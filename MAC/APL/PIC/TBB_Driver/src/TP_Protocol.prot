@@ -556,7 +556,7 @@ event = {
 	};
 	param = {
 		name = "ip";
-		type = "uint32[6]";
+		type = "uint32[5]";
 	};
 	param = {
 		name = "udp";
