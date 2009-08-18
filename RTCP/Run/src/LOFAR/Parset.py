@@ -202,10 +202,7 @@ class Parset(util.Parset.Parset):
         return int(self["Observation.ObsID"])
 
     def getNrUsedStorageNodes(self):
-        nrStorageNodes = len(self.storagenodes)
-	nrPsets = len(self.psets)
-
-	return min( nrStorageNodes, nrPsets )
+        return len(self.storagenodes)
 
     def disableCNProc(self):
         self["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "NULL"
