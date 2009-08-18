@@ -90,7 +90,7 @@ class CNProcSection(Section):
     # NOTE: This mpirun needs either stdin or stdout to be line buffered,
     # otherwise it will not provide output from CN_Processing (why?).
     mpiparams = [
-     # where
+      # where
       "-mode VN",
       "-partition %s" % (self.parset.partition,),
 
@@ -113,6 +113,7 @@ class CNProcSection(Section):
 
   def check(self):
     return
+
     # we have to own the partition
     owner = BGcontrol.owner( self.parset.partition )
     me = os.environ["USER"]
@@ -127,33 +128,45 @@ class CNProcSection(Section):
 
 class IONProcSection(Section):
   def run(self):
-    self.pidfiles = {}
+    logfiles = ["%s/run.IONProc.%s.log" % (Locations.files["logdir"],self.parset.partition)] + self.logoutputs
 
-    ionodes = self.parset.psets
+    # CNProc is started on the Blue Gene, which has BG/P mpirun 1.65
+    # NOTE: This mpirun needs either stdin or stdout to be line buffered,
+    # otherwise it will not provide output from CN_Processing (why?).
+    mpiparams = [
+      # where
+      "-host %s" % (",".join(self.parset.psets),),
+      "--pernode",
 
-    for node in ionodes:
-      nodenr = node.split(".")[-1]
+      # environment
 
-      # the PID of the IONProcs
-      self.pidfiles[node] = "%s/IONProc-%s-%s.pid" % (Locations.files["rundir"],self.parset.partition,nodenr)
+      # working directory
+      "-wd %s" % (Locations.files["rundir"],),
 
-      # change working directory to the rundir, remember the pid of the shell, and execute IONProc
-      cmd = "cd %s; echo $$ > %s; exec %s %s" % (
-         Locations.files["rundir"],
-         self.pidfiles[node],
-         Locations.files["ionproc"],Locations.files["parset"] )
+      # executable
+      "%s" % (Locations.files["ionproc"],),
 
-      logfiles = ["%s/run.IONProc.%s.%s" % (Locations.files["logdir"],self.parset.partition,nodenr)] + self.logoutputs
+      # arguments
+      "%s" % (Locations.files["parset"],),
+    ]
 
-      self.commands.append( AsyncCommand( "ssh -q %s %s" % (node,cmd,), logfiles ) )
+    self.commands.append( AsyncCommand( "/bgsys/LOFAR/openmpi-ion/bin/mpirun %s" % (" ".join(mpiparams),), logfiles, killcmd=mpikill ) )
 
   def abort( self, timeout ):
-    for node,pidfile in self.pidfiles.iteritems():
-      def kill( signal ):
-        # kill remote process using the pid we stored
-        SyncCommand( "ssh -q %s kill -%s `cat %s`" % (node,signal,pidfile) )
+    # kill mpirun
+    def kill( signal ):
+      for c in self.commands:
+        c.abort( signal )
 
-      self.killSequence( "IONProc process on %s" % (node,), kill, timeout )
+    self.killSequence( "mpirun process", kill, timeout )
+
+    # kill IONProc and orted processes on IONodes
+    for node in self.parset.psets:
+      def kill( signal ):
+        # We kill all the orted and IONProc processes, since we have sole access to the IONodes
+        SyncCommand( "ssh -q %s killall -%s IONProc orted" % (node, signal) )
+
+      self.killSequence( "orted/IONProc processes on %s" % (node,), kill, timeout )
 
     # fallback: kill local commands
     if not runUntilSuccess( [ self.wait ], timeout ):
@@ -225,8 +238,7 @@ class StorageSection(Section):
         SyncCommand( "ssh -q %s ps --no-heading -o pid,cmd -ww -C Storage | grep '%s' | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
           node, Locations.files["parset"], signal) )
 
-      self.killSequence( "orted process on %s" % (node,), kill, timeout )
-      self.killSequence( "orted process on %s" % (node,), kill, timeout )
+      self.killSequence( "orted/Storage processes on %s" % (node,), kill, timeout )
 
     # fallback: kill local commands
     if not runUntilSuccess( [ self.wait ], timeout ):

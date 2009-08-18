@@ -33,9 +33,13 @@ class AsyncCommand(object):
         else:
           self.cmd = cmd
 
-        debug("RUN %s: %s > %s" % (self.__class__.__name__,cmd,", ".join(outfiles)))
+        if outfiles:
+          outstr = "> %s" % (", ".join(outfiles),)
+        else:
+          outstr = ""
+        debug("RUN %s: %s %s" % (self.__class__.__name__,cmd,outstr) )
 
-        if outfiles == []:
+        if not outfiles:
           stdout = None
         else:
           # open all outputs, remember them to prevent the files
@@ -55,11 +59,11 @@ class AsyncCommand(object):
             # keep the pipe input
             stdout = w
 
-        if infile is None:
-          stdin = None
-        else:
+        if infile:
           # Line buffer stdin to satisfy MPIRUN on the BG/P. It will not provide output without it.
-          stdin  = ropen( infile, "w", 1 )
+          stdin = ropen( infile, "w", 1 )
+        else:
+          stdin = None
 
         self.done = False
         self.reaped = False
