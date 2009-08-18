@@ -37,7 +37,7 @@ class Job(object):
 	self.host.executeAsync('cp ' + self.executable + ' ' + self.workingDir).waitForDone()
 	
 	interfaces = IONodes.get(self.partition)
-        Job.run(self, runlog, parsetfile, timeOut, '/bgsys/LOFAR/openmpi-ion/bin/mpirun -host ' + ','.join(interfaces) + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]) + ' ' + parsetfile.split('/')[-1])
+        Job.run(self, runlog, parsetfile, timeOut, '/bgsys/LOFAR/openmpi-ion/bin/mpirun -host ' + ','.join(interfaces) + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
 
     def isDone(self):
         ret = self.runCommand.isDone()
