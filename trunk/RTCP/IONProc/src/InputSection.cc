@@ -322,8 +322,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
   CN_Command command(CN_Command::PROCESS);
   
   for (unsigned subbandBase = 0; subbandBase < itsNSubbandsPerPset; subbandBase ++) {
-    unsigned core    = CN_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
-    Stream   *stream = itsClientStreams[core];
+    Stream *stream = itsClientStreams[itsCurrentComputeCore];
 
     // tell CN to process data
     command.write(stream);
