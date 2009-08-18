@@ -191,7 +191,12 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
 
     itsLockedRanges.unlock(0, itsSize, itsSize);
 
-    LOG_DEBUG("reset BeamletBuffer at " << newTimeStamp << "; itsOffset was " << oldOffset << " and becomes " << itsOffset);
+    time_t now = time(0);
+    char   buf[26];
+    ctime_r(&now, buf);
+    buf[24] = '\0';
+
+    LOG_DEBUG("[" << buf << "] reset BeamletBuffer at " << newTimeStamp << "; itsOffset was " << oldOffset << " and becomes " << itsOffset);
   }
 }
 
