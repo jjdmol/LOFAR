@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Form version="1.3" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
+  <Properties>
+    <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+      <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
+        <TitledBorder title="RSP"/>
+      </Border>
+    </Property>
+  </Properties>
+  <AuxValues>
+    <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
+  </AuxValues>
+
+  <Layout>
+    <DimensionLayout dim="0">
+      <Group type="103" groupAlignment="0" attributes="0">
+          <Group type="102" alignment="1" attributes="0">
+              <EmptySpace pref="33" max="32767" attributes="0"/>
+              <Group type="103" groupAlignment="1" attributes="0">
+                  <Component id="lblBpClock" alignment="1" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblAp3Temp" alignment="1" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblAp2Temp" alignment="1" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblAp1Temp" alignment="1" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblAp0Temp" alignment="1" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblBpTemp" alignment="1" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblPcbTemp" alignment="1" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblVoltage3V3" alignment="1" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblVoltage2V5" alignment="1" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblVoltage1V2" alignment="1" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="1" attributes="0">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="103" groupAlignment="1" attributes="0">
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="txtVoltage1V2" min="-2" pref="64" max="-2" attributes="0"/>
+                              <Component id="txtVoltage2V5" min="-2" pref="64" max="-2" attributes="0"/>
+                              <Component id="txtVoltage3V3" min="-2" pref="64" max="-2" attributes="0"/>
+                          </Group>
+                          <Component id="txtPcbTemp" alignment="1" min="-2" pref="64" max="-2" attributes="0"/>
+                          <Component id="txtBpTemp" alignment="1" min="-2" pref="64" max="-2" attributes="0"/>
+                          <Component id="txtAp0Temp" alignment="1" min="-2" pref="64" max="-2" attributes="0"/>
+                          <Component id="txtAp1Temp" alignment="1" min="-2" pref="64" max="-2" attributes="0"/>
+                          <Component id="txtAp2Temp" alignment="1" min="-2" pref="64" max="-2" attributes="0"/>
+                      </Group>
+                      <Component id="txtAp3Temp" min="-2" pref="64" max="-2" attributes="0"/>
+                  </Group>
+                  <Component id="txtBpClock" alignment="1" min="-2" pref="64" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+          </Group>
+      </Group>
+    </DimensionLayout>
+    <DimensionLayout dim="1">
+      <Group type="103" groupAlignment="0" attributes="0">
+          <Group type="102" attributes="0">
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="txtVoltage1V2" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblVoltage1V2" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblVoltage2V5" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtVoltage2V5" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblVoltage3V3" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtVoltage3V3" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblPcbTemp" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtPcbTemp" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblBpTemp" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtBpTemp" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblAp0Temp" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtAp0Temp" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblAp1Temp" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtAp1Temp" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblAp2Temp" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtAp2Temp" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblAp3Temp" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtAp3Temp" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblBpClock" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtBpClock" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace pref="20" max="32767" attributes="0"/>
+          </Group>
+      </Group>
+    </DimensionLayout>
+  </Layout>
+  <SubComponents>
+    <Component class="javax.swing.JLabel" name="lblVoltage1V2">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Voltage 1.2V"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblVoltage2V5">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Voltage 2.5V"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblVoltage3V3">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Voltage 3.3V"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblPcbTemp">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Board temp."/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblBpTemp">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="BP temp."/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblAp0Temp">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="AP0 temp."/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblAp1Temp">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="AP1 temp."/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblAp2Temp">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="AP2 temp."/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblAp3Temp">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="AP3 temp."/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblBpClock">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="BP clock spd."/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtVoltage1V2">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtVoltage2V5">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtVoltage3V3">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtPcbTemp">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtBpTemp">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtAp0Temp">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtAp1Temp">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtAp2Temp">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtAp3Temp">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtBpClock">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+  </SubComponents>
+</Form>

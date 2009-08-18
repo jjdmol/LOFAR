@@ -1,0 +1,21 @@
+#!/bin/sh
+
+if test "$srcdir" = ""; then
+  srcdir=../../../src
+fi
+
+echo ''
+$srcdir/../src/startdistproc -dsn tstartdproc.in_vd -cdn tstartdproc.in_cd \
+-mode single -dry -hfn tstartdproc_tmp.out1 -fdp ../src prog1 -arg "a b"
+cat tstartdproc_tmp.out1
+
+echo ''
+$srcdir/../src/startdistproc -dsn tstartdproc.in_vd -cdn tstartdproc.in_cd \
+-mode mpi -dry -hfn tstartdproc_tmp.out2 -fdp ../src prog1 -arg "a b"
+cat tstartdproc_tmp.out2
+
+echo ''
+$srcdir/../src/startdistproc -dsn tstartdproc.in_vd -cdn tstartdproc.in_cd \
+-mode 3851 -dry -hfn tstartdproc_tmp.out3 -fdp ../src prog1 -arg "a b"
+cat tstartdproc_tmp.out3
+

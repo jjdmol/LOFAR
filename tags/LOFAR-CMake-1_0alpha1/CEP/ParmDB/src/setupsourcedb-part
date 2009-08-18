@@ -1,0 +1,90 @@
+#!/bin/sh
+
+# setupsourcedb-part: The distributed part of setupsourcedb
+#
+# Copyright (C) 2009
+# ASTRON (Netherlands Foundation for Research in Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# $Id$
+
+# Find the path used to start the script.
+pgmpath=`dirname $0`
+pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+
+if test $# != 16; then
+  echo "run as:  setupsourcedb-part dummy dummy dummy dummy rank"
+  echo "                            ms-part filesys ms-part-vds"
+  echo "                            lofarroot wd pdbfile pdbname overwrite dry"
+  echo "                            stepfreq steptime"
+  exit 1
+fi
+
+shift
+shift
+shift
+shift
+seqnr=$1
+msn=$2
+lroot=$5
+wd=$6
+srccat=$7
+pdb=$8
+overwrite=$9
+dry=${10}
+stepfreq=${11}
+steptime=${12}
+
+
+# Initialize lofar environment.
+. $lroot/lofarinit.sh
+
+# Check if a sourcedb name is given.
+if test "$pdb" = ""; then
+  echo "setupsourcedb-part:empty pdb name given"
+  exit 1
+fi
+
+# For 'make check' we need to qualify where makesourcedb is.
+case "$wd" in
+*/test)
+  pgmpath=../src/
+  ;;
+esac
+
+# Set the working directory; derive it if needed.
+if test "$wd" = ""  -o  "$wd" = "..."; then
+  wd=`dirname "$msn"`
+fi
+cd $wd  ||  exit 1
+
+# Append to the SourceDB. Delete it first if overwrite is given.
+echo "Create $msn/$pdb from $srccat"
+if test "$dry" != dry; then
+  if test $overwrite = 1; then
+    rm -rf $msn/$pdb
+  fi
+  ${pgmpath}/makesourcedb in=$srccat out=$msn/$pdb
+
+  if test "$stepfreq" != "."  -a  "$steptime" != "."; then
+    # Put default steps into the sourcedb.
+    parmdb <<EOF
+open tablename="$msn/$pdb"
+set stepx=$stepfreq, stepy=$steptime
+EOF
+  fi
+fi

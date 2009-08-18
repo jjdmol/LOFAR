@@ -1,0 +1,43 @@
+-- NOTE: Initialize the "Systems" schema before this one!
+
+CREATE TABLE Lofar.RSPStatus (
+    time            TIMESTAMP  WITH TIME ZONE     NOT NULL,
+    si_id           BIGINT                        REFERENCES Systems.SystemInstances ON DELETE CASCADE ON UPDATE CASCADE,
+    -- meta-information
+    rsp_id              INTEGER           NOT NULL, 
+    ADO_adc_offset_x    BIGINT []         NOT NULL, 
+    ADO_adc_offset_y    BIGINT []         NOT NULL,
+    BS_ext_count        BIGINT []         NOT NULL,
+    BS_sample_offset    BIGINT []         NOT NULL,
+    BS_slice_count      BIGINT []         NOT NULL,
+    BS_sync_count       BIGINT []         NOT NULL,
+    DIAG_ap_ri_errors   INTEGER []        NOT NULL,
+    DIAG_cep_errors     INTEGER           NOT NULL,
+    DIAG_interface      INTEGER           NOT NULL,
+    DIAG_lcu_errors     INTEGER           NOT NULL,
+    DIAG_mode           INTEGER           NOT NULL,
+    DIAG_rcux_errors    INTEGER           NOT NULL,
+    DIAG_rcuy_errors    INTEGER           NOT NULL,
+    DIAG_ri_errors      INTEGER           NOT NULL,
+    DIAG_serdes_errors  INTEGER           NOT NULL,
+    ETH_last_error      INTEGER           NOT NULL,
+    ETH_num_errors      BIGINT            NOT NULL,
+    ETH_num_frames      BIGINT            NOT NULL,
+    MEP_error           INTEGER           NOT NULL,
+    MEP_seqnr           INTEGER           NOT NULL,
+    RCU_num_overflow_x  BIGINT []         NOT NULL,
+    RCU_num_overflow_y  BIGINT []         NOT NULL,
+    RCU_pllx            INTEGER []        NOT NULL,
+    RCU_plly            INTEGER []        NOT NULL,
+    RSP_board_temps     INTEGER []        NOT NULL,
+    RSP_board_volts     REAL []           NOT NULL,
+    RSP_bp_clock        INTEGER           NOT NULL,
+    RSU_apbp            INTEGER []        NOT NULL,
+    RSU_error           INTEGER []        NOT NULL,
+    RSU_image_type      INTEGER []        NOT NULL,
+    RSU_ready           INTEGER []        NOT NULL, 
+    RSU_trig            INTEGER []        NOT NULL,
+    classification      TEXT[]            '{UNCLASSIFIED}',
+    -- constraints
+    PRIMARY KEY(time, si_id, rsp_id)
+);

@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lofar:project xmlns:lofar="http://www.astron.nl/MoM2-Lofar"
+	xmlns:mom2="http://www.astron.nl/MoM2"
+	xmlns:user="http://www.astron.nl/useradmin"
+	xmlns:persistent="http://www.astron.nl/PersistentObjects"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://wop17.nfra.nl/twiki/pub/Tools/Schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://wop17.nfra.nl/twiki/pub/Tools/Schemas/MoM2.xsd http://www.astron.nl/useradmin http://proposal.astron.nl/schemas/UserAdmin.xsd http://www.astron.nl/PersistentObjects http://proposal.astron.nl/schemas/PersistentObjects.xsd "
+	mom2Id="0" xsi:type="lofar:LofarProjectType" id="0">
+	<name>name</name>
+	<description>description</description>
+	<currentStatus>
+		<mom2:openedStatus />
+	</currentStatus>
+	<generalRemarks>
+		<item>
+			<mom2:generalRemark>
+				<user id="0" />
+				<name>name</name>
+				<roles>roles</roles>
+				<text>text</text>
+				<timeStamp>2001-12-31T12:00:00</timeStamp>
+			</mom2:generalRemark>
+		</item>
+	</generalRemarks>
+	<inspectionReports>
+		<item>
+			<mom2:inspectionReport>
+				<user id="0" />
+				<name>name</name>
+				<roles>roles</roles>
+				<text>text</text>
+				<timeStamp>2001-12-31T12:00:00</timeStamp>
+			</mom2:inspectionReport>
+		</item>
+	</inspectionReports>
+	<specificationRemarks>
+		<item>
+			<mom2:specificationRemark>
+				<user id="0" />
+				<name>name</name>
+				<roles>roles</roles>
+				<text>text</text>
+				<timeStamp>2001-12-31T12:00:00</timeStamp>
+			</mom2:specificationRemark>
+		</item>
+	</specificationRemarks>
+	<schedulingRemarks>
+		<item>
+			<mom2:schedulingRemark>
+				<user id="0" />
+				<name>name</name>
+				<roles>roles</roles>
+				<text>text</text>
+				<timeStamp>2001-12-31T12:00:00</timeStamp>
+			</mom2:schedulingRemark>
+		</item>
+	</schedulingRemarks>
+	<usedDataProducts>
+		<item>
+			<lofar:proposalDocument>
+				<name>name</name>
+				<uri>uri</uri>
+				<type>PROPOSAL</type>
+				<released>false</released>
+			</lofar:proposalDocument>
+		</item>
+	</usedDataProducts>
+	<children>
+		<item>
+			<lofar:collection>
+				<name>name</name>
+				<description>description</description>
+				<currentStatus>
+					<mom2:openedStatus />
+				</currentStatus>
+				<!--    <children/>  -->
+			</lofar:collection>
+		</item>
+		<item>
+			<lofar:observation>
+				<name>name</name>
+				<description>description</description>
+				<currentStatus>
+					<mom2:openedStatus />
+				</currentStatus>
+				<generalRemarks>
+					<item>
+						<mom2:generalRemark>
+							<user id="0" />
+							<name>name</name>
+							<roles>roles</roles>
+							<text>text</text>
+							<timeStamp>2001-12-31T12:00:00</timeStamp>
+						</mom2:generalRemark>
+					</item>
+				</generalRemarks>
+				<inspectionReports>
+					<item>
+						<mom2:inspectionReport>
+							<user id="0" />
+							<name>name</name>
+							<roles>roles</roles>
+							<text>text</text>
+							<timeStamp>2001-12-31T12:00:00</timeStamp>
+						</mom2:inspectionReport>
+					</item>
+				</inspectionReports>
+				<specificationRemarks>
+					<item>
+						<mom2:specificationRemark>
+							<user id="0" />
+							<name>name</name>
+							<roles>roles</roles>
+							<text>text</text>
+							<timeStamp>2001-12-31T12:00:00</timeStamp>
+						</mom2:specificationRemark>
+					</item>
+				</specificationRemarks>
+				<schedulingRemarks>
+					<item>
+						<mom2:schedulingRemark>
+							<user id="0" />
+							<name>name</name>
+							<roles>roles</roles>
+							<text>text</text>
+							<timeStamp>2001-12-31T12:00:00</timeStamp>
+						</mom2:schedulingRemark>
+					</item>
+				</schedulingRemarks>
+				<resultDataProducts>
+					<item>
+						<lofar:dataset>
+							<name>name</name>
+							<uri>uri</uri>
+							<type>LOFARDATA</type>
+							<released>false</released>
+						</lofar:dataset>
+					</item>
+				</resultDataProducts>
+				<lofar:observationAttributes>
+					<arrayConfiguration>Central core</arrayConfiguration>
+					<srgConfiguration>Station</srgConfiguration>
+					<bandFilter>10-70 MHz (160 MHz samplingrate)</bandFilter>
+					<subbandPlacement>Scattered</subbandPlacement>
+					<numberOfBands>10</numberOfBands>
+					<startFrequency>10.0</startFrequency>
+					<spacing>0</spacing>
+					<backend>Demo correlator</backend>
+				</lofar:observationAttributes>
+				<children>
+					<item>
+						<lofar:measurement>
+							<name>name</name>
+							<description>description</description>
+							<currentStatus>
+								<mom2:openedStatus />
+							</currentStatus>
+							<generalRemarks>
+								<item>
+									<mom2:generalRemark>
+										<user id="0" />
+										<name>name</name>
+										<roles>roles</roles>
+										<text>text</text>
+										<timeStamp>
+											2001-12-31T12:00:00
+										</timeStamp>
+									</mom2:generalRemark>
+								</item>
+							</generalRemarks>
+							<inspectionReports>
+								<item>
+									<mom2:inspectionReport>
+										<user id="0" />
+										<name>name</name>
+										<roles>roles</roles>
+										<text>text</text>
+										<timeStamp>
+											2001-12-31T12:00:00
+										</timeStamp>
+									</mom2:inspectionReport>
+								</item>
+							</inspectionReports>
+							<specificationRemarks>
+								<item>
+									<mom2:specificationRemark>
+										<user id="0" />
+										<name>name</name>
+										<roles>roles</roles>
+										<text>text</text>
+										<timeStamp>
+											2001-12-31T12:00:00
+										</timeStamp>
+									</mom2:specificationRemark>
+								</item>
+							</specificationRemarks>
+							<schedulingRemarks>
+								<item>
+									<mom2:schedulingRemark>
+										<user id="0" />
+										<name>name</name>
+										<roles>roles</roles>
+										<text>text</text>
+										<timeStamp>
+											2001-12-31T12:00:00
+										</timeStamp>
+									</mom2:schedulingRemark>
+								</item>
+							</schedulingRemarks>
+							<resultDataProducts>
+								<item index="0">
+									<lofar:dataset>
+										<name>name</name>
+										<uri>uri</uri>
+										<type>LOFARDATA</type>
+										<released>false</released>
+									</lofar:dataset>
+								</item>
+							</resultDataProducts>
+							<lofar:measurementAttributes>
+								<fieldName>fieldName</fieldName>
+								<ra>0.0</ra>
+								<dec>0.0</dec>
+								<coordinateRef>J2000</coordinateRef>
+								<requestedDuration>
+									P1D
+								</requestedDuration>
+								<startTime>
+									2001-12-31T12:00:00
+								</startTime>
+								<endTime>2001-12-31T12:00:00</endTime>
+								<timeRef>LST</timeRef>
+							</lofar:measurementAttributes>
+						</lofar:measurement>
+					</item>
+				</children>
+			</lofar:observation>
+		</item>
+	</children>
+	<proposalId>proposalId</proposalId>
+	<members>
+		<item>
+			<registeredMember>
+				<roles>
+					<mom2:pi />
+				</roles>
+				<user id="0" />
+			</registeredMember>
+		</item>
+	</members>
+	<lofar:allocation>
+		<mom2:observingTime>10000</mom2:observingTime>
+	</lofar:allocation>
+	<releaseDate>2010-01-01</releaseDate>
+</lofar:project>

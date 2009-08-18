@@ -1,0 +1,82 @@
+#!/bin/sh
+
+# setupparmdb-part: The distributed part of setupparmdb
+#
+# Copyright (C) 2009
+# ASTRON (Netherlands Foundation for Research in Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# $Id$
+
+# Find the path used to start the script.
+pgmpath=`dirname $0`
+pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+
+if test $# != 15; then
+  echo "run as:  setupparmdb-part dummy dummy dummy dummy rank"
+  echo "                          ms-part filesys ms-part-vds"
+  echo "                          lofarroot wd pdbfile pdbname dry"
+  echo "                          stepfreq steptime"
+  exit 1
+fi
+
+echo $*
+
+shift
+shift
+shift
+shift
+seqnr=$1
+msn=$2
+lroot=$5
+wd=$6
+pdbfile=$7
+pdb=$8
+dry=$9
+stepfreq=${10}
+steptime=${11}
+
+
+# Initialize lofar environment (to find parmdb).
+. $lroot/lofarinit.sh
+
+# Check if a parmdb name is given (otherwise the MS gets deleted hereafter).
+if test "$pdb" = ""; then
+  echo "setupparmdb-part: empty pdb name given"
+  exit 1
+fi
+
+# Set the working directory; derive it if needed.
+if test "$wd" = ""  -o  "$wd" = "..."; then
+  wd=`dirname "$msn"`
+fi
+cd $wd  ||  exit 1
+
+# Copy the instrument ParmDB.
+echo "Create $msn/$pdb (copy of $pdbfile)"
+if test "$dry" != dry; then
+  rm -rf $msn/$pdb           # this is safe because $pdb is not empty
+  cp -r $pdbfile $msn/$pdb
+
+  if test "$stepfreq" != "."  -a  "$steptime" != "."; then
+    # Put default steps into the parmdb.
+    parmdb <<EOF
+open tablename="$msn/$pdb"
+set stepx=$stepfreq, stepy=$steptime
+EOF
+  fi
+fi

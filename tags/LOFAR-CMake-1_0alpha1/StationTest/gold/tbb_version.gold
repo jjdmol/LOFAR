@@ -1,0 +1,16 @@
+subscribed, execute command
+
+== TBB ====================================== ID and version information ====
+
+TBBDriver version 2.12
+tbbctl    version 2.12
+
+TBB  ID  Board  TP sw  TP hw  MP hw
+---  --  -----  -----  -----  -----
+  0   0  V 0.3  V 4.0  V 2.1  V 2.3
+  1   2  V 0.3  V 4.0  V 2.1  V 2.3
+  2   4  V 0.3  V 4.0  V 2.1  V 2.3
+  3   6  V 0.3  V 4.0  V 2.1  V 2.3
+  4   8  V 0.3  V 4.0  V 2.1  V 2.3
+  5  10  V 0.3  V 4.0  V 2.1  V 2.3
+

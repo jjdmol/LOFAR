@@ -1,0 +1,24 @@
+AC_INIT(README.txt)
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(Station, 1.0, no-define)
+
+AC_PROG_LIBTOOL
+
+AC_CONFIG_FILES([test/runctest.sh:autoconf_share/runctest.sh.in],
+                [chmod +x test/runctest.sh])
+AC_OUTPUT(
+	Makefile
+	gold/Makefile
+	modules/Makefile
+	tc/Makefile
+	test/Makefile
+	test/beamformertest/Makefile
+	test/hbatest/Makefile
+	test/hbatest/gold/Makefile
+	test/subbandstatistics/Makefile
+	test/systemnoise/Makefile
+	test/timing/Makefile
+	test/xcstatistics/Makefile
+	test/envcontroltest/Makefile
+)
+
