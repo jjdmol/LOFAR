@@ -261,7 +261,7 @@ if [ "$lfr_use_casa" = 1 ]; then
 
   CPPFLAGS="$CPPFLAGS $AIPSPP_CPPFLAGS"
   LDFLAGS="$LDFLAGS $AIPSPP_LDFLAGS"
-  LIBS="$LIBS $AIPSPP_LIBS"
+  LIBS="$LIBS $AIPSPP_LIBS -ldl"
 
   if test "$lofar_compiler" = "gnu"; then
     CXXFLAGS="$CXXFLAGS -Wno-non-template-friend"
