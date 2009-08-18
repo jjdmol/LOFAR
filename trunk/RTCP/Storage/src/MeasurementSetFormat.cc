@@ -62,17 +62,15 @@ MeasurementSetFormat::MeasurementSetFormat(const Parset *ps, const unsigned alig
     itsAlignment(alignment)
 {
  
-  if (itsPS->nrTabStations() > 0) 
+  if (itsPS->nrTabStations() > 0) {
     itsNrAnt = itsPS->nrTabStations();
-  else 
+    stationNames = itsPS->getStringVector("OLAP.tiedArrayStationNames");
+  } else {
     itsNrAnt = itsPS->nrStations();
+    stationNames = itsPS->getStringVector("OLAP.storageStationNames");
+  }
 
   antPos = itsPS->positions();
-
-  if (itsPS->nrTabStations() > 0)
-    stationNames = itsPS->getStringVector("OLAP.tiedArrayStationNames");
-  else 
-    stationNames = itsPS->getStringVector("OLAP.storageStationNames");
 
   AMC::Epoch epoch;
   epoch.utc(itsPS->startTime());
@@ -348,7 +346,12 @@ void MeasurementSetFormat::createMSMetaFile(unsigned subband)
   Block<Int> ant1(itsPS->nrBaselines());
   Block<Int> ant2(itsPS->nrBaselines());
   uInt inx=0;
-  for (uInt i=0; i<itsPS->nrStations(); ++i) {
+  uInt nStations = 0;
+
+  if (itsPS->nrTabStations() > 0) nStations = itsPS->nrTabStations();
+  else nStations = itsPS->nrStations();
+
+  for (uInt i = 0; i < nStations; ++i) {
     for (uInt j=0; j<=i; ++j) {
       ant1[inx] = j;
       ant2[inx] = i;
