@@ -26,7 +26,7 @@ class CN_Mode
 
     CN_Mode();
 
-#if defined HAVE_APPLCOMMON
+#if ! defined HAVE_BGP_CN
     CN_Mode(const Parset &ps);
 #endif
 

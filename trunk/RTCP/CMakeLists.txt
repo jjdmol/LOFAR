@@ -45,7 +45,7 @@ lofar_add_subdirectory(FCNP)
 lofar_add_subdirectory(CNProc)
 
 # I/O Node Processing: application running on the BlueGene I/O nodes
-#lofar_add_subdirectory(IONProc)
+lofar_add_subdirectory(IONProc)
 
 # Stores output from the correlator in one or more MeasurmentSet files.
 lofar_add_subdirectory(Storage)
@@ -54,7 +54,7 @@ lofar_add_subdirectory(Storage)
 lofar_add_subdirectory(RTCPTools)
 
 # Several run scripts to start the RTCP components
-#lofar_add_subdirectory(Run)
+lofar_add_subdirectory(Run)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

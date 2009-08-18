@@ -28,7 +28,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#if defined HAVE_APPLCOMMON
+#if ! defined HAVE_BGP_CN
 
 //# Includes
 #include <Common/ParameterSet.h>
@@ -478,5 +478,5 @@ inline string Parset::projectName() const
 } // namespace RTCP
 } // namespace LOFAR
 
-#endif // defined HAVE_APPLCOMMON
+#endif // ! defined HAVE_BGP_CN
 #endif

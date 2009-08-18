@@ -40,7 +40,7 @@ class CN_Configuration
   public:
     CN_Configuration() {}
 
-#if defined HAVE_APPLCOMMON
+#if ! defined HAVE_BGP_CN
     CN_Configuration( const Parset &parset );
 #endif
 

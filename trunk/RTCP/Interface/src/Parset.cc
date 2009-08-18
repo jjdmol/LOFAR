@@ -23,7 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#if defined HAVE_APPLCOMMON
+#if ! defined HAVE_BGP_CN
 
 //# Includes
 #include <Common/LofarLogger.h>
