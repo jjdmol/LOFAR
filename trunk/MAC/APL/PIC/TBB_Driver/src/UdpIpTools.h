@@ -48,7 +48,7 @@ void string2mac(const char* macstring, uint32 mac[2]);
 // to an array of 6 bytes.
 uint32 string2ip(const char* ipstring);
 // Setup an appropriate UDP/IP header
-void setup_udpip_header(uint32 boardnr, uint32 mode, const char *srcip, const char *dstip, uint32 ip_hdr[6], uint32 udp_hdr[2]);
+void setup_udpip_header(uint32 boardnr, uint32 mode, const char *srcip, const char *dstip, uint32 ip_hdr[5], uint32 udp_hdr[2]);
 // Compute the 16-bit 1-complements checksum for the IP header.
 uint16 compute_ip_checksum(void* addr, int count);
 //==============================================================================
@@ -79,7 +79,7 @@ inline uint32 string2ip(const char* ipstring)
 	unsigned int hx[sizeof(uint32)] = { 0x00, 0x00, 0x00, 0x00 };
 
 	sscanf(ipstring, "%d.%d.%d.%d", &hx[3], &hx[2], &hx[1], &hx[0]);
-
+	
 	result	= ((hx[0] & 0xFF))
 			+ ((hx[1] & 0xFF) << 8)
 			+ ((hx[2] & 0xFF) << 16)
@@ -113,9 +113,9 @@ inline uint16 compute_ip_checksum(void* addr, int count)
 	return(~sum);
 }
 
-inline void setup_udpip_header(uint32 boardnr, uint32 mode, const char *srcip, const char *dstip, uint32 ip_hdr[6], uint32 udp_hdr[2])
+inline void setup_udpip_header(uint32 boardnr, uint32 mode, const char *srcip, const char *dstip, uint32 ip_hdr[5], uint32 udp_hdr[2])
 {
-	uint32 iphdr[6];
+	uint32 iphdr[5];
 	uint32 udphdr[2];
 
 	uint32 ip_hdr_size  = sizeof(iphdr); // bytes
@@ -128,7 +128,7 @@ inline void setup_udpip_header(uint32 boardnr, uint32 mode, const char *srcip, c
 
 	// IP header values
 	uint32 version 			= 4; // IPv4
-	uint32 ihl 				= 6; // 6 x uint32
+	uint32 ihl 				= 5; // 5 x uint32, no options field
 	uint32 tos				= 0;
 	uint32 total_length		= ip_hdr_size + udp_hdr_size + data_size;
 	uint32 identification	= 0;
@@ -138,7 +138,6 @@ inline void setup_udpip_header(uint32 boardnr, uint32 mode, const char *srcip, c
 	uint32 header_checksum	= 0; // set to zero for checksum calculation
 	uint32 src_ip_address	= string2ip(srcip);
 	uint32 dst_ip_address	= string2ip(dstip);
-	uint32 options			= 0; // no options
 	// UDP header values
 	uint32 src_udp_port		= BASEUDPPORT + boardnr;
 	uint32 dst_udp_port		= BASEUDPPORT + boardnr;
@@ -157,10 +156,9 @@ inline void setup_udpip_header(uint32 boardnr, uint32 mode, const char *srcip, c
 			 + (header_checksum & 0xFFFF);
 	iphdr[3] = src_ip_address;
 	iphdr[4] = dst_ip_address;
-	iphdr[5] = options;
 
 	// compute header checksum
-	header_checksum = compute_ip_checksum(&iphdr, 24); //sizeof(ip_hdr));
+	header_checksum = compute_ip_checksum(&iphdr, ip_hdr_size);
 	iphdr[2] += (uint32)(header_checksum & 0xFFFF); // add checksum
 	//LOG_DEBUG_STR(formatString("Checksum = 0x%08X", header_checksum));
 
@@ -170,14 +168,19 @@ inline void setup_udpip_header(uint32 boardnr, uint32 mode, const char *srcip, c
 	udphdr[1] = ((length & 0xFFFF) << 16)
 			  + (checksum & 0xFFFF);
 
-	for (int i = 0; i < 6; i++) {
+	memcpy(ip_hdr, iphdr, ip_hdr_size);
+	memcpy(udp_hdr, udphdr, udp_hdr_size);
+	
+	/*
+	for (int i = 0; i < 5; i++) {
 		ip_hdr[i] = iphdr[i];
 	}
 	for (int i = 0; i < 2; i++) {
 		udp_hdr[i] = udphdr[i];
 	}
-
-	for ( int i = 0; i < 6; i++) {
+	*/
+	
+	for ( int i = 0; i < 5; i++) {
 		LOG_DEBUG_STR(formatString("IP[%d]= 0x%08X", i, ip_hdr[i]));
 	}
 	for ( int i = 0; i < 2; i++) {

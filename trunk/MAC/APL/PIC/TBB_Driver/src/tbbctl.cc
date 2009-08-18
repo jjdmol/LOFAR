@@ -1018,14 +1018,13 @@ GCFEvent::TResult VersionCmd::ack(GCFEvent& e)
 	cout << formatString("TBBDriver version %3.2f",(ack.driverversion / 100.)) << endl;
 	cout << formatString("tbbctl    version %3.2f",(TBBCTL_VERSION / 100.)) << endl;
 	cout << endl;
-	cout << "TBB  ID  Board  TP sw  TP hw  MP hw" << endl;
-	cout << "---  --  -----  -----  -----  -----" << endl;
+	cout << "TBB  Board  TP sw  TP hw  MP hw" << endl;
+	cout << "---  -----  -----  -----  -----" << endl;
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
 		if (isSelected(bnr) ) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
-				cout << formatString(" %2u  %2u  V%4.1f  V%4.1f  V%4.1f  V%4.1f",
+				cout << formatString(" %2u  V%4.1f  V%4.1f  V%4.1f  V%4.1f",
 				 bnr,
-				 ack.boardid[bnr],
 				(ack.boardversion[bnr] / 10.),
 				(ack.tpswversion[bnr] / 10.),
 				(ack.tphwversion[bnr] / 10.),
@@ -2982,7 +2981,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					{
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
 						cout << "       '--trigsetup=level, start, stop, filter, window, mode' (use decimal values)" << endl;
-						cout << "       level=1..255,  start=1..15,  stop=1..15,  filter=0(on) or 1(off)" << endl;
+						cout << "       level=1..255,  start=1..15,  stop=1..15,  filter=0(in) or 1(bypassed)" << endl;
 						cout << "       window=0..8, mode=0..3 (b0=0 single shot),(b0=1 continues)" << endl;
 						cout << "                              (b1=0 RSP input),(b1=1 external input)" << endl;
 						exit(EXIT_FAILURE);
