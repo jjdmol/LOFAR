@@ -45,6 +45,7 @@ set(GNUBGP_EXE_LINKER_FLAGS_ION)
 set(GNUBGP_COMPILE_DEFINITIONS 
   -B/bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/bin
   -DHAVE_BGP
+  -DHAVE_FCNP
   -DHAVE_MPI
   -I/bgsys/drivers/ppcfloor/comm/include
   -I/bgsys/drivers/ppcfloor/arch/include)

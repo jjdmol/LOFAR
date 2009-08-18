@@ -27,7 +27,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 
 # Add libraries
 lofar_add_library(fcnp_cn Package__Version.cc fcnp_cn.cc)
-lofar_add_library(libfcnp_ion Package__Version.cc fcnp_ion.cc)
+lofar_add_library(fcnp_ion Package__Version.cc fcnp_ion.cc)
 
 # Add executable
 lofar_add_executable(versionfcnp versionfcnp.cc)

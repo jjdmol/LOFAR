@@ -27,7 +27,7 @@
 namespace LOFAR {
 namespace RTCP {
 
-#if defined HAVE_APPLCOMMON
+#if ! defined HAVE_BGP_CN
 
 CN_Configuration::CN_Configuration( const Parset &parset )
 {
