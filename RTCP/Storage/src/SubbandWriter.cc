@@ -164,6 +164,14 @@ void SubbandWriter::preprocess()
     itsNrSubbandsPerStorage = (itsNrSubbands / itsSize) + 1;
   }
 
+
+  const double sampleFreq   = itsPS->sampleRate();
+  const unsigned seconds    = static_cast<unsigned>(floor(startTime));
+  const unsigned samples    = static_cast<unsigned>((startTime - floor(startTime)) * sampleFreq);
+
+  itsSyncedStamp.setStationClockSpeed(static_cast<unsigned>(sampleFreq * 1024));
+  itsSyncedStamp = TimeStamp(seconds, samples);
+
   LOG_TRACE_VAR_STR("SubbandsPerStorage = " << itsNrSubbandsPerStorage);
 
   itsMyNrSubbands = 0;
@@ -281,9 +289,12 @@ void SubbandWriter::writeLogMessage()
 
   LOG_INFO_STR("time = " << buf <<
 #if defined HAVE_MPI
-	  ", rank = " << itsRank <<
+	       ", rank = " << itsRank <<
 #endif
-	  ", count = " << counter ++);
+	       ", count = " << counter ++ <<
+	       ", timestamp = " << itsSyncedStamp) ;
+  
+  itsSyncedStamp += itsPS->nrSubbandSamples() * itsPS->IONintegrationSteps();
 }
 
 
