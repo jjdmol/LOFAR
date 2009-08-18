@@ -112,8 +112,6 @@ class CNProcSection(Section):
     self.commands.append( AsyncCommand( "mpirun %s" % (" ".join(mpiparams),), logfiles, killcmd=mpikill ) )
 
   def check(self):
-    return
-
     # we have to own the partition
     owner = BGcontrol.owner( self.parset.partition )
     me = os.environ["USER"]
@@ -130,9 +128,6 @@ class IONProcSection(Section):
   def run(self):
     logfiles = ["%s/run.IONProc.%s.log" % (Locations.files["logdir"],self.parset.partition)] + self.logoutputs
 
-    # CNProc is started on the Blue Gene, which has BG/P mpirun 1.65
-    # NOTE: This mpirun needs either stdin or stdout to be line buffered,
-    # otherwise it will not provide output from CN_Processing (why?).
     mpiparams = [
       # where
       "-host %s" % (",".join(self.parset.psets),),
@@ -150,34 +145,16 @@ class IONProcSection(Section):
       "%s" % (Locations.files["parset"],),
     ]
 
-    self.commands.append( AsyncCommand( "/bgsys/LOFAR/openmpi-ion/bin/mpirun %s" % (" ".join(mpiparams),), logfiles, killcmd=mpikill ) )
-
-  def abort( self, timeout ):
-    # kill mpirun
-    def kill( signal ):
-      for c in self.commands:
-        c.abort( signal )
-
-    self.killSequence( "mpirun process", kill, timeout )
-
-    # kill IONProc and orted processes on IONodes
-    for node in self.parset.psets:
-      def kill( signal ):
-        # We kill all the orted and IONProc processes, since we have sole access to the IONodes
-        SyncCommand( "ssh -q %s killall -%s IONProc orted" % (node, signal) )
-
-      self.killSequence( "orted/IONProc processes on %s" % (node,), kill, timeout )
-
-    # fallback: kill local commands
-    if not runUntilSuccess( [ self.wait ], timeout ):
-      Section.abort( self )
+    self.commands.append( AsyncCommand( "/bgsys/LOFAR/openmpi-ion/bin/mpirun %s" % (" ".join(mpiparams),), logfiles ) )
 
   def check(self):
-    # I/O nodes need to be reachable
-    ionodes = self.parset.psets
+    # I/O nodes need to be reachable -- check in parallel
+    pingcmds = [
+      (node,AsyncCommand( "ping %s -c 1 -w 2 -q" % (node,), ["/dev/null"] ))
+      for node in self.parset.psets
+    ]
 
-    for node in ionodes:
-      c = SyncCommand( "ping %s -c 1 -w 2 -q" % (node,), ["/dev/null"] )
+    for (node,c) in pingcmds:
       assert c.isSuccess(), "Cannot reach I/O node %s" % (node,)
 
 class StorageSection(Section):

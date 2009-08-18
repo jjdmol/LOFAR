@@ -249,7 +249,7 @@ if __name__ == "__main__":
   hwgroup.add_option( "-P", "--partition",
   			dest = "partition",
 			type = "string",
-			default = "R00-M0-N00-256",
+			default = "R00",
   			help = "name of the BlueGene partition [%default]" )
   parser.add_option_group( hwgroup )
 
@@ -257,11 +257,11 @@ if __name__ == "__main__":
   (options, args) = parser.parse_args()
   errorOccurred = False
 
-  assert options.partition in PartitionPsets
-
   if not options.status and not options.checkStation and not options.kill and not options.allocate and not options.free:
     parser.print_help()
     sys.exit(0)
+
+  assert options.partition in PartitionPsets
 
   if options.kill and not errorOccurred:
     if not options.quiet: print "Killing jobs on %s..." % ( options.partition, )
