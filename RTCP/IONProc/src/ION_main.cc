@@ -77,7 +77,7 @@ extern "C" {
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
-using namespace  LOFAR::LFDebug;
+using namespace LOFAR::LFDebug;
 
 
 #if !defined CATCH_EXCEPTIONS
@@ -103,7 +103,8 @@ void terminate_with_backtrace()
 static char	   **global_argv;
 static std::string blockID;
 static unsigned    myPsetNumber, nrPsets, nrCoresPerPset, nrRuns;
-static std::vector<Stream *> clientStreams;
+static std::vector<Stream *> clientStreams, allClientStreams;
+static const unsigned nrCNcoresInPset = 64; // TODO: how to figure out the number of CN cores?
 
 #if defined HAVE_FCNP && defined __PPC__
 static bool	   fcnp_inited;
@@ -117,16 +118,14 @@ static void checkParset(const Parset &parset)
     exit(1);
   }
 
-#if 0
-  if (parset.sizeBeamletAndSubbandList);
-    LOG_ERROR("size of the beamletlist must be equal to the size of subbandlist.");
-
-  parset.parseBeamletList();
-#endif 
+  if (parset.nrCoresPerPset() > nrCNcoresInPset) {
+    LOG_ERROR_STR("nrCoresPerPset (" << parset.nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
+    exit(1);
+  }
 }
 
 
-static void createClientStreams(unsigned nrClients, const std::string &streamType)
+static void createAllClientStreams(const std::string &streamType)
 {
 #if defined HAVE_FCNP && defined __PPC__
   if (streamType == "FCNP") {
@@ -135,35 +134,44 @@ static void createClientStreams(unsigned nrClients, const std::string &streamTyp
   }
 #endif
 
-  clientStreams.resize(nrClients);
+  allClientStreams.resize(nrCNcoresInPset);
 
-  for (unsigned core = 0; core < nrClients; core ++) {
+  for (unsigned core = 0; core < nrCNcoresInPset; core ++) {
 #if defined HAVE_ZOID
     if (streamType == "ZOID")
-      clientStreams[core] = new ZoidServerStream(core);
+      allClientStreams[core] = new ZoidServerStream(core);
     else
 #endif
 
 #if defined HAVE_FCNP && defined __PPC__
     if (streamType == "FCNP")
-      clientStreams[core] = new FCNP_ServerStream(core);
+      allClientStreams[core] = new FCNP_ServerStream(core);
     else
 #endif
 
     if (streamType == "NULL")
-      clientStreams[core] = new NullStream;
+      allClientStreams[core] = new NullStream;
     else if (streamType == "TCP")
-      clientStreams[core] = new SocketStream("127.0.0.1", 5000 + core, SocketStream::TCP, SocketStream::Server);
+      allClientStreams[core] = new SocketStream("127.0.0.1", 5000 + core, SocketStream::TCP, SocketStream::Server);
     else
       THROW(IONProcException, "unknown Stream type between ION and CN");
   }
 }
 
 
-static void deleteClientStreams()
+static void createClientStreams(unsigned nrClients)
 {
-  for (unsigned core = 0; core < clientStreams.size(); core ++)
-    delete clientStreams[core];
+  clientStreams.resize(nrClients);
+
+  for (unsigned core = 0; core < nrClients; core ++)
+    clientStreams[core] = allClientStreams[CN_Mapping::mapCoreOnPset(core, myPsetNumber)];
+}
+
+
+static void deleteAllClientStreams()
+{
+  for (unsigned core = 0; core < nrCNcoresInPset; core ++)
+    delete allClientStreams[core];
 
 #if defined HAVE_FCNP && defined __PPC__
   if (fcnp_inited) {
@@ -177,8 +185,7 @@ static void deleteClientStreams()
 static void configureCNs(const Parset &parset)
 {
   CN_Command	    command(CN_Command::PREPROCESS);
-  CN_Configuration configuration( parset );
- 
+  CN_Configuration  configuration(parset);
   std::stringstream logStr;
   
   logStr << "configuring " << nrCoresPerPset << " cores ...";
@@ -215,12 +222,12 @@ static void unconfigureCNs()
 static void stopCNs()
 {
   std::stringstream logStr;
-  logStr << "stopping " << nrCoresPerPset << " cores ... ";
+  logStr << "stopping " << nrCNcoresInPset << " cores ... ";
 
   CN_Command command(CN_Command::STOP);
 
-  for (unsigned core = 0; core < nrCoresPerPset; core ++)
-    command.write(clientStreams[core]);
+  for (unsigned core = 0; core < nrCNcoresInPset; core ++)
+    command.write(allClientStreams[core]);
 
   logStr << " done";
   LOG_DEBUG(logStr.str());
@@ -399,7 +406,7 @@ void *master_thread(void *)
     ParameterSet parameterSet(global_argv[1]);
     Parset parset(&parameterSet);
 
-    // OLAP.parset is depricated, as everything will be in the parset given on the command line
+    // OLAP.parset is deprecated, as everything will be in the parset given on the command line
     try {
       parset.adoptFile("OLAP.parset");
     } catch( APSException &ex ) {
@@ -417,7 +424,8 @@ void *master_thread(void *)
 #if !defined HAVE_ZOID
     nrCoresPerPset = parset.nrCoresPerPset();
     string streamType = parset.getTransportType("OLAP.OLAP_Conn.IONProc_CNProc");
-    createClientStreams(nrCoresPerPset, streamType);
+    createAllClientStreams(streamType);
+    createClientStreams(nrCoresPerPset);
 #endif
 
     configureCNs(parset);
@@ -436,10 +444,10 @@ void *master_thread(void *)
       // quick hack to send PROCESS commands to CNs
 
       CN_Command command(CN_Command::PROCESS);
-      unsigned	  core = 0;
+      unsigned	 core = 0;
 
       for (int count = nrRuns * parset.nrSubbandsPerPset(); -- count >= 0;) {
-	command.write(clientStreams[CN_Mapping::mapCoreOnPset(core, myPsetNumber)]);
+	command.write(clientStreams[core]);
 
 	if (++ core == nrCoresPerPset)
 	  core = 0;
@@ -471,6 +479,8 @@ void *master_thread(void *)
     unmapFlatMemory();
 #endif
 
+  deleteAllClientStreams();
+
 #if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
     LOG_FATAL_STR("main thread caught Exception: " << ex);
@@ -481,9 +491,8 @@ void *master_thread(void *)
   }
 #endif
 
-  if (pthread_detach(pthread_self()) != 0) {
+  if (pthread_detach(pthread_self()) != 0)
     LOG_ERROR("could not detach master thread");
-  }
 
 #if defined HAVE_ZOID
   if (global_argv != 0) {
@@ -493,6 +502,7 @@ void *master_thread(void *)
     delete [] global_argv;
   }
 #endif
+
   LOG_DEBUG("master thread finishes");
   return 0;
 }
@@ -611,7 +621,7 @@ void lofar_init(char   **argv /* in:arr2d:size=+1 */,
 void lofar__fini(void)
 {
   LOG_DEBUG("begin of lofar__fini");
-  deleteClientStreams();
+  deleteAllClientStreams();
   LOG_DEBUG("end of lofar__fini");
 }
 
@@ -652,9 +662,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  
   master_thread(0);
-  deleteClientStreams();
 
 #if defined HAVE_MPI
   MPI_Finalize();
