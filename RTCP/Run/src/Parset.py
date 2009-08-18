@@ -233,12 +233,7 @@ class Parset(LOFAR_Parset.Parset):
 
 
     def getNrUsedStorageNodes(self):
-        nrStorageNodes = len(listfen.getSlaves())
-	nrPsets = self.getNrPsets()
-	if nrPsets > nrStorageNodes:
-		return nrStorageNodes
-	else:
-		return nrPsets
+        return len(listfen.getSlaves())
 
 
     def getPsetsPerStorage(self):
