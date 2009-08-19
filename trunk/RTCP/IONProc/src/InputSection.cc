@@ -32,7 +32,6 @@
 #include <InputThread.h>
 #include <ION_Allocator.h>
 #include <Scheduling.h>
-//#include <TH_ZoidServer.h>
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Mapping.h>

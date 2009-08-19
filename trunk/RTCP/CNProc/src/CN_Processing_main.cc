@@ -112,9 +112,7 @@ int main(int argc, char **argv)
     LOG_DEBUG("creating connection to ION ...");
     
     Stream *ionStream;
-#if defined HAVE_ZOID && defined HAVE_BGL
-    ionStream = new ZoidClientStream;
-#elif 1 &&  defined HAVE_FCNP && defined HAVE_BGP
+#if 1 && defined HAVE_FCNP && defined HAVE_BGP
     FCNP_CN::init();
     ionStream = new FCNP_ClientStream;
 #elif 0

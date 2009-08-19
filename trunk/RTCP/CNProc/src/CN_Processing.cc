@@ -41,12 +41,6 @@
 #include <spi/kernel_interface.h>
 #endif
 
-#if defined HAVE_ZOID && (defined HAVE_BGL || defined HAVE_BGP)
-extern "C" {
-#include <lofar.h>
-}
-
-#endif
 
 #if (defined HAVE_BGP || defined HAVE_BGL)
 //#define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
@@ -96,10 +90,6 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
 // #if defined HAVE_BGL
 //   getPersonality();
 // #endif
-
-#if defined HAVE_ZOID && (defined HAVE_BGL || defined HAVE_BGP)
-  initIONode();
-#endif
 }
 
 
@@ -149,28 +139,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::getPersonality(
 
 //     for (unsigned pset = 0; pset < itsPersonality.numPsets(); pset ++)
 //       LOG_DEBUG_STR("pset " << pset << " contains cores " << cores[pset]);
-  }
-}
-
-#endif
-
-
-#if defined HAVE_ZOID && (defined HAVE_BGL || defined HAVE_BGP)
-
-void CN_Processing<SAMPLE_TYPE>::initIONode() const
-{
-  // one of the compute cores in each Pset has to initialize its I/O node
-
-  if (itsLocationInfo.rankInPset() == 0) {
-    std::vector<size_t> lengths;
-
-    for (int arg = 0; original_argv[arg] != 0; arg ++) {
-      LOG_DEBUG_STR("adding arg " << original_argv[arg]);
-      lengths.push_back(strlen(original_argv[arg]) + 1);
-    }
-
-    LOG_DEBUG_STR("calling lofar_init(..., ..., " << lengths.size() << ")");
-    lofar_init(original_argv, &lengths[0], lengths.size());
   }
 }
 

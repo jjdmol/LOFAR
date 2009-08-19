@@ -34,7 +34,6 @@
 #include <Stream/SocketStream.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exceptions.h>
-//#include <TH_ZoidServer.h>
 #if !defined HAVE_PKVERSION
 #include <Package__Version.h>
 #endif
@@ -54,12 +53,6 @@
 
 #if defined HAVE_MPI
 #include <mpi.h>
-#endif
-
-#if defined HAVE_ZOID
-extern "C" {
-#include <lofar.h>
-}
 #endif
 
 #if defined HAVE_FCNP && defined __PPC__
@@ -137,12 +130,6 @@ static void createAllClientStreams(const std::string &streamType)
   allClientStreams.resize(nrCNcoresInPset);
 
   for (unsigned core = 0; core < nrCNcoresInPset; core ++) {
-#if defined HAVE_ZOID
-    if (streamType == "ZOID")
-      allClientStreams[core] = new ZoidServerStream(core);
-    else
-#endif
-
 #if defined HAVE_FCNP && defined __PPC__
     if (streamType == "FCNP")
       allClientStreams[core] = new FCNP_ServerStream(core);
@@ -421,12 +408,10 @@ void *master_thread(void *)
     bool hasInputSection  = parset.inputPsetIndex(myPsetNumber) >= 0;
     bool hasOutputSection = parset.outputPsetIndex(myPsetNumber) >= 0;
 
-#if !defined HAVE_ZOID
     nrCoresPerPset = parset.nrCoresPerPset();
     string streamType = parset.getTransportType("OLAP.OLAP_Conn.IONProc_CNProc");
     createAllClientStreams(streamType);
     createClientStreams(nrCoresPerPset);
-#endif
 
     configureCNs(parset);
 
@@ -494,15 +479,6 @@ void *master_thread(void *)
   if (pthread_detach(pthread_self()) != 0)
     LOG_ERROR("could not detach master thread");
 
-#if defined HAVE_ZOID
-  if (global_argv != 0) {
-    for (char **arg = &global_argv[0]; *arg != 0; arg ++)
-      free(*arg);
-
-    delete [] global_argv;
-  }
-#endif
-
   LOG_DEBUG("master thread finishes");
   return 0;
 }
@@ -515,20 +491,6 @@ extern "C"
 }
 
 
-inline static void redirect_output()
-{
-#if defined HAVE_ZOID
-  int  fd;
-  char file_name[64];
-  
-  sprintf(file_name, "run.IONProc.%s.%u", blockID.c_str(), myPsetNumber);
-
-  if ((fd = open(file_name, O_CREAT | O_TRUNC | O_RDWR, 0666)) < 0 || dup2(fd, 1) < 0 || dup2(fd, 2) < 0)
-      perror("redirecting stdout/stderr");
-#endif
-}
-
-
 static void tryToGetPersonality()
 {
   myPsetNumber = 0;
@@ -537,95 +499,16 @@ static void tryToGetPersonality()
   try {
     ParameterSet personality("/proc/personality.sh");
 
-#if defined HAVE_ZOID // compiler bug: exceptions cause crashes
-    try {
-      myPsetNumber = personality.getUint32("BGL_PSETNUM");
-      nrPsets	   = personality.getUint32("BGL_NUMPSETS");
-      blockID	   = personality.getString("BGL_BLOCKID");
-
-      LOG_DEBUG_STR(" myPsetNumber : " << myPsetNumber
-                    << " nrPsets : " << nrPsets
-		    << " blockID : " << blockID);
-    } catch (std::exception& ex) {
-      LOG_FATAL(ex.what());
-
-    } catch (...) {
-      LOG_FATAL("Caught unknown exception");
-      
-    }
-#else
     try {
       myPsetNumber = personality.getUint32("BG_PSETNUM");
       nrPsets	   = personality.getUint32("BG_NUMPSETS");
       blockID	   = personality.getString("BG_BLOCKID");
     } catch (...) {
     }
-#endif
   } catch (...) {
   }
 }
 
-
-#if defined HAVE_ZOID
-
-void lofar__init(int nrComputeCores)
-{
-  nrCoresPerPset = nrComputeCores;
-  tryToGetPersonality();
-  redirect_output();
-  LOG_DEBUG("begin of lofar__init");
-
-  createClientStreams(nrComputeCores, "ZOID");
-
-  global_argv = 0;
-}
-
-
-
-void lofar_init(char   **argv /* in:arr2d:size=+1 */,
-		size_t * /*lengths*/ /* in:arr:size=+1 */,
-		int    argc /* in:obj */)
-
-{
-  LOG_DEBUG_STR("ok, begin of lofar_init(..., ..., " << argc << ")");
-  
-
-  for (int i = 0; i < argc; i ++)
-     LOG_DEBUG_STR("lofar_init(): arg = " << argv[i]);
-
-  // copy argv
-  global_argv = new char * [argc + 1];
-
-  for (int arg = 0; arg < argc; arg ++)
-    global_argv[arg] = strdup(argv[arg]);
-
-  global_argv[argc] = 0; // terminating zero pointer
-
-  if (argc == 3) {
-    LOG_WARN("specifying nrRuns is deprecated --- ignored");
-  } else if (argc != 2) {
-    LOG_ERROR("unexpected number of arguments");
-    
-    exit(1);
-  }
-
-  pthread_t master_thread_id;
-
-  if (pthread_create(&master_thread_id, 0, master_thread, 0) != 0) {
-    perror("pthread_create");
-    exit(1);
-  }
-}
-
-
-void lofar__fini(void)
-{
-  LOG_DEBUG("begin of lofar__fini");
-  deleteAllClientStreams();
-  LOG_DEBUG("end of lofar__fini");
-}
-
-#else
 
 int main(int argc, char **argv)
 {
@@ -670,5 +553,3 @@ int main(int argc, char **argv)
 
   return 0;
 }
-
-#endif
