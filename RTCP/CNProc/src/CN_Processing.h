@@ -108,10 +108,6 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     void		getPersonality();
 #endif
 
-#if defined HAVE_ZOID && defined HAVE_BGL
-    void		initIONode() const;
-#endif
-
 #if defined HAVE_MPI
     void		printSubbandList() const;
 #endif
