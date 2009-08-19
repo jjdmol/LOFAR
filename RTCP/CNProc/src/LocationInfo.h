@@ -14,11 +14,6 @@
 #include <common/bgp_personality.h>
 #endif // HAVE_BGP
 
-#if defined HAVE_BGL
-#include <bglpersonality.h>
-#include <rts.h>
-#endif
-
 
 namespace LOFAR {
 namespace RTCP {
@@ -28,7 +23,7 @@ class LocationInfo
   public:
 	     LocationInfo();
 
-#if defined HAVE_BGP || defined HAVE_BGL
+#if defined HAVE_BGP
     unsigned remapOnTree(unsigned pset, unsigned core) const;
 #endif
 
@@ -38,17 +33,10 @@ class LocationInfo
     unsigned rankInPset() const;
 
   private:
-#if defined HAVE_BGP || defined HAVE_BGL
-    void getPersonality();
-#endif
-
 #if defined HAVE_BGP
-    _BGP_Personality_t    itsPersonality;
-    std::vector<unsigned> itsPsetNumbers;
-#endif
+    void getPersonality();
 
-#if defined HAVE_BGL
-    CNPersonality         itsPersonality;
+    _BGP_Personality_t    itsPersonality;
     std::vector<unsigned> itsPsetNumbers;
 #endif
 

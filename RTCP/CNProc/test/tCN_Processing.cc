@@ -37,11 +37,6 @@
 #include <mpi.h>
 #endif
 
-#if defined HAVE_BGL
-#include <bglpersonality.h>
-#include <rts.h>
-#endif
-
 #include <cmath>
 #include <cstring>
 #include <exception>
@@ -180,18 +175,6 @@ void checkCorrelatorTestPattern(const CorrelatedData *correlatedData, unsigned n
 
 template <typename SAMPLE_TYPE> void doWork()
 {
-#if defined HAVE_BGL
-  // only test on the one or two cores of the first compute node
-
-  struct CNPersonality personality;
-
-  if (rts_get_personality(&personality, sizeof personality) != 0) {
-    std::cerr << "Could not get personality" << std::endl;
-    exit(1);
-  }
-
-  if (personality.getXcoord() == 0 && personality.getYcoord() == 0 && personality.getZcoord() == 0)
-#endif
   {
     unsigned   nrStations	= 64;
     unsigned   nrChannels	= 256;
@@ -280,13 +263,7 @@ int main (int argc, char **argv)
 {
   int retval = 0;
 
-#if defined HAVE_BGL
-  // make std::clog line buffered
-  static char buffer[4096];
-  setvbuf(stderr, buffer, _IOLBF, sizeof buffer);
-#endif
-
-#if defined HAVE_BGP || defined HAVE_BGL
+#if defined HAVE_BGP
   INIT_BGP_LOGGER(argv[0]);
 #endif
 

@@ -1,7 +1,7 @@
 #ifndef LOFAR_CNPROC_PPF_H
 #define LOFAR_CNPROC_PPF_H
 
-#if 0 || !(defined HAVE_BGL || defined HAVE_BGP)
+#if 0 || !defined HAVE_BGP
 #define PPF_C_IMPLEMENTATION
 #endif
 
@@ -14,10 +14,6 @@
 
 #include <boost/multi_array.hpp>
 #include <boost/noncopyable.hpp>
-
-#if defined HAVE_BGL
-#include <rts.h>
-#endif
 
 #if defined HAVE_FFTW3
 #include <fftw3.h>
@@ -73,10 +69,6 @@ template <typename SAMPLE_TYPE> class PPF: boost::noncopyable
     fftwf_plan itsFFTWPlan;
 #elif defined HAVE_FFTW2
     fftw_plan  itsFFTWPlan;
-#endif
-
-#if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION
-    BGL_Mutex  *mutex;
 #endif
 };
 

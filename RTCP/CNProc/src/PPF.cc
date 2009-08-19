@@ -46,10 +46,6 @@ template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsig
   itsFFTinData(boost::extents[nrSamplesPerIntegration][NR_POLARIZATIONS][nrChannels + 4]),
   itsFFToutData(boost::extents[2][NR_POLARIZATIONS][nrChannels])
 #endif
-
-#if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION
-, mutex(rts_allocate_mutex())
-#endif
 {
   if (!powerOfTwo(nrChannels))
     THROW(CNProcException, "nrChannels must be a power of 2");
@@ -118,32 +114,6 @@ template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::~PPF()
 {
   destroy_fft();
 }
-
-
-#if 0 && defined HAVE_BGL
-
-static void FFTtest()
-{
-  fftw_plan plan = fftw_create_plan(256, FFTW_FORWARD, FFTW_ESTIMATE);
-
-  fcomplex in[256], fout[256], sout[256];
-
-  for (unsigned i = 0; i < 256; i ++)
-    in[i] = makefcomplex(2 * i, 2 * i + 1);
-
-  fftw_one(plan, (fftw_complex *) in, (fftw_complex *) fout);
-
-  _fft256(in, sout);
-
-  for (unsigned i = 0; i < 256; i ++) {
-    fcomplex diff = fout[i] / sout[i];
-    LOG_DEBUG_STR(i << " (" << real(fout[i]) << ',' << imag(fout[i]) << ") / (" << real(sout[i]) << ',' << imag(sout[i]) << ") = (" << real(diff) << ',' << imag(diff) << ")");
-  }
-
-  //std::exit(0);
-}
-
-#endif
 
 
 template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::init_fft()
@@ -239,12 +209,6 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
   PPFtimer.start();
 
   double baseFrequency = centerFrequency - (itsNrChannels / 2) * itsChannelBandwidth;
-
-#if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION
-  // PPF puts a lot of pressure on the memory bus.  Avoid that both cores
-  // run simultaneously, since it slows them both.
-  _bgl_mutex_lock(mutex);
-#endif
 
   const unsigned alignmentShift = transposedData->metaData.alignmentShift( stat );
 
@@ -375,10 +339,6 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 				 itsBandPass.correctionFactors());
   }
 #endif // PPF_C_IMPLEMENTATION
-
-#if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION
-  _bgl_mutex_unlock(mutex);
-#endif
 
   PPFtimer.stop();
 }

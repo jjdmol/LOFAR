@@ -2,7 +2,6 @@
 
 pkginclude_HEADERS = Package__Version.h \
 BeamletBuffer.h			\
-CN_Personality.h		\
 InputSection.h			\
 InputThread.h			\
 InputThreadAsm.h		\
@@ -21,7 +20,6 @@ FCNP_ServerStream.h
 
 liblofar_impl_la_SOURCES = $(pkginclude_HEADERS) \
 BeamletBuffer.cc		\
-CN_Personality.cc		\
 ION_main.cc		 	\
 InputSection.cc			\
 InputThread.cc			\

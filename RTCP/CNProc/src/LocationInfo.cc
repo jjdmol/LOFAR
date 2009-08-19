@@ -29,7 +29,7 @@ LocationInfo::LocationInfo()
   itsNrNodes = 1;
 #endif
 
-#if defined HAVE_BGP || defined HAVE_BGL
+#if defined HAVE_BGP
   getPersonality();
 #endif
 }
@@ -79,55 +79,6 @@ void LocationInfo::getPersonality()
   }
 }
 
-#endif
-
-#if defined HAVE_BGL
-
-void LocationInfo::getPersonality()
-{
-  if (rts_get_personality(&itsPersonality, sizeof(itsPersonality)) != 0) {
-    LOG_FATAL("could not get personality");
-    exit(1);
-  }
-  
-  if (itsRank= 0)
-    LOG_DEBUG_STR( "topology = ("
-		 << itsPersonality.getXsize() << ','
-		 << itsPersonality.getYsize() << ','
-		 << itsPersonality.getZsize() << "), torus wraparound = ("
-		 << (itsPersonality.isTorusX() ? 'T' : 'F') << ','
-		 << (itsPersonality.isTorusY() ? 'T' : 'F') << ','
-		 << (itsPersonality.isTorusZ() ? 'T' : 'F') << ')');
-  
-  itsPsetNumbers.resize(itsNrNodes);
-  itsPsetNumber = itsPersonality.getPsetNum();
-  itsPsetNumbers[itsRank] = itsPsetNumber;
-
-  for (unsigned core = 0; core < itsNrNodes; core ++)
-    MPI_Bcast(&itsPsetNumbers[core], 1, MPI_INT, core, MPI_COMM_WORLD);
-
-  itsRankInPset = 0;
-
-  for (unsigned rank = 0; rank < itsRank; rank ++)
-    if (itsPsetNumbers[rank] == itsPsetNumber)
-      ++ itsRankInPset;
-
-  //usleep(100000 * itsRank);
-    
-  if (itsRank == 0) {
-    std::vector<std::vector<unsigned> > cores(itsPersonality.numIONodes());
-
-    for (unsigned rank = 0; rank < itsPsetNumbers.size(); rank ++)
-      cores[itsPsetNumbers[rank]].push_back(rank);
-
-    for (unsigned pset = 0; pset < itsPersonality.numPsets(); pset ++)
-      LOG_DEBUG_STR("LocationInfo :: pset " << pset << " contains cores " << cores[pset]); 
-  }
-}
-
-#endif
-
-#if defined HAVE_BGL || defined HAVE_BGP
 
 unsigned LocationInfo::remapOnTree(unsigned pset, unsigned core) const
 {

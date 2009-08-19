@@ -42,7 +42,7 @@
 #endif
 
 
-#if (defined HAVE_BGP || defined HAVE_BGL)
+#if defined HAVE_BGP
 //#define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
 #define LOG_CONDITION	(itsLocationInfo.rank() == 0)
 //#define LOG_CONDITION	1
@@ -76,7 +76,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsIncoherentStokesIData(0),
   itsStokesDataIntegratedChannels(0),
   itsMode(),
-#if defined HAVE_BGL || defined HAVE_BGP
+#if defined HAVE_BGP
   itsAsyncTranspose(0),
 #endif
   itsPPF(0),
@@ -86,89 +86,12 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsIncoherentStokesI(0),
   itsCorrelator(0)
 {
-
-// #if defined HAVE_BGL
-//   getPersonality();
-// #endif
 }
 
 
 template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::~CN_Processing()
 {
 }
-
-
-#if 0
-  //#if defined HAVE_BGL
-
-struct Location {
-  unsigned pset, rankInPset;
-};
-
-
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::getPersonality()
-{
-  int retval = rts_get_personality(&itsPersonality, sizeof itsPersonality);
-  assert(retval == 0);
-
-  if (itsLocationInfo.rank() == 0)
-    LOG_DEBUG_STR( "topology = ("
-		 << itsPersonality.getXsize() << ','
-		 << itsPersonality.getYsize() << ','
-		 << itsPersonality.getZsize() << "), torus wraparound = ("
-		 << (itsPersonality.isTorusX() ? 'T' : 'F') << ','
-		 << (itsPersonality.isTorusY() ? 'T' : 'F') << ','
-		 << (itsPersonality.isTorusZ() ? 'T' : 'F') << ')');
-
-  itsRankInPset = itsPersonality.rankInPset() + itsPersonality.numNodesInPset() * (itsLocationInfo.rank() / itsPersonality.numComputeNodes());
-
-  Location myLocation = {
-    itsPersonality.getPsetNum(), itsRankInPset
-  };
-
-  std::vector<Location> allLocations(itsLocationInfo.nrNodes());
-
-  MPI_Gather(&myLocation, 2, MPI_INT, &allLocations[0], 2, MPI_INT, 0, MPI_COMM_WORLD);
-
-  if (itsLocationInfo.rank() == 0) {
-    unsigned nrCoresPerPset = itsPersonality.numNodesInPset() * (itsPersonality.isVirtualNodeMode() ? 2 : 1);
-    std::vector<std::vector<unsigned> > cores(itsPersonality.numPsets(), std::vector<unsigned>(nrCoresPerPset));
-
-    for (unsigned rank = 0; rank < allLocations.size(); rank ++)
-      cores[allLocations[rank].pset][allLocations[rank].rankInPset] = rank;
-
-//     for (unsigned pset = 0; pset < itsPersonality.numPsets(); pset ++)
-//       LOG_DEBUG_STR("pset " << pset << " contains cores " << cores[pset]);
-  }
-}
-
-#endif
-
-
-#if 0
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::checkConsistency(Parset *parset) const
-{
-  ASSERT(parset->nrPPFTaps()				 == NR_TAPS);
-  ASSERT(parset->getInt32("Observation.nrPolarisations") == NR_POLARIZATIONS);
-
-#if !defined C_IMPLEMENTATION
-  ASSERT(parset->CNintegrationSteps() % 16		 == 0);
-
-  ASSERT(_FIR_constants_used.nr_taps			 == NR_TAPS);
-  ASSERT(_FIR_constants_used.nr_polarizations		 == NR_POLARIZATIONS);
-#endif
-
-#if defined HAVE_BGL
-  unsigned physicalCoresPerPset = itsPersonality.numNodesInPset();
-
-  if (itsPersonality.isVirtualNodeMode())
-    physicalCoresPerPset *= 2;
-
-  ASSERTSTR(parset->nrCoresPerPset() <= physicalCoresPerPset, "too many cores per pset specified");
-  ASSERTSTR(parset->nrPsets() <= itsPersonality.numPsets(), "not enough psets available");
-#endif
-}
-#endif
 
 
 #if defined HAVE_MPI
@@ -200,11 +123,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 {
   //checkConsistency(parset);	TODO
 
-// #if defined HAVE_BGL
-//   unsigned usedCoresPerPset = configuration.nrUsedCoresPerPset();
-//   unsigned myPset	    = itsPersonality.getPsetNum();
-//   unsigned myCore	    = CN_Mapping::reverseMapCoreOnPset(itsRankInPset, myPset);
-#if defined HAVE_BGL || HAVE_BGP
+#if defined HAVE_BGP
   unsigned usedCoresPerPset = configuration.nrUsedCoresPerPset();
   unsigned myPset	    = itsLocationInfo.psetNumber();
   unsigned myCore	    = CN_Mapping::reverseMapCoreOnPset(itsLocationInfo.rankInPset(), myPset);
@@ -213,6 +132,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   unsigned myPset	    = 0;
   unsigned myCore	    = 0;
 #endif
+
   std::vector<unsigned> &inputPsets  = configuration.inputPsets();
   std::vector<unsigned> &outputPsets = configuration.outputPsets();
   

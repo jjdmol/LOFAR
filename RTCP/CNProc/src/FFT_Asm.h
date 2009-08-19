@@ -21,7 +21,7 @@
 #ifndef LOFAR_CNPROC_FFT_ASM_H
 #define LOFAR_CNPROC_FFT_ASM_H
 
-#if defined HAVE_BGL || defined HAVE_BGP
+#if defined HAVE_BGP
 #include <Common/lofar_complex.h>
 
 namespace LOFAR {

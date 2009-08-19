@@ -21,7 +21,7 @@
 #ifndef LOFAR_CNPROC_CN_PROCESSING_H
 #define LOFAR_CNPROC_CN_PROCESSING_H
 
-#if 0 || !(defined HAVE_BGL || defined HAVE_BGP)
+#if 0 || !defined HAVE_BGP
 #define C_IMPLEMENTATION
 #endif
 
@@ -53,11 +53,6 @@
 #include <Stokes.h>
 
 #include <LocationInfo.h>
-
-#if defined HAVE_BGL
-#include <bglpersonality.h>
-#include <rts.h>
-#endif
 
 #include <string>
 #include <boost/noncopyable.hpp>
@@ -104,10 +99,6 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     void		checkConsistency(Parset *) const;
 #endif
 
-#if defined HAVE_BGL
-    void		getPersonality();
-#endif
-
 #if defined HAVE_MPI
     void		printSubbandList() const;
 #endif
@@ -147,11 +138,6 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     PencilBeams         *itsPencilBeamFormer;
     Stokes              *itsStokes, *itsIncoherentStokesI;
     Correlator		*itsCorrelator;
-
-#if defined HAVE_BGL
-    CNPersonality	itsPersonality;
-    unsigned		itsRankInPset; // core number, not node number!
-#endif
 };
 
 } // namespace RTCP

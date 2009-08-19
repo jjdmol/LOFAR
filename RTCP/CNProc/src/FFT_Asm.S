@@ -1,4 +1,4 @@
-#if defined HAVE_BGL || defined HAVE_BGP
+#if defined HAVE_BGP
 
 _C1:	.long	0x3F800000, 0x3F800000
 _W:	.long	0x3F6C835E, 0xBEC3EF15

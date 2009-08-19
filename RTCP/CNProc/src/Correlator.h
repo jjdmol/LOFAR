@@ -1,7 +1,7 @@
 #ifndef LOFAR_CNPROC_CORRELATOR_H
 #define LOFAR_CNPROC_CORRELATOR_H
 
-#if 0 || !(defined HAVE_BGL || defined HAVE_BGP)
+#if 0 || !defined HAVE_BGP
 #define CORRELATOR_C_IMPLEMENTATION
 #endif
 
