@@ -63,8 +63,8 @@ void RTStorage::preprocess()
   const unsigned seconds    = static_cast<unsigned>(floor(startTime));
   const unsigned samples    = static_cast<unsigned>((startTime - floor(startTime)) * sampleFreq);
 
-  itsSyncedStamp.setStationClockSpeed(static_cast<unsigned>(sampleFreq * 1024));
-  itsSyncedStamp = TimeStamp(seconds, samples);
+  itsStartStamp.setStationClockSpeed(static_cast<unsigned>(sampleFreq * 1024));
+  itsStartStamp = TimeStamp(seconds, samples);
 
   /// Get various observation parameters
   itsNrSubbands = itsPS->nrSubbands();
@@ -184,9 +184,11 @@ void RTStorage::writeLogMessage()
 	       ", rank = " << itsRank <<
 #endif
 	       ", count = " << counter ++ <<
-	       ", timestamp = " << itsSyncedStamp);
+	       ", timestamp = " << itsStartStamp + ((itsPreviousSequenceNumbers[0][0] + 1) *
+						     itsPS->nrSubbandSamples() * 
+						     itsPS->IONintegrationSteps()));
 
-  itsSyncedStamp += itsPS->nrSubbandSamples() * itsPS->IONintegrationSteps();
+  //  itsStartStamp += itsPS->nrSubbandSamples() * itsPS->IONintegrationSteps();
 }
 
 
