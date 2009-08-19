@@ -97,7 +97,7 @@ class SubbandWriter
 
     NSTimer		    itsWriteTimer;
 
-    TimeStamp               itsSyncedStamp;
+    TimeStamp               itsStartStamp;
 
 #ifdef USE_MAC_PI
     bool itsWriteToMAC;

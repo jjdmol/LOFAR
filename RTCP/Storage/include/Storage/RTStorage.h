@@ -51,7 +51,7 @@ namespace LOFAR {
 				       // writes, for O_DIRECT
       Matrix<int>  itsPreviousSequenceNumbers;
       
-      TimeStamp    itsSyncedStamp;
+      TimeStamp    itsStartStamp;
 
       NSTimer itsWriteTimer;
       double  bytesWritten;
