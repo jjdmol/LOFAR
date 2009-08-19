@@ -43,8 +43,8 @@ class OutputSection
   private:
     void			connectToStorage();
 
-    void			droppingData(unsigned subband);
-    void			notDroppingData(unsigned subband);
+    void			droppingData(unsigned subband, unsigned subbandNumber);
+    void			notDroppingData(unsigned subband, unsigned subbandNumber);
 
     std::vector<unsigned>	itsDroppedCount; // [subband]
     std::vector<OutputThread *> itsOutputThreads; // [subband]
@@ -62,7 +62,8 @@ class OutputSection
     std::vector<struct SingleOutput> itsOutputs; // [outputs]
     PipelineOutputSet           *itsPipelineOutputSet;
 
-    unsigned			itsPsetNumber, itsNrComputeCores, itsCurrentComputeCore;
+    unsigned			itsPsetNumber, itsPsetIndex;
+    unsigned			itsNrComputeCores, itsCurrentComputeCore;
     unsigned                    itsNrSubbands;
     unsigned			itsNrSubbandsPerPset;
     const Parset                *itsParset;

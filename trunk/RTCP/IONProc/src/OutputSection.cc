@@ -63,16 +63,15 @@ OutputSection::OutputSection(unsigned psetNumber, const std::vector<Stream *> &s
 
 void OutputSection::connectToStorage()
 {
-  unsigned myPsetIndex       = itsParset->outputPsetIndex(itsPsetNumber);
   unsigned nrPsetsPerStorage = itsParset->nrPsetsPerStorage();
-  unsigned storageHostIndex  = myPsetIndex / nrPsetsPerStorage;
-  //unsigned storagePortIndex  = myPsetIndex % nrPsetsPerStorage;
+  unsigned storageHostIndex  = itsPsetIndex / nrPsetsPerStorage;
+  //unsigned storagePortIndex  = itsPsetIndex % nrPsetsPerStorage;
 
   string   prefix	     = "OLAP.OLAP_Conn.IONProc_Storage";
   string   connectionType    = itsParset->getString(prefix + "_Transport");
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
-    unsigned subbandNumber = myPsetIndex * itsNrSubbandsPerPset + subband;
+    unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
 
     if(subbandNumber < itsNrSubbands) {
 #if 0
@@ -110,37 +109,31 @@ void OutputSection::connectToStorage()
 void OutputSection::preprocess(const Parset *ps)
 {
   itsParset                 = ps;
+  itsPsetIndex		    = ps->outputPsetIndex(itsPsetNumber);
   itsNrComputeCores	    = ps->nrCoresPerPset();
   itsCurrentComputeCore	    = 0;
   itsNrSubbands             = ps->nrSubbands();
   itsNrSubbandsPerPset	    = ps->nrSubbandsPerPset();
   itsRealTime               = ps->realTime();
    
-  itsPipelineOutputSet = new PipelineOutputSet( *ps, hugeMemoryAllocator );
+  itsPipelineOutputSet = new PipelineOutputSet(*ps, hugeMemoryAllocator);
   itsOutputs.resize(itsPipelineOutputSet->size());
-
-  unsigned myPsetIndex       = itsParset->outputPsetIndex(itsPsetNumber);
 
   // since we need itsPipelineOutputSet just for settings, we can extract its data
   // for the tmpSum array
   PipelineOutputSet &pipeline = *itsPipelineOutputSet;
-  for( unsigned o = 0; o < itsOutputs.size(); o++ ) {
-    struct OutputSection::SingleOutput &output = itsOutputs[o];
 
-    output.tmpSum = pipeline[o].extractData();
-  }
+  for (unsigned o = 0; o < itsOutputs.size(); o ++)
+    itsOutputs[o].tmpSum = pipeline[o].extractData();
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
-    unsigned subbandNumber = myPsetIndex * itsNrSubbandsPerPset + subband;
+    unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
 
-    if(subbandNumber < itsNrSubbands) {
-      PipelineOutputSet pipeline( *ps, hugeMemoryAllocator );
+    if (subbandNumber < itsNrSubbands) {
+      PipelineOutputSet pipeline(*ps, hugeMemoryAllocator);
 
-      for( unsigned o = 0; o < itsOutputs.size(); o++ ) {
-	struct OutputSection::SingleOutput &output = itsOutputs[o];
-	
-	output.sums.push_back( pipeline[o].extractData() );
-      }
+      for (unsigned o = 0; o < itsOutputs.size(); o ++)
+	itsOutputs[o].sums.push_back(pipeline[o].extractData());
     }
   }
   
@@ -148,6 +141,7 @@ void OutputSection::preprocess(const Parset *ps)
 
   for (unsigned o = 0; o < itsOutputs.size(); o++) {
     struct OutputSection::SingleOutput &output = itsOutputs[o];
+
     output.nrIntegrationSteps	  = (*itsPipelineOutputSet)[o].IONintegrationSteps();
     output.currentIntegrationStep = 0;
     output.sequenceNumber	  = 0;
@@ -156,11 +150,10 @@ void OutputSection::preprocess(const Parset *ps)
   connectToStorage();
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
-    unsigned subbandNumber = myPsetIndex * itsNrSubbandsPerPset + subband;
+    unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
 
-    if(subbandNumber < itsNrSubbands) {
+    if (subbandNumber < itsNrSubbands)
       itsOutputThreads.push_back(new OutputThread(itsStreamsToStorage[subband], *ps));
-    }
   }
 
 #if defined HAVE_BGP_ION // FIXME: not in preprocess
@@ -170,19 +163,16 @@ void OutputSection::preprocess(const Parset *ps)
 }
 
 
-void OutputSection::droppingData(unsigned subband)
+void OutputSection::droppingData(unsigned subband, unsigned subbandNumber)
 {
-  if (itsDroppedCount[subband] ++ == 0) {
-    unsigned subbandNumber = itsPsetNumber * itsNrSubbandsPerPset + subband;
+  if (itsDroppedCount[subband] ++ == 0)
     LOG_WARN_STR("dropping data for subband " << subbandNumber);
-  }
 }
 
 
-void OutputSection::notDroppingData(unsigned subband)
+void OutputSection::notDroppingData(unsigned subband, unsigned subbandNumber)
 {
   if (itsDroppedCount[subband] > 0) {
-    unsigned subbandNumber = itsPsetNumber * itsNrSubbandsPerPset + subband;
     LOG_WARN_STR("dropped " << itsDroppedCount[subband] << (itsDroppedCount[subband] == 1 ? " integration time for subband " : " integration times for subband ") << subbandNumber);
     itsDroppedCount[subband] = 0;
   }
@@ -194,9 +184,9 @@ void OutputSection::process()
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     // TODO: make sure that there are more free buffers than subbandsPerPset
 
-    unsigned subbandNumber = itsPsetNumber * itsNrSubbandsPerPset + subband;
+    unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
 
-    if(subbandNumber < itsNrSubbands) {
+    if (subbandNumber < itsNrSubbands) {
       // read all outputs of one node at once, so that it becomes free to process the next set of samples
       for (unsigned o = 0; o < itsOutputs.size(); o ++) {
 	struct OutputSection::SingleOutput &output = itsOutputs[o];
@@ -207,10 +197,10 @@ void OutputSection::process()
 	
 	if (lastTime) {
 	  if (itsRealTime && outputThread.freeQueue.empty()) {
-	    droppingData(subband);
+	    droppingData(subband, subbandNumber);
 	    output.tmpSum->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
 	  } else {
-	    notDroppingData(subband);
+	    notDroppingData(subband, subbandNumber);
 	    StreamableData *data = outputThread.freeQueue.remove();
 	    
 	    data->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
@@ -240,7 +230,7 @@ void OutputSection::process()
   for (unsigned o = 0; o < itsOutputs.size(); o ++) {
     struct OutputSection::SingleOutput &output = itsOutputs[o];
 
-    if (++ output.currentIntegrationStep == output.nrIntegrationSteps ) {
+    if (++ output.currentIntegrationStep == output.nrIntegrationSteps) {
       output.currentIntegrationStep = 0;
       output.sequenceNumber++;
     }
@@ -250,17 +240,14 @@ void OutputSection::process()
 
 void OutputSection::postprocess()
 {
-  for (unsigned o = 0; o < itsOutputs.size(); o ++) {
-    struct OutputSection::SingleOutput &output = itsOutputs[o];
-    delete output.tmpSum;
-  }
+  for (unsigned o = 0; o < itsOutputs.size(); o ++)
+    delete itsOutputs[o].tmpSum;
 
-  unsigned myPsetIndex       = itsParset->outputPsetIndex(itsPsetNumber);
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
-    unsigned subbandNumber = myPsetIndex * itsNrSubbandsPerPset + subband;
+    unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
 
-    if(subbandNumber < itsNrSubbands) {
-      notDroppingData(subband); // for final warning message
+    if (subbandNumber < itsNrSubbands) {
+      notDroppingData(subband, subbandNumber); // for final warning message
       itsOutputThreads[subband]->itsSendQueueActivity.append(-1); // -1 indicates that no more messages will be sent
 
       for (unsigned o = 0; o < itsOutputs.size(); o ++) {
