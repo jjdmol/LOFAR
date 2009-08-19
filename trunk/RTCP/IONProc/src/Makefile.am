@@ -36,22 +36,10 @@ WH_DelayCompensation.cc		\
 FCNP_ServerStream.cc		\
 Package__Version.cc
 
-#if HAVE_ZOID
-#lib_LTLIBRARIES			= liblofar_impl.la
-#bin_PROGRAMS			= versionionproc
-#
-#install-exec-local:
-#	ln -sf .libs/liblofar_impl.so.0.0.0 lofar_impl.so
-#	cp lofar_impl.so /bgl/lofar-utils/zoid-test/lib
-#
-#uninstall-local:
-#	rm lofar_impl.so
-#else
 IONProc_SOURCES			= $(liblofar_impl_la_SOURCES)
 IONProc_DEPENDENCIES		= $(LOFAR_DEPEND)
 
 bin_PROGRAMS			= versionionproc IONProc
-#endif
 
 versionionproc_SOURCES      = versionionproc.cc Package__Version.cc 
 versionionproc_DEPENDENCIES = $(LOFAR_DEPEND)
