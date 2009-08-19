@@ -26,11 +26,6 @@
 #include <Common/Timer.h>
 #include <PLC/ACCmain.h>
 
-#if defined HAVE_BGL
-#include <bglpersonality.h>
-#include <rts.h>
-#endif
-
 #include <exception>
 #include <iostream>
 #include <string>
@@ -400,22 +395,7 @@ class AH_Transpose : public TinyApplicationHolder
 
 void AH_Transpose::define(const KeyValueMap &)
 {
-#if defined HAVE_BGL
-  struct CNPersonality personality;
-
-  if (rts_get_personality(&personality, sizeof personality) != 0) {
-    cout << "could not get personality" << endl;
-    exit(1);
-  }
-
-  Position::xSize = personality.getXsize();
-  Position::ySize = personality.getYsize();
-  Position::zSize = personality.getZsize();
-
-  //clog << itsCoreNumber << " at (" << personality.getXcoord() << ',' << personality.getYcoord() << ',' << personality.getZcoord() << "), phase = " << itsPhase << endl;
-#else
   Position::xSize = TH_MPI::getNumberOfNodes();
-#endif
 
   unsigned nrStations = itsParamSet.getUint32("Observation.NStations");
   unsigned nrNodes    = TH_MPI::getNumberOfNodes();

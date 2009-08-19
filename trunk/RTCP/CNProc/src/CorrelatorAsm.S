@@ -18,7 +18,7 @@
 #
 #  $Id$
 
-#if defined HAVE_BGL || defined HAVE_BGP
+#if defined HAVE_BGP
 #define CN_PROCESSING
 #include <Interface/Config.h>
 

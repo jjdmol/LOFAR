@@ -21,12 +21,8 @@
 #ifndef LOFAR_CNPROC_FIR_ASM_H
 #define LOFAR_CNPROC_FIR_ASM_H
 
-#if defined HAVE_BGL || defined HAVE_BGP
+#if defined HAVE_BGP
 #include <Interface/Config.h>
-
-#if defined HAVE_BGL
-#include <rts.h>
-#endif
 
 namespace LOFAR {
 namespace RTCP {
@@ -64,10 +60,6 @@ extern "C" {
     unsigned nr_taps;
     unsigned nr_polarizations;
   } _FIR_constants_used;
-
-#if defined HAVE_BGL
-  void _bgl_mutex_lock(BGL_Mutex *), _bgl_mutex_unlock(BGL_Mutex *);
-#endif
 
   unsigned long long _rdtsc();
 }

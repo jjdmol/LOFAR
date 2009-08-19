@@ -12,10 +12,6 @@
 #include <mpi.h>
 #endif
 
-#if defined HAVE_BGL
-#include <bglpersonality.h>
-#endif
-
 #include <vector>
 
 

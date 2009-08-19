@@ -21,7 +21,7 @@
 #ifndef LOFAR_CNPROC_CORRELATOR_ASM_H
 #define LOFAR_CNPROC_CORRELATOR_ASM_H
 
-#if defined HAVE_BGL || defined HAVE_BGP
+#if defined HAVE_BGP
 #include <Interface/Config.h>
 
 namespace LOFAR {

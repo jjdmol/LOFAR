@@ -21,7 +21,7 @@
 #ifndef LOFAR_IONPROC_INPUT_THREAD_ASM_H
 #define LOFAR_IONPROC_INPUT_THREAD_ASM_H
 
-#if 1 /*defined HAVE_BGL || defined HAVE_BGP*/
+#if defined HAVE_BGP
 
 extern "C" {
   void _copy_pkt_to_bbuffer_32_bytes(void *dst, size_t stride, const void *src, unsigned nrSubbands);

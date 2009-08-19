@@ -197,7 +197,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
     for (unsigned stat2 = nrValidStations % 2 ? 1 : 2; stat2 < nrValidStations; stat2 += 2) {
       unsigned stat1 = 0;
 
-#if defined HAVE_BGL
+#if 0 && defined HAVE_BGP
       // do as many 3x2 blocks as possible
       for (; stat1 + 3 <= stat2; stat1 += 3) { 
 	const unsigned stat10 = map[stat1], stat11 = map[stat1+1], stat12 = map[stat1+2];

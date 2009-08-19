@@ -3,7 +3,7 @@
 
 #define USE_ORIGINAL_FILTER 0
 
-#if 0 || !(defined HAVE_BGL || defined HAVE_BGP)
+#if 0 || !defined HAVE_BGP
 #define FIR_C_IMPLEMENTATION
 #endif
 
