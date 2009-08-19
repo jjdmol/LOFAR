@@ -137,7 +137,12 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, const unsigned beam
     }
   }
 
-//  LOG_ERROR_STR("total Stations in beam = " << nrStationsInBeam << ", valid = " << nrValidStations);
+  if(nrValidStations == 0) {
+    filteredData->flags[destStation].include(0, itsNrSamplesPerIntegration);
+    return;
+  }
+
+  //  LOG_ERROR_STR("total Stations in beam = " << nrStationsInBeam << ", valid = " << nrValidStations);
   const float factor = 1.0 / nrValidStations;
 
   // Now, we just flag everything that is flagged in one of the stations away.
@@ -171,7 +176,7 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, const unsigned beam
 	    // stations in this beam formed station.
 	    filteredData->samples[ch][destStation][time][pol] = sample * factor;
 	  }
-	} else {
+	} else { // data was flagged away
 	  for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 	    filteredData->samples[ch][destStation][time][pol] = makefcomplex(0, 0);
 	  }
