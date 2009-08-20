@@ -28,7 +28,6 @@ set(common_LIB_SRCS
   FileLocator.cc
   hexdump.cc
   KVpair.cc
-  Lock.cc
   lofar_bitset.cc
   LofarLogCout.cc
   LofarLogger.cc
