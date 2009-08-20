@@ -112,7 +112,7 @@ do
       msdirs="$msdirs,$dir"
     fi
     np=`expr $np + 1`
-    if test $np == $nparts; then
+    if test $np = $nparts; then
       break;
     fi
   done
