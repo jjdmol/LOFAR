@@ -56,7 +56,7 @@ fi
 
 # If present, use the package name from the CMakeLists.txt file.
 # It looks like: project (GCFProtocols ...)
-tpkg=`sed -n 's,^[ \t]*project[ \t]*([ \t]*\([^ \t)]\+\).*$,\1,ip' CMakeLists.txt`
+tpkg=`sed -n 's,^[ \t]*[pP][rR][oO][jJ][eE][cC][tT][ \t]*([ \t]*\([^ \t)]*\).*$,\1,p' CMakeLists.txt`
 if test "$tpkg" != ""; then
   pkg=$tpkg
 fi
@@ -64,7 +64,7 @@ fi
 # If the include directory exists, find the include path from the package's
 # CMakeLists.txt. Otherwise header files are in src and <package> is the
 # include path.
-incdir=`sed -n 's,^[ \t]*add_subdirectory[ \t]*([ \t]*\(include/[^)]\+\).*$,\1,ip' CMakeLists.txt`
+incdir=`sed -n 's,^[ \t]*[aA][dD][dD]_[sS][uU][bB][dD][iI][rR][eE][cC][tT][oO][rR][yY][ \t]*([ \t]*\(include/[^)]*\).*$,\1,p' CMakeLists.txt`
 incpath="${incdir##include/}"
 if test "$incdir" = ""; then
   incdir=src
@@ -118,7 +118,7 @@ fi
 # Get the version from the CMakeLists.txt. We'll assume (for the time being)
 # that the project's CMakeLists.txt file contains a line like
 # "lofad_add_package(<name> [version] [DEPENDS <depend> [depend]])
-cvers1=`sed -n 's,^[ \t]*lofar_add_package[ \t]*([ \t]*[^ \t]*[ \t]\+\([0-9.]\+\).*$,\1,ip' CMakeLists.txt`
+cvers1=`sed -n 's,^[ \t]*[lL][oO][fF][aA][rR]_[aA][dD][dD]_[pP][aA][cC][kK][aA][gG][eE][ \t]*([ \t]*[^ \t]*[ \t][ \t]*\([0-9.][0-9.]*\).*$,\1,p' CMakeLists.txt`
 #cvers1=`sed -n 's,^[ \t]*set[ \t]*([ \t]*package_version[ \t]\+\([0-9.]\+\).*$,\1,ip' CMakeLists.txt`
 if [ "$cvers1" != "" ]; then
   cvers=$cvers1
@@ -270,7 +270,7 @@ fi
 # library sources (if present). Get it from the CMakeLists.txt, because
 # sometimes it differs from the package name (e.g. libbbms for BB/MS).
 # Make sure that the first library is taken unless one matches exactly.
-addlib=`sed -n 's,^[ \t]*add_library[ \t]*([ \t]*\(.*\)).*$,\1,ip' src/CMakeLists.txt | head -1`
+addlib=`sed -n 's,^[ \t]*[aA][dD][dD]_[lL][iI][bB][rR][aA][rR][yY][ \t]*([ \t]*\(.*\)).*$,\1,p' src/CMakeLists.txt | head -1`
 if [ "$addlib" != "" ]; then
   libnm=`echo $addlib | sed 's,[ \t].*,,'`
   libsrcs=`echo $addlib | sed 's,^.*\${\(.*\)}.*$,\1,'`
