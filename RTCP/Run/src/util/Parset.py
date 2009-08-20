@@ -195,5 +195,9 @@ class Parset(switch):
     def __getitem__(self, key):
         return self.parameters[key]
 
+    def __delitem__(self, key):
+        # avoid KeyErrors
+        if key in self: del self.parameters[key]
+
     def setdefault(self, key, value):
         self.parameters.setdefault(key,value)	

@@ -255,11 +255,11 @@ class Parset(util.Parset.Parset):
       self['Observation.sampleClock'] = int( mhz )
 
     def setIntegrationTime( self, integrationTime ):
-      self.integrationtime = integrationTime
+      self.integrationtime = float( integrationTime )
 
       # make sure these values will be recalculated in finalise()
-      self.pop('OLAP.IONProc.integrationSteps',0)
-      self.pop('OLAP.CNProc.integrationSteps',0)
+      del self['OLAP.IONProc.integrationSteps']
+      del self['OLAP.CNProc.integrationSteps']
 
     def check( self ):
       """ Check the Parset configuration for inconsistencies. """
