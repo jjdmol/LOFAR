@@ -134,7 +134,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   itsNSamplesPerSec	= ps->nrSubbandSamples();
   itsNrBeams		= ps->nrBeams();
   itsNrPencilBeams	= ps->nrPencilBeams();
-  itsNrPsets		= ps->nrPsets();
+  itsNrOutputPsets	= ps->outputPsets().size();
 
 #if defined DUMP_RAW_DATA
   itsNHistorySamples	= 0;
@@ -328,18 +328,18 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
 
     // create and send all metadata in one "large" message, since initiating a message
     // has significant overhead in FCNP.
-    SubbandMetaData metaData( itsNrPsets, itsNrPencilBeams, 16 );
+    SubbandMetaData metaData(itsNrOutputPsets, itsNrPencilBeams, 16);
     
-    for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
-      unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
+    for (unsigned psetIndex = 0; psetIndex < itsNrOutputPsets; psetIndex ++) {
+      unsigned subband = itsNSubbandsPerPset * psetIndex + subbandBase;
 
-      if(subband < itsNSubbands) {
+      if (subband < itsNSubbands) {
         unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
         unsigned beam     = itsSubbandToBeamMapping[subband];
 
-        if( itsNeedDelays ) {
-          for( unsigned p = 0; p < itsNrPencilBeams; p++ ) {
-            struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(pset)[p];
+        if (itsNeedDelays) {
+          for (unsigned p = 0; p < itsNrPencilBeams; p ++) {
+            struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(psetIndex)[p];
 
 	    beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
 	    beamInfo.delayAfterEnd  = itsFineDelaysAfterEnd[beam][p];
@@ -347,24 +347,25 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
 	    const vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam][p].coord().get();
 	    const vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam][p].coord().get();
 
-	    for( unsigned i = 0; i < 3; i++ ) {
+	    for (unsigned i = 0; i < 3; i ++) {
 	      beamInfo.beamDirectionAtBegin[i]  = beamDirBegin[i];
 	      beamInfo.beamDirectionAfterEnd[i] = beamDirEnd[i];
 	    }
 	  }  
         }  
 
-        metaData.alignmentShift( pset ) = itsBBuffers[rspBoard]->alignmentShift(beam);
-        metaData.setFlags( pset, itsFlags[rspBoard][beam]);
+        metaData.alignmentShift(psetIndex) = itsBBuffers[rspBoard]->alignmentShift(beam);
+        metaData.setFlags(psetIndex, itsFlags[rspBoard][beam]);
       }
     }
 
-    metaData.write( stream );
+    metaData.write(stream);
 
     // now send all subband data
-    for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
-      unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
-      if(subband < itsNSubbands) {
+    for (unsigned psetIndex = 0; psetIndex < itsNrOutputPsets; psetIndex ++) {
+      unsigned subband = itsNSubbandsPerPset * psetIndex + subbandBase;
+
+      if (subband < itsNSubbands) {
 	unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
 	unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
 	unsigned beam     = itsSubbandToBeamMapping[subband];

@@ -227,8 +227,8 @@ template <typename SAMPLE_TYPE> void doWork()
 
     ArenaMapping mapping;
 
-    TransposedData<SAMPLE_TYPE> transposedData(nrStations, nrSamplesToCNProc);
-    FilteredData   filteredData(nrStations, nrChannels, nrSamplesPerIntegration);
+    TransposedData<SAMPLE_TYPE> transposedData(nrStations, nrSamplesToCNProc, 1);
+    FilteredData   filteredData(nrStations, nrChannels, nrSamplesPerIntegration, 1);
     CorrelatedData correlatedData(nrBaselines, nrChannels);
 
     mapping.addDataset( &transposedData, 1 );

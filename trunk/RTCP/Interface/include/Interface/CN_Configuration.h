@@ -40,8 +40,8 @@ class CN_Configuration
   public:
     CN_Configuration() {}
 
-#if ! defined HAVE_BGP_CN
-    CN_Configuration( const Parset &parset );
+#if !defined HAVE_BGP_CN
+    CN_Configuration(const Parset &parset);
 #endif
 
     unsigned		  &nrStations();
@@ -51,12 +51,12 @@ class CN_Configuration
     unsigned		  &nrSamplesPerIntegration();
     unsigned		  &nrSamplesPerStokesIntegration();
     unsigned		  &nrSamplesToCNProc();
-    unsigned		  &nrUsedCoresPerPset();
     unsigned		  &nrSubbandsPerPset();
     bool		  &delayCompensation();
     bool		  &correctBandPass();
     double		  &sampleRate();
     std::vector<unsigned> &inputPsets(), &outputPsets(), &tabList();
+    std::vector<unsigned> &usedCoresInPset();
     std::vector<double>	  &refFreqs();
     PencilCoordinates     &pencilBeams();
     std::vector<double>   &refPhaseCentre();
@@ -69,13 +69,15 @@ class CN_Configuration
     void		  read(Stream *);
     void		  write(Stream *);
 
-    static const unsigned MAX_PSETS       = 64;
-    static const unsigned MAX_SUBBANDS    = 1024;
-    static const unsigned MAX_STATIONS    = 100;
-    static const unsigned MAX_PENCILBEAMS = 256;
+    static const unsigned MAX_PSETS	     = 64;
+    static const unsigned MAX_SUBBANDS	     = 1024;
+    static const unsigned MAX_STATIONS	     = 100;
+    static const unsigned MAX_PENCILBEAMS    = 256;
+    static const unsigned MAX_CORES_PER_PSET = 64;
 
   private:
     std::vector<unsigned> itsInputPsets, itsOutputPsets, itsTabList;
+    std::vector<unsigned> itsUsedCoresInPset;
     std::vector<double>	  itsRefFreqs;
     std::vector<double>	  itsRefPhaseCentre;
     PencilCoordinates     itsPencilBeams;
@@ -99,6 +101,7 @@ class CN_Configuration
       unsigned		  itsInputPsetsSize, itsOutputPsetsSize, itsTabListSize;
       unsigned		  itsRefFreqsSize;
       unsigned		  itsInputPsets[MAX_PSETS], itsOutputPsets[MAX_PSETS], itsTabList[MAX_PSETS];
+      unsigned		  itsUsedCoresInPset[MAX_CORES_PER_PSET];
       double		  itsRefFreqs[MAX_SUBBANDS];
       double              itsRefPhaseCentre[3];
       double              itsPhaseCentres[MAX_STATIONS * 3];
@@ -145,11 +148,6 @@ inline unsigned &CN_Configuration::nrSamplesToCNProc()
   return itsMarshalledData.itsNrSamplesToCNProc;
 }
 
-inline unsigned &CN_Configuration::nrUsedCoresPerPset()
-{
-  return itsMarshalledData.itsNrUsedCoresPerPset;
-}
-
 inline unsigned &CN_Configuration::nrSubbandsPerPset()
 {
   return itsMarshalledData.itsNrSubbandsPerPset;
@@ -183,6 +181,11 @@ inline std::vector<unsigned> &CN_Configuration::outputPsets()
 inline std::vector<unsigned> &CN_Configuration::tabList()
 {
   return itsTabList;
+}
+
+inline std::vector<unsigned> &CN_Configuration::usedCoresInPset()
+{
+  return itsUsedCoresInPset;
 }
 
 inline std::vector<double> & CN_Configuration::refFreqs()

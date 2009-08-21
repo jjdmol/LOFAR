@@ -89,8 +89,8 @@ public:
 	uint32	       maxNetworkDelay() const;
 	uint32         nrPPFTaps() const;
 	uint32         nrChannelsPerSubband() const;
-	uint32         nrPsets() const;
 	uint32         nrCoresPerPset() const;
+	vector<unsigned> usedCoresInPset() const;
 	double         channelWidth() const;
 	bool	       delayCompensation() const;
 	uint32	       nrCalcDelays() const;
@@ -303,14 +303,14 @@ inline uint32 Parset::nrChannelsPerSubband() const
   return getUint32("Observation.channelsPerSubband");
 }
 
-inline uint32 Parset::nrPsets() const
+inline vector<unsigned> Parset::usedCoresInPset() const
 {
-  return getUint32("OLAP.nrPsets");
-}
-
+  return getUint32Vector("OLAP.CNProc.usedCoresInPset");
+}  
+ 
 inline uint32 Parset::nrCoresPerPset() const
 {
-  return getUint32("OLAP.CNProc.coresPerPset");
+  return usedCoresInPset().size();
 }  
  
 inline unsigned Parset::nrSubbands() const
@@ -440,9 +440,10 @@ inline uint32 Parset::nrPencilBeams() const
 inline PencilCoordinates Parset::pencilBeams() const
 {
   // include both the pencil rings and the manually defined pencil beam coordinates
-  PencilRings coordinates( nrPencilRings(), pencilRingSize() );
-  for( unsigned i = 0; i < nrManualPencilBeams(); i++ ) {
-    coordinates += PencilCoord3D( getManualPencilBeam( i ) );
+  PencilRings coordinates(nrPencilRings(), pencilRingSize());
+
+  for (unsigned i = 0; i < nrManualPencilBeams(); i ++) {
+    coordinates += PencilCoord3D(getManualPencilBeam(i));
   }
 
   return coordinates;
