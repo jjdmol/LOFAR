@@ -33,7 +33,7 @@ using namespace blitz;
 
 RegisterState::State RegisterState::get(int i) const
 {
-	ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
+	ASSERTSTR(i >= 0 && i < m_state.extent(blitz::firstDim), "i=" << i << ", firstDim=" << m_state.extent(blitz::firstDim));
 	return m_state(i);
 }
 
@@ -93,7 +93,7 @@ void RegisterState::tran(State source, State target, int i)
 		lb = 0;
 		ub = m_state.extent(blitz::firstDim);
 	} else {
-		ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
+		ASSERTSTR(i >= 0 && i < m_state.extent(blitz::firstDim), "i=" << i << ", firstDim=" << m_state.extent(blitz::firstDim));
 		lb = i;
 		ub = i + 1;
 	}
@@ -118,7 +118,7 @@ void RegisterState::clear(int i)
 		lb = 0;
 		ub = m_state.extent(blitz::firstDim);
 	} else {
-		ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
+		ASSERTSTR(i >= 0 && i < m_state.extent(blitz::firstDim), "i=" << i << ", firstDim=" << m_state.extent(blitz::firstDim));
 		lb = i;
 		ub = i + 1;
 	}
@@ -150,7 +150,7 @@ void RegisterState::write(int i)
 		lb = 0;
 		ub = m_state.extent(blitz::firstDim);
 	} else {
-		ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
+		ASSERTSTR(i >= 0 && i < m_state.extent(blitz::firstDim), "i=" << i << ", firstDim=" << m_state.extent(blitz::firstDim));
 		lb = i;
 		ub = i + 1;
 	}
@@ -170,7 +170,7 @@ void RegisterState::reset(int i)
 		return;
 	}
 
-	ASSERT(i >= 0 && i < m_state.extent(blitz::firstDim));
+	ASSERTSTR(i >= 0 && i < m_state.extent(blitz::firstDim), "i=" << i << ", firstDim=" << m_state.extent(blitz::firstDim));
 	m_state(i) = IDLE;
 	m_error(i) = 0;
 }
