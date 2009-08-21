@@ -60,26 +60,6 @@ FCNP_ServerStream::~FCNP_ServerStream()
 }
 
 
-#if 0
-void FCNP_ServerStream::createAllFCNP_ServerStreams(unsigned nrCoresPerPset)
-{
-  allStreams.resize(nrCoresPerPset);
-
-  for (unsigned core = 0; core < nrCoresPerPset; core ++)
-    allStreams[core] = new FCNP_ServerStream(core);
-}
-
-
-void FCNP_ServerStream::deleteAllFCNP_ServerStreams()
-{
-  for (unsigned core = 0; core < allStreams.size(); core ++)
-    delete allStreams[core];
-
-  allStreams.clear();
-}
-#endif
-
-
 void FCNP_ServerStream::write(const void *buf, size_t size)
 {
   //LOG_DEBUG_STR("FCNP_ServerStream::write(" << std::hex << buf << ", " << std::dec << size << ") to " << itsCore);

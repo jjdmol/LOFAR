@@ -94,8 +94,7 @@ void terminate_with_backtrace()
 
 
 static char	   **global_argv;
-static std::string blockID;
-static unsigned    myPsetNumber, nrPsets, nrCoresPerPset, nrRuns;
+static unsigned    myPsetNumber, nrRuns;
 static std::vector<Stream *> clientStreams, allClientStreams;
 static const unsigned nrCNcoresInPset = 64; // TODO: how to figure out the number of CN cores?
 
@@ -106,11 +105,6 @@ static bool	   fcnp_inited;
 
 static void checkParset(const Parset &parset)
 {
-  if (parset.nrPsets() > nrPsets) {
-    LOG_ERROR_STR("needs " << parset.nrPsets() << " psets; only " << nrPsets << " available");
-    exit(1);
-  }
-
   if (parset.nrCoresPerPset() > nrCNcoresInPset) {
     LOG_ERROR_STR("nrCoresPerPset (" << parset.nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
     exit(1);
@@ -146,12 +140,14 @@ static void createAllClientStreams(const std::string &streamType)
 }
 
 
-static void createClientStreams(unsigned nrClients)
+static void createClientStreams(const Parset &parset)
 {
-  clientStreams.resize(nrClients);
+  std::vector<unsigned> usedCoresInPset = parset.usedCoresInPset();
 
-  for (unsigned core = 0; core < nrClients; core ++)
-    clientStreams[core] = allClientStreams[CN_Mapping::mapCoreOnPset(core, myPsetNumber)];
+  clientStreams.resize(usedCoresInPset.size());
+
+  for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
+    clientStreams[core] = allClientStreams[CN_Mapping::mapCoreOnPset(usedCoresInPset[core], myPsetNumber)];
 }
 
 
@@ -171,38 +167,30 @@ static void deleteAllClientStreams()
 
 static void configureCNs(const Parset &parset)
 {
-  CN_Command	    command(CN_Command::PREPROCESS);
-  CN_Configuration  configuration(parset);
-  std::stringstream logStr;
+  CN_Command	   command(CN_Command::PREPROCESS);
+  CN_Configuration configuration(parset);
   
-  logStr << "configuring " << nrCoresPerPset << " cores ...";
+  LOG_DEBUG_STR("configuring cores " << parset.usedCoresInPset());
 
-  for (unsigned core = 0; core < nrCoresPerPset; core ++) {
-    logStr << ' ' << core;
+  for (unsigned core = 0; core < clientStreams.size(); core ++) {
     command.write(clientStreams[core]);
     configuration.write(clientStreams[core]);
   }
-
-  logStr << " done";
   
-  LOG_DEBUG(logStr.str());
+  LOG_DEBUG_STR("configuring cores " << parset.usedCoresInPset() << " done");
 }
 
 
-static void unconfigureCNs()
+static void unconfigureCNs(const Parset &parset)
 {
-  std::stringstream logStr;
-  logStr << "unconfiguring " << nrCoresPerPset << " cores ...";
-
   CN_Command command(CN_Command::POSTPROCESS);
 
-  for (unsigned core = 0; core < nrCoresPerPset; core ++) {
-    logStr << ' ' << core;
-    command.write(clientStreams[core]);
-  }
+  LOG_DEBUG_STR("unconfiguring cores " << parset.usedCoresInPset());
 
-  logStr << " done";
-  LOG_DEBUG(logStr.str());
+  for (unsigned core = 0; core < clientStreams.size(); core ++)
+    command.write(clientStreams[core]);
+
+  LOG_DEBUG_STR("unconfiguring cores " << parset.usedCoresInPset() << " done");
 }
 
 
@@ -396,7 +384,7 @@ void *master_thread(void *)
     // OLAP.parset is deprecated, as everything will be in the parset given on the command line
     try {
       parset.adoptFile("OLAP.parset");
-    } catch( APSException &ex ) {
+    } catch (APSException &ex) {
       LOG_WARN_STR("could not read OLAP.parset: " << ex);
     }
 
@@ -408,10 +396,9 @@ void *master_thread(void *)
     bool hasInputSection  = parset.inputPsetIndex(myPsetNumber) >= 0;
     bool hasOutputSection = parset.outputPsetIndex(myPsetNumber) >= 0;
 
-    nrCoresPerPset = parset.nrCoresPerPset();
     string streamType = parset.getTransportType("OLAP.OLAP_Conn.IONProc_CNProc");
     createAllClientStreams(streamType);
-    createClientStreams(nrCoresPerPset);
+    createClientStreams(parset);
 
     configureCNs(parset);
 
@@ -434,7 +421,7 @@ void *master_thread(void *)
       for (int count = nrRuns * parset.nrSubbandsPerPset(); -- count >= 0;) {
 	command.write(clientStreams[core]);
 
-	if (++ core == nrCoresPerPset)
+	if (++ core == parset.nrCoresPerPset())
 	  core = 0;
       }
     }
@@ -448,7 +435,7 @@ void *master_thread(void *)
       LOG_DEBUG("lofar__fini: input section joined");
     }
 
-    unconfigureCNs();
+    unconfigureCNs(parset);
     stopCNs();
 
     if (hasOutputSection) {
@@ -491,56 +478,35 @@ extern "C"
 }
 
 
-static void tryToGetPersonality()
-{
-  myPsetNumber = 0;
-  nrPsets      = 1;
-
-  try {
-    ParameterSet personality("/proc/personality.sh");
-
-    try {
-      myPsetNumber = personality.getUint32("BG_PSETNUM");
-      nrPsets	   = personality.getUint32("BG_NUMPSETS");
-      blockID	   = personality.getString("BG_BLOCKID");
-    } catch (...) {
-    }
-  } catch (...) {
-  }
-}
-
-
 int main(int argc, char **argv)
 {
 #if !defined CATCH_EXCEPTIONS
   std::set_terminate(terminate_with_backtrace);
 #endif
   
-  tryToGetPersonality();
+#if defined HAVE_MPI
+  MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, reinterpret_cast<int *>(&myPsetNumber));
+#endif
+
+#if defined HAVE_MPI && defined HAVE_BGP_ION
+  ParameterSet personality("/proc/personality.sh");
+  unsigned realPsetNumber = personality.getUint32("BG_PSETNUM");
+
+  if (myPsetNumber != realPsetNumber) {
+    LOG_ERROR_STR("myPsetNumber (" << myPsetNumber << ") != realPsetNumber (" << realPsetNumber << ')');
+    exit(1);
+  }
+#endif
   
   std::stringstream sysInfo;
   sysInfo << basename(argv[0]) << "@" << myPsetNumber;
  
   INIT_BGP_LOGGER(sysInfo.str());
 
-#if defined HAVE_MPI
-  MPI_Init(&argc, &argv);
-
-  int myRank;
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-
-  if (static_cast<unsigned>(myRank) != myPsetNumber) {
-    LOG_ERROR_STR("myRank (" << myRank << ") != myPsetNumber (" << myPsetNumber << ')');
-    exit(1);
-  }
-#endif
-  
   global_argv = argv;
   
-  if (argc == 3) {
-    LOG_WARN("specifying nrRuns is deprecated --- ignored");
-  } else if (argc != 2) {
+  if (argc < 2) {
     LOG_ERROR("unexpected number of arguments");
     exit(1);
   }

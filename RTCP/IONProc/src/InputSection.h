@@ -90,7 +90,7 @@ template <typename SAMPLE_TYPE> class InputSection {
     Matrix<double>		 itsDelaysAfterEnd;
     Matrix<AMC::Direction>	 itsBeamDirectionsAtBegin;
     Matrix<AMC::Direction>	 itsBeamDirectionsAfterEnd;
-    unsigned			 itsNrPsets;
+    unsigned			 itsNrOutputPsets;
     
     unsigned			 itsMaxNetworkDelay; // in samples
     unsigned                     itsNSubbands;

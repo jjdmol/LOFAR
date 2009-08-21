@@ -70,34 +70,6 @@ class Section(object):
     def isRunSuccess(self):
         return self.runJob.isSuccess()
 	
-    def inOutPsets(self, parset):
-        nSubbands = parset.getNrSubbands()
-        nSubbandsPerPset = parset.getSubbandsPerPset()
-	nPsets = parset.getNrPsets()
-
-        self.noProcesses = int(nPsets) * parset.getInt32('OLAP.CNProc.coresPerPset')
-        self.noProcesses = 256 # The calculation above is not correct, because some ranks aren't used
-
-	stations = parset.getStations()
-
-	interfaces = IONodes.get(self.partition)
-
-	#inputPsets = [interfaces.index(i) for i in inputNodes]
-	inputPsets = [station.getPset(self.partition) for station in stations]
-	outputPsets = range(nPsets)
-
-	if nPsets > len(interfaces):
-	  raise Exception('need too many output psets --- increase nrSubbandsPerPset')
-	
-	if not parset.isDefined('OLAP.CNProc.inputPsets') and not parset.isDefined('OLAP.CNProc.outputPsets'):
-	    print 'interfaces = ', interfaces
-	    print 'inputPsets = ', inputPsets
-	    print 'outputPsets = ', outputPsets
-
-	parset['OLAP.CNProc.inputPsets']  = inputPsets
-	parset['OLAP.CNProc.outputPsets'] = outputPsets
-	parset.checkRspBoardList()
-	
     def getNoProcesses(self):
 	return self.noProcesses
 
@@ -124,6 +96,7 @@ class StorageSection(Section):
         self.parset['OLAP.OLAP_Conn.IONProc_Storage_ServerHosts'] = '[' + ','.join(storageIPs) + ']'
 
     def run(self, runlog, timeOut, runCmd = None):
+	#print 'skipped run'
         Section.run(self, runlog, timeOut, runCmd)
 
 
@@ -138,7 +111,7 @@ class IONProcSection(Section):
 			 parsetfile = parsetfile, \
 			 buildvar = 'gnubgp_ion')
 	
-        self.inOutPsets(parset)
+	self.noProcesses = 1	# FIXME
 	
     def run(self, runlog, timeOut, runCmd = None):
         Section.run(self, runlog, timeOut, runCmd)        
@@ -148,7 +121,7 @@ class CNProcSection(Section):
     def __init__(self, parset, host, partition, workingDir, parsetfile):
         self.partition = partition
 
-        self.inOutPsets(parset)
+	self.noProcesses = 1	# FIXME
 
         Section.__init__(self, parset, \
                          'RTCP/CNProc', \

@@ -37,17 +37,10 @@ class FCNP_ServerStream : public Stream
 		 FCNP_ServerStream(unsigned core);
     virtual	 ~FCNP_ServerStream();
 
-#if 0
-    static  void createAllTH_FCNP_Servers(unsigned nrCoresPerPset);
-    static  void deleteAllTH_FCNP_Servers();
-#endif
-
     virtual void read(void *ptr, size_t size);
     virtual void write(const void *ptr, size_t size);
 
   private:
-    // create via createAllTH_FCNP_Servers(...)
-
     static std::vector<FCNP_ServerStream *> allStreams;
 
   private:

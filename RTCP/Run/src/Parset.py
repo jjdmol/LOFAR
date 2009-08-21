@@ -38,7 +38,9 @@ class Parset(LOFAR_Parset.Parset):
 	self.setClock(clock)
 	self.setIntegrationTime(integrationTime) 
 	self.setPartition(partition)
-	self.setNrPsets()
+	self.setStations(stationList)
+	self.setUsedCoresInPset()
+	self.setInputOutputPsets()
 	self.setSubbandsPerPset()
 	self.setPsetsPerStorage()
 	self.setStorageNodeList()
@@ -49,7 +51,6 @@ class Parset(LOFAR_Parset.Parset):
 	# read the runtime (optional start in utc and the length of the measurement)
 	self.setInterval(starttime, runtime)
 
-	self.setStations(stationList)
 	self.setObservePulsar(ObsPulsar)
 	self.checkBeamformList()
 	self.setTiedArrayStations()
@@ -190,13 +191,14 @@ class Parset(LOFAR_Parset.Parset):
 
 
     def setIntegrationTime(self, integrationTime):
-	maxCnIntegrationTime = 1.2 # seconds
-	ionIntegrationSteps = int(math.ceil(integrationTime / maxCnIntegrationTime))
-	cnIntegrationTime = integrationTime / ionIntegrationSteps
-	nrSamplesPerSecond = self['Observation.sampleClock'] * 1e6 / 1024 / int(self['Observation.channelsPerSubband'])
-	cnIntegrationSteps = int(round(nrSamplesPerSecond * cnIntegrationTime / 16)) * 16
-	self['OLAP.IONProc.integrationSteps'] = ionIntegrationSteps
-	self['OLAP.CNProc.integrationSteps']  = cnIntegrationSteps
+	if not self.isDefined('OLAP.IONProc.integrationSteps') and not self.isDefined('OLAP.CNProc.integrationSteps'):
+	  maxCnIntegrationTime = 1.2 # seconds
+	  ionIntegrationSteps = int(math.ceil(integrationTime / maxCnIntegrationTime))
+	  cnIntegrationTime = integrationTime / ionIntegrationSteps
+	  nrSamplesPerSecond = self['Observation.sampleClock'] * 1e6 / 1024 / int(self['Observation.channelsPerSubband'])
+	  cnIntegrationSteps = int(round(nrSamplesPerSecond * cnIntegrationTime / 16)) * 16
+	  self['OLAP.IONProc.integrationSteps'] = ionIntegrationSteps
+	  self['OLAP.CNProc.integrationSteps']  = cnIntegrationSteps
 
 
     def setMSName(self, msName):
@@ -207,29 +209,46 @@ class Parset(LOFAR_Parset.Parset):
         return self['Observation.MSNameMask']
 
 
-    def setNrPsets(self):
-	if self.isDefined('OLAP.nrPsets'): return
-	self['OLAP.nrPsets'] = len(IONodes.get(self.getPartition()))
-
-
     def getNrPsets(self):
-        return self['OLAP.nrPsets']
+        return len(IONodes.get(self.getPartition()))
+
+
+    def setUsedCoresInPset(self):
+	if not self.isDefined('OLAP.CNProc.usedCoresInPset'):
+	  nrCoresPerPset = int(self['OLAP.CNProc.coresPerPset']) # TODO: find out #usedCores differently
+	  self['OLAP.CNProc.usedCoresInPset'] = range(nrCoresPerPset)
+
+	print 'Used cores in Pset: ' + str(self['OLAP.CNProc.usedCoresInPset'])
+
+
+    def setInputOutputPsets(self):
+	interfaces = IONodes.get(self.partition)
+
+	if not self.isDefined('OLAP.CNProc.inputPsets'):
+	  stations = self.getStations()
+	  inputPsets = [station.getPset(self.partition) for station in stations]
+	  self['OLAP.CNProc.inputPsets']  = inputPsets
     
+	if not self.isDefined('OLAP.CNProc.outputPsets'):
+	  outputPsets = range(self.getNrPsets())
+	  self['OLAP.CNProc.outputPsets'] = outputPsets
+
+	print 'interfaces = ', interfaces
+	print 'inputPsets = ', self['OLAP.CNProc.inputPsets']
+	print 'outputPsets = ', self['OLAP.CNProc.outputPsets']
+
+	self.checkRspBoardList()
+
 
     def getSubbandsPerPset(self):
 	return self['OLAP.subbandsPerPset']
 
 
     def setSubbandsPerPset(self):
-	if self.isDefined('OLAP.subbandsPerPset'): return
-
-	if self.getNrSubbands() == 1 : self['OLAP.subbandsPerPset'] = 1
-	else:
-		nrPsets = self.getNrPsets()
-		if self.getNrSubbands() % nrPsets == 0:
-		    self['OLAP.subbandsPerPset'] = self.getNrSubbands() / nrPsets
-		else:
-		    self['OLAP.subbandsPerPset'] = (self.getNrSubbands() / nrPsets) + 1
+	if not self.isDefined('OLAP.subbandsPerPset'):
+	  nrOutputPsets = len(self['OLAP.CNProc.outputPsets'])
+	  nrSubbands = self.getNrSubbands()
+	  self['OLAP.subbandsPerPset'] = (nrSubbands + nrOutputPsets - 1) / nrOutputPsets
 
 
     def getNrUsedStorageNodes(self):
@@ -241,16 +260,10 @@ class Parset(LOFAR_Parset.Parset):
 
 
     def setPsetsPerStorage(self):
-        if self.isDefined('OLAP.psetsPerStorage'): return self['OLAP.psetsPerStorage']
-
-	if self.getNrSubbands() == 1 : self['OLAP.psetsPerStorage'] = 1
-	else:
-		nrPSets = self.getNrPsets()
-		nrStorageNodes = self.getNrUsedStorageNodes()
-		if nrPSets % nrStorageNodes == 0:
-			self['OLAP.psetsPerStorage'] = nrPSets/nrStorageNodes
-		else:
-			self['OLAP.psetsPerStorage'] = (nrPSets/nrStorageNodes) + 1
+        if not self.isDefined('OLAP.psetsPerStorage'):
+	  nrOutputPsets = len(self['OLAP.CNProc.outputPsets'])
+	  nrStorageNodes = self.getNrUsedStorageNodes()
+	  self['OLAP.psetsPerStorage'] = (nrOutputPsets + nrStorageNodes - 1) / nrStorageNodes
 
 
     def getNrSlotsInFrame(self):
@@ -311,7 +324,7 @@ class Parset(LOFAR_Parset.Parset):
 		    if sp == s.getName():
 		        found = True
 		        break
-		if not (found):
+		if not found:
 		    print 'invalid value: Observation.Beamformer[%d].stationList = ' % index + sp + ', or the station isn\'t found in the stationList.'
 		    sys.exit(0)
 	    index +=1

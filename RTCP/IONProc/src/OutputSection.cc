@@ -63,17 +63,13 @@ OutputSection::OutputSection(unsigned psetNumber, const std::vector<Stream *> &s
 
 void OutputSection::connectToStorage()
 {
-  unsigned nrPsetsPerStorage = itsParset->nrPsetsPerStorage();
-  unsigned storageHostIndex  = itsPsetIndex / nrPsetsPerStorage;
-  //unsigned storagePortIndex  = itsPsetIndex % nrPsetsPerStorage;
-
-  string   prefix	     = "OLAP.OLAP_Conn.IONProc_Storage";
-  string   connectionType    = itsParset->getString(prefix + "_Transport");
+  string prefix		= "OLAP.OLAP_Conn.IONProc_Storage";
+  string connectionType = itsParset->getString(prefix + "_Transport");
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
 
-    if(subbandNumber < itsNrSubbands) {
+    if (subbandNumber < itsNrSubbands) {
 #if 0
       if (itsPsetNumber != 31)
 	connectionType = string("NULL");
@@ -92,7 +88,6 @@ void OutputSection::connectToStorage()
 	LOG_DEBUG_STR("subband " << subbandNumber << " written to tcp:" << server << ':' << port << " connect DONE");
       } else if (connectionType == "FILE") {
 	std::string filename = itsParset->getString(prefix + "_BaseFileName") + '.' +
-	  boost::lexical_cast<std::string>(storageHostIndex) + '.' +
 	  boost::lexical_cast<std::string>(subbandNumber);
 	//boost::lexical_cast<std::string>(storagePortIndex);
 	

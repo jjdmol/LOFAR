@@ -29,7 +29,7 @@ namespace RTCP {
 
 #if ! defined HAVE_BGP_CN
 
-CN_Configuration::CN_Configuration( const Parset &parset )
+CN_Configuration::CN_Configuration(const Parset &parset)
 {
   nrStations()              = parset.nrStations();
   nrBitsPerSample()	    = parset.nrBitsPerSample();
@@ -38,14 +38,14 @@ CN_Configuration::CN_Configuration( const Parset &parset )
   nrSamplesPerIntegration() = parset.CNintegrationSteps();
   nrSamplesPerStokesIntegration() = parset.stokesIntegrationSteps();
   nrSamplesToCNProc()       = parset.nrSamplesToCNProc();
-  nrUsedCoresPerPset()      = parset.nrCoresPerPset();
   nrSubbandsPerPset()       = parset.nrSubbandsPerPset();
   delayCompensation()       = parset.delayCompensation();
   correctBandPass()  	    = parset.correctBandPass();
   sampleRate()              = parset.sampleRate();
   inputPsets()              = parset.inputPsets();
-  outputPsets()             = parset.getUint32Vector("OLAP.CNProc.outputPsets");
-  tabList()                 = parset.getUint32Vector("OLAP.CNProc.tabList");
+  outputPsets()             = parset.outputPsets();
+  tabList()                 = parset.tabList();
+  usedCoresInPset()	    = parset.usedCoresInPset();
   refFreqs()                = parset.subbandToFrequencyMapping();
   pencilBeams()             = parset.pencilBeams();
   refPhaseCentre()          = parset.getRefPhaseCentres();
@@ -58,14 +58,12 @@ CN_Configuration::CN_Configuration( const Parset &parset )
 
   // The order of the stations is the order in which they are defined in inputPsets and parset.getStationNamesAndRSPboardNumbers.
   // The CNProc/src/AsyncTranspose module should honor the same order.
-  itsPhaseCentres.resize( parset.nrStations(), 3 );
+  itsPhaseCentres.resize(parset.nrStations(), 3);
   std::vector<double> positions = parset.positions();
 
-  for( unsigned stat = 0; stat < parset.nrStations(); stat++ ) {
-    for( unsigned dim = 0; dim < 3; dim++ ) {
+  for (unsigned stat = 0; stat < parset.nrStations(); stat ++)
+    for (unsigned dim = 0; dim < 3; dim ++)
       itsPhaseCentres[stat][dim] = positions[stat*3+dim];
-    }
-  }
 }
 
 #endif
@@ -85,6 +83,9 @@ void CN_Configuration::read(Stream *str)
 
   itsTabList.resize(itsMarshalledData.itsTabListSize);
   memcpy(&itsTabList[0], itsMarshalledData.itsTabList, itsMarshalledData.itsTabListSize * sizeof(unsigned));
+
+  itsUsedCoresInPset.resize(itsMarshalledData.itsNrUsedCoresPerPset);
+  memcpy(&itsUsedCoresInPset[0], itsMarshalledData.itsUsedCoresInPset, itsMarshalledData.itsNrUsedCoresPerPset * sizeof(unsigned));
 
   itsRefFreqs.resize(itsMarshalledData.itsRefFreqsSize);
   memcpy(&itsRefFreqs[0], itsMarshalledData.itsRefFreqs, itsMarshalledData.itsRefFreqsSize * sizeof(double));
@@ -112,6 +113,10 @@ void CN_Configuration::write(Stream *str)
   itsMarshalledData.itsTabListSize = itsTabList.size();
   assert(itsMarshalledData.itsTabListSize <= MAX_PSETS);
   memcpy(itsMarshalledData.itsTabList, &itsTabList[0], itsMarshalledData.itsTabListSize * sizeof(unsigned));
+
+  itsMarshalledData.itsNrUsedCoresPerPset = itsUsedCoresInPset.size();
+  assert(itsMarshalledData.itsNrUsedCoresPerPset <= MAX_CORES_PER_PSET);
+  memcpy(itsMarshalledData.itsUsedCoresInPset, &itsUsedCoresInPset[0], itsMarshalledData.itsNrUsedCoresPerPset * sizeof(unsigned));
 
   itsMarshalledData.itsRefFreqsSize = itsRefFreqs.size();
   assert(itsMarshalledData.itsRefFreqsSize <= MAX_SUBBANDS);
