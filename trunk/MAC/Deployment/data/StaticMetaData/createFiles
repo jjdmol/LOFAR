@@ -300,7 +300,7 @@ def createAntennaArraysFile(resultDir, stationName, dataDir):
     """
     # Copy file <stationname>-antennaarrays.conf> to
     # /opt/lofar/etc/AntennaArray.conf
-    srcFile = dataDir + "/" + stationName.lower() + "-antennaarrays.conf"
+    srcFile = dataDir + "/" + stationName.upper() + "-AntennaArrays.conf"
     if (os.access(srcFile,os.F_OK) == False):
         print "Cannot find or open file ",srcFile," for creating AntennaArrays.conf"
         print "Will create AntennaArrays_default.conf instead"
@@ -322,7 +322,7 @@ def createCableDelaysFile(resultDir, stationName, dataDir):
     # /opt/lofar/etc/CableDelays.conf
     
     # stationName is in lowercase!
-    srcFile = dataDir + "/" + stationName.lower() + "-cabledelays.conf"
+    srcFile = dataDir + "/" + stationName.upper() + "-CableDelays.conf"
     if (os.access(srcFile,os.F_OK) == False):
         print "Cannot find or open file ",srcFile," for creating CableDelays.conf"
         print "Will create CableDelays_default.conf instead"
@@ -343,7 +343,7 @@ def createHBADeltasFile(resultDir, stationName, dataDir):
     # /opt/lofar/etc/HBADeltas.conf
     
     # stationName is in lowercase!
-    srcFile = dataDir + "/" + stationName.lower() + "-hbadeltas.conf"
+    srcFile = dataDir + "/" + stationName.upper() + "-HBADeltas.conf"
     if (os.access(srcFile,os.F_OK) == False):
         print "Cannot find or open file ",srcFile," for creating HBADeltas.conf"
         print "Will create HBADeltas_default.conf instead"
