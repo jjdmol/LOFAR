@@ -29,5 +29,21 @@ namespace LOFAR
 namespace BBS
 {
 
+ConditionNumber::ConditionNumber(const Expr<JonesMatrix>::ConstPtr &arg0)
+    :   BasicUnaryExpr<JonesMatrix, Scalar>(arg0)
+{
+}
+
+const Scalar::view ConditionNumber::evaluateImpl(const Request &request,
+    const JonesMatrix::view &arg0) const
+{
+    Matrix norm00 = abs(arg0(0, 0));
+    Matrix norm11 = abs(arg0(1, 1));
+
+    Scalar::view result;
+    result.assign(max(norm00, norm11) / max(min(norm00, norm11), 1e-9));
+    return result;
+}
+
 } //# namespace BBS
 } //# namespace LOFAR

@@ -27,7 +27,6 @@
 // Baseline UVW coordinates in wavelengths.
 
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ExprResult.h>
 #include <BBSKernel/VisData.h>
 
 namespace LOFAR
@@ -51,7 +50,7 @@ private:
     virtual ValueSet::ConstPtr evaluateImpl(const Request &request) const;
 
     const VisData::Ptr  itsChunk;
-    baseline_t              itsBaseline;
+    baseline_t          itsBaseline;
 };
 
 // @}

@@ -463,9 +463,6 @@ namespace LOFAR
 
       LOG_DEBUG_STR("Command: " << command);
 
-      ASSERTSTR(itsChunk, "No visibility data available.");
-      ASSERTSTR(itsModel, "No model available.");
-
       // Parse visibility selection.
       vector<baseline_t> baselines;
       vector<string> products;
@@ -488,7 +485,7 @@ namespace LOFAR
       // Compute simulated visibilities.
       Evaluator evaluator(itsChunk, itsModel);
       evaluator.setSelection(baselines, products);
-      evaluator.process(Evaluator::ASSIGN);
+      evaluator.process();
 
       // De-initialize model.
       itsModel->clear();
@@ -506,39 +503,40 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-//      LOG_DEBUG_STR("Command: " << command);
+      LOG_DEBUG_STR("Command: " << command);
 
-//      // Parse visibility selection.
-//      vector<baseline_t> baselines;
-//      vector<string> products;
+      // Parse visibility selection.
+      vector<baseline_t> baselines;
+      vector<string> products;
 
-//      if(!(parseBaselineSelection(baselines, command)
-//        && parseProductSelection(products, command))) {
-//        return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
-//          " selection.");
-//      }
+      if(!(parseBaselineSelection(baselines, command)
+        && parseProductSelection(products, command))) {
+        return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
+          " selection.");
+      }
 
-//      // Initialize model.
-//      try {
-//        itsModel->makeForwardExpr(command.modelConfig(), itsChunk, baselines);
-//      } catch(Exception &ex) {
-//        return CommandResult(CommandResult::ERROR, "Unable to initialize"
-//            " model.");
-//      }
+      // Initialize model.
+      try {
+        itsModel->makeForwardExpr(command.modelConfig(), itsChunk, baselines);
+      } catch(Exception &ex) {
+        return CommandResult(CommandResult::ERROR, "Unable to initialize"
+            " model.");
+      }
 
-//      // Compute simulated visibilities.
-//      Evaluator evaluator(itsChunk, itsModel);
-//      evaluator.setSelection(baselines, products);
-//      evaluator.process(Evaluator::SUBTRACT);
+      // Compute & subtract simulated visibilities.
+      Evaluator evaluator(itsChunk, itsModel);
+      evaluator.setSelection(baselines, products);
+      evaluator.setMode(Evaluator::SUBTRACT);
+      evaluator.process();
 
-//      // De-initialize model.
-//      itsModel->clear();
+      // De-initialize model.
+      itsModel->clear();
 
-//      // Optionally write the simulated visibilities.
-//      if(!command.outputColumn().empty()) {
-//        itsMeasurement->write(itsChunkSelection, itsChunk,
-//          command.outputColumn(), command.writeFlags());
-//      }
+      // Optionally write the simulated visibilities.
+      if(!command.outputColumn().empty()) {
+        itsMeasurement->write(itsChunkSelection, itsChunk,
+          command.outputColumn(), command.writeFlags());
+      }
 
       return CommandResult(CommandResult::OK, "Ok.");
     }
@@ -547,38 +545,40 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-      ASSERTSTR(itsChunk, "No visibility data available.");
-      ASSERTSTR(itsModel, "No model available.");
+      LOG_DEBUG_STR("Command: " << command);
 
-//      // Parse visibility selection.
-//      vector<baseline_t> baselines;
-//      vector<string> products;
-//
-//      if(!(parseBaselineSelection(baselines, command)
-//          && parseProductSelection(products, command))) {
-//        return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
-//          " selection.");
-//      }
-//
-//      // Initialize model.
-//      if(!itsModel->makeForwardExpr(command.modelConfig(), baselines)) {
-//        return CommandResult(CommandResult::ERROR, "Unable to initialize"
-//          " model.");
-//      }
-//
-//      // Compute simulated visibilities.
-//      Evaluator evaluator(itsChunk, itsModel);
-//      evaluator.setSelection(baselines, products);
-//      evaluator.process(Evaluator::ADD);
+      // Parse visibility selection.
+      vector<baseline_t> baselines;
+      vector<string> products;
 
-//      // De-initialize model.
-//      itsModel->clear();
+      if(!(parseBaselineSelection(baselines, command)
+        && parseProductSelection(products, command))) {
+        return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
+          " selection.");
+      }
 
-//      // Optionally write the simulated visibilities.
-//      if(!command.outputColumn().empty()) {
-//        itsMeasurement->write(itsChunkSelection, itsChunk,
-//          command.outputColumn(), false);
-//      }
+      // Initialize model.
+      try {
+        itsModel->makeForwardExpr(command.modelConfig(), itsChunk, baselines);
+      } catch(Exception &ex) {
+        return CommandResult(CommandResult::ERROR, "Unable to initialize"
+            " model.");
+      }
+
+      // Compute & add simulated visibilities.
+      Evaluator evaluator(itsChunk, itsModel);
+      evaluator.setSelection(baselines, products);
+      evaluator.setMode(Evaluator::ADD);
+      evaluator.process();
+
+      // De-initialize model.
+      itsModel->clear();
+
+      // Optionally write the simulated visibilities.
+      if(!command.outputColumn().empty()) {
+        itsMeasurement->write(itsChunkSelection, itsChunk,
+          command.outputColumn(), command.writeFlags());
+      }
 
       return CommandResult(CommandResult::OK, "Ok.");
     }
@@ -587,8 +587,7 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-      ASSERTSTR(itsChunk, "No visibility data available.");
-      ASSERTSTR(itsModel, "No model available.");
+      LOG_DEBUG_STR("Command: " << command);
 
       // Parse visibility selection.
       vector<baseline_t> baselines;
@@ -611,7 +610,7 @@ namespace LOFAR
       // Compute simulated visibilities.
       Evaluator evaluator(itsChunk, itsModel);
       evaluator.setSelection(baselines, products);
-      evaluator.process(Evaluator::ASSIGN);
+      evaluator.process();
 
       // De-initialize model.
       itsModel->clear();

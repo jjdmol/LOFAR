@@ -28,5 +28,151 @@ namespace LOFAR
 namespace BBS
 {
 
+// -------------------------------------------------------------------------- //
+// - Implementation: AsExpr<JonesMatrix>                                    - //
+// -------------------------------------------------------------------------- //
+
+AsExpr<JonesMatrix>::AsExpr()
+{
+}
+
+AsExpr<JonesMatrix>::AsExpr(const Expr<Scalar>::ConstPtr &element00,
+    const Expr<Scalar>::ConstPtr &element01,
+    const Expr<Scalar>::ConstPtr &element10,
+    const Expr<Scalar>::ConstPtr &element11)
+{
+    connect(itsArg[0]);
+    itsArg[0] = element00;
+    connect(itsArg[1]);
+    itsArg[1] = element01;
+    connect(itsArg[2]);
+    itsArg[2] = element10;
+    connect(itsArg[3]);
+    itsArg[3] = element11;
+}
+
+AsExpr<JonesMatrix>::~AsExpr()
+{
+    for(unsigned int i = 0; i < 4; ++i)
+    {
+        disconnect(itsArg[i]);
+    }
+}
+
+void AsExpr<JonesMatrix>::connect(unsigned int i1, unsigned int i0,
+    const Expr<Scalar>::ConstPtr &arg)
+{
+    DBGASSERT(i1 < 2 && i0 < 2);
+    connect(arg);
+    itsArg[i1 * 2 + i0] = arg;
+}
+
+const JonesMatrix AsExpr<JonesMatrix>::evaluateExpr(const Request &request,
+    Cache &cache) const
+{
+    // Allocate result.
+    JonesMatrix result;
+
+    // Evaluate arguments (pass through).
+    Scalar args[4];
+    for(unsigned int i = 0; i < 4; ++i)
+    {
+        args[i] = itsArg[i]->evaluate(request, cache);
+        result.setValueSet(i, args[i].getValueSet());
+    }
+
+    // Evaluate flags.
+    FlagArray flags[4];
+    for(unsigned int i = 0; i < 4; ++i)
+    {
+        flags[i] = args[i].flags();
+    }
+    result.setFlags(mergeFlags(flags, flags + 4));
+
+    return result;
+}
+
+unsigned int AsExpr<JonesMatrix>::nArguments() const
+{
+    return 4;
+}
+
+ExprBase::ConstPtr AsExpr<JonesMatrix>::argument(unsigned int i) const
+{
+    ASSERTSTR(i < 4, "Invalid argument index specified.");
+    return itsArg[i];
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: AsDiagonalMatrix                                       - //
+// -------------------------------------------------------------------------- //
+
+AsDiagonalMatrix::AsDiagonalMatrix(const Expr<Scalar>::ConstPtr &element00,
+    const Expr<Scalar>::ConstPtr &element11)
+    :   BinaryExpr<Scalar, Scalar, JonesMatrix>(element00, element11)
+{
+}
+
+const JonesMatrix AsDiagonalMatrix::evaluateExpr(const Request &request,
+    Cache &cache) const
+{
+    // Allocate result.
+    JonesMatrix result;
+
+    // Evaluate arguments (pass through).
+    Scalar args[2];
+    args[0] = argument0()->evaluate(request, cache);
+    args[1] = argument1()->evaluate(request, cache);
+
+    result.setValueSet(0, 0, args[0].getValueSet());
+    result.assign(0, 1, Matrix(makedcomplex(0.0, 0.0)));
+    result.assign(1, 0, Matrix(makedcomplex(0.0, 0.0)));
+    result.setValueSet(1, 1, args[1].getValueSet());
+
+    // Evaluate flags.
+    FlagArray flags[2];
+    flags[0] = args[0].flags();
+    flags[1] = args[1].flags();
+    result.setFlags(mergeFlags(flags, flags + 2));
+
+    return result;
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: AsComplex                                              - //
+// -------------------------------------------------------------------------- //
+
+AsComplex::AsComplex(const Expr<Scalar>::ConstPtr &re,
+        const Expr<Scalar>::ConstPtr &im)
+        : BasicBinaryExpr<Scalar, Scalar, Scalar>(re, im)
+{
+}
+
+const Scalar::view AsComplex::evaluateImpl(const Request&,
+    const Scalar::view &re, const Scalar::view &im) const
+{
+    Scalar::view result;
+    result.assign(tocomplex(re(), im()));
+    return result;
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: AsPolar                                                - //
+// -------------------------------------------------------------------------- //
+
+AsPolar::AsPolar(const Expr<Scalar>::ConstPtr &modulus,
+    const Expr<Scalar>::ConstPtr &argument)
+    : BasicBinaryExpr<Scalar, Scalar, Scalar>(modulus, argument)
+{
+}
+
+const Scalar::view AsPolar::evaluateImpl(const Request&,
+    const Scalar::view &mod, const Scalar::view &arg) const
+{
+    Scalar::view result;
+    result.assign(tocomplex(mod() * cos(arg()), mod() * sin(arg())));
+    return result;
+}
+
 } //# namespace BBS
 } //# namespace LOFAR

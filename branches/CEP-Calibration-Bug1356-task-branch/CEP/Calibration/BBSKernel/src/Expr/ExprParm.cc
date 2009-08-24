@@ -31,8 +31,7 @@ namespace BBS
 {
 
 ExprParm::ExprParm(const ParmProxy::ConstPtr &parm)
-    :   Expr<Scalar>(),
-        itsParm(parm),
+    :   itsParm(parm),
         itsPValueFlag(false)
 {
 }
@@ -42,9 +41,24 @@ void ExprParm::setPValueFlag()
     itsPValueFlag = true;
 }
 
+bool ExprParm::getPValueFlag() const
+{
+    return itsPValueFlag;
+}
+
 void ExprParm::clearPValueFlag()
 {
     itsPValueFlag = false;
+}
+
+unsigned int ExprParm::nArguments() const
+{
+    return 0;
+}
+
+ExprBase::ConstPtr ExprParm::argument(unsigned int) const
+{
+    ASSERT(false);
 }
 
 void ExprParm::updateSolvables(set<PValueKey> &solvables) const
@@ -123,12 +137,6 @@ const Scalar ExprParm::evaluateExpr(const Request &request, Cache &cache) const
     }
 
     Scalar scalar;
-//    if(itsParm->getId() == 32)
-//    {
-//        LOG_DEBUG_STR("Setting flags of parm: " << itsParm->getName());
-//        tmp.setFlags(FlagArray(3u));
-//    }
-//
     scalar.setValueSet(result);
     return scalar;
 }

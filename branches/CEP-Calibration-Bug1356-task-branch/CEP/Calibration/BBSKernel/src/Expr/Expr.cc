@@ -23,14 +23,63 @@
 #include <lofar_config.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprResult.h>
-//#include <BBSKernel/Expr/Cache.h>
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 ExprId ExprBase::theirId = 0;
-   
+
+
+ExprBase::ExprBase()
+    :   itsConsumerCount(0),
+        itsId(theirId++)
+{
+}
+
+ExprBase::~ExprBase()
+{
+}
+
+void ExprBase::updateSolvables() const
+{
+    set<PValueKey> solvables;
+    updateSolvables(solvables);
+}
+
+void ExprBase::connect(const ExprBase::ConstPtr &arg) const
+{
+    arg->incConsumerCount();
+}
+
+void ExprBase::disconnect(const ExprBase::ConstPtr &arg) const
+{
+    arg->decConsumerCount();
+}
+
+void ExprBase::updateSolvables(set<PValueKey> &solvables) const
+{
+    set<PValueKey> tmp;
+    for(unsigned int i = 0; i < nArguments(); ++i)
+    {
+        argument(i)->updateSolvables(tmp);
+    }
+
+    itsSolvables.clear();
+    itsSolvables.insert(itsSolvables.begin(), tmp.begin(), tmp.end());
+    solvables.insert(tmp.begin(), tmp.end());
+}
+
+void ExprBase::incConsumerCount() const
+{
+    ++itsConsumerCount;
+}
+
+void ExprBase::decConsumerCount() const
+{
+    --itsConsumerCount;
+}
+
 } //# namespace BBS
 } //# namespace LOFAR

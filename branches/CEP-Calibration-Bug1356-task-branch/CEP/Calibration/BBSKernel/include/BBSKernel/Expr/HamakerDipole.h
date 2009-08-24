@@ -28,7 +28,7 @@
 // Implementation of J.P. Hamaker's memo "Mathematical-physical analysis of the
 // generic dual-dipole antenna".
 
-#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 #include <Common/lofar_complex.h>
 
 #include <casa/Arrays.h>
@@ -80,6 +80,12 @@ private:
     HamakerBeamCoeff    itsCoeff;
 };
 
+// @}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: HamakerBeamCoeff                                       - //
+// -------------------------------------------------------------------------- //
+
 inline double HamakerBeamCoeff::center() const
 {
     return itsCenter;
@@ -103,8 +109,6 @@ inline dcomplex HamakerBeamCoeff::operator()(unsigned int element,
     // Reverse axes because casa::Array<> uses fortran order.
     return itsCoeff(casa::IPosition(4, powFreq, powTheta, harmonic, element));
 }
-
-// @}
 
 } //# namespace BBS
 } //# namespace LOFAR

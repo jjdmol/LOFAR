@@ -26,7 +26,7 @@
 // \file
 // Helper classes to convert between different Expr types.
 
-#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 
 namespace LOFAR
 {
@@ -45,78 +45,27 @@ template <unsigned int LENGTH>
 class AsExpr<Vector<LENGTH> >: public Expr<Vector<LENGTH> >
 {
 public:
-    typedef shared_ptr<AsExpr>  Ptr;
-    typedef shared_ptr<AsExpr>  ConstPtr;
+    typedef shared_ptr<AsExpr>          Ptr;
+    typedef shared_ptr<const AsExpr>    ConstPtr;
 
     using ExprBase::connect;
     using ExprBase::disconnect;
 
-    AsExpr()
-    {
-    }
+    AsExpr();
 
     template <typename T_ITERATOR>
-    AsExpr(T_ITERATOR first, T_ITERATOR last)
-    {
-        for(unsigned int i = 0; i < LENGTH; ++i)
-        {
-            ASSERT(first != last);
-            itsArg[i] = *first++;
-            connect(itsArg[i]);
-        }
-        ASSERT(first == last);
-    }
+    AsExpr(T_ITERATOR first, T_ITERATOR last);
 
-    ~AsExpr()
-    {
-        for(unsigned int i = 0; i < LENGTH; ++i)
-        {
-            disconnect(itsArg[i]);
-        }
-    }
+    ~AsExpr();
 
-    void connect(unsigned int i0, const typename Expr<Scalar>::ConstPtr &arg)
-    {
-        connect(arg);
-        itsArg[i0] = arg;
-    }
-
-    virtual const Vector<LENGTH> evaluateExpr(const Request &request,
-        Cache &cache) const
-    {
-        // Allocate result.
-        Vector<LENGTH> result;
-
-        // Evaluate arguments (pass through).
-        Scalar args[LENGTH];
-        for(unsigned int i = 0; i < LENGTH; ++i)
-        {
-            args[i] = itsArg[i]->evaluate(request, cache);
-            result.setValueSet(i, args[i].getValueSet());
-        }
-
-        // Evaluate flags.
-        FlagArray flags[LENGTH];
-        for(unsigned int i = 0; i < LENGTH; ++i)
-        {
-            flags[i] = args[i].flags();
-        }
-        result.setFlags(mergeFlags(flags, flags + LENGTH));
-
-        return result;
-    }
+    void connect(unsigned int i0, const typename Expr<Scalar>::ConstPtr &arg);
 
 protected:
-    virtual unsigned int nArguments() const
-    {
-        return LENGTH;
-    }
+    virtual unsigned int nArguments() const;
+    virtual ExprBase::ConstPtr argument(unsigned int i) const;
 
-    virtual ExprBase::ConstPtr argument(unsigned int i) const
-    {
-        ASSERTSTR(i < LENGTH, "Invalid argument index specified.");
-        return itsArg[i];
-    }
+    virtual const Vector<LENGTH> evaluateExpr(const Request &request,
+        Cache &cache) const;
 
 private:
     typename Expr<Scalar>::ConstPtr itsArg[LENGTH];
@@ -128,160 +77,48 @@ template <>
 class AsExpr<JonesMatrix>: public Expr<JonesMatrix>
 {
 public:
-    typedef shared_ptr<AsExpr>  Ptr;
-    typedef shared_ptr<AsExpr>  ConstPtr;
+    typedef shared_ptr<AsExpr>          Ptr;
+    typedef shared_ptr<const AsExpr>    ConstPtr;
 
     using ExprBase::connect;
     using ExprBase::disconnect;
 
-    AsExpr()
-    {
-    }
-
+    AsExpr();
     AsExpr(const Expr<Scalar>::ConstPtr &element00,
         const Expr<Scalar>::ConstPtr &element01,
         const Expr<Scalar>::ConstPtr &element10,
-        const Expr<Scalar>::ConstPtr &element11)
-    {
-        itsArg[0] = element00;
-        connect(itsArg[0]);
-        itsArg[1] = element01;
-        connect(itsArg[1]);
-        itsArg[2] = element10;
-        connect(itsArg[2]);
-        itsArg[3] = element11;
-        connect(itsArg[3]);
-    }
+        const Expr<Scalar>::ConstPtr &element11);
 
-    ~AsExpr()
-    {
-        for(unsigned int i = 0; i < 4; ++i)
-        {
-            disconnect(itsArg[i]);
-        }
-    }
+    ~AsExpr();
 
     void connect(unsigned int i1, unsigned int i0,
-        const Expr<Scalar>::ConstPtr &arg)
-    {
-        DBGASSERT(i1 < 2 && i0 < 2);
-        connect(arg);
-        itsArg[i1 * 2 + i0] = arg;
-    }
-
-    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache)
-        const
-    {
-        // Allocate result.
-        JonesMatrix result;
-
-        // Evaluate arguments (pass through).
-        Scalar args[4];
-        for(unsigned int i = 0; i < 4; ++i)
-        {
-            args[i] = itsArg[i]->evaluate(request, cache);
-            result.setValueSet(i, args[i].getValueSet());
-        }
-
-        // Evaluate flags.
-        FlagArray flags[4];
-        for(unsigned int i = 0; i < 4; ++i)
-        {
-            flags[i] = args[i].flags();
-        }
-        result.setFlags(mergeFlags(flags, flags + 4));
-
-        return result;
-    }
+        const Expr<Scalar>::ConstPtr &arg);
 
 protected:
-    virtual unsigned int nArguments() const
-    {
-        return 4;
-    }
+    virtual unsigned int nArguments() const;
+    virtual ExprBase::ConstPtr argument(unsigned int i) const;
 
-    virtual ExprBase::ConstPtr argument(unsigned int i) const
-    {
-        ASSERTSTR(i < 4, "Invalid argument index specified.");
-        return itsArg[i];
-    }
+    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache)
+        const;
 
 private:
     Expr<Scalar>::ConstPtr  itsArg[4];
 };
 
-
 // Adaptor class to bundle two Expr<Scalar> into a single diagonal
 // Expr<JonesMatrix>.
-class AsDiagonalMatrix: public Expr<JonesMatrix>
+class AsDiagonalMatrix: public BinaryExpr<Scalar, Scalar, JonesMatrix>
 {
 public:
-    typedef shared_ptr<AsDiagonalMatrix>  Ptr;
-    typedef shared_ptr<AsDiagonalMatrix>  ConstPtr;
-
-    using ExprBase::connect;
-    using ExprBase::disconnect;
-
-    AsDiagonalMatrix()
-    {
-    }
+    typedef shared_ptr<AsDiagonalMatrix>        Ptr;
+    typedef shared_ptr<const AsDiagonalMatrix>  ConstPtr;
 
     AsDiagonalMatrix(const Expr<Scalar>::ConstPtr &element00,
-        const Expr<Scalar>::ConstPtr &element11)
-    {
-        itsArg[0] = element00;
-        connect(itsArg[0]);
-        itsArg[1] = element11;
-        connect(itsArg[1]);
-    }
-
-    ~AsDiagonalMatrix()
-    {
-        for(unsigned int i = 0; i < 2; ++i)
-        {
-            disconnect(itsArg[i]);
-        }
-    }
-
-    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache)
-        const
-    {
-        // Allocate result.
-        JonesMatrix result;
-
-        // Evaluate arguments (pass through).
-        Scalar args[2];
-        args[0] = itsArg[0]->evaluate(request, cache);
-        args[1] = itsArg[1]->evaluate(request, cache);
-
-        result.setValueSet(0, 0, args[0].getValueSet());
-        result.assign(0, 1, Matrix(makedcomplex(0.0, 0.0)));
-        result.assign(1, 0, Matrix(makedcomplex(0.0, 0.0)));
-        result.setValueSet(1, 1, args[1].getValueSet());
-
-        // Evaluate flags.
-        FlagArray flags[2];
-        flags[0] = args[0].flags();
-        flags[1] = args[1].flags();
-        result.setFlags(mergeFlags(flags, flags + 2));
-
-        return result;
-    }
+        const Expr<Scalar>::ConstPtr &element11);
 
 protected:
-    virtual unsigned int nArguments() const
-    {
-        return 2;
-    }
-
-    virtual ExprBase::ConstPtr argument(unsigned int i) const
-    {
-        ASSERTSTR(i < 2, "Invalid argument index specified.");
-        return itsArg[i];
-    }
-
-private:
-    Expr<Scalar>::ConstPtr  itsArg[2];
+    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache)
+        const;
 };
 
 // Adaptor class to bundle two real Expr<Scalar> into a single complex
@@ -294,19 +131,11 @@ public:
     typedef shared_ptr<const AsComplex> ConstPtr;
 
     AsComplex(const Expr<Scalar>::ConstPtr &re,
-        const Expr<Scalar>::ConstPtr &im)
-        : BasicBinaryExpr<Scalar, Scalar, Scalar>(re, im)
-    {
-    }
+        const Expr<Scalar>::ConstPtr &im);
 
-private:
+protected:
     virtual const Scalar::view evaluateImpl(const Request&,
-        const Scalar::view &re, const Scalar::view &im) const
-    {
-        Scalar::view result;
-        result.assign(tocomplex(re(), im()));
-        return result;
-    }
+        const Scalar::view &re, const Scalar::view &im) const;
 };
 
 
@@ -320,22 +149,92 @@ public:
     typedef shared_ptr<const AsPolar>   ConstPtr;
 
     AsPolar(const Expr<Scalar>::ConstPtr &modulus,
-        const Expr<Scalar>::ConstPtr &argument)
-        : BasicBinaryExpr<Scalar, Scalar, Scalar>(modulus, argument)
-    {
-    }
+        const Expr<Scalar>::ConstPtr &argument);
 
-private:
+protected:
     virtual const Scalar::view evaluateImpl(const Request&,
-        const Scalar::view &mod, const Scalar::view &arg) const
-    {
-        Scalar::view result;
-        result.assign(tocomplex(mod() * cos(arg()), mod() * sin(arg())));
-        return result;
-    }
+        const Scalar::view &mod, const Scalar::view &arg) const;
 };
 
 // @}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: AsExpr<Vector<N> >                                     - //
+// -------------------------------------------------------------------------- //
+
+template <unsigned int LENGTH>
+AsExpr<Vector<LENGTH> >::AsExpr()
+{
+}
+
+template <unsigned int LENGTH>
+template <typename T_ITERATOR>
+AsExpr<Vector<LENGTH> >::AsExpr(T_ITERATOR first, T_ITERATOR last)
+{
+    for(unsigned int i = 0; i < LENGTH; ++i)
+    {
+        ASSERT(first != last);
+        itsArg[i] = *first++;
+        connect(itsArg[i]);
+    }
+    ASSERT(first == last);
+}
+
+template <unsigned int LENGTH>
+AsExpr<Vector<LENGTH> >::~AsExpr()
+{
+    for(unsigned int i = 0; i < LENGTH; ++i)
+    {
+        disconnect(itsArg[i]);
+    }
+}
+
+template <unsigned int LENGTH>
+void AsExpr<Vector<LENGTH> >::connect(unsigned int i0,
+    const typename Expr<Scalar>::ConstPtr &arg)
+{
+    connect(arg);
+    itsArg[i0] = arg;
+}
+
+template <unsigned int LENGTH>
+const Vector<LENGTH> AsExpr<Vector<LENGTH> >::evaluateExpr
+    (const Request &request, Cache &cache) const
+{
+    // Allocate result.
+    Vector<LENGTH> result;
+
+    // Evaluate arguments (pass through).
+    Scalar args[LENGTH];
+    for(unsigned int i = 0; i < LENGTH; ++i)
+    {
+        args[i] = itsArg[i]->evaluate(request, cache);
+        result.setValueSet(i, args[i].getValueSet());
+    }
+
+    // Evaluate flags.
+    FlagArray flags[LENGTH];
+    for(unsigned int i = 0; i < LENGTH; ++i)
+    {
+        flags[i] = args[i].flags();
+    }
+    result.setFlags(mergeFlags(flags, flags + LENGTH));
+
+    return result;
+}
+
+template <unsigned int LENGTH>
+unsigned int AsExpr<Vector<LENGTH> >::nArguments() const
+{
+    return LENGTH;
+}
+
+template <unsigned int LENGTH>
+ExprBase::ConstPtr AsExpr<Vector<LENGTH> >::argument(unsigned int i) const
+{
+    ASSERTSTR(i < LENGTH, "Invalid argument index specified.");
+    return itsArg[i];
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

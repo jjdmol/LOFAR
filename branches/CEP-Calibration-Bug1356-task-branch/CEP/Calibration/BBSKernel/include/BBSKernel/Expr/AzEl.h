@@ -26,7 +26,7 @@
 // \file
 // Azimuth and elevation for a direction (ra, dec) on the sky.
 
-#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 
 #include <measures/Measures/MPosition.h>
 
@@ -38,8 +38,8 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-// AzEl computes azimuth and elevation coordinates for a direction (ra, dec) on
-// the sky as seen from a specific location (ITRF) on earth.
+// Compute azimuth and elevation coordinates for a direction (ra, dec) (J2000)
+// on the sky as seen from a specific location on earth.
 class AzEl: public BasicUnaryExpr<Vector<2>, Vector<2> >
 {
 public:
@@ -49,10 +49,11 @@ public:
     AzEl(const casa::MPosition &position,
         const Expr<Vector<2> >::ConstPtr &direction);
 
-private:
+protected:
     virtual const Vector<2>::view evaluateImpl(const Request &request,
         const Vector<2>::view &direction) const;
 
+private:
     casa::MPosition itsPosition;
 };
 

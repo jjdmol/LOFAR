@@ -27,8 +27,7 @@
 // \file
 // Phase delay due to baseline geometry with respect to a direction on the sky.
 
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ExprResult.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 
 namespace LOFAR
 {

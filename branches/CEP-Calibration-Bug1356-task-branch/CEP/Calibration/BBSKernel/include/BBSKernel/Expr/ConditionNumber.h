@@ -28,148 +28,29 @@
 // Flag the result of an Expr<JonesMatrix> by thresholding on the condition
 // number of the Jones matrices.
 
-// TODO: Refactor the flagging part into a separate class that is templated
-// on a predicate? This way, the ConditionNumber only computes the condition
-// number, which is much clearer.
-
-#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 #include <Common/lofar_algorithm.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
-//using LOFAR::min;
-//using LOFAR::max;
 
 // \addtogroup Expr
 // @{
 
-class ConditionNumber: public UnaryExpr<JonesMatrix, Scalar>
+class ConditionNumber: public BasicUnaryExpr<JonesMatrix, Scalar>
 {
 public:
-    typedef shared_ptr<ConditionNumber>   Ptr;
-    typedef shared_ptr<ConditionNumber>   ConstPtr;
+    typedef shared_ptr<ConditionNumber>         Ptr;
+    typedef shared_ptr<const ConditionNumber>   ConstPtr;
 
-    using UnaryExpr<JonesMatrix, Scalar>::argument0;
+    ConditionNumber(const Expr<JonesMatrix>::ConstPtr &arg0);
 
-    ConditionNumber(const Expr<JonesMatrix>::ConstPtr &arg0)
-        :   UnaryExpr<JonesMatrix, Scalar>(arg0)
-    {
-    }
-
-    virtual const Scalar evaluateExpr(const Request &request, Cache &cache)
-        const
-    {
-        Scalar result;
-
-//        const JonesMatrix arg0 = static_pointer_cast<const Expr<JonesMatrix> >(argument(0))->evaluate(request, cache);
-        const JonesMatrix arg0 = argument0()->evaluate(request, cache);
-        result.setFlags(arg0.flags());
-
-        // Compute main value.
-        const JonesMatrix::view J = arg0.value();
-
-        Matrix norm00 = abs(J(0, 0));
-        Matrix norm11 = abs(J(1, 1));
-        result.assign(max(norm00, norm11) / max(min(norm00, norm11), 1e-9));
-
-        return result;
-    }
+protected:
+    virtual const Scalar::view evaluateImpl(const Request &request,
+        const JonesMatrix::view &arg0) const;
 };
-
-
-//class ConditionNumber: public Expr<JonesMatrix>
-//{
-//public:
-//    typedef shared_ptr<ConditionNumber>   Ptr;
-//    typedef shared_ptr<ConditionNumber>   ConstPtr;
-
-//    ConditionNumber(const Expr<JonesMatrix>::ConstPtr &arg0, double threshold)
-//        :   itsArg0(arg0),
-//            itsThreshold(threshold)
-//    {
-//        connect(itsArg0);
-//    }
-
-//    ~ConditionNumber()
-//    {
-//        disconnect(itsArg0);
-//    }
-
-//    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache)
-//        const
-//    {
-//        // Copy result.
-//        JonesMatrix result(itsArg0->evaluate(request, cache));
-
-//        // Flag on condition number.
-//        const JonesMatrix::view J = result.value();
-//        if(J(0, 0).isArray() || J(1, 1).isArray())
-//        {
-//            const int nFreq = request[FREQ]->size();
-//            const int nTime = request[TIME]->size();
-
-//            FlagArray flags(nFreq, nTime);
-//            FlagArray::iterator flagIt = flags.begin();
-
-//            double maxcn = 0.0, mincn = 1e16, meancn = 0.0;
-
-//            for(int t = 0; t < nTime; ++t)
-//            {
-//                for(int f = 0; f < nFreq; ++f)
-//                {
-//                    const double norm00 = abs(J(0, 0).getDComplex(f, t));
-//                    const double norm11 = abs(J(1, 1).getDComplex(f, t));
-
-//                    const double cond = max(norm00, norm11)
-//                        / max(min(norm00, norm11), 1e-9);
-
-//                    maxcn = max(maxcn, cond);
-//                    mincn = min(mincn, cond);
-//                    meancn += cond;
-
-//                    *flagIt = (cond > itsThreshold);
-//                    ++flagIt;
-//                }
-//            }
-
-//            LOG_DEBUG_STR("MAX: " << maxcn << " MIN: " << mincn << " MEAN: "
-//                << meancn / (nFreq * nTime));
-
-//            result.setFlags(result.hasFlags() ? result.flags() | flags : flags);
-//        }
-//        else
-//        {
-//            const double norm00 = abs(J(0, 0).getDComplex());
-//            const double norm11 = abs(J(1, 1).getDComplex());
-
-//            const double cond = max(norm00, norm11)
-//                / max(min(norm00, norm11), 1e-9);
-
-//            FlagArray flags(FlagType(cond > itsThreshold));
-//            result.setFlags(result.hasFlags() ? result.flags() | flags : flags);
-//        }
-
-//        return result;
-//    }
-
-//protected:
-//    virtual unsigned int nArguments() const
-//    {
-//        return 1;
-//    }
-
-//    virtual const ExprBase::ConstPtr argument(unsigned int i) const
-//    {
-//        ASSERT(i == 0);
-//        return itsArg0;
-//    }
-
-//private:
-//    Expr<JonesMatrix>::ConstPtr itsArg0;
-//    double                      itsThreshold;
-//};
 
 // @}
 

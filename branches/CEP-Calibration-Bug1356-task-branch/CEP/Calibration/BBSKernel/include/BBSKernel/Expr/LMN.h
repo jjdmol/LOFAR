@@ -26,7 +26,7 @@
 // \file
 // LMN-coordinates of a direction on the sky.
 
-#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 
 #include <measures/Measures/MDirection.h>
 

@@ -27,6 +27,7 @@
 #include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/Measurement.h>
 
+#include <BBSKernel/Expr/StationUVW.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/PointSource.h>
 #include <BBSKernel/Expr/MergeFlags.h>
@@ -102,7 +103,7 @@ void Model::clear()
     itsExpr.clear();
     itsParms.clear();
 
-    itsCache.printStats();
+    LOG_DEBUG_STR("" << itsCache);
     itsCache.clear();
     itsCache.clearStats();
 }
@@ -513,7 +514,7 @@ void Model::makeInverseExpr(const ModelConfig &config,
 void Model::setRequestGrid(const Grid &grid)
 {
     itsRequest = Request(grid);
-    itsCache.printStats();
+    LOG_DEBUG_STR("" << itsCache);
     itsCache.clearStats();
     itsCache.clear();
 
@@ -931,9 +932,6 @@ vector<Source::Ptr> Model::makeSourceList(const vector<string> &patterns)
 
 Source::Ptr Model::makeSource(const SourceInfo &source)
 {
-//    LOG_DEBUG_STR("Creating source: " << source.getName() << " ["
-//        << source.getType() << "]);
-
     switch(source.getType())
     {
     case SourceInfo::POINT:
@@ -944,7 +942,7 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
             ExprParm::Ptr stokesQ = makeExprParm(SKY, "Q:" + source.getName());
             ExprParm::Ptr stokesU = makeExprParm(SKY, "U:" + source.getName());
             ExprParm::Ptr stokesV = makeExprParm(SKY, "V:" + source.getName());
-            Expr<Scalar>::Ptr spectral = makeSpectralIndex(source);
+            Expr<Scalar>::Ptr spectral = makeSpectralIndexExpr(source);
 
             AsExpr<Vector<2> >::Ptr position(new AsExpr<Vector<2> >());
             position->connect(0, ra);
@@ -972,7 +970,7 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
 //            Expr maj = makeExprParm(SKY, "Major:" + source.getName());
 //            Expr min = makeExprParm(SKY, "Minor:" + source.getName());
 //            Expr phi = makeExprParm(SKY, "Phi:" + source.getName());
-//            Expr spectral = makeSpectralIndex(source);
+//            Expr spectral = makeSpectralIndexExpr(source);
 
 //            return GaussianSource::Ptr(new GaussianSource(source.getName(),
 //                ra, dec, i, q, u, v, maj, min, phi));
@@ -1000,7 +998,7 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
 //    }
 //}
 
-Expr<Scalar>::Ptr Model::makeSpectralIndex(const SourceInfo &source)
+Expr<Scalar>::Ptr Model::makeSpectralIndexExpr(const SourceInfo &source)
 {
     unsigned int degree =
         static_cast<unsigned int>(ParmManager::instance().getDefaultValue(SKY,
@@ -1293,15 +1291,6 @@ Model::makeDipoleBeamExpr(const ModelConfig &config,
     }
 
     return expr;
-
-//    else if(config.beamConfig->type() == "YatawattaDipole")
-//    {
-//        YatawattaDipoleConfig::ConstPtr beamConfig =
-//            dynamic_pointer_cast<const YatawattaDipoleConfig>
-//                (config.beamConfig);
-//        ASSERT(beamConfig);
-
-//    }
 }
 
 casa::Matrix<Expr<JonesMatrix>::Ptr>

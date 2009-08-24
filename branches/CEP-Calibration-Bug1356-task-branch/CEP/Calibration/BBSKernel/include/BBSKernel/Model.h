@@ -23,38 +23,29 @@
 #ifndef LOFAR_BBS_BBSKERNEL_MODEL_H
 #define LOFAR_BBS_BBSKERNEL_MODEL_H
 
-#include <Common/lofar_smartptr.h>
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_map.h>
-#include <Common/lofar_set.h>
-#include <iterator>
-
 #include <BBSKernel/ParmManager.h>
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/VisData.h>
 
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprParm.h>
-#include <BBSKernel/Expr/PhaseRef.h>
 #include <BBSKernel/Expr/Source.h>
-#include <BBSKernel/Expr/Cache.h>
-
-#include <BBSKernel/Expr/StationUVW.h>
 
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/SourceDB.h>
 
+#include <Common/lofar_vector.h>
+#include <Common/lofar_map.h>
+
 #include <casa/Arrays.h>
+#include <measures/Measures/MDirection.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 class ModelConfig;
-class Instrument;
-class PhaseRef;
-class Request;
+class Cache;
 
 // \addtogroup BBSKernel
 // @{
@@ -93,9 +84,7 @@ private:
 
     vector<Source::Ptr> makeSourceList(const vector<string> &patterns);
     Source::Ptr makeSource(const SourceInfo &source);
-    Expr<Scalar>::Ptr makeSpectralIndex(const SourceInfo &source);
-
-//    void makeStationUVW();
+    Expr<Scalar>::Ptr makeSpectralIndexExpr(const SourceInfo &source);
 
     casa::Vector<Expr<Vector<3> >::Ptr>
         makeStationUVWExpr(const vector<unsigned int> &stations) const;
@@ -133,15 +122,12 @@ private:
     Expr<JonesMatrix>::Ptr corrupt(Expr<JonesMatrix>::Ptr &accumulator,
         Expr<JonesMatrix>::Ptr &effect);
 
-//    BeamCoeff readBeamCoeffFile(const string &filename) const;
-
     Instrument          itsInstrument;
     SourceDB            itsSourceDb;
     casa::MDirection    itsPhaseReference;
     Request             itsRequest;
     Cache               itsCache;
 
-//    vector<StationUVW::ConstPtr>            itsStationUVW;
     map<baseline_t, Expr<JonesMatrix>::Ptr> itsExpr;
     map<unsigned int, ExprParm::Ptr>        itsParms;
 };

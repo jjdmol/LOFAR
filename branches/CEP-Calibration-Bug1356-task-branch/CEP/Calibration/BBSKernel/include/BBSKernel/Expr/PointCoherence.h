@@ -26,8 +26,7 @@
 // \file
 // Spatial coherence function of a point source.
 
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ExprResult.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 
 namespace LOFAR
 {

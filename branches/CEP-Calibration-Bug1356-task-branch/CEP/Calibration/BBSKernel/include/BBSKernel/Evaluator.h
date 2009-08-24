@@ -30,7 +30,6 @@
 
 #include <BBSKernel/Model.h>
 #include <BBSKernel/VisData.h>
-#include <BBSKernel/Expr/Request.h>
 #include <Common/Timer.h>
 
 namespace LOFAR
@@ -46,51 +45,62 @@ class Evaluator
 public:
     enum Mode
     {
-        ASSIGN = 0,
+        EQUATE = 0,
         SUBTRACT,
         ADD,
         N_Mode
     };
-    
-    // Constructor. NB: nThreads is ignored when compiled without OPENMP.
-    Evaluator(const VisData::Ptr &chunk, const Model::Ptr &model,
-        uint nThreads = 1);
-    ~Evaluator();
+
+    Evaluator(const VisData::Ptr &chunk, const Model::Ptr &model);
 
     // Set subset of visibility data to process.
     void setSelection(const vector<baseline_t> &baselines,
         const vector<string> &products);
 
-    // Evaluate the model and assign/subtract visibilities to/from the chunk.
-    void process(Mode mode = ASSIGN);
+    // Set operation to perform on the data (equate, subtract, or add).
+    void setMode(Mode mode);
+
+    // Evaluate the model and process the model visibilities according to the
+    // current processing mode.
+    void process();
 
 private:
-    //# Define the signature for a function that processes the data of a single
-    //# baseline.
-//    typedef void (Evaluator::*BlProcessor) (uint threadId,
-//        const baseline_t &baseline, Cache &cache);
+    struct OpEq
+    {
+        static void apply(sample_t &lhs, const complex_t &rhs);
+    };
 
-    typedef void (Evaluator::*BlProcessor) (uint threadId,
-        const baseline_t &baseline);
+    struct OpSub
+    {
+        static void apply(sample_t &lhs, const complex_t &rhs);
+    };
 
-    void blAssign(uint threadId, const baseline_t &baseline);
+    struct OpAdd
+    {
+        static void apply(sample_t &lhs, const complex_t &rhs);
+    };
 
-//    void blSubtract(uint threadId, const baseline_t &baseline,
-//        const Request &request);
-//    void blAdd(uint threadId, const baseline_t &baseline,
-//        const Request &request);
+    typedef void (Evaluator::*BlProcessor)(const baseline_t &baseline,
+        const JonesMatrix &model);
 
-    VisData::Ptr    itsChunk;
-    Model::Ptr      itsModel;
-    uint                itsThreadCount;
-    
+    template <typename T_OPERATOR>
+    void blProcess(const baseline_t &baseline, const JonesMatrix &model);
+
+    template <typename T_OPERATOR>
+    void blProcessNoFlags(const baseline_t &baseline, const JonesMatrix &model);
+
+
+    VisData::Ptr        itsChunk;
+    Model::Ptr          itsModel;
+
     vector<baseline_t>  itsBaselines;
     int                 itsProductMask[4];
-    
+    BlProcessor         itsBlProcessor[2];
+
     enum Timer
     {
-        PRECOMPUTE,
-        COMPUTE,
+        MODEL_EVAL,
+        PROCESS,
         N_Timer
     };
 
@@ -98,6 +108,135 @@ private:
 };
 
 // @}
+
+inline void Evaluator::OpEq::apply(sample_t &lhs, const complex_t &rhs)
+{
+    lhs = rhs;
+}
+
+inline void Evaluator::OpSub::apply(sample_t &lhs, const complex_t &rhs)
+{
+    lhs -= rhs;
+}
+
+inline void Evaluator::OpAdd::apply(sample_t &lhs, const complex_t &rhs)
+{
+    lhs += rhs;
+}
+
+template <typename T_OPERATOR>
+void Evaluator::blProcess(const baseline_t &baseline, const JonesMatrix &model)
+{
+    const VisDimensions &dims = itsChunk->getDimensions();
+    const size_t bl = dims.getBaselineIndex(baseline);
+    const size_t nFreq = dims.getChannelCount();
+    const size_t nTime = dims.getTimeslotCount();
+
+    JonesMatrix::view coherence = model.value();
+
+    // Process visibilities for this baseline.
+    for(unsigned int i = 0; i < 4; ++i)
+    {
+        // Check if the chunk contains the current correlation product.
+        const int extProd = itsProductMask[i];
+        if(extProd == -1)
+        {
+            continue;
+        }
+
+        // Get pointers to the model visibilities.
+        const Matrix &modelVis = coherence(i / 2, i & 1);
+        const double *re = 0, *im = 0;
+        modelVis.dcomplexStorage(re, im);
+
+        // Determine pointer increments (0 for scalar model visibility).
+        const size_t step = modelVis.isArray() ? 1 : 0;
+        DBGASSERT(!modelVis.isArray()
+            || static_cast<size_t>(modelVis.nelements()) == nFreq * nTime);
+
+        // Get random access iterator for the flags.
+        const FlagArray &flags = model.flags();
+        FlagArray::const_iterator flagIt = flags.begin();
+
+        // Determine pointer increments (0 for scalar flags).
+        const size_t flagStep = flags.rank() == 0 ? 0 : 1;
+        DBGASSERT(flags.rank() == 0 || flags.size() == nFreq * nTime);
+
+        // Get a view on the relevant slice of the chunk.
+        typedef boost::multi_array<sample_t, 4>::index_range DRange;
+        typedef boost::multi_array<sample_t, 4>::array_view<2>::type DView;
+        DView obsVis(itsChunk->vis_data[boost::indices[bl][DRange()]
+            [DRange()][extProd]]);
+
+        typedef boost::multi_array<flag_t, 4>::index_range FRange;
+        typedef boost::multi_array<flag_t, 4>::array_view<2>::type FView;
+        FView obsFlags(itsChunk->vis_flag[boost::indices[bl][FRange()]
+            [FRange()][extProd]]);
+
+        // Process visibilities and flags.
+        for(size_t ts = 0; ts < nTime; ++ts)
+        {
+            for(size_t ch = 0; ch < nFreq; ++ch)
+            {
+                obsFlags[ts][ch] |= *flagIt;
+                flagIt += flagStep;
+
+                T_OPERATOR::apply(obsVis[ts][ch], sample_t(*re, *im));
+                re += step;
+                im += step;
+            }
+        }
+    }
+}
+
+template <typename T_OPERATOR>
+void Evaluator::blProcessNoFlags(const baseline_t &baseline,
+    const JonesMatrix &model)
+{
+    const VisDimensions &dims = itsChunk->getDimensions();
+    const size_t bl = dims.getBaselineIndex(baseline);
+    const size_t nFreq = dims.getChannelCount();
+    const size_t nTime = dims.getTimeslotCount();
+
+    JonesMatrix::view coherence = model.value();
+
+    for(unsigned int i = 0; i < 4; ++i)
+    {
+        // Check if the chunk contains the current correlation product.
+        const int extProd = itsProductMask[i];
+        if(extProd == -1)
+        {
+            continue;
+        }
+
+        // Get pointers to the model visibilities.
+        const Matrix &modelVis = coherence(i / 2, i & 1);
+        const double *re = 0, *im = 0;
+        modelVis.dcomplexStorage(re, im);
+
+        // Determine pointer increments (0 for scalar model visibility).
+        const size_t step = modelVis.isArray() ? 1 : 0;
+        DBGASSERT(!modelVis.isArray()
+            || static_cast<size_t>(modelVis.nelements()) == nFreq * nTime);
+
+        // Get a view on the relevant slice of the chunk.
+        typedef boost::multi_array<sample_t, 4>::index_range DRange;
+        typedef boost::multi_array<sample_t, 4>::array_view<2>::type DView;
+        DView obsVis(itsChunk->vis_data[boost::indices[bl][DRange()]
+            [DRange()][extProd]]);
+
+        // Process visibilities.
+        for(size_t ts = 0; ts < nTime; ++ts)
+        {
+            for(size_t ch = 0; ch < nFreq; ++ch)
+            {
+                T_OPERATOR::apply(obsVis[ts][ch], sample_t(*re, *im));
+                re += step;
+                im += step;
+            }
+        }
+    }
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

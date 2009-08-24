@@ -26,7 +26,7 @@
 // \file
 // The inverse of a Jones matrix expression.
 
-#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 
 namespace LOFAR
 {
@@ -39,8 +39,8 @@ namespace BBS
 class JonesInvert: public BasicUnaryExpr<JonesMatrix, JonesMatrix>
 {
 public:
-    typedef shared_ptr<JonesInvert> Ptr;
-    typedef shared_ptr<JonesInvert> ConstPtr;
+    typedef shared_ptr<JonesInvert>         Ptr;
+    typedef shared_ptr<const JonesInvert>   ConstPtr;
 
     JonesInvert(const Expr<JonesMatrix>::ConstPtr &expr)
         :   BasicUnaryExpr<JonesMatrix, JonesMatrix>(expr)

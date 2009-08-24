@@ -1,8 +1,5 @@
 pkginclude_Exprdir = $(pkgincludedir)/Expr
 
-#	Equator.h \
-#	Expr/Diag.h \
-#	Expr/ExternalFunction.h \
 #	Expr/GaussianCoherence.h \
 #	Expr/GaussianSource.h \
 #	Expr/JonesCMul2.h \
@@ -43,6 +40,7 @@ pkginclude_HEADERS = Package__Version.h \
 
 pkginclude_Expr_HEADERS	= 	\
 	Expr/AzEl.h \
+    Expr/BasicExpr.h \
 	Expr/Cache.h \
 	Expr/ConditionNumber.h \
 	Expr/DFTPS.h \

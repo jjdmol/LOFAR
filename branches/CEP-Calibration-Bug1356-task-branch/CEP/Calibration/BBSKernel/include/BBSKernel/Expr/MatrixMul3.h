@@ -28,8 +28,7 @@
 // Compute A * B * C^H (e.g. to apply an effect described by a pair of station
 // specific Jones matrices (A, C) to a set of visibilities (B).
 
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ExprResult.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 
 namespace LOFAR
 {

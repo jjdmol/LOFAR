@@ -25,20 +25,50 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 Cache::Cache()
     :   itsQueryCount(0),
         itsHitCount(0),
-        itsMaxSize(0),
-        itsMemSize(0)
+        itsMaxSize(0)
 {
 }
 
-//Cache::~Cache()
-//{
-//}
+Cache::~Cache()
+{
+    clear();
+}
+
+void Cache::clear()
+{
+    map<ExprId, CacheRecord>::iterator it = itsCache.begin();
+    while(it != itsCache.end())
+    {
+        delete it->second.result;
+        ++it;
+    }
+    itsCache.clear();
+}
+
+void Cache::clearStats()
+{
+    itsQueryCount = itsHitCount = itsMaxSize = 0;
+}
+
+Cache::CacheRecord::CacheRecord()
+    :   request(0),
+        result(0)
+{
+}
+
+ostream &operator<<(ostream &out, const Cache &obj)
+{
+    out << "Cache statistics: queries: " << obj.itsQueryCount << " hits: "
+        << obj.itsHitCount << " max. size: " << obj.itsMaxSize;
+    return out;
+}
+
 
 } //# namespace BBS
 } //# namespace LOFAR

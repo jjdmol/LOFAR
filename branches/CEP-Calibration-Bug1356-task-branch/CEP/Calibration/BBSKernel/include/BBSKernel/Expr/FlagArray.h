@@ -1,5 +1,5 @@
 //# FlagArray.h: An array of flags that can transparently handle rank 0 (scalar)
-//# rank 2 (matrix) flag data.
+//# and rank 2 (matrix) flag data.
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,7 +25,7 @@
 #define LOFAR_BBSKERNEL_EXPR_FLAGARRAY_H
 
 // \file
-// An array of flags that can transparently handle rank 0 (scalar) rank 2
+// An array of flags that can transparently handle rank 0 (scalar) and rank 2
 // (matrix) flag data.
 
 #include <Common/LofarLogger.h>

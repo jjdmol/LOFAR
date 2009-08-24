@@ -26,7 +26,7 @@
 // \file
 // Pierce point for a direction (az, el) on the sky.
 
-#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 
 #include <measures/Measures/MPosition.h>
 

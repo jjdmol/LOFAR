@@ -26,7 +26,7 @@
 // \file
 // Compute A * B, where A and B are JonesMatrices.
 
-#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 
 namespace LOFAR
 {

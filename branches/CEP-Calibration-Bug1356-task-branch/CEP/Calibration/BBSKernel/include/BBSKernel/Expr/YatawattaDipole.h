@@ -24,7 +24,7 @@
 #ifndef LOFAR_BBSKERNEL_EXPR_YATAWATTADIPOLE_H
 #define LOFAR_BBSKERNEL_EXPR_YATAWATTADIPOLE_H
 
-#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 #include <BBSKernel/Expr/ExternalFunction.h>
 
 namespace LOFAR

@@ -41,8 +41,8 @@ namespace BBS
 class JonesVisData: public Expr<JonesMatrix>
 {
 public:
-    typedef shared_ptr<JonesVisData>    Ptr;
-    typedef shared_ptr<JonesVisData>    ConstPtr;
+    typedef shared_ptr<JonesVisData>        Ptr;
+    typedef shared_ptr<const JonesVisData>  ConstPtr;
 
     JonesVisData(const VisData::Ptr &chunk, const baseline_t &baseline);
 

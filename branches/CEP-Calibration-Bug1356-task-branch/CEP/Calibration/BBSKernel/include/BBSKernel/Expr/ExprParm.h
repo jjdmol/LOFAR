@@ -27,7 +27,6 @@
 // Parameter that can be used in an expression.
 
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ExprResult.h>
 #include <BBSKernel/ParmProxy.h>
 
 namespace LOFAR
@@ -47,27 +46,19 @@ public:
     ExprParm(const ParmProxy::ConstPtr &parm);
 
     void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
+    bool getPValueFlag() const;
     void clearPValueFlag();
 
 protected:
-    virtual unsigned int nArguments() const
-    {
-        return 0;
-    }
+    virtual unsigned int nArguments() const;
+    virtual ExprBase::ConstPtr argument(unsigned int) const;
 
-    virtual ExprBase::ConstPtr argument(unsigned int) const
-    {
-        ASSERT(false);
-    }
-
-private:
     virtual void updateSolvables(set<PValueKey> &solvables) const;
 
     virtual const Scalar evaluateExpr(const Request &request, Cache &cache)
         const;
 
+private:
     ParmProxy::ConstPtr itsParm;
     bool                itsPValueFlag;
 };

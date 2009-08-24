@@ -1,5 +1,5 @@
 //# FlagArray.cc: An array of flags that can transparently handle rank 0
-//# (scalar) rank 2 (matrix) flag data.
+//# (scalar) and rank 2 (matrix) flag data.
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)

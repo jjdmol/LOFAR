@@ -72,7 +72,7 @@ private:
         {
         }
 
-        uint    start, end;
+        unsigned int    start, end;
     };
 
     // Create a mapping for each axis that maps from cells in the solution grid

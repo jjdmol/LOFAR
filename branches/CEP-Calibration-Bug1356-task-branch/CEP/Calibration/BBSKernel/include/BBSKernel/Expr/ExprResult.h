@@ -69,7 +69,6 @@ public:
 // (parameter, coefficient) pair.
 // TODO: Use hashed container instead of map<> to optimize key look-up. However,
 // need iteration in sorted order (?).
-// TODO: Rename to ValueSetImpl?
 class ValueSetImpl: public RefCountable
 {
 public:

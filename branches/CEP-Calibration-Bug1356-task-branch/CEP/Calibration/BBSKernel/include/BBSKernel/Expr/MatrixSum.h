@@ -28,7 +28,6 @@
 // Compute the (element-wise) sum of a collection of Jones matrices.
 
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ExprResult.h>
 
 namespace LOFAR
 {

@@ -20,13 +20,13 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_EXPR_DFTPS_H
-#define LOFAR_BBS_EXPR_DFTPS_H
+#ifndef LOFAR_BBSKERNEL_EXPR_DFTPS_H
+#define LOFAR_BBSKERNEL_EXPR_DFTPS_H
 
 // \file
 // Station part of baseline phase shift.
 
-#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR
@@ -63,7 +63,7 @@ public:
     DFTPS(const Expr<Vector<3> >::ConstPtr &uvw,
         const Expr<Vector<3> >::ConstPtr &lmn);
 
-private:
+protected:
     virtual const Vector<2>::view evaluateImpl(const Request &request,
         const Vector<3>::view &uvw, const Vector<3>::view &lmn) const;
 };

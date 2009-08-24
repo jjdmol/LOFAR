@@ -1,9 +1,6 @@
 #AM_CXXFLAGS = -Wno-ignored-qualifiers -Werror
 lib_LTLIBRARIES = libbbskernel.la
 
-#	Equator.cc \
-#	Expr/Diag.cc \
-#	Expr/ExternalFunction.cc \
 #	Expr/GaussianCoherence.cc \
 #	Expr/GaussianSource.cc \
 #	Expr/JonesCMul2.cc \
@@ -42,6 +39,7 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/ConditionNumber.cc \
 	Expr/DFTPS.cc \
 	Expr/Expr.cc \
+	Expr/ExprAdaptors.cc \
 	Expr/ExprParm.cc \
 	Expr/ExprResult.cc \
 	Expr/ExternalFunction.cc \
