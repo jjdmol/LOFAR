@@ -214,6 +214,10 @@ template<typename SAMPLE_TYPE> static void inputTask(Parset *parset)
   InputSection<SAMPLE_TYPE> inputSection(clientStreams, myPsetNumber);
 
   inputSection.preprocess(parset);
+	
+	if (parset->dumpRawData()) {
+		LOG_DEBUG("Dumping raw beamformed data only, no further processing done");
+	}
 
   for (unsigned run = 0; run < nrRuns; run ++)
     inputSection.process();

@@ -45,13 +45,22 @@
 #include <cstdio>
 #include <stdexcept>
 
+//#define DUMP_RAW_DATA
+
+//#if defined DUMP_RAW_DATA
+#include <Stream/SocketStream.h>
+//static uint32 test;
+//static Float64 testttt;
+//#include <LOFAR_Datatypes/BFRawFormat.h>
+#include "/cephome/jong/projects/usg/trunk/src/DAL/implement/BFRawFormat.h" // FIXME needed for dumping raw data
+//#endif
 
 namespace LOFAR {
 namespace RTCP {
 
-#if defined DUMP_RAW_DATA
+//#if defined DUMP_RAW_DATA
 static Stream *rawDataStream;
-#endif
+//#endif
 
 
 template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const std::vector<Stream *> &clientStreams, unsigned psetNumber)
@@ -100,7 +109,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::startThreads()
 
 template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const Parset *ps)
 {
-  itsPS = ps;
+	itsPS = ps;
   itsSampleRate = ps->sampleRate();
   TimeStamp::setStationClockSpeed(static_cast<unsigned>(1024 * itsSampleRate));
   std::vector<Parset::StationRSPpair> inputs = ps->getStationNamesAndRSPboardNumbers(itsPsetNumber);
@@ -135,12 +144,19 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   itsNrBeams		= ps->nrBeams();
   itsNrPencilBeams	= ps->nrPencilBeams();
   itsNrOutputPsets	= ps->outputPsets().size();
-
+	/*
 #if defined DUMP_RAW_DATA
   itsNHistorySamples	= 0;
 #else
   itsNHistorySamples	= ps->nrHistorySamples();
 #endif
+	*/
+	if (ps->dumpRawData()) {
+  	itsNHistorySamples	= 0;
+	}
+	else {
+  	itsNHistorySamples	= ps->nrHistorySamples();
+	}
 
   itsCurrentComputeCore = 0;
   itsNrCoresPerPset	= ps->nrCoresPerPset();
@@ -193,17 +209,23 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
     itsBBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(ps->inputBufferSize(), ps->getUint32("OLAP.nrTimesInFrame"), ps->nrSlotsInFrame(), itsNrBeams, itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
 
-#if defined DUMP_RAW_DATA
-  vector<string> rawDataOutputs = ps->getStringVector("OLAP.OLAP_Conn.rawDataOutputs");
-  unsigned	 psetIndex	= ps->inputPsetIndex(itsPsetNumber);
+//#if defined DUMP_RAW_DATA
+	vector<string> rawDataOutputs;
+	unsigned	 psetIndex;
+	string rawDataOutput;
+	
+	if (itsPS->dumpRawData()) {
+		rawDataOutputs = ps->getStringVector("OLAP.OLAP_Conn.rawDataOutputs");
+  	psetIndex	= ps->inputPsetIndex(itsPsetNumber);
 
   if (psetIndex >= rawDataOutputs.size())
     THROW(IONProcException, "there are more input section nodes than entries in OLAP.OLAP_Conn.rawDataOutputs");
 
-  string rawDataOutput = rawDataOutputs[psetIndex];
-  LOG_DEBUG_STR("writing raw data to " << rawDataOutput);
-  rawDataStream = Parset::createStream(rawDataOutput, false);
-#endif
+  	rawDataOutput = rawDataOutputs[psetIndex];
+  	LOG_DEBUG_STR("writing raw data to " << rawDataOutput);
+		rawDataStream = Parset::createStream(rawDataOutput, false); // client
+	}
+//#endif
 
   startThreads();
 
@@ -380,7 +402,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
 }
 
 
-#if defined DUMP_RAW_DATA
+//#if defined DUMP_RAW_DATA
 
 template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
 {
@@ -391,45 +413,49 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
   vector<unsigned> subbandToRSPslotMapping  = itsPS->subbandToRSPslotMapping();
   unsigned	   nrSubbands		    = itsPS->nrSubbands();
 
+	DAL::BFRawFormat bfraw_data;
+	
   if (!fileHeaderWritten) {
     if (nrSubbands > 62)
       THROW(IONProcException, "too many subbands for raw data format");
-
+		/*
     struct FileHeader {
       uint32	magic;		// 0x3F8304EC, also determines endianness
       uint8	bitsPerSample;
       uint8	nrPolarizations;
-      uint16	nrSubbands;
+			uint16	nrSubbands; 
       uint32	nrSamplesPerBeamlet;
       char	station[20];
       double	sampleRate;	// typically 156250 or 195312.5
       double	subbandFrequencies[62];
       double	beamDirections[8][2];
       int16     subbandToBeamMapping[62];
-      int32     pad;
+			int32     pad; // wordt padding
       
-    } fileHeader;  
+    } bfraw_data.header;  
+		*/
+		
+    memset(&bfraw_data.header, 0, sizeof bfraw_data.header);
 
-    memset(&fileHeader, 0, sizeof fileHeader);
-
-    fileHeader.magic = 0x3F8304EC;
-    fileHeader.bitsPerSample = 16;
-    fileHeader.nrPolarizations = 2;
-    fileHeader.nrSubbands = nrSubbands;
-    fileHeader.nrSamplesPerBeamlet = itsNSamplesPerSec;
-    strncpy(fileHeader.station, itsPS->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station.c_str(), sizeof fileHeader.station);
-    fileHeader.sampleRate = itsSampleRate;
-    memcpy(fileHeader.subbandFrequencies, &itsPS->subbandToFrequencyMapping()[0], nrSubbands * sizeof(double));
+    bfraw_data.header.magic = 0x3F8304EC;
+    bfraw_data.header.bitsPerSample = 16;
+    bfraw_data.header.nrPolarizations = 2;
+    bfraw_data.header.nrSubbands = nrSubbands;
+		bfraw_data.header.nrSamplesPerSubband = itsNSamplesPerSec;
+    strncpy(bfraw_data.header.station, itsPS->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station.c_str(), sizeof bfraw_data.header.station);
+    bfraw_data.header.sampleRate = itsSampleRate;
+    memcpy(bfraw_data.header.subbandFrequencies, &itsPS->subbandToFrequencyMapping()[0], nrSubbands * sizeof(double));
 
     for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-      memcpy(fileHeader.beamDirections[beam], &itsPS->getBeamDirection(beam)[0], sizeof fileHeader.beamDirections[beam]);
+      memcpy(bfraw_data.header.beamDirections[beam], &itsPS->getBeamDirection(beam)[0], sizeof bfraw_data.header.beamDirections[beam]);
     for (unsigned subband = 0; subband < nrSubbands; subband ++)
-      fileHeader.subbandToBeamMapping[subband] = subbandToBeamMapping[subband];
+      bfraw_data.header.subbandToBeamMapping[subband] = subbandToBeamMapping[subband];
 
-    rawDataStream->write(&fileHeader, sizeof fileHeader);
+    rawDataStream->write(&bfraw_data.header, sizeof bfraw_data.header);
     fileHeaderWritten = true;
-  }
 
+	}
+	/*
   struct BlockHeader {
     uint32	magic; // 0x2913D852
     int32	coarseDelayApplied[8];
@@ -443,30 +469,30 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
 	uint32  end;   // exclusive
       } flagsRanges[16]; 
     } flags[8];
-  } blockHeader;  
+  } bfraw_data.block_header;  
+	*/
+	
+  memset(&bfraw_data.block_header, 0, sizeof bfraw_data.block_header);
 
-  memset(&blockHeader, 0, sizeof blockHeader);
-
-  blockHeader.magic = 0x2913D852;
+  bfraw_data.block_header.magic = 0x2913D852;
 
   for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-    blockHeader.coarseDelayApplied[beam]	 = itsSamplesDelay[beam];
-    blockHeader.fineDelayRemainingAtBegin[beam]	 = itsFineDelaysAtBegin[beam][0];
-    blockHeader.fineDelayRemainingAfterEnd[beam] = itsFineDelaysAfterEnd[beam][0];
-    blockHeader.time[beam]			 = itsDelayedStamps[beam];
+    bfraw_data.block_header.coarseDelayApplied[beam] = itsSamplesDelay[beam];
+    bfraw_data.block_header.fineDelayRemainingAtBegin[beam]	 = itsFineDelaysAtBegin[beam][0];
+    bfraw_data.block_header.fineDelayRemainingAfterEnd[beam] = itsFineDelaysAfterEnd[beam][0];
+    bfraw_data.block_header.time[beam] = itsDelayedStamps[beam];
 
     // FIXME: the current BlockHeader format does not provide space for
     // the flags from multiple RSP boards --- use the flags of RSP board 0
-    itsFlags[0][beam].marshall(reinterpret_cast<char *>(&blockHeader.flags[beam]), sizeof(struct BlockHeader::marshalledFlags));
-  }
+		itsFlags[0][beam].marshall(reinterpret_cast<char *>(&bfraw_data.block_header.flags[beam]), sizeof(struct DAL::BFRawFormat::BlockHeader::marshalledFlags));
+	}
   
-  rawDataStream->write(&blockHeader, sizeof blockHeader);
+  rawDataStream->write(&bfraw_data.block_header, sizeof bfraw_data.block_header);
 
   for (unsigned subband = 0; subband < nrSubbands; subband ++)
     itsBBuffers[subbandToRSPboardMapping[subband]]->sendUnalignedSubband(rawDataStream, subbandToRSPslotMapping[subband], subbandToBeamMapping[subband]);
 }
-
-#endif
+//#endif
 
 
 template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::stopTransaction()
@@ -487,12 +513,20 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process()
 
   NSTimer timer;
   timer.start();
-
+	/*
 #if defined DUMP_RAW_DATA
   dumpRawData();
 #else
   toComputeNodes();
 #endif
+	*/
+	
+	if (itsPS->dumpRawData()) {
+  	dumpRawData();
+	}
+	else {
+  	toComputeNodes();
+	}
 
   stopTransaction();
   itsSyncedStamp += itsNSamplesPerSec;
