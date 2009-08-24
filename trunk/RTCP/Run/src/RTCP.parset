@@ -6,7 +6,10 @@ OLAP.OLAP_Conn.IONProc_CNProc_Transport = FCNP
 
 OLAP.log2SasMac = F
 OLAP.OLAP_Conn.log2SasMacOutputs = [tcp:0.0.0.0:24500]
-OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.181.0.2:4000]
+
+OLAP.OLAP_Conn.rawDataOutputOnly = F
+#OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.181.0.1:4000,tcp:10.181.0.2:4000,tcp:10.181.0.3:4000]
+OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.181.0.1:4000]
 
 OLAP.realTime = T
 # OLAP.CNProc.integrationSteps = 608  #768 at 200MHz (generated)

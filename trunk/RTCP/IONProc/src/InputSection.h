@@ -42,7 +42,7 @@
 #include <boost/multi_array.hpp>
 #include <pthread.h>
 
-#undef DUMP_RAW_DATA
+//#define DUMP_RAW_DATA
 
 namespace LOFAR {
 namespace RTCP {
@@ -66,9 +66,9 @@ template <typename SAMPLE_TYPE> class InputSection {
     void			 toComputeNodes();
     void			 stopTransaction();
 
-#if defined DUMP_RAW_DATA
+//#if defined DUMP_RAW_DATA
     void			 dumpRawData();
-#endif
+//#endif
 
     bool			 itsDelayCompensation;
     bool			 itsNeedDelays;
