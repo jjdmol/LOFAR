@@ -62,7 +62,6 @@ public:
 	~Parset();
 	 
 	void           check() const;
-
 	double         startTime() const;
 	double         stopTime() const;
 	uint32	       nrStations() const;
@@ -126,6 +125,8 @@ public:
 	int32          nrSlotsInFrame() const;
 	string         partitionName() const;
 	bool           realTime() const;
+	
+	bool 					 dumpRawData() const;
 	
 	vector<double> getBeamDirection(unsigned beam) const;
 	string         getBeamDirectionType(unsigned beam) const;
@@ -410,6 +411,11 @@ inline int32 Parset::nrSlotsInFrame() const
 inline string Parset::partitionName() const
 {
   return getString("OLAP.CNProc.partition");
+}
+
+inline bool Parset::dumpRawData() const
+{
+	return getBool("OLAP.OLAP_Conn.rawDataOutputOnly");
 }
 
 inline bool Parset::realTime() const
