@@ -170,7 +170,7 @@ public:
 	// a collection.
 	// @{
 
-	// Add the given pair to the collection. When the \c aKey does not exist 
+	// Add the given pair to the collection. When the \c aKey already exist 
 	// in the collection an exception is thrown.
 	void	add    (const string& aKey, const ParameterValue& aValue);
 
