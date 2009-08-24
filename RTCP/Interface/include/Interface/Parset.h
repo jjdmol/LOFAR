@@ -62,6 +62,8 @@ public:
 	~Parset();
 	 
 	void           check() const;
+	void	       maintainBackwardCompatibility();
+
 	double         startTime() const;
 	double         stopTime() const;
 	uint32	       nrStations() const;

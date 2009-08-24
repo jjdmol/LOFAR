@@ -31,6 +31,7 @@
 //#include <APL/APLCommon/APLUtilities.h>
 #include <Interface/Parset.h>
 #include <Interface/Exceptions.h>
+#include <Interface/PrintVector.h>
 
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
@@ -59,6 +60,7 @@ Parset::Parset(ParameterSet *aParSet)
   ParameterSet(*aParSet),
   itsObservation(aParSet)
 {
+   maintainBackwardCompatibility();
    check();
 }
 
@@ -88,16 +90,15 @@ void Parset::check() const
     checkSubbandCount("Observation.beamList");
     checkSubbandCount("Observation.rspBoardList");
     checkSubbandCount("Observation.rspSlotList");
-  } 
-  else {
+  } else {
     checkSubbandCountFromObservation("Observation.beamList", itsObservation.getBeamList());
     checkSubbandCountFromObservation("Observation.rspBoardList", itsObservation.getRspBoardList());
     checkSubbandCountFromObservation("Observation.rspSlotList", itsObservation.getRspSlotList());
   }
 
   unsigned		slotsPerFrame = nrSlotsInFrame();
-  std::vector<unsigned> boards		 = subbandToRSPboardMapping();
-  std::vector<unsigned> slots		 = subbandToRSPslotMapping();
+  std::vector<unsigned> boards	      = subbandToRSPboardMapping();
+  std::vector<unsigned> slots	      = subbandToRSPslotMapping();
   
   for (unsigned subband = 0; subband < slots.size(); subband ++)
     if (slots[subband] >= slotsPerFrame)
@@ -105,7 +106,7 @@ void Parset::check() const
   
   // check not needed when using Storage
   if (isDefined("OLAP.CNProc.inputPsets")) {
-    std::vector<unsigned> inputs	 = inputPsets();
+    std::vector<unsigned> inputs = inputPsets();
     
     for (std::vector<unsigned>::const_iterator pset = inputs.begin(); pset != inputs.end(); pset ++) {
       unsigned nrRSPboards = getStationNamesAndRSPboardNumbers(*pset).size();
@@ -114,6 +115,26 @@ void Parset::check() const
         if (boards[subband] >= nrRSPboards)
 	  THROW(InterfaceException, "Observation.rspBoardList contains rsp board numbers that do not exist");
     }
+  }
+}
+
+
+void Parset::maintainBackwardCompatibility()
+{
+  // maintain compatibility with MAC, which does not provide the latest greatest keys
+
+  if (!isDefined("OLAP.CNProc.usedCoresInPset")) {
+    LOG_WARN("Specifying \"OLAP.CNProc.coresPerPset\" instead of \"OLAP.CNProc.usedCoresInPset\" is deprecated");
+
+    unsigned		  coresPerPset = getUint32("OLAP.CNProc.coresPerPset");
+    std::vector<unsigned> usedCoresInPset(coresPerPset);
+
+    for (unsigned core = 0; core < coresPerPset; core ++)
+      usedCoresInPset[core] = core;
+
+    std::stringstream str;
+    str << usedCoresInPset;
+    add("OLAP.CNProc.usedCoresInPset", str.str());
   }
 }
 
