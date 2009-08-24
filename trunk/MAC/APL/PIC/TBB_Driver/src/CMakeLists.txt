@@ -41,6 +41,7 @@ lofar_add_library(tp_protocol
 
 lofar_add_library(tbbdriver
   Package__Version.cc
+  TP_Protocol.ph
   DriverSettings.cc
   Command.cc
   AllocCmd.cc
