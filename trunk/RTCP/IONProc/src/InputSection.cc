@@ -435,7 +435,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
 
     // FIXME: the current BlockHeader format does not provide space for
     // the flags from multiple RSP boards --- use the flags of RSP board 0
-    itsFlags[0][beam].marshall(reinterpret_cast<char *>(&bfraw_data.block_header.flags[beam]), sizeof(struct DAL::BFRawFormat::BlockHeader::marshalledFlags));
+    itsFlags[0][beam].marshall(reinterpret_cast<char *>(&bfraw_data.block_header.flags[beam]), sizeof(struct BFRawFormat::BlockHeader::marshalledFlags));
   }
   
   rawDataStream->write(&bfraw_data.block_header, sizeof bfraw_data.block_header);
