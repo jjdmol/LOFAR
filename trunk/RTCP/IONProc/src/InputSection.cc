@@ -192,7 +192,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   itsFlags.resize(boost::extents[itsNrInputs][itsNrBeams]);
 
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
-    itsBBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(ps->inputBufferSize(), ps->getUint32("OLAP.nrTimesInFrame"), ps->nrSlotsInFrame(), itsNrBeams, itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
+    itsBBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(rsp, ps->inputBufferSize(), ps->getUint32("OLAP.nrTimesInFrame"), ps->nrSlotsInFrame(), itsNrBeams, itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
 
 	vector<string> rawDataOutputs;
 	unsigned	 psetIndex;
@@ -365,7 +365,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
       }
     }
 
-    metaData.write(stream);
+    metaData.write( stream );
 
     // now send all subband data
     for (unsigned psetIndex = 0; psetIndex < itsNrOutputPsets; psetIndex ++) {
@@ -396,27 +396,11 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
   vector<unsigned> subbandToRSPslotMapping  = itsPS->subbandToRSPslotMapping();
   unsigned	   nrSubbands		    = itsPS->nrSubbands();
 
-	DAL::BFRawFormat bfraw_data;
+  BFRawFormat bfraw_data;
 	
   if (!fileHeaderWritten) {
     if (nrSubbands > 62)
       THROW(IONProcException, "too many subbands for raw data format");
-		/*
-    struct FileHeader {
-      uint32	magic;		// 0x3F8304EC, also determines endianness
-      uint8	bitsPerSample;
-      uint8	nrPolarizations;
-			uint16	nrSubbands; 
-      uint32	nrSamplesPerBeamlet;
-      char	station[20];
-      double	sampleRate;	// typically 156250 or 195312.5
-      double	subbandFrequencies[62];
-      double	beamDirections[8][2];
-      int16     subbandToBeamMapping[62];
-			int32     pad; // wordt padding
-      
-    } bfraw_data.header;  
-		*/
 		
     memset(&bfraw_data.header, 0, sizeof bfraw_data.header);
 
@@ -437,23 +421,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
     rawDataStream->write(&bfraw_data.header, sizeof bfraw_data.header);
     fileHeaderWritten = true;
 
-	}
-	/*
-  struct BlockHeader {
-    uint32	magic; // 0x2913D852
-    int32	coarseDelayApplied[8];
-    int32       pad;
-    double	fineDelayRemainingAtBegin[8], fineDelayRemainingAfterEnd[8];
-    int64	time[8]; // compatible with TimeStamp class.
-    struct marshalledFlags {
-      uint32	nrRanges;
-      struct range {
-	uint32  begin; // inclusive
-	uint32  end;   // exclusive
-      } flagsRanges[16]; 
-    } flags[8];
-  } bfraw_data.block_header;  
-	*/
+  }
 	
   memset(&bfraw_data.block_header, 0, sizeof bfraw_data.block_header);
 
@@ -467,13 +435,14 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
 
     // FIXME: the current BlockHeader format does not provide space for
     // the flags from multiple RSP boards --- use the flags of RSP board 0
-		itsFlags[0][beam].marshall(reinterpret_cast<char *>(&bfraw_data.block_header.flags[beam]), sizeof(struct DAL::BFRawFormat::BlockHeader::marshalledFlags));
-	}
+    itsFlags[0][beam].marshall(reinterpret_cast<char *>(&bfraw_data.block_header.flags[beam]), sizeof(struct DAL::BFRawFormat::BlockHeader::marshalledFlags));
+  }
   
   rawDataStream->write(&bfraw_data.block_header, sizeof bfraw_data.block_header);
 
-  for (unsigned subband = 0; subband < nrSubbands; subband ++)
+  for (unsigned subband = 0; subband < nrSubbands; subband ++) {
     itsBBuffers[subbandToRSPboardMapping[subband]]->sendUnalignedSubband(rawDataStream, subbandToRSPslotMapping[subband], subbandToBeamMapping[subband]);
+  }
 }
 
 
