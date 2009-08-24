@@ -45,22 +45,13 @@
 #include <cstdio>
 #include <stdexcept>
 
-//#define DUMP_RAW_DATA
-
-//#if defined DUMP_RAW_DATA
 #include <Stream/SocketStream.h>
-//static uint32 test;
-//static Float64 testttt;
-//#include <LOFAR_Datatypes/BFRawFormat.h>
-#include "/cephome/jong/projects/usg/trunk/src/DAL/implement/BFRawFormat.h" // FIXME needed for dumping raw data
-//#endif
+#include <Interface/BFRawFormat.h>
 
 namespace LOFAR {
 namespace RTCP {
 
-//#if defined DUMP_RAW_DATA
 static Stream *rawDataStream;
-//#endif
 
 
 template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const std::vector<Stream *> &clientStreams, unsigned psetNumber)
@@ -144,13 +135,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   itsNrBeams		= ps->nrBeams();
   itsNrPencilBeams	= ps->nrPencilBeams();
   itsNrOutputPsets	= ps->outputPsets().size();
-	/*
-#if defined DUMP_RAW_DATA
-  itsNHistorySamples	= 0;
-#else
-  itsNHistorySamples	= ps->nrHistorySamples();
-#endif
-	*/
+	
 	if (ps->dumpRawData()) {
   	itsNHistorySamples	= 0;
 	}
@@ -209,7 +194,6 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
     itsBBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(ps->inputBufferSize(), ps->getUint32("OLAP.nrTimesInFrame"), ps->nrSlotsInFrame(), itsNrBeams, itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
 
-//#if defined DUMP_RAW_DATA
 	vector<string> rawDataOutputs;
 	unsigned	 psetIndex;
 	string rawDataOutput;
@@ -225,7 +209,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   	LOG_DEBUG_STR("writing raw data to " << rawDataOutput);
 		rawDataStream = Parset::createStream(rawDataOutput, false); // client
 	}
-//#endif
+
 
   startThreads();
 
@@ -402,7 +386,6 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
 }
 
 
-//#if defined DUMP_RAW_DATA
 
 template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
 {
@@ -492,7 +475,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
   for (unsigned subband = 0; subband < nrSubbands; subband ++)
     itsBBuffers[subbandToRSPboardMapping[subband]]->sendUnalignedSubband(rawDataStream, subbandToRSPslotMapping[subband], subbandToBeamMapping[subband]);
 }
-//#endif
+
 
 
 template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::stopTransaction()
@@ -513,13 +496,6 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process()
 
   NSTimer timer;
   timer.start();
-	/*
-#if defined DUMP_RAW_DATA
-  dumpRawData();
-#else
-  toComputeNodes();
-#endif
-	*/
 	
 	if (itsPS->dumpRawData()) {
   	dumpRawData();
