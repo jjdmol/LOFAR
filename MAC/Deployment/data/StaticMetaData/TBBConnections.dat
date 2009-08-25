@@ -7,8 +7,6 @@
 #
 # Station  Board      DestinationNode
 CS001      TBB_0      LIST001
-CS001      TBB_1      LIST002
-
 CS002      TBB_0      LIST001
 CS003      TBB_0      LIST001
 CS004      TBB_0      LIST001
@@ -17,10 +15,7 @@ CS006      TBB_0      LIST001
 CS007      TBB_0      LIST001
 CS008      TBB_0      LIST001
 CS009      TBB_0      LIST001
-
 CS010      TBB_0      LIST001
-CS010      TBB_2      LIST002
-
 CS011      TBB_0      LIST001
 CS012      TBB_0      LIST001
 CS013      TBB_0      LIST001
