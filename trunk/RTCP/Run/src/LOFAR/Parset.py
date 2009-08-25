@@ -272,6 +272,26 @@ class Parset(util.Parset.Parset):
       del self['OLAP.IONProc.integrationSteps']
       del self['OLAP.CNProc.integrationSteps']
 
+    def getStoragePorts( self ):
+      """ Returns a dictionary of the ports (value) required by each storage node (key). """
+
+      globalPorts = self.getExpandedInt32Vector("OLAP.OLAP_Conn.IONProc_Storage_Ports")
+      storageNodes = self.getStringVector("OLAP.OLAP_Conn.IONProc_Storage_ServerHosts")
+      subbandMapping = self.getExpandedInt32Vector("OLAP.storageNodeList")
+
+      localPorts = {}
+
+      for s in storageNodes:
+        localPorts[s] = []
+
+      for i,s in enumerate(subbandMapping):
+        node = storageNodes[s]
+        portnr = globalPorts[i]
+
+        localPorts[node].append(portnr)
+
+      return localPorts
+
     def check( self ):
       """ Check the Parset configuration for inconsistencies. """
 

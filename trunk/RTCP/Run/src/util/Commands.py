@@ -1,11 +1,16 @@
 import os
 import fcntl
 import socket
-from subprocess import Popen,STDOUT,call
+from subprocess import Popen,STDOUT,call,PIPE
 from Hosts import ropen
 from tee import Tee
 
 DRYRUN = False
+
+def backquote( cmdline ):
+  """ Run a command line and return the output. """
+
+  return Popen( cmdline.split(), stdout=PIPE, stderr=STDOUT ).communicate()[0]
 
 def debug( str ):
   """ Override with custom logging function. """
