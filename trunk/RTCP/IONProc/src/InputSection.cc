@@ -24,43 +24,19 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <Common/Timer.h>
-#include <Common/PrettyUnits.h>
 #include <InputSection.h>
-#include <BeamletBuffer.h>
-#include <WH_DelayCompensation.h>
-#include <InputThread.h>
-#include <ION_Allocator.h>
-#include <Scheduling.h>
-#include <Interface/AlignedStdAllocator.h>
-#include <Interface/CN_Command.h>
-#include <Interface/CN_Mapping.h>
-#include <Interface/SubbandMetaData.h>
-#include <Interface/Exceptions.h>
 #include <Stream/SocketStream.h>
 
-#include <pthread.h>
-#include <sys/time.h>
-
-#include <cstdio>
-#include <stdexcept>
-
-#include <Stream/SocketStream.h>
-#include <Interface/BFRawFormat.h>
 
 namespace LOFAR {
 namespace RTCP {
 
-static Stream *rawDataStream;
 
-
-template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const std::vector<Stream *> &clientStreams, unsigned psetNumber)
+template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const std::vector<Stream *> &cnStreams, unsigned psetNumber)
 :
-  itsClientStreams(clientStreams),
+  itsCNstreams(cnStreams),
   itsPsetNumber(psetNumber),
-  itsDelayComp(0),
-  itsLogThread(0),
-  itsDelayTimer("delay consumer",true,true)
+  itsLogThread(0)
 {
 }
 
@@ -71,50 +47,16 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::~InputSection()
 }
 
 
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::startThreads()
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputStreams(const Parset *ps, const std::vector<Parset::StationRSPpair> &inputs)
 {
-  itsLogThread = new LogThread(itsNrInputs);
-
-  /* start up thread which writes RSP data from ethernet link
-     into cyclic buffers */
-
-  typename InputThread<SAMPLE_TYPE>::ThreadArgs args;
-
-  args.nrTimesPerPacket    = itsPS->getInt32("OLAP.nrTimesInFrame");
-  args.nrSlotsPerPacket    = itsPS->nrSlotsInFrame();
-  args.isRealTime	   = itsPS->realTime();
-  args.startTime	   = itsSyncedStamp;
-
-  itsInputThreads.resize(itsNrInputs);
-
-  for (unsigned thread = 0; thread < itsNrInputs; thread ++) {
-    args.threadID	    = thread;
-    args.stream		    = itsInputStreams[thread];
-    args.BBuffer            = itsBBuffers[thread];
-    args.packetCounters     = &itsLogThread->itsCounters[thread];
-
-    itsInputThreads[thread] = new InputThread<SAMPLE_TYPE>(args);
-  }
-}
-
-
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const Parset *ps)
-{
-	itsPS = ps;
-  itsSampleRate = ps->sampleRate();
-  TimeStamp::setStationClockSpeed(static_cast<unsigned>(1024 * itsSampleRate));
-  std::vector<Parset::StationRSPpair> inputs = ps->getStationNamesAndRSPboardNumbers(itsPsetNumber);
-  itsNrInputs = inputs.size();
-
-  itsInputStreams.resize(itsNrInputs);
+  itsInputStreams.resize(itsNrRSPboards);
 
   LOG_DEBUG("input list:");
-  
 
-  for (unsigned i = 0; i < itsNrInputs; i ++) {
-    string    &station	 = inputs[i].station;
-    unsigned  rsp	 = inputs[i].rsp;
-    string    streamName = ps->getInputStreamName(station, rsp);
+  for (unsigned i = 0; i < itsNrRSPboards; i ++) {
+    const string &station   = inputs[i].station;
+    unsigned	 rsp	    = inputs[i].rsp;
+    std::string	 streamName = ps->getInputStreamName(station, rsp);
 
     LOG_DEBUG_STR("  " << i << ": station \"" << station << "\", RSP board " << rsp << ", reads from \"" << streamName << '"');
 
@@ -128,362 +70,69 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
     if (sstr != 0)
       sstr->setReadBufferSize(24 * 1024 * 1024); // stupid kernel multiplies this by 2
   }
-
-  itsNSubbands          = ps->nrSubbands();
-  itsNSubbandsPerPset	= ps->nrSubbandsPerPset();
-  itsNSamplesPerSec	= ps->nrSubbandSamples();
-  itsNrBeams		= ps->nrBeams();
-  itsNrPencilBeams	= ps->nrPencilBeams();
-  itsNrOutputPsets	= ps->outputPsets().size();
-	
-	if (ps->dumpRawData()) {
-  	itsNHistorySamples	= 0;
-	}
-	else {
-  	itsNHistorySamples	= ps->nrHistorySamples();
-	}
-
-  itsCurrentComputeCore = 0;
-  itsNrCoresPerPset	= ps->nrCoresPerPset();
-  itsSampleDuration     = ps->sampleDuration();
-
-  LOG_DEBUG_STR("nrSubbands = " << ps->nrSubbands());
-  LOG_DEBUG_STR("nrChannelsPerSubband = " << ps->nrChannelsPerSubband());
-  LOG_DEBUG_STR("nrStations = " << ps->nrStations());
-  LOG_DEBUG_STR("nrBitsPerSample = " << ps->nrBitsPerSample());
-
-  itsDelayCompensation	      = ps->delayCompensation();
-  itsNeedDelays               = ps->delayCompensation() || ps->nrPencilBeams() > 0;
-  itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
-  itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping();
-  itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping();
-
-  const double startTime = ps->startTime();
-
-  const double sampleFreq = ps->sampleRate();
-  const unsigned seconds    = static_cast<unsigned>(floor(startTime));
-  const unsigned samples    = static_cast<unsigned>((startTime - floor(startTime)) * sampleFreq);
-
-  itsSyncedStamp = TimeStamp(seconds, samples);
- 
-  if (itsNeedDelays) {
-    itsDelaysAtBegin.resize(itsNrBeams,itsNrPencilBeams);
-    itsDelaysAfterEnd.resize(itsNrBeams,itsNrPencilBeams);
-    itsBeamDirectionsAtBegin.resize(itsNrBeams,itsNrPencilBeams);
-    itsBeamDirectionsAfterEnd.resize(itsNrBeams,itsNrPencilBeams);
-    
-    itsDelayComp = new WH_DelayCompensation(ps, inputs[0].station, itsSyncedStamp); // TODO: support more than one station
-
-    itsDelayComp->getNextDelays( itsBeamDirectionsAfterEnd, itsDelaysAfterEnd );
-
-    itsDelaysAtBegin = itsDelaysAfterEnd;
-    itsBeamDirectionsAtBegin = itsBeamDirectionsAfterEnd;
-  }
-   
-  itsIsRealTime       = ps->realTime();
-  itsMaxNetworkDelay  = ps->maxNetworkDelay();
-  LOG_DEBUG_STR("maxNetworkDelay = " << itsMaxNetworkDelay << " samples");
-
-  itsBBuffers.resize(itsNrInputs);
-  itsDelayedStamps.resize(itsNrBeams);
-  itsSamplesDelay.resize(itsNrBeams);
-  itsFineDelaysAtBegin.resize(itsNrBeams,itsNrPencilBeams);
-  itsFineDelaysAfterEnd.resize(itsNrBeams,itsNrPencilBeams);
-  itsFlags.resize(boost::extents[itsNrInputs][itsNrBeams]);
-
-  for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
-    itsBBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(rsp, ps->inputBufferSize(), ps->getUint32("OLAP.nrTimesInFrame"), ps->nrSlotsInFrame(), itsNrBeams, itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
-
-	vector<string> rawDataOutputs;
-	unsigned	 psetIndex;
-	string rawDataOutput;
-	
-	if (itsPS->dumpRawData()) {
-		rawDataOutputs = ps->getStringVector("OLAP.OLAP_Conn.rawDataOutputs");
-  	psetIndex	= ps->inputPsetIndex(itsPsetNumber);
-
-  if (psetIndex >= rawDataOutputs.size())
-    THROW(IONProcException, "there are more input section nodes than entries in OLAP.OLAP_Conn.rawDataOutputs");
-
-  	rawDataOutput = rawDataOutputs[psetIndex];
-  	LOG_DEBUG_STR("writing raw data to " << rawDataOutput);
-		rawDataStream = Parset::createStream(rawDataOutput, false); // client
-	}
-
-
-  startThreads();
-
-#if defined HAVE_BGP_ION // FIXME: not in preprocess
-  doNotRunOnCore0();
-  setPriority(3);
-#endif
 }
 
 
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::limitFlagsLength(SparseSet<unsigned> &flags)
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputThreads(const Parset *ps)
 {
-  const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
+  itsLogThread = new LogThread(itsNrRSPboards);
 
-  if (ranges.size() > 16)
-    flags.include(ranges[15].begin, ranges.back().end);
-}
+  /* start up thread which writes RSP data from ethernet link
+     into cyclic buffers */
 
+  typename InputThread<SAMPLE_TYPE>::ThreadArgs args;
 
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::computeDelays()
-{
-  if (itsNeedDelays) {
-    itsDelayTimer.start();
+  args.nrTimesPerPacket    = ps->getInt32("OLAP.nrTimesInFrame");
+  args.nrSlotsPerPacket    = ps->nrSlotsInFrame();
+  args.isRealTime	   = ps->realTime();
+  args.startTime	   = TimeStamp(static_cast<int64>(ps->startTime() * ps->sampleRate()));
 
-    itsDelaysAtBegin = itsDelaysAfterEnd; // from previous integration
-    itsBeamDirectionsAtBegin = itsBeamDirectionsAfterEnd; // from previous integration
-    
-    itsDelayComp->getNextDelays( itsBeamDirectionsAfterEnd, itsDelaysAfterEnd );
-   
-    for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-      // The coarse delay is determined for the center of the current
-      // time interval and is expressed in an entire amount of samples.
-      //
-      // We use the central pencil beam (#0) for the coarse delay compensation.
-      const signed int coarseDelay = static_cast<signed int>(floor(0.5 * (itsDelaysAtBegin[beam][0] + itsDelaysAfterEnd[beam][0]) * itsSampleRate + 0.5));
+  itsInputThreads.resize(itsNrRSPboards);
 
-      // The fine delay is determined for the boundaries of the current
-      // time interval and is expressed in seconds.
-      const double d = coarseDelay * itsSampleDuration;
+  for (unsigned thread = 0; thread < itsNrRSPboards; thread ++) {
+    args.threadID	    = thread;
+    args.stream		    = itsInputStreams[thread];
+    args.BBuffer            = itsBBuffers[thread];
+    args.packetCounters     = &itsLogThread->itsCounters[thread];
 
-      itsDelayedStamps[beam]      -= coarseDelay;
-      itsSamplesDelay[beam]       = -coarseDelay;
-
-      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil++ ) {
-        // we don't do coarse delay compensation for the individual pencil beams to avoid complexity and overhead
-        itsFineDelaysAtBegin[beam][pencil]  = static_cast<float>(itsDelaysAtBegin[beam][pencil] - d);
-        itsFineDelaysAfterEnd[beam][pencil] = static_cast<float>(itsDelaysAfterEnd[beam][pencil] - d);
-      }
-    }
-
-    itsDelayTimer.stop();
-  } else {
-    for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-      itsSamplesDelay[beam]       = 0;
-
-      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil++ ) {
-        itsFineDelaysAtBegin[beam][pencil]  = 0;
-        itsFineDelaysAfterEnd[beam][pencil] = 0;
-      }
-    }  
+    itsInputThreads[thread] = new InputThread<SAMPLE_TYPE>(args);
   }
 }
 
 
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::startTransaction()
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const Parset *ps)
 {
-  for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++) {
-    itsBBuffers[rsp]->startReadTransaction(itsDelayedStamps, itsNSamplesPerSec + itsNHistorySamples);
+  TimeStamp::setStationClockSpeed(static_cast<unsigned>(1024 * ps->sampleRate()));
 
-    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-      /*if (itsMustComputeFlags[rsp][beam])*/ { // TODO
-	itsFlags[rsp][beam] = itsBBuffers[rsp]->readFlags(beam);
-	limitFlagsLength(itsFlags[rsp][beam]);
-      }
-  }
-}
+  std::vector<Parset::StationRSPpair> inputs = ps->getStationNamesAndRSPboardNumbers(itsPsetNumber);
+  itsNrRSPboards = inputs.size();
 
+  itsBBuffers.resize(itsNrRSPboards);
 
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::writeLogMessage() const
-{
-  std::stringstream logStr;
-  logStr << itsSyncedStamp;
+  for (unsigned rsp = 0; rsp < itsNrRSPboards; rsp ++)
+    itsBBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(ps);
 
-  if (itsIsRealTime) {
-    struct timeval tv;
+  itsBeamletBufferToComputeNode = new BeamletBufferToComputeNode<SAMPLE_TYPE>(itsCNstreams, itsBBuffers, itsPsetNumber);
 
-    gettimeofday(&tv, 0);
+  createInputStreams(ps, inputs);
+  createInputThreads(ps);
 
-    double currentTime  = tv.tv_sec + tv.tv_usec / 1e6;
-    double expectedTime = (itsSyncedStamp + itsNSamplesPerSec + itsMaxNetworkDelay) * itsSampleDuration;
-
-    logStr << " late: " << PrettyTime(currentTime - expectedTime);
-  }
-
-  if (itsDelayCompensation) {
-    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-      logStr << (beam == 0 ? ", delays: [" : ", ") << PrettyTime(itsDelaysAtBegin[beam][0], 7);
-      //logStr << (beam == 0 ? ", delays: [" : ", ") << PrettyTime(itsDelaysAtBegin[beam], 7) << " = " << itsSamplesDelay[beam] << " samples + " << PrettyTime(itsFineDelaysAtBegin[beam], 7);
-
-    logStr << "]";
-  }
-
-  for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
-    logStr << ", flags " << rsp << ": " << itsFlags[rsp][0] << '(' << std::setprecision(3) << (100.0 * itsFlags[rsp][0].count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)"; // not really correct; beam(0) may be shifted
-  
-  LOG_INFO(logStr.str());
-}
-
-
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
-{
-  // If the total number of subbands is not dividable by the nrSubbandsPerPset,
-  // we may have to send dummy process commands, without sending subband data.
-
-  CN_Command command(CN_Command::PROCESS);
-  
-  for (unsigned subbandBase = 0; subbandBase < itsNSubbandsPerPset; subbandBase ++) {
-    Stream *stream = itsClientStreams[itsCurrentComputeCore];
-
-    // tell CN to process data
-    command.write(stream);
-
-    // create and send all metadata in one "large" message, since initiating a message
-    // has significant overhead in FCNP.
-    SubbandMetaData metaData(itsNrOutputPsets, itsNrPencilBeams, 16);
-    
-    for (unsigned psetIndex = 0; psetIndex < itsNrOutputPsets; psetIndex ++) {
-      unsigned subband = itsNSubbandsPerPset * psetIndex + subbandBase;
-
-      if (subband < itsNSubbands) {
-        unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-        unsigned beam     = itsSubbandToBeamMapping[subband];
-
-        if (itsNeedDelays) {
-          for (unsigned p = 0; p < itsNrPencilBeams; p ++) {
-            struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(psetIndex)[p];
-
-	    beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
-	    beamInfo.delayAfterEnd  = itsFineDelaysAfterEnd[beam][p];
-
-	    const vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam][p].coord().get();
-	    const vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam][p].coord().get();
-
-	    for (unsigned i = 0; i < 3; i ++) {
-	      beamInfo.beamDirectionAtBegin[i]  = beamDirBegin[i];
-	      beamInfo.beamDirectionAfterEnd[i] = beamDirEnd[i];
-	    }
-	  }  
-        }  
-
-        metaData.alignmentShift(psetIndex) = itsBBuffers[rspBoard]->alignmentShift(beam);
-        metaData.setFlags(psetIndex, itsFlags[rspBoard][beam]);
-      }
-    }
-
-    metaData.write( stream );
-
-    // now send all subband data
-    for (unsigned psetIndex = 0; psetIndex < itsNrOutputPsets; psetIndex ++) {
-      unsigned subband = itsNSubbandsPerPset * psetIndex + subbandBase;
-
-      if (subband < itsNSubbands) {
-	unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-	unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
-	unsigned beam     = itsSubbandToBeamMapping[subband];
-
-	itsBBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
-      }
-    }
-
-    if (++ itsCurrentComputeCore == itsNrCoresPerPset)
-      itsCurrentComputeCore = 0;
-  }
-}
-
-
-
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
-{
-  static bool fileHeaderWritten = false;
-
-  vector<unsigned> subbandToBeamMapping     = itsPS->subbandToBeamMapping();
-  vector<unsigned> subbandToRSPboardMapping = itsPS->subbandToRSPboardMapping();
-  vector<unsigned> subbandToRSPslotMapping  = itsPS->subbandToRSPslotMapping();
-  unsigned	   nrSubbands		    = itsPS->nrSubbands();
-
-  BFRawFormat bfraw_data;
-	
-  if (!fileHeaderWritten) {
-    if (nrSubbands > 62)
-      THROW(IONProcException, "too many subbands for raw data format");
-		
-    memset(&bfraw_data.header, 0, sizeof bfraw_data.header);
-
-    bfraw_data.header.magic = 0x3F8304EC;
-    bfraw_data.header.bitsPerSample = 16;
-    bfraw_data.header.nrPolarizations = 2;
-    bfraw_data.header.nrSubbands = nrSubbands;
-		bfraw_data.header.nrSamplesPerSubband = itsNSamplesPerSec;
-    strncpy(bfraw_data.header.station, itsPS->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station.c_str(), sizeof bfraw_data.header.station);
-    bfraw_data.header.sampleRate = itsSampleRate;
-    memcpy(bfraw_data.header.subbandFrequencies, &itsPS->subbandToFrequencyMapping()[0], nrSubbands * sizeof(double));
-
-    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-      memcpy(bfraw_data.header.beamDirections[beam], &itsPS->getBeamDirection(beam)[0], sizeof bfraw_data.header.beamDirections[beam]);
-    for (unsigned subband = 0; subband < nrSubbands; subband ++)
-      bfraw_data.header.subbandToBeamMapping[subband] = subbandToBeamMapping[subband];
-
-    rawDataStream->write(&bfraw_data.header, sizeof bfraw_data.header);
-    fileHeaderWritten = true;
-
-  }
-	
-  memset(&bfraw_data.block_header, 0, sizeof bfraw_data.block_header);
-
-  bfraw_data.block_header.magic = 0x2913D852;
-
-  for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-    bfraw_data.block_header.coarseDelayApplied[beam] = itsSamplesDelay[beam];
-    bfraw_data.block_header.fineDelayRemainingAtBegin[beam]	 = itsFineDelaysAtBegin[beam][0];
-    bfraw_data.block_header.fineDelayRemainingAfterEnd[beam] = itsFineDelaysAfterEnd[beam][0];
-    bfraw_data.block_header.time[beam] = itsDelayedStamps[beam];
-
-    // FIXME: the current BlockHeader format does not provide space for
-    // the flags from multiple RSP boards --- use the flags of RSP board 0
-    itsFlags[0][beam].marshall(reinterpret_cast<char *>(&bfraw_data.block_header.flags[beam]), sizeof(struct BFRawFormat::BlockHeader::marshalledFlags));
-  }
-  
-  rawDataStream->write(&bfraw_data.block_header, sizeof bfraw_data.block_header);
-
-  for (unsigned subband = 0; subband < nrSubbands; subband ++) {
-    itsBBuffers[subbandToRSPboardMapping[subband]]->sendUnalignedSubband(rawDataStream, subbandToRSPslotMapping[subband], subbandToBeamMapping[subband]);
-  }
-}
-
-
-
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::stopTransaction()
-{
-  for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
-    itsBBuffers[rsp]->stopReadTransaction();
+  itsBeamletBufferToComputeNode->preprocess(ps);
 }
 
 
 template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process()
 {
-  for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-    itsDelayedStamps[beam] = itsSyncedStamp - itsNHistorySamples;
-
-  computeDelays();
-  startTransaction();
-  writeLogMessage();
-
-  NSTimer timer;
-  timer.start();
-	
-	if (itsPS->dumpRawData()) {
-  	dumpRawData();
-	}
-	else {
-  	toComputeNodes();
-	}
-
-  stopTransaction();
-  itsSyncedStamp += itsNSamplesPerSec;
-
-  timer.stop();
-  LOG_INFO_STR("ION->CN: " << PrettyTime(timer.getElapsed()));
+  itsBeamletBufferToComputeNode->process();
 }
 
 
 template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::postprocess()
 {
   LOG_DEBUG("InputSection::postprocess");
+
+  itsBeamletBufferToComputeNode->postprocess();
+  delete itsBeamletBufferToComputeNode; itsBeamletBufferToComputeNode = 0;
 
   for (unsigned i = 0; i < itsInputThreads.size(); i ++)
     delete itsInputThreads[i];
@@ -500,12 +149,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::postprocess()
 
   itsBBuffers.resize(0);
 
-  delete itsLogThread;	itsLogThread	= 0;
-  delete itsDelayComp;	itsDelayComp	= 0;
-
-  itsSubbandToBeamMapping.resize(0);
-  itsSubbandToRSPboardMapping.resize(0);
-  itsSubbandToRSPslotMapping.resize(0);
+  delete itsLogThread; itsLogThread = 0;
 }
 
 

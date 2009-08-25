@@ -34,6 +34,7 @@
 #include <Common/Timer.h>
 #include <Interface/Config.h>
 #include <Interface/MultiDimArray.h>
+#include <Interface/Parset.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SparseSet.h>
 #include <LockedRanges.h>
@@ -53,7 +54,7 @@ namespace RTCP {
 template<typename SAMPLE_TYPE> class BeamletBuffer
 {
   public:
-	     BeamletBuffer(unsigned bufferSize, unsigned nrTimesPerPacket, unsigned nrSubbands, unsigned nrBeams, unsigned history, bool isSynchronous, unsigned maxNetworkDelay);
+	     BeamletBuffer(const Parset *);
 	     ~BeamletBuffer();
 
     void     writePacketData(const SAMPLE_TYPE *data, const TimeStamp &begin);
@@ -73,7 +74,7 @@ template<typename SAMPLE_TYPE> class BeamletBuffer
 
     pthread_mutex_t			  itsValidDataMutex;
     SparseSet<TimeStamp>		  itsValidData;
-    unsigned				  itsNSubbands;
+    unsigned				  itsNrSubbands;
     size_t				  itsPacketSize;
     unsigned				  itsSize, itsHistorySize;
     ReaderAndWriterSynchronization	  *itsSynchronizedReaderWriter;

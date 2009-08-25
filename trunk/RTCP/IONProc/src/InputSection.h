@@ -30,93 +30,45 @@
 
 //# Includes
 #include <Interface/Parset.h>
-#include <Interface/MultiDimArray.h>
-#include <Interface/RSPTimeStamp.h>
 #include <Stream/Stream.h>
 #include <BeamletBuffer.h>
-#include <WH_DelayCompensation.h>
+#include <BeamletBufferToComputeNode.h>
 #include <InputThread.h>
 #include <LogThread.h>
-#include <AMCBase/Direction.h>
 
 #include <boost/multi_array.hpp>
 #include <pthread.h>
 
-//#define DUMP_RAW_DATA
 
 namespace LOFAR {
 namespace RTCP {
 
 template <typename SAMPLE_TYPE> class InputSection {
   public:
-    InputSection(const std::vector<Stream *> &clientStreams, unsigned psetNumber);
+    InputSection(const std::vector<Stream *> &cnStreams, unsigned psetNumber);
     ~InputSection();
   
-    void			 preprocess(const Parset *ps);
+    void			 preprocess(const Parset *);
     void			 process();
     void			 postprocess();
     
   private:
-    void			 startThreads();
-    static void			 limitFlagsLength(SparseSet<unsigned> &flags);
+    void			 createInputStreams(const Parset *, const std::vector<Parset::StationRSPpair> &inputs);
+    void			 createInputThreads(const Parset *);
 
-    void			 computeDelays();
-    void			 startTransaction();
-    void			 writeLogMessage() const;
-    void			 toComputeNodes();
-    void			 stopTransaction();
-
-//#if defined DUMP_RAW_DATA
-    void			 dumpRawData();
-//#endif
-
-    bool			 itsDelayCompensation;
-    bool			 itsNeedDelays;
-    bool			 itsIsRealTime;
-    std::vector<unsigned>	 itsSubbandToBeamMapping;
-    std::vector<unsigned>	 itsSubbandToRSPboardMapping;
-    std::vector<unsigned>	 itsSubbandToRSPslotMapping;
-
-    std::vector<InputThread<SAMPLE_TYPE> *> itsInputThreads;
+    BeamletBufferToComputeNode<SAMPLE_TYPE> *itsBeamletBufferToComputeNode;
 
     std::vector<Stream *>	 itsInputStreams;
-    const std::vector<Stream *>  &itsClientStreams;
+    const std::vector<Stream *>  &itsCNstreams;
     
-    const Parset		 *itsPS;
-    
-    TimeStamp			 itsSyncedStamp;
-   
-    Matrix<double>		 itsDelaysAtBegin;
-    Matrix<double>		 itsDelaysAfterEnd;
-    Matrix<AMC::Direction>	 itsBeamDirectionsAtBegin;
-    Matrix<AMC::Direction>	 itsBeamDirectionsAfterEnd;
-    unsigned			 itsNrOutputPsets;
-    
-    unsigned			 itsMaxNetworkDelay; // in samples
-    unsigned                     itsNSubbands;
-    unsigned			 itsNSubbandsPerPset;
-    unsigned			 itsNSamplesPerSec;
-    unsigned			 itsNHistorySamples;
-    unsigned			 itsNrInputs;
-    unsigned			 itsNrBeams;
-    unsigned			 itsNrPencilBeams;
-
-    unsigned			 itsCurrentComputeCore, itsNrCoresPerPset;
     unsigned			 itsPsetNumber;
+    unsigned			 itsNrRSPboards;
    
     std::vector<BeamletBuffer<SAMPLE_TYPE> *> itsBBuffers;
-    WH_DelayCompensation	 *itsDelayComp;
     double			 itsSampleRate, itsSampleDuration;
 
-    std::vector<TimeStamp>	 itsDelayedStamps;
-    std::vector<signed int>	 itsSamplesDelay;
-    boost::multi_array<SparseSet<unsigned>, 2> itsFlags;
-
-    Matrix<float>		 itsFineDelaysAtBegin, itsFineDelaysAfterEnd;
-
-    
-    LogThread			 *itsLogThread;
-    NSTimer			 itsDelayTimer;
+    LogThread				    *itsLogThread;
+    std::vector<InputThread<SAMPLE_TYPE> *> itsInputThreads;
 };
 
 } // namespace RTCP

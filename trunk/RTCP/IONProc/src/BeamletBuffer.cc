@@ -44,35 +44,35 @@ template<typename SAMPLE_TYPE> const unsigned BeamletBuffer<SAMPLE_TYPE>::itsNrT
 // itsOffset to a proper value, we can assure that input packets never
 // wrap around the circular buffer
 
-template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(unsigned bufferSize, unsigned nrTimesPerPacket, unsigned nrSubbands, unsigned nrBeams, unsigned history, bool isSynchronous, unsigned maxNetworkDelay)
+template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const Parset *ps)
 :
-  itsNSubbands(nrSubbands),
-  itsPacketSize(sizeof(struct RSP::header) + nrTimesPerPacket * nrSubbands * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE)),
-  itsSize(align(bufferSize, itsNrTimesPerPacket)),
-  itsHistorySize(history),
-  itsSBBuffers(boost::extents[nrSubbands][itsSize][NR_POLARIZATIONS], 128, hugeMemoryAllocator),
+  itsNrSubbands(ps->nrSlotsInFrame()),
+  itsPacketSize(sizeof(struct RSP::header) + itsNrTimesPerPacket * itsNrSubbands * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE)),
+  itsSize(align(ps->inputBufferSize(), itsNrTimesPerPacket)),
+  itsHistorySize(ps->nrHistorySamples()),
+  itsSBBuffers(boost::extents[itsNrSubbands][itsSize][NR_POLARIZATIONS], 128, hugeMemoryAllocator),
   itsOffset(0),
 #if defined HAVE_BGP
   itsStride(reinterpret_cast<char *>(itsSBBuffers[1].origin()) - reinterpret_cast<char *>(itsSBBuffers[0].origin())),
 #else
   itsStride(reinterpret_cast<SAMPLE_TYPE *>(itsSBBuffers[1].origin()) - reinterpret_cast<SAMPLE_TYPE *>(itsSBBuffers[0].origin())),
 #endif
-  itsReadTimer("buffer read", true,true),
-  itsWriteTimer("buffer write", true,true)
+  itsReadTimer("buffer read", true, true),
+  itsWriteTimer("buffer write", true, true)
 {
-  if (nrTimesPerPacket != itsNrTimesPerPacket)
+  if (ps->getUint32("OLAP.nrTimesInFrame") != itsNrTimesPerPacket)
     THROW(IONProcException, "OLAP.nrTimesInFrame should be " << boost::lexical_cast<std::string>(itsNrTimesPerPacket));
 
   pthread_mutex_init(&itsValidDataMutex, 0);
 
-  if (isSynchronous)
-    itsSynchronizedReaderWriter = new SynchronizedReaderAndWriter(itsSize);
+  if (ps->realTime())
+    itsSynchronizedReaderWriter = new TimeSynchronizedReader(ps->maxNetworkDelay());  
   else
-    itsSynchronizedReaderWriter = new TimeSynchronizedReader(maxNetworkDelay);  
+    itsSynchronizedReaderWriter = new SynchronizedReaderAndWriter(itsSize);
 
-  itsEnd.resize(nrBeams);
-  itsStartI.resize(nrBeams);
-  itsEndI.resize(nrBeams);
+  itsEnd.resize(ps->nrBeams());
+  itsStartI.resize(ps->nrBeams());
+  itsEndI.resize(ps->nrBeams());
 
   LOG_DEBUG_STR("Circular buffer at " << itsSBBuffers.origin() << "; contains " << itsSize << " samples");
 }
@@ -89,17 +89,17 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::~BeamletBuffer()
 
 template<> inline void BeamletBuffer<i4complex>::writePacket(i4complex *dst, const i4complex *src)
 {
-  _copy_pkt_to_bbuffer_32_bytes(dst, itsStride, src, itsNSubbands);
+  _copy_pkt_to_bbuffer_32_bytes(dst, itsStride, src, itsNrSubbands);
 }
 
 template<> inline void BeamletBuffer<i8complex>::writePacket(i8complex *dst, const i8complex *src)
 {
-  _copy_pkt_to_bbuffer_64_bytes(dst, itsStride, src, itsNSubbands);
+  _copy_pkt_to_bbuffer_64_bytes(dst, itsStride, src, itsNrSubbands);
 }
 
 template<> inline void BeamletBuffer<i16complex>::writePacket(i16complex *dst, const i16complex *src)
 {
-  _copy_pkt_to_bbuffer_128_bytes(dst, itsStride, src, itsNSubbands);
+  _copy_pkt_to_bbuffer_128_bytes(dst, itsStride, src, itsNrSubbands);
 }
 
 #endif
@@ -107,7 +107,7 @@ template<> inline void BeamletBuffer<i16complex>::writePacket(i16complex *dst, c
 
 template<typename SAMPLE_TYPE> inline void BeamletBuffer<SAMPLE_TYPE>::writePacket(SAMPLE_TYPE *dst, const SAMPLE_TYPE *src)
 {
-  for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
+  for (unsigned sb = 0; sb < itsNrSubbands; sb ++) {
     for (unsigned i = 0; i < itsNrTimesPerPacket * NR_POLARIZATIONS; i ++)
       dst[i] = *src ++;
 
