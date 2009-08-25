@@ -32,6 +32,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 lofar_add_library(ionproc
   Package__Version.cc
   BeamletBuffer.cc
+  BeamletBufferToComputeNode.cc
   CN_Personality.cc
   InputSection.cc
   InputThread.cc
