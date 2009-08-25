@@ -23,7 +23,7 @@ class Parset(util.Parset.Parset):
     def setFilename( self, filename ):
        self.filename = filename
 
-    def getFilename( self, filename ):
+    def getFilename( self ):
        return self.filename
 
     def save(self):

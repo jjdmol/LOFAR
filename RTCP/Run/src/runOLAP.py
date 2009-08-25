@@ -80,6 +80,15 @@ if __name__ == "__main__":
     tcp               station input arrives over TCP
     null              station input is generated from null:
 
+    start=xxx         start/stop time. allowed syntax:
+    stop=xxx            [YYYY-MM-DD] HH:MM[:SS]
+                        timestamp
+                        +seconds
+                        +HH:MM[:SS]
+    run=xxx           run time. allowed syntax:
+                        HH:MM[:SS]
+                        seconds
+
     clock=xxx         use a station clock of xxx MHz
     integration=xxx   use xxx seconds of integration time on the IO node
 
@@ -213,23 +222,11 @@ if __name__ == "__main__":
 
   info( "Observation ID %s" % (obsid,) )
 
-  # resolve all paths now that parset is set up and the observation ID is known
-  for opt in dirgroup.option_list:
-    Locations.setFilename( opt.dest, getattr( options, opt.dest ) )
-
-  # create log and directory if it does not exist
-  for d in ["logdir","rundir"]:
-    if not rexists(Locations.files[d]):
-      warning( "Creating %s directory %s" % ( d, Locations.files[d], ) )
-
-      if not DRYRUN:
-        rmkdir( Locations.files[d] )
-
   # ========== Observations
 
   parsets = []
-  for obsnr,obs in enumerate(args):
-    info( "===== Parsing observation %s: %s =====" % (obsnr,obs,) )
+  for obsIndex,obs in enumerate(args):
+    info( "===== Parsing observation %s: %s =====" % (obsIndex,obs,) )
 
     def splitparam( s ):
       """ Convert a parameter which is either 'key=value' or 'key' into a
@@ -268,11 +265,11 @@ if __name__ == "__main__":
         info( "Distilled partition %s from parset." % (options.partition,) )
       else:
         fatal( "No BlueGene partition selected on command line or in first parset." )
-    elif parset.distillPartition() not in [None,options.partition]:
+    elif parset.distillPartition() not in ["",options.partition]:
       # make sure all parsets use the same partition
       fatal( "Parset selects partition %s, but partition %s was already selected." % (parset.distillPartition(),options.partition) )
 
-    parset.setObsId( obsid )
+    parset.setObsID( obsid )
     parset.setPartition( options.partition )
     parset.setStorageNodes( Locations.nodes["storage"] )
 
@@ -335,15 +332,30 @@ if __name__ == "__main__":
       parset[k] = v
 
     # disable sections we won't start
-    if not start_cnproc:
+    if not options.nocnproc:
       parset.disableCNProc() 
-    if not start_ionproc:
+    if not options.noionproc:
       parset.disableIONProc()
-    if not start_storage:
+    if not options.nostorage:
       parset.disableStorage()
 
+  # resolve all paths now that parsets are set up and the observation ID is known
+  for opt in dirgroup.option_list:
+    Locations.setFilename( opt.dest, getattr( options, opt.dest ) )
+
+  Locations.resolveAllPaths( parsets[0] ) 
+
+  # create log and directory if it does not exist
+  for d in ["logdir","rundir"]:
+    if not rexists(Locations.files[d]):
+      warning( "Creating %s directory %s" % ( d, Locations.files[d], ) )
+
+      if not DRYRUN:
+        rmkdir( Locations.files[d] )
+
+  # finalise and save parsets
+  for p in parsets:
     # parse final settings (derive some extra keys)
-    Locations.resolveAllPaths( parset ) 
     parset.finalise()
 
     # sanity check on parset
@@ -356,6 +368,7 @@ if __name__ == "__main__":
 
   # ========== Run
   info( "========== Run ==========" )
+
 
   runObservations( parsets, options.partition, not options.nocnproc, not options.noionproc, not options.nostorage )
 
