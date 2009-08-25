@@ -9,31 +9,24 @@ id = "(LOFAR::MACIO::F_APL_PROTOCOL+1)";
 
 // specify extra include files
 // e.g.
-include = '<sys/time.h>';
-include = '<linux/types.h>';
 include = '<Common/LofarTypes.h>';
-include = '<Common/lofar_bitset.h>';
-
-include = '<APL/RTCCommon/Timestamp.h>';
 include = '<MD_Protocol/BlAllocArr.h>';
 
 prelude = << PRELUDE_END
-
-typedef	void*	memptr_t;
 
 static const int MD_SUCCESS       	= 1;
 static const int MD_FAILURE       	= 0;
 
 // The protocol implements the following messages.
-// SETBLALLOC			(timestamp,	BlAllocArr)
-// SETBLALLOCACK		(timestamp,	status)
-// GETBLALLOC			(timestamp)
-// GETBLALLOCACK		(timestamp,	status,	BlAllocArr)
-// SUBBLALLOC			(timestamp)
-// SUBBLALLOCACK		(timestamp,	status,	handle)
-// UPDBLALLOC			(timestamp,	status,	handle,	BlAllocArr)
-// UNSUBBLALLOC			(handle)
-// UNSUBBLALLOCACK		(timestamp,	status,	handle)
+// SETBLALLOC			(allocationArray)
+// SETBLALLOCACK		(status)
+// GETBLALLOC			()
+// GETBLALLOCACK		(status, allocationArray)
+// SUBBLALLOC			()
+// SUBBLALLOCACK		(status, arrayID)
+// UPDBLALLOC			(status, arrayID, allocationArray)
+// UNSUBBLALLOC			(arrayID)
+// UNSUBBLALLOCACK		(status, arrayID)
 
 
 // 8 commands
@@ -49,23 +42,14 @@ PRELUDE_END;
 //
 
 //
-// Subband Selection
+// BeamletAllocation
 //
 event = {
   signal = SETBLALLOC;
   dir = IN;
   param = {
-    name = "timestamp";
-    type = "RTC::Timestamp";
-    userdefined;
-  };
-  param = {
-    name = "rcumask";
-    type = "bitset<MEPHeader::MAX_N_RCUS>";
-  };
-  param = {
-    name = "allocation";
-    type = "BeamletAllocation";
+    name = "allocationArray";
+    type = "BlAllocArr";
     userdefined;
   };
 };
@@ -73,11 +57,6 @@ event = {
 event = {
   signal = SETBLALLOCACK;
   dir = OUT;
-  param = {
-    name = "timestamp";
-    type = "RTC::Timestamp";
-    userdefined;
-  };
   param = {
     name = "status";
     type = "int16";
@@ -87,40 +66,18 @@ event = {
 event = {
   signal = GETBLALLOC;
   dir = IN;
-  param = {
-    name = "timestamp";
-    type = "RTC::Timestamp";
-    userdefined;
-  };
-  param = {
-    name = "rcumask";
-    type = "bitset<MEPHeader::MAX_N_RCUS>";
-  };
-  param = {
-    name = "cache";
-    type = "uint8";
-  };
-  param = {
-    name = "type";
-    type = "uint16";
-  };
 };
 
 event = {
   signal = GETBLALLOCACK;
   dir = OUT;
   param = {
-    name = "timestamp";
-    type = "RTC::Timestamp";
-    userdefined;
-  };
-  param = {
     name = "status";
     type = "int16";
   };
   param = {
-    name = "allocation";
-    type = "BeamletAllocation";
+    name = "allocationArray";
+    type = "BlAllocArr";
     userdefined;
   };
 };
@@ -128,40 +85,18 @@ event = {
 event = {
   signal = SUBBLALLOC;
   dir = IN;
-  param = {
-    name = "timestamp";
-    type = "RTC::Timestamp";
-    userdefined;
-  };
-  param = {
-    name = "rcumask";
-    type = "bitset<MEPHeader::MAX_N_RCUS>";
-  };
-  param = {
-    name = "period";
-    type = "uint16";
-  };
-  param = {
-    name = "type";
-    type = "uint16";
-  };
 };
 
 event = {
   signal = SUBBLALLOCACK;
   dir = OUT;
   param = {
-    name = "timestamp";
-    type = "RTC::Timestamp";
-    userdefined;
-  };
-  param = {
     name = "status";
     type = "int16";
   };
   param = {
-    name = "handle";
-    type = "memptr_t";
+    name = "arrayID";
+    type = "string";
   };
 };
 
@@ -169,21 +104,16 @@ event = {
   signal = UPDBLALLOC;
   dir = OUT;
   param = {
-    name = "timestamp";
-    type = "RTC::Timestamp";
-    userdefined;
-  };
-  param = {
     name = "status";
     type = "int16";
   };
   param = {
-    name = "handle";
-    type = "memptr_t";
+    name = "arrayID";
+    type = "string";
   };
   param = {
-    name = "allocation";
-    type = "BeamletAllocation";
+    name = "allocationArray";
+    type = "BlAllocArr";
     userdefined;
   };
 };
@@ -192,8 +122,8 @@ event = {
   signal = UNSUBBLALLOC;
   dir = IN;
   param = {
-    name = "handle";
-    type = "memptr_t";
+    name = "arrayID";
+    type = "string";
   };
 };
 
@@ -201,17 +131,12 @@ event = {
   signal = UNSUBBLALLOCACK;
   dir = OUT;
   param = {
-    name = "timestamp";
-    type = "RTC::Timestamp";
-    userdefined;
-  };
-  param = {
     name = "status";
     type = "int16";
   };
   param = {
-    name = "handle";
-    type = "memptr_t";
+    name = "arrayID";
+    type = "string";
   };
 };
 

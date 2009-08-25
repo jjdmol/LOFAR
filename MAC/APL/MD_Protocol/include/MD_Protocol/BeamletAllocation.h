@@ -30,17 +30,17 @@
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
-  namespace MAC {
+  namespace MD_Protocol {
 
 class BeamletAllocation
 { 
 public:
 	// default constructor
-	BeamletAllocation():
+	BeamletAllocation() :
 		subband(0), beam(-1), observation(0) {};
 
 	// constructor
-	BeamletAllocation(int	subbandNr, int	beamNr, int	obsID):
+	BeamletAllocation(int	subbandNr, int	beamNr, int	obsID) :
 		subband(subbandNr), beam(beamNr), observation(obsID) {};
 
 	//@{
@@ -52,11 +52,11 @@ public:
 
 	// datamembers are public
 	uint32		subband;
-	uint32		beamnr;
+	int32		beam;
 	uint32		observation;
-} 
+};
 
-  } // namespace MAC
+  } // namespace MD_Protocol
 } // namespace LOFAR
 
 #endif

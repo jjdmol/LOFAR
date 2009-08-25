@@ -20,7 +20,6 @@
 //#
 //#  $Id$
 
-
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
@@ -29,7 +28,7 @@
 #include <MD_Protocol/BeamletAllocation.h>
 
 namespace LOFAR {
-  namespace MAC {
+  namespace MD_Protocol {
 
 //
 // getSize()
@@ -44,11 +43,11 @@ unsigned int BeamletAllocation::getSize()
 //
 unsigned int BeamletAllocation::pack   (void* buffer)
 {
-	unsigned int size32	= sizeof(uint32);
+	uint	size32(sizeof(uint32));
 
-	memcpy(((char*)buffer) + 0, 		 &subband, 		  size32);
-	memcpy(((char*)buffer) + size32, 	 &m_nyquist_zone, size32);
-	memcpy(((char*)buffer) + (2*size32), &m_numsubbands,  size32);
+	memcpy(((char*)buffer) + 0, 		 &subband,	   size32);
+	memcpy(((char*)buffer) + size32, 	 &beam, 	   size32);
+	memcpy(((char*)buffer) + (2*size32), &observation, size32);
 
 	return (3 * size32);
 }
@@ -58,14 +57,14 @@ unsigned int BeamletAllocation::pack   (void* buffer)
 //
 unsigned int BeamletAllocation::unpack (void* buffer)
 {
-	unsigned int size32	= sizeof(uint32);
+	uint	size32(sizeof(uint32));
 
-	memcpy(&subband,	 ((char*)buffer) + 0,		   size32);
-	memcpy(&beamnr, 	 ((char*)buffer) + size32, 	   size32);
+	memcpy(&subband, 	 ((char*)buffer) + 0, 		   size32);
+	memcpy(&beam, 		 ((char*)buffer) + size32, 	   size32);
 	memcpy(&observation, ((char*)buffer) + (2*size32), size32);
 
 	return (3 * size32);
 }
 
-  } // namespace MAC
+  } // namespace MD_Protocol
 } // namespace LOFAR
