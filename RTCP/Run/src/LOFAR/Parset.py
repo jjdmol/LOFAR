@@ -18,6 +18,17 @@ class Parset(util.Parset.Parset):
         self.integrationtime = 1.0
 	self.psets = []
 
+        self.filename = ""
+
+    def setFilename( self, filename ):
+       self.filename = filename
+
+    def getFilename( self, filename ):
+       return self.filename
+
+    def save(self):
+       self.writeToFile( self.filename )
+
     def distillStations(self):
         """ Distill station names to use from the parset file and return them. """
 

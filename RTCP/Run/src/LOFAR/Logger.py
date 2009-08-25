@@ -1,3 +1,5 @@
+import sys
+
 APPNAME="CEP"
 
 DEBUG=False
@@ -22,3 +24,4 @@ def error( str ):
 
 def fatal( str ):
   log( "FATAL", str )
+  sys.exit(1)

@@ -48,8 +48,7 @@ class Locations:
         # for all sections.
 	"rundir":  "${BASEDIR}",
 
-        # locations of the observation id counter and tables
-	"mslist":       "/log/MSList",
+        # location of the observation id counter
 	"nextmsnumber": "/log/nextMSNumber",
     } )
 
