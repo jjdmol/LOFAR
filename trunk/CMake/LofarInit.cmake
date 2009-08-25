@@ -190,6 +190,11 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
     set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS FALSE)
   endif(LOFAR_LIBDIR STREQUAL lib64)
 
+  # Make sure that RPATH is linked in for all LOFAR libraries ...
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LOFAR_LIBDIR}")
+  # ... and for all "external" libraries
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
   # Create include directory that will hold symbolic links to all
   # (sub)projects of the current build. This is needed, because we use
   # #include's that all contain the names of the different subprojects
