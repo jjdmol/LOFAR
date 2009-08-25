@@ -29,7 +29,7 @@
 
 error()
 {
-    echo "error: $1"
+    echo "error: ${1}"
     exit 1
 }
 
@@ -56,19 +56,19 @@ shift
 shift
 shift
 shift   # ignore rank
-part=$1
-filesys=$2
-partvds=$3
-lofarroot=$4
-wd=$5
-key=$6
-db_host=$7
-db_port=$8
-db_name=$9
-db_user=$10
-parmdb=$11
-sourcedb=$12
-dry=$13
+part=${1}
+filesys=${2}
+partvds=${3}
+lofarroot=${4}
+wd=${5}
+key=${6}
+db_host=${7}
+db_port=${8}
+db_name=${9}
+db_user=${10}
+parmdb=${11}
+sourcedb=${12}
+dry=${13}
 
 echo "arguments:"
 echo "    part: ${part}"
@@ -133,4 +133,3 @@ echo "execute KernelControl ${key}_kernel_$$.parset 0 > ${key}_kernel_$$.log 2>&
 if test "${dry}" != "dry"; then
     KernelControl "${key}_kernel_$$.parset" 0 > "${key}_kernel_$$.log" 2>&1
 fi
-

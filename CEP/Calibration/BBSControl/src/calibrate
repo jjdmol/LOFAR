@@ -68,19 +68,19 @@ usage()
 
 error()
 {
-    echo "\033[1;31m"`date` "[FAIL] error: $1\033[m"
+    echo "\033[1;31m"`date` "[FAIL] error: ${1}\033[m"
     exit 1
 }
 
 event()
 {
-    echo "\033[1;32m`date` $1\033[m"
+    echo "\033[1;32m`date` ${1}\033[m"
 }
 
 kill_all()
 {
-    event "kill local process(es): $1"
-    for pid in $1; do
+    event "kill local process(es): ${1}"
+    for pid in ${1}; do
         kill -9 "${pid}" >/dev/null 2>&1
     done
 }
@@ -94,7 +94,7 @@ echo "calibrate (top-level calibration script) "`date`
 echo
 
 # Find the path used to start the script.
-pgmpath=`dirname $0`
+pgmpath=`dirname ${0}`
 pgmpath=`cd ${pgmpath} > /dev/null 2>&1  &&  pwd`
 
 # Get LOFARROOT.
@@ -130,104 +130,104 @@ wd=
 # Parse command line.
 while test $# -ne 0
 do
-  if test "$1" = "-h" -o "$1" = "--help"; then
+  if test "${1}" = "-h" -o "${1}" = "--help"; then
     help=1
     break
-  elif test "$1" = "-v"  -o  "$1" = "--verbose"; then
+  elif test "${1}" = "-v"  -o  "${1}" = "--verbose"; then
     shift
     verbose=1
-  elif test "$1" = "-f" -o "$1" = "--force"; then
+  elif test "${1}" = "-f" -o "${1}" = "--force"; then
     shift
     force=1
-  elif test "$1" = "--dry"; then
+  elif test "${1}" = "--dry"; then
     shift
     dry=1
-  elif test "$1" = "--no-setup"; then
+  elif test "${1}" = "--no-setup"; then
     shift
     setup=0
-  elif test "$1" = "--key"; then
+  elif test "${1}" = "--key"; then
     if test $# -le 1; then
-        error "$1 needs an additional argument"
+        error "${1} needs an additional argument"
     fi
     shift
 
-    key=$1
+    key=${1}
     shift
-  elif test "$1" = "--db"; then
+  elif test "${1}" = "--db"; then
     if test $# -le 1; then
-        error "$1 needs an additional argument"
+        error "${1} needs an additional argument"
     fi
     shift
 
     # Parse hostname:port string.
     tmp=${1%%:*}
     db_host=${tmp:-$db_host}
-    if test "${1##*:}" != "$1"; then
+    if test "${1##*:}" != "${1}"; then
         tmp=${1##*:}
         db_port=${tmp:-$db_port}
     fi
     shift
-  elif test "$1" = "--db-name"; then
+  elif test "${1}" = "--db-name"; then
     if test $# -le 1; then
-        error "$1 needs an additional argument"
+        error "${1} needs an additional argument"
     fi
     shift
 
-    db_name=$1
+    db_name=${1}
     shift
-  elif test "$1" = "--db-user"; then
+  elif test "${1}" = "--db-user"; then
     if test $# -le 1; then
-        error "$1 needs an additional argument"
+        error "${1} needs an additional argument"
     fi
     shift
 
-    db_user=$1
+    db_user=${1}
     shift
-  elif test "$1" = "--instrument-db"; then
+  elif test "${1}" = "--instrument-db"; then
     if test $# -le 1; then
-        error "$1 needs an additional argument"
+        error "${1} needs an additional argument"
     fi
     shift
 
-    instrument_db=$1
+    instrument_db=${1}
     shift
-  elif test "$1" = "--instrument-name"; then
+  elif test "${1}" = "--instrument-name"; then
     if test $# -le 1; then
-        error "$1 needs an additional argument"
+        error "${1} needs an additional argument"
     fi
     shift
 
-    instrument_name=$1
+    instrument_name=${1}
     shift
-  elif test "$1" = "--sky-name"; then
+  elif test "${1}" = "--sky-name"; then
     if test $# -le 1; then
-        error "$1 needs an additional argument"
+        error "${1} needs an additional argument"
     fi
     shift
 
-    sky_name=$1
+    sky_name=${1}
     shift
-  elif test "$1" = "--port-range"; then
+  elif test "${1}" = "--port-range"; then
     if test $# -le 1; then
-        error "$1 needs an additional argument"
+        error "${1} needs an additional argument"
     fi
     shift
 
     # Parse low:high string.
     tmp=${1%%:*}
     port_low=${tmp:-$port_low}
-    if test "${1##*:}" != "$1"; then
+    if test "${1##*:}" != "${1}"; then
         tmp=${1##*:}
         port_high=${tmp:-$port_high}
     fi
     shift
-  elif test "$1" = "--cluster-desc"; then
+  elif test "${1}" = "--cluster-desc"; then
     if test $# -le 1; then
-        error "$1 needs an additional argument"
+        error "${1} needs an additional argument"
     fi
     shift
 
-    cluster_desc=$1
+    cluster_desc=${1}
     shift
   else
     break
@@ -239,10 +239,10 @@ if test $# -ne 4 -o ${help} -eq 1; then
 fi
 
 # Get arguments.
-observation=$1
-parset=$2
-catalogue=$3
-wd=$4
+observation=${1}
+parset=${2}
+catalogue=${3}
+wd=${4}
 
 # Get absolute paths.
 tmp=`dirname ${observation}`
@@ -317,7 +317,7 @@ echo
 # Parse boolean from parset.
 if test "${parset_solver}" = "T" -o "${parset_solver}" = "t" -o "${parset_solver}" = "Y" -o "${parset_solver}" = "y" -o "${parset_solver}" = "1"; then
     solver=1
-fi    
+fi
 
 # CLEAN DATABASE
 #
@@ -416,7 +416,7 @@ event "execute GlobalControl"
 if test ${verbose} -eq 1 -o ${dry} -eq 1; then
     echo "GlobalControl ${key}_control_$$.parset 0"
 fi
-    
+
 if test ${dry} -eq 0; then
     GlobalControl "${key}_control_$$.parset" 0 > "${key}_control_$$.log" 2>&1 &
     pidlist="${pidlist} $!"
@@ -424,7 +424,7 @@ fi
 
 if test ${solver} -eq 1; then
     event "execute SolverControl"
-    
+
     if test ${verbose} -eq 1 -o ${dry} -eq 1; then
         echo "SolverControl ${key}_solver_$$.parset 0"
     fi
@@ -453,7 +453,7 @@ fi
 event "execute remote KernelControl processes"
 if test ${verbose} -eq 1 -o ${dry} -eq 1; then
     echo "startdistproc -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${instrument_name}\" \"${sky_name}\" nodry"
-fi    
+fi
 
 if test ${dry} -eq 0; then
     startdistproc -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${instrument_name}" "${sky_name}" nodry
@@ -464,7 +464,7 @@ if test ${dry} -eq 0; then
     fi
 fi
 
-    
+
 #
 # SHUTDOWN
 #
