@@ -193,6 +193,7 @@ if __name__ == "__main__":
   if options.verbose:
     Commands.debug = debug
     Logger.DEBUG = True
+    Sections.DEBUG = True
 
   if not options.quiet:
     DEBUG = True
@@ -332,11 +333,11 @@ if __name__ == "__main__":
       parset[k] = v
 
     # disable sections we won't start
-    if not options.nocnproc:
+    if options.nocnproc:
       parset.disableCNProc() 
-    if not options.noionproc:
+    if options.noionproc:
       parset.disableIONProc()
-    if not options.nostorage:
+    if options.nostorage:
       parset.disableStorage()
 
   # resolve all paths now that parsets are set up and the observation ID is known

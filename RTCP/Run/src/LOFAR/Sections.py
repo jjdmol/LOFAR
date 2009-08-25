@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from util.Commands import SyncCommand,AsyncCommand,mpikill
+from util.Commands import SyncCommand,AsyncCommand,mpikill,backquote
 from util.Aborter import runUntilSuccess
 from Locations import Locations
 import os
@@ -8,6 +8,8 @@ import BGcontrol
 import Partitions
 import ObservationID
 from Logger import debug,info,warning
+
+DEBUG=False
 
 class Section:
   """ A 'section' is a set of commands which together perform a certain function. """
@@ -154,6 +156,11 @@ class IONProcSection(Section):
       "%s" % (" ".join([p.getFilename() for p in self.parsets]), ),
     ]
 
+    if DEBUG:
+      mpiparams = [
+        "-v",
+      ] + mpiparams
+
     self.commands.append( AsyncCommand( "/bgsys/LOFAR/openmpi-ion/bin/mpirun %s" % (" ".join(mpiparams),), logfiles ) )
 
   def check(self):
@@ -164,7 +171,15 @@ class IONProcSection(Section):
     ]
 
     for (node,c) in pingcmds:
-      assert c.isSuccess(), "Cannot reach I/O node %s" % (node,)
+      assert c.isSuccess(), "Cannot reach I/O node %s [ping]" % (node,)
+
+    sshcmds = [
+      (node,AsyncCommand( "ssh -o ConnectTimeout=10 %s /bin/true" % (node,), ["/dev/null"] ))
+      for node in self.psets
+    ]
+
+    for (node,c) in sshcmds:
+      assert c.isSuccess(), "Cannot reach I/O node %s [ssh]" % (node,)
 
 class StorageSection(Section):
   def run(self):
@@ -230,3 +245,13 @@ class StorageSection(Section):
     # fallback: kill local commands
     if not runUntilSuccess( [ self.wait ], timeout ):
       Section.abort( self )
+
+  def check( self ):
+    storagePorts = self.parsets[0].getStoragePorts()
+
+    for node,neededPorts in storagePorts.iteritems():
+      usedPorts = map( int, backquote( """ssh %s netstat -nta | awk 'NR>2 { n=split($4,f,":"); print f[n]; }'""" % (node,) ).split() )
+
+      cannotOpen = [p for p in neededPorts if p in usedPorts]
+
+      assert cannotOpen == [], "Storage: Cannot open ports %s on node %s." % (",".join(sorted(map(str,cannotOpen))), node)

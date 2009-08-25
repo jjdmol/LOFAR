@@ -162,7 +162,7 @@ class Parset(switch):
         return line.split(',')
 
     def getExpandedInt32Vector(self, key):
-        ln = self.expandedArray(self.parameters[key])
+        ln = self.expandedArray(str(self.parameters[key]))
 	if ln == '[]' : return []
 	ln = ln.strip('[').rstrip(']')
 	return [int(lp) for lp in ln.split(',')]
