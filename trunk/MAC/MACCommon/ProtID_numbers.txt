@@ -28,11 +28,12 @@ SB              F_GCF_PROTOCOL + 3      6    // security broker
 CM              F_GCF_PROTOCOL + 4      7    // claim manager
 
 TST             F_APL_PROTOCOL + 0      10   // used for testing
-...             F_APL_PROTOCOL + 1      11   // was LogicalDevice
+MD              F_APL_PROTOCOL + 1      11   // MetaData protocol
 StartDaemon     F_APL_PROTOCOL + 2      12
 Control         F_APL_PROTOCOL + 3      13   // used to be SAS
 THPVSSBridge    F_APL_PROTOCOL + 4      14   // Obsolete?
 MIS             F_APL_PROTOCOL + 5      15   // MAC information server
+
 BS              F_APL_PROTOCOL + 10     20   // Beam server
 EPA             F_APL_PROTOCOL + 11     21   // RSP board protocol
 RSP             F_APL_PROTOCOL + 12     22   // RSP Driver to clients
