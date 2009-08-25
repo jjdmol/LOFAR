@@ -1,0 +1,217 @@
+// -*- mode: c++ -*-//
+// Protocol definition for the MD driver interface
+//
+autogen definitions protocol;
+
+description = "Protocol for exchanging metadata";
+prefix = "MD"; // for the signal names
+id = "(LOFAR::MACIO::F_APL_PROTOCOL+1)";
+
+// specify extra include files
+// e.g.
+include = '<sys/time.h>';
+include = '<linux/types.h>';
+include = '<Common/LofarTypes.h>';
+include = '<Common/lofar_bitset.h>';
+
+include = '<APL/RTCCommon/Timestamp.h>';
+include = '<MD_Protocol/BlAllocArr.h>';
+
+prelude = << PRELUDE_END
+
+typedef	void*	memptr_t;
+
+static const int MD_SUCCESS       	= 1;
+static const int MD_FAILURE       	= 0;
+
+// The protocol implements the following messages.
+// SETBLALLOC			(timestamp,	BlAllocArr)
+// SETBLALLOCACK		(timestamp,	status)
+// GETBLALLOC			(timestamp)
+// GETBLALLOCACK		(timestamp,	status,	BlAllocArr)
+// SUBBLALLOC			(timestamp)
+// SUBBLALLOCACK		(timestamp,	status,	handle)
+// UPDBLALLOC			(timestamp,	status,	handle,	BlAllocArr)
+// UNSUBBLALLOC			(handle)
+// UNSUBBLALLOCACK		(timestamp,	status,	handle)
+
+
+// 8 commands
+
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+// Userdefine types are 
+//
+
+//
+// Subband Selection
+//
+event = {
+  signal = SETBLALLOC;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "allocation";
+    type = "BeamletAllocation";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETBLALLOCACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
+
+event = {
+  signal = GETBLALLOC;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+  param = {
+    name = "type";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = GETBLALLOCACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "allocation";
+    type = "BeamletAllocation";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SUBBLALLOC;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+  param = {
+    name = "type";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBBLALLOCACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UPDBLALLOC;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+  param = {
+    name = "allocation";
+    type = "BeamletAllocation";
+    userdefined;
+  };
+};
+
+event = {
+  signal = UNSUBBLALLOC;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
+event = {
+  signal = UNSUBBLALLOCACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "memptr_t";
+  };
+};
+
