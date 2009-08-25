@@ -27,11 +27,12 @@
 #include <Common/LofarLogger.h>
 #include <MD_Protocol/BlAllocArr.h>
 
+
 namespace LOFAR {
-  namespace MAC {
+  namespace MD_Protocol {
 
 //
-// Constructor and destructor
+// constructor and destructor
 //
 BlAllocArr::BlAllocArr(int	nrElements) :
 	itsSize(nrElements)
@@ -39,23 +40,29 @@ BlAllocArr::BlAllocArr(int	nrElements) :
 	itsPool.resize(itsSize);
 }
 
+BlAllocArr::BlAllocArr() :
+	itsSize(0)
+{
+}
+
 BlAllocArr::~BlAllocArr()
 {
 	itsPool.clear();
 }
+
 
 //
 // operator[]
 //
 BeamletAllocation&	BlAllocArr::operator[](uint	index)
 {
-	ASSERTSTR(index <= itsSize, "BeamletAllocation has only " << itsSize << " elements, not " << index);
+	ASSERTSTR(index < itsSize, "There are only " << itsSize << " beamletAllocations, not " << index);
 	return (itsPool[index]);
 }
 
 const BeamletAllocation&	BlAllocArr::operator[](uint	index) const
 {
-	ASSERTSTR(index <= itsSize, "BeamletAllocation has only " << itsSize << " elements, not " << index);
+	ASSERTSTR(index < itsSize, "There are only " << itsSize << " beamletAllocations, not " << index);
 	return (itsPool[index]);
 }
 
@@ -65,7 +72,7 @@ const BeamletAllocation&	BlAllocArr::operator[](uint	index) const
 //
 unsigned int BlAllocArr::getSize()
 {
-	return (sizeof(uint32) + (itsSize * itsPool[0].getSize()));
+	return (sizeof(itsSize) + (itsSize * itsPool[0].getSize()));
 }
 
 //
@@ -73,12 +80,13 @@ unsigned int BlAllocArr::getSize()
 //
 unsigned int BlAllocArr::pack   (void* buffer)
 {
-	uint offset(sizeof(itsSize));
-
 	memcpy(((char*)buffer), &itsSize, sizeof(itsSize));
-	for (int i = 0; i < itsSize; i++) {
-		offset += itsPool[i].pack((char*)buffer + offset);
+
+	uint	offset(sizeof(itsSize));
+	for (uint i = 0; i < itsSize; i++) {
+		offset += itsPool[i].pack(((char*)buffer) + offset);
 	}
+
 	return (offset);
 }
 
@@ -87,17 +95,18 @@ unsigned int BlAllocArr::pack   (void* buffer)
 //
 unsigned int BlAllocArr::unpack (void* buffer)
 {
-	uint offset(sizeof(itsSize));
-
 	memcpy(&itsSize, ((char*)buffer), sizeof(itsSize));
 	itsPool.clear();
 	itsPool.resize(itsSize);
-	for (int i = 0; i < itsSize; i++) {
+
+	uint	offset(sizeof(uint32));
+	for (uint i = 0; i < itsSize; i++) {
 		offset += itsPool[i].unpack(((char*)buffer) + offset);
 	}
+
 	return (offset);
 }
 
-  } // namespace MAC
+  } // namespace MD_Protocol
 } // namespace LOFAR
 

@@ -20,16 +20,18 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_MD_PROTOCOL_BEAMLET_ALLOCATION_H
-#define LOFAR_MD_PROTOCOL_BEAMLET_ALLOCATION_H
+#ifndef LOFAR_MD_PROTOCOL_BL_ALLOC_ARR_H
+#define LOFAR_MD_PROTOCOL_BL_ALLOC_ARR_H
 
 // \file
 // Allocation tripled for 1 beamlet
 
 //# Includes
+#include <Common/lofar_vector.h>
+#include <MD_Protocol/BeamletAllocation.h>
 
 namespace LOFAR {
-  namespace MAC {
+  namespace MD_Protocol {
 
 class BlAllocArr
 { 
@@ -37,13 +39,20 @@ public:
 	// Allocation
 	explicit BlAllocArr(int	nrElements);
 	~BlAllocArr();
+	// default construction needed for protocol
+	BlAllocArr();
 
 	BeamletAllocation&	operator[](uint	index);
 	const BeamletAllocation&	operator[](uint	index) const;
 
+	//@{
+	// marshalling methods
+	unsigned int getSize();
+	unsigned int pack   (void* buffer);
+	unsigned int unpack (void* buffer);
+	//@}
+
 private:
-	// default construction not allowed.
-	BlAllocArr();
 	// copying is not allowed
 	BlAllocArr(const BlAllocArr&	that);
 	BlAllocArr& operator=(const BlAllocArr& that);
@@ -51,9 +60,9 @@ private:
 	// ----- Datamembers -----
 	uint						itsSize;
 	vector<BeamletAllocation>	itsPool;
-} 
+};
 
-  } // namespace MAC
+  } // namespace MD_Protocol
 } // namespace LOFAR
 
 #endif
