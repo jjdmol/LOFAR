@@ -88,10 +88,10 @@ template <typename SAMPLE_TYPE> void setSubbandTestPattern(TransposedData<SAMPLE
   const double phaseShift = 2 * M_PI * distance;
 
   for (unsigned stat = 0; stat < nrStations; stat ++) {
-    transposedData->metaData[stat].delayAtBegin   = 0;
-    transposedData->metaData[stat].delayAfterEnd  = 0;
-    transposedData->metaData[stat].alignmentShift = 0;
-    transposedData->metaData[stat].setFlags(SparseSet<unsigned>());
+    transposedData->metaData.beams(stat)[0].delayAtBegin   = 0;
+    transposedData->metaData.beams(stat)[0].delayAfterEnd  = 0;
+    transposedData->metaData.alignmentShift(stat) = 0;
+    transposedData->metaData.setFlags(stat,SparseSet<unsigned>());
   }
 
   for (unsigned time = 0; time < transposedData->samples[0].size(); time ++) {
@@ -106,15 +106,15 @@ template <typename SAMPLE_TYPE> void setSubbandTestPattern(TransposedData<SAMPLE
 
     if (NR_POLARIZATIONS >= 2 && nrStations > 2) {
       toComplex(phi + phaseShift, transposedData->samples[1][time][1]);
-      transposedData->metaData[1].delayAtBegin  = distance / signalFrequency;
-      transposedData->metaData[1].delayAfterEnd = distance / signalFrequency;
+      transposedData->metaData.beams(1)[0].delayAtBegin  = distance / signalFrequency;
+      transposedData->metaData.beams(1)[0].delayAfterEnd = distance / signalFrequency;
     }
   }
   
 #if 1
   if (transposedData->samples[0].size() > 17000 && nrStations >= 6) {
-    transposedData->metaData[4].setFlags(SparseSet<unsigned>().include(14000));
-    transposedData->metaData[5].setFlags(SparseSet<unsigned>().include(17000));
+    transposedData->metaData.setFlags(4,SparseSet<unsigned>().include(14000));
+    transposedData->metaData.setFlags(5,SparseSet<unsigned>().include(17000));
   }
 #endif
 
