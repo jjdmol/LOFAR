@@ -41,6 +41,15 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   KeyParse.h
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+# On Apple, bison creates KeyParse.cc.h, instead of KeyParse.hh. So, when on
+# Apple, we need to create another symbolic link KeyParse.hh -> KeyParse.cc.h
+if(APPLE)
+  execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+    KeyParse.cc.h
+    KeyParse.hh
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+endif(APPLE)
+
 # Add current binary directory to include, because that's where flex/bison
 # will output the files they generate.
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
