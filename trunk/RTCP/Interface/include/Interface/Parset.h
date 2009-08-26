@@ -57,8 +57,7 @@ namespace RTCP {
 class Parset: public ParameterSet
 {
 public:
-	Parset();
-	Parset(ParameterSet *aParSet);
+	Parset(const char *name);
 	~Parset();
 	 
 	void           check() const;
@@ -146,7 +145,6 @@ public:
 	string         observerName() const;
 	string         projectName() const;
 
-	string	       name;
 	vector<double> itsStPositions;
 	
 private:

@@ -383,8 +383,7 @@ void master_thread(int argc, char **argv)
 
     pthread_t input_thread_id, output_thread_id;
     LOG_DEBUG_STR("trying to use " << argv[1] << " as ParameterSet");
-    ParameterSet parameterSet(argv[1]);
-    Parset parset(&parameterSet);
+    Parset parset(argv[1]);
 
     // OLAP.parset is deprecated, as everything will be in the parset given on the command line
     try {
