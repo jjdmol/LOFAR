@@ -20,6 +20,7 @@
 
 #include <lofar_config.h>
 
+#include <BeamletBufferToComputeNode.h>
 #include <PLC/ACCmain.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Configuration.h>
@@ -93,10 +94,10 @@ void terminate_with_backtrace()
 #endif
 
 
-static char	   **global_argv;
-static unsigned    myPsetNumber, nrRuns;
+static unsigned		     myPsetNumber, nrRuns;
 static std::vector<Stream *> clientStreams, allClientStreams;
-static const unsigned nrCNcoresInPset = 64; // TODO: how to figure out the number of CN cores?
+static const unsigned	     nrCNcoresInPset = 64; // TODO: how to figure out the number of CN cores?
+static void		     *inputSection; // TODO: do not use void *
 
 #if defined HAVE_FCNP && defined __PPC__
 static bool	   fcnp_inited;
@@ -170,7 +171,7 @@ static void configureCNs(const Parset &parset)
   CN_Command	   command(CN_Command::PREPROCESS);
   CN_Configuration configuration(parset);
   
-  LOG_DEBUG_STR("configuring cores " << parset.usedCoresInPset());
+  LOG_DEBUG_STR("configuring cores " << parset.usedCoresInPset() << " ...");
 
   for (unsigned core = 0; core < clientStreams.size(); core ++) {
     command.write(clientStreams[core]);
@@ -185,7 +186,7 @@ static void unconfigureCNs(const Parset &parset)
 {
   CN_Command command(CN_Command::POSTPROCESS);
 
-  LOG_DEBUG_STR("unconfiguring cores " << parset.usedCoresInPset());
+  LOG_DEBUG_STR("unconfiguring cores " << parset.usedCoresInPset() << " ...");
 
   for (unsigned core = 0; core < clientStreams.size(); core ++)
     command.write(clientStreams[core]);
@@ -196,37 +197,34 @@ static void unconfigureCNs(const Parset &parset)
 
 static void stopCNs()
 {
-  std::stringstream logStr;
-  logStr << "stopping " << nrCNcoresInPset << " cores ... ";
+  LOG_DEBUG_STR("stopping " << nrCNcoresInPset << " cores ...");
 
   CN_Command command(CN_Command::STOP);
 
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
     command.write(allClientStreams[core]);
 
-  logStr << " done";
-  LOG_DEBUG(logStr.str());
+  LOG_DEBUG_STR("stopping " << nrCNcoresInPset << " cores done");
 }
 
 
 template<typename SAMPLE_TYPE> static void inputTask(Parset *parset)
 {
-  InputSection<SAMPLE_TYPE> inputSection(clientStreams, myPsetNumber);
+  BeamletBufferToComputeNode<SAMPLE_TYPE> beamletBufferToComputeNode(clientStreams, static_cast<InputSection<SAMPLE_TYPE> *>(inputSection)->itsBeamletBuffers, myPsetNumber);
 
-  inputSection.preprocess(parset);
+  beamletBufferToComputeNode.preprocess(parset);
 	
-	if (parset->dumpRawData()) {
-		LOG_DEBUG("Dumping raw beamformed data only, no further processing done");
-	}
+  if (parset->dumpRawData())
+    LOG_DEBUG("Dumping raw beamformed data only, no further processing done");
 
   for (unsigned run = 0; run < nrRuns; run ++)
-    inputSection.process();
+    beamletBufferToComputeNode.process();
 
-  inputSection.postprocess();
+  beamletBufferToComputeNode.postprocess();
 }
 
 
-static void *inputSection(void *parset)
+static void *inputSectionThread(void *parset)
 {
   LOG_DEBUG("starting input section");
 
@@ -245,8 +243,6 @@ static void *inputSection(void *parset)
 
       case 16 : inputTask<i16complex>(ps);
 		break;
-
-      default : THROW(IONProcException, "unsupported number of bits per sample");
     }
 
 #if defined CATCH_EXCEPTIONS
@@ -264,7 +260,7 @@ static void *inputSection(void *parset)
 }
 
 
-static void *outputSection(void *parset)
+static void *outputSectionThread(void *parset)
 {
   LOG_DEBUG("starting output section");
 
@@ -358,7 +354,7 @@ static void unmapFlatMemory()
 
 #endif
 
-void *master_thread(void *)
+void master_thread(int argc, char **argv)
 {
 #if !defined HAVE_PKVERSION
   std::string type = "brief";
@@ -380,9 +376,14 @@ void *master_thread(void *)
 
     setenv("AIPSPATH", "/cephome/romein/packages/casacore-0.3.0/stage/", 0); // FIXME
 
+    if (argc < 2) {
+      LOG_ERROR("unexpected number of arguments");
+      exit(1);
+    }
+
     pthread_t input_thread_id, output_thread_id;
-    LOG_DEBUG_STR("trying to use " << global_argv[1] << " as ParameterSet");
-    ParameterSet parameterSet(global_argv[1]);
+    LOG_DEBUG_STR("trying to use " << argv[1] << " as ParameterSet");
+    ParameterSet parameterSet(argv[1]);
     Parset parset(&parameterSet);
 
     // OLAP.parset is deprecated, as everything will be in the parset given on the command line
@@ -394,24 +395,40 @@ void *master_thread(void *)
 
     checkParset(parset);
 
+    std::string streamType = parset.getTransportType("OLAP.OLAP_Conn.IONProc_CNProc");
+    createAllClientStreams(streamType);
+
+
     nrRuns = static_cast<unsigned>(ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime()));
     LOG_DEBUG_STR("nrRuns = " << nrRuns);
 
     bool hasInputSection  = parset.inputPsetIndex(myPsetNumber) >= 0;
     bool hasOutputSection = parset.outputPsetIndex(myPsetNumber) >= 0;
 
-    string streamType = parset.getTransportType("OLAP.OLAP_Conn.IONProc_CNProc");
-    createAllClientStreams(streamType);
+    if (hasInputSection)
+      switch (parset.nrBitsPerSample()) {
+	case  4 : inputSection = new InputSection<i4complex>(&parset, myPsetNumber);
+		  break;
+
+	case  8 : inputSection = new InputSection<i8complex>(&parset, myPsetNumber);
+		  break;
+
+	case 16 : inputSection = new InputSection<i16complex>(&parset, myPsetNumber);
+		  break;
+
+	default : THROW(IONProcException, "unsupported number of bits per sample");
+      }
+
     createClientStreams(parset);
 
     configureCNs(parset);
 
-    if (hasInputSection && pthread_create(&input_thread_id, 0, inputSection, static_cast<void *>(&parset)) != 0) {
+    if (hasInputSection && pthread_create(&input_thread_id, 0, inputSectionThread, static_cast<void *>(&parset)) != 0) {
       perror("pthread_create");
       exit(1);
     }
 
-    if (hasOutputSection && pthread_create(&output_thread_id, 0, outputSection, static_cast<void *>(&parset)) != 0) {
+    if (hasOutputSection && pthread_create(&output_thread_id, 0, outputSectionThread, static_cast<void *>(&parset)) != 0) {
       perror("pthread_create");
       exit(1);
     }
@@ -440,7 +457,20 @@ void *master_thread(void *)
     }
 
     unconfigureCNs(parset);
+
     stopCNs();
+
+    if (hasInputSection)
+      switch (parset.nrBitsPerSample()) {
+	case  4 : delete static_cast<InputSection<i4complex> *>(inputSection);
+		  break;
+
+	case  8 : delete static_cast<InputSection<i8complex> *>(inputSection);
+		  break;
+
+	case 16 : delete static_cast<InputSection<i16complex> *>(inputSection);
+		  break;
+      }
 
     if (hasOutputSection) {
       if (pthread_join(output_thread_id, 0) != 0) {
@@ -455,7 +485,7 @@ void *master_thread(void *)
     unmapFlatMemory();
 #endif
 
-  deleteAllClientStreams();
+    deleteAllClientStreams();
 
 #if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
@@ -467,11 +497,7 @@ void *master_thread(void *)
   }
 #endif
 
-  if (pthread_detach(pthread_self()) != 0)
-    LOG_ERROR("could not detach master thread");
-
   LOG_DEBUG("master thread finishes");
-  return 0;
 }
 
 
@@ -508,14 +534,7 @@ int main(int argc, char **argv)
  
   INIT_BGP_LOGGER(sysInfo.str());
 
-  global_argv = argv;
-  
-  if (argc < 2) {
-    LOG_ERROR("unexpected number of arguments");
-    exit(1);
-  }
-
-  master_thread(0);
+  master_thread(argc, argv);
 
 #if defined HAVE_MPI
   MPI_Finalize();
