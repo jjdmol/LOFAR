@@ -32,18 +32,39 @@ namespace LOFAR {
 namespace RTCP {
 
 
-template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const std::vector<Stream *> &cnStreams, unsigned psetNumber)
+template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const Parset *ps, unsigned psetNumber)
 :
-  itsCNstreams(cnStreams),
-  itsPsetNumber(psetNumber),
   itsLogThread(0)
 {
+  TimeStamp::setStationClockSpeed(static_cast<unsigned>(1024 * ps->sampleRate()));
+
+  std::vector<Parset::StationRSPpair> inputs = ps->getStationNamesAndRSPboardNumbers(psetNumber);
+  itsNrRSPboards = inputs.size();
+
+  itsBeamletBuffers.resize(itsNrRSPboards);
+
+  for (unsigned rsp = 0; rsp < itsNrRSPboards; rsp ++)
+    itsBeamletBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(ps);
+
+  createInputStreams(ps, inputs);
+  createInputThreads(ps);
 }
 
 
 template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::~InputSection() 
 {
-  LOG_DEBUG("InputSection::~InputSection");
+  LOG_DEBUG("InputSection::~InputSection()");
+
+  for (unsigned i = 0; i < itsInputThreads.size(); i ++)
+    delete itsInputThreads[i];
+
+  for (unsigned i = 0; i < itsInputStreams.size(); i ++)
+    delete itsInputStreams[i];
+
+  for (unsigned i = 0; i < itsBeamletBuffers.size(); i ++)
+    delete itsBeamletBuffers[i];
+
+  delete itsLogThread;
 }
 
 
@@ -92,64 +113,11 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputThread
   for (unsigned thread = 0; thread < itsNrRSPboards; thread ++) {
     args.threadID	    = thread;
     args.stream		    = itsInputStreams[thread];
-    args.BBuffer            = itsBBuffers[thread];
+    args.BBuffer            = itsBeamletBuffers[thread];
     args.packetCounters     = &itsLogThread->itsCounters[thread];
 
     itsInputThreads[thread] = new InputThread<SAMPLE_TYPE>(args);
   }
-}
-
-
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const Parset *ps)
-{
-  TimeStamp::setStationClockSpeed(static_cast<unsigned>(1024 * ps->sampleRate()));
-
-  std::vector<Parset::StationRSPpair> inputs = ps->getStationNamesAndRSPboardNumbers(itsPsetNumber);
-  itsNrRSPboards = inputs.size();
-
-  itsBBuffers.resize(itsNrRSPboards);
-
-  for (unsigned rsp = 0; rsp < itsNrRSPboards; rsp ++)
-    itsBBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(ps);
-
-  itsBeamletBufferToComputeNode = new BeamletBufferToComputeNode<SAMPLE_TYPE>(itsCNstreams, itsBBuffers, itsPsetNumber);
-
-  createInputStreams(ps, inputs);
-  createInputThreads(ps);
-
-  itsBeamletBufferToComputeNode->preprocess(ps);
-}
-
-
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process()
-{
-  itsBeamletBufferToComputeNode->process();
-}
-
-
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::postprocess()
-{
-  LOG_DEBUG("InputSection::postprocess");
-
-  itsBeamletBufferToComputeNode->postprocess();
-  delete itsBeamletBufferToComputeNode; itsBeamletBufferToComputeNode = 0;
-
-  for (unsigned i = 0; i < itsInputThreads.size(); i ++)
-    delete itsInputThreads[i];
-
-  itsInputThreads.resize(0);
-
-  for (unsigned i = 0; i < itsInputStreams.size(); i ++)
-    delete itsInputStreams[i];
-
-  itsInputStreams.resize(0);
-
-  for (unsigned i = 0; i < itsBBuffers.size(); i ++)
-    delete itsBBuffers[i];
-
-  itsBBuffers.resize(0);
-
-  delete itsLogThread; itsLogThread = 0;
 }
 
 

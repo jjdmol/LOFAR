@@ -32,7 +32,6 @@
 #include <Interface/Parset.h>
 #include <Stream/Stream.h>
 #include <BeamletBuffer.h>
-#include <BeamletBufferToComputeNode.h>
 #include <InputThread.h>
 #include <LogThread.h>
 
@@ -45,28 +44,19 @@ namespace RTCP {
 
 template <typename SAMPLE_TYPE> class InputSection {
   public:
-    InputSection(const std::vector<Stream *> &cnStreams, unsigned psetNumber);
+    InputSection(const Parset *, unsigned psetNumber);
     ~InputSection();
   
-    void			 preprocess(const Parset *);
-    void			 process();
-    void			 postprocess();
-    
+    std::vector<BeamletBuffer<SAMPLE_TYPE> *> itsBeamletBuffers;
+
   private:
     void			 createInputStreams(const Parset *, const std::vector<Parset::StationRSPpair> &inputs);
     void			 createInputThreads(const Parset *);
 
-    BeamletBufferToComputeNode<SAMPLE_TYPE> *itsBeamletBufferToComputeNode;
-
     std::vector<Stream *>	 itsInputStreams;
-    const std::vector<Stream *>  &itsCNstreams;
     
-    unsigned			 itsPsetNumber;
     unsigned			 itsNrRSPboards;
    
-    std::vector<BeamletBuffer<SAMPLE_TYPE> *> itsBBuffers;
-    double			 itsSampleRate, itsSampleDuration;
-
     LogThread				    *itsLogThread;
     std::vector<InputThread<SAMPLE_TYPE> *> itsInputThreads;
 };
