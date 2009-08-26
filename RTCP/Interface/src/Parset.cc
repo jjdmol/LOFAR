@@ -47,21 +47,14 @@
 namespace LOFAR {
 namespace RTCP {
 
-Parset::Parset()
+
+Parset::Parset(const char *name)
 :
-  name()
+  ParameterSet(name),
+  itsObservation(this)
 {
+  maintainBackwardCompatibility();
   check();
-}
-
-
-Parset::Parset(ParameterSet *aParSet) 
-:
-  ParameterSet(*aParSet),
-  itsObservation(aParSet)
-{
-   maintainBackwardCompatibility();
-   check();
 }
 
 
