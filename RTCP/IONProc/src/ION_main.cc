@@ -214,9 +214,6 @@ template<typename SAMPLE_TYPE> static void inputTask(Parset *parset)
 
   beamletBufferToComputeNode.preprocess(parset);
 	
-  if (parset->dumpRawData())
-    LOG_DEBUG("Dumping raw beamformed data only, no further processing done");
-
   for (unsigned run = 0; run < nrRuns; run ++)
     beamletBufferToComputeNode.process();
 
@@ -382,21 +379,26 @@ void master_thread(int argc, char **argv)
     }
 
     pthread_t input_thread_id, output_thread_id;
-    LOG_DEBUG_STR("trying to use " << argv[1] << " as ParameterSet");
-    Parset parset(argv[1]);
 
-    // OLAP.parset is deprecated, as everything will be in the parset given on the command line
-    try {
-      parset.adoptFile("OLAP.parset");
-    } catch (APSException &ex) {
-      LOG_WARN_STR("could not read OLAP.parset: " << ex);
+    std::vector<Parset *> parsets;
+
+    for (int arg = 1; arg < argc; arg ++) {
+      LOG_DEBUG_STR("trying to use " << argv[arg] << " as ParameterSet");
+      parsets.push_back(new Parset(argv[arg]));
+
+      // OLAP.parset is deprecated, as everything will be in the parset given on the command line
+      try {
+	LOG_WARN("Reading OLAP.parset is deprecated");
+	parsets.back()->adoptFile("OLAP.parset");
+      } catch (APSException &ex) {
+	LOG_WARN_STR("could not read OLAP.parset: " << ex);
+      }
+
+      checkParset(*parsets.back());
     }
 
-    checkParset(parset);
-
-    std::string streamType = parset.getTransportType("OLAP.OLAP_Conn.IONProc_CNProc");
-    createAllClientStreams(streamType);
-
+    Parset &parset = *parsets.front();
+    createAllClientStreams(parset.getTransportType("OLAP.OLAP_Conn.IONProc_CNProc"));
 
     nrRuns = static_cast<unsigned>(ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime()));
     LOG_DEBUG_STR("nrRuns = " << nrRuns);
@@ -485,6 +487,9 @@ void master_thread(int argc, char **argv)
 #endif
 
     deleteAllClientStreams();
+
+    for (unsigned i = 0; i < parsets.size(); i ++)
+      delete parsets[i];
 
 #if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {

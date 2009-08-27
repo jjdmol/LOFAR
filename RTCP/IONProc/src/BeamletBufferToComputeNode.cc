@@ -59,7 +59,7 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsPsetNumber(psetNumber),
   itsBeamletBuffers(beamletBuffers),
   itsDelayComp(0),
-  itsDelayTimer("delay consumer",true,true)
+  itsDelayTimer("delay consumer", true, true)
 {
 }
 
@@ -88,10 +88,11 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
   itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping();
   itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping();
-  itsSyncedStamp	      = TimeStamp(static_cast<int64>(ps->startTime() * itsSampleRate));
+  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps->startTime() * itsSampleRate));
   itsIsRealTime		      = ps->realTime();
   itsMaxNetworkDelay	      = ps->maxNetworkDelay();
-  itsNrHistorySamples	      = ps->dumpRawData() ? 0 : ps->nrHistorySamples();
+  itsDumpRawData	      = ps->dumpRawData();
+  itsNrHistorySamples	      = itsDumpRawData ? 0 : ps->nrHistorySamples();
 
   LOG_DEBUG_STR("nrSubbands = " << itsNrSubbands);
   LOG_DEBUG_STR("nrChannelsPerSubband = " << ps->nrChannelsPerSubband());
@@ -105,7 +106,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
     itsBeamDirectionsAtBegin.resize(itsNrBeams, itsNrPencilBeams);
     itsBeamDirectionsAfterEnd.resize(itsNrBeams, itsNrPencilBeams);
     
-    itsDelayComp = new WH_DelayCompensation(ps, ps->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station, itsSyncedStamp); // TODO: support more than one station
+    itsDelayComp = new WH_DelayCompensation(ps, ps->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station, itsCurrentTimeStamp); // TODO: support more than one station
 
     itsDelayComp->getNextDelays(itsBeamDirectionsAfterEnd, itsDelaysAfterEnd);
 
@@ -120,7 +121,9 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   itsFineDelaysAfterEnd.resize(itsNrBeams, itsNrPencilBeams);
   itsFlags.resize(boost::extents[itsNrInputs][itsNrBeams]);
 
-  if (ps->dumpRawData()) {
+  if (itsDumpRawData) {
+    LOG_DEBUG("Dumping raw beamformed data only, no further processing done");
+
     vector<string> rawDataOutputs = ps->getStringVector("OLAP.OLAP_Conn.rawDataOutputs");
     unsigned	   psetIndex	  = ps->inputPsetIndex(itsPsetNumber);
 
@@ -210,7 +213,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sta
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::writeLogMessage() const
 {
   std::stringstream logStr;
-  logStr << itsSyncedStamp;
+  logStr << itsCurrentTimeStamp;
 
   if (itsIsRealTime) {
     struct timeval tv;
@@ -218,7 +221,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::wri
     gettimeofday(&tv, 0);
 
     double currentTime  = tv.tv_sec + tv.tv_usec / 1e6;
-    double expectedTime = (itsSyncedStamp + itsNrSamplesPerSec + itsMaxNetworkDelay) * itsSampleDuration;
+    double expectedTime = (itsCurrentTimeStamp + itsNrSamplesPerSec + itsMaxNetworkDelay) * itsSampleDuration;
 
     logStr << " late: " << PrettyTime(currentTime - expectedTime);
   }
@@ -371,7 +374,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sto
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::process()
 {
   for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-    itsDelayedStamps[beam] = itsSyncedStamp - itsNrHistorySamples;
+    itsDelayedStamps[beam] = itsCurrentTimeStamp - itsNrHistorySamples;
 
   computeDelays();
   startTransaction();
@@ -380,14 +383,13 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
   NSTimer timer;
   timer.start();
 
-#if defined DUMP_RAW_DATA
-  dumpRawData();
-#else
-  toComputeNodes();
-#endif
+  if (itsDumpRawData)
+    dumpRawData();
+  else
+    toComputeNodes();
 
   stopTransaction();
-  itsSyncedStamp += itsNrSamplesPerSec;
+  itsCurrentTimeStamp += itsNrSamplesPerSec;
 
   timer.stop();
   LOG_INFO_STR("ION->CN: " << PrettyTime(timer.getElapsed()));

@@ -66,6 +66,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     bool			 itsDelayCompensation;
     bool			 itsNeedDelays;
     bool			 itsIsRealTime;
+    bool			 itsDumpRawData;
     std::vector<unsigned>	 itsSubbandToBeamMapping;
     std::vector<unsigned>	 itsSubbandToRSPboardMapping;
     std::vector<unsigned>	 itsSubbandToRSPslotMapping;
@@ -74,7 +75,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     
     const Parset		 *itsPS;
     
-    TimeStamp			 itsSyncedStamp;
+    TimeStamp			 itsCurrentTimeStamp;
    
     Matrix<double>		 itsDelaysAtBegin;
     Matrix<double>		 itsDelaysAfterEnd;
