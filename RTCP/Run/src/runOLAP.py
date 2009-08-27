@@ -9,7 +9,7 @@ from LOFAR.Stations import Stations
 from util import Commands
 from util.dateutil import format
 from LOFAR.Locations import Locations,isDevelopment
-from util.Hosts import ropen,rmkdir,rexists,runlink
+from util.Hosts import ropen,rmkdir,rexists,runlink,rsymlink
 import sys
 
 DRYRUN = False
@@ -66,7 +66,8 @@ if __name__ == "__main__":
 
   # default observation parameters
   defaultObsParams = {
-    "start": "+30",
+    "parset": "RTCP.parset",
+    "start": "+15",
     "run":   "00:01:00",
   }
 
@@ -354,6 +355,20 @@ if __name__ == "__main__":
       if not DRYRUN:
         rmkdir( Locations.files[d] )
 
+  # create symlink to log directory in run directory
+  log_symlink = {
+    "source": "%s/log" % (Locations.files["rundir"],),
+    "dest":   "%s"     % (Locations.files["logdir"],),
+  }
+
+  try:
+    if rexists( log_symlink["source"] ):
+      runlink( log_symlink["source"] )
+
+    rsymlink( log_symlink["source"], log_symlink["dest"] )
+  except OSError,e:
+    warning( "Could not create symlink %s pointing to %s" % (log_symlink["source"],log_symlink["dest"]) )
+
   # finalise and save parsets
   for p in parsets:
     # parse final settings (derive some extra keys)
@@ -364,21 +379,23 @@ if __name__ == "__main__":
 
     # write parset to disk (both rundir and logdir)
     parset.setFilename( "%s.%s" % (Locations.files["parset"], obsIndex) )
-    parset.save()
-    parset.writeToFile( "%s/RTCP.parset.%s" % (Locations.files["logdir"],obsIndex) )
+
+    if not DRYRUN:
+      parset.save()
+      parset.writeToFile( "%s/RTCP.parset.%s" % (Locations.files["logdir"],obsIndex) )
 
   # ========== Run
   info( "========== Run ==========" )
 
-
   runObservations( parsets, options.partition, not options.nocnproc, not options.noionproc, not options.nostorage )
 
   # ========== Clean up
-  for parset in parsets:
-    try:
-      runlink( parset.getFilename() )
-    except OSError,e:
-      warn( "Could not delete %s: %s" % (parset.getFilename(),e) )
+  if not DRYRUN:
+    for parset in parsets:
+      try:
+        runlink( parset.getFilename() )
+      except OSError,e:
+        warning( "Could not delete %s: %s" % (parset.getFilename(),e) )
 
   info( "========== Done ==========" )
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from util.Commands import SyncCommand,AsyncCommand,mpikill,backquote
-from util.Aborter import runUntilSuccess
+from util.Aborter import runUntilSuccess,runFunc
 from Locations import Locations
 import os
 import BGcontrol
@@ -165,6 +165,8 @@ class IONProcSection(Section):
 
   def check(self):
     # I/O nodes need to be reachable -- check in parallel
+
+    # ping
     pingcmds = [
       (node,AsyncCommand( "ping %s -c 1 -w 2 -q" % (node,), ["/dev/null"] ))
       for node in self.psets
@@ -173,13 +175,23 @@ class IONProcSection(Section):
     for (node,c) in pingcmds:
       assert c.isSuccess(), "Cannot reach I/O node %s [ping]" % (node,)
 
+    # ssh
     sshcmds = [
-      (node,AsyncCommand( "ssh -o ConnectTimeout=10 %s /bin/true" % (node,), ["/dev/null"] ))
+      (node,AsyncCommand( "ssh %s /bin/true" % (node,), ["/dev/null"] ))
       for node in self.psets
     ]
 
-    for (node,c) in sshcmds:
-      assert c.isSuccess(), "Cannot reach I/O node %s [ssh]" % (node,)
+    def waitForSuccess():
+      for (node,c) in sshcmds:
+        assert c.isSuccess(), "Cannot reach I/O node %s [ssh]" % (node,)
+
+    if not runFunc( waitForSuccess, 10 ):
+      for (node,c) in sshcmds:
+        assert c.isDone(), "Cannot reach I/O node %s [ssh]" % (node,)
+
+    # test flatmem access
+    for node in self.psets:
+      assert "FAIL" not in backquote("ssh %s cat /dev/flatmem 2>&1 | grep -q 'Cannot allocate memory' && echo FAIL" % (node,)), "Cannot allocate flat memory on I/O node %s" % (node,)
 
 class StorageSection(Section):
   def run(self):
