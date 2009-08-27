@@ -361,13 +361,14 @@ if __name__ == "__main__":
     "dest":   "%s"     % (Locations.files["logdir"],),
   }
 
-  try:
-    if rexists( log_symlink["source"] ):
-      runlink( log_symlink["source"] )
+  if not DRYRUN:
+    try:
+      if rexists( log_symlink["source"] ):
+        runlink( log_symlink["source"] )
 
-    rsymlink( log_symlink["source"], log_symlink["dest"] )
-  except OSError,e:
-    warning( "Could not create symlink %s pointing to %s" % (log_symlink["source"],log_symlink["dest"]) )
+      rsymlink( log_symlink["source"], log_symlink["dest"] )
+    except OSError,e:
+      warning( "Could not create symlink %s pointing to %s" % (log_symlink["source"],log_symlink["dest"]) )
 
   # finalise and save parsets
   for p in parsets:

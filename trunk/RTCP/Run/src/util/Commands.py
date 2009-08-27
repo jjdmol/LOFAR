@@ -5,7 +5,11 @@ from subprocess import Popen,STDOUT,call,PIPE
 from Hosts import ropen
 from tee import Tee
 
+
 DRYRUN = False
+
+# define our own PIPE as an alias to subprocess.PIPE
+PIPE=PIPE
 
 def backquote( cmdline ):
   """ Run a command line and return the output. """
@@ -29,7 +33,7 @@ class AsyncCommand(object):
         """ Run command `cmd', with I/O optionally redirected.
 
             cmd:      command to execute.
-            outfiles: filenames for output, or [] to use stdout.
+            outfiles: filenames for output, or [] to use stdout, or PIPE to record it within python.
             infile:   filename for input, or None to use stdin.
             killcmd:  function used to abort, called as killcmd( pid, signal ). """
 
@@ -38,7 +42,7 @@ class AsyncCommand(object):
         else:
           self.cmd = cmd
 
-        if outfiles:
+        if outfiles not in [[],PIPE]:
           outstr = "> %s" % (", ".join(outfiles),)
         else:
           outstr = ""
@@ -46,6 +50,8 @@ class AsyncCommand(object):
 
         if not outfiles:
           stdout = None
+        elif outfiles == PIPE:
+          stdout = PIPE
         else:
           # open all outputs, remember them to prevent the files
           # from being closed at the end of __init__
@@ -84,6 +90,16 @@ class AsyncCommand(object):
         """ Will be called when the command has just been started. """
 
         pass
+
+    def output(self):
+        """ Return the output of the program (when started with outfiles="PIPE"). """
+
+        output = self.popen.communicate()[0]
+
+        # even though process closed stdout, we still need to wait for termination
+        self.wait()
+
+        return output
 
     def isDone(self):
         """ Return whether the command has finished execution, but do not block. """
