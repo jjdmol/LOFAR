@@ -1,7 +1,10 @@
 #!/bin/bash
 #
+# $Id:$
+#
 # Script to add a LOFAR station to the Job Control database, so it will
-# be used by the SHM system
+# be used by the SHM system. Previously dropped stations can be added again, 
+# as well.
 #
 
 # This exits the script if an error occurs
@@ -34,10 +37,25 @@ test_connection()
 check_station_known()
 {
     station=$1
-    result=`psql -U${dbuser} -d${dbdatab} -h${dbhost} -p${dbport} -c "Select si_name from lofar.macinformationservers where si_name = '$station'" >& /dev/null ; echo $?`
-    if [ $result != 0 ]; then 
+    result=`psql -U${dbuser} -d${dbdatab} -h${dbhost} -p${dbport} -c "Select si_id from lofar.macinformationservers where si_name = '$station'" >& /dev/null ; echo $?`
+    if [ $result == 0 ]; then 
 	echo "Station "$station" already present in table lofar.macinformationservers!"
-	exit 1
+	read -p "Re-use stationname anyway [y/n]? "
+        if [ "$REPLY" != "" ]; then
+	  ans=`echo $REPLY | tr '[a-z]' '[A-Z]'`
+	  if [ $ans == "Y" ]; then 
+	     add_station=0
+          else 
+	    echo "Provide a new station name!"
+	    exit 1
+          fi
+	else
+	  echo "Quitting now!"
+	  exit 1
+        fi
+    else
+      echo "Stationname is new; will add it!"
+      add_station=1
     fi
 }
 
@@ -103,10 +121,15 @@ get_user_info()
 # Main program
 test_connection
 get_user_info
+
+# IF station alread exists in database, user will be asked for re-use 
+# Function creates variable $add_station, which is 1 if station is new.
 check_station_known $new_station
+if [ $add_station == 1 ]; then 
+  insert_station_row $new_station
+fi
 
 get_max_id
-
 curdate=`date +%Y-%m-%d\ %H:%M:%S`
 let next_id=max_id+1
 rsp_name="rsp_"$new_station
@@ -129,8 +152,6 @@ diag_name="dia_"$new_station
 let next_id+=1
 insert_diag="INSERT INTO job_control.queue (id, name, scheduled_time, ticket_no, state, client, time_of_bind, watchdog, wd_timeout, period, command) VALUES (nextval('job_control.queue_id_seq'),'"$diag_name"', '"${curdate}"', 1, 0, NULL, NULL, NULL, '00:11:00', '00:10:01', 'do_diagnosis.v2.py "${new_station}"');"
 insert_row "$insert_diag"
-
-insert_station_row $new_station
 
 echo "Done!"
 
