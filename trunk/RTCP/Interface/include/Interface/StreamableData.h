@@ -116,10 +116,16 @@ inline void StreamableData::write( Stream *str, const bool withSequenceNumber, c
 
       posix_memalign(&sn_buf, align, align);
 
-      dataConvert( LittleEndian, &sn, 1 );
-      memcpy(sn_buf, &sn, sizeof(uint32_t));
+      try {
+        dataConvert( LittleEndian, &sn, 1 );
+        memcpy(sn_buf, &sn, sizeof sn);
 
-      str->write( sn_buf, align );
+        str->write( sn_buf, align );
+      } catch( ... ) {
+        free(sn_buf);
+        throw;
+      }
+
       free(sn_buf);
     } else {
       uint32_t sn = sequenceNumber;
@@ -133,9 +139,16 @@ inline void StreamableData::write( Stream *str, const bool withSequenceNumber, c
 
       void *sn_buf;
       posix_memalign(&sn_buf, align, align);
-      memcpy(sn_buf, &sequenceNumber, sizeof(sequenceNumber));
 
-      str->write( sn_buf, align );
+      try {
+        memcpy(sn_buf, &sequenceNumber, sizeof sequenceNumber );
+
+        str->write( sn_buf, align );
+      } catch( ... ) {
+        free(sn_buf);
+        throw;
+      }
+
       free(sn_buf);
     } else {
       str->write( &sequenceNumber, sizeof sequenceNumber );
