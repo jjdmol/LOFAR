@@ -2,67 +2,195 @@
  
  PRSB test 
  
-Frame nr 0 Station 1  RSP 0  RCU 0  Sample rate 200 MHz
+Frame nr 0 RSP 0  RCU 0  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 0  RCU 1  Sample rate 200 MHz
+Frame nr 0 RSP 0  RCU 1  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 0  RCU 2  Sample rate 200 MHz
+Frame nr 0 RSP 0  RCU 2  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 0  RCU 3  Sample rate 200 MHz
+Frame nr 0 RSP 0  RCU 3  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 0  RCU 4  Sample rate 200 MHz
+Frame nr 0 RSP 0  RCU 4  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 0  RCU 5  Sample rate 200 MHz
+Frame nr 0 RSP 0  RCU 5  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 0  RCU 6  Sample rate 200 MHz
+Frame nr 0 RSP 0  RCU 6  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 0  RCU 7  Sample rate 200 MHz
+Frame nr 0 RSP 0  RCU 7  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 1  RCU 8  Sample rate 200 MHz
+Frame nr 0 RSP 1  RCU 8  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 1  RCU 9  Sample rate 200 MHz
+Frame nr 0 RSP 1  RCU 9  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 1  RCU 10  Sample rate 200 MHz
+Frame nr 0 RSP 1  RCU 10  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 1  RCU 11  Sample rate 200 MHz
+Frame nr 0 RSP 1  RCU 11  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 1  RCU 12  Sample rate 200 MHz
+Frame nr 0 RSP 1  RCU 12  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 1  RCU 13  Sample rate 200 MHz
+Frame nr 0 RSP 1  RCU 13  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 1  RCU 14  Sample rate 200 MHz
+Frame nr 0 RSP 1  RCU 14  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 1  RCU 15  Sample rate 200 MHz
+Frame nr 0 RSP 1  RCU 15  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 2  RCU 16  Sample rate 200 MHz
+Frame nr 0 RSP 2  RCU 16  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 2  RCU 17  Sample rate 200 MHz
+Frame nr 0 RSP 2  RCU 17  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 2  RCU 18  Sample rate 200 MHz
+Frame nr 0 RSP 2  RCU 18  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 2  RCU 19  Sample rate 200 MHz
+Frame nr 0 RSP 2  RCU 19  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 2  RCU 20  Sample rate 200 MHz
+Frame nr 0 RSP 2  RCU 20  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 2  RCU 21  Sample rate 200 MHz
+Frame nr 0 RSP 2  RCU 21  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 2  RCU 22  Sample rate 200 MHz
+Frame nr 0 RSP 2  RCU 22  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 2  RCU 23  Sample rate 200 MHz
+Frame nr 0 RSP 2  RCU 23  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 3  RCU 24  Sample rate 200 MHz
+Frame nr 0 RSP 3  RCU 24  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 3  RCU 25  Sample rate 200 MHz
+Frame nr 0 RSP 3  RCU 25  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 3  RCU 26  Sample rate 200 MHz
+Frame nr 0 RSP 3  RCU 26  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 3  RCU 27  Sample rate 200 MHz
+Frame nr 0 RSP 3  RCU 27  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 3  RCU 28  Sample rate 200 MHz
+Frame nr 0 RSP 3  RCU 28  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 3  RCU 29  Sample rate 200 MHz
+Frame nr 0 RSP 3  RCU 29  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 3  RCU 30  Sample rate 200 MHz
+Frame nr 0 RSP 3  RCU 30  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
-Frame nr 0 Station 1  RSP 3  RCU 31  Sample rate 200 MHz
+Frame nr 0 RSP 3  RCU 31  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 4  RCU 32  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 4  RCU 33  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 4  RCU 34  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 4  RCU 35  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 4  RCU 36  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 4  RCU 37  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 4  RCU 38  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 4  RCU 39  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 5  RCU 40  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 5  RCU 41  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 5  RCU 42  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 5  RCU 43  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 5  RCU 44  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 5  RCU 45  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 5  RCU 46  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 5  RCU 47  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 6  RCU 48  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 6  RCU 49  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 6  RCU 50  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 6  RCU 51  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 6  RCU 52  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 6  RCU 53  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 6  RCU 54  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 6  RCU 55  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 7  RCU 56  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 7  RCU 57  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 7  RCU 58  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 7  RCU 59  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 7  RCU 60  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 7  RCU 61  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 7  RCU 62  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 7  RCU 63  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 8  RCU 64  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 8  RCU 65  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 8  RCU 66  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 8  RCU 67  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 8  RCU 68  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 8  RCU 69  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 8  RCU 70  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 8  RCU 71  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 9  RCU 72  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 9  RCU 73  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 9  RCU 74  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 9  RCU 75  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 9  RCU 76  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 9  RCU 77  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 9  RCU 78  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 9  RCU 79  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 10  RCU 80  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 10  RCU 81  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 10  RCU 82  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 10  RCU 83  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 10  RCU 84  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 10  RCU 85  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 10  RCU 86  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 10  RCU 87  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 11  RCU 88  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 11  RCU 89  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 11  RCU 90  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 11  RCU 91  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 11  RCU 92  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 11  RCU 93  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 11  RCU 94  Sample rate 200 MHz
+Samples checked : 10239 PRBS errors: 0
+Frame nr 0 RSP 11  RCU 95  Sample rate 200 MHz
 Samples checked : 10239 PRBS errors: 0
