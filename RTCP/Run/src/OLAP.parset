@@ -6,10 +6,10 @@ PIC.Core.RS106LBA.position      = [3829261.468       , 469162.237        , 50621
 PIC.Core.RS106HBA.phaseCenter   = [3829205.641       , 469142.485        , 5062180.973      ]
 PIC.Core.RS106HBA.position      = [3829205.641       , 469142.485        , 5062180.973      ]
 
-PIC.Core.RS208LBA.phaseCenter   = [3847753.353       , 466962.762        , 5048397.215      ]
-PIC.Core.RS208LBA.position      = [3847753.353       , 466962.762        , 5048397.215      ]
-PIC.Core.RS208HBA.phaseCenter   = [3847810.094       , 466929.659        , 5048357.193      ]
-PIC.Core.RS208HBA.position      = [3847810.094       , 466929.659        , 5048357.193      ]
+PIC.Core.RS208LBA.phaseCenter   = [3847810.094       , 466929.659        , 5048357.193      ]
+PIC.Core.RS208LBA.position      = [3847810.094       , 466929.659        , 5048357.193      ]
+PIC.Core.RS208HBA.phaseCenter   = [3847753.353       , 466962.762        , 5048397.215      ]
+PIC.Core.RS208HBA.position      = [3847753.353       , 466962.762        , 5048397.215      ]
 
 PIC.Core.CS302LBA.phaseCenter	= [3827945.959604251,  459792.591307241,   5063989.987604071]
 PIC.Core.CS302LBA.position	= [3827945.959604251,  459792.591307241,   5063989.987604071]
