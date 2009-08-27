@@ -27,8 +27,13 @@ class Section:
     self.psets     = Partitions.PartitionPsets[self.partition]
     self.obsid     = ObservationID.ObservationID.generateID()
 
+    self.preProcess()
+
   def __str__(self):
     return self.__class__.__name__
+
+  def preProcess(self):
+    pass
 
   def run(self):
     pass
@@ -120,19 +125,6 @@ class CNProcSection(Section):
 
     self.commands.append( AsyncCommand( "mpirun %s" % (" ".join(mpiparams),), logfiles, killcmd=mpikill ) )
 
-  def check(self):
-    # we have to own the partition
-    owner = BGcontrol.owner( self.partition )
-    me = os.environ["USER"]
-
-    assert owner is not None, "Partition %s is not allocated." % ( self.partition, )
-    assert owner == me, "Partition %s owned by %s, but you are %s." % ( self.partition, owner, me )
-
-    # no job needs to be running on the partition
-    job = BGcontrol.runningJob( self.partition )
-
-    assert job is None, "Partition %s already running job %s (%s)." % ( self.partition, job[0], job[1] )
-
 class IONProcSection(Section):
   def run(self):
     logfiles = ["%s/run.IONProc.%s.log" % (Locations.files["logdir"],self.partition)] + self.logoutputs
@@ -194,6 +186,9 @@ class IONProcSection(Section):
       assert "FAIL" not in backquote("ssh %s cat /dev/flatmem 2>&1 | grep -q 'Cannot allocate memory' && echo FAIL" % (node,)), "Cannot allocate flat memory on I/O node %s" % (node,)
 
 class StorageSection(Section):
+  def preProcess(self):
+    self.pidfile = None
+
   def run(self):
     logfiles = ["%s/run.Storage.%s.log" % (Locations.files["logdir"],self.partition)] + self.logoutputs
 
