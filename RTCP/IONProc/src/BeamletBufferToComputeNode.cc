@@ -84,7 +84,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   itsNrCoresPerPset	      = ps->nrCoresPerPset();
   itsSampleDuration	      = ps->sampleDuration();
   itsDelayCompensation	      = ps->delayCompensation();
-  itsNeedDelays               = itsDelayCompensation || ps->nrPencilBeams() > 0;
+  itsNeedDelays               = (itsDelayCompensation || ps->nrPencilBeams() > 0) && itsNrInputs > 0;
   itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
   itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping();
   itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping();
@@ -114,14 +114,13 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
     itsBeamDirectionsAtBegin = itsBeamDirectionsAfterEnd;
   }
    
-
   itsDelayedStamps.resize(itsNrBeams);
   itsSamplesDelay.resize(itsNrBeams);
   itsFineDelaysAtBegin.resize(itsNrBeams, itsNrPencilBeams);
   itsFineDelaysAfterEnd.resize(itsNrBeams, itsNrPencilBeams);
   itsFlags.resize(boost::extents[itsNrInputs][itsNrBeams]);
 
-  if (itsDumpRawData) {
+  if (itsDumpRawData && itsNrInputs > 0) {
     LOG_DEBUG("Dumping raw beamformed data only, no further processing done");
 
     vector<string> rawDataOutputs = ps->getStringVector("OLAP.OLAP_Conn.rawDataOutputs");
@@ -159,7 +158,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::com
     itsDelaysAtBegin = itsDelaysAfterEnd; // from previous integration
     itsBeamDirectionsAtBegin = itsBeamDirectionsAfterEnd; // from previous integration
     
-    itsDelayComp->getNextDelays( itsBeamDirectionsAfterEnd, itsDelaysAfterEnd );
+    itsDelayComp->getNextDelays(itsBeamDirectionsAfterEnd, itsDelaysAfterEnd);
    
     for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
       // The coarse delay is determined for the center of the current
@@ -175,7 +174,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::com
       itsDelayedStamps[beam]      -= coarseDelay;
       itsSamplesDelay[beam]       = -coarseDelay;
 
-      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil++ ) {
+      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++) {
         // we don't do coarse delay compensation for the individual pencil beams to avoid complexity and overhead
         itsFineDelaysAtBegin[beam][pencil]  = static_cast<float>(itsDelaysAtBegin[beam][pencil] - d);
         itsFineDelaysAfterEnd[beam][pencil] = static_cast<float>(itsDelaysAfterEnd[beam][pencil] - d);
@@ -185,9 +184,9 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::com
     itsDelayTimer.stop();
   } else {
     for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-      itsSamplesDelay[beam]       = 0;
+      itsSamplesDelay[beam] = 0;
 
-      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil++ ) {
+      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++) {
         itsFineDelaysAtBegin[beam][pencil]  = 0;
         itsFineDelaysAfterEnd[beam][pencil] = 0;
       }
@@ -254,51 +253,53 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
     // tell CN to process data
     command.write(stream);
 
-    // create and send all metadata in one "large" message, since initiating a message
-    // has significant overhead in FCNP.
-    SubbandMetaData metaData(itsNrOutputPsets, itsNrPencilBeams, 16);
-    
-    for (unsigned psetIndex = 0; psetIndex < itsNrOutputPsets; psetIndex ++) {
-      unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
+    if (itsNrInputs > 0) {
+      // create and send all metadata in one "large" message, since initiating a message
+      // has significant overhead in FCNP.
+      SubbandMetaData metaData(itsNrOutputPsets, itsNrPencilBeams, 16);
 
-      if (subband < itsNrSubbands) {
-        unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-        unsigned beam     = itsSubbandToBeamMapping[subband];
+      for (unsigned psetIndex = 0; psetIndex < itsNrOutputPsets; psetIndex ++) {
+	unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
 
-        if (itsNeedDelays) {
-          for (unsigned p = 0; p < itsNrPencilBeams; p ++) {
-            struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(psetIndex)[p];
+	if (subband < itsNrSubbands) {
+	  unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
+	  unsigned beam     = itsSubbandToBeamMapping[subband];
 
-	    beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
-	    beamInfo.delayAfterEnd  = itsFineDelaysAfterEnd[beam][p];
+	  if (itsNeedDelays) {
+	    for (unsigned p = 0; p < itsNrPencilBeams; p ++) {
+	      struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(psetIndex)[p];
 
-	    const vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam][p].coord().get();
-	    const vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam][p].coord().get();
+	      beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
+	      beamInfo.delayAfterEnd  = itsFineDelaysAfterEnd[beam][p];
 
-	    for (unsigned i = 0; i < 3; i ++) {
-	      beamInfo.beamDirectionAtBegin[i]  = beamDirBegin[i];
-	      beamInfo.beamDirectionAfterEnd[i] = beamDirEnd[i];
-	    }
+	      const vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam][p].coord().get();
+	      const vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam][p].coord().get();
+
+	      for (unsigned i = 0; i < 3; i ++) {
+		beamInfo.beamDirectionAtBegin[i]  = beamDirBegin[i];
+		beamInfo.beamDirectionAfterEnd[i] = beamDirEnd[i];
+	      }
+	    }  
 	  }  
-        }  
 
-        metaData.alignmentShift(psetIndex) = itsBeamletBuffers[rspBoard]->alignmentShift(beam);
-        metaData.setFlags(psetIndex, itsFlags[rspBoard][beam]);
+	  metaData.alignmentShift(psetIndex) = itsBeamletBuffers[rspBoard]->alignmentShift(beam);
+	  metaData.setFlags(psetIndex, itsFlags[rspBoard][beam]);
+	}
       }
-    }
 
-    metaData.write(stream);
+      metaData.write(stream);
 
-    // now send all subband data
-    for (unsigned psetIndex = 0; psetIndex < itsNrOutputPsets; psetIndex ++) {
-      unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
+      // now send all subband data
+      for (unsigned psetIndex = 0; psetIndex < itsNrOutputPsets; psetIndex ++) {
+	unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
 
-      if (subband < itsNrSubbands) {
-	unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-	unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
-	unsigned beam     = itsSubbandToBeamMapping[subband];
+	if (subband < itsNrSubbands) {
+	  unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
+	  unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
+	  unsigned beam     = itsSubbandToBeamMapping[subband];
 
-	itsBeamletBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
+	  itsBeamletBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
+	}
       }
     }
 
@@ -373,23 +374,27 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sto
 
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::process()
 {
-  for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-    itsDelayedStamps[beam] = itsCurrentTimeStamp - itsNrHistorySamples;
+  if (itsNrInputs > 0) {
+    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
+      itsDelayedStamps[beam] = itsCurrentTimeStamp - itsNrHistorySamples;
 
-  computeDelays();
-  startTransaction();
-  writeLogMessage();
+    computeDelays();
+    startTransaction();
+    writeLogMessage();
+  }
 
   NSTimer timer;
   timer.start();
 
-  if (itsDumpRawData)
-    dumpRawData();
-  else
+  if (!itsDumpRawData)
     toComputeNodes();
+  else if (itsNrInputs > 0)
+    dumpRawData();
 
-  stopTransaction();
-  itsCurrentTimeStamp += itsNrSamplesPerSec;
+  if (itsNrInputs > 0) {
+    stopTransaction();
+    itsCurrentTimeStamp += itsNrSamplesPerSec;
+  }
 
   timer.stop();
   LOG_INFO_STR("ION->CN: " << PrettyTime(timer.getElapsed()));
@@ -400,7 +405,8 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pos
 {
   LOG_DEBUG("BeamletBufferToComputeNode::postprocess");
 
-  delete itsDelayComp; itsDelayComp = 0;
+  delete itsDelayComp;	   itsDelayComp	    = 0;
+  delete itsRawDataStream; itsRawDataStream = 0;
 
   itsSubbandToBeamMapping.resize(0);
   itsSubbandToRSPboardMapping.resize(0);

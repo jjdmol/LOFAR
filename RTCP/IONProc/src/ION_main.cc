@@ -208,9 +208,10 @@ static void stopCNs()
 }
 
 
-template<typename SAMPLE_TYPE> static void inputTask(Parset *parset)
+template<typename SAMPLE_TYPE> static void toCNtask(Parset *parset)
 {
-  BeamletBufferToComputeNode<SAMPLE_TYPE> beamletBufferToComputeNode(clientStreams, static_cast<InputSection<SAMPLE_TYPE> *>(inputSection)->itsBeamletBuffers, myPsetNumber);
+  std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
+  BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(clientStreams, inputSection != 0 ? static_cast<InputSection<SAMPLE_TYPE> *>(inputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
 
   beamletBufferToComputeNode.preprocess(parset);
 	
@@ -221,7 +222,7 @@ template<typename SAMPLE_TYPE> static void inputTask(Parset *parset)
 }
 
 
-static void *inputSectionThread(void *parset)
+static void *toCNthread(void *parset)
 {
   LOG_DEBUG("starting input section");
 
@@ -232,13 +233,13 @@ static void *inputSectionThread(void *parset)
     Parset *ps = static_cast<Parset *>(parset);
 
     switch (ps->nrBitsPerSample()) {
-      case 4  : inputTask<i4complex>(ps);
+      case 4  : toCNtask<i4complex>(ps);
 		break;
 
-      case 8  : inputTask<i8complex>(ps);
+      case 8  : toCNtask<i8complex>(ps);
 		break;
 
-      case 16 : inputTask<i16complex>(ps);
+      case 16 : toCNtask<i16complex>(ps);
 		break;
     }
 
@@ -378,7 +379,7 @@ void master_thread(int argc, char **argv)
       exit(1);
     }
 
-    pthread_t input_thread_id, output_thread_id;
+    pthread_t to_cn_thread_id, output_thread_id;
 
     std::vector<Parset *> parsets;
 
@@ -424,7 +425,7 @@ void master_thread(int argc, char **argv)
 
     configureCNs(parset);
 
-    if (hasInputSection && pthread_create(&input_thread_id, 0, inputSectionThread, static_cast<void *>(&parset)) != 0) {
+    if ((hasInputSection || hasOutputSection) && pthread_create(&to_cn_thread_id, 0, toCNthread, static_cast<void *>(&parset)) != 0) {
       perror("pthread_create");
       exit(1);
     }
@@ -434,22 +435,8 @@ void master_thread(int argc, char **argv)
       exit(1);
     }
 
-    if (!hasInputSection && hasOutputSection) {
-      // quick hack to send PROCESS commands to CNs
-
-      CN_Command command(CN_Command::PROCESS);
-      unsigned	 core = 0;
-
-      for (int count = nrRuns * parset.nrSubbandsPerPset(); -- count >= 0;) {
-	command.write(clientStreams[core]);
-
-	if (++ core == parset.nrCoresPerPset())
-	  core = 0;
-      }
-    }
-
-    if (hasInputSection) {
-      if (pthread_join(input_thread_id, 0) != 0) {
+    if (hasInputSection || hasOutputSection) {
+      if (pthread_join(to_cn_thread_id, 0) != 0) {
 	perror("pthread join");
 	exit(1);
       }
@@ -458,8 +445,6 @@ void master_thread(int argc, char **argv)
     }
 
     unconfigureCNs(parset);
-
-    stopCNs();
 
     if (hasInputSection)
       switch (parset.nrBitsPerSample()) {
@@ -481,6 +466,8 @@ void master_thread(int argc, char **argv)
 
       LOG_DEBUG("lofar__fini: output section joined");
     }
+
+    stopCNs();
 
 #if defined FLAT_MEMORY
     unmapFlatMemory();
