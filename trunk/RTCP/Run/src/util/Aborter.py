@@ -1,6 +1,6 @@
 import signal
 
-__all__ = ["runUntilSuccess"]
+__all__ = ["runUntilSuccess","runFunc"]
 
 class Aborter:
   """ Abort commands using a sequence of kill commands, which are kept in check with a timeout. """
@@ -58,6 +58,8 @@ class Aborter:
       if success:
         return True
 
-    return False    
+    return False 
 
-runUntilSuccess = Aborter().runUntilSuccess
+Aborter = Aborter()
+runUntilSuccess = Aborter.runUntilSuccess
+runFunc = Aborter.runFunc
