@@ -260,8 +260,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 #if defined HAVE_MPI
   if (itsIsTransposeInput || itsIsTransposeOutput) {
     itsAsyncTranspose = new AsyncTranspose<SAMPLE_TYPE>(itsIsTransposeInput, itsIsTransposeOutput, 
-							myCoreInPset, itsLocationInfo, inputPsets, outputPsets, 
-							itsNrSubbands, itsNrSubbandsPerPset, itsNrPencilBeams);
+							myCoreInPset, itsLocationInfo, inputPsets, outputPsets );
   }
 #endif // HAVE_MPI
 }
@@ -434,6 +433,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( Str
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingInput()
 {
 #if defined HAVE_MPI
+  if (LOG_CONDITION)
+    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start waiting to finish sending input at " << MPI_Wtime());
+
   NSTimer waitAsyncSendTimer("wait for all async sends", LOG_CONDITION, true);
   waitAsyncSendTimer.start();
   itsAsyncTranspose->waitForAllSends();

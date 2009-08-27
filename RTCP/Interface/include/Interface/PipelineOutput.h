@@ -130,6 +130,7 @@ inline PipelineOutputSet::PipelineOutputSet( const Parset &ps, Allocator &alloca
     case CN_Mode::FILTER:
 	o = new PipelineOutput( id++, PipelineOutput::FILTEREDDATA );
         o->itsData = new FilteredData( ps.nrStations(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), ps.nrPencilBeams() );
+        o->itsFilenameSuffix = ".filtered";
         break;
 
     case CN_Mode::CORRELATE:
@@ -141,6 +142,7 @@ inline PipelineOutputSet::PipelineOutputSet( const Parset &ps, Allocator &alloca
     case CN_Mode::COHERENT_COMPLEX_VOLTAGES:
 	o = new PipelineOutput( id++, PipelineOutput::PENCILBEAMDATA );
         o->itsData = new PencilBeamData( ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps() );
+        o->itsFilenameSuffix = ".complexvoltages";
         break;
 
     case CN_Mode::COHERENT_STOKES_I:
@@ -154,6 +156,7 @@ inline PipelineOutputSet::PipelineOutputSet( const Parset &ps, Allocator &alloca
           o = new PipelineOutput( id++, PipelineOutput::STOKESDATA );
           o->itsData = new StokesData( mode.isCoherent(), mode.nrStokes(), ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), ps.stokesIntegrationSteps() );
         }
+        o->itsFilenameSuffix = ".stokes";
         break;
 
     default:

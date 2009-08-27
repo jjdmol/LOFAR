@@ -159,7 +159,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
       if (ex.error == EINTR)
 	break;
       else
-	THROW(IONProcException,"");
+	throw;
     }
 
     ++ itsArgs.packetCounters->nrPacketsReceived;

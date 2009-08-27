@@ -20,14 +20,10 @@ namespace RTCP {
 template <typename SAMPLE_TYPE> AsyncTranspose<SAMPLE_TYPE>::AsyncTranspose(
   const bool isTransposeInput, const bool isTransposeOutput, 
   const unsigned groupNumber, const LocationInfo &locationInfo, 
-  const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, 
-  const unsigned nrSubbands, const unsigned nrSubbandsPerPset, const unsigned nrPencilBeams)
+  const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets )
 :
   itsIsTransposeInput(isTransposeInput),
   itsIsTransposeOutput(isTransposeOutput),
-  itsNrSubbands(nrSubbands),
-  itsNrSubbandsPerPset(nrSubbandsPerPset),
-  itsNrPencilBeams(nrPencilBeams),
   itsAsyncComm(),
   itsInputPsets(inputPsets),
   itsOutputPsets(outputPsets),
