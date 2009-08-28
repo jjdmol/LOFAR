@@ -57,11 +57,11 @@
 #define SUBBANDS_FLAG  0x10
 #define BEAMLETS_FLAG  0x20
 #define ALL_FLAGS (  ARRAY_FLAG			\
-		   | RCUS_FLAG			\
-		   | RCUMODE_FLAG		\
-		   | DIRECTION_FLAG		\
-		   | SUBBANDS_FLAG		\
-		   | BEAMLETS_FLAG)
+			 | RCUS_FLAG			\
+			 | RCUMODE_FLAG		\
+			 | DIRECTION_FLAG		\
+			 | SUBBANDS_FLAG		\
+			 | BEAMLETS_FLAG)
 
 #define SKYSCAN_STARTDELAY 30.0
 
@@ -116,7 +116,7 @@ beamctl::beamctl(string name,
 
 	try { itsSkyScanWaitTime = globalParameterSet()->getInt32("beamctl.SKYSCAN_WAIT_TIME"); }
 	catch (...) { LOG_INFO_STR(formatString("beamctl.SKYSCAN_WAIT_TIME")); }
-	}
+}
 
 //
 // ~beamctl()
@@ -248,7 +248,7 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
 			cerr << "Error: failed to start calibration" << endl;
 			TRAN(beamctl::final);
 		} else {
-			cout << "Calserver excepted settings." << endl;
+			cout << "Calserver accepted settings." << endl;
 			TRAN(beamctl::create_beam);
 		}
 	}
@@ -351,14 +351,14 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 						pointto.pointing.setTime(time);
 						pointto.pointing.setDirection(l, m);
 						itsBeamServer->send(pointto);
-						time = time + (long)itsSkyScanPointTime; // advance seconds
+						time = time + static_cast<long>(itsSkyScanPointTime); // advance seconds
 					}
 				}
 			}
 			pointto.pointing.setTime(time);
 			pointto.pointing.setDirection(0.0, 0.0);
 			itsBeamServer->send(pointto);
-			time = time + (long)itsSkyScanWaitTime; // advance seconds
+			time = time + static_cast<long>(itsSkyScanWaitTime); // advance seconds
 		} while (time < end_time);
 	}
 	break;
@@ -383,27 +383,27 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 
 GCFEvent::TResult beamctl::final(GCFEvent& e, GCFPortInterface& /*port*/)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch(e.signal) {
-      case F_ENTRY:
-	  GCFScheduler::instance()->stop();
-	  break;
-      
-      case F_EXIT:
-	  break;
+	switch(e.signal) {
+			case F_ENTRY:
+		GCFScheduler::instance()->stop();
+		break;
+			
+			case F_EXIT:
+		break;
 
-      default:
-	  status = GCFEvent::NOT_HANDLED;
-	  break;
-  }
+			default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
 
-  return status;
+	return status;
 }
 
 void usage()
 {
-  cout <<
+	cout <<
 "Usage: beamctl\n"
 "  --array=name      # name of  array of which the RCU's are part (for positions)\n"
 "  [--rcus=<set>]    # select set of RCU's, all RCU's if not specified\n"
@@ -420,83 +420,83 @@ void usage()
 "containing the selected RCU's. The CalServer sets those RCU's in the mode\n"
 "specified by --rcumode. Another connection is made to the BeamServer to create a\n"
 "beam on the created subarray pointing in the direction specified with --direction.\n"
-  << endl;
+	<< endl;
 }
 
 bitset<MEPHeader::MAX_N_RCUS> beamctl::getRCUMask() const
 {
-  bitset<MEPHeader::MAX_N_RCUS> mask;
-  
-  mask.reset();
-  list<int>::const_iterator it;
-  int count = 0; // limit to ndevices
-  for (it = m_rcus.begin(); it != m_rcus.end(); ++it, ++count) {
-    if (count >= MEPHeader::MAX_N_RCUS) break;
-    
-    if (*it < MEPHeader::MAX_N_RCUS)
-      mask.set(*it);
-  }
-  return mask;
+	bitset<MEPHeader::MAX_N_RCUS> mask;
+	
+	mask.reset();
+	list<int>::const_iterator it;
+	int count = 0; // limit to ndevices
+	for (it = m_rcus.begin(); it != m_rcus.end(); ++it, ++count) {
+		if (count >= MEPHeader::MAX_N_RCUS) break;
+		
+		if (*it < MEPHeader::MAX_N_RCUS)
+			mask.set(*it);
+	}
+	return mask;
 }
 
 static list<int> strtolist(const char* str, int max)
 {
-  string inputstring(str);
-  char* start = (char*)inputstring.c_str();
-  char* end   = 0;
-  bool  range = false;
-  long prevval = 0;
-  list<int> resultset;
+	string inputstring(str);
+	char* start = (char*)inputstring.c_str();
+	char* end   = 0;
+	bool  range = false;
+	long prevval = 0;
+	list<int> resultset;
 
-  resultset.clear();
+	resultset.clear();
 
-  while (start)
-  {
-    long val = strtol(start, &end, 10); // read decimal numbers
-    start = (end ? (*end ? end + 1 : 0) : 0); // advance
-    if (val >= max || val < 0) {
-      cerr << formatString("Error: value %ld out of range",val) << endl;
-      resultset.clear();
-      return resultset;
-    }
+	while (start)
+	{
+		long val = strtol(start, &end, 10); // read decimal numbers
+		start = (end ? (*end ? end + 1 : 0) : 0); // advance
+		if (val >= max || val < 0) {
+			cerr << formatString("Error: value %ld out of range",val) << endl;
+			resultset.clear();
+			return resultset;
+		}
 
-    if (end) {
-      switch (*end) {
-        case ',':
-        case 0: {
-          if (range) {
-            if (0 == prevval && 0 == val)
-              val = max - 1;
-            if (val < prevval) {
-	      cerr << "Error: invalid range specification" << endl;
-              resultset.clear();
-              return resultset;
-            }
-            for (long i = prevval; i <= val; i++)
-              resultset.push_back(i);
-          } 
-          else {
-            resultset.push_back(val);
-          }
-          range=false;
-        }
-        break;
+		if (end) {
+			switch (*end) {
+				case ',':
+				case 0: {
+					if (range) {
+						if (0 == prevval && 0 == val)
+							val = max - 1;
+						if (val < prevval) {
+				cerr << "Error: invalid range specification" << endl;
+							resultset.clear();
+							return resultset;
+						}
+						for (long i = prevval; i <= val; i++)
+							resultset.push_back(i);
+					} 
+					else {
+						resultset.push_back(val);
+					}
+					range=false;
+				}
+				break;
 
-        case ':':
-          range=true;
-          break;
+				case ':':
+					range=true;
+					break;
 
-        default:
-	  cerr << formatString("Error: invalid character %c",*end) << endl;
-          resultset.clear();
-          return resultset;
-          break;
-      }
-    }
-    prevval = val;
-  }
+				default:
+		cerr << formatString("Error: invalid character %c",*end) << endl;
+					resultset.clear();
+					return resultset;
+					break;
+			}
+		}
+		prevval = val;
+	}
 
-  return resultset;
+	return resultset;
 }
 
 void printList(list<int>&		theList)
@@ -512,37 +512,37 @@ void printList(list<int>&		theList)
 
 void beamctl::mainloop()
 {
-  start(); // make initial transition
-  GCFScheduler::instance()->run();
+	start(); // make initial transition
+	GCFScheduler::instance()->run();
 }
 
 int main(int argc, char** argv)
 {
-  char *array = "unset";              // --array argument goes here
-  list<int> rcus;                     // --rcus argument goes here
-  list<int> subbands;                 // --subbands argument goed here
-  list<int> beamlets;                 // --beamlets argument goes here
-  RSP_Protocol::RCUSettings rcumode;  // --rcumode argument goes here
-  Pointing direction;                 // --direction argument goed here
-  unsigned char presence = 0;         // keep track of which arguments have been specified
+	char *array = "unset";              // --array argument goes here
+	list<int> rcus;                     // --rcus argument goes here
+	list<int> subbands;                 // --subbands argument goed here
+	list<int> beamlets;                 // --beamlets argument goes here
+	RSP_Protocol::RCUSettings rcumode;  // --rcumode argument goes here
+	Pointing direction;                 // --direction argument goed here
+	unsigned char presence = 0;         // keep track of which arguments have been specified
 
-  double latitude = 0.0;
-  double longitude = 0.0;
-  char type[11] = "J2000";
+	double latitude = 0.0;
+	double longitude = 0.0;
+	char type[11] = "J2000";
 
-  // initialize rcus
-  rcus.clear();
-  //for (int i = 0; i < MEPHeader::MAX_N_RCUS; i++) rcus.push_back(i);
+	// initialize rcus
+	rcus.clear();
+	//for (int i = 0; i < MEPHeader::MAX_N_RCUS; i++) rcus.push_back(i);
 
-  subbands.clear();
-  beamlets.clear();
+	subbands.clear();
+	beamlets.clear();
 
-  // initialize rcumode
-  rcumode().resize(1);
+	// initialize rcumode
+	rcumode().resize(1);
 	
-  cout << "Reading configuration files" << endl;
-  try {
-  	LOFAR::ConfigLocator cl;
+	cout << "Reading configuration files" << endl;
+	try {
+		LOFAR::ConfigLocator cl;
 		globalParameterSet()->adoptFile(cl.locate("beamctl.conf"));
 	}
 	catch (LOFAR::Exception& e) {
@@ -550,181 +550,181 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 		
-  // parse options
-  optind = 0; // reset option parsing
-  while (1) {
+	// parse options
+	optind = 0; // reset option parsing
+	while (1) {
 
-    static struct option long_options[] = {
-      { "array",     required_argument, 0, 'a' },
-      { "rcus",      optional_argument, 0, 'r' },
-      { "rcumode",   required_argument, 0, 'm' },
-      { "direction", required_argument, 0, 'd' },
-      { "subbands",  required_argument, 0, 's' },
-      { "beamlets",  required_argument, 0, 'b' },
-      { "help",      no_argument,       0, 'h' },
-      { 0, 0, 0, 0 },
-    };
+		static struct option long_options[] = {
+			{ "array",     required_argument, 0, 'a' },
+			{ "rcus",      optional_argument, 0, 'r' },
+			{ "rcumode",   required_argument, 0, 'm' },
+			{ "direction", required_argument, 0, 'd' },
+			{ "subbands",  required_argument, 0, 's' },
+			{ "beamlets",  required_argument, 0, 'b' },
+			{ "help",      no_argument,       0, 'h' },
+			{ 0, 0, 0, 0 },
+		};
 
-    int option_index = 0;
-    int c = getopt_long(argc, argv, "a:rm:d:h", long_options, &option_index);
+		int option_index = 0;
+		int c = getopt_long(argc, argv, "a:rm:d:h", long_options, &option_index);
 
-    if (c == -1) break;
+		if (c == -1) break;
 
-    switch (c) {
+		switch (c) {
 
-    case 'a':
-      {
+		case 'a':
+			{
 	if (!optarg) {
-	  cerr << "Error: missing --array value" << endl;
+		cerr << "Error: missing --array value" << endl;
 	} else {
-	  array=strdup(optarg);
-	  cout << "array=" << array << endl;
-	  presence |= ARRAY_FLAG;
+		array=strdup(optarg);
+		cout << "array=" << array << endl;
+		presence |= ARRAY_FLAG;
 	}
-      }
-      break;
-     
-    case 'r':
-      {
+			}
+			break;
+		 
+		case 'r':
+			{
 	if (!optarg) {
-	  cerr << "Error: missing --rcus value" << endl;
+		cerr << "Error: missing --rcus value" << endl;
 	} else {
-	  rcus = strtolist(optarg, MEPHeader::MAX_N_RCUS);
-	  presence |= RCUS_FLAG;
-	  cout << "rcus=" << optarg << endl;
+		rcus = strtolist(optarg, MEPHeader::MAX_N_RCUS);
+		presence |= RCUS_FLAG;
+		cout << "rcus=" << optarg << endl;
 	}
-      }
-      break;
+			}
+			break;
 
-    case 'm':
-      {
+		case 'm':
+			{
 	if (!optarg) {
-	  cerr << "Error: missing --rcumode value" << endl;
+		cerr << "Error: missing --rcumode value" << endl;
 	} else {
-	  int mode = 0;
-	  if ((mode = atoi(optarg)) < 0 || mode > 7) {
-	    cerr << formatString("Error: --rcumode=%d, out of range [0..7]", mode) << endl;
-	  } else {
-	    rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)mode);
-	    presence |= RCUMODE_FLAG;
-	    cout << "rcumode=" << optarg << endl;
-	  }
+		int mode = 0;
+		if ((mode = atoi(optarg)) < 0 || mode > 7) {
+			cerr << formatString("Error: --rcumode=%d, out of range [0..7]", mode) << endl;
+		} else {
+			rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)mode);
+			presence |= RCUMODE_FLAG;
+			cout << "rcumode=" << optarg << endl;
+		}
 	}
-      }
-      break;
+			}
+			break;
 
-    case 'd':
-      {
+		case 'd':
+			{
 	if (!optarg) {
-	  cerr << "Error: missing --direction value" << endl;
+		cerr << "Error: missing --direction value" << endl;
 	} else {
-	  int nargs = sscanf(optarg, "%lf,%lf,%10s", &longitude, &latitude, type);
-	  if (nargs < 2) {
-	    cerr << "Error: invalid number of parameters for --direction " << endl;
-	  } else {
-	    cout << formatString("longitude=%lf, latitude=%lf, type=%s", longitude, latitude, type);
+		int nargs = sscanf(optarg, "%lf,%lf,%10s", &longitude, &latitude, type);
+		if (nargs < 2) {
+			cerr << "Error: invalid number of parameters for --direction " << endl;
+		} else {
+			cout << formatString("longitude=%lf, latitude=%lf, type=%s", longitude, latitude, type);
 
-	    if (string("J2000") == string(type)) {
-	      presence |= DIRECTION_FLAG;
-	    } else if (string("AZEL") == string(type)) {
-	      presence |= DIRECTION_FLAG;
-	    } else if (string("LOFAR_LMN") == string(type)) {
-	      presence |= DIRECTION_FLAG;
-	    } else if (string("SKYSCAN") == string(type)) {
-	      presence |= DIRECTION_FLAG;
-	    } else {
-	      cerr << "Error: invalid coordinate type '" << type << "'" << endl;
-	    }
-	  }
+			if (string("J2000") == string(type)) {
+				presence |= DIRECTION_FLAG;
+			} else if (string("AZEL") == string(type)) {
+				presence |= DIRECTION_FLAG;
+			} else if (string("LOFAR_LMN") == string(type)) {
+				presence |= DIRECTION_FLAG;
+			} else if (string("SKYSCAN") == string(type)) {
+				presence |= DIRECTION_FLAG;
+			} else {
+				cerr << "Error: invalid coordinate type '" << type << "'" << endl;
+			}
+		}
 	}
-      }
-      break;
+			}
+			break;
 
-    case 's':
-      {
+		case 's':
+			{
 	if (!optarg) {
-	  cerr << "Error: missing --subbands value" << endl;
+		cerr << "Error: missing --subbands value" << endl;
 	} else {
-	  subbands = strtolist(optarg, MEPHeader::N_SUBBANDS);
-	  presence |= SUBBANDS_FLAG;
-	  cout << "subbands = " << optarg << "(" << subbands.size() << ")" << endl;
+		subbands = strtolist(optarg, MEPHeader::N_SUBBANDS);
+		presence |= SUBBANDS_FLAG;
+		cout << "subbands = " << optarg << "(" << subbands.size() << ")" << endl;
 	}
-      }
-      break;
+			}
+			break;
 
-    case 'b':
-      {
+		case 'b':
+			{
 	if (!optarg) {
-	  cerr << "Error: missing --beamlets value" << endl;
+		cerr << "Error: missing --beamlets value" << endl;
 	} else {
-	  beamlets = strtolist(optarg, MEPHeader::N_BEAMLETS);
-	  presence |= BEAMLETS_FLAG;
-	  cout << "beamlets = " << optarg << "(" << beamlets.size() << ")" << endl;
+		beamlets = strtolist(optarg, MEPHeader::N_BEAMLETS);
+		presence |= BEAMLETS_FLAG;
+		cout << "beamlets = " << optarg << "(" << beamlets.size() << ")" << endl;
 	}
-      }
-      break;
+			}
+			break;
 
-    case 'h':
-      {
+		case 'h':
+			{
 	usage();
 	exit(EXIT_SUCCESS);
-      }
-      break;
+			}
+			break;
 
-    case '?':
-    default:
-      {
+		case '?':
+		default:
+			{
 	//cerr << formatString("Error: unknown argument '%s'", optarg) << endl;
 	exit(EXIT_FAILURE);
-      }
-      break;
-    }
-  }
+			}
+			break;
+		}
+	}
 
-  if (! (presence & ARRAY_FLAG)) {
-    cerr << "Error: --array argument missing." << endl;
-  }
-  if (! (presence & RCUS_FLAG)) {
-    cerr << "Error: --rcus argument missing." << endl;
-  }
-  if (! (presence & RCUMODE_FLAG)) {
-    cerr << "Error: --rcumode argument missing." << endl;
-  }
-  if (! (presence & DIRECTION_FLAG)) {
-    cerr << "Error: --direction argument missing." << endl;
-  }
-  if (! (presence & SUBBANDS_FLAG)) {
-    cerr << "Error: --subbands argument missing." << endl;
-  }
-  if (! (presence & BEAMLETS_FLAG)) {
-    cerr << "Error: --beamlets argument missing." << endl;
-  }
+	if (! (presence & ARRAY_FLAG)) {
+		cerr << "Error: --array argument missing." << endl;
+	}
+	if (! (presence & RCUS_FLAG)) {
+		cerr << "Error: --rcus argument missing." << endl;
+	}
+	if (! (presence & RCUMODE_FLAG)) {
+		cerr << "Error: --rcumode argument missing." << endl;
+	}
+	if (! (presence & DIRECTION_FLAG)) {
+		cerr << "Error: --direction argument missing." << endl;
+	}
+	if (! (presence & SUBBANDS_FLAG)) {
+		cerr << "Error: --subbands argument missing." << endl;
+	}
+	if (! (presence & BEAMLETS_FLAG)) {
+		cerr << "Error: --beamlets argument missing." << endl;
+	}
 
-  if (presence != ALL_FLAGS) {
-    cerr << "Error: Not all required arguments have been specified correctly." << endl;
-    usage();
-    exit(EXIT_FAILURE);
-  }
+	if (presence != ALL_FLAGS) {
+		cerr << "Error: Not all required arguments have been specified correctly." << endl;
+		usage();
+		exit(EXIT_FAILURE);
+	}
 
-  if (subbands.size() != beamlets.size()) {
-    cerr << "Error: length of --subbands value must be equal to length of --beamlets value." << endl;
-    exit(EXIT_FAILURE);
-  }
+	if (subbands.size() != beamlets.size()) {
+		cerr << "Error: length of --subbands value must be equal to length of --beamlets value." << endl;
+		exit(EXIT_FAILURE);
+	}
 
-  cout << "Argument are ok, creating a task" << endl;
-  GCFScheduler::instance()->init(argc, argv, "beamctl");
-  LOG_INFO(formatString("Program %s has started", argv[0]));
+	cout << "Argument are ok, creating a task" << endl;
+	GCFScheduler::instance()->init(argc, argv, "beamctl");
+	LOG_INFO(formatString("Program %s has started", argv[0]));
 
-  beamctl ctl("beamctl", array, rcus, subbands, beamlets, rcumode, longitude, latitude, type);
+	beamctl ctl("beamctl", array, rcus, subbands, beamlets, rcumode, longitude, latitude, type);
 
-  try {
-    ctl.mainloop();
-  } catch (Exception& e) {
-    cerr << "Exception: " << e.text() << endl;
-    exit(EXIT_FAILURE);
-  }
+	try {
+		ctl.mainloop();
+	} catch (Exception& e) {
+		cerr << "Exception: " << e.text() << endl;
+		exit(EXIT_FAILURE);
+	}
 
-  LOG_INFO("Normal termination of program");
+	LOG_INFO("Normal termination of program");
 
-  return 0;
+	return 0;
 }
