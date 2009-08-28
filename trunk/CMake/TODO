@@ -3,6 +3,16 @@
 =                       TODO - List of things to do                          =
 ==============================================================================
 
+* Solve the CN and ION build problems for RTCP. These problems arise because
+  CN and ION are now defined as variants, whereas they should be defined as
+  different compilers.
+  However, this only solves part of the problem. A *real* solution is to
+  define compilers in separate <compiler-suite>.compiler.conf files. That
+  way we can do per-compiler settings, instead of per-host settings, using a
+  variants file (see bug #1395).
+
+* Python package are not yet part of the CMake build.
+
 * Define ${PROJECT_NAME}_LINK_LIBRARIES in LofarAddPackage.cmake, which can
   then be used by lofar_add_library() and lofar_add_executable() in
   LofarMacros.cmake. This avoids the need to create a "dummy" project library,
@@ -32,8 +42,6 @@
 * SSE flags are not yet passed properly to either GNU or ICC compiler.
   Maybe this should just be done in the variants file when defining the
   different compiler suites and options.
-
-* Python package are not yet part of the CMake build.
 
 * Turn makeversion into a real CMake macro and merge it with
   LofarPackageVersion. Generate the Package__Version.{h,cc} files in the
