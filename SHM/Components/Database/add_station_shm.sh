@@ -34,12 +34,18 @@ test_connection()
     fi
 }
 
+# Check if station is in table systems.systeminstances. If so, it used to be 
+# present in the database before. Ask user if he wants to re-add the station.
+# Input is station name (uppercase)
+# sets $add_station. 0 means station must be re-added; 1 means station is 
+# really new.
+
 check_station_known()
 {
     station=$1
-    result=`psql -U${dbuser} -d${dbdatab} -h${dbhost} -p${dbport} -c "Select si_id from lofar.macinformationservers where si_name = '$station'" >& /dev/null ; echo $?`
+    result=`psql -U${dbuser} -d${dbdatab} -h${dbhost} -p${dbport} -c "Select si_id from systems.systeminstances where si_name = '$station'" | grep "1 row"  >& /dev/null ; echo $?`
     if [ $result == 0 ]; then 
-	echo "Station "$station" already present in table lofar.macinformationservers!"
+	echo "Station "$station" already present in table systems.systeminstances!"
 	read -p "Re-use stationname anyway [y/n]? "
         if [ "$REPLY" != "" ]; then
 	  ans=`echo $REPLY | tr '[a-z]' '[A-Z]'`
@@ -62,8 +68,8 @@ check_station_known()
 check_si_id_known()
 {
     _si_id=$1
-    result=`psql -U${dbuser} -d${dbdatab} -h${dbhost} -p${dbport} -c "Select si_id from systems.systeminstances where si_id = $_si_id" >& /dev/null ; echo $?`
-    if [ $result != 0 ]; then 
+    result=`psql -U${dbuser} -d${dbdatab} -h${dbhost} -p${dbport} -c "Select si_id from systems.systeminstances where si_id = $_si_id" | grep "1 row"  >& /dev/null ; echo $?`
+    if [ $result == 0 ]; then 
 	echo "Appointed system ID $_si_id already present in table systems.systeminstances!"
 	exit 1
     fi
@@ -73,6 +79,8 @@ check_si_id_known()
 insert_station_row()
 {
     station=$1
+    systems_add=$2
+
     result=`host -i ${station}C >& /dev/null; echo $?`
     if [ $result != 0 ]; then
 	echo "Host ${station}C unknown"
@@ -80,13 +88,14 @@ insert_station_row()
     else
 	host_ip=`host -i ${station}C | awk '{print $4}'`
     fi
-    station_nr=`echo $station| cut -c 3-`
+    station_nr=`echo $station| awk '{printf("%i",substr($1,3,3))}'`
 
     let si_id=station_nr+1000
-    check_si_id_known $si_id
-
-    query="Insert into systems.systeminstances (si_id, si_name, si_description, sc_id) VALUES ($si_id, '"$station"','"$station"',3);"
-    insert_row "$query"
+    if [ $systems_add == 1 ]; then 
+      check_si_id_known $si_id
+      query="Insert into systems.systeminstances (si_id, si_name, si_description, sc_id) VALUES ($si_id, '"$station"','"$station"',3);"
+      insert_row "$query"
+    fi
 
     query="Insert into lofar.macinformationservers (si_id, mis_address, mis_port, si_name) VALUES ("$si_id",'"$host_ip"',23990,'"$station"');"
     insert_row "$query"
@@ -125,9 +134,8 @@ get_user_info
 # IF station alread exists in database, user will be asked for re-use 
 # Function creates variable $add_station, which is 1 if station is new.
 check_station_known $new_station
-if [ $add_station == 1 ]; then 
-  insert_station_row $new_station
-fi
+
+insert_station_row $new_station $add_station
 
 get_max_id
 curdate=`date +%Y-%m-%d\ %H:%M:%S`

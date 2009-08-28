@@ -5,6 +5,13 @@
 # Script to drop a LOFAR station from the Job Control database, so it will
 # not be used anymore by the SHM system
 #
+# Station is dropped from :
+# - lofar.macinformationservers -> used for web-interface etc.
+# - jobcontrol.queue -> executes data fetching
+#
+# The station will remain in 
+# - systems.systeminstances -> List of all stations with unique ID
+#
 
 # This exits the script if an error occurs
 set -o errexit
@@ -36,7 +43,7 @@ test_connection()
 check_station_known()
 {
     station=$1
-    result=`psql -U${dbuser} -d${dbdatab} -h${dbhost} -p${dbport} -c "Select si_name from lofar.macinformationservers where si_name = '$station'" >& /dev/null ; echo $?`
+    result=`psql -U${dbuser} -d${dbdatab} -h${dbhost} -p${dbport} -c "Select si_name from lofar.macinformationservers where si_name = '$station'" | grep "1 row" >& /dev/null ; echo $?`
     if [ $result != 0 ]; then 
         echo "Station $station unknown in table lofar.macinformationservers!"
         exit 1
@@ -68,6 +75,9 @@ test_connection
 get_user_info
 check_station_known $the_station
 
+drop_MIS="DELETE from lofar.macinformationservers where si_name = '"$the_station"';"
+drop_row "$drop_MIS"
+ 
 rsp_name="rsp_"$the_station
 drop_rsp="DELETE from job_control.queue where name = '"$rsp_name"';"
 drop_row "$drop_rsp"
