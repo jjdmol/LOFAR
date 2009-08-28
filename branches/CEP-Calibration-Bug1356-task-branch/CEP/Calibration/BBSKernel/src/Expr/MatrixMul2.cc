@@ -35,8 +35,8 @@ MatrixMul2::MatrixMul2(const Expr<JonesMatrix>::ConstPtr &lhs,
 {
 }
 
-const JonesMatrix::view MatrixMul2::evaluateImpl(const Request &request,
-    const JonesMatrix::view &lhs, const JonesMatrix::view &rhs) const
+const JonesMatrix::View MatrixMul2::evaluateImpl(const Request &request,
+    const JonesMatrix::View &lhs, const JonesMatrix::View &rhs) const
 {
     // Determine dependencies.
     const bool dirtyLhsRow0 = lhs.dirty(0, 0) || lhs.dirty(0, 1);
@@ -46,7 +46,7 @@ const JonesMatrix::view MatrixMul2::evaluateImpl(const Request &request,
     const bool dirtyRhsCol1 = rhs.dirty(0, 1) || rhs.dirty(1, 1);
 
     // Create the result.
-    JonesMatrix::view result;
+    JonesMatrix::View result;
 
     if(dirtyLhsRow0 || dirtyRhsCol0)
     {

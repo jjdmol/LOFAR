@@ -61,23 +61,6 @@ ExprBase::ConstPtr ExprParm::argument(unsigned int) const
     ASSERT(false);
 }
 
-void ExprParm::updateSolvables(set<PValueKey> &solvables) const
-{
-    if(getPValueFlag())
-    {
-        // TODO: The following is incorrect; need to know the id's of all the
-        // _solvable_ coefficients (get the mask?).
-        const size_t nCoeff = itsParm->getCoeffCount();
-        for(size_t i = 0; i < nCoeff; ++i)
-        {
-            solvables.insert(PValueKey(itsParm->getId(), i));
-        }
-    }
-
-    itsSolvables.clear();
-    itsSolvables.insert(itsSolvables.begin(), solvables.begin(), solvables.end());
-}
-
 const Scalar ExprParm::evaluateExpr(const Request &request, Cache &cache) const
 {
     // Get the result from the Parm.

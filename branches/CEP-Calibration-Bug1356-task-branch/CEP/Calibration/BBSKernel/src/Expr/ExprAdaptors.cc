@@ -41,13 +41,13 @@ AsExpr<JonesMatrix>::AsExpr(const Expr<Scalar>::ConstPtr &element00,
     const Expr<Scalar>::ConstPtr &element10,
     const Expr<Scalar>::ConstPtr &element11)
 {
-    connect(itsArg[0]);
+    connect(element00);
     itsArg[0] = element00;
-    connect(itsArg[1]);
+    connect(element01);
     itsArg[1] = element01;
-    connect(itsArg[2]);
+    connect(element10);
     itsArg[2] = element10;
-    connect(itsArg[3]);
+    connect(element11);
     itsArg[3] = element11;
 }
 
@@ -148,10 +148,10 @@ AsComplex::AsComplex(const Expr<Scalar>::ConstPtr &re,
 {
 }
 
-const Scalar::view AsComplex::evaluateImpl(const Request&,
-    const Scalar::view &re, const Scalar::view &im) const
+const Scalar::View AsComplex::evaluateImpl(const Request&,
+    const Scalar::View &re, const Scalar::View &im) const
 {
-    Scalar::view result;
+    Scalar::View result;
     result.assign(tocomplex(re(), im()));
     return result;
 }
@@ -166,10 +166,10 @@ AsPolar::AsPolar(const Expr<Scalar>::ConstPtr &modulus,
 {
 }
 
-const Scalar::view AsPolar::evaluateImpl(const Request&,
-    const Scalar::view &mod, const Scalar::view &arg) const
+const Scalar::View AsPolar::evaluateImpl(const Request&,
+    const Scalar::View &mod, const Scalar::View &arg) const
 {
-    Scalar::view result;
+    Scalar::View result;
     result.assign(tocomplex(mod() * cos(arg()), mod() * sin(arg())));
     return result;
 }

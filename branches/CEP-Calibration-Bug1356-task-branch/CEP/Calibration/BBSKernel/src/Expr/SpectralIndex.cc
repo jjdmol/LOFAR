@@ -82,35 +82,59 @@ const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache)
     result.setFlags(mergeFlags(flags.begin(), flags.end()));
 
     // Compute main value.
-    vector<Scalar::view> coeffValue;
+    vector<Scalar::View> coeffValue;
     coeffValue.reserve(nArg - 1);
     for(unsigned int i = 0; i < nArg - 1; ++i)
     {
-        coeffValue.push_back(coeff[i].value());
+        coeffValue.push_back(coeff[i].view());
     }
-    result.assign(evaluateImpl(request, refFreq.value(), coeffValue));
+    result.assign(evaluateImpl(request, refFreq.view(), coeffValue));
 
     // Compute perturbed values.
-    ExprBase::const_solvable_iterator it = begin();
-    while(it != end())
+    Scalar::Iterator refFreqIt(refFreq);
+    bool atEnd = refFreqIt.atEnd();
+
+    vector<Scalar::Iterator> coeffIt;
+    coeffIt.reserve(nArg - 1);
+    for(unsigned int i = 0; i < nArg - 1; ++i)
     {
+        coeffIt.push_back(Scalar::Iterator(coeff[i]));
+        atEnd = atEnd && coeffIt.back().atEnd();
+    }
+
+    PValueKey key;
+    while(!atEnd)
+    {
+        key = refFreqIt.key();
         for(unsigned int i = 0; i < nArg - 1; ++i)
         {
-            coeffValue[i] = coeff[i].value(*it);
+            key = std::min(key, coeffIt[i].key());
         }
 
-        result.assign(*it, evaluateImpl(request, refFreq.value(*it),
+        for(unsigned int i = 0; i < nArg - 1; ++i)
+        {
+            coeffValue[i] = coeffIt[i].value(key);
+        }
+
+        result.assign(key, evaluateImpl(request, refFreqIt.value(key),
             coeffValue));
-        ++it;
+
+        refFreqIt.advance(key);
+        atEnd = refFreqIt.atEnd();
+        for(unsigned int i = 0; i < nArg - 1; ++i)
+        {
+            coeffIt[i].advance(key);
+            atEnd = atEnd && coeffIt[i].atEnd();
+        }
     }
 
     return result;
 }
 
-const Scalar::view SpectralIndex::evaluateImpl(const Request &request,
-    const Scalar::view &refFreq, const vector<Scalar::view> &coeff) const
+const Scalar::View SpectralIndex::evaluateImpl(const Request &request,
+    const Scalar::View &refFreq, const vector<Scalar::View> &coeff) const
 {
-    Scalar::view result;
+    Scalar::View result;
 
     // Special case: No coefficients or a single real coefficient with value
     // zero.

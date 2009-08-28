@@ -101,8 +101,8 @@ PhaseShiftOld::PhaseShiftOld(const Expr<Vector<2> >::ConstPtr &lhs,
 {
 }
 
-const Scalar::view PhaseShiftOld::evaluateImpl(const Request &request,
-    const Vector<2>::view &lhs, const Vector<2>::view &rhs) const
+const Scalar::View PhaseShiftOld::evaluateImpl(const Request &request,
+    const Vector<2>::View &lhs, const Vector<2>::View &rhs) const
 {
     int nChannels = request[FREQ]->size();
     int nTimeslots = request[TIME]->size();
@@ -120,10 +120,10 @@ const Scalar::view PhaseShiftOld::evaluateImpl(const Request &request,
     // frequency channels are used.
     bool multFreq = nChannels > 1;
 
-    const Matrix &left = lhs(0);
-    const Matrix &right = rhs(0);
-    const Matrix &leftDelta = lhs(1);
-    const Matrix &rightDelta = rhs(1);
+//    const Matrix &left = lhs(0);
+//    const Matrix &right = rhs(0);
+//    const Matrix &leftDelta = lhs(1);
+//    const Matrix &rightDelta = rhs(1);
 
     // It is tried to compute the DFT as efficient as possible.
     // Therefore the baseline contribution is split into its antenna parts.
@@ -185,8 +185,8 @@ const Scalar::view PhaseShiftOld::evaluateImpl(const Request &request,
     Matrix res(makedcomplex(0,0), nChannels, nTimeslots, false);
     for(int iy=0; iy<nTimeslots; ++iy)
     {
-        dcomplex tmpl = left.getDComplex(0,iy);
-        dcomplex tmpr = right.getDComplex(0,iy);
+        dcomplex tmpl = lhs(0).getDComplex(0,iy);
+        dcomplex tmpr = rhs(0).getDComplex(0,iy);
 
         // We have to divide by N.
         // However, we divide by 2N to get the factor 0.5 needed in (I+Q)/2, etc.
@@ -196,15 +196,15 @@ const Scalar::view PhaseShiftOld::evaluateImpl(const Request &request,
         dcomplex factor;
         if(multFreq)
         {
-            dcomplex deltal = leftDelta.getDComplex(0,iy);
-            dcomplex deltar = rightDelta.getDComplex(0,iy);
+            dcomplex deltal = lhs(1).getDComplex(0,iy);
+            dcomplex deltar = rhs(1).getDComplex(0,iy);
             factor = deltar * conj(deltal);
         }
 //        res.fillRowWithProducts (tmpr * conj(tmpl) / tmpnk, factor, iy);
         res.fillRowWithProducts (tmpr * conj(tmpl), factor, iy);
     }
 
-    Scalar::view result;
+    Scalar::View result;
     result.assign(res);
 
 //    //  cout << "DFT:" << endl;

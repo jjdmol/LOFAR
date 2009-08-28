@@ -37,10 +37,10 @@ Mul::Mul(const Expr<Scalar>::ConstPtr &lhs,
 {
 }
 
-const JonesMatrix::view Mul::evaluateImpl(const Request &request,
-    const Scalar::view &lhs, const JonesMatrix::view &rhs) const
+const JonesMatrix::View Mul::evaluateImpl(const Request &request,
+    const Scalar::View &lhs, const JonesMatrix::View &rhs) const
 {
-    JonesMatrix::view result;
+    JonesMatrix::View result;
 
     if(lhs.dirty() || rhs.dirty(0, 0))
     {

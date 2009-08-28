@@ -150,7 +150,7 @@ const JonesMatrix JonesVisData::evaluateExpr(const Request &request,
             [FRange(start.second, start.second + nTimeslots)]
             [FRange(start.first, start.first + nChannels)][3]]);
 
-    JonesMatrix::view proxy;
+    JonesMatrix::View proxy;
     proxy.assign(0, 0, m11);
     proxy.assign(0, 1, m12);
     proxy.assign(1, 0, m21);

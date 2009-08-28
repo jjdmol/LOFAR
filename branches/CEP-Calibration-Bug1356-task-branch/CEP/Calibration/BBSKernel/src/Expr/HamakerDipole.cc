@@ -138,8 +138,8 @@ HamakerDipole::HamakerDipole(const HamakerBeamCoeff &coeff,
 {
 }
 
-const JonesMatrix::view HamakerDipole::evaluateImpl(const Request &request,
-    const Vector<2>::view &azel, const Scalar::view &orientation) const
+const JonesMatrix::View HamakerDipole::evaluateImpl(const Request &request,
+    const Vector<2>::View &azel, const Scalar::View &orientation) const
 {
     const size_t nFreq = request[FREQ]->size();
     const size_t nTime = request[TIME]->size();
@@ -178,8 +178,10 @@ const JonesMatrix::view HamakerDipole::evaluateImpl(const Request &request,
 
     for(size_t t = 0; t < nTime; ++t)
     {
-        // Correct azimuth for dipole orientation.
-        const double phi = az[t] - angle;
+		// Correct azimuth for dipole orientation and sign flip (because in the
+        // definition of the beam model positive azimuth is defined as North
+        // over West).
+        const double phi = -(az[t] - angle);
 
         // NB: The model is parameterized in terms of zenith angle. The
         // appropriate conversion is taken care of below.
@@ -243,7 +245,7 @@ const JonesMatrix::view HamakerDipole::evaluateImpl(const Request &request,
         }
     }
 
-    JonesMatrix::view result;
+    JonesMatrix::View result;
     result.assign(0, 0, E00);
     result.assign(0, 1, E01);
     result.assign(1, 0, E10);

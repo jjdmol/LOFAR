@@ -27,6 +27,7 @@
 #include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/Measurement.h>
 
+#include <BBSKernel/Expr/StatUVW.h>
 #include <BBSKernel/Expr/StationUVW.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/PointSource.h>
@@ -534,20 +535,24 @@ const JonesMatrix Model::evaluate(const baseline_t &baseline)
 //    LOG_DEBUG_STR("BL: " << baseline.first << " - " << baseline.second
 //        << " FLAGS: " << value.flags());
 
-    const JonesMatrix::view value = model.value();
+    const JonesMatrix::View value(model.view());
     result.assign(value);
 
-//    cout << "Computing partials:";
+    PValueKey key;
+    JonesMatrix::Iterator it(model);
 
-    ExprBase::const_solvable_iterator solIt = (exprIt->second)->begin();
-    ExprBase::const_solvable_iterator solItEnd = (exprIt->second)->end();
-    while(solIt != solItEnd)
+//    cout << "Computing partials:";
+    while(!it.atEnd())
     {
+        key = it.key();
+
+//        cout << " " << key.parmId << "|" << key.coeffId;
 //        cout << " " << solvables[i].parmId << "|" << solvables[i].coeffId;
 
         // Get the perturbed value associated with *solIt (the current
         // solvable).
-        const JonesMatrix::view pert = model.value(*solIt);
+//        const JonesMatrix::View pert = model.value(*solIt);
+        const JonesMatrix::View pert(it.value(key));
 
         // Get perturbation.
 //        map<unsigned int, ExprParm::Ptr>::const_iterator parmIt =
@@ -557,24 +562,30 @@ const JonesMatrix Model::evaluate(const baseline_t &baseline)
 //        const double inversePert =
 //            1.0 / parmIt->second->getPerturbation(it->coeffId);
 
+//        ParmProxy::ConstPtr parm =
+//            ParmManager::instance().get(solIt->parmId);
+//        const double inversePert =
+//            1.0 / parm->getPerturbation(solIt->coeffId);
         ParmProxy::ConstPtr parm =
-            ParmManager::instance().get(solIt->parmId);
+            ParmManager::instance().get(key.parmId);
         const double inversePert =
-            1.0 / parm->getPerturbation(solIt->coeffId);
+            1.0 / parm->getPerturbation(key.coeffId);
 
         // Approximate partial derivative by forward differences.
-        JonesMatrix::view partial;
+        JonesMatrix::View partial;
         partial.assign(0, 0, Matrix((pert(0, 0) - value(0, 0)) * inversePert));
         partial.assign(0, 1, Matrix((pert(0, 1) - value(0, 1)) * inversePert));
         partial.assign(1, 0, Matrix((pert(1, 0) - value(1, 0)) * inversePert));
         partial.assign(1, 1, Matrix((pert(1, 1) - value(1, 1)) * inversePert));
 
-//        cout << "main: " << main(0) << endl;
-//        cout << "pert: " << pert(0) << endl;
-//        cout << "partial: " << partial(0) << endl;
+//        cout << "main: " << value(0, 0) << endl;
+//        cout << "pert: " << pert(0, 0) << endl;
+//        cout << "partial: " << partial(0, 0) << endl;
 
-        result.assign(*solIt, partial);
-        ++solIt;
+//        result.assign(*solIt, partial);
+//        ++solIt;
+        result.assign(key, partial);
+        it.advance(key);
     }
 //    cout << endl;
 
@@ -628,14 +639,6 @@ void Model::setSolvableParms(const ParmGroup &solvables)
 
         ++solIt;
     }
-
-    map<baseline_t, Expr<JonesMatrix>::Ptr>::const_iterator exprIt =
-        itsExpr.begin();
-    while(exprIt != itsExpr.end())
-    {
-        exprIt->second->updateSolvables();
-        ++exprIt;
-    }
 }
 
 void Model::clearSolvableParms()
@@ -646,169 +649,7 @@ void Model::clearSolvableParms()
         parmIt->second->clearPValueFlag();
         ++parmIt;
     }
-
-    map<baseline_t, Expr<JonesMatrix>::Ptr>::const_iterator exprIt =
-        itsExpr.begin();
-    while(exprIt != itsExpr.end())
-    {
-        exprIt->second->updateSolvables();
-        ++exprIt;
-    }
 }
-
-//ParmGroup Model::getPerturbedParms() const
-//{
-//    ParmGroup result;
-//
-//    map<uint, Expr>::const_iterator it = itsParms.begin();
-//    map<uint, Expr>::const_iterator itEnd = itsParms.end();
-//    while(it != itEnd)
-//    {
-//        const ExprParm *parmPtr =
-//            static_cast<const ExprParm*>(it->second.getPtr());
-//        ASSERT(parmPtr);
-//        if(parmPtr->getPValueFlag())
-//        {
-//            result.insert(it->first);
-//        }
-//        ++it;
-//    }
-
-//    return result;
-//}
-
-//void Model::precalculate(const Request &request)
-//{
-//    if(itsExpr.empty())
-//    {
-//        return;
-//    }
-//
-//    // First clear the levels of all nodes in the tree.
-//    for(map<baseline_t, JonesExpr>::iterator it = itsExpr.begin();
-//        it != itsExpr.end();
-//        ++it)
-//    {
-//        JonesExpr &expr = it->second;
-//        ASSERT(!expr.isNull());
-//        expr.clearDone();
-//    }
-
-//    // Now set the levels of all nodes in the tree.
-//    // The root nodes have level 0; child nodes have level 1 or higher.
-//    int nrLev = -1;
-//    for(map<baseline_t, JonesExpr>::iterator it = itsExpr.begin();
-//        it != itsExpr.end();
-//        ++it)
-//    {
-//        JonesExpr &expr = it->second;
-//        ASSERT(!expr.isNull());
-//        nrLev = std::max(nrLev, expr.setLevel(0));
-//    }
-//    ++nrLev;
-//    ASSERT(nrLev > 0);
-
-//    // Find the nodes to be precalculated at each level.
-//    // That is not needed for the root nodes (the baselines).
-//    // The nodes used by the baselines are always precalculated (even if
-//    // having one parent).
-//    // It may happen that a station is used by only one baseline. Calculating
-//    // such a baseline is much more work if the station was not precalculated.
-//    vector<vector<ExprRep*> > precalcNodes(nrLev);
-//    for(int level = 1; level < nrLev; ++level)
-//    {
-//        for(map<baseline_t, JonesExpr>::iterator it = itsExpr.begin();
-//            it != itsExpr.end();
-//            ++it)
-//        {
-//            JonesExpr &expr = it->second;
-//            ASSERT(!expr.isNull());
-//            expr.getCachingNodes(precalcNodes[level], level, false);
-//        }
-//    }
-
-//    LOG_TRACE_FLOW_STR("#levels=" << nrLev);
-//    for(int i = 0; i < nrLev; ++i)
-//    {
-//        LOG_TRACE_FLOW_STR("#expr on level " << i << " is "
-//            << precalcNodes[i].size());
-//    }
-
-//#pragma omp parallel
-//    {
-//        // Loop through expressions to be precalculated.
-//        // At each level the expressions can be executed in parallel.
-//        // Level 0 is formed by itsExpr which are not calculated here.
-//        for(size_t level = precalcNodes.size(); --level > 0;)
-//        {
-//            vector<ExprRep*> &nodes = precalcNodes[level];
-//
-//            if(!nodes.empty())
-//            {
-//#pragma omp for schedule(dynamic)
-//                // NOTE: OpenMP will only parallelize for loops that use type
-//                // 'int' for the loop counter.
-//                for(int i = 0; i < static_cast<int>(nodes.size()); ++i)
-//                {
-//                    nodes[i]->precalculate(request);
-//                }
-//            }
-//        }
-//    } // omp parallel
-//}
-
-//JonesResult Model::evaluate(const baseline_t &baseline,
-//    const Request &request)
-//{
-//    map<baseline_t, JonesExpr>::iterator it = itsExpr.find(baseline);
-//    ASSERTSTR(it != itsExpr.end(), "Result requested for unknown"
-//        " baseline " << baseline.first << " - " << baseline.second);
-
-//    return it->second.getResult(request);
-//}
-
-
-//vector<bool> Model::parseComponents(const vector<string> &components) const
-//{
-//    vector<bool> mask(N_ModelComponent, false);
-
-//    for(vector<string>::const_iterator it = components.begin();
-//        it != components.end();
-//        ++it)
-//    {
-//        if(*it == "BANDPASS")
-//        {
-//            mask[BANDPASS] = true;
-//        }
-//        else if(*it == "GAIN")
-//        {
-//            mask[GAIN] = true;
-//        }
-//        else if(*it == "DIRECTIONAL_GAIN")
-//        {
-//            mask[DIRECTIONAL_GAIN] = true;
-//        }
-//        else if(*it == "BEAM")
-//        {
-//            mask[BEAM] = true;
-//        }
-//        else if(*it == "IONOSPHERE")
-//        {
-//            mask[IONOSPHERE] = true;
-//        }
-//        else if(*it == "COND_NUM_FLAG")
-//        {
-//            mask[COND_NUM_FLAG] = true;
-//        }
-//        else
-//        {
-//            LOG_WARN_STR("Ignored unsupported model component \"" << *it
-//                << "\".");
-//        }
-//    }
-
-//    return mask;
-//}
 
 ExprParm::Ptr Model::makeExprParm(uint category, const string &name)
 {
@@ -1028,7 +869,9 @@ Model::makeStationUVWExpr(const vector<unsigned int> &stations) const
     {
         const casa::MPosition &position =
             itsInstrument.stations[stations[i]].position;
-        expr[i] = Expr<Vector<3> >::Ptr(new StationUVW(position,
+//        expr[i] = Expr<Vector<3> >::Ptr(new StationUVW(position,
+//            itsInstrument.position, itsPhaseReference));
+        expr[i] = Expr<Vector<3> >::Ptr(new StatUVW(position,
             itsInstrument.position, itsPhaseReference));
     }
 

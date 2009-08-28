@@ -62,8 +62,8 @@ PiercePoint::PiercePoint(const casa::MPosition &position,
     itsEarthRadius = inproduct_xyz - itsHeight;
 }
 
-const Vector<4>::view PiercePoint::evaluateImpl(const Request &request,
-    const Vector<2>::view &azel) const
+const Vector<4>::View PiercePoint::evaluateImpl(const Request &request,
+    const Vector<2>::View &azel) const
 {
     const size_t nTime = request[TIME]->size();
 
@@ -124,7 +124,7 @@ const Vector<4>::view PiercePoint::evaluateImpl(const Request &request,
     }
 
     // Create result.
-    Vector<4>::view result;
+    Vector<4>::View result;
     result.assign(0, out_x);
     result.assign(1, out_y);
     result.assign(2, out_z);

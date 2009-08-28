@@ -42,6 +42,8 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/ExprAdaptors.cc \
 	Expr/ExprParm.cc \
 	Expr/ExprResult.cc \
+	Expr/ExprValueView.cc \
+	Expr/ExprValueIterator.cc \
 	Expr/ExternalFunction.cc \
 	Expr/FlagArray.cc \
 	Expr/HamakerDipole.cc \
@@ -69,7 +71,9 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/Request.cc \
 	Expr/Source.cc \
 	Expr/SpectralIndex.cc \
+	Expr/StatUVW.cc \
 	Expr/StationUVW.cc \
+	Expr/ValueSet.cc \
 	Expr/YatawattaDipole.cc
 
 bin_PROGRAMS = versionbbskernel

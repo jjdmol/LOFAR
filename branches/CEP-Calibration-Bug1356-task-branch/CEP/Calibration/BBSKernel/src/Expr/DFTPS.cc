@@ -44,8 +44,8 @@ DFTPS::DFTPS(const Expr<Vector<3> >::ConstPtr &uvw,
 {
 }
 
-const Vector<2>::view DFTPS::evaluateImpl(const Request &request,
-    const Vector<3>::view &uvw, const Vector<3>::view &lmn) const
+const Vector<2>::View DFTPS::evaluateImpl(const Request &request,
+    const Vector<3>::View &uvw, const Vector<3>::View &lmn) const
 {
     // Check precondition (frequency axis must be regular).
     ASSERT(dynamic_cast<RegularAxis*>(request[FREQ].get()) != 0);
@@ -60,7 +60,7 @@ const Vector<2>::view DFTPS::evaluateImpl(const Request &request,
     ASSERT(lmn(0).nx() == 1 && lmn(1).nx() == 1 && lmn(2).nx() == 1);
 
     // Create the result.
-    Vector<2>::view result;
+    Vector<2>::View result;
 
     // Calculate the DFT contribution for this (station, direction) combination.
     Matrix phase0 = (uvw(0) * lmn(0) + uvw(1) * lmn(1) + uvw(2)

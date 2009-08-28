@@ -35,10 +35,10 @@ PointCoherence::PointCoherence(const Expr<Vector<4> >::ConstPtr &stokes,
 {
 }
 
-const JonesMatrix::view PointCoherence::evaluateImpl(const Request &request,
-    const Vector<4>::view &stokes, const Scalar::view &spectral) const
+const JonesMatrix::View PointCoherence::evaluateImpl(const Request &request,
+    const Vector<4>::View &stokes, const Scalar::View &spectral) const
 {
-    JonesMatrix::view result;
+    JonesMatrix::View result;
 
     if(spectral.dirty() || stokes.dirty(0) || stokes.dirty(1))
     {

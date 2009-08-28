@@ -42,12 +42,6 @@ ExprBase::~ExprBase()
 {
 }
 
-void ExprBase::updateSolvables() const
-{
-    set<PValueKey> solvables;
-    updateSolvables(solvables);
-}
-
 void ExprBase::connect(const ExprBase::ConstPtr &arg) const
 {
     arg->incConsumerCount();
@@ -56,19 +50,6 @@ void ExprBase::connect(const ExprBase::ConstPtr &arg) const
 void ExprBase::disconnect(const ExprBase::ConstPtr &arg) const
 {
     arg->decConsumerCount();
-}
-
-void ExprBase::updateSolvables(set<PValueKey> &solvables) const
-{
-    set<PValueKey> tmp;
-    for(unsigned int i = 0; i < nArguments(); ++i)
-    {
-        argument(i)->updateSolvables(tmp);
-    }
-
-    itsSolvables.clear();
-    itsSolvables.insert(itsSolvables.begin(), tmp.begin(), tmp.end());
-    solvables.insert(tmp.begin(), tmp.end());
 }
 
 void ExprBase::incConsumerCount() const

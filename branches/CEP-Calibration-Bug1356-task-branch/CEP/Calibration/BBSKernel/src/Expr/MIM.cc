@@ -81,33 +81,56 @@ const Scalar MIM::evaluateExpr(const Request &request, Cache &cache) const
     result.setFlags(mergeFlags(flags.begin(), flags.end()));
 
     // Compute main value.
-    vector<Scalar::view> coeffValue;
+    vector<Scalar::View> coeffValue;
     coeffValue.reserve(nArg - 1);
     for(unsigned int i = 0; i < nArg - 1; ++i)
     {
-        coeffValue.push_back(coeff[i].value());
+        coeffValue.push_back(coeff[i].view());
     }
-    result.assign(evaluateImpl(request, pp.value(), coeffValue));
+    result.assign(evaluateImpl(request, pp.view(), coeffValue));
 
     // Compute perturbed values.
-    ExprBase::const_solvable_iterator it = begin();
-    while(it != end())
+    Vector<4>::Iterator ppIt(pp);
+    bool atEnd = ppIt.atEnd();
+
+    vector<Scalar::Iterator> coeffIt;
+    coeffIt.reserve(nArg - 1);
+    for(unsigned int i = 0; i < nArg - 1; ++i)
     {
+        coeffIt.push_back(Scalar::Iterator(coeff[i]));
+        atEnd = atEnd && coeffIt.back().atEnd();
+    }
+
+    PValueKey key;
+    while(!atEnd)
+    {
+        key = ppIt.key();
         for(unsigned int i = 0; i < nArg - 1; ++i)
         {
-            coeffValue[i] = coeff[i].value(*it);
+            key = std::min(key, coeffIt[i].key());
         }
 
-        result.assign(*it, evaluateImpl(request, pp.value(*it),
-            coeffValue));
-        ++it;
+        for(unsigned int i = 0; i < nArg - 1; ++i)
+        {
+            coeffValue[i] = coeffIt[i].value(key);
+        }
+
+        result.assign(key, evaluateImpl(request, ppIt.value(key), coeffValue));
+
+        ppIt.advance(key);
+        atEnd = ppIt.atEnd();
+        for(unsigned int i = 0; i < nArg - 1; ++i)
+        {
+            coeffIt[i].advance(key);
+            atEnd = atEnd && coeffIt[i].atEnd();
+        }
     }
 
     return result;
 }
 
-const Scalar::view MIM::evaluateImpl(const Request &request,
-    const Vector<4>::view &pp, const vector<Scalar::view> &coeff) const
+const Scalar::View MIM::evaluateImpl(const Request &request,
+    const Vector<4>::View &pp, const vector<Scalar::View> &coeff) const
 {
     const size_t nFreq = request[FREQ]->size();
     const size_t nTime = request[TIME]->size();
@@ -190,7 +213,7 @@ const Scalar::view MIM::evaluateImpl(const Request &request,
         }
     }
 
-    Scalar::view result;
+    Scalar::View result;
     result.assign(Z);
 
     return result;

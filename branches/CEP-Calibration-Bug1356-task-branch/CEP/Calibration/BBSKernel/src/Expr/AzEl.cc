@@ -45,8 +45,8 @@ AzEl::AzEl(const casa::MPosition &position,
 {
 }
 
-const Vector<2>::view AzEl::evaluateImpl(const Request &request,
-        const Vector<2>::view &direction) const
+const Vector<2>::View AzEl::evaluateImpl(const Request &request,
+        const Vector<2>::View &direction) const
 {
     // Check preconditions.
     ASSERTSTR(!direction(0).isArray() && !direction(1).isArray(), "Variable"
@@ -98,7 +98,7 @@ const Vector<2>::view AzEl::evaluateImpl(const Request &request,
     }
 
 
-    Vector<2>::view result;
+    Vector<2>::View result;
     result.assign(0, az);
     result.assign(1, el);
 

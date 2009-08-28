@@ -1,5 +1,5 @@
-//# CondNumberFlagger.cc: Flag the result of an Expr<JonesMatrix> by
-//# thresholding on the condition number of the Jones matrices.
+//# ExprValueView.cc: A view on an ExprValue instance of the unbound value or
+//# the value bound to a specific (parameter, coefficient) pair.
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,27 +22,22 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/Expr/ConditionNumber.h>
+#include <BBSKernel/Expr/ExprValueView.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-ConditionNumber::ConditionNumber(const Expr<JonesMatrix>::ConstPtr &arg0)
-    :   BasicUnaryExpr<JonesMatrix, Scalar>(arg0)
+ExprValueView<Scalar>::ExprValueView()
+    :   itsDirtyMask(false)
 {
 }
 
-const Scalar::View ConditionNumber::evaluateImpl(const Request &request,
-    const JonesMatrix::View &arg0) const
+ExprValueView<JonesMatrix>::ExprValueView()
 {
-    Matrix norm00 = abs(arg0(0, 0));
-    Matrix norm11 = abs(arg0(1, 1));
-
-    Scalar::View result;
-    result.assign(max(norm00, norm11) / max(min(norm00, norm11), 1e-9));
-    return result;
+    itsDirtyMask[0] = itsDirtyMask[1] = itsDirtyMask[2] = itsDirtyMask[3]
+        = false;
 }
 
 } //# namespace BBS

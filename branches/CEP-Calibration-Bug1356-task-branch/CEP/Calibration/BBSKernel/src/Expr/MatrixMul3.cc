@@ -38,9 +38,9 @@ MatrixMul3::MatrixMul3(const Expr<JonesMatrix>::ConstPtr &left,
 {
 }
 
-const JonesMatrix::view MatrixMul3::evaluateImpl(const Request &request,
-    const JonesMatrix::view &left, const JonesMatrix::view &mid,
-    const JonesMatrix::view &right) const
+const JonesMatrix::View MatrixMul3::evaluateImpl(const Request &request,
+    const JonesMatrix::View &left, const JonesMatrix::View &mid,
+    const JonesMatrix::View &right) const
 {
     // Determine dependencies.
     // TODO: Should this be cached?
@@ -76,7 +76,7 @@ const JonesMatrix::view MatrixMul3::evaluateImpl(const Request &request,
     }
 
     // Create the result.
-    JonesMatrix::view result;
+    JonesMatrix::View result;
 
     if(eval00 || eval01)
     {
@@ -121,7 +121,7 @@ const JonesMatrix::view MatrixMul3::evaluateImpl(const Request &request,
 //    Matrix tmp11(left(1, 0) * mid(0, 1) + left(1, 1) * mid(1, 1));
 
 //    // Compute (LEFT * MID) * RIGHT^H.
-//    JonesMatrix::view result;
+//    JonesMatrix::View result;
 //    result.assign(0, 0, tmp00 * conj(right(0, 0)) + tmp01 * conj(right(0, 1)));
 //    result.assign(0, 1, tmp00 * conj(right(1, 0)) + tmp01 * conj(right(1, 1)));
 //    result.assign(1, 0, tmp10 * conj(right(0, 0)) + tmp11 * conj(right(0, 1)));

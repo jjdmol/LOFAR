@@ -44,8 +44,8 @@ LMN::LMN(const casa::MDirection &reference,
 //    itsPhaseReference = ;
 }
 
-const Vector<3>::view LMN::evaluateImpl(const Request &request,
-    const Vector<2>::view &direction) const
+const Vector<3>::View LMN::evaluateImpl(const Request &request,
+    const Vector<2>::View &direction) const
 {
 //    cout << "REF: " << itsRef->getRa() << " " << itsRef->getDec() << endl;
 //    cout << "SOURCE: " << ra->value()(0, 0) << " " << dec->value()(0, 0) << endl;
@@ -60,7 +60,7 @@ const Vector<3>::view LMN::evaluateImpl(const Request &request,
     Matrix cosDec(cos(direction(1)));
     Matrix deltaRa(direction(0) - refRa);
 
-    Vector<3>::view result;
+    Vector<3>::View result;
     result.assign(0, cosDec * sin(deltaRa));
     result.assign(1, sin(direction(1)) * refCosDec - cosDec * refSinDec
         * cos(deltaRa));
