@@ -75,7 +75,7 @@ private:
         result.setValueSet(arg0.getValueSet());
 
         // Compute flags.
-        const Matrix &value = arg0.value()();
+        const Matrix value = arg0.value();
         ASSERTSTR(!value.isComplex(), "Only real valued input supported.");
 
         if(value.isArray())
@@ -107,7 +107,7 @@ private:
         return result;
     }
 
-    real_t                  itsThreshold;
+    real_t  itsThreshold;
 };
 
 // @}

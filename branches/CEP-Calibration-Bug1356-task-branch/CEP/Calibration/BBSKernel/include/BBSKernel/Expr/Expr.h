@@ -51,26 +51,11 @@ public:
     typedef shared_ptr<ExprBase>                Ptr;
     typedef shared_ptr<const ExprBase>          ConstPtr;
 
-    typedef vector<PValueKey>::const_iterator   const_solvable_iterator;
-
     ExprBase();
     virtual ~ExprBase();
 
     // Return the unique id of this expression.
     ExprId id() const;
-
-    // Recurse the expression tree to determine which solvable coefficients this
-    // expression depends on. This information is cached internally.
-    void updateSolvables() const;
-
-    // \name Iterate over sovables
-    // Get iterators to iterate the solvable coefficients this expression
-    // depends on.
-    //
-    // @{
-    const_solvable_iterator begin() const;
-    const_solvable_iterator end() const;
-    // @}
 
 protected:
     // \name Connection management
@@ -90,20 +75,13 @@ protected:
     // \name Argument access.
     // Provide access to the arguments of an expression. Because the type of the
     // arguments must be kept, they are stored in the derived classes (where the
-    // type is known). However, there the base class has methods (such as
-    // updateSolvables()) that need access to the arguments (as
-    // ExprBase::ConstPtr objects).
+    // type is known). However, access from the base class can be useful to
+    // support visitors or base class functions that need to recurse the tree.
     //
     // @{
     virtual unsigned int nArguments() const = 0;
     virtual ExprBase::ConstPtr argument(unsigned int i) const = 0;
     // @}
-
-    // Recurse the expression tree to determine which solvable coefficients this
-    // Expr depends on. This information is cached internally.
-    virtual void updateSolvables(set<PValueKey> &solvables) const;
-
-    mutable vector<PValueKey>   itsSolvables;
 
 private:
     // Forbid copy and assignment.
@@ -254,16 +232,6 @@ FlagArray mergeFlags(T_ITER it, T_ITER end);
 inline ExprId ExprBase::id() const
 {
     return itsId;
-}
-
-inline ExprBase::const_solvable_iterator ExprBase::begin() const
-{
-    return itsSolvables.begin();
-}
-
-inline ExprBase::const_solvable_iterator ExprBase::end() const
-{
-    return itsSolvables.end();
 }
 
 inline unsigned int ExprBase::nConsumers() const

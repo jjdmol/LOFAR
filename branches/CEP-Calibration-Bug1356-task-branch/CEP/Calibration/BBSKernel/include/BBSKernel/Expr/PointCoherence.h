@@ -46,8 +46,8 @@ public:
         const Expr<Scalar>::ConstPtr &spectral);
 
 private:
-    virtual const JonesMatrix::view evaluateImpl(const Request &request,
-        const Vector<4>::view &stokes, const Scalar::view &spectral) const;
+    virtual const JonesMatrix::View evaluateImpl(const Request &request,
+        const Vector<4>::View &stokes, const Scalar::View &spectral) const;
 };
 
 // @}

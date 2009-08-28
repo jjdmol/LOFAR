@@ -48,10 +48,10 @@ public:
     }
 
 private:
-    virtual const JonesMatrix::view evaluateImpl(const Request &request,
-        const JonesMatrix::view &arg0) const
+    virtual const JonesMatrix::View evaluateImpl(const Request &request,
+        const JonesMatrix::View &arg0) const
     {
-        JonesMatrix::view result;
+        JonesMatrix::View result;
 
         Matrix invDet(1. / (arg0(0, 0) * arg0(1, 1) - arg0(0, 1) * arg0(1, 0)));
         result.assign(0, 0, arg0(1, 1) * invDet);

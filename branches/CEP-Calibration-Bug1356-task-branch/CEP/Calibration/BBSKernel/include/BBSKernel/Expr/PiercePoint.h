@@ -48,8 +48,8 @@ public:
         const Expr<Vector<2> >::ConstPtr &azel);
 
 private:
-    virtual const Vector<4>::view evaluateImpl(const Request &request,
-        const Vector<2>::view &azel) const;
+    virtual const Vector<4>::View evaluateImpl(const Request &request,
+        const Vector<2>::View &azel) const;
 
     // Station position (ITRF).
     casa::MPosition itsPosition;

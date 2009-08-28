@@ -48,8 +48,8 @@ public:
     ConditionNumber(const Expr<JonesMatrix>::ConstPtr &arg0);
 
 protected:
-    virtual const Scalar::view evaluateImpl(const Request &request,
-        const JonesMatrix::view &arg0) const;
+    virtual const Scalar::View evaluateImpl(const Request &request,
+        const JonesMatrix::View &arg0) const;
 };
 
 // @}

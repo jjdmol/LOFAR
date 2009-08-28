@@ -70,19 +70,9 @@ private:
     virtual const Scalar evaluateExpr(const Request &request, Cache &cache)
         const;
 
-    const Scalar::view evaluateImpl(const Request &request,
-        const Vector<4>::view &pp, const vector<Scalar::view> &coeff)
+    const Scalar::View evaluateImpl(const Request &request,
+        const Vector<4>::View &pp, const vector<Scalar::View> &coeff)
         const;
-
-//    void evaluate(const Request &request, const Matrix &in_x,
-//        const Matrix &in_y, const Matrix &in_z, const Matrix &in_alpha,
-//        const vector<const Matrix*> &MIMParms, const double refx,
-//        const double refy, const double refz, Matrix &out_11,
-//        Matrix &out_22);
-
-//    double calculate_mim_function(const vector<double> &parms, double x,
-//        double y, double z, double alpha, double ref_x,
-//        double ref_y, double ref_z);
 
     casa::MPosition                 itsRefStation;
     Expr<Vector<4> >::ConstPtr      itsPiercePoint;

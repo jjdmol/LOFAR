@@ -50,8 +50,8 @@ public:
         const Expr<Vector<2> >::ConstPtr &direction);
 
 protected:
-    virtual const Vector<2>::view evaluateImpl(const Request &request,
-        const Vector<2>::view &direction) const;
+    virtual const Vector<2>::View evaluateImpl(const Request &request,
+        const Vector<2>::View &direction) const;
 
 private:
     casa::MPosition itsPosition;

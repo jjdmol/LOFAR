@@ -53,8 +53,6 @@ protected:
     virtual unsigned int nArguments() const;
     virtual ExprBase::ConstPtr argument(unsigned int) const;
 
-    virtual void updateSolvables(set<PValueKey> &solvables) const;
-
     virtual const Scalar evaluateExpr(const Request &request, Cache &cache)
         const;
 

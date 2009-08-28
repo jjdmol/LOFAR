@@ -48,8 +48,8 @@ public:
         const Expr<Vector<2> >::ConstPtr &direction);
 
 private:
-    virtual const Vector<3>::view evaluateImpl(const Request &request,
-        const Vector<2>::view &direction) const;
+    virtual const Vector<3>::View evaluateImpl(const Request &request,
+        const Vector<2>::View &direction) const;
 
     casa::MDirection    itsPhaseReference;
 };

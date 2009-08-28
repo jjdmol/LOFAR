@@ -132,7 +132,7 @@ void Evaluator::blProcess(const baseline_t &baseline, const JonesMatrix &model)
     const size_t nFreq = dims.getChannelCount();
     const size_t nTime = dims.getTimeslotCount();
 
-    JonesMatrix::view coherence = model.value();
+    const JonesMatrix::View coherence(model.view());
 
     // Process visibilities for this baseline.
     for(unsigned int i = 0; i < 4; ++i)
@@ -145,7 +145,7 @@ void Evaluator::blProcess(const baseline_t &baseline, const JonesMatrix &model)
         }
 
         // Get pointers to the model visibilities.
-        const Matrix &modelVis = coherence(i / 2, i & 1);
+        const Matrix &modelVis = coherence(i / 2, i % 2);
         const double *re = 0, *im = 0;
         modelVis.dcomplexStorage(re, im);
 
@@ -198,7 +198,7 @@ void Evaluator::blProcessNoFlags(const baseline_t &baseline,
     const size_t nFreq = dims.getChannelCount();
     const size_t nTime = dims.getTimeslotCount();
 
-    JonesMatrix::view coherence = model.value();
+    const JonesMatrix::View coherence(model.view());
 
     for(unsigned int i = 0; i < 4; ++i)
     {
@@ -210,7 +210,7 @@ void Evaluator::blProcessNoFlags(const baseline_t &baseline,
         }
 
         // Get pointers to the model visibilities.
-        const Matrix &modelVis = coherence(i / 2, i & 1);
+        const Matrix modelVis = coherence(i / 2, i % 2);
         const double *re = 0, *im = 0;
         modelVis.dcomplexStorage(re, im);
 

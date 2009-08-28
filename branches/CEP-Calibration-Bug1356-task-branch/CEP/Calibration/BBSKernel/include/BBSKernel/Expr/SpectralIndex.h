@@ -66,8 +66,8 @@ private:
     virtual const Scalar evaluateExpr(const Request &request, Cache &cache)
         const;
 
-    const Scalar::view evaluateImpl(const Request &request,
-        const Scalar::view &refFreq, const vector<Scalar::view> &coeff) const;
+    const Scalar::View evaluateImpl(const Request &request,
+        const Scalar::View &refFreq, const vector<Scalar::View> &coeff) const;
 
     const Expr<Scalar>::ConstPtr    itsRefFreq;
     vector<Expr<Scalar>::ConstPtr>  itsCoeff;

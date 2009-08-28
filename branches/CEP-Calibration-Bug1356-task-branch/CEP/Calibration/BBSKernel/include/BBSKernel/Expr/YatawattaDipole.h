@@ -43,8 +43,8 @@ public:
         const Expr<Scalar>::ConstPtr &orientation);
 
 private:
-    virtual const JonesMatrix::view evaluateImpl(const Request &request,
-        const Vector<2>::view &azel, const Scalar::view &orientation) const;
+    virtual const JonesMatrix::View evaluateImpl(const Request &request,
+        const Vector<2>::View &azel, const Scalar::View &orientation) const;
 
     ExternalFunction    itsThetaFunction, itsPhiFunction;
     double              itsScaleFactor;

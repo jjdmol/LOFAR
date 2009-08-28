@@ -48,6 +48,8 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/ExprAdaptors.h \
 	Expr/ExprParm.h \
 	Expr/ExprResult.h \
+	Expr/ExprValueView.h \
+	Expr/ExprValueIterator.h \
 	Expr/ExternalFunction.h \
 	Expr/FlagArray.h \
 	Expr/HamakerDipole.h \
@@ -76,8 +78,10 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/Request.h \
 	Expr/Source.h \
 	Expr/SpectralIndex.h \
+	Expr/StatUVW.h \
 	Expr/StationUVW.h \
 	Expr/Threshold.h \
+	Expr/ValueSet.h \
 	Expr/YatawattaDipole.h
 
 include $(top_srcdir)/Makefile.common

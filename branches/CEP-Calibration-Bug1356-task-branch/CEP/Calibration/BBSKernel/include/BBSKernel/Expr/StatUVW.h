@@ -26,14 +26,10 @@
 // \file
 // UVW coordinates of a station in meters.
 
-#include <BBSKernel/Instrument.h>
-#include <BBSKernel/Expr/ExprResult.h>
-#include <BBSKernel/Expr/Request.h>
-#include <BBSKernel/Expr/PhaseRef.h>
+#include <BBSKernel/Expr/Expr.h>
 
 #include <Common/lofar_map.h>
 #include <Common/lofar_smartptr.h>
-#include <Common/lofar_string.h>
 
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
@@ -46,29 +42,39 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class StatUVW
+class StatUVW: public Expr<Vector<3> >
 {
 public:
     typedef shared_ptr<StatUVW>          Ptr;
     typedef shared_ptr<const StatUVW>    ConstPtr;
 
-    StatUVW(const Station &station, const casa::MPosition &arrayRef,
-        const PhaseRef::ConstPtr &phaseRef);
-    ~StatUVW();
+    StatUVW(const casa::MPosition &position, const casa::MPosition &array,
+        const casa::MDirection &reference);
 
-    void calculate(const Request &request) const;
+//    void calculate(const Request &request) const;
 
-    const Scalar getU(const Request &request) const
-    { if(request.id() != itsLastReqId) calculate(request); return itsU; }
-    const Scalar getV(const Request &request) const
-    { if(request.id() != itsLastReqId) calculate(request); return itsV; }
-    const Scalar getW(const Request &request) const
-    { if(request.id() != itsLastReqId) calculate(request); return itsW; }
+//    const Scalar getU(const Request &request) const
+//    { if(request.id() != itsLastReqId) calculate(request); return itsU; }
+//    const Scalar getV(const Request &request) const
+//    { if(request.id() != itsLastReqId) calculate(request); return itsV; }
+//    const Scalar getW(const Request &request) const
+//    { if(request.id() != itsLastReqId) calculate(request); return itsW; }
 
-    const string &getName() const
-    { return itsStation.name; }
+protected:
+    virtual unsigned int nArguments() const
+    {
+        return 0;
+    }
+
+    virtual ExprBase::ConstPtr argument(unsigned int) const
+    {
+        ASSERTSTR(false, "StatUVW has no arguments.");
+    }
 
 private:
+    virtual const Vector<3> evaluateExpr(const Request &request, Cache &cache)
+        const;
+
     struct Time
     {
         Time(double time)
@@ -93,15 +99,11 @@ private:
         double u, v, w;
     };
 
-    Station                 itsStation;
-    casa::MPosition         itsArrayRef;
-    PhaseRef::ConstPtr      itsPhaseRef;
-    mutable map<Time, Uvw>  itsUvwCache;
+    casa::MPosition         itsPosition;
+    casa::MPosition         itsArrayPosition;
+    casa::MDirection        itsPhaseReference;
 
-    mutable Scalar          itsU;
-    mutable Scalar          itsV;
-    mutable Scalar          itsW;
-    mutable RequestId       itsLastReqId;
+    mutable map<Time, Uvw>  itsUvwCache;
 };
 
 // @}

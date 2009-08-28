@@ -76,6 +76,7 @@ private:
     T_IMPL  *itsImpl;
 };
 
+// @}
 
 // -------------------------------------------------------------------------- //
 // - Implementation: RefCountable                                           - //
@@ -223,9 +224,6 @@ inline const T_IMPL &RefCounted<T_IMPL>::instance() const
 //        delete obj;
 //    }
 //}
-
-// @}
-
 
 } //# namespace BBS
 } //# namespace LOFAR

@@ -134,8 +134,8 @@ public:
         const Expr<Scalar>::ConstPtr &im);
 
 protected:
-    virtual const Scalar::view evaluateImpl(const Request&,
-        const Scalar::view &re, const Scalar::view &im) const;
+    virtual const Scalar::View evaluateImpl(const Request&,
+        const Scalar::View &re, const Scalar::View &im) const;
 };
 
 
@@ -152,8 +152,8 @@ public:
         const Expr<Scalar>::ConstPtr &argument);
 
 protected:
-    virtual const Scalar::view evaluateImpl(const Request&,
-        const Scalar::view &mod, const Scalar::view &arg) const;
+    virtual const Scalar::View evaluateImpl(const Request&,
+        const Scalar::View &mod, const Scalar::View &arg) const;
 };
 
 // @}

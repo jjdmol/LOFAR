@@ -68,8 +68,8 @@ public:
         const Expr<Vector<2> >::ConstPtr &rhs);
 
 private:
-    virtual const Scalar::view evaluateImpl(const Request &request,
-        const Vector<2>::view &lhs, const Vector<2>::view &rhs) const;
+    virtual const Scalar::View evaluateImpl(const Request &request,
+        const Vector<2>::View &lhs, const Vector<2>::View &rhs) const;
 };
 
 // @}

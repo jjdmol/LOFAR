@@ -47,8 +47,8 @@ public:
 
 private:
     // Compute a result for the given request.
-    virtual const JonesMatrix::view evaluateImpl(const Request &request,
-        const Scalar::view &lhs, const JonesMatrix::view &rhs) const;
+    virtual const JonesMatrix::View evaluateImpl(const Request &request,
+        const Scalar::View &lhs, const JonesMatrix::View &rhs) const;
 };
 
 // @}

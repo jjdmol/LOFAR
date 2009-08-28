@@ -46,8 +46,8 @@ public:
         const Expr<JonesMatrix>::ConstPtr &rhs);
 
 private:
-    virtual const JonesMatrix::view evaluateImpl(const Request &request,
-        const JonesMatrix::view &lhs, const JonesMatrix::view &rhs) const;
+    virtual const JonesMatrix::View evaluateImpl(const Request &request,
+        const JonesMatrix::View &lhs, const JonesMatrix::View &rhs) const;
 };
 
 // @}
