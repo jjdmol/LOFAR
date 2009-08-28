@@ -70,10 +70,10 @@ def defineStations( s ):
 
   s.update( {
     # CS302
-    "CS302LBA":    [Station('CS302LBA',  '10.170.0.21', defaultPorts)],
-    "CS302HBA":    [Station('CS302HBA',  '10.170.0.21', defaultPorts)],
-    "CS302HBA0":   [Station('CS302HBA0', '10.170.0.21', defaultPorts)],
-    "CS302HBA1":   [Station('CS302HBA1', '10.170.0.22', ports( [4352,4353,4354,4355] ))],
+    "CS302LBA":    [Station('CS302LBA',  '10.170.0.165', defaultPorts)],
+    "CS302HBA":    [Station('CS302HBA',  '10.170.0.165', defaultPorts)],
+    "CS302HBA0":   [Station('CS302HBA0', '10.170.0.165', defaultPorts)],
+    "CS302HBA1":   [Station('CS302HBA1', '10.170.0.37', ports( [4352,4353,4354,4355] ))],
 
     # RS106
     "RS106LBA":   [Station('RS106LBA',  '10.170.0.174', defaultPorts)],
