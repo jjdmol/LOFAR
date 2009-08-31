@@ -630,7 +630,7 @@ string expandRangeString (const string& strng)
       // First find number.
       int endnum = rskipws (str, 0, i);
       int stnum = endnum - 1;
-      while (stnum >= 0  &&  str[stnum] >= '0'  &&  str[stnum] <= '9') {
+      while (stnum >= 0  &&  isdigit(str[stnum])) {
         --stnum;
       }
       int lennum = endnum - stnum - 1;
@@ -638,19 +638,21 @@ string expandRangeString (const string& strng)
         int num = strToInt (str.substr (stnum+1, lennum));
         // Found number, now find possible prefix.
         // We could say that the prefix has to be alphanumeric, but more
-        // general is to accept all chracters except ({[,*; blank and tab.
+        // general is to accept all characters except ([,*; blank and tab.
         int stalp = stnum;
         while (stalp>=0 &&
-               str[stalp]!='(' && str[stalp]!='[' && str[stalp]!='{' &&
+               str[stalp]!='(' && str[stalp]!='[' &&
                str[stalp]!=',' && str[stalp]!=';' && str[stalp]!='*' &&
                str[stalp]!=' ' && str[stalp]!='\t') {
           --stalp;
         }
         stalp++;
         string prefix = str.substr (stalp, stnum-stalp+1);
+        string suffix;
         // Now find part after the .. which can contain the same prefix.
+        // if no parenthesis was used.
         i = lskipws (str, i+2, last);
-        if (last-i > prefix.size()  &&
+        if (prefix.size() > 0  &&  last-i > prefix.size()  &&
             str.substr(i, prefix.size()) == prefix) {
           i += prefix.size();
         }
@@ -663,16 +665,34 @@ string expandRangeString (const string& strng)
           }
           endnum = strToInt (str.substr(stnum, i-stnum));
           // We really have something like xxx000..004
+          // Find a possible suffix.
+          uint stsuf = i;
+          while (i < last  &&
+               str[i]!=')' && str[i]!=']' &&
+               str[i]!=',' && str[i]!=';' && str[i]!='*' &&
+               str[i]!=' ' && str[i]!='\t') {
+            ++i;
+          }
+          if (i > stsuf) {
+            suffix = str.substr (stsuf, i-stsuf);
+          }
+          // Removes braces if the prefix ends and suffix starts with it.
+          int lpre = prefix.size();
+          int lsuf = suffix.size();
+          if (lpre>0 && lsuf>0 && prefix[lpre-1]=='{' && suffix[0]=='}') {
+            prefix = prefix.substr(0, lpre-1);
+            suffix = suffix.substr(1, lsuf-1);
+          }
           // Fill it in in ascending or descending order.
           ostringstream ostr;
           if (num < endnum) {
             for (; num<=endnum; ++num) {
-              ostr << prefix << setfill('0') << setw(lennum) << num;
+              ostr << prefix << setfill('0') << setw(lennum) << num << suffix;
               if (num != endnum) ostr << ',';
             }
           } else {
             for (; num>=endnum; --num) {
-              ostr << prefix << setfill('0') << setw(lennum) << num;
+              ostr << prefix << setfill('0') << setw(lennum) << num << suffix;
               if (num != endnum) ostr << ',';
             }
           }
@@ -704,7 +724,7 @@ string expandMultString (const string& strng)
         // Found *; look back for digits.
         int endnum = rskipws (str, 0, i);
         int stnum = endnum - 1;
-        while (stnum >= 0  &&  str[stnum] >= '0'  &&  str[stnum] <= '9') {
+        while (stnum >= 0  &&  isdigit(str[stnum])) {
           --stnum;
         }
         stnum++;

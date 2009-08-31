@@ -340,12 +340,13 @@ inline bool   strToBool   (const string& aString) throw(Exception)
   { return StringToBool (aString); }
 // @}
 
-// @name Manupulate strings containing a array specification
-// Array specification are often entered by the user with ranges like 3..32,55..58
-// For converting such a string to a real vector the spec must be expanded so thatr
-// it contains all elements i.s.o. the ranges. 
+// @name Manipulate strings containing a array specification
+// Array specifications are often entered by the user with ranges like 3..32,55..58
+// For converting such a string to a real vector the spec must be expanded so that
+// it contains all elements instead of the ranges. 
 // Likewise, when you present a array to the user you often want to show a spec with
-// the ranges i.s.o. all loose elements. The following functions do the conversions.
+// the ranges instead of all individual elements.
+// See the ParameterSet document for a detailed description of the syntax.
 
 // @{
 // Given a string 'xx, xx, xx' this utility compacts the string
@@ -355,7 +356,7 @@ string compactedArrayString(const string&	orgStr);
 
 // Given a string 'xx..xx, xx' this utility expands the string
 // by replacing ranges with the fill series.
-// Eg. [ lii001..lii003, lii005 ] --> [ lii001, lii002, lii003, lii005 ]
+// Eg. [ lii001..003xx, lii005 ] --> [ lii001xx, lii002xx, lii003xx, lii005 ]
 string expandRangeString(const string&);
 
 // Given a string like '3*str' this utility expands the string

@@ -325,6 +325,9 @@ bool testExpandArray()
         DO_EXPAND_TEST("[abc0..abc9]");
         DO_EXPAND_TEST("['abc0..abc9']");
         DO_EXPAND_TEST("[abc000..abc9]");
+        DO_EXPAND_TEST("[abc000..abc9def]");
+        DO_EXPAND_TEST("[abc{000..9}def]");
+        DO_EXPAND_TEST("[abc${NAME}def]");
         DO_EXPAND_TEST("[(abc0009  ..  abc4, 010..8)]");
         DO_EXPAND_TEST("[/abc/../cd0..3]");
         DO_EXPAND_TEST("[3*abc]");
