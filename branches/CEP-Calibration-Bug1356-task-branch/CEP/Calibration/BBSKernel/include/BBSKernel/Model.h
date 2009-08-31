@@ -115,7 +115,7 @@ private:
             const casa::Matrix<Expr<Vector<2> >::Ptr> &azel);
 
     casa::Matrix<Expr<JonesMatrix>::Ptr>
-        makeIonosphereNodes(const ModelConfig &config,
+        makeIonosphereExpr(const ModelConfig &config,
             const vector<unsigned int> &stations,
             const casa::Matrix<Expr<Vector<2> >::Ptr> &azel);
 

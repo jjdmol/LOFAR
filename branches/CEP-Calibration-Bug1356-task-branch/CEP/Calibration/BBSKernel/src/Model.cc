@@ -228,7 +228,7 @@ void Model::makeForwardExpr(const ModelConfig &config,
     casa::Matrix<Expr<JonesMatrix>::Ptr> exprIonosphere;
     if(config.useIonosphere())
     {
-        exprIonosphere = makeIonosphereNodes(config, stations, exprAzEl);
+        exprIonosphere = makeIonosphereExpr(config, stations, exprAzEl);
     }
 
     // Create a single Expr<JonesMatrix> per (station, source) combination that
@@ -431,7 +431,7 @@ void Model::makeInverseExpr(const ModelConfig &config,
         casa::Matrix<Expr<JonesMatrix>::Ptr> exprIonosphere;
         if(config.useIonosphere())
         {
-            exprIonosphere = makeIonosphereNodes(config, stations, exprAzEl);
+            exprIonosphere = makeIonosphereExpr(config, stations, exprAzEl);
         }
 
         // Create a single Expr<JonesMatrix> per (station, source) combination
@@ -1137,7 +1137,7 @@ Model::makeDipoleBeamExpr(const ModelConfig &config,
 }
 
 casa::Matrix<Expr<JonesMatrix>::Ptr>
-Model::makeIonosphereNodes(const ModelConfig &config,
+Model::makeIonosphereExpr(const ModelConfig &config,
     const vector<unsigned int> &stations,
     const casa::Matrix<Expr<Vector<2> >::Ptr> &azel)
 {

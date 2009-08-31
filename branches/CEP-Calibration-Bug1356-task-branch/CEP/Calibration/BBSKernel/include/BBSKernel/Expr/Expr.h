@@ -60,11 +60,10 @@ public:
 protected:
     // \name Connection management
     // Connect/disconnect expressions to/from this expression. The connected
-    // expressions constitute this expression's arguments.
-    //
-    // Currently, these methods only keep track of the number of consumers of
-    // the result of an expression. This number is used to decide whether or not
-    // to cache a result.
+    // expressions constitute this expression's arguments. Currently, these
+    // methods only keep track of the number of consumers of the result of an
+    // expression. This number is used to decide whether or not to cache a
+    // result.
     //
     // @{
     void connect(const ExprBase::ConstPtr &arg) const;
@@ -72,7 +71,7 @@ protected:
     unsigned int nConsumers() const;
     // @}
 
-    // \name Argument access.
+    // \name Argument access
     // Provide access to the arguments of an expression. Because the type of the
     // arguments must be kept, they are stored in the derived classes (where the
     // type is known). However, access from the base class can be useful to
@@ -88,9 +87,9 @@ private:
     ExprBase(const ExprBase &);
     ExprBase &operator=(const ExprBase &);
 
+    // @{
     // Change the number of consumers (i.e. expressions that depend on the
     // result of this expression).
-    // @{
     void incConsumerCount() const;
     void decConsumerCount() const;
     // @}
