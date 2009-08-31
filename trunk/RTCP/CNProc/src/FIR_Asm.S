@@ -676,8 +676,8 @@ _ZN5LOFAR4RTCP7_filterINS_5TYPES9i4complexEEEvjPKfPKT_PSt7complexIfEi:
 
 # 	filter for i8complex
 
-.global	_ZN5LOFAR4RTCP7_filterISt7complexIcEEEvjPKfPKT_PS2_IfEi
-_ZN5LOFAR4RTCP7_filterISt7complexIcEEEvjPKfPKT_PS2_IfEi:
+.global	_ZN5LOFAR4RTCP7_filterISt7complexIaEEEvjPKfPKT_PS2_IfEi
+_ZN5LOFAR4RTCP7_filterISt7complexIaEEEvjPKfPKT_PS2_IfEi:
 #	filters all samples for one station, one polarization
 
 #	arguments:
