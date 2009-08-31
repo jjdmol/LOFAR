@@ -113,14 +113,17 @@ int main(int argc, char **argv)
     
     Stream *ionStream;
 #if 1 && defined HAVE_FCNP && defined HAVE_BGP
+    /* preferred */
     FCNP_CN::init();
     ionStream = new FCNP_ClientStream;
-#elif 0
-    ionStream = new NullStream;
-#elif 0   
+#elif 1
+    /* used by default for !HAVE_FCNP && !HAVE_BGP */ 
     usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
 
     ionStream = new SocketStream("127.0.0.1", 5000 + locationInfo.rankInPset(), SocketStream::TCP, SocketStream::Client);
+#elif 0
+    /* used for testing */
+    ionStream = new NullStream;
 #else
     THROW(CNProcException, "unknown Stream type between ION and CN");
 #endif    

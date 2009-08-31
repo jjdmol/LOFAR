@@ -61,6 +61,34 @@
 #include <FCNP_ServerStream.h>
 #endif
 
+#ifdef HAVE_VALGRIND
+extern "C" {
+#include <valgrind.h>
+
+/*
+ * Valgrind wrappers to replace functions which use Double Hummer instructions,
+ * since valgrind can't cope with them.
+ *
+ * Outside valgrind, these functions are not used.
+ */
+
+void *I_WRAP_SONAME_FNNAME_ZZ(Za,memcpy)( void *b, const void *a, size_t n) {
+    char *s1 = static_cast<char*>(b);
+    const char *s2 = static_cast<const char*>(a);
+    for(; 0<n; --n)*s1++ = *s2++;
+    return b;
+}
+
+void *I_WRAP_SONAME_FNNAME_ZZ(Za,memset)( void *dest, int val, size_t len) {
+  unsigned char *ptr = static_cast<unsigned char*>(dest);
+  while (len-- > 0)
+    *ptr++ = val;
+  return dest;
+}
+
+}
+#endif
+
 // if exceptions are not caught, an attempt is made to create a backtrace
 // from the place where the exception is thrown.
 //
@@ -498,7 +526,6 @@ extern "C"
   void lofar__fini(void);
 }
 
-
 int main(int argc, char **argv)
 {
 #if !defined CATCH_EXCEPTIONS
@@ -523,7 +550,9 @@ int main(int argc, char **argv)
   std::stringstream sysInfo;
   sysInfo << basename(argv[0]) << "@" << myPsetNumber;
  
+#if defined HAVE_BGP
   INIT_BGP_LOGGER(sysInfo.str());
+#endif
 
   master_thread(argc, argv);
 
