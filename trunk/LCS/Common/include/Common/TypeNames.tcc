@@ -30,7 +30,7 @@
 namespace LOFAR
 {
   template<typename T>
-  const std::string& typeName (const T**)
+  const std::string& typeName (T const* const*)
     {
       static std::string str ("array<" + typeName((const T*)0) + ">");
       return str;

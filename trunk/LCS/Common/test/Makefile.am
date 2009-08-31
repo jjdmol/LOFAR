@@ -1,5 +1,5 @@
 # programs to run through supplied checktools
-CHECKTOOLPROGS	=	testLogger tAllocator tDataConvert \
+CHECKTOOLPROGS	=	testLogger tAllocator tDataConvert tTypeNames \
 			tFileLocator tStringUtil tStreamUtil \
 			tHexdump testSocket tComplex tProcess \
 			tRunOnNode tTimer tNumeric tSingleton \
@@ -9,7 +9,7 @@ CHECKTOOLPROGS	=	testLogger tAllocator tDataConvert \
 
 check_PROGRAMS	=	$(CHECKTOOLPROGS)
 
-TESTSCRIPTS	= 	testLogger.sh tAllocator.sh tDataConvert.sh \
+TESTSCRIPTS	= 	testLogger.sh tAllocator.sh tDataConvert.sh tTypeNames.sh \
 			tFileLocator.sh tStringUtil.sh tStreamUtil.sh \
 			tHexdump.sh testSocket.sh tComplex.sh tProcess.sh \
 			tRunOnNode.sh tTimer.sh tNumeric.sh tSingleton.sh \
@@ -47,6 +47,7 @@ EXTRA_DIST	=	$(TESTSCRIPTS) \
 testLogger_SOURCES		= testLogger.cc
 tAllocator_SOURCES		= tAllocator.cc
 tDataConvert_SOURCES		= tDataConvert.cc
+tTypeNames_SOURCES		= tTypeNames.cc
 tFileLocator_SOURCES		= tFileLocator.cc
 tStringUtil_SOURCES		= tStringUtil.cc
 tStreamUtil_SOURCES		= tStreamUtil.cc

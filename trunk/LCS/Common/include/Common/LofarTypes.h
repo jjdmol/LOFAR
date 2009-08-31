@@ -45,7 +45,7 @@ namespace LOFAR
 {
   //# Make the type names defined in LofarTypedefs.h available in the
   //# namespace LOFAR. 
-  //# Note that QT defines ushort, uint, and ulong.
+  //# Note that QT defines uchar, uint, and ulong.
   //# Otherwise check if it's there.
 #ifdef HAVE_QT
   using ::uchar;
