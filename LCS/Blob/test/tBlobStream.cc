@@ -103,7 +103,7 @@ int doOut (BlobOBuffer& bb, bool header8=false)
   ln = 19;
   if (header8) doAlign(bos,ln);
   bool valbl[2];
-  char valsc[2];
+  int8 valsc[2];
   uchar valuc[2];
   short valss[2];
   ushort valus[2];
@@ -117,8 +117,8 @@ int doOut (BlobOBuffer& bb, bool header8=false)
   bool valb2[] = {false,false,true,true,true,false,true,false,true};
   valbl[0] = true;
   valbl[1] = false;
-  valsc[0] = char(2);
-  valsc[1] = char(-20);
+  valsc[0] = int8(2);
+  valsc[1] = int8(-20);
   valuc[0] = uchar(1);
   valuc[1] = uchar(3);
   valss[0] = short(22);
@@ -252,7 +252,7 @@ void doIn (BlobIBuffer& bb, bool header8=false)
   ln = 19;
   if (header8) doAlign(bis,ln);
   bool valbl[2], valblc[2];
-  char valsc[2], valscc[2];
+  int8 valsc[2], valscc[2];
   uchar valuc[2], valucc[2];
   short valss[2], valssc[2];
   ushort valus[2], valusc[2];
@@ -267,8 +267,8 @@ void doIn (BlobIBuffer& bb, bool header8=false)
   bool valb2c[sizeof(valb2)];
   valbl[0] = true;
   valbl[1] = false;
-  valsc[0] = char(2);
-  valsc[1] = char(-20);
+  valsc[0] = int8(2);
+  valsc[1] = int8(-20);
   valuc[0] = uchar(1);
   valuc[1] = uchar(3);
   valss[0] = short(22);

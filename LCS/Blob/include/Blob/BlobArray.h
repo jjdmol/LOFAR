@@ -264,8 +264,8 @@ template<> inline void getBlobArrayData (BlobIStream& bs, \
 				         TP* data, uint nr) \
   { bs.get (data, nr); }
 BLOBARRAY_PUTGET_SPEC(bool)
-BLOBARRAY_PUTGET_SPEC(char)
-BLOBARRAY_PUTGET_SPEC(uchar)
+BLOBARRAY_PUTGET_SPEC(int8)
+BLOBARRAY_PUTGET_SPEC(uint8)
 BLOBARRAY_PUTGET_SPEC(int16)
 BLOBARRAY_PUTGET_SPEC(uint16)
 BLOBARRAY_PUTGET_SPEC(int32)

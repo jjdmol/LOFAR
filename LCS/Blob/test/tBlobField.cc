@@ -216,7 +216,7 @@ void testAlign()
   BlobFieldSet fset("test1");
   fset.add (BlobField<fcomplex>(1, 4, 5), 16);
   fset.add (BlobField<int>(1), 8);
-  fset.add (BlobField<char>(1, 2), 32);
+  fset.add (BlobField<int8>(1, 2), 32);
   ASSERT (fset.getAlignment() == 32);
   // Define buffer.
   BlobString buf(false, 0, true, fset.getAlignment());
@@ -228,11 +228,11 @@ void testAlign()
     // Get pointers to the data in the buffer.
     fcomplex* pfcomplex = fset[0].getData<fcomplex> (bb);
     int* pint = fset[1].getData<int> (bb);
-    char* pchar = fset[2].getData<char> (bb);
-    ASSERT (((char*)pfcomplex - (char*)(buf.data())) % 16 == 0);
-    ASSERT ((char*)pint - (char*)pfcomplex ==
+    int8* pchar = fset[2].getData<int8> (bb);
+    ASSERT (((int8*)pfcomplex - (int8*)(buf.data())) % 16 == 0);
+    ASSERT ((int8*)pint - (int8*)pfcomplex ==
 	    int(fset[0].getNelem() * sizeof(fcomplex)));
-    ASSERT (((char*)pchar - (char*)(buf.data())) % 32 == 0);
+    ASSERT (((int8*)pchar - (int8*)(buf.data())) % 32 == 0);
     // Put data in the buffer.
     for (uint i=0; i<fset[1].getNelem(); i++) {
       pfcomplex[i] = makefcomplex(i+1.,i+2.);
@@ -251,7 +251,7 @@ void testAlign()
     fset.openBlob (bib);
     const fcomplex* pfcomplex = fset[0].getData<fcomplex> (bib);
     const int* pint = fset[1].getData<int> (bib);
-    const char* pchar = fset[2].getData<char> (bib);
+    const int8* pchar = fset[2].getData<int8> (bib);
     for (uint i=0; i<fset[1].getNelem(); i++) {
       ASSERT (pfcomplex[i] == makefcomplex(i+1.,i+2.));
     }

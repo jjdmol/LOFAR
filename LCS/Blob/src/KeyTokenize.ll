@@ -22,6 +22,10 @@
 //# $Id$
 */
 
+/* yy_unput is not used, so let flex not generate it, otherwise picky
+   compilers will issue warnings. */
+%option nounput
+
 %{
 #include <Blob/KeyValue.h>
 #include <Blob/KeyValueMap.h>

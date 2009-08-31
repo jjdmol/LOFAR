@@ -150,7 +150,7 @@ KeyParserError::KeyParserError (const string& message)
 {}
 
 
-void KeyParseerror (char*)
+void KeyParseerror (const char*)
 {
   std::ostringstream os2;
   os2 << KeyParser::position();

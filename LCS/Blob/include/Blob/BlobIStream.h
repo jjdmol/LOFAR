@@ -103,7 +103,8 @@ namespace LOFAR {
       // <group>
       BlobIStream& operator>> (bool& value);
       BlobIStream& operator>> (char& value);
-      BlobIStream& operator>> (uchar& value);
+      BlobIStream& operator>> (int8& value);
+      BlobIStream& operator>> (uint8& value);
       BlobIStream& operator>> (int16& value);
       BlobIStream& operator>> (uint16& value);
       BlobIStream& operator>> (int32& value);
@@ -126,7 +127,8 @@ namespace LOFAR {
       // <group>
       void get (bool* values, uint nrval);
       void get (char* values, uint nrval);
-      void get (uchar* values, uint nrval);
+      void get (int8* values, uint nrval);
+      void get (uint8* values, uint nrval);
       void get (int16* values, uint nrval);
       void get (uint16* values, uint nrval);
       void get (int32* values, uint nrval);
