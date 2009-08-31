@@ -47,7 +47,14 @@ namespace LOFAR
       return str;
     }
 
-  const std::string& typeName (const uchar*)
+  const std::string& typeName (const int8*)
+    {
+      // This is also char (for backward compatibility).
+      static std::string str ("char");
+      return str;
+    }
+
+  const std::string& typeName (const uint8*)
     {
       static std::string str ("uchar");
       return str;

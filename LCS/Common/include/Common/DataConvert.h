@@ -66,7 +66,8 @@ namespace LOFAR
   // These functions can be used in templates.
   // <group>
   void dataConvert (DataFormat, char* inout, uint nrval);
-  void dataConvert (DataFormat, uchar* inout, uint nrval);
+  void dataConvert (DataFormat, int8* inout, uint nrval);
+  void dataConvert (DataFormat, uint8* inout, uint nrval);
   void dataConvert (DataFormat, int16* inout, uint nrval);
   void dataConvert (DataFormat, uint16* inout, uint nrval);
   void dataConvert (DataFormat, int32* inout, uint nrval);
@@ -84,11 +85,12 @@ namespace LOFAR
   LFDC_TMPL_FP  void dataConvert (DataFormat, dcomplex* inout, uint nrval);
   // </group>
 
-  // \name Convert char or uchar.
+  // \name Convert char, int8, or uint8.
   // Currently it simply returns the input.
   // <group>
   char dataConvert (DataFormat, char in);
-  unsigned char dataConvert (DataFormat, unsigned char in);
+  int8 dataConvert (DataFormat, int8 in);
+  uint8 dataConvert (DataFormat, uint8 in);
   // </group>
 
   // \name Convert 16 bit integers.
@@ -190,7 +192,9 @@ namespace LOFAR
 
   inline void dataConvert (DataFormat, char*, uint)
     {}
-  inline void dataConvert (DataFormat, uchar*, uint)
+  inline void dataConvert (DataFormat, int8*, uint)
+    {}
+  inline void dataConvert (DataFormat, uint8*, uint)
     {}
   inline void dataConvert (DataFormat fmt, int16* inout, uint nrval)
     { dataConvert16 (fmt, inout, nrval); }
@@ -223,7 +227,9 @@ namespace LOFAR
 
   inline char dataConvert (DataFormat, char in)
     { return in; }
-  inline unsigned char dataConvert (DataFormat, unsigned char in)
+  inline int8 dataConvert (DataFormat, int8 in)
+    { return in; }
+  inline uint8 dataConvert (DataFormat, uint8 in)
     { return in; }
 
   inline int16 dataConvert (DataFormat, int16 in)

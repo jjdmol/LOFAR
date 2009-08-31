@@ -46,7 +46,8 @@ namespace LOFAR
   const std::string& typeName (const void*);
   const std::string& typeName (const bool*);
   const std::string& typeName (const char*);
-  const std::string& typeName (const uchar*);
+  const std::string& typeName (const int8*);
+  const std::string& typeName (const uint8*);
   const std::string& typeName (const int16*);
   const std::string& typeName (const uint16*);
   const std::string& typeName (const int32*);
@@ -68,7 +69,7 @@ namespace LOFAR
   const std::string& typeName (const std::complex<float>*);
   const std::string& typeName (const std::complex<double>*);
 #endif
-  template<typename T> const std::string& typeName (T**);
+  template<typename T> const std::string& typeName (T const* const*);
 
 // </group>
 
