@@ -119,7 +119,12 @@ BlobOStream& BlobOStream::operator<< (const char& var)
   putBuf (&var, 1);
   return *this;
 }
-BlobOStream& BlobOStream::operator<< (const uchar& var)
+BlobOStream& BlobOStream::operator<< (const int8& var)
+{
+  putBuf (&var, 1);
+  return *this;
+}
+BlobOStream& BlobOStream::operator<< (const uint8& var)
 {
   putBuf (&var, 1);
   return *this;
@@ -219,7 +224,11 @@ void BlobOStream::put (const char* values, uint nrval)
 {
   putBuf (values, nrval);
 }
-void BlobOStream::put (const uchar* values, uint nrval)
+void BlobOStream::put (const int8* values, uint nrval)
+{
+  putBuf (values, nrval);
+}
+void BlobOStream::put (const uint8* values, uint nrval)
 {
   putBuf (values, nrval);
 }

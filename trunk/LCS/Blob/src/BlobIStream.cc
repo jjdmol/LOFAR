@@ -161,7 +161,12 @@ BlobIStream& BlobIStream::operator>> (char& var)
   getBuf (&var, 1);
   return *this;
 }
-BlobIStream& BlobIStream::operator>> (uchar& var)
+BlobIStream& BlobIStream::operator>> (int8& var)
+{
+  getBuf (&var, 1);
+  return *this;
+}
+BlobIStream& BlobIStream::operator>> (uint8& var)
 {
   getBuf (&var, 1);
   return *this;
@@ -294,7 +299,11 @@ void BlobIStream::get (char* values, uint nrval)
 {
   getBuf (values, nrval);
 }
-void BlobIStream::get (uchar* values, uint nrval)
+void BlobIStream::get (int8* values, uint nrval)
+{
+  getBuf (values, nrval);
+}
+void BlobIStream::get (uint8* values, uint nrval)
 {
   getBuf (values, nrval);
 }

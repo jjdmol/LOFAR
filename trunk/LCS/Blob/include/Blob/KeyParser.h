@@ -108,7 +108,7 @@ namespace LOFAR {
   // The global yyerror function for the parser.
   // It throws an exception with the current token.
 
-  void KeyParseerror (char*);
+  void KeyParseerror (const char*);
   
   // </group>
 

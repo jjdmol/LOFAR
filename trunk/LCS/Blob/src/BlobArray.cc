@@ -138,24 +138,29 @@ BlobOStream& operator<< (BlobOStream& bs, const casa::IPosition& ipos)
 {
   uint32 size = ipos.size();
   putBlobArrayHeader (bs, true,
-		      LOFAR::typeName((const casa::Int**)0),
+		      LOFAR::typeName((const int32**)0),
 		      &size, 1, true, 1);
-  bs.put (ipos.begin(), size);
+  std::vector<int32> ivec(ipos.begin(), ipos.end());
+  bs.put (&(ivec[0]), size);
   bs.putEnd();
   return bs;
 }
 
 BlobIStream& operator>> (BlobIStream& bs, casa::IPosition& ipos)
 {
-  bs.getStart (LOFAR::typeName((const casa::Int**)0));
+  bs.getStart (LOFAR::typeName((const int32**)0));
   bool fortranOrder;
   uint16 ndim;
   uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
   ASSERT(ndim == 1);
   uint32 size;
   getBlobArrayShape (bs, &size, 1, false, nalign);
+  std::vector<int32> ivec(size);
   ipos.resize (size, false);
-  bs.get (ipos.begin(), size);
+  bs.get (&(ivec[0]), size);
+  for (uint i=0; i<size; ++i) {
+    ipos[i] = ivec[i];
+  }
   bs.getEnd();
   return bs;
 }

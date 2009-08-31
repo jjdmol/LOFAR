@@ -107,7 +107,8 @@ namespace LOFAR {
       // <group>
       BlobOStream& operator<< (const bool& value);
       BlobOStream& operator<< (const char& value);
-      BlobOStream& operator<< (const uchar& value);
+      BlobOStream& operator<< (const int8& value);
+      BlobOStream& operator<< (const uint8& value);
       BlobOStream& operator<< (const int16& value);
       BlobOStream& operator<< (const uint16& value);
       BlobOStream& operator<< (const int32& value);
@@ -131,7 +132,8 @@ namespace LOFAR {
       // <group>
       void put (const bool* values, uint nrval);
       void put (const char* values, uint nrval);
-      void put (const uchar* values, uint nrval);
+      void put (const int8* values, uint nrval);
+      void put (const uint8* values, uint nrval);
       void put (const int16* values, uint nrval);
       void put (const uint16* values, uint nrval);
       void put (const int32* values, uint nrval);

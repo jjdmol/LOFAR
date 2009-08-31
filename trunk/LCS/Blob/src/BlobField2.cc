@@ -184,7 +184,8 @@ namespace LOFAR {
 namespace LOFAR {
   //# Force the instantiation of the templates.
   template class BlobField<char>;
-  template class BlobField<uchar>;
+  template class BlobField<int8>;
+  template class BlobField<uint8>;
   template class BlobField<int16>;
   template class BlobField<uint16>;
   template class BlobField<int32>;
