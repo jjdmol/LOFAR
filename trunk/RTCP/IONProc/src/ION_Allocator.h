@@ -26,7 +26,9 @@
 
 #include <Interface/Allocator.h>
 
-#define FLAT_MEMORY
+#if defined HAVE_BGP
+#  define FLAT_MEMORY
+#endif
 
 namespace LOFAR {
 namespace RTCP {
