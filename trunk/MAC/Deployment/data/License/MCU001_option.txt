@@ -1,5 +1,5 @@
 [license]
-code          = "MCU001 53539018000"
+code          = "MCU001 70462893533"
 version       = 30800002
 comment       = "MainCU"
 sn            = "471_3031_1_Astron_Gen_I_1_38"
