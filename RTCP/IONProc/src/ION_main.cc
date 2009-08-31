@@ -25,6 +25,7 @@
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Configuration.h>
 #include <Interface/CN_Mapping.h>
+#include <Interface/Mutex.h>
 #include <Interface/Parset.h>
 #include <Interface/Exceptions.h>
 #include <ION_Allocator.h>
@@ -35,9 +36,11 @@
 #include <Stream/SocketStream.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exceptions.h>
+#include <Common/Semaphore.h>
 #if !defined HAVE_PKVERSION
 #include <Package__Version.h>
 #endif
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -122,23 +125,16 @@ void terminate_with_backtrace()
 #endif
 
 
-static unsigned		     myPsetNumber, nrRuns;
-static std::vector<Stream *> clientStreams, allClientStreams;
+static unsigned		     myPsetNumber;
+static std::vector<Stream *> allClientStreams;
 static const unsigned	     nrCNcoresInPset = 64; // TODO: how to figure out the number of CN cores?
-static void		     *inputSection; // TODO: do not use void *
+static std::vector<Mutex>    sharedWriteToCNmutexes(nrCNcoresInPset);
+static std::vector<Mutex>    sharedReadFromCNmutexes(nrCNcoresInPset);
 
 #if defined HAVE_FCNP && defined __PPC__
 static bool	   fcnp_inited;
 #endif
 
-
-static void checkParset(const Parset &parset)
-{
-  if (parset.nrCoresPerPset() > nrCNcoresInPset) {
-    LOG_ERROR_STR("nrCoresPerPset (" << parset.nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
-    exit(1);
-  }
-}
 
 
 static void createAllClientStreams(const std::string &streamType)
@@ -169,17 +165,6 @@ static void createAllClientStreams(const std::string &streamType)
 }
 
 
-static void createClientStreams(const Parset &parset)
-{
-  std::vector<unsigned> usedCoresInPset = parset.usedCoresInPset();
-
-  clientStreams.resize(usedCoresInPset.size());
-
-  for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
-    clientStreams[core] = allClientStreams[CN_Mapping::mapCoreOnPset(usedCoresInPset[core], myPsetNumber)];
-}
-
-
 static void deleteAllClientStreams()
 {
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
@@ -194,35 +179,6 @@ static void deleteAllClientStreams()
 }
 
 
-static void configureCNs(const Parset &parset)
-{
-  CN_Command	   command(CN_Command::PREPROCESS);
-  CN_Configuration configuration(parset);
-  
-  LOG_DEBUG_STR("configuring cores " << parset.usedCoresInPset() << " ...");
-
-  for (unsigned core = 0; core < clientStreams.size(); core ++) {
-    command.write(clientStreams[core]);
-    configuration.write(clientStreams[core]);
-  }
-  
-  LOG_DEBUG_STR("configuring cores " << parset.usedCoresInPset() << " done");
-}
-
-
-static void unconfigureCNs(const Parset &parset)
-{
-  CN_Command command(CN_Command::POSTPROCESS);
-
-  LOG_DEBUG_STR("unconfiguring cores " << parset.usedCoresInPset() << " ...");
-
-  for (unsigned core = 0; core < clientStreams.size(); core ++)
-    command.write(clientStreams[core]);
-
-  LOG_DEBUG_STR("unconfiguring cores " << parset.usedCoresInPset() << " done");
-}
-
-
 static void stopCNs()
 {
   LOG_DEBUG_STR("stopping " << nrCNcoresInPset << " cores ...");
@@ -233,88 +189,6 @@ static void stopCNs()
     command.write(allClientStreams[core]);
 
   LOG_DEBUG_STR("stopping " << nrCNcoresInPset << " cores done");
-}
-
-
-template<typename SAMPLE_TYPE> static void toCNtask(Parset *parset)
-{
-  std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
-  BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(clientStreams, inputSection != 0 ? static_cast<InputSection<SAMPLE_TYPE> *>(inputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
-
-  beamletBufferToComputeNode.preprocess(parset);
-	
-  for (unsigned run = 0; run < nrRuns; run ++)
-    beamletBufferToComputeNode.process();
-
-  beamletBufferToComputeNode.postprocess();
-}
-
-
-static void *toCNthread(void *parset)
-{
-  LOG_DEBUG("starting input section");
-
-#if defined CATCH_EXCEPTIONS
-  try {
-#endif
-
-    Parset *ps = static_cast<Parset *>(parset);
-
-    switch (ps->nrBitsPerSample()) {
-      case 4  : toCNtask<i4complex>(ps);
-		break;
-
-      case 8  : toCNtask<i8complex>(ps);
-		break;
-
-      case 16 : toCNtask<i16complex>(ps);
-		break;
-    }
-
-#if defined CATCH_EXCEPTIONS
-  } catch (Exception &ex) {
-    LOG_FATAL_STR("input section caught Exception: " << ex);
-  } catch (std::exception &ex) {
-    LOG_FATAL_STR("input section caught std::exception: " << ex.what());
-  } catch (...) {
-    LOG_FATAL("input section caught non-std::exception: ");
-  }
-#endif
-
-  LOG_DEBUG("input section finished");
-  return 0;
-}
-
-
-static void *outputSectionThread(void *parset)
-{
-  LOG_DEBUG("starting output section");
-
-#if defined CATCH_EXCEPTIONS
-  try {
-#endif
-
-    OutputSection outputSection(myPsetNumber, clientStreams);
-
-    outputSection.preprocess(static_cast<Parset *>(parset));
-
-    for (unsigned run = 0; run < nrRuns; run ++)
-      outputSection.process();
-
-    outputSection.postprocess();
-
-#if defined CATCH_EXCEPTIONS
-  } catch (Exception &ex) {
-    LOG_FATAL_STR("output section caught Exception: " << ex);
-  } catch (std::exception &ex) {
-    LOG_FATAL_STR("output section caught std::exception: " << ex.what());
-  } catch (...) {
-    LOG_FATAL("output section caught non-std::exception: ");
-  }
-#endif
-
-  LOG_DEBUG("output section finished");
-  return 0;
 }
 
 
@@ -380,6 +254,247 @@ static void unmapFlatMemory()
 
 #endif
 
+
+template <typename SAMPLE_TYPE> class Job
+{
+  public:
+    Job(const Parset &);
+    ~Job();
+
+  private:
+    void	createClientStreams();
+    void	configureCNs(), unconfigureCNs();
+
+    void	toCNthread();
+    static void	*toCNthreadStub(void *);
+
+    void	fromCNthread();
+    static void	*fromCNthreadStub(void *);
+
+    void	acquireExclusiveAccessToCNs(std::vector<Mutex> &);
+    void	releaseExclusiveAccessToCNs(std::vector<Mutex> &);
+
+    const Parset		&itsParset;
+    InputSection<SAMPLE_TYPE>	*itsInputSection;
+    std::vector<Stream *>	itsCNstreams;
+    unsigned			itsNrRuns;
+    pthread_t			itsToCNthreadID, itsFromCNthreadID;
+    bool			itsHasInputSection, itsHasOutputSection;
+    Semaphore			itsToCNthreadAcquiredCNaccess;
+};
+
+
+template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::Job(const Parset &parset)
+:
+  itsParset(parset),
+  itsInputSection(0)
+{
+  itsHasInputSection  = parset.inputPsetIndex(myPsetNumber) >= 0;
+  itsHasOutputSection = parset.outputPsetIndex(myPsetNumber) >= 0;
+
+  if (itsHasInputSection || itsHasOutputSection) {
+    createClientStreams();
+
+    itsNrRuns = static_cast<unsigned>(ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime()));
+    LOG_DEBUG_STR("itsNrRuns = " << itsNrRuns);
+
+    if (itsHasInputSection)
+      itsInputSection = new InputSection<SAMPLE_TYPE>(&parset, myPsetNumber);
+
+    if (pthread_create(&itsToCNthreadID, 0, toCNthreadStub, static_cast<void *>(this)) != 0) {
+      perror("pthread_create");
+      exit(1);
+    }
+
+    if (itsHasOutputSection && pthread_create(&itsFromCNthreadID, 0, fromCNthreadStub, static_cast<void *>(this)) != 0) {
+      perror("pthread_create");
+      exit(1);
+    }
+  }
+}
+
+
+template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::~Job()
+{
+  if (itsHasInputSection || itsHasOutputSection) {
+    if (pthread_join(itsToCNthreadID, 0) != 0) {
+      perror("pthread join");
+      exit(1);
+    }
+
+    LOG_DEBUG("lofar__fini: to_CN section joined");
+
+    if (itsHasInputSection)
+      delete itsInputSection;
+
+    if (itsHasOutputSection) {
+      if (pthread_join(itsFromCNthreadID, 0) != 0) {
+	perror("pthread join");
+	exit(1);
+      }
+
+      LOG_DEBUG("lofar__fini: output section joined");
+    }
+  }
+}
+
+
+template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::createClientStreams()
+{
+  std::vector<unsigned> usedCoresInPset = itsParset.usedCoresInPset();
+
+  itsCNstreams.resize(usedCoresInPset.size());
+
+  for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
+    itsCNstreams[core] = allClientStreams[CN_Mapping::mapCoreOnPset(usedCoresInPset[core], myPsetNumber)];
+}
+
+
+template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::acquireExclusiveAccessToCNs(std::vector<Mutex> &mutexes)
+{
+  std::vector<unsigned> usedCoresInPset = itsParset.usedCoresInPset();
+
+  // always acquire mutexes in same order, to avoid deadlocks
+  sort(usedCoresInPset.begin(), usedCoresInPset.end());
+
+  for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
+    mutexes[core].lock();
+}
+
+
+template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::releaseExclusiveAccessToCNs(std::vector<Mutex> &mutexes)
+{
+  std::vector<unsigned> usedCoresInPset = itsParset.usedCoresInPset();
+
+  for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
+    mutexes[core].unlock();
+}
+
+
+template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::configureCNs()
+{
+  CN_Command	   command(CN_Command::PREPROCESS);
+  CN_Configuration configuration(itsParset);
+  
+  LOG_DEBUG_STR("configuring cores " << itsParset.usedCoresInPset() << " ...");
+
+  for (unsigned core = 0; core < itsCNstreams.size(); core ++) {
+    command.write(itsCNstreams[core]);
+    configuration.write(itsCNstreams[core]);
+  }
+  
+  LOG_DEBUG_STR("configuring cores " << itsParset.usedCoresInPset() << " done");
+}
+
+
+template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::unconfigureCNs()
+{
+  CN_Command command(CN_Command::POSTPROCESS);
+
+  LOG_DEBUG_STR("unconfiguring cores " << itsParset.usedCoresInPset() << " ...");
+
+  for (unsigned core = 0; core < itsCNstreams.size(); core ++)
+    command.write(itsCNstreams[core]);
+
+  LOG_DEBUG_STR("unconfiguring cores " << itsParset.usedCoresInPset() << " done");
+}
+
+
+template<typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::toCNthread()
+{
+  acquireExclusiveAccessToCNs(sharedWriteToCNmutexes);
+
+  if (itsHasOutputSection)
+    itsToCNthreadAcquiredCNaccess.up();
+
+  configureCNs();
+
+  std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
+  BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsCNstreams, itsHasInputSection ? itsInputSection->itsBeamletBuffers : noInputs, myPsetNumber);
+
+  beamletBufferToComputeNode.preprocess(&itsParset);
+	
+  for (unsigned run = 0; run < itsNrRuns; run ++)
+    beamletBufferToComputeNode.process();
+
+  beamletBufferToComputeNode.postprocess();
+
+  unconfigureCNs();
+  releaseExclusiveAccessToCNs(sharedWriteToCNmutexes);
+}
+
+
+template <typename SAMPLE_TYPE> void *Job<SAMPLE_TYPE>::toCNthreadStub(void *job)
+{
+  LOG_DEBUG("starting to_CN section");
+
+#if defined CATCH_EXCEPTIONS
+  try {
+#endif
+    static_cast<Job<SAMPLE_TYPE> *>(job)->toCNthread();
+#if defined CATCH_EXCEPTIONS
+  } catch (Exception &ex) {
+    LOG_FATAL_STR("to_CN section caught Exception: " << ex);
+  } catch (std::exception &ex) {
+    LOG_FATAL_STR("to_CN section caught std::exception: " << ex.what());
+  } catch (...) {
+    LOG_FATAL("to_CN section caught non-std::exception: ");
+  }
+#endif
+
+  LOG_DEBUG("to_CN section finished");
+  return 0;
+}
+
+
+template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::fromCNthread()
+{
+  itsToCNthreadAcquiredCNaccess.down(); // wait until toCNthread has access to CNs
+  acquireExclusiveAccessToCNs(sharedReadFromCNmutexes); // get read access
+  OutputSection outputSection(myPsetNumber, itsCNstreams);
+
+  outputSection.preprocess(&itsParset);
+
+  for (unsigned run = 0; run < itsNrRuns; run ++)
+    outputSection.process();
+
+  outputSection.postprocess();
+  releaseExclusiveAccessToCNs(sharedReadFromCNmutexes);
+}
+
+
+template <typename SAMPLE_TYPE> void *Job<SAMPLE_TYPE>::fromCNthreadStub(void *job)
+{
+  LOG_DEBUG("starting output section");
+
+#if defined CATCH_EXCEPTIONS
+  try {
+#endif
+    static_cast<Job<SAMPLE_TYPE> *>(job)->fromCNthread();
+#if defined CATCH_EXCEPTIONS
+  } catch (Exception &ex) {
+    LOG_FATAL_STR("output section caught Exception: " << ex);
+  } catch (std::exception &ex) {
+    LOG_FATAL_STR("output section caught std::exception: " << ex.what());
+  } catch (...) {
+    LOG_FATAL("output section caught non-std::exception: ");
+  }
+#endif
+
+  LOG_DEBUG("output section finished");
+  return 0;
+}
+
+
+static void checkParset(const Parset &parset)
+{
+  if (parset.nrCoresPerPset() > nrCNcoresInPset) {
+    LOG_ERROR_STR("nrCoresPerPset (" << parset.nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
+    exit(1);
+  }
+}
+
+
 void master_thread(int argc, char **argv)
 {
 #if !defined HAVE_PKVERSION
@@ -407,8 +522,6 @@ void master_thread(int argc, char **argv)
       exit(1);
     }
 
-    pthread_t to_cn_thread_id, output_thread_id;
-
     std::vector<Parset *> parsets;
 
     for (int arg = 1; arg < argc; arg ++) {
@@ -429,70 +542,17 @@ void master_thread(int argc, char **argv)
     Parset &parset = *parsets.front();
     createAllClientStreams(parset.getTransportType("OLAP.OLAP_Conn.IONProc_CNProc"));
 
-    nrRuns = static_cast<unsigned>(ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime()));
-    LOG_DEBUG_STR("nrRuns = " << nrRuns);
+    switch (parset.nrBitsPerSample()) {
+      case  4 : { Job<i4complex> job(parset); }
+		break;
 
-    bool hasInputSection  = parset.inputPsetIndex(myPsetNumber) >= 0;
-    bool hasOutputSection = parset.outputPsetIndex(myPsetNumber) >= 0;
+      case  8 : { Job<i8complex> job(parset); }
+		break;
 
-    if (hasInputSection)
-      switch (parset.nrBitsPerSample()) {
-	case  4 : inputSection = new InputSection<i4complex>(&parset, myPsetNumber);
-		  break;
+      case 16 : { Job<i16complex> job(parset); }
+		break;
 
-	case  8 : inputSection = new InputSection<i8complex>(&parset, myPsetNumber);
-		  break;
-
-	case 16 : inputSection = new InputSection<i16complex>(&parset, myPsetNumber);
-		  break;
-
-	default : THROW(IONProcException, "unsupported number of bits per sample");
-      }
-
-    createClientStreams(parset);
-
-    configureCNs(parset);
-
-    if ((hasInputSection || hasOutputSection) && pthread_create(&to_cn_thread_id, 0, toCNthread, static_cast<void *>(&parset)) != 0) {
-      perror("pthread_create");
-      exit(1);
-    }
-
-    if (hasOutputSection && pthread_create(&output_thread_id, 0, outputSectionThread, static_cast<void *>(&parset)) != 0) {
-      perror("pthread_create");
-      exit(1);
-    }
-
-    if (hasInputSection || hasOutputSection) {
-      if (pthread_join(to_cn_thread_id, 0) != 0) {
-	perror("pthread join");
-	exit(1);
-      }
-
-      LOG_DEBUG("lofar__fini: input section joined");
-    }
-
-    unconfigureCNs(parset);
-
-    if (hasInputSection)
-      switch (parset.nrBitsPerSample()) {
-	case  4 : delete static_cast<InputSection<i4complex> *>(inputSection);
-		  break;
-
-	case  8 : delete static_cast<InputSection<i8complex> *>(inputSection);
-		  break;
-
-	case 16 : delete static_cast<InputSection<i16complex> *>(inputSection);
-		  break;
-      }
-
-    if (hasOutputSection) {
-      if (pthread_join(output_thread_id, 0) != 0) {
-	perror("pthread join");
-	exit(1);
-      }
-
-      LOG_DEBUG("lofar__fini: output section joined");
+      default : THROW(IONProcException, "unsupported number of bits per sample");
     }
 
     stopCNs();
@@ -519,12 +579,6 @@ void master_thread(int argc, char **argv)
   LOG_DEBUG("master thread finishes");
 }
 
-
-extern "C"
-{
-  void lofar__init(int);
-  void lofar__fini(void);
-}
 
 int main(int argc, char **argv)
 {

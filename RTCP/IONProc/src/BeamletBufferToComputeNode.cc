@@ -39,7 +39,6 @@
 #include <Interface/Exceptions.h>
 #include <Stream/SocketStream.h>
 
-#include <pthread.h>
 #include <sys/time.h>
 
 #include <cstdio>
