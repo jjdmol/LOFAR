@@ -100,6 +100,11 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
   			help = "do not actually execute anything [%default]" )
+  parser.add_option( "--valgrind",
+  			dest = "valgrind",
+			action = "store_true",
+			default = False,
+  			help = "run IONProc under valgrind [%default]" )
 
   opgroup = OptionGroup(parser, "Output" )
   opgroup.add_option( "-v", "--verbose",
@@ -179,6 +184,10 @@ if __name__ == "__main__":
   			dest = "storage",
 			default = Locations.files["storage"],
 			help = "Storage executable [%default]" )
+  dirgroup.add_option( "--valgrind-suppressions",
+  			dest = "ionsuppfile",
+			default = Locations.files["ionsuppfile"],
+  			help = "Valgrind suppressions file for IONProc [%default]" )
 
   parser.add_option_group( dirgroup )
 
@@ -195,6 +204,9 @@ if __name__ == "__main__":
     Commands.debug = debug
     Logger.DEBUG = True
     Sections.DEBUG = True
+
+  if options.valgrind:
+    Sections.VALGRIND = True
 
   if not options.quiet:
     DEBUG = True
@@ -325,6 +337,10 @@ if __name__ == "__main__":
     for k,v in configmap.iteritems():
       if k in obsparams:
         v( obsparams[k] )
+
+    if options.valgrind:
+      parset["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "TCP"
+      parset["OLAP.nrSecondsOfBuffer"] = 1
 
     # parse specific parset values from the command line (all options containing ".")
     for k,v in obsparams.iteritems():

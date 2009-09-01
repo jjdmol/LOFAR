@@ -10,6 +10,7 @@ import ObservationID
 from Logger import debug,info,warning
 
 DEBUG=False
+VALGRIND=False
 
 class Section:
   """ A 'section' is a set of commands which together perform a certain function. """
@@ -129,6 +130,11 @@ class IONProcSection(Section):
   def run(self):
     logfiles = ["%s/run.IONProc.%s.log" % (Locations.files["logdir"],self.partition)] + self.logoutputs
 
+    if VALGRIND:
+      valgrind = "/cephome/mol/root-ppc/bin/valgrind --suppressions=%s --leak-check=full --show-reachable=yes" % (Locations.files["ionsuppfile"],)
+    else:
+      valgrind = ""
+
     mpiparams = [
       # where
       "-host %s" % (",".join(self.psets),),
@@ -137,9 +143,13 @@ class IONProcSection(Section):
       "--tag-output",
 
       # environment
+      # "-x FOO=BAR",
 
       # working directory
       "-wd %s" % (Locations.files["rundir"],),
+
+      # valgrind
+      valgrind,
 
       # executable
       "%s" % (Locations.files["ionproc"],),
@@ -182,11 +192,10 @@ class IONProcSection(Section):
       for (node,c) in sshcmds:
         c.wait()
 
+        assert c.isSuccess(), "Cannot reach I/O node %s [ssh]" % (node,)
         assert successStr in c.output(), "Cannot allocate flat memory on I/O node %s" % (node,)
 
-    if not runFunc( waitForSuccess, 10 ):
-      for (node,c) in sshcmds:
-        assert c.isDone(), "Cannot reach I/O node %s [ssh]" % (node,)
+    assert runFunc( waitForSuccess, 10 ), "Failed to reach one or more I/O nodes [ssh]"
 
 class StorageSection(Section):
   def preProcess(self):
