@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 					proc = 0;
 					break;
 
-	case CN_Command::STOP :	break;
+	case CN_Command::STOP :		break;
 
 	default :			LOG_FATAL("Bad command!");
 					abort();
