@@ -293,7 +293,7 @@ if __name__ == "__main__":
     else:
       stationStr = parset.distillStations()
 
-      if stations:
+      if stationStr:
         info( "Distilled stations %s from parset." % (",".join(stationStr),) )
       else:
         fatal( "No stations or inputs selected on command line or in parset. " )
@@ -387,7 +387,7 @@ if __name__ == "__main__":
       warning( "Could not create symlink %s pointing to %s" % (log_symlink["source"],log_symlink["dest"]) )
 
   # finalise and save parsets
-  for p in parsets:
+  for obsIndex,parset in enumerate(parsets):
     # parse final settings (derive some extra keys)
     parset.finalise()
 
