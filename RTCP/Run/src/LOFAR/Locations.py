@@ -50,6 +50,7 @@ class Locations:
 
         # location of the observation id counter
 	"nextmsnumber": "/log/nextMSNumber",
+
     } )
 
     self.nodes.update( {
@@ -70,6 +71,9 @@ class Locations:
         # where to start the executables. rundir needs to be reachable
         # for all sections.
 	"rundir":  "${BASEDIR}/share",
+
+        # location of valgrind suppressions file
+        "ionsuppfile": "/cephome/lofarsystem/production/LOFAR/RTCP/IONProc/src/IONProc.supp",
       } )
       
       self.nodes.update( {
@@ -85,6 +89,9 @@ class Locations:
 	"cnproc":  "${BASEDIR}/installed/%s/bin/CN_Processing" % (self.buildvars["CNProc"],),
 	"ionproc": "${BASEDIR}/installed/%s/bin/IONProc" % (self.buildvars["IONProc"],),
 	"storage": "${BASEDIR}/installed/%s/bin/Storage" % (self.buildvars["Storage"],),
+
+        # location of valgrind suppressions file
+        "ionsuppfile": "${BASEDIR}/rtcp/ionproc/src/ionproc.supp",
       } )
 
       self.nodes.update( {
