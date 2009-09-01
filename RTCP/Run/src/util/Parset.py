@@ -28,7 +28,7 @@ class switch(object):
 class Parset(switch):
 
     def __init__(self, defaults = dict()):
-        self.parameters = defaults
+        self.parameters = defaults.copy()
 
     def readFromFile(self, fileName):
         lastline = ''
