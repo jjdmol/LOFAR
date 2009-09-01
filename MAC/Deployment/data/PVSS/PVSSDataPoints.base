@@ -21,8 +21,6 @@ LOFAR				-		M	N	LOFAR
 PIC				-		M	N	LOFAR_PIC
 Ring				-		M	N	LOFAR_PIC_@ring@
 Station				STS		M	Y	LOFAR_PIC_@ring@_@station@
-Cluster				-		M	N	LOFAR_PIC_@cluster@
-Node				-		M	Y	LOFAR_PIC_@cluster@_@node@
 WAN				-		M	N	LOFAR_PIC_WAN
 WANarea				-		M	N	LOFAR_PIC_WAN_@wan@
 Switch				-		M	Y	LOFAR_PIC_WAN_@wan@_@switch@
@@ -44,10 +42,8 @@ MACScheduler			MS		M	Y	LOFAR_PermSW_MACScheduler
 ObsSW				-		M	N	LOFAR_ObsSW
 Observation			OBS		M	N	LOFAR_ObsSW_@observation@
 ObservationControl		OBSCTRL		M	Y	LOFAR_ObsSW_@observation@_ObservationControl
-#OfflineControl	 		OFFLCTRL	M	N	LOFAR_ObsSW_@observation@_OfflineControl
-#CImager			CIMG		M	N	LOFAR_ObsSW_@observation@_OfflineControl_CImager
-Ring				-		M	N	LOFAR_ObsSW_@observation@_@ring@
-Station				-		M	N	LOFAR_ObsSW_@observation@_@ring@_@station@
+#Ring				-		M	N	LOFAR_ObsSW_@observation@_@ring@
+#Station				-		M	N	LOFAR_ObsSW_@observation@_@ring@_@station@
 #
 Adder				ADD		C	Y	@adder@
 InputBuffer			IPB		C	Y	@inputbuffer@
