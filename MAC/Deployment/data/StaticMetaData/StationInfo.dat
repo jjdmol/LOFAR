@@ -1,7 +1,7 @@
 #
 # StationInfo
 #
-# $Id: $
+# $Id:$
 #
 # ID: Unique station identifier (used for PVSS, SAS, etc)
 # ring: Location C=Core, R=Remote, E=European
@@ -61,23 +61,23 @@ CS501	181   R    0.0          0.0             0       12     6    48    48    Ye
 
 ## central (60-69)
 ## 60
-MCU001	61
+#MCU001	61
 ## 61 .. 69
 
 ## wan (70-79)
 ## 70
-WCU001	71
+#WCU001	71
 ## 72 .. 79
 
 ## cep (80-89)
 ## 80
-CCU001	81
+#CCU001	81
 ## 82 .. 89
 
 ## spare (90-99)
 ## 90 .. 99
-RS005	95
-CS099	99
+#RS005	95
+#CS099	99
 
 ## arm 1 (100-119)
 ## 100
@@ -164,7 +164,7 @@ RS509	189    R    6.813202     53.421924       0       12     6    48    48    N
 ## effelsberg
 DE601   201    E    6.883956633  50.5233189277   358.449 24    12    96    0     No       No
 ## garching
-DE602   202    E    11.2875855   48,5014681222   500     24    12    96    96    No       No
+DE602   202    E    11.2875855   48.5014681222   500     24    12    96    96    No       No
 DE603	203    E    0.0          0.0             0       24    12    96    96    No       No
 DE604	204    E    0.0          0.0             0       24    12    96    96    No       No
 DE605	205    E    0.0          0.0             0       24    12    96    96    No       No
