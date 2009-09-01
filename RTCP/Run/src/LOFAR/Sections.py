@@ -121,7 +121,6 @@ class CNProcSection(Section):
       "-exe %s" % (Locations.files["cnproc"],),
 
       # arguments
-      "-args %s" % (" ".join([p.getFilename() for p in self.parsets]), ),
     ]
 
     self.commands.append( AsyncCommand( "mpirun %s" % (" ".join(mpiparams),), logfiles, killcmd=mpikill ) )
