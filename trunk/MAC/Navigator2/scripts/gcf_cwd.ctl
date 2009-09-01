@@ -120,7 +120,7 @@ void fillWatchDog(
   dyn_time downtime, dyn_time uptime 
 )
 {
-  dpSet("__gcf_cwd.systemID",systems,"__gcf_cwd.name",names,"__gcf_cwd.online",up,"__gcf_cwd.lastUptime",uptime,"__gcf_cwd.lastDowntime",downtime);
+  dpSet("__gcf_cwd.systemID",systems,"__gcf_cwd.name",names,"__gcf_cwd.online",up,"__gcf_cwd.lastUpTime",uptime,"__gcf_cwd.lastDownTime",downtime);
 }
 
 void fillGlobalList(
@@ -128,5 +128,5 @@ void fillGlobalList(
   dyn_time &downtime, dyn_time &uptime 
 )
 {
-  dpGet("__gcf_cwd.systemID",systems,"__gcf_cwd.name",names,"__gcf_cwd.online",up,"__gcf_cwd.lastUptime",uptime,"__gcf_cwd.lastDowntime",downtime);
+  dpGet("__gcf_cwd.systemID",systems,"__gcf_cwd.name",names,"__gcf_cwd.online",up,"__gcf_cwd.lastUpTime",uptime,"__gcf_cwd.lastDownTime",downtime);
 }   
