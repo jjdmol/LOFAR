@@ -115,7 +115,7 @@ if __name__ == "__main__":
   			dest = "list",
 			action = "store_true",
 			default = False,
-  			help = "list all known BlueGene partitions, or the psets in the provided partition" )
+  			help = "list the psets in the partition" )
   parser.add_option( "-k", "--kill",
   			dest = "kill",
 			action = "store_true",
