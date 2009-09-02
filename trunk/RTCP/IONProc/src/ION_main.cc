@@ -255,11 +255,23 @@ static void unmapFlatMemory()
 #endif
 
 
-template <typename SAMPLE_TYPE> class Job
+class JobParent // untemplated superclass of Job<SAMPLE_TYPE>
 {
   public:
-    Job(const Parset &);
-    ~Job();
+    virtual ~JobParent();
+};
+
+
+JobParent::~JobParent()
+{
+}
+
+
+template <typename SAMPLE_TYPE> class Job : public JobParent
+{
+  public:
+    Job(const Parset *);
+    virtual ~Job();
 
   private:
     void	createClientStreams();
@@ -271,35 +283,51 @@ template <typename SAMPLE_TYPE> class Job
     void	fromCNthread();
     static void	*fromCNthreadStub(void *);
 
+    void	attachToInputSection();
+    void	detachFromInputSection();
+
     void	acquireExclusiveAccessToCNs(std::vector<Mutex> &);
     void	releaseExclusiveAccessToCNs(std::vector<Mutex> &);
 
-    const Parset		&itsParset;
-    InputSection<SAMPLE_TYPE>	*itsInputSection;
-    std::vector<Stream *>	itsCNstreams;
-    unsigned			itsNrRuns;
-    pthread_t			itsToCNthreadID, itsFromCNthreadID;
-    bool			itsHasInputSection, itsHasOutputSection;
-    Semaphore			itsToCNthreadAcquiredCNaccess;
+    const Parset			*itsParset;
+    std::vector<Stream *>		itsCNstreams;
+    unsigned				itsNrRuns;
+    pthread_t				itsToCNthreadID, itsFromCNthreadID;
+    bool				itsHasInputSection, itsHasOutputSection;
+    Semaphore				itsToCNthreadAcquiredCNaccess;
+    unsigned				itsObservationID;
+
+    static InputSection<SAMPLE_TYPE>	*theInputSection;
+    static Mutex			theInputSectionMutex;
+    static unsigned			theInputSectionRefCount;
 };
 
 
-template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::Job(const Parset &parset)
+template <typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE> *Job<SAMPLE_TYPE>::theInputSection;
+template <typename SAMPLE_TYPE> Mutex			   Job<SAMPLE_TYPE>::theInputSectionMutex;
+template <typename SAMPLE_TYPE> unsigned		   Job<SAMPLE_TYPE>::theInputSectionRefCount = 0;
+
+
+template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::Job(const Parset *parset)
 :
-  itsParset(parset),
-  itsInputSection(0)
+  itsParset(parset)
 {
-  itsHasInputSection  = parset.inputPsetIndex(myPsetNumber) >= 0;
-  itsHasOutputSection = parset.outputPsetIndex(myPsetNumber) >= 0;
+  itsObservationID = parset->observationID();
+
+  LOG_DEBUG_STR("Creating new observation, ObsID = " << parset->observationID());
+  LOG_DEBUG_STR("ObsID = " << parset->observationID() << ", parset = " << (void *) parset << ", usedCoresInPset = " << parset->usedCoresInPset());
+
+  itsHasInputSection  = parset->inputPsetIndex(myPsetNumber) >= 0;
+  itsHasOutputSection = parset->outputPsetIndex(myPsetNumber) >= 0;
 
   if (itsHasInputSection || itsHasOutputSection) {
     createClientStreams();
 
-    itsNrRuns = static_cast<unsigned>(ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime()));
+    itsNrRuns = static_cast<unsigned>(ceil((parset->stopTime() - parset->startTime()) / parset->CNintegrationTime()));
     LOG_DEBUG_STR("itsNrRuns = " << itsNrRuns);
 
     if (itsHasInputSection)
-      itsInputSection = new InputSection<SAMPLE_TYPE>(&parset, myPsetNumber);
+      attachToInputSection();
 
     if (pthread_create(&itsToCNthreadID, 0, toCNthreadStub, static_cast<void *>(this)) != 0) {
       perror("pthread_create");
@@ -325,7 +353,7 @@ template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::~Job()
     LOG_DEBUG("lofar__fini: to_CN section joined");
 
     if (itsHasInputSection)
-      delete itsInputSection;
+      detachFromInputSection();
 
     if (itsHasOutputSection) {
       if (pthread_join(itsFromCNthreadID, 0) != 0) {
@@ -336,12 +364,14 @@ template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::~Job()
       LOG_DEBUG("lofar__fini: output section joined");
     }
   }
+
+  delete itsParset; // FIXME: not here
 }
 
 
 template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::createClientStreams()
 {
-  std::vector<unsigned> usedCoresInPset = itsParset.usedCoresInPset();
+  std::vector<unsigned> usedCoresInPset = itsParset->usedCoresInPset();
 
   itsCNstreams.resize(usedCoresInPset.size());
 
@@ -350,40 +380,67 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::createClientStreams()
 }
 
 
+template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::attachToInputSection()
+{
+  theInputSectionMutex.lock();
+
+  // while (theInputSectionRefCount > 0 && !compatible(parset)
+  //   theInputSectionRetry.wait(theInputSectionMutex)
+
+  if (theInputSectionRefCount ++ == 0)
+    theInputSection = new InputSection<SAMPLE_TYPE>(itsParset, myPsetNumber);
+
+  theInputSectionMutex.unlock();
+}
+
+
+template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::detachFromInputSection()
+{
+  theInputSectionMutex.lock();
+
+  if (-- theInputSectionRefCount == 0) {
+    delete theInputSection;
+    //theInputSectionRetry.broadcast();
+  }
+
+  theInputSectionMutex.unlock();
+}
+
+
 template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::acquireExclusiveAccessToCNs(std::vector<Mutex> &mutexes)
 {
-  std::vector<unsigned> usedCoresInPset = itsParset.usedCoresInPset();
+  std::vector<unsigned> usedCoresInPset = itsParset->usedCoresInPset();
 
   // always acquire mutexes in same order, to avoid deadlocks
   sort(usedCoresInPset.begin(), usedCoresInPset.end());
 
   for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
-    mutexes[core].lock();
+    mutexes[usedCoresInPset[core]].lock();
 }
 
 
 template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::releaseExclusiveAccessToCNs(std::vector<Mutex> &mutexes)
 {
-  std::vector<unsigned> usedCoresInPset = itsParset.usedCoresInPset();
+  std::vector<unsigned> usedCoresInPset = itsParset->usedCoresInPset();
 
   for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
-    mutexes[core].unlock();
+    mutexes[usedCoresInPset[core]].unlock();
 }
 
 
 template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::configureCNs()
 {
   CN_Command	   command(CN_Command::PREPROCESS);
-  CN_Configuration configuration(itsParset);
+  CN_Configuration configuration(*itsParset);
   
-  LOG_DEBUG_STR("configuring cores " << itsParset.usedCoresInPset() << " ...");
+  LOG_DEBUG_STR("configuring cores " << itsParset->usedCoresInPset() << " ...");
 
   for (unsigned core = 0; core < itsCNstreams.size(); core ++) {
     command.write(itsCNstreams[core]);
     configuration.write(itsCNstreams[core]);
   }
   
-  LOG_DEBUG_STR("configuring cores " << itsParset.usedCoresInPset() << " done");
+  LOG_DEBUG_STR("configuring cores " << itsParset->usedCoresInPset() << " done");
 }
 
 
@@ -391,18 +448,19 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::unconfigureCNs()
 {
   CN_Command command(CN_Command::POSTPROCESS);
 
-  LOG_DEBUG_STR("unconfiguring cores " << itsParset.usedCoresInPset() << " ...");
+  LOG_DEBUG_STR("unconfiguring cores " << itsParset->usedCoresInPset() << " ...");
 
   for (unsigned core = 0; core < itsCNstreams.size(); core ++)
     command.write(itsCNstreams[core]);
 
-  LOG_DEBUG_STR("unconfiguring cores " << itsParset.usedCoresInPset() << " done");
+  LOG_DEBUG_STR("unconfiguring cores " << itsParset->usedCoresInPset() << " done");
 }
 
 
 template<typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::toCNthread()
 {
   acquireExclusiveAccessToCNs(sharedWriteToCNmutexes);
+  LOG_DEBUG_STR("Granted CN access to Job " << itsObservationID);
 
   if (itsHasOutputSection)
     itsToCNthreadAcquiredCNaccess.up();
@@ -410,9 +468,9 @@ template<typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::toCNthread()
   configureCNs();
 
   std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
-  BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsCNstreams, itsHasInputSection ? itsInputSection->itsBeamletBuffers : noInputs, myPsetNumber);
+  BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsCNstreams, itsHasInputSection ? theInputSection->itsBeamletBuffers : noInputs, myPsetNumber);
 
-  beamletBufferToComputeNode.preprocess(&itsParset);
+  beamletBufferToComputeNode.preprocess(itsParset);
 	
   for (unsigned run = 0; run < itsNrRuns; run ++)
     beamletBufferToComputeNode.process();
@@ -453,7 +511,7 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::fromCNthread()
   acquireExclusiveAccessToCNs(sharedReadFromCNmutexes); // get read access
   OutputSection outputSection(myPsetNumber, itsCNstreams);
 
-  outputSection.preprocess(&itsParset);
+  outputSection.preprocess(itsParset);
 
   for (unsigned run = 0; run < itsNrRuns; run ++)
     outputSection.process();
@@ -522,38 +580,50 @@ void master_thread(int argc, char **argv)
       exit(1);
     }
 
-    std::vector<Parset *> parsets;
+    //createAllClientStreams(parset->getTransportType("OLAP.OLAP_Conn.IONProc_CNProc"));
+    createAllClientStreams("FCNP"); // FIXME
+
+    std::vector<JobParent *> jobs;
 
     for (int arg = 1; arg < argc; arg ++) {
       LOG_DEBUG_STR("trying to use " << argv[arg] << " as ParameterSet");
-      parsets.push_back(new Parset(argv[arg]));
+      Parset *parset = new Parset(argv[arg]);
 
+#if 0
       // OLAP.parset is deprecated, as everything will be in the parset given on the command line
       try {
 	LOG_WARN("Reading OLAP.parset is deprecated");
-	parsets.back()->adoptFile("OLAP.parset");
+	parset->adoptFile("OLAP.parset");
       } catch (APSException &ex) {
 	LOG_WARN_STR("could not read OLAP.parset: " << ex);
       }
+#endif
 
-      checkParset(*parsets.back());
+      checkParset(*parset);
+
+      JobParent *job;
+
+      LOG_DEBUG("creating new Job");
+
+      switch (parset->nrBitsPerSample()) {
+	case  4 : job = new Job<i4complex>(parset);
+		  break;
+
+	case  8 : job = new Job<i8complex>(parset);
+		  break;
+
+	case 16 : job = new Job<i16complex>(parset);
+		  break;
+
+	default : THROW(IONProcException, "unsupported number of bits per sample");
+      }
+
+      LOG_DEBUG("creating new Job done");
+      jobs.push_back(job);
     }
 
-    Parset &parset = *parsets.front();
-    createAllClientStreams(parset.getTransportType("OLAP.OLAP_Conn.IONProc_CNProc"));
-
-    switch (parset.nrBitsPerSample()) {
-      case  4 : { Job<i4complex> job(parset); }
-		break;
-
-      case  8 : { Job<i8complex> job(parset); }
-		break;
-
-      case 16 : { Job<i16complex> job(parset); }
-		break;
-
-      default : THROW(IONProcException, "unsupported number of bits per sample");
-    }
+    for (unsigned i = 0; i < jobs.size(); i ++)
+      delete jobs[i];
 
     stopCNs();
 
@@ -562,9 +632,6 @@ void master_thread(int argc, char **argv)
 #endif
 
     deleteAllClientStreams();
-
-    for (unsigned i = 0; i < parsets.size(); i ++)
-      delete parsets[i];
 
 #if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {

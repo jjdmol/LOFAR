@@ -63,8 +63,6 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
   if (ps->getUint32("OLAP.nrTimesInFrame") != itsNrTimesPerPacket)
     THROW(IONProcException, "OLAP.nrTimesInFrame should be " << boost::lexical_cast<std::string>(itsNrTimesPerPacket));
 
-  pthread_mutex_init(&itsValidDataMutex, 0);
-
   if (ps->realTime())
     itsSynchronizedReaderWriter = new TimeSynchronizedReader(ps->maxNetworkDelay());  
   else
@@ -81,7 +79,6 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
 template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::~BeamletBuffer()
 {      
   delete itsSynchronizedReaderWriter;
-  pthread_mutex_destroy(&itsValidDataMutex);
 }
 
 
@@ -118,7 +115,7 @@ template<typename SAMPLE_TYPE> inline void BeamletBuffer<SAMPLE_TYPE>::writePack
 
 template<typename SAMPLE_TYPE> inline void BeamletBuffer<SAMPLE_TYPE>::updateValidData(const TimeStamp &begin, const TimeStamp &end)
 {
-  pthread_mutex_lock(&itsValidDataMutex);
+  itsValidDataMutex.lock();
   itsValidData.exclude(0, end - itsSize);  // forget old ValidData
 
   // add new ValidData (except if range list will grow too long, to avoid long
@@ -129,7 +126,7 @@ template<typename SAMPLE_TYPE> inline void BeamletBuffer<SAMPLE_TYPE>::updateVal
   if (ranges.size() < 64 || ranges.back().end == begin) 
     itsValidData.include(begin, end);
 
-  pthread_mutex_unlock(&itsValidDataMutex);
+  itsValidDataMutex.unlock();
 }
 
 
@@ -185,9 +182,9 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
     itsCurrentI = mapTime2Index(newTimeStamp);
     assert(aligned(itsCurrentI, itsNrTimesPerPacket));
 
-    pthread_mutex_lock(&itsValidDataMutex);
+    itsValidDataMutex.lock();
     itsValidData.reset();
-    pthread_mutex_unlock(&itsValidDataMutex);
+    itsValidDataMutex.unlock();
 
     itsLockedRanges.unlock(0, itsSize, itsSize);
 
@@ -241,9 +238,9 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writePacketData(
       itsOffset = - (startI % itsNrTimesPerPacket);
       startI    = mapTime2Index(begin);
 
-      pthread_mutex_lock(&itsValidDataMutex);
+      itsValidDataMutex.lock();
       itsValidData.reset();
-      pthread_mutex_unlock(&itsValidDataMutex);
+      itsValidDataMutex.unlock();
     }
 
     //LOG_DEBUG_STR(""timestamp = " << (uint64_t) begin << ", itsOffset = " << itsOffset");
@@ -265,7 +262,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writePacketData(
   writePacket(itsSBBuffers[0][startI].origin(), data);
   
   // forget old ValidData
-  pthread_mutex_lock(&itsValidDataMutex);
+  itsValidDataMutex.lock();
   itsValidData.exclude(0, end - itsSize);
 
   unsigned rangesSize = itsValidData.getRanges().size();
@@ -275,7 +272,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writePacketData(
   if (rangesSize < 64 || itsValidData.getRanges()[rangesSize - 1].end == begin) 
     itsValidData.include(begin, end);
 
-  pthread_mutex_unlock(&itsValidDataMutex);
+  itsValidDataMutex.unlock();
 
   itsLockedRanges.unlock(startI, endI, itsSize);
   itsSynchronizedReaderWriter->finishedWrite(end);
@@ -285,24 +282,26 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writePacketData(
 
 template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::startReadTransaction(const std::vector<TimeStamp> &begin, unsigned nrElements)
 {
+  TimeStamp minBegin = *std::min_element(begin.begin(),  begin.end());
+  TimeStamp maxEnd   = *std::max_element(begin.begin(),  begin.end()) + nrElements;
+  // in synchronous mode, do not overrun writer
+  itsSynchronizedReaderWriter->startRead(minBegin, maxEnd);
+
+  itsReadMutex.lock(); // only one reader per BeamletBuffer allowed
   itsReadTimer.start();
 
   itsBegin = begin;
 
-  for (unsigned beam = 0; beam < begin.size(); beam++) {
+  for (unsigned beam = 0; beam < begin.size(); beam ++) {
     itsEnd[beam]    = begin[beam] + nrElements;
     itsStartI[beam] = mapTime2Index(begin[beam]);
     itsEndI[beam]   = mapTime2Index(itsEnd[beam]);
   }
  
-  TimeStamp minBegin = *std::min_element(itsBegin.begin(),  itsBegin.end());
-  TimeStamp maxEnd   = *std::max_element(itsEnd.begin(),    itsEnd.end());
   itsMinEnd	     = *std::min_element(itsEnd.begin(),    itsEnd.end());
   itsMinStartI	     = *std::min_element(itsStartI.begin(), itsStartI.end());
   itsMaxEndI	     = *std::max_element(itsEndI.begin(),   itsEndI.end());
 
-  // in synchronous mode, do not overrun writer
-  itsSynchronizedReaderWriter->startRead(minBegin, maxEnd);
   // do not read from circular buffer section that is being written
   itsLockedRanges.lock(itsMinStartI, itsMaxEndI, itsMaxEndI - itsMinStartI);
 }
@@ -342,9 +341,9 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::sendUnalignedSub
 
 template<typename SAMPLE_TYPE> SparseSet<unsigned> BeamletBuffer<SAMPLE_TYPE>::readFlags(unsigned beam)
 {
-  pthread_mutex_lock(&itsValidDataMutex);
+  itsValidDataMutex.lock();
   SparseSet<TimeStamp> validTimes = itsValidData.subset(itsBegin[beam], itsEnd[beam]);
-  pthread_mutex_unlock(&itsValidDataMutex);
+  itsValidDataMutex.unlock();
 
   SparseSet<unsigned> flags;
   flags.include(0, static_cast<unsigned>(itsEnd[beam] - itsBegin[beam]));
@@ -364,6 +363,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::stopReadTransact
   // it is hard to predict where the next read will begin.
   
   itsReadTimer.stop();
+  itsReadMutex.unlock();
 }
 
 

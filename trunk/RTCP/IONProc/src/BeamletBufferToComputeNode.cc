@@ -83,7 +83,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   itsNrCoresPerPset	      = ps->nrCoresPerPset();
   itsSampleDuration	      = ps->sampleDuration();
   itsDelayCompensation	      = ps->delayCompensation();
-  itsNeedDelays               = (itsDelayCompensation || ps->nrPencilBeams() > 1) && itsNrInputs > 0;
+  itsNeedDelays               = (itsDelayCompensation || itsNrPencilBeams > 1) && itsNrInputs > 0;
   itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
   itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping();
   itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping();
@@ -92,6 +92,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   itsMaxNetworkDelay	      = ps->maxNetworkDelay();
   itsDumpRawData	      = ps->dumpRawData();
   itsNrHistorySamples	      = itsDumpRawData ? 0 : ps->nrHistorySamples();
+  itsObservationID	      = ps->observationID();
 
   LOG_DEBUG_STR("nrSubbands = " << itsNrSubbands);
   LOG_DEBUG_STR("nrChannelsPerSubband = " << ps->nrChannelsPerSubband());
@@ -211,7 +212,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sta
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::writeLogMessage() const
 {
   std::stringstream logStr;
-  logStr << itsCurrentTimeStamp;
+  logStr << itsCurrentTimeStamp << ", ObsID: " << itsObservationID;
 
   if (itsIsRealTime) {
     struct timeval tv;
@@ -221,7 +222,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::wri
     double currentTime  = tv.tv_sec + tv.tv_usec / 1e6;
     double expectedTime = (itsCurrentTimeStamp + itsNrSamplesPerSec + itsMaxNetworkDelay) * itsSampleDuration;
 
-    logStr << " late: " << PrettyTime(currentTime - expectedTime);
+    logStr << ", late: " << PrettyTime(currentTime - expectedTime);
   }
 
   if (itsDelayCompensation) {
@@ -396,7 +397,8 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
   }
 
   timer.stop();
-  LOG_INFO_STR("ION->CN: " << PrettyTime(timer.getElapsed()));
+
+  LOG_INFO_STR("ObsID: " << itsObservationID << ", ION->CN: " << PrettyTime(timer.getElapsed()));
 }
 
 
