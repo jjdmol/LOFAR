@@ -31,14 +31,18 @@ def packetAnalysis( name, ip, port ):
   if location is None:
     return "ERROR: Could not find `packetanalysis' binary"
 
-  mainAnalysis = backquote( "ssh -tq %s %s %s" % (ip,location,port) )
+  mainAnalysis = backquote( "ssh -tq %s %s %s" % (ip,location,port), 5)
+
+  if not mainAnalysis or " 0.00 pps" not in mainAnalysis:
+    # something went wrong -- don't run tcpdump
+    return mainAnalysis
 
   # do a tcpdump analysis to obtain source mac address
   """ tcpdump: The following information will be received from stations:
 
 08:30:23.175116 10:fa:00:01:01:01 > 00:14:5e:7d:19:71, ethertype IPv4 (0x0800), length 6974: 10.159.1.2.4347 > 10.170.0.1.4347: UDP, length 6928
   """
-  tcpdump = backquote("ssh -q %s /opt/lofar/bin/tcpdump -i eth0 -c 10 -e -n udp 2>/dev/null" % (ip,)).split("\n")
+  tcpdump = backquote("ssh -q %s /opt/lofar/bin/tcpdump -i eth0 -c 10 -e -n udp 2>/dev/null" % (ip,), 2).split("\n")
   macaddress = "UNKNOWN"
   for p in tcpdump:
     if not p: continue
