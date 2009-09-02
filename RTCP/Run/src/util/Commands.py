@@ -14,6 +14,7 @@ PIPE=PIPE
 def backquote( cmdline ):
   """ Run a command line and return the output. """
 
+  debug("RUN backquote: %s" % (cmdline,) )
   return Popen( cmdline.split(), stdout=PIPE, stderr=STDOUT ).communicate()[0]
 
 def debug( str ):
@@ -48,7 +49,7 @@ class AsyncCommand(object):
           outstr = ""
         debug("RUN %s: %s %s" % (self.__class__.__name__,cmd,outstr) )
 
-        if not outfiles:
+        if DRYRUN or not outfiles:
           stdout = None
         elif outfiles == PIPE:
           stdout = PIPE

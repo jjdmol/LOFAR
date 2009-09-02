@@ -339,8 +339,13 @@ if __name__ == "__main__":
         v( obsparams[k] )
 
     if options.valgrind:
-      parset["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "TCP"
-      parset["OLAP.nrSecondsOfBuffer"] = 1
+      # force settings required to run under valgrind
+      parset["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "TCP" # FCNP uses BG/P instructions
+      parset["OLAP.nrSecondsOfBuffer"] = 1                      # reduce memory footprint
+
+      # default to valgrind builds
+      options.ionproc = "${BASEDIR}/installed/gnubgp_ion-valgrind/bin/IONProc"
+      options.cnproc  = "${BASEDIR}/installed/gnubgp_cn-valgrind/bin/CN_Processing"
 
     # parse specific parset values from the command line (all options containing ".")
     for k,v in obsparams.iteritems():
