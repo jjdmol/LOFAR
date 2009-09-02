@@ -11,6 +11,7 @@ set(inst_HEADERS
   Config.h
   FilteredData.h
   MultiDimArray.h
+  Mutex.h
   Parset.h
   SubbandMetaData.h
   PrintVector.h
