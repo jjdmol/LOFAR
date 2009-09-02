@@ -33,7 +33,7 @@ def packetAnalysis( name, ip, port ):
 
   mainAnalysis = backquote( "ssh -tq %s %s %s" % (ip,location,port), 5)
 
-  if not mainAnalysis or " 0.00 pps" not in mainAnalysis:
+  if not mainAnalysis or " 0.00 pps" in mainAnalysis:
     # something went wrong -- don't run tcpdump
     return mainAnalysis
 
