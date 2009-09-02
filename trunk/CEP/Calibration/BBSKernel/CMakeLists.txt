@@ -32,7 +32,7 @@ project(BBSKernel)
 include(LofarGeneral)
 
 include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Blob Common MS ParmDB)
+lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Blob Common ParmDB)
 
 ## ---------------------------------------------------------------------------
 ## External packages
