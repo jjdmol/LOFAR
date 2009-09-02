@@ -34,10 +34,17 @@ class Mutex
     void lock(), unlock();
     bool trylock();
 
+    class ScopeLock {
+      public:
+        ScopeLock( Mutex &m ): mutex(m) { mutex.lock(); }
+        ~ScopeLock()                    { mutex.unlock(); }
+      private:
+        Mutex &mutex;
+    };
+
   private:
     pthread_mutex_t mutex;
 };
-
 
 inline Mutex::Mutex()
 {

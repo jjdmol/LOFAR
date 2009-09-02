@@ -83,7 +83,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   itsNrCoresPerPset	      = ps->nrCoresPerPset();
   itsSampleDuration	      = ps->sampleDuration();
   itsDelayCompensation	      = ps->delayCompensation();
-  itsNeedDelays               = (itsDelayCompensation || ps->nrPencilBeams() > 0) && itsNrInputs > 0;
+  itsNeedDelays               = (itsDelayCompensation || ps->nrPencilBeams() > 1) && itsNrInputs > 0;
   itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
   itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping();
   itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping();
