@@ -84,7 +84,7 @@ struct SubbandMetaData
     // except for the fact that the elements are spaces apart more than sizeof(struct marshallData)
     // to make room for extra beams which are not defined in the marshallData structure.
     //
-    // Access elements through subbandInfo( subband ).
+    // Access elements through subbandInfo(subband).
     char		*const itsMarshallData;
 
     // remember the pointer at which we allocated the memory for the marshallData

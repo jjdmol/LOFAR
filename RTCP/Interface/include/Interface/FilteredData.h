@@ -18,7 +18,7 @@ class FilteredData: public SampleData<fcomplex,4>
   public:
     typedef SampleData<fcomplex,4> SuperType;
 
-    FilteredData(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrPencilBeams);
+    FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrPencilBeams);
 
     SubbandMetaData             metaData; // with one subband for every station
 
@@ -27,13 +27,13 @@ class FilteredData: public SampleData<fcomplex,4>
     const unsigned              itsNrPencilBeams;
     const unsigned              itsNrChannels;
     const unsigned              itsNrSamplesPerIntegration;
-    virtual void readData( Stream* );
-    virtual void writeData( Stream* );
+    virtual void readData(Stream *);
+    virtual void writeData(Stream *);
 };
 
 
 
-inline FilteredData::FilteredData(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrPencilBeams)
+inline FilteredData::FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrPencilBeams)
 :
   // The "| 2" significantly improves transpose speeds for particular
   // numbers of stations due to cache conflict effects.  The extra memory
@@ -50,14 +50,14 @@ inline FilteredData::FilteredData(const unsigned nrStations, const unsigned nrCh
 
 inline void FilteredData::readData(Stream *str)
 {
-  metaData.read( str );
+  metaData.read(str);
   SuperType::readData(str);
 }
 
 
 inline void FilteredData::writeData(Stream *str)
 {
-  metaData.write( str );
+  metaData.write(str);
   SuperType::writeData(str);
 }
 

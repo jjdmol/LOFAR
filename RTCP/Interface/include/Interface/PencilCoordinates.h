@@ -16,10 +16,10 @@ namespace RTCP {
 
 class PencilCoord3D {
   public:
-    PencilCoord3D(const double ra, const double dec) {
+    PencilCoord3D(double ra, double dec) {
       itsXYZ[0] = ra;
       itsXYZ[1] = dec;
-      itsXYZ[2] = sqrt( 1.0 - ra*ra - dec*dec );
+      itsXYZ[2] = sqrt(1.0 - ra * ra - dec * dec);
     /*
       // (ra,dec) is a spherical direction, but the station positions
       // and phase centers are cartesian (x,y,z with origin close to the geocenter).
@@ -44,7 +44,7 @@ class PencilCoord3D {
     */  
     }
 
-    PencilCoord3D(const double x, const double y, const double z) {
+    PencilCoord3D(double x, double y, double z) {
       itsXYZ[0] = x;
       itsXYZ[1] = y;
       itsXYZ[2] = z;
@@ -62,7 +62,7 @@ class PencilCoord3D {
       itsXYZ[2] = xyz[2];
     }
 
-    inline PencilCoord3D& operator-=( const PencilCoord3D &rhs )
+    inline PencilCoord3D& operator-= (const PencilCoord3D &rhs)
     {
       itsXYZ[0] -= rhs.itsXYZ[0];
       itsXYZ[1] -= rhs.itsXYZ[1];
@@ -71,7 +71,7 @@ class PencilCoord3D {
       return *this;
     }
 
-    inline PencilCoord3D& operator+=( const PencilCoord3D &rhs )
+    inline PencilCoord3D& operator+= (const PencilCoord3D &rhs)
     {
       itsXYZ[0] += rhs.itsXYZ[0];
       itsXYZ[1] += rhs.itsXYZ[1];
@@ -80,7 +80,7 @@ class PencilCoord3D {
       return *this;
     }
 
-    inline PencilCoord3D& operator*=( const double a )
+    inline PencilCoord3D& operator*= (double a)
     {
       itsXYZ[0] *= a;
       itsXYZ[1] *= a;
@@ -89,21 +89,21 @@ class PencilCoord3D {
       return *this;
     }
 
-    inline double operator[]( const unsigned i ) const
+    inline double operator[] (unsigned i) const
     {
       return itsXYZ[i];
     }
 
-    inline double &operator[]( const unsigned i )
+    inline double &operator[] (unsigned i)
     {
       return itsXYZ[i];
     }
 
-    friend double operator*( const PencilCoord3D &lhs, const PencilCoord3D &rhs );
-    friend std::ostream& operator<<(std::ostream& os, const PencilCoord3D &c);
+    friend double operator* (const PencilCoord3D &lhs, const PencilCoord3D &rhs);
+    friend std::ostream& operator<< (std::ostream &os, const PencilCoord3D &c);
 
-    void read( Stream *s );
-    void write( Stream *s ) const;
+    void read(Stream *);
+    void write(Stream *) const;
 
   private:
     double itsXYZ[3];
@@ -119,8 +119,8 @@ class PencilCoordinates
 {
   public:
     PencilCoordinates() {}
-    PencilCoordinates( const std::vector<PencilCoord3D> &coordinates ): itsCoordinates(coordinates) {}
-    PencilCoordinates( const Matrix<double> &coordinates );
+    PencilCoordinates(const std::vector<PencilCoord3D> &coordinates): itsCoordinates(coordinates) {}
+    PencilCoordinates(const Matrix<double> &coordinates);
 
     inline std::vector<PencilCoord3D>& getCoordinates() 
     { return itsCoordinates; }
@@ -128,16 +128,16 @@ class PencilCoordinates
     inline size_t size() const
     { return itsCoordinates.size(); }
 
-    inline const PencilCoord3D& operator[]( const unsigned nr ) const
+    inline const PencilCoord3D &operator[] (unsigned nr) const
     { return itsCoordinates[nr]; }
 
-    void read( Stream *s );
-    void write( Stream *s ) const;
+    void read(Stream *s);
+    void write(Stream *s) const;
 
-    PencilCoordinates& operator+=( const PencilCoordinates &rhs );
-    PencilCoordinates& operator+=( const PencilCoord3D &rhs );
+    PencilCoordinates& operator += (const PencilCoordinates &rhs);
+    PencilCoordinates& operator += (const PencilCoord3D &rhs);
 
-    friend std::ostream& operator<<( std::ostream &os, const PencilCoordinates &c );
+    friend std::ostream& operator<< (std::ostream &os, const PencilCoordinates &c);
 
 private:
     std::vector<PencilCoord3D>  itsCoordinates;
@@ -158,7 +158,7 @@ private:
 class PencilRings: public PencilCoordinates
 {
   public:
-    PencilRings(const unsigned nrRings, const double ringWidth);
+    PencilRings(unsigned nrRings, double ringWidth);
 
     unsigned nrPencils() const;
 
@@ -184,7 +184,7 @@ class PencilRings: public PencilCoordinates
     const double	    itsRingWidth;
 };
 
-inline double operator*( const PencilCoord3D &lhs, const PencilCoord3D &rhs )
+inline double operator* (const PencilCoord3D &lhs, const PencilCoord3D &rhs)
 {
   double sum = 0;
 
@@ -194,32 +194,32 @@ inline double operator*( const PencilCoord3D &lhs, const PencilCoord3D &rhs )
   return sum;
 }
 
-inline PencilCoord3D& operator-( const PencilCoord3D &lhs, const PencilCoord3D &rhs )
+inline PencilCoord3D& operator- (const PencilCoord3D &lhs, const PencilCoord3D &rhs)
 {
-  return PencilCoord3D( lhs ) -= rhs;
+  return PencilCoord3D(lhs) -= rhs;
 }
 
-inline PencilCoord3D& operator+( const PencilCoord3D &lhs, const PencilCoord3D &rhs )
+inline PencilCoord3D& operator+ (const PencilCoord3D &lhs, const PencilCoord3D &rhs)
 {
-  return PencilCoord3D( lhs ) += rhs;
+  return PencilCoord3D(lhs) += rhs;
 }
 
-inline PencilCoord3D& operator*( const double a, const PencilCoord3D &rhs )
+inline PencilCoord3D& operator* (double a, const PencilCoord3D &rhs)
 {
-  return PencilCoord3D( rhs ) *= a;
+  return PencilCoord3D(rhs) *= a;
 }
 
-inline PencilCoord3D& operator*( const PencilCoord3D &lhs, const double a )
+inline PencilCoord3D& operator* (const PencilCoord3D &lhs, double a)
 {
-  return PencilCoord3D( lhs ) *= a;
+  return PencilCoord3D(lhs) *= a;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const PencilCoord3D &c)
+inline std::ostream& operator << (std::ostream& os, const PencilCoord3D &c)
 {
   return os << "(" << c.itsXYZ[0] << "," << c.itsXYZ[1] << "," << c.itsXYZ[2] << ")";
 }
 
-inline std::ostream& operator<<(std::ostream &os, const PencilCoordinates &c )
+inline std::ostream& operator << (std::ostream &os, const PencilCoordinates &c)
 {
   return os << c.itsCoordinates;
 }

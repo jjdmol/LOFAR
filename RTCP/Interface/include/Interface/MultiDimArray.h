@@ -4,7 +4,6 @@
 #include <Interface/Allocator.h>
 #include <Interface/Exceptions.h>
 #include <boost/multi_array.hpp>
-#include <boost/noncopyable.hpp>
 
 #include <memory>
 #include <ostream>
@@ -21,7 +20,7 @@ namespace LOFAR {
 namespace RTCP {
 
 
-template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_array_ref<T, DIM>, boost::noncopyable
+template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_array_ref<T, DIM>
 {
   public:
     typedef boost::multi_array_ref<T, DIM> SuperType;
@@ -53,7 +52,7 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
       // for it) but does nothing.
       T *elem = this->origin();
 
-      for( size_t i = 0; i < this->num_elements_; i++ ) {
+      for (size_t i = 0; i < this->num_elements_; i ++) {
         // amazingly, this also works for T = float etc.
         (elem++)->~T();
       }
@@ -61,23 +60,22 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
       allocator->deallocate(this->origin());
     }
 
-    MultiDimArray<T,DIM> &operator=( const MultiDimArray<T,DIM> &other )
+    MultiDimArray<T,DIM> &operator= (const MultiDimArray<T,DIM> &other)
     {
-      if( other.num_elements_ != this->num_elements_ ) {
-        THROW( InterfaceException, "Tried to assign an array with " << other.num_elements_ << " elements to an array with " << this->num_elements_ << "elements." );
+      if (other.num_elements_ != this->num_elements_) {
+        THROW(InterfaceException, "Tried to assign an array with " << other.num_elements_ << " elements to an array with " << this->num_elements_ << "elements.");
       }
 
       T *me  = this->origin();
       const T *him = other.origin();
 
-      for( size_t i = 0; i < this->num_elements_; i++ ) {
+      for (size_t i = 0; i < this->num_elements_; i ++)
         *(me++) = *(him++); 
-      }
 
       return *this;
     }
 
-    void resize(const ExtentList &extents, const size_t alignment, Allocator &allocator)
+    void resize(const ExtentList &extents, size_t alignment, Allocator &allocator)
     {
       MultiDimArray newArray(extents, alignment, allocator);
       std::swap(this->base_, newArray.base_);
@@ -91,9 +89,9 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
       std::swap(this->allocator, newArray.allocator);
     }
 
-    void resize(const ExtentList &extents, const size_t alignment = defaultAlignment())
+    void resize(const ExtentList &extents, size_t alignment = defaultAlignment())
     {
-      resize( extents, alignment, *allocator );
+      resize(extents, alignment, *allocator);
     }
 
     static size_t defaultAlignment()
@@ -130,13 +128,13 @@ template <typename T> class Vector : public MultiDimArray<T, 1>
     {
     }
 
-    Vector(const size_t x, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
+    Vector(size_t x, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     :
       SuperType(boost::extents[x], alignment, allocator)
     {
     }
 
-    Vector(const ExtentList &extents, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
+    Vector(const ExtentList &extents, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     :
       SuperType(extents, alignment, allocator)
     {
@@ -144,7 +142,7 @@ template <typename T> class Vector : public MultiDimArray<T, 1>
 
     using SuperType::resize;
 
-    void resize(const size_t x, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator )
+    void resize(size_t x, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     {
       SuperType::resize(boost::extents[x], alignment, allocator);
     }
@@ -163,13 +161,13 @@ template <typename T> class Matrix : public MultiDimArray<T, 2>
     {
     }
 
-    Matrix(const size_t x, const size_t y, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
+    Matrix(size_t x, size_t y, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     :
       SuperType(boost::extents[x][y], alignment, allocator)
     {
     }
 
-    Matrix(const ExtentList &extents, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
+    Matrix(const ExtentList &extents, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     :
       SuperType(extents, alignment, allocator)
     {
@@ -177,7 +175,7 @@ template <typename T> class Matrix : public MultiDimArray<T, 2>
 
     using SuperType::resize;
 
-    void resize(const size_t x, const size_t y, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
+    void resize(size_t x, size_t y, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     {
       SuperType::resize(boost::extents[x][y], alignment, allocator);
     }
@@ -196,13 +194,13 @@ template <typename T> class Cube : public MultiDimArray<T, 3>
     {
     }
 
-    Cube(const size_t x, const size_t y, const size_t z, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
+    Cube(size_t x, size_t y, size_t z, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     :
       SuperType(boost::extents[x][y][z], alignment, allocator)
     {
     }
 
-    Cube(const ExtentList &extents, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
+    Cube(const ExtentList &extents, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     :
       SuperType(extents, alignment, allocator)
     {
@@ -210,39 +208,41 @@ template <typename T> class Cube : public MultiDimArray<T, 3>
 
     using SuperType::resize;
 
-    void resize(const size_t x, const size_t y, const size_t z, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator )
+    void resize(size_t x, size_t y, size_t z, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     {
       SuperType::resize(boost::extents[x][y][z], alignment, allocator);
     }
 };
 
 // output function for full MultiDimArrays
-template <typename T, unsigned DIM> inline std::ostream &operator<<( std::ostream& str, const MultiDimArray<T,DIM> &array )
+template <typename T, unsigned DIM> inline std::ostream &operator<< (std::ostream& str, const MultiDimArray<T,DIM> &array)
 {
   str << "[ ";
-  for( size_t i = 0; i < array.size(); i++ ) {
-    if( i > 0 ) {
+
+  for (size_t i = 0; i < array.size(); i ++) {
+    if (i > 0)
       str << ", ";
-    }
+
     str << array[i];
   }
-  str << " ]";
 
+  str << " ]";
   return str;
 }
 
 // output function for subdimensions of MultiDimArrays
-template <typename T, unsigned DIM, typename TPtr> inline std::ostream &operator<<( std::ostream& str, const typename boost::detail::multi_array::const_sub_array<T,DIM,TPtr> &array )
+template <typename T, unsigned DIM, typename TPtr> inline std::ostream &operator<< (std::ostream& str, const typename boost::detail::multi_array::const_sub_array<T,DIM,TPtr> &array)
 {
   str << "[ ";
-  for( size_t i = 0; i < array.size(); i++ ) {
-    if( i > 0 ) {
+
+  for (size_t i = 0; i < array.size(); i ++) {
+    if (i > 0)
       str << ", ";
-    }
+
     str << array[i];
   }
-  str << " ]";
 
+  str << " ]";
   return str;
 }
 

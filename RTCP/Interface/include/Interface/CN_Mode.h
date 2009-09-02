@@ -72,17 +72,17 @@ inline unsigned CN_Mode::nrStokes() const
   return itsMarshalledData.nrStokes;
 }
 
-inline void CN_Mode::read( Stream *str )
+inline void CN_Mode::read(Stream *str)
 {
   str->read(&itsMarshalledData, sizeof itsMarshalledData);
 }
 
-inline void CN_Mode::write( Stream *str ) const
+inline void CN_Mode::write(Stream *str) const
 {
   str->write(&itsMarshalledData, sizeof itsMarshalledData);
 }
 
-inline std::ostream& operator<<(std::ostream &str, CN_Mode &m)
+inline std::ostream& operator << (std::ostream &str, CN_Mode &m)
 {
   return str << m.getModeName();
 }

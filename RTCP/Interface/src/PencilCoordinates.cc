@@ -11,89 +11,87 @@
 namespace LOFAR {
 namespace RTCP {
 
-void PencilCoord3D::read( Stream *s )
+void PencilCoord3D::read(Stream *s)
 {
-  s->read( &itsXYZ, sizeof itsXYZ );
+  s->read(&itsXYZ, sizeof itsXYZ);
 
 #if !defined WORDS_BIGENDIAN
-  dataConvert( LittleEndian, static_cast<double*>(itsXYZ), sizeof itsXYZ );
+  dataConvert(LittleEndian, static_cast<double*>(itsXYZ), sizeof itsXYZ);
 #endif
 }
 
-void PencilCoord3D::write( Stream *s ) const
+void PencilCoord3D::write(Stream *s) const
 {
 #if !defined WORDS_BIGENDIAN
   // create a copy to avoid modifying our own values
   double coordinates[sizeof itsXYZ];
 
-  for( unsigned i = 0; i < sizeof itsXYZ; i++ ) {
+  for (unsigned i = 0; i < sizeof itsXYZ; i ++)
     coordinates[i] = itsXYZ[i];
-  }
 
-  dataConvert( LittleEndian, static_cast<double*>(coordinates), sizeof coordinates );
-  s->write( &coordinates, sizeof coordinates );
+  dataConvert(LittleEndian, static_cast<double*>(coordinates), sizeof coordinates);
+  s->write(&coordinates, sizeof coordinates);
 #else
-  s->write( &itsXYZ, sizeof itsXYZ );
+  s->write(&itsXYZ, sizeof itsXYZ);
 #endif
 }
 
-void PencilCoordinates::read( Stream *s )
+void PencilCoordinates::read(Stream *s)
 {
   unsigned numCoordinates;
 
-  s->read( &numCoordinates, sizeof numCoordinates );
+  s->read(&numCoordinates, sizeof numCoordinates);
 
 #if !defined WORDS_BIGENDIAN
-  dataConvert( LittleEndian, &numCoordinates, 1 );
+  dataConvert(LittleEndian, &numCoordinates, 1);
 #endif
 
-  for( unsigned i = 0; i < numCoordinates; i++ ) {
-    PencilCoord3D coord( 0, 0, 0 );
+  for (unsigned i = 0; i < numCoordinates; i ++) {
+    PencilCoord3D coord(0, 0, 0);
 
-    coord.read( s );
+    coord.read(s);
 
     *this += coord;
   }
 }
 
-void PencilCoordinates::write( Stream *s ) const
+void PencilCoordinates::write(Stream *s) const
 {
   unsigned numCoordinates = itsCoordinates.size();
 
 #if !defined WORDS_BIGENDIAN
-  dataConvert( LittleEndian, &numCoordinates, 1 );
+  dataConvert(LittleEndian, &numCoordinates, 1);
 #endif
 
-  s->write( &numCoordinates, sizeof numCoordinates );
+  s->write(&numCoordinates, sizeof numCoordinates);
 
-  for( unsigned i = 0; i < numCoordinates; i++ ) {
-    itsCoordinates[i].write( s );
-  }
+  for (unsigned i = 0; i < numCoordinates; i ++)
+    itsCoordinates[i].write(s);
 }
 
-PencilCoordinates& PencilCoordinates::operator+=( const PencilCoordinates &rhs )
+PencilCoordinates& PencilCoordinates::operator+= (const PencilCoordinates &rhs)
 {
-  itsCoordinates.reserve( itsCoordinates.size() + rhs.size() );
-  for( unsigned i = 0; i < rhs.size(); i++ ) {
-     itsCoordinates.push_back( rhs.itsCoordinates[i] );
-  }
+  itsCoordinates.reserve(itsCoordinates.size() + rhs.size());
+
+  for (unsigned i = 0; i < rhs.size(); i ++)
+     itsCoordinates.push_back(rhs.itsCoordinates[i]);
 
   return *this;
 }
 
-PencilCoordinates& PencilCoordinates::operator+=( const PencilCoord3D &rhs )
+PencilCoordinates& PencilCoordinates::operator+= (const PencilCoord3D &rhs)
 {
-  itsCoordinates.push_back( rhs );
+  itsCoordinates.push_back(rhs);
 
   return *this;
 }
 
-PencilCoordinates::PencilCoordinates( const Matrix<double> &coordinates )
+PencilCoordinates::PencilCoordinates(const Matrix<double> &coordinates)
 {
-  itsCoordinates.reserve( coordinates.size() );
-  for( unsigned i = 0; i < coordinates.size(); i++ ) {
-    itsCoordinates.push_back( PencilCoord3D( coordinates[i][0], coordinates[i][1] ) );
-  }
+  itsCoordinates.reserve(coordinates.size());
+
+  for (unsigned i = 0; i < coordinates.size(); i ++)
+    itsCoordinates.push_back(PencilCoord3D(coordinates[i][0], coordinates[i][1]));
 }
 
 PencilRings::PencilRings(const unsigned nrRings, const double ringWidth):
@@ -203,17 +201,17 @@ void PencilRings::computeBeamCoordinates()
   dm[5] = pencilHeightDelta();
 
   // ring 0: the center pencil beam
-  coordinates.push_back( PencilCoord3D( 0, 0 ) );
+  coordinates.push_back(PencilCoord3D(0, 0));
 
   // ring 1-n: create the pencil beams from the inner ring outwards
-  for( unsigned ring = 1; ring <= itsNrRings; ring++ ) {
+  for (unsigned ring = 1; ring <= itsNrRings; ring ++) {
     // start from the top
     double l = 0;
     double m = pencilHeight() * ring;
 
-    for( unsigned side = 0; side < 6; side++ ) {
-      for( unsigned pencil = 0; pencil < ring; pencil++ ) {
-        coordinates.push_back( PencilCoord3D( l, m ) );
+    for (unsigned side = 0; side < 6; side ++) {
+      for (unsigned pencil = 0; pencil < ring; pencil ++) {
+        coordinates.push_back(PencilCoord3D(l, m));
         l += dl[side]; m += dm[side];
       }
     }
