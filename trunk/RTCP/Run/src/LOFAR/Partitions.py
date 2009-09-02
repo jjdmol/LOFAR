@@ -1,8 +1,16 @@
 #!/usr/bin/env python
 
-# PartitionPsets:	A dict which maps partitions to I/O node IP addresses.
-__all__ = [ "PartitionPsets" ]
+__all__ = [ "PartitionPsets","owner","runningJob","killJobs","freePartition","allocatePartition"]
 
+import os
+import sys
+
+# allow ../util to be found, a bit of a hack
+sys.path += [os.path.abspath(os.path.dirname(__file__)+"/..")]
+
+from util.Commands import SyncCommand
+
+# PartitionPsets:	A dict which maps partitions to I/O node IP addresses.
 # the pset hierarchy is is analogue to:
 # R00-M0-N00-J00 = R00-M0-N00-J00-16 consists of a single pset
 # R00-M0-N00-32  = R00-M0-N00-J00 + R00-M0-N00-J01
@@ -35,7 +43,7 @@ for R in xrange(3):
         nodecard = "%s-N%02d" % (midplane,N)
 
         PartitionPsets["%s-%d" % (nodecard,32*groupsize)] = sum( [
-          PartitionPsets["%s-N%02d-J00" % (midplane,x)] + PartitionPsets["%s-N%02d-J01" % (midplane,x)]
+          PartitionPsets["%s-N%02d-J00-16" % (midplane,x)] + PartitionPsets["%s-N%02d-J01-16" % (midplane,x)]
          for x in xrange( N, N+groupsize) ], [] )
 
     # a midplane
@@ -44,36 +52,125 @@ for R in xrange(3):
   # a rack
   PartitionPsets[rack] = PartitionPsets["%s-M0" % rack] + PartitionPsets["%s-M1" % rack]
 
+# Locations of the bg* scripts
+BGBUSY = "/usr/local/bin/bgbusy"
+BGJOBS = "/usr/local/bin/bgjobs"
+
+def owner( partition ):
+  """ Returns the name of the owner of the partition, or None if the partition is not allocated. """
+
+  cmd = "%s" % (BGBUSY,)
+
+  for l in os.popen( cmd, "r" ).readlines():
+    try:
+      part,nodes,cores,state,owner,net = l.split()
+    except ValueError:
+      continue
+
+    if part == partition:  
+      # partition found     
+      return owner
+  
+  # partition is not allocated
+  return None
+
+def runningJob( partition ):
+  """ Returns a (jobId,name) tuple of the job running on the partition, or None if no job is running. """
+
+  cmd = "%s" % (BGJOBS,)
+
+  for l in os.popen( cmd, "r" ).readlines():
+    try:
+      job,part,mode,executable,user,state,queue,limit,wall = l.split()
+    except ValueError:
+      continue
+
+    if part == partition: 
+      # job found 
+      return (job,executable)
+  
+  # partition is not allocated or has no job running
+  return None
+
+def killJobs( partition ):
+  """ Kill anything running on the partition. """
+  return SyncCommand( "%s | /usr/bin/grep %s | /usr/bin/awk '{ print $1; }' | /usr/bin/xargs -r bgkilljob" % (BGJOBS,partition,) ).isSuccess()
+
+
+def freePartition( partition ):
+  """ Free the given partition. """
+  return SyncCommand( "mpirun -partition %s -free wait" % (partition,) ).isSuccess()
+
+def allocatePartition( partition ):
+  """ Allocate the given partition by running Hello World. """
+  return SyncCommand( "mpirun -partition %s -nofree -exe /bgsys/tools/hello" % (partition,), ["/dev/null"] ).isSuccess()
+
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
   import sys
 
   # parse the command line
-  parser = OptionParser()
+  parser = OptionParser( "usage: %prog [options] partition" )
   parser.add_option( "-l", "--list",
   			dest = "list",
 			action = "store_true",
 			default = False,
   			help = "list all known BlueGene partitions, or the psets in the provided partition" )
-  parser.add_option( "-P", "--partition",
-  			dest = "partition",
-			action = "store",
-			type = "string",
-  			help = "use a certain partition" )
+  parser.add_option( "-k", "--kill",
+  			dest = "kill",
+			action = "store_true",
+			default = False,
+  			help = "kill all jobs running on the partition" )
+  parser.add_option( "-a", "--allocate",
+  			dest = "allocate",
+			action = "store_true",
+			default = False,
+  			help = "allocate the partition" )
+  parser.add_option( "-f", "--free",
+  			dest = "free",
+			action = "store_true",
+			default = False,
+  			help = "free the partition" )
 
   # parse arguments
   (options, args) = parser.parse_args()
+  errorOccurred = False
 
-  if not options.list:
+  if not args:
     parser.print_help()
     sys.exit(0)
 
-  if options.list:
-    if options.partition:
+  for partition in args:
+    assert partition in PartitionPsets,"Partition unknown: %s" % (partition,)
+
+    if options.list:
       # print the psets of a single partition
-      for ip in PartitionPsets[options.partition]:
+      for ip in PartitionPsets[partition]:
         print ip
-    else:
-      # print a list of all known partitions
-      for name in sorted(PartitionPsets.keys()):
-        print name
+
+    if options.kill and not errorOccurred:
+      print "Killing jobs on %s..." % ( partition, )
+      errorOccured = killJobs( partition )
+
+    if options.free and not errorOccurred:
+      print "Freeing %s..." % ( partition, )
+      errorOccured = freePartition( partition )
+
+    if options.allocate and not errorOccurred:
+      print "Allocating %s..." % ( partition, )
+      errorOccured = allocatePartition( partition )
+
+    # check partition if requested so
+    if options.check:
+      expected_owner = os.environ["USER"]
+      real_owner = owner( options.partition )
+
+      print "Partition Owner : %-40s %s" % (real_owner,okstr(real_owner == expected_owner))
+
+      expected_job = None
+      real_job = runningJob( options.partition )
+
+      print "Running Job     : %-40s %s" % (real_job,okstr(real_job == expected_job))
+
+    sys.exit(int(errorOccurred))
+
