@@ -26,7 +26,7 @@ for R in xrange(3):
          ip = "10.170.%d.%d" % (R,(1+M*128+N*4+J))
 
          pset = "%s-J%02d" % (nodecard,J)
-         PartitionPsets[pset] = [ip]
+         if R == 0: PartitionPsets[pset] = [ip] # single psets without -16 suffix only work on R00
          PartitionPsets[pset+"-16"] = [ip]
 
     # groups smaller than a midplane
