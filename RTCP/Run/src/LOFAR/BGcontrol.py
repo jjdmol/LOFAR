@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+print "WARNING: BGcontrol.py has been depricated. Use Stations.py or Partitions.py instead."
+
 import os
 from Partitions import PartitionPsets
 from Stations import Stations

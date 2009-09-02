@@ -4,7 +4,6 @@ from util.Commands import SyncCommand,AsyncCommand,mpikill,backquote,PIPE
 from util.Aborter import runUntilSuccess,runFunc
 from Locations import Locations
 import os
-import BGcontrol
 import Partitions
 import ObservationID
 from Logger import debug,info,warning
@@ -191,7 +190,6 @@ class IONProcSection(Section):
       for (node,c) in sshcmds:
         c.wait()
 
-        assert c.isSuccess(), "Cannot reach I/O node %s [ssh]" % (node,)
         assert successStr in c.output(), "Cannot allocate flat memory on I/O node %s" % (node,)
 
     assert runFunc( waitForSuccess, 10 ), "Failed to reach one or more I/O nodes [ssh]"
