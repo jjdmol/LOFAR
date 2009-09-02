@@ -22,25 +22,18 @@
 #define LOFAR_INTERFACE_MUTEX_H
 
 #include <pthread.h>
+#include <boost/noncopyable.hpp>
 
 namespace LOFAR {
 namespace RTCP {
 
-class Mutex
+class Mutex: boost::noncopyable
 {
   public:
     Mutex(), ~Mutex();
 
     void lock(), unlock();
     bool trylock();
-
-    class ScopeLock {
-      public:
-        ScopeLock( Mutex &m ): mutex(m) { mutex.lock(); }
-        ~ScopeLock()                    { mutex.unlock(); }
-      private:
-        Mutex &mutex;
-    };
 
   private:
     pthread_mutex_t mutex;

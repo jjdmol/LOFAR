@@ -151,11 +151,11 @@ namespace LOFAR
         // casacore is not thread-safe
         static Mutex mutex;
 
-        {
-          Mutex::ScopeLock sl(mutex);
-
-          converter->j2000ToItrf(result, request); // expensive
-        }
+        mutex.lock();
+        // TODO: hangs if exception is thrown here -- should abort everything instead, since
+        // we can't restore casacore.
+        converter->j2000ToItrf(result, request); // expensive
+        mutex.unlock();
 
         ASSERTSTR(result.direction.size() == itsNrCalcDelays * itsNrBeams * itsNrPencilBeams,
 	  	  result.direction.size() << " == " << itsNrCalcDelays * itsNrBeams * itsNrPencilBeams );
