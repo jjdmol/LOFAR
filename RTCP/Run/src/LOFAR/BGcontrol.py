@@ -8,7 +8,7 @@ import sys
 # allow ../util to be found, a bit of a hack
 sys.path += [os.path.dirname(__file__)+"/.."]
 
-from util.Commands import SyncCommand
+from util.Commands import SyncCommand,backquote
 
 __all__ = ["owner","runningJob","stationInfo","allStationInfo","receivingStation","stationInPartition","killJobs","freePartition","allocatePartition"]
 
@@ -18,7 +18,7 @@ __all__ = ["owner","runningJob","stationInfo","allStationInfo","receivingStation
 """
 
 # Default partition to query
-PARTITION = "R00-M0-N00-256"
+PARTITION = "R00"
 
 # Locations of the bg* scripts
 BGBUSY = "/usr/local/bin/bgbusy"
@@ -73,7 +73,7 @@ def stationInfo( ip ):
 	0x0020:  0201 aabb 2100 3610 9f1c 114a 4468 0000  ....!.6....JDh..
 	                        ^^^^ #beamlets, #times
   """
-  cmd = "ssh %s /opt/lofar/bin/tcpdump -i eth0 -c 10 -X -s 62 -e -n 2>/dev/null" % (ip,)
+  cmd = "ssh -tq %s /opt/lofar/bin/tcpdump -i eth0 -c 10 -X -s 62 -e -n 2>/dev/null" % (ip,)
   tcpdump = os.popen( cmd, "r" ).readlines()
 
   # split into packets, lines starting with a tab belong to the previous header
@@ -114,6 +114,45 @@ def stationInfo( ip ):
   # return all stations found
   return list(stations)
 
+def packetAnalysis( name, ip, port ):
+  mainAnalysis = backquote( "ssh -tq %s cd %s/..;./packetanalysis %s" % (ip,os.path.abspath(os.path.dirname(__file__)),port) )
+
+  macaddress = "UNKNOWN"
+  tcpdump = backquote("ssh -q %s /opt/lofar/bin/tcpdump -i eth0 -c 10 -e -n udp 2>/dev/null" % (ip,)).split("\n")
+  for p in tcpdump:
+    if not p: continue
+
+    try:
+      f = p.split()
+      srcmac = f[1]
+      dstip = f[-4]
+
+      dstip,dstport = dstip[:-1].rsplit(".",1)
+      if dstport != port:
+        continue
+    except ValueError:
+      continue
+
+    macaddress = srcmac
+
+  if macaddress in ["00:12:f2:c3:3a:00"]:
+    macline = " OK Source MAC address:  %s (known router)" % (macaddress,)
+  elif macaddress == "UNKNOWN" or not macaddress.startswith("00:22:86:"):
+    macline = "NOK Source MAC address:  %s (no LOFAR station)" % (macaddress,)
+  else:
+    rscs,nr,field = name[0:2],name[2:5],name[5:]
+    nr1,nr2,nr3 = nr
+
+    macnrs = macaddress.split(":")
+    srcnr = "%s%s" % (macnrs[3],macnrs[4])
+
+    if int(nr) == int(srcnr):
+      macline = " OK Source MAC address:  %s" % (macaddress,)
+    else:
+      macline = "NOK Source MAC address:  %s (station %d?)" % (macaddress,int(srcnr))
+    
+  return "%s\n%s" % (macline,mainAnalysis) 
+
 def allStationInfo( partition ):
   """ Returns information about all stations sending data to this partition. """
  
@@ -124,7 +163,7 @@ def allStationInfo( partition ):
 def allInputs( station ):
   """ Generates a list of name,ip,port tuples for all inputs for a certain station. """
 
-  for name,input in sum( ([(s.name,i)] for s in station for i in s.inputs), [] ):
+  for name,input,ionode in sum( ([(s.name,i,s.ionode)] for s in station for i in s.inputs), [] ):
     # skip non-network inputs
     if input == "null:":
       continue
@@ -139,6 +178,8 @@ def allInputs( station ):
     # only process ip:port combinations
     if ":" in input:
       ip,port = input.split(":")
+      if ip in ["0.0.0.0","0"]:
+        ip = ionode
       yield (name,ip,port)
 
 def receivingStation( station ):
@@ -211,45 +252,39 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
   			help = "output less" )
-  parser.add_option( "-s", "--status",
-  			dest = "status",
+  parser.add_option( "-c", "--check",
+  			dest = "check",
 			action = "store_true",
 			default = False,
-  			help = "print a status overview" )
-  parser.add_option( "-c", "--check",
-  			dest = "checkStation",
-			action = "append",
-			type = "string",
-			default = [],
-  			help = "check whether a certain station is being received" )
+  			help = "check whether a certain station or partition is ok" )
 
-  congroup = OptionGroup(parser, "Control" )
-  congroup.add_option( "-k", "--kill",
+  pargroup = OptionGroup(parser, "Partition" )
+  pargroup.add_option( "-k", "--kill",
   			dest = "kill",
 			action = "store_true",
 			default = False,
   			help = "kill all jobs running on the partition" )
-  congroup.add_option( "-a", "--allocate",
+  pargroup.add_option( "-a", "--allocate",
   			dest = "allocate",
 			action = "store_true",
 			default = False,
   			help = "allocate the partition" )
-  congroup.add_option( "-f", "--free",
+  pargroup.add_option( "-f", "--free",
   			dest = "free",
 			action = "store_true",
 			default = False,
   			help = "free the partition" )
-  parser.add_option_group( congroup )
+  parser.add_option_group( pargroup )
 
   hwgroup = OptionGroup(parser, "Hardware" )
   hwgroup.add_option( "-S", "--stations",
   			dest = "stations",
+			action = "append",
 			type = "string",
   			help = "the station(s) to use [%default]" )
   hwgroup.add_option( "-P", "--partition",
   			dest = "partition",
 			type = "string",
-			default = "R00",
   			help = "name of the BlueGene partition [%default]" )
   parser.add_option_group( hwgroup )
 
@@ -257,89 +292,52 @@ if __name__ == "__main__":
   (options, args) = parser.parse_args()
   errorOccurred = False
 
-  if not options.status and not options.checkStation and not options.kill and not options.allocate and not options.free:
-    parser.print_help()
-    sys.exit(0)
+  if options.partition:
+    assert options.partition in PartitionPsets
 
-  assert options.partition in PartitionPsets
+    if options.kill and not errorOccurred:
+      if not options.quiet: print "Killing jobs on %s..." % ( options.partition, )
+      errorOccured = killJobs( options.partition )
 
-  if options.kill and not errorOccurred:
-    if not options.quiet: print "Killing jobs on %s..." % ( options.partition, )
-    errorOccured = killJobs( options.partition )
+    if options.free and not errorOccurred:
+      if not options.quiet: print "Freeing %s..." % ( options.partition, )
+      errorOccured = freePartition( options.partition )
 
-  if options.free and not errorOccurred:
-    if not options.quiet: print "Freeing %s..." % ( options.partition, )
-    errorOccured = freePartition( options.partition )
+    if options.allocate and not errorOccurred:
+      if not options.quiet: print "Allocating %s..." % ( options.partition, )
+      errorOccured = allocatePartition( options.partition )
 
-  if options.allocate and not errorOccurred:
-    if not options.quiet: print "Allocating %s..." % ( options.partition, )
-    errorOccured = allocatePartition( options.partition )
+    # check partition if requested so
+    if options.check:
+      expected_owner = os.environ["USER"]
+      real_owner = owner( options.partition )
 
-  if options.status:
-    expected_owner = os.environ["USER"]
-    real_owner = owner( options.partition )
+      print "Partition Owner : %-40s %s" % (real_owner,okstr(real_owner == expected_owner))
 
-    print "Partition Owner : %-40s %s" % (real_owner,okstr(real_owner == expected_owner))
+      expected_job = None
+      real_job = runningJob( options.partition )
 
-    expected_job = None
-    real_job = runningJob( options.partition )
+      print "Running Job     : %-40s %s" % (real_job,okstr(real_job == expected_job))
 
-    print "Running Job     : %-40s %s" % (real_job,okstr(real_job == expected_job))
-
-    print "Receiving boards:"
-    allinfo = allStationInfo( options.partition )
-    for s in allinfo:
-      station, boardnr, dest, beamlets, nrsamples = s
-      print "\t%s, board %s -> %s (%s beamlets)" % (station,boardnr,dest,beamlets)
-
-    print "Receiving stations:"
-    allinputs = map( lambda x: x[2], allinfo )
-    foundstations = []
-    for name,inputs in Stations.iteritems():
-      # flatten inputs
-      stationinputs = sum( map( lambda x: x.inputs, inputs ), [] )
-
-      numfound = len( [i for i in stationinputs if i in allinputs] )
-      if numfound == len(stationinputs):
-        foundstations.append( name )
-    print "\t%s" % (" ".join(sorted(foundstations)))
-
+    sys.exit(int(errorOccurred))
 
   # check stations if requested so
-  expected_owner = os.environ["USER"]
-  real_owner = owner( options.partition )
+  if options.stations:
+    if options.check:
+      for stationName in options.stations:
+        if stationName not in Stations:
+          # unknown station
+          errorOccurred = True
+          print "NOK Station name unknown: %s" % (stationName,)
+          continue
 
-  for stationName in options.checkStation:
-    if stationName not in Stations:
-      # unknown station
-      errorOccurred = True
-      print "%-25s NOK Station name unknown" % (stationName,)
-      continue
+        for name,ip,port in allInputs( Stations[stationName] ):
+          print "---- Packet analysis for %s %s:%s" % (name,ip,port)
+          print packetAnalysis( name, ip, port )
 
-    status,missingInputs = receivingStation( Stations[stationName] )
-
-    if not status:
-      # missing an input
-      errorOccurred = True
-      print missingInputs
-      print "%-25s NOK Missing input(s) %s" % (stationName,", ".join( ("%s @ %s" % m for m in missingInputs) ))
-      continue
-      
-    status,missingInputs = stationInPartition( Stations[stationName], options.partition )
-
-    if not status:
-      # input outside partition
-      errorOccurred = True
-      print missingInputs
-      print "%-25s NOK Input(s) outside partition %s: %s" % (stationName,options.partition,", ".join( ("%s @ %s" % m for m in missingInputs) ))
-      continue
-
-    if expected_owner != real_owner:
-      # not our partition so not our data to receive
-      errorOccurred = True
-      print "%-25s NOK Partition %s is assigned to %s, not to you" % (stationName,options.partition,real_owner)
-      continue
-
-    print "%-25s OK" % (stationName,)
+    sys.exit(int(errorOccurred))
    
-  sys.exit(int(errorOccurred))
+  parser.print_help()
+  sys.exit(0)
+
+
