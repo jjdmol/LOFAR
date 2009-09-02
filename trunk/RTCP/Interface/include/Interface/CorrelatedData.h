@@ -22,10 +22,10 @@ namespace RTCP {
 class CorrelatedData: public StreamableData
 {
   public:
-    CorrelatedData(const unsigned nrBaselines, const unsigned nrChannels);
+    CorrelatedData(unsigned nrBaselines, unsigned nrChannels);
 
     virtual size_t requiredSize() const;
-    virtual void allocate( Allocator &allocator = heapAllocator );
+    virtual void allocate(Allocator &allocator = heapAllocator);
 
     virtual StreamableData &operator += (const StreamableData &);
 
@@ -74,7 +74,7 @@ inline size_t CorrelatedData::requiredSize() const
 }
 
 
-inline CorrelatedData::CorrelatedData(const unsigned nrBaselines, const unsigned nrChannels)
+inline CorrelatedData::CorrelatedData(unsigned nrBaselines, unsigned nrChannels)
 :
   StreamableData(true),
   itsNrBaselines(nrBaselines),
@@ -87,7 +87,7 @@ inline CorrelatedData::CorrelatedData(const unsigned nrBaselines, const unsigned
 {
 }
 
-inline void CorrelatedData::allocate( Allocator &allocator )
+inline void CorrelatedData::allocate(Allocator &allocator)
 {
   /// TODO Should this be aligned as well?? 
   visibilities.resize(boost::extents[itsNrBaselines][itsNrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], itsAlignment, allocator);

@@ -29,14 +29,14 @@ CN_Mode::CN_Mode()
 
 #if ! defined HAVE_BGP_CN
 
-CN_Mode::CN_Mode( const Parset &ps )
+CN_Mode::CN_Mode(const Parset &ps)
 {
   string name = ps.getModeName();
 
   itsMarshalledData.mode = INVALID;
 
-  for( unsigned i = 0; i < nrModes(); i++ ) {
-    if( name == modeList[i].name ) {
+  for (unsigned i = 0; i < nrModes(); i ++) {
+    if (name == modeList[i].name) {
       itsMarshalledData.mode = modeList[i].mode;
       itsMarshalledData.isCoherent = modeList[i].isCoherent;
       itsMarshalledData.nrStokes = modeList[i].nrStokes;

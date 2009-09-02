@@ -18,10 +18,10 @@ class StokesData: public SampleData<float,4>
   public:
     typedef SampleData<float,4> SuperType;
 
-    StokesData(const bool coherent, const unsigned nrStokes, const unsigned nrPencilBeams, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrSamplesPerStokesIntegration);
+    StokesData(bool coherent, unsigned nrStokes, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration);
 };
 
-inline StokesData::StokesData(const bool coherent, const unsigned nrStokes, const unsigned nrPencilBeams, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrSamplesPerStokesIntegration)
+inline StokesData::StokesData(bool coherent, unsigned nrStokes, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration)
 :
   // The "| 2" significantly improves transpose speeds for particular
   // numbers of stations due to cache conflict effects.  The extra memory
@@ -36,10 +36,10 @@ class StokesDataIntegratedChannels: public SampleData<float,3>
   public:
     typedef SampleData<float,3> SuperType;
 
-    StokesDataIntegratedChannels(const bool coherent, const unsigned nrStokes, const unsigned nrPencilBeams, const unsigned nrSamplesPerIntegration, const unsigned nrSamplesPerStokesIntegration);
+    StokesDataIntegratedChannels(bool coherent, unsigned nrStokes, unsigned nrPencilBeams, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration);
 };
 
-inline StokesDataIntegratedChannels::StokesDataIntegratedChannels(const bool coherent, const unsigned nrStokes, const unsigned nrPencilBeams, const unsigned nrSamplesPerIntegration, const unsigned nrSamplesPerStokesIntegration)
+inline StokesDataIntegratedChannels::StokesDataIntegratedChannels(bool coherent, unsigned nrStokes, unsigned nrPencilBeams, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration)
 :
   // The "| 2" significantly improves transpose speeds for particular
   // numbers of stations due to cache conflict effects.  The extra memory

@@ -22,12 +22,11 @@
 #define LOFAR_INTERFACE_MUTEX_H
 
 #include <pthread.h>
-#include <boost/noncopyable.hpp>
 
 namespace LOFAR {
 namespace RTCP {
 
-class Mutex: boost::noncopyable
+class Mutex
 {
   public:
     Mutex(), ~Mutex();

@@ -63,6 +63,7 @@ public:
 	void           check() const;
 	void	       maintainBackwardCompatibility();
 
+	uint32         observationID() const;
 	double         startTime() const;
 	double         stopTime() const;
 	uint32	       nrStations() const;
@@ -75,7 +76,7 @@ public:
 	vector<double> positions() const;
 	string         positionType() const;
 	vector<double> getRefPhaseCentres() const;
-	vector<double> getPhaseCentresOf(const string& name) const;	
+	vector<double> getPhaseCentresOf(const string &name) const;	
 	uint32	       CNintegrationSteps() const;
 	uint32	       IONintegrationSteps() const;
 	uint32	       stokesIntegrationSteps() const;
@@ -95,9 +96,9 @@ public:
 	bool	       delayCompensation() const;
 	uint32	       nrCalcDelays() const;
 	bool	       correctBandPass() const;
-	vector<string> getPortsOf(const string& aKey) const;
-	string         stationName(const int index) const;
-	string         storageHostName(const string& aKey, const int index) const;
+	vector<string> getPortsOf(const string &aKey) const;
+	string         stationName(int index) const;
+	string         storageHostName(const string& aKey, int index) const;
 	uint32	       nrPsetsPerStorage() const;
 	vector<uint32> inputPsets() const;
 	vector<uint32> outputPsets() const;
@@ -127,7 +128,7 @@ public:
 	string         partitionName() const;
 	bool           realTime() const;
 	
-	bool 					 dumpRawData() const;
+	bool	       dumpRawData() const;
 	
 	vector<double> getBeamDirection(unsigned beam) const;
 	string         getBeamDirectionType(unsigned beam) const;
@@ -149,7 +150,7 @@ public:
 	
 private:
 	uint32         nrManualPencilBeams() const;
-	vector<double> getManualPencilBeam( const unsigned pencil ) const;
+	vector<double> getManualPencilBeam(unsigned pencil) const;
 	uint32	       nrPencilRings() const;
 	double	       pencilRingSize() const;
 
@@ -166,6 +167,11 @@ private:
 
 // @}
 
+inline uint32 Parset::observationID() const
+{
+  return getUint32("Observation.ObsID");
+}
+
 inline double Parset::getTime(const char *name) const
 {
   return to_time_t(boost::date_time::c_local_adjustor<ptime>::utc_to_local(time_from_string(getString(name))));
@@ -181,12 +187,12 @@ inline double Parset::stopTime() const
   return getTime("Observation.stopTime");
 }
 
-inline string Parset::stationName(const int index) const
+inline string Parset::stationName(int index) const
 {
   return getStringVector("OLAP.storageStationNames")[index];
 }
 
-inline string Parset::storageHostName(const string& aKey, const int index) const
+inline string Parset::storageHostName(const string& aKey, int index) const
 {
   return getStringVector(aKey)[getUint32Vector("OLAP.storageNodeList")[index]];
 }

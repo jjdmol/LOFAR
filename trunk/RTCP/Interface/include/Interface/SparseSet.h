@@ -269,18 +269,18 @@ template <typename T> SparseSet<T> &SparseSet<T>::operator /= (size_t shrinkFact
 {
   iterator prev = ranges.end();
 
-  if( shrinkFactor == 1 ) {
+  if (shrinkFactor == 1) {
     /* nothing changes */
     return *this;
   }
 
   for (iterator it = ranges.begin(); it != ranges.end(); it ++) {
-    it->begin = static_cast<T>(floor( static_cast<double>(it->begin) / shrinkFactor ));
-    it->end = static_cast<T>(ceil( static_cast<double>(it->end) / shrinkFactor ));
+    it->begin = static_cast<T>(floor(static_cast<double>(it->begin) / shrinkFactor));
+    it->end = static_cast<T>(ceil(static_cast<double>(it->end) / shrinkFactor));
 
     /* The gap between two ranges might have disappeared. The ranges can
        even overlap due to the differences in rounding. */
-    if( prev != ranges.end() && prev->end >= it->begin ) {
+    if (prev != ranges.end() && prev->end >= it->begin) {
       /* combine tuples */
       it->begin = prev->begin;
 

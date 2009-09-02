@@ -4,7 +4,6 @@
 #include <Interface/SparseSet.h>
 
 #include <map>
-#include <boost/noncopyable.hpp>
 
 #include <pthread.h>
 
@@ -29,7 +28,7 @@ class Arena
 };
 
 
-class MallocedArena : public Arena, boost::noncopyable
+class MallocedArena : public Arena
 {
   public:
 		MallocedArena(size_t size, size_t alignment);
@@ -66,7 +65,7 @@ class HeapAllocator : public Allocator
 extern HeapAllocator heapAllocator;
 
 
-class SparseSetAllocator : public Allocator, boost::noncopyable
+class SparseSetAllocator : public Allocator
 {
   public:
 				SparseSetAllocator(const Arena &);
