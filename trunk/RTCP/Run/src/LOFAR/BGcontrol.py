@@ -115,7 +115,7 @@ def stationInfo( ip ):
   return list(stations)
 
 def packetAnalysis( name, ip, port ):
-  mainAnalysis = backquote( "ssh -tq %s cd %s/..;./packetanalysis %s" % (ip,os.path.abspath(os.path.dirname(__file__)),port) )
+  mainAnalysis = backquote( "ssh -tq %s cd %s/../..;./packetanalysis %s" % (ip,os.path.abspath(os.path.dirname(__file__)),port) )
 
   macaddress = "UNKNOWN"
   tcpdump = backquote("ssh -q %s /opt/lofar/bin/tcpdump -i eth0 -c 10 -e -n udp 2>/dev/null" % (ip,)).split("\n")
