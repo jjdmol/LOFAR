@@ -1,8 +1,118 @@
 #!/usr/bin/env python
 
 from Partitions import PartitionPsets
+import os
+import sys
 
-__all__ = ["Stations"]
+# allow ../util to be found, a bit of a hack
+sys.path += [os.path.dirname(__file__)+"/.."]
+
+from util.Commands import SyncCommand,backquote
+
+__all__ = ["packetAnalysis","stationInPartition","Stations"]
+
+def packetAnalysis( name, ip, port ):
+  # locate packetanalysis binary, since its location differs per usage, mainly because
+  # nobody runs these scripts from an installed environment
+  locations = map( os.path.abspath, [
+    "%s/../packetanalysis"    % os.path.dirname(__file__), # when running straight from a source tree
+    "%s/../../packetanalysis" % os.path.dirname(__file__), # when running in an installed environment
+    "%s/../../build/gnu/src/packetanalysis" % os.path.dirname(__file__), # when running straight from a source tree
+
+    "/cephome/mol/projects/LOFAR/RTCP/Run/src/packetanalysis", # fallback: Jan David's version
+  ] )
+  
+  location = None
+  for l in locations:
+    if os.path.exists( l ):
+      location = l
+      break
+
+  if location is None:
+    return "ERROR: Could not find `packetanalysis' binary"
+
+  mainAnalysis = backquote( "ssh -tq %s %s %s" % (ip,location,port) )
+
+  # do a tcpdump analysis to obtain source mac address
+  """ tcpdump: The following information will be received from stations:
+
+08:30:23.175116 10:fa:00:01:01:01 > 00:14:5e:7d:19:71, ethertype IPv4 (0x0800), length 6974: 10.159.1.2.4347 > 10.170.0.1.4347: UDP, length 6928
+  """
+  tcpdump = backquote("ssh -q %s /opt/lofar/bin/tcpdump -i eth0 -c 10 -e -n udp 2>/dev/null" % (ip,)).split("\n")
+  macaddress = "UNKNOWN"
+  for p in tcpdump:
+    if not p: continue
+
+    try:
+      f = p.split()
+      srcmac = f[1]
+      dstip = f[-4]
+
+      dstip,dstport = dstip[:-1].rsplit(".",1)
+      if dstport != port:
+        continue
+    except ValueError:
+      continue
+
+    macaddress = srcmac
+
+  if macaddress in [
+    "00:12:f2:c3:3a:00", # Effelsberg
+  ]:
+    macline = " OK Source MAC address:  %s (known router)" % (macaddress,)
+  elif macaddress == "UNKNOWN" or not macaddress.startswith("00:22:86:"):
+    macline = "NOK Source MAC address:  %s (no LOFAR station)" % (macaddress,)
+  else:
+    rscs,nr,field = name[0:2],name[2:5],name[5:]
+    nr1,nr2,nr3 = nr
+
+    macnrs = macaddress.split(":")
+    srcnr = "%s%s" % (macnrs[3],macnrs[4])
+
+    if int(nr) == int(srcnr):
+      macline = " OK Source MAC address:  %s" % (macaddress,)
+    else:
+      macline = "NOK Source MAC address:  %s (station %d?)" % (macaddress,int(srcnr))
+    
+  return "%s\n%s" % (macline,mainAnalysis) 
+
+def allInputs( station ):
+  """ Generates a list of name,ip,port tuples for all inputs for a certain station. """
+
+  for name,input,ionode in sum( ([(s.name,i,s.ionode)] for s in station for i in s.inputs), [] ):
+    # skip non-network inputs
+    if input == "null:":
+      continue
+
+    if input.startswith( "file:" ):
+      continue
+
+    # strip tcp:
+    if input.startswith( "tcp:" ):
+      input = input[4:]
+
+    # only process ip:port combinations
+    if ":" in input:
+      ip,port = input.split(":")
+      if ip in ["0.0.0.0","0"]:
+        ip = ionode
+      yield (name,ip,port)
+
+def stationInPartition( station, partition ):
+  """ Returns a list of stations that are not received within the given partition.
+  
+      Returns (True,[]) if the station is received correctly.
+      Returns (False,missingInputs) if some inputs are missing, where missingInputs is a list of (name,ip:port) pairs.
+  """
+
+  notfound = []
+
+  for name,ip,port in allInputs( station ):  
+    if ip not in PartitionPsets[partition]:
+      notfound.append( (name,"%s:%s" % (ip,port)) )
+    
+  return (not notfound, notfound)	
+
 
 class UnknownStationError(StandardError):
     pass
@@ -155,32 +265,44 @@ if __name__ == "__main__":
   import sys
 
   # parse the command line
-  parser = OptionParser()
-  parser.add_option( "-l", "--list",
-  			dest = "list",
+  parser = OptionParser( "usage: %prog [options] station" )
+  parser.add_option( "-i", "--inputs",
+  			dest = "inputs",
 			action = "store_true",
 			default = False,
-  			help = "list all known stations" )
-  parser.add_option( "-S", "--station",
-  			dest = "station",
-			action = "store",
-			type = "string",
-  			help = "list the inputs of a certain station" )
+  			help = "list the inputs for the station" )
+  parser.add_option( "-c", "--check",
+  			dest = "check",
+			action = "store_true",
+			default = False,
+  			help = "check whether the station provide correct data" )
 
   # parse arguments
   (options, args) = parser.parse_args()
+  errorOccurred = False
 
-  if not options.list and not options.station:
+  if not args:
     parser.print_help()
     sys.exit(0)
 
-  # print a list of all known stations
-  if options.list:
-    for name in sorted(Stations.keys()):
-      print name
+  for stationName in args:
+    # print the inputs of a single station
+    if options.inputs:
+      for s in Stations[stationName]:
+        print "Station:     %s" % (s.name,)
+        print "IONode:      %s" % (s.ionode,)
+        print "Inputs:      %s" % (" ".join(s.inputs),)
 
-  # print the inputs of a single station
-  if options.station:
-    for s in Stations[options.station]:
-      print s.name,s.ionode," ".join(s.inputs)
+    # check stations if requested so
+    if options.check:
+      if stationName not in Stations:
+        # unknown station
+        errorOccurred = True
+        print "NOK Station name unknown: %s" % (stationName,)
+        continue
 
+      for name,ip,port in allInputs( Stations[stationName] ):
+        print "---- Packet analysis for %s %s:%s" % (name,ip,port)
+        print packetAnalysis( name, ip, port )
+
+  sys.exit(int(errorOccurred))
