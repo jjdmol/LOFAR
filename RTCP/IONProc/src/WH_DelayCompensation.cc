@@ -36,7 +36,10 @@
 #include <Common/LofarLogger.h>
 #include <Common/PrettyUnits.h>
 #include <Interface/Exceptions.h>
+#include <Interface/Mutex.h>
 #include <Interface/PencilCoordinates.h>
+
+#include <pthread.h>
 
 namespace LOFAR 
 {
@@ -144,7 +147,15 @@ namespace LOFAR
         // for itsPhaseCentres[0], the second for itsPhaseCentres[1],
         // etc.
         ResultData result;
-        converter->j2000ToItrf(result, request); // expensive
+
+        // casacore is not thread-safe
+        static Mutex mutex;
+
+        {
+          Mutex::ScopeLock sl(mutex);
+
+          converter->j2000ToItrf(result, request); // expensive
+        }
 
         ASSERTSTR(result.direction.size() == itsNrCalcDelays * itsNrBeams * itsNrPencilBeams,
 	  	  result.direction.size() << " == " << itsNrCalcDelays * itsNrBeams * itsNrPencilBeams );
