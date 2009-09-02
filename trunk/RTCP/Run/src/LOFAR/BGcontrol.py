@@ -10,15 +10,12 @@ sys.path += [os.path.dirname(__file__)+"/.."]
 
 from util.Commands import SyncCommand,backquote
 
-__all__ = ["owner","runningJob","stationInfo","allStationInfo","receivingStation","stationInPartition","killJobs","freePartition","allocatePartition"]
+__all__ = ["owner","runningJob","packetAnalysis","stationInPartition","killJobs","freePartition","allocatePartition"]
 
 """
   Reports about the status of the BlueGene. An interface to the bg* scripts, and to check
   what data is being received on the BlueGene from the stations.
 """
-
-# Default partition to query
-PARTITION = "R00"
 
 # Locations of the bg* scripts
 BGBUSY = "/usr/local/bin/bgbusy"
@@ -60,65 +57,35 @@ def runningJob( partition ):
   # partition is not allocated or has no job running
   return None
 
-def stationInfo( ip ):
-  """ Returns information about station data received on a pset (which is an IP address).
-  
-      Returns a list of tuples (name, boardnr, ip:port, #beamlets, #samples). """ 
+def packetAnalysis( name, ip, port ):
+  # locate packetanalysis binary, since its location differs per usage, mainly because
+  # nobody runs these scripts from an installed environment
+  locations = map( os.path.abspath, [
+    "%s/../packetanalysis"    % os.path.dirname(__file__), # when running straight from a source tree
+    "%s/../../packetanalysis" % os.path.dirname(__file__), # when running in an installed environment
+    "%s/../../build/gnu/src/packetanalysis" % os.path.dirname(__file__), # when running straight from a source tree
 
-  """ The following information will be received from stations:
+    "/cephome/mol/projects/LOFAR/RTCP/Run/src/packetanalysis", # fallback: Jan David's version
+  ] )
+  
+  location = None
+  for l in locations:
+    if os.path.exists( l ):
+      location = l
+      break
+
+  if location is None:
+    return "ERROR: Could not find `packetanalysis' binary"
+
+  mainAnalysis = backquote( "ssh -tq %s %s %s" % (ip,location,port) )
+
+  # do a tcpdump analysis to obtain source mac address
+  """ tcpdump: The following information will be received from stations:
 
 08:30:23.175116 10:fa:00:01:01:01 > 00:14:5e:7d:19:71, ethertype IPv4 (0x0800), length 6974: 10.159.1.2.4347 > 10.170.0.1.4347: UDP, length 6928
-	0x0000:  4600 1b30 0000 4000 8011 c871 0a9f 0102  F..0..@....q....
-	0x0010:  0aaa 0001 0000 0000 10fb 10fb 1b18 0000  ................
-	0x0020:  0201 aabb 2100 3610 9f1c 114a 4468 0000  ....!.6....JDh..
-	                        ^^^^ #beamlets, #times
   """
-  cmd = "ssh -tq %s /opt/lofar/bin/tcpdump -i eth0 -c 10 -X -s 62 -e -n 2>/dev/null" % (ip,)
-  tcpdump = os.popen( cmd, "r" ).readlines()
-
-  # split into packets, lines starting with a tab belong to the previous header
-  packets = []
-  for l in tcpdump:
-    if packets and l.startswith("\t"):
-      # content line
-      packets[-1].append( l )
-    else:
-      # header
-      packets.append( [l] ) 
-
-  # analyse packets
-  stations = set()
-  for p in packets:
-    # analyse header
-    try:
-      _,srcmac,_,dstmac,_,_,_,_,_,srcip,_,dstip,prot,_,length = p[0].split()
-    except ValueError:
-      continue
-
-    fromstation = srcmac.startswith("10:fa:00:")
-    _,_,_,stationnr,boardnr,_ = map( lambda x: int(x,16), srcmac.split(":") )
-    dstip,dstport = dstip[:-1].rsplit(".",1)
-
-    if not fromstation:
-      continue
-
-    # analyse content
-    thirdhexline = p[3].split()[1:9]
-    beamlets     = int(thirdhexline[3][0:2],16)
-    nrsamples    = int(thirdhexline[3][2:4],16)
-
-    station      = ("CS%03d" % (stationnr,), boardnr, "%s:%s" % (dstip, dstport), beamlets, nrsamples)
-
-    stations.add( station )
-
-  # return all stations found
-  return list(stations)
-
-def packetAnalysis( name, ip, port ):
-  mainAnalysis = backquote( "ssh -tq %s cd %s/../..;./packetanalysis %s" % (ip,os.path.abspath(os.path.dirname(__file__)),port) )
-
-  macaddress = "UNKNOWN"
   tcpdump = backquote("ssh -q %s /opt/lofar/bin/tcpdump -i eth0 -c 10 -e -n udp 2>/dev/null" % (ip,)).split("\n")
+  macaddress = "UNKNOWN"
   for p in tcpdump:
     if not p: continue
 
@@ -135,7 +102,9 @@ def packetAnalysis( name, ip, port ):
 
     macaddress = srcmac
 
-  if macaddress in ["00:12:f2:c3:3a:00"]:
+  if macaddress in [
+    "00:12:f2:c3:3a:00", # Effelsberg
+  ]:
     macline = " OK Source MAC address:  %s (known router)" % (macaddress,)
   elif macaddress == "UNKNOWN" or not macaddress.startswith("00:22:86:"):
     macline = "NOK Source MAC address:  %s (no LOFAR station)" % (macaddress,)
@@ -152,13 +121,6 @@ def packetAnalysis( name, ip, port ):
       macline = "NOK Source MAC address:  %s (station %d?)" % (macaddress,int(srcnr))
     
   return "%s\n%s" % (macline,mainAnalysis) 
-
-def allStationInfo( partition ):
-  """ Returns information about all stations sending data to this partition. """
- 
-  stations = sum( (stationInfo(pset) for pset in PartitionPsets[partition]), [] )
-
-  return sorted(stations)
 
 def allInputs( station ):
   """ Generates a list of name,ip,port tuples for all inputs for a certain station. """
@@ -181,34 +143,6 @@ def allInputs( station ):
       if ip in ["0.0.0.0","0"]:
         ip = ionode
       yield (name,ip,port)
-
-def receivingStation( station ):
-  """ Returns whether we are receiving a station correctly.
-  
-      Returns (True,[]) if the station is received correctly.
-      Returns (False,missingInputs) if some inputs are missing, where missingInputs is a list of (name,ip:port) pairs.
-  """
-
-  # cache info per pset
-  infocache = {}
-
-  # accumulate inputs we cannot find
-  notfound = []
-
-  for name,ip,port in allInputs( station ):
-    if ip not in infocache:
-      infocache[ip] = stationInfo( ip )
-    info = infocache[ip]  
-
-    input = "%s:%s" % (ip,port)
-
-    for _,_,dest,_,_ in info:
-      if dest == input:
-        break
-    else:
-      notfound.append( (name,input) )
-
-  return (not notfound, notfound)	
 
 def stationInPartition( station, partition ):
   """ Returns a list of stations that are not received within the given partition.
@@ -246,7 +180,12 @@ if __name__ == "__main__":
     return ["NOK","OK"][int(bool(q))]
 
   # parse the command line
-  parser = OptionParser()
+  parser = OptionParser( """usage: %prog [options]
+
+  Typical invocations:
+    %prog -c   -S CS302LBA               Checks input from station CS302LBA
+    %prog -kfa -P R00                    Kills jobs, frees and allocates partition R00
+  """)
   parser.add_option( "-q", "--quiet",
   			dest = "quiet",
 			action = "store_true",
