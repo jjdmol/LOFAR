@@ -14,7 +14,7 @@
 # libcs1_run_la_LIBADD     = shmem/libshmem.la
 # endif
 
-bin_PROGRAMS =
+bin_PROGRAMS = packetanalysis
 
 # Lines to build a program prg
 #prg_SOURCES		= prg.cc
@@ -23,6 +23,8 @@ bin_PROGRAMS =
 
 glishdir = $(libexecdir)/glish
 dist_glish_SCRIPTS = 
+
+packetanalysis_SOURCES = packetanalysis.c
 
 pythondir = $(bindir)/Run
 dist_python_SCRIPTS = 	\
