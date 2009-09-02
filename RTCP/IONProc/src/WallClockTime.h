@@ -50,7 +50,7 @@ class WallClockTime
 inline WallClockTime::WallClockTime()
 {
   pthread_mutex_init(&itsMutex, 0);
-  pthread_mutex_lock(&itsMutex); // always locked (except during pthread_cond_init)
+  pthread_mutex_lock(&itsMutex); // always locked (except during pthread_cond_timedwait)
   pthread_cond_init(&itsCondition, 0);
 }
 

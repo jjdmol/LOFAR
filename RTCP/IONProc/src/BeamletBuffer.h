@@ -34,14 +34,13 @@
 #include <Common/Timer.h>
 #include <Interface/Config.h>
 #include <Interface/MultiDimArray.h>
+#include <Interface/Mutex.h>
 #include <Interface/Parset.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SparseSet.h>
 #include <LockedRanges.h>
 #include <ReaderWriterSynchronization.h>
 #include <Stream/Stream.h>
-
-#include <pthread.h>
 
 
 namespace LOFAR {
@@ -72,7 +71,7 @@ template<typename SAMPLE_TYPE> class BeamletBuffer
   private:
     unsigned mapTime2Index(TimeStamp time) const;
 
-    pthread_mutex_t			  itsValidDataMutex;
+    Mutex				  itsValidDataMutex;
     SparseSet<TimeStamp>		  itsValidData;
     unsigned				  itsNrSubbands;
     size_t				  itsPacketSize;
@@ -88,6 +87,7 @@ template<typename SAMPLE_TYPE> class BeamletBuffer
     std::vector<size_t>			  itsStartI, itsEndI;
     size_t                                itsMinStartI, itsMaxEndI;
     TimeStamp                             itsMinEnd;
+    Mutex				  itsReadMutex;
 
     // write internals
     void				  writePacket(SAMPLE_TYPE *dst, const SAMPLE_TYPE *src);

@@ -82,6 +82,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     Matrix<AMC::Direction>	 itsBeamDirectionsAtBegin;
     Matrix<AMC::Direction>	 itsBeamDirectionsAfterEnd;
     unsigned			 itsNrOutputPsets;
+    unsigned			 itsObservationID;
     
     unsigned			 itsMaxNetworkDelay; // in samples
     unsigned                     itsNrSubbands;
