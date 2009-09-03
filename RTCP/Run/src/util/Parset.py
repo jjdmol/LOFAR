@@ -1,203 +1,207 @@
-import os
-import time
-import string
-import copy
-import scanf
 from Hosts import ropen
+import shlex
 
-class switch(object):
-    def __init__(self, value):
-        self.value = value
-        self.fall = False
+class Parset(dict):
+    def __init__(self, defaults = dict() ):
+      self.update ( defaults.copy() )
 
-    def __iter__(self):
-        """Return the match method once, then stop"""
-        yield self.match
-        raise StopIteration
-    
-    def match(self, *args):
-        """Indicate whether or not to enter a case suite"""
-        if self.fall or not args:
-            return True
-        elif self.value in args: # changed for v1.5, see below
-            self.fall = True
-            return True
+    def readFile(self, filename):
+      """ Read a parset to disk, and merge it with the current settings. """
+
+      f = ropen( filename, "r" )
+
+      lexer = shlex.shlex( f, filename )
+      basic_wordchars = lexer.wordchars + ".:+-!@$%^&*/{}"
+      key_wordchars   = basic_wordchars + "[]()"
+      value_wordchars = basic_wordchars + "="
+      token = lexer.get_token
+
+      errormsg = lambda t: "%s%s"% (lexer.error_leader(),t)
+
+      def peek():
+        t = token()
+        if not t: return t
+
+        lexer.push_token(t)
+        return t
+
+      lexer.wordchars = key_wordchars
+      for t in lexer:
+        # read a KEY = VALUE pair
+        key = t
+        assert token() == "=",errormsg(t)
+
+        # read the value
+        lexer.wordchars = value_wordchars
+        t = token()
+        if t == "[":
+          # read array
+          value = []
+
+          if peek() != "]":
+            # non-empty array
+
+            def expand(s):
+              # expand a value s if needed
+
+              # 2*xxx = [xxx,xxx]
+              if "*" in s:
+                num,s = s.split("*")
+                return [s] * int(num)
+
+              # 1..3 = [1,2,3]
+              if ".." in s:  
+                a,b = s.split("..")
+                return range(int(a),int(b)+1)
+
+              # a single value
+              return [s] 
+
+            # accumulate tokens as a single value,
+            # and keep track of [] and () pairs as
+            # part of a value
+            cur = ""
+            parentheses, brackets = 0, 0
+            for t in lexer:
+              if t == "(":
+                parentheses += 1
+              elif t == ")":
+                assert parentheses > 0, errormsg("unmatched parentheses")
+                parentheses -= 1
+              if t == "[":
+                assert parentheses == 0, errormsg("cannot put brackets inside parentheses")
+                brackets += 1
+              elif t == "]":
+                if not brackets:
+                  # end of array
+                  value.extend(expand(cur))
+                  break
+
+                brackets -= 1
+              elif t == ",":
+                if not brackets and not parentheses:
+                  value.extend(expand(cur))
+                  cur = ""
+                  continue
+
+              cur += t
+            else:
+              assert False,errormsg("unterminated array")
+
         else:
-            return False
+          # t was no array
+          value = t
 
-class Parset(switch):
+        # store the key,value pair
+        self[key] = value
 
-    def __init__(self, defaults = dict()):
-        self.parameters = defaults.copy()
+        lexer.wordchars = key_wordchars
 
-    def readFromFile(self, fileName):
-        lastline = ''
-        for line in ropen(fileName, 'r').readlines():
-            lastline = lastline + line.split('#')[0]
-            lastline = lastline.rstrip()
-            if len(lastline) > 0 and lastline[-1] == '\\':
-                lastline = lastline[:-1]
-            elif '=' in lastline:
-                key, value = lastline.split('=')
-                self.parameters[key.strip()] = value.strip()
-                lastline = ''
+    def writeFile(self, filename):
+      """ Write the parset to disk. """
 
-    def find_first_of(self, key):
-	digit = False
-	for dig in range(0,10):
-	    if (key[0] == str(dig)):
-	        digit = True
-	        break;
-	if not digit:
-	        print key + ' is not an digit'
-		sys.exit(0)
-	
-    def stripBraces(self, orgStr):
-        baseString = copy.deepcopy(orgStr)
-        baseString = baseString.strip('[').rstrip(']')
-	return baseString
+      outf = ropen(filename, 'w')
 
-    def findRangeElement(self, orgStr):
-        if orgStr.find('(') != -1 : return "("
-	if orgStr.find('*') != -1 : return "*"
-	if orgStr.find('..') != -1 : return ".."
-        return orgStr   
-    
-    def expandedArray(self, orgStr):
- 	if orgStr.find('..') == -1 and orgStr.find('*') == -1:
-	    return orgStr    #no, just return original
+      def isint( x ):
+        try:
+          float(x)
+        except ValueError:
+          return False
 
-        baseString = self.stripBraces(orgStr)
-        # and split into a vector
-        strVector = string.split(baseString, ',')
-        # note: we assume that the format of each element is [xxxx]9999
-        self.find_first_of(strVector[0]) 
-        # construct scanmask and outputmask.
-	scanMask = "%05d"
-	outMask = '%01ld'
-        
-	# handle all elements
-	result = '['
-	nrElems = len(strVector);
-	for idx in range(0, nrElems):
-	    firstVal = scanf.sscanf(strVector[idx],scanMask)[0]
- 	    for case in switch(self.findRangeElement(strVector[idx])):
-                if case('('):
-		    rangePos = strVector[idx].find('(')
-		    grpStr = strVector[idx][rangePos+1:len(strVector[idx])-1]
-		    grpStr = grpStr.replace(";", ",")
-                    break
-                if case('*'):
-		    rangePos = strVector[idx].find('*')
-		    lastVal = strVector[idx][rangePos+1:len(strVector[idx])]
-                    break
-                if case('..'):
-		    rangePos = strVector[idx].find('..')
-		    lastVal = strVector[idx][rangePos+2:len(strVector[idx])]
-		    
-		    # check range
-		    if lastVal < firstVal:
-		        print 'Illegal range specified in ' + strVector[idx] + '. Returning orignal string'
-	                return orgStr
-                    break
-                if case():
-		    lastVal = firstVal;
-                    # No need to break here, it'll stop anyway	    
-	    
-	    # finally construct one or more elements
-	    firstElem  = True
-	    for case in switch(self.findRangeElement(strVector[idx])):
-                if case('('):
-		    for val in range(0, int(firstVal)):
-			if firstElem:
-			    eStr = self.stripBraces(self.expandedArray(grpStr))
-			    result += eStr
-		            firstElem = False
-		        else:
-		            result += ',' + eStr
-  		    break
-                if case('*'):
-		    for val in range(0, int(firstVal)):
-			if firstElem:
-			    result += str(lastVal)
-			    firstElem = False
-		        else:
-		            result += ',' + str(lastVal) 
- 		    break
-                if case('..'):
-		    tmp = False
-                if case():
-		    for val in range(int(firstVal), int(lastVal)+1):
-			if firstElem:
-			    result += str(val)
-		            firstElem = False
-		        else:
-		            result += ',' + str(val)
-	    if idx != len(strVector)-1:
-	        result += ','		    
-	result += ']'
-	return result
-	
-    def writeToFile(self, fileName):
-        outf = ropen(fileName, 'w')
-        for key, value in sorted(self.parameters.iteritems()):
-            outf.write(key + ' = ' + str(value) + '\n')
-        outf.close()
+        return True
 
-    def getString(self, key):
-        return self.parameters[key]
+      def compress( v ):
+        """ Compress a value v: if v is an array, try using ... or * to shorten ranges. """
 
-    def getInt32(self, key):
-        return int(self.parameters[key])
+        def strfy( x ):
+          if isint( x ):
+            return str(x)
+          elif reduce( lambda x,y: x or y, map( lambda y: y in x, """ []'",""" ), False ):
+            # if some characters given are present, quote the string
+            if "'" not in x:
+              return "'%s'" % (str(x))
+            elif '"' not in x:
+              return '"%s"' % (str(x))
+            else:
+              # both single and double quotes: use single quotes and escape
+              # existing single quotes with '"'"'.
+              return "'%s'" % (str.replace( "'", """'"'"'""", str(x) ))
+          else:
+            return str(x)
 
-    def getFloat(self, key):
-        return float(self.parameters[key])
+        if type(v) != list:
+          # can only compress lists
+          return strfy(v)
 
-    def getStringVector(self, key):
-        line = str(self.parameters[key])
-	if line == '[]' : return []
-	line = string.replace(line,'\'','')
-        line = line.strip('[').rstrip(']')
-	line = string.replace(line,' ','')
-        return line.split(',')
+        if len(v) < 3:
+          # length 0, 1 or 2 is not worth analysing
+          return "[%s]" % (",".join(map( strfy, v )),)
 
-    def getExpandedInt32Vector(self, key):
-        ln = self.expandedArray(str(self.parameters[key]))
-	if ln == '[]' : return []
-	ln = ln.strip('[').rstrip(']')
-	return [int(lp) for lp in ln.split(',')]
-	
-    def getInt32Vector(self, key):
-        ln = str(self.parameters[key])
-	if ln == '[]' : return []
-	ln = ln.strip('[').rstrip(']')
-  	ln = string.replace(ln,' ','')
-        return [int(lp) for lp in ln.split(',')]
-	
-    def getFloatVector(self, key):
-        line = self.parameters[key]
-	if line == '[]' : return []
-        line.strip('[').strip(']')
-        return [float(lp) for lp in line.split(',')]
+        i = 0
+        dst = []
+        while i < len(v):
+          # make sure each value is processed only once
+          written = False
 
-    def getBool(self, key):
-        return self.parameters[key] == 'T'
-   
-    def isDefined(self, key):
-        return key in self.parameters
+          # compress equal values
+          for j in xrange(i,len(v)+1):
+            if j == len(v) or str(v[j]) != str(v[i]):
+              if j-i-1 > 1:
+                dst.append( "%s * %s" % (j-i,strfy(v[i])) )
+                i = j
+                written = True
+              break
+          
+          if written:
+            continue
 
-    def __contains__(self, key):
-        return key in self.parameters
-        
-    def __setitem__(self, key, value):
-        self.parameters[key] = value
+          # compress ranges
+          for j in xrange(i,len(v)+1):
+            if j == len(v) or not isint(v[j]) or float(v[j]) != float(v[i])+j-i:
+              if j-i-1 > 2:
+                dst.append( "%s .. %s" % (str(v[i]),str(v[i]+j-i-1) ) )
+                i = j
+                written = True
+              break
 
-    def __getitem__(self, key):
-        return self.parameters[key]
+          if written:
+            continue
+
+          dst.append( strfy(v[i]) )
+          i += 1
+
+        return "[%s]" % (",".join(dst),)
+
+      # construct strings from key,value pairs
+      lines = ["%s = %s" % (str(k),compress(v)) for k,v in self.iteritems()]
+
+      # sort them for easy lookup
+      lines.sort()
+
+      # write them to file
+      outf.write( "\n".join( lines ) )
 
     def __delitem__(self, key):
-        # avoid KeyErrors
-        if key in self: del self.parameters[key]
+      # avoid KeyErrors
+      if key in self: del self[key]
 
-    def setdefault(self, key, value):
-        self.parameters.setdefault(key,value)	
+    def getBool(self, key):
+      return self[key] in ["T","t","1","Y","y",1,True]
+
+    def getString(self, key):
+      return str(self[key])
+
+    def getInt32(self, key):
+      return int(self[key])
+
+    def getFloat(self, key):
+      return float(self[key])
+
+    def getStringVector(self, key):
+      return map(str,self[key])
+
+    def getInt32Vector(self, key):
+      return map(int,self[key])
+
+    def getFloatVector(self, key):
+      return map(float,self[key])

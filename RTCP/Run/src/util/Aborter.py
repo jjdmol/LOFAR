@@ -22,6 +22,7 @@ class Aborter:
   def sigHandler( self, signum, frame ):
     """ Our custom alarm handler. """
 
+    raise KeyboardInterrupt
     self.alarmraised = True
 
   def resetAlarm( self ):
