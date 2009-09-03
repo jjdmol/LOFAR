@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from LOFAR import Logger
-from LOFAR import ObservationID
+from LOFAR.ObservationID import ObservationID
 from LOFAR.Logger import debug,info,warning,error,fatal
 from LOFAR import Sections
 from LOFAR.Parset import Parset
@@ -35,10 +35,10 @@ def runObservations( parsets, partition, start_cnproc = True, start_ionproc = Tr
   # ----- Select the sections to start
   sections = Sections.SectionSet()
 
-  if start_cnproc:
-    sections += [Sections.CNProcSection( parsets, partition )]
   if start_ionproc:
     sections += [Sections.IONProcSection( parsets, partition )]
+  if start_cnproc:
+    sections += [Sections.CNProcSection( parsets, partition )]
   if start_storage:
     sections += [Sections.StorageSection( parsets, partition )]
 
@@ -227,17 +227,7 @@ if __name__ == "__main__":
   # set log server
   Locations.nodes["logserver"] = options.logserver
 
-  # reserve an observation id
-  try:
-    obsid = ObservationID.ObservationID.generateID()
-  except IOError,e:
-    print_exception("Could not generate observation ID: %s" % (e,))
-    sys.exit(1)  
-
-  info( "Observation ID %s" % (obsid,) )
-
   # ========== Observations
-
   parsets = []
   for obsIndex,obs in enumerate(args):
     info( "===== Parsing observation %s: %s =====" % (obsIndex,obs,) )
@@ -263,13 +253,23 @@ if __name__ == "__main__":
     # read the parset file
     def addParset( f ):
       info( "Reading parset %s..." % (f,) )
-      parset.readFromFile( Locations.resolvePath( f ) )
+      parset.readFile( Locations.resolvePath( f ) )
 
     try:
       addParset( options.olapparset )
       addParset( obsparams["parset"] )  
     except IOError,e:
       fatal("ERROR: Cannot read parset file: %s" % (e,))
+
+    # reserve an observation id
+    try:
+      obsid = ObservationID.ObservationID.generateID()
+    except IOError,e:
+      print_exception("Could not generate observation ID: %s" % (e,))
+      sys.exit(1)  
+
+    info( "Observation ID %s" % (obsid,) )
+    parset.setObsID( obsid )
 
     # override parset with command-line values
     if options.partition is None:
@@ -282,8 +282,6 @@ if __name__ == "__main__":
     elif parset.distillPartition() not in ["",options.partition]:
       # make sure all parsets use the same partition
       fatal( "Parset selects partition %s, but partition %s was already selected." % (parset.distillPartition(),options.partition) )
-
-    parset.setObsID( obsid )
     parset.setPartition( options.partition )
     parset.setStorageNodes( Locations.nodes["storage"] )
 
@@ -404,7 +402,7 @@ if __name__ == "__main__":
 
     if not DRYRUN:
       parset.save()
-      parset.writeToFile( "%s/RTCP.parset.%s" % (Locations.files["logdir"],obsIndex) )
+      parset.writeFile( "%s/RTCP.parset.%s" % (Locations.files["logdir"],obsIndex) )
 
   # ========== Run
   info( "========== Run ==========" )

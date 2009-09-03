@@ -25,7 +25,6 @@ class Section:
 
     self.partition = partition
     self.psets     = Partitions.PartitionPsets[self.partition]
-    self.obsid     = ObservationID.ObservationID.generateID()
 
     self.preProcess()
 
@@ -169,7 +168,7 @@ class IONProcSection(Section):
     # ping
 
     pingcmds = [
-      (node,AsyncCommand( "ping %s -c 1 -w 2 -q" % (node,), ["/dev/null"] ))
+      (node,AsyncCommand( "ping %s -c 1 -w 2 -tq" % (node,), ["/dev/null"] ))
       for node in self.psets
     ]
 
@@ -204,13 +203,13 @@ class StorageSection(Section):
     # the PID of mpirun
     self.pidfile = "%s/Storage-%s.pid" % (Locations.files["rundir"],self.partition)
 
-    # unique identifier to locate the mpi processes
-    self.universe = "OLAP-%s" % (self.obsid,)
+    # unique identifier to locate the mpi processes, first obsid will do
+    self.universe = "OLAP-%s" % (self.parsets[0].getObsID(),)
 
     # create the target directories
-    for n in Locations.nodes["storage"]:
-      # use the first parset for the mask
-      self.commands.append( SyncCommand( "ssh -q %s mkdir %s" % (n,os.path.dirname(self.parsets[0].parseMask()),), logfiles ) )
+    for p in self.parsets:
+      for n in Locations.nodes["storage"]:
+        self.commands.append( SyncCommand( "ssh -tq %s mkdir %s" % (n,os.path.dirname(p.parseMask()),), logfiles ) )
 
     # Storage is started on LIIFEN, which has mpirun (Open MPI) 1.1.1
     mpiparams = [
@@ -235,12 +234,12 @@ class StorageSection(Section):
       "%s" % (" ".join([p.getFilename() for p in self.parsets]), ),
     ]
 
-    self.commands.append( AsyncCommand( "ssh -q %s echo $$ > %s;exec mpirun %s" % (Locations.nodes["storagemaster"],self.pidfile," ".join(mpiparams),), logfiles ) )
+    self.commands.append( AsyncCommand( "ssh -tq %s echo $$ > %s;exec mpirun %s" % (Locations.nodes["storagemaster"],self.pidfile," ".join(mpiparams),), logfiles ) )
 
   def abort( self, timeout ):
     # kill mpirun using the pid we stored locally
     def kill( signal ):
-      SyncCommand( "ssh -q %s kill -%s `cat %s`" % (Locations.nodes["storagemaster"],signal,self.pidfile) )
+      SyncCommand( "ssh -tq %s kill -%s `cat %s`" % (Locations.nodes["storagemaster"],signal,self.pidfile) )
 
     self.killSequence( "mpirun process on %s" % (Locations.nodes["storagemaster"],), kill, timeout )
 
@@ -249,11 +248,11 @@ class StorageSection(Section):
       def kill( signal ):
         # We kill the process group rooted at the orted process
         # (kill -PID) belonging to our MPI universe. This should take Storage with it.
-        SyncCommand( "ssh -q %s ps --no-heading -o pid,cmd -ww -C orted | grep %s | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
+        SyncCommand( "ssh -tq %s ps --no-heading -o pid,cmd -ww -C orted | grep %s | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
           node, self.universe, signal) )
 
         # Sometimes it does not though, so send Storage (identified by parset file on command line, which is unique) the same signal
-        SyncCommand( "ssh -q %s ps --no-heading -o pid,cmd -ww -C Storage | grep '%s' | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
+        SyncCommand( "ssh -tq %s ps --no-heading -o pid,cmd -ww -C Storage | grep '%s' | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
           node, Locations.files["parset"], signal) )
 
       self.killSequence( "orted/Storage processes on %s" % (node,), kill, timeout )
@@ -271,3 +270,4 @@ class StorageSection(Section):
       cannotOpen = [p for p in neededPorts if p in usedPorts]
 
       assert cannotOpen == [], "Storage: Cannot open ports %s on node %s." % (",".join(sorted(map(str,cannotOpen))), node)
+

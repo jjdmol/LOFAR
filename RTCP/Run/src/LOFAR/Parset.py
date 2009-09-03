@@ -27,7 +27,7 @@ class Parset(util.Parset.Parset):
        return self.filename
 
     def save(self):
-       self.writeToFile( self.filename )
+       self.writeFile( self.filename )
 
     def distillStations(self):
         """ Distill station names to use from the parset file and return them. """
@@ -80,14 +80,14 @@ class Parset(util.Parset.Parset):
         self.setdefault('OLAP.OLAP_Conn.IONProc_CNProc_Transport','FCNP');
 
 	# subband configuration
-	if self.isDefined("Observation.subbandList"):
-	  nrSubbands = len(self.getExpandedInt32Vector("Observation.subbandList"))
+	if "Observation.subbandList" in self:
+	  nrSubbands = len(self.getInt32Vector("Observation.subbandList"))
 	else:  
 	  index = 0
 	  subbands = Set()
 
-	  while self.isDefined("Observation.Beam[%s].subbandList" % (index,)):
-	    subbandList = self.getExpandedInt32Vector("Observation.Beam[%s].subbandList" % (index,))
+	  while "Observation.Beam[%s].subbandList" % (index,) in self:
+	    subbandList = self.getInt32Vector("Observation.Beam[%s].subbandList" % (index,))
 	    subbands.update( subbandList )
 
 	    index += 1
@@ -144,7 +144,7 @@ class Parset(util.Parset.Parset):
 	beamFormedStations = []
 	index = 0
 	
-	while self.isDefined('Observation.Beamformer[%s].stationList' % (index,)):
+	while 'Observation.Beamformer[%s].stationList' % (index,) in self:
 	    curlist = self.getString('Observation.Beamformer[%s].stationList' % (index,))
 
             # remove any initial or trailing "
@@ -205,7 +205,7 @@ class Parset(util.Parset.Parset):
         # resolve host names, as OLAP needs IP addresses
 	self.storagenodes = map(socket.gethostbyname, storagenodes)
 
-        self["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"] = "[%s]" % (",".join(self.storagenodes),)
+        self["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"] = self.storagenodes
 
     def setObsID(self,obsid):
         self["Observation.ObsID"] = obsid	
@@ -278,9 +278,9 @@ class Parset(util.Parset.Parset):
     def getStoragePorts( self ):
       """ Returns a dictionary of the ports (value) required by each storage node (key). """
 
-      globalPorts = self.getExpandedInt32Vector("OLAP.OLAP_Conn.IONProc_Storage_Ports")
+      globalPorts = self.getInt32Vector("OLAP.OLAP_Conn.IONProc_Storage_Ports")
       storageNodes = self.getStringVector("OLAP.OLAP_Conn.IONProc_Storage_ServerHosts")
-      subbandMapping = self.getExpandedInt32Vector("OLAP.storageNodeList")
+      subbandMapping = self.getInt32Vector("OLAP.storageNodeList")
 
       localPorts = {}
 
