@@ -40,5 +40,3 @@ class ObservationID:
     self.obsid = obsid
 
     return self.obsid
-
-ObservationID = ObservationID()
