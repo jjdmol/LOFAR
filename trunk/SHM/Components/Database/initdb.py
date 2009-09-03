@@ -4,9 +4,16 @@ def setup_db_queries():
 
     # Add "System Classes"
 
-    yield "INSERT INTO Systems.SystemClasses(sc_id, sc_name, sc_description) VALUES (1, 'CEP'     , 'Central Processing Facilities');"
-    yield "INSERT INTO Systems.SystemClasses(sc_id, sc_name, sc_description) VALUES (2, 'WAN'     , 'Wide Area Network');"
+    
+    # CEP and WAN not needed right now.
+    #yield "INSERT INTO Systems.SystemClasses(sc_id, sc_name, sc_description) VALUES (1, 'CEP'     , 'Central Processing Facilities');"
+    #yield "INSERT INTO Systems.SystemClasses(sc_id, sc_name, sc_description) VALUES (2, 'WAN'     , 'Wide Area Network');"
+
     yield "INSERT INTO Systems.SystemClasses(sc_id, sc_name, sc_description) VALUES (3, 'STATION' , 'Station');"
+
+    # Below here all INSERTS are commented out; we like to start with an empty
+    # database and add stations as they become available.
+    # The Observations database will not be used at all.
 
     # Add "Central Processing Facilities"
 
@@ -15,7 +22,7 @@ def setup_db_queries():
         si_name = "CEP"
         si_description = "Central Processing Facilities"
 
-        yield "INSERT INTO Systems.SystemInstances(si_id, si_name, si_description, sc_id) SELECT %(si_id)d, '%(si_name)s', '%(si_description)s', sc_id FROM Systems.SystemClasses WHERE sc_name = 'CEP';" % vars()
+        #yield "INSERT INTO Systems.SystemInstances(si_id, si_name, si_description, sc_id) SELECT %(si_id)d, '%(si_name)s', '%(si_description)s', sc_id FROM Systems.SystemClasses WHERE sc_name = 'CEP';" % vars()
 
     # Add "Wide Area Network"
 
@@ -24,7 +31,7 @@ def setup_db_queries():
         si_name = "WAN"
         si_description = "Wide Area Network"
 
-        yield "INSERT INTO Systems.SystemInstances(si_id, si_name, si_description, sc_id) SELECT %(si_id)d, '%(si_name)s', '%(si_description)s', sc_id FROM Systems.SystemClasses WHERE sc_name = 'WAN';" % vars()
+        #yield "INSERT INTO Systems.SystemInstances(si_id, si_name, si_description, sc_id) SELECT %(si_id)d, '%(si_name)s', '%(si_description)s', sc_id FROM Systems.SystemClasses WHERE sc_name = 'WAN';" % vars()
 
     # Add "Test Station" systems
 
@@ -35,7 +42,7 @@ def setup_db_queries():
         si_name = "FTS-%d" % fts_id
         si_description = "First Test Station %d" % fts_id
 
-        yield "INSERT INTO Systems.SystemInstances(si_id, si_name, si_description, sc_id) SELECT %(si_id)d, '%(si_name)s', '%(si_description)s', sc_id FROM Systems.SystemClasses WHERE sc_name = 'STATION';" % vars()
+        #yield "INSERT INTO Systems.SystemInstances(si_id, si_name, si_description, sc_id) SELECT %(si_id)d, '%(si_name)s', '%(si_description)s', sc_id FROM Systems.SystemClasses WHERE sc_name = 'STATION';" % vars()
 
     # Add "Core Station" systems
 
@@ -46,7 +53,7 @@ def setup_db_queries():
         si_name = "CS-%d" % cs_id
         si_description = "Core Station %d" % cs_id
 
-        yield "INSERT INTO Systems.SystemInstances(si_id, si_name, si_description, sc_id) SELECT %(si_id)d, '%(si_name)s', '%(si_description)s', sc_id FROM Systems.SystemClasses WHERE sc_name = 'STATION';" % vars()
+        #yield "INSERT INTO Systems.SystemInstances(si_id, si_name, si_description, sc_id) SELECT %(si_id)d, '%(si_name)s', '%(si_description)s', sc_id FROM Systems.SystemClasses WHERE sc_name = 'STATION';" % vars()
 
     # Add "Remote Station" systems
 
@@ -58,11 +65,11 @@ def setup_db_queries():
         si_name = "RS-%d" % rs_id
         si_description = "Remote Station %d" % rs_id
 
-        yield "INSERT INTO Systems.SystemInstances(si_id, si_name, si_description, sc_id) SELECT %(si_id)d, '%(si_name)s', '%(si_description)s', sc_id FROM Systems.SystemClasses WHERE sc_name = 'STATION';" % vars()
+        #yield "INSERT INTO Systems.SystemInstances(si_id, si_name, si_description, sc_id) SELECT %(si_id)d, '%(si_name)s', '%(si_description)s', sc_id FROM Systems.SystemClasses WHERE sc_name = 'STATION';" % vars()
 
     # Add Stable observable to each STATION ...
 
-    yield "INSERT INTO Observations.Observables(obs_name, obs_unit, si_id, type_id) SELECT 'stable', 'flag', si_id, type_id FROM Systems.SystemClasses NATURAL JOIN Systems.SystemInstances JOIN Observations.ObservableTypes ON sc_name = 'STATION' AND type_name = 'boolean';"
+    #yield "INSERT INTO Observations.Observables(obs_name, obs_unit, si_id, type_id) SELECT 'stable', 'flag', si_id, type_id FROM Systems.SystemClasses NATURAL JOIN Systems.SystemInstances JOIN Observations.ObservableTypes ON sc_name = 'STATION' AND type_name = 'boolean';"
 
     # Add RCU Status to each RCU at each STATION ...
 
@@ -85,7 +92,7 @@ def setup_db_queries():
 
                         obs_name = "crate%d_rsp%d_ap%d_rcu%d_%s" %  (crate_id, rsp_id, ap_id, rcu_id, obs_suffix)
 
-                        yield "INSERT INTO Observations.Observables(obs_name, obs_unit, si_id, type_id) SELECT '%(obs_name)s', '%(obs_unit)s', si_id, type_id FROM Systems.SystemClasses NATURAL JOIN Systems.SystemInstances JOIN Observations.ObservableTypes ON sc_name = 'STATION' AND type_name = '%(obs_type)s';" % vars()
+                        #yield "INSERT INTO Observations.Observables(obs_name, obs_unit, si_id, type_id) SELECT '%(obs_name)s', '%(obs_unit)s', si_id, type_id FROM Systems.SystemClasses NATURAL JOIN Systems.SystemInstances JOIN Observations.ObservableTypes ON sc_name = 'STATION' AND type_name = '%(obs_type)s';" % vars()
 
 def main():
     for query in setup_db_queries():
@@ -93,3 +100,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -63,10 +63,8 @@ createlang --host $LOFARSHM_DBHOST --port $LOFARSHM_DBPORT --dbname $LOFARSHM_DB
 # Create DB tables and functions
 
 SQLSOURCES="create-schema-systems.sql         \
-            create-schema-observations.sql    \
             create-schema-lofar.sql           \
             create-schema-job_control.sql     \
-            create-functions-observations.sql \
             create-functions-job_control.sql"
 
 for SQLSOURCE in $SQLSOURCES ; do

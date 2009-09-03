@@ -28,7 +28,7 @@ CREATE TABLE job_control.log (
     message         TEXT                          NOT NULL,
     job_id          BIGINT                        ,
     job_ticket_no   BIGINT                        ,
-    source          INET                          NOT NULL
+    source          INET                          NOT NULL,
     -- constraints
     PRIMARY KEY(timestamp)
 );
