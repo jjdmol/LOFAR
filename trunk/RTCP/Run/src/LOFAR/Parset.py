@@ -295,6 +295,13 @@ class Parset(util.Parset.Parset):
 
       return localPorts
 
+    def disableStoragePorts( self, reservedPorts ):
+      """ Prevents the use of a certain subset of ports for Storage. """
+
+      portkey = "OLAP.OLAP_Conn.IONProc_Storage_Ports"
+      myports = filter( lambda x: x not in reservedPorts, self.getInt32Vector(portkey) )
+      self[portkey] = myports
+
     def check( self ):
       """ Check the Parset configuration for inconsistencies. """
 

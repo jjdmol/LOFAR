@@ -263,7 +263,7 @@ if __name__ == "__main__":
 
     # reserve an observation id
     try:
-      obsid = ObservationID.ObservationID.generateID()
+      obsid = ObservationID().generateID()
     except IOError,e:
       print_exception("Could not generate observation ID: %s" % (e,))
       sys.exit(1)  
@@ -283,6 +283,8 @@ if __name__ == "__main__":
       # make sure all parsets use the same partition
       fatal( "Parset selects partition %s, but partition %s was already selected." % (parset.distillPartition(),options.partition) )
     parset.setPartition( options.partition )
+
+    # define storage nodes
     parset.setStorageNodes( Locations.nodes["storage"] )
 
     # set stations
@@ -325,7 +327,6 @@ if __name__ == "__main__":
       parset.setStartRunTime( obsparams["start"], obsparams["run"] )
     info( "Running from %s to %s." % (parset["Observation.startTime"], parset["Observation.stopTime"] ) )
 
-
     # set a few other options
     configmap = {
       "clock": parset.setClock,
@@ -360,6 +361,7 @@ if __name__ == "__main__":
     if options.nostorage:
       parset.disableStorage()
 
+
   # resolve all paths now that parsets are set up and the observation ID is known
   for opt in dirgroup.option_list:
     Locations.setFilename( opt.dest, getattr( options, opt.dest ) )
@@ -390,9 +392,17 @@ if __name__ == "__main__":
       warning( "Could not create symlink %s pointing to %s" % (log_symlink["source"],log_symlink["dest"]) )
 
   # finalise and save parsets
+  usedStoragePorts = []
+
   for obsIndex,parset in enumerate(parsets):
+    parset.disableStoragePorts( usedStoragePorts )
+
     # parse final settings (derive some extra keys)
     parset.finalise()
+
+    # finalise() allocates the ports that will be used, so don't use them for other observations
+    for ports in parset.getStoragePorts().itervalues():
+      usedStoragePorts.extend( ports )
 
     # sanity check on parset
     parset.check()
