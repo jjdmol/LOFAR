@@ -36,10 +36,10 @@
 #include <Common/LofarLogger.h>
 #include <Common/PrettyUnits.h>
 #include <Interface/Exceptions.h>
-#include <Interface/Mutex.h>
 #include <Interface/PencilCoordinates.h>
 
 #include <pthread.h>
+#include <boost/shared_ptr.hpp>
 
 namespace LOFAR 
 {
@@ -114,8 +114,8 @@ namespace LOFAR
         THROW(IONProcException, "nrCalcDelays (" << itsNrCalcDelays << ") must divide bufferSize (" << bufferSize << ")" );
       }
 
-      vector<AMC::Epoch>	observationEpochs( itsNrCalcDelays );
-      AMC::Converter*		converter = new ConverterImpl();
+      vector<AMC::Epoch>	        observationEpochs( itsNrCalcDelays );
+      boost::shared_ptr<AMC::Converter> converter( new ConverterImpl() );
 
       // the current time, in samples
       int64 currentTime = itsStartTime;
@@ -148,14 +148,11 @@ namespace LOFAR
         // etc.
         ResultData result;
 
-        // casacore is not thread-safe
-        static Mutex mutex;
-
-        mutex.lock();
+        itsCasacoreMutex.lock();
         // TODO: hangs if exception is thrown here -- should abort everything instead, since
         // we can't restore casacore.
         converter->j2000ToItrf(result, request); // expensive
-        mutex.unlock();
+        itsCasacoreMutex.unlock();
 
         ASSERTSTR(result.direction.size() == itsNrCalcDelays * itsNrBeams * itsNrPencilBeams,
 	  	  result.direction.size() << " == " << itsNrCalcDelays * itsNrBeams * itsNrPencilBeams );
@@ -185,8 +182,6 @@ namespace LOFAR
 	bufferUsed.up( itsNrCalcDelays );
       }
       
-      delete converter;
-
       LOG_DEBUG( "delay compensation thread stopped." );
     }
 
@@ -220,6 +215,8 @@ namespace LOFAR
     }
 
     //##----------------  Private methods  ----------------##//
+    
+    Mutex WH_DelayCompensation::itsCasacoreMutex;
 
     void WH_DelayCompensation::setBeamDirections(const Parset *ps)
     {
