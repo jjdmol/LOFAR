@@ -331,7 +331,7 @@ inline unsigned Parset::nrSubbands() const
 inline vector<unsigned> Parset::subbandToBeamMapping() const
 {
   if (isDefined("Observation.subbandList"))
-    return getUint32Vector("Observation.beamList",true)
+    return getUint32Vector("Observation.beamList",true);
   else
     return itsObservation.getBeamList();   
 }
@@ -339,7 +339,7 @@ inline vector<unsigned> Parset::subbandToBeamMapping() const
 inline vector<unsigned> Parset::subbandToRSPboardMapping() const
 {
   if (isDefined("Observation.subbandList"))
-    return getUint32Vector("Observation.rspBoardList",true)
+    return getUint32Vector("Observation.rspBoardList",true);
   else
     return itsObservation.getRspBoardList();
 }
@@ -348,7 +348,7 @@ inline vector<unsigned> Parset::subbandToRSPboardMapping() const
 inline vector<unsigned> Parset::subbandToRSPslotMapping() const
 {
   if (isDefined("Observation.subbandList"))
-    return getUint32Vector("Observation.rspSlotList")
+    return getUint32Vector("Observation.rspSlotList");
   else
     return itsObservation.getRspSlotList();
 }
