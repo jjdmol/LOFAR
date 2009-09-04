@@ -43,7 +43,7 @@
 #include <memory>
 
 // casacore is not thread safe
-static Mutex casacoreMutex;
+static LOFAR::RTCP::Mutex casacoreMutex;
 
 namespace LOFAR 
 {
