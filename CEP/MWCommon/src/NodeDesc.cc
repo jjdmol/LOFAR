@@ -22,8 +22,8 @@ namespace LOFAR { namespace CEP {
   NodeDesc::NodeDesc (const ParameterSet& parset)
   {
     itsName = parset.getString ("NodeName");
-    itsFileSys = parset.getStringVector ("NodeFileSys");
-    itsMounts  = parset.getStringVector ("NodeMountPoints");
+    itsFileSys = parset.getStringVector ("NodeFileSys", true);
+    itsMounts  = parset.getStringVector ("NodeMountPoints", true);
     ASSERT (itsFileSys.size() == itsMounts.size());
     for (uint i=0; i<itsMounts.size(); ++i) {
       ASSERT (itsFileSys[i].size() > 0);

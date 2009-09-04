@@ -95,6 +95,9 @@ namespace LOFAR { namespace CEP {
     // Fill the object from the given parset file.
     void init (const ParameterSet& parset);
 
+    // Fill the object from the subcluster definitions.
+    void getSubClusters (const vector<string>& parsetNames);
+
     // Add entries to the mapping of FileSys to Nodes.
     void add2Map (const NodeDesc& node);
 
