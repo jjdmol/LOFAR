@@ -698,8 +698,9 @@ string expandRangeString (const string& strng)
           }
           str.replace (stalp, i-stalp, ostr.str());
           int diff = ostr.str().size() - (i-stalp);
-          i    += diff;
           last += diff;
+          // Start again, because something like aa00..01bcd00..03ef might be used.
+          i = stalp-1;
         }
       }
     }
