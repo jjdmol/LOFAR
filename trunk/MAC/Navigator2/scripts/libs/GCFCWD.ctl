@@ -63,8 +63,8 @@ GCFCWD_Init() {
     dpConnect("GCFCWD_connectWD", TRUE, CWD_DP+".systemID",
                                         CWD_DP+".name",
                                         CWD_DP+".online",
-                                        CWD_DP+".lastUptime",
-                                        CWD_DP+".lastDowntime");
+                                        CWD_DP+".lastUpTime",
+                                        CWD_DP+".lastDownTime");
     LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Watch-dog started");
   } else {
     LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Couldn't connect to "+CWD_DP+".systemID.  Watch-dog NOT started");
