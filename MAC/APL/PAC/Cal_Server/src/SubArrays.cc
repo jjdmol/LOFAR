@@ -205,7 +205,7 @@ void SubArrays::updateAll()
 //
 // calibrate(CalI/F*, ACC)
 //
-void SubArrays::calibrate(CalibrationInterface* cal, ACC& acc, bool writeToFile)
+void SubArrays::calibrate(CalibrationInterface* cal, ACC& acc, bool writeToFile, const string& dataDir)
 {
 	bool done = false;
 
@@ -223,7 +223,7 @@ void SubArrays::calibrate(CalibrationInterface* cal, ACC& acc, bool writeToFile)
 				done = true;
 			}
 			if (writeToFile) {
-				writeGains(subarray);
+				writeGains(subarray, dataDir);
 			}
 		}
 	}
@@ -328,9 +328,9 @@ SubArrayMap	SubArrays::getSubArrays(const string&	optionalName) {
 }
 
 //
-// writeGains(Subarray*		Subarray)
+// writeGains(Subarray*		Subarray, dataDir)
 //
-void SubArrays::writeGains(SubArray*	anSubArr)
+void SubArrays::writeGains(SubArray*	anSubArr, const string&	dataDir)
 {
 	time_t now = time(0);
 	struct tm* t = gmtime(&now);
@@ -338,7 +338,8 @@ void SubArrays::writeGains(SubArray*	anSubArr)
 	AntennaGains*	gains;
 	anSubArr->getGains(gains, SubArray::FRONT);
 
-	snprintf(filename, PATH_MAX, "%s_%04d%02d%02d_%02d%02d%02d_gain_%dx%dx%d.dat",
+	snprintf(filename, PATH_MAX, "%s/%s_%04d%02d%02d_%02d%02d%02d_gain_%dx%dx%d.dat",
+						dataDir.c_str(),
 						anSubArr->getName().c_str(),
 						t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
 						t->tm_hour, t->tm_min, t->tm_sec,

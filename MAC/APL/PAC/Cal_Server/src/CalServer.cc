@@ -233,12 +233,22 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 			// Load antenna arrays
 			m_arrays.getAll(cl.locate(GET_CONFIG_STRING("CalServer.AntennaArraysFile")));
 
+			// Setup datapath
+			itsDataDir = globalParameterSet()->getString("CalServer.DataDirectory", "/opt/lofar/bin");
+			if (itsDataDir.empty()) {
+				itsDataDir="/opt/lofar/bin";
+			}
+			else if ((*itsDataDir.rbegin()) == '/') {		// strip off last /
+				itsDataDir.erase(itsDataDir.length()-1);
+			}
+			LOG_INFO_STR("Interim datafile will be stored in " << itsDataDir);
+
 			// Setup calibration algorithm
 			m_cal = new RemoteStationCalibration(m_sources, m_dipolemodels, *m_converter);
 
 #ifdef USE_CAL_THREAD
 			// Setup calibration thread
-			m_calthread = new CalibrationThread(&m_subarrays, m_cal, m_globallock);
+			m_calthread = new CalibrationThread(&m_subarrays, m_cal, m_globallock, itsDataDir);
 
 			pthread_mutex_unlock(&m_globallock); // unlock global lock
 #endif
@@ -445,9 +455,9 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 #else
 			bool	writeGains(GET_CONFIG("CalServer.WriteGainsToFile", i) == 1);
 			if (GET_CONFIG("CalServer.DisableCalibration", i)) {
-				m_subarrays.calibrate(0, m_accs.getFront(), writeGains);
+				m_subarrays.calibrate(0, m_accs.getFront(), writeGains, itsDataDir);
 			} else {
-				m_subarrays.calibrate(m_cal, m_accs.getFront(), writeGains);
+				m_subarrays.calibrate(m_cal, m_accs.getFront(), writeGains, itsDataDir);
 			}
 			m_subarrays.updateAll();
 #endif
@@ -836,6 +846,7 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 		disableCmd.rcumask = rcus2switchOff;
 		disableCmd.settings().resize(1);
 		disableCmd.settings()(0).setEnable(false);
+		disableCmd.settings()(0).setMode(RCUSettings::Control::MODE_OFF);
 		sleep (1);
 		LOG_INFO_STR("Disabling some rcu's because they are not used anymore");
 		m_rspdriver.send(disableCmd);
@@ -900,12 +911,13 @@ void CalServer::write_acc()
 		}
 	}
 
-	snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_acc_%dx%dx%d.dat",
-	t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-	t->tm_hour, t->tm_min, t->tm_sec,
-	newacc.extent(firstDim),
-	newacc.extent(secondDim),
-	newacc.extent(thirdDim));
+	snprintf(filename, PATH_MAX, "%s/%04d%02d%02d_%02d%02d%02d_acc_%dx%dx%d.dat",
+		itsDataDir.c_str(),
+		t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+		t->tm_hour, t->tm_min, t->tm_sec,
+		newacc.extent(firstDim),
+		newacc.extent(secondDim),
+		newacc.extent(thirdDim));
 	FILE* accfile = fopen(filename, "w");
 
 	if (!accfile) {

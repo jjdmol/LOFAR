@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  GetSplitterCmd.h: Set SerdesRing splitter on or off.
+//#  UpdSplitterCmd.h: Subband selection upd command.
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef GETSPLITTERCMD_H_
-#define GETSPLITTERCMD_H_
+#ifndef UPDSPLITTERCMD_H_
+#define UPDSPLITTERCMD_H_
 
 #include "Command.h"
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
@@ -34,14 +34,14 @@
 namespace LOFAR {
   namespace RSP {
 
-class GetSplitterCmd : public Command
+class UpdSplitterCmd : public Command
 {
 public:
-	// Constructors for a GetSplitterCmd object.
-	GetSplitterCmd(GCFEvent& event, GCFPortInterface& port, Operation oper);
+	// Constructors for a UpdSplitterCmd object.
+	UpdSplitterCmd(GCFEvent& event, GCFPortInterface& port, Operation oper);
 
-	// Destructor for GetSplitterCmd. */
-	virtual ~GetSplitterCmd();
+	// Destructor for UpdSplitterCmd.
+	virtual ~UpdSplitterCmd();
 
 	// Acknowledge the command by sending the appropriate
 	// response on m_port.
@@ -61,26 +61,17 @@ public:
 	virtual void setTimestamp(const RTC::Timestamp& timestamp);
 	/*@}*/
 
-	// Validate the event that underlies the command.
+	// Range check the parameters of the event.
 	virtual bool validate() const;
 
-	// Only for READ commands. Decides if the answer may be read from the curretnt cache
-	// or that we have to wait for another PPS pulse.
-	virtual bool readFromCache() const { return (false); }
-
-	// tables needed by UpdSplitterCmd
-	static char SERDES_ON_RESP[];
-	static char SERDES_OFF_RESP[];
-	static int  SERDES_ON_RESP_LEN;
-	static int  SERDES_OFF_RESP_LEN;
-
 private:
-	GetSplitterCmd();
+	UpdSplitterCmd();
 
-	RSPGetsplitterEvent* itsEvent;
+	RSPSubsplitterEvent*	itsEvent;
+	int						itsSplitterOn;
 };
 
   }; // namespace RSP
 }; // namespace LOFAR
      
-#endif /* GETSPLITTERCMD_H_ */
+#endif /* UPDSPLITTERCMD_H_ */

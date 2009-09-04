@@ -68,13 +68,6 @@ void SerdesWrite::sendrequest()
 	int				sendDataMsg = getCurrentIndex()%2;	// send MDIO data or MDIO header message
 	int				sendWriteHdr= getCurrentIndex()%4;	// send 'address' header or 'write' header
 
-	// is this board in the RSPmask?
-	if (!sdBuf.hasRSP(getBoardId())) {
-		//LOG_INFO(">>>> SerdesWrite:Wrong board");
-		setContinue(true);
-		return;
-	}
-	
 	// are we already beyond the data?
 	if (getCurrentIndex() >= sdBuf.getDataLen()) {		// reached EOdata?
 		Cache::getInstance().getState().sbwState().write_ack(getBoardId());	// mark cache ready

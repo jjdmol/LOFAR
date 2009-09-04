@@ -69,13 +69,6 @@ void SerdesRead::sendrequest()
 	int				sendDataMsg = getCurrentIndex()%2;		// send MDIO data or MDIO header message
 	int				sendReadHdr = getCurrentIndex()%4;		// send 'address' header or 'read' header
 
-	// is this board in the RSPmask?
-	if (!sdBuf.hasRSP(getBoardId())) {
-		//LOG_INFO(">>>> SerdesRead:Wrong board");
-		setContinue(true);
-		return;
-	}
-	
 	// are we already beyond the data?
 	if (getCurrentIndex()/2 >= sdBuf.getDataLen()) {		// reached EOdata?
 		Cache::getInstance().getState().sbrState().write_ack(getBoardId());	// mark cache ready

@@ -98,8 +98,9 @@ do {									\
 // Sample frequency, as received from the RSPDriver
 //
 #define DEFAULT_SAMPLE_FREQUENCY 160.0e6
-double g_sample_frequency = DEFAULT_SAMPLE_FREQUENCY;
-bool   g_getclock		  = false;
+double	gSampleFrequency= DEFAULT_SAMPLE_FREQUENCY;
+bool	g_getclock		= false;
+bool	gSplitter		= false;
 
 #define PAIR 2
 
@@ -461,15 +462,16 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 			RSPGetrcuackEvent ack(e);
 			bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
 
-			if (ack.status == RSP_SUCCESS) {
-				int rcuin = 0;
-				for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
-					if (mask[rcuout]) {
-						logMessage(cout,formatString("RCU[%2d].control=0x%08x => mode:%d, delay=%02d, att=%02d",
-					rcuout,
-					ack.settings()(rcuin).getRaw(),
-					ack.settings()(rcuin).getMode(),
-					ack.settings()(rcuin).getDelay(),
+      if (ack.status == RSP_SUCCESS) {
+        int rcuin = 0;
+        for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
+          if (mask[rcuout]) {
+            logMessage(cout,formatString("RCU[%2d].control=0x%08x => %s, mode:%d, delay=%02d, att=%02d",
+					rcuout, 
+					ack.settings()(rcuin).getRaw(), 
+					(ack.settings()(rcuin).getRaw() & 0x80) ? " ON" : "OFF",
+					ack.settings()(rcuin).getMode(), 
+					ack.settings()(rcuin).getDelay(), 
 					ack.settings()(rcuin).getAttenuation()));
 					rcuin++;
 					}
@@ -730,28 +732,24 @@ void ClockCommand::send()
 
 GCFEvent::TResult ClockCommand::ack(GCFEvent& e)
 {
-	switch (e.signal) {
-		case RSP_GETCLOCKACK: {
-			/**
-			 * This signal is handled in SubClockCommand.
-			 * We should never end up here.
-			 */
-			logMessage(cerr, "Error: invalid code path");
-			exit(EXIT_FAILURE);
+	if (e.signal == RSP_GETCLOCKACK) {
+		RSPGetclockackEvent ack(e);
+		if (RSP_SUCCESS != ack.status) {
+			logMessage(cerr,"Error: RSP_GETCLOCK command failed.");
 		}
-		break;
-
-		case RSP_SETCLOCKACK: {
-			RSPSetclockackEvent ack(e);
-
-			if (RSP_SUCCESS != ack.status) {
-				logMessage(cerr,"Error: RSP_SETCLOCK command failed.");
-			}
+		else {
+			gSampleFrequency = 1.0e6 * ack.clock;
+			logMessage(cout,formatString("Sample frequency: clock=%dMHz", ack.clock));
+		}
+	}
+	else if (e.signal == RSP_SETCLOCKACK) {
+		RSPSetclockackEvent ack(e);
+		if (RSP_SUCCESS != ack.status) {
+			logMessage(cerr,"Error: RSP_SETCLOCK command failed.");
 		}
 	}
 
 	GCFScheduler::instance()->stop();
-
 	return GCFEvent::HANDLED;
 }
 
@@ -783,60 +781,54 @@ void SubClockCommand::send()
 GCFEvent::TResult SubClockCommand::ack(GCFEvent& e)
 {
 	switch (e.signal) {
-		case RSP_GETCLOCKACK: {
-			RSPGetclockackEvent ack(e);
-			if (RSP_SUCCESS == ack.status) {
-	g_sample_frequency = 1.0e6 * ack.clock;
+	case RSP_GETCLOCKACK: {
+		RSPGetclockackEvent ack(e);
+		if (RSP_SUCCESS == ack.status) {
+			gSampleFrequency = 1.0e6 * ack.clock;
+			if (g_getclock) {
+				logMessage(cout,formatString("Sample frequency: clock=%dMHz", ack.clock));
+				GCFScheduler::instance()->stop();
+			} else {
+				LOG_DEBUG(formatString("Received initial sample frequency: clock=%dMHz", ack.clock));
 
-	if (g_getclock) {
+				// Subscribe to updates from now on
+				RSPSubclockEvent subclock;
+				subclock.timestamp = Timestamp(0,0);
+				subclock.period = 1; // check for change every second
 
-		logMessage(cout,formatString("Sample frequency: clock=%dMHz", ack.clock));
-		GCFScheduler::instance()->stop();
-
-	} else {
-
-		LOG_DEBUG(formatString("Received initial sample frequency: clock=%dMHz", ack.clock));
-
-		// Subscribe to updates from now on
-		RSPSubclockEvent subclock;
-
-		subclock.timestamp = Timestamp(0,0);
-		subclock.period = 1; // check for change every second
-
-		m_rspport.send(subclock);
+				m_rspport.send(subclock);
+			}
+		}
+		else {
+			logMessage(cerr,"Error: RSP_GETCLOCK command failed.");
+		}
 	}
-			}
-			else {
-				logMessage(cerr,"Error: RSP_GETCLOCK command failed.");
-			}
-		}
-		break;
+	break;
 
-		case RSP_SUBCLOCKACK: {
-			RSPSubclockackEvent ack(e);
-			if (RSP_SUCCESS != ack.status) {
-	logMessage(cerr,"Error: RSP_UPDCLOCK command failed.");
-	exit(EXIT_FAILURE);
-			}
+	case RSP_SUBCLOCKACK: {
+		RSPSubclockackEvent ack(e);
+		if (RSP_SUCCESS != ack.status) {
+			logMessage(cerr,"Error: RSP_UPDCLOCK command failed.");
+			exit(EXIT_FAILURE);
 		}
-		break;
+	}
+	break;
 
-		case RSP_UPDCLOCK: {
-			RSPUpdclockEvent upd(e);
-
-			if (RSP_SUCCESS == upd.status) {
-	logMessage(cout,formatString("Received new sample frequency: clock=%dMHz", upd.clock));
-	g_sample_frequency = 1.0e6 * upd.clock;
-			}
-			else {
-				logMessage(cerr,"Error: RSP_UPDCLOCK command failed.");
-			}
+	case RSP_UPDCLOCK: {
+		RSPUpdclockEvent upd(e);
+		if (RSP_SUCCESS == upd.status) {
+			logMessage(cout,formatString("Received new sample frequency: clock=%dMHz", upd.clock));
+			gSampleFrequency = 1.0e6 * upd.clock;
 		}
-		break;
+		else {
+			logMessage(cerr,"Error: RSP_UPDCLOCK command failed.");
+		}
+	}
+	break;
 
 	default:
 		return GCFEvent::NOT_HANDLED;
-		break;
+	break;
 	}
 
 	return GCFEvent::HANDLED;
@@ -1403,7 +1395,6 @@ void SplitterCommand::send()
 	if (getMode()) {
 		RSPGetsplitterEvent 	rspEvent;
 		rspEvent.timestamp = Timestamp(0,0);
-		rspEvent.rspmask   = getRSPMask();
 		m_rspport.send(rspEvent);
 		return;
 	}
@@ -1412,7 +1403,6 @@ void SplitterCommand::send()
 	RSPSetsplitterEvent 	rspEvent;
 	rspEvent.timestamp = Timestamp(0,0);
 	rspEvent.switch_on = state();
-	rspEvent.rspmask   = getRSPMask();
 
 	// and send it.
 	m_rspport.send(rspEvent);
@@ -1439,10 +1429,8 @@ GCFEvent::TResult SplitterCommand::ack(GCFEvent& event)
 				logMessage(cerr,"Error: RSP_GETSPLITTER command failed.");
 			}
 			else {
-				for (int rsp = 0; rsp < MAX_N_RSPBOARDS; rsp++) {
-					if (ack.rspmask.test(rsp)) {
-						logMessage(cerr, formatString("RSP[%2d]: %s", rsp, ack.splitter.test(rsp) ? "ON" : "OFF"));
-					}
+				for (int rsp = 0; rsp < get_ndevices(); rsp++) {
+					logMessage(cerr, formatString("RSP[%2d]: %s", rsp, ack.splitter.test(rsp) ? "ON" : "OFF"));
 				}
 			}
 		}
@@ -1484,8 +1472,8 @@ void WGCommand::send()
 		wgset.rcumask = getRCUMask();
 		wgset.settings().resize(1);
 
-		//wgset.settings()(0).freq = (uint32)((m_frequency * ((uint32)-1) / g_sample_frequency) + 0.5);
-		//wgset.settings()(0).freq = (uint32)round(m_frequency * ((uint64)1 << 32) / g_sample_frequency);
+		//wgset.settings()(0).freq = (uint32)((m_frequency * ((uint32)-1) / gSampleFrequency) + 0.5);
+		//wgset.settings()(0).freq = (uint32)round(m_frequency * ((uint64)1 << 32) / gSampleFrequency);
 
 		wgset.settings()(0).freq        = m_frequency;
 		wgset.settings()(0).phase       = m_phase;
@@ -1729,7 +1717,7 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 	return GCFEvent::HANDLED;
 }
 
-StatisticsBaseCommand::StatisticsBaseCommand(GCFPortInterface& port) : FECommand(port),
+StatisticsBaseCommand::StatisticsBaseCommand(GCFPortInterface& port) : Command(port),
 	m_subscriptionhandle(0),
 	m_duration(0),
 	m_endTime(),
@@ -1759,7 +1747,6 @@ void StatisticsCommand::send()
 
 		// SUBSCRIBE
 		RSPSubstatsEvent substats;
-
 		substats.timestamp = Timestamp(0,0);
 		substats.rcumask = getRCUMask();
 		substats.period = 1;
@@ -1841,7 +1828,6 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	int n_firstIndex = stats.extent(firstDim);
 	bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
 
-	bool itsSplitterActive = true;
 	char plotcmd[256];
 	int startrcu;
 	int stoprcu;
@@ -1860,7 +1846,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 		switch (m_type) {
 			case Statistics::SUBBAND_POWER:
 				gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\"\n");
-				gnuplot_cmd(handle, "set xrange [0:%f]\n", g_sample_frequency / 2.0);
+				gnuplot_cmd(handle, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
 				break;
 			case Statistics::BEAMLET_POWER:
 				gnuplot_cmd(handle, "set xlabel \"Beamlet index\"\n");
@@ -1871,8 +1857,8 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 			
 	
 	time_t seconds = timestamp.sec();
-	if (itsSplitterActive) {
-		strftime(plotcmd, 255, "set title \"Ring 1 %s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
+	if (gSplitter) {
+		strftime(plotcmd, 255, "set title \"Ring 0 %s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
 	}
 	else {
 		strftime(plotcmd, 255, "set title \"%s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
@@ -1884,7 +1870,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	int count = 0;
 	
 	startrcu = 0;
-	if (itsSplitterActive) {
+	if (gSplitter) {
 		stoprcu = get_ndevices() / 2;
 	}
 	else {
@@ -1900,7 +1886,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 			switch (m_type) {
 				case Statistics::SUBBAND_POWER:
 					gnuplot_cmd(handle, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
-					g_sample_frequency, n_freqbands*2.0, rcuout);
+					gSampleFrequency, n_freqbands*2.0, rcuout);
 					break;
 				case Statistics::BEAMLET_POWER:
 					gnuplot_cmd(handle, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board %d, %c)\" with steps ",
@@ -1915,16 +1901,21 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	}
 	gnuplot_cmd(handle, "\n");
 
-	if (itsSplitterActive) {
+	if (gSplitter) {
 		gnuplot_write_matrix(handle, stats(Range(0,(n_firstIndex/2)-1), Range::all()));
 	}
 	else {
 		gnuplot_write_matrix(handle, stats);
 	}
 
+	// if splitter is now OFF but the second screen is still shown, remove this window
+	if (handle2 && !gSplitter) {
+		gnuplot_close(handle2);
+		handle2=0;
+	}
 
-	// if Splitter is active plot annother graphics	
-	if (itsSplitterActive) {
+	// if Splitter is active plot another graphics	
+	if (gSplitter) {
 		if (!handle2) {
 			handle2 = gnuplot_init();
 			if (!handle2) return;
@@ -1936,7 +1927,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 			switch (m_type) {
 				case Statistics::SUBBAND_POWER:
 					gnuplot_cmd(handle2, "set xlabel \"Frequency (MHz)\"\n");
-					gnuplot_cmd(handle2, "set xrange [0:%f]\n", g_sample_frequency / 2.0);
+					gnuplot_cmd(handle2, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
 					break;
 				case Statistics::BEAMLET_POWER:
 					gnuplot_cmd(handle2, "set xlabel \"Beamlet index\"\n");
@@ -1947,7 +1938,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 			
 	
 		time_t seconds = timestamp.sec();
-		strftime(plotcmd, 255, "set title \"Ring 2 %s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
+		strftime(plotcmd, 255, "set title \"Ring 1 %s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
 	
 		gnuplot_cmd(handle2, plotcmd);
 		
@@ -1967,7 +1958,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 				switch (m_type) {
 					case Statistics::SUBBAND_POWER:
 						gnuplot_cmd(handle2, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
-						g_sample_frequency, n_freqbands*2.0, rcuout);
+						gSampleFrequency, n_freqbands*2.0, rcuout);
 						break;
 					case Statistics::BEAMLET_POWER:
 						gnuplot_cmd(handle2, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board %d, %c)\" with steps ",
@@ -2301,130 +2292,230 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
 	return GCFEvent::HANDLED;
 }
 
-RSPCtl::RSPCtl(string name, int argc, char** argv)
-		: GCFTask((State)&RSPCtl::initial, name), m_command(0),
-			m_nrcus(0), m_nrspboards(0), m_argc(argc), m_argv(argv), m_instancenr(-1),
-			m_subclock(m_server)
+//
+// RSPCtl()
+//
+RSPCtl::RSPCtl(string name, int argc, char** argv) :
+	GCFTask((State)&RSPCtl::initial, name), 
+	itsCommand		(0),
+	m_nrcus			(0), 
+	m_nrspboards	(0), 
+	m_argc			(argc), 
+	m_argv			(argv), 
+	m_instancenr	(-1),
+	itsNeedClock	(false),
+	itsNeedSplitter	(false),
+	m_subclock		(*itsRSPDriver)
 {
-// NOTE: parsing of option should be done BEFORE connecting to the RSPDriver
-// because we must know to which RSPDriver instance we must connect (-In)
-// Unfortunately this does not work properly.
-// The m_command created here does not work anymore were we need it.
-// Reparsing the options were we need the command doesn't recognise the
-// the arguments anymore! e.g --statistics --duration=50 -->
-// 'command argument should come before --duration argument'
-// This is probably because getopt_long reshuffles the arguments.
-//
-// For the time being the -I option will not work.
-//
-//  if (!(m_command = parse_options(m_argc, m_argv))) {
-//    logMessage(cerr,"Warning: no command specified.");
-//    exit(EXIT_FAILURE);
-//  }
-
 	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
-#ifdef ENABLE_RSPFE
-	registerProtocol(RSPFE_PROTOCOL, RSPFE_PROTOCOL_STRINGS);
-#endif
 
-	string	instanceID;
-//  if (m_instancenr>=0) {
-//    instanceID = formatString("(%d)", m_instancenr);
-//  }
-// NOTE: this also does not work because 'server' is a part of a parameter-
-// name that is in the conf files.!!!
-//
-//m_server.init(*this, "server"+instanceID, GCFPortInterface::SAP, RSP_PROTOCOL);
-	m_server.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
+	itsRSPDriver = new GCFTCPPort(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
+	ASSERTSTR(itsRSPDriver, "Cannot allocate port to RSPDriver");
 }
 
+//
+// ~RSPCtl()
+//
 RSPCtl::~RSPCtl()
 {
-	if (m_command)
-		delete m_command;
+	if (itsCommand)
+		delete itsCommand;
 }
 
+//
+// initial(event, port)
+//
 GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("initial:" << eventName(e) << "@" << port.getName());
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch(e.signal) {
-		case F_INIT:
-		break;
+	case F_INIT:
+	break;
 
-		case F_ENTRY: {
-			if (!m_server.isConnected()) {
-				m_server.open();
+	case F_ENTRY: {
+		// setup a connection with the RSPDriver
+		if (!itsRSPDriver->isConnected()) {
+			itsRSPDriver->autoOpen(3,0,1);	// try 3 times at 1 second interval
 		}
-		}
-		break;
+	}
+	break;
 
-		case F_CONNECTED: {
-			if (m_server.isConnected()) {
-				RSPGetconfigEvent getconfig;
-				m_server.send(getconfig);
-			}
-		}
-		break;
+	case F_DISCONNECTED: {
+		LOG_DEBUG_STR("Cannot connect to the RSPDriver. Is it running?");
+		GCFScheduler::instance()->stop();
+	}
+	break;
 
-		case RSP_GETCONFIGACK: {
-			RSPGetconfigackEvent ack(e);
-			m_nrcus        = ack.n_rcus;
-			m_nrspboards   = ack.n_rspboards;
-			m_maxrspboards = ack.max_rspboards;
-			LOG_DEBUG_STR(formatString("n_rcus     =%d",m_nrcus));
-			LOG_DEBUG_STR(formatString("n_rspboards=%d of %d",   m_nrspboards, m_maxrspboards));
-			TRAN(RSPCtl::docommand);
+	case F_CONNECTED: {
+		// get the number of rcu's and RSP's because we need that for some commands.
+		if (itsRSPDriver->isConnected()) {
+			RSPGetconfigEvent getconfig;
+			itsRSPDriver->send(getconfig);
 		}
-		break;
+	}
+	break;
 
-		case F_DISCONNECTED: {
-			port.setTimer((long)1);
-			port.close();
+	case RSP_GETCONFIGACK: {
+		RSPGetconfigackEvent ack(e);
+		m_nrcus        = ack.n_rcus;
+		m_nrspboards   = ack.n_rspboards;
+		m_maxrspboards = ack.max_rspboards;
+		LOG_DEBUG_STR(formatString("n_rcus     =%d",m_nrcus));
+		LOG_DEBUG_STR(formatString("n_rspboards=%d of %d",   m_nrspboards, m_maxrspboards));
+
+		// connected to RSPDriver, parse the arguments
+		if (!(itsCommand = parse_options(m_argc, m_argv))) {
+			logMessage(cerr,"Warning: no command specified.");
+			exit(EXIT_FAILURE);
 		}
-		break;
-
-		case F_TIMER: {
-			// try again
-			m_server.open();
+		if (itsNeedClock) {
+			TRAN(RSPCtl::sub2Clock);
 		}
-		break;
+		else if (itsNeedSplitter) {
+			TRAN(RSPCtl::sub2Splitter);
+		}
+		else {
+			TRAN(RSPCtl::doCommand);
+		}
+	}
+	break;
 
-		default:
-			status = GCFEvent::NOT_HANDLED;
-			break;
+	default:
+		status = GCFEvent::NOT_HANDLED;
+	break;
 	}
 
 	return status;
 }
 
-GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
+//
+// sub2Clock(event, port)
+//
+GCFEvent::TResult RSPCtl::sub2Clock(GCFEvent& e, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("docommand:" << eventName(e) << "@" << port.getName());
+	LOG_DEBUG_STR ("sub2Clock:" << eventName(e) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (e.signal) {
 	case F_ENTRY: {
-		m_subclock.send(); // subscribe to clock updates
+		logMessage(cerr, "Taking subscription on the clockvalue");
+		RSPSubclockEvent subEvent;
+		subEvent.timestamp = Timestamp(0,0);
+		subEvent.period = 1; // check for change every second
+		itsRSPDriver->send(subEvent);
 		// after receiving the clock update execute the actual requested command
 	}
 	break;
 
-	case F_CONNECTED: {
-		// connection with te frontend! send the command to the rsp driver
-		FECommand* feCommand = dynamic_cast<FECommand*>(m_command);
-		if(feCommand != 0) {
-			if(feCommand->isConnected(port)) {
-				m_command->send();
-			}
+	case RSP_SUBCLOCKACK: {
+		RSPSubclockackEvent		answer(e);
+		if (answer.status != RSP_SUCCESS) {
+			logMessage(cerr, "Subscription on the clock failed.");
+			exit(EXIT_FAILURE);
 		}
 	}
 	break;
 
-	case F_DISCONNECTED:
-	{
+	case RSP_UPDCLOCK: {
+		RSPUpdclockEvent		answer(e);
+		gSampleFrequency = 10e6 * answer.clock;
+		logMessage(cerr, formatString("Current clockvalue is %d Mhz", answer.clock));
+
+		if (itsNeedSplitter) {
+			TRAN(RSPCtl::sub2Splitter);
+		}
+		else {
+			TRAN(RSPCtl::doCommand);
+		}
+	}
+	break;
+
+	case F_DISCONNECTED: {
+		port.close();
+		logMessage(cerr,formatString("Error: port '%s' disconnected.",port.getName().c_str()));
+		exit(EXIT_FAILURE);
+	}
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+//
+// sub2Splitter(event, port)
+//
+GCFEvent::TResult RSPCtl::sub2Splitter(GCFEvent& e, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("sub2Splitter:" << eventName(e) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		logMessage(cerr, "Taking subscription on the state of the splitter");
+		RSPSubsplitterEvent subEvent;
+		subEvent.timestamp = Timestamp(0,0);
+		subEvent.period = 1; // check for change every second
+		itsRSPDriver->send(subEvent);
+	}
+	break;
+
+	case RSP_SUBSPLITTERACK: {
+		RSPSubsplitterackEvent	answer(e);
+		if (answer.status != RSP_SUCCESS) {
+			logMessage(cerr, "Subscription on the splitter-state failed.");	
+			exit(EXIT_FAILURE);
+		}
+		// wait for update event
+	}
+	break;
+
+	case RSP_UPDSPLITTER: {
+		RSPUpdsplitterEvent		updateEvent(e);
+		gSplitter = updateEvent.splitter[0];
+		logMessage(cerr, formatString("The splitter is currently %s", gSplitter ? "ON" : "OFF"));
+		TRAN(RSPCtl::doCommand);
+	}
+	break;
+
+	case F_DISCONNECTED: {
+		port.close();
+		logMessage(cerr,formatString("Error: port '%s' disconnected.",port.getName().c_str()));
+		exit(EXIT_FAILURE);
+	}
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+//
+// doCommand(event, port)
+//
+GCFEvent::TResult RSPCtl::doCommand(GCFEvent& e, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("doCommand:" << eventName(e) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		itsCommand->send();
+	}
+	break;
+
+	case F_DISCONNECTED: {
 		port.close();
 		logMessage(cerr,formatString("Error: port '%s' disconnected.",port.getName().c_str()));
 		exit(EXIT_FAILURE);
@@ -2444,6 +2535,7 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 	case RSP_SETSUBBANDSACK:
 	case RSP_SETWEIGHTSACK:
 	case RSP_GETWEIGHTSACK:
+
 	case RSP_GETWGACK:
 	case RSP_SETWGACK:
 	case RSP_SETCLOCKACK:
@@ -2463,50 +2555,26 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 	case RSP_SETBLOCKACK:
 	case RSP_SETSPLITTERACK:
 	case RSP_GETSPLITTERACK:
-		status = m_command->ack(e); // handle the acknowledgement
+	case RSP_GETCLOCKACK:
+		status = itsCommand->ack(e); // handle the acknowledgement
 	break;
 
-	case RSP_UPDCLOCK:
-	case RSP_SUBCLOCKACK:
-	case RSP_GETCLOCKACK:
-	{
-		status = m_subclock.ack(e); // handle clock updates
-
-		if (RSP_GETCLOCKACK == e.signal) {
-			// reparse options
-			if (0 == (m_command = parse_options(m_argc, m_argv))) {
-				logMessage(cerr,"Warning: no command specified.");
-//				usage(false);
-				exit(EXIT_FAILURE);
-			}
-			// check if a connection must be made with a frontend. If so, connect first
-			// and send the command to the rspdriver when connected with the frontend
-			FECommand* feCommand = dynamic_cast<FECommand*>(m_command);
-			if(feCommand != 0) {
-				if(feCommand->isFrontEndSet()) {
-					feCommand->connect(*this);
-				}
-				else {
-					m_command->send();
-				}
-			}
-			else {
-				m_command->send();
-			}
-		}
+	case RSP_UPDCLOCK: {
+		RSPUpdclockEvent		answer(e);
+		gSampleFrequency = 10e6 * answer.clock;
+		logMessage(cerr, formatString("NOTE: The clockvalue changed to %d Mhz", answer.clock));
 	}
 	break;
 
-#ifdef ENABLE_RSPFE
-	case RSPFE_STOP_RSPCTL:
-		logMessage(cout,"Rspctl stopped by frontend.");
-		m_command->stop();
-		GCFScheduler::instance()->stop();
+	case RSP_UPDSPLITTER: {
+		RSPUpdsplitterEvent		updateEvent(e);
+		gSplitter = updateEvent.splitter[0];
+		logMessage(cerr, formatString("NOTE: The splitter switched to %s", gSplitter ? "ON" : "OFF"));
+	}
 	break;
-#endif
 
 	default:
-		logMessage(cerr,"Error: unhandled event.");
+		logMessage(cerr,formatString("Error: unhandled event %s.", eventName(e).c_str()));
 		GCFScheduler::instance()->stop();
 		break;
 	}
@@ -2514,12 +2582,9 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 	return status;
 }
 
-void RSPCtl::mainloop()
-{
-	start(); // make initial transition
-	GCFScheduler::instance()->run();
-}
-
+//
+// usage()
+//
 static void usage(bool exportMode)
 {
 	cout << "rspctl usage:" << endl;
@@ -2615,16 +2680,10 @@ static void usage(bool exportMode)
 	cout << "             [--duration=<seconds>]            #" << endl;
 	cout << "             [--integration=<seconds>]         #" << endl;
 	cout << "             [--directory=<directory>]         #" << endl;
-#ifdef ENABLE_RSPFE
-	cout << "             [--feport=<hostname>:<port>]      #" << endl;
-#endif
 	cout << "rspctl [--xcangle] --xcstatistics  [--select=first,second] # get crosscorrelation statistics (of pair of RSP boards)" << endl;
 	cout << "             [--duration=<seconds>]            #" << endl;
 	cout << "             [--integration=<seconds>]         #" << endl;
 	cout << "             [--directory=<directory>]         #" << endl;
-#ifdef ENABLE_RSPFE
-	cout << "             [--feport=<hostname>:<port>]      #" << endl;
-#endif
 	cout << endl;
 	cout << "--- Miscellaneous --------------------------------------------------------------------------------------------" << endl;
 	cout << "rspctl --clock[=<int>]                         # get or set the clock frequency of clocks in MHz" << endl;
@@ -2677,9 +2736,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{ "clock",          optional_argument, 0, 'c' },
 		{ "duration",       required_argument, 0, 'd' },
 		{ "rcureset",       optional_argument, 0, 'e' },
-#ifdef ENABLE_RSPFE
-		{ "feport",         required_argument, 0, 'f' },
-#endif
 		{ "wg",             optional_argument, 0, 'g' },
 		{ "help",           no_argument,       0, 'h' },
 		{ "integration",    required_argument, 0, 'i' },
@@ -2767,7 +2823,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			WeightsCommand* weightscommand = new WeightsCommand(m_server);
+			WeightsCommand* weightscommand = new WeightsCommand(*itsRSPDriver);
 			weightscommand->setType(WeightsCommand::COMPLEX);
 			command = weightscommand;
 
@@ -2791,7 +2847,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			WeightsCommand* weightscommand = new WeightsCommand(m_server);
+			WeightsCommand* weightscommand = new WeightsCommand(*itsRSPDriver);
 			weightscommand->setType(WeightsCommand::ANGLE);
 			command = weightscommand;
 
@@ -2822,7 +2878,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			SubbandsCommand* subbandscommand = new SubbandsCommand(m_server);
+			SubbandsCommand* subbandscommand = new SubbandsCommand(*itsRSPDriver);
 			subbandscommand->setType(SubbandSelection::BEAMLET);
 
 			command = subbandscommand;
@@ -2844,7 +2900,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			RCUCommand* rcucommand = new RCUCommand(m_server);
+			RCUCommand* rcucommand = new RCUCommand(*itsRSPDriver);
 			command = rcucommand;
 
 			command->set_ndevices(m_nrcus);
@@ -2874,7 +2930,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			if (!rcumodecommand) {
 				if (command)
 					delete command;
-				rcumodecommand = new RCUCommand(m_server);
+				rcumodecommand = new RCUCommand(*itsRSPDriver);
 			}
 
 			command = rcumodecommand;
@@ -2954,7 +3010,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			WGCommand* wgcommand = new WGCommand(m_server);
+			WGCommand* wgcommand = new WGCommand(*itsRSPDriver);
 			command = wgcommand;
 
 			command->set_ndevices(m_nrcus);
@@ -2967,7 +3023,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 					delete command;
 					return 0;
 				}
-				wgcommand->setFrequency(frequency, g_sample_frequency);
+				wgcommand->setFrequency(frequency, gSampleFrequency);
 			}
 		}
 		break;
@@ -3021,7 +3077,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			StatusCommand* statuscommand = new StatusCommand(m_server);
+			StatusCommand* statuscommand = new StatusCommand(*itsRSPDriver);
 			command = statuscommand;
 
 			command->set_ndevices(m_nrspboards);
@@ -3032,7 +3088,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			TDStatusCommand* tdstatuscommand = new TDStatusCommand(m_server);
+			TDStatusCommand* tdstatuscommand = new TDStatusCommand(*itsRSPDriver);
 			command = tdstatuscommand;
 			command->set_ndevices(m_nrspboards);
 		}
@@ -3042,7 +3098,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			SPUStatusCommand* spustatuscommand = new SPUStatusCommand(m_server);
+			SPUStatusCommand* spustatuscommand = new SPUStatusCommand(*itsRSPDriver);
 			command = spustatuscommand;
 			command->set_ndevices(m_nrspboards);
 		}
@@ -3052,7 +3108,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			SplitterCommand* splitterCommand = new SplitterCommand(m_server);
+			SplitterCommand* splitterCommand = new SplitterCommand(*itsRSPDriver);
 			command = splitterCommand;
 			command->set_ndevices(m_nrspboards);
 			if (optarg) {
@@ -3067,7 +3123,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			StatisticsCommand* statscommand = new StatisticsCommand(m_server);
+			StatisticsCommand* statscommand = new StatisticsCommand(*itsRSPDriver);
 			command = statscommand;
 
 			command->set_ndevices(m_nrcus);
@@ -3078,11 +3134,13 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				} else if (!strcmp(optarg, "beamlet")) {
 					command->set_ndevices(m_nrspboards * MEPHeader::N_POL);
 					statscommand->setType(Statistics::BEAMLET_POWER);
+					itsNeedSplitter = true;
 				} else {
 					logMessage(cerr, formatString("Error: invalid statistics type %s", optarg));
 					exit(EXIT_FAILURE);
 				}
 			}
+			itsNeedClock = true;
 		}
 		break;
 
@@ -3096,7 +3154,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			XCStatisticsCommand* xcstatscommand = new XCStatisticsCommand(m_server);
+			XCStatisticsCommand* xcstatscommand = new XCStatisticsCommand(*itsRSPDriver);
 			xcstatscommand->setAngle(xcangle);
 			command = xcstatscommand;
 			command->set_ndevices(m_nrspboards);
@@ -3107,7 +3165,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			SubbandsCommand* subbandscommand = new SubbandsCommand(m_server);
+			SubbandsCommand* subbandscommand = new SubbandsCommand(*itsRSPDriver);
 			subbandscommand->setType(SubbandSelection::XLET);
 			command = subbandscommand;
 
@@ -3136,7 +3194,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			ClockCommand* clockcommand = new ClockCommand(m_server);
+			ClockCommand* clockcommand = new ClockCommand(*itsRSPDriver);
 			command = clockcommand;
 
 			command->set_ndevices(m_nrspboards);
@@ -3158,7 +3216,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			RSUCommand* rsucommand = new RSUCommand(m_server);
+			RSUCommand* rsucommand = new RSUCommand(*itsRSPDriver);
 			command = rsucommand;
 			command->set_ndevices(m_nrspboards);
 
@@ -3171,7 +3229,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			RegisterStateCommand* regstatecommand = new RegisterStateCommand(m_server);
+			RegisterStateCommand* regstatecommand = new RegisterStateCommand(*itsRSPDriver);
 			command = regstatecommand;
 		}
 		break;
@@ -3180,7 +3238,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			VersionCommand* versioncommand = new VersionCommand(m_server);
+			VersionCommand* versioncommand = new VersionCommand(*itsRSPDriver);
 			command = versioncommand;
 			command->set_ndevices(m_nrspboards);
 		}
@@ -3194,7 +3252,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			if (!hbacommand) {
 				if (command)
 					delete command;
-				hbacommand = new HBACommand(m_server);
+				hbacommand = new HBACommand(*itsRSPDriver);
 			}
 
 			command = hbacommand;
@@ -3211,7 +3269,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			TBBCommand* tbbcommand = new TBBCommand(m_server);
+			TBBCommand* tbbcommand = new TBBCommand(*itsRSPDriver);
 			command = tbbcommand;
 
 			command->set_ndevices(m_nrcus);
@@ -3247,7 +3305,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			SICommand* specInvCmd = new SICommand(m_server);
+			SICommand* specInvCmd = new SICommand(*itsRSPDriver);
 			command = specInvCmd;
 
 			command->set_ndevices(m_nrcus);
@@ -3261,31 +3319,13 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'h':	// --help
 			usage(false);
+			exit(EXIT_FAILURE);
 		break;
 
 		case 'X':	// --export help
 			usage(true);
+			exit(EXIT_FAILURE);
 		break;
-
-#ifdef ENABLE_RSPFE
-		case 'f':	// --feport
-			if (optarg) {
-				if (!command || 0 == command->get_ndevices()) {
-					logMessage(cerr,"Error: 'command' argument should come before --feport argument");
-					exit(EXIT_FAILURE);
-				}
-				FECommand* feCommand = dynamic_cast<FECommand*>(command);
-				if (feCommand == 0) {
-					logMessage(cerr,"Error: 'feport' argument can not be used in conjunction with the specified command");
-					exit(EXIT_FAILURE);
-				}
-				feCommand->setFrontEnd(optarg);
-			}
-			else {
-				logMessage(cerr,"Error: option '--feport' requires an argument");
-			}
-		break;
-#endif
 
 		case 'd':	// --duration
 			if (optarg) {
@@ -3323,15 +3363,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			}
 		break;
 
-//	case 'I':	// -- instance
-//	  if (optarg) {
-//	    m_instancenr = atoi(optarg);
-//	  }
-//	  else {
-//	    logMessage(cerr,"Error: option '--instance' requires an argument");
-//	  }
-//	  break;
-
 		case 'D':	// -- directory
 			if (optarg) {
 				if (!command || 0 == command->get_ndevices()) {
@@ -3356,7 +3387,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			if (command) {
 				delete (command);
 			}
-			RawBlockCommand*	rbCmd = new RawBlockCommand(m_server);
+			RawBlockCommand*	rbCmd = new RawBlockCommand(*itsRSPDriver);
 			command = rbCmd;
 			rbCmd->setMode(c == '1');
 
@@ -3507,8 +3538,8 @@ std::list<int> RSPCtl::strtolist(const char* str, int max)
 
 void RSPCtl::logMessage(ostream& stream, const string& message)
 {
-	if(m_command != 0) {
-		m_command->logMessage(stream,message);
+	if(itsCommand != 0) {
+		itsCommand->logMessage(stream,message);
 	}
 	else {
 		stream << message << endl;
@@ -3534,7 +3565,8 @@ int main(int argc, char** argv)
 	RSPCtl c("RSPCtl", argc, argv);
 
 	try {
-		c.mainloop();
+		c.start(); // make initial transition
+		GCFScheduler::instance()->run();
 	}
 	catch (Exception& e) {
 		cerr << "Exception: " << e.text() << endl;

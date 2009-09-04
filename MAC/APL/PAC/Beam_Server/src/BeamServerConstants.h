@@ -30,11 +30,5 @@
 #define UPDATE_INTERVAL  	5				// 
 //#define HBA_INTERVAL	 	2				// how often the HBA delays are calculated
 
-#define N_DIM 			 	3 				// x, y, z or l, m, n
-
-#define SCALE 			 	(1<<(16-2))		// 14 bits
-
-#define SYSTEM_CLOCK_FREQ 	120e6 			// 120 MHz
-
 #endif
 

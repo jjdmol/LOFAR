@@ -36,47 +36,48 @@
 namespace LOFAR {
   namespace BS_Protocol {
 
-    class Beamlet2SubbandMap
-    {
-    public:
-      /**
-       * Constructors for a Beamlet2SubbandMap object.
-       * Currently the tv_usec part is always set to 0 irrespective
-       * of the value passed in.
-       */
-      Beamlet2SubbandMap() { }
-	  
-      /* Destructor for Beamlet2SubbandMap. */
-      virtual ~Beamlet2SubbandMap() {}
+class Beamlet2SubbandMap
+{
+public:
+	// Constructors for a Beamlet2SubbandMap object.
+	// Currently the tv_usec part is always set to 0 irrespective
+	// of the value passed in.
+	Beamlet2SubbandMap() { }
 
-      /* get references to the version arrays */
-      std::map<uint16, uint16>& operator()();
+	// Destructor for Beamlet2SubbandMap.
+	virtual ~Beamlet2SubbandMap() {}
 
-    public:
-      /*@{*/
-      /**
-       * marshalling methods
-       */
-      unsigned int getSize();
-      unsigned int pack  (void* buffer);
-      unsigned int unpack(void *buffer);
-      /*@}*/
+	// get references to the version arrays
+	std::map<uint16, uint16>& operator()();
 
-    public:
-      /* other methods */
-      bitset<EPA_Protocol::MEPHeader::N_SUBBANDS> getAsBitset() const;
+	/*@{*/
+	// marshalling methods
+	unsigned int getSize();
+	unsigned int pack  (void* buffer);
+	unsigned int unpack(void *buffer);
+	/*@}*/
 
-    private:
-      /**
-       * Beamlet2SubbandMap
-       *
-       * map beamlet (first) to subband (second).
-       */
-      std::map<uint16, uint16> m_beamlet2subband;
-      
-    };
+	// other methods
+	bitset<EPA_Protocol::MEPHeader::N_SUBBANDS> getAsBitset() const;
 
-    inline std::map<uint16, uint16>& Beamlet2SubbandMap::operator()() { return m_beamlet2subband; }
-  };
+//	ostream& print (ostream& os) const;
+
+private:
+	// map beamlet (first) to subband (second).
+	std::map<uint16, uint16> m_beamlet2subband;
+
+};
+
+inline std::map<uint16, uint16>& Beamlet2SubbandMap::operator()() { return m_beamlet2subband; }
+
+#if 0
+// operator <<
+inline ostream& operator<<(ostream& os, const Beamlet2SubbandMap	theMap)
+{
+	return (theMap.print(os));
+}
+#endif
+
+  }; // namespace BS_Protocol
 }; // namespace LOFAR
 #endif /* BEAMLET2SUBBANDMAP_H_ */

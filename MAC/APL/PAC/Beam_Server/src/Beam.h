@@ -54,8 +54,8 @@ public:
 	// @param name String identifying this beam uniquely in the OTDB, used with
 	// key-value logger as nodeid.
 	// @param subarrayname The name of the subarray on which this beam is defined.
-	// @param nsubbands The number of subbands of this beam.
-	Beam(std::string name, std::string subarrayname, int nsubbands);
+	// @param ringNr The serdes segment the allocation is ment for.
+	Beam(std::string name, std::string subarrayname, int ringNr);
 
 	// Default destructor.
 	virtual ~Beam();
@@ -154,6 +154,9 @@ public:
 	// Get beam name (can be used as key in key-value logger).
 	std::string getName() const { return m_name; }
 
+	// Get number of ringSegment
+	int ringNr() const	{ return (itsRingNr); }
+
 private:
 	// Don't allow copying this object.
 	Beam (const Beam&);            // not implemented
@@ -162,7 +165,7 @@ private:
 	// Method to undo an allocation.
 	void deallocate();
 
-	//# --- datamembers ---
+	//# ----- DATAMEMBERS -----
 
 	// Name used as key in key-value logger.
 	std::string 		m_name;
@@ -170,11 +173,11 @@ private:
 	// Name of the beam or subarray on which the beam is allocated.
 	std::string 		m_subarrayname;
 
+	// ringSegment the beam is allocated on
+	int					itsRingNr;
+
 	// Allocation.
 	BS_Protocol::Beamlet2SubbandMap m_allocation;
-
-	// number of subbands
-	int					m_nsubbands;
 
 	/** current direction of the beam */
 	BS_Protocol::Pointing m_pointing;

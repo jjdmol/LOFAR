@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <Common/LofarConstants.h>
 
 #include <AMCBase/Converter.h>
 #include <AMCBase/Position.h>
@@ -51,10 +52,10 @@ using namespace RTC;
 //
 // Beam(name, subarray, nrSubbands)
 //
-Beam::Beam(string name, string subarrayname, int nsubbands) :
+Beam::Beam(string name, string subarrayname, int ringNr) :
 	m_name			(name), 
-	m_subarrayname	(subarrayname), 
-	m_nsubbands		(nsubbands)
+	m_subarrayname	(subarrayname),
+	itsRingNr		(ringNr)
 {}
 
 //
@@ -68,15 +69,15 @@ Beam::~Beam()
 }
 
 //
-// allocate(beamletAllocation, beamlets, nrSubbands)
+// allocate(beamletAllocation, beamletPool, nrSubbands)
 //
 // Note: B2Smap = map <beamletnr, subbandnr>
 //
-bool Beam::allocate(Beamlet2SubbandMap allocation, Beamlets& beamlets, int nsubbands)
+bool Beam::allocate(Beamlet2SubbandMap allocation, Beamlets& beamlets, int nrSubbands)
 {
 	// check mapsize with number of subbands
-	if (allocation().size() == 0 || allocation().size() > (unsigned)nsubbands) {
-		LOG_ERROR_STR("Need " << nsubbands << " slots for mapping the beamlets, only " 
+	if (allocation().size() == 0 || allocation().size() > (unsigned)nrSubbands) {
+		LOG_ERROR_STR("Need " << nrSubbands << " slots for mapping the beamlets, only " 
 							  << allocation().size() << " available");
 		return (false);
 	}
@@ -87,15 +88,14 @@ bool Beam::allocate(Beamlet2SubbandMap allocation, Beamlets& beamlets, int nsubb
 	// create a Beamlet object for every Beamletnr in the Beamlets array
 	for (map<uint16,uint16>::iterator it = m_allocation().begin();
 									  it != m_allocation().end(); ++it) {
-		//									 vv beamletnumber
-		Beamlet* beamlet = beamlets.get((int)it->first);
-
+		//																v--- beamletnumber
+		Beamlet* beamlet = beamlets.get((itsRingNr * LOFAR::MAX_BEAMLETS) + (int)it->first);		// create or get entry
 		if (!beamlet) {
 			goto failure;
 		}
 
-		m_beamlets.insert(beamlet); //vv subbandnr
-		if (beamlet->allocate(*this, it->second, nsubbands) < 0) {
+		m_beamlets.insert(beamlet); //v--- subbandnr
+		if (beamlet->allocate(*this, it->second, nrSubbands) < 0) {
 			goto failure;
 		}
 	} // for

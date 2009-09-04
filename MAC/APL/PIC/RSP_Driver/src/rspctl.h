@@ -32,9 +32,6 @@
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 #include <APL/RSP_Protocol/RCUSettings.h>
 #include <APL/RSP_Protocol/HBASettings.h>
-#ifdef ENABLE_RSPFE
-#include "RSPFE_Protocol.ph"
-#endif
 #include <GCF/TM/GCF_Control.h>
 
 #include <APL/RTCCommon/Timestamp.h>
@@ -183,68 +180,6 @@ private:
 	std::list<int>		m_beamlets;	
 	bool           		m_get; // get or set
 	int            		m_ndevices;
-};
-
-//
-// Class FECommand
-//
-class FECommand : public Command
-{
-public:
-	virtual ~FECommand() {}
-
-	void setFrontEnd(string frontend) {
-		string::size_type sep=frontend.find(':');
-		m_host = frontend.substr(0,sep);
-		m_port = atoi(frontend.substr(sep+1).c_str());
-	}
-
-	bool isFrontEndSet() {
-		return (m_port != 0 && m_host.length() > 0);
-	}
-
-#ifdef ENABLE_RSPFE
-	bool isConnected(GCFPortInterface& port) {
-		return (&port == &m_feClient && m_feClient.isConnected());
-	}
-#else
-	bool isConnected(GCFPortInterface&) { return false; }
-#endif
-
-#ifdef ENABLE_RSPFE
-	void connect(GCFTask& task) {
-		m_feClient.init(task, MAC_SVCMASK_RSPCTLFE, GCFPortInterface::SAP, RSPFE_PROTOCOL);
-		m_feClient.setHostName(m_host);
-		m_feClient.setPortNumber(m_port);
-		m_feClient.open();
-	}
-#else
-	void connect(GCFTask&) {}
-#endif
-
-#ifdef ENABLE_RSPFE
-	virtual void logMessage(ostream& stream, const string& message) {
-		if(m_feClient.isConnected()) {
-			RSPFEStatusUpdateEvent statusUpdateEvent;
-			statusUpdateEvent.status = message;
-			m_feClient.send(statusUpdateEvent);
-		}
-		stream << message << endl;
-	}
-#else
-	virtual void logMessage(ostream&stream , const string& message) {
-		stream << message << endl;
-	}
-#endif
-
-protected:
-	explicit FECommand(GCFPortInterface& port) : Command(port),m_host(""),m_port(0),m_feClient() {}
-	FECommand(); // no default construction allowed
-
-private:
-	string 		m_host;
-	uint16 		m_port;
-	GCFTCPPort 	m_feClient;
 };
 
 //
@@ -407,7 +342,7 @@ private:
 //
 // class StatisticsBaseCommand
 //
-class StatisticsBaseCommand : public FECommand
+class StatisticsBaseCommand	: public Command
 {
 public:
 	StatisticsBaseCommand(GCFPortInterface& port);
@@ -714,14 +649,17 @@ public:
 
 	// state methods
 
-	// The initial state. In this state a connection with the RSP
-	// driver is attempted. When the connection is established,
-	// a transition is made to the connected state.
+	// The initial state. In this state a connection with the RSP driver is attempted. 
 	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
 
-	// In this state the command is sent and the acknowledge handled.
-	// Any relevant output is printed.
-	GCFEvent::TResult docommand(GCFEvent& e, GCFPortInterface &p);
+	// Get a subscription on the clockvalue.
+	GCFEvent::TResult sub2Clock(GCFEvent& e, GCFPortInterface &p);
+
+	// Get a subscription on the splitter state.
+	GCFEvent::TResult sub2Splitter(GCFEvent& e, GCFPortInterface &p);
+
+	// In this state the command is sent and the acknowledge handled. Any relevant output is printed.
+	GCFEvent::TResult doCommand(GCFEvent& e, GCFPortInterface &p);
 
 	// Start the controller main loop.
 	void mainloop();
@@ -733,10 +671,10 @@ private:
 	void logMessage(ostream& stream, const string& message);
 
 	// ports
-	GCFPort 		m_server;
+	GCFTCPPort*		itsRSPDriver;
 
 	// the command to execute
-	Command* 		m_command;
+	Command* 		itsCommand;
 
 	// dimensions of the connected hardware
 	int 			m_nrcus;
@@ -748,6 +686,10 @@ private:
 	char** 			m_argv;
 
 	int32	 		m_instancenr;
+
+	// subscribtion admin
+	bool			itsNeedClock;
+	bool			itsNeedSplitter;
 
 	SubClockCommand m_subclock; // always subscribe to clock updates
 };

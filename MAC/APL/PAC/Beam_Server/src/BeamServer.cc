@@ -71,7 +71,7 @@ BeamServer::BeamServer(string name, int argc, char** argv) :
 	itsRSPDriver			(0),
 	itsCalServer			(0),
 	m_beams_modified		(false),
-	m_beams		  			(MEPHeader::N_BEAMLETS, MEPHeader::N_SUBBANDS),
+	itsBeamPool	  			(0),
 	m_converter	  			("localhost"),
 	m_instancenr	  		(-1),
 	itsUpdateInterval		(UPDATE_INTERVAL),
@@ -172,15 +172,30 @@ GCFEvent::TResult BeamServer::con2rspdriver(GCFEvent& event, GCFPortInterface& p
 
 	case RSP_GETCONFIGACK: {				// answer from RSPDriver
 		RSPGetconfigackEvent ack(event);
+		// TODO: don't ignore status field!
 
 		// resize our array to number of current RCUs
-		m_nrcus = ack.n_rcus;
-		m_weights.resize   (itsComputeInterval, m_nrcus, MEPHeader::N_BEAMLETS);
-		m_weights16.resize (itsComputeInterval, m_nrcus, MEPHeader::N_BEAMLETS);
+		itsMaxRCUs = ack.n_rcus;
+		m_weights.resize   (itsComputeInterval, itsMaxRCUs, MEPHeader::N_BEAMLETS);
+		m_weights16.resize (itsComputeInterval, itsMaxRCUs, MEPHeader::N_BEAMLETS);
 
 		// initialize matrices
 		m_weights   = complex<double>(0,0);
 		m_weights16 = complex<int16_t>(0,0);
+
+		// send request for splitter info
+		RSPSubsplitterEvent		subSplitter;
+		subSplitter.period = 1;
+		itsRSPDriver->send(subSplitter);
+	}
+	break;
+
+	case RSP_UPDSPLITTER: {
+		RSPUpdsplitterEvent		answer(event);
+		// TODO: don't ignore status field!
+		itsSplitterOn = answer.splitter[0];
+		LOG_INFO_STR("The ringsplitter is " << (itsSplitterOn ? "ON" : "OFF"));
+		_createBeamPool();
 
 		TRAN(BeamServer::con2calserver);
 	}
@@ -249,6 +264,15 @@ GCFEvent::TResult BeamServer::con2calserver(GCFEvent& event, GCFPortInterface& p
 		LOG_INFO_STR("port.getState()=" << port.getState());
 		LOG_INFO(formatString("port '%s' retry to open...", port.getName().c_str()));
 		itsCalServer->autoOpen(30, 0, 2);	// try max 30 times every 2 seconds than report DISCO
+	}
+	break;
+
+	case RSP_UPDSPLITTER: {
+		RSPUpdsplitterEvent		answer(event);
+		// TODO: don't ignore status field!
+		itsSplitterOn = answer.splitter[0];
+		LOG_INFO_STR("The ringsplitter is " << (itsSplitterOn ? "ON" : "OFF"));
+		_createBeamPool();
 	}
 	break;
 
@@ -388,8 +412,17 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 		CALUpdateEvent calupd(event);
 		if (calupd.status != CAL_Protocol::CAL_SUCCESS) {
 			LOG_INFO_STR("Received valid CAL_UPDATE event(" << calupd.status << ").");
-			m_beams.updateCalibration(calupd.handle, calupd.gains);
+			itsBeamPool->updateCalibration(calupd.handle, calupd.gains);
 		}
+	}
+	break;
+
+	case RSP_UPDSPLITTER: {
+		RSPUpdsplitterEvent		answer(event);
+		// TODO: don't ignore status field!
+		itsSplitterOn = answer.splitter[0];
+		LOG_INFO_STR("The ringsplitter is switched " << (itsSplitterOn ? "ON" : "OFF"));
+		_createBeamPool();
 	}
 	break;
 
@@ -502,10 +535,10 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 			m_bt.getBeam()->setSubarray(ack.subarray);
 
 			// set calibration handle for this beam
-			m_beams.setCalibrationHandle(m_bt.getBeam(), ack.handle);
+			itsBeamPool->setCalibrationHandle(m_bt.getBeam(), ack.handle);
 
 			// send succesful ack
-			beamallocack.status 	  = BS_Protocol::BS_SUCCESS;
+			beamallocack.status 	  = BS_Protocol::BS_NO_ERR;
 			beamallocack.subarrayname = ack.subarray.getName();
 			beamallocack.handle 	  = (BS_Protocol::memptr_t)m_bt.getBeam();
 			m_bt.getPort()->send(beamallocack);
@@ -516,7 +549,7 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 			LOG_DEBUG_STR("getAllocation.size()= " << (int)m_bt.getBeam()->getAllocation()().size());
 
 			// failed to subscribe
-			beamallocack.status = ERR_BEAMALLOC;
+			beamallocack.status = BS_BEAMALLOC_ERR;
 			beamallocack.handle = 0;
 			m_bt.getPort()->send(beamallocack);
 
@@ -569,7 +602,7 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 		// unsubscribe
 		CALUnsubscribeEvent unsubscribe;
 		unsubscribe.name 	= m_bt.getBeam()->getSubarrayName();
-		unsubscribe.handle  = m_beams.findCalibrationHandle(m_bt.getBeam());
+		unsubscribe.handle  = itsBeamPool->findCalibrationHandle(m_bt.getBeam());
 		ASSERT(unsubscribe.handle != 0);
 		itsCalServer->send(unsubscribe);
 	}
@@ -587,7 +620,7 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 		}
 
 		// send succesful ack
-		beamfreeack.status = BS_Protocol::BS_SUCCESS;
+		beamfreeack.status = BS_Protocol::BS_NO_ERR;
 		beamfreeack.handle = (BS_Protocol::memptr_t)m_bt.getBeam();
 
 		m_bt.getPort()->send(beamfreeack);
@@ -682,6 +715,35 @@ void BeamServer::undertaker()
 }
 
 //
+// _createBeamPool()
+//
+void BeamServer::_createBeamPool()
+{
+	LOG_INFO("Creating new beampool, shutting down existing beams");
+	// close connection with all clients.
+	while (m_client_list.size() > 0) {
+		list<GCFPortInterface*>::iterator it = m_client_list.begin();
+		if ((*it)->isConnected()) {
+			(*it)->close();
+			destroyAllBeams(*it);
+			m_client_list.remove(*it);
+			m_dead_clients.push_back(*it);
+		}
+	}
+
+	// remove old pool if any
+	if (itsBeamPool) {
+		delete itsBeamPool;
+		itsBeamPool = 0;
+	}
+
+	// make a new one based on the current value of the splitter.
+	LOG_INFO_STR("Initializing space for " << (itsSplitterOn ? 2 : 1 ) * MEPHeader::N_BEAMLETS << " beamlets");
+	itsBeamPool = new Beams((itsSplitterOn ? 2 : 1 ) * MEPHeader::N_BEAMLETS, MEPHeader::N_SUBBANDS);
+	ASSERTSTR(itsBeamPool, "Cannot allocate space for the beamlet administration.");
+}
+
+//
 // destroyAllBeams(port)
 //
 void BeamServer::destroyAllBeams(GCFPortInterface* port)
@@ -691,7 +753,8 @@ void BeamServer::destroyAllBeams(GCFPortInterface* port)
 	// deallocate all beams for this client
 	for (set<Beam*>::iterator beamit = m_client_beams[port].begin();
 								beamit != m_client_beams[port].end(); ++beamit) {
-		if (!m_beams.destroy(*beamit)) {
+		LOG_INFO_STR("Stopping beam " << (*beamit)->getName());
+		if (!itsBeamPool->destroy(*beamit)) {
 			LOG_WARN("Beam not found...");
 		}
 	}
@@ -705,9 +768,13 @@ Beam* BeamServer::newBeam(BeamTransaction& 					bt,
 						  GCFPortInterface* 				port,
 						  std::string 						name, 
 						  std::string 						subarrayname, 
-						  BS_Protocol::Beamlet2SubbandMap	allocation)
+						  BS_Protocol::Beamlet2SubbandMap	allocation,
+						  LOFAR::bitset<LOFAR::MAX_RCUS>	rcumask,
+						  int								ringNr,
+						  int*								beamError)
 {
-	LOG_TRACE_FLOW_STR("newBeam(" << port->getName() << "," << name << "," << subarrayname);
+	LOG_TRACE_FLOW_STR("newBeam(port=" << port->getName() << ", name=" << name << ", subarray=" << subarrayname 
+										<< ", ring=" << ringNr);
 
 	ASSERT(port);
 
@@ -715,18 +782,36 @@ Beam* BeamServer::newBeam(BeamTransaction& 					bt,
 	// returning 0 will result in a negative ACK
 	if (bt.getBeam() != 0 || bt.getPort() != 0) {
 		LOG_ERROR("Previous alloc is still in progress");
-		 return (0);
+		*beamError = BS_BEAMALLOC_ERR;
+		return (0);
 	}
 	if (name.length() == 0) {
 		LOG_ERROR("Name of beam not set, cannot alloc new beam");
+		*beamError = BS_RANGE_ERR;
 		return (0);
 	}
 	if (subarrayname.length() == 0)  {
 		LOG_ERROR("SubArrayName not set, cannot alloc new beam");
+		*beamError = BS_RANGE_ERR;
 		return (0); 
 	}
+	if (itsSplitterOn) {		// check allocation
+		int		ringLimit = itsMaxRCUs / 2;
+		for (int r = 0; r < itsMaxRCUs; r++) {
+			if (rcumask.test(r) && (ringNr != (r < ringLimit ? 0 : 1))) {
+				LOG_ERROR_STR("RCU's specified in the wrong ring, (rcu=" << r << ")");
+				*beamError = BS_WRONG_RING_ERR;
+				return (0);
+			}
+		}
+	}
+	else if (ringNr != 0) {		// splitter is off so ringNr must be 0
+		LOG_ERROR_STR("Splitter is off, ring segment 1 does not exist at this moment.");
+		*beamError = BS_SPLITTER_OFF_ERR;
+		return (0);
+	}
 
-	Beam* beam = m_beams.create(name, subarrayname, allocation);
+	Beam* beam = itsBeamPool->create(name, subarrayname, allocation, ringNr);
 
 	if (beam) { // register new beam
 		m_client_beams[port].insert(beam);
@@ -745,7 +830,7 @@ void BeamServer::deleteBeam(BeamTransaction& bt)
 	ASSERT(bt.getPort() && bt.getBeam());
 
 	// destroy beam
-	if (!m_beams.destroy(bt.getBeam())) {
+	if (!itsBeamPool->destroy(bt.getBeam())) {
 		LOG_WARN("Beam not found...");
 	}
 
@@ -845,7 +930,8 @@ bool BeamServer::beamalloc_start(BSBeamallocEvent& ba,
 								 GCFPortInterface& port)
 {
 	// allocate the beam
-	Beam* beam = newBeam(m_bt, &port, ba.name, ba.subarrayname, ba.allocation);
+	int		beamError(BS_NO_ERR);
+	Beam* beam = newBeam(m_bt, &port, ba.name, ba.subarrayname, ba.allocation, ba.rcumask, ba.ringNr, &beamError);
 
 	if (!beam) {
 		LOG_FATAL_STR("BEAMALLOC: failed to allocate beam " << ba.name << " on " << ba.subarrayname);
@@ -853,7 +939,7 @@ bool BeamServer::beamalloc_start(BSBeamallocEvent& ba,
 		BSBeamallocackEvent ack;
 		ack.handle 		 = 0;
 		ack.subarrayname = ba.subarrayname;
-		ack.status 		 = BS_Protocol::ERR_RANGE;
+		ack.status 		 = beamError;
 		port.send(ack);
 
 		return (false);
@@ -870,12 +956,12 @@ bool BeamServer::beamfree_start(BSBeamfreeEvent&  bf,
 {
 	Beam* beam = (Beam*)bf.handle;
 
-	if (!m_beams.exists(beam)) { 
+	if (!itsBeamPool->exists(beam)) { 
 		LOG_FATAL_STR("BEAMFREE failed: beam " << (Beam*)bf.handle << " does not exist");
 
 		BSBeamfreeackEvent ack;
 		ack.handle = bf.handle;
-		ack.status = BS_Protocol::ERR_BEAMFREE;
+		ack.status = BS_Protocol::BS_BEAMFREE_ERR;
 		port.send(ack);
 
 		return (false);
@@ -896,7 +982,7 @@ bool BeamServer::beampointto_action(BSBeampointtoEvent& pt,
 	Beam*	beam   = (Beam*)pt.handle;
 
 	// check if beam exists.
-	if (!m_beams.exists(beam))  {
+	if (!itsBeamPool->exists(beam))  {
 		LOG_ERROR(formatString("BEAMPOINTTO: invalid beam handle (%d)", pt.handle));
 		return (false);
 	}
@@ -940,7 +1026,7 @@ inline complex<int16_t> convert2complex_int16_t(complex<double> cd)
 void BeamServer::compute_HBAdelays(Timestamp time)
 {
 	// calculate HBA delays for all HBA beams.
-	m_beams.calculateHBAdelays(time, itsHbaInterval, &m_converter, itsTileRelPos, itsElementDelays);
+	itsBeamPool->calculateHBAdelays(time, itsHbaInterval, &m_converter, itsTileRelPos, itsElementDelays);
 }
 
 //
@@ -952,7 +1038,7 @@ void BeamServer::send_HBAdelays(Timestamp	time)
 	// because only the beam-factory has access to all beams. So we must
 	// implement the sending of the HBA delays in the beamfactory!
 //	LOG_INFO_STR("sending hba delays for interval " << time << " : " << time + (long)(itsComputeInterval-1));
-	m_beams.sendHBAdelays(time, *itsRSPDriver);
+	itsBeamPool->sendHBAdelays(time, *itsRSPDriver);
 }
 
 //
@@ -964,7 +1050,7 @@ void BeamServer::send_HBAdelays(Timestamp	time)
 void BeamServer::compute_weights(Timestamp time)
 {
 	// calculate weights for all beamlets
-	m_beams.calculate_weights(time, itsComputeInterval, &m_converter, m_weights);
+	itsBeamPool->calculate_weights(time, itsComputeInterval, &m_converter, m_weights);
 
 	// convert the weights from double to int16
 	m_weights16 = convert2complex_int16_t(m_weights);
@@ -987,11 +1073,11 @@ void BeamServer::send_weights(Timestamp time)
   
 	// select all BLPS, no subarraying
 	sw.rcumask.reset();
-	for (int i = 0; i < m_nrcus; i++) {
+	for (int i = 0; i < itsMaxRCUs; i++) {
 		sw.rcumask.set(i);
 	}
   
-	sw.weights().resize(itsComputeInterval, m_nrcus, MEPHeader::N_BEAMLETS);
+	sw.weights().resize(itsComputeInterval, itsMaxRCUs, MEPHeader::N_BEAMLETS);
 	sw.weights() = m_weights16;
   
 	LOG_INFO_STR("sending weights for interval " << time << " : " << time + (long)(itsComputeInterval-1));
@@ -1015,47 +1101,53 @@ void BeamServer::send_sbselection()
 		return;
 	}
 
-	RSPSetsubbandsEvent ss;
-	ss.timestamp.setNow(0);
-	ss.rcumask.reset(); 		// select all BLPS, no subarraying
-	for (int i = 0; i < m_nrcus; i++) {
-		ss.rcumask.set(i);
-	}
-	//
-	// Always allocate the array as if all beamlets were
-	// used. Because of allocation and deallocation of beams
-	// there can be holes in the subband selection.
-	//
-	// E.g. Beamlets 0-63 are used by beam 0, beamlets 64-127 by
-	// beam 1, then beam 0 is deallocated, thus there is a hole
-	// of 64 beamlets before the beamlets of beam 1.
-	//
-	ss.subbands.setType(SubbandSelection::BEAMLET);
-	ss.subbands().resize(1, MEPHeader::N_BEAMLETS);
-	ss.subbands() = 0;
+	for (int ringNr = 0; ringNr <= (itsSplitterOn ? 1 : 0); ringNr++) {
+		RSPSetsubbandsEvent ss;
+		ss.timestamp.setNow(0);
+		ss.rcumask.reset();
+		// splitter=OFF: all RCUs ; splitter=ON: 2 runs with half the RCUs
+		int	maxRCUs = (itsSplitterOn ? itsMaxRCUs / 2 : itsMaxRCUs);
+		for (int i = 0; i < maxRCUs; i++) {
+			ss.rcumask.set((ringNr * maxRCUs) + i);
+		}
+		//
+		// Always allocate the array as if all beamlets were
+		// used. Because of allocation and deallocation of beams
+		// there can be holes in the subband selection.
+		//
+		// E.g. Beamlets 0-63 are used by beam 0, beamlets 64-127 by
+		// beam 1, then beam 0 is deallocated, thus there is a hole
+		// of 64 beamlets before the beamlets of beam 1.
+		//
+		ss.subbands.setType(SubbandSelection::BEAMLET);
+		ss.subbands().resize(1, MEPHeader::N_BEAMLETS);
+		ss.subbands() = 0;
 
-	Beamlet2SubbandMap sbsel = m_beams.getSubbandSelection();
-	LOG_DEBUG(formatString("nrsubbands=%d", sbsel().size()));
+		Beamlet2SubbandMap sbsel = itsBeamPool->getSubbandSelection(ringNr);
+		LOG_DEBUG(formatString("nrsubbands=%d", sbsel().size()));
 
-	for (map<uint16,uint16>::iterator sel = sbsel().begin();
-										sel != sbsel().end(); ++sel) {
-		LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
+		for (map<uint16,uint16>::iterator sel = sbsel().begin();
+											sel != sbsel().end(); ++sel) {
+			LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
 
-		if (sel->first >= MEPHeader::N_BEAMLETS) {
-			LOG_ERROR(formatString("SBSELECTION: invalid src index %d", sel->first));
-			continue;
+			if (sel->first >= MEPHeader::N_BEAMLETS) {
+				LOG_ERROR(formatString("SBSELECTION: invalid src index %d", sel->first));
+				continue;
+			}
+
+			if (sel->second >= MEPHeader::N_SUBBANDS) {
+				LOG_ERROR(formatString("SBSELECTION: invalid tgt index %d", sel->second));
+				continue;
+			}
+
+			// same selection for x and y polarization
+			ss.subbands()(0, (int)sel->first) = sel->second;
 		}
 
-		if (sel->second >= MEPHeader::N_SUBBANDS) {
-			LOG_ERROR(formatString("SBSELECTION: invalid tgt index %d", sel->second));
-			continue;
-		}
-
-		// same selection for x and y polarization
-		ss.subbands()(0, (int)sel->first) = sel->second;
+		LOG_DEBUG_STR("Sending subbandselecton for ring segment " << ringNr);
+//		LOG_DEBUG_STR(sbsel);
+		itsRSPDriver->send(ss);
 	}
-
-	itsRSPDriver->send(ss);
 }
 
 //

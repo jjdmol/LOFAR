@@ -48,7 +48,7 @@ public:
 		DONE,
 		FAIL
 	};
-	static const int MAX_REGISTER_ERROR = 2;
+	static const int MAX_REGISTER_ERROR = 3;
 
 	// constructors /destructor
 	explicit RegisterState(State state = UNDEFINED) {

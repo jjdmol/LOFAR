@@ -102,7 +102,6 @@ void SetSplitterCmd::ack(CacheBuffer& /*cache*/)
 void SetSplitterCmd::apply(CacheBuffer& cache, 	bool setModFlag)
 {
 	SerdesBuffer&	SerdesBuf = cache.getSdsWriteBuffer();
-	SerdesBuf.setRSPmask(itsEvent->rspmask);
 	if (itsEvent->switch_on) {
 		SerdesBuf.newCommand(SERDES_ON_CMD, SERDES_ON_CMD_LEN);
 		cache.setSplitterActive(true); // set number of serdes lanes to 8
@@ -111,18 +110,17 @@ void SetSplitterCmd::apply(CacheBuffer& cache, 	bool setModFlag)
 		SerdesBuf.newCommand(SERDES_OFF_CMD, SERDES_OFF_CMD_LEN);
 		cache.setSplitterActive(false); // set number of serdes lanes to 4
 	}
-	string	hd;
-	hexdump(hd, SerdesBuf.getBufferPtr(), SerdesBuf.getDataLen());
-	LOG_INFO_STR(hd);
+//	string	hd;
+//	hexdump(hd, SerdesBuf.getBufferPtr(), SerdesBuf.getDataLen());
+//	LOG_INFO_STR(hd);
 
 	// mark registers that the serdes registers should be written.
 	if (setModFlag) {
-		for (int b = 0; b < MAX_N_RSPBOARDS; b++) {
-			if (SerdesBuf.hasRSP(b)) {
-				cache.getCache().getState().sbwState().write(b);
-				cache.getCache().getState().cdo().write(b);
-				cache.getCache().getState().rad().write(b);
-			}
+		for (int b = 0; b < StationSettings::instance()->nrRspBoards(); b++) {
+			cache.getCache().getState().sbwState().write(b);
+			cache.getCache().getState().cdo().write(2*b);
+			cache.getCache().getState().cdo().write(2*b+1);
+			cache.getCache().getState().rad().write(b);
 		}
 	}
 }
@@ -159,12 +157,5 @@ void SetSplitterCmd::setTimestamp(const Timestamp& timestamp)
 //
 bool SetSplitterCmd::validate() const
 {
-	// return true when everything is right
-	if (itsEvent->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards()) {
-		return (true);
-	}
-
-	// show our validation values.
-    LOG_ERROR(formatString("cmd rspmask.count = %d",itsEvent->rspmask.count()));
-    return (false);
+	return (true);
 }

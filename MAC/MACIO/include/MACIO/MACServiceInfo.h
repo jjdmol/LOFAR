@@ -36,18 +36,18 @@ namespace LOFAR {
 // \addtogroup MAC
 // @{
 
-// The two only well-known ports of whole MAC.
+// The only well-known ports of whole MAC.
+#define	MAC_EC_PORT						10000
 #define	SHM_INFOSERVER_PORT				23990
 #define	MAC_CODELOGGING_PORT			23999
-#define	MAC_SERVICEBROKER_PORT		24000
-#define	MAC_EC_PORT			          10000
+#define	MAC_SERVICEBROKER_PORT			24000
 
 // Define names for the services
 #define MAC_SVCMASK_RSPDRIVER			"RSPDriver%s:acceptor_v3.1"
 #define	MAC_SVCMASK_CALSERVER			"CalServer%s:acceptor_v2"
-#define MAC_SVCMASK_BEAMSERVER			"BeamServer%s:acceptor_v2"
+#define MAC_SVCMASK_BEAMSERVER			"BeamServer%s:acceptor_v2.1"
 #define MAC_SVCMASK_TBBDRIVER			"TBBDriver%s:acceptor"
-#define MAC_SVCMASK_RSPCTLFE			"RSPCtlFE%s:acceptor"
+//#define MAC_SVCMASK_RSPCTLFE			"RSPCtlFE%s:acceptor"
 
 // Define names for the daemons
 #define MAC_SVCMASK_SERVICEBROKER		"ServiceBroker%s:v1.0"

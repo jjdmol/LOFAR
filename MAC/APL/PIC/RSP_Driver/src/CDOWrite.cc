@@ -164,6 +164,7 @@ void CDOWrite::sendrequest()
 		cdo.hdr.set(MEPHeader::CDO_SETTINGS_HDR);
 
 		int output_lane = -1;
+//		LOG_INFO_STR("CDO: splitter[" << getBoardId() << "] is " << (Cache::getInstance().getBack().isSplitterActive() ? "ON" : "OFF"));
 		for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
 			char paramname[64];
 			// look if board is selected for sector 0
@@ -206,10 +207,11 @@ void CDOWrite::sendrequest()
 			l_srcip = string2ip_uint32(GET_CONFIG_STRING(srcip));
 			l_dstip = string2ip_uint32(GET_CONFIG_STRING(dstip));
 			
-			LOG_INFO(formatString("CDO: lane=%d, src=[%s,%s], dst=[%s,%s]",
+			LOG_INFO(formatString("CDO: RSP=%d, lane=%d, src=[%s,%s], dst=[%s,%s,%d]",
+								getBoardId(),
 								output_lane,
 								srcmac, GET_CONFIG_STRING(srcip),
-								GET_CONFIG_STRING(dstmac), GET_CONFIG_STRING(dstip)));
+								GET_CONFIG_STRING(dstmac), GET_CONFIG_STRING(dstip), BASEUDPPORT+getBoardId()));
 					
 			// settings
 			cdo.control.enable = GET_CONFIG("RSPDriver.CDO_ENABLE", i);

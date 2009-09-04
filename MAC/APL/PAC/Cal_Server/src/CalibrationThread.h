@@ -38,8 +38,9 @@ namespace LOFAR {
     {
     public:
       CalibrationThread(SubArrays*            subarrays,
-			CalibrationInterface* cal,
-			pthread_mutex_t&      globallock);
+						CalibrationInterface* cal,
+						pthread_mutex_t&      globallock,
+						const string&		  dataDir);
       virtual ~CalibrationThread();
 
       void setACC(ACC* acc);
@@ -52,6 +53,7 @@ namespace LOFAR {
       SubArrays*            m_subarrays;
       CalibrationInterface* m_cal;
       ACC*                  m_acc;
+	  string				itsDataDir;
 
       // thread management
       pthread_t        m_thread;

@@ -349,11 +349,11 @@ void HBAProtocolWrite::sendrequest()
 		rcuprotocol.hdr.set(MEPHeader::RCU_PROTOCOLY_HDR, 1 << (getCurrentIndex() / N_WRITES), MEPHeader::WRITE, sizeof(i2c_protocol));
 		rcuprotocol.protocol.setBuffer(i2c_protocol, sizeof(i2c_protocol));
 		
-		/*
+#if 0		
 		string tmpbuf;
 		hexdump (tmpbuf, i2c_protocol, sizeof(i2c_protocol));
 		LOG_INFO_STR("HBA WRITE: " << tmpbuf);
-  		*/
+#endif  		
 	
 		m_hdr = rcuprotocol.hdr; // remember header to match with ack
 		getBoardPort().send(rcuprotocol);
@@ -370,11 +370,11 @@ void HBAProtocolWrite::sendrequest()
 		memset(clear, 0xBB, RESULT_SIZE); // clear result
 		rcuresultwrite.payload.setBuffer(clear, RESULT_SIZE);
 		
-		/*
+#if 0		
 		string tmpbuf;
 		hexdump (tmpbuf, clear, sizeof(clear));
 		LOG_INFO_STR("HBA RESULT WRITE: " << tmpbuf);
-		*/
+#endif		
 		
 		m_hdr = rcuresultwrite.hdr; // remember header to match with ack
 		getBoardPort().send(rcuresultwrite);
@@ -399,7 +399,7 @@ GCFEvent::TResult HBAProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
 
 	uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / N_WRITES);
 
-	LOG_INFO_STR("hba[" << (int)(global_blp) << "]: handleAck");
+//	LOG_INFO_STR("hba[" << (int)(global_blp) << "]: handleAck");
 	if (!ack.hdr.isValidAck(m_hdr)) {
 		LOG_ERROR("HBAProtocolWrite::handleack: invalid ack");
 		Cache::getInstance().getState().hbaprotocol().write_error(global_blp * MEPHeader::N_POL);

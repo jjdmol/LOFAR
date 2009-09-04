@@ -95,6 +95,9 @@ public:
 	void write_acc();
 
 private:
+	// ----- DATA MEMBERS -----
+	string						itsDataDir;		// directory to store the interim data files in.
+
 	AntennaArrays               m_arrays;       // antenna arrays (read from file)
 	Sources                     m_sources;      // source catalog (read from file)
 	DipoleModels                m_dipolemodels; // dipole model   (read from file)

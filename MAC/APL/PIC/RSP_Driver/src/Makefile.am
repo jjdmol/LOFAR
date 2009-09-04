@@ -77,6 +77,7 @@ RSPDriver_SOURCES	= \
 	GetRawBlockCmd.cc \
 	SetSplitterCmd.cc \
 	GetSplitterCmd.cc \
+	UpdSplitterCmd.cc \
 	\
 	SyncAction.cc \
 	WriteReg.cc \
@@ -170,6 +171,7 @@ NOINSTHDRS	= \
 	GetRawBlockCmd.h \
 	SetSplitterCmd.h \
 	GetSplitterCmd.h \
+	UpdSplitterCmd.h \
 	\
 	SyncAction.h \
 	WriteReg.h \

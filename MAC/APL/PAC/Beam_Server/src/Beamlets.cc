@@ -46,9 +46,9 @@ const complex<double> I_COMPLEX = complex<double>(0.0,1.0);
 //
 // Beamlets()
 //
-Beamlets::Beamlets(int nbeamlets) : m_nbeamlets(nbeamlets)
+Beamlets::Beamlets(int maxBeamletsEver) : itsMaxBeamlets(maxBeamletsEver)
 {
-	m_beamlets = new Beamlet[m_nbeamlets];
+	itsBeamletsArray = new Beamlet[itsMaxBeamlets];
 }
 
 //
@@ -56,7 +56,7 @@ Beamlets::Beamlets(int nbeamlets) : m_nbeamlets(nbeamlets)
 //
 Beamlets::~Beamlets()
 {
-	delete [] m_beamlets;
+	delete [] itsBeamletsArray;
 }
 
 //
@@ -64,11 +64,11 @@ Beamlets::~Beamlets()
 //
 Beamlet* Beamlets::get(int index) const
 {
-	if (index < 0 || index >= m_nbeamlets) {
+	if (index < 0 || index >= itsMaxBeamlets) {
 		return (0);
 	}
 
-	return (m_beamlets + index);
+	return (itsBeamletsArray + index);
 }
 
 //
@@ -80,12 +80,12 @@ void Beamlets::calculate_weights(Array<complex<double>, 3>& weights)
 	int 	compute_interval = weights.extent(firstDim);
 	Range 	all 			 = Range::all();
 
-	ASSERT(weights.extent(thirdDim) == m_nbeamlets);
+	ASSERT(weights.extent(thirdDim) == LOFAR::MAX_BEAMLETS);
 
 	weights = complex<double>(0.0, 0.0); // initialize to zero weights
 
-	for (int bi = 0; bi < m_nbeamlets; bi++) {
-		Beamlet* beamlet = m_beamlets + bi;
+	for (int bi = 0; bi < itsMaxBeamlets; bi++) {
+		Beamlet* beamlet = itsBeamletsArray + bi;
 		if (!beamlet || !beamlet->allocated()) {
 			continue;
 		}
@@ -101,7 +101,7 @@ void Beamlets::calculate_weights(Array<complex<double>, 3>& weights)
 			LOG_ERROR(formatString("\nno beam for beamlet %d?\n", bi));
 			continue;
 		}
-		const Array<double,2>& lmn = beam->getLMNCoordinates();
+		const Array<double,2>& lmn = beam->getLMNCoordinates();				// calculated trackings
 		const Array<double,3>& pos = beam->getSubarray().getAntennaPos();
 		// note: pos[antennes, polarisations, coordinates]
 

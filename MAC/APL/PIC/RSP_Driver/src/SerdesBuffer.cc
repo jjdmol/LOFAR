@@ -67,7 +67,6 @@ void SerdesBuffer::clear()
 {
 	memset(itsBuffer, 0, SERDES_BUFFER_SIZE);
 	itsNrBytes = 0;
-	itsRSPmask.reset();
 }
 
   } // namespace RSP

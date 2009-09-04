@@ -207,6 +207,7 @@ int Scheduler::pqueue_remove_commands(pqueue&			pq,
 		if ((c->getPort() == &port) && (0 == handle || &(*c) == (Command*)handle)) {
 			count++;
 			// don't push back on pq, c will be deleted when it goes out of scope
+			LOG_DEBUG_STR("Removing command '" << c->name() << "' from the queue");
 		}
 		else {
 			pq.push(c);
@@ -281,7 +282,9 @@ void Scheduler::enter(Ptr<Command> command, QueueID queue, bool immediateApplyAl
 			command->ack  (Cache::getInstance().getFront());
 			return;
 		}
-		command->ack(Cache::getInstance().getFront()); // each SetXxxCmd needs an ack.
+		if (!command->delayedResponse()) {
+			command->ack(Cache::getInstance().getFront()); // each SetXxxCmd needs an ack.
+		}
 	}
 
 	/* determine at which time the command can actually be carried out */
@@ -366,12 +369,12 @@ void Scheduler::scheduleCommands()
 
 		/* detect late commands, but just execute them */
 		if (command->getTimestamp() <= m_current_time + (long)(scheduling_offset - SYNC_INTERVAL_INT)) {
-			LOG_WARN_STR("command is late, timestamp=" << command->getTimestamp()
+			LOG_WARN_STR("command '" << command->name() << "' is late, timestamp=" << command->getTimestamp()
 						<< ", current_time=" << m_current_time);
 		}
 
 		if (command->getTimestamp() <= m_current_time + (long)scheduling_offset) {
-			LOG_DEBUG_STR("scheduling command with time=" << command->getTimestamp());
+			LOG_DEBUG_STR("scheduling command '" << command->name() << "' with time=" << command->getTimestamp());
 
 			m_now_queue.push(command);
 			m_later_queue.pop();
@@ -396,12 +399,12 @@ void Scheduler::scheduleCommands()
 
 		/* detect late commands, but just execute them */
 		if (command->getTimestamp() <= m_current_time + (long)(scheduling_offset - SYNC_INTERVAL_INT)) {
-			LOG_WARN_STR("periodic command is late, timestamp=" << command->getTimestamp()
+			LOG_WARN_STR("periodic command '" << command->name() << "' is late, timestamp=" << command->getTimestamp()
 						<< ", current_time=" << m_current_time);
 		}
 
 		if (command->getTimestamp() <= m_current_time + (long)scheduling_offset) {
-			LOG_DEBUG_STR("scheduling periodic command with time=" << command->getTimestamp());
+			LOG_DEBUG_STR("scheduling periodic command '" << command->name() << "' with time=" << command->getTimestamp());
 			m_now_queue.push(command);
 		}
 

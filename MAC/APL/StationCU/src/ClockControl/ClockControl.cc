@@ -512,7 +512,6 @@ GCFEvent::TResult ClockControl::retrieveSplitters_state(GCFEvent& event,
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
 
 		itsSplitters = ack.splitter;
-		LOG_DEBUG_STR ("rspmask="  << ack.rspmask);
 		LOG_DEBUG_STR ("Splitters="  << itsSplitters << ", going to retrieve-clock state");
 		TRAN(ClockControl::retrieveClock_state);				// go to next state.
 	}
@@ -967,10 +966,6 @@ void ClockControl::requestSplitterSetting()
 	RSPGetsplitterEvent		msg;
 	msg.timestamp = RTC::Timestamp(0,0);
 	msg.cache = 1;
-	msg.rspmask.reset();
-	for (int i = 0; i < sc.nrRSPs; i++) {
-		msg.rspmask.set(i);
-	}
 	itsRSPDriver->send(msg);
 }
 
@@ -986,10 +981,6 @@ void ClockControl::sendSplitterSetting()
 	RSPSetsplitterEvent		msg;
 	msg.timestamp = RTC::Timestamp(0,0);
 	msg.switch_on = itsSplitterRequest;
-	msg.rspmask.reset();
-	for (int i = 0; i < sc.nrRSPs; i++) {
-		msg.rspmask.set(i);
-	}
 	itsRSPDriver->send(msg);
 }
 //
