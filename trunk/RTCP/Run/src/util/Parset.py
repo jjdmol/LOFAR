@@ -147,7 +147,7 @@ class Parset(dict):
           for j in xrange(i,len(v)+1):
             if j == len(v) or str(v[j]) != str(v[i]):
               if j-i-1 > 1:
-                dst.append( "%s * %s" % (j-i,strfy(v[i])) )
+                dst.append( "%s*%s" % (j-i,strfy(v[i])) )
                 i = j
                 written = True
               break
@@ -159,7 +159,7 @@ class Parset(dict):
           for j in xrange(i,len(v)+1):
             if j == len(v) or not isint(v[j]) or float(v[j]) != float(v[i])+j-i:
               if j-i-1 > 2:
-                dst.append( "%s .. %s" % (str(v[i]),str(v[i]+j-i-1) ) )
+                dst.append( "%s..%s" % (str(v[i]),str(v[i]+j-i-1) ) )
                 i = j
                 written = True
               break
