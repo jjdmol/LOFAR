@@ -63,12 +63,6 @@ public:
 	inline int			getDataLen	() 
 		{ return (itsNrBytes);	}
 
-	// RSPmask functions
-	inline void		setRSPmask(bitset<MAX_RSPBOARDS> aRSPmask)
-		{ itsRSPmask = aRSPmask; }
-	inline bool		hasRSP(int	rspNr)
-		{ return (itsRSPmask.test(rspNr)); }
-
 private:
 	// reserve space for a sequence of 16 commands.
 	#define	SERDES_BUFFER_SIZE		64
@@ -80,7 +74,6 @@ private:
 	//# --- Datamembers ---
 	char						itsBuffer [SERDES_BUFFER_SIZE];
 	int							itsNrBytes;
-	bitset<MAX_RSPBOARDS>		itsRSPmask;
 };
 
 //# --- Inline functions ---

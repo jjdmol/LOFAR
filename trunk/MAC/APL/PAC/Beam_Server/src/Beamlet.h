@@ -43,10 +43,10 @@ public:
 
 	// Allocate the beamlet.
 	// @param subband Index of the subband to allocate
-	// @param nsubbands Maximum number of subbands
+	// @param nrSubbands Maximum number of subbands
 	// within the spectral window.
 	// @return 0 if allocation succeeded, < 0 otherwise.
-	int allocate(const Beam& beam, int subband, int nsubbands);
+	int allocate(const Beam& beam, int subband, int nrSubbands);
 
 	// Deallocate the beamlet
 	int deallocate();

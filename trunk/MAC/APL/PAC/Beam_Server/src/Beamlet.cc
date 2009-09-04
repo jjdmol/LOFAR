@@ -55,7 +55,7 @@ Beamlet::~Beamlet()
 //
 // allocate(beam, subband, nrSubbands)
 //
-int Beamlet::allocate(const Beam& beam, int subband, int nsubbands)
+int Beamlet::allocate(const Beam& beam, int subband, int nrSubbands)
 {
 	// don't allow second allocation
 	if (m_beam) {
@@ -63,7 +63,7 @@ int Beamlet::allocate(const Beam& beam, int subband, int nsubbands)
 	}
 
 	// check that the subband is within the spectral window
-	if ((subband >= nsubbands) || (subband < 0)) {
+	if ((subband >= nrSubbands) || (subband < 0)) {
 		return (-1);
 	}
 

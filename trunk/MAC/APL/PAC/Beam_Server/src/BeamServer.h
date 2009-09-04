@@ -95,7 +95,10 @@ public:
 					GCFPortInterface* 				port,
 					std::string 					nodeid, 
 					std::string 					subarrayname,
-					BS_Protocol::Beamlet2SubbandMap allocation);
+					BS_Protocol::Beamlet2SubbandMap allocation,
+				    LOFAR::bitset<LOFAR::MAX_RCUS>	rcumask,
+					int								ringNr,
+					int*							error);
 
 	// Destroy beam of specified transaction.
 	// @param bt the beamtransaction specifying the beam to destroy
@@ -163,6 +166,9 @@ public:
 	// recall event
 	GCFEvent::TResult recall(GCFPortInterface& p);
 
+	// (re)create the beampool. Normally done after the splitter state changed.
+	void _createBeamPool();
+
 private:
 	// --- data members ---
 
@@ -193,8 +199,9 @@ private:
 	bool					itsSetHBAEnabled;		//
 	bool					itsSetWeightsEnabled;	//
 	bool					itsSetSubbandsEnabled;	//
-	int      				m_nrcus;				//
-	Beams    				m_beams;				//
+	bool					itsSplitterOn;			// state of the ringsplitter
+	int      				itsMaxRCUs;				//
+	Beams*    				itsBeamPool;			//
 	AMC::ConverterClient 	m_converter;			//
 	int32	 				m_instancenr;			//
 	long					itsUpdateInterval;		//

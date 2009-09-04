@@ -641,7 +641,6 @@ GCFEvent::TResult RSPMonitor::askSplitterInfo(GCFEvent& event,
 
 		RSPGetsplitterEvent		getSplitter;
 		getSplitter.timestamp.setNow();
-		getSplitter.rspmask   = itsRSPmask;
 		itsRSPDriver->send(getSplitter);
 		itsTimerPort->setTimer(5.0);		// in case the answer never comes.
 	}

@@ -51,11 +51,11 @@ namespace LOFAR {
 // that are active in the BeamServer at a particular point in time.
 class Beams {
 public:
-	// Create a collection of beams with subbands allocated from nbeamlets.
-	// @param nbeamlets The maximum number of beamlets that can be allocated
-	// @param nsubbands The maximum number of subbands that can be selected (valid
-	//        subbands are 0 <= subbands < nsubbands.
-	explicit Beams(int nbeamlets, int nsubbands);
+	// Create a collection of beams with subbands allocated from maxBeamletsEver.
+	// @param maxBeamletsEver The maximum number of beamlets that can be allocated
+	// @param maxSubbandsEver The maximum number of subbands that can be selected (valid
+	//        subbands are 0 <= subbands < maxSubbandsEver.
+	explicit Beams(int maxBeamletsEver, int maxSubbandsEver);
 
 	/* destructor */
 	~Beams();
@@ -63,7 +63,8 @@ public:
 	// Create a new beam.
 	Beam* create(std::string 						name, 
 				 std::string 						subarrayname, 
-				 BS_Protocol::Beamlet2SubbandMap	allocation);
+				 BS_Protocol::Beamlet2SubbandMap	allocation,
+				 int								ringNr);
 
 	// Set calibration handle for a beam
 	void setCalibrationHandle(Beam* beam, CAL_Protocol::memptr_t handle);
@@ -103,7 +104,7 @@ public:
 
 	// Return the combined beamlet to subband
 	// mapping for all beams.
-	BS_Protocol::Beamlet2SubbandMap getSubbandSelection();
+	BS_Protocol::Beamlet2SubbandMap getSubbandSelection(int	ringNr);
 
 private:
 	//# --- datamembers ---
@@ -116,10 +117,10 @@ private:
 	std::map<CAL_Protocol::memptr_t, Beam*> 	m_handle2beam;
 
 	// Collection of all beamlets;
-	Beamlets					m_beamlets;
+	Beamlets					itsBeamletPool;
 
 	// The maximum number of subbands.
-	int							m_nsubbands;
+	int							itsMaxSubbands;
 };
 
   }; //# namepsace BS

@@ -161,12 +161,17 @@ static const int RSP_RAW_BLOCK_SIZE = 1480;
 // GETBLOCK				(timestamp, boardID, address, offset, datalen)
 // GETBLOCKACK			(timestamp, boardID, status, datalen, data);
 
-// SETSPLITTER			(timestamp, rspmask, on/off);
+// SETSPLITTER			(timestamp, on/off);
 // SETSPLITTERACK		(timestamp, status);
-// GETSPLITTER			(timestamp, rspmask);
-// GETSPLITTERACK		(timestamp, status, rspmask, splitters);
+// GETSPLITTER			(timestamp);
+// GETSPLITTERACK		(timestamp, status, splitters);
+// SUBSPLITTER			(timestamp,	period)
+// SUBSPLITTERACK		(timestamp,	status,	handle)
+// UPDSPLITTER			(timestamp,	status,	handle,	splitters)
+// UNSUBSPLITTER		(handle)
+// UNSUBSPLITTERACK		(timestamp,	status,	handle)
 
-// 105 commands
+// 110 commands
 
 PRELUDE_END;
 
@@ -1981,10 +1986,6 @@ event = {
 		userdefined;
 	};
 	param = {
-		name = "rspmask";
-		type = "bitset<MAX_N_RSPBOARDS>";
-	};
-	param = {
 		name = "switch_on";
 		type = "bool";
 	};
@@ -2015,10 +2016,6 @@ event = {
 		userdefined;
 	};
 	param = {
-		name = "rspmask";
-		type = "bitset<MAX_N_RSPBOARDS>";
-	};
-	param = {
 		name = "cache";
 		type = "uint8";
 	};
@@ -2038,12 +2035,94 @@ event = {
 		type = "int16";
 	};
 	param = {
-		name = "rspmask";
+		name = "splitter";
 		type = "bitset<MAX_N_RSPBOARDS>";
+	};
+};
+
+// SUBSPLITTER(timestamp,	period)
+event = {
+	signal = SUBSPLITTER;
+	dir = IN;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "period";
+		type = "uint16";
+	};
+};
+
+// SUBSPLITTERACK(timestamp,	status,	handle)
+event = {
+	signal = SUBSPLITTERACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "handle";
+		type = "memptr_t";
+	};
+};
+
+// UPDSPLITTER(timestamp,	status,	handle,	splitters)
+event = {
+	signal = UPDSPLITTER;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "handle";
+		type = "memptr_t";
 	};
 	param = {
 		name = "splitter";
 		type = "bitset<MAX_N_RSPBOARDS>";
+	};
+};
+
+// UNSUBSPLITTER(handle)
+event = {
+	signal = UNSUBSPLITTER;
+	dir = IN;
+	param = {
+		name = "handle";
+		type = "memptr_t";
+	};
+};
+
+// UNSUBSPLITTERACK	(timestamp,	status,	handle)
+event = {
+	signal = UNSUBSPLITTERACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "handle";
+		type = "memptr_t";
 	};
 };
 

@@ -53,7 +53,7 @@ static char ASK_SERDES_CMD[] = {
 };
 static int ASK_SERDES_CMD_LEN = sizeof(ASK_SERDES_CMD);
 
-static char SERDES_ON_RESP[] = {
+char GetSplitterCmd::SERDES_ON_RESP[] = {
 	0x04, 0x05,
 	0x06, 0x07,
 	0x08, 0x09,
@@ -61,9 +61,9 @@ static char SERDES_ON_RESP[] = {
 	0x0C, 0x0D,
 	0x0E, 0x0F
 };
-static int SERDES_ON_RESP_LEN = sizeof(SERDES_ON_RESP);
+int GetSplitterCmd::SERDES_ON_RESP_LEN = sizeof(GetSplitterCmd::SERDES_ON_RESP);
 
-static char SERDES_OFF_RESP[] = {
+char GetSplitterCmd::SERDES_OFF_RESP[] = {
 	0x00, 0x01,
 	0x02, 0x03,
 	0x08, 0x09,
@@ -71,7 +71,7 @@ static char SERDES_OFF_RESP[] = {
 	0x0C, 0x0D,
 	0x0E, 0x0F
 };
-static int SERDES_OFF_RESP_LEN = sizeof(SERDES_OFF_RESP);
+int GetSplitterCmd::SERDES_OFF_RESP_LEN = sizeof(GetSplitterCmd::SERDES_OFF_RESP);
 
 
 //
@@ -99,22 +99,19 @@ void GetSplitterCmd::ack(CacheBuffer& cache)
 	RSPGetsplitterackEvent ack;
 	ack.timestamp = getTimestamp();
 	ack.status = RSP_SUCCESS;
-	ack.rspmask = itsEvent->rspmask;
 	ack.splitter.reset();
 
 	// note always return the state of all splitters
-	for (int rsp = 0; rsp < MAX_N_RSPBOARDS; rsp++) {
-		if (itsEvent->rspmask.test(rsp)) {
-			SerdesBuffer&	serdesBuf = cache.getSdsReadBuffer(rsp);
-			if (!memcmp(serdesBuf.getBufferPtr(), SERDES_ON_RESP, SERDES_ON_RESP_LEN)) {	// ON?
-				ack.splitter.set(rsp);
-			}
-			else if (memcmp(serdesBuf.getBufferPtr(), SERDES_OFF_RESP, SERDES_OFF_RESP_LEN)) {	// !OFF?
-				LOG_ERROR_STR("Serdes splitter from RSPboard " << rsp  << "is in an undefined state!");
-				string	hd;
-				hexdump(hd, serdesBuf.getBufferPtr(), SERDES_OFF_RESP_LEN);
-				LOG_INFO_STR("Serdes splitter responses from RSPboard " << rsp << ": " << hd);
-			}
+	for (int rsp = 0; rsp < StationSettings::instance()->nrRspBoards(); rsp++) {
+		SerdesBuffer&	serdesBuf = cache.getSdsReadBuffer(rsp);
+		if (!memcmp(serdesBuf.getBufferPtr(), SERDES_ON_RESP, SERDES_ON_RESP_LEN)) {	// ON?
+			ack.splitter.set(rsp);
+		}
+		else if (memcmp(serdesBuf.getBufferPtr(), SERDES_OFF_RESP, SERDES_OFF_RESP_LEN)) {	// !OFF?
+			LOG_ERROR_STR("Serdes splitter from RSPboard " << rsp  << "is in an undefined state!");
+			string	hd;
+			hexdump(hd, serdesBuf.getBufferPtr(), SERDES_OFF_RESP_LEN);
+			LOG_INFO_STR("Serdes splitter responses from RSPboard " << rsp << ": " << hd);
 		}
 	}
 
@@ -129,7 +126,6 @@ void GetSplitterCmd::apply(CacheBuffer& cache, 	bool setModFlag)
 	// Note: apply the data to the WRITE buffer since we must write to the Serdes chip.
 	//       the sdsReadBuffer if for storing the results.
 	SerdesBuffer&	SerdesBuf = cache.getSdsWriteBuffer();
-	SerdesBuf.setRSPmask(itsEvent->rspmask);
 	SerdesBuf.newCommand(ASK_SERDES_CMD, ASK_SERDES_CMD_LEN);
 	string	hd;
 	hexdump(hd, SerdesBuf.getBufferPtr(), SerdesBuf.getDataLen());
@@ -137,10 +133,8 @@ void GetSplitterCmd::apply(CacheBuffer& cache, 	bool setModFlag)
 
 	// mark registers that the serdes registers should be written.
 	if (setModFlag) {
-		for (int b= 0; b < MAX_N_RSPBOARDS; b++) {
-			if (SerdesBuf.hasRSP(b)) {
-				cache.getCache().getState().sbrState().write(b);
-			}
+		for (int b= 0; b < StationSettings::instance()->nrRspBoards(); b++) {
+			cache.getCache().getState().sbrState().write(b);
 		}
 	}
 }
@@ -174,12 +168,5 @@ void GetSplitterCmd::setTimestamp(const Timestamp& timestamp)
 //
 bool GetSplitterCmd::validate() const
 {
-	// return true when everything is right
-	if (itsEvent->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards()) {
-		return (true);
-	}
-
-	// show our validation values.
-    LOG_ERROR(formatString("cmd rspmask.count = %d",itsEvent->rspmask.count()));
-    return (false);
+	return (true);
 }

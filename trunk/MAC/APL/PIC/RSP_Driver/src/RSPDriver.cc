@@ -88,6 +88,7 @@
 #include "GetRawBlockCmd.h"
 #include "SetSplitterCmd.h"
 #include "GetSplitterCmd.h"
+#include "UpdSplitterCmd.h"
 
 #include "RSUWrite.h"
 #include "BSWrite.h"
@@ -1018,6 +1019,8 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
     case RSP_GETBLOCK: 				rsp_getRawBlock(event, port); 		break; 
 	case RSP_SETSPLITTER:			rsp_setSplitter(event,port);		break;
 	case RSP_GETSPLITTER:			rsp_getSplitter(event,port);		break;
+	case RSP_SUBSPLITTER:			rsp_subSplitter(event,port);		break;
+	case RSP_UNSUBSPLITTER:			rsp_unsubSplitter(event,port);		break;
 
     case F_TIMER: {
 		if (&port == &m_boardPorts[0]) {
@@ -1414,6 +1417,7 @@ void RSPDriver::rsp_setrcu(GCFEvent& event, GCFPortInterface& port)
 				LOG_INFO("Delaying RCUenable command for 1 second!");
 			}
 		}	
+		command->delayedResponse(true);
 	}
 
 	if (command->getTimestamp() == currentTime) {		// to make the scheduler easier
@@ -2340,6 +2344,57 @@ void RSPDriver::rsp_getSplitter(GCFEvent& event, GCFPortInterface& port)
 
 	// command is ok, schedule it.
 	m_scheduler.enter(Ptr<Command>(&(*command)));
+}
+
+//
+// rsp_subSplitter(event, port)
+//
+void RSPDriver::rsp_subSplitter(GCFEvent& event, GCFPortInterface& port) 
+{
+	// subscription is done by entering a UpdSplitterCmd in the periodic queue
+	Ptr<UpdSplitterCmd> command = new UpdSplitterCmd(event, port, Command::READ);
+	RSPSubsplitterackEvent ack;
+
+	if (!command->validate()) {
+		LOG_ERROR("SUBSPLITTER: invalid parameter");
+
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_FAILURE;
+		ack.handle = 0;
+
+		port.send(ack);
+		return;
+	}
+	else {
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_SUCCESS;
+		ack.handle = (memptr_t)&(*command);
+		port.send(ack);
+	}
+
+	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
+}
+
+//
+// rsp_unsubSplitter(event, port)
+//
+void RSPDriver::rsp_unsubSplitter(GCFEvent& event, GCFPortInterface& port) 
+{
+	RSPUnsubsplitterEvent unsub(event);
+
+	RSPUnsubsplitterackEvent ack;
+	ack.timestamp = m_scheduler.getCurrentTime();
+	ack.status = RSP_FAILURE;
+	ack.handle = unsub.handle;
+
+	if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
+		ack.status = RSP_SUCCESS;
+	}
+	else {
+		LOG_ERROR("UNSUBSPLITTER: failed to remove subscription");
+	}
+
+	port.send(ack);
 }
 
 

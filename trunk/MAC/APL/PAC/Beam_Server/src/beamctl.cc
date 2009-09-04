@@ -63,7 +63,8 @@
 			 | SUBBANDS_FLAG		\
 			 | BEAMLETS_FLAG)
 
-#define SKYSCAN_STARTDELAY 30.0
+#define SKYSCAN_STARTDELAY 		30.0
+#define	BEAMLET_RING_OFFSET		1000
 
 using namespace std;
 using namespace blitz;
@@ -138,7 +139,7 @@ GCFEvent::TResult beamctl::con2calserver(GCFEvent& e, GCFPortInterface& port)
 
 	case F_ENTRY: {
 		cout << "Connecting to CalServer... " << endl;
-		itsCalServer->autoOpen(30, 0, 2);
+		itsCalServer->autoOpen(5, 0, 2);
 	}
 	break;
 
@@ -149,6 +150,7 @@ GCFEvent::TResult beamctl::con2calserver(GCFEvent& e, GCFPortInterface& port)
 
 	case F_DISCONNECTED: {
 		// retry once every second
+		cout << "Can not connect to the CalServer, is it running?" << endl;
 		port.close();
 		port.setTimer(10.0);
 	}
@@ -157,7 +159,7 @@ GCFEvent::TResult beamctl::con2calserver(GCFEvent& e, GCFPortInterface& port)
 	case F_TIMER: {
 		// try again
 		cout << "Stil waiting for CalServer... " << endl;
-		itsCalServer->autoOpen(30, 0, 2);
+		itsCalServer->autoOpen(5, 0, 2);
 	}
 	break;
 
@@ -177,7 +179,7 @@ GCFEvent::TResult beamctl::con2beamserver(GCFEvent& e, GCFPortInterface& port)
 	switch(e.signal) {
 	case F_ENTRY: {
 		cout << "Connecting to BeamServer... " << endl;
-		itsBeamServer->autoOpen(30, 0, 2);
+		itsBeamServer->autoOpen(5, 0, 2);
 	}
 	break;
 
@@ -194,6 +196,7 @@ GCFEvent::TResult beamctl::con2beamserver(GCFEvent& e, GCFPortInterface& port)
 			TRAN(beamctl::con2calserver);
 		}
 		else {
+			cout << "Can not connect to the BeamServer, is it running?" << endl;
 			port.close();
 			port.setTimer(10.0);
 		}
@@ -203,7 +206,7 @@ GCFEvent::TResult beamctl::con2beamserver(GCFEvent& e, GCFPortInterface& port)
 	case F_TIMER: {
 		// try again
 		cout << "Still waiting for BeamServer... " << endl;
-		itsBeamServer->autoOpen(30, 0, 2);
+		itsBeamServer->autoOpen(5, 0, 2);
 	}
 	break;
 
@@ -285,22 +288,36 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 	switch (e.signal) {
 	case F_ENTRY: {
 		BSBeamallocEvent alloc;
-		alloc.name = BEAMCTL_BEAM + formatString("_%d", getpid());
+		alloc.name 		   = BEAMCTL_BEAM + formatString("_%d", getpid());
 		alloc.subarrayname = BEAMCTL_ARRAY + formatString("_%d", getpid());
+		alloc.rcumask	   = getRCUMask();
+		// assume beamletnumbers are right so the ring can be extracted from those numbers.
+		// when the user did this wrong the BeamServer will complain.
+		alloc.ringNr	   = m_beamlets.front() >= BEAMLET_RING_OFFSET;
 
 		list<int>::iterator its = m_subbands.begin();
 		list<int>::iterator itb = m_beamlets.begin();
 		for (; its != m_subbands.end() && itb != m_beamlets.end(); ++its, ++itb) {
-			alloc.allocation()[(*itb)] = (*its);
+			if (((*itb) >= BEAMLET_RING_OFFSET ? 1 : 0) != alloc.ringNr) {	// all beamlets in the same ring?
+				cerr << "Beamlet " << *itb << " does not lay in ring " << alloc.ringNr << endl;
+				TRAN(beamctl::final);
+				break;
+			}
+			alloc.allocation()[(*itb) % BEAMLET_RING_OFFSET] = (*its);
 		}
 		itsBeamServer->send(alloc);
+		LOG_INFO_STR("name        : " << alloc.name);
+		LOG_INFO_STR("subarrayname: " << alloc.subarrayname);
+		LOG_INFO_STR("rcumask     : " << alloc.rcumask);
+		LOG_INFO_STR("ringNr      : " << alloc.ringNr);
+//		LOG_INFO_STR(alloc.allocation);
 	}
 	break;
 
 	case BS_BEAMALLOCACK: {
 		BSBeamallocackEvent ack(e);
-		if (BS_Protocol::BS_SUCCESS != ack.status) {
-			cerr << "Error: failed to allocate beam" << endl;
+		if (ack.status != BS_Protocol::BS_NO_ERR) {
+			cerr << "Error: " << errorName(ack.status) << endl;
 			TRAN(beamctl::final);
 		} else {
 			cout << "BeamServer accepted settings" << endl;
@@ -406,10 +423,12 @@ void usage()
 	cout <<
 "Usage: beamctl\n"
 "  --array=name      # name of  array of which the RCU's are part (for positions)\n"
-"  [--rcus=<set>]    # select set of RCU's, all RCU's if not specified\n"
+"  --rcus=<set>      # select set of RCU's\n"
 "  --rcumode=0..7    # RCU mode to use\n"
 "  --subbands=<set>  # set of subbands to use for this beam\n"
 "  --beamlets=<list> # list of beamlets on which to allocate the subbands\n" 
+"                    # beamlet range = 0..247 when Serdes splitter is OFF\n"
+"                    # beamlet range = 0..247 + 1000..1247 when Serdes splitter is ON\n"
 "  --direction=longitude,latitude[,type]\n"
 "                    # lon,lat are floating point values specified in radians\n"
 "                    # type is one of J2000 (default), AZEL, LOFAR_LMN, SKYSCAN\n"
@@ -423,17 +442,17 @@ void usage()
 	<< endl;
 }
 
-bitset<MEPHeader::MAX_N_RCUS> beamctl::getRCUMask() const
+bitset<LOFAR::MAX_RCUS> beamctl::getRCUMask() const
 {
-	bitset<MEPHeader::MAX_N_RCUS> mask;
+	bitset<LOFAR::MAX_RCUS> mask;
 	
 	mask.reset();
 	list<int>::const_iterator it;
 	int count = 0; // limit to ndevices
 	for (it = m_rcus.begin(); it != m_rcus.end(); ++it, ++count) {
-		if (count >= MEPHeader::MAX_N_RCUS) break;
+		if (count >= LOFAR::MAX_RCUS) break;
 		
-		if (*it < MEPHeader::MAX_N_RCUS)
+		if (*it < LOFAR::MAX_RCUS)
 			mask.set(*it);
 	}
 	return mask;
@@ -532,8 +551,6 @@ int main(int argc, char** argv)
 
 	// initialize rcus
 	rcus.clear();
-	//for (int i = 0; i < MEPHeader::MAX_N_RCUS; i++) rcus.push_back(i);
-
 	subbands.clear();
 	beamlets.clear();
 
@@ -589,7 +606,7 @@ int main(int argc, char** argv)
 	if (!optarg) {
 		cerr << "Error: missing --rcus value" << endl;
 	} else {
-		rcus = strtolist(optarg, MEPHeader::MAX_N_RCUS);
+		rcus = strtolist(optarg, LOFAR::MAX_RCUS);
 		presence |= RCUS_FLAG;
 		cout << "rcus=" << optarg << endl;
 	}
@@ -645,7 +662,7 @@ int main(int argc, char** argv)
 	if (!optarg) {
 		cerr << "Error: missing --subbands value" << endl;
 	} else {
-		subbands = strtolist(optarg, MEPHeader::N_SUBBANDS);
+		subbands = strtolist(optarg, LOFAR::MAX_SUBBANDS);
 		presence |= SUBBANDS_FLAG;
 		cout << "subbands = " << optarg << "(" << subbands.size() << ")" << endl;
 	}
@@ -657,7 +674,7 @@ int main(int argc, char** argv)
 	if (!optarg) {
 		cerr << "Error: missing --beamlets value" << endl;
 	} else {
-		beamlets = strtolist(optarg, MEPHeader::N_BEAMLETS);
+		beamlets = strtolist(optarg, BEAMLET_RING_OFFSET + LOFAR::MAX_BEAMLETS);
 		presence |= BEAMLETS_FLAG;
 		cout << "beamlets = " << optarg << "(" << beamlets.size() << ")" << endl;
 	}

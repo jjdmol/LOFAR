@@ -64,8 +64,8 @@ void RCUWrite::sendrequest()
   RCUSettings::Control& x = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2));
   RCUSettings::Control& y = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2) + 1);
 
-  LOG_INFO(formatString("%d.X control=0x%08x", global_blp, x.getRaw()));
-  LOG_INFO(formatString("%d.Y control=0x%08x", global_blp, y.getRaw()));
+  LOG_DEBUG(formatString("%d.X control=0x%08x", global_blp, x.getRaw()));
+  LOG_DEBUG(formatString("%d.Y control=0x%08x", global_blp, y.getRaw()));
 
   EPARcuSettingsEvent rcusettings;
   rcusettings.hdr.set(MEPHeader::RCU_SETTINGS_HDR, 1 << getCurrentIndex()); // also sets payload_length

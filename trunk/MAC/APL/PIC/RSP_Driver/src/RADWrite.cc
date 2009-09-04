@@ -79,17 +79,19 @@ void RADWrite::sendrequest()
 	 */
 	
 	for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
-		uint8 mode = 0x00; // default is to ignore remote data (first board in ring)
+		uint8	mode 	 = 0x00; // default is to ignore remote data (first board in ring)
+		int		testlane = lane;
 		
 		// if the splitter is active, use for the upper boards the settings of ring-1
 		if (Cache::getInstance().getBack().isSplitterActive()) {
 			if ((int)getBoardId() >= (StationSettings::instance()->nrRspBoards() / 2)) {
-				lane += 10; // select ring-1
+				testlane += 10; // select ring-1
 			}
 		} 
 		
-		int blet_out = GET_CONFIG(formatString("RSPDriver.LANE_%02d_BLET_OUT", lane).c_str(), i) % StationSettings::instance()->nrRspBoards();
-		int xlet_out = GET_CONFIG(formatString("RSPDriver.LANE_%02d_XLET_OUT", lane).c_str(), i) % StationSettings::instance()->nrRspBoards();
+		int blet_out = GET_CONFIG(formatString("RSPDriver.LANE_%02d_BLET_OUT", testlane).c_str(), i) % StationSettings::instance()->nrRspBoards();
+		int xlet_out = GET_CONFIG(formatString("RSPDriver.LANE_%02d_XLET_OUT", testlane).c_str(), i) % StationSettings::instance()->nrRspBoards();
+//		LOG_INFO_STR("rad.lane[" << testlane << "], blet_out=" << blet_out << ", xlet_out=" << xlet_out << ", RSPboard=" << getBoardId());
 		
 		// if there are more than 1 boards and
 		// if this board is not the first board in the ring
@@ -107,7 +109,7 @@ void RADWrite::sendrequest()
 				// if the splitter is active data direction is reversed,
 				// and the ring is divided in two equal rings
 				else {
-					int exclude_board = (int)getBoardId() + 1;
+					exclude_board = (int)getBoardId() + 1;
 					
 					if ((int)getBoardId() < (StationSettings::instance()->nrRspBoards() / 2)) {
 						if (exclude_board >= (StationSettings::instance()->nrRspBoards() / 2)) {

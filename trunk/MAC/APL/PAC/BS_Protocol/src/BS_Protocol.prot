@@ -10,6 +10,8 @@ id = "(LOFAR::MACIO::F_APL_PROTOCOL+10)";
 // specify extra include files
 // e.g.
 include = '<sys/time.h>';
+include = '<Common/lofar_bitset.h>';
+include = '<Common/LofarConstants.h>';
 include = '<APL/BS_Protocol/Beamlet2SubbandMap.h>';
 include = '<APL/BS_Protocol/Pointing.h>';
 include = '<APL/RTCCommon/Timestamp.h>';
@@ -18,17 +20,20 @@ prelude = << PRELUDE_END
 
 typedef		void*		memptr_t;
 
-	enum {
-	     BS_SUCCESS = 0,
-	     ERR_RANGE,     // range error in message parameters
-	     ERR_BEAMALLOC, // could not allocate beam
-	     ERR_BEAMFREE,  // could not free beam
-	};
+//
+// Errors
+//
+// BS_NO_ERR			No errors
+// BS_RANGE_ERR			Range error in message parameters
+// BS_WRONG_RING_ERR	Rcu's specified in the wrong ring
+// BS_SPLITTER_OFF_ERR	Splitter is off, no ring 1
+// BS_BEAMALLOC_ERR		Could not alloc a beam
+// BS_BEAMFREE_ERR		Could not free the beam
 
 //
 // The following signals are defined in the BS protocol
 //
-// BEAMALLOC     (name,   subarrayname, beamletAllocationMap);
+// BEAMALLOC     (name,   subarrayname, beamletAllocationMap, RCUmask);
 // BEAMALLOCACK  (subarrayname, handle, status);
 // BEAMMODIFY    (handle, beamletAllocationMap);
 // BEAMMODIFYACK (handle, status);
@@ -41,6 +46,32 @@ typedef		void*		memptr_t;
 //
 
 PRELUDE_END;
+
+error = {
+	id = NO;
+	msg = "No errors";
+};
+error = {
+	id = RANGE;
+	msg = "Range error in message parameters";
+};
+error = {
+	id = WRONG_RING;
+	msg = "Rcu's specified in the wrong ring";
+};
+error = {
+	id = SPLITTER_OFF;
+	msg = "Splitter is off, ring-segment 1 does not exist";
+};
+error = {
+	id = BEAMALLOC;
+	msg = "Could not alloc a beam";
+};
+error = {
+	id = BEAMFREE;
+	msg = "Could not free the beam";
+};
+
 
 //
 // An "event" has a "signal" and a "dir" (direction)
@@ -75,6 +106,18 @@ event = {
 		type = "Beamlet2SubbandMap";
 	userdefined;
 	};
+
+	// NEW: so that BeamServer can check for ring inconsistancies.
+	param = { // subset of the receivers (2 receivers per antenna)
+		name = "rcumask";
+		type = "LOFAR::bitset<LOFAR::MAX_RCUS>";
+	};
+
+	param = {
+		name = "ringNr";
+		type = "int32";
+	};
+
 };
 
 event = {
@@ -165,3 +208,5 @@ event = {
             userdefined;
       };
 };
+
+

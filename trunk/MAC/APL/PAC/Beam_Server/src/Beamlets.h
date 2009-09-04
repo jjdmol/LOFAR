@@ -35,7 +35,7 @@ namespace LOFAR {
 class Beamlets {
 public:
 	// Constructor
-	Beamlets(int nbeamlets);
+	Beamlets(int maxBeamletsEver);
 
 	// Destructor
 	virtual ~Beamlets();
@@ -53,8 +53,8 @@ private:
 	// default constructor not allowed
 	Beamlets(); // no implementation
 
-	Beamlet*	m_beamlets;
-	int			m_nbeamlets;
+	Beamlet*	itsBeamletsArray;
+	int			itsMaxBeamlets;
 };
 
   }; // namespace BS

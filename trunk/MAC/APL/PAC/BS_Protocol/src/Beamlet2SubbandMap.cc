@@ -97,3 +97,38 @@ bitset<EPA_Protocol::MEPHeader::N_SUBBANDS> Beamlet2SubbandMap::getAsBitset() co
   return result;
 }
 
+#if 0
+// print (os)
+//
+ostream& Beamlet2SubbandMap::print (ostream&	os) const
+{
+	int	idx = 0;
+	int	elements = m_beamlet2subband.size();
+	int	MAX_ELEMENTS_PER_LINE	= 31;
+	cout << "#elements: " << elements << endl;
+	os << "#elements: " << elements << endl;
+	return (os);
+	map<uint16,uint16>::const_iterator	iter;
+	map<uint16,uint16>::const_iterator	end = m_beamlet2subband.end();
+	while (idx < elements && idx < 248) {
+		if (idx % MAX_ELEMENTS_PER_LINE == 0) {
+			if (idx % (2*MAX_ELEMENTS_PER_LINE) == 0) {
+				os << endl << formatString("[%d]: ", idx / (2*MAX_ELEMENTS_PER_LINE));
+			}
+			else {
+				os << endl << "     ";
+			}
+		}
+		if ((iter = m_beamlet2subband.find(idx)) != end) {
+			os << formatString("%3d ", iter->second);
+		}
+		else {
+			os << "  . ";
+		}
+		idx++;
+	}
+	os << endl;
+
+	return (os);
+}
+#endif

@@ -52,8 +52,8 @@ using namespace RTC;
 //
 // Beams(nrBeamlets, nrSubbands)
 //
-Beams::Beams(int 	nbeamlets, int 	nsubbands) : 
-	m_beamlets(nbeamlets), m_nsubbands(nsubbands)
+Beams::Beams(int 	maxBeamletsEver, int 	maxSubbandsEver) : 
+	itsBeamletPool(maxBeamletsEver), itsMaxSubbands(maxSubbandsEver)
 {}
 
 //
@@ -70,15 +70,15 @@ Beams::~Beams()
 //
 // create(nodename, subarrayname, allocation)
 //
-Beam* Beams::create(string nodeid, string subarrayname, Beamlet2SubbandMap allocation)
+Beam* Beams::create(string nodeid, string subarrayname, Beamlet2SubbandMap allocation, int ringNr)
 {
-	Beam* beam = new Beam(nodeid, subarrayname, m_nsubbands);
+	Beam* beam = new Beam(nodeid, subarrayname, ringNr);
 
 	if (!beam) {
 		return(0);
 	}
 
-	if (!beam->allocate(allocation, m_beamlets, m_nsubbands)) {
+	if (!beam->allocate(allocation, itsBeamletPool, itsMaxSubbands)) {
 		LOG_ERROR("Failed to allocate all required beamlets");
 		delete beam;
 		return (0);
@@ -185,18 +185,20 @@ void Beams::calculate_weights(Timestamp								 timestamp,
 	
 	// beamlets can be part of multiple beams for first calculate the new tracks of
 	// all beam and than loop over the beamlet s to calculate the weights.
-	m_beamlets.calculate_weights(weights);
+	itsBeamletPool.calculate_weights(weights);
 }
 
 //
 // getSubbandSelection()
 //
-Beamlet2SubbandMap Beams::getSubbandSelection()
+Beamlet2SubbandMap Beams::getSubbandSelection(int ringNr)
 {
 	Beamlet2SubbandMap selection;
 	for (map<Beam*,CAL_Protocol::memptr_t>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi) {
-		Beamlet2SubbandMap beammap = bi->first->getAllocation();
-		selection().insert(beammap().begin(), beammap().end());
+		if (bi->first->ringNr() == ringNr) {
+			Beamlet2SubbandMap beammap = bi->first->getAllocation();
+			selection().insert(beammap().begin(), beammap().end());
+		}
 	}
 
 	return (selection);

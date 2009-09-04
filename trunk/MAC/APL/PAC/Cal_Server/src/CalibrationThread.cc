@@ -35,9 +35,15 @@ using namespace LOFAR;
 using namespace CAL;
 
 CalibrationThread::CalibrationThread(SubArrays*            subarrays,
-				     CalibrationInterface* cal,
-				     pthread_mutex_t&      globallock)
-  : m_subarrays(subarrays), m_cal(cal), m_acc(0), m_thread(0), m_globallock(globallock)
+									 CalibrationInterface* cal,
+									 pthread_mutex_t&      globallock,
+									 const string&		   dataDir) :
+	m_subarrays	(subarrays), 
+	m_cal		(cal), 
+	m_acc		(0), 
+	itsDataDir  (dataDir),
+	m_thread	(0), 
+	m_globallock(globallock)
 {
 }
 
@@ -79,9 +85,9 @@ void* CalibrationThread::thread_main(void* thisthread)
 	if (thread->m_acc) {
 		bool	writeGains(GET_CONFIG("CalServer.WriteGainsToFile", i) == 1);
 		if (GET_CONFIG("CalServer.DisableCalibration", i)) {
-			thread->m_subarrays->calibrate(0, *thread->m_acc, writeGains);
+			thread->m_subarrays->calibrate(0, *thread->m_acc, writeGains, thread->itsDataDir);
 		} else {
-			thread->m_subarrays->calibrate(thread->m_cal, *thread->m_acc, writeGains);
+			thread->m_subarrays->calibrate(thread->m_cal, *thread->m_acc, writeGains, thread->itsDataDir);
 		}
 	}
 
