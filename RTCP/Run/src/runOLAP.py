@@ -395,14 +395,16 @@ if __name__ == "__main__":
   usedStoragePorts = []
 
   for obsIndex,parset in enumerate(parsets):
-    parset.disableStoragePorts( usedStoragePorts )
+    if not options.nostorage:
+      parset.disableStoragePorts( usedStoragePorts )
 
     # parse final settings (derive some extra keys)
     parset.finalise()
 
     # finalise() allocates the ports that will be used, so don't use them for other observations
-    for ports in parset.getStoragePorts().itervalues():
-      usedStoragePorts.extend( ports )
+    if not options.nostorage:
+      for ports in parset.getStoragePorts().itervalues():
+        usedStoragePorts.extend( ports )
 
     # sanity check on parset
     parset.check()
