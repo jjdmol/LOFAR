@@ -34,7 +34,7 @@ WorkerInfo.cc \
 WorkerProxy.cc \
 WorkersDesc.cc
 
-bin_PROGRAMS 		= versionmwcommon finddproc
+bin_PROGRAMS 		= versionmwcommon finddproc showclusterdesc
 
 versionmwcommon_SOURCES      = versionmwcommon.cc
 versionmwcommon_LDADD        = libmwcommon.la
@@ -43,6 +43,10 @@ versionmwcommon_DEPENDENCIES = libmwcommon.la $(LOFAR_DEPEND)
 finddproc_SOURCES      = finddproc.cc
 finddproc_LDADD        = libmwcommon.la
 finddproc_DEPENDENCIES = libmwcommon.la $(LOFAR_DEPEND)
+
+showclusterdesc_SOURCES      = showclusterdesc.cc
+showclusterdesc_LDADD        = libmwcommon.la
+showclusterdesc_DEPENDENCIES = libmwcommon.la $(LOFAR_DEPEND)
 
 scriptdir = $(bindir)
 dist_script_SCRIPTS = startdistproc socketrun
