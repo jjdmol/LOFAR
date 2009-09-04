@@ -37,7 +37,6 @@
 #include <AMCBase/ResultData.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/MultiDimArray.h>
-#include <Interface/Mutex.h>
 
 #include <boost/noncopyable.hpp>
 #include <pthread.h>
@@ -100,9 +99,6 @@ namespace LOFAR
       void getNextDelays( Matrix<AMC::Direction> &directions, Matrix<double> &delays );
       
     private:
-      // static initialisation in class to avoid race conditions
-      static Mutex              itsCasacoreMutex;
-
       // do the delay compensation calculations in a separate thread to allow bulk
       // calculations and to avoid blocking other threads
       pthread_t			thread;
