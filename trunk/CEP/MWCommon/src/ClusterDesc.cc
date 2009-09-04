@@ -32,10 +32,12 @@ namespace LOFAR { namespace CEP {
         NodeDesc node(subset);
         addNode (node);
       }
+    } else if (parset.isDefined ("SubClusters")) {
+      getSubClusters (parset.getStringVector ("SubClusters", true));
     } else {
       // The cluster is homogeneous and is described like that.
-      // All nodes share the same global mount point s and have the same
-      // local disks.
+      // All nodes share the same global mount points and have the same
+      // local disks names.
       vector<string> computeNodes =
         parset.get("ComputeNodes").expand().getStringVector();
       vector<string> mountPoints  =
@@ -57,6 +59,17 @@ namespace LOFAR { namespace CEP {
                            localDisks[j]);
         }
         addNode (node);
+      }
+    }
+  }
+
+  void ClusterDesc::getSubClusters (const vector<string>& parsetNames)
+  {
+    for (uint i=0; i<parsetNames.size(); ++i) {
+      ClusterDesc cdesc(parsetNames[i]);
+      const vector<NodeDesc>& nodes =cdesc.getNodes();
+      for (uint j=0; j<nodes.size(); ++j) {
+        addNode (nodes[j]);
       }
     }
   }
