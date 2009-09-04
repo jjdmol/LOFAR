@@ -168,7 +168,7 @@ void updateHumidity(string dp1, float humidity,
   } else {
     if (dp1 == \"\") {
       setValue(\"humidityAlarm\",\"backCol\",\"Lofar_dpOffline\");
-      setValue(\"humidityControl\",\"backCol\",\"Lofar_dpOffLine\");
+      setValue(\"humidityControl\",\"backCol\",\"Lofar_dpOffline\");
     } else {
       setValue(\"humidityAlarm\",\"backCol\",\"Lofar_invalid\");
       setValue(\"humidityControl\",\"backCol\",\"Lofar_invalid\");
