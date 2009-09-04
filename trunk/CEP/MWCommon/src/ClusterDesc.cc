@@ -8,18 +8,23 @@
 #include <lofar_config.h>
 
 #include <MWCommon/ClusterDesc.h>
+#include <casa/OS/Path.h>
 
 using namespace std;
+using namespace casa;
 
 namespace LOFAR { namespace CEP {
 
   ClusterDesc::ClusterDesc (const string& parsetName)
   {
-    init (ParameterSet (parsetName));
+    init (parsetName);
   }
 
-  void ClusterDesc::init (const ParameterSet& parset)
+  void ClusterDesc::init (const string& parsetName)
   {
+    // Get aboslute file name which also expands ~ and $.
+    String fullName = Path(parsetName).absoluteName();
+    ParameterSet parset(fullName);
     itsName     = parset.getString ("ClusterName");
     itsHeadNode = parset.getString ("HeadNode", string());
     int nnode   = parset.getInt    ("NNodes", 0);
@@ -33,7 +38,9 @@ namespace LOFAR { namespace CEP {
         addNode (node);
       }
     } else if (parset.isDefined ("SubClusters")) {
-      getSubClusters (parset.getStringVector ("SubClusters", true));
+      // Get subclusters; use parent's directory as default directory.
+      getSubClusters (parset.getStringVector ("SubClusters", true),
+                      Path(fullName).dirName());
     } else {
       // The cluster is homogeneous and is described like that.
       // All nodes share the same global mount points and have the same
@@ -63,10 +70,17 @@ namespace LOFAR { namespace CEP {
     }
   }
 
-  void ClusterDesc::getSubClusters (const vector<string>& parsetNames)
+  void ClusterDesc::getSubClusters (const vector<string>& parsetNames,
+                                    const string& defaultDir)
   {
     for (uint i=0; i<parsetNames.size(); ++i) {
-      ClusterDesc cdesc(parsetNames[i]);
+      // Expand possible ~ and $.
+      string name = Path(parsetNames[i]).expandedName();
+      // Add directory of parent parset if name is not absolute.
+      if (name[0] != '/') {
+        name = defaultDir + '/' + name;
+      }
+      ClusterDesc cdesc(name);
       const vector<NodeDesc>& nodes =cdesc.getNodes();
       for (uint j=0; j<nodes.size(); ++j) {
         addNode (nodes[j]);
