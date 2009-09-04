@@ -55,11 +55,7 @@ namespace LOFAR { namespace CEP {
       {}
 
     // Construct from the given parameterset.
-    // @{
     explicit ClusterDesc (const std::string& parsetName);
-    explicit ClusterDesc (const ParameterSet& parset)
-      { init (parset); }
-    // @}
 
     // Set cluster name.
     void setName (const std::string& name)
@@ -93,10 +89,12 @@ namespace LOFAR { namespace CEP {
 
   private:
     // Fill the object from the given parset file.
-    void init (const ParameterSet& parset);
+    void init (const std::string& parsetName);
 
     // Fill the object from the subcluster definitions.
-    void getSubClusters (const vector<string>& parsetNames);
+    // Use the given directory for relative clusterdesc names.
+    void getSubClusters (const vector<string>& parsetNames,
+                         const string& defaultDir);
 
     // Add entries to the mapping of FileSys to Nodes.
     void add2Map (const NodeDesc& node);
