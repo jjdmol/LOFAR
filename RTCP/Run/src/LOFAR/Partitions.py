@@ -116,6 +116,11 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
   			help = "list the psets in the partition" )
+  parser.add_option( "-c", "--check",
+  			dest = "check",
+			action = "store_true",
+			default = False,
+  			help = "check the partition status" )
   parser.add_option( "-k", "--kill",
   			dest = "kill",
 			action = "store_true",
@@ -165,12 +170,12 @@ if __name__ == "__main__":
       expected_owner = os.environ["USER"]
       real_owner = owner( options.partition )
 
-      print "Partition Owner : %-40s %s" % (real_owner,okstr(real_owner == expected_owner))
+      print "Partition Owner : %-40s" % (real_owner,)
 
       expected_job = None
       real_job = runningJob( options.partition )
 
-      print "Running Job     : %-40s %s" % (real_job,okstr(real_job == expected_job))
+      print "Running Job     : %-40s" % (real_job,)
 
     sys.exit(int(errorOccurred))
 
