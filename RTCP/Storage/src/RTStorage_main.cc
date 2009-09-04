@@ -50,8 +50,7 @@ static void child(int argc, char *argv[], int rank, int size)
 
     LOG_INFO_STR("trying to use parset \"" << argv[1] << '"');
     
-    ParameterSet parameterSet(argv[1]);
-    Parset parset(&parameterSet);
+    Parset parset(argv[1]);
     
     // OLAP.parset is depricated, as everything is now in the parset given on the command line
     try {
