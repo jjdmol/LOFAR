@@ -194,7 +194,7 @@ inline string Parset::stationName(int index) const
 
 inline string Parset::storageHostName(const string& aKey, int index) const
 {
-  return getStringVector(aKey)[getUint32Vector("OLAP.storageNodeList")[index]];
+  return getStringVector(aKey)[getUint32Vector("OLAP.storageNodeList",true)[index]];
 }
 
 
@@ -312,7 +312,7 @@ inline uint32 Parset::nrChannelsPerSubband() const
 
 inline vector<unsigned> Parset::usedCoresInPset() const
 {
-  return getUint32Vector("OLAP.CNProc.usedCoresInPset");
+  return getUint32Vector("OLAP.CNProc.usedCoresInPset",true);
 }  
  
 inline uint32 Parset::nrCoresPerPset() const
@@ -323,7 +323,7 @@ inline uint32 Parset::nrCoresPerPset() const
 inline unsigned Parset::nrSubbands() const
 {
   if (isDefined("Observation.subbandList"))
-    return get("Observation.subbandList").expand().getUint32Vector().size();
+    return getUint32Vector("Observation.subbandList",true).size();
   else
     return itsObservation.getSubbandList().size();   
 } 
@@ -331,7 +331,7 @@ inline unsigned Parset::nrSubbands() const
 inline vector<unsigned> Parset::subbandToBeamMapping() const
 {
   if (isDefined("Observation.subbandList"))
-    return get("Observation.beamList").expand().getUint32Vector();
+    return getUint32Vector("Observation.beamList",true)
   else
     return itsObservation.getBeamList();   
 }
@@ -339,7 +339,7 @@ inline vector<unsigned> Parset::subbandToBeamMapping() const
 inline vector<unsigned> Parset::subbandToRSPboardMapping() const
 {
   if (isDefined("Observation.subbandList"))
-    return get("Observation.rspBoardList").expand().getUint32Vector();
+    return getUint32Vector("Observation.rspBoardList",true)
   else
     return itsObservation.getRspBoardList();
 }
@@ -348,7 +348,7 @@ inline vector<unsigned> Parset::subbandToRSPboardMapping() const
 inline vector<unsigned> Parset::subbandToRSPslotMapping() const
 {
   if (isDefined("Observation.subbandList"))
-    return get("Observation.rspSlotList").expand().getUint32Vector();
+    return getUint32Vector("Observation.rspSlotList")
   else
     return itsObservation.getRspSlotList();
 }
@@ -386,17 +386,17 @@ inline uint32 Parset::nrPsetsPerStorage() const
 
 inline vector<uint32> Parset::inputPsets() const
 {
-  return getUint32Vector("OLAP.CNProc.inputPsets");
+  return getUint32Vector("OLAP.CNProc.inputPsets",true);
 }
 
 inline vector<uint32> Parset::outputPsets() const
 {
-  return getUint32Vector("OLAP.CNProc.outputPsets");
+  return getUint32Vector("OLAP.CNProc.outputPsets",true);
 }
 
 inline vector<uint32> Parset::tabList() const
 {
-  return getUint32Vector("OLAP.CNProc.tabList");
+  return getUint32Vector("OLAP.CNProc.tabList",true);
 }
 
 inline int Parset::inputPsetIndex(uint32 pset) const
