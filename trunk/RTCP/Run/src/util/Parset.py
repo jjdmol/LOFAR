@@ -17,6 +17,11 @@ def decode(s):
   if s[0] == "(" and s[-1] == ")":
     s = s[1:-1]
 
+  # x;x;x = x,x,x
+  if ";" in s:
+    # warning: not safe in case of () recursion
+    return map(decode, s.split(";"))
+
   # 2*xxx = [xxx,xxx]
   if "*" in s:
     num,s = s.split("*",1)
@@ -141,6 +146,7 @@ class Parset(dict):
             parentheses, brackets = 0, 0
             for t in lexer:
               if t == "(":
+                assert parentheses == 0, errormsg("nested parentheses not supported")
                 parentheses += 1
               elif t == ")":
                 assert parentheses > 0, errormsg("unmatched parentheses")
