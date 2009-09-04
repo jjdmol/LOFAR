@@ -168,7 +168,7 @@ class IONProcSection(Section):
     # ping
 
     pingcmds = [
-      (node,AsyncCommand( "ping %s -c 1 -w 2 -tq" % (node,), ["/dev/null"] ))
+      (node,AsyncCommand( "ping %s -c 1 -w 2 -q" % (node,), ["/dev/null"] ))
       for node in self.psets
     ]
 
