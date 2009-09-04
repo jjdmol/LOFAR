@@ -55,11 +55,14 @@ int main(int argc, char *argv[])
 
 #if defined HAVE_MPI
   int rank;
+  int size;
 
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
 #else
   int rank = 0;
+  int size = 1;
 #endif
 
   try {
@@ -69,11 +72,10 @@ int main(int argc, char *argv[])
       THROW(StorageException, std::string("usage: ") << argv[0] << " parset");
 
     std::clog << "trying to use parset \"" << argv[1] << '"' << std::endl;
-    ParameterSet parameterSet(argv[1]);
-    Parset parset(&parameterSet);
+    Parset parset(argv[1]);
     parset.adoptFile("OLAP.parset");
 
-    SubbandWriter subbandWriter(&parset, rank);
+    SubbandWriter subbandWriter(&parset, rank, size);
 
     subbandWriter.preprocess();
     subbandWriter.process();
