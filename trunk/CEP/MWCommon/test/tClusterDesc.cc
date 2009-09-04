@@ -61,8 +61,7 @@ void doIt()
   ofstream fos("tClusterDesc_tmp.fil");
   cl.write (fos);
   // Read back.
-  ParameterSet parset("tClusterDesc_tmp.fil");
-  ClusterDesc cl2(parset);
+  ClusterDesc cl2("tClusterDesc_tmp.fil");
   check(cl2);
   cl = cl2;
   check(cl);
@@ -98,8 +97,7 @@ void doParset()
   ofstream fos("tClusterDesc_tmp.fil2");
   cdesc.write (fos);
   // Read back.
-  ParameterSet parset("tClusterDesc_tmp.fil2");
-  ClusterDesc cl2(parset);
+  ClusterDesc cl2("tClusterDesc_tmp.fil2");
   check1 (cl2);
 }
 
