@@ -142,7 +142,7 @@ class Parset(dict):
         while i < len(v):
           # make sure each value is processed only once
           written = False
-
+          """
           # compress equal values
           for j in xrange(i,len(v)+1):
             if j == len(v) or str(v[j]) != str(v[i]):
@@ -166,6 +166,7 @@ class Parset(dict):
 
           if written:
             continue
+          """
 
           dst.append( strfy(v[i]) )
           i += 1
