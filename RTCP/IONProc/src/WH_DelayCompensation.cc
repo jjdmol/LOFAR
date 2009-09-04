@@ -37,9 +37,13 @@
 #include <Common/PrettyUnits.h>
 #include <Interface/Exceptions.h>
 #include <Interface/PencilCoordinates.h>
+#include <Interface/Mutex.h>
 
 #include <pthread.h>
-#include <boost/shared_ptr.hpp>
+#include <memory>
+
+// casacore is not thread safe
+static Mutex casacoreMutex;
 
 namespace LOFAR 
 {
@@ -115,7 +119,7 @@ namespace LOFAR
       }
 
       vector<AMC::Epoch>	        observationEpochs( itsNrCalcDelays );
-      boost::shared_ptr<AMC::Converter> converter( new ConverterImpl() );
+      std::auto_ptr<AMC::Converter>     converter( new ConverterImpl() );
 
       // the current time, in samples
       int64 currentTime = itsStartTime;
@@ -148,11 +152,11 @@ namespace LOFAR
         // etc.
         ResultData result;
 
-        itsCasacoreMutex.lock();
+        casacoreMutex.lock();
         // TODO: hangs if exception is thrown here -- should abort everything instead, since
         // we can't restore casacore.
         converter->j2000ToItrf(result, request); // expensive
-        itsCasacoreMutex.unlock();
+        casacoreMutex.unlock();
 
         ASSERTSTR(result.direction.size() == itsNrCalcDelays * itsNrBeams * itsNrPencilBeams,
 	  	  result.direction.size() << " == " << itsNrCalcDelays * itsNrBeams * itsNrPencilBeams );
@@ -216,8 +220,6 @@ namespace LOFAR
 
     //##----------------  Private methods  ----------------##//
     
-    Mutex WH_DelayCompensation::itsCasacoreMutex;
-
     void WH_DelayCompensation::setBeamDirections(const Parset *ps)
     {
       const PencilCoordinates& pencilBeams = ps->pencilBeams();
