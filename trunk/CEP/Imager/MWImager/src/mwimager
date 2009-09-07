@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# mwimager.cc: Script to start a distributed cimager process
+# mwimager: Script to start a distributed cimager process
 #
 # Copyright (C) 2008
 # ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -33,11 +33,26 @@ if test "$LOFARROOT" = ""; then
   exit 1
 fi
 
+# Handle possible options.
+imager=cimager
+while [ $# != 0 ]
+do
+  if [ "$1" = "-casa" ]; then
+    imager='casa'
+    shift
+  elif [ "$1" = "-nocasa" ]; then
+    imager=cimager
+    shift
+  else
+    break
+  fi
+done
+
 # First argument must be ms-name.
-# Second one is optional clusterdesc name.
-# Third one is optional dry run (0=normal, 1=dry).
 if test $# = 0; then
-  echo "run as:   mwimager parset-file [clusterdesc] [wd] [logfile] [dry] [hfn]"
+  echo "run as:   mwimager [-casa] parset-file [clusterdesc] [wd] [logfile] [dry] [hfn]"
+  echo "       -casa         use casaimager, otherwise askap's cimager"
+  echo "                     default is -nocasa"
   echo "       parset-file   name of parset file"
   echo "       clusterdesc   name of clusterdesc file"
   echo "                     default is $HOME/CEP.clusterdesc"
@@ -52,10 +67,10 @@ if test $# = 0; then
   echo "                     by startdistproc"
   echo "                     Only needed for test purposes"
   exit 1
-else
-  psn=$1
-  shift
 fi
+
+psn=$1
+shift
 cdn=
 if test $# != 0; then
   cdn=$1
@@ -105,11 +120,11 @@ fi
 # If it is an MS, operate directly on it (as rank 0).
 msvds=`getparsetvalue $psn dataset` || exit 1
 if test -d "$msvds"  -a  -e "$msvds/table.dat"; then
-  echo "mwimager-part '' '' '' '' 0 '$msvds' '$LOFARROOT' '$psn' '$wd' '$dry'"
-  mwimager-part "" "" "" "" 0 "$msvds" "$LOFARROOT" "$psn" "$wd" "$dry" 
+  echo "mwimager-part '' '' '' '' 0 '$msvds' '' '$psn' '$imager' '$wd' '$dry'"
+  mwimager-part "" "" "" "" 0 "$msvds" "" "$psn" "$imager" "$wd" "$dry" 
 
 else
   # Start the imager processes on the various machines.
-  echo "startdistproc -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/mwimager-part '$LOFARROOT' '$psn' '$wd' '$dry'"
-  startdistproc -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/mwimager-part "$LOFARROOT" "$psn" "$wd" "$dry"
+  echo "startdistproc -useenv -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/mwimager-part '$psn' '$imager' '$wd' '$dry'"
+  startdistproc -useenv -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/mwimager-part "$psn" "$imager" "$wd" "$dry"
 fi
