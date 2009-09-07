@@ -29,7 +29,7 @@
 
 namespace LOFAR {
 
-BlobIBufChar::BlobIBufChar (const void* buffer, uint size)
+BlobIBufChar::BlobIBufChar (const void* buffer, uint64 size)
 : itsBuffer ((const uchar*)buffer),
   itsSize   (size),
   itsPos    (0)
@@ -38,7 +38,7 @@ BlobIBufChar::BlobIBufChar (const void* buffer, uint size)
 BlobIBufChar::~BlobIBufChar()
 {}
 
-uint BlobIBufChar::get (void* buffer, uint nbytes)
+uint64 BlobIBufChar::get (void* buffer, uint64 nbytes)
 {
   if (itsPos >= itsSize) {
     return 0;
@@ -59,7 +59,7 @@ int64 BlobIBufChar::tellPos() const
 int64 BlobIBufChar::setPos (int64 pos)
 {
   ASSERT (pos >= 0);
-  if (pos < itsSize) {
+  if (pos < (int32)itsSize) {
     itsPos = pos;
   } else {
     itsPos = itsSize;

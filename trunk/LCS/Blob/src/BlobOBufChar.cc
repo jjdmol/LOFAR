@@ -30,7 +30,7 @@
 
 namespace LOFAR {
 
-BlobOBufChar::BlobOBufChar (uint initialSize, uint expandSize)
+BlobOBufChar::BlobOBufChar (uint64 initialSize, uint64 expandSize)
 : itsBuffer       (0),
   itsSize         (0),
   itsPos          (0),
@@ -43,8 +43,8 @@ BlobOBufChar::BlobOBufChar (uint initialSize, uint expandSize)
   }
 }
 
-BlobOBufChar::BlobOBufChar (void* buffer, uint size, uint expandSize,
-			    uint start, bool takeOver)
+BlobOBufChar::BlobOBufChar (void* buffer, uint64 size, uint64 expandSize,
+			    uint64 start, bool takeOver)
 : itsBuffer       ((uchar*)buffer),
   itsSize         (start),
   itsPos          (start),
@@ -71,7 +71,7 @@ void BlobOBufChar::clear()
   itsPos  = 0;
 }
 
-uint BlobOBufChar::put (const void* buffer, uint nbytes)
+uint64 BlobOBufChar::put (const void* buffer, uint64 nbytes)
 {
   // Expand the buffer if needed (and possible).
   if (! resizeIfNeeded (itsPos+nbytes)) {
@@ -109,9 +109,9 @@ int64 BlobOBufChar::setPos (int64 pos)
   return pos;
 }
 
-bool BlobOBufChar::expand (uint newSize)
+bool BlobOBufChar::expand (uint64 newSize)
 {
-  uint minsz = itsReservedSize;
+  uint64 minsz = itsReservedSize;
   if (newSize > minsz) {
     if (itsExpandSize == 0) {
       return false;                  // cannot expand
@@ -126,7 +126,7 @@ bool BlobOBufChar::expand (uint newSize)
   return true;
 }
 
-void BlobOBufChar::doExpand (uint newReservedSize, uint)
+void BlobOBufChar::doExpand (uint64 newReservedSize, uint64)
 {
   if (newReservedSize > itsReservedSize) {
     // Allocate new buffer, copy contents and delete old buffer (if possible).
@@ -143,7 +143,7 @@ void BlobOBufChar::doExpand (uint newReservedSize, uint)
   }
 }
 
-void BlobOBufChar::reserve (uint newReservedSize)
+void BlobOBufChar::reserve (uint64 newReservedSize)
 {
   if (newReservedSize > itsReservedSize) {
     doExpand (newReservedSize, itsSize);
@@ -151,7 +151,7 @@ void BlobOBufChar::reserve (uint newReservedSize)
   }
 }
 
-void BlobOBufChar::resize (uint newSize)
+void BlobOBufChar::resize (uint64 newSize)
 {
   doExpand (newSize, newSize);
   itsSize = newSize;

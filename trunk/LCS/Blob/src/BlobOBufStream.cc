@@ -35,7 +35,7 @@ BlobOBufStream::BlobOBufStream (std::ostream& os)
 BlobOBufStream::~BlobOBufStream()
 {}
 
-uint BlobOBufStream::put (const void* buffer, uint nbytes)
+uint64 BlobOBufStream::put (const void* buffer, uint64 nbytes)
 {
   return itsStream->sputn ((const char*)buffer, nbytes);
 }

@@ -68,10 +68,10 @@ namespace LOFAR
   // <group>
   template<typename T>
   BlobOStream& putBlobArray (BlobOStream& bs, const T* data,
-			     const uint32* shape, uint16 ndim,
+			     const uint64* shape, uint16 ndim,
 			     bool fortranOrder);
   template<typename T>
-  BlobOStream& putBlobVector (BlobOStream& bs, const T* data, uint32 size);
+  BlobOStream& putBlobVector (BlobOStream& bs, const T* data, uint64 size);
   // </group>
 
   // \name Reserve space for an array with the given shape
@@ -85,29 +85,29 @@ namespace LOFAR
   // sizeof(T) bytes with a maximum of 8.
   // <group>
   template<typename T>
-  uint setSpaceBlobArray1 (BlobOStream& bs, bool useBlobHeader,
-			   uint32 size0, uint alignment=0);
+  uint64 setSpaceBlobArray1 (BlobOStream& bs, bool useBlobHeader,
+                             uint64 size0, uint alignment=0);
   template<typename T>
-  uint setSpaceBlobArray2 (BlobOStream& bs, bool useBlobHeader,
-			   uint32 size0, uint32 size1,
-			   bool fortranOrder, uint alignment=0);
+  uint64 setSpaceBlobArray2 (BlobOStream& bs, bool useBlobHeader,
+                             uint64 size0, uint64 size1,
+                             bool fortranOrder, uint alignment=0);
   template<typename T>
-  uint setSpaceBlobArray3 (BlobOStream& bs, bool useBlobHeader,
-			   uint32 size0, uint32 size1, uint32 size2,
-			   bool fortranOrder, uint alignment=0);
+  uint64 setSpaceBlobArray3 (BlobOStream& bs, bool useBlobHeader,
+                             uint64 size0, uint64 size1, uint64 size2,
+                             bool fortranOrder, uint alignment=0);
   template<typename T>
-  uint setSpaceBlobArray4 (BlobOStream& bs, bool useBlobHeader,
-			   uint32 size0, uint32 size1,
-			   uint32 size2, uint32 size3,
-			   bool fortranOrder, uint alignment=0);
+  uint64 setSpaceBlobArray4 (BlobOStream& bs, bool useBlobHeader,
+                             uint64 size0, uint64 size1,
+                             uint64 size2, uint64 size3,
+                             bool fortranOrder, uint alignment=0);
   template<typename T>
-  uint setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
-			  const std::vector<uint32>& shape,
-			  bool fortranOrder, uint alignment=0);
+  uint64 setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
+                            const std::vector<uint64>& shape,
+                            bool fortranOrder, uint alignment=0);
   template<typename T>
-  uint setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
-			  const uint32* shape, uint16 ndim,
-			  bool fortranOrder, uint alignment=0);
+  uint64 setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
+                            const uint64* shape, uint16 ndim,
+                            bool fortranOrder, uint alignment=0);
   // </group>
 
 
@@ -162,7 +162,7 @@ namespace LOFAR
   // It allocates the required storage and puts the pointer to it in arr.
   // The user is responsible for deleting the data.
   template<typename T>
-  BlobIStream& getBlobVector (BlobIStream& bs, T*& arr, uint32& size);
+  BlobIStream& getBlobVector (BlobIStream& bs, T*& arr, uint64& size);
 
   // Read back as a C-array with the axes in Fortran or C-style order.
   // It allocates the required storage and puts the pointer to it in arr.
@@ -170,7 +170,7 @@ namespace LOFAR
   // The user is responsible for deleting the data.
   template<typename T>
   BlobIStream& getBlobArray (BlobIStream& bs, T*& arr,
-			     std::vector<uint32>& shape,
+			     std::vector<uint64>& shape,
 			     bool fortranOrder);
 
   // Find an array in the blob with the axes in Fortran or C-style order.
@@ -183,17 +183,17 @@ namespace LOFAR
   // The data are assumed to be aligned on the given alignment which
   // defaults to sizeof(T) bytes with a maximum of 8.
   template<typename T>
-  uint getSpaceBlobArray (BlobIStream& bs, bool useBlobHeader,
-			  std::vector<uint32>& shape,
-			  bool fortranOrder);
+  uint64 getSpaceBlobArray (BlobIStream& bs, bool useBlobHeader,
+                            std::vector<uint64>& shape,
+                            bool fortranOrder);
 
 
 
 
   //# Reserve space for a 1-dim array of the given size.
   template<typename T>
-  inline uint setSpaceBlobArray1 (BlobOStream& bs, bool useBlobHeader,
-				  uint32 size0, uint alignment)
+  inline uint64 setSpaceBlobArray1 (BlobOStream& bs, bool useBlobHeader,
+                                    uint64 size0, uint alignment)
   {
     return setSpaceBlobArray<T> (bs, useBlobHeader, &size0, 1, true,
 				 alignment);
@@ -209,19 +209,18 @@ namespace LOFAR
   //# Put a C-style vector of values as an array.
   template<typename T>
   inline BlobOStream& putBlobVector (BlobOStream& bs, const T* vec,
-				     uint32 size)
+				     uint64 size)
   {
     return putBlobArray (bs, vec, &size, 1, true);
   }
 
 
-  // Put a blob array header. It returns the number of elements.
+  // Put a blob array header. It returns the number of elements in the array.
   // This is a helper function for the functions writing an array.
   // After writing the shape it aligns the stream on the given alignment.
-  // It returns the number of elements in the array.
-  uint32 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
+  uint64 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
 			     const std::string& headerName,
-			     const uint32* shape, uint16 ndim,
+			     const uint64* shape, uint16 ndim,
 			     bool fortranOrder, uint alignment);
 
   // Get the ordering and dimensionality.
@@ -243,25 +242,25 @@ namespace LOFAR
   // Get the shape of an array from the blob.
   // This is a helper function for the functions reading an array.
   // It returns the number of elements in the array.
-  uint getBlobArrayShape (BlobIStream& bs, uint32* shape, uint ndim,
-			  bool swapAxes, uint nalign);
+  uint64 getBlobArrayShape (BlobIStream& bs, uint64* shape, uint ndim,
+                            bool swapAxes, uint nalign);
 
   // Helper function to put an array of data.
   // It is specialized for the standard types (including complex and string).
   template<typename T> void putBlobArrayData (BlobOStream& bs,
-					      const T* data, uint nr);
+					      const T* data, uint64 nr);
 
   // Helper function to get an array of data.
   template<typename T> void getBlobArrayData (BlobIStream& bs,
-					      T* data, uint nr);
+					      T* data, uint64 nr);
 
   // Specializations for the standard types (including complex and string).
 #define BLOBARRAY_PUTGET_SPEC(TP) \
 template<> inline void putBlobArrayData (BlobOStream& bs, \
-	   			         const TP* data, uint nr) \
+	   			         const TP* data, uint64 nr) \
   { bs.put (data, nr); } \
 template<> inline void getBlobArrayData (BlobIStream& bs, \
-				         TP* data, uint nr) \
+				         TP* data, uint64 nr) \
   { bs.get (data, nr); }
 BLOBARRAY_PUTGET_SPEC(bool)
 BLOBARRAY_PUTGET_SPEC(int8)

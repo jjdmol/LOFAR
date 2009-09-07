@@ -128,7 +128,7 @@ namespace LOFAR {
         { return itsAlignment; }
 
       // Find the length of the blob to be created.
-      uint findBlobSize();
+      uint64 findBlobSize();
       
       // Create the blob for output.
       // It defines the offsets of the data in the various fields.
@@ -145,7 +145,7 @@ namespace LOFAR {
       // The extra blob should be contained in inbuf.
       // The length of the blob is given by size. It can be 0.
       // If size>0, it is checked if the length of the blob in inbuf matches size.
-      void putExtraBlob (BlobOBufChar& outbuf, const void* inbuf, uint size);
+      void putExtraBlob (BlobOBufChar& outbuf, const void* inbuf, uint64 size);
       
       // Get the extra blob from the input.
       // The size of the returned buffer is the size of the extra blob.
@@ -183,7 +183,7 @@ namespace LOFAR {
       // <br>Size is checked if given as > 0.
       // It returns if it is needed to convert the data.
       static bool checkHeader (BlobIBufChar& buf, const char* objectType,
-			       int version, uint size);
+			       int version, uint64 size);
       
       // Convert all fields in the buffer to the local format.
       // The conversion is done in place.
@@ -196,7 +196,7 @@ namespace LOFAR {
       uint                        itsVersion;
       uint                        itsAlignment;
       bool                        itsHasFixedShape;
-      uint                        itsNormalSize;
+      uint64                      itsNormalSize;
       std::vector<BlobFieldBase*> itsFields;
       NameMap                     itsNameMap;
       ALLOC_TRACER_CONTEXT

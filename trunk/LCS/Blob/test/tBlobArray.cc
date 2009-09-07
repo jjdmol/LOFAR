@@ -122,7 +122,7 @@ int main()
 	ASSERT (bs.align(128) == uint(128-pos));
 	// Interpret the complex vector directly as an array.
 	// Check if the shape and values are correct.
-	std::vector<uint32> shape;
+	std::vector<uint64> shape;
 	uint cpos = getSpaceBlobArray<fcomplex> (bs, true, shape, false);
 	ASSERT (shape.size() == 1);
 	ASSERT (shape[0] == 2);

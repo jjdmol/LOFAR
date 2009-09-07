@@ -73,12 +73,12 @@ uint BlobOStream::doPutStart (const char* type, uint nrc, int version)
 
 // putend ends putting an object. It decreases the level and writes
 // the object length if the file is seekable.
-uint BlobOStream::putEnd()
+uint64 BlobOStream::putEnd()
 {
   ASSERT (itsLevel > 0);
   uint32 eob = BlobHeader::eobMagicValue();
   *this << eob;                        // write end-of-blob
-  uint32 len = itsCurLength;           // length of this object
+  uint64 len = itsCurLength;           // length of this object
   itsCurLength = itsObjLen.top();      // length of parent object
   int64 pos    = itsObjPtr.top();
   itsObjLen.pop();
@@ -96,10 +96,10 @@ uint BlobOStream::putEnd()
   return len;
 }
 
-void BlobOStream::putBuf (const void* buf, uint sz)
+void BlobOStream::putBuf (const void* buf, uint64 sz)
 {
   checkPut();
-  uint sz1 = itsStream->put (static_cast<const char*>(buf), sz);
+  uint64 sz1 = itsStream->put (static_cast<const char*>(buf), sz);
   if (sz1 != sz) {
     THROW (BlobException,
 	   "BlobOStream::putBuf - " << sz << " bytes asked, but only "
@@ -196,23 +196,23 @@ BlobOStream& BlobOStream::operator<< (const dcomplex& var)
 }
 BlobOStream& BlobOStream::operator<< (const std::string& var)
 {
-  operator<< (int32(var.size()));
+  operator<< (int64(var.size()));
   putBuf (var.data(), var.size());
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const char* var)
 {
-  int32 sz = strlen(var);
+  int64 sz = strlen(var);
   operator<< (sz);
   putBuf (var, sz);
   return *this;
 }
 
-void BlobOStream::put (const bool* values, uint nrval)
+void BlobOStream::put (const bool* values, uint64 nrval)
 {
   uchar buf[256];
   while (nrval > 0) {
-    uint nr = std::min(nrval, 8*256u);
+    uint nr = std::min(nrval, uint64(8*256));
     // Convert to bits and put.
     uint nrb = LOFAR::boolToBit (buf, values, nr);
     putBuf (buf, nrb);
@@ -220,85 +220,85 @@ void BlobOStream::put (const bool* values, uint nrval)
     values += nr;
   }
 }
-void BlobOStream::put (const char* values, uint nrval)
+void BlobOStream::put (const char* values, uint64 nrval)
 {
   putBuf (values, nrval);
 }
-void BlobOStream::put (const int8* values, uint nrval)
+void BlobOStream::put (const int8* values, uint64 nrval)
 {
   putBuf (values, nrval);
 }
-void BlobOStream::put (const uint8* values, uint nrval)
+void BlobOStream::put (const uint8* values, uint64 nrval)
 {
   putBuf (values, nrval);
 }
-void BlobOStream::put (const int16* values, uint nrval)
+void BlobOStream::put (const int16* values, uint64 nrval)
 {
   putBuf (values, nrval*sizeof(int16));
 }
-void BlobOStream::put (const uint16* values, uint nrval)
+void BlobOStream::put (const uint16* values, uint64 nrval)
 {
   putBuf (values, nrval*sizeof(uint16));
 }
-void BlobOStream::put (const int32* values, uint nrval)
+void BlobOStream::put (const int32* values, uint64 nrval)
 {
   putBuf (values, nrval*sizeof(int32));
 }
-void BlobOStream::put (const uint32* values, uint nrval)
+void BlobOStream::put (const uint32* values, uint64 nrval)
 {
   putBuf (values, nrval*sizeof(uint32));
 }
-void BlobOStream::put (const int64* values, uint nrval)
+void BlobOStream::put (const int64* values, uint64 nrval)
 {
   putBuf (values, nrval*sizeof(int64));
 }
-void BlobOStream::put (const uint64* values, uint nrval)
+void BlobOStream::put (const uint64* values, uint64 nrval)
 {
   putBuf (values, nrval*sizeof(uint64));
 }
-void BlobOStream::put (const float* values, uint nrval)
+void BlobOStream::put (const float* values, uint64 nrval)
 {
   putBuf (values, nrval*sizeof(float));
 }
-void BlobOStream::put (const double* values, uint nrval)
+void BlobOStream::put (const double* values, uint64 nrval)
 {
   putBuf (values, nrval*sizeof(double));
 }
-void BlobOStream::put (const i4complex* values, uint nrval)
+void BlobOStream::put (const i4complex* values, uint64 nrval)
 {
   putBuf (values, nrval*sizeof(i4complex));
 }
-void BlobOStream::put (const i16complex* values, uint nrval)
+void BlobOStream::put (const i16complex* values, uint64 nrval)
 {
   putBuf (values, nrval*sizeof(i16complex));
 }
-void BlobOStream::put (const u16complex* values, uint nrval)
+void BlobOStream::put (const u16complex* values, uint64 nrval)
 {
   putBuf (values, nrval*sizeof(u16complex));
 }
-void BlobOStream::put (const fcomplex* values, uint nrval)
+void BlobOStream::put (const fcomplex* values, uint64 nrval)
 {
   putBuf (values, nrval*sizeof(fcomplex));
 }
-void BlobOStream::put (const dcomplex* values, uint nrval)
+void BlobOStream::put (const dcomplex* values, uint64 nrval)
 {
   putBuf (values, nrval*sizeof(dcomplex));
 }
-void BlobOStream::put (const string* values, uint nrval)
+void BlobOStream::put (const string* values, uint64 nrval)
 {
-  for (uint i=0; i<nrval; i++) {
+  for (uint64 i=0; i<nrval; i++) {
     *this << values[i];
   }
 }
 
 void BlobOStream::putBoolVec (const std::vector<bool>& values)
 {
-  uint32 sz = values.size();
+  uint64 sz = values.size();
   // Convert to bools and put as such.
   bool buf[256];
-  uint inx=0;
+  uint64 inx=0;
   while (sz > 0) {
-    uint nr = std::min(sz, 256u);
+    uint nr = std::min(sz, uint64(256));
     for (uint i=0; i<nr; i++) {
       buf[i] = values[inx++];
     }
@@ -307,7 +307,7 @@ void BlobOStream::putBoolVec (const std::vector<bool>& values)
   }
 }
 
-int64 BlobOStream::setSpace (uint nbytes)
+int64 BlobOStream::setSpace (uint64 nbytes)
 {
   checkPut();
   int64 pos = tellPos();

@@ -48,14 +48,14 @@ namespace LOFAR {
       // It keeps a pointer to the given BlobString object, so that should
       // not be deleted before this object.
       explicit BlobOBufString (BlobString& buffer,
-			       uint expandSize=1024, uint start=0);
+			       uint64 expandSize=1024, uint64 start=0);
       
       // Destructor.
       virtual ~BlobOBufString();
       
     private:
       // Expand the capacity of the buffer to the given size.
-      virtual void doExpand (uint newReservedSize, uint newSize);
+      virtual void doExpand (uint64 newReservedSize, uint64 newSize);
       
       
       BlobString* itsString;

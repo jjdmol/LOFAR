@@ -43,14 +43,14 @@ namespace LOFAR {
   }
 
   template<typename T>
-  BlobField<T>::BlobField (uint version, uint32 size0)
+  BlobField<T>::BlobField (uint version, uint64 size0)
     : BlobFieldBase (version, size0)
   {
     setAlignment (p2divider(sizeof(T)));
   }
 
   template<typename T>
-  BlobField<T>::BlobField (uint version, uint32 size0, uint32 size1,
+  BlobField<T>::BlobField (uint version, uint64 size0, uint64 size1,
 			   bool fortranOrder)
     : BlobFieldBase (version, size0, size1, fortranOrder)
   {
@@ -58,23 +58,23 @@ namespace LOFAR {
   }
 
   template<typename T>
-  BlobField<T>::BlobField (uint version, uint32 size0, uint32 size1,
-			   uint32 size2, bool fortranOrder)
+  BlobField<T>::BlobField (uint version, uint64 size0, uint64 size1,
+			   uint64 size2, bool fortranOrder)
     : BlobFieldBase (version, size0, size1, size2, fortranOrder)
   {
     setAlignment (p2divider(sizeof(T)));
   }
 
   template<typename T>
-  BlobField<T>::BlobField (uint version, uint32 size0, uint32 size1,
-			   uint32 size2, uint32 size3, bool fortranOrder)
+  BlobField<T>::BlobField (uint version, uint64 size0, uint64 size1,
+			   uint64 size2, uint64 size3, bool fortranOrder)
     : BlobFieldBase (version, size0, size1, size2, size3, fortranOrder)
   {
     setAlignment (p2divider(sizeof(T)));
   }
 
   template<typename T>
-  BlobField<T>::BlobField (uint version, const std::vector<uint32>& shape,
+  BlobField<T>::BlobField (uint version, const std::vector<uint64>& shape,
 			   bool fortranOrder)
     : BlobFieldBase (version, shape, fortranOrder)
   {
@@ -82,7 +82,7 @@ namespace LOFAR {
   }
 
   template<typename T>
-  BlobField<T>::BlobField (uint version, const uint32* shape, uint16 ndim,
+  BlobField<T>::BlobField (uint version, const uint64* shape, uint16 ndim,
 			   bool fortranOrder)
     : BlobFieldBase (version, shape, ndim, fortranOrder)
   {
@@ -123,7 +123,7 @@ namespace LOFAR {
       setOffset (bs.getSpace (sizeof(T)), 0);
     } else {
       int64 off = bs.tellPos();     // array offset
-      std::vector<uint32> shp;
+      std::vector<uint64> shp;
       setOffset (getSpaceBlobArray<T> (bs, useBlobHeader(),
 				       shp, rwFortranOrder()),
 		 off);
@@ -137,7 +137,7 @@ namespace LOFAR {
     if (getOffset() < 0) {
       return 0;
     }
-    DBGASSERT (getOffset() + getNelem()*sizeof(T) <= buf.size());
+    DBGASSERT (getOffset() + getNelem()*sizeof(T) <= int64(buf.size()));
     T* data = (T*)(buf.getBuffer() + getOffset());
     return data;
   }
@@ -148,7 +148,7 @@ namespace LOFAR {
     if (getOffset() < 0) {
       return 0;
     }
-    DBGASSERT (getOffset() + getNelem()*sizeof(T) <= buf.size());
+    DBGASSERT (getOffset() + getNelem()*sizeof(T) <= int64(buf.size()));
     T* data = (T*)(buf.getBuffer() + getOffset());
     return data;
   }
@@ -183,7 +183,7 @@ namespace LOFAR {
 				  LOFAR::DataFormat fmt) const
   {
     if (getOffset() >= 0) {
-      DBGASSERT (getOffset() + getNelem()*sizeof(T) <= buf.size());
+      DBGASSERT (getOffset() + getNelem()*sizeof(T) <= int64(buf.size()));
       T* data = (T*)(buf.getBuffer() + getOffset());
       LOFAR::dataConvert (fmt, data, getNelem());
       if (! isScalar()) {

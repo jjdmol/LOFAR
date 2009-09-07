@@ -56,7 +56,7 @@ namespace LOFAR {
 	{};
       
       // Put the requested nr of bytes.
-      virtual uint put (const void* buffer, uint nbytes) = 0;
+      virtual uint64 put (const void* buffer, uint64 nbytes) = 0;
       
       // Get the position in the stream.
       // -1 is returned if the stream is not seekable.

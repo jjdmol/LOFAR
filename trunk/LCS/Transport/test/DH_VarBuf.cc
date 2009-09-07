@@ -68,7 +68,7 @@ void DH_VarBuf::init()
 void DH_VarBuf::setBufferSize (unsigned int nelements)
 {
   itsBufSize = nelements;
-  vector<uint> sizeVec(1);
+  vector<uint64> sizeVec(1);
   sizeVec[0] = itsBufSize;
   getDataField("Buffer").setShape(sizeVec);    // Adjust shape of datafield
   createDataBlock();
@@ -80,7 +80,7 @@ void DH_VarBuf::setBufferSize (unsigned int nelements)
 
 unsigned int DH_VarBuf::getBufferSize()
 { 
-  vector<uint> sizeVec;
+  vector<uint64> sizeVec;
   sizeVec = getDataField("Buffer").getShape();
   itsBufSize = sizeVec[0];
   return itsBufSize;

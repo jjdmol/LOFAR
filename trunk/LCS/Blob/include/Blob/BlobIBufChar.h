@@ -41,13 +41,13 @@ namespace LOFAR {
     {
     public:
       // Construct from a buffer with the given length.
-      BlobIBufChar (const void* buffer, uint size);
+      BlobIBufChar (const void* buffer, uint64 size);
       
       // Destructor.
       virtual ~BlobIBufChar();
       
       // Get the requested nr of bytes.
-      virtual uint get (void* buffer, uint nbytes);
+      virtual uint64 get (void* buffer, uint64 nbytes);
       
       // Get the position in the buffer.
       virtual int64 tellPos() const;
@@ -61,16 +61,16 @@ namespace LOFAR {
       const uchar* getBuffer() const;
       
       // Get the size of the data in the buffer.
-      uint size() const;
+      uint64 size() const;
       
       // Get a typed pointer to an area in the buffer.
       // It is meant to be used in combination with BlobIStream::getSpace.
-      template<typename U> const U* getPointer (uint position) const;
+      template<typename U> const U* getPointer (uint64 position) const;
       
     private:
       const uchar* itsBuffer;
-      uint         itsSize;
-      uint         itsPos;
+      uint64       itsSize;
+      uint64       itsPos;
     };
   
   
@@ -78,13 +78,13 @@ namespace LOFAR {
     {
       return itsBuffer;
     }
-  inline uint BlobIBufChar::size() const
+  inline uint64 BlobIBufChar::size() const
     {
       return itsSize;
     }
   
   template<typename U>
-    inline const U* BlobIBufChar::getPointer (uint position) const
+    inline const U* BlobIBufChar::getPointer (uint64 position) const
     {
       DBGASSERT(position < itsSize);
       return (const U*)(itsBuffer + position);
