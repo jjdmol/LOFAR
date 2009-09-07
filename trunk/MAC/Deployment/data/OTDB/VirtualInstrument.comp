@@ -18,4 +18,6 @@ par BGLNodeList              I    text   -      10    100    [bgl001,bgl002,bgl0
 par storageNodeList          I    text   -      10    100    [list001,list002]             -   'list of all used StorageNodes'
 par imageNodeList            I    text   -      10    100    [lioff005,lioff002,lioff003]        -   'list of all used ImageNodes'
 par storageCapacity          I    int    DISK   10    100    760                           -   'total available StorageCapacity'
+par stationSet		     I	  text   -      10    0      ""	                           -   'MOM stationset'
+par minimalNrStations        I    int    -      10    0      1                             -   'MOM minimal nr stations needed'
 
