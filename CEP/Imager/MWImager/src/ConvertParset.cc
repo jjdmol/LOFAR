@@ -132,10 +132,15 @@ namespace LOFAR {
       vector<string> cellSize = imin.getStringVector ("cellSize");
       vector<string> stokes   = imin.getStringVector ("stokes",
 						      vector<string>(1,"I"));
+      int nfacet = imin.getInt ("nfacets", 1);
+      string nfacets = imin.getString ("nfacets", "");
+      string facetstep = imin.getString ("facetstep", "1");
       imin.remove ("nchan");
       imin.remove ("frequency");
       imin.remove ("cellSize");
       imin.remove ("stokes");
+      imin.remove ("nfacets");
+      imin.remove ("facetstep");
       for (unsigned i=0; i<cellSize.size(); ++i) {
 	char last = cellSize[i][cellSize[i].size()-1];
 	if (last < 'a'  || last > 'z') {
@@ -160,6 +165,10 @@ namespace LOFAR {
 	out.add (name+"frequency", frequency);
 	out.add (name+"nchan",     nchan);
 	out.add (name+"direction", dirVecStr.str());
+        if (nfacet > 1) {
+          out.add (name+"nfacets", nfacets);
+          out.add (name+"facetstep", facetstep);
+        }
       }
       // Convert the remaining keywords.
       convert (out, imin, emptyMap, emptyMap, "Cimager.Images.");
