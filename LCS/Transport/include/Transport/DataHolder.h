@@ -99,7 +99,7 @@ public:
   virtual void dump() const;
 
   // Get data size (in bytes);
-  int getDataSize() const;
+  int64 getDataSize() const;
 
   // Get a pointer to the data (the beginning of the blob).
   void* getDataPtr() const;
@@ -108,10 +108,10 @@ public:
   uint getHeaderSize() const;
 
   // Extract the size from the blob header in the buffer.
-  static uint getDataLength (const void* buffer);
+  static uint64 getDataLength (const void* buffer);
 
   // Resize the buffer to the given size (if needed).
-  void resizeBuffer (uint newSize);
+  void resizeBuffer (uint64 newSize);
 
   // Does this DataHolder have a fixed size?
   bool hasFixedSize();
@@ -140,11 +140,12 @@ public:
   // so the maximum data size is the size of the main data blob plus nbytes.
   // <br>The default maximum data size is 0, but for TransportHolders not
   // supporting growable data, it is the size of all data fields.
-  void setMaxDataSize (uint nbytes, bool isAddMax=false);
+  void setMaxDataSize (uint64 nbytes, bool isAddMax=false);
 
   // Get the MAXIMUM data block size supported (in bytes).
   // 0 means no maximum.
-  int getMaxDataSize() const;
+  // <0 means that it has not been set yet.
+  int64 getMaxDataSize() const;
 
   // Tell the DataHolder the properties how the buffer allocation is done.
   void setAllocationProperties (bool		dataCanGrow,
@@ -243,7 +244,7 @@ private:
   // Put the extra data block into the main data blob.
   // If possible and needed the buffer is resized.
   // If resized, the data pointers are refilled.
-  void putExtra (const void* data, uint size);
+  void putExtra (const void* data, uint64 size);
 
   // Let the derived class fill its pointers to the data in the blob.
   // This function is called when the blob is created and when its layout
@@ -255,7 +256,7 @@ private:
   BlobString*     itsData;
   BlobOBufString* itsDataBlob;
   BlobStringType* itsBlobType;
-  int             itsMaxDataSize;   //# <0 is not filled in
+  int64           itsMaxDataSize;   //# <0 is not filled in
   bool		  itsDataCanGrow;
   string          itsName;
   string          itsType;
@@ -267,10 +268,10 @@ private:
 };
 
 
-inline void DataHolder::setMaxDataSize (uint nbytes, bool isAddMax)
+inline void DataHolder::setMaxDataSize (uint64 nbytes, bool isAddMax)
   { itsMaxDataSize = nbytes; itsDataCanGrow = !isAddMax; }
 
-inline int DataHolder::getDataSize() const
+inline int64 DataHolder::getDataSize() const
   { return itsData->size(); }
 
 inline void* DataHolder::getDataPtr() const
@@ -332,7 +333,7 @@ inline uint DataHolder::getHeaderSize() const
   return sizeof(BlobHeader);
 }
 
-inline uint DataHolder::getDataLength (const void* buffer)
+inline uint64 DataHolder::getDataLength (const void* buffer)
 {
   return static_cast<const BlobHeader*>(buffer)->getLength();
 }

@@ -28,7 +28,7 @@
 namespace LOFAR {
 
 BlobOBufString::BlobOBufString (BlobString& buffer,
-				uint expandSize, uint start)
+				uint64 expandSize, uint64 start)
   : BlobOBufChar (buffer.data(), buffer.capacity(),
 		  buffer.canExpand() ? expandSize:0,
 		  start, false),
@@ -40,7 +40,7 @@ BlobOBufString::BlobOBufString (BlobString& buffer,
 BlobOBufString::~BlobOBufString()
 {}
 
-void BlobOBufString::doExpand (uint newReservedSize, uint newSize)
+void BlobOBufString::doExpand (uint64 newReservedSize, uint64 newSize)
 {
   if (newReservedSize > itsString->capacity()) {
     itsString->reserve (newReservedSize);

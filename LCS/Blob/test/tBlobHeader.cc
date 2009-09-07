@@ -35,11 +35,11 @@ int main()
   // Define a blob header.
   BlobHeader bl(0, 1);
   // Check if all data in it are correct.
-  ASSERT (sizeof(bl) == 12);
+  ASSERT (sizeof(bl) == 16);
   ASSERT (bl.getVersion() == 0);
-  ASSERT (bl.lengthOffset() == 4);
+  ASSERT (bl.lengthOffset() == 0);
   ASSERT (bl.getNameLength() == 0);
-  ASSERT (bl.getHeaderLength() == 12);
+  ASSERT (bl.getHeaderLength() == 16);
   ASSERT (!bl.mustConvert());
   ASSERT (bl.checkMagicValue());
   ASSERT (bl.getLength() == 0);

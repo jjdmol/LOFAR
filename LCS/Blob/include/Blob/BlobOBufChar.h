@@ -45,7 +45,7 @@ namespace LOFAR {
     {
     public:
       // Construct a dynamic buffer with the given initial length.
-      explicit BlobOBufChar (uint initialSize=65536, uint expandSize=32768);
+      explicit BlobOBufChar (uint64 initialSize=65536, uint64 expandSize=32768);
       
       // Construct from the given buffer with the given size.
       // The arguments have the following meaning:
@@ -62,7 +62,7 @@ namespace LOFAR {
       // <li> takeOver indicates if the buffer pointer is taken over,
       //      thus that buffer gets deleted by this class.
       // </ul>
-      BlobOBufChar (void* buffer, uint size, uint expandSize=0, uint start=0,
+      BlobOBufChar (void* buffer, uint64 size, uint64 expandSize=0, uint64 start=0,
 		    bool takeOver=false);
       
       // Destructor.
@@ -72,7 +72,7 @@ namespace LOFAR {
       void clear();
       
       // Put the requested nr of bytes.
-      virtual uint put (const void* buffer, uint nbytes);
+      virtual uint64 put (const void* buffer, uint64 nbytes);
       
       // Get the position in the buffer.
       virtual int64 tellPos() const;
@@ -86,25 +86,25 @@ namespace LOFAR {
       const uchar* getBuffer() const;
       
       // Get the size of the data in the buffer.
-      uint size() const;
+      uint64 size() const;
       
       // Get the capacity of the buffer.
-      uint capacity() const;
+      uint64 capacity() const;
       
       // Get the expand size (0 = not expandable).
-      uint expandSize() const;
+      uint64 expandSize() const;
       
       // Get a typed pointer to an area in the string.
       // It is meant to be used in combination with BlobOStream::setSpace.
-      template<typename U> U* getPointer (uint position);
+      template<typename U> U* getPointer (uint64 position);
       
       // Reserve at least the given size.
       // An exception is thrown if the buffer needs to be expanded, but cannot.
-      void reserve (uint newReservedSize);
+      void reserve (uint64 newReservedSize);
       
       // Resize the buffer.
       // An exception is thrown if the buffer needs to be expanded, but cannot.
-      void resize (uint newSize);
+      void resize (uint64 newSize);
       
     protected:
       // Set the buffer pointer.
@@ -112,21 +112,21 @@ namespace LOFAR {
 
     private:
       // Expand the buffer if new size > current size.
-      bool resizeIfNeeded (uint newSize);
+      bool resizeIfNeeded (uint64 newSize);
       
       // Try to expand the buffer to at least the given size.
       // It returns false if the buffer cannot be expanded.
-      bool expand (uint minSize);
+      bool expand (uint64 minSize);
       
       // Expand the buffer to the given size.
-      virtual void doExpand (uint newReservedSize, uint newSize);
+      virtual void doExpand (uint64 newReservedSize, uint64 newSize);
       
       
       uchar* itsBuffer;
-      uint   itsSize;
-      uint   itsPos;
-      uint   itsReservedSize;
-      uint   itsExpandSize;
+      uint64 itsSize;
+      uint64 itsPos;
+      uint64 itsReservedSize;
+      uint64 itsExpandSize;
       bool   itsIsOwner;
     };
   
@@ -136,20 +136,20 @@ namespace LOFAR {
     {
       return itsBuffer;
     }
-  inline uint BlobOBufChar::size() const
+  inline uint64 BlobOBufChar::size() const
     {
       return itsSize;
     }
-  inline uint BlobOBufChar::capacity() const
+  inline uint64 BlobOBufChar::capacity() const
     {
       return itsReservedSize;
     }
-  inline uint BlobOBufChar::expandSize() const
+  inline uint64 BlobOBufChar::expandSize() const
     {
       return itsExpandSize;
     }
   
-  inline bool BlobOBufChar::resizeIfNeeded (uint newSize)
+  inline bool BlobOBufChar::resizeIfNeeded (uint64 newSize)
     {
       return (newSize > itsSize  ?  expand(newSize) : true);
     }
@@ -159,7 +159,7 @@ namespace LOFAR {
     }
   
   template<typename U>
-    inline U* BlobOBufChar::getPointer (uint position)
+    inline U* BlobOBufChar::getPointer (uint64 position)
     {
       DBGASSERT(position < itsSize);
       return (U*)(itsBuffer + position);

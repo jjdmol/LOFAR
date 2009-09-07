@@ -94,7 +94,7 @@ namespace LOFAR {
       
       // End putting an object. It returns the object length (including
       // possible nested objects).
-      uint putEnd();
+      uint64 putEnd();
       
       // Put a single value.
       // A string will be stored as a length followed by the characters.
@@ -130,25 +130,25 @@ namespace LOFAR {
       // Put an array of values with the given number of values.
       // Bool values are stored as bits.
       // <group>
-      void put (const bool* values, uint nrval);
-      void put (const char* values, uint nrval);
-      void put (const int8* values, uint nrval);
-      void put (const uint8* values, uint nrval);
-      void put (const int16* values, uint nrval);
-      void put (const uint16* values, uint nrval);
-      void put (const int32* values, uint nrval);
-      void put (const uint32* values, uint nrval);
-      void put (const int64* values, uint nrval);
-      void put (const uint64* values, uint nrval);
-      void put (const float* values, uint nrval);
-      void put (const double* values, uint nrval);
-      template<class T> void put (const std::complex<T>* values, uint nrval);
-      void put (const i4complex* values, uint nrval);
-      void put (const i16complex* values, uint nrval);
-      void put (const u16complex* values, uint nrval);
-      void put (const fcomplex* values, uint nrval);
-      void put (const dcomplex* values, uint nrval);
-      void put (const std::string* values, uint nrval);
+      void put (const bool* values, uint64 nrval);
+      void put (const char* values, uint64 nrval);
+      void put (const int8* values, uint64 nrval);
+      void put (const uint8* values, uint64 nrval);
+      void put (const int16* values, uint64 nrval);
+      void put (const uint16* values, uint64 nrval);
+      void put (const int32* values, uint64 nrval);
+      void put (const uint32* values, uint64 nrval);
+      void put (const int64* values, uint64 nrval);
+      void put (const uint64* values, uint64 nrval);
+      void put (const float* values, uint64 nrval);
+      void put (const double* values, uint64 nrval);
+      template<class T> void put (const std::complex<T>* values, uint64 nrval);
+      void put (const i4complex* values, uint64 nrval);
+      void put (const i16complex* values, uint64 nrval);
+      void put (const u16complex* values, uint64 nrval);
+      void put (const fcomplex* values, uint64 nrval);
+      void put (const dcomplex* values, uint64 nrval);
+      void put (const std::string* values, uint64 nrval);
       // </group>
       
       // Put a vector of values. First it puts the size of the vector.
@@ -168,7 +168,7 @@ namespace LOFAR {
       // It is meant for use with the BlobOBufString buffer. The function
       // getPointer in that class (in fact, in its base class BlobOBufChar)
       // can be used to turn the position into a pointer.
-      int64 setSpace (uint nbytes);
+      int64 setSpace (uint64 nbytes);
       
       // Add filler bytes as needed to make the total length a multiple of n.
       // In this way the next data are aligned properly.
@@ -186,7 +186,7 @@ namespace LOFAR {
       
       // Write the buffer, increment itsCurLength, and check
       // if everything is written.
-      void putBuf (const void* buf, uint sz);
+      void putBuf (const void* buf, uint64 sz);
       
       // Throw an exception if a put cannot be done.
       // <group>
@@ -196,10 +196,10 @@ namespace LOFAR {
       
       
       bool   itsSeekable;
-      uint32 itsCurLength;
+      uint64 itsCurLength;
       uint   itsLevel;
       // Object length at each level
-      std::stack<uint32> itsObjLen;
+      std::stack<uint64> itsObjLen;
       // Offset of length at each level
       std::stack<int64>  itsObjPtr;
       // The underlying stream object.
@@ -235,7 +235,7 @@ namespace LOFAR {
       return *this;
     }
   template<class T>
-    inline void BlobOStream::put (const std::complex<T>* values, uint nrval)
+    inline void BlobOStream::put (const std::complex<T>* values, uint64 nrval)
     {
       putBuf (values, nrval*sizeof(std::complex<T>));
     }
@@ -243,12 +243,12 @@ namespace LOFAR {
   template<class T>
     inline void BlobOStream::put (const std::vector<T>& vec)
     {
-      operator<< (uint32(vec.size()));
+      operator<< (uint64(vec.size()));
       put (&vec[0], vec.size());
     }
   inline void BlobOStream::put (const std::vector<bool>& vec)
     {
-      operator<< (uint32(vec.size()));
+      operator<< (uint64(vec.size()));
       putBoolVec (vec);
     }
   

@@ -48,7 +48,7 @@ namespace LOFAR {
       virtual ~BlobIBufStream();
       
       // Get the requested nr of bytes.
-      virtual uint get (void* buffer, uint nbytes);
+      virtual uint64 get (void* buffer, uint64 nbytes);
       
       // Get the position in the stream.
       // -1 is returned if the stream is not seekable.

@@ -46,9 +46,9 @@ namespace LOFAR {
     {
     private:
       char   itsAxisOrder;
-      uchar  itsNAlign;       // number of filler bytes for proper alignment
+      uchar  itsNAlign[5];    // number of filler bytes for proper alignment
       uint16 itsNdim;
-      uint32 itsSize[NDIM];   // shape
+      uint64 itsSize[NDIM];   // shape
     };
 
   // @}

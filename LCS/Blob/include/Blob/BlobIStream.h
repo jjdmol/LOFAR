@@ -86,7 +86,7 @@ namespace LOFAR {
       // possible nested objects).
       // It checks if the entire object has been read (to keep the data
       // stream in sync). If not, an exception is thrown.
-      uint getEnd();
+      uint64 getEnd();
       
       // getNextType gets the object type of the next piece of
       // information to read.
@@ -95,7 +95,7 @@ namespace LOFAR {
       // The second version also returns the size of this next blob.
       // <group>
       const std::string& getNextType();
-      const std::string& getNextType(uint& size);
+      const std::string& getNextType(uint64& size);
       // </group>
       
       // Get a single value.
@@ -125,25 +125,25 @@ namespace LOFAR {
       // Get an array of values with the given number of values.
       // Bools are retrieved as bits.
       // <group>
-      void get (bool* values, uint nrval);
-      void get (char* values, uint nrval);
-      void get (int8* values, uint nrval);
-      void get (uint8* values, uint nrval);
-      void get (int16* values, uint nrval);
-      void get (uint16* values, uint nrval);
-      void get (int32* values, uint nrval);
-      void get (uint32* values, uint nrval);
-      void get (int64* values, uint nrval);
-      void get (uint64* values, uint nrval);
-      void get (float* values, uint nrval);
-      void get (double* values, uint nrval);
-      template<class T> void get (std::complex<T>* values, uint nrval);
-      void get (i4complex* values, uint nrval);
-      void get (i16complex* values, uint nrval);
-      void get (u16complex* values, uint nrval);
-      void get (fcomplex* values, uint nrval);
-      void get (dcomplex* values, uint nrval);
-      void get (std::string* values, uint nrval);
+      void get (bool* values, uint64 nrval);
+      void get (char* values, uint64 nrval);
+      void get (int8* values, uint64 nrval);
+      void get (uint8* values, uint64 nrval);
+      void get (int16* values, uint64 nrval);
+      void get (uint16* values, uint64 nrval);
+      void get (int32* values, uint64 nrval);
+      void get (uint32* values, uint64 nrval);
+      void get (int64* values, uint64 nrval);
+      void get (uint64* values, uint64 nrval);
+      void get (float* values, uint64 nrval);
+      void get (double* values, uint64 nrval);
+      template<class T> void get (std::complex<T>* values, uint64 nrval);
+      void get (i4complex* values, uint64 nrval);
+      void get (i16complex* values, uint64 nrval);
+      void get (u16complex* values, uint64 nrval);
+      void get (fcomplex* values, uint64 nrval);
+      void get (dcomplex* values, uint64 nrval);
+      void get (std::string* values, uint64 nrval);
       // </group>
       
       // Get a vector of values. First it gets the size of the vector.
@@ -153,8 +153,9 @@ namespace LOFAR {
       template<typename T> void get (std::vector<T>& values);
       // </group>
       
-      // Get a vector of bools (without getting the size).
-      void getBoolVec (std::vector<bool>& values, uint size);
+      // Get a vector of bools of 'size' elements.
+      // The vector is resized to the given size.
+      void getBoolVec (std::vector<bool>& values, uint64 size);
       
       // Skip the given amount of space (the opposite of BlobOStream::setSpace).
       // This is useful when reading a static blob in a dynamic way.
@@ -162,7 +163,7 @@ namespace LOFAR {
       // It is meant for use with the BlobIBufString buffer. The function
       // getPointer in that class (in fact in its base class BlobIBufChar)
       // can be used to turn the position into a pointer.
-      int64 getSpace (uint nbytes);
+      int64 getSpace (uint64 nbytes);
       
       // Skip as many filler bytes as needed to make total length a multiple of n.
       // In this way the next data are aligned.
@@ -183,7 +184,7 @@ namespace LOFAR {
       
     private:
       // Read the buffer, increment itsCurLength, and check if everything read.
-      void getBuf (void* buf, uint sz);
+      void getBuf (void* buf, uint64 sz);
       
       // Throw an exception if a get cannot be done.
       // <group>
@@ -195,7 +196,7 @@ namespace LOFAR {
       bool   itsSeekable;
       bool   itsMustConvert;
       bool   itsHasCachedType;
-      uint32 itsCurLength;
+      uint64 itsCurLength;
       uint   itsLevel;
       int    itsVersion;
       // The endian type of the data in the blob.
@@ -203,9 +204,9 @@ namespace LOFAR {
       // The cached object type.
       std::string        itsObjectType;
       // Object length to read at each level
-      std::stack<uint32> itsObjTLN;
+      std::stack<uint64> itsObjTLN;
       // Object length at each level
-      std::stack<uint32> itsObjLen;
+      std::stack<uint64> itsObjLen;
       // The underlying stream object.
       BlobIBuffer*       itsStream;
     };
@@ -242,7 +243,7 @@ namespace LOFAR {
       return *this;
     }
   template<typename T>
-    inline void BlobIStream::get (std::complex<T>* values, uint nrval)
+    inline void BlobIStream::get (std::complex<T>* values, uint64 nrval)
     {
       getBuf (values, nrval*sizeof(std::complex<T>));
       if (itsMustConvert) {
@@ -253,14 +254,14 @@ namespace LOFAR {
   template<typename T>
     inline void BlobIStream::get (std::vector<T>& vec)
     {
-      uint32 sz;
+      uint64 sz;
       operator>> (sz);
       vec.resize (sz);
       get (&vec[0], sz);
     }
   inline void BlobIStream::get (std::vector<bool>& vec)
     {
-      uint32 sz;
+      uint64 sz;
       operator>> (sz);
       getBoolVec (vec, sz);
     }

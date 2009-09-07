@@ -30,8 +30,8 @@
 
 
 LOFAR::BlobHeader::BlobHeader (int version, uint level)
-: itsMagicValue     (bobMagicValue()),
-  itsLength         (0),
+: itsLength         (0),
+  itsMagicValue     (bobMagicValue()),
   itsVersion        (version),
   itsDataFormat     (LOFAR::dataFormat()),
   itsLevel          (level),

@@ -38,10 +38,10 @@ namespace LOFAR
 
 template<typename T>
 BlobOStream& putBlobArray (BlobOStream& bs, const T* data,
-	                   const uint32* shape, uint16 ndim,
+	                   const uint64* shape, uint16 ndim,
 			   bool fortranOrder)
 {
-  uint32 n = putBlobArrayHeader (bs, true,
+  uint64 n = putBlobArrayHeader (bs, true,
 				 LOFAR::typeName((const T**)0),
 				 shape, ndim, fortranOrder, 1);
   putBlobArrayData (bs, data, n);
@@ -51,22 +51,22 @@ BlobOStream& putBlobArray (BlobOStream& bs, const T* data,
 
 
 template<typename T>
-uint setSpaceBlobArray2 (BlobOStream& bs, bool useBlobHeader,
-			 uint32 size0, uint32 size1,
-			 bool fortranOrder, uint alignment)
+uint64 setSpaceBlobArray2 (BlobOStream& bs, bool useBlobHeader,
+                           uint64 size0, uint64 size1,
+                           bool fortranOrder, uint alignment)
 {
-  uint32 shp[2];
+  uint64 shp[2];
   shp[0] = size0;
   shp[1] = size1;
   return setSpaceBlobArray<T> (bs, useBlobHeader, shp, 2, fortranOrder,
 			       alignment);
 }
 template<typename T>
-uint setSpaceBlobArray3 (BlobOStream& bs,  bool useBlobHeader,
-			 uint32 size0, uint32 size1, uint32 size2,
-			 bool fortranOrder, uint alignment)
+uint64 setSpaceBlobArray3 (BlobOStream& bs,  bool useBlobHeader,
+                           uint64 size0, uint64 size1, uint64 size2,
+                           bool fortranOrder, uint alignment)
 {
-  uint32 shp[3];
+  uint64 shp[3];
   shp[0] = size0;
   shp[1] = size1;
   shp[2] = size2;
@@ -74,12 +74,12 @@ uint setSpaceBlobArray3 (BlobOStream& bs,  bool useBlobHeader,
 			       alignment);
 }
 template<typename T>
-uint setSpaceBlobArray4 (BlobOStream& bs, bool useBlobHeader,
-			 uint32 size0, uint32 size1,
-			 uint32 size2, uint32 size3,
-			 bool fortranOrder, uint alignment)
+uint64 setSpaceBlobArray4 (BlobOStream& bs, bool useBlobHeader,
+                           uint64 size0, uint64 size1,
+                           uint64 size2, uint64 size3,
+                           bool fortranOrder, uint alignment)
 {
-  uint32 shp[4];
+  uint64 shp[4];
   shp[0] = size0;
   shp[1] = size1;
   shp[2] = size2;
@@ -88,27 +88,27 @@ uint setSpaceBlobArray4 (BlobOStream& bs, bool useBlobHeader,
 			       alignment);
 }
 template<typename T>
-uint setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
-			const std::vector<uint32>& shape,
-			bool fortranOrder, uint alignment)
+uint64 setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
+                          const std::vector<uint64>& shape,
+                          bool fortranOrder, uint alignment)
 {
   return setSpaceBlobArray<T> (bs, useBlobHeader, &shape[0], shape.size(),
 			       fortranOrder, alignment);
 }
 
 template<typename T>
-uint setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
-			const uint32* shape, uint16 ndim,
-			bool fortranOrder, uint alignment)
+uint64 setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
+                          const uint64* shape, uint16 ndim,
+                          bool fortranOrder, uint alignment)
 {
   // Default alignment is the size of an array element with a maximum of 8.
   if (alignment == 0) {
     alignment = std::min((size_t) 8, sizeof(T));
   }
-  uint32 n = putBlobArrayHeader (bs, useBlobHeader,
+  uint64 n = putBlobArrayHeader (bs, useBlobHeader,
 				 LOFAR::typeName((const T**)0),
 				 shape, ndim, fortranOrder, alignment);
-  uint pos = bs.setSpace (n*sizeof(T));
+  uint64 pos = bs.setSpace (n*sizeof(T));
   if (useBlobHeader) {
     bs.putEnd();
   }
@@ -139,7 +139,7 @@ BlobIStream& operator>> (BlobIStream& bs, blitz::Array<T,NDIM>& arr)
   uint16 ndim;
   uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
   ASSERT (ndim == NDIM);
-  blitz::TinyVector<uint32,NDIM> shape;
+  blitz::TinyVector<uint64,NDIM> shape;
   getBlobArrayShape (bs, shape.data(), NDIM, fortranOrder!=arr.isMinorRank(),
 		     nalign);
   arr.resize (shape);
@@ -162,10 +162,8 @@ BlobOStream& operator<< (BlobOStream& bs, const casa::Array<T>& arr)
 {
   bool deleteIt;
   const T* data = arr.getStorage(deleteIt);
-  vector<uint32> shp(arr.ndim());
-  for (uint i=0; i<arr.ndim(); i++) {
-    shp[i] = arr.shape()[i];
-  }
+  const casa::IPosition& shape = arr.shape();
+  vector<uint64> shp(shape.begin(), shape.end());
   putBlobArray (bs, data, &shp[0], arr.ndim(), true);
   arr.freeStorage (data, deleteIt);
   return bs;
@@ -178,7 +176,7 @@ BlobIStream& operator>> (BlobIStream& bs, casa::Array<T>& arr)
   bool fortranOrder;
   uint16 ndim;
   uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
-  vector<uint32> shp(ndim);
+  vector<uint64> shp(ndim);
   getBlobArrayShape (bs, &shp[0], ndim, !fortranOrder, nalign);
   casa::IPosition shape(ndim);
   for (uint i=0; i<ndim; i++) {
@@ -196,7 +194,7 @@ BlobIStream& operator>> (BlobIStream& bs, casa::Array<T>& arr)
 
 
 template<typename T>
-BlobIStream& getBlobVector (BlobIStream& bs, T*& arr, uint32& size)
+BlobIStream& getBlobVector (BlobIStream& bs, T*& arr, uint64& size)
 {
   bs.getStart (LOFAR::typeName((const T**)0));
   bool fortranOrder;
@@ -212,15 +210,15 @@ BlobIStream& getBlobVector (BlobIStream& bs, T*& arr, uint32& size)
 
 template<typename T>
 BlobIStream& getBlobArray (BlobIStream& bs, T*& arr,
-	                   std::vector<uint32>& shape, bool fortranOrder)
+	                   std::vector<uint64>& shape, bool fortranOrder)
 {
   bs.getStart (LOFAR::typeName((const T**)0));
   bool fortranOrder1;
   uint16 ndim;
   uint nalign = getBlobArrayStart (bs, fortranOrder1, ndim);
   shape.resize (ndim);
-  uint n = getBlobArrayShape (bs, &shape[0], ndim,
-			      fortranOrder!=fortranOrder1, nalign);
+  uint64 n = getBlobArrayShape (bs, &shape[0], ndim,
+                                fortranOrder!=fortranOrder1, nalign);
   arr = new T[n];
   getBlobArrayData (bs, arr, n);
   bs.getEnd();
@@ -228,9 +226,9 @@ BlobIStream& getBlobArray (BlobIStream& bs, T*& arr,
 }
 
 template<typename T>
-uint getSpaceBlobArray (BlobIStream& bs, bool useBlobHeader,
-			std::vector<uint32>& shape,
-			bool fortranOrder)
+uint64 getSpaceBlobArray (BlobIStream& bs, bool useBlobHeader,
+                          std::vector<uint64>& shape,
+                          bool fortranOrder)
 {
   if (useBlobHeader) {
     bs.getStart (LOFAR::typeName((const T**)0));
@@ -239,9 +237,9 @@ uint getSpaceBlobArray (BlobIStream& bs, bool useBlobHeader,
   uint16 ndim;
   uint nalign = getBlobArrayStart (bs, fortranOrder1, ndim);
   shape.resize (ndim);
-  uint n = getBlobArrayShape (bs, &shape[0], ndim,
-			      fortranOrder!=fortranOrder1, nalign);
-  uint pos = bs.getSpace (n*sizeof(T));
+  uint64 n = getBlobArrayShape (bs, &shape[0], ndim,
+                                fortranOrder!=fortranOrder1, nalign);
+  uint64 pos = bs.getSpace (n*sizeof(T));
   if (useBlobHeader) {
     bs.getEnd();
   }
@@ -256,7 +254,7 @@ BlobIStream& operator>> (BlobIStream& bs, std::vector<T>& arr)
   uint16 ndim;
   uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
   ASSERT (ndim == 1);
-  uint32 size;
+  uint64 size;
   getBlobArrayShape (bs, &size, 1, false, nalign);
   arr.resize (size);
   getBlobArrayData (bs, &(arr[0]), size);
@@ -266,17 +264,17 @@ BlobIStream& operator>> (BlobIStream& bs, std::vector<T>& arr)
 
 
 template<typename T>
-void putBlobArrayData (BlobOStream& bs, const T* data, uint nr)
+void putBlobArrayData (BlobOStream& bs, const T* data, uint64 nr)
 {
-  for (uint i=0; i<nr; i++) {
+  for (uint64 i=0; i<nr; i++) {
     bs << data[i];
   }
 }
 
 template<typename T>
-void getBlobArrayData (BlobIStream& bs, T* data, uint nr)
+void getBlobArrayData (BlobIStream& bs, T* data, uint64 nr)
 {
-  for (uint i=0; i<nr; i++) {
+  for (uint64 i=0; i<nr; i++) {
     bs >> data[i];
   }
 }

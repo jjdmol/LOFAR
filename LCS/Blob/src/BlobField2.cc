@@ -42,7 +42,7 @@ namespace LOFAR {
       itsAlignment     (1)
   {}
 
-  BlobFieldBase::BlobFieldBase (uint version, uint32 size0)
+  BlobFieldBase::BlobFieldBase (uint version, uint64 size0)
     : itsVersion      (version),
       itsNelem        (size0),
       itsFortranOrder (true)
@@ -52,7 +52,7 @@ namespace LOFAR {
     init();
   }
 
-  BlobFieldBase::BlobFieldBase (uint version, uint32 size0, uint32 size1,
+  BlobFieldBase::BlobFieldBase (uint version, uint64 size0, uint64 size1,
 				bool fortranOrder)
     : itsVersion      (version),
       itsFortranOrder (fortranOrder)
@@ -62,8 +62,8 @@ namespace LOFAR {
     itsShapeDef[1] = size1;
     init();
   }
-  BlobFieldBase::BlobFieldBase (uint version, uint32 size0, uint32 size1,
-				uint32 size2, bool fortranOrder)
+  BlobFieldBase::BlobFieldBase (uint version, uint64 size0, uint64 size1,
+				uint64 size2, bool fortranOrder)
     : itsVersion      (version),
       itsFortranOrder (fortranOrder)
   {
@@ -73,8 +73,8 @@ namespace LOFAR {
     itsShapeDef[2] = size2;
     init();
   }
-  BlobFieldBase::BlobFieldBase (uint version, uint32 size0, uint32 size1,
-				uint32 size2, uint32 size3, bool fortranOrder)
+  BlobFieldBase::BlobFieldBase (uint version, uint64 size0, uint64 size1,
+				uint64 size2, uint64 size3, bool fortranOrder)
     : itsVersion      (version),
       itsFortranOrder (fortranOrder)
   {
@@ -85,7 +85,7 @@ namespace LOFAR {
     itsShapeDef[3] = size3;
     init();
   }
-  BlobFieldBase::BlobFieldBase (uint version, const std::vector<uint32>& shape,
+  BlobFieldBase::BlobFieldBase (uint version, const std::vector<uint64>& shape,
 				bool fortranOrder)
     : itsVersion      (version),
       itsShapeDef     (shape),
@@ -93,7 +93,7 @@ namespace LOFAR {
   {
     init();
   }
-  BlobFieldBase::BlobFieldBase (uint version, const uint32* shape, uint16 ndim,
+  BlobFieldBase::BlobFieldBase (uint version, const uint64* shape, uint16 ndim,
 				bool fortranOrder)
     : itsVersion      (version),
       itsFortranOrder (fortranOrder)
@@ -120,7 +120,7 @@ namespace LOFAR {
     itsAlignment     = 1;
   }
 
-  void BlobFieldBase::setShape (const std::vector<uint32>& shape)
+  void BlobFieldBase::setShape (const std::vector<uint64>& shape)
   {
     if (itsIsScalar) {
       THROW (BlobException,

@@ -53,36 +53,36 @@ void doAlign (BlobIStream& bis, uint& ln)
 
 // Create a blob in the given buffer.
 // If header8 is true, all data is aligned on 8 bytes.
-// Put all possible types in the blob (but scalars and vectors).
+// Put all possible types in the blob (both scalars and vectors).
 // Always check if the length (including end-of-blob) is as expected.
 int doOut (BlobOBuffer& bb, bool header8=false)
 {
   uint len = 0;
   BlobOStream bos(bb);
   ASSERT (bos.putStart ("test", 1) == 1);
-  uint ln = 16;
+  uint ln = 20;
   if (header8) doAlign(bos,ln);
   bos << true;
   bos << "abc";
-  bos << int32(4);
+  bos << int64(4);
   bos.put ("defg", 4);
-  ln += 20;
+  ln += 1 + 8+3 + 8 + 4 + 4;      // last 4 are for the eob magic value
   ASSERT (bos.putEnd() == ln);
   len += ln;
 
   if (header8) doAlign(bos,len);
   ASSERT (bos.putStart ("test1", 1) == 1);
-  ln = 17;
+  ln = 21;
   if (header8) doAlign(bos,ln);
   bos << int16(2);
   bos << makefcomplex(1,2);
   ln += 10;
   if (header8) doAlign(bos,ln);
   ASSERT (bos.putStart ("test1a", 3) == 2);
-  uint ln2 = 18;
+  uint ln2 = 22;
   if (header8) doAlign(bos,ln2);
   bos << std::string("defg");
-  ln2 += 12;
+  ln2 += 12 + 4;
   ASSERT (bos.putEnd() == ln2);
   ln += ln2 + 4;
   ASSERT (bos.putEnd() == ln);
@@ -90,7 +90,7 @@ int doOut (BlobOBuffer& bb, bool header8=false)
 
   if (header8) doAlign(bos,len);
   ASSERT (bos.putStart ("test2", -1) == 1);
-  ln = 17;
+  ln = 21;
   if (header8) doAlign(bos,ln);
   bos << int64(100);
   bos << makedcomplex(5,6);
@@ -100,7 +100,7 @@ int doOut (BlobOBuffer& bb, bool header8=false)
 
   if (header8) doAlign(bos,len);
   bos.putStart ("testall", 1);
-  ln = 19;
+  ln = 23;
   if (header8) doAlign(bos,ln);
   bool valbl[2];
   int8 valsc[2];
@@ -151,8 +151,9 @@ int doOut (BlobOBuffer& bb, bool header8=false)
   bos << valfc[0];
   bos << valdc[0];
   bos << valst[0];
-  bos.put (valb2, sizeof(valb2));
-  bos.put (valbl, 2);
+  ln += 1+1+1+2+2+4+4+4+8+8+16 + 8+10;
+  bos.put (valb2, sizeof(valb2));     // uses 2 bytes
+  bos.put (valbl, 2);                 // uses 1 byte
   bos.put (valsc, 2);
   bos.put (valuc, 2);
   bos.put (valss, 2);
@@ -164,7 +165,7 @@ int doOut (BlobOBuffer& bb, bool header8=false)
   bos.put (valfc, 2);
   bos.put (valdc, 2);
   bos.put (valst, 2);
-  ln += 212;
+  ln += 2+1+2+2+4+4+8+8+8+16+16+32 + 8+10 + 8+26;
   {
     // Do a long vector of bools, because they are stored as bits.
     std::vector<uint> veci(600);
@@ -175,7 +176,7 @@ int doOut (BlobOBuffer& bb, bool header8=false)
     }
     bos.put (veci);
     bos.put (vecb);
-    ln += 4 + 4*veci.size() + 4 + (vecb.size()+7)/8;
+    ln += 8 + 4*veci.size() + 8 + (vecb.size()+7)/8;
     bool bufb[2007];
     for (uint i=0; i<2007; i++) {
       bufb[i] = bool(i%7);
@@ -205,7 +206,7 @@ void doIn (BlobIBuffer& bb, bool header8=false)
 
   BlobIStream bis(bb);
   ASSERT (bis.getStart ("test") == 1);
-  uint ln = 16;
+  uint ln = 20;
   if (header8) doAlign(bis,ln);
   bis >> valb;
   ASSERT (valb == true);
@@ -213,12 +214,12 @@ void doIn (BlobIBuffer& bb, bool header8=false)
   ASSERT (vals.size() == 3  &&  vals == "abc");
   bis >> vals;
   ASSERT (vals.size() == 4  &&  vals == "defg");
-  ln += 20;
+  ln += 28;
   ASSERT (bis.getEnd() == ln);
 
   if (header8) doAlign(bis,dumlen);
   ASSERT (bis.getStart ("test1") == 1);
-  ln = 17;
+  ln = 21;
   if (header8) doAlign(bis,ln);
   bis >> val16;
   ASSERT (val16 == 2);
@@ -227,18 +228,18 @@ void doIn (BlobIBuffer& bb, bool header8=false)
   ln += 10;
   if (header8) doAlign(bis,ln);
   ASSERT (bis.getStart ("test1a") == 3);
-  uint ln2 = 18;
+  uint ln2 = 22;
   if (header8) doAlign(bis,ln2);
   bis >> vals;
   ASSERT (vals.size() == 4  &&  vals == "defg");
-  ln2 += 12;
+  ln2 += 12 + 4;
   ASSERT (bis.getEnd() == ln2);
   ln += ln2 + 4;
   ASSERT (bis.getEnd() == ln);
 
   if (header8) doAlign(bis,dumlen);
   ASSERT (bis.getStart ("test2") == -1);
-  ln = 17;
+  ln = 21;
   if (header8) doAlign(bis,ln);
   bis >> val64;
   ASSERT (val64 == 100);
@@ -249,7 +250,7 @@ void doIn (BlobIBuffer& bb, bool header8=false)
 
   if (header8) doAlign(bis,dumlen);
   bis.getStart ("testall");
-  ln = 19;
+  ln = 23;
   if (header8) doAlign(bis,ln);
   bool valbl[2], valblc[2];
   int8 valsc[2], valscc[2];

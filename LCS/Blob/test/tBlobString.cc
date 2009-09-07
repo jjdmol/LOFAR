@@ -36,7 +36,7 @@ void doIt (const BlobStringType& type)
   ASSERT (str.size() == 0);
   // Reserve some space.
   str.reserve (10);
-  uint cap = str.capacity();
+  uint64 cap = str.capacity();
   ASSERT (str.capacity() >= 10);
   ASSERT (str.size() == 0);
   if (type.useString()) {

@@ -46,7 +46,7 @@ namespace LOFAR {
       virtual ~BlobOBufNull();
       
       // Put the requested nr of bytes.
-      virtual uint put (const void* buffer, uint nbytes);
+      virtual uint64 put (const void* buffer, uint64 nbytes);
       
       // Get the position in the buffer.
       virtual int64 tellPos() const;
@@ -55,16 +55,16 @@ namespace LOFAR {
       virtual int64 setPos (int64 pos);
       
       // Get the size of the data in the buffer.
-      uint size() const;
+      uint64 size() const;
       
     private:
-      uint itsSize;
-      uint itsPos;
+      uint64 itsSize;
+      uint64 itsPos;
     };
 
 // @}
 
-  inline uint BlobOBufNull::size() const
+  inline uint64 BlobOBufNull::size() const
     {
       return itsSize;
     }

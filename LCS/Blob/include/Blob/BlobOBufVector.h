@@ -52,7 +52,7 @@ namespace LOFAR {
       // It keeps a pointer to the given vector object, so that should
       // not be deleted before this object.
       explicit BlobOBufVector (std::vector<T>& buffer,
-			       uint expandSize=1024, uint start=0)
+			       uint64 expandSize=1024, uint64 start=0)
 	: BlobOBufChar(buffer.empty()  ?  0 : &(buffer[0]),
 		       buffer.capacity(), expandSize, start, false),
 	  itsVector   (&buffer)
@@ -67,7 +67,7 @@ namespace LOFAR {
       
     private:
       // Expand the capacity of the buffer to the given size.
-      virtual void doExpand (uint newReservedSize, uint newSize)
+      virtual void doExpand (uint64 newReservedSize, uint64 newSize)
 	{
 	  if (newReservedSize > itsVector->capacity()) {
 	    itsVector->reserve (newReservedSize);

@@ -48,7 +48,7 @@ void doOut (BlobOBuffer& bb)
   indgen (arr);
   bs << arr;
   // Create an int vector.
-  std::vector<casa::Int> vec(2);
+  std::vector<casa::Int64> vec(2);
   vec[0] = 10;
   vec[1] = 11;
   bs << vec;
@@ -74,7 +74,7 @@ void doIn (BlobIBuffer& bb)
   BlobIStream bs(bb);
   bs.getStart ("test");
   // Read the shape as a vector.
-  std::vector<casa::Int> vec(1,100);
+  std::vector<casa::Int64> vec(1,100);
   bs >> vec;
   // Read the array.
   casa::Array<double> arr;

@@ -59,11 +59,11 @@ BlobIStream::~BlobIStream()
 // the object type.
 const std::string& BlobIStream::getNextType()
 {
-  uint size;
+  uint64 size;
   return getNextType (size);
 }
 
-const std::string& BlobIStream::getNextType (uint& size)
+const std::string& BlobIStream::getNextType (uint64& size)
 {
   // Return current type if already cached.
   if (itsHasCachedType) {
@@ -85,7 +85,7 @@ const std::string& BlobIStream::getNextType (uint& size)
   // Keep the current length read.
   itsLevel++;
   itsObjLen.push (itsCurLength);
-  uint32 sz = hdr.getLength();
+  uint64 sz = hdr.getLength();
   itsObjTLN.push (sz);
   size = sz;
   itsVersion = hdr.getVersion();
@@ -111,7 +111,7 @@ int BlobIStream::getStart (const std::string& type)
   return itsVersion;
 }
 
-uint BlobIStream::getEnd()
+uint64 BlobIStream::getEnd()
 {
   ASSERT (itsLevel > 0);
   uint32 eob;
@@ -120,8 +120,8 @@ uint BlobIStream::getEnd()
     THROW (BlobException,
 	   "BlobIStream::getEnd - no end-of-blob value found");
   }
-  uint32 toRead = itsObjTLN.top();
-  uint32 len    = itsCurLength;
+  uint64 toRead = itsObjTLN.top();
+  uint64 len    = itsCurLength;
   itsCurLength  = itsObjLen.top();
   itsObjTLN.pop();
   itsObjLen.pop();
@@ -137,10 +137,10 @@ uint BlobIStream::getEnd()
   return len;
 }
 
-void BlobIStream::getBuf (void* buf, uint sz)
+void BlobIStream::getBuf (void* buf, uint64 sz)
 {
   checkGet();
-  uint sz1 = itsStream->get (static_cast<char*>(buf), sz);
+  uint64 sz1 = itsStream->get (static_cast<char*>(buf), sz);
   if (sz1 != sz) {
       THROW (BlobException,
 	     "BlobIStream::getBuf - " << sz << " bytes asked, but only "
@@ -274,7 +274,7 @@ BlobIStream& BlobIStream::operator>> (dcomplex& var)
 }
 BlobIStream& BlobIStream::operator>> (std::string& var)
 {
-  int32 len;
+  int64 len;
   operator>> (len);
   var.resize (len);              // resize storage
   char* ptr = &(var[0]);         // get actual string
@@ -282,11 +282,11 @@ BlobIStream& BlobIStream::operator>> (std::string& var)
   return *this;
 }
 
-void BlobIStream::get (bool* values, uint nrval)
+void BlobIStream::get (bool* values, uint64 nrval)
 {
   uchar buf[256];
   while (nrval > 0) {
-    uint nr = std::min(nrval, 8*256u);
+    uint nr = std::min(nrval, uint64(8*256));
     // Get and convert bits to bools.
     int nrb = (nr+7)/8;
     getBuf (buf, nrb);
@@ -295,120 +295,120 @@ void BlobIStream::get (bool* values, uint nrval)
     values += nr;
   }
 }
-void BlobIStream::get (char* values, uint nrval)
+void BlobIStream::get (char* values, uint64 nrval)
 {
   getBuf (values, nrval);
 }
-void BlobIStream::get (int8* values, uint nrval)
+void BlobIStream::get (int8* values, uint64 nrval)
 {
   getBuf (values, nrval);
 }
-void BlobIStream::get (uint8* values, uint nrval)
+void BlobIStream::get (uint8* values, uint64 nrval)
 {
   getBuf (values, nrval);
 }
-void BlobIStream::get (int16* values, uint nrval)
+void BlobIStream::get (int16* values, uint64 nrval)
 {
   getBuf (values, nrval*sizeof(int16));
   if (itsMustConvert) {
     LOFAR::dataConvert16 (itsDataFormat, values, nrval);
   }
 }
-void BlobIStream::get (uint16* values, uint nrval)
+void BlobIStream::get (uint16* values, uint64 nrval)
 {
   getBuf (values, nrval*sizeof(uint16));
   if (itsMustConvert) {
     LOFAR::dataConvert16 (itsDataFormat, values, nrval);
   }
 }
-void BlobIStream::get (int32* values, uint nrval)
+void BlobIStream::get (int32* values, uint64 nrval)
 {
   getBuf (values, nrval*sizeof(int32));
   if (itsMustConvert) {
     LOFAR::dataConvert32 (itsDataFormat, values, nrval);
   }
 }
-void BlobIStream::get (uint32* values, uint nrval)
+void BlobIStream::get (uint32* values, uint64 nrval)
 {
   getBuf (values, nrval*sizeof(uint32));
   if (itsMustConvert) {
     LOFAR::dataConvert32 (itsDataFormat, values, nrval);
   }
 }
-void BlobIStream::get (int64* values, uint nrval)
+void BlobIStream::get (int64* values, uint64 nrval)
 {
   getBuf (values, nrval*sizeof(int64));
   if (itsMustConvert) {
     LOFAR::dataConvert64 (itsDataFormat, values, nrval);
   }
 }
-void BlobIStream::get (uint64* values, uint nrval)
+void BlobIStream::get (uint64* values, uint64 nrval)
 {
   getBuf (values, nrval*sizeof(uint64));
   if (itsMustConvert) {
     LOFAR::dataConvert64 (itsDataFormat, values, nrval);
   }
 }
-void BlobIStream::get (float* values, uint nrval)
+void BlobIStream::get (float* values, uint64 nrval)
 {
   getBuf (values, nrval*sizeof(float));
   if (itsMustConvert) {
     LOFAR::dataConvertFloat (itsDataFormat, values, nrval);
   }
 }
-void BlobIStream::get (double* values, uint nrval)
+void BlobIStream::get (double* values, uint64 nrval)
 {
   getBuf (values, nrval*sizeof(double));
   if (itsMustConvert) {
     LOFAR::dataConvertDouble (itsDataFormat, values, nrval);
   }
 }
-void BlobIStream::get (i4complex* values, uint nrval)
+void BlobIStream::get (i4complex* values, uint64 nrval)
 {
   getBuf (values, nrval);
 }
-void BlobIStream::get (i16complex* values, uint nrval)
+void BlobIStream::get (i16complex* values, uint64 nrval)
 {
   getBuf (values, nrval*sizeof(i16complex));
   if (itsMustConvert) {
     LOFAR::dataConvert16 (itsDataFormat, values, 2*nrval);
   }
 }
-void BlobIStream::get (u16complex* values, uint nrval)
+void BlobIStream::get (u16complex* values, uint64 nrval)
 {
   getBuf (values, nrval*sizeof(u16complex));
   if (itsMustConvert) {
     LOFAR::dataConvert16 (itsDataFormat, values, 2*nrval);
   }
 }
-void BlobIStream::get (fcomplex* values, uint nrval)
+void BlobIStream::get (fcomplex* values, uint64 nrval)
 {
   getBuf (values, nrval*sizeof(fcomplex));
   if (itsMustConvert) {
     LOFAR::dataConvertFloat (itsDataFormat, values, 2*nrval);
   }
 }
-void BlobIStream::get (dcomplex* values, uint nrval)
+void BlobIStream::get (dcomplex* values, uint64 nrval)
 {
   getBuf (values, nrval*sizeof(dcomplex));
   if (itsMustConvert) {
     LOFAR::dataConvertDouble (itsDataFormat, values, 2*nrval);
   }
 }
-void BlobIStream::get (string* values, uint nrval)
+void BlobIStream::get (string* values, uint64 nrval)
 {
-  for (uint i=0; i<nrval; i++) {
+  for (uint64 i=0; i<nrval; i++) {
     *this >> values[i];
   }
 }
 
-void BlobIStream::getBoolVec (std::vector<bool>& values, uint sz)
+void BlobIStream::getBoolVec (std::vector<bool>& values, uint64 sz)
 {
   values.resize (sz);
   bool buf[256];
-  uint inx=0;
+  uint64 inx=0;
   while (sz > 0) {
-    uint nr = std::min(sz, 256u);
+    uint nr = std::min(sz, uint64(256));
     // Get and convert bools to vector.
     get (buf, nr);
     for (uint i=0; i<nr; i++) {
@@ -418,7 +418,7 @@ void BlobIStream::getBoolVec (std::vector<bool>& values, uint sz)
   }
 }
 
-int64 BlobIStream::getSpace (uint nbytes)
+int64 BlobIStream::getSpace (uint64 nbytes)
 {
   checkGet();
   int64 pos = tellPos();

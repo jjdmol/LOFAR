@@ -64,17 +64,17 @@ namespace LOFAR {
       // A size>0 means that the given dimension has a fixed size.
       // <br>setShape will check if the fixed sizes match.
       // <group>
-      BlobFieldBase (uint version, uint32 size0);
-      BlobFieldBase (uint version, uint32 size0, uint32 size1,
+      BlobFieldBase (uint version, uint64 size0);
+      BlobFieldBase (uint version, uint64 size0, uint64 size1,
 		     bool fortranOrder = true);
-      BlobFieldBase (uint version, uint32 size0, uint32 size1, uint32 size2,
+      BlobFieldBase (uint version, uint64 size0, uint64 size1, uint64 size2,
 		     bool fortranOrder = true);
-      BlobFieldBase (uint version, uint32 size0, uint32 size1, uint32 size2,
-		     uint32 size3,
+      BlobFieldBase (uint version, uint64 size0, uint64 size1, uint64 size2,
+		     uint64 size3,
 		     bool fortranOrder = true);
-      BlobFieldBase (uint version, const std::vector<uint32>& shape,
+      BlobFieldBase (uint version, const std::vector<uint64>& shape,
 		     bool fortranOrder = true);
-      BlobFieldBase (uint version, const uint32* shape, uint16 ndim,
+      BlobFieldBase (uint version, const uint64* shape, uint16 ndim,
 		     bool fortranOrder = true);
       // </group>
       
@@ -98,13 +98,13 @@ namespace LOFAR {
       
       // Get the actual shape of the field.
       // An empty vector is returned for a scalar.
-      const std::vector<uint32>& getShape() const
+      const std::vector<uint64>& getShape() const
 	{ return itsShape; }
       
       // Set the actual shape of an array.
       // It checks if the shape matches possible fixed shape parts in the field
       // definition and throws an exception if not.
-      void setShape (const std::vector<uint32>&);
+      void setShape (const std::vector<uint64>&);
       
       // Is an array in Fortran order or in C order?
       bool isFortranOrder() const
@@ -208,9 +208,9 @@ namespace LOFAR {
       int64               itsOffset;
       int64               itsArrayOffset;     // offset of array header
       uint                itsVersion;
-      uint                itsNelem;
-      std::vector<uint32> itsShapeDef;
-      std::vector<uint32> itsShape;
+      uint64              itsNelem;
+      std::vector<uint64> itsShapeDef;
+      std::vector<uint64> itsShape;
       bool                itsFortranOrder;
       bool                itsIsScalar;
       bool                itsUseHeader;
@@ -288,23 +288,23 @@ namespace LOFAR {
       explicit BlobField (uint version);
       
       // Define a vector.
-      BlobField (uint version, uint32 size0);
+      BlobField (uint version, uint64 size0);
       
       // Define a 2-dim array with axes by default in Fortran order.
       // The default alignment is set to the greatest power of 2 that
       // divided sizeof(T).
       // E.g. for a struct containing 3 floats, the default alignment is 4.
       // For a struct containing 2 floats the default alignment is 8.
-      BlobField (uint version, uint32 size0, uint32 size1,
+      BlobField (uint version, uint64 size0, uint64 size1,
 		 bool fortranOrder = true);
-      BlobField (uint version, uint32 size0, uint32 size1, uint32 size2,
+      BlobField (uint version, uint64 size0, uint64 size1, uint64 size2,
 		 bool fortranOrder = true);
-      BlobField (uint version, uint32 size0, uint32 size1, uint32 size2,
-		 uint32 size3,
+      BlobField (uint version, uint64 size0, uint64 size1, uint64 size2,
+		 uint64 size3,
 		 bool fortranOrder = true);
-      BlobField (uint version, const std::vector<uint32>& shape,
+      BlobField (uint version, const std::vector<uint64>& shape,
 		 bool fortranOrder = true);
-      BlobField (uint version, const uint32* shape, uint16 ndim,
+      BlobField (uint version, const uint64* shape, uint16 ndim,
 		 bool fortranOrder = true);
       
       virtual ~BlobField();

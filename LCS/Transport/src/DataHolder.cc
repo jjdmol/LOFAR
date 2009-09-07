@@ -201,7 +201,7 @@ void DataHolder::createDataBlock()
 //      itsIsAddMax = !itsDataCanGrow;	// @@@
     }
     // If no or an additive maximum, determine the blob length.
-    int initsz = itsMaxDataSize;
+    int64 initsz = itsMaxDataSize;
     if (itsMaxDataSize == 0  ||  !itsDataCanGrow) {
       initsz += itsDataFields.findBlobSize();
     }
@@ -226,7 +226,7 @@ void DataHolder::openDataBlock()
   fillDataPointers();
 }
 
-void DataHolder::resizeBuffer (uint newSize)
+void DataHolder::resizeBuffer (uint64 newSize)
 {
   DBGASSERT (itsData != 0);
   char* oldPtr = itsData->data();
@@ -260,7 +260,7 @@ BlobIStream& DataHolder::getExtraBlob (bool& found, int& version)
   return itsExtraPtr->getBlock (found, version);
 }
 
-void DataHolder::putExtra (const void* data, uint size)
+void DataHolder::putExtra (const void* data, uint64 size)
 {
   DBGASSERT (itsData != 0);
   char* oldPtr = itsData->data();
@@ -270,7 +270,7 @@ void DataHolder::putExtra (const void* data, uint size)
   }
 }
 
-int DataHolder::getMaxDataSize() const
+int64 DataHolder::getMaxDataSize() const
 {
   if (itsMaxDataSize == 0  ||  itsData == 0) {
     return itsMaxDataSize;

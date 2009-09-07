@@ -33,7 +33,7 @@ namespace LOFAR
   BlobOStream& operator<< (BlobOStream& bs, const std::map<T,U>& m)
   {
     bs.putStart ("map<" + typeName((T*)0) + ',' + typeName((U*)0) + '>', 1);
-    bs << static_cast<uint32>(m.size());
+    bs << static_cast<uint64>(m.size());
     for (typename std::map<T,U>::const_iterator it=m.begin();
          it!=m.end();
          ++it) {
@@ -48,11 +48,11 @@ namespace LOFAR
   {
     bs.getStart ("map<" + typeName((T*)0) + ',' + typeName((U*)0) + '>');
     m.clear();
-    uint32 size;
+    uint64 size;
     bs >> size;
     T t;
     U u;
-    for (uint32 i=0; i<size; ++i) {
+    for (uint64 i=0; i<size; ++i) {
       bs >> t >> u;
       m[t] = u;
     }
@@ -63,7 +63,7 @@ namespace LOFAR
   template<typename Seq>
   void sequenceToBlob (BlobOStream& bs, const Seq& s)
   {
-    uint32 n = s.size();
+    uint64 n = s.size();
     putBlobArrayHeader (bs, true,
                         LOFAR::typeName((const typename Seq::value_type**)0),
                         &n, 1, true, 1);
@@ -83,11 +83,11 @@ namespace LOFAR
     uint16 ndim;
     uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
     ASSERT(ndim == 1);
-    uint32 size;
+    uint64 size;
     getBlobArrayShape (bs, &size, 1, false, nalign);
     typename Seq::value_type t;
     s.clear();
-    for (uint32 i=0; i<size; ++i) {
+    for (uint64 i=0; i<size; ++i) {
       bs >> t;
       s.push_back (t);
     }
@@ -102,11 +102,11 @@ namespace LOFAR
     uint16 ndim;
     uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
     ASSERT(ndim == 1);
-    uint32 size;
+    uint64 size;
     getBlobArrayShape (bs, &size, 1, false, nalign);
     T t;
     s.clear();
-    for (uint32 i=0; i<size; ++i) {
+    for (uint64 i=0; i<size; ++i) {
       bs >> t;
       s.insert (t);
     }

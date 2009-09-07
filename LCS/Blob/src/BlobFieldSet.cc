@@ -112,7 +112,7 @@ namespace LOFAR {
     return inx;
   }
 
-  uint BlobFieldSet::findBlobSize()
+  uint64 BlobFieldSet::findBlobSize()
   {
     // Create the blob in a null buffer to determine the length.
     BlobOBufNull nbuf;
@@ -159,7 +159,7 @@ namespace LOFAR {
   }
 
   void BlobFieldSet::putExtraBlob (BlobOBufChar& outbuf,
-				   const void* inbuf, uint size)
+				   const void* inbuf, uint64 size)
   {
     if (size > 0) {
       // Check if the input buffer is a blob. Get its length.
@@ -171,7 +171,7 @@ namespace LOFAR {
     // Get and check its length.
     BlobHeader* hdrout = (BlobHeader*)(outbuf.getBuffer());
     ASSERT (hdrout->checkMagicValue());
-    uint oldsz = hdrout->getLength();
+    uint64 oldsz = hdrout->getLength();
     ASSERT (outbuf.size() == oldsz);
     // Insert the extra blob in the normal blob.
     // Reserve enough space in the buffer.
@@ -193,7 +193,7 @@ namespace LOFAR {
     const void* extra = inbuf.getBuffer() + off;
     off += sizeof(BlobHeader::eobMagicValue());
     DBGASSERT (inbuf.size() >= off);
-    uint size = inbuf.size() - off;
+    uint64 size = inbuf.size() - off;
     BlobIBufChar buf(extra, size);
     if (size > 0) {
       // There is something extra. Check if indeed a blob with correct length.
@@ -223,7 +223,7 @@ namespace LOFAR {
   }
 
   bool BlobFieldSet::checkHeader (BlobIBufChar& buf, const char* objectType,
-				  int version, uint size)
+				  int version, uint64 size)
   {
     BlobHeader* hdr = (BlobHeader*)(buf.getBuffer());
     if (! hdr->checkMagicValue()) {

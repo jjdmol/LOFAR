@@ -35,7 +35,7 @@ BlobOBufNull::BlobOBufNull()
 BlobOBufNull::~BlobOBufNull()
 {}
 
-uint BlobOBufNull::put (const void*, uint nbytes)
+uint64 BlobOBufNull::put (const void*, uint64 nbytes)
 {
   itsPos += nbytes;
   if (itsPos > itsSize) {

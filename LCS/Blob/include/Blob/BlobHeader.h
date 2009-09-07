@@ -106,12 +106,12 @@ namespace LOFAR {
 		  LOFAR::dataConvert(getDataFormat(), itsVersion) : itsVersion); }
       
       // Get the length of the blob. Data will be converted if needed.
-      uint getLength() const
+      uint64 getLength() const
 	{ return (mustConvert()  ?
 		  LOFAR::dataConvert(getDataFormat(), itsLength) : itsLength); }
       
       // Set the length of the blob.
-      void setLength (uint length)
+      void setLength (uint64 length)
 	{ itsLength = length; }
       
       // Test if the data format in the header mismatches the data format of
@@ -121,7 +121,7 @@ namespace LOFAR {
       
       // Get the offset of the length.
       uint lengthOffset() const
-	{ return sizeof(uint32); }
+        { return 0; }
       
       // Get the name length.
       uint getNameLength() const
@@ -143,8 +143,8 @@ namespace LOFAR {
 	{ return sizeof(BlobHeader) + itsNameLength; }
       
     private:
+      uint64 itsLength;
       uint32 itsMagicValue;
-      uint32 itsLength;
       char   itsVersion;
       char   itsDataFormat;
       uchar  itsLevel;

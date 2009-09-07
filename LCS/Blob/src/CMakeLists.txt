@@ -79,3 +79,4 @@ lofar_add_library(blob
   KeyValueMap.cc)
 
 lofar_add_bin_program(versionblob versionblob.cc)
+

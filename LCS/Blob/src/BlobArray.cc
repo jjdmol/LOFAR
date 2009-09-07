@@ -31,9 +31,9 @@
 namespace LOFAR
 {
 
-uint32 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
+uint64 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
 			   const string& headerName,
-			   const uint32* shape, uint16 ndim,
+			   const uint64* shape, uint16 ndim,
 			   bool fortranOrder, uint alignment)
 {
   if (useBlobHeader) {
@@ -43,7 +43,7 @@ uint32 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
   if (alignment > 1) {
     int64 pos = bs.tellPos();
     if (pos > 0) {
-      nalign = (pos + 4 + ndim*sizeof(uint32)) % alignment;
+      nalign = (pos + 4 + ndim*sizeof(uint64)) % alignment;
       if (nalign > 0) {
 	nalign = alignment - nalign;
       }
@@ -51,7 +51,7 @@ uint32 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
   }    
   bs << fortranOrder << nalign << ndim;
   bs.put (shape, ndim);
-  uint32 n = 1;
+  uint64 n = 1;
   for (int i=0; i<ndim; i++) {
     n *= shape[i];
   }
@@ -63,15 +63,12 @@ uint32 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
 
 // Get the shape of an array from the blob.
 // This is a helper function for the functions reading an array.
-uint getBlobArrayShape (BlobIStream& bs, uint32* shape, uint ndim,
-			bool swapAxes, uint nalign)
+uint64 getBlobArrayShape (BlobIStream& bs, uint64* shape, uint ndim,
+                          bool swapAxes, uint nalign)
 {
   bs.get (shape, ndim);
   if (swapAxes) {
-    std::vector<uint32> shp(ndim);
-    for (uint i=0; i<ndim; i++) {
-      shp[i] = shape[i];
-    }
+    std::vector<uint64> shp(shape, shape+ndim);
     for (uint i=0; i<ndim; i++) {
       shape[i] = shp[ndim-i-1];
     }
@@ -111,7 +108,7 @@ void convertArrayHeader (LOFAR::DataFormat fmt, char* header,
 
 BlobOStream& operator<< (BlobOStream& bs, const std::vector<bool>& vec)
 {
-  uint32 size = vec.size();
+  uint64 size = vec.size();
   putBlobArrayHeader (bs, true,
 		      LOFAR::typeName((const bool**)0),
 		      &size, 1, true, 1);
@@ -127,7 +124,7 @@ BlobIStream& operator>> (BlobIStream& bs, std::vector<bool>& vec)
   uint16 ndim;
   uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
   ASSERT(ndim == 1);
-  uint32 size;
+  uint64 size;
   getBlobArrayShape (bs, &size, 1, false, nalign);
   bs.getBoolVec (vec, size);
   return bs;
@@ -136,11 +133,11 @@ BlobIStream& operator>> (BlobIStream& bs, std::vector<bool>& vec)
 #if defined(HAVE_AIPSPP) 
 BlobOStream& operator<< (BlobOStream& bs, const casa::IPosition& ipos)
 {
-  uint32 size = ipos.size();
+  uint64 size = ipos.size();
   putBlobArrayHeader (bs, true,
-		      LOFAR::typeName((const int32**)0),
+		      LOFAR::typeName((const int64**)0),
 		      &size, 1, true, 1);
-  std::vector<int32> ivec(ipos.begin(), ipos.end());
+  std::vector<int64> ivec(ipos.begin(), ipos.end());
   bs.put (&(ivec[0]), size);
   bs.putEnd();
   return bs;
@@ -148,14 +145,14 @@ BlobOStream& operator<< (BlobOStream& bs, const casa::IPosition& ipos)
 
 BlobIStream& operator>> (BlobIStream& bs, casa::IPosition& ipos)
 {
-  bs.getStart (LOFAR::typeName((const int32**)0));
+  bs.getStart (LOFAR::typeName((const int64**)0));
   bool fortranOrder;
   uint16 ndim;
   uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
   ASSERT(ndim == 1);
-  uint32 size;
+  uint64 size;
   getBlobArrayShape (bs, &size, 1, false, nalign);
-  std::vector<int32> ivec(size);
+  std::vector<int64> ivec(size);
   ipos.resize (size, false);
   bs.get (&(ivec[0]), size);
   for (uint i=0; i<size; ++i) {

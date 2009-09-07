@@ -35,7 +35,7 @@ BlobIBufStream::BlobIBufStream (std::istream& is)
 BlobIBufStream::~BlobIBufStream()
 {}
 
-uint BlobIBufStream::get (void* buffer, uint nbytes)
+uint64 BlobIBufStream::get (void* buffer, uint64 nbytes)
 {
   return itsStream->sgetn ((char*)buffer, nbytes);
 }
