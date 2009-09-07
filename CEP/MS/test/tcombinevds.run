@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ../src/combinevds tcombinevds_tmp.vdsout tcombinevds.in_vds1 tcombinevds.in_vds2
-# Name has absolute path, so remove it.
+# Keywords Name have absolute paths in their values, so remove them if needed.
 if test "$1" = 1; then
   cat tcombinevds_tmp.vdsout
 else

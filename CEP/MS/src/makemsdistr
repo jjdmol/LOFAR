@@ -69,7 +69,7 @@ cdn=$1
 shift
 dirs=$*
 test "$psn" = ""  &&  psn="makems.cfg"
-parsetcdn=`getparsetvalue $psn ClusterDescName` ||  parsetcdn=
+parsetcdn=`getparsetvalue $psn ClusterDescName >& /dev/null` ||  parsetcdn=
 test "$cdn" = ""  &&  cdn=$parsetcdn
 if test "$cdn" = ""; then
   echo "No ClusterDescName given on command line nor parset file"
@@ -128,8 +128,8 @@ cdn=`cd $dn > /dev/null; pwd`/`basename $cdn`
 # Start the distributed processes.
 # They write the name of the created VDS-file into $msvdsp/$msbase.gds_*.
 rm -f $msvdsp/$msbase.gds_*
-echo "startdistproc -mode 0 -nomasterhost -dirs $msdirs -cdn $cdn -hfn '$hfn' $pgmpath/makemsdistr-part $LOFARROOT $psname $msvdsp $msvdsp/$msbase.gds $cdn"
-startdistproc -mode 0 -nomasterhost -dirs "$msdirs" -cdn $cdn -hfn "$hfn" $pgmpath/makemsdistr-part $LOFARROOT $psname $msvdsp $msvdsp/$msbase.gds $cdn
+echo "startdistproc -useenv -mode 0 -nomasterhost -dirs $msdirs -cdn $cdn -hfn '$hfn' $pgmpath/makemsdistr-part $psname $msvdsp $msvdsp/$msbase.gds $cdn"
+startdistproc -useenv -mode 0 -nomasterhost -dirs "$msdirs" -cdn $cdn -hfn "$hfn" $pgmpath/makemsdistr-part $psname $msvdsp $msvdsp/$msbase.gds $cdn
 
 # Combine all VDS files.
 vdsnames=`cat $msvdsp/$msbase.gds_*`

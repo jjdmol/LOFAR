@@ -31,16 +31,23 @@ using namespace std;
 int main(int argc, const char* argv[])
 {
   try {
-    if (argc < 3) {
+    if (argc < 3  ||  argv[1][0] == '\0'  ||  argv[2][0] == '\0') {
       cout << "Run as:  makevds clusterdesc ms [msvds] [hostname] [writetimes]" << endl;
       cout << "  default vds name is <ms>.vds" << endl;
       cout << "  default host name is gethostname()" << endl;
       cout << "  default writetimes is false (0)" << endl;
       return 0;
     }
-    string msvds = string(argv[2]) + ".vds";
+    string msvds;
     if (argc > 3) {
       msvds = argv[3];
+    } else {
+      // Use MSname.vds, but remove possible trailing slash.
+      msvds = string(argv[2]);
+      if (msvds[msvds.size()-1] == '/') {
+        msvds = msvds.substr(0, msvds.size()-1);
+      }
+      msvds += ".vds";
     }
     string hostName;
     if (argc > 4) {
