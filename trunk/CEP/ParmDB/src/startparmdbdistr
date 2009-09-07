@@ -35,7 +35,7 @@ if test $? != 0; then
   echo "localhost is used because $host is unreachable"
   host=localhost
 fi
-  
+
 # Start parmdbremote for each part.
-startdistproc -mode "$1" -nowait -masterhost $host -nostartmaster \
-              -cdn "$2" -dsn "$3" $pgmpath/parmdbremote-scr "$LOFARROOT" `pwd`
+startdistproc -useenv -mode "$1" -nowait -masterhost $host -nostartmaster \
+              -cdn "$2" -dsn "$3" $pgmpath/parmdbremote-scr `pwd`

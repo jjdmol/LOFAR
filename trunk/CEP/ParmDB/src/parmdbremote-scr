@@ -24,17 +24,18 @@
 
 if test $# != 10; then
   echo "run as:   parmdbremote-src 'socket' host port np rank"
-  echo "                           pdb-part filesys ms-part-vds"
-  echo "                           lofarroot wd"
+  echo "                           pdb-part filesys ms-part-vds envfile"
+  echo "                           wd"
   exit 1
 fi
-lroot=$9
+envfile=$9
 wd=${10}
 
-# Source lofarinit to find parmdbremote in production environment.
-if test -e  $lroot/lofarinit.sh; then
-  sh $lroot/lofarinit.sh
+# Initialize environment.
+if test "$envfile" != ""; then
+  . $envfile
 fi
+
 # cd to work directory and add . to PATH for test purposes (make check).
 if test -d $wd; then
   cd $wd

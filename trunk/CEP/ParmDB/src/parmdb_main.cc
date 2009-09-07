@@ -28,6 +28,7 @@
 #include <ParmDB/ParmSet.h>
 #include <ParmDB/ParmCache.h>
 #include <ParmDB/ParmValue.h>
+#include <ParmDB/Package__Version.h>
 
 #include <Blob/KeyValueMap.h>
 #include <Blob/KeyParser.h>
@@ -814,6 +815,7 @@ void doIt (bool noPrompt, ostream& ostr)
 int main (int argc, char *argv[])
 {
   const char* progName = basename(argv[0]);
+  TEST_SHOW_VERSION (argc, argv, ParmDB);
   INIT_LOGGER(progName);
   
   try {
