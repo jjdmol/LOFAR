@@ -2,7 +2,24 @@
 
 # startdistproc: Start a distributed process
 #
-# @copyright (c) 2008 ASKAP, All Rights Reserved.
+#  @copyright (c) 2008, ASTRON
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
 # @author Ger van Diepen <diepen AT astron nl>
 #
 # $Id$
@@ -21,6 +38,7 @@ pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
 # Set default options.
+useenv=0
 modxx=single
 wait=1
 dsn=
@@ -45,6 +63,12 @@ do
   if [ "$1" = "-h"  -o  "$1" = "-help"  -o  "$1" = "--help" ]; then
     help=1
     break
+  elif [ "$1" = "-useenv" ]; then
+    shift
+    useenv=1
+  elif [ "$1" = "-nouseenv" ]; then
+    shift
+    useenv=0
   elif [ "$1" = "-dsn" ]; then
     shift
     dsn="$1"
@@ -136,13 +160,17 @@ if [ $help = 1 ]; then
   echo 'The mode tells if it is started through MPI, sockets, or as a single process.'
   echo ''
   echo 'Run as:'
-  echo ' startdistproc -cdn clusterdescname [-dsn datasetname]"
+  echo ' startdistproc -useenv -cdn clusterdescname [-dsn datasetname]"
   echo "              [-dirs directories] [-mode mode]'
   echo '              [-hfn hostfilename] [-fdp finddproc-path]'
   echo '              [-logfile logfilename] [-[no]dry]'
   echo '              [-extrahosts "host1 host2 ..."] [-noextrahosts]'
   echo '              [-masterhost host] [-startmaster] program [arg1 arg2 ...]'
   echo ''
+  echo '  -useenv               Copy *PATH and *ROOT environment variables to distributed'
+  echo '                        processes; otherwise they source lofarinit.sh.'
+  echo '                        Preferred behaviour is -useenv, but for backward'
+  echo '                        compatibility it is not standard yet.'
   echo '  -cdn clusterdescname  The name of the file describing the cluster.'
   echo '  -dsn datasetname      The name of the file describing the distributed dataset.'
   echo '  -dirs directories     Directories to use if -dsn is not given.'
@@ -230,13 +258,22 @@ else
 fi  
 np=`wc -l $hfn | awk '{print $1}'`
 
+# Find all PATH and ROOT variables and give a name derived from machine file.
+# Note that $envfile is empty is $useenv is not set. That is exactly what we need
+# in the mpirun and socketrun lines.
+if [ "$useenv" = 1 ]; then
+  envfile=$hfn.envfile
+  grex='[^=]*(PATH|ROOT)'
+  printenv | egrep "^$grex=" | sed -e "s/^\([^=]*\)=\(.*\)/\1=\2; export \1/;" > $envfile
+fi
+
 # Run the program as needed.
 if test "$modxx" = "mpi"; then
   sed -e "s/#.*//" $hfn > ${hfn}_tmp
   mv ${hfn}_tmp $hfn
-  echo "mpirun -np $np -machinefile $hfn $program" "$@"
+  echo "mpirun -np $np -machinefile $hfn $program $envfile" "$@"
   if test $dry = 0; then
-    mpirun -np $np -machinefile $hfn $program "$@" || exit 1
+    mpirun -np $np -machinefile $hfn $program $envfile "$@" || exit 1
   fi
 elif test "$modxx" = "single"; then
   echo "$program $@"
@@ -244,7 +281,7 @@ elif test "$modxx" = "single"; then
     $program "$@" || exit 1
   fi
 else
-  echo "socketrun $dry $hfn '$master' $modxx $wait $logfile $program" "$@"
-  $pgmpath/socketrun $dry $hfn "$master" $modxx $wait "$logfile" $program "$@" || exit 1
+  echo "socketrun $dry $hfn '$master' $modxx $wait $logfile $program $envfile" "$@"
+  $pgmpath/socketrun $dry $hfn "$master" $modxx $wait "$logfile" $program $envfile "$@" || exit 1
 fi
 #rm -f $hfn
