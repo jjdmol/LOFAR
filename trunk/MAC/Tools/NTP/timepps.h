@@ -30,6 +30,8 @@ typedef struct ntp_fp {
 	unsigned int	fractional;
 } ntp_fp_t;				/* NTP-compatible time stamp */
 
+#include <time.h>		/* REO: 070909 Added because check of Cmake failed */
+
 typedef union pps_timeu {
 	struct timespec	tspec;
 	ntp_fp_t	ntpfp;
