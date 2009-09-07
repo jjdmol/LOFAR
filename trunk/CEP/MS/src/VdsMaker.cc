@@ -212,7 +212,7 @@ void VdsMaker::create (const string& msName, const string& outName,
   } else {
     Path cdpath(clusterDescName);
     msd.setClusterDescName (cdpath.absoluteName());
-    ClusterDesc cdesc((ParameterSet(clusterDescName)));
+    ClusterDesc cdesc(clusterDescName);
     msd.setName (absName, findFileSys(absName, cdesc, hostName));
   }
   msd.setFileName (absName);

@@ -27,11 +27,10 @@
 pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
-echo $*
 if test $# != 13; then
   echo "run as:   makemsdistr-part dummy dummy dummy dummy rank"
-  echo "                           msname dummy dummy"
-  echo "                           lofarroot parset-file vdspath vdsout cdn"
+  echo "                           msname dummy dummy envfile"
+  echo "                           parset-file vdspath vdsout cdn"
   exit 1
 fi
 
@@ -41,14 +40,16 @@ shift
 shift
 seqnr=$1
 msn=$2
-lroot=$5
+envfile=$5
 psn=$6
 vdspath=$7
 vdsout=$8
 cdn=$9
 
-# Initialize lofar environment.
-. $lroot/lofarinit.sh
+# Initialize environment.
+if test "$envfile" != ""; then
+  . $envfile
+fi
 
 # Create the MS.
 # Grep the VDSname from the result.
