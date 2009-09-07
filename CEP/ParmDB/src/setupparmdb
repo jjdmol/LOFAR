@@ -170,8 +170,8 @@ steptime=.
 # It is possible to give an MS instead of a VDS file.
 # In that case only that MS is handled.
 if test -d "$msvds"  -a  -e "$msvds/table.dat"; then
-  echo "setupparmdb-part '' '' '' '' 0 '$msvds' '' '$LOFARROOT' '$wd' '$pdbfile' '$pdb' '$dry' '$stepfreq' '$steptime'"
-  $pgmpath/setupparmdb-part "" "" "" "" 0 "$msvds" "" "$LOFARROOT" "$wd" "$pdbfile" "$pdb" "$dry" "$stepfreq" "$steptime"
+  echo "setupparmdb-part '' '' '' '' 0 '$msvds' '' '' '$wd' '$pdbfile' '$pdb' '$dry' '$stepfreq' '$steptime'"
+  $pgmpath/setupparmdb-part "" "" "" "" 0 "$msvds" "" "" "$wd" "$pdbfile" "$pdb" "$dry" "$stepfreq" "$steptime"
   test $madetmpl = 0  ||  rm -rf $vdsname.template
   exit
 fi
@@ -203,8 +203,8 @@ if test "$hfn" != ""; then
 fi
 
 # Start the processes on the various machines.
-echo "startdistproc -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/setupparmdb-part '$LOFARROOT' '$wd' '$pdbfile' '$pdb' '$dry' '$stepfreq' '$steptime'"
-startdistproc -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/setupparmdb-part "$LOFARROOT" "$wd" "$pdbfile" "$pdb" "$dry" "$stepfreq" "$steptime"
+echo "startdistproc -useenv -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/setupparmdb-part '$wd' '$pdbfile' '$pdb' '$dry' '$stepfreq' '$steptime'"
+startdistproc -useenv -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/setupparmdb-part "$wd" "$pdbfile" "$pdb" "$dry" "$stepfreq" "$steptime"
 
 # Create a VDS file for the parmdb-s by copying it.
 # This is the file that has to be used in pyparmdb.
