@@ -219,7 +219,7 @@ int main( int argc, char **argv ) {
 
   rate = get_packetrate( fd, atoi( argv[1] ), 0.5 );
   if( rate < 1.0 ) {
-    printf("Packet rate:        NOK %.2f pps\n",rate);
+    printf("NOK Packet rate:        %.2f pps\n",rate);
   } else {
     int zeros = 0;
     int i;
