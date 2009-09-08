@@ -128,12 +128,6 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
-	// startup claimManager task
-//	itsClaimMgrTask = ClaimMgrTask::instance();
-//	ASSERTSTR(itsClaimMgrTask, "Can't construct a claimMgrTask");
-//	itsClaimMgrPort = new GCFITCPort (*this, *this, "ClaimMgrPort",
-//									GCFPortInterface::SAP, CM_PROTOCOL);
-
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
 	registerProtocol (DP_PROTOCOL, 		   DP_PROTOCOL_STRINGS);
 	registerProtocol (CM_PROTOCOL, 		   CM_PROTOCOL_STRINGS);
@@ -189,66 +183,6 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 
 	itsParentControl->nowInState(getName(), newState);
 }
-
-//
-// initial_state(event, port)
-//
-// Create top datapoint of this observation in PVSS.
-//
-GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event, 
-													GCFPortInterface& port)
-{
-	static bool	firstPass;
-
-	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-	switch (event.signal) {
-	case F_INIT: 	// must exist in initializing FSM
-		break;
-	
-    case F_ENTRY: {
-		itsTimerPort->cancelAllTimers();
-		itsTimerPort->setTimer(0.0);
-		firstPass = true;
-	}
-   	break;
-
-	case F_TIMER: {
-		if (!firstPass) {
-			LOG_ERROR_STR("Can't get real name of databasePoint for "<<observationName(itsTreeID));
-		}
-
-		// Ask claimMgrTask to get the DPname of this observation
-		itsClaimMgrTask->claimObject("Observation", 
-									 "LOFAR_ObsSW_"+observationName(itsTreeID), *itsClaimMgrPort);
-		// will result in CM_CLAIM_RESULT event
-
-		itsTimerPort->setTimer(10.0);		// set emergency timer.
-		firstPass = false;
-	}
-	break;
-
-	case CM_CLAIM_RESULT: {	
-		// TODO: implement error checking and retrying.
-		CMClaimResultEvent	cmEvent(event);
-		LOG_INFO_STR(cmEvent.nameInAppl << " is mapped to " << cmEvent.DPname);
-		itsObsDPname = cmEvent.DPname;
-		itsTimerPort->cancelAllTimers();
-		TRAN(ObservationControl::starting_state);			// go to next state.
-	}
-	break;
-
-	default:
-		LOG_DEBUG_STR ("initial, default");
-		status = GCFEvent::NOT_HANDLED;
-	break;
-	}    
-
-	return (status);
-}
-
 
 //
 // starting_state(event, port)
@@ -780,17 +714,32 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 			return;
 		}
  
+		// abort request?
+		if (strstr(dpEvent.DPname.c_str(), PN_OBSCTRL_COMMAND) != 0) {
+			string  command = ((GCFPVString*) (dpEvent.value._pValue))->getValue();
+			if (command == "ABORT") {
+				LOG_INFO("Received manual request for abort, accepting it.");
+				itsTimerPort->cancelTimer(itsStopTimer);	// cancel old timer
+				itsStopTimer = itsTimerPort->setTimer(0.0);	// expire immediately
+			}
+			return;
+			LOG_INFO_STR ("Received unknown command " << command << ". Ignoring it.");
+		}
+
 		// Change of claim_period?
 		if (strstr(dpEvent.DPname.c_str(), PN_OBS_CLAIM_PERIOD) != 0) {
 			uint32  newVal = ((GCFPVInteger*) (dpEvent.value._pValue))->getValue();
 			LOG_INFO_STR ("Changing ClaimPeriod from " << itsClaimPeriod << " to " << newVal);
 			itsClaimPeriod = newVal;
+			return;
 		}
+
 		// Change of prepare_period?
 		else if (strstr(dpEvent.DPname.c_str(), PN_OBS_PREPARE_PERIOD) != 0) {
 			uint32  newVal = ((GCFPVInteger*) (dpEvent.value._pValue))->getValue();
 			LOG_INFO_STR ("Changing PreparePeriod from " << itsPreparePeriod << " to " << newVal);
 			itsPreparePeriod = newVal;
+			return;
 		}
 
 		// Change of start or stop time?
