@@ -1,4 +1,4 @@
-""" Read the RSP status for one or all pid, based on TCL testcase 11.1"""
+""" Read or write external sync input edge and input delay, based on TCL testcase 2.2"""
 
 ################################################################################
 # - Verify options
