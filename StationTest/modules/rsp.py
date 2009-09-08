@@ -249,8 +249,8 @@ c_hba_cmd_request     =   0       # HBA client REQUEST register
 c_hba_cmd_response    =   1       # HBA client RESPONSE register
 c_hba_cmd_led         =   2       # HBA client LED register
 c_hba_cmd_vref        = 124       # HBA client VREF register (v10)
-c_hba_cmd_speed       = 127       # HBA client SPEED register (old)
-#c_hba_cmd_speed       = 125       # HBA client SPEED register (v10)
+#c_hba_cmd_speed       = 127       # HBA client SPEED register (old)
+c_hba_cmd_speed       = 125       # HBA client SPEED register (v10)
 c_hba_cmd_version     = 126       # HBA client VERSION register
 c_hba_reg_request_sz  =  38       # register size in octets
 c_hba_reg_response_sz =   4
@@ -698,6 +698,7 @@ def write_rd_smbh_protocol_list(tc, msg, smbh, protocol_list,  polId=['x', 'y'],
   """
   # - Write the protocol list to the SMBH
   smbus.write_protocol_list(tc, msg, smbh, protocol_list, polId, blpId, rspId)
+  rspctl_write_sleep()
 
   # - Read back the protocol list to verify that this is possible
   for ri in rspId:
@@ -750,6 +751,7 @@ def overwrite_rd_smbh_protocol_results(tc, msg, smbh, polId=['x', 'y'], blpId=['
 
   # - Overwrite
   smbus.overwrite_results(tc, msg, smbh, wr_result, polId, blpId, rspId)
+  rspctl_write_sleep()
 
   # - Readback to verify overwrite
   for ri in rspId:
