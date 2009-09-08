@@ -93,31 +93,27 @@ inline double convert_uint32_to_double(uint32 val)
 
 GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_BST_STATS != event.signal)
-  {
+  if (EPA_BST_STATS != event.signal) {
     LOG_WARN("BstRead::handleack: unexpected ack");
     return GCFEvent::NOT_HANDLED;
   }
 
   EPABstStatsEvent ack(event);
 
-  if (!ack.hdr.isValidAck(m_hdr))
-  {
+  if (!ack.hdr.isValidAck(m_hdr)) {
     Cache::getInstance().getState().bst().read_error(getBoardId());
     LOG_ERROR("BstRead::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
 
-  LOG_DEBUG(formatString("BstRead::handleack: boardid=%d",
-			 getBoardId()));
+  LOG_DEBUG(formatString("BstRead::handleack: boardid=%d", getBoardId()));
 
   Range fragment_range(0, MEPHeader::N_DATA_SLOTS - 1);
   fragment_range = fragment_range + (getCurrentIndex() * MEPHeader::N_DATA_SLOTS);
 
-  LOG_DEBUG_STR("fragment_range=" << fragment_range);
+//  LOG_INFO_STR("fragment_range[" << getBoardId() << "," << getCurrentIndex() << "]=" << fragment_range);
   
-  if (getCurrentIndex() != ack.hdr.m_fields.addr.regid)
-  {
+  if (getCurrentIndex() != ack.hdr.m_fields.addr.regid) {
     LOG_ERROR("invalid bst ack");
     return GCFEvent::HANDLED;
   }

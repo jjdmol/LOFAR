@@ -164,8 +164,9 @@ void CDOWrite::sendrequest()
 		cdo.hdr.set(MEPHeader::CDO_SETTINGS_HDR);
 
 		int output_lane = -1;
+		int	lane;
 //		LOG_INFO_STR("CDO: splitter[" << getBoardId() << "] is " << (Cache::getInstance().getBack().isSplitterActive() ? "ON" : "OFF"));
-		for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
+		for (lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
 			char paramname[64];
 			// look if board is selected for sector 0
 			snprintf(paramname, 64, "RSPDriver.LANE_%02d_BLET_OUT", lane);
@@ -183,7 +184,7 @@ void CDOWrite::sendrequest()
 			}
 		}
 
-		cdo.station_id.lane = output_lane;
+		cdo.station_id.lane = lane;
 		cdo.station_id.id = GET_CONFIG("RS.STATION_ID", i);
 
 		// fill in some magic so we recognise these fields easily in tcpdump/ethereal output
@@ -207,9 +208,9 @@ void CDOWrite::sendrequest()
 			l_srcip = string2ip_uint32(GET_CONFIG_STRING(srcip));
 			l_dstip = string2ip_uint32(GET_CONFIG_STRING(dstip));
 			
-			LOG_INFO(formatString("CDO: RSP=%d, lane=%d, src=[%s,%s], dst=[%s,%s,%d]",
+			LOG_INFO(formatString("CDO: RSP=%d, lane=%d(%d), src=[%s,%s], dst=[%s,%s,%d]",
 								getBoardId(),
-								output_lane,
+								output_lane, lane,
 								srcmac, GET_CONFIG_STRING(srcip),
 								GET_CONFIG_STRING(dstmac), GET_CONFIG_STRING(dstip), BASEUDPPORT+getBoardId()));
 					
@@ -218,7 +219,7 @@ void CDOWrite::sendrequest()
 			if (Cache::getInstance().getBack().isCepEnabled() == false) {
 				cdo.control.enable = 0;
 			}
-			cdo.control.lane       = output_lane;
+			cdo.control.lane       = lane;
 			cdo.control.fb_enable  = GET_CONFIG("RSPDriver.FB_ENABLE", i);
 			cdo.control.arp_enable = 1;
 			
