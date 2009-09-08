@@ -54,4 +54,4 @@ else:
     else:
       for ri in rspId:
         status = rsp.read_rsr(tc, msg, arg_procid, [ri], 11)
-    tc.sleep(100)   # less than 1 sec so we do not miss an interval status
+    #tc.sleep(100)   # less than 1 sec so we do not miss an interval status

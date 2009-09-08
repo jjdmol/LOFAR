@@ -23,8 +23,7 @@ if spu_version == 3:
 ################################################################################
 # - Testcase initializations
 
-# - Disable external sync to avoid asynchronous trigger of TDSH protocol list
-rsp.write_cr_syncoff(tc, msg, ['rsp'], rspId)
+# - Use external sync to trigger the TDSH protocol list
 
 
 ################################################################################
@@ -52,9 +51,8 @@ for rep in range(1,1+repeat):
     # - Write (and readback) the protocol list to the TDSH
     rsp.write_rd_smbh_protocol_list(tc, msg, 'tdsh', protocol_list, None, None, [ri])
 
-    # Apply altsync to start the TDSH SMBus protocols
-    rsp.write_rsu_altsync(tc, msg, [ri])
-    tc.sleep(100)
+    # External sync will start the TDSH SMBus protocols
+    tc.sleep(2010)
 
     # Read the protocol results from the TDSH
     rd_result = smbus.read_results(tc, msg, 'tdsh', len_result, None, None, [ri])
@@ -98,5 +96,3 @@ for rep in range(1,1+repeat):
       tc.appendLog(11, 'Read     protocol result: %s   (slave address 0x%x)' % (rd_result, addr))
       tc.setResult('FAILED')
 
-# - Enable external sync
-rsp.write_cr_syncon(tc, msg, ['rsp'], rspId)
