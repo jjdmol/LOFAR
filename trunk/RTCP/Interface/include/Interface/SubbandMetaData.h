@@ -30,6 +30,7 @@
 #include <Common/LofarLogger.h>
 
 #include <cassert>
+#include <cstring>
 
 
 namespace LOFAR {
@@ -105,6 +106,9 @@ inline SubbandMetaData::SubbandMetaData(unsigned nrSubbands, unsigned nrBeams, s
   itsMarshallData(static_cast<char*>(allocator.allocate(itsMarshallDataSize, alignment))),
   itsAllocator(allocator)
 {
+#if defined HAVE_VALGRIND
+  memset(itsMarshallData, 0, itsMarshallDataSize);
+#endif
 }
 
 inline SubbandMetaData::~SubbandMetaData()
