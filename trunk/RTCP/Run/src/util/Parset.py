@@ -7,6 +7,8 @@ def isnumeric( x ):
     float(x)
   except ValueError:
     return False
+  except TypeError:
+    return False
 
   return True
 
@@ -40,20 +42,20 @@ def encode( v ):
   """ Compress a value v: if v is an array, try using ... or * to shorten ranges. """
 
   def strfy( x ):
-    if isnumeric( x ):
+    if isnumeric( x ) or type(x) != str:
       return str(x)
     elif reduce( lambda x,y: x or y, map( lambda y: y in x, """ []'",""" ), False ):
       # if some characters given are present, quote the string
       if "'" not in x:
-        return "'%s'" % (str(x))
+        return "'%s'" % (x,)
       elif '"' not in x:
-        return '"%s"' % (str(x))
+        return '"%s"' % (x,)
       else:
         # both single and double quotes: use single quotes and escape
         # existing single quotes with '"'"'.
-        return "'%s'" % (str.replace( "'", """'"'"'""", str(x) ))
+        return "'%s'" % (str.replace( "'", """'"'"'""", x ))
     else:
-      return str(x)
+      return x
 
   if type(v) != list:
     # can only compress lists
