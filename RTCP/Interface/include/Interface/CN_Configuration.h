@@ -29,6 +29,7 @@
 #include <Interface/PencilCoordinates.h>
 #include <Interface/Parset.h>
 
+#include <cstring>
 #include <vector>
 #include <string>
 
@@ -38,7 +39,7 @@ namespace RTCP {
 class CN_Configuration
 {
   public:
-    CN_Configuration() {}
+    CN_Configuration();
 
 #if !defined HAVE_BGP_CN
     CN_Configuration(const Parset &parset);

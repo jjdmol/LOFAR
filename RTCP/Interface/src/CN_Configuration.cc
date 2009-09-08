@@ -23,14 +23,28 @@
 #include <Interface/CN_Configuration.h>
 
 #include <cassert>
+#include <cstring>
 
 namespace LOFAR {
 namespace RTCP {
+
+
+CN_Configuration::CN_Configuration()
+{
+#if defined HAVE_VALGRIND
+  memset(&itsMarshalledData, 0, sizeof itsMarshalledData);
+#endif
+}
+
 
 #if ! defined HAVE_BGP_CN
 
 CN_Configuration::CN_Configuration(const Parset &parset)
 {
+#if defined HAVE_VALGRIND
+  memset(&itsMarshalledData, 0, sizeof itsMarshalledData);
+#endif
+
   nrStations()              = parset.nrStations();
   nrBitsPerSample()	    = parset.nrBitsPerSample();
   nrSubbands()              = parset.nrSubbands();

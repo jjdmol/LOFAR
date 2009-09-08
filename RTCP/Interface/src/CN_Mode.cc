@@ -2,6 +2,9 @@
 
 #include <Interface/CN_Mode.h>
 
+#include <cstring>
+
+
 namespace LOFAR {
 namespace RTCP {
 
@@ -23,6 +26,10 @@ unsigned CN_Mode::nrModes()
 
 CN_Mode::CN_Mode()
 {
+#if defined HAVE_VALGRIND
+  memset(&itsMarshalledData, 0, sizeof itsMarshalledData);
+#endif
+
   itsMarshalledData.mode = INVALID;
 }
 
@@ -32,6 +39,10 @@ CN_Mode::CN_Mode()
 CN_Mode::CN_Mode(const Parset &ps)
 {
   string name = ps.getModeName();
+
+#if defined HAVE_VALGRIND
+  memset(&itsMarshalledData, 0, sizeof itsMarshalledData);
+#endif
 
   itsMarshalledData.mode = INVALID;
 
