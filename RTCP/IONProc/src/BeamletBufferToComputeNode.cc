@@ -49,6 +49,9 @@ namespace LOFAR {
 namespace RTCP {
 
 
+template<typename SAMPLE_TYPE> const unsigned BeamletBufferToComputeNode<SAMPLE_TYPE>::itsMaximumDelay;
+
+
 template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const std::vector<Stream *> &cnStreams, const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &beamletBuffers, unsigned psetNumber)
 :
   itsRawDataStream(0),
@@ -75,7 +78,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   itsSampleRate		      = ps->sampleRate();
   itsNrSubbands		      = ps->nrSubbands();
   itsNrSubbandsPerPset	      = ps->nrSubbandsPerPset();
-  itsNrSamplesPerSec	      = ps->nrSubbandSamples();
+  itsNrSamplesPerSubband      = ps->nrSubbandSamples();
   itsNrBeams		      = ps->nrBeams();
   itsNrPencilBeams	      = ps->nrPencilBeams();
   itsNrOutputPsets	      = ps->outputPsets().size();
@@ -198,7 +201,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::com
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::startTransaction()
 {
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++) {
-    itsBeamletBuffers[rsp]->startReadTransaction(itsDelayedStamps, itsNrSamplesPerSec + itsNrHistorySamples);
+    itsBeamletBuffers[rsp]->startReadTransaction(itsDelayedStamps, itsNrSamplesPerSubband + itsNrHistorySamples);
 
     for (unsigned beam = 0; beam < itsNrBeams; beam ++)
       /*if (itsMustComputeFlags[rsp][beam])*/ { // TODO
@@ -220,7 +223,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::wri
     gettimeofday(&tv, 0);
 
     double currentTime  = tv.tv_sec + tv.tv_usec / 1e6;
-    double expectedTime = (itsCurrentTimeStamp + itsNrSamplesPerSec + itsMaxNetworkDelay) * itsSampleDuration;
+    double expectedTime = itsCorrelationStartTime * itsSampleDuration;
 
     logStr << ", late: " << PrettyTime(currentTime - expectedTime);
   }
@@ -234,7 +237,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::wri
   }
 
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
-    logStr << ", flags " << rsp << ": " << itsFlags[rsp][0] << '(' << std::setprecision(3) << (100.0 * itsFlags[rsp][0].count() / (itsNrSamplesPerSec + itsNrHistorySamples)) << "%)"; // not really correct; beam(0) may be shifted
+    logStr << ", flags " << rsp << ": " << itsFlags[rsp][0] << '(' << std::setprecision(3) << (100.0 * itsFlags[rsp][0].count() / (itsNrSamplesPerSubband + itsNrHistorySamples)) << "%)"; // not really correct; beam(0) may be shifted
   
   LOG_INFO(logStr.str());
 }
@@ -327,7 +330,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::dum
     bfraw_data.header.bitsPerSample	  = 16;
     bfraw_data.header.nrPolarizations	  = 2;
     bfraw_data.header.nrSubbands	  = nrSubbands;
-    bfraw_data.header.nrSamplesPerSubband = itsNrSamplesPerSec;
+    bfraw_data.header.nrSamplesPerSubband = itsNrSamplesPerSubband;
     bfraw_data.header.sampleRate	  = itsSampleRate;
 
     strncpy(bfraw_data.header.station, itsPS->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station.c_str(), sizeof bfraw_data.header.station);
@@ -379,6 +382,12 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
       itsDelayedStamps[beam] = itsCurrentTimeStamp - itsNrHistorySamples;
 
     computeDelays();
+
+    if (itsIsRealTime) {
+      itsCorrelationStartTime = itsCurrentTimeStamp + itsNrSamplesPerSubband + itsMaxNetworkDelay + itsMaximumDelay;
+      itsWallClock.waitUntil(itsCorrelationStartTime);
+    }
+
     startTransaction();
     writeLogMessage();
   }
@@ -393,7 +402,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
 
   if (itsNrInputs > 0) {
     stopTransaction();
-    itsCurrentTimeStamp += itsNrSamplesPerSec;
+    itsCurrentTimeStamp += itsNrSamplesPerSubband;
   }
 
   timer.stop();

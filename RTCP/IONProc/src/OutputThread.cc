@@ -73,8 +73,6 @@ OutputThread::OutputThread(Stream *streamToStorage, const Parset &ps )
 
 OutputThread::~OutputThread()
 {
-  LOG_DEBUG("OutputThread::~OutputThread");
-
   itsSendQueueActivity.append(-1); // -1 indicates that no more messages will be sent
 
   if (pthread_join(thread, 0) != 0)

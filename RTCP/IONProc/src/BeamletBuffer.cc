@@ -31,6 +31,7 @@
 #include <RSP.h>
 
 #include <boost/lexical_cast.hpp>
+#include <cstring>
 #include <stdexcept>
 
 
@@ -50,6 +51,8 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
   itsPacketSize(sizeof(struct RSP::header) + itsNrTimesPerPacket * itsNrSubbands * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE)),
   itsSize(align(ps->inputBufferSize(), itsNrTimesPerPacket)),
   itsHistorySize(ps->nrHistorySamples()),
+  itsIsRealTime(ps->realTime()),
+  itsSynchronizedReaderWriter(itsIsRealTime ? 0 : new SynchronizedReaderAndWriter(itsSize)), // FIXME: does not work for multiple observations
   itsSBBuffers(boost::extents[itsNrSubbands][itsSize][NR_POLARIZATIONS], 128, hugeMemoryAllocator),
   itsOffset(0),
 #if defined HAVE_BGP
@@ -63,14 +66,16 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
   if (ps->getUint32("OLAP.nrTimesInFrame") != itsNrTimesPerPacket)
     THROW(IONProcException, "OLAP.nrTimesInFrame should be " << boost::lexical_cast<std::string>(itsNrTimesPerPacket));
 
+#if 0
   if (ps->realTime())
     itsSynchronizedReaderWriter = new TimeSynchronizedReader(ps->maxNetworkDelay());  
   else
     itsSynchronizedReaderWriter = new SynchronizedReaderAndWriter(itsSize);
+#endif
 
-  itsEnd.resize(ps->nrBeams());
-  itsStartI.resize(ps->nrBeams());
-  itsEndI.resize(ps->nrBeams());
+#if defined HAVE_VALGRIND
+  memset(itsSBBuffers.origin(), 0, itsSBBuffers.num_elements() * sizeof(SAMPLE_TYPE));
+#endif
 
   LOG_DEBUG_STR("Circular buffer at " << itsSBBuffers.origin() << "; contains " << itsSize << " samples");
 }
@@ -142,7 +147,9 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writeConsecutive
   SAMPLE_TYPE *dst = itsSBBuffers[0][startI].origin();
   
   // in synchronous mode, do not overrun tail of reader
-  itsSynchronizedReaderWriter->startWrite(begin, end);
+  if (!itsIsRealTime)
+    itsSynchronizedReaderWriter->startWrite(begin, end);
+
   // do not write in circular buffer section that is being read
   itsLockedRanges.lock(startI, endI, itsSize);
 
@@ -161,7 +168,9 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writeConsecutive
   updateValidData(begin, end);
 
   itsLockedRanges.unlock(startI, endI, itsSize);
-  itsSynchronizedReaderWriter->finishedWrite(end);
+
+  if (!itsIsRealTime)
+    itsSynchronizedReaderWriter->finishedWrite(end);
 }
 
 
@@ -255,7 +264,9 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writePacketData(
   itsPreviousI	       = endI;
 
   // in synchronous mode, do not overrun tail of reader
-  itsSynchronizedReaderWriter->startWrite(begin, end);
+  if (!itsIsRealTime)
+    itsSynchronizedReaderWriter->startWrite(begin, end);
+
   // do not write in circular buffer section that is being read
   itsLockedRanges.lock(startI, endI, itsSize);
 
@@ -275,20 +286,31 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writePacketData(
   itsValidDataMutex.unlock();
 
   itsLockedRanges.unlock(startI, endI, itsSize);
-  itsSynchronizedReaderWriter->finishedWrite(end);
+
+  if (!itsIsRealTime)
+    itsSynchronizedReaderWriter->finishedWrite(end);
+
   itsWriteTimer.stop();
 }
 
 
 template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::startReadTransaction(const std::vector<TimeStamp> &begin, unsigned nrElements)
 {
-  TimeStamp minBegin = *std::min_element(begin.begin(),  begin.end());
-  TimeStamp maxEnd   = *std::max_element(begin.begin(),  begin.end()) + nrElements;
   // in synchronous mode, do not overrun writer
-  itsSynchronizedReaderWriter->startRead(minBegin, maxEnd);
+  if (!itsIsRealTime) {
+    TimeStamp minBegin = *std::min_element(begin.begin(), begin.end());
+    TimeStamp maxEnd   = *std::max_element(begin.begin(), begin.end()) + nrElements;
+    itsSynchronizedReaderWriter->startRead(minBegin, maxEnd);
+  }
 
   itsReadMutex.lock(); // only one reader per BeamletBuffer allowed
   itsReadTimer.start();
+
+  unsigned nrBeams = begin.size();
+
+  itsEnd.resize(nrBeams);
+  itsStartI.resize(nrBeams);
+  itsEndI.resize(nrBeams);
 
   itsBegin = begin;
 
@@ -358,9 +380,11 @@ template<typename SAMPLE_TYPE> SparseSet<unsigned> BeamletBuffer<SAMPLE_TYPE>::r
 template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::stopReadTransaction()
 {
   itsLockedRanges.unlock(itsMinStartI, itsMaxEndI, itsMaxEndI - itsMinStartI);
-  itsSynchronizedReaderWriter->finishedRead(itsMinEnd - (itsHistorySize + 16));
-  // subtract 16 extra; due to alignment restrictions and the changing delays,
-  // it is hard to predict where the next read will begin.
+
+  if (!itsIsRealTime)
+    itsSynchronizedReaderWriter->finishedRead(itsMinEnd - (itsHistorySize + 16));
+    // subtract 16 extra; due to alignment restrictions and the changing delays,
+    // it is hard to predict where the next read will begin.
   
   itsReadTimer.stop();
   itsReadMutex.unlock();

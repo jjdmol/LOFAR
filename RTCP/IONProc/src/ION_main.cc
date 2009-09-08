@@ -126,7 +126,7 @@ void terminate_with_backtrace()
 
 
 static unsigned		     myPsetNumber;
-static std::vector<Stream *> allClientStreams;
+static std::vector<Stream *> allCNstreams;
 static const unsigned	     nrCNcoresInPset = 64; // TODO: how to figure out the number of CN cores?
 static std::vector<Mutex>    sharedWriteToCNmutexes(nrCNcoresInPset);
 static std::vector<Mutex>    sharedReadFromCNmutexes(nrCNcoresInPset);
@@ -137,7 +137,7 @@ static bool	   fcnp_inited;
 
 
 
-static void createAllClientStreams(const std::string &streamType)
+static void createAllCNstreams(const std::string &streamType)
 {
 #if defined HAVE_FCNP && defined __PPC__
   if (streamType == "FCNP") {
@@ -146,29 +146,29 @@ static void createAllClientStreams(const std::string &streamType)
   }
 #endif
 
-  allClientStreams.resize(nrCNcoresInPset);
+  allCNstreams.resize(nrCNcoresInPset);
 
   for (unsigned core = 0; core < nrCNcoresInPset; core ++) {
 #if defined HAVE_FCNP && defined __PPC__
     if (streamType == "FCNP")
-      allClientStreams[core] = new FCNP_ServerStream(core);
+      allCNstreams[core] = new FCNP_ServerStream(core);
     else
 #endif
 
     if (streamType == "NULL")
-      allClientStreams[core] = new NullStream;
+      allCNstreams[core] = new NullStream;
     else if (streamType == "TCP")
-      allClientStreams[core] = new SocketStream("127.0.0.1", 5000 + core, SocketStream::TCP, SocketStream::Server);
+      allCNstreams[core] = new SocketStream("127.0.0.1", 5000 + core, SocketStream::TCP, SocketStream::Server);
     else
       THROW(IONProcException, "unknown Stream type between ION and CN");
   }
 }
 
 
-static void deleteAllClientStreams()
+static void deleteAllCNstreams()
 {
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
-    delete allClientStreams[core];
+    delete allCNstreams[core];
 
 #if defined HAVE_FCNP && defined __PPC__
   if (fcnp_inited) {
@@ -186,7 +186,7 @@ static void stopCNs()
   CN_Command command(CN_Command::STOP);
 
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
-    command.write(allClientStreams[core]);
+    command.write(allCNstreams[core]);
 
   LOG_DEBUG_STR("stopping " << nrCNcoresInPset << " cores done");
 }
@@ -274,7 +274,7 @@ template <typename SAMPLE_TYPE> class Job : public JobParent
     virtual ~Job();
 
   private:
-    void	createClientStreams();
+    void	createCNstreams();
     void	configureCNs(), unconfigureCNs();
 
     void	toCNthread();
@@ -321,7 +321,7 @@ template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::Job(const Parset *parset)
   itsHasOutputSection = parset->outputPsetIndex(myPsetNumber) >= 0;
 
   if (itsHasInputSection || itsHasOutputSection) {
-    createClientStreams();
+    createCNstreams();
 
     itsNrRuns = static_cast<unsigned>(ceil((parset->stopTime() - parset->startTime()) / parset->CNintegrationTime()));
     LOG_DEBUG_STR("itsNrRuns = " << itsNrRuns);
@@ -369,14 +369,14 @@ template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::~Job()
 }
 
 
-template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::createClientStreams()
+template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::createCNstreams()
 {
   std::vector<unsigned> usedCoresInPset = itsParset->usedCoresInPset();
 
   itsCNstreams.resize(usedCoresInPset.size());
 
   for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
-    itsCNstreams[core] = allClientStreams[CN_Mapping::mapCoreOnPset(usedCoresInPset[core], myPsetNumber)];
+    itsCNstreams[core] = allCNstreams[CN_Mapping::mapCoreOnPset(usedCoresInPset[core], myPsetNumber)];
 }
 
 
@@ -544,10 +544,10 @@ template <typename SAMPLE_TYPE> void *Job<SAMPLE_TYPE>::fromCNthreadStub(void *j
 }
 
 
-static void checkParset(const Parset &parset)
+static void checkParset(const Parset *parset)
 {
-  if (parset.nrCoresPerPset() > nrCNcoresInPset) {
-    LOG_ERROR_STR("nrCoresPerPset (" << parset.nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
+  if (parset->nrCoresPerPset() > nrCNcoresInPset) {
+    LOG_ERROR_STR("nrCoresPerPset (" << parset->nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
     exit(1);
   }
 }
@@ -580,8 +580,12 @@ void master_thread(int argc, char **argv)
       exit(1);
     }
 
-    //createAllClientStreams(parset->getTransportType("OLAP.OLAP_Conn.IONProc_CNProc"));
-    createAllClientStreams("FCNP"); // FIXME
+    //createAllCNstreams(parset->getTransportType("OLAP.OLAP_Conn.IONProc_CNProc"));
+#if defined HAVE_VALGRIND // FIXME
+    createAllCNstreams("TCP");
+#else
+    createAllCNstreams("FCNP");
+#endif
 
     std::vector<JobParent *> jobs;
 
@@ -599,7 +603,7 @@ void master_thread(int argc, char **argv)
       }
 #endif
 
-      checkParset(*parset);
+      checkParset(parset);
 
       JobParent *job;
 
@@ -631,7 +635,7 @@ void master_thread(int argc, char **argv)
     unmapFlatMemory();
 #endif
 
-    deleteAllClientStreams();
+    deleteAllCNstreams();
 
 #if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
