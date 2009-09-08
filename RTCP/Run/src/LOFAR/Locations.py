@@ -91,7 +91,7 @@ class Locations:
 	"storage": "${BASEDIR}/installed/%s/bin/Storage" % (self.buildvars["Storage"],),
 
         # location of valgrind suppressions file
-        "ionsuppfile": "${BASEDIR}/rtcp/ionproc/src/ionproc.supp",
+        "ionsuppfile": "${BASEDIR}/RTCP/IONProc/src/IONProc.supp",
       } )
 
       self.nodes.update( {
