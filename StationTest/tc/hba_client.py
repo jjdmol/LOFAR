@@ -39,8 +39,7 @@ tc.appendLog(11, '')
 ################################################################################
 # - Testcase initializations
 
-# - Disable external sync
-rsp.write_cr_syncoff(tc, msg, blpId, rspId)
+# - Use external sync to trigger the RCUH protocol list
 
 # - Prepare the protocol list for RCU control register
 addr          = rsp.c_rcuh_i2c_addr_hba       # HBA client I2C address (7 bit)
@@ -143,10 +142,10 @@ for rep in range(1,1+repeat):
   # - Write (and readback) the protocol list to the RCUH
   rsp.write_rd_smbh_protocol_list(tc, msg, 'rcuh', protocol_list, rcuId, blpId, rspId)
 
-  # - Apply altsync to start the RCUH SMBus protocols
-  rsp.write_rsu_altsync(tc, msg, rspId)
+  # - External sync will start the RCUH SMBus protocols
+  #tc.sleep(1010)
   tc.sleep(bc_i2c + bc_wait + reg_i2c)
-  
+
   # Read the protocol results from the RCUH
   for ri in rspId:
     for bi in blpId:
@@ -162,6 +161,4 @@ for rep in range(1,1+repeat):
           tc.setResult('FAILED')
     
   #tc.sleep(1000)
-      
-# - Enable external sync
-rsp.write_cr_syncon(tc, msg, blpId, rspId)
+

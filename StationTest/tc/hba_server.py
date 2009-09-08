@@ -190,8 +190,12 @@ else:
 ################################################################################
 # - Testcase initializations
 
-# - Disable external sync
-rsp.write_cr_syncoff(tc, msg, blpId, rspId)
+# - Set RCU in HBA mode and enable the data path
+rsp.rspctl(tc, '--rcumode=5')
+rsp.rspctl(tc, '--rcuenable=1')
+tc.sleep(2010)
+
+# - Use external sync to trigger the RCUH protocol list
 
 # - HBA modem timing
 msec     = rsp.c_msec
@@ -295,12 +299,12 @@ for rep in range(1,1+repeat):
   
   # - Overwrite and read the protocol results from the RCUH
   rsp.overwrite_rd_smbh_protocol_results(tc, msg, 'rcuh', rcuId, blpId, rspId)
-   
+ 
   # - Write (and readback) the protocol list to the RCUH
   rsp.write_rd_smbh_protocol_list(tc, msg, 'rcuh', protocol_list, rcuId, blpId, rspId)
 
-  # - Apply altsync to start the RCUH SMBus protocols
-  rsp.write_rsu_altsync(tc, msg, rspId)
+  # External sync will start the RCUH SMBus protocols
+  tc.sleep(2010)
   if arg_access == 'bc':
     tc.sleep(reg_i2c + gap_wait + bc_i2c + bc_wait)
   else:
@@ -324,6 +328,4 @@ for rep in range(1,1+repeat):
   if tc.getResult()=='FAILED':
     None
     #break
-      
-# - Enable external sync
-rsp.write_cr_syncon(tc, msg, blpId, rspId)
+    
