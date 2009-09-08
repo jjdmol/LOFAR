@@ -76,7 +76,8 @@ template<typename SAMPLE_TYPE> class BeamletBuffer
     unsigned				  itsNrSubbands;
     size_t				  itsPacketSize;
     unsigned				  itsSize, itsHistorySize;
-    ReaderAndWriterSynchronization	  *itsSynchronizedReaderWriter;
+    bool				  itsIsRealTime;
+    SynchronizedReaderAndWriter		  *itsSynchronizedReaderWriter;
     LockedRanges			  itsLockedRanges;
     Cube<SAMPLE_TYPE>			  itsSBBuffers;
     int					  itsOffset;

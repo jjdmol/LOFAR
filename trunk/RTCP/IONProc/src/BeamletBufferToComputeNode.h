@@ -87,7 +87,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     unsigned			 itsMaxNetworkDelay; // in samples
     unsigned                     itsNrSubbands;
     unsigned			 itsNrSubbandsPerPset;
-    unsigned			 itsNrSamplesPerSec;
+    unsigned			 itsNrSamplesPerSubband;
     unsigned			 itsNrHistorySamples;
     unsigned			 itsNrInputs;
     unsigned			 itsNrBeams;
@@ -105,6 +105,10 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     boost::multi_array<SparseSet<unsigned>, 2> itsFlags;
 
     Matrix<float>		 itsFineDelaysAtBegin, itsFineDelaysAfterEnd;
+
+    static const unsigned	 itsMaximumDelay = 1000; // samples; roughly 1500 km
+    TimeStamp			 itsCorrelationStartTime;
+    WallClockTime		 itsWallClock;
 
     NSTimer			 itsDelayTimer;
 };
