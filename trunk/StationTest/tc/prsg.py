@@ -8,7 +8,7 @@
 
 nof_reflets_ap  = rsp.c_nof_reflets_ap
 nof_beamlets    = rsp.c_nof_beamlets      # maximum capable by RSP gateware
-nof_beamlets    = 216                     # sufficient for 32 MHz
+#nof_beamlets    = 216                     # sufficient nof beamlets for 32 MHz BW
 nof_beamlets_ap = rsp.c_nof_beamlets_ap           # including reflets
 nof_beamlets_ap = nof_reflets_ap + nof_beamlets   # including reflets
 
@@ -37,13 +37,24 @@ tc.appendLog(11,'')
   
 ################################################################################
 # - Testcase initializations
+
+# - Set RCU in PRSG mode
+rsp.rspctl(tc, '--rcuprsg')
+rsp.rspctl(tc, '--rcuenable=1')
+
 bypass = 0x8F  # Bypass data path to have direct access to RCU data via SS, use resync
                # version of pps to preserve X and Y order in captured data
 
-# - Write incrementing SS mapping, repeat (r > 1) write to 'ensure' both pages are written
-#ss_map = []
-#for i in range(0, rsp.c_pol * nof_beamlets_ap):
-#  ss_map.append(i)
+# - Set SS mapping
+# Default use incrementing SS mapping
+ss_map = []
+for i in range(0, rsp.c_pol * nof_beamlets_ap):
+  ss_map.append(i)
+
+# Use rspctl to write the SS mapping
+rsp.rspctl(tc, '--subbands=0:%d' % (nof_beamlets-1))
+
+# Write the SS mapping, repeat twice to ensure both pages are written
 #r = 1
 #for i in range(0,r):
 #  rsp.write_ss(tc, msg, ss_map, blpId, rspId)
@@ -56,22 +67,20 @@ bypass = 0x8F  # Bypass data path to have direct access to RCU data via SS, use 
 # this test case to the actual SS by reordering the captured data accordingly.
 # Therefore read the actual SS into ss_map.
 
-# - Read actual SS mapping, to use it to reorder the read DIAG result
-#   . assume all BLP use same mapping
-#   . strip the reflets
-#   . assume that the beamlets mapping uses all subbands
+# Read actual SS mapping, to use it to reorder the read DIAG result
+# . assume both pages and all BLP use same mapping
+# . strip the reflets
+# . assume that the beamlets mapping uses all subbands
 bi = [blpId[0]]
 ri = [rspId[0]]
 ss_map = rsp.read_ss(tc, msg, c_ss_size, bi, ri)
 ss_map = ss_map[c_ss_reflets_size:]
+tc.appendLog(21,'Active SS map (length %d):' % len(ss_map))
+tc.appendLog(21,'%s' % ss_map)
 
 rsp.write_cr_syncoff(tc, msg, blpId, rspId)
 rsp.write_diag_bypass(tc, msg, bypass, blpId, rspId)
 
-################################################################################
-# Set RCU in PRSG mode
-rsp.rspctl(tc, '--rcuprsg')
-rsp.rspctl(tc, '--rcuenable=1')
 
 ################################################################################
 # Run the test
