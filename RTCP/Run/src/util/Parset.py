@@ -198,7 +198,7 @@ class Parset(dict):
 
     def __delitem__(self, key):
       # avoid KeyErrors
-      if key in self: del self[key]
+      if key in self: dict.__delitem__(self,key)
 
     def getBool(self, key):
       return self[key] in ["T","t","1","Y","y",1,True]
