@@ -33,8 +33,9 @@ rsp.overwrite_rsr(tc, msg, 'mep', value, rspId)
 rsp.overwrite_rsr(tc, msg, 'diag', value, rspId)
   
 # Check overwriten RSR DIAG
-for ri in rspId:
-  rsp.read_rsr(tc, msg, 'diag', [ri], 31)
+if tc.verbosity >= 21:
+  for ri in rspId:
+    rsp.read_rsr(tc, msg, 'diag', [ri], 21)
   
 # - Write DIAG selftest for LCU
 #
@@ -44,8 +45,7 @@ for ri in rspId:
 tst_interface = rsp.c_diag_dev_lcu          # 3 = LCU
 tst_mode      = rsp.c_diag_mode_loop_local  # 1 = loop local
 selftest = [tst_interface, tst_mode, tst_duration, tst_lane]
-for ri in rspId:
-  rsp.write_diag_selftest(tc, msg, selftest, bpId, [ri], 99)
+rsp.write_diag_selftest(tc, msg, selftest, bpId, rspId, 99)
 tc.sleep(7000)
   
 # - Write DIAG selftest for CEP
@@ -56,8 +56,7 @@ tc.sleep(7000)
 tst_interface = rsp.c_diag_dev_cep          # 4 = CEP
 tst_mode      = rsp.c_diag_mode_loop_local  # 1 = loop local
 selftest = [tst_interface, tst_mode, tst_duration, tst_lane]
-for ri in rspId:
-  rsp.write_diag_selftest(tc, msg, selftest, bpId, [ri], 99)
+rsp.write_diag_selftest(tc, msg, selftest, bpId, rspId, 99)
 tc.sleep(5000)
   
 # - Write DIAG selftest for SERDES
@@ -68,8 +67,7 @@ tc.sleep(5000)
 tst_interface = rsp.c_diag_dev_serdes       # 5 = SERDES
 tst_mode      = rsp.c_diag_mode_loop_local  # 1 = loop local
 selftest = [tst_interface, tst_mode, tst_duration, tst_lane]
-for ri in rspId:
-  rsp.write_diag_selftest(tc, msg, selftest, bpId, [ri], 99)
+rsp.write_diag_selftest(tc, msg, selftest, bpId, rspId, 99)
 tc.sleep(1000)
   
 # - Write DIAG selftest for RI
@@ -80,8 +78,7 @@ tc.sleep(1000)
 tst_interface = rsp.c_diag_dev_ri           # 0 = RI
 tst_mode      = rsp.c_diag_mode_bus         # 6 = mode bus is mode tx,rx
 selftest = [tst_interface, tst_mode, tst_duration, tst_lane]
-for ri in rspId:
-  rsp.write_diag_selftest(tc, msg, selftest, fpgaId, [ri], 99)
+rsp.write_diag_selftest(tc, msg, selftest, fpgaId, rspId, 99)
 tc.sleep(1000)
   
 # - Read RSR to get BIST result, starting with MEP status error field (offset 0x1A) and length 0x18 bytes
@@ -142,5 +139,6 @@ for ri in rspId:
     tc.setResult('FAILED')
   
 # Read RSR DIAG again to also display result in text instead of numbers
-for ri in rspId:
-  rsp.read_rsr(tc, msg, 'diag', [ri], 21)
+if tc.verbosity >= 21:
+  for ri in rspId:
+    rsp.read_rsr(tc, msg, 'diag', [ri], 21)
