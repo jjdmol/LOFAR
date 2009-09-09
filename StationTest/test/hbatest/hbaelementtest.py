@@ -18,6 +18,7 @@ import os
 import time
 import sys
 import math
+import numpy
 
 # Read directory with the files to processs	
 def open_dir(dirname) :
@@ -97,8 +98,8 @@ def main() :
 	    os.mkdir(dir_name)
   	rmfile = '*.log'
 	hba_elements=16
-        factor=1000
         sleeptime=10
+        ctrl_word=[128,253]
  	ctrl_string='='
 	# read in arguments
         if len(sys.argv) < 2 :
@@ -111,13 +112,6 @@ def main() :
         else :
 		num_rcu = int(sys.argv[2])
         print ' Number of RCUs is ' + str(num_rcu)
-        # init log file
-        f_log1 = file('HBA_elements1.log', 'w')
-        f_log1.write(' ************ \n \n LOG File for HBA element test (ctrl word 128) \n \n *************** \n \n')
-        f_log1fac = file('HBA_factors1.log', 'w')
-        f_log2 = file('HBA_elements2.log', 'w')
-        f_log2.write(' ************ \n \n LOG File for HBA element test (ctrl word 253) \n \n *************** \n \n')
-        f_log2fac = file('HBA_factors2.log', 'w')
 	# initialize data arrays
 	ref_data=range(0, num_rcu)
 	os.chdir(dir_name)
@@ -153,41 +147,36 @@ def main() :
 		f.close
         #---------------------------------------------
         # capture hba element data for all elements
+        for temp_ctrl in ctrl_word:
+                print 'Capture data for control word: ' + str(temp_ctrl)
+                # init log file
+                filename='../HBA_elements_' + str(temp_ctrl)
+                f_log = file(filename, 'w')
+                writestring=' ************ \n \n LOG File for HBA element test (used ctrl word for active element:' + str(temp_ctrl) +' \n \n *************** \n \n'
+                f_log.write(writestring)
+                filename='../HBA_factors_' + str(temp_ctrl)
+                f_logfac = file(filename, 'w')
 
-        for element in range(hba_elements) :
-                #First capture when the control word is 128 of one of the elements
-                ctrl_word=128
-                meet_data=capture_data(dir_name,num_rcu,hba_elements,ctrl_word,sleeptime,subband_nr,element)
+                for element in range(hba_elements) :
+                    meet_data=capture_data(dir_name,num_rcu,hba_elements,temp_ctrl,sleeptime,subband_nr,element)
 
-                #Find the factor
-		
-                #Write results to file
-                for rcuind in range(num_rcu) :
-                        f_log1fac.write(str(element+1) + ' ' + str(rcuind) + ' ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
-			if meet_data[rcuind] < factor*ref_data[rcuind] :        
+                    #Find the factor
+                    data_tmp=10*numpy.log10(meet_data)
+                    data_tmp=numpy.sort(data_tmp)
+                    median=data_tmp[len(data_tmp)/2]
+                    factor=median/2
+                    print 'Processing element ' + str(element) + ' using a limit of ' + str(round(factor,1)) + ' dB'
+                    #Write results to file
+                    for rcuind in range(num_rcu) :
+                            f_logfac.write(str(element+1) + ' ' + str(rcuind) + ' ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
+			    if meet_data[rcuind] < factor*ref_data[rcuind] :        
 				if rcuind == 0 :
 					tilenumb=0
 				else:
 					tilenumb=int(rcuind/2)
-                                f_log1.write('Element ' + str(element+1) + ', Tile ' + str(tilenumb) + ' in RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
+                                f_log.write('Element ' + str(element+1) + ', Tile ' + str(tilenumb) + ' in RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
 		
-                #Second capture when the control word is 253 of one of the elements
-                ctrl_word=253
-                meet_data=capture_data(dir_name,num_rcu,hba_elements,ctrl_word,sleeptime,subband_nr,element)
-                 
-                #Write results to file
-                for rcuind in range(num_rcu) :
-                        f_log2fac.write(str(element+1) + ' ' + str(rcuind) + ' ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
-			if meet_data[rcuind] < factor*ref_data[rcuind] :        
-				if rcuind == 0 :
-					tilenumb=0
-				else:
-					tilenumb=int(rcuind/2)
-                                f_log2.write('Element ' + str(element+1) + ', Tile ' + str(tilenumb) + ' in RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
-
-        f_log1.close
-	f_log1fac.close
-        f_log2.close
-	f_log2fac.close
+        f_log.close
+	f_logfac.close
 
 main()
