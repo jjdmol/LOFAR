@@ -1,6 +1,11 @@
 from Hosts import ropen
 import shlex
 
+__all__ = ["Parset"]
+
+TRUE_VALUES  = ["T","t","1","Y","y",1,True]
+FALSE_VALUES = ["F","f","0","N","n",0,False]
+
 def isnumeric( x ):
   """ Returns whether x is numerical. """
   try:
@@ -11,6 +16,9 @@ def isnumeric( x ):
     return False
 
   return True
+
+def isbool( x ):
+  return (x in TRUE_VALUES) or (x in FALSE_VALUES)
 
 def decode(s):
   """ decode a string s into an array of values (possibly one). """
@@ -42,7 +50,7 @@ def encode( v ):
   """ Compress a value v: if v is an array, try using ... or * to shorten ranges. """
 
   def strfy( x ):
-    if isnumeric( x ) or type(x) != str:
+    if isnumeric( x ) or isbool( x ) or type(x) != str:
       return str(x)
     elif reduce( lambda x,y: x or y, map( lambda y: y in x, """ []'",""" ), False ):
       # if some characters given are present, quote the string
@@ -201,7 +209,7 @@ class Parset(dict):
       if key in self: dict.__delitem__(self,key)
 
     def getBool(self, key):
-      return self[key] in ["T","t","1","Y","y",1,True]
+      return self[key] in TRUE_VALUES
 
     def getString(self, key):
       return str(self[key])
