@@ -7,9 +7,12 @@ import os
 import Partitions
 import ObservationID
 from Logger import debug,info,warning
+from threading import Thread,Lock
 
 DEBUG=False
 VALGRIND=False
+
+SSH="ssh -o StrictHostKeyChecking=no -q "
 
 class Section:
   """ A 'section' is a set of commands which together perform a certain function. """
@@ -62,8 +65,21 @@ class Section:
       self.killCommand(c,timeout)
 
   def wait(self):
-    for c in self.commands:
-      c.wait()
+    lock = Lock()
+    commands = self.commands
+
+    # wait in a separate thread to allow python to capture KeyboardInterrupts in the main thread
+    class WaitThread(Thread):
+      def run(self):
+        for c in commands:
+          c.wait()
+        lock.release()  
+
+    lock.acquire()
+    WaitThread().start()      
+
+    # wait for lock to be released by waiting thread
+    lock.acquire()
 
   def check(self):
     pass
@@ -181,7 +197,7 @@ class IONProcSection(Section):
     # and "Cannot allocate memory" if not.
     successStr = "cat: /dev/flatmem: Invalid argument"
     sshcmds = [
-      (node,AsyncCommand( "ssh %s cat /dev/flatmem 2>&1 | grep '%s'" % (node,successStr),PIPE) )
+      (node,AsyncCommand( SSH+"%s cat /dev/flatmem 2>&1 | grep '%s'" % (node,successStr),PIPE) )
       for node in self.psets
     ]
 
@@ -209,7 +225,7 @@ class StorageSection(Section):
     # create the target directories
     for p in self.parsets:
       for n in Locations.nodes["storage"]:
-        self.commands.append( SyncCommand( "ssh -tq %s mkdir %s" % (n,os.path.dirname(p.parseMask()),), logfiles ) )
+        self.commands.append( SyncCommand( SSH+"-t %s mkdir %s" % (n,os.path.dirname(p.parseMask()),), logfiles ) )
 
     # Storage is started on LIIFEN, which has mpirun (Open MPI) 1.1.1
     mpiparams = [
@@ -234,12 +250,12 @@ class StorageSection(Section):
       "%s" % (" ".join([p.getFilename() for p in self.parsets]), ),
     ]
 
-    self.commands.append( AsyncCommand( "ssh -tq %s echo $$ > %s;exec mpirun %s" % (Locations.nodes["storagemaster"],self.pidfile," ".join(mpiparams),), logfiles ) )
+    self.commands.append( AsyncCommand( SSH+"%s echo $$ > %s;exec mpirun %s" % (Locations.nodes["storagemaster"],self.pidfile," ".join(mpiparams),), logfiles ) )
 
   def abort( self, timeout ):
     # kill mpirun using the pid we stored locally
     def kill( signal ):
-      SyncCommand( "ssh -tq %s kill -%s `cat %s`" % (Locations.nodes["storagemaster"],signal,self.pidfile) )
+      SyncCommand( SSH+"-t %s kill -%s `cat %s`" % (Locations.nodes["storagemaster"],signal,self.pidfile) )
 
     self.killSequence( "mpirun process on %s" % (Locations.nodes["storagemaster"],), kill, timeout )
 
@@ -248,11 +264,11 @@ class StorageSection(Section):
       def kill( signal ):
         # We kill the process group rooted at the orted process
         # (kill -PID) belonging to our MPI universe. This should take Storage with it.
-        SyncCommand( "ssh -tq %s ps --no-heading -o pid,cmd -ww -C orted | grep %s | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
+        SyncCommand( SSG+"-t %s ps --no-heading -o pid,cmd -ww -C orted | grep %s | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
           node, self.universe, signal) )
 
         # Sometimes it does not though, so send Storage (identified by parset file on command line, which is unique) the same signal
-        SyncCommand( "ssh -tq %s ps --no-heading -o pid,cmd -ww -C Storage | grep '%s' | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
+        SyncCommand( SSH+"-t %s ps --no-heading -o pid,cmd -ww -C Storage | grep '%s' | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
           node, Locations.files["parset"], signal) )
 
       self.killSequence( "orted/Storage processes on %s" % (node,), kill, timeout )
@@ -262,10 +278,37 @@ class StorageSection(Section):
       Section.abort( self )
 
   def check( self ):
+    # Storage nodes need to be reachable -- check in parallel
+
+    # ping
+
+    pingcmds = [
+      (node,AsyncCommand( "ping %s -c 1 -w 2 -q" % (node,), ["/dev/null"] ))
+      for node in Locations.nodes["storage"]
+    ]
+
+    for (node,c) in pingcmds:
+      assert c.isSuccess(), "Cannot reach Storage node %s [ping]" % (node,)
+
+    # ssh
+
+    sshcmds = [
+      (node,AsyncCommand( SSH+"%s /bin/true" % (node,),PIPE) )
+      for node in Locations.nodes["storage"]
+    ]
+
+    def waitForSuccess():
+      for (node,c) in sshcmds:
+        c.wait()
+
+    assert runFunc( waitForSuccess, 10 ), "Failed to reach one or more Storage nodes [ssh]"
+
+    # ports need to be open
+
     storagePorts = self.parsets[0].getStoragePorts()
 
     for node,neededPorts in storagePorts.iteritems():
-      usedPorts = map( int, backquote( """ssh %s netstat -nta | awk 'NR>2 { n=split($4,f,":"); print f[n]; }'""" % (node,) ).split() )
+      usedPorts = [int(p) for p in backquote( SSH+""" %s netstat -nta | awk 'NR>2 { n=split($4,f,":"); print f[n]; }'""" % (node,) ).split() if p.isdigit()]
 
       cannotOpen = [p for p in neededPorts if p in usedPorts]
 

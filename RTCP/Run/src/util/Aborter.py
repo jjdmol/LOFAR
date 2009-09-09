@@ -23,7 +23,6 @@ class Aborter:
     """ Our custom alarm handler. """
 
     raise KeyboardInterrupt
-    self.alarmraised = True
 
   def resetAlarm( self ):
     """ Reset a raised alarm, if any. """
@@ -42,7 +41,7 @@ class Aborter:
 
         func()
       except KeyboardInterrupt:
-        pass
+        self.alarmraised = True
     finally:
       signal.alarm( 0 )
 
