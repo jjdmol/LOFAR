@@ -1,3 +1,3 @@
-import solflag
+import lofar.solutions
 
-solflag.flag("test.MS", "instrument.db", 20, 3.0)
+lofar.solutions.flag("test.MS", "instrument.db", 20, 3.0)

@@ -1,7 +1,9 @@
 import sys
+import math
 import numpy
 import pylab
 import pyrap.tables
+import lofar.parmdb
 import solfetch
 
 def flag(msName, dbName, half_window, threshold, sources=None, storeFlags=True,
@@ -122,7 +124,7 @@ def flag(msName, dbName, half_window, threshold, sources=None, storeFlags=True,
                         pylab.clf()
 
                     pylab.subplot("21%d" % (el + 1))
-                    pylab.plot(ampl[el][src][stat], 'k-')
+                    pylab.plot(ampl[el][src][stat], 'r-')
                     pylab.plot(x_axis, sol_masked, 'go', markersize=4)
 
                 # Merge flags based on the solutions for the current direction
