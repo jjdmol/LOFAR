@@ -348,7 +348,7 @@ inline vector<unsigned> Parset::subbandToRSPboardMapping() const
 inline vector<unsigned> Parset::subbandToRSPslotMapping() const
 {
   if (isDefined("Observation.subbandList"))
-    return getUint32Vector("Observation.rspSlotList");
+    return getUint32Vector("Observation.rspSlotList",true);
   else
     return itsObservation.getRspSlotList();
 }

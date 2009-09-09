@@ -65,8 +65,8 @@ Parset::~Parset()
 
 void Parset::checkSubbandCount(const char *key) const
 {
-  if (get(key).expand().getUint32Vector().size() != nrSubbands())
-    THROW(InterfaceException, string(key) << " contains wrong number (" << boost::lexical_cast<string>(get(key).expand().getUint32Vector().size()) << ") of subbands (expected " << boost::lexical_cast<string>(nrSubbands()) << ')');
+  if (getUint32Vector(key,true).size() != nrSubbands())
+    THROW(InterfaceException, string(key) << " contains wrong number (" << boost::lexical_cast<string>(getUint32Vector(key,true).size()) << ") of subbands (expected " << boost::lexical_cast<string>(nrSubbands()) << ')');
 }
 
 
@@ -213,7 +213,7 @@ vector<double> Parset::subbandToFrequencyMapping() const
   
   vector<unsigned> subbandIds;
   if (isDefined("Observation.subbandList"))
-    subbandIds = get("Observation.subbandList").expand().getUint32Vector();
+    subbandIds = getUint32Vector("Observation.subbandList",true);
   else
     subbandIds = itsObservation.getSubbandList();
   vector<double>   subbandFreqs(subbandIds.size());
