@@ -264,7 +264,7 @@ class StorageSection(Section):
       def kill( signal ):
         # We kill the process group rooted at the orted process
         # (kill -PID) belonging to our MPI universe. This should take Storage with it.
-        SyncCommand( SSG+"-t %s ps --no-heading -o pid,cmd -ww -C orted | grep %s | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
+        SyncCommand( SSH+"-t %s ps --no-heading -o pid,cmd -ww -C orted | grep %s | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
           node, self.universe, signal) )
 
         # Sometimes it does not though, so send Storage (identified by parset file on command line, which is unique) the same signal
