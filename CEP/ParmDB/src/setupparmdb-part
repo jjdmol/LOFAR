@@ -76,7 +76,7 @@ if test "$dry" != dry; then
 
   if test "$stepfreq" != "."  -a  "$steptime" != "."; then
     # Put default steps into the parmdb.
-    parmdb <<EOF
+    parmdb_main <<EOF
 open tablename="$msn/$pdb"
 set stepx=$stepfreq, stepy=$steptime
 EOF
