@@ -25,7 +25,7 @@ nolog4cplus.variant.conf: $(standard) $(debug) --without-log4cplus
 insure.variant.conf:      $(standard) --with-insuretools --with-cppflags="-D__INSURE__"
 insure.variant.make:      QA=insure
 
-standard.var:             $(lofar_root) $(searchpath) $(log4c) $(aipspp) $(sockets) $(zoid) $(threads) $(sse) $(shmem) $(python) $(boost) $(cppflags) $(backtrace) $(readline)
+standard.var:             $(lofar_root) $(searchpath) $(log4c) $(aipspp) $(sockets) $(zoid) $(threads) $(sse) $(noshmem) $(python) $(boost) $(cppflags) $(backtrace) $(readline)
 
 lofar_root.var:
 searchpath.var:           --with-searchpath="+prefix +root /opt/lofar/external/+pkg+vers/+comp /opt/lofar/external/+pkg+vers /usr/local/+pkg+vers/+comp /usr/local/+pkg+vers /usr/local /usr"
