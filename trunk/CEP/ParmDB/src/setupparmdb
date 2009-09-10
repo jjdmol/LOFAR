@@ -204,7 +204,7 @@ fi
 
 # Start the processes on the various machines.
 echo "startdistproc -useenv -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/setupparmdb-part '$wd' '$pdbfile' '$pdb' '$dry' '$stepfreq' '$steptime'"
-startdistproc -useenv -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/setupparmdb-part "$wd" "$pdbfile" "$pdb" "$dry" "$stepfreq" "$steptime"
+startdistproc -useenv -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/setupparmdb-part "$wd" "$pdbfile" "$pdb" "$dry" "$stepfreq" "$steptime"  ||  exit 1
 
 # Create a VDS file for the parmdb-s by copying it.
 # This is the file that has to be used in pyparmdb.
