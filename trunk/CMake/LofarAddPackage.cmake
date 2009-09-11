@@ -25,9 +25,10 @@
 #
 # This function performs the following actions:
 # - Create a custom target for package <name>, using add_custom_target().
-# - Create dependencies for this custom target, using add_dependencies().
-# - If package <name> has dependencies, then, for each dependency:
-#   - add the list of include directories to that of package <name>.
+# - If package <name> has dependencies, then, for each dependency <dep>:
+#   - add a dependency of package <name> on package <dep>
+#   - add the list of include directories of <dep> to that of <name>
+# - Add a preprocessor definition for LOFARLOGGER_PACKAGE
 #
 # This function sets the following variables in the parent scope:
 #   ${name}_VERSION       Version number of package <name>
