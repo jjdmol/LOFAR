@@ -39,6 +39,7 @@ pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
 # Set default options.
 useenv=0
+envfile=
 modxx=single
 wait=1
 dsn=
@@ -66,6 +67,15 @@ do
   elif [ "$1" = "-useenv" ]; then
     shift
     useenv=1
+    case "$1" in
+    -*)
+      ;;
+    *)
+      # file name given
+      envfile=$1
+      shift
+      ;;
+    esac
   elif [ "$1" = "-nouseenv" ]; then
     shift
     useenv=0
@@ -171,6 +181,10 @@ if [ $help = 1 ]; then
   echo '                        processes; otherwise they source lofarinit.sh.'
   echo '                        Preferred behaviour is -useenv, but for backward'
   echo '                        compatibility it is not standard yet.'
+  echo '                        They are passed in a file; its name can be given after -useenv.'
+  echo '                        It defaults to "$HOME/startdistproc_$pid.envfile"'
+  echo '                        If -useenv is given as the last option, a (possibly empty)'
+  echo '                        file name must given, othwrwise the next argument is used.'
   echo '  -cdn clusterdescname  The name of the file describing the cluster.'
   echo '  -dsn datasetname      The name of the file describing the distributed dataset.'
   echo '  -dirs directories     Directories to use if -dsn is not given.'
@@ -180,7 +194,7 @@ if [ $help = 1 ]; then
   echo '                        -dsn and dirs cannot be given both.'
   echo '  -hfn hostfilename     The name of the generated hostfile.'
   echo '                        It defaults to /tmp/machinefile_$$'
-  echo '  -fdp finddproc-path   Path where to find finddistproc.'
+  echo '  -fdp finddproc-path   Path where to find finddproc.'
   echo '                        Default is empty.'
   echo '  -logfile logfilename  The general name of the subprocesses log files.'
   echo '                        They are suffixed with a sequence number.'
@@ -262,7 +276,9 @@ np=`wc -l $hfn | awk '{print $1}'`
 # Note that $envfile is empty is $useenv is not set. That is exactly what we need
 # in the mpirun and socketrun lines.
 if [ "$useenv" = 1 ]; then
-  envfile=$hfn.envfile
+  if test "$envfile" = ""; then
+    envfile=$HOME/startdistproc_$$.envfile
+  fi
   grex='[^=]*(PATH|ROOT)'
   printenv | egrep "^$grex=" | sed -e "s/^\([^=]*\)=\(.*\)/\1=\2; export \1/;" > $envfile
 fi
@@ -285,3 +301,6 @@ else
   $pgmpath/socketrun $dry $hfn "$master" $modxx $wait "$logfile" $program $envfile "$@" || exit 1
 fi
 #rm -f $hfn
+#if test "$envfile" != ""; then
+#  rm -f $envfile
+#fi
