@@ -69,7 +69,7 @@ cdn=$1
 shift
 dirs=$*
 test "$psn" = ""  &&  psn="makems.cfg"
-parsetcdn=`getparsetvalue $psn ClusterDescName >& /dev/null` ||  parsetcdn=
+parsetcdn=`getparsetvalue $psn ClusterDescName 2>/dev/null` ||  parsetcdn=
 test "$cdn" = ""  &&  cdn=$parsetcdn
 if test "$cdn" = ""; then
   echo "No ClusterDescName given on command line nor parset file"

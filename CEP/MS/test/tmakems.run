@@ -17,13 +17,10 @@ export PATH
 wd=`pwd`
 cat > tmakems_tmp.cd <<EOF
 ClusterName = cl
-NNodes = 2
+NNodes = 1
 Node0.NodeName = localhost
 Node0.NodeFileSys = [/usr]
 Node0.NodeMountPoints = [$wd]
-Node1.NodeName = localhost
-Node1.NodeFileSys = [/usr]
-Node1.NodeMountPoints = [$wd]
 EOF
 
 # Take care that system-dependent output is excluded.
