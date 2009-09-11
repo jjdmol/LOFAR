@@ -61,7 +61,11 @@ function(lofar_find_package _package)
     endif(DEFINED USE_${_PKG} AND NOT USE_${_PKG})
 
     # Use the Find${_package}.cmake module.
-    find_package(${ARGV})
+    if(LOFAR_VERBOSE_CONFIGURE)
+      find_package(${ARGV})
+    else(LOFAR_VERBOSE_CONFIGURE)
+      find_package(${ARGV} QUIET)
+    endif(LOFAR_VERBOSE_CONFIGURE)
 
     # Add include directories and libraries, if package was found;
     # set HAVE_<PACKAGE> variable in the cache.
