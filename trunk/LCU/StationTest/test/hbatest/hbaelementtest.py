@@ -122,7 +122,8 @@ def main() :
 	# capture reference data (all HBA elements off)
         rm_files(dir_name,'*')
         os.popen("rspctl --rcumode=5 2>/dev/null")
-        os.popen("rspctl --enable 2>/dev/null")
+        os.popen("rspctl --rcuenable=1 2>/dev/null")
+        time.sleep(2)
         for ind in range(hba_elements) :
 		ctrl_string=ctrl_string + '2,'
 	strlength=len(ctrl_string)
