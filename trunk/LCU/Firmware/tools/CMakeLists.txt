@@ -28,16 +28,7 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(Firmware-Tools)
-include(LofarGeneral)
-
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 1.0)
-
-## ---------------------------------------------------------------------------
-## Generate configuration header file.
-## ---------------------------------------------------------------------------
-include(LofarConfig)
+project(Firmware-Tools NONE)
 
 ## ---------------------------------------------------------------------------
 ## Subdirectories

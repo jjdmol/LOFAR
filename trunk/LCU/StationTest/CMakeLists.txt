@@ -28,16 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(StationTest)
-include(LofarGeneral)
+project(StationTest NONE)
 
 ## ---------------------------------------------------------------------------
-## Generate configuration header file.
-## ---------------------------------------------------------------------------
-include(LofarConfig)
-
-## ---------------------------------------------------------------------------
-## Installation
+## Install files matching regex pattern in current directory and below
 ## ---------------------------------------------------------------------------
 install(DIRECTORY . 
   DESTINATION stationtest
