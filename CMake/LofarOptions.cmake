@@ -20,16 +20,18 @@
 #
 #  $Id$
 
-include(LofarFindPackage)
-
 if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
 
   set(LOFAR_OPTIONS_INCLUDED TRUE)
 
   ## --------------------------------------------------------------------------
+  ## Include wrapper macro for find_package()
+  ## --------------------------------------------------------------------------
+  include(LofarFindPackage)
+
+  ## --------------------------------------------------------------------------
   ## Handle contradicting options
   ## --------------------------------------------------------------------------
-
   if(USE_LOG4CXX AND USE_LOG4CPLUS)
     message(FATAL_ERROR 
       "You cannot use more than one logger implementation. "
@@ -42,11 +44,9 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
       "Please check your variants file!")
   endif(BUILD_STATIC_EXECUTABLES AND BUILD_SHARED_LIBS)
 
-
   ## --------------------------------------------------------------------------
   ## Handle each option
   ## --------------------------------------------------------------------------
-
   if(BUILD_STATIC_EXECUTABLES)
     set(CMAKE_EXE_LINKER_FLAGS -static)
     set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
@@ -65,19 +65,19 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
 #  endif(USE_AIPSPP)
   
   if(USE_BACKTRACE)
-    lofar_find_package(Backtrace)
+    lofar_find_package(Backtrace REQUIRED)
   endif(USE_BACKTRACE)
 
   if(USE_LOG4CXX)
-    lofar_find_package(Log4Cxx)
+    lofar_find_package(Log4Cxx REQUIRED)
   endif(USE_LOG4CXX)
 
   if(USE_LOG4CPLUS)
-    lofar_find_package(Log4Cplus)
+    lofar_find_package(Log4Cplus REQUIRED)
   endif(USE_LOG4CPLUS)
 
   if(USE_MPI)
-    lofar_find_package(MPI)
+    lofar_find_package(MPI REQUIRED)
   endif(USE_MPI)
   
   if(USE_PYTHON)
@@ -85,8 +85,8 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
   endif(USE_PYTHON)
 
   if(USE_SSE)
-    set(GNU_SSE_FLAGS "-msse2")
-    set(ICC_SSE_FLAGS "-xW")
+    set(GNU_SSE_FLAGS "-msse2")      # DOES NOT YET WORK !
+    set(ICC_SSE_FLAGS "-xW")         # DOES NOT YET WORK !
   endif(USE_SSE)
 
   if(USE_SHMEM)
@@ -98,7 +98,13 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
   endif(USE_SOCKETS)
 
   if(USE_THREADS)
-    lofar_find_package(Pthreads)
+    lofar_find_package(Pthreads REQUIRED)
+    if(CMAKE_COMPILER_IS_GNUCC)
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+    endif(CMAKE_COMPILER_IS_GNUCC)
+    if(CMAKE_COMPILER_IS_GNUCXX)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    endif(CMAKE_COMPILER_IS_GNUCXX)
   endif(USE_THREADS)
 
   if(USE_ZOID)
