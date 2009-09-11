@@ -6,6 +6,6 @@
 /MAC/Deployment
 /MAC/Navigator2
 /LCS/AMC
-/Firmware/tools
-/StationTest
+/LCU/Firmware/tools
+/LCU/StationTest
 /MAC/Tools
