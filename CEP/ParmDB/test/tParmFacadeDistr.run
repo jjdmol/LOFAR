@@ -38,6 +38,7 @@ cdname=`pwd`/tParmFacadeDistr_tmp.cd
 echo "Creating cd and vd files"
 cat > tParmFacadeDistr_tmp.cd <<EOF
 ClusterName = cl
+NNodes = 1
 Node0.NodeName = localhost
 Node0.NodeFileSys = [node1:/usr]
 Node0.NodeMountPoints = [/usr]
