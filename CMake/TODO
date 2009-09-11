@@ -46,3 +46,13 @@
 * Turn makeversion into a real CMake macro and merge it with
   LofarPackageVersion. Generate the Package__Version.{h,cc} files in the
   binary directory, instead of the source directory.
+
+* It would be nice if a meta-package could be used as a real target -- so that
+  you could for example say "make LCS" to build all LCS packages -- much like
+  the lofarconf.in file do in the Autotools environment.
+  Specifying the packages as dependencies using lofar_add_package() will
+  not work, because then these packages cannot be optional. Maybe we should
+  change the semantics of lofar_add_package() to something that is now
+  handled by lofar_add_subdirectory(); and have a new macro, e.g. 
+  set_package_dependencies(), that can be used to define the actual package
+  dependencies. 
