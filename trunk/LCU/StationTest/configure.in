@@ -1,6 +1,6 @@
 AC_INIT(README.txt)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(Station, 1.0, no-define)
+AM_INIT_AUTOMAKE(StationTest, 1.0, no-define)
 
 AC_PROG_LIBTOOL
 
