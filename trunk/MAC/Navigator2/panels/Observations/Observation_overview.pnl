@@ -815,6 +815,50 @@ LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,
 0 ""
 1
 LANG:1 12 Observation:
+13 31
+"Abort_Observation"
+""
+1 6 490 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+61 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 4 488 128 514
+
+T 
+1
+LANG:1 5 Abort
+"// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_setDP();
+}
+
+EP_setDP()
+{
+dyn_errClass err;
+
+  dpSetWait(baseDP+\"_ObservationControl.command:_original.._value\", \"ABORT\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}
+
+// SimpleCtrlScript {EP_setDP}
+// DP1 {baseDP+\".abort\"}
+// Config1 {:_original.._value}
+// Type1 {string}
+// Value1 {ABORT}
+// SimpleCtrlScriptEnd {EP_setDP}
+" 0
+ E E E
 0
 LAYER, 1 
 1
