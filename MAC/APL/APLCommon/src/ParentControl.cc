@@ -393,7 +393,9 @@ void ParentControl::_doRequestedAction(PIiter	parent)
 			// current state == NOSTATE: CONNECT msg was sent to main task, do nothing
 			// current state == CONNECT: CONNECTED msg was received from main task,
 			//							 send CONNECT msg to parent-controller.
-			if (parent->currentState == CTState::NOSTATE) {
+			// current state == CONNECTED: we are in a RESYNC cycle, do nothing.
+			if (parent->currentState == CTState::NOSTATE || 
+				parent->currentState == CTState::CONNECTED) {
 				return;
 			}
 
@@ -714,7 +716,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			resync.cntlrName = oldParent->name;
 			resync.curState	 = oldParent->currentState;
 			resync.hostname	 = myHostname(true);
-			port.send(resync);		// will result in CONTROL_RESYNCED;
+			oldParent->port->send(resync);		// will result in CONTROL_RESYNCED;
 			break;
 		}
 
