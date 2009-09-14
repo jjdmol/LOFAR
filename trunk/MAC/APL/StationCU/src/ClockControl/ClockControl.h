@@ -69,17 +69,16 @@ public:
 
 private:
 	// During the initial state all connections with the other programs are made.
-   	GCFEvent::TResult initial_state   		 (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult connect2RSP_state		 (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult startListener_state	 (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult subscribe_state 		 (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult retrieveSplitters_state(GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult retrieveClock_state  	 (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult setClock_state  		 (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult setSplitters_state 	 (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult active_state    		 (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult defaultMessageHandling (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult finishing_state  		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult initial_state   		  (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult connect2RSP_state		  (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult startListener_state	  (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult subscribeClock_state 	  (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult subscribeSplitter_state (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult active_state    		  (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult defaultMessageHandling  (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult setClock_state  		  (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult setSplitters_state 	  (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult finishing_state  		  (GCFEvent& e, GCFPortInterface& p);
 
 	// avoid defaultconstruction and copying
 	ClockControl();
@@ -89,10 +88,12 @@ private:
    	void _disconnectedHandler(GCFPortInterface& port);
    	void _acceptRequestHandler(GCFPortInterface& port);
    	void _databaseEventHandler(GCFEvent& answer);
-	void requestSubscription();
-	void cancelSubscription();
+	void requestClockSubscription();
+	void cancelClockSubscription();
 	void requestClockSetting();
 	void sendClockSetting();
+	void requestSplitterSubscription();
+	void cancelSplitterSubscription();
 	void requestSplitterSetting();
 	void sendSplitterSetting();
 
@@ -115,10 +116,13 @@ private:
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
 	time_t					itsStartTime;		// timestamp the controller was started
-	void*					itsSubscription;
+
+	void*					itsClockSubscription;
 	int32					itsClock;
+
 	bool					itsSplitterRequest;
 	bitset<MAX_RSPBOARDS>	itsSplitters;
+	void*					itsSplitterSubscription;
 };
 
   };//StationCU

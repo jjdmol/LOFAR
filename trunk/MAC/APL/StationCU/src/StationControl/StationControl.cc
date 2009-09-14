@@ -536,7 +536,10 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 
 	case F_ACCEPT_REQ:
 	case F_CONNECTED:
+		break;
+
 	case F_DISCONNECTED:
+		port.close();
 		break;
 
 	case DP_CHANGED:
@@ -629,8 +632,9 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		if (event.signal == CONTROL_CLAIM) {
 			itsStartingObs = theObs;
 			TRAN(StationControl::startObservation_state);
-			queueTaskEvent(event, port);
-			return (GCFEvent::HANDLED);
+//			queueTaskEvent(event, port);
+//			return (GCFEvent::HANDLED);
+			return (GCFEvent::NEXT_STATE);
 		}
 
 		// TODO: CLEAN UP THE CODE BELOW
