@@ -243,6 +243,7 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 			StationConfig		config;
 			bitset<MAX_RCUS>	theRCUs(theObs.getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters));
 #endif
+#if 0
 			// TODO: this code should be moved to the StationController
 			bitset<MAX_RCUS>	theRCUs(theObs.getRCUbitset(96, 48, 12, true));
 			string	rbm;
@@ -253,7 +254,7 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				}
 			}
 			theObsPS->setValue(PN_OBS_RECEIVER_BITMAP,GCFPVString (rbm), 0.0, false);
-
+#endif
 			// for the beams we have to construct dyn arrays first.
 			GCFPValueArray		subbandArr;
 			GCFPValueArray		beamletArr;
