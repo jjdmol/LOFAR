@@ -109,6 +109,9 @@ class AsyncCommand(object):
     def output(self):
         """ Return the output of the program (when started with outfiles="PIPE"). """
 
+        if DRYRUN:
+          return ""
+
         output = self.popen.communicate()[0]
 
         # even though process closed stdout, we still need to wait for termination
