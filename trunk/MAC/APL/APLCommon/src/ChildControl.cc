@@ -1192,6 +1192,12 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 				controller->port 		   = &port;
 				controller->inResync	   = true;
 				LOG_DEBUG_STR("Updated info of reconnected controller " << msg.cntlrName);
+
+				// make sure that the maintask gets the Connect message it is waiting for.
+				if (controller->currentState == CTState::CONNECTED) {
+					_setEstablishedState(controller->cntlrName, CTState::CONNECTED, 
+										 time(0), CT_RESULT_NO_ERROR);
+				}
 			}
 
 			// Finally confirm resync action to child.
