@@ -9,7 +9,34 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   
   baseDP         = g_currentDatapoint;
   database = dpSubStr(baseDP,DPSUB_SYS);
+
+
   
+    // determine if we have an observation name in the DP, if so strip it and  get the real name to be included in the toplabel
+  string bareDP=dpSubStr(baseDP,DPSUB_DP);
+  int pos = strpos(bareDP,\"_TempObs\"  );
+
+  
+  if (pos > -1) {
+    string obsDP=substr(bareDP,0,pos+12);
+    dpGet(MainDBName+obsDP+\".claim.name\",observationName);
+    observation=navFunct_dpGetLastElement(observationName);
+  }
+  
+  // get involved stations.
+  // look if that name is available in the Observation List
+  int j = dynContains(g_observations[\"NAME\"],observationName);
+  if ( j > 0) {
+    // get the Stationlist from that observation
+    string sts=g_observations[\"STATIONLIST\"][j];
+    // add stations if not allready there
+    stationList = navFunct_listToDynString(sts);
+  }
+
+  // set the observation selectable items
+  prepareProcesses();
+
+
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".KSPType\")) {
     if (dpConnect(\"updateBGPAppl\", baseDP + \".KSPType\",
@@ -40,9 +67,6 @@ updateBGPAppl(string dp1, string KSPType,
   string SymbolCol=\"_Window\";
   if (!invalid) {
     setValue(\"ksp_txt\", \"text\", KSPType);
-    setValue(\"inputBuffer_txt\", \"text\", inputBufferList);
-    setValue(\"adder_txt\", \"text\", adderList);
-    
   } else {
     SymbolCol=\"Lofar_invalid\";
     if (dp1 == \"\") {
@@ -50,8 +74,22 @@ updateBGPAppl(string dp1, string KSPType,
     }
   }  
   setValue(\"ksp_txt\", \"backCol\",SymbolCol );
-  setValue(\"inputBuffer_txt\", \"backCol\", SymbolCol);
-  setValue(\"adder_txt\", \"backCol\", SymbolCol);
+  
+  dyn_string adders = navFunct_listToDynString(adderList);
+  dyn_string inputBuffers = navFunct_listToDynString(inputBufferList);
+  //determine nr of adders (for now we assume only 1 inputbuffer per station)
+  int skipFactor=0;
+  if (dynlen(adders) > 0 && dynlen(inputBuffers) >0 ) {
+    skipFactor == dynlen(adders)/dynlen(inputBuffers);
+  }
+  
+  // update stations based inputbuffers and adders
+  // clear stationtable
+  stationTable.deleteAllLines();
+  for (int i=1; i <= dynlen(stationList); i++) {
+    stationTable.appendLine(\"Station\",stationList[i],\"InputBuffers\",inputBuffers[i],\"Adders\",adders[i]);
+  }
+
 }
 
 
@@ -61,10 +99,11 @@ void prepareProcesses() {
   // append _BGPAppl
   dynAppend(result,\",BGPAppl,\"+baseDP);
   dynAppend(g_processesList,baseDP);
-  // append BGPAppl_BGPProc
-  dynAppend(result,baseDP+\",BGPProc,\"+baseDP+\"_BGPProc\");    
+  // append all involved stations
+  for (int i=1; i <= dynlen(stationList); i++) {  
+    dynAppend(result,baseDP+\",BGLProc->\"+stationList[i]+\",\"+baseDP+\"_BGPProc_\"+stationList[i]);    
+  }
   dynAppend(g_processesList,baseDP+\"_BGPProc\");
-  
   
   // write result to the db so various panels can reset themselves  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
@@ -98,9 +137,6 @@ void reload() {
   
   navFunct_clearGlobalLists();
   
-  // set the observation selectable items
-  prepareProcesses();
-
   // set panel to ready
   g_objectReady=true;
   
@@ -114,7 +150,9 @@ E "#uses \"navPanel.ctl\"
 
 string baseDP=\"\";
 string database=\"\";
-" 0
+string observation=\"\";
+string observationName = \"\";
+dyn_string stationList=\"\";" 0
  2
 "CBRef" "1"
 "EClose" E
@@ -123,39 +161,39 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 0 
-1 25 0 "" 0
+1 43 0 "" 0
 0
-1 26 0 "0" 1
+1 44 0 "0" 1
 0
-1 27 0 "" 2
+1 45 0 "" 2
 0
-1 28 0 "" 3
+1 46 0 "" 3
 0
-1 29 0 "" 7
+1 47 0 "" 7
 0
-1 30 0 "" 8
+1 48 0 "" 8
 0
-1 31 0 "" 9
+1 49 0 "" 9
 0
-1 32 0 "" 10
+1 50 0 "" 10
 0
-1 33 0 "" 11
+1 51 0 "" 11
 0
-1 34 0 "" 12
+1 52 0 "" 12
 0
-1 35 0 "" 13
+1 53 0 "" 13
 0
-1 36 0 "" 15
+1 54 0 "" 15
 0
-1 37 0 "" 16
+1 55 0 "" 16
 0
-1 38 0 "" 17
+1 56 0 "" 17
 0
-1 39 0 "" 18
+1 57 0 "" 18
 0
-1 40 0 "" 19
+1 58 0 "" 19
 0
-1 41 0 "" 20
+1 59 0 "" 20
 0
 2 18
 "PRIMITIVE_TEXT10"
@@ -177,46 +215,6 @@ LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,
 0 ""
 1
 LANG:1 19 Key Science Project
-2 19
-"PRIMITIVE_TEXT11"
-""
-1 28 396 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-2 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 28 396 111 410
-0 2 2 "0s" 0 0 0 192 0 0  28 396 1
-1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
-LANG:1 15 InputBufferList
-2 20
-"PRIMITIVE_TEXT12"
-""
-1 28 432 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-4 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 28 432 81 446
-0 2 2 "0s" 0 0 0 192 0 0  28 432 1
-1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
-LANG:1 9 AdderList
 14 21
 "ksp_txt"
 ""
@@ -234,12 +232,12 @@ LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,
 0 ""
  178 354 402 375
 2 "0s" 0 0 0 0 0 -1  E E E
-14 23
-"inputBuffer_txt"
+25 42
+"stationTable"
 ""
 1 180 390 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
-9 0 0 0 0 0
+12 0 0 0 0 0
 E E E
 0
 1
@@ -249,25 +247,32 @@ LANG:1 0
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
- 178 388 402 409
-2 "0s" 0 0 0 0 0 -1  E E E
-14 24
-"adder_txt"
-""
-1 180 429 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-11 0 0 0 0 0
-E E E
-0
+ 178 388 762 562
+EE 1 0 1 3 0 "Station" 8 1 0 "s" 1
+LANG:1 7 Station
+E
 1
 LANG:1 0 
 
-0
+80 "InputBuffers" 26 1 0 "s" 1
+LANG:1 12 InputBuffers
+E
+1
+LANG:1 0 
+
+250 "Adders" 26 1 0 "s" 1
+LANG:1 6 Adders
+E
+1
+LANG:1 0 
+
+250 
+14 14 10 10
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
- 178 427 402 448
-2 "0s" 0 0 0 0 0 -1  E E E
+0 1 0 1 7
+1 0
 0
 LAYER, 1 
 1

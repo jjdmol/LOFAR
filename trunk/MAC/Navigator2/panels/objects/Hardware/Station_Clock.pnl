@@ -22,8 +22,6 @@ PANEL,-1 -1 242 64 N "_3DFace" 0
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
 
 
-  // connect for childUpdates
-  showChildState(baseDP);
   // connect for selfUpdates
   showSelfState(baseDP);
 }
@@ -50,7 +48,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 0
-"childStateBorder"
+"border1"
 ""
 1 10 50 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
@@ -62,7 +60,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E U  1 E 10 10 225 50
+E E 0 1 1 0 1 E U  1 E 10 10 225 50
 2 1
 "Text1"
 ""

@@ -12,8 +12,6 @@ PANEL,-1 -1 147 92 N "_3DFace" 0
     if (!navFunct_dpReachable(baseDP)) {
       controlHBFilter(\"\",0,\"\",true);
     }
-  } else {
-    setValue(\"txt_state\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }
 }
 
@@ -23,24 +21,15 @@ void controlHBFilter(string dp1, unsigned filter,
 
   if(!invalid) {
     if (filter == 2) {
-      setValue(\"txt_state\"    , \"backCol\" , \"Lofar_operational\");
       setValue(\"txt_filter\" , \"text\"    , \"110-190 MHz\" );
     } else if (filter == 1) {
-      setValue(\"txt_state\", \"backCol\", \"Lofar_operational\");
       setValue(\"txt_filter\" , \"text\" , \"170-230 MHz\" );
     } else if (filter == 0) {
-      setValue(\"txt_state\", \"backCol\", \"Lofar_operational\");
-      setValue(\"txt_filter\" , \"text\" , \"210-240 MHz\" );
+      setValue(\"txt_filter\" , \"text\" , \"210-270 MHz\" );
     } else if (filter == 3) {
-      setValue(\"txt_state\", \"backCol\", \"Lofar_off\");
       setValue(\"txt_filter\" , \"text\" , \"Filter OFF\" );
     }
   } else {
-    if (dp1 == \"\") {
-      setValue(\"txt_state\", \"backCol\", \"Lofar_dpOffline\");
-    } else {
-      setValue(\"txt_state\", \"backCol\", \"Lofar_invalid\");
-    }
     setValue(\"txt_filter\" , \"text\" , \"\" );
   }
 }" 0
@@ -96,20 +85,6 @@ LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0
 0 ""
 1
 LANG:1 15 Highband filter
-7 7
-"txt_state"
-""
-1 23 23 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
- E E
-6 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 23 23 7 7
 14 8
 "txt_filter"
 ""
