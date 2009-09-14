@@ -286,7 +286,7 @@ void GCFScheduler::queueEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface*  
 		break;
 
 	case GCFEvent::NEXT_STATE:
-		LOG_TRACE_COND_STR("Moving event " << eventName(event) << 
+		LOG_DEBUG_STR("Moving event " << eventName(event) << 
 							" to eventQ of task, waiting there for state switch");
 		task->queueTaskEvent(event, *port);
 		break;
@@ -344,7 +344,7 @@ void GCFScheduler::handleEventQueue()
 		if (F_EVT_PROTOCOL(*(theQueueEntry->event)) == F_FSM_PROTOCOL) {
 			// FSM events are never send again, you get one shot only.
 			if (status != GCFEvent::HANDLED) {
-				LOG_WARN_STR("Event " << eventName(*(theQueueEntry->event)) << " in task " << taskName << 
+				LOG_TRACE_COND_STR("Event " << eventName(*(theQueueEntry->event)) << " in task " << taskName << 
 							 " NOT HANDLED, deleting it");
 			}
 			// when this command was an entry in a new state, empty the task queue first
@@ -367,7 +367,7 @@ void GCFScheduler::handleEventQueue()
 				break;
 
 			case GCFEvent::NEXT_STATE:
-				LOG_TRACE_COND_STR("Moving event " << eventName(*(theQueueEntry->event)) << 
+				LOG_DEBUG_STR("Moving event " << eventName(*(theQueueEntry->event)) << 
 									" to eventQ of task, waiting there for state switch");
 				theQueueEntry->task->queueTaskEvent(*(theQueueEntry->event), *(theQueueEntry->port));
 				handled = false;
