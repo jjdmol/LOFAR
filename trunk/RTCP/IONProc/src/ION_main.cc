@@ -421,11 +421,11 @@ template <typename SAMPLE_TYPE> void *Job<SAMPLE_TYPE>::jobThreadStub(void *job)
     static_cast<Job<SAMPLE_TYPE> *>(job)->jobThread();
 #if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
-    LOG_FATAL_STR("to_CN section caught Exception: " << ex);
+    LOG_FATAL_STR("job thread caught Exception: " << ex);
   } catch (std::exception &ex) {
-    LOG_FATAL_STR("to_CN section caught std::exception: " << ex.what());
+    LOG_FATAL_STR("job thread caught std::exception: " << ex.what());
   } catch (...) {
-    LOG_FATAL("to_CN section caught non-std::exception: ");
+    LOG_FATAL("job thread caught non-std::exception: ");
   }
 #endif
 
@@ -655,6 +655,7 @@ void master_thread(int argc, char **argv)
 
     for (int arg = 1; arg < argc; arg ++) {
       LOG_DEBUG_STR("trying to use " << argv[arg] << " as ParameterSet");
+
       Parset *parset = new Parset(argv[arg]);
 
 #if 0
@@ -674,7 +675,7 @@ void master_thread(int argc, char **argv)
       LOG_DEBUG("creating new Job");
 
       switch (parset->nrBitsPerSample()) {
-	case  4 : job = new Job<i4complex>(parset);
+	case  4 : job = new Job<i4complex>(parset); // parset deleted by ~Job()
 		  break;
 
 	case  8 : job = new Job<i8complex>(parset);
@@ -683,7 +684,8 @@ void master_thread(int argc, char **argv)
 	case 16 : job = new Job<i16complex>(parset);
 		  break;
 
-	default : THROW(IONProcException, "unsupported number of bits per sample");
+	default : delete parset;
+		  THROW(IONProcException, "unsupported number of bits per sample");
       }
 
       LOG_DEBUG("creating new Job done");
