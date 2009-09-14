@@ -106,7 +106,8 @@ ClockControl::~ClockControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
-	cancelSubscription();	// tell RSPdriver to stop sending updates.
+	cancelClockSubscription();	// tell RSPdriver to stop sending updates.
+	cancelSplitterSubscription();	// tell RSPdriver to stop sending updates.
 
 	if (itsCommandPort) {
 		itsCommandPort->close();
@@ -302,7 +303,8 @@ GCFEvent::TResult ClockControl::connect2RSP_state(GCFEvent& event,
 	case F_TIMER:
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("Connecting"));
 		itsOwnPropertySet->setValue(PN_CLC_CONNECTED,  GCFPVBool(false));
-		itsSubscription = 0;
+		itsClockSubscription = 0;
+		itsSplitterSubscription = 0;
 		itsRSPDriver->open();		// will result in F_CONN or F_DISCONN
 		break;
 
@@ -356,7 +358,7 @@ GCFEvent::TResult ClockControl::startListener_state(GCFEvent& event,
 	switch (event.signal) {
 	case F_ENTRY:
 		if (itsCommandPort->getState() == GCFPortInterface::S_CONNECTED) {
-			TRAN(ClockControl::subscribe_state);        // go to next state.
+			TRAN(ClockControl::subscribeSplitter_state);        // go to next state.
 		}
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("Opening command-port"));
 		itsCommandPort->autoOpen(0, 10, 2);		// will result in F_CONN or F_DISCONN
@@ -364,14 +366,15 @@ GCFEvent::TResult ClockControl::startListener_state(GCFEvent& event,
 
 	case F_CONNECTED:
 		if (&port == itsCommandPort) {
-			LOG_DEBUG ("Command port opened, taking subscription on the clock");
+			LOG_DEBUG ("Command port opened, taking subscription on the splitter");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 
-			// let Parent task register itself at the startDaemon. This will in a CONTROL_CONNECT event from the
-			// Parenttask (which we ignore) and probably CLKCTRL_XXX messages from the StationController 
+			// let Parent task register itself at the startDaemon. 
+			// This will result in a CONTROL_CONNECT event from the parenttask (which we ignore) 
+			// and probably CLKCTRL_XXX messages from the StationController 
 			itsParentPort = itsParentControl->registerTask(this);	// PC reports itself at the startDaemon
 
-			TRAN(ClockControl::subscribe_state);		// go to next state.
+			TRAN(ClockControl::subscribeSplitter_state);		// go to next state.
 		}
 		break;
 
@@ -404,14 +407,87 @@ GCFEvent::TResult ClockControl::startListener_state(GCFEvent& event,
 }
 
 //
-// subscribe_state(event, port)
+// subscribeSplitter_state(event, port)
+//
+// Take subscription on splitter modifications
+//
+GCFEvent::TResult ClockControl::subscribeSplitter_state(GCFEvent& event, 
+													GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("subscribeSplitter:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+    case F_EXIT:
+   		break;
+
+	case F_ENTRY:
+	case F_TIMER:
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Subscribe to splitters"));
+		requestSplitterSubscription();		// will result in RSP_SUBSPLITTERACK;
+		break;
+
+	case F_DISCONNECTED:
+		_disconnectedHandler(port);		// might result in transition to connect_state
+		break;
+
+	case F_ACCEPT_REQ:
+		_acceptRequestHandler(port);
+	break;
+
+	case RSP_SUBSPLITTERACK: {
+		RSPSubsplitterackEvent	ack(event);
+		if (ack.status != RSP_SUCCESS) {
+			LOG_WARN ("Could not get subscribtion on splitter, retry in 2 seconds");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("subscribe failed"));
+			itsTimerPort->setTimer(2.0);
+			break;
+		}
+		itsSplitterSubscription = ack.handle;
+		LOG_DEBUG ("Subscription on splitters successful, waiting actual value");
+	}
+	break;
+
+	case RSP_UPDSPLITTER: {
+		RSPUpdsplitterEvent		update(event);
+		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
+		itsSplitters = update.splitter;
+		itsSplitterRequest = itsSplitters[0] ? true : false;
+		LOG_INFO_STR("State of the splitters = " << update.splitter << ". Taking subscription on the clock");
+		TRAN(ClockControl::subscribeClock_state);				// go to next state.
+		}
+		break;
+
+	case DP_CHANGED:
+		_databaseEventHandler(event);
+		break;
+	
+	case CLKCTRL_GET_CLOCK:
+	case CLKCTRL_SET_CLOCK:
+	case CLKCTRL_GET_SPLITTERS:
+	case CLKCTRL_SET_SPLITTERS:
+		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
+		return (GCFEvent::NEXT_STATE);
+
+	default:
+		LOG_DEBUG_STR ("subscribeSplitter, default");
+		status = defaultMessageHandling(event, port);
+		break;
+	}    
+
+	return (status);
+}
+
+//
+// subscribeClock_state(event, port)
 //
 // Take subscription on clock modifications
 //
-GCFEvent::TResult ClockControl::subscribe_state(GCFEvent& event, 
+GCFEvent::TResult ClockControl::subscribeClock_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("subscribe:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("subscribeClock:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -422,7 +498,7 @@ GCFEvent::TResult ClockControl::subscribe_state(GCFEvent& event,
 	case F_ENTRY:
 	case F_TIMER:
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Subscribe to clock"));
-		requestSubscription();		// will result in RSP_SUBCLOCKACK;
+		requestClockSubscription();		// will result in RSP_SUBCLOCKACK;
 		break;
 
 	case F_DISCONNECTED:
@@ -436,87 +512,17 @@ GCFEvent::TResult ClockControl::subscribe_state(GCFEvent& event,
 	case RSP_SUBCLOCKACK: {
 		RSPSubclockackEvent	ack(event);
 		if (ack.status != RSP_SUCCESS) {
-			LOG_WARN ("Could not get subscribtion on clock, retry in 2 seconds");
+			LOG_WARN ("Could not get subscription on clock, retry in 2 seconds");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("subscribe failed"));
 			itsTimerPort->setTimer(2.0);
 			break;
 		}
-
-		itsSubscription = ack.handle;
-	
-		LOG_DEBUG ("Subscription successful, going to retrieve splitter state");
-		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
-		TRAN(ClockControl::retrieveSplitters_state);				// go to next state.
-		}
-		break;
-
-	case DP_CHANGED:
-		_databaseEventHandler(event);
-		break;
-	
-	case CLKCTRL_GET_CLOCK:
-	case CLKCTRL_SET_CLOCK:
-	case CLKCTRL_GET_SPLITTERS:
-	case CLKCTRL_SET_SPLITTERS:
-		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
-		return (GCFEvent::NEXT_STATE);
-
-	default:
-		LOG_DEBUG_STR ("subscribe, default");
-		status = defaultMessageHandling(event, port);
-		break;
-	}    
-
-	return (status);
-}
-
-
-//
-// retrieveSplitters_state(event, port)
-//
-// Retrieve splitters-state from RSP driver
-//
-GCFEvent::TResult ClockControl::retrieveSplitters_state(GCFEvent& event, 
-													GCFPortInterface& port)
-{
-	LOG_DEBUG_STR ("retrieveSplitters:" << eventName(event) << "@" << port.getName());
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-	switch (event.signal) {
-    case F_EXIT:
-   		break;
-
-	case F_ENTRY:
-	case F_TIMER:
-		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Retrieve clock"));
-		requestSplitterSetting();		// will result in RSP_GETSPLITTERACK;
-		break;
-
-	case F_DISCONNECTED:
-		_disconnectedHandler(port);		// might result in transition to connect_state
-		break;
-
-	case F_ACCEPT_REQ:
-		_acceptRequestHandler(port);
-	break;
-
-	case RSP_GETSPLITTERACK: {
-		RSPGetsplitterackEvent	ack(event);
-		if (ack.status != RSP_SUCCESS) {
-			LOG_WARN ("Could not retrieve splittersetting of RSPDriver, retry in 2 seconds");
-			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("getsplitter failed"));
-			itsTimerPort->setTimer(2.0);
-			break;
-		}
-		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
-
-		itsSplitters = ack.splitter;
-		LOG_DEBUG_STR ("Splitters="  << itsSplitters << ", going to retrieve-clock state");
-		TRAN(ClockControl::retrieveClock_state);				// go to next state.
+		itsClockSubscription = ack.handle;
+		LOG_INFO("Subscription on the clock successful. going to operational mode");
+		TRAN(ClockControl::active_state);				// go to next state.
 	}
 	break;
-
+	
 	case DP_CHANGED:
 		_databaseEventHandler(event);
 		break;
@@ -525,96 +531,13 @@ GCFEvent::TResult ClockControl::retrieveSplitters_state(GCFEvent& event,
 	case CLKCTRL_SET_CLOCK:
 	case CLKCTRL_GET_SPLITTERS:
 	case CLKCTRL_SET_SPLITTERS:
+	case RSP_UPDSPLITTER:
+	case RSP_UPDCLOCK:
 		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
 		return (GCFEvent::NEXT_STATE);
 
 	default:
-		LOG_DEBUG_STR ("retrieveSplitters, default");
-		status = defaultMessageHandling(event, port);
-		break;
-	}    
-
-	return (status);
-}
-
-
-//
-// retrieveClock_state(event, port)
-//
-// Retrieve sampleclock from RSP driver
-//
-GCFEvent::TResult ClockControl::retrieveClock_state(GCFEvent& event, 
-													GCFPortInterface& port)
-{
-	LOG_DEBUG_STR ("retrieveClock:" << eventName(event) << "@" << port.getName());
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-	switch (event.signal) {
-    case F_EXIT:
-   		break;
-
-	case F_ENTRY:
-	case F_TIMER:
-		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Retrieve clock"));
-		requestClockSetting();		// will result in RSP_GETCLOCKACK;
-		break;
-
-	case F_DISCONNECTED:
-		_disconnectedHandler(port);		// might result in transition to connect_state
-		break;
-
-	case F_ACCEPT_REQ:
-		_acceptRequestHandler(port);
-	break;
-
-	case RSP_GETCLOCKACK: {
-		RSPGetclockackEvent	ack(event);
-		if (ack.status != RSP_SUCCESS) {
-			LOG_WARN ("Could not retrieve clocksetting of RSPDriver, retry in 2 seconds");
-			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("getclock failed"));
-			itsTimerPort->setTimer(2.0);
-			break;
-		}
-		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
-
-		// my clock still uninitialized?
-		if (itsClock == 0) {
-			LOG_INFO_STR("My clock is still not initialized. StationClock is " << ack.clock << " adopting this value");
-			itsClock=ack.clock;
-			LOG_DEBUG ("Going to operational state");
-			TRAN(ClockControl::active_state);				// go to next state.
-			break;
-		}
-
-		// is station clock different from my setting?
-		if ((int32)ack.clock != itsClock) {
-			LOG_INFO_STR ("StationClock is " << ack.clock << ", required clock is " << itsClock << ", changing StationClock");
-			LOG_DEBUG ("Going to setClock state");
-			TRAN(ClockControl::setClock_state);
-		}
-		else {
-			LOG_INFO_STR ("StationClock is " << ack.clock << ", required clock is " << itsClock << ", no action required");
-
-			LOG_DEBUG ("Going to operational state");
-			TRAN(ClockControl::active_state);				// go to next state.
-		}
-		break;
-	}
-
-	case DP_CHANGED:
-		_databaseEventHandler(event);
-		break;
-	
-	case CLKCTRL_GET_CLOCK:
-	case CLKCTRL_SET_CLOCK:
-	case CLKCTRL_GET_SPLITTERS:
-	case CLKCTRL_SET_SPLITTERS:
-		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
-		return (GCFEvent::NEXT_STATE);
-
-	default:
-		LOG_DEBUG_STR ("retrieveClock, default");
+		LOG_DEBUG_STR ("subscribeClock, default");
 		status = defaultMessageHandling(event, port);
 		break;
 	}    
@@ -674,6 +597,8 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
 	case CLKCTRL_SET_CLOCK:
 	case CLKCTRL_GET_SPLITTERS:
 	case CLKCTRL_SET_SPLITTERS:
+	case RSP_UPDCLOCK:
+	case RSP_UPDSPLITTER:
 		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
 		return (GCFEvent::NEXT_STATE);
 
@@ -706,7 +631,7 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
 	case F_ENTRY:
 	case F_TIMER:
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Set splitters"));
-		sendSplitterSetting();				// will result in RSP_SETSPLITTERACK;
+		sendSplitterSetting();				// will result in RSP_SETSPLITTERACK and RSP_UPDSPLITTER
 		break;
 
 	case F_DISCONNECTED:
@@ -736,8 +661,7 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
 				itsSplitters.set(i);
 			}
 		}
-
-		TRAN(ClockControl::active_state);				// go to next state.
+		TRAN(ClockControl::active_state);				// handle RSP_UPDSPLITTER in next state.
 		break;
 	}
 
@@ -749,6 +673,8 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
 	case CLKCTRL_SET_CLOCK:
 	case CLKCTRL_GET_SPLITTERS:
 	case CLKCTRL_SET_SPLITTERS:
+	case RSP_UPDCLOCK:
+	case RSP_UPDSPLITTER:
 		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
 		return (GCFEvent::NEXT_STATE);
 
@@ -794,10 +720,22 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 
 	case RSP_UPDCLOCK: {
 		RSPUpdclockEvent	updateEvent(event);
-		if (updateEvent.status != RSP_SUCCESS || updateEvent.clock == 0) {
+		if (updateEvent.status != RSP_SUCCESS) {
+			LOG_WARN ("Received and INVALID clock update, WHAT IS THE CLOCK?");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("getclock failed"));
+			break;
+		}
+
+		if (updateEvent.clock == 0) {
 			LOG_ERROR_STR ("StationClock has stopped! Going to setClock state to try to solve the problem");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Clock stopped"));
 			TRAN(ClockControl::setClock_state);
+			break;
+		}
+
+		if (itsClock == 0) { // my clock still uninitialized?
+			LOG_INFO_STR("My clock is still not initialized. StationClock is " << updateEvent.clock << " adopting this value");
+			itsClock=updateEvent.clock;
 			break;
 		}
 
@@ -806,10 +744,27 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 						   " BY SOMEONE WHILE CLOCK SHOULD BE " << itsClock << ". CHANGING CLOCK BACK.");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Clock unallowed changed"));
 			TRAN (ClockControl::setClock_state);
+			break;
 		}
 
 		// when update.clock==itsClock ignore it, we probable caused it ourselves.
 		LOG_DEBUG_STR("Event.clock = " << updateEvent.clock << ", myClock = " << itsClock);
+	}
+	break;
+
+	case RSP_UPDSPLITTER: {
+		RSPUpdsplitterEvent		update(event);
+		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
+		if (update.splitter[0] != itsSplitters[0]) {
+			LOG_ERROR_STR ("SPLITTER WAS CHANGED TO " << (itsSplitters[0] ? "OFF" : "ON") << 
+						   " BY SOMEONE WHILE SPLITTER SHOULD BE " <<
+							(itsSplitters[0] ? "ON" : "OFF") << ". CHANGING SPLITTER BACK.");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Splitter unallowed changed"));
+			TRAN (ClockControl::setSplitters_state);
+			break;
+		}
+		itsSplitters = update.splitter;
+		LOG_DEBUG_STR("State of the splitters = " << itsSplitters);
 	}
 	break;
 
@@ -903,9 +858,9 @@ void ClockControl::_acceptRequestHandler(GCFPortInterface& /*port*/)
 }
 
 //
-// requestSubscription()
+// requestClockSubscription()
 //
-void ClockControl::requestSubscription()
+void ClockControl::requestClockSubscription()
 {
 	LOG_INFO ("Taking subscription on clock settings");
 
@@ -916,15 +871,15 @@ void ClockControl::requestSubscription()
 }
 
 //
-// cancelSubscription()
+// cancelClockSubscription()
 //
-void ClockControl::cancelSubscription()
+void ClockControl::cancelClockSubscription()
 {
 	LOG_INFO ("Canceling subscription on clock settings");
 
 	RSPUnsubclockEvent		msg;
-	msg.handle = itsSubscription;
-	itsSubscription = 0;
+	msg.handle = itsClockSubscription;
+	itsClockSubscription = 0;
 	itsRSPDriver->send(msg);
 }
 
@@ -956,16 +911,39 @@ void ClockControl::sendClockSetting()
 }
 
 //
+// requestSplitterSubscription()
+//
+void ClockControl::requestSplitterSubscription()
+{
+	LOG_INFO ("Taking subscription on splitter settings");
+
+	RSPSubsplitterEvent		msg;
+	msg.period = 1;				// let RSPdriver check every second
+	itsRSPDriver->send(msg);
+}
+
+//
+// cancelSplitterSubscription()
+//
+void ClockControl::cancelSplitterSubscription()
+{
+	LOG_INFO ("Canceling subscription on splitter settings");
+
+	RSPUnsubsplitterEvent		msg;
+	msg.handle = itsSplitterSubscription;
+	itsSplitterSubscription = 0;
+	itsRSPDriver->send(msg);
+}
+
+//
 // requestSplitterSetting()
 //
 void ClockControl::requestSplitterSetting()
 {
 	LOG_INFO ("Asking RSPdriver current splitter setting");
 
-	StationConfig			sc;
 	RSPGetsplitterEvent		msg;
 	msg.timestamp = RTC::Timestamp(0,0);
-	msg.cache = 1;
 	itsRSPDriver->send(msg);
 }
 
@@ -977,12 +955,14 @@ void ClockControl::sendSplitterSetting()
 {
 	LOG_INFO_STR ("Setting stationSplitters to " << (itsSplitterRequest ? "ON" : "OFF"));
 
-	StationConfig			sc;
 	RSPSetsplitterEvent		msg;
 	msg.timestamp = RTC::Timestamp(0,0);
 	msg.switch_on = itsSplitterRequest;
 	itsRSPDriver->send(msg);
 }
+
+
+
 //
 // defaultMessageHandling
 //
