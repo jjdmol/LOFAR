@@ -24,10 +24,26 @@ PANEL,-1 -1 185 272 N "_3DFace" 2
   // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
 
-  // connect for childUpdates
-  showChildState(baseDP);
-  // connect for selfUpdates
-  showSelfState(baseDP);
+  if (dpExists(baseDP) ){
+    // connect for childUpdates
+    showChildState(baseDP);
+    // connect for selfUpdates
+    showSelfState(baseDP);
+  } else {
+    Border1.visible(false);
+    setValue(\"selfState.light\",\"visible\",false);
+    childStateBorder.visible(false);
+    subrack_highLight.visible(false);
+    Subrack_Txt.visible(false);
+    subRackClkBoard.visible(false);
+    subRackRSP0.visible(false);
+    subRackRSP1.visible(false);
+    subRackRSP2.visible(false);
+    subRackRSP3.visible(false);
+    subRackSPUBoard.visible(false);
+    subRackTBB0.visible(false);
+    subRackTBB1.visible(false);
+  }    
 }" 0
  E "main()
 {
@@ -142,7 +158,7 @@ void SubrackCallback(string dp1, bool aTrig) {
 {
   click();
 }" 0
- 0 1 1 2 1 E 1 0 1 -181 1 1 E 200 10 333 193
+ 0 1 1 2 1 E 1 0 1 -180 0 1 E 200 10 333 193
 6 901
 "childStateBorder"
 ""

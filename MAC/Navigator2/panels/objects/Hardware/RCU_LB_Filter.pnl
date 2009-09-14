@@ -24,9 +24,9 @@ void controlLBFilter(string dp1, unsigned filter,
 
   if(!invalid) {
     if (filter == 0) {
-      setValue(\"txt_filter\" , \"text\"    , \"10-80 MHz\" );
+      setValue(\"txt_filter\" , \"text\"    , \"10-90 MHz\" );
     } else if (filter == 1) {
-     	setValue(\"txt_filter\" , \"text\" , \"30-80 MHz\" );
+     	setValue(\"txt_filter\" , \"text\" , \"30-90 MHz\" );
     }
   } else {
     setValue(\"txt_filter\" , \"text\" , \"\" );

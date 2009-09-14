@@ -348,13 +348,13 @@ LANG:1 6 Layer8
 3 86 "selfState"
 "objects\\lofar_self_state.pnl" 284 264 T 851 1 0 1 114 -23.99999999999997
 0
-3 89 "PANEL_REF90"
+3 89 "topSubrack"
 "objects\\Hardware\\Station_Subrack_small.pnl" 48 330 T 855 1 0 1 354 117
 2
 "$CabinetNr""0"
 "$SubrackNr""0"
-3 90 "PANEL_REF91"
-"objects\\Hardware\\Station_Subrack_small.pnl" 48 520 T 856 1 0 1 354 110
+3 90 "bottomSubrack"
+"objects\\Hardware\\Station_Subrack_small.pnl" 48 520 T 856 1 0 1 354 108
 2
 "$CabinetNr""0"
 "$SubrackNr""1"
