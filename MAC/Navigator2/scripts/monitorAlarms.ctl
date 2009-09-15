@@ -154,19 +154,20 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   
  
   // Loop through all alarms in this callback
-  for (int nr = 2; nr < dynlen (aResult);nr++) {
+  for (int nr = 2; nr < dynlen (aResult);nr+=4) {
     //get the stateNr and DP that go with this message
+    
     time aTime     = getCurrentTime();
-    string aDP     = aResult[2][nr];
-    int state      = (int)aResult[3][nr];
+    string aDP     = aResult[nr][2];
+    int state      = (int)aResult[nr+1][2];
   
     if (state == 60) {
       continue;
     }
     
     
-    string message = aResult[4][nr];
-    bool force     = aResult[5][nr];
+    string message = aResult[nr+2][2];
+    bool force     = aResult[nr+3][2];
     int aStatus    = CAME;
   
     if (aDP==""){
