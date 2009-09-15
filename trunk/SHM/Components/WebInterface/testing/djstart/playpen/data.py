@@ -10,10 +10,10 @@ import display
 import datetime
 #import misc_info
 
-sites = ["cs001","cs008","cs010","cs016"]
+sites = ["cs302","rs106","rs208","rs307","rs503"]
 
 obsdatatypes = ["rsp","sst","xst","sky"]
-job_path = '/home/lofartest/SHM/Components/JobScripts/'
+job_path = '/home/avruch/work/lofar/shm/versions/Components/JobScripts/'
 site_info = {}
 
 class dateform(forms.Form):
@@ -21,17 +21,18 @@ class dateform(forms.Form):
                                 required=True,
                                 help_text = " (format YYYY-MM-DD HH:MM:SS)")
 class siteform(forms.Form):
-    site = forms.ChoiceField(choices = ( ('cs001','cs001'),
-                                         ('cs008','cs008'),
-                                         ('cs010','cs010'),
-                                         ('cs016','cs016') ))
+    site = forms.ChoiceField(choices = ( ('cs302','cs302'),
+                                         ('rs106','rs106'),
+                                         ('rs208','rs208'),
+                                         ('rs503','rs503'),
+                                         ('rs307','rs307') ))
 class datatypeform(forms.Form):
     datatype = forms.ChoiceField(choices = ( ('rsp','RSP board sensor values'),
                                              ('sst','Subband Statistics'),
                                              ('xst','Crosscorrelation Statistics'),
                                              ('sky','Sky Map') ) )
 class ObservedData:
-    def __init__(self,system='cs001',qtime=datetime.datetime.utcnow()):
+    def __init__(self,system='cs302',qtime=datetime.datetime.utcnow()):
         self.datasource = system
         self.date   =  qtime
         self.classification = []
@@ -53,7 +54,7 @@ class Stations:
         db.close()
         count = 0
         for inst in results:
-            if (inst.si_id > 100) and (inst.si_id < 10000):
+            if (inst.si_id > 1000) and (inst.si_id < 10000):
                 self.names.append(inst.si_name.lower())
                 self.ids.append(int(inst.si_id))
                 self.ports.append(inst.mis_port)
@@ -76,7 +77,7 @@ class XST(ObservedData):
         db = lofar.shm.db.SysHealthDatabase()
         db.open()
 
-        query = "SELECT si_id, subband, time, rcu_settings, classification,"\
+        query = "SELECT si_id, subband, time, rcu_settings, classification, "\
                 "geo_loc, ant_coord, acm_data FROM Lofar.AntennaCorrelationMatrices WHERE "\
                 "(time <= %s) and " \
                 "(si_id = %04d) ORDER BY time DESC LIMIT 3;"%\
@@ -136,10 +137,11 @@ class SST(ObservedData):
         ObservedData.__init__(self,system,qtime)
         self.namestring = "Subband Statistics"
         self.shortnamestring = "sst"
-        if (self.datasource != 'cs010'):
-            self.num_per_station = range(32)
-        else:
-            self.num_per_station = range(96)
+        #if (self.datasource != 'cs010'):
+        #    self.num_per_station = range(32)
+        #else:
+        #    self.num_per_station = range(96)
+        self.num_per_station = range(96)
 
         #self.numitems = {}
         #for site in sites:
@@ -216,10 +218,10 @@ class RSP(ObservedData):
         ObservedData.__init__(self,system, qtime)
         self.namestring = "RSP Board Registers"
         self.shortnamestring = "rsp"
-        if (self.datasource != 'cs010'):
-            self.num_per_station = range(4)
-        else:
-            self.num_per_station = range(12)
+        #if (self.datasource != 'cs010'):
+        #    self.num_per_station = range(4)
+        #else:
+        self.num_per_station = range(12)
         self.num_display = 1
         #self.data = self.most_recent_observation()
         self.plot = ""
@@ -275,7 +277,7 @@ class RSP(ObservedData):
                                  stderr=subprocess.STDOUT).communicate()
         return MyOut
     
-def xst(request,station='cs001',plotnumber=0):
+def xst(request,station='cs302',plotnumber=0):
 
     if (request.method == 'POST'):
         view_date = dateform(request.POST)
@@ -350,7 +352,7 @@ def xst(request,station='cs001',plotnumber=0):
                                'ipaddr': request.META['REMOTE_ADDR'],
                                })
         
-def sst_plot(request,station='cs001',plotnumber=0):
+def sst_plot(request,station='cs302',plotnumber=0):
     if (request.method == 'GET'):
         view_date = dateform(request.GET)
         if (view_date.is_valid()):
@@ -372,7 +374,7 @@ def sst_plot(request,station='cs001',plotnumber=0):
     return response
 
 
-def sst(request,station='cs001',plotnumber=0):
+def sst(request,station='cs302',plotnumber=0):
 
     if (request.method == 'POST'):
         view_date = dateform(request.POST)
@@ -455,7 +457,7 @@ def sst(request,station='cs001',plotnumber=0):
                                'ipaddr'   : request.META['REMOTE_ADDR'],
                                })
     
-def rsp(request,station='cs001',plotnumber=0):
+def rsp(request,station='cs302',plotnumber=0):
 
     if (request.method == 'POST'):
         view_date = dateform(request.POST)
@@ -525,7 +527,7 @@ def rsp(request,station='cs001',plotnumber=0):
                                'sites' : siites.names,
                                'ipaddr': request.META['REMOTE_ADDR'],
                                })
-def sky(request,station='cs001',plotnumber=0):
+def sky(request,station='cs302',plotnumber=0):
 
     if (request.method == 'POST'):
         view_date = dateform(request.POST)
@@ -599,9 +601,9 @@ def defaultpage(request):
             query_date = view_date.clean_data['epoch']
         else:
             query_date = datetime.datetime.utcnow()
-        d = SKY('cs001',query_date)
+        d = SKY('cs302',query_date)
     else:
-        d = SKY('cs001',datetime.datetime.utcnow())
+        d = SKY('cs302',datetime.datetime.utcnow())
 
     dbres = []
     classifs = {}
