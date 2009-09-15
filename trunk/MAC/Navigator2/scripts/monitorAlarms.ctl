@@ -143,8 +143,6 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   }
   
   occupied = true;
-  bool changed = false;
-  int iPos;
   
   
   if (dynlen(aResult) <= 0) {
@@ -152,6 +150,8 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     return;
   } 
   
+  bool changed = false;
+  int iPos;
  
   // Loop through all alarms in this callback
   for (int nr = 2; nr < dynlen (aResult);nr+=4) {
@@ -210,13 +210,13 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
         g_alarms["STATE"][iPos] = g_alarms["STATE"][iPos]-3;
         changed = true;
       }   
+      if (changed) {
+        storeAlarms();
+      }
+      continue;
     }
     
-    if (changed) {
-      storeAlarms();
-    }
-    continue;
-    
+    // in the remainder of the cases the state was an alarm
     if( iPos < 1 ){
       if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|Need to append new alarm");
       dynAppend( g_alarms[ "DPNAME"          ], aDP );
