@@ -143,6 +143,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   }
   
   occupied = true;
+  bool changed = false;
   int iPos;
   
   
@@ -152,165 +153,163 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   } 
   
  
-  //get the stateNr and DP that go with this message
-  time aTime     = getCurrentTime();
-  string aDP     = aResult[2][2];
-  int state      = (int)aResult[3][2];
+  // Loop through all alarms in this callback
+  for (int nr = 2; nr < dynlen (aResult);nr++) {
+    //get the stateNr and DP that go with this message
+    time aTime     = getCurrentTime();
+    string aDP     = aResult[2][nr];
+    int state      = (int)aResult[3][nr];
   
-  if (state == 60) {
-    occupied = false;
-    return;
-  }
-  string message = aResult[4][2];
-  bool force     = aResult[5][2];
-  int aStatus    = CAME;
+    if (state == 60) {
+      continue;
+    }
+    
+    
+    string message = aResult[4][nr];
+    bool force     = aResult[5][nr];
+    int aStatus    = CAME;
   
-  if (aDP==""){
-    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|Return on empty dp");
-    occupied = false;
-    return;
-  }
+    if (aDP==""){
+      continue;
+    }
   
-  // Is this an existing DP or a new one
-  iPos = dynContains( g_alarms[ "DPNAME"         ], aDP );
+    // Is this an existing DP or a new one
+    iPos = dynContains( g_alarms[ "DPNAME"         ], aDP );
 
   
-  if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|iPos:" + iPos);
-  if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|dpnames in global:"+g_alarms[ "DPNAME"         ]);
-  if(iPos>0 && bDebug)  DebugN("monitorAlarms.ctl:objectStateCallback|floor g_alarms: "+floor(g_alarms["STATE"][iPos]/10));
-  if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|floor state: "+floor(state/10));
-  if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|force: "+force);
+    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|iPos:" + iPos);
+    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|dpnames in global:"+g_alarms[ "DPNAME"         ]);
+    if(iPos>0 && bDebug)  DebugN("monitorAlarms.ctl:objectStateCallback|floor g_alarms: "+floor(g_alarms["STATE"][iPos]/10));
+    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|floor state: "+floor(state/10));
+    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|force: "+force);
   
-  // check if existing dp.
-  // if it exists, check if new state 1st digit > oldState 1st digit && force, otherwise return
-  if (iPos > 0 && ((floor(g_alarms["STATE"][iPos]/10) >= floor(state/10))&& !force)) {
+    // check if existing dp.
+    // if it exists, check if new state 1st digit > oldState 1st digit && force, otherwise return
+    if (iPos > 0 && ((floor(g_alarms["STATE"][iPos]/10) >= floor(state/10))&& !force)) {
     if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|return on condition mismatch");
-    occupied = false;
-    return;
-  }
+      continue;
+    }
     
     
-  // if state < 40 we might need to remove an ACK'ed or WENT ALARM
-  // if status != ACK then we need to keep it and let ACK command remove it
-  // otherwise it can't be an alarm, so return.
-  if (state < 40)  {
-    bool changed = false;
-    if (iPos > 0 && g_alarms["STATUS"][iPos] == ACK ) {
-      dynRemove(g_alarms["DPNAME" ],iPos);
-      dynRemove(g_alarms["TIME"   ],iPos);
-      dynRemove(g_alarms["STATE"  ],iPos);
-      dynRemove(g_alarms["MESSAGE"],iPos);
-      dynRemove(g_alarms["STATUS" ],iPos);
-      changed = true;
+    // if state < 40 we might need to remove an ACK'ed or WENT ALARM
+    // if status != ACK then we need to keep it and let ACK command remove it
+    // otherwise it can't be an alarm, so return.
+    if (state < 40)  {
+      if (iPos > 0 && g_alarms["STATUS"][iPos] == ACK ) {
+        dynRemove(g_alarms["DPNAME" ],iPos);
+        dynRemove(g_alarms["TIME"   ],iPos);
+        dynRemove(g_alarms["STATE"  ],iPos);
+        dynRemove(g_alarms["MESSAGE"],iPos);
+        dynRemove(g_alarms["STATUS" ],iPos);
+        changed = true;
 
 
-    } else if (iPos > 0 && g_alarms["STATUS"][iPos] == CAME) {
-      g_alarms["STATUS"][iPos] = WENT;
-      g_alarms["STATE"][iPos] = g_alarms["STATE"][iPos]-3;
-      changed = true;
-    }   
+      } else if (iPos > 0 && g_alarms["STATUS"][iPos] == CAME) {
+        g_alarms["STATUS"][iPos] = WENT;
+        g_alarms["STATE"][iPos] = g_alarms["STATE"][iPos]-3;
+        changed = true;
+      }   
+    }
     
     if (changed) {
       storeAlarms();
     }
-    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|return on state < 40");   
-    occupied = false;
-    return;
-  }
+    continue;
     
-  
-  // in the remainder of the cases, the state was 
-  if( iPos < 1 ){
-    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|Need to append new alarm");
-    dynAppend( g_alarms[ "DPNAME"          ], aDP );
-    iPos = dynlen( g_alarms[ "DPNAME" ] );
-    if (state == BROKEN) aStatus=ACK;
-    if (state == BROKEN_WENT) aStatus=WENT;
-    if (state == BROKEN_CAME) aStatus=CAME;
-    if (state == SUSPICIOUS) aStatus=ACK;
-    if (state == SUSPICIOUS_WENT) aStatus=WENT;
-    if (state == SUSPICIOUS_CAME) aStatus=CAME;
+    if( iPos < 1 ){
+      if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|Need to append new alarm");
+      dynAppend( g_alarms[ "DPNAME"          ], aDP );
+      iPos = dynlen( g_alarms[ "DPNAME" ] );
+      if (state == BROKEN) aStatus=ACK;
+      if (state == BROKEN_WENT) aStatus=WENT;
+      if (state == BROKEN_CAME) aStatus=CAME;
+      if (state == SUSPICIOUS) aStatus=ACK;
+      if (state == SUSPICIOUS_WENT) aStatus=WENT;
+      if (state == SUSPICIOUS_CAME) aStatus=CAME;
     
-  } else {
-    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|Need to examine if alarm update is needed");
-    // it was an existing DP, so we have to compare the status.
+    } else {
+      if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|Need to examine if alarm update is needed");
+      // it was an existing DP, so we have to compare the status.
      
-    int oldState=g_alarms["STATE"][iPos];
+      int oldState=g_alarms["STATE"][iPos];
 
-    // check broken ranges first
-    if (state >= BROKEN ) {
-      if (oldState == BROKEN) {
-        if (state == BROKEN) {
-        	aStatus = ACK;
-        } else if (state == BROKEN_CAME) {
-          aStatus = CAME;
-        } else {
-          DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from BROKEN to BROKEN_WENT again, that should not be possible");
-          aStatus = WENT;
+      // check broken ranges first
+      if (state >= BROKEN ) {
+        if (oldState == BROKEN) {
+          if (state == BROKEN) {
+            aStatus = ACK;
+          } else if (state == BROKEN_CAME) {
+            aStatus = CAME;
+          } else {
+            DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from BROKEN to BROKEN_WENT again, that should not be possible");
+            aStatus = WENT;
+          }
+        } else if (oldState  == BROKEN_WENT) {
+          if (state == BROKEN) {
+            aStatus = ACK;
+          } else if (state == BROKEN_WENT) {
+            aStatus = WENT;
+          } else {
+            DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from BROKEN_WENT to BROKEN_CAME again, leaving last WENT not ACK'ed");
+            aStatus = CAME;
+          }        
+        } else if (oldState == BROKEN_CAME) {
+          if (state == BROKEN) {
+            aStatus = ACK;
+          } else if (state == BROKEN_WENT) {
+            aStatus = WENT;
+          } else {
+            aStatus = CAME;
+          }
         }
-      } else if (oldState  == BROKEN_WENT) {
-        if (state == BROKEN) {
-          aStatus = ACK;
-        } else if (state == BROKEN_WENT) {
-          aStatus = WENT;
-        } else {
-          DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from BROKEN_WENT to BROKEN_CAME again, leaving last WENT not ACK'ed");
-          aStatus = CAME;
-        }        
-      } else if (oldState == BROKEN_CAME) {
-        if (state == BROKEN) {
-          aStatus = ACK;
-        } else if (state == BROKEN_WENT) {
-          aStatus = WENT;
-        } else {
-          aStatus = CAME;
-        }        
-  		}
-   	} else if (state >= SUSPICIOUS) {
-      if (oldState == SUSPICIOUS) {
-        if (state == SUSPICIOUS) {
-        	aStatus = ACK;
-        } else if (state == SUSPICIOUS_CAME) {
-          aStatus = CAME;
-        } else {
-          DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from SUSPICIOUS to SUSPICIOUS_WENT again, that should not be possible");
-          aStatus = WENT;
+      } else if (state >= SUSPICIOUS) {
+        if (oldState == SUSPICIOUS) {
+          if (state == SUSPICIOUS) {
+            aStatus = ACK;
+          } else if (state == SUSPICIOUS_CAME) {
+            aStatus = CAME;
+          } else {
+            DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from SUSPICIOUS to SUSPICIOUS_WENT again, that should not be possible");
+            aStatus = WENT;
+          }
+        } else if (oldState  == SUSPICIOUS_WENT) {
+          if (state == SUSPICIOUS) {
+            aStatus = ACK;
+          } else if (state == SUSPICIOUS_WENT) {
+            aStatus = WENT;
+          } else {
+            DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from SUSPICIOUS_WENT to SUSPICIOUS_CAME again, leaving last WENT not ACK'ed");
+            aStatus = CAME;
+          }        
+        } else if (oldState == SUSPICIOUS_CAME) {
+          if (state == SUSPICIOUS) {
+            aStatus = ACK;
+          } else if (state == SUSPICIOUS_WENT) {
+            aStatus = WENT;
+          } else {
+            aStatus = CAME;
+          }        
         }
-      } else if (oldState  == SUSPICIOUS_WENT) {
-        if (state == SUSPICIOUS) {
-          aStatus = ACK;
-        } else if (state == SUSPICIOUS_WENT) {
-          aStatus = WENT;
-        } else {
-          DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from SUSPICIOUS_WENT to SUSPICIOUS_CAME again, leaving last WENT not ACK'ed");
-          aStatus = CAME;
-        }        
-      } else if (oldState == SUSPICIOUS_CAME) {
-        if (state == SUSPICIOUS) {
-          aStatus = ACK;
-        } else if (state == SUSPICIOUS_WENT) {
-          aStatus = WENT;
-        } else {
-          aStatus = CAME;
-        }        
       }
     }
+    if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Datapoint - "+aDP);
+    if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Time      - ",aTime);
+    if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: State     - "+state);
+    if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Message   - "+message);
+    if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Status    - "+aStatus);
+    if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Force     - "+force);
+    if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|iPos:            - "+iPos);
+    // Now store the values 
+    g_alarms[ "TIME"    ][iPos] = aTime;
+    g_alarms[ "STATE"   ][iPos] = state;
+    g_alarms[ "MESSAGE" ][iPos] = message;
+    g_alarms[ "STATUS"  ][iPos] = aStatus;
+    changed=true;
   }
-  if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Datapoint - "+aDP);
-  if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Time      - ",aTime);
-  if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: State     - "+state);
-  if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Message   - "+message);
-  if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Status    - "+aStatus);
-  if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Force     - "+force);
-  if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|iPos:            - "+iPos);
-  // Now store the values 
-  g_alarms[ "TIME"    ][iPos] = aTime;
-  g_alarms[ "STATE"   ][iPos] = state;
-  g_alarms[ "MESSAGE" ][iPos] = message;
-  g_alarms[ "STATUS"  ][iPos] = aStatus;
-    
-  
-  storeAlarms();
+  // store all alarms if changed
+  if (changed) {
+    storeAlarms();
+  }
   occupied = false;
 }
 
