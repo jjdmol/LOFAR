@@ -80,8 +80,8 @@ void LocalSolveController::init(const vector<string> &include,
     makeCoeffIndex(itsSolvables);
 
     // Initialize equator.
-    itsEquator.reset(new Equator(itsChunk, itsModel, itsCoeffIndex, itsSolGrid,
-         itsSolGrid.nx() * itsCellChunkSize));
+    itsEquator.reset(new Equator(itsChunk, itsModel, itsSolGrid,
+        itsCoeffIndex));
     itsEquator->setSelection(baselines, products);
 
     itsInitFlag = true;
@@ -129,12 +129,15 @@ void LocalSolveController::run()
         // Set initial coefficients.
         itsSolver.setCoeff(0, coeff);
 
+        // Set cell selection.
+        itsEquator->setCellSelection(chunkStart, chunkEnd);
+
         // Iterate.
         bool done = false;
         while(!done)
         {
             // Construct equations and pass to solver.
-            itsEquator->process(equations, chunkStart, chunkEnd);
+            itsEquator->process(equations);
             itsSolver.setEquations(0, equations);
 
             // Perform a non-linear LSQ iteration.

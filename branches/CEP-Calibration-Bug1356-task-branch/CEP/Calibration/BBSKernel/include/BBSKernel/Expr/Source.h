@@ -49,15 +49,8 @@ public:
     Source(const string &name, const Expr<Vector<2> >::ConstPtr &position);
     virtual ~Source();
 
-    const string &getName() const
-    {
-        return itsName;
-    }
-
-    const Expr<Vector<2> >::ConstPtr &getPosition() const
-    {
-        return itsPosition;
-    }
+    const string &getName() const;
+    Expr<Vector<2> >::ConstPtr getPosition() const;
 
 protected:
     string                      itsName;
@@ -65,6 +58,16 @@ protected:
 };
 
 // @}
+
+inline const string &Source::getName() const
+{
+    return itsName;
+}
+
+inline Expr<Vector<2> >::ConstPtr Source::getPosition() const
+{
+    return itsPosition;
+}
 
 } // namespace BBS
 } // namespace LOFAR

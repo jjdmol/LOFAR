@@ -86,12 +86,18 @@ private:
     Source::Ptr makeSource(const SourceInfo &source);
     Expr<Scalar>::Ptr makeSpectralIndexExpr(const SourceInfo &source);
 
-    casa::Vector<Expr<Vector<3> >::Ptr>
-        makeStationUVWExpr(const vector<unsigned int> &stations) const;
+    void makeStationUVW();
+
+//    casa::Vector<Expr<Vector<3> >::Ptr>
+//        makeStationUVWExpr(const vector<unsigned int> &stations) const;
 
     casa::Matrix<Expr<Vector<2> >::Ptr>
-        makeStationShiftExpr(const casa::Vector<Expr<Vector<3> >::Ptr> &uvw,
+        makeStationShiftExpr(const vector<unsigned int> &stations,
             const vector<Source::Ptr> &sources) const;
+
+//    casa::Matrix<Expr<Vector<2> >::Ptr>
+//        makeStationShiftExpr(const casa::Vector<Expr<Vector<3> >::Ptr> &uvw,
+//            const vector<Source::Ptr> &sources) const;
 
     casa::Vector<Expr<JonesMatrix>::Ptr>
         makeBandpassExpr(const vector<unsigned int> &stations);
@@ -130,6 +136,7 @@ private:
 
     map<baseline_t, Expr<JonesMatrix>::Ptr> itsExpr;
     map<unsigned int, ExprParm::Ptr>        itsParms;
+    vector<Expr<Vector<3> >::Ptr>           itsStationUVW;
 };
 
 // @}

@@ -130,7 +130,7 @@ void Equator::setCellSelection(const Location &start, const Location &end)
             (itsSelectionEnd.first - itsSelectionStart.first + 1)
                 * (itsSelectionEnd.second - itsSelectionStart.second + 1);
 
-        LOG_DEBUG_STR("Cells to process (solution grid relative): [("
+        LOG_DEBUG_STR("Cells to process (solution grid coordinates): [("
             << itsSelectionStart.first << "," << itsSelectionStart.second
             << "),(" << itsSelectionEnd.first << "," << itsSelectionEnd.second
             << ")]");
@@ -169,7 +169,7 @@ void Equator::process(vector<CellEquation> &out)
     const Location selEnd(itsSelectionEnd.first - itsChunkStart.first,
         itsSelectionEnd.second - itsChunkStart.second);
 
-    LOG_DEBUG_STR("Cells to process (chunk relative): [(" << selStart.first
+    LOG_DEBUG_STR("Cells to process (chunk coordinates): [(" << selStart.first
         << "," << selStart.second << "),(" << selEnd.first << ","
         << selEnd.second << ")]");
 
@@ -179,7 +179,7 @@ void Equator::process(vector<CellEquation> &out)
     const Location reqEnd(itsFreqIntervals[selEnd.first].end,
         itsTimeIntervals[selEnd.second].end);
 
-    LOG_DEBUG_STR("Visibilities to process (chunk relative): [("
+    LOG_DEBUG_STR("Samples to process (chunk coordinates): [("
         << reqStart.first << "," << reqStart.second << "),(" << reqEnd.first
         << "," << reqEnd.second << ")]");
 
@@ -197,18 +197,17 @@ void Equator::process(vector<CellEquation> &out)
     timer.stop();
 
     LOG_DEBUG_STR("Processing speed: " << context.count / timer.getElapsed()
-        << " vis/s");
-    LOG_DEBUG_STR("No. of processed visibilities (unflagged): " << fixed
+        << " samples/s");
+    LOG_DEBUG_STR("No. of processed samples (unflagged): " << fixed
         << context.count);
-    const double elapsed = timer.getElapsed() * 1e3;
-    const unsigned long long count = timer.getCount();
-    LOG_DEBUG_STR("Timer ms ALL total " << elapsed << " count " << count
-        << " avg " << elapsed / count);
+    LOG_DEBUG_STR("TIMER ms ALL total " << timer.getElapsed() * 1e3 << " count "
+        << timer.getCount() << " avg " << (timer.getElapsed() * 1e3)
+        / timer.getCount());
     for(size_t i = 0; i < Equator::BlContext::N_BlContextTimer; ++i)
     {
         const double elapsed = context.timers[i].getElapsed() * 1e3;
         const unsigned long long count = context.timers[i].getCount();
-        LOG_DEBUG_STR("Timer ms " << Equator::BlContext::timerNames[i]
+        LOG_DEBUG_STR("TIMER ms " << Equator::BlContext::timerNames[i]
             << " total " << elapsed << " count " << count << " avg "
             << elapsed / count);
     }

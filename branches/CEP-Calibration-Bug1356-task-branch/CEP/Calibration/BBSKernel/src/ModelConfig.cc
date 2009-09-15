@@ -32,6 +32,10 @@ namespace BBS
 {
 using LOFAR::operator<<;
 
+// -------------------------------------------------------------------------- //
+// - HamakerDipoleConfig implementation                                     - //
+// -------------------------------------------------------------------------- //
+
 HamakerDipoleConfig::HamakerDipoleConfig()
 {
 }
@@ -45,6 +49,10 @@ const string &HamakerDipoleConfig::getCoeffFile() const
 {
     return itsCoeffFile;
 }
+
+// -------------------------------------------------------------------------- //
+// - YatawattaDipoleConfig implementation                                   - //
+// -------------------------------------------------------------------------- //
 
 YatawattaDipoleConfig::YatawattaDipoleConfig()
 {
@@ -67,6 +75,10 @@ const string &YatawattaDipoleConfig::getModulePhi() const
     return itsModulePhi;
 }
 
+// -------------------------------------------------------------------------- //
+// - IonosphereConfig implementation                                        - //
+// -------------------------------------------------------------------------- //
+
 IonosphereConfig::IonosphereConfig()
     :   itsDegree(0)
 {
@@ -81,6 +93,10 @@ unsigned int IonosphereConfig::getDegree() const
 {
     return itsDegree;
 }
+
+// -------------------------------------------------------------------------- //
+// - FlaggerConfig implementation                                           - //
+// -------------------------------------------------------------------------- //
 
 FlaggerConfig::FlaggerConfig()
     :   itsThreshold(1.0)
@@ -97,11 +113,155 @@ double FlaggerConfig::getThreshold() const
     return itsThreshold;
 }
 
+// -------------------------------------------------------------------------- //
+// - ModelConfig implementation                                             - //
+// -------------------------------------------------------------------------- //
+
 ModelConfig::ModelConfig()
     :   itsBeamType(UNKNOWN_BEAM_TYPE)
 {
     fill(itsModelOptions, itsModelOptions + N_ModelOptions, false);
 }
+
+bool ModelConfig::usePhasors() const
+{
+    return itsModelOptions[PHASORS];
+}
+
+bool ModelConfig::useBandpass() const
+{
+    return itsModelOptions[BANDPASS];
+}
+
+bool ModelConfig::useIsotropicGain() const
+{
+    return itsModelOptions[ISOTROPIC_GAIN];
+}
+
+bool ModelConfig::useAnisotropicGain() const
+{
+    return itsModelOptions[ANISOTROPIC_GAIN];
+}
+
+bool ModelConfig::useBeam() const
+{
+    return itsModelOptions[BEAM];
+}
+
+ModelConfig::BeamType ModelConfig::getBeamType() const
+{
+    return itsBeamType;
+}
+
+void ModelConfig::getBeamConfig(HamakerDipoleConfig &config) const
+{
+    config = itsConfigBeamHamakerDipole;
+}
+
+void ModelConfig::getBeamConfig(YatawattaDipoleConfig &config) const
+{
+    config = itsConfigBeamYatawattaDipole;
+}
+
+bool ModelConfig::useIonosphere() const
+{
+    return itsModelOptions[IONOSPHERE];
+}
+
+void ModelConfig::getIonosphereConfig(IonosphereConfig &config) const
+{
+    config = itsConfigIonosphere;
+}
+
+bool ModelConfig::useFlagger() const
+{
+    return itsModelOptions[FLAGGER];
+}
+
+void ModelConfig::getFlaggerConfig(FlaggerConfig &config) const
+{
+    config = itsConfigFlagger;
+}
+
+void ModelConfig::setPhasors(bool value)
+{
+    itsModelOptions[PHASORS] = value;
+}
+
+void ModelConfig::setBandpass(bool value)
+{
+    itsModelOptions[BANDPASS] = value;
+}
+
+void ModelConfig::setIsotropicGain(bool value)
+{
+    itsModelOptions[ISOTROPIC_GAIN] = value;
+}
+
+void ModelConfig::setAnisotropicGain(bool value)
+{
+    itsModelOptions[ANISOTROPIC_GAIN] = value;
+}
+
+void ModelConfig::setBeamConfig(const HamakerDipoleConfig &config)
+{
+    itsModelOptions[BEAM] = true;
+    itsBeamType = HAMAKER_DIPOLE;
+    itsConfigBeamHamakerDipole = config;
+}
+
+void ModelConfig::setBeamConfig(const YatawattaDipoleConfig &config)
+{
+    itsModelOptions[BEAM] = true;
+    itsBeamType = YATAWATTA_DIPOLE;
+    itsConfigBeamYatawattaDipole = config;
+}
+
+void ModelConfig::clearBeamConfig()
+{
+    itsConfigBeamHamakerDipole = HamakerDipoleConfig();
+    itsConfigBeamYatawattaDipole = YatawattaDipoleConfig();
+    itsBeamType = UNKNOWN_BEAM_TYPE;
+    itsModelOptions[BEAM] = false;
+}
+
+void ModelConfig::setIonosphereConfig(const IonosphereConfig &config)
+{
+    itsModelOptions[IONOSPHERE] = true;
+    itsConfigIonosphere = config;
+}
+
+void ModelConfig::clearIonosphereConfig()
+{
+    itsConfigIonosphere = IonosphereConfig();
+    itsModelOptions[IONOSPHERE] = false;
+}
+
+void ModelConfig::setFlaggerConfig(const FlaggerConfig &config)
+{
+    itsModelOptions[FLAGGER] = true;
+    itsConfigFlagger = config;
+}
+
+void ModelConfig::clearFlaggerConfig()
+{
+    itsConfigFlagger = FlaggerConfig();
+    itsModelOptions[FLAGGER] = false;
+}
+
+void ModelConfig::setSources(const vector<string> &sources)
+{
+    itsSources = sources;
+}
+
+const vector<string> &ModelConfig::getSources() const
+{
+    return itsSources;
+}
+
+// -------------------------------------------------------------------------- //
+// - Non-member functions                                                   - //
+// -------------------------------------------------------------------------- //
 
 ostream &operator<<(ostream &out, const HamakerDipoleConfig &obj)
 {
@@ -194,7 +354,6 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
     }
 
     out << endl << indent << "Sources: " << obj.getSources();
-//        << indent << "Components: " << obj.components;
     return out;
 }
 

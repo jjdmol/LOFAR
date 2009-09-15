@@ -52,7 +52,7 @@ public:
         const VisData::Ptr &chunk, const Model::Ptr &model,
         const shared_ptr<BlobStreamableConnection> &solver);
     ~GlobalSolveController();
-    
+
     void init(const vector<string> &include, const vector<string> &exclude,
         const Grid &solGrid, const vector<baseline_t> &baselines,
         const vector<string> &products, uint cellChunkSize, bool propagate);
@@ -73,9 +73,9 @@ private:
     void setCoeff(const vector<double> &coeff, const Location &cell,
         const vector<uint> &mapping) const;
 
-    KernelIndex                                itsKernelIndex;
-    VisData::Ptr                        itsChunk;
-    Model::Ptr                          itsModel;
+    KernelIndex                             itsKernelIndex;
+    VisData::Ptr                            itsChunk;
+    Model::Ptr                              itsModel;
     shared_ptr<BlobStreamableConnection>    itsSolver;
 
     bool                                    itsInitFlag;

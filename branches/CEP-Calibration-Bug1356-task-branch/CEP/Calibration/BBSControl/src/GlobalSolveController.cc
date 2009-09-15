@@ -89,8 +89,8 @@ void GlobalSolveController::init(const vector<string> &include,
     makeCoeffIndex(itsSolvables);
 
     // Initialize equator.
-    itsEquator.reset(new Equator(itsChunk, itsModel, itsCoeffIndex, itsSolGrid,
-        itsSolGrid.nx() * itsCellChunkSize));
+    itsEquator.reset(new Equator(itsChunk, itsModel, itsSolGrid,
+        itsCoeffIndex));
     itsEquator->setSelection(baselines, products);
 
     itsInitFlag = true;
@@ -134,12 +134,15 @@ void GlobalSolveController::run()
         getInitialCoeff(localCoeffMsg.getContents(), chunkStart, chunkEnd);
         itsSolver->sendObject(localCoeffMsg);
 
+        // Set cell selection.
+        itsEquator->setCellSelection(chunkStart, chunkEnd);
+
         // Iterate.
         bool done = false;
         while(!done)
         {
             // Construct equations and send to the solver.
-            itsEquator->process(localEqMsg.getContents(), chunkStart, chunkEnd);
+            itsEquator->process(localEqMsg.getContents());
             itsSolver->sendObject(localEqMsg);
 
             // Receive solutions from the solver.

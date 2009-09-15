@@ -27,51 +27,39 @@
 #include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/Measurement.h>
 
-#include <BBSKernel/Expr/StatUVW.h>
-#include <BBSKernel/Expr/StationUVW.h>
-#include <BBSKernel/Expr/ExprAdaptors.h>
-#include <BBSKernel/Expr/PointSource.h>
-#include <BBSKernel/Expr/MergeFlags.h>
-#include <BBSKernel/Expr/Mul.h>
-#include <BBSKernel/Expr/MatrixMul3.h>
-#include <BBSKernel/Expr/MatrixMul2.h>
-#include <BBSKernel/Expr/MatrixSum.h>
-#include <BBSKernel/Expr/PointCoherence.h>
-//#include <BBSKernel/Expr/GaussianSource.h>
-//#include <BBSKernel/Expr/GaussianCoherence.h>
-
-//#include <BBSKernel/Expr/ExprParm.h>
 #include <BBSKernel/Expr/AzEl.h>
-#include <BBSKernel/Expr/PiercePoint.h>
-#include <BBSKernel/Expr/MIM.h>
-#include <BBSKernel/Expr/YatawattaDipole.h>
-#include <BBSKernel/Expr/HamakerDipole.h>
-#include <BBSKernel/Expr/PhaseRef.h>
-//#include <BBSKernel/Expr/UVW.h>
-#include <BBSKernel/Expr/SpectralIndex.h>
-#include <BBSKernel/Expr/PhaseShift.h>
-#include <BBSKernel/Expr/ConditionNumber.h>
-#include <BBSKernel/Expr/Threshold.h>
-//#include <BBSKernel/Expr/JonesMul.h>
-//#include <BBSKernel/Expr/JonesMul2.h>
-#include <BBSKernel/Expr/JonesVisData.h>
-//#include <BBSKernel/Expr/JonesSum.h>
-
-#include <BBSKernel/Expr/LMN.h>
 #include <BBSKernel/Expr/DFTPS.h>
-//#include <BBSKernel/Expr/Diag.h>
-//#include <BBSKernel/Expr/JonesNode.h>
+#include <BBSKernel/Expr/ConditionNumber.h>
+#include <BBSKernel/Expr/ExprAdaptors.h>
+#include <BBSKernel/Expr/GaussianCoherence.h>
+#include <BBSKernel/Expr/GaussianSource.h>
+#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/JonesInvert.h>
-//#include <BBSKernel/Expr/JonesCMul3.h>
+#include <BBSKernel/Expr/JonesVisData.h>
+#include <BBSKernel/Expr/LMN.h>
+#include <BBSKernel/Expr/MatrixMul2.h>
+#include <BBSKernel/Expr/MatrixMul3.h>
+#include <BBSKernel/Expr/MatrixSum.h>
+#include <BBSKernel/Expr/MergeFlags.h>
+#include <BBSKernel/Expr/MIM.h>
+#include <BBSKernel/Expr/Mul.h>
+#include <BBSKernel/Expr/PhaseShift.h>
+#include <BBSKernel/Expr/PiercePoint.h>
+#include <BBSKernel/Expr/PointCoherence.h>
+#include <BBSKernel/Expr/PointSource.h>
 #include <BBSKernel/Expr/Request.h>
-//#include <BBSKernel/Expr/JonesExpr.h>
 #include <BBSKernel/Expr/SpectralIndex.h>
+#include <BBSKernel/Expr/StationUVW.h>
+#include <BBSKernel/Expr/StatUVW.h>
+#include <BBSKernel/Expr/Threshold.h>
+#include <BBSKernel/Expr/YatawattaDipole.h>
 
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>
+#include <Common/lofar_set.h>
 #include <Common/lofar_fstream.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_complex.h>
@@ -81,8 +69,6 @@
 #include <measures/Measures/MDirection.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Arrays/Vector.h>
-
-#include <iterator>
 
 namespace LOFAR
 {
@@ -95,8 +81,8 @@ Model::Model(const Instrument &instrument, const SourceDB &sourceDb,
         itsSourceDb(sourceDb),
         itsPhaseReference(reference)
 {
-//    // Make station UVW expression for all stations.
-//    makeStationUVW();
+    // Make station UVW expression for all stations.
+    makeStationUVW();
 }
 
 void Model::clear()
@@ -137,16 +123,26 @@ void Model::makeForwardExpr(const ModelConfig &config,
             " source database.");
     }
 
+    // Create a UVW expression per station.
+//    casa::Vector<Expr<Vector<3> >::Ptr> exprStationUVW =
+//        makeStationUVWExpr(stations);
+
     // Create a coherence expression for all point sources.
-    casa::Vector<Expr<JonesMatrix>::Ptr> exprCoherence(sources.size());
+    map<unsigned int, Expr<JonesMatrix>::Ptr> exprPointCoherence;
     for(unsigned int i = 0; i < sources.size(); ++i)
     {
-        PointSource::ConstPtr point =
-            dynamic_pointer_cast<const PointSource>(sources[i]);
+        if(typeid(*sources[i]) == typeid(PointSource))
+        {
+            // A point source's coherence is independent of baseline UVW
+            // coordinates. Therefore, they are constructed here and shared
+            // between baselines.
+            PointSource::ConstPtr source =
+                static_pointer_cast<PointSource::ConstPtr::element_type>
+                    (sources[i]);
 
-        exprCoherence(i) =
-            PointCoherence::Ptr(new PointCoherence(point->getStokesVector(),
-                point->getSpectralIndex()));
+            Expr<JonesMatrix>::Ptr coherence(new PointCoherence(source));
+            exprPointCoherence[i] = coherence;
+        }
     }
 
     // Isotropic (direction independent) transform.
@@ -194,13 +190,9 @@ void Model::makeForwardExpr(const ModelConfig &config,
     const bool useAnisotropicTransform = config.useAnisotropicGain()
         || config.useBeam() || config.useIonosphere();
 
-    // Create a UVW expression per station.
-    casa::Vector<Expr<Vector<3> >::Ptr> exprStationUVW =
-        makeStationUVWExpr(stations);
-
     // Create a station shift expression per (station, source) combination.
     casa::Matrix<Expr<Vector<2> >::Ptr> exprStationShift =
-        makeStationShiftExpr(exprStationUVW, sources);
+        makeStationShiftExpr(stations, sources);
 
     // Create an anisotropic gain expression per (station, source) combination.
     casa::Matrix<Expr<JonesMatrix>::Ptr> exprAnisotropicGain;
@@ -261,7 +253,7 @@ void Model::makeForwardExpr(const ModelConfig &config,
                         exprIonosphere(j, i));
                 }
 
-                // TODO: Add other image-plane effects here.
+                // TODO: Add other anisotropic effects here.
             }
         }
     }
@@ -275,40 +267,45 @@ void Model::makeForwardExpr(const ModelConfig &config,
         vector<unsigned int>::const_iterator it;
 
         it = find(stations.begin(), stations.end(), baseline.first);
-        ASSERT(it != stations.end());
-        unsigned int lhs = it - stations.begin();
+        unsigned int lhs = distance(stations.begin(), it);
 
         it = find(stations.begin(), stations.end(), baseline.second);
-        ASSERT(it != stations.end());
-        unsigned int rhs = it - stations.begin();
+        unsigned int rhs = distance(stations.begin(), it);
+
+        ASSERT(lhs < stations.size() && rhs < stations.size());
 
         // Make baseline expression.
         MatrixSum::Ptr sum(new MatrixSum());
 
         for(size_t j = 0; j < sources.size(); ++j)
         {
-//            map<size_t, JonesExpr>::iterator pointCohIt = pointCoh.find(j);
-//            if(pointCohIt != pointCoh.end())
-//            {
-//                coherence = pointCohIt->second;
-//            }
-//            else
-//            {
-//                GaussianSource::ConstPtr gauss =
-//                    dynamic_pointer_cast<const GaussianSource>(sources[j]);
-//                ASSERT(gauss);
+            Expr<JonesMatrix>::Ptr term;
 
-//                coherence = new GaussianCoherence(gauss,
-//                    itsStationUVW[baseline.first],
-//                    itsStationUVW[baseline.second]);
-//            }
+            if(typeid(*sources[j]) == typeid(PointSource))
+            {
+                term = exprPointCoherence[j];
+            }
+            else if(typeid(*sources[j]) == typeid(GaussianSource))
+            {
+                GaussianSource::ConstPtr source =
+                    static_pointer_cast<GaussianSource::ConstPtr::element_type>
+                        (sources[j]);
+
+                term = Expr<JonesMatrix>::Ptr(new GaussianCoherence(source,
+                    itsStationUVW[baseline.first],
+                    itsStationUVW[baseline.second]));
+            }
+            else
+            {
+                THROW(BBSKernelException, "Unknown source type encountered");
+            }
 
             // Phase shift (incorporates geometry and fringe stopping).
-            PhaseShiftOld::Ptr shift(new PhaseShiftOld(exprStationShift(j, lhs),
+            PhaseShift::Ptr shift(new PhaseShift(exprStationShift(j, lhs),
                 exprStationShift(j, rhs)));
 
             // Phase shift the source coherence.
-            Expr<JonesMatrix>::Ptr term(new Mul(shift, exprCoherence(j)));
+            term = Expr<JonesMatrix>::Ptr(new Mul(shift, term));
 
             // Apply anisotropic (direction dependent) effects.
             if(useAnisotropicTransform)
@@ -454,7 +451,7 @@ void Model::makeInverseExpr(const ModelConfig &config,
                 transform(i) = corrupt(transform(i), exprIonosphere(0, i));
             }
 
-            // TODO: Add other image-plane effects here.
+            // TODO: Add other anisotropic effects here.
         }
     }
 
@@ -493,12 +490,12 @@ void Model::makeInverseExpr(const ModelConfig &config,
         vector<unsigned int>::const_iterator it;
 
         it = find(stations.begin(), stations.end(), baseline.first);
-        ASSERT(it != stations.end());
-        unsigned int lhs = it - stations.begin();
+        unsigned int lhs = distance(stations.begin(), it);
 
         it = find(stations.begin(), stations.end(), baseline.second);
-        ASSERT(it != stations.end());
-        unsigned int rhs = it - stations.begin();
+        unsigned int rhs = distance(stations.begin(), it);
+
+        ASSERT(lhs < stations.size() && rhs < stations.size());
 
         Expr<JonesMatrix>::Ptr exprVisData(new JonesVisData(chunk, baseline));
 
@@ -524,70 +521,46 @@ void Model::setRequestGrid(const Grid &grid)
 
 const JonesMatrix Model::evaluate(const baseline_t &baseline)
 {
+    JonesMatrix result;
+
+    // Evaluate the model.
     map<baseline_t, Expr<JonesMatrix>::Ptr>::const_iterator exprIt =
         itsExpr.find(baseline);
     ASSERT(exprIt != itsExpr.end());
-
     const JonesMatrix model = (exprIt->second)->evaluate(itsRequest, itsCache);
 
-    JonesMatrix result;
+    // Pass-through the flags.
     result.setFlags(model.flags());
-//    LOG_DEBUG_STR("BL: " << baseline.first << " - " << baseline.second
-//        << " FLAGS: " << value.flags());
 
+    // Pass-through the model value.
     const JonesMatrix::View value(model.view());
     result.assign(value);
 
+    // Compute (approximate) partial derivatives using forward differences.
     PValueKey key;
     JonesMatrix::Iterator it(model);
-
-//    cout << "Computing partials:";
     while(!it.atEnd())
     {
         key = it.key();
 
-//        cout << " " << key.parmId << "|" << key.coeffId;
-//        cout << " " << solvables[i].parmId << "|" << solvables[i].coeffId;
-
-        // Get the perturbed value associated with *solIt (the current
-        // solvable).
-//        const JonesMatrix::View pert = model.value(*solIt);
+        // Get the perturbed value associated with the current (parameter,
+        // coefficient) pair.
         const JonesMatrix::View pert(it.value(key));
 
         // Get perturbation.
-//        map<unsigned int, ExprParm::Ptr>::const_iterator parmIt =
-//            itsParms.find(it->parmId);
-//        ASSERT(parmIt != itsParms.end());
-//        ASSERT(parmIt->second);
-//        const double inversePert =
-//            1.0 / parmIt->second->getPerturbation(it->coeffId);
+        ParmProxy::ConstPtr parm = ParmManager::instance().get(key.parmId);
+        const double inversePert = 1.0 / parm->getPerturbation(key.coeffId);
 
-//        ParmProxy::ConstPtr parm =
-//            ParmManager::instance().get(solIt->parmId);
-//        const double inversePert =
-//            1.0 / parm->getPerturbation(solIt->coeffId);
-        ParmProxy::ConstPtr parm =
-            ParmManager::instance().get(key.parmId);
-        const double inversePert =
-            1.0 / parm->getPerturbation(key.coeffId);
-
-        // Approximate partial derivative by forward differences.
+        // Approximate partial derivative using forward differences.
         JonesMatrix::View partial;
         partial.assign(0, 0, Matrix((pert(0, 0) - value(0, 0)) * inversePert));
         partial.assign(0, 1, Matrix((pert(0, 1) - value(0, 1)) * inversePert));
         partial.assign(1, 0, Matrix((pert(1, 0) - value(1, 0)) * inversePert));
         partial.assign(1, 1, Matrix((pert(1, 1) - value(1, 1)) * inversePert));
 
-//        cout << "main: " << value(0, 0) << endl;
-//        cout << "pert: " << pert(0, 0) << endl;
-//        cout << "partial: " << partial(0, 0) << endl;
-
-//        result.assign(*solIt, partial);
-//        ++solIt;
         result.assign(key, partial);
         it.advance(key);
     }
-//    cout << endl;
 
     return result;
 }
@@ -662,51 +635,19 @@ ExprParm::Ptr Model::makeExprParm(uint category, const string &name)
     return status.first->second;
 }
 
-//vector<Expr::Ptr> Model::makeUVWExpr(const VisData::Ptr &chunk,
-//    const vector<baseline_t> &baselines)
-//{
-//    vector<Expr::Ptr> result;
-
-//    vector<baseline_t>::const_iterator it = baselines.begin();
-//    vector<baseline_t>::const_iterator itEnd = baselines.end();
-//    while(it != itEnd)
-//    {
-//        result.push_back(Expr::Ptr(new UVW(chunk, *it)));
-//        ++it;
-//    }
-//
-//    return result;
-//}
-
 vector<unsigned int>
 Model::makeUsedStationList(const vector<baseline_t> &baselines) const
 {
-    vector<bool> used(itsInstrument.stations.size(), false);
-
-    vector<baseline_t>::const_iterator blIt = baselines.begin();
-    while(blIt != baselines.end())
+    set<unsigned int> used;
+    for(vector<baseline_t>::const_iterator it = baselines.begin(),
+        end = baselines.end();
+        it != end; ++it)
     {
-        DBGASSERT(blIt->first < used.size() && blIt->second < used.size());
-        used[blIt->first] = true;
-        used[blIt->second] = true;
-        ++blIt;
+        used.insert(it->first);
+        used.insert(it->second);
     }
 
-    vector<unsigned int> list;
-    for(unsigned int i = 0; i < used.size(); ++i)
-    {
-        if(used[i])
-        {
-            list.push_back(i);
-        }
-    }
-//    int usedStation = 0;
-//    for(unsigned int i = 0; i < itsInstrument.stations.size(); ++i)
-//    {
-//        index[i] = used[i] ? usedStation++ : -1;
-//    }
-
-    return list;
+    return vector<unsigned int>(used.begin(), used.end());
 }
 
 Expr<JonesMatrix>::Ptr Model::corrupt(Expr<JonesMatrix>::Ptr &accumulator,
@@ -783,7 +724,6 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
             ExprParm::Ptr stokesQ = makeExprParm(SKY, "Q:" + source.getName());
             ExprParm::Ptr stokesU = makeExprParm(SKY, "U:" + source.getName());
             ExprParm::Ptr stokesV = makeExprParm(SKY, "V:" + source.getName());
-            Expr<Scalar>::Ptr spectral = makeSpectralIndexExpr(source);
 
             AsExpr<Vector<2> >::Ptr position(new AsExpr<Vector<2> >());
             position->connect(0, ra);
@@ -795,28 +735,48 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
             stokes->connect(2, stokesU);
             stokes->connect(3, stokesV);
 
+            Expr<Scalar>::Ptr spectral = makeSpectralIndexExpr(source);
+
             return PointSource::Ptr(new PointSource(source.getName(), position,
                 stokes, spectral));
         }
         break;
 
-//    case SourceInfo::GAUSSIAN:
-//        {
-//            Expr ra = makeExprParm(SKY, "Ra:" + source.getName());
-//            Expr dec = makeExprParm(SKY, "Dec:" + source.getName());
-//            Expr i = makeExprParm(SKY, "I:" + source.getName());
-//            Expr q = makeExprParm(SKY, "Q:" + source.getName());
-//            Expr u = makeExprParm(SKY, "U:" + source.getName());
-//            Expr v = makeExprParm(SKY, "V:" + source.getName());
-//            Expr maj = makeExprParm(SKY, "Major:" + source.getName());
-//            Expr min = makeExprParm(SKY, "Minor:" + source.getName());
-//            Expr phi = makeExprParm(SKY, "Phi:" + source.getName());
-//            Expr spectral = makeSpectralIndexExpr(source);
+    case SourceInfo::GAUSSIAN:
+        {
+            ExprParm::Ptr ra = makeExprParm(SKY, "Ra:" + source.getName());
+            ExprParm::Ptr dec = makeExprParm(SKY, "Dec:" + source.getName());
+            ExprParm::Ptr stokesI = makeExprParm(SKY, "I:" + source.getName());
+            ExprParm::Ptr stokesQ = makeExprParm(SKY, "Q:" + source.getName());
+            ExprParm::Ptr stokesU = makeExprParm(SKY, "U:" + source.getName());
+            ExprParm::Ptr stokesV = makeExprParm(SKY, "V:" + source.getName());
+            ExprParm::Ptr major =
+                makeExprParm(SKY, "MajorAxis:" + source.getName());
+            ExprParm::Ptr minor =
+                makeExprParm(SKY, "MinorAxis:" + source.getName());
+            ExprParm::Ptr orientation =
+                makeExprParm(SKY, "Orientation:" + source.getName());
 
-//            return GaussianSource::Ptr(new GaussianSource(source.getName(),
-//                ra, dec, i, q, u, v, maj, min, phi));
-//        }
-//        break;
+            AsExpr<Vector<2> >::Ptr position(new AsExpr<Vector<2> >());
+            position->connect(0, ra);
+            position->connect(1, dec);
+
+            AsExpr<Vector<4> >::Ptr stokes(new AsExpr<Vector<4> >());
+            stokes->connect(0, stokesI);
+            stokes->connect(1, stokesQ);
+            stokes->connect(2, stokesU);
+            stokes->connect(3, stokesV);
+
+            Expr<Scalar>::Ptr spectral = makeSpectralIndexExpr(source);
+
+            AsExpr<Vector<2> >::Ptr dimensions(new AsExpr<Vector<2> >());
+            dimensions->connect(0, major);
+            dimensions->connect(1, minor);
+
+            return GaussianSource::Ptr(new GaussianSource(source.getName(),
+                position, stokes, spectral, dimensions, orientation));
+        }
+        break;
 
     default:
         LOG_WARN_STR("Unable to construct source: " << source.getName());
@@ -825,19 +785,6 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
 
     return Source::Ptr();
 }
-
-//void Model::makeStationUVW()
-//{
-//    itsStationUVW.resize(itsInstrument.stations.size());
-//    for(size_t i = 0; i < itsStationUVW.size(); ++i)
-//    {
-////        itsStationUVW[i].reset(new StatUVW(itsInstrument.stations[i],
-////            itsInstrument.position, itsPhaseRef));
-//        itsStationUVW[i].reset
-//            (new StationUVW(itsInstrument.stations[i].position,
-//                itsInstrument.position, itsPhaseReference));
-//    }
-//}
 
 Expr<Scalar>::Ptr Model::makeSpectralIndexExpr(const SourceInfo &source)
 {
@@ -861,25 +808,37 @@ Expr<Scalar>::Ptr Model::makeSpectralIndexExpr(const SourceInfo &source)
         coeff.end()));
 }
 
-casa::Vector<Expr<Vector<3> >::Ptr>
-Model::makeStationUVWExpr(const vector<unsigned int> &stations) const
+void Model::makeStationUVW()
 {
-    casa::Vector<Expr<Vector<3> >::Ptr> expr(stations.size());
-    for(unsigned int i = 0; i < stations.size(); ++i)
+    itsStationUVW.resize(itsInstrument.stations.size());
+    for(size_t i = 0; i < itsStationUVW.size(); ++i)
     {
-        const casa::MPosition &position =
-            itsInstrument.stations[stations[i]].position;
-//        expr[i] = Expr<Vector<3> >::Ptr(new StationUVW(position,
-//            itsInstrument.position, itsPhaseReference));
-        expr[i] = Expr<Vector<3> >::Ptr(new StatUVW(position,
+        itsStationUVW[i].reset(new StatUVW(itsInstrument.stations[i].position,
             itsInstrument.position, itsPhaseReference));
     }
-
-    return expr;
 }
 
+//casa::Vector<Expr<Vector<3> >::Ptr>
+//Model::makeStationUVWExpr(const vector<unsigned int> &stations) const
+//{
+//    casa::Vector<Expr<Vector<3> >::Ptr> expr(stations.size());
+//    for(unsigned int i = 0; i < stations.size(); ++i)
+//    {
+//        const casa::MPosition &position =
+//            itsInstrument.stations[stations[i]].position;
+////        expr[i] = Expr<Vector<3> >::Ptr(new StationUVW(position,
+////            itsInstrument.position, itsPhaseReference));
+//        expr[i] = Expr<Vector<3> >::Ptr(new StatUVW(position,
+//            itsInstrument.position, itsPhaseReference));
+//    }
+
+//    return expr;
+//}
+
+//Model::makeStationShiftExpr(const casa::Vector<Expr<Vector<3> >::Ptr> &uvw,
+//    const vector<Source::Ptr> &sources) const
 casa::Matrix<Expr<Vector<2> >::Ptr>
-Model::makeStationShiftExpr(const casa::Vector<Expr<Vector<3> >::Ptr> &uvw,
+Model::makeStationShiftExpr(const vector<unsigned int> &stations,
     const vector<Source::Ptr> &sources) const
 {
     casa::Vector<LMN::Ptr> exprLMN(sources.size());
@@ -889,17 +848,55 @@ Model::makeStationShiftExpr(const casa::Vector<Expr<Vector<3> >::Ptr> &uvw,
             sources[i]->getPosition()));
     }
 
-    casa::Matrix<Expr<Vector<2> >::Ptr> expr(sources.size(), uvw.size());
-    for(unsigned int i = 0; i < uvw.size(); ++i)
+    casa::Matrix<Expr<Vector<2> >::Ptr> expr(sources.size(), stations.size());
+    for(unsigned int i = 0; i < stations.size(); ++i)
     {
         for(unsigned int j = 0; j < sources.size(); ++j)
         {
-            expr(j, i) = Expr<Vector<2> >::Ptr(new DFTPS(uvw(i), exprLMN(j)));
+            expr(j, i) =
+                Expr<Vector<2> >::Ptr(new DFTPS(itsStationUVW[stations[i]],
+                    exprLMN(j)));
         }
     }
 
     return expr;
 }
+
+//casa::Matrix<Expr<Vector<2> >::Ptr>
+//Model::makeCoherenceExpr(const vector<unsigned int> &stations,
+//    const vector<Source::Ptr> &sources,
+//    const casa::Vector<Expr<Vector<3> >::Ptr> &uvw) const
+//{
+//    for(unsigned int i = 0; i < sources.size(); ++i)
+//    {
+//        // A point source's coherence is independent of baseline UVW
+//        // coordinates. Therefore, they are constructed here and shared
+//        // between baselines.
+//        PointSource::ConstPtr point =
+//            dynamic_pointer_cast<const PointSource>(sources[i]);
+
+//        if(point)
+//        {
+//            exprCoherence(i) = PointCoherence::Ptr(new PointCoherence(point));
+//        }
+////            map<size_t, JonesExpr>::iterator pointCohIt = pointCoh.find(j);
+////            if(pointCohIt != pointCoh.end())
+////            {
+////                coherence = pointCohIt->second;
+////            }
+////            else
+////            {
+////                GaussianSource::ConstPtr gauss =
+////                    dynamic_pointer_cast<const GaussianSource>(sources[j]);
+////                ASSERT(gauss);
+
+////                coherence = new GaussianCoherence(gauss,
+////                    itsStationUVW[baseline.first],
+////                    itsStationUVW[baseline.second]);
+////            }
+
+//    }
+//}
 
 casa::Vector<Expr<JonesMatrix>::Ptr>
 Model::makeBandpassExpr(const vector<unsigned int> &stations)

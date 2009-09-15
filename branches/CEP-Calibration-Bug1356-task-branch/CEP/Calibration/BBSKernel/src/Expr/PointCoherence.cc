@@ -29,9 +29,9 @@ namespace LOFAR
 namespace BBS
 {
 
-PointCoherence::PointCoherence(const Expr<Vector<4> >::ConstPtr &stokes,
-    const Expr<Scalar>::ConstPtr &spectral)
-    :   BasicBinaryExpr<Vector<4>, Scalar, JonesMatrix>(stokes, spectral)
+PointCoherence::PointCoherence(const PointSource::ConstPtr &source)
+    :   BasicBinaryExpr<Vector<4>, Scalar, JonesMatrix>
+            (source->getStokesVector(), source->getSpectralIndex())
 {
 }
 
@@ -43,7 +43,33 @@ const JonesMatrix::View PointCoherence::evaluateImpl(const Request &request,
     if(spectral.dirty() || stokes.dirty(0) || stokes.dirty(1))
     {
         result.assign(0, 0, spectral() * 0.5 * (stokes(0) + stokes(1)));
-        result.assign(1, 1, spectral() * 0.5 * (stokes(0) + stokes(1)));
+        result.assign(1, 1, spectral() * 0.5 * (stokes(0) - stokes(1)));
+    }
+
+    if(stokes.dirty(2) || stokes.dirty(3))
+    {
+        Matrix uv = 0.5 * tocomplex(stokes(2), stokes(3));
+        result.assign(0, 1, uv);
+        result.assign(1, 0, conj(uv));
+    }
+
+    return result;
+}
+
+PointCoherenceSimple::PointCoherenceSimple(const Expr<Vector<4> >::ConstPtr &stokes)
+    :   BasicUnaryExpr<Vector<4>, JonesMatrix>(stokes)
+{
+}
+
+const JonesMatrix::View PointCoherenceSimple::evaluateImpl
+    (const Request &request, const Vector<4>::View &stokes) const
+{
+    JonesMatrix::View result;
+
+    if(stokes.dirty(0) || stokes.dirty(1))
+    {
+        result.assign(0, 0, 0.5 * (stokes(0) + stokes(1)));
+        result.assign(1, 1, 0.5 * (stokes(0) - stokes(1)));
     }
 
     if(stokes.dirty(2) || stokes.dirty(3))

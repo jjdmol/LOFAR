@@ -1,7 +1,5 @@
 pkginclude_Exprdir = $(pkgincludedir)/Expr
 
-#	Expr/GaussianCoherence.h \
-#	Expr/GaussianSource.h \
 #	Expr/JonesCMul2.h \
 #	Expr/JonesExpr.h \
 #	Expr/JonesMul2.h \
@@ -43,6 +41,7 @@ pkginclude_Expr_HEADERS	= 	\
     Expr/BasicExpr.h \
 	Expr/Cache.h \
 	Expr/ConditionNumber.h \
+	Expr/CSEVisitor.h \
 	Expr/DFTPS.h \
 	Expr/Expr.h \
 	Expr/ExprAdaptors.h \
@@ -52,6 +51,8 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/ExprValueIterator.h \
 	Expr/ExternalFunction.h \
 	Expr/FlagArray.h \
+	Expr/GaussianCoherence.h \
+	Expr/GaussianSource.h \
 	Expr/HamakerDipole.h \
 	Expr/JonesInvert.h \
 	Expr/JonesVisData.h \

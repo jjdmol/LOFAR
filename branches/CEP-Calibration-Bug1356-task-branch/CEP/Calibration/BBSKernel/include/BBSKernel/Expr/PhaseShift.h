@@ -37,6 +37,20 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
+class PhaseShift: public BasicBinaryExpr<Vector<2>, Vector<2>, Scalar>
+{
+public:
+    typedef shared_ptr<PhaseShift>          Ptr;
+    typedef shared_ptr<const PhaseShift>    ConstPtr;
+
+    PhaseShift(const Expr<Vector<2> >::ConstPtr &lhs,
+        const Expr<Vector<2> >::ConstPtr &rhs);
+
+private:
+    virtual const Scalar::View evaluateImpl(const Request &request,
+        const Vector<2>::View &lhs, const Vector<2>::View &rhs) const;
+};
+
 //class PhaseShift: public ExprStatic<2>
 //{
 //public:
@@ -57,20 +71,6 @@ namespace BBS
 //    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
 //        const ValueSet::ConstPtr (&inputs)[PhaseShift::N_Inputs]) const;
 //};
-
-class PhaseShiftOld: public BasicBinaryExpr<Vector<2>, Vector<2>, Scalar>
-{
-public:
-    typedef shared_ptr<PhaseShiftOld>       Ptr;
-    typedef shared_ptr<const PhaseShiftOld> ConstPtr;
-
-    PhaseShiftOld(const Expr<Vector<2> >::ConstPtr &lhs,
-        const Expr<Vector<2> >::ConstPtr &rhs);
-
-private:
-    virtual const Scalar::View evaluateImpl(const Request &request,
-        const Vector<2>::View &lhs, const Vector<2>::View &rhs) const;
-};
 
 // @}
 

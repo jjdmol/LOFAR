@@ -65,7 +65,7 @@
 #include <unistd.h>
 
 #include <BBSControl/LocalSolveController.h>
-//#include <BBSControl/GlobalSolveController.h>
+#include <BBSControl/GlobalSolveController.h>
 #include <BBSKernel/MeasurementAIPS.h>
 #include <BBSKernel/ParmManager.h>
 #include <BBSKernel/Evaluator.h>
@@ -652,8 +652,8 @@ namespace LOFAR
 
       try
       {
-//        if(command.calibrationGroups().empty())
-//        {
+        if(command.calibrationGroups().empty())
+        {
           // Construct solution grid.
           const CellSize &cellSize(command.cellSize());
 
@@ -697,71 +697,71 @@ namespace LOFAR
           // Store solutions to disk.
           // TODO: Revert solutions on failure?
           ParmManager::instance().flush();
-////        } else {
-////          // Construct solution grid.
-////          const CellSize &cellSize(command.cellSize());
+        } else {
+          // Construct solution grid.
+          const CellSize &cellSize(command.cellSize());
 
-////          // Determine group id.
-////          const vector<uint32> &groups = command.calibrationGroups();
-////          vector<uint32> groupIndex(groups.size());
-////          partial_sum(groups.begin(), groups.end(), groupIndex.begin());
-////          const size_t groupId = upper_bound(groupIndex.begin(),
-////            groupIndex.end(), itsKernelIndex) - groupIndex.begin();
-////          ASSERT(groupId < groupIndex.size());
-////          LOG_DEBUG_STR("Group id: " << groupId);
+          // Determine group id.
+          const vector<uint32> &groups = command.calibrationGroups();
+          vector<uint32> groupIndex(groups.size());
+          partial_sum(groups.begin(), groups.end(), groupIndex.begin());
+          const size_t groupId = upper_bound(groupIndex.begin(),
+            groupIndex.end(), itsKernelIndex) - groupIndex.begin();
+          ASSERT(groupId < groupIndex.size());
+          LOG_DEBUG_STR("Group id: " << groupId);
 
-////          // Determine the index of the first and the last kernel in the
-////          // calibration group that this kernel is part of.
-////          const size_t first = groupId > 0 ? groupIndex[groupId - 1] : 0;
-////          const size_t last = groupIndex[groupId] - 1;
-////
-////          // Get frequency range of the calibration group.
-////          ProcessId firstKernel =
-////              itsCalSession->getWorkerByIndex(CalSession::KERNEL, first);
-////          const double freqBegin =
-////              itsCalSession->getGrid(firstKernel)[0]->range().first;
-////          ProcessId lastKernel =
-////              itsCalSession->getWorkerByIndex(CalSession::KERNEL, last);
-////          const double freqEnd =
-////              itsCalSession->getGrid(lastKernel)[0]->range().second;
-////
-////          LOG_DEBUG_STR("Group freq range: [" << setprecision(15) << freqBegin
-////              << "," << freqEnd << "]");
-////          Axis::ShPtr freqAxis(new RegularAxis(freqBegin, freqEnd - freqBegin,
-////              1));
+          // Determine the index of the first and the last kernel in the
+          // calibration group that this kernel is part of.
+          const size_t first = groupId > 0 ? groupIndex[groupId - 1] : 0;
+          const size_t last = groupIndex[groupId] - 1;
 
-////          Axis::ShPtr timeAxis(itsGlobalTimeAxis);
-////          const size_t timeStart = timeAxis->locate(itsDomain.lowerY());
-////          const size_t timeEnd = timeAxis->locate(itsDomain.upperY(), false);
-////          ASSERT(timeStart <= timeEnd && timeEnd < timeAxis->size());
-////          timeAxis = timeAxis->subset(timeStart, timeEnd);
+          // Get frequency range of the calibration group.
+          ProcessId firstKernel =
+              itsCalSession->getWorkerByIndex(CalSession::KERNEL, first);
+          const double freqBegin =
+              itsCalSession->getGrid(firstKernel)[0]->range().first;
+          ProcessId lastKernel =
+              itsCalSession->getWorkerByIndex(CalSession::KERNEL, last);
+          const double freqEnd =
+              itsCalSession->getGrid(lastKernel)[0]->range().second;
 
-////          if(cellSize.time == 0) {
-////            const pair<double, double> range = timeAxis->range();
-////            timeAxis.reset(new RegularAxis(range.first, range.second
-////              - range.first, 1));
-////          } else if(cellSize.time > 1) {
-////            timeAxis = timeAxis->compress(cellSize.time);
-////          }
+          LOG_DEBUG_STR("Group freq range: [" << setprecision(15) << freqBegin
+              << "," << freqEnd << "]");
+          Axis::ShPtr freqAxis(new RegularAxis(freqBegin, freqEnd - freqBegin,
+              1));
 
-////          Grid grid(freqAxis, timeAxis);
+          Axis::ShPtr timeAxis(itsGlobalTimeAxis);
+          const size_t timeStart = timeAxis->locate(itsDomain.lowerY());
+          const size_t timeEnd = timeAxis->locate(itsDomain.upperY(), false);
+          ASSERT(timeStart <= timeEnd && timeEnd < timeAxis->size());
+          timeAxis = timeAxis->subset(timeStart, timeEnd);
 
-////          // Determine the number of cells to process simultaneously.
-////          uint cellChunkSize = (command.cellChunkSize() == 0 ?
-////            grid[TIME]->size() : command.cellChunkSize());
+          if(cellSize.time == 0) {
+            const pair<double, double> range = timeAxis->range();
+            timeAxis.reset(new RegularAxis(range.first, range.second
+              - range.first, 1));
+          } else if(cellSize.time > 1) {
+            timeAxis = timeAxis->compress(cellSize.time);
+          }
 
-////          GlobalSolveController controller(itsKernelIndex, itsChunk, itsModel,
-////            itsSolver);
+          Grid grid(freqAxis, timeAxis);
 
-////          controller.init(command.parms(), command.exclParms(), grid, baselines,
-////            products, cellChunkSize, command.propagate());
+          // Determine the number of cells to process simultaneously.
+          uint cellChunkSize = (command.cellChunkSize() == 0 ?
+            grid[TIME]->size() : command.cellChunkSize());
 
-////          controller.run();
+          GlobalSolveController controller(itsKernelIndex, itsChunk, itsModel,
+            itsSolver);
 
-////          // Store solutions to disk.
-////          // TODO: Revert solutions on failure?
-////          ParmManager::instance().flush();
-//        }
+          controller.init(command.parms(), command.exclParms(), grid, baselines,
+            products, cellChunkSize, command.propagate());
+
+          controller.run();
+
+          // Store solutions to disk.
+          // TODO: Revert solutions on failure?
+          ParmManager::instance().flush();
+        }
       }
       catch(Exception &ex)
       {

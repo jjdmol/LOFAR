@@ -46,15 +46,8 @@ public:
         const Expr<Vector<4> >::ConstPtr &stokes,
         const Expr<Scalar>::ConstPtr &spectral);
 
-    const Expr<Vector<4> >::ConstPtr &getStokesVector() const
-    {
-        return itsStokesVector;
-    }
-
-    const Expr<Scalar>::ConstPtr &getSpectralIndex() const
-    {
-        return itsSpectralIndex;
-    }
+    Expr<Vector<4> >::ConstPtr getStokesVector() const;
+    Expr<Scalar>::ConstPtr getSpectralIndex() const;
 
 private:
     Expr<Vector<4> >::ConstPtr  itsStokesVector;
@@ -62,6 +55,16 @@ private:
 };
 
 // @}
+
+inline Expr<Vector<4> >::ConstPtr PointSource::getStokesVector() const
+{
+    return itsStokesVector;
+}
+
+inline Expr<Scalar>::ConstPtr PointSource::getSpectralIndex() const
+{
+    return itsSpectralIndex;
+}
 
 } // namespace BBS
 } // namespace LOFAR

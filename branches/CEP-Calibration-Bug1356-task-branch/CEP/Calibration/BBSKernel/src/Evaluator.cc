@@ -31,15 +31,24 @@ namespace LOFAR
 namespace BBS
 {
 
+string Evaluator::theirTimerNames[Evaluator::N_Timer] =
+    {"ALL",
+    "MODEL_EVAL",
+    "APPLY"};
+
 Evaluator::Evaluator(const VisData::Ptr &chunk, const Model::Ptr &model)
     :   itsChunk(chunk),
         itsModel(model)
 {
-    // Set defaults.
+    // Set default processing mode.
     setMode(EQUATE);
 
+    // Set default visibility selection.
     const VisDimensions &dims = itsChunk->getDimensions();
     setSelection(dims.getBaselines(), dims.getPolarizations());
+
+    // Set request grid.
+    itsModel->setRequestGrid(itsChunk->getDimensions().getGrid());
 }
 
 void Evaluator::setSelection(const vector<baseline_t> &baselines,
@@ -100,23 +109,23 @@ void Evaluator::setMode(Mode mode)
 
 void Evaluator::process()
 {
-    // Create a request.
-    itsModel->setRequestGrid(itsChunk->getDimensions().getGrid());
+    // Reset statistics.
+    for(size_t i = 0; i < Evaluator::N_Timer; ++i)
+    {
+        itsTimers[i].reset();
+    }
 
-    itsTimers[MODEL_EVAL].reset();
-    itsTimers[PROCESS].reset();
-
-    itsTimers[PROCESS].start();
+    itsTimers[ALL].start();
     for(size_t i = 0; i < itsBaselines.size(); ++i)
     {
-        const baseline_t baseline = itsBaselines[i];
-        LOG_DEBUG_STR("" << baseline.first << "-" << baseline.second);
+        const baseline_t &baseline = itsBaselines[i];
 
         // Evaluate the model.
         itsTimers[MODEL_EVAL].start();
         const JonesMatrix result = itsModel->evaluate(baseline);
         itsTimers[MODEL_EVAL].stop();
 
+        itsTimers[APPLY].start();
         // Process the visibilities according to the current processing mode.
         if(result.hasFlags())
         {
@@ -136,12 +145,18 @@ void Evaluator::process()
         {
             (this->*itsBlProcessor[1])(baseline, result);
         }
+        itsTimers[APPLY].stop();
     }
-    itsTimers[PROCESS].stop();
+    itsTimers[ALL].stop();
 
-    LOG_DEBUG("Timings:");
-    LOG_DEBUG_STR("> Model evaluation: " << itsTimers[MODEL_EVAL]);
-    LOG_DEBUG_STR("> Process: " << itsTimers[PROCESS]);
+    // Print statistics.
+    for(size_t i = 0; i < Evaluator::N_Timer; ++i)
+    {
+        const double elapsed = itsTimers[i].getElapsed() * 1e3;
+        const unsigned long long count = itsTimers[i].getCount();
+        LOG_DEBUG_STR("TIMER ms " << Evaluator::theirTimerNames[i] << " total "
+            << elapsed << " count " << count << " avg " << elapsed / count);
+    }
     LOG_DEBUG_STR("CLONE COUNT: " << MatrixComplexArr::clone_count);
 }
 

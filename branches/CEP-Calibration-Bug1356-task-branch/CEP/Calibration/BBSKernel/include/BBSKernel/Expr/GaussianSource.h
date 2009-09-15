@@ -44,37 +44,46 @@ public:
     typedef shared_ptr<GaussianSource>       Ptr;
     typedef shared_ptr<const GaussianSource> ConstPtr;
 
-    GaussianSource(const string &name, const Expr &ra, const Expr &dec,
-        const Expr &I, const Expr &Q, const Expr &U, const Expr &V,
-        const Expr &si, const Expr &major, const Expr &minor, const Expr &phi);
+    GaussianSource(const string &name,
+        const Expr<Vector<2> >::ConstPtr &position,
+        const Expr<Vector<4> >::ConstPtr &stokes,
+        const Expr<Scalar>::ConstPtr &spectral,
+        const Expr<Vector<2> >::ConstPtr &dimensions,
+        const Expr<Scalar>::ConstPtr &orientation);
 
-    const Expr &getI() const
-    { return itsI; }
-    const Expr &getQ() const
-    { return itsQ; }
-    const Expr &getU() const
-    { return itsU; }
-    const Expr &getV() const
-    { return itsV; }
-    const Expr &getSpectralIndex() const
-    { return itsSpectralIndex; }
-    const Expr &getMajor() const
-    { return itsMajor; }
-    const Expr &getMinor() const
-    { return itsMinor; }
-    const Expr &getPhi() const
-    { return itsPhi; }
+    Expr<Vector<4> >::ConstPtr getStokesVector() const;
+    Expr<Scalar>::ConstPtr getSpectralIndex() const;
+    Expr<Vector<2> >::ConstPtr getDimensions() const;
+    Expr<Scalar>::ConstPtr getOrientation() const;
 
 private:
-    Expr    itsI;
-    Expr    itsQ;
-    Expr    itsU;
-    Expr    itsV;
-    Expr    itsMajor;
-    Expr    itsMinor;
-    Expr    itsPhi;
-    Expr    itsSpectralIndex;
+    Expr<Vector<4> >::ConstPtr  itsStokesVector;
+    Expr<Scalar>::ConstPtr      itsSpectralIndex;
+    Expr<Vector<2> >::ConstPtr  itsDimensions;
+    Expr<Scalar>::ConstPtr      itsOrientation;
 };
+
+// @}
+
+inline Expr<Vector<4> >::ConstPtr GaussianSource::getStokesVector() const
+{
+    return itsStokesVector;
+}
+
+inline Expr<Scalar>::ConstPtr GaussianSource::getSpectralIndex() const
+{
+    return itsSpectralIndex;
+}
+
+inline Expr<Vector<2> >::ConstPtr GaussianSource::getDimensions() const
+{
+    return itsDimensions;
+}
+
+inline Expr<Scalar>::ConstPtr GaussianSource::getOrientation() const
+{
+    return itsOrientation;
+}
 
 // @}
 

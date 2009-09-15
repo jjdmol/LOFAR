@@ -106,141 +106,38 @@ public:
 
     ModelConfig();
 
-    bool usePhasors() const
-    {
-        return itsModelOptions[PHASORS];
-    }
+    bool usePhasors() const;
+    void setPhasors(bool value = true);
 
-    bool useBandpass() const
-    {
-        return itsModelOptions[BANDPASS];
-    }
+    bool useBandpass() const;
+    void setBandpass(bool value = true);
 
-    bool useIsotropicGain() const
-    {
-        return itsModelOptions[ISOTROPIC_GAIN];
-    }
+    void setIsotropicGain(bool value = true);
+    bool useIsotropicGain() const;
 
-    bool useAnisotropicGain() const
-    {
-        return itsModelOptions[ANISOTROPIC_GAIN];
-    }
+    void setAnisotropicGain(bool value = true);
+    bool useAnisotropicGain() const;
 
-    bool useBeam() const
-    {
-        return itsModelOptions[BEAM];
-    }
+    bool useBeam() const;
+    BeamType getBeamType() const;
+    void setBeamConfig(const HamakerDipoleConfig &config);
+    void setBeamConfig(const YatawattaDipoleConfig &config);
+    void getBeamConfig(HamakerDipoleConfig &config) const;
+    void getBeamConfig(YatawattaDipoleConfig &config) const;
+    void clearBeamConfig();
 
-    BeamType getBeamType() const
-    {
-        return itsBeamType;
-    }
+    bool useIonosphere() const;
+    void setIonosphereConfig(const IonosphereConfig &config);
+    void getIonosphereConfig(IonosphereConfig &config) const;
+    void clearIonosphereConfig();
 
-    void getBeamConfig(HamakerDipoleConfig &config) const
-    {
-        config = itsConfigBeamHamakerDipole;
-    }
+    bool useFlagger() const;
+    void setFlaggerConfig(const FlaggerConfig &config);
+    void getFlaggerConfig(FlaggerConfig &config) const;
+    void clearFlaggerConfig();
 
-    void getBeamConfig(YatawattaDipoleConfig &config) const
-    {
-        config = itsConfigBeamYatawattaDipole;
-    }
-
-    bool useIonosphere() const
-    {
-        return itsModelOptions[IONOSPHERE];
-    }
-
-    void getIonosphereConfig(IonosphereConfig &config) const
-    {
-        config = itsConfigIonosphere;
-    }
-
-    bool useFlagger() const
-    {
-        return itsModelOptions[FLAGGER];
-    }
-
-    void getFlaggerConfig(FlaggerConfig &config) const
-    {
-        config = itsConfigFlagger;
-    }
-
-    void setPhasors(bool value = true)
-    {
-        itsModelOptions[PHASORS] = value;
-    }
-
-    void setBandpass(bool value = true)
-    {
-        itsModelOptions[BANDPASS] = value;
-    }
-
-    void setIsotropicGain(bool value = true)
-    {
-        itsModelOptions[ISOTROPIC_GAIN] = value;
-    }
-
-    void setAnisotropicGain(bool value = true)
-    {
-        itsModelOptions[ANISOTROPIC_GAIN] = value;
-    }
-
-    void setBeamConfig(const HamakerDipoleConfig &config)
-    {
-        itsModelOptions[BEAM] = true;
-        itsBeamType = HAMAKER_DIPOLE;
-        itsConfigBeamHamakerDipole = config;
-    }
-
-    void setBeamConfig(const YatawattaDipoleConfig &config)
-    {
-        itsModelOptions[BEAM] = true;
-        itsBeamType = YATAWATTA_DIPOLE;
-        itsConfigBeamYatawattaDipole = config;
-    }
-
-    void clearBeamConfig()
-    {
-        itsConfigBeamHamakerDipole = HamakerDipoleConfig();
-        itsConfigBeamYatawattaDipole = YatawattaDipoleConfig();
-        itsBeamType = UNKNOWN_BEAM_TYPE;
-        itsModelOptions[BEAM] = false;
-    }
-
-    void setIonosphereConfig(const IonosphereConfig &config)
-    {
-        itsModelOptions[IONOSPHERE] = true;
-        itsConfigIonosphere = config;
-    }
-
-    void clearIonosphereConfig()
-    {
-        itsConfigIonosphere = IonosphereConfig();
-        itsModelOptions[IONOSPHERE] = false;
-    }
-
-    void setFlaggerConfig(const FlaggerConfig &config)
-    {
-        itsModelOptions[FLAGGER] = true;
-        itsConfigFlagger = config;
-    }
-
-    void clearFlaggerConfig()
-    {
-        itsConfigFlagger = FlaggerConfig();
-        itsModelOptions[FLAGGER] = false;
-    }
-
-    void setSources(const vector<string> &sources)
-    {
-        itsSources = sources;
-    }
-
-    const vector<string> &getSources() const
-    {
-        return itsSources;
-    }
+    void setSources(const vector<string> &sources);
+    const vector<string> &getSources() const;
 
 private:
     enum ModelOptions

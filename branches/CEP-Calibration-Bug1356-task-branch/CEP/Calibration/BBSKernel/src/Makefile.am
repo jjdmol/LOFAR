@@ -1,8 +1,6 @@
 #AM_CXXFLAGS = -Wno-ignored-qualifiers -Werror
 lib_LTLIBRARIES = libbbskernel.la
 
-#	Expr/GaussianCoherence.cc \
-#	Expr/GaussianSource.cc \
 #	Expr/JonesCMul2.cc \
 #	Expr/JonesExpr.cc \
 #	Expr/JonesMul2.cc \
@@ -46,6 +44,8 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/ExprValueIterator.cc \
 	Expr/ExternalFunction.cc \
 	Expr/FlagArray.cc \
+	Expr/GaussianCoherence.cc \
+	Expr/GaussianSource.cc \
 	Expr/HamakerDipole.cc \
 	Expr/JonesInvert.cc \
 	Expr/JonesVisData.cc \
@@ -76,10 +76,14 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/ValueSet.cc \
 	Expr/YatawattaDipole.cc
 
-bin_PROGRAMS = versionbbskernel
+bin_PROGRAMS = versionbbskernel cse
 
 versionbbskernel_SOURCES      = versionbbskernel.cc
 versionbbskernel_LDADD        = libbbskernel.la
 versionbbskernel_DEPENDENCIES = libbbskernel.la $(LOFAR_DEPEND)
+
+cse_SOURCES      = cse.cc
+cse_LDADD        = libbbskernel.la
+cse_DEPENDENCIES = libbbskernel.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

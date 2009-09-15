@@ -29,18 +29,16 @@ namespace BBS
 {
 
 GaussianSource::GaussianSource(const string &name,
-    const Expr &ra, const Expr &dec,
-    const Expr &I, const Expr &Q, const Expr &U, const Expr &V, const Expr &si,
-    const Expr &major, const Expr &minor, const Expr &phi)
-    :   Source(name, ra, dec),
-        itsI(I),
-        itsQ(Q),
-        itsU(U),
-        itsV(V),
-        itsSpectralIndex(si),
-        itsMajor(major),
-        itsMinor(minor),
-        itsPhi(phi)
+        const Expr<Vector<2> >::ConstPtr &position,
+        const Expr<Vector<4> >::ConstPtr &stokes,
+        const Expr<Scalar>::ConstPtr &spectral,
+        const Expr<Vector<2> >::ConstPtr &dimensions,
+        const Expr<Scalar>::ConstPtr &orientation)
+    :   Source(name, position),
+        itsStokesVector(stokes),
+        itsSpectralIndex(spectral),
+        itsDimensions(dimensions),
+        itsOrientation(orientation)
 {
 }
 

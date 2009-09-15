@@ -99,12 +99,14 @@ private:
 
     enum Timer
     {
+        ALL,
         MODEL_EVAL,
-        PROCESS,
+        APPLY,
         N_Timer
     };
 
     NSTimer             itsTimers[N_Timer];
+    static string       theirTimerNames[N_Timer];
 };
 
 // @}
