@@ -1,13 +1,32 @@
 //# ClusterDesc.cc: Description of a cluster
 //#
-//# @copyright (c) 2007 ASKAP, All Rights Reserved.
-//# @author Ger van Diepen <diepen AT astron nl>
+//# Copyright (C) 2007
+//# ASTRON (Netherlands Foundation for Research in Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+//#
+//# This file is part of the LOFAR software suite LOFARsoft.
+//# LOFARsoft is free software: you can redistribute it and/or modify
+//# it under the terms of the GNU General Public License as published by
+//# the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# LOFARsoft is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License
+//# along with LOFARsoft. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
+//#
+//# @author Ger van Diepen <diepen AT astron nl>
 
 #include <lofar_config.h>
 
 #include <MWCommon/ClusterDesc.h>
+#include <MWCommon/MWError.h>
+#include <Common/LofarLogger.h>
 #include <casa/OS/Path.h>
 
 using namespace std;
@@ -22,51 +41,112 @@ namespace LOFAR { namespace CEP {
 
   void ClusterDesc::init (const string& parsetName)
   {
-    // Get aboslute file name which also expands ~ and $.
+    // Get absolute file name (it expands possible ~ and $ in the file name).
     String fullName = Path(parsetName).absoluteName();
     ParameterSet parset(fullName);
-    itsName     = parset.getString ("ClusterName");
-    itsHeadNode = parset.getString ("HeadNode", string());
-    int nnode   = parset.getInt    ("NNodes", 0);
-    if (nnode > 0) {
+    itsName = parset.getString ("ClusterName");
+    string headNode = parset.getString ("HeadNode", string());
+    if (parset.isDefined ("Node0.NodeName")) {
       // The cluster can be heterogeneous and is described in detail.
-      for (int i=0; i<nnode; ++i) {
-        ostringstream prefix;
-        prefix << "Node" << i << '.';
-        ParameterSet subset = parset.makeSubset (prefix.str());
-        NodeDesc node(subset);
-        addNode (node);
-      }
+      getHetCluster (parset);
     } else if (parset.isDefined ("SubClusters")) {
       // Get subclusters; use parent's directory as default directory.
       getSubClusters (parset.getStringVector ("SubClusters", true),
                       Path(fullName).dirName());
     } else {
-      // The cluster is homogeneous and is described like that.
-      // All nodes share the same global mount points and have the same
-      // local disks names.
-      vector<string> computeNodes =
-        parset.get("ComputeNodes").expand().getStringVector();
-      vector<string> mountPoints  =
-        parset.get("MountPoints").expand().getStringVector();
-      vector<string> localDisks   =
-        parset.get("LocalDisks").expand().getStringVector();
-      if (!itsHeadNode.empty()) {
-        computeNodes.push_back (itsHeadNode);
+      // The cluster is homogeneous and is described in a concise way.
+      getHomCluster (parset);
+    }
+  }
+
+  void ClusterDesc::getHetCluster (const ParameterSet& parset)
+  {
+    // Iterate sequentially until no node with that number is found.
+    int i=0;
+    while (true) {
+      ostringstream prefix;
+      prefix << "Node" << i << '.';
+      if (! parset.isDefined (prefix.str() + "NodeName")) {
+        break;
       }
-      for (uint i=0; i<computeNodes.size(); ++i) {
-        NodeDesc node;
-        node.setName (computeNodes[i]);
-        for (uint j=0; j<mountPoints.size(); ++j) {
-          node.addFileSys (mountPoints[j], mountPoints[j]);
-        }
-        // Add node name to local filesys to make it unique.
-        for (uint j=0; j<localDisks.size(); ++j) {
-          node.addFileSys (computeNodes[i] + ':' + localDisks[j],
-                           localDisks[j]);
-        }
-        addNode (node);
+      ParameterSet subset = parset.makeSubset (prefix.str());
+      NodeDesc node(subset);
+      addNode (node);
+      ++i;
+    }
+  }
+
+  void ClusterDesc::getHomCluster (const ParameterSet& parset)
+  {
+    vector<string> defVal;
+    // Add the different kind of nodes.
+    addNodes (parset.makeSubset("Compute."), NodeDesc::Compute);
+    addNodes (parset.makeSubset("Storage."), NodeDesc::Storage);
+    addNodes (parset.makeSubset("Head."), NodeDesc::Head);
+    if (parset.isDefined ("Nodes")) {
+      addNodes (parset, NodeDesc::Any);
+    }
+  }
+
+  void ClusterDesc::addNodes (const ParameterSet& parset,
+                              NodeDesc::NodeType type)
+  {
+    if (parset.empty()) {
+      return;
+    }
+    vector<string> defVal;
+    vector<string> names = parset.getStringVector ("Nodes", true);
+    vector<string> localDisks =
+      parset.getStringVector ("LocalDisks", defVal, true);
+    vector<string> remoteDisks =
+      parset.getStringVector ("RemoteDisks", defVal, true);
+    vector<string> remoteFilesys =
+      parset.getStringVector ("RemoteFileSys", defVal, true);
+    if (remoteFilesys.empty()) {
+      remoteFilesys = remoteDisks;
+    } else {
+      ASSERTSTR (remoteFilesys.size() == remoteDisks.size(),
+                 "RemoteFileSys must be empty or have equal length as RemoteDisks");
+    }
+    for (uint i=0; i<names.size(); ++i) {
+      vector<string> rdisks, rfilesys, lfilesys, ldisks;
+      const vector<string>* ldiskp = &localDisks;
+      const vector<string>* rdiskp = &remoteDisks;
+      const vector<string>* rfsysp = &remoteFilesys; 
+      // It is possible to override disk specifications on a per node basis.
+      string key = "LocalDisks." + names[i];
+      if (parset.isDefined (key)) {
+        ldisks = parset.getStringVector (key, true);
+        ldiskp = &ldisks;
       }
+      key = string("RemoteDisks." + names[i]);
+      if (parset.isDefined (key)) {
+        rdisks = parset.getStringVector (key, true);
+        rdiskp = &rdisks;
+        rfilesys = parset.getStringVector ("RemoteFileSys." + names[i],
+                                           defVal, true);
+        if (rfilesys.empty()) {
+          rfilesys = rdisks;
+        } else {
+          ASSERTSTR (rfilesys.size() == rdisks.size(),
+                     "RemoteFileSys," + names[i] +
+                     " must be empty or have equal length as RemoteDisks." +
+                     names[i]);
+        }
+        rfsysp = &rfilesys;
+      }
+      NodeDesc node;
+      node.setName (names[i]);
+      node.setType (type);
+      for (uint j=0; j<rdiskp->size(); ++j) {
+        node.addFileSys ((*rfsysp)[j], (*rdiskp)[j]);
+      }
+      // Add node name to local filesys to make it unique.
+      for (uint j=0; j<ldiskp->size(); ++j) {
+        node.addFileSys (names[i] + ':' + (*ldiskp)[j],
+                         (*ldiskp)[j]);
+      }
+      addNode (node);
     }
   }
 
@@ -83,7 +163,8 @@ namespace LOFAR { namespace CEP {
       ClusterDesc cdesc(name);
       const vector<NodeDesc>& nodes =cdesc.getNodes();
       for (uint j=0; j<nodes.size(); ++j) {
-        addNode (nodes[j]);
+        // The same nodes can occur in multiple subclusters.
+        addNode (nodes[j], true);
       }
     }
   }
@@ -91,7 +172,6 @@ namespace LOFAR { namespace CEP {
   void ClusterDesc::write (ostream& os) const
   { 
     os << "ClusterName = " << itsName << endl;
-    os << "HeadNode    = " << itsHeadNode << endl;
     os << "NNodes = " << itsNodes.size() << endl;
     for (unsigned i=0; i<itsNodes.size(); ++i) {
       ostringstream prefix;
@@ -100,24 +180,43 @@ namespace LOFAR { namespace CEP {
     }
   }
 
-  void ClusterDesc::addNode (const NodeDesc& node)
+  void ClusterDesc::addNode (const NodeDesc& node, bool canExist)
   {
-    itsNodes.push_back (node);
-    add2Map (node);
-  }
-
-  void ClusterDesc::add2Map (const NodeDesc& node)
-  {
-    // The head node is not added as a resource to the map.
-    if (node.getName() != itsHeadNode) {
-      for (vector<string>::const_iterator iter = node.getFileSys().begin();
-           iter != node.getFileSys().end();
-           ++iter) {
-        vector<string>& vec = itsFS2Nodes[*iter];
-        vec.push_back (node.getName());
+    // Check if node name does not exist yet.
+    map<string,int>::const_iterator loc = itsNodeMap.find (node.getName());
+    if (loc != itsNodeMap.end()) {
+      if (!canExist) {
+        THROW (MWError, "Node name " << node.getName()
+               << " multiply specified in clusterdesc " << itsName);
       }
+    } else {
+      int inx = itsNodes.size();
+      itsNodeMap[node.getName()] = inx;
+      itsNodes.push_back (node);
+      add2Map (inx);
     }
   }
+
+  void ClusterDesc::add2Map (int nodeIndex)
+  {
+    const NodeDesc& node = itsNodes[nodeIndex];
+    for (vector<string>::const_iterator iter = node.getFileSys().begin();
+         iter != node.getFileSys().end();
+         ++iter) {
+      vector<int>& vec = itsFS2Nodes[*iter];
+      vec.push_back (nodeIndex);
+    }
+  }
+
+    const NodeDesc& ClusterDesc::getNode (const string& nodeName) const
+    {
+      map<string,int>::const_iterator loc = itsNodeMap.find (nodeName);
+      if (loc == itsNodeMap.end()) {
+        THROW (MWError, "Node name " << nodeName
+               << " not found in clusterdesc " << itsName);
+      }
+      return itsNodes[loc->second];
+    }
 
 //   string ClusterDesc::findNode (const string& fileSystem,
 // 				const map<string,int>& done) const

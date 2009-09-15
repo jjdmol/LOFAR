@@ -1,14 +1,32 @@
 //# NodeDesc.cc: Description of a node
 //#
-//# @copyright (c) 2007 ASKAP, All Rights Reserved.
-//# @author Ger van Diepen <diepen AT astron nl>
+//# Copyright (C) 2007
+//# ASTRON (Netherlands Foundation for Research in Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+//#
+//# This file is part of the LOFAR software suite LOFARsoft.
+//# LOFARsoft is free software: you can redistribute it and/or modify
+//# it under the terms of the GNU General Public License as published by
+//# the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# LOFARsoft is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License
+//# along with LOFARsoft. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
+//#
+//# @author Ger van Diepen <diepen AT astron nl>
 
 #include <lofar_config.h>
 
 #include <MWCommon/NodeDesc.h>
 #include <Common/StreamUtil.h>
+#include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
 #include <ostream>
 
@@ -22,8 +40,18 @@ namespace LOFAR { namespace CEP {
   NodeDesc::NodeDesc (const ParameterSet& parset)
   {
     itsName = parset.getString ("NodeName");
-    itsFileSys = parset.getStringVector ("NodeFileSys", true);
+    string type (toLower (parset.getString ("NodeType", "Compute")));
+    if (type == "compute") {
+      itsType = Compute;
+    } else if (type == "storage") {
+      itsType = Storage;
+    } else if (type == "head") {
+      itsType = Head;
+    } else {
+      itsType = Any;
+    }
     itsMounts  = parset.getStringVector ("NodeMountPoints", true);
+    itsFileSys = parset.getStringVector ("NodeFileSys", itsMounts, true);
     ASSERT (itsFileSys.size() == itsMounts.size());
     for (uint i=0; i<itsMounts.size(); ++i) {
       ASSERT (itsFileSys[i].size() > 0);
@@ -97,7 +125,16 @@ namespace LOFAR { namespace CEP {
 
   void NodeDesc::write (ostream& os, const string& prefix) const
   {
+    string type = "Any";
+    if (itsType == Compute) {
+      type = "Compute";
+    } else if (itsType == Storage) {
+      type = "Storage";
+    } else if (itsType == Head) {
+      type = "Head";
+    }
     os << prefix << "NodeName = " << itsName << endl;
+    os << prefix << "NodeType = " << type << endl;
     os << prefix << "NodeFileSys     = " << itsFileSys << endl;
     os << prefix << "NodeMountPoints = " << itsMounts << endl;
   }

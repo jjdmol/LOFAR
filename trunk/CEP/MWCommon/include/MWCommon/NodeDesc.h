@@ -47,18 +47,31 @@ namespace LOFAR { namespace CEP {
   class NodeDesc
   {
   public:
+    // Define the node types.
+    enum NodeType {
+      Compute,
+      Storage,
+      Head,
+      Any
+    };
+
     // Construct an empty object.
+    // By default its type is Any.
     NodeDesc()
-      {}
+      : itsType(Any) {}
 
     // Construct from the given parameterset.
     explicit NodeDesc (const ParameterSet&);
-
+ 
     // Set node name.
     void setName (const std::string& name)
       { itsName = name; }
 
-    // Add a file system the node has access to.
+    // Set node type.
+    void setType (NodeType type)
+      { itsType = type; }
+
+   // Add a file system the node has access to.
     // A possible leading /auto is removed from the mountPoint.
     void addFileSys (const std::string& fsName, const string& mountPoint);
 
@@ -68,6 +81,10 @@ namespace LOFAR { namespace CEP {
     // Get the name.
     const std::string& getName() const
       { return itsName; }
+
+    // Get the type.
+    NodeType getType() const
+      { return itsType; }
 
     // Get the file systems it has access to.
     const std::vector<std::string>& getFileSys() const
@@ -85,6 +102,7 @@ namespace LOFAR { namespace CEP {
 
   private:
     std::string itsName;                  //# full name of the node
+    NodeType    itsType;
     std::vector<std::string> itsFileSys;  //# names of file systems
     std::vector<std::string> itsMounts;   //# and their mount points
   };

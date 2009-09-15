@@ -66,26 +66,31 @@ namespace LOFAR { namespace CEP {
     // @}
 
     // Find the worker with the lowest load that can perform the given
-    // work type for data on the given file system.
-    // The file system can be empty indicating that any worker can do it.
+    // work type for data on the given file system on a given type of node.
+    // By default it looks for Compute Nodes.
+    // The given file system can be empty indicating that any worker can do it.
     // It returns -1 if no suitable worker could be found.
-    int findWorker (int workType, const std::string& fileSystem) const;
+    // Otherwise the worker id is returned.
+    int findWorker (int workType, const std::string& fileSystem,
+                    NodeDesc::NodeType type = NodeDesc::Compute) const;
 
   private:
     // Map giving the workers on each node.
-    typedef std::map<std::string,std::vector<unsigned> > MapN2W;
+    typedef std::map<std::string, std::vector<unsigned> > MapN2W;
     // Map given the nodes with access to a file system.
-    typedef std::map<std::string,std::vector<std::string> > MapF2N;
+    typedef std::map<std::string, std::vector<int> > MapF2N;
 
     // Find worker with lowest load.
     // @{
-    int findLowest (const MapN2W& workMap) const;
     int findLowest (const MapN2W& workMap,
-		    const std::string& fileSystem) const;
+                    NodeDesc::NodeType type) const;
+    int findLowest (const MapN2W& workMap,
+		    const std::string& fileSystem,
+                    NodeDesc::NodeType type) const;
     // @}
 
-    MapF2N               itsFS2Nodes; //# map FileSystem to nodes
-    std::map<int,MapN2W> itsMap;      //# map worktype to node/worker
+    const ClusterDesc&   itsClusterDesc;
+    std::map<int,MapN2W> itsMap;      //# map worktype to nodename/workerid
     std::vector<int>     itsLoad;     //# load of each worker (#times used)
   };
     

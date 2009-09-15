@@ -1,7 +1,10 @@
 # Test cluster definition file.
 
 ClusterName  = lifs
-HeadNode     = lifsfen
-ComputeNodes = [ lifs001..lifs003 ]
-LocalDisks   = [ /data ]
-MountPoints  = [ /lifs014../lifs015 ]
+Head.Nodes     = lifsfen
+Head.LocalDisks   = [ /data ]
+Head.RemoteDisks.lifsfen = /abc
+
+Compute.Nodes = [ lifs001..lifs003 ]
+Compute.LocalDisks   = [ /data ]
+Compute.RemoteDisks  = [ /lifs014../lifs015 ]
