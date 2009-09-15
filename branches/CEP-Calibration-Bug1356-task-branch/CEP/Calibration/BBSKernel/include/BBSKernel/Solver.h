@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BB_BBSKERNEL_SOLVER_H
-#define LOFAR_BB_BBSKERNEL_SOLVER_H
+#ifndef LOFAR_BBSKERNEL_SOLVER_H
+#define LOFAR_BBSKERNEL_SOLVER_H
 
 #include <BBSKernel/SolverInterfaceTypes.h>
 #include <Common/LofarTypes.h>

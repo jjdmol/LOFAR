@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BB_BBS_PARMPROXY_H
-#define LOFAR_BB_BBS_PARMPROXY_H
+#ifndef LOFAR_BBSKERNEL_PARMPROXY_H
+#define LOFAR_BBSKERNEL_PARMPROXY_H
 
 // \file
 // Wrapper class that stores information related to solving.
@@ -53,13 +53,13 @@ public:
 
     size_t getId() const
     { return itsId; }
-    
+
     const string &getName() const
     { return itsName; }
 
     size_t getCoeffCount() const
     { return itsParm.getCoeffSize(); }
-    
+
     vector<double> getCoeff(const Location &loc, bool useMask = true) const
     { return itsParm.getCoeff(loc, useMask); }
 
@@ -72,10 +72,10 @@ public:
 
     const vector<double> &getPerturbations() const
     { return itsParm.getPerturbations(); }
-    
+
     double getPerturbation(uint index) const
     { return itsParm.getPerturbation(index); }
-    
+
     void setGrid(const Grid &grid)
     { itsParm.setSolveGrid(grid); }
 

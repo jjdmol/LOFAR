@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#if !defined(EXPR_MATRIXTMP_H)
-#define EXPR_MATRIXTMP_H
+#ifndef LOFAR_BBSKERNEL_EXPR_MATRIXTMP_H
+#define LOFAR_BBSKERNEL_EXPR_MATRIXTMP_H
 
 // \file
 // Temporary matrix for Mns

@@ -21,8 +21,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_EXPR_SPECTRALINDEX_H
-#define LOFAR_BBS_EXPR_SPECTRALINDEX_H
+#ifndef LOFAR_BBSKERNEL_EXPR_SPECTRALINDEX_H
+#define LOFAR_BBSKERNEL_EXPR_SPECTRALINDEX_H
 
 // \file
 // Frequency dependent scale factor for the base flux given for a specific
@@ -66,10 +66,10 @@ private:
     virtual const Scalar evaluateExpr(const Request &request, Cache &cache)
         const;
 
-    const Scalar::View evaluateImpl(const Request &request,
+    virtual const Scalar::View evaluateImpl(const Request &request,
         const Scalar::View &refFreq, const vector<Scalar::View> &coeff) const;
 
-    const Expr<Scalar>::ConstPtr    itsRefFreq;
+    Expr<Scalar>::ConstPtr          itsRefFreq;
     vector<Expr<Scalar>::ConstPtr>  itsCoeff;
 };
 

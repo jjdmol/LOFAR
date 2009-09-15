@@ -21,7 +21,7 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_OHASESHIFT_H
+#ifndef LOFAR_BBSKERNEL_EXPR_PHASESHIFT_H
 #define LOFAR_BBSKERNEL_EXPR_PHASESHIFT_H
 
 // \file
@@ -50,27 +50,6 @@ private:
     virtual const Scalar::View evaluateImpl(const Request &request,
         const Vector<2>::View &lhs, const Vector<2>::View &rhs) const;
 };
-
-//class PhaseShift: public ExprStatic<2>
-//{
-//public:
-//    typedef shared_ptr<PhaseShift>          Ptr;
-//    typedef shared_ptr<const PhaseShift>    ConstPtr;
-
-//    enum Inputs
-//    {
-//        UVW,
-//        LMN,
-//        N_Inputs
-//    };
-//
-//    PhaseShift();
-
-//private:
-//    // Compute a result for the given request.
-//    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
-//        const ValueSet::ConstPtr (&inputs)[PhaseShift::N_Inputs]) const;
-//};
 
 // @}
 

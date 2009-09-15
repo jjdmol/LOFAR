@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_BBSKERNEL_MEASUREMENT_H
-#define LOFAR_BBS_BBSKERNEL_MEASUREMENT_H
+#ifndef LOFAR_BBSKERNEL_MEASUREMENT_H
+#define LOFAR_BBSKERNEL_MEASUREMENT_H
 
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/VisData.h>

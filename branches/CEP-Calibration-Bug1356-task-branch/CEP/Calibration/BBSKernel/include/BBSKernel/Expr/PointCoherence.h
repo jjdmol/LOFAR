@@ -50,19 +50,6 @@ private:
         const Vector<4>::View &stokes, const Scalar::View &spectral) const;
 };
 
-class PointCoherenceSimple: public BasicUnaryExpr<Vector<4>, JonesMatrix>
-{
-public:
-    typedef shared_ptr<PointCoherenceSimple>        Ptr;
-    typedef shared_ptr<const PointCoherenceSimple>  ConstPtr;
-
-    PointCoherenceSimple(const Expr<Vector<4> >::ConstPtr &stokes);
-
-private:
-    virtual const JonesMatrix::View evaluateImpl(const Request &request,
-        const Vector<4>::View &stokes) const;
-};
-
 // @}
 
 } // namespace BBS

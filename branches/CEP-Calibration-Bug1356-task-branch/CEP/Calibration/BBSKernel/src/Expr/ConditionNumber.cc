@@ -42,7 +42,6 @@ const Scalar::View ConditionNumber::evaluateImpl(const Request &request,
 
     Scalar::View result;
     result.assign(max(norm00, norm11) / max(min(norm00, norm11), 1e-9));
-    LOG_DEBUG_STR("Condition#: " << result());
     return result;
 }
 

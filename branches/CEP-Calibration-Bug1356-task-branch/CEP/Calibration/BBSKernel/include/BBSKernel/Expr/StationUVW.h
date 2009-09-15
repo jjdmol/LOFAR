@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_EXPR_STATIONUVW_H
-#define LOFAR_BBS_EXPR_STATIONUVW_H
+#ifndef LOFAR_BBSKERNEL_EXPR_STATIONUVW_H
+#define LOFAR_BBSKERNEL_EXPR_STATIONUVW_H
 
 // \file
 // Station UVW coordinates.

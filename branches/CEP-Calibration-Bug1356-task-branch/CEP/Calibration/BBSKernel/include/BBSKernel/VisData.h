@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_BBSKERNEL_VISDATA_H
-#define LOFAR_BBS_BBSKERNEL_VISDATA_H
+#ifndef LOFAR_BBSKERNEL_VISDATA_H
+#define LOFAR_BBSKERNEL_VISDATA_H
 
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_map.h>

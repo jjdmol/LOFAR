@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_MIM_H
-#define EXPR_MIM_H
+#ifndef LOFAR_BBSKERNEL_EXPR_MIM_H
+#define LOFAR_BBSKERNEL_EXPR_MIM_H
 
 // \file
 // Ionospheric disturbance of a (source, station) combination.

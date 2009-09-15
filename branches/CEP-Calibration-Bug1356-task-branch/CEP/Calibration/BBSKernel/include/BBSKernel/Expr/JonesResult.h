@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_JONESRESULT_H
-#define EXPR_JONESRESULT_H
+#ifndef LOFAR_BBSKERNEL_EXPR_JONESRESULT_H
+#define LOFAR_BBSKERNEL_EXPR_JONESRESULT_H
 
 // \file
 // The result of a Jones expression.

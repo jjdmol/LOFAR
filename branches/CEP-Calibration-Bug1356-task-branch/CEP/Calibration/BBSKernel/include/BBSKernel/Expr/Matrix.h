@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#if !defined(EXPR_MATRIX_H)
-#define EXPR_MATRIX_H
+#ifndef LOFAR_BBSKERNEL_EXPR_MATRIX_H
+#define LOFAR_BBSKERNEL_EXPR_MATRIX_H
 
 // \file
 // Matrix for Mns

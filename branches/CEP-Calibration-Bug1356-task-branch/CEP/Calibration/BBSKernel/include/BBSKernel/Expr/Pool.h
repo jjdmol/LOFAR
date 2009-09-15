@@ -1,5 +1,5 @@
-#ifndef EXPR_POOL_H
-#define EXPR_POOL_H
+#ifndef LOFAR_BBSKERNEL_EXPR_POOL_H
+#define LOFAR_BBSKERNEL_EXPR_POOL_H
 
 #include <assert.h>
 #include <stdlib.h>

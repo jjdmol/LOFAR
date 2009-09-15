@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_JONESCMUL3_H
-#define EXPR_JONESCMUL3_H
+#ifndef LOFAR_BBSKERNEL_EXPR_JONESCMUL3_H
+#define LOFAR_BBSKERNEL_EXPR_JONESCMUL3_H
 
 // \file
 // Calculate A * B * C^H (the conjugate transpose of C).

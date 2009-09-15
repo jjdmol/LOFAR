@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_EXPR_EXPRADAPTORS_H
-#define LOFAR_BBS_EXPR_EXPRADAPTORS_H
+#ifndef LOFAR_BBSKERNEL_EXPR_EXPRADAPTORS_H
+#define LOFAR_BBSKERNEL_EXPR_EXPRADAPTORS_H
 
 // \file
 // Helper classes to convert between different Expr types.

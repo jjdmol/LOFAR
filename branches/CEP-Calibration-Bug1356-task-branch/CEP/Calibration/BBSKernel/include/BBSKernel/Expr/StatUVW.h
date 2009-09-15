@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_STATUVW_H
-#define EXPR_STATUVW_H
+#ifndef LOFAR_BBSKERNEL_EXPR_STATUVW_H
+#define LOFAR_BBSKERNEL_EXPR_STATUVW_H
 
 // \file
 // UVW coordinates of a station in meters.

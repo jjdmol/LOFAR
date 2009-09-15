@@ -1,5 +1,5 @@
-//# Evaluator.h: Evaluate a model and assign the result to or subtract/add it from/to
-//# the visibility data in the chunk.
+//# Evaluator.h: Evaluate a model and assign the result to or subtract/add it
+//# from/to the visibility data in the chunk.
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,12 +21,12 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BB_BBS_EVALUATOR_H
-#define LOFAR_BB_BBS_EVALUATOR_H
+#ifndef LOFAR_BBSKERNEL_EVALUATOR_H
+#define LOFAR_BBSKERNEL_EVALUATOR_H
 
 // \file
-// Evaluate a model and assign the result to or subtract/add it from/to the visibility
-// data in the chunk.
+// Evaluate a model and assign the result to or subtract/add it from/to the
+// visibility data in the chunk.
 
 #include <BBSKernel/Model.h>
 #include <BBSKernel/VisData.h>

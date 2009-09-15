@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_JONESMUL_H
-#define EXPR_JONESMUL_H
+#ifndef LOFAR_BBSKERNEL_EXPR_JONESMUL_H
+#define LOFAR_BBSKERNEL_EXPR_JONESMUL_H
 
 // \file
 // Calculate c * A, where c is an Expr and A is a JonesExpr.

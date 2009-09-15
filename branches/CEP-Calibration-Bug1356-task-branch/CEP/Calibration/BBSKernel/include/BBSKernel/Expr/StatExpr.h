@@ -21,7 +21,7 @@
 //# $Id$
 
 #if !defined(EXPR_STATEXPR_H)
-#define EXPR_STATEXPR_H
+#define LOFAR_BBSKERNEL_EXPR_STATEXPR_H
 
 // \file
 // The Jones expression for a station

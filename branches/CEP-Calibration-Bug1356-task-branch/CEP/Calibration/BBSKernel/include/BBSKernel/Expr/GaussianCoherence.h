@@ -21,8 +21,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_GAUSSIANCOHERENCE_H
-#define EXPR_GAUSSIANCOHERENCE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_GAUSSIANCOHERENCE_H
+#define LOFAR_BBSKERNEL_EXPR_GAUSSIANCOHERENCE_H
 
 // \file
 // Spatial coherence function of an elliptical gaussian source.

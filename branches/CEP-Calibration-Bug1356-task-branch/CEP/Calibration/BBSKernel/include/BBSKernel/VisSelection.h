@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_BBSKERNEL_VISSELECTION_H
-#define LOFAR_BBS_BBSKERNEL_VISSELECTION_H
+#ifndef LOFAR_BBSKERNEL_VISSELECTION_H
+#define LOFAR_BBSKERNEL_VISSELECTION_H
 
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>

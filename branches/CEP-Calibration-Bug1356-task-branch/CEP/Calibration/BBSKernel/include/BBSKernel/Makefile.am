@@ -1,23 +1,5 @@
 pkginclude_Exprdir = $(pkgincludedir)/Expr
 
-#	Expr/JonesCMul2.h \
-#	Expr/JonesExpr.h \
-#	Expr/JonesMul2.h \
-#	Expr/JonesMul3.h \
-#	Expr/JonesNode.h \
-#	Expr/JonesResult.h \
-#	Expr/PValueIterator.h \
-#	Expr/Result.h \
-#	Expr/ResultVec.h \
-#	Expr/Pool.h \
-#  	Expr/JonesCMul3.h \
-#	Expr/JonesMul.h \
-#	Expr/JonesSum.h \
-#	Expr/PointSource.h \
-#	Expr/Source.h
-
-#	Expr/UVW.h
-
 pkginclude_HEADERS = Package__Version.h \
 	Equator.h \
 	Evaluator.h \
@@ -38,10 +20,9 @@ pkginclude_HEADERS = Package__Version.h \
 
 pkginclude_Expr_HEADERS	= 	\
 	Expr/AzEl.h \
-    Expr/BasicExpr.h \
+	Expr/BasicExpr.h \
 	Expr/Cache.h \
 	Expr/ConditionNumber.h \
-	Expr/CSEVisitor.h \
 	Expr/DFTPS.h \
 	Expr/Expr.h \
 	Expr/ExprAdaptors.h \
@@ -70,7 +51,6 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/MergeFlags.h \
 	Expr/MIM.h \
 	Expr/Mul.h \
-	Expr/PhaseRef.h \
 	Expr/PhaseShift.h \
 	Expr/PiercePoint.h \
 	Expr/PointCoherence.h \
@@ -80,7 +60,6 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/Source.h \
 	Expr/SpectralIndex.h \
 	Expr/StatUVW.h \
-	Expr/StationUVW.h \
 	Expr/Threshold.h \
 	Expr/ValueSet.h \
 	Expr/YatawattaDipole.h

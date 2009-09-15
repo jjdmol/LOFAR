@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_BBSKERNEL_MODEL_H
-#define LOFAR_BBS_BBSKERNEL_MODEL_H
+#ifndef LOFAR_BBSKERNEL_MODEL_H
+#define LOFAR_BBSKERNEL_MODEL_H
 
 #include <BBSKernel/ParmManager.h>
 #include <BBSKernel/Instrument.h>
@@ -83,21 +83,16 @@ private:
     ExprParm::Ptr makeExprParm(uint category, const string &name);
 
     vector<Source::Ptr> makeSourceList(const vector<string> &patterns);
+
     Source::Ptr makeSource(const SourceInfo &source);
+
     Expr<Scalar>::Ptr makeSpectralIndexExpr(const SourceInfo &source);
 
     void makeStationUVW();
 
-//    casa::Vector<Expr<Vector<3> >::Ptr>
-//        makeStationUVWExpr(const vector<unsigned int> &stations) const;
-
     casa::Matrix<Expr<Vector<2> >::Ptr>
         makeStationShiftExpr(const vector<unsigned int> &stations,
             const vector<Source::Ptr> &sources) const;
-
-//    casa::Matrix<Expr<Vector<2> >::Ptr>
-//        makeStationShiftExpr(const casa::Vector<Expr<Vector<3> >::Ptr> &uvw,
-//            const vector<Source::Ptr> &sources) const;
 
     casa::Vector<Expr<JonesMatrix>::Ptr>
         makeBandpassExpr(const vector<unsigned int> &stations);

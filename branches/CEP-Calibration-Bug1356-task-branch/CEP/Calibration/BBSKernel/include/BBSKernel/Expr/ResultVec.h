@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_RESULTVEC_H
-#define EXPR_RESULTVEC_H
+#ifndef LOFAR_BBSKERNEL_EXPR_RESULTVEC_H
+#define LOFAR_BBSKERNEL_EXPR_RESULTVEC_H
 
 // \file
 // A vector containing multiple results.

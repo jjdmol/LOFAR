@@ -21,7 +21,7 @@
 //# $Id$
 
 #if !defined(EXPR_JONESEXPR_H)
-#define EXPR_JONESEXPR_H
+#define LOFAR_BBSKERNEL_EXPR_JONESEXPR_H
 
 // \file
 // The base class of a Jones matrix expression.

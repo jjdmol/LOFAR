@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BB_BBS_PARMMANAGER_H
-#define LOFAR_BB_BBS_PARMMANAGER_H
+#ifndef LOFAR_BBSKERNEL_PARMMANAGER_H
+#define LOFAR_BBSKERNEL_PARMMANAGER_H
 
 // \file
 // Manages model parameters from multiple ParmDBs.

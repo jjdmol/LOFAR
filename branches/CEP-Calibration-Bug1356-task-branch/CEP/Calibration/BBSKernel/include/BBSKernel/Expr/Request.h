@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_REQUEST_H
-#define EXPR_REQUEST_H
+#ifndef LOFAR_BBSKERNEL_EXPR_REQUEST_H
+#define LOFAR_BBSKERNEL_EXPR_REQUEST_H
 
 // \file
 // Request grid on which to evaluate an expression.

@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_JONESMUL3_H
-#define EXPR_JONESMUL3_H
+#ifndef LOFAR_BBSKERNEL_EXPR_JONESMUL3_H
+#define LOFAR_BBSKERNEL_EXPR_JONESMUL3_H
 
 // \file
 // Calculate A * B * C.

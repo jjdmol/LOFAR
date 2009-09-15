@@ -56,31 +56,5 @@ const JonesMatrix::View PointCoherence::evaluateImpl(const Request &request,
     return result;
 }
 
-PointCoherenceSimple::PointCoherenceSimple(const Expr<Vector<4> >::ConstPtr &stokes)
-    :   BasicUnaryExpr<Vector<4>, JonesMatrix>(stokes)
-{
-}
-
-const JonesMatrix::View PointCoherenceSimple::evaluateImpl
-    (const Request &request, const Vector<4>::View &stokes) const
-{
-    JonesMatrix::View result;
-
-    if(stokes.dirty(0) || stokes.dirty(1))
-    {
-        result.assign(0, 0, 0.5 * (stokes(0) + stokes(1)));
-        result.assign(1, 1, 0.5 * (stokes(0) - stokes(1)));
-    }
-
-    if(stokes.dirty(2) || stokes.dirty(3))
-    {
-        Matrix uv = 0.5 * tocomplex(stokes(2), stokes(3));
-        result.assign(0, 1, uv);
-        result.assign(1, 0, conj(uv));
-    }
-
-    return result;
-}
-
 } // namespace BBS
 } // namespace LOFAR

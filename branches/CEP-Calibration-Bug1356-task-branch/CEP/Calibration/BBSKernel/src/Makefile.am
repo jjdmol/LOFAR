@@ -1,24 +1,6 @@
 #AM_CXXFLAGS = -Wno-ignored-qualifiers -Werror
 lib_LTLIBRARIES = libbbskernel.la
 
-#	Expr/JonesCMul2.cc \
-#	Expr/JonesExpr.cc \
-#	Expr/JonesMul2.cc \
-#	Expr/JonesMul3.cc \
-#	Expr/JonesNode.cc \
-#	Expr/JonesVisData.cc \
-#	Expr/Result.cc \
-#	Expr/ResultVec.cc \
-#	Expr/JonesCMul3.cc \
-#	Expr/JonesMul.cc \
-#	Expr/JonesSum.cc \
-#	Expr/PointCoherence.cc \
-#	Expr/Expr.cc \
-#	Expr/PointSource.cc \
-#	Expr/Source.cc
-
-#	Expr/UVW.cc
-
 libbbskernel_la_SOURCES = Package__Version.cc \
 	Equator.cc \
 	Evaluator.cc \
@@ -63,7 +45,6 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/MergeFlags.cc \
 	Expr/MIM.cc \
 	Expr/Mul.cc \
-	Expr/PhaseRef.cc \
 	Expr/PhaseShift.cc \
 	Expr/PiercePoint.cc \
 	Expr/PointCoherence.cc \
@@ -72,18 +53,13 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/Source.cc \
 	Expr/SpectralIndex.cc \
 	Expr/StatUVW.cc \
-	Expr/StationUVW.cc \
 	Expr/ValueSet.cc \
 	Expr/YatawattaDipole.cc
 
-bin_PROGRAMS = versionbbskernel cse
+bin_PROGRAMS = versionbbskernel
 
 versionbbskernel_SOURCES      = versionbbskernel.cc
 versionbbskernel_LDADD        = libbbskernel.la
 versionbbskernel_DEPENDENCIES = libbbskernel.la $(LOFAR_DEPEND)
-
-cse_SOURCES      = cse.cc
-cse_LDADD        = libbbskernel.la
-cse_DEPENDENCIES = libbbskernel.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

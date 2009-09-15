@@ -21,8 +21,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_GAUSSIANSOURCE_H
-#define EXPR_GAUSSIANSOURCE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_GAUSSIANSOURCE_H
+#define LOFAR_BBSKERNEL_EXPR_GAUSSIANSOURCE_H
 
 // \file
 // Class holding the expressions defining a gaussian source.
@@ -84,8 +84,6 @@ inline Expr<Scalar>::ConstPtr GaussianSource::getOrientation() const
 {
     return itsOrientation;
 }
-
-// @}
 
 } // namespace BBS
 } // namespace LOFAR
