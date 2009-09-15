@@ -35,21 +35,14 @@ using namespace std;
 
 
 void makeFile (const vector<string>& fileSys, const vector<string>& fileNames,
-               const vector<string>& names, const ClusterDesc& cluster)
+               const vector<string>& names, WorkersDesc& workers,
+               const ClusterDesc& cluster, NodeDesc::NodeType type)
 {
-  WorkersDesc workers(cluster);
-  // Make a worker for each node in the cluster.
-  // Create a fake work type for them.
-  const int workType=0;
-  vector<int> workTypes(1, workType);
   const vector<NodeDesc>& nodes = cluster.getNodes();
-  for (unsigned i=0; i<nodes.size(); ++i) {
-    workers.addWorker (i, nodes[i].getName(), workTypes);
-  }
   // Loop through fileSys.
   for (uint i=0; i<fileSys.size(); ++i) {
     // Find a worker that can deal with the file system the dataset part is on.
-    int winx = workers.findWorker (workType, fileSys[i]);
+    int winx = workers.findWorker (0, fileSys[i], type);
     if (winx < 0) {
       THROW (MWError, "finddproc: no suitable host could be found" <<
 	     " for dataset part " << names[i] <<
@@ -63,11 +56,35 @@ void makeFile (const vector<string>& fileSys, const vector<string>& fileNames,
   }
 }
 
-void makeFromFile (const string& vdsName, const string& clusterName)
+// List the nodes to be used for processes on head nodes.
+void makeFromHead (int nhead, WorkersDesc& workers)
+{
+  // List the head nodes to use.
+  int winx = 0;
+  for (int i=0; i<nhead; ++i) {
+    winx = workers.findWorker (0, string(), NodeDesc::Head);
+    if (winx < 0) {
+      break;
+    }
+    workers.incrLoad (winx);
+  }
+  // If no head nodes found, try any nodes.
+  for (int i=0; i<nhead; ++i) {
+    winx = workers.findWorker (0, string(), NodeDesc::Any);
+    if (winx < 0) {
+      THROW (MWError, "finddproc: no suitable hosts could be found" <<
+	     " for " << nhead << " processes to run on head nodes");
+    }
+    workers.incrLoad (winx);
+  }
+}
+
+// Make the machine file for the data parts given in a global VDS file.
+void makeFromFile (const string& vdsName, WorkersDesc& workers,
+                   const ClusterDesc& cluster, NodeDesc::NodeType type)
 {
   // Read in the vds and cluster desc.
   VdsDesc vds(vdsName);
-  ClusterDesc cluster(clusterName);
   // Loop through all parts of the dataset.
   const vector<VdsPartDesc>& parts = vds.getParts();
   vector<string> fileSys, fileNames, names;
@@ -81,14 +98,13 @@ void makeFromFile (const string& vdsName, const string& clusterName)
     fileNames.push_back (iter->getFileName());
     names.push_back (iter->getName());
   }
-  // Create the machinefile.
-  makeFile (fileSys, fileNames, names, cluster);
+  // Find the hosts to processes the data parts.
+  makeFile (fileSys, fileNames, names, workers, cluster, type);
 }
 
-void makeFromDirs (const string& dirStr, const string& clusterName)
+void makeFromDirs (const string& dirStr, WorkersDesc& workers,
+                   const ClusterDesc& cluster, NodeDesc::NodeType type)
 {
-  // Read in the cluster desc.
-  ClusterDesc cluster(clusterName);
   const vector<NodeDesc>& nodes = cluster.getNodes();
   // Split string.
   vector<string> dirs = StringUtil::split(dirStr, ',');
@@ -115,36 +131,72 @@ void makeFromDirs (const string& dirStr, const string& clusterName)
     }
     fileNames.push_back (mountName);
   }
-  makeFile (fileSys, fileNames, fileNames, cluster);
+  makeFile (fileSys, fileNames, fileNames, workers, cluster, type);
 }
 
 int main (int argc, const char* argv[])
 {
   try {
-    int st = 3;
-    if (argc > 1  &&  string(argv[1]) == "-dirs") {
-      st = 4;
+    int nhead = 0;
+    bool useDirs = false;
+    NodeDesc::NodeType type = NodeDesc::Compute;
+    int st = 1;
+    if (argc > st  &&  string(argv[st]) == "-storage") {
+      type = NodeDesc::Storage;
+      ++st;
     }
-    if (argc < st) {
-      cerr << "Run as:  finddproc vdsdescname clusterdescname [otherhosts]"
+    if (argc > st+1  &&  string(argv[st]) == "-nhead") {
+      istringstream istr(argv[st+1]);
+      istr >> nhead;
+      st += 2;
+    }
+    if (argc > st  &&  string(argv[st]) == "-dirs") {
+      useDirs = true;
+      ++st;
+    }
+    if (argc < st+2) {
+      cerr << "Run as:  finddproc [-storage] [-nhead n] vdsdescname clusterdescname"
 	   << endl;
-      cerr << "    or   finddproc -dirs directories clusterdescname [otherhosts]"
+      cerr << "    or   finddproc [-storage] [-nhead n] -dirs directories clusterdescname"
            << endl;
-      cerr << "             directories is a single argument separated by commas" << endl;
-      cerr << "   The other hosts are listed first in the resulting machinefile"
+      cerr << "             directories is a single argument separated by commas."
            << endl;
-      cout << "   (represent master and e.g. solvers)" << endl;
+      cerr << "  -storage indicates that storage nodes are to be used." <<endl;
+      cerr << "           Otherwise compute nodes are used." << endl;
+      cerr << "  -nhead gives the number of processes to start on head nodes."
+           << endl;
+      cerr << "         They are listed first in the resulting machinefile."
+           << endl;
+      cerr << "         (they represent master and e.g. solvers)" << endl;
+      cerr << "  Options must be given in the order mentioned above." << endl;
+      cerr << "" << endl;
+      cerr << "For backward compatibility extra hosts can be given at the end."
+           << endl;
+      cerr << "They are listed first for master processes and the like." << endl;
+      cerr << "The preferred option is to use -nhead for these purposes." << endl;
       return 1;
     }
 
     // First list the other hosts (master and extra).
-    for (int i=st; i<argc; ++i) {
+    for (int i=st+2; i<argc; ++i) {
       cout << argv[i] << endl;
     }
-    if (st == 3) {
-      makeFromFile (argv[1], argv[2]);
+
+    // Make a worker for each node in the cluster.
+    // Create a fake work type for them.
+    ClusterDesc cluster(argv[st+1]);
+    WorkersDesc workers(cluster);
+    vector<int> workTypes(1, 0);     // Use work type 0
+    const vector<NodeDesc>& nodes = cluster.getNodes();
+    for (unsigned i=0; i<nodes.size(); ++i) {
+      workers.addWorker (i, nodes[i].getName(), workTypes);
+    }
+    // First list the processes on head nodes.
+    makeFromHead (nhead, workers);
+    if (useDirs) {
+      makeFromDirs (argv[st], workers, cluster, type);
     } else {
-      makeFromDirs (argv[2], argv[3]);
+      makeFromFile (argv[st], workers, cluster, type);
     }
   } catch (std::exception& x) {
     cerr << "Unexpected exception: " << x.what() << endl;

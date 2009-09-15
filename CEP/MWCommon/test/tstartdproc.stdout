@@ -12,10 +12,10 @@ node2
 node1
 
 socketrun 1 tstartdproc_tmp.out3 'localhost' 3851 1  prog1 tstartdproc_tmp.out3.envfile -arg a b
-ssh -x -n localhost prog1 socket localhost 3851 4 0 '.' '.' '.' tstartdproc_tmp.out3.envfile -arg a b  &
-ssh -x -n node1 prog1 socket localhost 3851 4 1 '/usr/local/xyx0' 'node1:/usr' '/usr/local/xyx0.vds' tstartdproc_tmp.out3.envfile -arg a b  &
-ssh -x -n node2 prog1 socket localhost 3851 4 2 '/usr/local/xyx1' 'node1:/usr' '/usr/local/xyx1.vds' tstartdproc_tmp.out3.envfile -arg a b  &
-ssh -x -n node1 prog1 socket localhost 3851 4 3 '/usr/local/xyx2' 'node1:/usr' '/usr/local/xyx2.vds' tstartdproc_tmp.out3.envfile -arg a b  &
+ssh -x -n localhost prog1 socket localhost 3851 4 0 '.' '.' '.'  'tstartdproc_tmp.out3.envfile' '-arg' 'a b'  &
+ssh -x -n node1 prog1 socket localhost 3851 4 1 '/usr/local/xyx0' 'node1:/usr' '/usr/local/xyx0.vds'  'tstartdproc_tmp.out3.envfile' '-arg' 'a b'  &
+ssh -x -n node2 prog1 socket localhost 3851 4 2 '/usr/local/xyx1' 'node1:/usr' '/usr/local/xyx1.vds'  'tstartdproc_tmp.out3.envfile' '-arg' 'a b'  &
+ssh -x -n node1 prog1 socket localhost 3851 4 3 '/usr/local/xyx2' 'node1:/usr' '/usr/local/xyx2.vds'  'tstartdproc_tmp.out3.envfile' '-arg' 'a b'  &
 localhost
 node1#/usr/local/xyx0,node1:/usr,/usr/local/xyx0.vds
 node2#/usr/local/xyx1,node1:/usr,/usr/local/xyx1.vds

@@ -19,18 +19,25 @@
 //# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //# $Id$
+//#
 
 #ifndef LOFAR_MWCOMMON_CLUSTERDESC_H
 #define LOFAR_MWCOMMON_CLUSTERDESC_H
 
 // @file
 // @brief Description of a cluster and the nodes in it.
+// @author Ger van Diepen <diepen AT astron nl>
 
 //# Includes
 #include <MWCommon/NodeDesc.h>
 #include <string>
 #include <vector>
 #include <iosfwd>
+
+//# Forard Declarations;
+namespace LOFAR {
+  class ParameterSet;
+}
 
 namespace LOFAR { namespace CEP {
 
@@ -61,48 +68,55 @@ namespace LOFAR { namespace CEP {
     void setName (const std::string& name)
       { itsName = name; }
 
-    // Set head node name.
-    void setHeadNode (const std::string& headNode)
-      { itsHeadNode = headNode; }
-
-    // Add a file system it has access to.
-    void addNode (const NodeDesc& node);
+    // Add a node description.
+    // A node with an already existing name is not added.
+    // If <src>canExist=false</src>, an exception is thrown if existing.
+    void addNode (const NodeDesc& node, bool canExist=false);
 
     // Write it in parset format.
     void write (std::ostream& os) const;
 
-    // Get the name.
+    // Get the cluster name.
     const std::string& getName() const
       { return itsName; }
 
-    // Get the head node.
-    const std::string& getHeadNode() const
-      { return itsHeadNode; }
+    // Get a specific node. An exception is thrown if not found.
+    const NodeDesc& getNode (const std::string& nodeName) const;
 
     // Get all nodes.
     const std::vector<NodeDesc>& getNodes() const
       { return itsNodes; }
 
-    // Get the map of file system to node.
-    const std::map<std::string, std::vector<std::string> >& getMap() const
+    // Get the map of file system to node index.
+    const std::map<std::string, std::vector<int> >& getMap() const
       { return itsFS2Nodes; }
 
   private:
     // Fill the object from the given parset file.
     void init (const std::string& parsetName);
 
+    // Get the description of a homogeneous cluster.
+    void getHomCluster (const ParameterSet& parset);
+
+    // Add nodes for a homogeneous cluster.
+    void addNodes (const ParameterSet& parset,
+                   NodeDesc::NodeType type);
+
+    // Get the description of a heterogeneous cluster.
+    void getHetCluster (const ParameterSet& parset);
+
     // Fill the object from the subcluster definitions.
     // Use the given directory for relative clusterdesc names.
-    void getSubClusters (const vector<string>& parsetNames,
-                         const string& defaultDir);
+    void getSubClusters (const std::vector<std::string>& parsetNames,
+                         const std::string& defaultDir);
 
     // Add entries to the mapping of FileSys to Nodes.
-    void add2Map (const NodeDesc& node);
+    void add2Map (int nodeIndex);
 
     std::string itsName;
-    std::string itsHeadNode;
-    std::vector<NodeDesc> itsNodes;
-    std::map<std::string, std::vector<std::string> > itsFS2Nodes;
+    std::vector<NodeDesc>      itsNodes;
+    std::map<std::string, int> itsNodeMap;
+    std::map<std::string, std::vector<int> > itsFS2Nodes;
   };
     
 }} // end namespaces

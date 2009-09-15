@@ -106,12 +106,18 @@ do
   if test "$masterhost" = ""; then
     masterhost=$host
   fi
-  echo "ssh -x -n $host $program socket $masterhost $port $np $rank '$part' '$fsys' '$partvds'" "$@" " &"
+  # Quote all arguments ("$@" does not work over ssh).
+  arg=
+  for a in "$@"
+  do
+    arg="$arg '$a'"
+  done
+  echo "ssh -x -n $host $program socket $masterhost $port $np $rank '$part' '$fsys' '$partvds' $arg" " &"
   if test $dry = 0; then
     if test "$logfile" = ""; then
-      ssh -x -n $host $program socket $masterhost $port $np $rank "$part" "$fsys" "$partvds" "$@" &
+      ssh -x -n $host $program socket $masterhost $port $np $rank "$part" "$fsys" "$partvds" $arg &
     else
-      ssh -x -n $host $program socket $masterhost $port $np $rank "$part" "$fsys" "$partvds" "$@" > $logfile-$rank 2>&1 &
+      ssh -x -n $host $program socket $masterhost $port $np $rank "$part" "$fsys" "$partvds" $arg > $logfile-$rank 2>&1 &
     fi
     pidlist="$pidlist $!"
   fi

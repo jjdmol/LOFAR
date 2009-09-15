@@ -26,10 +26,10 @@
 pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
-if test $# != 16; then
+if test $# != 17; then
   echo "run as:  setupsourcedb-part dummy dummy dummy dummy rank"
   echo "                            ms-part filesys ms-part-vds envfile"
-  echo "                            wd pdbfile pdbname overwrite dry"
+  echo "                            wd srccat makeopt pdbname overwrite dry"
   echo "                            stepfreq steptime"
   exit 1
 fi
@@ -43,11 +43,12 @@ msn=$2
 envfile=$5
 wd=$6
 srccat=$7
-pdb=$8
-overwrite=$9
-dry=${10}
-stepfreq=${11}
-steptime=${12}
+makeopt=$8
+pdb=$9
+overwrite=${10}
+dry=${11}
+stepfreq=${12}
+steptime=${13}
 
 
 # Initialize environment.
@@ -62,11 +63,11 @@ if test "$pdb" = ""; then
 fi
 
 # For 'make check' we need to qualify where makesourcedb is.
-case "$wd" in
-*/test)
-  pgmpath=../src/
-  ;;
-esac
+#case "$wd" in
+#*/test)
+#  pgmpath=../src/
+#  ;;
+#esac
 
 # Set the working directory; derive it if needed.
 if test "$wd" = ""  -o  "$wd" = "..."; then
@@ -74,13 +75,21 @@ if test "$wd" = ""  -o  "$wd" = "..."; then
 fi
 cd $wd  ||  exit 1
 
+# Enclose all options in quotes.
+sdbopt=
+for opt in $makeopt
+do
+  sdbopt="$sdbopt '$opt'"
+done
+
 # Append to the SourceDB. Delete it first if overwrite is given.
-echo "Create $msn/$pdb from $srccat"
+echo "makesourcedb $sdbopt in=$srccat out=$msn/$pdb"
 if test "$dry" != dry; then
   if test $overwrite = 1; then
     rm -rf $msn/$pdb
   fi
-  ${pgmpath}/makesourcedb in=$srccat out=$msn/$pdb
+  # Use eval to avoid problems with quotes in sdbopt.
+  eval makesourcedb $sdbopt in=$srccat out=$msn/$pdb || exit 1
 
   if test "$stepfreq" != "."  -a  "$steptime" != "."; then
     # Put default steps into the sourcedb.

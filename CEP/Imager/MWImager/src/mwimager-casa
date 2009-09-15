@@ -49,12 +49,40 @@ def main(argv=None):
     datacol = ps.getString ('column', 'DATA');
     schan = ps.getInt ('firstchan', 0);
     echan = ps.getInt ('lastchan', -1);
-    imsize = ps.getInt ('Images.shape');
-    cellsz = ps.getString ('Images.cellSize')
+    imgnchan = ps.getInt ('Images.nchan', 1);
+    imsize = ps.getIntVector ('Images.shape');
+    cellsz = ps.getStringVector ('Images.cellSize')
     stokes = ps.getStringVector ('Images.stokes', 'I')
+    padding = ps.getString ('Images.padding', '1')
+    taper = ps.getStringVector ('Filter', '')
+    phasecenter = ''
+    if ps.isDefined ('Images.ra'):
+        phasecenter = ' "phasecenter=%s,%s,%s"' % (ps.getString ('Images.ra'), ps.getString('Images.dec'), ps.getString("Images.directionType", 'J2000'))
+    filter = ''
+    if ps.isDefined ('taper'):
+        taper = ps.getStringVector ('taper', '')
+        if len(taper) != 3:
+            print sys.stderr, 'Specify taper as [bmajor,bminor,bpa]'
+            return 1
+        filter = ' "filter=%s,%s,%s"' % taper
     nwplanes = ps.getInt ('nwplanes', 256);
     nfacets  = ps.getInt ('nfacets', 1);
 
+    # Currently only equal values can be used for x and y.
+    print "aaa",len(imsize),len(cellsz)
+    if len(imsize) > 2  or  len(cellsz) > 2:
+        print sys.stderr, "One or two values can be given for shape or cellSize for casaimager"
+        return 1
+    if len(imsize) == 2:
+        if imsize[0] != imsize[1]:
+            print sys.stderr, "x and y shape must be equal for casaimager"
+            return 1
+        imsize = imsize[0]
+    if len(cellsz) == 2:
+        if cellsz[0] != cellsz[1]:
+            print sys.stderr, "x and y cellSize must be equal for casaimager"
+            return 1
+        cellsz = cellsz[0]
     # Append default unit arcsec if no unit given.
     ls = len(cellsz)
     if ls > 0  and  cellsz[ls-1] >= '0'  and  cellsz[ls-1] <= '9':
@@ -66,9 +94,13 @@ def main(argv=None):
         stokestr += s
 
     # Form the image name.
-    imgname = dname + '.img'
+    imgname = msname + '.img'
 
-    command = '"ms=%s" "image=%s" "data=%s" "mode=channel" "npix=%d" "cellsize=%s" "stokes=%s" "chan=%d" "wprojplanes=%d" ""nfacets=%d"' % (msname,imgname,datacol,imsize,cellsz,stokestr,schan,nwplanes,nfacets)
+    command = 'lwimager "ms=%s" "image=%s" "data=%s" "mode=channel" "npix=%d" "cellsize=%s" "stokes=%s" "chan=%d" "wprojplanes=%d" ""nfacets=%d"' % (msname,imgname,datacol,imsize,cellsz,stokestr,schan,nwplanes,nfacets)
+    if len(phasecenter) > 0:
+        command += phasecenter
+    if len(filter) > 0:
+        command += filter
     print command
     print "Nothing done; casaimager not operational yet"
 

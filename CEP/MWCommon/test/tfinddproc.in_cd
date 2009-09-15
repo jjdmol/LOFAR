@@ -1,7 +1,7 @@
 ClusterName = cl
-HeadNode = node0
 NNodes = 3
 Node0.NodeName = node0
+Node0.NodeType = Head
 Node0.NodeFileSys = [node1:/usr]
 Node0.NodeMountPoints = [/usr]
 Node1.NodeName = node1

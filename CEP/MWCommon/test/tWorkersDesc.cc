@@ -31,6 +31,7 @@ void doIt1()
   cl.addNode (node1);
   NodeDesc node2;
   node2.setName ("node2");
+  node2.setType (NodeDesc::Storage);
   node2.addFileSys ("fs0", "/fs0");
   node2.addFileSys ("fs1", "/fs1");
   node2.addFileSys ("fs2", "/fs2");
@@ -51,23 +52,33 @@ void doIt1()
   worker = wdesc.findWorker (0, "fs2");
   ASSERT (worker == 1);
   wdesc.incrLoad (worker);
-  worker = wdesc.findWorker (0, "fs1");
+  worker = wdesc.findWorker (0, "fs1", NodeDesc::Any);
   ASSERT (worker == 2);
   wdesc.incrLoad (worker);
   worker = wdesc.findWorker (0, "fs2");
   ASSERT (worker == 1);
   wdesc.incrLoad (worker);
+  // Test the difference between asking for Compute or Any.
+  worker = wdesc.findWorker (0, "fs2", NodeDesc::Compute);
+  ASSERT (worker == 1);
+  worker = wdesc.findWorker (0, "fs2", NodeDesc::Any);
+  ASSERT (worker == 2);
   worker = wdesc.findWorker (0, "fs1");
   ASSERT (worker == 0);
   worker = wdesc.findWorker (0, "fs0");
   ASSERT (worker == 0);
   wdesc.incrLoad (worker);
-  worker = wdesc.findWorker (0, "fs0");
+  worker = wdesc.findWorker (0, "fs0", NodeDesc::Any);
   ASSERT (worker == 2);
   wdesc.incrLoad (worker);
   wdesc.incrLoad (0);
   wdesc.incrLoad (1);
-  worker = wdesc.findWorker (1, "");
+  // At this point worker 0 and 1 have load 3, while worker 3 has load 2.
+  // Do tests without giving a file system.
+  // Test the difference between asking for Compute or Any.
+  worker = wdesc.findWorker (1, "", NodeDesc::Compute);
+  ASSERT (worker == 0);
+  worker = wdesc.findWorker (1, "", NodeDesc::Any);
   ASSERT (worker == 2);
   wdesc.incrLoad (worker);
   ASSERT (wdesc.findWorker (2, "") == -1);

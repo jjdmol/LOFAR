@@ -35,6 +35,7 @@ fi
 # Get possible options.
 overwrite=0
 setsteps=1
+makeopt=
 help=0
 while [ $# != 0 ]
 do
@@ -53,6 +54,13 @@ do
   elif [ "$1" = "-nosetsteps" ]; then
     setsteps=0
     shift
+  elif [ "$1" = "-makeopt" ]; then
+    shift
+    makeopt=$1
+    shift
+  elif [ "$1" = "-nomakeopt" ]; then
+    makeopt=
+    shift
   else
     break
   fi
@@ -68,9 +76,11 @@ if test $help = 1; then
   echo "                       [clusterdesc] [logfile] [dry] [hfn]"
   echo "       -overwrite    overwrite sourcedb if already existing"
   echo "       -setsteps     set default steps in the parmdb from the MS"
+  echo "       -makeopt      optional makesourcedb options; e.g."
+  echo "                     -makeopt='format=<'"
   echo "       ms-gds        name of global VDS file of the MS"
-  echo "       srccat        name of ASCII file containing sources in the"
-  echo "                     standard makesourcedb format"
+  echo "       srccat        name of ASCII file containing sources"
+  echo "                     makesourcedb options can be givn using -makeopt"
   echo "       sourcedb-name   extension name of new sourcedb (defaults to sky)"
   echo "                     e.g. for 100319.MS the name 100319.sky is used"
   echo "       clusterdesc   name of clusterdesc file"
@@ -130,6 +140,9 @@ fi
 if test "$wd" = ""; then
   wd=...
 fi
+##if test "$makeopt" = ""; then
+##  makeopt=...
+##fi
 
 # Generate a VDS file name for the sourcedb-s.
 # This is the file that has to be used in pysourcedb.
@@ -151,8 +164,8 @@ steptime=.
 # It is possible to give an MS instead of a VDS file.
 # In that case only that MS is handled.
 if test -d "$msvds"  -a  -e "$msvds/table.dat"; then
-  echo "setupsourcedb-part '' '' '' '' 0 '$msvds' '' '' '$wd' '$srccat' '$pdb' '$overwrite' '$dry' '$stepfreq' '$steptime'"
-  $pgmpath/setupsourcedb-part "" "" "" "" 0 "$msvds" "" "" "$wd" "$srccat" "$pdb" "$overwrite" "$dry" "$stepfreq" "$steptime"
+  echo "setupsourcedb-part '' '' '' '' 0 '$msvds' '' '' '$wd' '$srccat' '$makeopt' '$pdb' '$overwrite' '$dry' '$stepfreq' '$steptime'"
+  $pgmpath/setupsourcedb-part "" "" "" "" 0 "$msvds" "" "" "$wd" "$srccat" "$makeopt" "$pdb" "$overwrite" "$dry" "$stepfreq" "$steptime"
   exit
 fi
 
@@ -182,8 +195,8 @@ if test "$hfn" != ""; then
 fi
 
 # Start the processes on the various machines.
-echo "startdistproc -useenv -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/setupsourcedb-part '$wd' '$srccat' '$pdb' '$overwrite' '$dry' '$stepfreq' '$steptime'"
-startdistproc -useenv -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/setupsourcedb-part "$wd" "$srccat" "$pdb" "$overwrite" "$dry" "$stepfreq" "$steptime"  ||  exit 1
+echo "startdistproc -useenv -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/setupsourcedb-part '$wd' '$srccat' '$makeopt' '$pdb' '$overwrite' '$dry' '$stepfreq' '$steptime'"
+startdistproc -useenv -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/setupsourcedb-part "$wd" "$srccat" "$makeopt" "$pdb" "$overwrite" "$dry" "$stepfreq" "$steptime"  ||  exit 1
 
 # Create a VDS file for the sourcedb-s by copying it.
 # This is the file that has to be used in pyparmdb.
