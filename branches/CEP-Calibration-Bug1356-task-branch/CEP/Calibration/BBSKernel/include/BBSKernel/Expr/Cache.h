@@ -23,6 +23,7 @@
 #ifndef LOFAR_BBSKERNEL_EXPR_CACHE_H
 #define LOFAR_BBSKERNEL_EXPR_CACHE_H
 
+#include <BBSKernel/Expr/ExprId.h>
 #include <BBSKernel/Expr/Request.h>
 #include <BBSKernel/Expr/ExprResult.h>
 
@@ -39,8 +40,6 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-typedef size_t ExprId;
-
 class Cache
 {
 public:
@@ -48,37 +47,10 @@ public:
     ~Cache();
 
     template <typename T_EXPR_VALUE>
-    void insert(ExprId expr, RequestId request, const T_EXPR_VALUE &result)
-    {
-        CacheRecord &record = itsCache[expr];
-        itsMaxSize = std::max(itsMaxSize, itsCache.size());
-
-        if(record.result == 0 || record.request < request)
-        {
-            ExprValue* tmp = record.result;
-            record.result = new T_EXPR_VALUE(result);
-            delete tmp;
-            record.request = request;
-        }
-    }
+    void insert(ExprId expr, RequestId request, const T_EXPR_VALUE &result);
 
     template <typename T_EXPR_VALUE>
-    bool query(ExprId expr, RequestId request, T_EXPR_VALUE &value)
-    {
-        ++itsQueryCount;
-
-        map<ExprId, CacheRecord>::const_iterator it = itsCache.find(expr);
-        if(it != itsCache.end() && it->second.request == request)
-        {
-            ASSERT(it->second.result != 0);
-//            DBGASSERT(dynamic_cast<const T_EXPR_VALUE*>(it->second.result));
-            value = *(static_cast<T_EXPR_VALUE*>(it->second.result));
-            ++itsHitCount;
-            return true;
-        }
-
-        return false;
-    }
+    bool query(ExprId expr, RequestId request, T_EXPR_VALUE &value);
 
     void clear();
     void clearStats();
@@ -107,6 +79,44 @@ private:
 ostream &operator<<(ostream &out, const Cache &obj);
 
 // @}
+
+
+// -------------------------------------------------------------------------- //
+// - Implementation: Cache                                                  - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_EXPR_VALUE>
+void Cache::insert(ExprId expr, RequestId request, const T_EXPR_VALUE &result)
+{
+    CacheRecord &record = itsCache[expr];
+    itsMaxSize = std::max(itsMaxSize, itsCache.size());
+
+    if(record.result == 0 || record.request < request)
+    {
+        ExprValue* tmp = record.result;
+        record.result = new T_EXPR_VALUE(result);
+        delete tmp;
+        record.request = request;
+    }
+}
+
+template <typename T_EXPR_VALUE>
+bool Cache::query(ExprId expr, RequestId request, T_EXPR_VALUE &value)
+{
+    ++itsQueryCount;
+
+    map<ExprId, CacheRecord>::const_iterator it = itsCache.find(expr);
+    if(it != itsCache.end() && it->second.request == request)
+    {
+        ASSERT(it->second.result != 0);
+//        DBGASSERT(dynamic_cast<const T_EXPR_VALUE*>(it->second.result));
+        value = *(static_cast<T_EXPR_VALUE*>(it->second.result));
+        ++itsHitCount;
+        return true;
+    }
+
+    return false;
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

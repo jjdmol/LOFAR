@@ -25,6 +25,7 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/ConditionNumber.h \
 	Expr/DFTPS.h \
 	Expr/Expr.h \
+	Expr/ExprId.h \
 	Expr/ExprAdaptors.h \
 	Expr/ExprParm.h \
 	Expr/ExprResult.h \

@@ -29,6 +29,7 @@
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_set.h>
 
+#include <BBSKernel/Expr/ExprId.h>
 #include <BBSKernel/Expr/Request.h>
 #include <BBSKernel/Expr/ExprResult.h>
 #include <BBSKernel/Expr/Cache.h>
@@ -40,9 +41,6 @@ namespace BBS
 
 // \addtogroup Expr
 // @{
-
-// Expression identifier (used for caching).
-typedef size_t ExprId;
 
 // Expression base class.
 class ExprBase
