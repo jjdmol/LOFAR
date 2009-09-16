@@ -28,25 +28,27 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(LCS)
+project(pyparameterset)
 include(LofarGeneral)
 
-## ---------------------------------------------------------------------------
-## Subdirectories
-## ---------------------------------------------------------------------------
-lofar_add_subdirectory(Tools)          # Useful tools
-lofar_add_subdirectory(Common)         # Common stuff
-lofar_add_subdirectory(Blob)           # Binary Large Objects
-lofar_add_subdirectory(Stream)         # Low-level support for streaming data
-lofar_add_subdirectory(Transport)      # Low-level transport library
-lofar_add_subdirectory(ACC)            # Application Configuration & Control
-lofar_add_subdirectory(AMC)            # Astronomical Measures Conversions
-lofar_add_subdirectory(ApplCommon)     # Application common stuff
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common)
 
-lofar_add_subdirectory(pytools)        # Python tools
-lofar_add_subdirectory(pyparameterset) # Python ParameterSet bindings
+## ---------------------------------------------------------------------------
+## External packages
+## ---------------------------------------------------------------------------
+include(LofarFindPackage)
+lofar_find_package(Python REQUIRED)
+lofar_find_package(Boost REQUIRED COMPONENTS python)
+lofar_find_package(Pyrap REQUIRED)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
+
+## ---------------------------------------------------------------------------
+## Subdirectories
+## ---------------------------------------------------------------------------
+add_subdirectory(src)
+add_subdirectory(test)

@@ -21,7 +21,7 @@
 # A tiny wrapper around the FindBoost.cmake macro that comes with CMake. 
 # Its purpose is twofold:
 # - Define all-uppercase variables for the following variables: 
-#   Boost_INCLUDE_DIRS Boost_LIBRARIES and Boost_FOUND.
+#   Boost_INCLUDE_DIRS, Boost_LIBRARIES, and Boost_FOUND.
 # - Set a HAVE_BOOST_<COMPONENT> variable in the cache for each component that
 #   was found.
 
