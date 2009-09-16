@@ -1,8 +1,6 @@
-#!/bin/sh
-
-# runctest.sh: CTest wrapper script for runtest.sh
+#  $Id$
 #
-#  Copyright (C) 2009
+#  Copyright (C) 2008-2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
 #  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
@@ -19,24 +17,17 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
-#  $Id: runctest.sh 13275 2009-05-15 15:42:36Z loose $
 
-# These "Autotools variables" are used by autoconf_share/runtest.sh
-export lofar_sharedir=@lofar_sharedir@
-export srcdir=@srcdir@
+include(LofarPackageVersion)
 
-# We need to set PYTHONPATH when running python test programs.
-export PYTHONPATH=@PROJECT_BINARY_DIR@/src:$PYTHONPATH
+# Create symbolic link to include directory.
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
 
-# Start autoconf_share/runtest.sh
-$lofar_sharedir/runtest.sh "$@"
+lofar_add_library(_pyparameterset SHARED pyparameterset.cc)
+set_target_properties(_pyparameterset PROPERTIES PREFIX "")
 
-# The Autotools use the magic return value 77 for skipped tests. CMake can
-# only handle zero and non-zero return values. To avoid that CMake will flag a
-# skipped test as failed, we will silently change the return value 77 to 0.
-STATUS=$?
-if [ $STATUS -eq 77 ]; then
-  STATUS=0
-fi
-exit $STATUS
+lofar_add_bin_program(versionpyparameterset 
+  versionpyparameterset.cc
+  Package__Version.cc)
