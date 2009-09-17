@@ -121,6 +121,10 @@ if test "$AIPSPP" != ""; then
   export AIPSPATH
 fi
 
+# Add the current directory to the path. We don't care if it's already in.
+PATH=.:$PATH
+export PATH
+
 # Delete all possible files from previous test runs.
 \rm -f $1.err $1.valgrind*
 

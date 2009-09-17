@@ -28,22 +28,27 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(CEP)
+project(pyparmdb)
 include(LofarGeneral)
 
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common ParmDB)
+
 ## ---------------------------------------------------------------------------
-## Subdirectories
+## External packages
 ## ---------------------------------------------------------------------------
-lofar_add_subdirectory(MWCommon)
-lofar_add_subdirectory(MS)
-lofar_add_subdirectory(ParmDB)
-lofar_add_subdirectory(Calibration)
-lofar_add_subdirectory(DP3)
-lofar_add_subdirectory(Imager)
-lofar_add_subdirectory(Pipeline)
-lofar_add_subdirectory(pyparmdb)
+include(LofarFindPackage)
+lofar_find_package(Boost REQUIRED COMPONENTS python)
+lofar_find_package(Python REQUIRED)
+lofar_find_package(Pyrap REQUIRED)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
+
+## ---------------------------------------------------------------------------
+## Subdirectories
+## ---------------------------------------------------------------------------
+add_subdirectory(src)
+add_subdirectory(test)
