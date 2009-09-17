@@ -122,22 +122,25 @@ class UnknownStationError(StandardError):
     pass
 
 class Station(object):
-    """
-    Represents a real or virtual station.
-    """
-    def __init__(self, name, ionode, inputs):
-        self.name	= name
-        self.ionode	= ionode
-        self.inputs	= inputs
+  """
+  Represents a real or virtual station.
+  """
+  def __init__(self, name, ionode, inputs):
+    self.name   = name
+    self.ionode	= ionode
+    self.inputs	= inputs
 
-    def getPsetIndex(self, partition):
-        assert partition in PartitionPsets, "Unknown partition: %s" % (partition,)
+  def getPsetIndex(self, partition):
+    assert partition in PartitionPsets, "Unknown partition: %s" % (partition,)
 
-        psets = PartitionPsets[partition]
+    psets = PartitionPsets[partition]
 
-        assert self.ionode in psets, "IONode %s not in partition %s" % (self.ionode,partition)
+    assert self.ionode in psets, "IONode %s not in partition %s" % (self.ionode,partition)
 
-	return psets.index(self.ionode)
+    return psets.index(self.ionode)
+
+  def getName(self):
+    return self.name
 
 class Stations(dict):
   def __init__(self):

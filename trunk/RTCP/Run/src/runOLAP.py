@@ -285,7 +285,16 @@ if __name__ == "__main__":
     parset.setPartition( options.partition )
 
     # define storage nodes
-    parset.setStorageNodes( Locations.nodes["storage"] )
+    if not options.nostorage:
+      if not Locations.nodes["storage"]:
+        Locations.nodes["storage"] = parset.distillStorageNodes()
+
+        if Locations.nodes["storage"]:
+          info( "Distilled storage nodes %s from parset." % (Locations.nodes["storage"],) )
+        else:
+          fatal( "No storage nodes selected on command line or in parset." )
+
+      parset.setStorageNodes( Locations.nodes["storage"] )
 
     # set stations
     if "stations" in obsparams:

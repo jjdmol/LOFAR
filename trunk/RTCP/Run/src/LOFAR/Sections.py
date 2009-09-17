@@ -73,6 +73,7 @@ class Section:
       def run(self):
         for c in commands:
           c.wait()
+
         lock.release()  
 
     lock.acquire()
@@ -268,7 +269,7 @@ class StorageSection(Section):
           node, self.universe, signal) )
 
         # Sometimes it does not though, so send Storage (identified by parset file on command line, which is unique) the same signal
-        SyncCommand( SSH+"-t %s ps --no-heading -o pid,cmd -ww -C Storage | grep '%s' | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
+        SyncCommand( SSH+"-t %s ps --no-heading -o pid,cmd -ww -C Storage | grep '%s' | awk '{ print $1; }' | xargs -I foo kill -%s foo" % (
           node, Locations.files["parset"], signal) )
 
       self.killSequence( "orted/Storage processes on %s" % (node,), kill, timeout )
