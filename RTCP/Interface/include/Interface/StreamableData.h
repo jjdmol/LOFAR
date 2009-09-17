@@ -63,19 +63,18 @@ class StreamableData {
 };
 
 // A typical data set contains a MultiDimArray of tuples and a set of flags.
-template <typename T, unsigned DIM> class SampleData : public StreamableData
+template <typename T = fcomplex, unsigned DIM = 4> class SampleData : public StreamableData
 {
   public:
     typedef typename MultiDimArray<T,DIM>::ExtentList ExtentList;
 
     SampleData(bool isIntegratable, const ExtentList &extents, unsigned nrFlags);
-    virtual ~SampleData();
 
     virtual size_t requiredSize() const;
     virtual void allocate(Allocator &allocator = heapAllocator);
 
     MultiDimArray<T,DIM> samples;
-    SparseSet<unsigned>  *flags;
+    std::vector<SparseSet<unsigned> >  flags;
 
   protected:
     virtual void checkEndianness();
@@ -177,13 +176,7 @@ template <typename T, unsigned DIM> inline size_t SampleData<T,DIM>::requiredSiz
 template <typename T, unsigned DIM> inline void SampleData<T,DIM>::allocate(Allocator &allocator)
 {
   samples.resize(extents, 32, allocator);
-  flags = new SparseSet<unsigned>[nrFlags];
-}
-
-template <typename T, unsigned DIM> inline SampleData<T,DIM>::~SampleData()
-{
-  delete [] flags;
-  flags = 0;
+  flags.resize( nrFlags );
 }
 
 template <typename T, unsigned DIM> inline void SampleData<T,DIM>::checkEndianness()
@@ -213,7 +206,6 @@ template <typename T, unsigned DIM> inline void SampleData<T,DIM>::writeData(Str
 
   str->write(samples.origin(), samples.num_elements() * sizeof (T));
 }
-
 
 } // namespace RTCP
 } // namespace LOFAR

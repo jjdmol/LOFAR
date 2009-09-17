@@ -145,12 +145,12 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::destroy_fft()
 }
 
 
-template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned stat, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned stat, const SubbandMetaData *metaData, FilteredData *filteredData)
 {
   computeFlagsTimer.start();
 
   filteredData->flags[stat].reset();
-  SparseSet<unsigned> flags = transposedData->metaData.getFlags( stat );
+  SparseSet<unsigned> flags = metaData->getFlags( stat );
   const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
 
   for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
@@ -204,13 +204,13 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computePhaseShifts(struct
 #endif // PPF_C_IMPLEMENTATION
 
 
-template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, double centerFrequency, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, double centerFrequency, const SubbandMetaData *metaData, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
 {
   PPFtimer.start();
 
   double baseFrequency = centerFrequency - (itsNrChannels / 2) * itsChannelBandwidth;
 
-  const unsigned alignmentShift = transposedData->metaData.alignmentShift( stat );
+  const unsigned alignmentShift = metaData->alignmentShift( stat );
 
 #if 0
   LOG_DEBUG_STR(setprecision(15) << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << delays[stat].delayAtBegin << " to " << delays[stat].delayAfterEnd << " sec");
@@ -257,7 +257,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
 	for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
 	  if (itsDelayCompensation)
-	    fftOutData[chan] *= phaseShift(time, chan, baseFrequency, transposedData->metaData.beams(stat)[0].delayAtBegin, transposedData->metaData.beams(stat)[0].delayAfterEnd);
+	    fftOutData[chan] *= phaseShift(time, chan, baseFrequency, metaData->beams(stat)[0].delayAtBegin, metaData->beams(stat)[0].delayAfterEnd);
 
 	  filteredData->samples[chan][stat][time][pol] = fftOutData[chan];
 	}
@@ -296,10 +296,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
   struct phase_shift phaseShifts[itsNrSamplesPerIntegration];
 
-  computePhaseShifts(phaseShifts, transposedData->metaData.beams(stat)[0].delayAtBegin, transposedData->metaData.beams(stat)[0].delayAfterEnd, baseFrequency);
-
-  // forward (pencil) beam forming information
-  memcpy( &filteredData->metaData.subbandInfo(stat), &transposedData->metaData.subbandInfo(stat), transposedData->metaData.itsSubbandInfoSize );
+  computePhaseShifts(phaseShifts, metaData->beams(stat)[0].delayAtBegin, metaData->beams(stat)[0].delayAfterEnd, baseFrequency);
 
   const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[stat].getRanges();
   SparseSet<unsigned>::const_iterator it = ranges.begin();

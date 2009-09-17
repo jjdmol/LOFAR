@@ -7,8 +7,8 @@
 
 
 #include <BandPass.h>
-#include <Interface/FilteredData.h>
 #include <Interface/CorrelatedData.h>
+#include <Interface/StreamableData.h>
 
 #include <cassert>
 
@@ -22,23 +22,23 @@ namespace RTCP {
 class Correlator
 {
   public:
-    // TODO make stationMapping a vector? --Rob
-    Correlator(const unsigned nrStations, const unsigned* stationMapping, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const bool correctBandPass);
-    ~Correlator();
+    Correlator(const std::vector<unsigned> &stationMapping, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const bool correctBandPass);
 
-    void	    correlate(const FilteredData *, CorrelatedData *);
-    void	    computeFlagsAndCentroids(const FilteredData *, CorrelatedData *);
+    // We can correlate arrays of size
+    // samples[nrChannels][nrStations][nrSamplesPerIntegration][nrPolarizations]
+    void	    correlate(const SampleData<> *, CorrelatedData *);
+    void	    computeFlagsAndCentroids(const SampleData<> *, CorrelatedData *);
 
     static unsigned baseline(const unsigned station1, const unsigned station2);
 
   private:
     const unsigned  itsNrStations, itsNrBaselines, itsNrChannels, itsNrSamplesPerIntegration;
-    float	    *itsCorrelationWeights; //[itsNrSamplesPerIntegration + 1]
+    std::vector<float> itsCorrelationWeights; //[itsNrSamplesPerIntegration + 1]
     const BandPass  itsBandPass;
 
-    // A list indexed by station number, result is the station position in the Filtered data.
+    // A list indexed by station number, result is the station position in the input data.
     // This is needed in case of tied array beam forming.
-    const unsigned* itsStationMapping; //[itsNrStations]
+    const std::vector<unsigned> &itsStationMapping; //[itsNrStations]
 
     double	    computeCentroidAndValidSamples(const SparseSet<unsigned> &flags, unsigned &nrValidSamples) const;
 };

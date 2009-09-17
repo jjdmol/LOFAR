@@ -48,50 +48,20 @@ static inline void addStokes( struct stokes &stokes, const fcomplex &polX, const
 
 
 // Calculate coherent stokes values from pencil beams.
-void Stokes::calculateCoherent( const PencilBeamData *pencilBeamData, StokesData *stokesData, const unsigned nrBeams )
+void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, const unsigned nrBeams )
 {
-  stokesTimer.start();
-  computeCoherentStokes( pencilBeamData->samples, pencilBeamData->flags, stokesData, nrBeams );
-  stokesTimer.stop();
-}
+  ASSERT( sampleData->samples.shape()[0] == itsNrChannels );
+  ASSERT( sampleData->samples.shape()[1] == nrBeams );
+  ASSERT( sampleData->samples.shape()[2] >= itsNrSamplesPerIntegration );
+  ASSERT( sampleData->samples.shape()[3] == NR_POLARIZATIONS );
 
-// Calculate incoherent stokes values from (filtered) station data.
-void Stokes::calculateIncoherent( const FilteredData *filteredData, StokesData *stokesData, const unsigned nrStations )
-{
-  stokesTimer.start();
-  computeIncoherentStokes( filteredData->samples, filteredData->flags, stokesData, nrStations );
-  stokesTimer.stop();
-}
-
-// Compress Stokes values by summing over all channels
-void Stokes::compressStokes( const StokesData *in, StokesDataIntegratedChannels *out, const unsigned nrBeams )
-{
-  const unsigned timeSteps = itsNrSamplesPerIntegration / itsNrSamplesPerStokesIntegration;
-
-  // copy flags
-  for(unsigned beam = 0; beam < nrBeams; beam++) {
-    out->flags[beam] = in->flags[beam];
-  }
-
-  for (unsigned beam = 0; beam < nrBeams; beam++ ) {
-    for (unsigned time = 0; time < timeSteps; time++ ) {
-      for (unsigned stokes = 0; stokes < itsNrStokes; stokes++ ) {
-        float channelSum = 0.0f;
-
-        for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
-          channelSum += in->samples[ch][beam][time][stokes];
-        }
-
-	out->samples[beam][time][stokes] = channelSum;
-      }	
-    }
-  }
-}
-
-void Stokes::computeCoherentStokes( const MultiDimArray<fcomplex,4> &in, const SparseSet<unsigned> *inflags, StokesData *out, const unsigned nrBeams )
-{
   const unsigned &integrationSteps = itsNrSamplesPerStokesIntegration;
   const bool allStokes = itsNrStokes == 4;
+  const MultiDimArray<fcomplex,4> &in = sampleData->samples;
+  const std::vector<SparseSet<unsigned> > &inflags = sampleData->flags;
+  StokesData *out = stokesData;
+
+  stokesTimer.start();
 
   // copy flags from beams
   for(unsigned beam = 0; beam < nrBeams; beam++) {
@@ -123,15 +93,27 @@ void Stokes::computeCoherentStokes( const MultiDimArray<fcomplex,4> &in, const S
       }
     }
   }
+  stokesTimer.stop();
 }
 
-void Stokes::computeIncoherentStokes( const MultiDimArray<fcomplex,4> &in, const SparseSet<unsigned> *inflags, StokesData *out, const unsigned nrStations )
+// Calculate incoherent stokes values from (filtered) station data.
+void Stokes::calculateIncoherent( const SampleData<> *sampleData, StokesData *stokesData, const unsigned nrStations )
 {
+  ASSERT( sampleData->samples.shape()[0] == itsNrChannels );
+  ASSERT( sampleData->samples.shape()[1] == nrStations );
+  ASSERT( sampleData->samples.shape()[2] >= itsNrSamplesPerIntegration );
+  ASSERT( sampleData->samples.shape()[3] == NR_POLARIZATIONS );
+
   const unsigned &integrationSteps = itsNrSamplesPerStokesIntegration;
   const bool allStokes = itsNrStokes == 4;
   const unsigned upperBound = static_cast<unsigned>(itsNrSamplesPerIntegration * Stokes::MAX_FLAGGED_PERCENTAGE);
   bool validStation[nrStations];
   unsigned nrValidStations = 0;
+  const MultiDimArray<fcomplex,4> &in = sampleData->samples;
+  const std::vector< SparseSet<unsigned> > &inflags = sampleData->flags;
+  StokesData *out = stokesData;
+
+  stokesTimer.start();
 
   out->flags[0].reset();
 
@@ -178,6 +160,32 @@ void Stokes::computeIncoherentStokes( const MultiDimArray<fcomplex,4> &in, const
         dest[3] = stokes.V / nrValidStations;
       }
       #undef dest
+    }
+  }
+  stokesTimer.stop();
+}
+
+// Compress Stokes values by summing over all channels
+void Stokes::compressStokes( const StokesData *in, StokesDataIntegratedChannels *out, const unsigned nrBeams )
+{
+  const unsigned timeSteps = itsNrSamplesPerIntegration / itsNrSamplesPerStokesIntegration;
+
+  // copy flags
+  for(unsigned beam = 0; beam < nrBeams; beam++) {
+    out->flags[beam] = in->flags[beam];
+  }
+
+  for (unsigned beam = 0; beam < nrBeams; beam++ ) {
+    for (unsigned time = 0; time < timeSteps; time++ ) {
+      for (unsigned stokes = 0; stokes < itsNrStokes; stokes++ ) {
+        float channelSum = 0.0f;
+
+        for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
+          channelSum += in->samples[ch][beam][time][stokes];
+        }
+
+	out->samples[beam][time][stokes] = channelSum;
+      }	
     }
   }
 }

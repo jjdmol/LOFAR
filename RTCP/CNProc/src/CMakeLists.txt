@@ -34,7 +34,6 @@ set(cnproc_LIB_SRCS
   AsyncCommunication.cc
   AsyncTranspose.cc
   BandPass.cc
-  BeamFormer.cc
   CN_Processing.cc
   Correlator.cc
   FCNP_ClientStream.cc

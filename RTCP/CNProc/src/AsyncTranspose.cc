@@ -38,7 +38,7 @@ template <typename SAMPLE_TYPE> AsyncTranspose<SAMPLE_TYPE>::AsyncTranspose(
   }
 }
 
-template <typename SAMPLE_TYPE> void AsyncTranspose<SAMPLE_TYPE>::postAllReceives(TransposedData<SAMPLE_TYPE> *transposedData)
+template <typename SAMPLE_TYPE> void AsyncTranspose<SAMPLE_TYPE>::postAllReceives(SubbandMetaData *metaData, TransposedData<SAMPLE_TYPE> *transposedData)
 {
   // there must be something to receive
   ASSERT(itsInputPsets.size() > 0);
@@ -53,7 +53,7 @@ template <typename SAMPLE_TYPE> void AsyncTranspose<SAMPLE_TYPE>::postAllReceive
       size_t size;
     } toRead[itsNrCommunications] = {
       { transposedData->samples[i].origin(), transposedData->samples[i].num_elements() * sizeof(SAMPLE_TYPE) },
-      { &transposedData->metaData.subbandInfo(i), transposedData->metaData.itsSubbandInfoSize }
+      { &metaData->subbandInfo(i), metaData->itsSubbandInfoSize }
     };
 
     // read it
@@ -103,6 +103,7 @@ template <typename SAMPLE_TYPE> unsigned AsyncTranspose<SAMPLE_TYPE>::waitForAny
 
 
 template <typename SAMPLE_TYPE> void AsyncTranspose<SAMPLE_TYPE>::asyncSend(unsigned outputPsetIndex, 
+                                                                            const SubbandMetaData *metaData,
 									    const InputData<SAMPLE_TYPE> *inputData)
 {
   unsigned pset = itsOutputPsets[outputPsetIndex];
@@ -115,7 +116,7 @@ template <typename SAMPLE_TYPE> void AsyncTranspose<SAMPLE_TYPE>::asyncSend(unsi
     const size_t size;
   } toWrite[itsNrCommunications] = {
     { inputData->samples[outputPsetIndex].origin(), inputData->samples[outputPsetIndex].num_elements() * sizeof(SAMPLE_TYPE) },
-    { &inputData->metaData.subbandInfo(outputPsetIndex), inputData->metaData.itsSubbandInfoSize },
+    { &metaData->subbandInfo(outputPsetIndex), metaData->itsSubbandInfoSize },
   };
 
   // write it

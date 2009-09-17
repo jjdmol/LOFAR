@@ -37,13 +37,13 @@ template <typename SAMPLE_TYPE> class AsyncTranspose
 		 const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets );
   
   // Post all async receives for the transpose.
-  void postAllReceives(TransposedData<SAMPLE_TYPE> *transposedData);
+  void postAllReceives(SubbandMetaData *metaData, TransposedData<SAMPLE_TYPE> *transposedData);
   
   // Wait for a data message. Returns the station number where the message originates.
   unsigned waitForAnyReceive();
   
   // Asynchronously send a subband.
-  void asyncSend(const unsigned outputPsetNr, const InputData<SAMPLE_TYPE> *inputData);
+  void asyncSend(const unsigned outputPsetNr, const SubbandMetaData *metaData, const InputData<SAMPLE_TYPE> *inputData);
   
   // Make sure all async sends have finished.
   void waitForAllSends();

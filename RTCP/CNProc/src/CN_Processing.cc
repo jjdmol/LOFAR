@@ -29,7 +29,6 @@
 #include <Interface/CN_Configuration.h>
 #include <Interface/PencilCoordinates.h>
 #include <Interface/CN_Mapping.h>
-#include <cassert>
 #include <complex>
 #include <cmath>
 #include <iomanip>
@@ -68,10 +67,12 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsStream(str),
   itsLocationInfo(locationInfo),
   itsInputData(0),
+  itsInputSubbandMetaData(0),
+  itsSubbandMetaData(0),
   itsTransposedData(0),
   itsFilteredData(0),
   itsCorrelatedData(0),
-  itsPencilBeamData(0),
+  itsBeamFormedData(0),
   itsStokesData(0),
   itsIncoherentStokesIData(0),
   itsStokesDataIntegratedChannels(0),
@@ -81,7 +82,6 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
 #endif
   itsPPF(0),
   itsBeamFormer(0),
-  itsPencilBeamFormer(0),
   itsStokes(0),
   itsIncoherentStokesI(0),
   itsCorrelator(0)
@@ -148,6 +148,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsOutputIncoherentStokesI = configuration.outputIncoherentStokesI();
   itsStokesIntegrateChannels = configuration.stokesIntegrateChannels();
   itsOutputPsetSize          = outputPsets.size();
+  itsCenterFrequencies       = configuration.refFreqs();
 
   unsigned nrChannels			 = configuration.nrChannelsPerSubband();
   unsigned nrSamplesPerIntegration       = configuration.nrSamplesPerIntegration();
@@ -158,8 +159,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   // We have to create the Beam Former first, it knows the number of beam-formed stations.
   // The number of baselines depends on this.
   // If beam forming is disabled, nrBeamFormedStations will be equal to nrStations.
-  itsBeamFormer = new BeamFormer(itsNrStations, nrSamplesPerIntegration, station2BeamFormedStation, nrChannels);
-  const unsigned nrBeamFormedStations = itsBeamFormer->getNrBeamFormedStations();
+  itsBeamFormer = new BeamFormer(itsNrPencilBeams, itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, station2BeamFormedStation);
+  const unsigned nrBeamFormedStations = itsBeamFormer->getStationMapping().size();
   const unsigned nrBaselines = nrBeamFormedStations * (nrBeamFormedStations + 1) / 2;
 
   // Each phase (e.g., transpose, PPF, correlator) reads from an input data
@@ -168,16 +169,18 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   // buffer and the other as output buffer.
   // Since some buffers (arenas) are used multiple times, we use multiple
   // Allocators for a single arena.
-
+  //
   if (itsIsTransposeInput) {
-    itsInputData = new InputData<SAMPLE_TYPE>(outputPsets.size(), nrSamplesToCNProc, itsNrPencilBeams);
+    itsInputData = new InputData<SAMPLE_TYPE>(outputPsets.size(), nrSamplesToCNProc);
+    itsInputSubbandMetaData = new SubbandMetaData( outputPsets.size(), itsNrPencilBeams, 32 );
   }
 
   if (itsIsTransposeOutput) {
     // create only the data structures that are used by the pipeline
 
-    itsTransposedData = new TransposedData<SAMPLE_TYPE>(itsNrStations, nrSamplesToCNProc, itsNrPencilBeams);
-    itsFilteredData   = new FilteredData(itsNrStations, nrChannels, nrSamplesPerIntegration, itsNrPencilBeams);
+    itsSubbandMetaData = new SubbandMetaData( itsNrStations, itsNrPencilBeams, 32 );
+    itsTransposedData = new TransposedData<SAMPLE_TYPE>(itsNrStations, nrSamplesToCNProc);
+    itsFilteredData   = new FilteredData(itsNrStations, nrChannels, nrSamplesPerIntegration);
 
     switch( itsMode.mode() ) {
       case CN_Mode::FILTER:
@@ -185,16 +188,17 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
         break;
 
       case CN_Mode::CORRELATE:
+        itsBeamFormedData = new BeamFormedData(itsNrPencilBeams, nrChannels, nrSamplesPerIntegration);
         itsCorrelatedData = new CorrelatedData(nrBaselines, nrChannels);
         break;
 
       case CN_Mode::COHERENT_COMPLEX_VOLTAGES:
-        itsPencilBeamData = new PencilBeamData(itsNrPencilBeams, nrChannels, nrSamplesPerIntegration);
+        itsBeamFormedData = new BeamFormedData(itsNrPencilBeams, nrChannels, nrSamplesPerIntegration);
         break;
 
       case CN_Mode::COHERENT_STOKES_I:
       case CN_Mode::COHERENT_ALLSTOKES:
-        itsPencilBeamData = new PencilBeamData(itsNrPencilBeams, nrChannels, nrSamplesPerIntegration);
+        itsBeamFormedData = new BeamFormedData(itsNrPencilBeams, nrChannels, nrSamplesPerIntegration);
         // fallthrough
 
       case CN_Mode::INCOHERENT_STOKES_I:
@@ -217,8 +221,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsMapping.addDataset(itsInputData,			 0);
   itsMapping.addDataset(itsTransposedData,		 1);
   itsMapping.addDataset(itsFilteredData,		 2);
+  itsMapping.addDataset(itsBeamFormedData,		 1);
   itsMapping.addDataset(itsCorrelatedData,		 1);
-  itsMapping.addDataset(itsPencilBeamData,		 1);
   itsMapping.addDataset(itsStokesData,			 2);
   itsMapping.addDataset(itsIncoherentStokesIData,	 1);
   itsMapping.addDataset(itsStokesDataIntegratedChannels, 1);
@@ -238,7 +242,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     unsigned		  myCoreIndex	   = std::find(usedCoresInPset.begin(), usedCoresInPset.end(), myCoreInPset) - usedCoresInPset.begin();
     unsigned		  logicalNode	   = usedCoresPerPset * (outputPsetIndex - outputPsets.begin()) + myCoreIndex;
 
-    itsCenterFrequencies = configuration.refFreqs();
     itsFirstSubband	 = (logicalNode / usedCoresPerPset) * itsNrSubbandsPerPset;
     itsLastSubband	 = itsFirstSubband + itsNrSubbandsPerPset;
     itsCurrentSubband	 = itsFirstSubband + logicalNode % usedCoresPerPset % itsNrSubbandsPerPset;
@@ -250,11 +253,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
     itsPPF		 = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation(), itsLocationInfo.rank() == 0);
 
-    itsPencilBeamFormer  = new PencilBeams(itsNrPencilBeams, itsNrStations, nrChannels, nrSamplesPerIntegration, itsCenterFrequencies[itsCurrentSubband], configuration.sampleRate() / nrChannels);
     itsStokes            = new Stokes(itsMode.isCoherent(), itsMode.nrStokes(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
     itsIncoherentStokesI = new Stokes(false, 1, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
 
-    itsCorrelator	 = new Correlator(nrBeamFormedStations, itsBeamFormer->getStationMapping(), nrChannels, nrSamplesPerIntegration, configuration.correctBandPass());
+    itsCorrelator	 = new Correlator(itsBeamFormer->getStationMapping(), nrChannels, nrSamplesPerIntegration, configuration.correctBandPass());
   }
 
 #if defined HAVE_MPI
@@ -270,13 +272,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
 #if defined HAVE_MPI
 
   if (itsIsTransposeInput) {
-    itsInputData->readMetaData(itsStream); // sync read the meta data
+    itsInputSubbandMetaData->read(itsStream); // sync read the meta data
   }
 
   if(itsIsTransposeOutput && itsCurrentSubband < itsNrSubbands) {
     NSTimer postAsyncReceives("post async receives", LOG_CONDITION, true);
     postAsyncReceives.start();
-    itsAsyncTranspose->postAllReceives(itsTransposedData);
+    itsAsyncTranspose->postAllReceives(itsSubbandMetaData,itsTransposedData);
     postAsyncReceives.stop();
   }
 
@@ -302,7 +304,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
 	asyncSendTimer.start();
 //	LOG_DEBUG("transpose: send subband " << subband << " to pset id " << i);
 
-	itsAsyncTranspose->asyncSend(i, itsInputData); // Asynchronously send one subband to another pset.
+	itsAsyncTranspose->asyncSend(i, itsInputSubbandMetaData, itsInputData); // Asynchronously send one subband to another pset.
 	asyncSendTimer.stop();
       }
     }
@@ -313,7 +315,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
   if (itsIsTransposeInput) {
     static NSTimer readTimer("receive timer", true, true);
     readTimer.start();
-    itsInputData->readAll(itsStream);
+    itsInputSubbandMetaData->read(itsStream);
+    itsInputData->read(itsStream);
     readTimer.stop();
   }
 
@@ -336,15 +339,15 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 //    LOG_DEBUG("transpose: received subband " << itsCurrentSubband << " from " << stat);
 
     computeTimer.start();
-    itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);
-    itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
+    itsPPF->computeFlags(stat, itsSubbandMetaData, itsFilteredData);
+    itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsSubbandMetaData, itsTransposedData, itsFilteredData);
     computeTimer.stop();
   }
 #else // NO MPI
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
     computeTimer.start();
-    itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);
-    itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
+    itsPPF->computeFlags(stat, itsSubbandMetaData, itsFilteredData);
+    itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsSubbandMetaData, itsTransposedData, itsFilteredData);
     computeTimer.stop();
   }
 #endif // HAVE_MPI
@@ -357,18 +360,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams()
     LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start beam forming at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
-  itsBeamFormer->formBeams(itsFilteredData);
-  computeTimer.stop();
-}
-
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formPencilBeams()
-{
-#if defined HAVE_MPI
-  if (LOG_CONDITION)
-    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start pencil-beam forming at " << MPI_Wtime());
-#endif // HAVE_MPI
-  computeTimer.start();
-  itsPencilBeamFormer->formPencilBeams(itsFilteredData,itsPencilBeamData);
+  itsBeamFormer->formBeams(itsSubbandMetaData,itsFilteredData,itsBeamFormedData, itsCenterFrequencies[itsCurrentSubband]);
   computeTimer.stop();
 }
 
@@ -401,7 +393,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCohere
     LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating coherent Stokes at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
-  itsStokes->calculateCoherent(itsPencilBeamData,itsStokesData,itsNrPencilBeams);
+  itsStokes->calculateCoherent(itsBeamFormedData,itsStokesData,itsNrPencilBeams);
   computeTimer.stop();
 }
 
@@ -475,13 +467,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
         break;
 
       case CN_Mode::COHERENT_COMPLEX_VOLTAGES:
-        formPencilBeams();
-        sendOutput(itsPencilBeamData);
+        formBeams();
+        sendOutput(itsBeamFormedData);
         break;
 
       case CN_Mode::COHERENT_STOKES_I:
       case CN_Mode::COHERENT_ALLSTOKES:
-        formPencilBeams();
+        formBeams();
         calculateCoherentStokes();
 	if( itsStokesIntegrateChannels ) {
 	  itsStokes->compressStokes(itsStokesData, itsStokesDataIntegratedChannels, itsNrPencilBeams);
@@ -538,8 +530,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
 {
+  delete itsBeamFormer;
+
   if (itsIsTransposeInput) {
     delete itsInputData;
+    delete itsInputSubbandMetaData;
   }
 
   if (itsIsTransposeInput || itsIsTransposeOutput) {
@@ -549,12 +544,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
   }
 
   if (itsIsTransposeOutput) {
+    delete itsSubbandMetaData;
     delete itsTransposedData;
     delete itsPPF;
     delete itsFilteredData;
-    delete itsBeamFormer;
-    delete itsPencilBeamFormer;
-    delete itsPencilBeamData;
+    delete itsBeamFormedData;
     delete itsCorrelator;
     delete itsCorrelatedData;
     delete itsStokes;
