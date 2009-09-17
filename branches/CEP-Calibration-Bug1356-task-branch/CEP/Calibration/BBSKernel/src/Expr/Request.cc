@@ -25,25 +25,19 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 RequestId Request::theirId = 0;
 
 Request::Request()
-    :   itsId(theirId++),
-        itsPValueFlag(false)
+    :   itsId(theirId++)
 {
-}        
+}
 
-Request::Request(const Grid &grid, bool evalPValues)
+Request::Request(const Grid &grid)
     :   itsId(theirId++),
-        itsGrid(grid),
-        itsPValueFlag(evalPValues)
-{
-}        
-
-Request::~Request()
+        itsGrid(grid)
 {
 }
 

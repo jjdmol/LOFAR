@@ -47,10 +47,11 @@ public:
     PiercePoint(const casa::MPosition &position,
         const Expr<Vector<2> >::ConstPtr &azel);
 
-private:
+protected:
     virtual const Vector<4>::View evaluateImpl(const Request &request,
         const Vector<2>::View &azel) const;
 
+private:
     // Station position (ITRF).
     casa::MPosition itsPosition;
     // (longitude, latittude) coordinates of station.

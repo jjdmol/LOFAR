@@ -51,62 +51,81 @@ public:
     StatUVW(const casa::MPosition &position, const casa::MPosition &array,
         const casa::MDirection &reference);
 
-//    void calculate(const Request &request) const;
-
-//    const Scalar getU(const Request &request) const
-//    { if(request.id() != itsLastReqId) calculate(request); return itsU; }
-//    const Scalar getV(const Request &request) const
-//    { if(request.id() != itsLastReqId) calculate(request); return itsV; }
-//    const Scalar getW(const Request &request) const
-//    { if(request.id() != itsLastReqId) calculate(request); return itsW; }
-
 protected:
-    virtual unsigned int nArguments() const
-    {
-        return 0;
-    }
-
-    virtual ExprBase::ConstPtr argument(unsigned int) const
-    {
-        ASSERTSTR(false, "StatUVW has no arguments.");
-    }
-
-private:
+    virtual unsigned int nArguments() const;
+    virtual ExprBase::ConstPtr argument(unsigned int) const;
     virtual const Vector<3> evaluateExpr(const Request &request, Cache &cache)
         const;
 
-    struct Time
+private:
+    struct Timestamp
     {
-        Time(double time)
-            : time(time)
-        {}
-
-        bool operator<(const Time &other) const
-        { return time < other.time - 0.000001; }
+        Timestamp(double time);
+        bool operator<(const Timestamp &other) const;
 
         double time;
     };
 
-    struct Uvw
+    struct UVW
     {
-        Uvw()
-        {}
-
-        Uvw(double u, double v, double w)
-            : u(u), v(v), w(w)
-        {}
+        UVW();
+        UVW(double u, double v, double w);
 
         double u, v, w;
     };
 
-    casa::MPosition         itsPosition;
-    casa::MPosition         itsArrayPosition;
-    casa::MDirection        itsPhaseReference;
+    casa::MPosition             itsPosition;
+    casa::MPosition             itsArrayPosition;
+    casa::MDirection            itsPhaseReference;
 
-    mutable map<Time, Uvw>  itsUvwCache;
+    mutable map<Timestamp, UVW> itsUVWCache;
 };
 
 // @}
+
+
+// -------------------------------------------------------------------------- //
+// - Implementation: StatUVW                                                - //
+// -------------------------------------------------------------------------- //
+
+inline unsigned int StatUVW::nArguments() const
+{
+    return 0;
+}
+
+inline ExprBase::ConstPtr StatUVW::argument(unsigned int) const
+{
+    ASSERTSTR(false, "StatUVW has no arguments.");
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: StatUVW::Timestamp                                     - //
+// -------------------------------------------------------------------------- //
+
+inline StatUVW::Timestamp::Timestamp(double time)
+    :   time(time)
+{
+}
+
+inline bool StatUVW::Timestamp::operator<(const Timestamp &other) const
+{
+    return time < other.time - 0.000001;
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: StatUVW::UVW                                           - //
+// -------------------------------------------------------------------------- //
+
+inline StatUVW::UVW::UVW()
+{
+}
+
+inline StatUVW::UVW::UVW(double u, double v, double w)
+    :   u(u),
+        v(v),
+        w(w)
+{
+}
 
 } // namespace BBS
 } // namespace LOFAR

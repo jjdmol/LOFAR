@@ -22,7 +22,6 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/Expr/ExprParm.h>
-//#include <BBSKernel/Expr/Cache.h>
 #include <Common/lofar_iomanip.h>
 
 namespace LOFAR
@@ -91,9 +90,7 @@ const Scalar ExprParm::evaluateExpr(const Request &request, Cache &cache) const
     buffers[0].freeStorage(storage, deleteStorage);
 
     // Copy the perturbed values if necessary.
-    // TODO: re-enable flag in request to avoid generating partials even if
-    // some parms are set to solvable?
-    if(getPValueFlag())// && request.getPValueFlag())
+    if(getPValueFlag())
     {
         // TODO: check correctness when some coefficients are masked
         // non-solvable.

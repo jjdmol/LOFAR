@@ -59,10 +59,10 @@ protected:
         ASSERTSTR(false, "StationUVW has no arguments.");
     }
 
-private:
     virtual const Vector<3> evaluateExpr(const Request &request, Cache &cache)
         const;
 
+private:
     casa::MPosition     itsPosition;
     casa::MPosition     itsArrayPosition;
     casa::MDirection    itsPhaseReference;

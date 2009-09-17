@@ -47,10 +47,11 @@ public:
     LMN(const casa::MDirection &reference,
         const Expr<Vector<2> >::ConstPtr &direction);
 
-private:
+protected:
     virtual const Vector<3>::View evaluateImpl(const Request &request,
         const Vector<2>::View &direction) const;
 
+private:
     casa::MDirection    itsPhaseReference;
 };
 

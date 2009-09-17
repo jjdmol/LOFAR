@@ -39,8 +39,6 @@ using std::pair;
 // \addtogroup BBSKernel
 // @{
 
-typedef double                  real_t;
-typedef dcomplex                complex_t;
 typedef fcomplex                sample_t;
 typedef uint8                   flag_t;
 typedef uint8                   tslot_flag_t;

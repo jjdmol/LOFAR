@@ -59,7 +59,7 @@ public:
 
     virtual ~SpectralIndex();
 
-private:
+protected:
     virtual unsigned int nArguments() const;
     virtual ExprBase::ConstPtr argument(unsigned int i) const;
 
@@ -69,6 +69,7 @@ private:
     virtual const Scalar::View evaluateImpl(const Request &request,
         const Scalar::View &refFreq, const vector<Scalar::View> &coeff) const;
 
+private:
     Expr<Scalar>::ConstPtr          itsRefFreq;
     vector<Expr<Scalar>::ConstPtr>  itsCoeff;
 };

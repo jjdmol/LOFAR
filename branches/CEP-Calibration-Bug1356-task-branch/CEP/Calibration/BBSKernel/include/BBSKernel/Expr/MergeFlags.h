@@ -50,43 +50,58 @@ public:
     using BinaryExpr<T_ARG0, T_ARG1, T_ARG0>::argument1;
 
     MergeFlags(const typename Expr<T_ARG0>::ConstPtr &arg0,
-        const typename Expr<T_ARG1>::ConstPtr &arg1)
-        :   BinaryExpr<T_ARG0, T_ARG1, T_ARG0>(arg0, arg1)
-    {
-    }
+        const typename Expr<T_ARG1>::ConstPtr &arg1);
 
+protected:
     virtual const T_ARG0 evaluateExpr(const Request &request,
-        Cache &cache) const
-    {
-        // Allocate result.
-        T_ARG0 result;
-
-        // Evaluate arguments.
-        const T_ARG0 arg0 = argument0()->evaluate(request, cache);
-        const T_ARG1 arg1 = argument1()->evaluate(request, cache);
-
-        if(arg1.hasFlags())
-        {
-            // Pass through value.
-            for(unsigned int i = 0; i < arg0.size(); ++i)
-            {
-                result.setValueSet(i, arg0.getValueSet(i));
-            }
-
-            // Merge flags.
-            result.setFlags(arg0.hasFlags() ? arg0.flags() | arg1.flags()
-                : arg1.flags());
-        }
-        else
-        {
-            result = arg0;
-        }
-
-        return result;
-    }
+        Cache &cache) const;
 };
 
 // @}
+
+
+// -------------------------------------------------------------------------- //
+// - Implementation: MergeFlags                                             - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_ARG0, typename T_ARG1>
+MergeFlags<T_ARG0, T_ARG1>::MergeFlags
+    (const typename Expr<T_ARG0>::ConstPtr &arg0,
+    const typename Expr<T_ARG1>::ConstPtr &arg1)
+    :   BinaryExpr<T_ARG0, T_ARG1, T_ARG0>(arg0, arg1)
+{
+}
+
+template <typename T_ARG0, typename T_ARG1>
+const T_ARG0 MergeFlags<T_ARG0, T_ARG1>::evaluateExpr
+    (const Request &request, Cache &cache) const
+{
+    // Allocate result.
+    T_ARG0 result;
+
+    // Evaluate arguments.
+    const T_ARG0 arg0 = argument0()->evaluate(request, cache);
+    const T_ARG1 arg1 = argument1()->evaluate(request, cache);
+
+    if(arg1.hasFlags())
+    {
+        // Pass through value.
+        for(unsigned int i = 0; i < arg0.size(); ++i)
+        {
+            result.setValueSet(i, arg0.getValueSet(i));
+        }
+
+        // Merge flags.
+        result.setFlags(arg0.hasFlags() ? arg0.flags() | arg1.flags()
+            : arg1.flags());
+    }
+    else
+    {
+        result = arg0;
+    }
+
+    return result;
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

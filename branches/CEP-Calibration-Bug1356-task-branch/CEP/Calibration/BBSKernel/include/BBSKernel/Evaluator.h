@@ -67,17 +67,17 @@ public:
 private:
     struct OpEq
     {
-        static void apply(sample_t &lhs, const complex_t &rhs);
+        static void apply(sample_t &lhs, const dcomplex &rhs);
     };
 
     struct OpSub
     {
-        static void apply(sample_t &lhs, const complex_t &rhs);
+        static void apply(sample_t &lhs, const dcomplex &rhs);
     };
 
     struct OpAdd
     {
-        static void apply(sample_t &lhs, const complex_t &rhs);
+        static void apply(sample_t &lhs, const dcomplex &rhs);
     };
 
     typedef void (Evaluator::*BlProcessor)(const baseline_t &baseline,
@@ -111,17 +111,17 @@ private:
 
 // @}
 
-inline void Evaluator::OpEq::apply(sample_t &lhs, const complex_t &rhs)
+inline void Evaluator::OpEq::apply(sample_t &lhs, const dcomplex &rhs)
 {
     lhs = rhs;
 }
 
-inline void Evaluator::OpSub::apply(sample_t &lhs, const complex_t &rhs)
+inline void Evaluator::OpSub::apply(sample_t &lhs, const dcomplex &rhs)
 {
     lhs -= rhs;
 }
 
-inline void Evaluator::OpAdd::apply(sample_t &lhs, const complex_t &rhs)
+inline void Evaluator::OpAdd::apply(sample_t &lhs, const dcomplex &rhs)
 {
     lhs += rhs;
 }

@@ -53,7 +53,7 @@ const Scalar::View Scalar::view(const PValueKey &key) const
 
 void Scalar::assign(const View &value)
 {
-    if(value.dirty())
+    if(value.bound())
     {
         itsValueSet.assign(value());
     }
@@ -61,7 +61,7 @@ void Scalar::assign(const View &value)
 
 void Scalar::assign(const PValueKey &key, const View &value)
 {
-    if(value.dirty())
+    if(value.bound())
     {
         itsValueSet.assign(key, value());
     }
@@ -99,26 +99,48 @@ const JonesMatrix::View JonesMatrix::view(const PValueKey &key) const
 
 void JonesMatrix::assign(const View &value)
 {
-    if(value.dirty(0, 0))
+    if(value.bound(0, 0))
+    {
         itsValueSet[0].assign(value(0, 0));
-    if(value.dirty(0, 1))
+    }
+
+    if(value.bound(0, 1))
+    {
         itsValueSet[1].assign(value(0, 1));
-    if(value.dirty(1, 0))
+    }
+
+    if(value.bound(1, 0))
+    {
         itsValueSet[2].assign(value(1, 0));
-    if(value.dirty(1, 1))
+    }
+
+    if(value.bound(1, 1))
+    {
         itsValueSet[3].assign(value(1, 1));
+    }
 }
 
 void JonesMatrix::assign(const PValueKey &key, const View &value)
 {
-    if(value.dirty(0, 0))
+    if(value.bound(0, 0))
+    {
         itsValueSet[0].assign(key, value(0, 0));
-    if(value.dirty(0, 1))
+    }
+
+    if(value.bound(0, 1))
+    {
         itsValueSet[1].assign(key, value(0, 1));
-    if(value.dirty(1, 0))
+    }
+
+    if(value.bound(1, 0))
+    {
         itsValueSet[2].assign(key, value(1, 0));
-    if(value.dirty(1, 1))
+    }
+
+    if(value.bound(1, 1))
+    {
         itsValueSet[3].assign(key, value(1, 1));
+    }
 }
 
 } //# namespace BBS

@@ -26,7 +26,7 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 UVW::UVW(const VisData::Ptr &chunk,
@@ -56,34 +56,34 @@ ValueSet::ConstPtr UVW::evaluateImpl(const Request &request) const
     ViewType uvw(itsChunk->uvw[boost::indices[bl][RangeType(tstart, tend + 1)]
         [RangeType()]]);
 
-    Matrix U(real_t(), nFreq, nTime);
-    Matrix V(real_t(), nFreq, nTime);
-    Matrix W(real_t(), nFreq, nTime);
+    Matrix U(double(), nFreq, nTime);
+    Matrix V(double(), nFreq, nTime);
+    Matrix W(double(), nFreq, nTime);
 
     double *Up = U.doubleStorage();
     double *Vp = V.doubleStorage();
     double *Wp = W.doubleStorage();
-    
+
     for(int t = 0; t < static_cast<int>(nTime); ++t)
     {
-        const real_t u = uvw[t][0] / casa::C::c;
-        const real_t v = uvw[t][1] / casa::C::c;
-        const real_t w = uvw[t][2] / casa::C::c;
-        
+        const double u = uvw[t][0] / casa::C::c;
+        const double v = uvw[t][1] / casa::C::c;
+        const double w = uvw[t][2] / casa::C::c;
+
         for(int f = 0; f < static_cast<int>(nFreq); ++f)
         {
-            const real_t freq = request[FREQ]->center(f);
+            const double freq = request[FREQ]->center(f);
             Up[t * nFreq + f] = u * freq;
             Vp[t * nFreq + f] = v * freq;
             Wp[t * nFreq + f] = w * freq;
         }
     }
-    
+
     ValueSet::Ptr result(new ValueSet(3));
     result->assign(0, U);
     result->assign(1, V);
     result->assign(2, W);
-    
+
     return result;
 }
 

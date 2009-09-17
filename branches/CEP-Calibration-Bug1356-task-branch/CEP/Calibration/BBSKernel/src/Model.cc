@@ -70,6 +70,8 @@
 #include <casa/Quanta/Quantum.h>
 #include <casa/Arrays/Vector.h>
 
+#include <functional>
+
 namespace LOFAR
 {
 namespace BBS
@@ -122,10 +124,6 @@ void Model::makeForwardExpr(const ModelConfig &config,
         THROW(BBSKernelException, "No sources matching selection found in"
             " source database.");
     }
-
-    // Create a UVW expression per station.
-//    casa::Vector<Expr<Vector<3> >::Ptr> exprStationUVW =
-//        makeStationUVWExpr(stations);
 
     // Create a coherence expression for all point sources.
     map<unsigned int, Expr<JonesMatrix>::Ptr> exprPointCoherence;
@@ -464,16 +462,14 @@ void Model::makeInverseExpr(const ModelConfig &config,
                 FlaggerConfig flagConfig;
                 config.getFlaggerConfig(flagConfig);
 
-                typedef Threshold<OpGreaterOrEqual> T_THRESHOLD;
-                typedef MergeFlags<JonesMatrix, Scalar> T_MERGEFLAGS;
-
                 Expr<Scalar>::Ptr exprCond(new ConditionNumber(transform(i)));
-                Expr<Scalar>::Ptr exprThreshold(new T_THRESHOLD(exprCond,
-                    flagConfig.getThreshold()));
+                Expr<Scalar>::Ptr exprThreshold(makeFlagIf(exprCond,
+                    std::bind2nd(std::greater_equal<double>(),
+                        flagConfig.getThreshold())));
 
-                transform(i) =
-                    Expr<JonesMatrix>::Ptr(new T_MERGEFLAGS(transform(i),
-                        exprThreshold));
+                typedef MergeFlags<JonesMatrix, Scalar> T_MERGEFLAGS;
+                transform(i) = T_MERGEFLAGS::Ptr(new T_MERGEFLAGS(transform(i),
+                    exprThreshold));
             }
 
             transform(i) =
@@ -818,25 +814,6 @@ void Model::makeStationUVW()
     }
 }
 
-//casa::Vector<Expr<Vector<3> >::Ptr>
-//Model::makeStationUVWExpr(const vector<unsigned int> &stations) const
-//{
-//    casa::Vector<Expr<Vector<3> >::Ptr> expr(stations.size());
-//    for(unsigned int i = 0; i < stations.size(); ++i)
-//    {
-//        const casa::MPosition &position =
-//            itsInstrument.stations[stations[i]].position;
-////        expr[i] = Expr<Vector<3> >::Ptr(new StationUVW(position,
-////            itsInstrument.position, itsPhaseReference));
-//        expr[i] = Expr<Vector<3> >::Ptr(new StatUVW(position,
-//            itsInstrument.position, itsPhaseReference));
-//    }
-
-//    return expr;
-//}
-
-//Model::makeStationShiftExpr(const casa::Vector<Expr<Vector<3> >::Ptr> &uvw,
-//    const vector<Source::Ptr> &sources) const
 casa::Matrix<Expr<Vector<2> >::Ptr>
 Model::makeStationShiftExpr(const vector<unsigned int> &stations,
     const vector<Source::Ptr> &sources) const
@@ -853,6 +830,9 @@ Model::makeStationShiftExpr(const vector<unsigned int> &stations,
     {
         for(unsigned int j = 0; j < sources.size(); ++j)
         {
+            // NOTE: itsStationUVW is indexed on station number, not used
+            // station index (hence the look-up through the provided used
+            // station list).
             expr(j, i) =
                 Expr<Vector<2> >::Ptr(new DFTPS(itsStationUVW[stations[i]],
                     exprLMN(j)));
@@ -861,42 +841,6 @@ Model::makeStationShiftExpr(const vector<unsigned int> &stations,
 
     return expr;
 }
-
-//casa::Matrix<Expr<Vector<2> >::Ptr>
-//Model::makeCoherenceExpr(const vector<unsigned int> &stations,
-//    const vector<Source::Ptr> &sources,
-//    const casa::Vector<Expr<Vector<3> >::Ptr> &uvw) const
-//{
-//    for(unsigned int i = 0; i < sources.size(); ++i)
-//    {
-//        // A point source's coherence is independent of baseline UVW
-//        // coordinates. Therefore, they are constructed here and shared
-//        // between baselines.
-//        PointSource::ConstPtr point =
-//            dynamic_pointer_cast<const PointSource>(sources[i]);
-
-//        if(point)
-//        {
-//            exprCoherence(i) = PointCoherence::Ptr(new PointCoherence(point));
-//        }
-////            map<size_t, JonesExpr>::iterator pointCohIt = pointCoh.find(j);
-////            if(pointCohIt != pointCoh.end())
-////            {
-////                coherence = pointCohIt->second;
-////            }
-////            else
-////            {
-////                GaussianSource::ConstPtr gauss =
-////                    dynamic_pointer_cast<const GaussianSource>(sources[j]);
-////                ASSERT(gauss);
-
-////                coherence = new GaussianCoherence(gauss,
-////                    itsStationUVW[baseline.first],
-////                    itsStationUVW[baseline.second]);
-////            }
-
-//    }
-//}
 
 casa::Vector<Expr<JonesMatrix>::Ptr>
 Model::makeBandpassExpr(const vector<unsigned int> &stations)

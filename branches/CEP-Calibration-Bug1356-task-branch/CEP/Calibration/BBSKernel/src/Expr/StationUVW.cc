@@ -51,8 +51,6 @@ StationUVW::StationUVW(const casa::MPosition &position,
 const Vector<3> StationUVW::evaluateExpr(const Request &request, Cache &cache)
     const
 {
-//    LOG_DEBUG("Compute station UVW coordinates.");
-
     // Get the station position relative to the array reference position
     // (to keep values small).
     const casa::MPosition mDeltaPos(itsPosition.getValue()

@@ -43,43 +43,34 @@ public:
     typedef shared_ptr<MatrixSum>       Ptr;
     typedef shared_ptr<const MatrixSum> ConstPtr;
 
-    ~MatrixSum()
-    {
-        for(size_t i = 0; i < itsExpr.size(); ++i)
-        {
-            disconnect(itsExpr[i]);
-        }
-    }
-
-    void connect(const Expr<JonesMatrix>::ConstPtr &expr)
-    {
-        ExprBase::connect(expr);
-        itsExpr.push_back(expr);
-    }
+    virtual ~MatrixSum();
+    void connect(const Expr<JonesMatrix>::ConstPtr &expr);
 
 protected:
-    virtual unsigned int nArguments() const
-    {
-        return itsExpr.size();
-    }
-
-    virtual ExprBase::ConstPtr argument(unsigned int i) const
-    {
-        ASSERT(i < itsExpr.size());
-        ASSERT(itsExpr[i]);
-        return itsExpr[i];
-    }
-
-private:
+    virtual unsigned int nArguments() const;
+    virtual ExprBase::ConstPtr argument(unsigned int i) const;
     virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache)
         const;
 
+private:
     void merge(const ValueSet &in, ValueSet &out) const;
 
     vector<Expr<JonesMatrix>::ConstPtr> itsExpr;
 };
 
 // @}
+
+inline unsigned int MatrixSum::nArguments() const
+{
+    return itsExpr.size();
+}
+
+inline ExprBase::ConstPtr MatrixSum::argument(unsigned int i) const
+{
+    ASSERT(i < itsExpr.size());
+    ASSERT(itsExpr[i]);
+    return itsExpr[i];
+}
 
 } // namespace BBS
 } // namespace LOFAR

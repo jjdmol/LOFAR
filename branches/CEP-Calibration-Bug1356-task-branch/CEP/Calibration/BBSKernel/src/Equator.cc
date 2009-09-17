@@ -329,7 +329,7 @@ Equator::Interval::Interval()
 }
 
 // -------------------------------------------------------------------------- //
-// - Equator::BlContext implementation                                          - //
+// - Equator::BlContext implementation                                      - //
 // -------------------------------------------------------------------------- //
 Equator::BlContext::BlContext()
     :   count(0)

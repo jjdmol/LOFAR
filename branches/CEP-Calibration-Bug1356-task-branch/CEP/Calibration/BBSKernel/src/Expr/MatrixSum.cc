@@ -30,6 +30,20 @@ namespace LOFAR
 namespace BBS
 {
 
+MatrixSum::~MatrixSum()
+{
+    for(size_t i = 0; i < itsExpr.size(); ++i)
+    {
+        disconnect(itsExpr[i]);
+    }
+}
+
+void MatrixSum::connect(const Expr<JonesMatrix>::ConstPtr &expr)
+{
+    ExprBase::connect(expr);
+    itsExpr.push_back(expr);
+}
+
 const JonesMatrix MatrixSum::evaluateExpr(const Request &request, Cache &cache)
     const
 {

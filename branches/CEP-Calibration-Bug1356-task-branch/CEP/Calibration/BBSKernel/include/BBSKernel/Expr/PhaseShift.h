@@ -46,7 +46,7 @@ public:
     PhaseShift(const Expr<Vector<2> >::ConstPtr &lhs,
         const Expr<Vector<2> >::ConstPtr &rhs);
 
-private:
+protected:
     virtual const Scalar::View evaluateImpl(const Request &request,
         const Vector<2>::View &lhs, const Vector<2>::View &rhs) const;
 };

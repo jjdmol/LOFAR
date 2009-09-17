@@ -60,17 +60,15 @@ StatUVW::StatUVW(const casa::MPosition &position, const casa::MPosition &array,
 const Vector<3> StatUVW::evaluateExpr(const Request &request, Cache &cache)
     const
 {
-    Vector<3> result;
-
-    Matrix U, V, W;
-
     // Allocate result.
     size_t nTime = request[TIME]->size();
 
+    Matrix U, V, W;
     double *u = U.setDoubleFormat(1, nTime);
     double *v = V.setDoubleFormat(1, nTime);
     double *w = W.setDoubleFormat(1, nTime);
 
+    Vector<3> result;
     result.assign(0, U);
     result.assign(1, V);
     result.assign(2, W);
@@ -78,10 +76,10 @@ const Vector<3> StatUVW::evaluateExpr(const Request &request, Cache &cache)
     size_t nDone = 0;
     for(size_t i = 0; i < nTime; ++i)
     {
-        Time time(request[TIME]->center(i));
-        map<Time, Uvw>::const_iterator it = itsUvwCache.find(time);
+        Timestamp time(request[TIME]->center(i));
+        map<Timestamp, UVW>::const_iterator it = itsUVWCache.find(time);
 
-        if(it != itsUvwCache.end())
+        if(it != itsUVWCache.end())
         {
             u[i] = it->second.u;
             v[i] = it->second.v;
@@ -118,9 +116,10 @@ const Vector<3> StatUVW::evaluateExpr(const Request &request, Cache &cache)
         for(size_t i = 0; i < nTime; ++i)
         {
             const double time = request[TIME]->center(i);
-            map<Time, Uvw>::iterator it = itsUvwCache.find(Time(time));
+            map<Timestamp, UVW>::iterator it =
+                itsUVWCache.find(Timestamp(time));
 
-            if(it == itsUvwCache.end())
+            if(it == itsUVWCache.end())
             {
                 qEpoch.setValue(time);
                 mEpoch.set(qEpoch);
@@ -135,7 +134,7 @@ const Vector<3> StatUVW::evaluateExpr(const Request &request, Cache &cache)
                 w[i] = xyz(2);
 
                 // Update UVW cache.
-                itsUvwCache[Time(time)] = Uvw(xyz(0), xyz(1), xyz(2));
+                itsUVWCache[Timestamp(time)] = UVW(xyz(0), xyz(1), xyz(2));
             }
         }
     }

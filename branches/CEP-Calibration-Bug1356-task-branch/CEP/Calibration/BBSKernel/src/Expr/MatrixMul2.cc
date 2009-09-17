@@ -39,31 +39,31 @@ const JonesMatrix::View MatrixMul2::evaluateImpl(const Request &request,
     const JonesMatrix::View &lhs, const JonesMatrix::View &rhs) const
 {
     // Determine dependencies.
-    const bool dirtyLhsRow0 = lhs.dirty(0, 0) || lhs.dirty(0, 1);
-    const bool dirtyLhsRow1 = lhs.dirty(1, 0) || lhs.dirty(1, 1);
+    const bool boundLhsRow0 = lhs.bound(0, 0) || lhs.bound(0, 1);
+    const bool boundLhsRow1 = lhs.bound(1, 0) || lhs.bound(1, 1);
 
-    const bool dirtyRhsCol0 = rhs.dirty(0, 0) || rhs.dirty(1, 0);
-    const bool dirtyRhsCol1 = rhs.dirty(0, 1) || rhs.dirty(1, 1);
+    const bool boundRhsCol0 = rhs.bound(0, 0) || rhs.bound(1, 0);
+    const bool boundRhsCol1 = rhs.bound(0, 1) || rhs.bound(1, 1);
 
     // Create the result.
     JonesMatrix::View result;
 
-    if(dirtyLhsRow0 || dirtyRhsCol0)
+    if(boundLhsRow0 || boundRhsCol0)
     {
         result.assign(0, 0, lhs(0, 0) * rhs(0, 0) + lhs(0, 1) * rhs(1, 0));
     }
 
-    if(dirtyLhsRow0 || dirtyRhsCol1)
+    if(boundLhsRow0 || boundRhsCol1)
     {
         result.assign(0, 1, lhs(0, 0) * rhs(0, 1) + lhs(0, 1) * rhs(1, 1));
     }
 
-    if(dirtyLhsRow1 || dirtyRhsCol0)
+    if(boundLhsRow1 || boundRhsCol0)
     {
         result.assign(1, 0, lhs(1, 0) * rhs(0, 0) + lhs(1, 1) * rhs(1, 0));
     }
 
-    if(dirtyLhsRow1 || dirtyRhsCol1)
+    if(boundLhsRow1 || boundRhsCol1)
     {
         result.assign(1, 1, lhs(1, 0) * rhs(0, 1) + lhs(1, 1) * rhs(1, 1));
     }

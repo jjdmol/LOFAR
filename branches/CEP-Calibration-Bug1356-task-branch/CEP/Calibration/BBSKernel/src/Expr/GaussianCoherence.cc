@@ -91,10 +91,10 @@ const JonesMatrix::View GaussianCoherence::evaluateImpl(const Request &request,
         }
     }
 
-    const bool dirty = dimensions.dirty(0) || dimensions.dirty(1)
-        || orientation.dirty();
+    const bool bound = dimensions.bound(0) || dimensions.bound(1)
+        || orientation.bound();
 
-    if(dirty || stokes.dirty(0) || stokes.dirty(1) || spectral.dirty())
+    if(bound || stokes.bound(0) || stokes.bound(1) || spectral.bound())
     {
         result.assign(0, 0, spectral() * 0.5 * coherence
             * (stokes(0) + stokes(1)));
@@ -102,7 +102,7 @@ const JonesMatrix::View GaussianCoherence::evaluateImpl(const Request &request,
             * (stokes(0) - stokes(1)));
     }
 
-    if(dirty || stokes.dirty(2) || stokes.dirty(3))
+    if(bound || stokes.bound(2) || stokes.bound(3))
     {
         Matrix uv = coherence * 0.5 * tocomplex(stokes(2), stokes(3));
         result.assign(0, 1, uv);

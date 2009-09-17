@@ -45,8 +45,7 @@ public:
     Mul(const Expr<Scalar>::ConstPtr &lhs,
         const Expr<JonesMatrix>::ConstPtr &rhs);
 
-private:
-    // Compute a result for the given request.
+protected:
     virtual const JonesMatrix::View evaluateImpl(const Request &request,
         const Scalar::View &lhs, const JonesMatrix::View &rhs) const;
 };

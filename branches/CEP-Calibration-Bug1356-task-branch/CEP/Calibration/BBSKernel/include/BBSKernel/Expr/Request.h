@@ -26,8 +26,8 @@
 // \file
 // Request grid on which to evaluate an expression.
 
-#include <ParmDB/Grid.h>
 #include <BBSKernel/Types.h>
+#include <ParmDB/Grid.h>
 
 namespace LOFAR
 {
@@ -37,41 +37,60 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-typedef int RequestId;
-const RequestId InitRequestId = -1;
+typedef size_t RequestId;
 
 class Request
 {
 public:
     Request();
+    Request(const Grid &grid);
 
-    Request(const Grid &grid, bool evalPValues = false);
-    ~Request();
+    RequestId id() const;
 
-    RequestId id() const
-    { return itsId; }
+    Box getBoundingBox() const;
 
-    Box getBoundingBox() const
-    { return itsGrid.getBoundingBox(); }
+    const Axis::ShPtr &operator[](unsigned int i) const;
 
-    const Axis::ShPtr &operator[](size_t n) const
-    { return itsGrid[n]; }
-
-    const Grid &getGrid() const
-    { return itsGrid; }
-
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
+    const Grid &getGrid() const;
 
 private:
-    size_t              itsId;
+    RequestId           itsId;
     Grid                itsGrid;
-    bool                itsPValueFlag;
 
     static RequestId    theirId;
 };
 
 // @}
+
+
+// -------------------------------------------------------------------------- //
+// - Implementation: RefCountable                                           - //
+// -------------------------------------------------------------------------- //
+
+inline RequestId Request::id() const
+{
+    return itsId;
+}
+
+inline Box Request::getBoundingBox() const
+{
+    return itsGrid.getBoundingBox();
+}
+
+inline const Axis::ShPtr &Request::operator[](unsigned int i) const
+{
+    return itsGrid[i];
+}
+
+inline const Grid &Request::getGrid() const
+{
+    return itsGrid;
+}
+
+//bool Request::getPValueFlag() const
+//{
+//    return itsPValueFlag;
+//}
 
 } //# namespace BBS
 } //# namespace LOFAR

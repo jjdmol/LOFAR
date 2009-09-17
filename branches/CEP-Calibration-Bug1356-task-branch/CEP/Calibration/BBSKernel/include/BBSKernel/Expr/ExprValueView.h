@@ -58,14 +58,14 @@ public:
     ExprValueView();
 
     bool valid() const;
-    bool dirty() const;
+    bool bound() const;
 
     const Matrix operator()() const;
-    void assign(const Matrix &value, bool dirty = true);
+    void assign(const Matrix &value, bool bound = true);
 
 private:
     Matrix          itsValue;
-    bool            itsDirtyMask;
+    bool            itsBindMask;
 };
 
 template <>
@@ -76,14 +76,14 @@ public:
     ExprValueView();
 
     bool valid(unsigned int i0) const;
-    bool dirty(unsigned int i0) const;
+    bool bound(unsigned int i0) const;
 
     const Matrix operator()(unsigned int i0) const;
-    void assign(unsigned int i0, const Matrix &value, bool dirty = true);
+    void assign(unsigned int i0, const Matrix &value, bool bound = true);
 
 private:
     Matrix          itsValue[LENGTH];
-    bool            itsDirtyMask[LENGTH];
+    bool            itsBindMask[LENGTH];
 };
 
 template <>
@@ -93,15 +93,15 @@ public:
     ExprValueView();
 
     bool valid(unsigned int i0, unsigned int i1) const;
-    bool dirty(unsigned int i0, unsigned int i1) const;
+    bool bound(unsigned int i0, unsigned int i1) const;
 
     const Matrix operator()(unsigned int i0, unsigned int i1) const;
     void assign(unsigned int i0, unsigned int i1, const Matrix &value,
-        bool dirty = true);
+        bool bound = true);
 
 private:
     Matrix          itsValue[4];
-    bool            itsDirtyMask[4];
+    bool            itsBindMask[4];
 };
 
 // @}
@@ -115,9 +115,9 @@ inline bool ExprValueView<Scalar>::valid() const
     return !itsValue.isNull();
 }
 
-inline bool ExprValueView<Scalar>::dirty() const
+inline bool ExprValueView<Scalar>::bound() const
 {
-    return itsDirtyMask;
+    return itsBindMask;
 }
 
 inline const Matrix ExprValueView<Scalar>::operator()() const
@@ -125,10 +125,10 @@ inline const Matrix ExprValueView<Scalar>::operator()() const
     return itsValue;
 }
 
-inline void ExprValueView<Scalar>::assign(const Matrix &value, bool dirty)
+inline void ExprValueView<Scalar>::assign(const Matrix &value, bool bound)
 {
     itsValue = value;
-    itsDirtyMask = dirty;
+    itsBindMask = bound;
 }
 
 // -------------------------------------------------------------------------- //
@@ -138,7 +138,7 @@ inline void ExprValueView<Scalar>::assign(const Matrix &value, bool dirty)
 template <unsigned int LENGTH>
 ExprValueView<Vector<LENGTH> >::ExprValueView()
 {
-    fill(itsDirtyMask, itsDirtyMask + LENGTH, false);
+    fill(itsBindMask, itsBindMask + LENGTH, false);
 }
 
 template <unsigned int LENGTH>
@@ -148,9 +148,9 @@ inline bool ExprValueView<Vector<LENGTH> >::valid(unsigned int i0) const
 }
 
 template <unsigned int LENGTH>
-inline bool ExprValueView<Vector<LENGTH> >::dirty(unsigned int i0) const
+inline bool ExprValueView<Vector<LENGTH> >::bound(unsigned int i0) const
 {
-    return itsDirtyMask[i0];
+    return itsBindMask[i0];
 }
 
 template <unsigned int LENGTH>
@@ -162,10 +162,10 @@ inline const Matrix ExprValueView<Vector<LENGTH> >::operator()(unsigned int i0)
 
 template <unsigned int LENGTH>
 inline void ExprValueView<Vector<LENGTH> >::assign(unsigned int i0,
-    const Matrix &value, bool dirty)
+    const Matrix &value, bool bound)
 {
     itsValue[i0] = value;
-    itsDirtyMask[i0] = dirty;
+    itsBindMask[i0] = bound;
 }
 
 // -------------------------------------------------------------------------- //
@@ -178,10 +178,10 @@ inline bool ExprValueView<JonesMatrix>::valid(unsigned int i0, unsigned int i1)
     return !itsValue[i0 * 2 + i1].isNull();
 }
 
-inline bool ExprValueView<JonesMatrix>::dirty(unsigned int i0, unsigned int i1)
+inline bool ExprValueView<JonesMatrix>::bound(unsigned int i0, unsigned int i1)
     const
 {
-    return itsDirtyMask[i0 * 2 + i1];
+    return itsBindMask[i0 * 2 + i1];
 }
 
 inline const Matrix ExprValueView<JonesMatrix>::operator()(unsigned int i0,
@@ -191,10 +191,10 @@ inline const Matrix ExprValueView<JonesMatrix>::operator()(unsigned int i0,
 }
 
 inline void ExprValueView<JonesMatrix>::assign(unsigned int i0, unsigned int i1,
-    const Matrix &value, bool dirty)
+    const Matrix &value, bool bound)
 {
     itsValue[i0 * 2 + i1] = value;
-    itsDirtyMask[i0 * 2 + i1] = dirty;
+    itsBindMask[i0 * 2 + i1] = bound;
 }
 
 } //# namespace BBS

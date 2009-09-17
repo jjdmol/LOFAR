@@ -33,6 +33,7 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/ExprValueIterator.h \
 	Expr/ExternalFunction.h \
 	Expr/FlagArray.h \
+	Expr/FlagIf.h \
 	Expr/GaussianCoherence.h \
 	Expr/GaussianSource.h \
 	Expr/HamakerDipole.h \
@@ -61,7 +62,6 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/Source.h \
 	Expr/SpectralIndex.h \
 	Expr/StatUVW.h \
-	Expr/Threshold.h \
 	Expr/ValueSet.h \
 	Expr/YatawattaDipole.h
 

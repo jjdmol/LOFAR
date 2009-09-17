@@ -49,7 +49,7 @@ public:
         const Expr<JonesMatrix>::ConstPtr &mid,
         const Expr<JonesMatrix>::ConstPtr &right);
 
-private:
+protected:
     virtual const JonesMatrix::View evaluateImpl(const Request &request,
         const JonesMatrix::View &left, const JonesMatrix::View &mid,
         const JonesMatrix::View &right) const;

@@ -152,7 +152,6 @@ const Scalar::View SpectralIndex::evaluateImpl(const Request &request,
 
     Matrix freq;
     double *it = freq.setDoubleFormat(nFreq, nTime);
-
     for(unsigned int t = 0; t < nTime; ++t)
     {
         for(unsigned int f = 0; f < nFreq; ++f)
@@ -166,7 +165,7 @@ const Scalar::View SpectralIndex::evaluateImpl(const Request &request,
     // Where v is the frequency and v0 is the reference frequency.
 
     // Compute log(v / v0).
-    Matrix base = log(freq / refFreq());
+    Matrix base = log(freq) - log(refFreq());
 
     // In the following, we depend on coeff not being empty. It shouldn't be,
     // because that special case is handled above. But to guard against

@@ -45,10 +45,10 @@ public:
 
     UVW(const VisData::Ptr &chunk, const baseline_t &baseline);
 
-private:
-    // Compute a result for the given request.
+protected:
     virtual ValueSet::ConstPtr evaluateImpl(const Request &request) const;
 
+private:
     const VisData::Ptr  itsChunk;
     baseline_t          itsBaseline;
 };

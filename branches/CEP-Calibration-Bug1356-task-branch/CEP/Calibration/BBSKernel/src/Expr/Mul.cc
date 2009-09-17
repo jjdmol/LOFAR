@@ -42,22 +42,22 @@ const JonesMatrix::View Mul::evaluateImpl(const Request &request,
 {
     JonesMatrix::View result;
 
-    if(lhs.dirty() || rhs.dirty(0, 0))
+    if(lhs.bound() || rhs.bound(0, 0))
     {
         result.assign(0, 0, lhs() * rhs(0, 0));
     }
 
-    if(lhs.dirty() || rhs.dirty(0, 1))
+    if(lhs.bound() || rhs.bound(0, 1))
     {
         result.assign(0, 1, lhs() * rhs(0, 1));
     }
 
-    if(lhs.dirty() || rhs.dirty(1, 0))
+    if(lhs.bound() || rhs.bound(1, 0))
     {
         result.assign(1, 0, lhs() * rhs(1, 0));
     }
 
-    if(lhs.dirty() || rhs.dirty(1, 1))
+    if(lhs.bound() || rhs.bound(1, 1))
     {
         result.assign(1, 1, lhs() * rhs(1, 1));
     }

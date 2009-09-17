@@ -43,33 +43,32 @@ const JonesMatrix::View MatrixMul3::evaluateImpl(const Request &request,
     const JonesMatrix::View &right) const
 {
     // Determine dependencies.
-    // TODO: Should this be cached?
     bool eval00, eval01, eval10, eval11;
     eval00 = eval01 = eval10 = eval11 = false;
 
-    if(mid.dirty(0, 0) || mid.dirty(0, 1) || mid.dirty(1, 0)
-        || mid.dirty(1, 1))
+    if(mid.bound(0, 0) || mid.bound(0, 1) || mid.bound(1, 0)
+        || mid.bound(1, 1))
     {
         eval00 = eval01 = eval10 = eval11 = true;
     }
     else
     {
-        if(left.dirty(0, 0) || left.dirty(0, 1))
+        if(left.bound(0, 0) || left.bound(0, 1))
         {
             eval00 = eval01 = true;
         }
 
-        if(left.dirty(1, 0) || left.dirty(1, 1))
+        if(left.bound(1, 0) || left.bound(1, 1))
         {
             eval10 = eval11 = true;
         }
 
-        if(right.dirty(0, 0) || right.dirty(0, 1))
+        if(right.bound(0, 0) || right.bound(0, 1))
         {
             eval00 = eval10 = true;
         }
 
-        if(right.dirty(1, 0) || right.dirty(1, 1))
+        if(right.bound(1, 0) || right.bound(1, 1))
         {
             eval01 = eval11 = true;
         }

@@ -30,14 +30,13 @@ namespace BBS
 {
 
 ExprValueView<Scalar>::ExprValueView()
-    :   itsDirtyMask(false)
+    :   itsBindMask(false)
 {
 }
 
 ExprValueView<JonesMatrix>::ExprValueView()
 {
-    itsDirtyMask[0] = itsDirtyMask[1] = itsDirtyMask[2] = itsDirtyMask[3]
-        = false;
+    itsBindMask[0] = itsBindMask[1] = itsBindMask[2] = itsBindMask[3] = false;
 }
 
 } //# namespace BBS

@@ -57,10 +57,10 @@ protected:
         ASSERT(false);
     }
 
-private:
     virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache)
         const;
 
+private:
     void copyData(double *re, double *im,
         const boost::multi_array<sample_t, 4>::const_array_view<2>::type &src)
         const;

@@ -45,7 +45,7 @@ public:
     MatrixMul2(const Expr<JonesMatrix>::ConstPtr &lhs,
         const Expr<JonesMatrix>::ConstPtr &rhs);
 
-private:
+protected:
     virtual const JonesMatrix::View evaluateImpl(const Request &request,
         const JonesMatrix::View &lhs, const JonesMatrix::View &rhs) const;
 };

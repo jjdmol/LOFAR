@@ -1,4 +1,4 @@
-#AM_CXXFLAGS = -Wno-ignored-qualifiers -Werror
+#AM_CXXFLAGS = -Wno-ignored-qualifiers -Wconversion -Werror
 lib_LTLIBRARIES = libbbskernel.la
 
 libbbskernel_la_SOURCES = Package__Version.cc \
@@ -42,7 +42,6 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/MatrixRep.cc \
 	Expr/MatrixSum.cc \
 	Expr/MatrixTmp.cc \
-	Expr/MergeFlags.cc \
 	Expr/MIM.cc \
 	Expr/Mul.cc \
 	Expr/PhaseShift.cc \

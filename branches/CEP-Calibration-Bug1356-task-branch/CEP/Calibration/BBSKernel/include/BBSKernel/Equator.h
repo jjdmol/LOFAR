@@ -287,8 +287,8 @@ void Equator::blProcess(T_ITER outputEqIt, const baseline_t &baseline,
                     ++context.count;
 
                     // Compute right hand side of the equation pair.
-                    const complex_t rhs =
-                        static_cast<complex_t>
+                    const dcomplex rhs =
+                        static_cast<dcomplex>
                         (itsChunk->vis_data[bl][ts][ch][extProd])
                             - modelValue.getDComplex((int)(ch - visStart.first),
                                 (int)(ts - visStart.second));
@@ -297,7 +297,7 @@ void Equator::blProcess(T_ITER outputEqIt, const baseline_t &baseline,
                     context.timers[BlContext::TRANSPOSE].start();
                     for(unsigned int i = 0; i < nBlCoeff; ++i)
                     {
-                        const complex_t partial =
+                        const dcomplex partial =
                             context.partial[i].getDComplex((int)(ch
                                 - visStart.first), (int)(ts - visStart.second));
 

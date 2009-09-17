@@ -41,15 +41,11 @@ LMN::LMN(const casa::MDirection &reference,
         itsPhaseReference(casa::MDirection::Convert(reference,
             casa::MDirection::J2000)())
 {
-//    itsPhaseReference = ;
 }
 
 const Vector<3>::View LMN::evaluateImpl(const Request &request,
     const Vector<2>::View &direction) const
 {
-//    cout << "REF: " << itsRef->getRa() << " " << itsRef->getDec() << endl;
-//    cout << "SOURCE: " << ra->value()(0, 0) << " " << dec->value()(0, 0) << endl;
-
     casa::Quantum<casa::Vector<casa::Double> > angles =
         itsPhaseReference.getAngle();
     const double refRa = angles.getBaseValue()(0);
@@ -67,9 +63,6 @@ const Vector<3>::View LMN::evaluateImpl(const Request &request,
     Matrix n = 1.0 - sqr(result(0)) - sqr(result(1));
     ASSERT(min(n).getDouble() >= 0.0);
     result.assign(2, sqrt(n));
-
-//    cout << "LMN: " << result->result(0)(0, 0) << " " << result->result(1)(0, 0)
-//        << " " << result->result(2)(0, 0) << endl;
 
     return result;
 }

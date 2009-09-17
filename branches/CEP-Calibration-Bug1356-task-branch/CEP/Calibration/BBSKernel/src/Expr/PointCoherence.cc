@@ -40,13 +40,13 @@ const JonesMatrix::View PointCoherence::evaluateImpl(const Request &request,
 {
     JonesMatrix::View result;
 
-    if(spectral.dirty() || stokes.dirty(0) || stokes.dirty(1))
+    if(spectral.bound() || stokes.bound(0) || stokes.bound(1))
     {
         result.assign(0, 0, spectral() * 0.5 * (stokes(0) + stokes(1)));
         result.assign(1, 1, spectral() * 0.5 * (stokes(0) - stokes(1)));
     }
 
-    if(stokes.dirty(2) || stokes.dirty(3))
+    if(stokes.bound(2) || stokes.bound(3))
     {
         Matrix uv = 0.5 * tocomplex(stokes(2), stokes(3));
         result.assign(0, 1, uv);

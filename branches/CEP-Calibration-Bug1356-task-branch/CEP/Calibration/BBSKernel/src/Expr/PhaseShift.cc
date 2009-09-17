@@ -1,5 +1,5 @@
 //# PhaseShift.cc: Phase delay due to baseline geometry with respect to a
-//#     direction on the sky.
+//# direction on the sky.
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,8 +24,6 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/Expr/PhaseShift.h>
-//#include <BBSKernel/Expr/MatrixTmp.h>
-//#include <casa/BasicSL/Constants.h>
 
 namespace LOFAR
 {
@@ -99,69 +97,6 @@ const Scalar::View PhaseShift::evaluateImpl(const Request &request,
     result.assign(shift);
     return result;
 }
-
-// -------------------------------------------------------------------------- //
-
-//PhaseShift::PhaseShift()
-//    :   ExprStatic<PhaseShift::N_Inputs>()
-//{
-//}
-
-//ValueSet::ConstPtr PhaseShift::evaluateImpl(const Request &request,
-//    const ValueSet::ConstPtr (&inputs)[PhaseShift::N_Inputs]) const
-//{
-//    // Let (u . l) = u * l + v * m + w * (n - 1.0), then:
-//    //
-//    // shift = exp(2.0 * pi * i * (u . l) * f / c)
-
-//    ValueSet::ConstPtr uvw = inputs[UVW];
-//    ValueSet::ConstPtr lmn = inputs[LMN];
-
-//    Matrix phase = casa::C::_2pi
-//        * (uvw->value(0) * lmn->value(0)
-//        + uvw->value(1) * lmn->value(1)
-//        + uvw->value(2) * (lmn->value(2) - 1.0));
-//
-//    ValueSet::Ptr result(new ValueSet());
-//    result->assign(tocomplex(cos(phase), sin(phase)));
-//    return result;
-
-////    ASSERT(request[FREQ]->isRegular());
-////    const real_t l = lmn->value(0)(0, 0);
-////    const real_t m = lmn->value(1)(0, 0);
-////    const real_t n = lmn->value(2)(0, 0) - 1.0;
-////
-////    ARRAY(real_t) inner(uvw->value(0) * l
-////        + uvw->value(1) * m
-////        + uvw->value(2) * n);
-
-////    const int nFreq = (int) request[FREQ]->size();
-////    const int nTime = (int) request[TIME]->size();
-
-////    const double scale0 = casa::C::_2pi * request[FREQ]->center(0) / casa::C::c;
-////    const double scaleDelta = casa::C::_2pi * request[FREQ]->width(0) / casa::C::c;
-////
-////    ResultType::Ptr result(new ResultType());
-////    ARRAY(complex_t) shift(nTime, nFreq);
-////    complex_t *data = shift.data();
-////
-////    for(int t = 0; t < nTime; ++t)
-////    {
-////        const double phase0 = scale0 * inner(0, t);
-////        const double phaseDelta = scaleDelta * inner(0, t);
-////        complex_t curr(cos(phase0), sin(phase0));
-////        const complex_t delta(cos(phaseDelta), sin(phaseDelta));
-
-////        for(int f = 0; f < nFreq; ++f)
-////        {
-////            *data++ = curr;
-////            curr *= delta;
-////        }
-////    }
-////
-////    result->assign(shift);
-////    return result;
-//}
 
 } // namespace BBS
 } // namespace LOFAR

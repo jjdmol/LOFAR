@@ -42,25 +42,11 @@ public:
     typedef shared_ptr<JonesInvert>         Ptr;
     typedef shared_ptr<const JonesInvert>   ConstPtr;
 
-    JonesInvert(const Expr<JonesMatrix>::ConstPtr &expr)
-        :   BasicUnaryExpr<JonesMatrix, JonesMatrix>(expr)
-    {
-    }
+    JonesInvert(const Expr<JonesMatrix>::ConstPtr &expr);
 
-private:
+protected:
     virtual const JonesMatrix::View evaluateImpl(const Request &request,
-        const JonesMatrix::View &arg0) const
-    {
-        JonesMatrix::View result;
-
-        Matrix invDet(1. / (arg0(0, 0) * arg0(1, 1) - arg0(0, 1) * arg0(1, 0)));
-        result.assign(0, 0, arg0(1, 1) * invDet);
-        result.assign(0, 1, arg0(0, 1) * -invDet);
-        result.assign(1, 0, arg0(1, 0) * -invDet);
-        result.assign(1, 1, arg0(0, 0) * invDet);
-
-        return result;
-    }
+        const JonesMatrix::View &arg0) const;
 };
 
 // @}

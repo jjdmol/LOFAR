@@ -63,7 +63,7 @@ public:
 
     virtual ~MIM();
 
-private:
+protected:
     virtual unsigned int nArguments() const;
     virtual ExprBase::ConstPtr argument(unsigned int i) const;
 
@@ -74,6 +74,7 @@ private:
         const Vector<4>::View &pp, const vector<Scalar::View> &coeff)
         const;
 
+private:
     casa::MPosition                 itsRefStation;
     Expr<Vector<4> >::ConstPtr      itsPiercePoint;
     vector<Expr<Scalar>::ConstPtr > itsCoeff;

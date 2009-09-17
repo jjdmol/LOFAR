@@ -297,7 +297,7 @@ void Vector<LENGTH>::assign(const View &value)
 {
     for(unsigned int i = 0; i < LENGTH; ++i)
     {
-        if(value.dirty(i))
+        if(value.bound(i))
         {
             itsValueSet[i].assign(value(i));
         }
@@ -309,7 +309,7 @@ void Vector<LENGTH>::assign(const PValueKey &key, const View &value)
 {
     for(unsigned int i = 0; i < LENGTH; ++i)
     {
-        if(value.dirty(i))
+        if(value.bound(i))
         {
             itsValueSet[i].assign(key, value(i));
         }
