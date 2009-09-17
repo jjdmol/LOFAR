@@ -19,7 +19,7 @@
     <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
-    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,2,-12,0,0,3,-113"/>
+    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,2,-12,0,0,4,14"/>
   </AuxValues>
 
   <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
@@ -31,6 +31,9 @@
             <TitledBorder title="Station settings"/>
           </Border>
         </Property>
+        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[300, 756]"/>
+        </Property>
       </Properties>
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
@@ -41,20 +44,27 @@
       <Layout>
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Group type="102" alignment="1" attributes="0">
+              <Group type="102" alignment="0" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
-                  <Group type="103" groupAlignment="1" attributes="0">
-                      <Component id="inputLBAAntennas" alignment="0" min="-2" max="-2" attributes="0"/>
-                      <Component id="panelLBASelection" alignment="0" min="-2" max="-2" attributes="0"/>
-                      <Component id="labelClockMode" alignment="1" min="-2" pref="115" max="-2" attributes="1"/>
+                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                      <Group type="102" alignment="0" attributes="0">
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="inputLBAAntennas" min="-2" max="-2" attributes="0"/>
+                              <Component id="panelLBASelection" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace min="-2" pref="16" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="panelHBASelection1" min="-2" max="-2" attributes="0"/>
+                              <Component id="inputHBAAntennas" alignment="0" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <Group type="102" alignment="0" attributes="1">
+                          <Component id="labelClockMode" min="-2" pref="86" max="-2" attributes="1"/>
+                          <EmptySpace max="32767" attributes="0"/>
+                          <Component id="inputClockMode" min="-2" pref="131" max="-2" attributes="1"/>
+                      </Group>
                   </Group>
-                  <EmptySpace pref="6" max="32767" attributes="0"/>
-                  <Group type="103" groupAlignment="0" attributes="0">
-                      <Component id="inputHBAAntennas" alignment="0" min="-2" max="-2" attributes="0"/>
-                      <Component id="panelHBASelection1" alignment="0" min="-2" max="-2" attributes="0"/>
-                      <Component id="inputClockMode" alignment="0" min="-2" pref="113" max="-2" attributes="1"/>
-                  </Group>
-                  <EmptySpace max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="80" max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -67,16 +77,16 @@
                       <Component id="inputHBAAntennas" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
-                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                      <Component id="panelLBASelection" alignment="0" max="32767" attributes="1"/>
-                      <Component id="panelHBASelection1" alignment="0" pref="274" max="32767" attributes="1"/>
+                  <Group type="103" groupAlignment="1" attributes="0">
+                      <Component id="panelLBASelection" min="-2" max="-2" attributes="1"/>
+                      <Component id="panelHBASelection1" max="32767" attributes="1"/>
                   </Group>
-                  <EmptySpace min="-2" pref="33" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="labelClockMode" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="inputClockMode" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace pref="367" max="32767" attributes="0"/>
+                  <EmptySpace pref="338" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -117,17 +127,19 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" alignment="0" attributes="0">
+                  <Group type="102" attributes="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="inputInnerCircle" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="inputOuterCircle" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="inputSparse" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="inputXPolesOnly" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="inputYPolesOnly" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="inputLongBaselines" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel1" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="input3080" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="input1090" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="input1070" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="input3070" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel1" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputLongBaselines" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputYPolesOnly" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputXPolesOnly" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputSparse" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputOuterCircle" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputInnerCircle" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace pref="14" max="32767" attributes="0"/>
                   </Group>
@@ -153,6 +165,11 @@
                       <Component id="input3080" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="input1090" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                      <Component id="input1070" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
+                      <Component id="input3070" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -163,7 +180,6 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="AntennaLayoutGroup"/>
                 </Property>
-                <Property name="selected" type="boolean" value="true"/>
                 <Property name="text" type="java.lang.String" value="Inner circle"/>
               </Properties>
               <Events>
@@ -175,6 +191,7 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="AntennaLayoutGroup"/>
                 </Property>
+                <Property name="selected" type="boolean" value="true"/>
                 <Property name="text" type="java.lang.String" value="Outer circle"/>
               </Properties>
               <Events>
@@ -220,6 +237,7 @@
             <Component class="javax.swing.JCheckBox" name="inputLongBaselines">
               <Properties>
                 <Property name="text" type="java.lang.String" value="long baselines"/>
+                <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputLongBaselinesActionPerformed"/>
@@ -230,7 +248,7 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Tahoma" size="11" style="1"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Filter selection"/>
+                <Property name="text" type="java.lang.String" value="Freq. selection"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JRadioButton" name="input3080">
@@ -239,7 +257,7 @@
                   <ComponentRef name="AntennaFilterGroup"/>
                 </Property>
                 <Property name="selected" type="boolean" value="true"/>
-                <Property name="text" type="java.lang.String" value="30-80 (200 MHz)"/>
+                <Property name="text" type="java.lang.String" value="30-80 MHz"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="input3080ActionPerformed"/>
@@ -250,10 +268,33 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="AntennaFilterGroup"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="10-90 (200 MHz)"/>
+                <Property name="text" type="java.lang.String" value="10-90 MHz"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="input1090ActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JRadioButton" name="input1070">
+              <Properties>
+                <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
+                  <ComponentRef name="AntennaFilterGroup"/>
+                </Property>
+                <Property name="text" type="java.lang.String" value="10-70 MHz"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="input1070ActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JRadioButton" name="input3070">
+              <Properties>
+                <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
+                  <ComponentRef name="AntennaFilterGroup"/>
+                </Property>
+                <Property name="text" type="java.lang.String" value="30-70 MHz"/>
+                <Property name="actionCommand" type="java.lang.String" value="30-70"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="input3070ActionPerformed"/>
               </Events>
             </Component>
           </SubComponents>
@@ -297,6 +338,7 @@
                       <Component id="input170230" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="input210250" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace pref="55" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -331,7 +373,7 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Tahoma" size="11" style="1"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Filter selection"/>
+                <Property name="text" type="java.lang.String" value="Freq. selection"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JRadioButton" name="input110190">
@@ -339,7 +381,7 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="AntennaFilterGroup"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="110-190 (200MHz)"/>
+                <Property name="text" type="java.lang.String" value="110-190 MHz"/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
@@ -351,7 +393,7 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="AntennaFilterGroup"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="170-230 (160 MHz)"/>
+                <Property name="text" type="java.lang.String" value="170-230 MHz"/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
@@ -363,7 +405,7 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="AntennaFilterGroup"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="210-250 (200 MHz)"/>
+                <Property name="text" type="java.lang.String" value="210-250 MHz"/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
@@ -387,6 +429,7 @@
                 <StringItem index="3" value="Item 4"/>
               </StringArray>
             </Property>
+            <Property name="enabled" type="boolean" value="false"/>
           </Properties>
         </Component>
       </SubComponents>
@@ -460,9 +503,9 @@
       <Layout>
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Component id="europeStationLayout" alignment="0" pref="268" max="32767" attributes="1"/>
-              <Component id="remoteStationLayout" alignment="0" pref="268" max="32767" attributes="1"/>
-              <Component id="coreStationLayout" alignment="1" pref="268" max="32767" attributes="1"/>
+              <Component id="europeStationLayout" alignment="0" pref="411" max="32767" attributes="1"/>
+              <Component id="remoteStationLayout" alignment="0" pref="411" max="32767" attributes="1"/>
+              <Component id="coreStationLayout" alignment="1" pref="411" max="32767" attributes="1"/>
           </Group>
         </DimensionLayout>
         <DimensionLayout dim="1">

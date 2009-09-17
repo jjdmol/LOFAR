@@ -417,6 +417,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
 
     private void initialize() {
         userAccount = itsMainFrame.getUserAccount();
+        itsTreeID = itsMainFrame.getSharedVars().getTreeID();
 
         treePanel.setTitle("Template List");
         if (userAccount.isObserver()) {
@@ -453,7 +454,13 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         while (iter.hasNext()) {
             String aKey = iter.next().toString();
             if (!aKey.equals("*")) {
-                buttonPanel.addButton(aKey);
+                try {
+                    if (OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, "%" + aKey).size() > 0) {
+                        buttonPanel.addButton(aKey);
+                    }
+                } catch (Exception e) {
+                 logger.fatal("Exception during getItemList.",e);
+                }
             }
         }
 
