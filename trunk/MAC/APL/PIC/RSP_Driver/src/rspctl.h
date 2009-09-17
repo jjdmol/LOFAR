@@ -303,8 +303,10 @@ public:
 	virtual GCFEvent::TResult ack(GCFEvent& e);
 
 	// set frequency in range 0 <= frequency < sample_frequency / 2.0
-	void setFrequency(double frequency, double samplefreq) {
-		m_frequency = (uint32)round(frequency * ((uint64)1 << 32) / samplefreq);
+//	void setFrequency(double frequency, double samplefreq) {
+//		m_frequency = (uint32)round(frequency * ((uint64)1 << 32) / samplefreq);
+	void setFrequency(double frequency) {
+		itsFrequency = frequency;
 	}
 
 	void setWaveMode(int mode) {
@@ -335,7 +337,8 @@ public:
 private:
 	uint8  		m_mode;
 	uint8  		m_phase;
-	uint32 		m_frequency;
+//	uint32 		m_frequency;
+	double 		itsFrequency;
 	uint32 		m_amplitude;
 };
 

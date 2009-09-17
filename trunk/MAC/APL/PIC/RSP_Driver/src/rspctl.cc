@@ -1448,7 +1448,7 @@ WGCommand::WGCommand(GCFPortInterface& port) :
 	Command(port),
 	m_mode(0),
 	m_phase(0),
-	m_frequency(0),
+	itsFrequency(0),
 	m_amplitude((uint32)round(AMPLITUDE_SCALE))
 {
 	LOG_DEBUG_STR("amplitude=" << m_amplitude);
@@ -1474,13 +1474,14 @@ void WGCommand::send()
 
 		//wgset.settings()(0).freq = (uint32)((m_frequency * ((uint32)-1) / gSampleFrequency) + 0.5);
 		//wgset.settings()(0).freq = (uint32)round(m_frequency * ((uint64)1 << 32) / gSampleFrequency);
+		//wgset.settings()(0).freq        = m_frequency;
 
-		wgset.settings()(0).freq        = m_frequency;
+		wgset.settings()(0).freq        = (uint32)round(itsFrequency * ((uint64)1 << 32) / gSampleFrequency);
 		wgset.settings()(0).phase       = m_phase;
 		wgset.settings()(0).ampl        = m_amplitude;
 		wgset.settings()(0).nof_samples = MEPHeader::N_WAVE_SAMPLES;
 
-		if (m_frequency < 1e-6) {
+		if (wgset.settings()(0).freq < 1e-6) {
 			wgset.settings()(0).mode = WGSettings::MODE_OFF;
 		}
 		else  {	/* frequency ok */
@@ -3023,7 +3024,9 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 					delete command;
 					return 0;
 				}
-				wgcommand->setFrequency(frequency, gSampleFrequency);
+//				wgcommand->setFrequency(frequency, gSampleFrequency);
+				wgcommand->setFrequency(frequency);
+				itsNeedClock = true;
 			}
 		}
 		break;
