@@ -19,8 +19,7 @@ public class EuropeStationLayout extends javax.swing.JPanel {
     static String name="EuropeStationLayout";
     
     private boolean HBALeftSquareSelected=false;
-    private boolean LBAInnerCircleSelected=false;
-    private boolean LBAOuterCircleSelected=false;
+    private boolean LBACircleSelected=false;
 
     /** Creates new form CoreStationLayout */
     public EuropeStationLayout() {
@@ -35,18 +34,10 @@ public class EuropeStationLayout extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        LBAOuterCircleText = new javax.swing.JLabel();
-        LBAInnerCircle = new nl.astron.lofar.sas.otbcomponents.RoundButton();
-        LBAInnerCircle.addActionListener(new java.awt.event.ActionListener() {
+        LBACircle = new nl.astron.lofar.sas.otbcomponents.RoundButton();
+        LBACircle.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ActionEvent event = new ActionEvent(this,-1,"LBAInnerCircle");
-                fireActionListenerActionPerformed(event);
-            }
-        });
-        LBAOuterCircle = new nl.astron.lofar.sas.otbcomponents.RoundButton();
-        LBAOuterCircle.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ActionEvent event = new ActionEvent(this,-1,"LBAOuterCircle");
+                ActionEvent event = new ActionEvent(this,-1,"LBACircle");
                 fireActionListenerActionPerformed(event);  }
         });
         HBALeftSquare = new nl.astron.lofar.sas.otbcomponents.SquareButton();
@@ -57,18 +48,12 @@ public class EuropeStationLayout extends javax.swing.JPanel {
             }
         });
 
-        setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Europe", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 14)));
+        setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Europe", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 14))); // NOI18N
         setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        LBAOuterCircleText.setFont(new java.awt.Font("Dialog", 1, 12));
-        LBAOuterCircleText.setText("48");
-        add(LBAOuterCircleText, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 100, -1, 20));
-
-        LBAInnerCircle.setText("48");
-        LBAInnerCircle.setFont(new java.awt.Font("Dialog", 1, 12));
-        LBAInnerCircle.setSelected(true);
-        add(LBAInnerCircle, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 80, 50, 50));
-        add(LBAOuterCircle, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 110, 110));
+        LBACircle.setText("96");
+        LBACircle.setFont(new java.awt.Font("Dialog", 1, 12));
+        add(LBACircle, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 110, 110));
 
         HBALeftSquare.setText("96");
         HBALeftSquare.setEnabled(false);
@@ -84,9 +69,7 @@ public class EuropeStationLayout extends javax.swing.JPanel {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.SquareButton HBALeftSquare;
-    private nl.astron.lofar.sas.otbcomponents.RoundButton LBAInnerCircle;
-    private nl.astron.lofar.sas.otbcomponents.RoundButton LBAOuterCircle;
-    private javax.swing.JLabel LBAOuterCircleText;
+    private nl.astron.lofar.sas.otbcomponents.RoundButton LBACircle;
     // End of variables declaration//GEN-END:variables
     /**
      * Utility field used by event firing mechanism.
@@ -142,33 +125,19 @@ public class EuropeStationLayout extends javax.swing.JPanel {
         HBALeftSquare.repaint();
     }
 
-    public boolean isLBAInnerCircleEnabled() {
-        return LBAInnerCircle.isEnabled();
+    public boolean isLBACircleEnabled() {
+        return LBACircle.isEnabled();
     }
 
-    public void setLBAInnerCircleEnabled(boolean b) {
-        if (!b && LBAInnerCircle.isSelected()) {
-            setLBAInnerCircleSelected(false);
+    public void setLBACircleEnabled(boolean b) {
+        if (!b && LBACircle.isSelected()) {
+            setLBACircleSelected(false);
         }
-        LBAInnerCircle.setEnabled(b);
-        LBAInnerCircle.invalidate();
-        LBAInnerCircle.repaint();
+        LBACircle.setEnabled(b);
+        LBACircle.invalidate();
+        LBACircle.repaint();
     }
     
-    public boolean isLBAOuterCircleEnabled() {
-        return LBAOuterCircle.isEnabled();
-    }
-
-    public void setLBAOuterCircleEnabled(boolean b) {
-        if (!b && LBAOuterCircle.isSelected()) {
-            setLBAOuterCircleSelected(false);
-        }
-        LBAOuterCircleText.setEnabled(b);
-        LBAOuterCircle.setEnabled(b);
-        LBAOuterCircle.invalidate();
-        LBAOuterCircle.repaint();
-    }
-
     public boolean isHBALeftSquareSelected() {
         return HBALeftSquareSelected;
     }
@@ -184,35 +153,19 @@ public class EuropeStationLayout extends javax.swing.JPanel {
         HBALeftSquare.repaint();
     }
 
-    public boolean isLBAInnerCircleSelected() {
-        return LBAInnerCircleSelected;
+    public boolean isLBACircleSelected() {
+        return LBACircleSelected;
     }
 
-    public void setLBAInnerCircleSelected(boolean b) {
-        LBAInnerCircleSelected=b;
+    public void setLBACircleSelected(boolean b) {
+        LBACircleSelected=b;
         if (b) {
-            LBAInnerCircle.setBackground(Color.green);
+            LBACircle.setBackground(Color.green);
         } else {
-            LBAInnerCircle.setBackground(getBackground());
+            LBACircle.setBackground(getBackground());
         }
-        LBAInnerCircle.invalidate();
-        LBAInnerCircle.repaint();
-    }
-
-    public boolean isLBAOuterCircleSelected() {
-        return LBAOuterCircleSelected;
-    }
-
-    public void setLBAOuterCircleSelected(boolean b) {
-        LBAOuterCircleSelected=b;
-        if (b) {
-            LBAOuterCircle.setBackground(Color.green);
-        } else {
-            LBAOuterCircle.setBackground(getBackground());
-        }
-        LBAOuterCircle.invalidate();
-        LBAOuterCircle.repaint();
-    
+        LBACircle.invalidate();
+        LBACircle.repaint();
     }
 }
 

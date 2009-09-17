@@ -201,6 +201,10 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         String bandFilter="LBA_30_80";
         if (this.input1090.isSelected()) {
             bandFilter="LBA_10_90";
+        } else if (this.input1070.isSelected()) {
+            bandFilter="LBA_10_90";
+        } else if (this.input3070.isSelected()) {
+            bandFilter="LBA_30_80";
         } else if (this.input110190.isSelected()) {
             bandFilter="HBA_110_190";
         } else if (this.input170230.isSelected()) {
@@ -482,7 +486,11 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 input210250.setToolTipText(aParam.description);
                 this.itsBandFilter=aNode;
                 if (aNode.limits.equals("LBA_10_90")) {
-                    input1090.setSelected(true);                    
+                    if (inputClockMode.getSelectedItem().equals("<<Clock200")) {
+                        input1090.setSelected(true);
+                    } else {
+                        input1070.setSelected(true);
+                    }
                 } else if (aNode.limits.equals("HBA_110_190")) {
                     input110190.setSelected(true);                    
                 } else if (aNode.limits.equals("HBA_170_230")) {
@@ -490,7 +498,11 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 } else if (aNode.limits.equals("HBA_210_250")) {
                     input210250.setSelected(true);
                 } else {
-                    input3080.setSelected(true);
+                    if (inputClockMode.getSelectedItem().equals("<<Clock200")) {
+                        input3080.setSelected(true);
+                    } else {
+                        input3070.setSelected(true);
+                    }
                 }
             } else if (aKeyName.equals("longBaselines")) {
                 this.itsLongBaselines=aNode;
@@ -506,7 +518,6 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                     inputClockMode.setSelectedItem(aNode.limits);
                 }
                 itsClockMode=aNode;
-
             }
         } else if(parentName.contains("VirtualInstrument")){        
             // Observation Beamformer parameters
@@ -557,6 +568,8 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         if (this.inputLBAAntennas.isSelected() ) {
             this.input1090.setEnabled(true);
             this.input3080.setEnabled(true);
+            this.input1070.setEnabled(true);
+            this.input3070.setEnabled(true);
             this.inputLongBaselines.setEnabled(true);
             this.inputInnerCircle.setEnabled(true);
             this.inputOuterCircle.setEnabled(true);
@@ -565,10 +578,18 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             this.input210250.setEnabled(false);
             this.inputOneSquare.setEnabled(false);
             this.inputTwoSquares.setEnabled(false);
+            this.inputClockMode.setEnabled(false);
+            if (this.inputInnerCircle.isSelected()) {
+                this.inputLongBaselines.setEnabled(true);
+            } else {
+                this.inputLongBaselines.setEnabled(false);
+            }
 
         } else {
             this.input1090.setEnabled(false);
             this.input3080.setEnabled(false);
+            this.input1070.setEnabled(false);
+            this.input3070.setEnabled(false);
             this.inputLongBaselines.setEnabled(false);
             this.inputInnerCircle.setEnabled(false);
             this.inputOuterCircle.setEnabled(false);
@@ -577,6 +598,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             this.input210250.setEnabled(true);
             this.inputOneSquare.setEnabled(true);
             this.inputTwoSquares.setEnabled(true);
+            this.inputClockMode.setEnabled(true);
 
         }
 
@@ -606,10 +628,8 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         // all stuff for EuropeStationLayout Settings based on choices
         this.europeStationLayout.setHBALeftSquareEnabled(inputOneSquare.isEnabled());
         this.europeStationLayout.setHBALeftSquareSelected(inputOneSquare.isSelected()||inputTwoSquares.isSelected());
-        this.europeStationLayout.setLBAInnerCircleEnabled(inputInnerCircle.isEnabled());
-        this.europeStationLayout.setLBAInnerCircleSelected(inputInnerCircle.isSelected());
-        this.europeStationLayout.setLBAOuterCircleEnabled(inputOuterCircle.isEnabled());
-        this.europeStationLayout.setLBAOuterCircleSelected(inputOuterCircle.isSelected());
+        this.europeStationLayout.setLBACircleEnabled(inputInnerCircle.isEnabled()||inputOuterCircle.isEnabled());
+        this.europeStationLayout.setLBACircleSelected(inputInnerCircle.isSelected()||inputOuterCircle.isSelected());
     }
     
     
@@ -686,6 +706,8 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         jLabel1 = new javax.swing.JLabel();
         input3080 = new javax.swing.JRadioButton();
         input1090 = new javax.swing.JRadioButton();
+        input1070 = new javax.swing.JRadioButton();
+        input3070 = new javax.swing.JRadioButton();
         panelHBASelection1 = new javax.swing.JPanel();
         inputOneSquare = new javax.swing.JRadioButton();
         inputTwoSquares = new javax.swing.JRadioButton();
@@ -707,6 +729,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         setLayout(new java.awt.BorderLayout());
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Station settings"));
+        jPanel1.setPreferredSize(new java.awt.Dimension(300, 756));
 
         AntennaSelectionGroup.add(inputLBAAntennas);
         inputLBAAntennas.setSelected(true);
@@ -728,7 +751,6 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         panelLBASelection.setBorder(javax.swing.BorderFactory.createTitledBorder("Antenna Selection"));
 
         AntennaLayoutGroup.add(inputInnerCircle);
-        inputInnerCircle.setSelected(true);
         inputInnerCircle.setText("Inner circle");
         inputInnerCircle.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -737,6 +759,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         });
 
         AntennaLayoutGroup.add(inputOuterCircle);
+        inputOuterCircle.setSelected(true);
         inputOuterCircle.setText("Outer circle");
         inputOuterCircle.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -772,18 +795,19 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         });
 
         inputLongBaselines.setText("long baselines");
+        inputLongBaselines.setEnabled(false);
         inputLongBaselines.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputLongBaselinesActionPerformed(evt);
             }
         });
 
-        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11));
-        jLabel1.setText("Filter selection");
+        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jLabel1.setText("Freq. selection");
 
         AntennaFilterGroup.add(input3080);
         input3080.setSelected(true);
-        input3080.setText("30-80 (200 MHz)");
+        input3080.setText("30-80 MHz");
         input3080.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 input3080ActionPerformed(evt);
@@ -791,10 +815,27 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         });
 
         AntennaFilterGroup.add(input1090);
-        input1090.setText("10-90 (200 MHz)");
+        input1090.setText("10-90 MHz");
         input1090.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 input1090ActionPerformed(evt);
+            }
+        });
+
+        AntennaFilterGroup.add(input1070);
+        input1070.setText("10-70 MHz");
+        input1070.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                input1070ActionPerformed(evt);
+            }
+        });
+
+        AntennaFilterGroup.add(input3070);
+        input3070.setText("30-70 MHz");
+        input3070.setActionCommand("30-70");
+        input3070.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                input3070ActionPerformed(evt);
             }
         });
 
@@ -804,15 +845,17 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             panelLBASelectionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelLBASelectionLayout.createSequentialGroup()
                 .addGroup(panelLBASelectionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(inputInnerCircle)
-                    .addComponent(inputOuterCircle)
-                    .addComponent(inputSparse)
-                    .addComponent(inputXPolesOnly)
-                    .addComponent(inputYPolesOnly)
-                    .addComponent(inputLongBaselines)
-                    .addComponent(jLabel1)
                     .addComponent(input3080)
-                    .addComponent(input1090))
+                    .addComponent(input1090)
+                    .addComponent(input1070)
+                    .addComponent(input3070)
+                    .addComponent(jLabel1)
+                    .addComponent(inputLongBaselines)
+                    .addComponent(inputYPolesOnly)
+                    .addComponent(inputXPolesOnly)
+                    .addComponent(inputSparse)
+                    .addComponent(inputOuterCircle)
+                    .addComponent(inputInnerCircle))
                 .addContainerGap(14, Short.MAX_VALUE))
         );
         panelLBASelectionLayout.setVerticalGroup(
@@ -834,7 +877,12 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(input3080)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(input1090))
+                .addComponent(input1090)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(input1070)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(input3070)
+                .addContainerGap())
         );
 
         panelHBASelection1.setBorder(javax.swing.BorderFactory.createTitledBorder("Antenna Selection"));
@@ -857,11 +905,11 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             }
         });
 
-        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 11));
-        jLabel2.setText("Filter selection");
+        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jLabel2.setText("Freq. selection");
 
         AntennaFilterGroup.add(input110190);
-        input110190.setText("110-190 (200MHz)");
+        input110190.setText("110-190 MHz");
         input110190.setEnabled(false);
         input110190.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -870,7 +918,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         });
 
         AntennaFilterGroup.add(input170230);
-        input170230.setText("170-230 (160 MHz)");
+        input170230.setText("170-230 MHz");
         input170230.setEnabled(false);
         input170230.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -879,7 +927,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         });
 
         AntennaFilterGroup.add(input210250);
-        input210250.setText("210-250 (200 MHz)");
+        input210250.setText("210-250 MHz");
         input210250.setEnabled(false);
         input210250.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -914,29 +962,37 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(input170230)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(input210250))
+                .addComponent(input210250)
+                .addContainerGap(55, Short.MAX_VALUE))
         );
 
         labelClockMode.setText("Clock Mode:");
 
         inputClockMode.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        inputClockMode.setEnabled(false);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+            .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(inputLBAAntennas, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(panelLBASelection, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(labelClockMode, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 6, Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(inputHBAAntennas)
-                    .addComponent(panelHBASelection1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(inputClockMode, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(inputLBAAntennas)
+                            .addComponent(panelLBASelection, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(16, 16, 16)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(panelHBASelection1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(inputHBAAntennas)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(labelClockMode, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(inputClockMode, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(80, 80, 80))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -946,14 +1002,14 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                     .addComponent(inputLBAAntennas)
                     .addComponent(inputHBAAntennas))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(panelLBASelection, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(panelHBASelection1, javax.swing.GroupLayout.DEFAULT_SIZE, 274, Short.MAX_VALUE))
-                .addGap(33, 33, 33)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(panelLBASelection, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(panelHBASelection1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelClockMode)
                     .addComponent(inputClockMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(367, Short.MAX_VALUE))
+                .addContainerGap(338, Short.MAX_VALUE))
         );
 
         add(jPanel1, java.awt.BorderLayout.WEST);
@@ -1010,9 +1066,9 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(europeStationLayout, javax.swing.GroupLayout.DEFAULT_SIZE, 268, Short.MAX_VALUE)
-            .addComponent(remoteStationLayout, javax.swing.GroupLayout.DEFAULT_SIZE, 268, Short.MAX_VALUE)
-            .addComponent(coreStationLayout, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 268, Short.MAX_VALUE)
+            .addComponent(europeStationLayout, javax.swing.GroupLayout.DEFAULT_SIZE, 411, Short.MAX_VALUE)
+            .addComponent(remoteStationLayout, javax.swing.GroupLayout.DEFAULT_SIZE, 411, Short.MAX_VALUE)
+            .addComponent(coreStationLayout, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 411, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1029,8 +1085,12 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     }// </editor-fold>//GEN-END:initComponents
 
     private void inputLBAAntennasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputLBAAntennasActionPerformed
-        this.inputInnerCircle.setSelected(true);
-        this.input3080.setSelected(true);
+        this.inputOuterCircle.setSelected(true);
+        if (inputClockMode.getSelectedItem().equals("<<Clock200")) {
+            this.input3080.setSelected(true);
+        } else {
+            this.input3070.setSelected(true);
+        }
         checkSettings();
     }//GEN-LAST:event_inputLBAAntennasActionPerformed
 
@@ -1038,14 +1098,19 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         this.inputOneSquare.setSelected(true);
         this.inputLongBaselines.setSelected(false);
         this.input110190.setSelected(true);
+        this.inputClockMode.setSelectedItem("<<Clock200");
         checkSettings();
     }//GEN-LAST:event_inputHBAAntennasActionPerformed
 
     private void inputInnerCircleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputInnerCircleActionPerformed
+        this.inputLongBaselines.setSelected(true);
+        this.inputLongBaselines.setEnabled(true);
         checkSettings();
     }//GEN-LAST:event_inputInnerCircleActionPerformed
 
     private void inputOuterCircleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputOuterCircleActionPerformed
+        this.inputLongBaselines.setSelected(false);
+        this.inputLongBaselines.setEnabled(false);
         checkSettings();
     }//GEN-LAST:event_inputOuterCircleActionPerformed
 
@@ -1066,10 +1131,12 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     }//GEN-LAST:event_inputLongBaselinesActionPerformed
 
     private void input3080ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_input3080ActionPerformed
+        inputClockMode.setSelectedItem("<<Clock200");
         checkSettings();
     }//GEN-LAST:event_input3080ActionPerformed
 
     private void input1090ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_input1090ActionPerformed
+        inputClockMode.setSelectedItem("<<Clock200");
         checkSettings();
     }//GEN-LAST:event_input1090ActionPerformed
 
@@ -1082,14 +1149,17 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     }//GEN-LAST:event_inputTwoSquaresActionPerformed
 
     private void input110190ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_input110190ActionPerformed
+        inputClockMode.setSelectedItem("<<Clock200");
         checkSettings();
     }//GEN-LAST:event_input110190ActionPerformed
 
     private void input170230ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_input170230ActionPerformed
+        inputClockMode.setSelectedItem("<<Clock160");
         checkSettings();
     }//GEN-LAST:event_input170230ActionPerformed
 
     private void input210250ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_input210250ActionPerformed
+        inputClockMode.setSelectedItem("<<Clock200");
         checkSettings();
     }//GEN-LAST:event_input210250ActionPerformed
 
@@ -1106,8 +1176,10 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             }
         } else if (evt.getActionCommand().equals("LBAInnerCircle")) {
             this.inputInnerCircle.setSelected(!this.coreStationLayout.isLBAInnerCircleSelected());
+            this.inputLongBaselines.setSelected(true);
         } else if (evt.getActionCommand().equals("LBAOuterCircle")) {
             this.inputOuterCircle.setSelected(!this.coreStationLayout.isLBAOuterCircleSelected());
+            this.inputLongBaselines.setSelected(false);
         } else if (evt.getActionCommand().equals("LBALongBaselineLeft")) {
             this.inputLongBaselines.setSelected(!this.coreStationLayout.isLBALongBaselineLeftSelected());            
         } else if (evt.getActionCommand().equals("LBALongBaselineRight")) {            
@@ -1120,9 +1192,11 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         if (evt.getActionCommand().equals("HBALeftSquare")) {
             this.inputOneSquare.setSelected(true);
         } else if (evt.getActionCommand().equals("LBAInnerCircle")) {
-            this.inputInnerCircle.setSelected(!this.coreStationLayout.isLBAInnerCircleSelected());
+            this.inputLongBaselines.setSelected(true);
+            this.inputInnerCircle.setSelected(!this.remoteStationLayout.isLBAInnerCircleSelected());
         } else if (evt.getActionCommand().equals("LBAOuterCircle")) {
-            this.inputOuterCircle.setSelected(!this.coreStationLayout.isLBAOuterCircleSelected());
+            this.inputLongBaselines.setSelected(false);
+            this.inputOuterCircle.setSelected(!this.remoteStationLayout.isLBAOuterCircleSelected());
         }
         checkSettings();
     }//GEN-LAST:event_remoteStationLayoutActionPerformed
@@ -1130,13 +1204,21 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     private void europeStationLayoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_europeStationLayoutActionPerformed
         if (evt.getActionCommand().equals("HBALeftSquare")) {
             this.inputOneSquare.setSelected(true);
-        } else if (evt.getActionCommand().equals("LBAInnerCircle")) {
-            this.inputInnerCircle.setSelected(!this.coreStationLayout.isLBAInnerCircleSelected());
-        } else if (evt.getActionCommand().equals("LBAOuterCircle")) {
-            this.inputOuterCircle.setSelected(!this.coreStationLayout.isLBAOuterCircleSelected());
+        } else if (evt.getActionCommand().equals("LBACircle")) {
+            this.inputOuterCircle.setSelected(this.europeStationLayout.isLBACircleSelected());
         }
         checkSettings();
 }//GEN-LAST:event_europeStationLayoutActionPerformed
+
+    private void input1070ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_input1070ActionPerformed
+        inputClockMode.setSelectedItem("<<Clock160");
+        checkSettings();
+}//GEN-LAST:event_input1070ActionPerformed
+
+    private void input3070ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_input3070ActionPerformed
+        inputClockMode.setSelectedItem("<<Clock160");
+        checkSettings();
+}//GEN-LAST:event_input3070ActionPerformed
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -1147,10 +1229,12 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     private nl.astron.lofar.sas.otbcomponents.StationSelectionPanel coreStationSelectionPanel;
     private nl.astron.lofar.sas.otbcomponents.EuropeStationLayout europeStationLayout;
     private nl.astron.lofar.sas.otbcomponents.StationSelectionPanel europeStationSelectionPanel;
+    private javax.swing.JRadioButton input1070;
     private javax.swing.JRadioButton input1090;
     private javax.swing.JRadioButton input110190;
     private javax.swing.JRadioButton input170230;
     private javax.swing.JRadioButton input210250;
+    private javax.swing.JRadioButton input3070;
     private javax.swing.JRadioButton input3080;
     private javax.swing.JComboBox inputClockMode;
     private javax.swing.JRadioButton inputHBAAntennas;

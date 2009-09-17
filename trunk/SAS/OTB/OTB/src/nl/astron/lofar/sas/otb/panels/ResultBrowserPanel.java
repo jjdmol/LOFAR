@@ -30,7 +30,6 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
-import java.util.logging.Level;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
@@ -109,7 +108,13 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         while ( iter.hasNext()) {
             String aKey = iter.next().toString();
             if (!aKey.equals("*")) {
-                buttonPanel.addButton(aKey);
+                try {
+                    if (OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, "%" + aKey).size() > 0) {
+                        buttonPanel.addButton(aKey);
+                    }
+                } catch (Exception e) {
+                 logger.fatal("Exception during getItemList.",e);
+                }
             }
         }
 

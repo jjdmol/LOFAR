@@ -1051,6 +1051,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 jTabbedPane1StateChanged(evt);
             }
         });
+
+        antennaConfigPanel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                antennaConfigPanelActionPerformed(evt);
+            }
+        });
         jTabbedPane1.addTab("Station", antennaConfigPanel);
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
@@ -1455,6 +1461,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private void inputReceiverListFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputReceiverListFocusGained
         changeDescription(itsReceiverList);
     }//GEN-LAST:event_inputReceiverListFocusGained
+
+    private void antennaConfigPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_antennaConfigPanelActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_antennaConfigPanelActionPerformed
     
     private jOTDBnode                         itsNode = null;
     private MainFrame                         itsMainFrame;
