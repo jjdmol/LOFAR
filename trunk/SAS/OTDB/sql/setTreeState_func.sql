@@ -46,7 +46,10 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 		vAuthToken				ALIAS FOR $1;
 		vUserID					INT4;
 		TThardware CONSTANT		INT2 := 10;
+		TTVIC	   CONSTANT		INT2 := 30;
 		TSactive   CONSTANT		INT2 := 600;
+		TSfinished CONSTANT		INT2 := 1000;
+		TSaborted  CONSTANT		INT2 := 1100;
 		TSobsolete CONSTANT		INT2 := 1200;
 
 	BEGIN
@@ -110,6 +113,22 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 			WHERE  treeid    = $2;
 		  END IF;
 		  IF $3 = TSobsolete THEN
+		    UPDATE OTDBtree
+			SET	   stoptime = now()
+			WHERE  treeid   = $2;
+		  END IF;
+		  END;
+		END IF;
+
+		-- add timeinfo to VIC trees
+		IF vTreeType = TTVIC THEN
+		  BEGIN
+		  IF $3 = TSactive THEN
+			UPDATE OTDBtree
+			SET    starttime = now()
+			WHERE  treeid    = $2;
+		  END IF;
+		  IF $3 = TSfinished OR $3 = TSaborted THEN
 		    UPDATE OTDBtree
 			SET	   stoptime = now()
 			WHERE  treeid   = $2;
