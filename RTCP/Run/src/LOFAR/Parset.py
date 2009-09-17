@@ -3,6 +3,7 @@ import time
 import socket
 import util.Parset
 from Partitions import PartitionPsets
+from Locations import Hosts
 from util.dateutil import parse,format,parseDuration,timestamp
 import math
 import sys
@@ -47,6 +48,14 @@ class Parset(util.Parset.Parset):
           return ""
 
         return self["OLAP.CNProc.partition"]
+
+    def distillStorageNodes(self):
+        """ Distill storage nodes to use from the parset file and return it. """
+
+        if "OLAP.OLAP_Conn.IONProc_Storage_ServerHosts" not in self:
+          return []
+
+        return self.getStringVector("OLAP.OLAP_Conn.IONProc_Storage_ServerHosts")
 
     def finalise(self):
         """ Derive some final keys and finalise any parameters necessary
@@ -93,7 +102,7 @@ class Parset(util.Parset.Parset):
 	    index += 1
 
 	  nrSubbands = len(subbands)
-		
+
 	  self.setdefault('Observation.nrBeams', index)
 	
 	# Pset configuration
@@ -101,6 +110,9 @@ class Parset(util.Parset.Parset):
 
 	nrPsets = len(self.psets)
 	nrStorageNodes = self.getNrUsedStorageNodes()
+
+        # set and resolve storage hostnames
+        self["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"] = [Hosts.resolve( s, "back") for s in self.storagenodes]
 
 	self.setdefault('OLAP.nrPsets', nrPsets)
 	self.setdefault('OLAP.CNProc.inputPsets', [s.getPsetIndex(self.partition) for s in self.stations])
@@ -155,15 +167,8 @@ class Parset(util.Parset.Parset):
 
 	    tiedArrayStationList.append(curlist)
 
-            # extract the individual stations and remove them from the global station list
+            # extract the individual stations
 	    beamFormedStations += curlist.split('+')
-	    remainingStationList
-	    for sp in curlist.split('+'):
-		for s in remainingStationList:
-		    if s.getName() == sp:
-		       remainingStationList.remove(s)
-		       break
-
 	    index += 1
 	
 	if index > 0:
@@ -202,9 +207,10 @@ class Parset(util.Parset.Parset):
     def setStorageNodes(self,storagenodes):
 	""" Define the list of storage nodes to use. """
 
-        # resolve host names, as OLAP needs IP addresses
-	self.storagenodes = map(socket.gethostbyname, storagenodes)
+        # do not resolve host names, since the resolve depends on the need (i.e. NIC needed)
+	self.storagenodes = storagenodes[:]
 
+        # OLAP needs IP addresses from the backend
         self["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"] = self.storagenodes
 
     def setObsID(self,obsid):
@@ -279,7 +285,7 @@ class Parset(util.Parset.Parset):
       """ Returns a dictionary of the ports (value) required by each storage node (key). """
 
       globalPorts = self.getInt32Vector("OLAP.OLAP_Conn.IONProc_Storage_Ports")
-      storageNodes = self.getStringVector("OLAP.OLAP_Conn.IONProc_Storage_ServerHosts")
+      storageNodes = self.storagenodes
       subbandMapping = self.getInt32Vector("OLAP.storageNodeList")
 
       localPorts = {}

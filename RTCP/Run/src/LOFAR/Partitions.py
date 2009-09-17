@@ -105,6 +105,30 @@ def allocatePartition( partition ):
   """ Allocate the given partition by running Hello World. """
   return SyncCommand( "mpirun -partition %s -nofree -exe /bgsys/tools/hello" % (partition,), ["/dev/null"] ).isSuccess()
 
+def stealPartition( partition ):
+  """ Take over a partition from another user. UNDER CONSTRUCTION. """
+  old_owner = owner( partition )
+  new_owner = os.environ["USER"]
+
+  if old_owner is None:
+    # we already own it
+    return allocatePartition( partition )
+
+  jobinfo = runningJob( partition )
+
+  if jobinfo is not None:
+    # someone is still running a job
+    return False
+
+  # reallocate partition
+  commands = [
+    "set_username %s" % (old_owner,),
+    "free %s" % (partition,),
+    "set_username %s" % (new_owner,),
+    "allocate %s" % (partition),
+  ]
+  return SyncCommand("ssh bgsn echo '%s' | mmcs_db_console" % "\\n".join(commands) ).isSuccess()
+
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
   import sys
@@ -136,6 +160,11 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
   			help = "free the partition" )
+  parser.add_option( "-s", "--steal",
+  			dest = "steal",
+			action = "store_true",
+			default = False,
+  			help = "take over a partition from another user (needs access to bgsn)" )
 
   # parse arguments
   (options, args) = parser.parse_args()
@@ -164,6 +193,10 @@ if __name__ == "__main__":
     if options.allocate and not errorOccurred:
       print "Allocating %s..." % ( partition, )
       errorOccured = allocatePartition( partition )
+
+    if options.steal and not errorOccurred:
+      print "Taking over partition %s..." % ( partition, )
+      errorOccured = stealPartition( partition )
 
     # check partition if requested so
     if options.check:

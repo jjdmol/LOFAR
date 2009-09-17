@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-__all__ = ["Locations","isProduction","isDevelopment","homeDir"]
+__all__ = ["Locations","Hosts","isProduction","isDevelopment","homeDir"]
 
 import os
+from socket import gethostbyname
 
 def isProduction():
   """ Decides whether this is a production run, in order to set sane default values. """
@@ -14,6 +15,39 @@ def isDevelopment():
 
 def homeDir():
   return os.environ["HOME"]
+
+class Hosts:
+  def __init__(self):
+    self.hostnames = {}
+
+    self.populate()
+
+  def add(self,hostname,ip,interface="external"):
+    ips = self.hostnames.get( hostname, {} );
+    ips[interface] = ip
+
+    self.hostnames[hostname] = ips
+
+  def resolve(self,hostname,interface="external"):
+    if hostname in self.hostnames:
+      ips = self.hostnames[hostname]
+
+      if interface in ips:
+        return ips[interface]
+
+    # fallback
+    return gethostbyname( hostname )
+
+  def populate(self):
+    # storage nodes lse001 - lse024
+    for i in xrange( 1, 24 ):
+      self.add( "lse%03d" % (i,),
+                "10.176.1.%d" % (i,),
+                "front" )
+
+      self.add( "lse%03d" % (i,),
+                "10.174.0.%d" % (i,),
+                "back" )
   
 class Locations:
   def __init__(self):
@@ -136,4 +170,5 @@ class Locations:
       self.files[name] = self.resolvePath( path, parset )
 
 Locations = Locations()
+Hosts = Hosts()
 
