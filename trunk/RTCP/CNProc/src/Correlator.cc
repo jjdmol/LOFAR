@@ -19,13 +19,13 @@ static NSTimer weightTimer("Correlator::weight()", true, true);
 
 // nrStations is the number of superstations in case we use TAB.
 // Stations that are not beam formed count as a station.
-Correlator::Correlator(const unsigned nrStations, const unsigned* stationMapping, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const bool correctBandPass)
+Correlator::Correlator(const std::vector<unsigned> &stationMapping, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const bool correctBandPass)
 :
-  itsNrStations(nrStations),
-  itsNrBaselines(nrStations * (nrStations + 1) / 2),
+  itsNrStations(stationMapping.size()),
+  itsNrBaselines(itsNrStations * (itsNrStations + 1) / 2),
   itsNrChannels(nrChannels),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
-  itsCorrelationWeights(new float[nrSamplesPerIntegration + 1]),
+  itsCorrelationWeights(nrSamplesPerIntegration + 1),
   itsBandPass(correctBandPass, nrChannels),
   itsStationMapping(stationMapping)
 {
@@ -34,13 +34,6 @@ Correlator::Correlator(const unsigned nrStations, const unsigned* stationMapping
   for (unsigned i = 1; i <= nrSamplesPerIntegration; i ++)
     itsCorrelationWeights[i] = 1.0e-6 / i;
 }
-
-
-Correlator::~Correlator()
-{
-  delete [] itsCorrelationWeights;
-}
-
 
 #if 1
 
@@ -59,7 +52,7 @@ double Correlator::computeCentroidAndValidSamples(const SparseSet<unsigned> &fla
 }
 
 
-void Correlator::computeFlagsAndCentroids(const FilteredData *filteredData, CorrelatedData *correlatedData)
+void Correlator::computeFlagsAndCentroids(const SampleData<> *sampleData, CorrelatedData *correlatedData)
 {
   computeFlagsTimer.start();
 
@@ -68,8 +61,8 @@ void Correlator::computeFlagsAndCentroids(const FilteredData *filteredData, Corr
       unsigned nrValidSamples;
       const unsigned bl = baseline(stat1, stat2);
 
-      correlatedData->centroids[bl] = computeCentroidAndValidSamples(filteredData->flags[itsStationMapping[stat1]] 
-								     | filteredData->flags[itsStationMapping[stat2]], nrValidSamples);
+      correlatedData->centroids[bl] = computeCentroidAndValidSamples(sampleData->flags[itsStationMapping[stat1]] 
+								     | sampleData->flags[itsStationMapping[stat2]], nrValidSamples);
       correlatedData->nrValidSamples[bl][0] = 0; // channel 0 does not contain valid data
 
       for (unsigned ch = 1; ch < itsNrChannels; ch ++)
@@ -82,15 +75,15 @@ void Correlator::computeFlagsAndCentroids(const FilteredData *filteredData, Corr
 
 #else
 
-void Correlator::computeFlags(const FilteredData *filteredData, CorrelatedData *correlatedData)
+void Correlator::computeFlags(const SampleData<> *sampleData, CorrelatedData *correlatedData)
 {
   computeFlagsTimer.start();
 
   for (unsigned stat2 = 0; stat2 < itsNrStations; stat2 ++) {
     for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) {
       unsigned bl             = baseline(stat1, stat2);
-      unsigned nrValidSamples = itsNrSamplesPerIntegration - (filteredData->flags[itsStationMapping[stat1]] 
-							      | filteredData->flags[itsStationMapping[stat2]]).count();
+      unsigned nrValidSamples = itsNrSamplesPerIntegration - (sampleData->flags[itsStationMapping[stat1]] 
+							      | sampleData->flags[itsStationMapping[stat2]]).count();
 
       correlatedData->nrValidSamples[bl][0] = 0; // channel 0 does not contain valid data
 
@@ -105,8 +98,13 @@ void Correlator::computeFlags(const FilteredData *filteredData, CorrelatedData *
 #endif
 
 
-void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *correlatedData)
+void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *correlatedData)
 {
+  ASSERT( sampleData->samples.shape()[0] == itsNrChannels );
+  /* sampleData->samples.shape()[1] needs to be valid for any itsStationMapping */
+  ASSERT( sampleData->samples.shape()[2] >= itsNrSamplesPerIntegration );
+  ASSERT( sampleData->samples.shape()[3] == NR_POLARIZATIONS );
+
 #if 0
   LOG_DEBUG_STR("correlating " << itsNrStations << " stations");
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
@@ -128,8 +126,8 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
 	    for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
 	      dcomplex sum = makedcomplex(0, 0);
 	      for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
-		sum += filteredData->samples[ch][itsStationMapping[stat1]][time][pol1] 
-		  * conj(filteredData->samples[ch][itsStationMapping[stat2]][time][pol2]);
+		sum += sampleData->samples[ch][itsStationMapping[stat1]][time][pol1] 
+		  * conj(sampleData->samples[ch][itsStationMapping[stat2]][time][pol2]);
 	      }
 	      sum *= itsCorrelationWeights[nrValid] * itsBandPass.squaredCorrectionFactors()[ch];
 	      correlatedData->visibilities[bl][ch][pol1][pol2] = sum;
@@ -180,8 +178,8 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
     if (nrValidStations % 2 == 0) {
       unsigned stat10 = map[0], stat11 = map[1];
 
-      _auto_correlate_2(filteredData->samples[ch][itsStationMapping[stat10]].origin(),
-			filteredData->samples[ch][itsStationMapping[stat11]].origin(),
+      _auto_correlate_2(sampleData->samples[ch][itsStationMapping[stat10]].origin(),
+			sampleData->samples[ch][itsStationMapping[stat11]].origin(),
 			correlatedData->visibilities[baseline(stat10, stat10)][ch].origin(),
 			correlatedData->visibilities[baseline(stat10, stat11)][ch].origin(),
 			correlatedData->visibilities[baseline(stat11, stat11)][ch].origin(),
@@ -189,7 +187,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
     } else {
       unsigned stat10 = map[0];
 
-      _auto_correlate_1(filteredData->samples[ch][itsStationMapping[stat10]].origin(),
+      _auto_correlate_1(sampleData->samples[ch][itsStationMapping[stat10]].origin(),
 			correlatedData->visibilities[baseline(stat10, stat10)][ch].origin(),
 			itsNrSamplesPerIntegration);
     }
@@ -203,11 +201,11 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
 	const unsigned stat10 = map[stat1], stat11 = map[stat1+1], stat12 = map[stat1+2];
 	const unsigned stat20 = map[stat2], stat21 = map[stat2+1];
 
-	_correlate_3x2(filteredData->samples[ch][itsStationMapping[stat10]].origin(),
-		       filteredData->samples[ch][itsStationMapping[stat11]].origin(),
-		       filteredData->samples[ch][itsStationMapping[stat12]].origin(),
-		       filteredData->samples[ch][itsStationMapping[stat20]].origin(),
-		       filteredData->samples[ch][itsStationMapping[stat21]].origin(),
+	_correlate_3x2(sampleData->samples[ch][itsStationMapping[stat10]].origin(),
+		       sampleData->samples[ch][itsStationMapping[stat11]].origin(),
+		       sampleData->samples[ch][itsStationMapping[stat12]].origin(),
+		       sampleData->samples[ch][itsStationMapping[stat20]].origin(),
+		       sampleData->samples[ch][itsStationMapping[stat21]].origin(),
 		       correlatedData->visibilities[baseline(stat10, stat20)][ch].origin(),
 		       correlatedData->visibilities[baseline(stat10, stat21)][ch].origin(),
 		       correlatedData->visibilities[baseline(stat11, stat20)][ch].origin(),
@@ -223,10 +221,10 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
 	const unsigned stat10 = map[stat1], stat11 = map[stat1+1];
 	const unsigned stat20 = map[stat2], stat21 = map[stat2+1];
 
-	_correlate_2x2(filteredData->samples[ch][itsStationMapping[stat10]].origin(),
-		       filteredData->samples[ch][itsStationMapping[stat11]].origin(),
-		       filteredData->samples[ch][itsStationMapping[stat20]].origin(),
-		       filteredData->samples[ch][itsStationMapping[stat21]].origin(),
+	_correlate_2x2(sampleData->samples[ch][itsStationMapping[stat10]].origin(),
+		       sampleData->samples[ch][itsStationMapping[stat11]].origin(),
+		       sampleData->samples[ch][itsStationMapping[stat20]].origin(),
+		       sampleData->samples[ch][itsStationMapping[stat21]].origin(),
 		       correlatedData->visibilities[baseline(stat10, stat20)][ch].origin(),
 		       correlatedData->visibilities[baseline(stat10, stat21)][ch].origin(),
 		       correlatedData->visibilities[baseline(stat11, stat20)][ch].origin(),
@@ -238,8 +236,8 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
       if (stat1 == stat2) {
 	const unsigned stat10 = map[stat1], stat11 = map[stat1+1];
 
-	_auto_correlate_2(filteredData->samples[ch][itsStationMapping[stat10]].origin(),
-			  filteredData->samples[ch][itsStationMapping[stat11]].origin(),
+	_auto_correlate_2(sampleData->samples[ch][itsStationMapping[stat10]].origin(),
+			  sampleData->samples[ch][itsStationMapping[stat11]].origin(),
 			  correlatedData->visibilities[baseline(stat10,stat10)][ch].origin(),
 			  correlatedData->visibilities[baseline(stat10,stat11)][ch].origin(),
 			  correlatedData->visibilities[baseline(stat11,stat11)][ch].origin(),
@@ -247,9 +245,9 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
       } else {
 	const unsigned stat10 = map[stat1], stat11 = map[stat1+1], stat12 = map[stat1+2];
 
-	_auto_correlate_3(filteredData->samples[ch][itsStationMapping[stat10]].origin(),
-			  filteredData->samples[ch][itsStationMapping[stat11]].origin(),
-			  filteredData->samples[ch][itsStationMapping[stat12]].origin(),
+	_auto_correlate_3(sampleData->samples[ch][itsStationMapping[stat10]].origin(),
+			  sampleData->samples[ch][itsStationMapping[stat11]].origin(),
+			  sampleData->samples[ch][itsStationMapping[stat12]].origin(),
 			  correlatedData->visibilities[baseline(stat10,stat11)][ch].origin(),
 			  correlatedData->visibilities[baseline(stat10,stat12)][ch].origin(),
 			  correlatedData->visibilities[baseline(stat11,stat11)][ch].origin(),
@@ -272,7 +270,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
     }
   }
 #else
-  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), itsCorrelationWeights, itsBandPass.squaredCorrectionFactors(), itsNrBaselines, itsNrChannels); // FIXME
+  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), &itsCorrelationWeights[0], itsBandPass.squaredCorrectionFactors(), itsNrBaselines, itsNrChannels); // FIXME
 #endif
   weightTimer.stop();
 #endif  

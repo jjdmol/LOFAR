@@ -94,6 +94,11 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
       resize(extents, alignment, *allocator);
     }
 
+    bool hasShape(const ExtentList &extents)
+    {
+      return std::equal( this->extent_list_.begin(), this->extent_list_.end(), extents.begin() );
+    }
+
     static size_t defaultAlignment()
     {
       return sizeof(T) < 16 ? 8 : sizeof(T) < 32 ? 16 : 32;

@@ -46,10 +46,9 @@
 #include <Interface/StreamableData.h>
 
 #include <AsyncTranspose.h>
+#include <PencilBeams.h>
 #include <PPF.h>
 #include <Correlator.h>
-#include <BeamFormer.h>
-#include <PencilBeams.h>
 #include <Stokes.h>
 
 #include <LocationInfo.h>
@@ -86,7 +85,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     void                transpose();
     void                filter();
     void                formBeams();
-    void                formPencilBeams();
+    void                formBeamFormer();
     void                calculateIncoherentStokesI();
     void                calculateCoherentStokes();
     void                calculateIncoherentStokes();
@@ -119,10 +118,12 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     ArenaMapping        itsMapping;
 
     InputData<SAMPLE_TYPE>	*itsInputData;
+    SubbandMetaData             *itsInputSubbandMetaData;
+    SubbandMetaData             *itsSubbandMetaData;
     TransposedData<SAMPLE_TYPE>	*itsTransposedData;
     FilteredData		*itsFilteredData;
     CorrelatedData		*itsCorrelatedData;
-    PencilBeamData              *itsPencilBeamData;
+    BeamFormedData              *itsBeamFormedData;
     StokesData                  *itsStokesData;
     StokesData                  *itsIncoherentStokesIData;
     StokesDataIntegratedChannels *itsStokesDataIntegratedChannels;
@@ -134,8 +135,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
 #endif
 
     PPF<SAMPLE_TYPE>	*itsPPF;
-    BeamFormer          *itsBeamFormer;
-    PencilBeams         *itsPencilBeamFormer;
+    BeamFormer         *itsBeamFormer;
     Stokes              *itsStokes, *itsIncoherentStokesI;
     Correlator		*itsCorrelator;
 };

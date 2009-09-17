@@ -128,7 +128,7 @@ inline PipelineOutputSet::PipelineOutputSet(const Parset &ps, Allocator &allocat
   switch (mode.mode()) {
     case CN_Mode::FILTER :
 	o = new PipelineOutput(id ++, PipelineOutput::FILTEREDDATA);
-        o->itsData = new FilteredData(ps.nrStations(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), ps.nrPencilBeams());
+        o->itsData = new FilteredData(ps.nrStations(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps());
         o->itsFilenameSuffix = ".filtered";
         break;
 
@@ -140,7 +140,7 @@ inline PipelineOutputSet::PipelineOutputSet(const Parset &ps, Allocator &allocat
 
     case CN_Mode::COHERENT_COMPLEX_VOLTAGES :
 	o = new PipelineOutput(id ++, PipelineOutput::PENCILBEAMDATA);
-        o->itsData = new PencilBeamData(ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps());
+        o->itsData = new BeamFormedData(ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps());
         o->itsFilenameSuffix = ".complexvoltages";
         break;
 

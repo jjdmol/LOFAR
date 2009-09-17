@@ -10,6 +10,7 @@
 #include <FIR.h>
 #include <TransposedData.h>
 #include <Interface/FilteredData.h>
+#include <Interface/SubbandMetaData.h>
 #include <Interface/AlignedStdAllocator.h>
 
 #include <boost/multi_array.hpp>
@@ -33,8 +34,8 @@ template <typename SAMPLE_TYPE> class PPF: boost::noncopyable
     PPF(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation, bool verbose);
     ~PPF();
 
-    void computeFlags(unsigned stat, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
-    void filter(unsigned stat, double centerFrequency, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
+    void computeFlags(unsigned stat, const SubbandMetaData *metaData, FilteredData *);
+    void filter(unsigned stat, double centerFrequency, const SubbandMetaData *metaData, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
 
   private:
     void init_fft(), destroy_fft();
