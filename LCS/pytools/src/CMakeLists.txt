@@ -18,7 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-include(PythonMacros)
+include(PythonInstall)
 
-python_install(__init__.py ${PYTHON_INSTALL_DIR}/lofar)
+python_install(__init__.py DESTINATION ${PYTHON_INSTALL_DIR}/lofar)
 

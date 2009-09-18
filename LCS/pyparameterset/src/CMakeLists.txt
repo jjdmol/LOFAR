@@ -31,3 +31,8 @@ set_target_properties(_pyparameterset PROPERTIES PREFIX "")
 lofar_add_bin_program(versionpyparameterset 
   versionpyparameterset.cc
   Package__Version.cc)
+
+# Install Python modules
+include(PythonInstall)
+python_install(__init__.py 
+  DESTINATION ${PYTHON_INSTALL_DIR}/lofar/parameterset)
