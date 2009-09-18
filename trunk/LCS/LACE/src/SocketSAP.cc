@@ -1,24 +1,24 @@
-//#  SocketSAP.cc: Abstract base class for several kinds of sockets
+//# SocketSAP.cc: Abstract base class for several kinds of sockets
 //#
-//#  Copyright (C) 2008
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//# Copyright (C) 2008
+//# ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
 //#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
 //#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//#  $Id$
+//# $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -27,6 +27,8 @@
 #include <unistd.h>					// file stuff
 #include <netinet/in.h>				// IPPROTO
 //#include <netdb.h>					// fileStat
+#include <errno.h>
+#include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
 #include <LACE/SocketSAP.h>
 
@@ -140,7 +142,7 @@ int SocketSAP::read(void*	buffer, size_t	nrBytes)
 	int32	bytesRead = 0;
 	if (itsAddress.protocolNr() == IPPROTO_UDP) {
 	    errno = 0;
-		size_t	alen = itsAddress.getAddressSize();
+		socklen_t	alen = itsAddress.getAddressSize();
 		if ((bytesRead = recvfrom (getHandle(), (char*) buffer, nrBytes, 0,
 									(sockaddr*) itsAddress.getAddress(),
 									&alen) <= 0) || errno) {
