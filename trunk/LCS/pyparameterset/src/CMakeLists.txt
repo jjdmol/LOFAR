@@ -34,5 +34,4 @@ lofar_add_bin_program(versionpyparameterset
 
 # Install Python modules
 include(PythonInstall)
-python_install(__init__.py 
-  DESTINATION ${PYTHON_INSTALL_DIR}/lofar/parameterset)
+python_install(__init__.py DESTINATION lofar/parameterset)

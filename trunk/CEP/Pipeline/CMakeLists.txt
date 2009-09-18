@@ -28,23 +28,25 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(CEP)
+project(Pipeline)
 include(LofarGeneral)
 
-## ---------------------------------------------------------------------------
-## Subdirectories
-## ---------------------------------------------------------------------------
-lofar_add_subdirectory(MWCommon)
-lofar_add_subdirectory(MS)
-lofar_add_subdirectory(ParmDB)
-lofar_add_subdirectory(Calibration)
-lofar_add_subdirectory(DP3)
-lofar_add_subdirectory(Imager)
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 0.1 DEPENDS pytools)
 
-lofar_add_subdirectory(Pipeline)
-lofar_add_subdirectory(pyparmdb)
+## ---------------------------------------------------------------------------
+## External packages
+## ---------------------------------------------------------------------------
+include(LofarFindPackage)
+lofar_find_package(Python REQUIRED)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
+
+## ---------------------------------------------------------------------------
+## Subdirectories
+## ---------------------------------------------------------------------------
+add_subdirectory(Core)
+add_subdirectory(library)

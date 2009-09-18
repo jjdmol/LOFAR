@@ -48,12 +48,14 @@ macro(python_install)
     message(FATAL_ERROR "python_install: destination directory invalid")
   endif(_dest_dir MATCHES "^$" OR _dest_dir MATCHES ";")
 
+  # Set python package install directory.
   set(_dest_dir "${PYTHON_INSTALL_DIR}/${_dest_dir}")
 
   # Byte-compile each Python file and add both .py and .pyc to install list.
+  file(RELATIVE_PATH _rel_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
   set(_pyc_files)
   foreach(_py ${_py_files})
-    set(_comment "Byte-compiling ${_py}")
+    set(_comment "Byte-compiling ${_rel_path}/${_py}")
     set(_pyc ${CMAKE_CURRENT_BINARY_DIR}/${_py}c)
     set(_py ${CMAKE_CURRENT_SOURCE_DIR}/${_py})
     add_custom_command(OUTPUT ${_pyc}
