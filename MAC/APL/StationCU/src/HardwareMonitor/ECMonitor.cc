@@ -288,7 +288,7 @@ GCFEvent::TResult ECMonitor::createPropertySets(GCFEvent& event, GCFPortInterfac
 		}
 		LOG_INFO_STR("Allocation of all propertySets successfull, going to operational mode");
 //      itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
-		TRAN(ECMonitor::askStatus);
+		TRAN(ECMonitor::askSettings);
 	}
 	break;
 

@@ -200,7 +200,7 @@ GCFEvent::TResult ClockControl::initial_state(GCFEvent& event,
 	case F_ENTRY: {
 		// Get access to my own propertyset.
 		string	myPropSetName(createPropertySetName(PSN_CLOCK_CONTROL, getName()));
-		LOG_DEBUG_STR ("Activating PropertySet " << myPropSetName);
+		LOG_INFO_STR ("Activating PropertySet " << myPropSetName);
 		itsOwnPropertySet = new RTDBPropertySet(myPropSetName,
 												PST_CLOCK_CONTROL,
 												PSAT_RW,
@@ -249,7 +249,7 @@ GCFEvent::TResult ClockControl::initial_state(GCFEvent& event,
 			GCFPVInteger	clockVal;
 			itsOwnPropertySet->getValue(PN_CLC_REQUESTED_CLOCK, clockVal);
 			itsClock = clockVal.getValue();
-			LOG_DEBUG_STR("ClockSetting is " << itsClock);
+			LOG_INFO_STR("Requested clock is " << itsClock);
 
 			LOG_DEBUG ("Going to connect2RSP state");
 			TRAN(ClockControl::connect2RSP_state);			// go to next state.
@@ -519,6 +519,7 @@ GCFEvent::TResult ClockControl::subscribeClock_state(GCFEvent& event,
 		}
 		itsClockSubscription = ack.handle;
 		LOG_INFO("Subscription on the clock successful. going to operational mode");
+		itsOwnPropertySet->setValue(PN_CLC_ACTUAL_CLOCK,GCFPVInteger(itsClock));
 		TRAN(ClockControl::active_state);				// go to next state.
 	}
 	break;

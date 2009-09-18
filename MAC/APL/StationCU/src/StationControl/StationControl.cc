@@ -124,8 +124,8 @@ StationControl::StationControl(const string&	cntlrName) :
 	itsRCUmask.reset();
 	itsTBmask.reset();
 
-	LOG_DEBUG_STR("sizeof itsLBAmask: " << itsLBAmask.size());
-	LOG_DEBUG_STR("sizeof itsHBAmask: " << itsHBAmask.size());
+	LOG_DEBUG_STR("sizeof itsLBArcumask: " << itsLBArcumask.size());
+	LOG_DEBUG_STR("sizeof itsHBArcumask: " << itsHBArcumask.size());
 	LOG_DEBUG_STR("sizeof itsRCUmask: " << itsRCUmask.size());
 	LOG_DEBUG_STR("sizeof itsTBmask: "  << itsTBmask.size());
 }
@@ -632,9 +632,9 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		if (event.signal == CONTROL_CLAIM) {
 			itsStartingObs = theObs;
 			TRAN(StationControl::startObservation_state);
-//			queueTaskEvent(event, port);
-//			return (GCFEvent::HANDLED);
-			return (GCFEvent::NEXT_STATE);
+			queueTaskEvent(event, port);
+			return (GCFEvent::HANDLED);
+//			return (GCFEvent::NEXT_STATE);
 		}
 
 		// TODO: CLEAN UP THE CODE BELOW
@@ -773,6 +773,21 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 	break;
 
 	case F_TIMER: {
+		StationConfig	sc;
+		if (!sc.hasSplitters) {
+			LOG_INFO_STR("Ignoring splitter settings because we don't have splitters");
+			// finally send a CLAIM event to the observation
+			LOG_TRACE_FLOW("Dispatch CLAIM event to observation FSM's.");
+			CONTROLClaimEvent		claimEvent;
+			itsStartingObs->second->doEvent(claimEvent, port);
+
+			LOG_INFO("Going back to operational state.");
+			itsStartingObs = itsObsMap.end();
+			TRAN(StationControl::operational_state);
+			break;
+		}
+
+		// set the splitters in the right state.
 		bool	splitterState = itsStartingObs->second->obsPar()->splitter;
 		LOG_DEBUG_STR ("Setting the splitters to " << (splitterState ? "ON" : "OFF"));
 		CLKCTRLSetSplittersEvent	setEvent;
@@ -793,6 +808,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 		}
 		
 		itsSplitters = splitterState;
+		sleep (2);			// give splitters time to stabilize.
 
 		// finally send a CLAIM event to the observation
 		LOG_TRACE_FLOW("Dispatch CLAIM event to observation FSM's");
@@ -805,6 +821,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 	}
 	break;
 
+	case F_ENTRY:
 	case F_EXIT:
 		break;
 
@@ -942,6 +959,8 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 		uint32	newState(((GCFPVInteger*)(DPvalues->getValue()[idx]))->getValue());	// value
 		size_t	pos;
 
+		LOG_DEBUG_STR("QryUpdate: DP=" << nameStr << ", value=" << newState);
+
 		// test for RCU
 		if ((pos = nameStr.find("_RCU")) != string::npos) {
 			int		rcu;
@@ -984,8 +1003,15 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 				}
 
 				if (sscanf(nameStr.substr(pos).c_str(), "_RSPBoard%d.splitterOn", &rsp) == 1) {
-					LOG_INFO_STR("New setting of splitter " << rsp << " is " << (newState ? "on" : "off"));
-					itsSplitters.set(rsp);
+					if (itsSplitters[rsp] != (newState ? true : false)) {
+						LOG_INFO_STR("New setting of splitter " << rsp << " is " << (newState ? "on" : "off"));
+						if (newState) {
+							itsSplitters.set(rsp);
+						}
+						else {
+							itsSplitters.reset(rsp);
+						}
+					}
 				}
 			}
 			else {
@@ -1120,8 +1146,8 @@ void StationControl::_abortObservation(ObsIter	theObs)
 void StationControl::_initAntennaMasks()
 {
 	// reset all variables
-	itsLBAmask.reset();
-	itsHBAmask.reset();
+	itsLBArcumask.reset();
+	itsHBArcumask.reset();
 
 	// Adopt values from RemoteStation.conf
 	StationConfig	SC;
@@ -1130,15 +1156,17 @@ void StationControl::_initAntennaMasks()
 	itsNrHBAs 	   = SC.nrHBAs;
 	itsHasSplitters= SC.hasSplitters;
 
-	ASSERTSTR (itsNrLBAs <= itsLBAmask.size() && 
-			   itsNrHBAs <= itsHBAmask.size(), "Number of antennas exceed expected count");
+	ASSERTSTR (2*itsNrLBAs <= itsLBArcumask.size() && 
+			   2*itsNrHBAs <= itsHBArcumask.size(), "Number of antennas exceed expected count");
 
 	// set the right bits.
 	for (uint i = 0; i < itsNrLBAs; i++) {
-		itsLBAmask.set(i);
+		itsLBArcumask.set(2*i);
+		itsLBArcumask.set(2*i+1);
 	}   
 	for (uint i = 0; i < itsNrHBAs; i++) {
-		itsHBAmask.set(i);
+		itsHBArcumask.set(2*i);
+		itsHBArcumask.set(2*i+1);
 	}
 
 	// The masks are now initialized with the static information. The _handleQueryEvent routine
@@ -1156,21 +1184,27 @@ void StationControl::_updateAntennaMasks()
 {
 	// Note: the definition in StationControl.h and the ASSERT in _initAntennaMasks assure
 	//		 that we never exceed the boundaries of the bitmaps here.
-	for (int rcu = 0; rcu < MAX_RCUS ; rcu+=2) {
+	for (int rcu = 0; rcu < MAX_RCUS/2 ; rcu+=2) {
 		if (itsRCUmask[rcu] && itsRCUmask[rcu+1]) {		// X and Y
-			itsLBAmask.set(rcu/2);
-			itsLBAmask.set(48+(rcu/2));
-			itsHBAmask.set(rcu/2);
+			itsLBArcumask.set(rcu);
+			itsLBArcumask.set(rcu+1);
+			itsLBArcumask.set(96+rcu);
+			itsLBArcumask.set(96+rcu+1);
+			itsHBArcumask.set(rcu);
+			itsHBArcumask.set(rcu+1);
 		}
 		else {
-			itsLBAmask.reset(rcu/2);
-			itsLBAmask.reset(48+(rcu/2));
-			itsHBAmask.reset(rcu/2);
+			itsLBArcumask.reset(rcu);
+			itsLBArcumask.reset(rcu+1);
+			itsLBArcumask.reset(96+rcu);
+			itsLBArcumask.reset(96+rcu+1);
+			itsHBArcumask.reset(rcu);
+			itsHBArcumask.reset(rcu+1);
 		}
 	}
 	LOG_DEBUG_STR("itsRCU:" << string(itsRCUmask.to_string<char,char_traits<char>,allocator<char> >()));
-	LOG_DEBUG_STR("itsLBA:" << string(itsLBAmask.to_string<char,char_traits<char>,allocator<char> >()));
-	LOG_DEBUG_STR("itsHBA:" << string(itsHBAmask.to_string<char,char_traits<char>,allocator<char> >()));
+	LOG_DEBUG_STR("itsLBA:" << string(itsLBArcumask.to_string<char,char_traits<char>,allocator<char> >()));
+	LOG_DEBUG_STR("itsHBA:" << string(itsHBArcumask.to_string<char,char_traits<char>,allocator<char> >()));
 
 	if (itsHasSplitters && itsSplitters.count() != 0 && itsSplitters.count() != itsNrRSPboards) {
 		LOG_WARN_STR("Not all splitters have the same state! " << itsSplitters);

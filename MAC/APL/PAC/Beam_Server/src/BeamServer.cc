@@ -1145,7 +1145,6 @@ void BeamServer::send_sbselection()
 		}
 
 		LOG_DEBUG_STR("Sending subbandselecton for ring segment " << ringNr);
-//		LOG_DEBUG_STR(sbsel);
 		itsRSPDriver->send(ss);
 	}
 }

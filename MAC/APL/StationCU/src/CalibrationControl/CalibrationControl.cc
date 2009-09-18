@@ -26,11 +26,12 @@
 #include <ApplCommon/StationConfig.h>
 #include <ApplCommon/StationInfo.h>
 
-#include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
+#include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
-#include <GCF/RTDB/DP_Protocol.ph>
+#include <APL/RTDBCommon/RTDButilities.h>
 #include <signal.h>
 
 #include "CalibrationControl.h"
@@ -40,6 +41,7 @@
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
+using namespace LOFAR::APL::RTDBCommon;
 
 namespace LOFAR {
 	using namespace APLCommon;
@@ -396,9 +398,9 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 		setState(CTState::PREPARE);
 		gResult = CT_RESULT_NO_ERROR;
 		if (!startCalibration()) {	// will result in CAL_STARTACK event
-			sendControlResult(port, CONTROL_PREPARED, msg.cntlrName, 
-														CT_RESULT_CALSTART_FAILED);
+			sendControlResult(port, CONTROL_PREPARED, msg.cntlrName, CT_RESULT_CALSTART_FAILED);
 			setState(CTState::CLAIMED);
+			setObjectState("No beams specified!", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_SUSPICIOUS);
 		}
 		break;
 	}
@@ -419,6 +421,7 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 			LOG_ERROR_STR("Start of calibration of beam " << ack.name << 
 															" failed, staying in CLAIMED mode");
 			itsBeams[ack.name] = false;					// add to beammap
+			setObjectState("Cannot start beam", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
 		}
 
 		if (itsObsPar.beams.size() == itsBeams.size()) {	// answer for all beams received? report state
@@ -430,6 +433,7 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 			}
 			else {
 				LOG_INFO("Not all beams were calibrated right, staying in claiming mode");
+				setObjectState("Cannot start calibration", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
 				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_CALSTART_FAILED);
 				setState(CTState::CLAIMED);
 			}
@@ -544,6 +548,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 			}
 			else {
 				LOG_ERROR("Stop of some calibrations failed, staying in SUSPENDED mode");
+				setObjectState("Cannot stop the calibration", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
 				sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
 																CT_RESULT_CALSTOP_FAILED);
 				setState(CTState::SUSPENDED);
@@ -617,6 +622,10 @@ bool	CalibrationControl::startCalibration()
 {
 	uint32	nrBeams = itsObsPar.beams.size();
 	LOG_DEBUG_STR("Calibrating " << nrBeams << " beams.");
+	if (nrBeams == 0) {
+		LOG_WARN("No beams specified");
+		return (false);
+	}
 
 	GCFPValueArray		beamNameArr;
 	for (uint32	i(0); i < nrBeams; i++) {
@@ -624,12 +633,13 @@ bool	CalibrationControl::startCalibration()
 		string		beamName(itsObsPar.getBeamName(i));
 
 		CALStartEvent calStartEvent;
-		calStartEvent.name   	   = beamName;
-		calStartEvent.parent 	   = itsObsPar.antennaArray;
+		calStartEvent.name   = beamName;
+		StationConfig		config;
+		// TODO: As long as the AntennaArray.conf uses different names as SAS we have to use this dirty hack.
+		calStartEvent.parent = itsObsPar.getAntennaArrayName(config.hasSplitters);
 		calStartEvent.rcumode().resize(1);
 		calStartEvent.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)
 											convertFilterSelection(itsObsPar.filter, itsObsPar.antennaSet));
-		StationConfig		config;
 		calStartEvent.subset = itsObsPar.getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters);
 		LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
 								beamName.c_str(), calStartEvent.parent.c_str(),

@@ -27,13 +27,14 @@
 #include <ApplCommon/StationInfo.h>
 
 #include <Common/ParameterSet.h>
-#include <GCF/PVSS/GCF_PVTypes.h>
 #include <Common/SystemUtil.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
+#include <GCF/RTDB/DP_Protocol.ph>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/BS_Protocol/BS_Protocol.ph>
-#include <GCF/RTDB/DP_Protocol.ph>
+#include <APL/RTDBCommon/RTDButilities.h>
 #include <signal.h>
 
 #include "BeamControl.h"
@@ -43,6 +44,7 @@
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
+using namespace LOFAR::APL::RTDBCommon;
 using namespace std;
 
 namespace LOFAR {
@@ -372,8 +374,10 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 		port.close();
 		ASSERTSTR (&port == itsBeamServer, 
 								"F_DISCONNECTED event from port " << port.getName());
-		LOG_WARN("Connection with BeamServer lost, going to reconnect state.");
-		TRAN(BeamControl::started_state);
+		LOG_WARN("Connection with BeamServer lost");
+		setObjectState("Connection with BeamServer lost!", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
+		finish();
+//		TRAN(BeamControl::started_state);
 		break;
 	}
 
@@ -389,6 +393,7 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 			LOG_WARN_STR("Beamallocation error: nr subbands != nr beamlets" << 
 						 ", staying in CLAIMED mode");
 			setState(CTState::CLAIMED);
+			setObjectState("Number of subbands != number of beamlets", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
 			LOG_DEBUG_STR("Sending PREPARED(" << getName() << "," << 
 												CT_RESULT_CONFLICTING_ARGS << ")");
 			sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), 
@@ -461,8 +466,10 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 		port.close();
 		ASSERTSTR (&port == itsBeamServer, 
 								"F_DISCONNECTED event from port " << port.getName());
-		LOG_WARN("Connection with BeamServer lost, going to reconnect");
-		TRAN(BeamControl::started_state);
+		LOG_WARN("Connection with BeamServer lost");
+		setObjectState("Connection with BeamServer lost!", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
+		finish();
+//		TRAN(BeamControl::started_state);
 		break;
 	}
 	
@@ -661,10 +668,11 @@ uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 {
 	// check the beam ID and status of the ACK message
 	BSBeamallocackEvent ackEvent(event);
-	if (ackEvent.status != 0) {
+	if (ackEvent.status != BS_NO_ERR) {
 		LOG_ERROR_STR("Beamlet allocation for beam " << ackEvent.subarrayname 
 					  << " failed with errorcode: " << ackEvent.status);
 		itsBeamIDs[ackEvent.subarrayname] = 0;
+		setObjectState("Beamlet alloc error", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
 		return (CT_RESULT_BEAMALLOC_FAILED);
 	}
 	itsBeamIDs[ackEvent.subarrayname] = ackEvent.handle;
@@ -676,6 +684,7 @@ uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 	if (beamIdx >= theObs.beams.size()) {
 		LOG_FATAL_STR("Beamnr " << beamIdx+1 << " (=beam " << ackEvent.subarrayname << 
 						") is out of range: 1.." << theObs.beams.size());
+		setObjectState("Beamlet alloc index error", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
 		return (CT_RESULT_BEAMALLOC_FAILED);
 	}
 	Observation::Beam*	theBeam = &theObs.beams[beamIdx];
@@ -721,7 +730,7 @@ bool BeamControl::doRelease()
 bool BeamControl::handleBeamFreeAck(GCFEvent&		event)
 {
 	BSBeamfreeackEvent	ack(event);
-	if (ack.status != 0) {
+	if (ack.status != BS_NO_ERR) {
 		LOG_ERROR_STR("Beam de-allocation failed with errorcode: " << ack.status);
 		itsPropertySet->setValue(PN_FSM_ERROR,GCFPVString("De-allocation of the beam failed."));
 		return (false);	

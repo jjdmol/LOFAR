@@ -182,7 +182,10 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 				rbm[i] = '1';
 			}
 		}
-		itsPropertySet->setValue(PN_OBS_RECEIVER_BITMAP,GCFPVString (rbm), 0.0, false);
+		LOG_INFO_STR("Setting receiverBitMap of DP:" << itsObsPar.realPVSSdatapoint << "." << PN_OBS_RECEIVER_BITMAP);
+		itsPropertySet->setValue(PN_OBS_RECEIVER_BITMAP,GCFPVString (rbm));
+		itsPropertySet->setValue(PN_OBS_CLAIM_NAME, 
+								 GCFPVString(formatString("LOFAR_ObsSW_Observation%d", itsObsPar.obsID)));
 
 		// Startup the right controllers.
 		itsReqState = CTState::CREATED;
