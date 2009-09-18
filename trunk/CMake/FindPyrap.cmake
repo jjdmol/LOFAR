@@ -37,7 +37,8 @@ if(NOT PYRAP_FOUND)
   mark_as_advanced(PYRAP_INCLUDE_DIR PYRAP_LIBRARY)
 
   # Pyrap also depends on Casacore
-  find_package(Casacore REQUIRED COMPONENTS casa)
+  include(LofarFindPackage)
+  lofar_find_package(Casacore REQUIRED COMPONENTS casa)
 
   include(FindPackageHandleStandardArgs)
   find_package_handle_standard_args(Pyrap DEFAULT_MSG 
