@@ -453,6 +453,8 @@ GCFEvent::TResult SoftwareMonitor::finish_state(GCFEvent& event, GCFPortInterfac
 //
 void SoftwareMonitor::_updateProcess(vector<Process>::iterator	iter, int	pid, int	curLevel)
 {
+	LOG_DEBUG_STR("_updateProcess(" << iter->DPname << "," << pid << "," << curLevel << ")");
+
 	if (pid) {					// process is running?
 		// mark it operational whether or not it should be running
 		setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_OPERATIONAL, true);	// force
@@ -481,6 +483,8 @@ void SoftwareMonitor::_updateProcess(vector<Process>::iterator	iter, int	pid, in
 	}
 
 	// pid = 0 ==> process is not running
+	itsDPservice->setValue(iter->DPname+".process.processID", GCFPVInteger(iter->pid));
+
 	if (iter->level > curLevel) {										// should it be down?
 		setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_OFF, true);	// yes
 		iter->errorCnt = 0;
@@ -499,6 +503,9 @@ void SoftwareMonitor::_updateProcess(vector<Process>::iterator	iter, int	pid, in
 		else {
 			setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_OFF, true);	// force
 		}
+		if (iter->errorCnt == 0) {		// first error? set stoptime
+			iter->stopTime = 0;			// force update of stoptime
+		}
 		iter->errorCnt++;
 	} // proces not running but it should have been running
 		
@@ -509,6 +516,7 @@ void SoftwareMonitor::_updateProcess(vector<Process>::iterator	iter, int	pid, in
 		itsDPservice->setValue(iter->DPname+".process.stopTime", 
 									GCFPVString(to_simple_string(from_time_t(iter->stopTime))));
 		itsDPservice->setValue(iter->DPname+".process.processID", GCFPVInteger(0));
+		iter->startTime = 0;
 	}
 }
 
