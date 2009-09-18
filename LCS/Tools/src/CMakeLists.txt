@@ -1,5 +1,3 @@
-#  $Id$
-#
 # Copyright (C) 2008-2009
 # ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -17,6 +15,8 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+#  $Id$
 
 lofar_add_sbin_program(LimitExec LimitExec.cc)
 lofar_add_sbin_program(pkgdep pkgdep.cc)
