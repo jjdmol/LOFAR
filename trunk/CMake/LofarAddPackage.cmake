@@ -78,8 +78,8 @@ function(lofar_add_package _name)
     endwhile(_idx LESS ARGC)
   endif(ARGC GREATER 2)
 
-  # Create a custom target for package <name>.
-  add_custom_target(${_name})
+  # Create a custom target for package <name> that depends on 'all'.
+  add_custom_target(${_name} ALL)
 
   # For each package <pkg> that this package depends on:
   # - add a dependency of package <name> on package <pkg>
