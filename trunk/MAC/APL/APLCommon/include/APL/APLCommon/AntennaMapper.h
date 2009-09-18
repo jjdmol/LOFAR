@@ -79,12 +79,12 @@ private:
 
 inline int	AntennaMapper::XRCU(int	antNr) const
 {
-	return ((antNr <= itsRCUs/2) ? 2*antNr : 2*antNr+1 - itsRCUs);
+	return ((antNr < itsRCUs/2) ? 2*antNr : 2*antNr+1 - itsRCUs);
 }
 
 inline int AntennaMapper::YRCU(int	antNr) const
 {
-	return ((antNr <= itsRCUs/2) ? 2*antNr+1 : 2*antNr - itsRCUs);
+	return ((antNr < itsRCUs/2) ? 2*antNr+1 : 2*antNr - itsRCUs);
 }
 
 inline int AntennaMapper::RCUinput(int	antNr, int antType) const

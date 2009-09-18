@@ -40,6 +40,7 @@ void doTest(int	antNr, int antType, AntennaMapper&	AM)
 
 int main (int	argc, char* argv[]) 
 {
+	//						rcus, lbas, hbas
 	AntennaMapper	AMCore  (96, 96, 48);
 	AntennaMapper	AMRemote(96, 96, 0);
 	AntennaMapper	AMEurope(192,96, 48);
@@ -47,6 +48,7 @@ int main (int	argc, char* argv[])
 	cout << endl << "Core station with half HW and full LBA and HBA" << endl;
 	doTest(5, 	 AntennaMapper::AT_LBA, AMCore);
 	doTest(5+48, AntennaMapper::AT_LBA, AMCore);
+	doTest(48,   AntennaMapper::AT_LBA, AMCore);
 	doTest(5, 	 AntennaMapper::AT_HBA, AMCore);
 
 	cout << endl << "Remote station with half HW and full LBA and NO HBA" << endl;

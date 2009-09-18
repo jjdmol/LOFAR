@@ -65,6 +65,8 @@ public:
 
 	// Returns a bitset containing the RCU's requested by the observation.
 	bitset<MAX_RCUS> getRCUbitset(int nrLBAs, int nrHBAs, int nrRSPs, bool hasSplitters);
+	// TEMP HACK
+	string getAntennaArrayName(bool hasSplitters) const;
 
 	// REO: The next functions don't make sense, all info is public!!!!!
 	// OLAP: get the subbandList

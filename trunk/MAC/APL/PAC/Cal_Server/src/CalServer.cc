@@ -285,6 +285,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 		RSPGetconfigackEvent ack(e);
 		m_n_rspboards = ack.n_rspboards;
 		m_n_rcus = ack.n_rcus;
+		LOG_INFO_STR("nrRSPboards=" << m_n_rspboards << ", nrRCUS=" << m_n_rcus);
 		// resize and clear itsRCUcounters.
 		itsRCUcounts.assign(m_n_rcus, 0);
 
@@ -365,6 +366,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	switch (e.signal) {
 	case F_ENTRY: {
+		_disableRCUs(0);
 		m_acceptor.setTimer(0.0, 1.0);
 	}
 	break;
@@ -396,7 +398,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	case RSP_SETRCUACK: {
 		RSPSetrcuackEvent ack(e);
 		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
-			LOG_FATAL("Failed to set RCU control register");
+			LOG_FATAL_STR("Failed to set RCU control register, error = " << ack.status);
 			exit (EXIT_FAILURE);
 		}
 	}
@@ -405,7 +407,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	case RSP_SETBYPASSACK: {
 		RSPSetbypassackEvent ack(e);
 		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
-			LOG_FATAL("Failed to set Spectral Inversion control register");
+			LOG_FATAL_STR("Failed to set Spectral Inversion control register, error = " << ack.status);
 			exit (EXIT_FAILURE);
 		}
 	}
@@ -824,20 +826,34 @@ void CalServer::_enableRCUs(SubArray*	subarray)
 //
 void CalServer::_disableRCUs(SubArray*	subarray)
 {
-	if (!subarray) {
-		return;
-	}
 	// decrement the usecount of the receivers and build mask of receiver that may be disabled.
-	SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
+	bool				allSwitchedOff(true);
 	SubArray::RCUmask_t	rcus2switchOff;
 	rcus2switchOff.reset();
-	for (int r = 0; r < m_n_rcus; r++) {
-		if (rcuMask.test(r)) {	
-			if (--itsRCUcounts[r] == 0) {
-				rcus2switchOff.set(r);
-			} // count reaches 0
-		} // rcu in mask
-	} // for all rcus
+
+	if (subarray) {		// when no subarray is defined skipp this loop: switch all rcus off.
+		SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
+		for (int r = 0; r < m_n_rcus; r++) {
+			if (rcuMask.test(r)) {	
+				if (--itsRCUcounts[r] == 0) {
+					rcus2switchOff.set(r);
+				} // count reaches 0
+			} // rcu in mask
+
+			// independant of the rcuMask check if this receiver is (also) off
+			if (itsRCUcounts[r]) { 	// still on?
+				allSwitchedOff = false;
+			}
+		} // for all rcus
+	}
+
+	if (allSwitchedOff) { 	// all receivers off? force all rcu's to mode 0, disable
+		rcus2switchOff.reset();
+		for (int i = 0; i < m_n_rcus; i++) {
+			rcus2switchOff.set(i);
+		}
+		LOG_INFO("No active rcu's anymore, forcing all units to mode 0 and disable");
+	}
 
 	// anything to disable? Tell the RSPDriver.
 	if (rcus2switchOff.any()) {
@@ -848,7 +864,7 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 		disableCmd.settings()(0).setEnable(false);
 		disableCmd.settings()(0).setMode(RCUSettings::Control::MODE_OFF);
 		sleep (1);
-		LOG_INFO_STR("Disabling some rcu's because they are not used anymore");
+		LOG_INFO_STR("Disabling " << rcus2switchOff.count() << " rcu's because they are not used anymore");
 		m_rspdriver.send(disableCmd);
 	}
 } 

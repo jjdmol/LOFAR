@@ -292,14 +292,14 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 		itsHasSplitters = RSconf.getBool("RS.HBA_SPLIT", false);
 
 		// inform user
-		LOG_DEBUG(formatString("nr RCUs      = %d",ack.n_rcus));
-		LOG_DEBUG(formatString("nr RSPboards = %d",ack.max_rspboards));
-		LOG_DEBUG(formatString("nr Subracks  = %d", itsNrSubracks));
-		LOG_DEBUG(formatString("nr Cabinets  = %d", itsNrCabinets));
-		LOG_DEBUG(formatString("nr LBAs      = %d", itsNrLBAs));
-		LOG_DEBUG(formatString("nr HBAs      = %d", itsNrHBAs));
-		LOG_DEBUG_STR(         "RSPmask      = " << itsRSPmask);
-		LOG_DEBUG(formatString("has splitters= %s", (itsHasSplitters ? "yes" : "no")));
+		LOG_INFO(formatString("nr RCUs      = %d",ack.n_rcus));
+		LOG_INFO(formatString("nr RSPboards = %d",ack.max_rspboards));
+		LOG_INFO(formatString("nr Subracks  = %d", itsNrSubracks));
+		LOG_INFO(formatString("nr Cabinets  = %d", itsNrCabinets));
+		LOG_INFO(formatString("nr LBAs      = %d", itsNrLBAs));
+		LOG_INFO(formatString("nr HBAs      = %d", itsNrHBAs));
+		LOG_INFO_STR(         "RSPmask      = " << itsRSPmask);
+		LOG_INFO(formatString("has splitters= %s", (itsHasSplitters ? "yes" : "no")));
 	
 		// do some checks
 		if (itsNrRSPboards != (uint32)ack.max_rspboards) {
@@ -423,7 +423,7 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 		for (uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
 			ASSERTSTR(itsRCUs[rcu], "Allocation of PS for rcu " << rcu << " failed.");
 		}
-		LOG_DEBUG_STR("Allocation of all propertySets successfull, going to subscribe to RCU states");
+		LOG_INFO_STR("Allocation of all propertySets successfull, going to subscribe to RCU states");
 //		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		TRAN(RSPMonitor::subscribeToRCUs);
 	}
@@ -550,7 +550,7 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 
 	case RSP_GETVERSIONACK: {
 		RSPGetversionackEvent		ack(event);
-		if (ack.status != RSP_SUCCESS) {
+		if ((ack.status != RSP_SUCCESS) || (ack.versions.bp()(0).rsp_version == 0)) {
 			LOG_ERROR_STR ("RSP:Failed to get the version information, retry in 5 seconds");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getVersion error"));
 			itsTimerPort->setTimer(5.0);

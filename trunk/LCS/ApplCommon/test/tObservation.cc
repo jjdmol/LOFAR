@@ -109,7 +109,24 @@ int main (int, char* argv[])
 		cout << "getRCUbitset(96,48,24,false) = " << obs3.getRCUbitset(96,48,24,false) << endl;	// Europe
 		cout << "getRCUbitset(96,96,24,false) = " << obs3.getRCUbitset(96,96,24,false) << endl;	// Europe
 		
-	
+		cout << "HBA_ONE(false) = " << obs3.getAntennaArrayName(false) << endl;
+		cout << "HBA_ONE(true)  = " << obs3.getAntennaArrayName(true) << endl;
+		obs3.antennaSet = "HBA_TWO";
+		cout << "HBA_TWO(false) = " << obs3.getAntennaArrayName(false) << endl;
+		cout << "HBA_TWO(true)  = " << obs3.getAntennaArrayName(true) << endl;
+		obs3.antennaSet = "HBA_BOTH";
+		cout << "HBA_BOTH(false) = " << obs3.getAntennaArrayName(false) << endl;
+		cout << "HBA_BOTH(true)  = " << obs3.getAntennaArrayName(true) << endl;
+
+		obs3.antennaSet = "LBA_INNER";
+		cout << "LBA_INNER(false) = " << obs3.getAntennaArrayName(false) << endl;
+		cout << "LBA_INNER(true)  = " << obs3.getAntennaArrayName(true) << endl;
+		obs3.antennaSet = "LBA_OUTER";
+		cout << "LBA_OUTER(false) = " << obs3.getAntennaArrayName(false) << endl;
+		cout << "LBA_OUTER(true)  = " << obs3.getAntennaArrayName(true) << endl;
+		obs3.antennaSet = "LBA_X";
+		cout << "LBA_X(false) = " << obs3.getAntennaArrayName(false) << endl;
+		cout << "LBA_X(true)  = " << obs3.getAntennaArrayName(true) << endl;
 	}
 	catch (Exception& e) {
 		cout << "Exception: " << e.what() << endl;

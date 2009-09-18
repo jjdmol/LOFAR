@@ -500,7 +500,7 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 		// inform MACScheduler we are going down
 		CONTROLQuitedEvent	msg;
 		msg.cntlrName = getName();
-		msg.result 	  = itsQuitReason;;
+		msg.result 	  = itsQuitReason;
 		itsParentPort->send(msg);
 
 		// update PVSS
@@ -640,7 +640,9 @@ void  ObservationControl::doHeartBeatTask()
 		// if no more children left while we are not in the quit-phase (stoptimer still running)
 		if (!nrChilds && itsStopTimer) {
 			LOG_FATAL("Too less stations left, FORCING QUIT OF OBSERVATION");
-			itsQuitReason = CT_RESULT_LOST_CONNECTION;
+			if (itsState >= CTState::RESUME) {
+				itsQuitReason = CT_RESULT_LOST_CONNECTION;
+			}
 			itsTimerPort->cancelTimer(itsStopTimer);
 			itsStopTimer = itsTimerPort->setTimer(0.0);
 			return;
@@ -719,6 +721,9 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 			string  command = ((GCFPVString*) (dpEvent.value._pValue))->getValue();
 			if (command == "ABORT") {
 				LOG_INFO("Received manual request for abort, accepting it.");
+				if (itsState < CTState::RESUME) {
+					itsQuitReason = CT_RESULT_MANUAL_ABORT;
+				}
 				itsTimerPort->cancelTimer(itsStopTimer);	// cancel old timer
 				itsStopTimer = itsTimerPort->setTimer(0.0);	// expire immediately
 			}

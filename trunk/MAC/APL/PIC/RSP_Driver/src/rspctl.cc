@@ -2422,7 +2422,7 @@ GCFEvent::TResult RSPCtl::sub2Clock(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_UPDCLOCK: {
 		RSPUpdclockEvent		answer(e);
-		gSampleFrequency = 10e6 * answer.clock;
+		gSampleFrequency = 1e6 * answer.clock;
 		logMessage(cerr, formatString("Current clockvalue is %d Mhz", answer.clock));
 
 		if (itsNeedSplitter) {

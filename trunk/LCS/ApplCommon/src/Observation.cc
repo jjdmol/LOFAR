@@ -319,11 +319,36 @@ bitset<MAX_RCUS> Observation::getRCUbitset(int nrLBAs, int nrHBAs, int nrRSPs, b
 	
 	// Set up the RCUbits. Remember that we don't care here which of the three inputs is used.
 	RCUset.reset();
-	for (int rcu = firstRCU; rcu < nrAnts; rcu++) {
+	for (int rcu = firstRCU; rcu < 2*nrAnts; rcu++) {
 			RCUset.set(rcu);
 	}
 	return (RCUset);
 }
+
+//
+// TEMP HACK TO GET THE ANTENNAARRAYNAME
+//
+string Observation::getAntennaArrayName(bool hasSplitters) const
+{
+	string	result;
+	if (antennaSet.empty()) {
+		result = antennaArray;
+	}
+	else {
+		result = antennaSet;
+	}
+	
+	if (!hasSplitters) {		// no splitter, always use all HBA
+		if (result.find("HBA") == 0) return ("HBA");
+	}
+	else {						// has splitter, translate SAS names to AntennaArray.conf names
+		if (result == "HBA_ONE") 	return ("HBA_0");
+		if (result == "HBA_TWO") 	return ("HBA_1");
+		if (result == "HBA_BOTH")	return ("HBA");
+	}
+
+	return (result);
+}	
 
 //
 // getBeamName(beamidx): string
@@ -355,14 +380,6 @@ vector<uint32> Observation::getBeamList() const
 vector<uint32> Observation::getRspBoardList() const
 {
   return rspBoardList;
-}
-
-//
-// OLAP: getRspSlotList(): vector<uint32>
-//
-vector<uint32> Observation::getRspSlotList() const
-{
-  return rspSlotList;
 }
 
 //
@@ -406,6 +423,7 @@ ostream& Observation::print (ostream&	os) const
 //    os << "stations     : " << stations << endl;
     os << "stations     : "; writeVector(os, stations, ",", "[", "]"); os << endl;
     os << "antennaArray : " << antennaArray << endl;
+    os << "antenna set  : " << antennaSet << endl;
     os << "receiver set : " << RCUset << endl;
     os << "sampleClock  : " << sampleClock << endl;
     os << "filter       : " << filter << endl;
