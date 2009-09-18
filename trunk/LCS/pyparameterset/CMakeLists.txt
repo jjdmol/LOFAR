@@ -38,8 +38,8 @@ lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common)
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
-lofar_find_package(Python REQUIRED)
 lofar_find_package(Boost REQUIRED COMPONENTS python)
+lofar_find_package(Python REQUIRED)
 lofar_find_package(Pyrap REQUIRED)
 
 ## ---------------------------------------------------------------------------
