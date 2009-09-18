@@ -1,28 +1,28 @@
 #!/usr/bin/perl
 #
-#  slash2spanning.pl: Convert multiple C++ "slash-slash" style comment lines
-#                     into one spanning C-style comment (/* ... */), ignoring
-#                     lines that start with "slash-slash-hash style comments.
+# Copyright (C) 2002
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 #
-#  Copyright (C) 2002
-#  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 #
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
-#  $Id: countpurecode 2362 2004-04-01 08:18:20Z diepen $
+# $Id: countpurecode 2362 2004-04-01 08:18:20Z diepen $
+
+
+# This script counts the number of pure code lines in a C source file.
+# Lines containing braces only are not counted.
 
 $NON_COMMENT_BLOCK = 0;
 $COMMENT_BLOCK     = 1;
