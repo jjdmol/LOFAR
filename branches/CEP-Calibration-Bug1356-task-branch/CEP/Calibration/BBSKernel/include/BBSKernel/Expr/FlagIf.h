@@ -81,7 +81,7 @@ FlagIf<T_PREDICATE>::FlagIf(const Expr<Scalar>::ConstPtr &arg0,
     T_PREDICATE predicate, FlagType mask)
         :   UnaryExpr<Scalar, Scalar>(arg0),
             itsPredicate(predicate),
-            itsFlagMask(mask),
+            itsFlagMask(mask)
 {
 }
 

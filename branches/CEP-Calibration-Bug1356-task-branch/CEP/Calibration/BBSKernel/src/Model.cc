@@ -31,6 +31,7 @@
 #include <BBSKernel/Expr/DFTPS.h>
 #include <BBSKernel/Expr/ConditionNumber.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
+#include <BBSKernel/Expr/FlagIf.h>
 #include <BBSKernel/Expr/GaussianCoherence.h>
 #include <BBSKernel/Expr/GaussianSource.h>
 #include <BBSKernel/Expr/HamakerDipole.h>
@@ -51,7 +52,6 @@
 #include <BBSKernel/Expr/SpectralIndex.h>
 #include <BBSKernel/Expr/StationUVW.h>
 #include <BBSKernel/Expr/StatUVW.h>
-#include <BBSKernel/Expr/Threshold.h>
 #include <BBSKernel/Expr/YatawattaDipole.h>
 
 #include <Common/LofarLogger.h>
