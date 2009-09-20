@@ -75,6 +75,7 @@
 // navFunct_CEPName2DPName                    : Translates Rxx-Mx-Nxx-Jxx names to _BGP_Midplane_IONode names
 // navFunct_DPName2CEPName                    : Translates _BGP_Midplane_IONode names to Rxx-Mx-Nxx-Jxx names
 // navFunct_inputBuf2CEPName                  : Translates inputBufferNr 2 the Rxx-Mx-Nxx-Jxx name
+// navFunct_getReceiverBitmap                 : returns the stations receiverBitMap for a given observation
 
 
 
@@ -154,7 +155,6 @@ void navFunct_queryConnectObservations()
   g_observations[ "DP"          ]    = makeDynString();                    
   g_observations[ "NAME"        ]    = makeDynString();
   g_observations[ "STATIONLIST" ]    = makeDynString();
-  g_observations[ "RECEIVERBITMAP" ] = makeDynString();
   g_observations[ "SCHEDULE" ]       = makeDynString();
   if (dpExists(MainDBName+"LOFAR_PermSW_MACScheduler.activeObservations")) {
     oldPlannedObservations=makeDynString();
@@ -170,10 +170,34 @@ void navFunct_queryConnectObservations()
   }     
 }
 
+// ****************************************
+// Name : avFunct_getReceiverBitmap
+// ****************************************
+// Description:
+//    Search if on a given station a given observation has a receiverBitMap
+//    This is used to determine what hardware is used for that observation on that station
+//
+// Returns:
+//    The receiverbitMap 
+// ***************************************
+string navFunct_getReceiverBitmap(string db,string obsname) {
+  string receiverBitmap;
+  if (obsname == "") {
+    return receiverBitmap;
+  }
+  string dp = claimManager_nameToRealName(obsname); 
+  string aDP=navFunct_bareDBName(db)+":"+dpSubStr(dp,DPSUB_DP);
+
+  if (dpExists(aDP+".receiverBitmap")) {
+    dpGet(aDP+".receiverBitmap",receiverBitmap);
+  }
+  return receiverBitmap;
+  
+}
+
 void navFunct_updateObservations(string dp1, dyn_string active,
                                  string dp2, dyn_string planned,
                                  string dp3, dyn_string finished) {
-  dyn_string receiverBitmap;
   dyn_string stationList;
   int iPos=1;
   
@@ -214,21 +238,44 @@ void navFunct_updateObservations(string dp1, dyn_string active,
   g_observations[ "DP"          ]    = makeDynString();                    
   g_observations[ "NAME"        ]    = makeDynString();
   g_observations[ "STATIONLIST" ]    = makeDynString();
-  g_observations[ "RECEIVERBITMAP" ] = makeDynString();
   g_observations[ "SCHEDULE" ]       = makeDynString();
   
+  for (int i = 1; i<= dynlen(finished); i++) {
+    string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+finished[i]);
+    if (dp != "") {
+      iPos=dynAppend(g_observations[ "DP"          ] , dp);
+      dpGet(dp+".stationList",stationList);
+      
+      g_observations[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+finished[i];
+      g_observations[ "STATIONLIST"    ][iPos]  = stationList;
+      g_observations[ "SCHEDULE"       ][iPos]  = "finished";
+    }      
+  }
+
   for (int i = 1; i<= dynlen(active); i++) {
     string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+active[i]);
     if (dp != "") {
       iPos=dynAppend(g_observations[ "DP"          ] , dp);
       dpGet(dp+".stationList",stationList);
-      dpGet(dp+".receiverBitmap",receiverBitmap);
+      
       g_observations[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+active[i];
       g_observations[ "STATIONLIST"    ][iPos]  = stationList;
-      g_observations[ "RECEIVERBITMAP" ][iPos]  = receiverBitmap;
       g_observations[ "SCHEDULE"       ][iPos]  = "active";
     }      
   }
+  
+    for (int i = 1; i<= dynlen(planned); i++) {
+    string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+planned[i]);
+    if (dp != "") {
+      iPos=dynAppend(g_observations[ "DP"          ] , dp);
+      dpGet(dp+".stationList",stationList);
+      
+      g_observations[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+planned[i];
+      g_observations[ "STATIONLIST"    ][iPos]  = stationList;
+      g_observations[ "SCHEDULE"       ][iPos]  = "planned";
+    }      
+  }
+
   
   // check if tabCtrl has a Panel loaded (indicating init has passed and panels are loaded)
   // in that case a Navigator event should be issued after a change in MACScheduler observations, 
@@ -930,7 +977,7 @@ bool navFunct_hardware2Obs(string stationName, string observation,
                            string objectName, string strData, int intData) {
   bool flag = false;
   
-  // check if Observation is available in list and get the corresponding 
+ 
   if (strpos(observation,"LOFAR_ObsSW_") < 0) {
     observation = "LOFAR_ObsSW_"+observation;
   }
@@ -938,21 +985,18 @@ bool navFunct_hardware2Obs(string stationName, string observation,
   // remove : from station name if there
   strreplace(stationName,":","");
   
-  
-  
+  // check if Observation is available in list and get the stationList and receiverBitmap 
   int iPos = dynContains( g_observations[ "NAME"         ], observation );
   if (iPos <=0) {
     LOG_DEBUG("navFunct.ctl:navFunct_hardware2Obs|observation: "+ observation+" not in g_observations.");     
-    return false;
+    return flag;
   }
   
   dyn_string obsStations = navFunct_listToDynString(g_observations[ "STATIONLIST"    ][iPos]);
+  string receiverBitmap = navFunct_getReceiverBitmap(stationName,observation);
   
-  string receiverBitmap = g_observations[ "RECEIVERBITMAP" ][iPos];
-  // if receiverBitmap == "" return false
-  if (receiverBitmap == "") {
-    return false;
-  }  
+  
+
   
   // expand stationList with virtual groups (Core, Remote & Europe), so they can be highlighted when available
   bool coreFound  = false;
@@ -981,11 +1025,20 @@ bool navFunct_hardware2Obs(string stationName, string observation,
     dynAppend(obsStations,"Europe");
   }
 
-  
+
   // if station is not in stationList return false
   if (!dynContains(obsStations,stationName)) {
-    flag = false;
-  } else { 
+    return flag;
+  } else {
+    
+    // the station is involved in the stationList, but since receiverbitmap has been moved 
+    // to the station database it is possible that the station is offline, so the receiverbitmap can be empty, in that case it is
+    // not meaning that the station is not involved. So we won't check for en empty receiverBitmap anymore
+//    if (receiverBitmap == "" && stationName) {
+//        LOG_ERROR("navFunct.ctl:navFunct_hardware2Obs|Empty receiverBitmap");
+//        return false;
+//    }  
+ 
     if (objectName == "Station") {
       flag = true;
     } else if (objectName == "Cabinet") {
@@ -1136,7 +1189,8 @@ void navFunct_fillObservationsList() {
         dynAppend(stationList,g_stationList[k]);
       }
     }
-      
+    
+     
     // check all available observations
     for (int i = 1; i <= dynlen(g_observations["NAME"]); i++) {
       bool found=false;
