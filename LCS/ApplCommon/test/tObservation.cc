@@ -48,7 +48,7 @@ int main (int, char* argv[])
 		Observation  obs2(&parSet1);
 		cout << obs2 << endl;
 
-                cout << ">>>" << endl;
+		cout << ">>>" << endl;
 		// test conflicts in clock
 		ParameterSet conflictPS1("tObservation.in_conflict1");
 		Observation  conflictObs1(&conflictPS1);
@@ -73,7 +73,7 @@ int main (int, char* argv[])
 		ParameterSet conflictPS5("tObservation.in_conflict5");
 		Observation  conflictObs5(&conflictPS5);
 		ASSERTSTR(!obs2.conflicts(conflictObs5), "File 5 should NOT have had a conflict");
-                cout << "<<<" << endl;
+		cout << "<<<" << endl;
 		cout << "No conflict found in file 5 which is oke." << endl;
 
 		// test RCUbitset based on receiverList
