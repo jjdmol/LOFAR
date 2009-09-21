@@ -14,8 +14,10 @@ rm -f ./prbs/*.*
 
 # Set up RCU and RSP, make sure waveform generator is off
 rspctl --rcuprsg=1
-sleep 1
+sleep 2
 rspctl --tbbmode=transient
+sleep 1
+rspctl --rcuenable=1
 
 sleep 5
 # set up TBB
@@ -36,7 +38,7 @@ done
 cd ..
 # Verify the PRBS
 python prbs_dir_test.py
-
+rspctl --rcuprsg=0
 
 echo ""
 diff prbs_dir_test.log ./gold/prbs_dir_test.gold > prbs_dir_test.diff
