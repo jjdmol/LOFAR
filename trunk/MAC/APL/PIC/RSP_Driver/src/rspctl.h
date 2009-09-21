@@ -655,6 +655,9 @@ public:
 	// The initial state. In this state a connection with the RSP driver is attempted. 
 	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
 
+	// Get the clockvalue.
+	GCFEvent::TResult getClock(GCFEvent& e, GCFPortInterface &p);
+
 	// Get a subscription on the clockvalue.
 	GCFEvent::TResult sub2Clock(GCFEvent& e, GCFPortInterface &p);
 
@@ -691,8 +694,9 @@ private:
 	int32	 		m_instancenr;
 
 	// subscribtion admin
-	bool			itsNeedClock;
-	bool			itsNeedSplitter;
+	bool			itsNeedClockOnce;		// getClock
+	bool			itsNeedClock;			// subClock
+	bool			itsNeedSplitter;		// subSplitter
 
 	SubClockCommand m_subclock; // always subscribe to clock updates
 };
