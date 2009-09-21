@@ -3,9 +3,12 @@
 This script can be used for testing data from the TBB, it will be used by TBB test scripts.
 
 Started by Gijs, 16 dec 07
-Modified by Gijs on March 17 2009: 
+Modified by Gijs on March 17 2009:
 -PRBS test bug fixed, when data is all 0 error did't count.
 -CRC test on files with RRBS errors. When a PRBS error and no CRC, error in RCU-to-RSP communications, when both has errors, error between RSP-to-TBB communication
+Modified by Menno on Sept 21 2009:
+-Removed Samples Checked because sometime 10238 or 10239
+
 
 """
 # INIT
@@ -20,7 +23,7 @@ import commands
 def open_dir() :
 	files = os.listdir('./prbs/.')
 	files.sort()
-	print files
+	#print files
         return files
 
 # Open de file for testing
@@ -210,8 +213,8 @@ def main() :
 				o_ta = ta
 				o_tb = tb				
 			# plot results		
-#			print 'Samples checked : ' + str(samples_chk) + ' PRBS errors: ' + str(prbs_err)
-			f_log.write('Samples checked : ' + str(samples_chk) + ' PRBS errors: ' + str(prbs_err) + '\n')
+#			print 'PRBS errors: ' + str(prbs_err)
+			f_log.write('PRBS errors: ' + str(prbs_err) + '\n')
 		f.close
 		if prbs_err > 0:
 			(f, frames_to_proces) = open_file(files, file_cnt)
@@ -219,7 +222,7 @@ def main() :
 				crc_err=0
         	                for frame_cnt in range(frames_to_proces):
                 	                crc_err = crc_err + crc_frame(f, (frame_cnt==0), frame_cnt, f_log)
-#                       print 'Samples checked : ' + str(samples_chk) + ' PRBS errors: ' + str(prbs_err)
+#                       print 'PRBS errors: ' + str(prbs_err)
                         f_log.write('Number of frames with CRC  errors: ' + str(crc_err) + '\n')
 
 		f.close
