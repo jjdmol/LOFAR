@@ -2304,6 +2304,7 @@ RSPCtl::RSPCtl(string name, int argc, char** argv) :
 	m_argc			(argc), 
 	m_argv			(argv), 
 	m_instancenr	(-1),
+	itsNeedClockOnce(false),
 	itsNeedClock	(false),
 	itsNeedSplitter	(false),
 	m_subclock		(*itsRSPDriver)
@@ -2371,7 +2372,10 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 			logMessage(cerr,"Warning: no command specified.");
 			exit(EXIT_FAILURE);
 		}
-		if (itsNeedClock) {
+		if (itsNeedClockOnce) {
+			TRAN(RSPCtl::getClock);
+		}
+		else if (itsNeedClock) {
 			TRAN(RSPCtl::sub2Clock);
 		}
 		else if (itsNeedSplitter) {
@@ -2390,6 +2394,57 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 
 	return status;
 }
+
+//
+// getClock(event, port)
+//
+GCFEvent::TResult RSPCtl::getClock(GCFEvent& e, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("getClock:" << eventName(e) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		logMessage(cerr, "Getting the clockvalue");
+		RSPGetclockEvent getEvent;
+		getEvent.timestamp = Timestamp(0,0);
+		itsRSPDriver->send(getEvent);
+	}
+	break;
+
+	case RSP_GETCLOCKACK: {
+		RSPGetclockackEvent		answer(e);
+		if (answer.status != RSP_SUCCESS) {
+			logMessage(cerr, "Getting the clock failed.");
+			exit(EXIT_FAILURE);
+		}
+		logMessage(cerr, formatString("Current clockvalue is %d Mhz", answer.clock));
+
+		if (itsNeedSplitter) {
+			TRAN(RSPCtl::sub2Splitter);
+		}
+		else {
+			TRAN(RSPCtl::doCommand);
+		}
+	}
+	break;
+
+	case F_DISCONNECTED: {
+		port.close();
+		logMessage(cerr,formatString("Error: port '%s' disconnected.",port.getName().c_str()));
+		exit(EXIT_FAILURE);
+	}
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
 
 //
 // sub2Clock(event, port)
@@ -3026,7 +3081,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				}
 //				wgcommand->setFrequency(frequency, gSampleFrequency);
 				wgcommand->setFrequency(frequency);
-				itsNeedClock = true;
+				itsNeedClockOnce = true;
 			}
 		}
 		break;
