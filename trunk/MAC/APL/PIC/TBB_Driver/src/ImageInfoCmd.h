@@ -60,6 +60,7 @@ public:
 private:
 	TbbSettings *TS;
 	
+	int32 itsBoard;
 	int32 itsImage;
 	int32 itsBlock;
 	uint32 itsImageVersion[MAX_N_IMAGES];	  
