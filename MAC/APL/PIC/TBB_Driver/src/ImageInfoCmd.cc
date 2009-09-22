@@ -33,7 +33,7 @@ using	namespace TBB;
 
 //--Constructors for a ImageInfoCmd object.----------------------------------------
 ImageInfoCmd::ImageInfoCmd():
-		itsImage(0), itsBlock(0)
+		itsBoard(0), itsImage(0), itsBlock(0)
 {
 	TS = TbbSettings::instance();
 	for (int i = 0; i < TS->flashMaxImages(); i++) {
@@ -63,6 +63,7 @@ void ImageInfoCmd::saveTbbEvent(GCFEvent& event)
 	TBBImageInfoEvent tbb_event(event);
 
 	setBoard(tbb_event.board);
+	itsBoard = tbb_event.board;
 	itsImage = 0;
 	
 	nextBoardNr();
@@ -136,7 +137,7 @@ void ImageInfoCmd::saveTpAckEvent(GCFEvent& event)
 void ImageInfoCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBImageInfoAckEvent tbb_ack;
-	tbb_ack.board = getBoardNr();
+	tbb_ack.board = itsBoard;
 	tbb_ack.active_image = TS->getImageNr(getBoardNr());
 	
 	for (int image = 0; image < MAX_N_IMAGES; image++) {
