@@ -32,7 +32,7 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 HamakerDipole::HamakerDipole(const BeamCoeff &coeff, const Expr &azel,
@@ -41,7 +41,7 @@ HamakerDipole::HamakerDipole(const BeamCoeff &coeff, const Expr &azel,
 {
     ASSERT(itsBeamCoeff.coeff);
     ASSERT(itsBeamCoeff.coeff->size() > 0);
-    
+
     addChild(azel);
     addChild(orientation);
 }
@@ -51,7 +51,7 @@ JonesResult HamakerDipole::getJResult(const Request &request)
     // Evaluate children.
     ResultVec tmpAzel;
     Result tmpOrientation;
-    
+
     const ResultVec &resAzel = getChild(0).getResultVecSynced(request, tmpAzel);
     const Result &resOrientation =
         getChild(1).getResultSynced(request, tmpOrientation);
@@ -63,7 +63,7 @@ JonesResult HamakerDipole::getJResult(const Request &request)
     // Create result.
     JonesResult result;
     result.init();
-    
+
     Result &resXX = result.result11();
     Result &resXY = result.result12();
     Result &resYX = result.result21();
@@ -73,16 +73,16 @@ JonesResult HamakerDipole::getJResult(const Request &request)
     evaluate(request, az, el, orientation, resXX.getValueRW(),
         resXY.getValueRW(), resYX.getValueRW(), resYY.getValueRW());
 
-    // Compute the perturbed values.  
+    // Compute the perturbed values.
     enum PValues
     {
         PV_AZ, PV_EL, PV_ORIENTATION, N_PValues
     };
-    
+
     const Result *pvSet[N_PValues] = {&(resAzel[0]), &(resAzel[1]),
         &resOrientation};
     PValueSetIterator<N_PValues> pvIter(pvSet);
-    
+
     while(!pvIter.atEnd())
     {
         const Matrix &pvAz = pvIter.value(PV_AZ);
@@ -97,7 +97,7 @@ JonesResult HamakerDipole::getJResult(const Request &request)
 
         pvIter.next();
     }
-    
+
     return result;
 }
 
@@ -114,7 +114,7 @@ void HamakerDipole::evaluate(const Request &request,
     ASSERT(static_cast<size_t>(in_az.nelements()) == nTimeslots);
     ASSERT(static_cast<size_t>(in_el.nelements()) == nTimeslots);
     ASSERT(static_cast<size_t>(in_orientation.nelements()) == 1);
-    
+
     // Get pointers to input and output data.
     const double *az = in_az.doubleStorage();
     const double *el = in_el.doubleStorage();
@@ -123,7 +123,7 @@ void HamakerDipole::evaluate(const Request &request,
     double *E11_re, *E11_im;
     out_E11.setDCMat(nChannels, nTimeslots);
     out_E11.dcomplexStorage(E11_re, E11_im);
-    
+
     double *E12_re, *E12_im;
     out_E12.setDCMat(nChannels, nTimeslots);
     out_E12.dcomplexStorage(E12_re, E12_im);
@@ -135,7 +135,7 @@ void HamakerDipole::evaluate(const Request &request,
     double *E22_re, *E22_im;
     out_E22.setDCMat(nChannels, nTimeslots);
     out_E22.dcomplexStorage(E22_re, E22_im);
-    
+
     // Evaluate beam.
     const size_t nHarmonics = itsBeamCoeff.coeff->shape()[1];
     const size_t nTheta = itsBeamCoeff.coeff->shape()[2];
@@ -147,8 +147,10 @@ void HamakerDipole::evaluate(const Request &request,
     Axis::ShPtr freqAxis(request.getGrid()[FREQ]);
     for(size_t t = 0; t < nTimeslots; ++t)
     {
-        // Correct azimuth for dipole orientation.
-        const double phi = az[t] - orientation;
+        // Correct azimuth for dipole orientation and sign flip (because in the
+        // definition of the beam model positive azimuth is defined as North
+        // over West).
+        const double phi = -(az[t] - orientation);
 
         // NB: The model is parameterized in terms of zenith angle. The
         // appropriate conversion is taken care of below.
@@ -165,7 +167,7 @@ void HamakerDipole::evaluate(const Request &request,
             // J-jones matrix (2x2 complex matrix)
             dcomplex J[2][2];
             J[0][0] = J[0][1] = J[1][0] = J[1][1] = makedcomplex(0.0, 0.0);
-            
+
             for(size_t k = 0; k < nHarmonics; ++k)
             {
                 // Compute diagonal projection matrix P for the current
@@ -193,7 +195,7 @@ void HamakerDipole::evaluate(const Request &request,
                 const double kappa = ((k & 1) == 0 ? 1.0 : -1.0) * (2.0 * k + 1.0);
                 const double cphi = std::cos(kappa * phi);
                 const double sphi = std::sin(kappa * phi);
-                
+
                 J[0][0] += cphi * P[0];
                 J[0][1] += -sphi * P[1];
                 J[1][0] += sphi * P[0];
