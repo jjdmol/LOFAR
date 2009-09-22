@@ -76,6 +76,8 @@ namespace LOFAR
         tribool reinit   (const string& configID);
         string  askInfo  (const string& keylist);
 
+		virtual void sendResultParameters(const string&		aKVList);
+
         bool inRunState() const;
         void setRunState();
         void clearRunState();

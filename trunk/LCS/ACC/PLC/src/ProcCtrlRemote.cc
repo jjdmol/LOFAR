@@ -28,75 +28,89 @@
 #include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
-namespace LOFAR
+namespace LOFAR {
+  namespace ACC {
+    namespace PLC {
+
+using LOFAR::ParameterSet;
+
+//
+// ProcCtrlRemote(PC*)
+//
+ProcCtrlRemote::ProcCtrlRemote(ProcessControl* aProcCtrl) :
+	ProcCtrlProxy(aProcCtrl),
+	itsPCServer(0)
 {
-  namespace ACC
-  {
-    namespace PLC
-    {
-      using LOFAR::ParameterSet;
+	LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+}
 
-      ProcCtrlRemote::ProcCtrlRemote(ProcessControl* aProcCtrl) :
-        ProcCtrlProxy(aProcCtrl)
-      {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      }
+//
+// operator()
+//
+int ProcCtrlRemote::operator()(const ParameterSet& arg)
+{
+	LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
-      int ProcCtrlRemote::operator()(const ParameterSet& arg)
-      {
-        LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+	string prefix = globalParameterSet()->getString("_parsetPrefix");
 
-        string prefix = globalParameterSet()->getString("_parsetPrefix");
+	// connect to Application Controller
+	itsPCServer = new ProcControlServer(globalParameterSet()->getString(prefix+"_ACnode"),
+									    globalParameterSet()->getUint16(prefix+"_ACport"),
+									    this);
+	ASSERTSTR(itsPCServer, "Could not establish a connection with the ApplController.");
 
-        // connect to Application Controller
-        ProcControlServer 
-          pcServer(globalParameterSet()->getString(prefix+"_ACnode"),
-                   globalParameterSet()->getUint16(prefix+"_ACport"),
-                   this);
+	// Tell AC who we are.
+	string procID = arg.getString("ProcID");
+	LOG_DEBUG_STR("Registering at ApplController as " << procID);
+	sleep(1);
+	itsPCServer->registerAtAC(procID);
 
-        // Tell AC who we are.
-        string procID = arg.getString("ProcID");
-        LOG_DEBUG_STR("Registering at ApplController as " << procID);
-        sleep(1);
-        pcServer.registerAtAC(procID);
+	// Main processing loop
+	bool err(false); 
+	bool quiting(false);
+	while (!quiting) {
 
-        // Main processing loop
-        bool err(false);
-        bool quiting(false);
-        while (!quiting) {
+		LOG_TRACE_STAT("Polling ApplController for message");
+		if (itsPCServer->pollForMessage()) {
+			LOG_TRACE_COND("Message received from ApplController");
 
-          LOG_TRACE_STAT("Polling ApplController for message");
-          if (pcServer.pollForMessage()) {
-            LOG_TRACE_COND("Message received from ApplController");
+			// get pointer to received data
+			DH_ProcControl* newMsg = itsPCServer->getDataHolder();
 
-            // get pointer to received data
-            DH_ProcControl* newMsg = pcServer.getDataHolder();
+			if (newMsg->getCommand() == PCCmdQuit) {
+				quiting = true;
+			} 
 
-            if (newMsg->getCommand() == PCCmdQuit) {
-              quiting = true;
-            } 
+			if (err = err || !itsPCServer->handleMessage(newMsg)) {
+				LOG_ERROR("ProcControlServer::handleMessage() failed");
+			}
+		} 
+		else  {
+			// no new command received. If we are in the runstate 
+			// call the run-routine again.
+			if (inRunState()) {
+				DH_ProcControl tmpMsg(PCCmdRun);
+				err = err || !itsPCServer->handleMessage(&tmpMsg);
+			}
+		}
+	}
 
-            if (err = err || !pcServer.handleMessage(newMsg)) {
-              LOG_ERROR("ProcControlServer::handleMessage() failed");
-            }
-          } 
-          else  {
-            // no new command received. If we are in the runstate 
-            // call the run-routine again.
-            if (inRunState()) {
-              DH_ProcControl tmpMsg(PCCmdRun);
-              err = err || !pcServer.handleMessage(&tmpMsg);
-            }
-          }
-        }
-        LOG_INFO_STR("Shutting down: ApplicationController");
-        pcServer.unregisterAtAC("");    // send to AC before quiting
+	LOG_INFO_STR("Shutting down: ApplicationController");
+	itsPCServer->unregisterAtAC("");    // send to AC before quiting
 
-        return (err);
-      }
-      
+	return (err);
+}
+
+//
+// sendResultParameters(const string&)
+//
+void ProcCtrlRemote::sendResultParameters(const string&	aKVlist)
+{
+	ASSERTSTR(itsPCServer, "Pointer to ProcControlServer is empty!");
+
+	itsPCServer->sendResultParameters(aKVlist);
+}
+
     } // namespace PLC
-    
   } // namespace ACC
-
 } // namespace LOFAR

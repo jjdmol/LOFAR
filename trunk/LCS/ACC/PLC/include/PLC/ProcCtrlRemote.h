@@ -30,29 +30,38 @@
 #include <PLC/ProcCtrlProxy.h>
 #include <PLC/ProcControlServer.h>
 
-namespace LOFAR
+namespace LOFAR {
+  namespace ACC {
+    namespace PLC {
+
+// \addtogroup PLC
+// @{
+
+// Proxy for the command line process control.
+class ProcCtrlRemote : public ProcCtrlProxy
 {
-  namespace ACC 
-  {
-    namespace PLC 
-    {
-      // \addtogroup PLC
-      // @{
+public:
+	// Constructor. The argument \a aProcCtrl is a pointer to the "real"
+	// Process Control object.
+	ProcCtrlRemote(ProcessControl* aProcCtrl);
 
-      // Proxy for the command line process control.
-      class ProcCtrlRemote : public ProcCtrlProxy
-      {
-      public:
-        // Constructor. The argument \a aProcCtrl is a pointer to the "real"
-        // Process Control object.
-        ProcCtrlRemote(ProcessControl* aProcCtrl);
+	// Start the process controller. Let it run under control of a
+	// ProcControlServer.
+	virtual int operator()(const ParameterSet& arg);
 
-        // Start the process controller. Let it run under control of a
-        // ProcControlServer.
-        virtual int operator()(const ParameterSet& arg);
-      };
+	// Send metadata to the server
+	virtual void sendResultParameters(const string&	aKVlist);
 
-      // @}
+	// Tell how to talk to the ApplController
+	void setServer(ProcControlServer*		aControlServer)
+		{ itsPCServer = aControlServer; }
+
+private:
+	// Pointer to the server so that sendResultParameters can use it.
+	ProcControlServer*		itsPCServer;
+};
+
+// @}
 
     } // namespace PLC
 

@@ -20,5 +20,4 @@
 
 include(LofarCTest)
 
-lofar_add_test(APExample APExample.cc APCmdImpl.cc)
 lofar_add_test(APTest APTest.cc APCmdImpl.cc)

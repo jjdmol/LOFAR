@@ -30,6 +30,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <PLC/ProcControlServer.h>
+#include <PLC/ProcCtrlRemote.h>
 #include <Common/ParameterSet.h>
 #include <APCmdImpl.h>
 
@@ -62,11 +63,11 @@ int main (int argc, char *argv[]) {
 	ConfigLocator	aCL;
 	string			progName(basename(argv[0]));
 #ifdef HAVE_LOG4CPLUS
-        string			logPropFile(progName + ".log_prop");
+	string			logPropFile(progName + ".log_prop");
 	INIT_VAR_LOGGER (aCL.locate(logPropFile).c_str(), progName + "-" + argv[3]);
 #else
-        string logPropFile(progName + ".debug");
-        INIT_LOGGER (aCL.locate(logPropFile).c_str());	
+	string logPropFile(progName + ".debug");
+	INIT_LOGGER (aCL.locate(logPropFile).c_str());	
 #endif
 	// Check invocation syntax
 	if (argc < 3) {
@@ -87,12 +88,19 @@ int main (int argc, char *argv[]) {
 
 		// Create a APCmdImpl object. This object contains the real 
 		// implementation of the commands we should support.
-		APCmdImpl		itsAPCmdImpl;
+		ProcessControl*		itsAPCmdImpl = new APCmdImpl(itsProcID);
+
+		// Create a proxy to talk to the ApplController.
+		ProcCtrlProxy*	itsProxy = new ProcCtrlRemote(itsAPCmdImpl);
+		ASSERTSTR(itsProxy, "Unable to create a ProcessControlProxy");
 
 		// [A] Connect to the Application Controller
 		ProcControlServer  itsPCcomm(itsParamSet.getString(itsPrefix+"_ACnode"),
 									 itsParamSet.getUint16(itsPrefix+"_ACport"),
-									 &itsAPCmdImpl);
+									 itsProxy);
+
+		// Tell proxy how to talk to the ApplController.
+		((ProcCtrlRemote*)(itsProxy))->setServer(&itsPCcomm);
 
 		// IMPLEMENT: do other launch activities like processing the ParamSet
 		// TEST: init random generator with some value for testing
@@ -126,7 +134,7 @@ int main (int argc, char *argv[]) {
 			else {
 				// no new message was received, do another run if we are in
 				// the run state
-				if (itsAPCmdImpl.inRunState()) {
+				if (((APCmdImpl*)(itsAPCmdImpl))->inRunState()) {
 					itsPCcomm.handleMessage(&DH_ProcControl(PCCmdRun));
 				}
 			}

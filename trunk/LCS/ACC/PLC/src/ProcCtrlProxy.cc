@@ -28,98 +28,108 @@
 #include <PLC/ProcessControl.h>
 #include <Common/LofarLogger.h>
 
-namespace LOFAR
+namespace LOFAR {
+  namespace ACC {
+    namespace PLC {
+
+//## --------   P u b l i c   m e t h o d s   -------- ##//
+
+ProcCtrlProxy::~ProcCtrlProxy()
 {
-  namespace ACC
-  {
-    namespace PLC
-    {
-      //## --------   P u b l i c   m e t h o d s   -------- ##//
+	LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+}
 
-      ProcCtrlProxy::~ProcCtrlProxy()
-      {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      }
+tribool ProcCtrlProxy::define()
+{
+	return itsProcCtrl->define();
+}
 
-      tribool ProcCtrlProxy::define()
-      {
-        return itsProcCtrl->define();
-      }
+tribool ProcCtrlProxy::init()
+{
+	return itsProcCtrl->init();
+}
 
-      tribool ProcCtrlProxy::init()
-      {
-        return itsProcCtrl->init();
-      }
+tribool ProcCtrlProxy::run()
+{
+	setRunState();
+	tribool result = itsProcCtrl->run();
+	if (!result) { 
+		clearRunState();
+	}
+	return result;
+}
 
-      tribool ProcCtrlProxy::run()
-      {
-        setRunState();
-        tribool result = itsProcCtrl->run();
-        if (!result) clearRunState();
-        return result;
-      }
+tribool ProcCtrlProxy::pause(const string& condition)
+{
+	if (condition == PAUSE_OPTION_NOW) {
+		clearRunState();
+	}
+	return itsProcCtrl->pause(condition);
+}
 
-      tribool ProcCtrlProxy::pause(const string& condition)
-      {
-        if (condition == PAUSE_OPTION_NOW) clearRunState();
-        return itsProcCtrl->pause(condition);
-      }
+tribool ProcCtrlProxy::release()
+{
+	return itsProcCtrl->release();
+}
 
-      tribool ProcCtrlProxy::release()
-      {
-        return itsProcCtrl->release();
-      }
+tribool ProcCtrlProxy::quit()
+{
+	return itsProcCtrl->quit();
+}
 
-      tribool ProcCtrlProxy::quit()
-      {
-        return itsProcCtrl->quit();
-      }
+tribool ProcCtrlProxy::snapshot(const string& destination)
+{
+	return itsProcCtrl->snapshot(destination);
+}
 
-      tribool ProcCtrlProxy::snapshot(const string& destination)
-      {
-        return itsProcCtrl->snapshot(destination);
-      }
+tribool ProcCtrlProxy::recover(const string& source)
+{
+	return itsProcCtrl->recover(source);
+}
 
-      tribool ProcCtrlProxy::recover(const string& source)
-      {
-        return itsProcCtrl->recover(source);
-      }
+tribool ProcCtrlProxy::reinit(const string& configID)
+{
+	return itsProcCtrl->reinit(configID);
+}
 
-      tribool ProcCtrlProxy::reinit(const string& configID)
-      {
-        return itsProcCtrl->reinit(configID);
-      }
+string ProcCtrlProxy::askInfo(const string& keylist)
+{
+	return itsProcCtrl->askInfo(keylist);
+}
 
-      string ProcCtrlProxy::askInfo(const string& keylist)
-      {
-        return itsProcCtrl->askInfo(keylist);
-      }
+bool ProcCtrlProxy::inRunState() const
+{
+	return itsProcCtrl->inRunState();
+}
 
-      bool ProcCtrlProxy::inRunState() const
-      {
-        return itsProcCtrl->inRunState();
-      }
+void ProcCtrlProxy::setRunState()
+{
+	itsProcCtrl->setRunState();
+}
 
-      void ProcCtrlProxy::setRunState()
-      {
-        itsProcCtrl->setRunState();
-      }
+void ProcCtrlProxy::clearRunState()
+{
+	itsProcCtrl->clearRunState();
+}
 
-      void ProcCtrlProxy::clearRunState()
-      {
-        itsProcCtrl->clearRunState();
-      }
+//## -------- P r o t e c t e d   m e t h o d s   -------- ##//
 
-      //## -------- P r o t e c t e d   m e t h o d s   -------- ##//
+ProcCtrlProxy::ProcCtrlProxy(ProcessControl* aProcCtrl) :
+	itsProcCtrl(aProcCtrl)
+{
+	LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-      ProcCtrlProxy::ProcCtrlProxy(ProcessControl* aProcCtrl) :
-        itsProcCtrl(aProcCtrl)
-      {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      }
+	itsProcCtrl->itsControlProxy = this;
+}
+
+void ProcCtrlProxy::sendResultParameters(const string&	keyList)
+{
+	LOG_DEBUG_STR("Sending metadata: " << keyList);
+
+	itsProcCtrl->sendResultParameters(keyList);
+}
+
 
     } // namespace PLC
-
   } // namespace ACC
-
 } // namespace LOFAR
