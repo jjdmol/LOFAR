@@ -40,7 +40,7 @@ class APCmdImpl : public ProcessControl
 {
 public:
 	// Default constructable
-	APCmdImpl();
+	explicit APCmdImpl(const string&		aProcessID);
 
 	// Destructor
 	virtual ~APCmdImpl();
@@ -58,6 +58,9 @@ public:
 
 	// Define a generic way to exchange info between client and server.
 	string	askInfo   (const string& 	keylist);
+
+	// Make runstate test available
+	bool inRunState() const { return (ProcessControl::inRunState()); };
 
 protected:
 	// Copying is not allowed

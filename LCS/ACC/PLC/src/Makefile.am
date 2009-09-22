@@ -2,6 +2,7 @@ lib_LTLIBRARIES           = libplc.la
 
 libplc_la_SOURCES 		  = Package__Version.cc  DH_ProcControl.cc \
 							PCCmd.cc \
+							ProcessControl.cc  \
 							ProcControlComm.cc  \
 							ProcControlServer.cc \
 							ProcCtrlProxy.cc \

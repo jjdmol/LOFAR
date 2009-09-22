@@ -74,6 +74,7 @@ dnl
 AC_OUTPUT(
 src/Makefile
 src/ApplController/Makefile
+test/ApplController/Makefile
 src/CEPlogProcessor/Makefile
 src/BGPlogProcessor/Makefile
 src/OnlineControl/Makefile

@@ -24,6 +24,7 @@ lofar_add_library(plc
   Package__Version.cc
   DH_ProcControl.cc
   PCCmd.cc
+  ProcessControl.cc
   ProcControlComm.cc
   ProcControlServer.cc
   ProcCtrlProxy.cc

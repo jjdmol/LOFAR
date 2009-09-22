@@ -32,8 +32,12 @@
 #include <Common/lofar_tribool.h>
 
 namespace LOFAR {
+  class ParameterSet;
   namespace ACC {
     namespace PLC {
+
+//# Forward declarations
+class ProcCtrlProxy;
 
 // \addtogroup PLC
 // @{
@@ -55,7 +59,8 @@ public:
 
 protected:
 	// Default constructor
-	ProcessControl()	: itsRunState(false)	{}
+	explicit ProcessControl(const string&	theProcessID): 
+		itsProcID(theProcessID), itsRunState(false), itsControlProxy(0)	{}
 
 	// \name Commands to control the processes.
 	//
@@ -122,15 +127,22 @@ protected:
 	virtual tribool	reinit	 (const string&		configID)	   = 0;
 	// @}
 
-	// Define a generic way to exchange info between client and server.
+	// Define a generic way to ask questions to the server.
 	virtual string	askInfo   (const string& 	keylist)  = 0;
 
-        // Routines for handling the run state.
-        // @{
-	void setRunState()	{ itsRunState = true; }
+	// Define a generic way to send metadata to the server.
+	void	sendResultParameters (const string& 		keylist);
+	void	sendResultParameters (const ParameterSet& 	aParSet);
+
+    // Routines for handling the run state.
+    // @{
+	void setRunState()		{ itsRunState = true; }
 	void clearRunState()	{ itsRunState = false; }
 	bool inRunState() const	{ return itsRunState; }
-        // @}
+    // @}
+
+	// My unique name (use to communicate with the server).
+	string		itsProcID;
 
 	// The proxy class must be able to set/clear the run state.
 	friend class ProcCtrlProxy;
@@ -140,8 +152,12 @@ private:
 	ProcessControl(const ProcessControl& that);
 	ProcessControl& 	operator=(const ProcessControl& that);
 
-        // Run-state flag.
-        bool	itsRunState;
+	// Run-state flag.
+	bool				itsRunState;
+
+	// Pointer to controlproxy for passing metadata from the process to the server
+	ProcCtrlProxy*		itsControlProxy;
+
 };
 
 // @} addgroup

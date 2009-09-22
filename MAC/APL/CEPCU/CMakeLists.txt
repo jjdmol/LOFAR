@@ -49,4 +49,4 @@ include(LofarConfig)
 ## Subdirectories
 ## ---------------------------------------------------------------------------
 add_subdirectory(src)
-# add_subdirectory(test/ApplController)   # Tests currently do NOT compile 
+add_subdirectory(test/ApplController)   # Tests currently do NOT compile 

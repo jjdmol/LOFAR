@@ -32,7 +32,8 @@
 namespace LOFAR {
   namespace ACC {
 
-APCmdImpl::APCmdImpl() :
+APCmdImpl::APCmdImpl(const string&	aProcessID) :
+	ProcessControl(aProcessID),
 	itsRunCounter(0)
 {}
 
@@ -68,6 +69,18 @@ tribool	APCmdImpl::run()
 			clearRunState();
 		}
 	}
+
+	// to test the metadata path we send some metadata when the counter reached 1
+	if (itsRunCounter == 1) {
+		LOG_DEBUG("Sending metadata about runCounter");
+		ParameterSet    resultSet;
+		string          resultBuffer;
+		resultSet.add(KVpair(itsProcID+".runCounter",
+							 string("1"),
+							 true));
+		sendResultParameters(resultSet);
+	}
+
 	return (true);
 }
 
