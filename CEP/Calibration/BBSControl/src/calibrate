@@ -350,11 +350,11 @@ if test ${setup} -eq 1; then
 
   event "execute setupsourcedb"
   if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-      echo "setupsourcedb \"${overwrite}\" \"${observation}\" \"${catalogue}\" \"${sky_name}\" \"${cluster_desc}\" \"${key}_setupsourcedb-part_$$.log\" nodry"
+      echo "setupsourcedb \"${overwrite}\" -makeopt 'format=<' \"${observation}\" \"${catalogue}\" \"${sky_name}\" \"${cluster_desc}\" \"${key}_setupsourcedb-part_$$.log\" nodry"
   fi
 
   if test ${dry} -eq 0; then
-      setupsourcedb "${overwrite}" "${observation}" "${catalogue}" "${sky_name}" "${cluster_desc}" "${key}_setupsourcedb-part_$$.log" nodry
+      setupsourcedb "${overwrite}" -makeopt 'format=<' "${observation}" "${catalogue}" "${sky_name}" "${cluster_desc}" "${key}_setupsourcedb-part_$$.log" nodry
       if test $? -ne 0; then
           error "setupsourcedb or remote setupsourcedb-part process(es) failed"
       fi
