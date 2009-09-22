@@ -204,7 +204,7 @@ uint PVSSinfo::getSysId(const string& name)
 {
 	string::size_type index = name.find(':');
 	if (index == string::npos) {
-		index = name.length();
+		return (PVSSinfo::getLocalSystemId());
 	}
 	CharString sysName(name.c_str(), index);
 	uint	 sysNr;
