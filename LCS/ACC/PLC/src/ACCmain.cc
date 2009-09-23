@@ -89,7 +89,7 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 
 	string	programName(basename(argv[0]));
 	bool	ACCmode(true);
-        int     result(0);
+    int     result(0);
 
 	// Check invocation syntax: [ACC] parsetfile UniqProcesName
 	// When we are called by ACC the first argument is ACC.
@@ -121,7 +121,7 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
                 // Create the correct ProcCtrlProxy and start it.
                 if (ACCmode) {
                   arg.add("ProcID", argv[3]);
-                  result = (ProcCtrlRemote(theProcess))(arg);
+                  result = (ProcCtrlRemote(theProcess, argv[3]))(arg);
                 }
                 else {
                   if (argc > 1) {

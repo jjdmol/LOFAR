@@ -37,8 +37,8 @@ using LOFAR::ParameterSet;
 //
 // ProcCtrlRemote(PC*)
 //
-ProcCtrlRemote::ProcCtrlRemote(ProcessControl* aProcCtrl) :
-	ProcCtrlProxy(aProcCtrl),
+ProcCtrlRemote::ProcCtrlRemote(ProcessControl* aProcCtrl, const string& aUniqProcName) :
+	ProcCtrlProxy(aProcCtrl, aUniqProcName),
 	itsPCServer(0)
 {
 	LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
@@ -51,7 +51,7 @@ int ProcCtrlRemote::operator()(const ParameterSet& arg)
 {
 	LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
-	string prefix = globalParameterSet()->getString("_parsetPrefix");
+	string prefix    = globalParameterSet()->getString("_parsetPrefix");
 
 	// connect to Application Controller
 	itsPCServer = new ProcControlServer(globalParameterSet()->getString(prefix+"_ACnode"),

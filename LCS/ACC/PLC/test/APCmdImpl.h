@@ -40,7 +40,7 @@ class APCmdImpl : public ProcessControl
 {
 public:
 	// Default constructable
-	explicit APCmdImpl(const string&		aProcessID);
+	APCmdImpl();
 
 	// Destructor
 	virtual ~APCmdImpl();

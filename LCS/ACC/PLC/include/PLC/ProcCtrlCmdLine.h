@@ -44,7 +44,7 @@ namespace LOFAR
       public:
         // Constructor. The argument \a aProcCtrl is a pointer to the "real"
         // Process Control object.
-        ProcCtrlCmdLine(ProcessControl* aProcCtrl);
+        explicit ProcCtrlCmdLine(ProcessControl* aProcCtrl, const string& aUniqProcName = "localCmdLineProcess");
 
         // Start the process controller. Make a predefined sequence of calls
         // to ProcessController's member functions; the number of times that

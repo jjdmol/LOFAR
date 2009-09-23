@@ -43,7 +43,7 @@ class ProcCtrlRemote : public ProcCtrlProxy
 public:
 	// Constructor. The argument \a aProcCtrl is a pointer to the "real"
 	// Process Control object.
-	ProcCtrlRemote(ProcessControl* aProcCtrl);
+	ProcCtrlRemote(ProcessControl* aProcCtrl, const string&	aUniqProcName);
 
 	// Start the process controller. Let it run under control of a
 	// ProcControlServer.
@@ -51,10 +51,6 @@ public:
 
 	// Send metadata to the server
 	virtual void sendResultParameters(const string&	aKVlist);
-
-	// Tell how to talk to the ApplController
-	void setServer(ProcControlServer*		aControlServer)
-		{ itsPCServer = aControlServer; }
 
 private:
 	// Pointer to the server so that sendResultParameters can use it.

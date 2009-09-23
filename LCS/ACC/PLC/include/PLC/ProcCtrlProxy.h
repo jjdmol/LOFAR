@@ -89,7 +89,7 @@ namespace LOFAR
         // \warning Make sure that the lifetime of the "real" Process Control
         // object exceeds that of the ProcCtrlProxy object. Otherwise,
         // ProcCtrlProxy will use a dangling pointer.
-        ProcCtrlProxy(ProcessControl* aProcCtrl);
+        ProcCtrlProxy(ProcessControl* aProcCtrl, const string&	aUniqProcName);
 
         // Start the process controller. Arguments can be passed in a generic
         // way, using a ParameterSet. This method must be implemented by the
