@@ -1,0 +1,19 @@
+;This example configuration file is part of
+;LOFAR System Health Management - Job Control
+
+[job_control]
+;polling interval in seconds
+cycle_time=5
+
+;load threshold above which no new jobs are started
+max_load_avg=0.66
+
+;user as which to execute job scripts
+execute_as=shm
+
+;path to job scripts
+script_path=/path/to/scripts
+
+;resource limits (a list of resource:limit pairs, separated by spaces)
+;disable core dump
+rlimits=RLIMIT_CORE:0

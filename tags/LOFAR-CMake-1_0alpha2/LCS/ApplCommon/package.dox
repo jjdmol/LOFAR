@@ -1,0 +1,11 @@
+// \ingroup Appl
+// \defgroup ApplCommon ApplCommon
+//
+// The ApplCommon package contains pieces of software that are very
+// reusable for LOFAR applications. 
+
+/// @{
+
+///   \defgroup DataConvert Data conversion functions
+
+/// @}

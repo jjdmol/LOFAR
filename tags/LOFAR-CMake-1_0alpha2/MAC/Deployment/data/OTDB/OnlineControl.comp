@@ -1,0 +1,21 @@
+# -- OnlineControl--
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  OnlineControl   1.1.0  development 'node constraint'  "Controller for the online datastream"
+
+#    name               dir. type   unit   prun. vm   value                          constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  _hostname          I    text   -      10    0    MCU001                            -     "Machine this controller should run on."
+par  applications       I    vtext  -      10    0    [IONAppl,CorrAppl,StorageAppl]    -     "The applications the controller should manage."
+par  applOrder          I    vtext  -      10    0    [IONAppl,CorrAppl,StorageAppl]    -     "The application depencies if any!"
+
+
+uses  ApplCtrl     1.0.0  development 1                  "The ACC controller"
+uses  IONAppl      1.0.1  development 1                  "IONode Application"
+uses  CorrAppl     1.0.1  development 1                  "CN Application"
+uses  StorageAppl  1.0.0  development 1                  "Storage Application"
+uses  OLAP         1.0.7  development 1                  "OLAP specific information"
+

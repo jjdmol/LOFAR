@@ -1,0 +1,4 @@
+#!/bin/sh
+
+../../../autoconf_share/bootstrap ../../../autoconf_share
+

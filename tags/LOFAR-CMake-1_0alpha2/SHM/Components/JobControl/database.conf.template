@@ -1,0 +1,15 @@
+;This example configuration file is part of
+;LOFAR System Health Management - Common
+
+[database]
+;name of the database
+dbname=shm
+
+;name of the user
+user=shm
+
+;hostname
+host=localhost
+
+;port (default: 5432)
+;port=5433

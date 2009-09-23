@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html lang="en">
+
+    <head>
+        <title> {%block title %} LOFAR System Health Management Console {%endblock title%}</title>
+        <link rel="stylesheet" type="text/css" href="css/lofar-shm.css" />
+        <meta http-equiv="refresh" content="30" />
+    </head>
+
+    <body>
+        {%block body %}
+	<div id="header" align="center">
+        <h1> LOFAR System Health Monitor </h1>
+
+        <h2>Overall System Status: {% ifequal diagnose_LOFAR "N/A" %}
+	                                                <font color="#F00000">	
+                                                        {{diagnose_LOFAR}}
+                                                        </font>
+						       {%else%}
+                                                        {{diagnose_LOFAR}}
+                                                       {%endifequal%}
+              </h2>
+
+	</div>
+
+	<div id="leftnavigation" align="center">
+        <table class="dbtable">
+          {# column headings first #}
+          <tr>
+          <td> </td>
+          <td> SITE </td>
+          <td> STATUS </td>
+          </tr>
+          {% for site in site_diag_table %}
+             <td> ({{ forloop.counter0 }}) </td>
+             <td> {{ site.0 }} </td>
+	     <td> {%ifequal site.1 "N/A" %}
+                    <font color="#F00000"> {{site.1}} </font>
+                  {%else%}
+                    {{ site.1 }} 
+                  {%endifequal%}
+             </td>
+	     </tr>
+          {% endfor %}
+	 </table>
+	 </div>
+	 
+	 <p></p>
+
+	 <div id="content">
+	 {%block images%}
+	 {%include "SHM_images.html"%}
+	 {%endblock images%}
+
+	{%endblock body%}
+
+	 </div>
+	<div id="footer">
+	{%block    footer%}
+	{%include "SHM_footer.html"%}
+	{%endblock footer%}
+        </div>
+    </body>
+</html>

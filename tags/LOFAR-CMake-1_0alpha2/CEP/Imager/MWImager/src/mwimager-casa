@@ -1,0 +1,108 @@
+#!/usr/bin/env python
+
+# mwimager-casa: mwimager-part using casa's lwimager
+#
+# Copyright (C) 2009
+# ASTRON (Netherlands Foundation for Research in Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# $Id$
+
+import os
+import sys
+import lofar.parameterset as parset
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    pgmpath = os.path.dirname(argv[0])
+    if len(argv) != 5:
+        print sys.stderr, 'run as:   mwimager-casa parset-file seqnr ms-part-vds dry'
+        return 1
+
+    # Get arguments.
+    psn    = argv[1]
+    seqnr  = argv[2]
+    msname = argv[3]
+    dry    = argv[4]
+    psnbase = os.path.basename (psn)
+    outname = '%s.part%s.py' % (psnbase,seqnr)
+
+    # Open the parset file.
+    ps = parset.parameterset (psn)
+    # Get the various parameters.
+    msname = ps.getString ('dataset');
+    datacol = ps.getString ('column', 'DATA');
+    schan = ps.getInt ('firstchan', 0);
+    echan = ps.getInt ('lastchan', -1);
+    imgnchan = ps.getInt ('Images.nchan', 1);
+    imsize = ps.getIntVector ('Images.shape');
+    cellsz = ps.getStringVector ('Images.cellSize')
+    stokes = ps.getStringVector ('Images.stokes', 'I')
+    padding = ps.getString ('Images.padding', '1')
+    taper = ps.getStringVector ('Filter', '')
+    phasecenter = ''
+    if ps.isDefined ('Images.ra'):
+        phasecenter = ' "phasecenter=%s,%s,%s"' % (ps.getString ('Images.ra'), ps.getString('Images.dec'), ps.getString("Images.directionType", 'J2000'))
+    filter = ''
+    if ps.isDefined ('taper'):
+        taper = ps.getStringVector ('taper', '')
+        if len(taper) != 3:
+            print sys.stderr, 'Specify taper as [bmajor,bminor,bpa]'
+            return 1
+        filter = ' "filter=%s,%s,%s"' % taper
+    nwplanes = ps.getInt ('nwplanes', 256);
+    nfacets  = ps.getInt ('nfacets', 1);
+
+    # Currently only equal values can be used for x and y.
+    print "aaa",len(imsize),len(cellsz)
+    if len(imsize) > 2  or  len(cellsz) > 2:
+        print sys.stderr, "One or two values can be given for shape or cellSize for casaimager"
+        return 1
+    if len(imsize) == 2:
+        if imsize[0] != imsize[1]:
+            print sys.stderr, "x and y shape must be equal for casaimager"
+            return 1
+        imsize = imsize[0]
+    if len(cellsz) == 2:
+        if cellsz[0] != cellsz[1]:
+            print sys.stderr, "x and y cellSize must be equal for casaimager"
+            return 1
+        cellsz = cellsz[0]
+    # Append default unit arcsec if no unit given.
+    ls = len(cellsz)
+    if ls > 0  and  cellsz[ls-1] >= '0'  and  cellsz[ls-1] <= '9':
+        cellsz += 'arcsec'
+
+    # Combine stokes into one string.
+    stokestr = ''
+    for s in stokes:
+        stokestr += s
+
+    # Form the image name.
+    imgname = msname + '.img'
+
+    command = 'lwimager "ms=%s" "image=%s" "data=%s" "mode=channel" "npix=%d" "cellsize=%s" "stokes=%s" "chan=%d" "wprojplanes=%d" ""nfacets=%d"' % (msname,imgname,datacol,imsize,cellsz,stokestr,schan,nwplanes,nfacets)
+    if len(phasecenter) > 0:
+        command += phasecenter
+    if len(filter) > 0:
+        command += filter
+    print command
+    print "Nothing done; casaimager not operational yet"
+
+if __name__ == "__main__":
+    sys.exit(main())

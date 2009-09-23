@@ -1,0 +1,25 @@
+
+# Configure the loggers
+log4cplus.rootLogger=INFO, STDOUT, FILE
+#log4cplus.logger.TRC=INFO
+log4cplus.logger.TRC=INFO
+log4cplus.logger.LCS.Common=FATAL, STDOUT, FILE
+
+# Define the appenders
+log4cplus.appender.STDOUT=log4cplus::ConsoleAppender
+log4cplus.appender.STDOUT.layout=log4cplus::PatternLayout
+log4cplus.appender.STDOUT.layout.ConversionPattern=%D{%d-%m %H:%M:%S.%q} %-5p %c{9} - %m [%.25l]%n
+
+log4cplus.appender.STDERR=log4cplus::ConsoleAppender
+log4cplus.appender.STDERR.layout=log4cplus::PatternLayout
+log4cplus.appender.STDERR.layout.ConversionPattern=%D{%d-%m %H:%M:%S.%q} %-5p %c{3} - %m [%.25l]%n
+log4cplus.appender.STDERR.logToStdErr=true
+
+log4cplus.appender.FILE=log4cplus::RollingFileAppender
+log4cplus.appender.FILE.File=../log/%filename.log
+log4cplus.appender.FILE.MaxFileSize=10MB
+log4cplus.appender.FILE.MaxBackupIndex=2
+log4cplus.appender.FILE.layout=log4cplus::PatternLayout
+log4cplus.appender.FILE.layout.ConversionPattern=%x %D{%d-%m %H:%M:%S.%q} %-5p %c{3} - %m [%.25l]%n
+
+log4cplus.appender.DUMP=log4cplus::NullAppender

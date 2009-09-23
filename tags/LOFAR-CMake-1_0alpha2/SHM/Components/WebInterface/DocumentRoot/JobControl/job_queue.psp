@@ -1,0 +1,322 @@
+<%
+import sys
+import utils
+import lofar.shm
+
+#
+# maps
+#
+state_map = {0:"pending", 1:"running", 2:"stopped"}
+inverse_state_map = {"pending":0, "running":1, "stopped":2}
+sort_col_map = {"state":"state", "name":"name", "run":"period", "ticket_no":"ticket_no", "scheduled_time":"scheduled_time", "time_of_bind":"time_of_bind", "wd_timeout":"wd_timeout", "client":"client"}
+sort_dir_map = {"ticket_no":"DESC", "scheduled_time":"DESC", "time_of_bind":"DESC"}
+
+#
+# parse arguments
+#
+def parse_sort_by(argv):
+    # parse sort_by
+    if argv.has_key("sort_by"):
+        sort_by = argv["sort_by"]
+    else:
+        sort_by = "name"
+
+    # parse sort direction
+    if argv.has_key("sort_dir") and argv["sort_dir"] in ["ASC", "DESC"]:
+        sort_dir = argv["sort_dir"]
+    else:
+        try:
+            sort_dir = sort_dir_map[sort_by]
+        except KeyError:
+            sort_dir = "ASC"
+
+    # translate sort_by to the name of a column in the database
+    try:
+        sort_col = sort_col_map[sort_by]
+    except KeyError:
+        sort_col = "name"
+
+    # construct order by term(s)
+    if sort_col == "name":
+        order_by_terms = "%s %s, id" % (sort_col, sort_dir)
+    else:
+        order_by_terms = "%s %s, name, id" % (sort_col, sort_dir)
+
+    return (sort_by, sort_dir, order_by_terms)
+
+
+def parse_filter(argv):
+    filter_terms = []
+    filter_args = []
+
+    if argv.has_key("filter"):
+        filter = argv["filter"].split()
+
+        i = 0
+        while i < len(filter):
+            if filter[i].endswith(":") and len(filter[i]) > 1 and len(filter) > i + 1:
+                key = filter[i][:-1]
+                value_txt = filter[i + 1]
+
+                # currently, named parameters are limited to "state"
+                if key.lower() == "state":
+                    try:
+                        value = inverse_state_map[value_txt.lower()]
+                    except KeyError:
+                        pass
+                    else:
+                        filter_terms.append("%s = %%s" % (key,))
+                        filter_args.append(value)
+
+                # advance to next relevant token
+                i += 2
+
+            else:
+                try:
+                    filter[i].index(":")
+                except ValueError:
+                    filter_terms.append("name ILIKE %s")
+
+                    # not the most elegant way to implement escaping :-/
+                    value = filter[i]
+                    value = value.replace("\\", "\\\\")
+                    value = value.replace("%", "\%")
+                    value = value.replace("_", "\_")
+                    filter_args.append("%%%s%%" % (value,))
+                else:
+                    key, value_txt = filter[i].split(":")
+
+                    # currently, named parameters are limited to "state"
+                    if key.lower() == "state":
+                        try:
+                            value = inverse_state_map[value_txt.lower()]
+                        except KeyError:
+                            pass
+                        else:
+                            filter_terms.append("%s = %%s" % (key,))
+                            filter_args.append(value)
+
+                # advance to next relevant token
+                i += 1
+
+    # fall through
+    return (filter_terms, filter_args)
+
+
+#
+# formatting
+#
+def format_job_type(period):
+    if period is None:
+        return "once"
+    elif period == 0:
+        return "always"
+    else:
+        period_txt = utils.format_time_delta(period)
+        if period_txt is None:
+            return "invalid period"
+        else:
+            return "every %s" % (period_txt,)
+
+
+def format_client(client_ip):
+    if client_ip is None:
+        return "-"
+    else:
+        return str(client_ip)
+
+
+#
+# generate XHTML fragments
+#
+def generate_sort_image(col_name, sort_by, sort_dir):
+    if col_name == sort_by:
+        return "<img alt=\"%s\" src=\"images/%s.gif\" />" % (sort_dir.lower(), sort_dir.lower())
+    else:
+        return "<img alt=\"column not included in sort criterium\" src=\"images/none.gif\" />"
+
+
+def generate_sort_url(col_name, sort_by, sort_dir):
+    if col_name == sort_by:
+        if sort_dir == "ASC":
+            new_sort_dir = "DESC"
+        else:
+            new_sort_dir = "ASC"
+
+        return "javascript:sort('%s', '%s');" % (sort_by, new_sort_dir)
+
+    else:
+        return "javascript:sort('%s', null);" % (col_name,)
+
+
+def generate_xhtml_fragment(db, argv):
+    # parse arguments
+    sort_by, sort_dir, order_by_terms = parse_sort_by(argv)
+    filter_terms, filter_args = parse_filter(argv)
+
+    if argv.has_key("filter"):
+        no_jobs_message = "no jobs matching the active filter (%s)" % (argv["filter"])
+    else:
+        no_jobs_message = "job queue is empty"
+
+    # get minimum log level of last run for each job
+    min_log_level = {}
+    try:
+        data = db.perform_query(
+            """
+            SELECT job_control.queue.id, MIN(job_control.log.level) AS min_log_level
+            FROM job_control.queue, job_control.log
+            WHERE job_control.log.job_id = job_control.queue.id
+            AND ( (job_control.queue.state = 2 AND job_control.log.job_ticket_no = job_control.queue.ticket_no)
+                  OR (job_control.queue.state <> 2 AND job_control.log.job_ticket_no = job_control.queue.ticket_no - 1) )
+            GROUP BY job_control.queue.id;
+            """);
+
+        if data is not None:
+            for row in data:
+                min_log_level[row.id] = row.min_log_level
+
+    except lofar.shm.DatabaseError:
+        raise apache.SERVER_RETURN, apache.HTTP_INTERNAL_SERVER_ERROR
+
+    # get job data
+    job_data = None
+    try:
+        if len(filter_terms) > 0:
+            job_data = db.perform_query(
+                """
+                SELECT *, now() - time_of_bind AS running_time
+                FROM job_control.queue
+                WHERE %s
+                ORDER BY %s;
+                """ % (" AND ".join(filter_terms), order_by_terms), filter_args)
+
+        elif not argv.has_key("filter"):
+            job_data = db.perform_query(
+                """
+                SELECT *, now() - time_of_bind AS running_time
+                FROM job_control.queue
+                ORDER BY %s;
+                """ % (order_by_terms,))
+
+    except lofar.shm.DatabaseError:
+        raise apache.SERVER_RETURN, apache.HTTP_INTERNAL_SERVER_ERROR
+
+    # generate xhtml
+    # prevent caching by IE
+    req.content_type = "application/xml"
+    req.headers_out["Cache-Control"] = "no-cache"
+%>
+
+<update>
+    <xhtml><![CDATA[
+        <table id="queue">
+            <thead>
+                <tr class="header">
+                    <td></td>
+                    <td class="state"><a href="<%=generate_sort_url("state", sort_by, sort_dir)%>"><img class="state" alt="state" src="images/pending.gif"/></a> <%=generate_sort_image("state", sort_by, sort_dir)%></td>
+                    <td><a href="<%=generate_sort_url("name", sort_by, sort_dir)%>">name</a> <%=generate_sort_image("name", sort_by, sort_dir)%></td>
+                    <td class="ticket_no"><a href="<%=generate_sort_url("ticket_no", sort_by, sort_dir)%>">ticket no.</a></td><td class="ticket_no_image">&nbsp;<%=generate_sort_image("ticket_no", sort_by, sort_dir)%></td>
+                    <td><a href="<%=generate_sort_url("run", sort_by, sort_dir)%>">run</a> <%=generate_sort_image("run", sort_by, sort_dir)%></td>
+                    <td><a href="<%=generate_sort_url("wd_timeout", sort_by, sort_dir)%>">timeout</a> <%=generate_sort_image("wd_timeout", sort_by, sort_dir)%></td>
+                    <td><a href="<%=generate_sort_url("scheduled_time", sort_by, sort_dir)%>">scheduled time</a> <%=generate_sort_image("scheduled_time", sort_by, sort_dir)%></td>
+                    <td><a href="<%=generate_sort_url("time_of_bind", sort_by, sort_dir)%>">running time</a> <%=generate_sort_image("time_of_bind", sort_by, sort_dir)%></td>
+                    <td><a href="<%=generate_sort_url("client", sort_by, sort_dir)%>">client</a> <%=generate_sort_image("client", sort_by, sort_dir)%></td>
+                </tr>
+            </thead>
+            <tfoot />
+            <tbody>
+<%
+    if job_data is None or len(job_data) == 0:
+%>
+                <tr>
+                    <td colspan="7">
+                        <br /><br /><br />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="7">
+                        <%=no_jobs_message%>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="7">
+                        <br /><br /><br />
+                    </td>
+                </tr>
+<% 
+    else:
+        for job in job_data:
+            try:
+                min_level = min_log_level[job.id]
+            except KeyError:
+                min_level = 5
+
+            if min_level < 5:
+%>
+                <tr class="job_err" id="id<%=job.id%>">
+<%
+            else:
+%>
+                <tr class="job" id="id<%=job.id%>">
+<%
+            # end [if min_level < 5]
+%>
+                    <td class="state" abbr="<%=state_map[job.state]%>" title="<%=state_map[job.state]%>"><img class="state" alt="<%=state_map[job.state]%>" src="images/<%=state_map[job.state]%>.gif"/></td>
+                    <td><a class="job" href="job_details.psp?id=<%=str(job.id)%>"><%=job.name%></a></td>
+                    <td class="ticket_no"><%=str(job.ticket_no)%></td><td class="ticket_no_image"></td>
+                    <td abbr="<%=utils.format_time_delta(job.period, True)%>" title="<%=utils.format_time_delta(job.period, True)%>"><%=format_job_type(job.period)%></td>
+                    <td abbr="<%=utils.format_time_delta(job.wd_timeout, True)%>" title="<%=utils.format_time_delta(job.wd_timeout, True)%>"><%=utils.format_time_delta(job.wd_timeout)%></td>
+                    <td abbr="<%=utils.format_timestamp(job.scheduled_time, True)%>" title="<%=utils.format_timestamp(job.scheduled_time, True)%>"><%=utils.format_timestamp(job.scheduled_time)%></td>
+                    <td><%=utils.format_time_delta(job.running_time, True)%></td>
+                    <td><%=format_client(job.client)%></td>
+                </tr>
+<%
+        # end [for job in job_data]
+    # end [if job_data is None or len(job_data) == 0]
+%>
+            </tbody>
+        </table>
+    ]]></xhtml>
+<%
+    if job_data is not None:
+        for job in job_data:
+            # start [for job in job_data]
+%>
+    <job>
+        <id><%=str(job.id)%></id>
+        <state><%=state_map[job.state]%></state>
+    </job>
+<%
+        # end [for job in job_data]
+    # end [if job_data is not None]
+%>
+</update>
+
+
+<%
+def main(argv):
+    db = lofar.shm.db.SysHealthDatabase()
+
+    try:
+        db.open()
+    except lofar.shm.DatabaseError:
+        raise apache.SERVER_RETURN, apache.HTTP_INTERNAL_SERVER_ERROR
+
+    try:
+        jobctrl = lofar.shm.job_control.JobControl(db)
+
+        # update the job queue
+        try:
+            jobctrl.update_queue()
+        except lofar.shm.DatabaseError:
+            pass
+
+        generate_xhtml_fragment(db, argv)
+
+    finally:
+        db.close()
+
+# call main
+main(form)
+%>

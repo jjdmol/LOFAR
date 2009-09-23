@@ -1,0 +1,117 @@
+{%extends "base_shm.html"%}
+
+{%block header%}<h2>SHM {{data.namestring}} Data View</h2>
+<h1>Station {{data.datasource|upper}}</h1>
+<table>
+<tr>
+<td>
+Most recent data as of {{data.date|date:"Y-m-d H:i:s"}} UTC
+</td>
+<td>
+<form action="/shm/data/{{data.shortnamestring}}/{{data.datasource}}/" method="post">
+<input type="text" name="epoch" value="{{data.date|date:"Y-m-d H:i:s"}}" />
+<input type="submit" value="submit"/>
+</form>
+</td>
+</tr>
+</table>
+<!--{{query_time.as_p}} -->
+{%endblock header%}
+
+{%block leftnavigation%}
+<div align="center">
+<form method='link' action="/shm/data/{{data.shortnamestring}}/{{data.datasource}}/fetch" target="_blank">
+<input type="submit" value="Fetch Current">
+</form>
+<hr>
+<p> Data Type 
+<table class="menu">
+  {% for type in types %}
+    <tr>
+    <td><a href="/shm/data/{{type}}/{{data.datasource}}?epoch={{data.date|date:"Y-m-d H:i:s"}}">{{type}}</a></td>
+    </tr>
+  {%endfor%}
+</table>
+</p>
+<hr>
+<p> Stations 
+<table class="menu">
+  {% for site in sites %}
+     <tr>
+     <td> ({{ forloop.counter0 }}) </td>
+     <td> <a href="/shm/data/{{data.shortnamestring}}/{{site}}/?epoch={{data.date|date:"Y-m-d H:i:s"}}">{{site}}</a></td>
+     </tr>
+  {% endfor %}
+ </table>
+</p>
+</div>
+{%endblock leftnavigation%}
+
+{%block content%}
+{%if classifs.noresults %}
+  <table>
+    <tr> <td> Sorry, no data for you </td></tr>
+    <tr> <td> <img src="/static/images/nix.png" alt="no search results" /> </td></tr></table>
+{%else%}
+  {%ifequal data.shortnamestring "rsp"%}
+    {%if classifs.offnominal %}
+      <h2> OFF-NOMINAL RSP register values: </h2>
+      <br>
+      <table class="rspstatus">
+      {%for rsp_id in classifs.offnominal%}
+        <tr><td>
+        <IFRAME src="/shm/data/{{data.shortnamestring}}/{{data.datasource}}/image/{{rsp_id}}?epoch={{data.date|date:"Y-m-d H:i:s"}}" type="text/plain" width="600" height="200" scrolling="off" style="color:red">
+        </IFRAME>
+        </td></tr>
+      {%endfor%}
+      </table>
+      <hr>
+    {%endif%}
+    {%if classifs.nominal %}
+      <h2> NOMINAL RSP register values: </h2>
+      <br>
+      <table class="rspstatus">
+      {%for rsp_id in classifs.nominal %}
+        <tr><td>
+        <IFRAME src="/shm/data/{{data.shortnamestring}}/{{data.datasource}}/image/{{rsp_id}}?epoch={{data.date|date:"Y-m-d H:i:s"}}" type="text/plain" width="600" height="200" scrolling="off">
+        </IFRAME>
+        </td></tr>
+      {%endfor%}
+      </table>
+    {%endif%}
+  {%else%}
+    {%ifequal data.shortnamestring "sst"%}
+      {%if classifs.offnominal %}
+        <h2> OFF-NOMINAL RCU Spectra: </h2>
+        <br>
+        {%for rcu in classifs.offnominal%}
+          <A href="/shm/data/{{data.shortnamestring}}/{{data.datasource}}/image/{{rcu}}?epoch={{data.date|date:"Y-m-d H:i:s"}}" target="_blank">
+          <IMG src="/shm/data/{{data.shortnamestring}}/{{data.datasource}}/image/thumb/{{rcu}}?epoch={{data.date|date:"Y-m-d H:i:s"}}" type="image/png">
+          </A>
+        {%endfor%}
+        <hr>
+      {%endif%}
+      {%if classifs.nominal %}
+        <h2> NOMINAL RCU Spectra:</h2>
+        {%for rcu in classifs.nominal%}
+          <A href="/shm/data/{{data.shortnamestring}}/{{data.datasource}}/image/{{rcu}}?epoch={{data.date|date:"Y-m-d H:i:s"}}" target="_blank">
+          <IMG src="/shm/data/{{data.shortnamestring}}/{{data.datasource}}/image/thumb/{{rcu}}?epoch={{data.date|date:"Y-m-d H:i:s"}}" type="image/png">
+          </A>
+        {%endfor%}
+        </p>
+      {%endif%}
+      
+    {%else%}
+      {%for i in data.num_per_station%}
+        <A href="/shm/data/{{data.shortnamestring}}/{{data.datasource}}/image/{{i}}?epoch={{data.date|date:"Y-m-d H:i:s"}}" target="_blank">
+        <IMG src="/shm/data/{{data.shortnamestring}}/{{data.datasource}}/image/thumb/{{i}}?epoch={{data.date|date:"Y-m-d H:i:s"}}" type="image/png">
+        </A>
+      {%endfor%}
+    {%endifequal%}
+  {%endifequal%}
+{%endif%}
+{%endblock content%}
+
+{%block footer%}
+{%include "footer_shm.html"%}
+{%endblock footer%}
