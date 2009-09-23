@@ -5,10 +5,9 @@ import java.rmi.NotBoundException;
 import java.util.TimeZone;
 
 import nl.astron.lofar.odtb.mom2otdbadapter.data.OTDBRepository;
-import nl.astron.lofar.odtb.mom2otdbadapter.mom2listener.Mom2Listener;
 import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.OTDBListener;
-import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.TaskExecutor;
 import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.Queue;
+import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.TaskExecutor;
 
 public class MomOtdbAdapter {
 	protected String username = null;
@@ -46,8 +45,8 @@ public class MomOtdbAdapter {
 		OTDBListener otdbListener = new OTDBListener(queue, seconds.intValue()*1000, repository);
 		otdbListener.start();
 
-		Mom2Listener server = new Mom2Listener(repository);
-		server.start();
+		//Mom2Listener server = new Mom2Listener(repository);
+		//server.start();
 	}
 
 	/**
