@@ -383,6 +383,14 @@ vector<uint32> Observation::getRspBoardList() const
 }
 
 //
+// OLAP: getRspSlotList(): vector<uint32>
+//
+vector<uint32> Observation::getRspSlotList() const
+{
+  return rspSlotList;
+}
+
+//
 // nyquistzoneFromFilter(filtername)
 //
 uint32 Observation::nyquistzoneFromFilter(const string&	filterName)
