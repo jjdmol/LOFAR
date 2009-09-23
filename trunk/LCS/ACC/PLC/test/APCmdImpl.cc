@@ -32,8 +32,8 @@
 namespace LOFAR {
   namespace ACC {
 
-APCmdImpl::APCmdImpl(const string&	aProcessID) :
-	ProcessControl(aProcessID),
+APCmdImpl::APCmdImpl() :
+	ProcessControl(),
 	itsRunCounter(0)
 {}
 

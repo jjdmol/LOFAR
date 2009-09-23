@@ -114,12 +114,13 @@ void ProcCtrlProxy::clearRunState()
 
 //## -------- P r o t e c t e d   m e t h o d s   -------- ##//
 
-ProcCtrlProxy::ProcCtrlProxy(ProcessControl* aProcCtrl) :
+ProcCtrlProxy::ProcCtrlProxy(ProcessControl* aProcCtrl, const string&	aUniqProcName) :
 	itsProcCtrl(aProcCtrl)
 {
 	LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
 	itsProcCtrl->itsControlProxy = this;
+	itsProcCtrl->itsProcID       = aUniqProcName;
 }
 
 void ProcCtrlProxy::sendResultParameters(const string&	keyList)

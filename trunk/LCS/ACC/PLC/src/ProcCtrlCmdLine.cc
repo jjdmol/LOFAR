@@ -39,8 +39,8 @@ namespace LOFAR
 
       //## --------   P u b l i c   m e t h o d s   -------- ##//
 
-      ProcCtrlCmdLine::ProcCtrlCmdLine(ProcessControl* aProcCtrl) :
-        ProcCtrlProxy(aProcCtrl)
+      ProcCtrlCmdLine::ProcCtrlCmdLine(ProcessControl* aProcCtrl, const string&	aUniqProcName) :
+        ProcCtrlProxy(aProcCtrl, aUniqProcName)
       {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       }

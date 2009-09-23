@@ -59,8 +59,8 @@ public:
 
 protected:
 	// Default constructor
-	explicit ProcessControl(const string&	theProcessID): 
-		itsProcID(theProcessID), itsRunState(false), itsControlProxy(0)	{}
+	explicit ProcessControl(): 
+		itsRunState(false), itsControlProxy(0)	{}
 
 	// \name Commands to control the processes.
 	//
