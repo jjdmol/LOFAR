@@ -91,56 +91,56 @@ public class XMLGenerator {
 	}
 
 	protected void addChildren(Element parent, LofarObservation observation) {
-		Element childrenElement = xmlBuilder.addElement(parent, "children");
-		String[] ids = getArray(observation.getMeasurementMom2Ids());
-		String[] angleTimes = getArray(observation.getAngleTimes());
-		String status = observation.getStatus();
-		Date startTime = AstronConverter.toDate(observation.getStartTime(),
-				OTDB_DATETIME_FORMAT);
-		Date endTime = AstronConverter.toDate(observation.getEndTime(),
-				OTDB_DATETIME_FORMAT);
-
-		for (int i = 0; i < ids.length; i++) {
-			String mom2Id = ids[i];
-			if (angleTimes == null) {
-				addMeasurement(childrenElement, mom2Id, status, null, null);
-			} else {
-				long startTimeLong = startTime.getTime();
-				long startOffset = new Long(angleTimes[i].substring(1))
-						.longValue();
-				if (i > 0) {
-					/*
-					 * add 1 second, because a measurement can not be start and
-					 * end on the same second
-					 */
-					startOffset = (startOffset + 1) * 1000;
-				}
-				Date startDate = new Date();
-				startDate.setTime(startTimeLong + startOffset);
-				Date endDate = new Date();
-				if (i < ids.length - 1) {
-					long endOffset = new Long(angleTimes[i + 1].substring(1))
-							.longValue() * 1000;
-
-					endDate.setTime(startTimeLong + endOffset);
-				} else {
-					endDate = endTime;
-				}
-				/*
-				 * start and endtime is before the calculated times, according
-				 * angleTimes. Measurements must be failed
-				 */
-				if (endTime.before(endDate)) {
-					addMeasurement(childrenElement, mom2Id, FAILED, startDate,
-							endTime);
-				} else if (endTime.before(startDate)) {
-					addMeasurement(childrenElement, mom2Id, FAILED, null, null);
-				} else {
-					addMeasurement(childrenElement, mom2Id, FINISHED,
-							startDate, endDate);
-				}
-			}
-		}
+//		Element childrenElement = xmlBuilder.addElement(parent, "children");
+//		String[] ids = getArray(observation.getMeasurementMom2Ids());
+//		String[] angleTimes = getArray(observation.getAngleTimes());
+//		String status = observation.getStatus();
+//		Date startTime = AstronConverter.toDate(observation.getStartTime(),
+//				OTDB_DATETIME_FORMAT);
+//		Date endTime = AstronConverter.toDate(observation.getEndTime(),
+//				OTDB_DATETIME_FORMAT);
+//
+//		for (int i = 0; i < ids.length; i++) {
+//			String mom2Id = ids[i];
+//			if (angleTimes == null) {
+//				addMeasurement(childrenElement, mom2Id, status, null, null);
+//			} else {
+//				long startTimeLong = startTime.getTime();
+//				long startOffset = new Long(angleTimes[i].substring(1))
+//						.longValue();
+//				if (i > 0) {
+//					/*
+//					 * add 1 second, because a measurement can not be start and
+//					 * end on the same second
+//					 */
+//					startOffset = (startOffset + 1) * 1000;
+//				}
+//				Date startDate = new Date();
+//				startDate.setTime(startTimeLong + startOffset);
+//				Date endDate = new Date();
+//				if (i < ids.length - 1) {
+//					long endOffset = new Long(angleTimes[i + 1].substring(1))
+//							.longValue() * 1000;
+//
+//					endDate.setTime(startTimeLong + endOffset);
+//				} else {
+//					endDate = endTime;
+//				}
+//				/*
+//				 * start and endtime is before the calculated times, according
+//				 * angleTimes. Measurements must be failed
+//				 */
+//				if (endTime.before(endDate)) {
+//					addMeasurement(childrenElement, mom2Id, FAILED, startDate,
+//							endTime);
+//				} else if (endTime.before(startDate)) {
+//					addMeasurement(childrenElement, mom2Id, FAILED, null, null);
+//				} else {
+//					addMeasurement(childrenElement, mom2Id, FINISHED,
+//							startDate, endDate);
+//				}
+//			}
+//		}
 
 	}
 

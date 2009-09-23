@@ -17,9 +17,8 @@ public class XMLParserTest {
 		FileInputStream st = new FileInputStream(new File("examples/observation.xml"));
 		InputSource inputSource = new InputSource(st);
 		Document document = XMLConverter.convertXMLToDocument(inputSource, null);
-		XMLParser xmlParser = new XMLParser();
-		LofarObservation lofarObservation = xmlParser.getLofarObservation(document);
-		
+		LofarObservation lofarObservation = XMLParser.getLofarObservation(document);
+		System.out.println("YES");
 	}
 
 }
