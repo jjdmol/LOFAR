@@ -3,9 +3,9 @@ package nl.astron.lofar.odtb.mom2otdbadapter.mom2listener;
 import junit.framework.TestCase;
 import nl.astron.lofar.odtb.mom2otdbadapter.mom2listener.Mom2OtdbConverter;
 
-public class TestMom2OtdbConverter extends TestCase {
+public class Mom2OtdbConverterTest extends TestCase {
 
-	public TestMom2OtdbConverter(String name) {
+	public Mom2OtdbConverterTest(String name) {
 		super(name);
 	}
 

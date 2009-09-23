@@ -1,4 +1,4 @@
-
+package nl.astron.lofar.odtb.mom2otdbadapter.test;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,12 +37,7 @@ public class TestOTDB {
 		LofarObservation lofarObservation = xmlParser
 				.getLofarObservation(document);
 		OTDBRepository repository = new OTDBRepository("lofar17.astron.nl", 10500);
-		try {
-			repository.store(lofarObservation);
-		}catch (Exception e){
-			e.printStackTrace();
-		}
-		System.out.println("test");
+		repository.store(lofarObservation);
 
 	}
 	

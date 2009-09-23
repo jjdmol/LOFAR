@@ -1,5 +1,6 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.otdblistener;
 
+import java.io.IOException;
 import java.io.StringReader;
 
 import nl.astron.util.AstronValidator;
@@ -98,8 +99,8 @@ public class TaskExecutor extends Thread {
 			log.info(result);
 			httpClient.logout();
 			return isSucceed(result);
-		} catch (AstronHttpException ahe) {
-			log.error("AstronHttpException:" + ahe.getMessage(), ahe);
+		}catch (IOException e) {
+			log.error("IOException:" + e.getMessage(), e);
 			sleep();
 		} 
 		return succeed;
