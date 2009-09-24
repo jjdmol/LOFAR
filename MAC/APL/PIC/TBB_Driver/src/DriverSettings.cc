@@ -213,7 +213,9 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 	itsBoardInfo = new BoardInfo[itsMaxBoards];
 	
 	for (int nr = 0;nr < itsMaxBoards; nr++) {
-		itsBoardInfo[nr].boardState = setImage1;
+		itsBoardInfo[nr].boardState = noBoard;
+		itsBoardInfo[nr].setupWaitTime = 0;
+		itsBoardInfo[nr].setupRetries = 0;
 		itsBoardInfo[nr].memorySize = 0;
 		itsBoardInfo[nr].imageNr = 0;
 		itsBoardInfo[nr].freeToReset = true;

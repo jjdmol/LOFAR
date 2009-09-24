@@ -111,9 +111,7 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 		TPResetAckEvent tp_ack(event);
 		TS->setImageNr(getBoardNr(), 0);
 		itsStatus[getBoardNr()] = tp_ack.status;
-		if (tp_ack.status == 0) {
-			TS->setBoardState(getBoardNr(),setImage1);
-		} else {
+		if (tp_ack.status != 0) {
 			TS->setBoardState(getBoardNr(),boardError);
 		}
 	}
