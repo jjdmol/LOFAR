@@ -1,7 +1,8 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.mom2listener;
 
-import nl.astron.util.AstronConverter;
-import nl.astron.util.AstronValidator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 /**
  * Converts mom2 values to otdb values
@@ -10,193 +11,32 @@ import nl.astron.util.AstronValidator;
  *
  */
 public class Mom2OtdbConverter {
-	private static final double MAX_BANDWIDTH = 32000000;
-	private static final int TOTAL_SUBBANDS = 512;
-	/**
-	 * Calculate an array of subbands
-	 * 
-	 * @param samplingFrequency sampling frequency in Hz
-	 * @param numberOfBands number of bands
-	 * @param subbandPlacement kind of subband placement (e.g. contiguous, scattered) 
-	 * @param startFrequency start frequency in Hz
-	 * @param spacing spacing in bands
-	 * @return subbands e.g. [12,34]
-	 */
-	public static String getOTDBSubbands(Integer samplingFrequency, Integer numberOfBands,
-			String subbandPlacement, Integer startFrequency, Integer spacing) {
-		if (samplingFrequency == null 
-				|| numberOfBands == null
-				|| AstronValidator.isBlankOrNull(subbandPlacement)
-				|| startFrequency == null
-				|| spacing == null){
-			return null;
-		}
-		String subbandPlacementLowerCase = subbandPlacement.toLowerCase();
-		/*
-		 * if subband placement is special, no calculation can be made
-		 */
-		if (subbandPlacementLowerCase.equals("special")){
-			return null;
-		}
-		/*
-		 * if contiguous or scattered, calculate subbands
-		 */
-		else if(subbandPlacementLowerCase.equals("contiguous") ||
-				subbandPlacementLowerCase.equals("scattered")){
-			double samplingFreq = samplingFrequency.doubleValue();
-			double startFreq = startFrequency.doubleValue();
-			int nBands = numberOfBands.intValue();
-			int spac = 0;
-			if (subbandPlacementLowerCase.equals("scattered")){
-				spac = spacing.intValue();
-			}
-			/*
-			 * calculate subband width
-			 */
-			double subbandWidth = samplingFreq /(2*TOTAL_SUBBANDS);
-			/*
-			 * calculate firstband
-			 */
-			double firstBand = startFreq/subbandWidth;
-			firstBand = Math.floor(firstBand);
-
-			/*
-			 * calculate max number of bands
-			 */
-			double maxBands = MAX_BANDWIDTH/subbandWidth;
-			maxBands = Math.floor(maxBands);
-			/*
-			 * check if bands exceeds max number of bands
-			 */
-			if (nBands > maxBands){
-				nBands = (int) maxBands;
-			}
-			int currentSubband = (int) firstBand;
-			String result ="[" ;
-			for (int i = 0; i < nBands && currentSubband < TOTAL_SUBBANDS;i++){
-				result+=currentSubband;
-				if (i < nBands-1 && currentSubband < TOTAL_SUBBANDS-(1 + spac)){
-					result += ",";
-				}
-				currentSubband = currentSubband + spac + 1;
-			}
-			result += "]";
-			return result;
-			
-			
-		}
-		return null;
-	}
-	/**
-	 * Calculate bandselection from filter
-	 * @param filter
-	 * @return band selecitons
-	 */
-	public static String getOTDBBandSelection(String filter){
-
-		/*
-		 * check if filter is not null
-		 */
-
-		if (!AstronValidator.isBlankOrNull(filter)) {
-			/*
-			 * filter looks like 10-70 (160 MHz sampling rate) split it into:
-			 * '10-70 ' '160 MHz sampling rate)'
-			 */
-			String[] splitted = filter.split("\\(");
-			/*
-			 * get '10-70'
-			 */
-			String band = splitted[0].trim();
-			/*
-			 * split it into
-			 * '10' '70'
-			 */
-			String[] frequencies = band.split("[- ]");
-			/*
-			 * get '10'
-			 */
-			String startFrequency = frequencies[0];
-			String endFrequency = frequencies[1];
-			int startFreq = 0;
-			int endFreq = 0;
-			if (AstronValidator.isPositiveInt(startFrequency)){
 	
-				startFreq = AstronConverter.toInt(AstronConverter.toInteger(startFrequency));
-			}
-			if (AstronValidator.isPositiveInt(endFrequency)){
-				
-				endFreq = AstronConverter.toInt(AstronConverter.toInteger(endFrequency));
-			}
-			if (startFreq >= 10 && endFreq <= 90){
-				return "LB_10_90";
-			}else if (startFreq >= 110 && endFreq <= 190){
-				return "HB_110_190";
-			}else if (startFreq >= 210 && endFreq <= 250){
-				return "HB_210_250";
-			}else if (startFreq >= 170 && endFreq <= 230){
-				return "HB_170_230";
-			}
+	private static final String CLOCK_MODE = "<<ClockMode";
+	private static final Pattern CLOCK_PATTERN = Pattern.compile("(\\d+) MHz");
+	private static final Pattern INSTRUMENT_FILTER_PATTERN = Pattern.compile("(\\d+-\\d+) MHz");
+	
+	public static String getOTDBClockMode(String clock){
+		Matcher clockMatcher = CLOCK_PATTERN.matcher(clock);
+		clockMatcher.find();
+		return CLOCK_MODE + clockMatcher.group(1);
 
-			
-		}
-		return null;
+	}
+	public static String getOTDBAntennaArray(String antenna){
+		return antenna.substring(0,3).toUpperCase();
+	}	
+	public static String getOTDBAntennaSet(String antenna){
+		return antenna.toUpperCase().replace(' ','_');
+	}
+	public static String getOTDBBandFilter(String instrumentFilter, String antennaArray){
+		String result = antennaArray + "_";
+		Matcher filterMatcher = INSTRUMENT_FILTER_PATTERN.matcher(instrumentFilter);
+		filterMatcher.find();
+		return result + filterMatcher.group(1).replace('-', '_');
+
 	}
 
-	/**
-	 * Calculate sampling frequency
-	 * @param filter
-	 * @return sampling frequency in Hz
-	 */
-	public static Integer getOTDBSamplingFrequency(String filter) {
-		/*
-		 * check if filter is not null
-		 */
 
-		if (!AstronValidator.isBlankOrNull(filter)) {
-			/*
-			 * filter looks like 10-70 (160 MHz sampling rate) split it into:
-			 * '10-70 ' '160 MHz sampling rate)'
-			 */
-			String[] splitted = filter.split("\\(");
-			/*
-			 * get '160 MHz sampling rate)'
-			 */
-			String samplingRate = splitted[1].trim();
-			/*
-			 * split it by ' ' result is '160' 'MHz' 'sampling' 'rate)'
-			 */
-			splitted = samplingRate.split(" ");
-			/*
-			 * get '160'
-			 */
-			String samplingFrequency = splitted[0];
-			/*
-			 * if it is a positive int
-			 */
-			if (AstronValidator.isPositiveInt(samplingFrequency)) {
-				/*
-				 * convert it to an integer
-				 */
-				int number = AstronConverter.toInteger(samplingFrequency)
-						.intValue();
-				/*
-				 * convert it from MHz to Hz
-				 */
-				return new Integer(number * 1000000);
-			}
-		}
-		return null;
-	}
-	/**
-	 * Calculate frequency from mom frequency
-	 * @param frequency Mom2 frequency
-	 * @return OTDB frequency
-	 */
-	public static Integer getOTDBFrequency(String frequency){
-		Double freq = AstronConverter.toDouble(frequency);
-		return new Integer((int)freq.doubleValue()*1000000);
-	}
 	/**
 	 * Convert OTDB status from mom status
 	 * @param status Mom2 status
