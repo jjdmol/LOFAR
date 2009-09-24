@@ -124,7 +124,7 @@ class Parset(util.Parset.Parset):
 	  self.setdefault('OLAP.storageNodeList',[0] * nrSubbands)
 	else:  
 	  self.setdefault('OLAP.psetsPerStorage', int( math.ceil(1.0 * nrPsets / nrStorageNodes) ) )
-	  self.setdefault('OLAP.storageNodeList',[i//int(math.ceil(1.0 * nrSubbands//nrStorageNodes)) for i in xrange(0,nrSubbands)])
+	  self.setdefault('OLAP.storageNodeList',[i//int(math.ceil(1.0 * nrSubbands/nrStorageNodes)) for i in xrange(0,nrSubbands)])
 	
 	#print 'nrSubbands = ' + str(nrSubbands) + ', nrStorageNodes = ' + str(nrStorageNodes) + ', subbandsPerPset = ' + str(self.getSubbandsPerPset())
 
