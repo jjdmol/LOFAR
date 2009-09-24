@@ -24,6 +24,16 @@ import org.w3c.dom.NodeList;
  *
  */
 public class XMLParser {
+	private static final String STATIONS = "stations";
+
+	private static final String STATION_SET = "stationSet";
+
+	private static final String INSTRUMENT_FILTER = "instrumentFilter";
+
+	private static final String CLOCK = "clock";
+
+	private static final String ANTENNA = "antenna";
+
 	private static final String SPECIFICATION = "specification";
 
 	private static Log log = LogFactory.getLog(XMLParser.class);
@@ -37,28 +47,6 @@ public class XMLParser {
 	private static final String CURRENT_STATUS = "currentStatus";
 
 	private static final String OBSERVATION_ATTRIBUTES = "observationAttributes";
-
-	private static final String ARRAY_CONFIGURATION = "arrayConfiguration";
-
-	private static final String DEFAULT_ARRAY_CONFIGURATION = "default";
-
-	private static final String DETAILED_ARRAY_CONFIGURATION = "detailed";
-
-	private static final String STATION = "station";
-
-	private static final String SRG_CONFIGURATION = "srgConfiguration";
-
-	private static final String BAND_FILTER = "bandFilter";
-
-	private static final String SUBBAND_PLACEMENT = "subbandPlacement";
-
-	private static final String NUMBER_OF_BANDS = "numberOfBands";
-
-	private static final String START_FREQUENCY = "startFrequency";
-
-	private static final String SPACING = "spacing";
-
-	private static final String BACKEND = "backend";
 
 	private static final String CHILDREN = "children";
 
@@ -108,7 +96,7 @@ public class XMLParser {
 						parseCurrentStatus(nodeChild, lofarObservation);
 					} else if (equalIgnorePrefix(nodeChild,
 							OBSERVATION_ATTRIBUTES)) {
-						parseObservationAttributes(nodeChild, lofarObservation);
+						parseObservationAttributes((Element) nodeChild, lofarObservation);
 					} else if (equal(nodeChild, CHILDREN)) {
 						parseChildren(nodeChild, lofarObservation);
 					}
@@ -124,61 +112,46 @@ public class XMLParser {
 	 * @param node xml node that must be parsed
 	 * @param lofarObservation LofarObservation that must be filled
 	 */
-	private static void parseObservationAttributes(Node node,
+	private static void parseObservationAttributes(Element element,
 			LofarObservation lofarObservation) {
-		String filter = null;
-		String subbandPlacement = null;
-		Integer numberOfBands = null;
-		Integer startFrequency = null;
-		Integer spacing = null;
+		NodeList specificationList = element.getElementsByTagName(SPECIFICATION);
+		if (specificationList.getLength() > 0){
+			Element specification = (Element) specificationList.item(0);
+			Map<String, Element> elements = getElementMap(specification.getChildNodes());
+			if (elements.containsKey(ANTENNA)){
+				String antenna = getValue(elements.get(ANTENNA));
+				lofarObservation.setAntennaArray(Mom2OtdbConverter.getOTDBAntennaArray(antenna));
+				lofarObservation.setAntennaSet(Mom2OtdbConverter.getOTDBAntennaSet(antenna));
+			}
+			if (elements.containsKey(CLOCK)){
+				lofarObservation.setClockMode(Mom2OtdbConverter.getOTDBClockMode(getValue(elements.get(CLOCK))));
+			}
+			if (elements.containsKey(INSTRUMENT_FILTER)){
+				lofarObservation.setBandFilter(Mom2OtdbConverter.getOTDBBandFilter(getValue(elements.get(INSTRUMENT_FILTER)), lofarObservation.getAntennaArray()));
+			}
+			if (elements.containsKey(STATION_SET)){
+				lofarObservation.setStationSet(getValue(elements.get(STATION_SET)));
+			}
+			if (elements.containsKey(STATIONS)){
+				lofarObservation.setStations(getValue(elements.get(STATIONS)));
+				if (lofarObservation.getStations() != null){
+					lofarObservation.setStations("[" + lofarObservation.getStations() + "]");
+				}
+			}
+			
+		}
 
-//		for (int i = 0; i < node.getChildNodes().getLength(); i++) {
-//			Node nodeChild = node.getChildNodes().item(i);
-//			/*
-//			 * if child is an element
-//			 */
-//			if (AstronValidator.implementsInterface(Element.class, nodeChild
-//					.getClass())) {
-//				if (equal(nodeChild, ARRAY_CONFIGURATION)) {
-//					parseArrayConfiguration(nodeChild,lofarObservation);
-//				}
-//		        <specification>
-//	            <antenna>HBA Both</antenna>
-//	            <clock>160 MHz</clock>
-//	            <instrument>Interferometer</instrument>
-//	            <instrumentFilter>10-80 MHz</instrumentFilter>
-//	            <integrationInterval>4</integrationInterval>
-//	            <stationSet>Custom</stationSet>
-//	            <stations>CS302,CS303</stations>
-//	        </specification>
-//				if (equal(nodeChild, ARRAY_CONFIGURATION)) {
-//					parseArrayConfiguration(nodeChild,lofarObservation);
-//				} else if (equal(nodeChild, SRG_CONFIGURATION)) {
-//					lofarObservation.setSrgConfiguration(getValue(nodeChild));
-//				} else if (equal(nodeChild, BAND_FILTER)) {
-//					filter = getValue(nodeChild);
-//				} else if (equal(nodeChild, SUBBAND_PLACEMENT)) {
-//					subbandPlacement = getValue(nodeChild);
-//				} else if (equal(nodeChild, NUMBER_OF_BANDS)) {
-//					numberOfBands = AstronConverter
-//							.toInteger(getValue(nodeChild));
-//				} else if (equal(nodeChild, START_FREQUENCY)) {
-//					startFrequency = Mom2OtdbConverter
-//							.getOTDBFrequency(getValue(nodeChild));
-//				} else if (equal(nodeChild, SPACING)) {
-//					spacing = AstronConverter.toInteger(getValue(nodeChild));
-//				} else if (equal(nodeChild, BACKEND)) {
-//					lofarObservation.setBackend(getValue(nodeChild));
-//				}
-//			}
-//		}
-//		lofarObservation.setBandSelection(Mom2OtdbConverter
-//				.getOTDBBandSelection(filter));
-//		lofarObservation.setSamplingFrequency(Mom2OtdbConverter
-//				.getOTDBSamplingFrequency(filter));
-//		lofarObservation.setSubbands(Mom2OtdbConverter.getOTDBSubbands(
-//				lofarObservation.getSamplingFrequency(), numberOfBands,
-//				subbandPlacement, startFrequency, spacing));
+//		lofarObservation.setBandFilter("HBA_100_190");
+//		lofarObservation.setClockMode("<<Clock200");
+//		lofarObservation.setStationSet("Custom");
+//		lofarObservation.setStations("[CS302, CS010]");
+//        <antenna>HBA Both</antenna>
+//        <clock>160 MHz</clock>
+//        <instrument>Interferometer</instrument>
+//        <instrumentFilter>10-80 MHz</instrumentFilter>
+//        <integrationInterval>4</integrationInterval>
+//        <stationSet>Custom</stationSet>
+//        <stations>CS302,CS303</stations>
 	}
 
 
@@ -320,15 +293,6 @@ public class XMLParser {
 		return node.getNodeValue();
 	}
 
-//	/**
-//	 * add prefix to a string
-//	 * @param string input string
-//	 * @return string with prefix
-//	 */
-//	private static String withPrefix(String string) {
-//
-//		return PREFIX + ":" + string;
-//	}
 
 	/**
 	 * The getValue method returns the value of an node

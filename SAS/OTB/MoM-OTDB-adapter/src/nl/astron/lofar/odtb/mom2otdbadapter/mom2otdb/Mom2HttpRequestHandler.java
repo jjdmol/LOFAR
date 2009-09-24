@@ -28,17 +28,17 @@ public class Mom2HttpRequestHandler implements HttpRequestHandler {
             HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
             String content = EntityUtils.toString(entity);
 			Document document;
-			try {
-				document = convertStringToDocument(content);
-				XMLParser xmlParser = new XMLParser();
-				LofarObservation lofarObservation = xmlParser
-						.getLofarObservation(document);
-				response.setStatusCode(HttpStatus.SC_OK);				
-			} catch (Exception e) {
-				response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
-			}
+//			try {
+//				document = convertStringToDocument(content);
+//				XMLParser xmlParser = new XMLParser();
+//				LofarObservation lofarObservation = xmlParser
+//						.getLofarObservation(document);
+//				response.setStatusCode(HttpStatus.SC_OK);				
+//			} catch (Exception e) {
+//				response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
+//			}
 
-
+			response.setStatusCode(HttpStatus.SC_OK);	
             
         }else {
         	response.setStatusCode(HttpStatus.SC_BAD_REQUEST);

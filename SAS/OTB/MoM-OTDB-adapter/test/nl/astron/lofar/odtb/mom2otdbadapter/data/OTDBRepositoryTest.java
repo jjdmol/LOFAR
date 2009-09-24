@@ -16,7 +16,7 @@ public class OTDBRepositoryTest {
 
 	
 	@Test
-	public void testStore() throws RemoteException {
+	public void testStore() throws RepositoryException{
 		LofarObservation lofarObservation = new LofarObservation();
 		lofarObservation.setMom2Id(3);
 		lofarObservation.setStatus("being specified");
@@ -45,16 +45,12 @@ public class OTDBRepositoryTest {
 	}
 
 	@Test
-	public void testGetLatestChanges()  {
+	public void testGetLatestChanges() throws RepositoryException  {
 		Date startDate = new Date();
 		startDate.setMonth(4);
 		Date endDate = new Date();
-		try {
-			repository.getLatestChanges(startDate, endDate);
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		repository.getLatestChanges(startDate, endDate);
+
 	}
 
 }

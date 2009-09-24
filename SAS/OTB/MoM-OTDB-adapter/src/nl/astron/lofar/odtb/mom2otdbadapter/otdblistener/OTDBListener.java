@@ -6,6 +6,8 @@ import java.util.List;
 
 import nl.astron.lofar.odtb.mom2otdbadapter.data.LofarObservation;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.OTDBRepository;
+import nl.astron.lofar.odtb.mom2otdbadapter.data.Repository;
+import nl.astron.lofar.odtb.mom2otdbadapter.data.RepositoryException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,7 +24,7 @@ public class OTDBListener extends Thread {
 
 	private Queue queue = null;
 
-	private OTDBRepository repository = null;
+	private Repository repository = null;
 
 
 	/**
@@ -31,7 +33,7 @@ public class OTDBListener extends Thread {
 	 * @param milliseconds interval (in milliseconds) between the retrieval of the changes
 	 * @param repository OTDBRepository where this listener retrieves the changes
 	 */
-	public OTDBListener(Queue queue, int milliseconds, OTDBRepository repository) {
+	public OTDBListener(Queue queue, int milliseconds, Repository repository) {
 		this.milliseconds = milliseconds;
 		this.queue = queue;
 		this.repository = repository;
@@ -53,13 +55,11 @@ public class OTDBListener extends Thread {
 				/*
 				 * look for new changes in this time period
 				 */
-				List lofarObservations = repository.getLatestChanges(timePeriod.getStartTime(), timePeriod.getEndTime());
+				List<LofarObservation> lofarObservations = repository.getLatestChanges(timePeriod.getStartTime(), timePeriod.getEndTime());
 				/*
 				 * convert retrieved observations to tasks and add the tasks to the queue
 				 */
-				for (int i = 0; i < lofarObservations.size(); i++) {
-					LofarObservation observation = (LofarObservation) lofarObservations
-							.get(i);
+				for (LofarObservation observation: lofarObservations) {
 					Task task = convertToTask(observation);
 					if (task != null) {
 						queue.add(task);
@@ -79,6 +79,8 @@ public class OTDBListener extends Thread {
 				log.error("UnmarshalException: " + e.getMessage(), e);
 			}catch (IOException e) {
 				log.error("IOException: " + e.getMessage(), e);
+			} catch (RepositoryException e) {
+				log.error("RepositoryException: " + e.getMessage(), e);
 			}
 		}
 	}

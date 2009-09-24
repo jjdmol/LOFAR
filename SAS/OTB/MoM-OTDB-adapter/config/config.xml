@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config:config xmlns:config="http://www.astron.nl/MoM-OTDB-adapter" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.astron.nl/MoM-OTDB-adapter config.xsd ">
+	<config:mom2>
+		<config:username>config:username</config:username>
+		<config:password>config:password</config:password>
+		<config:authurl>config:authurl</config:authurl>
+		<config:mom2-import-url>config:mom2-import-url</config:mom2-import-url>
+	</config:mom2>
+	<config:stub>
+		<config:interval>3</config:interval>
+	</config:stub>
+	<config:adapter>
+		<config:keystore-location>config:keystore-location</config:keystore-location>
+		<config:keystore-password>config:keystore-password</config:keystore-password>
+		<config:trusted-keystore-location>config:trusted-keystore-location</config:trusted-keystore-location>
+		<config:trusted-keystore-password>config:trusted-keystore-password</config:trusted-keystore-password>
+	</config:adapter>
+</config:config>
