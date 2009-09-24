@@ -236,8 +236,9 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 				itsAcceptor.open();
 			}
 			if (itsAcceptor.isConnected()) {
-				// wait some time, to avoid problems with clock board
-				itsAliveTimer->setTimer(15.0);
+				// wait some time(10s for clock switching and 80s for watchdog), to avoid problems with clock board
+				itsAliveTimer->setTimer(20.0);
+				if (TS->saveTriggersToFile()) { itsSaveTimer->setTimer(10.0, 10.0); }
 				TRAN(TBBDriver::idle_state);
 			}
 		} break;
@@ -260,38 +261,155 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	LOG_DEBUG_STR ("setup_state:" << eventName(event) << "@" << port.getName());
 
-	static bool setupDone;
-	static int* retries;
-	static int* waitTimer;
-
 	switch(event.signal) {
 		case F_INIT: {
 		} break;
 
 		case F_EXIT: {
-			if (TS->saveTriggersToFile()) { itsSaveTimer->setTimer(2.0, 2.0); }
-			itsAliveTimer->setTimer(ALIVECHECKTIME);
-			if (retries)   delete [] retries;
-			if (waitTimer) delete [] waitTimer;
 		} break;
 
 		case F_ENTRY: {
 			LOG_DEBUG_STR("Entering setup_state");
-			itsSaveTimer->cancelAllTimers();
-			itsAliveTimer->cancelAllTimers();
-			retries = new int[TS->maxBoards()];
-			waitTimer = new int[TS->maxBoards()];
-
+			bool setupDone = true;
 			for (int board = 0; board < TS->maxBoards(); board++) {
-				waitTimer[board] = 0;
-				retries[board] = 0;
+
+				if (TS->getSetupWaitTime(board)) {
+					setupDone = false;
+					continue;
+				} // board still busy, next board
+
+				if ((TS->getBoardState(board) == noBoard) ||
+					 (TS->getBoardState(board) == boardReady) ||
+					 (TS->getBoardState(board) == boardError))
+				{ continue; }
+									
+				if (TS->getBoardState(board) == setImage1) {
+					TPConfigEvent config;
+					config.opcode = oc_CONFIG;
+					config.status = 0;
+					config.imagenr = 1;
+					//config.imagenr = 0;
+					itsBoard[board].send(config);
+					itsBoard[board].setTimer(TS->timeout());
+					LOG_INFO_STR("CONFIG = 1  is send to port '" << itsBoard[board].getName() << "'");
+					TS->setSetupWaitTime(board, 10);
+					TS->setSetupCmdDone(board, false);
+					setupDone = false;
+					continue;
+				}
+
+				if (TS->getBoardState(board) == clearBoard) {
+
+					TPClearEvent clear;
+					clear.opcode = oc_CLEAR;
+					clear.status = 0;
+					itsBoard[board].send(clear);
+					itsBoard[board].setTimer(TS->timeout());
+					LOG_INFO_STR("CLEAR BOARD is send to port '" << itsBoard[board].getName() << "'");
+					TS->setSetupWaitTime(board, 10);
+					TS->setSetupCmdDone(board, false);
+					setupDone = false;
+					continue;
+				}
+
+				if ((TS->getBoardState(board) == enableWatchdog) ||
+					 (TS->getBoardState(board) == boardCleared) ||
+					 (TS->getBoardState(board) == image1Set)) {
+
+					TPWatchdogEvent watchdog;
+					watchdog.opcode = oc_WATCHDOG;
+					watchdog.status = 0;
+					watchdog.mode = 1; // watchdog is set to eth port
+					//watchdog.mode = 0;
+					itsBoard[board].send(watchdog);
+					itsBoard[board].setTimer(TS->timeout());
+					LOG_INFO_STR("WATCHDOG = ETH is send to port '" << itsBoard[board].getName() << "'");
+					TS->setSetupWaitTime(board, 10);
+					TS->setSetupCmdDone(board, false);
+					setupDone = false;
+					continue;
+				}
+				
+				if ((TS->getBoardState(board) == setMode) ||
+					(TS->getBoardState(board) == watchdogEnabled)) {
+
+					TPUdpEvent udp;
+					udp.opcode = oc_UDP;
+					udp.status = 0;
+					string2mac(TS->getDstMac(board).c_str(),udp.mac);
+					setup_udpip_header( board, 
+										TBB_MODE_TRANSIENT, 
+										TS->getSrcIp(board).c_str(), 
+										TS->getDstIp(board).c_str(), 
+										udp.ip, 
+										udp.udp );
+					itsBoard[board].send(udp);
+					itsBoard[board].setTimer(TS->timeout());
+					LOG_INFO_STR("MODE = TRANSIENT is send to port '" << itsBoard[board].getName() << "'");
+					TS->setSetupWaitTime(board, 10);
+					TS->setSetupCmdDone(board, false);
+					setupDone = false;
+					continue;
+				}
+				
+				if ((TS->getBoardState(board) == enableArp) ||
+					(TS->getBoardState(board) == modeSet)) {
+
+					TPArpModeEvent arp;
+					arp.opcode = oc_ARPMODE;
+					arp.status = 0;
+					arp.mode=1; // set arp mode to auto
+					itsBoard[board].send(arp);
+					itsBoard[board].setTimer(TS->timeout());
+					LOG_INFO_STR("ARP = AUTO is send to port '" << itsBoard[board].getName() << "'");
+					TS->setSetupWaitTime(board, 10);
+					TS->setSetupCmdDone(board, false);
+					setupDone = false;
+					continue;
+				}
+				
+				if ((TS->getBoardState(board) == freeBoard) ||
+					(TS->getBoardState(board) == arpEnabled)) {
+
+					TPFreeEvent free;
+					free.opcode = oc_FREE;
+					free.status = 0;
+					free.channel = 0xFFFFFFFF;  // send channel = -1 to free all inputs
+					itsBoard[board].send(free);
+					itsBoard[board].setTimer(TS->timeout());
+					LOG_INFO_STR("FREE ALL is send to port '" << itsBoard[board].getName() << "'");
+					TS->setSetupWaitTime(board, 10);
+					TS->setSetupCmdDone(board, false);
+					setupDone = false;
+					continue;
+				}
+
+				if (TS->getBoardState(board) == boardFreed) {
+					TPAliveEvent alive;
+					alive.opcode = oc_ALIVE;
+					alive.status = 0;
+					itsBoard[board].send(alive);
+					itsBoard[board].setTimer(TS->timeout());
+					LOG_INFO_STR("ALIVE is send to port '" << itsBoard[board].getName() << "'");
+					TS->setSetupWaitTime(board, 10);
+					TS->setSetupCmdDone(board, false);
+					setupDone = false;
+					continue;
+				}
 			}
-			LOG_INFO_STR("setting up boards");
-			itsSetupTimer->setTimer(0.0);
+			if (setupDone) {
+				LOG_INFO_STR("setting up boards done");
+				for (int board = 0; board < TS->maxBoards(); board++) {
+					TS->resetSetupRetries(board);
+				}
+				TS->clearBoardSetup();
+				itsSetupTimer->cancelAllTimers();
+				TRAN(TBBDriver::idle_state);
+			}	
 		} break;
 
 		case F_CONNECTED: {
-			} break;
+		} break;
 
 		case F_DISCONNECTED: {
 			LOG_DEBUG_STR("DISCONNECTED: port ''" << port.getName() << "'");
@@ -318,146 +436,24 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 
 		case F_TIMER: {
 			if (&port == itsSetupTimer) {
-				setupDone = true;
-				for (int board = 0; board < TS->maxBoards(); board++) {
-
-					if (waitTimer[board]) { waitTimer[board]--; }
-					if (waitTimer[board]) {
-						setupDone = false;
-						continue;
-					} // board still busy, next board
-
-					if ((TS->getBoardState(board) == noBoard) ||
-						 (TS->getBoardState(board) == boardReady) ||
-						 (TS->getBoardState(board) == boardError))
-					{ continue; }
-
-					if (TS->getBoardState(board) == setImage1) {
-						TPConfigEvent config;
-						config.opcode = oc_CONFIG;
-						config.status = 0;
-						config.imagenr = 1;
-						//config.imagenr = 0;
-						itsBoard[board].send(config);
-						itsBoard[board].setTimer(20.0);
-						LOG_INFO_STR("CONFIG = 1  is send to port '" << itsBoard[board].getName() << "'");
-						waitTimer[board] = 22;
-						setupDone = false;
-						continue;
-					}
-
-					if (TS->getBoardState(board) == clearBoard) {
-
-						TPClearEvent clear;
-						clear.opcode = oc_CLEAR;
-						clear.status = 0;
-						itsBoard[board].send(clear);
-						itsBoard[board].setTimer(10.0);
-						LOG_INFO_STR("CLEAR BOARD is send to port '" << itsBoard[board].getName() << "'");
-						waitTimer[board] = 12;
-						setupDone = false;
-						continue;
-					}
-
-					if ((TS->getBoardState(board) == enableWatchdog) ||
-						 (TS->getBoardState(board) == boardCleared) ||
-						 (TS->getBoardState(board) == image1Set)) {
-
-						TPWatchdogEvent watchdog;
-						watchdog.opcode = oc_WATCHDOG;
-						watchdog.status = 0;
-						watchdog.mode = 1; // watchdog is set to eth port
-						//watchdog.mode = 0;
-						itsBoard[board].send(watchdog);
-						itsBoard[board].setTimer(10.0);
-						LOG_INFO_STR("WATCHDOG = ETH is send to port '" << itsBoard[board].getName() << "'");
-						waitTimer[board] = 12;
-						setupDone = false;
-						continue;
-					}
-					
-					if ((TS->getBoardState(board) == setMode) ||
-						(TS->getBoardState(board) == watchdogEnabled)) {
-
-						TPUdpEvent udp;
-						udp.opcode = oc_UDP;
-						udp.status = 0;
-						string2mac(TS->getDstMac(board).c_str(),udp.mac);
-						setup_udpip_header( board, 
-											TBB_MODE_TRANSIENT, 
-											TS->getSrcIp(board).c_str(), 
-											TS->getDstIp(board).c_str(), 
-											udp.ip, 
-											udp.udp );
-						itsBoard[board].send(udp);
-						itsBoard[board].setTimer(10.0);
-						LOG_INFO_STR("MODE = TRANSIENT is send to port '" << itsBoard[board].getName() << "'");
-						waitTimer[board] = 12;
-						setupDone = false;
-						continue;
-					}
-					
-					if ((TS->getBoardState(board) == enableArp) ||
-						(TS->getBoardState(board) == modeSet)) {
-
-						TPArpModeEvent arp;
-						arp.opcode = oc_ARPMODE;
-						arp.status = 0;
-						arp.mode=1; // set arp mode to auto
-						itsBoard[board].send(arp);
-						itsBoard[board].setTimer(10.0);
-						LOG_INFO_STR("ARP = AUTO is send to port '" << itsBoard[board].getName() << "'");
-						waitTimer[board] = 12;
-						setupDone = false;
-						continue;
-					}
-					
-					if ((TS->getBoardState(board) == freeBoard) ||
-						(TS->getBoardState(board) == arpEnabled)) {
-
-						TPFreeEvent free;
-						free.opcode = oc_FREE;
-						free.status = 0;
-						free.channel = 0xFFFFFFFF;  // send channel = -1 to free all inputs
-						itsBoard[board].send(free);
-						itsBoard[board].setTimer(10.0);
-						LOG_INFO_STR("FREE ALL is send to port '" << itsBoard[board].getName() << "'");
-						waitTimer[board] = 12;
-						setupDone = false;
-						continue;
-					}
-
-					if (TS->getBoardState(board) == boardFreed) {
-						TPAliveEvent alive;
-						alive.opcode = oc_ALIVE;
-						alive.status = 0;
-						itsBoard[board].send(alive);
-						itsBoard[board].setTimer(10.0);
-						LOG_INFO_STR("ALIVE is send to port '" << itsBoard[board].getName() << "'");
-						waitTimer[board] = 12;
-						setupDone = false;
-						continue;
-					}
-				}
-
-				if (!setupDone) {
-					itsSetupTimer->setTimer(1.0); // run this every second
-				}
-
-			} else { // no setup-timer event, must be a board time-out
+			}
+			else if (&port == itsSaveTimer) {
+				itsMsgHandler->saveTriggerMessage();
+			}
+			else if (&port == itsAliveTimer) {
+				CheckAlive(event, port);
+			} 
+			else {
+				// must be a board time-out
 				int board = TS->port2Board(&port); // get board nr
-				waitTimer[board] = 0;
-				retries[board]++;
-				if (retries[board] >= TS->maxRetries()) {
+				TS->setSetupWaitTime(board, 0);
+				TS->incSetupRetries(board);
+				TS->setSetupCmdDone(board, false);
+				
+				if (TS->getSetupRetries(board) >= TS->maxRetries()) {
 					TS->resetActiveBoard(board);
 					TS->setBoardState(board,boardError);
 				}
-			}
-
-			if (setupDone) {
-				LOG_INFO_STR("setting up boards done");
-				TS->clearBoardSetup();
-				TRAN(TBBDriver::idle_state);
 			}
 		} break;
 
@@ -468,23 +464,26 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 		case TP_CONFIG_ACK: {
 			int board = TS->port2Board(&port); // get board nr
 			itsBoard[board].cancelAllTimers();
-			TS->setBoardState(board,image1Set);
+			TS->setBoardState(board, image1Set);
 			TS->setImageNr(board, 1);
-			waitTimer[board] = 10;
+			TS->setSetupWaitTime(board, 15);
+			TS->setSetupCmdDone(board, true);
 		} break;
 
 		case TP_CLEAR_ACK: {
 			int board = TS->port2Board(&port); // get board nr
 			itsBoard[board].cancelAllTimers();
 			TS->setBoardState(board,boardCleared);
-			waitTimer[board] = 4;
+			TS->setSetupWaitTime(board, 4);
+			TS->setSetupCmdDone(board, true);
 		} break;
 
 		case TP_WATCHDOG_ACK: {
 			int board = TS->port2Board(&port); // get board nr
 			itsBoard[board].cancelAllTimers();
 			TS->setBoardState(board, watchdogEnabled);
-			waitTimer[board] = 0;
+			TS->setSetupWaitTime(board, 0);
+			TS->setSetupCmdDone(board, true);
 		} break;
 
 		case TP_UDP_ACK: {
@@ -494,21 +493,24 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 			for (int i = 0; i < TS->maxChannels(); i++) {
 				TS->setChOperatingMode(i,static_cast<uint8>(TBB_MODE_TRANSIENT));
 			}
-			waitTimer[board] = 0;
+			TS->setSetupWaitTime(board, 0);
+			TS->setSetupCmdDone(board, true);
 		} break;
 
 		case TP_ARP_MODE_ACK: {
 			int board = TS->port2Board(&port); // get board nr
 			itsBoard[board].cancelAllTimers();
 			TS->setBoardState(board,arpEnabled);
-			waitTimer[board] = 0;
+			TS->setSetupWaitTime(board, 0);
+			TS->setSetupCmdDone(board, true);
 		} break;
 
 		case TP_FREE_ACK: {
 			int board = TS->port2Board(&port); // get board nr
 			itsBoard[board].cancelAllTimers();
 			TS->setBoardState(board,boardFreed);
-			waitTimer[board] = 0;
+			TS->setSetupWaitTime(board, 0);
+			TS->setSetupCmdDone(board, true);
 		} break;
 
 		case TP_ALIVE_ACK: {
@@ -516,7 +518,8 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 			itsBoard[board].cancelAllTimers();
 			TS->setBoardState(board,boardReady);
 			LOG_INFO_STR("'" << itsBoard[board].getName() << "' is Ready");
-			waitTimer[board] = 0;
+			TS->setSetupWaitTime(board, 0);
+			TS->setSetupCmdDone(board, true);
 		} break;
 
 		case TP_TRIGGER: {
@@ -536,7 +539,13 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 			}
 		} break;
 	}
-
+	
+	bool done = true;
+	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		if (TS->isSetupCmdDone(boardnr) == false) { done = false; }
+	}
+	if (done) { TRAN(TBBDriver::idle_state); }
+		
 	return(status);
 }
 
@@ -560,20 +569,16 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		case F_ENTRY: {
 			LOG_DEBUG_STR("Entering idle_state");
 			busy = false;
-			// if board setup needed
-			if ((itsAliveCheck == false) && TS->boardSetupNeeded()) {
-				LOG_DEBUG_STR("need boards setup");
-				TRAN(TBBDriver::setup_state);
-				break;
-			}
-			if (itsClientList.empty()) {
-				itsTbbQueue->clear();
-				LOG_DEBUG_STR("Client list is empty, the queue is cleared");
-			}
 
 		// look if there is an Tbb command in queue
 			if (!itsTbbQueue->empty()) {
 				LOG_DEBUG_STR("The queue is NOT empty");
+				
+				if (itsClientList.empty()) {
+					itsTbbQueue->clear();
+					LOG_DEBUG_STR("Client list is empty, the queue is cleared");
+					break;
+				}
 
 				uint8* bufptr = new uint8[sizeof(GCFEvent) + itsTbbQueue->front()->length];
 
@@ -586,7 +591,6 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 				if (SetTbbCommand(e->signal)) {
 					busy = true;
 					status = itsCmdHandler->doEvent(*e,*itsTbbQueue->front()->port);
-			 // delete e;
 
 					TbbEvent* tmp = itsTbbQueue->front();
 					itsTbbQueue->pop_front();
@@ -635,18 +639,15 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		} break;
 
 		case F_TIMER: {
-			if (&port == itsSaveTimer) {
+			if (&port == itsSetupTimer) {
+				LOG_DEBUG_STR("need boards setup");
+				TRAN(TBBDriver::setup_state);
+			}
+			else if (&port == itsSaveTimer) {
 				itsMsgHandler->saveTriggerMessage();
-				break;
 			}
-
-			if (&port == itsAliveTimer) {
+			else if (&port == itsAliveTimer) {
 				CheckAlive(event, port);
-			}
-			// if new boards detected set them up
-			if ((itsAliveCheck == false) && TS->boardSetupNeeded()) {
-				 LOG_DEBUG_STR("need boards setup");
-				 TRAN(TBBDriver::setup_state);
 			}
 		} break;
 
@@ -776,6 +777,8 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		case F_TIMER: {
 			if (&port == itsSaveTimer) {
 				itsMsgHandler->saveTriggerMessage();
+			}
+			else if (&port == itsSetupTimer) {
 			}
 			else if (&port == itsAliveTimer) {
 				CheckAlive(event, port);
@@ -917,7 +920,8 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 	int32 boardnr;
 	static uint32 activeboards;
 	static uint32 sendmask;
-
+	static bool boardreset;
+	
 	if (!itsAliveCheck) {
 		TPAliveEvent tp_event;
 		tp_event.opcode = oc_ALIVE;
@@ -928,23 +932,38 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 		boardnr      = 0;
 		sendmask     = 0;
 		activeboards = 0;
+		boardreset   = false;
 
 		// mask all boards to check
 		for(int nr = 0; nr < TS->maxBoards(); nr++) {
-
 			// if board is busy, don't check alive
 			if ((itsCmd != 0) && (itsCmd->getBoardNr() == nr)) {
-				LOG_INFO_STR("busy board = " << nr);
 				sendmask |= (1 << nr);
 				activeboards |= (1 << nr);
 			}
-			else {
+			// check only boards with the listed states
+			else if ((TS->getBoardState(nr) == noBoard) ||
+					 (TS->getBoardState(nr) == boardReady) ||
+					 (TS->getBoardState(nr) == boardError)) {
 				itsBoard[nr].send(tp_event);
 				sendmask |= (1 << nr);
 			}
+			// not busy or active state, must be in service
+			else {
+				sendmask |= (1 << nr);
+				activeboards |= (1 << nr);
+			}
 		}
+		
+		// if all boards busy or in service, end check and shedule new one
+		if (activeboards == sendmask) {
+			itsAliveTimer->setTimer(ALIVECHECKTIME);
+			itsAliveCheck = false;
+			return(!itsAliveCheck);
+		}
+		
 		// one time-out timer for al events
-		itsAliveTimer->setTimer(5.0);
+		itsAliveTimer->setTimer(10.0);
 	}
 	else {
 		if (event.signal == TP_ALIVE_ACK) {
@@ -965,6 +984,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 						TS->setFreeToReset(boardnr, true);
 						TS->setBoardState(boardnr,enableWatchdog);
 					}
+					boardreset = true;
 				}
 
 				if (ack.resetflag == 0) {   // board reset
@@ -1008,6 +1028,11 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 				}
 				itsMsgHandler->sendBoardChange(TS->activeBoardsMask());
 				LOG_INFO_STR("Available TBB boards changed:" << boardstr);
+			}
+			
+			if ((activeboards != TS->activeBoardsMask()) || boardreset) {
+				itsSetupTimer->cancelAllTimers();
+				itsSetupTimer->setTimer(1.0, 1.0);
 			}
 
 			LOG_DEBUG_STR("Active TBB boards check");

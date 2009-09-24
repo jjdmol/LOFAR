@@ -27,6 +27,7 @@
 #include "TP_Protocol.ph"
 #include <GCF/TM/GCF_Control.h>
 #include <Common/LofarTypes.h>
+#include <time.h>
 
 
 
@@ -34,7 +35,7 @@ namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	namespace TBB {
 
-static const int DRIVER_VERSION = 215; // 2.15 
+static const int DRIVER_VERSION = 216; // 2.16 
 
 enum BoardStateT {noBoard,
 				  setImage1, image1Set,
@@ -72,7 +73,10 @@ struct ChannelInfo
 struct BoardInfo
 {
 	GCFPortInterface* port;
-	BoardStateT boardState; 
+	BoardStateT boardState;
+	time_t setupWaitTime;
+	int32  setupRetries;
+	bool   setupCmdDone;
 	uint32 memorySize;
 	uint32 imageNr;
 	bool   freeToReset;
@@ -141,6 +145,17 @@ public:
 	
 	BoardStateT getBoardState(int32 boardnr);
 	void setBoardState(int32 boardnr, BoardStateT boardstate);
+	
+	int32 getSetupWaitTime(int32 boardnr);
+	void setSetupWaitTime(int32 boardnr, int32 waittime);
+	
+	int32 getSetupRetries(int32 boardnr);
+	void resetSetupRetries(int32 boardnr);
+	void incSetupRetries(int32 boardnr);
+	
+	bool isSetupCmdDone(int32 boardnr);
+	void setSetupCmdDone(int32 boardnr, bool state);
+	
 	bool boardSetupNeeded();
 	void clearBoardSetup();
 	void setActiveBoardsMask (uint32 activeboardsmask);
@@ -174,7 +189,7 @@ public:
 	void setMemorySize(int32 boardnr,uint32 pages);
 	
 	uint32 getImageNr(int32 boardnr);
-	void setImageNr(int32 boardnr,uint32 image);
+	void setImageNr(int32 boardnr, uint32 image);
 	bool getFreeToReset(int32 boardnr);
 	void setFreeToReset(int32 boardnr, bool reset);
 	
@@ -242,6 +257,19 @@ inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ return (*itsBoa
 inline	BoardStateT TbbSettings::getBoardState(int32 boardnr) { return (itsBoardInfo[boardnr].boardState); }
 inline  bool TbbSettings::boardSetupNeeded() { return (itsBoardSetup); }
 inline  void TbbSettings::clearBoardSetup() { itsBoardSetup = false; }
+
+inline  int32 TbbSettings::getSetupWaitTime(int32 boardnr) { 
+			if (time(NULL) >= itsBoardInfo[boardnr].setupWaitTime) return(0);
+			return(static_cast<int32>(itsBoardInfo[boardnr].setupWaitTime - time(NULL)));
+		}
+inline  void TbbSettings::setSetupWaitTime(int32 boardnr, int32 waittime) { itsBoardInfo[boardnr].setupWaitTime = time(NULL) + waittime; }
+	
+inline  int32 TbbSettings::getSetupRetries(int32 boardnr) { return(itsBoardInfo[boardnr].setupRetries); }
+inline  void TbbSettings::resetSetupRetries(int32 boardnr) { itsBoardInfo[boardnr].setupRetries = 0; }
+inline  void TbbSettings::incSetupRetries(int32 boardnr) { ++itsBoardInfo[boardnr].setupRetries; }
+
+inline  bool TbbSettings::isSetupCmdDone(int32 boardnr) { return(itsBoardInfo[boardnr].setupCmdDone); }
+inline  void TbbSettings::setSetupCmdDone(int32 boardnr, bool state) { itsBoardInfo[boardnr].setupCmdDone = state; }
 
 //---- inline functions for channel information ------------
 inline	uint32 TbbSettings::getChStatus(int32 channelnr) { return (itsChannelInfo[channelnr].Status); }

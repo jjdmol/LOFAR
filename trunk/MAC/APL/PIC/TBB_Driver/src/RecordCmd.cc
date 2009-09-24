@@ -65,7 +65,7 @@ void RecordCmd::saveTbbEvent(GCFEvent& event)
 	for (int i = 0; i < TS->maxChannels(); i++) {
 		TS->convertCh2Rcu(i,&rcu);
 		if (tbb_event.rcu_mask.test(rcu) == true) {
-			if (TS->getChState(i) == 'A') {
+			if ((TS->getChState(i) == 'A') || (TS->getChState(i) == 'S')) {
 				setChannel(rcu);
 			}
 		}

@@ -108,7 +108,7 @@ void StatusCmd::saveTpAckEvent(GCFEvent& event)
 			itsTmp1[getBoardNr()] = tp_ack.Tmp1;
 			itsTmp2[getBoardNr()] = tp_ack.Tmp2;
 			itsTmp3[getBoardNr()] = tp_ack.Tmp3;
-			itsImage[getBoardNr()] = (tp_ack.info[5] & 0xf);
+			itsImage[getBoardNr()] = TS->getImageNr(getBoardNr());
 			itsWatchDogMode[getBoardNr()] = ((tp_ack.info[5] >> 16) & 0xf);
 			itsPgood[getBoardNr()] = tp_ack.info[0];
 				
