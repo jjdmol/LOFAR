@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.rmi.UnmarshalException;
 import java.util.List;
 
+import nl.astron.lofar.odtb.mom2otdbadapter.config.Configuration;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.LofarObservation;
-import nl.astron.lofar.odtb.mom2otdbadapter.data.OTDBRepository;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.Repository;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.RepositoryException;
 
@@ -18,9 +18,13 @@ import org.apache.commons.logging.LogFactory;
  *
  */
 public class OTDBListener extends Thread {
+	private static final int MILLISECONDS = 1000;
+
 	private Log log = LogFactory.getLog(this.getClass());
 
 	private int milliseconds = 1000;
+	
+	private Configuration configuration;
 
 	private Queue queue = null;
 
@@ -33,8 +37,9 @@ public class OTDBListener extends Thread {
 	 * @param milliseconds interval (in milliseconds) between the retrieval of the changes
 	 * @param repository OTDBRepository where this listener retrieves the changes
 	 */
-	public OTDBListener(Queue queue, int milliseconds, Repository repository) {
-		this.milliseconds = milliseconds;
+	public OTDBListener(Queue queue, Configuration configuration, Repository repository) {
+		this.milliseconds = configuration.getRepository().getInterval() * MILLISECONDS;
+		this.configuration = configuration;
 		this.queue = queue;
 		this.repository = repository;
 	}
@@ -93,8 +98,7 @@ public class OTDBListener extends Thread {
 	protected Task convertToTask(LofarObservation lofarObservation) {
 		try {
 			Task task = new Task();
-			XMLGenerator xmlGenerator = new XMLGenerator();
-			String xml = xmlGenerator.getObservationXml(lofarObservation);
+			String xml = XMLGenerator.getObservationXml(lofarObservation, configuration.getMom2());
 			task.setXml(xml);
 			task.setMom2Id(lofarObservation.getMom2Id() + "");
 			task.setTime(lofarObservation.getTimeStamp());

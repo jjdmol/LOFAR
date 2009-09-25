@@ -6,11 +6,13 @@
 		<config:password>config:password</config:password>
 		<config:authurl>config:authurl</config:authurl>
 		<config:mom2-import-url>config:mom2-import-url</config:mom2-import-url>
+		<config:mom2-schemas-url>dsfs</config:mom2-schemas-url>
 	</config:mom2>
 	<config:stub>
 		<config:interval>3</config:interval>
 	</config:stub>
 	<config:adapter>
+		<config:httpport>30</config:httpport>
 		<config:keystore-location>config:keystore-location</config:keystore-location>
 		<config:keystore-password>config:keystore-password</config:keystore-password>
 		<config:trusted-keystore-location>config:trusted-keystore-location</config:trusted-keystore-location>

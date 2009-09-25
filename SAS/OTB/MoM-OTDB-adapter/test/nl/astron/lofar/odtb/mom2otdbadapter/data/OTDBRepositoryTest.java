@@ -1,6 +1,5 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.data;
 
-import java.rmi.RemoteException;
 import java.util.Date;
 
 import org.junit.Before;
@@ -26,18 +25,18 @@ public class OTDBRepositoryTest {
 		lofarObservation.setClockMode("<<Clock200");
 		lofarObservation.setStationSet("Custom");
 		lofarObservation.setStations("[CS302, CS010]");
-		Beam beam = new Beam();
-		beam.setRa("85.650575");
-		beam.setDec("49.852009");
+		Beam beam = new Beam(lofarObservation);
+		beam.setRa(85.650575);
+		beam.setDec(49.852009);
 		beam.setEquinox("J2000");
-		beam.setRequestedDuration("423");
+		beam.setDuration(423);
 		beam.setSubbands("[123,124]");
 		lofarObservation.getBeams().add(beam);
-		beam = new Beam();
-		beam.setRa("85.650575");
-		beam.setDec("49.852009");
+		beam = new Beam(lofarObservation);
+		beam.setRa(85.650575);
+		beam.setDec(49.852009);
 		beam.setEquinox("J2000");
-		beam.setRequestedDuration("42");
+		beam.setDuration(42);
 		beam.setSubbands("[1,2,3,4]");
 		lofarObservation.getBeams().add(beam);
 		repository.store(lofarObservation);
