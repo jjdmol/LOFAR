@@ -1,22 +1,22 @@
 //# ConvertParset.cc: Convert a ParSet file from SAS to cimager format
 //#
 //# Copyright (C) 2008
-//# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//# ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
-//# This program is free software; you can redistribute it and/or modify
-//# it under the terms of the GNU General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
 //# (at your option) any later version.
 //#
-//# This program is distributed in the hope that it will be useful,
+//# The LOFAR software suite is distributed in the hope that it will be useful,
 //# but WITHOUT ANY WARRANTY; without even the implied warranty of
 //# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //# GNU General Public License for more details.
 //#
-//# You should have received a copy of the GNU General Public License
-//# along with this program; if not, write to the Free Software
-//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
 
@@ -78,7 +78,8 @@ namespace LOFAR {
     ParameterSet in (parset);
     // The output name is the base MS name minus the possible extension
     // and directory.
-    string outname = in.getString ("dataset");
+    string inname = in.getString ("dataset");
+    string outname = inname;
     string::size_type pos = outname.rfind ('.');
     if (pos != string::npos) {
       outname = outname.substr (0, pos);
@@ -102,7 +103,7 @@ namespace LOFAR {
       ParameterSet soin = in.makeSubset ("Solver.");
       in.subtractSubset ("Solver.");
       // Get the solver type (dirty, clean).
-      string type = soin.getString ("type");
+      string type = soin.getString ("type", "dirty");
       soin.remove ("type");
       out.add ("Cimager.solver", type);
       outname += '_' + type;
@@ -113,12 +114,21 @@ namespace LOFAR {
       ParameterSet imin = in.makeSubset ("Images.");
       in.subtractSubset ("Images.");
       // Combine ra,dec,type into a single string.
-      string angle1    = imin.getString ("ra");
-      string angle2    = imin.getString ("dec");
-      string dirType   = imin.getString ("directionType");
+      // Get it as given; otherwise use field direction from MS.
+      string angle1    = imin.getString ("ra", string());
+      string angle2    = imin.getString ("dec", string());
+      string dirType   = imin.getString ("directionType", "J2000");
+      if (angle1.empty() || angle2.empty()) {
+        angle1 = in.getString ("msDirRa", string());
+        angle2 = in.getString ("msDirDec", string());
+        dirType = in.getString ("msDirType", string());
+      }
       imin.remove ("ra");
       imin.remove ("dec");
       imin.remove ("directionType");
+      in.remove ("msDirRa");
+      in.remove ("msDirDec");
+      in.remove ("msDirType");
       vector<string> dirVec(3);
       dirVec[0] = angle1;
       dirVec[1] = angle2;
@@ -133,7 +143,7 @@ namespace LOFAR {
       vector<string> stokes   = imin.getStringVector ("stokes",
 						      vector<string>(1,"I"));
       int nfacet = imin.getInt ("nfacets", 1);
-      string nfacets = imin.getString ("nfacets", "");
+      string nfacets = imin.getString ("nfacets", string());
       string facetstep = imin.getString ("facetstep", "1");
       imin.remove ("nchan");
       imin.remove ("frequency");
@@ -150,26 +160,25 @@ namespace LOFAR {
       ostringstream cellSizeStr;
       cellSizeStr << cellSize;
       out.add ("Cimager.Images.cellsize", cellSizeStr.str());
-      // Form the image names.
-      vector<string> names(stokes.size());
-      for (unsigned i=0; i<stokes.size(); ++i) {
-	stokes[i] = toLower(stokes[i]);
-	names[i]  = "image." + stokes[i] + '.' + outname;
+      out.add ("Cimager.Images.Names", "image." + outname);
+      string prefix = "Cimager.Images.image." + outname;
+      out.add (prefix + ".frequency", frequency);
+      out.add (prefix + ".nchan", nchan);
+      out.add (prefix + ".direction", dirVecStr.str());
+      if (nfacet > 1) {
+        out.add (prefix + ".nfacets", nfacets);
+        out.add (prefix + ".facetstep", facetstep);
       }
-      ostringstream namesStr;
-      namesStr << names;
-      out.add ("Cimager.Images.Names",    namesStr.str());
-      // Create individual keywords for freq, nchan, and direction.
+      // Form the stokes string (separated by blanks).
+      string stokesStr("'");
       for (unsigned i=0; i<stokes.size(); ++i) {
-	string name = "Cimager.Images.image." + stokes[i] + '.' + outname + '.';
-	out.add (name+"frequency", frequency);
-	out.add (name+"nchan",     nchan);
-	out.add (name+"direction", dirVecStr.str());
-        if (nfacet > 1) {
-          out.add (name+"nfacets", nfacets);
-          out.add (name+"facetstep", facetstep);
+	stokes[i] = toUpper(stokes[i]);
+        if (i != 0) {
+          stokesStr += ' ';
         }
+        stokesStr += stokes[i];
       }
+      out.add (prefix + ".polarisation", stokesStr+"'");
       // Convert the remaining keywords.
       convert (out, imin, emptyMap, emptyMap, "Cimager.Images.");
     }
