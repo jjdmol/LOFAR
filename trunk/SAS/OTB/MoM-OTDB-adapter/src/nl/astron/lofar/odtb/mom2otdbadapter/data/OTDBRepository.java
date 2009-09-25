@@ -109,11 +109,11 @@ public class OTDBRepository implements Repository {
 						if ("directionTypes".equals(beamChild.name)) {
 							fillNode(beamChild, beam.getEquinox());
 						} else if ("angle1".equals(beamChild.name)) {
-							fillNode(beamChild, beam.getRa());
+							fillNode(beamChild, AstronConverter.toString(beam.getRa()));
 						} else if ("angle2".equals(beamChild.name)) {
-							fillNode(beamChild, beam.getDec());
+							fillNode(beamChild, AstronConverter.toString(beam.getDec()));
 						} else if ("angleTimes".equals(beamChild.name)) {
-							fillNode(beamChild, beam.getRequestedDuration());
+							fillNode(beamChild, AstronConverter.toString(beam.getDuration()));
 						} else if ("subbandList".equals(beamChild.name)) {
 							fillNode(beamChild, beam.getSubbands());
 						}
@@ -246,7 +246,7 @@ public class OTDBRepository implements Repository {
 					LofarObservation observation = new LofarObservation();
 					observation.setMom2Id(state.momID);
 					observation.setStatus(status);
-					observation.setTimeStamp(state.timestamp);
+					//observation.setTimeStamp(state.timestamp);
 					jOTDBnode observationNode = tm.getTopNode(state.treeID);
 					jOTDBnode measurementsNode = getNode(observationNode, "measurementMom2Ids");
 					// observation.setMeasurementMom2Ids(measurementsNode.limits);

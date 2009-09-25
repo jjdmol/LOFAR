@@ -1,5 +1,7 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.otdblistener;
 
+import java.util.Date;
+
 /**
  * Task
  * @author Bastiaan Verhoef
@@ -18,7 +20,7 @@ public class Task {
 	/**
 	 * Timestamp of the status change of the lofarobservation
 	 */
-	protected String time = null;
+	protected Date time = null;
 	
 	/**
 	 * Name of the file that belongs to this task
@@ -40,11 +42,11 @@ public class Task {
 		this.mom2Id = mom2Id;
 	}
 
-	public String getTime() {
+	public Date getTime() {
 		return time;
 	}
 
-	public void setTime(String time) {
+	public void setTime(Date time) {
 		this.time = time;
 	}
 

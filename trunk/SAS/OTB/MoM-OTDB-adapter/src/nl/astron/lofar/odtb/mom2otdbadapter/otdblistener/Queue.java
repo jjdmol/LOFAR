@@ -215,9 +215,8 @@ public class Queue {
 	 */
 	protected void storeTask(Task task) throws FileNotFoundException,
 			IOException {
-		Date date = AstronConverter.toDate(task.getTime(), OTDB_TIME_FORMAT);
 		String fileName = taskDir + File.separator
-				+ AstronConverter.toDateString(date, FILE_DATE_TIME_FORMAT)
+				+ AstronConverter.toDateString(task.getTime(), FILE_DATE_TIME_FORMAT)
 				+ "mom2id_" + task.getMom2Id() + ".xml";
 		task.setFileName(fileName);
 		File file = new File(fileName);

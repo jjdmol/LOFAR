@@ -9,19 +9,20 @@ public class Beam implements Serializable {
 	 */
 	private static final long serialVersionUID = -2820149572789270759L;
 
+	private LofarObservation parentObservation; 
 	
-	private int mom2Id = -1;
+	private Integer mom2Id ;
 	
 	/**
 	 * Angle 1 (mom2 -> otdb)
 	 * e.g. [6.123662, 5.233748, 1459568]
 	 */
-	private String ra = null;
+	private Double ra = null;
 	/**
 	 * Angle 2 (mom2 -> otdb)
 	 * e.g. [1.026719, 0,711018, 0384089]
 	 */
-	private String dec = null;
+	private Double dec = null;
 
 	/**
 	 * Direction type (mom2 -> otdb)
@@ -30,9 +31,9 @@ public class Beam implements Serializable {
 	private String equinox;
 	
 	/**
-	 * Requested duration
+	 * duration
 	 */
-	private String requestedDuration;
+	private Integer duration;
 	
 	/**
 	 * subbands that must be used (mom2 -> otdb)
@@ -40,30 +41,31 @@ public class Beam implements Serializable {
 	 */
 	private String subbands;
 
-	public int getMom2Id() {
+	public Beam(LofarObservation observation){
+		this.parentObservation = observation;
+	}
+	
+	public Integer getMom2Id() {
 		return mom2Id;
 	}
 
-	public void setMom2Id(int mom2Id) {
+	public void setMom2Id(Integer mom2Id) {
 		this.mom2Id = mom2Id;
 	}
 
-
-
-
-	public String getRa() {
+	public Double getRa() {
 		return ra;
 	}
 
-	public void setRa(String ra) {
+	public void setRa(Double ra) {
 		this.ra = ra;
 	}
 
-	public String getDec() {
+	public Double getDec() {
 		return dec;
 	}
 
-	public void setDec(String dec) {
+	public void setDec(Double dec) {
 		this.dec = dec;
 	}
 
@@ -75,12 +77,12 @@ public class Beam implements Serializable {
 		this.equinox = equinox;
 	}
 
-	public String getRequestedDuration() {
-		return requestedDuration;
+	public Integer getDuration() {
+		return duration;
 	}
 
-	public void setRequestedDuration(String requestedDuration) {
-		this.requestedDuration = requestedDuration;
+	public void setDuration(Integer duration) {
+		this.duration = duration;
 	}
 
 	public String getSubbands() {
@@ -89,6 +91,10 @@ public class Beam implements Serializable {
 
 	public void setSubbands(String subbands) {
 		this.subbands = subbands;
+	}
+
+	public LofarObservation getParentObservation() {
+		return parentObservation;
 	}
 	
 	
