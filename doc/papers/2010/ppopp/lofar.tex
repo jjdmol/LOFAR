@@ -14,28 +14,28 @@
 
 \title{The LOFAR Correlator: \\ Implementation and Performance Analysis}
 
-%% \numberofauthors{4}
+\numberofauthors{4}
 
-%% \def\sharedaffiliation{%
-%% \end{tabular}
-%% \begin{tabular}{c}}
+\def\sharedaffiliation{%
+\end{tabular}
+\begin{tabular}{c}}
 
-%% \author{
-%% \alignauthor John W. Romein\\
-%% \email{romein@astron.nl}
-%% \alignauthor P. Chris Broekema\\
-%% \email{broekema@astron.nl}
-%% \alignauthor Jan David Mol\\
-%% \email{mol@astron.nl}
-%% \and
-%% \alignauthor \hspace{1cm} \\
-%% \alignauthor Rob V. van Nieuwpoort\\
-%% \email{nieuwpoort@astron.nl}
-%% \alignauthor \hspace{1cm} \\
-%% \sharedaffiliation
-%% \affaddr{ASTRON (Netherlands Institute for Radio Astronomy)}\\
-%% \affaddr{Oude Hoogeveensedijk 4, 7991\ PD\ \ Dwingeloo, The Netherlands}\\
-%% }
+\author{
+\alignauthor John W. Romein\\
+\email{romein@astron.nl}
+\alignauthor P. Chris Broekema\\
+\email{broekema@astron.nl}
+\alignauthor Jan David Mol\\
+\email{mol@astron.nl}
+\and
+\alignauthor \hspace{1cm} \\
+\alignauthor Rob V. van Nieuwpoort\\
+\email{nieuwpoort@astron.nl}
+\alignauthor \hspace{1cm} \\
+\sharedaffiliation
+\affaddr{ASTRON (Netherlands Institute for Radio Astronomy)}\\
+\affaddr{Oude Hoogeveensedijk 4, 7991\ PD\ \ Dwingeloo, The Netherlands}\\
+}
 
 \date{}
 
@@ -251,7 +251,7 @@ and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
 \section{The LOFAR Telescope}
 \label{sec:overview}
 
-LOFAR is driven by the astronomical community, that needs a new instrument
+LOFAR is driven by the astronomical community, which needs a new instrument
 to study an extensive amount of new science cases.
 Five key science projects have been defined.
 First, we expect to see the \emph{Epoch of Reionization\/} (EoR), the time
@@ -822,7 +822,7 @@ narrower frequency channels.  In this step, we trade time
 resolution for frequency resolution: we split a subband into $N$
 separate channels, but with an $N$-times lower sampling rate per channel.  With
 the higher frequency resolution, we can remove RFI artifacts with a
-higher accuracy later later in the pipeline.
+higher accuracy later in the pipeline.
 Typically, a 195~KHz subband is split into 256~channels of 763~Hz, but the
 filter supports any reasonable power-of-two number of channels for different
 observation modes. 
@@ -857,13 +857,17 @@ implementation for the 256-point FFT.
 
 \begin{figure}[ht]
 \begin{minipage}[b]{4cm}
+\begin{center}
 \includegraphics[width=3cm]{delay.pdf}
+\end{center}
 \caption{The left antenna receives the wave later.}
 \label{fig:delay}
 \end{minipage}
 \hfill
 \begin{minipage}[b]{4cm}
+\begin{center}
 \includegraphics[width=3cm]{bandpass.pdf}
+\end{center}
 \caption{Not all channels have equal signal power.}
 \label{fig:bandpass}
 \end{minipage}
@@ -1706,7 +1710,8 @@ real-time calibration, and possibly real-time RFI removal.
 %calibration.
 
 
-\section*{Acknowledgments}
+\section{Acknowledgments}
+
 \begin{small}
 We thank Ger van Diepen, Martin Gels, Marcel Loose, and Ruud Overeem
 for their contributions to the LOFAR software, and many other colleagues
@@ -1723,7 +1728,6 @@ European Regional Development Fund (EFRO), and by the
 ``Samenwerkingsverband Noord-Nederland,'' EZ/KOMPAS. Part of this work was
 performed in the context of the NWO STARE AstroStream project.
 \end{small}
-%\newpage
 
 \bibliographystyle{plain}
 \bibliography{lofar}

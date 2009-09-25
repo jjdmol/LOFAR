@@ -51,15 +51,156 @@ newgraph
       fontsize 13
       : Execution Time (s)
 
-  legend
+  (* legend
     defaults
     font Helvetica
     fontsize 12
     hjl
     vjt
     x 32.4
-    y 7.5
+    y 7.5 *)
 
+(* custom legend *)
+
+newstring
+  font Helvetica
+  fontsize 12
+  hjl
+  vjc
+  x 34.8
+  y 7.5
+  : receive samples from I/O node
+
+copystring
+  y 7.1
+  : exchange data
+
+copystring
+  y 6.7
+  : FIR filter (incl. int to float conversion)
+
+copystring
+  y 6.3
+  : FFT
+
+copystring
+  y 5.9
+  : miscellaneous (incl. phase shift & bandpass)
+
+copystring
+  y 5.5
+  : correlate
+
+copystring
+  y 5.1
+  : send correlations to I/O node
+
+newstring
+  font Helvetica-Bold
+  fontsize 10
+  hjc
+  vjc
+  x 32.7
+  y 7.496
+  lcolor 1 0.827450931 0.125490189
+  : 1
+
+copystring
+  y 7.1
+  : 2
+
+copystring
+  y 6.696
+  : 3
+
+copystring
+  y 6.296
+  : 4
+
+copystring
+  y 5.896
+  : 5
+
+copystring
+  y 5.496
+  : 6
+
+copystring
+  y 5.096
+  : 7
+
+newcurve
+  marktype box
+  marksize 3.4 .32
+  gray 0
+  cfill 0.494117618 0 0.129411757
+  pts
+    32.7 7.5
+
+newcurve
+  marktype box
+  marksize 3.4 .32
+  gray 0
+  cfill 1 0 1
+  pts
+    32.7 7.1
+
+newcurve
+  marktype box
+  marksize 3.4 .32
+  gray 0
+  cfill 0 0.270588219 0.525490165
+  pts
+    32.7 6.7
+
+newcurve
+  marktype box
+  marksize 3.4 .32
+  gray 0
+  cfill 1 0.258823514 0.0549019575
+  pts
+    32.7 6.3
+
+newcurve
+  marktype box
+  marksize 3.4 .32
+  gray 0
+  cfill 1 0.827450931 0.125490189
+  pts
+    32.7 5.9
+
+newcurve
+  marktype box
+  marksize 3.4 .32
+  gray 0
+  cfill 0.34117645 0.615686238 0.109803915
+  pts
+    32.7 5.5
+
+newcurve
+  marktype box
+  marksize 3.4 .32
+  gray 0
+  cfill 0.51372546 0.792156816 1
+  pts
+    32.7 5.1
+
+newcurve
+  marktype circle
+  marksize 1.2
+  gray 0
+  fill 0
+  pts
+    32.7 7.5
+    32.7 7.1
+    32.7 6.7
+    32.7 6.3
+    32.7 5.9
+    32.7 5.5
+    32.7 5.1
+
+
+(* end of legend *)
 
 newcurve
   linetype dashed
@@ -103,8 +244,6 @@ newcurve
 marktype xbar
   marksize 3.4
   cfill 0.494117618 0 0.129411757
-  label
-    : receive samples from I/O node
   pts
     32 1.82
     36 2.14
@@ -123,9 +262,7 @@ marktype xbar
 newcurve
   marktype xbar
   marksize 3.4
-  cfill .8 0 .8
-  label
-    : exchange data
+  cfill 1 0 1
   pts
     32 1.76
     36 2.07
@@ -145,8 +282,6 @@ newcurve
   marktype xbar
   marksize 3.4
   cfill 0 0.270588219 0.525490165
-  label
-    : FIR filter (incl. int to float conversion)
   pts
     32 1.73
     36 2.05
@@ -166,8 +301,6 @@ newcurve
   marktype xbar
   marksize 3.4
   cfill 1 0.258823514 0.0549019575
-  label
-    : FFT
   pts
     32 1.45
     36 1.74
@@ -187,8 +320,6 @@ newcurve
   marktype xbar
   marksize 3.4
   cfill 1 0.827450931 0.125490189
-  label
-    : miscellaneous (incl. phase shift & bandpass)
   pts
     32 1.17
     36 1.43
@@ -208,8 +339,6 @@ newcurve
   marktype xbar
   marksize 3.4
   cfill 0.34117645 0.615686238 0.109803915
-  label
-    : correlate
   pts
     32 0.999
     36 1.27
@@ -229,8 +358,6 @@ newcurve
   marktype xbar
   marksize 3.4
   cfill 0.51372546 0.792156816 1
-  label
-    : send correlations to I/O node
   pts
     32 0.01
     36 0.02
@@ -245,3 +372,90 @@ newcurve
     72 0.025
     76 0.035
     80 0.022
+
+(* circled numbers *)
+
+newstring
+  font Helvetica-Bold
+  fontsize 13
+  hjc
+  vjc
+  lcolor 1 0.827450931 0.125490189
+  x 68
+  y 5.535
+  : 1
+
+copystring
+  y 5.15
+  : 2
+
+copystring
+  x 64
+  y 5.16
+  : 3
+
+copystring
+  y 4.6
+  : 4
+
+copystring
+  y 4.155
+  : 5
+
+copystring
+  y 2.01
+  : 6
+
+copystring
+  x 68
+  y 0.165
+  : 7
+
+newcurve
+  linetype solid
+  marktype none
+  rarrow
+  asize .6 .1
+  (* color 0.494117618 0 0.129411757
+  acfill 0.494117618 0 0.129411757 *)
+  pts
+    68 5.55
+    66 5.57
+
+
+newcurve
+  linetype solid
+  marktype none
+  rarrow
+  asize .6 .1
+  (* color 1 0 1
+  acfill 1 0 1 *)
+  pts
+    68 5.15
+    66 5.48
+
+
+newcurve
+  linetype solid
+  marktype none
+  rarrow
+  asize .6 .1
+  (* color 0.51372546 0.792156816 1
+  acfill 0.51372546 0.792156816 1 *)
+  pts
+    68 0.18
+    66 0.03
+
+newcurve
+  marktype circle
+  marksize 1.8
+  gray 0
+  fill 0
+  pts
+    68 5.55
+    68 5.15
+    64 5.175
+    64 4.615
+    64 4.17
+    64 2.02
+    68 0.18
