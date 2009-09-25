@@ -52,6 +52,7 @@ newgraph
       : System Load (%)
 
   legend
+    linebreak 2.6
     defaults
     font Helvetica
     fontsize 12
@@ -60,12 +61,117 @@ newgraph
     x 1.1
     y 100
 
+(* custom legend *)
+
+newstring
+  font Helvetica
+  fontsize 12
+  hjl
+  vjc
+  x 1.8
+  y 99
+  : UDP packet receipt (kernel)
+
+copystring
+  y 94
+  : packet to circular buffer copy
+
+copystring
+  y 89
+  : FCNP send to compute node
+
+copystring
+  y 84
+  : FCNP receive from compute node
+
+copystring
+  y 79
+  : TCP/IP send to storage (kernel)
+
+newstring
+  font Helvetica-Bold
+  fontsize 10
+  hjc
+  vjc
+  x 1.1
+  y 98.9
+  lcolor 1 0.827450931 0.125490189
+  : 1
+
+copystring
+  y 94
+  : 2
+
+copystring
+  y 88.9
+  : 3
+
+copystring
+  y 83.9
+  : 4
+
+copystring
+  y 78.9
+  : 5
+
+newcurve
+  marktype box
+  marksize 0.85 4
+  gray 0
+  cfill 0 0.270588219 0.525490165
+  pts
+    1.1 99
+
+newcurve
+  marktype box
+  marksize 0.85 4
+  gray 0
+  cfill 1 0.258823514 0.0549019575
+  pts
+    1.1 94
+
+newcurve
+  marktype box
+  marksize 0.85 4
+  gray 0
+  cfill 1 0.827450931 0.125490189
+  pts
+    1.1 89
+
+newcurve
+  marktype box
+  marksize 0.85 4
+  gray 0
+  cfill 0.34117645 0.615686238 0.109803915
+  pts
+    1.1 84
+
+newcurve
+  marktype box
+  marksize 0.85 4
+  gray 0
+  cfill 0.51372546 0.792156816 1
+  pts
+    1.1 79
+
+newcurve
+  marktype circle
+  marksize 0.32
+  gray 0
+  fill 0
+  pts
+    1.1 99
+    1.1 94
+    1.1 84
+    1.1 89
+    1.1 79
+
+(* the bars *)
+
 newcurve
   marktype xbar
-  marksize 0.85
+  marksize 0.85 5
   cfill 0 0.270588219 0.525490165
-  label
-    : UDP packet receipt (kernel)
   pts
      1 13.97
      2 27.43
@@ -83,11 +189,9 @@ newcurve
 
 newcurve
   marktype xbar
-  marksize 0.85
+  marksize 0.85 5
   cfill 1 0.258823514 0.0549019575
   (* pattern stripe 45 *)
-  label
-    : packet to circular buffer copy
   pts
      1  0.84
      2  4.92
@@ -105,10 +209,8 @@ newcurve
 
 newcurve
   marktype xbar
-  marksize 0.85
+  marksize 0.85 5
   cfill 1 0.827450931 0.125490189
-  label
-    : FCNP send to compute node
   pts
      1  0.62
      2  3.74
@@ -126,10 +228,8 @@ newcurve
 
 newcurve
   marktype xbar
-  marksize 0.85
+  marksize 0.85 5
   cfill 0.34117645 0.615686238 0.109803915
-  label
-    : FCNP receive from compute node
   pts
      1  0.57
      2  2.60
@@ -147,11 +247,9 @@ newcurve
 
 newcurve
   marktype xbar
-  marksize 0.85
+  marksize 0.85 5
   cfill 0.51372546 0.792156816 1
   (* pattern stripe -45 *)
-  label
-    : TCP/IP send to storage (kernel)
   pts
      1  0.00
      2  2.01
@@ -166,3 +264,43 @@ newcurve
     11  8.08
     12 15.48
     13 16.03
+
+(* circled numbers *)
+
+newstring
+  font Helvetica-Bold
+  fontsize 13
+  hjc
+  vjc
+  lcolor 1 0.827450931 0.125490189
+  x 9
+  y 63.98
+  : 1
+
+copystring
+  y 42.37
+  : 2
+
+copystring
+  y 29.84
+  : 3
+
+copystring
+  y 18.92
+  : 4
+
+copystring
+  y 7.64
+  : 5
+
+newcurve
+  marktype circle
+  marksize 0.45
+  gray 0
+  fill 0
+  pts
+    9 64.08
+    9 42.47
+    9 29.94
+    9 19.02
+    9 7.74
