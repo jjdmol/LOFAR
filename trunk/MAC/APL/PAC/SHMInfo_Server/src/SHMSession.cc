@@ -1155,14 +1155,15 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 
 }
 
-GCFEvent::TResult SHMSession::closing_state(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult SHMSession::closing_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  p.close();
   switch (e.signal) {
     case F_ENTRY:
-      if (!_missPort.isConnected()) {
+      if (&p == &_missPort) {
         LOG_INFO("Client gone. Stop all subsessions.");
-        _missPort.close();
       }
       else {
         _daemon.clientClosed(*this);
