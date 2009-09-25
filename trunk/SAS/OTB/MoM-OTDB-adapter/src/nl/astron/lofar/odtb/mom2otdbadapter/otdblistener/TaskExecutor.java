@@ -3,11 +3,11 @@ package nl.astron.lofar.odtb.mom2otdbadapter.otdblistener;
 import java.io.IOException;
 import java.io.StringReader;
 
+import nl.astron.lofar.odtb.mom2otdbadapter.config.Mom2Configuration;
 import nl.astron.util.AstronValidator;
 import nl.astron.util.http.client.AstronHttpClient;
 import nl.astron.util.http.client.HttpClientConfig;
 import nl.astron.util.http.client.handler.StringResponseHandler;
-import nl.astron.util.http.exception.AstronHttpException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,11 +32,7 @@ public class TaskExecutor extends Thread {
 
 	private Queue queue = null;
 
-	private String username = null;
-
-	private String password = null;
-
-	private String importXMLUrl = null;
+	private Mom2Configuration config; 
 
 	/*
 	 * seconds to wait
@@ -49,14 +45,11 @@ public class TaskExecutor extends Thread {
 	 * @param authUrl authorization module url
 	 * @param momUrl mom2 module url
 	 */
-	public TaskExecutor(Queue queue, String username, String password,
-			String authUrl, String momUrl) {
-		this.username = username;
-		this.password = password;
-		this.importXMLUrl = momUrl + "/interface/importMom2XML.do";
+	public TaskExecutor(Queue queue, Mom2Configuration config) {
+		this.config = config;
 		this.queue = queue;
-		HttpClientConfig config = new HttpClientConfig(authUrl);
-		httpClient = new AstronHttpClient(config);
+		HttpClientConfig httpClientConfig = new HttpClientConfig(config.getAuthUrl());
+		httpClient = new AstronHttpClient(httpClientConfig);
 	}
 	/**
 	 * start the taskExecutor thread
@@ -91,11 +84,11 @@ public class TaskExecutor extends Thread {
 	protected boolean processTask(Task task) {
 		boolean succeed = false;
 		try {
-			httpClient.login(username, password);
+			httpClient.login(config.getUsername(), config.getPassword());
 			BasicHttpParams params = new BasicHttpParams();
 			params.setParameter("command", "xmlcontent");
 			params.setParameter("importxml2",task.getXml());
-			String result = httpClient.doPost(importXMLUrl, params,null, new StringResponseHandler());
+			String result = httpClient.doPost(config.getMom2ImportUrl(), params,null, new StringResponseHandler());
 			log.info(result);
 			httpClient.logout();
 			return isSucceed(result);

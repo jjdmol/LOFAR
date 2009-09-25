@@ -1,113 +1,115 @@
 package nl.astron.lofar.odtb.mom2otdbadapter;
 
 import java.io.IOException;
-import java.rmi.NotBoundException;
 import java.util.TimeZone;
 
+import nl.astron.lofar.odtb.mom2otdbadapter.config.AdapterConfiguration;
+import nl.astron.lofar.odtb.mom2otdbadapter.config.Configuration;
+import nl.astron.lofar.odtb.mom2otdbadapter.config.Mom2Configuration;
+import nl.astron.lofar.odtb.mom2otdbadapter.config.OTDBConfiguration;
+import nl.astron.lofar.odtb.mom2otdbadapter.config.StubConfiguration;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.OTDBRepository;
+import nl.astron.lofar.odtb.mom2otdbadapter.data.Repository;
+import nl.astron.lofar.odtb.mom2otdbadapter.data.StubRepository;
 import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.OTDBListener;
 import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.Queue;
 import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.TaskExecutor;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class MomOtdbAdapter {
-	protected String username = null;
 
-	protected String password = null;
-
-	protected String momUrl = null;
-
-	protected String authUrl = null;
-
-	protected String rmiHost = null;
-
-	protected Integer rmiPort = null;
-	
-	protected Integer seconds = null;
-
-	public MomOtdbAdapter() {
-
-	}
+	private Log log = LogFactory.getLog(MomOtdbAdapter.class);
 
 	/**
 	 * Starts all services
-	 * @throws IOException
-	 * @throws NotBoundException
+	 * @throws IOException 
 	 */
-	protected void startServices() throws IOException, NotBoundException {
+	protected void startServices(Configuration config) throws IOException {
 		TimeZone.setDefault(TimeZone.getTimeZone("UTC")); 
 		Queue queue = new Queue();
-		OTDBRepository repository = new OTDBRepository(rmiHost, rmiPort
-				.intValue());
+		Repository repository = null;
+		if (config.getRepository() instanceof StubConfiguration){
+			repository = new StubRepository();
+		}else if (config.getRepository() instanceof OTDBConfiguration){
+			repository = new OTDBRepository((OTDBConfiguration) config.getRepository());
+		}
 		TaskExecutor otdbQueueProcessor = new TaskExecutor(queue,
-				username, password, authUrl, momUrl);
+				config.getMom2());
 		otdbQueueProcessor.start();
 
-//		OTDBListener otdbListener = new OTDBListener(queue, seconds.intValue()*1000, repository);
-//		otdbListener.start();
+		OTDBListener otdbListener = new OTDBListener(queue, config, repository);
+		otdbListener.start();
 
 		//Mom2Listener server = new Mom2Listener(repository);
 		//server.start();
 	}
 
-	/**
-	 * Parse arguments
-	 * @param args
-	 * @throws Exception
-	 */
-	protected void parseArguments(String[] args) throws Exception {
+//	/**
+//	 * Parse arguments
+//	 * @param args
+//	 * @throws Exception
+//	 */
+//	protected void parseArguments(String[] args) throws Exception {
+//
+//		if (args.length > 0) {
+//			for (int i = 0; i < args.length-1; i= i+2) {
+//				String argument = args[i];
+//				String value = args[i+1];
+//				parseArgument(argument, value);
+//
+//			}
+//		}
+//	}
 
-		if (args.length > 0) {
-			for (int i = 0; i < args.length-1; i= i+2) {
-				String argument = args[i];
-				String value = args[i+1];
-				parseArgument(argument, value);
-
-			}
-		}
-		if (username == null || password == null || authUrl == null
-				|| momUrl == null || rmiHost == null || rmiPort == null || seconds == null) {
-			throw new Exception();
-
-		}
-	}
-
-	/**
-	 * Parse one argument
-	 * @param argument
-	 * @param value
-	 * @throws Exception
-	 */
-	protected void parseArgument(String argument, String value)
-			throws Exception {
-		if (argument.equals("-u")) {
-			username = value;
-		} else if (argument.equals("-p")) {
-			password = value;
-		} else if (argument.equals("-authurl")) {
-			authUrl = value;
-		} else if (argument.equals("-mom2url")) {
-			momUrl = value;
-		} else if (argument.equals("-rmihost")) {
-			rmiHost = value;
-		} else if (argument.equals("-rmiport")) {
-			rmiPort = new Integer(value);
-		}else if (argument.equals("-rmiseconds")) {
-			seconds = new Integer(value);
-		}
-	}
+//	/**
+//	 * Parse one argument
+//	 * @param argument
+//	 * @param value
+//	 * @throws Exception
+//	 */
+//	protected void parseArgument(String argument, String value)
+//			throws Exception {
+//		if (argument.equals("-u")) {
+//			username = value;
+//		}
+//	}
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
 		MomOtdbAdapter adapter = new MomOtdbAdapter();
+		
 		try {
-			adapter.parseArguments(args);
+//			adapter.parseArguments(args);
+//            PropertyConfigurator.configure(logConfig);
+//            jInitCPPLogger aCPPLogger=new jInitCPPLogger(logConfig);
+//            logger.info("jOTDBServer started. LogPropFile: "+ logConfig);
+			Configuration configuration = new Configuration();
+			StubConfiguration stubConfiguration = new StubConfiguration();
+			stubConfiguration.setInterval(3000);
+			configuration.setRepository(stubConfiguration);
+			Mom2Configuration momConfiguration = new Mom2Configuration();
+			momConfiguration.setUsername("bastiaan");
+			momConfiguration.setPassword("bastiaan");
+			momConfiguration.setAuthUrl("http://localhost:8080/useradministration");
+			momConfiguration.setMom2SchemasUrl("http://localhost:8080/mom2lofar/schemas/");
+			momConfiguration.setMom2ImportUrl("http://localhost:8080/mom2lofar/interface/importMom2XML.do");
+			configuration.setMom2(momConfiguration);
+			AdapterConfiguration adapterConfiguration = new AdapterConfiguration();
+			adapterConfiguration.setHttpPort(8081);
+			adapterConfiguration.setTrustedKeystoreLocation("c:/mom-otdb-adapter-trusted-keystore.jks");
+			adapterConfiguration.setTrustedKeystorePassword("adapter-trusted");
+			adapterConfiguration.setKeystoreLocation("c:/mom-otdb-adapter-keystore.jks");
+			adapterConfiguration.setKeystorePassword("adapter");
+			adapter.startServices(configuration);
 		} catch (Exception e) {
 			adapter.showSyntax();
 			System.exit(0);
 		}
-		adapter.startServices();
+		
 
 	}
 
@@ -128,6 +130,6 @@ public class MomOtdbAdapter {
 		System.out.println("-rmiseconds <checks jOTDB with a interval of given amount of seconds>");
 		System.out.println("\n---Example ---");
 		System.out
-				.println("java -jar mom-otdb-adapter.jar -u bastiaan -p bastiaan -rmihost lofar17.astron.nl -rmiport 10099 -rmiseconds 5 -mom2url http://localhost:8080/mom2 -authurl http://localhost:8080/wsrtauth ");
+			.println("java -jar mom-otdb-adapter.jar -u bastiaan -p bastiaan -rmihost lofar17.astron.nl -rmiport 10099 -rmiseconds 5 -mom2url http://localhost:8080/mom2 -authurl http://localhost:8080/wsrtauth ");
 	};
 }

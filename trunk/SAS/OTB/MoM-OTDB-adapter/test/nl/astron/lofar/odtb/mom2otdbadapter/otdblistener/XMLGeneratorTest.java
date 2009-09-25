@@ -20,13 +20,13 @@ public class XMLGeneratorTest {
 	
 		LofarObservation lofarObservation = new LofarObservation();
 		lofarObservation.setMom2Id(3);
-		lofarObservation.setObservationId(15);
+
 		lofarObservation.setAntennaSet("HBA_TWO");
 		lofarObservation.setBandFilter("HBA_110_190");
 		lofarObservation.setClockMode("<<Clock200");
 		lofarObservation.setStations("[CS302, CS010]");
 		lofarObservation.setStatus("finished");
-		
+		lofarObservation.setObservationId(15);	
 		lofarObservation.setStartTime(AstronConverter.toDate("2009/06/24 13:00 UTC"));
 		lofarObservation.setEndTime(AstronConverter.toDate("2009/06/24 13:30 UTC"));
 		lofarObservation.setClockFrequency(200000000d);
