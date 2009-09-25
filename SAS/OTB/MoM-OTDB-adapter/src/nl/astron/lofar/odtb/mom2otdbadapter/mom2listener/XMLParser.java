@@ -5,6 +5,7 @@ import java.util.Map;
 
 import nl.astron.lofar.odtb.mom2otdbadapter.data.Beam;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.LofarObservation;
+import nl.astron.lofar.odtb.mom2otdbadapter.util.Mom2OtdbConverter;
 import nl.astron.lofar.odtb.mom2otdbadapter.util.XMLConstants;
 import nl.astron.util.AstronConverter;
 import nl.astron.util.AstronValidator;

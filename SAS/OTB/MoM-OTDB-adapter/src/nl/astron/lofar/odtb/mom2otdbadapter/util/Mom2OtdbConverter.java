@@ -1,9 +1,8 @@
-package nl.astron.lofar.odtb.mom2otdbadapter.mom2listener;
+package nl.astron.lofar.odtb.mom2otdbadapter.util;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import nl.astron.lofar.odtb.mom2otdbadapter.util.XMLConstants;
 
 
 /**
