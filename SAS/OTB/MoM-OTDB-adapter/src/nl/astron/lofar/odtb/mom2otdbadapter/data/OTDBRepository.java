@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
+import nl.astron.lofar.odtb.mom2otdbadapter.config.OTDBConfiguration;
 import nl.astron.lofar.sas.otb.jotdb2.jConverterInterface;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBinterface;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
@@ -35,11 +36,13 @@ public class OTDBRepository implements Repository {
 
 	private jConverterInterface converter = null;
 
-	private static final int TEMPLATE_ID = 5031;
-
 	// private static final int TEMPLATE_ID = 50091980;
 
 	public static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
+	private boolean connected = false;
+
+	private OTDBConfiguration config;
 
 	/**
 	 * Constructor that makes a connection to the specified rmi server on the
@@ -47,16 +50,23 @@ public class OTDBRepository implements Repository {
 	 * 
 	 * @param rmiServerName
 	 * @param port
+	 * @throws NotBoundException
 	 * @throws RemoteException
 	 * @throws NotBoundException
 	 */
-	public OTDBRepository(String rmiServerName, int port) throws RemoteException, NotBoundException {
+	public OTDBRepository(OTDBConfiguration config) {
+		this.config = config;
 
-		Registry remoteRegistry = LocateRegistry.getRegistry(rmiServerName, port);
-		remoteOTDB = (jOTDBinterface) remoteRegistry.lookup(jOTDBinterface.SERVICENAME);
-		tm = (jTreeMaintenanceInterface) remoteRegistry.lookup(jTreeMaintenanceInterface.SERVICENAME);
-		converter = (jConverterInterface) remoteRegistry.lookup(jConverterInterface.SERVICENAME);
+	}
 
+	private void init() throws RemoteException, NotBoundException {
+		if (!connected) {
+			Registry remoteRegistry = LocateRegistry.getRegistry(config.getRmiHost(), config.getRmiPort());
+			remoteOTDB = (jOTDBinterface) remoteRegistry.lookup(jOTDBinterface.SERVICENAME);
+			tm = (jTreeMaintenanceInterface) remoteRegistry.lookup(jTreeMaintenanceInterface.SERVICENAME);
+			converter = (jConverterInterface) remoteRegistry.lookup(jConverterInterface.SERVICENAME);
+			connected = true;
+		}
 	}
 
 	/**
@@ -67,7 +77,8 @@ public class OTDBRepository implements Repository {
 	 */
 	public void store(LofarObservation lofarObservation) throws RepositoryException {
 		try {
-			int treeId = tm.copyTemplateTree(TEMPLATE_ID);
+			init();
+			int treeId = tm.copyTemplateTree(config.getTemplateId());
 			// int treeId = 6;
 			jOTDBnode observationNode = getObservationNode(treeId);
 			List<jOTDBnode> beams = new ArrayList<jOTDBnode>();
@@ -127,7 +138,11 @@ public class OTDBRepository implements Repository {
 			tm.setTreeState(treeId, statusId);
 			tm.setMomInfo(treeId, lofarObservation.getMom2Id(), "no campaign");
 		} catch (RemoteException re) {
+			connected = false;
 			throw new RepositoryException(re);
+		} catch (NotBoundException e) {
+			connected = false;
+			throw new RepositoryException(e);
 		}
 	}
 
@@ -231,6 +246,7 @@ public class OTDBRepository implements Repository {
 	 */
 	public List getLatestChanges(Date startDate, Date endDate) throws RepositoryException {
 		try {
+			init();
 			String startTime = AstronConverter.toDateString(startDate, DATE_TIME_FORMAT);
 			String endTime = AstronConverter.toDateString(endDate, DATE_TIME_FORMAT);
 			log.info("Retrieve latest changes between:" + startTime + " and " + endTime);
@@ -246,7 +262,7 @@ public class OTDBRepository implements Repository {
 					LofarObservation observation = new LofarObservation();
 					observation.setMom2Id(state.momID);
 					observation.setStatus(status);
-					//observation.setTimeStamp(state.timestamp);
+					// observation.setTimeStamp(state.timestamp);
 					jOTDBnode observationNode = tm.getTopNode(state.treeID);
 					jOTDBnode measurementsNode = getNode(observationNode, "measurementMom2Ids");
 					// observation.setMeasurementMom2Ids(measurementsNode.limits);
@@ -269,7 +285,11 @@ public class OTDBRepository implements Repository {
 
 			return result;
 		} catch (RemoteException re) {
+			connected = false;
 			throw new RepositoryException(re);
+		} catch (NotBoundException e) {
+			connected = false;
+			throw new RepositoryException(e);
 		}
 	}
 

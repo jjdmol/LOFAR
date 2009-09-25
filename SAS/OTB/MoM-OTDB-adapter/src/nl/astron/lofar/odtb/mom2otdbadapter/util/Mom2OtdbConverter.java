@@ -19,7 +19,7 @@ public class Mom2OtdbConverter {
 	private static final String FITS_EXTENSION = ".fits";
 	private static final String H5_EXTENSION = ".h5";
 	private static final String MS_EXTENSION = ".MS";
-	private static final String OTDB_APPROVED_STATUS = "approved";
+	public static final String OTDB_APPROVED_STATUS = "approved";
 	public static final String OTDB_BEING_SPECIFIED_STATUS = "being specified";
 	public static final String MOM2_DESCRIBED_STATUS = "described";
 	public static final String MOM2_SPECIFIED_STATUS = "specified";	
@@ -110,6 +110,9 @@ public class Mom2OtdbConverter {
 	}
 
 	public static String getMom2Status(String code) {
+		if (code.equals(OTDB_APPROVED_STATUS)){
+			return MOM2_SPECIFIED_STATUS;
+		}
 		if (code.equals(OTDB_SPECIFIED_STATUS)) {
 			return MOM2_PREPARED_STATUS;
 		}

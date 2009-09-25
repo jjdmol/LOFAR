@@ -4,7 +4,8 @@ public class OTDBConfiguration extends RepositoryConfiguration {
 
 	private String rmiHost;
 	private Integer rmiPort;
-
+	private Integer templateId;
+	
 	public String getRmiHost() {
 		return rmiHost;
 	}
@@ -19,6 +20,14 @@ public class OTDBConfiguration extends RepositoryConfiguration {
 
 	public void setRmiPort(Integer rmiPort) {
 		this.rmiPort = rmiPort;
+	}
+
+	public void setTemplateId(Integer templateId) {
+		this.templateId = templateId;
+	}
+
+	public Integer getTemplateId() {
+		return templateId;
 	}
 
 }

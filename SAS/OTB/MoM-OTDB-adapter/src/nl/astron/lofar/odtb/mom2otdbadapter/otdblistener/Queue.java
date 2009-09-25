@@ -26,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
 public class Queue {
 	private Log log = LogFactory.getLog(this.getClass());
 
-	private List tasks = new ArrayList();
+	private List<Task> tasks = new ArrayList<Task>();
 
 	private String taskDir = "./tasks";
 
@@ -34,7 +34,7 @@ public class Queue {
 
 	private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
-	private static final String OTDB_TIME_FORMAT = "yyyy-MMM-dd HH:mm:ss";
+	//private static final String OTDB_TIME_FORMAT = "yyyy-MMM-dd HH:mm:ss";
 
 	private Date startTime = null;
 
@@ -84,7 +84,7 @@ public class Queue {
 			}
 		}
 		isTaskLocked = true;
-		Task task = (Task) tasks.get(0);
+		Task task =  tasks.get(0);
 		log.info("Processing task....Number of tasks:" + tasks.size());
 		notifyAll();
 		return task;

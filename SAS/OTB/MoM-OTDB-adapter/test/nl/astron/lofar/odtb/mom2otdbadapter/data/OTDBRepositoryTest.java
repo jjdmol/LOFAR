@@ -2,6 +2,8 @@ package nl.astron.lofar.odtb.mom2otdbadapter.data;
 
 import java.util.Date;
 
+import nl.astron.lofar.odtb.mom2otdbadapter.config.OTDBConfiguration;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -10,7 +12,10 @@ public class OTDBRepositoryTest {
 	private OTDBRepository repository;
 	@Before
 	public void setUp() throws Exception {
-		repository = new OTDBRepository("lofar17", 10399);
+		OTDBConfiguration config =new OTDBConfiguration();
+		config.setRmiHost("lofar17");
+		config.setRmiPort(10399);
+		repository = new OTDBRepository(config);
 	}
 
 	

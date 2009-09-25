@@ -1,7 +1,6 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.mom2otdb;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URL;
@@ -19,6 +18,9 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManagerFactory;
+
+import nl.astron.lofar.odtb.mom2otdbadapter.config.Configuration;
+import nl.astron.lofar.odtb.mom2otdbadapter.data.Repository;
 
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.DefaultHttpResponseFactory;
@@ -42,32 +44,41 @@ import org.apache.http.protocol.ResponseServer;
 
 public class HttpServer {
 
-	private int port;
+	private static final String JKS = "jks";
+
+	private Configuration config;
 
 	private HttpRequestHandler httpRequestHandler;
 
 	private SSLIOSessionHandler sslSessionHandler;
 
-	public HttpServer(int port, HttpRequestHandler httpRequestHandler, SSLIOSessionHandler sslSessionHandler) {
-		this.port = port;
+	public HttpServer(Configuration config, HttpRequestHandler httpRequestHandler, SSLIOSessionHandler sslSessionHandler) {
+		this.config = config;
 		this.httpRequestHandler = httpRequestHandler;
 		this.sslSessionHandler = sslSessionHandler;
 	}
 
-	public HttpServer(int port, HttpRequestHandler httpRequestHandler) {
-		this(port, httpRequestHandler, new ClientAuthSSLIOSessionHandler());
+	public HttpServer(Configuration config, Repository repository) {
+		this(config, new Mom2HttpRequestHandler(repository), new ClientAuthSSLIOSessionHandler());
+	}
+	
+	public HttpServer(Configuration config, HttpRequestHandler httpRequestHandler) {
+		this(config, httpRequestHandler, new ClientAuthSSLIOSessionHandler());
 	}
 	
 	public void start() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException{
 		ClassLoader cl = this.getClass().getClassLoader();
-		URL url = cl.getResource("keystore-server.jks");
-		KeyStore keystore = KeyStore.getInstance("jks");
-		keystore.load(url.openStream(), "server".toCharArray());
+		URL url = cl.getResource(config.getAdapter().getKeystoreLocation());
+		KeyStore keystore = KeyStore.getInstance(JKS);
+		keystore.load(url.openStream(), config.getAdapter().getKeystorePassword().toCharArray());
 		KeyManagerFactory kmfactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-		kmfactory.init(keystore, "server".toCharArray());
+		kmfactory.init(keystore, config.getAdapter().getKeystorePassword().toCharArray());
 		KeyManager[] keymanagers = kmfactory.getKeyManagers();
+		URL trustedKeystoreUrl = cl.getResource(config.getAdapter().getTrustedKeystoreLocation());
+		KeyStore trustedKeystore = KeyStore.getInstance(JKS);
+		trustedKeystore.load(trustedKeystoreUrl.openStream(), config.getAdapter().getTrustedKeystorePassword().toCharArray());		
 	    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()); 
-	    tmf.init(keystore); 		
+	    tmf.init(trustedKeystore); 		
 		SSLContext sslcontext = SSLContext.getInstance("TLS");
 		sslcontext.init(keymanagers, tmf.getTrustManagers(), null);
 
@@ -100,7 +111,7 @@ public class HttpServer {
 
 		ListeningIOReactor ioReactor = new DefaultListeningIOReactor(2, params);
 
-		ioReactor.listen(new InetSocketAddress(port));
+		ioReactor.listen(new InetSocketAddress(config.getAdapter().getHttpPort()));
 		ioReactor.execute(ioEventDispatch);
 	}
 	
