@@ -2,6 +2,8 @@ package nl.astron.lofar.odtb.mom2otdbadapter.mom2listener;
 
 import java.util.regex.Matcher;
 
+import nl.astron.lofar.odtb.mom2otdbadapter.util.Mom2OtdbConverter;
+
 import org.junit.Assert;
 import org.junit.Test;
 

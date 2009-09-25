@@ -9,7 +9,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import nl.astron.lofar.odtb.mom2otdbadapter.config.Mom2Configuration;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.Beam;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.LofarObservation;
-import nl.astron.lofar.odtb.mom2otdbadapter.mom2listener.Mom2OtdbConverter;
+import nl.astron.lofar.odtb.mom2otdbadapter.util.Mom2OtdbConverter;
 import nl.astron.lofar.odtb.mom2otdbadapter.util.XMLConstants;
 import nl.astron.util.AstronConverter;
 import nl.astron.util.XMLBuilder;
