@@ -3,7 +3,7 @@ gnu64.compiler.conf: CXX="$CCACHE /usr/bin/g++"
 
 #gnu64.compiler.aipspp.var: --with-aipspp=/app/aips++/Unstable/linux_gnu
 gnu64.compiler.aipspp.var: --with-casacore=/opt/casacore --with-wcs=/opt/wcslib
-gnu.compiler.aipspp.var: --with-casacore=/opt/casacore/dev --with-wcs=/opt/wcslib --with-log4cplus=/opt/lofar/external/log4cplus
+gnu.compiler.aipspp.var: --with-casacore=/opt/casacore/dev --with-wcs=/opt/wcslib --with-log4cplus=/opt/lofar/external/log4cplus --with-ldflags='-lhdf5 -L/opt/hdf5/lib'
 
 mpich.var:                --with-mpich=/usr/local/ofed/mpi/gcc/mvapich-0.9.7-mlx2.2.0
 openmpi.var:              --with-mpich=/usr
