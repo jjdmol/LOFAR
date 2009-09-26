@@ -31,7 +31,7 @@ def rm_files(dir_name,file) :
 	return
 
 def rec_stat(dirname,num_rcu) :
-	os.popen("rspctl --statistics --duration=5 --integration=5 --select=0:" + str(num_rcu-1) + " 2>/dev/null")
+	os.popen("rspctl --statistics --duration=10 --integration=10 --select=0:" + str(num_rcu-1) + " 2>/dev/null")
         return
 
 # Open file for processsing
@@ -95,7 +95,9 @@ def main() :
 	# capture reference data (all HBA elements off)
         rm_files(dir_name,'*')
         os.popen("rspctl --rcumode=5 2>/dev/null")
-        os.popen("rspctl --rcuenable 2>/dev/null")
+        time.sleep(2)
+        os.popen("rspctl --rcuenable=1 2>/dev/null")
+        time.sleep(2)
         for ind in range(hba_elements) :
 		ctrl_string=ctrl_string + '2,'
 	strlength=len(ctrl_string)
