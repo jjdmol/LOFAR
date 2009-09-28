@@ -69,7 +69,7 @@ MSCreate::MSCreate (const std::string& msName,
 		    bool writeAutoCorr,
 		    int tileSizeFreq, int tileSize,
                     const std::string& flagColumn, int nflagBits,
-                    bool useBitFlagsEngine)
+                    bool mapFlagBits)
 : itsWriteAutoCorr (writeAutoCorr),
   itsNrBand        (0),
   itsNrField       (0),
@@ -102,7 +102,7 @@ MSCreate::MSCreate (const std::string& msName,
   itsFrame = new MeasFrame(*itsArrayPos);
   // Create the MS.
   createMS (msName, antMPos, tileSizeFreq, tileSize, flagColumn, nflagBits,
-            useBitFlagsEngine);
+            mapFlagBits);
   itsNrPol  = new Block<Int>;
   itsNrChan = new Block<Int>;
   itsPolnr  = new Block<Int>;
@@ -136,7 +136,7 @@ void MSCreate::createMS (const String& msName,
 			 const Block<MPosition>& antPos,
 			 int tileSizeFreq, int tileSize,
                          const String& flagColumn, int nflagBits,
-                         bool useBitFlagsEngine)
+                         bool mapFlagBits)
 {
   // Create an integer flag column?
   if (flagColumn.empty()) {
@@ -182,7 +182,7 @@ void MSCreate::createMS (const String& msName,
   if (ts <= 0) {
     ts = 32;            // default is 32 KBytes
   }
-  int tsr = std::max (1, (ts*1024) / (tsf*4));
+  int tsr = std::max (1, (ts*1024) / (4*tsf*8));
   IPosition dataTileShape(3,4,tsf,tsr);
   TiledColumnStMan tiledData("TiledData", dataTileShape);
   newTab.bindColumn(MS::columnName(MS::DATA), tiledData);
@@ -191,7 +191,7 @@ void MSCreate::createMS (const String& msName,
   // Create the FLAG column.
   // Only needed if bit flags engine is not used.
   string dmName = "TiledFlag";
-  if (nflagBits <= 0  ||  !useBitFlagsEngine) {
+  if (nflagBits <= 0  ||  !mapFlagBits) {
     TiledColumnStMan tiledFlag(dmName, IPosition(3,4,tsf,8*tsr));
     newTab.bindColumn(MS::columnName(MS::FLAG), tiledFlag);
     dmName = "TiledFlagBits";
@@ -200,7 +200,7 @@ void MSCreate::createMS (const String& msName,
   if (nflagBits > 0) {
     TiledColumnStMan tiledFlagBits(dmName, IPosition(3,4,tsf,tsr));
     newTab.bindColumn(flagColumn, tiledFlagBits);
-    if (useBitFlagsEngine) {
+    if (mapFlagBits) {
       // Map the flag bits column to the FLAG column.
       if (nflagBits == 8) {
         BitFlagsEngine<uChar> fbe(MS::columnName(MS::FLAG), flagColumn);
