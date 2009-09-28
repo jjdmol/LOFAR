@@ -108,10 +108,9 @@ jobject convertOTDBtree(JNIEnv *env, OTDBtree aTree) {
 jobject convertTreeState (JNIEnv *env, TreeState aTreeState)
 {
   jobject jTreeState;
-  jclass class_jTreeState = env->FindClass ("nl/astron/lofar/otb/jotdb2/jTreeState");
+  jclass class_jTreeState = env->FindClass ("nl/astron/lofar/sas/otb/jotdb2/jTreeState");
   jmethodID mid_jTreeState_cons = env->GetMethodID (class_jTreeState, "<init>", "()V");
   jTreeState = env->NewObject (class_jTreeState, mid_jTreeState_cons);
-
 
   jfieldID fid_jTreeState_treeID = env->GetFieldID (class_jTreeState, "treeID", "I");
   jfieldID fid_jTreeState_momID = env->GetFieldID (class_jTreeState, "momID", "I");
@@ -124,7 +123,6 @@ jobject convertTreeState (JNIEnv *env, TreeState aTreeState)
   env->SetShortField (jTreeState, fid_jTreeState_newState, aTreeState.newState);
   env->SetObjectField (jTreeState, fid_jTreeState_username, env->NewStringUTF(aTreeState.username.c_str()));
   env->SetObjectField (jTreeState, fid_jTreeState_timestamp, env->NewStringUTF(to_simple_string(aTreeState.timestamp).c_str()));
-
   return jTreeState;
 }
 
