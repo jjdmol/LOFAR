@@ -1,0 +1,80 @@
+reviewer 1
+----------
+
+
+
+
+
+reviewer 2
+----------
+
+> A very well organized paper that leads the reader nicely to the
+> conclusions. The only thing that I am left wondering about is the
+> total cost and power that the example system (LOFAR) would require if
+> implemented with the five types of hardware listed but this is not the
+> stated purpose of the paper so can be left out (or put into a future
+> paper). 
+
+We agree that this is valuable knowledge, and are indeed working on
+this for a future paper.
+ 
+
+> Minor Revisions: 1. First line of abstract ia a bit awkward
+> and 'consist' instead of 'consists' - perhaps "Radio telescopes
+> typically consist of multiple receivers whose signals are
+> cross-correlated to filter out noise."
+
+Fixed.
+
+> 2. Page 2, column 2, 3rd of way down – change the number 44.000 to
+> 44000 with no period or comma to prevent confusion for non-European
+> readers.
+
+Fixed.
+
+> Page 3, column 1 – I think the real reason for more bits is to help
+> mitigate the impact of strong Radio Frequency Interference (RFI) as
+> opposed to more accuracy (unless the SNR is too large at high
+> frequency resolution - check).
+
+The reviewer is correct. The reason for having more bits it to
+mitigate the impact of strong Radio Frequency Interference.
+We corrected this in the text.
+
+> Page 3, column 1, last line – remove ‘of’ to give ‘less
+> instructions’.
+
+Fixed.
+
+> Page 4, column 1, 1st line – ‘The most high end’ => ‘The highest
+> performance’.
+
+Fixed.
+
+> Page 5, column2, line 8 should read ‘assumes a complete overlap of
+> communication and computation’
+
+Fixed.
+
+> Page 5, column 2, near end of 2nd paragraph – should read ‘by
+> computing the AI for the full system’
+
+Fixed.
+
+> Page 6, column 1, near end of 6.1 – ‘tile’ is used with no
+> explanation. Perhaps put ‘such as the red area in Figure 4’ in
+> brackets.
+
+Fixed.
+
+> Page 7, column 2, before and after the 6.3 title the term ‘cell blade’
+> and ‘QS21 blade’ are used without any prior explanation.
+> Perhaps just mention testing two of the chips together without any
+> mention of ‘blade’.
+
+Fixed, we now correctly introduce the term QS21 blade first.
+
+> Page 8, column 2, reference [4] – all of the words in the title of the
+> book except ‘to’ should be capitalized.
+
+Fixed.
