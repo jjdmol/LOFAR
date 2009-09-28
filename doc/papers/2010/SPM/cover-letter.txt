@@ -1,7 +1,23 @@
+Alg: 
+
+code on the web
+
 reviewer 1
 ----------
 
-
+> Well balanced paper over an attractive driver to discuss application
+> of multi-core architectures in signal processing application. I liked
+> the tutorial style that fits the magazine targets combined to the
+> strong coverage of the paper: although a single kernel is considered,
+> all kind of multicore targets are covered (cell, GPU, Intel
+> i7). Comparison to super-computer architectures (BG/P) is unique
+> information (to the best of my knowledge). What I miss most,
+> especially considering it is a magazine paper, is stronger
+> state-of-the-art analysis. The paper development points to the memory
+> access bottleneck, which is exacerbated with multi-core architecture
+> or GPU. It exists a whole body of research in this domain which is not
+> referenced and that the authors even try to "reinvent". This shall be
+> improved for full acceptance
 
 
 
