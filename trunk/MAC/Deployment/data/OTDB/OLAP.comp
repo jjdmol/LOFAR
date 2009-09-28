@@ -11,7 +11,7 @@ node   CNProc     1.0.4  development 'node constraint'  "Blue Gene Processing"
 par integrationSteps	I	int	-	10	0	768 	 -	'???'
 par nrPPFTaps		I	int	-	10	0	16	 -	"number of elements in the polyphasefilter"
 par coresPerPset	I	int	-	10	0	64	 -	'???'
-par partition		I	text	-	10	0	'R000_256_1'	-	'???'
+par partition		I	text	-	10	0	'R00'	-	'???'
 
 
 # -- OLAP_Conn--
@@ -67,9 +67,9 @@ node  OLAP         1.0.7  development 'node constraint'  "OLAP"
 #    name          	dir.    type   unit   prun.     vm      value   	constr.  	descr.
 #--------------------------------------------------------------------------------------------------------
 par realTime		I	bool    -	10	0	true		-		'???'
-par delayCompensation	I   	bool    -       10  	0	false		-		'???'
+par delayCompensation	I   	bool    -       10  	0	true		-		'???'
 par storageStationNames	I   	text    -	10	0	'AllStations'	-		'???'
-par IPHeaderSize	I	int	-	10	0	32		-		'???'
+par IPHeaderSize	I	int	-	10	0	28		-		'???'
 par EPAHeaderSize	I	int	-	10	0	16		-		'???'
 par nrTimesInFrame	I	int	-	10	0	16		-		'???'
 par nrSubbandsPerFrame	I	int	-	10	0	>>Observation.nrSlotsInFrame		-		'???'
