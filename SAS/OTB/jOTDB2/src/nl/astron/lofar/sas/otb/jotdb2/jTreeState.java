@@ -23,6 +23,11 @@ package nl.astron.lofar.sas.otb.jotdb2;
 
 public class jTreeState implements java.io.Serializable
 {
+
+    public jTreeState()
+    {
+        treeID = 0;
+    }
     public int treeID;
     public int momID;
     public short newState;

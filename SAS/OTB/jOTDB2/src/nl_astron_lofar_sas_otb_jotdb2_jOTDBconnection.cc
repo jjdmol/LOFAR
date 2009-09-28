@@ -114,8 +114,10 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection_ge
 
   jobject statesVector;
   try {
+
     vector<TreeState> states = theirConn->getStateList(treeID, isMomID,time_from_string(bd), time_from_string(ed));
     vector<TreeState>::iterator statesIterator;
+    
 
     // Construct java Vector
     jclass class_Vector = env->FindClass("java/util/Vector");
