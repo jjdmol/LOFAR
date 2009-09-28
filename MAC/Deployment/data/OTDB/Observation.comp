@@ -19,9 +19,9 @@ par  preparePeriod           I    int    -      10    100    120                
 
 # measurement information
 par  KSPType                 I    ptext  -      10    0      'eor|cosmicrays|surveys|transients|magnetism|solar;surveys'          -   'Key science project'
-par  bandFilter  	         I	  ptext	 -   	10    0	     'LBL_10_80|LBL_30_80|LBH_10_80|LBH_30_80|HB_100_190|HB_170_230|HB_210_240;LBL_30_80' - 'one of the seven filters to use'
+par  bandFilter  	         I	  ptext	 -   	10    0	     'LBA_30_80|LBA_10_90|HBA_110_190|HBA_170_230|HBA_210_250;LBA_30_80' - 'one of the seven filters to use'
 par  antennaArray	         I	  ptext	 -   	10    0	     'LBA|HBA;LBA'			                   - 'Name of the antenneArray (AntennaArrays.conf)'
-par  receiverList	         I	  text	 -   	10    0	     [0]                                       - 'List of the receivers to use, eg.[0..7,10,11]. Range 0..191.'
+par  receiverList	         I	  text	 -   	10    0	     []                                       - 'List of the receivers to use, eg.[0..7,10,11]. Range 0..191.'
 par  MSNameMask              I    text   -      10    0      '/data/L${YEAR}_${MSNUMBER}/SB${SUBBAND}.MS' - 'Name for the Measurement set for this Observation'
 par  channelsPerSubband      I    int    -      10    100    256                                       - 'Number of channels per subband'
 par  nrBeams                 I    int    -      10    100    1                                         - 'Number of simultaneous beams in this observation'

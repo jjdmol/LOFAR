@@ -42,5 +42,7 @@ par  angle1				 I	  vdbl	 -		10    0	   0   						-	'RightAscention(s) or Azimut
 par  angle2			     I	  vdbl	 -		10    0	   0   						-	'Declination(s) or Elevation of the source(s) in rad.'
 par  directionTypes	     I	  ptext	 -		10    0	   'J2000|AZEL|LMN;J2000'   -   'Coord.system used for the sources'
 par  angleTimes		     I	  vuint	 -		10    0	   0   						-	'Relative time (to starttime) when to activate the angles'
+par  durations		     I	  vuint	 -		10    0	   0   						-	'Time in seconds each sources is followed.'
 par  subbandList         I    text   -      10    0    [0]                      - 	'List of all used subbands, eg.[205,276..300]. Range 0..511.'
 par  beamletList         I    text   -      10    0    [0]                      - 	'Mapping of subbands on beamlets, eg.[0..47]. Range 0..215'
+par  momID		         I    int    -      10    0    0                      - 	'MeasurementID in MoM'
