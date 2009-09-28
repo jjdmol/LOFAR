@@ -76,7 +76,7 @@ public:
 	    bool writeAutoCorr,
 	    int tileSizeFreq, int tileSize,
             const std::string& flagColumn=std::string(), int nflagBits=0,
-            bool useBitFlagsEngine=false);
+            bool mapFlagBits=false);
 
   // Destructor
   ~MSCreate();
@@ -143,7 +143,7 @@ private:
 		 const casa::Block<casa::MPosition>& antPos,
 		 int tileSizeFreq, int tileSize,
                  const casa::String& flagColumn, int nflagBits,
-                 bool useBitFlagsEngine);
+                 bool mapFlagBits);
 
   // Set the band.
   int addBand (int npolarizations, int nchannels,

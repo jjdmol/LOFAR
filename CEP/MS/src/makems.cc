@@ -60,7 +60,7 @@ int    itsNTime;
 int    itsTileSizeFreq;
 int    itsTileSize;     //# in KBytes
 int    itsNFlags;
-bool   itsUseBitFlagsEngine;
+bool   itsMapFlagBits;
 vector<double> itsStartFreq;
 vector<double> itsStepFreq;
 double itsStartTime;
@@ -132,12 +132,12 @@ void readParms (const string& parset)
     ASSERT (itsStartFreq[i] > 0);
   }
   // Get remaining parameters.
-  itsWriteAutoCorr     = params.getBool   ("WriteAutoCorr", false);
-  itsWriteImagerCol    = params.getBool   ("WriteImagerColumns", false);
-  itsMsName            = params.getString ("MSName");
-  itsFlagColumn        = params.getString ("FlagColumn", "");
-  itsNFlags            = params.getInt    ("NFlagBits", 8);
-  itsUseBitFlagsEngine = params.getBool   ("UseBitFlagsEngine", true);
+  itsWriteAutoCorr  = params.getBool   ("WriteAutoCorr", false);
+  itsWriteImagerCol = params.getBool   ("WriteImagerColumns", false);
+  itsMsName         = params.getString ("MSName");
+  itsFlagColumn     = params.getString ("FlagColumn", "");
+  itsNFlags         = params.getInt    ("NFlagBits", 8);
+  itsMapFlagBits    = params.getBool   ("MapFlagBits", true);
   // Get directory part of MSName.
   string defaultVdsPath;
   string::size_type pos = itsMsName.rfind ('/');
@@ -164,7 +164,7 @@ void createMS (int nband, int bandnr, const string& msName)
                    itsAntPos.shape()[1],
 		   Matrix<double>(itsAntPos), itsWriteAutoCorr,
 		   itsTileSizeFreq, itsTileSize, itsFlagColumn, itsNFlags,
-                   itsUseBitFlagsEngine);
+                   itsMapFlagBits);
   for (int i=0; i<nband; ++i) {
     // Determine middle of band.
     double freqRef = itsStartFreq[bandnr] + nfpb*itsStepFreq[bandnr]/2;
