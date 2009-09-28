@@ -55,7 +55,7 @@ std::string SystemCallException::errorMessage(int error)
 
   // there are two incompatible versions of versions of strerror_r()
 
-#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
+#if !__linux__ || (!_GNU_SOURCE && (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600))
   if (strerror_r(error, buffer, sizeof buffer) == 0)
     return std::string(buffer);
   else
