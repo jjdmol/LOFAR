@@ -29,7 +29,7 @@
 #include <tables/Tables/IncrementalStMan.h>
 #include <tables/Tables/StandardStMan.h>
 #include <tables/Tables/TiledColumnStMan.h>
-////#include <tables/Tables/BitFlagsEngine.h>
+#include <tables/Tables/BitFlagsEngine.h>
 #include <tables/Tables/TiledStManAccessor.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableDesc.h>
@@ -67,8 +67,9 @@ MSCreate::MSCreate (const std::string& msName,
 		    double startTime, double timeStep, int nfreq, int ncorr,
 		    int nantennas, const Matrix<double>& antPos,
 		    bool writeAutoCorr,
-		    int tileSizeFreq, int tileSizeRest,
-                    const std::string& flagColumn, int nflagBits)
+		    int tileSizeFreq, int tileSize,
+                    const std::string& flagColumn, int nflagBits,
+                    bool useBitFlagsEngine)
 : itsWriteAutoCorr (writeAutoCorr),
   itsNrBand        (0),
   itsNrField       (0),
@@ -100,7 +101,8 @@ MSCreate::MSCreate (const std::string& msName,
   itsArrayPos = new MPosition(antMPos[nantennas/2]);
   itsFrame = new MeasFrame(*itsArrayPos);
   // Create the MS.
-  createMS (msName, antMPos, tileSizeFreq, tileSizeRest, flagColumn, nflagBits);
+  createMS (msName, antMPos, tileSizeFreq, tileSize, flagColumn, nflagBits,
+            useBitFlagsEngine);
   itsNrPol  = new Block<Int>;
   itsNrChan = new Block<Int>;
   itsPolnr  = new Block<Int>;
@@ -132,8 +134,9 @@ int MSCreate::nrPolarizations() const
 
 void MSCreate::createMS (const String& msName,
 			 const Block<MPosition>& antPos,
-			 int tileSizeFreq, int tileSizeRest,
-                         const String& flagColumn, int nflagBits)
+			 int tileSizeFreq, int tileSize,
+                         const String& flagColumn, int nflagBits,
+                         bool useBitFlagsEngine)
 {
   // Create an integer flag column?
   if (flagColumn.empty()) {
@@ -148,16 +151,9 @@ void MSCreate::createMS (const String& msName,
                                                       define("UNIT","Jy");
   // Store the data and flags in two separate files using TiledColumnStMan.
   // Also store UVW with TiledColumnStMan.
-  Vector<String> tsmNames(1);
-  tsmNames[0] = MS::columnName(MS::DATA);
-  td.rwColumnDesc(tsmNames[0]).setShape (dataShape);
-  td.defineHypercolumn("TiledData", 3, tsmNames);
-  tsmNames[0] = MS::columnName(MS::FLAG);
-  td.rwColumnDesc(tsmNames[0]).setShape (dataShape);
-  td.defineHypercolumn("TiledFlag", 3, tsmNames);////
-  if (nflagBits <= 0) {
-    td.defineHypercolumn("TiledFlag", 3, tsmNames);////
-  } else {
+  td.rwColumnDesc(MS::columnName(MS::DATA)).setShape (dataShape);
+  td.rwColumnDesc(MS::columnName(MS::FLAG)).setShape (dataShape);
+  if (nflagBits > 0) {
     if (nflagBits == 8) {
       td.addColumn(ArrayColumnDesc<uChar>(flagColumn, 2));
     } else if (nflagBits == 16) {
@@ -165,13 +161,8 @@ void MSCreate::createMS (const String& msName,
     } else {
       td.addColumn(ArrayColumnDesc<Int>(flagColumn, 2));
     }
-    tsmNames[0] = flagColumn;
     td.rwColumnDesc(flagColumn).setShape (dataShape);
-    td.defineHypercolumn("TiledIntFlag", 3, tsmNames);////
   }
-  ////td.defineHypercolumn("TiledFlag", 3, tsmNames);
-  tsmNames[0] = MS::columnName(MS::UVW);
-  td.defineHypercolumn("TiledUVW", 2, tsmNames);
   // Setup the new table.
   // Most columns use the IncrStMan; some use others.
   SetupNewTable newTab(msName, td, Table::New);
@@ -181,37 +172,47 @@ void MSCreate::createMS (const String& msName,
   newTab.bindColumn(MS::columnName(MS::ANTENNA1), stanStMan);
   newTab.bindColumn(MS::columnName(MS::ANTENNA2), stanStMan);
   // Use a TiledColumnStMan for the data, flags and UVW.
-  // Store all pol and freq in a single tile.
-  // In this way the data appear in separate files that can be mmapped.
+  // Store all pol in a single tile.
   // Flags are stored as bits, so take care each tile has multiple of 8 flags.
   int tsf = tileSizeFreq;
-  int tsr = tileSizeRest;
+  int ts  = tileSize;
   if (tsf <= 0) {
     tsf = itsNrFreq;    // default is all channels
   }
-  if (tsr <= 0) {
-    tsr = std::max (1, 4096/tsf);
+  if (ts <= 0) {
+    ts = 32;            // default is 32 KBytes
   }
+  int tsr = std::max (1, (ts*1024) / (tsf*4));
   IPosition dataTileShape(3,4,tsf,tsr);
   TiledColumnStMan tiledData("TiledData", dataTileShape);
   newTab.bindColumn(MS::columnName(MS::DATA), tiledData);
   TiledColumnStMan tiledUVW("TiledUVW", IPosition(3,128));
   newTab.bindColumn(MS::columnName(MS::UVW), tiledUVW);
-  TiledColumnStMan tiledFlag("TiledFlag", IPosition(3,4,tsf,8*tsr));
-  newTab.bindColumn(MS::columnName(MS::FLAG), tiledFlag);
+  // Create the FLAG column.
+  // Only needed if bit flags engine is not used.
+  string dmName = "TiledFlag";
+  if (nflagBits <= 0  ||  !useBitFlagsEngine) {
+    TiledColumnStMan tiledFlag(dmName, IPosition(3,4,tsf,8*tsr));
+    newTab.bindColumn(MS::columnName(MS::FLAG), tiledFlag);
+    dmName = "TiledFlagBits";
+  }
+  // Create the flag bits column.
   if (nflagBits > 0) {
-    TiledColumnStMan tiledIntFlag("TiledIntFlag", IPosition(3,4,tsf,8*tsr));////
-    newTab.bindColumn(flagColumn, tiledIntFlag);////
-    ////if (nflagBits == 8) {
-    ////  BitFlagsEngine<uChar> fbe(MS::columnName(MS::FLAG), flagColumn);
-    ////  newTab.bindColumn(MS::columnName(MS::FLAG), fbe);
-    ////} else if (nflagBits == 16) {
-    ////  BitFlagsEngine<Short> fbe(MS::columnName(MS::FLAG), flagColumn);
-    ////  newTab.bindColumn(MS::columnName(MS::FLAG), fbe);
-    ////} else {
-    ////  BitFlagsEngine<Int> fbe(MS::columnName(MS::FLAG), flagColumn);
-    ////  newTab.bindColumn(MS::columnName(MS::FLAG), fbe);
-    ////}
+    TiledColumnStMan tiledFlagBits(dmName, IPosition(3,4,tsf,tsr));
+    newTab.bindColumn(flagColumn, tiledFlagBits);
+    if (useBitFlagsEngine) {
+      // Map the flag bits column to the FLAG column.
+      if (nflagBits == 8) {
+        BitFlagsEngine<uChar> fbe(MS::columnName(MS::FLAG), flagColumn);
+        newTab.bindColumn(MS::columnName(MS::FLAG), fbe);
+      } else if (nflagBits == 16) {
+        BitFlagsEngine<Short> fbe(MS::columnName(MS::FLAG), flagColumn);
+        newTab.bindColumn(MS::columnName(MS::FLAG), fbe);
+      } else {
+        BitFlagsEngine<Int> fbe(MS::columnName(MS::FLAG), flagColumn);
+        newTab.bindColumn(MS::columnName(MS::FLAG), fbe);
+      }
+    }
   }
   // Create the MS and its subtables.
   // Get access to its columns.

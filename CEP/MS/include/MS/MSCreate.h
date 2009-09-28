@@ -74,8 +74,9 @@ public:
 	    double startTime, double timeStep, int nfreq, int ncorr,
 	    int nantennas, const casa::Matrix<double>& antPos,
 	    bool writeAutoCorr,
-	    int tileSizeFreq, int tileSizeRest,
-            const std::string& flagColumn=std::string(), int nflagBits=0);
+	    int tileSizeFreq, int tileSize,
+            const std::string& flagColumn=std::string(), int nflagBits=0,
+            bool useBitFlagsEngine=false);
 
   // Destructor
   ~MSCreate();
@@ -140,8 +141,9 @@ private:
   // Create the MS and fill its subtables as much as possible.
   void createMS (const casa::String& msName, 
 		 const casa::Block<casa::MPosition>& antPos,
-		 int tileSizeFreq, int tileSizeRest,
-                 const casa::String& flagColumn, int nflagBits);
+		 int tileSizeFreq, int tileSize,
+                 const casa::String& flagColumn, int nflagBits,
+                 bool useBitFlagsEngine);
 
   // Set the band.
   int addBand (int npolarizations, int nchannels,

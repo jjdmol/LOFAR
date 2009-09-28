@@ -58,8 +58,9 @@ int    itsNBand;
 int    itsNFreq;
 int    itsNTime;
 int    itsTileSizeFreq;
-int    itsTileSizeRest;
+int    itsTileSize;     //# in KBytes
 int    itsNFlags;
+bool   itsUseBitFlagsEngine;
 vector<double> itsStartFreq;
 vector<double> itsStepFreq;
 double itsStartTime;
@@ -96,7 +97,7 @@ void readParms (const string& parset)
   itsNPart = params.getInt32 ("NParts");
   // Determine possible tile size. Default is no tiling.
   itsTileSizeFreq = params.getInt32 ("TileSizeFreq", -1);
-  itsTileSizeRest = params.getInt32 ("TileSizeRest", -1);
+  itsTileSize = params.getInt32 ("TileSize", -1);
   // Determine nr of bands per part.
   ASSERT (itsNPart > 0);
   ASSERT (itsNBand > 0);
@@ -131,11 +132,12 @@ void readParms (const string& parset)
     ASSERT (itsStartFreq[i] > 0);
   }
   // Get remaining parameters.
-  itsWriteAutoCorr  = params.getBool   ("WriteAutoCorr", False);
-  itsWriteImagerCol = params.getBool   ("WriteImagerColumns", False);
-  itsMsName         = params.getString ("MSName");
-  itsFlagColumn     = params.getString ("FlagColumn", "");
-  itsNFlags         = params.getInt    ("NFlagBits", 8);
+  itsWriteAutoCorr     = params.getBool   ("WriteAutoCorr", false);
+  itsWriteImagerCol    = params.getBool   ("WriteImagerColumns", false);
+  itsMsName            = params.getString ("MSName");
+  itsFlagColumn        = params.getString ("FlagColumn", "");
+  itsNFlags            = params.getInt    ("NFlagBits", 8);
+  itsUseBitFlagsEngine = params.getBool   ("UseBitFlagsEngine", true);
   // Get directory part of MSName.
   string defaultVdsPath;
   string::size_type pos = itsMsName.rfind ('/');
@@ -161,7 +163,8 @@ void createMS (int nband, int bandnr, const string& msName)
   MSCreate msmaker(msName, itsStartTime, itsStepTime, nfpb, 4,
                    itsAntPos.shape()[1],
 		   Matrix<double>(itsAntPos), itsWriteAutoCorr,
-		   itsTileSizeFreq, itsTileSizeRest, itsFlagColumn, itsNFlags);
+		   itsTileSizeFreq, itsTileSize, itsFlagColumn, itsNFlags,
+                   itsUseBitFlagsEngine);
   for (int i=0; i<nband; ++i) {
     // Determine middle of band.
     double freqRef = itsStartFreq[bandnr] + nfpb*itsStepFreq[bandnr]/2;
