@@ -14,7 +14,7 @@ public class OTDBRepositoryTest {
 	public void setUp() throws Exception {
 		OTDBConfiguration config =new OTDBConfiguration();
 		config.setRmiHost("lofar17");
-		config.setRmiPort(10399);
+		config.setRmiPort(10500);
 		repository = new OTDBRepository(config);
 	}
 

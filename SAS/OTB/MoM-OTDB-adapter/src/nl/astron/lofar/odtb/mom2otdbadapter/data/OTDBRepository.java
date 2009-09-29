@@ -38,7 +38,7 @@ public class OTDBRepository implements Repository {
 
 	// private static final int TEMPLATE_ID = 50091980;
 
-	public static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+	public static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
 	private boolean connected = false;
 

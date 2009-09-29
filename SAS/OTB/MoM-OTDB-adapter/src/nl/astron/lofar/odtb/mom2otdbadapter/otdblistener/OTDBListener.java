@@ -74,7 +74,7 @@ public class OTDBListener extends Thread {
 				 * save the time period of this retrieval
 				 */
 				queue.saveTimePeriod();
-				log.debug("Going to sleep");
+				log.debug("Going to sleep: " + (milliseconds / MILLISECONDS));
 				/*
 				 * sleep a given milliseconds
 				 */
@@ -88,6 +88,7 @@ public class OTDBListener extends Thread {
 				log.error("RepositoryException: " + e.getMessage(), e);
 			}
 		}
+
 	}
 
 	/**
