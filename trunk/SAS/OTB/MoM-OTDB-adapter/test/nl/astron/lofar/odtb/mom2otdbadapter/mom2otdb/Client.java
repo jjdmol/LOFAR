@@ -50,7 +50,7 @@ public class Client {
 		BasicHttpParams params = new BasicHttpParams();
 //		System.out.println("POST: " + builder.toString());
 //		params.setParameter("observation", builder.toString());
-		System.out.println(client.doPost("https://localhost/CRAFT/user/setUpIssueList.do", params, entity, new StringResponseHandler()));
+		System.out.println(client.doPost("https://localhost/CRAFT/user/setUpIssueList.do", entity, new StringResponseHandler()));
 
 
 	}

@@ -35,6 +35,8 @@ public class Beam implements Serializable {
 	 */
 	private Integer duration;
 	
+	private Integer angleTime;
+	
 	/**
 	 * subbands that must be used (mom2 -> otdb)
 	 * e.g. [1,3,5,7]
@@ -83,6 +85,16 @@ public class Beam implements Serializable {
 
 	public void setDuration(Integer duration) {
 		this.duration = duration;
+	}
+
+	
+	
+	public Integer getAngleTime() {
+		return angleTime;
+	}
+
+	public void setAngleTime(Integer angleTime) {
+		this.angleTime = angleTime;
 	}
 
 	public String getSubbands() {

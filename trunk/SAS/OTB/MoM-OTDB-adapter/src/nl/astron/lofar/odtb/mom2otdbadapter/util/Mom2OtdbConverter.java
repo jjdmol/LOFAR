@@ -23,11 +23,11 @@ public class Mom2OtdbConverter {
 	public static final String OTDB_BEING_SPECIFIED_STATUS = "being specified";
 	public static final String MOM2_DESCRIBED_STATUS = "described";
 	public static final String MOM2_SPECIFIED_STATUS = "specified";	
-	public static final String MOM2_RUNNING_STATUS = "running";
+	public static final String MOM2_ACTIVE_STATUS = "active";
 	public static final String MOM2_PREPARED_STATUS = "prepared";
 	public static final String MOM2_FAILED_STATUS = "failed";
 	public static final String MOM2_ABORTED_STATUS = "aborted";
-	public static final String MOM2_FINISHED_STATUS = "finished";	
+	public static final String MOM2_SUCCESSFUL_STATUS = "successful";	
 	public static final String OTDB_FAILED_STATUS = "failed";
 	public static final String OTDB_ABORTED_STATUS = "aborted";
 	public static final String OTDB_FINISHED_STATUS = "finished";
@@ -117,10 +117,10 @@ public class Mom2OtdbConverter {
 			return MOM2_PREPARED_STATUS;
 		}
 		if (code.equals(OTDB_ACTIVE_STATUS)) {
-			return MOM2_RUNNING_STATUS;
+			return MOM2_ACTIVE_STATUS;
 		}
 		if (code.equals(OTDB_FINISHED_STATUS)) {
-			return MOM2_FINISHED_STATUS;
+			return MOM2_SUCCESSFUL_STATUS;
 		}
 		if (code.equals(OTDB_ABORTED_STATUS)) {
 			return MOM2_ABORTED_STATUS;

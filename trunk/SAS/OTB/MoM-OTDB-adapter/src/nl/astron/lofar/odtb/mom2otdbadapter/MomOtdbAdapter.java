@@ -1,6 +1,11 @@
 package nl.astron.lofar.odtb.mom2otdbadapter;
 
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.TimeZone;
 
 import nl.astron.lofar.odtb.mom2otdbadapter.config.AdapterConfiguration;
@@ -11,6 +16,7 @@ import nl.astron.lofar.odtb.mom2otdbadapter.config.StubConfiguration;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.OTDBRepository;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.Repository;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.StubRepository;
+import nl.astron.lofar.odtb.mom2otdbadapter.mom2otdb.HttpServer;
 import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.OTDBListener;
 import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.Queue;
 import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.TaskExecutor;
@@ -25,8 +31,13 @@ public class MomOtdbAdapter {
 	/**
 	 * Starts all services
 	 * @throws IOException 
+	 * @throws CertificateException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws KeyStoreException 
+	 * @throws KeyManagementException 
+	 * @throws UnrecoverableKeyException 
 	 */
-	protected void startServices(Configuration config) throws IOException {
+	protected void startServices(Configuration config) throws IOException, UnrecoverableKeyException, KeyManagementException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
 		TimeZone.setDefault(TimeZone.getTimeZone("UTC")); 
 		Queue queue = new Queue();
 		Repository repository = null;
@@ -42,6 +53,8 @@ public class MomOtdbAdapter {
 		OTDBListener otdbListener = new OTDBListener(queue, config, repository);
 		otdbListener.start();
 
+		HttpServer server = new HttpServer(config, repository);
+		server.start();
 		//Mom2Listener server = new Mom2Listener(repository);
 		//server.start();
 	}
@@ -89,14 +102,14 @@ public class MomOtdbAdapter {
 //            logger.info("jOTDBServer started. LogPropFile: "+ logConfig);
 			Configuration configuration = new Configuration();
 			StubConfiguration stubConfiguration = new StubConfiguration();
-			stubConfiguration.setInterval(3000);
+			stubConfiguration.setInterval(5);
 			configuration.setRepository(stubConfiguration);
 			Mom2Configuration momConfiguration = new Mom2Configuration();
 			momConfiguration.setUsername("bastiaan");
 			momConfiguration.setPassword("bastiaan");
 			momConfiguration.setAuthUrl("http://localhost:8080/useradministration");
 			momConfiguration.setMom2SchemasUrl("http://localhost:8080/mom2lofar/schemas/");
-			momConfiguration.setMom2ImportUrl("http://localhost:8080/mom2lofar/interface/importMom2XML.do");
+			momConfiguration.setMom2ImportUrl("http://localhost:8080/mom2lofar/interface/importXML2.do");
 			configuration.setMom2(momConfiguration);
 			AdapterConfiguration adapterConfiguration = new AdapterConfiguration();
 			adapterConfiguration.setHttpPort(8081);
@@ -104,8 +117,10 @@ public class MomOtdbAdapter {
 			adapterConfiguration.setTrustedKeystorePassword("adapter-trusted");
 			adapterConfiguration.setKeystoreLocation("c:/mom-otdb-adapter-keystore.jks");
 			adapterConfiguration.setKeystorePassword("adapter");
+			configuration.setAdapter(adapterConfiguration);
 			adapter.startServices(configuration);
 		} catch (Exception e) {
+			e.printStackTrace();
 			adapter.showSyntax();
 			System.exit(0);
 		}

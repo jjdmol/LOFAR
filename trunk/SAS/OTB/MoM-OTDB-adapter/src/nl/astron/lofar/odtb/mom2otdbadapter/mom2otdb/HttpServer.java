@@ -1,5 +1,7 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.mom2otdb;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -67,16 +69,15 @@ public class HttpServer {
 	}
 	
 	public void start() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException{
-		ClassLoader cl = this.getClass().getClassLoader();
-		URL url = cl.getResource(config.getAdapter().getKeystoreLocation());
+		FileInputStream keyStoreInputStream = new FileInputStream(new File(config.getAdapter().getKeystoreLocation()));
 		KeyStore keystore = KeyStore.getInstance(JKS);
-		keystore.load(url.openStream(), config.getAdapter().getKeystorePassword().toCharArray());
+		keystore.load(keyStoreInputStream, config.getAdapter().getKeystorePassword().toCharArray());
 		KeyManagerFactory kmfactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 		kmfactory.init(keystore, config.getAdapter().getKeystorePassword().toCharArray());
 		KeyManager[] keymanagers = kmfactory.getKeyManagers();
-		URL trustedKeystoreUrl = cl.getResource(config.getAdapter().getTrustedKeystoreLocation());
+		FileInputStream trustedKeyStoreInputStream = new FileInputStream(new File(config.getAdapter().getTrustedKeystoreLocation()));
 		KeyStore trustedKeystore = KeyStore.getInstance(JKS);
-		trustedKeystore.load(trustedKeystoreUrl.openStream(), config.getAdapter().getTrustedKeystorePassword().toCharArray());		
+		trustedKeystore.load(trustedKeyStoreInputStream, config.getAdapter().getTrustedKeystorePassword().toCharArray());		
 	    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()); 
 	    tmf.init(trustedKeystore); 		
 		SSLContext sslcontext = SSLContext.getInstance("TLS");
