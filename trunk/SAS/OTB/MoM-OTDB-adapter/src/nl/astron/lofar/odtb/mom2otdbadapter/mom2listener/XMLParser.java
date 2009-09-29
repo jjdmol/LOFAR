@@ -9,6 +9,9 @@ import nl.astron.lofar.odtb.mom2otdbadapter.util.Mom2OtdbConverter;
 import nl.astron.lofar.odtb.mom2otdbadapter.util.XMLConstants;
 import nl.astron.util.AstronConverter;
 import nl.astron.util.AstronValidator;
+import nl.astron.util.Frequency;
+import nl.astron.util.XMLBuilder;
+import nl.astron.util.Frequency.Unit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -88,8 +91,7 @@ public class XMLParser {
 				lofarObservation.setAntennaSet(Mom2OtdbConverter.getOTDBAntennaSet(antenna));
 			}
 			if (elements.containsKey(XMLConstants.CLOCK)) {
-				lofarObservation.setClockMode(Mom2OtdbConverter.getOTDBClockMode(getValue(elements
-						.get(XMLConstants.CLOCK))));
+				lofarObservation.setClockMode(Mom2OtdbConverter.getOTDBClockMode(getMHzFrequency(elements.get(XMLConstants.CLOCK))));
 			}
 			if (elements.containsKey(XMLConstants.INSTRUMENT_FILTER)) {
 				lofarObservation.setBandFilter(Mom2OtdbConverter.getOTDBBandFilter(getValue(elements
@@ -107,6 +109,21 @@ public class XMLParser {
 
 		}
 
+	}
+	
+	private static Double getMHzFrequency(Element frequencyElement){
+		Frequency frequency = new Frequency();
+		Double result = null;
+		if (frequencyElement != null){
+			frequency.setFrequency(AstronConverter.toDouble(getValue(frequencyElement)));
+			frequency.setUnit(getAttribute(frequencyElement.getAttributes() , XMLBuilder.UNITS));
+			if (!frequency.getUnit().equals(Unit.MHZ)){
+				result = AstronConverter.getFrequencyFromFrequencyWithUnit(frequency);
+			}else {
+				result = frequency.getFrequency();
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -285,16 +302,6 @@ public class XMLParser {
 		return value;
 	}
 
-	/**
-	 * The equal method compares if an node has the given name
-	 * 
-	 * @param node
-	 * @param nodeName
-	 * @return true if equals
-	 */
-	private static boolean equal(Node node, String nodeName) {
-		return node.getNodeName().equals(nodeName);
-	}
 
 	/**
 	 * Compares if a node has the given name, ignoring the prefix of the node
@@ -358,4 +365,5 @@ public class XMLParser {
 			return false;
 		}
 	}
+
 }

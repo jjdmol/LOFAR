@@ -1,7 +1,5 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.mom2listener;
 
-import java.util.regex.Matcher;
-
 import nl.astron.lofar.odtb.mom2otdbadapter.util.Mom2OtdbConverter;
 
 import org.junit.Assert;
@@ -13,8 +11,8 @@ public class Mom2OtdbConverterTest {
 	//LBA_INNER|LBA_OUTER|LBA_SPARSE|LBA_X|LBA_Y|HBA_ONE|HBA_TWO|HBA_BOTH;-
 	@Test
 	public void testGetOTDBClockMode(){
-		Assert.assertEquals("<<ClockMode200", Mom2OtdbConverter.getOTDBClockMode("200 MHz"));
-		Assert.assertEquals("<<ClockMode160", Mom2OtdbConverter.getOTDBClockMode("160 MHz"));
+		Assert.assertEquals("<<Clock200", Mom2OtdbConverter.getOTDBClockMode(200.00d));
+		Assert.assertEquals("<<Clock160", Mom2OtdbConverter.getOTDBClockMode(160.0d));
 
 	}
 	
@@ -66,13 +64,6 @@ public class Mom2OtdbConverterTest {
 		Assert.assertEquals("LBA Sparse", Mom2OtdbConverter.getMom2Antenna("LBA_SPARSE"));
 		Assert.assertEquals("LBA X", Mom2OtdbConverter.getMom2Antenna("LBA_X"));
 		Assert.assertEquals("LBA Y", Mom2OtdbConverter.getMom2Antenna("LBA_Y"));
-	}
-	
-	@Test
-	public void testGetMom2Clock(){
-		Assert.assertEquals("200 MHz", Mom2OtdbConverter.getMom2Clock("<<ClockMode200"));
-		Assert.assertEquals("160 MHz", Mom2OtdbConverter.getMom2Clock("<<ClockMode160"));
-
 	}
 	
 	@Test

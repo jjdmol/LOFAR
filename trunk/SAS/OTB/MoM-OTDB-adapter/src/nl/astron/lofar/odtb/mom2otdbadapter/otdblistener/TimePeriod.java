@@ -9,6 +9,10 @@ import java.util.Date;
  *
  */
 public class TimePeriod implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8282521565309700261L;
 	protected Date startTime = null;
 	protected Date endTime = null;
 	public Date getEndTime() {

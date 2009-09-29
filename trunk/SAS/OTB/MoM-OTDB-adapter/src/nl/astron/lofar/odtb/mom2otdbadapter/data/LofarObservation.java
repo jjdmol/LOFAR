@@ -89,6 +89,7 @@ public class LofarObservation implements Serializable{
 	private Double subbandWidth;
 	private String fileNameMask;
 	private Integer samplesPerSecond;
+	private Double integrationInterval;
 
 	public Integer getMom2Id() {
 		return mom2Id;
@@ -212,6 +213,12 @@ public class LofarObservation implements Serializable{
 	}
 	public void setSamplesPerSecond(Integer samplesPerSecond) {
 		this.samplesPerSecond = samplesPerSecond;
+	}
+	public Double getIntegrationInterval() {
+		return integrationInterval;
+	}
+	public void setIntegrationInterval(Double integrationInterval) {
+		this.integrationInterval = integrationInterval;
 	}
 
 	
