@@ -37,7 +37,7 @@ namespace RTCP {
 class InputThread
 {
   public:
-			    InputThread(Stream *streamFromION, const Parset *ps);
+			    InputThread(Stream *streamFromION, const Parset *ps, unsigned sb = 0);
 			    ~InputThread();
 
     static const unsigned   maxReceiveQueueSize = 3;
@@ -49,6 +49,7 @@ class InputThread
     unsigned                itsNrInputs;
 
     Queue<unsigned>         itsReceiveQueueActivity;
+    static Queue<unsigned>  itsRcvdQueue;
 
   private:
     static void		    *mainLoopStub(void *inputThread);
@@ -57,6 +58,7 @@ class InputThread
     const Parset            *itsPS;
     Stream		    *itsStreamFromION; 
     pthread_t		    thread;
+    unsigned                itsSB;
 };
 
 } // namespace RTCP

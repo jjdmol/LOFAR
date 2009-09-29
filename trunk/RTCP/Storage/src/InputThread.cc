@@ -32,13 +32,15 @@
 namespace LOFAR {
 namespace RTCP {
 
+  Queue<unsigned> InputThread::itsRcvdQueue;
 
-InputThread::InputThread(Stream *streamFromION, const Parset *ps)
+  InputThread::InputThread(Stream *streamFromION, const Parset *ps, unsigned sb)
 :
   itsInputs(0),
   itsNrInputs(0),
   itsPS(ps),
-  itsStreamFromION(streamFromION)
+  itsStreamFromION(streamFromION),
+  itsSB(sb)
 {
   // transpose output stream holders
   for (unsigned i = 0; i < maxReceiveQueueSize; i ++) {
@@ -106,8 +108,12 @@ void InputThread::mainLoop()
 
       // signal to the subbandwriter that we obtained data
       itsReceiveQueueActivity.append(o);
+
+      // read is complete, enqueue SB number 
+      itsRcvdQueue.append(itsSB);
     }
   } catch (Stream::EndOfStreamException &) {
+    itsRcvdQueue.append(itsSB);
     itsInputs[0].freeQueue.append(data); // to include data when freeing, so actual queue number does not matter
   }
 
