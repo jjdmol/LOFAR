@@ -703,25 +703,22 @@ the parameters and sizes of the caches, by carefully choosing the
 placement of variables, objects and arrays in
 memory~\cite{Panda96memorydata}.
 
+The memory systems of the many-core architectures are quite
+complex. On the GPUs, for instance, several levels of texture cache
+are available, in addition to local memory, and application-managed
+shared memory in several banks.  than cannot be accessed
+concurrently. There also are complex interactions between the memory
+system and the hardware thread scheduler that tries to overlap memory
+latencies.  GPUs literally run tens of thousands of parallel threads
+to keep all functional units fully occupied.  We apply the techniques described
+above in software by hand, since we found that the current compilers
+for the many-core architectures do not (yet) implement them well on
+their complex memory systems.
 
+
+% OpenCL helpt misschien, door runtime compilation.
 
 \subsubsection{Appying the techniques}
-
-
-wij doen het met de hand, compilers nog niet goed genoeg. OpenCL helpt misschien, door runtime compilation.
-
-gpus:
-
-massively multi-threaded
-coalescing (different threads read/write subsequent addresses)
-order of magnitute more impact than on normal shared mem machines (10-100x slowdown if coalescing not right)
-banking of shared memory
-texture cache
-SMT to overlap delays
-Alles nodig voor goede performance, compilers doen dit (nog) niet.
-
-
-literally tens of thousends of parallel threads to keep all functional units busy, and to overlap mem latencies.
 
 So, the second step of mapping a signal-processing algorithm to a many-core architecture
 is optimizing the memory behavior. We can split this step into two phases:
