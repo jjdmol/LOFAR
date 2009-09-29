@@ -99,6 +99,12 @@ public class StationSelectionPanel extends javax.swing.JPanel {
                 }
             }
 
+            // if no active PIC tree we can't continue
+            if (itsTree == null) {
+                enableAllButtons(false);
+                return;
+            }
+
             // Now we have the operational PIC tree, we need to search for the Ring Node to find
             // all available  stations for that ring
             Vector stations = OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "LOFAR_PIC_"+itsName);
