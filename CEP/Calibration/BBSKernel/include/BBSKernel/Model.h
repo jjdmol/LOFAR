@@ -103,7 +103,7 @@ private:
 
     Source::Pointer makeSource(const SourceInfo &source);
 
-    Expr makeSpectralIndex(const SourceInfo &source);
+    Expr makeSpectralIndex(const SourceInfo &source, const string &stokesParm);
 
     void makeStationUvw();
 

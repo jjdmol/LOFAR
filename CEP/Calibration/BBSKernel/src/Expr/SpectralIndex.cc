@@ -36,11 +36,12 @@ Matrix SpectralIndex::getResultValue(const Request &request,
     ASSERT(args.size() == getChildCount());
 
     // Special case: No coefficients or a single real coefficient with value
-    // zero.
-    if(args.size() == 1 || (args.size() == 2 && !args.back()->isArray()
+    // zero. Return the Stokes parameter at the reference frequency in this
+    // case.
+    if(args.size() == 2 || (args.size() == 3 && !args.back()->isArray()
         && !args.back()->isComplex() && args.back()->getDouble() == 0.0))
     {
-        return Matrix(1.0);
+        return *args[1];
     }
 
     // Create a 2-D Matrix that contains the frequency for each sample. (We
@@ -59,8 +60,8 @@ Matrix SpectralIndex::getResultValue(const Request &request,
         }
     }
 
-    // Compute flux scale factor as:
-    // (v / v0) ^ (-1.0 * [c0 + c1 * log(v / v0) + c2 * log(v / v0)^2 + ...])
+    // Compute scale factor as:
+    // (v / v0) ^ (c0 + c1 * log(v / v0) + c2 * log(v / v0)^2 + ...)
     // Where v is the frequency and v0 is the reference frequency.
 
     // Compute log(v / v0).
@@ -69,13 +70,14 @@ Matrix SpectralIndex::getResultValue(const Request &request,
     // Compute c0 + log(v / v0) * c1 + log(v / v0)^2 * c2 + ... using Horner's
     // rule.
     Matrix exponent = *args.back();
-    for(unsigned int i = args.size() - 2; i >= 1; --i)
+    for(unsigned int i = args.size() - 2; i >= 2; --i)
     {
         exponent = exponent * base + *args[i];
     }
 
-    // Compute (v / v0) ^ -exponent.
-    return exp(base * (-exponent));
+    // Compute I0 * (v / v0) ^ exponent, where I0 is the value of the Stokes
+    // parameter at the reference frequency.
+    return *args[1] * exp(base * exponent);
 }
 
 } //# namespace BBS
