@@ -27,6 +27,8 @@ class LocationInfo
     unsigned remapOnTree(unsigned pset, unsigned core) const;
 #endif
 
+    void     print() const;
+
     unsigned rank() const;
     unsigned nrNodes() const;
     unsigned psetNumber() const;

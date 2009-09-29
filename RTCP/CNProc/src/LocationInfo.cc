@@ -44,15 +44,6 @@ void LocationInfo::getPersonality()
     exit(1);
   }
 
-  if (itsRank == 0)
-    LOG_DEBUG_STR(   "topology = ("
-		  << BGP_Personality_xSize(&itsPersonality) << ','
-		  << BGP_Personality_ySize(&itsPersonality) << ','
-		  << BGP_Personality_zSize(&itsPersonality) << "), torus wraparound = ("
-		  << (BGP_Personality_isTorusX(&itsPersonality) ? 'T' : 'F') << ','
-		  << (BGP_Personality_isTorusY(&itsPersonality) ? 'T' : 'F') << ','
-		  << (BGP_Personality_isTorusZ(&itsPersonality) ? 'T' : 'F') << ')');
-
   itsPsetNumbers.resize(itsNrNodes);
   itsPsetNumber = BGP_Personality_psetNum(&itsPersonality);
   itsPsetNumbers[itsRank] = itsPsetNumber;
@@ -65,18 +56,6 @@ void LocationInfo::getPersonality()
   for (unsigned rank = 0; rank < itsRank; rank ++)
     if (itsPsetNumbers[rank] == itsPsetNumber)
       ++ itsRankInPset;
-
-  //usleep(100000 * itsRank);
-
-  if (itsRank == 0) {
-    std::vector<std::vector<unsigned> > cores(BGP_Personality_numIONodes(&itsPersonality));
-
-    for (unsigned rank = 0; rank < itsPsetNumbers.size(); rank ++)
-      cores[itsPsetNumbers[rank]].push_back(rank);
-
-    for (unsigned pset = 0; pset < BGP_Personality_numIONodes(&itsPersonality); pset ++)
-      LOG_DEBUG_STR("pset " << pset << " contains cores " << cores[pset]);
-  }
 }
 
 
@@ -87,6 +66,27 @@ unsigned LocationInfo::remapOnTree(unsigned pset, unsigned core) const
   for (unsigned rank = 0;; rank ++)
     if (itsPsetNumbers[rank] == pset && core -- == 0)
       return rank;
+}
+
+
+void LocationInfo::print() const
+{
+
+  LOG_DEBUG_STR(   "topology = ("
+		<< BGP_Personality_xSize(&itsPersonality) << ','
+		<< BGP_Personality_ySize(&itsPersonality) << ','
+		<< BGP_Personality_zSize(&itsPersonality) << "), torus wraparound = ("
+		<< (BGP_Personality_isTorusX(&itsPersonality) ? 'T' : 'F') << ','
+		<< (BGP_Personality_isTorusY(&itsPersonality) ? 'T' : 'F') << ','
+		<< (BGP_Personality_isTorusZ(&itsPersonality) ? 'T' : 'F') << ')');
+
+  std::vector<std::vector<unsigned> > cores(BGP_Personality_numIONodes(&itsPersonality));
+
+  for (unsigned rank = 0; rank < itsPsetNumbers.size(); rank ++)
+    cores[itsPsetNumbers[rank]].push_back(rank);
+
+  for (unsigned pset = 0; pset < BGP_Personality_numIONodes(&itsPersonality); pset ++)
+    LOG_DEBUG_STR("pset " << pset << " contains cores " << cores[pset]);
 }
 
 #endif

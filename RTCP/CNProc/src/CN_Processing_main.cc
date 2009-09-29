@@ -103,12 +103,15 @@ int main(int argc, char **argv)
     INIT_BGP_LOGGER(sysInfo.str());
 #endif
   
-#if !defined HAVE_PKVERSION    
     if (locationInfo.rank() == 0) {
+      locationInfo.print();
+
+#if !defined HAVE_PKVERSION    
       std::string type = "brief";
       Version::show<CNProcVersion> (std::cout, "CNProc", type);
-    }
 #endif
+    }
+
     LOG_DEBUG("creating connection to ION ...");
     
     Stream *ionStream;
