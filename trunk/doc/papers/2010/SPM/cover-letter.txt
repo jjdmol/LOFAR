@@ -20,6 +20,12 @@ reviewer 1
 > improved for full acceptance
 
 
+by no means did we intend to claim that we developed new memory optimization techniques
+or try to "reinvent" them. We simply descrite techniques we used for optimizing
+algorithms on many core hardware, and introduce the terminilogy as it is used in the GPGPU
+field (e.g. "coalescing"). However, we do agree that it is a very good idea
+to provide more context. We added a complete new section ....@@@x
+
 
 reviewer 2
 ----------
