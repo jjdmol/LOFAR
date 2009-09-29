@@ -92,10 +92,12 @@ public class XMLGenerator {
 				.getMom2Antenna(observation.getAntennaSet()));
 		Element clockElement = xmlBuilder.addElement(observationAttributes, XMLConstants.CLOCK);
 
-		xmlBuilder.addTextElement(clockElement, "channelWidth", observation.getChannelWidth());
+		xmlBuilder.addFrequencyElement(clockElement, "channelWidth", observation.getChannelWidth());
 		xmlBuilder.addTextElement(clockElement, "samplesPerSecond", observation.getSamplesPerSecond());
-		xmlBuilder.addTextElement(clockElement, "subbandWidth", observation.getSubbandWidth());
-		xmlBuilder.addTextElement(clockElement, "systemClock", observation.getClockFrequency());
+		xmlBuilder.addFrequencyElement(clockElement, "subbandWidth", observation.getSubbandWidth());
+		xmlBuilder.addFrequencyElement(clockElement, "systemClock", observation.getClockFrequency());
+		xmlBuilder.addTextElement(observationAttributes, "integrationInterval", observation.getIntegrationInterval());
+		xmlBuilder.addTextElement(observationAttributes, "channelsPerSubband", observation.getChannelsPerSubband());				
 		xmlBuilder.addTextElement(observationAttributes, XMLConstants.INSTRUMENT_FILTER, Mom2OtdbConverter
 				.getMom2InstrumentFilter(observation.getBandFilter()));
 		Date startTime = observation.getStartTime();
@@ -140,18 +142,9 @@ public class XMLGenerator {
 					Element uvDataProduct = xmlBuilder.addIndexedElement(resultDataProducts, "uvDataProduct");
 
 					xmlBuilder.addTextElement(uvDataProduct, "name", fileMask.replaceAll("\\$\\{SUBBAND\\}", i + ""));
-					xmlBuilder.addTextElement(uvDataProduct, "type", Mom2OtdbConverter.getMom2DPFileType(fileMask));
+					xmlBuilder.addTextElement(uvDataProduct, "fileFormat", Mom2OtdbConverter.getMom2DPFileType(fileMask));
 					xmlBuilder.addTextElement(uvDataProduct, "subband", i);
 					xmlBuilder.addTextElement(uvDataProduct, "stationSubband", subbands[i]);
-					xmlBuilder.addDurationElement(uvDataProduct, "duration", beam.getDuration());
-					// xmlBuilder.addTextElement(uvDataProduct,
-					// "centralFrequency",
-					// beam.getDuration());
-					// xmlBuilder.addTextElement(uvDataProduct, "channelWidth",
-					// beam.getParentObservation().getChannelWidth());
-					// xmlBuilder.addTextElement(uvDataProduct,
-					// "numberOfChannels",
-					// beam.getParentObservation().getChannelsPerSubband());
 				}
 
 			}

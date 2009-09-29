@@ -1,5 +1,6 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.util;
 
+import java.text.DecimalFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,15 +36,15 @@ public class Mom2OtdbConverter {
 	public static final String OTDB_SPECIFIED_STATUS = "specified";
 	private static final String MHZ_SUFFIX = " MHz";
 	private static final String CLOCK_MODE = "<<Clock";
-	private static final Pattern CLOCK_MODE_PATTERN = Pattern.compile(CLOCK_MODE + "(\\d+)");
-	private static final Pattern CLOCK_PATTERN = Pattern.compile("(\\d+)" + MHZ_SUFFIX);
+	private static final DecimalFormat CLOCK_FORMATTER = new DecimalFormat("000");
 	private static final Pattern INSTRUMENT_FILTER_PATTERN = Pattern.compile("(\\d+-\\d+)" + MHZ_SUFFIX);	
-	public static String getOTDBClockMode(String clock){
-		Matcher clockMatcher = CLOCK_PATTERN.matcher(clock);
-		clockMatcher.find();
-		return CLOCK_MODE + clockMatcher.group(1);
+	public static String getOTDBClockMode(Double clock){
+		
+		return CLOCK_MODE + CLOCK_FORMATTER.format(clock);
 
 	}
+
+	
 	public static String getOTDBAntennaArray(String antenna){
 		return antenna.substring(0,3).toUpperCase();
 	}	
@@ -78,13 +79,6 @@ public class Mom2OtdbConverter {
 		n = n + 2;
 		result = result.substring(0,n) + result.substring(n, result.length()).toLowerCase();
 		return result;
-	}
-	
-	public static String getMom2Clock(String clockMode){
-		Matcher clockModeMatcher = CLOCK_MODE_PATTERN.matcher(clockMode);
-		clockModeMatcher.find();
-		return clockModeMatcher.group(1) + MHZ_SUFFIX;
-
 	}
 	
 	public static String getMom2InstrumentFilter(String bandFilter){

@@ -16,7 +16,7 @@ import nl.astron.lofar.odtb.mom2otdbadapter.config.StubConfiguration;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.OTDBRepository;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.Repository;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.StubRepository;
-import nl.astron.lofar.odtb.mom2otdbadapter.mom2otdb.HttpServer;
+import nl.astron.lofar.odtb.mom2otdbadapter.mom2listener.HttpServer;
 import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.OTDBListener;
 import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.Queue;
 import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.TaskExecutor;

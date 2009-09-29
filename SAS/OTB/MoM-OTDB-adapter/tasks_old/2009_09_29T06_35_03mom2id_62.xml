@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lofar:observation mom2Id="62"
+    xmlns:lofar="http://www.astron.nl/MoM2-Lofar"
+    xmlns:mom2="http://www.astron.nl/MoM2"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.astron.nl/MoM2-Lofar http://localhost:8080/mom2lofar/schemas/LofarMoM2.xsd http://www.astron.nl/MoM2 http://localhost:8080/mom2lofar/schemas/MoM2.xsd ">
+    <currentStatus>
+        <mom2:activeStatus/>
+    </currentStatus>
+    <children>
+        <item index="0">
+            <lofar:measurement mom2Id="63" xsi:type="lofar:UVMeasurementType">
+                <measurementAttributes>
+                    <ra>85.650575</ra>
+                    <dec>49.852009</dec>
+                    <equinox>J2000</equinox>
+                    <duration>PT10M</duration>
+                    <startTime>2009-09-29T06:35:03</startTime>
+                    <subbands>304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336</subbands>
+                </measurementAttributes>
+            </lofar:measurement>
+        </item>
+        <item index="1">
+            <lofar:measurement mom2Id="64" xsi:type="lofar:UVMeasurementType">
+                <measurementAttributes>
+                    <ra>85.650575</ra>
+                    <dec>49.852009</dec>
+                    <equinox>J2000</equinox>
+                    <duration>PT40M</duration>
+                    <startTime>2009-09-29T06:45:03</startTime>
+                    <subbands>304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336</subbands>
+                </measurementAttributes>
+            </lofar:measurement>
+        </item>
+        <item index="2">
+            <lofar:measurement mom2Id="65" xsi:type="lofar:UVMeasurementType">
+                <measurementAttributes>
+                    <ra>85.650575</ra>
+                    <dec>49.852009</dec>
+                    <equinox>J2000</equinox>
+                    <duration>PT10M</duration>
+                    <startTime>2009-09-29T07:25:03</startTime>
+                    <subbands>304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336</subbands>
+                </measurementAttributes>
+            </lofar:measurement>
+        </item>
+    </children>
+    <observationAttributes>
+        <observationId>1</observationId>
+        <antenna>HBA Both</antenna>
+        <clock>
+            <channelWidth>762.939453125</channelWidth>
+            <samplesPerSecond>196608</samplesPerSecond>
+            <subbandWidth>195312.5</subbandWidth>
+            <systemClock>200000000</systemClock>
+        </clock>
+        <instrumentFilter>10-90 MHz</instrumentFilter>
+        <startTime>2009-09-29T06:35:03</startTime>
+        <stations>
+            <station>
+                <name>CS302</name>
+            </station>
+            <station>
+                <name>CS303</name>
+            </station>
+        </stations>
+    </observationAttributes>
+</lofar:observation>
