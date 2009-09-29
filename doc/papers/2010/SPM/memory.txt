@@ -1,14 +1,29 @@
 reeds bekend:
 
-cache-aware dynamic memory allocation (dsa.pdf)
-caches
-cache lines
-associativity
-access patterns (data-access book)
-padding of arrays (Bacon94Framework.ps)
-compilers, suif (10.1.1.81.349.pdf, todaes97_panda_compilecache.pdf)
-hardware prefetching (10.1.1.117.6719.pdf)
 
+access patterns (data-access book genoemd door reviewer)
+embedded, signal processing
+mem optimizations through caching, data prefetching and software pipelining
+ook parallel / multi-processor 
+parallel maakt memory problem larger, data gaat niet alleen van core naar mem hierarchy, maar ook tussen cores.
+focus op multimedia, maar zeker toepasbaar op signal processing
+
+
+
+hardware:
+  caches
+  cache lines
+  associativity
+  hardware prefetching (10.1.1.117.6719.pdf)
+
+software:
+  compiler / runtime system
+    cache-aware dynamic memory allocation (dsa.pdf)
+    access patterns (data-access book genoemd door reviewer)
+    padding of arrays (Bacon94Framework.ps)
+    compilers, suif (10.1.1.81.349.pdf, todaes97_panda_compilecache.pdf)
+  algorithmic
+    wij doen het met de hand, compilers nog niet goed genoeg. OpenCL helpt misschien, door runtime compilation.
 
 gpus:
 
@@ -17,16 +32,21 @@ coalescing (different threads read/write subsequent addresses)
 order of magnitute more impact than on normal shared mem machines (10-100x slowdown if coalescing not right)
 banking of shared memory
 texture cache
+SMT to overlap delays
+Alles nodig voor goede performance, compilers doen dit (nog) niet.
+
+
+embedded: niet massively threaded, lagere clock, mem/processing gap is veel kleiner (gflops/byte GPU is x keer groter)
 
 
 Boek genoemd door reviewer
 --------------------------
 
 @Book{data-access,
-  ALTauthor = 	 {Catthoor, F. and Danckaert, K. and Kulkarni, K.K. and Brockmeyer, E. and Kjeldsberg, P.G. and van Achteren, T. and Omnes, T.},
+  author = 	 {Catthoor, F. and Danckaert, K. and Kulkarni, K.K. and Brockmeyer, E. and Kjeldsberg, P.G. and van Achteren, T. and Omnes, T.},
   ALTeditor = 	 {},
   title = 	 {Data Access and Storage Management for Embedded Programmable Processors},
-  publisher = 	 {},
+  publisher = 	 {Kluwer Academic Publishers},
   year = 	 {2002},
   OPTkey = 	 {},
   OPTvolume = 	 {},
