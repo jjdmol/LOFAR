@@ -64,8 +64,8 @@ suboptimally, and also deal with programmability.
 The correlator on the Blue Gene/P achieves a superb 96\% of the
 theoretical peak performance.  We show that the processing power and
 memory bandwidth of current GPUs are highly imbalanced. Because of
-this, the correlator achieves only 14\% of the peak on ATI GPUs, and
-26\% on NVIDIA GPUs.  The \mbox{Cell/B.E.} processor, in contrast,
+this, the correlator achieves only 16\% of the peak on ATI GPUs, and
+32\% on NVIDIA GPUs.  The \mbox{Cell/B.E.} processor, in contrast,
 achieves an excellent 92\%.  Many of the insights we discuss here are not only
 applicable to telescope correlators, are valuable when developing
 signal-processing applications in general.
@@ -1010,7 +1010,7 @@ not achieve acceptable performance. The low-level
 CAL model does, but it is difficult to use.
 The best-performing implementation uses a tile size of 4x3, thanks to
 the large number of registers.  
-Due to the low I/O performance, we achieve only 14\% of the theoretical peak.
+Due to the low I/O performance, we achieve only 16\% of the theoretical peak.
 
 
 
@@ -1048,9 +1048,9 @@ degradation.
 Registers are a shared resource. Using fewer registers in a kernel
 allows the use of more concurrent threads, hiding load delays.
 We found that using a relatively small tile size (3x2) and many threads increases performance.
-The kernel itself, without host-to-device communication achieves 31\%
+The kernel itself, without host-to-device communication achieves 38\%
 of the theoretical peak performance.  If we include communication, the
-performance drops to 26\% of the peak. Just like with the ATI
+performance drops to 32\% of the peak. Just like with the ATI
 hardware, this is caused by the low PCI-e bandwidth.  With NVIDIA
 hardware significant performance gains can be achieved by using asynchronous host-to-device I/O.
 
