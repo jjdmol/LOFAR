@@ -114,7 +114,7 @@ void RTStorage::preprocess()
     }
     /// create input stream and thread to handle the inputstream
     createInputStream(sb);
-    itsInputThreads.push_back(new InputThread(itsInputStreams[sb], itsPS));
+    itsInputThreads.push_back(new InputThread(itsInputStreams[sb], itsPS, sb));
   }  
 
   itsPreviousSequenceNumbers.resize(itsMyNrSubbands, itsNrOutputs);
@@ -131,16 +131,16 @@ void RTStorage::process()
 {
   std::vector<bool> finishedSubbands(itsMyNrSubbands, false);
   unsigned finishedSubbandsCount = 0;
-
+ 
   while (finishedSubbandsCount < itsMyNrSubbands) {
-    writeLogMessage();
    
-    for (unsigned sb = 0; sb < itsMyNrSubbands; sb++) {
-      if (!finishedSubbands[sb]) {
-	if(!processSubband(sb)) {
-	  finishedSubbands[sb] = true;
-	  ++finishedSubbandsCount;
-	}
+    unsigned sb = itsInputThreads[0]->itsRcvdQueue.remove();
+    if (sb == 0) writeLogMessage();
+
+    if (!finishedSubbands[sb]) {
+      if (!processSubband(sb)) {
+ 	finishedSubbands[sb] = true;
+ 	++finishedSubbandsCount;
       }
     }
   }
@@ -185,10 +185,8 @@ void RTStorage::writeLogMessage()
 #endif
 	       ", count = " << counter ++ <<
 	       ", timestamp = " << itsStartStamp + ((itsPreviousSequenceNumbers[0][0] + 1) *
-						     itsPS->nrSubbandSamples() * 
-						     itsPS->IONintegrationSteps()));
-
-  //  itsStartStamp += itsPS->nrSubbandSamples() * itsPS->IONintegrationSteps();
+						    itsPS->nrSubbandSamples() * 
+						    itsPS->IONintegrationSteps()));
 }
 
 
