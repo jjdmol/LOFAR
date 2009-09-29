@@ -42,17 +42,19 @@ class SpectralIndex: public ExprRep
 {
 public:
     template <typename T_Iterator>
-    SpectralIndex(const Expr &refFreq, T_Iterator first, T_Iterator last);
+    SpectralIndex(const Expr &refFreq, const Expr &refStokes, T_Iterator first,
+        T_Iterator last);
 
     virtual Matrix getResultValue(const Request &request,
         const std::vector<const Matrix*> &args);
 };
 
 template <typename T_Iterator>
-SpectralIndex::SpectralIndex(const Expr &refFreq, T_Iterator first,
-    T_Iterator last)
+SpectralIndex::SpectralIndex(const Expr &refFreq, const Expr &refStokes,
+    T_Iterator first, T_Iterator last)
 {
     addChild(refFreq);
+    addChild(refStokes);
     while(first != last)
     {
         addChild(*first++);

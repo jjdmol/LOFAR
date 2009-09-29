@@ -53,7 +53,6 @@ GaussianCoherence::GaussianCoherence(const GaussianSource::ConstPointer &source,
 	addChild(source->getQ());
 	addChild(source->getU());
 	addChild(source->getV());
-    addChild(source->getSpectralIndex());
 	addChild(source->getMajor());
 	addChild(source->getMinor());
 	addChild(source->getPhi());
@@ -63,7 +62,7 @@ JonesResult GaussianCoherence::getJResult(const Request &request)
 {
     enum ChildExprIndex
     {
-        IN_I, IN_Q, IN_U, IN_V, IN_SI, IN_MAJOR, IN_MINOR, IN_PHI
+        IN_I, IN_Q, IN_U, IN_V, IN_MAJOR, IN_MINOR, IN_PHI
     };
 
     // Evaluate source parameters.
@@ -74,7 +73,6 @@ JonesResult GaussianCoherence::getJResult(const Request &request)
     const Result &qk = getChild(IN_Q).getResultSynced(request, qkBuf);
     const Result &uk = getChild(IN_U).getResultSynced(request, ukBuf);
     const Result &vk = getChild(IN_V).getResultSynced(request, vkBuf);
-    const Result &si = getChild(IN_SI).getResultSynced(request, siBuf);
     const Result &major = getChild(IN_MAJOR).getResultSynced(request, majorBuf);
     const Result &minor = getChild(IN_MINOR).getResultSynced(request, minorBuf);
     const Result &phi = getChild(IN_PHI).getResultSynced(request, phiBuf);
@@ -118,68 +116,61 @@ JonesResult GaussianCoherence::getJResult(const Request &request)
     Matrix vBaseline = vStation2.getValue() - vStation1.getValue();
 
     // Compute spatial coherence for a gaussian source.
-    Matrix coherence = computeCoherence(request, uBaseline, vBaseline,
-        major.getValue(), minor.getValue(), phi.getValue());
+    Matrix coherence_2 = computeCoherence(request, uBaseline, vBaseline,
+        major.getValue(), minor.getValue(), phi.getValue()) * 0.5;
 
     // Compute main result.
-    Matrix uv_2 = tocomplex(uk.getValue(), vk.getValue()) * 0.5;
+    Matrix uv = tocomplex(uk.getValue(), vk.getValue());
 
-    resXX.setValue(si.getValue() * coherence * (ik.getValue() + qk.getValue())
-        * 0.5);
-    resXY.setValue(uv_2 * coherence);
-    resYX.setValue(conj(uv_2) * coherence);
-    resYY.setValue(si.getValue() * coherence * (ik.getValue() - qk.getValue())
-        * 0.5);
+    resXX.setValue(coherence_2 * (ik.getValue() + qk.getValue()));
+    resXY.setValue(coherence_2 * uv);
+    resYX.setValue(coherence_2 * conj(uv));
+    resYY.setValue(coherence_2 * (ik.getValue() - qk.getValue()));
 
     // Compute the perturbed values.
     enum PValues
     {
-        PV_I, PV_Q, PV_U, PV_V, PV_SI, PV_MAJOR, PV_MINOR, PV_PHI, N_PValues
+        PV_I, PV_Q, PV_U, PV_V, PV_MAJOR, PV_MINOR, PV_PHI, N_PValues
     };
 
-    const Result *pvSet[N_PValues] = {&ik, &qk, &uk, &vk, &si, &major, &minor,
-        &phi};
+    const Result *pvSet[N_PValues] = {&ik, &qk, &uk, &vk, &major, &minor, &phi};
     PValueSetIterator<N_PValues> pvIter(pvSet);
 
     while(!pvIter.atEnd())
     {
-        bool evalIQ = pvIter.hasPValue(PV_I) || pvIter.hasPValue(PV_Q)
-            || pvIter.hasPValue(PV_SI);
+        bool evalIQ = pvIter.hasPValue(PV_I) || pvIter.hasPValue(PV_Q);
         bool evalUV = pvIter.hasPValue(PV_U) || pvIter.hasPValue(PV_V);
         bool evalCoh = pvIter.hasPValue(PV_MAJOR) || pvIter.hasPValue(PV_MINOR)
             || pvIter.hasPValue(PV_PHI);
 
-        Matrix pvUV_2(uv_2);
-        Matrix pvCoh(coherence);
+        Matrix pvUV(uv);
+        Matrix pvCoh_2(coherence_2);
 
         if(evalUV)
         {
-            pvUV_2 = tocomplex(pvIter.value(PV_U), pvIter.value(PV_V)) * 0.5;
+            pvUV = tocomplex(pvIter.value(PV_U), pvIter.value(PV_V));
         }
 
         if(evalCoh)
         {
-            pvCoh = computeCoherence(request, uBaseline, vBaseline,
+            pvCoh_2 = computeCoherence(request, uBaseline, vBaseline,
                 pvIter.value(PV_MAJOR), pvIter.value(PV_MINOR),
-                pvIter.value(PV_PHI));
+                pvIter.value(PV_PHI)) * 0.5;
         }
 
         if(evalIQ || evalCoh)
         {
             const Matrix &pvI = pvIter.value(PV_I);
             const Matrix &pvQ = pvIter.value(PV_Q);
-            const Matrix &pvSI = pvIter.value(PV_SI);
 
-            resXX.setPerturbedValue(pvIter.key(), pvSI * pvCoh * (pvI + pvQ)
-                * 0.5);
-            resYY.setPerturbedValue(pvIter.key(), pvSI * pvCoh * (pvI - pvQ)
-                * 0.5);
+            resXX.setPerturbedValue(pvIter.key(), pvCoh_2 * (pvI + pvQ));
+            resYY.setPerturbedValue(pvIter.key(), pvCoh_2 * (pvI - pvQ));
         }
 
         if(evalUV || evalCoh)
         {
-            resXY.setPerturbedValue(pvIter.key(), pvUV_2 * pvCoh);
-            resYX.setPerturbedValue(pvIter.key(), conj(pvUV_2) * pvCoh);
+            resXY.setPerturbedValue(pvIter.key(), pvCoh_2 * pvUV);
+            resYX.setPerturbedValue(pvIter.key(), pvCoh_2 * conj(pvUV));
         }
 
         pvIter.next();

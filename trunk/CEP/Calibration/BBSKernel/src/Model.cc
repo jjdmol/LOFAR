@@ -726,14 +726,13 @@ Source::Pointer Model::makeSource(const SourceInfo &source)
         {
             Expr ra = makeExprParm(SKY, "Ra:" + source.getName());
             Expr dec = makeExprParm(SKY, "Dec:" + source.getName());
-            Expr i = makeExprParm(SKY, "I:" + source.getName());
+            Expr i = makeSpectralIndex(source, "I");
             Expr q = makeExprParm(SKY, "Q:" + source.getName());
             Expr u = makeExprParm(SKY, "U:" + source.getName());
             Expr v = makeExprParm(SKY, "V:" + source.getName());
-            Expr spectral = makeSpectralIndex(source);
 
             return PointSource::Pointer(new PointSource(source.getName(),
-                ra, dec, i, q, u, v, spectral));
+                ra, dec, i, q, u, v));
         }
         break;
 
@@ -741,17 +740,16 @@ Source::Pointer Model::makeSource(const SourceInfo &source)
         {
             Expr ra = makeExprParm(SKY, "Ra:" + source.getName());
             Expr dec = makeExprParm(SKY, "Dec:" + source.getName());
-            Expr i = makeExprParm(SKY, "I:" + source.getName());
+            Expr i = makeSpectralIndex(source, "I");
             Expr q = makeExprParm(SKY, "Q:" + source.getName());
             Expr u = makeExprParm(SKY, "U:" + source.getName());
             Expr v = makeExprParm(SKY, "V:" + source.getName());
             Expr maj = makeExprParm(SKY, "Major:" + source.getName());
             Expr min = makeExprParm(SKY, "Minor:" + source.getName());
             Expr phi = makeExprParm(SKY, "Phi:" + source.getName());
-            Expr spectral = makeSpectralIndex(source);
 
             return GaussianSource::Pointer(new GaussianSource(source.getName(),
-                ra, dec, i, q, u, v, spectral, maj, min, phi));
+                ra, dec, i, q, u, v, maj, min, phi));
         }
         break;
 
@@ -763,14 +761,17 @@ Source::Pointer Model::makeSource(const SourceInfo &source)
     return Source::Pointer();
 }
 
-Expr Model::makeSpectralIndex(const SourceInfo &source)
+Expr Model::makeSpectralIndex(const SourceInfo &source,
+    const string &stokesParm)
 {
     unsigned int degree =
         static_cast<unsigned int>(ParmManager::instance().getDefaultValue(SKY,
             "SpectralIndexDegree:" + source.getName()));
 
-    Expr reference = makeExprParm(SKY, "ReferenceFrequency:"
-        + source.getName());
+    // Reference frequency.
+    Expr refFreq = makeExprParm(SKY, "ReferenceFrequency:" + source.getName());
+    // Stokes parameter value at the reference frequency.
+    Expr refStokes = makeExprParm(SKY, stokesParm + ":" + source.getName());
 
     vector<Expr> coefficients;
     coefficients.reserve(degree + 1);
@@ -781,7 +782,7 @@ Expr Model::makeSpectralIndex(const SourceInfo &source)
         coefficients.push_back(makeExprParm(SKY, name.str()));
     }
 
-    return Expr(new SpectralIndex(reference, coefficients.begin(),
+    return Expr(new SpectralIndex(refFreq, refStokes, coefficients.begin(),
         coefficients.end()));
 }
 

@@ -40,7 +40,6 @@ PointCoherence::PointCoherence(const PointSource::ConstPointer &source)
     addChild(source->getQ());
     addChild(source->getU());
     addChild(source->getV());
-    addChild(source->getSpectralIndex());
 }
 
 
@@ -61,39 +60,36 @@ JonesResult PointCoherence::getJResult(const Request &request)
     const Result& qk = getChild(1).getResultSynced(request, qkBuf);
     const Result& uk = getChild(2).getResultSynced(request, ukBuf);
     const Result& vk = getChild(3).getResultSynced(request, vkBuf);
-    const Result& si = getChild(4).getResultSynced(request, siBuf);
 
     // Compute main value.
-    Matrix uvk_2 = tocomplex(uk.getValue(), vk.getValue()) * 0.5;
-    resXX.setValue(si.getValue() * (ik.getValue() + qk.getValue()) * 0.5);
+    Matrix uvk_2 = 0.5 * tocomplex(uk.getValue(), vk.getValue());
+    resXX.setValue(0.5 * (ik.getValue() + qk.getValue()));
     resXY.setValue(uvk_2);
     resYX.setValue(conj(uvk_2));
-    resYY.setValue(si.getValue() * (ik.getValue() - qk.getValue()) * 0.5);
+    resYY.setValue(0.5 * (ik.getValue() - qk.getValue()));
 
     // Compute perturbed values.
     enum PValues
-    { PV_I, PV_Q, PV_U, PV_V, PV_SI, N_PValues };
+    { PV_I, PV_Q, PV_U, PV_V, N_PValues };
 
-    const Result *pvSet[N_PValues] = {&ik, &qk, &uk, &vk, &si};
+    const Result *pvSet[N_PValues] = {&ik, &qk, &uk, &vk};
     PValueSetIterator<N_PValues> pvIter(pvSet);
 
     while(!pvIter.atEnd())
     {
-        if(pvIter.hasPValue(PV_I) || pvIter.hasPValue(PV_Q)
-            || pvIter.hasPValue(PV_SI))
+        if(pvIter.hasPValue(PV_I) || pvIter.hasPValue(PV_Q))
         {
           const Matrix &pvI = pvIter.value(PV_I);
           const Matrix &pvQ = pvIter.value(PV_Q);
-          const Matrix &pvSI = pvIter.value(PV_SI);
-          resXX.setPerturbedValue(pvIter.key(), pvSI * (pvI + pvQ) * 0.5);
-          resYY.setPerturbedValue(pvIter.key(), pvSI * (pvI - pvQ) * 0.5);
+          resXX.setPerturbedValue(pvIter.key(), 0.5 * (pvI + pvQ));
+          resYY.setPerturbedValue(pvIter.key(), 0.5 * (pvI - pvQ));
         }
 
         if(pvIter.hasPValue(PV_U) || pvIter.hasPValue(PV_V))
         {
             const Matrix &pvU = pvIter.value(PV_U);
             const Matrix &pvV = pvIter.value(PV_V);
-            Matrix uvkp_2 = tocomplex(pvU, pvV) * 0.5;
+            Matrix uvkp_2 = 0.5 * tocomplex(pvU, pvV);
             resXY.setPerturbedValue(pvIter.key(), uvkp_2);
             resYX.setPerturbedValue(pvIter.key(), conj(uvkp_2));
         }

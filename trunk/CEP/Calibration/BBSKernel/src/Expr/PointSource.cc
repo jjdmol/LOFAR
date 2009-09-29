@@ -28,14 +28,13 @@ namespace LOFAR
 namespace BBS
 {
 
-PointSource::PointSource(const string& name, const Expr &ra, const Expr &dec,
-    const Expr &I, const Expr &Q, const Expr &U, const Expr &V, const Expr &si)
+PointSource::PointSource(const string &name, const Expr &ra, const Expr &dec,
+    const Expr &I, const Expr &Q, const Expr &U, const Expr &V)
     :   Source(name, ra, dec),
         itsI(I),
         itsQ(Q),
         itsU(U),
-        itsV(V),
-        itsSpectralIndex(si)
+        itsV(V)
 {
 }
 

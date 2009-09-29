@@ -30,14 +30,13 @@ namespace BBS
 
 GaussianSource::GaussianSource(const string &name,
     const Expr &ra, const Expr &dec,
-    const Expr &I, const Expr &Q, const Expr &U, const Expr &V, const Expr &si,
+    const Expr &I, const Expr &Q, const Expr &U, const Expr &V,
     const Expr &major, const Expr &minor, const Expr &phi)
     :   Source(name, ra, dec),
         itsI(I),
         itsQ(Q),
         itsU(U),
         itsV(V),
-        itsSpectralIndex(si),
         itsMajor(major),
         itsMinor(minor),
         itsPhi(phi)
