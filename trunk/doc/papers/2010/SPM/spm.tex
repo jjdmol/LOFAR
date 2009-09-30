@@ -270,7 +270,7 @@ The cost
 is dominated by the cost of computing and will follow Moore's law,
 becoming cheaper with time and allowing increasingly large telescopes
 to be built. 
-\longversion{
+
 LOFAR will enable exciting new science cases.  First, we expect to see
 the \emph{Epoch of Reionization\/} (EoR), the time that the first star
 galaxies and quasars were formed. Second, LOFAR offers a unique
@@ -284,9 +284,8 @@ switch focus to some galactic event.  Fourth, \emph{Deep Extragalactic
 galaxies and study star-forming galaxies.  Fifth, LOFAR will be
 capable of observing the so far unexplored radio waves emitted by
 \emph{cosmic magnetic fields}.  For a more extensive description of
-the astronomical aspects of the LOFAR system, see De Bruyn
-et.~al.~\cite{Bruyn:02}.
-}
+the astronomical aspects of the LOFAR system, see~\cite{lofar}.
+
 A global overview of the LOFAR processing is given in
 Figure~\ref{fig:lofar-overview}. The thickness of the lines indicates
 the size of the data streams.  Initial processing is done in the
@@ -347,7 +346,6 @@ numbers: two polarizations, each with a real and an imaginary part.
 
 LOFAR uses an FX correlator: it first filters the different frequencies, and
 then correlates the signals. This is more efficient than an XF correlator for larger numbers of receivers.
-\longversion{
 Prior to correlation, the data that comes from
 the receivers must be reordered:
 each input carries the signals of many frequency bands from a single
@@ -357,7 +355,8 @@ The data reordering phase is outside the scope of this paper, but a correlator
 implementation cannot ignore this issue.
 The LOFAR Blue Gene/P correlator uses the fast 3D~torus for this purpose;
 other multi-core architectures need external switches.
-}
+
+
 The received signals from sky sources are so weak, that the antennas 
 mainly receive noise. To see if there is statistical coherence
 in the noise, simultaneous samples of each pair of receivers are correlated, 
@@ -541,13 +540,11 @@ and is managed \emph{entirely by the application} with explicit DMA
 transfers to and from main memory.  The LS can be considered the SPU's (explicit) L1 cache.  The
 \mbox{Cell/B.E.} has a large number of registers: each SPU has 128,
 which are 128-bit (4 floats) wide.
-\longversion{
  The SPU can dispatch two
 instructions in each clock cycle using the two pipelines designated
 \emph{even} and \emph{odd}. Most of the arithmetic instructions
 execute on the even pipe, while most of the memory instructions
 execute on the odd pipe. 
-}
 For the performance evaluation, we use a QS21 Cell blade with two
 \mbox{Cell/B.E.} processors.
 The 8 SPEs of a single chip in the
@@ -1043,13 +1040,11 @@ ratio significantly.  We found that this optimization improved performance by a 
 This optimization is a good example that shows that, on GPUs, it is important to optimize
 memory behavior, even at the cost of additional instructions and synchronization overhead.
 
-\longversion{
 We also investigated the use of the per-multiprocessor shared memory as an
 application-managed cache.  Others report good results with this
 approach~\cite{gpu-cache}.  However, we found that, for our
 application, the use of shared memory only led to performance
-degradation.
-}
+degradation compared to the use of the texture caches.
 
 Registers are a shared resource. Using fewer registers in a kernel
 allows the use of more concurrent threads, hiding load delays.
@@ -1155,7 +1150,6 @@ architectural strengths and weaknesses that we discussed.
 
 %@@@ larrabee / lange vectoren
 
-\longversion{
 \section{Programmability of the platforms}
 
 The performance gap between assembly and a high-level programming language 
@@ -1180,7 +1174,6 @@ should be kept in registers. With ATI hardware, this is different.  We
 found that the high-level Brook+ model does not achieve acceptable
 performance compared to hand-written CAL code.  Manually written assembly 
 is more than three times faster. Also, the Brook+ documentation is insufficient.
-}
 
 \longversion{
 \section{Applying the techniques: a case study with the Intel Larrabee}

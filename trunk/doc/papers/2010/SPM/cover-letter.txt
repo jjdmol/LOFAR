@@ -1,9 +1,13 @@
 We are very happy with the positive comments of the reviewers.
-In the full paper, we were able to address all issues that were identified by the reviewers.
+We were able to address all issues that were identified by the reviewers.
 
 Alg: 
 
-code on the web
+new things:
+
+code open sources and on the web
+section on programmability (Section 7)
+???
 
 reviewer 1
 ----------
@@ -22,12 +26,16 @@ reviewer 1
 > referenced and that the authors even try to "reinvent". This shall be
 > improved for full acceptance
 
+By no means did we intend to claim that we developed new memory
+optimization techniques, not did we try to reinvent them. Our aim was to simply
+describe techniques we used for optimizing algorithms on many core
+hardware, and we introduced the terminilogy as it is used in the GPGPU
+field (e.g. "coalescing"). We now clearly state this in the paper.
 
-By no means did we intend to claim that we developed new memory optimization techniques
-or try to "reinvent" them. We simply descrite techniques we used for optimizing
-algorithms on many core hardware, and introduce the terminilogy as it is used in the GPGPU
-field (e.g. "coalescing"). However, we do agree that it is a very good idea
-to provide more context. We added a complete new section ....@@@x
+However, we certainly agree that it is a very good
+idea to provide more context on memory-related optimizations, and
+refer to the large body of research that was already done in this
+area. We added a complete new section, Section 5.2.1 about this.
 
 
 reviewer 2
