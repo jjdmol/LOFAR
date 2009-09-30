@@ -651,18 +651,18 @@ information on memory-system related optimizations.
 
 We can make a distinction between hardware and software memory
 optimization techniques.  Examples of hardware-based techniques include caching, data
-prefetching and pipelining. The software techniques can be divided
+prefetching, write combining, and pipelining. The software techniques can be divided
 further into compiler optimizations and algorithmic improvements.
   The distinction between hardware and
 software is not entirely black and white. Data prefetching, for
 instance, can be done both in harware and software.  Another good
-example is the explicit cache of the \mbox{Cell/B.E.} processor. It can be
-seen as an architecture where the programmer handles the cache
+example is the explicit cache of the \mbox{Cell/B.E.} processor. This is
+an architecture where the programmer handles the cache
 replacement policies instead of the hardware.
 
 Many optimizations focus on utilizing data caches more efficiently.
-Hardware cache hierarchies are in principle transparent for the
-application. Nevertheless, it is important to take the sizes of the
+Hardware cache hierarchies can, in principle, transparently improve application performance.
+Nevertheless, it is important to take the sizes of the
 different cache levels into account when optimizing an algorithm.  A
 cache line is the smallest unit of memory than can be transferred
 between the main memory and the cache.  Code can be optimized for the
@@ -671,45 +671,51 @@ associativity of the cache can be important.  If a cache is N-way set
 associative, this means that any particular location in memory can be
 cached in either of N locations in the data cache. Algorithms can be
 designed such that they take care that cache lines that are needed
-later are not replaced prematurely.  Finally, prefetching can be used
-to load data into caches or registers ahead of time.
+later are not replaced prematurely. 
+In addition, write combining,
+a technique that allows data writes to be combined and written later in burst mode,
+can be used if the ordering of writes is not important.
+Finally, prefetching can be used to load data into caches or registers ahead of time.
 
 Many cache-related optimization techniques have been described in the
-literature, both in the context of hardware and software. For instance,
-an efficient implementation of hardware-based prefetching is described
-in~\cite{Chen95effectivehardware-based}.  As we will describe in
-Section~\ref{sec:optimizing}, we implemented prefetching manually in software, for
-example by using multi-buffering on the \mbox{Cell/B.E.}, or by explicitly
-loading data into shared memory or registers on the GPUs.  A good
-starting point for cache-aware or cache-oblivious algorithms
-is~\cite{cache}. Another good example of a technique that we used to
-improve cache efficiencies for the correlator is the padding of multi-dimensional arrays
-with extra ``dummy'' data elements. This way, we can make sure that
-cache replacement policies work well, and subsequent elements in an array dimension are not mapped
-onto the same cache location. This well-known technique
-is described, for instance, by Bacon et al.~\cite{cache-tlb-compiler}.
-Many additional data access patterns optimization techniques are described
-in~\cite{data-access}.
+literature, both in the context of hardware and software. For
+instance, an efficient implementation of hardware-based prefetching is
+described in~\cite{Chen95effectivehardware-based}.  As we will
+describe in Section~\ref{sec:optimizing}, we implemented prefetching
+manually in software, for example by using multi-buffering on the
+\mbox{Cell/B.E.}, or by explicitly loading data into shared memory or
+registers on the GPUs.  A good starting point for cache-aware or
+cache-oblivious algorithms is~\cite{cache}. An example of a technique
+that we used to improve cache efficiencies for the correlator is the
+padding of multi-dimensional arrays with extra ``dummy'' data
+elements.  This can be especially important if memory is accessed with
+a stride of a (large) power of two.  This way, we can make sure that
+cache replacement policies work well, and subsequent elements in an
+array dimension are not mapped onto the same cache location.  This
+well-known technique is described, for instance, by Bacon et
+al.~\cite{cache-tlb-compiler}.  Many additional data access patterns
+optimization techniques are described in~\cite{data-access}.
 
-A large number of memory optimization techniques have been developed in the context
-of optimizing compilers and runtime systems. For instance, a lot of
-research effort has been invested in cache-aware memory allocation, see
+Many memory optimization techniques have been developed in the context
+of optimizing compilers and runtime systems (e.g., efficient memory allocators). 
+For instance, a lot of research effort has been invested in cache-aware memory allocation; see
 e.g.,~\cite{Wilson95dynamicstorage}.  Compilers can exploit many
 techniques to optimize locality, by applying code and loop
-transformations such as interchange, reversal, skewing and
+transformations such as interchange, reversal, skewing, and
 tiling~\cite{data-locality}.  Furthermore, compilers can optimize code for
 the parameters and sizes of the caches, by carefully choosing the
-placement of variables, objects and arrays in
+placement of variables, objects, and arrays in
 memory~\cite{Panda96memorydata}.
 
 The memory systems of the many-core architectures are quite
 complex. GPUs, for instance, have banked device memory, several levels of texture cache,
-in addition to local memory, and application-managed
-shared memory (also divided over several banks). 
+in addition to local memory, application-managed
+shared memory (also divided over several banks), and write combining buffers.
 There also are complex interactions between the memory
 system and the hardware thread scheduler.
 GPUs literally run tens of thousands of parallel threads
-to overlap memory latencies, trying to keep all functional units fully occupied.  We apply the techniques described
+to overlap memory latencies, trying to keep all functional units fully occupied.
+We apply the techniques described
 above in software by hand, since we found that the current compilers
 for the many-core architectures do not (yet) implement them well on
 their complex memory systems.
