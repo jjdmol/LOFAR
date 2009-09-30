@@ -604,36 +604,6 @@ optimizing the memory properties of the algorithms is more important
 than focusing on reducing the number of compute cycles that is used,
 as is traditionally done on systems with only a few or just one core.
 
-\begin{table}[t]
-\begin{center}
-{\footnotesize
-\begin{tabular}{|l|l|l|}
-\hline
-feature                   & Cell/B.E.                      & GPUs \\
-\hline
-access times              & uniform                        & non-uniform \\
-\hline
-cache sharing level       & single thread (SPE)            & all threads in a \\
-                          &                                & multiprocessor \\
-\hline
-access to off-chip mem.   & through DMA only               & supported \\
-\hline
-memory access             & asynchronous DMA               & hardware-managed \\
-overlapping               &                                & thread preemption \\
-\hline
-communication             & DMA between SPEs               & independent thread  \\
-                          &                                & blocks \& shared   \\
-                          &                                & mem. within a block \\
-\hline
-\end{tabular}
-} %\small
-\end{center}
-\vspace{-0.5cm}
-\caption{Differences between memory architectures.}
-\label{memory-properties}
-\end{table}
-
-
 
 \subsubsection{Well-known memory optimization techniques}
 
@@ -737,6 +707,35 @@ where different parallel operations read (but not write) the
 same data.  For the correlator, the most important insight here
 is a technique to exploit date reuse opportunities, reducing the number of memory
 loads. We explain this in detail in Section~\ref{sec:tiling}.
+
+\begin{table}[t]
+\begin{center}
+{\footnotesize
+\begin{tabular}{|l|l|l|}
+\hline
+feature                   & Cell/B.E.                      & GPUs \\
+\hline
+access times              & uniform                        & non-uniform \\
+\hline
+cache sharing level       & single thread (SPE)            & all threads in a \\
+                          &                                & multiprocessor \\
+\hline
+access to off-chip mem.   & through DMA only               & supported \\
+\hline
+memory access             & asynchronous DMA               & hardware-managed \\
+overlapping               &                                & thread preemption \\
+\hline
+communication             & DMA between SPEs               & independent thread  \\
+                          &                                & blocks \& shared   \\
+                          &                                & mem. within a block \\
+\hline
+\end{tabular}
+} %\small
+\end{center}
+\vspace{-0.5cm}
+\caption{Differences between memory architectures.}
+\label{memory-properties}
+\end{table}
 
 The second phase deals with architecture-specific optimizations.
 In this phase, we do not reduce the \emph{number} of memory loads, but think about the
@@ -1056,6 +1055,27 @@ hardware, this is caused by the low PCI-e bandwidth.  With NVIDIA
 hardware significant performance gains can be achieved by using asynchronous host-to-device I/O.
 
 
+\begin{table*}[t]
+\begin{center}
+%{\footnotesize % for normal layout
+{\scriptsize % for double spaced
+\begin{tabular}{l|l|l|l|l}
+Intel Core i7 920     & IBM Blue Gene/P          & ATI 4870                      & NVIDIA Tesla C1060     & STI  Cell/B.E.                      \\
+\hline
+ + well-known         &  + L2 prefetch unit      &  + largest number of cores    &  + random write access &  + power efficiency                 \\
+-- few registers      &  + high memory bandwidth &  + swizzling support          &  + Cuda is high-level  &  + random write access              \\
+-- no fma instruction &  + fast interconnects    & -- low PCI-e bandwidth        & -- low PCI-e bandwidth &  + shuffle capabilities             \\
+-- limited shuffling  & -- double precision only & -- transfer slows down kernel &                        &  + explicit cache (performance)     \\
+                      & -- expensive             & -- no random write access     &                        & -- explicit cache (programmability) \\
+                      &                          & -- bad programming support    &                        & -- multiple parallelism levels      \\
+\end{tabular}
+} %\small
+\end{center}
+\vspace{-0.5cm}
+\caption{Strengths and weaknesses of the different platforms for signal-processing applications.}
+\label{architecture-results-table}
+\end{table*}
+
 \noindent \\ \emph{The Cell Broadband Engine}
 
 \noindent With the
@@ -1103,27 +1123,6 @@ the high data reuse factor.
 
 \subsection{Comparison and Evaluation}
 \label{sec:perf-compare}
-
-\begin{table*}[t]
-\begin{center}
-%{\footnotesize % for normal layout
-{\scriptsize % for double spaced
-\begin{tabular}{l|l|l|l|l}
-Intel Core i7 920     & IBM Blue Gene/P          & ATI 4870                      & NVIDIA Tesla C1060     & STI  Cell/B.E.                      \\
-\hline
- + well-known         &  + L2 prefetch unit      &  + largest number of cores    &  + random write access &  + power efficiency                 \\
--- few registers      &  + high memory bandwidth &  + swizzling support          &  + Cuda is high-level  &  + random write access              \\
--- no fma instruction &  + fast interconnects    & -- low PCI-e bandwidth        & -- low PCI-e bandwidth &  + shuffle capabilities             \\
--- limited shuffling  & -- double precision only & -- transfer slows down kernel &                        &  + explicit cache (performance)     \\
-                      & -- expensive             & -- no random write access     &                        & -- explicit cache (programmability) \\
-                      &                          & -- bad programming support    &                        & -- multiple parallelism levels      \\
-\end{tabular}
-} %\small
-\end{center}
-\vspace{-0.5cm}
-\caption{Strengths and weaknesses of the different platforms for signal-processing applications.}
-\label{architecture-results-table}
-\end{table*}
 
 Figure~\ref{performance-graph} shows the performance on all
 architectures we evaluated. The NVIDIA GPU achieves the highest
