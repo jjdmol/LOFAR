@@ -1,13 +1,12 @@
-We are very happy with the positive comments of the reviewers.
-We were able to address all issues that were identified by the reviewers.
+﻿We are very happy with the positive comments. We were able to address all issues that were identified by the reviewers. 
 
-Alg: 
+We now provide context on memory-related optimizations, while referring to the large body of research that was done in this area (Section 5.2.1).
 
-new things:
+In addition, we added a section on the programmability of the many-core platforms (Section 7).
 
-code open sources and on the web
-section on programmability (Section 7)
-???
+We also open-sourced the code for the correlator on all platforms. We will make example code available on the web.
+
+Detailed comments are below.
 
 reviewer 1
 ----------
@@ -26,16 +25,9 @@ reviewer 1
 > referenced and that the authors even try to "reinvent". This shall be
 > improved for full acceptance
 
-By no means did we intend to claim that we developed new memory
-optimization techniques, not did we try to reinvent them. Our aim was to simply
-describe techniques we used for optimizing algorithms on many core
-hardware, and we introduced the terminilogy as it is used in the GPGPU
-field (e.g. "coalescing"). We now clearly state this in the paper.
+By no means did we intend to claim that we developed new memory optimization techniques, not did we try to reinvent them. Our aim was to simply describe techniques we used for optimizing algorithms on many core hardware, and we introduced the terminology as it is used in the GPGPU field (e.g. "coalescing"). We now clearly state this in the paper.
 
-However, we certainly agree that it is a very good
-idea to provide more context on memory-related optimizations, and
-refer to the large body of research that was already done in this
-area. We added a complete new section, Section 5.2.1 about this.
+However, we certainly agree that it is a very good idea to provide more context on memory-related optimizations, and refer to the large body of research that was already done in this area. We added a complete new section, Section 5.2.1 about this.
 
 
 reviewer 2
@@ -48,9 +40,9 @@ reviewer 2
 > stated purpose of the paper so can be left out (or put into a future
 > paper). 
 
-We agree that this is valuable knowledge, and are indeed working on
-this for a future paper.
+We agree that this is valuable knowledge, and are indeed working on this for a future paper.
  
+
 
 > Minor Revisions: 1. First line of abstract ia a bit awkward
 > and 'consist' instead of 'consists' - perhaps "Radio telescopes
@@ -74,8 +66,7 @@ The reviewer is correct. The reason for having more bits it to
 mitigate the impact of strong Radio Frequency Interference.
 We corrected this in the text.
 
-> Page 3, column 1, last line – remove ‘of’ to give ‘less
-> instructions’.
+> Page 3, column 1, last line – remove ‘of’ to give ‘less instructions’.
 
 Fixed.
 
