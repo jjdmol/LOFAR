@@ -65,9 +65,11 @@ unsigned char packet[MAX_PACKETSIZE];
 #define IP			(*(struct IP_header *)packet)
 #define UDP			(*(struct UDP_header *)((char*)packet + IP.headerlength * 4))
 #define EPA			(*(struct EPA_header *)((char*)&UDP + UDP_HEADERSIZE))
-#define DATA			((signed char *)((char*)&EPA + EPA_HEADERSIZE))
+#define DATA8			((uint8_t *)((char*)&EPA + EPA_HEADERSIZE))
+#define DATA16			((uint16_t *)((char*)&EPA + EPA_HEADERSIZE))
+#define DATA32			((uint32_t *)((char*)&EPA + EPA_HEADERSIZE))
 
-#define PAYLOAD_SIZE		(UDP.length - EPA_HEADERSIZE)
+#define PAYLOAD_SIZE		(UDP.length - EPA_HEADERSIZE - UDP_HEADERSIZE)
 #define EXPECTED_PPS(clock)	(1.0*clock*1e6/1024/EPA.times)
 
 /* a filter for the packets we're looking for */
@@ -223,20 +225,56 @@ int main( int argc, char **argv ) {
   } else {
     int zeros = 0;
     int i;
+    int elementbits = 0;
+    unsigned elements;
 
     do {
       recv( fd, &packet, sizeof packet, 0 );
     } while( !PACKETFILTER( port ) );
 
+    elements = EPA.beamlets * EPA.times * 2 /* polarizations */;
+    if( elements == 0 ) elements = 1; /* avoid dividing by 0 */
+
     /* little endian -> big endian */
     swap16( (char*)&EPA.station );
     swap32( (char*)&EPA.RSPtimestamp );
 
-    for( i = 0; i < PAYLOAD_SIZE; i++ ) {
-      if( !DATA[i] ) {
-        zeros++;
+    if( PAYLOAD_SIZE == elements * 4 ) { /* i16complex */
+      elementbits = 16;
+
+      for( i = 0; i < elements; i ++ ) {
+        if( !(DATA32[i] & 0xffff) ) {
+          zeros++;
+        }
+        if( !(DATA32[i] >> 16) ) {
+          zeros++;
+        }
+      }
+    } else if( PAYLOAD_SIZE == elements * 2 ) { /* i8complex */
+      elementbits = 8;
+
+      for( i = 0; i < elements; i ++ ) {
+        if( !(DATA16[i] & 0xff) ) {
+          zeros++;
+        }
+        if( !(DATA16[i] >> 8) ) {
+          zeros++;
+        }
+      }
+    } else if( PAYLOAD_SIZE == elements ) { /* i4complex */
+      elementbits = 4;
+
+      for( i = 0; i < elements; i ++ ) {
+        if( !(DATA8[i] & 0x0f) ) {
+          zeros++;
+        }
+        if( !(DATA8[i] >> 4) ) {
+          zeros++;
+        }
       }
     }
+
+    elements *= 2 ; /* compensate for real/imag */
 
     union {
       uint32_t integer;
@@ -272,6 +310,13 @@ int main( int argc, char **argv ) {
       printf("NOK Time samples:        %d (should be 16?)\n",EPA.times);
     }
 
+    if( elementbits == 0 ) {
+      printf("NOK Sample type:         UNKNOWN (payload = %d, expected samples = #beamlets * #times * 2 * 2 = %d)\n",PAYLOAD_SIZE,elements);
+    } else {
+      printf(" OK Sample type:         i%dcomplex\n",elementbits);
+    }
+
+
     if( EPA.RSPtimestamp == -1 ) {
       printf("NOK Timestamp UTC:       UNDEFINED (0xffffffff)\n");
     } else {
@@ -283,12 +328,12 @@ int main( int argc, char **argv ) {
       }
     }
 
-    if( zeros == PAYLOAD_SIZE ) {
-      printf("NOK Zeros in payload:    %.f %%\n",100.0*zeros/PAYLOAD_SIZE);
-    } else if( zeros > 0.5 * PAYLOAD_SIZE ) {
-      printf("NOK Zeros in payload:    %.f %% (did you set up %d beamlets?)\n",100.0*zeros/PAYLOAD_SIZE,EPA.beamlets);
+    if( zeros == elements ) {
+      printf("NOK Zeros in payload:    %.f %%\n",100.0*zeros/elements);
+    } else if( zeros > 0.25 * PAYLOAD_SIZE ) {
+      printf("NOK Zeros in payload:    %.f %% (did you set up %d beamlets?)\n",100.0*zeros/elements,EPA.beamlets);
     } else {
-      printf(" OK Zeros in payload:    %.f %%\n",100.0*zeros/PAYLOAD_SIZE);
+      printf(" OK Zeros in payload:    %.f %%\n",100.0*zeros/elements);
     }
 
     if(  rate < 0.99 * EXPECTED_PPS(160) 
