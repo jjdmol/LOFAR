@@ -27,7 +27,7 @@ public class StubRepository implements Repository {
 				}else if (Mom2OtdbConverter.OTDB_FINISHED_STATUS.equals(observation.getStatus())){
 					int duration = 0;
 					for (Beam beam : observation.getBeams()) {
-						duration += beam.getDuration();
+						duration += beam.getDurations().get(0);
 					}
 					Date endTime = (Date) observation.getStartTime().clone();
 					endTime.setSeconds(duration);

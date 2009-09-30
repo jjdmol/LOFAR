@@ -66,8 +66,8 @@ public class XMLParser {
 		}
 		int offSet = 0;
 		for (Beam beam: lofarObservation.getBeams()){
-			beam.setAngleTime(offSet);
-			offSet += beam.getDuration();
+			beam.getAngleTimes().add(offSet);
+			offSet += beam.getDurations().get(0);
 		}
 		return lofarObservation;
 	}
@@ -93,6 +93,10 @@ public class XMLParser {
 			if (elements.containsKey(XMLConstants.CLOCK)) {
 				lofarObservation.setClockMode(Mom2OtdbConverter.getOTDBClockMode(getMHzFrequency(elements.get(XMLConstants.CLOCK))));
 			}
+			if (elements.containsKey(XMLConstants.INTEGRATION_INTERVAL)) {
+				lofarObservation.setIntegrationInterval(AstronConverter.toDouble(getValue(elements
+						.get(XMLConstants.INTEGRATION_INTERVAL))));
+			}
 			if (elements.containsKey(XMLConstants.INSTRUMENT_FILTER)) {
 				lofarObservation.setBandFilter(Mom2OtdbConverter.getOTDBBandFilter(getValue(elements
 						.get(XMLConstants.INSTRUMENT_FILTER)), lofarObservation.getAntennaArray()));
@@ -101,9 +105,9 @@ public class XMLParser {
 				lofarObservation.setStationSet(getValue(elements.get(XMLConstants.STATION_SET)));
 			}
 			if (elements.containsKey(XMLConstants.STATIONS)) {
-				lofarObservation.setStations(getValue(elements.get(XMLConstants.STATIONS)));
-				if (lofarObservation.getStations() != null) {
-					lofarObservation.setStations("[" + lofarObservation.getStations() + "]");
+				String[] stations = getValue(elements.get(XMLConstants.STATIONS)).split(",");
+				for(String station: stations){
+					lofarObservation.getStations().add(station);
 				}
 			}
 
@@ -241,16 +245,16 @@ public class XMLParser {
 			Element specification = (Element) specificationList.item(0);
 			Map<String, Element> elements = getElementMap(specification.getChildNodes());
 			if (elements.containsKey(XMLConstants.RA)) {
-				beam.setRa(AstronConverter.toDouble(getValue(elements.get(XMLConstants.RA))));
+				beam.getRaList().add(AstronConverter.toDouble(getValue(elements.get(XMLConstants.RA))));
 			}
 			if (elements.containsKey(XMLConstants.DEC)) {
-				beam.setDec(AstronConverter.toDouble(getValue(elements.get(XMLConstants.DEC))));
+				beam.getDecList().add(AstronConverter.toDouble(getValue(elements.get(XMLConstants.DEC))));
 			}
 			if (elements.containsKey(XMLConstants.EQUINOX)) {
 				beam.setEquinox(getValue(elements.get(XMLConstants.EQUINOX)));
 			}
 			if (elements.containsKey(XMLConstants.DURATION)) {
-				beam.setDuration(AstronConverter.convertXMLDurationToSeconds(getValue(elements
+				beam.getDurations().add(AstronConverter.convertXMLDurationToSeconds(getValue(elements
 						.get(XMLConstants.DURATION))));
 			}
 			if (elements.containsKey(XMLConstants.SUBBANDS_SPECIFICATION)) {
@@ -258,7 +262,11 @@ public class XMLParser {
 				Map<String, Element> subbandsSpecificationsElements = getElementMap(subbandsSpecificationsElement
 						.getChildNodes());
 				if (subbandsSpecificationsElements.containsKey(XMLConstants.SUBBANDS)) {
-					beam.setSubbands("[" + getValue(subbandsSpecificationsElements.get(XMLConstants.SUBBANDS)) + "]");
+					String[] subbands = getValue(subbandsSpecificationsElements.get(XMLConstants.SUBBANDS)).split(",");
+					for(String subband: subbands){
+						beam.getSubbands().add(subband);
+					}
+
 				}
 			}
 

@@ -15,38 +15,42 @@ public class OTDBRepositoryTest {
 		OTDBConfiguration config =new OTDBConfiguration();
 		config.setRmiHost("lofar17");
 		config.setRmiPort(10500);
+		config.setTemplateId(5001);
 		repository = new OTDBRepository(config);
 	}
 
 	
-	@Test
-	public void testStore() throws RepositoryException{
-		LofarObservation lofarObservation = new LofarObservation();
-		lofarObservation.setMom2Id(3);
-		lofarObservation.setStatus("being specified");
-		lofarObservation.setAntennaArray("HBA");
-		lofarObservation.setAntennaSet("HBA_TWO");
-		lofarObservation.setBandFilter("HBA_100_190");
-		lofarObservation.setClockMode("<<Clock200");
-		lofarObservation.setStationSet("Custom");
-		lofarObservation.setStations("[CS302, CS010]");
-		Beam beam = new Beam(lofarObservation);
-		beam.setRa(85.650575);
-		beam.setDec(49.852009);
-		beam.setEquinox("J2000");
-		beam.setDuration(423);
-		beam.setSubbands("[123,124]");
-		lofarObservation.getBeams().add(beam);
-		beam = new Beam(lofarObservation);
-		beam.setRa(85.650575);
-		beam.setDec(49.852009);
-		beam.setEquinox("J2000");
-		beam.setDuration(42);
-		beam.setSubbands("[1,2,3,4]");
-		lofarObservation.getBeams().add(beam);
-		repository.store(lofarObservation);
-
-	}
+//	@Test
+//	public void testStore() throws RepositoryException{
+//		LofarObservation lofarObservation = new LofarObservation();
+//		lofarObservation.setMom2Id(3);
+//		lofarObservation.setStatus("being specified");
+//		lofarObservation.setAntennaArray("HBA");
+//		lofarObservation.setAntennaSet("HBA_TWO");
+//		lofarObservation.setBandFilter("HBA_100_190");
+//		lofarObservation.setClockMode("<<Clock200");
+//		lofarObservation.setStationSet("Custom");
+//		lofarObservation.setStations("[CS302, CS010]");
+//		lofarObservation.setIntegrationInterval(3d);
+//		Beam beam = new Beam(lofarObservation);
+//		beam.setRa(85.650575);
+//		beam.setDec(49.852009);
+//		beam.setEquinox("J2000");
+//		beam.setAngleTime(0);
+//		beam.setDuration(423);
+//		beam.setSubbands("[123,124]");
+//		lofarObservation.getBeams().add(beam);
+//		beam = new Beam(lofarObservation);
+//		beam.setRa(85.650575);
+//		beam.setDec(49.852009);
+//		beam.setEquinox("J2000");
+//		beam.setAngleTime(423);
+//		beam.setDuration(42);
+//		beam.setSubbands("[1,2,3,4]");
+//		lofarObservation.getBeams().add(beam);
+//		repository.store(lofarObservation);
+//
+//	}
 
 	@Test
 	public void testGetLatestChanges() throws RepositoryException  {
