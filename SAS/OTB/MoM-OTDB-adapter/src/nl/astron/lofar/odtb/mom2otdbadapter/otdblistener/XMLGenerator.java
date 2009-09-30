@@ -26,6 +26,8 @@ import org.w3c.dom.Element;
  */
 public class XMLGenerator {
 
+
+
 	private static final String STATION_NAME = "name";
 
 	private static final String MOM2_LOFAR_PREFIX = "lofar";
@@ -96,8 +98,8 @@ public class XMLGenerator {
 		xmlBuilder.addTextElement(clockElement, "samplesPerSecond", observation.getSamplesPerSecond());
 		xmlBuilder.addFrequencyElement(clockElement, "subbandWidth", observation.getSubbandWidth());
 		xmlBuilder.addFrequencyElement(clockElement, "systemClock", observation.getClockFrequency());
-		xmlBuilder.addTextElement(observationAttributes, "integrationInterval", observation.getIntegrationInterval());
-		xmlBuilder.addTextElement(observationAttributes, "channelsPerSubband", observation.getChannelsPerSubband());				
+		xmlBuilder.addTextElement(observationAttributes, XMLConstants.INTEGRATION_INTERVAL, observation.getIntegrationInterval());
+		xmlBuilder.addTextElement(observationAttributes, "channelsPerSubband", observation.getChannelsPerSubband());
 		xmlBuilder.addTextElement(observationAttributes, XMLConstants.INSTRUMENT_FILTER, Mom2OtdbConverter
 				.getMom2InstrumentFilter(observation.getBandFilter()));
 		Date startTime = observation.getStartTime();
@@ -107,7 +109,7 @@ public class XMLGenerator {
 
 		if (observation.getStations() != null) {
 			Element stationsElement = xmlBuilder.addElement(observationAttributes, XMLConstants.STATIONS);
-			for (String station : Mom2OtdbConverter.getStringArray(observation.getStations())) {
+			for (String station : observation.getStations()) {
 				Element stationElement = xmlBuilder.addElement(stationsElement, XMLConstants.STATION);
 				xmlBuilder.addTextElement(stationElement, STATION_NAME, station);
 			}
@@ -129,40 +131,45 @@ public class XMLGenerator {
 		xmlBuilder.addTypeAttributeToElement(measurementElement, XMLConstants.MOM2_LOFAR_NAMESPACE,
 				XMLConstants.UVMEASUREMENT_TYPE);
 		xmlBuilder.addAttributeToElement(measurementElement, XMLConstants.MOM2_ID, beam.getMom2Id().toString());
-		String[] subbands = Mom2OtdbConverter.getStringArray(beam.getSubbands());
+
 		if (Mom2OtdbConverter.OTDB_FINISHED_STATUS.equals(beam.getParentObservation().getStatus())) {
 			String fileMask = beam.getParentObservation().getFileNameMask();
 			fileMask = fileMask.substring(fileMask.lastIndexOf("/") + 1);
 			fileMask = fileMask.replaceAll("\\$\\{OBSERVATION\\}", beam.getParentObservation().getObservationId()
 					.toString());
 			fileMask = fileMask.replaceAll("\\$\\{BEAM\\}", index + "");
-			if (subbands.length > 0) {
+			if (beam.getSubbands().size() > 0) {
 				Element resultDataProducts = xmlBuilder.addElement(measurementElement, "resultDataProducts");
-				for (int i = 0; i < subbands.length; i++) {
+				for (int i = 0; i < beam.getSubbands().size(); i++) {
 					Element uvDataProduct = xmlBuilder.addIndexedElement(resultDataProducts, "uvDataProduct");
 
 					xmlBuilder.addTextElement(uvDataProduct, "name", fileMask.replaceAll("\\$\\{SUBBAND\\}", i + ""));
-					xmlBuilder.addTextElement(uvDataProduct, "fileFormat", Mom2OtdbConverter.getMom2DPFileType(fileMask));
+					xmlBuilder.addTextElement(uvDataProduct, "fileFormat", Mom2OtdbConverter
+							.getMom2DPFileType(fileMask));
 					xmlBuilder.addTextElement(uvDataProduct, "subband", i);
-					xmlBuilder.addTextElement(uvDataProduct, "stationSubband", subbands[i]);
+					xmlBuilder.addTextElement(uvDataProduct, "stationSubband", beam.getSubbands().get(i));
 				}
 
 			}
 		}
 		Element measurementAttributes = xmlBuilder.addElement(measurementElement, XMLConstants.MEASUREMENT_ATTRIBUTES);
-		xmlBuilder.addTextElement(measurementAttributes, XMLConstants.RA, beam.getRa());
-		xmlBuilder.addTextElement(measurementAttributes, XMLConstants.DEC, beam.getDec());
-		xmlBuilder.addTextElement(measurementAttributes, XMLConstants.EQUINOX, beam.getEquinox());
-		xmlBuilder.addDurationElement(measurementAttributes, XMLConstants.DURATION, beam.getDuration());
-		Date startTime = beam.getParentObservation().getStartTime();
-		if (startTime != null) {
-			Calendar cal = Calendar.getInstance();
-			cal.setTime(startTime);
-			cal.set(Calendar.SECOND, cal.get(Calendar.SECOND) + beam.getAngleTime());
-			xmlBuilder.addTextDateTimeElement(measurementAttributes, XMLConstants.START_TIME, cal.getTime());
-			if (beam.getParentObservation().getEndTime() != null) {
-				cal.set(Calendar.SECOND, cal.get(Calendar.SECOND) + beam.getDuration());
-				xmlBuilder.addTextDateTimeElement(measurementAttributes, XMLConstants.END_TIME, cal.getTime());
+		if (beam.getRaList().size() > 0 && beam.getDecList().size() > 0 && beam.getDurations().size() > 0
+				&& beam.getAngleTimes().size() > 0) {
+			xmlBuilder.addTextElement(measurementAttributes, XMLConstants.RA, beam.getRaList().get(0));
+
+			xmlBuilder.addTextElement(measurementAttributes, XMLConstants.DEC, beam.getDecList().get(0));
+			xmlBuilder.addTextElement(measurementAttributes, XMLConstants.EQUINOX, beam.getEquinox());
+			xmlBuilder.addDurationElement(measurementAttributes, XMLConstants.DURATION, beam.getDurations().get(0));
+			Date startTime = beam.getParentObservation().getStartTime();
+			if (startTime != null) {
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(startTime);
+				cal.set(Calendar.SECOND, cal.get(Calendar.SECOND) + beam.getAngleTimes().get(0));
+				xmlBuilder.addTextDateTimeElement(measurementAttributes, XMLConstants.START_TIME, cal.getTime());
+				if (beam.getParentObservation().getEndTime() != null) {
+					cal.set(Calendar.SECOND, cal.get(Calendar.SECOND) + beam.getDurations().get(0));
+					xmlBuilder.addTextDateTimeElement(measurementAttributes, XMLConstants.END_TIME, cal.getTime());
+				}
 			}
 		}
 		xmlBuilder.addTextElement(measurementAttributes, XMLConstants.SUBBANDS, Mom2OtdbConverter.getMom2Subbands(beam
@@ -190,4 +197,5 @@ public class XMLGenerator {
 		}
 		return result + XMLConstants.STATUS_SUFFIX;
 	}
+
 }

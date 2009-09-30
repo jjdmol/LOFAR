@@ -52,7 +52,7 @@ public class LofarObservation implements Serializable{
 	 * Stations that belongs to the array configuration (mom2 -> otdb)
 	 * e.g. [CS001,CS002]
 	 */
-	private String stations;
+	private List<String> stations = new ArrayList<String>();
 
 	private String antennaArray;	
 	
@@ -140,11 +140,11 @@ public class LofarObservation implements Serializable{
 	public void setStationSet(String stationSet) {
 		this.stationSet = stationSet;
 	}
-	public String getStations() {
+	public List<String> getStations() {
 		return stations;
 	}
 
-	public void setStations(String stations) {
+	public void setStations(List<String> stations) {
 		this.stations = stations;
 	}
 

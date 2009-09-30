@@ -1,6 +1,8 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.data;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Beam implements Serializable {
 
@@ -17,12 +19,12 @@ public class Beam implements Serializable {
 	 * Angle 1 (mom2 -> otdb)
 	 * e.g. [6.123662, 5.233748, 1459568]
 	 */
-	private Double ra = null;
+	private List<Double> raList = new ArrayList<Double>();
 	/**
 	 * Angle 2 (mom2 -> otdb)
 	 * e.g. [1.026719, 0,711018, 0384089]
 	 */
-	private Double dec = null;
+	private List<Double> decList  = new ArrayList<Double>();
 
 	/**
 	 * Direction type (mom2 -> otdb)
@@ -33,15 +35,15 @@ public class Beam implements Serializable {
 	/**
 	 * duration
 	 */
-	private Integer duration;
+	private List<Integer> durations = new ArrayList<Integer>();
 	
-	private Integer angleTime;
+	private List<Integer> angleTimes= new ArrayList<Integer>();
 	
 	/**
 	 * subbands that must be used (mom2 -> otdb)
 	 * e.g. [1,3,5,7]
 	 */
-	private String subbands;
+	private List<String> subbands = new ArrayList<String>();
 
 	public Beam(LofarObservation observation){
 		this.parentObservation = observation;
@@ -55,21 +57,6 @@ public class Beam implements Serializable {
 		this.mom2Id = mom2Id;
 	}
 
-	public Double getRa() {
-		return ra;
-	}
-
-	public void setRa(Double ra) {
-		this.ra = ra;
-	}
-
-	public Double getDec() {
-		return dec;
-	}
-
-	public void setDec(Double dec) {
-		this.dec = dec;
-	}
 
 	public String getEquinox() {
 		return equinox;
@@ -79,29 +66,44 @@ public class Beam implements Serializable {
 		this.equinox = equinox;
 	}
 
-	public Integer getDuration() {
-		return duration;
+
+	public List<Double> getRaList() {
+		return raList;
 	}
 
-	public void setDuration(Integer duration) {
-		this.duration = duration;
+	public void setRaList(List<Double> raList) {
+		this.raList = raList;
 	}
 
-	
-	
-	public Integer getAngleTime() {
-		return angleTime;
+	public List<Double> getDecList() {
+		return decList;
 	}
 
-	public void setAngleTime(Integer angleTime) {
-		this.angleTime = angleTime;
+	public void setDecList(List<Double> decList) {
+		this.decList = decList;
 	}
 
-	public String getSubbands() {
+	public List<Integer> getDurations() {
+		return durations;
+	}
+
+	public void setDurations(List<Integer> durations) {
+		this.durations = durations;
+	}
+
+	public List<Integer> getAngleTimes() {
+		return angleTimes;
+	}
+
+	public void setAngleTimes(List<Integer> angleTimes) {
+		this.angleTimes = angleTimes;
+	}
+
+	public List<String> getSubbands() {
 		return subbands;
 	}
 
-	public void setSubbands(String subbands) {
+	public void setSubbands(List<String> subbands) {
 		this.subbands = subbands;
 	}
 

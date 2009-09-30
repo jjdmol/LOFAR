@@ -13,6 +13,8 @@ public final class XMLConstants {
 	
 	public static final String STATION_SET = "stationSet";
 
+	public static final String INTEGRATION_INTERVAL = "integrationInterval";
+	
 	public static final String INSTRUMENT_FILTER = "instrumentFilter";
 
 	public static final String CLOCK = "clock";
