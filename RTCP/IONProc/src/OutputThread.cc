@@ -54,7 +54,7 @@ OutputThread::OutputThread(const unsigned subband, const Parset &ps )
   // transpose the data holders: create queues streams for the output streams
   // itsPlans is the owner of the pointers to sample data structures
   for (unsigned i = 0; i < maxSendQueueSize; i ++) {
-    CN_ProcessingPlan<> *plan = new CN_ProcessingPlan<>( configuration, false, true, ps.nrBaselines() );
+    CN_ProcessingPlan<> *plan = new CN_ProcessingPlan<>( configuration, false, true );
     plan->removeNonOutputs();
     plan->allocateOutputs( hugeMemoryAllocator );
 

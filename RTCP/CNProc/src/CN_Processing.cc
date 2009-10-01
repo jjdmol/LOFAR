@@ -130,18 +130,18 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
 
   itsNrStations	             = configuration.nrStations();
+  itsNrBeamFormedStations    = configuration.nrMergedStations();
   itsNrPencilBeams           = configuration.nrPencilBeams();
   itsNrSubbands              = configuration.nrSubbands();
   itsNrSubbandsPerPset       = configuration.nrSubbandsPerPset();
   itsNrStokes                = configuration.nrStokes();
   itsOutputPsetSize          = outputPsets.size();
   itsCenterFrequencies       = configuration.refFreqs();
+  itsFlysEye                 = configuration.flysEye();
 
   unsigned nrChannels			 = configuration.nrChannelsPerSubband();
   unsigned nrSamplesPerIntegration       = configuration.nrSamplesPerIntegration();
   unsigned nrSamplesPerStokesIntegration = configuration.nrSamplesPerStokesIntegration();
-  unsigned nrBeamFormedStations          = configuration.nrMergedStations();
-  unsigned nrBaselines                   = nrBeamFormedStations * (nrBeamFormedStations + 1) / 2;
 
   // Each phase (e.g., transpose, PPF, correlator) reads from an input data
   // set and writes to an output data set.  To save memory, a few memory buffers
@@ -150,7 +150,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   // Since some buffers (arenas) are used multiple times, we use multiple
   // Allocators for a single arena.
 
-  itsPlan = new CN_ProcessingPlan<SAMPLE_TYPE>( configuration, itsIsTransposeInput, itsIsTransposeOutput, nrBaselines );
+  itsPlan = new CN_ProcessingPlan<SAMPLE_TYPE>( configuration, itsIsTransposeInput, itsIsTransposeOutput );
 
   // calculate what to calculate, what goes where, etc
   itsPlan->assignArenas();
@@ -321,7 +321,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCohere
     LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating coherent Stokes at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
-  itsCoherentStokes->calculateCoherent(itsPlan->itsBeamFormedData,itsPlan->itsCoherentStokesData,itsNrPencilBeams);
+  itsCoherentStokes->calculateCoherent(itsPlan->itsBeamFormedData,itsPlan->itsCoherentStokesData,itsFlysEye ? itsNrBeamFormedStations : itsNrPencilBeams);
   computeTimer.stop();
 }
 

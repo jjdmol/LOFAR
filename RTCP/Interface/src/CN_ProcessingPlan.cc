@@ -29,10 +29,10 @@ namespace RTCP {
 // shortcut to automatically name the data sets
 #define TRANSFORM(source,set)   transform(source,set,#set)
 
-template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPlan( CN_Configuration &configuration, bool isInput, bool isOutput, unsigned nrBaselines ):
+template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPlan( CN_Configuration &configuration, bool isInput, bool isOutput )
+:
   itsIsTransposeInput(isInput),
   itsIsTransposeOutput(isOutput),
-  itsNrBaselines(nrBaselines),
   itsInputData(0),
   itsInputSubbandMetaData(0),
   itsSubbandMetaData(0),
@@ -47,6 +47,8 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 {
   // in fly's eye mode, every station is a beam
   const unsigned nrBeams = configuration.flysEye() ? configuration.nrMergedStations() : configuration.nrPencilBeams();
+
+  const unsigned nrBaselines = configuration.nrMergedStations() * (configuration.nrMergedStations() + 1)/2;
     
   if (itsIsTransposeInput) {
     std::vector<unsigned> &outputPsets = configuration.outputPsets();
@@ -77,7 +79,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     );
 
     itsCorrelatedData = new CorrelatedData(
-      itsNrBaselines,
+      nrBaselines,
       configuration.nrChannelsPerSubband()
     );
 
