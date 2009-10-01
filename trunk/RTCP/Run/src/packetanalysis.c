@@ -75,6 +75,27 @@ unsigned char packet[MAX_PACKETSIZE];
 /* a filter for the packets we're looking for */
 #define PACKETFILTER(port)	(IP.protocol == 0x11 && UDP.destPort == port)
 
+void swap32( char *nr ) {
+  char tmp;
+
+  tmp = nr[0];
+  nr[0] = nr[3];
+  nr[3] = tmp;
+
+  tmp = nr[1];
+  nr[1] = nr[2];
+  nr[2] = tmp;
+}
+
+void swap16( char *nr ) {
+  char tmp;
+
+  tmp = nr[0];
+  nr[0] = nr[1];
+  nr[1] = tmp;
+}
+
+
 int create_socket( int port )
 {
   struct sockaddr_in sa;
@@ -130,10 +151,40 @@ void set_affinity( char *cpus )
     perror("sched_setaffinity");
 }
 
-float get_packetrate( int fd, int port, float seconds ) {
+// can (prev_ts,prev_bs) be followed by (next_ts,next_bs) when there is no loss?
+int can_follow( struct EPA_header *prev, struct EPA_header *next, uint16_t clock )
+{
+  const time_t prev_ts = prev->RSPtimestamp;
+  const time_t next_ts = next->RSPtimestamp;
+
+  const uint32_t prev_bs = prev->blockSequenceNumber;
+  const uint32_t next_bs = next->blockSequenceNumber;
+
+  const unsigned char prev_times = prev->times;
+
+  if( next_ts == prev_ts ) {
+    /* same timestamp -- compare block sequence numbers */
+    return (next_bs - prev_bs) == prev_times;
+  } else if( next_ts != prev_ts + 1 ) {
+    /* not the next second */
+    return 0;
+  } else {
+    /* the next second */
+    uint64_t prev_time, next_time;
+
+    prev_time = ((uint64_t) prev_ts * clock * 1e6 + 512)/1024 + prev_bs;
+    next_time = ((uint64_t) next_ts * clock * 1e6 + 512)/1024 + next_bs;
+
+    return (next_time - prev_time) == prev_times;
+  }
+}
+
+float get_packetrate( int fd, int port, float seconds, float *lossrate ) {
   struct timeval tv;
   unsigned long now,end_time;
   unsigned nr;
+  struct EPA_header prev;
+  unsigned loss = 0;
 
   nr = 0;
   gettimeofday( &tv, NULL );
@@ -167,34 +218,29 @@ float get_packetrate( int fd, int port, float seconds ) {
     } else if( retval ) {
       recv( fd, &packet, sizeof buf, 0 );
       if( PACKETFILTER( port ) ) {
+        swap32( (char*)&EPA.RSPtimestamp );
+        swap32( (char*)&EPA.blockSequenceNumber );
+
+        if( nr > 0 ) {
+          if( !can_follow( &prev, &EPA, 200 )
+           && !can_follow( &prev, &EPA, 160 ) ) {
+             loss++;
+          }
+        }
+
         nr++;
+        prev = EPA;
       }
     } else {
       break;
     }
   }
 
+  if( lossrate ) {
+    *lossrate = 1.0*loss/seconds;
+  }
+
   return 1.0*nr/seconds;
-}
-
-void swap32( char *nr ) {
-  char tmp;
-
-  tmp = nr[0];
-  nr[0] = nr[3];
-  nr[3] = tmp;
-
-  tmp = nr[1];
-  nr[1] = nr[2];
-  nr[2] = tmp;
-}
-
-void swap16( char *nr ) {
-  char tmp;
-
-  tmp = nr[0];
-  nr[0] = nr[1];
-  nr[1] = tmp;
 }
 
 
@@ -202,6 +248,7 @@ int main( int argc, char **argv ) {
   int fd;
   int port;
   float rate;
+  float lossrate;
 
   /* weird things happen if RSPtimestamp is not the same size as the input
      for localtime() */
@@ -219,7 +266,7 @@ int main( int argc, char **argv ) {
 
   fd = create_socket( port );
 
-  rate = get_packetrate( fd, atoi( argv[1] ), 0.5 );
+  rate = get_packetrate( fd, atoi( argv[1] ), 0.5, &lossrate );
   if( rate < 1.0 ) {
     printf("NOK Packet rate:        %.2f pps\n",rate);
   } else {
@@ -330,7 +377,7 @@ int main( int argc, char **argv ) {
 
     if( zeros == elements ) {
       printf("NOK Zeros in payload:    %.f %%\n",100.0*zeros/elements);
-    } else if( zeros > 0.25 * PAYLOAD_SIZE ) {
+    } else if( zeros > 0.1 * elements ) {
       printf("NOK Zeros in payload:    %.f %% (did you set up %d beamlets?)\n",100.0*zeros/elements,EPA.beamlets);
     } else {
       printf(" OK Zeros in payload:    %.f %%\n",100.0*zeros/elements);
@@ -342,6 +389,12 @@ int main( int argc, char **argv ) {
       printf("NOK Packet rate:         %.f pps (200 MHz: ~%.f; 160 MHz: ~%.f)\n",rate,EXPECTED_PPS(200),EXPECTED_PPS(160));
     } else {
       printf(" OK Packet rate:         %.f pps (200 MHz: ~%.f; 160 MHz: ~%.f)\n",rate,EXPECTED_PPS(200),EXPECTED_PPS(160));
+    }
+
+    if( lossrate > 0.0 ) {
+      printf("NOK Packet loss:         %.f pps\n", lossrate );
+    } else {
+      printf(" OK Packet loss:         %.f pps\n", lossrate );
     }
   }
 
