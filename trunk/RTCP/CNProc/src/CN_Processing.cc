@@ -143,16 +143,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   unsigned nrSamplesPerIntegration       = configuration.nrSamplesPerIntegration();
   unsigned nrSamplesPerStokesIntegration = configuration.nrSamplesPerStokesIntegration();
 
-  // Each phase (e.g., transpose, PPF, correlator) reads from an input data
-  // set and writes to an output data set.  To save memory, a few memory buffers
-  // are used, and consecutive phases alternately use one of them as input
-  // buffer and the other as output buffer.
-  // Since some buffers (arenas) are used multiple times, we use multiple
-  // Allocators for a single arena.
-
+  // set up the plan of what to compute and which data set to allocate in which arena
   itsPlan = new CN_ProcessingPlan<SAMPLE_TYPE>( configuration, itsIsTransposeInput, itsIsTransposeOutput );
-
-  // calculate what to calculate, what goes where, etc
   itsPlan->assignArenas();
 
   for( unsigned i = 0; i < itsPlan->plan.size(); i++ ) {
@@ -192,8 +184,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   
     itsPPF		 = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation(), itsLocationInfo.rank() == 0);
 
-    itsCoherentStokes    = new Stokes(true, itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
-    itsIncoherentStokes  = new Stokes(false, itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
+    itsCoherentStokes    = new Stokes(itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
+    itsIncoherentStokes  = new Stokes(itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
 
     itsCorrelator	 = new Correlator(itsBeamFormer->getStationMapping(), nrChannels, nrSamplesPerIntegration, configuration.correctBandPass());
   }
@@ -292,6 +284,17 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 #endif // HAVE_MPI
 }
 
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::mergeStations()
+{
+#if defined HAVE_MPI
+  if (LOG_CONDITION)
+    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start merging stations at " << MPI_Wtime());
+#endif // HAVE_MPI
+  computeTimer.start();
+  itsBeamFormer->mergeStations(itsPlan->itsFilteredData);
+  computeTimer.stop();
+}
+
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams()
 {
 #if defined HAVE_MPI
@@ -310,7 +313,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncohe
     LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating incoherent Stokes at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
-  itsIncoherentStokes->calculateIncoherent(itsPlan->itsFilteredData,itsPlan->itsIncoherentStokesData,itsNrStations);
+  itsIncoherentStokes->calculateIncoherent(itsPlan->itsFilteredData,itsPlan->itsIncoherentStokesData,itsBeamFormer->getStationMapping());
   computeTimer.stop();
 }
 
@@ -354,7 +357,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingIn
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start waiting to finish sending input at " << MPI_Wtime());
+    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start waiting to finish sending input for transpose at " << MPI_Wtime());
 
   NSTimer waitAsyncSendTimer("wait for all async sends", LOG_CONDITION, true);
   waitAsyncSendTimer.start();
@@ -380,6 +383,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
     // calculate -- use same order as in plan
     if( itsPlan->calculate( itsPlan->itsFilteredData ) ) {
       filter();
+      mergeStations(); // create superstations
     }
 
     if( itsPlan->calculate( itsPlan->itsBeamFormedData ) ) {

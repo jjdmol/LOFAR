@@ -75,6 +75,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
   private:
     void                transpose();
     void                filter();
+    void                mergeStations();
     void                formBeams();
     void                calculateCoherentStokes();
     void                calculateIncoherentStokes();

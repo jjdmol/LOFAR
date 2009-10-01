@@ -50,7 +50,10 @@ class BeamFormer
 
     BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation, const bool flysEye);
 
-    // merges stations into superstations in sampleData, and fills beamFormedData with pencil beams
+    // merges stations into superstations in sampleData
+    void mergeStations( SampleData<> *sampleData );
+
+    // fills beamFormedData with pencil beams
     void formBeams( const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, double centerFrequency );
 
     // return the station mapping

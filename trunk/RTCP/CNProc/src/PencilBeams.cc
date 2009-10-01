@@ -465,6 +465,19 @@ void BeamFormer::computeFlysEye( const SampleData<> *in, SampleData<> *out ) {
   }
 }
 
+void BeamFormer::mergeStations( SampleData<> *sampleData )
+{
+  ASSERT( sampleData->samples.shape()[0] == itsNrChannels );
+  ASSERT( sampleData->samples.shape()[1] == itsNrStations );
+  ASSERT( sampleData->samples.shape()[2] >= itsNrSamplesPerIntegration );
+  ASSERT( sampleData->samples.shape()[3] == NR_POLARIZATIONS );
+
+  beamFormTimer.start();
+  mergeStationFlags( sampleData, sampleData );
+  mergeStations( sampleData, sampleData );
+  beamFormTimer.stop();
+}
+
 void BeamFormer::formBeams( const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, double centerFrequency )
 {
   ASSERT( sampleData->samples.shape()[0] == itsNrChannels );
@@ -488,20 +501,14 @@ void BeamFormer::formBeams( const SubbandMetaData *metaData, SampleData<> *sampl
 
   beamFormTimer.start();
 
-  // merging has to happen first!
-  mergeStationFlags( sampleData, sampleData );
-  mergeStations( sampleData, sampleData );
-
-  if( beamFormedData ) {
-    if( itsFlysEye ) {
-      // turn stations into beams
-      computeFlysEye( sampleData, beamFormedData );
-    } else if( itsNrPencilBeams > 0 ) { // TODO: implement itsNrPencilBeams == 0 if nothing needs to be done
-      // perform beam forming
-      computeDelays( metaData );
-      computeFlags( sampleData, beamFormedData );
-      computeComplexVoltages( sampleData, beamFormedData, baseFrequency );
-    }
+  if( itsFlysEye ) {
+    // turn stations into beams
+    computeFlysEye( sampleData, beamFormedData );
+  } else if( itsNrPencilBeams > 0 ) { // TODO: implement itsNrPencilBeams == 0 if nothing needs to be done
+    // perform beam forming
+    computeDelays( metaData );
+    computeFlags( sampleData, beamFormedData );
+    computeComplexVoltages( sampleData, beamFormedData, baseFrequency );
   }
 
   beamFormTimer.stop();

@@ -12,12 +12,11 @@ namespace RTCP {
 static NSTimer stokesTimer("Stokes calculations", true, true);
 static NSTimer stokesIntegrationTimer("Stokes integration", true, true);
 
-Stokes::Stokes( const bool coherent, const int nrStokes, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrSamplesPerStokesIntegration ):
+Stokes::Stokes( const int nrStokes, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrSamplesPerStokesIntegration ):
   itsNrChannels(nrChannels),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsNrSamplesPerStokesIntegration(nrSamplesPerStokesIntegration),
-  itsNrStokes(nrStokes),
-  itsIsCoherent(coherent)
+  itsNrStokes(nrStokes)
 {
 } 
 
@@ -26,9 +25,6 @@ static inline double sqr( const double x ) { return x * x; }
 struct stokes {
   // the sums of stokes values over a number of stations or beams
   double I, Q, U, V;
-  
-  // the number of samples contained in the sums
-  unsigned nrValidSamples;
 };
 
 // compute Stokes values, and add them to an existing stokes array
@@ -43,7 +39,6 @@ static inline void addStokes( struct stokes &stokes, const fcomplex &polX, const
     stokes.Q += powerX - powerY;
     stokes.U += real(polX * conj(polY)); // proper stokes.U is twice this
     stokes.V += imag(polX * conj(polY)); // proper stokes.V is twice this
-    stokes.nrValidSamples++;
   }
 }
 
@@ -79,7 +74,7 @@ void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stok
   for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
     for (unsigned inTime = 0, outTime = 0; inTime < itsNrSamplesPerIntegration; inTime += integrationSteps, outTime++ ) {
       for( unsigned beam = 0; beam < nrBeams; beam++ ) {
-        struct stokes stokes = { 0, 0, 0, 0, 0 };
+        struct stokes stokes = { 0, 0, 0, 0 };
 
         for( unsigned fractime = 0; fractime < integrationSteps; fractime++ ) {
 	  addStokes( stokes, in[ch][beam][inTime+fractime][0], in[ch][beam][inTime+fractime][1], allStokes );
@@ -101,10 +96,12 @@ void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stok
 }
 
 // Calculate incoherent stokes values from (filtered) station data.
-void Stokes::calculateIncoherent( const SampleData<> *sampleData, StokesData *stokesData, const unsigned nrStations )
+void Stokes::calculateIncoherent( const SampleData<> *sampleData, StokesData *stokesData, const std::vector<unsigned> &stationMapping )
 {
+  const unsigned nrStations = stationMapping.size();
+
   ASSERT( sampleData->samples.shape()[0] == itsNrChannels );
-  ASSERT( sampleData->samples.shape()[1] == nrStations );
+  // sampleData->samples.shape()[1] has to be bigger than all elements in stationMapping
   ASSERT( sampleData->samples.shape()[2] >= itsNrSamplesPerIntegration );
   ASSERT( sampleData->samples.shape()[3] == NR_POLARIZATIONS );
 
@@ -122,7 +119,9 @@ void Stokes::calculateIncoherent( const SampleData<> *sampleData, StokesData *st
   out->flags[0].reset();
 
   for(unsigned stat = 0; stat < nrStations; stat++) {
-    if( inflags[stat].count() > upperBound ) {
+    const unsigned srcStat = stationMapping[stat];
+
+    if( inflags[srcStat].count() > upperBound ) {
       // drop station due to too much flagging
       validStation[stat] = false;
     } else {
@@ -130,7 +129,7 @@ void Stokes::calculateIncoherent( const SampleData<> *sampleData, StokesData *st
       nrValidStations++;
 
       // conservative flagging: flag anything that is flagged in one of the stations
-      out->flags[0] |= inflags[stat];
+      out->flags[0] |= inflags[srcStat];
     }
   }
 
@@ -144,15 +143,17 @@ void Stokes::calculateIncoherent( const SampleData<> *sampleData, StokesData *st
 
   for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
     for (unsigned inTime = 0, outTime = 0; inTime < itsNrSamplesPerIntegration; inTime += integrationSteps, outTime++ ) {
-      struct stokes stokes = { 0, 0, 0, 0, 0 };
+      struct stokes stokes = { 0, 0, 0, 0 };
 
       for( unsigned stat = 0; stat < nrStations; stat++ ) {
+        const unsigned srcStat = stationMapping[stat];
+
         if( !validStation[stat] ) {
 	  continue;
 	}
 
         for( unsigned fractime = 0; fractime < integrationSteps; fractime++ ) {
-	    addStokes( stokes, in[ch][stat][inTime+fractime][0], in[ch][stat][inTime+fractime][1], allStokes );
+	    addStokes( stokes, in[ch][srcStat][inTime+fractime][0], in[ch][srcStat][inTime+fractime][1], allStokes );
         }
       }
 

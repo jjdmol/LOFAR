@@ -15,10 +15,10 @@ class Stokes
   public:
     static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
 
-    Stokes(const bool coherent, const int nrStokes, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrSamplesPerOutputIntegration);
+    Stokes(const int nrStokes, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrSamplesPerOutputIntegration);
 
     void calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, const unsigned nrBeams );
-    void calculateIncoherent( const SampleData<> *sampleData, StokesData *stokesData, const unsigned nrStations );
+    void calculateIncoherent( const SampleData<> *sampleData, StokesData *stokesData, const std::vector<unsigned> &stationMapping );
     void compressStokes( const StokesData *in, StokesDataIntegratedChannels *out, const unsigned nrBeams );
 
   private:
@@ -26,7 +26,6 @@ class Stokes
     const unsigned          itsNrSamplesPerIntegration;
     const unsigned          itsNrSamplesPerStokesIntegration;
     const unsigned          itsNrStokes;
-    const bool              itsIsCoherent;
 };
 
 } // namespace RTCP
