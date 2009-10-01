@@ -133,13 +133,28 @@ else:
   sr.appendLog(11,'Expected:')
   sr.appendFile(11,'gold/tbb_memory.gold')
   sr.setResult('FAILED')
+
+################################################################################
+sr.setId('RCU-RSP-TBB - ')
+sr.appendLog(21,'')
+sr.appendLog(21,'### Verify the RCU - RSP - TBB LVDS interfaces by capturing pseudo random data on TBB')
+sr.appendLog(21,'')
+res = cli.command('./tbb_prbs_tester.sh')
+if res.find('wrong')==-1:
+  sr.appendLog(11,'>>> RCU - RSP - TBB LVDS interfaces test went OK')
+else:
+  sr.appendLog(11,'>>> RCU - RSP - TBB LVDS interfaces went wrong')
+  sr.appendLog(11,'CLI:')
+  sr.appendLog(11,res,1,1,1)
+  sr.setResult('FAILED')
    
 ################################################################################
 sr.setId('SPU status - ')
 sr.appendLog(21,'')
 sr.appendLog(21,'### Verify the RSP - SPU I2C interface by reading the SPU sensor data')
 sr.appendLog(21,'')
-res = cli.command('python i2c_spu.py --sub %s --rep 1 -v 11' %(SubRck,))
+#res = cli.command('python i2c_spu.py --sub %s --rep 1 -v 11' %(SubRck,))
+res = cli.command('python i2c_spu.py --sub sub0,sub1,sub2')
 if res.find('FAILED')==-1:
   sr.appendLog(11,'>>> RSP - SPU I2c interface test went OK')
 else:
@@ -229,20 +244,6 @@ else:
   sr.appendLog(11,res,1,1,1)
   sr.appendLog(11,'tc/bist.log')
   sr.appendLog('FAILED')  
-
-################################################################################
-#sr.setId('RCU-RSP-TBB - ')
-#sr.appendLog(21,'')
-#sr.appendLog(21,'### Verify the RCU - RSP - TBB LVDS interfaces by capturing pseudo random data on TBB')
-#sr.appendLog(21,'')
-#res = cli.command('./tbb_prbs_tester.sh')
-#if res.find('wrong')==-1:
-#  sr.appendLog(11,'>>> RCU - RSP - TBB LVDS interfaces test went OK')
-#else:
-#  sr.appendLog(11,'>>> RCU - RSP - TBB LVDS interfaces went wrong')
-#  sr.appendLog(11,'CLI:')
-#  sr.appendLog(11,res,1,1,1)
-#  sr.setResult('FAILED')
 
 ################################################################################
 # End of the subrack test
