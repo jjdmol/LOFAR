@@ -11,8 +11,6 @@
   way we can do per-compiler settings, instead of per-host settings, using a
   variants file (see bug #1395).
 
-* Python package are not yet part of the CMake build.
-
 * In order for SubSystem build to succeed, it is necessary that meta-packages
   can be used as a real target -- so that you can "make LCS" to build all LCS
   packages -- much like the lofarconf.in file do in the Autotools environment.
