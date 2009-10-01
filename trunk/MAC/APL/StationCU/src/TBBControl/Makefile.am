@@ -6,18 +6,12 @@ TBBControl_CPPFLAGS			= -Wno-deprecated \
 
 TBBControl_SOURCES			= ../Package__Version.cc \
 							  TBBControl.cc \
-							  TBBTrigger.cc \
-							  TBBReadCmd.cc \
-							  VHECRTask.cc \
 							  TBBObservation.cc \
 							  TBBControlMain.cc 
 TBBControl_LDADD			= $(LOFAR_DEPEND)
 TBBControl_DEPENDENCIES		= $(LOFAR_DEPEND)
 
 NOINSTHDRS 					= TBBControl.h \
-							  TBBTrigger.h \
-							  TBBReadCmd.h \
-							  VHECRTask.h \
 							  TBBObservation.h  \
 							  PVSSDatapointDefs.h
 

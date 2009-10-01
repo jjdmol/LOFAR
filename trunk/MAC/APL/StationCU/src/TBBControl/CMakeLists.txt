@@ -21,9 +21,6 @@
 lofar_add_bin_program(TBBControl 
   TBBControlMain.cc
   TBBControl.cc
-  TBBTrigger.cc
-  TBBReadCmd.cc
-  VHECRTask.cc
   TBBObservation.cc)
 
 install(FILES

@@ -38,15 +38,15 @@
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
 #include <APL/RTCCommon/Timestamp.h>
+#include <APL/ClockProtocol/Package__Version.h>
 
 //# local includes
+#include <VHECR/TBBTrigger.h>
+#include <VHECR/TBBReadCmd.h>
+#include <VHECR/VHECRTask.h>
 #include "TBBControl.h"
 #include "PVSSDatapointDefs.h"
 #include "TBBObservation.h"
-#include "TBBTrigger.h"
-#include "TBBReadCmd.h"
-#include "VHECRTask.h"
-#include <APL/ClockProtocol/Package__Version.h>
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
@@ -54,6 +54,7 @@ using namespace LOFAR::GCF::RTDB;
 using namespace std;
 
 using namespace LOFAR;
+using namespace LOFAR::VHECR;
 using namespace APLCommon;
 using namespace RTC;
 using namespace StationCU;
@@ -120,7 +121,8 @@ TBBControl::TBBControl(const string&	cntlrName) :
 	itsStopCommandVector.clear();					// clear buffer
 	itsReadCommandVector.clear();					// clear buffer
 
-	itsVHECRTask = VHECRTask::instance();
+	itsVHECRTask = new VHECRTask;
+	ASSERTSTR(itsVHECRTask, "Could not create the VHECR task");
 	//itsVHECRTask->setSaveTask(this);
 }
 
@@ -130,8 +132,11 @@ TBBControl::TBBControl(const string&	cntlrName) :
 //
 TBBControl::~TBBControl()
 {
-	LOG_TRACE_OBJ_STR (getName() << " destruction");
+	if (itsVHECRTask) {
+		delete itsVHECRTask;
+	}
 
+	LOG_TRACE_OBJ_STR (getName() << " destruction");
 }
 
 //
