@@ -42,10 +42,10 @@
 //# local includes
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
+#include <VHECR/TBBTrigger.h>
+#include <VHECR/TBBReadCmd.h>
+#include <VHECR/VHECRTask.h>
 #include "TBBObservation.h"
-#include "TBBTrigger.h"
-#include "TBBReadCmd.h"
-#include "VHECRTask.h"
 
 // forward declaration
 
@@ -60,6 +60,9 @@ using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
 using	GCF::RTDB::RTDBPropertySet;
 using	APLCommon::ParentControl;
+using	VHECR::TBBReadCmd;
+using	VHECR::TBBTrigger;
+using	VHECR::VHECRTask;
 
 class TBBControl : public GCFTask
 {
