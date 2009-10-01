@@ -46,6 +46,9 @@ void PencilCoordinates::read(Stream *s)
   dataConvert(LittleEndian, &numCoordinates, 1);
 #endif
 
+  itsCoordinates.clear();
+
+
   for (unsigned i = 0; i < numCoordinates; i ++) {
     PencilCoord3D coord(0, 0, 0);
 
