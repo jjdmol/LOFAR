@@ -25,13 +25,9 @@
 
 #include <Stream/Stream.h>
 #include <Interface/MultiDimArray.h>
-#include <Interface/CN_Mode.h>
-#include <Interface/PencilCoordinates.h>
 #include <Interface/Parset.h>
 
-#include <cstring>
 #include <vector>
-#include <string>
 
 namespace LOFAR {
 namespace RTCP {
@@ -46,6 +42,8 @@ class CN_Configuration
 #endif
 
     unsigned		  &nrStations();
+    unsigned		  nrMergedStations();
+
     unsigned		  &nrBitsPerSample();
     unsigned		  &nrSubbands();
     unsigned		  &nrChannelsPerSubband();
@@ -59,13 +57,19 @@ class CN_Configuration
     std::vector<unsigned> &inputPsets(), &outputPsets(), &tabList();
     std::vector<unsigned> &usedCoresInPset();
     std::vector<double>	  &refFreqs();
-    PencilCoordinates     &pencilBeams();
     std::vector<double>   &refPhaseCentre();
     Matrix<double>        &phaseCentres();
-    CN_Mode               &mode();
-    bool                  &outputIncoherentStokesI();
+
+    bool                  &outputFilteredData();
+    bool                  &outputCorrelatedData();
+    bool                  &outputBeamFormedData();
+    bool                  &outputCoherentStokes();
+    bool                  &outputIncoherentStokes();
+    unsigned              &nrStokes();
     bool                  &stokesIntegrateChannels();
-    unsigned              nrPencilBeams() const;
+    bool                  &flysEye();
+
+    unsigned              &nrPencilBeams();
     
     void		  read(Stream *);
     void		  write(Stream *);
@@ -73,7 +77,6 @@ class CN_Configuration
     static const unsigned MAX_PSETS	     = 64;
     static const unsigned MAX_SUBBANDS	     = 1024;
     static const unsigned MAX_STATIONS	     = 100;
-    static const unsigned MAX_PENCILBEAMS    = 256;
     static const unsigned MAX_CORES_PER_PSET = 64;
 
   private:
@@ -81,9 +84,7 @@ class CN_Configuration
     std::vector<unsigned> itsUsedCoresInPset;
     std::vector<double>	  itsRefFreqs;
     std::vector<double>	  itsRefPhaseCentre;
-    PencilCoordinates     itsPencilBeams;
     Matrix<double>        itsPhaseCentres;
-    CN_Mode               itsMode;
 
     struct MarshalledData
     {
@@ -107,9 +108,14 @@ class CN_Configuration
       double              itsRefPhaseCentre[3];
       double              itsPhaseCentres[MAX_STATIONS * 3];
       unsigned            itsNrPencilBeams;
-      double              itsPencilBeams[MAX_PENCILBEAMS * 2];
-      bool                itsOutputIncoherentStokesI;
+      bool                itsOutputFilteredData;
+      bool                itsOutputCorrelatedData;
+      bool                itsOutputBeamFormedData;
+      bool                itsOutputCoherentStokes;
+      bool                itsOutputIncoherentStokes;
+      unsigned            itsNrStokes;
       bool                itsStokesIntegrateChannels;
+      bool                itsFlysEye;
     } itsMarshalledData;
 };
 
@@ -194,14 +200,9 @@ inline std::vector<double> & CN_Configuration::refFreqs()
   return itsRefFreqs;
 }
 
-inline PencilCoordinates &CN_Configuration::pencilBeams()
+inline unsigned &CN_Configuration::nrPencilBeams()
 {
-  return itsPencilBeams;
-}
-
-inline unsigned CN_Configuration::nrPencilBeams() const
-{
-  return itsPencilBeams.size();
+  return itsMarshalledData.itsNrPencilBeams;
 }
 
 inline std::vector<double> &CN_Configuration::refPhaseCentre()
@@ -214,19 +215,44 @@ inline Matrix<double> &CN_Configuration::phaseCentres()
   return itsPhaseCentres;
 }
 
-inline CN_Mode &CN_Configuration::mode()
+inline bool &CN_Configuration::outputFilteredData()
 {
-  return itsMode;
+  return itsMarshalledData.itsOutputFilteredData;
 }
 
-inline bool &CN_Configuration::outputIncoherentStokesI()
+inline bool &CN_Configuration::outputCorrelatedData()
 {
-  return itsMarshalledData.itsOutputIncoherentStokesI;
+  return itsMarshalledData.itsOutputCorrelatedData;
+}
+
+inline bool &CN_Configuration::outputBeamFormedData()
+{
+  return itsMarshalledData.itsOutputBeamFormedData;
+}
+
+inline bool &CN_Configuration::outputCoherentStokes()
+{
+  return itsMarshalledData.itsOutputCoherentStokes;
+}
+
+inline bool &CN_Configuration::outputIncoherentStokes()
+{
+  return itsMarshalledData.itsOutputIncoherentStokes;
+}
+
+inline unsigned &CN_Configuration::nrStokes()
+{
+  return itsMarshalledData.itsNrStokes;
 }
 
 inline bool &CN_Configuration::stokesIntegrateChannels()
 {
   return itsMarshalledData.itsStokesIntegrateChannels;
+}
+
+inline bool &CN_Configuration::flysEye()
+{
+  return itsMarshalledData.itsFlysEye;
 }
 
 

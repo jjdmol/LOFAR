@@ -20,7 +20,7 @@ namespace RTCP {
 
 static NSTimer beamFormTimer("BeamFormer::formBeams()", true, true);
 
-BeamFormer::BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation )
+BeamFormer::BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation, const bool flysEye )
 :
   itsNrStations(nrStations),
   itsNrPencilBeams(nrPencilBeams),
@@ -28,16 +28,16 @@ BeamFormer::BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, 
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsChannelBandwidth(channelBandwidth),
   itsDelays( nrStations, nrPencilBeams ),
-  itsStation2BeamFormedStation(station2BeamFormedStation),
   itsNrValidStations( 0 ),
-  itsValidStations( itsNrStations )
+  itsValidStations( itsNrStations ),
+  itsFlysEye( flysEye )
 {
-  initStationMergeMap();
+  initStationMergeMap( station2BeamFormedStation );
 }
 
-void BeamFormer::initStationMergeMap()
+void BeamFormer::initStationMergeMap( const std::vector<unsigned> &station2BeamFormedStation )
 {
-  if(itsStation2BeamFormedStation.empty()) {
+  if(station2BeamFormedStation.empty()) {
     // beamforming disabled -- assignment is 1:1
     itsMergeSourceStations.resize(itsNrStations);
     itsMergeDestStations.resize(itsNrStations);
@@ -48,15 +48,15 @@ void BeamFormer::initStationMergeMap()
     }
   } else {
     // beamforming enabled
-    ASSERT( itsStation2BeamFormedStation.size() == itsNrStations );
+    ASSERT( station2BeamFormedStation.size() == itsNrStations );
 
-    const unsigned nrMergedStations = *std::max_element( itsStation2BeamFormedStation.begin(), itsStation2BeamFormedStation.end() ) + 1;
+    const unsigned nrMergedStations = *std::max_element( station2BeamFormedStation.begin(), station2BeamFormedStation.end() ) + 1;
 
     itsMergeSourceStations.resize( nrMergedStations );
     itsMergeDestStations.resize( nrMergedStations );
 
     for(unsigned i=0; i<itsNrStations; i++) {
-      unsigned id = itsStation2BeamFormedStation[i];
+      unsigned id = station2BeamFormedStation[i];
       
       itsMergeSourceStations[id].push_back(i);
     }
@@ -444,6 +444,27 @@ void BeamFormer::computeDelays( const SubbandMetaData *metaData )
   }
 }
 
+void BeamFormer::computeFlysEye( const SampleData<> *in, SampleData<> *out ) {
+  // In fly's eye, every station is turned into a beam.
+  //
+  // We can just copy the station data, which has two advantages:
+  //   1) for further processing, there is no difference between beam-formed and fly's eye data.
+  //   2) potentially scattered merged stations are put in order
+
+  std::vector<unsigned>::const_iterator src = itsMergeDestStations.begin();
+  unsigned dest = 0;
+
+  for(; src != itsMergeDestStations.end(); src++, dest++ ) {
+    // copy station *src to dest
+    out->flags[dest] = in->flags[*src];        
+    for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
+      memcpy( out->samples[ch][dest].origin(),
+              in->samples[ch][*src].origin(), 
+              in->samples[ch].strides()[0] * sizeof in->samples[0][0][0][0] );
+    }
+  }
+}
+
 void BeamFormer::formBeams( const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, double centerFrequency )
 {
   ASSERT( sampleData->samples.shape()[0] == itsNrChannels );
@@ -471,11 +492,16 @@ void BeamFormer::formBeams( const SubbandMetaData *metaData, SampleData<> *sampl
   mergeStationFlags( sampleData, sampleData );
   mergeStations( sampleData, sampleData );
 
-  // perform beam forming
-  if( itsNrPencilBeams > 0 && beamFormedData ) { // TODO: implement itsNrPencilBeams == 0 if nothing needs to be done
-    computeDelays( metaData );
-    computeFlags( sampleData, beamFormedData );
-    computeComplexVoltages( sampleData, beamFormedData, baseFrequency );
+  if( beamFormedData ) {
+    if( itsFlysEye ) {
+      // turn stations into beams
+      computeFlysEye( sampleData, beamFormedData );
+    } else if( itsNrPencilBeams > 0 ) { // TODO: implement itsNrPencilBeams == 0 if nothing needs to be done
+      // perform beam forming
+      computeDelays( metaData );
+      computeFlags( sampleData, beamFormedData );
+      computeComplexVoltages( sampleData, beamFormedData, baseFrequency );
+    }
   }
 
   beamFormTimer.stop();

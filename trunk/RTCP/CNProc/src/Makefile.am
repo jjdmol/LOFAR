@@ -5,8 +5,6 @@ LocationInfo.h		\
 CorrelatorAsm.h		\
 FFT_Asm.h		\
 FIR_Asm.h		\
-InputData.h		\
-TransposedData.h	\
 FIR.h			\
 PPF.h			\
 AsyncTranspose.h	\

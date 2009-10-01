@@ -28,30 +28,49 @@
 #include <IONProc/ION_Allocator.h>
 #include <Stream/SystemCallException.h>
 #include <Scheduling.h>
-#include <Interface/PipelineOutput.h>
+#include <Interface/CN_ProcessingPlan.h>
+
+#include <Stream/FileStream.h>
+#include <Stream/NullStream.h>
+#include <Stream/SocketStream.h>
+
+#include <memory>
 
 namespace LOFAR {
 namespace RTCP {
 
 
-OutputThread::OutputThread(Stream *streamToStorage, const Parset &ps )
+OutputThread::OutputThread(const unsigned subband, const Parset &ps )
 :
   itsOutputs(0),
   itsNrOutputs(0),
-  itsStreamToStorage(streamToStorage)
+  itsPlans(0),
+  itsParset(ps),
+  itsSubband(subband),
+  thread(0)
 {
+  CN_Configuration configuration(ps);
+
   // transpose the data holders: create queues streams for the output streams
+  // itsPlans is the owner of the pointers to sample data structures
   for (unsigned i = 0; i < maxSendQueueSize; i ++) {
-    PipelineOutputSet pipeline( ps, hugeMemoryAllocator );
+    CN_ProcessingPlan<> *plan = new CN_ProcessingPlan<>( configuration, false, true, ps.nrBaselines() );
+    plan->removeNonOutputs();
+    plan->allocateOutputs( hugeMemoryAllocator );
+
+    itsPlans.push_back( plan );
+
+    itsNrOutputs = plan->nrOutputs();
 
     // only the first call will actually resize the array
-    if( !itsOutputs ) {
-      itsNrOutputs = pipeline.size();
-      itsOutputs = new struct OutputThread::SingleOutput[itsNrOutputs];
+    if( !itsOutputs.size() ) {
+      itsOutputs.resize( itsNrOutputs );
     }
+    
+    for (unsigned o = 0; o < plan->plan.size(); o++ ) {
+      const ProcessingPlan::planlet &p = plan->plan[o];
 
-    for (unsigned o = 0; o < itsNrOutputs; o++ ) {
-      itsOutputs[o].freeQueue.append(pipeline[o].extractData());
+      itsOutputs[o].freeQueue.append( p.source );
     }
   }
 
@@ -75,60 +94,79 @@ OutputThread::~OutputThread()
 {
   itsSendQueueActivity.append(-1); // -1 indicates that no more messages will be sent
 
-  if (pthread_join(thread, 0) != 0)
+  if (thread && pthread_join(thread, 0) != 0)
     throw SystemCallException("pthread_join output thread", errno, THROW_ARGS);
 
   while (!itsSendQueueActivity.empty())
     itsSendQueueActivity.remove();
 
-  for (unsigned o = 0; o < itsNrOutputs; o ++) {
-    struct OutputThread::SingleOutput &output = itsOutputs[o];
-
-    while (!output.freeQueue.empty())
-      delete output.freeQueue.remove();
-
-    while (!output.sendQueue.empty())
-      delete output.sendQueue.remove();
-
+  for (unsigned i = 0; i < itsPlans.size(); i++ ) {
+    delete itsPlans[i];
   }
-
-  delete [] itsOutputs;
 }
 
 
 void OutputThread::mainLoop()
 {
-  StreamableData *data;
+  std::auto_ptr<Stream> streamToStorage;
   int o;
 
 #if defined HAVE_BGP_ION
   doNotRunOnCore0();
 #endif
 
+  // connect to storage
+  const string prefix         = "OLAP.OLAP_Conn.IONProc_Storage";
+  const string connectionType = itsParset.getString(prefix + "_Transport");
+
+  if (connectionType == "NULL") {
+    LOG_DEBUG_STR("subband " << itsSubband << " written to null:");
+    streamToStorage.reset( new NullStream );
+  } else if (connectionType == "TCP") {
+    const std::string    server = itsParset.storageHostName(prefix + "_ServerHosts", itsSubband);
+    const unsigned short port   = boost::lexical_cast<unsigned short>(itsParset.getPortsOf(prefix)[itsSubband]);
+  
+    LOG_DEBUG_STR("subband " << itsSubband << " written to tcp:" << server << ':' << port << " connecting..");
+    streamToStorage.reset( new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Client) );
+    LOG_DEBUG_STR("subband " << itsSubband << " written to tcp:" << server << ':' << port << " connect DONE");
+  } else if (connectionType == "FILE") {
+    std::string filename = itsParset.getString(prefix + "_BaseFileName") + '.' +
+      boost::lexical_cast<std::string>(itsSubband);
+    //boost::lexical_cast<std::string>(storagePortIndex);
+  
+    LOG_DEBUG_STR("subband " << itsSubband << " written to file:" << filename);
+    streamToStorage.reset( new FileStream(filename.c_str(), 0666) );
+  } else {
+    THROW(IONProcException, "unsupported ION->Storage stream type: " << connectionType);
+  }
+
   // set the maximum number of concurrent writers
+  // TODO: race condition on creation
+  // TODO: if a storage node blocks, ionproc can't write anymore
+  //       in any thread
   static Semaphore semaphore(1);
 
   while ((o = itsSendQueueActivity.remove()) >= 0) {
     struct OutputThread::SingleOutput &output = itsOutputs[o];
+    std::auto_ptr<StreamableData> data( output.sendQueue.remove() );
 
-    data = output.sendQueue.remove();
-
+    // prevent too many concurrent writers by locking this scope
     semaphore.down();
-
     try {
       // write header: nr of output
-      itsStreamToStorage->write( &o, sizeof o );
+      streamToStorage->write( &o, sizeof o );
 
       // write data, including serial nr
-      data->write(itsStreamToStorage, true);
-    } catch (...) {
+      data->write(streamToStorage.get(), true);
+    } catch( ... ) {
       semaphore.up();
-      output.freeQueue.append(data);
       throw;
     }
 
     semaphore.up();
-    output.freeQueue.append(data);
+
+    // data can now be reused
+    output.freeQueue.append( data.release() );
   }
 }
 

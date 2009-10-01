@@ -10,6 +10,7 @@ namespace LOFAR {
 namespace RTCP {
 
 static NSTimer stokesTimer("Stokes calculations", true, true);
+static NSTimer stokesIntegrationTimer("Stokes integration", true, true);
 
 Stokes::Stokes( const bool coherent, const int nrStokes, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrSamplesPerStokesIntegration ):
   itsNrChannels(nrChannels),
@@ -73,13 +74,15 @@ void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stok
     out->flags[beam] /= integrationSteps;
   }
 
+  // TODO: divide by #valid stations
+
   for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
     for (unsigned inTime = 0, outTime = 0; inTime < itsNrSamplesPerIntegration; inTime += integrationSteps, outTime++ ) {
       for( unsigned beam = 0; beam < nrBeams; beam++ ) {
         struct stokes stokes = { 0, 0, 0, 0, 0 };
 
         for( unsigned fractime = 0; fractime < integrationSteps; fractime++ ) {
-	    addStokes( stokes, in[ch][beam][inTime+fractime][0], in[ch][beam][inTime+fractime][1], allStokes );
+	  addStokes( stokes, in[ch][beam][inTime+fractime][0], in[ch][beam][inTime+fractime][1], allStokes );
         }
 
         #define dest out->samples[ch][beam][outTime]
@@ -93,6 +96,7 @@ void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stok
       }
     }
   }
+
   stokesTimer.stop();
 }
 
@@ -170,6 +174,8 @@ void Stokes::compressStokes( const StokesData *in, StokesDataIntegratedChannels 
 {
   const unsigned timeSteps = itsNrSamplesPerIntegration / itsNrSamplesPerStokesIntegration;
 
+  stokesIntegrationTimer.start();
+
   // copy flags
   for(unsigned beam = 0; beam < nrBeams; beam++) {
     out->flags[beam] = in->flags[beam];
@@ -188,6 +194,8 @@ void Stokes::compressStokes( const StokesData *in, StokesDataIntegratedChannels 
       }	
     }
   }
+
+  stokesIntegrationTimer.stop();
 }
 
 } // namespace RTCP

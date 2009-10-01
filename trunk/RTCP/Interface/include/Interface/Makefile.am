@@ -5,7 +5,6 @@ pkginclude_HEADERS = Package__Version.h \
 		     CN_Command.h \
 		     CN_Configuration.h \
 		     CN_Mapping.h \
-		     CN_Mode.h \
 		     CorrelatedData.h \
 		     Config.h \
 		     FilteredData.h \
@@ -22,7 +21,10 @@ pkginclude_HEADERS = Package__Version.h \
 		     PencilBeamData.h \
 		     PencilCoordinates.h \
                      StokesData.h \
-                     PipelineOutput.h \
-		     BFRawFormat.h
+		     BFRawFormat.h \
+                     ProcessingPlan.h \
+                     CN_ProcessingPlan.h \
+                     TransposedData.h \
+                     InputData.h
 
 include $(top_srcdir)/Makefile.common

@@ -17,7 +17,6 @@ tCN_Processing.cc				\
 ../src/FFT_Asm.S				\
 ../src/FIR.cc					\
 ../src/FIR_Asm.S				\
-../src/BeamFormer.cc                            \
 ../src/LocationInfo.cc				\
 ../src/PPF.cc					\
 ../src/PencilBeams.cc				\

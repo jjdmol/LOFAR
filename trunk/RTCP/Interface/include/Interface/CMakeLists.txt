@@ -6,7 +6,6 @@ set(inst_HEADERS
   CN_Command.h
   CN_Configuration.h
   CN_Mapping.h
-  CN_Mode.h
   CorrelatedData.h
   Config.h
   FilteredData.h
@@ -23,7 +22,11 @@ set(inst_HEADERS
   PencilBeamData.h
   PencilCoordinates.h
   StokesData.h
-  PipelineOutput.h)
+  ProcessingPlan.h
+  CN_ProcessingPlan.h
+  BFRawFormat.h
+  TransposedData.h
+  InputData.h)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 

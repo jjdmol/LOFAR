@@ -2,9 +2,9 @@
 #define LOFAR_CNPROC_ASYNC_TRANSPOSE_H
 
 #include <AsyncCommunication.h>
-#include <InputData.h>
+#include <Interface/InputData.h>
 #include <LocationInfo.h>
-#include <TransposedData.h>
+#include <Interface/TransposedData.h>
 #include <Interface/SubbandMetaData.h>
 
 #if defined HAVE_MPI
