@@ -109,7 +109,6 @@ public:
 	string         getMSBaseDir() const;
 	string         getTransportType(const string& prefix) const;
 	string         getModeName() const;
-	bool           outputIncoherentStokesI() const;
 
         bool           outputFilteredData() const;
         bool           outputCorrelatedData() const;
@@ -304,7 +303,7 @@ inline unsigned Parset::nrStokes() const
 {
   if( getModeName() == "IncoherentStokesI"
    || getModeName() == "CoherentStokesI" 
-   || getBool("Observation.outputIncoherentStokesI") ) {
+   || getBool("Observation.outputIncoherentStokesI",false) ) {
     return 1;
   } else if( getModeName() == "IncoherentAllStokes"
           || getModeName() == "CoherentAllStokes" ) {

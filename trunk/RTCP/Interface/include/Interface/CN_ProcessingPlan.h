@@ -48,12 +48,11 @@ namespace RTCP {
 template <typename SAMPLE_TYPE = i8complex> class CN_ProcessingPlan: public ProcessingPlan
 {
   public:
-    CN_ProcessingPlan( CN_Configuration &configuration, bool isInput, bool isOutput, unsigned nrBaselines );
+    CN_ProcessingPlan( CN_Configuration &configuration, bool isInput, bool isOutput );
     virtual ~CN_ProcessingPlan();
 
     const bool             itsIsTransposeInput;
     const bool             itsIsTransposeOutput;
-    const unsigned         itsNrBaselines;
 
     InputData<SAMPLE_TYPE>	 *itsInputData;
     SubbandMetaData              *itsInputSubbandMetaData;

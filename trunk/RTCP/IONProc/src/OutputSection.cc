@@ -71,7 +71,7 @@ void OutputSection::preprocess(const Parset *ps)
   CN_Configuration configuration(*ps);
 
   // allocate output structures and temporary data holders
-  itsPlan = new CN_ProcessingPlan<>( configuration, false, true, ps->nrBaselines() );
+  itsPlan = new CN_ProcessingPlan<>( configuration, false, true );
   itsPlan->removeNonOutputs();
   itsPlan->allocateOutputs( hugeMemoryAllocator );
   itsOutputs.resize(itsPlan->nrOutputs());
@@ -92,7 +92,7 @@ void OutputSection::preprocess(const Parset *ps)
     unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
 
     if (subbandNumber < itsNrSubbands) {
-      itsSumPlans[subband] = new CN_ProcessingPlan<>( configuration, false, true, ps->nrBaselines() );
+      itsSumPlans[subband] = new CN_ProcessingPlan<>( configuration, false, true );
       itsSumPlans[subband]->removeNonOutputs();
 
       // create data structures to accumulate data, if needed
