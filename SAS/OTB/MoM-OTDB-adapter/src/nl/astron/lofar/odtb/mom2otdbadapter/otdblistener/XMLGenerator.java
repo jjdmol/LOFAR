@@ -141,7 +141,7 @@ public class XMLGenerator {
 			if (beam.getSubbands().size() > 0) {
 				Element resultDataProducts = xmlBuilder.addElement(measurementElement, "resultDataProducts");
 				for (int i = 0; i < beam.getSubbands().size(); i++) {
-					Element uvDataProduct = xmlBuilder.addIndexedElement(resultDataProducts, "uvDataProduct");
+					Element uvDataProduct = xmlBuilder.addIndexedElement(resultDataProducts, XMLConstants.MOM2_LOFAR_NAMESPACE, "uvDataProduct");
 
 					xmlBuilder.addTextElement(uvDataProduct, "name", fileMask.replaceAll("\\$\\{SUBBAND\\}", i + ""));
 					xmlBuilder.addTextElement(uvDataProduct, "fileFormat", Mom2OtdbConverter
