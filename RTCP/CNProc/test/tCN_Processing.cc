@@ -28,7 +28,7 @@
 #include <Common/Exception.h>
 #include <Common/Timer.h>
 #include <PPF.h>
-#include <BeamFormer.h>
+#include <PencilBeams.h>
 #include <Correlator.h>
 #include <ArenaMapping.h>
 
@@ -73,7 +73,7 @@ template <> inline void toComplex<i16complex>(double phi, i16complex &z)
 }
 
 
-template <typename SAMPLE_TYPE> void setSubbandTestPattern(TransposedData<SAMPLE_TYPE> *transposedData, unsigned nrStations, double signalFrequency, double sampleRate)
+template <typename SAMPLE_TYPE> void setSubbandTestPattern(SubbandMetaData *metaData, TransposedData<SAMPLE_TYPE> *transposedData, unsigned nrStations, double signalFrequency, double sampleRate)
 {
   // Simulate a monochrome complex signal into the PPF, with station 1 at a
   // distance of .25 labda to introduce a delay.  Also, a few samples can be
@@ -88,10 +88,10 @@ template <typename SAMPLE_TYPE> void setSubbandTestPattern(TransposedData<SAMPLE
   const double phaseShift = 2 * M_PI * distance;
 
   for (unsigned stat = 0; stat < nrStations; stat ++) {
-    transposedData->metaData.beams(stat)[0].delayAtBegin   = 0;
-    transposedData->metaData.beams(stat)[0].delayAfterEnd  = 0;
-    transposedData->metaData.alignmentShift(stat) = 0;
-    transposedData->metaData.setFlags(stat,SparseSet<unsigned>());
+    metaData->beams(stat)[0].delayAtBegin   = 0;
+    metaData->beams(stat)[0].delayAfterEnd  = 0;
+    metaData->alignmentShift(stat) = 0;
+    metaData->setFlags(stat,SparseSet<unsigned>());
   }
 
   for (unsigned time = 0; time < transposedData->samples[0].size(); time ++) {
@@ -106,15 +106,15 @@ template <typename SAMPLE_TYPE> void setSubbandTestPattern(TransposedData<SAMPLE
 
     if (NR_POLARIZATIONS >= 2 && nrStations > 2) {
       toComplex(phi + phaseShift, transposedData->samples[1][time][1]);
-      transposedData->metaData.beams(1)[0].delayAtBegin  = distance / signalFrequency;
-      transposedData->metaData.beams(1)[0].delayAfterEnd = distance / signalFrequency;
+      metaData->beams(1)[0].delayAtBegin  = distance / signalFrequency;
+      metaData->beams(1)[0].delayAfterEnd = distance / signalFrequency;
     }
   }
   
 #if 1
   if (transposedData->samples[0].size() > 17000 && nrStations >= 6) {
-    transposedData->metaData.setFlags(4,SparseSet<unsigned>().include(14000));
-    transposedData->metaData.setFlags(5,SparseSet<unsigned>().include(17000));
+    metaData->setFlags(4,SparseSet<unsigned>().include(14000));
+    metaData->setFlags(5,SparseSet<unsigned>().include(17000));
   }
 #endif
 
@@ -210,10 +210,10 @@ template <typename SAMPLE_TYPE> void doWork()
       exit(1);
     }
 
-    BeamFormer     beamFormer(nrStations, nrSamplesPerIntegration, station2SuperStation, nrChannels);
+    BeamFormer     beamFormer(0, nrStations, nrChannels, nrSamplesPerIntegration, 0, station2SuperStation, false);
 
     const char *env;
-    unsigned nrBeamFormedStations = beamFormer.getNrBeamFormedStations();
+    unsigned nrBeamFormedStations = nrStations;
     unsigned nrBaselines = nrBeamFormedStations * (nrBeamFormedStations + 1) / 2;
 
 
@@ -227,9 +227,10 @@ template <typename SAMPLE_TYPE> void doWork()
 
     ArenaMapping mapping;
 
-    TransposedData<SAMPLE_TYPE> transposedData(nrStations, nrSamplesToCNProc, 1);
-    FilteredData   filteredData(nrStations, nrChannels, nrSamplesPerIntegration, 1);
+    TransposedData<SAMPLE_TYPE> transposedData(nrStations, nrSamplesToCNProc);
+    FilteredData   filteredData(nrStations, nrChannels, nrSamplesPerIntegration);
     CorrelatedData correlatedData(nrBaselines, nrChannels);
+    SubbandMetaData metaData(nrStations, 1, 32);
 
     mapping.addDataset( &transposedData, 1 );
     mapping.addDataset( &filteredData, 0 );
@@ -239,22 +240,21 @@ template <typename SAMPLE_TYPE> void doWork()
     std::clog << transposedData.requiredSize() << " " << filteredData.requiredSize() << " " << correlatedData.requiredSize() << std::endl;
 
     PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true, true);
-    Correlator     correlator(beamFormer.getNrBeamFormedStations(), 
-			      beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration, true /* use bandpass correction */);
+    Correlator     correlator(beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration, true /* use bandpass correction */);
 
-    setSubbandTestPattern(&transposedData, nrStations, signalFrequency, sampleRate);
+    setSubbandTestPattern(&metaData, &transposedData, nrStations, signalFrequency, sampleRate);
 
     for (unsigned stat = 0; stat < nrStations; stat ++) {
-      ppf.computeFlags(stat, &transposedData, &filteredData);
-      ppf.filter(stat, centerFrequency, &transposedData, &filteredData);
+      ppf.computeFlags(stat, &metaData, &filteredData);
+      ppf.filter(stat, centerFrequency, &metaData, &transposedData, &filteredData);
     }
 
-    beamFormer.formBeams(&filteredData);
+    beamFormer.formBeams(&metaData,&filteredData,0,0.0);
 
     correlator.computeFlagsAndCentroids(&filteredData, &correlatedData);
     correlator.correlate(&filteredData, &correlatedData);
 
-    checkCorrelatorTestPattern(&correlatedData, beamFormer.getNrBeamFormedStations(), nrChannels);
+    checkCorrelatorTestPattern(&correlatedData, nrBeamFormedStations, nrChannels);
   }
 }
 

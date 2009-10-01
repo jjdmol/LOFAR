@@ -110,7 +110,17 @@ public:
 	string         getTransportType(const string& prefix) const;
 	string         getModeName() const;
 	bool           outputIncoherentStokesI() const;
+
+        bool           outputFilteredData() const;
+        bool           outputCorrelatedData() const;
+        bool           outputBeamFormedData() const;
+        bool           outputCoherentStokes() const;
+        bool           outputIncoherentStokes() const;
+
 	bool           stokesIntegrateChannels() const;
+        unsigned       nrStokes() const;
+        bool           flysEye() const;
+
 
 	uint32	       nrPencilBeams() const;
 	PencilCoordinates pencilBeams() const;
@@ -258,6 +268,50 @@ inline uint32 Parset::IONintegrationSteps() const
 inline uint32 Parset::stokesIntegrationSteps() const
 {
   return getUint32("Observation.stokesIntegrationSteps");
+}
+
+inline bool Parset::outputFilteredData() const
+{
+  return getModeName() == "Filter" || getBool("Observation.outputFilteredData",false);
+}
+
+inline bool Parset::outputCorrelatedData() const
+{
+  return getModeName() == "Correlate" || getBool("Observation.outputCorrelatedData",false);
+}
+
+inline bool Parset::outputBeamFormedData() const
+{
+  return getModeName() == "ComplexVoltages" || getBool("Observation.outputBeamFormedData",false);
+}
+
+inline bool Parset::outputCoherentStokes() const
+{
+  return getModeName() == "CoherentStokesI"
+      || getModeName() == "CoherentAllStokes"
+      || getBool("Observation.outputCoherentStokes",false);
+}
+
+inline bool Parset::outputIncoherentStokes() const
+{
+  return getModeName() == "IncoherentStokesI"
+      || getModeName() == "IncoherentAllStokes"
+      || getBool("Observation.outputIncoherentStokesI",false)
+      || getBool("Observation.outputIncoherentStokes",false);
+}
+
+inline unsigned Parset::nrStokes() const
+{
+  if( getModeName() == "IncoherentStokesI"
+   || getModeName() == "CoherentStokesI" 
+   || getBool("Observation.outputIncoherentStokesI") ) {
+    return 1;
+  } else if( getModeName() == "IncoherentAllStokes"
+          || getModeName() == "CoherentAllStokes" ) {
+    return 4;
+  } else {
+    return getUint32("Observation.nrStokes",0);
+  }
 }
 
 inline double Parset::CNintegrationTime() const
@@ -421,7 +475,7 @@ inline string Parset::partitionName() const
 
 inline bool Parset::dumpRawData() const
 {
-	return getBool("OLAP.OLAP_Conn.rawDataOutputOnly");
+  return getBool("OLAP.OLAP_Conn.rawDataOutputOnly");
 }
 
 inline bool Parset::realTime() const
@@ -431,7 +485,7 @@ inline bool Parset::realTime() const
 
 inline string Parset::getModeName() const
 {
-  return getString("Observation.mode");
+  return getString("Observation.mode", "");
 }
 
 inline uint32 Parset::nrPencilRings() const
@@ -455,7 +509,10 @@ inline PencilCoordinates Parset::pencilBeams() const
   PencilRings coordinates(nrPencilRings(), pencilRingSize());
 
   for (unsigned i = 0; i < nrManualPencilBeams(); i ++) {
-    coordinates += PencilCoord3D(getManualPencilBeam(i));
+    const std::vector<double> coords = getManualPencilBeam(i);
+
+    // assume ra,dec
+    coordinates += PencilCoord3D(coords[0],coords[1]);
   }
 
   return coordinates;
@@ -466,14 +523,14 @@ inline double Parset::pencilRingSize() const
   return getDouble("Observation.pencilRingSize");
 }
 
-inline bool Parset::outputIncoherentStokesI() const
-{
-  return getBool("Observation.outputIncoherentStokesI");
-}
-
 inline bool Parset::stokesIntegrateChannels() const
 {
   return getBool("Observation.stokesIntegrateChannels");
+}
+
+inline bool Parset::flysEye() const
+{
+  return getBool("Observation.flysEye", false);
 }
 
 inline string Parset::observerName() const

@@ -122,5 +122,6 @@ void SparseSetAllocator::deallocate(void *ptr)
   }
 }
 
+
 } // namespace RTCP
 } // namespace LOFAR

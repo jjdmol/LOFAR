@@ -8,7 +8,7 @@
 
 #include <BandPass.h>
 #include <FIR.h>
-#include <TransposedData.h>
+#include <Interface/TransposedData.h>
 #include <Interface/FilteredData.h>
 #include <Interface/SubbandMetaData.h>
 #include <Interface/AlignedStdAllocator.h>

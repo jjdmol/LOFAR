@@ -25,9 +25,9 @@ lofar_add_library(interface
   Allocator.cc
   CN_Configuration.cc
   CN_Mapping.cc
+  CN_ProcessingPlan.cc
   Parset.cc
   PencilCoordinates.cc
-  RSPTimeStamp.cc
-  CN_Mode.cc)
+  RSPTimeStamp.cc)
 
 lofar_add_bin_program(versioninterface versioninterface.cc)

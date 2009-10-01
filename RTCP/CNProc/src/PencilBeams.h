@@ -20,10 +20,12 @@ namespace RTCP {
 
 /*
 
-   This beam former supports two modes:
+   This beam former supports three modes:
 
    1) merging stations, as indicated by the station2BeamFormedStation array.
    2) creating pencil beams, as indicated by the nrPencilBeams and metaData parameters.
+   3) creating a 'fly's eye', which is a variation on mode 2, except
+      that each station creates its own beam (i.e. the data is copied).
 
    Merging stations
    -------------------------
@@ -46,7 +48,7 @@ class BeamFormer
   public:
     static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
 
-    BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation );
+    BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation, const bool flysEye);
 
     // merges stations into superstations in sampleData, and fills beamFormedData with pencil beams
     void formBeams( const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, double centerFrequency );
@@ -55,7 +57,7 @@ class BeamFormer
     std::vector<unsigned> &getStationMapping();
   private:
     unsigned calcNrBeamFormedStations();
-    void initStationMergeMap();
+    void initStationMergeMap( const std::vector<unsigned> &station2BeamFormedStation );
 
     // extracts the delays from the metaData, and transforms them if necessary
     void computeDelays( const SubbandMetaData *metaData );
@@ -72,6 +74,9 @@ class BeamFormer
     void mergeStations( const SampleData<> *in, SampleData<> *out );
     void computeComplexVoltages( const SampleData<> *in, SampleData<> *out, double baseFrequency );
 
+    // fly's eye
+    void computeFlysEye( const SampleData<> *in, SampleData<> *out );
+
     const unsigned          itsNrStations;
     const unsigned          itsNrPencilBeams;
     const unsigned          itsNrChannels;
@@ -82,8 +87,6 @@ class BeamFormer
     // a station is 'valid' if the samples do not contain too much flagged data. invalid stations
     // are ignored by the beamformer.
 
-    // variables for station merging
-    const std::vector<unsigned>         &itsStation2BeamFormedStation; // [s] = i => station s belongs to beam i
     std::vector<std::vector<unsigned> > itsMergeSourceStations;        // [i] = [a,b,c] => beam i is a+b+c
     std::vector<unsigned>               itsMergeDestStations;          // [i] = a => beam i is stored at a
     std::vector<std::vector<unsigned> > itsValidMergeSourceStations;   // subset of itsMergeSourceStations,
@@ -92,6 +95,8 @@ class BeamFormer
     // variables for pencil beam forming
     unsigned                itsNrValidStations; // number of 'true' values in itsValidStations
     std::vector<bool>       itsValidStations;   // [itsNrStations] whether each station is valid
+
+    const bool              itsFlysEye;
 };
 
 inline dcomplex BeamFormer::phaseShift( const double frequency, const double delay ) const

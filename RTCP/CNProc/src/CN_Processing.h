@@ -33,17 +33,8 @@
 #include <Interface/CN_Configuration.h>
 #endif
 
-#include <Interface/CN_Mode.h>
-
+#include <Interface/CN_ProcessingPlan.h>
 #include <ArenaMapping.h>
-
-#include <InputData.h>
-#include <Interface/FilteredData.h>
-#include <TransposedData.h>
-#include <Interface/CorrelatedData.h>
-#include <Interface/PencilBeamData.h>
-#include <Interface/StokesData.h>
-#include <Interface/StreamableData.h>
 
 #include <AsyncTranspose.h>
 #include <PencilBeams.h>
@@ -85,8 +76,6 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     void                transpose();
     void                filter();
     void                formBeams();
-    void                formBeamFormer();
-    void                calculateIncoherentStokesI();
     void                calculateCoherentStokes();
     void                calculateIncoherentStokes();
     void                correlate();
@@ -114,29 +103,18 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
     bool		itsIsTransposeInput, itsIsTransposeOutput;
     bool		itsStokesIntegrateChannels;
+    bool                itsNrStokes;
     
-    ArenaMapping        itsMapping;
-
-    InputData<SAMPLE_TYPE>	*itsInputData;
-    SubbandMetaData             *itsInputSubbandMetaData;
-    SubbandMetaData             *itsSubbandMetaData;
-    TransposedData<SAMPLE_TYPE>	*itsTransposedData;
-    FilteredData		*itsFilteredData;
-    CorrelatedData		*itsCorrelatedData;
-    BeamFormedData              *itsBeamFormedData;
-    StokesData                  *itsStokesData;
-    StokesData                  *itsIncoherentStokesIData;
-    StokesDataIntegratedChannels *itsStokesDataIntegratedChannels;
-    CN_Mode                     itsMode;
-    bool			itsOutputIncoherentStokesI;
+    CN_ProcessingPlan<SAMPLE_TYPE> *itsPlan;
+    ArenaMapping        itsMapping; // needs to be a member to ensure that its lifetime extends beyond that of its data sets
 
 #if defined HAVE_MPI
     AsyncTranspose<SAMPLE_TYPE> *itsAsyncTranspose;
 #endif
 
     PPF<SAMPLE_TYPE>	*itsPPF;
-    BeamFormer         *itsBeamFormer;
-    Stokes              *itsStokes, *itsIncoherentStokesI;
+    BeamFormer          *itsBeamFormer;
+    Stokes              *itsCoherentStokes, *itsIncoherentStokes;
     Correlator		*itsCorrelator;
 };
 

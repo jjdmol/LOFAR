@@ -27,10 +27,6 @@
 #include <Interface/StreamableData.h>
 #include <Interface/CorrelatedData.h>
 
-#include <Stream/FileStream.h>
-#include <Stream/NullStream.h>
-#include <Stream/SocketStream.h>
-
 #include <ION_Allocator.h>
 #include <OutputSection.h>
 #include <Scheduling.h>
@@ -53,53 +49,12 @@ namespace RTCP {
 
 OutputSection::OutputSection(unsigned psetNumber, const std::vector<Stream *> &streamsFromCNs)
 :
-  itsPipelineOutputSet(0),
   itsPsetNumber(psetNumber),
   itsParset(0),
+  itsPlan(0),
   itsStreamsFromCNs(streamsFromCNs)
 {
 }
-
-
-void OutputSection::connectToStorage()
-{
-  string prefix		= "OLAP.OLAP_Conn.IONProc_Storage";
-  string connectionType = itsParset->getString(prefix + "_Transport");
-
-  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
-    unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
-
-    if (subbandNumber < itsNrSubbands) {
-#if 0
-      if (itsPsetNumber != 31)
-	connectionType = string("NULL");
-#endif
-
-      if (connectionType == "NULL") {
-	LOG_DEBUG_STR("subband " << subbandNumber << " written to null:");
-	itsStreamsToStorage.push_back(new NullStream);
-      } else if (connectionType == "TCP") {
-	std::string    server = itsParset->storageHostName(prefix + "_ServerHosts", subbandNumber);
-	//unsigned short port   = boost::lexical_cast<unsigned short>(ps->getPortsOf(prefix)[storagePortIndex]);
-	unsigned short port   = boost::lexical_cast<unsigned short>(itsParset->getPortsOf(prefix)[subbandNumber]);
-	
-	LOG_DEBUG_STR("subband " << subbandNumber << " written to tcp:" << server << ':' << port);
-	itsStreamsToStorage.push_back(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Client));
-	LOG_DEBUG_STR("subband " << subbandNumber << " written to tcp:" << server << ':' << port << " connect DONE");
-      } else if (connectionType == "FILE") {
-	std::string filename = itsParset->getString(prefix + "_BaseFileName") + '.' +
-	  boost::lexical_cast<std::string>(subbandNumber);
-	//boost::lexical_cast<std::string>(storagePortIndex);
-	
-	LOG_DEBUG_STR("subband " << subbandNumber << " written to file:" << filename);
-	itsStreamsToStorage.push_back(new FileStream(filename.c_str(), 0666));
-      } else {
-	THROW(IONProcException, "unsupported ION->Storage stream type");
-      }
-    }
-  }
-}
-
 
 void OutputSection::preprocess(const Parset *ps)
 {
@@ -110,47 +65,60 @@ void OutputSection::preprocess(const Parset *ps)
   itsNrSubbands             = ps->nrSubbands();
   itsNrSubbandsPerPset	    = ps->nrSubbandsPerPset();
   itsRealTime               = ps->realTime();
-   
-  itsPipelineOutputSet = new PipelineOutputSet(*ps, hugeMemoryAllocator);
-  itsOutputs.resize(itsPipelineOutputSet->size());
 
-  // since we need itsPipelineOutputSet just for settings, we can extract its data
-  // for the tmpSum array
-  PipelineOutputSet &pipeline = *itsPipelineOutputSet;
+  itsDroppedCount.resize(itsNrSubbandsPerPset);
 
-  for (unsigned o = 0; o < itsOutputs.size(); o ++)
-    itsOutputs[o].tmpSum = pipeline[o].extractData();
+  CN_Configuration configuration(*ps);
 
+  // allocate output structures and temporary data holders
+  itsPlan = new CN_ProcessingPlan<>( configuration, false, true, ps->nrBaselines() );
+  itsPlan->removeNonOutputs();
+  itsPlan->allocateOutputs( hugeMemoryAllocator );
+  itsOutputs.resize(itsPlan->nrOutputs());
+
+  for (unsigned o = 0; o < itsPlan->plan.size(); o++ ) {
+    struct OutputSection::SingleOutput &output = itsOutputs[o];
+    const ProcessingPlan::planlet &p = itsPlan->plan[o];
+
+    output.nrIntegrationSteps	  = 1;
+    output.currentIntegrationStep = 0;
+    output.sequenceNumber	  = 0;
+    output.tmpSum                 = p.source;
+  }
+
+  // allocate partial sums -- only for those outputs that need it
+  itsSumPlans.resize(itsNrSubbandsPerPset);
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
 
     if (subbandNumber < itsNrSubbands) {
-      PipelineOutputSet pipeline(*ps, hugeMemoryAllocator);
+      itsSumPlans[subband] = new CN_ProcessingPlan<>( configuration, false, true, ps->nrBaselines() );
+      itsSumPlans[subband]->removeNonOutputs();
 
-      for (unsigned o = 0; o < itsOutputs.size(); o ++)
-	itsOutputs[o].sums.push_back(pipeline[o].extractData());
+      // create data structures to accumulate data, if needed
+      for (unsigned o = 0; o < itsSumPlans[subband]->plan.size(); o++ ) {
+        struct OutputSection::SingleOutput &output = itsOutputs[o];
+        const ProcessingPlan::planlet &p = itsSumPlans[subband]->plan[o];
+
+        if( !p.source->isIntegratable() ) {
+          continue;
+        }
+
+        if( ps->IONintegrationSteps() <= 1 ) {
+          continue;
+        }
+
+        // set up this output to accumulate data
+        p.source->allocate( hugeMemoryAllocator );
+        output.sums.push_back( p.source );
+        output.nrIntegrationSteps = ps->IONintegrationSteps();
+      }
+
+      // create an output thread for this subband
+      itsOutputThreads.push_back(new OutputThread(subbandNumber, *ps));
     }
   }
   
-  itsDroppedCount.resize(itsNrSubbandsPerPset);
-
-  for (unsigned o = 0; o < itsOutputs.size(); o++) {
-    struct OutputSection::SingleOutput &output = itsOutputs[o];
-
-    output.nrIntegrationSteps	  = (*itsPipelineOutputSet)[o].IONintegrationSteps();
-    output.currentIntegrationStep = 0;
-    output.sequenceNumber	  = 0;
-  }
-
-  connectToStorage();
-
-  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
-    unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
-
-    if (subbandNumber < itsNrSubbands)
-      itsOutputThreads.push_back(new OutputThread(itsStreamsToStorage[subband], *ps));
-  }
-
 #if defined HAVE_BGP_ION // FIXME: not in preprocess
   doNotRunOnCore0();
   setPriority(2);
@@ -183,7 +151,7 @@ void OutputSection::process()
 
     if (subbandNumber < itsNrSubbands) {
       // read all outputs of one node at once, so that it becomes free to process the next set of samples
-      for (unsigned o = 0; o < itsOutputs.size(); o ++) {
+      for (unsigned o = 0; o < itsOutputs.size(); o++ ) {
 	struct OutputSection::SingleOutput &output = itsOutputs[o];
 	struct OutputThread::SingleOutput &outputThread = itsOutputThreads[subband]->itsOutputs[o];
 	
@@ -235,31 +203,22 @@ void OutputSection::process()
 
 void OutputSection::postprocess()
 {
-  for (unsigned o = 0; o < itsOutputs.size(); o ++)
-    delete itsOutputs[o].tmpSum;
-
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
 
     if (subbandNumber < itsNrSubbands) {
       notDroppingData(subband, subbandNumber); // for final warning message
-      itsOutputThreads[subband]->itsSendQueueActivity.append(-1); // -1 indicates that no more messages will be sent
-
-      for (unsigned o = 0; o < itsOutputs.size(); o ++) {
-	struct OutputSection::SingleOutput &output = itsOutputs[o];
-	delete output.sums[subband];
-      }
       
       delete itsOutputThreads[subband];
-      delete itsStreamsToStorage[subband];
+      delete itsSumPlans[subband];
     }
   }
 
-  delete itsPipelineOutputSet;
+  delete itsPlan;
+  itsSumPlans.resize(0);
 
   itsOutputThreads.clear();
   itsOutputs.clear();
-  itsStreamsToStorage.clear();
   itsDroppedCount.clear();
 }
 

@@ -22,7 +22,7 @@
 #define LOFAR_IONPROC_OUTPUT_SECTION_H
 
 #include <Interface/Parset.h>
-#include <Interface/PipelineOutput.h>
+#include <Interface/CN_ProcessingPlan.h>
 #include <Stream/Stream.h>
 #include <IONProc/OutputThread.h>
 
@@ -60,7 +60,6 @@ class OutputSection
     };
 
     std::vector<struct SingleOutput> itsOutputs; // [outputs]
-    PipelineOutputSet           *itsPipelineOutputSet;
 
     unsigned			itsPsetNumber, itsPsetIndex;
     unsigned			itsNrComputeCores, itsCurrentComputeCore;
@@ -69,8 +68,13 @@ class OutputSection
     const Parset                *itsParset;
     bool                        itsRealTime;
 
+    // the main plan, also holds temporary results
+    CN_ProcessingPlan<>         *itsPlan;
+
+    // plans that hold accumulated results
+    Vector<CN_ProcessingPlan<> *> itsSumPlans;
+
     const std::vector<Stream *> &itsStreamsFromCNs;
-    std::vector<Stream *>	itsStreamsToStorage;
 };
 
 }

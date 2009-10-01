@@ -24,6 +24,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <algorithm>
 
 namespace LOFAR {
 namespace RTCP {
@@ -61,10 +62,16 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   tabList()                 = parset.tabList();
   usedCoresInPset()	    = parset.usedCoresInPset();
   refFreqs()                = parset.subbandToFrequencyMapping();
-  pencilBeams()             = parset.pencilBeams();
+  nrPencilBeams()           = parset.nrPencilBeams();
   refPhaseCentre()          = parset.getRefPhaseCentres();
-  mode()                    = CN_Mode(parset);
-  outputIncoherentStokesI() = parset.outputIncoherentStokesI();
+  outputFilteredData()      = parset.outputFilteredData();
+  outputCorrelatedData()    = parset.outputCorrelatedData();
+  outputBeamFormedData()    = parset.outputBeamFormedData();
+  outputCoherentStokes()    = parset.outputCoherentStokes();
+  outputIncoherentStokes()  = parset.outputIncoherentStokes();
+  nrStokes()                = parset.nrStokes();
+  flysEye()                 = parset.flysEye();
+
   stokesIntegrateChannels() = parset.stokesIntegrateChannels();
 
   // Get the phase centres of all station, not just the one we receive input from. The compute nodes
@@ -86,8 +93,6 @@ CN_Configuration::CN_Configuration(const Parset &parset)
 void CN_Configuration::read(Stream *str)
 {
   str->read(&itsMarshalledData, sizeof itsMarshalledData);
-  itsMode.read(str);
-  itsPencilBeams.read(str);
 
   itsInputPsets.resize(itsMarshalledData.itsInputPsetsSize);
   memcpy(&itsInputPsets[0], itsMarshalledData.itsInputPsets, itsMarshalledData.itsInputPsetsSize * sizeof(unsigned));
@@ -142,8 +147,15 @@ void CN_Configuration::write(Stream *str)
   }
 
   str->write(&itsMarshalledData, sizeof itsMarshalledData);
-  itsMode.write(str);
-  itsPencilBeams.write(str);
+}
+
+unsigned CN_Configuration::nrMergedStations()
+{
+  if( tabList().empty() ) {
+    return nrStations();
+  }
+
+  return *std::max_element( tabList().begin(), tabList().end() ) + 1;
 }
 
 } // namespace RTCP
