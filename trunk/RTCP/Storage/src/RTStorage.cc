@@ -37,8 +37,9 @@ RTStorage::RTStorage(const Parset *ps, unsigned rank, unsigned size)
   itsPS(ps),
   itsRank(rank), 
   itsSize(size),
-  itsPipelineOutputSet(*ps),
-  itsNrOutputs(itsPipelineOutputSet.size()),
+  itsConfiguration(*ps),
+  itsPlan(itsConfiguration,false,true),
+  itsNrOutputs(itsPlan.nrOutputs()),
   itsAlignment(512),
   itsWriteTimer("WriteTimer", false),
   bytesWritten(0)

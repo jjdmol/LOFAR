@@ -16,7 +16,8 @@
 
 #include <Interface/Parset.h>
 #include <Interface/Exceptions.h>
-#include <Interface/PipelineOutput.h>
+#include <Interface/CN_Configuration.h>
+#include <Interface/CN_ProcessingPlan.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/RSPTimeStamp.h>
 
@@ -41,7 +42,8 @@ namespace LOFAR {
       unsigned     itsRank;
       unsigned     itsSize;
 
-      PipelineOutputSet itsPipelineOutputSet;
+      CN_Configuration itsConfiguration;
+      CN_ProcessingPlan<> itsPlan;
 
       unsigned     itsNrOutputs;
       unsigned     itsNrSubbands;

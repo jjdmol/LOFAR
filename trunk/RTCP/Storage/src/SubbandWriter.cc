@@ -34,6 +34,7 @@
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <Interface/Exceptions.h>
+#include <Interface/CorrelatedData.h>
 
 #ifdef USE_MAC_PI
 #include <GCF/GCF_PVDouble.h>
@@ -52,8 +53,12 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank, unsigned size)
   itsPS(ps),
   itsRank(rank),
   itsSize(size),
-  itsPipelineOutputSet(*ps),
-  itsNrOutputs(itsPipelineOutputSet.size()),
+  itsConfiguration(*ps),
+  itsPlan(itsConfiguration,false,true),
+  itsNrOutputs(itsPlan.nrOutputs()),
+  itsNBaselines(ps->nrBaselines()),
+  itsNChannels(ps->nrChannelsPerSubband()),
+  itsNBeams(ps->nrBeams()),
   itsTimeCounter(0),
   itsVisibilities(0),
   itsWriteTimer ("writing-MS", false, true)
@@ -61,6 +66,8 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank, unsigned size)
 ,itsPropertySet(0)
 #endif
 {
+  itsPlan.removeNonOutputs();
+
 #ifdef USE_MAC_PI
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
@@ -70,9 +77,6 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank, unsigned size)
     itsNStations = itsPS->nrStations();
   }
   
-  itsNBaselines = itsPS->nrBaselines();
-  itsNChannels = itsPS->nrChannelsPerSubband();
-  itsNBeams = itsPS->nrBeams();
   unsigned pols = itsPS->getUint32("Observation.nrPolarisations");
   itsNPolSquared = pols*pols;
 
@@ -164,7 +168,6 @@ void SubbandWriter::preprocess()
     itsNrSubbandsPerStorage = (itsNrSubbands / itsSize) + 1;
   }
 
-
   const double sampleFreq   = itsPS->sampleRate();
   const unsigned seconds    = static_cast<unsigned>(floor(startTime));
   const unsigned samples    = static_cast<unsigned>((startTime - floor(startTime)) * sampleFreq);
@@ -200,39 +203,34 @@ void SubbandWriter::preprocess()
     
     for (unsigned output = 0; output < itsNrOutputs; output++ ) {
       
-      string filename = itsPS->getMSname(currentSubband) + itsPipelineOutputSet[output].filenameSuffix();
-      
-      switch( itsPipelineOutputSet[output].writerType() ) {
-      case PipelineOutput::CASAWRITER:
-	
+      string filename = itsPS->getMSname(currentSubband) + itsPlan.plan[output].filenameSuffix;
+
+      if( dynamic_cast<CorrelatedData*>( itsPlan.plan[output].source ) ) {
+        // correlated data -> mswriter
 	itsWriters[i][output] = new MSWriterCasa(
 	  filename.c_str(),
 	  startTime, itsPS->IONintegrationTime(), itsNChannels,
 	  itsNPolSquared, itsNStations, antPos,
 	  stationNames, itsWeightFactor);
-	
-	break;
-	
-      case PipelineOutput::RAWWRITER:
+      } else {    
+        // raw writer
 	itsWriters[i][output] = new MSWriterFile(
 	  filename.c_str(),
 	  startTime, itsPS->IONintegrationTime(), itsNChannels,
 	  itsNPolSquared, itsNStations, antPos,
 	  stationNames, itsWeightFactor);
-	break;
-	
-      case PipelineOutput::NULLWRITER:
+      }
+
+#if 0
+      {
+        // null writer
 	itsWriters[i][output] = new MSWriterNull(
 	  filename.c_str(),
 	  startTime, itsPS->IONintegrationTime(), itsNChannels,
 	  itsNPolSquared, itsNStations, antPos,
 	  stationNames, itsWeightFactor);
-	break;
-	  
-      default:
-	LOG_WARN_STR("unknown writer type!");
-	break;
       }
+#endif
 
       unsigned       beam    = subbandToBeamMapping[currentSubband];
       vector<double> beamDir = itsPS->getBeamDirection(beam);
@@ -273,7 +271,7 @@ void SubbandWriter::preprocess()
   createInputStreams();
   
   for (unsigned sb = 0; sb < itsMyNrSubbands; sb ++) {
-    itsInputThreads.push_back(new InputThread(itsInputStreams[sb], itsPS));
+    itsInputThreads.push_back(new InputThread(itsInputStreams[sb], itsPS, sb));
   }
 }
 
@@ -322,25 +320,26 @@ void SubbandWriter::checkForDroppedData(StreamableData *data, unsigned sb, unsig
 
 bool SubbandWriter::processSubband(unsigned sb)
 {
-  do {
-    unsigned o = itsInputThreads[sb]->itsReceiveQueueActivity.remove();
-    struct InputThread::SingleInput &input = itsInputThreads[sb]->itsInputs[o];
+  // process a single output, since we get a trigger for each one
+  // from the InputThread
 
-    StreamableData *data = input.receiveQueue.remove();
+  unsigned o = itsInputThreads[sb]->itsReceiveQueueActivity.remove();
+  struct InputThread::SingleInput &input = itsInputThreads[sb]->itsInputs[o];
 
-    if (data == 0)
-      return false;
+  StreamableData *data = input.receiveQueue.remove();
 
-    checkForDroppedData(data, sb, o);
+  if (data == 0)
+    return false;
+
+  checkForDroppedData(data, sb, o);
 
 #if defined HAVE_AIPSPP
-    itsWriteTimer.start();
-    itsWriters[sb][o]->write(itsBandIDs[sb][o], 0, itsNChannels, data);
-    itsWriteTimer.stop();
+  itsWriteTimer.start();
+  itsWriters[sb][o]->write(itsBandIDs[sb][o], 0, itsNChannels, data);
+  itsWriteTimer.stop();
 #endif
 
-    input.freeQueue.append(data);
-  } while( !itsInputThreads[sb]->itsReceiveQueueActivity.empty() );
+  input.freeQueue.append(data);
 
   return true;
 }
@@ -354,17 +353,19 @@ void SubbandWriter::process()
   while (finishedSubbandsCount < itsMyNrSubbands) {
     writeLogMessage();
 
-    for (unsigned sb = 0; sb < itsMyNrSubbands; ++ sb)
-      if (!finishedSubbands[sb])
-	if (!processSubband(sb)) {
-	  finishedSubbands[sb] = true;
-	  ++ finishedSubbandsCount;
-	}
+    unsigned sb = itsInputThreads[0]->itsRcvdQueue.remove();
+    if (sb == 0) writeLogMessage();
+
+    if (!finishedSubbands[sb]) {
+      if (!processSubband(sb)) {
+         finishedSubbands[sb] = true;
+	 ++ finishedSubbandsCount;
+      }
+    }
 
     ++ itsTimeCounter;
   }
 }
-
 
 void SubbandWriter::postprocess() 
 {

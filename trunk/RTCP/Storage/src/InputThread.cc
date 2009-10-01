@@ -24,7 +24,6 @@
 #include <lofar_config.h>
 
 #include <Storage/InputThread.h>
-#include <Interface/PipelineOutput.h>
 #include <Interface/StreamableData.h>
 #include <Stream/NullStream.h>
 #include <Common/DataConvert.h>
@@ -40,20 +39,25 @@ namespace RTCP {
   itsNrInputs(0),
   itsPS(ps),
   itsStreamFromION(streamFromION),
+  itsPlans(maxReceiveQueueSize),
   itsSB(sb)
 {
   // transpose output stream holders
-  for (unsigned i = 0; i < maxReceiveQueueSize; i ++) {
-    PipelineOutputSet pipeline( *ps );
+  CN_Configuration configuration(*ps);
 
-    // only the first call will resize the array
-    if( !itsInputs ) {
-      itsNrInputs = pipeline.size();
-      itsInputs = new struct InputThread::SingleInput[itsNrInputs];
+  for (unsigned i = 0; i < maxReceiveQueueSize; i ++) {
+    itsPlans[i] = new CN_ProcessingPlan<>( configuration, false, true );
+    itsPlans[i]->removeNonOutputs();
+    itsPlans[i]->allocateOutputs( heapAllocator );
+
+    if( itsNrInputs == 0 ) {
+      // do this only the first time
+      itsNrInputs = itsPlans[i]->nrOutputs();
+      itsInputs.resize( itsNrInputs );
     }
 
     for (unsigned o = 0; o < itsNrInputs; o ++ ) {
-      itsInputs[o].freeQueue.append( pipeline[o].extractData() );
+      itsInputs[o].freeQueue.append( itsPlans[i]->plan[o].source );
     }
   }
 
@@ -70,15 +74,6 @@ InputThread::~InputThread()
     LOG_ERROR("could not join input thread");
     exit(1);
   }
-
-  for (unsigned o = 0; o < itsNrInputs; o++ ) {
-    struct InputThread::SingleInput &input = itsInputs[o];
-
-    for (unsigned i = 0; i < maxReceiveQueueSize; i ++)
-      delete input.freeQueue.remove();
-  }
-
-  delete [] itsInputs;
 }
 
 
