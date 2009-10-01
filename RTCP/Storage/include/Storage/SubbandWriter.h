@@ -35,7 +35,8 @@
 #include <Common/Timer.h>
 #include <Common/lofar_vector.h>
 #include <Interface/Parset.h>
-#include <Interface/PipelineOutput.h>
+#include <Interface/CN_Configuration.h>
+#include <Interface/CN_ProcessingPlan.h>
 #include <Interface/StreamableData.h>
 #include <Interface/Queue.h>
 #include <Interface/RSPTimeStamp.h>
@@ -68,7 +69,8 @@ class SubbandWriter
     const Parset	    *itsPS;
     unsigned		    itsRank;
     unsigned		    itsSize;
-    PipelineOutputSet       itsPipelineOutputSet;
+    CN_Configuration        itsConfiguration;
+    CN_ProcessingPlan<>     itsPlan;
     unsigned                itsNrOutputs;
 
     std::vector<Stream *>   itsInputStreams;

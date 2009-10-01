@@ -56,8 +56,6 @@ namespace RTCP {
 
 MeasurementSetFormat::MeasurementSetFormat(const Parset *ps, const unsigned alignment)
   : itsPS(ps),
-    itsPipelineOutputSet(*ps),
-    itsNrOutputs(itsPipelineOutputSet.size()),
     itsMS(0), 
     itsAlignment(alignment)
 {

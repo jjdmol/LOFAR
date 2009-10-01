@@ -26,6 +26,8 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Interface/StreamableData.h>
+#include <Interface/MultiDimArray.h>
+#include <Interface/CN_ProcessingPlan.h>
 #include <Interface/Queue.h>
 #include <Stream/Stream.h>
 
@@ -45,7 +47,7 @@ class InputThread
     struct SingleInput {
       Queue<StreamableData *> freeQueue, receiveQueue;
     };
-    struct SingleInput      *itsInputs; // [itsNrInputs]
+    Vector<struct SingleInput> itsInputs; // [itsNrInputs]
     unsigned                itsNrInputs;
 
     Queue<unsigned>         itsReceiveQueueActivity;
@@ -58,6 +60,8 @@ class InputThread
     const Parset            *itsPS;
     Stream		    *itsStreamFromION; 
     pthread_t		    thread;
+
+    Vector<CN_ProcessingPlan<> *> itsPlans; // [maxReceiveQueueSize]
     unsigned                itsSB;
 };
 

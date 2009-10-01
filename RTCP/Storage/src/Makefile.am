@@ -23,7 +23,6 @@ RTStorage_SOURCES               = RTStorage_main.cc
 RTStorage_LDADD                 = librtstorage.la 
 RTStorage_DEPENDENCIES          = librtstorage.la $(LOFAR_DEPEND)
 
-
 configfilesdir			= $(bindir)
 configfiles_DATA                = Storage.machinefile \
 				  Storage.log_prop \

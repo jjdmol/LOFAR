@@ -16,7 +16,6 @@
 			       // (#samples correlated)
 
 #include <Interface/Parset.h>
-#include <Interface/PipelineOutput.h>
 #include <casa/aips.h>
 #include <tables/Tables/Table.h>
 
@@ -49,9 +48,7 @@ class MeasurementSetFormat : public Format
 
  private:
   const Parset *itsPS;
-  const PipelineOutputSet itsPipelineOutputSet;
 
-  unsigned itsNrOutputs;
   unsigned itsNrAnt;
   uint32   itsNrTimes;
 
