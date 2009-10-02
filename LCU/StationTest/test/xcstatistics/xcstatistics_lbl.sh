@@ -1,6 +1,6 @@
 #!/bin/sh
-# 1.4 xcstatistics test to check SerDes Ring with LBL antennas
-# 1-07-09, M.J Norden
+# 1.5 xcstatistics test to check SerDes Ring with LBL antennas
+# 2-10-09, M.J Norden
 # LBL input with antenna
 
 
@@ -9,6 +9,7 @@ rspctl --wg=0
 rspctl --rcumode=1
 rspctl --rcuenable=1
 sleep 2
+rspctl --splitter=1
 
 echo "check xcstat and xcangle"
 
