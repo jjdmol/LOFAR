@@ -49,6 +49,7 @@ lofar_add_subdirectory(CUDaemons)     # Control Unit Daemons
 lofar_add_subdirectory(CURTDBDaemons) # Control Unit RTDB Daemons
 lofar_add_subdirectory(PIC)           # Physical Instrument Components (?)
 lofar_add_subdirectory(PAC)           # ???
+lofar_add_subdirectory(VHECR)         # VHECR related code
 lofar_add_subdirectory(CEPCU)         # CEP-related MAC controllers
 lofar_add_subdirectory(MainCU)        # Main Control Unit
 lofar_add_subdirectory(StationCU)     # Station Control Unit software

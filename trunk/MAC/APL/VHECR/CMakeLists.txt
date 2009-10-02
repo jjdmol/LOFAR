@@ -32,13 +32,13 @@ project(VHECR)
 include(LofarGeneral)
 
 include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 3.1 DEPENDS Common GCFTM MACIO)
+lofar_add_package(${PROJECT_NAME} 3.1 DEPENDS Common )
 
 ## ---------------------------------------------------------------------------
 ## External packages
 ## ---------------------------------------------------------------------------
-##include(LofarFindPackage)
-##lofar_find_package(Boost REQUIRED COMPONENTS regex)
+include(LofarFindPackage)
+lofar_find_package(Boost REQUIRED COMPONENTS date_time)
 
 ## ---------------------------------------------------------------------------
 ## Project-specific compiler definitions.
