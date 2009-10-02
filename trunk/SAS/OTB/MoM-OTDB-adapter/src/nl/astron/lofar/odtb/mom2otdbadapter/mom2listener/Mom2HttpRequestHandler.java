@@ -33,7 +33,7 @@ public class Mom2HttpRequestHandler implements HttpRequestHandler {
 			try {
 				String content = EntityUtils.toString(entity);
 				InputSource inputSource = new InputSource(new StringReader(content));
-				Document document = XMLConverter.convertXMLToDocument(inputSource, null);
+				Document document = XMLConverter.convertXMLToDocument(inputSource);
 				LofarObservation lofarObservation = XMLParser
 						.getLofarObservation(document);
 				repository.store(lofarObservation);

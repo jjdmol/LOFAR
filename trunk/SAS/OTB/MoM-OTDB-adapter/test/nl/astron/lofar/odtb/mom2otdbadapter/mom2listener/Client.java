@@ -1,4 +1,4 @@
-package nl.astron.lofar.odtb.mom2otdbadapter.mom2otdb;
+package nl.astron.lofar.odtb.mom2otdbadapter.mom2listener;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

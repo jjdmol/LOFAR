@@ -99,7 +99,7 @@ public class Mom2OtdbConverter {
 		return temp.split(",");
 	}
 
-	public static String getMom2Subbands(List<String> subbands) {
+	public static String getMom2Subbands(List<Integer> subbands) {
 		String result = "";
 		for (int i = 0; i < subbands.size(); i++) {
 			if (i > 0) {

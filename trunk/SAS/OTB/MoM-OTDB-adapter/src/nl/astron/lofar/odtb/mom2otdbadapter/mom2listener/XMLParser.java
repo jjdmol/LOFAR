@@ -264,7 +264,9 @@ public class XMLParser {
 				if (subbandsSpecificationsElements.containsKey(XMLConstants.SUBBANDS)) {
 					String[] subbands = getValue(subbandsSpecificationsElements.get(XMLConstants.SUBBANDS)).split(",");
 					for(String subband: subbands){
-						beam.getSubbands().add(subband);
+						beam.getSubbands().add(AstronConverter.toInteger(subband));
+						beam.getBeamlets().add(beam.getParentObservation().getBeamletNumber());
+						beam.getParentObservation().setBeamletNumber(beam.getParentObservation().getBeamletNumber()+1);
 					}
 
 				}

@@ -3,16 +3,23 @@ package nl.astron.lofar.odtb.mom2otdbadapter.otdblistener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import javax.xml.parsers.ParserConfigurationException;
+
+import junit.framework.Assert;
 
 import nl.astron.lofar.odtb.mom2otdbadapter.config.Mom2Configuration;
 import nl.astron.lofar.odtb.mom2otdbadapter.config.OTDBConfiguration;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.LofarObservation;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.OTDBRepository;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.RepositoryException;
+import nl.astron.util.AstronConverter;
 
 import org.junit.Test;
 
@@ -40,6 +47,7 @@ public class XMLGeneratorTest {
 			writer.flush();
 			writer.close();
 		}
+		//2009-Oct-02 08:51:23 "yyyy-MMM-dd HH:mm:ss"
 	}
 
 }

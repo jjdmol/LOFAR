@@ -37,6 +37,7 @@ public class LofarObservation implements Serializable{
 	 */
 	private String status;
 	
+	private int beamletNumber = 0;
 	
 	/**
 	 * timestamp of status change in UTC (mom2 <-> otdb)
@@ -219,6 +220,12 @@ public class LofarObservation implements Serializable{
 	}
 	public void setIntegrationInterval(Double integrationInterval) {
 		this.integrationInterval = integrationInterval;
+	}
+	public int getBeamletNumber() {
+		return beamletNumber;
+	}
+	public void setBeamletNumber(int beamletNumber) {
+		this.beamletNumber = beamletNumber;
 	}
 
 	
