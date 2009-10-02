@@ -43,8 +43,10 @@ public class Beam implements Serializable {
 	 * subbands that must be used (mom2 -> otdb)
 	 * e.g. [1,3,5,7]
 	 */
-	private List<String> subbands = new ArrayList<String>();
+	private List<Integer> subbands = new ArrayList<Integer>();
 
+	private List<Integer> beamlets = new ArrayList<Integer>();
+	
 	public Beam(LofarObservation observation){
 		this.parentObservation = observation;
 	}
@@ -99,16 +101,24 @@ public class Beam implements Serializable {
 		this.angleTimes = angleTimes;
 	}
 
-	public List<String> getSubbands() {
+	public List<Integer> getSubbands() {
 		return subbands;
 	}
 
-	public void setSubbands(List<String> subbands) {
+	public void setSubbands(List<Integer> subbands) {
 		this.subbands = subbands;
 	}
 
 	public LofarObservation getParentObservation() {
 		return parentObservation;
+	}
+
+	public List<Integer> getBeamlets() {
+		return beamlets;
+	}
+
+	public void setBeamlets(List<Integer> beamlets) {
+		this.beamlets = beamlets;
 	}
 	
 	

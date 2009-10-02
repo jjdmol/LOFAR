@@ -5,8 +5,11 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Vector;
 
 import nl.astron.lofar.odtb.mom2otdbadapter.config.OTDBConfiguration;
@@ -29,7 +32,6 @@ import org.apache.commons.logging.LogFactory;
  * 
  */
 public class OTDBRepository implements Repository {
-	private static final String STRING_POINT = ".";
 
 	private static final String CHANNELS_PER_SUBBAND = "channelsPerSubband";
 
@@ -52,7 +54,9 @@ public class OTDBRepository implements Repository {
 	private static final String BEAM_MOM_ID = "momID";
 
 	private static final String SUBBAND_LIST = "subbandList";
-
+	
+	private static final String BEAMLET_LIST = "beamletList";
+	
 	private static final String DURATIONS = "durations";
 
 	private static final String ANGLE_TIMES = "angleTimes";
@@ -80,6 +84,10 @@ public class OTDBRepository implements Repository {
 	private static final String ANTENNA_SET = "antennaSet";
 
 	private static final String ANTENNA_ARRAY = "antennaArray";
+	
+	private static final String TEMPLATE_TYPE = "VItemplate";
+	
+	private static final String VIC_TYPE = "VHtree";
 
 	private Log log = LogFactory.getLog(this.getClass());
 
@@ -200,6 +208,8 @@ public class OTDBRepository implements Repository {
 							fillNode(beamChild, beam.getDurations());
 						} else if (SUBBAND_LIST.equals(beamChild.name)) {
 							fillNode(beamChild, beam.getSubbands());
+						}  else if (BEAMLET_LIST.equals(beamChild.name)) {
+							fillNode(beamChild, beam.getBeamlets());
 						} else if (BEAM_MOM_ID.equals(beamChild.name)) {
 							fillNode(beamChild, beam.getMom2Id().toString());
 						}
@@ -207,8 +217,12 @@ public class OTDBRepository implements Repository {
 					}
 
 				}
-
+				 // store new number of instances in baseSetting
+	            aDefaultNode.instances=(short)(lofarObservation.getBeams().size()); // - default at -1 
+	            saveNode(aDefaultNode);
 			}
+           
+
 			short statusId = converter.getTreeState(lofarObservation.getStatus());
 			tm.setTreeState(treeId, statusId);
 			tm.setMomInfo(treeId, lofarObservation.getMom2Id(), "no campaign");
@@ -224,7 +238,7 @@ public class OTDBRepository implements Repository {
 	@SuppressWarnings("unchecked")
 	private jOTDBnode getClockModeNode(int treeId, String clockMode) throws RemoteException {
 		jOTDBnode node = null;
-		Vector<jOTDBnode> childs = tm.getItemList(treeId, clockMode.substring(2));
+		Vector<jOTDBnode> childs = tm.getItemList(treeId, "%" + clockMode.substring(2));
 		if (childs.size() > 0) {
 			node = childs.get(0);
 		}
@@ -412,30 +426,29 @@ public class OTDBRepository implements Repository {
 			remoteOTDB.connect();
 			List<LofarObservation> result = new ArrayList<LofarObservation>();
 			Vector<jTreeState> stateList = remoteOTDB.getStateList(0, false, startTime, endTime);
-
-			for (int i = 0; i < stateList.size(); i++) {
-				jTreeState state = (jTreeState) stateList.get(i);
+			Collections.sort(stateList, new TreeStateComparator());
+			short vicTree = converter.getTreeType(VIC_TYPE);
+			short templateTree = converter.getTreeType(TEMPLATE_TYPE);
+			for (jTreeState state: stateList) {
 				jOTDBtree treeInfo = remoteOTDB.getTreeInfo(state.treeID, false);
 				String status = converter.getTreeState(state.newState);
-				log.info("treeId: " + state.treeID + " momId: " + state.momID + " status:" + status + " statusId:"
-						+ state.newState);
-				if (state.momID > 0 && isStatusThatMustBeExported(status)) {
+				if (state.momID > 0 && isStatusThatMustBeExported(status) && (treeInfo.type == vicTree || treeInfo.type == templateTree) ) {
+					log.info("treeId: " + state.treeID + " momId: " + state.momID + " status:" + status +  " date: " + state.timestamp);
 					LofarObservation lofarObservation = new LofarObservation();
 					lofarObservation.setMom2Id(state.momID);
 					lofarObservation.setObservationId(state.treeID);
 					lofarObservation.setStatus(status);
 					// it must be a template
-					if (treeInfo.originalTree == config.getTemplateId()) {
-						jOTDBnode observationNode = getObservationNode(state.treeID);
-						fillLofarObservation("", observationNode, lofarObservation);
-
-					} else {
+					if (treeInfo.type == templateTree) {
 						
 						jOTDBnode observationNode = getObservationNode(state.treeID);
-						String prefix = observationNode.name + STRING_POINT;						
-                        fillLofarObservation(prefix, observationNode, lofarObservation);
+						fillLofarObservation(observationNode, lofarObservation);
 
-							lofarObservation
+					} else if (treeInfo.type == vicTree) {
+						
+						jOTDBnode observationNode = getObservationNode(state.treeID);				
+                        fillLofarObservation( observationNode, lofarObservation);
+						lofarObservation
 								.setStartTime(AstronConverter.toDate(treeInfo.starttime, OTDB_DATE_TIME_FORMAT));
 						lofarObservation.setEndTime(AstronConverter.toDate(treeInfo.stoptime, OTDB_DATE_TIME_FORMAT));
 					}
@@ -452,45 +465,47 @@ public class OTDBRepository implements Repository {
 			throw new RepositoryException(e);
 		}
 	}
-	private void fillLofarObservation(String prefix, jOTDBnode observationNode, LofarObservation lofarObservation) throws RemoteException{
+	private void fillLofarObservation(jOTDBnode observationNode, LofarObservation lofarObservation) throws RemoteException{
 		List<jOTDBnode> beams = new ArrayList<jOTDBnode>();
 		Vector<jOTDBnode> childs = getChilds(observationNode);
 		for (jOTDBnode node : childs) {
-			if (ANTENNA_ARRAY.equals(node.name)) {
+			String nodeName = getNodeNameWithoutPrefix(node.name);
+			if (ANTENNA_ARRAY.equals(nodeName)) {
 				lofarObservation.setAntennaArray(getValue(node));
-			} else if (ANTENNA_SET.equals(node.name)) {
+			} else if (ANTENNA_SET.equals(nodeName)) {
 				lofarObservation.setAntennaSet(getValue(node));
-			} else if (BAND_FILTER.equals(node.name)) {
+			} else if (BAND_FILTER.equals(nodeName)) {
 				lofarObservation.setBandFilter(getValue(node));
-			} else if (CLOCK_MODE.equals(node.name)) {
+			} else if (CLOCK_MODE.equals(nodeName)) {
 				String clockMode = getValue(node);
 				jOTDBnode clockNode = getClockModeNode(lofarObservation.getObservationId(), clockMode);
 				Vector<jOTDBnode> clockNodeChilds = getChilds(clockNode);
 				for (jOTDBnode clockNodeChild : clockNodeChilds) {
-					if (CHANNEL_WIDTH.equals(clockNodeChild.name)) {
+					String clockNodeName = getNodeNameWithoutPrefix(clockNodeChild.name);
+					if (CHANNEL_WIDTH.equals(clockNodeName)) {
 						lofarObservation.setChannelWidth(AstronConverter
 								.toDouble(getValue(clockNodeChild)));
-					} else if (SAMPLES_PER_SECOND.equals(clockNodeChild.name)) {
+					} else if (SAMPLES_PER_SECOND.equals(clockNodeName)) {
 						lofarObservation.setSamplesPerSecond(AstronConverter
 								.toInteger(getValue(clockNodeChild)));
-					} else if (SUBBAND_WIDTH.equals(clockNodeChild.name)) {
+					} else if (SUBBAND_WIDTH.equals(clockNodeName)) {
 						lofarObservation.setSubbandWidth(AstronConverter
 								.toDouble(getValue(clockNodeChild)));
-					} else if (SAMPLE_CLOCK.equals(clockNodeChild.name)) {
+					} else if (SAMPLE_CLOCK.equals(clockNodeName)) {
 						lofarObservation.setClockFrequency(AstronConverter
 								.toDouble(getValue(clockNodeChild)));
 					}
 				}
-			} else if (CHANNELS_PER_SUBBAND.equals(node.name)) {
+			} else if (CHANNELS_PER_SUBBAND.equals(nodeName)) {
 				lofarObservation.setChannelsPerSubband(AstronConverter.toInteger(getValue(node)));
-			} else if (FILE_NAME_MASK.equals(node.name)) {
+			} else if (FILE_NAME_MASK.equals(nodeName)) {
 				lofarObservation.setFileNameMask((getValue(node)));
-			} else if (BEAM.equals(node.name)) {
+			} else if (nodeName.startsWith(BEAM + "[")) {
 				beams.add(node);
-			} else if (VIRTUAL_INSTRUMENT.equals(node.name)) {
+			} else if (VIRTUAL_INSTRUMENT.equals(nodeName)) {
 				jOTDBnode stationsNode = getNode(node, STATION_LIST);
 				fillStringList(stationsNode, lofarObservation.getStations());
-			} else if (OBSERVATION_CONTROL.equals(node.name)) {
+			} else if (OBSERVATION_CONTROL.equals(nodeName)) {
 				jOTDBnode onlineControlNode = getNode(node, ONLINE_CONTROL);
 				if (onlineControlNode != null) {
 					jOTDBnode olapNode = getNode(onlineControlNode, OLAP);
@@ -507,28 +522,28 @@ public class OTDBRepository implements Repository {
 		}
 
 		if (beams.size() > 0) {
-			// remove default beam
-			beams.remove(0);
 			for (jOTDBnode beamNode : beams) {
 				Beam beam = new Beam(lofarObservation);
 				Vector<jOTDBnode> beamChilds = getChilds(beamNode);
 
 				// get all the params per child
 				for (jOTDBnode beamChild : beamChilds) {
-
-					if (DIRECTION_TYPES.equals(beamChild.name)) {
+					String nodeName = getNodeNameWithoutPrefix(beamChild.name);
+					if (DIRECTION_TYPES.equals(nodeName)) {
 						beam.setEquinox(getValue(beamChild));
-					} else if (ANGLE1.equals(beamChild.name)) {
+					} else if (ANGLE1.equals(nodeName)) {
 						fillDoubleList(beamChild, beam.getRaList());
-					} else if (ANGLE2.equals(beamChild.name)) {
+					} else if (ANGLE2.equals(nodeName)) {
 						fillDoubleList(beamChild, beam.getDecList());
-					} else if (ANGLE_TIMES.equals(beamChild.name)) {
+					} else if (ANGLE_TIMES.equals(nodeName)) {
 						fillIntegerList(beamChild, beam.getAngleTimes());
-					} else if (DURATIONS.equals(beamChild.name)) {
+					} else if (DURATIONS.equals(nodeName)) {
 						fillIntegerList(beamChild, beam.getDurations());
-					} else if (SUBBAND_LIST.equals(beamChild.name)) {
-						fillStringList(beamChild, beam.getSubbands());
-					} else if (BEAM_MOM_ID.equals(beamChild.name)) {
+					} else if (SUBBAND_LIST.equals(nodeName)) {
+						fillIntegerList(beamChild, beam.getSubbands());
+					}else if (BEAMLET_LIST.equals(nodeName)) {
+						fillIntegerList(beamChild, beam.getBeamlets());
+					}else if (BEAM_MOM_ID.equals(nodeName)) {
 						beam.setMom2Id(AstronConverter.toInteger(getValue(beamChild)));
 					}
 
@@ -539,6 +554,11 @@ public class OTDBRepository implements Repository {
 		}
 	}
 
+	private String getNodeNameWithoutPrefix(String nodeName){
+		return nodeName.substring(nodeName.lastIndexOf('.')+1);	
+
+	}
+	
 	/**
 	 * Checkes if observation with a status must be exported to MoM
 	 * 
@@ -563,5 +583,14 @@ public class OTDBRepository implements Repository {
 		}
 		return false;
 	}
+	public static class TreeStateComparator implements Comparator<jTreeState> {
 
+		@Override
+		public int compare(jTreeState treeStateOne, jTreeState treeStateTwo) {
+			Date dateOne = AstronConverter.toDate(treeStateOne.timestamp, OTDB_DATE_TIME_FORMAT);
+			Date dateTwo= AstronConverter.toDate(treeStateTwo.timestamp, OTDB_DATE_TIME_FORMAT);
+			return dateOne.compareTo(dateTwo);
+		}
+
+	}
 }

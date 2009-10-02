@@ -132,7 +132,7 @@ public class TaskExecutor extends Thread {
 		boolean result = false;
 		try {
 			StringReader reader = new StringReader(string);
-			Document document = XMLConverter.convertXMLToDocument(new InputSource(reader), null);
+			Document document = XMLConverter.convertXMLToDocument(new InputSource(reader));
 			NodeList errors = document.getElementsByTagName("error");
 			if (errors.getLength() > 0) {
 				String errorString = "Mom2 returns errors: ";

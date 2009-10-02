@@ -18,7 +18,7 @@ public class XMLParserTest {
 	public void testGetLofarObservation() throws Exception {
 		FileInputStream st = new FileInputStream(new File("examples/observation.xml"));
 		InputSource inputSource = new InputSource(st);
-		Document document = XMLConverter.convertXMLToDocument(inputSource, null);
+		Document document = XMLConverter.convertXMLToDocument(inputSource);
 		LofarObservation lofarObservation = XMLParser.getLofarObservation(document);
 		OTDBConfiguration config =new OTDBConfiguration();
 		config.setRmiHost("lofar17");
