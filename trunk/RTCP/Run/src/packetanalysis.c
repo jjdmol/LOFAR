@@ -75,6 +75,8 @@ unsigned char packet[MAX_PACKETSIZE];
 /* a filter for the packets we're looking for */
 #define PACKETFILTER(port)	(IP.protocol == 0x11 && UDP.destPort == port)
 
+#define MIN(a,b)                (a<b?a:b) /* warning: may evaluate a twice */
+
 void swap32( char *nr ) {
   char tmp;
 
@@ -152,7 +154,8 @@ void set_affinity( char *cpus )
 }
 
 // can (prev_ts,prev_bs) be followed by (next_ts,next_bs) when there is no loss?
-int can_follow( struct EPA_header *prev, struct EPA_header *next, uint16_t clock )
+// this function returns the offset difference
+unsigned diff( struct EPA_header *prev, struct EPA_header *next, uint16_t clock )
 {
   const time_t prev_ts = prev->RSPtimestamp;
   const time_t next_ts = next->RSPtimestamp;
@@ -164,18 +167,15 @@ int can_follow( struct EPA_header *prev, struct EPA_header *next, uint16_t clock
 
   if( next_ts == prev_ts ) {
     /* same timestamp -- compare block sequence numbers */
-    return (next_bs - prev_bs) == prev_times;
-  } else if( next_ts != prev_ts + 1 ) {
-    /* not the next second */
-    return 0;
+    return (next_bs - prev_bs) / prev_times;
   } else {
-    /* the next second */
+    /* seconds differ */
     uint64_t prev_time, next_time;
 
     prev_time = ((uint64_t) prev_ts * clock * 1e6 + 512)/1024 + prev_bs;
     next_time = ((uint64_t) next_ts * clock * 1e6 + 512)/1024 + next_bs;
 
-    return (next_time - prev_time) == prev_times;
+    return (next_time - prev_time) / prev_times;
   }
 }
 
@@ -222,10 +222,9 @@ float get_packetrate( int fd, int port, float seconds, float *lossrate ) {
         swap32( (char*)&EPA.blockSequenceNumber );
 
         if( nr > 0 ) {
-          if( !can_follow( &prev, &EPA, 200 )
-           && !can_follow( &prev, &EPA, 160 ) ) {
-             loss++;
-          }
+          unsigned diff200 = diff( &prev, &EPA, 200 );
+          unsigned diff160 = diff( &prev, &EPA, 160 );
+          loss += MIN( diff200, diff160 ) - 1;
         }
 
         nr++;
