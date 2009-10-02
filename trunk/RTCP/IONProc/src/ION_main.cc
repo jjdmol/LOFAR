@@ -34,9 +34,9 @@
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
+#include <Stream/SystemCallException.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exceptions.h>
-#include <Common/Semaphore.h>
 #if !defined HAVE_PKVERSION
 #include <Package__Version.h>
 #endif
@@ -128,8 +128,11 @@ void terminate_with_backtrace()
 static unsigned		     myPsetNumber;
 static std::vector<Stream *> allCNstreams;
 static const unsigned	     nrCNcoresInPset = 64; // TODO: how to figure out the number of CN cores?
-static std::vector<Mutex>    sharedWriteToCNmutexes(nrCNcoresInPset);
-static std::vector<Mutex>    sharedReadFromCNmutexes(nrCNcoresInPset);
+static pthread_mutex_t	     allocationMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t	     reevaluate	     = PTHREAD_COND_INITIALIZER;
+class JobParent;
+static std::vector<JobParent *> jobs;
+
 
 #if defined HAVE_FCNP && defined __PPC__
 static bool	   fcnp_inited;
@@ -258,8 +261,18 @@ static void unmapFlatMemory()
 class JobParent // untemplated superclass of Job<SAMPLE_TYPE>
 {
   public:
+	    JobParent(const Parset *);
     virtual ~JobParent();
+
+    const Parset *itsParset;
 };
+
+
+JobParent::JobParent(const Parset *parset)
+:
+  itsParset(parset)
+{
+}
 
 
 JobParent::~JobParent()
@@ -292,15 +305,10 @@ template <typename SAMPLE_TYPE> class Job : public JobParent
     void	attachToInputSection();
     void	detachFromInputSection();
 
-    void	acquireExclusiveAccessToCNs(std::vector<Mutex> &);
-    void	releaseExclusiveAccessToCNs(std::vector<Mutex> &);
-
-    const Parset			*itsParset;
     std::vector<Stream *>		itsCNstreams;
     unsigned				itsNrRuns;
     pthread_t				itsJobID, itsToCNthreadID, itsFromCNthreadID;
     bool				itsHasInputSection, itsHasOutputSection;
-    Semaphore				itsToCNthreadAcquiredCNaccess;
     unsigned				itsObservationID;
 
     static InputSection<SAMPLE_TYPE>	*theInputSection;
@@ -316,7 +324,7 @@ template <typename SAMPLE_TYPE> unsigned		   Job<SAMPLE_TYPE>::theInputSectionRe
 
 template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::Job(const Parset *parset)
 :
-  itsParset(parset)
+  JobParent(parset)
 {
   itsObservationID = parset->observationID();
 
@@ -338,10 +346,17 @@ template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::Job(const Parset *parset)
 template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::~Job()
 {
   if (itsHasInputSection || itsHasOutputSection) {
+#if 0
     if (pthread_join(itsJobID, 0) != 0) {
       perror("pthread join");
       exit(1);
     }
+#else
+    if (pthread_detach(pthread_self()) != 0) {
+      perror("pthread detach");
+      exit(1);
+    }
+#endif
   }
 
   delete itsParset; // FIXME: not here
@@ -355,18 +370,38 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::allocateResources()
   itsNrRuns = static_cast<unsigned>(ceil((itsParset->stopTime() - itsParset->startTime()) / itsParset->CNintegrationTime()));
   LOG_DEBUG_STR("itsNrRuns = " << itsNrRuns);
 
+  pthread_mutex_lock(&allocationMutex);
+
+  // see if there is a resource conflict with any preceding job
+  for (std::vector<JobParent *>::iterator job = jobs.begin(); *job != this;)
+    if ((*job)->itsParset->overlappingResources(itsParset)) {
+      pthread_cond_wait(&reevaluate, &allocationMutex);
+      job = jobs.begin();
+    } else {
+      job ++;
+    }
+
+  pthread_mutex_unlock(&allocationMutex);
+
   if (itsHasInputSection)
     attachToInputSection();
 
-  if (pthread_create(&itsToCNthreadID, 0, toCNthreadStub, static_cast<void *>(this)) != 0) {
-    perror("pthread_create");
-    exit(1);
-  }
+  pthread_attr_t attr;
 
-  if (itsHasOutputSection && pthread_create(&itsFromCNthreadID, 0, fromCNthreadStub, static_cast<void *>(this)) != 0) {
-    perror("pthread_create");
-    exit(1);
-  }
+  if (pthread_attr_init(&attr) != 0)
+    throw SystemCallException("pthread_attr_init", errno, THROW_ARGS);
+
+  if (pthread_attr_setstacksize(&attr, 65536) != 0)
+    throw SystemCallException("pthread_attr_setstacksize", errno, THROW_ARGS);
+
+  if (pthread_create(&itsToCNthreadID, &attr, toCNthreadStub, static_cast<void *>(this)) != 0)
+    throw SystemCallException("pthread_create toCN thread", errno, THROW_ARGS);
+
+  if (itsHasOutputSection && pthread_create(&itsFromCNthreadID, &attr, fromCNthreadStub, static_cast<void *>(this)) != 0)
+    throw SystemCallException("pthread_create fromCN thread", errno, THROW_ARGS);
+
+  if (pthread_attr_destroy(&attr) != 0)
+    throw SystemCallException("pthread_attr_destroy", errno, THROW_ARGS);
 }
 
 
@@ -390,7 +425,13 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::deallocateResources()
 
     LOG_DEBUG("lofar__fini: output section joined");
   }
+
+  pthread_mutex_lock(&allocationMutex);
+  jobs.erase(find(jobs.begin(), jobs.end(), this));
+  pthread_cond_broadcast(&reevaluate);
+  pthread_mutex_unlock(&allocationMutex);
 }
+
 
 
 template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::jobThread()
@@ -410,6 +451,7 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::jobThread()
 
   deallocateResources();
   LOG_DEBUG("resources of job " << itsObservationID << " deallocated");
+  delete this;
 }
 
 
@@ -471,36 +513,18 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::detachFromInputSection()
 }
 
 
-template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::acquireExclusiveAccessToCNs(std::vector<Mutex> &mutexes)
-{
-  std::vector<unsigned> usedCoresInPset = itsParset->usedCoresInPset();
-
-  // always acquire mutexes in same order, to avoid deadlocks
-  sort(usedCoresInPset.begin(), usedCoresInPset.end());
-
-  for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
-    mutexes[usedCoresInPset[core]].lock();
-}
-
-
-template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::releaseExclusiveAccessToCNs(std::vector<Mutex> &mutexes)
-{
-  std::vector<unsigned> usedCoresInPset = itsParset->usedCoresInPset();
-
-  for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
-    mutexes[usedCoresInPset[core]].unlock();
-}
-
-
 template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::configureCNs()
 {
   CN_Command	   command(CN_Command::PREPROCESS);
   CN_Configuration configuration(*itsParset);
+  LOG_DEBUG_STR("ION thinks that there are " << configuration.nrPencilBeams() << " pencil beams");
   
   LOG_DEBUG_STR("configuring cores " << itsParset->usedCoresInPset() << " ...");
 
   for (unsigned core = 0; core < itsCNstreams.size(); core ++) {
+    LOG_DEBUG_STR("sending message 1 to core " << core << " ...");
     command.write(itsCNstreams[core]);
+    LOG_DEBUG_STR("sending message 2 to core " << core << " ...");
     configuration.write(itsCNstreams[core]);
   }
   
@@ -523,11 +547,7 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::unconfigureCNs()
 
 template<typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::toCNthread()
 {
-  acquireExclusiveAccessToCNs(sharedWriteToCNmutexes);
   LOG_DEBUG_STR("Granted CN access to Job " << itsObservationID);
-
-  if (itsHasOutputSection)
-    itsToCNthreadAcquiredCNaccess.up();
 
   configureCNs();
 
@@ -542,7 +562,6 @@ template<typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::toCNthread()
   beamletBufferToComputeNode.postprocess();
 
   unconfigureCNs();
-  releaseExclusiveAccessToCNs(sharedWriteToCNmutexes);
 }
 
 
@@ -571,8 +590,6 @@ template <typename SAMPLE_TYPE> void *Job<SAMPLE_TYPE>::toCNthreadStub(void *job
 
 template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::fromCNthread()
 {
-  itsToCNthreadAcquiredCNaccess.down(); // wait until toCNthread has access to CNs
-  acquireExclusiveAccessToCNs(sharedReadFromCNmutexes); // get read access
   OutputSection outputSection(myPsetNumber, itsCNstreams);
 
   outputSection.preprocess(itsParset);
@@ -581,7 +598,6 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::fromCNthread()
     outputSection.process();
 
   outputSection.postprocess();
-  releaseExclusiveAccessToCNs(sharedReadFromCNmutexes);
 }
 
 
@@ -651,7 +667,7 @@ void master_thread(int argc, char **argv)
     createAllCNstreams("FCNP");
 #endif
 
-    std::vector<JobParent *> jobs;
+    pthread_mutex_lock(&allocationMutex);
 
     for (int arg = 1; arg < argc; arg ++) {
       LOG_DEBUG_STR("trying to use " << argv[arg] << " as ParameterSet");
@@ -689,12 +705,20 @@ void master_thread(int argc, char **argv)
       }
 
       LOG_DEBUG("creating new Job done");
-      jobs.push_back(job);
+
+      // insert into sorted jobs list
+      std::vector<JobParent *>::iterator prev = jobs.begin();
+
+      while (prev != jobs.end() && (*prev)->itsParset->precedes(job->itsParset))
+	++ prev;
+
+      jobs.insert(prev, job);
     }
 
-    for (unsigned i = 0; i < jobs.size(); i ++)
-      delete jobs[i];
+    while (jobs.size() > 0)
+      pthread_cond_wait(&reevaluate, &allocationMutex);
 
+    pthread_mutex_unlock(&allocationMutex);
     stopCNs();
 
 #if defined FLAT_MEMORY
