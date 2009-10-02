@@ -1,6 +1,0 @@
-./bootstrap
-mkdir -p build/gnu_debug
-cd build/gnu_debug
-../../lofarconf
-make
-
