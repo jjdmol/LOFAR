@@ -385,6 +385,48 @@ string Parset::getBeamDirectionType(const unsigned beam) const
   return beamDirType;
 }
 
+
+vector<uint32> Parset::usedPsets() const
+{
+  std::vector<uint32> inputs  = inputPsets();
+  std::vector<uint32> outputs = outputPsets();
+  std::vector<uint32> psets(inputs.size() + outputs.size());
+
+  sort(inputs.begin(),  inputs.end());
+  sort(outputs.begin(), outputs.end());
+
+  psets.resize(set_union(inputs.begin(), inputs.end(), outputs.begin(), outputs.end(), psets.begin()) - psets.begin());
+
+  return psets;
+}
+
+
+bool Parset::overlappingResources(const Parset *otherParset) const
+{
+  // return true if jobs (partially) use same cores within psets
+
+  std::vector<uint32> myPsets    = usedPsets();
+  std::vector<uint32> otherPsets = otherParset->usedPsets();
+  std::vector<uint32> psets(myPsets.size() + otherPsets.size());
+
+  bool overlappingPsets = set_intersection(myPsets.begin(), myPsets.end(), otherPsets.begin(), otherPsets.end(), psets.begin()) != psets.begin();
+
+  if (!overlappingPsets)
+    return false;
+
+  std::vector<uint32> myCores    = usedCoresInPset();
+  std::vector<uint32> otherCores = otherParset->usedCoresInPset();
+  std::vector<uint32> cores(myCores.size() + otherCores.size());
+
+  sort(myCores.begin(),    myCores.end());
+  sort(otherCores.begin(), otherCores.end());
+
+  bool overlappingCores = set_intersection(myCores.begin(), myCores.end(), otherCores.begin(), otherCores.end(), cores.begin()) != cores.begin();
+
+  return overlappingCores;
+}
+
+
 int Parset::findIndex(uint32 pset, const vector<uint32> &psets)
 {
   unsigned index = std::find(psets.begin(), psets.end(), pset) - psets.begin();
