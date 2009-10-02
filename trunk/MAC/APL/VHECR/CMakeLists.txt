@@ -55,3 +55,4 @@ include(LofarConfig)
 ## ---------------------------------------------------------------------------
 add_subdirectory(include/VHECR)
 add_subdirectory(src)
+add_subdirectory(test)
