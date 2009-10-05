@@ -683,7 +683,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         itsBeamConfigurationTableModel.getTable(itsDirectionTypes,itsAngle1,itsAngle2,itsSubbandList,itsBeamletList);
         // keep defaultTBBsetting save
         jOTDBnode aDefaultNode= itsBeams.elementAt(0);
-        itsBeams.clear();        
         try {
             // for all elements
             for (i=1; i < itsDirectionTypes.size();i++) {
@@ -749,7 +748,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         itsBeamformerConfigurationTableModel.getTable(itsStations);
         // keep default save
         jOTDBnode aDefaultBFNode= itsBeamformers.elementAt(0);
-        itsBeamformers.clear(); 
         // validate table
         for (int j=0; j< itsStations.size(); j++) {
             if (itsStations.get(j).equals("")) {
