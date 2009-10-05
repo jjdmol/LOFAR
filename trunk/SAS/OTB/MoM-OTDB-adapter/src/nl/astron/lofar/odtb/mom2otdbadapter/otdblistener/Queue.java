@@ -85,7 +85,9 @@ public class Queue {
 		}
 		isTaskLocked = true;
 		Task task =  tasks.get(0);
-		log.info("Processing task....Number of tasks:" + tasks.size());
+		if (log.isDebugEnabled()){
+			log.debug("Get task (mom2Id: " + task.getMom2Id() + ") ....Number of tasks:" + tasks.size());
+		}
 		notifyAll();
 		return task;
 	}
@@ -99,7 +101,7 @@ public class Queue {
 		if (!file.delete()) {
 			log.error("Can not delete file:" + task.getFileName());
 		}
-		log.info("Remove task(" + task.getMom2Id() + ") Number of tasks:"
+		log.info("Remove task( mom2Id: " + task.getMom2Id() + ") Number of tasks:"
 				+ tasks.size());
 		tasks.remove(0);
 		isTaskLocked = false;
@@ -166,8 +168,6 @@ public class Queue {
 		out.write(content);
 		out.close();
 		fileOutputStream.close();
-		// isTimeLocked = false;
-		// notifyAll();
 	}
 
 	/**
@@ -177,7 +177,7 @@ public class Queue {
 	 */
 	public synchronized void add(Task task) throws IOException {
 		tasks.add(task);
-		log.info("Task added. Number of tasks:" + tasks.size());
+		log.info("Add task (mom2Id: " + task.getMom2Id() + ") Number of tasks:" + tasks.size());
 		storeTask(task);
 		notifyAll();
 	}

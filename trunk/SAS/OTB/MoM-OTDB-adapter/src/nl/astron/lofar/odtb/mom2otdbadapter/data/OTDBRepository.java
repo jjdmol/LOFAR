@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Vector;
 
 import nl.astron.lofar.odtb.mom2otdbadapter.config.OTDBConfiguration;
@@ -97,8 +96,6 @@ public class OTDBRepository implements Repository {
 
 	private jConverterInterface converter = null;
 
-	// private static final int TEMPLATE_ID = 50091980;
-
 	public static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
 	public static final String OTDB_DATE_TIME_FORMAT = "yyyy-MMM-dd HH:mm:ss";
@@ -118,6 +115,7 @@ public class OTDBRepository implements Repository {
 	 * @throws NotBoundException
 	 */
 	public OTDBRepository(OTDBConfiguration config) {
+		log.info("OTDBRepository started that communicates with OTDB(" + config.getRmiHost() + ":" + config.getRmiPort());
 		this.config = config;
 
 	}

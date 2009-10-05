@@ -40,6 +40,7 @@ public class XMLParser {
 	 * @return LofarObservation
 	 */
 	public static LofarObservation getLofarObservation(Document document) {
+
 		LofarObservation lofarObservation = new LofarObservation();
 
 		/*
@@ -69,6 +70,7 @@ public class XMLParser {
 			beam.getAngleTimes().add(offSet);
 			offSet += beam.getDurations().get(0);
 		}
+		log.info("Parsed xml of observation with mom2id: " + lofarObservation.getMom2Id());
 		return lofarObservation;
 	}
 

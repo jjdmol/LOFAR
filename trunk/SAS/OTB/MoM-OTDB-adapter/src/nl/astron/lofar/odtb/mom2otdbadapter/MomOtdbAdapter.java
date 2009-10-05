@@ -21,13 +21,10 @@ import nl.astron.lofar.odtb.mom2otdbadapter.mom2listener.HttpServer;
 import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.OTDBListener;
 import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.Queue;
 import nl.astron.lofar.odtb.mom2otdbadapter.otdblistener.TaskExecutor;
-import nl.astron.lofar.sas.otb.jotdb2.jInitCPPLogger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.PropertyConfigurator;
-
-import com.sun.corba.se.impl.orb.ORBConfiguratorImpl.ConfigParser;
 
 public class MomOtdbAdapter {
 
@@ -66,35 +63,6 @@ public class MomOtdbAdapter {
 		// server.start();
 	}
 
-	// /**
-	// * Parse arguments
-	// * @param args
-	// * @throws Exception
-	// */
-	// protected void parseArguments(String[] args) throws Exception {
-	//
-	// if (args.length > 0) {
-	// for (int i = 0; i < args.length-1; i= i+2) {
-	// String argument = args[i];
-	// String value = args[i+1];
-	// parseArgument(argument, value);
-	//
-	// }
-	// }
-	// }
-
-	// /**
-	// * Parse one argument
-	// * @param argument
-	// * @param value
-	// * @throws Exception
-	// */
-	// protected void parseArgument(String argument, String value)
-	// throws Exception {
-	// if (argument.equals("-u")) {
-	// username = value;
-	// }
-	// }
 
 	/**
 	 * @param args

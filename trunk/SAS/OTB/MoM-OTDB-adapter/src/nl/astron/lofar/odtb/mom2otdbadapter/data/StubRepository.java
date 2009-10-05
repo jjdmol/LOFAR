@@ -1,18 +1,26 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.data;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import nl.astron.lofar.odtb.mom2otdbadapter.util.Mom2OtdbConverter;
 
 public class StubRepository implements Repository {
-
+	private Log log = LogFactory.getLog(this.getClass());
 	private Map<Integer, LofarObservation> observationsMap = new HashMap<Integer, LofarObservation>();
 	private int lastObservationId = 1;
 
+	public StubRepository(){
+		log.info("StubRepository started");
+	}
+	
 	@Override
 	public List<LofarObservation> getLatestChanges(Date startDate, Date endDate) throws RepositoryException {
 		List<Integer> observationToRemoved = new ArrayList<Integer>();
@@ -29,9 +37,10 @@ public class StubRepository implements Repository {
 					for (Beam beam : observation.getBeams()) {
 						duration += beam.getDurations().get(0);
 					}
-					Date endTime = (Date) observation.getStartTime().clone();
-					endTime.setSeconds(duration);
-					observation.setEndTime(endTime);					
+					Calendar cal = Calendar.getInstance();
+					cal.setTime(observation.getStartTime());
+					cal.set(Calendar.SECOND, cal.get(Calendar.SECOND) + duration);					
+					observation.setEndTime(cal.getTime());					
 				}
 
 				if (observation.getClockMode().equals("<<Clock160")) {
