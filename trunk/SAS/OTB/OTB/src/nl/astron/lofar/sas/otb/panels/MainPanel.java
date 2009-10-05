@@ -688,6 +688,13 @@ public class MainPanel extends javax.swing.JPanel
                                     logger.debug("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());                      
                                 }
                             }
+                            // check momID, if not zero set to zero
+                            if (aT.momID() != 0) {
+                                if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aT.treeID(),0, aT.campaign)) {
+                                    logger.debug("Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                }
+
+                            }
                             itsMainFrame.getSharedVars().setTreeID(newTreeID);
                             // set changed flag to reload mainpanel
                             itsMainFrame.setChanged(this.getFriendlyName(),true);
