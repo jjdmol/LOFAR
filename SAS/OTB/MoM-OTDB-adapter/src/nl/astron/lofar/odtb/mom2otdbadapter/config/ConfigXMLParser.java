@@ -1,10 +1,12 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.config;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,14 +43,27 @@ public class ConfigXMLParser {
 	 * @param document
 	 *            xml document
 	 * @return LofarObservation
-	 * @throws Exception 
-	 * @throws URISyntaxException 
-	 * @throws FileNotFoundException 
+	 * @throws Exception
+	 * @throws URISyntaxException
+	 * @throws FileNotFoundException
 	 */
 	public static Configuration parse(File xml) throws Exception {
-    	ClassLoader classLoader = (ClassLoader) Thread.currentThread().getContextClassLoader();
-    	URL xsdFile = classLoader.getResource("config.xsd");   	
-		Document document = XMLConverter.convertXMLToDocument(new InputSource(new FileInputStream(xml)), new File(xsdFile.toURI()));
+		log.info("Mom-otdb-adapter config file: " + xml.getPath());
+		ClassLoader classLoader = (ClassLoader) Thread.currentThread().getContextClassLoader();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(classLoader.getResourceAsStream("config.xsd")));
+		File configXsd = new File("./conf/config.xsd");
+		if (configXsd.exists()) {
+			configXsd.delete();
+		}
+		PrintWriter writer = new PrintWriter(configXsd);
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+			writer.write(line);
+		}
+		writer.flush();
+		writer.close();
+		reader.close();
+		Document document = XMLConverter.convertXMLToDocument(new InputSource(new FileInputStream(xml)), configXsd);
 		Configuration configuration = new Configuration();
 
 		/*
@@ -57,16 +72,14 @@ public class ConfigXMLParser {
 		Node element = document.getDocumentElement();
 		Map<String, Element> elementsMap = getElementMap(element.getChildNodes());
 
-				configuration.setMom2(parseMom2Configuration(elementsMap.get(MOM2)));
+		configuration.setMom2(parseMom2Configuration(elementsMap.get(MOM2)));
 
-			if (elementsMap.containsKey(STUB)) {
-				configuration.setRepository(parseStubConfiguration(elementsMap.get(STUB)));
-			}else if (elementsMap.containsKey(OTDB)) {
-				configuration.setRepository(parseOTDBConfiguration(elementsMap.get(OTDB)));
-			}
-			configuration.setAdapter(parseAdapterConfiguration(elementsMap.get(ADAPTER)));
-
-
+		if (elementsMap.containsKey(STUB)) {
+			configuration.setRepository(parseStubConfiguration(elementsMap.get(STUB)));
+		} else if (elementsMap.containsKey(OTDB)) {
+			configuration.setRepository(parseOTDBConfiguration(elementsMap.get(OTDB)));
+		}
+		configuration.setAdapter(parseAdapterConfiguration(elementsMap.get(ADAPTER)));
 		return configuration;
 	}
 
@@ -74,13 +87,13 @@ public class ConfigXMLParser {
 		Map<String, Element> elements = getElementMap(mom2Element.getChildNodes());
 		Mom2Configuration mom2Configuration = new Mom2Configuration();
 		mom2Configuration.setUsername(getValue(elements.get("username")));
-		mom2Configuration.setPassword(getValue(elements.get("password")));	
+		mom2Configuration.setPassword(getValue(elements.get("password")));
 		mom2Configuration.setAuthUrl(getValue(elements.get("authurl")));
 		mom2Configuration.setMom2ImportUrl(getValue(elements.get("mom2-import-url")));
 		mom2Configuration.setMom2SchemasUrl(getValue(elements.get("mom2-schemas-url")));
 		return mom2Configuration;
 	}
-	
+
 	private static StubConfiguration parseStubConfiguration(Element element) {
 		Map<String, Element> elements = getElementMap(element.getChildNodes());
 		StubConfiguration configuration = new StubConfiguration();
@@ -94,10 +107,10 @@ public class ConfigXMLParser {
 		configuration.setInterval(AstronConverter.toInteger(getValue(elements.get("interval"))));
 		configuration.setTemplateId(AstronConverter.toInteger(getValue(elements.get("uvObservationTemplateId"))));
 		configuration.setRmiPort(AstronConverter.toInteger(getValue(elements.get("rmiport"))));
-		configuration.setRmiHost(getValue(elements.get("rmiport"))); 
+		configuration.setRmiHost(getValue(elements.get("rmiport")));
 		return configuration;
 	}
-	
+
 	private static AdapterConfiguration parseAdapterConfiguration(Element element) {
 		Map<String, Element> elements = getElementMap(element.getChildNodes());
 		AdapterConfiguration configuration = new AdapterConfiguration();
@@ -105,12 +118,10 @@ public class ConfigXMLParser {
 		configuration.setKeystoreLocation(getValue(elements.get("keystore-location")));
 		configuration.setKeystorePassword(getValue(elements.get("keystore-password")));
 		configuration.setTrustedKeystoreLocation(getValue(elements.get("trusted-keystore-location")));
-		configuration.setTrustedKeystorePassword(getValue(elements.get("trusted-keystore-password")));		
+		configuration.setTrustedKeystorePassword(getValue(elements.get("trusted-keystore-password")));
 		return configuration;
 
 	}
-
-	
 
 	/**
 	 * The getValue method returns the value of an node
@@ -129,8 +140,6 @@ public class ConfigXMLParser {
 		return value;
 	}
 
-
-
 	/**
 	 * Returns the node name without prefix
 	 * 
@@ -146,8 +155,6 @@ public class ConfigXMLParser {
 		String withoutPrefix = nodeSplit[nodeSplit.length - 1];
 		return withoutPrefix;
 	}
-
-
 
 	private static Map<String, Element> getElementMap(NodeList nodeList) {
 		Map<String, Element> elementMap = new HashMap<String, Element>();

@@ -70,7 +70,7 @@ public class TaskExecutor extends Thread {
 			 * get new task, if no tasks available, wait until new tasks added
 			 */
 			Task task = queue.get();
-			log.debug("Process task: " + task.getXml());
+			//log.debug("Process task: " + task.getXml());
 			/*
 			 * process task if task process successfull, remove tasks else move
 			 * task to the end of the task list
@@ -97,12 +97,17 @@ public class TaskExecutor extends Thread {
 		boolean succeed = false;
 		try {
 			httpClient.login(config.getUsername(), config.getPassword());
+			log.info("Login " + config.getAuthUrl());
 			List<BasicNameValuePair> parameters = new ArrayList<BasicNameValuePair>();
 			parameters.add(new BasicNameValuePair("command", "IMPORTXML2"));
 			parameters.add(new BasicNameValuePair("xmlcontent", task.getXml()));
+			log.info("Post xml (mom2Id: " + task.getMom2Id() + ") to mom2 " + config.getMom2ImportUrl() );
 			String result = httpClient.doPost(config.getMom2ImportUrl(), parameters, new StringResponseHandler());
-			log.info(result);
+			if (log.isDebugEnabled()){
+				log.debug(result);
+			}
 			httpClient.logout();
+			log.info("Logout " + config.getAuthUrl());
 			return isSucceed(result);
 		} catch (IOException e) {
 			log.error("IOException:" + e.getMessage(), e);

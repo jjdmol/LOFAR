@@ -23,6 +23,8 @@ import javax.net.ssl.TrustManagerFactory;
 import nl.astron.lofar.odtb.mom2otdbadapter.config.Configuration;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.Repository;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.DefaultHttpResponseFactory;
 import org.apache.http.impl.nio.SSLServerIOEventDispatch;
@@ -44,7 +46,7 @@ import org.apache.http.protocol.ResponseDate;
 import org.apache.http.protocol.ResponseServer;
 
 public class HttpServer {
-
+	private static Log log = LogFactory.getLog(HttpServer.class);
 	private static final String JKS = "jks";
 
 	private Configuration config;
@@ -68,9 +70,11 @@ public class HttpServer {
 	}
 	
 	public void start() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException{
+		log.info("Starting http server on port " + config.getAdapter().getHttpPort());
 		FileInputStream keyStoreInputStream = new FileInputStream(new File(config.getAdapter().getKeystoreLocation()));
 		KeyStore keystore = KeyStore.getInstance(JKS);
 		keystore.load(keyStoreInputStream, config.getAdapter().getKeystorePassword().toCharArray());
+		log.info("Keystore " + config.getAdapter().getKeystoreLocation() + " loaded");
 		KeyManagerFactory kmfactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 		kmfactory.init(keystore, config.getAdapter().getKeystorePassword().toCharArray());
 		KeyManager[] keymanagers = kmfactory.getKeyManagers();
@@ -79,6 +83,7 @@ public class HttpServer {
 		trustedKeystore.load(trustedKeyStoreInputStream, config.getAdapter().getTrustedKeystorePassword().toCharArray());		
 	    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()); 
 	    tmf.init(trustedKeystore); 		
+	    log.info("Trusted keystore " + config.getAdapter().getKeystoreLocation() + " loaded");
 		SSLContext sslcontext = SSLContext.getInstance("TLS");
 		sslcontext.init(keymanagers, tmf.getTrustManagers(), null);
 
@@ -110,9 +115,10 @@ public class HttpServer {
 		IOEventDispatch ioEventDispatch = new SSLServerIOEventDispatch(handler, sslcontext,  sslSessionHandler, params);
 
 		ListeningIOReactor ioReactor = new DefaultListeningIOReactor(2, params);
-
+		log.info("Http server started on port " + config.getAdapter().getHttpPort());		
 		ioReactor.listen(new InetSocketAddress(config.getAdapter().getHttpPort()));
 		ioReactor.execute(ioEventDispatch);
+		
 	}
 	
 	
