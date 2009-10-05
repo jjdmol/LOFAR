@@ -20,7 +20,7 @@
 
 include(LofarPackageVersion)
 
-set(jotdb2_LIB_SRCS
+lofar_add_library(jotdb2 
   Package__Version.cc
   nl_astron_lofar_sas_otb_jotdb2_jCommon.cc
   nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection.cc
@@ -33,9 +33,5 @@ set(jotdb2_LIB_SRCS
   nl_astron_lofar_sas_otb_jotdb2_jInitCPPLogger.cc
   nl_astron_lofar_sas_otb_jotdb2_jTreeValue.cc)
 
-lofar_add_library(jotdb2 ${jotdb2_LIB_SRCS})
-
-add_executable(versionjotdb2 versionjotdb2.cc)
-target_link_libraries(versionjotdb2 jotdb2 ${LOFAR_LIBRARIES})
-install(TARGETS versionjotdb2 DESTINATION bin)
+lofar_add_executable(versionjotdb2 versionjotdb2.cc)
 

@@ -54,3 +54,4 @@ include(LofarConfig)
 add_subdirectory(include/BBSControl)
 add_subdirectory(src)
 #add_subdirectory(test)    # test currently do NOT compile!
+add_subdirectory(scripts)

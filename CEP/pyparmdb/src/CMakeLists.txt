@@ -31,3 +31,7 @@ set_target_properties(_parmdb PROPERTIES PREFIX "")
 lofar_add_bin_program(versionpyparmdb 
   versionpyparmdb.cc
   Package__Version.cc)
+
+# Install Python modules
+include(PythonInstall)
+python_install(__init__.py DESTINATION lofar/parmdb)
