@@ -72,9 +72,9 @@ CREATE OR REPLACE FUNCTION copyTree(INT4, INT4)
 		  RAISE EXCEPTION \'PIC trees cannot be copied\';
 		END IF;
 
-		-- make new tree entry
+		-- make new tree entry, dont copy momID
 		vNewTreeID := 0;
-		SELECT  newTree(vAuthToken, $2, vOldTree.momID, vOldTree.classif,
+		SELECT  newTree(vAuthToken, $2, 0, vOldTree.classif,
 					    vOldTree.treetype, vOldTree.state,
 					    vOldTree.campaign)
 		INTO    vNewTreeID;

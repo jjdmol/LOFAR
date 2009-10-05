@@ -81,7 +81,8 @@ CREATE OR REPLACE FUNCTION getStateList(INT4, BOOLEAN, TIMESTAMP, TIMESTAMP)
 			   s.timestamp 
 		FROM   StateHistory s 
 			   INNER JOIN OTDBuser u ON s.userid = u.userid
-		\' || vQuery 
+		\' || vQuery || \'
+		ORDER BY s.timestamp ASC\'
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
