@@ -72,10 +72,8 @@ if test -d "$vds"  -a  -e "$vds/table.dat"; then
 fi
 
 if test "$img" = "casa"; then
-  echo "$pgmpath/mwimager-casa $psn $seqnr $msn $dry"
   $pgmpath/mwimager-casa $psn $seqnr $msn $vds $dry
 else
-  echo "$pgmpath/mwimager-askap $psn $seqnr $msn $vds $dry"
   $pgmpath/mwimager-askap $psn $seqnr $msn $vds $dry
 fi
 

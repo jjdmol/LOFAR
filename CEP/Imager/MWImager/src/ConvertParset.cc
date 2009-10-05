@@ -93,10 +93,15 @@ namespace LOFAR {
       ParameterSet grin = in.makeSubset ("Gridder.");
       in.subtractSubset ("Gridder.");
       // Get the gridder type.
-      string type = grin.getString ("type");
+      string type    = grin.getString ("type");
+      string padding = grin.getString ("padding", string());
       out.add ("Cimager.gridder", type);
       grin.remove ("type");
+      grin.remove ("padding");
       convert (out, grin, emptyMap, emptyMap, "Cimager.gridder."+type+'.');
+      if (! padding.empty()) {
+        out.add ("Cimager.gridder.padding", padding);
+      }
     }
     // Convert the solver keywords.
     {
@@ -123,9 +128,13 @@ namespace LOFAR {
         angle2 = in.getString ("msDirDec", string());
         dirType = in.getString ("msDirType", string());
       }
+      string nfacets   = imin.getString ("nfacets", string());
+      string facetstep = imin.getString ("facetstep", string());
       imin.remove ("ra");
       imin.remove ("dec");
       imin.remove ("directionType");
+      imin.remove ("nfacets");
+      imin.remove ("facetstep");
       in.remove ("msDirRa");
       in.remove ("msDirDec");
       in.remove ("msDirType");
@@ -142,15 +151,10 @@ namespace LOFAR {
       vector<string> cellSize = imin.getStringVector ("cellSize");
       vector<string> stokes   = imin.getStringVector ("stokes",
 						      vector<string>(1,"I"));
-      int nfacet = imin.getInt ("nfacets", 1);
-      string nfacets = imin.getString ("nfacets", string());
-      string facetstep = imin.getString ("facetstep", "1");
       imin.remove ("nchan");
       imin.remove ("frequency");
       imin.remove ("cellSize");
       imin.remove ("stokes");
-      imin.remove ("nfacets");
-      imin.remove ("facetstep");
       for (unsigned i=0; i<cellSize.size(); ++i) {
 	char last = cellSize[i][cellSize[i].size()-1];
 	if (last < 'a'  || last > 'z') {
@@ -165,9 +169,11 @@ namespace LOFAR {
       out.add (prefix + ".frequency", frequency);
       out.add (prefix + ".nchan", nchan);
       out.add (prefix + ".direction", dirVecStr.str());
-      if (nfacet > 1) {
+      if (! nfacets.empty()) {
         out.add (prefix + ".nfacets", nfacets);
-        out.add (prefix + ".facetstep", facetstep);
+        if (! facetstep.empty()) {
+          out.add (prefix + ".facetstep", facetstep);
+        }
       }
       // Form the stokes string (separated by blanks).
       string stokesStr("'");
@@ -182,6 +188,7 @@ namespace LOFAR {
       // Convert the remaining keywords.
       convert (out, imin, emptyMap, emptyMap, "Cimager.Images.");
     }
+        //      float padding = imin.getFloat ("padding", 1);
     {
       // If needed add unit deg to beamshape.
       vector<string> beam = in.getStringVector ("restore_beam",
