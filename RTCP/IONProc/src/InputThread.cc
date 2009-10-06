@@ -38,7 +38,6 @@
 #include <RSP.h>
 #include <Scheduling.h>
 
-#include <errno.h>
 #include <signal.h>
 
 #include <cstddef>
@@ -69,11 +68,7 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs
   }
 
   stop = stopped = false;
-
-  if (pthread_create(&thread, 0, mainLoopStub, this) != 0) {
-    LOG_ERROR("could not create input thread");
-    exit(1);
-  }
+  thread = new Thread(this, &InputThread<SAMPLE_TYPE>::threadFunction, 65536);
 }
 
 
@@ -84,18 +79,11 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::~InputThread()
   stop = true;
 
   while (!stopped) {
-    if (pthread_kill(thread, SIGUSR1) != 0) { // interrupt read() system call
-      perror("pthread_kill");
-      exit(1);
-    }
-
+    thread->kill(SIGUSR1); // interrupt read() system call
     usleep(25000);
   }
 
-  if (pthread_join(thread, 0) != 0) {
-    LOG_ERROR("could not join input thread");
-    exit(1);
-  }
+  delete thread;
 }
 
 
@@ -104,24 +92,21 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::sigHandler(int)
 }
 
 
-template <typename SAMPLE_TYPE> void *InputThread<SAMPLE_TYPE>::mainLoopStub(void *inputThread)
+template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::threadFunction()
 {
-  try {
-    static_cast<InputThread<SAMPLE_TYPE> *>(inputThread)->mainLoop();
-  } catch (Exception &ex) {
-    LOG_FATAL_STR("input thread caught Exception: " << ex);
-  } catch (std::exception &ex) {
-    LOG_FATAL_STR("input thread caught std::exception: " << ex.what());
-  } catch (...) {
-    LOG_FATAL("input thread caught non-std::exception");
-  }
+  // set "stopped", even if exception is thrown
 
-  static_cast<InputThread<SAMPLE_TYPE> *>(inputThread)->stopped = true;
-  return 0;
+  try {
+    receivePackets();
+    stopped = true;
+  } catch (...) {
+    stopped = true;
+    throw;
+  }
 }
 
 
-template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
+template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::receivePackets()
 {
 #if 1 && defined HAVE_BGP_ION
   if (itsArgs.threadID == 0)
@@ -223,7 +208,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
     }
   }
 
-  LOG_DEBUG("InputThread::mainLoop() exiting loop");
+  LOG_DEBUG("InputThread::threadFunction() exiting loop");
 }
 
 

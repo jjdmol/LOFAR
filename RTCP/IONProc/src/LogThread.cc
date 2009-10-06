@@ -39,37 +39,22 @@ namespace LOFAR {
 namespace RTCP {
 
 
+// log from separate thread, since printing from a signal handler causes deadlocks
+
 LogThread::LogThread(unsigned nrRspBoards)
 :
   itsCounters(nrRspBoards),
-  itsShouldStop(false)
+  itsShouldStop(false),
+  //thread(((void (LogThread::*)(void)) &LOFAR::RTCP::LogThread::logThread), this)
+  thread(this, &LogThread::mainLoop, 65536)
 {
-  if (pthread_create(&thread, 0, logThreadStub, this) != 0) {
-    LOG_ERROR("could not create input thread");
-    exit(1);
-  }
 }
 
 
 LogThread::~LogThread()
 {
   itsShouldStop = true;
-
-  if (pthread_join(thread, 0) != 0) {
-    LOG_ERROR("could not join input thread");
-    exit(1);
-  }
-
   LOG_DEBUG("LogThread stopped");
-}
-
-
-// log from separate thread, since printing from a signal handler causes deadlocks
-
-void *LogThread::logThreadStub(void *arg)
-{
-  static_cast<LogThread *>(arg)->logThread();
-  return 0;
 }
 
 
@@ -132,7 +117,7 @@ void LogThread::writeCPUstats(std::stringstream &str)
 #endif
 
 
-void LogThread::logThread()
+void LogThread::mainLoop()
 {
 #if defined HAVE_BGP_ION
   runOnCore0();

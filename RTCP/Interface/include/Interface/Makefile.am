@@ -24,6 +24,7 @@ pkginclude_HEADERS = Package__Version.h \
 		     BFRawFormat.h \
                      ProcessingPlan.h \
                      CN_ProcessingPlan.h \
+		     Thread.h \
                      TransposedData.h \
                      InputData.h
 

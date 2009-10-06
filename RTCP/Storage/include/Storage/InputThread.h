@@ -29,9 +29,9 @@
 #include <Interface/MultiDimArray.h>
 #include <Interface/CN_ProcessingPlan.h>
 #include <Interface/Queue.h>
+#include <Interface/Thread.h>
 #include <Stream/Stream.h>
 
-#include <pthread.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -54,12 +54,11 @@ class InputThread
     static Queue<unsigned>  itsRcvdQueue;
 
   private:
-    static void		    *mainLoopStub(void *inputThread);
     void		    mainLoop();
 
     const Parset            *itsPS;
     Stream		    *itsStreamFromION; 
-    pthread_t		    thread;
+    Thread		    *thread;
 
     Vector<CN_ProcessingPlan<> *> itsPlans; // [maxReceiveQueueSize]
     unsigned                itsSB;

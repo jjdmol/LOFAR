@@ -31,10 +31,10 @@
 //# Includes
 #include <Common/lofar_vector.h>
 #include <Interface/RSPTimeStamp.h>
+#include <Interface/Thread.h>
 #include <BeamletBuffer.h>
 #include <LogThread.h>
 
-#include <pthread.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -57,8 +57,8 @@ template<typename SAMPLE_TYPE> class InputThread
 			  InputThread(ThreadArgs args);
 			  ~InputThread();
 
-    static void		  *mainLoopStub(void *inputThread);
-    void		  mainLoop();
+    void		  threadFunction();
+    void		  receivePackets();
 
     static const unsigned packetBuffersSize = 128;
 
@@ -68,7 +68,7 @@ template<typename SAMPLE_TYPE> class InputThread
     volatile bool	  stop, stopped;
 
     ThreadArgs		  itsArgs;
-    pthread_t		  thread;
+    Thread		  *thread;
 };
 
 } // namespace RTCP

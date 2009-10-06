@@ -61,19 +61,13 @@ namespace RTCP {
     }
   }
 
-  if (pthread_create(&thread, 0, mainLoopStub, this) != 0) {
-    LOG_ERROR("could not create input thread");
-    exit(1);
-  }
+  thread = new Thread(this, &InputThread::mainLoop);
 }
 
 
 InputThread::~InputThread()
 {
-  if (pthread_join(thread, 0) != 0) {
-    LOG_ERROR("could not join input thread");
-    exit(1);
-  }
+  delete thread;
 }
 
 
@@ -118,22 +112,6 @@ void InputThread::mainLoop()
   }
 }
 
-
-void *InputThread::mainLoopStub(void *inputThread)
-{
-  try {
-    static_cast<InputThread *>(inputThread)->mainLoop();
-  } catch (Exception &ex) {
-    LOG_FATAL_STR("caught Exception: " << ex.what());
-  } catch (std::exception &ex) {
-    LOG_FATAL_STR("caught std::exception: " << ex.what());
-  } catch (...) {
-    LOG_FATAL("caught non-std:exception");
-  }
-
-  //static_cast<InputThread *>(inputThread)->stopped = true;
-  return 0;
-}
 
 } // namespace RTCP
 } // namespace LOFAR
