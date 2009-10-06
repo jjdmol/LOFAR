@@ -102,8 +102,12 @@ int main (int argc, char *argv[])
 #if defined HAVE_MPI
   int rank;
   int size;
-
-  MPI_Init(&argc, &argv);
+  int thread_model_provided;
+  
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &thread_model_provided);
+  if (thread_model_provided != MPI_THREAD_SERIALIZED) {
+    LOG_WARN_STR("Failed to set MPI thread model to MPI_THREAD_SERIALIZED");
+  }
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 #else
