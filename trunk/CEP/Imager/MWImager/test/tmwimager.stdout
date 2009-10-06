@@ -5,12 +5,12 @@ ssh localhost /Users/diepen/sim/LOFAR/CEP/BB/MWImager/src/mwimager-part socket l
 ssh localhost /Users/diepen/sim/LOFAR/CEP/BB/MWImager/src/mwimager-part socket localhost 0 3 1 tmwimager.in_ms1 /Users/diepen/sim/LOFAR/installed/gnu_opt /Users/diepen/sim/LOFAR/CEP/BB/MWImager/build/gnu_opt/test/tmwimager.parset /Users/diepen/sim/LOFAR/CEP/BB/MWImager/build/gnu_opt/test dry
 ssh localhost /Users/diepen/sim/LOFAR/CEP/BB/MWImager/src/mwimager-part socket localhost 0 3 2 tmwimager.in_ms2 /Users/diepen/sim/LOFAR/installed/gnu_opt /Users/diepen/sim/LOFAR/CEP/BB/MWImager/build/gnu_opt/test/tmwimager.parset /Users/diepen/sim/LOFAR/CEP/BB/MWImager/build/gnu_opt/test dry
 <<<
-Cimager.Images.Names=image.tmwimager_Dirty
+Cimager.Images.Names=image.tmwimager_dirty
 Cimager.Images.cellsize=[240arcsec,240arcsec]
-Cimager.Images.image.tmwimager_Dirty.direction=[230.35,-10.345,J2000]
-Cimager.Images.image.tmwimager_Dirty.frequency=[20, 22]
-Cimager.Images.image.tmwimager_Dirty.nchan=1
-Cimager.Images.image.tmwimager_Dirty.polarisation='I Q U V'
+Cimager.Images.image.tmwimager_dirty.direction=[230.35,-10.345,J2000]
+Cimager.Images.image.tmwimager_dirty.frequency=[20, 22]
+Cimager.Images.image.tmwimager_dirty.nchan=1
+Cimager.Images.image.tmwimager_dirty.polarisation='I Q U V'
 Cimager.Images.shape=[2048, 2048]
 Cimager.MinUV=1.0
 Cimager.datacolumn=CORRECTED_DATA
@@ -24,18 +24,18 @@ Cimager.gridder.WProject.wmax=75
 Cimager.ncycles=0
 Cimager.restore=False
 Cimager.restore.beam=[1deg,1deg,0deg]
-Cimager.solver=Dirty
+Cimager.solver=dirty
 Cimager.solver.Clean.algorithm=MultiScale
 Cimager.solver.Clean.gain=1.0
 Cimager.solver.Clean.niter=10
 Cimager.solver.Clean.scales=[0, 3]
 Cimager.solver.Clean.verbose=True
-Cimager.Images.Names=image.tmwimager_Dirty
+Cimager.Images.Names=image.tmwimager_dirty
 Cimager.Images.cellsize=[240arcsec,240arcsec]
-Cimager.Images.image.tmwimager_Dirty.direction=[230.35,-10.345,J2000]
-Cimager.Images.image.tmwimager_Dirty.frequency=[120, 122]
-Cimager.Images.image.tmwimager_Dirty.nchan=1
-Cimager.Images.image.tmwimager_Dirty.polarisation='I Q U V'
+Cimager.Images.image.tmwimager_dirty.direction=[230.35,-10.345,J2000]
+Cimager.Images.image.tmwimager_dirty.frequency=[120, 122]
+Cimager.Images.image.tmwimager_dirty.nchan=1
+Cimager.Images.image.tmwimager_dirty.polarisation='I Q U V'
 Cimager.Images.shape=[2048, 2048]
 Cimager.MinUV=1.0
 Cimager.datacolumn=CORRECTED_DATA
@@ -49,18 +49,18 @@ Cimager.gridder.WProject.wmax=75
 Cimager.ncycles=0
 Cimager.restore=False
 Cimager.restore.beam=[1deg,1deg,0deg]
-Cimager.solver=Dirty
+Cimager.solver=dirty
 Cimager.solver.Clean.algorithm=MultiScale
 Cimager.solver.Clean.gain=1.0
 Cimager.solver.Clean.niter=10
 Cimager.solver.Clean.scales=[0, 3]
 Cimager.solver.Clean.verbose=True
-Cimager.Images.Names=image.tmwimager_Dirty
+Cimager.Images.Names=image.tmwimager_dirty
 Cimager.Images.cellsize=[240arcsec,240arcsec]
-Cimager.Images.image.tmwimager_Dirty.direction=[230.35,-10.345,J2000]
-Cimager.Images.image.tmwimager_Dirty.frequency=[220, 222]
-Cimager.Images.image.tmwimager_Dirty.nchan=1
-Cimager.Images.image.tmwimager_Dirty.polarisation='I Q U V'
+Cimager.Images.image.tmwimager_dirty.direction=[230.35,-10.345,J2000]
+Cimager.Images.image.tmwimager_dirty.frequency=[220, 222]
+Cimager.Images.image.tmwimager_dirty.nchan=1
+Cimager.Images.image.tmwimager_dirty.polarisation='I Q U V'
 Cimager.Images.shape=[2048, 2048]
 Cimager.MinUV=1.0
 Cimager.datacolumn=CORRECTED_DATA
@@ -74,9 +74,13 @@ Cimager.gridder.WProject.wmax=75
 Cimager.ncycles=0
 Cimager.restore=False
 Cimager.restore.beam=[1deg,1deg,0deg]
-Cimager.solver=Dirty
+Cimager.solver=dirty
 Cimager.solver.Clean.algorithm=MultiScale
 Cimager.solver.Clean.gain=1.0
 Cimager.solver.Clean.niter=10
 Cimager.solver.Clean.scales=[0, 3]
 Cimager.solver.Clean.verbose=True
+
+lwimager "ms=tmwimager.in_ms0" "image=tmwimager.img0" "data=CORRECTED_DATA" "mode=channel" "npix=2048" "cellsize=240arcsec" "stokes=IQUV" "nchan=2" "chanstart=0" "img_nchan=1" "wprojplanes=201" "nfacets=1" "padding=1" "phasecenter=230.35,-10.345,J2000"
+lwimager "ms=tmwimager.in_ms1" "image=tmwimager.img1" "data=CORRECTED_DATA" "mode=channel" "npix=2048" "cellsize=240arcsec" "stokes=IQUV" "nchan=2" "chanstart=0" "img_nchan=1" "wprojplanes=201" "nfacets=1" "padding=1" "phasecenter=230.35,-10.345,J2000"
+lwimager "ms=tmwimager.in_ms2" "image=tmwimager.img2" "data=CORRECTED_DATA" "mode=channel" "npix=2048" "cellsize=240arcsec" "stokes=IQUV" "nchan=2" "chanstart=0" "img_nchan=1" "wprojplanes=201" "nfacets=1" "padding=1" "phasecenter=230.35,-10.345,J2000"
