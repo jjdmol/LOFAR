@@ -27,19 +27,22 @@ public class XMLGeneratorTest {
 
 	@Test
 	public void testGetObservationXml() throws IOException, ParserConfigurationException, RepositoryException {
+		Locale.setDefault(Locale.US);
 		OTDBConfiguration config = new OTDBConfiguration();
 		config.setRmiHost("lofar17");
-		config.setRmiPort(10500);
+		config.setRmiPort(10399);
 		config.setTemplateId(5001);
 		OTDBRepository repository = new OTDBRepository(config);
 		Date startDate = new Date();
 		startDate.setMonth(4);
 		Date endDate = new Date();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 		List<LofarObservation> lofarObservations = repository.getLatestChanges(startDate, endDate);
-		if (lofarObservations.size() > 0) {
-			LofarObservation lofarObservation = lofarObservations.get(0);
+		for (int i = 0; i < lofarObservations.size(); i++){
+			LofarObservation lofarObservation = lofarObservations.get(i);
 			Mom2Configuration mom2Config = new Mom2Configuration();
-			mom2Config.setMom2SchemasUrl("C:/java/workspace/MoM-OTDB-adapter/schemas/");
+			mom2Config.setMom2SchemasUrl("http://localhost:8080/mom2lofar/schemas/");
 			String xml = XMLGenerator.getObservationXml(lofarObservation, mom2Config);
 			File file = new File("examples/obs-" + lofarObservation.getMom2Id() + "-" + lofarObservation.getStatus() + ".xml");
 			PrintWriter writer = new PrintWriter(file);

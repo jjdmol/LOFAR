@@ -59,8 +59,6 @@ public class MomOtdbAdapter {
 
 		HttpServer server = new HttpServer(config, repository);
 		server.start();
-		// Mom2Listener server = new Mom2Listener(repository);
-		// server.start();
 	}
 
 
