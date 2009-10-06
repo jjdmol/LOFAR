@@ -30,4 +30,6 @@ lofar_add_bin_program(convertimagerparset convertimagerparset.cc)
 install(PROGRAMS
   mwimager
   mwimager-part
+  mwimager-askap
+  mwimager-casa
   DESTINATION bin)
