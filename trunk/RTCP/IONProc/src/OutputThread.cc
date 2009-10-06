@@ -74,19 +74,7 @@ OutputThread::OutputThread(const unsigned subband, const Parset &ps )
     }
   }
 
-  pthread_attr_t attr;
-
-  if (pthread_attr_init(&attr) != 0)
-    throw SystemCallException("pthread_attr_init output thread", errno, THROW_ARGS);
-
-  if (pthread_attr_setstacksize(&attr, 262144) != 0)
-    throw SystemCallException("pthread_attr_setstacksize output thread", errno, THROW_ARGS);
-
-  if (pthread_create(&thread, &attr, mainLoopStub, this) != 0)
-    throw SystemCallException("pthread_create output thread", errno, THROW_ARGS);
-
-  if (pthread_attr_destroy(&attr) != 0)
-    throw SystemCallException("pthread_attr_destroy output thread", errno, THROW_ARGS);
+  thread = new Thread(this, &OutputThread::mainLoop, 65536);
 }
 
 
@@ -94,8 +82,7 @@ OutputThread::~OutputThread()
 {
   itsSendQueueActivity.append(-1); // -1 indicates that no more messages will be sent
 
-  if (thread && pthread_join(thread, 0) != 0)
-    throw SystemCallException("pthread_join output thread", errno, THROW_ARGS);
+  delete thread;
 
   while (!itsSendQueueActivity.empty())
     itsSendQueueActivity.remove();
@@ -168,23 +155,6 @@ void OutputThread::mainLoop()
     // data can now be reused
     output.freeQueue.append( data.release() );
   }
-}
-
-
-void *OutputThread::mainLoopStub(void *outputThread)
-{
-  try {
-    static_cast<OutputThread *>(outputThread)->mainLoop();
-  } catch (Exception &ex) {
-    LOG_FATAL_STR("output thread caught Exception: " << ex);
-  } catch (std::exception &ex) {
-    LOG_FATAL_STR("output thread caught std::exception: " << ex.what());
-  } catch (...) {
-    LOG_FATAL("output thread caught non-std::exception");
-  }
-
-  //static_cast<OutputThread *>(outputThread)->stopped = true;
-  return 0;
 }
 
 } // namespace RTCP

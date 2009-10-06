@@ -27,7 +27,8 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 
-#include <pthread.h>
+#include <Interface/Thread.h>
+
 #include <vector>
 
 namespace LOFAR {
@@ -47,13 +48,12 @@ class LogThread
     std::vector<Counters> itsCounters;
 
   private:
-    static void *logThreadStub(void *);
-    void	logThread();
+    void	mainLoop();
   
     //# Datamembers
     volatile bool itsShouldStop;
 
-    pthread_t	 thread;
+    Thread	  thread;
 
 #if defined HAVE_BGP_ION
     struct CPUload {

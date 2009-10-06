@@ -21,22 +21,23 @@
 #include <lofar_config.h>
 
 #include <BeamletBufferToComputeNode.h>
-#include <PLC/ACCmain.h>
+#include <Common/LofarLogger.h>
+#include <Common/Exceptions.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Configuration.h>
 #include <Interface/CN_Mapping.h>
+#include <Interface/Exceptions.h>
 #include <Interface/Mutex.h>
 #include <Interface/Parset.h>
-#include <Interface/Exceptions.h>
+#include <Interface/Thread.h>
 #include <ION_Allocator.h>
 #include <InputSection.h>
 #include <OutputSection.h>
+#include <PLC/ACCmain.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <Stream/SystemCallException.h>
-#include <Common/LofarLogger.h>
-#include <Common/Exceptions.h>
 #if !defined HAVE_PKVERSION
 #include <Package__Version.h>
 #endif
@@ -291,13 +292,8 @@ template <typename SAMPLE_TYPE> class Job : public JobParent
     void	configureCNs(), unconfigureCNs();
 
     void	jobThread();
-    static void *jobThreadStub(void *);
-
     void	toCNthread();
-    static void	*toCNthreadStub(void *);
-
     void	fromCNthread();
-    static void	*fromCNthreadStub(void *);
 
     void	allocateResources();
     void	deallocateResources();
@@ -307,7 +303,7 @@ template <typename SAMPLE_TYPE> class Job : public JobParent
 
     std::vector<Stream *>		itsCNstreams;
     unsigned				itsNrRuns;
-    pthread_t				itsJobID, itsToCNthreadID, itsFromCNthreadID;
+    Thread				*itsJobThread, *itsToCNthread, *itsFromCNthread;
     bool				itsHasInputSection, itsHasOutputSection;
     unsigned				itsObservationID;
 
@@ -334,30 +330,15 @@ template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::Job(const Parset *parset)
   itsHasInputSection  = parset->inputPsetIndex(myPsetNumber) >= 0;
   itsHasOutputSection = parset->outputPsetIndex(myPsetNumber) >= 0;
 
-  if (itsHasInputSection || itsHasOutputSection) {
-    if (pthread_create(&itsJobID, 0, jobThreadStub, static_cast<void *>(this)) != 0) {
-      perror("pthread_create");
-      exit(1);
-    }
-  }
+  if (itsHasInputSection || itsHasOutputSection)
+    itsJobThread = new Thread(this, &Job<SAMPLE_TYPE>::jobThread, 65536);
 }
 
 
 template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::~Job()
 {
-  if (itsHasInputSection || itsHasOutputSection) {
-#if 0
-    if (pthread_join(itsJobID, 0) != 0) {
-      perror("pthread join");
-      exit(1);
-    }
-#else
-    if (pthread_detach(pthread_self()) != 0) {
-      perror("pthread detach");
-      exit(1);
-    }
-#endif
-  }
+  if (itsHasInputSection || itsHasOutputSection)
+    delete itsJobThread;
 
   delete itsParset; // FIXME: not here
 }
@@ -386,44 +367,24 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::allocateResources()
   if (itsHasInputSection)
     attachToInputSection();
 
-  pthread_attr_t attr;
+  itsToCNthread = new Thread(this, &Job<SAMPLE_TYPE>::toCNthread, 65536);
 
-  if (pthread_attr_init(&attr) != 0)
-    throw SystemCallException("pthread_attr_init", errno, THROW_ARGS);
-
-  if (pthread_attr_setstacksize(&attr, 65536) != 0)
-    throw SystemCallException("pthread_attr_setstacksize", errno, THROW_ARGS);
-
-  if (pthread_create(&itsToCNthreadID, &attr, toCNthreadStub, static_cast<void *>(this)) != 0)
-    throw SystemCallException("pthread_create toCN thread", errno, THROW_ARGS);
-
-  if (itsHasOutputSection && pthread_create(&itsFromCNthreadID, &attr, fromCNthreadStub, static_cast<void *>(this)) != 0)
-    throw SystemCallException("pthread_create fromCN thread", errno, THROW_ARGS);
-
-  if (pthread_attr_destroy(&attr) != 0)
-    throw SystemCallException("pthread_attr_destroy", errno, THROW_ARGS);
+  if (itsHasOutputSection)
+    itsFromCNthread = new Thread(this, &Job<SAMPLE_TYPE>::fromCNthread, 65536);
 }
 
 
 template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::deallocateResources()
 {
-  if (pthread_join(itsToCNthreadID, 0) != 0) {
-    perror("pthread join");
-    exit(1);
-  }
-
-  LOG_DEBUG("lofar__fini: to_CN section joined");
+  delete itsToCNthread;
+  LOG_DEBUG("lofar__fini: to_CN thread joined");
 
   if (itsHasInputSection)
     detachFromInputSection();
 
   if (itsHasOutputSection) {
-    if (pthread_join(itsFromCNthreadID, 0) != 0) {
-      perror("pthread join");
-      exit(1);
-    }
-
-    LOG_DEBUG("lofar__fini: output section joined");
+    delete itsFromCNthread;
+    LOG_DEBUG("lofar__fini: from_CN thread joined");
   }
 
   pthread_mutex_lock(&allocationMutex);
@@ -452,26 +413,6 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::jobThread()
   deallocateResources();
   LOG_DEBUG("resources of job " << itsObservationID << " deallocated");
   delete this;
-}
-
-
-template <typename SAMPLE_TYPE> void *Job<SAMPLE_TYPE>::jobThreadStub(void *job)
-{
-#if defined CATCH_EXCEPTIONS
-  try {
-#endif
-    static_cast<Job<SAMPLE_TYPE> *>(job)->jobThread();
-#if defined CATCH_EXCEPTIONS
-  } catch (Exception &ex) {
-    LOG_FATAL_STR("job thread caught Exception: " << ex);
-  } catch (std::exception &ex) {
-    LOG_FATAL_STR("job thread caught std::exception: " << ex.what());
-  } catch (...) {
-    LOG_FATAL("job thread caught non-std::exception: ");
-  }
-#endif
-
-  return 0;
 }
 
 
@@ -547,8 +488,7 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::unconfigureCNs()
 
 template<typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::toCNthread()
 {
-  LOG_DEBUG_STR("Granted CN access to Job " << itsObservationID);
-
+  LOG_DEBUG("starting to_CN thread");
   configureCNs();
 
   std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
@@ -562,34 +502,13 @@ template<typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::toCNthread()
   beamletBufferToComputeNode.postprocess();
 
   unconfigureCNs();
-}
-
-
-template <typename SAMPLE_TYPE> void *Job<SAMPLE_TYPE>::toCNthreadStub(void *job)
-{
-  LOG_DEBUG("starting to_CN section");
-
-#if defined CATCH_EXCEPTIONS
-  try {
-#endif
-    static_cast<Job<SAMPLE_TYPE> *>(job)->toCNthread();
-#if defined CATCH_EXCEPTIONS
-  } catch (Exception &ex) {
-    LOG_FATAL_STR("to_CN section caught Exception: " << ex);
-  } catch (std::exception &ex) {
-    LOG_FATAL_STR("to_CN section caught std::exception: " << ex.what());
-  } catch (...) {
-    LOG_FATAL("to_CN section caught non-std::exception: ");
-  }
-#endif
-
-  LOG_DEBUG("to_CN section finished");
-  return 0;
+  LOG_DEBUG("to_CN thread finished");
 }
 
 
 template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::fromCNthread()
 {
+  LOG_DEBUG("starting from_CN thread");
   OutputSection outputSection(myPsetNumber, itsCNstreams);
 
   outputSection.preprocess(itsParset);
@@ -598,29 +517,7 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::fromCNthread()
     outputSection.process();
 
   outputSection.postprocess();
-}
-
-
-template <typename SAMPLE_TYPE> void *Job<SAMPLE_TYPE>::fromCNthreadStub(void *job)
-{
-  LOG_DEBUG("starting output section");
-
-#if defined CATCH_EXCEPTIONS
-  try {
-#endif
-    static_cast<Job<SAMPLE_TYPE> *>(job)->fromCNthread();
-#if defined CATCH_EXCEPTIONS
-  } catch (Exception &ex) {
-    LOG_FATAL_STR("output section caught Exception: " << ex);
-  } catch (std::exception &ex) {
-    LOG_FATAL_STR("output section caught std::exception: " << ex.what());
-  } catch (...) {
-    LOG_FATAL("output section caught non-std::exception: ");
-  }
-#endif
-
-  LOG_DEBUG("output section finished");
-  return 0;
+  LOG_DEBUG("from_CN thread finished");
 }
 
 

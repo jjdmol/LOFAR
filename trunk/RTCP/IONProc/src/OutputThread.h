@@ -29,9 +29,9 @@
 #include <Interface/CN_ProcessingPlan.h>
 #include <Interface/Queue.h>
 #include <Interface/Parset.h>
+#include <Interface/Thread.h>
 #include <Stream/Stream.h>
 
-#include <pthread.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -56,13 +56,11 @@ class OutputThread
     Queue<int>              itsSendQueueActivity; 
 
   private:
-    static void		    *mainLoopStub(void *outputThread);
     void		    mainLoop();
 
     const Parset            &itsParset;
     const unsigned          itsSubband;
-
-    pthread_t		    thread;
+    Thread		    *thread;
 };
 
 } // namespace RTCP
