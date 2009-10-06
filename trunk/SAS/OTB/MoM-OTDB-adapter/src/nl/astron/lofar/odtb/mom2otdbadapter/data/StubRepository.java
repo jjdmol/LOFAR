@@ -88,9 +88,6 @@ public class StubRepository implements Repository {
 		if (Mom2OtdbConverter.OTDB_BEING_SPECIFIED_STATUS.equals(status)) {
 			return Mom2OtdbConverter.OTDB_SPECIFIED_STATUS;
 		}
-		// if (Mom2OtdbConverter.OTDB_SPECIFIED_STATUS.equals(status)){
-		// return Mom2OtdbConverter.OTDB_APPROVED_STATUS;
-		// }
 		if (Mom2OtdbConverter.OTDB_APPROVED_STATUS.equals(status)) {
 			return Mom2OtdbConverter.OTDB_ACTIVE_STATUS;
 		}

@@ -107,7 +107,7 @@ public class ConfigXMLParser {
 		configuration.setInterval(AstronConverter.toInteger(getValue(elements.get("interval"))));
 		configuration.setTemplateId(AstronConverter.toInteger(getValue(elements.get("uvObservationTemplateId"))));
 		configuration.setRmiPort(AstronConverter.toInteger(getValue(elements.get("rmiport"))));
-		configuration.setRmiHost(getValue(elements.get("rmiport")));
+		configuration.setRmiHost(getValue(elements.get("rmihost")));
 		return configuration;
 	}
 
@@ -133,9 +133,6 @@ public class ConfigXMLParser {
 		String value = null;
 		if (node.getFirstChild() != null) {
 			value = node.getFirstChild().getNodeValue();
-			if (log.isDebugEnabled()) {
-				log.debug("Node: " + node.getNodeName() + " value: " + value);
-			}
 		}
 		return value;
 	}
@@ -171,9 +168,6 @@ public class ConfigXMLParser {
 
 	private static boolean isElement(Node node) {
 		if (AstronValidator.implementsInterface(Element.class, node.getClass())) {
-			if (log.isDebugEnabled()) {
-				log.debug("<" + node.getNodeName() + ">");
-			}
 			return true;
 		} else {
 			return false;

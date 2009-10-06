@@ -16,13 +16,13 @@ public class XMLParserTest {
 
 	@Test
 	public void testGetLofarObservation() throws Exception {
-		FileInputStream st = new FileInputStream(new File("examples/observation.xml"));
+		FileInputStream st = new FileInputStream(new File("examples/observation-64-specified.xml"));
 		InputSource inputSource = new InputSource(st);
 		Document document = XMLConverter.convertXMLToDocument(inputSource);
 		LofarObservation lofarObservation = XMLParser.getLofarObservation(document);
 		OTDBConfiguration config =new OTDBConfiguration();
 		config.setRmiHost("lofar17");
-		config.setRmiPort(10500);
+		config.setRmiPort(10399);
 		config.setTemplateId(5001);
 		OTDBRepository repository = new OTDBRepository(config);
 		repository.store(lofarObservation);

@@ -9,6 +9,7 @@ import nl.astron.lofar.odtb.mom2otdbadapter.config.Configuration;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.LofarObservation;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.Repository;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.RepositoryException;
+import nl.astron.lofar.odtb.mom2otdbadapter.util.AbstractThread;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,12 +20,9 @@ import org.apache.commons.logging.LogFactory;
  * @author Bastiaan Verhoef
  * 
  */
-public class OTDBListener extends Thread {
-	private static final int MILLISECONDS = 1000;
+public class OTDBListener extends AbstractThread {
 
 	private Log log = LogFactory.getLog(this.getClass());
-
-	private int milliseconds = 1000;
 
 	private Configuration configuration;
 
@@ -44,7 +42,7 @@ public class OTDBListener extends Thread {
 	 *            OTDBRepository where this listener retrieves the changes
 	 */
 	public OTDBListener(Queue queue, Configuration configuration, Repository repository) {
-		this.milliseconds = configuration.getRepository().getInterval() * MILLISECONDS;
+		super(configuration.getRepository().getInterval());
 		this.configuration = configuration;
 		this.queue = queue;
 		this.repository = repository;
@@ -53,47 +51,38 @@ public class OTDBListener extends Thread {
 
 	/**
 	 * Starts the OTDBListener and retrieves changes with an interval
+	 * @throws RepositoryException 
+	 * @throws IOException 
+	 * @throws ParserConfigurationException 
 	 */
-	public void run() {
-
-		while (true) {
-			try {
-
-				log.debug("Add new tasks");
-				/*
-				 * get time period of this retrieval
-				 */
-				TimePeriod timePeriod = queue.getTimePeriod();
-				/*
-				 * look for new changes in this time period
-				 */
-				List<LofarObservation> lofarObservations = repository.getLatestChanges(timePeriod.getStartTime(),
-						timePeriod.getEndTime());
-				/*
-				 * convert retrieved observations to tasks and add the tasks to
-				 * the queue
-				 */
-				for (LofarObservation observation : lofarObservations) {
-					Task task = convertToTask(observation);
-					if (task != null) {
-						queue.add(task);
-					}
-				}
-				/*
-				 * save the time period of this retrieval
-				 */
-				queue.saveTimePeriod();
-				log.debug("Going to sleep: " + (milliseconds / MILLISECONDS));
-				/*
-				 * sleep a given milliseconds
-				 */
-				Thread.sleep(milliseconds);
-			} catch (InterruptedException e) {
-			} catch (RepositoryException e) {
-				log.fatal("Problem occurred with OTDB: " + e.getMessage(), e);
-			} catch (Exception e) {
-				log.fatal("Fatal exception occurred: " + e.getMessage(), e);
+	public void doRun() throws RepositoryException, IOException, ParserConfigurationException {
+		if (log.isDebugEnabled()) {
+			log.debug("Looking for new tasks");
+		}
+		/*
+		 * get time period of this retrieval
+		 */
+		TimePeriod timePeriod = queue.getTimePeriod();
+		/*
+		 * look for new changes in this time period
+		 */
+		List<LofarObservation> lofarObservations = repository.getLatestChanges(timePeriod.getStartTime(), timePeriod
+				.getEndTime());
+		/*
+		 * convert retrieved observations to tasks and add the tasks to the
+		 * queue
+		 */
+		for (LofarObservation observation : lofarObservations) {
+			Task task = convertToTask(observation);
+			if (task != null) {
+				queue.add(task);
 			}
+		}
+		if (lofarObservations.size() > 0) {
+			/*
+			 * save the time period of this retrieval
+			 */
+			queue.saveTimePeriod(lofarObservations.get(lofarObservations.size() - 1).getTimeStamp());
 		}
 
 	}
@@ -103,8 +92,8 @@ public class OTDBListener extends Thread {
 	 * 
 	 * @param lofarObservation
 	 * @return Task
-	 * @throws ParserConfigurationException 
-	 * @throws IOException 
+	 * @throws ParserConfigurationException
+	 * @throws IOException
 	 */
 	protected Task convertToTask(LofarObservation lofarObservation) throws IOException, ParserConfigurationException {
 		Task task = new Task();
@@ -114,4 +103,5 @@ public class OTDBListener extends Thread {
 		task.setTime(lofarObservation.getTimeStamp());
 		return task;
 	}
+
 }

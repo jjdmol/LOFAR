@@ -26,8 +26,6 @@ import org.w3c.dom.Element;
  */
 public class XMLGenerator {
 
-
-
 	private static final String STATION_NAME = "name";
 
 	private static final String MOM2_LOFAR_PREFIX = "lofar";
@@ -98,7 +96,8 @@ public class XMLGenerator {
 		xmlBuilder.addTextElement(clockElement, "samplesPerSecond", observation.getSamplesPerSecond());
 		xmlBuilder.addFrequencyElement(clockElement, "subbandWidth", observation.getSubbandWidth());
 		xmlBuilder.addFrequencyElement(clockElement, "systemClock", observation.getClockFrequency());
-		xmlBuilder.addTextElement(observationAttributes, XMLConstants.INTEGRATION_INTERVAL, observation.getIntegrationInterval());
+		xmlBuilder.addTextElement(observationAttributes, XMLConstants.INTEGRATION_INTERVAL, observation
+				.getIntegrationInterval());
 		xmlBuilder.addTextElement(observationAttributes, "channelsPerSubband", observation.getChannelsPerSubband());
 		xmlBuilder.addTextElement(observationAttributes, XMLConstants.INSTRUMENT_FILTER, Mom2OtdbConverter
 				.getMom2InstrumentFilter(observation.getBandFilter()));
@@ -118,9 +117,11 @@ public class XMLGenerator {
 	}
 
 	private static void addChildren(XMLBuilder xmlBuilder, Element observationElement, LofarObservation observation) {
-		Element childrenElement = xmlBuilder.addElement(observationElement, XMLConstants.CHILDREN);
-		for (int index = 0; index < observation.getBeams().size(); index++) {
-			addMeasurement(xmlBuilder, childrenElement, observation.getBeams().get(index), index);
+		if (observation.getBeams().size() > 0) {
+			Element childrenElement = xmlBuilder.addElement(observationElement, XMLConstants.CHILDREN);
+			for (int index = 0; index < observation.getBeams().size(); index++) {
+				addMeasurement(xmlBuilder, childrenElement, observation.getBeams().get(index), index);
+			}
 		}
 
 	}
@@ -141,7 +142,8 @@ public class XMLGenerator {
 			if (beam.getSubbands().size() > 0) {
 				Element resultDataProducts = xmlBuilder.addElement(measurementElement, "resultDataProducts");
 				for (int i = 0; i < beam.getSubbands().size(); i++) {
-					Element uvDataProduct = xmlBuilder.addIndexedElement(resultDataProducts, XMLConstants.MOM2_LOFAR_NAMESPACE, "uvDataProduct");
+					Element uvDataProduct = xmlBuilder.addIndexedElement(resultDataProducts,
+							XMLConstants.MOM2_LOFAR_NAMESPACE, "uvDataProduct");
 
 					xmlBuilder.addTextElement(uvDataProduct, "name", fileMask.replaceAll("\\$\\{SUBBAND\\}", i + ""));
 					xmlBuilder.addTextElement(uvDataProduct, "fileFormat", Mom2OtdbConverter

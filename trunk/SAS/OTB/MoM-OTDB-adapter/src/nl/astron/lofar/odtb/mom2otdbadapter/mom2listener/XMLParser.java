@@ -55,18 +55,17 @@ public class XMLParser {
 			if (elementsMap.containsKey(XMLConstants.CURRENT_STATUS)) {
 				parseCurrentStatus(elementsMap.get(XMLConstants.CURRENT_STATUS), lofarObservation);
 			}
-			if (lofarObservation.getStatus().equals(Mom2OtdbConverter.OTDB_BEING_SPECIFIED_STATUS)) {
-				if (elementsMap.containsKey(XMLConstants.OBSERVATION_ATTRIBUTES)) {
-					parseObservationAttributes(elementsMap.get(XMLConstants.OBSERVATION_ATTRIBUTES), lofarObservation);
-				}
-				if (elementsMap.containsKey(XMLConstants.CHILDREN)) {
-					parseChildren(elementsMap.get(XMLConstants.CHILDREN), lofarObservation);
-				}
-			}
 
+			if (elementsMap.containsKey(XMLConstants.OBSERVATION_ATTRIBUTES)) {
+				parseObservationAttributes(elementsMap.get(XMLConstants.OBSERVATION_ATTRIBUTES), lofarObservation);
+			}
+			if (elementsMap.containsKey(XMLConstants.CHILDREN)) {
+				parseChildren(elementsMap.get(XMLConstants.CHILDREN), lofarObservation);
+			}
 		}
+
 		int offSet = 0;
-		for (Beam beam: lofarObservation.getBeams()){
+		for (Beam beam : lofarObservation.getBeams()) {
 			beam.getAngleTimes().add(offSet);
 			offSet += beam.getDurations().get(0);
 		}
@@ -83,49 +82,58 @@ public class XMLParser {
 	 *            LofarObservation that must be filled
 	 */
 	private static void parseObservationAttributes(Element element, LofarObservation lofarObservation) {
-		NodeList specificationList = element.getElementsByTagName(XMLConstants.SPECIFICATION);
-		if (specificationList.getLength() > 0) {
-			Element specification = (Element) specificationList.item(0);
-			Map<String, Element> elements = getElementMap(specification.getChildNodes());
-			if (elements.containsKey(XMLConstants.ANTENNA)) {
-				String antenna = getValue(elements.get(XMLConstants.ANTENNA));
-				lofarObservation.setAntennaArray(Mom2OtdbConverter.getOTDBAntennaArray(antenna));
-				lofarObservation.setAntennaSet(Mom2OtdbConverter.getOTDBAntennaSet(antenna));
-			}
-			if (elements.containsKey(XMLConstants.CLOCK)) {
-				lofarObservation.setClockMode(Mom2OtdbConverter.getOTDBClockMode(getMHzFrequency(elements.get(XMLConstants.CLOCK))));
-			}
-			if (elements.containsKey(XMLConstants.INTEGRATION_INTERVAL)) {
-				lofarObservation.setIntegrationInterval(AstronConverter.toDouble(getValue(elements
-						.get(XMLConstants.INTEGRATION_INTERVAL))));
-			}
-			if (elements.containsKey(XMLConstants.INSTRUMENT_FILTER)) {
-				lofarObservation.setBandFilter(Mom2OtdbConverter.getOTDBBandFilter(getValue(elements
-						.get(XMLConstants.INSTRUMENT_FILTER)), lofarObservation.getAntennaArray()));
-			}
-			if (elements.containsKey(XMLConstants.STATION_SET)) {
-				lofarObservation.setStationSet(getValue(elements.get(XMLConstants.STATION_SET)));
-			}
-			if (elements.containsKey(XMLConstants.STATIONS)) {
-				String[] stations = getValue(elements.get(XMLConstants.STATIONS)).split(",");
-				for(String station: stations){
-					lofarObservation.getStations().add(station);
-				}
-			}
+		Map<String, Element> elementsMap = getElementMap(element.getChildNodes());
+		if (elementsMap.containsKey(XMLConstants.OBSERVATION_ID)) {
+			lofarObservation.setObservationId(AstronConverter.toInteger(getValue(elementsMap
+					.get(XMLConstants.OBSERVATION_ID))));
+		}
+		if (lofarObservation.getStatus().equals(Mom2OtdbConverter.OTDB_BEING_SPECIFIED_STATUS)) {
+			NodeList specificationList = element.getElementsByTagName(XMLConstants.SPECIFICATION);
+			if (specificationList.getLength() > 0) {
+				Element specification = (Element) specificationList.item(0);
+				Map<String, Element> elements = getElementMap(specification.getChildNodes());
 
+				if (elements.containsKey(XMLConstants.ANTENNA)) {
+					String antenna = getValue(elements.get(XMLConstants.ANTENNA));
+					lofarObservation.setAntennaArray(Mom2OtdbConverter.getOTDBAntennaArray(antenna));
+					lofarObservation.setAntennaSet(Mom2OtdbConverter.getOTDBAntennaSet(antenna));
+				}
+				if (elements.containsKey(XMLConstants.CLOCK)) {
+					lofarObservation.setClockMode(Mom2OtdbConverter.getOTDBClockMode(getMHzFrequency(elements
+							.get(XMLConstants.CLOCK))));
+				}
+				if (elements.containsKey(XMLConstants.INTEGRATION_INTERVAL)) {
+					lofarObservation.setIntegrationInterval(AstronConverter.toDouble(getValue(elements
+							.get(XMLConstants.INTEGRATION_INTERVAL))));
+				}
+				if (elements.containsKey(XMLConstants.INSTRUMENT_FILTER)) {
+					lofarObservation.setBandFilter(Mom2OtdbConverter.getOTDBBandFilter(getValue(elements
+							.get(XMLConstants.INSTRUMENT_FILTER)), lofarObservation.getAntennaArray()));
+				}
+				if (elements.containsKey(XMLConstants.STATION_SET)) {
+					lofarObservation.setStationSet(getValue(elements.get(XMLConstants.STATION_SET)));
+				}
+				if (elements.containsKey(XMLConstants.STATIONS)) {
+					String[] stations = getValue(elements.get(XMLConstants.STATIONS)).split(",");
+					for (String station : stations) {
+						lofarObservation.getStations().add(station);
+					}
+				}
+
+			}
 		}
 
 	}
-	
-	private static Double getMHzFrequency(Element frequencyElement){
+
+	private static Double getMHzFrequency(Element frequencyElement) {
 		Frequency frequency = new Frequency();
 		Double result = null;
-		if (frequencyElement != null){
+		if (frequencyElement != null) {
 			frequency.setFrequency(AstronConverter.toDouble(getValue(frequencyElement)));
-			frequency.setUnit(getAttribute(frequencyElement.getAttributes() , XMLBuilder.UNITS));
-			if (!frequency.getUnit().equals(Unit.MHZ)){
+			frequency.setUnit(getAttribute(frequencyElement.getAttributes(), XMLBuilder.UNITS));
+			if (!frequency.getUnit().equals(Unit.MHZ)) {
 				result = AstronConverter.getFrequencyFromFrequencyWithUnit(frequency);
-			}else {
+			} else {
 				result = frequency.getFrequency();
 			}
 		}
@@ -164,15 +172,17 @@ public class XMLParser {
 	 *            LofarObservation that must be filled
 	 */
 	private static void parseChildren(Node node, LofarObservation lofarObservation) {
-		for (int i = 0; i < node.getChildNodes().getLength(); i++) {
-			Node nodeChild = node.getChildNodes().item(i);
-			/*
-			 * if child is an element
-			 */
-			if (isElement(nodeChild)) {
+		if (lofarObservation.getStatus().equals(Mom2OtdbConverter.OTDB_BEING_SPECIFIED_STATUS)) {
+			for (int i = 0; i < node.getChildNodes().getLength(); i++) {
+				Node nodeChild = node.getChildNodes().item(i);
+				/*
+				 * if child is an element
+				 */
+				if (isElement(nodeChild)) {
 
-				if (equalIgnorePrefix(nodeChild, XMLConstants.ITEM)) {
-					parseItem(nodeChild, lofarObservation);
+					if (equalIgnorePrefix(nodeChild, XMLConstants.ITEM)) {
+						parseItem(nodeChild, lofarObservation);
+					}
 				}
 			}
 		}
@@ -256,8 +266,8 @@ public class XMLParser {
 				beam.setEquinox(getValue(elements.get(XMLConstants.EQUINOX)));
 			}
 			if (elements.containsKey(XMLConstants.DURATION)) {
-				beam.getDurations().add(AstronConverter.convertXMLDurationToSeconds(getValue(elements
-						.get(XMLConstants.DURATION))));
+				beam.getDurations().add(
+						AstronConverter.convertXMLDurationToSeconds(getValue(elements.get(XMLConstants.DURATION))));
 			}
 			if (elements.containsKey(XMLConstants.SUBBANDS_SPECIFICATION)) {
 				Element subbandsSpecificationsElement = elements.get(XMLConstants.SUBBANDS_SPECIFICATION);
@@ -265,10 +275,11 @@ public class XMLParser {
 						.getChildNodes());
 				if (subbandsSpecificationsElements.containsKey(XMLConstants.SUBBANDS)) {
 					String[] subbands = getValue(subbandsSpecificationsElements.get(XMLConstants.SUBBANDS)).split(",");
-					for(String subband: subbands){
+					for (String subband : subbands) {
 						beam.getSubbands().add(AstronConverter.toInteger(subband));
 						beam.getBeamlets().add(beam.getParentObservation().getBeamletNumber());
-						beam.getParentObservation().setBeamletNumber(beam.getParentObservation().getBeamletNumber()+1);
+						beam.getParentObservation()
+								.setBeamletNumber(beam.getParentObservation().getBeamletNumber() + 1);
 					}
 
 				}
@@ -307,13 +318,9 @@ public class XMLParser {
 		String value = null;
 		if (node.getFirstChild() != null) {
 			value = node.getFirstChild().getNodeValue();
-			if (log.isDebugEnabled()) {
-				log.debug("Node: " + node.getNodeName() + " value: " + value);
-			}
 		}
 		return value;
 	}
-
 
 	/**
 	 * Compares if a node has the given name, ignoring the prefix of the node
@@ -369,9 +376,6 @@ public class XMLParser {
 
 	private static boolean isElement(Node node) {
 		if (AstronValidator.implementsInterface(Element.class, node.getClass())) {
-			if (log.isDebugEnabled()) {
-				log.debug("<" + node.getNodeName() + ">");
-			}
 			return true;
 		} else {
 			return false;

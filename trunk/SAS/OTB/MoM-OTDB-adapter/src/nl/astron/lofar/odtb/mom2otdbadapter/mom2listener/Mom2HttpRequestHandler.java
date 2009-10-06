@@ -50,11 +50,9 @@ public class Mom2HttpRequestHandler implements HttpRequestHandler {
 				}
 			} catch (ParseException e) {
 				response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
-				response.setReasonPhrase(e.getMessage());
 				log.error("Problem with parsing http request: " + e.getMessage(), e);
 			} catch (IOException e) {
 				response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
-				response.setReasonPhrase(e.getMessage());
 				log.error("Problem with reading http request: " + e.getMessage(), e);
 			}
 			if (content != null){
@@ -64,7 +62,6 @@ public class Mom2HttpRequestHandler implements HttpRequestHandler {
 					document = XMLConverter.convertXMLToDocument(inputSource);
 				} catch (Exception e) {
 					response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
-					response.setReasonPhrase(e.getMessage());
 					log.error("Problem with parsing xml content: " + e.getMessage(), e);
 				}		
 				LofarObservation lofarObservation = XMLParser.getLofarObservation(document);
@@ -74,7 +71,6 @@ public class Mom2HttpRequestHandler implements HttpRequestHandler {
 					requestHandledSuccessfull = true;
 				} catch (RepositoryException e) {
 					response.setStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-					response.setReasonPhrase(e.getMessage());
 					log.fatal("Problem occurred with OTDB: " + e.getMessage(), e);
 				}
 				response.setStatusCode(HttpStatus.SC_OK);
@@ -82,7 +78,6 @@ public class Mom2HttpRequestHandler implements HttpRequestHandler {
 
 		} else {
 			response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
-			response.setReasonPhrase("Content-Type must be 'text/xml'");
 			log.error("Request with invalid content, Content-Type must be 'text/xml'");
 
 		}

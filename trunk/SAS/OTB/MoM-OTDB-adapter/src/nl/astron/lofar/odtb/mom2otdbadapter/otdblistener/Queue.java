@@ -20,8 +20,9 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Queue of tasks
+ * 
  * @author Bastiaan Verhoef
- *
+ * 
  */
 public class Queue {
 	private Log log = LogFactory.getLog(this.getClass());
@@ -34,16 +35,18 @@ public class Queue {
 
 	private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
-	//private static final String OTDB_TIME_FORMAT = "yyyy-MMM-dd HH:mm:ss";
+	// private static final String OTDB_TIME_FORMAT = "yyyy-MMM-dd HH:mm:ss";
 
 	private Date startTime = null;
 
-	private Date endTime = null;
+	// private Date endTime = null;
 
-	private boolean isTaskLocked = false;
+	// private boolean isTaskLocked = false;
 
 	/**
-	 * Constructor that looks for tasks (*.xml) in the ./tasks directory and load them. 
+	 * Constructor that looks for tasks (*.xml) in the ./tasks directory and
+	 * load them.
+	 * 
 	 * @throws IOException
 	 */
 	public Queue() throws IOException {
@@ -61,8 +64,7 @@ public class Queue {
 			String[] files = dir.list(new TasksFilter());
 			for (int i = 0; i < files.length; i++) {
 				Task task = new Task();
-				String fileName = taskDir + File.separator
-				+ files[i];
+				String fileName = taskDir + File.separator + files[i];
 				String xml = getFile(fileName);
 				task.setXml(xml);
 				task.setFileName(fileName);
@@ -72,57 +74,64 @@ public class Queue {
 	}
 
 	/**
-	 * Retrieve a task, if there are tasks, if there are no tasks, wait until a task is in the queue
+	 * Retrieve a task, if there are tasks, if there are no tasks, wait until a
+	 * task is in the queue
+	 * 
 	 * @return Task
 	 */
 	public synchronized Task get() {
-		while (tasks.size() == 0 || isTaskLocked) {
+		while (tasks.size() == 0) {
 			log.info("No task available...");
 			try {
 				wait();
 			} catch (InterruptedException e) {
 			}
 		}
-		isTaskLocked = true;
-		Task task =  tasks.get(0);
-		if (log.isDebugEnabled()){
+		Task task = null;
+		synchronized (tasks) {
+			task = tasks.get(0);
+		}
+		if (log.isDebugEnabled()) {
 			log.debug("Get task (mom2Id: " + task.getMom2Id() + ") ....Number of tasks:" + tasks.size());
 		}
-		notifyAll();
 		return task;
 	}
 
 	/**
 	 * Remove a task
-	 * @param task task to be removed
+	 * 
+	 * @param task
+	 *            task to be removed
 	 */
 	public synchronized void remove(Task task) {
-		File file = new File(task.getFileName());
-		if (!file.delete()) {
-			log.error("Can not delete file:" + task.getFileName());
+		synchronized (tasks) {
+			File file = new File(task.getFileName());
+			if (!file.delete()) {
+				log.error("Can not delete file:" + task.getFileName());
+			}
+			log.info("Remove task( mom2Id: " + task.getMom2Id() + ") Number of tasks:" + tasks.size());
+			tasks.remove(0);
 		}
-		log.info("Remove task( mom2Id: " + task.getMom2Id() + ") Number of tasks:"
-				+ tasks.size());
-		tasks.remove(0);
-		isTaskLocked = false;
-		notifyAll();
 	}
-	
+
 	/**
-	 * If a task can not be executed, move it to the end of the tasks list, so other tasks can be executed.
-	 * @param task task to be moved to the end of the tasks list.
+	 * If a task can not be executed, move it to the end of the tasks list, so
+	 * other tasks can be executed.
+	 * 
+	 * @param task
+	 *            task to be moved to the end of the tasks list.
 	 */
 	public synchronized void moveToEndOfTaskList(Task task) {
-		log.info("Can not execute task(" + task.getMom2Id() + ") Number of tasks:"
-				+ tasks.size());
-		tasks.remove(0);
-		tasks.add(task);
-		isTaskLocked = false;
-		notifyAll();
+		log.info("Can not execute task(" + task.getMom2Id() + ") Number of tasks:" + tasks.size());
+		synchronized (tasks) {
+			tasks.remove(0);
+			tasks.add(task);
+		}
 	}
 
 	/**
 	 * Retrieves the new time period, from the last time period to now
+	 * 
 	 * @return Time period
 	 * @throws IOException
 	 */
@@ -134,6 +143,7 @@ public class Queue {
 			String[] time = content.split(",");
 			// long newStartTime = new Long().longValue();
 			startTime = AstronConverter.toDate(time[1], DATE_TIME_FORMAT);
+			startTime.setSeconds(startTime.getSeconds() + 1);
 			// startTime.setTime(newStartTime);
 
 		} else {
@@ -141,7 +151,7 @@ public class Queue {
 			startTime.setTime(0);
 
 		}
-		endTime = new Date();
+		Date endTime = new Date();
 		// endTime.setHours(endTime.getHours()+1);
 		TimePeriod time = new TimePeriod();
 		time.setStartTime(startTime);
@@ -151,14 +161,14 @@ public class Queue {
 	}
 
 	/**
-	 * Save the time period 
+	 * Save the time period
+	 * 
 	 * @throws IOException
 	 */
-	public synchronized void saveTimePeriod() throws IOException {
+	public synchronized void saveTimePeriod(Date endDate) throws IOException {
 		String fileName = taskDir + File.separator + "last_time_period.txt";
-		String content = AstronConverter
-				.toDateString(startTime, DATE_TIME_FORMAT)
-				+ "," + AstronConverter.toDateString(endTime, DATE_TIME_FORMAT);
+		String content = AstronConverter.toDateString(startTime, DATE_TIME_FORMAT) + ","
+				+ AstronConverter.toDateString(endDate, DATE_TIME_FORMAT);
 		File file = new File(fileName);
 		if (!file.exists()) {
 			file.createNewFile();
@@ -172,19 +182,25 @@ public class Queue {
 
 	/**
 	 * Add the task to the task list and store it as a xml file
-	 * @param task Task to be stored
+	 * 
+	 * @param task
+	 *            Task to be stored
 	 * @throws IOException
 	 */
 	public synchronized void add(Task task) throws IOException {
-		tasks.add(task);
-		log.info("Add task (mom2Id: " + task.getMom2Id() + ") Number of tasks:" + tasks.size());
-		storeTask(task);
+		synchronized (tasks) {
+			tasks.add(task);
+			log.info("Add task (mom2Id: " + task.getMom2Id() + ") Number of tasks:" + tasks.size());
+			storeTask(task);
+		}
 		notifyAll();
 	}
 
 	/**
 	 * Retrieve file by file name
-	 * @param fileName name of the file to be read
+	 * 
+	 * @param fileName
+	 *            name of the file to be read
 	 * @return file as string
 	 * @throws IOException
 	 */
@@ -192,8 +208,7 @@ public class Queue {
 		File file = new File(fileName);
 		if (file.exists()) {
 			FileInputStream fileInputStream = new FileInputStream(file);
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					fileInputStream));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(fileInputStream));
 			String line = null;
 			StringBuffer stringBuffer = new StringBuffer();
 			while ((line = reader.readLine()) != null) {
@@ -209,15 +224,16 @@ public class Queue {
 
 	/**
 	 * Store a task
-	 * @param task task to be stored
+	 * 
+	 * @param task
+	 *            task to be stored
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	protected void storeTask(Task task) throws FileNotFoundException,
-			IOException {
+	protected void storeTask(Task task) throws FileNotFoundException, IOException {
 		String fileName = taskDir + File.separator
-				+ AstronConverter.toDateString(task.getTime(), FILE_DATE_TIME_FORMAT)
-				+ "mom2id_" + task.getMom2Id() + ".xml";
+				+ AstronConverter.toDateString(task.getTime(), FILE_DATE_TIME_FORMAT) + "mom2id_" + task.getMom2Id()
+				+ ".xml";
 		task.setFileName(fileName);
 		File file = new File(fileName);
 		if (!file.exists()) {
@@ -232,8 +248,9 @@ public class Queue {
 
 	/**
 	 * Filters task files
+	 * 
 	 * @author Bastiaan Verhoef
-	 *
+	 * 
 	 */
 	class TasksFilter implements FilenameFilter {
 		/**
