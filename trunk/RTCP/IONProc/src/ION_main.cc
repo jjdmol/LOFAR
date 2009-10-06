@@ -131,8 +131,6 @@ static std::vector<Stream *> allCNstreams;
 static const unsigned	     nrCNcoresInPset = 64; // TODO: how to figure out the number of CN cores?
 static pthread_mutex_t	     allocationMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t	     reevaluate	     = PTHREAD_COND_INITIALIZER;
-class JobParent;
-static std::vector<JobParent *> jobs;
 
 
 #if defined HAVE_FCNP && defined __PPC__
@@ -259,41 +257,21 @@ static void unmapFlatMemory()
 #endif
 
 
-class JobParent // untemplated superclass of Job<SAMPLE_TYPE>
-{
-  public:
-	    JobParent(const Parset *);
-    virtual ~JobParent();
-
-    const Parset *itsParset;
-};
-
-
-JobParent::JobParent(const Parset *parset)
-:
-  itsParset(parset)
-{
-}
-
-
-JobParent::~JobParent()
-{
-}
-
-
-template <typename SAMPLE_TYPE> class Job : public JobParent
+class Job
 {
   public:
     Job(const Parset *);
-    virtual ~Job();
+    ~Job();
+
+    const Parset *const itsParset;
 
   private:
     void	createCNstreams();
     void	configureCNs(), unconfigureCNs();
 
-    void	jobThread();
-    void	toCNthread();
-    void	fromCNthread();
+    void				 jobThread();
+    template <typename SAMPLE_TYPE> void toCNthread();
+    void				 fromCNthread();
 
     void	allocateResources();
     void	deallocateResources();
@@ -307,20 +285,22 @@ template <typename SAMPLE_TYPE> class Job : public JobParent
     bool				itsHasInputSection, itsHasOutputSection;
     unsigned				itsObservationID;
 
-    static InputSection<SAMPLE_TYPE>	*theInputSection;
+    static void				*theInputSection;
     static Mutex			theInputSectionMutex;
     static unsigned			theInputSectionRefCount;
 };
 
 
-template <typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE> *Job<SAMPLE_TYPE>::theInputSection;
-template <typename SAMPLE_TYPE> Mutex			   Job<SAMPLE_TYPE>::theInputSectionMutex;
-template <typename SAMPLE_TYPE> unsigned		   Job<SAMPLE_TYPE>::theInputSectionRefCount = 0;
+void			  *Job::theInputSection;
+Mutex			  Job::theInputSectionMutex;
+unsigned		  Job::theInputSectionRefCount = 0;
+
+static std::vector<Job *> jobs;
 
 
-template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::Job(const Parset *parset)
+Job::Job(const Parset *parset)
 :
-  JobParent(parset)
+  itsParset(parset)
 {
   itsObservationID = parset->observationID();
 
@@ -331,11 +311,11 @@ template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::Job(const Parset *parset)
   itsHasOutputSection = parset->outputPsetIndex(myPsetNumber) >= 0;
 
   if (itsHasInputSection || itsHasOutputSection)
-    itsJobThread = new Thread(this, &Job<SAMPLE_TYPE>::jobThread, 65536);
+    itsJobThread = new Thread(this, &Job::jobThread, 65536);
 }
 
 
-template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::~Job()
+Job::~Job()
 {
   if (itsHasInputSection || itsHasOutputSection)
     delete itsJobThread;
@@ -344,7 +324,7 @@ template <typename SAMPLE_TYPE> Job<SAMPLE_TYPE>::~Job()
 }
 
 
-template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::allocateResources()
+void Job::allocateResources()
 {
   createCNstreams();
 
@@ -354,7 +334,7 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::allocateResources()
   pthread_mutex_lock(&allocationMutex);
 
   // see if there is a resource conflict with any preceding job
-  for (std::vector<JobParent *>::iterator job = jobs.begin(); *job != this;)
+  for (std::vector<Job *>::iterator job = jobs.begin(); *job != this;)
     if ((*job)->itsParset->overlappingResources(itsParset)) {
       pthread_cond_wait(&reevaluate, &allocationMutex);
       job = jobs.begin();
@@ -367,14 +347,24 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::allocateResources()
   if (itsHasInputSection)
     attachToInputSection();
 
-  itsToCNthread = new Thread(this, &Job<SAMPLE_TYPE>::toCNthread, 65536);
+  switch (itsParset->nrBitsPerSample()) {
+    case  4 : itsToCNthread = new Thread(this, &Job::toCNthread<i4complex>, 65536);
+	      break;
+
+    case  8 : itsToCNthread = new Thread(this, &Job::toCNthread<i8complex>, 65536);
+	      break;
+
+    case 16 : itsToCNthread = new Thread(this, &Job::toCNthread<i16complex>, 65536);
+	      break;
+  }
+      
 
   if (itsHasOutputSection)
-    itsFromCNthread = new Thread(this, &Job<SAMPLE_TYPE>::fromCNthread, 65536);
+    itsFromCNthread = new Thread(this, &Job::fromCNthread, 65536);
 }
 
 
-template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::deallocateResources()
+void Job::deallocateResources()
 {
   delete itsToCNthread;
   LOG_DEBUG("lofar__fini: to_CN thread joined");
@@ -395,7 +385,7 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::deallocateResources()
 
 
 
-template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::jobThread()
+void Job::jobThread()
 {
   if (itsParset->realTime()) {
     // claim resources two seconds before observation start
@@ -416,7 +406,7 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::jobThread()
 }
 
 
-template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::createCNstreams()
+void Job::createCNstreams()
 {
   std::vector<unsigned> usedCoresInPset = itsParset->usedCoresInPset();
 
@@ -427,45 +417,55 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::createCNstreams()
 }
 
 
-template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::attachToInputSection()
+void Job::attachToInputSection()
 {
   theInputSectionMutex.lock();
-
-  // while (theInputSectionRefCount > 0 && !compatible(parset)
-  //   theInputSectionRetry.wait(theInputSectionMutex)
 
   if (theInputSectionRefCount ++ == 0)
-    theInputSection = new InputSection<SAMPLE_TYPE>(itsParset, myPsetNumber);
+    switch (itsParset->nrBitsPerSample()) {
+      case  4 : theInputSection = new InputSection<i4complex>(itsParset, myPsetNumber);
+		break;
+
+      case  8 : theInputSection = new InputSection<i8complex>(itsParset, myPsetNumber);
+		break;
+
+      case 16 : theInputSection = new InputSection<i16complex>(itsParset, myPsetNumber);
+		break;
+    }
 
   theInputSectionMutex.unlock();
 }
 
 
-template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::detachFromInputSection()
+void Job::detachFromInputSection()
 {
   theInputSectionMutex.lock();
 
-  if (-- theInputSectionRefCount == 0) {
-    delete theInputSection;
-    //theInputSectionRetry.broadcast();
-  }
+  if (-- theInputSectionRefCount == 0)
+    switch (itsParset->nrBitsPerSample()) {
+      case  4 : delete static_cast<InputSection<i4complex> *>(theInputSection);
+		break;
+
+      case  8 : delete static_cast<InputSection<i8complex> *>(theInputSection);
+		break;
+
+      case 16 : delete static_cast<InputSection<i16complex> *>(theInputSection);
+		break;
+    }
 
   theInputSectionMutex.unlock();
 }
 
 
-template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::configureCNs()
+void Job::configureCNs()
 {
   CN_Command	   command(CN_Command::PREPROCESS);
   CN_Configuration configuration(*itsParset);
-  LOG_DEBUG_STR("ION thinks that there are " << configuration.nrPencilBeams() << " pencil beams");
   
   LOG_DEBUG_STR("configuring cores " << itsParset->usedCoresInPset() << " ...");
 
   for (unsigned core = 0; core < itsCNstreams.size(); core ++) {
-    LOG_DEBUG_STR("sending message 1 to core " << core << " ...");
     command.write(itsCNstreams[core]);
-    LOG_DEBUG_STR("sending message 2 to core " << core << " ...");
     configuration.write(itsCNstreams[core]);
   }
   
@@ -473,7 +473,7 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::configureCNs()
 }
 
 
-template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::unconfigureCNs()
+void Job::unconfigureCNs()
 {
   CN_Command command(CN_Command::POSTPROCESS);
 
@@ -486,13 +486,13 @@ template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::unconfigureCNs()
 }
 
 
-template<typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::toCNthread()
+template <typename SAMPLE_TYPE> void Job::toCNthread()
 {
   LOG_DEBUG("starting to_CN thread");
   configureCNs();
 
   std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
-  BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsCNstreams, itsHasInputSection ? theInputSection->itsBeamletBuffers : noInputs, myPsetNumber);
+  BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsCNstreams, itsHasInputSection ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
 
   beamletBufferToComputeNode.preprocess(itsParset);
 	
@@ -506,7 +506,7 @@ template<typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::toCNthread()
 }
 
 
-template <typename SAMPLE_TYPE> void Job<SAMPLE_TYPE>::fromCNthread()
+void Job::fromCNthread()
 {
   LOG_DEBUG("starting from_CN thread");
   OutputSection outputSection(myPsetNumber, itsCNstreams);
@@ -583,28 +583,12 @@ void master_thread(int argc, char **argv)
 
       checkParset(parset);
 
-      JobParent *job;
-
       LOG_DEBUG("creating new Job");
-
-      switch (parset->nrBitsPerSample()) {
-	case  4 : job = new Job<i4complex>(parset); // parset deleted by ~Job()
-		  break;
-
-	case  8 : job = new Job<i8complex>(parset);
-		  break;
-
-	case 16 : job = new Job<i16complex>(parset);
-		  break;
-
-	default : delete parset;
-		  THROW(IONProcException, "unsupported number of bits per sample");
-      }
-
+      Job *job = new Job(parset); // parset deleted by ~Job()
       LOG_DEBUG("creating new Job done");
 
       // insert into sorted jobs list
-      std::vector<JobParent *>::iterator prev = jobs.begin();
+      std::vector<Job *>::iterator prev = jobs.begin();
 
       while (prev != jobs.end() && (*prev)->itsParset->precedes(job->itsParset))
 	++ prev;
