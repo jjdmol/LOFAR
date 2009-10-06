@@ -6,7 +6,7 @@ Images.ra = 230.35
 Images.dec = -10.345
 Images.directionType = J2000
 
-Solver.type = Dirty
+Solver.type = dirty
 Solver.algorithm = MultiScale
 Solver.niter = 10
 Solver.gain = 1.0

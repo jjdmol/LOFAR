@@ -60,6 +60,7 @@ echo "<<<"
 # Wait for the subprocesses to finish.
 # Remove disturbing log4cxx lines
 sleep 5
-##grep -v 'log4cxx:' tmwimager_tmp.log-0
-##grep -v 'log4cxx:' tmwimager_tmp.log-1
-##grep -v 'log4cxx:' tmwimager_tmp.log-2
+echo ""
+cat tmwimager_tmp.log-0
+cat tmwimager_tmp.log-1
+cat tmwimager_tmp.log-2
