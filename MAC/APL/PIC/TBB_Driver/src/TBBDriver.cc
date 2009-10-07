@@ -298,20 +298,6 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 					continue;
 				}
 
-				if (TS->getBoardState(board) == clearBoard) {
-
-					TPClearEvent clear;
-					clear.opcode = oc_CLEAR;
-					clear.status = 0;
-					itsBoard[board].send(clear);
-					itsBoard[board].setTimer(TS->timeout());
-					LOG_INFO_STR("CLEAR BOARD is send to port '" << itsBoard[board].getName() << "'");
-					TS->setSetupWaitTime(board, 10);
-					TS->setSetupCmdDone(board, false);
-					setupDone = false;
-					continue;
-				}
-
 				if ((TS->getBoardState(board) == enableWatchdog) ||
 					 (TS->getBoardState(board) == boardCleared) ||
 					 (TS->getBoardState(board) == image1Set)) {
@@ -467,14 +453,6 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 			TS->setBoardState(board, image1Set);
 			TS->setImageNr(board, 1);
 			TS->setSetupWaitTime(board, 15);
-			TS->setSetupCmdDone(board, true);
-		} break;
-
-		case TP_CLEAR_ACK: {
-			int board = TS->port2Board(&port); // get board nr
-			itsBoard[board].cancelAllTimers();
-			TS->setBoardState(board,boardCleared);
-			TS->setSetupWaitTime(board, 4);
 			TS->setSetupCmdDone(board, true);
 		} break;
 
@@ -944,7 +922,8 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 			// check only boards with the listed states
 			else if ((TS->getBoardState(nr) == noBoard) ||
 					 (TS->getBoardState(nr) == boardReady) ||
-					 (TS->getBoardState(nr) == boardError)) {
+					 (TS->getBoardState(nr) == boardError) ||
+					 (TS->getBoardState(nr) == boardCleared)) {
 				itsBoard[nr].send(tp_event);
 				sendmask |= (1 << nr);
 			}
