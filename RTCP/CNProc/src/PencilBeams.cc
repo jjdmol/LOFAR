@@ -83,7 +83,7 @@ class stationValidator
 
    bool operator ()(unsigned stationNr) const
    {
-     return samples->flags[stationNr].count() > upperBound;
+     return samples->flags[stationNr].count() <= upperBound;
    }
   private:
    const SampleData<> *samples;
