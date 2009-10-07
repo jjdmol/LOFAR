@@ -126,7 +126,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   if (itsDumpRawData && itsNrInputs > 0) {
     LOG_DEBUG("Dumping raw beamformed data only, no further processing done");
 
-    vector<string> rawDataOutputs = ps->getStringVector("OLAP.OLAP_Conn.rawDataOutputs");
+    vector<string> rawDataOutputs = ps->getStringVector("OLAP.OLAP_Conn.rawDataOutputs",true);
     unsigned	   psetIndex	  = ps->inputPsetIndex(itsPsetNumber);
 
     if (psetIndex >= rawDataOutputs.size())

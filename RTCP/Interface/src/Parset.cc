@@ -134,7 +134,7 @@ void Parset::maintainBackwardCompatibility()
 
 vector<Parset::StationRSPpair> Parset::getStationNamesAndRSPboardNumbers(unsigned psetNumber) const
 {
-  vector<string> inputs = getStringVector(string("PIC.Core.IONProc.") + partitionName() + '[' + boost::lexical_cast<string>(psetNumber) + "].inputs");
+  vector<string> inputs = getStringVector(string("PIC.Core.IONProc.") + partitionName() + '[' + boost::lexical_cast<string>(psetNumber) + "].inputs",true);
   vector<StationRSPpair> stationsAndRSPs(inputs.size());
 
   for (unsigned i = 0; i < inputs.size(); i ++) {
@@ -153,7 +153,7 @@ vector<Parset::StationRSPpair> Parset::getStationNamesAndRSPboardNumbers(unsigne
 
 string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNumber) const
 {
-  return getStringVector(string("PIC.Core.Station.") + stationName + ".RSP.ports")[rspBoardNumber];
+  return getStringVector(string("PIC.Core.Station.") + stationName + ".RSP.ports",true)[rspBoardNumber];
 }
 
 
@@ -257,11 +257,11 @@ vector<double> Parset::positions() const
   unsigned nStations;
   
   if (nrTabStations() > 0) {
-    stNames = getStringVector("OLAP.tiedArrayStationNames");
+    stNames = getStringVector("OLAP.tiedArrayStationNames",true);
     nStations = nrTabStations();
   }
   else {
-    stNames = getStringVector("OLAP.storageStationNames");
+    stNames = getStringVector("OLAP.storageStationNames",true);
     nStations = nrStations();
   }
   
@@ -281,7 +281,7 @@ vector<double> Parset::positions() const
 vector<double> Parset::getRefPhaseCentres() const
 {
   vector<double> list;
-  vector<string> stNames = getStringVector("OLAP.storageStationNames");
+  vector<string> stNames = getStringVector("OLAP.storageStationNames",true);
   int index;
   
   index = stNames[0].find("_");
@@ -343,7 +343,7 @@ string Parset::getMSBaseDir() const
 
 vector<string> Parset::getPortsOf(const string& aKey) const
 {
-  return get(aKey + "_Ports").expand().getStringVector();
+  return getStringVector(aKey + "_Ports",true);
 }
 
 vector<double> Parset::getManualPencilBeam(const unsigned pencil) const
