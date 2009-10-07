@@ -31,8 +31,8 @@ include(LofarInit)
 project(AMCBase)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 2.0 DEPENDS Common Blob Transport)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 2.0 DEPENDS Common Blob Transport)
 
 ## ---------------------------------------------------------------------------
 ## External packages

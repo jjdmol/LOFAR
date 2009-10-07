@@ -31,32 +31,19 @@ include(LofarInit)
 project(LOFAR)
 include(LofarGeneral)
 
+include(LofarPackage)
+lofar_package(LOFAR)
+
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-lofar_add_subdirectory(LCS)
-lofar_add_subdirectory(CEP)
-lofar_add_subdirectory(RTCP)
-lofar_add_subdirectory(SAS)
-lofar_add_subdirectory(MAC)
+lofar_add_package(LCS)
+lofar_add_package(CEP)
+lofar_add_package(RTCP)
+lofar_add_package(SAS)
+lofar_add_package(MAC)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
-
-get_directory_property(def DEFINITIONS)
-message(STATUS "COMPILE_DEFINITIONS = ${def}")
-
-if(0)
-  get_cmake_property(cache_vars CACHE_VARIABLES)
-  message(STATUS "vvvvvvvv Cache variables vvvvvvvv")
-  foreach(var ${cache_vars})
-    message(STATUS "[cached] ${var} = ${${var}}")
-  endforeach(var ${cache_vars})
-  message(STATUS "^^^^^^^^ Cache variables ^^^^^^^^")
-  message(STATUS "vvvvvvvv Variables vvvvvvvv")
-  include(AllVariables)
-  all_variables()
-  message(STATUS "^^^^^^^^ Variables ^^^^^^^^")
-endif(0)

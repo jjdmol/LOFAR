@@ -31,8 +31,8 @@ include(LofarInit)
 project(BS_Protocol)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common AMCBase MACIO RTCCommon RSP_Protocol)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 6.0 DEPENDS Common AMCBase MACIO RTCCommon RSP_Protocol)
 
 ## ---------------------------------------------------------------------------
 ## External packages

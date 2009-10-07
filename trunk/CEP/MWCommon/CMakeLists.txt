@@ -31,8 +31,8 @@ include(LofarInit)
 project(MWCommon)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 0.1 DEPENDS Common Blob)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 0.1 DEPENDS Common Blob)
 
 ## ---------------------------------------------------------------------------
 ## External packages

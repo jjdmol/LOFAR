@@ -31,8 +31,8 @@ include(LofarInit)
 project(GCFPVSS)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common GCFTM)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common GCFTM)
 
 ## ---------------------------------------------------------------------------
 ## External packages

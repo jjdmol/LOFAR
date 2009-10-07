@@ -31,8 +31,8 @@ include(LofarInit)
 project(pytools NONE)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME})
+include(LofarPackage)
+lofar_package(${PROJECT_NAME})
 
 ## ---------------------------------------------------------------------------
 ## External packages

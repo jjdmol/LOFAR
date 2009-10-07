@@ -31,8 +31,8 @@ include(LofarInit)
 project(BBSKernel)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Blob Common ParmDB)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 1.0 DEPENDS Blob Common ParmDB)
 
 ## ---------------------------------------------------------------------------
 ## External packages

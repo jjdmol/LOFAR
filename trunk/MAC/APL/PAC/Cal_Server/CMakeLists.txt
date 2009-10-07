@@ -31,9 +31,9 @@ include(LofarInit)
 project(Cal_Server)
 include(LofarGeneral)
 
-include(LofarAddPackage)
+include(LofarPackage)
 # Do not split the following line, otherwise makeversion will fail!
-lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common AMCBase ApplCommon MACIO GCFTM TestSuite RTCCommon RSP_Protocol CAL_Protocol)
+lofar_package(${PROJECT_NAME} 6.0 DEPENDS Common AMCBase ApplCommon MACIO GCFTM TestSuite RTCCommon RSP_Protocol CAL_Protocol)
 
 ## ---------------------------------------------------------------------------
 ## External packages

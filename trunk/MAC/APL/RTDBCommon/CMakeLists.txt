@@ -31,9 +31,9 @@ include(LofarInit)
 project(RTDBCommon)
 include(LofarGeneral)
 
-include(LofarAddPackage)
+include(LofarPackage)
 # Do not split the following line, otherwise makeversion will fail!
-lofar_add_package(${PROJECT_NAME} 3.1 DEPENDS Common GCFPVSS GCFRTDB GCFTM MACIO)
+lofar_package(${PROJECT_NAME} 3.1 DEPENDS Common GCFPVSS GCFRTDB GCFTM MACIO)
 
 ## ---------------------------------------------------------------------------
 ## External packages

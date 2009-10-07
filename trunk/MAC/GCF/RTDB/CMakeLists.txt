@@ -31,8 +31,8 @@ include(LofarInit)
 project(GCFRTDB)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common GCFPVSS GCFTM MACIO)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common GCFPVSS GCFTM MACIO)
 
 ## ---------------------------------------------------------------------------
 ## External packages

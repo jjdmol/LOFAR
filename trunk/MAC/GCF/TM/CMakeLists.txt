@@ -31,8 +31,8 @@ include(LofarInit)
 project(GCFTM)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 6.1 DEPENDS Common MACIO)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 6.1 DEPENDS Common MACIO)
 
 ## ---------------------------------------------------------------------------
 ## External packages

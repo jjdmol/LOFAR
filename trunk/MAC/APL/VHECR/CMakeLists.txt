@@ -31,8 +31,8 @@ include(LofarInit)
 project(VHECR)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 3.1 DEPENDS Common )
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 3.1 DEPENDS Common )
 
 ## ---------------------------------------------------------------------------
 ## External packages

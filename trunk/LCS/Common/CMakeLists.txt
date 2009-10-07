@@ -31,8 +31,8 @@ include(LofarInit)
 project(Common)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 3.1)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 3.1)
 
 ## ---------------------------------------------------------------------------
 ## External packages

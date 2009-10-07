@@ -31,8 +31,8 @@ include(LofarInit)
 project(Transport)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 2.3 DEPENDS Blob)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 2.3 DEPENDS Blob)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

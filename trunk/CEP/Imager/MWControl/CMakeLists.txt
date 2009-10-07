@@ -31,9 +31,9 @@ include(LofarInit)
 project(MWControl)
 include(LofarGeneral)
 
-include(LofarAddPackage)
+include(LofarPackage)
 # Do not split the following line, otherwise makeversion will fail!
-lofar_add_package(${PROJECT_NAME} 0.1 DEPENDS Common Blob MWCommon ParmDB BBSKernel)
+lofar_package(${PROJECT_NAME} 0.1 DEPENDS Common Blob MWCommon ParmDB BBSKernel)
 
 ## ---------------------------------------------------------------------------
 ## External packages

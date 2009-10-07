@@ -33,4 +33,4 @@ project(Firmware NONE)
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-lofar_add_subdirectory(tools)
+lofar_add_package(Firmware-Tools tools)

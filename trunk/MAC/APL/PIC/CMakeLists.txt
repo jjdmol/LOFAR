@@ -34,10 +34,10 @@ include(LofarGeneral)
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-lofar_add_subdirectory(RSP_Protocol)
-lofar_add_subdirectory(TBB_Protocol)
-lofar_add_subdirectory(RSP_Driver)
-lofar_add_subdirectory(TBB_Driver)
+lofar_add_package(RSP_Protocol)
+lofar_add_package(TBB_Protocol)
+lofar_add_package(RSP_Driver)
+lofar_add_package(TBB_Driver)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

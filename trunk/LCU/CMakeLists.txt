@@ -33,5 +33,5 @@ project(LCU NONE)
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-lofar_add_subdirectory(Firmware)
-lofar_add_subdirectory(StationTest)
+lofar_add_package(Firmware)
+lofar_add_package(StationTest)

@@ -31,8 +31,8 @@ include(LofarInit)
 project(RTCPTools)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 1.0)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 1.0)
 
 ## ---------------------------------------------------------------------------
 ## Subdirectories
