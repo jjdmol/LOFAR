@@ -14,7 +14,7 @@ par  _executable             I    text   -      10    0    'CN_Processing'      
 par  _hostname               I    text   -      10    0    'bgfen1'                      -     'The machine on which the start- and stop-script is executed.'
 par  _nodes                  I    vtext  -      10    0    '[]'                          -     'Nodes used by the (mpi)processes'
 par  _startstopType          I    ptext  -      10    0    "cmdline|mpirun|bgl;bgl"      -     'Method of starting the proces'
-par  workingdir              I    text   -      10    0    "/cephome/lofar-prod/bin/"      						 -     'Directory to use.'
+par  workingdir              I    text   -      10    0    "/cephome/lofar-prod/lofar/bin/"      						 -     'Directory to use.'
 
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------

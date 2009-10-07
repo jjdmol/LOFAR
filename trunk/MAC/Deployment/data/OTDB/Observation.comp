@@ -27,7 +27,7 @@ par  channelsPerSubband      I    int    -      10    100    256                
 par  nrBeams                 I    int    -      10    100    1                                         - 'Number of simultaneous beams in this observation'
 par  nrBeamformers           I    int    -      10    100    0                                         - 'Number of beamformers in this observation'
 par  nrPolarisations         I    pint   -      10    100    '1|2;2'                                   - 'Number of polarisations to use in this observation'
-par  nrSlotsInFrame	     I    int    -      10    100    48                                        - '???'
+par  nrSlotsInFrame	     I    int    -      10    100    62                                        - '???'
 
 # new way of selection the receivers and the antennaArray at once
 par  antennaSet		         I    ptext  -      10    0      'LBA_INNER|LBA_OUTER|LBA_SPARSE|LBA_X|LBA_Y|HBA_ONE|HBA_TWO|HBA_BOTH;-'    - 'Which part of the antennas should be used'
