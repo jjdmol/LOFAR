@@ -21,7 +21,7 @@ node  OLAP_Conn    1.0.5  development 'node constraint'  "Connection specificati
 
 #    name         	     	dir. 	type   unit   	prun. 	vm  	value			constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par IONProc_Storage_Ports	I	vtext	-	10	0	'[8300..8363]'		- 	'Portnumbers to use in the connections.'
+par IONProc_Storage_Ports	I	vtext	-	10	0	'[8300..8547]'		- 	'Portnumbers to use in the connections.'
 par IONProc_CNProc_Transport   I	ptext	-	10	0	'FCNP|TCP|NULL;FCNP'	-	'???'
 par rawDataOutputs		I	text	-	10	0	'[tcp:10.181.0.2:4000]'	-	'???'
 
