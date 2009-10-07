@@ -19,9 +19,24 @@ def parse( str ):
       date,time = str.split()
     except:
       date,time = str,"00:00:00"
-        
-    date_elements = map( int, date.split("-") )
+
+    def conv_month(m):
+      """ Convert month 'm', which is either a  string or a number. """
+      months = ["Jan","Feb","Mar",
+                "Apr","May","Jun",
+                "Jul","Aug","Sep",
+                "Oct","Nov","Dec"]
+
+      for n,name in enumerate(months):
+	if name == m:
+	  return n+1
+
+      return int(m)
+	  
+    y,m,d = date.split("-")
+    date_elements = [int(y),conv_month(m),int(d)]
     time_elements = map( int, time.split(":") )
+
     return datetime.datetime( *(date_elements + time_elements) )
   elif ":" in str:
     # assume HH:MM:SS, and use today as the date

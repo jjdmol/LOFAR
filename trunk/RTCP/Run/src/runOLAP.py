@@ -68,8 +68,13 @@ if __name__ == "__main__":
   defaultObsParams = {
     "parset": "RTCP.parset",
     "start": "+15",
-    "run":   "00:01:00",
   }
+  defaultRunTime = "00:01:00"
+
+  # define no default run or stop time in defaultObsParams,
+  # otherwise it will always overrule the parset
+  assert "stop" not in defaultObsParams
+  assert "run" not in defaultObsParams
 
   # parse the command line
   parser = OptionParser( usage = """usage: %prog [options] observation [observation] ...
@@ -100,11 +105,16 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
   			help = "do not actually execute anything [%default]" )
-  parser.add_option( "--valgrind",
-  			dest = "valgrind",
+  parser.add_option( "--valgrind-ion",
+  			dest = "valgrind_ion",
 			action = "store_true",
 			default = False,
   			help = "run IONProc under valgrind [%default]" )
+  parser.add_option( "--valgrind-storage",
+  			dest = "valgrind_storage",
+			action = "store_true",
+			default = False,
+  			help = "run Storage under valgrind [%default]" )
 
   opgroup = OptionGroup(parser, "Output" )
   opgroup.add_option( "-v", "--verbose",
@@ -184,10 +194,14 @@ if __name__ == "__main__":
   			dest = "storage",
 			default = Locations.files["storage"],
 			help = "Storage executable [%default]" )
-  dirgroup.add_option( "--valgrind-suppressions",
+  dirgroup.add_option( "--valgrind-ion-suppressions",
   			dest = "ionsuppfile",
 			default = Locations.files["ionsuppfile"],
   			help = "Valgrind suppressions file for IONProc [%default]" )
+  dirgroup.add_option( "--valgrind-storage-suppressions",
+  			dest = "storagesuppfile",
+			default = Locations.files["storagesuppfile"],
+  			help = "Valgrind suppressions file for Storage [%default]" )
 
   parser.add_option_group( dirgroup )
 
@@ -205,8 +219,11 @@ if __name__ == "__main__":
     Logger.DEBUG = True
     Sections.DEBUG = True
 
-  if options.valgrind:
-    Sections.VALGRIND = True
+  if options.valgrind_ion:
+    Sections.VALGRIND_ION = True
+
+  if options.valgrind_storage:
+    Sections.VALGRIND_STORAGE = True
 
   if not options.quiet:
     DEBUG = True
@@ -303,7 +320,7 @@ if __name__ == "__main__":
       stationStr = parset.distillStations()
 
       if stationStr:
-        info( "Distilled stations %s from parset." % (",".join(stationStr),) )
+        info( "Distilled stations %s from parset." % (stationStr,) )
       else:
         fatal( "No stations or inputs selected on command line or in parset. " )
 
@@ -332,8 +349,13 @@ if __name__ == "__main__":
     # set runtime
     if "start" in obsparams and "stop" in obsparams:
       parset.setStartStopTime( obsparams["start"], obsparams["stop"] )
-    else:
+    elif "start" in obsparams and "run" in obsparams:
       parset.setStartRunTime( obsparams["start"], obsparams["run"] )
+    elif "Observation.startTime" in parset and "Observation.stopTime" in parset:
+      parset.setStartStopTime( parset["Observation.startTime"], parset["Observation.stopTime"] )
+    else:  
+      parset.setStartRunTime( obsparams["start"], defaultRunTime )
+
     info( "Running from %s to %s." % (parset["Observation.startTime"], parset["Observation.stopTime"] ) )
 
     # set a few other options
@@ -346,7 +368,7 @@ if __name__ == "__main__":
       if k in obsparams:
         v( obsparams[k] )
 
-    if options.valgrind:
+    if options.valgrind_ion:
       # force settings required to run under valgrind
       parset["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "TCP" # FCNP uses BG/P instructions
       parset["OLAP.nrSecondsOfBuffer"] = 1                      # reduce memory footprint

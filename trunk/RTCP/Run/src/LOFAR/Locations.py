@@ -108,6 +108,7 @@ class Locations:
 
         # location of valgrind suppressions file
         "ionsuppfile": "/cephome/lofarsystem/production/LOFAR/RTCP/IONProc/src/IONProc.supp",
+        "storagesuppfile": "/cephome/lofarsystem/production/LOFAR/RTCP/Storage/src/Storage.supp",
       } )
       
       self.nodes.update( {
@@ -126,6 +127,7 @@ class Locations:
 
         # location of valgrind suppressions file
         "ionsuppfile": "${BASEDIR}/RTCP/IONProc/src/IONProc.supp",
+        "storagesuppfile": "${BASEDIR}/RTCP/Storage/src/Storage.supp",
       } )
 
       self.nodes.update( {
