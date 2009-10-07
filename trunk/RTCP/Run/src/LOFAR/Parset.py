@@ -33,13 +33,21 @@ class Parset(util.Parset.Parset):
     def distillStations(self):
         """ Distill station names to use from the parset file and return them. """
 
-        def stripQuotes(s):
-          return s.strip("'").rstrip("'")
+        key = "Observation.VirtualInstrument.stationList"  
 
-        if "OLAP.storageStationNames" not in self:
+        if key not in self:
           return ""
 
-        return map( stripQuotes, self.getStringVector( "OLAP.storageStationNames" ) )
+        stationlist = self.getStringVector(key)
+        antennaset = self["Observation.antennaSet"]
+        if antennaset.startswith("LBA"):
+          array = "LBA"
+        elif antennaset.startswith("HBA"):
+          array = "HBA"
+        else:
+          assert False,"Unknown Observation.antennaSet: %s" % (antennaset,)
+
+        return "+".join(["%s%s" % (stat,array) for stat in stationlist])
 
     def distillPartition(self):
         """ Distill partition to use from the parset file and return it. """

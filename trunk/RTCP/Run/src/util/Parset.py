@@ -146,7 +146,9 @@ class Parset(dict):
           # read array
           value = []
 
-          if peek() != "]":
+          if peek() == "]":
+            token() # discard ]
+          else:
             # non-empty array
 
             # accumulate tokens as a single value,
