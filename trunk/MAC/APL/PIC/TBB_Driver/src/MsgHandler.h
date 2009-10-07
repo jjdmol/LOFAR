@@ -76,16 +76,23 @@ public:
 		
 	void sendTriggerMessage(GCFEvent& event);
 	
-	void saveTriggerMessage();
+	//void saveTriggerMessage();
 	
 	void sendHardwareMessage(GCFEvent& event);
+	
+	void openTriggerFile();
+	
+	void closeTriggerFile();
 
 private:
 	TbbSettings *TS;
+	FILE* itsFile;
+	char itsFileName[256];
+	char itsTimeString[12];
 	
 	list<GCFPortInterface*> itsClientTriggerMsgList;  // list of clients witch receive messages
 	list<GCFPortInterface*> itsClientHardwareMsgList;  // list of clients witch receive messages
-	list<TriggerStruct*> itsTriggerList;  // list of Received Trigger	
+	//list<TriggerStruct*> itsTriggerList;  // list of Received Trigger	
 };
 	} // end TBB namespace
 } // end LOFAR namespace

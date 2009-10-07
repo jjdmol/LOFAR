@@ -131,7 +131,7 @@ private:
 	GCFTimerPort*  itsAliveTimer;  // used to check precence and reset of the boards
 	GCFTimerPort*  itsSetupTimer;  // used in the setup state
 	GCFTimerPort*  itsCmdTimer;  // used by CommandHandler
-	GCFTimerPort*  itsSaveTimer;  // used to save triggers to a file
+	//GCFTimerPort*  itsSaveTimer;  // used to save triggers to a file
 	std::list<GCFPortInterface*> itsClientList;  // list of clients
 };
 

@@ -35,7 +35,7 @@ namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	namespace TBB {
 
-static const int DRIVER_VERSION = 216; // 2.16 
+static const int DRIVER_VERSION = 218; // 2.18 
 
 enum BoardStateT {noBoard,
 				  setImage1, image1Set,
@@ -141,7 +141,8 @@ public:
 	string getDstIp(int32 boardnr);
 	string getSrcMac(int32 boardnr);
 	string getDstMac(int32 boardnr);
-	int32	 saveTriggersToFile();
+	int32  saveTriggersToFile();
+	bool   isRecording();
 	
 	BoardStateT getBoardState(int32 boardnr);
 	void setBoardState(int32 boardnr, BoardStateT boardstate);
@@ -223,6 +224,7 @@ private:
 	int32  itsMaxRetries;
 	double itsTimeOut;
 	int32  itsSaveTriggersToFile;
+	int32  itsRecording;
 	
 	// mask with active boards
 	uint32 itsActiveBoardsMask;
@@ -296,9 +298,14 @@ inline	string TbbSettings::getDstIp(int32 boardnr) { return(itsBoardInfo[boardnr
 inline	string TbbSettings::getSrcMac(int32 boardnr) { return(itsBoardInfo[boardnr].srcMac); }
 inline	string TbbSettings::getDstMac(int32 boardnr) { return(itsBoardInfo[boardnr].dstMac); }
 inline  int32 TbbSettings::saveTriggersToFile() { return(itsSaveTriggersToFile); }
+inline  bool TbbSettings::isRecording() { return(static_cast<bool>(itsRecording)); }
 
 inline	void TbbSettings::setChStatus(int32 channelnr, uint32 status){ itsChannelInfo[channelnr].Status = status; }
-inline	void TbbSettings::setChState(int32 channelnr, char state){ itsChannelInfo[channelnr].State = state; }
+inline	void TbbSettings::setChState(int32 channelnr, char state){
+	 		itsChannelInfo[channelnr].State = state;
+	 		if (state == 'R') { itsRecording |= (1 << itsChannelInfo[channelnr].BoardNr); }
+	 		else { itsRecording &= ~(1 << itsChannelInfo[channelnr].BoardNr); }
+	 	}
 inline	void TbbSettings::setChStartAddr(int32 channelnr, uint32 startaddr){ itsChannelInfo[channelnr].StartAddr = startaddr; }
 inline	void TbbSettings::setChPageSize(int32 channelnr, uint32 pagesize){ itsChannelInfo[channelnr].PageSize = pagesize; }
 inline	void TbbSettings::setChTriggered(int32 channelnr, bool triggered){ itsChannelInfo[channelnr].Triggered = triggered; }

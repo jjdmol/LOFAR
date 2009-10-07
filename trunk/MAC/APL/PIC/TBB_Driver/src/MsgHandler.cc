@@ -33,9 +33,31 @@ namespace LOFAR {
 MsgHandler::MsgHandler()
 {
 	TS = TbbSettings::instance();
+		
+	/*
+	if (TS->saveTriggersToFile()) {
+		time_t timenow;
+		timenow = time(NULL);
+		
+		strftime(itsTimeString, 255, "%Y-%m-%d", gmtime(&timenow));
+		snprintf(itsFileName, PATH_MAX, "/opt/lofar/log/%s_TRIGGER.dat", itsTimeString);
+		itsFile = fopen(itsFileName,"a");
+	}
+	else {
+		memset(itsFileName, 12, '\0');
+		memset(itsTimeString, 12, '\0');
+		itsFile = 0;
+	}
+	*/
+	memset(itsFileName, 12, '\0');
+	memset(itsTimeString, 12, '\0');
+	itsFile = 0;
 }
 
-MsgHandler::~MsgHandler() { }
+MsgHandler::~MsgHandler()
+{
+	if (itsFile != 0) { fclose(itsFile); }
+}
 
 //-----------------------------------------------------------------------------
 void MsgHandler::addTriggerClient(GCFPortInterface& port)
@@ -88,12 +110,59 @@ void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
 	sendTriggerMessage(tbb_event);
 	
 	// save trigger messages to a file
-	if (TS->saveTriggersToFile()) { 
-		TriggerStruct* trig = new TriggerStruct;
-		memcpy(&trig->rcu, &tbb_event.rcu, sizeof(TriggerStruct));
-		itsTriggerList.push_back(trig);
+	
+	
+	if (TS->saveTriggersToFile()) {
+		int err;
+		if (itsFile != 0) {
+			time_t timenow;
+			timenow = time(NULL);
+			char timestring[12];
+			strftime(timestring, 255, "%Y-%m-%d", gmtime(&timenow));
+			
+			if (strcmp(timestring, itsTimeString) != 0) {
+				strcpy(itsTimeString, timestring);
+				fclose(itsFile);
+				snprintf(itsFileName, PATH_MAX, "/opt/lofar/log/%s_TRIGGER.dat", itsTimeString);
+				itsFile = fopen(itsFileName,"a");
+			}
+		
+			err = fprintf(itsFile,"%d %u %u %u %u %u %u %u %u\n",
+					tbb_event.rcu,
+					tbb_event.sequence_nr,
+					tbb_event.time,
+					tbb_event.sample_nr,
+					tbb_event.trigger_sum,
+					tbb_event.trigger_samples,
+					tbb_event.peak_value,
+					tbb_event.power_before,
+					tbb_event.power_after);
+			fflush(itsFile);
+		}
 	}
 	TS->setChTriggered(channel, true);
+}
+//-----------------------------------------------------------------------------
+void MsgHandler::openTriggerFile()
+{
+	if (itsFile == 0) {
+		time_t timenow;
+		timenow = time(NULL);
+		char timestring[12];
+		strftime(timestring, 255, "%Y-%m-%d", gmtime(&timenow));
+		strcpy(itsTimeString, timestring);
+		snprintf(itsFileName, PATH_MAX, "/opt/lofar/log/%s_TRIGGER.dat", itsTimeString);
+		itsFile = fopen(itsFileName,"a");
+	}
+}
+
+//-----------------------------------------------------------------------------
+void MsgHandler::closeTriggerFile()
+{
+	if (itsFile != 0) {
+		fclose(itsFile);
+		itsFile = 0;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -130,42 +199,6 @@ void MsgHandler::sendTriggerMessage(GCFEvent& event)
 	}
 }
 
-//-----------------------------------------------------------------------------
-void MsgHandler::saveTriggerMessage()
-{
-	if (!itsTriggerList.empty()) {  
-		
-		FILE* file;
-		char filename[256];
-		char timestring[12];
-		time_t timenow;
-		
-		timenow = time(NULL);
-		
-		strftime(timestring, 255, "%Y-%m-%d", gmtime(&timenow));
-		snprintf(filename, PATH_MAX, "/opt/lofar/log/%s_TRIGGER.dat",timestring);
-		file = fopen(filename,"a");
-		
-		list<TriggerStruct*>::iterator it;
-		for (it = itsTriggerList.begin(); it != itsTriggerList.end(); it++) {
-			fprintf(file,"%d %u %u %u %u %u %u %u %u\n",
-				(*it)->rcu,
-				(*it)->sequence_nr,
-				(*it)->time,
-				(*it)->sample_nr,
-				(*it)->trigger_sum,
-				(*it)->trigger_samples,
-				(*it)->peak_value,
-				(*it)->power_before,
-				(*it)->power_after);
-				
-			delete (*it);	
-		}
-		itsTriggerList.clear();
-		fclose(file);
-	}
-} 
-	
 //-----------------------------------------------------------------------------
 void MsgHandler::sendHardwareMessage(GCFEvent& event)
 { 
