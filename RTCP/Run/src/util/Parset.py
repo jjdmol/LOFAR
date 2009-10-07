@@ -119,30 +119,52 @@ class Parset(dict):
       f = ropen( filename, "r" )
 
       lexer = shlex.shlex( f, filename )
+      lexer.whitespace = "" # we have to discard our own whitespace, since whitespace can be significant within values
       basic_wordchars = lexer.wordchars + ".:+-!@$%^&*/{}"
       key_wordchars   = basic_wordchars + "[]()"
       value_wordchars = basic_wordchars + "="
       token = lexer.get_token
 
+      whitespace = " \t\r\n"
+
       errormsg = lambda t: "%s%s"% (lexer.error_leader(),t)
 
-      def peek():
-        t = token()
-        if not t: return t
+      def token(skip=whitespace):
+        for t in lexer:
+          if t in skip:
+            continue
+
+          return t
+
+      def tokengen(skip=whitespace):
+        while True:
+          t = token(skip)
+          if t is None:
+            return
+
+          yield t  
+
+      def peek(skip=whitespace):
+        t = token(skip)
+        if t is None: return t
 
         lexer.push_token(t)
         return t
 
       lexer.wordchars = key_wordchars
-      for t in lexer:
+      for t in tokengen():
         # read a KEY = VALUE pair
         key = t
+
         assert token() == "=",errormsg(t)
 
         # read the value
         lexer.wordchars = value_wordchars
-        t = token()
-        if t == "[":
+        t = token(" \t") # also catch newlines for empty values
+        if t == "\n":
+          # empty value
+          value = ""
+        elif t == "[":
           # read array
           value = []
 
@@ -156,7 +178,7 @@ class Parset(dict):
             # part of a value
             cur = ""
             parentheses, brackets = 0, 0
-            for t in lexer:
+            for t in tokengen(""):
               if t == "(":
                 assert parentheses == 0, errormsg("nested parentheses not supported")
                 parentheses += 1
@@ -169,23 +191,30 @@ class Parset(dict):
               elif t == "]":
                 if not brackets:
                   # end of array
-                  value.extend(decode(cur))
+                  value.extend(decode(cur.strip()))
                   break
 
                 brackets -= 1
               elif t == ",":
                 if not brackets and not parentheses:
-                  value.extend(decode(cur))
+                  value.extend(decode(cur.strip()))
                   cur = ""
                   continue
 
               cur += t
             else:
               assert False,errormsg("unterminated array")
-
         else:
-          # t was no array
-          value = t
+          # read everything until the newline, including spaces
+          tokens = [t]
+
+          for t in tokengen(""):
+            if t == "\n":
+              break
+
+            tokens.append(t)
+
+          value = "".join(tokens).strip()
 
         # store the key,value pair
         self[key] = value
@@ -230,3 +259,12 @@ class Parset(dict):
 
     def getFloatVector(self, key):
       return map(float,self[key])
+
+if __name__ == "__main__":
+  import sys
+
+  for f in sys.argv[1:]:
+    p = Parset()
+    p.readFile( f )
+    for k in sorted(p.keys()):
+      print "%s = %s" % (k,p[k])
