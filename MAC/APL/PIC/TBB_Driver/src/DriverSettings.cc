@@ -73,6 +73,7 @@ TbbSettings::TbbSettings() :
 	itsMaxRetries(5),                  // max.number of retries for each command
 	itsTimeOut(0.2),                   // response timeout
 	itsSaveTriggersToFile(0),          // save trigger info to a file
+	itsRecording(0),                   // if > 0 then recording is active
 	itsActiveBoardsMask(0),            // mask with active boards
 	itsBoardInfo(0),
 	itsChannelInfo(0)                  // Struct with channel info
