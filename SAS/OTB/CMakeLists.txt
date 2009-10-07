@@ -34,8 +34,8 @@ include(LofarGeneral)
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-lofar_add_subdirectory(jOTDB2)
-lofar_add_subdirectory(OTB)
+lofar_add_package(jOTDB2)
+lofar_add_package(scripts)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

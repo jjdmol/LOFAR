@@ -31,8 +31,8 @@ include(LofarInit)
 project(Stream)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 0.1 DEPENDS Common)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 0.1 DEPENDS Common)
 
 ## ---------------------------------------------------------------------------
 ## External packages

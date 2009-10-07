@@ -41,19 +41,19 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-lofar_add_subdirectory(APLCommon)     # Common tasks and functions
-lofar_add_subdirectory(RTCCommon)     # Real Time Control functions
-lofar_add_subdirectory(RTDBCommon)    # RealTimeDataBase common software
-lofar_add_subdirectory(TestSuite)     # 
-lofar_add_subdirectory(CUDaemons)     # Control Unit Daemons
-lofar_add_subdirectory(CURTDBDaemons) # Control Unit RTDB Daemons
-lofar_add_subdirectory(PIC)           # Physical Instrument Components (?)
-lofar_add_subdirectory(PAC)           # ???
-lofar_add_subdirectory(VHECR)         # VHECR related code
-lofar_add_subdirectory(CEPCU)         # CEP-related MAC controllers
-lofar_add_subdirectory(MainCU)        # Main Control Unit
-lofar_add_subdirectory(StationCU)     # Station Control Unit software
-lofar_add_subdirectory(TestCtlr)      # Testprograms for MAC controllers
+lofar_add_package(APLCommon)     # Common tasks and functions
+lofar_add_package(RTCCommon)     # Real Time Control functions
+lofar_add_package(RTDBCommon)    # RealTimeDataBase common software
+lofar_add_package(TestSuite)     # 
+lofar_add_package(CUDaemons)     # Control Unit Daemons
+lofar_add_package(CURTDBDaemons) # Control Unit RTDB Daemons
+lofar_add_package(PIC)           # Physical Instrument Components (?)
+lofar_add_package(PAC)           # ???
+lofar_add_package(VHECR)         # VHECR related code
+lofar_add_package(CEPCU)         # CEP-related MAC controllers
+lofar_add_package(MainCU)        # Main Control Unit
+lofar_add_package(StationCU)     # Station Control Unit software
+lofar_add_package(TestCtlr)      # Testprograms for MAC controllers
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

@@ -31,8 +31,8 @@ include(LofarInit)
 project(Pipeline)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 0.1 DEPENDS pytools)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 0.1 DEPENDS pytools)
 
 ## ---------------------------------------------------------------------------
 ## External packages

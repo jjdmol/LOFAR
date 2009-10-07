@@ -31,8 +31,8 @@ include(LofarInit)
 project(Storage)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common AMCBase Interface)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common AMCBase Interface)
 
 ## ---------------------------------------------------------------------------
 ## External packages

@@ -31,8 +31,8 @@ include(LofarInit)
 project(RSP_Protocol)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common MACIO RTCCommon)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 6.0 DEPENDS Common MACIO RTCCommon)
 
 ## ---------------------------------------------------------------------------
 ## External packages

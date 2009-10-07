@@ -31,8 +31,8 @@ include(LofarInit)
 project(TBB_Protocol)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS MACIO)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 1.0 DEPENDS MACIO)
 
 ## ---------------------------------------------------------------------------
 ## External packages

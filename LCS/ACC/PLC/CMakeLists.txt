@@ -31,8 +31,8 @@ include(LofarInit)
 project(PLC)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 2.1 DEPENDS Common Blob Transport)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 2.1 DEPENDS Common Blob Transport)
 
 ## ---------------------------------------------------------------------------
 ## External packages

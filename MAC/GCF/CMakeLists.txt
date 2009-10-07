@@ -41,9 +41,9 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-lofar_add_subdirectory(TM)     # Task Management
-lofar_add_subdirectory(PVSS)   # Low-level interface to PVSS database
-lofar_add_subdirectory(RTDB)   # Real-Time Database layer.
+lofar_add_package(GCFTM   TM)     # Task Management
+lofar_add_package(GCFPVSS PVSS)   # Low-level interface to PVSS database
+lofar_add_package(GCFRTDB RTDB)   # Real-Time Database layer.
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

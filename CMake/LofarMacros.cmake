@@ -31,7 +31,6 @@
 #   lofar_add_executable(name)
 #   lofar_add_library(name)
 #   lofar_add_sbin_program(name)
-#   lofar_add_subdirectory(name)
 #   lofar_add_test(name)
 #   lofar_get_date(date)
 #   lofar_get_hostname(name)
@@ -169,32 +168,6 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     lofar_add_executable(${_name} ${ARGN})
     install(TARGETS ${_name} DESTINATION sbin)
   endmacro(lofar_add_sbin_program _name)
-
-
-  # --------------------------------------------------------------------------
-  # lofar_add_subdirectory(srcdir [bindir] [REQUIRED])
-  #
-  # Add a subdirectory like add_subdirectory() does.
-  # Furthermore:
-  # - It is not an error is the directory does not exist, unless the REQUIRED
-  #   keyword is specified.
-  # - If [bindir] is not supplied, it is determined on the fly, so the user
-  #   doesn't have to bother when specifying an out-of-tree source.
-  # --------------------------------------------------------------------------
-  macro(lofar_add_subdirectory srcdir)
-    get_filename_component(_srcdir ${srcdir} ABSOLUTE)
-    string(REGEX MATCH ";?REQUIRED.*" _required "${ARGN}")
-    string(REPLACE "${_required}" "" _bindir "${ARGN}")
-    if(_bindir MATCHES "^.+$")
-      get_filename_component(_bindir ${_bindir} ABSOLUTE)
-    else(_bindir MATCHES "^.+$")
-      string(REGEX REPLACE
-        ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} _bindir ${_srcdir})
-    endif(_bindir MATCHES "^.+$")
-    if(_required OR EXISTS ${_srcdir})
-      add_subdirectory(${_srcdir} ${_bindir})
-    endif(_required OR EXISTS ${_srcdir})
-  endmacro(lofar_add_subdirectory)
 
 
   # --------------------------------------------------------------------------

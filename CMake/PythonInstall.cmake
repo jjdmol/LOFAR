@@ -19,11 +19,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
+# --------------------------------------------------------------------------
 # python_install(source1..sourceN DESTINATION install_dir)
 #
 # Install Python source files and byte-compile them in the directory
 # ${PYTHON_INSTALL_DIR}/${install_dir}.
-
+# --------------------------------------------------------------------------
 macro(python_install)
 
   # Precondition checks.

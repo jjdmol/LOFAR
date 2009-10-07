@@ -31,8 +31,8 @@ include(LofarInit)
 project(Deployment)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 0.1 DEPENDS Common ApplCommon OTDB)
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 0.1 DEPENDS Common ApplCommon OTDB)
 
 ## ---------------------------------------------------------------------------
 ## External packages

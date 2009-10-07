@@ -31,8 +31,8 @@ include(LofarInit)
 project(StationCU)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS 
+include(LofarPackage)
+lofar_package(${PROJECT_NAME} 1.0 DEPENDS 
   Common ApplCommon MACIO GCFTM GCFRTDB GCFPVSS APLCommon RTCCommon RTDBCommon
   BS_Protocol CAL_Protocol RSP_Protocol TBB_Protocol VHECR)
 
