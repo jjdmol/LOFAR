@@ -187,10 +187,10 @@ def defineStations( s ):
 
   s.update( {
     # CS302
-    "CS302LBA":    [Station('CS302LBA',  '10.170.0.165', defaultPorts)],
-    "CS302HBA":    [Station('CS302HBA',  '10.170.0.165', defaultPorts)],
-    "CS302HBA0":   [Station('CS302HBA0', '10.170.0.165', defaultPorts)],
-    "CS302HBA1":   [Station('CS302HBA1', '10.170.0.37', ports( [4352,4353,4354,4355] ))],
+    "CS302LBA":    [Station('CS302LBA',  '10.170.0.165', ports( [4346,4347,4348,4350] ))],
+    "CS302HBA":    [Station('CS302HBA',  '10.170.0.165', ports( [4346,4347,4348,4350] ))],
+    "CS302HBA0":   [Station('CS302HBA0', '10.170.0.165', ports( [4346,4347,4348,4350] ))],
+    "CS302HBA1":   [Station('CS302HBA1', '10.170.0.37',  ports( [4352,4353,4354,4355] ))],
 
     # RS106
     "RS106LBA":   [Station('RS106LBA',  '10.170.0.174', defaultPorts)],
@@ -213,7 +213,7 @@ def defineStations( s ):
     "CS030HBA":   [Station('CS030HBA',  '10.170.0.153', defaultPorts)],
 
     # DE601, a.k.a. Effelsberg
-    "DE601LBA":   [Station('DE601LBA',  '10.170.0.178', ports( [4358,4359,4363,4364] ))],
+    "DE601LBA":   [Station('DE601LBA',  '10.170.0.178', ports( [4353,4359,4363,4364] ))],
   } )
 
   # Simulated stations for experimentation.

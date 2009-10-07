@@ -69,7 +69,7 @@ def encode( v ):
     # can only compress lists
     return strfy(v)
 
-  if len(v) < 3:
+  if True or len(v) < 3:
     # length 0, 1 or 2 is not worth analysing
     return "[%s]" % (",".join(map( strfy, v )),)
 

@@ -10,7 +10,8 @@ from Logger import debug,info,warning
 from threading import Thread,Lock
 
 DEBUG=False
-VALGRIND=False
+VALGRIND_ION=False
+VALGRIND_STORAGE=False
 
 SSH="ssh -o StrictHostKeyChecking=no -q "
 
@@ -144,7 +145,7 @@ class IONProcSection(Section):
   def run(self):
     logfiles = ["%s/run.IONProc.%s.log" % (Locations.files["logdir"],self.partition)] + self.logoutputs
 
-    if VALGRIND:
+    if VALGRIND_ION:
       valgrind = "/cephome/mol/root-ppc/bin/valgrind --suppressions=%s --leak-check=full --show-reachable=yes" % (Locations.files["ionsuppfile"],)
     else:
       valgrind = ""
@@ -171,6 +172,7 @@ class IONProcSection(Section):
       # arguments
       "%s" % (" ".join([p.getFilename() for p in self.parsets]), ),
     ]
+
 
     if DEBUG:
       mpiparams = [
@@ -208,7 +210,7 @@ class IONProcSection(Section):
 
         assert successStr in c.output(), "Cannot allocate flat memory on I/O node %s" % (node,)
 
-    assert runFunc( waitForSuccess, 10 ), "Failed to reach one or more I/O nodes [ssh]"
+    assert runFunc( waitForSuccess, 20 ), "Failed to reach one or more I/O nodes [ssh]"
 
 class StorageSection(Section):
   def preProcess(self):
@@ -228,6 +230,11 @@ class StorageSection(Section):
       for n in Locations.nodes["storage"]:
         self.commands.append( SyncCommand( SSH+"-t %s mkdir %s" % (n,os.path.dirname(p.parseMask()),), logfiles ) )
 
+    if VALGRIND_STORAGE:
+      valgrind = "/cephome/mol/root-ppc/bin/valgrind --suppressions=%s --leak-check=full --show-reachable=yes" % (Locations.files["storagesuppfile"],)
+    else:
+      valgrind = ""
+
     # Storage is started on LIIFEN, which has mpirun (Open MPI) 1.1.1
     mpiparams = [
       # provide this run with an unique name to identify the corresponding
@@ -243,6 +250,9 @@ class StorageSection(Section):
 
       # working directory
       "-wdir %s" % (Locations.files["rundir"],),
+
+      # valgrind
+      valgrind,
 
       # executable
       "%s" % (Locations.files["storage"],),
@@ -302,7 +312,7 @@ class StorageSection(Section):
       for (node,c) in sshcmds:
         c.wait()
 
-    assert runFunc( waitForSuccess, 10 ), "Failed to reach one or more Storage nodes [ssh]"
+    assert runFunc( waitForSuccess, 20 ), "Failed to reach one or more Storage nodes [ssh]"
 
     # ports need to be open
 
