@@ -62,10 +62,10 @@ MeasurementSetFormat::MeasurementSetFormat(const Parset *ps, const unsigned alig
  
   if (itsPS->nrTabStations() > 0) {
     itsNrAnt = itsPS->nrTabStations();
-    stationNames = itsPS->getStringVector("OLAP.tiedArrayStationNames");
+    stationNames = itsPS->getStringVector("OLAP.tiedArrayStationNames",true);
   } else {
     itsNrAnt = itsPS->nrStations();
-    stationNames = itsPS->getStringVector("OLAP.storageStationNames");
+    stationNames = itsPS->getStringVector("OLAP.storageStationNames",true);
   }
 
   antPos = itsPS->positions();

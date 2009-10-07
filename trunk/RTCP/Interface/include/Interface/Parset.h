@@ -206,7 +206,7 @@ inline bool Parset::precedes(const Parset *other) const
 
 inline string Parset::stationName(int index) const
 {
-  return getStringVector("OLAP.storageStationNames")[index];
+  return getStringVector("OLAP.storageStationNames",true)[index];
 }
 
 inline string Parset::storageHostName(const string& aKey, int index) const
@@ -222,12 +222,12 @@ inline string Parset::getTransportType(const string& prefix) const
 
 inline uint32 Parset::nrStations() const
 {
-  return getStringVector("OLAP.storageStationNames").size();
+  return getStringVector("OLAP.storageStationNames",true).size();
 } 
 
 inline uint32 Parset::nrTabStations() const
 {
-  return getStringVector("OLAP.tiedArrayStationNames").size();
+  return getStringVector("OLAP.tiedArrayStationNames",true).size();
 }   
 
 inline uint32 Parset::nrBaselines() const
