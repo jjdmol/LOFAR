@@ -248,25 +248,17 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
   // If the total number of subbands is not dividable by the nrSubbandsPerPset,
   // we may have to send dummy process commands, without sending subband data.
 
-  NSTimer timer1;
-  NSTimer timer2; 
-  NSTimer timer3;
-
-
   CN_Command command(CN_Command::PROCESS);
   
   for (unsigned subbandBase = 0; subbandBase < itsNrSubbandsPerPset; subbandBase ++) {
     Stream *stream = itsCNstreams[itsCurrentComputeCore];
 
-    timer1.start();
     // tell CN to process data
     command.write(stream);
-    timer1.stop();
 
     if (itsNrInputs > 0) {
       // create and send all metadata in one "large" message, since initiating a message
       // has significant overhead in FCNP.
-      timer2.start();
       SubbandMetaData metaData(itsNrOutputPsets, itsNrPencilBeams, 16);
 
       for (unsigned psetIndex = 0; psetIndex < itsNrOutputPsets; psetIndex ++) {
@@ -299,9 +291,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
       }
 
       metaData.write(stream);
-      timer2.stop();
 
-      timer3.start();
       // now send all subband data
       for (unsigned psetIndex = 0; psetIndex < itsNrOutputPsets; psetIndex ++) {
 	unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
@@ -314,14 +304,12 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
 	  itsBeamletBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
 	}
       }
-      timer3.stop();
     }
 
 
     if (++ itsCurrentComputeCore == itsNrCoresPerPset)
       itsCurrentComputeCore = 0;
   }
-  LOG_INFO_STR("CommandTimer: " << PrettyTime(timer1.getElapsed()) << ", MetaTimer: " << PrettyTime(timer2.getElapsed()) << ", DataTimer: " << PrettyTime(timer3.getElapsed()));
 }
 
 
@@ -406,7 +394,6 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
   }
 
   NSTimer timer;
-  NSTimer timer2;
   timer.start();
   
 
@@ -414,17 +401,14 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
     toComputeNodes();
   else if (itsNrInputs > 0)
     dumpRawData();
-  timer.stop();
 
-  timer2.start();
   if (itsNrInputs > 0) {
     stopTransaction();
     itsCurrentTimeStamp += itsNrSamplesPerSubband;
   }
+  timer.stop();
 
-  timer2.stop();
-
-  //  LOG_INFO_STR("ObsID: " << itsObservationID << ", toComputeNodes(): " << PrettyTime(timer.getElapsed()) << ", stopTransaction(): " << PrettyTime(timer2.getElapsed()));
+  LOG_INFO_STR("ObsID: " << itsObservationID << ", ION->CN: " << PrettyTime(timer.getElapsed()));
 }
 
 
