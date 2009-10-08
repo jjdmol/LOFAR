@@ -126,8 +126,8 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     // define TRANSFORMations in chronological order
     TRANSFORM( itsInputData,            itsTransposedData );
     TRANSFORM( itsTransposedData,       itsFilteredData   );
-    TRANSFORM( itsFilteredData,         itsCorrelatedData );
     TRANSFORM( itsFilteredData,         itsBeamFormedData );
+    TRANSFORM( itsFilteredData,         itsCorrelatedData );
     TRANSFORM( itsBeamFormedData,       itsCoherentStokesData );
     TRANSFORM( itsFilteredData,         itsIncoherentStokesData );
     TRANSFORM( itsCoherentStokesData,   itsCoherentStokesDataIntegratedChannels );
