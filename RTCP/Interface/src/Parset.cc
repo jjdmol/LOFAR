@@ -182,6 +182,18 @@ unsigned Parset::nyquistZone() const
 {
   string bandFilter = getString("Observation.bandFilter");
 
+  if (bandFilter == "LBA_30_80" ||
+      bandFilter == "LBA_10_90" )
+    return 1;
+
+  if (bandFilter == "HBA_110_190")
+    return 2;
+
+  if (bandFilter == "HBA_170_230" ||
+      bandFilter == "HBA_210_250")
+    return 3;
+
+  /* >>> depricated */
   if (bandFilter == "LBL_10_80" ||
       bandFilter == "LBL_30_80" ||
       bandFilter == "LBH_10_80" ||
@@ -194,6 +206,7 @@ unsigned Parset::nyquistZone() const
   if (bandFilter == "HB_170_230" ||
       bandFilter == "HB_210_240")
     return 3;
+  /* <<< depricated */
 
   THROW(InterfaceException, string("unknown band filter \"" + bandFilter + '"'));
 }
