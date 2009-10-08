@@ -22,13 +22,60 @@ class Parset(util.Parset.Parset):
         self.filename = ""
 
     def setFilename( self, filename ):
-       self.filename = filename
+        self.filename = filename
 
     def getFilename( self ):
-       return self.filename
+        return self.filename
 
     def save(self):
-       self.writeFile( self.filename )
+        self.writeFile( self.filename )
+
+    def addMissingKeys(self):
+        """ Sets some default values which SAS does not yet contain. """
+
+        # pencil beam configuration
+        self.setdefault("Observation.nrPencilRings",0);
+        self.setdefault("Observation.nrPencils",0);
+        self.setdefault("Observation.pencilRingSize",0.0);
+
+        # output configuration
+        self.setdefault("Observation.outputFilteredData",False);
+        self.setdefault("Observation.outputBeamFormedData",False);
+        self.setdefault("Observation.outputCorrelatedData",False);
+        self.setdefault("Observation.outputCoherentStokes",False);
+        self.setdefault("Observation.outputIncoherentStokes",False);
+        self.setdefault("Observation.nrStokes",1);
+        self.setdefault("Observation.stokesIntegrateChannels",False);
+        self.setdefault("Observation.stokesIntegrationSteps",1);
+
+        # depricated:
+        self.setdefault("Observation.mode","Correlate");
+        self.setdefault("Observation.outputIncoherentStokesI",False);
+
+    def convertNewKeys(self):
+        """ Converts some new keys to old ones to help old CEP code cope with new SAS code. """
+
+        # new bandfilter names
+        bandfilter_xlate = {
+          "LBA_30_80": "LBH_30_80", # actually, LBH/LBL depends on LBA_INNER/LBA_OUTER, but we only use this for the NyQuest zone
+          "LBA_10_90": "LBH_10_80",
+          "HBA_110_190": "HB_100_190",
+          "HBA_170_230": "HB_170_230",
+          "HBA_210_250": "HB_210_240",
+        }
+
+        if self["Observation.bandFilter"] in bandfilter_xlate:
+          self["Observation.bandFilter"] = bandfilter_xlate[self["Observation.bandFilter"]]
+
+        # new direction type variable name
+        i = 0
+        while "Observation.Beam[%d].directionTypes" % (i,) in self:
+          self.setdefault("Observation.Beam[%d].directionType" % i, self["Observation.Beam[%d].directionTypes" % i])
+          i += 1
+
+	# override some erroneous values
+	self["OLAP.DelayComp.positionType"] = "ITRF"    
+
 
     def distillStations(self):
         """ Distill station names to use from the parset file and return them. """
@@ -69,8 +116,8 @@ class Parset(util.Parset.Parset):
         """ Derive some final keys and finalise any parameters necessary
 	    before writing the parset to disk. """
 
-	# override some erroneous values
-	self["OLAP.DelayComp.positionType"] = "ITRF"    
+        self.addMissingKeys();
+        self.convertNewKeys();
 
 	# TODO: we use self.setdefault, but this can create inconsistencies if we
 	# set one value but not the other in a pair of interdependent parameters.
@@ -295,6 +342,7 @@ class Parset(util.Parset.Parset):
       globalPorts = self.getInt32Vector("OLAP.OLAP_Conn.IONProc_Storage_Ports")
       storageNodes = self.storagenodes
       subbandMapping = self.getInt32Vector("OLAP.storageNodeList")
+      assert len(subbandMapping) <= len(globalPorts), "Not enough Storage ports to listen on (have %d, need %d)" % (len(globalPorts),len(subbandMapping))
 
       localPorts = {}
 
