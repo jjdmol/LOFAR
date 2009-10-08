@@ -55,7 +55,7 @@ class Parset(util.Parset.Parset):
     def convertNewKeys(self):
         """ Converts some new keys to old ones to help old CEP code cope with new SAS code. """
 
-        # new bandfilter names
+        # new bandfilter names -- needed until svn rev 14214
         bandfilter_xlate = {
           "LBA_30_80": "LBH_30_80", # actually, LBH/LBL depends on LBA_INNER/LBA_OUTER, but we only use this for the NyQuest zone
           "LBA_10_90": "LBH_10_80",
@@ -67,7 +67,7 @@ class Parset(util.Parset.Parset):
         if self["Observation.bandFilter"] in bandfilter_xlate:
           self["Observation.bandFilter"] = bandfilter_xlate[self["Observation.bandFilter"]]
 
-        # new direction type variable name
+        # new direction type variable name -- needed until svn rev 14215
         i = 0
         while "Observation.Beam[%d].directionTypes" % (i,) in self:
           self.setdefault("Observation.Beam[%d].directionType" % i, self["Observation.Beam[%d].directionTypes" % i])
