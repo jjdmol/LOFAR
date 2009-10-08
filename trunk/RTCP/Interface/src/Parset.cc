@@ -392,8 +392,15 @@ string Parset::getBeamDirectionType(const unsigned beam) const
   char buf[50];
   string beamDirType;
  
-  sprintf(buf,"Observation.Beam[%d].directionType", beam);
-  beamDirType = getString(buf);
+  sprintf(buf,"Observation.Beam[%d].directionTypes", beam);
+  if (isDefined(buf)) {
+    beamDirType = getString(buf);
+  } else {
+    /* >>> depricated */
+    sprintf(buf,"Observation.Beam[%d].directionType", beam);
+    beamDirType = getString(buf);
+    /* << depricated */
+  }
 
   return beamDirType;
 }
