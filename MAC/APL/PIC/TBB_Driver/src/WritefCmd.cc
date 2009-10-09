@@ -254,7 +254,7 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
 				TPErasefAckEvent tp_ack(event);
 				LOG_DEBUG_STR(formatString("Received ErasefAck from boardnr[%d]", getBoardNr()));
 				if (tp_ack.status != 0) {
-					setStatus(0, (TBB_FLASH_ERROR | (tp_ack.status << 24)));
+					setStatus(0, (TBB_FLASH_ERASE_ERROR | (tp_ack.status << 24)));
 					setDone(true);
 				} else {
 					itsSector++;
@@ -268,7 +268,7 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
 				TPWritefAckEvent tp_ack(event);
 				LOG_DEBUG_STR(formatString("Received WritefAck from boardnr[%d]", getBoardNr()));	
 				if (tp_ack.status != 0) {
-					setStatus(0, (TBB_FLASH_ERROR | (tp_ack.status << 24)));
+					setStatus(0, (TBB_FLASH_WRITE_ERROR | (tp_ack.status << 24)));
 					setDone(true);
 				} else {
 					itsBlock++;
@@ -287,7 +287,7 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
 				TPReadfAckEvent tp_ack(event);
 				LOG_DEBUG_STR(formatString("Received ReadfAck from boardnr[%d]", getBoardNr()));	
 				if (tp_ack.status != 0) {
-					setStatus(0, (TBB_FLASH_ERROR | (tp_ack.status << 24)));
+					setStatus(0, (TBB_FLASH_VERIFY_ERROR | (tp_ack.status << 24)));
 					if (itsImage == 0) {
 						itsStage = protect;
 					} else {
@@ -295,15 +295,21 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
 					}
 				} else {
 					for (int i = 0; i < (TS->flashBlockSize() / 4); i++) {
+						testdata = static_cast<uint32>(itsImageData[itsDataPtr])
+						         + (static_cast<uint32>(itsImageData[itsDataPtr+1]) << 8)
+						         + (static_cast<uint32>(itsImageData[itsDataPtr+2]) << 16)
+						         + (static_cast<uint32>(itsImageData[itsDataPtr+3]) << 24);
+						itsDataPtr += 4;
+						/*
 						testdata  = itsImageData[itsDataPtr]; itsDataPtr++;
 						testdata |= (itsImageData[itsDataPtr] << 8); itsDataPtr++; 
 						testdata |= (itsImageData[itsDataPtr] << 16); itsDataPtr++; 
 						testdata |= (itsImageData[itsDataPtr] << 24); itsDataPtr++;    
-		 
+						*/
 						if (tp_ack.data[i] != testdata) {
 							LOG_DEBUG_STR(formatString("block(%d) uint32(%d) NOT same 0x%08X 0x%08X (WritefCmd(verify_flash stage))",
 																			itsBlock,i,tp_ack.data[i],testdata));
-							setStatus(0, TBB_FLASH_ERROR);
+							setStatus(0, TBB_FLASH_VERIFY_ERROR);
 							if (itsImage == 0) {
 								itsStage = protect;
 							} else {

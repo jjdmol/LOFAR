@@ -66,16 +66,16 @@ public:
 private:
 	TbbSettings *TS;
 	
-	flashStage	itsStage;
-	int32		itsImage;
-	int32		itsSector;
-	int32		itsBlock;
-	int32		itsImageSize;
-	int32		itsDataPtr;
-	char		itsFileNameTp[64];
-	char		itsFileNameMp[64];
-	uint32	itsPassword;
-	uint8		*itsImageData; // data from hex files
+	flashStage itsStage;
+	int32      itsImage;
+	int32      itsSector;
+	int32      itsBlock;
+	int32      itsImageSize;
+	int32      itsDataPtr;
+	char       itsFileNameTp[64];
+	char       itsFileNameMp[64];
+	uint32     itsPassword;
+	uint8      *itsImageData; // data from hex files
 };
 
 	} // end TBB namespace
