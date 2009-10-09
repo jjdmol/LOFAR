@@ -49,6 +49,6 @@ showclusterdesc_LDADD        = libmwcommon.la
 showclusterdesc_DEPENDENCIES = libmwcommon.la $(LOFAR_DEPEND)
 
 scriptdir = $(bindir)
-dist_script_SCRIPTS = startdistproc socketrun
+dist_script_SCRIPTS = startdistproc socketrun runlogpid
 
 include $(top_srcdir)/Makefile.common

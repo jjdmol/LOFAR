@@ -25,21 +25,53 @@
 # $Id$
 
 
+# Set srcdir if not set.
 if test "$srcdir" = ""; then
-  srcdir=../../../src
+  srcdir=../../../test
 fi
+curdir=`pwd`
+# Set the src and make it absolute.
+ssdir=`cd $srcdir/../src > /dev/null 2>&1; pwd`
+
+# Add srcdir to PATH, so runlogpid can be found.
+# Add test to PATH, so tstartdproc can be found.
+PATH=$ssdir:$curdir:$PATH
+export PATH
+
+startdistproc -dsn tstartdproc.in_vd -cdn tstartdproc.in_cd \
+-mode single -dry -hfn tstartdproc_tmp.out0 -fdp ../src prog1 -arg "a b"
+echo "status=$?"
+cat tstartdproc_tmp.out0
 
 echo ''
-$srcdir/../src/startdistproc -dsn tstartdproc.in_vd -cdn tstartdproc.in_cd \
--mode single -dry -hfn tstartdproc_tmp.out1 -fdp ../src prog1 -arg "a b"
+startdistproc -dsn tstartdproc.in_vd -cdn tstartdproc.in_cd \
+-mode mpi -dry -hfn tstartdproc_tmp.out1 -fdp ../src prog1 -arg "a b"
+echo "status=$?"
 cat tstartdproc_tmp.out1
 
 echo ''
-$srcdir/../src/startdistproc -dsn tstartdproc.in_vd -cdn tstartdproc.in_cd \
--mode mpi -dry -hfn tstartdproc_tmp.out2 -fdp ../src prog1 -arg "a b"
+startdistproc -useenv $curdir/tstartdproc_tmp.out2.envfile \
+-dsn tstartdproc.in_vd -cdn tstartdproc.in_cd \
+-mode 3851 -dry -hfn tstartdproc_tmp.out2 -fdp ../src prog1 -arg "a b" \
+> tstartdproc_tmp.log2
+echo "status=$?"
 cat tstartdproc_tmp.out2
+# Remove absolute directory path from logfile.
+sed -e "s%$curdir%%g" tstartdproc_tmp.log2
 
 echo ''
-$srcdir/../src/startdistproc -useenv tstartdproc_tmp.out3.envfile -dsn tstartdproc.in_vd -cdn tstartdproc.in_cd -mode 3851 -dry -hfn tstartdproc_tmp.out3 -fdp ../src prog1 -arg "a b"
+startdistproc -killonfail -useenv $curdir/tstartdproc_tmp.out3.envfile \
+-logfile $curdir/tstartdproc_tmp.log3b \
+-dsn tstartdproc.in_vd -cdn tstartdproc.in_cd1 -nostartmaster \
+-mode 3851 -hfn tstartdproc_tmp.out3 -fdp ../src `pwd`/tstartdproc.in_run \
+> tstartdproc_tmp.log3a
+echo "status=$?"
 cat tstartdproc_tmp.out3
-
+# Print log file without lines containing directory path and pids.
+# Outcomment lines with kill which contain pids.
+sed -e "s%$curdir%%g" -e 's/pid=[0-9]*/pid=nn/' -e 's/\(.* [kK]ill.*\)/>>> \1 <<</' tstartdproc_tmp.log3a
+for i in 0 1 2
+do
+  sed -e "s%$curdir%%g" tstartdproc_tmp.log3b-$i
+  sed -e 's/pid=[0-9]*/pid=nn/' -e 's/\(.* [kK]ill.*\)/>>> \1 <<</' tstartdproc_tmp.out3.envfile.pid-$i
+done

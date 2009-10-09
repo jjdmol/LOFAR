@@ -1,5 +1,5 @@
 check_PROGRAMS	= tClusterDesc tNodeDesc tVdsDesc tVdsPartDesc tWorkersDesc \
-		  tSocketConnection
+		  tSocketConnection tstartdproc
 
 CHECKTOOLPROGS	= $(CHECK_PROGRAMS)
 
@@ -28,11 +28,13 @@ tWorkersDesc_DEPENDENCIES = ../src/libmwcommon.la $(LOFAR_DEPEND)
 tSocketConnection_SOURCES 	  = tSocketConnection.cc
 tSocketConnection_DEPENDENCIES	  = ../src/libmwcommon.la $(LOFAR_DEPEND)
 
+tstartdproc_SOURCES 	  = tstartdproc.cc
+
 EXTRA_DIST	= tSocketConnection.run tSocketConnection.stdout \
 		  tfinddproc.in_vd tfinddproc.in_cd \
 		  tfinddproc.run tfinddproc.stdout 
-		  tstartdproc.in_vd tstartdproc.in_cd \
-		  tstartdproc.run tstartdproc.stdout 
+		  tstartdproc.in_vd tstartdproc.in_cd tstartdproc.in_cd1 \
+		  tstartdproc.run tstartdproc.in_run tstartdproc.stdout 
 
 include $(top_srcdir)/Makefile.common
 
