@@ -38,7 +38,9 @@ pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
 # Set default options.
+
 useenv=0
+killfail=0
 envfile=
 modxx=single
 wait=1
@@ -79,6 +81,12 @@ do
   elif [ "$1" = "-nouseenv" ]; then
     shift
     useenv=0
+  elif [ "$1" = "-killonfail" ]; then
+    shift
+    killfail=1
+  elif [ "$1" = "-nokillonfail" ]; then
+    shift
+    killfail=0
   elif [ "$1" = "-dsn" ]; then
     shift
     dsn="$1"
@@ -170,12 +178,13 @@ if [ $help = 1 ]; then
   echo 'The mode tells if it is started through MPI, sockets, or as a single process.'
   echo ''
   echo 'Run as:'
-  echo ' startdistproc -useenv -cdn clusterdescname [-dsn datasetname]"
-  echo "              [-dirs directories] [-mode mode]'
-  echo '              [-hfn hostfilename] [-fdp finddproc-path]'
-  echo '              [-logfile logfilename] [-[no]dry]'
-  echo '              [-extrahosts "host1 host2 ..."] [-noextrahosts]'
-  echo '              [-masterhost host] [-startmaster] program [arg1 arg2 ...]'
+  echo ' startdistproc [-useenv [envfilename]] [-wait] [-killonfail]'
+  echo '               [-cdn clusterdescname] [-dsn datasetname]'
+  echo '               [-dirs directories] [-mode mode]'
+  echo '               [-hfn hostfilename] [-fdp finddproc-path]'
+  echo '               [-logfile logfilename] [-dry]'
+  echo '               [-extrahosts "host1 host2 ..."] [-noextrahosts]'
+  echo '               [-masterhost host] [-startmaster] program [arg1 arg2 ...]'
   echo ''
   echo '  -useenv               Copy *PATH and *ROOT environment variables to distributed'
   echo '                        processes; otherwise they source lofarinit.sh.'
@@ -185,6 +194,9 @@ if [ $help = 1 ]; then
   echo '                        It defaults to "$HOME/startdistproc_$pid.envfile"'
   echo '                        If -useenv is given as the last option, a (possibly empty)'
   echo '                        file name must given, othwrwise the next argument is used.'
+  echo '  -wait                 wait for all processes to finish.'
+  echo '  -killonfail           kill all other processes if one fails.'
+  echo '                        It requires that -useenv is given.' 
   echo '  -cdn clusterdescname  The name of the file describing the cluster.'
   echo '  -dsn datasetname      The name of the file describing the distributed dataset.'
   echo '  -dirs directories     Directories to use if -dsn is not given.'
@@ -238,7 +250,7 @@ if test "$cdn" = ""; then
   exit 1
 fi
 if test $startmaster = 0; then
-  if test $modxx = "mpi"  -a  $modxx = "single"; then
+  if test $modxx = "mpi"  -o  $modxx = "single"; then
     echo "Error: -nostartmaster cannot be used with mode=mpi or single"
     exit 1
   fi
@@ -252,6 +264,13 @@ if test "$hfn" = ""; then
 fi
 if test "$fdp" != ""; then
   fdp="$fdp/"
+fi
+if test $modxx = "mpi"  -o  $modxx = "single"; then
+  killfail=0
+fi
+if test $killfail = 1  -a  $useenv != 1; then
+  echo "-useenv is mandatory if -killonfail is given"
+  exit 1
 fi
 
 # Prepend the hosts with the master and extra hosts.
@@ -272,8 +291,8 @@ else
 fi  
 np=`wc -l $hfn | awk '{print $1}'`
 
-# Find all PATH and ROOT variables and give a name derived from machine file.
-# Note that $envfile is empty is $useenv is not set. That is exactly what we need
+# Find all PATH and ROOT variables and store in a file with the pid in its name.
+# Note that $envfile is empty if $useenv is not set. That is exactly what we need
 # in the mpirun and socketrun lines.
 if [ "$useenv" = 1 ]; then
   if test "$envfile" = ""; then
@@ -297,10 +316,10 @@ elif test "$modxx" = "single"; then
     $program "$@" || exit 1
   fi
 else
-  echo "socketrun $dry $hfn '$master' $modxx $wait $logfile $program $envfile" "$@"
-  $pgmpath/socketrun $dry $hfn "$master" $modxx $wait "$logfile" $program $envfile "$@" || exit 1
+  echo "socketrun $dry $hfn '$master' $modxx $wait $killfail $logfile $program $envfile" "$@"
+  $pgmpath/socketrun $dry $hfn "$master" $modxx $wait $killfail "$logfile" $program $envfile "$@" || exit 1
 fi
 #rm -f $hfn
 #if test "$envfile" != ""; then
-#  rm -f $envfile
+#  rm -f $envfile*
 #fi
