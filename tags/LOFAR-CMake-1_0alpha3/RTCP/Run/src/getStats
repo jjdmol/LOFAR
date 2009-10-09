@@ -1,0 +1,212 @@
+#!/bin/sh
+
+# Do the first part in a shell script so the startup delay is
+# less unpredictable
+DATAFILE='/tmp/CURINPUT'
+tcpdump -c 10 -i eth0 -X -s 62 -e -n 2> /dev/null > $DATAFILE
+ifconfig | grep HW | awk '{print $1, $5;}' > $DATAFILE.MACS
+ifconfig |grep inet\ addr|awk '{print $2;}'|cut -b 1-5 --complement > $DATAFILE.IPS
+
+python <<EOF
+
+import sys
+import time
+from sets import Set
+
+#index of board in the sourceMac 
+bordIndex = 4
+
+class Packet(object):
+  """
+  Represents a packet of RSP data.
+  This class can extract information about a RSP packet.
+  It is written specifically to accept the output of the following command:
+  tcpdump -n -c 1 -i <interface> -X -s <greater than or equal to 62> -e
+  The first line of the tcpdump output should be given to the constructor, 
+  the following lines can be added by using appendLine().
+  """
+
+  # Some constants
+  #index of the sourceMac in tcpdump output
+  srcMacIndex = 1
+  #index of the destinationMac in tcpdump output
+  dstMacIndex = 3
+  #index of the UDPlength in tcpdump output
+  udpLengthIndex = -1
+
+  #the start of all LOFAR RSP MAC addresses
+  lofarMacStart = '10:fa:00:'
+  #index of station in the sourceMac 
+  stationIndex = 3
+
+  #index of the formatstring in the EPAheader
+  formatIndex = 4
+  #index of the second counters in the EPAheader
+  secondIndex = 5
+  # size of the EPA header
+  headerSize = 16
+  # index of the destination IP 
+  dstIPindex = 11
+
+  bytesPerBeamlet = 8
+
+
+  def __init__(self, header):
+    self.header = header
+    self.lines = list()
+  def appendLine(self, line):
+    self.lines.append(line)
+
+
+  def getMacs(self):
+    try:
+      words = self.header.split()
+      return (words[self.srcMacIndex], words[self.dstMacIndex])
+    except IndexError:
+      return ('-', '-')
+  def getSrcStation(self):
+    try:
+      srcMac, dstMac = self.getMacs()
+      if not srcMac.startswith(self.lofarMacStart):
+        return 'not a LOFAR station'
+       
+      return 'CS' + str(int(srcMac.split(':')[self.stationIndex], 16)) + ' board ' + str(int(srcMac.split(':')[bordIndex], 16))
+    except IndexError:
+      return 'not a LOFAR station'
+  def getBeamletAndTimes(self):
+    try:
+      format = self.lines[2].split()[self.formatIndex]
+      return int(format[0:2], 16), int(format[2:4], 16)
+    except IndexError:
+      return 0, 0
+  def getLength(self):
+    try:
+      return int(self.header.split()[self.udpLengthIndex])
+    except IndexError:
+      return 0
+  def getExpectedLength(self):
+    beamlets, times = self.getBeamletAndTimes()
+    return beamlets * times * self.bytesPerBeamlet + self.headerSize
+  def getUTC(self):
+    try:
+      parts = self.lines[2].split()
+      stamp = ''.join(parts[self.secondIndex:self.secondIndex + 2])
+      hexcode =           stamp[6:8]
+      hexcode = hexcode + stamp[4:6]
+      hexcode = hexcode + stamp[2:4]
+      hexcode = hexcode + stamp[0:2]
+      if hexcode == 'ffffffff':
+        return -1
+      return int(hexcode, 16)
+    except IndexError:
+      return 0
+  def getDestIP(self):
+   try:
+    words = self.header.split()
+    return (words[self.dstIPindex])
+   except IndexError:
+    return 0
+
+def parsefile(inputfile):
+  inputlines = open(inputfile).readlines()
+  packets = list()
+  packet = None
+  for line in inputlines:
+    if line.startswith('\t'):
+      # The first line should not start with a tab
+      # so if you get an error about not being able to append to None,
+      # something else is wrong (try a manual tcpdump)
+      packet.appendLine(line)
+    else:
+      packet = Packet(line)
+      packets.append(packet)
+  return packets
+
+packets = parsefile('$DATAFILE')
+# store all unique (by macs) packets and remember only the first one
+streams = dict()
+lBoardIds = set()
+
+for packet in reversed(packets):
+  IDFound = 0
+  ml = packet.getMacs()
+  for id in lBoardIds:
+    if ml[0].split(':')[bordIndex] == id:
+      IDFound = 1
+      break
+  
+  if not IDFound:
+    lBoardIds.add(ml[0].split(':')[bordIndex])
+  
+  # if a newer one was already found, it is now forgotten
+  if not IDFound:
+    streams[ml] = packet
+
+mymacs = open('$DATAFILE.MACS').readlines()
+myips = open('$DATAFILE.IPS').readlines()
+
+# analyze each packet for each data stream
+print ('Found the following datastreams:')
+
+# some methods for easier formatting
+def printok(text):
+  print ('  ok ' + text)
+def printnok(text):
+  print (' NOK ' + text)
+def printokornot(text):
+  print (' ??? ' + text)
+
+for (srcMac, dstMac), packet in streams.iteritems():
+  beamlets, times = packet.getBeamletAndTimes()
+  utcTime = packet.getUTC()
+  packetLength = packet.getLength()
+  expectedLength = packet.getExpectedLength()
+  stationName = packet.getSrcStation()
+  destIPs = packet.getDestIP()
+  
+  # check the source MAC
+  info = srcMac + ' -> ' + packet.getSrcStation()
+  if stationName.startswith('CS'):
+    printok(info)
+  else:
+    printnok(info)
+
+  # check the destination MAC
+  interfaces = [line.split()[0] for line in mymacs if dstMac.lower().rstrip(',') in line.lower()]
+  if not len(interfaces) == 0:
+    printok(dstMac.lower().rstrip(',') + ' -> this computer has this MAC address on ' + str(interfaces))
+  else:
+    printnok(dstMac + ' -> not my MAC address, this station seems to be broadcasting')
+
+  # check the destination IP address and port number
+  ips = [line.split()[0] for line in myips if destIPs.lower()[0:10] in line.lower()]
+  if not len(ips) == 0:
+    printok('Stream found to ' + str(ips) + ':' + destIPs.lower()[11:16].rstrip(':').lstrip('.') + ' and this machine has an interface configured with this IP.')
+  else:
+    printnok(destIPs.lower()[0:10]+':'+ destIPs.lower()[11:15] + ' not found on this machine. Station misconfigured or broadcasting' )
+
+  # check the packet format
+  info = str(beamlets) + ' beamlets and ' + str(times) + ' times and packet length is ' + str(packetLength)
+  if expectedLength == packetLength:
+    printok(info)
+  else:
+    printnok(info + ' but should be ' + str(expectedLength))
+
+  # check the station time
+  # info = 'Current UTC time: ' + str(utcTime) + ' (' + str(time.ctime(utcTime)) + ')'
+  info = 'Current UTC time: ' + str(utcTime) + ' (' + str(time.asctime(time.gmtime(utcTime))) + ')'
+  if utcTime == -1:
+    printnok('UTC time is not updated by RSPDriver')
+  elif time.time() - utcTime > 600 or utcTime > time.time():
+    printnok(info)
+  elif time.time() - utcTime > 10:
+    printokornot(info)
+  else:
+    printok(info)
+
+print
+sys.exit(0)
+
+EOF
+
+
