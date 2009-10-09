@@ -214,16 +214,34 @@ else:
   sr.setResult('FAILED')
 
 ################################################################################
-sr.setId('Serdes ring -')
+sr.setId('Serdes ring off -')
 sr.appendLog(21,'')
-sr.appendLog(21,'### Verify the Serdes ring connection between the RSP boards')
+sr.appendLog(21,'### Verify the Serdes ring connection between the RSP boards with ring is off')
 sr.appendLog(21,'')
+cli.command('rspctl --splitter=0')
 res = cli.command('python verify.py --brd %s --rep 1 -v 21 --te tc/serdes.py --diag_sync 0' %(RspBrd,))
 if res.find('wrong')==-1:
-  sr.appendLog(11,'>>> Serdes ring test went OK')
+  sr.appendLog(11,'>>> Serdes ring off test went OK')
   sr.appendLog(21,'tc/serdes.log')
 else:
-  sr.appendLog(11,'>>> Serdes ring test went wrong')
+  sr.appendLog(11,'>>> Serdes ring off test went wrong')
+  sr.appendLog(11,'CLI:')
+  sr.appendLog(11,res,1,1,1)
+  sr.appendLog(11,'tc/serdes.log')
+  sr.appendLog('FAILED')
+
+################################################################################
+sr.setId('Serdes ring on -')
+sr.appendLog(21,'')
+sr.appendLog(21,'### Verify the Serdes ring connection between the RSP boards with ring is on')
+sr.appendLog(21,'')
+cli.command('rspctl --splitter=1')
+res = cli.command('python verify.py --brd %s --rep 1 -v 21 --te tc/serdes.py --diag_sync 0' %(RspBrd,))
+if res.find('wrong')==-1:
+  sr.appendLog(11,'>>> Serdes ring on test went OK')
+  sr.appendLog(21,'tc/serdes.log')
+else:
+  sr.appendLog(11,'>>> Serdes ring on test went wrong')
   sr.appendLog(11,'CLI:')
   sr.appendLog(11,res,1,1,1)
   sr.appendLog(11,'tc/serdes.log')
