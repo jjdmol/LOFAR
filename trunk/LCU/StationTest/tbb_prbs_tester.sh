@@ -10,6 +10,7 @@ let nof_rcu=8*$rspboards
 rm -f *.log
 rm -f *.diff
 rm -f ./prbs/*.*
+rm -r ./prbs/.svn
 
 
 # Set up RCU and RSP, make sure waveform generator is off
