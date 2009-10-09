@@ -28,20 +28,12 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(LOFAR)
+project(Offline)
 include(LofarGeneral)
 
-## ---------------------------------------------------------------------------
-## Subdirectories
-## ---------------------------------------------------------------------------
 include(LofarPackage)
-lofar_add_package(LCS)
-lofar_add_package(CEP)
-lofar_add_package(RTCP)
-lofar_add_package(SAS)
-lofar_add_package(MAC)
-lofar_add_package(LCU)
-lofar_add_package(SubSystems)
+lofar_package(${PROJECT_NAME} 
+  DEPENDS pyparameterset BBSControl pyparmdb MWImager DPPP LofarStMan)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
