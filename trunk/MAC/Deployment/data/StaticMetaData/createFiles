@@ -203,11 +203,21 @@ def createRSPDriverFile(resultDir, stationName, dataDir):
     # substitute StationInfo
     ipnumber = findIPNumber(stationName)
     ip_parts = ipnumber.split('.')
-    if (ip_parts[1] == "151"):
-        ip_prefix = "175"
-    else:
-        ip_prefix = "174"
 
+    # Find IP address for RSP board ethernet. All NL stations have RSP address
+    # like 10.175.x.x, Non-NL stations like 10.174.x.x
+    if (ip_parts[1] == "151"): 
+        ip_prefix = "175" # NL stations
+    else:
+        ip_prefix = "174" # Non-NL stations
+
+    print stationName[0:2].upper()
+    # Core stations should have Splitter set to 1; others to 0.
+    if (stationName[0:2].upper() == "CS"):
+        RSPconfig = RSPconfig.replace("@SPLITTER@",str(1))
+    else:
+        RSPconfig = RSPconfig.replace("@SPLITTER@",str(0))
+      
     hexStationID = str("%02x" % int(stationName[3:6]))
     ringID = '0'+stationName[2]
 
