@@ -69,9 +69,10 @@ echo "status=$?"
 cat tstartdproc_tmp.out3
 # Print log file without lines containing directory path and pids.
 # Outcomment lines with kill which contain pids.
-sed -e "s%$curdir%%g" -e 's/pid=[0-9]*/pid=nn/' -e 's/\(.* [kK]ill.*\)/>>> \1 <<</' tstartdproc_tmp.log3a
+# Remove other lines containing Kill because some systems print them, some don't.
+sed -e "s%$curdir%%g" -e 's/pid=[0-9]*/pid=nn/' -e 's/\(.* kill -9 .*\)/>>> \1 <<</' tstartdproc_tmp.log3a
 for i in 0 1 2
 do
   sed -e "s%$curdir%%g" tstartdproc_tmp.log3b-$i
-  sed -e 's/pid=[0-9]*/pid=nn/' -e 's/\(.* [kK]ill.*\)/>>> \1 <<</' tstartdproc_tmp.out3.envfile.pid-$i
+  sed -e 's/pid=[0-9]*/pid=nn/' tstartdproc_tmp.out3.envfile.pid-$i | grep -v " Killed "
 done
