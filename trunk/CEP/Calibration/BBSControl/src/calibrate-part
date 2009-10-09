@@ -43,11 +43,11 @@ echo "calibrate-part (script to calibrate a single MS)"
 echo
 
 # Check argument count.
-if test $# != 18; then
+if test $# != 19; then
   echo "usage:"
   echo "    calibrate-part <ignored> <ignored> <ignored> <ignored> rank"
-  echo "        part filesystem partvds lofarroot wd key db-host db-port"
-  echo "        db-name db-user parmdb sourcedb dry"
+  echo "        part filesystem partvds envfile lofarroot wd key db-host"
+  echo "        db-port db-name db-user parmdb sourcedb dry"
   exit 1
 fi
 
@@ -59,22 +59,24 @@ shift   # ignore rank
 part=${1}
 filesys=${2}
 partvds=${3}
-lofarroot=${4}
-wd=${5}
-key=${6}
-db_host=${7}
-db_port=${8}
-db_name=${9}
-db_user=${10}
-parmdb=${11}
-sourcedb=${12}
-dry=${13}
+envfile=${4}
+lofarroot=${5}
+wd=${6}
+key=${7}
+db_host=${8}
+db_port=${9}
+db_name=${10}
+db_user=${11}
+parmdb=${12}
+sourcedb=${13}
+dry=${14}
 
 echo "arguments:"
 echo "    part: ${part}"
 echo "    filesys: ${filesys}"
 echo "    part vds: ${partvds}"
 echo "    wd: ${wd}"
+echo "    envfile: ${envfile}"
 echo
 echo "    lofarroot: ${lofarroot}"
 echo
@@ -86,6 +88,11 @@ echo "    parmdb: ${parmdb}"
 echo "    sourcedb: ${sourcedb}"
 echo "    dry: ${dry}"
 echo
+
+# Initialize environment.
+if test "${envfile}" != ""; then
+  . ${envfile}
+fi
 
 # Initialize lofar environment.
 if test ! -r "${lofarroot}/lofarinit.sh"; then
