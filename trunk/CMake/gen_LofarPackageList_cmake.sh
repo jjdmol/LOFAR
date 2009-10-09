@@ -46,19 +46,17 @@ cat >&3 <<EOF
 #
 #                            ---- DO NOT EDIT ----
 #
-#  This file creates for each LOFAR package a cache variable containing the
-#  relative path to its source directory. Note that CMake also provides this
-#  information, but only AFTER a CMake project has been processed by
-#  CMake. However, sometimes we need this information BEFORE CMake has
-#  processed the directory. This file resolves this chicken-and-egg
-#  problem. 
+#  This file creates for each LOFAR package a variable containing the relative
+#  path to its source directory. 
 #
-#  ATTENTION: This file must be included BEFORE the first project() command is
-#  seen by CMake; either directly, or indirectly.
+#  ATTENTION: This file must be included BEFORE the first call of the
+#  lofar_package() macro; either directly, or indirectly.
 #
 #  NOTE: This file must be kept up-to-date when project directories are added,
 #  moved, or deleted. Use $(basename $0) to do so.
 #
+if(NOT DEFINED LOFAR_PACKAGE_LIST_INCLUDED)
+  set(LOFAR_PACKAGE_LIST_INCLUDED TRUE)
 EOF
 
 # Add a trailing slash to the directory path $lofar_root to ensure that, if
@@ -70,10 +68,11 @@ do
   if test "$p" != ""; then
     d=$(dirname $f | sed -n "s%$lofar_root/%%p")
     if test "$d" != ""; then
-      echo >&3 "set(${p}_SOURCE_DIR $d CACHE STATIC \"$p source directory\")"
+      echo >&3 "  set(${p}_SOURCE_DIR \${CMAKE_SOURCE_DIR}/$d)"
     fi
   fi
 done
+echo >&3 "endif(NOT DEFINED LOFAR_PACKAGE_LIST_INCLUDED)"
 
 # Close the output file
 exec 3>&-

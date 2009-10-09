@@ -31,12 +31,10 @@ include(LofarInit)
 project(LOFAR)
 include(LofarGeneral)
 
-include(LofarPackage)
-lofar_package(LOFAR)
-
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
+include(LofarPackage)
 lofar_add_package(LCS)
 lofar_add_package(CEP)
 lofar_add_package(RTCP)
