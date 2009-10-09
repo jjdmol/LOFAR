@@ -44,7 +44,7 @@ namespace LOFAR {
 
 GCFTimerPort* itsCmdTimer;
 
-static const int TBBCTL_VERSION = 215;
+static const int TBBCTL_VERSION = 219; // tbbctl V2.19
 
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 
@@ -142,8 +142,10 @@ public:
 			case TBB_TIME_OUT            : str = "time-out"; break;
 			case TBB_BUSY                : str = "driver busy"; break;
 			case TBB_FLASH_FILE_NOT_FIND : str = "hex files not found"; break;
-			case TBB_FLASH_ERROR         : str = "flash error"; break;
-			case TBB_FLASH_BAD_PASSWORD  : str = "bad password for image 0"; break;
+			case TBB_FLASH_BAD_PASSWORD  : str = "bad password for image 0"; break; 
+			case TBB_FLASH_ERASE_ERROR   : str = "flash erase error"; break;
+			case TBB_FLASH_WRITE_ERROR   : str = "flash write error"; break;
+			case TBB_FLASH_VERIFY_ERROR  : str = "flash verify error"; break;
 			case TBB_CH_NOT_FREE         : str = "channel not free"; break;
 			case TBB_CH_NOT_ALLOCATED    : str = "channel not allocated"; break;
 			case TBB_CH_NOT_STOPPED      : str = "channel not stopped"; break;

@@ -112,7 +112,7 @@ void StatusCmd::saveTpAckEvent(GCFEvent& event)
 			itsWatchDogMode[getBoardNr()] = ((tp_ack.info[5] >> 16) & 0xf);
 			itsPgood[getBoardNr()] = tp_ack.info[0];
 				
-			LOG_INFO_STR(formatString("Status info = 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x",
+			LOG_DEBUG_STR(formatString("Status info = 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x",
 												tp_ack.info[0], tp_ack.info[5], tp_ack.info[6], 
 												tp_ack.info[7], tp_ack.info[8], tp_ack.info[9]));
 		}
