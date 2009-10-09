@@ -38,7 +38,9 @@ Killing the other remote processes ...
 sleep for 30 seconds
 tstartdproc 30 0
 pid=nn
->>> /Users/diepen/sim/LOFAR/CEP/MWCommon/src/runlogpid: line 52: 20373 Killed                  $program "$@" <<<
+>>>
+/Users/diepen/sim/LOFAR/CEP/MWCommon/src/runlogpid: line 52: 20373 Killed                  $program "$@"
+<<<
 status=137
 sleep for 5 seconds
 tstartdproc 5 1
@@ -47,5 +49,7 @@ status=1
 sleep for 30 seconds
 tstartdproc 30 0
 pid=nn
->>> /Users/diepen/sim/LOFAR/CEP/MWCommon/src/runlogpid: line 52: 20385 Killed                  $program "$@" <<<
+>>>
+/Users/diepen/sim/LOFAR/CEP/MWCommon/src/runlogpid: line 52: 20385 Killed                  $program "$@"
+<<<
 status=137

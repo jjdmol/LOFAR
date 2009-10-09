@@ -61,4 +61,5 @@ lofar_add_bin_program(finddproc finddproc.cc)
 install(PROGRAMS
   startdistproc
   socketrun
+  runlogpid
   DESTINATION bin)
