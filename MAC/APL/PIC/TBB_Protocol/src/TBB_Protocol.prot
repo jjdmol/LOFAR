@@ -39,8 +39,10 @@ static const uint32 TBB_BUSY                 = 0x00000005;
 // flash errors
 static const uint32 TBB_FLASH_MASK           = 0x000000F0;
 static const uint32 TBB_FLASH_FILE_NOT_FIND  = 0x00000010;
-static const uint32 TBB_FLASH_ERROR          = 0x00000020;
-static const uint32 TBB_FLASH_BAD_PASSWORD   = 0x00000030;
+static const uint32 TBB_FLASH_BAD_PASSWORD   = 0x00000020;
+static const uint32 TBB_FLASH_ERASE_ERROR    = 0x00000030;
+static const uint32 TBB_FLASH_WRITE_ERROR    = 0x00000040;
+static const uint32 TBB_FLASH_VERIFY_ERROR   = 0x00000050;
 
 // rcu errors
 static const uint32 TBB_CH_MASK              = 0x00000F00;
