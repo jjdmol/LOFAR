@@ -70,7 +70,7 @@ cat tstartdproc_tmp.out3
 # Print log file without lines containing directory path and pids.
 # Outcomment lines with kill which contain pids.
 # Remove other lines containing Kill because some systems print them, some don't.
-sed -e "s%$curdir%%g" -e 's/pid=[0-9]*/pid=nn/' -e 's/\(.* kill -9 .*\)/>>> \1 <<</' tstartdproc_tmp.log3a
+sed -e "s%$curdir%%g" -e 's/pid=[0-9]*/pid=nn/' -e 's/kill -9 .*/kill -9 /' tstartdproc_tmp.log3a
 for i in 0 1 2
 do
   sed -e "s%$curdir%%g" tstartdproc_tmp.log3b-$i
