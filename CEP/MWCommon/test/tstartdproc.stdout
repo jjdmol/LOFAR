@@ -33,8 +33,8 @@ ssh -x -n localhost /tstartdproc.in_run socket localhost 3851 3 1 '/usr/local/xy
 ssh -x -n localhost /tstartdproc.in_run socket localhost 3851 3 2 '/usr/local/xyx2' 'node1:/usr' '/usr/local/xyx2.vds' '/tstartdproc_tmp.out3.envfile'   &
 Remote process (pid=nn) with rank 1 ended with error status 1
 Killing the other remote processes ...
->>> ssh -x localhost kill -9 20373 <<<
->>> ssh -x localhost kill -9 20385 <<<
+ssh -x localhost kill -9 >>> 20373 <<<
+ssh -x localhost kill -9 >>> 20385 <<<
 sleep for 30 seconds
 tstartdproc 30 0
 pid=nn
