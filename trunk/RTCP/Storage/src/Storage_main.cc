@@ -13,8 +13,9 @@
 #include <Common/LofarLogger.h>
 #include <Common/Exceptions.h>
 #include <Common/LofarLocators.h>
-#include <Interface/Parset.h>
 #include <Interface/Exceptions.h>
+#include <Interface/Parset.h>
+#include <Interface/Thread.h>
 #include <Storage/SubbandWriter.h>
 
 #if !defined HAVE_PKVERSION
@@ -34,34 +35,65 @@
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 
+
+class Job
+{
+  public:
+    Job(const char *parsetName, int rank, int size);
+
+    void	  mainLoop();
+
+  private:
+    const Parset  itsParset;
+    SubbandWriter itsSubbandWriter;
+    Thread	  itsThread;
+};
+
+
+static std::vector<Job *> jobs;
+
+
+Job::Job(const char *parsetName, int rank, int size)
+:
+  itsParset(parsetName),
+  itsSubbandWriter(&itsParset, rank, size),
+  itsThread(this, &Job::mainLoop)
+{
+  LOG_INFO_STR("Created job with parset " << parsetName);
+}
+
+
+void Job::mainLoop()
+{
+  itsSubbandWriter.preprocess();
+  itsSubbandWriter.process();
+  itsSubbandWriter.postprocess();
+}
+
+
 static void child(int argc, char *argv[], int rank, int size)
 {
   try {
-    if (argc == 3)
-      LOG_WARN("specifying nrRuns is deprecated --- ignored");
-    else if (argc != 2)
-      THROW(StorageException, std::string("usage: ") << argv[0] << " parset");
 #if !defined HAVE_PKVERSION
     std::string type = "brief";
     Version::show<StorageVersion> (std::cout, "Storage", type);  
 #endif    
     
-    LOG_INFO_STR("trying to use parset \"" << argv[1] << '"');
-    
-    Parset parset(argv[1]);
-
+#if 0
     // OLAP.parset is depricated, as everything is now in the parset given on the command line
     try {
       parset.adoptFile("OLAP.parset");
     } catch( APSException &ex ) {
       LOG_WARN_STR("could not read OLAP.parset: " << ex);
     }
+#endif
 
-    SubbandWriter subbandWriter(&parset, rank, size);
+  for (int i = 1; i < argc; i ++)
+    jobs.push_back(new Job(argv[i], rank, size));
 
-    subbandWriter.preprocess();
-    subbandWriter.process();
-    subbandWriter.postprocess();
+  for (unsigned i = 0; i < jobs.size(); i ++) // TODO: let job delete itself
+    delete jobs[i];
+
   } catch (Exception &ex) {
     LOG_FATAL_STR("caught Exception: " << ex);
     exit(1);
@@ -98,12 +130,17 @@ int main(int argc, char *argv[])
 #if defined HAVE_MPI
   int rank;
   int size;
+
+#if 0
   int thread_model_provided;
 
   MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &thread_model_provided);
   if (thread_model_provided != MPI_THREAD_SERIALIZED) {
     LOG_WARN_STR("Failed to set MPI thread model to MPI_THREAD_SERIALIZED");
   }
+#else
+  MPI_Init(&argc, &argv);
+#endif
 
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -142,5 +179,6 @@ int main(int argc, char *argv[])
   MPI_Finalize();
 #endif
 
+  LOG_INFO("Program end");
   return 0; // always return 0, otherwise mpirun kills other storage processes
 }
