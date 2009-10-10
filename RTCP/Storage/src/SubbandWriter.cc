@@ -53,6 +53,7 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank, unsigned size)
   itsPS(ps),
   itsRank(rank),
   itsSize(size),
+  itsObservationID(ps->observationID()),
   itsConfiguration(*ps),
   itsPlan(itsConfiguration,false,true),
   itsNrOutputs(itsPlan.nrOutputs()),
@@ -289,6 +290,7 @@ void SubbandWriter::writeLogMessage()
 #if defined HAVE_MPI
 	       ", rank = " << itsRank <<
 #endif
+	       ", obsID = " << itsObservationID <<
 	       ", count = " << counter ++ <<
 	       ", timestamp = " << itsStartStamp + ((itsPreviousSequenceNumbers[0][0] + 1) *
 						     itsPS->nrSubbandSamples() *
@@ -310,7 +312,7 @@ void SubbandWriter::checkForDroppedData(StreamableData *data, unsigned sb, unsig
 
     if (droppedBlocks > 0) {
       unsigned subbandNumber = itsRank * itsNrSubbandsPerStorage + sb;
-      LOG_WARN_STR("dropped " << droppedBlocks << " block" << (droppedBlocks == 1 ? "" : "s") << " for subband " << subbandNumber << " and output " << output);
+      LOG_WARN_STR("dropped " << droppedBlocks << (droppedBlocks == 1 ? "block for subband" : "blocks for subband") << subbandNumber << " and output " << output << " of obsID " << itsObservationID);
     }
 
     itsPreviousSequenceNumbers[sb][output] = data->sequenceNumber;

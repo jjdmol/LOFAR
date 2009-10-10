@@ -79,6 +79,7 @@ namespace LOFAR
   namespace RTCP
   {
 
+    Mutex MSWriterCasa::sharedMutex;
 
     static NSTimer MSsetupTimer("MSWriterCasa::write (setup)", true, true);
     static NSTimer MSwriteTimer("MSWriterCasa::write (write)", true, true);
@@ -108,6 +109,7 @@ namespace LOFAR
         itsMS       (0),
         itsMSCol    (0)	
     {
+      sharedMutex.lock();
       AlwaysAssert (nantennas >= 0, AipsError);
 
       // Allocate buffers
@@ -182,10 +184,12 @@ namespace LOFAR
       // Make a frame for the calculation of apparent coordinates.
       // Store position of array center in it.
       itsFrame = new MeasFrame(*itsArrayPos);
+      sharedMutex.unlock();
     }
 
     MSWriterCasa::~MSWriterCasa()
     {
+      sharedMutex.lock();
       if (itsMS != 0) {
         updateTimes();
       }
@@ -200,6 +204,7 @@ namespace LOFAR
       
       delete [] itsFlagsBuffers;   itsFlagsBuffers   = 0;
       delete [] itsWeightsBuffers; itsWeightsBuffers = 0;
+      sharedMutex.unlock();
     }
 
     int MSWriterCasa::nrPolarizations() const
@@ -293,13 +298,15 @@ namespace LOFAR
     int MSWriterCasa::addBand (int npolarizations, int nchannels,
                                double refFreq, double chanWidth)
     {
+      sharedMutex.lock();
       AlwaysAssert (nchannels > 0, AipsError);
       casa::Vector<double> chanWidths(nchannels);
       chanWidths = chanWidth;
       casa::Vector<double> chanFreqs(nchannels);
       indgen (chanFreqs, refFreq - (nchannels-1)*chanWidth/2., chanWidth);
+      int retval;
       try {
-	return addBand (npolarizations, nchannels, refFreq, chanFreqs, chanWidths);
+	retval = addBand (npolarizations, nchannels, refFreq, chanFreqs, chanWidths);
       } catch (AipsError x) {
 	LOG_FATAL_STR("AIPS/Casa error in MSWriterCasa::addBand(): " << x.getMesg());
 	exit(0);
@@ -307,18 +314,22 @@ namespace LOFAR
 	LOG_FATAL("Unexpected error in MSWriterCasa::addBand() ");
 	exit(0);
       }
+      sharedMutex.unlock();
+      return retval;
     }
 
     int MSWriterCasa::addBand (int npolarizations, int nchannels,
                                double refFreq, const double* chanFreqs,
                                const double* chanWidths)
     {
+      sharedMutex.lock();
       AlwaysAssert (nchannels > 0, AipsError);
       IPosition shape(1, nchannels);
       casa::Vector<double> freqs (shape, const_cast<double*>(chanFreqs), SHARE);
       casa::Vector<double> widths(shape, const_cast<double*>(chanWidths), SHARE);
+      int retval;
       try {
-	return addBand (npolarizations, nchannels, refFreq, freqs, widths);
+	retval = addBand (npolarizations, nchannels, refFreq, freqs, widths);
       } catch (AipsError x) {
 	LOG_FATAL_STR("AIPS/Casa error in MSWriterCasa::addBand(): " << x.getMesg());
 	exit(0);
@@ -326,6 +337,8 @@ namespace LOFAR
         LOG_FATAL("Unexpected error in MSWriterCasa::addBand() ");
 	exit(0);
       }
+      sharedMutex.unlock();
+      return retval;
     }
 
     int MSWriterCasa::addBand (int npolarizations, int nchannels,
@@ -428,6 +441,7 @@ namespace LOFAR
 
     void MSWriterCasa::addField (double RA, double DEC, unsigned beamIndex)
     {
+      sharedMutex.lock();
       MVDirection radec (Quantity(RA,"rad"), Quantity(DEC,"rad"));
       MDirection indir(radec, MDirection::J2000);
       casa::Vector<MDirection> outdir(1);
@@ -469,6 +483,7 @@ namespace LOFAR
         }
       }
       itsNrField++;
+      sharedMutex.unlock();
     }
 
     void MSWriterCasa::fillAntenna (const Block<MPosition>& antPos,
@@ -633,6 +648,7 @@ namespace LOFAR
     void MSWriterCasa::write (int bandId, int channelId, int nrChannels, 
                               StreamableData *data)
     {
+      sharedMutex.lock();
       CorrelatedData *correlatedData = dynamic_cast<CorrelatedData*>(data);
       const fcomplex* visibilityData = correlatedData->visibilities.origin();
   
@@ -798,6 +814,7 @@ namespace LOFAR
         LOG_FATAL("Unknown error in MSWriterCasa::write(): ");
 	exit(0);
       } /// try
+      sharedMutex.unlock();
     }
     
   } // namespace RTCP
