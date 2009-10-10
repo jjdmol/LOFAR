@@ -34,9 +34,6 @@
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 
-using namespace log4cplus;
-using namespace log4cplus::helpers;
-
 static void child(int argc, char *argv[], int rank, int size)
 {
   try {
@@ -78,12 +75,12 @@ static void child(int argc, char *argv[], int rank, int size)
 }
 
 
-using namespace log4cplus;
-using namespace log4cplus::helpers;
-
 int main(int argc, char *argv[])
 {
-#ifdef HAVE_LOG4CPLUS
+#if defined HAVE_LOG4CPLUS
+  using namespace log4cplus;
+  using namespace log4cplus::helpers;
+
   lofarLoggerInitNode();
   helpers::Properties traceProp;
   traceProp.setProperty("log4cplus.rootLogger", "DEBUG, STDOUT");
@@ -93,7 +90,7 @@ int main(int argc, char *argv[])
   traceProp.setProperty("log4cplus.appender.STDOUT.layout.ConversionPattern", "%-5p|%x|%m%n");
   
   PropertyConfigurator(traceProp).configure();
-#else
+#elif !defined LOG4CXX
   Context::initialize();
   setLevel("Global",8);
 #endif
