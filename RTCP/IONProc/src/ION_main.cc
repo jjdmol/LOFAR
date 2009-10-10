@@ -260,12 +260,13 @@ static void unmapFlatMemory()
 class Job
 {
   public:
-    Job(const Parset *);
+    Job(const char *parsetName);
     ~Job();
 
-    const Parset *const itsParset;
+    const Parset itsParset;
 
   private:
+    void	checkParset() const;
     void	createCNstreams();
     void	configureCNs(), unconfigureCNs();
 
@@ -298,17 +299,19 @@ unsigned		  Job::theInputSectionRefCount = 0;
 static std::vector<Job *> jobs;
 
 
-Job::Job(const Parset *parset)
+Job::Job(const char *parsetName)
 :
-  itsParset(parset)
+  itsParset(parsetName)
 {
-  itsObservationID = parset->observationID();
+  checkParset();
 
-  LOG_DEBUG_STR("Creating new observation, ObsID = " << parset->observationID());
-  LOG_DEBUG_STR("ObsID = " << parset->observationID() << ", parset = " << (void *) parset << ", usedCoresInPset = " << parset->usedCoresInPset());
+  itsObservationID = itsParset.observationID();
 
-  itsHasInputSection  = parset->inputPsetIndex(myPsetNumber) >= 0;
-  itsHasOutputSection = parset->outputPsetIndex(myPsetNumber) >= 0;
+  LOG_DEBUG_STR("Creating new observation, ObsID = " << itsParset.observationID());
+  LOG_DEBUG_STR("ObsID = " << itsParset.observationID() << ", usedCoresInPset = " << itsParset.usedCoresInPset());
+
+  itsHasInputSection  = itsParset.inputPsetIndex(myPsetNumber) >= 0;
+  itsHasOutputSection = itsParset.outputPsetIndex(myPsetNumber) >= 0;
 
   if (itsHasInputSection || itsHasOutputSection)
     itsJobThread = new Thread(this, &Job::jobThread, 65536);
@@ -319,8 +322,6 @@ Job::~Job()
 {
   if (itsHasInputSection || itsHasOutputSection)
     delete itsJobThread;
-
-  delete itsParset; // FIXME: not here
 }
 
 
@@ -328,14 +329,14 @@ void Job::allocateResources()
 {
   createCNstreams();
 
-  itsNrRuns = static_cast<unsigned>(ceil((itsParset->stopTime() - itsParset->startTime()) / itsParset->CNintegrationTime()));
+  itsNrRuns = static_cast<unsigned>(ceil((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime()));
   LOG_DEBUG_STR("itsNrRuns = " << itsNrRuns);
 
   pthread_mutex_lock(&allocationMutex);
 
   // see if there is a resource conflict with any preceding job
   for (std::vector<Job *>::iterator job = jobs.begin(); *job != this;)
-    if ((*job)->itsParset->overlappingResources(itsParset)) {
+    if ((*job)->itsParset.overlappingResources(&itsParset)) {
       pthread_cond_wait(&reevaluate, &allocationMutex);
       job = jobs.begin();
     } else {
@@ -347,7 +348,7 @@ void Job::allocateResources()
   if (itsHasInputSection)
     attachToInputSection();
 
-  switch (itsParset->nrBitsPerSample()) {
+  switch (itsParset.nrBitsPerSample()) {
     case  4 : itsToCNthread = new Thread(this, &Job::toCNthread<i4complex>, 65536);
 	      break;
 
@@ -387,10 +388,10 @@ void Job::deallocateResources()
 
 void Job::jobThread()
 {
-  if (itsParset->realTime()) {
+  if (itsParset.realTime()) {
     // claim resources two seconds before observation start
     WallClockTime wallClock;
-    TimeStamp     closeToStart(static_cast<int64>((itsParset->startTime() - 2) * itsParset->sampleRate()));
+    TimeStamp     closeToStart(static_cast<int64>((itsParset.startTime() - 2) * itsParset.sampleRate()));
     
     wallClock.waitUntil(closeToStart);
   }
@@ -408,7 +409,7 @@ void Job::jobThread()
 
 void Job::createCNstreams()
 {
-  std::vector<unsigned> usedCoresInPset = itsParset->usedCoresInPset();
+  std::vector<unsigned> usedCoresInPset = itsParset.usedCoresInPset();
 
   itsCNstreams.resize(usedCoresInPset.size());
 
@@ -422,14 +423,14 @@ void Job::attachToInputSection()
   theInputSectionMutex.lock();
 
   if (theInputSectionRefCount ++ == 0)
-    switch (itsParset->nrBitsPerSample()) {
-      case  4 : theInputSection = new InputSection<i4complex>(itsParset, myPsetNumber);
+    switch (itsParset.nrBitsPerSample()) {
+      case  4 : theInputSection = new InputSection<i4complex>(&itsParset, myPsetNumber);
 		break;
 
-      case  8 : theInputSection = new InputSection<i8complex>(itsParset, myPsetNumber);
+      case  8 : theInputSection = new InputSection<i8complex>(&itsParset, myPsetNumber);
 		break;
 
-      case 16 : theInputSection = new InputSection<i16complex>(itsParset, myPsetNumber);
+      case 16 : theInputSection = new InputSection<i16complex>(&itsParset, myPsetNumber);
 		break;
     }
 
@@ -442,7 +443,7 @@ void Job::detachFromInputSection()
   theInputSectionMutex.lock();
 
   if (-- theInputSectionRefCount == 0)
-    switch (itsParset->nrBitsPerSample()) {
+    switch (itsParset.nrBitsPerSample()) {
       case  4 : delete static_cast<InputSection<i4complex> *>(theInputSection);
 		break;
 
@@ -460,16 +461,16 @@ void Job::detachFromInputSection()
 void Job::configureCNs()
 {
   CN_Command	   command(CN_Command::PREPROCESS);
-  CN_Configuration configuration(*itsParset);
+  CN_Configuration configuration(itsParset);
   
-  LOG_DEBUG_STR("configuring cores " << itsParset->usedCoresInPset() << " ...");
+  LOG_DEBUG_STR("configuring cores " << itsParset.usedCoresInPset() << " ...");
 
   for (unsigned core = 0; core < itsCNstreams.size(); core ++) {
     command.write(itsCNstreams[core]);
     configuration.write(itsCNstreams[core]);
   }
   
-  LOG_DEBUG_STR("configuring cores " << itsParset->usedCoresInPset() << " done");
+  LOG_DEBUG_STR("configuring cores " << itsParset.usedCoresInPset() << " done");
 }
 
 
@@ -477,12 +478,12 @@ void Job::unconfigureCNs()
 {
   CN_Command command(CN_Command::POSTPROCESS);
 
-  LOG_DEBUG_STR("unconfiguring cores " << itsParset->usedCoresInPset() << " ...");
+  LOG_DEBUG_STR("unconfiguring cores " << itsParset.usedCoresInPset() << " ...");
 
   for (unsigned core = 0; core < itsCNstreams.size(); core ++)
     command.write(itsCNstreams[core]);
 
-  LOG_DEBUG_STR("unconfiguring cores " << itsParset->usedCoresInPset() << " done");
+  LOG_DEBUG_STR("unconfiguring cores " << itsParset.usedCoresInPset() << " done");
 }
 
 
@@ -494,7 +495,7 @@ template <typename SAMPLE_TYPE> void Job::toCNthread()
   std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
   BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsCNstreams, itsHasInputSection ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
 
-  beamletBufferToComputeNode.preprocess(itsParset);
+  beamletBufferToComputeNode.preprocess(&itsParset);
 	
   for (unsigned run = 0; run < itsNrRuns; run ++)
     beamletBufferToComputeNode.process();
@@ -511,7 +512,7 @@ void Job::fromCNthread()
   LOG_DEBUG("starting from_CN thread");
   OutputSection outputSection(myPsetNumber, itsCNstreams);
 
-  outputSection.preprocess(itsParset);
+  outputSection.preprocess(&itsParset);
 
   for (unsigned run = 0; run < itsNrRuns; run ++)
     outputSection.process();
@@ -521,10 +522,10 @@ void Job::fromCNthread()
 }
 
 
-static void checkParset(const Parset *parset)
+void Job::checkParset() const
 {
-  if (parset->nrCoresPerPset() > nrCNcoresInPset) {
-    LOG_ERROR_STR("nrCoresPerPset (" << parset->nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
+  if (itsParset.nrCoresPerPset() > nrCNcoresInPset) {
+    LOG_ERROR_STR("nrCoresPerPset (" << itsParset.nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
     exit(1);
   }
 }
@@ -557,7 +558,7 @@ void master_thread(int argc, char **argv)
       exit(1);
     }
 
-    //createAllCNstreams(parset->getTransportType("OLAP.OLAP_Conn.IONProc_CNProc"));
+    //createAllCNstreams(parset.getTransportType("OLAP.OLAP_Conn.IONProc_CNProc"));
 #if defined HAVE_VALGRIND // FIXME
     createAllCNstreams("TCP");
 #else
@@ -567,30 +568,13 @@ void master_thread(int argc, char **argv)
     pthread_mutex_lock(&allocationMutex);
 
     for (int arg = 1; arg < argc; arg ++) {
-      LOG_DEBUG_STR("trying to use " << argv[arg] << " as ParameterSet");
-
-      Parset *parset = new Parset(argv[arg]);
-
-#if 0
-      // OLAP.parset is deprecated, as everything will be in the parset given on the command line
-      try {
-	LOG_WARN("Reading OLAP.parset is deprecated");
-	parset->adoptFile("OLAP.parset");
-      } catch (APSException &ex) {
-	LOG_WARN_STR("could not read OLAP.parset: " << ex);
-      }
-#endif
-
-      checkParset(parset);
-
-      LOG_DEBUG("creating new Job");
-      Job *job = new Job(parset); // parset deleted by ~Job()
-      LOG_DEBUG("creating new Job done");
+      LOG_DEBUG_STR("creating new Job for ParameterSet " << argv[arg]);
+      Job *job = new Job(argv[arg]);
 
       // insert into sorted jobs list
       std::vector<Job *>::iterator prev = jobs.begin();
 
-      while (prev != jobs.end() && (*prev)->itsParset->precedes(job->itsParset))
+      while (prev != jobs.end() && (*prev)->itsParset.precedes(&job->itsParset))
 	++ prev;
 
       jobs.insert(prev, job);
