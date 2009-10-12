@@ -149,6 +149,11 @@ if __name__ == "__main__":
 			action = "append",
 			type = "string",
   			help = "storage nodes to use [%s]" % (",".join(Locations.nodes["storage"]),) )
+  hwgroup.add_option( "--storageprocs",
+  			dest = "storageprocs",
+			type = "int",
+                        default = 4,
+  			help = "number of processes per storage node [%default]" )
   parser.add_option_group( hwgroup )
 
   secgroup = OptionGroup(parser, "Sections" )
@@ -311,7 +316,7 @@ if __name__ == "__main__":
         else:
           fatal( "No storage nodes selected on command line or in parset." )
 
-      parset.setStorageNodes( Locations.nodes["storage"] )
+      parset.setStorageNodes( Locations.nodes["storage"] * options.storageprocs )
 
     # set stations
     if "stations" in obsparams:
