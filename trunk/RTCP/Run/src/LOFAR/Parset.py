@@ -173,7 +173,7 @@ class Parset(util.Parset.Parset):
 
         # set and resolve storage hostnames
         # sort them since mpirun will as well, messing with our indexing schemes!
-        self["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"] = sorted([Hosts.resolve( s, "back") for s in self.storagenodes])
+        self["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"] = [Hosts.resolve( s, "back") for s in self.storagenodes]
 
 	self.setdefault('OLAP.nrPsets', nrPsets)
 	self.setdefault('OLAP.CNProc.inputPsets', [s.getPsetIndex(self.partition) for s in self.stations])
@@ -269,7 +269,7 @@ class Parset(util.Parset.Parset):
 	""" Define the list of storage nodes to use. """
 
         # do not resolve host names, since the resolve depends on the need (i.e. NIC needed)
-	self.storagenodes = storagenodes[:]
+	self.storagenodes = sorted(storagenodes)
 
         # OLAP needs IP addresses from the backend
         self["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"] = self.storagenodes

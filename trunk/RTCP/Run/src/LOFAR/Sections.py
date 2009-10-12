@@ -222,13 +222,10 @@ class StorageSection(Section):
     # the PID of mpirun
     self.pidfile = "%s/Storage-%s.pid" % (Locations.files["rundir"],self.partition)
 
-    # unique identifier to locate the mpi processes, first obsid will do
-    self.universe = "OLAP-%s" % (self.parsets[0].getObsID(),)
-
     # create the target directories
     for p in self.parsets:
       for n in p.storagenodes:
-        self.commands.append( SyncCommand( SSH+"-t %s mkdir %s" % (n,os.path.dirname(p.parseMask()),), logfiles ) )
+        self.commands.append( SyncCommand( SSH+"-t %s mkdir -p %s" % (n,os.path.dirname(p.parseMask()),), logfiles ) )
 
     if VALGRIND_STORAGE:
       valgrind = "/cephome/mol/root-ppc/bin/valgrind --suppressions=%s --leak-check=full --show-reachable=yes" % (Locations.files["storagesuppfile"],)
@@ -239,10 +236,6 @@ class StorageSection(Section):
     storagenodes = self.parsets[0].storagenodes
 
     mpiparams = [
-      # provide this run with an unique name to identify the corresponding
-      # processes on the storage nodes
-      "-universe %s" % (self.universe,),
-
       # where
       "-host %s" % (",".join(storagenodes),),
 
@@ -275,18 +268,15 @@ class StorageSection(Section):
     self.killSequence( "mpirun process on %s" % (Locations.nodes["storagemaster"],), kill, timeout )
 
     # kill Storage and orted processes on storage nodes
-    for node in storagenodes:
-      def kill( signal ):
-        # We kill the process group rooted at the orted process
-        # (kill -PID) belonging to our MPI universe. This should take Storage with it.
-        SyncCommand( SSH+"-t %s ps --no-heading -o pid,cmd -ww -C orted | grep -F '%s' | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
-          node, self.universe, signal) )
+    for signal in [2,9]:
+      for node in storagenodes:
+        def kill(signal):
+          # Kill all Storage processes which have our parset on the command line, and their parents
+          # the parent of Storage is either orted, or init (1) if orted died
+          SyncCommand( SSH+"-t %s ps --no-heading -o pid,ppid,cmd -ww -C Storage | grep -F '%s' | awk '{ print $1; if($2>1) { print $2; } }' | sort | uniq | xargs -I foo kill -%s foo" % (
+            node, self.parsets[0].getFilename(), signal) )
 
-        # Sometimes it does not though, so send Storage (identified by parset file on command line, which is unique) the same signal
-        SyncCommand( SSH+"-t %s ps --no-heading -o pid,cmd -ww -C Storage | grep -F '%s' | awk '{ print $1; }' | xargs -I foo kill -%s foo" % (
-          node, Locations.files["parset"], signal) )
-
-      self.killSequence( "orted/Storage processes on %s" % (node,), kill, timeout )
+        runFunc( lambda: kill(signal), 20 )     
 
     # fallback: kill local commands
     if not runUntilSuccess( [ self.wait ], timeout ):
