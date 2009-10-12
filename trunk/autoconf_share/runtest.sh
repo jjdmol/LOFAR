@@ -162,7 +162,7 @@ if test -f "$srcdir/$1.log_prop"; then
   \cp $srcdir/$1.log_prop .
 else
   if test ! -f "$1.log_prop"; then
-    sed -e "s/<LOGFILENAME>/$1_tmp.log/" $lfr_share_dir/default.log_prop > $1.log_prop
+    sed -e "s%<LOGFILENAME>%$1_tmp.log%" $lfr_share_dir/default.log_prop > $1.log_prop
   fi
 fi
 
