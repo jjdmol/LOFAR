@@ -3,8 +3,8 @@ import shlex
 
 __all__ = ["Parset"]
 
-TRUE_VALUES  = ["T","t","1","Y","y",1,True]
-FALSE_VALUES = ["F","f","0","N","n",0,False]
+TRUE_VALUES  = ["T","t","1","Y","y","true","True",1,True]
+FALSE_VALUES = ["F","f","0","N","n","false","False",0,False]
 
 def isnumeric( x ):
   """ Returns whether x is numerical. """
