@@ -14,7 +14,8 @@
 # name  ID    ring long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
 #--------------------------------------------------------------------------------------------------------------
 ## core (1-59)
-CS001   1     C    0.0          0.0             0       12     6    96    48    Yes      YesCS002	2     C    0.0          0.0             0       12     6    96    48    Yes      Yes
+CS001   1     C    0.0          0.0             0       12     6    96    48    Yes      Yes
+CS002	2     C    0.0          0.0             0       12     6    96    48    Yes      Yes
 CS003	3     C    0.0          0.0             0       12     6    96    48    Yes      Yes
 CS004	4     C    0.0          0.0             0       12     6    96    48    Yes      Yes
 CS005	5     C    0.0          0.0             0       12     6    96    48    Yes      Yes
