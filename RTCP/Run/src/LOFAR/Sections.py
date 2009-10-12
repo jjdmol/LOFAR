@@ -200,7 +200,7 @@ class IONProcSection(Section):
     # and "Cannot allocate memory" if not.
     successStr = "cat: /dev/flatmem: Invalid argument"
     sshcmds = [
-      (node,AsyncCommand( SSH+"%s cat /dev/flatmem 2>&1 | grep '%s'" % (node,successStr),PIPE) )
+      (node,AsyncCommand( SSH+"%s cat /dev/flatmem 2>&1 | grep -F '%s'" % (node,successStr),PIPE) )
       for node in self.psets
     ]
 
@@ -227,7 +227,7 @@ class StorageSection(Section):
 
     # create the target directories
     for p in self.parsets:
-      for n in Locations.nodes["storage"]:
+      for n in p.storagenodes:
         self.commands.append( SyncCommand( SSH+"-t %s mkdir %s" % (n,os.path.dirname(p.parseMask()),), logfiles ) )
 
     if VALGRIND_STORAGE:
@@ -236,15 +236,17 @@ class StorageSection(Section):
       valgrind = ""
 
     # Storage is started on LIIFEN, which has mpirun (Open MPI) 1.1.1
+    storagenodes = self.parsets[0].storagenodes
+
     mpiparams = [
       # provide this run with an unique name to identify the corresponding
       # processes on the storage nodes
       "-universe %s" % (self.universe,),
 
       # where
-      "-host %s" % (",".join(Locations.nodes["storage"]),),
+      "-host %s" % (",".join(storagenodes),),
 
-      "-np %s" % (len(Locations.nodes["storage"]),),
+      "-np %s" % (len(storagenodes),),
 
       # environment
 
@@ -264,6 +266,8 @@ class StorageSection(Section):
     self.commands.append( AsyncCommand( SSH+"%s echo $$ > %s;exec mpirun %s" % (Locations.nodes["storagemaster"],self.pidfile," ".join(mpiparams),), logfiles ) )
 
   def abort( self, timeout ):
+    storagenodes = self.parsets[0].storagenodes
+    
     # kill mpirun using the pid we stored locally
     def kill( signal ):
       SyncCommand( SSH+"-t %s kill -%s `cat %s`" % (Locations.nodes["storagemaster"],signal,self.pidfile) )
@@ -271,15 +275,15 @@ class StorageSection(Section):
     self.killSequence( "mpirun process on %s" % (Locations.nodes["storagemaster"],), kill, timeout )
 
     # kill Storage and orted processes on storage nodes
-    for node in Locations.nodes["storage"]:
+    for node in storagenodes:
       def kill( signal ):
         # We kill the process group rooted at the orted process
         # (kill -PID) belonging to our MPI universe. This should take Storage with it.
-        SyncCommand( SSH+"-t %s ps --no-heading -o pid,cmd -ww -C orted | grep %s | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
+        SyncCommand( SSH+"-t %s ps --no-heading -o pid,cmd -ww -C orted | grep -F '%s' | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
           node, self.universe, signal) )
 
         # Sometimes it does not though, so send Storage (identified by parset file on command line, which is unique) the same signal
-        SyncCommand( SSH+"-t %s ps --no-heading -o pid,cmd -ww -C Storage | grep '%s' | awk '{ print $1; }' | xargs -I foo kill -%s foo" % (
+        SyncCommand( SSH+"-t %s ps --no-heading -o pid,cmd -ww -C Storage | grep -F '%s' | awk '{ print $1; }' | xargs -I foo kill -%s foo" % (
           node, Locations.files["parset"], signal) )
 
       self.killSequence( "orted/Storage processes on %s" % (node,), kill, timeout )
@@ -289,13 +293,15 @@ class StorageSection(Section):
       Section.abort( self )
 
   def check( self ):
+    storagenodes = self.parsets[0].storagenodes
+
     # Storage nodes need to be reachable -- check in parallel
 
     # ping
 
     pingcmds = [
       (node,AsyncCommand( "ping %s -c 1 -w 2 -q" % (node,), ["/dev/null"] ))
-      for node in Locations.nodes["storage"]
+      for node in storagenodes
     ]
 
     for (node,c) in pingcmds:
@@ -305,7 +311,7 @@ class StorageSection(Section):
 
     sshcmds = [
       (node,AsyncCommand( SSH+"%s /bin/true" % (node,),PIPE) )
-      for node in Locations.nodes["storage"]
+      for node in storagenodes
     ]
 
     def waitForSuccess():

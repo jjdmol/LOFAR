@@ -85,14 +85,19 @@ class Parset(util.Parset.Parset):
         if key not in self:
           return ""
 
+        # translate station name + antenna set to CEP comprehensable names
         stationlist = self.getStringVector(key)
         antennaset = self["Observation.antennaSet"]
-        if antennaset.startswith("LBA"):
-          array = "LBA"
-        elif antennaset.startswith("HBA"):
-          array = "HBA"
-        else:
-          assert False,"Unknown Observation.antennaSet: %s" % (antennaset,)
+        antennaset_xlate = {
+          "LBA_INNER": "LBA",
+          "LBA_OUTER": "LBA",
+          "LBA_X":     "LBA",
+
+          "HBA_ONE":   "HBA0",
+          "HBA_TWO":   "HBA1",
+          "HBA_BOTH":  "HBA",
+        }
+        array = antennaset_xlate[antennaset]
 
         return "+".join(["%s%s" % (stat,array) for stat in stationlist])
 
@@ -167,7 +172,8 @@ class Parset(util.Parset.Parset):
 	nrStorageNodes = self.getNrUsedStorageNodes()
 
         # set and resolve storage hostnames
-        self["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"] = [Hosts.resolve( s, "back") for s in self.storagenodes]
+        # sort them since mpirun will as well, messing with our indexing schemes!
+        self["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"] = sorted([Hosts.resolve( s, "back") for s in self.storagenodes])
 
 	self.setdefault('OLAP.nrPsets', nrPsets)
 	self.setdefault('OLAP.CNProc.inputPsets', [s.getPsetIndex(self.partition) for s in self.stations])
