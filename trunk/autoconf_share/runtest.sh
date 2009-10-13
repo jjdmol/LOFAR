@@ -198,6 +198,6 @@ $lfr_share_dir/assay $1 $MAXTIME $PREC $NEEDOUTFIL
 STS=$?
 
 # Cleanup (mainly for make distcheck).
-\rm -f $1.stdout $1.run $1.py $1.in $1.parset $1.log_prop
-\rm -rf $1.in_*
+#\rm -f $1.stdout $1.run $1.py $1.in $1.parset $1.log_prop
+#\rm -rf $1.in_*
 exit $STS
