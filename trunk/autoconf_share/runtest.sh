@@ -178,13 +178,17 @@ if [ "$PYTHONPKG" != "" ]; then
   do
       ln -s $FIL $PYTHONDIR/lofar/$PYTHONPKG
   done
-  for FIL in `pwd`/../src/.libs/*.so
+  if test -d `pwd`/../src/.libs; then
+    bdir="`pwd`/../src/.libs"  # Autotools 
+  else
+    bdir="`pwd`/../src"        # CMake
+  fi
+  for FIL in "$bdir"/*.so
   do
       ln -s $FIL $PYTHONDIR/lofar/$PYTHONPKG
   done
-  PYTHONPATH=`pwd`/$PYTHONDIR/:$PYTHONPATH
+  PYTHONPATH=`pwd`/$PYTHONDIR:$PYTHONPATH
   export PYTHONPATH
-  echo "PYTHONPATH=$PYTHONPATH"
 fi
 
 # Define source directory and run assay
