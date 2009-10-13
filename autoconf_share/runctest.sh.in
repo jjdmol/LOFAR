@@ -26,9 +26,6 @@
 export lofar_sharedir=@lofar_sharedir@
 export srcdir=@srcdir@
 
-# We need to set PYTHONPATH when running python test programs.
-export PYTHONPATH=@PROJECT_BINARY_DIR@/src:$PYTHONPATH
-
 # Start autoconf_share/runtest.sh
 $lofar_sharedir/runtest.sh "$@"
 
