@@ -299,7 +299,7 @@ if [ "$useenv" = 1 ]; then
     envfile=$HOME/startdistproc_$$.envfile
   fi
   grex='[^=]*(PATH|ROOT)'
-  printenv | egrep "^$grex=" | sed -e "s/^\([^=]*\)=\(.*\)/\1=\2; export \1/;" > $envfile
+  printenv | egrep "^$grex=" | sed -e "s/^\([^=]*\)=\(.*\)/\1='\2'; export \1/;" > $envfile
 fi
 
 # Run the program as needed.
@@ -319,7 +319,8 @@ else
   echo "socketrun $dry $hfn '$master' $modxx $wait $killfail $logfile $program $envfile" "$@"
   $pgmpath/socketrun $dry $hfn "$master" $modxx $wait $killfail "$logfile" $program $envfile "$@" || exit 1
 fi
+if test "$envfile" != ""; then
+  rm -f $envfile
+fi
+# hfn cannot be deleted, otherwise tstartdproc fails.
 #rm -f $hfn
-#if test "$envfile" != ""; then
-#  rm -f $envfile*
-#fi
