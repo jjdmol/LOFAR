@@ -115,9 +115,13 @@ inline void Thread::kill(int sig)
 template <typename T> inline void *Thread::stub(void *arg)
 {
   std::pair<T *, void (T::*)()> *object_method = static_cast<std::pair<T *, void (T::*)()> *>(arg);
+  T				*object	       = object_method->first;
+  void				(T::*method)() = object_method->second;
+
+  delete object_method;
 
   try {
-    ((object_method->first)->*(object_method->second))();
+    (object->*method)();
   } catch (Exception &ex) {
     LOG_FATAL_STR("caught Exception: " << ex);
   } catch (std::exception &ex) {
@@ -126,7 +130,6 @@ template <typename T> inline void *Thread::stub(void *arg)
     LOG_FATAL("caught non-std::exception");
   }
 
-  delete object_method;
   return 0;
 }
 
