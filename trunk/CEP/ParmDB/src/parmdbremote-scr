@@ -22,6 +22,7 @@
 #
 # $Id$
 
+
 if test $# != 10; then
   echo "run as:   parmdbremote-src 'socket' host port np rank"
   echo "                           pdb-part filesys ms-part-vds envfile"
@@ -44,3 +45,5 @@ if test -d $wd; then
 fi
 
 parmdbremote $2 $3 $6    # host,port,parmdb-part
+
+rm -f $envfile

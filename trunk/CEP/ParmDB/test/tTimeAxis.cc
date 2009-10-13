@@ -82,6 +82,10 @@ void doIt (const string& msname, int timestep, int timestart)
 int main (int argc, char* argv[])
 {
   try {
+    if (argc < 2) {
+      cerr << "Run as:  tTimeAxis MS [timestep [timestsrt]" << endl;
+      return 1;
+    }
     int timestep = 50;
     int timestart = 0;
     if (argc > 2) {
