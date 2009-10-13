@@ -196,7 +196,7 @@
 
 
 # Define exit and interrupt handler.
-  trap 'rm -rf core ${PROG}_tmp*; \
+  trap '#rm -rf core ${PROG}_tmp*; \
         trap - 0 ; \
         exit $STATUS' 0 1 2 3 15
 
