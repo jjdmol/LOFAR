@@ -1,8 +1,10 @@
 
 Observation  : 
 ObsID        : 5025
+>>>
 starttime    : 2008-Dec-16 15:30:00
 stoptime     : 2008-Dec-16 15:34:00
+<<<
 stations     : [CS016,CS017,CS018]
 antennaArray : HBA
 antenna set  : 
@@ -35,8 +37,10 @@ rspSlotList     : [0,1,2,3]
 
 Observation  : 
 ObsID        : 5025
+>>>
 starttime    : 2008-Dec-16 15:30:00
 stoptime     : 2008-Dec-16 15:34:00
+<<<
 stations     : [CS016,CS017,CS018]
 antennaArray : HBA
 antenna set  : 
