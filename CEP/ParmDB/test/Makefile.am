@@ -13,7 +13,8 @@ TESTSCRIPTS           = tAxis.sh tAxisMapping.sh tBox.sh tGrid.sh \
 			tParmFacade.sh tParmFacadeDistr.sh \
 			tparmdb.sh \
 			tSourceDBCasa.sh tmakesourcedb.sh \
-			tsetupparmdb.sh tsetupsourcedb.sh
+			tsetupparmdb.sh tsetupsourcedb.sh \
+			tTimeAxis.sh
 
 # scripts and possible programs to run tests
 TESTS	              = $(TESTSCRIPTS)
