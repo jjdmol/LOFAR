@@ -69,8 +69,9 @@ echo "status=$?"
 cat tstartdproc_tmp.out3
 # Print log file without lines containing directory path and pids.
 # Outcomment lines with kill which contain pids.
-# Remove other lines containing Kill because some systems print them, some don't.
-sed -e "s%$curdir%%g" -e 's/pid=[0-9]*/pid=nn/' -e 's/kill -9 .*/kill -9 /' tstartdproc_tmp.log3a
+# Remove other lines containing Killed because some systems print them, some don't.
+# Also remove lines containing debug which are written when not using log4cplus/cxx.
+sed -e "s%$curdir%%g" -e 's/pid=[0-9]*/pid=nn/' -e 's/kill -9 .*/kill -9 /' tstartdproc_tmp.log3a | grep -i -v "debug"
 for i in 0 1 2
 do
   sed -e "s%$curdir%%g" tstartdproc_tmp.log3b-$i
