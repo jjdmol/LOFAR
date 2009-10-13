@@ -456,7 +456,7 @@ if test ${verbose} -eq 1 -o ${dry} -eq 1; then
 fi
 
 if test ${dry} -eq 0; then
-    startdistproc -useenv -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "/home/swinbank/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${instrument_name}" "${sky_name}" nodry
+    startdistproc -useenv -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${instrument_name}" "${sky_name}" nodry
 
     if test $? -ne 0; then
         kill_all "${pidlist}"
