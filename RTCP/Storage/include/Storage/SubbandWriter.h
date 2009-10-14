@@ -69,6 +69,7 @@ class SubbandWriter
     const Parset	    *itsPS;
     unsigned		    itsRank;
     unsigned		    itsSize;
+    unsigned		    itsObservationID;
     CN_Configuration        itsConfiguration;
     CN_ProcessingPlan<>     itsPlan;
     unsigned                itsNrOutputs;
