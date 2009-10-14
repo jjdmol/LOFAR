@@ -30,6 +30,7 @@
 #include <casa/aips.h>
 #include <measures/Measures/MDirection.h>
 #include <Common/lofar_vector.h>
+#include <Interface/Mutex.h>
 
 #include <Storage/MSWriterNull.h>
 
@@ -149,6 +150,8 @@ namespace LOFAR
       void updateTimes();
 
       //# Define the data.
+      static Mutex sharedMutex;
+
       int itsNrBand;                     ///< nr of bands
       int itsNrField;                    ///< nr of fields (beams)
       int itsNrAnt;                      ///< nr of antennas (stations)
