@@ -21,6 +21,8 @@ template <typename SAMPLE_TYPE> class TransposedData: public SampleData<SAMPLE_T
     typedef SampleData<SAMPLE_TYPE,3> SuperType;
 
     TransposedData(const unsigned nrStations, const unsigned nrSamplesToCNProc);
+
+    virtual TransposedData *clone() const { return new TransposedData(*this); }
   private:
     const unsigned		itsNrStations;
     const unsigned		itsNrSamplesToCNProc;

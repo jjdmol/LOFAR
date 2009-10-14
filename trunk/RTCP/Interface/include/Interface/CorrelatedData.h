@@ -24,6 +24,7 @@ class CorrelatedData: public StreamableData
   public:
     CorrelatedData(unsigned nrBaselines, unsigned nrChannels);
 
+    virtual CorrelatedData *clone() const { return new CorrelatedData(*this); }
     virtual size_t requiredSize() const;
     virtual void allocate(Allocator &allocator = heapAllocator);
 

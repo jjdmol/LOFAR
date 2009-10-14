@@ -105,6 +105,9 @@ class ProcessingPlan
     // wipe the plan except for the outputs
     void removeNonOutputs();
 
+    // return a copy of a certain output
+    StreamableData *cloneOutput( unsigned outputNr ) const;
+
     // allocate only the outputs, using the provided allocator
     void allocateOutputs( Allocator &allocator );
 
@@ -266,6 +269,20 @@ inline void ProcessingPlan::removeNonOutputs() {
       std::not1( std::mem_fun_ref( &planlet::isOutput ) ) ),
     plan.end()
   );
+}
+
+inline StreamableData *ProcessingPlan::cloneOutput( unsigned outputNr ) const {
+  unsigned n = 0;
+
+  for( unsigned i = 0; i < plan.size(); i++ ) {
+    if( plan[i].output ) {
+      if (++n == outputNr) {
+        return plan[i].source->clone();
+      }
+    }
+  }
+
+  return 0;
 }
 
 inline void ProcessingPlan::allocateOutputs( Allocator &allocator ) {

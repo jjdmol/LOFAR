@@ -18,6 +18,8 @@ class BeamFormedData: public SampleData<fcomplex,4>
     typedef SampleData<fcomplex,4> SuperType;
 
     BeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration);
+
+    virtual BeamFormedData *clone() const { return new BeamFormedData(*this); }
 };
 
 inline BeamFormedData::BeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration)
