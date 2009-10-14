@@ -24,6 +24,8 @@ template <typename SAMPLE_TYPE> class InputData: public SampleData<SAMPLE_TYPE,3
 
     InputData(const unsigned nrSubbands, const unsigned nrSamplesToCNProc);
 
+    virtual InputData *clone() const { return new InputData(*this); }
+
     // used for asynchronous transpose
     void readOne(Stream *str, unsigned subbandPosition);
 

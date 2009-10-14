@@ -40,6 +40,9 @@ class StreamableData {
     // suppress warning by defining a virtual destructor
     virtual ~StreamableData() {}
 
+    // return a copy of the object
+    virtual StreamableData *clone() const = 0;
+
     virtual size_t requiredSize() const = 0;
     virtual void allocate(Allocator &allocator = heapAllocator) = 0;
 
@@ -69,6 +72,8 @@ template <typename T = fcomplex, unsigned DIM = 4> class SampleData : public Str
     typedef typename MultiDimArray<T,DIM>::ExtentList ExtentList;
 
     SampleData(bool isIntegratable, const ExtentList &extents, unsigned nrFlags);
+
+    virtual SampleData *clone() const { return new SampleData(*this); }
 
     virtual size_t requiredSize() const;
     virtual void allocate(Allocator &allocator = heapAllocator);

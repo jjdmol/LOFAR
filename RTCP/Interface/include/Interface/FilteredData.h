@@ -19,6 +19,7 @@ class FilteredData: public SampleData<fcomplex,4>
 
     FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration);
 
+    virtual FilteredData *clone() const { return new FilteredData(*this); }
   protected:
     const unsigned              itsNrStations;
     const unsigned              itsNrChannels;

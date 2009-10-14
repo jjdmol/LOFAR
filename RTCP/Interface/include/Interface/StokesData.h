@@ -19,6 +19,8 @@ class StokesData: public SampleData<float,4>
     typedef SampleData<float,4> SuperType;
 
     StokesData(bool coherent, unsigned nrStokes, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration);
+
+    virtual StokesData *clone() const { return new StokesData(*this); }
 };
 
 inline StokesData::StokesData(bool coherent, unsigned nrStokes, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration)
@@ -37,6 +39,8 @@ class StokesDataIntegratedChannels: public SampleData<float,3>
     typedef SampleData<float,3> SuperType;
 
     StokesDataIntegratedChannels(bool coherent, unsigned nrStokes, unsigned nrPencilBeams, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration);
+
+    virtual StokesDataIntegratedChannels *clone() const { return new StokesDataIntegratedChannels(*this); }
 };
 
 inline StokesDataIntegratedChannels::StokesDataIntegratedChannels(bool coherent, unsigned nrStokes, unsigned nrPencilBeams, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration)
