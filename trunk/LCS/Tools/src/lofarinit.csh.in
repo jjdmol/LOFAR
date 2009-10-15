@@ -94,7 +94,7 @@ else
     if (! $?LD_LIBRARY_PATH) then
         setenv LD_LIBRARY_PATH $LOFARROOT/$lfr_libdir
     else
-        setenv LD_LIBRARY_PATH $LOFARROOT/$lfr_libdir:$LD_LIBRARY_PATH
+        setenv LD_LIBRARY_PATH $LOFARROOT/${lfr_libdir}:$LD_LIBRARY_PATH
     endif
     set lfr_pyt = "$LOFARROOT/$lfr_libdir/python$lfr_pyvv/site-packages"
     if (! $?PYTHONPATH) then
