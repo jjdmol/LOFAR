@@ -62,13 +62,18 @@ selectImage1()
 	do
 		# get version of RSPboard
 		boardHex=`echo $board | awk '{ printf "%02x", $1 }'`
-		let version=`sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
-		# if board has reset itself to image 0, load image 1 again
-		if [ $version -le 4 ]; then
-			echo "Loading image 1 on RSPboard $board ..."
-			sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p 1 1>/dev/null 2>&1
+		rsu=`sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
+		if [ ${#rsu} -eq 1 ]; then
+  		  let version=$rsu
+ 		  # if board has reset itself to image 0, load image 1 again
+		  if [ $version -le 4 ]; then
+		     echo "Loading image 1 on RSPboard $board ..."
+		     sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p 1 1>/dev/null 2>&1
+		  fi
+                else
+                  echo "No RSP board $board found"
 		fi
-		let board=$board+1
+		let board+=1
 	done
 }
 
@@ -304,10 +309,13 @@ fi
 
 # don't allow root to run swlevel because all logfile get root access.
 user=`id | cut -d'(' -f2 | cut -d')' -f1`
+group=`groups | awk '{print $1}'`
 #echo $user
-if [ $user != "lofartest" -a $user != "lofarsys" ]; then
-	echo "you are ${user}. swlevel must be run as user lofartest or lofarsys!"
+if [ $user != "lofarsys" ]; then
+    if [ $group != "local" ]; then 
+	echo "swlevel must be run by user lofarsys or group local members!"
 	exit
+    fi
 fi
 
 # first power down to this level
