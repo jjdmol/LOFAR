@@ -35,22 +35,5 @@ namespace LOFAR
 
     MSWriter::MSWriter() {}
     MSWriter::~MSWriter() {}
-
-    int MSWriter::addBand(int, int, double, double)
-    {
-      return 0;
-    }
-
-    int MSWriter::addBand(int, int, double, const double*, const double*) 
-    {
-      return 0;
-    }
-    
-    void MSWriter::addField(double, double, unsigned)
-    {}
-    
-    void MSWriter::write(int, int, int, StreamableData*)
-    {}
-
   }
 }

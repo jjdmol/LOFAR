@@ -58,8 +58,6 @@ namespace LOFAR {
       NSTimer itsWriteTimer;
       double  bytesWritten;
 
-      std::vector<Stream *>      itsInputStreams;
-      std::vector<bool>          itsIsNullStream;
       Matrix<FileStream *>       myFDs;
       std::vector<InputThread *> itsInputThreads;
 

@@ -43,42 +43,10 @@ namespace LOFAR
     class MSWriterNull : public MSWriter
     {
     public:
-      MSWriterNull(const char* msName, double startTime, double timeStep, 
-		   int nfreq, int ncorr, int nantennas, const vector<double>& antPos, 
-		   const vector<std::string>& storageStationNames, float weightFactor);
+      MSWriterNull();
       ~MSWriterNull();
 
-      int addBand(int, int, double, double);
-      int addBand(int, int, double, const double*, const double*);
-      void addField(double, double, unsigned);
-      void write(int, int, int, StreamableData*);
-
-
-      inline int nrAntennas() const
-      { return itsNrAnt; }
-      
-      inline int nrBands() const
-      { return itsNrBand; }
-
-      inline int nrFields() const
-      { return itsNrField; }
-      
-      inline int nrPolarizations() const
-      { return itsNrPol; }
-
-      inline int nrTimes() const
-      { return itsNrTimes; }
-
-
-    private:
-      int itsNrBand;
-      int itsNrField;
-      int itsNrAnt;
-      int itsNrFreq;
-      int itsNrCorr;
-      int itsNrTimes;
-      int itsNrPol;
-      int itsNrChan;
+      void write(StreamableData*);
     };
   }
 }

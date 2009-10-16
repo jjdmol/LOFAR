@@ -25,22 +25,24 @@
 
 #include <Storage/InputThread.h>
 #include <Interface/StreamableData.h>
+#include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
+#include <Stream/SocketStream.h>
 #include <Common/DataConvert.h>
+#include <Common/Timer.h>
 
 namespace LOFAR {
 namespace RTCP {
 
   Queue<unsigned> InputThread::itsRcvdQueue;
 
-  InputThread::InputThread(Stream *streamFromION, const Parset *ps, unsigned sb)
+  InputThread::InputThread(const Parset *ps, unsigned subbandNumber)
 :
   itsInputs(0),
   itsNrInputs(0),
   itsPS(ps),
-  itsStreamFromION(streamFromION),
   itsPlans(maxReceiveQueueSize),
-  itsSB(sb)
+  itsSubbandNumber(subbandNumber)
 {
   // transpose output stream holders
   CN_Configuration configuration(*ps);
@@ -73,17 +75,46 @@ InputThread::~InputThread()
 
 void InputThread::mainLoop()
 {
+  std::auto_ptr<Stream> streamFromION;
+  string   prefix            = "OLAP.OLAP_Conn.IONProc_Storage";
+  string   connectionType    = itsPS->getString(prefix + "_Transport");
+  bool     nullInput         = false;
+
+  unsigned subbandNumber = itsSubbandNumber;
+
+  if (connectionType == "NULL") {
+    LOG_DEBUG_STR("subband " << subbandNumber << " read from null stream");
+    streamFromION.reset( new NullStream );
+    nullInput = true;
+  } else if (connectionType == "TCP") {
+    std::string    server = itsPS->storageHostName(prefix + "_ServerHosts", subbandNumber);
+    unsigned short port   = boost::lexical_cast<unsigned short>(itsPS->getPortsOf(prefix)[subbandNumber]);
+    
+    LOG_DEBUG_STR("subband " << subbandNumber << " read from tcp:" << server << ':' << port);
+    streamFromION.reset( new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Server) );
+  } else if (connectionType == "FILE") {
+    std::string filename = itsPS->getString(prefix + "_BaseFileName") + '.' +
+      boost::lexical_cast<std::string>(subbandNumber);
+    
+    LOG_DEBUG_STR("subband " << subbandNumber << " read from file:" << filename);
+    streamFromION.reset( new FileStream(filename.c_str()) );
+  } else {
+    THROW(StorageException, "unsupported ION->Storage stream type: " << connectionType);
+  }
+
   // limit reads from NullStream to 10 blocks; otherwise unlimited
-  bool		 nullInput = dynamic_cast<NullStream *>(itsStreamFromION) != 0;
   unsigned	 increment = nullInput ? 1 : 0;
   StreamableData *data     = 0;
+
+  std::stringstream subbandStr;
+  subbandStr << itsSubbandNumber;
 
   try {
     for (unsigned count = 0; count < 10; count += increment) {
       unsigned o;
 
       // read header: output number
-      itsStreamFromION->read( &o, sizeof o );
+      streamFromION->read( &o, sizeof o );
 #if !defined WORDS_BIGENDIAN
       dataConvert( LittleEndian, &o, 1 );
 #endif
@@ -91,18 +122,26 @@ void InputThread::mainLoop()
       struct InputThread::SingleInput &input = itsInputs[o];
 
       // read data
-      data = input.freeQueue.remove();
-      data->read(itsStreamFromION, true);
+      {
+        NSTimer timer("subband " + subbandStr.str() + ": retrieve freeQueue item",true,true);
+        timer.start();
+        data = input.freeQueue.remove();
+        timer.stop();
+      }  
+
+      {
+        NSTimer timer("subband " + subbandStr.str() + ": read data",true,true);
+        timer.start();
+        data->read(streamFromION.get(), true);
+        timer.stop();
+      }
+
       input.receiveQueue.append(data);
 
       // signal to the subbandwriter that we obtained data
       itsReceiveQueueActivity.append(o);
-
-      // read is complete, enqueue SB number 
-      itsRcvdQueue.append(itsSB);
     }
   } catch (Stream::EndOfStreamException &) {
-    itsRcvdQueue.append(itsSB);
     itsInputs[0].freeQueue.append(data); // to include data when freeing, so actual queue number does not matter
   }
 

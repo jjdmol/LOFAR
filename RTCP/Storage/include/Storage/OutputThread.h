@@ -1,4 +1,4 @@
-//#  InputThread.h
+//#  OutputThread.h
 //#
 //#  Copyright (C) 2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,50 +18,50 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: OutputThread.h 14194 2009-10-06 09:54:51Z romein $
 
-#ifndef LOFAR_RTCP_STORAGE_INPUT_THREAD_H
-#define LOFAR_RTCP_STORAGE_INPUT_THREAD_H
+#ifndef LOFAR_RTCP_STORAGE_OUTPUT_THREAD_H
+#define LOFAR_RTCP_STORAGE_OUTPUT_THREAD_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Interface/StreamableData.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/CN_ProcessingPlan.h>
-#include <Interface/Queue.h>
 #include <Interface/Thread.h>
 #include <Stream/Stream.h>
+#include <Storage/InputThread.h>
+#include <Storage/MSWriter.h>
+#include <Common/Timer.h>
 
 
 namespace LOFAR {
 namespace RTCP {
 
-class InputThread
+class OutputThread
 {
   public:
-			    InputThread(const Parset *ps, unsigned subbandNumber); // sb = local subband number (0..n) and subbandNumber is the real subband number (say, 100..347)
-			    ~InputThread();
-
-    static const unsigned   maxReceiveQueueSize = 3;
-
-    struct SingleInput {
-      Queue<StreamableData *> freeQueue, receiveQueue;
-    };
-    Vector<struct SingleInput> itsInputs; // [itsNrInputs]
-    unsigned                itsNrInputs;
-
-    Queue<unsigned>         itsReceiveQueueActivity;
-    static Queue<unsigned>  itsRcvdQueue;
+			    OutputThread(const Parset *ps, unsigned subbandNumber, InputThread *inputThread, unsigned nrOutputs, const CN_ProcessingPlan<> &plan); // sb = local subband number (0..n) and subbandNumber is the real subband number (say, 100..347)
+			    ~OutputThread();
 
   private:
+    void                    writeLogMessage();
+    void                    checkForDroppedData(StreamableData *data, unsigned output);
     void		    mainLoop();
 
     const Parset            *itsPS;
-    Stream		    *itsStreamFromION; 
     Thread		    *thread;
 
-    Vector<CN_ProcessingPlan<> *> itsPlans; // [maxReceiveQueueSize]
+    InputThread             *itsInputThread;
+
+    const unsigned          itsNrOutputs;
     const unsigned          itsSubbandNumber;
+
+    const unsigned          itsObservationID;
+
+    Vector<MSWriter*>       itsWriters;
+    std::vector<signed>     itsPreviousSequenceNumbers;
+    std::vector<bool>       itsIsNullStream;
 };
 
 } // namespace RTCP

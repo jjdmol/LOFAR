@@ -40,22 +40,7 @@ namespace LOFAR
       MSWriter();
       virtual ~MSWriter();
 
-      virtual int addBand(int, int, double, double);
-      virtual int addBand(int, int, double, const double*, const double*);
-      virtual void addField(double, double, unsigned);
-      virtual void write(int, int, int, StreamableData*);
-
-    private:
-
-      int itsNrBand;
-      int itsNrField;
-      int itsNrAnt;
-      int itsNrFreq;
-      int itsNrCorr;
-      int itsNrTimes;
-      int itsNrPol;
-      int itsNrChan;
-
+      virtual void write(StreamableData*) = 0;
     };
   } // namespace RTCP
 } // namespace LOFAR
