@@ -135,7 +135,7 @@ void OutputThread::mainLoop()
 
   while ((o = itsSendQueueActivity.remove()) >= 0) {
     struct OutputThread::SingleOutput &output = itsOutputs[o];
-    std::auto_ptr<StreamableData> data( output.sendQueue.remove() );
+    StreamableData *data = output.sendQueue.remove(); // will be freed by itsPlans, so we can freely use it without worry we lose the pointer
 
     // prevent too many concurrent writers by locking this scope
     semaphore.down();
@@ -153,7 +153,7 @@ void OutputThread::mainLoop()
     semaphore.up();
 
     // data can now be reused
-    output.freeQueue.append( data.release() );
+    output.freeQueue.append( data );
   }
 }
 
