@@ -70,45 +70,52 @@ class Thread
 
 template <typename T> inline Thread::Thread(T *object, void (T::*method)())
 {
-  if (pthread_create(&thread, 0, &Thread::stub<T>, new std::pair<T *, void (T::*)()>(object, method)) != 0)
-    throw SystemCallException("pthread_create", errno, THROW_ARGS);
+  int retval;
+
+  if ((retval = pthread_create(&thread, 0, &Thread::stub<T>, new std::pair<T *, void (T::*)()>(object, method))) != 0)
+    throw SystemCallException("pthread_create", retval, THROW_ARGS);
 }
 
 
 template <typename T> inline Thread::Thread(T *object, void (T::*method)(), size_t stackSize)
 {
   pthread_attr_t attr;
+  int		 retval;
 
-  if (pthread_attr_init(&attr) != 0)
-    throw SystemCallException("pthread_attr_init", errno, THROW_ARGS);
+  if ((retval = pthread_attr_init(&attr)) != 0)
+    throw SystemCallException("pthread_attr_init", retval, THROW_ARGS);
 
-  if (pthread_attr_setstacksize(&attr, stackSize) != 0)
-    throw SystemCallException("pthread_attr_setstacksize", errno, THROW_ARGS);
+  if ((retval = pthread_attr_setstacksize(&attr, stackSize)) != 0)
+    throw SystemCallException("pthread_attr_setstacksize", retval, THROW_ARGS);
 
-  if (pthread_create(&thread, &attr, &Thread::stub<T>, new std::pair<T *, void (T::*)()>(object, method)) != 0)
-    throw SystemCallException("pthread_create", errno, THROW_ARGS);
+  if ((retval = pthread_create(&thread, &attr, &Thread::stub<T>, new std::pair<T *, void (T::*)()>(object, method))) != 0)
+    throw SystemCallException("pthread_create", retval, THROW_ARGS);
 
-  if (pthread_attr_destroy(&attr) != 0)
-    throw SystemCallException("pthread_attr_destroy", errno, THROW_ARGS);
+  if ((retval = pthread_attr_destroy(&attr)) != 0)
+    throw SystemCallException("pthread_attr_destroy", retval, THROW_ARGS);
 }
 
 
 inline Thread::~Thread()
 {
+  int retval;
+
   if (thread == pthread_self()) {
-    if (pthread_detach(thread) != 0)
-      throw SystemCallException("pthread_detach", errno, THROW_ARGS);
+    if ((retval = pthread_detach(thread)) != 0)
+      throw SystemCallException("pthread_detach", retval, THROW_ARGS);
   } else {
-    if (pthread_join(thread, 0) != 0)
-      throw SystemCallException("pthread_join", errno, THROW_ARGS);
+    if ((retval = pthread_join(thread, 0)) != 0)
+      throw SystemCallException("pthread_join", retval, THROW_ARGS);
   }
 }
 
 
 inline void Thread::kill(int sig)
 {
-  if (pthread_kill(thread, sig) != 0)
-    throw SystemCallException("pthread_kill", errno, THROW_ARGS);
+  int retval;
+
+  if ((retval = pthread_kill(thread, sig)) != 0)
+    throw SystemCallException("pthread_kill", retval, THROW_ARGS);
 }
 
 
