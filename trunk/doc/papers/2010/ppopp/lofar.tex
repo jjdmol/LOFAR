@@ -50,7 +50,7 @@ Its revolutionary design allows observations in a frequency range that has
 hardly been studied before.
 
 This paper focuses on another novel feature: where traditional telescopes
-use customized hardware, we process the data in \emph{software}. 
+combine data using customized hardware, we process the data in \emph{software}. 
 This dramatically increases flexibility and substantially reduces costs, but
 the high processing and bandwidth requirements compel the use of a
 supercomputer.
@@ -86,10 +86,11 @@ physics~\cite{Bruyn:02}. The different goals and observation types require
 several different processing pipelines, however.
 
 \begin{figure}[t]
-\vspace{-0.4cm}
+\vspace{-4mm}
 \begin{center}
 \includegraphics[width=70mm]{LBA-field.jpg}
 \end{center}
+\vspace{-3mm}
 \caption{A field with low-band antennas (dipoles).}
 \label{fig:lba-field}
 \end{figure}
@@ -97,7 +98,7 @@ several different processing pipelines, however.
 Another novelty is the elaborate use of \emph{software\/} to process
 the telescope data in real time. 
 Previous generations of telescopes depended on custom-made hardware
-because of the high data rates and processing requirements.
+to combine data, because of the high data rates and processing requirements.
 However, the desire for a flexible and reconfigurable instrument with
 different processing pipelines for different observation types demands a
 software solution.
@@ -157,7 +158,7 @@ implementation of the LOFAR processing on our previous platform, the
 Blue Gene/L.  The work presented in this paper differs in several
 important ways.  First, we have now implemented the complete I/O path:
 from the LOFAR stations in the field to the Blue Gene/P, 
-from the IO~nodes to the compute nodes, the internal
+from the I/O~nodes to the compute nodes, the internal
 data transpose, and finally the transfer 
 to the storage cluster. In contrast, in~\cite{Romein:06}
 we focused only on computing, and not on I/O.
@@ -391,12 +392,12 @@ flexibility of a \emph{software\/} solution.
 
 Initially, LOFAR used a 6-rack IBM Blue Gene/L supercomputer for real-time
 processing of the station data.
-We recently replaced the system by an equally powerful 2.5-rack Blue Gene/P.
+We recently replaced the system by a more powerful 3-rack Blue Gene/P.
 %The consequences of this upgrade are described in Section~\ref{sec:upgrade}.
 Below, we describe the key features of the Blue Gene/P.
 More information can be found elsewhere~\cite{IBM:08}.
 
-Our system contains 10,880 processor cores that provide 37.0 TFLOPS peak
+Our system contains 12,480 processor cores that provide 42.4 TFLOPS peak
 processing power.
 % (including I/O~nodes).
 %The system is built using SoC (System-on-a-Chip) technology that integrates
@@ -431,22 +432,35 @@ but also for external communication.
 %A \emph{global interrupt network\/} provides support for fast barriers.
 Additional networks exist for fast barriers, initialization, diagnostics, and debugging.
 
-Each compute node is connected to an I/O~node via the collective network.
-%(see Figure~\ref{fig:pset}).
-An I/O~node uses the same hardware as a compute node, but has its 10 Gb/s Ethernet
-interface connected and runs another operating system (a modified Linux kernel).
-%Since our application demands high bandwidths, our system is configured with
-%the maximum number of 1~I/O~node per 16~compute nodes (64~cores).
-The group of one I/O~node and the compute nodes that are connected to it (16 in our case),
-is called a \emph{pset}.
-Our system has 160~psets in total, 64 per rack.
+%Each compute node is connected to an I/O~node via the collective network.
+%%(see Figure~\ref{fig:pset}).
+%An I/O~node uses the same hardware as a compute node, but has its 10 Gb/s Ethernet
+%interface connected and runs another operating system (a modified Linux kernel).
+%%Since our application demands high bandwidths, our system is configured with
+%%the maximum number of 1~I/O~node per 16~compute nodes (64~cores).
+%The group of one I/O~node and the compute nodes that are connected to it (16 in our case),
+%is called a \emph{pset}.
+%Our system has 160~psets in total, 64 per rack.
+%Normally, the I/O~node is used as a black box that provides transparent
+%communication from the compute nodes to external systems.
+%%: all I/O-related
+%%system calls on the compute nodes are forwarded to a daemon that runs
+%%on the I/O~node and performs the real operation.
+%In Section~\ref{sec:IONProc}, we show that it is much more
+%efficient to run part of the application software on the I/O~node.
+
+Each group of (in our case 16) compute nodes is connected to an I/O~node via
+the collective network.
 Normally, the I/O~node is used as a black box that provides transparent
 communication from the compute nodes to external systems.
-%: all I/O-related
-%system calls on the compute nodes are forwarded to a daemon that runs
-%on the I/O~node and performs the real operation.
 In Section~\ref{sec:IONProc}, we show that it is much more
 efficient to run part of the application software on the I/O~node.
+An I/O~node uses the same hardware as a compute node, but has its
+10~Gb/s Ethernet interface connected and runs another operating system
+(a modified Linux kernel).
+The group of one I/O~node and its associated compute nodes is called a
+\emph{pset}.
+Our system has 192~psets in total, 64 per rack.
 
 
 \section{LOFAR Processing}
@@ -608,6 +622,7 @@ Under normal circumstances, no data are lost here.
 \begin{center}
 \includegraphics[width=.8\textwidth]{CN-processing.pdf}
 \end{center}
+\vspace{-3mm}
 \caption{Simplified data flow diagram for the compute nodes.}
 \label{fig:cn-processing}
 \end{figure*}
@@ -750,6 +765,7 @@ The data are thus first sent over the collective network from the I/O~node to
 a compute node and then over the 3-D~torus network.
 The torus provides high bandwidth and switches packets efficiently.
 
+
 \begin{figure}[ht]
 \begin{center}
 \includegraphics[width=25mm]{colinear.pdf}
@@ -760,7 +776,10 @@ non-colinear nodes.}
 \label{fig:colinear}
 \end{figure}
 
-The torus bandwidth between colinear and coplanar nodes is lower than between
+Unfortunately, it is not possible to optimize for short torus paths; due to the
+physical location of I/O nodes and compute nodes,
+the data are necessarily exchanged between distant nodes.
+The bandwidth between colinear and coplanar nodes is lower than between
 non-coplanar nodes, since non-coplanar nodes communicate over more links
 (in three dimensions) simultaneously.
 Figure~\ref{fig:colinear} illustrates this; the bandwidth between nodes
@@ -810,7 +829,7 @@ table to convert 4-bit and 8-bit numbers, and an efficient assembly
 implementation to convert 16-bit numbers.
 Since the conversion increases the data size, we perform it \emph{after\/} the
 data exchange.
-Since the samples are at most 16-bit wide, single precision floating
+Since the samples are at most 16-bit wide, single-precision floating
 point is enough for our purposes. Other telescopes use typically 2--4 bits
 per sample.
 
@@ -860,14 +879,16 @@ implementation for the 256-point FFT.
 \begin{center}
 \includegraphics[width=3cm]{delay.pdf}
 \end{center}
+\vspace{-5mm}
 \caption{The left antenna receives the wave later.}
 \label{fig:delay}
 \end{minipage}
 \hfill
 \begin{minipage}[b]{4cm}
 \begin{center}
-\includegraphics[width=3cm]{bandpass.pdf}
+\includegraphics[width=35mm]{bandpass.pdf}
 \end{center}
+\vspace{-5mm}
 \caption{Not all channels have equal signal power.}
 \label{fig:bandpass}
 \end{minipage}
@@ -893,14 +914,14 @@ sample.
 %Since the phase rotation depends on the frequency, the correction
 %is done after the PPF: the correction is more accurate on narrow
 %frequency channels.  
-The delays are computed for the begin
-time and end time of a chunk, and interpolated in frequency and time
-for each individual sample, with another complex multiplication.
+The exact delays are computed for the begin time and end time of a chunk,
+and interpolated in frequency and time for each individual sample,
+with another complex multiplication.
 
 
 \subsubsection{Bandpass Correction}
 The bandpass correction step compensates for an artifact
-introduced by a filter back that runs on the FPGAs in the stations.
+introduced by a filter bank that runs on the FPGAs in the stations.
 This filter bank performed the initial division of the antenna signals into subbands.
 Without correction, some channels have a stronger signal than others (see Figure~\ref{fig:bandpass}).
 The correction is performed by multiplying each complex sample by a real,
@@ -1019,6 +1040,7 @@ cache hierarchy.
 \begin{center}
 \includegraphics[width=40mm]{correlation-triangle.pdf}
 \end{center}
+\vspace{-4mm}
 \caption{The correlation triangle is divided into $2\times2$ tiles.}
 \label{fig:correlation-triangle}
 \end{figure}
@@ -1207,7 +1229,7 @@ Since only a small number of LOFAR stations have been constructed (the
 majority will become operational later this year), we will provide
 performance measurements with externally generated artificial data.
 We use one Blue Gene/P rack to generate UDP data, another rack for the
-correlator, and the remaining half rack to receive and dump the
+correlator, and half a rack to receive and dump the
 correlated data.  The signal processing pipeline performance does not
 depend on the input data: the exact same operations are always
 performed, regardless of the data values.  The experiments thus are
