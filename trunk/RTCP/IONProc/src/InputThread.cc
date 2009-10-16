@@ -78,10 +78,13 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::~InputThread()
 
   stop = true;
 
-  while (!stopped) {
-    thread->kill(SIGUSR1); // interrupt read() system call
-    usleep(25000);
-  }
+  while (!stopped)
+    try {
+      thread->kill(SIGUSR1); // interrupt read() system call
+      usleep(25000);
+    } catch (SystemCallException &) {
+      // ignore the case that the thread just exited
+    }  
 
   delete thread;
 }
