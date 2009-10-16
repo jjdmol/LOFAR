@@ -270,7 +270,7 @@ void MeasurementSetFormat::fillDataDesc() {
   msdd.addRow();
 
   msddCol.spectralWindowId().put(0, 0);
-  msddCol.polarizationId().put(0, itsPS->nrCrossPolarisations());
+  msddCol.polarizationId().put(0, 0);
   msddCol.flagRow().put(0, False);
 
   msdd.flush();
@@ -370,7 +370,7 @@ void MeasurementSetFormat::createMSMetaFile(unsigned subband)
       << itsPS->IONintegrationTime()
       << itsPS->nrChannelsPerSubband()
       << itsPS->nrCrossPolarisations()
-      << itsPS->sampleRate()
+      << (itsPS->CNintegrationSteps() * itsPS->IONintegrationSteps())
       << itsAlignment
       << isBigEndian;
   aio.close();
