@@ -1,44 +1,9 @@
 # $Id$
 
-cmake_minimum_required(VERSION 2.6)
-
-## ---------------------------------------------------------------------------
-## Preamble: set compilers
-## ---------------------------------------------------------------------------
-include(LofarInit)
-
-## ---------------------------------------------------------------------------
-## Project characteristics
-## ---------------------------------------------------------------------------
-project(RTCP)
-include(LofarGeneral)
-
-## ---------------------------------------------------------------------------
-## Subdirectories
-## ---------------------------------------------------------------------------
-
-# Defines interfaces between the different components within the RTCP product
-lofar_add_package(Interface)
-
-# Fast Collective Network Protocol; used on BlueGene only.
-lofar_add_package(FCNP)
-
-# Compute-Node Processing: application running on the BlueGene compute nodes
-lofar_add_package(CNProc)
-
-# I/O Node Processing: application running on the BlueGene I/O nodes
-lofar_add_package(IONProc)
-
-# Stores output from the correlator in one or more MeasurmentSet files.
-lofar_add_package(Storage)
-
-# Several RTCP tools
-lofar_add_package(RTCPTools)
-
-# Several run scripts to start the RTCP components
-lofar_add_package(Run)
-
-## ---------------------------------------------------------------------------
-## Generate configuration header file.
-## ---------------------------------------------------------------------------
-include(LofarConfig)
+lofar_add_package(Interface) # Interfaces between RTCP product components 
+lofar_add_package(FCNP)      # BlueGene: Fast Collective Network Protocol
+lofar_add_package(CNProc)    # BlueGene: Compute-Node Processing applications 
+lofar_add_package(IONProc)   # BlueGene: I/O Node Processing applications 
+lofar_add_package(Storage)   # Stores correlator output in MeasurmentSets
+lofar_add_package(RTCPTools) # Several RTCP tools
+lofar_add_package(Run)       # Run scripts to start RTCP components
