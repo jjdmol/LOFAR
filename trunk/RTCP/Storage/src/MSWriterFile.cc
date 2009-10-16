@@ -31,6 +31,9 @@
 #include <mpi.h>
 #endif
 
+#include <sys/types.h>
+#include <errno.h>
+#include <fcntl.h>
 
 namespace LOFAR 
 {
@@ -38,47 +41,25 @@ namespace LOFAR
   namespace RTCP
   {
 
-     MSWriterFile::MSWriterFile (const char*msName, double , double ,
-                                int nfreq, int ncorr, int nantennas, const vector<double>& ,
-				const vector<string>&, float)
-       : itsNrBand           (0),
-	 itsNrField          (0),
-	 itsNrAnt            (nantennas),
-	 itsNrFreq           (nfreq), 
-	 itsNrCorr           (ncorr),
-	 itsNrTimes          (0),
-	 itsNrPol            (0),
-	 itsNrChan           (0),
-         itsFile             (msName,00666)
-     {
-     }
+    MSWriterFile::MSWriterFile (const char*msName)
+    :
+         /*
+         itsFile             (msName,O_SYNC | O_RDWR | O_CREAT | O_TRUNC | O_DIRECT,
+				     S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH)
+                                     */
+         itsFile             (msName,O_RDWR | O_CREAT | O_TRUNC,
+				     S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH)
+    {
+    }
 
     MSWriterFile::~MSWriterFile()
     {
     }
 
-    int MSWriterFile::addBand(int, int, double, double)
+    void MSWriterFile::write(StreamableData *data)
     {
-      itsNrBand++;
-      return itsNrBand;
+      data->write( &itsFile, true, 512 );
     }
-
-    int MSWriterFile::addBand(int, int, double, const double*, const double*)
-    {
-      itsNrBand++;
-      return itsNrBand;
-    }
-
-    void MSWriterFile::addField(double, double, unsigned)
-    {
-      itsNrField++;
-    }
-
-    void MSWriterFile::write(int, int, int, StreamableData *data)
-    {
-      data->write( &itsFile, true );
-    }
-
 
   } // namespace RTCP
 } // namespace LOFAR

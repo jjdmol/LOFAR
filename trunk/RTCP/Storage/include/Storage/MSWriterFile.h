@@ -45,42 +45,11 @@ namespace LOFAR
     class MSWriterFile : public MSWriter
     {
     public:
-      MSWriterFile(const char* msName, double startTime, double timeStep, 
-		   int nfreq, int ncorr, int nantennas, const vector<double>& antPos, 
-		   const vector<std::string>& storageStationNames, float weightFactor);
+      MSWriterFile(const char* msName);
       ~MSWriterFile();
-
-      int addBand(int, int, double, double);
-      int addBand(int, int, double, const double*, const double*);
-      void addField(double, double, unsigned);
-      void write(int, int, int, StreamableData *data);
-
-
-      inline int nrAntennas() const
-      { return itsNrAnt; }
-      
-      inline int nrBands() const
-      { return itsNrBand; }
-
-      inline int nrFields() const
-      { return itsNrField; }
-      
-      inline int nrPolarizations() const
-      { return itsNrPol; }
-
-      inline int nrTimes() const
-      { return itsNrTimes; }
-
+      void write(StreamableData *data);
 
     private:
-      int itsNrBand;
-      int itsNrField;
-      int itsNrAnt;
-      int itsNrFreq;
-      int itsNrCorr;
-      int itsNrTimes;
-      int itsNrPol;
-      int itsNrChan;
       FileStream itsFile;
     };
   }

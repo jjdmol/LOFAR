@@ -1,19 +1,20 @@
-lib_LTLIBRARIES			= libstorage.la librtstorage.la
+lib_LTLIBRARIES			= libstorage.la
 
 libstorage_la_SOURCES	= Package__Version.cc \
 				  InputThread.cc \
+				  OutputThread.cc \
 				  SubbandWriter.cc \
 				  MSWriter.cc      \
-				  MSWriterCasa.cc  \
 				  MSWriterNull.cc  \
-				  MSWriterFile.cc
+				  MSWriterFile.cc  \
+                                  MeasurementSetFormat.cc
 
 librtstorage_la_SOURCES = Package__Version.cc \
                                 RTStorage.cc \
                                 InputThread.cc \
                                 MeasurementSetFormat.cc
 
-bin_PROGRAMS			= versionstorage Storage RTStorage
+bin_PROGRAMS			= versionstorage Storage
 
 Storage_SOURCES		        = Storage_main.cc
 Storage_LDADD		        = libstorage.la

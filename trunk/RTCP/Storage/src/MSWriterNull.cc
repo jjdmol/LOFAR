@@ -38,43 +38,15 @@ namespace LOFAR
   namespace RTCP
   {
 
-     MSWriterNull::MSWriterNull (const char* , double , double ,
-                                int nfreq, int ncorr, int nantennas, const vector<double>& ,
-				const vector<string>&, float)
-       : itsNrBand           (0),
-	 itsNrField          (0),
-	 itsNrAnt            (nantennas),
-	 itsNrFreq           (nfreq), 
-	 itsNrCorr           (ncorr),
-	 itsNrTimes          (0),
-	 itsNrPol            (0),
-	 itsNrChan           (0)
-     {
-       
-     }
+    MSWriterNull::MSWriterNull ()
+    {
+    }
 
     MSWriterNull::~MSWriterNull()
     {
     }
 
-    int MSWriterNull::addBand(int, int, double, double)
-    {
-      itsNrBand++;
-      return itsNrBand;
-    }
-
-    int MSWriterNull::addBand(int, int, double, const double*, const double*)
-    {
-      itsNrBand++;
-      return itsNrBand;
-    }
-
-    void MSWriterNull::addField(double, double, unsigned)
-    {
-      itsNrField++;
-    }
-
-    void MSWriterNull::write(int, int, int, StreamableData*)
+    void MSWriterNull::write(StreamableData*)
     {
       //nothing
     }

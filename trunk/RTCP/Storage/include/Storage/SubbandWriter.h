@@ -41,13 +41,13 @@
 #include <Interface/Queue.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Storage/InputThread.h>
+#include <Storage/OutputThread.h>
+#include <Storage/MSWriter.h>
 #include <Stream/Stream.h>
 
 
 namespace LOFAR {
 namespace RTCP {
-
-class MSWriter;
 
 class SubbandWriter
 {
@@ -60,12 +60,6 @@ class SubbandWriter
     void		    postprocess();
 
   private:
-    void		    clearAllSums();
-    void		    createInputStreams();
-    void		    writeLogMessage();
-    void		    checkForDroppedData(StreamableData *, unsigned sb, unsigned output);
-    bool		    processSubband(unsigned sb);
-
     const Parset	    *itsPS;
     unsigned		    itsRank;
     unsigned		    itsSize;
@@ -74,15 +68,10 @@ class SubbandWriter
     CN_ProcessingPlan<>     itsPlan;
     unsigned                itsNrOutputs;
 
-    std::vector<Stream *>   itsInputStreams;
-    std::vector<bool>	    itsIsNullStream;
     std::vector<InputThread *> itsInputThreads;
+    std::vector<OutputThread *> itsOutputThreads;
 
     unsigned		    itsNStations;
-    unsigned		    itsNBaselines;
-    unsigned		    itsNChannels;
-    unsigned		    itsNBeams;
-    unsigned		    itsNPolSquared;
 
     Matrix<MSWriter *>      itsWriters;
 
@@ -90,15 +79,6 @@ class SubbandWriter
     unsigned                itsMyNrSubbands;
     unsigned		    itsNrSubbandsPerPset;
     unsigned		    itsNrSubbandsPerStorage;
-    Matrix<int>		    itsPreviousSequenceNumbers;
-
-    Matrix<unsigned>	    itsBandIDs;
-    unsigned		    itsTimeCounter;
-    fcomplex		    *itsVisibilities;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
-
-    float		    itsWeightFactor;
-
-    NSTimer		    itsWriteTimer;
 
     TimeStamp               itsStartStamp;
 

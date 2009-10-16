@@ -103,6 +103,7 @@ void RTStorage::preprocess()
   LOG_INFO_STR("MeasuremetSet created");
 
   for (unsigned sb = 0; sb < itsMyNrSubbands; sb++) {
+    unsigned currentSubband = itsRank * itsNrSubbandsPerStorage + sb;
     /// create filedescriptors for raw data files
     for (unsigned o = 0; o < itsNrOutputs; o++) {
       
@@ -114,8 +115,8 @@ void RTStorage::preprocess()
 				    S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
     }
     /// create input stream and thread to handle the inputstream
-    createInputStream(sb);
-    itsInputThreads.push_back(new InputThread(itsInputStreams[sb], itsPS, sb));
+    InputThread *i = new InputThread(itsPS,sb,currentSubband);
+    itsInputThreads.push_back(i);
   }  
 
   itsPreviousSequenceNumbers.resize(itsMyNrSubbands, itsNrOutputs);
@@ -130,6 +131,8 @@ void RTStorage::preprocess()
 
 void RTStorage::process()
 {
+  return;
+
   std::vector<bool> finishedSubbands(itsMyNrSubbands, false);
   unsigned finishedSubbandsCount = 0;
  
@@ -152,21 +155,16 @@ void RTStorage::postprocess()
 
   /// close filedescriptors
   for (unsigned i = 0; i < itsMyNrSubbands; i++) {
+    delete itsInputThreads[i];
+
     for (unsigned j = 0; j < itsNrOutputs; j++) {
       
       delete myFDs[i][j];
       
     }
-
-    delete itsInputThreads[i];
-    delete itsInputStreams[i];
   }
-  itsInputStreams.clear();
   itsInputThreads.clear();
-  itsIsNullStream.clear();
   myFDs.resize(0, 0);  
-
-  itsPreviousSequenceNumbers.resize(0, 0);
 }
 
 
@@ -195,7 +193,7 @@ void RTStorage::checkForDroppedData(StreamableData *data, unsigned sb, unsigned 
 {
   unsigned expectedSequenceNumber = itsPreviousSequenceNumbers[sb][output] + 1;
     
-  if (itsIsNullStream[sb]) {
+  if(0){ //if (itsIsNullStream[sb]) { TODO
     data->sequenceNumber	           = expectedSequenceNumber;
     itsPreviousSequenceNumbers[sb][output] = expectedSequenceNumber;
   } else {
@@ -235,34 +233,5 @@ bool RTStorage::processSubband(unsigned sb)
   return true;
 }
 
-
-void RTStorage::createInputStream(unsigned subband)
-{
-  string   prefix            = "OLAP.OLAP_Conn.IONProc_Storage";
-  string   connectionType    = itsPS->getString(prefix + "_Transport");
-  unsigned subbandNumber     = itsRank * itsNrSubbandsPerStorage + subband;
-      
-  if (connectionType == "NULL") {
-    LOG_DEBUG_STR(itsRank << ": subband " << subbandNumber << " read from null stream");
-    itsInputStreams.push_back(new NullStream);
-  } else if (connectionType == "TCP") {
-    std::string    server = itsPS->storageHostName(prefix + "_ServerHosts", subbandNumber);
-    unsigned short port   = boost::lexical_cast<unsigned short>(itsPS->getPortsOf(prefix)[subbandNumber]);
-      
-    LOG_DEBUG_STR(itsRank << ": subband " << subbandNumber << " read from tcp:" << server << ':' << port);
-    itsInputStreams.push_back(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Server));
-  } else if (connectionType == "FILE") {
-    std::string filename = itsPS->getString(prefix + "_BaseFileName") + '.' +
-      boost::lexical_cast<std::string>(itsRank) + '.' +
-      boost::lexical_cast<std::string>(subbandNumber);
-      
-    LOG_DEBUG_STR(itsRank << ": subband " << subbandNumber << " read from file:" << filename);
-    itsInputStreams.push_back(new FileStream(filename.c_str()));
-  } else {
-    THROW(StorageException, itsRank << ": unsupported ION->Storage stream type");
-  }
-    
-  itsIsNullStream.push_back(dynamic_cast<NullStream *>(itsInputStreams.back()) != 0);
-}
 } // namespace RTCP
 } // namespace LOFAR
