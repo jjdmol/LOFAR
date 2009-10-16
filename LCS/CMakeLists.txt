@@ -1,21 +1,5 @@
 # $Id$
 
-cmake_minimum_required(VERSION 2.6)
-
-## ---------------------------------------------------------------------------
-## Preamble: set compilers
-## ---------------------------------------------------------------------------
-include(LofarInit)
-
-## ---------------------------------------------------------------------------
-## Project characteristics
-## ---------------------------------------------------------------------------
-project(LCS)
-include(LofarGeneral)
-
-## ---------------------------------------------------------------------------
-## Subdirectories
-## ---------------------------------------------------------------------------
 lofar_add_package(ACC)            # Application Configuration & Control
 lofar_add_package(AMC)            # Astronomical Measures Conversions
 lofar_add_package(ApplCommon)     # Application common stuff
@@ -26,8 +10,3 @@ lofar_add_package(pytools)        # Python tools
 lofar_add_package(Stream)         # Low-level support for streaming data
 lofar_add_package(Tools)          # Useful tools
 lofar_add_package(Transport)      # Low-level transport library
-
-## ---------------------------------------------------------------------------
-## Generate configuration header file.
-## ---------------------------------------------------------------------------
-include(LofarConfig)
