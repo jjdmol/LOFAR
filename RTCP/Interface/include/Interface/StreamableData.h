@@ -29,7 +29,8 @@ namespace RTCP {
 //  * Data received by the CN from the stations (transported via the ION)
 //  * Data received by Storage from the ION
 //
-// WARNING: We consider all data streams to be big endian
+// WARNING: We consider all data streams to be big endian, and will also write
+// them as such. sequenceNumber is the only field converted from and to big endian.
 
 class StreamableData {
   public:
@@ -122,7 +123,7 @@ inline void StreamableData::write(Stream *str, bool withSequenceNumber, unsigned
       posix_memalign(&sn_buf, align, align);
 
       try {
-        dataConvert(LittleEndian, &sn, 1);
+        dataConvert(BigEndian, &sn, 1);
         memcpy(sn_buf, &sn, sizeof sn);
 
         str->write(sn_buf, align);
@@ -186,7 +187,7 @@ template <typename T, unsigned DIM> inline void SampleData<T,DIM>::allocate(Allo
 
 template <typename T, unsigned DIM> inline void SampleData<T,DIM>::checkEndianness()
 {
-#if !defined WORDS_BIGENDIAN
+#if 0 && !defined WORDS_BIGENDIAN
   dataConvert(LittleEndian, samples.origin(), samples.num_elements());
 #endif
 }
@@ -200,7 +201,7 @@ template <typename T, unsigned DIM> inline void SampleData<T,DIM>::readData(Stre
 
 template <typename T, unsigned DIM> inline void SampleData<T,DIM>::writeData(Stream *str)
 {
-#if !defined WORDS_BIGENDIAN
+#if 0 && !defined WORDS_BIGENDIAN
   if (!itsHaveWarnedLittleEndian) {
     itsHaveWarnedLittleEndian = true;
 

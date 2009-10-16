@@ -101,15 +101,16 @@ inline void CorrelatedData::readData(Stream *str)
   str->read(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
   str->read(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(unsigned short));
   //str->read(&centroids[0], centroids.size() * sizeof(float));
-
+#if 0
   checkEndianness();
+#endif  
 }
 
 
 inline void CorrelatedData::writeData(Stream *str) 
 {
-#if !defined WORDS_BIGENDIAN && !defined WRITE_BIG_ON_LITTLE_ENDIAN
-  THROW(AssertError, "not implemented: think about endianness");
+#if 0 && !defined WORDS_BIGENDIAN && !defined WRITE_BIG_ON_LITTLE_ENDIAN
+  THROW(AssertError,"not implemented: think about endianness");
 #endif
 
   str->write(visibilities.origin(), align(visibilities.num_elements() * sizeof(fcomplex), itsAlignment));
@@ -120,7 +121,7 @@ inline void CorrelatedData::writeData(Stream *str)
 
 inline void CorrelatedData::checkEndianness()
 {
-#if !defined WORDS_BIGENDIAN && !defined WRITE_BIG_ON_LITTLE_ENDIAN
+#if 0 && !defined WORDS_BIGENDIAN && !defined WRITE_BIG_ON_LITTLE_ENDIAN
   dataConvert(LittleEndian, visibilities.origin(), visibilities.num_elements());
   dataConvert(LittleEndian, nrValidSamples.origin(), nrValidSamples.num_elements());
   // dataConvert(LittleEndian, &centroids[0], centroids.size());
