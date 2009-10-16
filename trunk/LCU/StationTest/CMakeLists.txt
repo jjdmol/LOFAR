@@ -1,20 +1,8 @@
 # $Id$
 
-cmake_minimum_required(VERSION 2.6)
+lofar_package(StationTest)
 
-## ---------------------------------------------------------------------------
-## Preamble: set compilers
-## ---------------------------------------------------------------------------
-include(LofarInit)
-
-## ---------------------------------------------------------------------------
-## Project characteristics
-## ---------------------------------------------------------------------------
-project(StationTest NONE)
-
-## ---------------------------------------------------------------------------
-## Install files matching regex pattern in current directory and below
-## ---------------------------------------------------------------------------
+# Install files matching regex pattern in current directory and below
 install(DIRECTORY . 
   DESTINATION stationtest
   USE_SOURCE_PERMISSIONS
