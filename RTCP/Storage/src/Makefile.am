@@ -30,8 +30,8 @@ configfiles_DATA                = Storage.machinefile \
 				  PropertyInterface.conf
 
 versionstorage_SOURCES          = versionstorage.cc
-versionstorage_LDADD            = libstorage.la librtstorage.la
-versionstorage_DEPENDENCIES     = libstorage.la librtstorage.la $(LOFAR_DEPEND)
+versionstorage_LDADD            = libstorage.la
+versionstorage_DEPENDENCIES     = libstorage.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
 
