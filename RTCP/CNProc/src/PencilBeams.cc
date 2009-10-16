@@ -95,17 +95,17 @@ void BeamFormer::mergeStationFlags( const SampleData<> *in, SampleData<> *out )
   const unsigned upperBound = static_cast<unsigned>(itsNrSamplesPerIntegration * BeamFormer::MAX_FLAGGED_PERCENTAGE);
   const stationValidator isValid( in, upperBound );
 
-  for( unsigned i = 0; i < itsMergeDestStations.size(); i++ ) {
-    const unsigned destStation = itsMergeDestStations[i];
-    const std::vector<unsigned> &sourceStations = itsMergeSourceStations[i];
-    std::vector<unsigned> &validSourceStations  = itsValidMergeSourceStations[i];
+  for( unsigned d = 0; d < itsMergeDestStations.size(); d++ ) {
+    const unsigned destStation = itsMergeDestStations[d];
+    const std::vector<unsigned> &sourceStations = itsMergeSourceStations[d];
+    std::vector<unsigned> &validSourceStations  = itsValidMergeSourceStations[d];
 
     validSourceStations.clear();
 
     // copy valid stations from sourceStations -> validSourceStations
-    for( unsigned i = 0; i < sourceStations.size(); i++ ) {
-      if( isValid( sourceStations[i] ) ) {
-        validSourceStations.push_back( i );
+    for( unsigned s = 0; s < sourceStations.size(); s++ ) {
+      if( isValid( sourceStations[s] ) ) {
+        validSourceStations.push_back( sourceStations[s] );
       }
     }
 
