@@ -1,34 +1,8 @@
 # $Id$
 
-cmake_minimum_required(VERSION 2.6)
-
-## ---------------------------------------------------------------------------
-## Preamble: set compilers
-## ---------------------------------------------------------------------------
-include(LofarInit)
-
-## ---------------------------------------------------------------------------
-## Project characteristics
-## ---------------------------------------------------------------------------
-include(LofarGeneral)
-
-include(LofarPackage)
 # Do not split the following line, otherwise makeversion will fail!
 lofar_package(RTDBCommon 3.1 DEPENDS Common GCFPVSS GCFRTDB GCFTM MACIO)
 
-## ---------------------------------------------------------------------------
-## External packages
-## ---------------------------------------------------------------------------
-include(LofarFindPackage)
-
-## ---------------------------------------------------------------------------
-## Generate configuration header file.
-## ---------------------------------------------------------------------------
-include(LofarConfig)
-
-## ---------------------------------------------------------------------------
-## Subdirectories
-## ---------------------------------------------------------------------------
 add_subdirectory(include/APL/RTDBCommon)
 add_subdirectory(src)
 add_subdirectory(test)

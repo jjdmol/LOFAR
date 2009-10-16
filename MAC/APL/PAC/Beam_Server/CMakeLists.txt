@@ -1,39 +1,12 @@
 # $Id$
 
-cmake_minimum_required(VERSION 2.6)
-
-## ---------------------------------------------------------------------------
-## Preamble: set compilers
-## ---------------------------------------------------------------------------
-include(LofarInit)
-
-## ---------------------------------------------------------------------------
-## Project characteristics
-## ---------------------------------------------------------------------------
-include(LofarGeneral)
-
-include(LofarPackage)
 # Do not split the following line, otherwise makeversion will fail!
 lofar_package(Beam_Server 6.0 DEPENDS Common AMCBase MACIO GCFTM TestSuite RTCCommon RSP_Protocol BS_Protocol CAL_Protocol)
 
-## ---------------------------------------------------------------------------
-## External packages
-## ---------------------------------------------------------------------------
 include(LofarFindPackage)
 lofar_find_package(Blitz REQUIRED)
 
-## ---------------------------------------------------------------------------
-## Project-specific compiler definitions.
-## ---------------------------------------------------------------------------
 add_definitions(-DUSE_CAL_THREAD)
 
-## ---------------------------------------------------------------------------
-## Generate configuration header file.
-## ---------------------------------------------------------------------------
-include(LofarConfig)
-
-## ---------------------------------------------------------------------------
-## Subdirectories
-## ---------------------------------------------------------------------------
 add_subdirectory(src)
 add_subdirectory(test)
