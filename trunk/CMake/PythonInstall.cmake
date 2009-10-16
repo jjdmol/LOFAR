@@ -71,9 +71,9 @@ macro(python_install)
 
   # Create a unique custom target that depends on all .pyc files, and let
   # that target depend on the current project.
-  if(NOT TARGET ${PROJECT_NAME}_py_compile)
-    add_custom_target(${PROJECT_NAME}_py_compile DEPENDS ${_pyc_files})
-  endif(NOT TARGET ${PROJECT_NAME}_py_compile)
-  add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_py_compile)
+  if(NOT TARGET ${PACKAGE_NAME}_py_compile)
+    add_custom_target(${PACKAGE_NAME}_py_compile DEPENDS ${_pyc_files})
+  endif(NOT TARGET ${PACKAGE_NAME}_py_compile)
+  add_dependencies(${PACKAGE_NAME} ${PACKAGE_NAME}_py_compile)
 
 endmacro(python_install)

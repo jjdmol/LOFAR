@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(LCU_MAC)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 
+lofar_package(LCU_MAC 
   DEPENDS StationCU PIC PAC CUDaemons CURTDBDaemons Deployment Navigator2
     AMC Firmware-Tools StationTest MACTools)
 

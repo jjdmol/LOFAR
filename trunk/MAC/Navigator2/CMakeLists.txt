@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(Navigator2)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.0)
+lofar_package(Navigator2 1.0)
 
 ## ---------------------------------------------------------------------------
 ## External packages

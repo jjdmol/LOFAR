@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(jOTDB2)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common OTDB)
+lofar_package(jOTDB2 1.0 DEPENDS Common OTDB)
 
 ## ---------------------------------------------------------------------------
 ## External packages

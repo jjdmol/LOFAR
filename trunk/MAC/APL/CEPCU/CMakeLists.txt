@@ -28,12 +28,11 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(CEPCU)
 include(LofarGeneral)
 
 include(LofarPackage)
 # Do not split the following line, otherwise makeversion will fail!
-lofar_package(${PROJECT_NAME} 3.1 DEPENDS Common ApplCommon ALC PLC MACIO GCFTM GCFRTDB APLCommon)
+lofar_package(CEPCU 3.1 DEPENDS Common ApplCommon ALC PLC MACIO GCFTM GCFRTDB APLCommon)
 
 ## ---------------------------------------------------------------------------
 ## External packages

@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(Storage)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common AMCBase Interface)
+lofar_package(Storage 1.0 DEPENDS Common AMCBase Interface)
 
 ## ---------------------------------------------------------------------------
 ## External packages

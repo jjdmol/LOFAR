@@ -28,12 +28,11 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(Beam_Server)
 include(LofarGeneral)
 
 include(LofarPackage)
 # Do not split the following line, otherwise makeversion will fail!
-lofar_package(${PROJECT_NAME} 6.0 DEPENDS Common AMCBase MACIO GCFTM TestSuite RTCCommon RSP_Protocol BS_Protocol CAL_Protocol)
+lofar_package(Beam_Server 6.0 DEPENDS Common AMCBase MACIO GCFTM TestSuite RTCCommon RSP_Protocol BS_Protocol CAL_Protocol)
 
 ## ---------------------------------------------------------------------------
 ## External packages

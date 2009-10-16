@@ -113,7 +113,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   # Add an executable like add_executable() does.
   # Furthermore:
   # - Set the link dependencies of this executable on other LOFAR libraries
-  #   using the information in ${PROJECT_NAME}_LIBRARIES.
+  #   using the information in ${PACKAGE_NAME}_LIBRARIES.
   # - Add a dependency of the current project on this executable.
   #
   # Note: since the libraries of the current project already have all their
@@ -122,9 +122,9 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   # --------------------------------------------------------------------------
   macro(lofar_add_executable _name)
     add_executable(${_name} ${ARGN})
-    get_property(_libs GLOBAL PROPERTY ${PROJECT_NAME}_LIBRARIES)
+    get_property(_libs GLOBAL PROPERTY ${PACKAGE_NAME}_LIBRARIES)
     target_link_libraries(${_name} ${_libs})
-    add_dependencies(${PROJECT_NAME} ${_name})
+    add_dependencies(${PACKAGE_NAME} ${_name})
   endmacro(lofar_add_executable _name)
 
 
@@ -134,9 +134,9 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   # Add a library like add_library() does. 
   # Furthermore:
   # - add the library to the list of libraries for the current project
-  #   (global property ${PROJECT_NAME}_LIBRARIES). 
+  #   (global property ${PACKAGE_NAME}_LIBRARIES). 
   # - set the link dependencies of this library on other LOFAR libraries 
-  #   using the information in ${PROJECT_NAME}_DEPENDENCIES.
+  #   using the information in ${PACKAGE_NAME}_DEPENDENCIES.
   # - mark the library for install into LOFAR_LIBDIR.
   # - add a dependency of the current project on the library.
   #
@@ -146,15 +146,15 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   # --------------------------------------------------------------------------
   macro(lofar_add_library _name)
     add_library(${_name} ${ARGN})
-    set_property(GLOBAL APPEND PROPERTY ${PROJECT_NAME}_LIBRARIES ${_name})
+    set_property(GLOBAL APPEND PROPERTY ${PACKAGE_NAME}_LIBRARIES ${_name})
     set(_link_libs)
-    foreach(_dep ${${PROJECT_NAME}_DEPENDENCIES})
+    foreach(_dep ${${PACKAGE_NAME}_DEPENDENCIES})
       get_property(_dep_libs GLOBAL PROPERTY ${_dep}_LIBRARIES)
       list(APPEND _link_libs ${_dep_libs})
-    endforeach(_dep ${${PROJECT_NAME}_DEPENDENCIES})
+    endforeach(_dep ${${PACKAGE_NAME}_DEPENDENCIES})
     target_link_libraries(${_name} ${_link_libs} ${LOFAR_EXTRA_LIBRARIES})
     install(TARGETS ${_name} DESTINATION ${LOFAR_LIBDIR})
-    add_dependencies(${PROJECT_NAME} ${_name})
+    add_dependencies(${PACKAGE_NAME} ${_name})
   endmacro(lofar_add_library _name)
 
 

@@ -21,10 +21,10 @@
 include(LofarCTest)
 
 # Add the directory where the generated C++ headers are stored to the -I path.
-include_directories(${PROJECT_BINARY_DIR}/src)
+include_directories(${PACKAGE_BINARY_DIR}/src)
 
 # Add the project's source directory to the -I path.
-include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PACKAGE_SOURCE_DIR}/src)
 
 lofar_add_library(tbbstub StubRawEvent.cc)
 lofar_add_sbin_program(TPStub TPStub.cc)

@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(Tools)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.3)
+lofar_package(Tools 1.3)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration-specific header file

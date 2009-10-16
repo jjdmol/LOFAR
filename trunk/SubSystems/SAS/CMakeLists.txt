@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(SAS)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 
+lofar_package(SAS 
   DEPENDS OTB Deployment)
 
 ## ---------------------------------------------------------------------------

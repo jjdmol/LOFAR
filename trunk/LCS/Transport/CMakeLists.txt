@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(Transport)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 2.3 DEPENDS Blob)
+lofar_package(Transport 2.3 DEPENDS Blob)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

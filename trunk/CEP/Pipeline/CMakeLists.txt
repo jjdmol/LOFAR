@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(Pipeline)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 0.1 DEPENDS pytools)
+lofar_package(Pipeline 0.1 DEPENDS pytools)
 
 ## ---------------------------------------------------------------------------
 ## External packages

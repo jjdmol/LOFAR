@@ -23,7 +23,7 @@ include(LofarPackageVersion)
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
+  ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
 
 lofar_add_library(_parmdb SHARED pyparmdb.cc)
 set_target_properties(_parmdb PROPERTIES PREFIX "")

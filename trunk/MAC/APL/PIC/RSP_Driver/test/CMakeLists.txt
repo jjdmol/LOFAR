@@ -21,16 +21,16 @@
 include(LofarCTest)
 
 # Add project's source directory to -I path.
-include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PACKAGE_SOURCE_DIR}/src)
 
 lofar_add_test(tCableAttenuation 
   tCableAttenuation.cc
-  ${PROJECT_SOURCE_DIR}/src/CableAttenuation.cc)
+  ${PACKAGE_SOURCE_DIR}/src/CableAttenuation.cc)
   
 lofar_add_test(tRCUCables
   tRCUCables.cc
-  ${PROJECT_SOURCE_DIR}/src/RCUCables.cc
-  ${PROJECT_SOURCE_DIR}/src/CableAttenuation.cc)
+  ${PACKAGE_SOURCE_DIR}/src/RCUCables.cc
+  ${PACKAGE_SOURCE_DIR}/src/CableAttenuation.cc)
 
 lofar_add_sbin_program(EPAStub EPAStub.cc)
 lofar_add_sbin_program(RSPTest RSPTest.cc)

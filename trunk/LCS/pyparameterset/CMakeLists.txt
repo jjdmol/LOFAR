@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(pyparameterset)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common)
+lofar_package(pyparameterset 1.0 DEPENDS Common)
 
 ## ---------------------------------------------------------------------------
 ## External packages

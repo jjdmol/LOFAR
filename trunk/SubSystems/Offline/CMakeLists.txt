@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(Offline)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 
+lofar_package(Offline 
   DEPENDS pyparameterset BBSControl pyparmdb MWImager DPPP LofarStMan)
 
 ## ---------------------------------------------------------------------------

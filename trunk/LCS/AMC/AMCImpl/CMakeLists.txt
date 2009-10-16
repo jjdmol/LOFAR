@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(AMCImpl)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 2.0 DEPENDS Common Transport AMCBase)
+lofar_package(AMCImpl 2.0 DEPENDS Common Transport AMCBase)
 
 ## ---------------------------------------------------------------------------
 ## External packages

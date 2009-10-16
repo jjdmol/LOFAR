@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(pytools NONE)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME})
+lofar_package(pytools)
 
 ## ---------------------------------------------------------------------------
 ## External packages

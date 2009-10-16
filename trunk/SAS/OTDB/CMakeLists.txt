@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(OTDB)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common)
+lofar_package(OTDB 1.0 DEPENDS Common)
 
 ## ---------------------------------------------------------------------------
 ## External packages

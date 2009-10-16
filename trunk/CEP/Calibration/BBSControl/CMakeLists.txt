@@ -28,12 +28,11 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(BBSControl)
 include(LofarGeneral)
 
 include(LofarPackage)
 # Do not split the following line, otherwise makeversion will fail!
-lofar_package(${PROJECT_NAME} 1.0 DEPENDS BBSKernel Blob Common MWCommon ParmDB PLC Transport)
+lofar_package(BBSControl 1.0 DEPENDS BBSKernel Blob Common MWCommon ParmDB PLC Transport)
 
 ## ---------------------------------------------------------------------------
 ## External packages

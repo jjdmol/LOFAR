@@ -28,12 +28,11 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(CUDaemons)
 include(LofarGeneral)
 
 include(LofarPackage)
 # Do not split the following line, otherwise makeversion will fail!
-lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common ApplCommon APLCommon GCFTM MACIO)
+lofar_package(CUDaemons 1.0 DEPENDS Common ApplCommon APLCommon GCFTM MACIO)
 
 ## ---------------------------------------------------------------------------
 ## External packages
