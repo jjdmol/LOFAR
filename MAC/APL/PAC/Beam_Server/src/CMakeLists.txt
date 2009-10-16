@@ -23,7 +23,7 @@ include(LofarPackageVersion)
 # Create symbolic link in binary include directory to current directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
+  ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
 
 # Add the directory where the generated C++ headers are stored to the -I path.
 #include_directories(${CMAKE_BINARY_DIR}/include/MAC)

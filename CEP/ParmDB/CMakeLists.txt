@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(ParmDB)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common Blob MWCommon)
+lofar_package(ParmDB 1.0 DEPENDS Common Blob MWCommon)
 
 ## ---------------------------------------------------------------------------
 ## External packages

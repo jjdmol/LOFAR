@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(MWImager)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 0.1 DEPENDS Common MWCommon)
+lofar_package(MWImager 0.1 DEPENDS Common MWCommon)
 
 ## ---------------------------------------------------------------------------
 ## External packages

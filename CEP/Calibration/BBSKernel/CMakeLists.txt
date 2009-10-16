@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(BBSKernel)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.0 DEPENDS Blob Common ParmDB)
+lofar_package(BBSKernel 1.0 DEPENDS Blob Common ParmDB)
 
 ## ---------------------------------------------------------------------------
 ## External packages

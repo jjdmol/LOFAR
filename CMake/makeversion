@@ -56,7 +56,7 @@ fi
 
 # If present, use the package name from the CMakeLists.txt file.
 # It looks like: project (GCFProtocols ...)
-tpkg=`sed -n 's,^[ \t]*[pP][rR][oO][jJ][eE][cC][tT][ \t]*([ \t]*\([^ \t)]*\).*$,\1,p' CMakeLists.txt`
+tpkg=`sed -n 's,^[ \t]*[lL][oO][fF][aA][rR]_[pP][aA][cC][kK][aA][gG][eE][ \t]*([ \t]*\([^ \t)]*\).*$,\1,p' CMakeLists.txt`
 if test "$tpkg" != ""; then
   pkg=$tpkg
 fi
@@ -118,7 +118,7 @@ fi
 # Get the version from the CMakeLists.txt. We'll assume (for the time being)
 # that the project's CMakeLists.txt file contains a line like
 # "lofad_add_package(<name> [version] [DEPENDS <depend> [depend]])
-cvers1=`sed -n 's,^[ \t]*[lL][oO][fF][aA][rR]_[aA][dD][dD]_[pP][aA][cC][kK][aA][gG][eE][ \t]*([ \t]*[^ \t]*[ \t][ \t]*\([0-9.][0-9.]*\).*$,\1,p' CMakeLists.txt`
+cvers1=`sed -n 's,^[ \t]*[lL][oO][fF][aA][rR]_[pP][aA][cC][kK][aA][gG][eE][ \t]*([ \t]*[^ \t]*[ \t][ \t]*\([0-9.][0-9.]*\).*$,\1,p' CMakeLists.txt`
 #cvers1=`sed -n 's,^[ \t]*set[ \t]*([ \t]*package_version[ \t]\+\([0-9.]\+\).*$,\1,ip' CMakeLists.txt`
 if [ "$cvers1" != "" ]; then
   cvers=$cvers1

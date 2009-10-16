@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(Stream)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 0.1 DEPENDS Common)
+lofar_package(Stream 0.1 DEPENDS Common)
 
 ## ---------------------------------------------------------------------------
 ## External packages

@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(CNProc)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common Stream Interface FCNP)
+lofar_package(CNProc 1.0 DEPENDS Common Stream Interface FCNP)
 
 ## ---------------------------------------------------------------------------
 ## External packages

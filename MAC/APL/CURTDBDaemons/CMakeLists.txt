@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(CURTDBDaemons)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common ApplCommon MACIO GCFTM GCFRTDB RTDBCommon APLCommon OTDB)
+lofar_package(CURTDBDaemons 1.0 DEPENDS Common ApplCommon MACIO GCFTM GCFRTDB RTDBCommon APLCommon OTDB)
 
 ## ---------------------------------------------------------------------------
 ## External packages

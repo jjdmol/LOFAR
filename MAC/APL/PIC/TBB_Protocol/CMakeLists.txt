@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(TBB_Protocol)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.0 DEPENDS MACIO)
+lofar_package(TBB_Protocol 1.0 DEPENDS MACIO)
 
 ## ---------------------------------------------------------------------------
 ## External packages

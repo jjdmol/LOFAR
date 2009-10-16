@@ -19,7 +19,7 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 # Add path to generated ClockProtocol files to -I path.
-include_directories(${PROJECT_BINARY_DIR}/src/ClockProtocol)
+include_directories(${PACKAGE_BINARY_DIR}/src/ClockProtocol)
 
 lofar_add_bin_program(ClockControl ClockControlMain.cc ClockControl.cc)
 target_link_libraries(ClockControl clock_protocol)

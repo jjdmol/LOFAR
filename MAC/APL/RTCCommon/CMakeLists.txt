@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(RTCCommon)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 6.0 DEPENDS Common)
+lofar_package(RTCCommon 6.0 DEPENDS Common)
 
 ## ---------------------------------------------------------------------------
 ## External packages

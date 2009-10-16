@@ -28,12 +28,11 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(RSP_Driver)
 include(LofarGeneral)
 
 include(LofarPackage)
 # Do not split the following line, otherwise makeversion will fail!
-lofar_package(${PROJECT_NAME} 6.0 DEPENDS Common TestSuite GCFTM MACIO RTCCommon RSP_Protocol)
+lofar_package(RSP_Driver 6.0 DEPENDS Common TestSuite GCFTM MACIO RTCCommon RSP_Protocol)
 
 ## ---------------------------------------------------------------------------
 ## External packages

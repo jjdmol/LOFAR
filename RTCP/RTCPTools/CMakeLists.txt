@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(RTCPTools)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.0)
+lofar_package(RTCPTools 1.0)
 
 ## ---------------------------------------------------------------------------
 ## Subdirectories

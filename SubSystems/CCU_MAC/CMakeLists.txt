@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(CCU_MAC)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 
+lofar_package(CCU_MAC 
   DEPENDS CEPCU CUDaemons CURTDBDaemons Deployment Navigator2)
 
 ## ---------------------------------------------------------------------------

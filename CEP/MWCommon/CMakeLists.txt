@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(MWCommon)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 0.1 DEPENDS Common Blob)
+lofar_package(MWCommon 0.1 DEPENDS Common Blob)
 
 ## ---------------------------------------------------------------------------
 ## External packages

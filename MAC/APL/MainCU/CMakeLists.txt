@@ -28,12 +28,11 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(MainCU)
 include(LofarGeneral)
 
 include(LofarPackage)
 # Do not split the following line, otherwise makeversion will fail!
-lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common OTDB MACIO GCFTM GCFPVSS GCFRTDB APLCommon RTDBCommon ApplCommon)
+lofar_package(MainCU 1.0 DEPENDS Common OTDB MACIO GCFTM GCFPVSS GCFRTDB APLCommon RTDBCommon ApplCommon)
 
 ## ---------------------------------------------------------------------------
 ## External packages

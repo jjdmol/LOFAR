@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(IONProc)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.0
+lofar_package(IONProc 1.0
   DEPENDS Common Stream AMCBase AMCImpl PLC Interface FCNP)
 
 ## ---------------------------------------------------------------------------

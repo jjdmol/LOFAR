@@ -28,12 +28,11 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(Cal_Server)
 include(LofarGeneral)
 
 include(LofarPackage)
 # Do not split the following line, otherwise makeversion will fail!
-lofar_package(${PROJECT_NAME} 6.0 DEPENDS Common AMCBase ApplCommon MACIO GCFTM TestSuite RTCCommon RSP_Protocol CAL_Protocol)
+lofar_package(Cal_Server 6.0 DEPENDS Common AMCBase ApplCommon MACIO GCFTM TestSuite RTCCommon RSP_Protocol CAL_Protocol)
 
 ## ---------------------------------------------------------------------------
 ## External packages

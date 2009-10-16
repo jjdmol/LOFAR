@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(VHECR)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 3.1 DEPENDS Common )
+lofar_package(VHECR 3.1 DEPENDS Common )
 
 ## ---------------------------------------------------------------------------
 ## External packages

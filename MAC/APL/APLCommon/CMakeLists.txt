@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(APLCommon)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 3.1 DEPENDS Common ApplCommon GCFTM MACIO)
+lofar_package(APLCommon 3.1 DEPENDS Common ApplCommon GCFTM MACIO)
 
 ## ---------------------------------------------------------------------------
 ## External packages

@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(MD_Protocol)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 6.0 DEPENDS Common MACIO RTCCommon)
+lofar_package(MD_Protocol 6.0 DEPENDS Common MACIO RTCCommon)
 
 ## ---------------------------------------------------------------------------
 ## External packages

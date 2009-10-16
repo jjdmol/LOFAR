@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(PLC)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 2.1 DEPENDS Common Blob Transport)
+lofar_package(PLC 2.1 DEPENDS Common Blob Transport)
 
 ## ---------------------------------------------------------------------------
 ## External packages

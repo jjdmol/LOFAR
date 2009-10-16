@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(pyparmdb)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common ParmDB)
+lofar_package(pyparmdb 1.0 DEPENDS Common ParmDB)
 
 ## ---------------------------------------------------------------------------
 ## External packages

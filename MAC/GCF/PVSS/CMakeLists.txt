@@ -28,11 +28,10 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(GCFPVSS)
 include(LofarGeneral)
 
 include(LofarPackage)
-lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common GCFTM)
+lofar_package(GCFPVSS 1.0 DEPENDS Common GCFTM)
 
 ## ---------------------------------------------------------------------------
 ## External packages
