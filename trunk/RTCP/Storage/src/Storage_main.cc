@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
 	      break;
 
     case 0  : child(argc, argv, rank, size);
-	      exit(0);
+	      _exit(0);
 
     default : if (wait(&status) < 0)
 		perror("wait");
