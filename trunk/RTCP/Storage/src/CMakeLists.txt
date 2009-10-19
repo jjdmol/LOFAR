@@ -5,9 +5,9 @@ include(LofarPackageVersion)
 set(storage_LIB_SRCS
   Package__Version.cc
   InputThread.cc
+  OutputThread.cc
   SubbandWriter.cc
   MSWriter.cc
-  MSWriterCasa.cc
   MSWriterNull.cc
   MSWriterFile.cc)
 
