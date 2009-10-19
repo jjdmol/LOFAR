@@ -70,6 +70,14 @@ MeasurementSetFormat::MeasurementSetFormat(const Parset *ps, const unsigned alig
 
   antPos = itsPS->positions();
 
+  if (itsPS->nrTabStations() > 0) { 
+    ASSERTSTR(antPos.size() == 3 * itsPS->nrTabStations(),
+	      antPos.size() << " == " << 3 * itsPS->nrTabStations());
+  } else {
+    ASSERTSTR(antPos.size() == 3 * itsPS->nrStations(),
+	      antPos.size() << " == " << 3 * itsPS->nrStations());
+  }
+
   AMC::Epoch epoch;
   epoch.utc(itsPS->startTime());
   itsStartTime = MVEpoch(epoch.mjd()).getTime().getValue("s");

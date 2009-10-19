@@ -61,11 +61,6 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank, unsigned size)
 #ifdef USE_MAC_PI
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
-  if (itsPS->nrTabStations() > 0) {
-    itsNStations = itsPS->nrTabStations();
-  } else {
-    itsNStations = itsPS->nrStations();
-  }
 }
 
 
@@ -82,7 +77,6 @@ SubbandWriter::~SubbandWriter()
 #endif
 }
 
-
 void SubbandWriter::preprocess() 
 {
 #if defined HAVE_AIPSPP
@@ -97,26 +91,12 @@ void SubbandWriter::preprocess()
   }
 #endif
 
-  double startTime = itsPS->startTime();
-  LOG_TRACE_VAR_STR("startTime = " << startTime);
-  
-  vector<double> antPos = itsPS->positions();
-  ASSERTSTR(antPos.size() == 3 * itsNStations,
-	    antPos.size() << " == " << 3 * itsNStations);
   itsNrSubbands           = itsPS->nrSubbands();
-  itsNrSubbandsPerPset	  = itsPS->nrSubbandsPerPset();
   if(itsNrSubbands % itsSize == 0) {
     itsNrSubbandsPerStorage = itsNrSubbands / itsSize;
   } else {
     itsNrSubbandsPerStorage = (itsNrSubbands / itsSize) + 1;
   }
-
-  const double sampleFreq   = itsPS->sampleRate();
-  const unsigned seconds    = static_cast<unsigned>(floor(startTime));
-  const unsigned samples    = static_cast<unsigned>((startTime - floor(startTime)) * sampleFreq);
-
-  itsStartStamp.setStationClockSpeed(static_cast<unsigned>(sampleFreq * 1024));
-  itsStartStamp = TimeStamp(seconds, samples);
 
   LOG_TRACE_VAR_STR("SubbandsPerStorage = " << itsNrSubbandsPerStorage);
 
@@ -142,9 +122,7 @@ void SubbandWriter::preprocess()
       myFormat.addSubband(itsRank * itsNrSubbandsPerStorage + sb);
     }
 
-    // clean up the format object, so we don't carry this overhead into
-    // the online part of the application.
-    LOG_INFO_STR("MeasuremetSet created");
+    LOG_INFO_STR("MeasurementSet created");
   }
 
   LOG_TRACE_VAR_STR("Subbands per storage = " << itsNrSubbandsPerStorage << ", I will store " 
