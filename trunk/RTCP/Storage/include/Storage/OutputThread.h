@@ -41,8 +41,11 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(const Parset *ps, unsigned subbandNumber, InputThread *inputThread, unsigned nrOutputs, const CN_ProcessingPlan<> &plan); // sb = local subband number (0..n) and subbandNumber is the real subband number (say, 100..347)
+			    OutputThread(const Parset *ps, unsigned subbandNumber, InputThread *inputThread, unsigned nrOutputs, const CN_ProcessingPlan<> &plan);
 			    ~OutputThread();
+
+    // report any writes that take longer than this (seconds)
+    static const float      reportWriteDelay = 0.05;
 
   private:
     void                    writeLogMessage();
