@@ -48,7 +48,10 @@ class mdcomplex
 public:
   mdcomplex() : itsValue(makedcomplex(0,0)) {}
   mdcomplex(double re, double im) : itsValue(makedcomplex(re,im)) {}
-  mdcomplex(dcomplex val) : itsValue(val) {}
+  // Should be
+  //    mdcomplex(dcomplex val): itsValue(val) {}
+  // but that causes an internal compiler error on bgfen0
+  mdcomplex(dcomplex val) { itsValue = val; }
   mdcomplex operator* (const mdcomplex that) {return mdcomplex(itsValue*that.itsValue);}
   friend mdcomplex conj (const mdcomplex that) {return mdcomplex(LOFAR::conj(that.itsValue));}
 private:
