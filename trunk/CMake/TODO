@@ -11,6 +11,20 @@
   way we can do per-compiler settings, instead of per-host settings, using a
   variants file (see bug #1395).
 
+* Solve the problem of running some (distributed) tests, e.g. ParmDB tests,
+  which rely on executables and/or scripts that were built as part of another
+  LOFAR package. For (C)Make targets, this can be solved by using the target
+  property ${CMAKE_BUILD_TYPE}_LOCATION; this would return, e.g., the location
+  of getparsetvalue (in LCS/Common). However, scripts, like startdistproc,
+  don't have an associated target (because they don't have to be built). We 
+  could solve this by creating a custom target for that (and other) scripts:
+
+    add_custom_target(hello.sh ALL)
+    add_custom_command(TARGET hello.sh POST_BUILD COMMAND ${CMAKE_COMMAND} -E
+    copy ${CMAKE_SOURCE_DIR}/hello.sh ${CMAKE_BINARY_DIR}/hello.sh)
+
+  But this feels rather hacky.
+
 * Define ${PACKAGE_NAME}_LINK_LIBRARIES in LofarPackage.cmake, which can
   then be used by lofar_add_library() and lofar_add_executable() in
   LofarMacros.cmake. This avoids the need to create a "dummy" project library,
