@@ -159,12 +159,12 @@ int32 CalibrationControl::convertFilterSelection(const string&	filterselection, 
 
 	// support new filternames
 	if (antennaSet == "LBA_OUTER") {
-		if (filterselection == "LBA_30_80")	{ return(1); }
-		if (filterselection == "LBA_10_90")	{ return(2); }
+		if (filterselection == "LBA_10_90")	{ return(1); }
+		if (filterselection == "LBA_30_80")	{ return(2); }
 	}
 	if (antennaSet == "LBA_INNER") {
-		if (filterselection == "LBA_30_80")	{ return(3); }
-		if (filterselection == "LBA_10_90")	{ return(4); }
+		if (filterselection == "LBA_10_90")	{ return(3); }
+		if (filterselection == "LBA_30_80")	{ return(4); }
 	}
 	if (filterselection == "HBA_110_190")	{ return(5); }
 	if (filterselection == "HBA_170_230")	{ return(6); }
