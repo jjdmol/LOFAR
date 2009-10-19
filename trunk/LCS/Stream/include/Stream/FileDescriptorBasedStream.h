@@ -37,7 +37,7 @@ class FileDescriptorBasedStream : public Stream
     virtual void write(const void *ptr, size_t size);
 
   protected:
-		 FileDescriptorBasedStream() {} // do not create directly
+		 FileDescriptorBasedStream(): fd(-1) {} // do not create directly
 
     int		 fd;
 };

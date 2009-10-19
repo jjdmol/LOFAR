@@ -24,6 +24,7 @@
 
 #include <Stream/FileDescriptorBasedStream.h>
 #include <Stream/SystemCallException.h>
+#include <Common/LofarLogger.h>
 
 #include <unistd.h>
 
@@ -34,8 +35,18 @@ namespace LOFAR {
 
 FileDescriptorBasedStream::~FileDescriptorBasedStream()
 {
-  if (close(fd) < 0)
-    throw SystemCallException("close", errno, THROW_ARGS);
+  if (fd >= 0 && close(fd) < 0) {
+    // try/throw/catch to match patterns elsewhere. 
+    //
+    // This ensures a proper string for errno, a
+    // backtrace if available, and the proper representation
+    // of exceptions in general.
+    try {
+      throw SystemCallException("close", errno, THROW_ARGS);
+    } catch( Exception &ex ) {
+      LOG_ERROR_STR( "Exception in destructor: " << ex );
+    }
+  }
 }
 
 
