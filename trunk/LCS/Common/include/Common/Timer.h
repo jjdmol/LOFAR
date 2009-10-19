@@ -144,7 +144,7 @@ namespace LOFAR {
         std::stringstream logStr;
         LOG_DEBUG_STR(print(logStr).rdbuf());
       } else
-        print(std::clog);
+        std::clog << *this << std::endl;
     }
   }
 

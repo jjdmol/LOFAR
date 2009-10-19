@@ -49,7 +49,7 @@ int main()
 	timer.stop();
     }
 
-    std::cout << timer;
+    std::cout << timer << std::endl;
 
     return 0;
 }
