@@ -71,13 +71,6 @@ class SubbandWriter
     std::vector<InputThread *> itsInputThreads;
     std::vector<OutputThread *> itsOutputThreads;
 
-
-    Matrix<MSWriter *>      itsWriters;
-
-    unsigned                itsNrSubbands;
-    unsigned                itsMyNrSubbands;
-    unsigned		    itsNrSubbandsPerStorage;
-
 #ifdef USE_MAC_PI
     bool itsWriteToMAC;
     GCF::CEPPMLlight::CEPPropertySet* itsPropertySet;

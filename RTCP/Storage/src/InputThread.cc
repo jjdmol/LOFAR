@@ -42,7 +42,8 @@ namespace RTCP {
   itsNrInputs(0),
   itsPS(ps),
   itsPlans(maxReceiveQueueSize),
-  itsSubbandNumber(subbandNumber)
+  itsSubbandNumber(subbandNumber),
+  itsObservationID(ps->observationID())
 {
   // transpose output stream holders
   CN_Configuration configuration(*ps);
@@ -106,12 +107,12 @@ void InputThread::mainLoop()
   unsigned	 increment = nullInput ? 1 : 0;
   StreamableData *data     = 0;
 
-  std::stringstream subbandStr;
-  subbandStr << itsSubbandNumber;
 
   try {
     for (unsigned count = 0; count < 10; count += increment) {
       unsigned o;
+      NSTimer queueTimer("retrieve freeQueue item",false,false);
+      NSTimer readTimer("read data",false,false);
 
       // read header: output number
       streamFromION->read( &o, sizeof o );
@@ -122,18 +123,20 @@ void InputThread::mainLoop()
       struct InputThread::SingleInput &input = itsInputs[o];
 
       // read data
-      {
-        NSTimer timer("subband " + subbandStr.str() + ": retrieve freeQueue item",true,true);
-        timer.start();
-        data = input.freeQueue.remove();
-        timer.stop();
-      }  
+      queueTimer.start();
+      data = input.freeQueue.remove();
+      queueTimer.stop();
 
-      {
-        NSTimer timer("subband " + subbandStr.str() + ": read data",true,true);
-        timer.start();
-        data->read(streamFromION.get(), true);
-        timer.stop();
+      if( queueTimer.getElapsed() > reportQueueRemoveDelay ) {
+        LOG_WARN_STR( "observation " << itsObservationID << " subband " << itsSubbandNumber << " output " << o << " " << queueTimer );
+      }
+
+      readTimer.start();
+      data->read(streamFromION.get(), true);
+      readTimer.stop();
+
+      if( readTimer.getElapsed() > reportReadDelay ) {
+        LOG_WARN_STR( "observation " << itsObservationID << " subband " << itsSubbandNumber << " output " << o << " " << readTimer );
       }
 
       input.receiveQueue.append(data);

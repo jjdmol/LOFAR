@@ -27,6 +27,7 @@
 #include <Common/lofar_iomanip.h>
 #include <Storage/SubbandWriter.h>
 #include <Storage/MeasurementSetFormat.h>
+#include <Stream/SystemCallException.h>
 #include <Interface/Exceptions.h>
 #include <Interface/CorrelatedData.h>
 
@@ -79,6 +80,15 @@ SubbandWriter::~SubbandWriter()
 
 void SubbandWriter::preprocess() 
 {
+  unsigned nrSubbands           = itsPS->nrSubbands();
+  unsigned nrSubbandsPerStorage =
+    nrSubbands % itsSize == 0
+    ? nrSubbands / itsSize
+    : nrSubbands / itsSize + 1;
+  unsigned firstSubband = itsRank * nrSubbandsPerStorage;
+  unsigned lastSubband  = std::min( firstSubband + nrSubbandsPerStorage, nrSubbands ) - 1;
+  unsigned myNrSubbands = lastSubband - firstSubband + 1;
+
 #if defined HAVE_AIPSPP
   LOG_TRACE_FLOW("SubbandWriter enabling PropertySet");
 #ifdef USE_MAC_PI
@@ -91,50 +101,28 @@ void SubbandWriter::preprocess()
   }
 #endif
 
-  itsNrSubbands           = itsPS->nrSubbands();
-  if(itsNrSubbands % itsSize == 0) {
-    itsNrSubbandsPerStorage = itsNrSubbands / itsSize;
-  } else {
-    itsNrSubbandsPerStorage = (itsNrSubbands / itsSize) + 1;
-  }
-
-  LOG_TRACE_VAR_STR("SubbandsPerStorage = " << itsNrSubbandsPerStorage);
-
-  itsMyNrSubbands = 0;
-  for (unsigned i = 0; i < itsNrSubbandsPerStorage; i ++) {
-    unsigned currentSubband = itsRank * itsNrSubbandsPerStorage + i;
-    if(currentSubband < itsNrSubbands) {
-      itsMyNrSubbands++;
-    }
-  }
-
   if( itsPS->outputCorrelatedData()) {
     MeasurementSetFormat myFormat(itsPS, 512);
     // create root directory of the observation tree
     if ( (mkdir(itsPS->getMSBaseDir().c_str(), 0770) != 0) && (errno != EEXIST) ) {
-      LOG_FATAL_STR("failed to create directory " << itsPS->getMSBaseDir());
-      perror("mkdir");
-      exit(1);
+      throw SystemCallException("mkdir " + itsPS->getMSBaseDir(), errno, THROW_ARGS);
     }
           
-    for (unsigned sb = 0; sb < itsMyNrSubbands; sb++) {
+    for (unsigned sb = firstSubband; sb <= lastSubband; sb++) {
       /// Make MeasurementSet filestructures and required tables
-      myFormat.addSubband(itsRank * itsNrSubbandsPerStorage + sb);
+      myFormat.addSubband(sb);
     }
 
     LOG_INFO_STR("MeasurementSet created");
   }
 
-  LOG_TRACE_VAR_STR("Subbands per storage = " << itsNrSubbandsPerStorage << ", I will store " 
-		    << itsMyNrSubbands << " subbands, nrOutputs = " << itsNrOutputs);
+  LOG_DEBUG_STR("Subbands per storage = " << nrSubbandsPerStorage << ", I will store " << myNrSubbands << " subbands, nrOutputs = " << itsNrOutputs);
 
 #endif // defined HAVE_AIPSPP
 
-  for (unsigned sb = 0; sb < itsMyNrSubbands; sb ++) {
-    unsigned currentSubband = itsRank * itsNrSubbandsPerStorage + sb;
-
-    InputThread *i = new InputThread(itsPS, currentSubband);
-    OutputThread *o = new OutputThread(itsPS, currentSubband, i, itsNrOutputs, itsPlan);
+  for (unsigned sb = firstSubband; sb <= lastSubband; sb ++) {
+    InputThread *i = new InputThread(itsPS, sb);
+    OutputThread *o = new OutputThread(itsPS, sb, i, itsNrOutputs, itsPlan);
 
     itsInputThreads.push_back(i);
     itsOutputThreads.push_back(o);
@@ -148,11 +136,12 @@ void SubbandWriter::process()
 
 void SubbandWriter::postprocess() 
 {
-  for (unsigned sb = 0; sb < itsMyNrSubbands; sb ++) {
-    delete itsOutputThreads[sb];
-    delete itsInputThreads[sb];
+  for (unsigned i = 0; i < itsInputThreads.size(); i++ ) {
+    delete itsOutputThreads[i];
+    delete itsInputThreads[i];
   }
 
+  itsOutputThreads.clear();
   itsInputThreads.clear();
 }
 

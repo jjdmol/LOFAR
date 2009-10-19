@@ -47,6 +47,7 @@
 #include <ms/MeasurementSets.h>
 
 #include <LofarStMan/LofarStMan.h>
+#include <Interface/Exceptions.h>
 
 
 using namespace casa;
@@ -138,11 +139,7 @@ void MeasurementSetFormat::createMSTables(unsigned subband)
     fillObs();
 
   } catch (AipsError x) {
-    LOG_FATAL_STR("AIPS/CASA error: " << x.getMesg());
-    exit(1);
-  } catch (...) {
-    LOG_FATAL_STR("NON AIPS/CASA error");
-    exit(1);
+    THROW(StorageException,"AIPS/CASA error: " << x.getMesg());
   }
 
   // Flush the MS to make sure all tables are written

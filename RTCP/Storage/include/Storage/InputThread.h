@@ -39,10 +39,14 @@ namespace RTCP {
 class InputThread
 {
   public:
-			    InputThread(const Parset *ps, unsigned subbandNumber); // sb = local subband number (0..n) and subbandNumber is the real subband number (say, 100..347)
+			    InputThread(const Parset *ps, unsigned subbandNumber);
 			    ~InputThread();
 
     static const unsigned   maxReceiveQueueSize = 3;
+    // report if fetching an item from the receive queue takes longer than this (seconds)
+    static const float      reportQueueRemoveDelay = 0.05;
+    // report if reading data takes longer than this (seconds)
+    static const float      reportReadDelay = 0.05;
 
     struct SingleInput {
       Queue<StreamableData *> freeQueue, receiveQueue;
@@ -62,6 +66,7 @@ class InputThread
 
     Vector<CN_ProcessingPlan<> *> itsPlans; // [maxReceiveQueueSize]
     const unsigned          itsSubbandNumber;
+    const unsigned          itsObservationID;
 };
 
 } // namespace RTCP

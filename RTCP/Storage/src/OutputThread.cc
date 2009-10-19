@@ -45,14 +45,26 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, InputThread
 {
   itsWriters.resize(itsNrOutputs);
   for (unsigned output = 0; output < itsNrOutputs; output++ ) {
+    string filename;
+
     if( dynamic_cast<CorrelatedData*>( plan.plan[output].source ) ) {
       std::stringstream out;
-      out << output;
-      itsWriters[output] = new MSWriterFile( (itsPS->getMSname( subbandNumber )+"/table.f"+out.str()+"data").c_str() );
+      out << itsPS->getMSname(subbandNumber) << "/table.f" << output << "data";
+      filename = out.str();
     } else {    
       // raw writer
-      string filename = itsPS->getMSname(subbandNumber) + plan.plan[output].filenameSuffix;
+      filename = itsPS->getMSname(subbandNumber) + plan.plan[output].filenameSuffix;
+    }
+
+    LOG_DEBUG_STR("subband " << subbandNumber << " written to " << filename);
+
+    try {
       itsWriters[output] = new MSWriterFile(filename.c_str());
+    } catch( SystemCallException &ex ) {
+      LOG_ERROR_STR( "Cannot open " << filename << ": " << ex );
+
+      itsWriters[output] = new MSWriterNull();
+      itsIsNullStream[output] = true;
     }
 #if 0
     {
@@ -126,6 +138,7 @@ void OutputThread::mainLoop()
   for(;;) {
     unsigned o = itsInputThread->itsReceiveQueueActivity.remove();
     struct InputThread::SingleInput &input = itsInputThread->itsInputs[o];
+    NSTimer writeTimer("write data",false,false);
 
     StreamableData *data = input.receiveQueue.remove();
 
@@ -135,14 +148,13 @@ void OutputThread::mainLoop()
 
     checkForDroppedData(data, o);
 
-  #if defined HAVE_AIPSPP
-    {
-      NSTimer timer("subband " + subbandStr.str() + ": read data",true,true);
-      timer.start();
-      itsWriters[o]->write(data);
-      timer.stop();
-    }  
-  #endif
+    writeTimer.start();
+    itsWriters[o]->write(data);
+    writeTimer.stop();
+
+    if( writeTimer.getElapsed() > reportWriteDelay ) {
+      LOG_WARN_STR( "observation " << itsObservationID << " subband " << itsSubbandNumber << " output " << o << " " << writeTimer );
+    }
 
     input.freeQueue.append(data);
   }
