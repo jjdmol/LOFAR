@@ -71,16 +71,12 @@ class SubbandWriter
     std::vector<InputThread *> itsInputThreads;
     std::vector<OutputThread *> itsOutputThreads;
 
-    unsigned		    itsNStations;
 
     Matrix<MSWriter *>      itsWriters;
 
     unsigned                itsNrSubbands;
     unsigned                itsMyNrSubbands;
-    unsigned		    itsNrSubbandsPerPset;
     unsigned		    itsNrSubbandsPerStorage;
-
-    TimeStamp               itsStartStamp;
 
 #ifdef USE_MAC_PI
     bool itsWriteToMAC;
