@@ -1,12 +1,10 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.config;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,21 +47,8 @@ public class ConfigXMLParser {
 	 */
 	public static Configuration parse(File xml) throws Exception {
 		log.info("Mom-otdb-adapter config file: " + xml.getPath());
-		ClassLoader classLoader = (ClassLoader) Thread.currentThread().getContextClassLoader();
-		BufferedReader reader = new BufferedReader(new InputStreamReader(classLoader.getResourceAsStream("config.xsd")));
-		File configXsd = new File("./conf/config.xsd");
-		if (configXsd.exists()) {
-			configXsd.delete();
-		}
-		PrintWriter writer = new PrintWriter(configXsd);
-		String line = null;
-		while ((line = reader.readLine()) != null) {
-			writer.write(line);
-		}
-		writer.flush();
-		writer.close();
-		reader.close();
-		Document document = XMLConverter.convertXMLToDocument(new InputSource(new FileInputStream(xml)), configXsd);
+		URL url = ConfigXMLParser.class.getClassLoader().getResource("config.xsd");
+		Document document = XMLConverter.convertXMLToDocument(new InputSource(new FileInputStream(xml)), url);
 		Configuration configuration = new Configuration();
 
 		/*
