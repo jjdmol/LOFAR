@@ -1,6 +1,6 @@
 import sys
 
-APPNAME="CEP"
+APPNAME="OLAP"
 
 DEBUG=False
 VERBOSE=False
