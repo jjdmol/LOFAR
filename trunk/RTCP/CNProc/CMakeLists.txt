@@ -13,6 +13,14 @@ if(NOT FFTW3_F0UND)
   endif(NOT FFTW2_FOUND)
 endif(NOT FFTW3_F0UND)
 
+## ---------------------------------------------------------------------------
+## Enable BGP specific assembler.
+## Use the BGP assembler also for linking C/C++ programs.
+##
+## NOTE: Maybe this should be moved to the variants file. That requires that
+## CN and ION are no longer variants; we then need two compiler definitions:
+## BGPCN and BGPION, which is a cleaner solution anyway.
+## ---------------------------------------------------------------------------
 enable_language(ASM-BGP)
 set(CMAKE_C_LINK_EXECUTABLE ${CMAKE_ASM-BGP_LINK_EXECUTABLE})
 set(CMAKE_CXX_LINK_EXECUTABLE ${CMAKE_ASM-BGP_LINK_EXECUTABLE})
