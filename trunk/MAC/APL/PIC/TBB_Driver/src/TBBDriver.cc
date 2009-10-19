@@ -81,6 +81,7 @@ using namespace TBB;
 
 static bool   itsDaemonize  = false;
 static int32  itsInstancenr = -1;
+static bool  itsFirstAliveCheck = true;
 
 static const double ALIVECHECKTIME = 30.0;
 
@@ -237,7 +238,7 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 			}
 			if (itsAcceptor.isConnected()) {
 				// wait some time(10s for clock switching and 80s for watchdog), to avoid problems with clock board
-				itsAliveTimer->setTimer(20.0);
+				itsAliveTimer->setTimer(0.1);
 				//if (TS->saveTriggersToFile()) { itsSaveTimer->setTimer(10.0, 10.0); }
 				TRAN(TBBDriver::idle_state);
 			}
@@ -953,17 +954,19 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 				TPAliveAckEvent ack(event);
 				// board is reset
 				if ((ack.resetflag == 0) || ((TS->activeBoardsMask() & (1 << boardnr)) == 0)) {
-					TS->clearRcuSettings(boardnr);
-					// if a new image is loaded by config, do not reload it to image-1
-					if (TS->getFreeToReset(boardnr)) {
-						TS->setImageNr(boardnr, 0);
-						TS->setBoardState(boardnr,setImage1);
-					} else {
-						// new image loaded, auto reconfigure is now possible again
-						TS->setFreeToReset(boardnr, true);
-						TS->setBoardState(boardnr,enableWatchdog);
+					if (itsFirstAliveCheck == false) {
+						TS->clearRcuSettings(boardnr);
+						// if a new image is loaded by config, do not reload it to image-1
+						if (TS->getFreeToReset(boardnr)) {
+							TS->setImageNr(boardnr, 0);
+							TS->setBoardState(boardnr,setImage1);
+						} else {
+							// new image loaded, auto reconfigure is now possible again
+							TS->setFreeToReset(boardnr, true);
+							TS->setBoardState(boardnr,enableWatchdog);
+						}
+						boardreset = true;
 					}
-					boardreset = true;
 				}
 
 				if (ack.resetflag == 0) {   // board reset
@@ -1004,7 +1007,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 				return(!itsAliveCheck);
 			}
 			
-			if (activeboards != TS->activeBoardsMask()) {
+			if ((itsFirstAliveCheck == false) && (activeboards != TS->activeBoardsMask())) {
 				LOG_DEBUG_STR("sendmask[" << sendmask 
 							<< "] activeboards[" << activeboards 
 							<< "] activeBoardsMask()[" << TS->activeBoardsMask() << "]");
@@ -1028,7 +1031,8 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 				itsSetupTimer->cancelAllTimers();
 				itsSetupTimer->setTimer(1.0, 1.0);
 			}
-
+			itsFirstAliveCheck = false;
+			
 			LOG_DEBUG_STR("Active TBB boards check");
 			itsAliveTimer->setTimer(ALIVECHECKTIME);
 			itsAliveCheck = false;
