@@ -38,6 +38,18 @@ class Mutex
     pthread_mutex_t mutex;
 };
 
+
+class ScopedLock
+{
+  public:
+    ScopedLock(Mutex &);
+    ~ScopedLock();
+
+  private:
+    Mutex &itsMutex;
+};
+
+
 inline Mutex::Mutex()
 {
   pthread_mutex_init(&mutex, 0);
@@ -65,6 +77,20 @@ inline void Mutex::unlock()
 inline bool Mutex::trylock()
 {
   return pthread_mutex_trylock(&mutex) == 0;
+}
+
+
+inline ScopedLock::ScopedLock(Mutex &mutex)
+:
+  itsMutex(mutex)
+{
+  itsMutex.lock();
+}
+
+
+inline ScopedLock::~ScopedLock()
+{
+  itsMutex.unlock();
 }
 
 } // namespace RTCP
