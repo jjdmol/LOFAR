@@ -122,7 +122,7 @@ void OutputThread::checkForDroppedData(StreamableData *data, unsigned output)
     unsigned droppedBlocks = data->sequenceNumber - expectedSequenceNumber;
 
     if (droppedBlocks > 0) {
-      LOG_WARN_STR("dropped " << droppedBlocks << (droppedBlocks == 1 ? "block for subband" : "blocks for subband") << itsSubbandNumber << " and output " << output << " of obsID " << itsObservationID);
+      LOG_WARN_STR("dropped " << droppedBlocks << (droppedBlocks == 1 ? " block for subband " : " blocks for subband ") << itsSubbandNumber << " and output " << output << " of obsID " << itsObservationID);
     }
 
     itsPreviousSequenceNumbers[output] = data->sequenceNumber;
