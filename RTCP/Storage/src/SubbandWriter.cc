@@ -105,7 +105,7 @@ void SubbandWriter::preprocess()
     MeasurementSetFormat myFormat(itsPS, 512);
     // create root directory of the observation tree
     if ( (mkdir(itsPS->getMSBaseDir().c_str(), 0770) != 0) && (errno != EEXIST) ) {
-      throw SystemCallException("mkdir " + itsPS->getMSBaseDir(), errno, THROW_ARGS);
+      throw SystemCallException(("mkdir " + itsPS->getMSBaseDir()).c_str(), errno, THROW_ARGS);
     }
           
     for (unsigned sb = firstSubband; sb <= lastSubband; sb++) {
