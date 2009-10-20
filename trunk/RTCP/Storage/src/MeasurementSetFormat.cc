@@ -49,11 +49,18 @@
 #include <LofarStMan/LofarStMan.h>
 #include <Interface/Exceptions.h>
 
+#include <boost/thread/mutex.hpp>
+
+
 
 using namespace casa;
 
 namespace LOFAR { 
 namespace RTCP {
+
+
+Mutex MeasurementSetFormat::sharedMutex;
+
 
 MeasurementSetFormat::MeasurementSetFormat(const Parset *ps, const unsigned alignment)
   : itsPS(ps),
@@ -79,9 +86,13 @@ MeasurementSetFormat::MeasurementSetFormat(const Parset *ps, const unsigned alig
 	      antPos.size() << " == " << 3 * itsPS->nrStations());
   }
 
-  AMC::Epoch epoch;
-  epoch.utc(itsPS->startTime());
-  itsStartTime = MVEpoch(epoch.mjd()).getTime().getValue("s");
+  {
+    ScopedLock scopedLock(sharedMutex);
+    AMC::Epoch epoch;
+    epoch.utc(itsPS->startTime());
+    itsStartTime = MVEpoch(epoch.mjd()).getTime().getValue("s");
+  }
+
   itsTimeStep = itsPS->IONintegrationTime();
   itsNrTimes = 29030400;  /// equates to about one year, sets valid
 			  /// timerage to 1 year beyond starttime
@@ -92,6 +103,8 @@ MeasurementSetFormat::~MeasurementSetFormat()
 
 void MeasurementSetFormat::addSubband(unsigned subband)
 {
+  ScopedLock scopedLock(sharedMutex);
+
   /// First create a valid MeasurementSet with all required
   /// tables. Note that the MS is destroyed immidiately.
   createMSTables(subband);

@@ -15,6 +15,7 @@
 #define WEIGHTSIZE      2      // weights are 2 byted short per 4 pols
 			       // (#samples correlated)
 
+#include <Interface/Mutex.h>
 #include <Interface/Parset.h>
 #include <casa/aips.h>
 #include <tables/Tables/Table.h>
@@ -61,6 +62,8 @@ class MeasurementSetFormat : public Format
   casa::MeasurementSet* itsMS;
 /*   casa::Table* itsMS; */
   uint32 itsAlignment;
+
+  static Mutex sharedMutex;
 
   void createMSTables(unsigned subband);
   void createMSMetaFile(unsigned subband);
