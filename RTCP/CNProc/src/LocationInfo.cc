@@ -89,6 +89,12 @@ void LocationInfo::print() const
     LOG_DEBUG_STR("pset " << pset << " contains cores " << cores[pset]);
 }
 
+#else
+
+void LocationInfo::print() const
+{
+}
+
 #endif
 
 } // namespace RTCP

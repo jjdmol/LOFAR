@@ -247,7 +247,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
     static NSTimer readTimer("receive timer", true, true);
     readTimer.start();
     itsPlan->itsInputSubbandMetaData->read(itsStream);
-    itsPlan->itsInputData->read(itsStream);
+    itsPlan->itsInputData->read(itsStream,false);
     readTimer.stop();
   }
 
