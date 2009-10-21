@@ -27,7 +27,7 @@ inline BeamFormedData::BeamFormedData(unsigned nrBeams, unsigned nrChannels, uns
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
 :
-  SuperType::SampleData(false, boost::extents[nrChannels][nrBeams][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrBeams)
+  SuperType::SampleData(false, boost::extents[nrBeams][nrChannels][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrBeams)
 {
 }
 
