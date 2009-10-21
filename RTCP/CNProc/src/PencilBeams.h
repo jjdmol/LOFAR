@@ -58,6 +58,8 @@ class BeamFormer
 
     // return the station mapping
     std::vector<unsigned> &getStationMapping();
+
+    Matrix<double>          itsDelays; // [itsNrStations][itsNrPencilBeams]
   private:
     unsigned calcNrBeamFormedStations();
     void initStationMergeMap( const std::vector<unsigned> &station2BeamFormedStation );
@@ -85,7 +87,6 @@ class BeamFormer
     const unsigned          itsNrChannels;
     const unsigned          itsNrSamplesPerIntegration;
     const double            itsChannelBandwidth;
-    Matrix<double>          itsDelays; // [itsNrStations][itsNrPencilBeams]
 
     // a station is 'valid' if the samples do not contain too much flagged data. invalid stations
     // are ignored by the beamformer.

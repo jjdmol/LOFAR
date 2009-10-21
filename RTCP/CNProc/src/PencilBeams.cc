@@ -22,12 +22,12 @@ static NSTimer beamFormTimer("BeamFormer::formBeams()", true, true);
 
 BeamFormer::BeamFormer(const unsigned nrPencilBeams, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const std::vector<unsigned> &station2BeamFormedStation, const bool flysEye )
 :
+  itsDelays( nrStations, nrPencilBeams ),
   itsNrStations(nrStations),
   itsNrPencilBeams(nrPencilBeams),
   itsNrChannels(nrChannels),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsChannelBandwidth(channelBandwidth),
-  itsDelays( nrStations, nrPencilBeams ),
   itsNrValidStations( 0 ),
   itsValidStations( itsNrStations ),
   itsFlysEye( flysEye )
@@ -162,7 +162,7 @@ void BeamFormer::computeFlags( const SampleData<> *in, SampleData<> *out )
 }
 
 #ifdef PENCILBEAMS_C_IMPLEMENTATION
-void BeamFormer::mergeStations( const SampleData<> *in, SampleData<> *out );
+void BeamFormer::mergeStations( const SampleData<> *in, SampleData<> *out )
 {
   for (unsigned i = 0; i < itsValidMergeSourceStations.size(); i++ ) {
     const unsigned destStation = itsMergeDestStations[i];
@@ -177,32 +177,32 @@ void BeamFormer::mergeStations( const SampleData<> *in, SampleData<> *out );
     }
 
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
-      const double frequency = baseFrequency + ch * itsChannelBandwidth;
-      const float factor = averagingFactor;
-
       for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
         if( !out->flags[destStation].test(time) ) {
           for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-            fcomplex &dest = inout->samples[ch][destStation][time][pol];
+            fcomplex &dest = out->samples[ch][destStation][time][pol];
 
             if( validSourceStations[0] != destStation ) {
               // first station is somewhere else; copy it
-              dest = inout->samples[ch][0][time][pol];
+              dest = in->samples[ch][0][time][pol];
             }
 
             // combine the stations
-            for( unsigned stat = 1; stat < validSourceStations[i].size(); stat++ ) {
-              dest += inout->samples[ch][validSourceStations[stat]][time][pol];
+            for( unsigned stat = 1; stat < validSourceStations.size(); stat++ ) {
+              dest += in->samples[ch][validSourceStations[stat]][time][pol];
             }
           }
+            // TODO: divide by number of valid stations
         }  
       }
     }
   }
 }
 
-void BeamFormer::computeComplexVoltages( const SampleData<> *in, SampleData *out, double baseFrequency )
+void BeamFormer::computeComplexVoltages( const SampleData<> *in, SampleData<> *out, double baseFrequency )
 {
+  const double averagingFactor = 1.0 / itsNrValidStations;
+
   for( unsigned beam = 0; beam < itsNrPencilBeams; beam++ ) {
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
       const double frequency = baseFrequency + ch * itsChannelBandwidth;
@@ -210,10 +210,11 @@ void BeamFormer::computeComplexVoltages( const SampleData<> *in, SampleData *out
       for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
         if( !out->flags[beam].test(time) ) {
           for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-            fcomplex &dest  = out->samples[ch][beam][time][pol];
+            fcomplex &dest  = out->samples[beam][ch][time][pol];
+            const float factor = averagingFactor;
 
             // combine the stations for this beam
-            fcomplex sample = makefcomplex( 0, 0 );
+            dest = makefcomplex( 0, 0 );
 
             for( unsigned stat = 0; stat < itsNrStations; stat++ ) {
               if( itsValidStations[stat] ) {
@@ -221,14 +222,17 @@ void BeamFormer::computeComplexVoltages( const SampleData<> *in, SampleData *out
                 //
                 // static_cast<fcomplex> is required here since GCC can't seem to figure it out otherwise
                 const fcomplex shift = static_cast<fcomplex>( phaseShift( frequency, itsDelays[stat][beam] ) );
-                sample += in->samples[ch][stat][time][pol] * shift;
+
+                dest += in->samples[ch][stat][time][pol] * shift;
               }
             }
+
+            dest *= factor;
           }
         } else {
           // data is flagged
           for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-            out->samples[ch][beam][time][pol] = makefcomplex( 0, 0 );
+            out->samples[beam][ch][time][pol] = makefcomplex( 0, 0 );
   	  }
 	}
       }
@@ -260,7 +264,7 @@ inline void BeamFormer::addUnweighedStations( const SampleData<> *in, SampleData
       break;
 
 // possible inputs
-#define OUTPUT		(reinterpret_cast<float*>(out->samples[channel][beamIndex][timeOffset].origin()))
+#define OUTPUT		(reinterpret_cast<float*>(out->samples[beamIndex][channel][timeOffset].origin()))
 #define STATION(nr)	(reinterpret_cast<const float*>(in->samples[channel][stationIndices[nr]][timeOffset].origin()))
 
 // shorthand for the add functions
@@ -336,6 +340,8 @@ void BeamFormer::mergeStations( const SampleData<> *in, SampleData<> *out )
 
         replaceDest = false;
       }
+
+      // TODO: divide by number of valid stations
     }
   }
 }
@@ -397,8 +403,8 @@ void BeamFormer::computeComplexVoltages( const SampleData<> *in, SampleData<> *o
           // beam form
 	  // note: PPF.cc puts zeroes at flagged samples, so we can just add them
           BEAMFORMFUNC(
-            out->samples[ch][beam][time].origin(),
-            out->samples[ch].strides()[0] * sizeof out->samples[0][0][0][0],
+            out->samples[beam][ch][time].origin(),
+            out->samples.strides()[0] * sizeof out->samples[0][0][0][0],
 
             in->samples[ch][stat][time].origin(),
             in->samples[ch].strides()[0] * sizeof in->samples[0][0][0][0],
@@ -451,14 +457,15 @@ void BeamFormer::computeFlysEye( const SampleData<> *in, SampleData<> *out ) {
   //   1) for further processing, there is no difference between beam-formed and fly's eye data.
   //   2) potentially scattered merged stations are put in order
 
-  std::vector<unsigned>::const_iterator src = itsMergeDestStations.begin();
+  ASSERT( in->samples.shape()[1] == out->samples.shape()[0] );
+
   unsigned dest = 0;
 
-  for(; src != itsMergeDestStations.end(); src++, dest++ ) {
+  for(std::vector<unsigned>::const_iterator src = itsMergeDestStations.begin(); src != itsMergeDestStations.end(); src++, dest++ ) {
     // copy station *src to dest
     out->flags[dest] = in->flags[*src];        
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
-      memcpy( out->samples[ch][dest].origin(),
+      memcpy( out->samples[dest][ch].origin(),
               in->samples[ch][*src].origin(), 
               in->samples[ch].strides()[0] * sizeof in->samples[0][0][0][0] );
     }
@@ -489,7 +496,13 @@ void BeamFormer::formBeams( const SubbandMetaData *metaData, SampleData<> *sampl
   ASSERT( TIMESTEPSIZE % 16 == 0 );
 
   if( itsNrSamplesPerIntegration % 16 > 0 ) {
+    // for asm routines
     THROW(CNProcException, "nrSamplesPerIntegration (" << itsNrSamplesPerIntegration << ") needs to be a multiple of 16" );
+  }
+
+  if( itsNrSamplesPerIntegration % TIMESTEPSIZE > 0 ) {
+    // for blocks around asm routines
+    THROW(CNProcException, "nrSamplesPerIntegration (" << itsNrSamplesPerIntegration << ") needs to be a multiple of " << TIMESTEPSIZE );
   }
 #endif
 
