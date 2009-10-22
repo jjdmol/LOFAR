@@ -105,14 +105,20 @@ void test_stationmerger() {
     for( unsigned i = 0; i < NRSAMPLES; i++ ) {
       for( unsigned p = 0; p < NR_POLARIZATIONS; p++ ) {
         fcomplex sums[NRSTATIONS];
+        unsigned nrstations[NRSTATIONS];
 
         for( unsigned s = 0; s < NRSTATIONS; s++ ) {
           sums[s] = makefcomplex(s+1,0);
+          nrstations[s] = 1;
         }
         for( unsigned s = 0; s < NRSTATIONS; s++ ) {
           if( stationMapping[s] != s ) {
             sums[stationMapping[s]] += makefcomplex( s+1, 0 );
+            nrstations[stationMapping[s]]++;
           }
+        }
+        for( unsigned s = 0; s < NRSTATIONS; s++ ) {
+          sums[s] /= nrstations[s];
         }
 
         for( unsigned s = 0; s < NRSTATIONS; s++ ) {
