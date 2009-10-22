@@ -388,7 +388,7 @@ void MeasurementSetFormat::createMSMetaFile(unsigned subband)
       << itsPS->IONintegrationTime()
       << itsPS->nrChannelsPerSubband()
       << itsPS->nrCrossPolarisations()
-      << (itsPS->CNintegrationSteps() * itsPS->IONintegrationSteps())
+      << static_cast<double>(itsPS->CNintegrationSteps() * itsPS->IONintegrationSteps())
       << itsAlignment
       << isBigEndian;
   aio.close();
