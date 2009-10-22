@@ -173,7 +173,7 @@ void test_beamformer() {
   const float averagingFactor = 1.0 / NRSTATIONS;
   const float factor = averagingFactor;
 
-  for( unsigned b = 1; b < NRPENCILBEAMS; b++ ) {
+  for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
     for( unsigned c = 0; c < NRCHANNELS; c++ ) {
       const double frequency = BASEFREQUENCY + c * CHANNELBW;
 

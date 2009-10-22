@@ -1,5 +1,5 @@
 
-check_PROGRAMS = tCN_Processing tBeamForming tPencilBeamFormer
+check_PROGRAMS = tCN_Processing tBeamForming tPencilBeamFormer tStokes
 
 
 AM_CPPFLAGS = $(EXTRA_CPPFLAGS)
@@ -33,12 +33,19 @@ tPencilBeamFormer.cc				\
 ../src/PencilBeams.cc                           \
 ../src/BeamFormerAsm.S
 
+tStokes_SOURCES =		        	\
+tStokes.cc	        			\
+../src/PencilBeams.cc                           \
+../src/Stokes.cc                                \
+../src/BeamFormerAsm.S
+
 CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) $(EXTRA_CPPFLAGS)
 
 
 TESTS   = 					\
 tCN_Processing.sh                               \
-tPencilBeamFormer.sh
+tPencilBeamFormer.sh                            \
+tStokes.sh
 
 
 include $(top_srcdir)/Makefile.common
