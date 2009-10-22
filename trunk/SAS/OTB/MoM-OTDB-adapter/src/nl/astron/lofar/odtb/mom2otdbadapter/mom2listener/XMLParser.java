@@ -274,8 +274,21 @@ public class XMLParser {
 				Map<String, Element> subbandsSpecificationsElements = getElementMap(subbandsSpecificationsElement
 						.getChildNodes());
 				if (subbandsSpecificationsElements.containsKey(XMLConstants.SUBBANDS)) {
-					String[] subbands = getValue(subbandsSpecificationsElements.get(XMLConstants.SUBBANDS)).split(",");
-					for (String subband : subbands) {
+					String subbands = getValue(subbandsSpecificationsElements.get(XMLConstants.SUBBANDS));
+					String[] subbandsArray = null;
+					if (subbands.contains("..")){
+						String[] tempArray = subbands.split("\\.\\.");
+						int startSubband = AstronConverter.toInteger(tempArray[0]);
+						int endSubband = AstronConverter.toInteger(tempArray[1]);
+						int length = endSubband - startSubband + 1;
+						subbandsArray = new String[length];
+						for (int subbandNumber = startSubband, i = 0; subbandNumber <= endSubband; subbandNumber++, i++){
+							subbandsArray[i] = subbandNumber + "";
+						}
+					}else {
+						subbandsArray = subbands.split(",");
+					}
+					for (String subband : subbandsArray) {
 						beam.getSubbands().add(AstronConverter.toInteger(subband));
 						beam.getBeamlets().add(beam.getParentObservation().getBeamletNumber());
 						beam.getParentObservation()

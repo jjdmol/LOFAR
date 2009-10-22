@@ -101,12 +101,24 @@ public class Mom2OtdbConverter {
 
 	public static String getMom2Subbands(List<Integer> subbands) {
 		String result = "";
+		if (subbands.size() >= 2) {
+			int firstSubband = subbands.get(0);
+			int lastSubband = subbands.get(subbands.size() - 1);
+			// is the array contiguous??
+			if ((lastSubband - firstSubband +1) == subbands.size()) {
+				result += firstSubband + ".." + lastSubband;
+				return result;
+			}
+		}
+
 		for (int i = 0; i < subbands.size(); i++) {
 			if (i > 0) {
-				result += ",";
+				result += "," + subbands.get(i);
+			} else {
+				result += subbands.get(i);
 			}
-			result += subbands.get(i);
 		}
+
 		return result;
 	}
 
