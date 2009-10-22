@@ -279,6 +279,18 @@ MatrixRep* MatrixComplexSca::exp()
   return this;
 }
 
+MatrixRep* MatrixComplexSca::log10()
+{
+  itsValue = LOFAR::log10(itsValue);
+  return this;
+}
+
+MatrixRep* MatrixComplexSca::pow10()
+{
+  itsValue = LOFAR::pow(10.0, itsValue);
+  return this;
+}
+
 MatrixRep* MatrixComplexSca::sqr()
 {
   itsValue *= itsValue;

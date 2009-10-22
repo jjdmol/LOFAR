@@ -232,6 +232,18 @@ MatrixRep* MatrixRealSca::exp()
   return this;
 }
 
+MatrixRep* MatrixRealSca::log10()
+{
+  itsValue = std::log10(itsValue);
+  return this;
+}
+
+MatrixRep* MatrixRealSca::pow10()
+{
+  itsValue = std::pow(10.0, itsValue);
+  return this;
+}
+
 MatrixRep* MatrixRealSca::sqr()
 {
   itsValue *= itsValue;

@@ -61,13 +61,13 @@ Matrix SpectralIndex::getResultValue(const Request &request,
     }
 
     // Compute scale factor as:
-    // (v / v0) ^ (c0 + c1 * log(v / v0) + c2 * log(v / v0)^2 + ...)
+    // (v / v0) ^ (c0 + c1 * log10(v / v0) + c2 * log10(v / v0)^2 + ...)
     // Where v is the frequency and v0 is the reference frequency.
 
-    // Compute log(v / v0).
-    Matrix base = log(freq / *args[0]);
+    // Compute log10(v / v0).
+    Matrix base = log10(freq / *args[0]);
 
-    // Compute c0 + log(v / v0) * c1 + log(v / v0)^2 * c2 + ... using Horner's
+    // Compute c0 + log10(v / v0) * c1 + log10(v / v0)^2 * c2 + ... using Horner's
     // rule.
     Matrix exponent = *args.back();
     for(unsigned int i = args.size() - 2; i >= 2; --i)
@@ -77,7 +77,7 @@ Matrix SpectralIndex::getResultValue(const Request &request,
 
     // Compute I0 * (v / v0) ^ exponent, where I0 is the value of the Stokes
     // parameter at the reference frequency.
-    return *args[1] * exp(base * exponent);
+    return *args[1] * pow10(base * exponent);
 }
 
 } //# namespace BBS

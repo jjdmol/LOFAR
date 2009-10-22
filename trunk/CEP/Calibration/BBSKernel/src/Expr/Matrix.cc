@@ -300,6 +300,14 @@ MatrixTmp exp(const Matrix& arg)
 {
     return exp(MatrixTmp(arg));
 }
+MatrixTmp log10(const Matrix& arg)
+{
+    return log10(MatrixTmp(arg));
+}
+MatrixTmp pow10(const Matrix& arg)
+{
+    return pow10(MatrixTmp(arg));
+}
 MatrixTmp sqr(const Matrix& arg)
 {
     return sqr(MatrixTmp(arg));
