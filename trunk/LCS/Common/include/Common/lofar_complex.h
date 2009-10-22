@@ -66,147 +66,147 @@ namespace LOFAR
   using TYPES::fcomplex;
   using TYPES::dcomplex;
 
-  inline static i4complex makei4complex(i4complex &z) {
+  inline static i4complex makei4complex(const i4complex &z) {
     return z;
   }
 
-  inline static i4complex makei4complex(i8complex &z) {
+  inline static i4complex makei4complex(const i8complex &z) {
     return makei4complex(real(z) - .5, imag(z) - .5);
   }
 
-  inline static i4complex makei4complex(i16complex &z) {
+  inline static i4complex makei4complex(const i16complex &z) {
     return makei4complex(real(z) - .5, imag(z) - .5);
   }
 
-  inline static i4complex makei4complex(u16complex &z) {
+  inline static i4complex makei4complex(const u16complex &z) {
     return makei4complex(real(z) - .5, imag(z) - .5);
   }
 
-  inline static i4complex makei4complex(fcomplex &z) {
+  inline static i4complex makei4complex(const fcomplex &z) {
     return makei4complex(real(z), imag(z));
   }
 
-  inline static i4complex makei4complex(dcomplex &z) {
+  inline static i4complex makei4complex(const dcomplex &z) {
     return makei4complex(real(z), imag(z));
   }
 
-  inline static i8complex makei8complex(i4complex &z) {
+  inline static i8complex makei8complex(const i4complex &z) {
     return makei8complex((int) real(z), (int) imag(z));
   }
 
-  inline static i8complex makei8complex(i8complex &z) {
+  inline static i8complex makei8complex(const i8complex &z) {
     return z;
   }
 
-  inline static i8complex makei8complex(i16complex &z) {
+  inline static i8complex makei8complex(const i16complex &z) {
     return makei8complex(real(z), imag(z));
   }
 
-  inline static i8complex makei8complex(u16complex &z) {
+  inline static i8complex makei8complex(const u16complex &z) {
     return makei8complex(real(z), imag(z));
   }
 
-  inline static i8complex makei8complex(fcomplex &z) {
+  inline static i8complex makei8complex(const fcomplex &z) {
     return makei8complex((int) real(z), (int) imag(z));
   }
 
-  inline static i8complex makei8complex(dcomplex &z) {
+  inline static i8complex makei8complex(const dcomplex &z) {
     return makei8complex((int) real(z), (int) imag(z));
   }
 
-  inline static i16complex makei16complex(i4complex &z) {
+  inline static i16complex makei16complex(const i4complex &z) {
     return makei16complex((int) real(z), (int) imag(z));
   }
 
-  inline static i16complex makei16complex(i8complex &z) {
+  inline static i16complex makei16complex(const i8complex &z) {
     return makei16complex(real(z), imag(z));
   }
 
-  inline static i16complex makei16complex(i16complex &z) {
+  inline static i16complex makei16complex(const i16complex &z) {
     return z;
   }
 
-  inline static i16complex makei16complex(u16complex &z) {
+  inline static i16complex makei16complex(const u16complex &z) {
     return makei16complex(real(z), imag(z));
   }
 
-  inline static i16complex makei16complex(fcomplex &z) {
+  inline static i16complex makei16complex(const fcomplex &z) {
     return makei16complex((int) real(z), (int) imag(z));
   }
 
-  inline static i16complex makei16complex(dcomplex &z) {
+  inline static i16complex makei16complex(const dcomplex &z) {
     return makei16complex((int) real(z), (int) imag(z));
   }
 
-  inline static u16complex makeu16complex(i4complex &z) {
+  inline static u16complex makeu16complex(const i4complex &z) {
     return makeu16complex((int) real(z), (int) imag(z));
   }
 
-  inline static u16complex makeu16complex(i8complex &z) {
+  inline static u16complex makeu16complex(const i8complex &z) {
     return makeu16complex(real(z), imag(z));
   }
 
-  inline static u16complex makeu16complex(i16complex &z) {
+  inline static u16complex makeu16complex(const i16complex &z) {
     return makeu16complex(real(z), imag(z));
   }
 
-  inline static u16complex makeu16complex(u16complex &z) {
+  inline static u16complex makeu16complex(const u16complex &z) {
     return z;
   }
 
-  inline static u16complex makeu16complex(fcomplex &z) {
+  inline static u16complex makeu16complex(const fcomplex &z) {
     return makeu16complex((unsigned) real(z), (unsigned) imag(z));
   }
 
-  inline static u16complex makeu16complex(dcomplex &z) {
+  inline static u16complex makeu16complex(const dcomplex &z) {
     return makeu16complex((unsigned) real(z), (unsigned) imag(z));
   }
 
-  inline static fcomplex makefcomplex(i4complex &z) {
+  inline static fcomplex makefcomplex(const i4complex &z) {
     return makefcomplex(real(z), imag(z));
   }
 
-  inline static fcomplex makefcomplex(i8complex &z) {
+  inline static fcomplex makefcomplex(const i8complex &z) {
     return makefcomplex((float) real(z), (float) imag(z));
   }
 
-  inline static fcomplex makefcomplex(i16complex &z) {
+  inline static fcomplex makefcomplex(const i16complex &z) {
     return makefcomplex((float) real(z), (float) imag(z));
   }
 
-  inline static fcomplex makefcomplex(u16complex &z) {
+  inline static fcomplex makefcomplex(const u16complex &z) {
     return makefcomplex((float) real(z), (float) imag(z));
   }
 
-  inline static fcomplex makefcomplex(fcomplex &z) {
+  inline static fcomplex makefcomplex(const fcomplex &z) {
     return z;
   }
 
-  inline static fcomplex makefcomplex(dcomplex &z) {
+  inline static fcomplex makefcomplex(const dcomplex &z) {
     return makefcomplex((float) real(z), (float) imag(z));
   }
 
-  inline static dcomplex makedcomplex(i4complex &z) {
+  inline static dcomplex makedcomplex(const i4complex &z) {
     return makedcomplex(real(z), imag(z));
   }
 
-  inline static dcomplex makedcomplex(i8complex &z) {
+  inline static dcomplex makedcomplex(const i8complex &z) {
     return makedcomplex((double) real(z), (double) imag(z));
   }
 
-  inline static dcomplex makedcomplex(i16complex &z) {
+  inline static dcomplex makedcomplex(const i16complex &z) {
     return makedcomplex((double) real(z), (double) imag(z));
   }
 
-  inline static dcomplex makedcomplex(u16complex &z) {
+  inline static dcomplex makedcomplex(const u16complex &z) {
     return makedcomplex((double) real(z), (double) imag(z));
   }
 
-  inline static dcomplex makedcomplex(fcomplex &z) {
+  inline static dcomplex makedcomplex(const fcomplex &z) {
     return makedcomplex((double) real(z), (double) imag(z));
   }
 
-  inline static dcomplex makedcomplex(dcomplex &z) {
+  inline static dcomplex makedcomplex(const dcomplex &z) {
     return z;
   }
 }
