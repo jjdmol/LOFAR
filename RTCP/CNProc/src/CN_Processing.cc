@@ -66,7 +66,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsStream(str),
   itsLocationInfo(locationInfo),
   itsPlan(0),
-#if defined HAVE_BGP
+#if defined HAVE_MPI
   itsAsyncTranspose(0),
 #endif
   itsPPF(0),

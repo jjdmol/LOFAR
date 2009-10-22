@@ -42,7 +42,7 @@
 #include <mpi.h>
 #endif
 
-#if defined HAVE_FCNP && defined HAVE_BGP
+#if defined HAVE_FCNP && defined HAVE_BGP_CN
 #include <FCNP/fcnp_cn.h>
 #endif
 
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     LOG_DEBUG("creating connection to ION ...");
     
     Stream *ionStream;
-#if 1 && defined HAVE_FCNP && defined HAVE_BGP
+#if 1 && defined HAVE_FCNP && defined HAVE_BGP_CN
     /* preferred */
     FCNP_CN::init();
     ionStream = new FCNP_ClientStream;
