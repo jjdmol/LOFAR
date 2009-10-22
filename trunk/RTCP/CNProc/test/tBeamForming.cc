@@ -273,8 +273,10 @@ void test_beamformer(unsigned nr_stations_at_once, unsigned nr_beams_at_once)
 
 int main(int, char **argv)
 {
+#ifdef HAVE_BGP_CN
   BGP_UPC_Initialize();
   BGP_UPC_Initialize_Counter_Config(BGP_UPC_MODE_0, BGP_UPC_CFG_EDGE_DEFAULT);
+#endif
 
   init_data();
 

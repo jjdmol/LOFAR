@@ -23,7 +23,7 @@
 #ifndef LOFAR_CNPROC_FCNP_CLIENT_STREAM_H
 #define LOFAR_CNPROC_FCNP_CLIENT_STREAM_H
 
-#if defined HAVE_FCNP && defined HAVE_BGP
+#if defined HAVE_FCNP && defined HAVE_BGP_CN
 
 #include <Stream/Stream.h>
 

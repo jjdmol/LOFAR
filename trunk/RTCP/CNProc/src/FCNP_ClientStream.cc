@@ -23,7 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#if defined HAVE_FCNP && defined HAVE_BGP
+#if defined HAVE_FCNP && defined HAVE_BGP_CN
 
 #include <Common/Timer.h>
 #include <Interface/Align.h>

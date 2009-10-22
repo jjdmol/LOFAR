@@ -48,8 +48,10 @@ void LocationInfo::getPersonality()
   itsPsetNumber = BGP_Personality_psetNum(&itsPersonality);
   itsPsetNumbers[itsRank] = itsPsetNumber;
 
+#if defined HAVE_MPI
   for (unsigned core = 0; core < itsNrNodes; core ++)
     MPI_Bcast(&itsPsetNumbers[core], 1, MPI_INT, core, MPI_COMM_WORLD);
+#endif
 
   itsRankInPset = 0;
 
