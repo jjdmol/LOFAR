@@ -46,8 +46,8 @@ static inline void addStokes( struct stokes &stokes, const fcomplex &polX, const
 // Calculate coherent stokes values from pencil beams.
 void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, const unsigned nrBeams )
 {
-  ASSERT( sampleData->samples.shape()[0] == itsNrChannels );
-  ASSERT( sampleData->samples.shape()[1] == nrBeams );
+  ASSERT( sampleData->samples.shape()[0] == nrBeams );
+  ASSERT( sampleData->samples.shape()[1] == itsNrChannels );
   ASSERT( sampleData->samples.shape()[2] >= itsNrSamplesPerIntegration );
   ASSERT( sampleData->samples.shape()[3] == NR_POLARIZATIONS );
 
@@ -71,16 +71,16 @@ void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stok
 
   // TODO: divide by #valid stations
 
-  for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
-    for (unsigned inTime = 0, outTime = 0; inTime < itsNrSamplesPerIntegration; inTime += integrationSteps, outTime++ ) {
-      for( unsigned beam = 0; beam < nrBeams; beam++ ) {
+  for( unsigned beam = 0; beam < nrBeams; beam++ ) {
+    for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
+      for (unsigned inTime = 0, outTime = 0; inTime < itsNrSamplesPerIntegration; inTime += integrationSteps, outTime++ ) {
         struct stokes stokes = { 0, 0, 0, 0 };
 
         for( unsigned fractime = 0; fractime < integrationSteps; fractime++ ) {
-	  addStokes( stokes, in[ch][beam][inTime+fractime][0], in[ch][beam][inTime+fractime][1], allStokes );
+	  addStokes( stokes, in[beam][ch][inTime+fractime][0], in[beam][ch][inTime+fractime][1], allStokes );
         }
 
-        #define dest out->samples[ch][beam][outTime]
+        #define dest out->samples[beam][ch][outTime]
         dest[0] = stokes.I;
         if( allStokes ) {
           dest[1] = stokes.Q;
@@ -157,7 +157,7 @@ void Stokes::calculateIncoherent( const SampleData<> *sampleData, StokesData *st
         }
       }
 
-      #define dest out->samples[ch][0][outTime]
+      #define dest out->samples[0][ch][outTime]
       dest[0] = stokes.I / nrValidStations;
       if( allStokes ) {
         dest[1] = stokes.Q / nrValidStations;
@@ -188,7 +188,7 @@ void Stokes::compressStokes( const StokesData *in, StokesDataIntegratedChannels 
         float channelSum = 0.0f;
 
         for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
-          channelSum += in->samples[ch][beam][time][stokes];
+          channelSum += in->samples[beam][ch][time][stokes];
         }
 
 	out->samples[beam][time][stokes] = channelSum;
