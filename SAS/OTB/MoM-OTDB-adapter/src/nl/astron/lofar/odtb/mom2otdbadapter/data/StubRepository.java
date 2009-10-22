@@ -43,12 +43,12 @@ public class StubRepository implements Repository {
 					observation.setEndTime(cal.getTime());					
 				}
 
-				if (observation.getClockMode().equals("<<Clock160")) {
+				if (observation.getClockMode().equals("<<Clock200")) {
 					observation.setClockFrequency(200000000d);
 					observation.setSubbandWidth(195312.5d);
 					observation.setChannelWidth(762.939453125d);
 					observation.setSamplesPerSecond(196608);
-				} else if (observation.getClockMode().equals("<<Clock2000")) {
+				} else if (observation.getClockMode().equals("<<Clock160")) {
 					observation.setClockFrequency(160000000d);
 					observation.setSubbandWidth(156250d);
 					observation.setChannelWidth(610.3515625d);
