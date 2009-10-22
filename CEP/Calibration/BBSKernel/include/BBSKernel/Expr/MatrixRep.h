@@ -152,6 +152,8 @@ public:
   virtual MatrixRep* cos() = 0;
   virtual MatrixRep* log() = 0;
   virtual MatrixRep* exp() = 0;
+  virtual MatrixRep* log10() = 0;
+  virtual MatrixRep* pow10() = 0;
   virtual MatrixRep* sqr() = 0;
   virtual MatrixRep* sqrt() = 0;
   virtual MatrixRep* conj() = 0;

@@ -98,6 +98,8 @@ private:
   virtual MatrixRep* cos();
   virtual MatrixRep* log();
   virtual MatrixRep* exp();
+  virtual MatrixRep* log10();
+  virtual MatrixRep* pow10();
   virtual MatrixRep* sqr();
   virtual MatrixRep* sqrt();
   virtual MatrixRep* conj();

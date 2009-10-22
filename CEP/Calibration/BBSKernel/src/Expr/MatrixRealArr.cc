@@ -770,6 +770,44 @@ MatrixRep* MatrixRealArr::exp()
   return this;
 }
 
+MatrixRep* MatrixRealArr::log10()
+{
+#if defined TIMER
+  static NSTimer timer("log10 RA", true);
+  timer.start();
+#endif
+
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    itsValue[i] = std::log10(itsValue[i]);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return this;
+}
+
+MatrixRep* MatrixRealArr::pow10()
+{
+#if defined TIMER
+  static NSTimer timer("pow10 RA", true);
+  timer.start();
+#endif
+
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    itsValue[i] = std::pow(10.0, itsValue[i]);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return this;
+}
+
 MatrixRep* MatrixRealArr::sqr()
 {
 #if defined TIMER

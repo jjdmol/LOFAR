@@ -791,6 +791,48 @@ MatrixRep* MatrixComplexArr::exp()
   return this;
 }
 
+MatrixRep* MatrixComplexArr::log10()
+{
+#if defined TIMER
+  static NSTimer timer("log10 CA", true);
+  timer.start();
+#endif
+
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    dcomplex value = LOFAR::log10(makedcomplex(itsReal[i], itsImag[i]));
+    itsReal[i] = real(value);
+    itsImag[i] = imag(value);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return this;
+}
+
+MatrixRep* MatrixComplexArr::pow10()
+{
+#if defined TIMER
+  static NSTimer timer("pow10 CA", true);
+  timer.start();
+#endif
+
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    dcomplex value = LOFAR::pow(10.0, makedcomplex(itsReal[i], itsImag[i]));
+    itsReal[i] = real(value);
+    itsImag[i] = imag(value);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return this;
+}
+
 MatrixRep* MatrixComplexArr::sqr()
 {
 #if defined TIMER

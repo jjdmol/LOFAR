@@ -213,6 +213,8 @@ public:
   friend MatrixTmp cos (const Matrix&);
   friend MatrixTmp log (const Matrix&);
   friend MatrixTmp exp (const Matrix&);
+  friend MatrixTmp log10 (const Matrix&);
+  friend MatrixTmp pow10 (const Matrix&);
   friend MatrixTmp sqr (const Matrix&);
   friend MatrixTmp sqrt(const Matrix&);
   friend MatrixTmp conj(const Matrix&);

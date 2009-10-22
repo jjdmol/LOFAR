@@ -99,6 +99,14 @@ MatrixTmp exp (const MatrixTmp& arg)
 {
   return arg.itsRep->exp();
 }
+MatrixTmp log10 (const MatrixTmp& arg)
+{
+  return arg.itsRep->log10();
+}
+MatrixTmp pow10 (const MatrixTmp& arg)
+{
+  return arg.itsRep->pow10();
+}
 MatrixTmp sqr(const MatrixTmp& arg)
 {
   return arg.itsRep->sqr();
