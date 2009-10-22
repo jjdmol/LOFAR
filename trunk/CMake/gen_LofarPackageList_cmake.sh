@@ -63,8 +63,9 @@ EOF
 # it is a symbolic link, it is translated to the directory it links to.
 for f in $(find $lofar_root/ -name CMakeLists.txt)
 do
-  # Search for the project() command, which looks like: project (MyProject ...)
-  p=$(sed -n 's,^[ \t]*project[ \t]*([ \t]*\([^ \t)]\+\).*$,\1,ip' $f)
+  # Search for the lofar_package() command, which looks like:
+  # lofar_package (MyProject ...)
+  p=$(sed -n 's,^[ \t]*lofar_package[ \t]*([ \t]*\([^ \t)]\+\).*$,\1,ip' $f)
   if test "$p" != ""; then
     d=$(dirname $f | sed -n "s%$lofar_root/%%p")
     if test "$d" != ""; then
