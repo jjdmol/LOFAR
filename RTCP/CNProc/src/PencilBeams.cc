@@ -176,6 +176,8 @@ void BeamFormer::mergeStations( const SampleData<> *in, SampleData<> *out )
       continue;
     }
 
+    const float factor = 1.0 / validSourceStations.size();
+
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
       for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
         if( !out->flags[destStation].test(time) ) {
@@ -191,8 +193,9 @@ void BeamFormer::mergeStations( const SampleData<> *in, SampleData<> *out )
             for( unsigned stat = 1; stat < validSourceStations.size(); stat++ ) {
               dest += in->samples[ch][validSourceStations[stat]][time][pol];
             }
+
+            dest *= factor;
           }
-            // TODO: divide by number of valid stations
         }  
       }
     }
@@ -254,8 +257,12 @@ static const unsigned NRBEAMS = 3;
 // TIMESTEPSIZE and itsNrSamplesPerIntegration need to be a multiple of 16, as the assembly code requires it
 static const unsigned TIMESTEPSIZE = 128;
 
-inline void BeamFormer::addUnweighedStations( const SampleData<> *in, SampleData<> *out, const unsigned stationIndices[], unsigned nrStations, unsigned channel, unsigned beamIndex, unsigned timeOffset, unsigned timeLength, bool replace )
+// convertes from filtereddata to either filtereddata (mergeStations) or beamformeddata (formBeams)
+inline void BeamFormer::addUnweighedStations( const SampleData<> *in, SampleData<> *out, const unsigned stationIndices[], unsigned nrStations, unsigned channel, unsigned beamIndex, unsigned timeOffset, unsigned timeLength, bool replace, bool outputHasChannelFirst, float weight )
 {
+  const unsigned outDim1 = outputHasChannelFirst ? channel : beamIndex;
+  const unsigned outDim2 = outputHasChannelFirst ? beamIndex : channel;
+
   // central beam (#0) has no weights, we can simply add the stations
   switch( nrStations ) {
     case 0:
@@ -264,7 +271,7 @@ inline void BeamFormer::addUnweighedStations( const SampleData<> *in, SampleData
       break;
 
 // possible inputs
-#define OUTPUT		(reinterpret_cast<float*>(out->samples[beamIndex][channel][timeOffset].origin()))
+#define OUTPUT		(reinterpret_cast<float*>(out->samples[outDim1][outDim2][timeOffset].origin()))
 #define STATION(nr)	(reinterpret_cast<const float*>(in->samples[channel][stationIndices[nr]][timeOffset].origin()))
 
 // shorthand for the add functions
@@ -303,6 +310,13 @@ inline void BeamFormer::addUnweighedStations( const SampleData<> *in, SampleData
       ADD( 6, 7, STATION(0), STATION(1), STATION(2), STATION(3), STATION(4), STATION(5) );
       break;
   }
+
+  for( unsigned i = 0; i < timeLength; i++ ) {
+    for( unsigned p = 0; p < NR_POLARIZATIONS; p++ ) {
+      out->samples[outDim1][outDim2][timeOffset+i][p] *= weight;
+    }
+  }
+
 }
 
 void BeamFormer::mergeStations( const SampleData<> *in, SampleData<> *out )
@@ -320,6 +334,7 @@ void BeamFormer::mergeStations( const SampleData<> *in, SampleData<> *out )
     }
 
     const unsigned nrStations = validSourceStations.size();
+    const float factor = 1.0 / nrStations;
     const bool destValid = validSourceStations[0] == destStation;
 
     // do the actual beamforming
@@ -335,13 +350,11 @@ void BeamFormer::mergeStations( const SampleData<> *in, SampleData<> *out )
         for( unsigned time = 0; time < itsNrSamplesPerIntegration; time += processTime ) {
           processTime = std::min( TIMESTEPSIZE, itsNrSamplesPerIntegration - time );
 
-          addUnweighedStations( in, out, &validSourceStations[stat], processStations, ch, destStation, time, processTime, replaceDest );
+          addUnweighedStations( in, out, &validSourceStations[stat], processStations, ch, destStation, time, processTime, replaceDest, true, factor );
         }
 
         replaceDest = false;
       }
-
-      // TODO: divide by number of valid stations
     }
   }
 }
@@ -394,7 +407,7 @@ void BeamFormer::computeComplexVoltages( const SampleData<> *in, SampleData<> *o
         processTime = std::min( TIMESTEPSIZE, itsNrSamplesPerIntegration - time );
 
         // central beam (#0) has no weights, we can simply add the stations
-        addUnweighedStations( in, out, &allStations[stat], processStations, ch, 0, time, processTime, stat == 0 );
+        addUnweighedStations( in, out, &allStations[stat], processStations, ch, 0, time, processTime, stat == 0, false, factor );
 
 	// non-central beams
         for( unsigned beam = 1; beam < itsNrPencilBeams; beam += processBeams ) {

@@ -69,7 +69,7 @@ class BeamFormer
 
     dcomplex phaseShift( const double frequency, const double delay ) const;
 
-    void addUnweighedStations( const SampleData<> *in, SampleData<> *out, const unsigned stationIndices[], unsigned nrStations, unsigned channel, unsigned beamIndex, unsigned timeOffset, unsigned timeLength, bool first );
+    void addUnweighedStations( const SampleData<> *in, SampleData<> *out, const unsigned stationIndices[], unsigned nrStations, unsigned channel, unsigned beamIndex, unsigned timeOffset, unsigned timeLength, bool first, bool outputHasChannelFirst, float weight );
 
     // sets the flags in beamFormedData, and decides which stations should be added
     void computeFlags( const SampleData<> *sampleData, SampleData<> *beamFormedData );
