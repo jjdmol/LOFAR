@@ -295,6 +295,7 @@ if("${MPI_LIBRARY}" MATCHES "mpich.rts")
 endif("${MPI_LIBRARY}" MATCHES "mpich.rts")
 
 # Set up extra variables to conform to 
+set(MPI_INCLUDE_DIRS ${MPI_INCLUDE_PATH})
 if (MPI_EXTRA_LIBRARY)
   set(MPI_LIBRARIES ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARY})
 else (MPI_EXTRA_LIBRARY)
