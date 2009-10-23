@@ -107,7 +107,7 @@ class Locations:
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
-	"rundir":  "/gloablhome/lofarsystem/log",
+	"rundir":  "/globalhome/lofarsystem/log",
 
         # where to store logs
 	"logdir":  "/globalhome/lofarsystem/log",
