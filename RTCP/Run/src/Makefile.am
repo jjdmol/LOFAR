@@ -64,6 +64,7 @@ dist_utilpython_SCRIPTS = 	\
 			util/Hosts.py \
 			util/__init__.py \
 			util/Parset.py \
+			util/shlex.py \
 			util/tee.py
 
 scriptdir = $(bindir)
