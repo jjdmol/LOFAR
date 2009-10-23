@@ -137,7 +137,7 @@ class Locations:
       } )
 
       self.nodes.update( {
-	"storage": ["lfe001","lfe002","lfe003"],
+	"storage": ["lse001","lse002","lse003"],
 
         # no external log server
         "logserver": "",
