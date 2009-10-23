@@ -89,34 +89,40 @@ class Locations:
 
     self.nodes.update( {
         # on which node to start the mpirun for Storage
-        "storagemaster": "listfen",
+        "storagemaster": "10.144.4.1",
     } )
 
     if self.isproduction:
       self.files.update( {
+        # fix the homedir, for systems which link to /cephome, /localhome, /home. etc
+        "home":    "/globalhome/lofarsystem",
+
         # the base directory most paths will be related to
-	"basedir": "/cephome/lofar-prod/lofar",
+	"basedir": "${HOME}/production/lofar",
 
         # the locations of the main executables
-	"cnproc":  "${BASEDIR}/bin/CN_Processing",
-	"ionproc": "${BASEDIR}/bin/IONProc",
-	"storage": "${BASEDIR}/bin/Storage",
+	"cnproc":  "${BASEDIR}/bgp_cn/bin/CN_Processing",
+	"ionproc": "${BASEDIR}/bgp_ion/bin/IONProc",
+	"storage": "${BASEDIR}/lfe/bin/Storage",
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
-	"rundir":  "${BASEDIR}/share",
+	"rundir":  "/gloablhome/lofarsystem/log",
+
+        # where to store logs
+	"logdir":  "/globalhome/lofarsystem/log",
 
         # location of valgrind suppressions file
-        "ionsuppfile": "/cephome/lofarsystem/production/LOFAR/RTCP/IONProc/src/IONProc.supp",
-        "storagesuppfile": "/cephome/lofarsystem/production/LOFAR/RTCP/Storage/src/Storage.supp",
+        "ionsuppfile": "",
+        "storagesuppfile": "",
       } )
       
       self.nodes.update( {
         # which storage nodes to use
-	"storage": ["list001","list002"],
+	"storage": ["lse001","lse002","lse003"],
 
         # default log server address
-        "logserver": "tcp:127.0.0.1:24500"
+        "logserver": "",
       } )
     else:
       self.files.update( {
@@ -131,7 +137,7 @@ class Locations:
       } )
 
       self.nodes.update( {
-	"storage": ["list003","list004"],
+	"storage": ["lfe001","lfe002","lfe003"],
 
         # no external log server
         "logserver": "",

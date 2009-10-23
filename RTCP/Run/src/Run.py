@@ -46,7 +46,7 @@ def doObservation(obsID, parset):
         print 'Invalid userId: ' + logname
 	sys.exit(1)
     
-    parsetfile = workingDir + 'RTCP.parset'
+    parsetfile = workingDir + 'RTCP%s.parset' % (obsID,)
     
     sectionTable = dict({\
         'IONProcSection': IONProcSection(parset, userId.getHost(), options.partition, workingDir, parsetfile),
@@ -146,6 +146,8 @@ if __name__ == '__main__':
     parser.add_option('--pulsarmode'     , dest='pulsarmode'     , default=int(0)      ,type='int'    , help='observation in pulsar mode [%default]')
     # parse the options
     (options, args) = parser.parse_args()
+
+    print "*** WARNING: Run.py is DEPRICATED. Use runOLAP.py instead. For questions, ask Jan David Mol (tel. 182) ***"
     
     workingDir = os.getcwd()[:-len('LOFAR/RTCP/Run/src')]
     
