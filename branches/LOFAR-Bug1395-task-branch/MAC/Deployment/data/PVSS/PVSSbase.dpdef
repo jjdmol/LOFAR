@@ -1,0 +1,104 @@
+# Common types in Station and MainCU PVSS Database
+# Definition of some basic types
+
+# DpType
+TypeName
+Claim.Claim	1#1
+	claimDate	26#2
+	name	25#3
+
+TypeName
+ClaimManager.ClaimManager	1#1
+	request	1#2
+		typeName	25#3
+		newObjectName	25#4
+	response	1#5
+		typeName	25#6
+		newObjectName	25#7
+		DPName	25#8
+		claimDate	26#9
+	cache	1#10
+		typeNames	9#11
+		newObjectNames	9#12
+		DPNames	9#13
+		claimDates	10#14
+
+TypeName
+LofarSpeedTest.LofarSpeedTest	1#1
+	singleInt	21#2
+	singleString	25#3
+	result	1#4
+		testName	25#5
+		nrWrites	21#6
+		nrReads	21#7
+		passed	23#8
+		writeTime	25#9
+		readTime	25#10
+	IntCollection	1#11
+		val1	21#12
+		val2	21#13
+		val3	21#14
+		val4	21#15
+		val5	21#16
+		val6	21#17
+		val7	21#18
+		val8	21#19
+		val9	21#20
+		val10	21#21
+	StringCollection	1#22
+		val1	25#23
+		val2	25#24
+		val3	25#25
+		val4	25#26
+		val5	25#27
+		val6	25#28
+		val7	25#29
+		val8	25#30
+		val9	25#31
+		val10	25#32
+
+TypeName
+NCFObjectState.NCFObjectState	1#1
+	DPName	25#2
+	stateNr	21#3
+	message	25#4
+	force	23#5
+
+TypeName
+ObjectStatus.ObjectStatus	1#1
+	state	21#2
+	childState	21#3
+	message	25#4
+	leaf	23#5
+
+TypeName
+ProcessStatus.ProcessStatus	1#1
+	processID	21#2
+	startTime	25#3
+	stopTime	25#4
+	logMsg	25#5
+	error	25#6
+	currentAction	25#7
+
+# create mp for ProcessStatus and attach an archive
+DpName	TypeName	ID
+_mp_ProcessStatus	ProcessStatus	0
+_dt_ProcessStatus	_DynamicDatapoints	0
+
+ElementName	TypeName	_original.._value	_original.._status
+_dt_ProcessStatus.Leaf	_DynamicDatapoints	"_mp_ProcessStatus.logMsg:_archive"	0x101
+_dt_ProcessStatus.DynamicAttribute	_DynamicDatapoints	"_da_none"	0x101
+
+StampSec	StampMSec	ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class
+0	0	_mp_ProcessStatus.logMsg	ProcessStatus		45	1
+0	0	_mp_ProcessStatus.logMsg	ProcessStatus	1	15		_ValueArchive_2
+
+
+# create datapoints for ClaimManager,NCFObjectState and lofarSpeedTest
+DpName	TypeName	ID
+ClaimManager	ClaimManager	0
+__navObjectState	NCFObjectState	0
+__resetObjectState	NCFObjectState	0
+lofarSpeedTest	LofarSpeedTest	0
+
+
