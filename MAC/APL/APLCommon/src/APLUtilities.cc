@@ -22,7 +22,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
-#include <climits>
 #include <unistd.h>
 
 #include "APL/APLCommon/APLUtilities.h"
@@ -44,7 +43,7 @@ void APLUtilities::decodeCommand(const string&		commandString,
 								 vector<string>&	parameters, 
 								 const char 		delimiter)
 {
-	unsigned int delim=commandString.find(' ');
+	string::size_type delim=commandString.find(' ');
 	if(delim==string::npos) { // no space found
 		command=commandString;
 	}
@@ -59,9 +58,9 @@ void APLUtilities::decodeCommand(const string&		commandString,
  */
 void APLUtilities::string2Vector(const string& parametersString, vector<string>& parameters, const char delimiter)
 {
-  unsigned int parametersStringLen=parametersString.length();
-  unsigned int delim(0);
-  unsigned int nextDelim;
+  string::size_type parametersStringLen=parametersString.length();
+  string::size_type delim(0);
+  string::size_type nextDelim;
   do {
     nextDelim=parametersString.find(delimiter,delim);
     if(nextDelim==string::npos) {
@@ -82,9 +81,9 @@ void APLUtilities::string2Vector(const string& parametersString, vector<string>&
  */
 void APLUtilities::string2Vector(const string& parametersString, vector<int>& parameters, const char delimiter)
 {
-  unsigned int parametersStringLen=parametersString.length();
-  unsigned int delim(0);
-  unsigned int nextDelim;
+  string::size_type parametersStringLen=parametersString.length();
+  string::size_type delim(0);
+  string::size_type nextDelim;
   do {
     nextDelim=parametersString.find(delimiter,delim);
     if(nextDelim==string::npos) {
@@ -105,9 +104,9 @@ void APLUtilities::string2Vector(const string& parametersString, vector<int>& pa
  */
 void APLUtilities::string2Vector(const string& parametersString, vector<int16>& parameters, const char delimiter)
 {
-  unsigned int parametersStringLen=parametersString.length();
-  unsigned int delim(0);
-  unsigned int nextDelim;
+  string::size_type parametersStringLen=parametersString.length();
+  string::size_type delim(0);
+  string::size_type nextDelim;
   do {
     nextDelim=parametersString.find(delimiter,delim);
     if(nextDelim==string::npos) {

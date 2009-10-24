@@ -46,7 +46,7 @@ string stripProperty(string in)
 string getProperty(string in)
 {
   string property("");
-  unsigned int dotPos = in.rfind('.');
+  string::size_type dotPos = in.rfind('.');
   if(dotPos != string::npos)
   {
     property = in.substr(dotPos+1);
