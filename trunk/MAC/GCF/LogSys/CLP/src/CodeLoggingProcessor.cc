@@ -163,7 +163,7 @@ GCFEvent::TResult CodeLoggingProcessor::operational(GCFEvent& e, GCFPortInterfac
               
               // '.' must be converted to the '_' in case of DP names
               string::size_type dotSepPos;
-              while ((dotSepPos = scope.find('.')) < string::npos) {
+              while ((dotSepPos = scope.find('.')) != string::npos) {
                 scope[dotSepPos] = '_';
               } 
               key.push_back(formatString("%s.logMsg", scope.c_str()));
@@ -185,7 +185,7 @@ GCFEvent::TResult CodeLoggingProcessor::operational(GCFEvent& e, GCFPortInterfac
       
       string file = event.getFile();
       string::size_type sepPos = file.rfind("/"); 
-      if (sepPos < string::npos) {
+      if (sepPos != string::npos) {
         file.erase(0, sepPos + 1);
       }
 

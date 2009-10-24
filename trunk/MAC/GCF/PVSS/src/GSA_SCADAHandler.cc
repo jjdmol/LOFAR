@@ -69,7 +69,7 @@ GSASCADAHandler* GSASCADAHandler::instance()
     string::size_type indexf(0), indexl(0);
     do {
       indexf = cmdline.find_first_not_of(' ', indexl);
-      if (indexf < string::npos) {
+      if (indexf != string::npos) {
         indexl = cmdline.find_first_of(' ', indexf);
         if (indexl == string::npos) {
           indexl = cmdline.length();

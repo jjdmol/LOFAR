@@ -186,7 +186,7 @@ int32	getControllerType	(const string&	controllerName)
 {
 	string	cntlrName(controllerName);		// destroyable copy
 	rtrim(cntlrName, "[]{}0123456789");		// cut down to executable name
-	uint	pos;
+	string::size_type	pos;
 	if ((pos = cntlrName.find(":")) != string::npos) {	// strip off hostname
 		cntlrName.erase(0, pos+1);
 	}

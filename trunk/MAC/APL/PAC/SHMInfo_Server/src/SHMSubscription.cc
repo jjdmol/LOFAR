@@ -111,7 +111,7 @@ void SHMSubscription::unsubscribe(uint64 seqnr)
 
 void SHMSubscription::propSubscribed (const string& propName)
 {
-  ASSERTSTR(propName.find(_propName) < string::npos, "Propnames should be the same");
+  ASSERTSTR(propName.find(_propName) != string::npos, "Propnames should be the same");
   SHMPvssDpSubscriptionResponseEvent ack;
   ack.replynr = _curReplySeqNr;
   SHMSession::setCurrentTime(ack.timestamp_sec, ack.timestamp_nsec);
@@ -125,7 +125,7 @@ void SHMSubscription::propSubscribed (const string& propName)
 
 void SHMSubscription::propValueChanged (const string& propName, const GCFPValue& newValue)
 {
-  ASSERTSTR(propName.find(_propName) < string::npos, "Propnames should be the same");
+  ASSERTSTR(propName.find(_propName) != string::npos, "Propnames should be the same");
   SHMPvssDpSubscriptionValueChangedAsyncEvent vce;
   vce.replynr = _curReplySeqNr;
   SHMSession::setCurrentTime(vce.timestamp_sec, vce.timestamp_nsec);
@@ -138,7 +138,7 @@ void SHMSubscription::propValueChanged (const string& propName, const GCFPValue&
 
 void SHMSubscription::propValueGet (const string& propName, const GCFPValue& newValue)
 {
-  ASSERTSTR(propName.find(_propName) < string::npos, "Propnames should be the same");
+  ASSERTSTR(propName.find(_propName) != string::npos, "Propnames should be the same");
   _pFirstValue = newValue.clone();
   if (_onlyOnce)
   {
@@ -162,7 +162,7 @@ void SHMSubscription::propValueGet (const string& propName, const GCFPValue& new
 
 void SHMSubscription::propSubscriptionLost(const string& propName)
 {
-  ASSERTSTR(propName.find(_propName) < string::npos, "Propnames should be the same");
+  ASSERTSTR(propName.find(_propName) != string::npos, "Propnames should be the same");
   LOG_DEBUG(formatString (
       "Lost subscription of %s",
       propName.c_str()));

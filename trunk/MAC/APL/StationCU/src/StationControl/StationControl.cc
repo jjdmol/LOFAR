@@ -957,7 +957,7 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 		// Get the name and figure out what circuitboard we are talking about
 		string  nameStr(DPnames->getValue()[idx]->getValueAsString());				// DP name
 		uint32	newState(((GCFPVInteger*)(DPvalues->getValue()[idx]))->getValue());	// value
-		size_t	pos;
+		string::size_type	pos;
 
 		LOG_DEBUG_STR("QryUpdate: DP=" << nameStr << ", value=" << newState);
 

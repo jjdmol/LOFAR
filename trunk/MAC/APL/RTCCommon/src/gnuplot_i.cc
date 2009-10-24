@@ -29,6 +29,7 @@
 #include <APL/RTCCommon/gnuplot_i.h>
 #include <cstring>
 #include <unistd.h>
+#include <string.h>
 
 // to find Array type in blitz namespace
 using namespace blitz;

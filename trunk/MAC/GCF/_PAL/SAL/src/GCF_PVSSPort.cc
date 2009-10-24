@@ -272,7 +272,7 @@ unsigned int GCFPVSSPort::claimPortNr()
 void GCFPVSSPort::releasePortNr(const string& portId)
 {
 	string::size_type pos = portId.rfind(':');
-	if (pos > 0 && pos < string::npos) {
+	if (pos > 0 && pos != string::npos) {
 		unsigned int portNr = atoi(portId.c_str() + pos + 1);
 		_pvssPortNrs.erase(portNr);
 	}
