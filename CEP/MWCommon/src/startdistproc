@@ -205,7 +205,7 @@ if [ $help = 1 ]; then
   echo '                        to be created for which no VDS file exists yet.'
   echo '                        -dsn and dirs cannot be given both.'
   echo '  -hfn hostfilename     The name of the generated hostfile.'
-  echo '                        It defaults to /tmp/machinefile_$$'
+  echo '                        It defaults to /tmp/machinefile_$USER_$$'
   echo '  -fdp finddproc-path   Path where to find finddproc.'
   echo '                        Default is empty.'
   echo '  -logfile logfilename  The general name of the subprocesses log files.'
@@ -259,8 +259,9 @@ if test ! -f "$cdn"; then
   echo "Error: clusterdesc $cdn not found"
   exit 1
 fi
+hfnorg=$hfn
 if test "$hfn" = ""; then
-  hfn="/tmp/machinefile_$$"
+  hfn="/tmp/machinefile_$USER_$$"
 fi
 if test "$fdp" != ""; then
   fdp="$fdp/"
@@ -323,5 +324,7 @@ fi
 if test $wait = 1  -a  "$envfile" != ""; then
   rm -f $envfile
 fi
-# hfn cannot be deleted, otherwise tstartdproc fails.
-#rm -f $hfn
+# Delete hfn if default name was used (it needs to be kept for tstartdproc).
+if test "$hfnorg" = ""; then
+  rm -f $hfn
+fi
