@@ -355,7 +355,7 @@ bool testExpandArray()
         tim2.start();
         string s2 = expandArrayString("[abc001..abc10,abc45..abc50]");
         tim2.stop();
-        tim2.print(cout);
+        cout << tim2 << endl;
         cout << "<<<" << endl;
         cout << s2 << endl;
 
