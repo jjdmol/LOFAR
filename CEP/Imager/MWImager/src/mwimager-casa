@@ -67,7 +67,7 @@ def main(argv=None):
     taper = ps.getStringVector ('Filter', '')
     phasecenter = ''
     if ps.isDefined ('Images.ra'):
-        phasecenter = ' "phasecenter=%s,%s,%s"' % (ps.getString ('Images.ra'), ps.getString('Images.dec'), ps.getString("Images.directionType", 'J2000'))
+        phasecenter = ' "phasecenter=%s,%s,%s"' % (ps.getString("Images.directionType", 'J2000'), ps.getString ('Images.ra'), ps.getString('Images.dec'))
     filter = ''
     if ps.isDefined ('taper'):
         taper = ps.getStringVector ('taper', '')
