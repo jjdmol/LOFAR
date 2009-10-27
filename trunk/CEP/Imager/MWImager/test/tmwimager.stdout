@@ -81,6 +81,6 @@ Cimager.solver.Clean.niter=10
 Cimager.solver.Clean.scales=[0, 3]
 Cimager.solver.Clean.verbose=True
 
-lwimager "ms=tmwimager.in_ms0" "image=tmwimager.img0" "data=CORRECTED_DATA" "mode=channel" "npix=2048" "cellsize=240arcsec" "stokes=IQUV" "nchan=2" "chanstart=0" "img_nchan=1" "wprojplanes=201" "nfacets=1" "padding=1" "phasecenter=230.35,-10.345,J2000"
-lwimager "ms=tmwimager.in_ms1" "image=tmwimager.img1" "data=CORRECTED_DATA" "mode=channel" "npix=2048" "cellsize=240arcsec" "stokes=IQUV" "nchan=2" "chanstart=0" "img_nchan=1" "wprojplanes=201" "nfacets=1" "padding=1" "phasecenter=230.35,-10.345,J2000"
-lwimager "ms=tmwimager.in_ms2" "image=tmwimager.img2" "data=CORRECTED_DATA" "mode=channel" "npix=2048" "cellsize=240arcsec" "stokes=IQUV" "nchan=2" "chanstart=0" "img_nchan=1" "wprojplanes=201" "nfacets=1" "padding=1" "phasecenter=230.35,-10.345,J2000"
+lwimager "ms=tmwimager.in_ms0" "image=tmwimager.img0" "data=CORRECTED_DATA" "mode=channel" "npix=2048" "cellsize=240arcsec" "stokes=IQUV" "nchan=2" "chanstart=0" "img_nchan=1" "wprojplanes=201" "nfacets=1" "padding=1" "phasecenter=J2000,230.35,-10.345"
+lwimager "ms=tmwimager.in_ms1" "image=tmwimager.img1" "data=CORRECTED_DATA" "mode=channel" "npix=2048" "cellsize=240arcsec" "stokes=IQUV" "nchan=2" "chanstart=0" "img_nchan=1" "wprojplanes=201" "nfacets=1" "padding=1" "phasecenter=J2000,230.35,-10.345"
+lwimager "ms=tmwimager.in_ms2" "image=tmwimager.img2" "data=CORRECTED_DATA" "mode=channel" "npix=2048" "cellsize=240arcsec" "stokes=IQUV" "nchan=2" "chanstart=0" "img_nchan=1" "wprojplanes=201" "nfacets=1" "padding=1" "phasecenter=J2000,230.35,-10.345"
