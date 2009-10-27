@@ -460,7 +460,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     
     private void setStartDateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setStartDateButtonActionPerformed
         try {
-            SimpleDateFormat aD = new SimpleDateFormat("yyyy-MMM-d HH:mm", itsLocale);
+            SimpleDateFormat aD = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm", itsLocale);
             Date initialDate = aD.parse(LogParamStartTimeText.getText());
             DateTimeChooser chooser = new DateTimeChooser(initialDate);
             itsStartTime = DateTimeChooser.showDialog(this, "StartTime", chooser);
@@ -471,8 +471,8 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     }
 
     private Date getGMTTime(Date aDate) {
-        SimpleDateFormat aD   = new SimpleDateFormat("yyyy-MMM-d HH:mm",itsLocale);
-        SimpleDateFormat aGMT = new SimpleDateFormat("yyyy-MMM-d HH:mm",itsLocale);
+        SimpleDateFormat aD   = new SimpleDateFormat("yyyy-MMM-d'T'HH:mm",itsLocale);
+        SimpleDateFormat aGMT = new SimpleDateFormat("yyyy-MMM-d'T'HH:mm",itsLocale);
         aGMT.setTimeZone(TimeZone.getTimeZone("GMT"));
         String  aS = aGMT.format(aDate);
         
@@ -488,7 +488,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     
     private void setStopDateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setStopDateButtonActionPerformed
         try {
-            SimpleDateFormat aD = new SimpleDateFormat("yyyy-MMM-d HH:mm", itsLocale);
+            SimpleDateFormat aD = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm", itsLocale);
             Date initialDate = aD.parse(LogParamEndTimeText.getText());
             DateTimeChooser chooser = new DateTimeChooser(initialDate);
             itsStopTime = DateTimeChooser.showDialog(this, "StopTime", chooser);
@@ -503,17 +503,17 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
      */
     public void composeTimeString(String time) {
         // Set the dateformat OTDB takes
-        SimpleDateFormat id = new SimpleDateFormat("yyyy-MMM-d HH:mm",itsLocale);
+        SimpleDateFormat id = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm",itsLocale);
         if (time.equals("start")) {
             if (itsStartTime != null) {
-              LogParamStartTimeText.setText(id.format(itsStartTime));
+              LogParamStartTimeText.setText(id.format(itsStartTime).replace("T", " "));
             } else {
                 LogParamStartTimeText.setText("not-a-date-time");
             }
               
         } else if (time.equals("stop")) {
             if (itsStopTime != null) {
-                LogParamEndTimeText.setText(id.format(itsStopTime));
+                LogParamEndTimeText.setText(id.format(itsStopTime).replace("T", " "));
             } else {
                 LogParamEndTimeText.setText("not-a-date-time");
             }
@@ -521,8 +521,8 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     }   
     private void setTime() {
         
-        SimpleDateFormat aDate = new SimpleDateFormat("yyyy-MMM-d HH:mm",itsLocale);
-        SimpleDateFormat aGMT = new SimpleDateFormat("yyyy-MMM-d HH:mm",itsLocale);
+        SimpleDateFormat aDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm",itsLocale);
+        SimpleDateFormat aGMT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm",itsLocale);
         aGMT.setTimeZone(TimeZone.getTimeZone("GMT"));
         Calendar aC = Calendar.getInstance(itsLocale);
         try {
@@ -530,19 +530,19 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
                 Date endDate = aC.getTime();
                 aC.add(Calendar.MONTH, -1);
                 String  aS = aGMT.format(endDate);
-                LogParamEndTimeText.setText(aS);
+                LogParamEndTimeText.setText(aS.replace("T", " "));
             } else {
                 String  aS = itsMainFrame.getSharedVars().getLogParamEndTime();
-                LogParamEndTimeText.setText(aS); 
+                LogParamEndTimeText.setText(aS.replace("T", " "));
                 itsStopTime = aDate.parse(LogParamEndTimeText.getText());
             }
             if (itsMainFrame.getSharedVars().getLogParamStartTime().equals("")) {
                 Date startDate = aC.getTime();
                 String aS = aGMT.format(startDate);
-                LogParamStartTimeText.setText(aS);
+                LogParamStartTimeText.setText(aS.replace("T", " "));
             } else {
                 String  aS = itsMainFrame.getSharedVars().getLogParamStartTime();
-                LogParamStartTimeText.setText(aS); 
+                LogParamStartTimeText.setText(aS.replace("T", " "));
                 itsStartTime = aDate.parse(LogParamStartTimeText.getText());
             }
         } catch (ParseException ex) {

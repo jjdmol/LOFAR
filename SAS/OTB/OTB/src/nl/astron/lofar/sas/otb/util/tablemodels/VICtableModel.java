@@ -66,8 +66,8 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
             data[row][2]=new String(OtdbRmi.getTreeState().get(tInfo.state));
             data[row][3]=new String(tInfo.campaign);
             data[row][4]=new Integer(tInfo.momID());
-            data[row][5]=new String(tInfo.starttime);
-            data[row][6]=new String(tInfo.stoptime);
+            data[row][5]=new String(tInfo.starttime.replace("T", " "));
+            data[row][6]=new String(tInfo.stoptime.replace("T", " "));
             data[row][7]=new String(tInfo.description);
             fireTableDataChanged();
         } catch (Exception e) {
@@ -103,8 +103,8 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
 	            data[k][2]=new String(OtdbRmi.getTreeState().get(tInfo.state));
 	            data[k][3]=new String(tInfo.campaign);
 	            data[k][4]=new Integer(tInfo.momID());
-	            data[k][5]=new String(tInfo.starttime);
-	            data[k][6]=new String(tInfo.stoptime);
+	            data[k][5]=new String(tInfo.starttime.replace("T", " "));
+	            data[k][6]=new String(tInfo.stoptime.replace("T", " "));
 	            data[k][7]=new String(tInfo.description);
                 }
             }
