@@ -79,9 +79,9 @@
      pagecolor="#ffffff"
      id="base"
      showgrid="false"
-     inkscape:zoom="0.32763797"
-     inkscape:cx="1266.642"
-     inkscape:cy="625.27393"
+     inkscape:zoom="0.73724969"
+     inkscape:cx="729.60127"
+     inkscape:cy="1131.3699"
      inkscape:window-x="0"
      inkscape:window-y="25"
      inkscape:current-layer="svg2"
@@ -898,7 +898,7 @@
      id="path3269"
      sodipodi:nodetypes="cc" />
   <text
-     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#225500;stroke:#225500;stroke-width:0.02500000000000000in;font-family:Helvetica"
      id="text4558"
      font-size="768"
      font-weight="bold"
@@ -917,7 +917,7 @@
      id="path4562"
      sodipodi:nodetypes="cc" />
   <text
-     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.02500000000000000in;font-family:Helvetica"
      id="text4564"
      font-size="768"
      font-weight="bold"
@@ -926,7 +926,7 @@
      x="12625.2"
      xml:space="preserve">compute</text>
   <text
-     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#550000;stroke:#550000;stroke-width:0.02500000000000000in;font-family:Helvetica"
      id="text4566"
      font-size="768"
      font-weight="bold"
