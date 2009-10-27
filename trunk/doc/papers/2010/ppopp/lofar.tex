@@ -709,18 +709,18 @@ Figure~\ref{fig:cn-processing}.
 \label{fig:round-robin}
 \end{figure}
 
-The I/O~node chops the data stream that comes from the station into chunks of
-one frequency subband and approximately one second of time.
-Such a chunk is the unit of data that is sent to the compute node for further
-processing.
-Since processing a chunk typically takes much longer than one second,
-the chunks are distributed round robin over a group of processor cores,
-as illustrated by Figure~\ref{fig:round-robin}.
-Subsequent chunks are processed by different processor cores.
-A core must finish its work before it is time to process the next chunk.
-A core first receives data from the I/O~node (green in the figure),
-processes them (yellow), sends back the results (red), and idles until the
-I/O~node sends new data.
+The I/O~node chops the data stream that comes from the station into
+chunks of one frequency subband and approximately one second of time.
+Such a chunk is the unit of data that is sent to the compute node for
+further processing.  Since processing a chunk typically takes much
+longer than one second, the chunks are distributed round robin over a
+group of processor cores, as illustrated by
+Figure~\ref{fig:round-robin}.  Subsequent chunks are processed by
+different processor cores.  A core must finish its work before it is
+time to process the next chunk.  A core first receives data from the
+I/O~node (green in the figure, the left side of the bars), processes
+them (yellow, middle part of the bars), sends back the results (red,
+right side of the bars), and idles until the I/O~node sends new data.
 
 For simplicity, Figure~\ref{fig:round-robin} shows the processing of
 three subbands on six cores.
