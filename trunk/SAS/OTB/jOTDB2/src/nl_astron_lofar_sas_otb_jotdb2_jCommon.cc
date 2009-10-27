@@ -93,13 +93,13 @@ jobject convertOTDBtree(JNIEnv *env, OTDBtree aTree) {
   
   env->SetShortField (jTree, fid_jOTDBtree_classification, aTree.classification);
   env->SetObjectField (jTree, fid_jOTDBtree_creator, env->NewStringUTF (aTree.creator.c_str ()));
-  env->SetObjectField (jTree, fid_jOTDBtree_creationDate, env->NewStringUTF (to_simple_string(aTree.creationDate).c_str ()));
+  env->SetObjectField (jTree, fid_jOTDBtree_creationDate, env->NewStringUTF (to_iso_extended_string(aTree.creationDate).c_str ()));
   env->SetShortField (jTree, fid_jOTDBtree_type, aTree.type);
   env->SetShortField (jTree, fid_jOTDBtree_state, aTree.state);
   env->SetIntField (jTree, fid_jOTDBtree_originalTree, aTree.originalTree);
   env->SetObjectField (jTree, fid_jOTDBtree_campaign, env->NewStringUTF (aTree.campaign.c_str ()));
-  env->SetObjectField (jTree, fid_jOTDBtree_starttime, env->NewStringUTF(to_simple_string(aTree.starttime).c_str ()));
-  env->SetObjectField (jTree, fid_jOTDBtree_stoptime, env->NewStringUTF (to_simple_string(aTree.stoptime).c_str ()));
+  env->SetObjectField (jTree, fid_jOTDBtree_starttime, env->NewStringUTF(to_iso_extended_string(aTree.starttime).c_str ()));
+  env->SetObjectField (jTree, fid_jOTDBtree_stoptime, env->NewStringUTF (to_iso_extended_string(aTree.stoptime).c_str ()));
   env->SetObjectField (jTree, fid_jOTDBtree_description, env->NewStringUTF (aTree.description.c_str()));
   
   return jTree;
@@ -122,7 +122,7 @@ jobject convertTreeState (JNIEnv *env, TreeState aTreeState)
   env->SetIntField (jTreeState, fid_jTreeState_momID, aTreeState.momID);
   env->SetShortField (jTreeState, fid_jTreeState_newState, aTreeState.newState);
   env->SetObjectField (jTreeState, fid_jTreeState_username, env->NewStringUTF(aTreeState.username.c_str()));
-  env->SetObjectField (jTreeState, fid_jTreeState_timestamp, env->NewStringUTF(to_simple_string(aTreeState.timestamp).c_str()));
+  env->SetObjectField (jTreeState, fid_jTreeState_timestamp, env->NewStringUTF(to_iso_extended_string(aTreeState.timestamp).c_str()));
   return jTreeState;
 }
 
@@ -197,7 +197,7 @@ jobject convertOTDBvalue (JNIEnv *env, OTDBvalue aValue)
   
   env->SetObjectField (jvalue, fid_jOTDBvalue_name, env->NewStringUTF (aValue.name.c_str ()));
   env->SetObjectField (jvalue, fid_jOTDBvalue_value, env->NewStringUTF (aValue.value.c_str ()));
-  env->SetObjectField (jvalue, fid_jOTDBvalue_time, env->NewStringUTF (to_simple_string(aValue.time).c_str ()));
+  env->SetObjectField (jvalue, fid_jOTDBvalue_time, env->NewStringUTF (to_iso_extended_string(aValue.time).c_str ()));
   
   return jvalue;
 }

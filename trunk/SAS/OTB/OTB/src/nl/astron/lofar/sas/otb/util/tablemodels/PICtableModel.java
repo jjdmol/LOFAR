@@ -78,8 +78,8 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
             data[row][1]=new String(OtdbRmi.getTreeState().get(tInfo.state));
             data[row][2]=new String(OtdbRmi.getClassif().get(tInfo.classification));
 	    data[row][3]=new String(tInfo.creator);
-	    data[row][4]=new String(tInfo.starttime);
-	    data[row][5]=new String(tInfo.stoptime);
+	    data[row][4]=new String(tInfo.starttime.replace("T", " "));
+	    data[row][5]=new String(tInfo.stoptime.replace("T", " "));
 	    data[row][6]=new String(tInfo.description);
             fireTableDataChanged();
         } catch (Exception e) {
@@ -115,8 +115,8 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
 	            data[k][1]=new String(OtdbRmi.getTreeState().get(tInfo.state));
                     data[k][2]=new String(OtdbRmi.getClassif().get(tInfo.classification));
 	            data[k][3]=new String(tInfo.creator);
-	            data[k][4]=new String(tInfo.starttime);
-	            data[k][5]=new String(tInfo.stoptime);
+	            data[k][4]=new String(tInfo.starttime.replace("T", " "));
+	            data[k][5]=new String(tInfo.stoptime.replace("T", " "));
 	            data[k][6]=new String(tInfo.description);
                 }
             }
