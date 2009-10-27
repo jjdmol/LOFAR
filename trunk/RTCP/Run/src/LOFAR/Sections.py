@@ -2,7 +2,7 @@
 
 from util.Commands import SyncCommand,AsyncCommand,mpikill,backquote,PIPE
 from util.Aborter import runUntilSuccess,runFunc
-from Locations import Locations
+from Locations import Locations,Hosts
 import os
 import Partitions
 import ObservationID
@@ -225,7 +225,7 @@ class StorageSection(Section):
     # create the target directories
     for p in self.parsets:
       for n in p.storagenodes:
-        self.commands.append( SyncCommand( SSH+"-t %s mkdir -p %s" % (n,os.path.dirname(p.parseMask()),), logfiles ) )
+        self.commands.append( SyncCommand( SSH+"-t %s mkdir -p %s" % (Hosts.resolve(n,"back"),os.path.dirname(p.parseMask()),), logfiles ) )
 
     if VALGRIND_STORAGE:
       valgrind = "/cephome/mol/root-ppc/bin/valgrind --suppressions=%s --leak-check=full --show-reachable=yes" % (Locations.files["storagesuppfile"],)
@@ -259,7 +259,7 @@ class StorageSection(Section):
     self.commands.append( AsyncCommand( SSH+"%s echo $$ > %s;exec mpirun %s" % (Locations.nodes["storagemaster"],self.pidfile," ".join(mpiparams),), logfiles ) )
 
   def abort( self, timeout ):
-    storagenodes = self.parsets[0].storagenodes
+    storagenodes = [Hosts.resolve(s,"back") for s in self.parsets[0].storagenodes]
     
     # kill mpirun using the pid we stored locally
     def kill( signal ):
@@ -283,7 +283,7 @@ class StorageSection(Section):
       Section.abort( self )
 
   def check( self ):
-    storagenodes = self.parsets[0].storagenodes
+    storagenodes = [Hosts.resolve(s,"back") for s in self.parsets[0].storagenodes]
 
     # Storage nodes need to be reachable -- check in parallel
 
@@ -315,7 +315,7 @@ class StorageSection(Section):
     storagePorts = self.parsets[0].getStoragePorts()
 
     for node,neededPorts in storagePorts.iteritems():
-      usedPorts = [int(p) for p in backquote( SSH+""" %s netstat -nta | awk 'NR>2 { n=split($4,f,":"); print f[n]; }'""" % (node,) ).split() if p.isdigit()]
+      usedPorts = [int(p) for p in backquote( SSH+""" %s netstat -nta | awk 'NR>2 { n=split($4,f,":"); print f[n]; }'""" % (Hosts.resolve(node,"back"),) ).split() if p.isdigit()]
 
       cannotOpen = [p for p in neededPorts if p in usedPorts]
 

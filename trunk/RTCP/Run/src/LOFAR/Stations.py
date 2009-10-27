@@ -73,10 +73,13 @@ def packetAnalysis( name, ip, port ):
     macnrs = macaddress.split(":")
     srcnr = "%s%s" % (macnrs[3],macnrs[4])
 
-    if int(nr) == int(srcnr):
-      macline = " OK Source MAC address:  %s" % (macaddress,)
-    else:
-      macline = "NOK Source MAC address:  %s (station %d?)" % (macaddress,int(srcnr))
+    try:
+      if int(nr) == int(srcnr):
+        macline = " OK Source MAC address:  %s" % (macaddress,)
+      else:
+        macline = "NOK Source MAC address:  %s (station %d?)" % (macaddress,int(srcnr))
+    except ValueError:    
+        macline = "NOK Source MAC address:  %s" % (macaddress,)
     
   return "%s\n%s" % (macline,mainAnalysis) 
 

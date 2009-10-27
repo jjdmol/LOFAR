@@ -342,13 +342,40 @@ class Parset(util.Parset.Parset):
       del self['OLAP.IONProc.integrationSteps']
       del self['OLAP.CNProc.integrationSteps']
 
+    def getNrOutputs( self ):
+      # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
+      output_keys = [
+        "Observation.outputFilteredData",
+        "Observation.outputCorrelatedData",
+        "Observation.outputBeamFormedData",
+        "Observation.outputCoherentStokes",
+        "Observation.outputIncoherentStokes",
+
+        # depricated
+        "Observation.outputIncoherentStokesI",
+      ]
+
+      outputs = 0
+
+      for k in output_keys:
+        if k in self and self.getBool(k):
+          outputs += 1
+
+      # depricated
+      if "Observation.mode" in output_keys:
+        outputs += 1
+
+      return outputs
+
     def getStoragePorts( self ):
       """ Returns a dictionary of the ports (value) required by each storage node (key). """
 
       globalPorts = self.getInt32Vector("OLAP.OLAP_Conn.IONProc_Storage_Ports")
       storageNodes = self.storagenodes
       subbandMapping = self.getInt32Vector("OLAP.storageNodeList")
-      assert len(subbandMapping) <= len(globalPorts), "Not enough Storage ports to listen on (have %d, need %d)" % (len(globalPorts),len(subbandMapping))
+      nrOutputs = self.getNrOutputs()
+
+      assert len(subbandMapping) * nrOutputs <= len(globalPorts), "Not enough Storage ports to listen on (have %d, need %d)" % (len(globalPorts),len(subbandMapping) * nrOutputs)
 
       localPorts = {}
 
