@@ -182,6 +182,22 @@ else:
   sr.setResult('FAILED')
 
 ################################################################################
+sr.setId('Build In Self Test -')
+sr.appendLog(21,'')
+sr.appendLog(21,'### Build In Self Test (BIST)')
+sr.appendLog(21,'')
+res = cli.command('python verify.py --brd %s --rep 1 -v 21 --te tc/bist.py' %(RspBrd,))
+if res.find('wrong')==-1:
+  sr.appendLog(11,'>>> BIST went OK')
+  sr.appendLog(21,'tc/bist.log')
+else:
+  sr.appendLog(11,'>>> BIST went wrong')
+  sr.appendLog(11,'CLI:')
+  sr.appendLog(11,res,1,1,1)
+  sr.appendLog(11,'tc/bist.log')
+  sr.appendLog('FAILED')  
+
+################################################################################
 sr.setId('RCU-RSP - ')
 sr.appendLog(21,'')
 sr.appendLog(21,'### Verify the RCU -> RSP LVDS interfaces by capturing pseudo random data on RSP')
@@ -246,22 +262,6 @@ else:
   sr.appendLog(11,res,1,1,1)
   sr.appendLog(11,'tc/serdes.log')
   sr.appendLog('FAILED')
-
-################################################################################
-sr.setId('Build In Self Test -')
-sr.appendLog(21,'')
-sr.appendLog(21,'### Build In Self Test (BIST)')
-sr.appendLog(21,'')
-res = cli.command('python verify.py --brd %s --rep 1 -v 21 --te tc/bist.py' %(RspBrd,))
-if res.find('wrong')==-1:
-  sr.appendLog(11,'>>> BIST went OK')
-  sr.appendLog(21,'tc/bist.log')
-else:
-  sr.appendLog(11,'>>> BIST went wrong')
-  sr.appendLog(11,'CLI:')
-  sr.appendLog(11,res,1,1,1)
-  sr.appendLog(11,'tc/bist.log')
-  sr.appendLog('FAILED')  
 
 ################################################################################
 # End of the subrack test
