@@ -153,10 +153,12 @@ void    BeamControl::setState(CTState::CTstateNr     newState)
 //
 int32 BeamControl::convertDirection(const string&	typeName)
 {
-	if (typeName == "J2000") 	{ return (1); }
-	if (typeName == "AZEL") 	{ return (2); }
-	if (typeName == "LMN")	 	{ return (3); }
-	return (2);
+  LOG_INFO_STR ("Receiving DirectionType: " << typeName );	
+  if (typeName == "J2000") 	{ return (1); }
+  if (typeName == "AZEL") 	{ return (2); }
+  if (typeName == "LMN")	{ return (3); }
+  LOG_WARN_STR ("Unknown DirectionType : " << typeName << " Will use J2000");
+  return (1);
 }
 
 //
