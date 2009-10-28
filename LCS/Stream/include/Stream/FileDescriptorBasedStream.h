@@ -36,6 +36,8 @@ class FileDescriptorBasedStream : public Stream
     virtual void read(void *ptr, size_t size);
     virtual void write(const void *ptr, size_t size);
 
+    virtual void sync();
+
   protected:
 		 FileDescriptorBasedStream(): fd(-1) {} // do not create directly
 

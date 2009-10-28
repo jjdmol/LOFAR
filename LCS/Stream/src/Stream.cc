@@ -31,4 +31,9 @@ Stream::~Stream()
 {
 }
 
+
+void Stream::sync()
+{
+}
+
 } // namespace LOFAR
