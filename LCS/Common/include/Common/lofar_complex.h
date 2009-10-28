@@ -91,7 +91,7 @@ namespace LOFAR
   }
 
   inline static i8complex makei8complex(const i4complex &z) {
-    return makei8complex((int) real(z), (int) imag(z));
+    return makei8complex(TYPES::int8(real(z)), TYPES::int8(imag(z)));
   }
 
   inline static i8complex makei8complex(const i8complex &z) {
@@ -99,7 +99,7 @@ namespace LOFAR
   }
 
   inline static i8complex makei8complex(const i16complex &z) {
-    return makei8complex(real(z), imag(z));
+    return makei8complex(TYPES::int8(real(z)), TYPES::int8(imag(z)));
   }
 
   inline static i8complex makei8complex(const u16complex &z) {
@@ -107,15 +107,15 @@ namespace LOFAR
   }
 
   inline static i8complex makei8complex(const fcomplex &z) {
-    return makei8complex((int) real(z), (int) imag(z));
+    return makei8complex(TYPES::int8(real(z)), TYPES::int8(imag(z)));
   }
 
   inline static i8complex makei8complex(const dcomplex &z) {
-    return makei8complex((int) real(z), (int) imag(z));
+    return makei8complex(TYPES::int8(real(z)), TYPES::int8(imag(z)));
   }
 
   inline static i16complex makei16complex(const i4complex &z) {
-    return makei16complex((int) real(z), (int) imag(z));
+    return makei16complex(TYPES::int16(real(z)), TYPES::int16(imag(z)));
   }
 
   inline static i16complex makei16complex(const i8complex &z) {
@@ -131,15 +131,15 @@ namespace LOFAR
   }
 
   inline static i16complex makei16complex(const fcomplex &z) {
-    return makei16complex((int) real(z), (int) imag(z));
+    return makei16complex(TYPES::int16(real(z)), TYPES::int16(imag(z)));
   }
 
   inline static i16complex makei16complex(const dcomplex &z) {
-    return makei16complex((int) real(z), (int) imag(z));
+    return makei16complex(TYPES::int16(real(z)), TYPES::int16(imag(z)));
   }
 
   inline static u16complex makeu16complex(const i4complex &z) {
-    return makeu16complex((int) real(z), (int) imag(z));
+    return makeu16complex(TYPES::uint16(real(z)), TYPES::uint16(imag(z)));
   }
 
   inline static u16complex makeu16complex(const i8complex &z) {
@@ -155,15 +155,15 @@ namespace LOFAR
   }
 
   inline static u16complex makeu16complex(const fcomplex &z) {
-    return makeu16complex((unsigned) real(z), (unsigned) imag(z));
+    return makeu16complex(TYPES::uint16(real(z)), TYPES::uint16(imag(z)));
   }
 
   inline static u16complex makeu16complex(const dcomplex &z) {
-    return makeu16complex((unsigned) real(z), (unsigned) imag(z));
+    return makeu16complex(TYPES::uint16(real(z)), TYPES::uint16(imag(z)));
   }
 
   inline static fcomplex makefcomplex(const i4complex &z) {
-    return makefcomplex(real(z), imag(z));
+    return makefcomplex(float(real(z)), float(imag(z)));
   }
 
   inline static fcomplex makefcomplex(const i8complex &z) {
@@ -183,7 +183,7 @@ namespace LOFAR
   }
 
   inline static fcomplex makefcomplex(const dcomplex &z) {
-    return makefcomplex((float) real(z), (float) imag(z));
+    return makefcomplex(float(real(z)), float(imag(z)));
   }
 
   inline static dcomplex makedcomplex(const i4complex &z) {
