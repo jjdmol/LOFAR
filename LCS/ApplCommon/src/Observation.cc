@@ -139,7 +139,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 		// get all fields
 		newBeam.angle1 		  = aParSet->getDouble(beamPrefix+"angle1", 0.0);
 		newBeam.angle2 		  = aParSet->getDouble(beamPrefix+"angle2", 0.0);
-		newBeam.directionType = aParSet->getString(beamPrefix+"directionType", "");
+		newBeam.directionType = aParSet->getString(beamPrefix+"directionTypes", "");
 //		newBeam.angleTimes 	  = aParSet->get(beamPrefix+"angleTimes", "[]");
 		// subbandList
 		newBeam.subbands = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);	// true:expandable
