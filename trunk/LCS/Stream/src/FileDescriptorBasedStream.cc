@@ -80,4 +80,11 @@ void FileDescriptorBasedStream::write(const void *ptr, size_t size)
   }
 }
 
+
+void FileDescriptorBasedStream::sync()
+{
+  if (fsync(fd) < 0)
+    throw SystemCallException("fsync", errno, THROW_ARGS);
+}
+
 } // namespace LOFAR
