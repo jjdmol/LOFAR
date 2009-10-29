@@ -58,7 +58,7 @@
      inkscape:window-width="1600"
      inkscape:window-height="1125"
      inkscape:window-x="0"
-     inkscape:window-y="25" />
+     inkscape:window-y="0" />
   <metadata
      id="metadata8414">
     <rdf:RDF>
@@ -324,7 +324,7 @@
        font-style="normal"
        y="515.58063"
        x="261.26437"
-       xml:space="preserve">IONProc</text>
+       xml:space="preserve">CNProc</text>
     <text
        style="font-size:5.89105511px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.0007671in;font-family:Helvetica"
        id="text8539"

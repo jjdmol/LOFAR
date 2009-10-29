@@ -49,19 +49,22 @@ combines the signals from many thousands of simple antennas.
 Its revolutionary design allows observations in a frequency range that has
 hardly been studied before.
 
-This paper focuses on another novel feature: where traditional telescopes
-combine data using customized hardware, we process the data in \emph{software}. 
+Another novel feature of LOFAR is the elaborate use of \emph{software\/} to
+process data, where traditional telescopes use customized hardware.
 This dramatically increases flexibility and substantially reduces costs, but
 the high processing and bandwidth requirements compel the use of a
 supercomputer.
 The antenna signals are centrally combined, filtered, optionally beam-formed,
 and correlated by an IBM Blue Gene/P.
 
+This paper describes the implementation of the so-called correlator.
 To meet the real-time requirements, the application is highly optimized, and
 reaches exceptionally high computational and I/O efficiencies.
-This allows us to use only half the planned amount of resources, \emph{and\/}
-process 50\% more telescope data, significantly improving the effectiveness
-of the entire telescope.
+Additionally, we study the scalability of the system, and show that it scales
+well beyond the requirements.
+The optimizations allows us to use only half the planned amount of resources,
+\emph{and\/} process 50\% more telescope data, significantly improving the
+effectiveness of the entire telescope.
 \end{abstract}
 
 
@@ -73,17 +76,19 @@ range.
 It is the first of a new generation of radio telescopes, that breaks with
 the concepts of traditional telescopes in several ways.
 Rather than using large, expensive dishes, LOFAR uses many thousands of
-simple antennas that have no movable parts~\cite{Butcher:04,deVos:09}, see Figure~\ref{fig:lba-field}.
+simple antennas that have no movable parts~\cite{Butcher:04,deVos:09} (see
+Figure~\ref{fig:lba-field}).
 Essentially, it is a distributed sensor network that monitors the sky
 and combines all signals centrally.
 This concept requires much more signal processing, but the additional costs
 of silicon are easily offset by cost savings in steel that would be needed for dishes.
 Moreover, LOFAR can observe the sky in many directions simultaneously and
 switch directions instantaneously. 
-In several ways, LOFAR will be the largest telescope of the world, 
-and will enable groundbreaking research in several areas of astronomy and particle
-physics~\cite{Bruyn:02}. The different goals and observation types require
-several different processing pipelines, however.
+In several ways, LOFAR will be the largest telescope of the world, and will
+enable groundbreaking research in several areas of astronomy and particle
+physics~\cite{Bruyn:02}.
+The different goals and observation types require several different processing
+pipelines, however.
 
 \begin{figure}[t]
 \vspace{-4mm}
@@ -103,8 +108,8 @@ However, the desire for a flexible and reconfigurable instrument with
 different processing pipelines for different observation types demands a
 software solution.
 The availability of sufficiently powerful supercomputers allows this.
-We have to perform all processing in real time,
-since the data streams simply are too large to store.
+%We have to perform all processing in real time,
+%since the data streams simply are too large to store.
 
 \begin{figure*}
 \begin{minipage}[b]{11cm}
@@ -122,13 +127,7 @@ since the data streams simply are too large to store.
 
 The most common mode of operation for LOFAR is the 
 \emph{standard imaging pipeline}, which is used to generate sky images.
-This mode filters and correlates the data sent by the stations.
-This paper describes the implementation and
-performance characteristics of the real-time part of this pipeline on an IBM Blue Gene/P (BG/P)
-supercomputer.
-We present a highly-optimized implementation that achieves very high
-computational performance: the correlator sustains 96\% of the theoretical
-floating-point peak performance during the computational phase.
+This mode filters and correlates the data sent by the stations in the field.
 %The \emph{Epoch of Reionization (EoR)\/} pipeline should detect the faint,
 %very first sky objects.
 %It is a similar pipeline, but with even higher computational demands, due to
@@ -136,9 +135,26 @@ floating-point peak performance during the computational phase.
 Several \emph{pulsar pipelines\/} are being developed as well, that either
 search large sky regions to find unknown pulsars or, once found, sensitively
 observe their characteristics.
+We also started development of a \emph{transient pipeline}, that observes the
+sky for transient events.
 The pipelines share common components, shortening their development time. 
-The software also supports multiple simultaneous observations, even of different
-types.
+The software also supports multiple simultaneous observations, even of
+different types.
+The first part of each pipeline runs in real time, since the receivers produce
+too much data to store on disk.
+Only after substantial reduction of the data volume, intermediate products
+are written to disk.
+
+In this paper, we focus on the real-time part of the standard imaging pipeline,
+commonly called ``the correlator''.
+We first present an integral overview of the correlator and a discussion of
+the optimizations that we implemented.
+The main contribution of this paper is an in-depth study of all performance
+aspects, real-time behavior, and scalability characteristics of the correlator
+as a whole (previous papers only focused on single aspects and did not
+comprise a scalability study).
+We also enumerate the conditions that are necessary to obtain good,
+real-time performance, and assert that none of these conditions can be ignored.
 
 The receivers produce hundreds of gigabits per second.
 To handle the high data rate,
@@ -151,24 +167,33 @@ Additionally, we developed a low-overhead network protocol~\cite{Romein:09a}
 for communication between I/O~nodes and compute nodes, since we were not able
 to achieve the required internal input and output data rates with the standard
 network software.
-
-% @@@ TODO, change back to ``we''
-In earlier work, Romein et al.~\cite{Romein:06}, presented an initial prototype
-implementation of the LOFAR processing on our previous platform, the
-Blue Gene/L.  The work presented in this paper differs in several
-important ways.  First, we have now implemented the complete I/O path:
-from the LOFAR stations in the field to the Blue Gene/P, 
-from the I/O~nodes to the compute nodes, the internal
-data transpose, and finally the transfer 
-to the storage cluster. In contrast, in~\cite{Romein:06}
-we focused only on computing, and not on I/O.
-Second, we now have a fully functional \emph{real time} processing pipeline
-for the most important standard imaging mode, and prototypes for other
-pipelines, showing the flexibility of our design.  Finally, for the
-first time, we perform a scalability analysis, proving that we can 
-support the requirements of the full LOFAR instrument, both in
-terms of computing and I/O, in real time. In fact, we even surpass the
-requirements.
+The correlator achieves very high computational performance: it sustains
+96\% of the theoretical floating-point peak performance during the
+computational phase~\cite{Romein:06}.
+The application scales to data rates well beyond the requirements;
+in fact, the performance is so good that it led to the decision to change
+the LOFAR specifications: the instrument can observe over 50\% more sources
+or frequencies simultaneously than in its original design specifications,
+greatly enhancing the efficiency of the entire instrument.
+%This paper describes the implementation of the LOFAR correlator and shows
+%how the optimized system scales to sizes beyond what is required
+%In earlier work, we presented an initial prototype
+%implementation of the LOFAR processing on our previous platform, the
+%Blue Gene/L~\cite{Romein:06}.
+%The work presented in this paper differs in several
+%important ways.  First, we have now implemented the complete I/O path:
+%from the LOFAR stations in the field to the Blue Gene/P, 
+%from the I/O~nodes to the compute nodes, the internal
+%data transpose, and finally the transfer 
+%to the storage cluster. In contrast, in~\cite{Romein:06}
+%we focused only on computing, and not on I/O.
+%Second, we now have a fully functional \emph{real time} processing pipeline
+%for the most important standard imaging mode, and prototypes for other
+%%pipelines, showing the flexibility of our design.  Finally, for the
+%first time, we perform a scalability analysis, proving that we can 
+%support the requirements of the full LOFAR instrument, both in
+%terms of computing and I/O, in real time. In fact, we even surpass the
+%requirements.
 
 This paper is structured as follows.
 We mention related work in Section~\ref{sec:related-work}.
@@ -266,7 +291,8 @@ studying the origin of high-energy
 Neither the source, nor the physical process that accelerates such particles
 is known.
 Third, LOFAR's ability to continuously monitor a large fraction of the sky
-makes it uniquely suited to find new \emph{pulsars} and to study \emph{transient sources}.
+makes it uniquely suited to find new \emph{pulsars\/} and to study
+\emph{transient sources}.
 Since LOFAR has no moving parts, it can instantaneously switch focus to
 some galactic event.
 Fourth, \emph{Deep Extragalactic Surveys\/} will be carried out to find the
@@ -313,10 +339,9 @@ used for all observations.
 The roll-out of the stations is currently in progress.
 
 Each station is equipped with 48--96 LBAs and 48--96 HBA tiles. 
-A station also features a cabinet where initial processing is done.
-Typical operations that are performed here include analog-to-digital
-conversion, filtering, frequency selection, and combination of the signals
-from the different receivers.
+A station also features a cabinet where initial processing is done, like
+analog-to-digital conversion, filtering, frequency selection, and combination
+of the signals from the different receivers.
 One of the distinctive properties of LOFAR is that the receivers are
 omni-directional, and that multiple, simultaneous observation directions are
 supported.
@@ -715,12 +740,11 @@ Such a chunk is the unit of data that is sent to the compute node for
 further processing.  Since processing a chunk typically takes much
 longer than one second, the chunks are distributed round robin over a
 group of processor cores, as illustrated by
-Figure~\ref{fig:round-robin}.  Subsequent chunks are processed by
-different processor cores.  A core must finish its work before it is
-time to process the next chunk.  A core first receives data from the
-I/O~node (green in the figure, the left side of the bars), processes
-them (yellow, middle part of the bars), sends back the results (red,
-right side of the bars), and idles until the I/O~node sends new data.
+Figure~\ref{fig:round-robin}.
+Subsequent chunks are processed by different processor cores.
+A core first receives data from the I/O~node, processes them, sends back the
+results, and idles until the I/O~node sends new data.
+A core must finish its work before it is time to process the next chunk.
 
 For simplicity, Figure~\ref{fig:round-robin} shows the processing of
 three subbands on six cores.

@@ -101,7 +101,7 @@ newstring
   hjc
   vjc
   x 32.7
-  y 7.496
+  y 7.492
   lcolor 1 0.827450931 0.125490189
   : 1
 
@@ -110,23 +110,23 @@ copystring
   : 2
 
 copystring
-  y 6.696
+  y 6.692
   : 3
 
 copystring
-  y 6.296
+  y 6.292
   : 4
 
 copystring
-  y 5.896
+  y 5.892
   : 5
 
 copystring
-  y 5.496
+  y 5.492
   : 6
 
 copystring
-  y 5.096
+  y 5.092
   : 7
 
 newcurve
@@ -141,7 +141,7 @@ newcurve
   marktype box
   marksize 3.4 .32
   gray 0
-  cfill 1 0 1
+  cfill 1 .5 1
   pts
     32.7 7.1
 
@@ -187,7 +187,7 @@ newcurve
 
 newcurve
   marktype circle
-  marksize 1.2
+  marksize 1.3
   gray 0
   fill 0
   pts
@@ -262,7 +262,7 @@ marktype xbar
 newcurve
   marktype xbar
   marksize 3.4
-  cfill 1 0 1
+  cfill 1 .5 1
   pts
     32 1.76
     36 2.07
@@ -428,8 +428,8 @@ newcurve
   marktype none
   rarrow
   asize .6 .1
-  (* color 1 0 1
-  acfill 1 0 1 *)
+  (* color 1 .5 1
+  acfill 1 .5 1 *)
   pts
     68 5.15
     66 5.48
