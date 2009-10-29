@@ -1,14 +1,17 @@
-\documentclass{sig-alternate}
+\documentclass{sigplanconf}
+%\documentclass{sig-alternate}
 %\documentclass{acm_proc_article-sp}
 
-\global\acmcopyr={Y-YYYYY-YY-Y/YY/YY}
-\global\copyrtyr={2010}            
+\conferenceinfo{PPoPP'10,} {January 9--14, 2010, Bangalore, India.}
+\CopyrightYear{2010}
+\copyrightdata{978-1-60558-708-0/10/01}
 
-\usepackage{cite, graphicx, subfigure, amsmath, xspace, txfonts}
+\usepackage{graphicx, subfigure, amsmath, xspace, txfonts}
 %\usepackage{eurosym} 
 
 \newcommand{\us}{\,$\muup$s\xspace}
 
+\hyphenation{syn-chro-nously}
 \hyphenation{ob-ser-va-tion}
 \hyphenation{pipe-li-nes}
 \hyphenation{FPGAs}
@@ -17,30 +20,13 @@
 
 \title{The LOFAR Correlator: \\ Implementation and Performance Analysis}
 
-\numberofauthors{4}
-
 \def\sharedaffiliation{%
 \end{tabular}
 \begin{tabular}{c}}
 
-\author{
-\alignauthor John W. Romein\\
-\email{romein@astron.nl}
-\alignauthor P. Chris Broekema\\
-\email{broekema@astron.nl}
-\alignauthor Jan David Mol\\
-\email{mol@astron.nl}
-\and
-\alignauthor \hspace{1cm} \\
-\alignauthor Rob V. van Nieuwpoort\\
-\email{nieuwpoort@astron.nl}
-\alignauthor \hspace{1cm} \\
-\sharedaffiliation
-\affaddr{ASTRON (Netherlands Institute for Radio Astronomy)}\\
-\affaddr{Oude Hoogeveensedijk 4, 7991\ PD\ \ Dwingeloo, The Netherlands}\\
-}
-
-\date{}
+\authorinfo{John W. Romein \and P. Chris Broekema \and Jan David Mol \and Rob van Nieuwpoort}
+{ASTRON (Netherlands Institute for Radio Astronomy) \\ Oude Hoogeveensedijk 4, 7991\ PD\ \ Dwingeloo, The Netherlands}
+{\{romein,broekema,mol,nieuwpoort\}@astron.nl}
 
 \maketitle
 
@@ -95,10 +81,8 @@ pipelines, however.
 
 \begin{figure}[t]
 \vspace{-4mm}
-\begin{center}
-\includegraphics[width=70mm]{LBA-field.jpg}
-\end{center}
-\vspace{-3mm}
+\includegraphics[width=\columnwidth]{LBA-field.jpg}
+\vspace{-2mm}
 \caption{A field with low-band antennas (dipoles).}
 \label{fig:lba-field}
 \end{figure}
@@ -115,13 +99,13 @@ The availability of sufficiently powerful supercomputers allows this.
 %since the data streams simply are too large to store.
 
 \begin{figure*}
-\begin{minipage}[b]{11cm}
-\includegraphics[width=11cm]{lofar-overview.pdf}
+\begin{minipage}[b]{118mm}
+\includegraphics[width=\columnwidth]{lofar-overview.pdf}
 \caption{A simplified overview of the LOFAR processing.}
 \label{fig:lofar-overview}
 \end{minipage}
 \hfill
-\begin{minipage}[b]{49mm}
+\begin{minipage}[b]{52mm}
 \includegraphics[width=\columnwidth]{lofar-stations.png}
 \caption{Locations of the stations.}
 \label{fig:map}
@@ -527,17 +511,17 @@ data to disk.
 \section{I/O-node Processing}
 \label{sec:IONProc}
 
-\begin{figure}[t]
-\includegraphics[width=\columnwidth]{ION-processing.pdf}
-\caption{Simplified data flow diagram for the I/O nodes.}
-\label{fig:ion-processing}
-\end{figure}
-
 We use the Blue Gene in an innovative way, by running application software
 on the I/O~nodes.
 On the Blue Gene/L, this required rewriting major parts of the system
 software~\cite{Iskra:08}, but this idea is much better supported on the
 Blue Gene/P.
+
+\begin{figure}[ht]
+\includegraphics[width=\columnwidth]{ION-processing.pdf}
+\caption{Simplified data flow diagram for the I/O nodes.}
+\label{fig:ion-processing}
+\end{figure}
 
 We run one multi-threaded process on each I/O~node that takes care of two
 tasks: the handling of input and the handling of output (see
@@ -650,7 +634,6 @@ Under normal circumstances, no data are lost here.
 \begin{center}
 \includegraphics[width=.8\textwidth]{CN-processing.pdf}
 \end{center}
-\vspace{-3mm}
 \caption{Simplified data flow diagram for the compute nodes.}
 \label{fig:cn-processing}
 \end{figure*}
@@ -793,15 +776,32 @@ a compute node and then over the 3-D~torus network.
 The torus provides high bandwidth and switches packets efficiently.
 
 
-\begin{figure}[ht]
+\begin{figure*}[ht]
+\begin{minipage}[b]{45mm}
 \begin{center}
-\includegraphics[width=25mm]{colinear.pdf}
+\includegraphics[width=30mm]{colinear.pdf}
 \end{center}
-\vspace{-0.5cm}
 \caption{The bandwidth between colinear nodes is lower than between
 non-colinear nodes.}
 \label{fig:colinear}
-\end{figure}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{4cm}
+\begin{center}
+\includegraphics[width=40mm]{delay.pdf}
+\end{center}
+\caption{The left antenna receives the wave later.}
+\label{fig:delay}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{68mm}
+\begin{center}
+\includegraphics[width=45mm]{bandpass.pdf}
+\end{center}
+\caption{Channels have different signal powers.}
+\label{fig:bandpass}
+\end{minipage}
+\end{figure*}
 
 Unfortunately, it is not possible to optimize for short torus paths; due to the
 physical location of I/O nodes and compute nodes,
@@ -900,26 +900,6 @@ implementation for the 256-point FFT.
 %% \label{fig:delay}
 %% \end{figure}
 
-
-\begin{figure}[ht]
-\begin{minipage}[b]{4cm}
-\begin{center}
-\includegraphics[width=3cm]{delay.pdf}
-\end{center}
-\vspace{-5mm}
-\caption{The left antenna receives the wave later.}
-\label{fig:delay}
-\end{minipage}
-\hfill
-\begin{minipage}[b]{4cm}
-\begin{center}
-\includegraphics[width=35mm]{bandpass.pdf}
-\end{center}
-\vspace{-5mm}
-\caption{Not all channels have equal signal power.}
-\label{fig:bandpass}
-\end{minipage}
-\end{figure}
 
 Due to the finite speed
 of electromagnetic waves, the wavefront from a celestial source hits
@@ -1067,7 +1047,6 @@ cache hierarchy.
 \begin{center}
 \includegraphics[width=40mm]{correlation-triangle.pdf}
 \end{center}
-\vspace{-4mm}
 \caption{The correlation triangle is divided into $2\times2$ tiles.}
 \label{fig:correlation-triangle}
 \end{figure}
