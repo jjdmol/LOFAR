@@ -7,9 +7,9 @@ FIG_SOURCES =	colinear.fig correlation-triangle.fig delay.fig processing.fig\
 
 JGR_SOURCES =	bandpass.jgr cn-performance.jgr ion-performance.jgr
 
-JPG_SOURCES =	fringe.jpg LBA-field.jpg map.jpg
+JPG_SOURCES =	fringe.jpg LBA-field.jpg
 
-PNG_SOURCES =	
+PNG_SOURCES =	lofar-stations.png
 
 STY_SOURCES =	
 
