@@ -12,6 +12,7 @@ import nl.astron.util.AstronValidator;
 import nl.astron.util.Frequency;
 import nl.astron.util.XMLBuilder;
 import nl.astron.util.Frequency.Unit;
+import nl.astron.util.converters.TimeConverter;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -130,7 +131,7 @@ public class XMLParser {
 		Double result = null;
 		if (frequencyElement != null) {
 			frequency.setFrequency(AstronConverter.toDouble(getValue(frequencyElement)));
-			frequency.setUnit(getAttribute(frequencyElement.getAttributes(), XMLBuilder.UNITS));
+			frequency.setUnit(getAttribute(frequencyElement.getAttributes(), XMLBuilder.UNIT));
 			if (!frequency.getUnit().equals(Unit.MHZ)) {
 				result = AstronConverter.getFrequencyFromFrequencyWithUnit(frequency);
 			} else {
@@ -267,7 +268,7 @@ public class XMLParser {
 			}
 			if (elements.containsKey(XMLConstants.DURATION)) {
 				beam.getDurations().add(
-						AstronConverter.convertXMLDurationToSeconds(getValue(elements.get(XMLConstants.DURATION))));
+						TimeConverter.convertXMLDurationToSeconds(getValue(elements.get(XMLConstants.DURATION))));
 			}
 			if (elements.containsKey(XMLConstants.SUBBANDS_SPECIFICATION)) {
 				Element subbandsSpecificationsElement = elements.get(XMLConstants.SUBBANDS_SPECIFICATION);
