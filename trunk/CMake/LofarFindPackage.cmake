@@ -50,22 +50,23 @@ function(lofar_find_package _package)
     lofar_search_path(_prefix_path ${_pkg})
     set(CMAKE_PREFIX_PATH ${${_PKG}_PREFIX_PATH} ${_prefix_path})
 
-    # If package has been disabled explicitly, but is required, raise an
-    # error.
-    if(DEFINED USE_${_PKG} AND NOT USE_${_PKG})
+    # Search the package using the Find${_package}.cmake module, unless the
+    # package have been disabled explicitly.
+    if(NOT DEFINED USE_${_PKG} OR USE_${_PKG})
+      if(LOFAR_VERBOSE_CONFIGURE)
+        find_package(${ARGV})
+      else(LOFAR_VERBOSE_CONFIGURE)
+        find_package(${ARGV} QUIET)
+      endif(LOFAR_VERBOSE_CONFIGURE)
+    else(NOT DEFINED USE_${_PKG} OR USE_${_PKG})
       list(FIND ARGN REQUIRED is_required)
       if(is_required GREATER -1)
         message(SEND_ERROR 
           "Package ${_package} is required, but has been disabled explicitly!")
+      else(is_required GREATER -1)
+        message(STATUS "Package ${_package} has been disabled explicitly")
       endif(is_required GREATER -1)
-    endif(DEFINED USE_${_PKG} AND NOT USE_${_PKG})
-
-    # Use the Find${_package}.cmake module.
-    if(LOFAR_VERBOSE_CONFIGURE)
-      find_package(${ARGV})
-    else(LOFAR_VERBOSE_CONFIGURE)
-      find_package(${ARGV} QUIET)
-    endif(LOFAR_VERBOSE_CONFIGURE)
+    endif(NOT DEFINED USE_${_PKG} OR USE_${_PKG})
 
     # Add include directories and libraries, if package was found;
     # set HAVE_<PACKAGE> variable in the cache.
