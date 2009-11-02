@@ -84,9 +84,9 @@ public class XMLGenerator {
 		}
 		Element currentStatusElement = xmlBuilder.addElement(observationElement, XMLConstants.CURRENT_STATUS);
 		addXmlStatusElement(xmlBuilder, currentStatusElement, observation.getStatus());
-		addChildren(xmlBuilder, observationElement, observation);
 
-		Element observationAttributes = xmlBuilder.addElement(observationElement, XMLConstants.OBSERVATION_ATTRIBUTES);
+
+		Element observationAttributes = xmlBuilder.addElement(observationElement, XMLConstants.MOM2_LOFAR_NAMESPACE, XMLConstants.OBSERVATION_ATTRIBUTES);
 		xmlBuilder.addTextElement(observationAttributes, XMLConstants.OBSERVATION_ID, observation.getObservationId());
 		xmlBuilder.addTextElement(observationAttributes, XMLConstants.ANTENNA, Mom2OtdbConverter
 				.getMom2Antenna(observation.getAntennaSet()));
@@ -113,7 +113,7 @@ public class XMLGenerator {
 				xmlBuilder.addTextElement(stationElement, STATION_NAME, station);
 			}
 		}
-
+		addChildren(xmlBuilder, observationElement, observation);
 	}
 
 	private static void addChildren(XMLBuilder xmlBuilder, Element observationElement, LofarObservation observation) {
@@ -154,7 +154,7 @@ public class XMLGenerator {
 
 			}
 		}
-		Element measurementAttributes = xmlBuilder.addElement(measurementElement, XMLConstants.UV_MEASUREMENT_ATTRIBUTES);
+		Element measurementAttributes = xmlBuilder.addElement(measurementElement,XMLConstants.MOM2_LOFAR_NAMESPACE, XMLConstants.UV_MEASUREMENT_ATTRIBUTES);
 		if (beam.getRaList().size() > 0 && beam.getDecList().size() > 0 && beam.getDurations().size() > 0
 				&& beam.getAngleTimes().size() > 0) {
 			xmlBuilder.addTextElement(measurementAttributes, XMLConstants.RA, beam.getRaList().get(0));
