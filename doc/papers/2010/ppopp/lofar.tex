@@ -24,7 +24,7 @@
 \end{tabular}
 \begin{tabular}{c}}
 
-\authorinfo{John W. Romein \and P. Chris Broekema \and Jan David Mol \and Rob van Nieuwpoort}
+\authorinfo{John W. Romein \and P. Chris Broekema \and Jan David Mol \and Rob V. van Nieuwpoort}
 {ASTRON (Netherlands Institute for Radio Astronomy) \\ Oude Hoogeveensedijk 4, 7991\ PD\ \ Dwingeloo, The Netherlands}
 {\{romein,broekema,mol,nieuwpoort\}@astron.nl}
 
@@ -55,6 +55,10 @@ The optimizations allows us to use only half the planned amount of resources,
 \emph{and\/} process 50\% more telescope data, significantly improving the
 effectiveness of the entire telescope.
 \end{abstract}
+
+\terms{Algorithms, Experimentation, Performance}
+
+\keywords{LOFAR, Correlator, IBM Blue Gene/P}
 
 
 \section{Introduction}
@@ -129,7 +133,7 @@ The software also supports multiple simultaneous observations, even of
 different types.
 The first part of each pipeline runs in real time, since the receivers produce
 too much data to store on disk.
-Only after substantial reduction of the data volume, intermediate products
+Only after substantial reduction of the data volume, intermediate data products
 are written to disk.
 
 In this paper, we focus on the real-time part of the standard imaging pipeline,
@@ -235,7 +239,8 @@ otherwise.
 
 On our previous platform, the BG/L, we were dissatisfied with
 the I/O model and its performance.  This led to a joint effort with 
-Argonne national lab to redesign the entire network software infrastructure, and resulted in a
+Argonne National Laboratory to redesign the entire network software
+infrastructure, and resulted in a
 new environment called {\em ZOID\/}~\cite{Iskra:08}.  ZOID does not
 only yield better performance, but it is much more flexible, since it
 allows application code to be run on the I/O~nodes.  
@@ -460,7 +465,7 @@ Additional networks exist for fast barriers, initialization, diagnostics, and de
 %In Section~\ref{sec:IONProc}, we show that it is much more
 %efficient to run part of the application software on the I/O~node.
 
-Each group of (in our case 16) compute nodes is connected to an I/O~node via
+Each group of (in our case) 16 compute nodes is connected to an I/O~node via
 the collective network.
 Normally, the I/O~node is used as a black box that provides transparent
 communication from the compute nodes to external systems.
@@ -496,7 +501,7 @@ for up to 2.5~seconds, and to forward it to the compute nodes in the pset.
 The second application, called \emph{CNProc}, runs on the Blue Gene/P compute
 nodes, where the compute-intensive processing takes place.
 The main tasks are to reorder the data across the compute nodes over the
-internal torus network, to filter the data, and to correlate or beam-form
+internal torus network, to filter the data, and to beam-form and/or correlate
 the filtered data.
 The resulting data are then sent back to the I/O-node application, that
 collects the data from the compute nodes and
@@ -563,7 +568,7 @@ The samples from the received UDP packets are copied into a circular buffer that
 holds the most recent 2.5~seconds of data.
 The buffer serves three purposes.
 First, it is used to synchronize the stations, since the travel times over
-the WAN are higher for the remote stations than for the central stations.
+the WAN are higher for the international stations than for the central stations.
 Second, the buffer prevents data loss due to small variations in processing
 times of the remainder of the pipeline.
 Third, the buffer is used to artificially delay the stream of samples,
@@ -739,7 +744,7 @@ over the psets.
 Typically, a pset is responsible for a fixed set of four to sixteen subbands.
 Then, the subbands are scheduled round robin over the 64~cores \emph{within the
 pset}.
-For example, if a pset processes six subbands, every second, the next six
+For example, if a pset processes six subbands, then every second, the next six
 cores are scheduled and each of the cores will process one subband.
 In this example, the available time to process one subband is ten seconds
 ($\lfloor\frac{64}{6}\rfloor$).
@@ -831,8 +836,8 @@ the transfer from the I/O~nodes to the compute nodes, and with
 the next four processing steps.
 As soon as a chunk of data from one station has arrived, the core starts
 processing them, up to the point that the data from \emph{all\/} stations
-are required. As we will explain in the next section, this is before the beam forming 
-step.
+are required. As we will explain in the next section, this is before the
+beam-forming step.
 
 
 \subsection{Signal Processing}
@@ -873,7 +878,7 @@ filter supports any reasonable power-of-two number of channels for different
 observation modes. 
 
 The PPF consists of two parts. 
-First, the data is filtered using Finite Impulse Response (FIR)
+First, the data are filtered using Finite Impulse Response (FIR)
 filters. A FIR filter simply multiplies a sample with a real weight factor, and
 also adds a number of weighted samples from the past.  Since we have
 to support different numbers of channels, our software automatically designs
@@ -881,7 +886,7 @@ a filter bank with the desired properties and number of channels at
 run time, generating the FIR filter weights on the fly. This again
 demonstrates the flexibility of a software solution.  For performance reasons, the
 implementation of the filter is done in assembly.
-Second, the filtered data are Fourier Transformed. We use the Blue
+Next, the filtered data are Fourier Transformed. We use the Blue
 Gene ``Vienna'' version of FFTW~\cite{Lorenz:05} to do this. Since the
 most common observation mode uses 256 channels, we optimized this case
 a bit further, and manually wrote a more efficient assembly
@@ -954,7 +959,7 @@ beam forming can also be used to select observation directions, or to
 observe a large parts of the sky simultaneously.
 The first is used for known pulsar and transient observations, while the latter can be 
 used when searching for unknown pulsars, for instance.
-The different beam forming modes are implemented, but not optimized yet.
+The different beam forming modes are implemented, but not yet fully optimized.
 Therefore we only mention them here to show the flexibility of a software solution, but do not include
 them in the performance measurements of Section~\ref{sec:performance}.
 
@@ -1077,7 +1082,7 @@ For example, the lower right-hand-side rectangle correlates stations 8 and~9
 with stations 0 and~1.
 The X and Y samples of each of these four stations are read, requiring eight
 memory load instructions (one load instruction reads a complex sample).
-Computing the correlations requires 128~real operations, i.e.\ 32~instructions.
+Computing the correlations requires 128~real operations, i.e., 32~instructions.
 Hence, four floating-point instructions per load instruction are performed.
 An unoptimized implementation would perform four times more memory accesses,
 making the memory subsystem a severe bottleneck.
@@ -1408,7 +1413,7 @@ higher bandwidths, UDP packet receipt could be optimized by not using the
 \texttt{read()} system call interface,
 but by using another interface that reads the data directly from kernel buffers
 and does not enforce a (370~MiB/s!) kernel-to-user-space copy.
-Right now, we felt no need to implement the required kernel changes.
+Right now, we feel no need to implement the required kernel changes.
 Alternatively, the second rack could be used.
 
 
@@ -1454,7 +1459,7 @@ time to communicate with the other 63~cores in the pset.
 %Doubling the number of subbands halves the available processing time, and in
 %the 4-bit mode, up to about 50~stations can be supported on a single rack.
 
-The performance results hardly differ for the 16-bit and 4-bit modes,
+The performance results hardly differ for the 16-bit and 8-bit modes,
 since only the performance of the data receipt from the I/O~node and data
 exchange phase are affected by the sample size, 
 both of which hardly contribute to the total run time.
@@ -1505,7 +1510,7 @@ signal quality, such as real-time flagging and real-time calibration.
 \end{figure}
 
 The system we described is used on a daily basis for observations, using the currently
-available stations. The images we show in this Section are created with \emph{real} data.
+available stations. The images we show in this section are created with \emph{real} data.
 A graphical representation of the correlator output is depicted in
 Figure~\ref{fig:fringe}.
 The figure shows the cross-correlations from two of the stations used during a 9-hour
@@ -1636,7 +1641,7 @@ in a major improvement in the effectiveness of the \emph{entire\/} telescope.
 Generalizing the lessons learned, we conclude that to achieve high performance,
 high bandwidths, and real-time behavior, it is necessary to consider
 \emph{all\/} performance-related aspects of the application integrally,
-without ignoring one of them:
+without ignoring any of them:
 \begin{itemize}
 \setlength{\parskip}{0mm}
 \item	close integration with the hardware, e.g., by writing kernels in
@@ -1644,7 +1649,7 @@ without ignoring one of them:
 \item	using real-time thread scheduling;
 \item	using a work distribution scheme that avoids all forms of resource
 	contention;
-\item	using optimized network protocols;
+\item	using optimized network protocols and asynchrounous I/O;
 \item	computing on I/O nodes;
 \item	operating system modifications to circumvent inefficient hardware
 	(TLBs).
@@ -1755,7 +1760,7 @@ real-time calibration, and possibly real-time RFI removal.
 
 \section{Acknowledgments}
 
-\begin{small}
+%\begin{small}
 We thank Ger van Diepen, Martin Gels, Marcel Loose, and Ruud Overeem
 for their contributions to the LOFAR software, and many other colleagues
 for their work on the LOFAR telescope.
@@ -1763,6 +1768,7 @@ We also thank Kamil Iskra and Kazutomo Yoshii from Argonne National Laboratory
 for their work on the BG/P system software.
 Bruce Elmegreen, Todd Inglett, Tom Liebsch, and Andrew Taufener from IBM
 provided the support to optimally use the BG/P.
+Figure~\ref{fig:map} was edited from a map from Wikimedia.
 
 LOFAR is funded by the Dutch government in the BSIK program for
 interdisciplinary research for improvements of the knowledge
@@ -1770,7 +1776,7 @@ infrastructure.  Additional funding is provided by the European Union,
 European Regional Development Fund (EFRO), and by the
 ``Samenwerkingsverband Noord-Nederland,'' EZ/KOMPAS. Part of this work was
 performed in the context of the NWO STARE AstroStream project.
-\end{small}
+%\end{small}
 
 \bibliographystyle{plain}
 \bibliography{lofar}
