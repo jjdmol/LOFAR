@@ -72,6 +72,9 @@ public class Mom2HttpRequestHandler implements HttpRequestHandler {
 				} catch (RepositoryException e) {
 					response.setStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 					log.fatal("Problem occurred with OTDB: " + e.getMessage(), e);
+				} catch (Exception e) {
+					response.setStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+					log.fatal("Problem occurred : " + e.getMessage(), e);
 				}
 				response.setStatusCode(HttpStatus.SC_OK);
 			}		
