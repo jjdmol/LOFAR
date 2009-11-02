@@ -235,7 +235,7 @@ public class XMLParser {
 			 */
 			if (isElement(nodeChild)) {
 
-				if (equalIgnorePrefix(nodeChild, XMLConstants.MEASUREMENT_ATTRIBUTES)) {
+				if (equalIgnorePrefix(nodeChild, XMLConstants.UV_MEASUREMENT_ATTRIBUTES)) {
 					parseMeasurementAttributes((Element) nodeChild, beam);
 				}
 			}
