@@ -33,7 +33,7 @@ CalServer.DisableACMProxy=0
 
 # Directory where the interim datafiles are stored
 # When left empty the files are stored in /opt/lofar/bin !!
-CalServer.DataDirectory=~/
+CalServer.DataDirectory=/localhome/data
 
 # Write ACC's to file for debugging. 
 # Note: DisableCalibration should be 0 to produce this file.
