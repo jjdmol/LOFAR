@@ -19,12 +19,31 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 # A tiny wrapper around the FindBoost.cmake macro that comes with CMake. 
-# Its purpose is twofold:
+# Its purpose is threefold:
+# - Remove Boost components that have been disabled explicitly from the
+#   Boost_FIND_COMPONENTS list. Raise an error, if the component is required.
 # - Define all-uppercase variables for the following variables: 
 #   Boost_INCLUDE_DIRS, Boost_LIBRARIES, and Boost_FOUND.
 # - Set a HAVE_BOOST_<COMPONENT> variable in the cache for each component that
 #   was found.
 
+# Boost components that have been disabled explicitly by the user, should be
+# removed from the Boost_FIND_COMPONENTS list.
+foreach(_comp ${Boost_FIND_COMPONENTS})
+  string(TOUPPER "${_comp}" _COMP)
+  if(DEFINED USE_BOOST_${_COMP} AND NOT USE_BOOST_${_COMP})
+    # Remove disabled item from the component list.
+    list(REMOVE_ITEM Boost_FIND_COMPONENTS ${_comp})
+    if(Boost_FIND_REQUIRED)
+      message(SEND_ERROR "Boost component ${_comp} is required, "
+        "but has been disabled explicitly!")
+    else(Boost_FIND_REQUIRED)
+      message(STATUS "Boost component ${_comp} has been disabled explicitly")
+    endif(Boost_FIND_REQUIRED)
+  endif(DEFINED USE_BOOST_${_COMP} AND NOT USE_BOOST_${_COMP})
+endforeach(_comp ${Boost_FIND_COMPONENTS})
+
+# Call the "real" FindBoost module.
 include(${CMAKE_ROOT}/Modules/FindBoost.cmake)
 
 # Define all-uppercase variables for Boost_INCLUDE_DIRS Boost_LIBRARIES and 
