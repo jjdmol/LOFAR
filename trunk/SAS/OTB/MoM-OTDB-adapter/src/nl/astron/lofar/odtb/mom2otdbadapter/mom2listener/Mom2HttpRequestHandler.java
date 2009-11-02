@@ -66,23 +66,24 @@ public class Mom2HttpRequestHandler implements HttpRequestHandler {
 					schemas.add(this.getClass().getClassLoader().getResource("schemas/MoM2.xsd"));
 					schemas.add(this.getClass().getClassLoader().getResource("schemas/LofarMoM2.xsd"));
 					document = XMLConverter.convertXMLToDocument(inputSource,schemas);
+					LofarObservation lofarObservation = XMLParser.getLofarObservation(document);
+					try {
+						repository.store(lofarObservation);
+						response.setStatusCode(HttpStatus.SC_OK);
+						requestHandledSuccessfull = true;
+					} catch (RepositoryException e) {
+						response.setStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+						log.fatal("Problem occurred with OTDB: " + e.getMessage(), e);
+					} catch (Exception e) {
+						response.setStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+						log.fatal("Problem occurred : " + e.getMessage(), e);
+					}
+					response.setStatusCode(HttpStatus.SC_OK);
 				} catch (Exception e) {
 					response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
 					log.error("Problem with parsing xml content: " + e.getMessage(), e);
 				}		
-				LofarObservation lofarObservation = XMLParser.getLofarObservation(document);
-				try {
-					repository.store(lofarObservation);
-					response.setStatusCode(HttpStatus.SC_OK);
-					requestHandledSuccessfull = true;
-				} catch (RepositoryException e) {
-					response.setStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-					log.fatal("Problem occurred with OTDB: " + e.getMessage(), e);
-				} catch (Exception e) {
-					response.setStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-					log.fatal("Problem occurred : " + e.getMessage(), e);
-				}
-				response.setStatusCode(HttpStatus.SC_OK);
+
 			}		
 
 		} else {
