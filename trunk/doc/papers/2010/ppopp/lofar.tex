@@ -105,8 +105,8 @@ The availability of sufficiently powerful supercomputers allows this.
 \label{fig:lofar-overview}
 \end{minipage}
 \hfill
-\begin{minipage}[b]{52mm}
-\includegraphics[width=\columnwidth]{lofar-stations.png}
+\begin{minipage}[b]{49mm}
+\includegraphics[width=\columnwidth]{lofar-stations.pdf}
 \caption{Locations of the stations.}
 \label{fig:map}
 \end{minipage}
@@ -139,7 +139,7 @@ the optimizations that we implemented.
 The main contribution of this paper is an in-depth study of all performance
 aspects, real-time behavior, and scalability characteristics of the correlator
 as a whole (previous papers only focused on single aspects and did not
-comprise a scalability study).
+include a scalability study).
 We also enumerate the conditions that are necessary to obtain good,
 real-time performance, and assert that none of these conditions can be ignored.
 
@@ -307,23 +307,8 @@ However, combining the data of all individual antennas centrally would
 require too much network bandwidth and would result in excessive
 computational requirements. Therefore, multiple antennas are grouped
 to form a \emph{station}.
-The signals of the receivers are combined locally, within the station, using FPGAs.
-
-Geographically, LOFAR consists of a compact core area that contains
-about 50\% of the stations, and a number of remote stations (See
-Figure~\ref{fig:map}).
-The heart of LOFAR will be installed in the Northern part of the Netherlands.
-The stations are roughly distributed along five log-spiral arms with a diameter of
-hundreds of kilometers. 
-%The station fields are centrally condensed,
-%following a logarithmic distribution.  
-Additionally, eight to fifteen European stations will be or have been built,
-extending the maximum distance to roughly 1000~km.
-The longer baselines (distance between two stations) allows observations with high angular resolution,
-but limits the Field-of-View; therefore the European stations will not be
-used for all observations.
-%In the past several years we have deployed a number of prototype antennas,
-The roll-out of the stations is currently in progress.
+The signals of the receivers are combined locally, within the station, using
+FPGAs.
 
 Each station is equipped with 48--96 LBAs and 48--96 HBA tiles. 
 A station also features a cabinet where initial processing is done, like
@@ -336,12 +321,26 @@ Since observing the sky in all frequencies and all directions at the same time
 would result in an unmanageable output data rate, the observer selects a
 limited number of directions and frequencies, called \emph{subbands}.
 
+Geographically, LOFAR consists of a 2-kilometer wide compact core area of
+20 stations, 16~remote stations with a maximum distance of 125~km, and
+8~international stations, with a maximum distance of 1300~km (see
+Figure~\ref{fig:map}).
+The heart of LOFAR is installed in the Northern part of the Netherlands.
+Each HBA field of a compact core station can optionally be split into two
+fields, so they can appear as 40~core stations to the correlator.
+The long distance between the European stations allows observations with high
+angular resolution, but with a limited Field-of-View; therefore the European
+stations will not be used for all observations.
+The roll-out of the stations is currently in progress.
+As of October 2009, six stations are fully functional; another 22~stations are
+under construction or partially functional.
+
 The station data are transported to the central processing location 
 via a Wide-Area Network (WAN), using dedicated light paths.
 We use UDP for data transport, since we can easily tolerate some data loss.
 We do not use a reliable protocol such as TCP, because this significantly
-complicates the programming of the station FPGAs, due to buffering, flow control,
-retransmission, and real-time issues.
+complicates the programming of the station FPGAs, due to buffering, flow
+control, retransmission, and real-time issues.
 
 The UDP packets contain samples, where a sample is a complex number
 that represents the amplitude and phase of a signal at a particular
@@ -556,8 +555,8 @@ duplicated, and lost packets.
 At each station, four of the FPGAs send data to their associated I/O~node,
 each FPGA to a different UDP port.
 The I/O~node runs four ``input'' threads, one thread per socket.
-Multiple threads are necessary, since we have to utilize multiple cores; a single core is too slow to receive all
-data.
+Multiple threads are necessary, since we have to utilize multiple cores;
+a single core is too slow to receive all data.
 Together, the threads receive a total of 48,828~packets per second.
 
 The samples from the received UDP packets are copied into a circular buffer that
@@ -663,7 +662,7 @@ However, the I/O~nodes run a Linux kernel that typically uses a page size of
 4~KiB, generating a huge number of TLB-miss interrupts.
 
 To avoid the interrupts, we use a modified ZeptoOS (Linux-based)
-kernel\cite{Yoshii:09}.
+kernel\cite{Yoshii:10}.
 It allows a process to pin 1.5~GiB (out of 2~GiB) of physical memory in its
 virtual memory map, using six fixed mappings of 256~MiB that are never evicted
 from the TLB.
@@ -1528,9 +1527,8 @@ ignored in the remainder of the processing pipeline.
 \end{figure}
 
 The correlations are used to create images.
-Even with the limited amount of prototype antennas that have been employed
-during the last few years, impressive (all-sky) images were made (see
-Figure~\ref{fig:all-sky-image}).
+Even with the limited amount of stations that have been employed,
+impressive (all-sky) images were made (see Figure~\ref{fig:all-sky-image}).
 Also, the prototype pulsar pipeline software successfully detected several
 known pulsars~\cite{Hessels:09}.
 
@@ -1634,6 +1632,23 @@ resources\/} to process \emph{50\% more station data\/} than the LOFAR
 specifications require.
 The latter ability led to the decision to adjust the specifications, resulting
 in a major improvement in the effectiveness of the \emph{entire\/} telescope.
+
+Generalizing the lessons learned, we conclude that to achieve high performance,
+high bandwidths, and real-time behavior, it is necessary to consider
+\emph{all\/} performance-related aspects of the application integrally,
+without ignoring one of them:
+\begin{itemize}
+\setlength{\parskip}{0mm}
+\item	close integration with the hardware, e.g., by writing kernels in
+	assembly;
+\item	using real-time thread scheduling;
+\item	using a work distribution scheme that avoids all forms of resource
+	contention;
+\item	using optimized network protocols;
+\item	computing on I/O nodes;
+\item	operating system modifications to circumvent inefficient hardware
+	(TLBs).
+\end{itemize}
 
 %Performance measurements show that, due to the optimizations, we need only
 %\emph{half the amount of planned resources\/} to process \emph{50\% more
