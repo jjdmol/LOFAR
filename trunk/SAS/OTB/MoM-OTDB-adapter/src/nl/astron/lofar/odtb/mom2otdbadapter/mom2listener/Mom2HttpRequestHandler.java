@@ -2,6 +2,9 @@ package nl.astron.lofar.odtb.mom2otdbadapter.mom2listener;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import nl.astron.lofar.odtb.mom2otdbadapter.data.LofarObservation;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.Repository;
@@ -59,7 +62,10 @@ public class Mom2HttpRequestHandler implements HttpRequestHandler {
 				InputSource inputSource = new InputSource(new StringReader(content));
 				Document document = null;
 				try {
-					document = XMLConverter.convertXMLToDocument(inputSource);
+					List<URL> schemas = new ArrayList<URL>();
+					schemas.add(this.getClass().getClassLoader().getResource("schemas/MoM2.xsd"));
+					schemas.add(this.getClass().getClassLoader().getResource("schemas/LofarMoM2.xsd"));
+					document = XMLConverter.convertXMLToDocument(inputSource,schemas);
 				} catch (Exception e) {
 					response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
 					log.error("Problem with parsing xml content: " + e.getMessage(), e);
