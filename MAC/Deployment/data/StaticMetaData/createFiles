@@ -366,7 +366,18 @@ def createHBADeltasFile(resultDir, stationName, dataDir):
     print command
     os.system(command)
 
-
+def de601Exceptions(resultDir, stationName, dataDir)
+    """
+    Handle exceptions for station de601 (Effelsberg)
+    """
+    if (stationName.lower() == "de601"):
+        srcFile = dataDir + "/DE601-Attenuation.conf"
+        destFile= resultDir + "/Attenuation.conf"
+        
+    command = "cp -f "+srcFile+ " " + destFile
+    print command
+    os.system(command)
+      
 
 # MAIN
 
@@ -404,6 +415,7 @@ if (sys.argv[1] == "localhost"):
             createAntennaArraysFile(resultDir, stationName, dataDir)
             createCableDelaysFile  (resultDir, stationName, dataDir)
             createHBADeltasFile    (resultDir, stationName, dataDir)
+            de601Exceptions        (resultDir, stationName, dataDir)
     else:
         print "Cannot determine node name from HOSTNAME"
         sys.exit(1)
@@ -438,7 +450,8 @@ else:
         createAntennaArraysFile(resultDir, stationName, dataDir)
         createCableDelaysFile  (resultDir, stationName, dataDir)
         createHBADeltasFile    (resultDir, stationName, dataDir)
-
+        de601Exceptions        (resultDir, stationName, dataDir)
+        
 if len(warnings) > 0:
     print "The following warnings occured:"
     print warnings
