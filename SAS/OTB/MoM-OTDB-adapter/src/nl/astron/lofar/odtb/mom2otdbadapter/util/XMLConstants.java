@@ -39,7 +39,7 @@ public final class XMLConstants {
 
 	public static final String MEASUREMENT = "measurement";
 
-	public static final String MEASUREMENT_ATTRIBUTES = "measurementAttributes";
+	public static final String UV_MEASUREMENT_ATTRIBUTES = "uvMeasurementAttributes";
 
 	public static final String RA = "ra";
 
