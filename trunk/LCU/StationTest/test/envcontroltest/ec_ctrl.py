@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
+import sys
 import socket
 import time
 import struct
 
-VERSION = '1.0.3' # version of this script    
+VERSION = '1.1.4' # version of this script    
 
 ## to use other commands, see playground on the bottom of this file
 
@@ -19,32 +20,31 @@ doCheckFans = 0
 doCheckDoors = 0
 doChangeSettings = 0   # fill in table below
 
-#HOST = '192.168.178.111' # EC @Home
-#HOST = '10.151.19.2'     # CS010c EC
-#HOST = '10.151.134.3'    # RS106c EC
-HOST = '10.151.162.3'     # RS302c EC
-#HOST = '10.151.66.3'     # CS030c EC
-#HOST = '10.151.161.3'    # CS301c EC
-#HOST = '10.87.2.239'     # EC on desk PD
+STATION = str(sys.argv[1])
+## using: python ec_ctrl.py CS302
 
 # settings for (cab0, cab1, cab2, cab3)
 # for LOFAR NL stations cab2 is not available
 # cab0 = rack with receiver 0, cab3 = always control rack
-ControlMode  = (0   , 0   , 0   , 1   )
-ControlSpan  = (1.00, 1.00, 1.00, 1.00)
-MaxDayChange = (5.00, 5.00, 5.00, 5.00)
-SeekTime     = (60  , 60  , 60  , 60  )
-SeekChange   = (5.00, 5.00, 5.00, 5.00)
+ControlMode  = (3   , 0   , 0   , 1   ) # used on ec_1.0.9 and below
+ControlSpan  = (1.00, 1.00, 1.00, 1.00) # used on ec_1.0.9 and below
+MaxHourChange= (0.50, 0.50, 0.50, 0.50) 
+StartSide    = (1   , 1   , 1   , 0   ) # used on ec_1.1.1 and higher
+BalancePoint = (20.0, 20.0, 20.0, 20.0) # used on ec_1.1.1 and higher
+SeekTime     = (15  , 15  , 15  , 15  )
+SeekChange   = (10.0, 10.0, 10.0, 10.0)
 MinTemp      = (0.00, 0.00, 0.00, 10.0)
 MaxTemp      = (35.0, 35.0, 35.0, 30.0)
 MinMinTemp   = (0.00, 0.00, 0.00, 8.0 )
-MaxMaxTemp   = (40.0, 40.0, 40.0, 35.0)
+MaxMaxTemp   = (40.0, 40.0, 45.0, 38.0)
 MaxHum       = (90.0, 90.0, 90.0, 80.0)
 MaxMaxHum    = (95.0, 95.0, 95.0, 85.0)
 #==================================================================
 
 PORT = 10000            # Gateway port
 ecSck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+HOST = socket.gethostbyname(STATION+'EC')
 stop = False
 
 # === TCP PROTOCOL from controller ===
@@ -53,12 +53,14 @@ EC_STATUS           = 1
 EC_SETTINGS         = 2
 EC_CTRL_TEMP        = 3
 EC_VERSION          = 5
-EC_SET_MODE         = 10
+EC_SET_CTRL_MODE    = 10
 EC_SET_TEMP         = 15
+EC_SET_HEATER       = 17
 EC_SET_48           = 20
 EC_RESET_48         = 22
 EC_SET_230          = 25
-EC_RESET_230        = 27   
+EC_RESET_230        = 27
+EC_RESET_TRIP       = 28
 EC_SET_DOOR_CTRL    = 50
 EC_SET_HUM_CTRL     = 52
 EC_SET_MAX_TEMP     = 100
@@ -67,7 +69,9 @@ EC_SET_MAXMAX_TEMP  = 102
 EC_SET_MINMIN_TEMP  = 103
 EC_SET_MAX_HUM      = 105
 EC_SET_MAXMAX_HUM   = 106
-EC_SET_CTRL_MODE    = 109
+EC_SET_START_SIDE   = 107
+EC_SET_BALANCE_POINT= 108
+EC_SET_CTRL_TYPE    = 109
 EC_SET_CTRL_SPAN    = 110
 EC_SET_MAX_CHANGE   = 111
 EC_SET_SEEK_TIME    = 112
@@ -88,6 +92,7 @@ LCU          = 230
 # used variables
 cabs =(0,1,3) # cabs in station
 version = 0   # EC version
+versionstr = 'V-.-.-'
 #---------------------------------------
 # open files if needed
 if (printToFile == 1):
@@ -114,20 +119,44 @@ def printInfo(info):
 def connectToHost():
     info =  "connecting to %s on port %d\n" %(HOST, PORT)
     printInfo(info)
-    ecSck.connect((HOST, PORT))
-    ecSck.settimeout(5.0)
+    connected = False
+    while not connected:
+        try:
+            ecSck.connect((HOST, PORT))
+            ecSck.settimeout(5.0)
+            connected = True
+        except socket.error:
+            ecSck.close()
+        
 #---------------------------------------
 def disconnectHost():
     ecSck.close()
+    
 #---------------------------------------
 def sendCmd(cmdId=EC_NONE, cab=-1, value=0):
     if (cmdId == EC_NONE):
         return (false)
-    cmd = struct.pack('hhh', cmdId, cab, int(value))
-    ecSck.send(cmd)
+    try:
+        cmd = struct.pack('hhh', cmdId, cab, int(value))
+        ecSck.send(cmd)
+    except socket.error:
+        printInfo("socket error, try to reconnect")
+        disconnectHost()
+        connectToHost()
+        
 #---------------------------------------
 def recvAck():
-    data = ecSck.recv(6)
+    socketError = False    
+    try:
+        data = ecSck.recv(6)
+    except socket.error:
+        socketError = True
+        printInfo("socket error, try to reconnect")
+        disconnectHost()
+        connectToHost()
+    if socketError:
+        return
+        
     header = struct.unpack('hhh', data)
     cmdId = header[0]
     status = header[1]
@@ -164,10 +193,10 @@ def restart():
         print 'restart not possible in this EC version'
     return 1
 #---------------------------------------
-def setMode(cab=-1, mode=MODE_AUTO):
-    sendCmd(EC_SET_MODE, cab, mode)
+def setControlMode(cab=-1, mode=MODE_AUTO):
+    sendCmd(EC_SET_CTRL_MODE, cab, mode)
     (cmdId, status, PL) = recvAck()
-    printInfo('SetMode cab %d to %d' %(cab, mode))
+    printInfo('SetControlMode cab %d to %d' %(cab, mode))
 #---------------------------------------
 def setPower(pwr=-1, state=PWR_ON):
     if ((pwr == 48) or (pwr == -1)):
@@ -190,10 +219,16 @@ def resetPower(pwr=-1):
         printInfo('PowerReset LCU')
 
 #---------------------------------------
+def resetTrip():
+    sendCmd(EC_RESET_TRIP, -1, 0)
+    (cmdId, status, PL) = recvAck()
+    printInfo('Reset Trip System')
+
+#---------------------------------------
 ## mode 1 = moving setpoint
 ## mode 2 = constant setpoint, preset to 25.0 C    
-def setControlMode(cab=-1, mode=1):
-    sendCmd(EC_SET_CTRL_MODE, cab, mode)
+def setControlType(cab=-1, mode=1):
+    sendCmd(EC_SET_CTRL_TYPE, cab, mode)
     (cmdId, status, PL) = recvAck()
     printInfo('SetControlMode cab %d to %d' %(cab, mode))
 #---------------------------------------
@@ -244,22 +279,28 @@ def setHumControl(cab=-1, state=1):
     (cmdId, status, PL) = recvAck()
     printInfo('SetHumidityControl cab %d to %d' %(cab, state))
 #---------------------------------------
-def setHeater(state=0):
-    if (state == 0):
-        sendCmd(EC_SET_MINMIN_TEMP, 3, int(8.0*100))
+def setHeater(mode=0):
+    if (version >= 108):
+        sendCmd(EC_SET_HEATER, 3, mode)
         (cmdId, status, payload) = recvAck()
-        printInfo("heater turned off\n")
     else:
-        sendCmd(EC_SET_MINMIN_TEMP, 3, int(30.0*100))
-        (cmdId, status, payload) = recvAck()
-        printInfo('heater turned on\n')
+        if (mode == 0):
+            sendCmd(EC_SET_MINMIN_TEMP, 3, int(8.0*100))
+            (cmdId, status, payload) = recvAck()
+        else:
+            sendCmd(EC_SET_MINMIN_TEMP, 3, int(30.0*100))
+            (cmdId, status, payload) = recvAck()
+    if (mode == MODE_ON): printInfo('heater is turned ON\n')
+    if (mode == MODE_OFF): printInfo('heater is turned OFF\n')
+    if (mode == MODE_AUTO): printInfo('heater set to AUTO\n')
 #---------------------------------------
 def getVersion():
     sendCmd(EC_VERSION)
     (cmdId, status, PL) = recvAck()
     version = int((PL[0]*100)+(PL[1]*10)+PL[2])
+    versionstr = 'V%d.%d.%d' %(PL)
     printInfo('EC software version %d.%d.%d' %(PL))
-    return version
+    return version, versionstr
 #---------------------------------------
 def getStatus():
     ec_mode = ('OFF','ON','AUTO','MANUAL','STARTUP','ABSENT')
@@ -279,7 +320,7 @@ def getStatus():
         
     sendCmd(EC_STATUS)
     (cmdId, status, PL2) = recvAck()
-
+    
     # fill lines with data    
     lines = []
     lines.append('            |')
@@ -313,7 +354,10 @@ def getStatus():
     lines.append('lightning state = %s' %(badok[(PL2[29] & 1)]))
         
     # print lines to screen or file, see printInfo
-    printInfo('=== Station status ===')
+    info = (' status %s (%s)     %s ' %(STATION, versionstr, time.asctime()))
+    printInfo('-' * len(info))
+    printInfo(info)
+    printInfo('-' * len(info))
     for line in lines:
         printInfo(line)
     printInfo(' ')
@@ -344,13 +388,17 @@ def getControlTemp():
 def getSettings():
     sendCmd(EC_SETTINGS)
     (cmdId, status, PL) = recvAck()
-
+	#printInfo( len(PL))
     # fill lines with data    
     lines = []
     lines.append('                 |')
-    lines.append('control mode     |')
-    lines.append('control span     |')
-    lines.append('max day change   |')
+    if (version < 111):
+        lines.append('control type     |')
+        lines.append('control span     |')
+    else:
+        lines.append('start side       |')
+        lines.append('balance point    |')    
+    lines.append('max hour change  |')
     lines.append('seek time        |')
     lines.append('max seek change  |')
     lines.append('min control temp |')
@@ -375,6 +423,7 @@ def getSettings():
         lines[10] += '%9.2f |' %(PL[(cab*11)+4]/100.)
         lines[11] += '%9.2f |' %(PL[(cab*11)+5]/100.)
     # print lines to screen or file, see printInfo
+    printInfo('%d' %(PL[7]))
     printInfo('=== Station settings ===')
     for line in lines:
         printInfo(line)
@@ -382,12 +431,22 @@ def getSettings():
 #---------------------------------------
 def setSettings():
     for i in range(4):
-        sendCmd(EC_SET_CTRL_MODE, i, int(ControlMode[i]))
-        (cmdId, status, payload) = recvAck()
-        sendCmd(EC_SET_CTRL_SPAN, i, int(ControlSpan[i]*100))
-        (cmdId, status, payload) = recvAck()
-        sendCmd(EC_SET_MAX_CHANGE, i, int(MaxDayChange[i]*100))
-        (cmdId, status, payload) = recvAck()
+        if (version < 108):
+            sendCmd(EC_SET_MAX_CHANGE, i, int(MaxHourChange[i]*100*24))
+            (cmdId, status, payload) = recvAck()
+        else:
+            sendCmd(EC_SET_MAX_CHANGE, i, int(MaxHourChange[i]*100))
+            (cmdId, status, payload) = recvAck()
+        if (version < 111):
+            sendCmd(EC_SET_CTRL_MODE, i, int(ControlMode[i]))
+            (cmdId, status, payload) = recvAck()
+            sendCmd(EC_SET_CTRL_SPAN, i, int(ControlSpan[i]*100))
+            (cmdId, status, payload) = recvAck()
+        else:
+            sendCmd(EC_SET_START_SIDE, i, int(StartSide[i]))
+            (cmdId, status, payload) = recvAck()
+            sendCmd(EC_SET_BALANCE_POINT, i, int(BalancePoint[i]*100))
+            (cmdId, status, payload) = recvAck()
         sendCmd(EC_SET_SEEK_TIME, i, int(SeekTime[i]))
         (cmdId, status, payload) = recvAck()
         sendCmd(EC_SET_SEEK_CHANGE, i, int(SeekChange[i]*100))
@@ -404,10 +463,8 @@ def setSettings():
         (cmdId, status, payload) = recvAck()
         sendCmd(EC_SET_MAXMAX_HUM, i, int(MaxMaxHum[i]*100))
         (cmdId, status, payload) = recvAck()
-        sendCmd(EC_SET_CTRL_SPAN, i, int(ControlSpan[i]*100))
-        (cmdId, status, payload) = recvAck()
-        sendCmd(EC_SET_MAX_CHANGE, i, int(MaxDayChange[i]*100))
-        (cmdId, status, payload) = recvAck()
+        
+        
 #---------------------------------------
 def checkFans():
     setMode(cab=-1, mode=MODE_ON)
@@ -538,7 +595,10 @@ time.sleep(1.0)
 ## synchronize EC and PC
 setSecond(int(time.gmtime()[5]))
 # version is used to check if function is available in firmware
-version = getVersion()  
+version,versionstr  = getVersion()  
+if (version >= 200):
+    printInfo('this version can only be used for EC 1.x.x versions')
+    exit(-1)
 ## do not change if statements
 if (doCheckRelayPanel == 1):
     checkRelayPanel()
@@ -563,18 +623,23 @@ if (doChangeSettings == 1):
 
 ## set cab to mode 
 ## mode = MODE_OFF, MODE_ON, MODE_AUTO, MODE_MANUAL, MODE_STARTUP
-#setMode(cab=-1, mode=MODE_MANUAL)
+#setControlMode(cab=-1, mode=MODE_MANUAL)
 
 ## set cab to given temp, only posible in MODE_MANUAL
-#setTemperature(cab=-1,temp=25.0)
+#setTemperature(cab=0,temp=29.50)
+#setTemperature(cab=1,temp=29.50)
+#setTemperature(cab=3,temp=29.50)
 
 ## set cab to auto
-#setMode(cab=-1, mode=MODE_AUTO)
+#setControlMode(cab=-1, mode=MODE_AUTO)
+
+
+#setControlMode(cab=0, mode=MODE_ON)
 
 ## turn on fans of cab, only possible in MODE_ON
 ## fans=bitfield(0000,0010,0011,0100,0110,0111,1100,1110,1111)
 ## lsb = fan1
-#setFans(cab=-1,fans=0x0c)
+#setFans(cab=3,fans=0x0f)
 
 ## set door control on(1) or off(0)
 #setDoorControl(cab=-1,state=1)
@@ -585,8 +650,8 @@ if (doChangeSettings == 1):
 ## reset or set power for 48V or LCU
 #resetPower(48)
 #resetPower(LCU)
-#setPower(48,0)
-#setPower(LCU,0)
+#setPower(48,1)
+#setPower(LCU,1)
 
 ## turn on(1)/off(0) heater
 #setHeater(0)
@@ -594,14 +659,16 @@ if (doChangeSettings == 1):
 ## restart works from EC version 1.0.7
 #restart()
 
+## reset trip system
+#resetTrip()
+
 while (not stop):
     waitForUpdate()
-    printInfo('====== %s ====================' %(time.asctime()) )
     getStatus()
 
 ##----------------------------------------------------------------------
 ## do not delete next lines
-disconnectHost()
+#disconnectHost()
 closeFile()
 
 
