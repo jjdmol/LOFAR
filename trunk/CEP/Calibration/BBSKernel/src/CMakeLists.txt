@@ -2,6 +2,8 @@
 
 include(LofarPackageVersion)
 
+add_subdirectory(Contrib)
+
 lofar_add_library(bbskernel
   Package__Version.cc
   Evaluator.cc
@@ -56,5 +58,8 @@ lofar_add_library(bbskernel
   Expr/SpectralIndex.cc
   Expr/StatUVW.cc
   Expr/YatawattaDipole.cc)
+
+# Because we're using dlopen()
+target_link_libraries(bbskernel ${CMAKE_DL_LIBS})
 
 lofar_add_bin_program(versionbbskernel versionbbskernel.cc)
