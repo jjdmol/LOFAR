@@ -5,7 +5,7 @@ import socket
 import time
 import struct
 
-VERSION = '1.1.1.hack' # version of this script    
+VERSION = '1.1.4.hack' # version of this script    
 
 ## to use other commands, see playground on the bottom of this file
 
@@ -20,26 +20,24 @@ doCheckFans = 0
 doCheckDoors = 0
 doChangeSettings = 0   # fill in table below
 
-print sys.argv
-
 #STATION = str(sys.argv[1])
 STATION = 'TESTRACK'
-## using: python ec_ctrl_man.py 
+## using: python ec_ctrl.py CS302
 
 # settings for (cab0, cab1, cab2, cab3)
 # for LOFAR NL stations cab2 is not available
 # cab0 = rack with receiver 0, cab3 = always control rack
 ControlMode  = (3   , 0   , 0   , 1   ) # used on ec_1.0.9 and below
 ControlSpan  = (1.00, 1.00, 1.00, 1.00) # used on ec_1.0.9 and below
-MaxHourChange= (0.10, 0.10, 0.10, 0.10) 
+MaxHourChange= (0.50, 0.50, 0.50, 0.50) 
 StartSide    = (1   , 1   , 1   , 0   ) # used on ec_1.1.1 and higher
-BalancePoint = (25.0, 25.0, 25.0, 25.0) # used on ec_1.1.1 and higher
+BalancePoint = (20.0, 20.0, 20.0, 20.0) # used on ec_1.1.1 and higher
 SeekTime     = (15  , 15  , 15  , 15  )
 SeekChange   = (10.0, 10.0, 10.0, 10.0)
 MinTemp      = (0.00, 0.00, 0.00, 10.0)
 MaxTemp      = (35.0, 35.0, 35.0, 30.0)
 MinMinTemp   = (0.00, 0.00, 0.00, 8.0 )
-MaxMaxTemp   = (40.0, 40.0, 40.0, 35.0)
+MaxMaxTemp   = (40.0, 40.0, 45.0, 38.0)
 MaxHum       = (90.0, 90.0, 90.0, 80.0)
 MaxMaxHum    = (95.0, 95.0, 95.0, 85.0)
 #==================================================================
@@ -48,7 +46,7 @@ PORT = 10000            # Gateway port
 ecSck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 #HOST = socket.gethostbyname(STATION+'EC')
-HOST = '10.151.129.3'
+HOST = '10.151.39.3' #CS021
 stop = False
 
 # === TCP PROTOCOL from controller ===
@@ -63,7 +61,8 @@ EC_SET_HEATER       = 17
 EC_SET_48           = 20
 EC_RESET_48         = 22
 EC_SET_230          = 25
-EC_RESET_230        = 27   
+EC_RESET_230        = 27
+EC_RESET_TRIP       = 28
 EC_SET_DOOR_CTRL    = 50
 EC_SET_HUM_CTRL     = 52
 EC_SET_MAX_TEMP     = 100
@@ -95,6 +94,7 @@ LCU          = 230
 # used variables
 cabs =(0,1,3) # cabs in station
 version = 0   # EC version
+versionstr = 'V-.-.-'
 #---------------------------------------
 # open files if needed
 if (printToFile == 1):
@@ -121,20 +121,44 @@ def printInfo(info):
 def connectToHost():
     info =  "connecting to %s on port %d\n" %(HOST, PORT)
     printInfo(info)
-    ecSck.connect((HOST, PORT))
-    ecSck.settimeout(5.0)
+    connected = False
+    while not connected:
+        try:
+            ecSck.connect((HOST, PORT))
+            ecSck.settimeout(5.0)
+            connected = True
+        except socket.error:
+            ecSck.close()
+        
 #---------------------------------------
 def disconnectHost():
     ecSck.close()
+    
 #---------------------------------------
 def sendCmd(cmdId=EC_NONE, cab=-1, value=0):
     if (cmdId == EC_NONE):
         return (false)
-    cmd = struct.pack('hhh', cmdId, cab, int(value))
-    ecSck.send(cmd)
+    try:
+        cmd = struct.pack('hhh', cmdId, cab, int(value))
+        ecSck.send(cmd)
+    except socket.error:
+        printInfo("socket error, try to reconnect")
+        disconnectHost()
+        connectToHost()
+        
 #---------------------------------------
 def recvAck():
-    data = ecSck.recv(6)
+    socketError = False    
+    try:
+        data = ecSck.recv(6)
+    except socket.error:
+        socketError = True
+        printInfo("socket error, try to reconnect")
+        disconnectHost()
+        connectToHost()
+    if socketError:
+        return
+        
     header = struct.unpack('hhh', data)
     cmdId = header[0]
     status = header[1]
@@ -195,6 +219,12 @@ def resetPower(pwr=-1):
         sendCmd(EC_RESET_230, 0, 0)
         (cmdId, status, PL) = recvAck()
         printInfo('PowerReset LCU')
+
+#---------------------------------------
+def resetTrip():
+    sendCmd(EC_RESET_TRIP, -1, 0)
+    (cmdId, status, PL) = recvAck()
+    printInfo('Reset Trip System')
 
 #---------------------------------------
 ## mode 1 = moving setpoint
@@ -270,8 +300,9 @@ def getVersion():
     sendCmd(EC_VERSION)
     (cmdId, status, PL) = recvAck()
     version = int((PL[0]*100)+(PL[1]*10)+PL[2])
+    versionstr = 'V%d.%d.%d' %(PL)
     printInfo('EC software version %d.%d.%d' %(PL))
-    return version
+    return version, versionstr
 #---------------------------------------
 def getStatus():
     ec_mode = ('OFF','ON','AUTO','MANUAL','STARTUP','ABSENT')
@@ -291,7 +322,7 @@ def getStatus():
         
     sendCmd(EC_STATUS)
     (cmdId, status, PL2) = recvAck()
-
+    
     # fill lines with data    
     lines = []
     lines.append('            |')
@@ -325,7 +356,10 @@ def getStatus():
     lines.append('lightning state = %s' %(badok[(PL2[29] & 1)]))
         
     # print lines to screen or file, see printInfo
-    printInfo('=== %s Station status ===' %(STATION))
+    info = (' status %s (%s)     %s ' %(STATION, versionstr, time.asctime()))
+    printInfo('-' * len(info))
+    printInfo(info)
+    printInfo('-' * len(info))
     for line in lines:
         printInfo(line)
     printInfo(' ')
@@ -366,7 +400,7 @@ def getSettings():
     else:
         lines.append('start side       |')
         lines.append('balance point    |')    
-    lines.append('max day change   |')
+    lines.append('max hour change  |')
     lines.append('seek time        |')
     lines.append('max seek change  |')
     lines.append('min control temp |')
@@ -563,7 +597,7 @@ time.sleep(1.0)
 ## synchronize EC and PC
 setSecond(int(time.gmtime()[5]))
 # version is used to check if function is available in firmware
-version = getVersion()  
+version,versionstr  = getVersion()  
 if (version >= 200):
     printInfo('this version can only be used for EC 1.x.x versions')
     exit(-1)
@@ -602,12 +636,12 @@ if (doChangeSettings == 1):
 #setControlMode(cab=-1, mode=MODE_AUTO)
 
 
-#setControlMode(cab=0, mode=MODE_STARTUP)
+#setControlMode(cab=0, mode=MODE_ON)
 
 ## turn on fans of cab, only possible in MODE_ON
 ## fans=bitfield(0000,0010,0011,0100,0110,0111,1100,1110,1111)
 ## lsb = fan1
-#setFans(cab=0,fans=0x0c)
+#setFans(cab=3,fans=0x0f)
 
 ## set door control on(1) or off(0)
 #setDoorControl(cab=-1,state=1)
@@ -618,23 +652,25 @@ if (doChangeSettings == 1):
 ## reset or set power for 48V or LCU
 #resetPower(48)
 #resetPower(LCU)
-#setPower(48,0)
-#setPower(LCU,0)
+#setPower(48,1)
+#setPower(LCU,1)
 
 ## turn on(1)/off(0) heater
-setHeater(0)
+#setHeater(0)
 
 ## restart works from EC version 1.0.7
 #restart()
 
+## reset trip system
+#resetTrip()
+
 while (not stop):
     waitForUpdate()
-    printInfo('====== %s ====================' %(time.asctime()) )
     getStatus()
 
 ##----------------------------------------------------------------------
 ## do not delete next lines
-disconnectHost()
+#disconnectHost()
 closeFile()
 
 
