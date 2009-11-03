@@ -40,7 +40,7 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, InputThread
   itsNrOutputs(nrOutputs),
   itsSubbandNumber(subbandNumber),
   itsObservationID(ps->observationID()),
-  itsPreviousSequenceNumbers(itsNrOutputs,-1),
+  itsNextSequenceNumbers(itsNrOutputs,0),
   itsIsNullStream(itsNrOutputs,false)
 {
   itsWriters.resize(itsNrOutputs);
@@ -113,11 +113,11 @@ void OutputThread::writeLogMessage()
 
 void OutputThread::checkForDroppedData(StreamableData *data, unsigned output)
 {
-  unsigned expectedSequenceNumber = itsPreviousSequenceNumbers[output] + 1;
+  unsigned expectedSequenceNumber = itsNextSequenceNumbers[output];
 
   if(itsIsNullStream[output]) {
-    data->sequenceNumber	       = expectedSequenceNumber;
-    itsPreviousSequenceNumbers[output] = expectedSequenceNumber;
+    data->sequenceNumber	   = expectedSequenceNumber;
+    itsNextSequenceNumbers[output] = expectedSequenceNumber + 1;
   } else {
     unsigned droppedBlocks = data->sequenceNumber - expectedSequenceNumber;
 
@@ -125,7 +125,7 @@ void OutputThread::checkForDroppedData(StreamableData *data, unsigned output)
       LOG_WARN_STR("dropped " << droppedBlocks << (droppedBlocks == 1 ? " block for subband " : " blocks for subband ") << itsSubbandNumber << " and output " << output << " of obsID " << itsObservationID);
     }
 
-    itsPreviousSequenceNumbers[output] = data->sequenceNumber;
+    itsNextSequenceNumbers[output] = data->sequenceNumber + 1;
   }
 }
 

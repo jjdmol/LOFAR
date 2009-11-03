@@ -64,7 +64,7 @@ class OutputThread
     const unsigned          itsObservationID;
 
     Vector<MSWriter*>       itsWriters;
-    std::vector<signed>     itsPreviousSequenceNumbers;
+    std::vector<unsigned>   itsNextSequenceNumbers;
     std::vector<bool>       itsIsNullStream;
 };
 

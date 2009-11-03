@@ -116,6 +116,7 @@ void InputThread::mainLoop()
 
       // read header: output number
       streamFromION->read( &o, sizeof o );
+
 #if !defined WORDS_BIGENDIAN
       dataConvert( LittleEndian, &o, 1 );
 #endif
