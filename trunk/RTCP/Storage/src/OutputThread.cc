@@ -135,6 +135,11 @@ void OutputThread::mainLoop()
   std::stringstream subbandStr;
   subbandStr << itsSubbandNumber;
 
+  /// allow only a limited number of thread to write at a time
+  /// TODO: race at creation
+  static Semaphore semaphore(4);
+
+  
   for(;;) {
     unsigned o = itsInputThread->itsReceiveQueueActivity.remove();
     struct InputThread::SingleInput &input = itsInputThread->itsInputs[o];
@@ -149,7 +154,11 @@ void OutputThread::mainLoop()
     checkForDroppedData(data, o);
 
     writeTimer.start();
+    semaphore.down();
+
     itsWriters[o]->write(data);
+
+    semaphore.up();
     writeTimer.stop();
 
     if( writeTimer.getElapsed() > reportWriteDelay ) {

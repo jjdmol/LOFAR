@@ -32,6 +32,7 @@
 #include <Stream/Stream.h>
 #include <Storage/InputThread.h>
 #include <Storage/MSWriter.h>
+#include <Common/Semaphore.h>
 #include <Common/Timer.h>
 
 
