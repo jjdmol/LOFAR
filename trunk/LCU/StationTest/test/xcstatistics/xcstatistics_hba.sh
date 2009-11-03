@@ -1,5 +1,5 @@
 #!/bin/sh
-# 1.0 xcstatistics test to check SerDes Ring with LBH antennas
+# 1.0 xcstatistics test to check SerDes Ring with HBA antennas
 # 8-10-09, M.J Norden
 # HBA input with antenna
 
