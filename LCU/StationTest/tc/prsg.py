@@ -158,3 +158,6 @@ for k in range(0, repeat):
 bypass = 1
 rsp.write_diag_bypass(tc, msg, bypass, blpId, rspId, 99)
 rsp.write_cr_syncon(tc, msg, blpId, rspId)
+# Disable prsg after test
+rsp.rspctl(tc, '--rcuprsg=0')
+
