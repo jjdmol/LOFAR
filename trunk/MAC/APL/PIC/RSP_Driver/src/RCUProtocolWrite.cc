@@ -211,10 +211,10 @@ GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
 	if ((getCurrentIndex() % N_WRITES) == 1) {
 		// Mark modification as applied when write of RCU result register has completed
 		if (m_hdr.m_fields.payload_length == RESULT_WRITE_SIZE) {
-			Cache::getInstance().getState().rcuprotocol().schedule_read(global_rcu);
+			Cache::getInstance().getState().rcuprotocol().schedule_wait1read(global_rcu);
 		}
 		else {
-			Cache::getInstance().getState().rcuread().schedule_read(global_rcu);
+			Cache::getInstance().getState().rcuread().schedule_wait1read(global_rcu);
 		}
 	}
 

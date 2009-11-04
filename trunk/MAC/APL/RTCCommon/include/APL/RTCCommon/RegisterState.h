@@ -46,7 +46,9 @@ public:
 		WRITE_ERROR,
 		READ_ERROR,
 		DONE,
-		FAIL
+		FAIL,
+		WAIT_1,
+		WAIT_2
 	};
 	static const int MAX_REGISTER_ERROR = 3;
 
@@ -102,15 +104,17 @@ public:
 
 	void tran(State source, State target, int i);
 
-	void read         (int i = -1) { tran(IDLE,	 READ,		  i); }
-	void check        (int i = -1) { tran(IDLE,	 CHECK,		  i); }
-	void unmodified   (int i = -1) { tran(CHECK, IDLE,		  i); }
-	void schedule_read(int i = -1) { tran(WRITE, READ,		  i); clearError(i);}
-	void read_ack     (int i = -1) { tran(READ,	 DONE,		  i); clearError(i);}
-	void write_ack    (int i = -1) { tran(WRITE, DONE,		  i); clearError(i);}
-	void read_error   (int i = -1) { tran(READ,	 READ_ERROR,  i); addError(i); }
-	void write_error  (int i = -1) { tran(WRITE, WRITE_ERROR, i); addError(i); }
-	void write        (int i = -1);
+	void read       	   (int i = -1) { tran(IDLE,  READ,		   i); }
+	void check      	   (int i = -1) { tran(IDLE,  CHECK,	   i); }
+	void unmodified 	   (int i = -1) { tran(CHECK, IDLE,		   i); }
+	void schedule_read	   (int i = -1) { tran(WRITE, READ,		   i); clearError(i);}
+	void schedule_wait1read(int i = -1) { tran(WRITE, WAIT_1,	   i); clearError(i);}
+	void schedule_wait2read(int i = -1) { tran(WRITE, WAIT_2,	   i); clearError(i);}
+	void read_ack   	   (int i = -1) { tran(READ,  DONE,		   i); clearError(i);}
+	void write_ack  	   (int i = -1) { tran(WRITE, DONE,		   i); clearError(i);}
+	void read_error 	   (int i = -1) { tran(READ,  READ_ERROR,  i); addError(i); }
+	void write_error	   (int i = -1) { tran(WRITE, WRITE_ERROR, i); addError(i); }
+	void write      	   (int i = -1);
 
 	void clear(int i = -1);
 	void reset(int i = -1);

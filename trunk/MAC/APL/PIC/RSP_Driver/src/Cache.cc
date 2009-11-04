@@ -338,11 +338,16 @@ void Cache::resetI2Cuser()
 	if ((m_front->getI2Cuser() == HBA) && (!m_allstate.hbaprotocol().isMatchAll(RegisterState::CHECK))) {
 		busUser = HBA;
 	}
-	else if ((m_front->getI2Cuser() == RCU) && (!m_allstate.rcuprotocol().isMatchAll(RegisterState::CHECK))) {
-		busUser = RCU;
+	else if ((m_front->getI2Cuser() == RCU_W) && (!m_allstate.rcuprotocol().isMatchAll(RegisterState::CHECK))) {
+		busUser = RCU_W;
+	}
+	else if ((m_front->getI2Cuser() == RCU_R) && (!m_allstate.rcuread().isMatchAll(RegisterState::CHECK))) {
+		busUser = RCU_R;
 	}
 	m_front->setI2Cuser(busUser);
 	m_back->setI2Cuser (busUser);
-	LOG_INFO_STR("new I2Cuser = " << ((busUser == NONE) ? "NONE" : ((busUser == HBA) ? "HBA" : "RCU")));
+	LOG_INFO_STR("new I2Cuser = " << ((busUser == NONE) ? "NONE" : 
+									 ((busUser == HBA) ? "HBA" : 
+									 ((busUser == RCU_R) ? "RCU_R" : "RCU_W"))));
 
 }

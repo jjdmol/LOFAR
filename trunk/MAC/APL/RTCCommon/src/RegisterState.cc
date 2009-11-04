@@ -60,6 +60,8 @@ void RegisterState::print(std::ostream& out) const
 		case WRITE_ERROR:   out << "EW"; break;
 		case DONE:          out << "* "; break;
 		case FAIL:          out << "F "; break;
+		case WAIT_1:        out << "W1"; break;
+		case WAIT_2:        out << "W2"; break;
 		default:            out << formatString("%02X", m_state(i)); break;
 //		default:            out << "X "; break;
 		}
@@ -135,6 +137,12 @@ void RegisterState::clear(int i)
 
 		} else if (m_state(j) == FAIL) {
 			m_state(j) = DONE;
+
+		} else if (m_state(j) == WAIT_2) {
+			m_state(j) = WAIT_1;
+
+		} else if (m_state(j) == WAIT_1) {
+			m_state(j) = READ;
 
 		} else {
 			LOG_DEBUG_STR("clear tran from " << m_state(j) << " failed");

@@ -409,8 +409,8 @@ GCFEvent::TResult HBAProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
 
 	if ((getCurrentIndex() % N_WRITES) == 1) { 
 		// Mark modification as applied when write of RCU result register has completed
-		Cache::getInstance().getState().hbaprotocol().schedule_read(global_blp * MEPHeader::N_POL);
-		Cache::getInstance().getState().hbaprotocol().schedule_read(global_blp * MEPHeader::N_POL + 1);
+		Cache::getInstance().getState().hbaprotocol().schedule_wait2read(global_blp * MEPHeader::N_POL);
+		Cache::getInstance().getState().hbaprotocol().schedule_wait2read(global_blp * MEPHeader::N_POL + 1);
 	}
 
 	return GCFEvent::HANDLED;
