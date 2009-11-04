@@ -216,7 +216,7 @@ def defineStations( s ):
     "CS030LBA":   [Station('CS030LBA',  '10.170.0.153', defaultPorts)],
     "CS030HBA":   [Station('CS030HBA',  '10.170.0.153', defaultPorts)],
     "CS030HBA0":  [Station('CS030HBA0', '10.170.0.153', defaultPorts)],
-    "CS030HBA1":  [Station('CS030HBA1', '10.170.0.25', defaultPorts)],
+    "CS030HBA1":  [Station('CS030HBA1', '10.170.0.25', defaultPorts)], # probably not right, check RSPDriver.conf
 
     # DE601, a.k.a. Effelsberg
     #"DE601LBA":   [Station('DE601LBA',  '10.170.0.178', ports( [4353,4359,4363,4364] ))],
