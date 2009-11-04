@@ -266,6 +266,8 @@ void LofarStMan::init()
   aio >> itsAnt1 >> itsAnt2 >> itsStartTime >> itsTimeIntv >> itsNChan
       >> itsNPol >> itsMaxNrSample >> alignment >> asBigEndian;
   aio.getend();
+  // Set start time to middle of first time slot.
+  itsStartTime += itsTimeIntv*0.5;
   AlwaysAssert (itsAnt1.size() == itsAnt2.size(), AipsError);
   uInt nrant = itsAnt1.size();
   itsDoSwap  = (asBigEndian != HostInfo::bigEndian());
