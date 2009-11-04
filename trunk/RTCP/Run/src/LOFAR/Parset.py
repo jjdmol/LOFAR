@@ -49,6 +49,7 @@ class Parset(util.Parset.Parset):
         self.setdefault("Observation.nrStokes",1);
         self.setdefault("Observation.stokesIntegrateChannels",False);
         self.setdefault("Observation.stokesIntegrationSteps",1);
+        self.setdefault("OLAP.OLAP_Conn.rawDataOutputOnly",False);
 
         # depricated:
         self.setdefault("Observation.mode","Correlate");
