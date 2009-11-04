@@ -213,14 +213,8 @@ class IONProcSection(Section):
     assert runFunc( waitForSuccess, 20 ), "Failed to reach one or more I/O nodes [ssh]"
 
 class StorageSection(Section):
-  def preProcess(self):
-    self.pidfile = None
-
   def run(self):
     logfiles = ["%s/run.Storage.%s.log" % (Locations.files["logdir"],self.partition)] + self.logoutputs
-
-    # the PID of mpirun
-    self.pidfile = "%s/Storage-%s.pid" % (Locations.files["rundir"],self.partition)
 
     # create the target directories
     for p in self.parsets:
@@ -256,14 +250,14 @@ class StorageSection(Section):
       "%s" % (" ".join([p.getFilename() for p in self.parsets]), ),
     ]
 
-    self.commands.append( AsyncCommand( SSH+"%s echo $$ > %s;exec mpirun %s" % (Locations.nodes["storagemaster"],self.pidfile," ".join(mpiparams),), logfiles ) )
+    self.commands.append( AsyncCommand( SSH+"%s mpirun %s" % (Locations.nodes["storagemaster"]," ".join(mpiparams),), logfiles ) )
 
   def abort( self, timeout ):
     storagenodes = [Hosts.resolve(s,"back") for s in self.parsets[0].storagenodes]
     
     # kill mpirun using the pid we stored locally
     def kill( signal ):
-      SyncCommand( SSH+"-t %s kill -%s `cat %s`" % (Locations.nodes["storagemaster"],signal,self.pidfile) )
+      SyncCommand( SSH+"-t %s ps --no-heading -o pid,ppid,cmd -ww -C mpirun | grep -F '%s' | awk '{ print $1; if($2>1) { print $2; } }' | sort | uniq | xargs -I foo kill -%s foo" % (Locations.nodes["storagemaster"], self.parsets[0].getFilename(), signal) )
 
     self.killSequence( "mpirun process on %s" % (Locations.nodes["storagemaster"],), kill, timeout )
 

@@ -4,7 +4,9 @@ import socket
 import util.Parset
 from Partitions import PartitionPsets
 from Locations import Hosts
+from Stations import Stations
 from util.dateutil import parse,format,parseDuration,timestamp
+from Logger import error
 import math
 import sys
 from sets import Set
@@ -86,20 +88,34 @@ class Parset(util.Parset.Parset):
           return ""
 
         # translate station name + antenna set to CEP comprehensable names
-        stationlist = self.getStringVector(key)
+        sasstationlist = self.getStringVector(key)
         antennaset = self["Observation.antennaSet"]
         antennaset_xlate = {
-          "LBA_INNER": "LBA",
-          "LBA_OUTER": "LBA",
-          "LBA_X":     "LBA",
+          # name in SAS parset: possible names to try in CEP stationlist
+          "LBA_INNER": ["LBA"],
+          "LBA_OUTER": ["LBA"],
+          "LBA_X":     ["LBA"],
 
-          "HBA_ONE":   "HBA0",
-          "HBA_TWO":   "HBA1",
-          "HBA_BOTH":  "HBA",
+          "HBA_ONE":   ["HBA0","HBA"],
+          "HBA_TWO":   ["HBA1","HBA"],
+          "HBA_BOTH":  ["HBA"],
         }
-        array = antennaset_xlate[antennaset]
+        arrays = antennaset_xlate[antennaset]
 
-        return "+".join(["%s%s" % (stat,array) for stat in stationlist])
+        cepstationlist = []
+        for stat in sasstationlist:
+          for array in arrays:
+            cepstationname = "%s%s" % (stat,array)
+
+            if cepstationname not in Stations:
+              continue
+
+            cepstationlist.append( cepstationname )  
+            break
+          else:
+            error( "Station %s undefined for antenna set %s" % (stat,array) )
+            
+        return "+".join(cepstationlist)
 
     def distillPartition(self):
         """ Distill partition to use from the parset file and return it. """
