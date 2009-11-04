@@ -16,7 +16,7 @@ AUX_FILES =	$(TEX_SOURCES:%.tex=%.aux)
 FIGURES =	$(FIG_SOURCES:%.fig=%.pdf) $(JGR_SOURCES:%.jgr=%.pdf)
 
 GEN_EXT =	bbl blg dvi idx ilg ind lof log lot ps toc ps_pages
-GEN_FILES =	$(AUX_FILES) $(FIGURES) spm.pdf $(GEN_EXT:%=spm.%)\
+GEN_FILES =	$(AUX_FILES) $(FIGURES) $(GEN_EXT:%=spm.%)\
 		mfput.log missfont.log texput.log
 
 TEXINPUTS =	inputs:.:
