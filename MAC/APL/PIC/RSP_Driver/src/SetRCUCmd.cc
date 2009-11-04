@@ -62,12 +62,14 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
 	// someone else using the I2C bus?
 	I2Cuser	busUser = cache.getI2Cuser();
-	LOG_INFO_STR("SetRCU::apply : " << ((busUser == NONE) ? "NONE" : ((busUser == HBA) ? "HBA" : "RCU")));
-	if (busUser != NONE && busUser != RCU) {
+	LOG_INFO_STR("SetRCU::apply : " << ((busUser == NONE) ?  "NONE" : 
+									   ((busUser == HBA) ?   "HBA" : 
+									   ((busUser == RCU_R) ? "RCU_R" : "RCU_W"))));
+	if (busUser != NONE && busUser != RCU_W) {
 		postponeExecution(true);
 		return;
 	}
-	cache.setI2Cuser(RCU);		// claim the I2C bus.
+	cache.setI2Cuser(RCU_W);		// claim the I2C bus.
 	postponeExecution(false);
 
 	bool			newMode 	  = m_event->settings()(0).isModeModified();

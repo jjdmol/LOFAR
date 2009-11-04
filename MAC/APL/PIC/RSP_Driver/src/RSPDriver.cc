@@ -27,6 +27,8 @@
 #include <Common/ParameterSet.h>
 #include <Common/Version.h>
 
+#include <ApplCommon/StationConfig.h>
+
 #include <APL/RTCCommon/PSAccess.h>
 #include <APL/RTCCommon/daemonize.h>
 
@@ -221,10 +223,12 @@ RSPDriver::RSPDriver(string name) :
 
 	// first initialize the global settins
 	LOG_DEBUG("Setting up station settings");
-	StationSettings*      ssp = StationSettings::instance();
-	ssp->setMaxRspBoards  (GET_CONFIG("RS.N_RSPBOARDS", i));
-	ssp->setNrRspBoards   (GET_CONFIG("RS.N_RSPBOARDS", i));
+	StationSettings*	ssp = StationSettings::instance();
+	StationConfig		sc;
+	ssp->setMaxRspBoards  (sc.nrRSPs);
+	ssp->setNrRspBoards   (sc.nrRSPs);
 	ssp->setNrBlpsPerBoard(MEPHeader::N_BLPS);
+	ssp->setSplitter      (sc.hasSplitters);
 	if (GET_CONFIG("RSPDriver.OPERATION_MODE", i) == MODE_SUBSTATION) {
 		ssp->setNrRspBoards(1);
 	};
@@ -2307,6 +2311,15 @@ void RSPDriver::rsp_setRawBlock(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_setSplitter(GCFEvent& event, GCFPortInterface& port) 
 {
+	// When station has no splitters, pretend the command is succesfull.
+	if (!StationSettings::instance()->hasSplitter()) {
+		RSPSetsplitterackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_SUCCESS;
+		port.send(ack);
+		return;
+	}
+
 	Ptr<SetSplitterCmd> command = new SetSplitterCmd(event, port, Command::WRITE);
 
 	if (!command->validate()) {

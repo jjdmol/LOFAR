@@ -59,14 +59,17 @@ public:
 	int32 nrBlps();			// nrRspBoards * nrBlpsPerBoard
 	int32 nrRcus();			// nrRspBoards * nrRcusPerBoard
 
+	bool  hasSplitter();
+
 	ostream& print (ostream& os) const;
 
 	friend class RSPDriver;
 
 protected:	// note RSPDriver must be able to set them
-	void setNrBlpsPerBoard (int32 nrBlps);
-	void setNrRspBoards    (int32 nrBlps);
-	void setMaxRspBoards   (int32 nrBlps);
+	void setNrBlpsPerBoard(int32 nrBlps);
+	void setNrRspBoards   (int32 nrBlps);
+	void setMaxRspBoards  (int32 nrBlps);
+	void setSplitter      (bool hasSplitter) { itsHasSplitter = hasSplitter; }
 
 private:
 	// Copying is not allowed
@@ -82,6 +85,8 @@ private:
 	int32	itsNrBlps;
 	int32	itsNrRcus;
 
+	bool	itsHasSplitter;
+
 	static StationSettings* theirStationSettings;
 };
 
@@ -91,8 +96,10 @@ inline	int32 StationSettings::nrBlpsPerBoard() { return (itsNrBlpsPerBoard); }
 inline	int32 StationSettings::nrRcusPerBoard() { return (itsNrRcusPerBoard); }
 
 inline	int32 StationSettings::nrRspBoards()	{ return (itsNrRspBoards); }
-inline	int32 StationSettings::nrBlps()		{ return (itsNrBlps); }
-inline	int32 StationSettings::nrRcus()		{ return (itsNrRcus); }
+inline	int32 StationSettings::nrBlps()			{ return (itsNrBlps); }
+inline	int32 StationSettings::nrRcus()			{ return (itsNrRcus); }
+
+inline	bool  StationSettings::hasSplitter()	{ return(itsHasSplitter); }
 
 //#
 //# operator<<

@@ -46,7 +46,8 @@ typedef struct {
 typedef enum {
 	NONE = 0,
 	HBA,
-	RCU
+	RCU_R,
+	RCU_W
 } I2Cuser;
 
 class CacheBuffer

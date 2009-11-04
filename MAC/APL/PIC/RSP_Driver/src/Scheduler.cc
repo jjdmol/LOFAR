@@ -421,15 +421,13 @@ void Scheduler::processCommands()
 {
 //	LOG_INFO("Scheduler::processCommands");
 
-	// revision 6175 (230805) introduced these double lines. Typo???
 	Cache::getInstance().getFront().setTimestamp(getCurrentTime());
-//	Cache::getInstance().getFront().setTimestamp(getCurrentTime());
 
 	while (!m_now_queue.empty()) {
 		Ptr<Command> command = m_now_queue.top();
 
-		// Let the commands apply their changes to 
-		// the front and back caches.
+		// Let the commands apply their changes to the front and back caches.
+		// (and set the postpone flag if they like).
 		command->apply(Cache::getInstance().getFront(), true);
 		command->apply(Cache::getInstance().getBack(), false);
 
@@ -437,7 +435,7 @@ void Scheduler::processCommands()
 		m_now_queue.pop();
 		if (command->postponeExecution()) {
 			LOG_INFO_STR("Command " << command->name() << " asked for postponed execution");
-			command->setTimestamp(m_current_time + (long)SCHEDULING_DELAY);
+			command->setTimestamp(m_current_time + 1L);		// try again next second.
 			m_later_queue.push(command);
 		}
 		else {

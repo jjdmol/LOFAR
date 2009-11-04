@@ -4,13 +4,13 @@ TESTSCRIPTS			= tCableAttenuation.sh tRCUCables.sh
 
 TESTS				= $(TESTSCRIPTS)
 
-tCableAttenuation_SOURCES	= tCableAttenuation.cc ../src/CableAttenuation.cc
-tCableAttenuation_LDADD		= $(LOFAR_DEPEND)
-tCableAttenuation_DEPENCIES	= $(LOFAR_DEPEND)
+tCableAttenuation_SOURCES		= tCableAttenuation.cc ../src/CableAttenuation.cc
+tCableAttenuation_LDADD			= $(LOFAR_DEPEND)
+tCableAttenuation_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 tRCUCables_SOURCES			= tRCUCables.cc ../src/RCUCables.cc ../src/CableAttenuation.cc
 tRCUCables_LDADD			= $(LOFAR_DEPEND)
-tRCUCables_DEPENCIES		= $(LOFAR_DEPEND)
+tRCUCables_DEPENDENCIES		= $(LOFAR_DEPEND)
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
