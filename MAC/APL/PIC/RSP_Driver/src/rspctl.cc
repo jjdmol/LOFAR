@@ -101,6 +101,7 @@ do {									\
 double	gSampleFrequency= DEFAULT_SAMPLE_FREQUENCY;
 bool	g_getclock		= false;
 bool	gSplitter		= false;
+bool	gClockChanged	= false;
 
 #define PAIR 2
 
@@ -1836,6 +1837,18 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	// initialize the freq array
 	//firstIndex i;
 
+#if 0
+	if (handle && gClockChanged) {
+		gnuplot_close(handle);
+		handle = 0;
+		if (handle2) {
+			gnuplot_close(handle2);
+			handle2 = 0;
+		}
+		gClockChanged = false;
+	}
+#endif
+
 	if (!handle) {
 		handle = gnuplot_init();
 		if (!handle) return;
@@ -1864,6 +1877,12 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	else {
 		strftime(plotcmd, 255, "set title \"%s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
 	}
+
+	// Redefine xrange when clock changed.
+	if (gClockChanged && (m_type == Statistics::SUBBAND_POWER)) {
+		gnuplot_cmd(handle, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
+	}
+
 	gnuplot_cmd(handle, plotcmd);
 	
 	gnuplot_cmd(handle, "plot ");
@@ -1937,10 +1956,14 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 			}
 		}
 			
-	
 		time_t seconds = timestamp.sec();
 		strftime(plotcmd, 255, "set title \"Ring 1 %s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
 	
+		// Redefine xrange when clock changed.
+		if (gClockChanged && (m_type == Statistics::SUBBAND_POWER)) {
+			gnuplot_cmd(handle2, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
+		}
+
 		gnuplot_cmd(handle2, plotcmd);
 		
 		gnuplot_cmd(handle2, "plot ");
@@ -2420,6 +2443,7 @@ GCFEvent::TResult RSPCtl::getClock(GCFEvent& e, GCFPortInterface& port)
 			exit(EXIT_FAILURE);
 		}
 		logMessage(cerr, formatString("Current clockvalue is %d Mhz", answer.clock));
+		gSampleFrequency = 1.0e6 * answer.clock;
 
 		if (itsNeedSplitter) {
 			TRAN(RSPCtl::sub2Splitter);
@@ -2477,7 +2501,7 @@ GCFEvent::TResult RSPCtl::sub2Clock(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_UPDCLOCK: {
 		RSPUpdclockEvent		answer(e);
-		gSampleFrequency = 1e6 * answer.clock;
+		gSampleFrequency = 1.0e6 * answer.clock;
 		logMessage(cerr, formatString("Current clockvalue is %d Mhz", answer.clock));
 
 		if (itsNeedSplitter) {
@@ -2613,11 +2637,13 @@ GCFEvent::TResult RSPCtl::doCommand(GCFEvent& e, GCFPortInterface& port)
 	case RSP_GETSPLITTERACK:
 	case RSP_GETCLOCKACK:
 		status = itsCommand->ack(e); // handle the acknowledgement
+		gClockChanged = false;
 	break;
 
 	case RSP_UPDCLOCK: {
 		RSPUpdclockEvent		answer(e);
-		gSampleFrequency = 10e6 * answer.clock;
+		gSampleFrequency = 1.0e6 * answer.clock;
+		gClockChanged = true;
 		logMessage(cerr, formatString("NOTE: The clockvalue changed to %d Mhz", answer.clock));
 	}
 	break;
