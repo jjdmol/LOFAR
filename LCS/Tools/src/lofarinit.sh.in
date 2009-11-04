@@ -26,8 +26,13 @@
 # Define root here.
 # This is a placeholder, so do NOT change the line.
 # The actual value is filled in by make install (see Makefile.am).
-lfr_root=@prefix@        # lfr_root=@CMAKE_INSTALL_PREFIX@
+lfr_root=@prefix@
 lfr_libdir=@libdir@
+
+# CMake does not define libdir, so we need to do things differently
+if test "$lfr_libdir" = ""; then
+  lfr_libdir=@CMAKE_INSTALL_PREFIX@/@LOFAR_LIBDIR@
+fi
 
 # Use only the basename of the the lib
 lfr_libdir=`basename $lfr_libdir`
