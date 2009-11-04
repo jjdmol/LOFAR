@@ -152,8 +152,13 @@ if __name__ == "__main__":
   hwgroup.add_option( "--storageprocs",
   			dest = "storageprocs",
 			type = "int",
-                        default = 4,
+                        default = 1,
   			help = "number of processes per storage node [%default]" )
+  hwgroup.add_option( "-M", "--storage-master",
+  			dest = "storagemaster",
+			type = "string",
+			default = Locations.nodes["storagemaster"],
+  			help = "Front-end for storage nodes [%default]" )
   parser.add_option_group( hwgroup )
 
   secgroup = OptionGroup(parser, "Sections" )
@@ -245,6 +250,8 @@ if __name__ == "__main__":
     # treat values like list001,list002 as two nodes
     options.storagenode = ",".join(options.storagenode).split(",")
     Locations.nodes["storage"] = options.storagenode
+
+  Locations.nodes["storagemaster"] = options.storagemaster
 
   # set log server
   Locations.nodes["logserver"] = options.logserver
