@@ -31,7 +31,7 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 YatawattaDipole::YatawattaDipole(const string &moduleTheta,
@@ -41,9 +41,9 @@ YatawattaDipole::YatawattaDipole(const string &moduleTheta,
         itsPhiFunction(modulePhi, "test"),
         itsScaleFactor(scaleFactor)
 {
-    ASSERT(itsThetaFunction.getParameterCount() == 8);
-    ASSERT(itsPhiFunction.getParameterCount() == 8);
-    
+    ASSERT(itsThetaFunction.getParameterCount() == 5);
+    ASSERT(itsPhiFunction.getParameterCount() == 5);
+
     addChild(azel);
     addChild(orientation);
 }
@@ -53,7 +53,7 @@ JonesResult YatawattaDipole::getJResult(const Request &request)
     // Evaluate children.
     ResultVec tmpAzel;
     Result tmpOrientation;
-    
+
     const ResultVec &resAzel = getChild(0).getResultVecSynced(request, tmpAzel);
     const Result &resOrientation =
         getChild(1).getResultSynced(request, tmpOrientation);
@@ -65,26 +65,26 @@ JonesResult YatawattaDipole::getJResult(const Request &request)
     // Create result.
     JonesResult result;
     result.init();
-    
+
     Result &resXX = result.result11();
     Result &resXY = result.result12();
     Result &resYX = result.result21();
     Result &resYY = result.result22();
-    
+
     // Compute main value.
     evaluate(request, az, el, orientation, resXX.getValueRW(),
         resXY.getValueRW(), resYX.getValueRW(), resYY.getValueRW());
 
-    // Compute the perturbed values.  
+    // Compute the perturbed values.
     enum PValues
     {
         PV_AZ, PV_EL, PV_ORIENTATION, N_PValues
     };
-    
+
     const Result *pvSet[N_PValues] = {&(resAzel[0]), &(resAzel[1]),
         &resOrientation};
     PValueSetIterator<N_PValues> pvIter(pvSet);
-    
+
     while(!pvIter.atEnd())
     {
         const Matrix &pvAz = pvIter.value(PV_AZ);
@@ -108,7 +108,7 @@ void YatawattaDipole::evaluate(const Request &request,
         const Matrix &in_orientation,
         Matrix &out_E11, Matrix &out_E12,
         Matrix &out_E21, Matrix &out_E22)
-{        
+{
     const size_t nChannels = request.getChannelCount();
     const size_t nTimeslots = request.getTimeslotCount();
 
@@ -116,14 +116,14 @@ void YatawattaDipole::evaluate(const Request &request,
     ASSERT(static_cast<size_t>(in_az.nelements()) == nTimeslots);
     ASSERT(static_cast<size_t>(in_el.nelements()) == nTimeslots);
     ASSERT(static_cast<size_t>(in_orientation.nelements()) == 1);
-    
+
     const double *az = in_az.doubleStorage();
     const double *el = in_el.doubleStorage();
 
     double *E11_re, *E11_im;
     out_E11.setDCMat(nChannels, nTimeslots);
     out_E11.dcomplexStorage(E11_re, E11_im);
-    
+
     double *E12_re, *E12_im;
     out_E12.setDCMat(nChannels, nTimeslots);
     out_E12.dcomplexStorage(E12_re, E12_im);
@@ -135,7 +135,7 @@ void YatawattaDipole::evaluate(const Request &request,
     double *E22_re, *E22_im;
     out_E22.setDCMat(nChannels, nTimeslots);
     out_E22.dcomplexStorage(E22_re, E22_im);
-    
+
     //  Parameters for external functions:
     //      0: time
     //          (NOTE: ignored)
@@ -143,18 +143,12 @@ void YatawattaDipole::evaluate(const Request &request,
     //      2: az
     //      3: el
     //          (NOTE: incorrectly labelled zenith angle in implementation!)
-    //      4: height
-    //          (NOTE: ignored)
-    //      5: projected arm length
-    //          (NOTE: ignored)
-    //      6: slant
-    //          (NOTE: ignored)
-    //      7: orientation (phi0)
+    //      4: orientation (phi0)
 
     // Create parameter vectors for the X and Y dipole (used for calling
     // external functions).
-    vector<dcomplex> xParms(8, makedcomplex(0.0, 0.0));
-    vector<dcomplex> yParms(8, makedcomplex(0.0, 0.0));
+    vector<dcomplex> xParms(5, makedcomplex(0.0, 0.0));
+    vector<dcomplex> yParms(5, makedcomplex(0.0, 0.0));
 
     // TODO: Inside external function, these parameters are added to the
     // azimuth. The resulting azimuth is therefore:
@@ -164,10 +158,10 @@ void YatawattaDipole::evaluate(const Request &request,
     // Whereas it seems to me that the orientation should be subtracted
     // instead of added. It probably does not matter much, because the
     // beam pattern is symmetric with respect to azimuth.
-    xParms[7] = makedcomplex(in_orientation.getDouble(0, 0), 0.0);
-    yParms[7] =
+    xParms[4] = makedcomplex(in_orientation.getDouble(0, 0), 0.0);
+    yParms[4] =
         makedcomplex(in_orientation.getDouble(0, 0) - casa::C::pi_2, 0.0);
-        
+
     // Evaluate beam.
     uint sample = 0;
     Axis::ShPtr freqAxis(request.getGrid()[FREQ]);
@@ -182,7 +176,7 @@ void YatawattaDipole::evaluate(const Request &request,
 //        xParms[2] = yParms[2] = makedcomplex(az[t] - casa::C::pi_4, 0.0);
         xParms[2] = yParms[2] = makedcomplex(az[t], 0.0);
         xParms[3] = yParms[3] = makedcomplex(el[t], 0.0);
-                    
+
         for(size_t f = 0; f < nChannels; ++f)
         {
             // Update frequency.
@@ -202,7 +196,7 @@ void YatawattaDipole::evaluate(const Request &request,
             E21_im[sample] = imag(yTheta);
             E22_re[sample] = real(yPhi);
             E22_im[sample] = imag(yPhi);
-            
+
             // Move to next sample.
             ++sample;
         }
