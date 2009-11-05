@@ -97,7 +97,7 @@ def findRSPDestNodes(stationName, dataDir):
     station		board	destinationnode
     CS001		RSP_0	BGL001
     """
-    pattern=re.compile(stationName+"[ \t]*RSP_([0-9]+)[ \t]*(.*)", re.IGNORECASE)
+    pattern=re.compile("[^#]"+stationName+"[ \t]*RSP_([0-9]+)[ \t]*(.*)", re.IGNORECASE)
     rspDestNode = {}
     for match in pattern.finditer(open(dataDir+"/RSPConnections.dat").read()):
         rspDestNode[match.group(1)] = match.group(2)
@@ -116,7 +116,7 @@ def findTBBDestNodes(stationName, dataDir):
     CS001    TBB-0   LIST004
     """
     # NOTE: for now we always take the first nodename
-    pattern=re.compile(stationName+"[ \t]*TBB_([0-9]+)[ \t]*([a-zA-Z0-9]*)[, ]?.*", re.IGNORECASE)
+    pattern=re.compile("[^#]"+stationName+"[ \t]*TBB_([0-9]+)[ \t]*([a-zA-Z0-9]*)[, ]?.*", re.IGNORECASE)
     tbbDestNode = {}
     for match in pattern.finditer(open(dataDir+"/TBBConnections.dat").read()):
         tbbDestNode[match.group(1)] = match.group(2)
