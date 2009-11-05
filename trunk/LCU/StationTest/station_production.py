@@ -265,7 +265,7 @@ else:
 
 ################################################################################
 # End of the subrack test
-
+cli.command('rspctl --rcuprsg=0') 
 sr.setId('Subrack - ')
 dt = sr.getRunTime()
 sr.appendLog(2,'Duration: %02dm:%02ds' % (dt/60 % 60, dt % 60))
