@@ -72,9 +72,9 @@ do
 done
 
 # By default do not build test programs.  
-echo "//Build the testing tree." >> $3
-echo "BUILD_TESTING:BOOL=OFF" >> $3
-echo "" >> $3
+#echo "//Build the testing tree." >> $3
+#echo "BUILD_TESTING:BOOL=OFF" >> $3
+#echo "" >> $3
 # LOFAR needs to be built.
 echo "//Build packageLOFAR?." >> $3
 echo "BUILD_LOFAR:BOOL=ON" >> $3
