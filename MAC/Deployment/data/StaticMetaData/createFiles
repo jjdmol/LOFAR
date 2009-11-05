@@ -37,7 +37,7 @@ def findIPNumber(stationName):
     In case the station is not known, it will return -1.
     """
     
-    localStationName = os.getenv("HOSTNAME")[0:5].lower()
+    localStationName = os.getenv("HOST")[0:5].lower()
     if (localStationName == stationName):
         command = "hostname -i"
         output = os.popen3(command)
@@ -366,19 +366,17 @@ def createHBADeltasFile(resultDir, stationName, dataDir):
     print command
     os.system(command)
 
-def de601Exceptions(resultDir, stationName, dataDir)
+def de601Exceptions(resultDir, stationName, dataDir):
     """
     Handle exceptions for station de601 (Effelsberg)
     """
     if (stationName.lower() == "de601"):
         srcFile = dataDir + "/DE601-Attenuation.conf"
         destFile= resultDir + "/Attenuation.conf"
-        
-    command = "cp -f "+srcFile+ " " + destFile
-    print command
-    os.system(command)
+        command = "cp -f "+srcFile+ " " + destFile
+        print command
+        os.system(command)
       
-
 # MAIN
 
 if (len(sys.argv) == 1):
@@ -392,9 +390,9 @@ if (len(sys.argv) == 1):
 # /opt/lofar/etc/StaticMetaData
 
 if (sys.argv[1] == "localhost"):
-    # Find out stationname from env. var. HOSTNAME (e.g., CS010C)
-    if (os.getenv("HOSTNAME")) :
-        stationName = os.getenv("HOSTNAME")[0:5].lower()
+    # Find out stationname from env. var. HOST (e.g., CS010C)
+    if (os.getenv("HOST")) :
+        stationName = os.getenv("HOST")[0:5].lower()
         print stationName
         if (os.path.exists("/opt/lofar/etc")):
             resultDir = "/opt/lofar/etc"
@@ -417,7 +415,7 @@ if (sys.argv[1] == "localhost"):
             createHBADeltasFile    (resultDir, stationName, dataDir)
             de601Exceptions        (resultDir, stationName, dataDir)
     else:
-        print "Cannot determine node name from HOSTNAME"
+        print "Cannot determine node name from HOST"
         sys.exit(1)
 else:
     # We are not running on a station LCU. The user needs to provide
