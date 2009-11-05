@@ -16,6 +16,8 @@
 #
 
 import re, sys, os
+from subprocess import *
+
 warnings = []
 
 #
@@ -37,11 +39,11 @@ def findIPNumber(stationName):
     In case the station is not known, it will return -1.
     """
     
-    localStationName = os.getenv("HOST")[0:5].lower()
+    localStationName = Popen("hostname -s",shell=True, stdout=PIPE).stdout.readlines()[0].strip()[0:5].lower()
     if (localStationName == stationName):
         command = "hostname -i"
-        output = os.popen3(command)
-        stdout = output[1].readlines()
+        output = Popen(command,shell=True, stdout=PIPE).stdout
+        stdout = output.readlines()
         outline = stdout[0].strip()
         outwords = outline.split()
         if (len(outwords) != 1):
@@ -50,8 +52,8 @@ def findIPNumber(stationName):
             return outwords[0]
     else:
         command = "host "+stationName+"C"
-        output = os.popen3(command)
-        stdout = output[1].readlines()
+        output = Popen(command,shell=True, stdout=PIPE).stdout
+        stdout = output.readlines()
         outline = stdout[0].strip()
         outwords = outline.split()
         if (len(outwords) != 4):
@@ -211,7 +213,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir):
     else:
         ip_prefix = "174" # Non-NL stations
 
-    print stationName[0:2].upper()
+    #print stationName[0:2].upper()
     # Core stations should have Splitter set to 1; others to 0.
     if (stationName[0:2].upper() == "CS"):
         RSPconfig = RSPconfig.replace("@SPLITTER@",str(1))
@@ -390,10 +392,9 @@ if (len(sys.argv) == 1):
 # /opt/lofar/etc/StaticMetaData
 
 if (sys.argv[1] == "localhost"):
-    # Find out stationname from env. var. HOST (e.g., CS010C)
-    if (os.getenv("HOST")) :
-        stationName = os.getenv("HOST")[0:5].lower()
-        print stationName
+    # Find out stationname from command 'hostname -s'
+    stationName = Popen("hostname -s",shell=True, stdout=PIPE).stdout.readlines()[0].strip()[0:5].lower()
+    if (len(stationName) > 0) :
         if (os.path.exists("/opt/lofar/etc")):
             resultDir = "/opt/lofar/etc"
             dataDir = resultDir + "/StaticMetaData"
@@ -404,7 +405,7 @@ if (sys.argv[1] == "localhost"):
         # If the hostname is like 'lcu001', this lcu is set up to be tested
         # in the lab before a station is assigned. We can then use a set of
         # fixed test configuration files.
-        if (stationName[0:3].lower() == "lcu"):
+        if (stationName[0:3] == "lcu"):
             copyTestFiles(dataDir)
         else:
             createRSPDriverFile    (resultDir, stationName, dataDir) 
@@ -415,7 +416,7 @@ if (sys.argv[1] == "localhost"):
             createHBADeltasFile    (resultDir, stationName, dataDir)
             de601Exceptions        (resultDir, stationName, dataDir)
     else:
-        print "Cannot determine node name from HOST"
+        print "Cannot determine stationname"
         sys.exit(1)
 else:
     # We are not running on a station LCU. The user needs to provide
