@@ -26,6 +26,7 @@
 #include <Common/SystemUtil.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <cstdio>
 #include <cstring>
 
 #if !defined(USE_NOSOCKETS)

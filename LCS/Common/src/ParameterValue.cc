@@ -24,6 +24,7 @@
 #include <Common/ParameterValue.h>
 #include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
+#include <cstdio>
 
 namespace LOFAR { 
 

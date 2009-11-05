@@ -31,6 +31,7 @@
 #include <Common/lofar_iomanip.h>
 #include <cstring>
 #include <cstdarg>
+#include <cstdio>
 #include <ctime>
 #include <errno.h>
 

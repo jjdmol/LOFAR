@@ -27,6 +27,7 @@
 #include <Common/hexdump.h>
 #include <Common/StringUtil.h>
 #include <cstring>
+#include <cstdio>
 
 using namespace LOFAR;
 
