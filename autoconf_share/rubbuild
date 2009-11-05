@@ -38,6 +38,7 @@ pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 kopt=0
 jobsopt=
 buildmake=1
+cmake=0
 conf=2
 confopt=
 clean=0
@@ -93,6 +94,12 @@ do
   elif [ "$1" = -nomake ]; then
     shift
     buildmake=0
+  elif [ "$1" = -cmake ]; then
+    shift
+    cmake=1
+  elif [ "$1" = -nocmake ]; then
+    shift
+    cmake=0
   elif [ "$1" = -conf ]; then
     shift
     conf=1
@@ -204,13 +211,21 @@ if [ $distclean = 1 ]; then
   clean=2
   conf=1
 fi
+if [ $cmake = 1 ]; then
+  conf=0
+  dist=0
+  distcheck=0
+  skipbuilt=0
+  rpm=0
+fi
+
 
 # Get the other arguments.
 if test $# -lt 1; then
   echo 'rubbuild builds (non-recursively) a single variant of the packages given.'
   echo 'It can configure, but it does not do a bootstrap.'
   echo 'Run as:'
-  echo ' rubbuild [-srcdir] [-build variant] [-skipbuilt] [-bg]'
+  echo ' rubbuild [-srcdir] [-build variant] [-skipbuilt] [-bg] [-cmake]'
   echo '          [-conf] [-confopt string] [-k] [-j<option>]'
   echo '          [-[dist]clean] [-make] [-test] [-check] [-checktool tool] [-memcheck]'
   echo '          [-install] [-dist] [-distcheck] [-rpm]'
@@ -283,8 +298,8 @@ fi
 # dorubbuild writes the build output to a log file.
 if [ $bg = 1 ]; then
   echo "Building packages on `uname -n` in $buildvarpr in the background"
-  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$jobsopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$memcheck" "$install" "$dist" "$distcheck" "$rpm" $pkgs >> /dev/null 2>&1 &
+  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$jobsopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$memcheck" "$install" "$dist" "$distcheck" "$rpm" "$cmake" $pkgs >> /dev/null 2>&1 &
 else
   echo "Building packages in $buildvarpr ..."
-  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$jobsopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$memcheck" "$install" "$dist" "$distcheck" "$rpm" $pkgs
+  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$jobsopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$memcheck" "$install" "$dist" "$distcheck" "$rpm" "$cmake" $pkgs
 fi
