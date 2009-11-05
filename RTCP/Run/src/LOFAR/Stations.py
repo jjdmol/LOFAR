@@ -221,6 +221,7 @@ def defineStations( s ):
     # DE601, a.k.a. Effelsberg
     #"DE601LBA":   [Station('DE601LBA',  '10.170.0.178', ports( [4353,4359,4363,4364] ))],
     "DE601LBA":   [Station('DE601LBA',  '10.170.0.178', ports( [4346,4353,4355,4358] ))],
+    "DE601HBA":   [Station('DE601HBA',  '10.170.0.178', ports( [4346,4353,4355,4358] ))],
   } )
 
   # Simulated stations for experimentation.
@@ -255,8 +256,8 @@ def defineStations( s ):
      s["T%s"   % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
 
   # define sets of various sizes 
-  for setsize in [2,4,8,16,32,64]:
-     for first_index in xrange( 0, len(psetsuffixes), setsize ):
+  for setsize in xrange(2,65):
+     for first_index in xrange( 0, len(psetsuffixes)-setsize+1 ):
        suffixes = psetsuffixes[first_index:first_index+setsize]
 
        for prefix in ["s","S","t","T"]:
