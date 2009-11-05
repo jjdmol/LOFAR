@@ -249,6 +249,7 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
   Vector<Double> times = timeCol.getColumn();
   AlwaysAssertExit (times.size() == nrow);
   row=0;
+  startTime += interval/2;
   for (uInt i=0; i<nseq; ++i) {
     for (uInt j=0; j<nbasel; ++j) {
       AlwaysAssertExit (near(times[row], startTime));
