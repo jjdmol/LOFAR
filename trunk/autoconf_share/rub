@@ -81,6 +81,7 @@ kopt=
 jobsopt=
 variants=
 buildmake=1
+cmake=0
 boot=2
 conf=2
 confopt=
@@ -185,6 +186,12 @@ do
   elif [ "$1" = -nomake ]; then
     shift
     buildmake=0
+  elif [ "$1" = -cmake ]; then
+    shift
+    cmake=1
+  elif [ "$1" = -nocmake ]; then
+    shift
+    cmake=0
   elif [ "$1" = -boot ]; then
     shift
     boot=1
@@ -454,9 +461,11 @@ if [ $help = 1 ]; then
   echo '                    -nomake is more useful; it skips doing make and'
   echo '                    implies -noclean and -noinstall.'
   echo '                    Default is -make.'
-  echo '  -test             indicates that a make test should be done.'
+  echo '  -cmake            use cmake (default is -nocmake)'
+  echo '                    -cmake forces -noboot -noconf -noskipbuilt -nodist'
+  echo '  -test             indicates that test programs should be built.'
   echo '                    Default is -notest.'
-  echo '  -check            indicates that a make check should be done.'
+  echo '  -check            indicates that test program should be built and run.'
   echo '                    Default is -nocheck.'
   echo '  -checktool string Optional checking tool to use with make check.'
   echo '                    E.g. "valgrind --tool=memcheck --num-callers=50 \'
@@ -516,6 +525,12 @@ if [ "$verstype" = "" ]; then
 elif [ "$cutag" != "" ]; then
   "Error: no -release option can be given if a specific -r tag is used"
   exit 1
+fi
+if [ $cmake = 1 ]; then
+  boot=0
+  conf=0
+  dist=0
+  skipbuilt=0
 fi
 
 # Get the URL of svn.
@@ -620,7 +635,7 @@ touch allpkg.tmp rub.log
 echo "$0$args" > rub.log
 echo "" >> rub.log
 
-# First update bootstrap and autoconf_share.
+# First update bootstrap, autoconf_share, and CMake.
 if [ $updas != 0 ]; then
   if [ -f bootstrap ]; then
     echo "Update of LOFAR/bootstrap"
@@ -630,6 +645,7 @@ if [ $updas != 0 ]; then
     (cd .. && $chocomm LOFAR/bootstrap) >> rub.log 2>&1
   fi
   $pgmpath/rub1 autoconf_share 2 h "" "" "$updas" "$recur" "$usesvn" "$command" || [ "$kopt" = "-k" ] || exit 1
+  $pgmpath/rub1 CMake 2 h "" "" "$updas" "$recur" "$usesvn" "$command" || [ "$kopt" = "-k" ] || exit 1
 fi
 \rm -f allpkg.tmp
 touch allpkg.tmp
@@ -832,9 +848,12 @@ if [ $skipbuilt = 1 ]; then
 fi  
 if [ $conf = 1 ]; then
   bopt="$bopt -conf"
-  echo "  Packages will always be configured"
+  echo "  Packages will always be configured using autotools"
 elif [ $conf = 2 ]; then
-  echo "  Packages will be configured when needed"
+  echo "  Packages will be configured when needed using autotools"
+fi
+if test $cmake = 1; then
+  echo "  Packages will be configured using cmake"
 fi
 if [ $clean = 1 ]; then
   bopt="$bopt -clean"
@@ -881,6 +900,9 @@ else
     bopt="$bopt -rpm"
     echo "  Packages will be rpm-ed"
   fi
+fi
+if [ $cmake = 1 ]; then
+    bopt="$bopt -cmake"
 fi
 
 # Build all variants.
