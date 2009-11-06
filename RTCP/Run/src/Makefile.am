@@ -28,18 +28,8 @@ packetanalysis_SOURCES = packetanalysis.c
 
 pythondir = $(bindir)/Run
 dist_python_SCRIPTS = 	\
-			Commands.py \
-			getBGPStats.py \
-			Host_Names.py \
-			Hosts.py \
-			Parset.py \
 			runOLAP.py \
-			Run.py \
-			scanf.py \
-			Sections.py \
-			Stations.py \
-			BGPStats.sh \
-			getStats \
+                        killOLAP \
 			OLAP.parset
 
 lofarpythondir = $(bindir)/Run/LOFAR
