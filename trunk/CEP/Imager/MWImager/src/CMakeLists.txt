@@ -8,7 +8,7 @@ lofar_add_library(mwimager
 
 lofar_add_bin_program(versionmwimager versionmwimager.cc)
 lofar_add_bin_program(convertimagerparset convertimagerparset.cc)
-lofar_add_bin_program(convertimagerparset combineFacets.cc)
+lofar_add_bin_program(combineFacets combineFacets.cc)
 
 install(PROGRAMS
   mwimager
