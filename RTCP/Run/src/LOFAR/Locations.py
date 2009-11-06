@@ -110,7 +110,7 @@ class Locations:
 	"rundir":  "/globalhome/lofarsystem/log",
 
         # where to store logs
-	"logdir":  "/globalhome/lofarsystem/log",
+	#"logdir":  "/globalhome/lofarsystem/log",
 
         # location of valgrind suppressions file
         "ionsuppfile": "",
