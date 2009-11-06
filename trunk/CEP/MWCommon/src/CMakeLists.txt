@@ -41,6 +41,8 @@ lofar_add_bin_program(versionmwcommon versionmwcommon.cc)
 lofar_add_bin_program(finddproc finddproc.cc)
 
 install(PROGRAMS
+  rundist
+  rundist-part
   startdistproc
   socketrun
   runlogpid
