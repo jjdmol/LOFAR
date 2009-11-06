@@ -1,0 +1,271 @@
+#!/usr/bin/env python
+
+# mwimager-dd: mwimager to do direction-dependent corrections
+#
+# Copyright (C) 2009
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# @author Ger van Diepen <diepen AT astron nl>
+#
+# $Id$
+
+# This script creates images corrected for direction-dependent effects
+# in a faceted way. It uses BBS to apply the direction-dependent corrections.
+
+# 1. Use pyquanta to read the ra,dec,cellsize (with default arcsec as unit)
+# 2. Make facet list for BBS and run setupsourcedb
+# 3. Loop over facet and do BBS, DPPP, and mwimager for each facet.
+#    Each of them runs in a distributed way.
+#    BBS is only run if correct=T is given.
+#    DPPP is only run if average=T is given
+# parset keywords:
+#  dir = center of field (get from MS VDS file if needed)
+#  correctdd = beam,ionosphere (or both)
+#  extrafacets (names of strong sources plus width)
+#  possible squash factor in freq/time
+#
+# An alternative (and slightly better) approach would be to run mwimager-dd-part
+# in a distributed way, which does BBS, DPPP, and mwimager for each facet.
+# However, that requires a non-distributed version of BBS which does not exist.
+#
+# Several temporary files are created to deal with the various steps.
+# - $vdsdir/facetlist.txt contains the facet centers in ASCII format
+# - vds.facet contains the distributed sourcedb
+# - parset files for BBS, DPPP, and mwimager
+#    they use the same name as the input parset with an extra extension 
+# - images per facet to be combined into the final image
+# - the MS may get an extra column to hold the corrected data
+
+
+import os
+import sys
+import re
+import math
+import lofar.parameterset as parset
+import pyrap.quanta as pyquan
+
+def getInfo (ps, vdsname, nfacet):
+    # Get center of image.
+    # It can be given in the parset, otherwise take it from the VDS file.
+    if ps.isDefined ('Images.ra'):
+        ra  = ps.getString('Images.ra')
+        dec = ps.getString('Images.dec')
+    else:
+        pvds = parset.parameterset(vds)
+        ra  = pvds.getString('FieldDirectionRa')
+        dec = pvds.getString('FieldDirectionDec')
+    # Read string and convert to radians.
+    qra  = pyquan.quantity(ra)
+    qdec = pyquan.quantity(dec)
+    ra  =  qra.get_value("rad")
+    dec = qdec.get_value("rad")
+    # Get other info.
+    npix   = ps.getIntVector("Images.shape")
+    cellsz = ps.getStringVector("Images.cellSize")
+    # Copy value if only one given.
+    if len(npix) == 1:
+        npix = (npix[0], npix[0])
+    # Check if nfacet divides npix integrally.
+    if npix[0]%nfacet != 0  or  npix[1]%nfacet != 0:
+        raise ValueError, "npix is not an integral multiple of nfacet"
+    if len(cellsz) == 1:
+        cellsz = (cellsz[0], cellsz[0])
+    # Convert cellsize to radians; default unit is arcsec.
+    for i in range(2):
+        csz = cellsz[i]
+        ls = len(csz)
+        if ls > 0  and  csz[ls-1] >= '0'  and  csz[ls-1] <= '9':
+            csz += 'arcsec'
+        qcsz  = pyquan.quantity(csz)
+        cellsz[i] = qcsz.get_value("rad")
+    return (ra,dec,cellsz,npix)
+
+def makeFacetSourceList (name, ra, dec, cellwidth, n):
+    # ra and dec give the center of the image; cellwidth the width in ra and dec.
+    # In declination the facets are placed at distances of cellwidth[1].
+    # In right ascension the length is declination dependent.
+    # Only at the equator 1 arcsec in image width is 1 arcsec in RA.
+    # At dec=d 1 arcsec in RA is 1*cos(d) arcsec in image width
+    # (like on earth 360deg = 40000km*cos(d) at dec=d).
+    centers = []
+    f = open(name, 'w')
+    f.write ('#( Name Ra Dec )=format\n')
+    decv = dec - cellwidth[1] * (n-1.)/2.
+    for i in range(n):
+        rawidth = cellwidth[0] / math.cos(decv)
+        rav = ra - rawidth * (n-1.)/2.
+        for j in range(n):
+            centers.append ((rav, decv))
+            f.write ("facet-%03d-%03d %.15f %.15f\n" % (i,j,rav,decv))
+            rav += rawidth
+        decv += cellwidth[1]
+    return centers
+
+def doBBS (ps, i, j, psname, vds, cd, wd, dry, instdb, skydb, catname, incol, outcol):
+    if dry == 'dry':
+        dry = '--dry --verbose'
+    print 'doBBS facet',i,j
+    # Create the parset file for the calibrate run.
+    bbskey = "bbs-%03d-%03d" % (i, j)
+    psn = psname + '-' + bbskey
+    f = file(psn, 'w')
+    f.write ('Strategy.Stations = []\n')
+    f.write ('Strategy.InputColumn = %s\n' % incol)
+    f.write ('Strategy.TimeWindow = []\n')
+    f.write ('Strategy.ChunkSize = 0\n')
+    f.write ('Strategy.UseSolver = F\n')
+    f.write ('Strategy.Correlation.Selection = CROSS\n')
+    f.write ('Strategy.Correlation.Type = []\n')
+    f.write ('Strategy.Steps = [correct]\n')
+    f.write ('Step.correct.Baselines.Station1 = []\n')
+    f.write ('Step.correct.Baselines.Station2 = []\n')
+    f.write ('Step.correct.Model.Sources    = facet-%03d-%03d\n' % (i,j))
+    f.write ('Step.correct.Model.Components = [BEAM]\n')
+    f.write ('Step.correct.Model.Beam.Type = "HamakerDipole"\n')
+    f.write ('Step.correct.Model.Beam.CoeffFile = "/home/zwieten/Work/Lofar/Data/BeamCoefficients/lba.txt"\n')
+    f.write ('#Step.correct.Model.Beam.Type = "YatawattaDipole"\n')
+    f.write ('#Step.correct.Model.Beam.ModuleTheta = "/home/zwieten/Work/Lofar/Data/YatawattaDipoleBeam/hba_beam_theta.so"\n')
+    f.write ('#Step.correct.Model.Beam.ModulePhi = "/home/zwieten/Work/Lofar/Data/YatawattaDipoleBeam/hba_beam_phi.so"\n')
+    f.write ('Step.correct.Correlation.Selection = CROSS\n')
+    f.write ('Step.correct.Correlation.Type      = []\n')
+    f.write ('Step.correct.Operation             = CORRECT\n')
+    f.write ('Step.correct.OutputColumn          = %s\n' % outcol)
+    f.close()
+    os.system ("cat " + psn)
+    print 'calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --no-setup "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, vds, psn, catname, wd)
+    os.system ('calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --no-setup "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, vds, psn, catname, wd))
+
+def doDPPP (i, j, freqstep, timestep):
+    print 'doDPPP facet',i,j
+    # Create the parset file.
+#    f = file(psname, 'w')
+#    f.write ("\n")
+#    os.system ("./IDPPP")
+
+def doImager (ps, imagename, i, j, center, psname, cd, wd, logfile, dry, hfn, casaopt):
+    print 'doImager facet',i,j,center
+    # Convert the parset file to a parset file for the facet.
+    # It means inserting a new center and image name.
+    ps.replace ("Images.ra",  '%d' % center[0])
+    ps.replace ("Images.dec", '%d' % center[1])
+    newName = '%s-%03d-%03d' % (imagename, i ,j)
+    ps.replace ("Images.name", newName)
+    psn = "%s-image-%03d-%03d" % (psname, i, j)
+    ps.writeFile (psn)
+    print 'mwimager %s %s "%s" "%s" "%s" "%s" "%s"' % (casaopt, psn, cd, wd, logfile, dry, hfn)
+    os.system ('mwimager %s %s "%s" "%s" "%s" "%s" "%s"' % (casaopt, psn, cd, wd, logfile, dry, hfn))
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    pgmpath = os.path.dirname(argv[0])
+    if len(argv) != 8:
+        print sys.stderr, 'run as:  mwimager-dd parset-file clusterdesc wd logfile dry hfn usecasa'
+        return 1
+
+    # Get arguments.
+    psn     = os.path.abspath(argv[1])
+    cd      = argv[2]
+    wd      = argv[3]
+    logfile = argv[4]
+    dry     = argv[5]
+    hfn     = argv[6]
+    casaopt = argv[7]
+
+    # Open the parset file.
+    ps  = parset.parameterset(psn)
+    # Determine which dataset and columns to use.
+    vds = os.path.abspath (ps.getString('dataset'))
+    incol = ps.getString('datacolumn')
+    outcol = incol
+    correct = ps.getBool ('correct', True)
+    if correct:
+        outcol = ps.getString('Correct.column')
+        if incol == outcol:
+            print sys.stderr, 'datacolumn and correctcolumn have to be different'
+            return 1
+        instdb  = ps.getString ('Correct.instrumentDB')
+
+    # Get info from the parset file and VDS file.
+    nfacet  = ps.getInt('Images.nfacets')
+    padding = ps.getDouble ('Images.padding', 2)
+    average = ps.getBool ('average', False)
+    freqavg = ps.getInt ('Average.nfreq', 1)
+    timeavg = ps.getInt ('Average.ntime', 1)
+    average = average and (freqavg!=1 or timeavg!=1)
+    (ra,dec,cellsz,npix) = getInfo (ps, vds, nfacet)
+    # Form the output image name.
+    # Remove parts before / and after .
+    imagename = os.path.basename (ps.getString ("Images.name", vds))
+    imagename = imagename.split('.')[0]
+    print ra,dec,cellsz,npix,nfacet,average,freqavg,timeavg,average,imagename
+
+    # Form the facet centers and source list for BBS.
+    vdsdir =  os.path.dirname(vds)
+    catname = vdsdir + '/facetlist.txt'
+    skydb   = vdsdir + '/' + imagename + '.facets'
+    centers = makeFacetSourceList(catname, ra, dec, cellsz, nfacet)
+
+    # Remove the parameters not needed for an image per facet.
+    ps.remove ("Images.nfacets")
+    ps.remove ("Correct.column")
+    ps.remove ("Correct.instrumentDB")
+    # Put the sizes per facet in the parset object.
+    # Take padding into account.
+    factor = padding/nfacet
+    ps.replace ("Images.shape", '[%d, %d]' % (int(npix[0]*factor+0.5), int(npix[1]*factor+0.5)))
+    ps.replace ("Images.cellSize", '[%.15frad, %.15frad]' % (cellsz[0], cellsz[1]))
+    ps.replace ("datacolumn", outcol)
+
+    # Create the source data base for the facet centers.
+    if dry == 'dry':
+        os.system ('cat %s' % (catname))
+    print 'os.system (setupsourcedb -overwrite %s %s facets "%s" "%s" dry "%s" "%s"' % (vds,catname,cd,logfile,hfn,wd)
+    os.system ('setupsourcedb -overwrite %s %s facets "%s" "%s" dry "%s" "%s"' % (vds,catname,cd,logfile,hfn,wd))
+
+    # Do the processing for each facet.
+    inx = 0
+    for i in range(nfacet):
+        for j in range(nfacet):
+            if correct:
+                doBBS (ps, i, j, psn, vds, cd, wd, dry, instdb, skydb, catname, incol, outcol)
+            if average:
+                doDPPP (i, j, freqavg, timeavg)
+            doImager (ps, imagename, i, j, centers[inx], psn, cd, wd, logfile, dry, hfn, casaopt)
+            inx += 1
+
+    # Combine all facets.
+    print 'makeCombinedImage ...'
+    # Create the parset file for the calibrate run.
+    psnm = psn + '-combine'
+    f = file(psnm, 'w')
+    f.write ('useHDF5 = False\n')
+    f.write ('ra  = %.15f\n' % ra)
+    f.write ('dec = %.15f\n' % dec)
+    f.write ('npix = [%d,%d]\n' % (npix[0], npix[1]))
+    f.write ('nfacet = [%d,%d]\n' % (nfacet, nfacet))
+    f.close()
+    os.system ('cat ' + psnm);
+    print 'rundist -cdn %s -gdsout img makeCombinedImage-part %s %s %s "%s"' % (cd, vds, psnm, imagename, dry)
+    os.system ('rundist -cdn %s -gdsout img makeCombinedImage-part %s %s %s "%s"' % (cd, vds, psnm, imagename, dry))
+    
+
+
+if __name__ == "__main__":
+    sys.exit(main())
