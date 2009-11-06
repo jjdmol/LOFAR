@@ -10,6 +10,12 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 lofar_add_library(_pyparameterset SHARED pyparameterset.cc)
 set_target_properties(_pyparameterset PROPERTIES PREFIX "")
 
+# This is a quick-and-dirty fix to install the Python binding module in the
+# right place. It will now be installed twice, because lofar_add_library()
+# will install it in $prefix/$libdir
+install(TARGETS _pyparameterset 
+  DESTINATION ${PYTHON_INSTALL_DIR}/lofar/parameterset)
+
 lofar_add_bin_program(versionpyparameterset 
   versionpyparameterset.cc
   Package__Version.cc)
