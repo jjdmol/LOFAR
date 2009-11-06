@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config:config xmlns:config="http://www.astron.nl/MoM-OTDB-adapter" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.astron.nl/MoM-OTDB-adapter ../src/config.xsd ">
+	<config:mom2>
+		<config:username>bastiaan</config:username>
+		<config:password>bastiaan</config:password>
+		<config:authurl>http://rdd-stage6.nfra.nl:8080/useradministration</config:authurl>
+		<config:mom2-import-url>http://rdd-stage6.nfra.nl:8080/mom2lofar/interface/importXML2.do</config:mom2-import-url>
+		<config:mom2-schemas-url>http://rdd-stage6.nfra.nl:8080/mom2lofar/schemas/</config:mom2-schemas-url>
+	</config:mom2>
+	<config:otdb>
+		<config:interval>5</config:interval>
+		<config:uvObservationTemplateId>5001</config:uvObservationTemplateId>
+		<config:rmihost>lofar17.astron.nl</config:rmihost>
+		<config:rmiport>10399</config:rmiport>
+	</config:otdb>
+	<config:adapter>
+		<config:httpport>8082</config:httpport>
+		<config:keystore-location>./keystores/mom-otdb-adapter-keystore.jks</config:keystore-location>
+		<config:keystore-password>adapter</config:keystore-password>
+		<config:trusted-keystore-location>./keystores/mom-otdb-adapter-trusted-keystore.jks</config:trusted-keystore-location>
+		<config:trusted-keystore-password>adapter-trusted</config:trusted-keystore-password>
+	</config:adapter>
+</config:config>

@@ -1,0 +1,68 @@
+#!/bin/sh
+
+# tmwimager-dd.run: Script to test mwimager-dd
+#
+# Copyright (C) 2009
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# $Id$
+
+
+# Set srcdir if undefined (if run outside 'make check')
+curdir=`pwd`
+if test "$srcdir" = ""; then
+  srcdir=$curdir/../../../test
+fi
+ssdir=`cd $srcdir/../src > /dev/null && pwd`
+
+# Extend PATH.
+PATH=$curdir:$ssdir:$PATH
+export PATH
+
+# Get directory of executables.
+exedir=`which calibrate`
+exedir=`dirname $exedir`
+
+# Do a test using the askap imager.
+# Some machine/time specific output is changed to make it pass assay
+#  - current directory changed to curdir
+#  - execute directory changed to exedir
+#  - home directory changed to home
+#  - user name changed to user
+#  - lines containing date/time are removed
+rm -rf tmwimager-dd_tmp.instdb
+mkdir tmwimager-dd_tmp.instdb
+mwimager-dd tmwimager-dd.parset tmwimager-dd.in_cd `pwd` tmwimager-dd_tmp.log dry tmwimager-dd_tmp.hfn "" | sed -e "s%$curdir%curdir%g" -e "s%$exedir%exedir%g" -e "s%$ssdir%ssdir%g" -e "s%$HOME%home%g" -e "s%$USER%user%g" -e 's/_[0-9][0-9]*/_<pid>/g' | egrep -i -v '[a-z]{3} [ 0-9]?[0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
+
+# Append the three log files to the output.
+# Wait for the subprocesses to finish.
+# Remove disturbing log4cxx lines
+# As above change/remove system specific parts.
+sleep 5
+echo ""
+echo " *** logfile 0 ***"
+grep -v 'log4cxx:' tmwimager-dd_tmp.log-0 | sed -e "s%$curdir%curdir%g" -e "s%$exedir%exedir%g" -e "s%$ssdir%ssdir%g" -e "s%$HOME%home%g" -e "s%$USER%user%g" -e 's/_[0-9]*/_<pid>/g' | egrep -i -v '[a-z]{3} [ 0-9]?[0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
+echo ""
+echo " *** logfile 1 ***"
+grep -v 'log4cxx:' tmwimager-dd_tmp.log-1 | sed -e "s%$curdir%curdir%g" -e "s%$exedir%exedir%g" -e "s%$ssdir%ssdir%g" -e "s%$HOME%home%g" -e "s%$USER%user%g" -e 's/_[0-9]*/_<pid>/g' | egrep -i -v '[a-z]{3} [ 0-9]?[0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
+echo ""
+echo " *** logfile 2 ***"
+grep -v 'log4cxx:' tmwimager-dd_tmp.log-2 | sed -e "s%$curdir%curdir%g" -e "s%$exedir%exedir%g" -e "s%$ssdir%ssdir%g" -e "s%$HOME%home%g" -e "s%$USER%user%g" -e 's/_[0-9]*/_<pid>/g' | egrep -i -v '[a-z]{3} [ 0-9]?[0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
+
+# Remove the temporary parset part files.
+rm -f tmwimager-dd.parset.part*

@@ -1,0 +1,11 @@
+# -- BGL-Storage --
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   BGL-Storage         1.0.1  development 'node constraint'  "Storage Node Settings"
+
+#      name          vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+uses   @BGL-Storage@ 1.0.1  development 1                  "Connection between @BGL-Storage@"

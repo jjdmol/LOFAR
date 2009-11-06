@@ -1,0 +1,480 @@
+V 10
+1
+LANG:1 6 RCUTBB
+PANEL,-1 -1 321 408 N "_3DFace" 0
+"main()
+{
+  baseDP = g_currentDatapoint;
+ 	
+ 	// check if the required datapoint for this view are enabled and accessible
+  if(dpExists(baseDP + \".Trigger.startlevel:_online.._value\")) {
+    dpConnect(\"updateTriggerDetails\", baseDP + \".Trigger.startlevel:_online.._value\",
+				      baseDP + \".Trigger.baselevel:_online.._value\",
+                                      baseDP + \".Trigger.stoplevel:_online.._value\",
+                                      baseDP + \".Trigger.filter:_online.._value\",
+                                      baseDP + \".Trigger.window:_online.._value\",
+                                      baseDP + \".Trigger.coeff0:_online.._value\",
+                                      baseDP + \".Trigger.coeff1:_online.._value\",
+                                      baseDP + \".Trigger.coeff2:_online.._value\",
+                                      baseDP + \".Trigger.coeff3:_online.._value\",
+                                      baseDP + \".Trigger.coeff3:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)) {
+      updateTriggerDetails(\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",true);
+    }
+  } else {
+    LOG_ERROR(\"RCU_TriggerInfo.pnl:Initialize|Error connecting to : \"+baseDP+ \".Trigger.startlevel\");
+    setValue(\"txt_startlevel\" , \"text\", \"\");
+    setValue(\"txt_baselevel\"  , \"text\", \"\");
+    setValue(\"txt_stoplevel\"  , \"text\", \"\");
+    setValue(\"txt_filter\"     , \"text\", \"\");
+    setValue(\"txt_window\"     , \"text\", \"\");
+    setValue(\"txt_coeff0\"     , \"text\", \"\");
+    setValue(\"txt_coeff1\"     , \"text\", \"\");
+    setValue(\"txt_coeff2\"     , \"text\", \"\");
+    setValue(\"txt_coeff3\"     , \"text\", \"\");
+  }	
+}
+
+updateTriggerDetails(string dp1, int start,
+                     string dp2, int base,
+                     string dp3, int stop,
+                     string dp4, int filter,
+                     string dp5, int window,
+                     string dp6, int coeff0,
+                     string dp7, int coeff1,
+                     string dp8, int coeff2,
+                     string dp9, int coeff3,
+                     string dp10, bool invalid)
+{
+    LOG_TRACE(\"RCU_TriggerInfo.pnl:updateTriggerDetails|Trigger change: \"+ dp1);
+    if (invalid) {
+    setValue(\"txt_startlevel\" , \"text\", \"\");
+    setValue(\"txt_baselevel\"  , \"text\", \"\");
+    setValue(\"txt_stoplevel\"  , \"text\", \"\");
+    setValue(\"txt_filter\"     , \"text\", \"\");
+    setValue(\"txt_window\"     , \"text\", \"\");
+    setValue(\"txt_coeff0\"     , \"text\", \"\");
+    setValue(\"txt_coeff1\"     , \"text\", \"\");
+    setValue(\"txt_coeff2\"     , \"text\", \"\");
+    setValue(\"txt_coeff3\"     , \"text\", \"\");
+  } else {
+    setValue(\"txt_startlevel\" , \"text\", start);
+    setValue(\"txt_baselevel\"  , \"text\", base);
+    setValue(\"txt_stoplevel\"  , \"text\", stop);
+    setValue(\"txt_filter\"     , \"text\", filter);
+    setValue(\"txt_window\"     , \"text\", window);
+    setValue(\"txt_coeff0\"     , \"text\", coeff0);
+    setValue(\"txt_coeff1\"     , \"text\", coeff1);
+    setValue(\"txt_coeff2\"     , \"text\", coeff2);
+    setValue(\"txt_coeff3\"     , \"text\", coeff3);
+  }
+}" 0
+ E E E E 1 0 0 0  16 105
+""0  1
+E "#uses \"navPanel.ctl\"
+string baseDP;" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 1
+"rcu_border"
+""
+1 10 255 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 35 207 255
+2 2
+"Text1"
+""
+1 33 38 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 35 40 90 57
+0 2 0 "0s" 0 0 0 192 0 0  35 40 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 11 startlevel:
+2 3
+"Text2"
+""
+1 33 62 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 35 64 92 81
+0 2 0 "0s" 0 0 0 192 0 0  35 64 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 10 baselevel:
+2 4
+"Text3"
+""
+1 33 86 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 35 88 89 105
+0 2 0 "0s" 0 0 0 192 0 0  35 88 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 10 stoplevel:
+2 6
+"Text5"
+""
+1 33 110 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 35 112 63 129
+0 2 0 "0s" 0 0 0 192 0 0  35 112 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 7 filter:
+2 30
+"Text8"
+""
+1 10 12 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+28 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 14 118 39
+0 2 0 "0s" 0 0 0 64 0 0  12 14 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 12 Trigger info
+2 31
+"Text9"
+""
+1 34 134 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+29 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 36 136 82 153
+0 2 0 "0s" 0 0 0 192 0 0  36 136 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 7 window:
+2 32
+"Text10"
+""
+1 34 158 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 36 160 74 177
+0 2 0 "0s" 0 0 0 192 0 0  36 160 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 7 coeff0:
+2 33
+"Text11"
+""
+1 34 182 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+31 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 36 184 74 201
+0 2 0 "0s" 0 0 0 192 0 0  36 184 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 7 coeff1:
+2 34
+"Text12"
+""
+1 34 206 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+32 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 36 208 74 225
+0 2 0 "0s" 0 0 0 192 0 0  36 208 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 7 coeff2:
+2 43
+"Text17"
+""
+1 34 230 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+41 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 36 232 74 249
+0 2 0 "0s" 0 0 0 192 0 0  36 232 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 7 coeff3:
+14 47
+"txt_startlevel"
+""
+1 100 39 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+45 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 98 37 202 60
+2 "9d" 9 0 0 2 0 -1  E E E
+14 48
+"txt_coeff2"
+""
+1 100 207 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+46 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 98 205 202 228
+2 "9d" 9 0 0 2 0 -1  E E E
+14 49
+"txt_baselevel"
+""
+1 100 63 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+47 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 98 61 202 84
+2 "9d" 9 0 0 2 0 -1  E E E
+14 50
+"txt_stoplevel"
+""
+1 100 87 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+48 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 98 85 202 108
+2 "9d" 9 0 0 2 0 -1  E E E
+14 51
+"txt_filter"
+""
+1 100 111 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+49 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 98 109 202 132
+2 "9d" 9 0 0 2 0 -1  E E E
+14 52
+"txt_window"
+""
+1 100 135 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+50 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 98 133 202 156
+2 "9d" 9 0 0 2 0 -1  E E E
+14 53
+"txt_coeff0"
+""
+1 100 159 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+51 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 98 157 202 180
+2 "9d" 9 0 0 2 0 -1  E E E
+14 54
+"txt_coeff1"
+""
+1 100 183 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+52 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 98 181 202 204
+2 "9d" 9 0 0 2 0 -1  E E E
+14 55
+"txt_coeff3"
+""
+1 100 231 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+53 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 98 229 202 252
+2 "9d" 9 0 0 2 0 -1  E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
