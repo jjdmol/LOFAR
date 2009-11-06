@@ -65,9 +65,6 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
   set(CMAKE_MODULE_PATH "${LOFAR_ROOT}/CMake" CACHE PATH 
     "LOFAR CMake module path")
 
-  # Include host-specific variants file, if present, and global variants file.
-  include(LofarVariants)
-
   # Get compiler suite and build variant from binary directory name.
   # The directory name should follow the naming convention
   # <compiler>_<variant>, where <compiler> specifies the compiler suite to
@@ -82,6 +79,15 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
   string(TOUPPER ${_cmpvar} _cmpvar)
   string(REGEX REPLACE "\(.*)_.*" "\\1" _cmp ${_cmpvar})
   string(REGEX REPLACE ".*_\(.*)" "\\1" _var ${_cmpvar})
+
+  # Include the compiler definition file
+  include(variants/${_cmp} OPTIONAL RESULT_VARIABLE _result)
+  if(_result)
+    message(STATUS "Loaded compiler defintion file for ${_cmp}")
+  endif(_result)
+
+  # Include host-specific variants file, if present, and global variants file.
+  include(LofarVariants)
 
   # Check if compiler suite is known. Compiler suites should be defined in the
   # variants file.
@@ -133,6 +139,7 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
       "${_lang} compiler." FORCE)
     set(CMAKE_${_lang}_FLAGS ${${_cmp}_FLAGS} CACHE STRING 
       "Flags used by the compiler for all build types." FORCE)
+    set(CMAKE_${_lang}_OUTPUT_EXTENSION_REPLACE TRUE)
     foreach(_var ${LOFAR_BUILD_VARIANTS})
       set(CMAKE_${_lang}_FLAGS_${_var} ${${_cmp}_FLAGS_${_var}} CACHE STRING
         "Flags used by the compiler for ${_var} builds." FORCE)
