@@ -18,6 +18,11 @@
 
 \begin{document}
 
+%\permission{\copyright ACM, 2010. This is the author's version of the work.
+%It is posted here by permission of ACM for your personal use.
+%Not for redistribution.
+%The definitive version is published in the proceedings.}
+%
 \title{The LOFAR Correlator: \\ Implementation and Performance Analysis}
 
 \def\sharedaffiliation{%
@@ -56,6 +61,15 @@ The optimizations allows us to use only half the planned amount of resources,
 effectiveness of the entire telescope.
 \end{abstract}
 
+\begin{sloppypar}
+\category{J.2}{Physical Sciences and Engineering}{Astronomy}
+%\category{C.3}{Special-Purpose and Application-Based Systems}{Signal Processing Systems}
+%\category{C.5.1}{Computer System Implementation}{Large and Medium (``Mainframe'') Computers}[Super (very large) computers]
+\category{C.2.4}{Computer-Communication Networks}{Distributed Systems}[Distributed Applications]
+\category{D.1.3}{Programming Techniques}{Concurrent Programming}
+\category{J.7}{Computers in Other Systems}{Real time}
+\end{sloppypar}
+
 \terms{Algorithms, Experimentation, Performance}
 
 \keywords{LOFAR, Correlator, IBM Blue Gene/P}
@@ -84,9 +98,9 @@ The different goals and observation types require several different processing
 pipelines, however.
 
 \begin{figure}[t]
-\vspace{-4mm}
+\vspace*{-6mm}
 \includegraphics[width=\columnwidth]{LBA-field.jpg}
-\vspace{-2mm}
+\vspace*{-3.5mm}
 \caption{A field with low-band antennas (dipoles).}
 \label{fig:lba-field}
 \end{figure}
@@ -241,8 +255,8 @@ On our previous platform, the BG/L, we were dissatisfied with
 the I/O model and its performance.  This led to a joint effort with 
 Argonne National Laboratory to redesign the entire network software
 infrastructure, and resulted in a
-new environment called {\em ZOID\/}~\cite{Iskra:08}.  ZOID does not
-only yield better performance, but it is much more flexible, since it
+new environment called {\em ZOID\/}~\cite{Iskra:08}.  ZOID yields far
+better performance and is much more flexible, since it
 allows application code to be run on the I/O~nodes.  
 The standard BG/P
 software infrastructure is a major improvement over the BG/L, since it
@@ -484,7 +498,7 @@ Our system has 192~psets in total, 64 per rack.
 
 \begin{figure}[ht]
 \includegraphics[width=\columnwidth]{processing-overview.pdf}
-\caption{Simplified data flow diagram for the central processing pipeline.}
+\caption{Data flow diagram for the central processing pipeline.}
 \label{fig:processing}
 \end{figure}
 
@@ -523,7 +537,7 @@ Blue Gene/P.
 
 \begin{figure}[ht]
 \includegraphics[width=\columnwidth]{ION-processing.pdf}
-\caption{Simplified data flow diagram for the I/O nodes.}
+\caption{Data flow diagram for the I/O nodes.}
 \label{fig:ion-processing}
 \end{figure}
 
@@ -638,7 +652,8 @@ Under normal circumstances, no data are lost here.
 \begin{center}
 \includegraphics[width=.8\textwidth]{CN-processing.pdf}
 \end{center}
-\caption{Simplified data flow diagram for the compute nodes.}
+\vspace{-1.5mm}
+\caption{Data flow diagram for the compute nodes.}
 \label{fig:cn-processing}
 \end{figure*}
 
@@ -718,12 +733,6 @@ Figure~\ref{fig:cn-processing}.
 
 \subsection{Scheduling}
 
-\begin{figure}[ht]
-\includegraphics[width=\columnwidth]{round-robin.pdf}
-\caption{Round-robin work distribution.}
-\label{fig:round-robin}
-\end{figure}
-
 The I/O~node chops the data stream that comes from the station into
 chunks of one frequency subband and approximately one second of time.
 Such a chunk is the unit of data that is sent to the compute node for
@@ -735,6 +744,12 @@ Subsequent chunks are processed by different processor cores.
 A core first receives data from the I/O~node, processes them, sends back the
 results, and idles until the I/O~node sends new data.
 A core must finish its work before it is time to process the next chunk.
+
+\begin{figure}[ht]
+\includegraphics[width=\columnwidth]{round-robin.pdf}
+\caption{Round-robin work distribution.}
+\label{fig:round-robin}
+\end{figure}
 
 For simplicity, Figure~\ref{fig:round-robin} shows the processing of
 three subbands on six cores.
@@ -764,21 +779,6 @@ BG/P, it unnecessarily increases torus communication.
 \subsection{All-to-All Data Exchange}
 \label{all-to-all}
 
-The compute nodes perform several operations on the data, as shown in
-Figure~\ref{fig:cn-processing}.
-The very first step is to exchange data with another group of processor cores.
-This is necessary, because an I/O~node receives all frequency subbands from one
-station, but the correlator requires one frequency subband from all
-stations (we explain this in more detail below).
-The data exchange is challenging, since it involves hundreds of gigabits per
-second.
-Unfortunately, an I/O~node cannot send the data directly from the circular
-buffer to the compute core that will process the data, since the I/O~node is
-only connected to the compute nodes in its own pset.
-The data are thus first sent over the collective network from the I/O~node to
-a compute node and then over the 3-D~torus network.
-The torus provides high bandwidth and switches packets efficiently.
-
 
 \begin{figure*}[ht]
 \begin{minipage}[b]{45mm}
@@ -802,10 +802,26 @@ non-colinear nodes.}
 \begin{center}
 \includegraphics[width=45mm]{bandpass.pdf}
 \end{center}
+\vspace{-1.5mm}
 \caption{Channels have different signal powers.}
 \label{fig:bandpass}
 \end{minipage}
 \end{figure*}
+
+The compute nodes perform several operations on the data, as shown in
+Figure~\ref{fig:cn-processing}.
+The very first step is to exchange data with another group of processor cores.
+This is necessary, because an I/O~node receives all frequency subbands from one
+station, but the correlator requires one frequency subband from all
+stations (we explain this in more detail below).
+The data exchange is challenging, since it involves hundreds of gigabits per
+second.
+Unfortunately, an I/O~node cannot send the data directly from the circular
+buffer to the compute core that will process the data, since the I/O~node is
+only connected to the compute nodes in its own pset.
+The data are thus first sent over the collective network from the I/O~node to
+a compute node and then over the 3-D~torus network.
+The torus provides high bandwidth and switches packets efficiently.
 
 Unfortunately, it is not possible to optimize for short torus paths; due to the
 physical location of I/O nodes and compute nodes,
@@ -1049,8 +1065,9 @@ cache hierarchy.
 
 \begin{figure}[ht]
 \begin{center}
-\includegraphics[width=40mm]{correlation-triangle.pdf}
+\includegraphics[width=39mm]{correlation-triangle.pdf}
 \end{center}
+\vspace{-2mm}
 \caption{The correlation triangle is divided into $2\times2$ tiles.}
 \label{fig:correlation-triangle}
 \end{figure}
@@ -1277,7 +1294,8 @@ available compute time	 & 16.1	     & 8.05     & 4.03     \\
 \end{tabular}
 \end{small}
 \end{center}
-\caption{Characteristics of three realistic, challenging observation modes.}
+\vspace*{-2mm}
+\caption{Characteristics of three challenging observation modes.}
 \label{tab:observation-characteristics}
 \end{table}
 
@@ -1333,6 +1351,7 @@ case, and use 48~stations.
   \hspace{15mm}
   \label{fig:ion-performance-obs-mode}
 }
+\vspace{-1.5mm}
 \caption{I/O node performance breakdown.}
 \label{fig:ion-performance}
 \end{figure}
@@ -1433,6 +1452,7 @@ Alternatively, the second rack could be used.
   \hspace{15mm}
   \label{fig:cn-performance-obs-mode}
 }
+\vspace{-1.5mm}
 \caption{Compute node performance breakdown.}
 \label{fig:cn-performance}
 \end{figure}
@@ -1477,7 +1497,7 @@ version. It successfully overlaps communication with computations, reducing
 the data exchange overhead by roughly a factor of four.
 
 The correlator is extremely efficient: it achieves 96\% of the FPU
-peak performance, thanks to the highly-optimized assembly code.  The
+peak performance, due to the highly-optimized assembly code.  The
 FIR filter runs at 86\% of the peak performance, and the hand-crafted
 256-point FFT runs at 44\%.  Compared to ``Vienna'' FFTW, which is already
 efficient, our hand-written FFT is about 34\% faster.
@@ -1492,7 +1512,7 @@ assembly code is typically an order of magnitude faster.
 
 Due to all optimizations, the correlator can process 50\% more data than
 the specifications require, on only half the amount of planned resources.
-Only if the need to correlate more than 64~stations would ever arise, or if
+Only if the need to correlate more than 64~stations would arise, or if
 significant additional real-time signal processing would be needed, the
 second rack must be employed.
 We can exploit the compute power we saved to run other observation types
