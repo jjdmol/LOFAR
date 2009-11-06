@@ -391,7 +391,7 @@ void Job::jobThread()
   if (itsParset.realTime()) {
     // claim resources two seconds before observation start
     WallClockTime wallClock;
-    TimeStamp     closeToStart(static_cast<int64>((itsParset.startTime() - 2) * itsParset.sampleRate()));
+    time_t     closeToStart = itsParset.startTime() - 2;
     
     wallClock.waitUntil(closeToStart);
   }
