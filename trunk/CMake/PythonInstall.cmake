@@ -52,28 +52,16 @@ macro(python_install)
   # Set python package install directory.
   set(_dest_dir "${PYTHON_INSTALL_DIR}/${_dest_dir}")
 
-  # Byte-compile each Python file and add both .py and .pyc to install list.
-  file(RELATIVE_PATH _rel_path ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
-  set(_pyc_files)
+  # Install and byte-compile each Python file.
   foreach(_py ${_py_files})
-    set(_comment "Byte-compiling ${_rel_path}/${_py}")
-    set(_pyc ${CMAKE_CURRENT_BINARY_DIR}/${_py}c)
-    set(_py ${CMAKE_CURRENT_SOURCE_DIR}/${_py})
-    add_custom_command(OUTPUT ${_pyc}
-      COMMAND ${PYTHON_EXECUTABLE}
-      ARGS -c "import py_compile; py_compile.compile('${_py}', '${_pyc}')"
-      COMMENT ${_comment}
-      DEPENDS ${_py}
-      VERBATIM)
-    list(APPEND _pyc_files ${_pyc})
-    install(FILES ${_py} ${_pyc} DESTINATION ${_dest_dir})
+    install(FILES ${_py} DESTINATION ${_dest_dir})
+    get_filename_component(_py ${_py} NAME)
+    set(_py_code
+      "import py_compile"
+      "print '-- Byte-compiling: ${_dest_dir}/${_py}'"
+      "py_compile.compile('${_dest_dir}/${_py}')")
+    install(CODE 
+      "execute_process(COMMAND ${PYTHON_EXECUTABLE} -c \"${_py_code}\")")
   endforeach(_py ${_py_files})
-
-  # Create a unique custom target that depends on all .pyc files, and let
-  # that target depend on the current project.
-  if(NOT TARGET ${PACKAGE_NAME}_py_compile)
-    add_custom_target(${PACKAGE_NAME}_py_compile ALL DEPENDS ${_pyc_files})
-  endif(NOT TARGET ${PACKAGE_NAME}_py_compile)
-  add_dependencies(${PACKAGE_NAME} ${PACKAGE_NAME}_py_compile)
 
 endmacro(python_install)
