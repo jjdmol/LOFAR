@@ -1,0 +1,197 @@
+#!/bin/sh
+
+# rundist: Script to run a program in a distributed way
+#
+# Copyright (C) 2009
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# $Id$
+
+# This script is a front-end for startdistproc.
+# It adds the following:
+# - the environment for the distributed process is setup
+# - it makes all paths absolute
+# - it can create an output VDS file based on the input VDS file
+#   This is useful for processes that create output (e.g. combineFacets)
+#
+# The distributed processes are started with the following arguments
+# 1.  rank (0-relative)
+# 2.  name of dataset part to process
+# >2 extra arguments given
+
+
+# Find the path used to start the script.
+pgmpath=`dirname $0`
+pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+
+# Check if LOFARROOT is set.
+if test "$LOFARROOT" = ""; then
+  echo "LOFARROOT is undefined; source lofarinit.(c)sh first"
+  exit 1
+fi
+
+# Get possible options.
+help=0
+dry=
+logfile=
+cdn=
+wd=
+hfn=
+gdsout=
+overwrite=1
+useenv='-useenv'
+while [ $# != 0 ]
+do
+  # Accept both one and two leading hyphens
+  opt=`echo $1 | sed 's/^--/-/'`
+  if [ "$opt" = "-h"  -o  "$1" = "-help" ]; then
+    help=1
+    break
+  elif [ "$opt" = "-dry" ]; then
+    dry="-dry"
+    shift
+  elif [ "$opt" = "-nodry" ]; then
+    dry=
+    shift
+  elif [ "$opt" = "-logfile" ]; then
+    shift
+    logfile="$1"
+    shift
+  elif [ "$opt" = "-clusterdesc"  -o  "$opt" = "-cdn" ]; then
+    shift
+    cdn="$1"
+    shift
+  elif [ "$opt" = "-wd" ]; then
+    shift
+    wd="$1"
+    shift
+  elif [ "$opt" = "-envfile" ]; then
+    shift
+    dn=`dirname $1`
+    envf=`cd $dn > /dev/null; pwd`/`basename $1`    # absolute path
+    useenv="-useenv $envf"
+    shift
+  elif [ "$opt" = "-machinefile"  -o  "$opt" = "-hfn" ]; then
+    shift
+    hfn="$1"
+    shift
+  elif [ "$opt" = "-gdsout" ]; then
+    shift
+    gdsout="$1"
+    shift
+  elif [ "$opt" = "-overwrite" ]; then
+    overwrite=1
+    shift
+  elif [ "$opt" = "-nooverwrite" ]; then
+    overwrite=0
+    shift
+  else
+    break
+  fi
+done
+
+# Check arguments.
+if test $# = 0; then
+  help=1
+fi
+if test $help = 1; then
+  echo "run as:  rundist [-dry] [-clusterdesc] [-logfile] [-wd] [-machinefile]"
+  echo "                 prog gds [args]"
+  echo "       -dry          do a dry run, i.e. only print commands"
+  echo "       -clusterdesc  name of clusterdesc file"
+  echo "                     default is $HOME/CEP.clusterdesc"
+  echo "       -logfile      root name of logfile of each subprocess"
+  echo "                     A sequence number gets appended to it"
+  echo "                     default is setupparmdb.log"
+  echo "       -machinefile  name of the hostfile (machinefile) created"
+  echo "                     by startdistproc"
+  echo "                     Usually only needed for test purposes"
+  echo "       -wd           working directory to use on remote hosts"
+  echo "                     default is same directory as MS part"
+  echo "       -envfile      name of envfile to use by startdistproc's -useenv"
+  echo "       -gdsout       extension of the global VDS file to create"
+  echo "                     The name of this file will be the same as the input VDS"
+  echo "                     with its the extension replaced by the given one."
+  echo "                     If not given, not global VDS file will be created."
+  echo "       -overwrite    If global VDS file is created, it will be overwritten."
+  echo "                     Otherwise an error is reported if the file exists."
+  echo "                     Default is -overwrite"
+  echo ""
+  echo "       prog          program or script to start on remote hosts"
+  echo "       gds           name of global VDS file of the dataset to process"
+  echo "       args          optional further arguments for the remote processes"
+  exit 1
+fi
+
+prog=$1
+shift
+msvds=$1
+shift
+
+# Create the name of the output GDS file.
+# It is the same as the input GDS but with the given extension.
+if test "$gdsout" != ""; then
+  vdsname=`echo $msvds | sed -e "s%\([^.]*\)\.[^/]*$%\1.$gdsout%"`
+  if test -e $vdsname; then
+    if test $overwrite = 0; then
+      echo "Error, global VDS file $vdsname already exists"
+      exit 1
+    fi
+  fi
+fi
+
+# Make all file names absolute.
+dn=`dirname $msvds`
+msvds=`cd $dn > /dev/null; pwd`/`basename $msvds`
+dn=`dirname $cdn`
+cdn=`cd $dn > /dev/null; pwd`/`basename $cdn`
+if test "$hfn" != ""; then
+  dn=`dirname $hfn`
+  hfn=`cd $dn > /dev/null; pwd`/`basename $hfn`
+fi
+# Make name of program absolute.
+# First test if it contains a slash. If so, it has a path; make it absolute.
+progx=`echo $prog | sed -e 's%/%%'`
+if test "$prog" != "$progx"; then
+  dn=`dirname $prog`
+  prog=`cd $dn > /dev/null; pwd`/`basename $prog`
+else
+  # Find the program; which returns an error string if not found.
+  # If not found, it can be a builtin command, so leave it.
+  # Note that which always succeeds, even if not found. So test its output.
+  progx=`which $prog`
+  if test -e "$progx"; then
+    dn=`dirname $progx`
+    prog=`cd $dn > /dev/null; pwd`/`basename $progx`
+  fi
+fi
+
+
+# Start the processes on the various machines.
+echo "startdistproc $useenv -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $dry $prog '$wd' $*"
+startdistproc $useenv -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $dry $pgmpath/rundist-part $prog "$wd" "$@"  ||  exit 1
+
+# Optionally create a GDS file for output created by the remote processes.
+# Its name is the input GDS with the extension replaced by $pdb.
+# Refer in it to the actual pdb filename.
+if test "$vdsname" != ""; then
+  echo "Creating global VDS file $vdsname"
+  if test "$dry" = ""; then
+    sed -e "s%\(Part.*\.FileName *= *[^ #.]*\)\.[^/ #]*%\1.$gdsout%" $msvds > $vdsname
+  fi
+fi

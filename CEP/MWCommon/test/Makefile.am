@@ -6,7 +6,7 @@ CHECKTOOLPROGS	= $(CHECK_PROGRAMS)
 TESTS		= tClusterDesc.sh tNodeDesc.sh tVdsDesc.sh tVdsPartDesc.sh \
 		  tWorkersDesc.sh \
 		  tSocketConnection.sh \
-		  tfinddproc.sh tstartdproc.sh
+		  tfinddproc.sh tstartdproc.sh trundist.sh
 
 LDADD		= ../src/libmwcommon.la 
 
