@@ -127,6 +127,7 @@ confcmd=
 premake=
 mainmake=date
 postmake=
+cmaketest=0
 # If -k, continue in case of failure, so use ; to separate commands.
 ksep="&&"
 [ $kopt = 1 ] && ksep=";"
@@ -136,13 +137,13 @@ fi
 if [ $buildmake = 1 ]; then
   mainmake="date $ksep make $kstr $jobsopt "
   if [ $bldtest = 1 ]; then
-    if [ $cmake = 1 ]; then
-      postmake="$ksep make test"
-    else
+    cmaketest=1
+    if [ $cmake = 0 ]; then
       postmake="$ksep (if [ -d test ]; then cd test $ksep make test; fi;)"
     fi
   fi
   if [ $check = 1 ]; then
+    cmaketest=1
     if [ "$checktool" = "" ]; then
       postmake="$postmake $ksep make $kstr check"
     else
@@ -180,8 +181,8 @@ if [ $cmake = 1 ]; then
   mkdir -p build/$variant >> $logfile 2>&1  ||  exit 1
   cd build/$variant >> $logfile 2>&1  ||  exit 1
   echo ":::::: BUILDING VARIANT $variant " >> $srcdir/$logfile
-  echo "$srcdir/CMake/makeCMakeCache $srcdir $srcdir/lofarconf.in.private CMakeCache.txt && cmake -DCMAKE_MODULE_PATH:PATH=$srcdir/CMake $srcdir && $premake $mainmake $postmake" >> $srcdir/$logfile
-  eval "($srcdir/CMake/makeCMakeCache $srcdir $srcdir/lofarconf.in.private CMakeCache.txt && cmake -DCMAKE_MODULE_PATH:PATH=$srcdir/CMake $srcdir && $premake $mainmake $postmake)" >> $srcdir/$logfile 2>&1
+  echo "$srcdir/CMake/makeCMakeCache $srcdir $srcdir/lofarconf.in.private $cmaketest CMakeCache.txt && cmake -DCMAKE_MODULE_PATH:PATH=$srcdir/CMake $srcdir && $premake $mainmake $postmake" >> $srcdir/$logfile
+  eval "($srcdir/CMake/makeCMakeCache $srcdir $srcdir/lofarconf.in.private $cmaketest CMakeCache.txt && cmake -DCMAKE_MODULE_PATH:PATH=$srcdir/CMake $srcdir && $premake $mainmake $postmake)" >> $srcdir/$logfile 2>&1
   status=$?
   echo ":::::: FINISHED BUILDING VARIANT $variant" >> $srcdir/$logfile
 else

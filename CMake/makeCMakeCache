@@ -28,14 +28,14 @@
 # Run as:   makeCMakeCache sourceroot lofarconf_file outfile
 # E.g.      makeCMakeCache ~/LOFAR ~/LOFAR/lofarconf.in.private CMakeCache
 
-if test $# != 3; then
-  echo "Run as:   makeCMakeCache sourceroot lofarconf_file outfile"
+if test $# != 4; then
+  echo "Run as:   makeCMakeCache sourceroot lofarconf_file buildtest outfile"
   exit 1
 fi
 
 # Create output file.
-rm -f $3
-touch $3
+rm -f $4
+touch $4
 
 # Find the packages to be built.
 pkgs=
@@ -64,20 +64,22 @@ do
           break
         fi
       done
-      echo "//Build package $pkg?" >> $3
-      echo "BUILD_$pkg:BOOL=$opt" >> $3
-      echo "" >> $3
+      echo "//Build package $pkg?" >> $4
+      echo "BUILD_$pkg:BOOL=$opt" >> $4
+      echo "" >> $4
     fi
   fi
 done
 
-# By default do not build test programs.  
-#echo "//Build the testing tree." >> $3
-#echo "BUILD_TESTING:BOOL=OFF" >> $3
-#echo "" >> $3
+# Optionally build test programs.
+btest=ON
+test $3 = 1  ||  btest=OFF
+echo "//Build the testing tree?" >> $4
+echo "BUILD_TESTING:BOOL=$btest" >> $4
+echo "" >> $4
 # LOFAR needs to be built.
-echo "//Build packageLOFAR?." >> $3
-echo "BUILD_LOFAR:BOOL=ON" >> $3
-echo "" >> $3
+echo "//Build packageLOFAR?." >> $4
+echo "BUILD_LOFAR:BOOL=ON" >> $4
+echo "" >> $4
 
 exit 0
