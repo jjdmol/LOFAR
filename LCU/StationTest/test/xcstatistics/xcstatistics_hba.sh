@@ -1,5 +1,5 @@
 #!/bin/sh
-# 1.0 xcstatistics test to check SerDes Ring with HBA antennas
+# 1.0 xcstatistics test to check SerDes Ring with LBH antennas
 # 8-10-09, M.J Norden
 # HBA input with antenna
 
@@ -8,6 +8,7 @@ rspctl --rcuprsg=0
 rspctl --wg=0
 rspctl --rcumode=5
 rspctl --rcuenable=1
+rspctl --splitter=1
 sleep 2
 
 echo "check xcstat and xcangle"
