@@ -53,7 +53,10 @@ dnl
 lofar_GENERAL
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 lofar_INTERNAL(CEP/MWCommon,MWCommon,,1,MWCommon/ClusterDesc.h,,)
-dnl lofar_INTERNAL(CEP/MS,MS,,1,MS/VdsMaker.h,bbms,)
+lofar_INTERNAL(CEP/ParmDB,ParmDB,,1,ParmDB/ParmDB.h)
+lofar_INTERNAL(CEP/Calibration/BBSKernel,BBSKernel,,1,BBSKernel/Equator.h)
+
+lofar_AIPSPP(1,"-limages -lcomponents -lcoordinates -llattices -lfits -lms -lmeasures -ltables -lscimath -lscimath_f -lcasa -lmirlib -lwcs -lcfitsio")
 
 dnl
 dnl Output Makefiles

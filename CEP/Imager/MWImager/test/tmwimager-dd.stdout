@@ -1,0 +1,354 @@
+#( Name Ra Dec )=format
+facet-000-000 230.350961327192778 -10.345581776417331
+facet-000-001 230.349038672807183 -10.345581776417331
+facet-001-000 230.350959858680568 -10.344418223582668
+facet-001-001 230.349040141319421 -10.344418223582668
+Distributed sourcedb curdir/tmwimager-dd.facets will be overwritten
+startdistproc -useenv -mode 0 -nomasterhost -dsn 'curdir/tmwimager-dd.in_vd' -hfn 'curdir/tmwimager-dd_tmp.hfn' -cdn 'curdir/tmwimager-dd.in_cd' -logfile 'tmwimager-dd_tmp.log' exedir/setupsourcedb-part 'curdir' 'curdir/facetlist.txt' '' 'facets' '1' 'dry' '10' '0.5'
+socketrun 0 curdir/tmwimager-dd_tmp.hfn '' 0 1 0 tmwimager-dd_tmp.log exedir/setupsourcedb-part home/startdistproc_<pid>.envfile curdir curdir/facetlist.txt  facets 1 dry 10 0.5
+ssh -x -n localhost exedir/setupsourcedb-part socket localhost 0 3 0 'tmwimager-dd.in_ms0' 'node1:/usr' 'tmwimager-dd.in_ms0.vds' 'home/startdistproc_<pid>.envfile'  'curdir' 'curdir/facetlist.txt' '' 'facets' '1' 'dry' '10' '0.5'  &
+ssh -x -n localhost exedir/setupsourcedb-part socket localhost 0 3 1 'tmwimager-dd.in_ms1' 'node1:/usr' 'tmwimager-dd.in_ms1.vds' 'home/startdistproc_<pid>.envfile'  'curdir' 'curdir/facetlist.txt' '' 'facets' '1' 'dry' '10' '0.5'  &
+ssh -x -n localhost exedir/setupsourcedb-part socket localhost 0 3 2 'tmwimager-dd.in_ms2' 'node1:/usr' 'tmwimager-dd.in_ms2.vds' 'home/startdistproc_<pid>.envfile'  'curdir' 'curdir/facetlist.txt' '' 'facets' '1' 'dry' '10' '0.5'  &
+Create overall VDS curdir/tmwimager-dd.facets
+Strategy.Stations = []
+Strategy.InputColumn = DATA
+Strategy.TimeWindow = []
+Strategy.ChunkSize = 0
+Strategy.UseSolver = F
+Strategy.Correlation.Selection = CROSS
+Strategy.Correlation.Type = []
+Strategy.Steps = [correct]
+Step.correct.Baselines.Station1 = []
+Step.correct.Baselines.Station2 = []
+Step.correct.Model.Sources    = facet-000-000
+Step.correct.Model.Components = [BEAM]
+Step.correct.Model.Beam.Type = "HamakerDipole"
+Step.correct.Model.Beam.CoeffFile = "/home/zwieten/Work/Lofar/Data/BeamCoefficients/lba.txt"
+#Step.correct.Model.Beam.Type = "YatawattaDipole"
+#Step.correct.Model.Beam.ModuleTheta = "/home/zwieten/Work/Lofar/Data/YatawattaDipoleBeam/hba_beam_theta.so"
+#Step.correct.Model.Beam.ModulePhi = "/home/zwieten/Work/Lofar/Data/YatawattaDipoleBeam/hba_beam_phi.so"
+Step.correct.Correlation.Selection = CROSS
+Step.correct.Correlation.Type      = []
+Step.correct.Operation             = CORRECT
+Step.correct.OutputColumn          = CORRECTED_DATA
+
+arguments:
+    observation: curdir/tmwimager-dd.in_vd
+    parset: curdir/tmwimager-dd.parset-bbs-000-000
+    catalogue: curdir/facetlist.txt
+    wd: curdir
+
+    key: bbs-000-000
+    cluster_desc: curdir/tmwimager-dd.in_cd
+    db: localhost:5432
+    db name: user
+    db user: user
+    solver: 0
+    port range: 6500:6599
+    instrument db: curdir/tmwimager-dd_tmp.instdb
+    instrument name: instrument
+    sky name: curdir/tmwimager-dd.facets
+    setup: 0
+    force: 0
+    dry: 1
+    verbose: 1
+
+information from parset:
+    UseSolver: F
+
+GlobalControl bbs-000-000_control_<pid>.parset 0
+startdistproc -useenv -mode 0 -nomasterhost -dsn "curdir/tmwimager-dd.in_vd" -cdn "curdir/tmwimager-dd.in_cd" -logfile "bbs-000-000_calibrate-part_<pid>.log" "exedir/calibrate-part" "home/sim/LOFAR/installed/gnu_opt" "curdir" "bbs-000-000" "localhost" "5432" "user" "user" "instrument" "curdir/tmwimager-dd.facets" nodry
+startdistproc -useenv -mode 0 -nomasterhost -dsn 'tmwimager-dd.in_vd' -hfn 'curdir/tmwimager-dd_tmp.hfn' -cdn 'curdir/tmwimager-dd.in_cd' -logfile 'tmwimager-dd_tmp.log' ssdir/mwimager-part 'curdir/tmwimager-dd.parset-image-000-000' 'cimager' 'curdir' 'dry'
+socketrun 0 curdir/tmwimager-dd_tmp.hfn '' 0 1 0 tmwimager-dd_tmp.log ssdir/mwimager-part home/startdistproc_<pid>.envfile curdir/tmwimager-dd.parset-image-000-000 cimager curdir dry
+ssh -x -n localhost ssdir/mwimager-part socket localhost 0 3 0 'tmwimager-dd.in_ms0' 'node1:/usr' 'tmwimager-dd.in_ms0.vds' 'home/startdistproc_<pid>.envfile'  'curdir/tmwimager-dd.parset-image-000-000' 'cimager' 'curdir' 'dry'  &
+ssh -x -n localhost ssdir/mwimager-part socket localhost 0 3 1 'tmwimager-dd.in_ms1' 'node1:/usr' 'tmwimager-dd.in_ms1.vds' 'home/startdistproc_<pid>.envfile'  'curdir/tmwimager-dd.parset-image-000-000' 'cimager' 'curdir' 'dry'  &
+ssh -x -n localhost ssdir/mwimager-part socket localhost 0 3 2 'tmwimager-dd.in_ms2' 'node1:/usr' 'tmwimager-dd.in_ms2.vds' 'home/startdistproc_<pid>.envfile'  'curdir/tmwimager-dd.parset-image-000-000' 'cimager' 'curdir' 'dry'  &
+Strategy.Stations = []
+Strategy.InputColumn = DATA
+Strategy.TimeWindow = []
+Strategy.ChunkSize = 0
+Strategy.UseSolver = F
+Strategy.Correlation.Selection = CROSS
+Strategy.Correlation.Type = []
+Strategy.Steps = [correct]
+Step.correct.Baselines.Station1 = []
+Step.correct.Baselines.Station2 = []
+Step.correct.Model.Sources    = facet-000-001
+Step.correct.Model.Components = [BEAM]
+Step.correct.Model.Beam.Type = "HamakerDipole"
+Step.correct.Model.Beam.CoeffFile = "/home/zwieten/Work/Lofar/Data/BeamCoefficients/lba.txt"
+#Step.correct.Model.Beam.Type = "YatawattaDipole"
+#Step.correct.Model.Beam.ModuleTheta = "/home/zwieten/Work/Lofar/Data/YatawattaDipoleBeam/hba_beam_theta.so"
+#Step.correct.Model.Beam.ModulePhi = "/home/zwieten/Work/Lofar/Data/YatawattaDipoleBeam/hba_beam_phi.so"
+Step.correct.Correlation.Selection = CROSS
+Step.correct.Correlation.Type      = []
+Step.correct.Operation             = CORRECT
+Step.correct.OutputColumn          = CORRECTED_DATA
+
+arguments:
+    observation: curdir/tmwimager-dd.in_vd
+    parset: curdir/tmwimager-dd.parset-bbs-000-001
+    catalogue: curdir/facetlist.txt
+    wd: curdir
+
+    key: bbs-000-001
+    cluster_desc: curdir/tmwimager-dd.in_cd
+    db: localhost:5432
+    db name: user
+    db user: user
+    solver: 0
+    port range: 6500:6599
+    instrument db: curdir/tmwimager-dd_tmp.instdb
+    instrument name: instrument
+    sky name: curdir/tmwimager-dd.facets
+    setup: 0
+    force: 0
+    dry: 1
+    verbose: 1
+
+information from parset:
+    UseSolver: F
+
+GlobalControl bbs-000-001_control_<pid>.parset 0
+startdistproc -useenv -mode 0 -nomasterhost -dsn "curdir/tmwimager-dd.in_vd" -cdn "curdir/tmwimager-dd.in_cd" -logfile "bbs-000-001_calibrate-part_<pid>.log" "exedir/calibrate-part" "home/sim/LOFAR/installed/gnu_opt" "curdir" "bbs-000-001" "localhost" "5432" "user" "user" "instrument" "curdir/tmwimager-dd.facets" nodry
+startdistproc -useenv -mode 0 -nomasterhost -dsn 'tmwimager-dd.in_vd' -hfn 'curdir/tmwimager-dd_tmp.hfn' -cdn 'curdir/tmwimager-dd.in_cd' -logfile 'tmwimager-dd_tmp.log' ssdir/mwimager-part 'curdir/tmwimager-dd.parset-image-000-001' 'cimager' 'curdir' 'dry'
+socketrun 0 curdir/tmwimager-dd_tmp.hfn '' 0 1 0 tmwimager-dd_tmp.log ssdir/mwimager-part home/startdistproc_<pid>.envfile curdir/tmwimager-dd.parset-image-000-001 cimager curdir dry
+ssh -x -n localhost ssdir/mwimager-part socket localhost 0 3 0 'tmwimager-dd.in_ms0' 'node1:/usr' 'tmwimager-dd.in_ms0.vds' 'home/startdistproc_<pid>.envfile'  'curdir/tmwimager-dd.parset-image-000-001' 'cimager' 'curdir' 'dry'  &
+ssh -x -n localhost ssdir/mwimager-part socket localhost 0 3 1 'tmwimager-dd.in_ms1' 'node1:/usr' 'tmwimager-dd.in_ms1.vds' 'home/startdistproc_<pid>.envfile'  'curdir/tmwimager-dd.parset-image-000-001' 'cimager' 'curdir' 'dry'  &
+ssh -x -n localhost ssdir/mwimager-part socket localhost 0 3 2 'tmwimager-dd.in_ms2' 'node1:/usr' 'tmwimager-dd.in_ms2.vds' 'home/startdistproc_<pid>.envfile'  'curdir/tmwimager-dd.parset-image-000-001' 'cimager' 'curdir' 'dry'  &
+Strategy.Stations = []
+Strategy.InputColumn = DATA
+Strategy.TimeWindow = []
+Strategy.ChunkSize = 0
+Strategy.UseSolver = F
+Strategy.Correlation.Selection = CROSS
+Strategy.Correlation.Type = []
+Strategy.Steps = [correct]
+Step.correct.Baselines.Station1 = []
+Step.correct.Baselines.Station2 = []
+Step.correct.Model.Sources    = facet-001-000
+Step.correct.Model.Components = [BEAM]
+Step.correct.Model.Beam.Type = "HamakerDipole"
+Step.correct.Model.Beam.CoeffFile = "/home/zwieten/Work/Lofar/Data/BeamCoefficients/lba.txt"
+#Step.correct.Model.Beam.Type = "YatawattaDipole"
+#Step.correct.Model.Beam.ModuleTheta = "/home/zwieten/Work/Lofar/Data/YatawattaDipoleBeam/hba_beam_theta.so"
+#Step.correct.Model.Beam.ModulePhi = "/home/zwieten/Work/Lofar/Data/YatawattaDipoleBeam/hba_beam_phi.so"
+Step.correct.Correlation.Selection = CROSS
+Step.correct.Correlation.Type      = []
+Step.correct.Operation             = CORRECT
+Step.correct.OutputColumn          = CORRECTED_DATA
+
+arguments:
+    observation: curdir/tmwimager-dd.in_vd
+    parset: curdir/tmwimager-dd.parset-bbs-001-000
+    catalogue: curdir/facetlist.txt
+    wd: curdir
+
+    key: bbs-001-000
+    cluster_desc: curdir/tmwimager-dd.in_cd
+    db: localhost:5432
+    db name: user
+    db user: user
+    solver: 0
+    port range: 6500:6599
+    instrument db: curdir/tmwimager-dd_tmp.instdb
+    instrument name: instrument
+    sky name: curdir/tmwimager-dd.facets
+    setup: 0
+    force: 0
+    dry: 1
+    verbose: 1
+
+information from parset:
+    UseSolver: F
+
+GlobalControl bbs-001-000_control_<pid>.parset 0
+startdistproc -useenv -mode 0 -nomasterhost -dsn "curdir/tmwimager-dd.in_vd" -cdn "curdir/tmwimager-dd.in_cd" -logfile "bbs-001-000_calibrate-part_<pid>.log" "exedir/calibrate-part" "home/sim/LOFAR/installed/gnu_opt" "curdir" "bbs-001-000" "localhost" "5432" "user" "user" "instrument" "curdir/tmwimager-dd.facets" nodry
+startdistproc -useenv -mode 0 -nomasterhost -dsn 'tmwimager-dd.in_vd' -hfn 'curdir/tmwimager-dd_tmp.hfn' -cdn 'curdir/tmwimager-dd.in_cd' -logfile 'tmwimager-dd_tmp.log' ssdir/mwimager-part 'curdir/tmwimager-dd.parset-image-001-000' 'cimager' 'curdir' 'dry'
+socketrun 0 curdir/tmwimager-dd_tmp.hfn '' 0 1 0 tmwimager-dd_tmp.log ssdir/mwimager-part home/startdistproc_<pid>.envfile curdir/tmwimager-dd.parset-image-001-000 cimager curdir dry
+ssh -x -n localhost ssdir/mwimager-part socket localhost 0 3 0 'tmwimager-dd.in_ms0' 'node1:/usr' 'tmwimager-dd.in_ms0.vds' 'home/startdistproc_<pid>.envfile'  'curdir/tmwimager-dd.parset-image-001-000' 'cimager' 'curdir' 'dry'  &
+ssh -x -n localhost ssdir/mwimager-part socket localhost 0 3 1 'tmwimager-dd.in_ms1' 'node1:/usr' 'tmwimager-dd.in_ms1.vds' 'home/startdistproc_<pid>.envfile'  'curdir/tmwimager-dd.parset-image-001-000' 'cimager' 'curdir' 'dry'  &
+ssh -x -n localhost ssdir/mwimager-part socket localhost 0 3 2 'tmwimager-dd.in_ms2' 'node1:/usr' 'tmwimager-dd.in_ms2.vds' 'home/startdistproc_<pid>.envfile'  'curdir/tmwimager-dd.parset-image-001-000' 'cimager' 'curdir' 'dry'  &
+Strategy.Stations = []
+Strategy.InputColumn = DATA
+Strategy.TimeWindow = []
+Strategy.ChunkSize = 0
+Strategy.UseSolver = F
+Strategy.Correlation.Selection = CROSS
+Strategy.Correlation.Type = []
+Strategy.Steps = [correct]
+Step.correct.Baselines.Station1 = []
+Step.correct.Baselines.Station2 = []
+Step.correct.Model.Sources    = facet-001-001
+Step.correct.Model.Components = [BEAM]
+Step.correct.Model.Beam.Type = "HamakerDipole"
+Step.correct.Model.Beam.CoeffFile = "/home/zwieten/Work/Lofar/Data/BeamCoefficients/lba.txt"
+#Step.correct.Model.Beam.Type = "YatawattaDipole"
+#Step.correct.Model.Beam.ModuleTheta = "/home/zwieten/Work/Lofar/Data/YatawattaDipoleBeam/hba_beam_theta.so"
+#Step.correct.Model.Beam.ModulePhi = "/home/zwieten/Work/Lofar/Data/YatawattaDipoleBeam/hba_beam_phi.so"
+Step.correct.Correlation.Selection = CROSS
+Step.correct.Correlation.Type      = []
+Step.correct.Operation             = CORRECT
+Step.correct.OutputColumn          = CORRECTED_DATA
+
+arguments:
+    observation: curdir/tmwimager-dd.in_vd
+    parset: curdir/tmwimager-dd.parset-bbs-001-001
+    catalogue: curdir/facetlist.txt
+    wd: curdir
+
+    key: bbs-001-001
+    cluster_desc: curdir/tmwimager-dd.in_cd
+    db: localhost:5432
+    db name: user
+    db user: user
+    solver: 0
+    port range: 6500:6599
+    instrument db: curdir/tmwimager-dd_tmp.instdb
+    instrument name: instrument
+    sky name: curdir/tmwimager-dd.facets
+    setup: 0
+    force: 0
+    dry: 1
+    verbose: 1
+
+information from parset:
+    UseSolver: F
+
+GlobalControl bbs-001-001_control_<pid>.parset 0
+startdistproc -useenv -mode 0 -nomasterhost -dsn "curdir/tmwimager-dd.in_vd" -cdn "curdir/tmwimager-dd.in_cd" -logfile "bbs-001-001_calibrate-part_<pid>.log" "exedir/calibrate-part" "home/sim/LOFAR/installed/gnu_opt" "curdir" "bbs-001-001" "localhost" "5432" "user" "user" "instrument" "curdir/tmwimager-dd.facets" nodry
+startdistproc -useenv -mode 0 -nomasterhost -dsn 'tmwimager-dd.in_vd' -hfn 'curdir/tmwimager-dd_tmp.hfn' -cdn 'curdir/tmwimager-dd.in_cd' -logfile 'tmwimager-dd_tmp.log' ssdir/mwimager-part 'curdir/tmwimager-dd.parset-image-001-001' 'cimager' 'curdir' 'dry'
+socketrun 0 curdir/tmwimager-dd_tmp.hfn '' 0 1 0 tmwimager-dd_tmp.log ssdir/mwimager-part home/startdistproc_<pid>.envfile curdir/tmwimager-dd.parset-image-001-001 cimager curdir dry
+ssh -x -n localhost ssdir/mwimager-part socket localhost 0 3 0 'tmwimager-dd.in_ms0' 'node1:/usr' 'tmwimager-dd.in_ms0.vds' 'home/startdistproc_<pid>.envfile'  'curdir/tmwimager-dd.parset-image-001-001' 'cimager' 'curdir' 'dry'  &
+ssh -x -n localhost ssdir/mwimager-part socket localhost 0 3 1 'tmwimager-dd.in_ms1' 'node1:/usr' 'tmwimager-dd.in_ms1.vds' 'home/startdistproc_<pid>.envfile'  'curdir/tmwimager-dd.parset-image-001-001' 'cimager' 'curdir' 'dry'  &
+ssh -x -n localhost ssdir/mwimager-part socket localhost 0 3 2 'tmwimager-dd.in_ms2' 'node1:/usr' 'tmwimager-dd.in_ms2.vds' 'home/startdistproc_<pid>.envfile'  'curdir/tmwimager-dd.parset-image-001-001' 'cimager' 'curdir' 'dry'  &
+useHDF5 = False
+ra  = 230.349999999999994
+dec = -10.345000000000001
+npix = [2048,2048]
+nfacet = [2,2]
+startdistproc -useenv -mode 0 -nomasterhost -dsn 'curdir/tmwimager-dd.in_vd' -hfn '' -cdn 'curdir/tmwimager-dd.in_cd' -logfile ''  ssdir/makeCombinedImage-part '' curdir/tmwimager-dd.parset-combine tmwimager-dd dry
+socketrun 0 /tmp/machinefile_<pid> '' 0 1 0  exedir/rundist-part home/startdistproc_<pid>.envfile ssdir/makeCombinedImage-part  curdir/tmwimager-dd.parset-combine tmwimager-dd dry
+ssh -x -n localhost exedir/rundist-part socket localhost 0 3 0 'tmwimager-dd.in_ms0' 'node1:/usr' 'tmwimager-dd.in_ms0.vds' 'home/startdistproc_<pid>.envfile'  'ssdir/makeCombinedImage-part' '' 'curdir/tmwimager-dd.parset-combine' 'tmwimager-dd' 'dry'  &
+ssh -x -n localhost exedir/rundist-part socket localhost 0 3 1 'tmwimager-dd.in_ms1' 'node1:/usr' 'tmwimager-dd.in_ms1.vds' 'home/startdistproc_<pid>.envfile'  'ssdir/makeCombinedImage-part' '' 'curdir/tmwimager-dd.parset-combine' 'tmwimager-dd' 'dry'  &
+ssh -x -n localhost exedir/rundist-part socket localhost 0 3 2 'tmwimager-dd.in_ms2' 'node1:/usr' 'tmwimager-dd.in_ms2.vds' 'home/startdistproc_<pid>.envfile'  'ssdir/makeCombinedImage-part' '' 'curdir/tmwimager-dd.parset-combine' 'tmwimager-dd' 'dry'  &
+combineFacets curdir/tmwimager-dd.parset-combine tmwimager-dd.in_ms0 tmwimager-dd
+useHDF5 = False
+ra  = 230.349999999999994
+dec = -10.345000000000001
+npix = [2048,2048]
+nfacet = [2,2]
+combineFacets curdir/tmwimager-dd.parset-combine tmwimager-dd.in_ms1 tmwimager-dd
+useHDF5 = False
+ra  = 230.349999999999994
+dec = -10.345000000000001
+npix = [2048,2048]
+nfacet = [2,2]
+combineFacets curdir/tmwimager-dd.parset-combine tmwimager-dd.in_ms2 tmwimager-dd
+useHDF5 = False
+ra  = 230.349999999999994
+dec = -10.345000000000001
+npix = [2048,2048]
+nfacet = [2,2]
+Creating global VDS file curdir/tmwimager-dd.img
+230.35 -10.345 [0.0011635528346628863, 0.0011635528346628863] [2048, 2048] 2 False 1 1 False tmwimager-dd
+os.system (setupsourcedb -overwrite curdir/tmwimager-dd.in_vd curdir/facetlist.txt facets "tmwimager-dd.in_cd" "tmwimager-dd_tmp.log" dry "tmwimager-dd_tmp.hfn" "curdir"
+doBBS facet 0 0
+calibrate --dry --verbose --key bbs-000-000 --cluster-desc "tmwimager-dd.in_cd" --instrument-db "tmwimager-dd_tmp.instdb" --sky-name "curdir/tmwimager-dd.facets" --no-setup "curdir/tmwimager-dd.in_vd" "curdir/tmwimager-dd.parset-bbs-000-000" "curdir/facetlist.txt" "curdir"
+doImager facet 0 0 (230.35096132719278, -10.345581776417331)
+mwimager  curdir/tmwimager-dd.parset-image-000-000 "tmwimager-dd.in_cd" "curdir" "tmwimager-dd_tmp.log" "dry" "tmwimager-dd_tmp.hfn"
+doBBS facet 0 1
+calibrate --dry --verbose --key bbs-000-001 --cluster-desc "tmwimager-dd.in_cd" --instrument-db "tmwimager-dd_tmp.instdb" --sky-name "curdir/tmwimager-dd.facets" --no-setup "curdir/tmwimager-dd.in_vd" "curdir/tmwimager-dd.parset-bbs-000-001" "curdir/facetlist.txt" "curdir"
+doImager facet 0 1 (230.34903867280718, -10.345581776417331)
+mwimager  curdir/tmwimager-dd.parset-image-000-001 "tmwimager-dd.in_cd" "curdir" "tmwimager-dd_tmp.log" "dry" "tmwimager-dd_tmp.hfn"
+doBBS facet 1 0
+calibrate --dry --verbose --key bbs-001-000 --cluster-desc "tmwimager-dd.in_cd" --instrument-db "tmwimager-dd_tmp.instdb" --sky-name "curdir/tmwimager-dd.facets" --no-setup "curdir/tmwimager-dd.in_vd" "curdir/tmwimager-dd.parset-bbs-001-000" "curdir/facetlist.txt" "curdir"
+doImager facet 1 0 (230.35095985868057, -10.344418223582668)
+mwimager  curdir/tmwimager-dd.parset-image-001-000 "tmwimager-dd.in_cd" "curdir" "tmwimager-dd_tmp.log" "dry" "tmwimager-dd_tmp.hfn"
+doBBS facet 1 1
+calibrate --dry --verbose --key bbs-001-001 --cluster-desc "tmwimager-dd.in_cd" --instrument-db "tmwimager-dd_tmp.instdb" --sky-name "curdir/tmwimager-dd.facets" --no-setup "curdir/tmwimager-dd.in_vd" "curdir/tmwimager-dd.parset-bbs-001-001" "curdir/facetlist.txt" "curdir"
+doImager facet 1 1 (230.34904014131942, -10.344418223582668)
+mwimager  curdir/tmwimager-dd.parset-image-001-001 "tmwimager-dd.in_cd" "curdir" "tmwimager-dd_tmp.log" "dry" "tmwimager-dd_tmp.hfn"
+makeCombinedImage ...
+rundist -cdn tmwimager-dd.in_cd -gdsout img makeCombinedImage-part curdir/tmwimager-dd.in_vd curdir/tmwimager-dd.parset-combine tmwimager-dd "dry"
+
+ *** logfile 0 ***
+Cimager.Images.Names=image.tmwimager-dd-001-001_<pid>dirty
+Cimager.Images.cellsize=[0.001163552834663rad,0.001163552834663rad]
+Cimager.Images.image.tmwimager-dd-001-001_<pid>dirty.direction=[230,-10,J2000]
+Cimager.Images.image.tmwimager-dd-001-001_<pid>dirty.frequency=[20, 22]
+Cimager.Images.image.tmwimager-dd-001-001_<pid>dirty.nchan=1
+Cimager.Images.image.tmwimager-dd-001-001_<pid>dirty.polarisation='I Q U V'
+Cimager.Images.shape=[2048, 2048]
+Cimager.MinUV=1.0
+Cimager.datacolumn=CORRECTED_<pid>DATA
+Cimager.dataset=tmwimager-dd.in_<pid>vd
+Cimager.gridder=WProject
+Cimager.gridder.WProject.cutoff=0.001
+Cimager.gridder.WProject.maxsupport=1024
+Cimager.gridder.WProject.nwplanes=201
+Cimager.gridder.WProject.oversample=2
+Cimager.gridder.WProject.wmax=75
+Cimager.ncycles=0
+Cimager.restore=False
+Cimager.restore.beam=[1deg,1deg,0deg]
+Cimager.solver=dirty
+Cimager.solver.Clean.algorithm=MultiScale
+Cimager.solver.Clean.gain=1.0
+Cimager.solver.Clean.niter=10
+Cimager.solver.Clean.scales=[0, 3]
+Cimager.solver.Clean.verbose=True
+
+ *** logfile 1 ***
+Cimager.Images.Names=image.tmwimager-dd-001-001_<pid>dirty
+Cimager.Images.cellsize=[0.001163552834663rad,0.001163552834663rad]
+Cimager.Images.image.tmwimager-dd-001-001_<pid>dirty.direction=[230,-10,J2000]
+Cimager.Images.image.tmwimager-dd-001-001_<pid>dirty.frequency=[120, 122]
+Cimager.Images.image.tmwimager-dd-001-001_<pid>dirty.nchan=1
+Cimager.Images.image.tmwimager-dd-001-001_<pid>dirty.polarisation='I Q U V'
+Cimager.Images.shape=[2048, 2048]
+Cimager.MinUV=1.0
+Cimager.datacolumn=CORRECTED_<pid>DATA
+Cimager.dataset=tmwimager-dd.in_<pid>vd
+Cimager.gridder=WProject
+Cimager.gridder.WProject.cutoff=0.001
+Cimager.gridder.WProject.maxsupport=1024
+Cimager.gridder.WProject.nwplanes=201
+Cimager.gridder.WProject.oversample=2
+Cimager.gridder.WProject.wmax=75
+Cimager.ncycles=0
+Cimager.restore=False
+Cimager.restore.beam=[1deg,1deg,0deg]
+Cimager.solver=dirty
+Cimager.solver.Clean.algorithm=MultiScale
+Cimager.solver.Clean.gain=1.0
+Cimager.solver.Clean.niter=10
+Cimager.solver.Clean.scales=[0, 3]
+Cimager.solver.Clean.verbose=True
+
+ *** logfile 2 ***
+Cimager.Images.Names=image.tmwimager-dd-001-001_<pid>dirty
+Cimager.Images.cellsize=[0.001163552834663rad,0.001163552834663rad]
+Cimager.Images.image.tmwimager-dd-001-001_<pid>dirty.direction=[230,-10,J2000]
+Cimager.Images.image.tmwimager-dd-001-001_<pid>dirty.frequency=[220, 222]
+Cimager.Images.image.tmwimager-dd-001-001_<pid>dirty.nchan=1
+Cimager.Images.image.tmwimager-dd-001-001_<pid>dirty.polarisation='I Q U V'
+Cimager.Images.shape=[2048, 2048]
+Cimager.MinUV=1.0
+Cimager.datacolumn=CORRECTED_<pid>DATA
+Cimager.dataset=tmwimager-dd.in_<pid>vd
+Cimager.gridder=WProject
+Cimager.gridder.WProject.cutoff=0.001
+Cimager.gridder.WProject.maxsupport=1024
+Cimager.gridder.WProject.nwplanes=201
+Cimager.gridder.WProject.oversample=2
+Cimager.gridder.WProject.wmax=75
+Cimager.ncycles=0
+Cimager.restore=False
+Cimager.restore.beam=[1deg,1deg,0deg]
+Cimager.solver=dirty
+Cimager.solver.Clean.algorithm=MultiScale
+Cimager.solver.Clean.gain=1.0
+Cimager.solver.Clean.niter=10
+Cimager.solver.Clean.scales=[0, 3]
+Cimager.solver.Clean.verbose=True

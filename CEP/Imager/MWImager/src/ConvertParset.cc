@@ -65,21 +65,21 @@ namespace LOFAR {
   }
 
   ParameterSet MWImager::convertParset (const string& nameIn,
-						  const string& nameOut)
+                                        const string& nameOut)
   {
     return convertParset (ParameterSet(nameIn), nameOut);
   }
 
   ParameterSet MWImager::convertParset (const ParameterSet& parset,
-						  const string& nameOut)
+                                        const string& nameOut)
   {
     map<string,string> emptyMap;
     ParameterSet out;
     ParameterSet in (parset);
     // The output name is the base MS name minus the possible extension
-    // and directory.
-    string inname = in.getString ("dataset");
-    string outname = inname;
+    // and directory unless an image name is given.
+    string inname  = in.getString ("dataset");
+    string outname = in.getString ("Images.name", inname);
     string::size_type pos = outname.rfind ('.');
     if (pos != string::npos) {
       outname = outname.substr (0, pos);
@@ -130,6 +130,7 @@ namespace LOFAR {
       }
       string nfacets   = imin.getString ("nfacets", string());
       string facetstep = imin.getString ("facetstep", string());
+      imin.remove ("name");
       imin.remove ("ra");
       imin.remove ("dec");
       imin.remove ("directionType");

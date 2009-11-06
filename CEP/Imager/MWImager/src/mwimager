@@ -50,7 +50,7 @@ do
   fi
 done
 
-# First argument must be ms-name.
+# First argument must be parset-name.
 if test $# = 0; then
   echo "run as:   mwimager [-casa] parset-file [clusterdesc] [wd] [logfile] [dry] [hfn]"
   echo "       -casa         use casaimager, otherwise askap's cimager"
