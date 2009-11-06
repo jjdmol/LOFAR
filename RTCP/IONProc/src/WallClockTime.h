@@ -27,6 +27,7 @@
 
 #include <pthread.h>
 #include <errno.h>
+#include <time.h>
 
 
 namespace LOFAR {
@@ -39,6 +40,7 @@ class WallClockTime
 	 WallClockTime();
 	 ~WallClockTime();
 
+    void waitUntil(time_t);
     void waitUntil(const TimeStamp &);
 
   private:
@@ -62,6 +64,13 @@ inline WallClockTime::~WallClockTime()
   pthread_cond_destroy(&itsCondition);
 }
 
+inline void WallClockTime::waitUntil(time_t timestamp)
+{
+  struct timespec timespec = { timestamp, 0 };
+  
+  while (pthread_cond_timedwait(&itsCondition, &itsMutex, &timespec) != ETIMEDOUT)
+    ;
+}
 
 inline void WallClockTime::waitUntil(const TimeStamp &timestamp)
 {
