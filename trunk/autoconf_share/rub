@@ -444,7 +444,7 @@ if [ $help = 1 ]; then
   echo '  -conf             Always do a configure before the build.'
   echo '                    -noconf means do not configure.'
   echo '                    Default is to only do a configure when needed.'
-  echo '  -confopt string   configure options.'
+  echo '  -confopt string   configure options (for autotools or cmake).'
   echo '  -k                continue after an error?'
   echo '                    Default is -nok.'
   echo '  -j<option>        Option for a parallel make. Default is -noj.'
