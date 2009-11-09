@@ -392,7 +392,11 @@ void Job::jobThread()
     // claim resources two seconds before observation start
     WallClockTime wallClock;
     time_t     closeToStart = itsParset.startTime() - 2;
+    char       buf[26];
+    ctime_r(&closeToStart, buf);
+    buf[24] = '\0';
     
+    LOG_DEBUG("waiting for job " << itsObservationID << " to start: sleeping until " << buf);
     wallClock.waitUntil(closeToStart);
   }
 

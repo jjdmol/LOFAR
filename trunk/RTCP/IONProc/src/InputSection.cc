@@ -36,7 +36,7 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const Par
 :
   itsLogThread(0)
 {
-  TimeStamp::setStationClockSpeed(static_cast<unsigned>(1024 * ps->sampleRate()));
+  TimeStamp::setStationClockSpeed(ps->clockSpeed());
 
   std::vector<Parset::StationRSPpair> inputs = ps->getStationNamesAndRSPboardNumbers(psetNumber);
   itsNrRSPboards = inputs.size();
