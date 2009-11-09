@@ -181,8 +181,8 @@ if [ $cmake = 1 ]; then
   mkdir -p build/$variant >> $logfile 2>&1  ||  exit 1
   cd build/$variant >> $logfile 2>&1  ||  exit 1
   echo ":::::: BUILDING VARIANT $variant " >> $srcdir/$logfile
-  echo "$srcdir/CMake/makeCMakeCache $srcdir $srcdir/lofarconf.in.private $cmaketest CMakeCache.txt && cmake -DCMAKE_MODULE_PATH:PATH=$srcdir/CMake $srcdir && $premake $mainmake $postmake" >> $srcdir/$logfile
-  eval "($srcdir/CMake/makeCMakeCache $srcdir $srcdir/lofarconf.in.private $cmaketest CMakeCache.txt && cmake -DCMAKE_MODULE_PATH:PATH=$srcdir/CMake $srcdir && $premake $mainmake $postmake)" >> $srcdir/$logfile 2>&1
+  echo "$srcdir/CMake/makeCMakeCache $srcdir $srcdir/lofarconf.in.private $cmaketest CMakeCache.txt && cmake -DCMAKE_MODULE_PATH:PATH=$srcdir/CMake $confopt $srcdir && $premake $mainmake $postmake" >> $srcdir/$logfile
+  eval "($srcdir/CMake/makeCMakeCache $srcdir $srcdir/lofarconf.in.private $cmaketest CMakeCache.txt && cmake -DCMAKE_MODULE_PATH:PATH=$srcdir/CMake $confopt $srcdir && $premake $mainmake $postmake)" >> $srcdir/$logfile 2>&1
   status=$?
   echo ":::::: FINISHED BUILDING VARIANT $variant" >> $srcdir/$logfile
 else
