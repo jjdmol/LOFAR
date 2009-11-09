@@ -71,6 +71,7 @@ public:
 	uint32	       nrTabStations() const;
 	uint32	       nrBaselines() const;
 	uint32         nrCrossPolarisations() const;
+	uint32         clockSpeed() const; // Hz
 	double         sampleRate() const;
 	double         sampleDuration() const;
 	uint32	       nrBitsPerSample() const;
@@ -97,7 +98,7 @@ public:
 	bool	       delayCompensation() const;
 	uint32	       nrCalcDelays() const;
 	bool	       correctBandPass() const;
-	vector<string> getPortsOf(const string &aKey) const;
+	vector<unsigned> getPortsOf(const string &aKey) const;
 	string         stationName(int index) const;
 	string         storageHostName(const string& aKey, int index) const;
 	uint32	       nrPsetsPerStorage() const;
@@ -246,10 +247,15 @@ inline uint32 Parset::nrCrossPolarisations() const
 {
   return (getUint32("Observation.nrPolarisations") * getUint32("Observation.nrPolarisations"));
 }
-  
+
+inline uint32 Parset::clockSpeed() const
+{
+  return getUint32("Observation.sampleClock") * 1000000;
+} 
+
 inline double Parset::sampleRate() const
 {
-  return getUint32("Observation.sampleClock") * 1000000.0 / 1024;
+  return clockSpeed() / 1024;
 } 
 
 inline double Parset::sampleDuration() const

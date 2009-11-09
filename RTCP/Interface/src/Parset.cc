@@ -354,9 +354,9 @@ string Parset::getMSBaseDir() const
 }
 
 
-vector<string> Parset::getPortsOf(const string& aKey) const
+vector<unsigned> Parset::getPortsOf(const string& aKey) const
 {
-  return getStringVector(aKey + "_Ports",true);
+  return getUint32Vector(aKey + "_Ports",true);
 }
 
 vector<double> Parset::getManualPencilBeam(const unsigned pencil) const

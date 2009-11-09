@@ -161,12 +161,6 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     // we need the input data until the end to allow the async transpose to finish
     require( itsInputData );
   }
-
-  if (itsIsTransposeOutput) {
-    // TODO: really so?
-    // we need the transposed data until the end to allow the async transpose to finish
-    require( itsTransposedData );
-  }
 }
 
 template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::~CN_ProcessingPlan()
