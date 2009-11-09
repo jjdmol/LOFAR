@@ -65,6 +65,9 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::~InputSection()
     delete itsBeamletBuffers[i];
 
   delete itsLogThread;
+
+  // do not use the station clock when no InputSection is active
+  TimeStamp::setStationClockSpeed(0);
 }
 
 
