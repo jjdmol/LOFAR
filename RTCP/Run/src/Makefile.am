@@ -36,11 +36,9 @@ lofarpythondir = $(bindir)/Run/LOFAR
 dist_lofarpython_SCRIPTS = 	\
 			LOFAR/BGcontrol.py \
 			LOFAR/__init__.py \
-			LOFAR_Jobs.py \
 			LOFAR/Locations.py \
 			LOFAR/Logger.py \
 			LOFAR/ObservationID.py \
-			LOFAR_Parset.py \
 			LOFAR/Parset.py \
 			LOFAR/Partitions.py \
 			LOFAR/Sections.py \
