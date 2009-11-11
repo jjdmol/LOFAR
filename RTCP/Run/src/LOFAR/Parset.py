@@ -46,44 +46,18 @@ class Parset(util.Parset.Parset):
         self.setdefault("Observation.outputCorrelatedData",False);
         self.setdefault("Observation.outputCoherentStokes",False);
         self.setdefault("Observation.outputIncoherentStokes",False);
-        self.setdefault("Observation.nrStokes",1);
+        self.setdefault("Observation.whichStokes","I");
         self.setdefault("Observation.stokesIntegrateChannels",False);
         self.setdefault("Observation.stokesIntegrationSteps",1);
         self.setdefault("OLAP.OLAP_Conn.rawDataOutputOnly",False);
 
-        # depricated:
-        self.setdefault("Observation.mode","Correlate");
-        self.setdefault("Observation.outputIncoherentStokesI",False);
-
     def convertNewKeys(self):
         """ Converts some new keys to old ones to help old CEP code cope with new SAS code. """
 
-        # new bandfilter names -- needed until svn rev 14214
-        bandfilter_xlate = {
-          "LBA_30_80": "LBH_30_80", # actually, LBH/LBL depends on LBA_INNER/LBA_OUTER, but we only use this for the NyQuest zone
-          "LBA_10_90": "LBH_10_80",
-          "HBA_110_190": "HB_100_190",
-          "HBA_170_230": "HB_170_230",
-          "HBA_210_250": "HB_210_240",
-        }
+        pass
 
-        if self["Observation.bandFilter"] in bandfilter_xlate:
-          self["Observation.bandFilter"] = bandfilter_xlate[self["Observation.bandFilter"]]
-
-        # new direction type variable name -- needed until svn rev 14215
-        i = 0
-        while "Observation.Beam[%d].directionTypes" % (i,) in self:
-          self.setdefault("Observation.Beam[%d].directionType" % i, self["Observation.Beam[%d].directionTypes" % i])
-          i += 1
-
-	# override some erroneous values
-	self["OLAP.DelayComp.positionType"] = "ITRF"    
-
-
-    def distillStations(self):
+    def distillStations(self, key="Observation.VirtualInstrument.stationList"):
         """ Distill station names to use from the parset file and return them. """
-
-        key = "Observation.VirtualInstrument.stationList"  
 
         if key not in self:
           return ""
@@ -105,7 +79,7 @@ class Parset(util.Parset.Parset):
 
         cepstationlist = []
         for stat in sasstationlist:
-          for array in arrays:
+          for array in arrays + [""]:
             cepstationname = "%s%s" % (stat,array)
 
             if cepstationname not in Stations:
@@ -118,21 +92,21 @@ class Parset(util.Parset.Parset):
             
         return "+".join(cepstationlist)
 
-    def distillPartition(self):
+    def distillPartition(self, key="OLAP.CNProc.partition"):
         """ Distill partition to use from the parset file and return it. """
 
-        if "OLAP.CNProc.partition" not in self:
+        if key not in self:
           return ""
 
-        return self["OLAP.CNProc.partition"]
+        return self[key]
 
-    def distillStorageNodes(self):
+    def distillStorageNodes(self, key="Observation.VirtualInstrument.storageNodeList"):
         """ Distill storage nodes to use from the parset file and return it. """
 
-        if "OLAP.OLAP_Conn.IONProc_Storage_ServerHosts" not in self:
+        if key not in self:
           return []
 
-        return self.getStringVector("OLAP.OLAP_Conn.IONProc_Storage_ServerHosts")
+        return self.getStringVector(key)
 
     def finalise(self):
         """ Derive some final keys and finalise any parameters necessary
@@ -295,7 +269,8 @@ class Parset(util.Parset.Parset):
         self["Observation.ObsID"] = obsid	
 
     def getObsID(self):
-        assert "Observation.ObsID" in self, "Observation ID not generated yet."
+        if "Observation.ObsID" not in self:
+          return None
 
         return int(self["Observation.ObsID"])
 

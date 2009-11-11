@@ -144,11 +144,6 @@ if __name__ == "__main__":
   			dest = "partition",
 			type = "string",
   			help = "name of the BlueGene partition [%default]" )
-  hwgroup.add_option( "-D", "--storagenode",
-  			dest = "storagenode",
-			action = "append",
-			type = "string",
-  			help = "storage nodes to use [%s]" % (",".join(Locations.nodes["storage"]),) )
   hwgroup.add_option( "--storageprocs",
   			dest = "storageprocs",
 			type = "int",
@@ -245,12 +240,6 @@ if __name__ == "__main__":
     Commands.DRYRUN = True
     ObservationID.DRYRUN = True
 
-  # set storage nodes
-  if options.storagenode is not None:
-    # treat values like list001,list002 as two nodes
-    options.storagenode = ",".join(options.storagenode).split(",")
-    Locations.nodes["storage"] = options.storagenode
-
   Locations.nodes["storagemaster"] = options.storagemaster
 
   # set log server
@@ -291,14 +280,18 @@ if __name__ == "__main__":
       fatal("ERROR: Cannot read parset file: %s" % (e,))
 
     # reserve an observation id
-    try:
-      obsid = ObservationID().generateID()
-    except IOError,e:
-      print_exception("Could not generate observation ID: %s" % (e,))
-      sys.exit(1)  
+    if parset.getObsID():
+      info( "Distilled observation ID %s from parset." % (parset.getObsID(),) )
+    else:  
+      try:
+        obsid = ObservationID().generateID()
+      except IOError,e:
+        print_exception("Could not generate observation ID: %s" % (e,))
+        sys.exit(1)  
 
-    info( "Observation ID %s" % (obsid,) )
-    parset.setObsID( obsid )
+      parset.setObsID( obsid )
+
+      info( "Generated observation ID %s" % (obsid,) )
 
     # override parset with command-line values
     if options.partition is None:
@@ -315,15 +308,14 @@ if __name__ == "__main__":
 
     # define storage nodes
     if not options.nostorage:
-      if not Locations.nodes["storage"]:
-        Locations.nodes["storage"] = parset.distillStorageNodes()
+      storagenodes = parset.distillStorageNodes()
 
-        if Locations.nodes["storage"]:
-          info( "Distilled storage nodes %s from parset." % (Locations.nodes["storage"],) )
-        else:
-          fatal( "No storage nodes selected on command line or in parset." )
+      if storagenodes:
+        info( "Distilled storage nodes %s from parset." % (storagenodes,) )
+      else:
+        fatal( "No storage nodes selected in parset." )
 
-      parset.setStorageNodes( Locations.nodes["storage"] * options.storageprocs )
+      parset.setStorageNodes( storagenodes * options.storageprocs )
 
     # set stations
     if "stations" in obsparams:
