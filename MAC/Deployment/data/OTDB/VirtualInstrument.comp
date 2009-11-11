@@ -13,10 +13,10 @@ node  VirtualInstrument        1.0.0  development 'node constraint'  "VirtualIns
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #-------------------------------------------------------------------------------------------------------
 par stationList              I    text   -      10    0      [CS001,CS008,CS010,CS016]     -   'list of all used stations, eg. [CS001,CS016]'
-par partitionList            I    text   -      10    0      [R001_128_0,R001_128_1,R001_128_2,R001_128_3]     -   'list of the used BG/L partitions for the RSPboard series 0 till 3.'
+par partitionList            I    text   -      10    0      [R00]                         -   'list of the used BG/P partitions'
 par BGLNodeList              I    text   -      10    100    [bgl001,bgl002,bgl003]        -   'list of all used BGLNodes'
-par storageNodeList          I    text   -      10    100    [list001,list002]             -   'list of all used StorageNodes'
-par imageNodeList            I    text   -      10    100    [lioff005,lioff002,lioff003]        -   'list of all used ImageNodes'
+par storageNodeList          I    text   -      10    100    [lse001,lse002,lse003]        -   'list of all used StorageNodes'
+par imageNodeList            I    text   -      10    100    []                            -   'list of all used ImageNodes'
 par storageCapacity          I    int    DISK   10    100    760                           -   'total available StorageCapacity'
 par stationSet		     I	  text   -      10    0      ""	                           -   'MOM stationset'
 par minimalNrStations        I    int    -      10    0      1                             -   'MOM minimal nr stations needed'
