@@ -35,6 +35,14 @@
   The user can then override the default value. There will be no need for
   caching anymore (as far as I can see).
 
+* Add possibility to do svn checkout/update per package, using the package
+  dependencies provided by lofar_package() and/or lofar_add_package().
+  This will be close to the checkout/update behaviour of `rub'.
+
+* Turn makeversion into a real CMake macro and merge it with
+  LofarPackageVersion. Generate the Package__Version.{h,cc} files in the
+  binary directory, instead of the source directory.
+
 * Create a symlink to each header file, instead of each directory containing 
   header files. 
   Advantages: 
@@ -54,7 +62,5 @@
 * SSE flags are not yet passed properly to either GNU or ICC compiler.
   Maybe this should just be done in the variants file when defining the
   different compiler suites and options.
+  Is this still needed? SSE is enabled by default on x86_64 platforms.
 
-* Turn makeversion into a real CMake macro and merge it with
-  LofarPackageVersion. Generate the Package__Version.{h,cc} files in the
-  binary directory, instead of the source directory.
