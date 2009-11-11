@@ -39,7 +39,7 @@ void doTest()
   ParameterSet pset("tDelayCompensation.parset");
   Parset       ps(&pset);
 
-  TimeStamp::setStationClockSpeed(static_cast<unsigned>(1024 * ps.sampleRate()));
+  TimeStamp::setStationClockSpeed(ps.clockSpeed());
 
   std::vector<Parset::StationRSPpair> inputs = ps.getStationNamesAndRSPboardNumbers(psetNumber);
   const unsigned  nrBeams = ps.nrBeams();
