@@ -65,7 +65,6 @@ class OutputThread
 
     Vector<MSWriter*>       itsWriters;
     std::vector<unsigned>   itsNextSequenceNumbers;
-    std::vector<bool>       itsIsNullStream;
 };
 
 } // namespace RTCP
