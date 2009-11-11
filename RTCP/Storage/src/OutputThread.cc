@@ -40,13 +40,18 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, InputThread
   itsNrOutputs(nrOutputs),
   itsSubbandNumber(subbandNumber),
   itsObservationID(ps->observationID()),
-  itsNextSequenceNumbers(itsNrOutputs,0),
-  itsIsNullStream(itsNrOutputs,false)
+  itsNextSequenceNumbers(itsNrOutputs,0)
 {
   itsWriters.resize(itsNrOutputs);
   for (unsigned output = 0; output < itsNrOutputs; output++ ) {
     string filename;
 
+#if 0
+    // null writer
+    itsWriters[output] = new MSWriterNull();
+
+    LOG_DEBUG_STR("subband " << subbandNumber << " written to null");
+#else    
     if( dynamic_cast<CorrelatedData*>( plan.plan[output].source ) ) {
       std::stringstream out;
       out << itsPS->getMSname(subbandNumber) << "/table.f" << output << "data";
@@ -64,13 +69,6 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, InputThread
       LOG_ERROR_STR( "Cannot open " << filename << ": " << ex );
 
       itsWriters[output] = new MSWriterNull();
-      itsIsNullStream[output] = true;
-    }
-#if 0
-    {
-      // null writer
-      itsWriters[output] = new MSWriterNull();
-      itsIsNullStream[output] = true;
     }
 #endif
   }
@@ -114,19 +112,13 @@ void OutputThread::writeLogMessage()
 void OutputThread::checkForDroppedData(StreamableData *data, unsigned output)
 {
   unsigned expectedSequenceNumber = itsNextSequenceNumbers[output];
+  unsigned droppedBlocks = data->sequenceNumber - expectedSequenceNumber;
 
-  if(itsIsNullStream[output]) {
-    data->sequenceNumber	   = expectedSequenceNumber;
-    itsNextSequenceNumbers[output] = expectedSequenceNumber + 1;
-  } else {
-    unsigned droppedBlocks = data->sequenceNumber - expectedSequenceNumber;
-
-    if (droppedBlocks > 0) {
-      LOG_WARN_STR("dropped " << droppedBlocks << (droppedBlocks == 1 ? " block for subband " : " blocks for subband ") << itsSubbandNumber << " and output " << output << " of obsID " << itsObservationID);
-    }
-
-    itsNextSequenceNumbers[output] = data->sequenceNumber + 1;
+  if (droppedBlocks > 0) {
+    LOG_WARN_STR("dropped " << droppedBlocks << (droppedBlocks == 1 ? " block for subband " : " blocks for subband ") << itsSubbandNumber << " and output " << output << " of obsID " << itsObservationID);
   }
+
+  itsNextSequenceNumbers[output] = data->sequenceNumber + 1;
 }
 
 
