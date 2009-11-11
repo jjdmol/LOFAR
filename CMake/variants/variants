@@ -39,14 +39,12 @@ set(GNU_COMPILE_DEFINITIONS_OPT)
 
 # Default search path to use when searching for an external package.
 set(LOFAR_SEARCH_PATH 
-  "+prefix"
-  "+root"
-  "/opt/lofar/external/+pkg+vers/+comp"
-  "/opt/lofar/external/+pkg+vers"
-  "/usr/local/+pkg+vers/+comp"
-  "/usr/local/+pkg+vers"
-  "/usr/local"
-  "/usr"
+  +prefix
+  +root
+  /opt/lofar/external/+pkg+vers/+comp
+  /opt/lofar/external/+pkg+vers
+  /usr/local/+pkg+vers/+comp
+  /usr/local/+pkg+vers
 )
 
 # Define default values for all LOFAR build options. 
