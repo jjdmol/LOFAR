@@ -22,13 +22,13 @@
 #
 #  $Id$
 
-# This script generates the file LofarPackageList.cmake. This CMake file
-# initializes the <pkg>_SOURCE_DIR variables for each LOFAR package.
+# This script generates the file LofarPackageList.cmake, which initializes the
+# <pkg>_SOURCE_DIR variables for each LOFAR package.
 
 
 # Get the LOFAR source directory root
 script_dir=$(cd $(dirname $0) && pwd)
-lofar_root=$(echo $script_dir | sed -e "s%\(.*/LOFAR\)/.*%\1%")
+lofar_root=$(echo $script_dir | sed -e "s|\(.*/LOFAR\)/.*|\1|")
 
 # Just a safety net; this script must be inside the LOFAR tree.
 if test "$script_dir" = "$lofar_root"; then
@@ -59,19 +59,27 @@ if(NOT DEFINED LOFAR_PACKAGE_LIST_INCLUDED)
   set(LOFAR_PACKAGE_LIST_INCLUDED TRUE)
 EOF
 
+# Set internal field separator (IFS) to newline only.
+IFS=$'\n'
+
 # Add a trailing slash to the directory path $lofar_root to ensure that, if
 # it is a symbolic link, it is translated to the directory it links to.
 for f in $(find $lofar_root/ -name CMakeLists.txt)
 do
-  # Search for the lofar_package() command, which looks like:
-  # lofar_package (MyProject ...)
-  p=$(sed -n 's,^[ \t]*lofar_package[ \t]*([ \t]*\([^ \t)]\+\).*$,\1,ip' $f)
-  if test "$p" != ""; then
-    d=$(dirname $f | sed -n "s%$lofar_root/%%p")
-    if test "$d" != ""; then
-      echo >&3 "  set(${p}_SOURCE_DIR \${CMAKE_SOURCE_DIR}/$d)"
-    fi
-  fi
+  # get directory name relative to $lofar_root
+  bdir=$(dirname $f | sed "s|$lofar_root/\?||")
+  # Search for the lofar_add_package() command, which looks like:
+  # lofar_add_package (MyPackage [MyPackageDir])
+  for pkg in $(sed -n "s|^[[:space:]]*[Ll][Oo][Ff][Aa][Rr]_[Aa][Dd][Dd]_[Pp][Aa][Cc][Kk][Aa][Gg][Ee][[:space:]]*([[:space:]]*\([^)]\+\)).*$|\1|p" $f)
+  do
+    # First argument is the package name
+    pkgnam=$(echo $pkg | sed "s|[[:space:]].*||")
+    # Remaining part is the package source dir
+    pkgdir=$(echo $pkg | sed -e "s|[^[:space:]]\+[[:space:]]\+||")
+    # Prefix pkgdir with bdir unless bdir is empty
+    pkgdir=${bdir:+$bdir/}$pkgdir
+    echo >&3 "  set(${pkgnam}_SOURCE_DIR \${CMAKE_SOURCE_DIR}/${pkgdir})"
+  done
 done
 echo >&3 "endif(NOT DEFINED LOFAR_PACKAGE_LIST_INCLUDED)"
 
