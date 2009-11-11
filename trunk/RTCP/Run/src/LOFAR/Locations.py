@@ -118,9 +118,6 @@ class Locations:
       } )
       
       self.nodes.update( {
-        # which storage nodes to use
-	"storage": ["lse001","lse002","lse003"],
-
         # default log server address
         "logserver": "",
       } )
@@ -137,8 +134,6 @@ class Locations:
       } )
 
       self.nodes.update( {
-	"storage": ["lse001","lse002","lse003"],
-
         # no external log server
         "logserver": "",
       } )

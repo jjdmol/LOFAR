@@ -193,21 +193,6 @@ unsigned Parset::nyquistZone() const
       bandFilter == "HBA_210_250")
     return 3;
 
-  /* >>> depricated */
-  if (bandFilter == "LBL_10_80" ||
-      bandFilter == "LBL_30_80" ||
-      bandFilter == "LBH_10_80" ||
-      bandFilter == "LBH_30_80")
-    return 1;
-
-  if (bandFilter == "HB_100_190")
-    return 2;
-
-  if (bandFilter == "HB_170_230" ||
-      bandFilter == "HB_210_240")
-    return 3;
-  /* <<< depricated */
-
   THROW(InterfaceException, string("unknown band filter \"" + bandFilter + '"'));
 }
 
@@ -393,14 +378,7 @@ string Parset::getBeamDirectionType(const unsigned beam) const
   string beamDirType;
  
   sprintf(buf,"Observation.Beam[%d].directionTypes", beam);
-  if (isDefined(buf)) {
-    beamDirType = getString(buf);
-  } else {
-    /* >>> depricated */
-    sprintf(buf,"Observation.Beam[%d].directionType", beam);
-    beamDirType = getString(buf);
-    /* << depricated */
-  }
+  beamDirType = getString(buf);
 
   return beamDirType;
 }

@@ -112,7 +112,6 @@ public:
 	string	       getMSname(unsigned sb) const;
 	string         getMSBaseDir() const;
 	string         getTransportType(const string& prefix) const;
-	string         getModeName() const;
 
         bool           outputFilteredData() const;
         bool           outputCorrelatedData() const;
@@ -285,45 +284,39 @@ inline uint32 Parset::stokesIntegrationSteps() const
 
 inline bool Parset::outputFilteredData() const
 {
-  return getModeName() == "Filter" || getBool("Observation.outputFilteredData",false);
+  return getBool("Observation.outputFilteredData",false);
 }
 
 inline bool Parset::outputCorrelatedData() const
 {
-  return getModeName() == "Correlate" || getBool("Observation.outputCorrelatedData",false);
+  return getBool("Observation.outputCorrelatedData",false);
 }
 
 inline bool Parset::outputBeamFormedData() const
 {
-  return getModeName() == "ComplexVoltages" || getBool("Observation.outputBeamFormedData",false);
+  return getBool("Observation.outputBeamFormedData",false);
 }
 
 inline bool Parset::outputCoherentStokes() const
 {
-  return getModeName() == "CoherentStokesI"
-      || getModeName() == "CoherentAllStokes"
-      || getBool("Observation.outputCoherentStokes",false);
+  return getBool("Observation.outputCoherentStokes",false);
 }
 
 inline bool Parset::outputIncoherentStokes() const
 {
-  return getModeName() == "IncoherentStokesI"
-      || getModeName() == "IncoherentAllStokes"
-      || getBool("Observation.outputIncoherentStokesI",false)
+  return getBool("Observation.outputIncoherentStokesI",false)
       || getBool("Observation.outputIncoherentStokes",false);
 }
 
 inline unsigned Parset::nrStokes() const
 {
-  if( getModeName() == "IncoherentStokesI"
-   || getModeName() == "CoherentStokesI" 
-   || getBool("Observation.outputIncoherentStokesI",false) ) {
+  if( getString("Observation.whichStokes","") == "I" ) {
     return 1;
-  } else if( getModeName() == "IncoherentAllStokes"
-          || getModeName() == "CoherentAllStokes" ) {
+  } else if( getString("Observation.whichStokes","") == "IQUV" ) {
     return 4;
-  } else {
-    return getUint32("Observation.nrStokes",0);
+  } else {  
+    // backward compatibility
+    return 1;
   }
 }
 
@@ -494,11 +487,6 @@ inline bool Parset::dumpRawData() const
 inline bool Parset::realTime() const
 {
   return getBool("OLAP.realTime");
-}
-
-inline string Parset::getModeName() const
-{
-  return getString("Observation.mode", "");
 }
 
 inline uint32 Parset::nrPencilRings() const
