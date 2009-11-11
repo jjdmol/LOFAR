@@ -8,58 +8,17 @@
 #set(CMAKE_SYSTEM_NAME BlueGeneP)
 
 # Define compiler suites.
-set(LOFAR_COMPILER_SUITES
-  GNUBGP
-)
+#list(APPEND LOFAR_COMPILER_SUITES GNUBGP)
 
 # Define build variants.
-set(LOFAR_BUILD_VARIANTS
-  CN
-  ION
-)
+#list(APPEND LOFAR_BUILD_VARIANTS CN ION)
 
 # Options
-option(USE_MPI "Use MPI" ON)
-option(BUILD_STATIC_EXECUTABLES "Build static executables" ON)
-
-# GNU BG/P compiler suite
-set(GNUBGP_COMPILERS GNUBGP_C GNUBGP_CXX GNUBGP_ASM)
-set(GNUBGP_C         /usr/bin/gcc)
-set(GNUBGP_CXX       /usr/bin/g++)
-set(GNUBGP_ASM       /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++)
-
-set(GNUBGP_C_FLAGS)
-set(GNUBGP_C_FLAGS_DEBUG "-g")
-set(GNUBGP_C_FLAGS_OPT "-g -O2")
-set(GNUBGP_CXX_FLAGS "-W -Wall -Woverloaded-virtual -Wno-unknown-pragmas")
-set(GNUBGP_CXX_FLAGS_DEBUG "-g")
-set(GNUBGP_CXX_FLAGS_OPT "-g -O2")
-set(GNUBGP_EXE_LINKER_FLAGS)
-#  -B/bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/bin)
-set(GNUBGP_EXE_LINKER_FLAGS_CN)
-#  -L/bgsys/drivers/ppcfloor/comm/lib
-#  -L/bgsys/drivers/ppcfloor/runtime/SPI)
-#  -lcxxmpich.cnk -lmpich.cnk -ldcmfcoll.cnk -ldcmf.cnk -lSPI.cna)
-# -lpthread -lrt -lSPI.cna -lm)
-set(GNUBGP_EXE_LINKER_FLAGS_ION)
-set(GNUBGP_COMPILE_DEFINITIONS 
-  -B/bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/bin
-  -DHAVE_BGP
-  -DHAVE_FCNP
-  -DHAVE_MPI
-  -I/bgsys/drivers/ppcfloor/comm/include
-  -I/bgsys/drivers/ppcfloor/arch/include)
-set(GNUBGP_COMPILE_DEFINITIONS_CN -DHAVE_BGP_CN)
-set(GNUBGP_COMPILE_DEFINITIONS_ION -DHAVE_BGP_ION)
-
-# Re-root search to this directory first; needed for cross-compilation
-#set(CMAKE_FIND_ROOT_PATH /bgsys/drivers/ppcfloor/linux/OS)
-set(CMAKE_FIND_ROOT_PATH /bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux)
-#set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-#set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
-#set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+option(USE_LOG4CPLUS "Use Log4Cplus" OFF)
+option(USE_MPI       "Use MPI"       ON)
 
 # Host specific paths to third party packages
 set(CASACORE_PREFIX_PATH /cephome/romein/packages/casacore-0.3.0/stage)
 set(MASS_PREFIX_PATH /opt/mass)
 set(FFTW2_PREFIX_PATH /cephome/romein/packages/fftw-2.1.5-single-precision)
+set(BOOST_LIBRARYDIR /cephome/romein/lib.bgp)

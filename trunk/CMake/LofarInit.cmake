@@ -65,9 +65,6 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
   set(CMAKE_MODULE_PATH "${LOFAR_ROOT}/CMake" CACHE PATH 
     "LOFAR CMake module path")
 
-  # Include host-specific variants file, if present, and global variants file.
-  include(LofarVariants)
-
   # Get compiler suite and build variant from binary directory name.
   # The directory name should follow the naming convention
   # <compiler>_<variant>, where <compiler> specifies the compiler suite to
@@ -82,6 +79,15 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
   string(TOUPPER ${_cmpvar} _cmpvar)
   string(REGEX REPLACE "\(.*)_.*" "\\1" _cmp ${_cmpvar})
   string(REGEX REPLACE ".*_\(.*)" "\\1" _var ${_cmpvar})
+
+  # Include the compiler definition file
+  include(variants/${_cmp} OPTIONAL RESULT_VARIABLE _result)
+  if(_result)
+    message(STATUS "Loaded compiler defintion file for ${_cmp}")
+  endif(_result)
+
+  # Include host-specific variants file, if present, and global variants file.
+  include(LofarVariants)
 
   # Check if compiler suite is known. Compiler suites should be defined in the
   # variants file.
@@ -189,11 +195,6 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
   else(LOFAR_LIBDIR STREQUAL lib64)
     set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS FALSE)
   endif(LOFAR_LIBDIR STREQUAL lib64)
-
-  # Make sure that RPATH is linked in for all LOFAR libraries ...
-  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LOFAR_LIBDIR}")
-  # ... and for all "external" libraries
-  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
   # Create include directory that will hold symbolic links to all
   # (sub)projects of the current build. This is needed, because we use

@@ -58,6 +58,10 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
     set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
     # Maybe this works as well, haven't tried yet.
     # set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
+  else(BUILD_STATIC_EXECUTABLES)
+    # Set RPATH to use for installed targets; append linker search path
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LOFAR_LIBDIR}")
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
   endif(BUILD_STATIC_EXECUTABLES)
   
 #  if(USE_AIPSPP)
