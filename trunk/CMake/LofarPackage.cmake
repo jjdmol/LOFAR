@@ -96,7 +96,7 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
           add_subdirectory(${_srcdir} ${_bindir})
         else(EXISTS ${_srcdir})
           set(_errmsg "Source package `${_pkg}' not found! "
-            "Directory ${_srcdir} does not exist")
+            "Directory ${_srcdir} does not exist.")
           if(_required)
             message(FATAL_ERROR ${_errmsg})
           else(_required)
