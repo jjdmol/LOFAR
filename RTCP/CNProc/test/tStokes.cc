@@ -130,9 +130,11 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
 
   BeamFormedData in( NRPENCILBEAMS, NRCHANNELS, NRSAMPLES );
   StokesData out( true, NRSTOKES, NRPENCILBEAMS, NRCHANNELS, NRSAMPLES, INTEGRATION );
+  StokesDataIntegratedChannels integrated( true, NRSTOKES, NRPENCILBEAMS, NRSAMPLES, INTEGRATION );
 
   in.allocate();
   out.allocate();
+  integrated.allocate();
 
   // fill
   for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
@@ -148,6 +150,7 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
   // calculate
   Stokes     s = Stokes( NRSTOKES, NRCHANNELS, NRSAMPLES, INTEGRATION );
   s.calculateCoherent( &in, &out, NRPENCILBEAMS );
+  s.compressStokes( &out, &integrated, NRPENCILBEAMS );
 
   // check
   for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
@@ -199,6 +202,20 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
       }
     }
   }
+
+  for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
+    for( unsigned i = 0; i < NRSAMPLES; i++ ) {
+      for( unsigned s = 0; s < NRSTOKES; s++ ) {
+        float channelSum = 0.0f;
+
+        for( unsigned c = 0; c < NRCHANNELS; c++ ) {
+          channelSum += out.samples[b][c][i][s];
+        }
+
+        assert( same(channelSum, integrated.samples[b][i][s] ) );
+      }
+    }  
+  }    
 }
 
 int main() {
