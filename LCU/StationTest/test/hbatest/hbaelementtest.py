@@ -45,7 +45,7 @@ def open_file(files, file_nr) :
 		f=open(file_name,'rb')
 		max_frames = size/(512*8)
 		frames_to_process=max_frames
-    		rcu_nr = int(files[file_nr][-6:-4])
+    		rcu_nr = int(files[file_nr][-7:-4])
 		#print 'File nr ' + str(file_nr) + ' RCU nr ' + str(rcu_nr) + '  ' + files[file_nr][-6:-4]
 	else :
 		frames_to_process=0
