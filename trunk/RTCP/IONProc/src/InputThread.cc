@@ -63,8 +63,7 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs
   sa.sa_handler = sigHandler;
 
   if (sigaction(SIGUSR1, &sa, 0) != 0) {
-    perror("sigaction");
-    exit(1);
+    throw SystemCallException("sigaction", errno, THROW_ARGS);
   }
 
   stop = stopped = false;
