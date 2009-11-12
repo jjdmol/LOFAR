@@ -47,28 +47,25 @@
 namespace LOFAR {
 namespace RTCP {
 
-OutputSection::OutputSection(unsigned psetNumber, const std::vector<Stream *> &streamsFromCNs)
+OutputSection::OutputSection(const Parset *ps, unsigned psetNumber, const std::vector<Stream *> &streamsFromCNs)
 :
-  itsPsetNumber(psetNumber),
-  itsParset(0),
+  itsParset(ps),
+  itsPsetIndex(ps->outputPsetIndex(psetNumber)),
+  itsNrComputeCores(ps->nrCoresPerPset()),
+  itsCurrentComputeCore(0),
+  itsNrSubbands(ps->nrSubbands()),
+  itsNrSubbandsPerPset(ps->nrSubbandsPerPset()),
+  itsRealTime(ps->realTime()),
   itsPlan(0),
   itsStreamsFromCNs(streamsFromCNs)
 {
 }
 
-void OutputSection::preprocess(const Parset *ps)
+void OutputSection::preprocess()
 {
-  itsParset                 = ps;
-  itsPsetIndex		    = ps->outputPsetIndex(itsPsetNumber);
-  itsNrComputeCores	    = ps->nrCoresPerPset();
-  itsCurrentComputeCore	    = 0;
-  itsNrSubbands             = ps->nrSubbands();
-  itsNrSubbandsPerPset	    = ps->nrSubbandsPerPset();
-  itsRealTime               = ps->realTime();
-
   itsDroppedCount.resize(itsNrSubbandsPerPset);
 
-  CN_Configuration configuration(*ps);
+  CN_Configuration configuration(*itsParset);
 
   // allocate output structures and temporary data holders
   itsPlan = new CN_ProcessingPlan<>( configuration, false, true );
@@ -104,18 +101,18 @@ void OutputSection::preprocess(const Parset *ps)
           continue;
         }
 
-        if( ps->IONintegrationSteps() <= 1 ) {
+        if( itsParset->IONintegrationSteps() <= 1 ) {
           continue;
         }
 
         // set up this output to accumulate data
         p.source->allocate( hugeMemoryAllocator );
         output.sums.push_back( p.source );
-        output.nrIntegrationSteps = ps->IONintegrationSteps();
+        output.nrIntegrationSteps = itsParset->IONintegrationSteps();
       }
 
       // create an output thread for this subband
-      itsOutputThreads.push_back(new OutputThread(subbandNumber, *ps));
+      itsOutputThreads.push_back(new OutputThread(subbandNumber, *itsParset));
     }
   }
   

@@ -34,9 +34,9 @@ namespace RTCP {
 class OutputSection
 {
   public:
-    OutputSection(unsigned psetNumber, const std::vector<Stream *> &streamsFromCNs);
+    OutputSection(const Parset *ps, unsigned psetNumber, const std::vector<Stream *> &streamsFromCNs);
 
-    void			preprocess(const Parset *);
+    void			preprocess();
     void			process();
     void			postprocess();
 
@@ -61,12 +61,12 @@ class OutputSection
 
     std::vector<struct SingleOutput> itsOutputs; // [outputs]
 
-    unsigned			itsPsetNumber, itsPsetIndex;
-    unsigned			itsNrComputeCores, itsCurrentComputeCore;
-    unsigned                    itsNrSubbands;
-    unsigned			itsNrSubbandsPerPset;
     const Parset                *itsParset;
-    bool                        itsRealTime;
+    const unsigned		itsPsetIndex;
+    unsigned			itsNrComputeCores, itsCurrentComputeCore;
+    const unsigned              itsNrSubbands;
+    const unsigned		itsNrSubbandsPerPset;
+    const bool                  itsRealTime;
 
     // the main plan, also holds temporary results
     CN_ProcessingPlan<>         *itsPlan;
@@ -76,6 +76,7 @@ class OutputSection
 
     const std::vector<Stream *> &itsStreamsFromCNs;
 };
+
 
 }
 }
