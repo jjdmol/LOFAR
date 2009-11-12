@@ -37,6 +37,7 @@
 #include <AMCBase/ResultData.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/MultiDimArray.h>
+#include <Interface/Thread.h>
 
 #include <boost/noncopyable.hpp>
 #include <pthread.h>
@@ -101,10 +102,8 @@ namespace LOFAR
     private:
       // do the delay compensation calculations in a separate thread to allow bulk
       // calculations and to avoid blocking other threads
-      pthread_t			thread;
       bool			stop;
-      static void *mainLoopStub( void *delayCompensationObject );
-      void mainLoop();
+      void                      mainLoop();
 
       // the circular buffer to hold the moving beam directions for every second of data
       Matrix<AMC::Direction>	itsBuffer;
@@ -156,6 +155,8 @@ namespace LOFAR
       AMC::Position                 itsPhasePositionDiffs;
       
       NSTimer                       itsDelayTimer;
+
+      Thread                        *thread;
     };
 
     // @}
