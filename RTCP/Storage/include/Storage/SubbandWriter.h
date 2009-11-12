@@ -39,7 +39,6 @@
 #include <Interface/CN_ProcessingPlan.h>
 #include <Interface/StreamableData.h>
 #include <Interface/Queue.h>
-#include <Interface/RSPTimeStamp.h>
 #include <Storage/InputThread.h>
 #include <Storage/OutputThread.h>
 #include <Storage/MSWriter.h>
