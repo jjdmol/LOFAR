@@ -24,6 +24,8 @@
 #if defined HAVE_BGLPERSONALITY
 
 #include <BGL_Personality.h>
+#include <Stream/SystemCallException.h>
+#include <Interface/Mutex.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -37,14 +39,14 @@
 namespace LOFAR {
 namespace RTCP {
 
-static pthread_mutex_t	     mutex	 = PTHREAD_MUTEX_INITIALIZER;
+static Mutex                 mutex;
 static bool		     initialized = false;
 static struct BGLPersonality BGLPersonality;
 
 
 struct BGLPersonality *getBGLpersonality()
 {
-  pthread_mutex_lock(&mutex);
+  ScopedLock lock( mutex );
 
   if (!initialized) {
     initialized = true;
@@ -52,22 +54,17 @@ struct BGLPersonality *getBGLpersonality()
     int fd;
 
     if ((fd = open("/proc/personality", O_RDONLY)) < 0) {
-      perror("open /proc/personality");
-      exit(1);
+      throw SystemCallException("open /proc/personality", errno, THROW_ARGS);
     }
 
     if (read(fd, &BGLPersonality, sizeof BGLPersonality) < 0) {
-      perror("read /proc/personality");
-      exit(1);
+      throw SystemCallException("read /proc/personality", errno, THROW_ARGS);
     }
 
     if (close(fd) < 0) {
-      perror("close /proc/personality");
-      exit(1);
+      throw SystemCallException("close /proc/personality", errno, THROW_ARGS);
     }
   }
-
-  pthread_mutex_unlock(&mutex);
 
   return &BGLPersonality;
 }
