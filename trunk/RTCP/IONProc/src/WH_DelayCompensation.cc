@@ -74,11 +74,8 @@ namespace LOFAR
     {
       setBeamDirections(ps);
       setPositionDiffs(ps);
-      
-      if (pthread_create(&thread, 0, mainLoopStub, this) != 0) {
-        LOG_ERROR("could not create delay compensation thread");
-        exit(1);
-      }
+
+      thread = new Thread( this, &WH_DelayCompensation::mainLoop );
     }
 
     WH_DelayCompensation::~WH_DelayCompensation()
@@ -87,25 +84,7 @@ namespace LOFAR
       stop = true;
       bufferFree.up( itsNrCalcDelays );
 
-      if (pthread_join(thread, 0) != 0) {
-        LOG_ERROR("could not join delay compensation thread");
-        exit(1);
-      }
-    }
-
-    void *WH_DelayCompensation::mainLoopStub( void *delayCompensationObject )
-    {
-      try {
-        static_cast<WH_DelayCompensation*>(delayCompensationObject)->mainLoop();
-      } catch (Exception &ex) {
-        LOG_FATAL_STR("delay compensation thread caught Exception: " << ex);
-      } catch (std::exception &ex) {
-        LOG_FATAL_STR("delay compensation thread caught std::exception: " << ex.what());
-      } catch (...) {
-        LOG_FATAL("delay compensation thread caught non-std::exception");
-      }
-
-      return 0;
+      delete thread;
     }
 
     void WH_DelayCompensation::mainLoop()
