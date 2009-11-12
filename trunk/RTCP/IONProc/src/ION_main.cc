@@ -514,9 +514,9 @@ template <typename SAMPLE_TYPE> void Job::toCNthread()
 void Job::fromCNthread()
 {
   LOG_DEBUG("starting from_CN thread");
-  OutputSection outputSection(myPsetNumber, itsCNstreams);
+  OutputSection outputSection(&itsParset, myPsetNumber, itsCNstreams);
 
-  outputSection.preprocess(&itsParset);
+  outputSection.preprocess();
 
   for (unsigned run = 0; run < itsNrRuns; run ++)
     outputSection.process();
