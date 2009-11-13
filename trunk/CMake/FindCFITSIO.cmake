@@ -1,4 +1,4 @@
-# $Id: FindWcslib.cmake 13814 2009-08-20 11:55:06Z loose $
+# $Id: FindCFITSIO.cmake 13814 2009-08-20 11:55:06Z loose $
 #
 # Copyright (C) 2008-2009
 # ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,30 +18,30 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# Try to find Wcslib.
+# Try to find CFITSIO.
 #
 # This will define:
 #  
-#  WCSLIB_FOUND        - system has Wcslib
-#  WCSLIB_INCLUDE_DIR  - the Wcslib include directory (cached)
-#  WCSLIB_INCLUDE_DIRS - the Wcslib include directories
-#                         (identical to WCSLIB_INCLUDE_DIR)
-#  WCSLIB_LIBRARY      - the Wcslib library (cached)
-#  WCSLIB_LIBRARIES    - the Wcslib libraries
-#                         (identical to WCSLIB_LIBRARY)
+#  CFITSIO_FOUND        - system has CFITSIO
+#  CFITSIO_INCLUDE_DIR  - the CFITSIO include directory (cached)
+#  CFITSIO_INCLUDE_DIRS - the CFITSIO include directories
+#                         (identical to CFITSIO_INCLUDE_DIR)
+#  CFITSIO_LIBRARY      - the CFITSIO library (cached)
+#  CFITSIO_LIBRARIES    - the CFITSIO libraries
+#                         (identical to CFITSIO_LIBRARY)
 
-if(NOT WCSLIB_FOUND)
+if(NOT CFITSIO_FOUND)
 
-  find_path(WCSLIB_INCLUDE_DIR wcslib/wcs.h)
-  find_library(WCSLIB_LIBRARY wcs)
-  mark_as_advanced(WCSLIB_INCLUDE_DIR WCSLIB_LIBRARY)
+  find_path(CFITSIO_INCLUDE_DIR fitsio.h)
+  find_library(CFITSIO_LIBRARY cfitsio)
+  find_library(M_LIBRARY m)
+  mark_as_advanced(CFITSIO_INCLUDE_DIR CFITSIO_LIBRARY M_LIBRARY)
 
   include(FindPackageHandleStandardArgs)
-  set(custom_msg "Could NOT find Wcslib in ${CMAKE_PREFIX_PATH}")
-  find_package_handle_standard_args(Wcslib "${custom_msg}"
-    WCSLIB_LIBRARY WCSLIB_INCLUDE_DIR)
+  find_package_handle_standard_args(CFITSIO DEFAULT_MSG
+    CFITSIO_LIBRARY M_LIBRARY CFITSIO_INCLUDE_DIR)
 
-  set(WCSLIB_INCLUDE_DIRS ${WCSLIB_INCLUDE_DIR})
-  set(WCSLIB_LIBRARIES ${WCSLIB_LIBRARY})
+  set(CFITSIO_INCLUDE_DIRS ${CFITSIO_INCLUDE_DIR})
+  set(CFITSIO_LIBRARIES ${CFITSIO_LIBRARY} ${M_LIBRARY})
 
-endif(NOT WCSLIB_FOUND)
+endif(NOT CFITSIO_FOUND)
