@@ -33,7 +33,7 @@ Observation.Beam[0].directionTypes = J2000
 
 # ----- Output streams
 Observation.MSNameMask = /data1/D${YEAR}_${MSNUMBER}/SB${SUBBAND}.MS
-Observation.VirtualInstrument.storageNodeList = [lse001,lse002,lse003]
+Observation.VirtualInstrument.storageNodeList = [lse019,lse020,lse021]
 
 OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.174.0.1:4000] # output data go to lse001
 OLAP.OLAP_Conn.rawDataOutputOnly = F
