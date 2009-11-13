@@ -99,6 +99,7 @@ private:
 	void	_updateObsListInPVSS ();
 	uint16	_addObservation		 (const string&   	name);
 	void	_abortObservation	 (ObsIter			theObs);
+	void	_abortObsWithWrongClock();
    	void	_disconnectedHandler (GCFPortInterface&	port);
    	void	_databaseEventHandler(GCFEvent& 		event);
 	void	_handleQueryEvent	 (GCFEvent&			event);

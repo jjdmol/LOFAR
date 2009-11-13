@@ -182,7 +182,7 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 				rbm[i] = '1';
 			}
 		}
-		LOG_INFO_STR("Setting receiverBitMap of DP:" << itsObsPar.realPVSSdatapoint << "." << PN_OBS_RECEIVER_BITMAP);
+		LOG_INFO_STR("Setting receiverBitMap of DP:" << itsObsPar.realPVSSdatapoint << "." << PN_OBS_RECEIVER_BITMAP << "to " << theRCUs);
 		itsPropertySet->setValue(PN_OBS_RECEIVER_BITMAP,GCFPVString (rbm));
 		itsPropertySet->setValue(PN_OBS_CLAIM_NAME, 
 								 GCFPVString(formatString("LOFAR_ObsSW_Observation%d", itsObsPar.obsID)));

@@ -63,7 +63,7 @@ ClockControl::ClockControl(const string&	cntlrName) :
 	itsTimerPort		(0),
 	itsRSPDriver		(0),
 	itsCommandPort		(0),
-	itsClock			(160)
+	itsClock			(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 	LOG_INFO(Version::getInfo<StationCUVersion>("ClockControl"));
@@ -314,9 +314,26 @@ GCFEvent::TResult ClockControl::connect2RSP_state(GCFEvent& event,
 			LOG_DEBUG ("Connected with RSPDriver, starting listener for commands");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 			itsOwnPropertySet->setValue(PN_CLC_CONNECTED,  GCFPVBool(true));
-			TRAN(ClockControl::startListener_state);		// go to next state.
+			requestClockSetting();		// ask value of clock: will result in RSP_GETCLOCKACK
 		}
 		break;
+
+	case RSP_GETCLOCKACK: {
+		RSPGetclockackEvent		ack(event);
+		if (ack.status != RSP_SUCCESS) {
+			LOG_ERROR_STR ("Clock could not be get. Ignoring that for now.");
+		}
+		else {
+			itsClock = ack.clock;
+			LOG_INFO_STR("RSP says clock is " << itsClock << "MHz. Adopting that value.");
+			itsOwnPropertySet->setValue(PN_CLC_ACTUAL_CLOCK,GCFPVInteger(itsClock));
+			// Note: only here I am allowed to change the value of the requested clock. Normally
+			//       the stationController is the owner of this value.
+			itsOwnPropertySet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(itsClock));
+		}
+		TRAN(ClockControl::startListener_state);		// go to next state.
+	}
+	break;
 
 	case F_DISCONNECTED:
 		ASSERTSTR (&port == itsRSPDriver, 
@@ -791,6 +808,7 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 		response.status = CLKCTRL_NO_ERR;
 		LOG_INFO_STR("Received request to change the clock to " << request.clock << " MHz.");
+		itsOwnPropertySet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(request.clock));
 		itsClock = request.clock;
 		TRAN(ClockControl::setClock_state);
 		port.send(response);
@@ -1056,6 +1074,7 @@ GCFEvent::TResult ClockControl::defaultMessageHandling(GCFEvent& 		event,
 		case F_INIT:
 		case F_EXIT:
 		case F_ENTRY:
+		case F_CONNECTED:
 		break;
 
 		default: {
