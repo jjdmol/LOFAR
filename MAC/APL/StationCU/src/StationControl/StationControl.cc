@@ -231,7 +231,7 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 			LOG_DEBUG_STR ("Activating PropertySet " << clkPropSetName);
 			itsClockPropSet = new RTDBPropertySet(clkPropSetName,
 												  PST_CLOCK_CONTROL,
-												  PSAT_WO,
+												  PSAT_RW,
 												  this);
 		}
 		else {
@@ -586,7 +586,9 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		answer.cntlrName = msg.cntlrName;
 		// add observation to the list if not already in the list
 		answer.result = _addObservation(msg.cntlrName);
-		if (answer.result != CT_RESULT_NO_ERROR) {	// problem?
+		if ((answer.result != CT_RESULT_NO_ERROR) && 
+			(answer.result != CT_RESULT_ALREADY_REGISTERED)) {	// problem?
+			answer.result = CT_RESULT_NO_ERROR;
 			port.send(answer);						// tell parent we didn't start the obs.
 		}
 	}
@@ -903,7 +905,15 @@ void StationControl::_databaseEventHandler(GCFEvent& event)
 		DPChangedEvent		dpEvent(event);
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_REQUESTED_CLOCK) != 0) {
 			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
+			LOG_DEBUG_STR("Received (requested)clock change from PVSS, clock is now " << itsClock);
+			break;
+		}
+
+		// during startup we adopt the value set by the Clockcontroller.
+		if (strstr(dpEvent.DPname.c_str(), PN_CLC_ACTUAL_CLOCK) != 0) {
+			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
+			LOG_DEBUG_STR("Received (actual)clock change from PVSS, clock is now " << itsClock);
+			_abortObsWithWrongClock();
 			break;
 		}
 
@@ -1137,6 +1147,24 @@ void StationControl::_abortObservation(ObsIter	theObs)
 	itsParentControl->nowInState(theObs->second->getName(), CTState::QUIT);
 }
 
+//
+// _abortObsWithWrongClock()
+//
+void StationControl::_abortObsWithWrongClock()
+{
+	LOG_DEBUG_STR("Checking if all observations use clock " << itsClock);
+
+	ObsIter		iter = itsObsMap.begin();
+	ObsIter		end  = itsObsMap.end();
+	while (iter != end) {
+		if (iter->second->obsPar()->sampleClock != itsClock) {
+			LOG_FATAL_STR("Aborting observation " << getObservationNr(iter->second->getName()) <<
+							" because the clock was (manually?) changed!");
+			_abortObservation(iter);
+		}
+		++iter;
+	}
+}
 
 //      
 // _initAntennaMasks
