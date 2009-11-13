@@ -8,7 +8,7 @@ gnu.compiler.aipspp.var: --with-casacore=/opt/casacore/dev --with-wcs=/opt/wcsli
 mpich.var:                --with-mpich=/usr/local/ofed/mpi/gcc/mvapich-0.9.7-mlx2.2.0
 openmpi.var:              --with-mpich=/usr
 
-openmpi.variant.conf:     $(standard) $(openmpi)
+openmpi.variant.conf:     $(standard) $(openmpi) $(cppopt)
 openmpi-opt.variant.conf: $(standard) $(openmpi) $(optimize) $(cppopt)
 
 mpich.variant.conf:       $(standard) $(mpich) $(debug)
