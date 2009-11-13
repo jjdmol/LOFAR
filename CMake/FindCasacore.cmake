@@ -62,7 +62,6 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-
 # - casacore_resolve_dependencies(_result)
 #
 # Resolve the Casacore library dependencies for the given components. 
@@ -116,7 +115,36 @@ macro(casacore_find_library _name)
 endmacro(casacore_find_library _name)
 
 
-# Define the Casacore components
+# - casacore_find_package(_name)
+#
+# Search for the package ${_name}.
+# If the package is found, add the contents of ${_name}_INCLUDE_DIRS to
+# CASACORE_INCLUDE_DIRS and ${_name}_LIBRARIES to CASACORE_LIBRARIES.
+#
+# Strictly speaking, required packages are always needed. However, when
+# linking against static libraries it may not be needed. One can override the
+# REQUIRED setting by setting CASACORE_MAKE_REQUIRED_EXTERNALS_OPTIONAL to ON.
+# Beware that this might cause compile and/or link errors.
+#
+#   Usage: casacore_find_package(name [REQUIRED])
+#
+macro(casacore_find_package _name)
+  if("${ARGN}" MATCHES "^REQUIRED$" AND 
+      NOT CASACORE_MAKE_REQUIRED_EXTERNALS_OPTIONAL)
+    message(STATUS "casacore_find_package: find_package(${_name} REQUIRED)")
+    find_package(${_name} REQUIRED)
+  else()
+    message(STATUS "casacore_find_package: find_package(${_name})")
+    find_package(${_name})
+  endif()
+  if(${_name}_FOUND)
+    list(APPEND CASACORE_INCLUDE_DIRS ${${_name}_INCLUDE_DIR})
+    list(APPEND CASACORE_LIBRARIES ${${_name}_LIBRARIES})
+  endif(${_name}_FOUND)
+endmacro(casacore_find_package _name)
+
+
+# Define the Casacore components.
 set(Casacore_components
   casa
   components
@@ -134,7 +162,7 @@ set(Casacore_components
   tables
 )
 
-# Define the Casacore library dependencies
+# Define the Casacore components' inter-dependencies.
 set(Casacore_components_DEPENDENCIES  coordinates)
 set(Casacore_coordinates_DEPENDENCIES fits)
 set(Casacore_fits_DEPENDENCIES        measures)
@@ -182,28 +210,24 @@ else(NOT CASACORE_INCLUDE_DIR)
   endif(NOT Casacore_FIND_COMPONENTS)
 
   # Get a list of all dependent Casacore libraries that need to be found.
-  casacore_resolve_dependencies(find_components ${Casacore_FIND_COMPONENTS})
+  casacore_resolve_dependencies(_find_components ${Casacore_FIND_COMPONENTS})
 
-  # Find the library for each component
-  foreach(component ${find_components})
-    casacore_find_library(casa_${component})
-  endforeach(component ${find_components})
-
-  # Skip this part (temporarily), because on bgfen neither lapack nor blas
-  # are installed.
-  if(0)
-  # Find required external packages.
-  # - scimath_f requires lapack/blas (which depend on gfortran)
-  list(FIND find_components scimath_f _found)
-  if(_found GREATER -1)
-    foreach(package lapack blas)# gfortran)
-      casacore_find_library(${package})
-    endforeach(package lapack blas)# gfortran)
-  endif(_found GREATER -1)
-  endif(0)
-
-  # - all casa components require math library
-  casacore_find_library(m)
+  # Find the library for each component, and handle external dependencies
+  foreach(_comp ${_find_components})
+    casacore_find_library(casa_${_comp})
+    if(${_comp} STREQUAL casa)
+      casacore_find_package(HDF5)
+      casacore_find_library(m)
+      casacore_find_library(dl)
+    elseif(${_comp} STREQUAL coordinates)
+      casacore_find_package(WCSLIB REQUIRED)
+    elseif(${_comp} STREQUAL fits)
+      casacore_find_package(CFITSIO REQUIRED)
+    elseif(${_comp} STREQUAL scimath_f)
+      enable_language(Fortran)
+      casacore_find_package(LAPACK REQUIRED)
+    endif(${_comp} STREQUAL casa)
+  endforeach(_comp ${_find_components})
 endif(NOT CASACORE_INCLUDE_DIR)
 
 # Set HAVE_CASACORE; and HAVE_AIPSPP (for backward compatibility with AIPS++).
@@ -221,9 +245,9 @@ endif(CASACORE_MISSING_COMPONENTS)
 if(CASACORE_FOUND)
   if(NOT Casacore_FIND_QUIETLY)
     message(STATUS "Found the following Casacore components: ")
-    foreach(comp ${find_components})
+    foreach(comp ${_find_components})
       message(STATUS "  ${comp}")
-    endforeach(comp ${find_components})
+    endforeach(comp ${_find_components})
   endif(NOT Casacore_FIND_QUIETLY)
 else(CASACORE_FOUND)
   if(Casacore_FIND_REQUIRED)
