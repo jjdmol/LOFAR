@@ -64,55 +64,43 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
   endif(BUILD_STATIC_EXECUTABLES)
   
-#  if(USE_AIPSPP)
-#    lofar_find_package(CasaCore)
-#  endif(USE_AIPSPP)
-  
   if(USE_BACKTRACE)
     lofar_find_package(Backtrace REQUIRED)
   endif(USE_BACKTRACE)
-
-  if(USE_LOG4CXX)
-    lofar_find_package(Log4Cxx REQUIRED)
-  endif(USE_LOG4CXX)
 
   if(USE_LOG4CPLUS)
     lofar_find_package(Log4Cplus REQUIRED)
   endif(USE_LOG4CPLUS)
 
+  if(USE_LOG4CXX)
+    lofar_find_package(Log4Cxx REQUIRED)
+  endif(USE_LOG4CXX)
+
   if(USE_MPI)
     lofar_find_package(MPI REQUIRED)
   endif(USE_MPI)
   
-  if(USE_PYTHON)
-#    lofar_find_package(Python)
-  endif(USE_PYTHON)
-
-  if(USE_SSE)
-    set(GNU_SSE_FLAGS "-msse2")      # DOES NOT YET WORK !
-    set(ICC_SSE_FLAGS "-xW")         # DOES NOT YET WORK !
-  endif(USE_SSE)
-
   if(USE_SHMEM)
     set(HAVE_SHMEM 1)
   endif(USE_SHMEM)
 
-  if(USE_SOCKETS)
-    #
-  endif(USE_SOCKETS)
+  if(NOT USE_SOCKETS)
+    add_definitions(-DUSE_NOSOCKETS)
+  endif(NOT USE_SOCKETS)
 
   if(USE_THREADS)
+    set(_errmsg "FIXME: Don't know how to enable thread support for ")
     lofar_find_package(Pthreads REQUIRED)
     if(CMAKE_COMPILER_IS_GNUCC)
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+    else(CMAKE_COMPILER_IS_GNUCC)
+      message(FATAL_ERROR "${_errmsg} ${CMAKE_C_COMPILER")
     endif(CMAKE_COMPILER_IS_GNUCC)
     if(CMAKE_COMPILER_IS_GNUCXX)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    else(CMAKE_COMPILER_IS_GNUCXX)
+      message(FATAL_ERROR "${_errmsg} ${CMAKE_CXX_COMPILER")
     endif(CMAKE_COMPILER_IS_GNUCXX)
   endif(USE_THREADS)
-
-  if(USE_ZOID)
-    #
-  endif(USE_ZOID)
 
 endif(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
