@@ -103,7 +103,8 @@ lofar_add_bin_program(RSPDriver
   TBBBandselWrite.cc
   BypassWrite.cc
   SerdesWrite.cc
-  SerdesRead.cc)
+  SerdesRead.cc
+  UpdSplitterCmd.cc)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/rspctl.conf.in
