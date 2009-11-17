@@ -1,50 +1,89 @@
 #!/bin/bash
 
-PARTITION=R00
+WHOAMI=`whoami`
+PARTITIONS=`bgbusy | awk '{ if( $5 == "'$WHOAMI'" ) { print $1; } }'`
 
 BASEDIR=/globalhome/lofarsystem/production/lofar/bgfen/bin
 LFE001=10.144.4.1
 
+SKILL="pkill -u $WHOAMI"
+HKILL="pkill -9 -u $WHOAMI"
+
 # ----- Storage: Soft kill
+echo ----- Killing Storage "(soft)"
 for s in `seq -w 1 24`
 do
   LSENODE=lse0${s}dc
 
-  ssh $LSENODE killall Storage orted
+  ssh $LSENODE $SKILL Storage
+  ssh $LSENODE $SKILL orted
 done  
 
-ssh $LFE001 killall mpirun
+ssh $LFE001 $SKILL mpirun
 
+echo ----- Killing BGFEN processes "(soft)"
 for f in bgfen0 bgfen1
 do
-  ssh $f killall python mpirun
+  ssh $f $SKILL python
+  ssh $f $SKILL mpirun
 done  
-
 
 # ----- Storage: Hard kill
+echo ----- Killing Storage "(hard)"
 for s in `seq -w 1 24`
 do
   LSENODE=lse0${s}dc
 
-  ssh $LSENODE killall -9 Storage orted
+  ssh $LSENODE $HKILL Storage
+  ssh $LSENODE $HKILL orted
 done  
 
-ssh $LFE001 killall -9 mpirun
+ssh $LFE001 $HKILL mpirun
 
+echo ----- Killing BGFEN processes "(hard)"
 for f in bgfen0 bgfen1
 do
-  ssh $f killall -9 python mpirun
+  ssh $f $HKILL python
+  ssh $f $HKILL mpirun
 done 
 
 # ----- IONProc/CNProc: Partition reset
-ssh bgfen0 $BASEDIR/Run/LOFAR/Partitions.py -kfa $PARTITION
+for p in $PARTITIONS
+do
+  ATTEMPTS=0
+  while bgjobs -s | cut -c 7-23 | grep -q -E '^'$PARTITION' *$'
+  do
+    ATTEMPTS=$[ $ATTEMPTS + 1 ]
+
+    if [ $ATTEMPTS > 6 ]
+    then
+      # don't try forever
+      echo ----- FAILED to kill jobs on $p
+      break
+    fi
+
+    if [ $ATTEMPTS > 1 ]
+    then
+      sleep 10
+    fi
+
+    echo ----- Killing jobs on $p
+    $BASEDIR/Run/LOFAR/Partitions.py -k $p
+  done
+
+  echo ----- Reallocating $p
+  $BASEDIR/Run/LOFAR/Partitions.py -fa $p
+done
 
 # ----- SAS/MAC
-for f in bgfen0 bgfen1
-do
-  ssh $f killall -9 ApplController
+if [ "$WHOAMI" == "lofarsys" ]
+then
+  echo ----- Killing and resetting SAS/MAC processes
+  for f in bgfen0 bgfen1
+  do
+    ssh $f $HKILL ApplController
 
-  $BASEDIR/swlevel 0
-  $BASEDIR/swlevel 1
-done 
-
+    $BASEDIR/swlevel 0
+    $BASEDIR/swlevel 1
+  done 
+fi  
