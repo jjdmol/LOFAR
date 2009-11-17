@@ -839,23 +839,22 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
   ssize_t maxsend;
   static int N_HBA = 0;
   static int N_LBA = 0;
+  static int N_LBA_INNER = 0;
+  static int N_LBA_OUTER = 0;
 
   switch (e.signal)
     {
     case F_ENTRY:
       if (ackout.rcu_settings == 0) {
         ackout.rcu_settingsNOE = _nrOfRCUs;
-        //ackout.rcu_settings = new uint8[_nrOfRCUs];
 	ackout.rcu_settings = new uint32[_nrOfRCUs];
         ackout.invalidNOE = _nrOfRCUs;
-        //ackout.invalid = new uint8[_nrOfRCUs];
 	ackout.invalid = new uint32[_nrOfRCUs];
         ackout.acmdataNOE = _nrOfRCUs * _nrOfRCUs;
 	ackout.geoposNOE = 3;
 	ackout.geopos = new double[3];  //lat,lon,h
 	ackout.antcoordsNOE = _nrOfRCUs * 3 ;
 	ackout.antcoords = new double[_nrOfRCUs * 3];  //xyz Xpol, xyz Ypol
-        //ackout.data = new double[_nrOfRCUs * 512];  // PROBLEM why doesn't this give an error? I see no 'data' element
       }
       assert(_pRememberedEvent);
       pIn = (SHMAntennaCorrelationMatrixRequestEvent*) _pRememberedEvent;
@@ -919,25 +918,37 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       }
       
       //MAXMOD guess observing freq (Low or High)
-      N_HBA = 0; N_LBA = 0;
+      N_HBA = 0; N_LBA = 0;N_LBA_INNER = 0; N_LBA_OUTER = 0;
+
+      // Inetrnational stations have no lba_inner or lba_outer, only lba
+      // so we need an additional counter as well.
+      // Note that int. stations have 192 rcus, which we can use
+      // to distinguish NL from int stations..
       for (int rcuout = 0; rcuout < _nrOfRCUs; rcuout++) {
 	  ackout.rcu_settings[rcuout] = ack.settings()(rcuout).getRaw();
 	  //determine RCU mode and hence array 'LBA' or 'HBA' 
 	  //Ignore possibility of subarrays, for now.
 	  //see RCUSettings.h
 	  //This might be insufficient -- perhaps not all ON RCUs are being used. should check somehow.
-	  //int nyqzone = ack.settings()(rcuout).getNyquistZone();
+
 	  int rcumode = ack.settings()(rcuout).getMode();
-	  if ((rcumode >= 1) && (rcumode <= 4)) {
-	    N_LBA++ ;
+	  if ((rcumode == 1) || (rcumode == 2)) {
+	    N_LBA_OUTER++ ;
+	    N_LBA++;
 	  }
+	  if ((rcumode == 3) || (rcumode == 4)) {
+	    N_LBA_INNER++ ;
+	    N_LBA++;
+	  }
+	  
 	  if ((rcumode >= 5) && (rcumode <= 7)) {
 	    N_HBA++ ;
 	  }
 	  // rcumode = -1 => indeterminate RCU mode
 	  // rcumode =  0 => RCU off
 	}
-      LOG_DEBUG(formatString("MAXMOD N_LBA = %d, N_HBA = %d",N_LBA, N_HBA));
+      
+      LOG_DEBUG(formatString("MAXMOD N_LBA = %d, N_LBA_INNER = %d, N_LBA_OUTER = %d, N_HBA = %d", N_LBA, N_LBA_INNER, N_LBA_OUTER, N_HBA));
 
       //MAXMOD do as rspctl does
       // SET subbands for XC
@@ -1043,7 +1054,16 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 	targetarrayname = "LBA";       //doesnt matter
       }
       if (N_LBA > N_HBA) {
-	targetarrayname = "LBA";
+	if (N_LBA_INNER > N_LBA_OUTER) {
+	  targetarrayname = "LBA_INNER";
+	}
+	if (N_LBA_OUTER > N_LBA_INNER) {
+	  targetarrayname = "LBA_OUTER";
+	}
+	// International stations only have LBA
+	if (_nrOfRCUs > 96) {
+	  targetarrayname = "LBA";
+	}
       }
       if (N_LBA < N_HBA) {
 	targetarrayname = "HBA";
@@ -1052,9 +1072,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 	targetarrayname = "LBA";
       }
 
-      //search for AntennaArray with that name;
-      // I have been assured that working stations will either be "LBA" or "HBA"
-      // but if none found, special case: test station has FTS-1-LBA, FTS-1-HBA 
+      // search for AntennaArray with that name;
       // otherwise, return zeros
       char hostName[200];
       gethostname(hostName, 200);
@@ -1081,6 +1099,13 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       //}
 
       if (targetarray != NULL){
+	// reset possible wrong setting of number of elements (in case 
+	// previously no valid array name was found this is set to 1 ).
+	if (ackout.geoposNOE == 1) {
+	  ackout.geoposNOE = 3;
+	  ackout.antcoordsNOE = _nrOfRCUs * 3 ;
+	}
+	
 	for (int i = 0; i < targetarray->getGeoLoc().extent(firstDim); i++){
 	  //ackout.geopos[i] = *(const_cast<double *>(targetarray->getGeoLoc()(i).data()));
 	  ackout.geopos[i] = targetarray->getGeoLoc()(i);
