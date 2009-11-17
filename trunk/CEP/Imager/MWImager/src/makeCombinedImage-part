@@ -33,7 +33,7 @@ fi
 
 # Get the arguments.
 rank=$1
-vds=$2
+ms=$2
 parset=$3
 imgn=$4
 dry=$5
@@ -42,9 +42,9 @@ dry=$5
 if test "$dry" = dry; then
   # In dry mode sleep to make sure the output is in the correct order.
   sleep $rank
-  echo "combineFacets $parset $vds $imgn"
+  echo "combineFacets $parset $ms $imgn"
   cat $parset
 else
-  echo "combineFacets $parset $vds $imgn"
-  combineFacets $parset $vds $imgn
+  echo "combineFacets $parset $ms $imgn"
+  combineFacets $parset $ms $imgn
 fi

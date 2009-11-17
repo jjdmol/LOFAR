@@ -37,13 +37,23 @@ fi
 
 # Handle possible options.
 imager=cimager
+casaopt=
+dde=0
 while [ $# != 0 ]
 do
   if [ "$1" = "-casa" ]; then
     imager='casa'
+    casaopt=$1
     shift
   elif [ "$1" = "-nocasa" ]; then
     imager=cimager
+    casaopt=
+    shift
+  elif [ "$1" = "-dde" ]; then
+    dde=1
+    shift
+  elif [ "$1" = "-nodde" ]; then
+    dde=0
     shift
   else
     break
@@ -118,15 +128,21 @@ if test "$hfn" != ""; then
   hfn=`cd $dn > /dev/null; pwd`/`basename $hfn`
 fi
 
-# Get dataset name from the parset.
-# If it is an MS, operate directly on it (as rank 0).
-msvds=`getparsetvalue $psn dataset` || exit 1
-if test -d "$msvds"  -a  -e "$msvds/table.dat"; then
-  echo "mwimager-part '' '' '' '' 0 '$msvds' '' '$psn' '$imager' '$wd' '$dry'"
-  mwimager-part "" "" "" "" 0 "$msvds" "" "$psn" "$imager" "$wd" "$dry" 
-
+# Use mwimager-dd if direction-dependent effect corrections.
+if test $dde = 1; then
+  $pgmpath/mwimager-dd "$psn" "$cdn" "$wd" "$logfile" "$dry" "$hfn" "$casaopt"
 else
-  # Start the imager processes on the various machines.
-  echo "startdistproc -useenv -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/mwimager-part '$psn' '$imager' '$wd' '$dry'"
-  startdistproc -useenv -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/mwimager-part "$psn" "$imager" "$wd" "$dry"
+
+  # Get dataset name from the parset.
+  # If it is an MS, operate directly on it (as rank 0).
+  msvds=`getparsetvalue $psn dataset` || exit 1
+  if test -d "$msvds"  -a  -e "$msvds/table.dat"; then
+    echo "$pgmpath/mwimager-part '' '' '' '' 0 '$msvds' '' '$psn' '$imager' '$wd' '$dry'"
+    $pgmpath/mwimager-part "" "" "" "" 0 "$msvds" "" "$psn" "$imager" "$wd" "$dry" 
+
+  else
+    # Start the imager processes on the various machines.
+    echo "startdistproc -useenv -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/mwimager-part '$psn' '$imager' '$wd' '$dry'"
+    startdistproc -useenv -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/mwimager-part "$psn" "$imager" "$wd" "$dry"
+  fi
 fi
