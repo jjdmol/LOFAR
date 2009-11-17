@@ -74,6 +74,8 @@ int32 Socket::connect (int32)
   { throw Exception("Sockets not supported"); }
 Socket* Socket::accept(int32)
   { throw Exception("Sockets not supported"); }
+int32 Socket::close()
+  { throw Exception("Sockets not supported"); }
 int32 Socket::shutdown (bool, bool)
   { throw Exception("Sockets not supported"); }
 int32 Socket::setBlocking (bool)
