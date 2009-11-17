@@ -98,7 +98,7 @@ public:
 	bool	       delayCompensation() const;
 	uint32	       nrCalcDelays() const;
 	bool	       correctBandPass() const;
-	vector<unsigned> getPortsOf(const string &aKey) const;
+	unsigned short getStoragePort(const string &aKey, unsigned subband, unsigned output) const;
 	string         stationName(int index) const;
 	string         storageHostName(const string& aKey, int index) const;
 	uint32	       nrPsetsPerStorage() const;
@@ -279,40 +279,40 @@ inline uint32 Parset::IONintegrationSteps() const
 
 inline uint32 Parset::stokesIntegrationSteps() const
 {
-  return getUint32("Observation.stokesIntegrationSteps");
+  return getUint32("OLAP.Stokes.integrationSteps");
 }
 
 inline bool Parset::outputFilteredData() const
 {
-  return getBool("Observation.outputFilteredData",false);
+  return getBool("OLAP.outputFilteredData",false);
 }
 
 inline bool Parset::outputCorrelatedData() const
 {
-  return getBool("Observation.outputCorrelatedData",false);
+  return getBool("OLAP.outputCorrelatedData",false);
 }
 
 inline bool Parset::outputBeamFormedData() const
 {
-  return getBool("Observation.outputBeamFormedData",false);
+  return getBool("OLAP.outputBeamFormedData",false);
 }
 
 inline bool Parset::outputCoherentStokes() const
 {
-  return getBool("Observation.outputCoherentStokes",false);
+  return getBool("OLAP.outputCoherentStokes",false);
 }
 
 inline bool Parset::outputIncoherentStokes() const
 {
-  return getBool("Observation.outputIncoherentStokesI",false)
-      || getBool("Observation.outputIncoherentStokes",false);
+  return getBool("OLAP.outputIncoherentStokesI",false)
+      || getBool("OLAP.outputIncoherentStokes",false);
 }
 
 inline unsigned Parset::nrStokes() const
 {
-  if( getString("Observation.whichStokes","") == "I" ) {
+  if( getString("OLAP.Stokes.which","") == "I" ) {
     return 1;
-  } else if( getString("Observation.whichStokes","") == "IQUV" ) {
+  } else if( getString("OLAP.Stokes.which","") == "IQUV" ) {
     return 4;
   } else {  
     // backward compatibility
@@ -491,12 +491,12 @@ inline bool Parset::realTime() const
 
 inline uint32 Parset::nrPencilRings() const
 {
-  return getUint32("Observation.nrPencilRings");
+  return getUint32("OLAP.Pencils.nrRings");
 }
 
 inline uint32 Parset::nrManualPencilBeams() const
 {
-  return getUint32("Observation.nrPencils");
+  return getUint32("OLAP.Pencils.nrPencils");
 }
 
 inline uint32 Parset::nrPencilBeams() const
@@ -521,17 +521,17 @@ inline PencilCoordinates Parset::pencilBeams() const
 
 inline double Parset::pencilRingSize() const
 {
-  return getDouble("Observation.pencilRingSize");
+  return getDouble("OLAP.Pencils.ringSize");
 }
 
 inline bool Parset::stokesIntegrateChannels() const
 {
-  return getBool("Observation.stokesIntegrateChannels");
+  return getBool("OLAP.Stokes.integrateChannels");
 }
 
 inline bool Parset::flysEye() const
 {
-  return getBool("Observation.flysEye", false);
+  return getBool("OLAP.Pencils.flysEye", false);
 }
 
 inline string Parset::observerName() const

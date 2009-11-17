@@ -18,7 +18,6 @@ class Parset(util.Parset.Parset):
 	self.stations = []
 	self.storagenodes = []
 	self.partition = ""
-        self.integrationtime = 1.0
 	self.psets = []
 
         self.filename = ""
@@ -36,19 +35,19 @@ class Parset(util.Parset.Parset):
         """ Sets some default values which SAS does not yet contain. """
 
         # pencil beam configuration
-        self.setdefault("Observation.nrPencilRings",0);
-        self.setdefault("Observation.nrPencils",0);
-        self.setdefault("Observation.pencilRingSize",0.0);
+        self.setdefault("OLAP.Pencils.nrRings",0);
+        self.setdefault("OLAP.Pencils.nrPencils",0);
+        self.setdefault("OLAP.Pencils.ringSize",0.0);
 
         # output configuration
-        self.setdefault("Observation.outputFilteredData",False);
-        self.setdefault("Observation.outputBeamFormedData",False);
-        self.setdefault("Observation.outputCorrelatedData",False);
-        self.setdefault("Observation.outputCoherentStokes",False);
-        self.setdefault("Observation.outputIncoherentStokes",False);
-        self.setdefault("Observation.whichStokes","I");
-        self.setdefault("Observation.stokesIntegrateChannels",False);
-        self.setdefault("Observation.stokesIntegrationSteps",1);
+        self.setdefault("OLAP.outputFilteredData",False);
+        self.setdefault("OLAP.outputBeamFormedData",False);
+        self.setdefault("OLAP.outputCorrelatedData",False);
+        self.setdefault("OLAP.outputCoherentStokes",False);
+        self.setdefault("OLAP.outputIncoherentStokes",False);
+        self.setdefault("OLAP.Stokes.which","I");
+        self.setdefault("OLAP.Stokes.integrateChannels",False);
+        self.setdefault("OLAP.Stokes.integrationSteps",1);
         self.setdefault("OLAP.OLAP_Conn.rawDataOutputOnly",False);
 
     def convertNewKeys(self):
@@ -189,11 +188,12 @@ class Parset(util.Parset.Parset):
         maxCnIntegrationTime = 1.2 # seconds
 
         # (minimal) number of times the IONProc will have to integrate
-        ionIntegrationSteps = int(math.ceil(self.integrationtime / maxCnIntegrationTime))
+        integrationtime = float( self["OLAP.Correlator.integrationTime"] )
+        ionIntegrationSteps = int(math.ceil(integrationtime / maxCnIntegrationTime))
         self.setdefault('OLAP.IONProc.integrationSteps', ionIntegrationSteps)
 
         # the amount of time CNProc will integrate, translated into samples
-        cnIntegrationTime = self.integrationtime / int(self["OLAP.IONProc.integrationSteps"])
+        cnIntegrationTime = integrationtime / int(self["OLAP.IONProc.integrationSteps"])
         nrSamplesPerSecond = int(self['Observation.sampleClock']) * 1e6 / 1024 / int(self['Observation.channelsPerSubband'])
 
         cnIntegrationSteps = int(round(nrSamplesPerSecond * cnIntegrationTime / 16)) * 16
@@ -328,7 +328,7 @@ class Parset(util.Parset.Parset):
       self['Observation.sampleClock'] = int( mhz )
 
     def setIntegrationTime( self, integrationTime ):
-      self.integrationtime = float( integrationTime )
+      self["OLAP.Correlator.integrationTime"] = integrationTime
 
       # make sure these values will be recalculated in finalise()
       del self['OLAP.IONProc.integrationSteps']
@@ -337,11 +337,11 @@ class Parset(util.Parset.Parset):
     def getNrOutputs( self ):
       # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
       output_keys = [
-        "Observation.outputFilteredData",
-        "Observation.outputCorrelatedData",
-        "Observation.outputBeamFormedData",
-        "Observation.outputCoherentStokes",
-        "Observation.outputIncoherentStokes",
+        "OLAP.outputFilteredData",
+        "OLAP.outputCorrelatedData",
+        "OLAP.outputBeamFormedData",
+        "OLAP.outputCoherentStokes",
+        "OLAP.outputIncoherentStokes",
 
         # depricated
         "Observation.outputIncoherentStokesI",
@@ -391,6 +391,8 @@ class Parset(util.Parset.Parset):
 
     def check( self ):
       """ Check the Parset configuration for inconsistencies. """
+
+      assert self.getNrOutputs() > 0, "No data output selected."
 
       # verify start/stop times
       assert self["Observation.startTime"] < self["Observation.stopTime"], "Start time (%s) must be before stop time (%s)" % (self["Observation.startTime"],self["Observation.stopTime"])

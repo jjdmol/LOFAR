@@ -38,11 +38,11 @@ Observation.VirtualInstrument.storageNodeList = [lse019,lse020,lse021]
 OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.174.0.1:4000] # output data go to lse001
 OLAP.OLAP_Conn.rawDataOutputOnly = F
 
-Observation.outputFilteredData = F
-Observation.outputBeamFormedData = F
-Observation.outputCorrelatedData = T
-Observation.outputCoherentStokes = F
-Observation.outputIncoherentStokes = F
+OLAP.outputFilteredData = F
+OLAP.outputBeamFormedData = F
+OLAP.outputCorrelatedData = T
+OLAP.outputCoherentStokes = F
+OLAP.outputIncoherentStokes = F
 
 Observation.channelsPerSubband = 256
 
@@ -55,19 +55,23 @@ Observation.bandFilter = LBA_30_80
 #Observation.bandFilter = HBA_170_230
 #Observation.bandFilter = HBA_210_250
 
-Observation.whichStokes = I              # I or IQUV
-Observation.stokesIntegrateChannels = F  # channel integration (DM=0)
-Observation.stokesIntegrationSteps = 1   # time integration
-
+OLAP.Correlator.integrationTime = 1.0
 #OLAP.IONProc.integrationSteps = 1   # (generated)
-#OLAP.CNProc.integrationSteps  = 768 # (generated, multiple of 128)
+#OLAP.CNProc.integrationSteps  = 768 # (generated, multiple of 128 for pencil beams)
+
+OLAP.Stokes.which = I              # I or IQUV
+OLAP.Stokes.integrateChannels = F  # channel integration (DM=0)
+OLAP.Stokes.integrationSteps = 1   # time integration
 
 # ----- Beam forming
-Observation.nrPencilRings = 0 # 0 = just the central beam
-Observation.pencilRingSize = 0.01
-Observation.nrPencils = 0
-Observation.Pencil[0].angle1 = 0.01745329251994329576
-Observation.Pencil[0].angle2 = 0
+OLAP.Pencils.flysEye = F           # don't form pencil beams, but turn stations
+                                   # into pencil beams
+
+OLAP.Pencils.nrRings = 0 # 0 = just the central beam
+OLAP.Pencils.ringSize = 0.01
+OLAP.Pencils.nrPencils = 0
+OLAP.Pencil[0].angle1 = 0.01745329251994329576
+OLAP.Pencil[0].angle2 = 0
 
 # Eg. tiedArray beamforming
 #Observation.Beamformer[0].stationList = "B01_0,B01_1"
@@ -90,7 +94,7 @@ OLAP.maxNetworkDelay = 0.5
 
 # ----- Storage internals
 OLAP.OLAP_Conn.IONProc_Storage_Transport = TCP
-OLAP.OLAP_Conn.IONProc_Storage_Ports = [8300..9291]
+OLAP.OLAP_Conn.IONProc_Storage_Ports = [6300..7291]
 
 # ----- Global internals
 OLAP.log2SasMac = F
