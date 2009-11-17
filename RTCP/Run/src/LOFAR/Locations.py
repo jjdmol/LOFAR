@@ -76,7 +76,7 @@ class Locations:
 	"parset":  "${RUNDIR}/RTCP-${MSNUMBER}.parset", 
 
         # where to store logs
-	"logdir":  "/log/L${YEAR}_${MSNUMBER}",
+	"logdir":  "${BASEDIR}/D${YEAR}_${MSNUMBER}",
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
@@ -110,7 +110,7 @@ class Locations:
 	"rundir":  "/globalhome/lofarsystem/log",
 
         # where to store logs
-	#"logdir":  "/globalhome/lofarsystem/log",
+	"logdir":  "/globalhome/lofarsystem/log/L${YEAR}_${MSNUMBER}",
 
         # location of valgrind suppressions file
         "ionsuppfile": "",

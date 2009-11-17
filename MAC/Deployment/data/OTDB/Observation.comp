@@ -40,28 +40,9 @@ par  samplesPerSecond        I    int    -      10    100    >>Observation.clock
 par  subbandWidth            I    dbl    kHz    10    100    >>Observation.clockMode.subbandWidth      - ''
 par  channelWidth            I    dbl    Hz     10    100    >>Observation.clockMode.channelWidth      - ''
 
-
-# output selection
-par  outputCorrelatedData    I    bool   -      10    0      true                                      - "Store correlated visilibities"
-par  outputFilteredData      I    bool   -      10    0      false                                     - "Store output of PPF/FFT"
-par  outputBeamFormedData    I    bool   -      10    0      false                                     - "Store beam formed complex voltages"
-par  outputCoherentStokes    I    bool   -      10    0      false                                     - "Store coherent Stokes"
-par  outputInoherentStokes   I    bool   -      10    0      false                                     - "Store incoherent Stokes"
-
-# output configuration
-par  whichStokes             I    ptext  -      10    0      "I|IQUV;I"                                - "Which Stokes values to compute"
-par  flysEye                 I    bool   -      10    0      false                                     - "Fly's Eye mode: every station is transformed into its own beam"
-par  stokesIntegrateChannels I    bool   -      10    0      false                                     - "Collapse channels for Stokes (DM=0)"
-par  stokesIntegrationSteps  I    int    -      10    0      1                                         - "Time-wise integration of Stokes data (in samples)"
-
-par  nrPencilRings           I    int    -      10    0      0                                         - "Number of pencil-beam rings to create"
-par  pencilRingSize          I    dbl    -      10    0      0                                         - "Width of each pencil ring in rad."
-par  nrPencils               I    int    -      10    0      0                                         - "Number of additional (manual) pencil beams"
-
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 uses  VirtualInstrument  1.0.0  development '1'		       "Virtual Instrument"
-uses  Pencil		 1.0.0  development '1'		       "Pencil beam specification"
 uses  Beam		 2.0.0  development '1'		       "Beam specification"
 uses  Beamformer	 1.0.0  development '1'		       "Beamformet specifications"	
 uses  TBB		 1.0.1  development '1' 	       "TBB settings"
