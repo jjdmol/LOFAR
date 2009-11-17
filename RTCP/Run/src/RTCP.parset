@@ -64,12 +64,12 @@ OLAP.Stokes.integrateChannels = F  # channel integration (DM=0)
 OLAP.Stokes.integrationSteps = 1   # time integration
 
 # ----- Beam forming
-OLAP.Pencils.flysEye = F           # don't form pencil beams, but turn stations
+OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn stations
                                    # into pencil beams
 
-OLAP.Pencils.nrRings = 0 # 0 = just the central beam
-OLAP.Pencils.ringSize = 0.01
-OLAP.Pencils.nrPencils = 0
+OLAP.PencilInfo.nrRings = 0 # 0 = just the central beam
+OLAP.PencilInfo.ringSize = 0.01
+OLAP.nrPencils = 0
 OLAP.Pencil[0].angle1 = 0.01745329251994329576
 OLAP.Pencil[0].angle2 = 0
 

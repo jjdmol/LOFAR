@@ -491,12 +491,12 @@ inline bool Parset::realTime() const
 
 inline uint32 Parset::nrPencilRings() const
 {
-  return getUint32("OLAP.Pencils.nrRings");
+  return getUint32("OLAP.PencilInfo.nrRings");
 }
 
 inline uint32 Parset::nrManualPencilBeams() const
 {
-  return getUint32("OLAP.Pencils.nrPencils");
+  return getUint32("OLAP.nrPencils");
 }
 
 inline uint32 Parset::nrPencilBeams() const
@@ -521,7 +521,7 @@ inline PencilCoordinates Parset::pencilBeams() const
 
 inline double Parset::pencilRingSize() const
 {
-  return getDouble("OLAP.Pencils.ringSize");
+  return getDouble("OLAP.PencilInfo.ringSize");
 }
 
 inline bool Parset::stokesIntegrateChannels() const
@@ -531,7 +531,7 @@ inline bool Parset::stokesIntegrateChannels() const
 
 inline bool Parset::flysEye() const
 {
-  return getBool("OLAP.Pencils.flysEye", false);
+  return getBool("OLAP.PencilInfo.flysEye", false);
 }
 
 inline string Parset::observerName() const

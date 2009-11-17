@@ -35,9 +35,10 @@ class Parset(util.Parset.Parset):
         """ Sets some default values which SAS does not yet contain. """
 
         # pencil beam configuration
-        self.setdefault("OLAP.Pencils.nrRings",0);
-        self.setdefault("OLAP.Pencils.nrPencils",0);
-        self.setdefault("OLAP.Pencils.ringSize",0.0);
+        self.setdefault("OLAP.PencilInfo.flysEye",False);
+        self.setdefault("OLAP.PencilInfo.nrRings",0);
+        self.setdefault("OLAP.PencilInfo.ringSize",0.0);
+        self.setdefault("OLAP.nrPencils",0);
 
         # output configuration
         self.setdefault("OLAP.outputFilteredData",False);
