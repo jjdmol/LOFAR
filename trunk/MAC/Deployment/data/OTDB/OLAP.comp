@@ -58,10 +58,8 @@ par  integrationSteps        I    int    -      10    0      1                  
 node  Pencil    2.0.0  development  'node constraint'  "Pencil beam specification"
 #    name                dir. type   unit   prun. vm   value                   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  angle1              I        vdbl   -              10    0    0                    -       'RightAscention(s) or Azimuth of the
-source(s) in rad. (coordinate system is same as used in the Beams)'
-par  angle2              I        vdbl   -              10    0    0                    -       'Declination(s) or Elevation of the s
-ource(s) in rad. (coordinate system is the same as used in the Beams)'
+par  angle1              I        vdbl   -              10    0    0                    -       'RightAscention(s) or Azimuth of thesource(s) in rad. (coordinate system is same as used in the Beams)'
+par  angle2              I        vdbl   -              10    0    0                    -       'Declination(s) or Elevation of the source(s) in rad. (coordinate system is the same as used in the Beams)'
 
 
 # -- PencilInfo --
