@@ -51,15 +51,27 @@ par  which                   I    ptext  -      10    0      "I|IQUV;I"         
 par  integrateChannels       I    bool   -      10    0      false                                     - "Collapse channels for Stokes (DM=0)"
 par  integrationSteps        I    int    -      10    0      1                                         - "Time-wise integration of Stokes data (in samples)"
 
-# -- Pencils --
+#########################################################################################################
+# -- Pencil --
+#      name                      vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  Pencil    2.0.0  development  'node constraint'  "Pencil beam specification"
+#    name                dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  angle1              I        vdbl   -              10    0    0                    -       'RightAscention(s) or Azimuth of the
+source(s) in rad. (coordinate system is same as used in the Beams)'
+par  angle2              I        vdbl   -              10    0    0                    -       'Declination(s) or Elevation of the s
+ource(s) in rad. (coordinate system is the same as used in the Beams)'
+
+
+# -- PencilInfo --
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  Pencils    1.0.1  development 'node constraint'  "Settings for pencil beamformer"
+node  PencilInfo    1.0.1  development 'node constraint'  "Settings for pencil beamformer"
 
 par  flysEye                 I    bool   -      10    0      false                                     - "Fly's Eye mode: every station is transformed into its own beam"
 par  nrRings                 I    int    -      10    0      0                                         - "Number of pencil-beam rings to create"
 par  ringSize                I    dbl    -      10    0      0                                         - "Width of each pencil ring in rad."
-par  nrPencils               I    int    -      10    0      0                                         - "Number of additional (manual) pencil beams"
 
 # -- DelayComp --
 #      name        vers   qual        constr.            descr.
@@ -113,7 +125,7 @@ par nrBitsPerSample	I	int	-	10	0	16		-		"sample size in bits"
 par nrSecondsOfBuffer	I	int	-	10	0	4		-		'buffer size for raw station data (in seconds)'
 par maxNetworkDelay	I	int	-	10	0	0.5		-		'???'
 par correctBandPass	I   	bool    -       10  	0	true		-		'apply the bandpass filter'
-
+par nrPencils           I       int     -       10      0       0               -               "Number of additional (manual) pencil beams"
 
 
 #      name        vers   qual        constr.            descr.
@@ -121,8 +133,8 @@ par correctBandPass	I   	bool    -       10  	0	true		-		'apply the bandpass fil
 uses  CNProc       1.0.4  development 'node constraint'  "Compute-Node Processing: application running on the BlueGene compute nodes"
 uses  OLAP_Conn    1.0.5  development 'node constraint'  "Connection specification of OLAP"
 uses  Stokes       1.0.1  development 'node constraint'  "Settings for Stokes calculations"
-uses  Pencils      1.0.1  development 'node constraint'  "Settings for pencil beamformer"
-uses  Pencil       1.0.0  development '1'	         "Pencil beam specification"
+uses  PencilInfo   1.0.1  development 'node constraint'  "Settings for pencil beamformer"
 uses  DelayComp    1.0.3  development 'node constraint'  "Setting of the delaycompensation"
 uses  IONProc      1.0.2  development 'node constraint'  "I/O Node Processing: application running on the BlueGene I/O nodes"
 uses  StorageProc  1.0.2  development 'node constraint'  "Stores output from the correlator in one or more MeasurmentSet files"
+uses  Pencil	   2.0.0  development 'node constraint'  "Pencil beam specification"
