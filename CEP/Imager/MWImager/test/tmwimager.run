@@ -23,14 +23,16 @@
 # $Id$
 
 
-# Add . to PATH.
-PATH=.:$PATH
-export PATH
-
 # Set srcdir if undefined (if run outside 'make check')
 if test "$srcdir" = ""; then
-  srcdir=../../../src
+  srcdir=../../../test
 fi
+srcdir=`cd $srcdir/../src > /dev/null && pwd`
+exedir=`cd ../test > /dev/null && pwd`
+
+# Extend PATH.
+PATH=`pwd`:$srcdir:$exedir:$PATH
+export PATH
 
 # Do a test using the askap imager.
 # Enclose output in angle brackets to exclude it from the assay diff.
@@ -42,9 +44,9 @@ echo "<<<"
 # Wait for the subprocesses to finish.
 # Remove disturbing log4cxx lines
 sleep 5
-grep -v 'log4cxx:' tmwimager_tmp.log-0
-grep -v 'log4cxx:' tmwimager_tmp.log-1
-grep -v 'log4cxx:' tmwimager_tmp.log-2
+grep -v 'log4cxx:' tmwimager_tmp.log-0 | grep -v 'Debug: '
+grep -v 'log4cxx:' tmwimager_tmp.log-1 | grep -v 'Debug: '
+grep -v 'log4cxx:' tmwimager_tmp.log-2 | grep -v 'Debug: '
 
 # Remove the temporary parset part files.
 rm -f tmwimager.parset.part*

@@ -54,7 +54,6 @@
 
 import os
 import sys
-import re
 import math
 import lofar.parameterset as parset
 import pyrap.quanta as pyquan
@@ -95,25 +94,27 @@ def getInfo (ps, vdsname, nfacet):
         cellsz[i] = qcsz.get_value("rad")
     return (ra,dec,cellsz,npix)
 
-def makeFacetSourceList (name, ra, dec, cellwidth, n):
-    # ra and dec give the center of the image; cellwidth the width in ra and dec.
+def makeFacetSourceList (name, ra, dec, cellwidth, nfacet, imgshape):
+    # ra and dec give the image center; cellwidth the width in ra and dec.
     # In declination the facets are placed at distances of cellwidth[1].
     # In right ascension the length is declination dependent.
     # Only at the equator 1 arcsec in image width is 1 arcsec in RA.
     # At dec=d 1 arcsec in RA is 1*cos(d) arcsec in image width
     # (like on earth 360deg = 40000km*cos(d) at dec=d).
+    facetwidth = (cellwidth[0] * imgshape[0] / nfacet,
+                  cellwidth[1] * imgshape[1] / nfacet)
     centers = []
     f = open(name, 'w')
     f.write ('#( Name Ra Dec )=format\n')
-    decv = dec - cellwidth[1] * (n-1.)/2.
-    for i in range(n):
-        rawidth = cellwidth[0] / math.cos(decv)
-        rav = ra - rawidth * (n-1.)/2.
-        for j in range(n):
+    decv = dec - facetwidth[1] * (nfacet-1.)/2.
+    for i in range(nfacet):
+        rawidth = facetwidth[0] / math.cos(decv)
+        rav = ra - rawidth * (nfacet-1.)/2.
+        for j in range(nfacet):
             centers.append ((rav, decv))
             f.write ("facet-%03d-%03d %.15f %.15f\n" % (i,j,rav,decv))
             rav += rawidth
-        decv += cellwidth[1]
+        decv += facetwidth[1]
     return centers
 
 def doBBS (ps, i, j, psname, vds, cd, wd, dry, instdb, skydb, catname, incol, outcol):
@@ -147,7 +148,7 @@ def doBBS (ps, i, j, psname, vds, cd, wd, dry, instdb, skydb, catname, incol, ou
     f.write ('Step.correct.OutputColumn          = %s\n' % outcol)
     f.close()
     os.system ("cat " + psn)
-    print 'calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --no-setup "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, vds, psn, catname, wd)
+    print 'calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --skip-instrument-db --skip-sky-db "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, vds, psn, catname, wd)
     os.system ('calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --no-setup "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, vds, psn, catname, wd))
 
 def doDPPP (i, j, freqstep, timestep):
@@ -157,18 +158,18 @@ def doDPPP (i, j, freqstep, timestep):
 #    f.write ("\n")
 #    os.system ("./IDPPP")
 
-def doImager (ps, imagename, i, j, center, psname, cd, wd, logfile, dry, hfn, casaopt):
+def doImager (ps, imagename, i, j, center, psname, cd, wd, logfile, dry, hfn, casaopt, pgmpath):
     print 'doImager facet',i,j,center
     # Convert the parset file to a parset file for the facet.
     # It means inserting a new center and image name.
-    ps.replace ("Images.ra",  '%d' % center[0])
-    ps.replace ("Images.dec", '%d' % center[1])
+    ps.replace ("Images.ra",  '%.15frad' % center[0])
+    ps.replace ("Images.dec", '%.15frad' % center[1])
     newName = '%s-%03d-%03d' % (imagename, i ,j)
     ps.replace ("Images.name", newName)
     psn = "%s-image-%03d-%03d" % (psname, i, j)
     ps.writeFile (psn)
-    print 'mwimager %s %s "%s" "%s" "%s" "%s" "%s"' % (casaopt, psn, cd, wd, logfile, dry, hfn)
-    os.system ('mwimager %s %s "%s" "%s" "%s" "%s" "%s"' % (casaopt, psn, cd, wd, logfile, dry, hfn))
+    print '%s/mwimager %s %s "%s" "%s" "%s" "%s" "%s"' % (pgmpath, casaopt, psn, cd, wd, logfile, dry, hfn)
+    os.system ('%s/mwimager %s %s "%s" "%s" "%s" "%s" "%s"' % (pgmpath, casaopt, psn, cd, wd, logfile, dry, hfn))
 
 
 def main(argv=None):
@@ -220,7 +221,7 @@ def main(argv=None):
     vdsdir =  os.path.dirname(vds)
     catname = vdsdir + '/facetlist.txt'
     skydb   = vdsdir + '/' + imagename + '.facets'
-    centers = makeFacetSourceList(catname, ra, dec, cellsz, nfacet)
+    centers = makeFacetSourceList(catname, ra, dec, cellsz, nfacet, npix)
 
     # Remove the parameters not needed for an image per facet.
     ps.remove ("Images.nfacets")
@@ -247,7 +248,7 @@ def main(argv=None):
                 doBBS (ps, i, j, psn, vds, cd, wd, dry, instdb, skydb, catname, incol, outcol)
             if average:
                 doDPPP (i, j, freqavg, timeavg)
-            doImager (ps, imagename, i, j, centers[inx], psn, cd, wd, logfile, dry, hfn, casaopt)
+            doImager (ps, imagename, i, j, centers[inx], psn, cd, wd, logfile, dry, hfn, casaopt, pgmpath)
             inx += 1
 
     # Combine all facets.
@@ -262,8 +263,8 @@ def main(argv=None):
     f.write ('nfacet = [%d,%d]\n' % (nfacet, nfacet))
     f.close()
     os.system ('cat ' + psnm);
-    print 'rundist -cdn %s -gdsout img makeCombinedImage-part %s %s %s "%s"' % (cd, vds, psnm, imagename, dry)
-    os.system ('rundist -cdn %s -gdsout img makeCombinedImage-part %s %s %s "%s"' % (cd, vds, psnm, imagename, dry))
+    print 'rundist -cdn %s -gdsout img %s/makeCombinedImage-part %s %s %s "%s"' % (cd, pgmpath, vds, psnm, imagename, dry)
+    os.system ('rundist -cdn %s -gdsout img %s/makeCombinedImage-part %s %s %s "%s"' % (cd, pgmpath, vds, psnm, imagename, dry))
     
 
 

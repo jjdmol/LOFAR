@@ -38,8 +38,8 @@ using namespace std;
 string facetName (const string& imageName, int ix, int iy)
 {
   ostringstream ostr;
-  ostr << imageName << "-facet-" << setw(3) << setfill('0') << ix
-       << '-' << setw(3) << setfill('0') << iy;
+  ostr << imageName << '-' << setw(3) << setfill('0') << ix
+       << '-' << setw(3) << setfill('0') << iy << ".img";
   return ostr.str();
 }
 
@@ -56,45 +56,55 @@ void combine (const string& imageName, bool useHDF5,
   // Open first image and get its coordinates.
   PagedImage<Float> img(facetName(imageName, 0, 0));
   IPosition imgShape = img.shape();
-  imgShape[0] = nfacet[0]*npix[0];
-  imgShape[1] = nfacet[1]*npix[1];
+  imgShape[0] = npix[0];
+  imgShape[1] = npix[1];
   CoordinateSystem csys (img.coordinates());
   // Coordinates of output image only changes in RA/DEC.
   ASSERT (csys.type(0) == Coordinate::DIRECTION);
   DirectionCoordinate coord = csys.directionCoordinate(0);
   Vector<double> cellSize = coord.increment();
-  Vector<double> refPix(2);
-  Vector<double> refPos(2);
+  Vector<double> refPix = coord.referencePixel();
+  Vector<double> refPos = coord.referenceValue();
+  cout << refPos[0] <<' '<<refPos[1]<<' '<<refPix[0]<<' '<<refPix[1]<<endl;
   refPos[0] = ra;
   refPos[1] = dec;
   refPix[0] = imgShape[0]/2;
   refPix[1] = imgShape[1]/2;
+  cout << refPos[0] <<' '<<refPos[1]<<' '<<refPix[0]<<' '<<refPix[1]<<endl;
   coord.setReferenceValue (refPos);
   coord.setReferencePixel (refPix);
   csys.replaceCoordinate (coord, 0);
   // Now create the new image.
   ImageInterface<Float>* newImg;
   if (useHDF5) {
-    newImg = new HDF5Image<Float>  (imgShape, csys, imageName);
+    newImg = new HDF5Image<Float>  (imgShape, csys, imageName+".img");
   } else {
-    newImg = new PagedImage<Float> (imgShape, csys, imageName);
+    newImg = new PagedImage<Float> (imgShape, csys, imageName+".img");
   }
+  // Get nr of pixels to take per facet.
+  vector<int> npixf(npix);
+  npixf[0] /= nfacet[0];
+  npixf[1] /= nfacet[1];
   // Determine which part of the facets to take.
   IPosition facetShape = img.shape();
-  int xpadding = (facetShape[0] - npix[0]) / 2;
-  int ypadding = (facetShape[1] - npix[1]) / 2;
-  Slicer slicer (IPosition(2, xpadding, ypadding),
-                 IPosition(2, npix[0], npix[1]));
+  IPosition stslice (facetShape.size(), 0);
+  IPosition lenslice(facetShape);
+  for (int i=0; i<2; ++i) {
+    stslice[i] = (facetShape[i] - npixf[i]) / 2;
+    lenslice[i] = npixf[i];
+  }
+  cout<<stslice<<lenslice<<facetShape<<imgShape<<endl;
+  Slicer slicer (stslice, lenslice);
   // Put the data of each facet into the image.
   IPosition where(imgShape.size(), 0);
   for (int iy=0; iy<nfacet[1]; ++iy) {
     for (int ix=0; ix<nfacet[0]; ++ix) {
       PagedImage<Float> facet(facetName(imageName, ix, iy));
       newImg->putSlice (facet.getSlice(slicer), where);
-      where[0] += npix[0];
+      where[0] += npixf[0];
     }
     where[0] = 0;
-    where[1] += npix[1];
+    where[1] += npixf[1];
   }
   // Cleanup.
   delete newImg;
@@ -102,13 +112,14 @@ void combine (const string& imageName, bool useHDF5,
 
 int main (int argc, char* argv[])
 {
-  if (argc < 3) {
-    cerr << "Run as:   combineFacets parsetname imagename" << endl;
+  if (argc < 4) {
+    cerr << "Run as:   combineFacets parsetname ms imagename" << endl;
     return 1;
   }
   try {
+    String fullName = Path(argv[2]).dirName() + '/' + argv[3];
     ParameterSet ps(argv[1]);
-    combine (argv[2],
+    combine (fullName,
              ps.getBool  ("useHDF5", False),
              ps.getDouble("ra"),
              ps.getDouble("dec"),

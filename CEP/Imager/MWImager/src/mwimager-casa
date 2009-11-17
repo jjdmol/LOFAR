@@ -28,7 +28,6 @@ import os
 import sys
 import re
 import lofar.parameterset as parset
-import pyrap.tables as pytab
 
 def main(argv=None):
     if argv is None:
@@ -59,6 +58,7 @@ def main(argv=None):
         nch = vdsps.getIntVector('NChan')
         echan += nch[0]
     nchan = echan - schan + 1
+    imgname  = ps.getString ('Images.name', msname);
     imgnchan = ps.getInt ('Images.nchan', 1);
     imsize = ps.getIntVector ('Images.shape');
     cellsz = ps.getStringVector ('Images.cellSize')
@@ -108,13 +108,17 @@ def main(argv=None):
     # Form the image name by replacing the file extension with .img
     # Keep a possible numeric extension (note *? means non-greedy).
     imgre = re.compile ("\.[^.]*?([0-9]*)$")
-    imgname = imgre.sub (r'.img\1', msname)
+    imgname2 = imgre.sub (r'.img\1', imgname)
+    if imgname2 == imgname:
+        imgname2 = imgname + '.img'
 
     # Add the lwimager columns if needed.
-    print "Adding MS columns needed for CASA's imager ..."
-    pytab.addImagingColumns (msname);
+    if dry != 'dry':
+        import pyrap.tables as pytab
+        print "Adding MS columns needed for CASA's imager ..."
+        pytab.addImagingColumns (msname);
 
-    command = 'lwimager "ms=%s" "image=%s" "data=%s" "mode=channel" "npix=%d" "cellsize=%s" "stokes=%s" "nchan=%d" "chanstart=%d" "img_nchan=%d" "wprojplanes=%d" "nfacets=%d" "padding=%s"' % (msname,imgname,datacol,imsize,cellsz,stokestr,nchan,schan,imgnchan,nwplanes,nfacets,padding)
+    command = 'lwimager "ms=%s" "image=%s" "data=%s" "mode=channel" "npix=%d" "cellsize=%s" "stokes=%s" "nchan=%d" "chanstart=%d" "img_nchan=%d" "wprojplanes=%d" "nfacets=%d" "padding=%s"' % (msname,imgname2,datacol,imsize,cellsz,stokestr,nchan,schan,imgnchan,nwplanes,nfacets,padding)
     if len(phasecenter) > 0:
         command += phasecenter
     if len(filter) > 0:
