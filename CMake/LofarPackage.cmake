@@ -56,8 +56,8 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
   #   - add a dependency of the current project on package <pkg>
   #
   # Furthermore:
-  # - if [srcdir] is not supplied, <pkg>_SOURCE_DIR is used as directory name,
-  #   unless <pkg>_SOURCE_DIR is undefined, in which case <pkg> is used.
+  # - if [srcdir] is not supplied, <pkg>_SOURCE_DIR, which must be defined in
+  #   that case, is used as directory name;
   # - it is not an error if the package source directory does not exist, 
   #   unless the REQUIRED keyword is specified.
   #
@@ -74,14 +74,15 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
         string(REGEX REPLACE ";?REQUIRED$" "" _srcdir "${ARGN}")
         string(REGEX MATCH "REQUIRED$" _required "${ARGN}")
         if(_srcdir MATCHES "^$")
-          if(DEFINED ${_pkg}_SOURCE_DIR)
-            set(_srcdir ${${_pkg}_SOURCE_DIR})
-          else(DEFINED ${_pkg}_SOURCE_DIR)
-#          message(STATUS "Variable ${_pkg}_SOURCE_DIR is undefined")
-            set(_srcdir ${_pkg})
-          endif(DEFINED ${_pkg}_SOURCE_DIR)
+          if(NOT DEFINED ${_pkg}_SOURCE_DIR)
+            message(FATAL_ERROR "Variable ${_pkg}_SOURCE_DIR is undefined!\n"
+              "Please regenerate LofarPackageList.cmake.\n")
+          endif(NOT DEFINED ${_pkg}_SOURCE_DIR)
+          set(_srcdir ${${_pkg}_SOURCE_DIR})
         endif(_srcdir MATCHES "^$")
-        get_filename_component(_srcdir ${_srcdir} ABSOLUTE)
+        if(NOT IS_ABSOLUTE ${_srcdir})
+          get_filename_component(_srcdir ${_srcdir} ABSOLUTE)
+        endif(NOT IS_ABSOLUTE ${_srcdir})
         string(REGEX REPLACE
           ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} _bindir ${_srcdir})
         if(EXISTS ${_srcdir})
@@ -95,8 +96,8 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
           add_custom_target(${_pkg})
           add_subdirectory(${_srcdir} ${_bindir})
         else(EXISTS ${_srcdir})
-          set(_errmsg "Source package `${_pkg}' not found! "
-            "Directory ${_srcdir} does not exist.")
+          set(_errmsg "Source package `${_pkg}' not found!"
+            "  (directory ${_srcdir} does not exist)")
           if(_required)
             message(FATAL_ERROR ${_errmsg})
           else(_required)
