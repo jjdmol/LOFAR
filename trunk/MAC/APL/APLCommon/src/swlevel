@@ -99,8 +99,8 @@ start_prog()
 		return
 	fi
 
-#	ps -ef | grep -v grep | egrep '[0-9][0-9] [a-zA-Z0-9/_.]*/'${prog} 2>&1 >/dev/null
-	/sbin/pidof ${prog} 2>&1 >/dev/null
+#	ps -ef | grep -v grep | egrep '[0-9][0-9] [a-zA-Z0-9/_.]*/'${prog} 1>/dev/null 2>&1
+	/sbin/pidof ${prog} 1>/dev/null 2>&1
 	if [ $? -ne 0 ]; then
 		echo Starting $prog
 		# PVSS needs special treatment
@@ -109,7 +109,7 @@ start_prog()
 			sleep 5
 		else
 			if [ -n "$asroot" ]; then
-				sudo rm -f $LOGDIR/$prog.log.?
+				sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
 				if [ "$prog" = "RSPDriver" ]; then
 					selectImage1
 					echo "Starting RSPDriver with nice -20"
@@ -118,7 +118,7 @@ start_prog()
 					sudo -b $BINDIR/$prog 1>/dev/null 2>&1
 				fi
 			else
-				rm -f $LOGDIR/$prog.log*.?
+				rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
 				$BINDIR/$prog 1>/dev/null 2>&1 &
 			fi
 			sleep 1
@@ -152,7 +152,7 @@ stop_prog()
 
 	# get processlist
 #	ps -ef | grep -v grep | egrep '[0-9][0-9] [a-zA-Z0-9/_.]*/'${prog} 2>&1 >/dev/null
-	/sbin/pidof ${prog} 2>&1 >/dev/null
+	/sbin/pidof ${prog} 1>/dev/null 2>&1
 	if [ $? -ne 0 ]; then
 		return
 	fi
@@ -185,7 +185,7 @@ stop_prog()
 	do 
 		sleep 2
 		echo "Hard killing ${prog}(${pid})"
-		$asroot kill -9 $pid 1>&2 2>/dev/null
+		$asroot kill -9 $pid 1>/dev/null 2>&1
 	done
 }
 
@@ -221,13 +221,13 @@ status_prog()
 		fi
 
 #		ps -ef | grep -v grep | egrep '[0-9][0-9] [a-zA-Z0-9/_.]*/'${prog} 2>&1 >/dev/null
-		/sbin/pidof ${prog} 2>&1 >/dev/null
+		/sbin/pidof ${prog} 1>/dev/null 2>&1
 		if [ $? -eq 0 ]; then
 			pid=`/sbin/pidof ${prog}`
 		else
 			pid="DOWN"
 		fi
-		echo ${levelnr} ${prog} ${pid} | awk '{ printf "%s : %-25s %s\n", $1, $2, $3 }'
+		echo ${levelnr}:${prog}:${pid} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3 }'
 	done
 }
 
@@ -248,7 +248,7 @@ goto_level()
           fi
           if [ ${curlevel} -ge 2 ]; then 
 	    echo "set rcumode to 0 (power save)"
-	    rspctl --rcumode=0
+	    rspctl --rcumode=0 1>/dev/null 2>&1
           fi
 	fi
 
