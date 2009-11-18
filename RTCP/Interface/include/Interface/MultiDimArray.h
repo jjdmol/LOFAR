@@ -29,7 +29,8 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
     MultiDimArray(Allocator &allocator = heapAllocator)
     :
       SuperType(0, boost::detail::multi_array::extent_gen<DIM>()),
-      allocator(&allocator)
+      allocator(&allocator),
+      alignment(0)
     {
     }
 
@@ -40,8 +41,22 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
       // TODO: Not sure how to handle an exception raised by the constructor of T. The placement
       // delete[] will be called, but that's an empty stub.
       SuperType(new(allocator.allocate(nrElements(extents) * sizeof(T), alignment))T[nrElements(extents)], extents),
-      allocator(&allocator)
+      allocator(&allocator),
+      alignment(alignment)
     {
+    }
+
+    MultiDimArray(const MultiDimArray<T,DIM> &other)
+    :
+      SuperType(other.num_elements_ ? new(other.allocator->allocate(other.num_elements_ * sizeof(T), other.alignment))T[other.num_elements_] : 0, other.extent_list_),
+      allocator(other.allocator),
+      alignment(other.alignment)
+    {
+      T *me  = this->origin();
+      const T *him = other.origin();
+
+      for (size_t i = 0; i < this->num_elements_; i ++)
+        *(me++) = *(him++); 
     }
 
     ~MultiDimArray()
@@ -87,6 +102,7 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
       std::swap(this->directional_offset_, newArray.directional_offset_);
       std::swap(this->num_elements_, newArray.num_elements_);
       std::swap(this->allocator, newArray.allocator);
+      std::swap(this->alignment, newArray.alignment);
     }
 
     void resize(const ExtentList &extents, size_t alignment = defaultAlignment())
@@ -118,6 +134,8 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
   private:
     // needs to be a pointer to be swappable in resize()
     Allocator *allocator;
+
+    unsigned alignment;
 };
 
 
