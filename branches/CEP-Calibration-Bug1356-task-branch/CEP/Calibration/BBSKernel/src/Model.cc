@@ -1,22 +1,22 @@
 //# Model.cc:
 //#
 //# Copyright (C) 2007
-//# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//# ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
-//# This program is free software; you can redistribute it and/or modify
-//# it under the terms of the GNU General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
 //# (at your option) any later version.
 //#
-//# This program is distributed in the hope that it will be useful,
+//# The LOFAR software suite is distributed in the hope that it will be useful,
 //# but WITHOUT ANY WARRANTY; without even the implied warranty of
 //# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //# GNU General Public License for more details.
 //#
-//# You should have received a copy of the GNU General Public License
-//# along with this program; if not, write to the Free Software
-//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
 
@@ -716,7 +716,7 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
         {
             ExprParm::Ptr ra = makeExprParm(SKY, "Ra:" + source.getName());
             ExprParm::Ptr dec = makeExprParm(SKY, "Dec:" + source.getName());
-            ExprParm::Ptr stokesI = makeExprParm(SKY, "I:" + source.getName());
+            Expr<Scalar>::Ptr stokesI = makeSpectralIndexExpr(source, "I");
             ExprParm::Ptr stokesQ = makeExprParm(SKY, "Q:" + source.getName());
             ExprParm::Ptr stokesU = makeExprParm(SKY, "U:" + source.getName());
             ExprParm::Ptr stokesV = makeExprParm(SKY, "V:" + source.getName());
@@ -731,10 +731,8 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
             stokes->connect(2, stokesU);
             stokes->connect(3, stokesV);
 
-            Expr<Scalar>::Ptr spectral = makeSpectralIndexExpr(source);
-
             return PointSource::Ptr(new PointSource(source.getName(), position,
-                stokes, spectral));
+                stokes));
         }
         break;
 
@@ -742,7 +740,7 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
         {
             ExprParm::Ptr ra = makeExprParm(SKY, "Ra:" + source.getName());
             ExprParm::Ptr dec = makeExprParm(SKY, "Dec:" + source.getName());
-            ExprParm::Ptr stokesI = makeExprParm(SKY, "I:" + source.getName());
+            Expr<Scalar>::Ptr stokesI = makeSpectralIndexExpr(source, "I");
             ExprParm::Ptr stokesQ = makeExprParm(SKY, "Q:" + source.getName());
             ExprParm::Ptr stokesU = makeExprParm(SKY, "U:" + source.getName());
             ExprParm::Ptr stokesV = makeExprParm(SKY, "V:" + source.getName());
@@ -763,14 +761,12 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
             stokes->connect(2, stokesU);
             stokes->connect(3, stokesV);
 
-            Expr<Scalar>::Ptr spectral = makeSpectralIndexExpr(source);
-
             AsExpr<Vector<2> >::Ptr dimensions(new AsExpr<Vector<2> >());
             dimensions->connect(0, major);
             dimensions->connect(1, minor);
 
             return GaussianSource::Ptr(new GaussianSource(source.getName(),
-                position, stokes, spectral, dimensions, orientation));
+                position, stokes, dimensions, orientation));
         }
         break;
 
@@ -782,14 +778,19 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
     return Source::Ptr();
 }
 
-Expr<Scalar>::Ptr Model::makeSpectralIndexExpr(const SourceInfo &source)
+Expr<Scalar>::Ptr Model::makeSpectralIndexExpr(const SourceInfo &source,
+    const string &stokesParm)
 {
     unsigned int degree =
         static_cast<unsigned int>(ParmManager::instance().getDefaultValue(SKY,
             "SpectralIndexDegree:" + source.getName()));
 
-    ExprParm::Ptr reference = makeExprParm(SKY, "ReferenceFrequency:"
-        + source.getName());
+    // Reference frequency.
+    ExprParm::Ptr refFreq =
+        makeExprParm(SKY, "ReferenceFrequency:" + source.getName());
+    // Stokes parameter value at the reference frequency.
+    ExprParm::Ptr refStokes =
+        makeExprParm(SKY, stokesParm + ":" + source.getName());
 
     vector<Expr<Scalar>::Ptr> coeff;
     coeff.reserve(degree + 1);
@@ -800,8 +801,8 @@ Expr<Scalar>::Ptr Model::makeSpectralIndexExpr(const SourceInfo &source)
         coeff.push_back(makeExprParm(SKY, name.str()));
     }
 
-    return Expr<Scalar>::Ptr(new SpectralIndex(reference, coeff.begin(),
-        coeff.end()));
+    return Expr<Scalar>::Ptr(new SpectralIndex(refFreq, refStokes,
+        coeff.begin(), coeff.end()));
 }
 
 void Model::makeStationUVW()

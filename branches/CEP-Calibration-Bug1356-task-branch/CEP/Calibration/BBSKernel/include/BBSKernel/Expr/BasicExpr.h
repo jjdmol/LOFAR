@@ -106,33 +106,30 @@ protected:
 };
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
-    typename T_ARG4, typename T_ARG5, typename T_EXPR_VALUE>
-class BasicExpr6: public Expr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
+    typename T_ARG4, typename T_EXPR_VALUE>
+class BasicExpr5: public Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
     T_EXPR_VALUE>
 {
 public:
-    typedef shared_ptr<BasicExpr6>          Ptr;
-    typedef shared_ptr<const BasicExpr6>    ConstPtr;
+    typedef shared_ptr<BasicExpr5>          Ptr;
+    typedef shared_ptr<const BasicExpr5>    ConstPtr;
 
-    using Expr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
+    using Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
         T_EXPR_VALUE>::argument0;
-    using Expr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
+    using Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
         T_EXPR_VALUE>::argument1;
-    using Expr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
+    using Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
         T_EXPR_VALUE>::argument2;
-    using Expr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
+    using Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
         T_EXPR_VALUE>::argument3;
-    using Expr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
+    using Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
         T_EXPR_VALUE>::argument4;
-    using Expr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
-        T_EXPR_VALUE>::argument5;
 
-    BasicExpr6(const typename Expr<T_ARG0>::ConstPtr &arg0,
+    BasicExpr5(const typename Expr<T_ARG0>::ConstPtr &arg0,
         const typename Expr<T_ARG1>::ConstPtr &arg1,
         const typename Expr<T_ARG2>::ConstPtr &arg2,
         const typename Expr<T_ARG3>::ConstPtr &arg3,
-        const typename Expr<T_ARG4>::ConstPtr &arg4,
-        const typename Expr<T_ARG5>::ConstPtr &arg5);
+        const typename Expr<T_ARG4>::ConstPtr &arg4);
 
 protected:
     virtual const T_EXPR_VALUE evaluateExpr(const Request &request,
@@ -141,8 +138,8 @@ protected:
     virtual const typename T_EXPR_VALUE::View evaluateImpl
         (const Request &request, const typename T_ARG0::View &arg0,
         const typename T_ARG1::View &arg1, const typename T_ARG2::View &arg2,
-        const typename T_ARG3::View &arg3, const typename T_ARG4::View &arg4,
-        const typename T_ARG5::View &arg5) const = 0;
+        const typename T_ARG3::View &arg3, const typename T_ARG4::View &arg4)
+        const = 0;
 };
 
 // @}
@@ -290,26 +287,25 @@ const T_EXPR_VALUE BasicTernaryExpr<T_ARG0, T_ARG1, T_ARG2,
 }
 
 // -------------------------------------------------------------------------- //
-// - Implementation: BasicExpr6                                             - //
+// - Implementation: BasicExpr5                                             - //
 // -------------------------------------------------------------------------- //
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
-    typename T_ARG4, typename T_ARG5, typename T_EXPR_VALUE>
-BasicExpr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
-    T_EXPR_VALUE>::BasicExpr6(const typename Expr<T_ARG0>::ConstPtr &arg0,
+    typename T_ARG4, typename T_EXPR_VALUE>
+BasicExpr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
+    T_EXPR_VALUE>::BasicExpr5(const typename Expr<T_ARG0>::ConstPtr &arg0,
         const typename Expr<T_ARG1>::ConstPtr &arg1,
         const typename Expr<T_ARG2>::ConstPtr &arg2,
         const typename Expr<T_ARG3>::ConstPtr &arg3,
-        const typename Expr<T_ARG4>::ConstPtr &arg4,
-        const typename Expr<T_ARG5>::ConstPtr &arg5)
-    :   Expr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
-            T_EXPR_VALUE>(arg0, arg1, arg2, arg3, arg4, arg5)
+        const typename Expr<T_ARG4>::ConstPtr &arg4)
+    :   Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>(arg0, arg1,
+            arg2, arg3, arg4)
 {
 }
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
-    typename T_ARG4, typename T_ARG5, typename T_EXPR_VALUE>
-const T_EXPR_VALUE BasicExpr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
+    typename T_ARG4, typename T_EXPR_VALUE>
+const T_EXPR_VALUE BasicExpr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
     T_EXPR_VALUE>::evaluateExpr(const Request &request, Cache &cache) const
 {
     // Allocate result.
@@ -321,21 +317,19 @@ const T_EXPR_VALUE BasicExpr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
     const T_ARG2 arg2 = argument2()->evaluate(request, cache);
     const T_ARG3 arg3 = argument3()->evaluate(request, cache);
     const T_ARG4 arg4 = argument4()->evaluate(request, cache);
-    const T_ARG5 arg5 = argument5()->evaluate(request, cache);
 
     // Evaluate flags.
-    FlagArray flags[6];
+    FlagArray flags[5];
     flags[0] = arg0.flags();
     flags[1] = arg1.flags();
     flags[2] = arg2.flags();
     flags[3] = arg3.flags();
     flags[4] = arg4.flags();
-    flags[5] = arg5.flags();
-    result.setFlags(mergeFlags(flags, flags + 6));
+    result.setFlags(mergeFlags(flags, flags + 5));
 
     // Compute main value.
     result.assign(evaluateImpl(request, arg0.view(), arg1.view(), arg2.view(),
-        arg3.view(), arg4.view(), arg5.view()));
+        arg3.view(), arg4.view()));
 
     // Compute perturbed values.
     typename T_ARG0::Iterator it0(arg0);
@@ -343,31 +337,27 @@ const T_EXPR_VALUE BasicExpr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
     typename T_ARG2::Iterator it2(arg2);
     typename T_ARG3::Iterator it3(arg3);
     typename T_ARG4::Iterator it4(arg4);
-    typename T_ARG5::Iterator it5(arg5);
 
     PValueKey key;
     bool atEnd = it0.atEnd() && it1.atEnd() && it2.atEnd() && it3.atEnd()
-        && it4.atEnd() && it5.atEnd();
+        && it4.atEnd();
     while(!atEnd)
     {
         key = std::min(it0.key(), it1.key());
         key = std::min(key, it2.key());
         key = std::min(key, it3.key());
         key = std::min(key, it4.key());
-        key = std::min(key, it5.key());
 
         result.assign(key, evaluateImpl(request, it0.value(key),
-            it1.value(key), it2.value(key), it3.value(key), it4.value(key),
-            it5.value(key)));
+            it1.value(key), it2.value(key), it3.value(key), it4.value(key)));
 
         it0.advance(key);
         it1.advance(key);
         it2.advance(key);
         it3.advance(key);
         it4.advance(key);
-        it5.advance(key);
         atEnd = it0.atEnd() && it1.atEnd() && it2.atEnd() && it3.atEnd()
-            && it4.atEnd() && it5.atEnd();
+            && it4.atEnd();
     }
 
     return result;

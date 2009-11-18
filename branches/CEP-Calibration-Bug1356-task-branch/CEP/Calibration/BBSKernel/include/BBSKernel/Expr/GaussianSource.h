@@ -2,22 +2,22 @@
 //# source.
 //#
 //# Copyright (C) 2002
-//# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//# ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
-//# This program is free software; you can redistribute it and/or modify
-//# it under the terms of the GNU General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
 //# (at your option) any later version.
 //#
-//# This program is distributed in the hope that it will be useful,
+//# The LOFAR software suite is distributed in the hope that it will be useful,
 //# but WITHOUT ANY WARRANTY; without even the implied warranty of
 //# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //# GNU General Public License for more details.
 //#
-//# You should have received a copy of the GNU General Public License
-//# along with this program; if not, write to the Free Software
-//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
 
@@ -47,32 +47,28 @@ public:
     GaussianSource(const string &name,
         const Expr<Vector<2> >::ConstPtr &position,
         const Expr<Vector<4> >::ConstPtr &stokes,
-        const Expr<Scalar>::ConstPtr &spectral,
         const Expr<Vector<2> >::ConstPtr &dimensions,
         const Expr<Scalar>::ConstPtr &orientation);
 
     Expr<Vector<4> >::ConstPtr getStokesVector() const;
-    Expr<Scalar>::ConstPtr getSpectralIndex() const;
     Expr<Vector<2> >::ConstPtr getDimensions() const;
     Expr<Scalar>::ConstPtr getOrientation() const;
 
 private:
     Expr<Vector<4> >::ConstPtr  itsStokesVector;
-    Expr<Scalar>::ConstPtr      itsSpectralIndex;
     Expr<Vector<2> >::ConstPtr  itsDimensions;
     Expr<Scalar>::ConstPtr      itsOrientation;
 };
 
 // @}
 
+// -------------------------------------------------------------------------- //
+// - GaussianSource implementation                                          - //
+// -------------------------------------------------------------------------- //
+
 inline Expr<Vector<4> >::ConstPtr GaussianSource::getStokesVector() const
 {
     return itsStokesVector;
-}
-
-inline Expr<Scalar>::ConstPtr GaussianSource::getSpectralIndex() const
-{
-    return itsSpectralIndex;
 }
 
 inline Expr<Vector<2> >::ConstPtr GaussianSource::getDimensions() const

@@ -1,23 +1,22 @@
-//# SpectralIndex.cc: Frequency dependent scale factor for the base flux given
-//# for a specific reference frequency.
+//# SpectralIndex.cc: Frequency dependent flux.
 //#
 //# Copyright (C) 2009
-//# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//# ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
-//# This program is free software; you can redistribute it and/or modify
-//# it under the terms of the GNU General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
 //# (at your option) any later version.
 //#
-//# This program is distributed in the hope that it will be useful,
+//# The LOFAR software suite is distributed in the hope that it will be useful,
 //# but WITHOUT ANY WARRANTY; without even the implied warranty of
 //# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //# GNU General Public License for more details.
 //#
-//# You should have received a copy of the GNU General Public License
-//# along with this program; if not, write to the Free Software
-//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
 
@@ -31,28 +30,31 @@ namespace BBS
 
 SpectralIndex::~SpectralIndex()
 {
-    for(unsigned int i = 0; i < itsCoeff.size(); ++i)
+    typedef vector<Expr<Scalar>::ConstPtr>::const_reverse_iterator _iter;
+    for(_iter it = itsCoeff.rbegin(), end = itsCoeff.rend(); it != end; ++it)
     {
-        disconnect(itsCoeff[i]);
+        disconnect(*it);
     }
+    disconnect(itsRefStokes);
     disconnect(itsRefFreq);
 }
 
 unsigned int SpectralIndex::nArguments() const
 {
-    return itsCoeff.size() + 1;
+    return itsCoeff.size() + 2;
 }
 
 ExprBase::ConstPtr SpectralIndex::argument(unsigned int i) const
 {
     DBGASSERT(i < nArguments());
-    if(i == 0)
+    switch(i)
     {
+    case 0:
         return itsRefFreq;
-    }
-    else
-    {
-        return itsCoeff[i - 1];
+    case 1:
+        return itsRefStokes;
+    default:
+        return itsCoeff[i - 2];
     }
 }
 
@@ -70,9 +72,12 @@ const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache)
     const Scalar refFreq = itsRefFreq->evaluate(request, cache);
     flags.push_back(refFreq.flags());
 
+    const Scalar refStokes = itsRefStokes->evaluate(request, cache);
+    flags.push_back(refFreq.flags());
+
     vector<Scalar> coeff;
-    coeff.reserve(nArg - 1);
-    for(unsigned int i = 0; i < nArg - 1; ++i)
+    coeff.reserve(nArg - 2);
+    for(unsigned int i = 0; i < nArg - 2; ++i)
     {
         coeff.push_back(itsCoeff[i]->evaluate(request, cache));
         flags.push_back(coeff[i].flags());
@@ -83,20 +88,22 @@ const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache)
 
     // Compute main value.
     vector<Scalar::View> coeffValue;
-    coeffValue.reserve(nArg - 1);
-    for(unsigned int i = 0; i < nArg - 1; ++i)
+    coeffValue.reserve(nArg - 2);
+    for(unsigned int i = 0; i < nArg - 2; ++i)
     {
         coeffValue.push_back(coeff[i].view());
     }
-    result.assign(evaluateImpl(request, refFreq.view(), coeffValue));
+    result.assign(evaluateImpl(request, refFreq.view(), refStokes.view(),
+        coeffValue));
 
     // Compute perturbed values.
     Scalar::Iterator refFreqIt(refFreq);
-    bool atEnd = refFreqIt.atEnd();
+    Scalar::Iterator refStokesIt(refStokes);
+    bool atEnd = refFreqIt.atEnd() && refStokesIt.atEnd();
 
     vector<Scalar::Iterator> coeffIt;
-    coeffIt.reserve(nArg - 1);
-    for(unsigned int i = 0; i < nArg - 1; ++i)
+    coeffIt.reserve(nArg - 2);
+    for(unsigned int i = 0; i < nArg - 2; ++i)
     {
         coeffIt.push_back(Scalar::Iterator(coeff[i]));
         atEnd = atEnd && coeffIt.back().atEnd();
@@ -105,23 +112,24 @@ const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache)
     PValueKey key;
     while(!atEnd)
     {
-        key = refFreqIt.key();
-        for(unsigned int i = 0; i < nArg - 1; ++i)
+        key = std::min(refFreqIt.key(), refStokesIt.key());
+        for(unsigned int i = 0; i < nArg - 2; ++i)
         {
             key = std::min(key, coeffIt[i].key());
         }
 
-        for(unsigned int i = 0; i < nArg - 1; ++i)
+        for(unsigned int i = 0; i < nArg - 2; ++i)
         {
             coeffValue[i] = coeffIt[i].value(key);
         }
 
         result.assign(key, evaluateImpl(request, refFreqIt.value(key),
-            coeffValue));
+            refStokesIt.value(key), coeffValue));
 
         refFreqIt.advance(key);
-        atEnd = refFreqIt.atEnd();
-        for(unsigned int i = 0; i < nArg - 1; ++i)
+        refStokesIt.advance(key);
+        atEnd = refFreqIt.atEnd() && refStokesIt.atEnd();
+        for(unsigned int i = 0; i < nArg - 2; ++i)
         {
             coeffIt[i].advance(key);
             atEnd = atEnd && coeffIt[i].atEnd();
@@ -132,7 +140,8 @@ const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache)
 }
 
 const Scalar::View SpectralIndex::evaluateImpl(const Request &request,
-    const Scalar::View &refFreq, const vector<Scalar::View> &coeff) const
+    const Scalar::View &refFreq, const Scalar::View &refStokes,
+    const vector<Scalar::View> &coeff) const
 {
     Scalar::View result;
 
@@ -141,7 +150,7 @@ const Scalar::View SpectralIndex::evaluateImpl(const Request &request,
     if(coeff.empty() || (coeff.size() == 1 && !coeff[0]().isArray()
         && !coeff[0]().isComplex() && coeff[0]().getDouble() == 0.0))
     {
-        result.assign(Matrix(1.0));
+        result.assign(refStokes());
         return result;
     }
 
@@ -160,28 +169,24 @@ const Scalar::View SpectralIndex::evaluateImpl(const Request &request,
         }
     }
 
-    // Compute flux scale factor as:
-    // (v / v0) ^ (-1.0 * [c0 + c1 * log(v / v0) + c2 * log(v / v0)^2 + ...])
+    // Compute spectral index as:
+    // (v / v0) ^ (c0 + c1 * log10(v / v0) + c2 * log10(v / v0)^2 + ...)
     // Where v is the frequency and v0 is the reference frequency.
 
-    // Compute log(v / v0).
-    Matrix base = log(freq) - log(refFreq());
+    // Compute log10(v / v0).
+    Matrix base = log10(freq) - log10(refFreq());
 
-    // In the following, we depend on coeff not being empty. It shouldn't be,
-    // because that special case is handled above. But to guard against
-    // oversights during software maintenance, we recheck the condition here.
-    DBGASSERT(!coeff.empty());
-
-    // Compute c0 + log(v / v0) * c1 + log(v / v0)^2 * c2 + ... using Horner's
-    // rule.
+    // Compute c0 + log10(v / v0) * c1 + log10(v / v0)^2 * c2 + ... using
+    // Horner's rule.
     Matrix exponent = coeff[coeff.size() - 1]();
     for(unsigned int i = 1; i < coeff.size(); ++i)
     {
         exponent = exponent * base + coeff[coeff.size() - 1 - i]();
     }
 
-    // Compute (v / v0) ^ -exponent.
-    result.assign(exp(base * (-exponent)));
+    // Compute I0 * (v / v0) ^ exponent, where I0 is the value of the Stokes
+    // parameter at the reference frequency.
+    result.assign(refStokes() * pow10(base * exponent));
     return result;
 }
 

@@ -1,23 +1,22 @@
-//# SpectralIndex.h: Frequency dependent scale factor for the base flux given
-//# for a specific reference frequency.
+//# SpectralIndex.h: Frequency dependent flux.
 //#
 //# Copyright (C) 2009
-//# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//# ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
-//# This program is free software; you can redistribute it and/or modify
-//# it under the terms of the GNU General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
 //# (at your option) any later version.
 //#
-//# This program is distributed in the hope that it will be useful,
+//# The LOFAR software suite is distributed in the hope that it will be useful,
 //# but WITHOUT ANY WARRANTY; without even the implied warranty of
 //# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //# GNU General Public License for more details.
 //#
-//# You should have received a copy of the GNU General Public License
-//# along with this program; if not, write to the Free Software
-//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
 
@@ -25,8 +24,7 @@
 #define LOFAR_BBSKERNEL_EXPR_SPECTRALINDEX_H
 
 // \file
-// Frequency dependent scale factor for the base flux given for a specific
-// reference frequency.
+// Frequency dependent flux.
 
 #include <BBSKernel/Expr/Expr.h>
 
@@ -44,18 +42,9 @@ public:
     typedef shared_ptr<SpectralIndex>       Ptr;
     typedef shared_ptr<const SpectralIndex> ConstPtr;
 
-    template <typename T_ITERATOR>
-    SpectralIndex(const Expr<Scalar>::ConstPtr &refFreq, T_ITERATOR coeffBegin,
-        T_ITERATOR coeffEnd)
-        :   itsRefFreq(refFreq),
-            itsCoeff(coeffBegin, coeffEnd)
-    {
-        connect(itsRefFreq);
-        for(unsigned int i = 0; i < itsCoeff.size(); ++i)
-        {
-            connect(itsCoeff[i]);
-        }
-    }
+    template <typename T_ITER>
+    SpectralIndex(const Expr<Scalar>::ConstPtr &refFreq,
+        const Expr<Scalar>::ConstPtr &refStokes, T_ITER first, T_ITER last);
 
     virtual ~SpectralIndex();
 
@@ -67,14 +56,36 @@ protected:
         const;
 
     virtual const Scalar::View evaluateImpl(const Request &request,
-        const Scalar::View &refFreq, const vector<Scalar::View> &coeff) const;
+        const Scalar::View &refFreq, const Scalar::View &refStokes,
+        const vector<Scalar::View> &coeff) const;
 
 private:
     Expr<Scalar>::ConstPtr          itsRefFreq;
+    Expr<Scalar>::ConstPtr          itsRefStokes;
     vector<Expr<Scalar>::ConstPtr>  itsCoeff;
 };
 
 // @}
+
+// -------------------------------------------------------------------------- //
+// - SpectralIndex implementation                                           - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_ITER>
+SpectralIndex::SpectralIndex(const Expr<Scalar>::ConstPtr &refFreq,
+    const Expr<Scalar>::ConstPtr &refStokes, T_ITER first, T_ITER last)
+    :   itsRefFreq(refFreq),
+        itsRefStokes(refStokes),
+        itsCoeff(first, last)
+{
+    connect(itsRefFreq);
+    connect(itsRefStokes);
+    for(unsigned int i = 0; i < itsCoeff.size(); ++i)
+    {
+        connect(itsCoeff[i]);
+    }
+}
+
 
 } //# namespace BBS
 } //# namespace LOFAR

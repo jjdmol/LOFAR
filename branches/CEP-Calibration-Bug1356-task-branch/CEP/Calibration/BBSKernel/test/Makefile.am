@@ -1,13 +1,10 @@
-check_PROGRAMS = tFillRow tJonesCMul3 tBoundValueIterator
+check_PROGRAMS = tFillRow tJonesCMul3
 
 tFillRow_SOURCES = tFillRow.cc
 tFillRow_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tJonesCMul3_SOURCES = tJonesCMul3.cc utils.cc
 tJonesCMul3_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
-
-tBoundValueIterator_SOURCES = tBoundValueIterator.cc
-tBoundValueIterator_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 LDADD				= ../src/libbbskernel.la
 

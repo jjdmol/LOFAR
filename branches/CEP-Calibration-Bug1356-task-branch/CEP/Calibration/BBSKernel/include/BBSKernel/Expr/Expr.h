@@ -1,22 +1,22 @@
 //# Expr.h: Expression base class
 //#
-//# Copyright (C) 2009
-//# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//# Copyright (C) 2002
+//# ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
-//# This program is free software; you can redistribute it and/or modify
-//# it under the terms of the GNU General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
 //# (at your option) any later version.
 //#
-//# This program is distributed in the hope that it will be useful,
+//# The LOFAR software suite is distributed in the hope that it will be useful,
 //# but WITHOUT ANY WARRANTY; without even the implied warranty of
 //# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //# GNU General Public License for more details.
 //#
-//# You should have received a copy of the GNU General Public License
-//# along with this program; if not, write to the Free Software
-//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
 
@@ -215,30 +215,28 @@ private:
 };
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
-    typename T_ARG4, typename T_ARG5, typename T_EXPR_VALUE>
-class Expr6: public Expr<T_EXPR_VALUE>
+    typename T_ARG4, typename T_EXPR_VALUE>
+class Expr5: public Expr<T_EXPR_VALUE>
 {
 public:
-    typedef shared_ptr<Expr6>       Ptr;
-    typedef shared_ptr<const Expr6> ConstPtr;
+    typedef shared_ptr<Expr5>       Ptr;
+    typedef shared_ptr<const Expr5> ConstPtr;
 
     typedef T_ARG0  Arg0Type;
     typedef T_ARG1  Arg1Type;
     typedef T_ARG2  Arg2Type;
     typedef T_ARG3  Arg3Type;
     typedef T_ARG4  Arg4Type;
-    typedef T_ARG5  Arg5Type;
 
     using ExprBase::connect;
     using ExprBase::disconnect;
 
-    Expr6(const typename Expr<T_ARG0>::ConstPtr &arg0,
+    Expr5(const typename Expr<T_ARG0>::ConstPtr &arg0,
         const typename Expr<T_ARG1>::ConstPtr &arg1,
         const typename Expr<T_ARG2>::ConstPtr &arg2,
         const typename Expr<T_ARG3>::ConstPtr &arg3,
-        const typename Expr<T_ARG4>::ConstPtr &arg4,
-        const typename Expr<T_ARG5>::ConstPtr &arg5);
-    ~Expr6();
+        const typename Expr<T_ARG4>::ConstPtr &arg4);
+    ~Expr5();
 
 protected:
     virtual unsigned int nArguments() const;
@@ -249,7 +247,6 @@ protected:
     const typename Expr<T_ARG2>::ConstPtr &argument2() const;
     const typename Expr<T_ARG3>::ConstPtr &argument3() const;
     const typename Expr<T_ARG4>::ConstPtr &argument4() const;
-    const typename Expr<T_ARG5>::ConstPtr &argument5() const;
 
 private:
     typename Expr<T_ARG0>::ConstPtr itsArg0;
@@ -257,7 +254,6 @@ private:
     typename Expr<T_ARG2>::ConstPtr itsArg2;
     typename Expr<T_ARG3>::ConstPtr itsArg3;
     typename Expr<T_ARG4>::ConstPtr itsArg4;
-    typename Expr<T_ARG5>::ConstPtr itsArg5;
 };
 
 // Helper function to compute the bitwise or of all the FlagArray instances
@@ -483,38 +479,34 @@ inline const typename Expr<T_ARG2>::ConstPtr &TernaryExpr<T_ARG0, T_ARG1,
 }
 
 // -------------------------------------------------------------------------- //
-// - Implementation: Expr6                                                  - //
+// - Implementation: Expr5                                                  - //
 // -------------------------------------------------------------------------- //
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
-     typename T_ARG4, typename T_ARG5, typename T_EXPR_VALUE>
-Expr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5, T_EXPR_VALUE>::Expr6
+     typename T_ARG4, typename T_EXPR_VALUE>
+Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::Expr5
     (const typename Expr<T_ARG0>::ConstPtr &arg0,
     const typename Expr<T_ARG1>::ConstPtr &arg1,
     const typename Expr<T_ARG2>::ConstPtr &arg2,
     const typename Expr<T_ARG3>::ConstPtr &arg3,
-    const typename Expr<T_ARG4>::ConstPtr &arg4,
-    const typename Expr<T_ARG5>::ConstPtr &arg5)
+    const typename Expr<T_ARG4>::ConstPtr &arg4)
     :   itsArg0(arg0),
         itsArg1(arg1),
         itsArg2(arg2),
         itsArg3(arg3),
-        itsArg4(arg4),
-        itsArg5(arg5)
+        itsArg4(arg4)
 {
     connect(itsArg0);
     connect(itsArg1);
     connect(itsArg2);
     connect(itsArg3);
     connect(itsArg4);
-    connect(itsArg5);
 }
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
-     typename T_ARG4, typename T_ARG5, typename T_EXPR_VALUE>
-Expr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5, T_EXPR_VALUE>::~Expr6()
+     typename T_ARG4, typename T_EXPR_VALUE>
+Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::~Expr5()
 {
-    disconnect(itsArg5);
     disconnect(itsArg4);
     disconnect(itsArg3);
     disconnect(itsArg2);
@@ -523,16 +515,16 @@ Expr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5, T_EXPR_VALUE>::~Expr6()
 }
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
-     typename T_ARG4, typename T_ARG5, typename T_EXPR_VALUE>
-inline unsigned int Expr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
+     typename T_ARG4, typename T_EXPR_VALUE>
+inline unsigned int Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
     T_EXPR_VALUE>::nArguments() const
 {
-    return 6;
+    return 5;
 }
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
-     typename T_ARG4, typename T_ARG5, typename T_EXPR_VALUE>
-inline ExprBase::ConstPtr Expr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
+     typename T_ARG4, typename T_EXPR_VALUE>
+inline ExprBase::ConstPtr Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
     T_EXPR_VALUE>::argument(unsigned int i) const
 {
     switch(i)
@@ -547,59 +539,49 @@ inline ExprBase::ConstPtr Expr6<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_ARG5,
             return itsArg3;
         case 4:
             return itsArg4;
-        case 5:
-            return itsArg5;
         default:
             ASSERTSTR(false, "Invalid argument index specified.");
     }
 }
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
-     typename T_ARG4, typename T_ARG5, typename T_EXPR_VALUE>
-inline const typename Expr<T_ARG0>::ConstPtr &Expr6<T_ARG0, T_ARG1,
-    T_ARG2, T_ARG3, T_ARG4, T_ARG5, T_EXPR_VALUE>::argument0() const
+     typename T_ARG4, typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG0>::ConstPtr &Expr5<T_ARG0, T_ARG1,
+    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument0() const
 {
     return itsArg0;
 }
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
-     typename T_ARG4, typename T_ARG5, typename T_EXPR_VALUE>
-inline const typename Expr<T_ARG1>::ConstPtr &Expr6<T_ARG0, T_ARG1,
-    T_ARG2, T_ARG3, T_ARG4, T_ARG5, T_EXPR_VALUE>::argument1() const
+     typename T_ARG4, typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG1>::ConstPtr &Expr5<T_ARG0, T_ARG1,
+    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument1() const
 {
     return itsArg1;
 }
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
-     typename T_ARG4, typename T_ARG5, typename T_EXPR_VALUE>
-inline const typename Expr<T_ARG2>::ConstPtr &Expr6<T_ARG0, T_ARG1,
-    T_ARG2, T_ARG3, T_ARG4, T_ARG5, T_EXPR_VALUE>::argument2() const
+     typename T_ARG4, typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG2>::ConstPtr &Expr5<T_ARG0, T_ARG1,
+    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument2() const
 {
     return itsArg2;
 }
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
-     typename T_ARG4, typename T_ARG5, typename T_EXPR_VALUE>
-inline const typename Expr<T_ARG3>::ConstPtr &Expr6<T_ARG0, T_ARG1,
-    T_ARG2, T_ARG3, T_ARG4, T_ARG5, T_EXPR_VALUE>::argument3() const
+     typename T_ARG4, typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG3>::ConstPtr &Expr5<T_ARG0, T_ARG1,
+    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument3() const
 {
     return itsArg3;
 }
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
-     typename T_ARG4, typename T_ARG5, typename T_EXPR_VALUE>
-inline const typename Expr<T_ARG4>::ConstPtr &Expr6<T_ARG0, T_ARG1,
-    T_ARG2, T_ARG3, T_ARG4, T_ARG5, T_EXPR_VALUE>::argument4() const
+     typename T_ARG4, typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG4>::ConstPtr &Expr5<T_ARG0, T_ARG1,
+    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument4() const
 {
     return itsArg4;
-}
-
-template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
-     typename T_ARG4, typename T_ARG5, typename T_EXPR_VALUE>
-inline const typename Expr<T_ARG5>::ConstPtr &Expr6<T_ARG0, T_ARG1,
-    T_ARG2, T_ARG3, T_ARG4, T_ARG5, T_EXPR_VALUE>::argument5() const
-{
-    return itsArg5;
 }
 
 // -------------------------------------------------------------------------- //

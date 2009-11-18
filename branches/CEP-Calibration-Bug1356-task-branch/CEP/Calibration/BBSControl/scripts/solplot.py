@@ -1,57 +1,9 @@
 import math
 import numpy
 import pylab
-import lofar.parmdb
 
-styles = ["%s%s" % (x, y) for y in ["-", ":"] for x in ["b", "g", "r", "c", "m",
-    "y", "k"]]
-
-def fetch(db, stations, phasors=False, parm="Gain:11", direction="",
-    asPolar=True):
-
-    suffix = ""
-    if direction:
-        suffix = ":%s" % direction
-
-    el0_infix = "Real"
-    el1_infix = "Imag"
-
-    if phasors:
-        el0_infix = "Ampl"
-        el1_infix = "Phase"
-
-    el0 = []
-    el1 = []
-    for station in stations:
-        fqname = "%s:%s:%s%s" % (parm, el0_infix, station, suffix)
-        el0.append(numpy.squeeze(db.getValuesGrid(fqname)[fqname]))
-        fqname = "%s:%s:%s%s" % (parm, el1_infix, station, suffix)
-        el1.append(numpy.squeeze(db.getValuesGrid(fqname)[fqname]))
-
-    el0 = numpy.array(el0)
-    el1 = numpy.array(el1)
-
-    if phasors and not asPolar:
-        re = numpy.zeros(el0.shape)
-        im = numpy.zeros(el1.shape)
-
-        for i in range(0, len(stations)):
-            re[i] = el0[i] * numpy.cos(el1[i])
-            im[i] = el0[i] * numpy.sin(el1[i])
-
-        return (re, im)
-
-    if not phasors and asPolar:
-        ampl = numpy.zeros(el0.shape)
-        phase = numpy.zeros(el1.shape)
-
-        for i in range(0, len(stations)):
-            ampl[i] = numpy.sqrt(numpy.power(el0[i], 2) + numpy.power(el1[i], 2))
-            phase[i] = numpy.arctan2(el1[i], el0[i])
-
-        return (ampl, phase)
-
-    return (el0, el1)
+__styles = ["%s%s" % (x, y) for y in ["-", ":"] for x in ["b", "g", "r", "c",
+    "m", "y", "k"]]
 
 def unwrap(phase, tol=0.25, delta_tol=0.25):
     """
@@ -139,9 +91,9 @@ def unwrap_windowed(phase, window_size=5):
 
     return out
 
-def phase_normalize(phase):
+def normalize(phase):
     """
-    Normalize input phase to the range [-pi, pi].
+    Normalize phase to the range [-pi, pi].
     """
 
     # Convert to range [-2*pi, 2*pi].
@@ -160,12 +112,21 @@ def plot(sol, fig=None, sub=None, scatter=False, stack=False, sep=5.0,
 
     If 'fig' is equal to None, a new figure will be created. Otherwise, the
     specified figure number is used. The 'sub' argument can be used to create
-    subplots. The 'sep' and 'stack' argument can be used to control placement
-    of the plots in the list.
+    subplots.
+
+    The 'scatter' argument selects between scatter and line plots.
+
+    The 'stack', 'sep', and 'sep_abs' arguments can be used to control placement
+    of the plots in the list. If 'stack' is set to True, each plot will be
+    offset by the mean plus sep times the standard deviation of the previous
+    plot. If 'sep_abs' is set to True, 'sep' is used as is.
+
+    The 'labels' argument can be set to a list of labels and 'show_legend' can
+    be set to True to show a legend inside the plot.
 
     The figure number of the figure used to plot in is returned.
     """
-    global styles
+    global __styles
 
     cf = pylab.figure(fig)
 
@@ -180,16 +141,17 @@ def plot(sol, fig=None, sub=None, scatter=False, stack=False, sep=5.0,
         if labels is None:
             if scatter:
                 pylab.scatter(range(0, len(sol[i])), sol[i] + offset,
-                    edgecolors="None", c=styles[i % len(styles)][0], marker="o")
+                    edgecolors="None", c=__styles[i % len(__styles)][0],
+                    marker="o")
             else:
-                pylab.plot(sol[i] + offset, styles[i % len(styles)])
+                pylab.plot(sol[i] + offset, __styles[i % len(__styles)])
         else:
             if scatter:
                 pylab.scatter(range(0, len(sol[i])), sol[i] + offset,
-                    edgecolors="None", c=styles[i % len(styles)][0], marker="o",
-                    label=labels[i])
+                    edgecolors="None", c=__styles[i % len(__styles)][0],
+                    marker="o", label=labels[i])
             else:
-                pylab.plot(sol[i] + offset, styles[i % len(styles)],
+                pylab.plot(sol[i] + offset, __styles[i % len(__styles)],
                     label=labels[i])
 
         if stack:
