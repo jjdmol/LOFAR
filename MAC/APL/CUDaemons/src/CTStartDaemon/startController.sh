@@ -4,7 +4,7 @@
 #
 
 # start process
-($1 $2 $3 $4 2>&1 | tee $2.log ) & 
+($1 $2 $3 $4 1>/dev/null 2>&1 ) &
 
 # get its pid
 # echo $!
