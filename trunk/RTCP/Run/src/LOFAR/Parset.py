@@ -63,34 +63,25 @@ class Parset(util.Parset.Parset):
           return ""
 
         # translate station name + antenna set to CEP comprehensable names
-        sasstationlist = self.getStringVector(key)
         antennaset = self["Observation.antennaSet"]
-        antennaset_xlate = {
-          # name in SAS parset: possible names to try in CEP stationlist
-          "LBA_INNER": ["LBA"],
-          "LBA_OUTER": ["LBA"],
-          "LBA_X":     ["LBA"],
 
-          "HBA_ONE":   ["HBA0","HBA"],
-          "HBA_TWO":   ["HBA1","HBA"],
-          "HBA_BOTH":  ["HBA"],
-        }
-        arrays = antennaset_xlate[antennaset]
+        def applyAntennaSet( station, antennaset ):
+          if antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE"]:
+            suffix = ["LBA"]
+          elif station.startsWith("CS"):
+            if antennaset == "HBA_ONE":
+              suffix = ["HBA0"]
+            elif antennaset == "HBA_TWO":  
+              suffix = ["HBA1"]
+            else: 
+              assert antennaset == "HBA_BOTH", "Unknown antennaSet: %s" % (antennaset,)
+              suffix = ["HBA0","HBA1"]
+          else:  
+            suffix = ["HBA"]
 
-        cepstationlist = []
-        for stat in sasstationlist:
-          for array in arrays + [""]:
-            cepstationname = "%s%s" % (stat,array)
+          return "+".join(["%s%s" % (station,s) for s in suffix])
 
-            if cepstationname not in Stations:
-              continue
-
-            cepstationlist.append( cepstationname )  
-            break
-          else:
-            error( "Station %s undefined for antenna set %s" % (stat,array) )
-            
-        return "+".join(cepstationlist)
+        return "+".join( [applyAntennaSet(s, self["Observation.antennaSet"]) for s in sasstationlist] )
 
     def distillPartition(self, key="OLAP.CNProc.partition"):
         """ Distill partition to use from the parset file and return it. """
