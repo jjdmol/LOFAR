@@ -339,9 +339,9 @@ string Parset::getMSBaseDir() const
 }
 
 
-vector<unsigned> Parset::getPortsOf(const string& aKey) const
+unsigned short Parset::getStoragePort(const string &aKey, unsigned subband, unsigned output) const
 {
-  return getUint32Vector(aKey + "_Ports",true);
+  return static_cast<unsigned short>(getUint32Vector(aKey + "_Ports",true)[subband + output * nrSubbands()]);
 }
 
 vector<double> Parset::getManualPencilBeam(const unsigned pencil) const
@@ -349,9 +349,9 @@ vector<double> Parset::getManualPencilBeam(const unsigned pencil) const
   char buf[50];
   std::vector<double> pencilBeam(2);
  
-  sprintf(buf, "Observation.Pencil[%d].angle1", pencil);
+  sprintf(buf, "OLAP.Pencil[%d].angle1", pencil);
   pencilBeam[0] = getDouble(buf);
-  sprintf(buf, "Observation.Pencil[%d].angle2", pencil);
+  sprintf(buf, "OLAP.Pencil[%d].angle2", pencil);
   pencilBeam[1] = getDouble(buf);
 
   return pencilBeam;
