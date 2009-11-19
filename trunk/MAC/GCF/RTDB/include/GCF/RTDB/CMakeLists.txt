@@ -10,7 +10,8 @@ set(inst_HEADERS
 set(${PACKAGE_NAME}_INCLUDE_PATH_SUFFIX GCF/RTDB
   CACHE INTERNAL "Include path suffix for package \"${PACKAGE_NAME}\"")
 
-# Create symbolic link to include directory.
+# Create symbolic link to include directory, create directory first, if needed.
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include/GCF)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}/include/GCF/RTDB)
