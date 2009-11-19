@@ -25,7 +25,7 @@
 
 #include <Common/lofar_iosfwd.h>
 #include <Common/LofarTypes.h>
-
+#include <Common/LofarLogger.h>
 
 #define EVEN_SECOND_HAS_MORE_SAMPLES
 
@@ -115,6 +115,7 @@ namespace LOFAR {
 
     inline void TimeStamp::setStationClockSpeed(unsigned speed)
       {
+        LOG_INFO_STR( "Using a " << (speed/1e6) << " MHz clock" );
 	clockSpeed = speed;
       }
 
