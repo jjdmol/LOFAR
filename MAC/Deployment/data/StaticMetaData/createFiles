@@ -373,7 +373,7 @@ def de601Exceptions(resultDir, stationName, dataDir):
     Handle exceptions for station de601 (Effelsberg)
     """
     if (stationName.lower() == "de601"):
-        srcFile = dataDir + "/DE601-Attenuation.conf"
+        srcFile = dataDir + "../DE601-Attenuation.conf"
         destFile= resultDir + "/Attenuation.conf"
         command = "cp -f "+srcFile+ " " + destFile
         print command
