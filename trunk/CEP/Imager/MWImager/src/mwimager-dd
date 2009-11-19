@@ -101,19 +101,20 @@ def makeFacetSourceList (name, ra, dec, cellwidth, nfacet, imgshape):
     # Only at the equator 1 arcsec in image width is 1 arcsec in RA.
     # At dec=d 1 arcsec in RA is 1*cos(d) arcsec in image width
     # (like on earth 360deg = 40000km*cos(d) at dec=d).
+    # Note that negative RA is counter-clockwise.
     facetwidth = (cellwidth[0] * imgshape[0] / nfacet,
                   cellwidth[1] * imgshape[1] / nfacet)
     centers = []
     f = open(name, 'w')
     f.write ('#( Name Ra Dec )=format\n')
     decv = dec - facetwidth[1] * (nfacet-1.)/2.
-    for i in range(nfacet):
+    for j in range(nfacet):
         rawidth = facetwidth[0] / math.cos(decv)
-        rav = ra - rawidth * (nfacet-1.)/2.
-        for j in range(nfacet):
+        rav = ra + rawidth * (nfacet-1.)/2.
+        for i in range(nfacet):
             centers.append ((rav, decv))
             f.write ("facet-%03d-%03d %.15f %.15f\n" % (i,j,rav,decv))
-            rav += rawidth
+            rav -= rawidth
         decv += facetwidth[1]
     return centers
 
