@@ -44,7 +44,7 @@ namespace LOFAR {
 
 GCFTimerPort* itsCmdTimer;
 
-static const int TBBCTL_VERSION = 219; // tbbctl V2.19
+static const int TBBCTL_VERSION = 220; // tbbctl V2.20
 
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 
@@ -100,7 +100,7 @@ static const int TBB_WRITER_TABLE[16] = {
 
 // dimensions of the connected hardware
 uint32	itsActiveBoards;	// mask b0 = board0, b1 = board1 ....
-int		itsMemory[MAX_N_TBBOARDS];
+//int		itsMemory[MAX_N_TBBOARDS];
 int		itsMaxBoards;
 int		itsMaxChannels;
 

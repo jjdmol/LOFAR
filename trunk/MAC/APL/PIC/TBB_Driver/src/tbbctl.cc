@@ -353,13 +353,14 @@ GCFEvent::TResult TriggerSettingsCmd::ack(GCFEvent& e)
 		bnr = static_cast<int32>(rcu / 16);
 		if (isSelected(rcu) ) {
 			if (bnr != oldbnr) {
-				cout << "Rcu  Board  level  start  stop   filter  window  c0     c1     c2     c3" << endl;
-				cout << "---  -----  -----  -----  -----  ------  ------  -----  -----  -----  -----" << endl;
+				cout << "Rcu  Board  level  start  stop   filter  window  mode   c0     c1     c2     c3" << endl;
+				cout << "---  -----  -----  -----  -----  ------  ------  -----  -----  -----  -----  -----" << endl;
 			}
-			cout << formatString("%3d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d",
+			cout << formatString("%3d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d",
 					rcu, bnr, ack.setup[rcu].level, ack.setup[rcu].start_mode, ack.setup[rcu].stop_mode,
-					ack.setup[rcu].filter_select, ack.setup[rcu].window, ack.coefficients[rcu].c0,
-					ack.coefficients[rcu].c1, ack.coefficients[rcu].c2, ack.coefficients[rcu].c3) << endl;
+					ack.setup[rcu].filter_select, ack.setup[rcu].window, ack.setup[rcu].operating_mode,
+					ack.coefficients[rcu].c0, ack.coefficients[rcu].c1,
+					ack.coefficients[rcu].c2, ack.coefficients[rcu].c3) << endl;
 		}
 		oldbnr = bnr;
 	}
@@ -2600,12 +2601,14 @@ void TBBCtl::commandHelp(int level)
 TBBCtl::TBBCtl(string name, int argc, char** argv): GCFTask((State)&TBBCtl::initial, name),
 	itsCommand(0),itsArgc(argc),itsArgv(argv)
 {
+	/*
 	for(int boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
 		itsMemory[boardnr] = 0;
 	}
+	*/
 	registerProtocol (TBB_PROTOCOL, TBB_PROTOCOL_STRINGS);
 	itsServerPort.init(*this, MAC_SVCMASK_TBBDRIVER, GCFPortInterface::SAP, TBB_PROTOCOL);
-	itsCmdTimer = new GCFTimerPort(*this, "AliveTimer");
+	itsCmdTimer = new GCFTimerPort(*this, "tbbctlTimer");
 }
 
 //-----------------------------------------------------------------------------
@@ -2662,10 +2665,10 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 			itsServerPort.send(subscribe);
 		} break;
 
-			case TBB_SUBSCRIBE_ACK: {
-				cout << "subscribed, execute command" << endl;
-				TRAN(TBBCtl::docommand);
-			} break;
+		case TBB_SUBSCRIBE_ACK: {
+			cout << "subscribed, execute command" << endl;
+			TRAN(TBBCtl::docommand);
+		} break;
 
 		case F_DISCONNECTED: {
 			//port.setTimer(DELAY);
@@ -2992,10 +2995,11 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					// will give more than 6000 triggers per second per
 					// board, if level is chosen to low, the driver can't
 					// handle that amount of trigger per board.
-					if (triggermode == 1) {
-						cout << "mode=1 can generate to many triggers, auto corrected to mode=0(single-shot)" << endl;
+					if ((triggermode == 1) && (level < 3)){
+						cout << "mode=1 with level < 3 can generate to many triggers, auto corrected to level = 3" << endl;
+						level = 3;
 					}
-					triggermode = 0;
+					
 					//================================================
 	
 	
@@ -3004,7 +3008,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					trigsetupcmd->setStopMode(static_cast<uint8>(stop));
 					trigsetupcmd->setFilter(static_cast<uint8>(filter));
 					trigsetupcmd->setWindow(static_cast<uint8>(window));
-					trigsetupcmd->setOperatingMode(0);
+					trigsetupcmd->setOperatingMode(static_cast<uint16>(triggermode));
 					trigsetupcmd->setTriggerMode(static_cast<uint16>(triggermode));
 				}
 	

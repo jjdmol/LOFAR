@@ -77,12 +77,13 @@ void UdpCmd::sendTpEvent()
 	tp_event.status = 0;
 	
 	// fill in destination mac address
-	string2mac(TS->getDstMac(getBoardNr()).c_str(), tp_event.mac);
+	string2mac(TS->getSrcMacCep(getBoardNr()).c_str(), tp_event.srcmac);
+	string2mac(TS->getDstMacCep(getBoardNr()).c_str(), tp_event.dstmac);
 	// fill in udp-ip header
 	setup_udpip_header(	getBoardNr(), 
 						itsMode, 
-						TS->getSrcIp(getBoardNr()).c_str(), 
-						TS->getDstIp(getBoardNr()).c_str(), 
+						TS->getSrcIpCep(getBoardNr()).c_str(), 
+						TS->getDstIpCep(getBoardNr()).c_str(), 
 						tp_event.ip, 
 						tp_event.udp );
 	

@@ -112,36 +112,44 @@ void TbbSettings::getTbbSettings()
 	try { itsIfName = globalParameterSet()->getString("TBBDriver.IF_NAME"); }
 	catch (...) { LOG_INFO_STR(formatString("TBBDriver.IF_NAME not found")); configOK = false; }
 		
-	char dstip[64];
-	char srcip[64];
-	char srcmac[64];
 	char dstmac[64];
+	char dstipcep[64];
+	char srcipcep[64];
+	char srcmaccep[64];
+	char dstmaccep[64];
+	
 	for (int boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
-		snprintf(srcip,  64, "TBBDriver.SRC_IP_ADDR_%d", boardnr);
-		snprintf(dstip,  64, "TBBDriver.DST_IP_ADDR_%d", boardnr);
-		snprintf(srcmac, 64, "TBBDriver.MAC_ADDR_%d", boardnr);
-		snprintf(dstmac, 64, "TBBDriver.DST_MAC_ADDR_%d", boardnr);
+		snprintf(dstmac, 64, "TBBDriver.MAC_ADDR_%d", boardnr);
 		
-		try { itsBoardInfo[boardnr].srcIp = globalParameterSet()->getString(srcip); }
-		catch (APSException&) { LOG_INFO_STR(formatString("%s not found",srcip)); configOK = false; }
-		
-		try { itsBoardInfo[boardnr].dstIp = globalParameterSet()->getString(dstip); }
-		catch (APSException&) {	LOG_INFO_STR(formatString("%s not found",dstip)); configOK = false; }
-		
-		try { itsBoardInfo[boardnr].srcMac = globalParameterSet()->getString(srcmac); }
-		catch (APSException&) { LOG_INFO_STR(formatString("%s not found",srcmac)); }
+		snprintf(srcipcep,  64, "TBBDriver.SRC_IP_ADDR_%d", boardnr);
+		snprintf(dstipcep,  64, "TBBDriver.DST_IP_ADDR_%d", boardnr);
+		snprintf(srcmaccep, 64, "TBBDriver.SRC_MAC_ADDR_%d", boardnr);
+		snprintf(dstmaccep, 64, "TBBDriver.DST_MAC_ADDR_%d", boardnr);
 		
 		try { itsBoardInfo[boardnr].dstMac = globalParameterSet()->getString(dstmac); }
-		catch (APSException&) { LOG_INFO_STR(formatString("%s not found",dstmac)); }
+		catch (APSException&) { LOG_INFO_STR(formatString("%s not found",dstmac)); configOK = false;}
+		
+		try { itsBoardInfo[boardnr].srcIpCep = globalParameterSet()->getString(srcipcep); }
+		catch (APSException&) { LOG_INFO_STR(formatString("%s not found",srcipcep)); configOK = false; }
+		
+		try { itsBoardInfo[boardnr].dstIpCep = globalParameterSet()->getString(dstipcep); }
+		catch (APSException&) {	LOG_INFO_STR(formatString("%s not found",dstipcep)); configOK = false; }
+		
+		try { itsBoardInfo[boardnr].srcMacCep = globalParameterSet()->getString(srcmaccep); }
+		catch (APSException&) { LOG_INFO_STR(formatString("%s not found",dstmac)); configOK = false;}
+		
+		try { itsBoardInfo[boardnr].dstMacCep = globalParameterSet()->getString(dstmaccep); }
+		catch (APSException&) { LOG_INFO_STR(formatString("%s not found",dstmac)); configOK = false;}
 		
 		LOG_INFO_STR(formatString("Board %d:",boardnr));
 		LOG_INFO_STR(formatString("Control port: Mac = '%s'"
-															,itsBoardInfo[boardnr].srcMac.c_str()));
-		LOG_INFO_STR(formatString("CEP port    : Src Ip = '%s'"
-															,itsBoardInfo[boardnr].srcIp.c_str()));
+															,itsBoardInfo[boardnr].dstMac.c_str()));
+		LOG_INFO_STR(formatString("CEP port    : Src Ip = '%s', Src Mac = '%s'"
+															,itsBoardInfo[boardnr].srcIpCep.c_str()
+															,itsBoardInfo[boardnr].srcMacCep.c_str()));
 		LOG_INFO_STR(formatString("            : Dst Ip = '%s', Dst Mac = '%s'"
-															,itsBoardInfo[boardnr].dstIp.c_str()
-															,itsBoardInfo[boardnr].dstMac.c_str()));		
+															,itsBoardInfo[boardnr].dstIpCep.c_str()
+															,itsBoardInfo[boardnr].dstMacCep.c_str()));
 	}
 }
 
@@ -220,10 +228,11 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsBoardInfo[nr].memorySize = 0;
 		itsBoardInfo[nr].imageNr = 0;
 		itsBoardInfo[nr].freeToReset = true;
-		itsBoardInfo[nr].srcIp = "";
-		itsBoardInfo[nr].dstIp = "";
-		itsBoardInfo[nr].srcMac = "";
 		itsBoardInfo[nr].dstMac = "";
+		itsBoardInfo[nr].srcIpCep = "";
+		itsBoardInfo[nr].dstIpCep = "";
+		itsBoardInfo[nr].srcMacCep = "";
+		itsBoardInfo[nr].dstMacCep = "";
 	}
 }
 

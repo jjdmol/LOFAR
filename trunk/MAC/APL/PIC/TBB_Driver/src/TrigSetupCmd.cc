@@ -96,7 +96,7 @@ void TrigSetupCmd::sendTpEvent()
 														  (TS->getChTriggerStopMode(getChannelNr() + i) << 4)));
 		tp_event.channel[i].filter_select = static_cast<uint32>(TS->getChFilterSelect(getChannelNr() + i));
 		tp_event.channel[i].window = static_cast<uint32>(TS->getChDetectWindow(getChannelNr() + i));
-		tp_event.channel[i].dummy = static_cast<uint32>(TS->getTriggerMode());
+		tp_event.channel[i].dummy = static_cast<uint32>(TS->getChOperatingMode(getChannelNr() + i));
 	}
 	
 	TS->boardPort(getBoardNr()).send(tp_event);

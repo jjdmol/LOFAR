@@ -163,11 +163,11 @@ TBBDriver::TBBDriver(string name)
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
 		snprintf(boardname, 64, "board%d", boardnr);
 
-		LOG_DEBUG_STR("initializing board " << boardname << ":" << TS->getSrcMac(boardnr).c_str());
+		LOG_DEBUG_STR("initializing board " << boardname << ":" << TS->getDstMac(boardnr).c_str());
 		itsBoard[boardnr].init(*this, boardname, GCFPortInterface::SAP, TP_PROTOCOL,true /*raw*/);
 
-		LOG_DEBUG_STR("setAddr " << boardname << ":" << TS->getSrcMac(boardnr).c_str());
-		itsBoard[boardnr].setAddr(TS->getIfName().c_str(), TS->getSrcMac(boardnr).c_str());
+		LOG_DEBUG_STR("setAddr " << boardname << ":" << TS->getDstMac(boardnr).c_str());
+		itsBoard[boardnr].setAddr(TS->getIfName().c_str(), TS->getDstMac(boardnr).c_str());
 
 		// set ethertype to 0x7BB0 so Ethereal can decode TBB messages
 		itsBoard[boardnr].setEtherType(ETHERTYPE_TP);
@@ -323,11 +323,12 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 					TPUdpEvent udp;
 					udp.opcode = oc_UDP;
 					udp.status = 0;
-					string2mac(TS->getDstMac(board).c_str(),udp.mac);
+					string2mac(TS->getSrcMacCep(board).c_str(),udp.srcmac);
+					string2mac(TS->getDstMacCep(board).c_str(),udp.dstmac);
 					setup_udpip_header( board, 
 										TBB_MODE_TRANSIENT, 
-										TS->getSrcIp(board).c_str(), 
-										TS->getDstIp(board).c_str(), 
+										TS->getSrcIpCep(board).c_str(), 
+										TS->getDstIpCep(board).c_str(), 
 										udp.ip, 
 										udp.udp );
 					itsBoard[board].send(udp);
