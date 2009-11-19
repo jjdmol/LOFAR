@@ -254,7 +254,7 @@ inline uint32 Parset::clockSpeed() const
 
 inline double Parset::sampleRate() const
 {
-  return clockSpeed() / 1024;
+  return 1.0 * clockSpeed() / 1024;
 } 
 
 inline double Parset::sampleDuration() const
