@@ -24,6 +24,7 @@
 #include <MWImager/ConvertParset.h>
 #include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
+#include <Common/LofarLogger.h>
 #include <sstream>
 #include <iostream>
 
@@ -120,16 +121,15 @@ namespace LOFAR {
       in.subtractSubset ("Images.");
       // Combine ra,dec,type into a single string.
       // Get it as given; otherwise use field direction from MS.
-      string angle1    = imin.getString ("ra", string());
-      string angle2    = imin.getString ("dec", string());
-      string dirType   = imin.getString ("directionType", "J2000");
+      string angle1  = imin.getString ("ra", string());
+      string angle2  = imin.getString ("dec", string());
+      string dirType = imin.getString ("directionType", "J2000");
       if (angle1.empty() || angle2.empty()) {
         angle1 = in.getString ("msDirRa", string());
         angle2 = in.getString ("msDirDec", string());
         dirType = in.getString ("msDirType", string());
       }
-      string nfacets   = imin.getString ("nfacets", string());
-      string facetstep = imin.getString ("facetstep", string());
+      int nfacets = imin.getInt ("nfacets", 1);
       imin.remove ("name");
       imin.remove ("ra");
       imin.remove ("dec");
@@ -152,16 +152,30 @@ namespace LOFAR {
       vector<string> cellSize = imin.getStringVector ("cellSize");
       vector<string> stokes   = imin.getStringVector ("stokes",
 						      vector<string>(1,"I"));
+      vector<int>    imSize   = imin.getIntVector ("shape");
       imin.remove ("nchan");
       imin.remove ("frequency");
       imin.remove ("cellSize");
       imin.remove ("stokes");
+      imin.remove ("shape");
+      // Convert image shape to facet shape.
+      if (nfacets > 1) {
+        for (uint i=0; i<imSize.size(); ++i) {
+          ASSERTSTR (imSize[i] % nfacets == 0,
+                     "Image shape must be a multiple of nfacets");
+          imSize[i] /= nfacets;
+        }
+      }
+      // Default unit for cellsize is arcsec.
       for (unsigned i=0; i<cellSize.size(); ++i) {
 	char last = cellSize[i][cellSize[i].size()-1];
 	if (last < 'a'  || last > 'z') {
 	  cellSize[i] += "arcsec";
 	}
       }
+      ostringstream imSizeStr;
+      imSizeStr << imSize;
+      out.add ("Cimager.Images.shape", imSizeStr.str());
       ostringstream cellSizeStr;
       cellSizeStr << cellSize;
       out.add ("Cimager.Images.cellsize", cellSizeStr.str());
@@ -170,11 +184,10 @@ namespace LOFAR {
       out.add (prefix + ".frequency", frequency);
       out.add (prefix + ".nchan", nchan);
       out.add (prefix + ".direction", dirVecStr.str());
-      if (! nfacets.empty()) {
-        out.add (prefix + ".nfacets", nfacets);
-        if (! facetstep.empty()) {
-          out.add (prefix + ".facetstep", facetstep);
-        }
+      if (nfacets > 1) {
+        ostringstream nfacetStr;
+        nfacetStr << nfacets;
+        out.add (prefix + ".nfacets", nfacetStr.str());
       }
       // Form the stokes string (separated by blanks).
       string stokesStr("'");
