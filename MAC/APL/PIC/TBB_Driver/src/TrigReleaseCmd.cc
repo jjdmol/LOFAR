@@ -61,8 +61,8 @@ void TrigReleaseCmd::saveTbbEvent(GCFEvent& event)
 	TBBTrigReleaseEvent tbb_event(event);
 		
 	for (int i = 0; i < TS->maxChannels(); i++) {
-		itsChannelStartMask[i] = tbb_event.rcu_start_mask[i];
 		itsChannelStopMask[i] = tbb_event.rcu_stop_mask[i];
+		itsChannelStartMask[i] = tbb_event.rcu_start_mask[i];
 	}
 	
 	setChannels(itsChannelStopMask);
@@ -98,7 +98,12 @@ void TrigReleaseCmd::sendTpEvent()
 				tp_event.channel_mask = 0xF;
 			} else {
 				tp_event.mp = TS->getChMpNr(getChannelNr());
-				tp_event.channel_mask = getMpChannels(getBoardNr(), TS->getChMpNr(getChannelNr())) & 0xF;
+				tp_event.channel_mask = getMpChannels(getBoardNr(), TS->getChMpNr(getChannelNr()));
+				for (int i = 0; i < 4; ++i) {
+					if (TS->isChTriggerReleased(getChannelNr()+i)) {
+						tp_event.channel_mask |= (1 << i);
+					}
+				}
 			}
 		} break;
 

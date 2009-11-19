@@ -551,7 +551,11 @@ event = {
 		type = "uint32";
 	};
 	param = {
-		name = "mac";
+		name = "srcmac";
+		type = "uint32[2]";
+	};
+	param = {
+		name = "dstmac";
 		type = "uint32[2]";
 	};
 	param = {
