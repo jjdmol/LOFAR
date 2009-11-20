@@ -35,8 +35,20 @@ def parse( str ):
 	  
     y,m,d = date.split("-")
     date_elements = [int(y),conv_month(m),int(d)]
+
     h,m,s = time.split(":")
-    time_elements = [int(h),int(m),float(s)]
+
+    try:
+      s,ms = s.split(".")
+
+      # convert to 6 digits
+      digits = 6 # microsecond precision in datetime objects
+      ms = ms[:digits]
+      ms = ms + "0" * (digits-len(ms)) # left align the digits!
+    except:
+      s,ms = s,0
+
+    time_elements = [int(h),int(m),int(s),int(ms)]
 
     return datetime.datetime( *(date_elements + time_elements) )
   elif ":" in str:

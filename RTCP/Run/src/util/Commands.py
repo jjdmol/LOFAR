@@ -109,7 +109,7 @@ class AsyncCommand(object):
     def output(self):
         """ Return the output of the program (when started with outfiles="PIPE"). """
 
-        output = self.popen.communicate()[0]
+        output = self.popen.communicate()[0] or ""
 
         # even though process closed stdout, we still need to wait for termination
         self.wait()
