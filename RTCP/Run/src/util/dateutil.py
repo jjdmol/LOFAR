@@ -35,7 +35,8 @@ def parse( str ):
 	  
     y,m,d = date.split("-")
     date_elements = [int(y),conv_month(m),int(d)]
-    time_elements = map( int, time.split(":") )
+    h,m,s = time.split(":")
+    time_elements = [int(h),int(m),float(s)]
 
     return datetime.datetime( *(date_elements + time_elements) )
   elif ":" in str:
@@ -61,7 +62,7 @@ def parseDuration( str ):
     return toSeconds( *(time_elements) )
   else:
     # a number of seconds
-    return int( str )
+    return float( str )
 
 def format( dt ):
   """ Convert either a datetime object or a timestamp to YYYY-MM-DD HH:MM:SS. """
@@ -74,7 +75,7 @@ def format( dt ):
 def timestamp( dt ):
   """ Returns the UTC timestamp corresponding to the provided datetime object. """
 
-  return int(time.mktime( dt.utctimetuple() ))
+  return float(time.mktime( dt.utctimetuple() ))
   
 if __name__ == "__main__":
   """ Convert whatever parse() accepts into UNIX timestamps and a proper date/time string. """
