@@ -68,7 +68,7 @@ verify.add_option('--pps_delay', type='int', dest='pps_delay',
 verify.add_option('--diag_mode', type='string', dest='diag_mode',
   help='Diag mode: off, tx, rx, tx_rx, local', default='tx_rx')
 verify.add_option('--diag_sync', type='int', dest='diag_sync',
-  help='Diag sync: 0 for pps, > 0 for alt sync interval in s', default=1)
+  help='Diag sync: 0 for pps, > 0 for alt sync interval in s', default=0)
 verify.add_option('--diag_data', type='string', dest='diag_data',
   help='Diag data: lfsr, cntr', default='lfsr')
 verify.add_option('--rad_lane_mode', type='string', dest='rad_lane_mode',
