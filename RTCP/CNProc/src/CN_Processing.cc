@@ -228,12 +228,16 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
       unsigned subband = (itsCurrentSubband % itsNrSubbandsPerPset) + (i * itsNrSubbandsPerPset);
 
       if (subband < itsNrSubbands) {
-//	LOG_DEBUG("read subband " << subband << " from IO node");
+        //if (LOG_CONDITION) {
+	//  LOG_DEBUG("read subband " << subband << " from IO node");
+        //}
 	readTimer.start();
 	itsPlan->itsInputData->readOne(itsStream, i); // Synchronously read 1 subband from my IO node.
 	readTimer.stop();
 	asyncSendTimer.start();
-//	LOG_DEBUG("transpose: send subband " << subband << " to pset id " << i);
+        //if (LOG_CONDITION) {
+	//  LOG_DEBUG("transpose: send subband " << subband << " to pset id " << i);
+        //}
 
 	itsAsyncTranspose->asyncSend(i, itsPlan->itsInputSubbandMetaData, itsPlan->itsInputData); // Asynchronously send one subband to another pset.
 	asyncSendTimer.stop();
@@ -399,7 +403,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
     }
 
     if( itsPlan->calculate( itsPlan->itsCoherentStokesDataIntegratedChannels ) ) {
-      itsCoherentStokes->compressStokes(itsPlan->itsCoherentStokesData, itsPlan->itsCoherentStokesDataIntegratedChannels, itsNrPencilBeams);
+#if defined HAVE_MPI
+      if (LOG_CONDITION)
+        LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start compressing coherent Stokes at " << MPI_Wtime());
+#endif // HAVE_MPI
+      itsCoherentStokes->compressStokes(itsPlan->itsCoherentStokesData, itsPlan->itsCoherentStokesDataIntegratedChannels, itsFlysEye ? itsNrBeamFormedStations : itsNrPencilBeams);
     }
 
     if( itsPlan->calculate( itsPlan->itsIncoherentStokesData ) ) {
@@ -407,6 +415,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
     }
 
     if( itsPlan->calculate( itsPlan->itsIncoherentStokesDataIntegratedChannels ) ) {
+#if defined HAVE_MPI
+      if (LOG_CONDITION)
+        LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start compressing incoherent Stokes at " << MPI_Wtime());
+#endif // HAVE_MPI
       itsIncoherentStokes->compressStokes(itsPlan->itsIncoherentStokesData, itsPlan->itsIncoherentStokesDataIntegratedChannels, 1);
     }
 
