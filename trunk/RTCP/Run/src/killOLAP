@@ -11,9 +11,9 @@ HKILL="pkill -9 -u $WHOAMI"
 
 # ----- Storage: Soft kill
 echo ----- Killing Storage "(soft)"
-for s in `seq -w 1 24`
+for s in `seq 1 24`
 do
-  LSENODE=lse0${s}dc
+  LSENODE=10.174.0.${s}
 
   ssh $LSENODE $SKILL Storage
   ssh $LSENODE $SKILL orted
@@ -30,9 +30,9 @@ done
 
 # ----- Storage: Hard kill
 echo ----- Killing Storage "(hard)"
-for s in `seq -w 1 24`
+for s in `seq 1 24`
 do
-  LSENODE=lse0${s}dc
+  LSENODE=10.174.0.${s}
 
   ssh $LSENODE $HKILL Storage
   ssh $LSENODE $HKILL orted
