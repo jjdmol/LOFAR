@@ -114,6 +114,10 @@ int create_file(char *arg, int is_output)
 {
   int fd;
 
+  if (!strcmp(arg,"-")) {
+    return is_output ? 1 : 0;
+  }
+
   if ((fd = open(arg, is_output ? O_CREAT | O_WRONLY : O_RDONLY, 0666)) < 0) {
     perror("opening input file");
     exit(1);
