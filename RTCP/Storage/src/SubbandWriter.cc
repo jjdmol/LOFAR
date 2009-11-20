@@ -29,7 +29,8 @@
 #include <Storage/MeasurementSetFormat.h>
 #include <Stream/SystemCallException.h>
 #include <Interface/Exceptions.h>
-#include <Interface/CorrelatedData.h>
+#include <Interface/CN_Configuration.h>
+#include <Interface/CN_ProcessingPlan.h>
 
 #ifdef USE_MAC_PI
 #include <GCF/GCF_PVDouble.h>
@@ -49,16 +50,11 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank, unsigned size)
   itsPS(ps),
   itsRank(rank),
   itsSize(size),
-  itsObservationID(ps->observationID()),
-  itsConfiguration(*ps),
-  itsPlan(itsConfiguration,false,true),
-  itsNrOutputs(itsPlan.nrOutputs())
+  itsObservationID(ps->observationID())
 #ifdef USE_MAC_PI
 ,itsPropertySet(0)
 #endif
 {
-  itsPlan.removeNonOutputs();
-
 #ifdef USE_MAC_PI
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
@@ -89,6 +85,9 @@ void SubbandWriter::preprocess()
   unsigned lastSubband  = std::min( firstSubband + nrSubbandsPerStorage, nrSubbands ) - 1;
   unsigned myNrSubbands = lastSubband - firstSubband + 1;
 
+  CN_Configuration configuration(*itsPS);
+  const CN_ProcessingPlan<> plan(configuration);
+
 #if defined HAVE_AIPSPP
   LOG_TRACE_FLOW("SubbandWriter enabling PropertySet");
 #ifdef USE_MAC_PI
@@ -116,16 +115,18 @@ void SubbandWriter::preprocess()
     LOG_INFO_STR("MeasurementSet created");
   }
 
-  LOG_DEBUG_STR("Subbands per storage = " << nrSubbandsPerStorage << ", I will store " << myNrSubbands << " subbands, nrOutputs = " << itsNrOutputs);
+  LOG_DEBUG_STR("Subbands per storage = " << nrSubbandsPerStorage << ", I will store " << myNrSubbands << " subbands, nrOutputs = " << plan.nrOutputs());
 
 #endif // defined HAVE_AIPSPP
 
   for (unsigned sb = firstSubband; sb <= lastSubband; sb ++) {
-    InputThread *i = new InputThread(itsPS, sb);
-    OutputThread *o = new OutputThread(itsPS, sb, i, itsNrOutputs, itsPlan);
+    for (unsigned output = 0; output < plan.nrOutputs(); output ++) {
+      InputThread *i = new InputThread(itsPS, sb, output);
+      OutputThread *o = new OutputThread(itsPS, sb, output, i);
 
-    itsInputThreads.push_back(i);
-    itsOutputThreads.push_back(o);
+      itsInputThreads.push_back(i);
+      itsOutputThreads.push_back(o);
+    }
   }
 }
 

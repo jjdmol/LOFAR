@@ -35,10 +35,6 @@
 #include <Common/Timer.h>
 #include <Common/lofar_vector.h>
 #include <Interface/Parset.h>
-#include <Interface/CN_Configuration.h>
-#include <Interface/CN_ProcessingPlan.h>
-#include <Interface/StreamableData.h>
-#include <Interface/Queue.h>
 #include <Storage/InputThread.h>
 #include <Storage/OutputThread.h>
 #include <Storage/MSWriter.h>
@@ -63,9 +59,6 @@ class SubbandWriter
     unsigned		    itsRank;
     unsigned		    itsSize;
     unsigned		    itsObservationID;
-    CN_Configuration        itsConfiguration;
-    CN_ProcessingPlan<>     itsPlan;
-    unsigned                itsNrOutputs;
 
     std::vector<InputThread *> itsInputThreads;
     std::vector<OutputThread *> itsOutputThreads;

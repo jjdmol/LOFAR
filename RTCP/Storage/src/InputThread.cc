@@ -25,6 +25,7 @@
 
 #include <Storage/InputThread.h>
 #include <Interface/StreamableData.h>
+#include <Interface/CN_ProcessingPlan.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
@@ -34,34 +35,26 @@
 namespace LOFAR {
 namespace RTCP {
 
-  Queue<unsigned> InputThread::itsRcvdQueue;
-
-  InputThread::InputThread(const Parset *ps, unsigned subbandNumber)
+InputThread::InputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber)
 :
-  itsInputs(0),
-  itsNrInputs(0),
   itsPS(ps),
-  itsPlans(maxReceiveQueueSize),
   itsSubbandNumber(subbandNumber),
+  itsOutputNumber(outputNumber),
   itsObservationID(ps->observationID())
 {
   // transpose output stream holders
   CN_Configuration configuration(*ps);
+  CN_ProcessingPlan<> plan(configuration);
+  plan.removeNonOutputs();
+
+  const ProcessingPlan::planlet &p = plan.plan[outputNumber];
 
   for (unsigned i = 0; i < maxReceiveQueueSize; i ++) {
-    itsPlans[i] = new CN_ProcessingPlan<>( configuration, false, true );
-    itsPlans[i]->removeNonOutputs();
-    itsPlans[i]->allocateOutputs( heapAllocator );
+    StreamableData *data = p.source->clone();
 
-    if( itsNrInputs == 0 ) {
-      // do this only the first time
-      itsNrInputs = itsPlans[i]->nrOutputs();
-      itsInputs.resize( itsNrInputs );
-    }
+    data->allocate();
 
-    for (unsigned o = 0; o < itsNrInputs; o ++ ) {
-      itsInputs[o].freeQueue.append( itsPlans[i]->plan[o].source );
-    }
+    itsFreeQueue.append( data );
   }
 
   thread = new Thread(this, &InputThread::mainLoop);
@@ -71,6 +64,12 @@ namespace RTCP {
 InputThread::~InputThread()
 {
   delete thread;
+
+  while (!itsReceiveQueue.empty())
+    delete itsReceiveQueue.remove();
+
+  while (!itsFreeQueue.empty())
+    delete itsFreeQueue.remove();
 }
 
 
@@ -81,23 +80,21 @@ void InputThread::mainLoop()
   string   connectionType    = itsPS->getString(prefix + "_Transport");
   bool     nullInput         = false;
 
-  unsigned subbandNumber = itsSubbandNumber;
-
   if (connectionType == "NULL") {
-    LOG_DEBUG_STR("subband " << subbandNumber << " read from null stream");
+    LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from null stream");
     streamFromION.reset( new NullStream );
     nullInput = true;
   } else if (connectionType == "TCP") {
-    std::string    server = itsPS->storageHostName(prefix + "_ServerHosts", subbandNumber);
-    unsigned short port   = boost::lexical_cast<unsigned short>(itsPS->getPortsOf(prefix)[subbandNumber]);
+    std::string    server = itsPS->storageHostName(prefix + "_ServerHosts", itsSubbandNumber);
+    const unsigned short port = itsPS->getStoragePort(prefix, itsSubbandNumber, itsOutputNumber);
     
-    LOG_DEBUG_STR("subband " << subbandNumber << " read from tcp:" << server << ':' << port);
+    LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from tcp:" << server << ':' << port);
     streamFromION.reset( new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Server) );
   } else if (connectionType == "FILE") {
     std::string filename = itsPS->getString(prefix + "_BaseFileName") + '.' +
-      boost::lexical_cast<std::string>(subbandNumber);
+      boost::lexical_cast<std::string>(itsSubbandNumber);
     
-    LOG_DEBUG_STR("subband " << subbandNumber << " read from file:" << filename);
+    LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from file:" << filename);
     streamFromION.reset( new FileStream(filename.c_str()) );
   } else {
     THROW(StorageException, "unsupported ION->Storage stream type: " << connectionType);
@@ -105,8 +102,7 @@ void InputThread::mainLoop()
 
   // limit reads from NullStream to 10 blocks; otherwise unlimited
   unsigned	 increment = nullInput ? 1 : 0;
-  StreamableData *data     = 0;
-
+  std::auto_ptr<StreamableData> data;
 
   try {
     for (unsigned count = 0; count < 10; count += increment) {
@@ -114,22 +110,13 @@ void InputThread::mainLoop()
       NSTimer queueTimer("retrieve freeQueue item",false,false);
       NSTimer readTimer("read data",false,false);
 
-      // read header: output number
-      streamFromION->read( &o, sizeof o );
-
-#if !defined WORDS_BIGENDIAN
-      dataConvert( LittleEndian, &o, 1 );
-#endif
-
-      struct InputThread::SingleInput &input = itsInputs[o];
-
       // read data
       queueTimer.start();
-      data = input.freeQueue.remove();
+      data.reset( itsFreeQueue.remove() );
       queueTimer.stop();
 
       if( queueTimer.getElapsed() > reportQueueRemoveDelay ) {
-        LOG_WARN_STR( "observation " << itsObservationID << " subband " << itsSubbandNumber << " output " << o << " " << queueTimer );
+        LOG_WARN_STR( "observation " << itsObservationID << " subband " << itsSubbandNumber << " output " << itsOutputNumber << " " << queueTimer );
       }
 
       readTimer.start();
@@ -137,22 +124,15 @@ void InputThread::mainLoop()
       readTimer.stop();
 
       if( readTimer.getElapsed() > reportReadDelay ) {
-        LOG_WARN_STR( "observation " << itsObservationID << " subband " << itsSubbandNumber << " output " << o << " " << readTimer );
+        LOG_WARN_STR( "observation " << itsObservationID << " subband " << itsSubbandNumber << " output " << itsOutputNumber << " " << readTimer );
       }
 
-      input.receiveQueue.append(data);
-
-      // signal to the subbandwriter that we obtained data
-      itsReceiveQueueActivity.append(o);
+      itsReceiveQueue.append(data.release());
     }
   } catch (Stream::EndOfStreamException &) {
-    itsInputs[0].freeQueue.append(data); // to include data when freeing, so actual queue number does not matter
   }
 
-  for (unsigned o = 0; o < itsNrInputs; o++ ) {
-    itsInputs[o].receiveQueue.append(0); // no more data
-    itsReceiveQueueActivity.append(o);
-  }
+  itsReceiveQueue.append(0); // no more data
 }
 
 

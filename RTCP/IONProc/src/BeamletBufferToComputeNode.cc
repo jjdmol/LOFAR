@@ -386,6 +386,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
 
     if (itsIsRealTime) {
       itsCorrelationStartTime = itsCurrentTimeStamp + itsNrSamplesPerSubband + itsMaxNetworkDelay + itsMaximumDelay;
+
       itsWallClock.waitUntil(itsCorrelationStartTime);
     }
 

@@ -42,84 +42,104 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <pthread.h>
 
 
 namespace LOFAR {
 namespace RTCP {
 
-OutputSection::OutputSection(const Parset *ps, unsigned psetNumber, const std::vector<Stream *> &streamsFromCNs)
+OutputSection::OutputSection(const Parset *ps, unsigned psetNumber, unsigned outputNumber, const std::vector<Stream *> &streamsFromCNs, bool lastOutput)
 :
+  stop(false),
   itsParset(ps),
   itsPsetIndex(ps->outputPsetIndex(psetNumber)),
+  itsOutputNr(outputNumber),
   itsNrComputeCores(ps->nrCoresPerPset()),
   itsCurrentComputeCore(0),
   itsNrSubbands(ps->nrSubbands()),
   itsNrSubbandsPerPset(ps->nrSubbandsPerPset()),
   itsRealTime(ps->realTime()),
   itsPlan(0),
-  itsStreamsFromCNs(streamsFromCNs)
-{
-}
-
-void OutputSection::preprocess()
+  itsStreamsFromCNs(streamsFromCNs),
+  thread(0),
+  lastOutput(lastOutput)
 {
   itsDroppedCount.resize(itsNrSubbandsPerPset);
 
   CN_Configuration configuration(*itsParset);
 
   // allocate output structures and temporary data holders
-  itsPlan = new CN_ProcessingPlan<>( configuration, false, true );
+  itsPlan = new CN_ProcessingPlan<>(configuration);
   itsPlan->removeNonOutputs();
-  itsPlan->allocateOutputs( hugeMemoryAllocator );
-  itsOutputs.resize(itsPlan->nrOutputs());
 
-  for (unsigned o = 0; o < itsPlan->plan.size(); o++ ) {
-    struct OutputSection::SingleOutput &output = itsOutputs[o];
-    const ProcessingPlan::planlet &p = itsPlan->plan[o];
-
-    output.nrIntegrationSteps	  = 1;
-    output.currentIntegrationStep = 0;
-    output.sequenceNumber	  = 0;
-    output.tmpSum                 = p.source;
-  }
+  const ProcessingPlan::planlet &p = itsPlan->plan[itsOutputNr];
 
   // allocate partial sums -- only for those outputs that need it
-  itsSumPlans.resize(itsNrSubbandsPerPset);
+  if( p.source->isIntegratable() && itsParset->IONintegrationSteps() <= 1 ) {
+    itsNrIntegrationSteps = itsParset->IONintegrationSteps();
+
+    for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
+      unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
+
+      if (subbandNumber < itsNrSubbands) {
+        StreamableData *clone = p.source->clone();
+
+        clone->allocate();
+
+        itsSums.push_back( clone );
+      }
+    }
+  } else {
+    // no integration
+    itsNrIntegrationSteps  = 1;
+  }
+
+  itsCurrentIntegrationStep = 0;
+  itsSequenceNumber  	    = 0;
+  itsTmpSum                 = p.source;
+  itsTmpSum->allocate();
+
+  // create an output thread for this subband
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
 
     if (subbandNumber < itsNrSubbands) {
-      itsSumPlans[subband] = new CN_ProcessingPlan<>( configuration, false, true );
-      itsSumPlans[subband]->removeNonOutputs();
-
-      // create data structures to accumulate data, if needed
-      for (unsigned o = 0; o < itsSumPlans[subband]->plan.size(); o++ ) {
-        struct OutputSection::SingleOutput &output = itsOutputs[o];
-        const ProcessingPlan::planlet &p = itsSumPlans[subband]->plan[o];
-
-        if( !p.source->isIntegratable() ) {
-          continue;
-        }
-
-        if( itsParset->IONintegrationSteps() <= 1 ) {
-          continue;
-        }
-
-        // set up this output to accumulate data
-        p.source->allocate( hugeMemoryAllocator );
-        output.sums.push_back( p.source );
-        output.nrIntegrationSteps = itsParset->IONintegrationSteps();
-      }
-
-      // create an output thread for this subband
-      itsOutputThreads.push_back(new OutputThread(subbandNumber, *itsParset));
+      itsOutputThreads.push_back(new OutputThread(*itsParset, subbandNumber, itsOutputNr));
     }
   }
-  
+
+
 #if defined HAVE_BGP_ION // FIXME: not in preprocess
   doNotRunOnCore0();
   setPriority(2);
 #endif
+
+  thread = new Thread( this, &OutputSection::mainLoop );
+}
+
+OutputSection::~OutputSection()
+{
+  delete thread;
+
+  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
+    unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
+
+    if (subbandNumber < itsNrSubbands) {
+      notDroppingData(subband, subbandNumber); // for final warning message
+      
+      delete itsOutputThreads[subband];
+    }
+  }
+
+  // itsSums does not always contain data, so take its size as leading
+  for (unsigned subband = 0; subband < itsSums.size(); subband ++) {
+    delete itsSums[subband];
+  }
+
+  delete itsPlan;
+
+  itsOutputThreads.clear();
+  itsDroppedCount.clear();
 }
 
 
@@ -139,84 +159,80 @@ void OutputSection::notDroppingData(unsigned subband, unsigned subbandNumber)
 }
 
 
-void OutputSection::process()
+void OutputSection::mainLoop()
 {
-  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
-    // TODO: make sure that there are more free buffers than subbandsPerPset
+  const unsigned nrRuns = static_cast<unsigned>(ceil((itsParset->stopTime() - itsParset->startTime()) / itsParset->CNintegrationTime()));
 
-    unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
+  static pthread_mutex_t mutex[64];
+  static pthread_cond_t  condition[64];
+  static unsigned computeCoreStates[64];
 
-    if (subbandNumber < itsNrSubbands) {
-      // read all outputs of one node at once, so that it becomes free to process the next set of samples
-      for (unsigned o = 0; o < itsOutputs.size(); o++ ) {
-	struct OutputSection::SingleOutput &output = itsOutputs[o];
-	struct OutputThread::SingleOutput &outputThread = itsOutputThreads[subband]->itsOutputs[o];
-	
-	bool firstTime = output.currentIntegrationStep == 0;
-	bool lastTime  = output.currentIntegrationStep == output.nrIntegrationSteps - 1;
-	
-	if (lastTime) {
-	  if (itsRealTime && outputThread.freeQueue.empty()) {
-	    droppingData(subband, subbandNumber);
-	    output.tmpSum->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
-	  } else {
-	    notDroppingData(subband, subbandNumber);
-	    StreamableData *data = outputThread.freeQueue.remove();
-	    
-	    data->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
-	    
-	    if (!firstTime)
-	      *data += *output.sums[subband];
-	    
-	    data->sequenceNumber = output.sequenceNumber;
-	    outputThread.sendQueue.append(data);
-	    
-	    // report that data has been added to a send queue
-	    itsOutputThreads[subband]->itsSendQueueActivity.append(o);
-	  }
-	} else if (firstTime) {
-	  output.sums[subband]->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
-	} else {
-	  output.tmpSum->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
-	  *output.sums[subband] += *output.tmpSum;
-	}
+  if( itsOutputNr == 0 ) {
+    for( unsigned i = 0; i < 64; i++ ) {
+      pthread_mutex_init( &mutex[i], 0 );
+      pthread_cond_init( &condition[i], 0 );
+      computeCoreStates[i] = 0;
+    }
+  }
+
+  for( unsigned i = 0; i < nrRuns && !stop; i++ ) {
+    for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
+      // TODO: make sure that there are more free buffers than subbandsPerPset
+
+      unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
+
+      if (subbandNumber < itsNrSubbands) {
+        // wait for our turn for this core
+        pthread_mutex_lock(&mutex[itsCurrentComputeCore]);
+        while( computeCoreStates[itsCurrentComputeCore] != itsOutputNr ) {
+         pthread_cond_wait(&condition[itsCurrentComputeCore], &mutex[itsCurrentComputeCore]);
+        }
+        pthread_mutex_unlock(&mutex[itsCurrentComputeCore]);
+
+        OutputThread *outputThread = itsOutputThreads[subband];
+        
+        bool firstTime = itsCurrentIntegrationStep == 0;
+        bool lastTime  = itsCurrentIntegrationStep == itsNrIntegrationSteps - 1;
+        
+        if (lastTime) {
+          if (itsRealTime && outputThread->itsFreeQueue.empty()) {
+            droppingData(subband, subbandNumber);
+            itsTmpSum->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
+          } else {
+            notDroppingData(subband, subbandNumber);
+            std::auto_ptr<StreamableData> data( outputThread->itsFreeQueue.remove() );
+            
+            data->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
+            
+            if (!firstTime)
+              *data += *itsSums[subband];
+            
+            data->sequenceNumber = itsSequenceNumber;
+            outputThread->itsSendQueue.append(data.release());
+          }
+        } else if (firstTime) {
+          itsSums[subband]->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
+        } else {
+          itsTmpSum->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
+          *itsSums[subband] += *itsTmpSum;
+        }
+
+        // signal next output that we're done with this one
+        pthread_mutex_lock(&mutex[itsCurrentComputeCore]);
+        computeCoreStates[itsCurrentComputeCore] = lastOutput ? 0 : itsOutputNr + 1;
+        pthread_cond_broadcast(&condition[itsCurrentComputeCore]);
+        pthread_mutex_unlock(&mutex[itsCurrentComputeCore]);
       }
-    }
-    
-    if (++ itsCurrentComputeCore == itsNrComputeCores)
-      itsCurrentComputeCore = 0;
-  }
-
-  for (unsigned o = 0; o < itsOutputs.size(); o ++) {
-    struct OutputSection::SingleOutput &output = itsOutputs[o];
-
-    if (++ output.currentIntegrationStep == output.nrIntegrationSteps) {
-      output.currentIntegrationStep = 0;
-      output.sequenceNumber++;
-    }
-  }
-}
-
-
-void OutputSection::postprocess()
-{
-  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
-    unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
-
-    if (subbandNumber < itsNrSubbands) {
-      notDroppingData(subband, subbandNumber); // for final warning message
       
-      delete itsOutputThreads[subband];
-      delete itsSumPlans[subband];
+      if (++ itsCurrentComputeCore == itsNrComputeCores)
+        itsCurrentComputeCore = 0;
     }
-  }
 
-  delete itsPlan;
-  itsSumPlans.resize(0);
-
-  itsOutputThreads.clear();
-  itsOutputs.clear();
-  itsDroppedCount.clear();
+    if (++ itsCurrentIntegrationStep == itsNrIntegrationSteps) {
+      itsCurrentIntegrationStep = 0;
+      itsSequenceNumber++;
+    }
+  }  
 }
 
 }

@@ -42,7 +42,7 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(const Parset *ps, unsigned subbandNumber, InputThread *inputThread, unsigned nrOutputs, const CN_ProcessingPlan<> &plan);
+			    OutputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, InputThread *inputThread);
 			    ~OutputThread();
 
     // report any writes that take longer than this (seconds)
@@ -50,7 +50,7 @@ class OutputThread
 
   private:
     void                    writeLogMessage();
-    void                    checkForDroppedData(StreamableData *data, unsigned output);
+    void                    checkForDroppedData(StreamableData *data);
     void		    mainLoop();
 
     const Parset            *itsPS;
@@ -58,13 +58,13 @@ class OutputThread
 
     InputThread             *itsInputThread;
 
-    const unsigned          itsNrOutputs;
     const unsigned          itsSubbandNumber;
+    const unsigned          itsOutputNumber;
 
     const unsigned          itsObservationID;
 
-    Vector<MSWriter*>       itsWriters;
-    std::vector<unsigned>   itsNextSequenceNumbers;
+    MSWriter*               itsWriter;
+    unsigned                itsNextSequenceNumber;
 };
 
 } // namespace RTCP

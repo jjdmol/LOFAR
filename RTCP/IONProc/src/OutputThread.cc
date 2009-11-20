@@ -40,38 +40,27 @@ namespace LOFAR {
 namespace RTCP {
 
 
-OutputThread::OutputThread(const unsigned subband, const Parset &ps )
+OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsigned output )
 :
-  itsOutputs(0),
-  itsNrOutputs(0),
-  itsPlans(0),
   itsParset(ps),
   itsSubband(subband),
+  itsOutput(output),
   thread(0)
 {
   CN_Configuration configuration(ps);
+  CN_ProcessingPlan<> plan(configuration);
+  plan.removeNonOutputs();
+
+  const ProcessingPlan::planlet &p = plan.plan[output];
 
   // transpose the data holders: create queues streams for the output streams
   // itsPlans is the owner of the pointers to sample data structures
   for (unsigned i = 0; i < maxSendQueueSize; i ++) {
-    CN_ProcessingPlan<> *plan = new CN_ProcessingPlan<>( configuration, false, true );
-    plan->removeNonOutputs();
-    plan->allocateOutputs( hugeMemoryAllocator );
+    StreamableData *clone = p.source->clone();
 
-    itsPlans.push_back( plan );
+    clone->allocate();
 
-    itsNrOutputs = plan->nrOutputs();
-
-    // only the first call will actually resize the array
-    if( !itsOutputs.size() ) {
-      itsOutputs.resize( itsNrOutputs );
-    }
-    
-    for (unsigned o = 0; o < plan->plan.size(); o++ ) {
-      const ProcessingPlan::planlet &p = plan->plan[o];
-
-      itsOutputs[o].freeQueue.append( p.source );
-    }
+    itsFreeQueue.append( clone );
   }
 
   thread = new Thread(this, &OutputThread::mainLoop, 65536);
@@ -80,23 +69,21 @@ OutputThread::OutputThread(const unsigned subband, const Parset &ps )
 
 OutputThread::~OutputThread()
 {
-  itsSendQueueActivity.append(-1); // -1 indicates that no more messages will be sent
+  itsSendQueue.append(0); // 0 indicates that no more messages will be sent
 
   delete thread;
 
-  while (!itsSendQueueActivity.empty())
-    itsSendQueueActivity.remove();
+  while (!itsSendQueue.empty())
+    delete itsSendQueue.remove();
 
-  for (unsigned i = 0; i < itsPlans.size(); i++ ) {
-    delete itsPlans[i];
-  }
+  while (!itsFreeQueue.empty())
+    delete itsFreeQueue.remove();
 }
 
 
 void OutputThread::mainLoop()
 {
   std::auto_ptr<Stream> streamToStorage;
-  int o;
 
 #if defined HAVE_BGP_ION
   doNotRunOnCore0();
@@ -111,7 +98,7 @@ void OutputThread::mainLoop()
     streamToStorage.reset( new NullStream );
   } else if (connectionType == "TCP") {
     const std::string    server = itsParset.storageHostName(prefix + "_ServerHosts", itsSubband);
-    const unsigned short port   = boost::lexical_cast<unsigned short>(itsParset.getPortsOf(prefix)[itsSubband]);
+    const unsigned short port = itsParset.getStoragePort(prefix, itsSubband, itsOutput);
   
     LOG_DEBUG_STR("subband " << itsSubband << " written to tcp:" << server << ':' << port << " connecting..");
     streamToStorage.reset( new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Client) );
@@ -131,29 +118,25 @@ void OutputThread::mainLoop()
   // TODO: race condition on creation
   // TODO: if a storage node blocks, ionproc can't write anymore
   //       in any thread
-  static Semaphore semaphore(1);
+  static Semaphore semaphore(2);
+  StreamableData *data;
 
-  while ((o = itsSendQueueActivity.remove()) >= 0) {
-    struct OutputThread::SingleOutput &output = itsOutputs[o];
-    StreamableData *data = output.sendQueue.remove(); // will be freed by itsPlans, so we can freely use it without worry we lose the pointer
-
+  while ((data = itsSendQueue.remove()) != 0) {
     // prevent too many concurrent writers by locking this scope
     semaphore.down();
     try {
-      // write header: nr of output
-      streamToStorage->write( &o, sizeof o );
-
       // write data, including serial nr
       data->write(streamToStorage.get(), true);
     } catch( ... ) {
       semaphore.up();
+      itsFreeQueue.append( data ); // make sure data will be freed
       throw;
     }
 
     semaphore.up();
 
     // data can now be reused
-    output.freeQueue.append( data );
+    itsFreeQueue.append( data );
   }
 }
 

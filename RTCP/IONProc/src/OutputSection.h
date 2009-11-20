@@ -25,6 +25,8 @@
 #include <Interface/CN_ProcessingPlan.h>
 #include <Stream/Stream.h>
 #include <IONProc/OutputThread.h>
+#include <Interface/Thread.h>
+#include <Interface/Mutex.h>
 
 #include <vector>
 
@@ -34,14 +36,12 @@ namespace RTCP {
 class OutputSection
 {
   public:
-    OutputSection(const Parset *ps, unsigned psetNumber, const std::vector<Stream *> &streamsFromCNs);
-
-    void			preprocess();
-    void			process();
-    void			postprocess();
+    OutputSection(const Parset *ps, unsigned psetNumber, unsigned outputNumber, const std::vector<Stream *> &streamsFromCNs, bool lastOutput);
+    ~OutputSection();
 
   private:
-    void			connectToStorage();
+    bool                        stop;
+    void			mainLoop();
 
     void			droppingData(unsigned subband, unsigned subbandNumber);
     void			notDroppingData(unsigned subband, unsigned subbandNumber);
@@ -49,20 +49,17 @@ class OutputSection
     std::vector<unsigned>	itsDroppedCount; // [subband]
     std::vector<OutputThread *> itsOutputThreads; // [subband]
 
-    struct SingleOutput {
-      std::vector<StreamableData *> sums;
-      StreamableData *tmpSum;
+    std::vector<StreamableData *> itsSums;
+    StreamableData *itsTmpSum;
 
-      unsigned nrIntegrationSteps;
-      unsigned currentIntegrationStep;
+    unsigned itsNrIntegrationSteps;
+    unsigned itsCurrentIntegrationStep;
 
-      unsigned sequenceNumber;
-    };
-
-    std::vector<struct SingleOutput> itsOutputs; // [outputs]
+    unsigned itsSequenceNumber;
 
     const Parset                *itsParset;
     const unsigned		itsPsetIndex;
+    const unsigned              itsOutputNr;
     unsigned			itsNrComputeCores, itsCurrentComputeCore;
     const unsigned              itsNrSubbands;
     const unsigned		itsNrSubbandsPerPset;
@@ -71,10 +68,12 @@ class OutputSection
     // the main plan, also holds temporary results
     CN_ProcessingPlan<>         *itsPlan;
 
-    // plans that hold accumulated results
-    Vector<CN_ProcessingPlan<> *> itsSumPlans;
-
     const std::vector<Stream *> &itsStreamsFromCNs;
+
+    Thread                      *thread;
+
+    // hack to syncrhonise multiple outputs per compute core
+    bool                         lastOutput;
 };
 
 

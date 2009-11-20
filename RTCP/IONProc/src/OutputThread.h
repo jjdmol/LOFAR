@@ -26,7 +26,6 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Interface/StreamableData.h>
-#include <Interface/CN_ProcessingPlan.h>
 #include <Interface/Queue.h>
 #include <Interface/Parset.h>
 #include <Interface/Thread.h>
@@ -39,27 +38,19 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(const unsigned subband, const Parset &ps);
+			    OutputThread(const Parset &ps, const unsigned subband, const unsigned output);
 			    ~OutputThread();
 
     static const unsigned   maxSendQueueSize = 3;
 
-    // each output stream has its own queues. the itsSendQueueActivity contains
-    // the output stream numbers of the queues to which data has been added 
-    struct SingleOutput {
-      Queue<StreamableData *> freeQueue, sendQueue;
-    };
-    Vector<struct SingleOutput>  itsOutputs; // [itsNrOutputs]
-    unsigned                itsNrOutputs;
-    std::vector<CN_ProcessingPlan<> *> itsPlans;
-
-    Queue<int>              itsSendQueueActivity; 
+    Queue<StreamableData *> itsFreeQueue, itsSendQueue;
 
   private:
     void		    mainLoop();
 
     const Parset            &itsParset;
     const unsigned          itsSubband;
+    const unsigned          itsOutput;
     Thread		    *thread;
 };
 

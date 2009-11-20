@@ -27,7 +27,6 @@
 
 #include <Interface/StreamableData.h>
 #include <Interface/MultiDimArray.h>
-#include <Interface/CN_ProcessingPlan.h>
 #include <Interface/Queue.h>
 #include <Interface/Thread.h>
 #include <Stream/Stream.h>
@@ -39,33 +38,25 @@ namespace RTCP {
 class InputThread
 {
   public:
-			    InputThread(const Parset *ps, unsigned subbandNumber);
+			    InputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber);
 			    ~InputThread();
 
     static const unsigned   maxReceiveQueueSize = 3;
     // report if fetching an item from the receive queue takes longer than this (seconds)
     static const float      reportQueueRemoveDelay = 0.05;
     // report if reading data takes longer than this (seconds)
-    static const float      reportReadDelay = 0.05;
+    static const float      reportReadDelay = 1.10;
 
-    struct SingleInput {
-      Queue<StreamableData *> freeQueue, receiveQueue;
-    };
-    Vector<struct SingleInput> itsInputs; // [itsNrInputs]
-    unsigned                itsNrInputs;
-
-    Queue<unsigned>         itsReceiveQueueActivity;
-    static Queue<unsigned>  itsRcvdQueue;
+    Queue<StreamableData *> itsFreeQueue, itsReceiveQueue;
 
   private:
     void		    mainLoop();
 
     const Parset            *itsPS;
-    Stream		    *itsStreamFromION; 
     Thread		    *thread;
 
-    Vector<CN_ProcessingPlan<> *> itsPlans; // [maxReceiveQueueSize]
     const unsigned          itsSubbandNumber;
+    const unsigned          itsOutputNumber;
     const unsigned          itsObservationID;
 };
 
