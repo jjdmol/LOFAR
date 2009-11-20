@@ -33,7 +33,7 @@ namespace LOFAR {
 class SystemCallException : public Exception
 {
   public:
-    SystemCallException(const char *syscall, int error=errno, const std::string& file="", int line=0, 
+    SystemCallException(const std::string &syscall, int error=errno, const std::string& file="", int line=0, 
 			const std::string& func="", Backtrace* bt=0) throw();
 			
     virtual		~SystemCallException() throw();

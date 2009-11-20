@@ -29,9 +29,9 @@
 
 namespace LOFAR {
 
-SystemCallException::SystemCallException(const char *syscall, int error, const std::string& file, int line, 
+SystemCallException::SystemCallException(const std::string &syscall, int error, const std::string& file, int line, 
 			const std::string& func, Backtrace* bt) throw()
-: Exception(std::string(syscall) + ": " + errorMessage(error), file, line, func, bt),
+: Exception(syscall + ": " + errorMessage(error), file, line, func, bt),
   error(error)
 {
 }
