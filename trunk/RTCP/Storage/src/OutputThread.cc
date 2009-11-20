@@ -28,50 +28,56 @@
 #include <Storage/MSWriterFile.h>
 #include <Storage/MSWriterNull.h>
 #include <Interface/StreamableData.h>
+#include <Interface/CN_ProcessingPlan.h>
 #include <Common/DataConvert.h>
+#include <stdio.h>
 
 namespace LOFAR {
 namespace RTCP {
 
-OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, InputThread *inputThread, unsigned nrOutputs, const CN_ProcessingPlan<> &plan)
+OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, InputThread *inputThread)
 :
   itsPS(ps),
   itsInputThread(inputThread),
-  itsNrOutputs(nrOutputs),
   itsSubbandNumber(subbandNumber),
+  itsOutputNumber(outputNumber),
   itsObservationID(ps->observationID()),
-  itsNextSequenceNumbers(itsNrOutputs,0)
+  itsNextSequenceNumber(0)
 {
-  itsWriters.resize(itsNrOutputs);
-  for (unsigned output = 0; output < itsNrOutputs; output++ ) {
-    string filename;
+  string filename;
+  CN_Configuration configuration(*ps);
+  CN_ProcessingPlan<> plan(configuration);
+  plan.removeNonOutputs();
+
+  const ProcessingPlan::planlet &p = plan.plan[outputNumber];
 
 #if 0
-    // null writer
-    itsWriters[output] = new MSWriterNull();
+  // null writer
+  itsWriters[output] = new MSWriterNull();
 
-    LOG_DEBUG_STR("subband " << subbandNumber << " written to null");
+  LOG_DEBUG_STR("subband " << subbandNumber << " written to null");
 #else    
-    if( dynamic_cast<CorrelatedData*>( plan.plan[output].source ) ) {
-      std::stringstream out;
-      out << itsPS->getMSname(subbandNumber) << "/table.f" << output << "data";
-      filename = out.str();
-    } else {    
-      // raw writer
-      filename = itsPS->getMSname(subbandNumber) + plan.plan[output].filenameSuffix;
-    }
-
-    LOG_DEBUG_STR("subband " << subbandNumber << " written to " << filename);
-
-    try {
-      itsWriters[output] = new MSWriterFile(filename.c_str());
-    } catch( SystemCallException &ex ) {
-      LOG_ERROR_STR( "Cannot open " << filename << ": " << ex );
-
-      itsWriters[output] = new MSWriterNull();
-    }
-#endif
+  if( dynamic_cast<CorrelatedData*>( p.source ) ) {
+    std::stringstream out;
+    out << itsPS->getMSname(subbandNumber) << "/table.f" << outputNumber << "data";
+    filename = out.str();
+  } else {    
+    // raw writer
+    std::stringstream out;
+    out << itsPS->getMSname(subbandNumber) << p.filenameSuffix;
+    filename = out.str();
   }
+
+  LOG_DEBUG_STR("subband " << subbandNumber << " output " << outputNumber << " written to " << filename);
+
+  try {
+    itsWriter = new MSWriterFile(filename.c_str());
+  } catch( SystemCallException &ex ) {
+    LOG_ERROR_STR( "Cannot open " << filename << ": " << ex );
+
+    itsWriter = new MSWriterNull();
+  }
+#endif
 
   thread = new Thread(this, &OutputThread::mainLoop);
 }
@@ -81,9 +87,7 @@ OutputThread::~OutputThread()
 {
   delete thread;
 
-  for (unsigned i = 0; i < itsNrOutputs; i++) {
-    delete itsWriters[i];
-  }
+  delete itsWriter;
 }
 
 
@@ -109,16 +113,16 @@ void OutputThread::writeLogMessage()
 }
 
 
-void OutputThread::checkForDroppedData(StreamableData *data, unsigned output)
+void OutputThread::checkForDroppedData(StreamableData *data)
 {
-  unsigned expectedSequenceNumber = itsNextSequenceNumbers[output];
+  unsigned expectedSequenceNumber = itsNextSequenceNumber;
   unsigned droppedBlocks = data->sequenceNumber - expectedSequenceNumber;
 
   if (droppedBlocks > 0) {
-    LOG_WARN_STR("dropped " << droppedBlocks << (droppedBlocks == 1 ? " block for subband " : " blocks for subband ") << itsSubbandNumber << " and output " << output << " of obsID " << itsObservationID);
+    LOG_WARN_STR("dropped " << droppedBlocks << (droppedBlocks == 1 ? " block for subband " : " blocks for subband ") << itsSubbandNumber << " and output " << itsOutputNumber << " of obsID " << itsObservationID);
   }
 
-  itsNextSequenceNumbers[output] = data->sequenceNumber + 1;
+  itsNextSequenceNumber = data->sequenceNumber + 1;
 }
 
 
@@ -133,31 +137,28 @@ void OutputThread::mainLoop()
 
   
   for(;;) {
-    unsigned o = itsInputThread->itsReceiveQueueActivity.remove();
-    struct InputThread::SingleInput &input = itsInputThread->itsInputs[o];
     NSTimer writeTimer("write data",false,false);
+    std::auto_ptr<StreamableData> data( itsInputThread->itsReceiveQueue.remove() );
 
-    StreamableData *data = input.receiveQueue.remove();
-
-    if (data == 0) {
+    if (data.get() == 0) {
       break;
     }
 
-    checkForDroppedData(data, o);
+    checkForDroppedData(data.get());
 
     writeTimer.start();
     semaphore.down();
 
-    itsWriters[o]->write(data);
+    itsWriter->write(data.get());
 
     semaphore.up();
     writeTimer.stop();
 
     if( writeTimer.getElapsed() > reportWriteDelay ) {
-      LOG_WARN_STR( "observation " << itsObservationID << " subband " << itsSubbandNumber << " output " << o << " " << writeTimer );
+      LOG_WARN_STR( "observation " << itsObservationID << " subband " << itsSubbandNumber << " output " << itsOutputNumber << " " << writeTimer );
     }
 
-    input.freeQueue.append(data);
+    itsInputThread->itsFreeQueue.append(data.release());
   }
 }
 

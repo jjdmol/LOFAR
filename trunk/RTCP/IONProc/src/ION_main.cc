@@ -391,7 +391,7 @@ void Job::jobThread()
   if (itsParset.realTime()) {
     // claim resources two seconds before observation start
     WallClockTime wallClock;
-    time_t     closeToStart = itsParset.startTime() - 2;
+    time_t     closeToStart = static_cast<time_t>(itsParset.startTime()) - 2;
     char       buf[26];
     ctime_r(&closeToStart, buf);
     buf[24] = '\0';
@@ -513,15 +513,25 @@ template <typename SAMPLE_TYPE> void Job::toCNthread()
 
 void Job::fromCNthread()
 {
+  CN_Configuration configuration(itsParset);
+  const CN_ProcessingPlan<> plan(configuration);
+  const unsigned nrOutputs = plan.nrOutputs();
+
   LOG_DEBUG("starting from_CN thread");
-  OutputSection outputSection(&itsParset, myPsetNumber, itsCNstreams);
 
-  outputSection.preprocess();
+  {
+    std::vector<OutputSection *> outputSections( nrOutputs );
 
-  for (unsigned run = 0; run < itsNrRuns; run ++)
-    outputSection.process();
+    for (unsigned output = 0; output < nrOutputs; output++) {
+      outputSections[output] = new OutputSection(&itsParset, myPsetNumber, output, itsCNstreams, output == nrOutputs-1);
+    }
 
-  outputSection.postprocess();
+    // destructor of OutputSections will wait for threads to complete
+    for (unsigned output = 0; output < nrOutputs; output++) {
+      delete outputSections[output];
+    }
+  }  
+
   LOG_DEBUG("from_CN thread finished");
 }
 

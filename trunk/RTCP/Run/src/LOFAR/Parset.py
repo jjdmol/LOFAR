@@ -368,9 +368,11 @@ class Parset(util.Parset.Parset):
 
       for i,s in enumerate(subbandMapping):
         node = storageNodes[s]
-        portnr = globalPorts[i]
 
-        localPorts[node].append(portnr)
+        for o in xrange(nrOutputs):
+          portnr = globalPorts[i * len(subbandMapping) + o]
+
+          localPorts[node].append(portnr)
 
       return localPorts
 
