@@ -96,10 +96,18 @@ def killJobs( partition ):
   """ Kill anything running on the partition. """
   return SyncCommand( "%s | /usr/bin/grep %s | /usr/bin/awk '{ print $1; }' | /usr/bin/xargs -r bgkilljob" % (BGJOBS,partition,) ).isSuccess()
 
-
 def freePartition( partition ):
   """ Free the given partition. """
   return SyncCommand( "mpirun -partition %s -free wait" % (partition,) ).isSuccess()
+
+def resetPartition( partition ):
+  """ Reset /dev/flatmem on all I/O nodes and kill all processes that we started. """
+  success = True
+
+  for node in PartitionPsets[partition]:
+    success = success and SyncCommand( "ssh -tq %s pkill IONProc ; pkill orted ; echo 1 > /proc/flatmem_reset" % (node,) ).isSuccess()
+
+  return success  
 
 def allocatePartition( partition ):
   """ Allocate the given partition by running Hello World. """
@@ -160,6 +168,11 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
   			help = "free the partition" )
+  parser.add_option( "-r", "--reset",
+  			dest = "reset",
+			action = "store_true",
+			default = False,
+  			help = "reset the partition without freeing it" )
   parser.add_option( "-s", "--steal",
   			dest = "steal",
 			action = "store_true",
@@ -193,6 +206,10 @@ if __name__ == "__main__":
     if options.allocate and not errorOccurred:
       print "Allocating %s..." % ( partition, )
       errorOccured = allocatePartition( partition )
+
+    if options.reset and not errorOccurred:
+      print "Resetting %s..." % ( partition, )
+      errorOccured = resetPartition( partition )
 
     if options.steal and not errorOccurred:
       print "Taking over partition %s..." % ( partition, )
