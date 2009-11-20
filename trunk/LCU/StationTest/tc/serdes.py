@@ -85,9 +85,6 @@ else:
   tc.appendLog(11, '')
   
   for rep in range(1,1+repeat):
-    # Temporarily disable external sync
-    rsp.write_cr_syncoff(tc, msg, ['rsp'], rspId)
-  
     value = 0xAB
     tc.appendLog(31, '')
     tc.appendLog(31, '>>> Overwrite RSR diag bytes with %#x to ensure fresh status.' % value)
@@ -96,21 +93,24 @@ else:
     for ri in rspId:
       rsp.read_rsr(tc, msg, 'diag', [ri], 31)
 
-    # Configure DIAG tst
-    rsp.write_diag_selftest(tc, msg, selftest, ['rsp'], rspId, 99)
-
-    tc.sleep(100)        # wait DIAG ack_period_done
-
     # Sync control
     if arg_mode != 'tx':
       if arg_sync == 0:
-        # Enable external sync, first ext sync will start test, next ext sync will end test
-        rsp.write_cr_syncon(tc, msg, ['rsp'], rspId)
+        # Configure DIAG tst
+        rsp.write_diag_selftest(tc, msg, selftest, ['rsp'], rspId, 99)
+        tc.sleep(100)        # wait DIAG ack_period_done
 
+        # First ext sync will start test, next ext sync will end test
         # Wait for serdes_diag_lane tx, rx test to finish (1 until start sync, 1 measurement sync interval, 1 sync interval
         # for tx to finish, so worst case 3 sec)
         tc.sleep(3000)
       else:
+        # For test time other than 1 sec by ext sync (= PPS) switch ext sync off and use alt sync on board
+        rsp.write_cr_syncoff(tc, msg, ['rsp'], rspId)
+        # Configure DIAG tst
+        rsp.write_diag_selftest(tc, msg, selftest, ['rsp'], rspId, 99)
+        tc.sleep(100)        # wait DIAG ack_period_done
+
         # Run serdes_diag_lane tx, rx test for 1 sync interval (arbitrary long, typically 1 sec)
         rsp.write_rsu_altsync(tc, msg, rspId)        # start of sync interval
         tc.sleep(arg_sync*1000)
@@ -118,7 +118,13 @@ else:
         rsp.write_rsu_altsync(tc, msg, rspId)        # end tx
         tc.sleep(1000)                               # allow time for DIAG tst result event to reach RSR
         rsp.write_cr_syncon(tc, msg, ['rsp'], rspId)  # restore CR ext sync enabled default
-    # else: For mode 'tx' keep ext sync off to run tx forever, i.e. until tc is rerun with mode 'off'.
+    else:
+      # For mode 'tx' switch ext sync off to run tx forever, i.e. until this tc is rerun with mode 'off'.
+      rsp.write_cr_syncoff(tc, msg, ['rsp'], rspId)
+      # Configure DIAG tst
+      rsp.write_diag_selftest(tc, msg, selftest, ['rsp'], rspId, 99)
+      tc.sleep(100)        # wait DIAG ack_period_done
+
 
     for ri in rspId:
       tc.appendLog(31, '')
@@ -182,5 +188,3 @@ else:
     # Break repeat loop in case test FAILED
     if tc.getResult() == 'FAILED':
       break
-  # Restore external sync enabled
-  rsp.write_cr_syncon(tc, msg, ['rsp'], rspId)
