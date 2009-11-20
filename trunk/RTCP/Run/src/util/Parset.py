@@ -30,7 +30,7 @@ def decode(s):
   # x;x;x = x,x,x
   if ";" in s:
     # warning: not safe in case of () recursion
-    return map(decode, s.split(";"))
+    return sum( map(decode, s.split(";")), [] )
 
   # 2*xxx = [xxx,xxx]
   if "*" in s:
@@ -118,6 +118,12 @@ class Parset(dict):
 
       f = ropen( filename, "r" )
 
+      self._readFile(f, filename)
+
+    def parse(self, str):
+      self._readFile( str, "" )
+
+    def _readFile(self, f, filename):
       lexer = shlex.shlex( f, filename )
       lexer.whitespace = "" # we have to discard our own whitespace, since whitespace can be significant within values
       basic_wordchars = lexer.wordchars + ".:+-!@$%^&*/{}"

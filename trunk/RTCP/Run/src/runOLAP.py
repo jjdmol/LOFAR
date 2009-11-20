@@ -43,7 +43,8 @@ def runObservations( parsets, partition, start_cnproc = True, start_ionproc = Tr
     sections += [Sections.StorageSection( parsets, partition )]
 
   # sanity check on sections
-  sections.check()
+  if not DRYRUN:
+    sections.check()
 
   # ----- Run all sections
   try:
@@ -207,7 +208,6 @@ if __name__ == "__main__":
   			dest = "storagesuppfile",
 			default = Locations.files["storagesuppfile"],
   			help = "Valgrind suppressions file for Storage [%default]" )
-
   parser.add_option_group( dirgroup )
 
   # parse arguments
@@ -239,6 +239,7 @@ if __name__ == "__main__":
     DRYRUN = True
     Commands.DRYRUN = True
     ObservationID.DRYRUN = True
+    Sections.DRYRUN = True
 
   Locations.nodes["storagemaster"] = options.storagemaster
 
@@ -278,6 +279,14 @@ if __name__ == "__main__":
       addParset( obsparams["parset"] )  
     except IOError,e:
       fatal("ERROR: Cannot read parset file: %s" % (e,))
+
+    # parse specific parset values from the command line (all options containing ".")
+    # apply them so that we will parse them instead of the parset values
+    for k,v in obsparams.iteritems():
+      if "." not in k:
+        continue
+
+      parset.parse( "%s=%s" % (k,v) )
 
     # reserve an observation id
     if parset.getObsID():
@@ -375,18 +384,19 @@ if __name__ == "__main__":
     if options.valgrind_ion:
       # force settings required to run under valgrind
       parset["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "TCP" # FCNP uses BG/P instructions
-      parset["OLAP.nrSecondsOfBuffer"] = 1                      # reduce memory footprint
+      parset["OLAP.nrSecondsOfBuffer"] = 1.5                    # reduce memory footprint
 
       # default to valgrind builds
       options.ionproc = "${BASEDIR}/installed/gnubgp_ion-valgrind/bin/IONProc"
       options.cnproc  = "${BASEDIR}/installed/gnubgp_cn-valgrind/bin/CN_Processing"
 
     # parse specific parset values from the command line (all options containing ".")
+    # reapply them in case they got overwritten
     for k,v in obsparams.iteritems():
       if "." not in k:
         continue
 
-      parset[k] = v
+      parset.parse( "%s=%s" % (k,v) )
 
     # disable sections we won't start
     if options.nocnproc:

@@ -10,6 +10,7 @@ from Logger import debug,info,warning
 from threading import Thread,Lock
 
 DEBUG=False
+DRYRUN=False
 VALGRIND_ION=False
 VALGRIND_STORAGE=False
 
