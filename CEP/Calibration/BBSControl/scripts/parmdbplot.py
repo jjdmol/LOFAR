@@ -452,7 +452,7 @@ class MainWindow(QFrame):
         QFrame.__init__(self)
         self.db = db
 
-        self.setWindowTitle("ParmPlotter")
+#        self.setWindowTitle("parmdbplot")
 
         layout = QVBoxLayout()
 
