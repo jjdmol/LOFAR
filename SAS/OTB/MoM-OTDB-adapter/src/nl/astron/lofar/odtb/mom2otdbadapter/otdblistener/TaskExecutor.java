@@ -1,6 +1,5 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.otdblistener;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;

@@ -132,7 +132,8 @@ public class XMLGenerator {
 		xmlBuilder.addTypeAttributeToElement(measurementElement, XMLConstants.MOM2_LOFAR_NAMESPACE,
 				XMLConstants.UVMEASUREMENT_TYPE);
 		xmlBuilder.addAttributeToElement(measurementElement, XMLConstants.MOM2_ID, beam.getMom2Id().toString());
-
+		Element currentStatusElement = xmlBuilder.addElement(measurementElement, XMLConstants.CURRENT_STATUS);
+		addXmlStatusElement(xmlBuilder, currentStatusElement, beam.getParentObservation().getStatus());
 		if (Mom2OtdbConverter.OTDB_FINISHED_STATUS.equals(beam.getParentObservation().getStatus())) {
 			String fileMask = beam.getParentObservation().getFileNameMask();
 			fileMask = fileMask.substring(fileMask.lastIndexOf("/") + 1);
