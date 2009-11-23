@@ -68,11 +68,11 @@ OutputSection::OutputSection(const Parset *ps, unsigned psetNumber, unsigned out
 
   CN_Configuration configuration(*itsParset);
 
-  // allocate output structures and temporary data holders
+  // define output structures and temporary data holders
   itsPlan = new CN_ProcessingPlan<>(configuration);
   itsPlan->removeNonOutputs();
-
   const ProcessingPlan::planlet &p = itsPlan->plan[itsOutputNr];
+  const StreamableData *dataTemplate = p.source;
 
   // allocate partial sums -- only for those outputs that need it
   if( p.source->isIntegratable() && itsParset->IONintegrationSteps() <= 1 ) {
@@ -82,7 +82,7 @@ OutputSection::OutputSection(const Parset *ps, unsigned psetNumber, unsigned out
       unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
 
       if (subbandNumber < itsNrSubbands) {
-        StreamableData *clone = p.source->clone();
+        StreamableData *clone = dataTemplate->clone();
 
         clone->allocate();
 
@@ -94,19 +94,21 @@ OutputSection::OutputSection(const Parset *ps, unsigned psetNumber, unsigned out
     itsNrIntegrationSteps  = 1;
   }
 
-  itsCurrentIntegrationStep = 0;
-  itsSequenceNumber  	    = 0;
-  itsTmpSum                 = p.source;
-  itsTmpSum->allocate();
-
   // create an output thread for this subband
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
 
     if (subbandNumber < itsNrSubbands) {
-      itsOutputThreads.push_back(new OutputThread(*itsParset, subbandNumber, itsOutputNr));
+      itsOutputThreads.push_back(new OutputThread(*itsParset, subbandNumber, itsOutputNr, dataTemplate));
     }
   }
+
+  itsCurrentIntegrationStep = 0;
+  itsSequenceNumber  	    = 0;
+  itsTmpSum                 = dataTemplate;
+
+  // allocate at the end, since we use it as an unallocated template above
+  itsTmpSum->allocate();
 
 
 #if defined HAVE_BGP_ION // FIXME: not in preprocess

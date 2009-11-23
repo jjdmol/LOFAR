@@ -28,7 +28,6 @@
 #include <IONProc/ION_Allocator.h>
 #include <Stream/SystemCallException.h>
 #include <Scheduling.h>
-#include <Interface/CN_ProcessingPlan.h>
 
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
@@ -40,23 +39,17 @@ namespace LOFAR {
 namespace RTCP {
 
 
-OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsigned output )
+OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsigned output, StreamableData *dataTemplate)
 :
   itsParset(ps),
   itsSubband(subband),
   itsOutput(output),
   thread(0)
 {
-  CN_Configuration configuration(ps);
-  CN_ProcessingPlan<> plan(configuration);
-  plan.removeNonOutputs();
-
-  const ProcessingPlan::planlet &p = plan.plan[output];
-
   // transpose the data holders: create queues streams for the output streams
   // itsPlans is the owner of the pointers to sample data structures
   for (unsigned i = 0; i < maxSendQueueSize; i ++) {
-    StreamableData *clone = p.source->clone();
+    StreamableData *clone = dataTemplate->clone();
 
     clone->allocate();
 

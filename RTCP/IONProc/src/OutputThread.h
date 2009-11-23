@@ -38,7 +38,7 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(const Parset &ps, const unsigned subband, const unsigned output);
+			    OutputThread(const Parset &ps, const unsigned subband, const unsigned output, StreamableData *dataTemplate);
 			    ~OutputThread();
 
     static const unsigned   maxSendQueueSize = 3;

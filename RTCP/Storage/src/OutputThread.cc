@@ -28,14 +28,13 @@
 #include <Storage/MSWriterFile.h>
 #include <Storage/MSWriterNull.h>
 #include <Interface/StreamableData.h>
-#include <Interface/CN_ProcessingPlan.h>
 #include <Common/DataConvert.h>
 #include <stdio.h>
 
 namespace LOFAR {
 namespace RTCP {
 
-OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, InputThread *inputThread)
+OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, InputThread *inputThread, const ProcessingPlan::planlet &outputConfig )
 :
   itsPS(ps),
   itsInputThread(inputThread),
@@ -45,11 +44,6 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
   itsNextSequenceNumber(0)
 {
   string filename;
-  CN_Configuration configuration(*ps);
-  CN_ProcessingPlan<> plan(configuration);
-  plan.removeNonOutputs();
-
-  const ProcessingPlan::planlet &p = plan.plan[outputNumber];
 
 #if 0
   // null writer
@@ -57,14 +51,14 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
 
   LOG_DEBUG_STR("subband " << subbandNumber << " written to null");
 #else    
-  if( dynamic_cast<CorrelatedData*>( p.source ) ) {
+  if( dynamic_cast<CorrelatedData*>( outputConfig.source ) ) {
     std::stringstream out;
     out << itsPS->getMSname(subbandNumber) << "/table.f" << outputNumber << "data";
     filename = out.str();
   } else {    
     // raw writer
     std::stringstream out;
-    out << itsPS->getMSname(subbandNumber) << p.filenameSuffix;
+    out << itsPS->getMSname(subbandNumber) << outputConfig.filenameSuffix;
     filename = out.str();
   }
 

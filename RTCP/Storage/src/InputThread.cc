@@ -24,8 +24,6 @@
 #include <lofar_config.h>
 
 #include <Storage/InputThread.h>
-#include <Interface/StreamableData.h>
-#include <Interface/CN_ProcessingPlan.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
@@ -35,22 +33,15 @@
 namespace LOFAR {
 namespace RTCP {
 
-InputThread::InputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber)
+InputThread::InputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, StreamableData *dataTemplate)
 :
   itsPS(ps),
   itsSubbandNumber(subbandNumber),
   itsOutputNumber(outputNumber),
   itsObservationID(ps->observationID())
 {
-  // transpose output stream holders
-  CN_Configuration configuration(*ps);
-  CN_ProcessingPlan<> plan(configuration);
-  plan.removeNonOutputs();
-
-  const ProcessingPlan::planlet &p = plan.plan[outputNumber];
-
   for (unsigned i = 0; i < maxReceiveQueueSize; i ++) {
-    StreamableData *data = p.source->clone();
+    StreamableData *data = dataTemplate->clone();
 
     data->allocate();
 
