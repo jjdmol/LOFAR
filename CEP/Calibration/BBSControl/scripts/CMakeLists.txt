@@ -9,3 +9,5 @@ python_install(
   solplot.py
   solflag.py
   DESTINATION lofar/solutions)
+
+install(PROGRAMS parmdbplot.py DESTINATION bin)
