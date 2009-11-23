@@ -71,8 +71,8 @@ OutputSection::OutputSection(const Parset *ps, unsigned psetNumber, unsigned out
   // define output structures and temporary data holders
   itsPlan = new CN_ProcessingPlan<>(configuration);
   itsPlan->removeNonOutputs();
-  const ProcessingPlan::planlet &p = itsPlan->plan[itsOutputNr];
-  const StreamableData *dataTemplate = p.source;
+  ProcessingPlan::planlet &p = itsPlan->plan[itsOutputNr];
+  StreamableData *dataTemplate = p.source;
 
   // allocate partial sums -- only for those outputs that need it
   if( p.source->isIntegratable() && itsParset->IONintegrationSteps() <= 1 ) {
