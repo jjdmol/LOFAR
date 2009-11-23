@@ -42,7 +42,7 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, InputThread *inputThread);
+			    OutputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, InputThread *inputThread, const ProcessingPlan::planlet &outputConfig );
 			    ~OutputThread();
 
     // report any writes that take longer than this (seconds)

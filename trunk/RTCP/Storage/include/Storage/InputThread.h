@@ -38,7 +38,7 @@ namespace RTCP {
 class InputThread
 {
   public:
-			    InputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber);
+			    InputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, StreamableData *dataTemplate);
 			    ~InputThread();
 
     static const unsigned   maxReceiveQueueSize = 3;

@@ -86,7 +86,8 @@ void SubbandWriter::preprocess()
   unsigned myNrSubbands = lastSubband - firstSubband + 1;
 
   CN_Configuration configuration(*itsPS);
-  const CN_ProcessingPlan<> plan(configuration);
+  CN_ProcessingPlan<> plan(configuration);
+  plan.removeNonOutputs();
 
 #if defined HAVE_AIPSPP
   LOG_TRACE_FLOW("SubbandWriter enabling PropertySet");
@@ -100,7 +101,7 @@ void SubbandWriter::preprocess()
   }
 #endif
 
-  if( itsPS->outputCorrelatedData()) {
+  if (itsPS->outputCorrelatedData()) {
     MeasurementSetFormat myFormat(itsPS, 512);
     // create root directory of the observation tree
     if ( (mkdir(itsPS->getMSBaseDir().c_str(), 0770) != 0) && (errno != EEXIST) ) {
@@ -121,8 +122,11 @@ void SubbandWriter::preprocess()
 
   for (unsigned sb = firstSubband; sb <= lastSubband; sb ++) {
     for (unsigned output = 0; output < plan.nrOutputs(); output ++) {
-      InputThread *i = new InputThread(itsPS, sb, output);
-      OutputThread *o = new OutputThread(itsPS, sb, output, i);
+      ProcessingPlan::planlet &outputConfig = plan.plan[output];
+      StreamableData *dataTemplate = outputConfig.source;
+
+      InputThread *i = new InputThread(itsPS, sb, output, dataTemplate);
+      OutputThread *o = new OutputThread(itsPS, sb, output, i, outputConfig);
 
       itsInputThreads.push_back(i);
       itsOutputThreads.push_back(o);
@@ -138,12 +142,14 @@ void SubbandWriter::process()
 void SubbandWriter::postprocess() 
 {
   for (unsigned i = 0; i < itsInputThreads.size(); i++ ) {
-    delete itsOutputThreads[i];
     delete itsInputThreads[i];
   }
-
-  itsOutputThreads.clear();
   itsInputThreads.clear();
+
+  for (unsigned i = 0; i < itsOutputThreads.size(); i++ ) {
+    delete itsOutputThreads[i];
+  }
+  itsOutputThreads.clear();
 }
 
 } // namespace RTCP
