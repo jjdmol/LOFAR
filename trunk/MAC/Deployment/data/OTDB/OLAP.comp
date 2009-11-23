@@ -27,13 +27,6 @@ par rawDataOutputs		I	text	-	10	0	'[tcp:10.181.0.2:4000]'	-	"where to send raw s
 par rawDataOutputOnly		I	bool	-	10	0	false	                -	"only retransmit raw station data"
 
 
-# output selection
-par  outputCorrelatedData    I    bool   -      10    0      true                                      - "Store correlated visilibities"
-par  outputFilteredData      I    bool   -      10    0      false                                     - "Store output of PPF/FFT"
-par  outputBeamFormedData    I    bool   -      10    0      false                                     - "Store beam formed complex voltages"
-par  outputCoherentStokes    I    bool   -      10    0      false                                     - "Store coherent Stokes"
-par  outputInoherentStokes   I    bool   -      10    0      false                                     - "Store incoherent Stokes"
-
 # -- Correlator --
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
@@ -125,6 +118,12 @@ par maxNetworkDelay	I	int	-	10	0	0.5		-		'???'
 par correctBandPass	I   	bool    -       10  	0	true		-		'apply the bandpass filter'
 par nrPencils           I       int     -       10      0       0               -               "Number of additional (manual) pencil beams"
 
+# output selection
+par outputCorrelatedData    I    bool   -      10    0      true                                      - "Store correlated visilibities"
+par outputFilteredData      I    bool   -      10    0      false                                     - "Store output of PPF/FFT"
+par outputBeamFormedData    I    bool   -      10    0      false                                     - "Store beam formed complex voltages"
+par outputCoherentStokes    I    bool   -      10    0      false                                     - "Store coherent Stokes"
+par outputInoherentStokes   I    bool   -      10    0      false                                     - "Store incoherent Stokes"
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
