@@ -25,7 +25,8 @@
 --
 -- getTreesInPeriod (groupType, periodInMinutes)
 -- 
--- groupType = 1: get all trees that are scheduled to start in the period: now till now+period
+-- groupType = 0: get all trees that have to be scheduled
+--             1: get all trees that are scheduled to start in the period: now till now+period
 --             2: get all trees with starttime <=now and stoptime > now ; period param is ignored
 --             3: get all trees with stoptime in the period: now-period till now
 --
@@ -52,23 +53,27 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 
 	BEGIN
 	  vQuery := \'\';
-	  IF $1 = 1 THEN
-		vQuery := \' AND (t.state = \' || TSscheduled || \' OR t.state = \' || TSqueued || \') \';
---		vQuery := vQuery || \' AND t.starttime < now()+interval \' || chr(39) || $2 || \' minutes\' || chr(39);
-		vQuery := vQuery || \' AND t.starttime >= now() AND t.starttime < now()+interval \' || chr(39) || $2 || \' minutes\' || chr(39);
-	  ELSE 
-		IF $1 = 2 THEN
-		  vQuery := \' AND t.starttime <= now() AND t.stoptime > now() \';
-		  vQuery := vQuery || \' AND t.state > \' || TSscheduled;
-		  vQuery := vQuery || \' AND t.state < \' || TSfinished;
+	  IF $1 = 0 THEN
+		vQuery := \' AND (t.stoptime > now() OR t.stoptime IS NULL) \';
+	  ELSE
+	    IF $1 = 1 THEN
+		  vQuery := \' AND (t.state = \' || TSscheduled || \' OR t.state = \' || TSqueued || \') \';
+--		  vQuery := vQuery || \' AND t.starttime < now()+interval \' || chr(39) || $2 || \' minutes\' || chr(39);
+		  vQuery := vQuery || \' AND t.starttime >= now() AND t.starttime < now()+interval \' || chr(39) || $2 || \' minutes\' || chr(39);
 	    ELSE 
-		  IF $1 = 3 THEN
-			vQuery := \' AND t.state >= \' || TSfinished;
-			vQuery := vQuery || \' AND t.stoptime > now()-interval \' || chr(39) || $2 || \' minutes\' || chr(39);
-		  ELSE
-			RAISE EXCEPTION \'groupType must be 1,2 or 3 not %\', $1;
+	  	  IF $1 = 2 THEN
+		    vQuery := \' AND t.starttime <= now() AND t.stoptime > now() \';
+		    vQuery := vQuery || \' AND t.state > \' || TSscheduled;
+		    vQuery := vQuery || \' AND t.state < \' || TSfinished;
+	      ELSE 
+		    IF $1 = 3 THEN
+			  vQuery := \' AND t.state >= \' || TSfinished;
+			  vQuery := vQuery || \' AND t.stoptime > now()-interval \' || chr(39) || $2 || \' minutes\' || chr(39);
+		    ELSE
+			  RAISE EXCEPTION \'groupType must be 0,1,2 or 3 not %\', $1;
+		    END IF;
 		  END IF;
-		END IF;
+	    END IF;
 	  END IF;
 
 	  -- do selection
