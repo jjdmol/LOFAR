@@ -70,7 +70,12 @@ else
     endif
 
     # Now define the new LOFARROOT
-    setenv LOFARROOT `cd >/dev/null $lfr_root; pwd`      # make path absolute
+    # If not needed, do not do cd;pwd because that resolves symlinks.
+    if ( $lfr_root =~ /* ) then
+        setenv LOFARROOT $lfr_root
+    else
+        setenv LOFARROOT `cd >/dev/null $lfr_root; pwd`   # make path absolute
+    endif
 
     # Also strip this path from the current paths (in case it is contained in
     # it).
