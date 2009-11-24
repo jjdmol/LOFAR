@@ -55,6 +55,8 @@ verify.add_option('--pid', type='string', dest='pid',
   help='Process ID: rsp, eth, mep, diag, bs, rcuh, rsu, ado, rad, all', default='all')
 verify.add_option('--data', type='string', dest='data',
   help='Data values(s) to write or verify read', default='40')
+verify.add_option('--hexdata', type='string', dest='hexdata',
+  help='Hex data values(s) to write or verify read', default='0xFFFFFFFF')
 verify.add_option('--count', action='store_true', dest='count',
   help='Use counter data values')
 verify.add_option('--rand', action='store_true', dest='rand',
@@ -135,6 +137,10 @@ data_str                = v.opts.data.split(',')
 arg_data = []
 for di in data_str:
   arg_data.append(int(di))
+hexdata_str             = v.opts.hexdata.split(',')
+arg_hexdata = []
+for di in hexdata_str:
+  arg_hexdata.append(int(di,16))
 arg_count               = v.opts.count
 arg_rand                = v.opts.rand
 arg_read                = v.opts.read
