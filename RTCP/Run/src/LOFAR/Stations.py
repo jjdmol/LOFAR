@@ -187,14 +187,19 @@ def defineStations( s ):
     return ['0.0.0.0:%s' % (port,) for port in portnrs]
 
   defaultPorts = ports( [4346, 4347, 4348, 4349] )
+  defaultPorts2 = ports( [4354, 4355, 4356, 4357] ) # second ear when splitter is enabled
+
+  # see MAC/Deployment/data/StaticMetaData/RSPConnections.dat
+  # for a mapping of station -> io node
+  # and LOFAR/Stations.py -l for a mapping of io node -> ip address 
 
   s.update( {
     # CS302
-    "CS302LBA":    [Station('CS302LBA',  '10.170.0.165', ports( [4346,4347,4348,4350] ))],
-    "CS302HBA":    [Station('CS302HBA',  '10.170.0.165', ports( [4346,4347,4348,4350] ))],
-    "CS302HBA0":   [Station('CS302HBA0', '10.170.0.165', ports( [4346,4347,4348,4350] ))],
+    "CS302LBA":    [Station('CS302LBA',  '10.170.0.165', defaultPorts)],
+    "CS302HBA":    [Station('CS302HBA',  '10.170.0.165', defaultPorts)],
+    "CS302HBA0":   [Station('CS302HBA0', '10.170.0.165', defaultPorts)],
     #"CS302HBA1":   [Station('CS302HBA1', '10.170.0.37',  ports( [4352,4353,4354,4355] ))],
-    "CS302HBA1":   [Station('CS302HBA1', '10.170.0.37',  ports( [4354,4355,4356,4357] ))],
+    "CS302HBA1":   [Station('CS302HBA1', '10.170.0.37',  defaultPorts2)],
 
     # RS106
     "RS106LBA":   [Station('RS106LBA',  '10.170.0.174', defaultPorts)],
@@ -212,11 +217,17 @@ def defineStations( s ):
     "RS503LBA":   [Station('RS503LBA',  '10.170.0.170', defaultPorts)],
     "RS503HBA":   [Station('RS503HBA',  '10.170.0.170', defaultPorts)],
 
+    # CS021
+    "CS021LBA":   [Station('CS021LBA',  '10.170.0.129', defaultPorts)],
+    "CS021HBA":   [Station('CS021HBA',  '10.170.0.129', defaultPorts)],
+    "CS021HBA0":  [Station('CS021HBA0', '10.170.0.129', defaultPorts)],
+    "CS021HBA1":  [Station('CS021HBA1', '10.170.0.1',   defaultPorts2)], # probably not right, check RSPDriver.conf
+
     # CS030
     "CS030LBA":   [Station('CS030LBA',  '10.170.0.153', defaultPorts)],
     "CS030HBA":   [Station('CS030HBA',  '10.170.0.153', defaultPorts)],
     "CS030HBA0":  [Station('CS030HBA0', '10.170.0.153', defaultPorts)],
-    "CS030HBA1":  [Station('CS030HBA1', '10.170.0.25', defaultPorts)], # probably not right, check RSPDriver.conf
+    "CS030HBA1":  [Station('CS030HBA1', '10.170.0.25',  defaultPorts2)], # probably not right, check RSPDriver.conf
 
     # DE601, a.k.a. Effelsberg
     #"DE601LBA":   [Station('DE601LBA',  '10.170.0.178', ports( [4353,4359,4363,4364] ))],
