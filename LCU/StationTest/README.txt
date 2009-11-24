@@ -231,17 +231,23 @@ a) The testcases in tc/ are ran using verify.py. The test results are reported
 b) The following test scripts are available in tc/, they are more or less plain,
    manual translations from TCL test cases:
 
-  - empty.py     = empty, can be used to try verify.py
-  - cdo_ctrl.py  = Read or write the CTRL field in the CDO settings register
-  - prsg.py      = TC 5.10, capture RCU PSRG data
-  - serdes.py    = TC 3.8, serdes ring test
-  - status.py    = TC 11.1, read RSP status register
-  - spustat.py   = TC 9.6, read SPU sensor status <=> 'rspctl --spustat'
-  - tdstat.py    = TC 9.1, read TD sensor status <=> 'rspctl --tdstat' 
-  - hba_client   = TC 5.42, read or write to a HBA client register at the RCU
-  - hba_server   = TC 5.43, read or write to a HBA server register at the tile
-  - rad_lanemode = TC 5.24, write or read the lane mode for the SERDES lanes
-  - rad_latency  = TC 5.49, show latency of data frames on the SERDES lanes
+  - empty.py           = empty, can be used to try verify.py
+  - cdo_ctrl.py        = Read or write the CTRL field in the CDO settings
+                         register
+  - prsg.py            = TC 5.10, capture RCU PSRG data
+  - serdes.py          = TC 3.8, serdes ring test
+  - read_serdes_phy.py = TC 8.3, read serdes PHY registers
+  - status.py          = TC 11.1, read RSP status register
+  - spustat.py         = TC 9.6, read SPU sensor status <=> 'rspctl --spustat'
+  - tdstat.py          = TC 9.1, read TD sensor status <=> 'rspctl --tdstat' 
+  - hba_client         = TC 5.42, read or write to a HBA client register at the
+                         RCU
+  - hba_server         = TC 5.43, read or write to a HBA server register at the
+                         tile
+  - rad_lanemode       = TC 5.24, write or read the lane mode for the SERDES
+                         lanes
+  - rad_latency        = TC 5.49, show latency of data frames on the SERDES
+                         lanes
 
 c) 'rspctl --readblock' and 'rspctl --writeblock'
 
@@ -363,6 +369,8 @@ d) Useful tests for monitoring the data on the serdes ring between the RSP
    - 'tc/status.py --pid rad' --> Shows whether no data packets go lost on the
      serdes ring and whether the data streams from the local AP and the
      preceding RSP are aligned.
+   - 'tc/read_serdes_phy.py --data 16,18,20,21,22,23' --> for multiple RSP read
+     the redundant ring registers to diagnose in case serdes.py fails.
 
 e) Clock and PPS can also affect the XST:
    - 'tc/serdes.py --diag_sync 0' --> Uses the PPS to start and stop the
