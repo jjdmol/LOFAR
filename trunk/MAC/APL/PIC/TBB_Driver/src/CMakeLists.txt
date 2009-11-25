@@ -35,7 +35,9 @@ lofar_add_library(tbbdriver
   TrigReleaseCmd.cc
   TrigGenCmd.cc
   TrigSetupCmd.cc
+  TrigSetupSameCmd.cc
   TrigCoefCmd.cc
+  TrigCoefSameCmd.cc
   TrigInfoCmd.cc
   ReadCmd.cc
   UdpCmd.cc
