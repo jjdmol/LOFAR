@@ -599,6 +599,7 @@ GCFEvent::TResult TBBControl::doTBBtrigsetup(GCFEvent& event, GCFPortInterface& 
 						cmd.setup[i].stop_mode     = (*it).stopLevel;
 						cmd.setup[i].filter_select = (*it).filter;
 						cmd.setup[i].window        = (*it).detectWindow;
+						cmd.setup[i].trigger_mode   = 0; //(*it).triggerMode;
 					}
 				}
 			}
