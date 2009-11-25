@@ -90,6 +90,7 @@ typedef struct TbbTriggerSetup // setup variables for 1 channel
 	uint8  stop_mode;
 	uint8  filter_select;
 	uint8  window;
+	uint8  trigger_mode;
 	uint8  operating_mode;
 };
 
@@ -404,14 +405,32 @@ event = {
 		name = "setup";
 		type = "TbbTriggerSetup[MAX_N_RCUS]";
 	};
-	param = {
-		name = "trigger_mode";
-		type = uint16;
-	};
 };
 
 event = {
 	signal = TRIG_SETUP_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = TRIG_SETUP_SAME;
+	dir = IN;
+	param = {
+		name = "rcu_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+	param = {
+		name = "setup";
+		type = "TbbTriggerSetup";
+	};
+};
+
+event = {
+	signal = TRIG_SETUP_SAME_ACK;
 	dir = OUT;
 	param = {
 		name = "status_mask";
@@ -430,6 +449,28 @@ event = {
 
 event = {
 	signal = TRIG_COEF_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = TRIG_COEF_SAME;
+	dir = IN;
+	param = {
+		name = "rcu_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+	param = {
+		name = "coefficients";
+		type = "TbbTriggerCoef";
+	};
+};
+
+event = {
+	signal = TRIG_COEF_SAME_ACK;
 	dir = OUT;
 	param = {
 		name = "status_mask";
@@ -823,7 +864,11 @@ event = {
 		type = "uint32[MAX_N_TBBOARDS]";
 	};
 	param = {
-		name = "Image";
+		name = "CurrentImage";
+		type = "uint8[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "FlashState";
 		type = "uint8[MAX_N_TBBOARDS]";
 	};
 	param = {
