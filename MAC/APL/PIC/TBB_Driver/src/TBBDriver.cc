@@ -43,7 +43,9 @@
 #include "TrigReleaseCmd.h"
 #include "TrigGenCmd.h"
 #include "TrigSetupCmd.h"
+#include "TrigSetupSameCmd.h"
 #include "TrigCoefCmd.h"
+#include "TrigCoefSameCmd.h"
 #include "TrigInfoCmd.h"
 #include "ReadCmd.h"
 #include "UdpCmd.h"
@@ -470,9 +472,6 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 			int board = TS->port2Board(&port); // get board nr
 			itsBoard[board].cancelAllTimers();
 			TS->setBoardState(board,modeSet);
-			for (int i = 0; i < TS->maxChannels(); i++) {
-				TS->setChOperatingMode(i,static_cast<uint8>(TBB_MODE_TRANSIENT));
-			}
 			TS->setSetupWaitTime(board, 0);
 			TS->setSetupCmdDone(board, true);
 		} break;
@@ -1083,6 +1082,7 @@ bool TBBDriver::sendInfo(GCFEvent& event, GCFPortInterface& port)
 		case TBB_TRIG_SETTINGS: {
 			if (TS->activeBoardsMask() != 0) {
 				TBBTrigSettingsAckEvent ack;
+				ack.status_mask = TS->activeBoardsMask();
 				int rcu;
 				for (int32 ch = 0; ch < TS->maxChannels(); ch++) {
 					rcu = TS->getChRcuNr(ch);
@@ -1092,6 +1092,7 @@ bool TBBDriver::sendInfo(GCFEvent& event, GCFPortInterface& port)
 					ack.setup[rcu].stop_mode = TS->getChTriggerStopMode(ch);
 					ack.setup[rcu].filter_select = TS->getChFilterSelect(ch);
 					ack.setup[rcu].window = TS->getChDetectWindow(ch);
+					ack.setup[rcu].trigger_mode = TS->getChTriggerMode(ch);
 					ack.setup[rcu].operating_mode = TS->getChOperatingMode(ch);
 					ack.coefficients[rcu].c0 = TS->getChFilterCoefficient(ch,0);
 					ack.coefficients[rcu].c1 = TS->getChFilterCoefficient(ch,1);
@@ -1128,7 +1129,9 @@ bool TBBDriver::addTbbCommandToQueue(GCFEvent& event, GCFPortInterface& port)
 		case TBB_TRIG_RELEASE:
 		case TBB_TRIG_GENERATE:
 		case TBB_TRIG_SETUP:
+		case TBB_TRIG_SETUP_SAME:
 		case TBB_TRIG_COEF:
+		case TBB_TRIG_COEF_SAME:
 		case TBB_TRIG_SETTINGS:
 		case TBB_TRIG_INFO:
 		case TBB_READ:
@@ -1230,10 +1233,22 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 			itsCmd = new TrigSetupCmd();
 			itsCmdHandler->setTpCmd(itsCmd);
 		} break;
+		
+		case TBB_TRIG_SETUP_SAME:  {
+			TrigSetupSameCmd *itsCmd;
+			itsCmd = new TrigSetupSameCmd();
+			itsCmdHandler->setTpCmd(itsCmd);
+		} break;
 
 		case TBB_TRIG_COEF: {
 			TrigCoefCmd *itsCmd;
 			itsCmd = new TrigCoefCmd();
+			itsCmdHandler->setTpCmd(itsCmd);
+		} break;
+
+		case TBB_TRIG_COEF_SAME: {
+			TrigCoefSameCmd *itsCmd;
+			itsCmd = new TrigCoefSameCmd();
 			itsCmdHandler->setTpCmd(itsCmd);
 		} break;
 

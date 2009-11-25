@@ -68,7 +68,8 @@ private:
 	uint32 itsTmp1[MAX_N_TBBOARDS];
 	uint32 itsTmp2[MAX_N_TBBOARDS];
 	uint32 itsTmp3[MAX_N_TBBOARDS];
-	uint32 itsImage[MAX_N_TBBOARDS];
+	uint32 itsCurrentImage[MAX_N_TBBOARDS];
+	uint32 itsFlashState[MAX_N_TBBOARDS];
 	uint32 itsWatchDogMode[MAX_N_TBBOARDS];
 	uint32 itsPgood[MAX_N_TBBOARDS];
 };

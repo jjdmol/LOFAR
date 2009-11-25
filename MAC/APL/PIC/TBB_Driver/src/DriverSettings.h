@@ -35,7 +35,7 @@ namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	namespace TBB {
 
-static const int DRIVER_VERSION = 221; // TBBDriver V2.21
+static const int DRIVER_VERSION = 222; // TBBDriver V2.22
 
 enum BoardStateT {noBoard,
 				  setImage1, image1Set,
@@ -66,6 +66,7 @@ struct ChannelInfo
 	uint8  TriggerStopMode;
 	uint8  FilterSelect;
 	uint8  DetectWindow;
+	uint8  TriggerMode;
 	uint8  OperatingMode;
 	uint16 Coefficient[4];
 };
@@ -133,9 +134,9 @@ public:
 	uint8 getChTriggerStopMode(int32 channelnr);
 	uint8 getChFilterSelect(int32 channelnr);
 	uint8 getChDetectWindow(int32 channelnr);
+	uint8 getChTriggerMode(int32 channelnr);
 	uint8 getChOperatingMode(int32 channelnr);
 	uint16 getChFilterCoefficient(int32 channelnr, int32 coef_nr);
-	uint16 getTriggerMode();
 	
 	string getIfName();
 	string getDstMac(int32 boardnr);
@@ -178,9 +179,9 @@ public:
 	void setChTriggerStopMode(int32 channelnr, uint8 mode);
 	void setChFilterSelect(int32 channelnr, uint8 filter_select);
 	void setChDetectWindow(int32 channelnr, uint8 detect_window);
+	void setChTriggerMode(int32 channelnr, uint8 trigger_mode);
 	void setChOperatingMode(int32 channelnr, uint8 operating_mode);
 	void setChFilterCoefficient(int32 channelnr, int32 coef_nr, uint16 coef);
-	void setTriggerMode(uint16 trigger_mode);
 	
 	void clearRcuSettings(int32 boardnr);
 	
@@ -236,7 +237,6 @@ private:
 	BoardInfo   *itsBoardInfo;
 	ChannelInfo *itsChannelInfo;
 	bool        itsBoardSetup;
-	uint16      itsTriggerMode;
 	string      itsIfName;
 	
 	static TbbSettings *theirTbbSettings;
@@ -293,9 +293,9 @@ inline	uint8 TbbSettings::getChTriggerStartMode(int32 channelnr) { return (itsCh
 inline	uint8 TbbSettings::getChTriggerStopMode(int32 channelnr) { return (itsChannelInfo[channelnr].TriggerStopMode); }
 inline	uint8 TbbSettings::getChFilterSelect(int32 channelnr) { return (itsChannelInfo[channelnr].FilterSelect); }
 inline	uint8 TbbSettings::getChDetectWindow(int32 channelnr) { return (itsChannelInfo[channelnr].DetectWindow); }
+inline	uint8 TbbSettings::getChTriggerMode(int32 channelnr) { return (itsChannelInfo[channelnr].TriggerMode); }
 inline	uint8 TbbSettings::getChOperatingMode(int32 channelnr) { return (itsChannelInfo[channelnr].OperatingMode); }
 inline	uint16 TbbSettings::getChFilterCoefficient(int32 channelnr, int32 coef_nr) { return (itsChannelInfo[channelnr].Coefficient[coef_nr]); }
-inline	uint16 TbbSettings::getTriggerMode() { return (itsTriggerMode); }
 inline	string TbbSettings::getIfName() { return(itsIfName); }
 inline	string TbbSettings::getDstMac(int32 boardnr) { return(itsBoardInfo[boardnr].dstMac); }
 inline	string TbbSettings::getSrcIpCep(int32 boardnr) { return(itsBoardInfo[boardnr].srcIpCep); }
@@ -321,9 +321,9 @@ inline	void TbbSettings::setChTriggerStartMode(int32 channelnr, uint8 mode){ its
 inline	void TbbSettings::setChTriggerStopMode(int32 channelnr, uint8 mode){ itsChannelInfo[channelnr].TriggerStopMode = mode; }
 inline	void TbbSettings::setChFilterSelect(int32 channelnr, uint8 select){ itsChannelInfo[channelnr].FilterSelect = select; }
 inline	void TbbSettings::setChDetectWindow(int32 channelnr, uint8 window){ itsChannelInfo[channelnr].DetectWindow = window; }
+inline	void TbbSettings::setChTriggerMode(int32 channelnr, uint8 trigger_mode){ itsChannelInfo[channelnr].TriggerMode = trigger_mode; }
 inline	void TbbSettings::setChOperatingMode(int32 channelnr, uint8 operating_mode){ itsChannelInfo[channelnr].OperatingMode = operating_mode; }
 inline	void TbbSettings::setChFilterCoefficient(int32 channelnr, int32 coef_nr, uint16 coef){ itsChannelInfo[channelnr].Coefficient[coef_nr] = coef; }
-inline	void TbbSettings::setTriggerMode(uint16 triggermode){ itsTriggerMode = triggermode; }
 //---- inline functions for board information ------------
 inline	uint32 TbbSettings::getMemorySize(int32 boardnr) { return (itsBoardInfo[boardnr].memorySize); }
 inline	void TbbSettings::setMemorySize(int32 boardnr,uint32 pages) { itsBoardInfo[boardnr].memorySize = pages; }

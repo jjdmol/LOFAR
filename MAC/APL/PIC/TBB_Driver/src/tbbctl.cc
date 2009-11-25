@@ -349,18 +349,31 @@ GCFEvent::TResult TriggerSettingsCmd::ack(GCFEvent& e)
 
 	int32 bnr = 0;
 	int32 oldbnr = -1;
+	
+	char trig_mode[4][10] = {"shot RSP","cont RSP","shot Ext","cont Ext"};
+	char oper_mode[4][10] = {"?","transient","subbands","?"};
+	
 	for (int rcu=0; rcu < getMaxSelections(); rcu++) {
 		bnr = static_cast<int32>(rcu / 16);
 		if (isSelected(rcu) ) {
 			if (bnr != oldbnr) {
-				cout << "Rcu  Board  level  start  stop   filter  window  mode   c0     c1     c2     c3" << endl;
-				cout << "---  -----  -----  -----  -----  ------  ------  -----  -----  -----  -----  -----" << endl;
+				if (ack.status_mask & (1 << bnr)) {
+					cout << "Rcu  Board  level  start  stop   filter  window  mode                 c0     c1     c2     c3" << endl;
+					cout << "---  -----  -----  -----  -----  ------  ------  -------------------  -----  -----  -----  -----" << endl;
+				}
+				else {
+					cout << formatString("board-%d not active",bnr) << endl;
+				}
 			}
-			cout << formatString("%3d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d",
-					rcu, bnr, ack.setup[rcu].level, ack.setup[rcu].start_mode, ack.setup[rcu].stop_mode,
-					ack.setup[rcu].filter_select, ack.setup[rcu].window, ack.setup[rcu].operating_mode,
-					ack.coefficients[rcu].c0, ack.coefficients[rcu].c1,
-					ack.coefficients[rcu].c2, ack.coefficients[rcu].c3) << endl;
+			if (ack.status_mask & (1 << bnr)) {
+				cout << formatString("%3d  %5d  %5d  %5d  %5d  %6d  %6d  %8s, %9s  %5d  %5d  %5d  %5d",
+						rcu, bnr, ack.setup[rcu].level, ack.setup[rcu].start_mode, ack.setup[rcu].stop_mode,
+						ack.setup[rcu].filter_select, ack.setup[rcu].window,
+						trig_mode[ack.setup[rcu].trigger_mode],
+						oper_mode[ack.setup[rcu].operating_mode],
+						ack.coefficients[rcu].c0, ack.coefficients[rcu].c1,
+						ack.coefficients[rcu].c2, ack.coefficients[rcu].c3) << endl;
+			}
 		}
 		oldbnr = bnr;
 	}
@@ -476,7 +489,7 @@ GCFEvent::TResult TrigGenerateCmd::ack(GCFEvent& e)
 
 //---- TRIGSETUP --------------------------------------------------------------
 TrigSetupCmd::TrigSetupCmd(GCFPortInterface& port) : Command(port),
-	itsLevel(0), itsStartMode(0), itsStopMode(0),itsFilter(0), itsWindow(0), itsOperatingMode(0), itsTriggerMode(0)
+	itsLevel(0), itsStartMode(0), itsStopMode(0),itsFilter(0), itsWindow(0), itsTriggerMode(0)
 {
 	cout << endl;
 	cout << "== TBB ============================ trigger system setup for selected rcu's ====" << endl;
@@ -486,17 +499,16 @@ TrigSetupCmd::TrigSetupCmd(GCFPortInterface& port) : Command(port),
 //-----------------------------------------------------------------------------
 void TrigSetupCmd::send()
 {
-	TBBTrigSetupEvent event;
+	TBBTrigSetupSameEvent event;
+	
 	if (isSelectionDone()) {
-		for (int cnr=0; cnr < getMaxSelections(); cnr++) {
-			event.setup[cnr].level = itsLevel;
-			event.setup[cnr].start_mode = itsStartMode;
-			event.setup[cnr].stop_mode = itsStopMode;
-			event.setup[cnr].filter_select = itsFilter;
-			event.setup[cnr].window = itsWindow;
-			event.setup[cnr].operating_mode = itsOperatingMode;
-			event.trigger_mode = itsTriggerMode;
-		}
+		event.rcu_mask = getRcuMask(); // if select cmd is used
+		event.setup.level = itsLevel;
+		event.setup.start_mode = itsStartMode;
+		event.setup.stop_mode = itsStopMode;
+		event.setup.filter_select = itsFilter;
+		event.setup.window = itsWindow;
+		event.setup.trigger_mode = itsTriggerMode;
 	}
 	itsPort.send(event);
 	itsPort.setTimer(DELAY);
@@ -505,8 +517,8 @@ void TrigSetupCmd::send()
 //-----------------------------------------------------------------------------
 GCFEvent::TResult TrigSetupCmd::ack(GCFEvent& e)
 {
-	if (e.signal == TBB_TRIG_SETUP_ACK) {
-		TBBTrigSetupAckEvent ack(e);
+	if (e.signal == TBB_TRIG_SETUP_SAME_ACK) {
+		TBBTrigSetupSameAckEvent ack(e);
 		cout << "TBB  Info" << endl;
 		cout << "---  -------------------------------------------------------" << endl;
 		int32 bnr = 0;
@@ -516,7 +528,7 @@ GCFEvent::TResult TrigSetupCmd::ack(GCFEvent& e)
 
 			if (bnr != oldbnr) {
 				if (ack.status_mask[bnr] == TBB_SUCCESS) {
-					cout << formatString(" %2d  setup trigger system for all rcu's",bnr ) << endl;
+					cout << formatString(" %2d  setup trigger system for all selected rcu's",bnr ) << endl;
 				} else {
 					cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
 				}
@@ -540,14 +552,13 @@ TrigCoefficientCmd::TrigCoefficientCmd(GCFPortInterface& port) : Command(port),
 //-----------------------------------------------------------------------------
 void TrigCoefficientCmd::send()
 {
-	TBBTrigCoefEvent event;
+	TBBTrigCoefSameEvent event;
 	if (isSelectionDone()) {
-		for (int cnr=0; cnr < getMaxSelections(); cnr++) {
-			event.coefficients[cnr].c0 = itsC0;
-			event.coefficients[cnr].c1 = itsC1;
-			event.coefficients[cnr].c2 = itsC2;
-			event.coefficients[cnr].c3 = itsC3;
-		}
+		event.rcu_mask = getRcuMask(); // if select cmd is used
+		event.coefficients.c0 = itsC0;
+		event.coefficients.c1 = itsC1;
+		event.coefficients.c2 = itsC2;
+		event.coefficients.c3 = itsC3;
 	}
 	itsPort.send(event);
 	itsPort.setTimer(DELAY);
@@ -556,7 +567,7 @@ void TrigCoefficientCmd::send()
 //-----------------------------------------------------------------------------
 GCFEvent::TResult TrigCoefficientCmd::ack(GCFEvent& e)
 {
-	TBBTrigCoefAckEvent ack(e);
+	TBBTrigCoefSameAckEvent ack(e);
 	cout << "TBB  Info" << endl;
 	cout << "---  -------------------------------------------------------" << endl;
 	int32 bnr = 0;
@@ -566,7 +577,7 @@ GCFEvent::TResult TrigCoefficientCmd::ack(GCFEvent& e)
 
 		if (bnr != oldbnr) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
-				cout << formatString(" %2d  setup trigger system for all rcu's",bnr ) << endl;
+				cout << formatString(" %2d  setup trigger system for all selected rcu's",bnr ) << endl;
 			} else {
 				cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
 			}
@@ -664,7 +675,7 @@ void ListenCmd::send()
 			cout << "-release all trigger systems, and waiting  (STOP WAITING WITH CTRL-C)" << endl;
 			setCmdSendNext(false);
 			TBBTrigReleaseEvent release;
-			release.rcu_stop_mask.reset();
+			release.rcu_stop_mask = getRcuMask();
 			release.rcu_start_mask = getRcuMask();
 			itsPort.send(release);
 			cout << endl;
@@ -1103,16 +1114,16 @@ GCFEvent::TResult StatusCmd::ack(GCFEvent& e)
 {
 	TBBStatusAckEvent ack(e);
 
-	cout << "TBB  Image  WD mode  V 1.2  V 2.5  V 3.3  PCB   TP    MP0      MP1      MP2      MP3  " << endl;
-	cout << "---  -----  -------  -----  -----  -----  ----  ----  -------  -------  -------  -------" << endl;
+	cout << "TBB  Image  WDmode  V 1.2  V 2.5  V 3.3  PCB   TP    MP0      MP1      MP2      MP3      Flash" << endl;
+	cout << "---  -----  ------  -----  -----  -----  ----  ----  -------  -------  -------  -------  -----" << endl;
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
 		if (isSelected(bnr) ) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
 
-				cout << formatString(" %2d    %2d    %s   %4.2fV  %4.2fV  %4.2fV  %2u'C  %2u'C  %2u'C %s  %2u'C %s  %2u'C %s  %2u'C %s",
+				cout << formatString("%3d  %5d  %6s  %4.2fV  %4.2fV  %4.2fV  %2u'C  %2u'C  %2u'C %s  %2u'C %s  %2u'C %s  %2u'C %s   0x%2x",
 						bnr,
-						ack.Image[bnr],
-						ack.WatchDogMode[bnr]?" ETH ":"clock",
+						ack.CurrentImage[bnr],
+						ack.WatchDogMode[bnr]?"ETH":"clock",
 						((double)ack.V12[bnr] * (2.5 / 192.)), // MAX6652 pin-2:  2.5 / 192  = 0.0130 / count
 						((double)ack.V25[bnr] * (3.3 / 192.)), // MAX6652 pin-3:  3.3 / 192  = 0.0172 / count
 						((double)ack.V33[bnr] * (5.0 / 192.)), // MAX6652 pin-1:  5.0 / 192  = 0.0625 / count
@@ -1121,7 +1132,8 @@ GCFEvent::TResult StatusCmd::ack(GCFEvent& e)
 						ack.Tmp0[bnr], (ack.Pgood[bnr] & 0x1)?"Pg":"Pb",
 						ack.Tmp1[bnr], (ack.Pgood[bnr] & 0x2)?"Pg":"Pb",
 						ack.Tmp2[bnr], (ack.Pgood[bnr] & 0x4)?"Pg":"Pb",
-						ack.Tmp3[bnr], (ack.Pgood[bnr] & 0x8)?"Pg":"Pb" ) << endl;
+						ack.Tmp3[bnr], (ack.Pgood[bnr] & 0x8)?"Pg":"Pb",
+						ack.FlashState[bnr]) << endl;
 			} else {
 				cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
 			}
@@ -2531,9 +2543,9 @@ void TBBCtl::commandHelp(int level)
 	cout << " tbbctl --stop [--select=<set>]                                     # stop recording on selected rcu's" << endl;
 	cout << endl;
 	cout << "______| CEP |_____________________________________________________________________________________________________________" << endl;
-		cout << " tbbctl --mode=[transient | subbands]                               # set mode to configure UDP/IP header for CEP tranport" << endl;
-	cout << "        # before using: --read, readall, --arp or --arpmode," << endl;
-	cout << "        # first use --mode to setup UDP/IP header" << endl;
+	cout << " tbbctl --mode=[transient | subbands]                               # set mode to configure UDP/IP header for CEP tranport" << endl;
+	cout << "      # before using: --read, readall, --arp or --arpmode," << endl;
+	cout << "      # first use --mode to setup UDP/IP header" << endl;
 	cout << " tbbctl --read=rcunr,secondstime,sampletime,prepages,postpages      # transfer recorded data from rcunr to CEP, " << endl;
 	cout << " tbbctl --readall=pages [--select=<set>]                            # transfer number of pages from all selected rcunr to CEP, " << endl;
 	cout << " tbbctl --stopcep [--select=<set>]                                  # stop sending data to CEP" << endl;
@@ -2748,7 +2760,9 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 		case TBB_TRIG_SETTINGS_ACK:
 		case TBB_TRIG_RELEASE_ACK:
 		case TBB_TRIG_SETUP_ACK:
+		case TBB_TRIG_SETUP_SAME_ACK:
 		case TBB_TRIG_COEF_ACK:
+		case TBB_TRIG_COEF_SAME_ACK:
 		case TBB_TRIG_GENERATE_ACK:
 		case TBB_TRIG_INFO_ACK:
 		case TBB_TRIGGER:
@@ -2976,7 +2990,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int numitems = sscanf(optarg, "%u,%u,%u,%u,%u,%u",&level, &start, &stop, &filter, &window, &triggermode);
 					// check if valid arguments
 					if ( numitems < 6 || numitems == EOF
-							|| level < 1 || level > 255
+							|| level < 1 || level > 2047
 							|| start < 1 || start > 15
 							|| stop < 1 || stop > 15
 							|| window > 8
@@ -2984,31 +2998,22 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					{
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
 						cout << "       '--trigsetup=level, start, stop, filter, window, mode' (use decimal values)" << endl;
-						cout << "       level=1..255,  start=1..15,  stop=1..15,  filter=0(in) or 1(bypassed)" << endl;
+						cout << "       level=1..2047,  start=1..15,  stop=1..15,  filter=0(in) or 1(bypassed)" << endl;
 						cout << "       window=0..8, mode=0..3 (b0=0 single shot),(b0=1 continues)" << endl;
 						cout << "                              (b1=0 RSP input),(b1=1 external input)" << endl;
 						exit(EXIT_FAILURE);
 					}
 	
-					//================================================
-					// set triggermode to single shot, continues mode
-					// will give more than 6000 triggers per second per
-					// board, if level is chosen to low, the driver can't
-					// handle that amount of trigger per board.
-					if ((triggermode == 1) && (level < 3)){
-						cout << "mode=1 with level < 3 can generate to many triggers, auto corrected to level = 3" << endl;
-						level = 3;
+					if ((triggermode & 1) && (level < 4)){
+						cout << "mode=continues with level < 4 can generate to many triggers, auto corrected to level = 4" << endl;
+						level = 4;
 					}
-					
-					//================================================
-	
 	
 					trigsetupcmd->setLevel(static_cast<uint16>(level));
 					trigsetupcmd->setStartMode(static_cast<uint8>(start));
 					trigsetupcmd->setStopMode(static_cast<uint8>(stop));
 					trigsetupcmd->setFilter(static_cast<uint8>(filter));
 					trigsetupcmd->setWindow(static_cast<uint8>(window));
-					trigsetupcmd->setOperatingMode(static_cast<uint16>(triggermode));
 					trigsetupcmd->setTriggerMode(static_cast<uint16>(triggermode));
 				}
 	

@@ -204,11 +204,12 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		// initialize filter settings
 		itsChannelInfo[ch].TriggerReleased = false;
 		itsChannelInfo[ch].Triggered = false;
-		itsChannelInfo[ch].TriggerLevel = 0;
+		itsChannelInfo[ch].TriggerLevel = 2047;
 		itsChannelInfo[ch].TriggerStartMode = 0;
 		itsChannelInfo[ch].TriggerStopMode = 0;
 		itsChannelInfo[ch].FilterSelect = 0;
 		itsChannelInfo[ch].DetectWindow = 0;
+		itsChannelInfo[ch].TriggerMode = 0;
 		itsChannelInfo[ch].OperatingMode = 0;
 		for (int i = 0; i < 4; i++) {
 			itsChannelInfo[ch].Coefficient[i] = 0;
@@ -216,7 +217,6 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 	}
 	
 	itsBoardSetup  = false;
-	itsTriggerMode = 0;	
 		
 	if (itsBoardInfo) delete itsBoardInfo;
 	itsBoardInfo = new BoardInfo[itsMaxBoards];
@@ -322,7 +322,20 @@ void TbbSettings::clearRcuSettings(int32 boardnr)
 		itsChannelInfo[(boardnr * 16) + cn].Status = 0;
 		itsChannelInfo[(boardnr * 16) + cn].State = 'F';
 		itsChannelInfo[(boardnr * 16) + cn].StartAddr = 0;
-		itsChannelInfo[(boardnr * 16) + cn].PageSize = 0;	
+		itsChannelInfo[(boardnr * 16) + cn].PageSize = 0;
+		
+		itsChannelInfo[(boardnr * 16) + cn].TriggerReleased = false;
+		itsChannelInfo[(boardnr * 16) + cn].Triggered = false;
+		itsChannelInfo[(boardnr * 16) + cn].TriggerLevel = 2047;
+		itsChannelInfo[(boardnr * 16) + cn].TriggerStartMode = 0;
+		itsChannelInfo[(boardnr * 16) + cn].TriggerStopMode = 0;
+		itsChannelInfo[(boardnr * 16) + cn].FilterSelect = 0;
+		itsChannelInfo[(boardnr * 16) + cn].DetectWindow = 0;
+		itsChannelInfo[(boardnr * 16) + cn].TriggerMode = 0;
+		itsChannelInfo[(boardnr * 16) + cn].OperatingMode = 0;
+		for (int i = 0; i < 4; i++) {
+			itsChannelInfo[(boardnr * 16) + cn].Coefficient[i] = 0;
+		}
 	}
 }
 

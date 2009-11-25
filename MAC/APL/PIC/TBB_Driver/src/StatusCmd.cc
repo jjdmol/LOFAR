@@ -46,7 +46,8 @@ StatusCmd::StatusCmd()
 		itsTmp1[boardnr] = 0;
 		itsTmp2[boardnr] = 0;
 		itsTmp3[boardnr] = 0;
-		itsImage[boardnr] = 0;
+		itsCurrentImage[boardnr] = 0;
+		itsFlashState[boardnr] = 0;
 		itsWatchDogMode[boardnr] = 0;
 		itsPgood[boardnr] = 0;
 	}
@@ -108,7 +109,8 @@ void StatusCmd::saveTpAckEvent(GCFEvent& event)
 			itsTmp1[getBoardNr()] = tp_ack.Tmp1;
 			itsTmp2[getBoardNr()] = tp_ack.Tmp2;
 			itsTmp3[getBoardNr()] = tp_ack.Tmp3;
-			itsImage[getBoardNr()] = TS->getImageNr(getBoardNr());
+			itsCurrentImage[getBoardNr()] = TS->getImageNr(getBoardNr());
+			itsFlashState[getBoardNr()] = ((tp_ack.info[5] >> 8) & 0xff);
 			itsWatchDogMode[getBoardNr()] = ((tp_ack.info[5] >> 16) & 0xf);
 			itsPgood[getBoardNr()] = tp_ack.info[0];
 				
@@ -136,7 +138,8 @@ void StatusCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 		tbb_ack.Tmp1[i] = itsTmp1[i];
 		tbb_ack.Tmp2[i] = itsTmp2[i];
 		tbb_ack.Tmp3[i] = itsTmp3[i];
-		tbb_ack.Image[i] = itsImage[i];
+		tbb_ack.CurrentImage[i] = itsCurrentImage[i];
+		tbb_ack.FlashState[i] = itsFlashState[i];
 		tbb_ack.WatchDogMode[i] = itsWatchDogMode[i];
 		tbb_ack.Pgood[i] = itsPgood[i];
 	}

@@ -63,9 +63,7 @@ void UdpCmd::saveTbbEvent(GCFEvent& event)
 	setBoards(0xFFF);
 	
 	itsMode = tbb_event.rec_mode;
-	for (int i = 0; i < TS->maxChannels(); i++) {
-		TS->setChOperatingMode(i,static_cast<uint8>(itsMode));
-	}
+	
 	nextBoardNr();
 }
 
@@ -104,7 +102,12 @@ void UdpCmd::saveTpAckEvent(GCFEvent& event)
 		if (tp_ack.status != 0) {
 			setStatus(getBoardNr(), (tp_ack.status << 24));
 		}
-		
+		else {
+			int start_channel = getBoardNr() * TS->nrChannelsOnBoard();
+			for (int i = 0; i < TS->nrChannelsOnBoard();++i) {
+				TS->setChOperatingMode((start_channel + i), itsMode);
+			}
+		}
 		LOG_DEBUG_STR(formatString("Received UdpAck from boardnr[%d]", getBoardNr()));
 	}
 	nextBoardNr();
