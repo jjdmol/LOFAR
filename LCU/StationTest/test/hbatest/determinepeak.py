@@ -101,7 +101,7 @@ def main() :
             sst_data = read_frame(f)
             [maxval,subband_nr] = max((x,i) for i,x in enumerate(sst_data[1:]))
             max_rfi[rcu_nr]=10*numpy.log10(maxval)
-            max_subband[rcu_nr]=subband_nr   
+            max_subband[rcu_nr]=subband_nr+1   
         f.close
         for rcuind in range(num_rcu) :
                 print 'RCU ' + str(rcuind) + ' has max. RFI (' + str(round(max_rfi[rcuind],1)) + ' dB) in subband ' + str(max_subband[rcuind])
