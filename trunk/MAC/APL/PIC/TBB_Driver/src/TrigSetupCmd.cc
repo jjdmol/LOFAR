@@ -70,9 +70,8 @@ void TrigSetupCmd::saveTbbEvent(GCFEvent& event)
 		TS->setChTriggerStopMode(channel, (tbb_event.setup[rcunr].stop_mode));
 		TS->setChFilterSelect(channel, tbb_event.setup[rcunr].filter_select);
 		TS->setChDetectWindow(channel, tbb_event.setup[rcunr].window);
-		TS->setChOperatingMode(channel, tbb_event.setup[rcunr].operating_mode);
+		TS->setChTriggerMode(channel, tbb_event.setup[rcunr].trigger_mode);
 	}
-	TS->setTriggerMode(tbb_event.trigger_mode);
 	
 	std::bitset<MAX_N_RCUS> channels;
 	channels.set();
@@ -96,7 +95,7 @@ void TrigSetupCmd::sendTpEvent()
 														  (TS->getChTriggerStopMode(getChannelNr() + i) << 4)));
 		tp_event.channel[i].filter_select = static_cast<uint32>(TS->getChFilterSelect(getChannelNr() + i));
 		tp_event.channel[i].window = static_cast<uint32>(TS->getChDetectWindow(getChannelNr() + i));
-		tp_event.channel[i].dummy = static_cast<uint32>(TS->getChOperatingMode(getChannelNr() + i));
+		tp_event.channel[i].dummy = static_cast<uint32>(TS->getChTriggerMode(getChannelNr() + i));
 	}
 	
 	TS->boardPort(getBoardNr()).send(tp_event);

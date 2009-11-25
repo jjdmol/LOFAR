@@ -44,7 +44,7 @@ namespace LOFAR {
 
 GCFTimerPort* itsCmdTimer;
 
-static const int TBBCTL_VERSION = 220; // tbbctl V2.20
+static const int TBBCTL_VERSION = 222; // tbbctl V2.22
 
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 
@@ -455,16 +455,14 @@ public:
 	void setStopMode(uint8 mode) { itsStopMode = mode; }
 	void setFilter(uint8 filter) { itsFilter = filter; }
 	void setWindow(uint8 window) { itsWindow = window; }
-	void setOperatingMode(uint16 mode) { itsOperatingMode = mode; }
-	void setTriggerMode(uint16 mode) { itsTriggerMode = mode; }
+	void setTriggerMode(uint8 mode) { itsTriggerMode = mode; }
 private:
 	uint16 itsLevel;
 	uint8 itsStartMode;
 	uint8 itsStopMode;
 	uint8 itsFilter;
 	uint8 itsWindow;
-	uint8 itsOperatingMode;
-	uint16 itsTriggerMode;
+	uint8 itsTriggerMode;
 };
 
 //-----------------------------------------------------------------------------

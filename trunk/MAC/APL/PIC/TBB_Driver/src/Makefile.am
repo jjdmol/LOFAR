@@ -41,7 +41,9 @@ libtbbdriver_la_SOURCES = Package__Version.cc \
 	TrigReleaseCmd.cc \
 	TrigGenCmd.cc\
 	TrigSetupCmd.cc\
+	TrigSetupSameCmd.cc\
 	TrigCoefCmd.cc\
+	TrigCoefSameCmd.cc\
 	TrigInfoCmd.cc\
 	ReadCmd.cc \
 	UdpCmd.cc \
@@ -89,7 +91,9 @@ noinst_HEADERS = \
 	TrigReleaseCmd.h \
 	TrigGenCmd.h\
 	TrigSetupCmd.h\
+	TrigSetupSameCmd.h\
 	TrigCoefCmd.h\
+	TrigCoefSameCmd.h\
 	TrigInfoCmd.h\
 	ReadCmd.h \
 	UdpCmd.h \
