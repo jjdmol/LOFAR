@@ -121,7 +121,7 @@ GCFEvent::TResult TBBMonitor::initial_state(GCFEvent& event, GCFPortInterface& p
 		}
 		break;
 
-	case DP_CREATED: {
+	case DP_CREATED: {		
 		// NOTE: this function may be called DURING the construction of the PropertySet.
 		// Always exit this event in a way that GCF can end the construction.
 		DPCreatedEvent		dpEvent(event);
@@ -843,8 +843,9 @@ GCFEvent::TResult TBBMonitor::askRCUSettings(GCFEvent& event, GCFPortInterface& 
 			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_STARTLEVEL, GCFPVInteger(ack.setup[rcu].start_mode), 0.0, false),
 			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_BASELEVEL,  GCFPVInteger(ack.setup[rcu].level), 0.0, false),
 			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_STOPLEVEL,  GCFPVInteger(ack.setup[rcu].stop_mode), 0.0, false),
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER, 	  GCFPVInteger(ack.setup[rcu].filter_select), 0.0, false),
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_WINDOW, 	  GCFPVInteger(ack.setup[rcu].window), 0.0, false),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER,     GCFPVInteger(ack.setup[rcu].filter_select), 0.0, false),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_WINDOW,     GCFPVInteger(ack.setup[rcu].window), 0.0, false),
+			//itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_MODE,       GCFPVInteger(ack.setup[rcu].trigger_mode), 0.0, false),
 			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_OPERATING_MODE, 
 													GCFPVInteger(ack.setup[rcu].operating_mode), 0.0, false);
 			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF0, 	  GCFPVInteger(ack.coefficients[rcu].c0), 0.0, false);
