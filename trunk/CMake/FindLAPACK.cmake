@@ -24,13 +24,13 @@
 # not an error if a Fortran compiler is missing.
 
 # Enable the Fortran compiler, if that has not been done yet.
-if(NOT CMAKE_Fortran_COMPILER_WORKS)
+if(NOT DEFINED CMAKE_Fortran_COMPILER)
   if(LAPACK_FIND_REQUIRED)
     enable_language(Fortran)
   else(LAPACK_FIND_REQUIRED)
     enable_language(Fortran OPTIONAL)
   endif(LAPACK_FIND_REQUIRED)
-endif(NOT CMAKE_Fortran_COMPILER_WORKS)
+endif(NOT DEFINED CMAKE_Fortran_COMPILER)
 
 # If we have a working Fortran compiler, call the "real" FindLAPACK module;
 # otherwise display a diagnostic message.
@@ -38,8 +38,8 @@ if(CMAKE_Fortran_COMPILER_WORKS)
   include(${CMAKE_ROOT}/Modules/FindLAPACK.cmake)
 else(CMAKE_Fortran_COMPILER_WORKS)
   if(LAPACK_FIND_REQUIRED)
-    message(SEND_ERROR "FindLAPACK.cmake requires a working Fortran compiler!")
+    message(SEND_ERROR "FindLAPACK requires a working Fortran compiler!")
   else(LAPACK_FIND_REQUIRED)
-    message(STATUS "FindLAPACK.cmake requires a working Fortran compiler!")
+    message(STATUS "FindLAPACK requires a working Fortran compiler!")
   endif(LAPACK_FIND_REQUIRED)
 endif(CMAKE_Fortran_COMPILER_WORKS)
