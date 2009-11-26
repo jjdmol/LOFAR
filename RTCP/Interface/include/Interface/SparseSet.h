@@ -25,6 +25,7 @@
 #define LOFAR_INTERFACE_BITSET_H
 
 #include <sys/types.h>
+#include <stdint.h>
 
 #include <algorithm>
 #include <cassert>

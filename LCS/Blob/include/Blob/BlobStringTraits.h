@@ -42,6 +42,7 @@
 #include <Common/LofarTypedefs.h>
 #include <string>
 #include <cstring>
+#include <cstdio>
 
 namespace std 
 {
