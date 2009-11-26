@@ -24,13 +24,13 @@
 # not an error if a Fortran compiler is missing.
 
 # Enable the Fortran compiler, if that has not been done yet.
-if(NOT CMAKE_Fortran_COMPILER_WORKS)
+if(NOT DEFINED CMAKE_Fortran_COMPILER)
   if(BLAS_FIND_REQUIRED)
     enable_language(Fortran)
   else(BLAS_FIND_REQUIRED)
     enable_language(Fortran OPTIONAL)
   endif(BLAS_FIND_REQUIRED)
-endif(NOT CMAKE_Fortran_COMPILER_WORKS)
+endif(NOT DEFINED CMAKE_Fortran_COMPILER)
 
 # If we have a working Fortran compiler, call the "real" FindBLAS module;
 # otherwise display a diagnostic message.
@@ -38,8 +38,8 @@ if(CMAKE_Fortran_COMPILER_WORKS)
   include(${CMAKE_ROOT}/Modules/FindBLAS.cmake)
 else(CMAKE_Fortran_COMPILER_WORKS)
   if(BLAS_FIND_REQUIRED)
-    message(SEND_ERROR "FindBLAS.cmake requires a working Fortran compiler!")
+    message(SEND_ERROR "FindBLAS requires a working Fortran compiler!")
   else(BLAS_FIND_REQUIRED)
-    message(STATUS "FindBLAS.cmake requires a working Fortran compiler!")
+    message(STATUS "FindBLAS requires a working Fortran compiler!")
   endif(BLAS_FIND_REQUIRED)
 endif(CMAKE_Fortran_COMPILER_WORKS)
