@@ -27,8 +27,8 @@ include(FindPackageHandleStandardArgs)
 # function lofar_find_package(package)
 #
 # Find a package like find_package() does.
-# It uses the LOFAR search path (defined in the variants file), preprended
-# with <PKG>_PREFIX_PATH (if defined) as CMAKE_PREFIX_PATH.
+# Use the LOFAR search path to locate the package, unless the package's root
+# directory <PKG>_ROOT_DIR is defined.
 #
 # Furthermore:
 # - Add preprocessor definitions that are defined in <PKG>_DEFINITIONS.
@@ -46,9 +46,14 @@ function(lofar_find_package _package)
 
   if(NOT ${_PKG}_FOUND)
 
-    # Set CMAKE_PREFIX_PATH; used by the find_xxx() commands for searching.
-    lofar_search_path(_prefix_path ${_pkg})
-    set(CMAKE_PREFIX_PATH ${${_PKG}_PREFIX_PATH} ${_prefix_path})
+    # Set CMAKE_PREFIX_PATH, used by the find_xxx() commands, to the package's
+    # root directory ${_PKG}_ROOT_DIR, if defined; otherwise set it to the
+    # LOFAR search path.
+    if(${_PKG}_ROOT_DIR)
+      set(CMAKE_PREFIX_PATH ${${_PKG}_ROOT_DIR})
+    else(${_PKG}_ROOT_DIR)
+      lofar_search_path(CMAKE_PREFIX_PATH ${_pkg})
+    endif(${_PKG}_ROOT_DIR)
 
     # Search the package using the Find${_package}.cmake module, unless the
     # package have been disabled explicitly.

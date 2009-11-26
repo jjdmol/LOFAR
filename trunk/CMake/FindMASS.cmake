@@ -20,8 +20,10 @@
 
 # Try to find MASS, the IBM BG/P Mathematical Acceleration Subsystem
 #
-# This macro will define:
-#  
+# Variables used by this module:
+#  MASS_ROOT_DIR     - MASS root directory
+#
+# Variables defined by this module:
 #  MASS_FOUND        - system has MASS
 #  MASS_INCLUDE_DIR  - the MASS include directory (cached)
 #  MASS_INCLUDE_DIRS - the MASS include directories
@@ -31,14 +33,17 @@
 #  MASS_LIBRARIES    - all MASS libraries
 #
 # CAUTION: It is not guaranteed that the version of MASS found by this
-#  macro can be used on the BG/P, because we need to do cross-compile.
+#  macro can be used on the BG/P, because we need to do cross-compilation.
 #
 
 if(NOT MASS_FOUND)
 
-  find_path(MASS_INCLUDE_DIR massv.h)
-  find_library(MASS_LIBRARY mass)
-  find_library(MASSV_LIBRARY massv)
+  find_path(MASS_INCLUDE_DIR massv.h
+    PATHS ${MASS_ROOT_DIR} PATH_SUFFIXES include)
+  find_library(MASS_LIBRARY mass
+    PATHS ${MASS_ROOT_DIR} PATH_SUFFIXES lib)
+  find_library(MASSV_LIBRARY massv
+    PATHS ${MASS_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(MASS_INCLUDE_DIR MASS_LIBRARY MASSV_LIBRARY)
 
   include(FindPackageHandleStandardArgs)

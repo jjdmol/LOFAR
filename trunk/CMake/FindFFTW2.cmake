@@ -18,24 +18,26 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# Try to find FFTW.
+# Try to find FFTW2.
 #
 # Usage: find_package(FFTW [COMPONENTS [real] [double|single] [mpi|threads]])
 #
-# This will define:
-#  
-#  FFTW2_FOUND           - FFTW is present for the requested components.
-#  FFTW2_INCLUDE_DIR     - FFTW include directory for the requested components
-#                         (cached)
-#  FFTW2_INCLUDE_DIRS    - FFTW include directory 
-#                         (identical to FFTW2_INCLUDE_DIR)
-#  FFTW2_<YYY>_LIBRARY   - FFTW library for the requested component <YYY>
-#                         (cached)
-#  FFTW2_LIBRARIES       - FFTW libraries needed to when linking
+# Variables used by this module:
+#  FFTW2_ROOT_DIR        - FFTW2 root directory
 #
-#  FFTW2_PRECISION       - FFTW precision specified (double|single)
+# Variables defined by this module:
+#  FFTW2_FOUND           - FFTW2 is present for the requested components.
+#  FFTW2_INCLUDE_DIR     - FFTW2 include directory for the requested components
+#                         (cached)
+#  FFTW2_INCLUDE_DIRS    - FFTW2 include directory 
+#                         (identical to FFTW2_INCLUDE_DIR)
+#  FFTW2_<YYY>_LIBRARY   - FFTW2 library for the requested component <YYY>
+#                         (cached)
+#  FFTW2_LIBRARIES       - FFTW2 libraries needed to when linking
+#
+#  FFTW2_PRECISION       - FFTW2 precision specified (double|single)
 #                         (cached internal)
-#  FFTW2_PARALLELIZATION - FFTW parallelization specified(off|mpi|threads)
+#  FFTW2_PARALLELIZATION - FFTW2 parallelization specified(off|mpi|threads)
 #                         (cached internal)
 
 set(_usage_msg 
@@ -143,14 +145,16 @@ set(_check_list)
 set(FFTW2_LIBRARIES)
 foreach(_lib ${_libraries})
   string(TOUPPER "${_lib}2" _LIB)
-  find_library(${_LIB}_LIBRARY NAMES ${_lib} ${_prec}${_lib})
+  find_library(${_LIB}_LIBRARY NAMES ${_lib} ${_prec}${_lib}
+    PATHS ${FFTW2_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(${_LIB}_LIBRARY)
   list(APPEND FFTW2_LIBRARIES ${${_LIB}_LIBRARY})
   list(APPEND _check_list ${_LIB}_LIBRARY)
 endforeach(_lib ${_libraries})
 
 # Search for header file, with and without prefix.
-find_path(FFTW2_INCLUDE_DIR NAMES ${_prec}${_headerfile} ${_headerfile})
+find_path(FFTW2_INCLUDE_DIR NAMES ${_prec}${_headerfile} ${_headerfile}
+  PATHS ${FFTW2_ROOT_DIR} PATH_SUFFIXES include)
 mark_as_advanced(FFTW2_INCLUDE_DIR)
 list(APPEND _check_list FFTW2_INCLUDE_DIR)
 

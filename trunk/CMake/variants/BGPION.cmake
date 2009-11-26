@@ -41,6 +41,6 @@ set(BGPION_COMPILE_DEFINITIONS
   -I/bgsys/drivers/ppcfloor/comm/include
   -I/bgsys/drivers/ppcfloor/arch/include)
 
-set(MPI_PREFIX_PATH /bgsys/LOFAR/openmpi-ion)
+set(MPI_ROOT_DIR /bgsys/LOFAR/openmpi-ion)
 
 message(STATUS "LEAVE: BGPION.cmake")

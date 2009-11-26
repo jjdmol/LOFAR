@@ -1,1 +1,1 @@
-set(PVSS_PREFIX_PATH /opt/pvss/pvss2_v3.7)
+set(PVSS_ROOT_DIR /opt/pvss/pvss2_v3.7)

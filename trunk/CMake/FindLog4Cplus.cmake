@@ -20,8 +20,10 @@
 
 # Try to find Log4Cplus.
 #
-# This will define:
-#  
+# Variables used by this module:
+#  LOG4CPLUS_ROOT_DIR     - Log4Cplus root directory
+#
+# Variables defined by this module:
 #  LOG4CPLUS_FOUND        - system has Log4Cplus
 #  LOG4CPLUS_INCLUDE_DIR  - the Log4Cplus include directory (cached)
 #  LOG4CPLUS_INCLUDE_DIRS - the Log4Cplus include directories
@@ -32,13 +34,14 @@
 
 if(NOT LOG4CPLUS_FOUND)
 
-  find_path(LOG4CPLUS_INCLUDE_DIR log4cplus/logger.h)
-  find_library(LOG4CPLUS_LIBRARY log4cplus)
+  find_path(LOG4CPLUS_INCLUDE_DIR log4cplus/logger.h
+    PATHS ${LOG4CPLUS_ROOT_DIR} PATH_SUFFIXES include)
+  find_library(LOG4CPLUS_LIBRARY log4cplus
+    PATHS ${LOG4CPLUS_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(LOG4CPLUS_INCLUDE_DIR LOG4CPLUS_LIBRARY)
 
   include(FindPackageHandleStandardArgs)
-  set(custom_msg "Could NOT find Log4cplus in ${CMAKE_PREFIX_PATH}")
-  find_package_handle_standard_args(Log4Cplus "${custom_msg}"
+  find_package_handle_standard_args(Log4Cplus DEFAULT_MSG
     LOG4CPLUS_LIBRARY LOG4CPLUS_INCLUDE_DIR)
 
   set(LOG4CPLUS_INCLUDE_DIRS ${LOG4CPLUS_INCLUDE_DIR})
