@@ -29,10 +29,11 @@
   * For now we have: 
 
   * AntennaArrays.conf.
-  * This will be used to fill: Antenna deltaX deltaY and deltaH fields for LBA and HBA
-  * antenna configurations. 
+  * This will be used to fill: Antenna deltaX deltaY and deltaH fields for 
+  * LBA and HBA antenna configurations. 
   *
-  * Allowed for now are :  LBA-HBA When LBA is missing LBAX will be used (if available)
+  * Allowed for now are :  LBA-HBA When LBA is missing LBA_X will be used 
+  * (if available)
   *
   * The files contain fieldcenter coordinates in OL-NB-Height
   * and Antenna positions in OL-NB-Height Offsets from the fieldCenter.
@@ -105,12 +106,12 @@ main()
       // Select on allowed configurations
       if (strCurConfig == "LBA" || 
           strCurConfig == "HBA" ||
-          (strCurConfig == "LBAX" && !foundLBA)
+          (strCurConfig == "LBA_X" && !foundLBA)
           ) {
         DebugN("--> will be read");
         bool splitArray=false;   //LBAXarray is 48 lines, 1st col(x3) contains 0-47  2ndco(x3) contain 48-96 
         if (strCurConfig == "LBA") foundLBA=true;
-        if (strCurConfig == "LBAX") {
+        if (strCurConfig == "LBA_X") {
           strCurConfig="LBA";
           splitArray=true;
         }
