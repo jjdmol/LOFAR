@@ -20,19 +20,23 @@
 
 # Try to find readline, a library for easy editing of command lines.
 #
-# This will define:
-#  
+# Variables used by this module:
+#  READLINE_ROOT_DIR     - Readline root directory
+#
+# Variables defined by this module:
 #  READLINE_FOUND        - system has Readline
 #  READLINE_INCLUDE_DIR  - the Readline include directory (cached)
 #  READLINE_INCLUDE_DIRS - the Readline include directories
-#                           (identical to READLINE_INCLUDE_DIR)
+#                          (identical to READLINE_INCLUDE_DIR)
 #  READLINE_LIBRARY      - the Readline library (cached)
 #  READLINE_LIBRARIES    - the Readline library plus the libraries it depends on
 
 if(NOT READLINE_FOUND)
 
-  find_path(READLINE_INCLUDE_DIR readline/readline.h)
-  find_library(READLINE_LIBRARY readline)
+  find_path(READLINE_INCLUDE_DIR readline/readline.h
+    PATHS ${READLINE_ROOT_DIR} PATH_SUFFIXES include)
+  find_library(READLINE_LIBRARY readline
+    PATHS ${READLINE_ROOT_DIR} PATH_SUFFIXES lib)
   find_library(NCURSES_LIBRARY ncurses)   # readline depends on libncurses
   mark_as_advanced(READLINE_INCLUDE_DIR READLINE_LIBRARY NCURSES_LIBRARY)
 

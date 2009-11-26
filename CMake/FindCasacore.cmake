@@ -25,6 +25,9 @@
 #   components   ->  coordinates
 #   images       ->  components, mirlib, lattices
 #
+# Variables used by this module:
+#  CASACORE_ROOT_DIR         - Casacore root directory. 
+#
 # Variables defined by this module:
 #  CASACORE_FOUND            - System has Casacore, which means that the
 #                              include dir was found, as well as all 
@@ -104,7 +107,8 @@ endmacro(casacore_resolve_dependencies _result)
 #
 macro(casacore_find_library _name)
   string(TOUPPER ${_name} _NAME)
-  find_library(${_NAME}_LIBRARY ${_name})
+  find_library(${_NAME}_LIBRARY ${_name}
+    PATHS ${CASACORE_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(${_NAME}_LIBRARY)
   if(${_NAME}_LIBRARY)
     list(APPEND CASACORE_LIBRARIES ${${_NAME}_LIBRARY})
@@ -121,15 +125,17 @@ endmacro(casacore_find_library _name)
 # If the package is found, add the contents of ${_name}_INCLUDE_DIRS to
 # CASACORE_INCLUDE_DIRS and ${_name}_LIBRARIES to CASACORE_LIBRARIES.
 #
-# Strictly speaking, required packages are always needed. However, when
-# linking against static libraries it may not be needed. One can override the
-# REQUIRED setting by setting CASACORE_MAKE_REQUIRED_EXTERNALS_OPTIONAL to ON.
-# Beware that this might cause compile and/or link errors.
+# If Casacore itself is required, then, strictly speaking, the packages it
+# requires must be present. However, when linking against static libraries
+# they may not be needed. One can override the REQUIRED setting by switching
+# CASACORE_MAKE_REQUIRED_EXTERNALS_OPTIONAL to ON. Beware that this might cause
+# compile and/or link errors.
 #
 #   Usage: casacore_find_package(name [REQUIRED])
 #
 macro(casacore_find_package _name)
-  if("${ARGN}" MATCHES "^REQUIRED$" AND 
+  if("${ARGN}" MATCHES "^REQUIRED$" AND
+      Casacore_FIND_REQUIRED AND
       NOT CASACORE_MAKE_REQUIRED_EXTERNALS_OPTIONAL)
     find_package(${_name} REQUIRED)
   else()
@@ -180,22 +186,16 @@ set(CASACORE_DEFINITIONS)
 set(CASACORE_LIBRARIES)
 set(CASACORE_MISSING_COMPONENTS)
 
-# If the user specified the root directory of the Casacore package, use it
-# when searching for header files and libraries.
-if(CASACORE_ROOT_DIR)
-  set(CMAKE_PREFIX_PATH ${CASACORE_ROOT_DIR})
-endif(CASACORE_ROOT_DIR)
-
-# Search for the header file first. We need to add "casacore" as path suffix,
-# because, by default, casacore installs the header files in
-# ${prefix}/include/casacore, instead of the more usual ${prefix}/include.
+# Search for the header file first. Note that casacore installs the header
+# files in ${prefix}/include/casacore, instead of ${prefix}/include.
 if(NOT CASACORE_INCLUDE_DIR)
-  find_path(CASACORE_INCLUDE_DIR casa/aips.h PATH_SUFFIXES casacore)
+  find_path(CASACORE_INCLUDE_DIR casa/aips.h
+    PATHS ${CASACORE_ROOT_DIR} PATH_SUFFIXES include/casacore)
   mark_as_advanced(CASACORE_INCLUDE_DIR)
 endif(NOT CASACORE_INCLUDE_DIR)
 
 if(NOT CASACORE_INCLUDE_DIR)
-  set(CASACORE_ERROR_MESSAGE "Casacore: unable to find the header file casa/aips.h.\n   Please set CASACORE_ROOT_DIR to the root directory containing Casacore.")
+  set(CASACORE_ERROR_MESSAGE "Casacore: unable to find the header file casa/aips.h.\nPlease set CASACORE_ROOT_DIR to the root directory containing Casacore.")
 else(NOT CASACORE_INCLUDE_DIR)
   # We've found the header file; let's continue.
   set(CASACORE_FOUND TRUE)
@@ -216,13 +216,12 @@ else(NOT CASACORE_INCLUDE_DIR)
     if(${_comp} STREQUAL casa)
       casacore_find_package(HDF5)
       casacore_find_library(m)
-      casacore_find_library(dl)
+      list(APPEND CASACORE_LIBRARIES ${CMAKE_DL_LIBS})
     elseif(${_comp} STREQUAL coordinates)
       casacore_find_package(WCSLIB REQUIRED)
     elseif(${_comp} STREQUAL fits)
       casacore_find_package(CFITSIO REQUIRED)
     elseif(${_comp} STREQUAL scimath_f)
-      enable_language(Fortran)
       casacore_find_package(LAPACK REQUIRED)
     endif(${_comp} STREQUAL casa)
   endforeach(_comp ${_find_components})

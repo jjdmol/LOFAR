@@ -19,13 +19,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 # A tiny wrapper around the FindBoost.cmake macro that comes with CMake. 
-# Its purpose is threefold:
+# Its purpose is fourfold:
+# - Set BOOST_ROOT if BOOST_ROOT_DIR is set.
 # - Remove Boost components that have been disabled explicitly from the
 #   Boost_FIND_COMPONENTS list. Raise an error, if the component is required.
 # - Define all-uppercase variables for the following variables: 
 #   Boost_INCLUDE_DIRS, Boost_LIBRARIES, and Boost_FOUND.
 # - Set a HAVE_BOOST_<COMPONENT> variable in the cache for each component that
 #   was found.
+
+# Set BOOST_ROOT if BOOST_ROOT_DIR is set.
+if(BOOST_ROOT_DIR)
+  set(BOOST_ROOT ${BOOST_ROOT_DIR})
+endif(BOOST_ROOT_DIR)
 
 # Boost components that have been disabled explicitly by the user, should be
 # removed from the Boost_FIND_COMPONENTS list.

@@ -20,8 +20,10 @@
 
 # Try to find Log4Cxx.
 #
-# This will define:
-#  
+# Variables used by this module:
+#  LOG4CXX_ROOT_DIR     - Log4Cxx root directory
+#
+# Variables defined by this module:
 #  LOG4CXX_FOUND        - system has Log4Cxx
 #  LOG4CXX_INCLUDE_DIR  - the Log4Cxx include directory (cached)
 #  LOG4CXX_INCLUDE_DIRS - the Log4Cxx include directories
@@ -32,13 +34,14 @@
 
 if(NOT LOG4CXX_FOUND)
 
-  find_path(LOG4CXX_INCLUDE_DIR log4cxx/logger.h)
-  find_library(LOG4CXX_LIBRARY log4cxx)
+  find_path(LOG4CXX_INCLUDE_DIR log4cxx/logger.h
+    PATHS ${LOG4CXX_ROOT_DIR} PATH_SUFFIXES include)
+  find_library(LOG4CXX_LIBRARY log4cxx
+    PATHS ${LOG4CXX_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(LOG4CXX_INCLUDE_DIR LOG4CXX_LIBRARY)
 
   include(FindPackageHandleStandardArgs)
-  set(custom_msg "Could NOT find Log4cxx in ${CMAKE_PREFIX_PATH}")
-  find_package_handle_standard_args(Log4Cxx "${custom_msg}"
+  find_package_handle_standard_args(Log4Cxx DEFAULT_MSG
     LOG4CXX_LIBRARY LOG4CXX_INCLUDE_DIR)
 
   set(LOG4CXX_INCLUDE_DIRS ${LOG4CXX_INCLUDE_DIR})

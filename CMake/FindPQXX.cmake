@@ -20,8 +20,10 @@
 
 # Try to find libpqxx: the official C++ client API for PostgreSQL
 #
-# This will define:
-#  
+# Variables used by this module:
+#  PQXX_ROOT_DIR     - PQXX root directory
+#
+# Variables defined by this module:
 #  PQXX_FOUND        - system has PQXX
 #  PQXX_INCLUDE_DIR  - the PQXX include directory (cached)
 #  PQXX_INCLUDE_DIRS - the PQXX include directories 
@@ -32,11 +34,13 @@
 
 if(NOT PQXX_FOUND)
 
-  find_path(PQXX_INCLUDE_DIR pqxx/pqxx)
-  find_library(PQXX_LIBRARY pqxx)
+  find_path(PQXX_INCLUDE_DIR pqxx/pqxx
+    PATHS ${PQXX_ROOT_DIR} PATH_SUFFIXES include)
+  find_library(PQXX_LIBRARY pqxx
+    PATHS ${PQXX_ROOT_DIR} PATH_SUFFIXES lib)
   find_library(PQ_LIBRARY pq)
   mark_as_advanced(PQXX_INCLUDE_DIR PQXX_LIBRARY PQ_LIBRARY)
-  
+
   include(FindPackageHandleStandardArgs)
   find_package_handle_standard_args(PQXX DEFAULT_MSG
     PQXX_LIBRARY PQ_LIBRARY PQXX_INCLUDE_DIR)

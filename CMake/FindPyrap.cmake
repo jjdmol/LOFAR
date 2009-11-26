@@ -20,8 +20,10 @@
 
 # Try to find Pyrap.
 #
-# This will define:
-#  
+# Variables used by this module:
+#  PYRAP_ROOT_DIR     - Pyrap root directory
+#
+# Variables defined by this module:
 #  PYRAP_FOUND        - system has Pyrap
 #  PYRAP_INCLUDE_DIR  - the Pyrap include directory (cached)
 #  PYRAP_INCLUDE_DIRS - the Pyrap include directories
@@ -32,19 +34,20 @@
 
 if(NOT PYRAP_FOUND)
 
-  find_path(PYRAP_INCLUDE_DIR pyrap/Converters.h)
-  find_library(PYRAP_LIBRARY pyrap)
+  find_path(PYRAP_INCLUDE_DIR pyrap/Converters.h
+    PATHS ${PYRAP_ROOT_DIR} PATH_SUFFIXES include)
+  find_library(PYRAP_LIBRARY pyrap
+    PATHS ${PYRAP_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(PYRAP_INCLUDE_DIR PYRAP_LIBRARY)
 
   # Pyrap also depends on Casacore
-  include(LofarFindPackage)
-  lofar_find_package(Casacore REQUIRED COMPONENTS casa)
+  find_package(Casacore REQUIRED COMPONENTS casa)
 
   include(FindPackageHandleStandardArgs)
   find_package_handle_standard_args(Pyrap DEFAULT_MSG 
-    PYRAP_LIBRARY PYRAP_INCLUDE_DIR CASACORE_INCLUDE_DIR)
+    PYRAP_LIBRARY PYRAP_INCLUDE_DIR)
 
-  set(PYRAP_INCLUDE_DIRS ${PYRAP_INCLUDE_DIR} ${CASACORE_INCLUDE_DIR})
-  set(PYRAP_LIBRARIES ${PYRAP_LIBRARY})
+  set(PYRAP_INCLUDE_DIRS ${PYRAP_INCLUDE_DIR} ${CASACORE_INCLUDE_DIRS})
+  set(PYRAP_LIBRARIES ${PYRAP_LIBRARY} ${CASACORE_LIBRARIES})
 
 endif(NOT PYRAP_FOUND)

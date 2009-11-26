@@ -20,8 +20,10 @@
 
 # Try to find CPPLapack, a C++ class wrapper for BLAS and LAPACK.
 #
-# This will define:
-#  
+# Variables used by this module:
+#  CPPLAPACK_ROOT_DIR     - CPPLAPACK root directory
+#
+# Variables defined by this module:
 #  CPPLAPACK_FOUND        - system has CPPLapack
 #  CPPLAPACK_INCLUDE_DIR  - the CPPLapack include directory (cached)
 #  CPPLAPACK_INCLUDE_DIRS - the CPPLapack include directories
@@ -30,16 +32,21 @@
 
 if(NOT CPPLAPACK_FOUND)
 
-  find_path(CPPLAPACK_INCLUDE_DIR cpplapack.h)
-  find_library(LAPACK_LIBRARY lapack)
-  find_library(BLAS_LIBRARY blas)
-  mark_as_advanced(CPPLAPACK_INCLUDE_DIR LAPACK_LIBRARY BLAS_LIBRARY)
+  find_path(CPPLAPACK_INCLUDE_DIR cpplapack.h
+    PATHS ${CPPLAPACK_ROOT_DIR} PATH_SUFFIXES include)
+  mark_as_advanced(CPPLAPACK_INCLUDE_DIR)
+
+  if(CPPLAPACK_FIND_REQUIRED)
+    find_package(LAPACK REQUIRED)
+  else(CPPLAPACK_FIND_REQUIRED)
+    find_package(LAPACK)
+  endif(CPPLAPACK_FIND_REQUIRED)
 
   include(FindPackageHandleStandardArgs)
   find_package_handle_standard_args(CPPLapack DEFAULT_MSG
-    CPPLAPACK_INCLUDE_DIR LAPACK_LIBRARY BLAS_LIBRARY)
+    CPPLAPACK_INCLUDE_DIR)
 
   set(CPPLAPACK_INCLUDE_DIRS ${CPPLAPACK_INCLUDE_DIR})
-  set(CPPLAPACK_LIBRARIES ${LAPACK_LIBRARY} ${BLAS_LIBRARY})
+  set(CPPLAPACK_LIBRARIES ${LAPACK_LIBRARIES})
 
 endif(NOT CPPLAPACK_FOUND)

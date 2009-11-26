@@ -21,8 +21,11 @@
 # Try to find FFTW3.
 #
 # Usage: find_package(FFTW3 [COMPONENTS [double|single|long-double] [threads]])
-# This will define:
 #  
+# Variables used by this module:
+#  FFTW3_ROOT_DIR     - FFTW3 root directory
+#
+# Variables defined by this module:
 #  FFTW3_FOUND        - system has FFTW3
 #  FFTW3_INCLUDE_DIR  - the FFTW3 include directory (cached)
 #  FFTW3_INCLUDE_DIRS - the FFTW3 include directories
@@ -126,14 +129,16 @@ set(_check_list)
 # Search for all required libraries.
 foreach(_lib ${_libraries})
   string(TOUPPER ${_lib} _LIB)
-  find_library(${_LIB}_LIBRARY ${_lib})
+  find_library(${_LIB}_LIBRARY ${_lib}
+    PATHS ${FFTW3_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(${_LIB}_LIBRARY)
   list(APPEND FFTW3_LIBRARIES ${${_LIB}_LIBRARY})
   list(APPEND _check_list ${_LIB}_LIBRARY)
 endforeach(_lib ${_libraries})
 
 # Search for the header file.
-find_path(FFTW3_INCLUDE_DIR fftw3.h)
+find_path(FFTW3_INCLUDE_DIR fftw3.h 
+  PATHS ${FFTW3_ROOT_DIR} PATH_SUFFIXES include)
 mark_as_advanced(FFTW3_INCLUDE_DIR)
 list(APPEND _check_list FFTW3_INCLUDE_DIR)
 

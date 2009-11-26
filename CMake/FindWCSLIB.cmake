@@ -20,20 +20,24 @@
 
 # Try to find WCSLIB.
 #
-# This will define:
-#  
+# Variables used by this module:
+#  WCSLIB_ROOT_DIR     - WCSLIB root directory
+#
+# Variables defined by this module:
 #  WCSLIB_FOUND        - system has WCSLIB
 #  WCSLIB_INCLUDE_DIR  - the WCSLIB include directory (cached)
 #  WCSLIB_INCLUDE_DIRS - the WCSLIB include directories
-#                         (identical to WCSLIB_INCLUDE_DIR)
+#                        (identical to WCSLIB_INCLUDE_DIR)
 #  WCSLIB_LIBRARY      - the WCSLIB library (cached)
 #  WCSLIB_LIBRARIES    - the WCSLIB libraries
-#                         (identical to WCSLIB_LIBRARY)
+#                        (identical to WCSLIB_LIBRARY)
 
 if(NOT WCSLIB_FOUND)
 
-  find_path(WCSLIB_INCLUDE_DIR wcslib/wcs.h)
-  find_library(WCSLIB_LIBRARY wcs)
+  find_path(WCSLIB_INCLUDE_DIR wcslib/wcs.h
+    PATHS ${WCSLIB_ROOT_DIR} PATH_SUFFIXES include)
+  find_library(WCSLIB_LIBRARY wcs
+    PATHS ${WCSLIB_ROOT_DIR} PATH_SUFFIXES lib)
   find_library(M_LIBRARY m)
   mark_as_advanced(WCSLIB_INCLUDE_DIR WCSLIB_LIBRARY M_LIBRARY)
 
