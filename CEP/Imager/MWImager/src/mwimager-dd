@@ -33,11 +33,28 @@
 #    Each of them runs in a distributed way.
 #    BBS is only run if correct=T is given.
 #    DPPP is only run if average=T is given
+#
 # parset keywords:
-#  dir = center of field (get from MS VDS file if needed)
-#  correctdd = beam,ionosphere (or both)
-#  extrafacets (names of strong sources plus width)
-#  possible squash factor in freq/time
+#
+#  correct = False
+#  Correct.Model.Beam.Type        = "HamakerDipole"    # or "YatawattaDipole"
+#  Correct.Model.Beam.CoeffFile   = "$LOFARROOT/share/lofar_dipole_beam_lba.txt"
+#  Correct.Model.Beam.ModuleTheta = "$LOFARROOT/lib/lba_beam_theta.so"
+#  Correct.Model.Beam.ModulePhi   = "$LOFARROOT/lib/lba_beam_phi.so"
+#  Correct.column       = CORRECTED_DATA   # output column after correction
+#  Correct.instrumentDB
+#  Images.name
+#  Images.ra            = 10:23:53.68
+#  Images.dec           = 34.51.04.98
+#  Images.shape         = [1024,1024]
+#  Images.cellSize      = [20,20]          # default unit is arcsec
+#  Images.nfacets       = 8                # nfacets in ra and dec
+#  Images.padding       = 2                # padding factor in ra and dec
+#  dataset              = my.MS.gds
+#  datacolumn           = DATA             # input data column
+#  average = False
+#  Average.nfreq = 1
+#  Average.ntime = 1
 #
 # An alternative (and slightly better) approach would be to run mwimager-dd-part
 # in a distributed way, which does BBS, DPPP, and mwimager for each facet.
@@ -122,6 +139,17 @@ def doBBS (ps, i, j, psname, vds, cd, wd, dry, instdb, skydb, catname, incol, ou
     if dry == 'dry':
         dry = '--dry --verbose'
     print 'doBBS facet',i,j
+    # Get beam files and expand possible env.var. like $LOFARROOT
+    beamType    = ps.getString ('Correct.Model.Beam.Type')
+    coeffFile   = ps.getString ('Correct.Model.Beam.CoeffFile', '')
+    moduleTheta = ps.getString ('Correct.Model.Beam.ModuleTheta', '')
+    modulePhi   = ps.getString ('Correct.Model.Beam.ModulePhi', '')
+    if len(coeffFile) > 0:
+        coeffFile = os.path.abspath(coeffFile)
+    if len(moduleTheta) > 0:
+        moduleTheta = os.path.abspath(moduleTheta)
+    if len(modulePhi) > 0:
+        modulePhi = os.path.abspath(modulePhi)
     # Create the parset file for the calibrate run.
     bbskey = "bbs-%03d-%03d" % (i, j)
     psn = psname + '-' + bbskey
@@ -138,11 +166,10 @@ def doBBS (ps, i, j, psname, vds, cd, wd, dry, instdb, skydb, catname, incol, ou
     f.write ('Step.correct.Baselines.Station2 = []\n')
     f.write ('Step.correct.Model.Sources    = facet-%03d-%03d\n' % (i,j))
     f.write ('Step.correct.Model.Components = [BEAM]\n')
-    f.write ('Step.correct.Model.Beam.Type = "HamakerDipole"\n')
-    f.write ('Step.correct.Model.Beam.CoeffFile = "/home/zwieten/Work/Lofar/Data/BeamCoefficients/lba.txt"\n')
-    f.write ('#Step.correct.Model.Beam.Type = "YatawattaDipole"\n')
-    f.write ('#Step.correct.Model.Beam.ModuleTheta = "/home/zwieten/Work/Lofar/Data/YatawattaDipoleBeam/hba_beam_theta.so"\n')
-    f.write ('#Step.correct.Model.Beam.ModulePhi = "/home/zwieten/Work/Lofar/Data/YatawattaDipoleBeam/hba_beam_phi.so"\n')
+    f.write ('Step.correct.Model.Beam.Type = %s\n' % beamType)
+    f.write ('Step.correct.Model.Beam.CoeffFile = %s\n' % coeffFile)
+    f.write ('Step.correct.Model.Beam.ModuleTheta = %s\n' % moduleTheta)
+    f.write ('Step.correct.Model.Beam.ModulePhi = %s\n' % modulePhi)
     f.write ('Step.correct.Correlation.Selection = CROSS\n')
     f.write ('Step.correct.Correlation.Type      = []\n')
     f.write ('Step.correct.Operation             = CORRECT\n')
@@ -152,12 +179,23 @@ def doBBS (ps, i, j, psname, vds, cd, wd, dry, instdb, skydb, catname, incol, ou
     print 'calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --skip-instrument-db --skip-sky-db "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, vds, psn, catname, wd)
     os.system ('calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --no-setup "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, vds, psn, catname, wd))
 
-def doDPPP (i, j, freqstep, timestep):
+def doDPPP (i, j, psname, dataset, cd, dry, freqstep, timestep):
     print 'doDPPP facet',i,j
     # Create the parset file.
-#    f = file(psname, 'w')
-#    f.write ("\n")
-#    os.system ("./IDPPP")
+    psn = psname + '-dppp'
+    f = file(psname, 'w')
+    f.write('fixed=0')
+    f.write('existing=False')
+    f.write('skipflags=False')
+    f.write('allcolumns=True')
+    f.write('bandpass=0')
+    f.write('squasher=1')
+    f.write('timestep=%d' % timestep)
+    f.write('freqstep=%d' % freqstep)
+    f.write('clusterdesc=%s' % cd)
+    f.close()
+    os.system ('rundist mwimager-dd-dppp "%s" "%s"' % (psn, dry)
+##    os.system ("combinevds")
 
 def doImager (ps, imagename, i, j, center, psname, cd, wd, logfile, dry, hfn, casaopt, pgmpath):
     print 'doImager facet',i,j,center
@@ -248,7 +286,7 @@ def main(argv=None):
             if correct:
                 doBBS (ps, i, j, psn, vds, cd, wd, dry, instdb, skydb, catname, incol, outcol)
             if average:
-                doDPPP (i, j, freqavg, timeavg)
+                doDPPP (i, j, psn, vds, cd, freqavg, timeavg)
             doImager (ps, imagename, i, j, centers[inx], psn, cd, wd, logfile, dry, hfn, casaopt, pgmpath)
             inx += 1
 
