@@ -123,7 +123,7 @@ void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
 			if (strcmp(timestring, itsTimeString) != 0) {
 				strcpy(itsTimeString, timestring);
 				fclose(itsFile);
-				snprintf(itsFileName, PATH_MAX, "/opt/lofar/log/%s_TRIGGER.dat", itsTimeString);
+				snprintf(itsFileName, PATH_MAX, "/localhome/data/%s_TRIGGER.dat", itsTimeString);
 				itsFile = fopen(itsFileName,"a");
 			}
 		
