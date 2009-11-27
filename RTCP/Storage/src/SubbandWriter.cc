@@ -116,12 +116,12 @@ void SubbandWriter::preprocess()
     LOG_INFO_STR("MeasurementSet created");
   }
 
-  LOG_DEBUG_STR("Subbands per storage = " << nrSubbandsPerStorage << ", I will store " << myNrSubbands << " subbands, nrOutputs = " << plan.nrOutputs());
+  LOG_DEBUG_STR("Subbands per storage = " << nrSubbandsPerStorage << ", I will store " << myNrSubbands << " subbands, nrOutputTypes = " << plan.nrOutputTypes());
 
 #endif // defined HAVE_AIPSPP
 
   for (unsigned sb = firstSubband; sb <= lastSubband; sb ++) {
-    for (unsigned output = 0; output < plan.nrOutputs(); output ++) {
+    for (unsigned output = 0; output < plan.nrOutputTypes(); output ++) {
       ProcessingPlan::planlet &outputConfig = plan.plan[output];
       StreamableData *dataTemplate = outputConfig.source;
 

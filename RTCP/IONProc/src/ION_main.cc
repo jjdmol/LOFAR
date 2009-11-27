@@ -515,19 +515,19 @@ void Job::fromCNthread()
 {
   CN_Configuration configuration(itsParset);
   const CN_ProcessingPlan<> plan(configuration);
-  const unsigned nrOutputs = plan.nrOutputs();
+  const unsigned nrOutputTypes = plan.nrOutputTypes();
 
   LOG_DEBUG("starting from_CN thread");
 
   {
-    std::vector<OutputSection *> outputSections( nrOutputs );
+    std::vector<OutputSection *> outputSections( nrOutputTypes );
 
-    for (unsigned output = 0; output < nrOutputs; output++) {
-      outputSections[output] = new OutputSection(&itsParset, myPsetNumber, output, itsCNstreams, output == nrOutputs-1);
+    for (unsigned output = 0; output < nrOutputTypes; output++) {
+      outputSections[output] = new OutputSection(&itsParset, myPsetNumber, output, itsCNstreams, output == nrOutputTypes - 1);
     }
 
     // destructor of OutputSections will wait for threads to complete
-    for (unsigned output = 0; output < nrOutputs; output++) {
+    for (unsigned output = 0; output < nrOutputTypes; output++) {
       delete outputSections[output];
     }
   }  

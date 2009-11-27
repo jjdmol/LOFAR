@@ -36,7 +36,7 @@ namespace RTCP {
 class OutputSection
 {
   public:
-    OutputSection(const Parset *ps, unsigned psetNumber, unsigned outputNumber, const std::vector<Stream *> &streamsFromCNs, bool lastOutput);
+    OutputSection(const Parset *ps, unsigned psetNumber, unsigned outputType, const std::vector<Stream *> &streamsFromCNs, bool lastOutput);
     ~OutputSection();
 
   private:
@@ -59,7 +59,7 @@ class OutputSection
 
     const Parset                *itsParset;
     const unsigned		itsPsetIndex;
-    const unsigned              itsOutputNr;
+    const unsigned              itsOutputType;
     unsigned			itsNrComputeCores, itsCurrentComputeCore;
     const unsigned              itsNrSubbands;
     const unsigned		itsNrSubbandsPerPset;
