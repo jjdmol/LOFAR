@@ -10,9 +10,10 @@ set(LOFAR_COMPILER_SUITES GNU)
 set(LOFAR_BUILD_VARIANTS DEBUG OPT)
 
 # GNU compiler suite
-set(GNU_COMPILERS GNU_C GNU_CXX)  # GNU Compiler Suite
+set(GNU_COMPILERS GNU_C GNU_CXX GNU_ASM)
 set(GNU_C         /usr/bin/gcc )  # GNU C compiler
 set(GNU_CXX       /usr/bin/g++ )  # GNU C++ compiler
+set(GNU_ASM       /usr/bin/gcc )  # GNU assembler
 
 set(GNU_C_FLAGS)
 set(GNU_C_FLAGS_DEBUG    "-g")
