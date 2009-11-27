@@ -40,7 +40,7 @@ class Hosts:
 
   def populate(self):
     # storage nodes lse001 - lse024
-    for i in xrange( 1, 24 ):
+    for i in xrange( 1, 25 ):
       self.add( "lse%03d" % (i,),
                 "10.176.1.%d" % (i,),
                 "front" )
