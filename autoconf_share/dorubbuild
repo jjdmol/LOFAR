@@ -134,16 +134,18 @@ ksep="&&"
 if [ $clean = 1 ]; then
   premake="make $kstr clean $ksep "
 fi
+# If needed, create test target for cmake (even if not building).
+if [ $bldtest = 1 ]; then
+  cmaketest=1
+fi
 if [ $buildmake = 1 ]; then
   mainmake="date $ksep make $kstr $jobsopt "
   if [ $bldtest = 1 ]; then
-    cmaketest=1
     if [ $cmake = 0 ]; then
       postmake="$ksep (if [ -d test ]; then cd test $ksep make test; fi;)"
     fi
   fi
   if [ $check = 1 ]; then
-    cmaketest=1
     if [ "$checktool" = "" ]; then
       postmake="$postmake $ksep make $kstr check"
     else
