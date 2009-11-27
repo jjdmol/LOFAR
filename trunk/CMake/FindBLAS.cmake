@@ -24,13 +24,18 @@
 # not an error if a Fortran compiler is missing.
 
 # Enable the Fortran compiler, if that has not been done yet.
-if(NOT DEFINED CMAKE_Fortran_COMPILER)
+get_property(_enabled_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
+if(NOT _enabled_languages MATCHES Fortran)
+  # Work-around for CMake issue #9220
+  if(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
+    set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
+  endif(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
   if(BLAS_FIND_REQUIRED)
     enable_language(Fortran)
   else(BLAS_FIND_REQUIRED)
     enable_language(Fortran OPTIONAL)
   endif(BLAS_FIND_REQUIRED)
-endif(NOT DEFINED CMAKE_Fortran_COMPILER)
+endif(NOT _enabled_languages MATCHES Fortran)
 
 # If we have a working Fortran compiler, call the "real" FindBLAS module;
 # otherwise display a diagnostic message.
