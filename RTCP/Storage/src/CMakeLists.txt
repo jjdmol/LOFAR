@@ -9,7 +9,8 @@ set(storage_LIB_SRCS
   SubbandWriter.cc
   MSWriter.cc
   MSWriterNull.cc
-  MSWriterFile.cc)
+  MSWriterFile.cc
+  MeasurementSetFormat.cc)
 
 lofar_add_library(storage ${storage_LIB_SRCS})
 
