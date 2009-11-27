@@ -862,12 +862,14 @@ elif [ $clean = 2 ]; then
   bopt="$bopt -distclean"
   echo "  Packages will be distcleaned"
 fi
+if [ $bldtest = 1 ]; then
+  bopt="$bopt -test"
+fi
 if [ $buildmake = 0 ]; then
   bopt="$bopt -nomake"
 else
   echo "  Packages will be built"
   if [ $bldtest = 1 ]; then
-    bopt="$bopt -test"
     echo "  Packages test programs will be built"
   fi
   if [ $check = 1 ]; then
