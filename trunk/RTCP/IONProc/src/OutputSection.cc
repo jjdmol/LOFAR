@@ -48,12 +48,12 @@
 namespace LOFAR {
 namespace RTCP {
 
-OutputSection::OutputSection(const Parset *ps, unsigned psetNumber, unsigned outputNumber, const std::vector<Stream *> &streamsFromCNs, bool lastOutput)
+OutputSection::OutputSection(const Parset *ps, unsigned psetNumber, unsigned outputType, const std::vector<Stream *> &streamsFromCNs, bool lastOutput)
 :
   stop(false),
   itsParset(ps),
   itsPsetIndex(ps->outputPsetIndex(psetNumber)),
-  itsOutputNr(outputNumber),
+  itsOutputType(outputType),
   itsNrComputeCores(ps->nrCoresPerPset()),
   itsCurrentComputeCore(0),
   itsNrSubbands(ps->nrSubbands()),
@@ -71,7 +71,7 @@ OutputSection::OutputSection(const Parset *ps, unsigned psetNumber, unsigned out
   // define output structures and temporary data holders
   itsPlan = new CN_ProcessingPlan<>(configuration);
   itsPlan->removeNonOutputs();
-  ProcessingPlan::planlet &p = itsPlan->plan[itsOutputNr];
+  ProcessingPlan::planlet &p = itsPlan->plan[itsOutputType];
   StreamableData *dataTemplate = p.source;
 
   // allocate partial sums -- only for those outputs that need it
@@ -99,7 +99,7 @@ OutputSection::OutputSection(const Parset *ps, unsigned psetNumber, unsigned out
     unsigned subbandNumber = itsPsetIndex * itsNrSubbandsPerPset + subband;
 
     if (subbandNumber < itsNrSubbands) {
-      itsOutputThreads.push_back(new OutputThread(*itsParset, subbandNumber, itsOutputNr, dataTemplate));
+      itsOutputThreads.push_back(new OutputThread(*itsParset, subbandNumber, itsOutputType, dataTemplate));
     }
   }
 
@@ -169,7 +169,7 @@ void OutputSection::mainLoop()
   static pthread_cond_t  condition[64];
   static unsigned computeCoreStates[64];
 
-  if( itsOutputNr == 0 ) {
+  if( itsOutputType == 0 ) {
     for( unsigned i = 0; i < 64; i++ ) {
       pthread_mutex_init( &mutex[i], 0 );
       pthread_cond_init( &condition[i], 0 );
@@ -186,7 +186,7 @@ void OutputSection::mainLoop()
       if (subbandNumber < itsNrSubbands) {
         // wait for our turn for this core
         pthread_mutex_lock(&mutex[itsCurrentComputeCore]);
-        while( computeCoreStates[itsCurrentComputeCore] != itsOutputNr ) {
+        while( computeCoreStates[itsCurrentComputeCore] != itsOutputType ) {
          pthread_cond_wait(&condition[itsCurrentComputeCore], &mutex[itsCurrentComputeCore]);
         }
         pthread_mutex_unlock(&mutex[itsCurrentComputeCore]);
@@ -221,7 +221,7 @@ void OutputSection::mainLoop()
 
         // signal next output that we're done with this one
         pthread_mutex_lock(&mutex[itsCurrentComputeCore]);
-        computeCoreStates[itsCurrentComputeCore] = lastOutput ? 0 : itsOutputNr + 1;
+        computeCoreStates[itsCurrentComputeCore] = lastOutput ? 0 : itsOutputType + 1;
         pthread_cond_broadcast(&condition[itsCurrentComputeCore]);
         pthread_mutex_unlock(&mutex[itsCurrentComputeCore]);
       }

@@ -100,7 +100,7 @@ class ProcessingPlan
     planlet const *find( const StreamableData *set ) const;
 
     // number of outputs
-    unsigned nrOutputs() const;
+    unsigned nrOutputTypes() const;
 
     // wipe the plan except for the outputs
     void removeNonOutputs();
@@ -251,7 +251,7 @@ inline ProcessingPlan::planlet const *ProcessingPlan::find( const StreamableData
   return 0;
 }
 
-inline unsigned ProcessingPlan::nrOutputs() const {
+inline unsigned ProcessingPlan::nrOutputTypes() const {
   unsigned n = 0;
 
   for( unsigned i = 0; i < plan.size(); i++ ) {
