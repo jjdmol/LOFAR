@@ -87,13 +87,13 @@ endmacro(get_fftw3_component _kind)
 # -----------------------------------------------------------------------------
 macro(get_fftw3_precision)
   get_fftw3_component(precision double single long-double)
-  if(_precision MATCHES single)
+  if(_fftw3_precision MATCHES single)
     set(_precision_tag f)
-  elseif(_precision MATCHES long-double)
+  elseif(_fftw3_precision MATCHES long-double)
     set(_precision_tag l)
   else()
     set(_precision_tag)
-  endif(_precision MATCHES single)
+  endif(_fftw3_precision MATCHES single)
 endmacro(get_fftw3_precision)
 
 # -----------------------------------------------------------------------------
