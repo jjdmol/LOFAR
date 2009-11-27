@@ -54,7 +54,7 @@ if len(sys.argv) == 1:
 if str(sys.argv[1]) == 'this':
     # get ip-adres of LCU
     LOCAL_HOST = socket.gethostbyname(socket.gethostname())
-    if LOCAL_HOST.find('10.15') == -1:
+    if LOCAL_HOST.find('10.151') == -1 and  LOCAL_HOST.find('10.209') == -1:
         print 'Error: this script can only run on a LCU'
         exit(0)
 
@@ -62,9 +62,12 @@ if str(sys.argv[1]) == 'this':
     # change to ec adres
     HOST = LOCAL_HOST[:LOCAL_HOST.rfind('.1')] + '.3'
 else:
-    STATION = str(sys.argv[1])
-    HOST = socket.gethostbyname(STATION+'EC')
-
+    if str(sys.argv[1]).count('.') == 3:
+        HOST = str(sys.argv[1])
+        STATION = HOST
+    else:
+        STATION = str(sys.argv[1])
+        HOST = socket.gethostbyname(STATION+'EC')
 
 PORT = 10000            # Gateway port
 ecSck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -114,7 +117,10 @@ PWR_ON       = 1
 LCU          = 230
 
 # used variables
-cabs =(0,1,3) # cabs in station
+cabs = (0,1,3)
+IS = False
+if HOST.find('10.209') != -1:
+    IS = True
 version = 0   # EC version
 versionstr = 'V-.-.-'
 #---------------------------------------
@@ -345,38 +351,47 @@ def getStatus():
         
     sendCmd(EC_STATUS)
     (cmdId, status, PL2) = recvAck()
-    
+   
+        
+ 
     # fill lines with data    
     lines = []
-    lines.append('            |')
-    lines.append('mode        |')
-    lines.append('status      |')
-    lines.append('set point   |')
-    lines.append('temperature |')
-    lines.append('humidity    |')
-    lines.append('fans        |')
-    lines.append('fans state  |')
-    lines.append('doors       |')
-    lines.append('heater      |')
+    
+    if IS:
+        lines.append('temperature cab3 = %5.2f' %(PL2[2]/100.))
+        lines.append('humidity cab3    = %5.2f' %(PL2[3]/100.))
+        lines.append('cabinet fans     = all on')
+        lines.append('heater state     = %s' %(onoff[PL2[(3*7)+5]]))
+    else:
+        lines.append('            |')
+        lines.append('mode        |')
+        lines.append('status      |')
+        lines.append('set point   |')
+        lines.append('temperature |')
+        lines.append('humidity    |')
+        lines.append('fans        |')
+        lines.append('fans state  |')
+        lines.append('doors       |')
+        lines.append('heater      |')
 
-    for cab in cabs:
-        lines[0] += '  cabinet %1d |' %(cab)
-        lines[1] += '%11s |' %(ec_mode[PL2[(cab*7)]])
-        lines[2] += '%11X |' %(PL2[(cab*7)+1])
-        lines[3] += '%11.2f |' %(PL1[cab]/100.)
-        lines[4] += '%11.2f |' %(PL2[(cab*7)+2]/100.)
-        lines[5] += '%11.2f |' %(PL2[(cab*7)+3]/100.)
-        lines[6] += '%11s |' %(fan[(PL2[(cab*7)+4]&0x0f)])
-        lines[7] += '%11s |' %(fanstate[(PL2[(cab*7)+4]>>6)])
-        lines[8] += '%11s |' %(door[(PL2[(cab*7)+5]&0x03)])
-        if (cab != 3):
-           lines[9] += '%11s |' %('none')
-        else:
-           lines[9] += '%11s |' %(onoff[PL2[(cab*7)+6]])
+        for cab in cabs:
+            lines[0] += '  cabinet %1d |' %(cab)
+            lines[1] += '%11s |' %(ec_mode[PL2[(cab*7)]])
+            lines[2] += '%11X |' %(PL2[(cab*7)+1])
+            lines[3] += '%11.2f |' %(PL1[cab]/100.)
+            lines[4] += '%11.2f |' %(PL2[(cab*7)+2]/100.)
+            lines[5] += '%11.2f |' %(PL2[(cab*7)+3]/100.)
+            lines[6] += '%11s |' %(fan[(PL2[(cab*7)+4]&0x0f)])
+            lines[7] += '%11s |' %(fanstate[(PL2[(cab*7)+4]>>6)])
+            lines[8] += '%11s |' %(door[(PL2[(cab*7)+5]&0x03)])
+            if (cab != 3):
+               lines[9] += '%11s |' %('none')
+            else:
+               lines[9] += '%11s |' %(onoff[PL2[(cab*7)+6]])
 
-    lines.append('power 48V state = %s' %(onoff[(PL2[28] & 1)]))
-    lines.append('power LCU state = %s' %(onoff[(PL2[28] >> 1)]))
-    lines.append('lightning state = %s' %(badok[(PL2[29] & 1)]))
+    lines.append('power 48V state  = %s' %(onoff[(PL2[28] & 1)]))
+    lines.append('power LCU state  = %s' %(onoff[(PL2[28] >> 1)]))
+    lines.append('lightning state  = %s' %(badok[(PL2[29] & 1)]))
         
     # print lines to screen or file, see printInfo
     info = (' status %s (%s)     %s ' %(STATION, versionstr, time.asctime()))
