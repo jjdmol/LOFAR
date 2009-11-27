@@ -5,11 +5,12 @@ import socket
 import time
 import struct
 
-VERSION = '1.1.4' # version of this script    
+VERSION = '1.2.0' # version of this script    
 
 ## to use other commands, see playground on the bottom of this file
 
 ##== change only next settings ====================================
+
 printToScreen = 1
 printToFile = 0
 printDataToFile = 0     # save setpoint, temp, humidity to data.txt
@@ -20,17 +21,12 @@ doCheckFans = 0
 doCheckDoors = 0
 doChangeSettings = 0   # fill in table below
 
-STATION = str(sys.argv[1])
-## using: python ec_ctrl.py CS302
-
 # settings for (cab0, cab1, cab2, cab3)
 # for LOFAR NL stations cab2 is not available
 # cab0 = rack with receiver 0, cab3 = always control rack
-ControlMode  = (3   , 0   , 0   , 1   ) # used on ec_1.0.9 and below
-ControlSpan  = (1.00, 1.00, 1.00, 1.00) # used on ec_1.0.9 and below
-MaxHourChange= (0.50, 0.50, 0.50, 0.50) 
-StartSide    = (1   , 1   , 1   , 0   ) # used on ec_1.1.1 and higher
-BalancePoint = (20.0, 20.0, 20.0, 20.0) # used on ec_1.1.1 and higher
+MaxHourChange= (0.50, 0.50, 0.50, 0.25) 
+StartSide    = (1   , 1   , 1   , 0   ) 
+BalancePoint = (10  , 10  , 10  , 10  ) 
 SeekTime     = (15  , 15  , 15  , 15  )
 SeekChange   = (10.0, 10.0, 10.0, 10.0)
 MinTemp      = (0.00, 0.00, 0.00, 10.0)
@@ -39,12 +35,40 @@ MinMinTemp   = (0.00, 0.00, 0.00, 8.0 )
 MaxMaxTemp   = (40.0, 40.0, 45.0, 38.0)
 MaxHum       = (90.0, 90.0, 90.0, 80.0)
 MaxMaxHum    = (95.0, 95.0, 95.0, 85.0)
-#==================================================================
+##==================================================================
+
+
+if len(sys.argv) == 1:
+    print '--------------------------------------------'
+    print 'Error: no arguments found'
+    print '--------------------------------------------'
+    print ''
+    print 'usage power.py host'
+    print '    host = this (get IP based on LCU)'
+    print '    host = ip (set ip manualy)'
+    print ''
+    print '--------------------------------------------'
+    print ''
+    exit(0)
+
+if str(sys.argv[1]) == 'this':
+    # get ip-adres of LCU
+    LOCAL_HOST = socket.gethostbyname(socket.gethostname())
+    if LOCAL_HOST.find('10.15') == -1:
+        print 'Error: this script can only run on a LCU'
+        exit(0)
+
+    STATION = socket.gethostname()
+    # change to ec adres
+    HOST = LOCAL_HOST[:LOCAL_HOST.rfind('.1')] + '.3'
+else:
+    STATION = str(sys.argv[1])
+    HOST = socket.gethostbyname(STATION+'EC')
+
 
 PORT = 10000            # Gateway port
 ecSck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-HOST = socket.gethostbyname(STATION+'EC')
 stop = False
 
 # === TCP PROTOCOL from controller ===
@@ -127,6 +151,7 @@ def connectToHost():
             connected = True
         except socket.error:
             ecSck.close()
+            time.sleep(5.0)
         
 #---------------------------------------
 def disconnectHost():
@@ -366,10 +391,12 @@ def getStatus():
         tm = time.gmtime()
         filename = 'ec%d%02d%02d.dat' %(tm.tm_year, tm.tm_mon, tm.tm_mday)
         df = open(filename, mode='a')
-        df.write('%f' %(time.time()))
+        df.write('%f ' %(time.time()))
         for cab in cabs:
-            df.write(' %3.2f %3.2f %3.2f' %\
-                    (PL1[cab]/100., PL2[(cab*7)+2]/100., PL2[(cab*7)+3]/100.))
+            # print cabnr, setpoint, temperature, humidity, fansstate, heaterstate
+            df.write('[%d] %3.2f %3.2f %3.2f %d %d ' %\
+                    ( cab, PL1[cab]/100., PL2[(cab*7)+2]/100., PL2[(cab*7)+3]/100.,
+                      PL2[(cab*7)+4], PL2[(cab*7)+6]))
         df.write('\n')
         df.close()
     
@@ -392,12 +419,8 @@ def getSettings():
     # fill lines with data    
     lines = []
     lines.append('                 |')
-    if (version < 111):
-        lines.append('control type     |')
-        lines.append('control span     |')
-    else:
-        lines.append('start side       |')
-        lines.append('balance point    |')    
+    lines.append('start side       |')
+    lines.append('balance point    |')    
     lines.append('max hour change  |')
     lines.append('seek time        |')
     lines.append('max seek change  |')
@@ -412,7 +435,7 @@ def getSettings():
     for cab in cabs:
         lines[0] += '    cab-%1d |' %(cab)
         lines[1] += '%9d |' %(PL[(cab*11)+8])
-        lines[2] += '%9.2f |' %(PL[(cab*11)+7]/100.)
+        lines[2] += '%9d |' %(PL[(cab*11)+7])
         lines[3] += '%9.2f |' %(PL[(cab*11)+6]/100.)
         lines[4] += '%9d |' %(PL[(cab*11)+9])
         lines[5] += '%9.2f |' %(PL[(cab*11)+10]/100.)
@@ -431,22 +454,12 @@ def getSettings():
 #---------------------------------------
 def setSettings():
     for i in range(4):
-        if (version < 108):
-            sendCmd(EC_SET_MAX_CHANGE, i, int(MaxHourChange[i]*100*24))
-            (cmdId, status, payload) = recvAck()
-        else:
-            sendCmd(EC_SET_MAX_CHANGE, i, int(MaxHourChange[i]*100))
-            (cmdId, status, payload) = recvAck()
-        if (version < 111):
-            sendCmd(EC_SET_CTRL_MODE, i, int(ControlMode[i]))
-            (cmdId, status, payload) = recvAck()
-            sendCmd(EC_SET_CTRL_SPAN, i, int(ControlSpan[i]*100))
-            (cmdId, status, payload) = recvAck()
-        else:
-            sendCmd(EC_SET_START_SIDE, i, int(StartSide[i]))
-            (cmdId, status, payload) = recvAck()
-            sendCmd(EC_SET_BALANCE_POINT, i, int(BalancePoint[i]*100))
-            (cmdId, status, payload) = recvAck()
+        sendCmd(EC_SET_MAX_CHANGE, i, int(MaxHourChange[i]*100))
+        (cmdId, status, payload) = recvAck()
+        sendCmd(EC_SET_START_SIDE, i, int(StartSide[i]))
+        (cmdId, status, payload) = recvAck()
+        sendCmd(EC_SET_BALANCE_POINT, i, int(BalancePoint[i]))
+        (cmdId, status, payload) = recvAck()
         sendCmd(EC_SET_SEEK_TIME, i, int(SeekTime[i]))
         (cmdId, status, payload) = recvAck()
         sendCmd(EC_SET_SEEK_CHANGE, i, int(SeekChange[i]*100))
@@ -570,20 +583,21 @@ def checkDoors():
 #---------------------------------------
 def checkRelayPanel():
     printInfo('\nRelay panel check')
-    resetPower(48)
-    waitForUpdate()
-    waitForUpdate()
-    resetPower(230)
-    waitForUpdate()
-    waitForUpdate()
-
     # heater test
     setHeater(1)
     printInfo("heater test")
     waitForUpdate()
     waitForUpdate()
     setHeater(0)
+    # power switch test
+    resetPower(48)
+    waitForUpdate()
+    waitForUpdate()
+    resetPower(230)
+    waitForUpdate()
+    waitForUpdate()
     printInfo('Relay panel check done\n')
+    
    
 
 ##=======================================================================
@@ -596,16 +610,16 @@ time.sleep(1.0)
 setSecond(int(time.gmtime()[5]))
 # version is used to check if function is available in firmware
 version,versionstr  = getVersion()  
-if (version >= 200):
-    printInfo('this version can only be used for EC 1.x.x versions')
+if (version < 120):
+    printInfo('this version can only be used for EC V1.2.0 and higher')
     exit(-1)
 ## do not change if statements
-if (doCheckRelayPanel == 1):
-    checkRelayPanel()
 if (doCheckFans == 1):
     checkFans()
 if (doCheckDoors == 1):
     checkDoors()
+if (doCheckRelayPanel == 1):
+    checkRelayPanel()
 if (doChangeSettings == 1):
     printInfo('Change control settings\nold settings')
     getSettings()
@@ -617,35 +631,29 @@ if (doChangeSettings == 1):
 ##-----------------------------------------------------------------------
 ## playground
 ## cab = -1(all) or 0,1,3
-   
-## search for new temperature setpoint
-#seekNewSetpoint()
 
-## set cab to mode 
+## set cab to mode, default=MODE_AUTO
 ## mode = MODE_OFF, MODE_ON, MODE_AUTO, MODE_MANUAL, MODE_STARTUP
 #setControlMode(cab=-1, mode=MODE_MANUAL)
-
+   
 ## set cab to given temp, only posible in MODE_MANUAL
-#setTemperature(cab=0,temp=29.50)
-#setTemperature(cab=1,temp=29.50)
-#setTemperature(cab=3,temp=29.50)
+#setTemperature(cab=0,temp=20.50)
+#setTemperature(cab=1,temp=20.50)
+#setTemperature(cab=3,temp=20.50)
 
-## set cab to auto
-#setControlMode(cab=-1, mode=MODE_AUTO)
-
-
-#setControlMode(cab=0, mode=MODE_ON)
+## search for new temperature setpoint
+#seekNewSetpoint()
 
 ## turn on fans of cab, only possible in MODE_ON
 ## fans=bitfield(0000,0010,0011,0100,0110,0111,1100,1110,1111)
 ## lsb = fan1
-#setFans(cab=3,fans=0x0f)
+#setFans(cab=0,fans=0x0f)
 
 ## set door control on(1) or off(0)
 #setDoorControl(cab=-1,state=1)
 
-## get controller settings
-#getSettings()
+## set humidity control on(1) or off(0)
+#setHumControl(cab=-1,state=1)
 
 ## reset or set power for 48V or LCU
 #resetPower(48)
@@ -653,15 +661,24 @@ if (doChangeSettings == 1):
 #setPower(48,1)
 #setPower(LCU,1)
 
-## turn on(1)/off(0) heater
-#setHeater(0)
+## set Heater mode default=MODE_AUTO
+## mode = MODE_OFF | MODE_ON | MODE_AUTO
+#setHeater(MODE_AUTO)
 
-## restart works from EC version 1.0.7
+## restart controller, works from EC version 1.0.7
 #restart()
 
 ## reset trip system
 #resetTrip()
 
+## set cab to mode, default=MODE_AUTO 
+### mode = MODE_OFF, MODE_ON, MODE_AUTO, MODE_MANUAL, MODE_STARTUP
+#setControlMode(cab=-1, mode=MODE_AUTO)
+
+## get controller settings
+#getSettings()
+
+getStatus()
 while (not stop):
     waitForUpdate()
     getStatus()
