@@ -24,6 +24,7 @@
 #include <APL/CAL_Protocol/SubArray.h>
 #include <APL/CAL_Protocol/CalibrationInterface.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <Common/hexdump.h>
 #include <MACIO/Marshalling.h>
 #include <APL/RTCCommon/MarshallBlitz.h>

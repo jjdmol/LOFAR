@@ -23,6 +23,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <unistd.h>
+#include <climits>
 
 #include "APL/APLCommon/APLUtilities.h"
 
