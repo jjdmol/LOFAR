@@ -879,6 +879,10 @@ string navFunct_bareDBName(string aDBName) {
 // ****************************************
 int navFunct_findFirstOne(string receiverList, int start) {
 
+  if ( receiverList == "" ) {
+    return -1;
+  }
+  
   // make a substring from the startindex onwards
   string aS= substr(receiverList,start);
   
@@ -1062,11 +1066,11 @@ bool navFunct_hardware2Obs(string stationName, string observation,
         flag = true;
       } 
     } else if (objectName == "RCU") {
-      if (receiverBitmap[intData] == "1") {
+      if (receiverBitmap != "" && receiverBitmap[intData] == "1") {
         flag = true;
       }
     } else if (objectName == "Antenna") {
-      if (receiverBitmap[(intData*2)] == "1" || receiverBitmap[((intData*2)+1)] == "1") {
+      if (receiverBitmap != "" && (receiverBitmap[(intData*2)] == "1" || receiverBitmap[((intData*2)+1)] == "1")) {
         flag = true;
       } 
     } else if (objectName == "SPU") {
@@ -1866,4 +1870,30 @@ string navFunct_inputBuf2CEPName(int buf) {
     name += "-N" + nodenr + "-J0" + ionr;
   }
   return name;
+}
+
+string navFunct_ObsToTemp(string dp){
+  int pos=strpos(dp,"Observation");
+  if ( pos > -1) {
+    string aDB=dpSubStr(dp,DPSUB_SYS);
+    string bareDP=substr(dp,strlen(aDB));
+//    string bareDP=dpSubStr(dp,DPSUB_DP); strange ???? should be woking but returns ""
+    string aS2="";
+    int nr=-1;
+    int err = sscanf(bareDP,"LOFAR_ObsSW_Observation%d_%s",nr,aS2);
+    dp=aDB+claimManager_nameToRealName("LOFAR_ObsSW_Observation"+nr)+"_"+aS2;
+  }
+  return dp;
+}
+
+string navFunct_TempToObs(string dp){
+  int pos=strpos(dp,"TempObs");
+  if ( pos > -1) {
+    string front=substr(dp,0,pos+11);
+    string end = substr(dp,pos+11);
+    string aDB=dpSubStr(front,DPSUB_SYS);
+    string bareDP=dpSubStr(front,DPSUB_DP);
+    dp=aDB+claimManager_realNameToName(bareDP)+end;
+  }
+  return dp;
 }

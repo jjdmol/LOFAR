@@ -134,6 +134,11 @@ bool CEP_Processes_UpdateCEPControllers() {
         DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(CEP_obsBaseDP));
   
   }
+  
+  // update StationTree
+  LOG_DEBUG("CEP_Processes.ctl:UpdateCEPControllers|Starting updateStationTree");  
+  CEP_Processes_UpdateStationTree();
+  
   LOG_TRACE("CEP_Processes.ctl:UpdateCEPControllers|call UpdateProcessesList");
   if (!CEP_Processes_UpdateProcessesList()) {
     LOG_ERROR("CEP_Processes.ctl:UpdateCEPControllers|UpdateProcessesList returned false");
@@ -199,8 +204,10 @@ bool CEP_Processes_UpdateProcessesList() {
       // Remainder should be Ctrl Programs, split on _ 
       dyn_string spl=strsplit(aS,"_");
       if (dynlen(spl) > 1) { // low level Ctrl
-        dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[dynlen(spl)]+","+path);
-        dynAppend(g_processesList,path);
+        if (dynlen(spl) < 3) {
+          dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[2]+","+path);
+          dynAppend(g_processesList,path);
+        }
       } else {   // Ctrl
         dynAppend(list,CEPObsDP+","+spl[1]+","+path);
         if (spl[1] != "OnlineControl") {
@@ -277,4 +284,35 @@ CEP_Processes_ActiveObsCallback(string dp1, dyn_string activeObservations) {
   CEP_Processes_UpdateCEPControllers(); 
 }
 
+CEP_Processes_UpdateStationTree() {
+
+  // empty the table
+  stationTree.clear();
   
+  
+  LOG_DEBUG("CEPProcesses.ctl:CEP_Processes_UpdateStationTree|Found CEP_selectedObservation: "+CEP_selectedObservation);
+  if (CEP_selectedObservation == "") {
+    return;
+  }
+  
+  LOG_DEBUG("CEP_Processes.ctl:CEP_Processes_UpdateStationTree|Found CEP_obsBaseDP: "+CEP_obsBaseDP);
+  if (dpExists(CEP_obsBaseDP)) {
+    // look if that name is available in the Observation List
+    int j = dynContains(g_observations["DP"],CEP_obsBaseDP);
+    if ( j > 0) {
+      // get the Stationlist from that observation
+      string sts=g_observations["STATIONLIST"][j];
+      LOG_DEBUG("CEP_Processes.ctl:CEP_Processes_UpdateStationTree|Found Stationlist for this Observation: "+ sts);
+      // add stations if not allready there
+      dyn_string stations = navFunct_listToDynString(sts);
+      for (int k=1; k<= dynlen(stations);k++) {
+        if (!stationTree.itemExists(stations[k])) {
+          stationTree.appendItem("",stations[k],stations[k]);
+          stationTree.ensureItemVisible(stations[k]);
+          stationTree.setIcon(stations[k],0,"16_empty.gif");
+
+        }
+      }
+    }
+  }
+}  

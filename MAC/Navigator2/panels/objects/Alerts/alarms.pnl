@@ -55,7 +55,7 @@ void dblClick(int row) {
   }
   dyn_anytype result = alarmTable.getLineN(row);
   LOG_DEBUG(\"alarms.pnl:DoubleClicked|Result: \"+result);
-  string dp = result[2];  
+  string dp = navFunct_ObsToTemp(result[2]);
   if (dpExists(dp) ) {
     LOG_DEBUG(\"alarms.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+dp);
     g_currentDatapoint=dp;
@@ -87,7 +87,7 @@ void rClick(int row) {
   }
   dyn_anytype result = alarmTable.getLineN(row);
   LOG_DEBUG(\"alarms.pnl:RightMouseClick|Result: \"+result);
-  string dp = result[2]+\".status.state\";
+  string dp = navFunct_ObsToTemp(result[2])+\".status.state\";
   string message = result[3];
   int status=-1;
   if (result[4] == \"ACK\") {
@@ -173,8 +173,8 @@ void redraw_table() {
   //append  all CAME and WENT alarms
   for (int j=1; j<=dynlen(g_alarms[\"TIME\"])  ; j++) {
     if (g_alarms[\"STATUS\"][j] != ACK  && choice == \"New\") {
-      string aS = substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\"));
-      alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",aS,
+      string dp = navFunct_TempToObs(substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\")));
+      alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",dp,
                             \"Message\",g_alarms[\"MESSAGE\"][j],
                             \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]),
                             \"State\",g_alarms[\"STATE\"][j]);
@@ -182,7 +182,7 @@ void redraw_table() {
       string aColor=getStateColor(g_alarms[\"STATE\"][j]);
       alarmTable.cellBackColRC(alarmTable.lineCount()-1,\"State\",aColor);
     } else if (g_alarms[\"STATUS\"][j] == ACK  && choice == \"Old\") {
-      string aS = substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\"));
+      string dp = navFunct_TempToObs(substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\")));
       alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",aS,
                             \"Message\",g_alarms[\"MESSAGE\"][j],
                             \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]),

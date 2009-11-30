@@ -34,6 +34,12 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
       if (dpConnect(\"updatePositions\",fill,sysName+\"remoteStation.\"+arrayList.text(i)+\".centerOL\",
                                        sysName+\"remoteStation.\"+arrayList.text(i)+\".centerNB\",
                                        sysName+\"remoteStation.\"+arrayList.text(i)+\".centerH\",
+                                       sysName+\"remoteStation.N_RSPBoards\",        
+                                       sysName+\"remoteStation.N_TBBoards\",
+                                       sysName+\"remoteStation.N_LBAS\",
+                                       sysName+\"remoteStation.N_HBAS\",
+                                       sysName+\"remoteStation.HBA_Split\",         
+                                       sysName+\"remoteStation.wide_LBAS\",
                                        sysName+\"remoteStation.\"+arrayList.text(i)+\".centerOL:_online.._invalid\") == -1) {
         LOG_DEBUG(\"LOFAR_Netherlands.pnl:main| couldn't connect to \"+sysName+\"remoteStation.\"+arrayList.text(i)+\".centerOL \"+ getLastError());
       }  
@@ -68,7 +74,13 @@ void doAction(string aDP, string anAction) {
 void updatePositions(string dp1, float cOL,
                      string dp2, float cNB,
                      string dp3, float cH,
-                     string dp7, bool invalid) {
+                     string dp4, int nrsp,
+                     string dp5, int ntbb,
+                     string dp6, int nlbas,
+                     string dp7, int nhbas,
+                     string dp8, bool hbasplit,
+                     string dp9, bool widelbas,
+                     string dp10, bool invalid) {
   
   // Check if the update concerns the current view
   string txt=arrayList.text(arrayList.number());
@@ -76,6 +88,13 @@ void updatePositions(string dp1, float cOL,
   if (strpos(dp1,txt) < 0) {    //not found match
     return;
   }
+  
+  NRSP=nrsp;         
+  NTBB=ntbb;         
+  NLBA=nlbas;         
+  NHBA=nhbas;         
+  HBASplit=hbasplit;         
+  WideLBAs=widelbas;
   
   dyn_string unsortOL=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
   dyn_string unsortNB=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
@@ -95,6 +114,8 @@ void updatePositions(string dp1, float cOL,
     NB[idx+1]=unsortNB[i];
     H[idx+1]=unsortH[i];         
   }
+
+  
   
         
   // found match, save found strings and redraw screen
@@ -127,6 +148,13 @@ float zoomFactor=1;
 int   shiftValue=25;
 int   shiftFactorX=0;
 int   shiftFactorY=0;
+
+int NRSP=-1;
+int NTBB=-1;
+int NLBA=-1;
+int NHBA=-1;
+bool HBASplit=false;
+bool WideLBAs=false;
 
 
 float centerOL;
@@ -167,7 +195,7 @@ void redraw(string mode) {
   g_stationList[1] = navFunct_bareDBName(sysName);
   
   LOG_DEBUG(\"Station.pnl:redraw|Mode: \"+mode);
-  if (strpos(mode,\"LBA\") > -1 || strpos(mode,\"LBL\") > -1 || strpos(mode,\"LBH\") > -1) {
+  if (strpos(mode,\"LBA\") > -1) {
     addPanelName    = \"objects/Hardware/Station_LBA.pnl\";
   } else if (strpos(mode,\"HBA\") > -1) {
     addPanelName    = \"objects/Hardware/Station_HBA.pnl\";
@@ -219,39 +247,46 @@ void redraw(string mode) {
   //  now start adding symbols to panel
   int ref =   1;
   for (int i = 1; i <= dynlen(antennaOffsetsOL); i++ ) {
-    if (antennaOffsetsOL[i] !=0 || antennaOffsetsNB[i] != 0) {
-      int XRCU = 2 * (i-1);
-      int YRCU = XRCU+1;
-      string xDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(XRCU)+\"_Subrack\"+
-                 navFunct_receiver2Subrack(XRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(XRCU)+\"_RCU\"+XRCU;
-      string yDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(YRCU)+\"_Subrack\"+
-                 navFunct_receiver2Subrack(YRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(YRCU)+\"_RCU\"+YRCU;
+    int XRCU;
+    int YRCU;
+    if (i-1 < NRSP*8/2) {
+      XRCU = 2 * (i-1);
+      YRCU = XRCU+1;
+    } else {
+      XRCU = 2*i - NRSP*8;
+      YRCU = 2*i-1 - NRSP*8;
+    }
+      
+    string xDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(XRCU)+\"_Subrack\"+
+               navFunct_receiver2Subrack(XRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(XRCU)+\"_RCU\"+XRCU;
+    string yDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(YRCU)+\"_Subrack\"+
+               navFunct_receiver2Subrack(YRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(YRCU)+\"_RCU\"+YRCU;
+    if (i-1 < NRSP*8/2) {
       dynAppend(g_RCUList,XRCU);
       dynAppend(g_RCUList,YRCU);
-      refNames[ref]=\"ant\"+(ref);
-      xPos_AddSymbol = (mainpanel_midX+shiftFactorX) + (antennaOffsetsOL[i] * expandFactorX);
-      yPos_AddSymbol = (mainpanel_midY+shiftFactorY) - (antennaOffsetsNB[i] * expandFactorY);
-      
-    
-      if (  addSymbol(  strModuleName,                   // Stay in this module
-	     	        \"\",                  // Name of this panel
-		        addPanelName,                    // Panel to add
-		        refNames[ref],                     // Ref of the addedPanel
-		        makeDynString( \"$aNr:\" + (i-1) ,     // Define all $values
-		                       \"$aOL:\" + antennaOffsetsOL[i]  ,    
-		                       \"$aNB:\" + antennaOffsetsNB[i]  ,
-		                       \"$aH:\"  + antennaOffsetsH[i]),                  // of particular addedpanel
-		        xPos_AddSymbol,                  // Xpos of the AddedSymbol
-		        yPos_AddSymbol,                  // Ypos of the AddedSymbol
-		        0,                               // angle
-		        1    ,1                          // zoomX , zoomY
-          ) < 0 ) {
-	    LOG_ERROR(\"Station.pnl:redraw|Error Appending antenna : \" + i + \" in this panel.\");
-      }
-      ref++;
     }
+    refNames[ref]=\"ant\"+(ref);
+    xPos_AddSymbol = (mainpanel_midX+shiftFactorX) + (antennaOffsetsOL[i] * expandFactorX);
+    yPos_AddSymbol = (mainpanel_midY+shiftFactorY) - (antennaOffsetsNB[i] * expandFactorY);
+      
+    if (  addSymbol(  strModuleName,                   // Stay in this modul
+                                  \"\",                  // Name of this panel
+		      addPanelName,                    // Panel to add
+		      refNames[ref],                     // Ref of the addedPanel
+		      makeDynString( \"$aNr:\" + (i-1) ,     // Define all $values
+		                     \"$aOL:\" + antennaOffsetsOL[i]  ,    
+		                     \"$aNB:\" + antennaOffsetsNB[i]  ,
+		                     \"$aH:\"  + antennaOffsetsH[i]),                  // of particular addedpanel
+		      xPos_AddSymbol,                  // Xpos of the AddedSymbol
+		      yPos_AddSymbol,                  // Ypos of the AddedSymbol
+		      0,                               // angle
+		      1    ,1                          // zoomX , zoomY
+        ) < 0 ) {
+	  LOG_ERROR(\"Station.pnl:redraw|Error Appending antenna : \" + i + \" in this panel.\");
+          }
+    ref++;
   }
-  
+ 
   // trigger that the panel values are calculated and ready
   dynClear(highlight);
   dynClear(strHighlight);
@@ -287,15 +322,25 @@ void updateField() {
     H[idx+1]=unsortH[i];         
   }
   
+    
+
+  
   string field=sysName+\"remoteStation.\"+txt;
   if (dpExists(field+\".centerOL:_online.._value\")) {
     // found match, save found strings and redraw screen
     dpGet(field+\".centerOL:_online.._value\",centerOL,
           field+\".centerNB:_online.._value\",centerNB,
           field+\".centerH:_online.._value\",centerH);
-     dpGet(OL,antennaOffsetsOL);          
-     dpGet(NB,antennaOffsetsNB);          
-     dpGet(H,antennaOffsetsH);          
+    dpGet(OL,antennaOffsetsOL);          
+    dpGet(NB,antennaOffsetsNB);          
+    dpGet(H,antennaOffsetsH);
+    dpGet(sysName+\"remoteStation.N_RSPBoards\",NRSP);         
+    dpGet(sysName+\"remoteStation.N_TBBoards\",NTBB);         
+    dpGet(sysName+\"remoteStation.N_LBAS\",NLBA);         
+    dpGet(sysName+\"remoteStation.N_HBAS\",NHBA);         
+    dpGet(sysName+\"remoteStation.HBA_Split\",HBASplit);         
+    dpGet(sysName+\"remoteStation.wide_LBAS\",WideLBAs);
+ 
     redraw(txt);
   } else {
     LOG_ERROR(\"Station.pnl:updateField|Error, couldn't find:\"+field+\".centerOL:_online.._value\");

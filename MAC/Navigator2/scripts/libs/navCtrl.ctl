@@ -1,6 +1,6 @@
 // navCtrl.ctl
 //
-//  Copyright (C) 2002-2004  // TabChanoged: The Tab has changed, so a new panle needs to be initialized and put in place
+//  Copyright (C) 2002-2004  // TabChanoged: The Tab has changed, so a new panel needs to be initialized and put in place
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
 //  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
@@ -708,6 +708,26 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
       navTabCtrl_setSelectedTab(typeSelector);
     }
     
+    // To be able to handle same panel for different choices we introduce the possiblity to give a fake extra _level in the
+    // selection datapoint, in that case the selection will be stripped from the fake point and set to the one b4 that
+    // a fake point will be known by the # delim
+    
+    string var="";
+    if (strtok(selection,"#") >= 0) {
+      dyn_string aS = strsplit(selection,"#");
+      selection = aS[1];
+      var= aS[2];
+      
+      LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|#selection: "+selection);
+      LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|#var:       "+var);
+      if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList")) {
+        dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList",var);
+      } else {
+        LOG_WARNING("navCtrl.ctl:navCtrl_handleLocatorEvent| Error: no dp " + DPNAME_NAVIGATOR + g_navigatorID+".panelParam");
+      }
+    }
+      
+
     if (dpExists(selection)) {
       g_currentDatapoint=selection;
     }

@@ -1,50 +1,67 @@
 V 10
 1
-LANG:1 13 IONode detail
-PANEL,-1 -1 631 221 N "_3DFace" 3
+LANG:1 5 Adder
+PANEL,-1 -1 631 221 N "_3DFace" 2
 "$KSPType"
-"$adderList"
 "$objectNumber"
 "main()
 {
   baseDP         = g_currentDatapoint;
   database       = dpSubStr(baseDP,DPSUB_SYS);
   
+  panelName=\"Adder\";
   ksp=$KSPType;
-  adder=$adderList;
-    
-  // determine adderNumber
-  objectNr=$objectNumber;
-  dyn_string list=navFunct_listToDynString(adder);
-  
-  int bufNr = -1;
-  if (dynlen(list) <= 1+objectNr && list[1+objectNr] < 127) {
-    bufNr=list[1+objectNr];;
-    adderDP=database+\"Adder\"+bufNr;
-    
-  
-    // connect to the adder values
-    // check if the requiered datapoint for this view are enabled and accessible
-    if (dpExists(adderDP + \".dropping\")) {
-      if (dpConnect(\"updateAdder\", adderDP + \".dropping\",
-		                   adderDP + \".nrBlocksDropped\",
-                                   adderDP + \".dropping:_online.._invalid\") == -1) {
-        LOG_ERROR(\"adder.pnl:main|Couldn't connect to: \"+adderDP+\" \"+getLastError());
-      }
-    } else {
-      LOG_ERROR(\"adder.pnl:main|Couldn't find DP to connect to: \"+adderDP + \".dropping\");
-      setValue(\"dropping\", \"foreCol\", \"Lofar_dpdoesnotexist\");
-      setValue(\"nrBlocksDropped\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    }    
-    
-    // pass baseDP to selfstate Object to work with
-    setValue(\"selfState.light\",\"toolTipText\",adderDP);
 
-    // connect for selfUpdates
-    showSelfState(adderDP);
-
+  // check if the required datapoint for this view are enabled and accessible
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName\") ){
+    if (dpConnect(\"updateTrigger\", DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName:_online.._value\",
+                                   DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.paramList:_online.._value\",
+                                   DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName:_online.._invalid\") == -1) {
+      LOG_ERROR(\"adder.pnl:main|Couldn't connect to: \"+DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName \"+ getLastError() );
+    }
   } else {
-    LOG_ERROR(\"adder.pnl:main|adderList out of range or invalid adderDP\");
+    LOG_ERROR(\"adder.pnl:main|Couldn't find DP to connect to: \"+DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName\" );
+  } 
+}
+
+void updateTrigger( string dp1, string objectName,
+                    string dp2, dyn_string paramList,
+                    string dp3, bool invalid) {
+  if (objectName == panelName) {
+    LOG_TRACE(\"adder.pnl:updateTrigger|objectName: \"+objectName+
+              \" panelName: \"+ panelName);  
+   
+    // determine adderNumber
+    objectNr=$objectNumber;
+  
+    int bufNr = -1;
+    if (dynlen(paramList) <= 1+objectNr && paramList[1+objectNr] < 127) {
+      bufNr=paramList[1+objectNr];;
+      adderDP=database+\"Adder\"+bufNr;
+    
+  
+      // connect to the adder values
+      // check if the requiered datapoint for this view are enabled and accessible
+      if (dpExists(adderDP + \".dropping\")) {
+        if (dpConnect(\"updateAdder\", adderDP + \".dropping\",
+                                     adderDP + \".nrBlocksDropped\",
+                                     adderDP + \".dropping:_online.._invalid\") == -1) {
+          LOG_ERROR(\"adder.pnl:main|Couldn't connect to: \"+adderDP+\" \"+getLastError());
+        }
+      } else {
+        LOG_ERROR(\"adder.pnl:main|Couldn't find DP to connect to: \"+adderDP + \".dropping\");
+        setValue(\"dropping\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+        setValue(\"nrBlocksDropped\", \"backCol\", \"Lofar_dpdoesnotexist\");
+      }    
+    
+      // pass baseDP to selfstate Object to work with
+      setValue(\"selfState.light\",\"toolTipText\",adderDP);
+      // connect for selfUpdates
+      showSelfState(adderDP);
+
+    } else {
+      LOG_ERROR(\"adder.pnl:main|adderList out of range or invalid adderDP\");
+    }
   }
 }
 
@@ -61,8 +78,8 @@ updateAdder(string dp1, bool dropping,
     }        
     setValue(\"nrBlocksDropped\", \"text\", nrBlocksDropped);
   } else {
-    setValue(\"dropping\", \"backCol\", \"black\");
-    setValue(\"nrBlocksDropped\", \"text\", \"\");
+    setValue(\"dropping\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"nrBlocksDropped\", \"backCol\", \"Lofar_invalid\");
   }
 }
 " 0
@@ -73,6 +90,7 @@ E "#uses \"navPanel.ctl\"
 string ksp=\"\";
 string adder=\"\";
 string database=\"\";
+string panelName=\"\";
 
 string baseDP = \"\";
 string adderDP=\"\";

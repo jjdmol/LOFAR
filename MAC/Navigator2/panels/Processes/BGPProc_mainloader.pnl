@@ -11,6 +11,17 @@ PANEL,-1 -1 980 746 N "_3DFace" 0
   string strModuleName   = myModuleName();  
   string addPanelName    = \"\";
   dyn_string addPanelValues = makeDynString();
+
+  // get the saved panelparams for this panel
+  string var=\"\";
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".panelParamList\")) {
+    dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".panelParamList\",var);
+    // empty the paramList
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".panelParamList\",\"\");
+  } else {
+    LOG_WARNING(\"navCtrl.ctl:navCtrl_handleLocatorEvent| Error: no dp \" + DPNAME_NAVIGATOR + g_navigatorID+\".panelParam\");
+  }
+
   
   // get BGLAppl path to obtain the KSPType
   BGLApplDP              = navFunct_getPathLessOne(baseDP);
@@ -49,6 +60,7 @@ PANEL,-1 -1 980 746 N "_3DFace" 0
     dynAppend(addPanelValues,\"$KSPType:\"+KSPType);
     dynAppend(addPanelValues,\"$inputBufferList:\"+inputBufferList);
     dynAppend(addPanelValues,\"$adderList:\"+adderList);
+    dynAppend(addPanelValues,\"$station:\"+var);
   } else if (KSPType == \"transients\") {
     addPanelName=\"objects/Processes/BGPProc_transients.pnl\";
     addPanelValues = makeDynString();
