@@ -117,7 +117,7 @@ class Parset(util.Parset.Parset):
 	for station in self.stations:
 	  self.setdefault('PIC.Core.Station.%s.RSP.ports' % (station.name,), station.inputs)
 	  
-          stationName = s.name.split("_")[0] # remove specific antenna or array name (_hba0 etc) if present
+          stationName = station.name.split("_")[0] # remove specific antenna or array name (_hba0 etc) if present
           self.setdefault("PIC.Core.%s.position" % (stationName,), self["PIC.Core.%s.phaseCenter" % (stationName,)])
 
 	for pset in xrange(len(self.psets)):
