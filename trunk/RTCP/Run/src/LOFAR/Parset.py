@@ -68,7 +68,7 @@ class Parset(util.Parset.Parset):
         def applyAntennaSet( station, antennaset ):
           if antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE"]:
             suffix = ["LBA"]
-          elif station.startsWith("CS"):
+          elif station.startswith("CS"):
             if antennaset == "HBA_ONE":
               suffix = ["HBA0"]
             elif antennaset == "HBA_TWO":  
@@ -81,7 +81,7 @@ class Parset(util.Parset.Parset):
 
           return "+".join(["%s%s" % (station,s) for s in suffix])
 
-        return "+".join( [applyAntennaSet(s, self["Observation.antennaSet"]) for s in sasstationlist] )
+        return "+".join( [applyAntennaSet(s, self["Observation.antennaSet"]) for s in self[key]] )
 
     def distillPartition(self, key="OLAP.CNProc.partition"):
         """ Distill partition to use from the parset file and return it. """
@@ -116,6 +116,9 @@ class Parset(util.Parset.Parset):
 	
 	for station in self.stations:
 	  self.setdefault('PIC.Core.Station.%s.RSP.ports' % (station.name,), station.inputs)
+	  
+          stationName = s.name.split("_")[0] # remove specific antenna or array name (_hba0 etc) if present
+          self.setdefault("PIC.Core.%s.position" % (stationName,), self["PIC.Core.%s.phaseCenter" % (stationName,)])
 
 	for pset in xrange(len(self.psets)):
 	  self.setdefault('PIC.Core.IONProc.%s[%s].inputs' % (self.partition,pset), [
@@ -146,12 +149,13 @@ class Parset(util.Parset.Parset):
 	  nrSubbands = len(subbands)
 
 	  self.setdefault('Observation.nrBeams', index)
-	
+
 	# Pset configuration
 	self['OLAP.CNProc.partition'] = self.partition
 
 	nrPsets = len(self.psets)
 	nrStorageNodes = self.getNrUsedStorageNodes()
+        nrBeams = self.getNrPencilBeams()
 
         # set and resolve storage hostnames
         # sort them since mpirun will as well, messing with our indexing schemes!
@@ -159,16 +163,22 @@ class Parset(util.Parset.Parset):
 
 	self.setdefault('OLAP.nrPsets', nrPsets)
 	self.setdefault('OLAP.CNProc.inputPsets', [s.getPsetIndex(self.partition) for s in self.stations])
-	self.setdefault('OLAP.CNProc.outputPsets', range(nrPsets))
+	self.setdefault('OLAP.CNProc.outputSubbandPsets', range(nrPsets))
+	self.setdefault('OLAP.CNProc.outputBeamPsets', range(nrPsets))
 
-	self.setdefault('OLAP.subbandsPerPset', int( math.ceil(1.0 * nrSubbands / nrPsets) ) )
-	if nrSubbands == 1 or nrStorageNodes == 0:
-	  self.setdefault('OLAP.psetsPerStorage', 1 )
+        # what will be stored where?
+        # outputSubbandPsets may well be set before finalize()
+	self.setdefault('OLAP.subbandsPerPset', int( math.ceil(1.0 * nrSubbands / len(self["OLAP.CNProc.outputSubbandPsets"]) ) ) )
+	if nrStorageNodes == 0:
 	  self.setdefault('OLAP.storageNodeList',[0] * nrSubbands)
 	else:  
-	  self.setdefault('OLAP.psetsPerStorage', int( math.ceil(1.0 * nrPsets / nrStorageNodes) ) )
 	  self.setdefault('OLAP.storageNodeList',[i//int(math.ceil(1.0 * nrSubbands/nrStorageNodes)) for i in xrange(0,nrSubbands)])
-	
+
+	if nrStorageNodes == 0:
+	  self.setdefault('OLAP.PencilInfo.storageNodeList',[0] * nrBeams)
+	else:  
+	  self.setdefault('OLAP.PencilInfo.storageNodeList',[i//int(math.ceil(1.0 * nrBeams/nrStorageNodes)) for i in xrange(0,nrBeams)])
+
 	#print 'nrSubbands = ' + str(nrSubbands) + ', nrStorageNodes = ' + str(nrStorageNodes) + ', subbandsPerPset = ' + str(self.getSubbandsPerPset())
 
 	#print 'storageNodes: ' + str(self['OLAP.storageNodeList'])
@@ -326,6 +336,12 @@ class Parset(util.Parset.Parset):
       del self['OLAP.IONProc.integrationSteps']
       del self['OLAP.CNProc.integrationSteps']
 
+    def getNrPencilBeams( self ):
+      rings =  int( self["OLAP.PencilInfo.nrRings"] )
+      manual = int( self["OLAP.nrPencils"] )
+
+      return 3 * rings * (rings + 1) + 1 + manual
+
     def getNrOutputs( self ):
       # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
       output_keys = [
@@ -334,9 +350,6 @@ class Parset(util.Parset.Parset):
         "OLAP.outputBeamFormedData",
         "OLAP.outputCoherentStokes",
         "OLAP.outputIncoherentStokes",
-
-        # depricated
-        "Observation.outputIncoherentStokesI",
       ]
 
       outputs = 0
@@ -344,10 +357,6 @@ class Parset(util.Parset.Parset):
       for k in output_keys:
         if k in self and self.getBool(k):
           outputs += 1
-
-      # depricated
-      if "Observation.mode" in output_keys:
-        outputs += 1
 
       return outputs
 
