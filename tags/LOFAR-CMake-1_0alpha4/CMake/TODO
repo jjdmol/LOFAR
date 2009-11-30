@@ -1,0 +1,79 @@
+
+==============================================================================
+=                       TODO - List of things to do                          =
+==============================================================================
+
+* Solve the CN and ION build problems for RTCP. These problems arise because
+  CN and ION are now defined as variants, whereas they should be defined as
+  different compilers.
+  However, this only solves part of the problem. A *real* solution is to
+  define compilers in separate <compiler-suite>.compiler.conf files. That
+  way we can do per-compiler settings, instead of per-host settings, using a
+  variants file (see bug #1395).
+
+* Solve the problem of running some (distributed) tests, e.g. ParmDB tests,
+  which rely on executables and/or scripts that were built as part of another
+  LOFAR package. For (C)Make targets, this can be solved by using the target
+  property ${CMAKE_BUILD_TYPE}_LOCATION; this would return, e.g., the location
+  of getparsetvalue (in LCS/Common). However, scripts, like startdistproc,
+  don't have an associated target (because they don't have to be built). We 
+  could solve this by creating a custom target for that (and other) scripts:
+
+    add_custom_target(hello.sh ALL)
+    add_custom_command(TARGET hello.sh POST_BUILD COMMAND ${CMAKE_COMMAND} -E
+    copy ${CMAKE_SOURCE_DIR}/hello.sh ${CMAKE_BINARY_DIR}/hello.sh)
+
+  But this feels rather hacky.
+
+* Define ${PACKAGE_NAME}_LINK_LIBRARIES in LofarPackage.cmake, which can
+  then be used by lofar_add_library() and lofar_add_executable() in
+  LofarMacros.cmake. This avoids the need to create a "dummy" project library,
+  solely to resolve all library dependencies on other packages when linking
+  executables. 
+
+* Define ${PACKAGE_NAME}_INCLUDE_PATH_SUFFIX in LofarPackage.cmake.
+  The user can then override the default value. There will be no need for
+  caching anymore (as far as I can see).
+
+* Add possibility to do svn checkout/update per package, using the package
+  dependencies provided by lofar_package() and/or lofar_add_package().
+  This will be close to the checkout/update behaviour of `rub'.
+
+* Do not set CMAKE_PREFIX_PATH anymore. Use ${PKG}_ROOT or ${PKG}_ROOT_DIR
+  as a hint for the root directory of the package. You can/should then use
+  the HINTS and PATH_SUFFIXES options for the find_xxx() commands.
+  LofarFindPackage should then set ${PKG}_ROOT before invoking the actual
+  FindXXX macro. For example, in FindFOO.cmake, use:
+    find_path(FOO_DIR foo.h PATH_SUFFIXES include HINTS ${FOO_ROOT})
+    find_library(FOO_LIBRARY foo PATH SUFFIXES lib HINTS ${FOO_ROOT})
+  Note that CMake will handle the lib/lib64 issue, even if only lib is
+  specified as path (suffix).
+  This assumes that every external package that we depend on handles the
+  variable ${PKG}_ROOT or ${PKG}_ROOT_DIR. Packages like FindBoost and FindHDF5
+  do so, but I'm not sure if every packages does this.
+
+* Turn makeversion into a real CMake macro and merge it with
+  LofarPackageVersion. Generate the Package__Version.{h,cc} files in the
+  binary directory, instead of the source directory.
+
+* Create a symlink to each header file, instead of each directory containing 
+  header files. 
+  Advantages: 
+  - you must explicitly mention each header file that is part of the
+    package's interface.
+  - Generated files (like the MAC protocol files) can be put in the 
+    $bindir/include directory instead of $bindir/include/MAC directory.
+  Disadvantages: 
+  - a lot of symlinks.
+  This could all be done using a macro like lofar_add_headers(). This macro
+  would then create the directory 
+  ${CMAKE_BINARY_DIR}/include/${${PACKAGE_NAME}_INCLUDE_PATH_SUFFIX}, when the 
+  first symlink is created. Another options is to let LofarPackage handle
+  this, but then a non-default include path suffix should be set before
+  lofar_package() is called.
+
+* SSE flags are not yet passed properly to either GNU or ICC compiler.
+  Maybe this should just be done in the variants file when defining the
+  different compiler suites and options.
+  Is this still needed? SSE is enabled by default on x86_64 platforms.
+

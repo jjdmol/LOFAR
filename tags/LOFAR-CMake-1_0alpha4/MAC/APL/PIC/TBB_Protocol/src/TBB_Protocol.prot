@@ -1,0 +1,1352 @@
+// -*- mode: c++ -*-//
+// Protocol definition for the TBB driver
+//
+autogen definitions protocol;
+
+description = "Protocol for the TBB driver interface";
+prefix = "TBB"; // for the signal names
+id = "(LOFAR::MACIO::F_APL_PROTOCOL+14)";
+
+// specify extra include files
+// e.g.
+include = '<sys/time.h>';
+include = '<linux/types.h>';
+include = '<bitset>';
+include = '<Common/LofarTypes.h>';
+
+include = '<APL/RTCCommon/Timestamp.h>';
+
+prelude = << PRELUDE_END
+
+static const int32 MAX_N_TBBOARDS = 12;              // max 12 TB boards, see station.conf for number of installed boards
+static const int32 MAX_N_RCUS = MAX_N_TBBOARDS * 16; // 16 channels on 1 board, max 192 RCU's
+static const int32 MAX_N_IMAGES = 16;                // max number of images in flash
+
+static const uint32 TBB_MODE_TRANSIENT       = 0x00000001;
+static const uint32 TBB_MODE_SUBBANDS        = 0x00000002;
+
+// asignments for the status_mask word
+
+// board status
+static const uint32 TBB_BOARD_MASK           = 0x0000000F;
+static const uint32 TBB_SUCCESS              = 0x00000000;
+static const uint32 TBB_NO_BOARD             = 0x00000001;
+static const uint32 TBB_NOT_ACTIVE           = 0x00000002;
+static const uint32 TBB_NOT_READY            = 0x00000003;
+static const uint32 TBB_TIME_OUT             = 0x00000004;
+static const uint32 TBB_BUSY                 = 0x00000005;
+
+// flash errors
+static const uint32 TBB_FLASH_MASK           = 0x000000F0;
+static const uint32 TBB_FLASH_FILE_NOT_FIND  = 0x00000010;
+static const uint32 TBB_FLASH_BAD_PASSWORD   = 0x00000020;
+static const uint32 TBB_FLASH_ERASE_ERROR    = 0x00000030;
+static const uint32 TBB_FLASH_WRITE_ERROR    = 0x00000040;
+static const uint32 TBB_FLASH_VERIFY_ERROR   = 0x00000050;
+
+// rcu errors
+static const uint32 TBB_CH_MASK              = 0x00000F00;
+static const uint32 TBB_CH_NOT_FREE          = 0x00000100;
+static const uint32 TBB_CH_NOT_ALLOCATED     = 0x00000200;
+static const uint32 TBB_CH_NOT_STOPPED       = 0x00000300;
+static const uint32 TBB_ALLOC_ERROR          = 0x00000400;
+
+// select errors
+static const uint32 TBB_SELECT_MASK          = 0x0000F000;
+static const uint32 TBB_BOARD_SELECT_ERROR   = 0x00001000;
+static const uint32 TBB_MP_SELECT_ERROR      = 0x00002000;
+static const uint32 TBB_RCU_SELECT_ERROR     = 0x00003000;
+static const uint32 TBB_IMAGE_SELECT_ERROR   = 0x00004000;
+static const uint32 TBB_PID_SELECT_ERROR     = 0x00005000;
+static const uint32 TBB_REGID_SELECT_ERROR   = 0x00006000;
+static const uint32 TBB_ADDR_SEL_ERROR       = 0x00007000;
+
+// status from board
+static const uint32 TBB_BOARD_STATUS_MASK    = 0xFF000000;
+static const uint32 TBB_CH_ALREADY_ALLOCATED = 0x01000000;
+static const uint32 TBB_CH_ALREADY_IN_USE    = 0x02000000;
+static const uint32 TBB_SIZE_TO_LARGE        = 0x03000000;
+static const uint32 TBB_NO_MEMORY_AVAILABLE  = 0x04000000;
+static const uint32 TBB_RING_FULL            = 0x05000000;
+static const uint32 TBB_MPI_CRC_ERROR_MP0    = 0xF0000000;
+static const uint32 TBB_MPI_CRC_ERROR_MP1    = 0xF1000000;
+static const uint32 TBB_MPI_CRC_ERROR_MP2    = 0xF2000000;
+static const uint32 TBB_MPI_CRC_ERROR_MP3    = 0xF3000000;
+static const uint32 TBB_MPI_CRC_ERROR_TP     = 0xF4000000;
+static const uint32 TBB_MPI_ACK_ERROR        = 0xF5000000;
+static const uint32 TBB_MPI_TIMEOUT_ERROR    = 0xF6000000;
+static const uint32 TBB_CEP_CONFIG_ERRORR    = 0xFB000000;
+static const uint32 TBB_FLASH_ACCESS_DENIED  = 0xFC000000;
+static const uint32 TBB_CEP_ALREADY_IN_USE   = 0xFD000000;
+static const uint32 TBB_WRONG_COMMAND        = 0xFE000000;
+
+//
+// Example: if(status_mask != TBB_SUCCESS) then ....
+
+typedef struct TbbTriggerSetup // setup variables for 1 channel
+{
+	uint16 level;
+	uint8  start_mode;
+	uint8  stop_mode;
+	uint8  filter_select;
+	uint8  window;
+	uint8  trigger_mode;
+	uint8  operating_mode;
+};
+
+typedef struct TbbTriggerCoef // setup variables for 1 channel
+{
+	uint16 c0;
+	uint16 c1;
+	uint16 c2;
+	uint16 c3;
+};
+PRELUDE_END;
+
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+// Userdefine types are
+//
+
+
+//
+// TBB events
+//
+
+event = {
+	signal = DRIVER_BUSY_ACK;
+	dir = OUT;
+};
+
+// configuration info
+event = {
+	signal = GET_CONFIG;
+	dir = IN;
+};
+
+event = {
+	signal = GET_CONFIG_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+	param = {
+		name = "max_boards";
+		type = "int32";
+	};
+	param = {
+		name = "active_boards_mask";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = RCU_INFO;
+	dir = IN;
+};
+
+// for bit assignment of rcu_status see on top of file
+// the value of rcu_state can be one of the following
+// F = Rcu is Free
+// A = Rcu is Allocated
+// R = Rcu is recording
+// S = Rcu is stopped
+// E = Rcu error
+//
+event = {
+	signal = RCU_INFO_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+	param = {
+		name = "rcu_status";
+		type = "uint16[MAX_N_RCUS]";
+	};
+	param = {
+		name = "rcu_state";
+		type = "char[MAX_N_RCUS]";
+	};
+	param = {
+		name = "rcu_start_addr";
+		type = "uint32[MAX_N_RCUS]";
+	};
+	param = {
+		name = "rcu_pages";
+		type = "uint32[MAX_N_RCUS]";
+	};
+	param = {
+		name = "rcu_on_board";
+		type = "uint8[MAX_N_RCUS]";
+	};
+	param = {
+		name = "rcu_on_input";
+		type = "uint8[MAX_N_RCUS]";
+	};
+};
+
+event = {
+	signal = SUBSCRIBE;
+	dir = IN;
+	param = {
+		name = "triggers";
+		type = "bool";
+	};
+	param = {
+		name = "hardware";
+		type = "bool";
+	};
+};
+
+event = {
+	signal = SUBSCRIBE_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = UNSUBSCRIBE;
+	dir = IN;
+};
+
+event = {
+	signal = UNSUBSCRIBE_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+};
+
+// data recording
+event = {
+	signal = ALLOC;
+	dir = IN;
+	param = {
+		name = "rcu_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+};
+
+event = {
+	signal = ALLOC_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "rcu_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+};
+
+event = {
+	signal = FREE;
+	dir = IN;
+	param = {
+		name = "rcu_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+};
+
+event = {
+	signal = FREE_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "rcu_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+};
+
+event = {
+	signal = RECORD;
+	dir = IN;
+	param = {
+		name = "rcu_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+};
+
+event = {
+	signal = RECORD_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "rcu_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+};
+
+event = {
+	signal = STOP;
+	dir = IN;
+	param = {
+		name = "rcu_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+};
+
+event = {
+	signal = STOP_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "rcu_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+};
+
+// Triggering
+event = {
+	signal = TRIGGER;
+	dir = OUT;
+	param = {
+		name = "rcu";
+		type = "int32";
+	};
+	param = {
+		name = "sequence_nr";
+		type = "uint32";
+	};
+	param = {
+		name = "time";
+		type = "uint32";
+	};
+	param = {
+		name = "sample_nr";
+		type = "uint32";
+	};
+	param = {
+		name = "trigger_sum";
+		type = "uint32";
+	};
+	param = {
+		name = "trigger_samples";
+		type = "uint32";
+	};
+	param = {
+		name = "peak_value";
+		type = "uint32";
+	};
+	param = {
+		name = "power_before";
+		type = "uint16";
+	};
+	param = {
+		name = "power_after";
+		type = "uint16";
+	};
+};
+
+event = {
+	signal = TRIG_RELEASE;
+	dir = IN;
+	param = {
+		name = "rcu_stop_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+	param = {
+		name = "rcu_start_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+};
+
+event = {
+	signal = TRIG_RELEASE_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = TRIG_GENERATE;
+	dir = IN;
+	param = {
+		name = "rcu_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+};
+
+event = {
+	signal = TRIG_GENERATE_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = TRIG_SETUP;
+	dir = IN;
+	param = {
+		name = "setup";
+		type = "TbbTriggerSetup[MAX_N_RCUS]";
+	};
+};
+
+event = {
+	signal = TRIG_SETUP_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = TRIG_SETUP_SAME;
+	dir = IN;
+	param = {
+		name = "rcu_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+	param = {
+		name = "setup";
+		type = "TbbTriggerSetup";
+	};
+};
+
+event = {
+	signal = TRIG_SETUP_SAME_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = TRIG_COEF;
+	dir = IN;
+	param = {
+		name = "coefficients";
+		type = "TbbTriggerCoef[MAX_N_RCUS]";
+	};
+};
+
+event = {
+	signal = TRIG_COEF_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = TRIG_COEF_SAME;
+	dir = IN;
+	param = {
+		name = "rcu_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+	};
+	param = {
+		name = "coefficients";
+		type = "TbbTriggerCoef";
+	};
+};
+
+event = {
+	signal = TRIG_COEF_SAME_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = TRIG_SETTINGS;
+	dir = IN;
+};
+
+event = {
+	signal = TRIG_SETTINGS_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+	param = {
+		name = "setup";
+		type = "TbbTriggerSetup[MAX_N_RCUS]";
+	};
+	param = {
+		name = "coefficients";
+		type = "TbbTriggerCoef[MAX_N_RCUS]";
+	};
+};
+
+event = {
+	signal = TRIG_INFO;
+	dir = IN;
+	param = {
+		name = "rcu";
+		type = "int32";
+	};
+};
+
+event = {
+	signal = TRIG_INFO_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+	param = {
+		name = "rcu";
+		type = "int32";
+	};
+	param = {
+		name = "sequence_nr";
+		type = "uint32";
+	};
+	param = {
+		name = "time";
+		type = "uint32";
+	};
+	param = {
+		name = "sample_nr";
+		type = "uint32";
+	};
+	param = {
+		name = "trigger_sum";
+		type = "uint32";
+	};
+	param = {
+		name = "trigger_samples";
+		type = "uint32";
+	};
+	param = {
+		name = "peak_value";
+		type = "uint32";
+	};
+	param = {
+		name = "power_before";
+		type = "uint16";
+	};
+	param = {
+		name = "power_after";
+		type = "uint16";
+	};
+};
+
+
+// Data reading
+event = {
+	signal = READ;
+	dir = IN;
+	param = {
+		name = "rcu";
+		type = "int32";
+	};
+	param = {
+		name = "secondstime";
+		type = "uint32";
+	};
+	param = {
+		name = "sampletime";
+		type = "uint32";
+	};
+	param = {
+		name = "prepages";
+		type = "uint32";
+	};
+	param = {
+		name = "postpages";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = READ_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+	param = {
+		name = "page_index";
+		type = "uint32";
+	};
+	param = {
+		name = "pages_left";
+		type = "uint32";
+	};
+	param = {
+		name = "period_samples";
+		type = "uint32";
+	};
+	param = {
+		name = "period_seconds";
+		type = "uint32";
+	};
+	param = {
+		name = "page_offset";
+		type = "uint32";
+	};
+};
+
+
+event = {
+	signal = MODE;
+	dir = IN;
+	param = {
+		name = "rec_mode";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = MODE_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = PAGEPERIOD;
+	dir = IN;
+	param = {
+		name = "rcu";
+		type = "int32";
+	};
+};
+
+event = {
+	signal = PAGEPERIOD_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+	param = {
+		name = "pageperiod";
+		type = "uint32";
+	};
+};
+
+// Operation and Maintenance
+// Board information
+
+event = {
+	signal = BOARDCHANGE;
+	dir = OUT;
+	param = {
+		name = "activeboards";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = CEP_STATUS;
+	dir = IN;
+	param = {
+		name = "boardmask";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = CEP_STATUS_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "pages_left";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = STOP_CEP;
+	dir = IN;
+	param = {
+		name = "boardmask";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = STOP_CEP_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = CEP_DELAY;
+	dir = IN;
+	param = {
+		name = "boardmask";
+		type = "uint32";
+	};
+	param = {
+		name = "delay";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = CEP_DELAY_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = VERSION;
+	dir = IN;
+	param = {
+		name = "boardmask";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = VERSION_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "boardid";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "tpswversion";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "boardversion";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "tphwversion";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "mp0version";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "mp1version";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "mp2version";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "mp3version";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "driverversion";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = SIZE;
+	dir = IN;
+	param = {
+		name = "boardmask";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = SIZE_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "npages";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+// Board status
+event = {
+	signal = ERROR;
+	dir = OUT;
+	param = {
+		name = "code";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = STATUS;
+	dir = IN;
+	param = {
+		name = "boardmask";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = STATUS_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "V12";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "V25";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "V33";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "Tpcb";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "Ttp";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "Tmp0";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "Tmp1";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "Tmp2";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "Tmp3";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "CurrentImage";
+		type = "uint8[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "FlashState";
+		type = "uint8[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "WatchDogMode";
+		type = "uint8[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "Pgood";
+		type = "uint8[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = WATCHDOG;
+	dir = IN;
+	param = {
+		name = "boardmask";
+		type = "uint32";
+	};
+	param = {
+		name = "mode";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = WATCHDOG_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event  = {
+	signal = TEMP_LIMIT;
+	dir = IN;
+	param = {
+		name = "boardmask";
+		type = "uint32";
+	};
+	param = {
+		name = "high";
+		type = "uint32";
+	};
+	param = {
+		name = "low";
+		type = "uint32";
+	};
+};
+
+event  = {
+	signal = TEMP_LIMIT_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+
+// Board control
+event = {
+	signal = CLEAR;
+	dir = IN;
+	param = {
+		name = "boardmask";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = CLEAR_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = RESET;
+	dir = IN;
+	param = {
+		name = "boardmask";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = RESET_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = CONFIG;
+	dir = IN;
+	param = {
+		name = "boardmask";
+		type = "uint32";
+	};
+	param = {
+		name = "imagenr";
+		type = "int32";
+	};
+};
+
+event = {
+	signal = CONFIG_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+
+// Remote system update, one board a time
+// board = 0..MAX_N_TBBOARDS
+event  = {
+	signal = ERASE_IMAGE;
+	dir = IN;
+	param = {
+		name = "board";
+		type = "int32";
+	};
+	param = {
+		name = "image";
+		type = "int32";
+	};
+};
+
+event = {
+	signal = ERASE_IMAGE_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+};
+
+event  = {
+	signal = READ_IMAGE;
+	dir = IN;
+	param = {
+		name = "board";
+		type = "int32";
+	};
+	param = {
+		name = "image";
+		type = "int32";
+	};
+};
+
+event = {
+	signal = READ_IMAGE_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+};
+
+
+event  = {
+	signal = WRITE_IMAGE;
+	dir = IN;
+	param = {
+		name = "board";
+		type = "int32";
+	};
+	param = {
+		name = "image";
+		type = "int32";
+	};
+	param = {
+		name = "version";
+		type = "int32";
+	};
+	param = {
+		name = "filename_tp";
+		type = "char[64]";
+	};
+	param = {
+		name = "filename_mp";
+		type = "char[64]";
+	};
+	param = {
+		name = "password";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = WRITE_IMAGE_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+};
+
+event  = {
+	signal = IMAGE_INFO;
+	dir = IN;
+	param = {
+		name = "board";
+		type = "int32";
+	};
+};
+
+event = {
+	signal = IMAGE_INFO_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+	param = {
+		name = "board";
+		type = "int32";
+	};
+	param = {
+		name = "image_version";
+		type = "uint32[MAX_N_IMAGES]";
+	};
+	param = {
+		name = "write_date";
+		type = "uint32[MAX_N_IMAGES]";
+	};
+	param = {
+		name = "tp_file_name";
+		type = "char[MAX_N_IMAGES][16]";
+	};
+	param = {
+		name = "mp_file_name";
+		type = "char[MAX_N_IMAGES][16]";
+	};
+	param = {
+		name = "active_image";
+		type = "uint32";
+	};
+};
+
+// DDR2 Access
+event  = {
+	signal = READX;
+	dir = IN;
+	param = {
+		name = "board";
+		type = "int32";
+	};
+	param = {
+		name = "mp";
+		type = "int32";
+	};
+	param = {
+		name = "pid";
+		type = "int32";
+	};
+	param = {
+		name = "regid";
+		type = "int32";
+	};
+	param = {
+		name = "pagelength";
+		type = "uint32";
+	};
+	param = {
+		name = "pageaddr";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = READX_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+	param = {
+		name = "pagedata";
+		type = "uint32[256]";
+	};
+};
+
+event  = {
+	signal = READW;
+	dir = IN;
+	param = {
+		name = "board";
+		type = "int32";
+	};
+	param = {
+		name = "mp";
+		type = "int32";
+	};
+	param = {
+		name = "addr";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = READW_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+	param = {
+		name = "word";
+		type = "uint32[8]";
+	};
+};
+
+event  = {
+	signal = WRITEW;
+	dir = IN;
+	param = {
+		name = "board";
+		type = "int32";
+	};
+	param = {
+		name = "mp";
+		type = "int32";
+	};
+	param = {
+		name = "addr";
+		type = "uint32";
+	};
+	param = {
+		name = "word";
+		type = "uint32[8]";
+	};
+};
+
+	event = {
+		signal = WRITEW_ACK;
+		dir = OUT;
+		param = {
+			name = "status_mask";
+			type = "uint32";
+		};
+	};
+
+	event  = {
+		signal = READR;
+		dir = IN;
+		param = {
+			name = "board";
+			type = "int32";
+		};
+		param = {
+			name = "mp";
+			type = "int32";
+		};
+		param = {
+			name = "pid";
+			type = "int32";
+		};
+		param = {
+			name = "regid";
+			type = "int32";
+		};
+	};
+
+	event = {
+		signal = READR_ACK;
+		dir = OUT;
+		param = {
+			name = "status_mask";
+			type = "uint32";
+		};
+		param = {
+			name = "data";
+			type = "uint32[256]";
+		};
+	};
+
+	event  = {
+		signal = WRITER;
+		dir = IN;
+		param = {
+			name = "board";
+			type = "int32";
+		};
+		param = {
+			name = "mp";
+			type = "int32";
+		};
+		param = {
+			name = "pid";
+			type = "int32";
+		};
+		param = {
+			name = "regid";
+			type = "int32";
+		};
+		param = {
+			name = "data";
+			type = "uint32[3]";
+		};
+	};
+
+	event = {
+		signal = WRITER_ACK;
+		dir = OUT;
+		param = {
+			name = "status_mask";
+			type = "uint32";
+		};
+	};
+
+	event = {
+		signal = ARP;
+		dir = IN;
+		param = {
+			name = "boardmask";
+			type = "uint32";
+		};
+	};
+
+	event = {
+		signal = ARP_ACK;
+		dir = OUT;
+		param = {
+			name = "status_mask";
+			type = "uint32[MAX_N_TBBOARDS]";
+		};
+	};
+
+	event = {
+		signal = ARP_MODE;
+		dir = IN;
+		param = {
+			name = "boardmask";
+			type = "uint32";
+		};
+		param = {
+			name = "mode";
+			type = "uint32";
+		};
+	};
+
+	event = {
+		signal = ARP_MODE_ACK;
+		dir = OUT;
+		param = {
+			name = "status_mask";
+			type = "uint32[MAX_N_TBBOARDS]";
+		};
+	};
+	
+	event = {
+		signal = TEST_MODE;
+		dir = IN;
+		param = {
+			name = "rcu_mask";
+			type = "std::bitset<MAX_N_RCUS>";
+		};
+		param = {
+			name = "mode";
+			type = "uint32";
+		};
+	};
+
+	event = {
+		signal = TEST_MODE_ACK;
+		dir = OUT;
+		param = {
+			name = "status_mask";
+			type = "uint32[MAX_N_TBBOARDS]";
+		};
+	};
+

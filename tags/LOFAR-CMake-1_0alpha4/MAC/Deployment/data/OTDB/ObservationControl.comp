@@ -1,0 +1,20 @@
+#  -- ObservationControl --
+#
+# Parameter specification of the ObservationController.
+#
+# $Id$
+#
+# -- ObservationControl--
+#      name        vers   qual        constr.     descr.
+#---------------------------------------------------------------------------------------
+node  ObservationControl   1.1.0  development ''			"Observation Controller"
+uses  StationControl       1.1.0  development '1'			"All the station Controllers"
+uses  OnlineControl        1.1.0  development '1'			"Controller for the online datastream"
+#uses  OfflineControl       1.1.0  development '1'			"Controller for the offline datastream"
+
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  _hostname               I    text   -      10    100  MCU001                    -        "Machine the program should run on"
+par  heartbeatInterval       I    int    -      10    100  10                        -        "Interval (in sec) between to 'sanity checks'"
+
