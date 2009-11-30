@@ -5,7 +5,7 @@ import os
 import sys
 
 # allow ../util to be found, a bit of a hack
-sys.path += [os.path.dirname(__file__)+"/.."]
+sys.path += [(os.path.dirname(__file__) or ".")+"/.."]
 
 from util.Commands import SyncCommand,backquote
 
@@ -185,55 +185,42 @@ def defineStations( s ):
 
   def ports( portnrs ):
     return ['0.0.0.0:%s' % (port,) for port in portnrs]
-
-  defaultPorts = ports( [4346, 4347, 4348, 4349] )
-  defaultPorts2 = ports( [4354, 4355, 4356, 4357] ) # second ear when splitter is enabled
+  def boards( boardnrs ):
+    return ['0.0.0.0:%s' % (4346+board,) for board in boardnrs]
+    
+  # default port numbers
+  defaultPorts = {
+    "RSP_0": boards( [0, 1, 2, 3] ),
+    "RSP_1": boards( [8, 9, 10, 11] ),
+  }
+  defaultFields = {
+    "RSP_0": ["LBA","HBA","HBA0"],
+    "RSP_1": ["HBA1"],
+  }
 
   # see MAC/Deployment/data/StaticMetaData/RSPConnections.dat
   # for a mapping of station -> io node
   # and LOFAR/Stations.py -l for a mapping of io node -> ip address 
 
-  s.update( {
-    # CS302
-    "CS302LBA":    [Station('CS302LBA',  '10.170.0.165', defaultPorts)],
-    "CS302HBA":    [Station('CS302HBA',  '10.170.0.165', defaultPorts)],
-    "CS302HBA0":   [Station('CS302HBA0', '10.170.0.165', defaultPorts)],
-    #"CS302HBA1":   [Station('CS302HBA1', '10.170.0.37',  ports( [4352,4353,4354,4355] ))],
-    "CS302HBA1":   [Station('CS302HBA1', '10.170.0.37',  defaultPorts2)],
+  # parse RSPConnections.dat.
+  for l in file("%s/RSPConnections.dat" % ((os.path.dirname(__file__) or "."),)):
+    l = l.split("#")[0].strip() # strip comments and whitespace
 
-    # RS106
-    "RS106LBA":   [Station('RS106LBA',  '10.170.0.174', defaultPorts)],
-    "RS106HBA":   [Station('RS106HBA',  '10.170.0.174', defaultPorts)],
+    info = l.split()
+    if len(info) < 3: continue # need at least NAME BOARD IONODE
 
-    # RS208
-    "RS208LBA":   [Station('RS208LBA',  '10.170.0.162', defaultPorts)],
-    "RS208HBA":   [Station('RS208HBA',  '10.170.0.162', defaultPorts)],
+    station,board,ionode = info[:3]
+    ip = PartitionPsets[ionode][0]
+    portlist = defaultPorts[board]
+    fieldlist = defaultFields[board]
 
-    # RS307
-    "RS307LBA":   [Station('RS307LBA',  '10.170.0.189', defaultPorts)],
-    "RS307HBA":   [Station('RS307HBA',  '10.170.0.189', defaultPorts)],
+    for f in fieldlist:
+      s.update( {
+        "%s%s" % (station,f): [Station("%s%s" % (station,f), ip, portlist )],
+      } )
 
-    # RS503
-    "RS503LBA":   [Station('RS503LBA',  '10.170.0.170', defaultPorts)],
-    "RS503HBA":   [Station('RS503HBA',  '10.170.0.170', defaultPorts)],
-
-    # CS021
-    "CS021LBA":   [Station('CS021LBA',  '10.170.0.129', defaultPorts)],
-    "CS021HBA":   [Station('CS021HBA',  '10.170.0.129', defaultPorts)],
-    "CS021HBA0":  [Station('CS021HBA0', '10.170.0.129', defaultPorts)],
-    "CS021HBA1":  [Station('CS021HBA1', '10.170.0.1',   defaultPorts2)], # probably not right, check RSPDriver.conf
-
-    # CS030
-    "CS030LBA":   [Station('CS030LBA',  '10.170.0.153', defaultPorts)],
-    "CS030HBA":   [Station('CS030HBA',  '10.170.0.153', defaultPorts)],
-    "CS030HBA0":  [Station('CS030HBA0', '10.170.0.153', defaultPorts)],
-    "CS030HBA1":  [Station('CS030HBA1', '10.170.0.25',  defaultPorts2)], # probably not right, check RSPDriver.conf
-
-    # DE601, a.k.a. Effelsberg
-    #"DE601LBA":   [Station('DE601LBA',  '10.170.0.178', ports( [4353,4359,4363,4364] ))],
-    "DE601LBA":   [Station('DE601LBA',  '10.170.0.178', defaultPorts)],
-    "DE601HBA":   [Station('DE601HBA',  '10.170.0.178', defaultPorts)],
-  } )
+  # to change the ports of CS302HBA0 for example, use
+  # s["CS302HBA0"][0].inputs = boards( 0, 1, 2, 4 )
 
   # Simulated stations for experimentation.
 
@@ -307,10 +294,19 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
   			help = "check whether the station provide correct data" )
+  parser.add_option( "-l", "--list",
+  			dest = "list",
+			action = "store_true",
+			default = False,
+  			help = "list all known stations" )
 
   # parse arguments
   (options, args) = parser.parse_args()
   errorOccurred = False
+  
+  if options.list:
+    print "\n".join(sorted(Stations.keys()))
+    sys.exit(0)
 
   if not args:
     parser.print_help()
