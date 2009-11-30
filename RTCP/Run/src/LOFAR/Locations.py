@@ -80,11 +80,13 @@ class Locations:
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
-	"rundir":  "${BASEDIR}",
+	"rundir":  "${BASEDIR}/D${YEAR}_${MSNUMBER}",
+
+        # symlink to create to latest log dir
+        "logsymlink": "${BASEDIR}/log",
 
         # location of the observation id counter
-	"nextmsnumber": "/log/nextMSNumber",
-
+	"nextmsnumber": "/globalhome/lofarsystem/log/nextMSNumber",
     } )
 
     self.nodes.update( {
@@ -107,10 +109,12 @@ class Locations:
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
-	"rundir":  "/globalhome/lofarsystem/log",
+	"rundir":  "/globalhome/lofarsystem/log/L${YEAR}_${MSNUMBER}",
 
         # where to store logs
 	"logdir":  "/globalhome/lofarsystem/log/L${YEAR}_${MSNUMBER}",
+
+        "logsymlink": "/globalhome/lofarsystem/log/latest",
 
         # location of valgrind suppressions file
         "ionsuppfile": "",
