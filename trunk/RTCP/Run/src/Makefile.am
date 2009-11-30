@@ -42,7 +42,8 @@ dist_lofarpython_SCRIPTS = 	\
 			LOFAR/Parset.py \
 			LOFAR/Partitions.py \
 			LOFAR/Sections.py \
-			LOFAR/Stations.py
+			LOFAR/Stations.py \
+                        LOFAR/RSPConnections.dat
 
 utilpythondir = $(bindir)/Run/util
 dist_utilpython_SCRIPTS = 	\
