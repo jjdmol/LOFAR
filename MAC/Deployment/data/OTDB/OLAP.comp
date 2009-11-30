@@ -123,7 +123,7 @@ par outputCorrelatedData    I    bool   -      10    0      true                
 par outputFilteredData      I    bool   -      10    0      false                                     - "Store output of PPF/FFT"
 par outputBeamFormedData    I    bool   -      10    0      false                                     - "Store beam formed complex voltages"
 par outputCoherentStokes    I    bool   -      10    0      false                                     - "Store coherent Stokes"
-par outputInoherentStokes   I    bool   -      10    0      false                                     - "Store incoherent Stokes"
+par outputIncoherentStokes   I    bool   -      10    0      false                                     - "Store incoherent Stokes"
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
