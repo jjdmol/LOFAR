@@ -202,7 +202,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
     ctime_r(&now, buf);
     buf[24] = '\0';
 
-    LOG_DEBUG("[" << buf << "] reset BeamletBuffer at " << newTimeStamp << "; itsOffset was " << oldOffset << " and becomes " << itsOffset);
+    LOG_DEBUG_STR("[" << buf << "] reset BeamletBuffer at " << newTimeStamp << "; itsOffset was " << oldOffset << " and becomes " << itsOffset);
   }
 }
 

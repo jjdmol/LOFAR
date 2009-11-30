@@ -103,7 +103,6 @@ void *I_WRAP_SONAME_FNNAME_ZZ(Za,memset)( void *dest, int val, size_t len) {
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
-using namespace LOFAR::LFDebug;
 
 
 #if !defined CATCH_EXCEPTIONS
@@ -396,17 +395,17 @@ void Job::jobThread()
     ctime_r(&closeToStart, buf);
     buf[24] = '\0';
     
-    LOG_DEBUG("waiting for job " << itsObservationID << " to start: sleeping until " << buf);
+    LOG_DEBUG_STR("waiting for job " << itsObservationID << " to start: sleeping until " << buf);
     wallClock.waitUntil(closeToStart);
   }
 
-  LOG_DEBUG("claiming resources for observation " << itsObservationID);
+  LOG_DEBUG_STR("claiming resources for observation " << itsObservationID);
   allocateResources();
 
   // do observation
 
   deallocateResources();
-  LOG_DEBUG("resources of job " << itsObservationID << " deallocated");
+  LOG_DEBUG_STR("resources of job " << itsObservationID << " deallocated");
   delete this;
 }
 
