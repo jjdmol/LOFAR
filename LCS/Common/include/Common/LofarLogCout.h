@@ -32,7 +32,10 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 
-#include <libgen.h>
+#ifndef _GNU_SOURCE
+# include <libgen.h>
+# define __BASE_FILE__ basename(__FILE__)
+#endif
 
 #ifdef ENABLE_LATENCY_STATS
 #include <sys/time.h>
@@ -153,7 +156,7 @@ public: \
 	if( LFDebugCheck(level) ) { \
 		::LOFAR::LFDebug::Tracer objname; \
 		constructStream(stream); \
-		objname.startMsg (LOG4CPLUS_LEVEL(level), basename(__FILE__), __LINE__, \
+		objname.startMsg (LOG4CPLUS_LEVEL(level), __BASE_FILE__, __LINE__, \
                         AUTO_FUNCTION_NAME, lfr_log_oss.str().c_str(), 0); \
 	}
 
