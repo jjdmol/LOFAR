@@ -27,9 +27,9 @@
 get_property(_enabled_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
 if(NOT _enabled_languages MATCHES Fortran)
   # Work-around for CMake issue #9220
-  if(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
+  if(CMAKE_Fortran_COMPILER MATCHES "^$")
     set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
-  endif(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
+  endif(CMAKE_Fortran_COMPILER MATCHES "^$")
   if(LAPACK_FIND_REQUIRED)
     enable_language(Fortran)
   else(LAPACK_FIND_REQUIRED)
