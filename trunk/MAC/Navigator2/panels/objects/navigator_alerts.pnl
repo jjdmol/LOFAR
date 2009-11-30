@@ -96,8 +96,7 @@ void dblClick(int row) {
   }
   dyn_anytype result = alarmTable.getLineN(row);
   LOG_DEBUG(\"navigator_alerts.pnl:DoubleClicked|Result: \"+result);
-  string dp = result[2]; 
-  
+  string dp = navFunct_ObsToTemp(result[2]);  
   //we need to strip the . level from the dp 
   dyn_string aS = strsplit(dp,\".\");
   
@@ -147,7 +146,8 @@ void rClick(int row) {
   }
   dyn_anytype result = alarmTable.getLineN(row);
   LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|Result: \"+result);
-  string dp = result[2]+\".status.state\";
+  
+  string dp = navFunct_ObsToTemp(result[2])+\".status.state\";  
   string message = result[3];
   int status=-1;
   if (result[4] == \"ACK\") {
@@ -233,9 +233,9 @@ void redraw_table() {
   //append  all CAME alarms
   for (int j=1; j<=dynlen(g_alarms[\"TIME\"])  ; j++) {
     if (g_alarms[\"STATUS\"][j] == CAME ) {
-      string aS = substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\"));
+      string dp = navFunct_TempToObs(substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\")));
       alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],
-                            \"Datapoint\",aS,
+                            \"Datapoint\",dp,
                             \"Message\",g_alarms[\"MESSAGE\"][j],
                             \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]));
         string aColor=getStateColor(g_alarms[\"STATE\"][j]);

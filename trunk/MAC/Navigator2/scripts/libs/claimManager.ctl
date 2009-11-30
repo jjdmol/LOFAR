@@ -137,6 +137,7 @@ void claimManager_queryConnectClaim_Callback(
 {
   // Locla data
   int iPos;
+  string aDP;
   string strDP;
   string strName;
   time tClaimDate;
@@ -150,9 +151,11 @@ void claimManager_queryConnectClaim_Callback(
   // Iterate through the results
   for( int t = 2; t <= dynlen( aResult ); t++)
   {
-    strDP      = aResult[t][1];
+    aDP        = aResult[t][1];
     strName    = aResult[t][2];
     tClaimDate = aResult[t][3];
+    
+    strDP=dpSubStr(aDP,DPSUB_DP);
     
     LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| strDP     : "+ strDP);
     LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| strName   : "+strName);

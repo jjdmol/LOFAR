@@ -101,7 +101,7 @@ void prepareProcesses() {
   dynAppend(g_processesList,baseDP);
   // append all involved stations
   for (int i=1; i <= dynlen(stationList); i++) {  
-    dynAppend(result,baseDP+\",BGLProc->\"+stationList[i]+\",\"+baseDP+\"_BGPProc_\"+stationList[i]);    
+    dynAppend(result,baseDP+\",BGLProc->\"+stationList[i]+\",\"+baseDP+\"_BGPProc#\"+stationList[i]);    
   }
   dynAppend(g_processesList,baseDP+\"_BGPProc\");
   

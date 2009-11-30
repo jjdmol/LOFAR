@@ -1,10 +1,11 @@
 V 10
 1
 LANG:1 13 IONode detail
-PANEL,-1 -1 1003 784 N "_3DFace" 3
+PANEL,-1 -1 1003 784 N "_3DFace" 4
 "$KSPType"
 "$adderList"
 "$inputBufferList"
+"$station"
 "main()
 {
   // Initialise the Panel
@@ -13,28 +14,55 @@ PANEL,-1 -1 1003 784 N "_3DFace" 3
   baseDP         = g_currentDatapoint;
   
   ksp=$KSPType;
-  inputbuffer=$inputBufferList;
-  adder=$adderList;
+  inputbuffer=navFunct_listToDynString($inputBufferList);
+  adder=navFunct_listToDynString($adderList);
   
-  //determine Nodename
-  dyn_string list=navFunct_listToDynString(inputbuffer);  
-  string nodeName = navFunct_inputBuf2CEPName(list[1]);
+  LOG_DEBUG(\"BGPProc_surveys.pnl:main|InputBufferList: \"+inputbuffer);
+  LOG_DEBUG(\"BGPProc_surveys.pnl:main|AdderList: \"+adder);
   
-  setValue(\"ionode\",\"text\",\"IONode: \"+nodeName);
-  
+  // in the survey mode we have one inputBuffer and one adder for each station,
+  // so we need to determine what station the user wanted to view
   string stationName=\"\";
+  string nodeName=\"\";
+  int idx=0; 
+  for (int i=1; i<= dynlen(inputbuffer); i++) {
   
-  if (dpExists(\"CCU001:\"+nodeName+\".station\")){
-    dpGet(\"CCU001:\"+nodeName+\".station\",stationName);
-  } else {
-    LOG_ERROR(\"BGPProc_surveys.pnl:main|Could not find dp for stationname: CCU001:\"+nodeName+\".station\");    
+    //determine Nodename
+    nodeName = navFunct_inputBuf2CEPName(inputbuffer[i]);
+
+    LOG_DEBUG(\"BGPProc_surveys.pnl:main|nodeName working: \"+nodeName);
+    stationName=\"\";
+    if (dpExists(\"CCU001:\"+nodeName+\".station\")){
+      dpGet(\"CCU001:\"+nodeName+\".station\",stationName);
+    } else {
+      LOG_ERROR(\"BGPProc_surveys.pnl:main|Could not find dp for stationname: CCU001:\"+nodeName+\".station\");    
+    }
+    if (stationName==$station) {
+      idx=i;
+      break;
+    }
   }
   
-  setValue(\"stationLabel\",\"text\",stationName);
+  // if no match found we have an error
+  if (stationName == \"\" || idx == 0) {
+    LOG_ERROR(\"BGPProc_surveys.pnl:main| ERROR no station name found, can't view running processes\");
+  } else {
+    
+    // we have to set the stripped inputBuffer List and Adder List here.
+    // Since this is the Survey mode we only need one InputBuffer and one Adder
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName\",\"CircularBuffer\",
+          DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.paramList\",makeDynString(inputbuffer[idx]));    
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName\",\"Adder\",
+          DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.paramList\",makeDynString(adder[idx]));    
+    
   
-  setValue(\"ksp_txt\",\"text\",ksp);
+    LOG_DEBUG(\"BGPProc_surveys.pnl:main|Station: \"+stationName);
   
-    // pass baseDP to selfstate Object to work with
+    setValue(\"ionode\",\"text\",\"IONode: \"+nodeName);
+    setValue(\"stationLabel\",\"text\",stationName);
+    setValue(\"ksp_txt\",\"text\",ksp);
+  }
+  // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
   
   
@@ -101,8 +129,8 @@ void reload() {
 E "#uses \"navPanel.ctl\"
 
 string ksp=\"\";
-string inputbuffer=\"\";
-string adder=\"\";
+dyn_string inputbuffer=\"\";
+dyn_string adder=\"\";
 
 string baseDP = \"\";
 int ioNr;" 0
@@ -645,14 +673,12 @@ LANG:1 6 Layer8
 0
 3 52 "PANEL_REF53"
 "objects\\Processes\\circularBuffer.pnl" 90 160 T 255 1 0 1 50 -5
-3
+2
 "$KSPType""$KSPType"
-"$inputBufferList""$inputBufferList"
 "$objectNumber""0"
 3 53 "PANEL_REF54"
 "objects\\Processes\\adder.pnl" 90 360 T 255 1 0 1 50 2
-3
+2
 "$KSPType""$KSPType"
-"$adderList""$adderList"
 "$objectNumber""0"
 0
