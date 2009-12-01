@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 #
-# $Id: $
-#
 # Syntax: createFiles localhost or
 #         createFiles <resultdir> <datadir> <stationname>
 #
@@ -82,10 +80,6 @@ def copyTestFiles(dataDir):
     destFile = "/opt/lofar/etc/RemoteStation.conf"
     command = "cp -f "+testFile+ " " + destFile
     os.system(command);
-    testFile = dataDir+"/CableDelays.conf.test"
-    destFile = "/opt/lofar/etc/CableDelays.conf"
-    command = "cp -f "+testFile+ " " + destFile
-    os.system(command);
 
 #
 # findRSPDestNodes(stationName)
@@ -146,12 +140,11 @@ def findRSPIP(nodeName, dataDir):
     """
     Translates the given nodename to an MAC address and and IP address.
     """
-    pattern=re.compile("^"+nodeName+"[ \t]*([0-9\.]*)[ \t]*([0-9a-fA-F:]*)", re.IGNORECASE | re.MULTILINE)
-    RspIp = ()
-    RspIp = pattern.search(open(dataDir+"/RSP+IP.dat").read())
+    pattern=re.compile("^"+nodeName+"_([0-9]*)[ \t]*([0-9\.]*)", re.IGNORECASE | re.MULTILINE)
+    RspIp = pattern.findall(open(dataDir+"/RSP+IP.dat").read())
     if not RspIp:
         raise "\nFatal error: "+nodeName+" is not defined in file 'RSP+IP'"
-    return RspIp.group(1), RspIp.group(2)
+    return RspIp
 
 
 #
@@ -197,11 +190,14 @@ def createRSPDriverFile(resultDir, stationName, dataDir):
     RSPfile = open(dataDir+"/RSPDriver.conf.tmpl")
     RSPconfig = RSPfile.read()
     RSPfile.close()
-    nrNodes = len(rspDestNode)
+    nrNodes = len(rspDestNode) # Number of occurences in file
+    # Core stations have two occurences (these have a splitter), and so
+    # for these we need to fill in LANE0x and LANE1x values.
+    # All other stations have one occurence, so only LANE_0x is relevant.
     if (nrNodes == 1 or nrNodes == 2):
         if str(0) in rspDestNode.keys():
             (ip, mac) = findIPandMAC(rspDestNode[str(0)],dataDir)
-            for rspNr in range(0,4):
+            for rspNr in range(4):
                 RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(0)])
                 RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip)
         if str(1) in rspDestNode.keys():
@@ -210,43 +206,68 @@ def createRSPDriverFile(resultDir, stationName, dataDir):
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(1)])
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
 
-    if (nrNodes == 4):
-        for rspNr in range(0,4):
-            if str(rspNr) in rspDestNode.keys():
-                (ip, mac) = findIPandMAC(rspDestNode[str(rspNr)],dataDir)
-                RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_MAC@", mac+"   # "+rspDestNode[str(rspNr)])
-                RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_IP@",  ip +"   # "+rspDestNode[str(rspNr)])
-
-
-    # substitute StationInfo
+    # Find Ip number station
     ipnumber = findIPNumber(stationName)
     ip_parts = ipnumber.split('.')
-
     # Find IP address for RSP board ethernet. All NL stations have RSP address
-    # like 10.175.x.x, Non-NL stations like 10.174.x.x
+    # like 10.175.x.x, Non-NL station must be looked up 
     if (ip_parts[1] == "151"): 
-        ip_prefix = "175" # NL stations
-    else:
-        ip_prefix = "174" # Non-NL stations
+        ip_prefix = "175" # NL stations; FIXED!
 
-    #print stationName[0:2].upper()
-    # Core stations should have Splitter set to 1; others to 0.
-    if (stationName[0:2].upper() == "CS"):
-        RSPconfig = RSPconfig.replace("@SPLITTER@",str(1))
-    else:
-        RSPconfig = RSPconfig.replace("@SPLITTER@",str(0))
+        # Core stations should have Splitter set to 1; others to 0.
+        if (stationName[0:2].upper() == "CS"):
+            RSPconfig = RSPconfig.replace("@SPLITTER@",str(1))
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_00@",   "1")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   "2")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_02@",   "3")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_03@",   "4")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_10@",   "1")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_11@",   "2")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_12@",   "3")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_13@",   "4")
+        else:
+            RSPconfig = RSPconfig.replace("@SPLITTER@",str(0))
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_00@",   "1")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   "2")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_02@",   "3")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_03@",   "4")
       
-    hexStationID = str("%02x" % int(stationName[3:6]))
-    ringID = '0'+stationName[2]
-
-    RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName)
-    RSPconfig = RSPconfig.replace("@RING_ID@",   ringID)
-    RSPconfig = RSPconfig.replace("@STATION_HID@",  hexStationID)
-    RSPconfig = RSPconfig.replace("@IP_PREFIX@",   ip_prefix)
-    RSPconfig = RSPconfig.replace("@IP_SUBNET@",   ip_parts[2])
+        hexStationID = str("%02x" % int(stationName[3:6]))
+        ringID = '0'+stationName[2]
+        RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName)
+        RSPconfig = RSPconfig.replace("@RING_ID@",   ringID)
+        RSPconfig = RSPconfig.replace("@STATION_HID@",  hexStationID)
+        RSPconfig = RSPconfig.replace("@IP_PREFIX_00@",   ip_prefix)
+        RSPconfig = RSPconfig.replace("@IP_PREFIX_01@",   ip_prefix)
+        RSPconfig = RSPconfig.replace("@IP_PREFIX_02@",   ip_prefix)
+        RSPconfig = RSPconfig.replace("@IP_PREFIX_03@",   ip_prefix)
+        RSPconfig = RSPconfig.replace("@IP_SUBNET_00@",   ip_parts[2])
+        RSPconfig = RSPconfig.replace("@IP_SUBNET_01@",   ip_parts[2])
+        RSPconfig = RSPconfig.replace("@IP_SUBNET_02@",   ip_parts[2])
+        RSPconfig = RSPconfig.replace("@IP_SUBNET_03@",   ip_parts[2])
+    else: 
+        RSPconfig = RSPconfig.replace("@SPLITTER@",str(0))
+        hexStationID = str("%02x" % int(stationName[3:6]))
+        ringID = '0'+stationName[2]
+        RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName)
+        RSPconfig = RSPconfig.replace("@RING_ID@",   ringID)
+        RSPconfig = RSPconfig.replace("@STATION_HID@",  hexStationID)
+        rspinfo = findRSPIP(stationName, dataDir)
+        for rspNr in range(len(rspinfo)):        
+            rspip = rspinfo[rspNr][1]
+            rspip_parts = rspip.split('.')
+            repl_str = "@IP_EXTEN_"+rspinfo[rspNr][0]+"@"
+            RSPconfig = RSPconfig.replace(repl_str, rspip_parts[3])
+            repl_str = "@IP_PREFIX_"+rspinfo[rspNr][0]+"@"
+            RSPconfig = RSPconfig.replace(repl_str, rspip_parts[1])
+            repl_str = "@IP_SUBNET_"+rspinfo[rspNr][0]+"@"
+            RSPconfig = RSPconfig.replace(repl_str, rspip_parts[2])
+            
     outFile = os.open(dataDir+"/RSPDriver.conf.tmp", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
     os.write(outFile, RSPconfig)
     os.close(outFile)
+
+
     # An ugly way to get rid of all lines in the template file that are not
     # filled yet.
     cmd = "grep -v '@' "+dataDir+"/RSPDriver.conf.tmp > "+resultDir+"/RSPDriver.conf";
