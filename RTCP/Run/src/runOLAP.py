@@ -423,8 +423,8 @@ if __name__ == "__main__":
 
   # create symlink to log directory in run directory
   log_symlink = {
-    "source": "%s/log" % (Locations.files["rundir"],),
-    "dest":   "%s"     % (Locations.files["logdir"],),
+    "source": "%s" % (Locations.files["logsymlink"],),
+    "dest":   "%s" % (Locations.files["logdir"],),
   }
 
   if not DRYRUN:
