@@ -564,7 +564,7 @@ void master_thread(int argc, char **argv)
     mmapFlatMemory();
 #endif
 
-    setenv("AIPSPATH", "/cephome/romein/packages/casacore-0.3.0/stage/", 0); // FIXME
+    setenv("AIPSPATH", "/globalhome/romein/packages/casacore-0.3.0/stage/", 0); // FIXME
 
     if (argc < 2) {
       LOG_ERROR("unexpected number of arguments");
