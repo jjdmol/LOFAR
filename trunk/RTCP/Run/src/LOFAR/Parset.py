@@ -50,6 +50,7 @@ class Parset(util.Parset.Parset):
         self.setdefault("OLAP.Stokes.integrateChannels",False);
         self.setdefault("OLAP.Stokes.integrationSteps",1);
         self.setdefault("OLAP.OLAP_Conn.rawDataOutputOnly",False);
+        self.setdefault("OLAP.Correlator.integrationTime",1);
 
     def convertNewKeys(self):
         """ Converts some new keys to old ones to help old CEP code cope with new SAS code. """
