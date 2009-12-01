@@ -138,6 +138,22 @@ def findIPandMAC(nodeName, dataDir):
         raise "\nFatal error: "+nodeName+" is not defined in file 'MAC+IP'"
     return ipAndMac.group(1), ipAndMac.group(2)
 
+
+#
+# findRSPIP(node)
+#
+def findRSPIP(nodeName, dataDir):
+    """
+    Translates the given nodename to an MAC address and and IP address.
+    """
+    pattern=re.compile("^"+nodeName+"[ \t]*([0-9\.]*)[ \t]*([0-9a-fA-F:]*)", re.IGNORECASE | re.MULTILINE)
+    RspIp = ()
+    RspIp = pattern.search(open(dataDir+"/RSP+IP.dat").read())
+    if not RspIp:
+        raise "\nFatal error: "+nodeName+" is not defined in file 'RSP+IP'"
+    return RspIp.group(1), RspIp.group(2)
+
+
 #
 # findAllStations()
 #

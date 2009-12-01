@@ -1,7 +1,12 @@
 #
 # MAP + IP
 #
-# $Id: $
+# - Gives the Ip address and MAC address of each BG/P I/O node
+# 
+# For foreign stations this is different:
+# - Gives MAC address of local switch to connect to, and
+#   IP address of BG/P I/O node where the data should be
+#   sent to (see stationBGPconnection sheets in the Wiki).
 #
 # node	  IP		MAC
 #-----------------------------------------------
@@ -199,3 +204,4 @@ R02-M1-N15-J00 10.170.2.189 00:14:5E:7D:1D:51
 R02-M1-N15-J01 10.170.2.190 00:14:5E:7D:1D:52 
 LIST001 10.181.0.1 00:19:B9:D8:E4:C7
 LIST002 10.181.0.2 00:19:B9:D8:E4:B3
+BG0-DE601 10.170.0.178 00:12:F2:C3:3A:00 
