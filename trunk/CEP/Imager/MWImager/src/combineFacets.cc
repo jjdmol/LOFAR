@@ -35,16 +35,17 @@ using namespace LOFAR;
 using namespace casa;
 using namespace std;
 
-string facetName (const string& imageName, int ix, int iy)
+String facetName (const String& imageName, const String& baseExt,
+                  int ix, int iy)
 {
   ostringstream ostr;
   ostr << imageName << '-' << setw(3) << setfill('0') << ix
-       << '-' << setw(3) << setfill('0') << iy << ".img";
+       << '-' << setw(3) << setfill('0') << iy << baseExt;
   return ostr.str();
 }
 
 
-void combine (const string& imageName, bool useHDF5, 
+void combine (const String& msName, const String& imageExt, bool useHDF5, 
               double ra, double dec, const vector<int>& npix,
               const vector<int>& nfacet)
 {
@@ -53,8 +54,27 @@ void combine (const string& imageName, bool useHDF5,
   }
   ASSERT (npix.size() == 2);
   ASSERT (nfacet.size() == 2);
+  // Get base name of images from the msName.
+  Path msPath(msName);
+  String dirNm = msPath.dirName();
+  String baseNm = msPath.baseName();
+  // Remove the file extension.
+  String::size_type inx = baseNm.find('.');
+  if (inx != String::npos) {
+    baseNm = baseNm.before(inx);
+  }
+  // Append the possibly given image extension.
+  baseNm += imageExt;
+  // Get the file extension and remove from base name; default is .img.
+  String baseExt = ".img";
+  inx = baseNm.find('.');
+  if (inx != String::npos) {
+    baseExt = baseNm.from(inx);
+    baseNm = baseNm.before(inx);
+  }
+  String imageName = dirNm + '/' + baseNm;
   // Open first image and get its coordinates.
-  PagedImage<Float> img(facetName(imageName, 0, 0));
+  PagedImage<Float> img(facetName(imageName, baseExt, 0, 0));
   IPosition imgShape = img.shape();
   imgShape[0] = npix[0];
   imgShape[1] = npix[1];
@@ -77,9 +97,9 @@ void combine (const string& imageName, bool useHDF5,
   // Now create the new image.
   ImageInterface<Float>* newImg;
   if (useHDF5) {
-    newImg = new HDF5Image<Float>  (imgShape, csys, imageName+".img");
+    newImg = new HDF5Image<Float>  (imgShape, csys, imageName+baseExt);
   } else {
-    newImg = new PagedImage<Float> (imgShape, csys, imageName+".img");
+    newImg = new PagedImage<Float> (imgShape, csys, imageName+baseExt);
   }
   // Get nr of pixels to take per facet.
   vector<int> npixf(npix);
@@ -99,7 +119,7 @@ void combine (const string& imageName, bool useHDF5,
   IPosition where(imgShape.size(), 0);
   for (int iy=0; iy<nfacet[1]; ++iy) {
     for (int ix=0; ix<nfacet[0]; ++ix) {
-      PagedImage<Float> facet(facetName(imageName, ix, iy));
+      PagedImage<Float> facet(facetName(imageName, baseExt, ix, iy));
       newImg->putSlice (facet.getSlice(slicer), where);
       where[0] += npixf[0];
     }
@@ -113,13 +133,13 @@ void combine (const string& imageName, bool useHDF5,
 int main (int argc, char* argv[])
 {
   if (argc < 4) {
-    cerr << "Run as:   combineFacets parsetname ms imagename" << endl;
+    cerr << "Run as:   combineFacets parsetname ms imageext" << endl;
     return 1;
   }
   try {
-    String fullName = Path(argv[2]).dirName() + '/' + argv[3];
     ParameterSet ps(argv[1]);
-    combine (fullName,
+    combine (argv[2],
+             argv[3],
              ps.getBool  ("useHDF5", False),
              ps.getDouble("ra"),
              ps.getDouble("dec"),

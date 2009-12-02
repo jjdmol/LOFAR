@@ -20,7 +20,7 @@ versionmwimager_LDADD        = libmwimager.la
 versionmwimager_DEPENDENCIES = libmwimager.la $(LOFAR_DEPEND)
 
 scriptdir = $(bindir)
-dist_script_SCRIPTS = mwimager mwimager-dd \
+dist_script_SCRIPTS = mwimager mwimager-dd mwimager-dd-dppp \
 			mwimager-part mwimager-askap mwimager-casa \
 			makeCombinedImage-part
 

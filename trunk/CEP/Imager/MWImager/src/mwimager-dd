@@ -60,13 +60,23 @@
 # in a distributed way, which does BBS, DPPP, and mwimager for each facet.
 # However, that requires a non-distributed version of BBS which does not exist.
 #
-# Several temporary files are created to deal with the various steps.
-# - $vdsdir/facetlist.txt contains the facet centers in ASCII format
-# - vds.facet contains the distributed sourcedb
+# Several temporary files are created to deal with the various steps to
+# process MSs called msdir/xxx-SBn.MS described in gdsdir/xxx.MS.gds.
+# - gdsdir/facetlist.txt contains the facet centers in ASCII format
+# - xxx.facet contains the distributed sourcedb
 # - parset files for BBS, DPPP, and mwimager
-#    they use the same name as the input parset with an extra extension 
-# - images per facet to be combined into the final image
-# - the MS may get an extra column to hold the corrected data
+#    they use the same name as the input parset with an extra extension
+#    like -dppp. 
+# - images per facet to be combined into the final image; they are called
+#    msdir/xxx-SBn
+# - the optional output of DPPP called msdir/xxx-SBn.MS-dppp and its GDS file
+#    gdsdir/xxx.MS-dppp.gds
+# - the image per facet per subband called msdir/xxx-SBn-nnn-nnn.img
+# - the overall image per subband called msdir/xxx-SBn.img
+#    (for cimager this is a symlink to the .restored image)
+# - the overall image gds file called gdsdir/xxx.img.gds
+# - when correcting, the MS gets an extra column to hold the corrected data
+#    given in correct.Column
 
 
 import os
@@ -75,16 +85,32 @@ import math
 import lofar.parameterset as parset
 import pyrap.quanta as pyquan
 
-def getInfo (ps, vdsname, nfacet):
+# Remove .gds from name.
+def getGdsbase(gdsname):
+    gdsbase = gdsname
+    if gdsbase.endswith ('.gds'):
+        gdsbase = gdsbase[:-4]
+    return gdsbase
+
+# Remove .MS or .MS.gds from name.
+def getBase(name):
+    base = name
+    if base.endswith ('.gds'):
+        base = base[:-4]
+    if base.endswith ('.MS'):
+        base = base[:-3]
+    return base
+
+def getInfo (ps, gdsname, nfacet):
     # Get center of image.
-    # It can be given in the parset, otherwise take it from the VDS file.
+    # It can be given in the parset, otherwise take it from the GDS file.
     if ps.isDefined ('Images.ra'):
         ra  = ps.getString('Images.ra')
         dec = ps.getString('Images.dec')
     else:
-        pvds = parset.parameterset(vds)
-        ra  = pvds.getString('FieldDirectionRa')
-        dec = pvds.getString('FieldDirectionDec')
+        pgds = parset.parameterset(gdsname)
+        ra  = pgds.getString('FieldDirectionRa')
+        dec = pgds.getString('FieldDirectionDec')
     # Read string and convert to radians.
     qra  = pyquan.quantity(ra)
     qdec = pyquan.quantity(dec)
@@ -135,15 +161,13 @@ def makeFacetSourceList (name, ra, dec, cellwidth, nfacet, imgshape):
         decv += facetwidth[1]
     return centers
 
-def doBBS (ps, i, j, psname, vds, cd, wd, dry, instdb, skydb, catname, incol, outcol):
+def doBBS (ps, i, j, psname, gdsname, cd, wd, dry, instdb, skydb, catname, incol, outcol):
     if dry == 'dry':
         dry = '--dry --verbose'
     print 'doBBS facet',i,j
     # Get beam files and expand possible env.var. like $LOFARROOT
-    beamType    = ps.getString ('Correct.Model.Beam.Type')
-    coeffFile   = ps.getString ('Correct.Model.Beam.CoeffFile', '')
-    moduleTheta = ps.getString ('Correct.Model.Beam.ModuleTheta', '')
-    modulePhi   = ps.getString ('Correct.Model.Beam.ModulePhi', '')
+    beamType = ps.getString ('Correct.Model.Beam.Element.Type', '')
+    beamPath = ps.getString ('Correct.Model.Beam.Element.Path', '')
     if len(coeffFile) > 0:
         coeffFile = os.path.abspath(coeffFile)
     if len(moduleTheta) > 0:
@@ -165,51 +189,60 @@ def doBBS (ps, i, j, psname, vds, cd, wd, dry, instdb, skydb, catname, incol, ou
     f.write ('Step.correct.Baselines.Station1 = []\n')
     f.write ('Step.correct.Baselines.Station2 = []\n')
     f.write ('Step.correct.Model.Sources    = facet-%03d-%03d\n' % (i,j))
-    f.write ('Step.correct.Model.Components = [BEAM]\n')
-    f.write ('Step.correct.Model.Beam.Type = %s\n' % beamType)
-    f.write ('Step.correct.Model.Beam.CoeffFile = %s\n' % coeffFile)
-    f.write ('Step.correct.Model.Beam.ModuleTheta = %s\n' % moduleTheta)
-    f.write ('Step.correct.Model.Beam.ModulePhi = %s\n' % modulePhi)
+    if len(beamType) > 0:
+        f.write ('Step.correct.Model.Beam.Enable = True\n')
+        f.write ('Step.correct.Model.Beam.Element.Type = %s\n' % beamType)
+        if len(beamPath) > 0:
+            f.write ('Step.correct.Model.Beam.Element.Path = %s\n' % beamPath)
     f.write ('Step.correct.Correlation.Selection = CROSS\n')
     f.write ('Step.correct.Correlation.Type      = []\n')
     f.write ('Step.correct.Operation             = CORRECT\n')
     f.write ('Step.correct.OutputColumn          = %s\n' % outcol)
     f.close()
     os.system ("cat " + psn)
-    print 'calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --skip-instrument-db --skip-sky-db "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, vds, psn, catname, wd)
-    os.system ('calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --no-setup "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, vds, psn, catname, wd))
+    print 'calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --skip-instrument-db --skip-sky-db "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, gdsname, psn, catname, wd)
+    os.system ('calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --no-setup "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, gdsname, psn, catname, wd))
 
-def doDPPP (i, j, psname, dataset, cd, dry, freqstep, timestep):
-    print 'doDPPP facet',i,j
+def doDPPP (i, j, psname, gdsname, cd, dry, freqstep, timestep):
     # Create the parset file.
+    gdsdir = os.path.dirname(gdsname)
+    gdsbase = getBase(gdsname)
     psn = psname + '-dppp'
-    f = file(psname, 'w')
-    f.write('fixed=0')
-    f.write('existing=False')
-    f.write('skipflags=False')
-    f.write('allcolumns=True')
-    f.write('bandpass=0')
-    f.write('squasher=1')
-    f.write('timestep=%d' % timestep)
-    f.write('freqstep=%d' % freqstep)
-    f.write('clusterdesc=%s' % cd)
+    print 'doDPPP facet',i,j,psn,gdsname,cd,dry
+    f = file(psn, 'w')
+    f.write('skipflags=False\n')
+    f.write('allcolumns=True\n')
+    f.write('squasher=1\n')
+    f.write('timestep=%d\n' % timestep)
+    f.write('step=%d\n' % freqstep)
+    f.write('clusterdesc=%s\n' % cd)
+    f.write('vdsdir=%s\n' % gdsdir)
     f.close()
-    os.system ('rundist mwimager-dd-dppp "%s" "%s"' % (psn, dry)
-##    os.system ("combinevds")
+    os.system ('rundist -cdn %s mwimager-dd-dppp "%s" "%s" "%s"' % (cd,gdsname,psn,dry))
+    if dry == 'dry':
+        # Make a copy in dry mode, so next steps work well in dry mode.
+        os.system ('cp %s %s.MS-dppp.gds' % (gdsname,gdsbase))
+        print 'combinevds %s.MS-dppp.gds %s*.MS-dppp.vds' % (gdsbase,gdsbase)
+    else:
+        os.system ('combinevds %s.MS-dppp.gds %s*.MS-dppp.vds' % (gdsbase,gdsbase))
 
-def doImager (ps, imagename, i, j, center, psname, cd, wd, logfile, dry, hfn, casaopt, pgmpath):
+def doImager (ps, gdsname, imageext, i, j, center, psname, cd, wd, logfile, dry, hfn, casaopt, pgmpath):
     print 'doImager facet',i,j,center
     # Convert the parset file to a parset file for the facet.
     # It means inserting a new center and image name.
     ps.replace ("Images.ra",  '%.15frad' % center[0])
     ps.replace ("Images.dec", '%.15frad' % center[1])
-    newName = '%s-%03d-%03d' % (imagename, i ,j)
+    ps.replace ("dataset", gdsname)
+    newName = '%s-%03d-%03d' % (imageext, i ,j)
     ps.replace ("Images.name", newName)
-    psn = "%s-image-%03d-%03d" % (psname, i, j)
+    psn = "%s-%03d-%03d" % (psname, i, j)
     ps.writeFile (psn)
     print '%s/mwimager %s %s "%s" "%s" "%s" "%s" "%s"' % (pgmpath, casaopt, psn, cd, wd, logfile, dry, hfn)
     os.system ('%s/mwimager %s %s "%s" "%s" "%s" "%s" "%s"' % (pgmpath, casaopt, psn, cd, wd, logfile, dry, hfn))
 
+def clean():
+    os.system ('rm -rf *parset-*')
+    os.system ('rm -rf *-[0-9][0-9][0-9]-[0-9][0-9][0-9]*')
 
 def main(argv=None):
     if argv is None:
@@ -231,10 +264,10 @@ def main(argv=None):
     # Open the parset file.
     ps  = parset.parameterset(psn)
     # Determine which dataset and columns to use.
-    vds = os.path.abspath (ps.getString('dataset'))
+    gdsname = os.path.abspath (ps.getString('dataset'))
     incol = ps.getString('datacolumn')
     outcol = incol
-    correct = ps.getBool ('correct', True)
+    correct = ps.getBool ('correct', False)
     if correct:
         outcol = ps.getString('Correct.column')
         if incol == outcol:
@@ -242,24 +275,24 @@ def main(argv=None):
             return 1
         instdb  = ps.getString ('Correct.instrumentDB')
 
-    # Get info from the parset file and VDS file.
+    # Get info from the parset file and GDS file.
     nfacet  = ps.getInt('Images.nfacets')
     padding = ps.getDouble ('Images.padding', 2)
     average = ps.getBool ('average', False)
     freqavg = ps.getInt ('Average.nfreq', 1)
     timeavg = ps.getInt ('Average.ntime', 1)
     average = average and (freqavg!=1 or timeavg!=1)
-    (ra,dec,cellsz,npix) = getInfo (ps, vds, nfacet)
+    (ra,dec,cellsz,npix) = getInfo (ps, gdsname, nfacet)
     # Form the output image name.
     # Remove parts before / and after .
-    imagename = os.path.basename (ps.getString ("Images.name", vds))
-    imagename = imagename.split('.')[0]
-    print ra,dec,cellsz,npix,nfacet,average,freqavg,timeavg,average,imagename
+    imageext  = ps.getString('Images.name', '')
+    imagebase = os.path.basename(gdsname).split('.')[0] + imageext
+    print ra,dec,cellsz,npix,nfacet,average,freqavg,timeavg,average,imagebase
 
     # Form the facet centers and source list for BBS.
-    vdsdir =  os.path.dirname(vds)
-    catname = vdsdir + '/facetlist.txt'
-    skydb   = vdsdir + '/' + imagename + '.facets'
+    gdsdir =  os.path.dirname(gdsname)
+    catname = gdsdir + '/facetlist.txt'
+    skydb   = gdsdir + '/' + imagebase + '.facets'
     centers = makeFacetSourceList(catname, ra, dec, cellsz, nfacet, npix)
 
     # Remove the parameters not needed for an image per facet.
@@ -276,18 +309,20 @@ def main(argv=None):
     # Create the source data base for the facet centers.
     if dry == 'dry':
         os.system ('cat %s' % (catname))
-    print 'os.system (setupsourcedb -overwrite %s %s facets "%s" "%s" dry "%s" "%s"' % (vds,catname,cd,logfile,hfn,wd)
-    os.system ('setupsourcedb -overwrite %s %s facets "%s" "%s" dry "%s" "%s"' % (vds,catname,cd,logfile,hfn,wd))
+    print 'os.system (setupsourcedb -overwrite %s %s facets "%s" "%s" dry "%s" "%s"' % (gdsname,catname,cd,logfile,hfn,wd)
+    os.system ('setupsourcedb -overwrite %s %s facets "%s" "%s" dry "%s" "%s"' % (gdsname,catname,cd,logfile,hfn,wd))
 
     # Do the processing for each facet.
     inx = 0
     for i in range(nfacet):
         for j in range(nfacet):
             if correct:
-                doBBS (ps, i, j, psn, vds, cd, wd, dry, instdb, skydb, catname, incol, outcol)
+                doBBS (ps, i, j, psn, gdsname, cd, wd, dry, instdb, skydb, catname, incol, outcol)
+            gdsin = gdsname
             if average:
-                doDPPP (i, j, psn, vds, cd, freqavg, timeavg)
-            doImager (ps, imagename, i, j, centers[inx], psn, cd, wd, logfile, dry, hfn, casaopt, pgmpath)
+                gdsin = getGdsbase(gdsname) + '-dppp.gds'
+                doDPPP (i, j, psn, gdsname, cd, dry, freqavg, timeavg)
+            doImager (ps, gdsin, imageext, i, j, centers[inx], psn, cd, wd, logfile, dry, hfn, casaopt, pgmpath)
             inx += 1
 
     # Combine all facets.
@@ -302,8 +337,8 @@ def main(argv=None):
     f.write ('nfacet = [%d,%d]\n' % (nfacet, nfacet))
     f.close()
     os.system ('cat ' + psnm);
-    print 'rundist -cdn %s -gdsout img %s/makeCombinedImage-part %s %s %s "%s"' % (cd, pgmpath, vds, psnm, imagename, dry)
-    os.system ('rundist -cdn %s -gdsout img %s/makeCombinedImage-part %s %s %s "%s"' % (cd, pgmpath, vds, psnm, imagename, dry))
+    print 'rundist -cdn %s -gdsout img.gds %s/makeCombinedImage-part %s %s "%s" "%s"' % (cd, pgmpath, gdsname, psnm, imageext, dry)
+    os.system ('rundist -cdn %s -gdsout img.gds %s/makeCombinedImage-part %s %s "%s" "%s"' % (cd, pgmpath, gdsname, psnm, imageext, dry))
     
 
 
