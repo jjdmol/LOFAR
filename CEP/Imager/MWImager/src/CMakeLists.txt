@@ -16,5 +16,6 @@ install(PROGRAMS
   mwimager-askap
   mwimager-casa
   mwimager-dd
+  mwimager-dd-dppp
   makeCombinedImage-part
   DESTINATION bin)

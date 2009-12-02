@@ -29,21 +29,25 @@
 pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
-if test $# != 5; then
+if test $# != 4; then
   echo "run as:   mwimager-dd-dppp rank ms-part parset-file dry"
+  echo $*
   exit 1
 fi
 
-cp $psn $psn-$rank
+rank=$1
 ms=$2
 psn=$3
+dry=$4
 
-echo "msin=$ms" >> $psn-rank
-echo "msout=$ms-dppp" >> $psn-rank
+cp $psn $psn-$rank
+echo "msin=$ms" >> $psn-$rank
+echo "msout=$ms-dppp" >> $psn-$rank
 
-if "$dry" = dry; then
-  cat $psn-rank
+rm -rf $ms-dppp
+if test "$dry" = dry; then
+  cat $psn-$rank
 else
-  IDPPP $psn-rank 1
+  echo "IDPPP $psn-$rank 1"
+  IDPPP $psn-$rank 1
 fi
-rm $psn-rank

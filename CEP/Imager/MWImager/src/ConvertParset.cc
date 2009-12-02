@@ -54,7 +54,7 @@ namespace LOFAR {
     for (map<string,string>::const_iterator iter=defaults.begin();
 	 iter != defaults.end(); ++iter) {
       string name = iter->first;
-      // Insert default if not part of input paramters.
+      // Insert default if not part of input parameters.
       if (! in.isDefined (name)) {
 	map<string,string>::const_iterator loc = old2NewNameMap.find(name);
 	if (loc != old2NewNameMap.end()) {
@@ -77,17 +77,29 @@ namespace LOFAR {
     map<string,string> emptyMap;
     ParameterSet out;
     ParameterSet in (parset);
-    // The output name is the base MS name minus the possible extension
-    // and directory unless an image name is given.
-    string inname  = in.getString ("dataset");
-    string outname = in.getString ("Images.name", inname);
-    string::size_type pos = outname.rfind ('.');
-    if (pos != string::npos) {
-      outname = outname.substr (0, pos);
+    // The image name is formed from the given image name and the MS name
+    // by replacing the MS file extension with the image name.
+    // In this way it works well for e.g. mwimager-dd where a global
+    // image name like -000-001.img gets applied to, say, X_SB0.MS resulting
+    // in X_SB0-000-001.img
+    // The following is also fine if there is no file extension.
+    // If the result has no file extension, add .img to it.
+    string msname  = in.getString ("dataset");
+    string imgext  = in.getString ("Images.name", "");
+    string imgname = StringUtil::split(msname, '.')[0] + imgext;
+    if (imgname.find('.') == string::npos) {
+      imgname += ".img";
     }
-    pos = outname.rfind ('/');
+    string::size_type pos = imgname.rfind ('/');
     if (pos != string::npos) {
-      outname = outname.substr (pos+1);
+      imgname = imgname.substr (pos+1);
+    }
+    // Define the image name for the ln -s command in mwimager-askap.
+    out.add("imgname", imgname);
+    // Remove the extension for the cimager name.
+    pos = imgname.rfind ('.');
+    if (pos != string::npos) {
+      imgname = imgname.substr (0, pos);
     }
     // Convert the gridder keywords.
     {
@@ -112,7 +124,7 @@ namespace LOFAR {
       string type = soin.getString ("type", "dirty");
       soin.remove ("type");
       out.add ("Cimager.solver", type);
-      outname += '_' + type;
+      imgname += '_' + type;
       convert (out, soin, emptyMap, emptyMap, "Cimager.solver.Clean.");
     }
     // Convert the images keywords.
@@ -179,8 +191,8 @@ namespace LOFAR {
       ostringstream cellSizeStr;
       cellSizeStr << cellSize;
       out.add ("Cimager.Images.cellsize", cellSizeStr.str());
-      out.add ("Cimager.Images.Names", "image." + outname);
-      string prefix = "Cimager.Images.image." + outname;
+      out.add ("Cimager.Images.Names", "image." + imgname);
+      string prefix = "Cimager.Images.image." + imgname;
       out.add (prefix + ".frequency", frequency);
       out.add (prefix + ".nchan", nchan);
       out.add (prefix + ".direction", dirVecStr.str());
@@ -202,7 +214,6 @@ namespace LOFAR {
       // Convert the remaining keywords.
       convert (out, imin, emptyMap, emptyMap, "Cimager.Images.");
     }
-        //      float padding = imin.getFloat ("padding", 1);
     {
       // If needed add unit deg to beamshape.
       vector<string> beam = in.getStringVector ("restore_beam",

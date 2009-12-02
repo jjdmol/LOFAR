@@ -27,7 +27,7 @@ pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
 if test $# != 5; then
-  echo "run as:  makeCombinedImages-part rank img-part parsetfile imagename dry"
+  echo "run as:  makeCombinedImages-part rank ms-part parsetfile imageext dry"
   exit 1
 fi
 
@@ -35,16 +35,16 @@ fi
 rank=$1
 ms=$2
 parset=$3
-imgn=$4
+imgext=$4
 dry=$5
 
 # Combine the facets.
 if test "$dry" = dry; then
   # In dry mode sleep to make sure the output is in the correct order.
   sleep $rank
-  echo "combineFacets $parset $ms $imgn"
+  echo "combineFacets $parset $ms $imgext"
   cat $parset
 else
-  echo "combineFacets $parset $ms $imgn"
-  combineFacets $parset $ms $imgn
+  echo "combineFacets $parset $ms $imgext"
+  combineFacets $parset $ms "$imgext"
 fi

@@ -72,12 +72,14 @@ fi
 echo "cimager.sh -inputs $psnbase.part$seqnr.cvt"
 cimager.sh -inputs $psnbase.part$seqnr.cvt
 
-# Create a symlink giving the same name as cimager would create.
+# Create a symlink using the same name as cimager would create.
 imgname=`getparsetvalue $psnbase.part$seqnr.cvt Cimager.Images.Names`
-newname=`echo $imgname | sed -e 's/^image.//' -e 's/_Dirty$/.img/'`
-if test ! -d $newname; then
-  echo "ln -s $imgname $newname"
-  ln -s $imgname $newname
+newname=`getparsetvalue $psnbase.part$seqnr.cvt imgname`
+if test -d $imgname.restored; then
+  if test ! -d $newname; then
+    echo "ln -s $imgname.restored $newname"
+    ln -s $imgname.restored $newname
+  fi
 fi
 
 # Convert to FITS.
