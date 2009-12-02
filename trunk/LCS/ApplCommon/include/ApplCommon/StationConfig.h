@@ -67,6 +67,9 @@ public:
 	bool	hasWideLBAs;
 };
 
+// Make one instance of the Station configuration globally accessable.
+StationConfig*	globalStationConfig();
+
 // @}
 
 } // namespace LOFAR

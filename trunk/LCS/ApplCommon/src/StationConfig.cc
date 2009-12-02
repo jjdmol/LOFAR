@@ -30,6 +30,17 @@
 
 namespace LOFAR {
 
+//---------- global instance of StationConfig ----------
+static StationConfig* globalStationConfigInstance = 0;
+
+StationConfig* globalStationConfig()
+{
+	if (globalStationConfigInstance == 0) {
+		globalStationConfigInstance = new StationConfig();
+	}
+	return (globalStationConfigInstance);
+}
+
 //
 // Constructor
 //

@@ -804,15 +804,12 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 	}
 
 	if (signal) { // signal == 0 indicates unrecognised or invalid MEP message
-		(void)new((void*)&buf.event) GCFEvent(signal); // placement new does in place construction
-
-		// set the event length
-		buf.event.length = sizeof(buf.mephdr) + buf.mephdr.payload_length;
+//		(void)new((void*)&buf.event) GCFEvent(signal); // placement new does in place construction
 
 		// check if there is more data than needed
-		if (size - (sizeof(GCFEvent) + sizeof(MEPHeader::FieldsType)) > 0) {
-			LOG_DEBUG(formatString("discarding %d bytes", size - (sizeof(GCFEvent) + sizeof(MEPHeader::FieldsType))));
-		}
+//		if (size - (sizeof(GCFEvent) + sizeof(MEPHeader::FieldsType)) > 0) {
+//			LOG_DEBUG(formatString("discarding %d bytes", size - (sizeof(GCFEvent) + sizeof(MEPHeader::FieldsType))));
+//		}
 
 		//
 		// Print debugging info
@@ -831,7 +828,14 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 		//
 		// dispatch the MEP message as a GCFEvent (which it now is)
 		//
+		buf.event.signal  = signal;
+		buf.event.length  = sizeof(buf.mephdr) + buf.mephdr.payload_length;
+		buf.event._buffer = (char*)(&buf.mephdr) - GCFEvent::sizePackedGCFEvent;
+
 		status = task.doEvent(buf.event, port);
+
+		buf.event._buffer = 0L;
+		buf.event.length = 0;
 	}
 	else {
 		LOG_WARN("F_DATAIN: Discarding unknown message.");

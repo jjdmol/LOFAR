@@ -121,6 +121,8 @@ GCFEvent::TResult tStateResult::collecting(GCFEvent& event, GCFPortInterface& /*
 		} 
 		else if (echo.seqnr % 3 == 0) {
 			LOG_DEBUG_STR("Received echo " << echo.seqnr << ", returning NEXT_STATE");
+			LOG_DEBUG_STR("event=" << event);
+			LOG_DEBUG_STR("echo =" << echo);
 			status = GCFEvent::NEXT_STATE;
 		}
 		else {
@@ -131,7 +133,9 @@ GCFEvent::TResult tStateResult::collecting(GCFEvent& event, GCFPortInterface& /*
 		if (echo.seqnr < 10) {
 			EchoPingEvent	ping;
 			ping.seqnr = ++echo.seqnr;
-			LOG_DEBUG_STR("Sending ping nr " << ping.seqnr);
+			ping.ping_time.tv_sec= 100000 + ping.seqnr;
+			ping.someName = formatString("ping has seqnr %d", ping.seqnr);
+			LOG_DEBUG_STR("Sending ping " << ping);
 			itsConn->send(ping);
 		}
 		else {
@@ -176,7 +180,7 @@ GCFEvent::TResult tStateResult::lastState(GCFEvent& event, GCFPortInterface& por
 
 	case ECHO_ECHO: {
 		EchoEchoEvent	echo(event);
-		LOG_DEBUG_STR("Received postponed ECHO nr " << echo.seqnr);
+		LOG_DEBUG_STR("Received postponed ECHO event:" << echo);
 		if (echo.seqnr < 9) {
 			return (GCFEvent::HANDLED);
 		}

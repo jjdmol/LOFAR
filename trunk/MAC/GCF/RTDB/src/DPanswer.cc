@@ -144,7 +144,7 @@ void DPanswer::_dispatchEvent(GCFEvent&	event)
 	if (!itsTask) {		// allow empty taskPointers
 		return;
 	}
-
+#if 0
 	// save signal from original event.
 	uint16			signal(event.signal);
 	const uint32	GCFEVENT_LEN = sizeof(GCFEvent);
@@ -171,6 +171,10 @@ void DPanswer::_dispatchEvent(GCFEvent&	event)
 
 	// and delete it again.
 	delete newEventBuffer;
+#else
+	event.pack();
+	itsTask->doEvent(event, gDummyPort);
+#endif
 }
 
   } // namespace RTDB

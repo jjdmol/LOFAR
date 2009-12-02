@@ -283,7 +283,7 @@ event = {
 	};
 	param = {
 		name = "trigger";
-		type = "TpTriggerInfo";
+		type = "struct TpTriggerInfo";
 	};
 };
 
@@ -377,7 +377,7 @@ event = {
 	};
 	param = {
 		name = "channel";
-		type = "TpTriggerSetup[4]";
+		type = "struct TpTriggerSetup[4]";
 	};
 };
 
@@ -413,7 +413,7 @@ event = {
 	};
 	param = {
 		name = "channel";
-		type = "TpFilterCoeffients[4]";
+		type = "struct TpFilterCoeffients[4]";
 	};
 	
 };
@@ -464,7 +464,7 @@ event = {
 	};
 	param = {
 		name = "trigger";
-		type = "TpTriggerInfo";
+		type = "struct TpTriggerInfo";
 	};
 };
 

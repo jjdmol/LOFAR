@@ -100,9 +100,9 @@ extern const struct protocolStrings F_PORT_PROTOCOL_STRINGS;
 //
 struct GCFTimerEvent : public GCFEvent
 {
-  GCFTimerEvent() : GCFEvent(F_TIMER)
-  {
-    length = sizeof(GCFTimerEvent);
+  GCFTimerEvent() : GCFEvent(F_TIMER) {};
+  GCFTimerEvent* clone() {
+    return (new GCFTimerEvent(*this)); 
   }
 
   long        sec;

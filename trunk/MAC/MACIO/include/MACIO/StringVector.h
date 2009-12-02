@@ -30,6 +30,7 @@
 //# Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/StreamUtil.h>
 #include <MACIO/Marshalling.h>
 
 // Avoid 'using namespace' in headerfiles
@@ -51,6 +52,7 @@ public:
 	unsigned int getSize();
 	unsigned int pack  (void	*buffer);
 	unsigned int unpack(void	*buffer);
+	ostream& print (ostream& os) const;
 
 	//# --- PUBLIC Datamember ---
 	vector<string>	theVector;
@@ -80,6 +82,19 @@ inline unsigned int StringVector::unpack(void	*buffer)
 	unsigned int offset = 0;
 	MSH_UNPACK_VECTOR_STRING(buffer, offset, theVector);
 	return (offset);
+}
+
+// print(ostream&)
+inline ostream& StringVector::print (ostream&os) const
+{
+	writeVector(os, theVector);
+	return (os);
+}
+
+// operator<< 
+inline ostream& operator<< (ostream& os, const StringVector&	sv)
+{
+	return (sv.print(os));
 }
 
 

@@ -421,7 +421,7 @@ event = {
   };
   param = {
     name = "board";
-    type = "BoardStatus";
+    type = "struct BoardStatus";
   };
 };
 
@@ -436,7 +436,7 @@ event = {
   };
   param = {
     name = "version";
-    type = "RSRVersion";
+    type = "struct RSRVersion";
   };
 };
 
@@ -497,7 +497,7 @@ event = {
   };
   param = {
     name = "config";
-    type = "RSUReconfig";
+    type = "struct RSUReconfig";
   };
 };
 
@@ -512,7 +512,7 @@ event = {
   };
   param = {
     name = "reset";
-    type = "RSUReset";
+    type = "struct RSUReset";
   };
 };
 
@@ -573,7 +573,7 @@ event = {
   };
   param = {
     name = "bypass";
-    type = "DIAGBypass";
+    type = "struct DIAGBypass";
   };
 };
 
@@ -603,7 +603,7 @@ event = {
   };
   parm = {
     name = "selftest";
-    type = "DIAGSelftest";
+    type = "struct DIAGSelftest";
   };
 };
 
@@ -694,7 +694,7 @@ event = {
   };
   param = {
     name = "ap";
-    type = "RCUHandler";
+    type = "struct RCUHandler";
   };
 };
 
@@ -770,7 +770,7 @@ event = {
   };
   param = {
     name = "station_id";
-    type = "CDOStationId";
+    type = "struct CDOStationId";
   };
   param = {
     name = "configuration_id";
@@ -782,7 +782,7 @@ event = {
   };
   param = {
     name = "control";
-    type = "CDOControl";
+    type = "struct CDOControl";
   };
   param = {
     name = "nof_blocks";

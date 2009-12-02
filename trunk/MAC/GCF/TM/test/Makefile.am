@@ -6,7 +6,7 @@ SUFFIXES = .ph
 %.cc: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/MACIO $<
 
-check_PROGRAMS 			= tAutoOpen tEventQueue tStateResult tmEcho tmPing tGCFPort tGCFTimer \
+check_PROGRAMS 			= tAutoOpen tEventQueue tStateResult tmEcho tmPing tGCFPort tITCPort tGCFTimer \
 						tGCFTask1 tGCFTask2 tGCFTask3 tGCFTask4 tGCFTask5
 
 tmEcho_SOURCES 			= $(BUILT_SOURCES) Echo.cc Echo_Protocol.cc
@@ -21,6 +21,10 @@ tGCFPort_SOURCES 		= $(BUILT_SOURCES) Echo_Protocol.cc \
 						  tGCFPort.cc tGCFPort.h 
 tGCFPort_LDADD			= ../src/libgcftm.la
 tGCFPort_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
+
+tITCPort_SOURCES 		= $(BUILT_SOURCES) tITCPort.cc Echo_Protocol.cc
+tITCPort_LDADD			= ../src/libgcftm.la
+tITCPort_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
 
 tGCFTimer_SOURCES 		= $(BUILT_SOURCES) tTimer.cc
 tGCFTimer_LDADD			= ../src/libgcftm.la

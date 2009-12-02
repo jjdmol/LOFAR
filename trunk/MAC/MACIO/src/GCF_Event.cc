@@ -31,56 +31,89 @@ using namespace std;
 namespace LOFAR {
   namespace MACIO {
 
+//
+// ~GCFEvent
+//
 GCFEvent::~GCFEvent() 
 { 
-//	LOG_DEBUG(formatString("~GCFEvent: _buffer=%08X, _upperbound=%d", _buffer, _upperbound));
+	LOG_TRACE_CALC(formatString("~GCFEvent: length=%d, _buffer=%08X", length, _buffer));
 
 	if (_buffer)  {
-//		LOG_DEBUG("CALLING DELETE");
 		delete [] _buffer; 
 	}
 }
 
-void* GCFEvent::pack(uint32& packsize) 
+//
+// pack()
+//
+void GCFEvent::pack() 
 {   
-  // packs the base event fields     
-  memcpy(_buffer, &signal, sizeof(signal));
-  memcpy(_buffer + sizeof(signal), &length, sizeof(length));
-  packsize = sizeof(signal) + sizeof(length);
-  return _buffer;
+	if (!_buffer) {
+		resizeBuf(sizePackedGCFEvent);
+	}
+
+	// packs the GCF event fields in an existing buffer
+	memcpy(_buffer, &signal, sizeof(signal));
+	memcpy(_buffer + sizeof(signal), &length, sizeof(length));
 }
 
+//
+// resizeBuf(requiredSize)
+//
+// makes sure that the pack buffer is large enough
+//
 void GCFEvent::resizeBuf(uint32 requiredSize)
 {
-  // resizes the buffer if needed
-  if (requiredSize > _upperbound && _buffer) {
-    delete [] _buffer;
-    _buffer = 0;
-  }
-  if (!_buffer) {
-    _buffer = new char[requiredSize];
-    _upperbound = requiredSize;
-  }
-  length = requiredSize - sizeof(length) - sizeof(signal);
-}
-
-GCFEvent* GCFEvent::clone() const
-{
-	int		mySize = sizeof(GCFEvent) + length;
-	char* 	theClone = new char[mySize];
-	memcpy(theClone, (const char*)this, mySize);
-
+	// release old buffer is any.
 	if (_buffer) {
-		((GCFEvent*)theClone)->_buffer 	  = 0;
-		((GCFEvent*)theClone)->_upperbound = 0;
-		((GCFEvent*)theClone)->resizeBuf(_upperbound);
-		memcpy(((GCFEvent*)theClone)->_buffer, _buffer, _upperbound);
+		delete [] _buffer;
+		_buffer = 0;
 	}
-	LOG_TRACE_CALC_STR("The clone is " << mySize << "+" << _upperbound << " bytes");
 
-	return ((GCFEvent*)theClone);
+	_buffer = new char[requiredSize];
+	ASSERTSTR(_buffer, "Can not allocated " << requiredSize << 
+						" bytes for packing an event of type " << signal);
+	length = requiredSize - sizePackedGCFEvent;
 }
 
+//
+// clone()
+//
+GCFEvent* GCFEvent::clone() 
+{
+	if (length == 0) {
+		LOG_TRACE_CALC(formatString("The %04X clone is %d bytes", signal, sizePackedGCFEvent, length));
+		// Cloning is easy, just call the copy constructor.
+		return (new GCFEvent(*this));
+	}
+
+	// Sometimes packed event are cloned (GCF_Scheduler of GCF/TM).
+	LOG_DEBUG(formatString("GCFEvent::clone() cloning a packed event of type 0x%04x (size=%d)", signal, bufferSize()));
+	GCFEvent*	clonedEvent = new GCFEvent(signal);
+	clonedEvent->resizeBuf(bufferSize());
+	memcpy (clonedEvent->_buffer, _buffer, bufferSize());
+	return (clonedEvent);
+}
+
+//
+// print(os)
+//
+ostream& GCFEvent::print (ostream& os) const
+{
+	os << formatString("signal=0x%04X, length=0x%08X(%d), _buffer=0x%08X\n", signal, length, length, _buffer);
+	if (_buffer) {
+		string	hd;
+		hexdump(hd, _buffer, sizePackedGCFEvent + length);
+		os << hd;
+	}
+	return (os);
+}
+
+// -------------------- helper functions --------------------
+
+//
+// unpackMember(data, offset, elementnumber, sizeof element)
+//
 void* GCFEvent::unpackMember(char* data, uint32& offset, uint32& memberNOE, uint32 sizeofMemberType)
 {
   void* seqPtr(0);
@@ -90,9 +123,13 @@ void* GCFEvent::unpackMember(char* data, uint32& offset, uint32& memberNOE, uint
   return seqPtr;
 }
 
+//
+// packMember(data, offset, elementnumber, sizeof element)
+//
 uint32 GCFEvent::packMember(uint32 offset, const void* member, uint32 memberNOE, uint32 sizeofMemberType)
 {
-  ASSERT(_buffer);
+	ASSERTSTR(_buffer, "Attempt to pack an eventMember in an unallocated _buffer");
+
   memcpy(_buffer + offset, &memberNOE, sizeof(memberNOE));
   offset += sizeof(memberNOE);
   if (memberNOE > 0) {
@@ -101,6 +138,9 @@ uint32 GCFEvent::packMember(uint32 offset, const void* member, uint32 memberNOE,
   return (memberNOE * sizeofMemberType) + sizeof(memberNOE);
 }
 
+//
+// unpackString(string, buffer)
+//
 uint32 GCFEvent::unpackString(string& value, char* buffer)
 {
   uint16 stringLength(0);
@@ -110,6 +150,9 @@ uint32 GCFEvent::unpackString(string& value, char* buffer)
   return stringLength + sizeof(stringLength);
 }
 
+//
+// packString(string, buffer)
+//
 uint32 GCFEvent::packString(char* buffer, const string& value)
 {
   uint16 stringLength(value.size());
@@ -118,5 +161,6 @@ uint32 GCFEvent::packString(char* buffer, const string& value)
   memcpy(buffer + sizeof(stringLength), (void *) value.c_str(), value.size());
   return neededBufLength;
 }  
+
   } // namespace MACIO
 } // namespace LOFAR

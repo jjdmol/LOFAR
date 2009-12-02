@@ -420,8 +420,14 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
 		return 0; // no messages can be send by this type of port
 	}
 
-	unsigned int packsize;
-	void* buf = e.pack(packsize);
+#if 0
+	unsigned int packSize;
+	void* buf = e.pack(packSize);
+#else
+	e.pack();
+	char*	buf      = e.packedBuffer();
+	uint	packSize = e.bufferSize();
+#endif
 
 	LOG_TRACE_STAT(formatString (
 						"Sending event '%s' for task '%s' on port '%s'",
@@ -429,7 +435,8 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
 						getTask()->getName().c_str(), 
 						getRealName().c_str()));
 
-	if ((written = _pSocket->send(buf, packsize)) != (ssize_t) packsize) {  
+	if ((written = _pSocket->send(buf, packSize)) != (ssize_t) packSize) {  
+		LOG_ERROR_STR("Could only send " << written << " of " << packSize << " bytes");
 		setState(S_DISCONNECTING);     
 		_handleDisconnect();
 

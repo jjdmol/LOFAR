@@ -81,9 +81,9 @@ protected: // constructors && destructors
 	// Define TRANEvent
 	struct GCFTranEvent : public GCFEvent
 	{
-		GCFTranEvent() : GCFEvent(F_TRAN)
-		{
-			length = sizeof(GCFTranEvent);
+		GCFTranEvent() : GCFEvent(F_TRAN) {};
+		GCFTranEvent* clone() {
+			return(new GCFTranEvent(*this));
 		}
 		State 	state;
 	};

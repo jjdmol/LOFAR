@@ -403,7 +403,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "setup";
-		type = "TbbTriggerSetup[MAX_N_RCUS]";
+		type = "struct TbbTriggerSetup[MAX_N_RCUS]";
 	};
 };
 
@@ -425,7 +425,7 @@ event = {
 	};
 	param = {
 		name = "setup";
-		type = "TbbTriggerSetup";
+		type = "struct TbbTriggerSetup";
 	};
 };
 
@@ -443,7 +443,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "coefficients";
-		type = "TbbTriggerCoef[MAX_N_RCUS]";
+		type = "struct TbbTriggerCoef[MAX_N_RCUS]";
 	};
 };
 
@@ -465,7 +465,7 @@ event = {
 	};
 	param = {
 		name = "coefficients";
-		type = "TbbTriggerCoef";
+		type = "struct TbbTriggerCoef";
 	};
 };
 
@@ -492,11 +492,11 @@ event = {
 	};
 	param = {
 		name = "setup";
-		type = "TbbTriggerSetup[MAX_N_RCUS]";
+		type = "struct TbbTriggerSetup[MAX_N_RCUS]";
 	};
 	param = {
 		name = "coefficients";
-		type = "TbbTriggerCoef[MAX_N_RCUS]";
+		type = "struct TbbTriggerCoef[MAX_N_RCUS]";
 	};
 };
 
