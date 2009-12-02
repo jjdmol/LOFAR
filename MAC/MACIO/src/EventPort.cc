@@ -344,11 +344,10 @@ void EventPort::sendEvent(Socket*		aSocket,
 						  GCFEvent*		anEvent)
 {
 	// Serialize the message and write buffer to port
-	uint32	packSize;
-	void* 	buf 	   = anEvent->pack(packSize);
-	int32 	btsWritten = aSocket->write(buf, packSize);
-	ASSERTSTR(btsWritten == (int32)packSize, 
-			  "Only " << btsWritten << " of " << packSize << " bytes written");
+	anEvent->pack();
+	int32 	btsWritten = aSocket->write(anEvent->packedBuffer(), anEvent->bufferSize());
+	ASSERTSTR(btsWritten == (int32)anEvent->bufferSize(), 
+			  "Only " << btsWritten << " of " << anEvent->bufferSize() << " bytes written");
 }
 
 //

@@ -252,28 +252,28 @@ bool GCFRawPort::findAddr(TPeerAddr& addr)
 GCFEvent::TResult GCFRawPort::recvEvent()
 {
 	bool		error (false);
-	GCFEvent	e;
+	GCFEvent*	newEvent = new GCFEvent;
 	char* 		event_buf(0);
-	GCFEvent*	full_event(&e);
 
 	// expects and reads signal
-	if (recv(&e.signal, sizeof(e.signal)) != sizeof(e.signal)) {
+	if (recv(&newEvent->signal, sizeof(newEvent->signal)) != sizeof(newEvent->signal)) {
 		error = true;
 		// don't continue with receiving
 	}
 	// expects and reads length
-	else if (recv(&e.length, sizeof(e.length)) != sizeof(e.length)) {
+	else if (recv(&newEvent->length, sizeof(newEvent->length)) != sizeof(newEvent->length)) {
 		error = true;
 		// don't continue with receiving
 	}  
 	// reads payload if specified
-	else if (e.length > 0) {
-		event_buf = new char[sizeof(e) + e.length];
-		memcpy(event_buf, &e, sizeof(e));
-		full_event = (GCFEvent*)event_buf;
+	else if (newEvent->length > 0) {
+		event_buf = new char[GCFEvent::sizePackedGCFEvent + newEvent->length];
+		ASSERTSTR(event_buf, "Could not allocate buffer for " << GCFEvent::sizePackedGCFEvent + newEvent->length << " bytes");
+		memcpy(event_buf, 						 &newEvent->signal, GCFEvent::sizeSignal);
+		memcpy(event_buf + GCFEvent::sizeSignal, &newEvent->length, GCFEvent::sizeLength);
 
 		// read the payload right behind the just memcopied basic event struct
-		if (recv(event_buf + sizeof(e), e.length) != e.length) {
+		if (recv(event_buf + GCFEvent::sizePackedGCFEvent, newEvent->length) != newEvent->length) {
 			error = true;
 		}    
 	}
@@ -288,11 +288,10 @@ GCFEvent::TResult GCFRawPort::recvEvent()
 	}
 
 	// dispatch the event to the task
-	itsScheduler->queueEvent(const_cast<GCFTask*>(getTask()), *full_event, this);
+	newEvent->_buffer = event_buf;	// attach buffer to event
+	itsScheduler->queueEvent(const_cast<GCFTask*>(getTask()), *newEvent, this);
+	delete newEvent;
 
-	if (event_buf) {
-		delete [] event_buf;
-	}
 	return (GCFEvent::HANDLED);
 }
 

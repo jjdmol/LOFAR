@@ -269,7 +269,9 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 		//
 		// dispatch the TP message as a GCFEvent (which it now is)
 		//
+		buf.event._buffer = (char*)(&buf.opcode) - GCFEvent::sizePackedGCFEvent;
 		status = task.doEvent(buf.event, port);
+		buf.event._buffer = 0;
 	}
 	else
 	{

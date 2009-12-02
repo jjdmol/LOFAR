@@ -252,8 +252,10 @@ void GCFScheduler::deregisterHandler(GCFHandler& handler)
 GCFEvent::TResult GCFScheduler::_sendEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface*    port)
 {
 	if (task) {
+		LOG_TRACE_CALC_STR("_sendEvent " << eventName(event) << "->task.doEvent");
 		return (task->doEvent(event, port ? *port : *itsFrameworkPort));
 	}
+	LOG_TRACE_CALC_STR("_sendEvent " << eventName(event) << "->port.dispatch");
 	return(port->dispatch(event));
 }
 
@@ -262,6 +264,8 @@ GCFEvent::TResult GCFScheduler::_sendEvent(GCFFsm* task, GCFEvent& event, GCFPor
 //
 void GCFScheduler::queueEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface*    port)
 {
+	LOG_TRACE_CALC_STR("queueEvent " << eventName(event));
+	LOG_TRACE_CALC_STR(event);
 	if (!itsUseQueue) {
 		_sendEvent(task, event, port);
 		return;
@@ -301,6 +305,7 @@ void GCFScheduler::queueEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface*  
 void GCFScheduler::_addEvent(GCFFsm*			task, GCFEvent&			event, 
 							 GCFPortInterface*	port, GCFEvent::TResult	status)
 {
+	LOG_TRACE_CALC_STR("_addEvent " << eventName(event));
 	waitingEvent_t*	newWE = new waitingEvent_t;
 	newWE->task = task;
 	newWE->port = (port ? port : itsFrameworkPort);
@@ -377,15 +382,15 @@ void GCFScheduler::handleEventQueue()
 
 		// throw away the handled event
 		theEventQueue.pop_front();
-		if (handled) {
+//		if (handled) {
 			LOG_TRACE_STAT_STR("Event " << eventName(*(theQueueEntry->event)) << " in task " << taskName << 
 							 " removed from queue");
-			if (status != GCFEvent::NEXT_STATE) {
-				delete [] (char*)(theQueueEntry->event);
+//			if (status != GCFEvent::NEXT_STATE) {
+				delete theQueueEntry->event;
 				theQueueEntry->event = 0;
-			}
+//			}
 			delete theQueueEntry;
-		}
+//		}
 		
 	} // for
 }

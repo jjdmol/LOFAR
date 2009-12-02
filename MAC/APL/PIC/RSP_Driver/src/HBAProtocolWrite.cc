@@ -274,11 +274,11 @@ HBAProtocolWrite::HBAProtocolWrite(GCFPortInterface& board_port, int board_id)
 	memset(&m_hdr, 0, sizeof(MEPHeader));
 
 #ifdef HBA_WRITE_DELAYS
-	LOG_INFO_STR("HBAProtocolWrite: " << board_id);
+//	LOG_INFO_STR("HBAProtocolWrite: " << board_id);
 	if (!i2c_tables_patched) {
 		// add the hba server address offset to specified indices
 		int		offset(GET_CONFIG("RSPDriver.HBA_SERVER_ADDRESS_OFFSET", i));
-		LOG_INFO_STR ("Patching i2c tables with offset " << offset);
+//		LOG_INFO_STR ("Patching i2c tables with offset " << offset);
 		// patch protocol table
 		for (int i = 0; i < (int)(sizeof(i2c_protocol_patch_indices)/sizeof(int)); i++) {
 			i2c_protocol[i2c_protocol_patch_indices[i]] += offset;
@@ -319,7 +319,7 @@ void HBAProtocolWrite::sendrequest()
 
 	// delays for at least on HBA need to be written, and the RCUProtocol register is not in use by RCUProtocolWrite
 
-	LOG_INFO_STR("HBAsendrequest: " << getCurrentIndex());
+//	LOG_INFO_STR("HBAsendrequest: " << getCurrentIndex());
 	switch (getCurrentIndex() % N_WRITES) {
 	case 0: {
 #ifdef HBA_WRITE_DELAYS

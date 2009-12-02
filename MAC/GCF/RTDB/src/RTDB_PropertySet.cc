@@ -99,6 +99,8 @@ RTDBPropertySet::~RTDBPropertySet()
 	}
 
 	delete itsService;
+	delete itsOwnResponse;
+	delete itsExtResponse;
 }
 
 //

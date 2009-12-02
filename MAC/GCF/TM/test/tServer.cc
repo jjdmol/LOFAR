@@ -89,6 +89,8 @@ GCFEvent::TResult tServer::connected(GCFEvent& event, GCFPortInterface& port)
 		EchoPingEvent	ping(event);
 		EchoEchoEvent	echo;
 		echo.seqnr     = ping.seqnr;
+		echo.ping_time = ping.ping_time;
+		echo.someName = formatString("Echo event has seqnr %d", echo.seqnr);
 		port.send(echo);
 		break;
 	}

@@ -187,21 +187,22 @@ ssize_t GCFETHRawPort::send(GCFEvent& e)
     return 0;
   }
 
-  unsigned int packsize;
-  void* buf = e.pack(packsize);
+#if 0
+  unsigned int packSize;
+  void* buf = e.pack(packSize);
+#else
+	e.pack();
+	char*	buf = e.packedBuffer();
+	uint	packSize = e.bufferSize();
+#endif
 
-  LOG_DEBUG(formatString (
-      "Sending event '%s' for task '%s' on port '%s'",
-//      getTask()->eventName(e).c_str(),
+  LOG_DEBUG(formatString ( "Sending event '%s' for task '%s' on port '%s'",
       eventName(e).c_str(),
       getTask()->getName().c_str(), 
       getRealName().c_str()));
 
-  if ((written = _pSocket->send(buf, packsize)) != packsize)
-  {
-    LOG_DEBUG(formatString (
-        "truncated send: %s",
-        strerror(errno)));
+  if ((written = _pSocket->send(buf, packSize)) != packSize) {
+    LOG_DEBUG(formatString ( "truncated send: %s", strerror(errno)));
       
     setState(S_DISCONNECTING);  
     schedule_disconnected();

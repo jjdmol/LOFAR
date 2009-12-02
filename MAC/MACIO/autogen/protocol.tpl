@@ -17,7 +17,7 @@
 //
 //  [+ (base-name) +].[+ (suffix) +]: [+ description +]
 //
-//  Copyright (C) 2003-2008
+//  Copyright (C) 2003-2009
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
 //  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
@@ -26,9 +26,12 @@
 //  $Id$
 //
 [+ IF (== (suffix) "cc") +]
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 #include "[+ (base-name) +].ph"
 
 using namespace LOFAR::MACIO;
+using namespace std;
 
 const char* LOFAR::[+ (base-name) +]::[+ protocol_name +]_signalnames[] = 
 {
@@ -109,14 +112,22 @@ extern const struct LOFAR::MACIO::protocolStrings [+ protocol-name +]_STRINGS;
       [+ FOR param ";" +]
       [+ IF (== (get "type") "string") +]std::[+ ENDIF +][+ event_class_member +][+ IF (*== (get "type") "[]") +]; uint32 [+ (get "name") +]NOE[+ ENDIF +][+ ENDFOR +];
 
-      void* pack(uint32& __packsize);
+      void pack();
+      virtual [+ event_class_name +]*	clone();
+      ostream& print (ostream& os) const;
 
     private:
       [+ event_class_name +]([+ event_class_name +]&);
       [+ event_class_name +]& operator= (const [+ event_class_name +]&);
       
-	    void unpack();
-  };   [+ ELSE +]
+	  void unpack();
+  };  
+
+inline ostream& operator<<(ostream& os, const [+ event_class_name +]& event)
+{
+    return (event.print(os));
+};
+ [+ ELSE +]
 [+ event_class_name +]::[+ event_class_name +](MACIO::GCFEvent& e)
   : MACIO::GCFEvent(e)[+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +],
     [+ (get "name") +](0)[+ ENDIF +][+ IF (*== (get "type") "[]") +],
@@ -134,26 +145,25 @@ extern const struct LOFAR::MACIO::protocolStrings [+ protocol-name +]_STRINGS;
 
 [+ event_class_name +]::~[+ event_class_name +]() 
 {
-  if (_unpackDone)
-  {[+ FOR param "" +][+ IF (and (exist? "userdefined") (*== (get "type") "*")) +]
+  [+ FOR param "" +][+ IF (and (exist? "userdefined") (*== (get "type") "*")) +]
     if ([+ (get "name") +]) delete [+ (get "name") +];[+ ENDIF +][+ ENDFOR +]
-  }
 }
     
-void* [+ event_class_name +]::pack(uint32& __packsize)
+void [+ event_class_name +]::pack()
 {
   [+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +][+ IF (*== (get "type") "[]") +]if ([+ (get "name") +]NOE > 0) [+ ENDIF +]assert([+ (get "name") +]);[+ ENDIF +]
   [+ ENDFOR +]
-  uint32 __requiredSize = [+ IF (not (exist? "noheader")) +]sizeof(signal) + sizeof(length)[+ ELSE +]0[+ ENDIF +][+ FOR param "" +]
+  uint32 __requiredSize = [+ IF (not (exist? "noheader")) +]sizePackedGCFEvent[+ ELSE +]0[+ ENDIF +][+ FOR param "" +]
     [+ IF (exist? "userdefined") +]+ [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]getSize()
     [+ ELIF (not (*== (get "type") "]")) +]+ [+ IF (== (get "type") "string") +][+ (get "name") +].length() + sizeof(uint16)[+ ELSE +]sizeof([+ (get "name") +])[+ ENDIF+]
     [+ ELIF (*== (get "type") "[]") +]+ sizeof([+ (get "name") +]NOE) + ([+ (get "name") +]NOE * sizeof([+ event_class_member_type +]))
     [+ ELSE +]+ sizeof([+ (get "name") +])[+ ENDIF +][+ ENDFOR +];
 
   resizeBuf(__requiredSize);
-  uint32 __offset = __packsize = 0;
+  uint32 __offset = 0;
   [+ IF (not (exist? "noheader")) +]
-  MACIO::GCFEvent::pack(__offset);[+ ENDIF +]
+  GCFEvent::pack();
+  __offset = GCFEvent::sizePackedGCFEvent;[+ ENDIF +]
   [+ FOR param "" +]
   [+ IF (exist? "userdefined") +]
   __offset += [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]pack(_buffer + __offset);
@@ -173,18 +183,15 @@ void* [+ event_class_name +]::pack(uint32& __packsize)
 	[+ IF (= (count "param") 0) +]
   // no params in this event to pack
 	[+ ENDIF +]
-          
-  __packsize = __offset;
-  return _buffer;
 }
 
 void [+ event_class_name +]::unpack()
 {
-  if (length > 0)
-  {
+  if (length == 0)
+    return;
+
   	[+ IF (> (count "param") 0) +]
-  	uint32 __offset = sizeof(MACIO::GCFEvent);
-    char* __data = (char*) _base;
+  	uint32 __offset = sizePackedGCFEvent;
     [+ ELSE +]
     // no params in this event to unpack
     [+ ENDIF +]
@@ -193,26 +200,52 @@ void [+ event_class_name +]::unpack()
       [+ IF (*== (get "type") "*") +]
     [+ (get "name") +] = new [+ (substring (get "type") 0 (string-index (get "type") #\*)) +]();
       [+ ENDIF +]
-    __offset += [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]unpack(__data + __offset);
+    __offset += [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]unpack(_buffer + __offset);
     [+ ELIF (not (*== (get "type") "]")) +]
       [+ IF (== (get "type") "string") +]
-    __offset += MACIO::GCFEvent::unpackString([+ (get "name") +], __data + __offset);
+    __offset += GCFEvent::unpackString([+ (get "name") +], _buffer + __offset);
       [+ ELSE +]
-    memcpy(&[+ (get "name") +], __data + __offset, sizeof([+ (get "type") +]));
+    memcpy(&[+ (get "name") +], _buffer + __offset, sizeof([+ (get "type") +]));
     __offset += sizeof([+ (get "type") +]);
       [+ ENDIF +]
     [+ ELIF (*== (get "type") "[]") +]
-    [+ (get "name") +] = ([+ event_class_member_type +]*) unpackMember(__data, __offset, [+ (get "name") +]NOE,  sizeof([+ event_class_member_type +]));
+    [+ (get "name") +] = ([+ event_class_member_type +]*) unpackMember(_buffer, __offset, [+ (get "name") +]NOE,  sizeof([+ event_class_member_type +]));
     [+ ELSE +]
-    memcpy([+ (get "name") +], (__data + __offset), sizeof([+ (get "name") +]));
+    memcpy([+ (get "name") +], (_buffer + __offset), sizeof([+ (get "name") +]));
     __offset += sizeof([+ (get "name") +]);
     [+ ENDIF +][+ ENDFOR +]
-  }
-}[+ ENDIF +][+ ENDFOR +]
+    _buffer = 0;
+    length = 0;
+}
+
+[+ event_class_name +]* [+ event_class_name +]::clone()
+{
+	LOG_TRACE_CALC("[+ event_class_name +]::clone()");
+	pack();
+	[+ event_class_name +]*		clonedEvent = new [+ event_class_name +]((GCFEvent&)*this);
+	ASSERTSTR(clonedEvent, "Could not allocate a new [+ event_class_name +] class");
+    return (clonedEvent);
+}
+
+ostream& [+ event_class_name +]::print(ostream& os) const
+{
+  // Note: 'userdefined' classes are only printed if they are 'printable'
+  //       base classes are printed except when they are 'nonprintable'
+  MACIO::GCFEvent::print(os);
+  [+ FOR param "" +][+ IF (==* (get "type") "struct") +][+ ELSE +]
+    [+ IF (or (and (exist? "userdefined") (exist? "printable")) (and (not(exist? "userdefined")) (not(exist? "nonprintable")))) +]
+      [+ IF (*== (get "type") "*") +]
+      os << " [+ (get "name") +] = " << *[+ (get "name") +] << endl;
+      [+ ELSE +]
+      os << " [+ (get "name") +] = " <<  [+ (get "name") +] << endl; // [+ (get "type") +]
+      [+ ENDIF +][+ ENDIF +][+ ENDIF +]
+  [+ ENDFOR +]return (os);
+}
+[+ ENDIF +][+ ENDFOR +]
+
 [+ IF (= (suffix) "ph") +]
 	} // namespace [+ (base-name) +]
 } // namespace LOFAR
-
 
 using namespace LOFAR::[+ (base-name) +];
 

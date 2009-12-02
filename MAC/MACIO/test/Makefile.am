@@ -6,7 +6,7 @@ SUFFIXES = .ph
 %.cc: %.prot
 	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
 
-check_PROGRAMS 		= tEventPort tProtocol
+check_PROGRAMS 		= tEventPort tProtocol tClone
 
 tProtocol_SOURCES 		= testprotocol.ph testprotocol.cc \
 						  Echo_Protocol.ph Echo_Protocol.cc \
@@ -19,7 +19,12 @@ tEventPort_SOURCES 		= Echo_Protocol.ph Echo_Protocol.cc \
 tEventPort_LDADD		= ../src/libmacio.la
 tEventPort_DEPENDENCIES	= ../src/libmacio.la $(LOFAR_DEPEND)
 
-BUILT_SOURCES = Echo_Protocol.ph testprotocol.ph
+tClone_SOURCES 			= Clone_Protocol.ph Clone_Protocol.cc \
+						  tClone.cc
+tClone_LDADD			= ../src/libmacio.la
+tClone_DEPENDENCIES		= ../src/libmacio.la $(LOFAR_DEPEND)
+
+BUILT_SOURCES = Echo_Protocol.ph testprotocol.ph Clone_Protocol.ph
 
 EXTRA_DIST =  tProtocol.log_prop
 	

@@ -102,7 +102,7 @@ void GCFFsm::handleTaskQueue()
 		}
 		itsEventQueue.pop_front();
 //		LOG_DEBUG("delete theEvent->event");
-//		delete theEvent->event;
+		delete theEvent->event;
 		delete theEvent;
 	}
 }

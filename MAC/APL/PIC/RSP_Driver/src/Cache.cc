@@ -151,10 +151,11 @@ void CacheBuffer::reset(void)
 		//
 		// Set default subband selection starting at RSPDriver.FIRST_SUBBAND
 		//
+		int		firstSubband = GET_CONFIG("RSPDriver.FIRST_SUBBAND", i);
 		for (int rcu = 0; rcu < m_subbandselection().extent(firstDim); rcu++) {
 			for (int sb = 0; sb < MEPHeader::N_BEAMLETS; sb++) {
 				m_subbandselection()(rcu, sb + MEPHeader::N_LOCAL_XLETS) = (rcu % MEPHeader::N_POL) +
-										(sb * MEPHeader::N_POL) + (GET_CONFIG("RSPDriver.FIRST_SUBBAND", i) * 2);
+										(sb * MEPHeader::N_POL) + (firstSubband * 2);
 			}
 		}
 	}

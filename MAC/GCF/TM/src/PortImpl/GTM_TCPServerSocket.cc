@@ -147,7 +147,7 @@ void GTMTCPServerSocket::doWork()
 			forwardEvent(connectedEvent);
 		}
 		else {
-			LOG_WARN(formatString ( "::accept, error: %s", strerror(errno)));
+			LOG_WARN(formatString ( "::accept(%d, %d)-> error:(%d)=%s", _fd, clAddrLen, errno, strerror(errno)));
 		}
 
 		// because we only accept one connection (SPP), we don't need to listen with

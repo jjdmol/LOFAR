@@ -141,7 +141,7 @@ int GTMTimerHandler::cancelTimer(unsigned long timerid, void** arg)
   if (arg) {
 	*arg = pCurTimer->getTimerArg();
   }
-  pCurTimer->cancel();
+  pCurTimer->cancel();		// Note: sets internal flag in Timer.
   
   return result;
 }
