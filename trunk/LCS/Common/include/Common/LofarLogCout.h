@@ -32,7 +32,7 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 
-#ifndef _GNU_SOURCE
+#ifndef __BASE_FILE__
 # include <libgen.h>
 # define __BASE_FILE__ basename(__FILE__)
 #endif
