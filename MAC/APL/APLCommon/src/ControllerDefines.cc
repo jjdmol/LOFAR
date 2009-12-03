@@ -427,6 +427,8 @@ bool sendControlResult(GCF::TM::GCFPortInterface&	port,
 			formatString("State %04X is not supported by 'sendControlResult'", signal));
 
 	}
+
+        return false; // satisfy compiler        
 }
 
 

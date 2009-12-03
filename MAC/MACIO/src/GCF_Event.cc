@@ -24,6 +24,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/hexdump.h>
+#include <Common/StringUtil.h>
 #include <MACIO/GCF_Event.h>
 
 using namespace std;
