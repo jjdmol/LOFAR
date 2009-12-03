@@ -22,6 +22,7 @@
 #
 # Variables used by this module:
 #  PQXX_ROOT_DIR     - PQXX root directory
+#  PQ_ROOT_DIR       - PQ root directory (Postgres C API)
 #
 # Variables defined by this module:
 #  PQXX_FOUND        - system has PQXX
@@ -38,7 +39,8 @@ if(NOT PQXX_FOUND)
     PATHS ${PQXX_ROOT_DIR} PATH_SUFFIXES include)
   find_library(PQXX_LIBRARY pqxx
     PATHS ${PQXX_ROOT_DIR} PATH_SUFFIXES lib)
-  find_library(PQ_LIBRARY pq)
+  find_library(PQ_LIBRARY pq
+    PATHS ${PQ_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(PQXX_INCLUDE_DIR PQXX_LIBRARY PQ_LIBRARY)
 
   include(FindPackageHandleStandardArgs)

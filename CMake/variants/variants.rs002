@@ -1,5 +1,8 @@
 set(LOFAR_COMPILER_SUITES GNUNEW)
 
+# Build variants
+set(LOFAR_BUILD_VARIANTS DEBUG OPT)
+
 # GNUNEW compiler suite
 set(GNUNEW_COMPILERS GNUNEW_C GNUNEW_CXX)  # GNUNEW Compiler Suite
 set(GNUNEW_C         /usr/bin/gcc )        # GNUNEW C compiler
@@ -21,8 +24,8 @@ set(GNUNEW_COMPILE_DEFINITIONS_OPT)
 # Preset rs002 specific options
 option(USE_BACKTRACE     "Use backtrace" OFF)
 
-# Where to find Postgres libraries
-set(PQXX_ROOT_DIR /usr/local/pgsql)
+# Path to Postgres C API
+set(PQ_ROOT_DIR /usr/local/pgsql)
 
 # Search Lapack in /usr first, because Lapack library in /usr/local is broken!
 set(CPPLAPACK_ROOT_DIR /usr)
