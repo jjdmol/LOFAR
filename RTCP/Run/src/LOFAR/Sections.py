@@ -129,7 +129,7 @@ class CNProcSection(Section):
       # environment
       "-env DCMF_COLLECTIVES=0",
       "-env BG_MAPPING=XYZT",
-      "-env LD_LIBRARY_PATH=/bgsys/drivers/ppcfloor/comm/lib:/bgsys/drivers/ppcfloor/runtime/SPI:/cephome/romein/lib.bgp",
+      "-env LD_LIBRARY_PATH=/bgsys/drivers/ppcfloor/comm/lib:/bgsys/drivers/ppcfloor/runtime/SPI:/globalhome/romein/lib.bgp",
 
       # working directory
       "-cwd %s" % (Locations.files["rundir"],),
@@ -147,7 +147,7 @@ class IONProcSection(Section):
     logfiles = ["%s/run.IONProc.%s.log" % (Locations.files["logdir"],self.partition)] + self.logoutputs
 
     if VALGRIND_ION:
-      valgrind = "/cephome/mol/root-ppc/bin/valgrind --suppressions=%s --leak-check=full --show-reachable=yes" % (Locations.files["ionsuppfile"],)
+      valgrind = "/globalhome/mol/root-ppc/bin/valgrind --suppressions=%s --leak-check=full --show-reachable=yes" % (Locations.files["ionsuppfile"],)
     else:
       valgrind = ""
 
@@ -223,7 +223,7 @@ class StorageSection(Section):
         self.commands.append( SyncCommand( SSH+"-t %s mkdir -p %s" % (Hosts.resolve(n,"back"),os.path.dirname(p.parseMask()),), logfiles ) )
 
     if VALGRIND_STORAGE:
-      valgrind = "/cephome/mol/root-ppc/bin/valgrind --suppressions=%s --leak-check=full --show-reachable=yes" % (Locations.files["storagesuppfile"],)
+      valgrind = "/globalhome/mol/root-ppc/bin/valgrind --suppressions=%s --leak-check=full --show-reachable=yes" % (Locations.files["storagesuppfile"],)
     else:
       valgrind = ""
 
