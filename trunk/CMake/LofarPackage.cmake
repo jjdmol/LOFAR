@@ -50,10 +50,13 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
   # - If the target <pkg> is not yet defined, and if the package source
   #   directory exists:
   #   - define the option BUILD_<pkg>
+  #   - set the variables PACKAGE_SOURCE_DIR and <pkg>_SOURCE_DIR to the
+  #     source directory of <pkg>, and the variables PACKAGE_BINARY_DIR and
+  #     <pkg>_BINARY_DIR to the binary directory of <pkg>.
   #   - add a custom target <pkg>
   #   - add the source directory to the build
   # - If the target <pkg> is defined:
-  #   - add a dependency of the current project on package <pkg>
+  #   - add a dependency of the current package on package <pkg>
   #
   # Furthermore:
   # - if [srcdir] is not supplied, <pkg>_SOURCE_DIR, which must be defined in

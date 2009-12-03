@@ -24,6 +24,10 @@
     copy ${CMAKE_SOURCE_DIR}/hello.sh ${CMAKE_BINARY_DIR}/hello.sh)
 
   But this feels rather hacky.
+  Another solution would be to set the output path of all generated
+  executables to ${CMAKE_BINARY_DIR}/bin, instead of the automatically
+  selected ${CMAKE_CURRENT_BINARY_DIR}. This could cause name conflicts,
+  though.
 
 * Define ${PACKAGE_NAME}_LINK_LIBRARIES in LofarPackage.cmake, which can
   then be used by lofar_add_library() and lofar_add_executable() in
