@@ -351,6 +351,7 @@ GCFEvent::TResult ECMonitor::askSettings(GCFEvent& event, GCFPortInterface& port
 	case EC_CMD_ACK: {
 		itsTimerPort->cancelAllTimers();
 		ECCmdAckEvent   ack(event);
+		LOG_DEBUG_STR("EC_CMD_ACK: " << ack);
 		sts_settings settings;
 		memcpy(&settings, &ack.payload, ack.payloadSize);
 
@@ -402,6 +403,7 @@ GCFEvent::TResult ECMonitor::askSettings(GCFEvent& event, GCFPortInterface& port
 		break;
 	}
 
+	LOG_DEBUG("EO AskSettings");
 	return (status);
 }
 
@@ -676,7 +678,7 @@ typedef struct {
 	int16    cmdId;
 	int16    status;
 	int16    payloadLen; // number of bytes in payload
-	int16    payload[31];
+	int16    payload[64];
 } ECFrame;
 
 
@@ -707,7 +709,9 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   hexdump(hd,&buf,sizeof(buf));
   LOG_DEBUG_STR("raw buf all=" << hd);
   // dispatch the EC message as a GCFEvent (which it now is)
+  buf.event._buffer = (char*)(&buf.cmdId) - GCFEvent::sizePackedGCFEvent;
   status = task.doEvent(buf.event, port);
+  buf.event._buffer = 0;
 
   return(status);
 }
