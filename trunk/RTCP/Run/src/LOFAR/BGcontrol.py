@@ -67,7 +67,7 @@ def packetAnalysis( name, ip, port ):
     "%s/../../packetanalysis" % os.path.dirname(__file__), # when running in an installed environment
     "%s/../../build/gnu/src/packetanalysis" % os.path.dirname(__file__), # when running straight from a source tree
 
-    "/cephome/mol/projects/LOFAR/RTCP/Run/src/packetanalysis", # fallback: Jan David's version
+    "/globalhome/mol/projects/LOFAR/RTCP/Run/src/packetanalysis", # fallback: Jan David's version
   ] )
   
   location = None

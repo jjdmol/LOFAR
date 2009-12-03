@@ -167,6 +167,9 @@ class Parset(util.Parset.Parset):
 	self.setdefault('OLAP.CNProc.outputSubbandPsets', range(nrPsets))
 	self.setdefault('OLAP.CNProc.outputBeamPsets', range(nrPsets))
 
+        # depricated
+	self.setdefault('OLAP.CNProc.outputPsets', range(nrPsets))
+
         # what will be stored where?
         # outputSubbandPsets may well be set before finalize()
 	self.setdefault('OLAP.subbandsPerPset', int( math.ceil(1.0 * nrSubbands / len(self["OLAP.CNProc.outputSubbandPsets"]) ) ) )
