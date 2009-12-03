@@ -135,3 +135,4 @@ uses  DelayComp    1.0.3  development 'node constraint'  "Setting of the delayco
 uses  IONProc      1.0.2  development 'node constraint'  "I/O Node Processing: application running on the BlueGene I/O nodes"
 uses  StorageProc  1.0.2  development 'node constraint'  "Stores output from the correlator in one or more MeasurmentSet files"
 uses  Pencil	   2.0.0  development 'node constraint'  "Pencil beam specification"
+uses  Correlator   1.0.1  development 'node constraint'  "Correlator specification"
