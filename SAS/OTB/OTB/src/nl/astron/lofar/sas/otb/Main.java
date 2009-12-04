@@ -52,7 +52,7 @@ public class Main {
     public static void main(String[] argv) {
         try {
             String logConfig = "OTB.log_prop";
-            String server    = "sas001.lofar";
+            String server    = "sas001";
             String port      = "10199";
             boolean errs     = false;
             
