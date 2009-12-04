@@ -1,0 +1,675 @@
+%%%%%%%%%%%%%%%%%%%%%%% file template.tex %%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% This is a general template file for the LaTeX package SVJour3
+% for Springer journals.          Springer Heidelberg 2006/03/15
+%
+% Copy it to a new file with a new name and use it as the basis
+% for your article. Delete % signs as needed.
+%
+% This template includes a few options for different layouts and
+% content for various journals. Please consult a previous issue of
+% your journal as needed.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% First comes an example EPS file -- just ignore it and
+% proceed on the \documentclass line
+% your LaTeX will extract the file if required
+\begin{filecontents*}{example.eps}
+%!PS-Adobe-3.0 EPSF-3.0
+%%BoundingBox: 19 19 221 221
+%%CreationDate: Mon Sep 29 1997
+%%Creator: programmed by hand (JK)
+%%EndComments
+gsave
+newpath
+  20 20 moveto
+  20 220 lineto
+  220 220 lineto
+  220 20 lineto
+closepath
+2 setlinewidth
+gsave
+  .4 setgray fill
+grestore
+stroke
+grestore
+\end{filecontents*}
+%
+\documentclass{svjour3}                     % onecolumn (standard format)
+%\documentclass[smallextended]{svjour3}     % onecolumn (second format)
+%\documentclass[twocolumn]{svjour3}         % twocolumn
+%
+\smartqed  % flush right qed marks, e.g. at end of proof
+%
+\usepackage{graphicx}
+%
+\usepackage{mathptmx}      % use Times fonts if available on your TeX system
+%
+% insert here the call for the packages your document requires
+%\usepackage{latexsym}
+% etc.
+%
+% please place your own definitions here and don't use \def but
+% \newcommand{}{}
+%
+% Insert the name of "your journal" with
+\journalname{Experimental Astronomy}
+%
+
+\begin{document}
+
+\title{The LOFAR Correlator%\thanks{Grants or other notes
+%about the article that should go on the front page should be
+%placed here. General acknowledgments should be placed at the end of the article.}
+}
+%\subtitle{Do you have a subtitle?\\ If so, write it here}
+
+%\titlerunning{Short form of title}        % if too long for running head
+
+\author{\hbox{John W. Romein \and P. Chris Broekema \and Jan David Mol \and Rob V. van Nieuwpoort}}
+
+%\authorrunning{Short form of author list} % if too long for running head
+
+\institute{John W. Romein \and P. Chris Broekema \and Jan David Mol \and Rob V. van Nieuwpoort \at
+              ASTRON (Netherlands Institute for Radio Astronomy) \\
+	      Dwingeloo, The Netherlands \\
+%              Tel.: +123-45-678910\\
+%              Fax: +123-45-678910\\
+              \email{\{romein,broekema,mol,nieuwpoort\}@astron.nl}           %  \\
+%             \emph{Present address:} of F. Author  %  if needed
+%           \and
+%           S. Author \at
+%              second address
+}
+
+\date{Received: date / Accepted: date}
+% The correct dates will be entered by the editor
+
+
+\maketitle
+
+\begin{abstract}
+This article describes the central, real-time processing of the LOFAR data.
+Since computing correlations is one of its main functions, the software is
+often called ``the correlator''.
+
+
+\keywords{LOFAR \and Correlator \and Blue Gene/P}
+% \PACS{PACS code1 \and PACS code2 \and more}
+% \subclass{MSC code1 \and MSC code2 \and more}
+\end{abstract}
+
+\section{Introduction}
+
+This article describes the central, real-time part of the LOFAR data
+processing.
+The data is processed in software, by an application commonly called
+``the correlator''.
+Actually, this term is a misnomer, since the correlator can perform many
+more operations than correlating only, and supports a wide range of
+observation types.
+
+The LOFAR correlator is the first large-scale correlator that processes
+data in \emph{software}.
+Traditionally, correlators use custom-built hardware to process data, because
+of the high data rates and processing requirements.
+However, the desire to support different observation types demanded a more
+flexible software solution.
+The availability of sufficiently powerful supercomputer, an IBM Blue Gene/P,
+allows this.
+We have to perform all processing in real time, since the data streams
+that come from the stations are simply too large to store.
+
+
+
+\section{The IBM Blue Gene/P}
+
+The Blue Gene/P (BG/P) is a supercomputer that combines powerful computational
+capabilities with a fast interconnect.
+The computational power comes from a large number of relatively simple
+processor cores (4,096 per rack) that run at a low clock speed, to reduce
+power consumption and allow a dense packaging.
+Each chip consists of four PowerPC cores, and each core is extended by
+two custom-built double-precision Floating-Point Units (FPU), that provide
+remarkably good support for operations on complex numbers.
+Although the support for double precision is overkill for our application,
+the good support for complex numbers is handy for signal-processing purposes.
+
+The nodes are connected by \emph{five\/} different types of networks,
+all integrated on the same chip.
+The most important network is the \emph{three-dimensional torus}, that
+connects all compute nodes.
+The \emph{collective network\/} is used for MPI collective operations,
+but also for external communication, as explained below.
+Additional networks exist for fast barriers, initialization, diagnostics, and
+debugging.
+More information on the BG/P can be found elsewhere~\cite{IBM:08}.
+
+Each group of (in our case 16) compute nodes is connected to an I/O~node via
+the collective network.
+Normally, the I/O~node is used as a black box that provides transparent
+communication from the compute nodes to external systems: each I/O-related
+system call (e.g., \texttt{open()}, \texttt{read()}, \texttt{socket()}) on a
+compute node is forwarded by the operating system to a daemon process on
+the I/O~node that performs the real operation.
+However, we found that it is much more efficient to run part of the correlator
+software on the I/O~node~\cite{Iskra:08}, on which we will elaborate in
+Section~\ref{sec:IONProc}.
+An I/O~node uses the same hardware as a compute node, but has its
+10~Gb/s Ethernet interface connected and runs another operating system
+(a modified Linux kernel).
+The group of one I/O~node and its associated compute nodes is called a
+\emph{pset}.
+Our system has 192~psets in total, 64 per rack.
+
+In 2005, LOFAR used a 6-rack IBM Blue Gene/L (BG/L) supercomputer for real-time
+processing of the station data, which was, at that time, the sixth fastest
+supercomputer in the world.
+In 2008, the system was replaced by its successor, the BG/P.
+Although the architecture of the BG/P does not differ much from that
+of the BG/L, there were several advantages.
+First, the system software of the BG/P is much more mature than that of the
+BG/L.
+For the BG/L, we had to rewrite major parts of the operating system and network
+system software to achieve acceptable I/O
+performance~\cite{Iskra:08,Boonstoppel:08} (which was done in close cooperation
+with Argonne National Laboratory, Chicago).
+Second, the L1 caches of the processor cores are coherent in the BG/P, unlike
+those of the BG/L, where shared-memory processing was virtually impossible.
+Third, provisions were made to transparently recover from L1-cache faults,
+making the system much more reliable.
+Fourth, asynchronous communication (i.e., overlapping of computations and
+communication) on the 3-D~torus was enabled by adding a DMA (Direct Memory
+Access) engine.
+Furthermore, the use of 10-Gb/s Ethernet interfaces (as opposed to 1-GbE on
+the BG/L) simplified the connections to the stations.
+However, the relatively slow processor cores of I/O~nodes limit the data rate
+to roughly four Gb/s in practice.
+
+
+\begin{figure*}
+\begin{center}
+\includegraphics[width=\textwidth]{processing.pdf}
+\end{center}
+\caption{Bla bla}
+\label{fig:processing}
+\end{figure*}
+
+
+\section{Processing pipelines}
+
+The data that come from the LOFAR stations are centrally processed in real
+time on the Blue Gene/P and a cluster of storage nodes.
+Figure~\ref{fig:processing} shows how the data flows through the entire
+processing chain.
+
+The HBAs of a core station can be split into two separate substations~\cite{?}.
+The correlator treats a split station as if it were two independent stations,
+hence both substations are correlated to all other stations, as well as
+mutually.
+
+
+
+\subsubsection{Data Receipt}
+
+The stations send packets with subband data over the Wide-Area Network to the
+Blue Gene.
+The observer selects up to 248 subbands (frequency/beam combinations),
+corresponding to 48.4~MHz observation bandwidth.
+Each (sub)station sends 48,828 packets per second, at a rate of 3.1~Gb/s.
+
+We use the UDP datagram protocol for data transport, which is simple, but
+unreliable.
+A reliable protocol like TCP does not guarantee real-time data transport
+and significantly complicates the programming of the station FPGAs, due to
+buffering, flow control, retransmissions, and the necessity to communicate
+in two directions.
+The correlator takes care of out-of-order, duplicated, and lost UDP packets.
+Missing data is administrated throughout the remainder of the processing
+pipeline, but in practice, hardly any data is lost.
+
+
+\subsubsection{The Circular buffer}
+\label{sec:circular-buffer}
+
+A Blue Gene I/O~node receives data from one (sub)station, and stores the
+data in a circular buffer.
+Due to the high data rate and the small amount of available memory,
+the circular buffer holds only the most recent 2.5~seconds of data, after
+which old data is overwritten by new data.
+In practice, 2.5~seconds is sufficient, due to the good real-time behavior of
+the correlator.
+
+
+\subsubsection{I/O Node to Compute Node transport}
+
+The I/O~node sends the data directly from the circular buffer to the compute
+nodes for further processing, in chunks of up to one second.
+We developed a new network protocol for this purpose, called
+\emph{FCNP\/}~\cite{Romein:09a}, since existing protocols did not provide
+enough bandwidth and consumed too many CPU cycles.
+FCNP communicates at link speed for large transfers.
+Timely transport to the compute node is important, since the circular buffer
+is small.
+In the exceptional case that (part of the) data is lost due to a missed
+real-time deadline, the missing data is flagged.
+
+
+\subsubsection{Round-Robin distribution}
+
+A processor core is too slow to process one second of data within one second of
+real time (e.g., one second of data from 64~stations requires 5.6~seconds
+processing time).
+The basic idea is to send subsequent chunks to different compute nodes in
+round-robin order (i.e., one after another, in a cyclic manner).
+A compute node first receives data from the I/O~node, processes them, sends
+back the results, and idles until the I/O~node sends new data.
+In reality, the scheduling of work over the compute nodes is extremely
+complicated, since resource conflicts are avoided.
+
+
+\subsubsection{Data Transpose}
+
+Unfortunately, an I/O~node cannot send the data directly to the compute node
+that must correlate the data, since an I/O~node is connected to only a few
+compute nodes.
+Also, an I/O~node contains data from \emph{all subbands\/} of a \emph{single
+station}.
+However, to correlate, a compute node needs data from a \emph{single subband\/}
+of \emph{all stations}.
+Hence, the sampled data must be exchanged with other compute nodes.
+We use the 3-D torus to switch hundreds of gigabits per second.
+These are challenging data rates, but the torus is well capable of doing so.
+We overlap communication with the computational steps described below,
+to hide the costs of sending and receiving data.
+
+
+\subsubsection{Data Conversion}
+
+First, we convert the 4-bit, 8-bit, or 16-bit integer samples to 32-bit
+floating point numbers (the stations currently only support 16-bit samples,
+but the correlator is ready for future modes).
+We convert the data to floating point, because the Blue Gene is much better at
+floating-point processing than integer processing.
+Since the conversion increases the data size, we perform it \emph{after\/} the
+data transpose.
+
+
+\subsubsection{The Poly-Phase Filter Bank}
+
+Next, the subband data is processed by a Poly-Phase Filter bank (PPF) that
+splits a frequency subband into a number of narrower frequency channels.
+In this step, we trade time resolution for frequency resolution: we split a
+subband into $N$ separate channels, but with an $N$-times lower sampling rate
+per channel.
+With the higher frequency resolution, we can remove RFI artifacts with a
+higher accuracy later in the pipeline.
+Typically, a 195~KHz subband is split into 256~channels of 763~Hz, but the
+filter supports any reasonable of channels.
+
+The PPF consists of two parts.
+First, the data is filtered using Finite Impulse Response (FIR) filters,
+to avoid leakage between channels.
+A FIR filter simply multiplies a sample with a real weight factor, and
+also adds a number of weighted samples from the past.
+Since we have to support different numbers of channels, our software
+automatically designs a filter bank with the desired properties and number
+of channels at run time, generating the FIR filter weights on the fly.
+This again demonstrates the flexibility of a software solution.
+For performance reasons, the implementation of the filter is done in assembly.
+Second, the filtered data is Fourier Transformed. We use the Blue
+Gene ``Vienna'' version of FFTW~\cite{Lorenz:05} to do this.
+Since the most common observation mode uses 256 channels, we optimized this
+case a bit further, and manually wrote a more efficient assembly
+implementation for the 256-point FFT.
+
+In priciple, any reasonable number of channels per subband is supported.
+However, powers of two are more efficient, since power-of-two FFT sizes
+are more efficient.
+Also, the number of FIR filter taps is fixed to~16, so the quality of the
+filter becomes pretty bad when the number of channels is below 16.
+Unfortunately, adding more taps would make the (assembly) implementation
+of the FIR filter unacceptably less efficient, so we do not support this.
+Finally, channel~0 of each subband is always marked as flagged, since both
+the lowest and the highest frequencies of the subband are folded into this
+channel, and the different frequencies within this channel cannot be
+disambiguated~\cite{Romein:08}.
+
+\begin{figure*}
+\begin{minipage}[b]{55mm}
+\begin{center}
+\includegraphics[width=40mm]{delay.pdf}
+\end{center}
+\caption{The left antenna receives the wave later.}
+\label{fig:delay}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{55mm}
+\begin{center}
+\includegraphics[width=45mm]{bandpass.pdf}
+\end{center}
+\caption{Channels have different signal powers.}
+\label{fig:bandpass}
+\end{minipage}
+\end{figure*}
+
+
+\subsubsection{Phase Shift Correction}
+\label{sec:delay-compensation}
+
+Due to the finite speed of electromagnetic waves, the wavefront from a
+celestial source hits stations at different times
+(see Figure~\ref{fig:delay}).
+The time difference depends on the direction of the observed source and on the
+station positions, and is continuously altered by the rotation of the earth.
+Therefore, all station streams must be aligned before the signals can be
+correlated.
+
+Since delays can be larger than the sample period, we perform delay
+compensation in two steps.
+First, we correct for integer multiples of the sample period by simply
+delaying the streams of station samples.
+This shift is performed on the I/O~node, by moving the read pointer of the
+circular buffer (see Section~\ref{sec:circular-buffer}).
+
+Second, the remaining error is corrected by rotating the phase of the signal.
+The phase rotation itself requires a complex multiplication per sample.
+The exact delays are computed for the begin time and end time of a chunk,
+and interpolated in frequency and time for each individual sample (with
+another complex multiplication), so the sky source is followed very accurately.
+
+
+\subsubsection{Bandpass Correction}
+
+The bandpass correction step compensates for an artifact introduced by a
+filter back that runs on the FPGAs in the stations~\cite{Kooistra:10}.
+This filter bank performed the initial division of the antenna signals into
+subbands.
+Without correction, some channels have a stronger signal than others
+(see Figure~\ref{fig:bandpass}).
+The correction is performed by multiplying each complex sample by a real,
+channel-dependent value that is computed in advance.
+A station cannot correct for this artifact itself, since it is only visible
+in channels, not in subbands.
+We describe how the correction factors are computed in~\cite{Romein:08}.
+
+
+\subsubsection{Finalizing the Asynchronous Transpose}
+
+Up to this point in the pipeline, processing chunks from different stations
+can be done independently, but from here on, the data from all stations are
+required.
+Therefore, the asynchronous transpose ends here, before the beam forming.
+
+
+\subsubsection{Superstations}
+
+Optionally, any group of stations can be beam formed to create a
+\emph{superstation}.
+Such a superstation is treated as a single station by the correlator.
+A typical use case is the addition of all superterp stations in long-baseline
+observations, so that the superterp forms a very sensitive virtual stations.
+Grouping stations into superstations significantly reduces the number of
+baselines and hence the output data rate of the correlator.
+This form of beam forming is a special case of the coherent beam former
+described below (Section~\ref{sec:beam-forming}).
+
+
+\subsubsection{The Correlator}
+
+Finally, the samples from each pair of individual or grouped stations are
+correlated, by multiplying the sample of one station with the complex conjugate
+of the sample of the other station.
+To reduce the output size, the products are integrated, by accumulating all
+products.
+We typically accumulate 768~correlations at 763~Hz, so that the integration
+time is approximately one second, the size of a chunk.
+The correlator is the most time-consuming operation in the signal
+processing path, because its cost grows quadratically with the number of
+stations.
+All other steps have a lower time complexity.
+
+
+\subsubsection{Beam Forming}
+\label{sec:beam-forming}
+
+We implemented a variety of beam-forming modes, to support the pulsar pipelines
+and transient pipelines.
+We briefly describe the modes here; more information can be found in the
+paper on pulsar modes elsewhere in this issue~\cite{Hessels:10}.
+
+The beamforming pipelines fall into two catagories: the coherent modes and
+incoherent modes.
+The coherent modes add the samples from all stations, resulting in a
+complex voltage.
+Optionally, the complex voltage is converted to Stokes~I or to Stokes~I,Q,U,V.
+The incoherent modes first compute the power of each sample, and add the
+powers from the different stations, outputting either Stokes~I or
+Stokes~I,Q,U,V.
+
+
+\subsubsection{Pencil Beams}
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=25mm]{pencil-beam.pdf}
+\end{center}
+\caption{Multiple pencil beams cover (part of) the station beam.}
+\label{fig:pencil-beams}
+\end{figure}
+
+The coherent modes can also form multiple \emph{pencil beams}, to cover the
+much larger station beam (see Figure~\ref{fig:pencil-beams}).
+The different pointings are computed by rotating the phase of each station
+sample differently for each pencil beam, before the station samples are added.
+Note that the center beam needs no correction, as the phase correction for
+this direction was already performed at high precision (see
+Section~\ref{sec:delay-compensation}).
+The other pencil beams are corrected with respect to the center beam.
+
+The directions of the pencil beam can be choosen freely (although observing
+outside the station beams makes no sense).
+However, there is provision for specifing a honeycomb structure around the
+center beam (as shown in Figure~\ref{fig:pencil-beams}).
+This eases the specification of an observation, since a honeycomb structure
+requires only two parameters: the diameter of a pencil beam and the number
+of rings.
+
+The number of pencil beams that can be formed is likely to be limited by the
+output data rate that can be handled (specified at 50~Gb/s).
+The data rate can be reduced by integrating multiple samples.
+We also plan to support conversion from single-precision (32-bit) floating
+point to 16-bit or even smaller bit-count values.
+
+
+\subsubsection{The Second Transpose}
+
+A Blue Gene compute node computes all beams of (all channels within) a
+single subband; different subbands are necessarily computed by different 
+compute nodes.
+However, the next steps of the pulsar and transient processing pipelines
+need the data of all subbands close together; different beams can further be
+processed independently on different processors.
+Hence, a second transpose is necessary to reorder the beam-formed data.
+
+We are currently implementing this transpose.
+For the pulsar pipelines, the transpose can be done offline, but it is more
+efficient to do it online on the fast torus network on the Blue Gene.
+For the transient detection pipeline, the transpose \emph{must\/} be done
+in real time.
+
+
+\subsubsection{Data Transport to the I/O~Node}
+
+The beam-formed and correlated data is sent back to the I/O~nodes, again
+using FCNP.
+
+\subsubsection{Further Integration}
+
+The I/O~node can optionally integrate correlated data over multiple seconds.
+The reason that this is done on the I/O~node and not on the compute node is
+historical, and has to do with the absence of asynchronous communication
+on the BG/L.
+
+
+\subsubsection{The Best-Effort Queues}
+
+At the very end of the Blue Gene pipelines, the output data is queued to
+be sent to the storage nodes.
+The queue improves real-time behavior and increases fault tolerance, since
+it handles data on a best-effort basis.
+If, for any reason, the data is not sent quickly enough to the storage node,
+the queue fills up and subsequent data is simply discarded until space is
+available.
+This way, we can tolerate (intermittent) disk and network failures.
+The mechanism is important to keep the correlator running in real
+time: it is much better to lose a small part of the data than to stall the
+entire correlator and lose \emph{all\/} data.
+Under normal circumstances, no data is lost here.
+
+
+\subsubsection{Data Transport to the Storage Node}
+
+The data from the best-effort queues is dequeued and sent to the storage nodes.
+Unlike the station input, we use TCP here, since a reliable connection here
+is more important than real-time behavior (possible hiccups are handled by
+the best-effort queues).
+
+
+\subsubsection{Storing the Data}
+
+The correlated data is written as CasaCore Measurement Set~\cite{Kemball:00}.
+Initially, we used the CasaCore ``tables'' library to write data, but we
+found that the library consumed far too many CPU cycles to sustain write
+speeds of more than a few tens of megabytes per second per storage node.
+To improve this speed by more than an order of magnitude, we write the
+raw streams of correlations \emph{uninterpreted\/} to disk, and changed
+the CasaCore library so that it supports the raw data format as well,
+without changing the Application Programming Interface of the library.
+This way, legacy applications can read (and write) Measurement Sets that
+internally use the raw data format, by relinking against the new CasaCore
+library, either dynamically or statically.
+
+Only the correlations and flagging information are written in the raw
+format, bypassing the CasaCore library.
+All metadata is written in the ``old'' format, using the normal CasaCore
+library primitives; writing the metadata is not on the time-critical path.
+
+Beamformed data is written in HDF5 format~\cite{?}.
+
+
+
+\subsection{The Ultra-High Energy Particle pipeline}
+
+The Ultra-High Energy Particle pipeline is currently in its design phase.
+This pipeline beamforms the stations and reverts back to the 200~Mhz
+time-domain, to detect peaks caused by ultra-high-energy particles.
+It largely relies on the pulsar pipeline, since it will use the beam former
+to create many tens of beams.
+However, the second PPF and bandpass correction are bypassed.
+The second transpose, used for the pulsar pipeline will be used to spread the
+beams over different compute nodes and join all frequencies, so that a compute
+node has all frequencies of a single beam.
+This way, the first PPF (at the stations) can be undone, by an inverse PPF.
+Of course, some of the data is lost, since no more than 248~subbands can be
+sent by the stations.
+A peak-detection algorithm inspects the time-series data to generate a trigger
+to freeze the Transient Buffer Boards~\cite{Kooistra:10}
+
+
+
+\section{Multiple Observations}
+
+The correlator is very flexible: multiple, independent observations can
+run concurrently.
+For example, the core stations can be set in the 200~MHz mode and used for
+a pulsar observation, while the remote stations and international stations
+can be set in the 160~MHz mode and used for an imaging observation.
+
+Also, multiple (types of) observations can be done using a single group of
+stations.
+In this case, the available observation bandwidth is divided over the
+observations; the total bandwidth cannot exceed 48.4~MHz.
+Another restriction in the HBA mode is that all observed sources must be in the
+beam of the tiles, since the analogue tile beam former can only point at one
+direction~\cite{?}.
+
+Additionally, an observation can produce multiple types of outputs, e.g.,
+the station data can both be correlated \emph{and\/} beam formed, so that
+an imaging pipeline and pulsar pipeline can piggy-back each other.
+In this case, the available observation bandwidth is not divided, but shared
+by the different observation types.
+Some restrictions apply, since the pipelines share common components through
+which the data is processed only once.
+For example, the Poly-Phase Filterbank generates the same amount of channels
+for both the pulsar pipeline and imaging pipeline (although the beam-formed
+data can be compressed in frequency direction afterward).
+Also, the maximum output data rate must not be exceeded.
+
+The ability to run multiple pipelines simultaneously does not only increase
+the scientific output of the instrument, in the future, it also offers the
+possibility to improve the data quality.
+For example, when the data is both correlated and beam formed, the correlated
+data can be used to calibrate the input data stream in real time (with a few
+seconds delay), using a feed-back loop that applies corrections to the station
+samples.
+This way, the quality of the beam-formed data improves as well.
+
+
+\section{Computational Performance and I/O capabilities}
+
+The application is highly optimized to achieve extremely high computational
+performance and to sustain the high station data rates.
+For example, all compute-intensive program parts are written in assembly
+that optimally use the Blue Gene hardware.
+C++ reference code is maintained as well, but is much slower.
+The correlator achieves 96\% of the theoretical peak performance
+of the floating-point units during the computational phase.
+Other components also achieve very high performance.
+A separate paper elaborates on the high-performance computing and scaling
+aspects of the correlator~\cite{Romein:10a}.
+
+The very good efficiency and high bandwidths obtained on the Blue Gene led
+to the decision to increase the bandwidth from 32~MHz to 48.4~MHz, the
+maximum data rate that the station FPGAs can handle.
+This does not only increase the efficiency of the entire LOFAR telescope
+by 50\%, it also allows full coverage of the interesting 30--78~MHz range
+in a single observation, rather than two.
+
+
+\section{Control}
+
+The correlator can both be run under control of MAC~\cite{Overeem:10} and
+using a series of Python scripts.
+The former method is primarily used for production observations by the
+LOFAR Observatory, while the latter is mostly used for development.
+The correlator reads a \emph{parameter set\/} with observation-specific
+parameters, one per observation, provided by MAC or by the Python environment.
+MAC also monitors the log output of the correlator.
+
+
+\begin{acknowledgements}
+We thank Ger van Diepen, Martin Gels, Marcel Loose, and Ruud Overeem
+for their contributions to the LOFAR software, and many other colleagues
+for their work on the LOFAR telescope.
+We also thank Kamil Iskra and Kazutomo Yoshii from Argonne National Laboratory
+for their work on the BG/P system software.
+Bruce Elmegreen, Todd Inglett, Tom Liebsch, and Andrew Taufener from IBM
+provided the support to optimally use the BG/P.
+
+LOFAR is funded by the Dutch government in the BSIK program for
+interdisciplinary research for improvements of the knowledge
+infrastructure.  Additional funding is provided by the European Union,
+European Regional Development Fund (EFRO), and by the
+``Samenwerkingsverband Noord-Nederland,'' EZ/KOMPAS. Part of this work was
+performed in the context of the NWO STARE AstroStream project.
+\end{acknowledgements}
+
+
+%\bibliographystyle{spbasic}
+\bibliographystyle{plain}
+\bibliography{lofar}
+
+
+\end{document}
