@@ -37,7 +37,7 @@ namespace LOFAR {
 //
 GCFEvent::~GCFEvent() 
 { 
-	LOG_TRACE_CALC(formatString("~GCFEvent: length=%d, _buffer=%08X", length, _buffer));
+	LOG_TRACE_CALC(formatString("~GCFEvent: signal=%04X, length=%d, _buffer=%08X", signal, length, _buffer));
 
 	if (_buffer)  {
 		delete [] _buffer; 

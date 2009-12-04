@@ -375,6 +375,24 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		itsStopTimer = itsTimerPort->setTimer(0.0);	// expire immediately
 		break;
 	}
+	// ----- The next events from parent control are implemented for ControllerMenu ----
+	case CONTROL_CLAIM:
+		itsTimerPort->cancelTimer(itsClaimTimer);
+		itsClaimTimer = itsTimerPort->setTimer(0.0);
+		break;
+	case CONTROL_PREPARE:
+		itsTimerPort->cancelTimer(itsPrepareTimer);
+		itsPrepareTimer = itsTimerPort->setTimer(0.0);
+		break;
+	case CONTROL_RESUME:
+		itsTimerPort->cancelTimer(itsStartTimer);
+		itsStartTimer = itsTimerPort->setTimer(0.0);
+		break;
+	case CONTROL_SUSPEND:	// Note: SUSPEND, RELEASE and QUIT will result in QUIT.
+	case CONTROL_RELEASE:
+		itsTimerPort->cancelTimer(itsStopTimer);
+		itsStopTimer = itsTimerPort->setTimer(0.0);
+		break;
 
 	// -------------------- EVENT RECEIVED FROM CHILD CONTROL --------------------
 	case CONTROL_STARTED: {
