@@ -31,7 +31,10 @@ par rawDataOutputOnly		I	bool	-	10	0	false	                -	"only retransmit ra
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node  Correlator 1.0.1  development 'node constraint'  "Settings for Correlation (visibilities) calculations"
-par integrationTime     I       dbl    s        10       0      0                                         - "Integration time"
+
+#    name         	dir.	type	unit	prun.	vm	value	constr.	descr.
+#--------------------------------------------------------------------------------------------------------
+par integrationTime	I       dbl		s		10		0	0		- 		"Integration time"
 
 
 # -- Stokes --
