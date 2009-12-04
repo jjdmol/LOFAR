@@ -18,8 +18,8 @@ option(USE_LOG4CPLUS "Use Log4Cplus" OFF)
 option(USE_MPI       "Use MPI"       ON)
 
 # Host specific paths to third party packages
-set(CASACORE_ROOT_DIR /cephome/romein/packages/casacore-0.3.0/stage)
+set(CASACORE_ROOT_DIR /globalhome/romein/packages/casacore-0.3.0/stage)
 set(CASACORE_MAKE_REQUIRED_EXTERNALS_OPTIONAL ON)
 set(MASS_ROOT_DIR /opt/mass)
-set(FFTW2_ROOT_DIR /cephome/romein/packages/fftw-2.1.5-single-precision)
-set(BOOST_LIBRARYDIR /cephome/romein/lib.bgp)
+set(FFTW2_ROOT_DIR /globalhome/romein/packages/fftw-2.1.5-single-precision)
+set(BOOST_LIBRARYDIR /globalhome/romein/lib.bgp)
