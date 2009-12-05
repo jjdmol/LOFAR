@@ -283,8 +283,8 @@ public class DateTimeChooser
     }//GEN-LAST:event_zeroActionPerformed
 
     private void nowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nowActionPerformed
-        SimpleDateFormat aDate = new SimpleDateFormat("yyyy-MMM-d HH:mm",itsLocale);
-        SimpleDateFormat aGMT = new SimpleDateFormat("yyyy-MMM-d HH:mm");
+        SimpleDateFormat aDate = new SimpleDateFormat("yyyy-MM-dd HH:mm",itsLocale);
+        SimpleDateFormat aGMT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         aGMT.setTimeZone(TimeZone.getTimeZone("GMT"));
         Date aD = new Date();
         String  aS = aGMT.format(aD);
