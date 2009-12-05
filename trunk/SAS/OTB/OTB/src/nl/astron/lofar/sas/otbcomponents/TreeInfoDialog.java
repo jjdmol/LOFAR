@@ -92,9 +92,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }
     
     private void init() {
-        this.durationValue.setValue(durationValue.getMinimum());
-        this.durationValue.loopEnabled(true);
-        this.durationValue.adjustWidthToMaximumValue();
 
         SimpleDateFormat id = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm",itsLocale);
         if (itsMultiple) {
@@ -486,8 +483,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         setStopDateButton = new javax.swing.JButton();
         durationLabel = new javax.swing.JLabel();
         setDurationButton = new javax.swing.JButton();
-        durationValue = new JSpinField(1,60);
         inputDurationType = new javax.swing.JComboBox();
+        durationValue = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("LOFAR View TreeInfo");
@@ -639,15 +636,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             }
         });
         getContentPane().add(setDurationButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 350, 60, 20));
-        getContentPane().add(durationValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 350, 40, 20));
 
         inputDurationType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Minute(s)", "Hour(s)", "Day(s)" }));
-        inputDurationType.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                inputDurationTypeActionPerformed(evt);
-            }
-        });
         getContentPane().add(inputDurationType, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 350, 110, -1));
+        getContentPane().add(durationValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 350, 40, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -730,32 +722,17 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             Calendar cal = Calendar.getInstance();
             cal.setTime(now);
             if (inputDurationType.getSelectedItem().equals("Minute(s)")){
-                cal.set(Calendar.MINUTE,cal.get(Calendar.MINUTE)+durationValue.getValue());
+                cal.set(Calendar.MINUTE,cal.get(Calendar.MINUTE)+Integer.valueOf(durationValue.getText()));
             } else if (inputDurationType.getSelectedItem().equals("Hour(s)")){
-                cal.set(Calendar.HOUR,cal.get(Calendar.HOUR)+durationValue.getValue());
+                cal.set(Calendar.HOUR,cal.get(Calendar.HOUR)+Integer.valueOf(durationValue.getText()));
             } else if (inputDurationType.getSelectedItem().equals("Day(s)")){
-                cal.set(Calendar.DAY_OF_MONTH,cal.get(Calendar.DAY_OF_MONTH)+durationValue.getValue());
+                cal.set(Calendar.DAY_OF_MONTH,cal.get(Calendar.DAY_OF_MONTH)+Integer.valueOf(durationValue.getText()));
             }
 
             itsStopDate = cal.getTime();
             SimpleDateFormat id = new SimpleDateFormat("yyyy-MM-dd HH:mm",itsLocale);
             stopTimeInput.setText(id.format(itsStopDate));
 }//GEN-LAST:event_setDurationButtonActionPerformed
-
-    private void inputDurationTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputDurationTypeActionPerformed
-        if (inputDurationType.getSelectedItem().equals("Minute(s)")) {
-            this.durationValue.setMinimum(1);
-            this.durationValue.setMaximum(60);
-        } else if (inputDurationType.getSelectedItem().equals("Hour(s)")) {
-            this.durationValue.setMinimum(1);
-            this.durationValue.setMaximum(24);
-        } else if (inputDurationType.getSelectedItem().equals("Day(s)")) {
-            this.durationValue.setMinimum(1);
-            this.durationValue.setMaximum(31);
-        }
-
-        this.durationValue.setValue(this.durationValue.getMinimum());
-    }//GEN-LAST:event_inputDurationTypeActionPerformed
 
 
     private MainFrame itsMainFrame = null;
@@ -784,7 +761,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private javax.swing.JTextField creatorInput;
     private javax.swing.JTextArea descriptionInput;
     private javax.swing.JLabel durationLabel;
-    private com.toedter.components.JSpinField durationValue;
+    private javax.swing.JTextField durationValue;
     private javax.swing.JComboBox inputDurationType;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;

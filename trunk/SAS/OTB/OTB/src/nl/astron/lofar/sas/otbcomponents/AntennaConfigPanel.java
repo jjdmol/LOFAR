@@ -29,12 +29,12 @@ import org.apache.log4j.Logger;
 public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel{
     static Logger logger = Logger.getLogger(AntennaConfigPanel.class);
     static String name = "AntennaConfigDialog";
-    
+
     private jOTDBnode          itsNode = null;
     private MainFrame          itsMainFrame;
     private Vector<jOTDBparam> itsParamList;
     private String             itsTreeType="";
-    
+
     // AntennaConfig parameters
     private jOTDBnode itsAntennaArray;
     private jOTDBnode itsAntennaSet;
@@ -45,7 +45,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     // Clockmode
     private jOTDBnode itsClockMode;
 
-    
+
     private Vector<String>    itsUsedCoreStations      = new Vector<String>();
     private Vector<String>    itsUsedRemoteStations    = new Vector<String>();
     private Vector<String>    itsUsedEuropeStations    = new Vector<String>();
@@ -58,7 +58,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         initComponents();
     }
 
-    
+
     /**
      * Creates new AntennaConfigPanel instance using a given MainFrame instance and
      * the OTDBnode needed to fill the panel with correct data.
@@ -66,7 +66,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
      * @param  aMainFrame   the OTB instance
      * @param  aNode        the node to obtain the BBS Strategy information from
      * (should be the BBS.Strategy node in the component tree)
-     */    
+     */
     /** Creates new form AntennaConfigPanel */
     public AntennaConfigPanel(MainFrame aMainFrame,jOTDBnode aNode) {
         initComponents();
@@ -74,7 +74,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         itsNode=aNode;
         initPanel();
     }
-    
+
     /**
      * Sets the OTB MainFrame instance in this panel.
      * @param aMainFrame the MainFrame instance to associate with
@@ -115,34 +115,34 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         try {
             //we need to get all the childs from this node.
             Vector childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
-            
+
             // get all the params per child
             Enumeration e = childs.elements();
             while( e.hasMoreElements()  ) {
                 aParam=null;
                 jOTDBnode aNode = (jOTDBnode)e.nextElement();
-                
+
                 // We need to keep all the nodes needed by this panel
                 // if the node is a leaf we need to get the pointed to value via Param.
                 if (aNode.leaf) {
                     aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode);
                     setField(itsNode,aParam,aNode);
-                    
+
                     //we need to get all the childs from the following nodes as well.
                 }else if (LofarUtils.keyName(aNode.name).equals("VirtualInstrument")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
-                }                   
+                }
            }
         } catch (RemoteException ex) {
             logger.debug("Error during getComponentParam: "+ ex);
             itsParamList=null;
             return;
         }
-        
+
         initPanel();
         //reset all values
         restore();
-        
+
     }
 
     /** saves the given node back to the database
@@ -160,7 +160,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
 
     public boolean saveInput() {
 
-        //VirtualInstrument
+        //StationList
         if (this.itsStationList != null && !getUsedStations().equals(itsStationList.limits)) {
             itsStationList.limits = getUsedStations();
             logger.trace("Variable VirtualInstrumenst ("+itsStationList.name+"//"+itsStationList.treeID()+"//"+itsStationList.nodeID()+"//"+itsStationList.parentID()+"//"+itsStationList.paramDefID()+") updating to :"+itsStationList.limits);
@@ -187,9 +187,9 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
           antennaSet = "LBA_X";
         } else if (this.inputYPolesOnly.isSelected()) {
           antennaSet = "LBA_Y";
-        } else if (this.inputOneSquare.isSelected()) {
+        } else if (this.inputHBAOne.isSelected()) {
           antennaSet = "HBA_ONE";
-        } else if (this.inputTwoSquares.isSelected()) {
+        } else if (this.inputHBABoth.isSelected()) {
           antennaSet = "HBA_BOTH";
         }
         if (itsAntennaSet != null && !antennaSet.equals(itsAntennaSet.limits)) {
@@ -259,9 +259,9 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
       } else if (itsAntennaSet.limits.equals("LBA_Y")) {
         inputYPolesOnly.setSelected(true);
       } else if (itsAntennaSet.limits.equals("HBA_ONE")) {
-        inputOneSquare.setSelected(true);
+        inputHBAOne.setSelected(true);
       } else if (itsAntennaSet.limits.equals("HBA_BOTH")) {
-        inputTwoSquares.setSelected(true);
+        inputHBABoth.setSelected(true);
       } else {
         inputInnerCircle.setSelected(true);
       }
@@ -328,14 +328,14 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
     }
-    
+
     /** Enables/disables the buttons (unused)
      *
      * @param   enabled     true/false enabled/disabled
      */
     public void enableButtons(boolean enabled) {
     }
-    
+
     /** Sets the buttons visible/invisible (unused)
      *
      * @param   visible     true/false visible/invisible
@@ -388,9 +388,9 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         aS+="]";
         return aS;
     }
-   
-     /** 
-     * Helper method that retrieves the child nodes for a given jOTDBnode, 
+
+     /**
+     * Helper method that retrieves the child nodes for a given jOTDBnode,
      * and triggers setField() accordingly.
      * @param aNode the node to retrieve and display child data of.
      */
@@ -401,7 +401,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             // get all the params per child
             Enumeration e1 = HWchilds.elements();
             while( e1.hasMoreElements()  ) {
-                
+
                 jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
                 aParam=null;
                 // We need to keep all the params needed by this panel
@@ -415,7 +415,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             return;
         }
     }
-    
+
     /**
      * Sets the different fields in the GUI, using the names of the nodes provided
      * @param parent the parent node of the node to be displayed
@@ -437,13 +437,13 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         try {
             if (OtdbRmi.getRemoteTypes().getParamType(aParam.type).substring(0,1).equals("p")) {
                // Have to get new param because we need the unresolved limits field.
-               aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());                
+               aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());
             }
         } catch (RemoteException ex) {
             logger.debug("Error during getParam: "+ ex);
         }
-        
-        if(parentName.equals("Observation")){        
+
+        if(parentName.equals("Observation")){
         // Observation Specific parameters
             if (aKeyName.equals("antennaArray")) {
                 inputLBAAntennas.setToolTipText(aParam.description);
@@ -452,33 +452,33 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 if (aNode.limits.equals("HBA")) {
                     inputHBAAntennas.setSelected(true);
                 } else {
-                    inputLBAAntennas.setSelected(true);                    
+                    inputLBAAntennas.setSelected(true);
                 }
-            } else if (aKeyName.equals("antennaSet")) {        
+            } else if (aKeyName.equals("antennaSet")) {
                 inputInnerCircle.setToolTipText(aParam.description);
                 inputOuterCircle.setToolTipText(aParam.description);
                 inputSparse.setToolTipText(aParam.description);
                 inputXPolesOnly.setToolTipText(aParam.description);
                 inputYPolesOnly.setToolTipText(aParam.description);
-                inputOneSquare.setToolTipText(aParam.description);
-                inputTwoSquares.setToolTipText(aParam.description);
+                inputHBAOne.setToolTipText(aParam.description);
+                inputHBABoth.setToolTipText(aParam.description);
                 this.itsAntennaSet=aNode;
                 if (aNode.limits.equals("LBA_OUTER")) {
-                    inputOuterCircle.setSelected(true);                    
+                    inputOuterCircle.setSelected(true);
                 } else if (aNode.limits.equals("LBA_SPARSE")) {
-                    inputSparse.setSelected(true);                    
+                    inputSparse.setSelected(true);
                 } else if (aNode.limits.equals("LBA_X")) {
-                    inputXPolesOnly.setSelected(true);                    
+                    inputXPolesOnly.setSelected(true);
                 } else if (aNode.limits.equals("LBA_Y")) {
                     inputYPolesOnly.setSelected(true);
                 } else if (aNode.limits.equals("HBA_ONE")) {
-                    inputOneSquare.setSelected(true);                    
+                    inputHBAOne.setSelected(true);
                 } else if (aNode.limits.equals("HBA_BOTH")) {
-                    inputTwoSquares.setSelected(true);                                        
+                    inputHBABoth.setSelected(true);
                 } else {
                     inputInnerCircle.setSelected(true);
                 }
-            } else if (aKeyName.equals("bandFilter")) {        
+            } else if (aKeyName.equals("bandFilter")) {
                 input3080.setToolTipText(aParam.description);
                 input1090.setToolTipText(aParam.description);
                 input110190.setToolTipText(aParam.description);
@@ -492,9 +492,9 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                         input1070.setSelected(true);
                     }
                 } else if (aNode.limits.equals("HBA_110_190")) {
-                    input110190.setSelected(true);                    
+                    input110190.setSelected(true);
                 } else if (aNode.limits.equals("HBA_170_230")) {
-                    input170230.setSelected(true);                    
+                    input170230.setSelected(true);
                 } else if (aNode.limits.equals("HBA_210_250")) {
                     input210250.setSelected(true);
                 } else {
@@ -509,7 +509,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 if (aNode.limits.toLowerCase().equals("true")) {
                     this.inputLongBaselines.setSelected(true);
                 } else {
-                    this.inputLongBaselines.setSelected(false);                    
+                    this.inputLongBaselines.setSelected(false);
                 }
             } else if (aKeyName.equals("clockMode")) {
                 inputClockMode.setToolTipText(aParam.description);
@@ -519,7 +519,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 }
                 itsClockMode=aNode;
             }
-        } else if(parentName.contains("VirtualInstrument")){        
+        } else if(parentName.contains("VirtualInstrument")){
             // Observation Beamformer parameters
             if (aKeyName.equals("stationList")) {
                 this.coreStationSelectionPanel.setToolTipText(aParam.description);
@@ -558,12 +558,12 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             this.europeStationSelectionPanel.setUsedStationList(itsUsedEuropeStations);
         }
     }
-    
+
     /** Checks all settings and enables/disables all what is needed.
-     * 
+     *
      */
     private void checkSettings() {
-        
+
         // all stuff for Station Settings based on choices
         if (this.inputLBAAntennas.isSelected() ) {
             this.input1090.setEnabled(true);
@@ -576,8 +576,9 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             this.input110190.setEnabled(false);
             this.input170230.setEnabled(false);
             this.input210250.setEnabled(false);
-            this.inputOneSquare.setEnabled(false);
-            this.inputTwoSquares.setEnabled(false);
+            this.inputHBAOne.setEnabled(false);
+            this.inputHBATwo.setEnabled(false);
+            this.inputHBABoth.setEnabled(false);
             this.inputClockMode.setEnabled(false);
             if (this.inputInnerCircle.isSelected()) {
                 this.inputLongBaselines.setEnabled(true);
@@ -596,18 +597,19 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             this.input110190.setEnabled(true);
             this.input170230.setEnabled(true);
             this.input210250.setEnabled(true);
-            this.inputOneSquare.setEnabled(true);
-            this.inputTwoSquares.setEnabled(true);
+            this.inputHBAOne.setEnabled(true);
+            this.inputHBATwo.setEnabled(true);
+            this.inputHBABoth.setEnabled(true);
             this.inputClockMode.setEnabled(true);
 
         }
 
-        
+
         // all stuff for CoreStationLayout Settings based on choices
-        this.coreStationLayout.setHBALeftSquareEnabled(inputOneSquare.isEnabled());
-        this.coreStationLayout.setHBALeftSquareSelected(inputOneSquare.isSelected()||inputTwoSquares.isSelected());
-        this.coreStationLayout.setHBARightSquareEnabled(inputTwoSquares.isEnabled());
-        this.coreStationLayout.setHBARightSquareSelected(inputTwoSquares.isSelected());
+        this.coreStationLayout.setHBALeftSquareEnabled(inputHBAOne.isEnabled()||inputHBABoth.isSelected());
+        this.coreStationLayout.setHBALeftSquareSelected(inputHBAOne.isSelected()||inputHBABoth.isSelected());
+        this.coreStationLayout.setHBARightSquareEnabled(inputHBATwo.isEnabled()||inputHBABoth.isSelected());
+        this.coreStationLayout.setHBARightSquareSelected(inputHBATwo.isSelected()||inputHBABoth.isSelected());
         this.coreStationLayout.setLBAInnerCircleEnabled(inputInnerCircle.isEnabled());
         this.coreStationLayout.setLBAInnerCircleSelected(inputInnerCircle.isSelected());
         this.coreStationLayout.setLBAOuterCircleEnabled(inputOuterCircle.isEnabled());
@@ -618,21 +620,21 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         this.coreStationLayout.setLBALongBaselineRightSelected(inputLongBaselines.isSelected());
 
         // all stuff for RemoteStationLayout Settings based on choices
-        this.remoteStationLayout.setHBALeftSquareEnabled(inputOneSquare.isEnabled());
-        this.remoteStationLayout.setHBALeftSquareSelected(inputOneSquare.isSelected()||inputTwoSquares.isSelected());
+        this.remoteStationLayout.setHBALeftSquareEnabled(inputHBAOne.isEnabled()||inputHBATwo.isEnabled()||inputHBABoth.isEnabled());
+        this.remoteStationLayout.setHBALeftSquareSelected(inputHBAOne.isSelected()||inputHBATwo.isSelected()||inputHBABoth.isSelected());
         this.remoteStationLayout.setLBAInnerCircleEnabled(inputInnerCircle.isEnabled());
         this.remoteStationLayout.setLBAInnerCircleSelected(inputInnerCircle.isSelected());
         this.remoteStationLayout.setLBAOuterCircleEnabled(inputOuterCircle.isEnabled());
         this.remoteStationLayout.setLBAOuterCircleSelected(inputOuterCircle.isSelected());
 
         // all stuff for EuropeStationLayout Settings based on choices
-        this.europeStationLayout.setHBALeftSquareEnabled(inputOneSquare.isEnabled());
-        this.europeStationLayout.setHBALeftSquareSelected(inputOneSquare.isSelected()||inputTwoSquares.isSelected());
+        this.europeStationLayout.setHBALeftSquareEnabled(inputHBAOne.isEnabled()||inputHBATwo.isEnabled()||inputHBABoth.isEnabled());
+        this.europeStationLayout.setHBALeftSquareSelected(inputHBAOne.isSelected()||inputHBATwo.isSelected()||inputHBABoth.isSelected());
         this.europeStationLayout.setLBACircleEnabled(inputInnerCircle.isEnabled()||inputOuterCircle.isEnabled());
         this.europeStationLayout.setLBACircleSelected(inputInnerCircle.isSelected()||inputOuterCircle.isSelected());
     }
-    
-    
+
+
     private void initPanel() {
 
         itsMainFrame.setHourglassCursor();
@@ -642,7 +644,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
 
         // for now:
         setAllEnabled(true);
-        
+
         if(userAccount.isAdministrator()) {
             // enable/disable certain controls
         }
@@ -652,7 +654,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         if(userAccount.isInstrumentScientist()) {
             // enable/disable certain controls
         }
-        
+
 
         if (itsNode != null) {
             try {
@@ -666,22 +668,22 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
          } else {
             logger.debug("ERROR:  no node given");
         }
-        
+
         // set defaults/initial settings
         restore();
-        
 
-        
+
+
         if (itsTreeType.equals("VHtree")) {
             this.setButtonsVisible(false);
             this.setAllEnabled(false);
         }
-        
+
 
         itsMainFrame.setNormalCursor();
 
     }
-    
+
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -709,12 +711,13 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         input1070 = new javax.swing.JRadioButton();
         input3070 = new javax.swing.JRadioButton();
         panelHBASelection1 = new javax.swing.JPanel();
-        inputOneSquare = new javax.swing.JRadioButton();
-        inputTwoSquares = new javax.swing.JRadioButton();
+        inputHBAOne = new javax.swing.JRadioButton();
+        inputHBABoth = new javax.swing.JRadioButton();
         jLabel2 = new javax.swing.JLabel();
         input110190 = new javax.swing.JRadioButton();
         input170230 = new javax.swing.JRadioButton();
         input210250 = new javax.swing.JRadioButton();
+        inputHBATwo = new javax.swing.JRadioButton();
         labelClockMode = new javax.swing.JLabel();
         inputClockMode = new javax.swing.JComboBox();
         jPanel2 = new javax.swing.JPanel();
@@ -759,7 +762,6 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         });
 
         AntennaLayoutGroup.add(inputOuterCircle);
-        inputOuterCircle.setSelected(true);
         inputOuterCircle.setText("Outer circle");
         inputOuterCircle.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -802,7 +804,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             }
         });
 
-        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11));
         jLabel1.setText("Freq. selection");
 
         AntennaFilterGroup.add(input3080);
@@ -887,25 +889,26 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
 
         panelHBASelection1.setBorder(javax.swing.BorderFactory.createTitledBorder("Antenna Selection"));
 
-        AntennaLayoutGroup.add(inputOneSquare);
-        inputOneSquare.setText("One square");
-        inputOneSquare.setEnabled(false);
-        inputOneSquare.addActionListener(new java.awt.event.ActionListener() {
+        AntennaLayoutGroup.add(inputHBAOne);
+        inputHBAOne.setSelected(true);
+        inputHBAOne.setText("Square One");
+        inputHBAOne.setEnabled(false);
+        inputHBAOne.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                inputOneSquareActionPerformed(evt);
+                inputHBAOneActionPerformed(evt);
             }
         });
 
-        AntennaLayoutGroup.add(inputTwoSquares);
-        inputTwoSquares.setText("Two squares");
-        inputTwoSquares.setEnabled(false);
-        inputTwoSquares.addActionListener(new java.awt.event.ActionListener() {
+        AntennaLayoutGroup.add(inputHBABoth);
+        inputHBABoth.setText("Both Squares");
+        inputHBABoth.setEnabled(false);
+        inputHBABoth.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                inputTwoSquaresActionPerformed(evt);
+                inputHBABothActionPerformed(evt);
             }
         });
 
-        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 11));
         jLabel2.setText("Freq. selection");
 
         AntennaFilterGroup.add(input110190);
@@ -935,27 +938,39 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             }
         });
 
+        AntennaLayoutGroup.add(inputHBATwo);
+        inputHBATwo.setText("Square Two");
+        inputHBATwo.setEnabled(false);
+        inputHBATwo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                inputHBATwoActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout panelHBASelection1Layout = new javax.swing.GroupLayout(panelHBASelection1);
         panelHBASelection1.setLayout(panelHBASelection1Layout);
         panelHBASelection1Layout.setHorizontalGroup(
             panelHBASelection1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelHBASelection1Layout.createSequentialGroup()
                 .addGroup(panelHBASelection1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(inputOneSquare)
-                    .addComponent(inputTwoSquares)
+                    .addComponent(inputHBAOne)
                     .addComponent(jLabel2)
                     .addComponent(input110190)
                     .addComponent(input170230)
-                    .addComponent(input210250))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(input210250)
+                    .addComponent(inputHBATwo)
+                    .addComponent(inputHBABoth))
+                .addContainerGap(10, Short.MAX_VALUE))
         );
         panelHBASelection1Layout.setVerticalGroup(
             panelHBASelection1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelHBASelection1Layout.createSequentialGroup()
-                .addComponent(inputOneSquare)
+                .addComponent(inputHBAOne)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(inputTwoSquares)
-                .addGap(103, 103, 103)
+                .addComponent(inputHBATwo)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(inputHBABoth)
+                .addGap(80, 80, 80)
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(input110190)
@@ -985,9 +1000,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                         .addGap(16, 16, 16)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(panelHBASelection1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(inputHBAAntennas)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))))
+                            .addComponent(inputHBAAntennas)))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(labelClockMode, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -1095,7 +1108,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     }//GEN-LAST:event_inputLBAAntennasActionPerformed
 
     private void inputHBAAntennasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputHBAAntennasActionPerformed
-        this.inputOneSquare.setSelected(true);
+        this.inputHBAOne.setSelected(true);
         this.inputLongBaselines.setSelected(false);
         this.input110190.setSelected(true);
         this.inputClockMode.setSelectedItem("<<Clock200");
@@ -1140,13 +1153,13 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         checkSettings();
     }//GEN-LAST:event_input1090ActionPerformed
 
-    private void inputOneSquareActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputOneSquareActionPerformed
+    private void inputHBAOneActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputHBAOneActionPerformed
         checkSettings();
-    }//GEN-LAST:event_inputOneSquareActionPerformed
+}//GEN-LAST:event_inputHBAOneActionPerformed
 
-    private void inputTwoSquaresActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputTwoSquaresActionPerformed
+    private void inputHBABothActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputHBABothActionPerformed
         checkSettings();
-    }//GEN-LAST:event_inputTwoSquaresActionPerformed
+}//GEN-LAST:event_inputHBABothActionPerformed
 
     private void input110190ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_input110190ActionPerformed
         inputClockMode.setSelectedItem("<<Clock200");
@@ -1165,14 +1178,16 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
 
     private void coreStationLayoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_coreStationLayoutActionPerformed
         if (evt.getActionCommand().equals("HBALeftSquare")) {
-            this.inputOneSquare.setSelected(true);
-        } else if (evt.getActionCommand().equals("HBARightSquare")) {
-            boolean b=true;
-            if (this.coreStationLayout.isHBARightSquareSelected()) {
-                b=false;
-                this.inputOneSquare.setSelected(true);
+            if (this.inputHBATwo.isSelected()) {
+                this.inputHBABoth.setSelected(true);
             } else {
-                this.inputTwoSquares.setSelected(b);
+                this.inputHBAOne.setSelected(true);
+            }
+        } else if (evt.getActionCommand().equals("HBARightSquare")) {
+            if (this.inputHBAOne.isSelected()) {
+                this.inputHBABoth.setSelected(true);
+            } else {
+                this.inputHBATwo.setSelected(true);
             }
         } else if (evt.getActionCommand().equals("LBAInnerCircle")) {
             this.inputInnerCircle.setSelected(!this.coreStationLayout.isLBAInnerCircleSelected());
@@ -1181,16 +1196,16 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             this.inputOuterCircle.setSelected(!this.coreStationLayout.isLBAOuterCircleSelected());
             this.inputLongBaselines.setSelected(false);
         } else if (evt.getActionCommand().equals("LBALongBaselineLeft")) {
-            this.inputLongBaselines.setSelected(!this.coreStationLayout.isLBALongBaselineLeftSelected());            
-        } else if (evt.getActionCommand().equals("LBALongBaselineRight")) {            
-            this.inputLongBaselines.setSelected(!this.coreStationLayout.isLBALongBaselineRightSelected());            
+            this.inputLongBaselines.setSelected(!this.coreStationLayout.isLBALongBaselineLeftSelected());
+        } else if (evt.getActionCommand().equals("LBALongBaselineRight")) {
+            this.inputLongBaselines.setSelected(!this.coreStationLayout.isLBALongBaselineRightSelected());
         }
         checkSettings();
     }//GEN-LAST:event_coreStationLayoutActionPerformed
 
     private void remoteStationLayoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_remoteStationLayoutActionPerformed
         if (evt.getActionCommand().equals("HBALeftSquare")) {
-            this.inputOneSquare.setSelected(true);
+            this.inputHBABoth.setSelected(true);
         } else if (evt.getActionCommand().equals("LBAInnerCircle")) {
             this.inputLongBaselines.setSelected(true);
             this.inputInnerCircle.setSelected(!this.remoteStationLayout.isLBAInnerCircleSelected());
@@ -1203,7 +1218,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
 
     private void europeStationLayoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_europeStationLayoutActionPerformed
         if (evt.getActionCommand().equals("HBALeftSquare")) {
-            this.inputOneSquare.setSelected(true);
+            this.inputHBABoth.setSelected(true);
         } else if (evt.getActionCommand().equals("LBACircle")) {
             this.inputOuterCircle.setSelected(this.europeStationLayout.isLBACircleSelected());
         }
@@ -1219,8 +1234,12 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         inputClockMode.setSelectedItem("<<Clock160");
         checkSettings();
 }//GEN-LAST:event_input3070ActionPerformed
-    
-    
+
+    private void inputHBATwoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputHBATwoActionPerformed
+        checkSettings();
+}//GEN-LAST:event_inputHBATwoActionPerformed
+
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup AntennaFilterGroup;
     private javax.swing.ButtonGroup AntennaLayoutGroup;
@@ -1238,13 +1257,14 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     private javax.swing.JRadioButton input3080;
     private javax.swing.JComboBox inputClockMode;
     private javax.swing.JRadioButton inputHBAAntennas;
+    private javax.swing.JRadioButton inputHBABoth;
+    private javax.swing.JRadioButton inputHBAOne;
+    private javax.swing.JRadioButton inputHBATwo;
     private javax.swing.JRadioButton inputInnerCircle;
     private javax.swing.JRadioButton inputLBAAntennas;
     private javax.swing.JCheckBox inputLongBaselines;
-    private javax.swing.JRadioButton inputOneSquare;
     private javax.swing.JRadioButton inputOuterCircle;
     private javax.swing.JRadioButton inputSparse;
-    private javax.swing.JRadioButton inputTwoSquares;
     private javax.swing.JRadioButton inputXPolesOnly;
     private javax.swing.JRadioButton inputYPolesOnly;
     private javax.swing.JLabel jLabel1;
@@ -1258,40 +1278,40 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     private nl.astron.lofar.sas.otbcomponents.RemoteStationLayout remoteStationLayout;
     private nl.astron.lofar.sas.otbcomponents.StationSelectionPanel remoteStationSelectionPanel;
     // End of variables declaration//GEN-END:variables
- 
+
     /**
      * Utility field used by event firing mechanism.
      */
     private javax.swing.event.EventListenerList myListenerList =  null;
-    
+
     /**
      * Registers ActionListener to receive events.
      * @param listener The listener to register.
      */
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
-        
+
         if (myListenerList == null ) {
             myListenerList = new javax.swing.event.EventListenerList();
         }
         myListenerList.add(java.awt.event.ActionListener.class, listener);
     }
-    
+
     /**
      * Removes ActionListener from the list of listeners.
      * @param listener The listener to remove.
      */
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
-        
+
         myListenerList.remove(java.awt.event.ActionListener.class, listener);
     }
-    
+
     /**
      * Notifies all registered listeners about the event.
      *
      * @param event The event to be fired
      */
     private void fireActionListenerActionPerformed(java.awt.event.ActionEvent event) {
-        
+
         if (myListenerList == null) return;
         Object[] listeners = myListenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {

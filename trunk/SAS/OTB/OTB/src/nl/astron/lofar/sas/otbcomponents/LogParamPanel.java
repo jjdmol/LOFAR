@@ -521,7 +521,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     }   
     private void setTime() {
         
-        SimpleDateFormat aDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm",itsLocale);
+        SimpleDateFormat aDate = new SimpleDateFormat("yyyy-MM-dd HH:mm",itsLocale);
         SimpleDateFormat aGMT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm",itsLocale);
         aGMT.setTimeZone(TimeZone.getTimeZone("GMT"));
         Calendar aC = Calendar.getInstance(itsLocale);
