@@ -31,6 +31,8 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
 
+#include <casa/OS/Path.h>
+
 namespace LOFAR
 {
 namespace BBS
@@ -39,33 +41,67 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
-// Configuration options specific to Hamaker's dipole beam model.
-class HamakerDipoleConfig
+class BeamConfig
 {
 public:
-    HamakerDipoleConfig();
-    HamakerDipoleConfig(const string &file);
+    enum ElementType
+    {
+        UNKNOWN,
+        HAMAKER_LBA,
+        HAMAKER_HBA,
+        YATAWATTA_LBA,
+        YATAWATTA_HBA,
+        N_ElementType
+    };
 
-    const string &getCoeffFile() const;
+    BeamConfig();
+    BeamConfig(const string &configName, const casa::Path &configPath,
+        ElementType elementType, const casa::Path &elementPath);
+
+    const string &getConfigName() const;
+    const casa::Path &getConfigPath() const;
+    ElementType getElementType() const;
+    const casa::Path &getElementPath() const;
+
+    const string &getElementTypeAsString() const;
+    static ElementType getElementTypeFromString(const string &type);
 
 private:
-    string  itsCoeffFile;
+    static string   theirElementTypeName[N_ElementType];
+
+    string          itsConfigName;
+    casa::Path      itsConfigPath;
+    ElementType     itsElementType;
+    casa::Path      itsElementPath;
 };
 
-// Configuration options specific to Yatawatta's dipole beam model.
-class YatawattaDipoleConfig
-{
-public:
-    YatawattaDipoleConfig();
-    YatawattaDipoleConfig(const string &theta, const string &phi);
+//// Configuration options specific to Hamaker's dipole beam model.
+//class HamakerDipoleConfig
+//{
+//public:
+//    HamakerDipoleConfig();
+//    HamakerDipoleConfig(const string &file);
 
-    const string &getModuleTheta() const;
-    const string &getModulePhi() const;
+//    const string &getCoeffFile() const;
 
-private:
-    string  itsModuleTheta;
-    string  itsModulePhi;
-};
+//private:
+//    string  itsCoeffFile;
+//};
+
+//// Configuration options specific to Yatawatta's dipole beam model.
+//class YatawattaDipoleConfig
+//{
+//public:
+//    YatawattaDipoleConfig();
+//    YatawattaDipoleConfig(const string &theta, const string &phi);
+
+//    const string &getModuleTheta() const;
+//    const string &getModulePhi() const;
+
+//private:
+//    string  itsModuleTheta;
+//    string  itsModulePhi;
+//};
 
 // Configuration options specific to Mevius' minimal ionospheric model.
 class IonosphereConfig
@@ -97,12 +133,12 @@ private:
 class ModelConfig
 {
 public:
-    enum BeamType
-    {
-        UNKNOWN_BEAM_TYPE,
-        HAMAKER_DIPOLE,
-        YATAWATTA_DIPOLE
-    };
+//    enum BeamType
+//    {
+//        UNKNOWN_BEAM_TYPE,
+//        HAMAKER_DIPOLE,
+//        YATAWATTA_DIPOLE
+//    };
 
     ModelConfig();
 
@@ -112,28 +148,31 @@ public:
     bool useBandpass() const;
     void setBandpass(bool value = true);
 
-    void setIsotropicGain(bool value = true);
-    bool useIsotropicGain() const;
+    void setGain(bool value = true);
+    bool useGain() const;
 
-    void setAnisotropicGain(bool value = true);
-    bool useAnisotropicGain() const;
+    void setDirectionalGain(bool value = true);
+    bool useDirectionalGain() const;
 
     bool useBeam() const;
-    BeamType getBeamType() const;
-    void setBeamConfig(const HamakerDipoleConfig &config);
-    void setBeamConfig(const YatawattaDipoleConfig &config);
-    void getBeamConfig(HamakerDipoleConfig &config) const;
-    void getBeamConfig(YatawattaDipoleConfig &config) const;
+    void setBeamConfig(const BeamConfig &config);
+    const BeamConfig &getBeamConfig() const;
+
+//    BeamType getBeamType() const;
+//    void setBeamConfig(const HamakerDipoleConfig &config);
+//    void setBeamConfig(const YatawattaDipoleConfig &config);
+//    void getBeamConfig(HamakerDipoleConfig &config) const;
+//    void getBeamConfig(YatawattaDipoleConfig &config) const;
     void clearBeamConfig();
 
     bool useIonosphere() const;
     void setIonosphereConfig(const IonosphereConfig &config);
-    void getIonosphereConfig(IonosphereConfig &config) const;
+    const IonosphereConfig &getIonosphereConfig() const;
     void clearIonosphereConfig();
 
     bool useFlagger() const;
     void setFlaggerConfig(const FlaggerConfig &config);
-    void getFlaggerConfig(FlaggerConfig &config) const;
+    const FlaggerConfig &getFlaggerConfig() const;
     void clearFlaggerConfig();
 
     void setSources(const vector<string> &sources);
@@ -144,29 +183,32 @@ private:
     {
         PHASORS,
         BANDPASS,
-        ISOTROPIC_GAIN,
-        ANISOTROPIC_GAIN,
+        GAIN,
+        DIRECTIONAL_GAIN,
         BEAM,
         IONOSPHERE,
         FLAGGER,
         N_ModelOptions
     };
 
-    bool                    itsModelOptions[N_ModelOptions];
-    vector<string>          itsSources;
+    bool                itsModelOptions[N_ModelOptions];
 
-    BeamType                itsBeamType;
-    HamakerDipoleConfig     itsConfigBeamHamakerDipole;
-    YatawattaDipoleConfig   itsConfigBeamYatawattaDipole;
+//    BeamType                itsBeamType;
+//    HamakerDipoleConfig     itsConfigBeamHamakerDipole;
+//    YatawattaDipoleConfig   itsConfigBeamYatawattaDipole;
 
-    IonosphereConfig        itsConfigIonosphere;
-    FlaggerConfig           itsConfigFlagger;
+    BeamConfig          itsConfigBeam;
+    IonosphereConfig    itsConfigIonosphere;
+    FlaggerConfig       itsConfigFlagger;
+
+    vector<string>      itsSources;
 };
 
-ostream &operator<<(ostream &out, const HamakerDipoleConfig &obj);
-ostream &operator<<(ostream &out, const YatawattaDipoleConfig &obj);
+//ostream &operator<<(ostream &out, const HamakerDipoleConfig &obj);
+//ostream &operator<<(ostream &out, const YatawattaDipoleConfig &obj);
 ostream &operator<<(ostream &out, const FlaggerConfig &obj);
 ostream &operator<<(ostream &out, const IonosphereConfig &obj);
+ostream &operator<<(ostream &out, const BeamConfig &obj);
 ostream &operator<<(ostream &out, const ModelConfig &obj);
 
 // @}

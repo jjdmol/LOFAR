@@ -52,10 +52,10 @@ protected:
     virtual unsigned int nArguments() const;
     virtual ExprBase::ConstPtr argument(unsigned int i) const;
 
-    virtual const Scalar evaluateExpr(const Request &request, Cache &cache)
-        const;
+    virtual const Scalar evaluateExpr(const Request &request, Cache &cache,
+        unsigned int grid) const;
 
-    virtual const Scalar::View evaluateImpl(const Request &request,
+    virtual const Scalar::View evaluateImpl(const Grid &grid,
         const Scalar::View &refFreq, const Scalar::View &refStokes,
         const vector<Scalar::View> &coeff) const;
 

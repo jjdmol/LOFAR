@@ -149,10 +149,8 @@ namespace LOFAR
 
       // Write the contents of a Step to an output stream.
       friend ostream& operator<<(ostream&, const Step&);
-
     };
 
-   
   } // namespace BBS
 
 } // namespace LOFAR

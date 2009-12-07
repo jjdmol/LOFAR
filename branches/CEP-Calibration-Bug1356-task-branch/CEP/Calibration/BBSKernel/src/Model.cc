@@ -1,4 +1,4 @@
-//# Model.cc:
+//# Model.cc: Measurement equation for the LOFAR telescope and its environment.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -27,16 +27,19 @@
 #include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/Measurement.h>
 
+#include <BBSKernel/Expr/ArrayFactor.h>
 #include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/DFTPS.h>
 #include <BBSKernel/Expr/ConditionNumber.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
+#include <BBSKernel/Expr/ExprVisData.h>
 #include <BBSKernel/Expr/FlagIf.h>
 #include <BBSKernel/Expr/GaussianCoherence.h>
 #include <BBSKernel/Expr/GaussianSource.h>
 #include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/JonesInvert.h>
 #include <BBSKernel/Expr/JonesVisData.h>
+#include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/LMN.h>
 #include <BBSKernel/Expr/MatrixMul2.h>
 #include <BBSKernel/Expr/MatrixMul3.h>
@@ -66,11 +69,15 @@
 #include <Common/lofar_algorithm.h>
 #include <Common/lofar_smartptr.h>
 
-#include <measures/Measures/MDirection.h>
-#include <casa/Quanta/Quantum.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/Quanta/Quantum.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MCDirection.h>
 
 #include <functional>
+// For std::advance()...
+#include <iterator>
 
 namespace LOFAR
 {
@@ -78,10 +85,11 @@ namespace BBS
 {
 
 Model::Model(const Instrument &instrument, const SourceDB &sourceDb,
-    const casa::MDirection &reference)
+    const casa::MDirection &reference, double referenceFreq)
     :   itsInstrument(instrument),
         itsSourceDb(sourceDb),
-        itsPhaseReference(reference)
+        itsPhaseReference(reference),
+        itsReferenceFreq(referenceFreq)
 {
     // Make station UVW expression for all stations.
     makeStationUVW();
@@ -97,8 +105,8 @@ void Model::clear()
     itsCache.clearStats();
 }
 
-void Model::makeForwardExpr(const ModelConfig &config,
-    const VisData::Ptr &chunk, const vector<baseline_t> &baselines)
+void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
+    const vector<baseline_t> &baselines)
 {
     // Clear previously created expressions and cached results.
     clear();
@@ -125,6 +133,8 @@ void Model::makeForwardExpr(const ModelConfig &config,
             " source database.");
     }
 
+    LOG_INFO_STR("Number of sources in the model: " << sources.size());
+
     // Create a coherence expression for all point sources.
     map<unsigned int, Expr<JonesMatrix>::Ptr> exprPointCoherence;
     for(unsigned int i = 0; i < sources.size(); ++i)
@@ -143,9 +153,9 @@ void Model::makeForwardExpr(const ModelConfig &config,
         }
     }
 
-    // Isotropic (direction independent) transform.
-    const bool useIsotropicTransform = config.useBandpass()
-        || config.useIsotropicGain();
+    // Direction independent effects.
+    const bool haveIndependentEffects = config.useBandpass()
+        || config.useGain();
 
     // Create a bandpass expression per station.
     casa::Vector<Expr<JonesMatrix>::Ptr> exprBandpass;
@@ -154,50 +164,50 @@ void Model::makeForwardExpr(const ModelConfig &config,
         exprBandpass = makeBandpassExpr(stations);
     }
 
-    // Create an isotropic gain expression per station.
-    casa::Vector<Expr<JonesMatrix>::Ptr> exprIsotropicGain;
-    if(config.useIsotropicGain())
+    // Create a direction independent gain expression per station.
+    casa::Vector<Expr<JonesMatrix>::Ptr> exprGain;
+    if(config.useGain())
     {
-        exprIsotropicGain = makeIsotropicGainExpr(config, stations);
+        exprGain = makeGainExpr(config, stations);
     }
 
     // Create a single Expr<JonesMatrix> per station that is the composition of
-    // all isotropic effects.
-    casa::Vector<Expr<JonesMatrix>::Ptr> isoTransform;
-    if(useIsotropicTransform)
+    // all direction independent effects.
+    casa::Vector<Expr<JonesMatrix>::Ptr> indepTransform;
+    if(haveIndependentEffects)
     {
-        isoTransform.resize(stations.size());
+        indepTransform.resize(stations.size());
         for(size_t i = 0; i < stations.size(); ++i)
         {
             if(config.useBandpass())
             {
-                isoTransform(i) = corrupt(isoTransform(i), exprBandpass(i));
+                indepTransform(i) = corrupt(indepTransform(i), exprBandpass(i));
             }
 
-            if(config.useIsotropicGain())
+            if(config.useGain())
             {
-                isoTransform(i) =
-                    corrupt(isoTransform(i), exprIsotropicGain(i));
+                indepTransform(i) = corrupt(indepTransform(i), exprGain(i));
             }
 
-            // TODO: Add other isotropic effects here.
+            // TODO: Add other direction independent effects here.
         }
     }
 
-    // Anisotropic (direction dependent) effects.
-    const bool useAnisotropicTransform = config.useAnisotropicGain()
+    // Direction dependent effects.
+    const bool haveDependentEffects = config.useDirectionalGain()
         || config.useBeam() || config.useIonosphere();
 
     // Create a station shift expression per (station, source) combination.
     casa::Matrix<Expr<Vector<2> >::Ptr> exprStationShift =
         makeStationShiftExpr(stations, sources);
 
-    // Create an anisotropic gain expression per (station, source) combination.
-    casa::Matrix<Expr<JonesMatrix>::Ptr> exprAnisotropicGain;
-    if(config.useAnisotropicGain())
+    // Create a direction dependent gain expression per (station, source)
+    // combination.
+    casa::Matrix<Expr<JonesMatrix>::Ptr> exprDirectionalGain;
+    if(config.useDirectionalGain())
     {
-        exprAnisotropicGain =
-            makeAnisotropicGainExpr(config, stations, sources);
+        exprDirectionalGain =
+            makeDirectionalGainExpr(config, stations, sources);
     }
 
     // Create an AzEl node per (station, source) combination.
@@ -211,52 +221,54 @@ void Model::makeForwardExpr(const ModelConfig &config,
     casa::Matrix<Expr<JonesMatrix>::Ptr> exprBeam;
     if(config.useBeam())
     {
-        exprBeam = makeDipoleBeamExpr(config, stations, exprAzEl);
+        exprBeam = makeBeamExpr(config.getBeamConfig(), stations, exprAzEl);
     }
 
     // Create a MIM expression per (station, source) combination.
     casa::Matrix<Expr<JonesMatrix>::Ptr> exprIonosphere;
     if(config.useIonosphere())
     {
-        exprIonosphere = makeIonosphereExpr(config, stations, exprAzEl);
+        exprIonosphere = makeIonosphereExpr(config.getIonosphereConfig(),
+            stations, exprAzEl);
     }
 
     // Create a single Expr<JonesMatrix> per (station, source) combination that
-    // is the composition of all anisotropic effects in the direction of the
-    // source.
-    casa::Matrix<Expr<JonesMatrix>::Ptr> anisoTransform;
-    if(useAnisotropicTransform)
+    // is the composition of all direction dependent effects in the direction of
+    // the source.
+    casa::Matrix<Expr<JonesMatrix>::Ptr> depTransform;
+    if(haveDependentEffects)
     {
-        anisoTransform.resize(sources.size(), stations.size());
+        depTransform.resize(sources.size(), stations.size());
 
         for(size_t i = 0; i < stations.size(); ++i)
         {
             for(size_t j = 0; j < sources.size(); ++j)
             {
-                if(config.useAnisotropicGain())
+                if(config.useDirectionalGain())
                 {
-                    anisoTransform(j, i) = corrupt(anisoTransform(j, i),
-                        exprAnisotropicGain(j, i));
+                    depTransform(j, i) = corrupt(depTransform(j, i),
+                        exprDirectionalGain(j, i));
                 }
 
                 if(config.useBeam())
                 {
-                    anisoTransform(j, i) = corrupt(anisoTransform(j, i),
+                    depTransform(j, i) = corrupt(depTransform(j, i),
                         exprBeam(j, i));
                 }
 
                 if(config.useIonosphere())
                 {
-                    anisoTransform(j, i) = corrupt(anisoTransform(j, i),
+                    depTransform(j, i) = corrupt(depTransform(j, i),
                         exprIonosphere(j, i));
                 }
 
-                // TODO: Add other anisotropic effects here.
+                // TODO: Add other direction dependent effects here.
             }
         }
     }
 
     // Create an expression tree for each baseline.
+    itsExpr.reserve(baselines.size());
     for(size_t i = 0; i < baselines.size(); ++i)
     {
         const baseline_t &baseline = baselines[i];
@@ -305,11 +317,11 @@ void Model::makeForwardExpr(const ModelConfig &config,
             // Phase shift the source coherence.
             term = Expr<JonesMatrix>::Ptr(new Mul(shift, term));
 
-            // Apply anisotropic (direction dependent) effects.
-            if(useAnisotropicTransform)
+            // Apply direction dependent effects.
+            if(haveDependentEffects)
             {
-                term = Expr<JonesMatrix>::Ptr(new MatrixMul3(anisoTransform(j,
-                    lhs), term, anisoTransform(j, rhs)));
+                term = Expr<JonesMatrix>::Ptr(new MatrixMul3(depTransform(j,
+                    lhs), term, depTransform(j, rhs)));
             }
 
             sum->connect(term);
@@ -317,14 +329,15 @@ void Model::makeForwardExpr(const ModelConfig &config,
 
         Expr<JonesMatrix>::Ptr coherence(sum);
 
-        // Apply isotropic (direction independent) effects.
-        if(useIsotropicTransform)
+        // Apply direction independent effects.
+        if(haveIndependentEffects)
         {
-            coherence = Expr<JonesMatrix>::Ptr(new MatrixMul3(isoTransform(lhs),
-                coherence, isoTransform(rhs)));
+            coherence =
+                Expr<JonesMatrix>::Ptr(new MatrixMul3(indepTransform(lhs),
+                    coherence, indepTransform(rhs)));
         }
 
-        itsExpr[baseline] = coherence;
+        itsExpr.push_back(coherence);
     }
 }
 
@@ -346,9 +359,9 @@ void Model::makeInverseExpr(const ModelConfig &config,
     // selected direction.
     casa::Vector<Expr<JonesMatrix>::Ptr> transform(stations.size());
 
-    // Isotropic (direction independent) transform.
-    const bool useIsotropicTransform = config.useBandpass()
-        || config.useIsotropicGain();
+    // Direction independent effects.
+    const bool haveIndependentEffects = config.useBandpass()
+        || config.useGain();
 
     // Create a bandpass expression per station.
     casa::Vector<Expr<JonesMatrix>::Ptr> exprBandpass;
@@ -357,38 +370,38 @@ void Model::makeInverseExpr(const ModelConfig &config,
         exprBandpass = makeBandpassExpr(stations);
     }
 
-    // Create an isotropic gain expression per station.
-    casa::Vector<Expr<JonesMatrix>::Ptr> exprIsotropicGain;
-    if(config.useIsotropicGain())
+    // Create a direction independent gain expression per station.
+    casa::Vector<Expr<JonesMatrix>::Ptr> exprGain;
+    if(config.useGain())
     {
-        exprIsotropicGain = makeIsotropicGainExpr(config, stations);
+        exprGain = makeGainExpr(config, stations);
     }
 
     // Create a single Expr<JonesMatrix> per station that is the composition of
-    // all isotropic effects.
-    if(useIsotropicTransform)
+    // all direction independent effects.
+    if(haveIndependentEffects)
     {
-        for(unsigned int i = 0; i < stations.size(); ++i)
+        for(size_t i = 0; i < stations.size(); ++i)
         {
             if(config.useBandpass())
             {
                 transform(i) = corrupt(transform(i), exprBandpass(i));
             }
 
-            if(config.useIsotropicGain())
+            if(config.useGain())
             {
-                transform(i) = corrupt(transform(i), exprIsotropicGain(i));
+                transform(i) = corrupt(transform(i), exprGain(i));
             }
 
-            // TODO: Add other isotropic effects here.
+            // TODO: Add other direction independent effects here.
         }
     }
 
-    // Anisotropic (direction dependent) transform.
-    const bool useAnisotropicTransform = config.useAnisotropicGain()
+    // Direction dependent effects.
+    const bool haveDependentEffects = config.useDirectionalGain()
         || config.useBeam() || config.useIonosphere();
 
-    if(useAnisotropicTransform)
+    if(haveDependentEffects)
     {
         // Create Source objects for all selected sources.
         vector<Source::Ptr> sources = makeSourceList(config.getSources());
@@ -399,13 +412,13 @@ void Model::makeInverseExpr(const ModelConfig &config,
             " direction on the sky");
         }
 
-        // Create an anisotropic gain expression per (station, source)
+        // Create a direction dependent gain expression per (station, source)
         // combination.
-        casa::Matrix<Expr<JonesMatrix>::Ptr> exprAnisotropicGain;
-        if(config.useAnisotropicGain())
+        casa::Matrix<Expr<JonesMatrix>::Ptr> exprDirectionalGain;
+        if(config.useDirectionalGain())
         {
-            exprAnisotropicGain =
-                makeAnisotropicGainExpr(config, stations, sources);
+            exprDirectionalGain =
+                makeDirectionalGainExpr(config, stations, sources);
         }
 
         // Create an AzEl node per (station, source) combination.
@@ -419,24 +432,25 @@ void Model::makeInverseExpr(const ModelConfig &config,
         casa::Matrix<Expr<JonesMatrix>::Ptr> exprBeam;
         if(config.useBeam())
         {
-            exprBeam = makeDipoleBeamExpr(config, stations, exprAzEl);
+            exprBeam = makeBeamExpr(config.getBeamConfig(), stations, exprAzEl);
         }
 
         // Create a MIM expression per (station, source) combination.
         casa::Matrix<Expr<JonesMatrix>::Ptr> exprIonosphere;
         if(config.useIonosphere())
         {
-            exprIonosphere = makeIonosphereExpr(config, stations, exprAzEl);
+            exprIonosphere = makeIonosphereExpr(config.getIonosphereConfig(),
+                stations, exprAzEl);
         }
 
         // Create a single Expr<JonesMatrix> per (station, source) combination
-        // that is the composition of all anisotropic effects in the direction
-        // of the source.
-        for(unsigned int i = 0; i < stations.size(); ++i)
+        // that is the composition of all direction dependent effects in the
+        // direction of the source.
+        for(size_t i = 0; i < stations.size(); ++i)
         {
-            if(config.useAnisotropicGain())
+            if(config.useDirectionalGain())
             {
-                transform(i) = corrupt(transform(i), exprAnisotropicGain(0, i));
+                transform(i) = corrupt(transform(i), exprDirectionalGain(0, i));
             }
 
             if(config.useBeam())
@@ -449,18 +463,17 @@ void Model::makeInverseExpr(const ModelConfig &config,
                 transform(i) = corrupt(transform(i), exprIonosphere(0, i));
             }
 
-            // TODO: Add other anisotropic effects here.
+            // TODO: Add other direction dependent effects here.
         }
     }
 
-    if(useIsotropicTransform || useAnisotropicTransform)
+    if(haveIndependentEffects || haveDependentEffects)
     {
-        for(unsigned int i = 0; i < stations.size(); ++i)
+        for(size_t i = 0; i < stations.size(); ++i)
         {
             if(config.useFlagger())
             {
-                FlaggerConfig flagConfig;
-                config.getFlaggerConfig(flagConfig);
+                const FlaggerConfig &flagConfig = config.getFlaggerConfig();
 
                 Expr<Scalar>::Ptr exprCond(new ConditionNumber(transform(i)));
                 Expr<Scalar>::Ptr exprThreshold(makeFlagIf(exprCond,
@@ -478,6 +491,7 @@ void Model::makeInverseExpr(const ModelConfig &config,
     }
 
     // Create an expression tree for each baseline.
+    itsExpr.reserve(baselines.size());
     for(size_t i = 0; i < baselines.size(); ++i)
     {
         const baseline_t &baseline = baselines[i];
@@ -495,70 +509,24 @@ void Model::makeInverseExpr(const ModelConfig &config,
 
         Expr<JonesMatrix>::Ptr exprVisData(new JonesVisData(chunk, baseline));
 
-        if(useIsotropicTransform || useAnisotropicTransform)
+        if(haveIndependentEffects || haveDependentEffects)
         {
             exprVisData = Expr<JonesMatrix>::Ptr(new MatrixMul3(transform(lhs),
                 exprVisData, transform(rhs)));
         }
 
-        itsExpr[baseline] = exprVisData;
+        itsExpr.push_back(exprVisData);
     }
 }
 
-void Model::setRequestGrid(const Grid &grid)
+unsigned int Model::size() const
 {
-    itsRequest = Request(grid);
-    LOG_DEBUG_STR("" << itsCache);
-    itsCache.clearStats();
-    itsCache.clear();
-
-    // TODO: Set cache size in number of Matrix instances... ?
+    return itsExpr.size();
 }
 
-const JonesMatrix Model::evaluate(const baseline_t &baseline)
+Box Model::domain() const
 {
-    JonesMatrix result;
-
-    // Evaluate the model.
-    map<baseline_t, Expr<JonesMatrix>::Ptr>::const_iterator exprIt =
-        itsExpr.find(baseline);
-    ASSERT(exprIt != itsExpr.end());
-    const JonesMatrix model = (exprIt->second)->evaluate(itsRequest, itsCache);
-
-    // Pass-through the flags.
-    result.setFlags(model.flags());
-
-    // Pass-through the model value.
-    const JonesMatrix::View value(model.view());
-    result.assign(value);
-
-    // Compute (approximate) partial derivatives using forward differences.
-    PValueKey key;
-    JonesMatrix::Iterator it(model);
-    while(!it.atEnd())
-    {
-        key = it.key();
-
-        // Get the perturbed value associated with the current (parameter,
-        // coefficient) pair.
-        const JonesMatrix::View pert(it.value(key));
-
-        // Get perturbation.
-        ParmProxy::ConstPtr parm = ParmManager::instance().get(key.parmId);
-        const double inversePert = 1.0 / parm->getPerturbation(key.coeffId);
-
-        // Approximate partial derivative using forward differences.
-        JonesMatrix::View partial;
-        partial.assign(0, 0, Matrix((pert(0, 0) - value(0, 0)) * inversePert));
-        partial.assign(0, 1, Matrix((pert(0, 1) - value(0, 1)) * inversePert));
-        partial.assign(1, 0, Matrix((pert(1, 0) - value(1, 0)) * inversePert));
-        partial.assign(1, 1, Matrix((pert(1, 1) - value(1, 1)) * inversePert));
-
-        result.assign(key, partial);
-        it.advance(key);
-    }
-
-    return result;
+    return ParmManager::instance().domain();
 }
 
 ParmGroup Model::getParms() const
@@ -600,6 +568,7 @@ void Model::setSolvableParms(const ParmGroup &solvables)
     {
         map<unsigned int, ExprParm::Ptr>::iterator parmIt =
             itsParms.find(*solIt);
+        ASSERT(parmIt != itsParms.end());
 
         if(parmIt != itsParms.end())
         {
@@ -620,11 +589,65 @@ void Model::clearSolvableParms()
     }
 }
 
-ExprParm::Ptr Model::makeExprParm(uint category, const string &name)
+void Model::setEvalGrid(const Grid &grid)
+{
+    itsRequest = Request(grid);
+    LOG_DEBUG_STR("" << itsCache);
+    itsCache.clearStats();
+    itsCache.clear();
+
+    // TODO: Set cache size in number of Matrix instances... ?
+}
+
+const JonesMatrix Model::evaluate(unsigned int i)
+{
+    JonesMatrix result;
+
+    // Evaluate the model.
+    ASSERT(i < itsExpr.size());
+    const JonesMatrix model = itsExpr[i]->evaluate(itsRequest, itsCache, 0);
+
+    // Pass-through the flags.
+    result.setFlags(model.flags());
+
+    // Pass-through the model value.
+    const JonesMatrix::View value(model.view());
+    result.assign(value);
+
+    // Compute (approximate) partial derivatives using forward differences.
+    PValueKey key;
+    JonesMatrix::Iterator it(model);
+    while(!it.atEnd())
+    {
+        key = it.key();
+
+        // Get the perturbed value associated with the current (parameter,
+        // coefficient) pair.
+        const JonesMatrix::View pert(it.value(key));
+
+        // Get perturbation.
+        ParmProxy::ConstPtr parm = ParmManager::instance().get(key.parmId);
+        const double inversePert = 1.0 / parm->getPerturbation(key.coeffId);
+
+        // Approximate partial derivative using forward differences.
+        JonesMatrix::View partial;
+        partial.assign(0, 0, (pert(0, 0) - value(0, 0)) * inversePert);
+        partial.assign(0, 1, (pert(0, 1) - value(0, 1)) * inversePert);
+        partial.assign(1, 0, (pert(1, 0) - value(1, 0)) * inversePert);
+        partial.assign(1, 1, (pert(1, 1) - value(1, 1)) * inversePert);
+
+        result.assign(key, partial);
+        it.advance(key);
+    }
+
+    return result;
+}
+
+ExprParm::Ptr Model::makeExprParm(unsigned int category, const string &name)
 {
     ParmProxy::ConstPtr proxy(ParmManager::instance().get(category, name));
 
-    pair<map<uint, ExprParm::Ptr>::const_iterator, bool> status =
+    pair<map<unsigned int, ExprParm::Ptr>::const_iterator, bool> status =
         itsParms.insert(make_pair(proxy->getId(),
             ExprParm::Ptr(new ExprParm(proxy))));
 
@@ -807,11 +830,11 @@ Expr<Scalar>::Ptr Model::makeSpectralIndexExpr(const SourceInfo &source,
 
 void Model::makeStationUVW()
 {
-    itsStationUVW.resize(itsInstrument.stations.size());
+    itsStationUVW.resize(itsInstrument.size());
     for(size_t i = 0; i < itsStationUVW.size(); ++i)
     {
-        itsStationUVW[i].reset(new StatUVW(itsInstrument.stations[i].position,
-            itsInstrument.position, itsPhaseReference));
+        itsStationUVW[i].reset(new StatUVW(itsInstrument[i].position(),
+            itsInstrument.position(), itsPhaseReference));
     }
 }
 
@@ -850,7 +873,7 @@ Model::makeBandpassExpr(const vector<unsigned int> &stations)
     for(unsigned int i = 0; i < stations.size(); ++i)
     {
         const unsigned int station = stations[i];
-        const string &suffix = itsInstrument.stations[station].name;
+        const string &suffix = itsInstrument[station].name();
 
         Expr<Scalar>::Ptr B00 = makeExprParm(INSTRUMENT, "Bandpass:0:0:"
             + suffix);
@@ -864,7 +887,7 @@ Model::makeBandpassExpr(const vector<unsigned int> &stations)
 }
 
 casa::Vector<Expr<JonesMatrix>::Ptr>
-Model::makeIsotropicGainExpr(const ModelConfig &config,
+Model::makeGainExpr(const ModelConfig &config,
     const vector<unsigned int> &stations)
 {
     string elem0(config.usePhasors() ? "Ampl"  : "Real");
@@ -876,7 +899,7 @@ Model::makeIsotropicGainExpr(const ModelConfig &config,
         Expr<Scalar>::Ptr J00, J01, J10, J11;
 
         const unsigned int station = stations[i];
-        const string &suffix = itsInstrument.stations[station].name;
+        const string &suffix = itsInstrument[station].name();
 
         ExprParm::Ptr J00_elem0 =
             makeExprParm(INSTRUMENT, "Gain:0:0:" + elem0 + ":" + suffix);
@@ -918,7 +941,7 @@ Model::makeIsotropicGainExpr(const ModelConfig &config,
 }
 
 casa::Matrix<Expr<JonesMatrix>::Ptr>
-Model::makeAnisotropicGainExpr(const ModelConfig &config,
+Model::makeDirectionalGainExpr(const ModelConfig &config,
     const vector<unsigned int> &stations, const vector<Source::Ptr> &sources)
 {
     string elem0(config.usePhasors() ? "Ampl"  : "Real");
@@ -932,25 +955,25 @@ Model::makeAnisotropicGainExpr(const ModelConfig &config,
         {
             Expr<Scalar>::Ptr J00, J01, J10, J11;
 
-            string suffix(itsInstrument.stations[station].name + ":"
+            string suffix(itsInstrument[station].name() + ":"
                 + sources[j]->getName());
 
-            ExprParm::Ptr J00_elem0 =
-                makeExprParm(INSTRUMENT, "Gain:0:0:" + elem0 + ":" + suffix);
-            ExprParm::Ptr J00_elem1 =
-                makeExprParm(INSTRUMENT, "Gain:0:0:" + elem1 + ":" + suffix);
-            ExprParm::Ptr J01_elem0 =
-                makeExprParm(INSTRUMENT, "Gain:0:1:" + elem0 + ":" + suffix);
-            ExprParm::Ptr J01_elem1 =
-                makeExprParm(INSTRUMENT, "Gain:0:1:" + elem1 + ":" + suffix);
-            ExprParm::Ptr J10_elem0 =
-                makeExprParm(INSTRUMENT, "Gain:1:0:" + elem0 + ":" + suffix);
-            ExprParm::Ptr J10_elem1 =
-                makeExprParm(INSTRUMENT, "Gain:1:0:" + elem1 + ":" + suffix);
-            ExprParm::Ptr J11_elem0 =
-                makeExprParm(INSTRUMENT, "Gain:1:1:" + elem0 + ":" + suffix);
-            ExprParm::Ptr J11_elem1 =
-                makeExprParm(INSTRUMENT, "Gain:1:1:" + elem1 + ":" + suffix);
+            ExprParm::Ptr J00_elem0 = makeExprParm(INSTRUMENT,
+                "DirectionalGain:0:0:" + elem0 + ":" + suffix);
+            ExprParm::Ptr J00_elem1 = makeExprParm(INSTRUMENT,
+                "DirectionalGain:0:0:" + elem1 + ":" + suffix);
+            ExprParm::Ptr J01_elem0 = makeExprParm(INSTRUMENT,
+                "DirectionalGain:0:1:" + elem0 + ":" + suffix);
+            ExprParm::Ptr J01_elem1 = makeExprParm(INSTRUMENT,
+                "DirectionalGain:0:1:" + elem1 + ":" + suffix);
+            ExprParm::Ptr J10_elem0 = makeExprParm(INSTRUMENT,
+                "DirectionalGain:1:0:" + elem0 + ":" + suffix);
+            ExprParm::Ptr J10_elem1 = makeExprParm(INSTRUMENT,
+                "DirectionalGain:1:0:" + elem1 + ":" + suffix);
+            ExprParm::Ptr J11_elem0 = makeExprParm(INSTRUMENT,
+                "DirectionalGain:1:1:" + elem0 + ":" + suffix);
+            ExprParm::Ptr J11_elem1 = makeExprParm(INSTRUMENT,
+                "DirectionalGain:1:1:" + elem1 + ":" + suffix);
 
             if(config.usePhasors())
             {
@@ -984,8 +1007,7 @@ Model::makeAzElExpr(const vector<unsigned int> &stations,
     for(unsigned int i = 0; i < stations.size(); ++i)
     {
         const unsigned int station = stations[i];
-        const casa::MPosition &position =
-            itsInstrument.stations[station].position;
+        const casa::MPosition &position = itsInstrument[station].position();
 
         for(unsigned int j = 0; j < sources.size(); ++j)
         {
@@ -997,89 +1019,215 @@ Model::makeAzElExpr(const vector<unsigned int> &stations,
     return expr;
 }
 
+//casa::Matrix<Expr<JonesMatrix>::Ptr>
+//Model::makeDipoleBeamExpr(const ModelConfig &config,
+//    const vector<unsigned int> &stations,
+//    const casa::Matrix<Expr<Vector<2> >::Ptr> &azel)
+//{
+//    ASSERT(config.useBeam() && config.getBeamType()
+//        != ModelConfig::UNKNOWN_BEAM_TYPE);
+
+//    const unsigned int nSources = azel.shape()(0);
+//    const unsigned int nStations = azel.shape()(1);
+//    ASSERT(nStations == stations.size());
+
+//    // Allocate result.
+//    casa::Matrix<Expr<JonesMatrix>::Ptr> expr(nSources, nStations);
+
+//    switch(config.getBeamType())
+//    {
+//        case ModelConfig::HAMAKER_DIPOLE:
+//        {
+//            HamakerDipoleConfig beamConfig;
+//            config.getBeamConfig(beamConfig);
+
+//            // Read beam coefficients from file.
+//            HamakerBeamCoeff coeff;
+//            coeff.init(beamConfig.getCoeffFile());
+
+//            // Create a dipole beam expression per (station, source)
+//            // combination.
+//            for(unsigned int i = 0; i < nStations; ++i)
+//            {
+//                // Get dipole orientation.
+//                const unsigned int station = stations[i];
+//                Expr<Scalar>::Ptr orientation = makeExprParm(INSTRUMENT,
+//                    "Orientation:" + itsInstrument[station].name());
+
+//                for(unsigned int j = 0; j < nSources; ++j)
+//                {
+//                    expr(j, i) = Expr<JonesMatrix>::Ptr(new HamakerDipole(coeff,
+//                        azel(j, i), orientation));
+//                }
+//            }
+//            break;
+//        }
+
+//        case ModelConfig::YATAWATTA_DIPOLE:
+//        {
+//            YatawattaDipoleConfig beamConfig;
+//            config.getBeamConfig(beamConfig);
+
+//            // TODO: Where is this scale factor coming from (see global_model.py
+//            // in EJones_droopy_comp and EJones_HBA)?
+////            const double scaleFactor = options[DIPOLE_BEAM_LBA] ? 1.0 / 88.0
+////                : 1.0 / 600.0;
+
+//            // Create a dipole beam expression per (station, source)
+//            // combination.
+//            for(unsigned int i = 0; i < nStations; ++i)
+//            {
+//                // Get dipole orientation.
+//                const unsigned int station = stations[i];
+//                Expr<Scalar>::Ptr orientation = makeExprParm(INSTRUMENT,
+//                    "Orientation:" + itsInstrument[station].name());
+
+//                for(unsigned int j = 0; j < nSources; ++j)
+//                {
+//                    expr(j, i) = Expr<JonesMatrix>::Ptr
+//                        (new YatawattaDipole(beamConfig.getModuleTheta(),
+//                            beamConfig.getModulePhi(), 1.0, azel(j, i),
+//                            orientation));
+//                }
+//            }
+//            break;
+//        }
+
+//        default:
+//            THROW(BBSKernelException, "Unsupported beam type encountered.");
+//    }
+
+//    return expr;
+//}
+
 casa::Matrix<Expr<JonesMatrix>::Ptr>
-Model::makeDipoleBeamExpr(const ModelConfig &config,
+Model::makeBeamExpr(const BeamConfig &config,
     const vector<unsigned int> &stations,
     const casa::Matrix<Expr<Vector<2> >::Ptr> &azel)
 {
-    ASSERT(config.useBeam() && config.getBeamType()
-        != ModelConfig::UNKNOWN_BEAM_TYPE);
+    ASSERT(config.getElementType() != BeamConfig::UNKNOWN);
 
-    const unsigned int nSources = azel.shape()(0);
+    const unsigned int nDirections = azel.shape()(0);
     const unsigned int nStations = azel.shape()(1);
     ASSERT(nStations == stations.size());
 
-    // Allocate result.
-    casa::Matrix<Expr<JonesMatrix>::Ptr> expr(nSources, nStations);
+    LOG_INFO_STR("Using element type: "
+        << config.getElementTypeAsString());
 
-    switch(config.getBeamType())
+    // Create element beam expressions.
+    casa::Matrix<Expr<JonesMatrix>::Ptr> exprElement(nDirections, nStations);
+    switch(config.getElementType())
     {
-        case ModelConfig::HAMAKER_DIPOLE:
+        case BeamConfig::HAMAKER_LBA:
+        case BeamConfig::HAMAKER_HBA:
         {
-            HamakerDipoleConfig beamConfig;
-            config.getBeamConfig(beamConfig);
+            casa::Path coeffFile = config.getElementPath();
+            coeffFile.append("element_beam_" + config.getElementTypeAsString()
+                + ".coeff");
+            LOG_INFO_STR("Element beam config file: "
+                << coeffFile.expandedName());
 
             // Read beam coefficients from file.
             HamakerBeamCoeff coeff;
-            coeff.init(beamConfig.getCoeffFile());
+            coeff.init(coeffFile);
 
-            // Create a dipole beam expression per (station, source)
+            // Create an element beam expression per (station, source)
             // combination.
             for(unsigned int i = 0; i < nStations; ++i)
             {
-                // Get dipole orientation.
+                // Get element orientation.
                 const unsigned int station = stations[i];
                 Expr<Scalar>::Ptr orientation = makeExprParm(INSTRUMENT,
-                    "Orientation:" + itsInstrument.stations[station].name);
+                    "AntennaOrientation:" + itsInstrument[station].name());
 
-                for(unsigned int j = 0; j < nSources; ++j)
+                for(unsigned int j = 0; j < nDirections; ++j)
                 {
-                    expr(j, i) = Expr<JonesMatrix>::Ptr(new HamakerDipole(coeff,
-                        azel(j, i), orientation));
+                    exprElement(j, i) =
+                        Expr<JonesMatrix>::Ptr(new HamakerDipole(coeff,
+                            azel(j, i), orientation));
                 }
             }
             break;
         }
 
-        case ModelConfig::YATAWATTA_DIPOLE:
+        case BeamConfig::YATAWATTA_LBA:
+        case BeamConfig::YATAWATTA_HBA:
         {
-            YatawattaDipoleConfig beamConfig;
-            config.getBeamConfig(beamConfig);
+            // TODO: Transparantly handle platforms that use a different
+            // extension for loadable modules.
+            casa::Path moduleTheta = config.getElementPath();
+            moduleTheta.append("element_beam_" + config.getElementTypeAsString()
+                + "_theta.so");
 
-            // TODO: Where is this scale factor coming from (see global_model.py
-            // in EJones_droopy_comp and EJones_HBA)?
-//            const double scaleFactor = options[DIPOLE_BEAM_LBA] ? 1.0 / 88.0
-//                : 1.0 / 600.0;
+            casa::Path modulePhi = config.getElementPath();
+            modulePhi.append("element_beam_" + config.getElementTypeAsString()
+                + "_phi.so");
 
-            // Create a dipole beam expression per (station, source)
+            LOG_INFO_STR("Element beam loadable modules: ["
+                << moduleTheta.expandedName() << ","
+                << modulePhi.expandedName() << "]");
+
+            // Create an element beam expression per (station, source)
             // combination.
             for(unsigned int i = 0; i < nStations; ++i)
             {
-                // Get dipole orientation.
+                // Get element orientation.
                 const unsigned int station = stations[i];
                 Expr<Scalar>::Ptr orientation = makeExprParm(INSTRUMENT,
-                    "Orientation:" + itsInstrument.stations[station].name);
+                    "AntennaOrientation:" + itsInstrument[station].name());
 
-                for(unsigned int j = 0; j < nSources; ++j)
+                for(unsigned int j = 0; j < nDirections; ++j)
                 {
-                    expr(j, i) = Expr<JonesMatrix>::Ptr
-                        (new YatawattaDipole(beamConfig.getModuleTheta(),
-                            beamConfig.getModulePhi(), 1.0, azel(j, i),
-                            orientation));
+                    exprElement(j, i) =
+                        Expr<JonesMatrix>::Ptr(new YatawattaDipole(moduleTheta,
+                            modulePhi, azel(j, i), orientation));
                 }
             }
             break;
         }
 
         default:
-            THROW(BBSKernelException, "Unsupported beam type encountered.");
+            THROW(BBSKernelException, "Unsupported element type encountered");
+    }
+
+    itsInstrument.readAntennaConfigurations(config.getConfigPath());
+
+    casa::MDirection refJ2000(casa::MDirection::Convert(itsPhaseReference,
+        casa::MDirection::J2000)());
+    casa::Quantum<casa::Vector<casa::Double> > refAngles =
+        refJ2000.getAngle();
+    Literal::Ptr refRa(new Literal(refAngles.getBaseValue()(0)));
+    Literal::Ptr refDec(new Literal(refAngles.getBaseValue()(1)));
+
+    AsExpr<Vector<2> >::Ptr exprRefDir(new AsExpr<Vector<2> >());
+    exprRefDir->connect(0, refRa);
+    exprRefDir->connect(1, refDec);
+
+    casa::Matrix<Expr<JonesMatrix>::Ptr> expr(nDirections, nStations);
+    for(unsigned int i = 0; i < nStations; ++i)
+    {
+        const unsigned int station = stations[i];
+        const AntennaConfig &antennaConfig =
+            itsInstrument[station].config(config.getConfigName());
+
+        Expr<Vector<2> >::Ptr
+            refAzEl(new AzEl(itsInstrument[station].position(), exprRefDir));
+
+        for(unsigned int j = 0; j < nDirections; ++j)
+        {
+            Expr<JonesMatrix>::Ptr exprArrayFactor(new ArrayFactor(azel(j, i),
+                refAzEl, antennaConfig, itsReferenceFreq));
+
+            expr(j, i) = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprArrayFactor,
+                exprElement(j, i)));
+        }
     }
 
     return expr;
 }
 
 casa::Matrix<Expr<JonesMatrix>::Ptr>
-Model::makeIonosphereExpr(const ModelConfig &config,
+Model::makeIonosphereExpr(const IonosphereConfig &config,
     const vector<unsigned int> &stations,
     const casa::Matrix<Expr<Vector<2> >::Ptr> &azel)
 {
@@ -1087,12 +1235,10 @@ Model::makeIonosphereExpr(const ModelConfig &config,
     // TODO: Is station 0 a sensible choice for the reference position? Should
     // we use the array reference position instead? Or should it be different
     // for each station?
-    casa::MPosition reference = itsInstrument.stations[0].position;
+    casa::MPosition reference = itsInstrument[0].position();
 
     // Get ionosphere model parameters.
-    IonosphereConfig ionoConfig;
-    config.getIonosphereConfig(ionoConfig);
-    unsigned int degree = ionoConfig.getDegree() + 1;
+    unsigned int degree = config.getDegree() + 1;
 
     // Make sure rank is at least 1 (i.e. a linear gradient over the field of
     // view).
@@ -1130,8 +1276,7 @@ Model::makeIonosphereExpr(const ModelConfig &config,
     for(size_t i = 0; i < nStations; ++i)
     {
         const unsigned int station = stations[i];
-        const casa::MPosition &position =
-            itsInstrument.stations[station].position;
+        const casa::MPosition &position = itsInstrument[station].position();
 
         for(size_t j = 0; j < nSources; ++j)
         {

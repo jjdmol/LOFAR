@@ -80,23 +80,26 @@ namespace LOFAR
         N_State
       };
 
+      // Get the global time axis and verify consistency across all parts.
+      Axis::ShPtr getGlobalTimeAxis() const;
+
+      // Assign an index to each kernel process starting from 0. The index is
+      // sorted on start frequency. Also, each solver process is assigned an
+      // index (starting from 0, sorted on worker id).
+      void createWorkerIndex();
+
       // Set run state to \a state
       void setState(State state);
 
       // Return the run state as a string.
       const string& showState() const;
 
-      // Assign an index to each kernel process starting from 0. The index is
-      // sorted on start frequency. Also, each solver process is assigned an
-      // index (starting from 0, sorted on worker id).
-      void createWorkerIndex();
-      
       // State of the control process controller.
       State                     itsState;
 
       // The strategy that will be executed by this controller.
       Strategy                  itsStrategy;
-      
+
       // Iterator used to iterate over the leaf-nodes (SingleSteps) of the
       // Strategy.
       StrategyIterator          itsStrategyIterator;
@@ -106,7 +109,7 @@ namespace LOFAR
 
       // Id of the command that the controller is waiting for.
       CommandId                 itsWaitId;
-          
+
       CEP::VdsDesc              itsVdsDesc;
       Axis::ShPtr               itsGlobalTimeAxis;
       double                    itsFreqStart, itsFreqEnd;
@@ -115,7 +118,7 @@ namespace LOFAR
     };
 
     // @}
-    
+
   } // namespace BBS
 
 } // namespace LOFAR

@@ -44,9 +44,7 @@ public:
     typedef shared_ptr<Measurement>         Ptr;
     typedef shared_ptr<const Measurement>   ConstPtr;
 
-    virtual ~Measurement()
-    {
-    }
+    virtual ~Measurement();
 
     virtual VisDimensions
         getDimensions(const VisSelection &selection) const = 0;
@@ -58,22 +56,48 @@ public:
         VisData::Ptr buffer, const string &column = "CORRECTED_DATA",
         bool writeFlags = true) = 0;
 
-    const Instrument &getInstrument() const
-    { return itsInstrument; }
+    double getReferenceFreq() const;
+    const casa::MDirection &getPhaseCenter() const;
 
-    const casa::MDirection &getPhaseCenter() const
-    { return itsPhaseCenter; }
-
-    const VisDimensions &getDimensions() const
-    { return itsDimensions; }
+    const Instrument &getInstrument() const;
+    const VisDimensions &getDimensions() const;
 
 protected:
-    Instrument              itsInstrument;
+    double                  itsReferenceFreq;
     casa::MDirection        itsPhaseCenter;
+    Instrument              itsInstrument;
     VisDimensions           itsDimensions;
 };
 
 // @}
+
+// -------------------------------------------------------------------------- //
+// - Measurement implementation                                             - //
+// -------------------------------------------------------------------------- //
+
+inline Measurement::~Measurement()
+{
+}
+
+inline const Instrument &Measurement::getInstrument() const
+{
+    return itsInstrument;
+}
+
+inline const casa::MDirection &Measurement::getPhaseCenter() const
+{
+    return itsPhaseCenter;
+}
+
+inline double Measurement::getReferenceFreq() const
+{
+    return itsReferenceFreq;
+}
+
+inline const VisDimensions &Measurement::getDimensions() const
+{
+    return itsDimensions;
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

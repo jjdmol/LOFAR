@@ -25,6 +25,7 @@
 #include <BBSKernel/Expr/ExternalFunction.h>
 #include <BBSKernel/Exceptions.h>
 
+#include <casa/OS/Path.h>
 #include <dlfcn.h>
 
 namespace LOFAR
@@ -32,12 +33,14 @@ namespace LOFAR
 namespace BBS
 {
 
-ExternalFunction::ExternalFunction(const string &module, const string &name)
+ExternalFunction::ExternalFunction(const casa::Path &module, const string &name)
+    :   itsModule(0)
 {
-    itsModule = dlopen(module.c_str(), RTLD_LAZY);
+    casa::String path = module.expandedName();
+    itsModule = dlopen(path.c_str(), RTLD_LAZY);
     if(!itsModule)
     {
-        THROW(BBSKernelException, "Unable to open module: " << module);
+        THROW(BBSKernelException, "Unable to open module: " << path);
     }
 
     itsNX = *static_cast<int*>(getSymbol("Nx_" + name));
@@ -48,8 +51,10 @@ ExternalFunction::ExternalFunction(const string &module, const string &name)
 
 ExternalFunction::~ExternalFunction()
 {
-    ASSERT(itsModule);
-    dlclose(itsModule);
+    if(itsModule)
+    {
+        dlclose(itsModule);
+    }
 }
 
 void *ExternalFunction::getSymbol(const string &name) const

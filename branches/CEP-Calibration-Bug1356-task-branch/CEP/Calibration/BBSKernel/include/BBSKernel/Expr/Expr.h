@@ -117,12 +117,12 @@ public:
     using ExprBase::id;
     using ExprBase::nConsumers;
 
-    virtual const T_EXPR_VALUE evaluate(const Request &request, Cache &cache)
-        const;
+    virtual const T_EXPR_VALUE evaluate(const Request &request, Cache &cache,
+        unsigned int grid) const;
 
 protected:
     virtual const T_EXPR_VALUE evaluateExpr(const Request &request,
-        Cache &cache) const = 0;
+        Cache &cache, unsigned int grid) const = 0;
 };
 
 template <typename T_ARG0, typename T_EXPR_VALUE>
@@ -284,7 +284,7 @@ inline unsigned int ExprBase::nConsumers() const
 
 template <typename T_EXPR_VALUE>
 inline const T_EXPR_VALUE  Expr<T_EXPR_VALUE>::evaluate(const Request &request,
-    Cache &cache) const
+    Cache &cache, unsigned int grid) const
 {
     T_EXPR_VALUE result;
 
@@ -292,7 +292,7 @@ inline const T_EXPR_VALUE  Expr<T_EXPR_VALUE>::evaluate(const Request &request,
     if(nConsumers() < 1 || !cache.query(id(), request.id(), result))
     {
         // Compute the result.
-        result = evaluateExpr(request, cache);
+        result = evaluateExpr(request, cache, grid);
 
         // Insert into cache (only if it will be re-used later on).
         if(nConsumers() > 1)

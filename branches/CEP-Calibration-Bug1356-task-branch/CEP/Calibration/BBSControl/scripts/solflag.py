@@ -1,4 +1,4 @@
-# solflag.py: 
+# solflag.py:
 #
 # Copyright (C) 2007
 # ASTRON (Netherlands Institute for Radio Astronomy)
@@ -68,15 +68,19 @@ def flag(msName, dbName, half_window, threshold, sources=None, storeFlags=True,
     db = lofar.parmdb.parmdb(dbName)
 
     # Get solutions from solution database.
-    elements = ["11","22"]
-    if sources is None:
-        sources = [None]
+    elements = ["0:0", "1:1"]
 
     print "fetching solutions from %s..." % dbName,
     sys.stdout.flush()
     ampl = __fetch(db, elements, stations, sources)
     print "done."
     sys.stdout.flush()
+
+    # Determine the number of directions.
+    if sources is None:
+        n_directions = 1
+    else:
+        n_directions = len(sources)
 
     # Get the number of time samples.
     n_samples = ampl.shape[-1]
@@ -89,7 +93,7 @@ def flag(msName, dbName, half_window, threshold, sources=None, storeFlags=True,
         # Allocate flag array for this station.
         flags = numpy.zeros(n_samples, bool)
 
-        for src in range(0, len(sources)):
+        for src in range(0, n_directions):
             for el in range(0, len(elements)):
                 # Create padded data array.
                 sol = numpy.zeros(n_samples + 2 * half_window)
@@ -140,7 +144,7 @@ def flag(msName, dbName, half_window, threshold, sources=None, storeFlags=True,
                     sol_masked = sol[half_window:half_window + n_samples]
                     sol_masked = sol_masked[mask]
 
-                    fig_index = stat * len(sources) + src + 1
+                    fig_index = stat * n_directions + src + 1
                     pylab.figure(fig_index)
                     if el == 0:
                         pylab.clf()
@@ -176,22 +180,37 @@ def flag(msName, dbName, half_window, threshold, sources=None, storeFlags=True,
 
     print "done."
 
-def __fetch(db, elements, stations, directions=[None]):
+def __fetch(db, elements, stations, directions=None):
     result = None
 
-    for i in range(0, len(elements)):
-        for j in range(0, len(directions)):
-            # Fetch solutions.
+    if directions is None:
+        for i in range(0, len(elements)):
             (ampl, phase) = solfetch.fetch(db, stations, parm="Gain:%s" %
-                elements[i], direction=directions[j])
+                elements[i])
 
             # Allocate result array if necessary.
             if result is None:
-                result = numpy.zeros((len(elements), len(directions),
-                    len(stations), ampl.shape[-1]))
+                result = numpy.zeros((len(elements), 1, len(stations),
+                    ampl.shape[-1]))
 
             # Copy solutions into result array.
             assert(result[i][j].shape == ampl.shape)
             result[i][j] = ampl
+    else:
+        for i in range(0, len(elements)):
+            for j in range(0, len(directions)):
+                # Fetch solutions.
+                (ampl, phase) = solfetch.fetch(db, stations,
+                    parm="DirectionalGain:%s" % elements[i],
+                    direction=directions[j])
+
+                # Allocate result array if necessary.
+                if result is None:
+                    result = numpy.zeros((len(elements), len(directions),
+                        len(stations), ampl.shape[-1]))
+
+                # Copy solutions into result array.
+                assert(result[i][j].shape == ampl.shape)
+                result[i][j] = ampl
 
     return result

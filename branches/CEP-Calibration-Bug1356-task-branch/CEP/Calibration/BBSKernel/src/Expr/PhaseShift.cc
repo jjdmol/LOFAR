@@ -69,13 +69,13 @@ PhaseShift::PhaseShift(const Expr<Vector<2> >::ConstPtr &lhs,
 // complex numbers which can be turned into a cheaper multiplication.
 // exp(x)/exp(y) = (cos(x) + i.sin(x)) / (cos(y) + i.sin(y))
 //               = (cos(x) + i.sin(x)) * (cos(y) - i.sin(y))
-const Scalar::View PhaseShift::evaluateImpl(const Request &request,
+const Scalar::View PhaseShift::evaluateImpl(const Grid &grid,
     const Vector<2>::View &lhs, const Vector<2>::View &rhs) const
 {
     Scalar::View result;
 
-    size_t nChannels = request[FREQ]->size();
-    size_t nTimeslots = request[TIME]->size();
+    size_t nChannels = grid[FREQ]->size();
+    size_t nTimeslots = grid[TIME]->size();
 
     Matrix shift(makedcomplex(0.0, 0.0), nChannels, nTimeslots, false);
     for(size_t ts = 0; ts < nTimeslots; ++ts)

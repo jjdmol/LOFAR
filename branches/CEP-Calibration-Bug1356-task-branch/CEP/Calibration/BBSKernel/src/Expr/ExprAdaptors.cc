@@ -68,7 +68,7 @@ void AsExpr<JonesMatrix>::connect(unsigned int i1, unsigned int i0,
 }
 
 const JonesMatrix AsExpr<JonesMatrix>::evaluateExpr(const Request &request,
-    Cache &cache) const
+    Cache &cache, unsigned int grid) const
 {
     // Allocate result.
     JonesMatrix result;
@@ -77,7 +77,7 @@ const JonesMatrix AsExpr<JonesMatrix>::evaluateExpr(const Request &request,
     Scalar args[4];
     for(unsigned int i = 0; i < 4; ++i)
     {
-        args[i] = itsArg[i]->evaluate(request, cache);
+        args[i] = itsArg[i]->evaluate(request, cache, grid);
         result.setValueSet(i, args[i].getValueSet());
     }
 
@@ -114,15 +114,15 @@ AsDiagonalMatrix::AsDiagonalMatrix(const Expr<Scalar>::ConstPtr &element00,
 }
 
 const JonesMatrix AsDiagonalMatrix::evaluateExpr(const Request &request,
-    Cache &cache) const
+    Cache &cache, unsigned int grid) const
 {
     // Allocate result.
     JonesMatrix result;
 
     // Evaluate arguments (pass through).
     Scalar args[2];
-    args[0] = argument0()->evaluate(request, cache);
-    args[1] = argument1()->evaluate(request, cache);
+    args[0] = argument0()->evaluate(request, cache, grid);
+    args[1] = argument1()->evaluate(request, cache, grid);
 
     result.setValueSet(0, 0, args[0].getValueSet());
     result.assign(0, 1, Matrix(makedcomplex(0.0, 0.0)));
@@ -148,8 +148,8 @@ AsComplex::AsComplex(const Expr<Scalar>::ConstPtr &re,
 {
 }
 
-const Scalar::View AsComplex::evaluateImpl(const Request&,
-    const Scalar::View &re, const Scalar::View &im) const
+const Scalar::View AsComplex::evaluateImpl(const Grid&, const Scalar::View &re,
+    const Scalar::View &im) const
 {
     Scalar::View result;
     result.assign(tocomplex(re(), im()));
@@ -166,8 +166,8 @@ AsPolar::AsPolar(const Expr<Scalar>::ConstPtr &modulus,
 {
 }
 
-const Scalar::View AsPolar::evaluateImpl(const Request&,
-    const Scalar::View &mod, const Scalar::View &arg) const
+const Scalar::View AsPolar::evaluateImpl(const Grid&, const Scalar::View &mod,
+    const Scalar::View &arg) const
 {
     Scalar::View result;
     result.assign(tocomplex(mod() * cos(arg()), mod() * sin(arg())));

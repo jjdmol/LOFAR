@@ -40,7 +40,7 @@ ParmManagerImpl::ParmManagerImpl()
 {
 }
 
-void ParmManagerImpl::initCategory(uint category, const ParmDB &db)
+void ParmManagerImpl::initCategory(unsigned int category, const ParmDB &db)
 {
     // It is assumed that constructing multiple ParmDB objects for the same
     // ParmDB on disk is supported by the ParmDB implementation.
@@ -49,8 +49,8 @@ void ParmManagerImpl::initCategory(uint category, const ParmDB &db)
     itsCategories.insert(make_pair(category, db));
 }
 
-double ParmManagerImpl::getDefaultValue(uint category, const string &name,
-    double value)
+double ParmManagerImpl::getDefaultValue(unsigned int category,
+    const string &name, double value)
 {
     ParmDB &parmDb = getParmDbForCategory(category);
 
@@ -61,16 +61,16 @@ double ParmManagerImpl::getDefaultValue(uint category, const string &name,
     return values(casa::IPosition(values.ndim(), 0));
 }
 
-ParmProxy::Ptr ParmManagerImpl::get(uint category, const string &name)
+ParmProxy::Ptr ParmManagerImpl::get(unsigned int category, const string &name)
 {
     ParmDB &parmDb = getParmDbForCategory(category);
 
-    pair<map<string, pair<uint, uint> >::const_iterator, bool> status =
-        itsParmMap.insert(make_pair(name,
-            make_pair(category, itsParms.size())));
+    pair<map<string, pair<unsigned int, unsigned int> >::const_iterator, bool>
+        status = itsParmMap.insert(make_pair(name, make_pair(category,
+            itsParms.size())));
 
-    const uint parmCat = status.first->second.first;
-    const uint parmId = status.first->second.second;
+    const unsigned int parmCat = status.first->second.first;
+    const unsigned int parmId = status.first->second.second;
 
     // Verify that the parameter belongs to the requested category.
     ASSERTSTR(parmCat == category, "Category mismatch for parameter " << name);
@@ -91,7 +91,7 @@ ParmProxy::Ptr ParmManagerImpl::get(uint category, const string &name)
     return itsParms[parmId];
 }
 
-ParmProxy::Ptr ParmManagerImpl::get(uint category, const string &name,
+ParmProxy::Ptr ParmManagerImpl::get(unsigned int category, const string &name,
     ParmGroup &group)
 {
     ParmProxy::Ptr proxy(get(category, name));
@@ -99,8 +99,14 @@ ParmProxy::Ptr ParmManagerImpl::get(uint category, const string &name,
     return proxy;
 }
 
+Box ParmManagerImpl::domain() const
+{
+    return itsDomain;
+}
+
 void ParmManagerImpl::setDomain(const Box &domain)
 {
+    itsDomain = domain;
     itsParmCache.reset(domain);
 }
 
@@ -211,17 +217,18 @@ bool ParmManagerImpl::isIncluded(const string &candidate,
     return flag;
 }
 
-const ParmDB &ParmManagerImpl::getParmDbForCategory(uint category) const
+const ParmDB &ParmManagerImpl::getParmDbForCategory(unsigned int category) const
 {
-    map<uint, ParmDB>::const_iterator catIt = itsCategories.find(category);
+    map<unsigned int, ParmDB>::const_iterator catIt =
+        itsCategories.find(category);
     ASSERTSTR(catIt != itsCategories.end(), "No ParmDB instance bound to"
         " category: " << category);
     return catIt->second;
 }
 
-ParmDB &ParmManagerImpl::getParmDbForCategory(uint category)
+ParmDB &ParmManagerImpl::getParmDbForCategory(unsigned int category)
 {
-    map<uint, ParmDB>::iterator catIt = itsCategories.find(category);
+    map<unsigned int, ParmDB>::iterator catIt = itsCategories.find(category);
     ASSERTSTR(catIt != itsCategories.end(), "No ParmDB instance bound to"
         " category: " << category);
     return catIt->second;

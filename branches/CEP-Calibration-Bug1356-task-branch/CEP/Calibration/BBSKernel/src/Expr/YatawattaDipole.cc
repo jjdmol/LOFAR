@@ -32,24 +32,22 @@ namespace LOFAR
 namespace BBS
 {
 
-YatawattaDipole::YatawattaDipole(const string &moduleTheta,
-    const string &modulePhi, double scaleFactor,
-    const Expr<Vector<2> >::ConstPtr &azel,
+YatawattaDipole::YatawattaDipole(const casa::Path &moduleTheta,
+    const casa::Path &modulePhi, const Expr<Vector<2> >::ConstPtr &azel,
     const Expr<Scalar>::ConstPtr &orientation)
     :   BasicBinaryExpr<Vector<2>, Scalar, JonesMatrix>(azel, orientation),
         itsThetaFunction(moduleTheta, "test"),
-        itsPhiFunction(modulePhi, "test"),
-        itsScaleFactor(scaleFactor)
+        itsPhiFunction(modulePhi, "test")
 {
     ASSERT(itsThetaFunction.nArguments() == 5);
     ASSERT(itsPhiFunction.nArguments() == 5);
 }
 
-const JonesMatrix::View YatawattaDipole::evaluateImpl(const Request &request,
+const JonesMatrix::View YatawattaDipole::evaluateImpl(const Grid &grid,
     const Vector<2>::View &azel, const Scalar::View &orientation) const
 {
-    const size_t nFreq = request[FREQ]->size();
-    const size_t nTime = request[TIME]->size();
+    const size_t nFreq = grid[FREQ]->size();
+    const size_t nTime = grid[TIME]->size();
 
     // Check preconditions.
     ASSERT(static_cast<size_t>(azel(0).nelements()) == nTime);
@@ -119,18 +117,18 @@ const JonesMatrix::View YatawattaDipole::evaluateImpl(const Request &request,
         for(size_t f = 0; f < nFreq; ++f)
         {
             // Update frequency.
-            xArgs[1] = yArgs[1] = makedcomplex(request[FREQ]->center(f), 0.0);
+            xArgs[1] = yArgs[1] = makedcomplex(grid[FREQ]->center(f), 0.0);
 
             // Compute dipole beam value.
-            const dcomplex xTheta = itsThetaFunction(xArgs) * itsScaleFactor;
-            const dcomplex xPhi = itsPhiFunction(xArgs) * itsScaleFactor;
+            const dcomplex xTheta = itsThetaFunction(xArgs);
+            const dcomplex xPhi = itsPhiFunction(xArgs);
             *E00_re++ = real(xTheta);
             *E00_im++ = imag(xTheta);
             *E01_re++ = real(xPhi);
             *E01_im++ = imag(xPhi);
 
-            const dcomplex yTheta = itsThetaFunction(yArgs) * itsScaleFactor;
-            const dcomplex yPhi = itsPhiFunction(yArgs) * itsScaleFactor;
+            const dcomplex yTheta = itsThetaFunction(yArgs);
+            const dcomplex yPhi = itsPhiFunction(yArgs);
             *E10_re++ = real(yTheta);
             *E10_im++ = imag(yTheta);
             *E11_re++ = real(yPhi);

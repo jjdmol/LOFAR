@@ -45,7 +45,7 @@ public:
     JonesInvert(const Expr<JonesMatrix>::ConstPtr &expr);
 
 protected:
-    virtual const JonesMatrix::View evaluateImpl(const Request &request,
+    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
         const JonesMatrix::View &arg0) const;
 };
 

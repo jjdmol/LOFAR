@@ -33,6 +33,11 @@
 
 #include <casa/Arrays.h>
 
+namespace casa
+{
+    class Path;
+}
+
 namespace LOFAR
 {
 namespace BBS
@@ -46,7 +51,7 @@ class HamakerBeamCoeff
 public:
     HamakerBeamCoeff();
 
-    void init(const string &filename);
+    void init(const casa::Path &coeffFile);
 
     // Center frequency used to scale frequency to range [-1.0, 1.0].
     double center() const;
@@ -74,7 +79,7 @@ public:
         const Expr<Scalar>::ConstPtr &orientation);
 
 protected:
-    virtual const JonesMatrix::View evaluateImpl(const Request &request,
+    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
         const Vector<2>::View &azel, const Scalar::View &orientation) const;
 
 private:

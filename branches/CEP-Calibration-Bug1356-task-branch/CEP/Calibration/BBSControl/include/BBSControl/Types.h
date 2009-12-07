@@ -61,18 +61,18 @@ namespace LOFAR
     // wildcards, like \c * and \c ?. If they do, then all possible baselines
     // will be constructed from the expanded names. Expansion of wildcards
     // will be done in the BBS kernel.
-    // 
-    // For example, suppose that: 
-    // \verbatim 
+    //
+    // For example, suppose that:
+    // \verbatim
     // station1 = ["CS*", "RS1"]
-    // station2 = ["CS*", "RS2"] 
+    // station2 = ["CS*", "RS2"]
     // \endverbatim
     // Furthermore, suppose that \c CS* expands to \c CS1, \c CS2, and \c
     // CS3. Then, in the BBS kernel, seven baselines will be constructed:
     // \verbatim
     // [ CS1:CS1, CS1:CS2, CS1:CS3, CS2:CS2, CS2:CS3, CS3:CS3, RS1:RS2 ]
     // \endverbatim
-    // 
+    //
     // \note Station names are \e not expanded by matching with all existing
     // %LOFAR stations, but only with those that took part in a particular
     // observation; i.e., only those stations that are mentioned in the \c
@@ -88,6 +88,7 @@ namespace LOFAR
     struct CellSize
     {
       CellSize() : freq(0), time(0) {}
+      CellSize(uint32 freq, uint32 time) : freq(freq), time(time) {}
       uint32 freq;	         ///< Size in frequency (number of channels).
       uint32 time;           ///< Size in time (number of timeslots).
     };
@@ -116,7 +117,7 @@ namespace LOFAR
     // @}
 
     // @}
-    
+
   } // namespace BBS
 
 } // namespace LOFAR

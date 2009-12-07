@@ -52,8 +52,8 @@ public:
         FlagType mask);
 
 protected:
-    virtual const Scalar evaluateExpr(const Request &request, Cache &cache)
-        const;
+    virtual const Scalar evaluateExpr(const Request &request, Cache &cache,
+        unsigned int grid) const;
 
 private:
     T_PREDICATE itsPredicate;
@@ -87,10 +87,10 @@ FlagIf<T_PREDICATE>::FlagIf(const Expr<Scalar>::ConstPtr &arg0,
 
 template <typename T_PREDICATE>
 const Scalar FlagIf<T_PREDICATE>::evaluateExpr(const Request &request,
-    Cache &cache) const
+    Cache &cache, unsigned int grid) const
 {
     // Evaluate argument.
-    const Scalar arg0 = argument0()->evaluate(request, cache);
+    const Scalar arg0 = argument0()->evaluate(request, cache, grid);
 
     // Create result.
     Scalar result;
@@ -103,19 +103,18 @@ const Scalar FlagIf<T_PREDICATE>::evaluateExpr(const Request &request,
 
     if(value.isArray())
     {
-        const size_t nFreq = request[FREQ]->size();
-        const size_t nTime = request[TIME]->size();
+        const size_t nFreq = request[grid][FREQ]->size();
+        const size_t nTime = request[grid][TIME]->size();
 
         FlagArray flags(nFreq, nTime);
-        FlagArray::iterator flagIt = flags.begin();
-        FlagArray::iterator flagItEnd = flags.end();
 
         const double *valueIt = value.doubleStorage();
         ASSERT(static_cast<size_t>(value.nelements()) == nFreq * nTime);
 
-        while(flagIt != flagItEnd)
+        for(FlagArray::iterator flagIt = flags.begin(), flagItEnd = flags.end();
+            flagIt != flagItEnd; ++flagIt, ++valueIt)
         {
-            *flagIt++ = itsPredicate(*valueIt++) ? itsFlagMask : 0;
+            *flagIt = itsPredicate(*valueIt) ? itsFlagMask : 0;
         }
 
         result.setFlags(arg0.hasFlags() ? arg0.flags() | flags : flags);

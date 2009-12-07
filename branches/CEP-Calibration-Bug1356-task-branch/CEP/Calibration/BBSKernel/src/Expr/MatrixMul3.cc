@@ -38,7 +38,7 @@ MatrixMul3::MatrixMul3(const Expr<JonesMatrix>::ConstPtr &left,
 {
 }
 
-const JonesMatrix::View MatrixMul3::evaluateImpl(const Request &request,
+const JonesMatrix::View MatrixMul3::evaluateImpl(const Grid &grid,
     const JonesMatrix::View &left, const JonesMatrix::View &mid,
     const JonesMatrix::View &right) const
 {

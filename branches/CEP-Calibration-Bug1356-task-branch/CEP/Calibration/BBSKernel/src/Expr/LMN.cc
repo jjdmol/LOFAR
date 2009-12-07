@@ -43,7 +43,7 @@ LMN::LMN(const casa::MDirection &reference,
 {
 }
 
-const Vector<3>::View LMN::evaluateImpl(const Request &request,
+const Vector<3>::View LMN::evaluateImpl(const Grid &grid,
     const Vector<2>::View &direction) const
 {
     casa::Quantum<casa::Vector<casa::Double> > angles =

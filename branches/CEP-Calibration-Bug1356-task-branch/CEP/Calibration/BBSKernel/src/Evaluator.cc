@@ -1,5 +1,5 @@
-//# Evaluator.cc: Evaluate a model and assign the result to or subtract it from
-//# the visibility data in the chunk.
+//# Evaluator.h: Evaluate an expression and assign, subtract, or add the result
+//# to / from a buffer of visibility data.
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -22,9 +22,9 @@
 //# $Id$
 
 #include <lofar_config.h>
+
 #include <BBSKernel/Evaluator.h>
 #include <BBSKernel/Exceptions.h>
-#include <BBSKernel/Expr/MatrixComplexArr.h>
 
 namespace LOFAR
 {
@@ -33,12 +33,13 @@ namespace BBS
 
 string Evaluator::theirTimerNames[Evaluator::N_Timer] =
     {"ALL",
-    "MODEL_EVAL",
+    "EVAL_RHS",
     "APPLY"};
 
-Evaluator::Evaluator(const VisData::Ptr &chunk, const Model::Ptr &model)
+Evaluator::Evaluator(const VisData::Ptr &chunk,
+    const ExprSet<JonesMatrix>::Ptr &expr)
     :   itsChunk(chunk),
-        itsModel(model)
+        itsExprSet(expr)
 {
     // Set default processing mode.
     setMode(EQUATE);
@@ -48,7 +49,7 @@ Evaluator::Evaluator(const VisData::Ptr &chunk, const Model::Ptr &model)
     setSelection(dims.getBaselines(), dims.getPolarizations());
 
     // Set request grid.
-    itsModel->setRequestGrid(itsChunk->getDimensions().getGrid());
+    itsExprSet->setEvalGrid(itsChunk->getDimensions().getGrid());
 }
 
 void Evaluator::setSelection(const vector<baseline_t> &baselines,
@@ -91,16 +92,16 @@ void Evaluator::setMode(Mode mode)
     switch(mode)
     {
     case EQUATE:
-        itsBlProcessor[0] = &Evaluator::blProcess<OpEq>;
-        itsBlProcessor[1] = &Evaluator::blProcessNoFlags<OpEq>;
+        itsExprProcessor[0] = &Evaluator::procExprWithFlags<OpEq>;
+        itsExprProcessor[1] = &Evaluator::procExpr<OpEq>;
         break;
     case SUBTRACT:
-        itsBlProcessor[0] = &Evaluator::blProcess<OpSub>;
-        itsBlProcessor[1] = &Evaluator::blProcessNoFlags<OpSub>;
+        itsExprProcessor[0] = &Evaluator::procExprWithFlags<OpSub>;
+        itsExprProcessor[1] = &Evaluator::procExpr<OpSub>;
         break;
     case ADD:
-        itsBlProcessor[0] = &Evaluator::blProcess<OpAdd>;
-        itsBlProcessor[1] = &Evaluator::blProcessNoFlags<OpAdd>;
+        itsExprProcessor[0] = &Evaluator::procExprWithFlags<OpAdd>;
+        itsExprProcessor[1] = &Evaluator::procExpr<OpAdd>;
         break;
     default:
         THROW(BBSKernelException, "Invalid mode specified.");
@@ -120,30 +121,33 @@ void Evaluator::process()
     {
         const baseline_t &baseline = itsBaselines[i];
 
-        // Evaluate the model.
-        itsTimers[MODEL_EVAL].start();
-        const JonesMatrix result = itsModel->evaluate(baseline);
-        itsTimers[MODEL_EVAL].stop();
+//        LOG_DEBUG_STR("Baseline: " << baseline.first << " - "
+//            << baseline.second);
+
+        // Evaluate the expression for this baseline.
+        itsTimers[EVAL_RHS].start();
+        const JonesMatrix expr = itsExprSet->evaluate(i);
+        itsTimers[EVAL_RHS].stop();
 
         itsTimers[APPLY].start();
         // Process the visibilities according to the current processing mode.
-        if(result.hasFlags())
+        if(expr.hasFlags())
         {
-            const FlagArray &flags = result.flags();
+            const FlagArray flags = expr.flags();
             if(flags.rank() > 0 || flags(0, 0) != 0)
             {
-                (this->*itsBlProcessor[0])(baseline, result);
+                (this->*itsExprProcessor[0])(baseline, expr);
             }
             else
             {
-                // Optimization: If the flags of the result are scalar and equal
-                // to zero then they can be ignored.
-                (this->*itsBlProcessor[1])(baseline, result);
+                // Optimization: If the flags of the expression are scalar and
+                // equal to zero (false) then they can be ignored.
+                (this->*itsExprProcessor[1])(baseline, expr);
             }
         }
         else
         {
-            (this->*itsBlProcessor[1])(baseline, result);
+            (this->*itsExprProcessor[1])(baseline, expr);
         }
         itsTimers[APPLY].stop();
     }
@@ -157,7 +161,6 @@ void Evaluator::process()
         LOG_DEBUG_STR("TIMER ms " << Evaluator::theirTimerNames[i] << " total "
             << elapsed << " count " << count << " avg " << elapsed / count);
     }
-    LOG_DEBUG_STR("CLONE COUNT: " << MatrixComplexArr::clone_count);
 }
 
 } //# namespace BBS

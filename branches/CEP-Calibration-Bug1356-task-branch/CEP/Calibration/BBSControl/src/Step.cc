@@ -139,59 +139,40 @@ namespace LOFAR
       // for this Step.
       ps.subtractSubset(prefix + "Model.");
 
-      ps.add(prefix + "Model.Phasors.Enabled",
+      ps.add(prefix + "Model.Phasors.Enable",
         toString(itsModelConfig.usePhasors()));
-      ps.add(prefix + "Model.Bandpass.Enabled",
+      ps.add(prefix + "Model.Bandpass.Enable",
         toString(itsModelConfig.useBandpass()));
-      ps.add(prefix + "Model.IsotropicGain.Enabled",
-        toString(itsModelConfig.useIsotropicGain()));
-      ps.add(prefix + "Model.AnisotropicGain.Enabled",
-        toString(itsModelConfig.useAnisotropicGain()));
+      ps.add(prefix + "Model.Gain.Enable",
+        toString(itsModelConfig.useGain()));
+      ps.add(prefix + "Model.DirectionalGain.Enable",
+        toString(itsModelConfig.useDirectionalGain()));
 
-      ps.add(prefix + "Model.Beam.Enabled", toString(itsModelConfig.useBeam()));
+      ps.add(prefix + "Model.Beam.Enable", toString(itsModelConfig.useBeam()));
       if(itsModelConfig.useBeam()) {
-        switch(itsModelConfig.getBeamType())
-        {
-          case ModelConfig::HAMAKER_DIPOLE:
-          {
-            HamakerDipoleConfig config;
-            itsModelConfig.getBeamConfig(config);
-
-            ps.add(prefix + "Model.Beam.Type", "HamakerDipole");
-            ps.add(prefix + "Model.Beam.CoeffFile", config.getCoeffFile());
-            break;
-          }
-
-          case ModelConfig::YATAWATTA_DIPOLE:
-          {
-            YatawattaDipoleConfig config;
-            itsModelConfig.getBeamConfig(config);
-
-            ps.add(prefix + "Model.Beam.Type", "YatawattaDipole");
-            ps.add(prefix + "Model.Beam.ModuleTheta", config.getModuleTheta());
-            ps.add(prefix + "Model.Beam.ModulePhi", config.getModulePhi());
-            break;
-          }
-
-          default:
-            break;
-        }
+        const BeamConfig &config = itsModelConfig.getBeamConfig();
+        ps.add(prefix + "Model.Beam.StationConfig.Name",
+          config.getConfigName());
+        ps.add(prefix + "Model.Beam.StationConfig.Path",
+          config.getConfigPath().originalName());
+        ps.add(prefix + "Model.Beam.Element.Type",
+          config.getElementTypeAsString());
+        ps.add(prefix + "Model.Beam.Element.Path",
+          config.getElementPath().originalName());
       }
 
-      ps.add(prefix + "Model.Ionosphere.Enabled",
+      ps.add(prefix + "Model.Ionosphere.Enable",
         toString(itsModelConfig.useIonosphere()));
       if(itsModelConfig.useIonosphere()) {
-        IonosphereConfig config;
-        itsModelConfig.getIonosphereConfig(config);
+        const IonosphereConfig &config = itsModelConfig.getIonosphereConfig();
         ps.add(prefix + "Model.Ionosphere.Degree",
           toString(config.getDegree()));
       }
 
-      ps.add(prefix + "Model.Flagger.Enabled",
+      ps.add(prefix + "Model.Flagger.Enable",
         toString(itsModelConfig.useFlagger()));
       if(itsModelConfig.useFlagger()) {
-        FlaggerConfig config;
-        itsModelConfig.getFlaggerConfig(config);
+        const FlaggerConfig &config = itsModelConfig.getFlaggerConfig();
         ps.add(prefix + "Model.Flagger.Threshold",
           toString(config.getThreshold()));
       }
@@ -220,119 +201,86 @@ namespace LOFAR
         ps.getStringVector("Correlation.Type", itsCorrelation.type);
 
       // Get the model configuration.
-      itsModelConfig.setPhasors(ps.getBool("Model.Phasors.Enabled",
+      itsModelConfig.setPhasors(ps.getBool("Model.Phasors.Enable",
         itsModelConfig.usePhasors()));
 
-      itsModelConfig.setBandpass(ps.getBool("Model.Bandpass.Enabled",
+      itsModelConfig.setBandpass(ps.getBool("Model.Bandpass.Enable",
         itsModelConfig.useBandpass()));
 
-      itsModelConfig.setIsotropicGain(ps.getBool("Model.IsotropicGain.Enabled",
-        itsModelConfig.useIsotropicGain()));
+      itsModelConfig.setGain(ps.getBool("Model.Gain.Enable",
+        itsModelConfig.useGain()));
 
-      itsModelConfig.setAnisotropicGain
-        (ps.getBool("Model.AnisotropicGain.Enabled",
-          itsModelConfig.useAnisotropicGain()));
+      itsModelConfig.setDirectionalGain
+        (ps.getBool("Model.DirectionalGain.Enable",
+          itsModelConfig.useDirectionalGain()));
 
-      if(ps.getBool("Model.Beam.Enabled", itsModelConfig.useBeam())) {
-        ModelConfig::BeamType beamType = ModelConfig::UNKNOWN_BEAM_TYPE;
+      if(ps.getBool("Model.Beam.Enable", itsModelConfig.useBeam())) {
+        BeamConfig parentConfig = itsModelConfig.getBeamConfig();
 
+        string elementTypeString = ps.getString("Model.Beam.Element.Type",
+          parentConfig.getElementTypeAsString());
+        BeamConfig::ElementType elementType =
+          BeamConfig::getElementTypeFromString(elementTypeString);
+
+        if(elementType == BeamConfig::UNKNOWN) {
+          THROW(BBSControlException, "Key Model.Beam.Element.Type not found or"
+            " invalid.");
+        }
+
+        string defaultPath;
+        if(itsModelConfig.useBeam()
+          && parentConfig.getElementType() == elementType) {
+          defaultPath = parentConfig.getElementPath().originalName();
+        } else if(elementType == BeamConfig::HAMAKER_LBA
+          || elementType == BeamConfig::HAMAKER_HBA) {
+          defaultPath = "$LOFARROOT/share";
+        } else {
+          defaultPath = "$LOFARROOT/lib";
+        }
+
+        string elementPath = ps.getString("Model.Beam.Element.Path",
+          defaultPath);
+
+        string configName, configPath;
         if(itsModelConfig.useBeam()) {
-          beamType = itsModelConfig.getBeamType();
+          configName = ps.getString("Model.Beam.StationConfig.Name",
+            parentConfig.getConfigName());
+          configPath = ps.getString("Model.Beam.StationConfig.Path",
+            parentConfig.getConfigPath().originalName());
+        } else {
+          configName = ps.getString("Model.Beam.StationConfig.Name");
+          configPath = ps.getString("Model.Beam.StationConfig.Path");
         }
 
-        if(ps.isDefined("Model.Beam.Type")) {
-          string typeString(ps.getString("Model.Beam.Type"));
-
-          if(typeString == "HamakerDipole") {
-            beamType = ModelConfig::HAMAKER_DIPOLE;
-          } else if(typeString == "YatawattaDipole") {
-            beamType = ModelConfig::YATAWATTA_DIPOLE;
-          }
-        }
-
-        switch(beamType) {
-          case ModelConfig::HAMAKER_DIPOLE:
-          {
-            HamakerDipoleConfig parentConfig;
-
-            if(itsModelConfig.useBeam()
-              && itsModelConfig.getBeamType() == beamType) {
-                itsModelConfig.getBeamConfig(parentConfig);
-            }
-
-            string coeffFile = ps.getString("Model.Beam.CoeffFile",
-              parentConfig.getCoeffFile());
-
-            if(coeffFile.empty()) {
-              THROW(BBSControlException, "Key Model.Beam.CoeffFile not found.");
-            }
-
-            itsModelConfig.clearBeamConfig();
-            itsModelConfig.setBeamConfig(HamakerDipoleConfig(coeffFile));
-            break;
-          }
-
-          case ModelConfig::YATAWATTA_DIPOLE:
-          {
-            YatawattaDipoleConfig parentConfig;
-
-            if(itsModelConfig.useBeam()
-              && itsModelConfig.getBeamType() == beamType) {
-                itsModelConfig.getBeamConfig(parentConfig);
-            }
-
-            string moduleTheta = ps.getString("Model.Beam.ModuleTheta",
-              parentConfig.getModuleTheta());
-            if(moduleTheta.empty()) {
-              THROW(BBSControlException, "Key Model.Beam.ModuleTheta not"
-                " found.");
-            }
-
-            string modulePhi = ps.getString("Model.Beam.ModulePhi",
-              parentConfig.getModulePhi());
-            if(modulePhi.empty()) {
-              THROW(BBSControlException, "Key Model.Beam.ModulePhi not found.");
-            }
-
-            itsModelConfig.clearBeamConfig();
-            itsModelConfig.setBeamConfig(YatawattaDipoleConfig(moduleTheta,
-              modulePhi));
-            break;
-          }
-
-          default:
-            THROW(BBSControlException, "Key Model.Beam.Type not found or"
-              " invalid.");
-        }
+        itsModelConfig.setBeamConfig(BeamConfig(configName,
+          casa::Path(configPath), elementType, casa::Path(elementPath)));
       } else {
         itsModelConfig.clearBeamConfig();
       }
 
-      if(ps.getBool("Model.Ionosphere.Enabled", itsModelConfig.useIonosphere()))
+      if(ps.getBool("Model.Ionosphere.Enable", itsModelConfig.useIonosphere()))
       {
-        IonosphereConfig parentConfig;
-
+        unsigned int degree = 0;
         if(itsModelConfig.useIonosphere()) {
-          itsModelConfig.getIonosphereConfig(parentConfig);
+          degree = ps.getUint("Model.Ionosphere.Degree",
+            itsModelConfig.getIonosphereConfig().getDegree());
+        } else {
+          degree = ps.getUint("Model.Ionosphere.Degree");
         }
-
-        unsigned int degree = ps.getUint("Model.Ionosphere.Degree",
-          parentConfig.getDegree());
 
         itsModelConfig.setIonosphereConfig(IonosphereConfig(degree));
       } else {
         itsModelConfig.clearIonosphereConfig();
       }
 
-      if(ps.getBool("Model.Flagger.Enabled", itsModelConfig.useFlagger())) {
-        FlaggerConfig parentConfig;
-
+      if(ps.getBool("Model.Flagger.Enable", itsModelConfig.useFlagger())) {
+        double threshold = 0.0;
         if(itsModelConfig.useFlagger()) {
-          itsModelConfig.getFlaggerConfig(parentConfig);
+          threshold = ps.getDouble("Model.Flagger.Threshold",
+            itsModelConfig.getFlaggerConfig().getThreshold());
+        } else {
+          threshold = ps.getDouble("Model.Flagger.Threshold");
         }
-
-        double threshold = ps.getDouble("Model.Flagger.Threshold",
-          parentConfig.getThreshold());
 
         itsModelConfig.setFlaggerConfig(FlaggerConfig(threshold));
       } else {

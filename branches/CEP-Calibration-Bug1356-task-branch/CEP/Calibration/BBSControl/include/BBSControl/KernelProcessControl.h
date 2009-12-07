@@ -115,6 +115,8 @@ private:
     // Return the current state as a string.
     const string& showState() const;
 
+    Axis::ShPtr getCalGroupFreqAxis(const vector<uint32> &groups) const;
+
     bool parseProductSelection(vector<string> &result, const Step &command)
         const;
 
@@ -130,19 +132,16 @@ private:
     KernelIndex                             itsKernelIndex;
 
     // Measurement.
-    Measurement::Ptr                    itsMeasurement;
+    Measurement::Ptr                        itsMeasurement;
     string                                  itsInputColumn;
-
-    // Global time axis.
-    Axis::ShPtr                             itsGlobalTimeAxis;
 
     // Chunk.
     Box                                     itsDomain;
     VisSelection                            itsChunkSelection;
-    VisData::Ptr                        itsChunk;
+    VisData::Ptr                            itsChunk;
 
-    // Model
-    Model::Ptr                          itsModel;
+//    // Model
+//    Model::Ptr                              itsModel;
 
     // Source Database
     shared_ptr<SourceDB>                    itsSourceDb;

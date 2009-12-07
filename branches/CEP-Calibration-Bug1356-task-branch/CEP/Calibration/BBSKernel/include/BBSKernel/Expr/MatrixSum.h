@@ -49,8 +49,8 @@ public:
 protected:
     virtual unsigned int nArguments() const;
     virtual ExprBase::ConstPtr argument(unsigned int i) const;
-    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache)
-        const;
+    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache,
+        unsigned int grid) const;
 
 private:
     void merge(const ValueSet &in, ValueSet &out) const;

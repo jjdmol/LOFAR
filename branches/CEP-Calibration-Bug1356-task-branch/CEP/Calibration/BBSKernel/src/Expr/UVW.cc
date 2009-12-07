@@ -37,15 +37,15 @@ UVW::UVW(const VisData::Ptr &chunk,
 {
 }
 
-ValueSet::ConstPtr UVW::evaluateImpl(const Request &request) const
+ValueSet::ConstPtr UVW::evaluateImpl(const Grid &grid) const
 {
-    const size_t nFreq = request[FREQ]->size();
-    const size_t nTime = request[TIME]->size();
+    const size_t nFreq = grid[FREQ]->size();
+    const size_t nTime = grid[TIME]->size();
 
     // Find the offset of the request grid relative to the chunk grid.
     const Grid &visGrid = itsChunk->getDimensions().getGrid();
-    const size_t tstart = visGrid[TIME]->locate(request[TIME]->start());
-    const size_t tend = visGrid[TIME]->locate(request[TIME]->end(), false);
+    const size_t tstart = visGrid[TIME]->locate(grid[TIME]->start());
+    const size_t tend = visGrid[TIME]->locate(grid[TIME]->end(), false);
     ASSERT(tend - tstart + 1 == nTime);
 
     const size_t bl = itsChunk->getDimensions().getBaselineIndex(itsBaseline);
@@ -72,7 +72,7 @@ ValueSet::ConstPtr UVW::evaluateImpl(const Request &request) const
 
         for(int f = 0; f < static_cast<int>(nFreq); ++f)
         {
-            const double freq = request[FREQ]->center(f);
+            const double freq = grid[FREQ]->center(f);
             Up[t * nFreq + f] = u * freq;
             Vp[t * nFreq + f] = v * freq;
             Wp[t * nFreq + f] = w * freq;

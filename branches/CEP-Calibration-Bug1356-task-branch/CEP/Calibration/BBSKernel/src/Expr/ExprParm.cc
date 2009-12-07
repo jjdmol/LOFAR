@@ -60,11 +60,12 @@ ExprBase::ConstPtr ExprParm::argument(unsigned int) const
     ASSERT(false);
 }
 
-const Scalar ExprParm::evaluateExpr(const Request &request, Cache &cache) const
+const Scalar ExprParm::evaluateExpr(const Request &request, Cache &cache,
+    unsigned int grid) const
 {
     // Get the result from the Parm.
     vector<casa::Array<double> > buffers;
-    itsParm->getResult(buffers, request.getGrid(), getPValueFlag()); //false);
+    itsParm->getResult(buffers, request[grid], getPValueFlag()); //false);
     ASSERT(buffers.size() > 0);
 
     // Transform into an ExprResult.
@@ -83,8 +84,8 @@ const Scalar ExprParm::evaluateExpr(const Request &request, Cache &cache) const
     else
     {
         const casa::IPosition &shape = buffers[0].shape();
-        DBGASSERT(static_cast<unsigned int>(shape(0)) == request[FREQ]->size()
-            && static_cast<unsigned int>(shape(1)) == request[TIME]->size());
+        DBGASSERT(static_cast<unsigned int>(shape(0)) == request[grid][FREQ]->size()
+            && static_cast<unsigned int>(shape(1)) == request[grid][TIME]->size());
         result.assign(Matrix(storage, shape(0), shape(1)));
     }
     buffers[0].freeStorage(storage, deleteStorage);

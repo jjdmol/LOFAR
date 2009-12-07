@@ -34,7 +34,7 @@ PointCoherence::PointCoherence(const PointSource::ConstPtr &source)
 {
 }
 
-const JonesMatrix::View PointCoherence::evaluateImpl(const Request &request,
+const JonesMatrix::View PointCoherence::evaluateImpl(const Grid &grid,
     const Vector<4>::View &stokes) const
 {
     JonesMatrix::View result;

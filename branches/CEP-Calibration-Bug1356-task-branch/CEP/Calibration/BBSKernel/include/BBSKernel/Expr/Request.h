@@ -1,4 +1,4 @@
-//# Request.h: Request grid on which to evaluate an expression.
+//# Request.h: Request grid(s) on which to evaluate an expression.
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -24,9 +24,11 @@
 #define LOFAR_BBSKERNEL_EXPR_REQUEST_H
 
 // \file
-// Request grid on which to evaluate an expression.
+// Request grid(s) on which to evaluate an expression.
 
 #include <BBSKernel/Types.h>
+
+#include <Common/LofarLogger.h>
 #include <ParmDB/Grid.h>
 
 namespace LOFAR
@@ -46,25 +48,22 @@ public:
     Request(const Grid &grid);
 
     RequestId id() const;
-
-    Box getBoundingBox() const;
-
-    const Axis::ShPtr &operator[](unsigned int i) const;
-
-    const Grid &getGrid() const;
+    const Box &domain() const;
+    const Grid &operator[](unsigned int i) const;
+    void append(const Grid &grid);
 
 private:
     RequestId           itsId;
-    Grid                itsGrid;
+    Box                 itsDomain;
+    vector<Grid>        itsGrid;
 
     static RequestId    theirId;
 };
 
 // @}
 
-
 // -------------------------------------------------------------------------- //
-// - Implementation: RefCountable                                           - //
+// - Implementation: Request                                                - //
 // -------------------------------------------------------------------------- //
 
 inline RequestId Request::id() const
@@ -72,25 +71,16 @@ inline RequestId Request::id() const
     return itsId;
 }
 
-inline Box Request::getBoundingBox() const
+inline const Box &Request::domain() const
 {
-    return itsGrid.getBoundingBox();
+    return itsDomain;
 }
 
-inline const Axis::ShPtr &Request::operator[](unsigned int i) const
+inline const Grid &Request::operator[](unsigned int i) const
 {
+    DBGASSERT(i < itsGrid.size());
     return itsGrid[i];
 }
-
-inline const Grid &Request::getGrid() const
-{
-    return itsGrid;
-}
-
-//bool Request::getPValueFlag() const
-//{
-//    return itsPValueFlag;
-//}
 
 } //# namespace BBS
 } //# namespace LOFAR

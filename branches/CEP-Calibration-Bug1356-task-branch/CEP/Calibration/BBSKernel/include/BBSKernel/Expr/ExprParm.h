@@ -53,8 +53,8 @@ protected:
     virtual unsigned int nArguments() const;
     virtual ExprBase::ConstPtr argument(unsigned int) const;
 
-    virtual const Scalar evaluateExpr(const Request &request, Cache &cache)
-        const;
+    virtual const Scalar evaluateExpr(const Request &request, Cache &cache,
+        unsigned int grid) const;
 
 private:
     ParmProxy::ConstPtr itsParm;

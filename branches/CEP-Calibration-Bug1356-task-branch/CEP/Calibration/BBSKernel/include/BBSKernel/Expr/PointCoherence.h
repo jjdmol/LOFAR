@@ -46,7 +46,7 @@ public:
     PointCoherence(const PointSource::ConstPtr &source);
 
 protected:
-    virtual const JonesMatrix::View evaluateImpl(const Request &request,
+    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
         const Vector<4>::View &stokes) const;
 };
 

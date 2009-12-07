@@ -51,10 +51,10 @@ public:
 
 protected:
     virtual const T_EXPR_VALUE evaluateExpr(const Request &request,
-        Cache &cache) const;
+        Cache &cache, unsigned int grid) const;
 
     virtual const typename T_EXPR_VALUE::View evaluateImpl
-        (const Request &request, const typename T_ARG0::View &arg0) const = 0;
+        (const Grid &grid, const typename T_ARG0::View &arg0) const = 0;
 };
 
 template <typename T_ARG0, typename T_ARG1, typename T_EXPR_VALUE>
@@ -72,10 +72,10 @@ public:
 
 protected:
     virtual const T_EXPR_VALUE evaluateExpr(const Request &request,
-        Cache &cache) const;
+        Cache &cache, unsigned int grid) const;
 
     virtual const typename T_EXPR_VALUE::View evaluateImpl
-        (const Request &request, const typename T_ARG0::View &arg0,
+        (const Grid &grid, const typename T_ARG0::View &arg0,
         const typename T_ARG1::View &arg1) const = 0;
 };
 
@@ -97,10 +97,10 @@ public:
 
 protected:
     virtual const T_EXPR_VALUE evaluateExpr(const Request &request,
-        Cache &cache) const;
+        Cache &cache, unsigned int grid) const;
 
     virtual const typename T_EXPR_VALUE::View evaluateImpl
-        (const Request &request, const typename T_ARG0::View &arg0,
+        (const Grid &grid, const typename T_ARG0::View &arg0,
         const typename T_ARG1::View &arg1, const typename T_ARG2::View &arg2)
         const = 0;
 };
@@ -133,10 +133,10 @@ public:
 
 protected:
     virtual const T_EXPR_VALUE evaluateExpr(const Request &request,
-        Cache &cache) const;
+        Cache &cache, unsigned int grid) const;
 
     virtual const typename T_EXPR_VALUE::View evaluateImpl
-        (const Request &request, const typename T_ARG0::View &arg0,
+        (const Grid &grid, const typename T_ARG0::View &arg0,
         const typename T_ARG1::View &arg1, const typename T_ARG2::View &arg2,
         const typename T_ARG3::View &arg3, const typename T_ARG4::View &arg4)
         const = 0;
@@ -157,24 +157,24 @@ BasicUnaryExpr<T_ARG0, T_EXPR_VALUE>::BasicUnaryExpr
 
 template <typename T_ARG0, typename T_EXPR_VALUE>
 const T_EXPR_VALUE BasicUnaryExpr<T_ARG0, T_EXPR_VALUE>::evaluateExpr
-    (const Request &request, Cache &cache) const
+    (const Request &request, Cache &cache, unsigned int grid) const
 {
     T_EXPR_VALUE result;
 
     // Evaluate arguments.
-    const T_ARG0 arg0 = argument0()->evaluate(request, cache);
+    const T_ARG0 arg0 = argument0()->evaluate(request, cache, grid);
 
     // Evaluate flags.
     result.setFlags(arg0.flags());
 
     // Compute main value.
-    result.assign(evaluateImpl(request, arg0.view()));
+    result.assign(evaluateImpl(request[grid], arg0.view()));
 
     // Compute perturbed values.
     typename T_ARG0::Iterator it0(arg0);
     while(!it0.atEnd())
     {
-        result.assign(it0.key(), evaluateImpl(request, it0.value()));
+        result.assign(it0.key(), evaluateImpl(request[grid], it0.value()));
         it0.advance();
     }
 
@@ -195,14 +195,14 @@ BasicBinaryExpr<T_ARG0, T_ARG1, T_EXPR_VALUE>::BasicBinaryExpr
 
 template <typename T_ARG0, typename T_ARG1, typename T_EXPR_VALUE>
 const T_EXPR_VALUE BasicBinaryExpr<T_ARG0, T_ARG1, T_EXPR_VALUE>::evaluateExpr
-    (const Request &request, Cache &cache) const
+    (const Request &request, Cache &cache, unsigned int grid) const
 {
     // Allocate result.
     T_EXPR_VALUE result;
 
     // Evaluate arguments.
-    const T_ARG0 arg0 = argument0()->evaluate(request, cache);
-    const T_ARG1 arg1 = argument1()->evaluate(request, cache);
+    const T_ARG0 arg0 = argument0()->evaluate(request, cache, grid);
+    const T_ARG1 arg1 = argument1()->evaluate(request, cache, grid);
 
     // Evaluate flags.
     FlagArray flags[2];
@@ -211,7 +211,7 @@ const T_EXPR_VALUE BasicBinaryExpr<T_ARG0, T_ARG1, T_EXPR_VALUE>::evaluateExpr
     result.setFlags(mergeFlags(flags, flags + 2));
 
     // Compute main value.
-    result.assign(evaluateImpl(request, arg0.view(), arg1.view()));
+    result.assign(evaluateImpl(request[grid], arg0.view(), arg1.view()));
 
     // Compute perturbed values.
     typename T_ARG0::Iterator it0(arg0);
@@ -221,7 +221,7 @@ const T_EXPR_VALUE BasicBinaryExpr<T_ARG0, T_ARG1, T_EXPR_VALUE>::evaluateExpr
     while(!(it0.atEnd() && it1.atEnd()))
     {
         key = std::min(it0.key(), it1.key());
-        result.assign(key, evaluateImpl(request, it0.value(key),
+        result.assign(key, evaluateImpl(request[grid], it0.value(key),
             it1.value(key)));
         it0.advance(key);
         it1.advance(key);
@@ -247,15 +247,16 @@ BasicTernaryExpr<T_ARG0, T_ARG1, T_ARG2, T_EXPR_VALUE>::BasicTernaryExpr
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2,
     typename T_EXPR_VALUE>
 const T_EXPR_VALUE BasicTernaryExpr<T_ARG0, T_ARG1, T_ARG2,
-    T_EXPR_VALUE>::evaluateExpr(const Request &request, Cache &cache) const
+    T_EXPR_VALUE>::evaluateExpr(const Request &request, Cache &cache,
+    unsigned int grid) const
 {
     // Allocate result.
     T_EXPR_VALUE result;
 
     // Evaluate arguments.
-    const T_ARG0 arg0 = argument0()->evaluate(request, cache);
-    const T_ARG1 arg1 = argument1()->evaluate(request, cache);
-    const T_ARG2 arg2 = argument2()->evaluate(request, cache);
+    const T_ARG0 arg0 = argument0()->evaluate(request, cache, grid);
+    const T_ARG1 arg1 = argument1()->evaluate(request, cache, grid);
+    const T_ARG2 arg2 = argument2()->evaluate(request, cache, grid);
 
     // Evaluate flags.
     FlagArray flags[3];
@@ -265,7 +266,8 @@ const T_EXPR_VALUE BasicTernaryExpr<T_ARG0, T_ARG1, T_ARG2,
     result.setFlags(mergeFlags(flags, flags + 3));
 
     // Compute main value.
-    result.assign(evaluateImpl(request, arg0.view(), arg1.view(), arg2.view()));
+    result.assign(evaluateImpl(request[grid], arg0.view(), arg1.view(),
+        arg2.view()));
 
     // Compute perturbed values.
     typename T_ARG0::Iterator it0(arg0);
@@ -276,7 +278,7 @@ const T_EXPR_VALUE BasicTernaryExpr<T_ARG0, T_ARG1, T_ARG2,
     while(!(it0.atEnd() && it1.atEnd() && it2.atEnd()))
     {
         key = std::min(std::min(it0.key(), it1.key()), it2.key());
-        result.assign(key, evaluateImpl(request, it0.value(key),
+        result.assign(key, evaluateImpl(request[grid], it0.value(key),
             it1.value(key), it2.value(key)));
         it0.advance(key);
         it1.advance(key);
@@ -306,17 +308,18 @@ BasicExpr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
     typename T_ARG4, typename T_EXPR_VALUE>
 const T_EXPR_VALUE BasicExpr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
-    T_EXPR_VALUE>::evaluateExpr(const Request &request, Cache &cache) const
+    T_EXPR_VALUE>::evaluateExpr(const Request &request, Cache &cache,
+    unsigned int grid) const
 {
     // Allocate result.
     T_EXPR_VALUE result;
 
     // Evaluate arguments.
-    const T_ARG0 arg0 = argument0()->evaluate(request, cache);
-    const T_ARG1 arg1 = argument1()->evaluate(request, cache);
-    const T_ARG2 arg2 = argument2()->evaluate(request, cache);
-    const T_ARG3 arg3 = argument3()->evaluate(request, cache);
-    const T_ARG4 arg4 = argument4()->evaluate(request, cache);
+    const T_ARG0 arg0 = argument0()->evaluate(request, cache, grid);
+    const T_ARG1 arg1 = argument1()->evaluate(request, cache, grid);
+    const T_ARG2 arg2 = argument2()->evaluate(request, cache, grid);
+    const T_ARG3 arg3 = argument3()->evaluate(request, cache, grid);
+    const T_ARG4 arg4 = argument4()->evaluate(request, cache, grid);
 
     // Evaluate flags.
     FlagArray flags[5];
@@ -328,8 +331,8 @@ const T_EXPR_VALUE BasicExpr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
     result.setFlags(mergeFlags(flags, flags + 5));
 
     // Compute main value.
-    result.assign(evaluateImpl(request, arg0.view(), arg1.view(), arg2.view(),
-        arg3.view(), arg4.view()));
+    result.assign(evaluateImpl(request[grid], arg0.view(), arg1.view(),
+        arg2.view(), arg3.view(), arg4.view()));
 
     // Compute perturbed values.
     typename T_ARG0::Iterator it0(arg0);
@@ -348,7 +351,7 @@ const T_EXPR_VALUE BasicExpr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
         key = std::min(key, it3.key());
         key = std::min(key, it4.key());
 
-        result.assign(key, evaluateImpl(request, it0.value(key),
+        result.assign(key, evaluateImpl(request[grid], it0.value(key),
             it1.value(key), it2.value(key), it3.value(key), it4.value(key)));
 
         it0.advance(key);

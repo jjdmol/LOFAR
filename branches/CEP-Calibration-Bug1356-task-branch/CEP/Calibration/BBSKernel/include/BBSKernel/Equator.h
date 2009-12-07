@@ -26,13 +26,14 @@
 // \file
 // Generate normal equations that tie a model to an observation.
 
-#include <BBSKernel/Model.h>
+#include <BBSKernel/ExprSet.h>
 #include <BBSKernel/SolverInterfaceTypes.h>
-#include <BBSKernel/VisData.h>
+#include <BBSKernel/Types.h>
+#include <BBSKernel/Expr/ExprResult.h>
 
 #include <Common/Timer.h>
-#include <Common/LofarTypes.h>
 #include <Common/lofar_map.h>
+#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
@@ -45,18 +46,14 @@ namespace BBS
 class Equator
 {
 public:
-    Equator(const VisData::Ptr &chunk, const Model::Ptr &model,
-        const Grid &grid, const CoeffIndex &coeffIndex);
-
-    // Set subset of visibility data to process.
-    void setSelection(const vector<baseline_t> &baselines,
-        const vector<string> &products);
+    Equator(const ExprSet<JonesMatrix>::Ptr &lhs,
+        const ExprSet<JonesMatrix>::Ptr &rhs, const Grid &evalGrid,
+        const Grid &solGrid, const CoeffIndex &coeffIndex);
 
     // Set the (inclusive) range of cells of the solution grid to process.
     void setCellSelection(const Location &start, const Location &end);
 
     // Generate equations.
-    // TODO: Use output iterators instead of a non-const reference.
     void process(vector<CellEquation> &out);
 
 private:
@@ -73,18 +70,21 @@ private:
     };
 
     // Nested class that holds the temporary buffers needed while processing
-    // a baseline and some counters and timers used to gather processing
-    // statistics. The reason this is collected in a class is that it is easy to
-    // create a thread-private instance for each thread should this code be
-    // parallelized. Also, it is a way of grouping a number of members that
-    // belong together semantically.
-    class BlContext
+    // a single expression from the set and some counters and timers used to
+    // gather processing statistics. This is collected in a nested class such
+    // that it's easy to create a thread-private instance for each thread should
+    // this code be parallelized. Also, it is a way of grouping a number of
+    // members that belong together semantically.
+    class ProcContext
     {
     public:
-        BlContext();
+        ProcContext();
 
         void resize(unsigned int nCoeff);
         void reset();
+
+        // Number of expression specific coefficients.
+        size_t                  nCoeff;
 
         // Mapping from available partial derivatives (parmId, coeffId) to a
         // coefficient index in the normal matrix.
@@ -97,25 +97,24 @@ private:
         // Statistics and timers.
         size_t                  count;
 
-        enum BlContextTimer
+        enum ProcTimer
         {
-            MODEL_EVAL,
+            EVAL_LHS,
+            EVAL_RHS,
+            MERGE_FLAGS,
             EQUATE,
-            BUILD_INDEX,
+            MAKE_COEFF_MAP,
             TRANSPOSE,
             MAKE_NORM,
-            N_BlContextTimer
+            N_ProcTimer
         };
 
-        static string           timerNames[N_BlContextTimer];
-        NSTimer                 timers[N_BlContextTimer];
+        static string           timerNames[N_ProcTimer];
+        NSTimer                 timers[N_ProcTimer];
     };
 
-    // Return the number of solvable coefficients.
-    size_t getCoeffCount() const;
-
     // Create a mapping for each axis that maps from cells in the solution grid
-    // to cell intervals in the observation (chunk) grid.
+    // to cell intervals in the evaluation grid.
     void makeGridMapping();
 
     // Create a mapping from cells of axis "from" to cell intervals on axis
@@ -125,47 +124,56 @@ private:
         const Axis::ShPtr &to) const;
 
     // Create a mapping from (parmId, coeffId) to a coefficient index in the
-    // normal equations.
+    // condition equations.
     void makeCoeffMapping(const CoeffIndex &index);
 
-    // Generate normal equations for a single baseline.
+    // Compute partial derivatives and generate a look-up table for the index of
+    // the corresponding coefficients in the condition equations for a single
+    // expression from the set.
+    void makeExprCoeffMapping(const ValueSet &lhs, const ValueSet &rhs,
+        ProcContext &context);
+
+    // Generate normal equations for a single expression from the set.
     template <typename T_ITER>
-    void blProcess(T_ITER outputEqIt, const baseline_t &baseline,
-        const Location &selStart, const Location &selEnd, BlContext &context);
+    void procExpr(T_ITER result, size_t idx, ProcContext &context);
 
-    // Observed visibilities.
-    VisData::Ptr                        itsChunk;
-    // Model of the sky and the instrument.
-    Model::Ptr                          itsModel;
+    // Sets of expressions between which the difference is to be minimized.
+    ExprSet<JonesMatrix>::Ptr     itsLHS;
+    ExprSet<JonesMatrix>::Ptr     itsRHS;
+
+    // Evaluation grid.
+    Grid                                itsEvalGrid;
     // Solution grid.
-    Grid                                itsGrid;
+    Grid                                itsSolGrid;
 
-    // Selection of the visibility data to process.
-    vector<baseline_t>                  itsBaselines;
-    int                                 itsProductMask[4];
-
-    // Is the intersection between the solution grid and the available
-    // visibility data empty?
+    // Is the intersection between the solution grid and the evaluation grid
+    // empty?
     bool                                itsIntersectionEmpty;
-    // Location in the solution grid of the current chunk's start and end cell.
-    Location                            itsChunkStart, itsChunkEnd;
+    // Location in the solution grid of the start and end of the evaluation
+    // grid.
+    Location                            itsEvalStart, itsEvalEnd;
     // Location in the solution grid of the current selection (clipped against
-    // the available visibility data).
+    // the evaluation grid).
     Location                            itsSelectionStart, itsSelectionEnd;
     // The number of cells in the current selection (clipped against the
-    // available visibility data).
+    // evaluation grid).
     unsigned int                        itsSelectedCellCount;
+    // Location in the solution grid of the current selection relative to the
+    // start (in the solution grid) of the evaluation grid.
+    Location                            itsEvalSelStart, itsEvalSelEnd;
+    // Location in the evaluation grid of the current selection.
+    Location                            itsReqStart, itsReqEnd;
 
     // Mapping of cells in the solution grid to intervals of cells along the
     // observation grid's axes.
     vector<Interval>                    itsFreqIntervals, itsTimeIntervals;
 
-    // Mapping from (parmId, coeffId) to a coefficient index in the normal
+    // Mapping from (parmId, coeffId) to a coefficient index in the condition
     // equations.
     map<PValueKey, unsigned int>        itsCoeffMap;
 
-    // Baseline processing buffers.
-    BlContext                           itsBlContext;
+    // Expression processing buffers.
+    ProcContext                         itsProcContext;
 };
 
 // @}
@@ -174,83 +182,91 @@ private:
 // - Equator implementation                                                 - //
 // -------------------------------------------------------------------------- //
 
-inline size_t Equator::getCoeffCount() const
-{
-    return itsCoeffMap.size();
-}
-
 template <typename T_ITER>
-void Equator::blProcess(T_ITER outputEqIt, const baseline_t &baseline,
-    const Location &selStart, const Location &selEnd, BlContext &context)
+void Equator::procExpr(T_ITER result, size_t idx, ProcContext &context)
 {
-    // Evaluate the model.
-    context.timers[BlContext::MODEL_EVAL].start();
-    const JonesMatrix model = itsModel->evaluate(baseline);
+    // Evaluate the left hand side.
+    context.timers[ProcContext::EVAL_LHS].start();
+    const JonesMatrix LHS = itsLHS->evaluate(idx);
+    context.timers[ProcContext::EVAL_LHS].stop();
 
-    // If the model contains no flags, assume no sample is flagged.
+    // Evaluate the right hand side.
+    context.timers[ProcContext::EVAL_RHS].start();
+    const JonesMatrix RHS = itsRHS->evaluate(idx);
+    context.timers[ProcContext::EVAL_RHS].stop();
+
+    // If the model contains no flags, assume no samples are flagged.
     // TODO: This incurs a cost for models that do not contain flags because
     // a call to virtual FlagArray::operator() is made for each sample.
-    const FlagArray flags =
-        (model.hasFlags() ? model.flags() : FlagArray((FlagType())));
-    context.timers[BlContext::MODEL_EVAL].stop();
+    context.timers[ProcContext::MERGE_FLAGS].start();
+
+    FlagArray flags(FlagType(0));
+
+    if(LHS.hasFlags())
+    {
+        flags = flags | LHS.flags();
+    }
+
+    if(RHS.hasFlags())
+    {
+        flags = flags | RHS.flags();
+    }
+    context.timers[ProcContext::MERGE_FLAGS].stop();
 
     // Construct equations.
-    context.timers[BlContext::EQUATE].start();
+    //
+    // Both LHS and RHS may depend on parameters and any parameter may appear
+    // in both LHS and RHS. Therefore, essentially the model is LHS - RHS (or
+    // alternatively RHS - LHS) and the observables are all zero.
+    //
+    // In the condition equations, the partial derivatives of the model with
+    // respect to the parameters appear with a positive sign. The partial
+    // derivative of LHS - RHS with respect to a parameter p equals:
+    //
+    // (1) d(LHS - RHS)/d(p) = d(LHS)/d(p) - d(RHS)/d(p)
+    //
+    // However, it is often the case that LHS has no associated parameters
+    // (because it represents observed visibility data), while RHS does.
+    // Following equation (1) then requires negation of all the partial
+    // derivatives of RHS. This is avoided by using RHS - LHS as the model
+    // instead of LHS - RHS.
 
-    // Find baseline index.
-    // NB. VisDimensions::getBaselineIndex() could throw an exception.
-    const size_t bl = itsChunk->getDimensions().getBaselineIndex(baseline);
+    context.timers[ProcContext::EQUATE].start();
 
-    // Offset in the visibility grid of the start of the selected cells.
-    const Location visStart(itsFreqIntervals[selStart.first].start,
-        itsTimeIntervals[selStart.second].start);
+    // Offset in the evaluation grid of the start of the selected solution
+    // cells.
+    const Location visStart(itsFreqIntervals[itsEvalSelStart.first].start,
+        itsTimeIntervals[itsEvalSelStart.second].start);
 
-    for(unsigned int prod = 0; prod < 4; ++prod)
+    for(unsigned int el = 0; el < 4; ++el)
     {
-        const int extProd = itsProductMask[prod];
-        if(extProd == -1)
-        {
-            continue;
-        }
-
-//        typedef boost::multi_array<sample_t, 4>::index_range Range;
-//        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
-//        View vdata(itsChunk->vis_data[boost::indices[bl][Range()][Range()]
-//            [extProd]]);
-
-        // Determine which parameters have partial derivatives (e.g. when
-        // solving for station-bound parameters, only a few parameters
-        // per baseline are relevant).
-        context.timers[BlContext::BUILD_INDEX].start();
-        unsigned int nBlCoeff = 0;
-        for(ValueSet::const_iterator it = model.getValueSet(prod).begin(),
-            end = model.getValueSet(prod).end();
-            it != end;
-            ++it, ++nBlCoeff)
-        {
-            // Look-up coefficient index for this coefficient.
-            context.index[nBlCoeff] = itsCoeffMap[it->first];
-
-            // Get a reference to the partial derivative of the model with
-            // respect to this coefficient.
-            context.partial[nBlCoeff] = it->second;
-        }
-        context.timers[BlContext::BUILD_INDEX].stop();
+        const ValueSet valueSetLHS = LHS.getValueSet(el);
+        const ValueSet valueSetRHS = RHS.getValueSet(el);
 
         // If there are no coefficients to fit, continue to the next
         // polarization product.
-        if(nBlCoeff == 0)
+        if(valueSetLHS.size() == 1 && valueSetRHS.size() == 1)
         {
             continue;
         }
 
-        // Get the model visibilities.
-        const Matrix modelValue = model.getValueSet(prod).value();
+        // Compute the right hand side of the condition equations:
+        //
+        // 0 - (RHS - LHS) = LHS - RHS
+        //
+        Matrix delta = valueSetLHS.value() - valueSetRHS.value();
+
+        // Compute the partial derivatives of RHS - LHS with respect to the
+        // solvable coefficients and determine a mapping from sequential
+        // coefficient number to coefficient index in the condition equations.
+        context.timers[ProcContext::MAKE_COEFF_MAP].start();
+        makeExprCoeffMapping(valueSetLHS, valueSetRHS, context);
+        context.timers[ProcContext::MAKE_COEFF_MAP].stop();
 
         // Loop over all selected cells and generate equations, adding them
         // to the associated normal matrix.
-        T_ITER cellEqIt = outputEqIt;
-        CellIterator cellIt(selStart, selEnd);
+        T_ITER cellEqIt = result;
+        CellIterator cellIt(itsEvalSelStart, itsEvalSelEnd);
         while(!cellIt.atEnd())
         {
             // Get a reference to the normal matrix associated to this cell.
@@ -260,25 +276,21 @@ void Equator::blProcess(T_ITER outputEqIt, const baseline_t &baseline,
             const Interval &chInterval = itsFreqIntervals[cellIt->first];
             const Interval &tsInterval = itsTimeIntervals[cellIt->second];
 
-//            size_t visOffset = (tsInterval.start - visStart.second)
-//                * nChannels + (chInterval.start - visStart.first);
-
             for(unsigned int ts = tsInterval.start; ts <= tsInterval.end; ++ts)
             {
-                // Skip timeslot if flagged.
-                if(itsChunk->tslot_flag[bl][ts])
-                {
-//                    visOffset += nChannels;
-                    continue;
-                }
+                // Timeslot index relative to the start of the selection in
+                // evaluation grid coordinates.
+                int tsRel = static_cast<int>(ts - visStart.second);
 
-                // Construct two equations for each unflagged visibility.
+                // Construct two equations for each unflagged sample.
                 for(unsigned int ch = chInterval.start; ch <= chInterval.end;
                     ++ch)
                 {
-                    if(itsChunk->vis_flag[bl][ts][ch][extProd]
-                        || flags((int)(ch - visStart.first),
-                            (int)(ts - visStart.second)))
+                    // Channel index relative to the start of the selection in
+                    // evaluation grid coordinates.
+                    int chRel = static_cast<int>(ch - visStart.first);
+
+                    if(flags(chRel, tsRel))
                     {
                         continue;
                     }
@@ -286,56 +298,52 @@ void Equator::blProcess(T_ITER outputEqIt, const baseline_t &baseline,
                     // Update statistics.
                     ++context.count;
 
-                    // Compute right hand side of the equation pair.
-                    const dcomplex rhs =
-                        static_cast<dcomplex>
-                        (itsChunk->vis_data[bl][ts][ch][extProd])
-                            - modelValue.getDComplex((int)(ch - visStart.first),
-                                (int)(ts - visStart.second));
+                    // Load right hand side of the equation pair.
+                    const dcomplex sampleDelta =
+                        delta.getDComplex(chRel, tsRel);
 
                     // Tranpose the partial derivatives.
-                    context.timers[BlContext::TRANSPOSE].start();
-                    for(unsigned int i = 0; i < nBlCoeff; ++i)
+                    context.timers[ProcContext::TRANSPOSE].start();
+                    for(unsigned int i = 0; i < context.nCoeff; ++i)
                     {
                         const dcomplex partial =
-                            context.partial[i].getDComplex((int)(ch
-                                - visStart.first), (int)(ts - visStart.second));
+                            context.partial[i].getDComplex(chRel, tsRel);
 
                         context.partialRe[i] = real(partial);
                         context.partialIm[i] = imag(partial);
                     }
-                    context.timers[BlContext::TRANSPOSE].stop();
+                    context.timers[ProcContext::TRANSPOSE].stop();
 
                     // Generate condition equations.
-                    context.timers[BlContext::MAKE_NORM].start();
-                    equation.makeNorm(nBlCoeff,
+                    context.timers[ProcContext::MAKE_NORM].start();
+                    equation.makeNorm(context.nCoeff,
                         &(context.index[0]),
                         &(context.partialRe[0]),
                         1.0,
-                        real(rhs));
+                        real(sampleDelta));
 
-                    equation.makeNorm(nBlCoeff,
+                    equation.makeNorm(context.nCoeff,
                         &(context.index[0]),
                         &(context.partialIm[0]),
                         1.0,
-                        imag(rhs));
-                    context.timers[BlContext::MAKE_NORM].stop();
-//                    // Move to next channel.
-//                    ++visOffset;
-                } // for(size_t ch = chStart; ch < chEnd; ++ch)
+                        imag(sampleDelta));
+                    context.timers[ProcContext::MAKE_NORM].stop();
+
+                    // Move to the next channel.
+                    ++chRel;
+                } // End of loop over frequency.
 
                 // Move to next timeslot.
-//                visOffset +=
-//                    nChannels - (chInterval.end - chInterval.start + 1);
-            } // for(size_t ts = tsStart; ts < tsEnd; ++ts)
+                ++tsRel;
+            } // End of loop over time.
 
-            // Move to the next cell.
+            // Move to the next solution cell.
             ++cellEqIt;
             ++cellIt;
         }
     }
 
-    context.timers[BlContext::EQUATE].stop();
+    context.timers[ProcContext::EQUATE].stop();
 }
 
 } //# namespace BBS

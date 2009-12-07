@@ -49,7 +49,7 @@ GaussianCoherence::GaussianCoherence(const GaussianSource::ConstPtr &source,
 {
 }
 
-const JonesMatrix::View GaussianCoherence::evaluateImpl(const Request &request,
+const JonesMatrix::View GaussianCoherence::evaluateImpl(const Grid &grid,
     const Vector<4>::View &stokes, const Vector<2>::View &dimensions,
     const Scalar::View &orientation, const Vector<3>::View &uvwA,
     const Vector<3>::View &uvwB) const
@@ -75,8 +75,8 @@ const JonesMatrix::View GaussianCoherence::evaluateImpl(const Request &request,
         + sqr(dimensions(1) * (uBaseline * sinPhi + vBaseline * cosPhi)));
 
     // Compute spatial coherence (2D).
-    const unsigned int nChannels = request[FREQ]->size();
-    const unsigned int nTimeslots = request[TIME]->size();
+    const unsigned int nChannels = grid[FREQ]->size();
+    const unsigned int nTimeslots = grid[TIME]->size();
 
     Matrix coherence;
     double *it = coherence.setDoubleFormat(nChannels, nTimeslots);
@@ -86,7 +86,7 @@ const JonesMatrix::View GaussianCoherence::evaluateImpl(const Request &request,
         const double uv = uvTransformed.getDouble(0, ts);
         for(unsigned int ch = 0; ch < nChannels; ++ch)
         {
-            const double freq = request[FREQ]->center(ch);
+            const double freq = grid[FREQ]->center(ch);
             *it++ = exp(-(freq * freq * uv));
         }
     }

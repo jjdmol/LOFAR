@@ -48,7 +48,7 @@ public:
     typedef shared_ptr<ParmProxy>       Ptr;
     typedef shared_ptr<const ParmProxy> ConstPtr;
 
-    ParmProxy(uint id, const string &name, const Parm &parm);
+    ParmProxy(unsigned int id, const string &name, const Parm &parm);
     ~ParmProxy();
 
     size_t getId() const
@@ -63,8 +63,8 @@ public:
     vector<double> getCoeff(const Location &loc, bool useMask = true) const
     { return itsParm.getCoeff(loc, useMask); }
 
-    void setCoeff(const Location &loc, const double* values, uint nvalues,
-        bool useMask = true)
+    void setCoeff(const Location &loc, const double* values,
+        unsigned int nvalues, bool useMask = true)
     { itsParm.setCoeff(loc, values, nvalues, 0, useMask); }
 
     void revertCoeff()
@@ -73,7 +73,7 @@ public:
     const vector<double> &getPerturbations() const
     { return itsParm.getPerturbations(); }
 
-    double getPerturbation(uint index) const
+    double getPerturbation(unsigned int index) const
     { return itsParm.getPerturbation(index); }
 
     void setGrid(const Grid &grid)
@@ -87,9 +87,14 @@ public:
     { itsParm.getResult(result, grid, perturbed); }
 
 private:
-    uint                itsId;
-    string              itsName;
-    mutable Parm        itsParm;
+    unsigned int    itsId;
+    string          itsName;
+
+    //# The Parm class exposes details of lazy intialization through it's
+    //# interface, e.g. by declaring Parm::getCoeffSize() as non-const. We use
+    //# mutable to hide this implementation detail from the clients of
+    //# ParmProxy.
+    mutable Parm    itsParm;
 };
 
 // @}

@@ -1,3 +1,3 @@
 # $Id$
 
-install(FILES lofar_dipole_beam_lba.coeff lofar_dipole_beam_hba.coeff DESTINATION share)
+install(FILES element_beam_HAMAKER_LBA.coeff element_beam_HAMAKER_HBA.coeff DESTINATION share)

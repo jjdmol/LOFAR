@@ -31,15 +31,16 @@ namespace BBS
 {
 using LOFAR::operator<<;
 
-LocalSolveController::LocalSolveController(const VisData::Ptr &chunk,
-    const Model::Ptr &model, const SolverOptions &options)
-    :   itsChunk(chunk),
-        itsModel(model),
+
+LocalSolveController::LocalSolveController
+    (const ExprSet<JonesMatrix>::Ptr &lhs,
+    const ExprSet<JonesMatrix>::Ptr &rhs,
+    const SolverOptions &options)
+    :   itsLHS(lhs),
+        itsRHS(rhs),
         itsInitFlag(false)
 {
-    ASSERT(itsChunk);
-    ASSERT(itsModel);
-
+	ASSERT(itsLHS->size() == itsRHS->size() && itsLHS->size() > 0 );
     itsSolver.reset(options.maxIter, options.epsValue, options.epsDerivative,
         options.colFactor, options.lmFactor, options.balancedEqs,
         options.useSVD);
@@ -47,42 +48,55 @@ LocalSolveController::LocalSolveController(const VisData::Ptr &chunk,
 
 LocalSolveController::~LocalSolveController()
 {
-    itsModel->clearSolvableParms();
+    itsLHS->clearSolvableParms();
+    itsRHS->clearSolvableParms();
 }
 
 void LocalSolveController::init(const vector<string> &include,
-    const vector<string> &exclude, const Grid &solGrid,
-    const vector<baseline_t> &baselines, const vector<string> &products,
-    uint cellChunkSize, bool propagate)
+    const vector<string> &exclude, const Grid &evalGrid, const Grid &solGrid,
+    unsigned int cellChunkSize, bool propagate)
 {
     ASSERTSTR(!itsInitFlag, "Controller already initialized");
+    ASSERT(evalGrid.size() > 0);
     ASSERT(solGrid.size() > 0);
-    ASSERT(baselines.size() > 0);
-    ASSERT(products.size() > 0);
     ASSERT(cellChunkSize > 0);
 
     itsPropagateFlag = propagate;
     itsSolGrid = solGrid;
     itsCellChunkSize = cellChunkSize;
 
-    // Parse solvable selection.
-    itsSolvables = ParmManager::instance().makeSubset(include, exclude,
-        itsModel->getParms());
-    ASSERT(!itsSolvables.empty());
+    // Find all parameters matching the specified inclusion and exclusion
+    // criteria.
+    ParmGroup solvablesLHS = ParmManager::instance().makeSubset(include,
+        exclude, itsLHS->getParms());
+    ParmGroup solvablesRHS = ParmManager::instance().makeSubset(include,
+        exclude, itsRHS->getParms());
+    // Merge the set of parameters found for the left and right hand side.
+    std::set_union(solvablesLHS.begin(), solvablesLHS.end(),
+        solvablesRHS.begin(), solvablesRHS.end(),
+        std::inserter(itsSolvables, itsSolvables.begin()));
+
+    if(itsSolvables.empty())
+    {
+        THROW(BBSControlException, "No parameters found matching the specified"
+            " inclusion and exclusion criteria.");
+    }
 
     // Assign solution grid to solvables.
     ParmManager::instance().setGrid(itsSolGrid, itsSolvables);
 
-    // Instruct model to generate partial derivatives for solvables.
-    itsModel->setSolvableParms(itsSolvables);
+    // Instruct left and right hand side to generate partial derivatives for
+    // the solvable parameters.
+    itsLHS->setSolvableParms(itsSolvables);
+    itsRHS->setSolvableParms(itsSolvables);
 
     // Create coefficient index.
     makeCoeffIndex(itsSolvables);
 
     // Initialize equator.
-    itsEquator.reset(new Equator(itsChunk, itsModel, itsSolGrid,
+    itsEquator.reset(new Equator(itsLHS, itsRHS, evalGrid, itsSolGrid,
         itsCoeffIndex));
-    itsEquator->setSelection(baselines, products);
+//    itsEquator->setSelection(baselines, products);
 
     itsInitFlag = true;
 }
@@ -91,37 +105,29 @@ void LocalSolveController::run()
 {
     ASSERTSTR(itsInitFlag, "Controller not initialized.");
 
-    // Compute overlap between the solution grid and the chunk.
-    const Grid &visGrid = itsChunk->getDimensions().getGrid();
-    Box overlap = itsSolGrid.getBoundingBox() & visGrid.getBoundingBox();
-    ASSERTSTR(!overlap.empty(), "No overlap between the solution grid and the"
-        " current chunk.");
-
-    // Find the first and last cell that intersects the chunk.
-    Location startCell(itsSolGrid.locate(overlap.lower()));
-    Location endCell(itsSolGrid.locate(overlap.upper(), false));
-
-    // Initialize solver.
+	// Exchange coefficient index with solver.
     itsSolver.setCoeffIndex(0, itsCoeffIndex);
 
     // Construct look-up table from Solver's coefficient index.
     makeCoeffMapping(itsSolvables, itsSolver.getCoeffIndex());
 
     // Compute the number of cell chunks to process.
-    const uint nCellChunks =
-        static_cast<uint>(ceil(static_cast<double>(endCell.second
-            - startCell.second + 1) / itsCellChunkSize));
+    const unsigned int nCellChunks =
+        static_cast<unsigned int>(ceil(static_cast<double>(itsSolGrid[TIME]->size())
+            / itsCellChunkSize));
 
     vector<CellCoeff> coeff;
     vector<CellEquation> equations;
     vector<CellSolution> solutions;
 
-    Location chunkStart(startCell), chunkEnd(endCell);
-    for(uint cellChunk = 0; cellChunk < nCellChunks; ++cellChunk)
+    Location chunkStart(0, 0);
+    Location chunkEnd(itsSolGrid[FREQ]->size() - 1,
+        itsSolGrid[TIME]->size() - 1);
+    for(unsigned int cellChunk = 0; cellChunk < nCellChunks; ++cellChunk)
     {
         // Compute end cell of current cell chunk.
         chunkEnd.second = std::min(chunkStart.second + itsCellChunkSize - 1,
-            endCell.second);
+            itsSolGrid[TIME]->size() - 1);
 
         // Get initial coefficients.
         getInitialCoeff(coeff, chunkStart, chunkEnd);
@@ -138,6 +144,7 @@ void LocalSolveController::run()
         {
             // Construct equations and pass to solver.
             itsEquator->process(equations);
+
             itsSolver.setEquations(0, equations);
 
             // Perform a non-linear LSQ iteration.
@@ -153,8 +160,8 @@ void LocalSolveController::run()
         {
             // Determine start and end time index of the next cell chunk.
             const size_t tStart = chunkStart.second + itsCellChunkSize;
-            const size_t tEnd =
-                std::min(tStart + itsCellChunkSize - 1, endCell.second);
+            const size_t tEnd = std::min(tStart + itsCellChunkSize - 1,
+                itsSolGrid[TIME]->size() - 1);
 
             Location cell;
             vector<double> values;
@@ -217,7 +224,7 @@ void LocalSolveController::makeCoeffMapping(const ParmGroup &solvables,
 void LocalSolveController::getInitialCoeff(vector<CellCoeff> &result,
     const Location &start, const Location &end) const
 {
-    const uint nCells = (end.first - start.first + 1)
+    const unsigned int nCells = (end.first - start.first + 1)
         * (end.second - start.second + 1);
 
     result.resize(nCells);
@@ -293,9 +300,9 @@ void LocalSolveController::setCoeff(const vector<double> &coeff,
 }
 
 void LocalSolveController::setCoeff(const vector<double> &coeff,
-    const Location &cell, const vector<uint> &mapping) const
+    const Location &cell, const vector<unsigned int> &mapping) const
 {
-    vector<uint>::const_iterator mapIt = mapping.begin();
+    vector<unsigned int>::const_iterator mapIt = mapping.begin();
     ParmGroup::const_iterator solIt = itsSolvables.begin();
     while(solIt != itsSolvables.end())
     {

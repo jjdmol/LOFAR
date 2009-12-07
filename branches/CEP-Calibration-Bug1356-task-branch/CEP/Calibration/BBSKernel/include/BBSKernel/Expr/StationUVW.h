@@ -59,8 +59,8 @@ protected:
         ASSERTSTR(false, "StationUVW has no arguments.");
     }
 
-    virtual const Vector<3> evaluateExpr(const Request &request, Cache &cache)
-        const;
+    virtual const Vector<3> evaluateExpr(const Request &request, Cache &cache,
+        unsigned int grid) const;
 
 private:
     casa::MPosition     itsPosition;

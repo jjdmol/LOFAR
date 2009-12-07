@@ -46,7 +46,7 @@ public:
     UVW(const VisData::Ptr &chunk, const baseline_t &baseline);
 
 protected:
-    virtual ValueSet::ConstPtr evaluateImpl(const Request &request) const;
+    virtual ValueSet::ConstPtr evaluateImpl(const Grid &grid) const;
 
 private:
     const VisData::Ptr  itsChunk;

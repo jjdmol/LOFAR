@@ -54,7 +54,7 @@ public:
 
 protected:
     virtual const T_ARG0 evaluateExpr(const Request &request,
-        Cache &cache) const;
+        Cache &cache, unsigned int grid) const;
 };
 
 // @}
@@ -74,14 +74,14 @@ MergeFlags<T_ARG0, T_ARG1>::MergeFlags
 
 template <typename T_ARG0, typename T_ARG1>
 const T_ARG0 MergeFlags<T_ARG0, T_ARG1>::evaluateExpr
-    (const Request &request, Cache &cache) const
+    (const Request &request, Cache &cache, unsigned int grid) const
 {
     // Allocate result.
     T_ARG0 result;
 
     // Evaluate arguments.
-    const T_ARG0 arg0 = argument0()->evaluate(request, cache);
-    const T_ARG1 arg1 = argument1()->evaluate(request, cache);
+    const T_ARG0 arg0 = argument0()->evaluate(request, cache, grid);
+    const T_ARG1 arg1 = argument1()->evaluate(request, cache, grid);
 
     if(arg1.hasFlags())
     {

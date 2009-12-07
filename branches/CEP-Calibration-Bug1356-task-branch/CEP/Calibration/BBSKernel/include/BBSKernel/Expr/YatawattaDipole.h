@@ -27,6 +27,11 @@
 #include <BBSKernel/Expr/BasicExpr.h>
 #include <BBSKernel/Expr/ExternalFunction.h>
 
+namespace casa
+{
+    class Path;
+}
+
 namespace LOFAR
 {
 namespace BBS
@@ -38,17 +43,16 @@ namespace BBS
 class YatawattaDipole: public BasicBinaryExpr<Vector<2>, Scalar, JonesMatrix>
 {
 public:
-    YatawattaDipole(const string &moduleTheta, const string &modulePhi,
-        double scaleFactor, const Expr<Vector<2> >::ConstPtr &azel,
+    YatawattaDipole(const casa::Path &moduleTheta, const casa::Path &modulePhi,
+        const Expr<Vector<2> >::ConstPtr &azel,
         const Expr<Scalar>::ConstPtr &orientation);
 
 protected:
-    virtual const JonesMatrix::View evaluateImpl(const Request &request,
+    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
         const Vector<2>::View &azel, const Scalar::View &orientation) const;
 
 private:
     ExternalFunction    itsThetaFunction, itsPhiFunction;
-    double              itsScaleFactor;
 };
 
 // @}

@@ -74,6 +74,8 @@ public:
     typedef map<PValueKey, Matrix>::iterator        iterator;
     typedef map<PValueKey, Matrix>::const_iterator  const_iterator;
 
+    size_t size() const;
+
     iterator begin();
     iterator end();
     const_iterator begin() const;
@@ -102,23 +104,29 @@ public:
 
     ValueSet();
 
+    // Return the number of scalar fields in the set. This number is at least
+    // one, because there is always the unbound scalar field. Note that this
+    // does not imply that the main scalar field (or any of the scalar fields)
+    // actually contains data.
+    size_t size() const;
+
     iterator begin();
     iterator end();
     const_iterator begin() const;
     const_iterator end() const;
 
     const Matrix value() const;
-    // Returns the field associated with "key", or the unkeyed (main) field if
-    // not found.
+    // Returns the field bound to "key", or the unbound (main) field if no field
+    // bound to "key" could be found.
     const Matrix value(const PValueKey &key) const;
-    // Returns the field associated with "key", or the unkeyed (main) field if
-    // not found. The "found" argument is indicates if a field associated with
-    // "key" was found.
+    // Returns the field bound to "key", or the unbound (main) field if no field
+    // bound to "key" could be found. The "found" argument indicates whether or not a
+    // field bound to "key" was found.
     const Matrix value(const PValueKey &key, bool &found) const;
 
     Matrix value();
-    // Returns a writeable reference to the field associated with "key". If no
-    // such field exists yet it will be created.
+    // Returns a writeable reference to the field bound to "key". If no field
+    // bound to "key" exists it will be created.
     Matrix value(const PValueKey &key);
 
     void assign(const Matrix &value);
@@ -162,6 +170,11 @@ inline bool PValueKey::operator==(const PValueKey &other) const
 // -------------------------------------------------------------------------- //
 // - Implementation: ValueSetImpl                                           - //
 // -------------------------------------------------------------------------- //
+
+inline size_t ValueSetImpl::size() const
+{
+    return 1 + itsDepData.size();
+}
 
 inline ValueSetImpl::const_iterator ValueSetImpl::begin() const
 {
@@ -220,6 +233,11 @@ inline void ValueSetImpl::assign(const PValueKey &key, const Matrix &value)
 // -------------------------------------------------------------------------- //
 // - Implementation: ValueSet                                               - //
 // -------------------------------------------------------------------------- //
+
+inline size_t ValueSet::size() const
+{
+    return instance().size();
+}
 
 inline ValueSet::iterator ValueSet::begin()
 {

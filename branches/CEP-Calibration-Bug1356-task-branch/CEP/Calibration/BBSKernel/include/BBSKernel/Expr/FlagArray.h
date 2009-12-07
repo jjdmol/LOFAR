@@ -69,7 +69,8 @@ public:
     virtual unsigned int shape(unsigned int n) const = 0;
     virtual unsigned int size() const = 0;
 
-    virtual FlagType value(unsigned int i0, unsigned int i1) const = 0;
+    virtual const FlagType &value(unsigned int i0, unsigned int i1) const = 0;
+    virtual FlagType &value(unsigned int i0, unsigned int i1) = 0;
 
     virtual const_iterator begin() const = 0;
     virtual const_iterator end() const = 0;
@@ -163,7 +164,8 @@ public:
     // FlagArray uses a column-major memory layout (FORTRAN order) to be
     // consistent with the Matrix class. In particular, i0 (the index belonging
     // to first dimension) is the fastest running dimension.
-    FlagType operator()(unsigned int i0, unsigned int i1) const;
+    const FlagType &operator()(unsigned int i0, unsigned int i1) const;
+    FlagType &operator()(unsigned int i0, unsigned int i1);
 
     const_iterator begin() const;
     const_iterator end() const;
@@ -211,7 +213,8 @@ public:
     virtual unsigned int shape(unsigned int n) const;
     virtual unsigned int size() const;
 
-    virtual FlagType value(unsigned int i0, unsigned int i1) const;
+    virtual const FlagType &value(unsigned int i0, unsigned int i1) const;
+    virtual FlagType &value(unsigned int i0, unsigned int i1);
 
     virtual const_iterator begin() const;
     virtual const_iterator end() const;
@@ -255,7 +258,8 @@ public:
     virtual unsigned int shape(unsigned int n) const;
     virtual unsigned int size() const;
 
-    virtual FlagType value(unsigned int i0, unsigned int i1) const;
+    virtual const FlagType &value(unsigned int i0, unsigned int i1) const;
+    virtual FlagType &value(unsigned int i0, unsigned int i1);
 
     virtual const_iterator begin() const;
     virtual const_iterator end() const;
@@ -435,7 +439,13 @@ inline unsigned int FlagArray::size() const
     return instance().size();
 }
 
-inline FlagType FlagArray::operator()(unsigned int i0, unsigned int i1) const
+inline const FlagType &FlagArray::operator()(unsigned int i0, unsigned int i1)
+    const
+{
+    return instance().value(i0, i1);
+}
+
+inline FlagType &FlagArray::operator()(unsigned int i0, unsigned int i1)
 {
     return instance().value(i0, i1);
 }
@@ -515,7 +525,13 @@ inline unsigned int FlagArrayImplScalar::size() const
     return 1;
 }
 
-inline FlagType FlagArrayImplScalar::value(unsigned int, unsigned int) const
+inline const FlagType &FlagArrayImplScalar::value(unsigned int, unsigned int)
+    const
+{
+    return itsData;
+}
+
+inline FlagType &FlagArrayImplScalar::value(unsigned int, unsigned int)
 {
     return itsData;
 }
@@ -637,8 +653,14 @@ inline unsigned int FlagArrayImplMatrix::size() const
     return itsSize;
 }
 
-inline FlagType FlagArrayImplMatrix::value(unsigned int i0, unsigned int i1)
-    const
+inline const FlagType &FlagArrayImplMatrix::value(unsigned int i0,
+    unsigned int i1) const
+{
+    DBGASSERT(i0 < shape(0) && i1 < shape(1));
+    return itsData[i0 + shape(0) * i1];
+}
+
+inline FlagType &FlagArrayImplMatrix::value(unsigned int i0, unsigned int i1)
 {
     DBGASSERT(i0 < shape(0) && i1 < shape(1));
     return itsData[i0 + shape(0) * i1];

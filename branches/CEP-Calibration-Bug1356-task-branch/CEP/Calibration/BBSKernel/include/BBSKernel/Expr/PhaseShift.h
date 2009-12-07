@@ -47,7 +47,7 @@ public:
         const Expr<Vector<2> >::ConstPtr &rhs);
 
 protected:
-    virtual const Scalar::View evaluateImpl(const Request &request,
+    virtual const Scalar::View evaluateImpl(const Grid &grid,
         const Vector<2>::View &lhs, const Vector<2>::View &rhs) const;
 };
 

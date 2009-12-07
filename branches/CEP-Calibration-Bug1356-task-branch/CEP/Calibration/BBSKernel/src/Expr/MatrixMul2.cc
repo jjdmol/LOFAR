@@ -35,7 +35,7 @@ MatrixMul2::MatrixMul2(const Expr<JonesMatrix>::ConstPtr &lhs,
 {
 }
 
-const JonesMatrix::View MatrixMul2::evaluateImpl(const Request &request,
+const JonesMatrix::View MatrixMul2::evaluateImpl(const Grid &grid,
     const JonesMatrix::View &lhs, const JonesMatrix::View &rhs) const
 {
     // Determine dependencies.

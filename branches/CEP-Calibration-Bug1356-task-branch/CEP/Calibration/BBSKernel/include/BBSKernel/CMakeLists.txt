@@ -10,6 +10,7 @@ install(FILES
   Equator.h
   Evaluator.h
   Exceptions.h
+  ExprSet.h
   Instrument.h
   Measurement.h
   MeasurementAIPS.h
@@ -22,7 +23,9 @@ install(FILES
   Types.h
   VisData.h
   VisDimensions.h
+  VisExpr.h
   VisSelection.h
+  Expr/ArrayFactor.h
   Expr/AzEl.h
   Expr/BasicExpr.h
   Expr/Cache.h
@@ -35,6 +38,7 @@ install(FILES
   Expr/ExprResult.h
   Expr/ExprValueView.h
   Expr/ExprValueIterator.h
+  Expr/ExprVisData.h
   Expr/ExternalFunction.h
   Expr/FlagArray.h
   Expr/FlagIf.h
@@ -43,6 +47,7 @@ install(FILES
   Expr/HamakerDipole.h
   Expr/JonesInvert.h
   Expr/JonesVisData.h
+  Expr/Literal.h
   Expr/LMN.h
   Expr/Matrix.h
   Expr/MatrixComplexArr.h
@@ -63,6 +68,7 @@ install(FILES
   Expr/PointSource.h
   Expr/RefCounting.h
   Expr/Request.h
+  Expr/Resampler.h
   Expr/Source.h
   Expr/SpectralIndex.h
   Expr/StatUVW.h

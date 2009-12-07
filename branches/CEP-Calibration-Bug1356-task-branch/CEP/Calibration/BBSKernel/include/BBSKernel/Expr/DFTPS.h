@@ -64,7 +64,7 @@ public:
         const Expr<Vector<3> >::ConstPtr &lmn);
 
 protected:
-    virtual const Vector<2>::View evaluateImpl(const Request &request,
+    virtual const Vector<2>::View evaluateImpl(const Grid &grid,
         const Vector<3>::View &uvw, const Vector<3>::View &lmn) const;
 };
 

@@ -31,7 +31,6 @@
 #include <BBSControl/Types.h>
 
 #include <BBSKernel/Equator.h>
-#include <BBSKernel/Model.h>
 #include <BBSKernel/Solver.h>
 #include <BBSKernel/VisData.h>
 
@@ -49,13 +48,15 @@ class GlobalSolveController
 {
 public:
     GlobalSolveController(const KernelIndex &index,
-        const VisData::Ptr &chunk, const Model::Ptr &model,
-        const shared_ptr<BlobStreamableConnection> &solver);
+        const shared_ptr<BlobStreamableConnection> &solver,
+        const ExprSet<JonesMatrix>::Ptr &lhs,
+        const ExprSet<JonesMatrix>::Ptr &rhs);
     ~GlobalSolveController();
 
     void init(const vector<string> &include, const vector<string> &exclude,
-        const Grid &solGrid, const vector<baseline_t> &baselines,
-        const vector<string> &products, uint cellChunkSize, bool propagate);
+        const Grid &evalGrid, const Grid &solGrid, unsigned int cellChunkSize,
+        bool propagate);
+
     void run();
 
 private:
@@ -71,21 +72,21 @@ private:
     void getCoeff(vector<double> &result, const Location &cell) const;
     void setCoeff(const vector<double> &coeff, const Location &cell) const;
     void setCoeff(const vector<double> &coeff, const Location &cell,
-        const vector<uint> &mapping) const;
+        const vector<unsigned int> &mapping) const;
 
     KernelIndex                             itsKernelIndex;
-    VisData::Ptr                            itsChunk;
-    Model::Ptr                              itsModel;
     shared_ptr<BlobStreamableConnection>    itsSolver;
+    ExprSet<JonesMatrix>::Ptr               itsLHS;
+    ExprSet<JonesMatrix>::Ptr               itsRHS;
 
     bool                                    itsInitFlag;
     bool                                    itsPropagateFlag;
     Grid                                    itsSolGrid;
-    uint                                    itsCellChunkSize;
+    unsigned int                            itsCellChunkSize;
     ParmGroup                               itsSolvables;
     CoeffIndex                              itsCoeffIndex;
     scoped_ptr<Equator>                     itsEquator;
-    vector<uint>                            itsSolCoeffMapping;
+    vector<unsigned int>                    itsSolCoeffMapping;
 };
 
 // @}

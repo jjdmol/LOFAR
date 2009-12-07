@@ -1,4 +1,4 @@
-//# Model.h:
+//# Model.h: Measurement equation for the LOFAR telescope and its environment.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -23,8 +23,10 @@
 #ifndef LOFAR_BBSKERNEL_MODEL_H
 #define LOFAR_BBSKERNEL_MODEL_H
 
-#include <BBSKernel/ParmManager.h>
+#include <BBSKernel/ExprSet.h>
 #include <BBSKernel/Instrument.h>
+#include <BBSKernel/ModelConfig.h>
+#include <BBSKernel/ParmManager.h>
 #include <BBSKernel/VisData.h>
 
 #include <BBSKernel/Expr/Expr.h>
@@ -45,19 +47,18 @@ namespace LOFAR
 namespace BBS
 {
 class ModelConfig;
-class Cache;
 
 // \addtogroup BBSKernel
 // @{
 
-class Model
+class Model: public ExprSet<JonesMatrix>
 {
 public:
     typedef shared_ptr<Model>       Ptr;
     typedef shared_ptr<const Model> ConstPtr;
 
     Model(const Instrument &instrument, const SourceDB &sourceDb,
-        const casa::MDirection &reference);
+        const casa::MDirection &reference, double referenceFreq);
 
     void clear();
 
@@ -67,20 +68,22 @@ public:
     void makeInverseExpr(const ModelConfig &config, const VisData::Ptr &chunk,
         const vector<baseline_t> &baselines);
 
-    void setRequestGrid(const Grid &grid);
-    const JonesMatrix evaluate(const baseline_t &baseline);
+    virtual unsigned int size() const;
+    virtual Box domain() const;
 
-    ParmGroup getParms() const;
+    virtual ParmGroup getParms() const;
+    virtual ParmGroup getSolvableParms() const;
+    virtual void setSolvableParms(const ParmGroup &solvables);
+    virtual void clearSolvableParms();
 
-    ParmGroup getSolvableParms() const;
-    void setSolvableParms(const ParmGroup &solvables);
-    void clearSolvableParms();
+    virtual void setEvalGrid(const Grid &grid);
+    virtual const JonesMatrix evaluate(unsigned int i);
 
 private:
     vector<unsigned int>
         makeUsedStationList(const vector<baseline_t> &baselines) const;
 
-    ExprParm::Ptr makeExprParm(uint category, const string &name);
+    ExprParm::Ptr makeExprParm(unsigned int category, const string &name);
 
     vector<Source::Ptr> makeSourceList(const vector<string> &patterns);
 
@@ -99,11 +102,11 @@ private:
         makeBandpassExpr(const vector<unsigned int> &stations);
 
     casa::Vector<Expr<JonesMatrix>::Ptr>
-        makeIsotropicGainExpr(const ModelConfig &config,
-            const vector<unsigned int> &stations);
+        makeGainExpr(const ModelConfig &config,
+          const vector<unsigned int> &stations);
 
     casa::Matrix<Expr<JonesMatrix>::Ptr>
-        makeAnisotropicGainExpr(const ModelConfig &config,
+        makeDirectionalGainExpr(const ModelConfig &config,
             const vector<unsigned int> &stations,
             const vector<Source::Ptr> &sources);
 
@@ -112,25 +115,31 @@ private:
             const vector<Source::Ptr> &sources) const;
 
     casa::Matrix<Expr<JonesMatrix>::Ptr>
-        makeDipoleBeamExpr(const ModelConfig &config,
+        makeBeamExpr(const BeamConfig &config,
             const vector<unsigned int> &stations,
             const casa::Matrix<Expr<Vector<2> >::Ptr> &azel);
 
+//    casa::Matrix<Expr<JonesMatrix>::Ptr>
+//        makeDipoleBeamExpr(const ModelConfig &config,
+//            const vector<unsigned int> &stations,
+//            const casa::Matrix<Expr<Vector<2> >::Ptr> &azel);
+
     casa::Matrix<Expr<JonesMatrix>::Ptr>
-        makeIonosphereExpr(const ModelConfig &config,
+        makeIonosphereExpr(const IonosphereConfig &config,
             const vector<unsigned int> &stations,
             const casa::Matrix<Expr<Vector<2> >::Ptr> &azel);
 
     Expr<JonesMatrix>::Ptr corrupt(Expr<JonesMatrix>::Ptr &accumulator,
         Expr<JonesMatrix>::Ptr &effect);
 
-    Instrument          itsInstrument;
-    SourceDB            itsSourceDb;
-    casa::MDirection    itsPhaseReference;
-    Request             itsRequest;
-    Cache               itsCache;
+    Instrument                              itsInstrument;
+    SourceDB                                itsSourceDb;
+    casa::MDirection                        itsPhaseReference;
+    double                                  itsReferenceFreq;
+    Request                                 itsRequest;
+    Cache                                   itsCache;
 
-    map<baseline_t, Expr<JonesMatrix>::Ptr> itsExpr;
+    vector<Expr<JonesMatrix>::Ptr>          itsExpr;
     map<unsigned int, ExprParm::Ptr>        itsParms;
     vector<Expr<Vector<3> >::Ptr>           itsStationUVW;
 };

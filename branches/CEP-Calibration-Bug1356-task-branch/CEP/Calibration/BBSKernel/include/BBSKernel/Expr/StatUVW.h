@@ -54,8 +54,8 @@ public:
 protected:
     virtual unsigned int nArguments() const;
     virtual ExprBase::ConstPtr argument(unsigned int) const;
-    virtual const Vector<3> evaluateExpr(const Request &request, Cache &cache)
-        const;
+    virtual const Vector<3> evaluateExpr(const Request &request, Cache &cache,
+        unsigned int grid) const;
 
 private:
     struct Timestamp

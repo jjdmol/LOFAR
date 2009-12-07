@@ -30,6 +30,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
 
+#include <casa/Quanta/MVAngle.h>
+
 namespace LOFAR
 {
   namespace BBS
@@ -77,16 +79,40 @@ namespace LOFAR
       Indent id;
       os << endl << indent << "Solve: ";
       {
-	Indent id;
-	os << endl << indent << "Solvable parameters: " << itsParms
-	   << endl << indent << "Excluded parameters: " << itsExclParms
-       << endl << indent << "Calibration groups: "  << itsCalibrationGroups
-	   << endl << indent << itsCellSize
-	   << endl << indent << "Cell chunk size: " << itsCellChunkSize
-	   << boolalpha
-	   << endl << indent << "Propagate solutions: " << itsPropagateFlag
-	   << noboolalpha
-       << endl << indent << itsSolverOptions;
+        Indent id;
+        os << endl << indent << "Solvable parameters: " << itsParms
+          << endl << indent << "Excluded parameters: " << itsExclParms
+          << endl << indent << "Calibration groups: "  << itsCalibrationGroups
+          << endl << indent << itsCellSize
+          << endl << indent << "Cell chunk size: " << itsCellChunkSize
+          << endl << indent << "Propagate solutions: " << boolalpha
+          << itsPropagateFlag << noboolalpha
+          << endl << indent << "Resample observed data: " << boolalpha
+          << itsResampleFlag << noboolalpha;
+          if(itsResampleFlag)
+          {
+            Indent id;
+            os << endl << indent << "Resample cell size: ";
+            {
+              Indent id;
+              os << endl << indent << "Frequency (channels): "
+                << itsResampleCellSize.freq
+                << endl << indent << "Time (timestamps): "
+                << itsResampleCellSize.time;
+            }
+            os << endl << indent << "Flag density threshold: "
+              << itsFlagDensityThreshold;
+          }
+
+          os << endl << indent << "Phase shift observed data: " << boolalpha
+            << itsShiftFlag << noboolalpha;
+          if(itsShiftFlag)
+          {
+            Indent id;
+            os << endl << indent << "Direction: " << itsDirectionASCII;
+          }
+
+          os << endl << indent << itsSolverOptions;
       }
     }
 
@@ -111,34 +137,44 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::write(ps);
       const string prefix = "Step." + name() + ".Solve.";
-      ps.replace(prefix + "Parms",
-                 toString(itsParms));
-      ps.replace(prefix + "ExclParms",
-                 toString(itsExclParms));
-      ps.replace(prefix + "CalibrationGroups",
-                 toString(itsCalibrationGroups));
-      ps.replace(prefix + "CellSize.Freq",
-                 toString(itsCellSize.freq));
-      ps.replace(prefix + "CellSize.Time",
-                 toString(itsCellSize.time));
-      ps.replace(prefix + "CellChunkSize",
-                 toString(itsCellChunkSize));
-      ps.replace(prefix + "PropagateSolutions",
-                 toString(itsPropagateFlag));
+      ps.replace(prefix + "Parms", toString(itsParms));
+      ps.replace(prefix + "ExclParms", toString(itsExclParms));
+      ps.replace(prefix + "CalibrationGroups", toString(itsCalibrationGroups));
+      ps.replace(prefix + "CellSize.Freq", toString(itsCellSize.freq));
+      ps.replace(prefix + "CellSize.Time", toString(itsCellSize.time));
+      ps.replace(prefix + "CellChunkSize", toString(itsCellChunkSize));
+      ps.replace(prefix + "PropagateSolutions", toString(itsPropagateFlag));
+
+      ps.replace(prefix + "PhaseShift.Enable", toString(itsShiftFlag));
+      if(itsShiftFlag) {
+        ps.replace(prefix + "PhaseShift.Direction",
+          toString(itsDirectionASCII));
+      }
+
+      ps.replace(prefix + "Resample.Enable", toString(itsResampleFlag));
+      if(itsResampleFlag) {
+        ps.replace(prefix + "Resample.CellSize.Freq",
+          toString(itsResampleCellSize.freq));
+        ps.replace(prefix + "Resample.CellSize.Time",
+          toString(itsResampleCellSize.time));
+        ps.replace(prefix + "Resample.FlagDensityThreshold",
+          toString(itsFlagDensityThreshold));
+      }
+
       ps.replace(prefix + "Options.MaxIter",
-                 toString(itsSolverOptions.maxIter));
+        toString(itsSolverOptions.maxIter));
       ps.replace(prefix + "Options.EpsValue",
-                 toString(itsSolverOptions.epsValue));
+        toString(itsSolverOptions.epsValue));
       ps.replace(prefix + "Options.EpsDerivative",
-                 toString(itsSolverOptions.epsDerivative));
+        toString(itsSolverOptions.epsDerivative));
       ps.replace(prefix + "Options.ColFactor",
-                 toString(itsSolverOptions.colFactor));
+        toString(itsSolverOptions.colFactor));
       ps.replace(prefix + "Options.LMFactor",
-                 toString(itsSolverOptions.lmFactor));
+        toString(itsSolverOptions.lmFactor));
       ps.replace(prefix + "Options.BalancedEqs",
-                 toString(itsSolverOptions.balancedEqs));
-      ps.replace(prefix + "Options.UseSVD",
-                 toString(itsSolverOptions.useSVD));
+        toString(itsSolverOptions.balancedEqs));
+      ps.replace(prefix + "Options.UseSVD", toString(itsSolverOptions.useSVD));
+
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
 
@@ -148,34 +184,76 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::read(ps);
       ParameterSet pss(ps.makeSubset("Solve."));
-      itsParms                       =
-        pss.getStringVector("Parms");
-      itsExclParms                   =
-        pss.getStringVector("ExclParms",    vector<string>());
-      itsCalibrationGroups           =
-        pss.getUint32Vector("CalibrationGroups");//, vector<uint32>());
-      itsCellSize.freq               =
-        pss.getUint32      ("CellSize.Freq");
-      itsCellSize.time               =
-        pss.getUint32      ("CellSize.Time");
-      itsCellChunkSize               =
-        pss.getUint32      ("CellChunkSize", 0);
-      itsPropagateFlag               =
-        pss.getBool("PropagateSolutions", false);
-      itsSolverOptions.maxIter       =
-        pss.getUint32      ("Options.MaxIter");
-      itsSolverOptions.epsValue      =
-        pss.getDouble      ("Options.EpsValue");
-      itsSolverOptions.epsDerivative =
-        pss.getDouble      ("Options.EpsDerivative");
-      itsSolverOptions.colFactor     =
-        pss.getDouble      ("Options.ColFactor");
-      itsSolverOptions.lmFactor      =
-        pss.getDouble      ("Options.LMFactor");
-      itsSolverOptions.balancedEqs   =
-        pss.getBool        ("Options.BalancedEqs");
-      itsSolverOptions.useSVD        =
-        pss.getBool        ("Options.UseSVD");
+      itsParms = pss.getStringVector("Parms");
+      itsExclParms = pss.getStringVector("ExclParms", vector<string>());
+      itsCalibrationGroups = pss.getUint32Vector("CalibrationGroups");
+      itsCellSize.freq = pss.getUint32("CellSize.Freq");
+      itsCellSize.time = pss.getUint32("CellSize.Time");
+      itsCellChunkSize = pss.getUint32("CellChunkSize");
+      itsPropagateFlag = pss.getBool("PropagateSolutions", false);
+
+      itsDirection = casa::MDirection();
+      itsDirectionASCII = vector<string>();
+      itsShiftFlag = pss.getBool("PhaseShift.Enable", false);
+      if(itsShiftFlag) {
+        parseDirection(pss);
+      }
+
+      itsResampleCellSize = CellSize(1, 1);
+      itsResampleFlag = pss.getBool("Resample.Enable", false);
+      if(itsResampleFlag) {
+        parseResampleCellSize(pss);
+        itsFlagDensityThreshold =
+          pss.getDouble("Resample.FlagDensityThreshold");
+      }
+
+      itsSolverOptions.maxIter = pss.getUint32("Options.MaxIter");
+      itsSolverOptions.epsValue = pss.getDouble("Options.EpsValue");
+      itsSolverOptions.epsDerivative = pss.getDouble("Options.EpsDerivative");
+      itsSolverOptions.colFactor = pss.getDouble("Options.ColFactor");
+      itsSolverOptions.lmFactor = pss.getDouble("Options.LMFactor");
+      itsSolverOptions.balancedEqs = pss.getBool("Options.BalancedEqs");
+      itsSolverOptions.useSVD = pss.getBool("Options.UseSVD");
+    }
+
+    void SolveStep::parseResampleCellSize(const ParameterSet& ps)
+    {
+      itsResampleCellSize.freq = ps.getUint32("Resample.CellSize.Freq");
+      itsResampleCellSize.time = ps.getUint32("Resample.CellSize.Time");
+
+      if(itsResampleCellSize.freq == 0 || itsResampleCellSize.time == 0)
+      {
+        THROW(BBSControlException, "Invalid resample cell size specified for "
+          "step: " << name());
+      }
+    }
+
+    void SolveStep::parseDirection(const ParameterSet& ps)
+    {
+      // Parse PhaseShift.Direction value and convert to casa::MDirection.
+      itsDirectionASCII = ps.getStringVector("PhaseShift.Direction");
+      if(itsDirectionASCII.size() != 3)
+      {
+        THROW(BBSControlException, "Parse error in key PhaseShift of step: "
+          << name());
+      }
+
+      casa::Bool status = true;
+      casa::MDirection::Types refType;
+      status = status && casa::MDirection::getType(refType,
+        itsDirectionASCII[0]);
+
+      casa::Quantity ra, dec;
+      status = status && casa::MVAngle::read(ra, itsDirectionASCII[1]);
+      status = status && casa::MVAngle::read(dec, itsDirectionASCII[2]);
+
+      if(!status)
+      {
+        THROW(BBSControlException, "Parse error in key PhaseShift of step: "
+          << name());
+      }
+
+      itsDirection = casa::MDirection(ra, dec, refType);
     }
 
 

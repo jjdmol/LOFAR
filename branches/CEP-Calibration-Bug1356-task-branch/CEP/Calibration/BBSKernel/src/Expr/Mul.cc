@@ -37,7 +37,7 @@ Mul::Mul(const Expr<Scalar>::ConstPtr &lhs,
 {
 }
 
-const JonesMatrix::View Mul::evaluateImpl(const Request &request,
+const JonesMatrix::View Mul::evaluateImpl(const Grid &grid,
     const Scalar::View &lhs, const JonesMatrix::View &rhs) const
 {
     JonesMatrix::View result;

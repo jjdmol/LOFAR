@@ -53,8 +53,8 @@ public:
 
     AsExpr();
 
-    template <typename T_ITERATOR>
-    AsExpr(T_ITERATOR first, T_ITERATOR last);
+    template <typename T_ITER>
+    AsExpr(T_ITER first, T_ITER last);
 
     ~AsExpr();
 
@@ -65,7 +65,7 @@ protected:
     virtual ExprBase::ConstPtr argument(unsigned int i) const;
 
     virtual const Vector<LENGTH> evaluateExpr(const Request &request,
-        Cache &cache) const;
+        Cache &cache, unsigned int grid) const;
 
 private:
     typename Expr<Scalar>::ConstPtr itsArg[LENGTH];
@@ -98,8 +98,8 @@ protected:
     virtual unsigned int nArguments() const;
     virtual ExprBase::ConstPtr argument(unsigned int i) const;
 
-    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache)
-        const;
+    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache,
+        unsigned int grid) const;
 
 private:
     Expr<Scalar>::ConstPtr  itsArg[4];
@@ -117,8 +117,8 @@ public:
         const Expr<Scalar>::ConstPtr &element11);
 
 protected:
-    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache)
-        const;
+    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache,
+        unsigned int grid) const;
 };
 
 // Adaptor class to bundle two real Expr<Scalar> into a single complex
@@ -134,7 +134,7 @@ public:
         const Expr<Scalar>::ConstPtr &im);
 
 protected:
-    virtual const Scalar::View evaluateImpl(const Request&,
+    virtual const Scalar::View evaluateImpl(const Grid&,
         const Scalar::View &re, const Scalar::View &im) const;
 };
 
@@ -152,7 +152,7 @@ public:
         const Expr<Scalar>::ConstPtr &argument);
 
 protected:
-    virtual const Scalar::View evaluateImpl(const Request&,
+    virtual const Scalar::View evaluateImpl(const Grid&,
         const Scalar::View &mod, const Scalar::View &arg) const;
 };
 
@@ -168,8 +168,8 @@ AsExpr<Vector<LENGTH> >::AsExpr()
 }
 
 template <unsigned int LENGTH>
-template <typename T_ITERATOR>
-AsExpr<Vector<LENGTH> >::AsExpr(T_ITERATOR first, T_ITERATOR last)
+template <typename T_ITER>
+AsExpr<Vector<LENGTH> >::AsExpr(T_ITER first, T_ITER last)
 {
     for(unsigned int i = 0; i < LENGTH; ++i)
     {
@@ -199,7 +199,7 @@ void AsExpr<Vector<LENGTH> >::connect(unsigned int i0,
 
 template <unsigned int LENGTH>
 const Vector<LENGTH> AsExpr<Vector<LENGTH> >::evaluateExpr
-    (const Request &request, Cache &cache) const
+    (const Request &request, Cache &cache, unsigned int grid) const
 {
     // Allocate result.
     Vector<LENGTH> result;
@@ -208,7 +208,7 @@ const Vector<LENGTH> AsExpr<Vector<LENGTH> >::evaluateExpr
     Scalar args[LENGTH];
     for(unsigned int i = 0; i < LENGTH; ++i)
     {
-        args[i] = itsArg[i]->evaluate(request, cache);
+        args[i] = itsArg[i]->evaluate(request, cache, grid);
         result.setValueSet(i, args[i].getValueSet());
     }
 

@@ -29,6 +29,11 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 
+namespace casa
+{
+    class Path;
+}
+
 namespace LOFAR
 {
 namespace BBS
@@ -40,7 +45,7 @@ namespace BBS
 class ExternalFunction
 {
 public:
-    ExternalFunction(const string &module, const string &name);
+    ExternalFunction(const casa::Path &module, const string &name);
     ~ExternalFunction();
 
     unsigned int nArguments() const;

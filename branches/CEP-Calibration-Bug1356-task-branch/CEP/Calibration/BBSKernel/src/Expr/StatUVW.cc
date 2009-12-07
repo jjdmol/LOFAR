@@ -57,11 +57,11 @@ StatUVW::StatUVW(const casa::MPosition &position, const casa::MPosition &array,
 {
 }
 
-const Vector<3> StatUVW::evaluateExpr(const Request &request, Cache &cache)
-    const
+const Vector<3> StatUVW::evaluateExpr(const Request &request, Cache &cache,
+    unsigned int grid) const
 {
     // Allocate result.
-    size_t nTime = request[TIME]->size();
+    size_t nTime = request[grid][TIME]->size();
 
     Matrix U, V, W;
     double *u = U.setDoubleFormat(1, nTime);
@@ -76,7 +76,7 @@ const Vector<3> StatUVW::evaluateExpr(const Request &request, Cache &cache)
     size_t nDone = 0;
     for(size_t i = 0; i < nTime; ++i)
     {
-        Timestamp time(request[TIME]->center(i));
+        Timestamp time(request[grid][TIME]->center(i));
         map<Timestamp, UVW>::const_iterator it = itsUVWCache.find(time);
 
         if(it != itsUVWCache.end())
@@ -115,7 +115,7 @@ const Vector<3> StatUVW::evaluateExpr(const Request &request, Cache &cache)
         //# Compute missing UVW coordinates.
         for(size_t i = 0; i < nTime; ++i)
         {
-            const double time = request[TIME]->center(i);
+            const double time = request[grid][TIME]->center(i);
             map<Timestamp, UVW>::iterator it =
                 itsUVWCache.find(Timestamp(time));
 

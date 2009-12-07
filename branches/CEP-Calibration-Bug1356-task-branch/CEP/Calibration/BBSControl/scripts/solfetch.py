@@ -1,4 +1,4 @@
-# solfetch.py: 
+# solfetch.py:
 #
 # Copyright (C) 2007
 # ASTRON (Netherlands Institute for Radio Astronomy)
@@ -22,7 +22,7 @@
 
 import numpy
 
-def fetch(db, stations, phasors=False, parm="Gain:11", direction=None,
+def fetch(db, stations, phasors=False, parm="Gain:0:0", direction=None,
     asPolar=True):
     """
     Fetch the value of a complex, station bound, parameter from a LOFAR
@@ -33,7 +33,7 @@ def fetch(db, stations, phasors=False, parm="Gain:11", direction=None,
                 (will be added as an infix / suffix to the parameter base name).
     phasors:    (default False) If set to true, use "Ampl", "Phase" infix
                 instead of "Real", "Imag".
-    parm:       (default "Gain:11") Base name of parameter to fetch.
+    parm:       (default "Gain:0:0") Base name of parameter to fetch.
     direction:  (default None) Source name added to the parameter name as a
                 suffix.
     asPolar:    (default True) Return value as (amplitude, phase) if set to

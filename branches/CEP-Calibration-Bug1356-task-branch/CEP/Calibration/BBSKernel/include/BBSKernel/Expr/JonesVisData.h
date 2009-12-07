@@ -57,8 +57,8 @@ protected:
         ASSERT(false);
     }
 
-    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache)
-        const;
+    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache,
+        unsigned int grid) const;
 
 private:
     void copyData(double *re, double *im,
@@ -70,7 +70,7 @@ private:
         const;
 
     VisData::Ptr    itsChunk;
-    uint            itsBaselineIndex;
+    unsigned int    itsBaselineIndex;
 };
 
 // @}

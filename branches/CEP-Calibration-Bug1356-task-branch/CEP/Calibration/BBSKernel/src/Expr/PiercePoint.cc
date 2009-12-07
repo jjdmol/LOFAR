@@ -62,10 +62,10 @@ PiercePoint::PiercePoint(const casa::MPosition &position,
     itsEarthRadius = inproduct_xyz - itsHeight;
 }
 
-const Vector<4>::View PiercePoint::evaluateImpl(const Request &request,
+const Vector<4>::View PiercePoint::evaluateImpl(const Grid &grid,
     const Vector<2>::View &azel) const
 {
-    const size_t nTime = request[TIME]->size();
+    const size_t nTime = grid[TIME]->size();
 
     // Get long lat needed for rotation.
     double sinlon = std::sin(itsLon);

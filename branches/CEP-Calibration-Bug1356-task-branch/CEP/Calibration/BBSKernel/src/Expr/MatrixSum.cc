@@ -44,12 +44,12 @@ void MatrixSum::connect(const Expr<JonesMatrix>::ConstPtr &expr)
     itsExpr.push_back(expr);
 }
 
-const JonesMatrix MatrixSum::evaluateExpr(const Request &request, Cache &cache)
-    const
+const JonesMatrix MatrixSum::evaluateExpr(const Request &request, Cache &cache,
+    unsigned int grid) const
 {
     // TODO: Use unsigned integer type for Matrix size.
-    int nx = request[FREQ]->size();
-    int ny = request[TIME]->size();
+    int nx = request[grid][FREQ]->size();
+    int ny = request[grid][TIME]->size();
 
     // Allocate Jones matrix elements and initialize the main value to 0 + 0i.
     ValueSet element[2][2];
@@ -67,7 +67,7 @@ const JonesMatrix MatrixSum::evaluateExpr(const Request &request, Cache &cache)
     // this sum somehow.
     for(size_t i = 0; i < itsExpr.size(); ++i)
     {
-        const JonesMatrix term = itsExpr[i]->evaluate(request, cache);
+        const JonesMatrix term = itsExpr[i]->evaluate(request, cache, grid);
 
         // Update flags.
         if(term.hasFlags())

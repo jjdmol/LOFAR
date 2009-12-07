@@ -56,7 +56,8 @@ ExprBase::ConstPtr MIM::argument(unsigned int i) const
     }
 }
 
-const Scalar MIM::evaluateExpr(const Request &request, Cache &cache) const
+const Scalar MIM::evaluateExpr(const Request &request, Cache &cache,
+    unsigned int grid) const
 {
     // Allocate result.
     Scalar result;
@@ -66,14 +67,14 @@ const Scalar MIM::evaluateExpr(const Request &request, Cache &cache) const
     vector<FlagArray> flags;
     flags.reserve(nArg);
 
-    const Vector<4> pp = itsPiercePoint->evaluate(request, cache);
+    const Vector<4> pp = itsPiercePoint->evaluate(request, cache, grid);
     flags.push_back(pp.flags());
 
     vector<Scalar> coeff;
     coeff.reserve(nArg - 1);
     for(unsigned int i = 0; i < nArg - 1; ++i)
     {
-        coeff.push_back(itsCoeff[i]->evaluate(request, cache));
+        coeff.push_back(itsCoeff[i]->evaluate(request, cache, grid));
         flags.push_back(coeff[i].flags());
     }
 
@@ -87,7 +88,7 @@ const Scalar MIM::evaluateExpr(const Request &request, Cache &cache) const
     {
         coeffValue.push_back(coeff[i].view());
     }
-    result.assign(evaluateImpl(request, pp.view(), coeffValue));
+    result.assign(evaluateImpl(request[grid], pp.view(), coeffValue));
 
     // Compute perturbed values.
     Vector<4>::Iterator ppIt(pp);
@@ -115,7 +116,8 @@ const Scalar MIM::evaluateExpr(const Request &request, Cache &cache) const
             coeffValue[i] = coeffIt[i].value(key);
         }
 
-        result.assign(key, evaluateImpl(request, ppIt.value(key), coeffValue));
+        result.assign(key, evaluateImpl(request[grid], ppIt.value(key),
+            coeffValue));
 
         ppIt.advance(key);
         atEnd = ppIt.atEnd();
@@ -129,11 +131,11 @@ const Scalar MIM::evaluateExpr(const Request &request, Cache &cache) const
     return result;
 }
 
-const Scalar::View MIM::evaluateImpl(const Request &request,
+const Scalar::View MIM::evaluateImpl(const Grid &grid,
     const Vector<4>::View &pp, const vector<Scalar::View> &coeff) const
 {
-    const size_t nFreq = request[FREQ]->size();
-    const size_t nTime = request[TIME]->size();
+    const size_t nFreq = grid[FREQ]->size();
+    const size_t nTime = grid[TIME]->size();
 
     // Check preconditions.
     ASSERT(static_cast<size_t>(pp(0).nelements()) == nTime);
@@ -207,7 +209,7 @@ const Scalar::View MIM::evaluateImpl(const Request &request,
         // Convert TEC to frequency dependent phase.
         for(size_t f = 0; f < nFreq; ++f)
         {
-    	    double phase = (75e8 / request[FREQ]->center(f)) * tec;
+    	    double phase = (75e8 / grid[FREQ]->center(f)) * tec;
             *Z_re++ = std::cos(phase);
             *Z_im++ = std::sin(phase);
         }

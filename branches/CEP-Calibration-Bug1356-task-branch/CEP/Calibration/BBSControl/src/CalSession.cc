@@ -73,7 +73,7 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 namespace
@@ -109,7 +109,7 @@ CalSession::CalSession(const string &key, const string &db, const string &user,
     // Determine the ProcessId of this worker.
     char hostname[512];
     int status = gethostname(hostname, 512);
-    ASSERT(status == 0);    
+    ASSERT(status == 0);
     itsProcessId = ProcessId(string(hostname), getpid());
 
     // Build connection string.
@@ -118,7 +118,7 @@ CalSession::CalSession(const string &key, const string &db, const string &user,
     if(!password.empty()) {
       opts += " password='" + password + "'";
     }
-    
+
     try
     {
         LOG_DEBUG_STR("Connecting to database: " << opts);
@@ -129,7 +129,7 @@ CalSession::CalSession(const string &key, const string &db, const string &user,
         itsConnection->perform(PQInitSession(key, itsSessionId));
     }
     CATCH_PQXX_AND_RETHROW
-    
+
     registerTrigger(Trigger::WorkerRegisterModified);
     syncWorkerRegister(true);
 }
@@ -146,14 +146,14 @@ ProcessId CalSession::getProcessId() const
 bool CalSession::registerAsControl()
 {
     int32 status = -1;
-    
+
     try
     {
         itsConnection->perform(PQRegisterAsControl(itsSessionId, itsProcessId,
             status));
     }
     CATCH_PQXX_AND_RETHROW;
-    
+
     return status == 0;
 }
 
@@ -189,14 +189,14 @@ bool CalSession::registerAsSolver(size_t port)
 void CalSession::setState(State state)
 {
     int32 status = -1;
-    
+
     try
     {
         itsConnection->perform(PQSetState(itsSessionId, itsProcessId, state,
             status));
     }
     CATCH_PQXX_AND_RETHROW;
-    
+
     if(status != 0)
     {
         THROW(CalSessionException, "Unable to set session state");
@@ -207,18 +207,18 @@ CalSession::State CalSession::getState() const
 {
     int32 status = -1;
     State result;
-    
+
     try
     {
         itsConnection->perform(PQGetState(itsSessionId, status, result));
     }
     CATCH_PQXX_AND_RETHROW;
-    
+
     if(status != 0)
     {
         THROW(CalSessionException, "Unable to get session state");
     }
-    
+
     return result;
 }
 
@@ -230,19 +230,19 @@ void CalSession::initWorkerRegister(const CEP::VdsDesc &vds, bool useSolver)
             vds, useSolver));
     }
     CATCH_PQXX_AND_RETHROW;
-}    
+}
 
 void CalSession::setWorkerIndex(const ProcessId &worker, size_t index)
 {
     int32 status = -1;
-    
+
     try
     {
         itsConnection->perform(PQSetWorkerIndex(itsSessionId, itsProcessId,
             worker, index, status));
     }
     CATCH_PQXX_AND_RETHROW;
-    
+
     if(status != 0)
     {
         THROW(CalSessionException, "Unable to set index of worker: " << worker
@@ -276,7 +276,7 @@ pair<CommandId, shared_ptr<Command> > CalSession::getCommand() const
     int32 status = -1;
     pair<CommandId, shared_ptr<Command> > cmd(CommandId(-1),
         shared_ptr<Command>());
-    
+
     try
     {
         itsConnection->perform(PQGetCommand(itsSessionId, itsProcessId, status,
@@ -296,9 +296,9 @@ pair<CommandId, shared_ptr<Command> > CalSession::getCommand() const
 
 void CalSession::postResult(const CommandId &id, const CommandResult &result)
     const
-{        
+{
     int32 status = -1;
-      
+
     try
     {
         itsConnection->perform(PQPostResult(itsSessionId, itsProcessId, id,
@@ -338,13 +338,13 @@ vector<pair<ProcessId, CommandResult> > CalSession::getResults(const CommandId
     &id) const
 {
     vector<pair<ProcessId, CommandResult> > results;
-    
+
     try
     {
         itsConnection->perform(PQGetResults(id, results));
     }
     CATCH_PQXX_AND_RETHROW;
-    
+
     return results;
 }
 
@@ -492,7 +492,7 @@ ProcessId CalSession::getWorkerByIndex(WorkerType type, size_t index) const
 {
     ASSERT(index <= static_cast<size_t>(std::numeric_limits<int32>::max()));
     syncWorkerRegister();
-    
+
     vector<Worker>::const_iterator it = itsRegister.begin();
     vector<Worker>::const_iterator itEnd = itsRegister.end();
     while(it != itEnd)
@@ -500,44 +500,12 @@ ProcessId CalSession::getWorkerByIndex(WorkerType type, size_t index) const
         if(it->type == type && it->index == static_cast<int32>(index))
         {
             return it->id;
-        }        
+        }
         ++it;
     }
-    
+
     THROW(CalSessionException, "No worker found of type: "
         << static_cast<int>(type) << " with index: " << index);
-}
-
-Axis::ShPtr CalSession::getGlobalTimeAxis() const
-{
-    syncWorkerRegister();
-
-    Axis::ShPtr axis;
-    vector<Worker>::const_iterator it = itsRegister.begin();
-    vector<Worker>::const_iterator itEnd = itsRegister.end();
-    while(it != itEnd)
-    {
-        if(it->type == KERNEL)
-        {
-            if(!it->grid[1])
-            {
-                continue;
-            }
-            
-            if(axis)
-            {
-                int s1, e1, s2, e2;
-                axis = axis->combine(*(it->grid[1]), s1, e1, s2, e2);
-            }
-            else
-            {
-                axis = it->grid[1];
-            }
-        }        
-        ++it;
-    }
-    
-    return axis;        
 }
 
 void CalSession::syncWorkerRegister(bool force) const
@@ -546,20 +514,20 @@ void CalSession::syncWorkerRegister(bool force) const
     {
         return;
     }
-    
+
     vector<size_t> tmpSlotCount(N_WorkerType, 0);
     vector<Worker> tmpRegister;
-    
+
     try
     {
         itsConnection->perform(PQGetWorkerRegister(itsSessionId, tmpSlotCount,
             tmpRegister));
     }
     CATCH_PQXX_AND_RETHROW;
-    
+
     itsSlotCount = tmpSlotCount;
     itsRegister = tmpRegister;
-    
+
     // Recreate the mapping from ProcessId to index in the register.
     itsRegisterMap.clear();
     for(size_t i = 0; i < itsRegister.size(); ++i)
@@ -571,7 +539,7 @@ void CalSession::syncWorkerRegister(bool force) const
 const CalSession::Worker &CalSession::getWorkerById(const ProcessId &id) const
 {
     syncWorkerRegister();
-    
+
     map<ProcessId, size_t>::const_iterator index = itsRegisterMap.find(id);
     if(index == itsRegisterMap.end())
     {
@@ -595,7 +563,7 @@ bool CalSession::waitForCommand(double timeOut) const
 
 bool CalSession::waitForResult(double timeOut) const
 {
-    if(!isRegistered(Trigger::Result))	
+    if(!isRegistered(Trigger::Result))
     {
         registerTrigger(Trigger::Result);
         return true;
@@ -632,7 +600,7 @@ bool CalSession::waitForTrigger(Trigger::Type type, double timeOut) const
     else
     {
         LOG_TRACE_COND("Waiting for notification");
-        uint notifs;
+        unsigned int notifs;
         if(timeOut < 0)
         {
             notifs = itsConnection->await_notification();
@@ -643,7 +611,7 @@ bool CalSession::waitForTrigger(Trigger::Type type, double timeOut) const
             notifs = itsConnection->await_notification(tv.tv_sec, tv.tv_usec);
         }
     }
-    
+
     return (Trigger::testAndClearFlags(type) == type);
 }
 

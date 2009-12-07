@@ -45,8 +45,8 @@ AzEl::AzEl(const casa::MPosition &position,
 {
 }
 
-const Vector<2>::View AzEl::evaluateImpl(const Request &request,
-        const Vector<2>::View &direction) const
+const Vector<2>::View AzEl::evaluateImpl(const Grid &grid,
+    const Vector<2>::View &direction) const
 {
     // Check preconditions.
     ASSERTSTR(!direction(0).isArray() && !direction(1).isArray(), "Variable"
@@ -73,7 +73,7 @@ const Vector<2>::View AzEl::evaluateImpl(const Request &request,
     // Allocate space for the result.
     // TODO: This is a hack! The Matrix class does not support 1xN or Nx1
     // "matrices".
-    const size_t nTime = request[TIME]->size();
+    const size_t nTime = grid[TIME]->size();
 
     Matrix az, el;
     double *az_p = az.setDoubleFormat(1, nTime);
@@ -83,7 +83,7 @@ const Vector<2>::View AzEl::evaluateImpl(const Request &request,
     for(size_t i = 0; i < nTime; ++i)
     {
         // Update reference frame.
-        const double time = request[TIME]->center(i);
+        const double time = grid[TIME]->center(i);
 
         qEpoch.setValue(time);
         mEpoch.set(qEpoch);

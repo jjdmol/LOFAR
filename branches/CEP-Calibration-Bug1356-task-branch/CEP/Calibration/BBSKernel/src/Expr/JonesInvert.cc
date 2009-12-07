@@ -49,7 +49,7 @@ JonesInvert::JonesInvert(const Expr<JonesMatrix>::ConstPtr &expr)
 {
 }
 
-const JonesMatrix::View JonesInvert::evaluateImpl(const Request &request,
+const JonesMatrix::View JonesInvert::evaluateImpl(const Grid &grid,
     const JonesMatrix::View &arg0) const
 {
     JonesMatrix::View result;

@@ -27,6 +27,7 @@
 #include <BBSKernel/Exceptions.h>
 
 #include <casa/BasicSL/Constants.h>
+#include <casa/OS/Path.h>
 
 namespace LOFAR
 {
@@ -39,13 +40,14 @@ HamakerBeamCoeff::HamakerBeamCoeff()
 {
 }
 
-void HamakerBeamCoeff::init(const string &filename)
+void HamakerBeamCoeff::init(const casa::Path &coeffFile)
 {
     // Open file.
-    ifstream in(filename.c_str());
+    casa::String path = coeffFile.expandedName();
+    ifstream in(path.c_str());
     if(!in)
     {
-        THROW(BBSKernelException, "" << filename << ": unable to open file");
+        THROW(BBSKernelException, "" << path << ": unable to open file");
     }
 
     // Read file header.
@@ -62,18 +64,18 @@ void HamakerBeamCoeff::init(const string &filename)
     if(!in || !iss || token0 != "d" || token1 != "k" || token2 != "pwrT"
         || token3 != "pwrF" || token4 != "freqAvg" || token5 != "freqRange")
     {
-        THROW(BBSKernelException, "" << filename << ": unable to parse header");
+        THROW(BBSKernelException, "" << path << ": unable to parse header");
     }
 
     if(nElements * nHarmonics * nPowerTime * nPowerFreq == 0)
     {
-        THROW(BBSKernelException, "" << filename << ": the number of"
-            " coefficients should be larger than zero.");
+        THROW(BBSKernelException, "" << path << ": the number of coefficients"
+            " should be larger than zero.");
     }
 
-    LOG_DEBUG_STR("" << filename << ": nElements: " << nElements
-        << " nHarmonics: " << nHarmonics << " nPowerTime: " << nPowerTime
-        << " nPowerFreq: " << nPowerFreq);
+    LOG_DEBUG_STR("" << path << ": nElements: " << nElements << " nHarmonics: "
+        << nHarmonics << " nPowerTime: " << nPowerTime << " nPowerFreq: "
+        << nPowerFreq);
 
     // Allocate coefficient matrix.
     itsCenter = freqAvg;
@@ -105,8 +107,7 @@ void HamakerBeamCoeff::init(const string &filename)
         if(!iss || element >= nElements || harmonic >= nHarmonics
             || powerTime >= nPowerTime || powerFreq >= nPowerFreq)
         {
-            THROW(BBSKernelException, "" << filename << ": errror reading"
-                " file.");
+            THROW(BBSKernelException, "" << path << ": errror reading file.");
         }
 
         // Store coefficient.
@@ -119,14 +120,14 @@ void HamakerBeamCoeff::init(const string &filename)
 
     if(!in.eof())
     {
-        THROW(BBSKernelException, "" << filename << ": error reading file.");
+        THROW(BBSKernelException, "" << path << ": error reading file.");
     }
 
     if(nCoeff != nElements * nHarmonics * nPowerTime * nPowerFreq)
     {
-        THROW(BBSKernelException, "" << filename << ": the number of"
-            " coefficients specified in the header does not match the number of"
-            " coefficients in the file.");
+        THROW(BBSKernelException, "" << path << ": the number of coefficients"
+            " specified in the header does not match the number of coefficients"
+            " in the file.");
     }
 }
 
@@ -138,11 +139,11 @@ HamakerDipole::HamakerDipole(const HamakerBeamCoeff &coeff,
 {
 }
 
-const JonesMatrix::View HamakerDipole::evaluateImpl(const Request &request,
+const JonesMatrix::View HamakerDipole::evaluateImpl(const Grid &grid,
     const Vector<2>::View &azel, const Scalar::View &orientation) const
 {
-    const size_t nFreq = request[FREQ]->size();
-    const size_t nTime = request[TIME]->size();
+    const size_t nFreq = grid[FREQ]->size();
+    const size_t nTime = grid[TIME]->size();
 
     // Check preconditions.
     ASSERT(static_cast<size_t>(azel(0).nelements()) == nTime);
@@ -192,8 +193,8 @@ const JonesMatrix::View HamakerDipole::evaluateImpl(const Request &request,
             // NB: The model is parameterized in terms of a normalized
             // frequency in the range [-1, 1]. The appropriate conversion is
             // taken care of below.
-            const double normFreq = (request[FREQ]->center(f)
-                - itsCoeff.center()) / itsCoeff.width();
+            const double normFreq = (grid[FREQ]->center(f) - itsCoeff.center())
+                / itsCoeff.width();
 
             // J-jones matrix (2x2 complex matrix)
             dcomplex J[2][2];
@@ -250,6 +251,11 @@ const JonesMatrix::View HamakerDipole::evaluateImpl(const Request &request,
     result.assign(0, 1, E01);
     result.assign(1, 0, E10);
     result.assign(1, 1, E11);
+
+//    LOG_DEBUG_STR("E00: " << E00);
+//    LOG_DEBUG_STR("E01: " << E01);
+//    LOG_DEBUG_STR("E10: " << E10);
+//    LOG_DEBUG_STR("E11: " << E11);
 
     return result;
 }

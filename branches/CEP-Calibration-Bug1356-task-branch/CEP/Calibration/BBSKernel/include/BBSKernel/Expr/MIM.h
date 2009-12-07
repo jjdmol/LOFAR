@@ -56,12 +56,11 @@ protected:
     virtual unsigned int nArguments() const;
     virtual ExprBase::ConstPtr argument(unsigned int i) const;
 
-    virtual const Scalar evaluateExpr(const Request &request, Cache &cache)
-        const;
+    virtual const Scalar evaluateExpr(const Request &request, Cache &cache,
+        unsigned int grid) const;
 
-    const Scalar::View evaluateImpl(const Request &request,
-        const Vector<4>::View &pp, const vector<Scalar::View> &coeff)
-        const;
+    const Scalar::View evaluateImpl(const Grid &grid,
+        const Vector<4>::View &pp, const vector<Scalar::View> &coeff) const;
 
 private:
     casa::MPosition                 itsRefStation;

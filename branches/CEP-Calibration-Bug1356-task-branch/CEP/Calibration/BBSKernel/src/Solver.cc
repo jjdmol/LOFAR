@@ -1,4 +1,4 @@
-//# Solver.cc: 
+//# Solver.cc:
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -44,7 +44,7 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 using LOFAR::operator<<;
 
@@ -64,13 +64,13 @@ void Solver::reset(size_t maxIter, double epsValue, double epsDerivative,
     itsLmFactor = lmFactor;
     itsBalanced = balanced;
     itsUseSvd = useSvd;
-    
+
     itsCells.clear();
     itsCoeffIndex.clear();
     itsCoeffMapping.clear();
 }
 
-    
+
 void Solver::setCoeffIndex(uint32 kernelId, const CoeffIndex &local)
 {
     vector<uint32> &mapping = itsCoeffMapping[kernelId];
@@ -86,8 +86,8 @@ void Solver::setCoeffIndex(uint32 kernelId, const CoeffIndex &local)
         {
             mapping[it->second.start + i] = interval.start + i;
         }
-    }        
-}    
+    }
+}
 
 
 const CoeffIndex &Solver::getCoeffIndex() const
@@ -99,21 +99,21 @@ const CoeffIndex &Solver::getCoeffIndex() const
 void Solver::setCoeff(uint32 kernelId, const vector<CellCoeff> &local)
 {
     const vector<uint32> &mapping = itsCoeffMapping[kernelId];
-    LOG_DEBUG_STR("Look-up table: " << mapping);
+//    LOG_DEBUG_STR("Look-up table: " << mapping);
 
     const uint32 nCoeff = itsCoeffIndex.getCoeffCount();
-    LOG_DEBUG_STR("Global coefficient count: " << nCoeff);
+//    LOG_DEBUG_STR("Global coefficient count: " << nCoeff);
 
     for(size_t i = 0; i < local.size(); ++i)
     {
         pair<map<uint32, Cell>::iterator, bool> result =
             itsCells.insert(make_pair(local[i].id, Cell()));
         Cell &cell = (result.first)->second;
-        
+
         if(result.second)
         {
             ASSERT(cell.solver.nUnknowns() == 0);
-            LOG_DEBUG_STR("Initializing cell: " << local[i].id);
+//            LOG_DEBUG_STR("Initializing cell: " << local[i].id);
 
             cell.coeff.resize(nCoeff);
             cell.solver.set(nCoeff);
@@ -132,7 +132,7 @@ void Solver::setCoeff(uint32 kernelId, const vector<CellCoeff> &local)
             cell.coeff[mapping[j]] = localCoeff[j];
         }
 
-        LOG_DEBUG_STR("Global coefficients: " << cell.coeff);
+//        LOG_DEBUG_STR("Global coefficients: " << cell.coeff);
     }
 }
 
@@ -185,7 +185,7 @@ bool Solver::iterate(vector<CellSolution> &global)
     {
         const uint32 cellId = it->first;
         Cell &cell = it->second;
-        
+
         ASSERT(cell.solver.nUnknowns() > 0);
 
         // Get some statistics from the solver. Note that the chi squared is
@@ -227,7 +227,7 @@ bool Solver::iterate(vector<CellSolution> &global)
             itsCells.erase(it++);
         }
     }
-    
+
     return done;
 }
 

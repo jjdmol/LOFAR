@@ -58,8 +58,8 @@ ExprBase::ConstPtr SpectralIndex::argument(unsigned int i) const
     }
 }
 
-const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache)
-    const
+const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache,
+    unsigned int grid) const
 {
     // Allocate result.
     Scalar result;
@@ -69,17 +69,17 @@ const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache)
     vector<FlagArray> flags;
     flags.reserve(nArg);
 
-    const Scalar refFreq = itsRefFreq->evaluate(request, cache);
+    const Scalar refFreq = itsRefFreq->evaluate(request, cache, grid);
     flags.push_back(refFreq.flags());
 
-    const Scalar refStokes = itsRefStokes->evaluate(request, cache);
+    const Scalar refStokes = itsRefStokes->evaluate(request, cache, grid);
     flags.push_back(refFreq.flags());
 
     vector<Scalar> coeff;
     coeff.reserve(nArg - 2);
     for(unsigned int i = 0; i < nArg - 2; ++i)
     {
-        coeff.push_back(itsCoeff[i]->evaluate(request, cache));
+        coeff.push_back(itsCoeff[i]->evaluate(request, cache, grid));
         flags.push_back(coeff[i].flags());
     }
 
@@ -93,7 +93,7 @@ const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache)
     {
         coeffValue.push_back(coeff[i].view());
     }
-    result.assign(evaluateImpl(request, refFreq.view(), refStokes.view(),
+    result.assign(evaluateImpl(request[grid], refFreq.view(), refStokes.view(),
         coeffValue));
 
     // Compute perturbed values.
@@ -123,7 +123,7 @@ const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache)
             coeffValue[i] = coeffIt[i].value(key);
         }
 
-        result.assign(key, evaluateImpl(request, refFreqIt.value(key),
+        result.assign(key, evaluateImpl(request[grid], refFreqIt.value(key),
             refStokesIt.value(key), coeffValue));
 
         refFreqIt.advance(key);
@@ -139,7 +139,7 @@ const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache)
     return result;
 }
 
-const Scalar::View SpectralIndex::evaluateImpl(const Request &request,
+const Scalar::View SpectralIndex::evaluateImpl(const Grid &grid,
     const Scalar::View &refFreq, const Scalar::View &refStokes,
     const vector<Scalar::View> &coeff) const
 {
@@ -156,8 +156,8 @@ const Scalar::View SpectralIndex::evaluateImpl(const Request &request,
 
     // Create a 2-D Matrix that contains the frequency for each sample. (We
     // _must_ expand to a 2-D buffer because 1-D buffers are not supported).
-    const size_t nFreq = request[FREQ]->size();
-    const size_t nTime = request[TIME]->size();
+    const size_t nFreq = grid[FREQ]->size();
+    const size_t nTime = grid[TIME]->size();
 
     Matrix freq;
     double *it = freq.setDoubleFormat(nFreq, nTime);
@@ -165,7 +165,7 @@ const Scalar::View SpectralIndex::evaluateImpl(const Request &request,
     {
         for(unsigned int f = 0; f < nFreq; ++f)
         {
-            *it++ = request[FREQ]->center(f);
+            *it++ = grid[FREQ]->center(f);
         }
     }
 

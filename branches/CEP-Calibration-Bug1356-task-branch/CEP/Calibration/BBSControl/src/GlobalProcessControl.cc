@@ -47,7 +47,7 @@ namespace LOFAR
   namespace BBS
   {
     using LOFAR::operator<<;
-    
+
     // Unnamed namespace, used to define local (static) variables, etc.
     namespace
     {
@@ -76,7 +76,7 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
     }
-    
+
 
     GlobalProcessControl::~GlobalProcessControl()
     {
@@ -96,7 +96,7 @@ namespace LOFAR
         LOG_ERROR_STR(e);
         return false;
       }
-      
+
       // All went well.
       return true;
     }
@@ -109,7 +109,7 @@ namespace LOFAR
       try {
         ParameterSet *ps = globalParameterSet();
         ASSERT(ps);
-        
+
         // Read Observation descriptor.
         itsVdsDesc = CEP::VdsDesc(ps->getString("Observation"));
 
@@ -155,10 +155,10 @@ namespace LOFAR
         LOG_INFO_STR("Observation frequency range: [" << itsFreqStart << ","
           << itsFreqEnd << "]");
 
-        // Determine global time axis and apply TimeWindow selection.
-        itsGlobalTimeAxis = itsCalSession->getGlobalTimeAxis();
-        ASSERT(itsGlobalTimeAxis);
-        
+        // Determine global time axis and verify consistency across all parts.
+        itsGlobalTimeAxis = getGlobalTimeAxis();
+
+        // Apply TimeWindow selection.
         itsTimeStart = 0;
         itsTimeEnd = itsGlobalTimeAxis->size() - 1;
 
@@ -168,15 +168,21 @@ namespace LOFAR
         if(!window.empty() && casa::MVTime::read(time, window[0])) {
           const pair<size_t, bool> result =
             itsGlobalTimeAxis->find(time.getValue("s"));
-          itsTimeStart = result.first;
+
+          if(result.second) {
+            itsTimeStart = result.first;
+          }
         }
 
         if(window.size() > 1 && casa::MVTime::read(time, window[1])) {
           const pair<size_t, bool> result =
             itsGlobalTimeAxis->find(time.getValue("s"), false);
-          itsTimeEnd = result.first;
+
+          if(result.first < itsGlobalTimeAxis->size()) {
+            itsTimeEnd = result.first;
+          }
         }
-        
+
         itsChunkStart = itsTimeStart;
         itsChunkSize = itsStrategy.getChunkSize();
         if(itsChunkSize == 0) {
@@ -187,7 +193,7 @@ namespace LOFAR
 
         LOG_INFO_STR("Selected time range: [" << itsTimeStart << ","
           << itsTimeEnd << "]");
-        LOG_INFO_STR("Chunk size: " << itsChunkSize << " time slot(s)");
+        LOG_INFO_STR("Chunk size: " << itsChunkSize << " timestamp(s)");
 
         // Switch session state.
         itsCalSession->setState(CalSession::PROCESSING);
@@ -198,7 +204,7 @@ namespace LOFAR
         InitializeCommand initCmd(itsStrategy);
         CommandId initId = itsCalSession->postCommand(initCmd);
         LOG_DEBUG_STR("Initialize command has ID: " << initId);
-        
+
         // Wait for workers to execute initialize command.
         bool ok = false;
         while(!ok) {
@@ -211,7 +217,7 @@ namespace LOFAR
               itsCalSession->setState(CalSession::FAILED);
               return false;
             }
-                    
+
             ok = (status.finished == nWorkers);
           }
         }
@@ -231,11 +237,11 @@ namespace LOFAR
             LOG_ERROR_STR(e);
           } catch(...) {
           }
-        }          
-          
+        }
+
         return false;
       }
-     
+
       return true;
     }
 
@@ -253,25 +259,25 @@ namespace LOFAR
           }
 
           case NEXT_CHUNK: {
-            // Send a "next chunk" command. 
+            // Send a "next chunk" command.
             LOG_TRACE_FLOW("State::NEXT_CHUNK");
             ASSERT(itsChunkStart <= itsTimeEnd);
 
             const double start = itsGlobalTimeAxis->lower(itsChunkStart);
             const double end = itsGlobalTimeAxis->upper(std::min(itsChunkStart
               + itsChunkSize - 1, itsTimeEnd));
-            
+
             itsChunkStart += itsChunkSize;
-            
-            NextChunkCommand cmd(itsFreqStart, itsFreqEnd, start, end);          
+
+            NextChunkCommand cmd(itsFreqStart, itsFreqEnd, start, end);
             itsWaitId =  itsCalSession->postCommand(cmd, CalSession::KERNEL);
             LOG_DEBUG_STR("Next-chunk command has ID: " << itsWaitId);
 
             setState(NEXT_CHUNK_WAIT);
             break;
           }
-            
-            
+
+
           case NEXT_CHUNK_WAIT: {
             // Wait for a "result trigger" form the database. If trigger
             // received within time-out period, fetch new results. If any of the
@@ -337,37 +343,37 @@ namespace LOFAR
 
             if(itsCalSession->waitForResult()) {
               CommandStatus status = itsCalSession->getCommandStatus(itsWaitId);
-                
+
               if(status.finished == itsCalSession->getWorkerCount()) {
                 if(status.failed == 0) {
                   itsCalSession->setState(CalSession::DONE);
                 } else {
                   itsCalSession->setState(CalSession::FAILED);
                 }
-                
+
                 setState(QUIT);
               }
-            }                    
+            }
             break;
           }
-          
+
           case QUIT: {
             LOG_TRACE_FLOW("State::QUIT");
             // Notify ACC that we are done.
             clearRunState();
             break;
-          }          
+          }
         } // switch
       }
       catch(Exception& e) {
         LOG_ERROR_STR(e);
         return false;
       }
-      
+
       // All went well.
       return true;
     }
-    
+
 
     tribool GlobalProcessControl::release()
     {
@@ -430,6 +436,31 @@ namespace LOFAR
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
+    Axis::ShPtr GlobalProcessControl::getGlobalTimeAxis() const {
+      vector<ProcessId> kernels =
+        itsCalSession->getWorkersByType(CalSession::KERNEL);
+      ASSERT(kernels.size() > 0);
+
+      Axis::ShPtr globalAxis;
+      for(size_t i = 0; i < kernels.size(); ++i)
+      {
+        Axis::ShPtr localAxis = itsCalSession->getGrid(kernels[i])[1];
+        if(!localAxis) {
+          THROW(BBSControlException, "Time axis not known for kernel process: "
+            << kernels[i]);
+        }
+
+        if(globalAxis && globalAxis != localAxis) {
+          THROW(CalSessionException, "Time axis inconsistent for kernel"
+            " process: " << kernels[i]);
+        } else {
+          globalAxis = localAxis;
+        }
+      }
+
+      return globalAxis;
+    }
+
 
     void GlobalProcessControl::createWorkerIndex()
     {
@@ -444,7 +475,7 @@ namespace LOFAR
         index[i] = make_pair(kernels[i],
           itsCalSession->getGrid(kernels[i])[0]->lower(0));
       }
-      
+
       stable_sort(index.begin(), index.end(), LessKernel());
 
       // Update the worker register.
@@ -455,15 +486,15 @@ namespace LOFAR
 
       vector<ProcessId> solvers =
         itsCalSession->getWorkersByType(CalSession::SOLVER);
-          
+
       // Update the worker register.
       for(size_t i = 0; i < solvers.size(); ++i)
       {
         itsCalSession->setWorkerIndex(solvers[i], i);
       }
     }
-    
-    void GlobalProcessControl::setState(State state) 
+
+    void GlobalProcessControl::setState(State state)
     {
       itsState = state;
       LOG_DEBUG_STR("Switching to " << showState() << " state");

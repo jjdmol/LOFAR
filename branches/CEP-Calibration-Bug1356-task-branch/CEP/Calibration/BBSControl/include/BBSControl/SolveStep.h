@@ -33,6 +33,9 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 
+#include <measures/Measures/MDirection.h>
+
+
 namespace LOFAR
 {
   namespace BBS
@@ -69,13 +72,23 @@ namespace LOFAR
 
       // @name Accessor methods
       // @{
-      vector<string> parms()              const { return itsParms; }
-      vector<string> exclParms()          const { return itsExclParms; }
-      vector<uint32> calibrationGroups()  const { return itsCalibrationGroups; }
-      CellSize       cellSize()           const { return itsCellSize; }
-      uint32         cellChunkSize()      const { return itsCellChunkSize; }
-      bool           propagate()          const { return itsPropagateFlag; }
-      SolverOptions  solverOptions()      const { return itsSolverOptions; }
+      vector<string>    parms()             const { return itsParms; }
+      vector<string>    exclParms()         const { return itsExclParms; }
+      vector<uint32>    calibrationGroups() const
+      { return itsCalibrationGroups; }
+      bool              globalSolution()    const
+      { return !itsCalibrationGroups.empty(); }
+      CellSize          cellSize()          const { return itsCellSize; }
+      uint32            cellChunkSize()     const { return itsCellChunkSize; }
+      bool              propagate()         const { return itsPropagateFlag; }
+      bool              resample()          const { return itsResampleFlag; }
+      CellSize          resampleCellSize()  const
+      { return itsResampleCellSize; }
+      double            flagDensityThreshold() const
+      { return itsFlagDensityThreshold; }
+      bool              shift()             const { return itsShiftFlag; }
+      casa::MDirection  direction()         const { return itsDirection; }
+      SolverOptions     solverOptions()     const { return itsSolverOptions; }
       // @}
 
       // Return the command type of \c *this as a string.
@@ -88,13 +101,36 @@ namespace LOFAR
       // Read the contents from the ParameterSet \a ps into \c *this.
       virtual void read(const ParameterSet& ps);
 
-      vector<string> itsParms;         ///< Names of the solvable parameters
-      vector<string> itsExclParms;     ///< Parameters excluded from solve
-      vector<uint32> itsCalibrationGroups; ///< Vector of calibration groups.
-      CellSize       itsCellSize;      ///< Solution cell size.
-      uint32         itsCellChunkSize; ///< Number of cells processed together.
-      bool           itsPropagateFlag; ///< Propagate solutions?
-      SolverOptions  itsSolverOptions; ///< Solver options
+      void parseResampleCellSize(const ParameterSet& ps);
+      void parseDirection(const ParameterSet& ps);
+
+      // Names of the parameters to fit.
+      vector<string>    itsParms;
+      // Names of the parameters to exclude from fitting.
+      vector<string>    itsExclParms;
+      // Vector of calibration groups.
+      vector<uint32>    itsCalibrationGroups;
+      // Solution cell size.
+      CellSize          itsCellSize;
+      // Number of cells (along the time axis) processed together.
+      uint32            itsCellChunkSize;
+      // Resample observed visbility data?
+      bool              itsResampleFlag;
+      // Resolution on which to fit the model.
+      CellSize          itsResampleCellSize;
+      // Maximal flag density.
+      double            itsFlagDensityThreshold;
+      // Phase shift observed visibility data?
+      bool              itsShiftFlag;
+      // Direction to phase shift the visibility data to.
+      // TODO: Extend casacore with I/O stream operators for MDirection
+      // instances (alla MVAngle but including the reference type, e.g. J2000).
+      vector<string>    itsDirectionASCII;
+      casa::MDirection  itsDirection;
+      // Propagate solutions?
+      bool              itsPropagateFlag;
+      // Solver options.
+      SolverOptions     itsSolverOptions;
     };
 
     // @}
@@ -104,4 +140,3 @@ namespace LOFAR
 } // namespace LOFAR
 
 #endif
-

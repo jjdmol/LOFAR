@@ -44,15 +44,15 @@ DFTPS::DFTPS(const Expr<Vector<3> >::ConstPtr &uvw,
 {
 }
 
-const Vector<2>::View DFTPS::evaluateImpl(const Request &request,
+const Vector<2>::View DFTPS::evaluateImpl(const Grid &grid,
     const Vector<3>::View &uvw, const Vector<3>::View &lmn) const
 {
     // Check precondition (frequency axis must be regular).
-    ASSERT(dynamic_cast<RegularAxis*>(request[FREQ].get()) != 0);
+    ASSERT(dynamic_cast<RegularAxis*>(grid[FREQ].get()) != 0);
 
     // Calculate 2.0 * pi / lambda0, where lambda0 = c / f0.
-    const double lambda0 = C::_2pi * request[FREQ]->center(0) / C::c;
-    const double dlambda = request[FREQ]->width(0) / request[FREQ]->center(0);
+    const double lambda0 = C::_2pi * grid[FREQ]->center(0) / C::c;
+    const double dlambda = grid[FREQ]->width(0) / grid[FREQ]->center(0);
 
     // NOTE: Both UVW and LMN are vectors are required to be either scalar or
     // variable in time.
@@ -67,11 +67,11 @@ const Vector<2>::View DFTPS::evaluateImpl(const Request &request,
         * (lmn(2) - 1.0)) * lambda0;
     result.assign(0, tocomplex(cos(phase0), sin(phase0)));
 
-    // If the request contains multiple frequencies then a "step" term is
-    // computed to be able to efficiently compute the phase shift at
-    // different frequencies in the PhaseShift node (see explanation in the
-    // DFTPS header file).
-    if(request[FREQ]->size() > 1)
+    // If the grid contains multiple frequencies then a "step" term is computed
+    // to be able to efficiently compute the phase shift at different
+    // frequencies in the PhaseShift node (see explanation in the DFTPS header
+    // file).
+    if(grid[FREQ]->size() > 1)
     {
         phase0 *= dlambda;
         result.assign(1, tocomplex(cos(phase0), sin(phase0)));

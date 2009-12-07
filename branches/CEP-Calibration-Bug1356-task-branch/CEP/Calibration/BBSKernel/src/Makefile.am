@@ -4,6 +4,7 @@ lib_LTLIBRARIES = libbbskernel.la
 libbbskernel_la_SOURCES = Package__Version.cc \
 	Equator.cc \
 	Evaluator.cc \
+	Instrument.cc \
 	MeasurementAIPS.cc \
 	Model.cc \
 	ModelConfig.cc \
@@ -13,7 +14,9 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	SolverInterfaceTypes.cc \
 	VisData.cc \
 	VisDimensions.cc \
+	VisExpr.cc \
 	VisSelection.cc \
+	Expr/ArrayFactor.cc \
 	Expr/AzEl.cc \
 	Expr/Cache.cc \
 	Expr/ConditionNumber.cc \
@@ -24,6 +27,7 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/ExprResult.cc \
 	Expr/ExprValueView.cc \
 	Expr/ExprValueIterator.cc \
+	Expr/ExprVisData.cc \
 	Expr/ExternalFunction.cc \
 	Expr/FlagArray.cc \
 	Expr/GaussianCoherence.cc \
@@ -31,6 +35,7 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/HamakerDipole.cc \
 	Expr/JonesInvert.cc \
 	Expr/JonesVisData.cc \
+	Expr/Literal.cc \
 	Expr/LMN.cc \
 	Expr/Matrix.cc \
 	Expr/MatrixComplexArr.cc \
@@ -49,6 +54,7 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/PointCoherence.cc \
 	Expr/PointSource.cc \
 	Expr/Request.cc \
+	Expr/Resampler.cc \
 	Expr/Source.cc \
 	Expr/SpectralIndex.cc \
 	Expr/StatUVW.cc \

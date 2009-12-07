@@ -50,7 +50,7 @@ public:
         const Expr<Vector<2> >::ConstPtr &direction);
 
 protected:
-    virtual const Vector<2>::View evaluateImpl(const Request &request,
+    virtual const Vector<2>::View evaluateImpl(const Grid &grid,
         const Vector<2>::View &direction) const;
 
 private:

@@ -50,7 +50,7 @@ public:
         const Expr<Vector<3> >::ConstPtr &uvwB);
 
 protected:
-    virtual const JonesMatrix::View evaluateImpl(const Request &request,
+    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
         const Vector<4>::View &stokes, const Vector<2>::View &dimensions,
         const Scalar::View &orientation, const Vector<3>::View &uvwA,
         const Vector<3>::View &uvwB) const;

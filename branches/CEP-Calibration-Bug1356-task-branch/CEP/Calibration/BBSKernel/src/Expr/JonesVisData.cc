@@ -40,11 +40,11 @@ JonesVisData::JonesVisData(const VisData::Ptr &chunk,
 }
 
 const JonesMatrix JonesVisData::evaluateExpr(const Request &request,
-    Cache &cache) const
+    Cache &cache, unsigned int grid) const
 {
     const VisDimensions &dims = itsChunk->getDimensions();
     const Grid &visGrid = dims.getGrid();
-    const Grid &reqGrid = request.getGrid();
+    const Grid &reqGrid = request[grid];
 
     // Find the offset of the request grid relative to the chunk grid.
     Box reqBox(reqGrid.getBoundingBox());
@@ -52,8 +52,8 @@ const JonesMatrix JonesVisData::evaluateExpr(const Request &request,
 
     // Verify that the request grid is contained within the chunk grid (as it
     // is impossible to return a partial result).
-    uint nChannels = request[FREQ]->size();
-    uint nTimeslots = request[TIME]->size();
+    unsigned int nChannels = reqGrid[FREQ]->size();
+    unsigned int nTimeslots = reqGrid[TIME]->size();
     ASSERT(start.first + nChannels <= visGrid.shape().first);
     ASSERT(start.second + nTimeslots <= visGrid.shape().second);
 
@@ -73,7 +73,7 @@ const JonesMatrix JonesVisData::evaluateExpr(const Request &request,
     // Copy 11 elements if available.
     try
     {
-        const uint productIndex = dims.getPolarizationIndex("XX");
+        const unsigned int productIndex = dims.getPolarizationIndex("XX");
         m11.setDCMat(nChannels, nTimeslots);
         m11.dcomplexStorage(re, im);
         copyData(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
@@ -87,7 +87,7 @@ const JonesMatrix JonesVisData::evaluateExpr(const Request &request,
     // Copy 12 elements if available.
     try
     {
-        const uint productIndex = dims.getPolarizationIndex("XY");
+        const unsigned int productIndex = dims.getPolarizationIndex("XY");
         m12.setDCMat(nChannels, nTimeslots);
         m12.dcomplexStorage(re, im);
         copyData(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
@@ -101,7 +101,7 @@ const JonesMatrix JonesVisData::evaluateExpr(const Request &request,
     // Copy 21 elements if available.
     try
     {
-        const uint productIndex = dims.getPolarizationIndex("YX");
+        const unsigned int productIndex = dims.getPolarizationIndex("YX");
         m21.setDCMat(nChannels, nTimeslots);
         m21.dcomplexStorage(re, im);
         copyData(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
@@ -116,7 +116,7 @@ const JonesMatrix JonesVisData::evaluateExpr(const Request &request,
     // Copy 22 elements if available.
     try
     {
-        const uint productIndex = dims.getPolarizationIndex("YY");
+        const unsigned int productIndex = dims.getPolarizationIndex("YY");
         m22.setDCMat(nChannels, nTimeslots);
         m22.dcomplexStorage(re, im);
         copyData(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
