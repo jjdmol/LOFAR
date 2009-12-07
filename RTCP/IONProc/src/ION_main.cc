@@ -152,7 +152,7 @@ static void createAllCNstreams(const std::string &streamType)
   for (unsigned core = 0; core < nrCNcoresInPset; core ++) {
 #if defined HAVE_FCNP && defined __PPC__
     if (streamType == "FCNP")
-      allCNstreams[core] = new FCNP_ServerStream(core);
+      allCNstreams[core] = new FCNP_ServerStream(core, 0);
     else
 #endif
 

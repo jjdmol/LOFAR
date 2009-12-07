@@ -43,11 +43,11 @@ int main(int argc, char **argv)
 
     for (size_t size = 16; size <= 128 * 1024 * 1024; size <<= 1)
        for (unsigned i = 0; i < 16; i ++)
-	FCNP_CN::IONtoCN_ZeroCopy(largeBuffer, size);
+	FCNP_CN::IONtoCN_ZeroCopy(0, largeBuffer, size);
 
     for (unsigned logsize = 4; logsize <= 27; logsize ++) {
       size_t size = 1 << logsize;
-      FCNP_CN::CNtoION_ZeroCopy(largeBuffer, size);
+      FCNP_CN::CNtoION_ZeroCopy(0, largeBuffer, size);
 
       unsigned long long time = 0;
 
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 	//usleep(10000); // wait until ION is ready to receive
 
 	time -= _bgp_GetTimeBase();
-	FCNP_CN::CNtoION_ZeroCopy(largeBuffer, size);
+	FCNP_CN::CNtoION_ZeroCopy(0, largeBuffer, size);
 	time += _bgp_GetTimeBase();
       }
 

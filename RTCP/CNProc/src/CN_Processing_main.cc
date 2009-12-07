@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 #if 1 && defined HAVE_FCNP && defined HAVE_BGP_CN
     /* preferred */
     FCNP_CN::init();
-    ionStream = new FCNP_ClientStream;
+    ionStream = new FCNP_ClientStream(0);
 #elif 1
     /* used by default for !HAVE_FCNP && !HAVE_BGP */ 
     usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
