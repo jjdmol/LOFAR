@@ -49,7 +49,7 @@ fi
 help=0
 dry=
 logfile=
-cdn=
+cdn=$HOME/CEP.clusterdesc
 wd=
 hfn=
 gdsout=
@@ -142,17 +142,15 @@ prog=$1
 shift
 msvds=$1
 shift
+if test "$cdn" = ""; then
+  echo "No clusterdesc file given using -cdn"
+  exit 1
+fi
 
 # Create the name of the output GDS file.
 # It is the same as the input GDS but with the given extension.
 if test "$gdsout" != ""; then
   vdsname=`echo $msvds | sed -e "s%\([^.]*\)\.[^/]*$%\1.$gdsout%"`
-  if test -e $vdsname; then
-    if test $overwrite = 0; then
-      echo "Error, global VDS file $vdsname already exists"
-      exit 1
-    fi
-  fi
 fi
 
 # Make all file names absolute.
@@ -190,6 +188,16 @@ startdistproc $useenv -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn
 # Its name is the input GDS with the extension replaced by $pdb.
 # Refer in it to the actual pdb filename.
 if test "$vdsname" != ""; then
+  if test -e $vdsname; then
+    if test -d $vdsname; then
+      echo "Error, global VDS file $vdsname already exists as a directory"
+      exit 1
+    fi
+    if test $overwrite = 0; then
+      echo "Error, global VDS file $vdsname already exists"
+      exit 1
+    fi
+  fi
   echo "Creating global VDS file $vdsname"
   if test "$dry" = ""; then
     sed -e "s%\(Part.*\.FileName *= *[^ #.]*\)\.[^/ #]*%\1.$gdsout%" $msvds > $vdsname

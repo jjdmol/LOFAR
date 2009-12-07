@@ -32,10 +32,12 @@ fi
 curdir=`pwd`
 # Set the src and make it absolute.
 ssdir=`cd $srcdir/../src > /dev/null 2>&1; pwd`
+sedir=`cd ../src > /dev/null 2>&1; pwd`
 
 # Add srcdir to PATH, so runlogpid can be found.
+# Add ../src to PATH, so finddproc can be found
 # Add test to PATH, so tstartdproc can be found.
-PATH=$ssdir:$curdir:$PATH
+PATH=$ssdir:$sedir:$curdir:$PATH
 export PATH
 
 startdistproc -dsn tstartdproc.in_vd -cdn tstartdproc.in_cd \

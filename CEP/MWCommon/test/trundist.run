@@ -32,9 +32,12 @@ fi
 curdir=`pwd`
 # Set the src and make it absolute.
 ssdir=`cd $srcdir/../src > /dev/null 2>&1; pwd`
+sedir=`cd ../src > /dev/null 2>&1; pwd`
 
-# Extend PATH, so other programs/scripts can be found.
-PATH=$ssdir:$curdir:$PATH
+# Add srcdir to PATH, so runlogpid can be found.
+# Add ../src to PATH, so finddproc can be found
+# Add test to PATH, so tstartdproc can be found.
+PATH=$ssdir:$sedir:$curdir:$PATH
 export PATH
 
 # Run in dry mode.
