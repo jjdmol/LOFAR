@@ -39,12 +39,6 @@
 pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
-# Check if LOFARROOT is set.
-if test "$LOFARROOT" = ""; then
-  echo "LOFARROOT is undefined; source lofarinit.(c)sh first"
-  exit 1
-fi
-
 # Get possible options.
 help=0
 dry=
