@@ -43,9 +43,10 @@ namespace RTCP {
 std::vector<FCNP_ServerStream *> FCNP_ServerStream::allStreams;
 
 
-FCNP_ServerStream::FCNP_ServerStream(unsigned core)
+FCNP_ServerStream::FCNP_ServerStream(unsigned core, unsigned channel)
 :
-  itsCore(core)
+  itsCore(core),
+  itsChannel(channel)
 {
   if (allStreams.size() <= core)
     allStreams.resize(core + 1);
@@ -69,9 +70,9 @@ void FCNP_ServerStream::write(const void *buf, size_t size)
     std::vector<char, AlignedStdAllocator<char, 16> > alignedBuffer(alignedSize);
 
     memcpy(&alignedBuffer[0], buf, size);
-    FCNP_ION::IONtoCN_ZeroCopy(itsCore, &alignedBuffer[0], alignedSize);
+    FCNP_ION::IONtoCN_ZeroCopy(itsCore, itsChannel, &alignedBuffer[0], alignedSize);
   } else {
-    FCNP_ION::IONtoCN_ZeroCopy(itsCore, buf, size);
+    FCNP_ION::IONtoCN_ZeroCopy(itsCore, itsChannel, buf, size);
   }
 }
 
@@ -84,10 +85,10 @@ void FCNP_ServerStream::read(void *buf, size_t size)
     size_t alignedSize = align(size, 16);
     std::vector<char, AlignedStdAllocator<char, 16> > alignedBuffer(alignedSize);
 
-    FCNP_ION::CNtoION_ZeroCopy(itsCore, &alignedBuffer[0], alignedSize);
+    FCNP_ION::CNtoION_ZeroCopy(itsCore, itsChannel, &alignedBuffer[0], alignedSize);
     memcpy(buf, &alignedBuffer[0], size);
   } else {
-    FCNP_ION::CNtoION_ZeroCopy(itsCore, buf, size);
+    FCNP_ION::CNtoION_ZeroCopy(itsCore, itsChannel, buf, size);
   }
 }
 

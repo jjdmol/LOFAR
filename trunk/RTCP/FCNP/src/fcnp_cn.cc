@@ -258,11 +258,12 @@ std::clog << "ignored reset ack (2)" << std::endl;
 }
 
 
-void IONtoCN_ZeroCopy(void *ptr, size_t size)
+void IONtoCN_ZeroCopy(unsigned channel, void *ptr, size_t size)
 {
   //std::cout << "IONtoCN_ZeroCopy(" << ptr << ", " << size << ")" << std::endl;
 
   assert(size % 16 == 0 && (size_t) ptr % 16 == 0);
+  assert(channel < MAX_CHANNELS);
 
   char *dst = static_cast<char *>(ptr);
 
@@ -273,6 +274,7 @@ void IONtoCN_ZeroCopy(void *ptr, size_t size)
     request.rank	= personality.Network_Config.Rank;
     request.core	= myCore;
     request.rankInPSet	= myRankInPSet;
+    request.channel	= channel;
     request.size	= size;
 
     sendRequest(&request);
@@ -305,11 +307,12 @@ static void sendData(const char *ptr, size_t size)
 }
 
 
-void CNtoION_ZeroCopy(const void *ptr, size_t size)
+void CNtoION_ZeroCopy(unsigned channel, const void *ptr, size_t size)
 {
   //std::cout << "CNtoION_ZeroCopy(" << ptr << ", " << size << ")" << std::endl;
 
   assert(size % 16 == 0 && (size_t) ptr % 16 == 0);
+  assert(channel < MAX_CHANNELS);
 
   const char *src = static_cast<const char *>(ptr);
 
@@ -320,6 +323,7 @@ void CNtoION_ZeroCopy(const void *ptr, size_t size)
     request.rank	= personality.Network_Config.Rank;
     request.core	= myCore;
     request.rankInPSet	= myRankInPSet;
+    request.channel	= channel;
     request.size	= size;
 
     memcpy(request.messageHead, src, std::min(size, sizeof request.messageHead));

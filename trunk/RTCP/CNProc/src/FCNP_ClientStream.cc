@@ -52,10 +52,10 @@ void FCNP_ClientStream::read(void *ptr, size_t size)
     size_t alignedSize = align(size, 16);
     std::vector<char, AlignedStdAllocator<char, 16> > alignedBuffer(alignedSize);
 
-    FCNP_CN::IONtoCN_ZeroCopy(&alignedBuffer[0], alignedSize);
+    FCNP_CN::IONtoCN_ZeroCopy(itsChannel, &alignedBuffer[0], alignedSize);
     memcpy(ptr, &alignedBuffer[0], size);
   } else {
-    FCNP_CN::IONtoCN_ZeroCopy(ptr, size);
+    FCNP_CN::IONtoCN_ZeroCopy(itsChannel, ptr, size);
   }
 }
 
@@ -69,9 +69,9 @@ void FCNP_ClientStream::write(const void *ptr, size_t size)
     std::vector<char, AlignedStdAllocator<char, 16> > alignedBuffer(alignedSize);
 
     memcpy(&alignedBuffer[0], ptr, size);
-    FCNP_CN::CNtoION_ZeroCopy(&alignedBuffer[0], alignedSize);
+    FCNP_CN::CNtoION_ZeroCopy(itsChannel, &alignedBuffer[0], alignedSize);
   } else {
-    FCNP_CN::CNtoION_ZeroCopy(ptr, size);
+    FCNP_CN::CNtoION_ZeroCopy(itsChannel, ptr, size);
   }
 }
 

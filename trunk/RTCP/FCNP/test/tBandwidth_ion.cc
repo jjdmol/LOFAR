@@ -35,17 +35,17 @@ void *bidirectional(void *arg)
   setAffinity();
 
   if (arg == 0)
-    FCNP_ION::IONtoCN_ZeroCopy(0, largeBuffer, 128 * 1024 * 1024);
+    FCNP_ION::IONtoCN_ZeroCopy(0, 0, largeBuffer, 128 * 1024 * 1024);
   else
-    FCNP_ION::CNtoION_ZeroCopy(1, largeBuffer, 128 * 1024 * 1024);
+    FCNP_ION::CNtoION_ZeroCopy(1, 0, largeBuffer, 128 * 1024 * 1024);
 
   unsigned long long start_time = _bgp_GetTimeBase();
 
   for (unsigned i = 0; i < 16; i ++)
     if (arg == 0)
-      FCNP_ION::IONtoCN_ZeroCopy(0, largeBuffer, 128 * 1024 * 1024);
+      FCNP_ION::IONtoCN_ZeroCopy(0, 0, largeBuffer, 128 * 1024 * 1024);
     else
-      FCNP_ION::CNtoION_ZeroCopy(1, largeBuffer, 128 * 1024 * 1024);
+      FCNP_ION::CNtoION_ZeroCopy(1, 0, largeBuffer, 128 * 1024 * 1024);
 
   unsigned long long stop_time = _bgp_GetTimeBase();
   double time = (stop_time - start_time) / 850e6;
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
   for (unsigned logsize = 4; logsize <= 27; logsize ++) {
     size_t size = 1 << logsize;
 
-    FCNP_ION::IONtoCN_ZeroCopy(0, largeBuffer, size);
+    FCNP_ION::IONtoCN_ZeroCopy(0, 0, largeBuffer, size);
 
     unsigned long long time = 0;
 
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
       //usleep(10000); // wait until the CN sent a request
 
       time -= _bgp_GetTimeBase();
-      FCNP_ION::IONtoCN_ZeroCopy(0, largeBuffer, size);
+      FCNP_ION::IONtoCN_ZeroCopy(0, 0, largeBuffer, size);
       time += _bgp_GetTimeBase();
     }
 
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
 
   for (size_t size = 16; size <= 128 * 1024 * 1024; size <<= 1) {
     for (unsigned i = 0; i < 16; i ++)
-      FCNP_ION::CNtoION_ZeroCopy(0, largeBuffer, size);
+      FCNP_ION::CNtoION_ZeroCopy(0, 0, largeBuffer, size);
   }
 
   for (unsigned logsize = 4; logsize <= 27; logsize ++) {

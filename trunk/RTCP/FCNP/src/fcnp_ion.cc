@@ -47,6 +47,7 @@ class Handshake {
       size_t	      size;
       char	      *ptr;
 
+#if 0
       pthread_mutex_t mutex;
 
       IonRequest()
@@ -58,6 +59,7 @@ class Handshake {
       {
 	pthread_mutex_destroy(&mutex);
       }
+#endif
     } ionRequest;
 
     Semaphore writeFinished;
@@ -65,7 +67,7 @@ class Handshake {
     Handshake() : writeFinished(0) {}
 };
 
-static Handshake		handshakes[256][2] __attribute__ ((aligned(16))); // FIXME: variable size
+static Handshake		handshakes[MAX_CORES][MAX_CHANNELS][2] __attribute__ ((aligned(16))); // FIXME: variable size
 static bool			useInterrupts;
 static bool			initialized[256]; // FIXME
 static std::vector<Handshake *> scheduledWriteRequests;
@@ -314,7 +316,7 @@ static void sendAck(const RequestPacket *ack)
 
 static void handleRequest(const RequestPacket *request)
 {
-  Handshake::CnRequest *cnRequest = &handshakes[request->rankInPSet][request->type].cnRequest;
+  Handshake::CnRequest *cnRequest = &handshakes[request->rankInPSet][request->channel][request->type].cnRequest;
 
   //std::cout << "handleRequest: rank = " << request->rank << ", core = " << request->core << ", rankInPSet = " << request->rankInPSet << ", type = " << request->type << ", size = " << request->size << std::endl;
 
@@ -472,11 +474,13 @@ static void *pollThread(void *)
 }
 
 
-void IONtoCN_ZeroCopy(unsigned rankInPSet, const void *ptr, size_t size)
+void IONtoCN_ZeroCopy(unsigned rankInPSet, unsigned channel, const void *ptr, size_t size)
 {
   assert(size % 16 == 0 && (size_t) ptr % 16 == 0);
+  assert(channel < MAX_CHANNELS);
+  assert(rankInPSet < MAX_CORES);
 
-  Handshake *handshake = &handshakes[rankInPSet][RequestPacket::ZERO_COPY_READ];
+  Handshake *handshake = &handshakes[rankInPSet][channel][RequestPacket::ZERO_COPY_READ];
   //pthread_mutex_lock(&handshake->ionRequest.mutex);
 
   while (size > 0) {
@@ -498,11 +502,13 @@ void IONtoCN_ZeroCopy(unsigned rankInPSet, const void *ptr, size_t size)
 }
 
 
-void CNtoION_ZeroCopy(unsigned rankInPSet, void *ptr, size_t size)
+void CNtoION_ZeroCopy(unsigned rankInPSet, unsigned channel, void *ptr, size_t size)
 {
   assert(size % 16 == 0 && (size_t) ptr % 16 == 0);
+  assert(channel < MAX_CHANNELS);
+  assert(rankInPSet < MAX_CORES);
 
-  Handshake *handshake = &handshakes[rankInPSet][RequestPacket::ZERO_COPY_WRITE];
+  Handshake *handshake = &handshakes[rankInPSet][channel][RequestPacket::ZERO_COPY_WRITE];
   //pthread_mutex_lock(&handshake->ionRequest.mutex);
 
   while (size > 0) {

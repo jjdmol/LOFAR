@@ -12,8 +12,8 @@ namespace FCNP_ION
   void init(bool enableInterrupts);
   void end();
 
-  void IONtoCN_ZeroCopy(unsigned rankInPSet, const void *ptr, size_t size);
-  void CNtoION_ZeroCopy(unsigned rankInPSet, void *ptr, size_t size);
+  void IONtoCN_ZeroCopy(unsigned rankInPSet, unsigned channel, const void *ptr, size_t size);
+  void CNtoION_ZeroCopy(unsigned rankInPSet, unsigned channel, void *ptr, size_t size);
 }
 
 #endif
