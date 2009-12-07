@@ -22,8 +22,8 @@
 #
 # $Id$
 
-
-../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="< "
+# Remove the Version line from the output because it is system dependent.
+../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="< " | grep -v ' Version '
 ../src/parmdb_main tmakesourcedb_tmp.stdout > /dev/null <<EOF
 open tablename='tmakesourcedb_tmp.sdb'
 showdef
@@ -31,7 +31,7 @@ EOF
 cat tmakesourcedb_tmp.stdout
 
 echo ""
-../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="category=fixed'1',Name,Type,Ra,Dec,I,Q,U,V,SpInx='0.5',Major,Minor,Phi"
+../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="category=fixed'1',Name,Type,Ra,Dec,I,Q,U,V,SpInx='0.5',Major,Minor,Phi" | grep -v ' Version '
 ../src/parmdb_main tmakesourcedb_tmp.stdout > /dev/null <<EOF
 open tablename='tmakesourcedb_tmp.sdb'
 showdef
@@ -39,7 +39,7 @@ EOF
 cat tmakesourcedb_tmp.stdout
 
 echo ""
-../src/makesourcedb in=tmakesourcedb.in_2 out=tmakesourcedb_tmp.sdb append=0 format="category=fixed'3', patch=fixed'patch1' Name Type Rah ram ras Decd decm decs I, Q, U, V, SpInx=fixed'1.5', Major, Minor, Phi, a0:b=fixed'3.0'"
+../src/makesourcedb in=tmakesourcedb.in_2 out=tmakesourcedb_tmp.sdb append=0 format="category=fixed'3', patch=fixed'patch1' Name Type Rah ram ras Decd decm decs I, Q, U, V, SpInx=fixed'1.5', Major, Minor, Phi, a0:b=fixed'3.0'" | grep -v ' Version '
 ../src/parmdb_main tmakesourcedb_tmp.stdout > /dev/null <<EOF
 open tablename='tmakesourcedb_tmp.sdb'
 showdef
@@ -63,9 +63,9 @@ fi
 echo "<<<"
 
 # Select using a cone
-../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="," center="" center="23deg,45.0.0.00" radius="1arcsec"
-../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="," center="" center="23deg,45.0.2.00" radius="1.9arcsec"
-../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="," center="" center="23deg,45.0.0.00" width="1arcsec"
-../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="," center="" center="23deg,45.0.2.00" width="10arcmin,4.1arcsec"
-../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="," center="" center="23deg,45.0.2.00" width="10arcmin,3.9arcsec"
+../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="," center="" center="23deg,45.0.0.00" radius="1arcsec" | grep -v ' Version '
+../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="," center="" center="23deg,45.0.2.00" radius="1.9arcsec" | grep -v ' Version '
+../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="," center="" center="23deg,45.0.0.00" width="1arcsec" | grep -v ' Version '
+../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="," center="" center="23deg,45.0.2.00" width="10arcmin,4.1arcsec" | grep -v ' Version '
+../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="," center="" center="23deg,45.0.2.00" width="10arcmin,3.9arcsec" | grep -v ' Version '
 
