@@ -101,8 +101,9 @@ public:
 
 	/*@{*/
 	// Accessor methods for the port member.
-	void 			  setPort(GCFPortInterface& port) { m_port = &port; }
+	void setPort(GCFPortInterface& port) { m_port = &port; }
 	GCFPortInterface* getPort() 					  { return m_port; }
+	void resetPort() { m_port = 0; }
 	/*@}*/
 
 	/*@{*/
