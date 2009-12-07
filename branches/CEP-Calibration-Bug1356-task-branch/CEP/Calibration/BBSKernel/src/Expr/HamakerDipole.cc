@@ -252,11 +252,6 @@ const JonesMatrix::View HamakerDipole::evaluateImpl(const Grid &grid,
     result.assign(1, 0, E10);
     result.assign(1, 1, E11);
 
-//    LOG_DEBUG_STR("E00: " << E00);
-//    LOG_DEBUG_STR("E01: " << E01);
-//    LOG_DEBUG_STR("E10: " << E10);
-//    LOG_DEBUG_STR("E11: " << E11);
-
     return result;
 }
 

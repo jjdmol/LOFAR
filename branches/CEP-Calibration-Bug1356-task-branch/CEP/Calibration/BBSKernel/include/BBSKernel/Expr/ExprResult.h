@@ -217,21 +217,13 @@ inline unsigned int Scalar::size() const
     return 1;
 }
 
-#ifdef DEBUG
 inline const ValueSet Scalar::getValueSet(unsigned int i0) const
-#else
-inline const ValueSet Scalar::getValueSet(unsigned int) const
-#endif
 {
     DBGASSERT(i0 == 0);
     return itsValueSet;
 }
 
-#ifdef DEBUG
 inline void Scalar::setValueSet(unsigned int i0, const ValueSet &set)
-#else
-inline void Scalar::setValueSet(unsigned int, const ValueSet &set)
-#endif
 {
     DBGASSERT(i0 == 0);
     itsValueSet = set;

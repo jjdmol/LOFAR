@@ -7,6 +7,7 @@ include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS casa)
 lofar_find_package(PQXX REQUIRED)
+lofar_find_package(Python REQUIRED)
 
 add_subdirectory(include/BBSControl)
 add_subdirectory(src)

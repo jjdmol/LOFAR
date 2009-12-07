@@ -4,7 +4,8 @@ lofar_package(BBSKernel 1.0 DEPENDS Blob Common ParmDB)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
-lofar_find_package(Casacore COMPONENTS ms REQUIRED)
+lofar_find_package(Casacore REQUIRED COMPONENTS 
+  casa measures ms scimath tables)
 
 add_definitions(-Wconversion)
 
