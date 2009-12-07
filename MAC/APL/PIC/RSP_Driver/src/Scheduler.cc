@@ -277,13 +277,15 @@ void Scheduler::enter(Ptr<Command> command, QueueID queue, bool immediateApplyAl
 	if ((command->getOperation() == Command::WRITE) && (queue != Scheduler::PERIODIC)) {
 		if ((scheduled_time == Timestamp(0,0)) && (immediateApplyAllowed)) {
 			LOG_INFO_STR("Applying command " << command->name() << " immediately");
-			command->apply(Cache::getInstance().getFront(), true);
-			command->apply(Cache::getInstance().getBack(), false);
-			command->ack  (Cache::getInstance().getFront());
-			return;
+			//command->apply(Cache::getInstance().getFront(), true);
+			//command->apply(Cache::getInstance().getBack(), false);
+			//command->ack  (Cache::getInstance().getFront());
+			//return;
 		}
 		if (!command->delayedResponse()) {
 			command->ack(Cache::getInstance().getFront()); // each SetXxxCmd needs an ack.
+			// set Port to 0, to prevent throwing away the command, if the client port is closed.
+			command->resetPort();
 		}
 	}
 
@@ -444,7 +446,9 @@ void Scheduler::processCommands()
 				itsDelayedResponseQueue.push(command);
 			}
 			else {
-				m_done_queue.push(command);
+				if ((command->getOperation() != Command::WRITE) && (command->getTimestamp() != Timestamp(0,0))) {
+					m_done_queue.push(command);
+				}
 			}
 		}
 	}
@@ -548,9 +552,12 @@ void Scheduler::completeCommands()
 	while (!m_done_queue.empty()) {
 		Ptr<Command> command = m_done_queue.top();
 		m_done_queue.pop();
-
-		command->complete(Cache::getInstance().getFront());
-
+		
+		// If command->getPort() = 0, an ack for this command is already send in the enter function  
+		if (command->getPort() != 0) {
+			command->complete(Cache::getInstance().getFront());
+		}
+		
 		// re-timestamp periodic commands for the next period
 		if (command->getPeriod()) {
 			// Set the next time at which the periodic command should be executed.
