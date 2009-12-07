@@ -1,0 +1,11 @@
+// \ingroup BB
+
+// \defgroup BBSControl BBSControl
+
+// BBSControl contains the control part of the BlackBoard Selfcal system. It
+// consists of:
+// - classes that define so-called strategies and steps, which are
+//   used to describe a self-calibration algorithm; 
+// - global and local controllers;
+// - database access layer for the blackboard database system.
+
