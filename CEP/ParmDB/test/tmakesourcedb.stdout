@@ -1,4 +1,6 @@
+>>>
 ../src/makesourcedb: Version GvD 2009-Jan-26
+<<<
 Wrote 0 patches (out of 0) and 2 sources (out of 2) into tmakesourcedb_tmp.sdb
 Dec:cygnus  type=scalar
     values:  0.785398  shape=[1, 1]
@@ -44,7 +46,9 @@ V:sun  type=scalar
     pert=1e-06 pert_rel=y
 14 parms and 14 values found
 
+>>>
 ../src/makesourcedb: Version GvD 2009-Jan-26
+<<<
 Wrote 0 patches (out of 0) and 2 sources (out of 2) into tmakesourcedb_tmp.sdb
 Dec:cygnus  type=scalar
     values:  0.785398  shape=[1, 1]
@@ -90,7 +94,9 @@ V:sun  type=scalar
     pert=1e-06 pert_rel=y
 14 parms and 14 values found
 
+>>>
 ../src/makesourcedb: Version GvD 2009-Jan-26
+<<<
 Wrote 1 patches (out of 1) and 3 sources (out of 3) into tmakesourcedb_tmp.sdb
 Dec:cygnus  type=scalar
     values:  0.802851  shape=[1, 1]
@@ -188,13 +194,23 @@ SOURCENAME = ['sun', 'cygnus', 'lena']
 PATCHID = [0 0 0]
 SOURCETYPE = [10  0  1]
 <<<
+>>>
 ../src/makesourcedb: Version GvD 2009-Jan-26
+<<<
 Wrote 0 patches (out of 0) and 1 sources (out of 2) into tmakesourcedb_tmp.sdb
+>>>
 ../src/makesourcedb: Version GvD 2009-Jan-26
+<<<
 Wrote 0 patches (out of 0) and 0 sources (out of 2) into tmakesourcedb_tmp.sdb
+>>>
 ../src/makesourcedb: Version GvD 2009-Jan-26
+<<<
 Wrote 0 patches (out of 0) and 1 sources (out of 2) into tmakesourcedb_tmp.sdb
+>>>
 ../src/makesourcedb: Version GvD 2009-Jan-26
+<<<
 Wrote 0 patches (out of 0) and 1 sources (out of 2) into tmakesourcedb_tmp.sdb
+>>>
 ../src/makesourcedb: Version GvD 2009-Jan-26
+<<<
 Wrote 0 patches (out of 0) and 0 sources (out of 2) into tmakesourcedb_tmp.sdb
