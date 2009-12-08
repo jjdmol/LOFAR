@@ -1,29 +1,7 @@
-# $Id$
-#
-# Copyright (C) 2008-2009
-# ASTRON (Netherlands Foundation for Research in Astronomy)
-# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-# Try to find libpqxx: the official C++ client API for PostgreSQL
-#
+# - Try to find libpqxx: the official C++ client API for PostgreSQL
 # Variables used by this module:
 #  PQXX_ROOT_DIR     - PQXX root directory
 #  PQ_ROOT_DIR       - PQ root directory (Postgres C API)
-#
 # Variables defined by this module:
 #  PQXX_FOUND        - system has PQXX
 #  PQXX_INCLUDE_DIR  - the PQXX include directory (cached)
@@ -32,6 +10,26 @@
 #  PQXX_LIBRARY      - the PQXX library (cached)
 #  PQXX_LIBRARIES    - the PQXX libraries
 #                      (identical to PQXX_LIBRARY)
+
+# Copyright (C) 2009
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# $Id$
 
 if(NOT PQXX_FOUND)
 
