@@ -37,10 +37,8 @@
 # parset keywords:
 #
 #  correct = False
-#  Correct.Model.Beam.Type        = "HamakerDipole"    # or "YatawattaDipole"
-#  Correct.Model.Beam.CoeffFile   = "$LOFARROOT/share/lofar_dipole_beam_lba.txt"
-#  Correct.Model.Beam.ModuleTheta = "$LOFARROOT/lib/lba_beam_theta.so"
-#  Correct.Model.Beam.ModulePhi   = "$LOFARROOT/lib/lba_beam_phi.so"
+#  Correct.Model.Beam.Element.Type = ""
+#  Correct.Model.Beam.Element.Path = "$LOFARROOT/share"
 #  Correct.column       = CORRECTED_DATA   # output column after correction
 #  Correct.instrumentDB
 #  Images.name
@@ -52,7 +50,7 @@
 #  Images.padding       = 2                # padding factor in ra and dec
 #  dataset              = my.MS.gds
 #  datacolumn           = DATA             # input data column
-#  average = False
+#  average       = False
 #  Average.nfreq = 1
 #  Average.ntime = 1
 #
@@ -76,7 +74,7 @@
 #    (for cimager this is a symlink to the .restored image)
 # - the overall image gds file called gdsdir/xxx.img.gds
 # - when correcting, the MS gets an extra column to hold the corrected data
-#    given in correct.Column
+#    (given in correct.Column)
 
 
 import os
@@ -168,12 +166,6 @@ def doBBS (ps, i, j, psname, gdsname, cd, wd, dry, instdb, skydb, catname, incol
     # Get beam files and expand possible env.var. like $LOFARROOT
     beamType = ps.getString ('Correct.Model.Beam.Element.Type', '')
     beamPath = ps.getString ('Correct.Model.Beam.Element.Path', '')
-    if len(coeffFile) > 0:
-        coeffFile = os.path.abspath(coeffFile)
-    if len(moduleTheta) > 0:
-        moduleTheta = os.path.abspath(moduleTheta)
-    if len(modulePhi) > 0:
-        modulePhi = os.path.abspath(modulePhi)
     # Create the parset file for the calibrate run.
     bbskey = "bbs-%03d-%03d" % (i, j)
     psn = psname + '-' + bbskey
@@ -181,27 +173,25 @@ def doBBS (ps, i, j, psname, gdsname, cd, wd, dry, instdb, skydb, catname, incol
     f.write ('Strategy.Stations = []\n')
     f.write ('Strategy.InputColumn = %s\n' % incol)
     f.write ('Strategy.TimeWindow = []\n')
-    f.write ('Strategy.ChunkSize = 0\n')
+    f.write ('Strategy.ChunkSize = 100\n')
     f.write ('Strategy.UseSolver = F\n')
     f.write ('Strategy.Correlation.Selection = CROSS\n')
     f.write ('Strategy.Correlation.Type = []\n')
     f.write ('Strategy.Steps = [correct]\n')
     f.write ('Step.correct.Baselines.Station1 = []\n')
     f.write ('Step.correct.Baselines.Station2 = []\n')
-    f.write ('Step.correct.Model.Sources    = facet-%03d-%03d\n' % (i,j))
+    f.write ('Step.correct.Model.Sources    = [facet-%03d-%03d]\n' % (i,j))
     if len(beamType) > 0:
         f.write ('Step.correct.Model.Beam.Enable = True\n')
         f.write ('Step.correct.Model.Beam.Element.Type = %s\n' % beamType)
         if len(beamPath) > 0:
             f.write ('Step.correct.Model.Beam.Element.Path = %s\n' % beamPath)
-    f.write ('Step.correct.Correlation.Selection = CROSS\n')
-    f.write ('Step.correct.Correlation.Type      = []\n')
     f.write ('Step.correct.Operation             = CORRECT\n')
     f.write ('Step.correct.OutputColumn          = %s\n' % outcol)
     f.close()
     os.system ("cat " + psn)
     print 'calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --skip-instrument-db --skip-sky-db "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, gdsname, psn, catname, wd)
-    os.system ('calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --no-setup "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, gdsname, psn, catname, wd))
+    os.system('calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --skip-instrument-db --skip-sky-db "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, gdsname, psn, catname, wd))
 
 def doDPPP (i, j, psname, gdsname, cd, dry, freqstep, timestep):
     # Create the parset file.
