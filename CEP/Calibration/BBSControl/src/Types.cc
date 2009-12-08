@@ -1,4 +1,4 @@
-//# Types.cc: 
+//#  Types.cc:
 //#
 //# Copyright (C) 2002-2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -58,8 +58,8 @@ namespace LOFAR
     {
       os << "Cell size:";
       Indent id;
-      os << endl << indent << "No. of channels: " << obj.freq << endl
-         << indent << "No. of timeslots: " << obj.time;
+      os << endl << indent << "Frequency (channels): " << obj.freq << endl
+         << indent << "Time (timestamps): " << obj.time;
       return os;
     }
 

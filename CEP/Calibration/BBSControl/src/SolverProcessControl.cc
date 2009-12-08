@@ -118,12 +118,13 @@ namespace LOFAR
         itsSocket.setName("Solver");
 
         // Get range of ports to test from parset, or default to [6500, 6599].
-        vector<uint> range = ps->getUintVector("PortRange", vector<uint>());
-        uint portLow = range.size() > 0 ? range[0] : 6500;
-        uint portHigh = range.size() > 1 ? range[1] : 6599;
+        vector<unsigned int> range = ps->getUintVector("PortRange",
+            vector<unsigned int>());
+        unsigned int portLow = range.size() > 0 ? range[0] : 6500;
+        unsigned int portHigh = range.size() > 1 ? range[1] : 6599;
 
         // Try to bind to a port from the specified range.
-        uint port = 0;
+        unsigned int port = 0;
         int32 sockErrno = Socket::BIND;
         for(port = portLow; port <= portHigh; ++port) {
           // Socket::initServer takes port as a string.
@@ -311,7 +312,7 @@ namespace LOFAR
       LOG_DEBUG_STR("Waiting for " << nKernels << " kernel(s) to connect...");
 
       itsKernels.resize(nKernels);
-      for(uint i = 0; i < nKernels; ++i) {
+      for(unsigned int i = 0; i < nKernels; ++i) {
         connection.reset(new BlobStreamableConnection(itsSocket.accept()));
         if(!connection->connect()) {
           THROW(IOException, "Unable to connect to kernel");
@@ -423,7 +424,7 @@ namespace LOFAR
       while(!done)
       {
         done = true;
-        for(uint i = 0; i < itsSolveTasks.size(); ++i) {
+        for(unsigned int i = 0; i < itsSolveTasks.size(); ++i) {
           done = itsSolveTasks[i].run() && done;
         }
       }
@@ -473,7 +474,7 @@ namespace LOFAR
       else return states[N_State];
     }
 
-    void SolverProcessControl::setSolveTasks(const vector<uint>& groups,
+    void SolverProcessControl::setSolveTasks(const vector<unsigned int>& groups,
         const SolverOptions& options)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
@@ -492,7 +493,7 @@ namespace LOFAR
 
       // Create kernel groups, passing the correct subrange of kernel
       // connections to each kernel group.
-      for (uint i = 0; i < groups.size(); ++i) {
+      for(unsigned int i = 0; i < groups.size(); ++i) {
         advance(end, groups[i]);
         itsSolveTasks.push_back(SolveTask(vector<KernelConnection>(beg, end),
           options));

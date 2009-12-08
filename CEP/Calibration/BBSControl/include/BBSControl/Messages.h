@@ -44,6 +44,9 @@ namespace LOFAR
     class KernelMessageHandler;
     class SolverMessageHandler;
 
+    // \addtogroup BBSControl
+    // @{
+
     //## --------  A b s t r a c t   b a s e   c l a s s e s   -------- ##//
 
     // Abstract base classes for kernel and solver messages that will be
@@ -83,7 +86,7 @@ namespace LOFAR
         : itsKernelIndex(index)
       {}
 
-      //# -------- BlobStreamable interface implementation -------- 
+      //# -------- BlobStreamable interface implementation --------
 
       // Write the contents of \c *this into the blob output stream \a bos.
       virtual void write(BlobOStream& bos) const;
@@ -115,7 +118,7 @@ namespace LOFAR
       string type() const { return classType(); }
 
     protected:
-      //# -------- BlobStreamable interface implementation -------- 
+      //# -------- BlobStreamable interface implementation --------
 
       // Write the contents of \c *this into the blob output stream \a bos.
       virtual void write(BlobOStream& bos) const;
@@ -136,7 +139,7 @@ namespace LOFAR
     {
     public:
       typedef KernelMessage super;
-      typedef shared_ptr<KernelIdMsg>     Pointer;
+      typedef shared_ptr<KernelIdMsg>     Ptr;
 
       KernelIdMsg()
         : KernelMessage()
@@ -151,7 +154,7 @@ namespace LOFAR
 
     private:
 
-      //# -------- BlobStreamable interface implementation -------- 
+      //# -------- BlobStreamable interface implementation --------
       static const string theirClassType;
 
       // Write the contents of \c *this into the blob output stream \a bos.
@@ -170,7 +173,7 @@ namespace LOFAR
     {
     public:
       typedef KernelMessage super;
-      typedef shared_ptr<ProcessIdMsg>     Pointer;
+      typedef shared_ptr<ProcessIdMsg>     Ptr;
 
       ProcessIdMsg()
         : KernelMessage()
@@ -180,7 +183,7 @@ namespace LOFAR
         : KernelMessage(-1),
             itsProcessId(id)
       {}
-      
+
       ProcessId getProcessId() const
       { return itsProcessId; }
 
@@ -190,7 +193,7 @@ namespace LOFAR
     private:
       ProcessId  itsProcessId;
 
-      //# -------- BlobStreamable interface implementation -------- 
+      //# -------- BlobStreamable interface implementation --------
       static const string theirClassType;
 
       // Write the contents of \c *this into the blob output stream \a bos.
@@ -208,8 +211,8 @@ namespace LOFAR
     {
     public:
       typedef KernelMessage super;
-      typedef shared_ptr<CoeffIndexMsg>   Pointer;
-        
+      typedef shared_ptr<CoeffIndexMsg>   Ptr;
+
       CoeffIndexMsg()
         : KernelMessage()
       {}
@@ -220,7 +223,7 @@ namespace LOFAR
 
       CoeffIndex &getContents()
       { return itsContents; }
-        
+
       const CoeffIndex &getContents() const
       { return itsContents; }
 
@@ -229,8 +232,8 @@ namespace LOFAR
 
     private:
       CoeffIndex  itsContents;
-    
-      //# -------- BlobStreamable interface implementation -------- 
+
+      //# -------- BlobStreamable interface implementation --------
       static const string theirClassType;
 
       // Write the contents of \c *this into the blob output stream \a bos.
@@ -249,14 +252,14 @@ namespace LOFAR
     {
     public:
       typedef SolverMessage super;
-      typedef shared_ptr<MergedCoeffIndexMsg>   Pointer;
-        
+      typedef shared_ptr<MergedCoeffIndexMsg>   Ptr;
+
       MergedCoeffIndexMsg()
       {}
 
       CoeffIndex &getContents()
       { return itsContents; }
-        
+
       const CoeffIndex &getContents() const
       { return itsContents; }
 
@@ -265,8 +268,8 @@ namespace LOFAR
 
     private:
       CoeffIndex  itsContents;
-    
-      //# -------- BlobStreamable interface implementation -------- 
+
+      //# -------- BlobStreamable interface implementation --------
       static const string theirClassType;
 
       // Write the contents of \c *this into the blob output stream \a bos.
@@ -285,7 +288,7 @@ namespace LOFAR
     {
     public:
       typedef KernelMessage super;
-      typedef shared_ptr<CoeffMsg>  Pointer;
+      typedef shared_ptr<CoeffMsg>  Ptr;
 
       CoeffMsg()
         : KernelMessage()
@@ -302,17 +305,17 @@ namespace LOFAR
 
       vector<CellCoeff> &getContents()
       { return itsContents; }
-        
+
       const vector<CellCoeff> &getContents() const
       { return itsContents; }
-        
+
       //# -------- Message interface implementation --------
       virtual void passTo(KernelMessageHandler &handler) const;
 
     private:
       vector<CellCoeff>   itsContents;
-    
-      //# -------- BlobStreamable interface implementation -------- 
+
+      //# -------- BlobStreamable interface implementation --------
       static const string theirClassType;
 
       // Write the contents of \c *this into the blob output stream \a bos.
@@ -326,7 +329,7 @@ namespace LOFAR
     };
 
     // BlobStream I/O
-    BlobIStream &operator>>(BlobIStream &in, CellCoeff &obj);    
+    BlobIStream &operator>>(BlobIStream &in, CellCoeff &obj);
     BlobOStream &operator<<(BlobOStream &out, const CellCoeff &obj);
 
 
@@ -335,7 +338,7 @@ namespace LOFAR
     {
     public:
       typedef KernelMessage super;
-      typedef shared_ptr<EquationMsg> Pointer;
+      typedef shared_ptr<EquationMsg> Ptr;
 
       EquationMsg()
         : KernelMessage()
@@ -352,17 +355,17 @@ namespace LOFAR
 
       vector<CellEquation> &getContents()
       { return itsContents; }
-        
+
       const vector<CellEquation> &getContents() const
       { return itsContents; }
-        
+
       //# -------- Message interface implementation --------
       virtual void passTo(KernelMessageHandler &handler) const;
 
     private:
       vector<CellEquation>    itsContents;
-    
-      //# -------- BlobStreamable interface implementation -------- 
+
+      //# -------- BlobStreamable interface implementation --------
       static const string theirClassType;
 
       // Write the contents of \c *this into the blob output stream \a bos.
@@ -376,7 +379,7 @@ namespace LOFAR
     };
 
     // BlobStream I/O
-    BlobIStream &operator>>(BlobIStream &in, CellEquation &obj);    
+    BlobIStream &operator>>(BlobIStream &in, CellEquation &obj);
     BlobOStream &operator<<(BlobOStream &out, const CellEquation &obj);
 
 
@@ -385,7 +388,7 @@ namespace LOFAR
     {
     public:
       typedef SolverMessage super;
-      typedef shared_ptr<SolutionMsg> Pointer;
+      typedef shared_ptr<SolutionMsg> Ptr;
 
       SolutionMsg()
       {}
@@ -396,17 +399,17 @@ namespace LOFAR
 
       vector<CellSolution> &getContents()
       { return itsContents; }
-        
+
       const vector<CellSolution> &getContents() const
       { return itsContents; }
-        
+
       //# -------- Message interface implementation --------
       virtual void passTo(SolverMessageHandler &handler) const;
 
     private:
       vector<CellSolution>    itsContents;
-    
-      //# -------- BlobStreamable interface implementation -------- 
+
+      //# -------- BlobStreamable interface implementation --------
       static const string theirClassType;
 
       // Write the contents of \c *this into the blob output stream \a bos.
@@ -420,7 +423,7 @@ namespace LOFAR
     };
 
     // BlobStream I/O
-    BlobIStream &operator>>(BlobIStream &in, CellSolution &obj);    
+    BlobIStream &operator>>(BlobIStream &in, CellSolution &obj);
     BlobOStream &operator<<(BlobOStream &out, const CellSolution &obj);
 
 
@@ -430,7 +433,7 @@ namespace LOFAR
     {
     public:
       typedef KernelMessage super;
-      typedef shared_ptr<ChunkDoneMsg> Pointer;
+      typedef shared_ptr<ChunkDoneMsg> Ptr;
 
       ChunkDoneMsg()
         : KernelMessage()
@@ -444,7 +447,7 @@ namespace LOFAR
       virtual void passTo(KernelMessageHandler &handler) const;
 
     private:
-      //# -------- BlobStreamable interface implementation -------- 
+      //# -------- BlobStreamable interface implementation --------
       static const string theirClassType;
 
       // Write the contents of \c *this into the blob output stream \a bos.
@@ -456,6 +459,8 @@ namespace LOFAR
       // Return the type of \c *this as a string.
       virtual const string& classType() const;
     };
+
+    // @}
 
   } //# namespace BBS
 

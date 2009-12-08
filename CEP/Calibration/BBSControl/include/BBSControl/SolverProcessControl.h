@@ -112,7 +112,7 @@ namespace LOFAR
       // - The size of the vector determines the number of groups.
       // - The sum of the elements determines the total number of kernels.
       // - Each element determines the number of kernels per group.
-      void setSolveTasks(const vector<uint>& groups,
+      void setSolveTasks(const vector<unsigned int>& groups,
                          const SolverOptions& options);
 
       // State of the solver control process.

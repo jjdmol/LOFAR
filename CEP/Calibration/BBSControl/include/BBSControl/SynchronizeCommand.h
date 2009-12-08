@@ -1,4 +1,4 @@
-//# SynchronizeCommand.h: 
+//# SynchronizeCommand.h:
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -29,6 +29,10 @@ namespace LOFAR
 {
   namespace BBS
   {
+
+    // \addtogroup BBSControl
+    // @{
+
     class SynchronizeCommand : public Command
     {
     public:
@@ -52,6 +56,8 @@ namespace LOFAR
       virtual CommandResult accept(CommandVisitor &visitor) const;
 
     };
+
+    // @}
 
   } //# namespace BBS
 } //# namespace LOFAR

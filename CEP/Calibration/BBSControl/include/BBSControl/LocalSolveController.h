@@ -28,6 +28,7 @@
 // Class that controls the execution of a local solve command.
 
 #include <BBSControl/Types.h>
+#include <BBSControl/Exceptions.h>
 
 #include <BBSKernel/Equator.h>
 #include <BBSKernel/Model.h>
@@ -47,13 +48,15 @@ namespace BBS
 class LocalSolveController
 {
 public:
-    LocalSolveController(const VisData::Pointer &chunk,
-        const Model::Pointer &model, const SolverOptions &options);
+    LocalSolveController(const ExprSet<JonesMatrix>::Ptr &lhs,
+        const ExprSet<JonesMatrix>::Ptr &rhs,
+        const SolverOptions &options);
     ~LocalSolveController();
-    
+
     void init(const vector<string> &include, const vector<string> &exclude,
-        const Grid &solGrid, const vector<baseline_t> &baselines,
-        const vector<string> &products, uint cellChunkSize, bool propagate);
+        const Grid &evalGrid, const Grid &solGrid, unsigned int cellChunkSize,
+        bool propagate);
+
     void run();
 
 private:
@@ -69,20 +72,20 @@ private:
     void getCoeff(vector<double> &result, const Location &cell) const;
     void setCoeff(const vector<double> &coeff, const Location &cell) const;
     void setCoeff(const vector<double> &coeff, const Location &cell,
-        const vector<uint> &mapping) const;
+        const vector<unsigned int> &mapping) const;
 
-    VisData::Pointer    itsChunk;
-    Model::Pointer      itsModel;
-    Solver              itsSolver;
+    ExprSet<JonesMatrix>::Ptr       itsLHS;
+    ExprSet<JonesMatrix>::Ptr       itsRHS;
+    Solver                          itsSolver;
 
-    bool                itsInitFlag;
-    bool                itsPropagateFlag;
-    Grid                itsSolGrid;
-    uint                itsCellChunkSize;
-    ParmGroup           itsSolvables;
-    CoeffIndex          itsCoeffIndex;
-    scoped_ptr<Equator> itsEquator;    
-    vector<uint>        itsSolCoeffMapping;
+    bool                            itsInitFlag;
+    bool                            itsPropagateFlag;
+    Grid                            itsSolGrid;
+    unsigned int                    itsCellChunkSize;
+    ParmGroup                       itsSolvables;
+    CoeffIndex                      itsCoeffIndex;
+    scoped_ptr<Equator>             itsEquator;
+    vector<unsigned int>            itsSolCoeffMapping;
 };
 
 // @}
