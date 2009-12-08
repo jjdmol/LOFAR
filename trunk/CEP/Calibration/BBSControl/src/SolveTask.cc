@@ -37,13 +37,13 @@ namespace LOFAR
 
     //##--------  P u b l i c   m e t h o d s  --------##//
 
-    SolveTask::SolveTask(const vector<KernelConnection>& kernels, 
+    SolveTask::SolveTask(const vector<KernelConnection>& kernels,
       const SolverOptions& options) :
       itsKernels(kernels),
       itsState(IDLE)
     {
 //       itsKernels.reserve(kernels.size());
-//       for (uint i = 0; i < kernels.size(); ++i) {
+//       for (unsigned int i = 0; i < kernels.size(); ++i) {
 //         itsKernels.push_back(make_pair(kernels[i], NOMESSAGE));
 //       }
       itsSolver.reset(options.maxIter, options.epsValue, options.epsDerivative,
@@ -61,9 +61,9 @@ namespace LOFAR
         // a round-robin "polling". Every message is handed over to the
         // kernel group that currently "holds" the kernel identified by the
         // kernel-index in the received message.
-        // Note that the current implementation assumes blocking I/O. 
-        for (uint i = 0; i < itsKernels.size(); ++i) {
-          LOG_TRACE_STAT_STR("Kernel #" << i << " (index=" << 
+        // Note that the current implementation assumes blocking I/O.
+        for (unsigned int i = 0; i < itsKernels.size(); ++i) {
+          LOG_TRACE_STAT_STR("Kernel #" << i << " (index=" <<
                              itsKernels[i].index() << ") : recvObject()");
           shared_ptr<const KernelMessage> msg(itsKernels[i].recvMessage());
           if (msg) msg->passTo(*this);
@@ -86,7 +86,7 @@ namespace LOFAR
     void SolveTask::handle(const CoeffIndexMsg &message)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      LOG_DEBUG_STR("SolveTask: Handling " << message.type() << 
+      LOG_DEBUG_STR("SolveTask: Handling " << message.type() <<
                     ", kernel-index = " << message.getKernelIndex());
 
       switch (itsState) {
@@ -104,14 +104,15 @@ namespace LOFAR
           error("Duplicate", message);
         }
         // Set the coefficient index in the solver
-        itsSolver.setCoeffIndex(message.getKernelIndex(), message.getContents());
+        itsSolver.setCoeffIndex(message.getKernelIndex(),
+            message.getContents());
 
         // If all kernels have sent a CoeffIndexMsg, we should send a the
         // merged coefficient indices back to our kernels.
         if (itsKernelMessageReceived.size() == itsKernels.size()) {
           MergedCoeffIndexMsg msg;
           msg.getContents() = itsSolver.getCoeffIndex();
-          for (uint i = 0; i < itsKernels.size(); ++i) {
+          for (unsigned int i = 0; i < itsKernels.size(); ++i) {
             itsKernels[i].sendMessage(msg);
           }
           itsKernelMessageReceived.clear();
@@ -125,7 +126,7 @@ namespace LOFAR
     void SolveTask::handle(const CoeffMsg &message)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      LOG_DEBUG_STR("SolveTask: Handling " << message.type() << 
+      LOG_DEBUG_STR("SolveTask: Handling " << message.type() <<
                     ", kernel-index = " << message.getKernelIndex());
 
       switch (itsState) {
@@ -169,7 +170,7 @@ namespace LOFAR
         itsSolver.setEquations(message.getKernelIndex(), message.getContents());
 
         // If all kernels have sent an EquationMsg, we can let the solver
-        // perform one iteration. 
+        // perform one iteration.
         if (itsKernelMessageReceived.size() == itsKernels.size()) {
           SolutionMsg msg;
 
@@ -178,7 +179,7 @@ namespace LOFAR
           itsKernelMessageReceived.clear();
 
           // Send the results back to "our" kernels.
-          for (uint i = 0; i < itsKernels.size(); ++i) {
+          for (unsigned int i = 0; i < itsKernels.size(); ++i) {
             itsKernels[i].sendMessage(msg);
           }
         }
@@ -211,7 +212,7 @@ namespace LOFAR
     }
 
 
-    void SolveTask::setState(State state) 
+    void SolveTask::setState(State state)
     {
       itsState = state;
       LOG_DEBUG_STR("Switching to " << showState() << " state");
@@ -237,7 +238,7 @@ namespace LOFAR
 
     void SolveTask::error(const string& prefix, const KernelMessage& message)
     {
-      THROW (SolveTaskException, prefix << " message " << message.type() << 
+      THROW (SolveTaskException, prefix << " message " << message.type() <<
              " received from kernel (index=" << message.getKernelIndex() <<
              ") while in " << showState() << " state");
     }

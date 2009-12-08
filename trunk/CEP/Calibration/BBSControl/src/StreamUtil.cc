@@ -34,13 +34,13 @@ namespace LOFAR
                     const char* prefix, const char* postfix)
   {
     os << prefix;
-    for (uint i = 0; i < vec.size(); i++) {
+    for (unsigned int i = 0; i < vec.size(); i++) {
       if (i > 0) os << separator;
       os << '"';
       const string& s = vec[i];
-      for (uint j = 0; j < s.size(); ++j) {
+      for (unsigned int j = 0; j < s.size(); ++j) {
         if (s[j] == '"') os << '\\';
-        os << s[j]; 
+        os << s[j];
       }
       os << '"';
     }

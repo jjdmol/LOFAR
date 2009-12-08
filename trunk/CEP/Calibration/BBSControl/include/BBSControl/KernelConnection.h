@@ -35,6 +35,9 @@ namespace LOFAR
 {
   namespace BBS
   {
+    // \addtogroup BBSControl
+    // @{
+
     class KernelConnection
     {
     public:
@@ -56,7 +59,7 @@ namespace LOFAR
 
       // Send a solver message.
       void sendMessage(const SolverMessage& message) const;
-      
+
     private:
       // Connection to our kernel.
       Connection itsConnection;
@@ -64,6 +67,8 @@ namespace LOFAR
       // ID of the kernel we're connected to.
       KernelIndex itsIndex;
     };
+
+    // @}
 
   } // namespace BBS
 

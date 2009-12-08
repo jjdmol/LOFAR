@@ -28,7 +28,7 @@
 --  0 - WAITING_FOR_CONTROL
 --  1 - WAITING_FOR_WORKERS
 --  2 - COMPUTING_WORKER_INDEX
---  3 - workerING
+--  3 - PROCESSING
 --  4 - DONE
 
 ------------------

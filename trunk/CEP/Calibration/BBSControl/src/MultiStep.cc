@@ -1,4 +1,4 @@
-//# MultiStep.cc: 
+//# MultiStep.cc:
 //#
 //# Copyright (C) 2002-2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -50,7 +50,7 @@ namespace LOFAR
 //       vector<string> steps(parset.getStringVector("Step." + name + ".Steps"));
 
 //       // Create a new step for each name in \a steps.
-//       for (uint i = 0; i < steps.size(); ++i) {
+//       for (unsigned int i = 0; i < steps.size(); ++i) {
 // 	infiniteRecursionCheck(steps[i]);
 // 	itsSteps.push_back(Step::create(steps[i], parset, this));
 //       }
@@ -74,7 +74,7 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       Step::print(os);
       Indent id;
-      for (uint i = 0; i < itsSteps.size(); ++i) {
+      for (unsigned int i = 0; i < itsSteps.size(); ++i) {
 	os << endl << indent << *itsSteps[i];
       }
     }
@@ -98,7 +98,7 @@ namespace LOFAR
     }
 
 
-    const string& MultiStep::type() const 
+    const string& MultiStep::type() const
     {
       static const string theType("MultiStep");
       return theType;
@@ -110,7 +110,7 @@ namespace LOFAR
       // Write the "Steps" key/value pair
       const string key = "Step." + name() + ".Steps";
       string value = "[";
-      for (uint i = 0; i < itsSteps.size(); ++i) {
+      for (unsigned int i = 0; i < itsSteps.size(); ++i) {
         if (i > 0) value += ",";
         value += itsSteps[i]->name();
       }
@@ -118,7 +118,7 @@ namespace LOFAR
       ps.replace(key,value);
 
       // Write the Step objects, one by one.
-      for (uint i = 0; i < itsSteps.size(); ++i) {
+      for (unsigned int i = 0; i < itsSteps.size(); ++i) {
         itsSteps[i]->write(ps);
       }
     }
@@ -130,7 +130,7 @@ namespace LOFAR
       vector<string> steps(ps.getStringVector("Step." + name() + ".Steps"));
 
       // Create a new step for each name in \a steps.
-      for (uint i = 0; i < steps.size(); ++i) {
+      for (unsigned int i = 0; i < steps.size(); ++i) {
 	infiniteRecursionCheck(steps[i]);
 	itsSteps.push_back(Step::create(steps[i], ps, this));
       }
@@ -140,7 +140,7 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       if (nm == name()) {
-	THROW (BBSControlException, 
+	THROW (BBSControlException,
 	       "Infinite recursion detected in defintion of Step \""
 	       << nm << "\". Please check your ParameterSet file.");
       }

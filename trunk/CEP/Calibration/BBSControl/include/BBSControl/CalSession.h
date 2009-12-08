@@ -73,7 +73,7 @@ struct ProcessId
         :   pid(-1)
     {
     }
-    
+
     ProcessId(const string &hostname, int64 pid)
         :   hostname(hostname),
             pid(pid)
@@ -102,9 +102,9 @@ ostream& operator<<(ostream& os, const ProcessId &obj);
 struct CommandStatus
 {
     // Number of workers that finished the command.
-    uint    finished;
+    unsigned int    finished;
     // Number of workers that reported failure.
-    uint    failed;
+    unsigned int    failed;
 };
 
 class CalSession
@@ -120,7 +120,7 @@ public:
         DONE,
         N_State
     };
-    
+
     enum WorkerType
     {
         KERNEL,
@@ -142,7 +142,7 @@ public:
 
     void setState(State state);
     State getState() const;
-    
+
     void initWorkerRegister(const CEP::VdsDesc &vds, bool useSolver);
     void setWorkerIndex(const ProcessId &worker, size_t index);
 
@@ -164,7 +164,7 @@ public:
     // this method.
     // \returns False if post failed, true otherwise.
     void postResult(const CommandId &id, const CommandResult &result) const;
-    
+
     // Get the current status of the command (identified by) \a id, which must
     // refer to a command posted in the current session.
     CommandStatus getCommandStatus(const CommandId &id) const;
@@ -182,18 +182,16 @@ public:
     bool isWorker(const ProcessId &id) const;
     bool isKernel(const ProcessId &id) const;
     bool isSolver(const ProcessId &id) const;
-    
+
     size_t getIndex() const;
     size_t getIndex(const ProcessId &id) const;
     size_t getPort(const ProcessId &id) const;
     string getFilesys(const ProcessId &id) const;
     string getPath(const ProcessId &id) const;
     Grid getGrid(const ProcessId &id) const;
-    
-    vector<ProcessId> getWorkersByType(WorkerType type) const;    
-    ProcessId getWorkerByIndex(WorkerType type, size_t index) const;    
 
-    Axis::ShPtr getGlobalTimeAxis() const;
+    vector<ProcessId> getWorkersByType(WorkerType type) const;
+    ProcessId getWorkerByIndex(WorkerType type, size_t index) const;
     // @}
 
     // Waiting for an event.
@@ -228,11 +226,11 @@ private:
         virtual void operator()(int be_pid);
 
         // Test if any of the \a flags are raised.
-        static Type testFlags(Type flags) 
+        static Type testFlags(Type flags)
         { return Type(theirFlags & flags); }
 
         // Raise \a flags.
-        static void raiseFlags(Type flags) 
+        static void raiseFlags(Type flags)
         { theirFlags = Type(theirFlags | flags); }
 
         // Clear \a flags.
@@ -286,7 +284,7 @@ private:
 
     // Trigger administration and waiting.
     // @{
-    
+
     // Create a the trigger for events of type \a type. Once registered, we will
     // receive a notification from the database whenever an event of type
     // \a type occurs.
@@ -297,21 +295,20 @@ private:
 
     // Is a trigger for events of type \a type registered?
     bool isRegistered(Trigger::Type type) const;
-    
+
     // Wait for a trigger from the database backend. Only triggers that were
     // previously registered will get through. When a trigger arrives the
     // associated trigger flag will be raised. This way, we decouple reception
     // of the trigger from the action to be taken.
     bool waitForTrigger(Trigger::Type type,
         double timeOut = theirDefaultTimeOut) const;
-
     // @}
 
     // Synchronize the cached worker register with the database.
     void syncWorkerRegister(bool force = false) const;
-    
+
     const Worker &getWorkerById(const ProcessId &id) const;
-    
+
     int32                           itsSessionId;
     ProcessId                       itsProcessId;
     scoped_ptr<pqxx::connection>    itsConnection;
@@ -327,7 +324,7 @@ private:
 
     // Default time-out value.
     static double theirDefaultTimeOut;
-    
+
     friend class PQGetWorkerRegister;
 };
 // @}

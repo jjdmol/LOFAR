@@ -48,7 +48,7 @@ namespace LOFAR
     class SolutionMsg;
     class ChunkDoneMsg;
 
-    // \addtogroup BBS
+    // \addtogroup BBSControl
     // @{
 
     // Group of kernels that share one (global) solver. This class implements
@@ -86,7 +86,7 @@ namespace LOFAR
       virtual void handle(const EquationMsg &message);
       virtual void handle(const ChunkDoneMsg &message);
 
-//       uint nrKernels() const { return itsNrKernels; }
+//       unsigned int nrKernels() const { return itsNrKernels; }
 
       void setState(State s);
 //       State state() const { return itsState; }
@@ -107,7 +107,7 @@ namespace LOFAR
       };
 
 //       // Number of kernels in this group
-//       uint itsNrKernels;
+//       unsigned int itsNrKernels;
       vector<KernelConnection> itsKernels;
 //       vector< pair<KernelConnection, MsgType> > itsKernels;
 
@@ -118,7 +118,7 @@ namespace LOFAR
       // Message counter. Counts the number of messages received of a certain
       // type. When we've received \c nrKernels messages we can change state.
       // The vector will contain \c N_MsgTypes elements.
-      vector<uint> msgCount;
+      vector<unsigned int> msgCount;
 #endif
 
       // A set is used to "count" whether we've already received a message
@@ -140,7 +140,7 @@ namespace LOFAR
 
       // The solver associated with this kernel group.
       Solver itsSolver;
-      
+
     };
 
     // @}

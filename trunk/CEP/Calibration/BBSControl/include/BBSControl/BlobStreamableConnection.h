@@ -38,7 +38,7 @@ namespace LOFAR
 {
   namespace BBS
   {
-    // \addtogroup BBS
+    // \addtogroup BBSControl
     // @{
 
     // This class provides a client-server connection to be used within

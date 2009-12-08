@@ -1,4 +1,4 @@
-//# CorrectStep.cc: 
+//#  CorrectStep.cc:
 //#
 //# Copyright (C) 2002-2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//#  $Id$
 
 #include <lofar_config.h>
 #include <BBSControl/CorrectStep.h>
@@ -30,7 +30,7 @@ namespace LOFAR
   namespace BBS
   {
 
-    CorrectStep::CorrectStep(const string& name, 
+    CorrectStep::CorrectStep(const string& name,
                              const ParameterSet& parSet,
                              const Step* parent) :
       SingleStep(name, parent)
@@ -52,7 +52,7 @@ namespace LOFAR
     }
 
 
-    const string& CorrectStep::type() const 
+    const string& CorrectStep::type() const
     {
       static const string theType("Correct");
       return theType;
@@ -62,5 +62,3 @@ namespace LOFAR
   } // namespace BBS
 
 } // namespace LOFAR
-    
-    

@@ -1,4 +1,4 @@
-//# Step.cc:
+//#  Step.cc:
 //#
 //# Copyright (C) 2002-2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//#  $Id$
 
 #include <lofar_config.h>
 
@@ -128,57 +128,56 @@ namespace LOFAR
       LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << itsName);
       const string prefix = "Step." + itsName + ".";
       ps.replace(prefix + "Baselines.Station1",
-                  toString(itsBaselines.station1));
+        toString(itsBaselines.station1));
       ps.replace(prefix + "Baselines.Station2",
-                  toString(itsBaselines.station2));
-      ps.replace(prefix + "Correlation.Selection",
-                  itsCorrelation.selection);
-      ps.replace(prefix + "Correlation.Type",
-                  toString(itsCorrelation.type));
-      ps.replace(prefix + "Model.UsePhasors",
-                  toString(itsModelConfig.usePhasors));
-      ps.replace(prefix + "Model.Sources",
-                  toString(itsModelConfig.sources));
-      ps.replace(prefix + "Model.Components",
-		  toString(itsModelConfig.components));
+        toString(itsBaselines.station2));
+      ps.replace(prefix + "Correlation.Selection", itsCorrelation.selection);
+      ps.replace(prefix + "Correlation.Type", toString(itsCorrelation.type));
 
-      if(itsModelConfig.ionoConfig) {
-        ps.replace(prefix + "Model.Ionosphere.Rank",
-          toString(itsModelConfig.ionoConfig->rank));
+      // Remove all Model keys from the parset. Effectively, key inheritance
+      // is handled in read() and here we only output the keys that are relevant
+      // for this Step.
+      ps.subtractSubset(prefix + "Model.");
+
+      ps.add(prefix + "Model.Phasors.Enable",
+        toString(itsModelConfig.usePhasors()));
+      ps.add(prefix + "Model.Bandpass.Enable",
+        toString(itsModelConfig.useBandpass()));
+      ps.add(prefix + "Model.Gain.Enable",
+        toString(itsModelConfig.useGain()));
+      ps.add(prefix + "Model.DirectionalGain.Enable",
+        toString(itsModelConfig.useDirectionalGain()));
+
+      ps.add(prefix + "Model.Beam.Enable", toString(itsModelConfig.useBeam()));
+      if(itsModelConfig.useBeam()) {
+        const BeamConfig &config = itsModelConfig.getBeamConfig();
+        ps.add(prefix + "Model.Beam.StationConfig.Name",
+          config.getConfigName());
+        ps.add(prefix + "Model.Beam.StationConfig.Path",
+          config.getConfigPath().originalName());
+        ps.add(prefix + "Model.Beam.Element.Type",
+          config.getElementTypeAsString());
+        ps.add(prefix + "Model.Beam.Element.Path",
+          config.getElementPath().originalName());
       }
 
-      // Cancel any inherited beam type. If we did inherit, this key will
-      // be replaced again below (this is related to bug 1054).
-      ps.replace(prefix + "Model.Beam.Type", "");
-
-      if(itsModelConfig.beamConfig)
-      {
-        ps.replace(prefix + "Model.Beam.Type",
-                  itsModelConfig.beamConfig->type());
-
-        if(itsModelConfig.beamConfig->type() == "HamakerDipole")
-        {
-          HamakerDipoleConfig::ConstPointer config =
-            dynamic_pointer_cast<const HamakerDipoleConfig>
-              (itsModelConfig.beamConfig);
-          ASSERT(config);
-
-          ps.replace(prefix + "Model.Beam.HamakerDipole.CoeffFile",
-                  config->coeffFile);
-        }
-        else if(itsModelConfig.beamConfig->type() == "YatawattaDipole")
-        {
-          YatawattaDipoleConfig::ConstPointer config =
-            dynamic_pointer_cast<const YatawattaDipoleConfig>
-              (itsModelConfig.beamConfig);
-          ASSERT(config);
-
-          ps.replace(prefix + "Model.Beam.YatawattaDipole.ModuleTheta",
-                  config->moduleTheta);
-          ps.replace(prefix + "Model.Beam.YatawattaDipole.ModulePhi",
-                  config->modulePhi);
-        }
+      ps.add(prefix + "Model.Ionosphere.Enable",
+        toString(itsModelConfig.useIonosphere()));
+      if(itsModelConfig.useIonosphere()) {
+        const IonosphereConfig &config = itsModelConfig.getIonosphereConfig();
+        ps.add(prefix + "Model.Ionosphere.Degree",
+          toString(config.getDegree()));
       }
+
+      ps.add(prefix + "Model.Flagger.Enable",
+        toString(itsModelConfig.useFlagger()));
+      if(itsModelConfig.useFlagger()) {
+        const FlaggerConfig &config = itsModelConfig.getFlaggerConfig();
+        ps.add(prefix + "Model.Flagger.Threshold",
+          toString(config.getThreshold()));
+      }
+
+      ps.add(prefix + "Model.Sources", toString(itsModelConfig.getSources()));
 
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
@@ -202,71 +201,94 @@ namespace LOFAR
         ps.getStringVector("Correlation.Type", itsCorrelation.type);
 
       // Get the model configuration.
-      itsModelConfig.usePhasors =
-        ps.getBool("Model.UsePhasors", itsModelConfig.usePhasors);
-      itsModelConfig.sources =
-        ps.getStringVector("Model.Sources", itsModelConfig.sources);
-      itsModelConfig.components =
-        ps.getStringVector("Model.Components", itsModelConfig.components);
+      itsModelConfig.setPhasors(ps.getBool("Model.Phasors.Enable",
+        itsModelConfig.usePhasors()));
 
-      if(ps.isDefined("Model.Ionosphere.Rank")) {
-        IonoConfig::Pointer config(new IonoConfig());
-        config->rank = ps.getUint32("Model.Ionosphere.Rank");
-        itsModelConfig.ionoConfig = config;
+      itsModelConfig.setBandpass(ps.getBool("Model.Bandpass.Enable",
+        itsModelConfig.useBandpass()));
+
+      itsModelConfig.setGain(ps.getBool("Model.Gain.Enable",
+        itsModelConfig.useGain()));
+
+      itsModelConfig.setDirectionalGain
+        (ps.getBool("Model.DirectionalGain.Enable",
+          itsModelConfig.useDirectionalGain()));
+
+      if(ps.getBool("Model.Beam.Enable", itsModelConfig.useBeam())) {
+        BeamConfig parentConfig = itsModelConfig.getBeamConfig();
+
+        string elementTypeString = ps.getString("Model.Beam.Element.Type",
+          parentConfig.getElementTypeAsString());
+        BeamConfig::ElementType elementType =
+          BeamConfig::getElementTypeFromString(elementTypeString);
+
+        if(elementType == BeamConfig::UNKNOWN) {
+          THROW(BBSControlException, "Key Model.Beam.Element.Type not found or"
+            " invalid.");
+        }
+
+        string defaultPath;
+        if(itsModelConfig.useBeam()
+          && parentConfig.getElementType() == elementType) {
+          defaultPath = parentConfig.getElementPath().originalName();
+        } else if(elementType == BeamConfig::HAMAKER_LBA
+          || elementType == BeamConfig::HAMAKER_HBA) {
+          defaultPath = "$LOFARROOT/share";
+        } else {
+          defaultPath = "$LOFARROOT/lib";
+        }
+
+        string elementPath = ps.getString("Model.Beam.Element.Path",
+          defaultPath);
+
+        string configName, configPath;
+        if(itsModelConfig.useBeam()) {
+          configName = ps.getString("Model.Beam.StationConfig.Name",
+            parentConfig.getConfigName());
+          configPath = ps.getString("Model.Beam.StationConfig.Path",
+            parentConfig.getConfigPath().originalName());
+        } else {
+          configName = ps.getString("Model.Beam.StationConfig.Name");
+          configPath = ps.getString("Model.Beam.StationConfig.Path");
+        }
+
+        itsModelConfig.setBeamConfig(BeamConfig(configName,
+          casa::Path(configPath), elementType, casa::Path(elementPath)));
+      } else {
+        itsModelConfig.clearBeamConfig();
       }
 
-      if(ps.isDefined("Model.Beam.Type")) {
-        string beamType(ps.getString("Model.Beam.Type"));
-
-        if(beamType.empty()) {
-          itsModelConfig.beamConfig.reset();
+      if(ps.getBool("Model.Ionosphere.Enable", itsModelConfig.useIonosphere()))
+      {
+        unsigned int degree = 0;
+        if(itsModelConfig.useIonosphere()) {
+          degree = ps.getUint("Model.Ionosphere.Degree",
+            itsModelConfig.getIonosphereConfig().getDegree());
+        } else {
+          degree = ps.getUint("Model.Ionosphere.Degree");
         }
-        else if(beamType == "HamakerDipole") {
-          HamakerDipoleConfig::ConstPointer parentConfig =
-            dynamic_pointer_cast<const HamakerDipoleConfig>
-              (itsModelConfig.beamConfig);
 
-          HamakerDipoleConfig::Pointer config(new HamakerDipoleConfig());
-
-          config->coeffFile = ps.getString("Model.Beam.HamakerDipole.CoeffFile",
-            parentConfig ? parentConfig->coeffFile : string());
-          if(config->coeffFile.empty()) {
-            THROW(BBSControlException, "Model.Beam.HamakerDipole.CoeffFile"
-              " expected but not found.");
-          }
-
-          itsModelConfig.beamConfig = config;
-        }
-        else if(beamType == "YatawattaDipole") {
-          YatawattaDipoleConfig::ConstPointer parentConfig =
-            dynamic_pointer_cast<const YatawattaDipoleConfig>
-              (itsModelConfig.beamConfig);
-
-          YatawattaDipoleConfig::Pointer config(new YatawattaDipoleConfig());
-
-          config->moduleTheta =
-            ps.getString("Model.Beam.YatawattaDipole.ModuleTheta",
-              parentConfig ? parentConfig->moduleTheta : string());
-          if(config->moduleTheta.empty()) {
-            THROW(BBSControlException, "Model.Beam.YatawattaDipole.ModuleTheta"
-              " expected but not found.");
-          }
-
-          config->modulePhi =
-            ps.getString("Model.Beam.YatawattaDipole.ModulePhi", parentConfig
-              ? parentConfig->modulePhi : string());
-          if(config->modulePhi.empty()) {
-            THROW(BBSControlException, "Model.Beam.YatawattaDipole.ModulePhi"
-                " expected but not found.");
-          }
-
-          itsModelConfig.beamConfig = config;
-        }
-        else {
-          THROW(BBSControlException, "Unknown beam model type " << beamType
-            << " encountered.");
-        }
+        itsModelConfig.setIonosphereConfig(IonosphereConfig(degree));
+      } else {
+        itsModelConfig.clearIonosphereConfig();
       }
+
+      if(ps.getBool("Model.Flagger.Enable", itsModelConfig.useFlagger())) {
+        double threshold = 0.0;
+        if(itsModelConfig.useFlagger()) {
+          threshold = ps.getDouble("Model.Flagger.Threshold",
+            itsModelConfig.getFlaggerConfig().getThreshold());
+        } else {
+          threshold = ps.getDouble("Model.Flagger.Threshold");
+        }
+
+        itsModelConfig.setFlaggerConfig(FlaggerConfig(threshold));
+      } else {
+        itsModelConfig.clearFlaggerConfig();
+      }
+
+      itsModelConfig.setSources(ps.getStringVector("Model.Sources",
+        itsModelConfig.getSources()));
     }
 
 
