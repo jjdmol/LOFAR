@@ -21,8 +21,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_PVALUEITERATOR_H
-#define EXPR_PVALUEITERATOR_H
+#ifndef LOFAR_BBSKERNEL_EXPR_PVALUEITERATOR_H
+#define LOFAR_BBSKERNEL_EXPR_PVALUEITERATOR_H
 
 // \file
 // Iterators that iterate over the perturbed values of a (set of) result(s).
@@ -34,7 +34,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class PValueConstIterator

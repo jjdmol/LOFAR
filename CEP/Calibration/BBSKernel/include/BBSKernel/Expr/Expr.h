@@ -1,4 +1,4 @@
-//# Expr.h: The base class of an expression.
+//# Expr.h: Expression base class
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,322 +20,606 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPR_H
-#define EXPR_EXPR_H
+#ifndef LOFAR_BBSKERNEL_EXPR_EXPR_H
+#define LOFAR_BBSKERNEL_EXPR_EXPR_H
 
 // \file
-// The base class of an expression
+// Expression base class
 
-//# Includes
+#include <Common/lofar_smartptr.h>
+#include <Common/lofar_set.h>
+
+#include <BBSKernel/Expr/ExprId.h>
 #include <BBSKernel/Expr/Request.h>
-#include <BBSKernel/Expr/Result.h>
-#include <BBSKernel/Expr/ResultVec.h>
-#include <vector>
-
+#include <BBSKernel/Expr/ExprResult.h>
+#include <BBSKernel/Expr/Cache.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-//# Forward Declarations.
-class Expr;
-
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
-
-// This class is the (abstract) base class for an expression. The classes
-// derived from it implement an expression which must be evaluated for
-// a given request.
-//
-// There are a few virtual methods which must or can be implemented in derived
-// classes. They are:
-// <ul>
-//  <li> \b getResult calculates the main value and the
-//       perturbed values of the solvable parameters.
-//       The default implementation uses getResultValue for all of them.
-//       Sometimes a derived class can do it in a better way by reusing
-//       intermediate results. In that case it might be better implement
-//       to implement getResult in the derived class.
-//  <li> \b getResultVec returns the result as a vector. Only in very
-//       exceptional cases it needs to be implemented in a derived class.
-//  <li> getResultValue calculates the value of the expression represented
-//       by the derived class. It must be implemented if <tt>getResult</tt>
-//       is not implemented.
-// </ul>
-// So in short: either <tt>getResultValue</tt> or <tt>getResult</tt> must be
-// implemented in a derived class. Usually the simpler <tt>getResultValue</tt>
-// will do.
-
-class ExprRep
+// Expression base class.
+class ExprBase
 {
 public:
-  // The default constructor.
-  ExprRep();
+    typedef shared_ptr<ExprBase>                Ptr;
+    typedef shared_ptr<const ExprBase>          ConstPtr;
 
-  virtual ~ExprRep();
+    ExprBase();
+    virtual ~ExprBase();
 
-  // Link to this node (incrementing the refcount).
-  void link()
-    { itsCount++; }
-
-  // Link to this node (decrementing the refcount).
-  // The object is deleted if the refcount gets zero.
-  static void unlink (ExprRep* rep)
-    { if (rep != 0  &&  --rep->itsCount == 0) delete rep; }
-
-  // Increment number of parents.
-  void incrNParents()
-  {
-      itsNParents++;
-  }
-
-  // Decrement the number of parents.
-  void decrNParents()
-  {
-      itsNParents--;
-  }
-
-  // Get the current number of parents
-  int getParentCount() const
-  {
-      return itsNParents;
-  }
-
-  size_t getChildCount() const
-  {
-      return itsChildren.size();
-  }
-
-  // Recursively set the lowest and highest level of the node as used
-  // in the tree.
-  // Return the number of levels used so far.
-  int setLevel (int level);
-
-  // Clear the done flag recursively.
-  void clearDone();
-
-  // At which level is the node done?
-  int levelDone() const
-    { return itsLevelDone; }
-
-  // Get the nodes at the given level.
-  // All nodes or only nodes with multiple parents can be retrieved.
-  // It is used to find the nodes with results to be cached.
-  void getCachingNodes (std::vector<ExprRep*>& nodes,
-            int level, bool all=false);
-
-  // Get the single result of the expression for the given domain.
-  // The return value is a reference to the true result. This can either
-  // be a reference to the cached value (if the object maintains a cache)
-  // or to the result object in the parameter list (if no cache).
-  // If the result is stored in the cache, it is done in a thread-safe way.
-  // Note that a cache is used if the expression has multiple parents.
-  const Result& getResultSynced (const Request& request,
-                    Result& result)
-    { return itsReqId == request.getId()  ?
-    *itsResult : calcResult(request,result); }
-
-  // Get the actual result.
-  // The default implementation throw an exception.
-  virtual Result getResult (const Request&);
-
-  // Get the multi result of the expression for the given domain.
-  // The default implementation calls getResult.
-  const ResultVec& getResultVecSynced (const Request& request,
-                      ResultVec& result)
-    { return itsReqId == request.getId()  ?
-    *itsResVec : calcResultVec(request,result); }
-
-  virtual ResultVec getResultVec (const Request&);
-  // </group>
-
-  // Precalculate the result and store it in the cache.
-  virtual void precalculate (const Request&);
-
+    // Return the unique id of this expression.
+    ExprId id() const;
 
 protected:
-  // Add a child to this node.
-  // It also increases NParents in the child.
-  void addChild(Expr child);
-  void removeChild(Expr child);
-  Expr getChild(size_t index);
+    // \name Connection management
+    // Connect/disconnect expressions to/from this expression. The connected
+    // expressions constitute this expression's arguments. Currently, these
+    // methods only keep track of the number of consumers of the result of an
+    // expression. This number is used to decide whether or not to cache a
+    // result.
+    //
+    // @{
+    void connect(const ExprBase::ConstPtr &arg) const;
+    void disconnect(const ExprBase::ConstPtr &arg) const;
+    unsigned int nConsumers() const;
+    // @}
+
+    // \name Argument access
+    // Provide access to the arguments of an expression. Because the type of the
+    // arguments must be kept, they are stored in the derived classes (where the
+    // type is known). However, access from the base class can be useful to
+    // support visitors or base class functions that need to recurse the tree.
+    //
+    // @{
+    virtual unsigned int nArguments() const = 0;
+    virtual ExprBase::ConstPtr argument(unsigned int i) const = 0;
+    // @}
 
 private:
-  // Forbid copy and assignment.
-  ExprRep (const ExprRep&);
-  ExprRep& operator= (const ExprRep&);
+    // Forbid copy and assignment.
+    ExprBase(const ExprBase &);
+    ExprBase &operator=(const ExprBase &);
 
-  // Calculate the actual result in a cache thread-safe way.
-  // <group>
-  const Result& calcResult (const Request&, Result&);
-  const ResultVec& calcResultVec (const Request&, ResultVec&,
-                     bool useCache=false);
-  // </group>
+    // @{
+    // Change the number of consumers (i.e. expressions that depend on the
+    // result of this expression).
+    void incConsumerCount() const;
+    void decConsumerCount() const;
+    // @}
 
-  // Let a derived class calculate the resulting value.
-  virtual Matrix getResultValue (const Request &,
-    const std::vector<const Matrix*>&);
+    // The number of registered consumers. This attribute is mutable such that
+    // an expression tree can be constructed without requiring non-const access
+    // to the constituent nodes (derivatives of ExprBase).
+    //
+    // The consumer count is used to decide whether or not to cache a result. As
+    // caching is an implementation detail, anything related to it should not be
+    // detectable outside the ExprBase hierarchy.
+    mutable unsigned int        itsConsumerCount;
 
+    ExprId                      itsId;
+    static ExprId               theirId;
+};
 
-  int           itsCount;      //# Reference count
-  int           itsMinLevel;   //# Minimum level of node as used in tree.
-  int           itsMaxLevel;   //# Maximum level of node as used in tree.
-  int           itsLevelDone;  //# Level the node is handled by some parent.
-  Result*    itsResult;     //# Possibly cached result
-  ResultVec* itsResVec;     //# Possibly cached result vector
-  std::vector<Expr> itsChildren;   //# All children
+template <typename T_EXPR_VALUE>
+class Expr: public ExprBase
+{
+public:
+    typedef shared_ptr<Expr<T_EXPR_VALUE> >         Ptr;
+    typedef shared_ptr<const Expr<T_EXPR_VALUE> >   ConstPtr;
+
+    typedef T_EXPR_VALUE    ExprValueType;
+
+    using ExprBase::id;
+    using ExprBase::nConsumers;
+
+    virtual const T_EXPR_VALUE evaluate(const Request &request, Cache &cache,
+        unsigned int grid) const;
 
 protected:
-  int           itsNParents;   //# Nr of parents
-  RequestId  itsReqId;      //# Request-id of cached result.
+    virtual const T_EXPR_VALUE evaluateExpr(const Request &request,
+        Cache &cache, unsigned int grid) const = 0;
 };
 
-
-
-class Expr
+template <typename T_ARG0, typename T_EXPR_VALUE>
+class UnaryExpr: public Expr<T_EXPR_VALUE>
 {
-friend class ExprRep;
-
 public:
-  // Construct from a rep object.
-  // It takes over the pointer, so it takes care of deleting the object.
-  Expr (ExprRep* expr = 0)
-    : itsRep(expr)
-    { if (itsRep) itsRep->link(); }
+    typedef shared_ptr<UnaryExpr>       Ptr;
+    typedef shared_ptr<const UnaryExpr> ConstPtr;
 
-  // Copy constructor (reference semantics).
-  Expr (const Expr&);
+    typedef T_ARG0  Arg0Type;
 
-  ~Expr()
-    { ExprRep::unlink (itsRep); }
+    using ExprBase::connect;
+    using ExprBase::disconnect;
 
-  // Assignment (reference semantics).
-  Expr& operator= (const Expr&);
-
-  // Is the node empty?
-  bool isNull() const
-    { return itsRep == 0; }
-
-  // A Expr is essentially a reference counted shared
-  // pointer. Two Expr's can be considered equal if both
-  // reference the same underlying ExprRep.
-  bool operator ==(const Expr &other)
-  {
-    return (itsRep == other.itsRep);
-  }
-
-  ExprRep *getPtr()
-  { return itsRep; }
-  const ExprRep *getPtr() const
-  { return itsRep; }
-
-  //# -- DELEGATED METHODS --
-  // Get the current number of parents
-  int getParentCount() const
-  {
-      return itsRep->getParentCount();
-  }
-
-  // Get the current number of children
-  size_t getChildCount() const
-  {
-      return itsRep->getChildCount();
-  }
-
-  // Recursively set the lowest and highest level of the node as used
-  // in the tree.
-  // Return the number of levels used so far.
-  int setLevel (int level)
-    { return itsRep->setLevel (level); }
-
-  // Clear the done flag recursively.
-  void clearDone()
-    { itsRep->clearDone(); }
-
-  // At which level is the node done?
-  int levelDone() const
-    { return itsRep->levelDone(); }
-
-  // Get the nodes at the given level.
-  // By default only nodes with multiple parents are retrieved.
-  // It is used to find the nodes with results to be cached.
-  void getCachingNodes (std::vector<ExprRep*>& nodes,
-               int level, bool all=false)
-    { itsRep->getCachingNodes (nodes, level, all); }
-
-  // Precalculate the result and store it in the cache.
-  void precalculate (const Request& request)
-    { itsRep->precalculate (request); }
-
-  // Get the result of the expression for the given domain.
-  // getResult will throw an exception if the node has a multi result.
-  // getResultVec will always succeed.
-  // <group>
-  const Result getResult (const Request& request)
-    { return itsRep->getResult (request); }
-  const Result& getResultSynced (const Request& request,
-                    Result& result)
-    { return itsRep->getResultSynced (request, result); }
-  const ResultVec getResultVec (const Request& request)
-    { return itsRep->getResultVec (request); }
-  const ResultVec& getResultVecSynced (const Request& request,
-                      ResultVec& result)
-    { return itsRep->getResultVecSynced (request, result); }
-  // </group>
-
+    UnaryExpr(const typename Expr<T_ARG0>::ConstPtr &arg0);
+    ~UnaryExpr();
 
 protected:
-  ExprRep* itsRep;
-};
+    virtual unsigned int nArguments() const;
+    virtual ExprBase::ConstPtr argument(unsigned int i) const;
 
-class ExprToComplex: public ExprRep
-{
-public:
-  ExprToComplex (const Expr& real, const Expr& imag);
-
-  virtual ~ExprToComplex();
-
-  virtual Result getResult (const Request&);
+    const typename Expr<T_ARG0>::ConstPtr &argument0() const;
 
 private:
-
-  Expr itsReal;
-  Expr itsImag;
+    typename Expr<T_ARG0>::ConstPtr itsArg0;
 };
 
-class ExprAPToComplex: public ExprRep
+template <typename T_ARG0, typename T_ARG1, typename T_EXPR_VALUE>
+class BinaryExpr: public Expr<T_EXPR_VALUE>
 {
 public:
-  ExprAPToComplex (const Expr& ampl, const Expr& phase);
+    typedef shared_ptr<BinaryExpr>          Ptr;
+    typedef shared_ptr<const BinaryExpr>    ConstPtr;
 
-  virtual ~ExprAPToComplex();
+    typedef T_ARG0  Arg0Type;
+    typedef T_ARG1  Arg1Type;
 
-  virtual Result getResult (const Request&);
+    using ExprBase::connect;
+    using ExprBase::disconnect;
+
+    BinaryExpr(const typename Expr<T_ARG0>::ConstPtr &arg0,
+        const typename Expr<T_ARG1>::ConstPtr &arg1);
+    ~BinaryExpr();
+
+protected:
+    virtual unsigned int nArguments() const;
+    virtual ExprBase::ConstPtr argument(unsigned int i) const;
+
+    const typename Expr<T_ARG0>::ConstPtr &argument0() const;
+    const typename Expr<T_ARG1>::ConstPtr &argument1() const;
 
 private:
-
-  Expr itsAmpl;
-  Expr itsPhase;
+    typename Expr<T_ARG0>::ConstPtr itsArg0;
+    typename Expr<T_ARG1>::ConstPtr itsArg1;
 };
 
-class ExprPhaseToComplex: public ExprRep
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2,
+    typename T_EXPR_VALUE>
+class TernaryExpr: public Expr<T_EXPR_VALUE>
 {
 public:
-    ExprPhaseToComplex(const Expr &phase);
-    virtual ~ExprPhaseToComplex();
+    typedef shared_ptr<TernaryExpr>         Ptr;
+    typedef shared_ptr<const TernaryExpr>   ConstPtr;
 
-    virtual Result getResult(const Request &request);
+    typedef T_ARG0  Arg0Type;
+    typedef T_ARG1  Arg1Type;
+    typedef T_ARG2  Arg2Type;
+
+    using ExprBase::connect;
+    using ExprBase::disconnect;
+
+    TernaryExpr(const typename Expr<T_ARG0>::ConstPtr &arg0,
+        const typename Expr<T_ARG1>::ConstPtr &arg1,
+        const typename Expr<T_ARG2>::ConstPtr &arg2);
+    ~TernaryExpr();
+
+protected:
+    virtual unsigned int nArguments() const;
+    virtual ExprBase::ConstPtr argument(unsigned int i) const;
+
+    const typename Expr<T_ARG0>::ConstPtr &argument0() const;
+    const typename Expr<T_ARG1>::ConstPtr &argument1() const;
+    const typename Expr<T_ARG2>::ConstPtr &argument2() const;
 
 private:
-
-    Expr itsPhase;
+    typename Expr<T_ARG0>::ConstPtr itsArg0;
+    typename Expr<T_ARG1>::ConstPtr itsArg1;
+    typename Expr<T_ARG2>::ConstPtr itsArg2;
 };
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+    typename T_ARG4, typename T_EXPR_VALUE>
+class Expr5: public Expr<T_EXPR_VALUE>
+{
+public:
+    typedef shared_ptr<Expr5>       Ptr;
+    typedef shared_ptr<const Expr5> ConstPtr;
+
+    typedef T_ARG0  Arg0Type;
+    typedef T_ARG1  Arg1Type;
+    typedef T_ARG2  Arg2Type;
+    typedef T_ARG3  Arg3Type;
+    typedef T_ARG4  Arg4Type;
+
+    using ExprBase::connect;
+    using ExprBase::disconnect;
+
+    Expr5(const typename Expr<T_ARG0>::ConstPtr &arg0,
+        const typename Expr<T_ARG1>::ConstPtr &arg1,
+        const typename Expr<T_ARG2>::ConstPtr &arg2,
+        const typename Expr<T_ARG3>::ConstPtr &arg3,
+        const typename Expr<T_ARG4>::ConstPtr &arg4);
+    ~Expr5();
+
+protected:
+    virtual unsigned int nArguments() const;
+    virtual ExprBase::ConstPtr argument(unsigned int i) const;
+
+    const typename Expr<T_ARG0>::ConstPtr &argument0() const;
+    const typename Expr<T_ARG1>::ConstPtr &argument1() const;
+    const typename Expr<T_ARG2>::ConstPtr &argument2() const;
+    const typename Expr<T_ARG3>::ConstPtr &argument3() const;
+    const typename Expr<T_ARG4>::ConstPtr &argument4() const;
+
+private:
+    typename Expr<T_ARG0>::ConstPtr itsArg0;
+    typename Expr<T_ARG1>::ConstPtr itsArg1;
+    typename Expr<T_ARG2>::ConstPtr itsArg2;
+    typename Expr<T_ARG3>::ConstPtr itsArg3;
+    typename Expr<T_ARG4>::ConstPtr itsArg4;
+};
+
+// Helper function to compute the bitwise or of all the FlagArray instances
+// in the range [it, end).
+template <typename T_ITER>
+FlagArray mergeFlags(T_ITER it, T_ITER end);
 
 // @}
 
-} // namespace BBS
-} // namespace LOFAR
+
+// -------------------------------------------------------------------------- //
+// - Implementation: ExprBase                                               - //
+// -------------------------------------------------------------------------- //
+
+inline ExprId ExprBase::id() const
+{
+    return itsId;
+}
+
+inline unsigned int ExprBase::nConsumers() const
+{
+    return itsConsumerCount;
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: Expr                                                   - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_EXPR_VALUE>
+inline const T_EXPR_VALUE  Expr<T_EXPR_VALUE>::evaluate(const Request &request,
+    Cache &cache, unsigned int grid) const
+{
+    T_EXPR_VALUE result;
+
+    // Query the cache.
+    if(nConsumers() < 1 || !cache.query(id(), request.id(), result))
+    {
+        // Compute the result.
+        result = evaluateExpr(request, cache, grid);
+
+        // Insert into cache (only if it will be re-used later on).
+        if(nConsumers() > 1)
+        {
+            cache.insert(id(), request.id(), result);
+        }
+    }
+
+    return result;
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: UnaryExpr                                              - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_ARG0, typename T_EXPR_VALUE>
+UnaryExpr<T_ARG0, T_EXPR_VALUE>::UnaryExpr
+    (const typename Expr<T_ARG0>::ConstPtr &arg0)
+    :   itsArg0(arg0)
+{
+    connect(itsArg0);
+}
+
+template <typename T_ARG0, typename T_EXPR_VALUE>
+UnaryExpr<T_ARG0, T_EXPR_VALUE>::~UnaryExpr()
+{
+    disconnect(itsArg0);
+}
+
+template <typename T_ARG0, typename T_EXPR_VALUE>
+inline unsigned int UnaryExpr<T_ARG0, T_EXPR_VALUE>::nArguments() const
+{
+    return 1;
+}
+
+template <typename T_ARG0, typename T_EXPR_VALUE>
+inline ExprBase::ConstPtr UnaryExpr<T_ARG0, T_EXPR_VALUE>::argument
+    (unsigned int i) const
+{
+    ASSERTSTR(i == 0, "Invalid argument index specified.");
+    return itsArg0;
+}
+
+template <typename T_ARG0, typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG0>::ConstPtr&
+UnaryExpr<T_ARG0, T_EXPR_VALUE>::argument0() const
+{
+    return itsArg0;
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: BinaryExpr                                             - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_ARG0, typename T_ARG1, typename T_EXPR_VALUE>
+BinaryExpr<T_ARG0, T_ARG1, T_EXPR_VALUE>::BinaryExpr
+    (const typename Expr<T_ARG0>::ConstPtr &arg0,
+    const typename Expr<T_ARG1>::ConstPtr &arg1)
+    :   itsArg0(arg0),
+        itsArg1(arg1)
+{
+    connect(itsArg0);
+    connect(itsArg1);
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_EXPR_VALUE>
+BinaryExpr<T_ARG0, T_ARG1, T_EXPR_VALUE>::~BinaryExpr()
+{
+    disconnect(itsArg1);
+    disconnect(itsArg0);
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_EXPR_VALUE>
+inline unsigned int BinaryExpr<T_ARG0, T_ARG1, T_EXPR_VALUE>::nArguments() const
+{
+    return 2;
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_EXPR_VALUE>
+inline ExprBase::ConstPtr BinaryExpr<T_ARG0, T_ARG1, T_EXPR_VALUE>::argument
+    (unsigned int i) const
+{
+    switch(i)
+    {
+        case 0:
+            return itsArg0;
+        case 1:
+            return itsArg1;
+        default:
+            ASSERTSTR(false, "Invalid argument index specified.");
+    }
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG0>::ConstPtr &BinaryExpr<T_ARG0, T_ARG1,
+    T_EXPR_VALUE>::argument0() const
+{
+    return itsArg0;
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG1>::ConstPtr&BinaryExpr<T_ARG0, T_ARG1,
+    T_EXPR_VALUE>::argument1() const
+{
+    return itsArg1;
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: TernaryExpr                                            - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2,
+    typename T_EXPR_VALUE>
+TernaryExpr<T_ARG0, T_ARG1, T_ARG2, T_EXPR_VALUE>::TernaryExpr
+    (const typename Expr<T_ARG0>::ConstPtr &arg0,
+    const typename Expr<T_ARG1>::ConstPtr &arg1,
+    const typename Expr<T_ARG2>::ConstPtr &arg2)
+    :   itsArg0(arg0),
+        itsArg1(arg1),
+        itsArg2(arg2)
+{
+    connect(itsArg0);
+    connect(itsArg1);
+    connect(itsArg2);
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2,
+    typename T_EXPR_VALUE>
+TernaryExpr<T_ARG0, T_ARG1, T_ARG2, T_EXPR_VALUE>::~TernaryExpr()
+{
+    disconnect(itsArg2);
+    disconnect(itsArg1);
+    disconnect(itsArg0);
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2,
+    typename T_EXPR_VALUE>
+inline unsigned int TernaryExpr<T_ARG0, T_ARG1, T_ARG2,
+    T_EXPR_VALUE>::nArguments() const
+{
+    return 3;
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2,
+    typename T_EXPR_VALUE>
+inline ExprBase::ConstPtr TernaryExpr<T_ARG0, T_ARG1, T_ARG2,
+    T_EXPR_VALUE>::argument(unsigned int i) const
+{
+    switch(i)
+    {
+        case 0:
+            return itsArg0;
+        case 1:
+            return itsArg1;
+        case 2:
+            return itsArg2;
+        default:
+            ASSERTSTR(false, "Invalid argument index specified.");
+    }
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2,
+    typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG0>::ConstPtr &TernaryExpr<T_ARG0, T_ARG1,
+    T_ARG2, T_EXPR_VALUE>::argument0() const
+{
+    return itsArg0;
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2,
+    typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG1>::ConstPtr &TernaryExpr<T_ARG0, T_ARG1,
+    T_ARG2, T_EXPR_VALUE>::argument1() const
+{
+    return itsArg1;
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2,
+    typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG2>::ConstPtr &TernaryExpr<T_ARG0, T_ARG1,
+    T_ARG2, T_EXPR_VALUE>::argument2() const
+{
+    return itsArg2;
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: Expr5                                                  - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_ARG4, typename T_EXPR_VALUE>
+Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::Expr5
+    (const typename Expr<T_ARG0>::ConstPtr &arg0,
+    const typename Expr<T_ARG1>::ConstPtr &arg1,
+    const typename Expr<T_ARG2>::ConstPtr &arg2,
+    const typename Expr<T_ARG3>::ConstPtr &arg3,
+    const typename Expr<T_ARG4>::ConstPtr &arg4)
+    :   itsArg0(arg0),
+        itsArg1(arg1),
+        itsArg2(arg2),
+        itsArg3(arg3),
+        itsArg4(arg4)
+{
+    connect(itsArg0);
+    connect(itsArg1);
+    connect(itsArg2);
+    connect(itsArg3);
+    connect(itsArg4);
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_ARG4, typename T_EXPR_VALUE>
+Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::~Expr5()
+{
+    disconnect(itsArg4);
+    disconnect(itsArg3);
+    disconnect(itsArg2);
+    disconnect(itsArg1);
+    disconnect(itsArg0);
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_ARG4, typename T_EXPR_VALUE>
+inline unsigned int Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
+    T_EXPR_VALUE>::nArguments() const
+{
+    return 5;
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_ARG4, typename T_EXPR_VALUE>
+inline ExprBase::ConstPtr Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
+    T_EXPR_VALUE>::argument(unsigned int i) const
+{
+    switch(i)
+    {
+        case 0:
+            return itsArg0;
+        case 1:
+            return itsArg1;
+        case 2:
+            return itsArg2;
+        case 3:
+            return itsArg3;
+        case 4:
+            return itsArg4;
+        default:
+            ASSERTSTR(false, "Invalid argument index specified.");
+    }
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_ARG4, typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG0>::ConstPtr &Expr5<T_ARG0, T_ARG1,
+    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument0() const
+{
+    return itsArg0;
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_ARG4, typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG1>::ConstPtr &Expr5<T_ARG0, T_ARG1,
+    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument1() const
+{
+    return itsArg1;
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_ARG4, typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG2>::ConstPtr &Expr5<T_ARG0, T_ARG1,
+    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument2() const
+{
+    return itsArg2;
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_ARG4, typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG3>::ConstPtr &Expr5<T_ARG0, T_ARG1,
+    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument3() const
+{
+    return itsArg3;
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_ARG4, typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG4>::ConstPtr &Expr5<T_ARG0, T_ARG1,
+    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument4() const
+{
+    return itsArg4;
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: mergeFlags                                             - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_ITER>
+FlagArray mergeFlags(T_ITER it, T_ITER end)
+{
+    FlagArray result;
+
+    // Skip until a non-empty FlagArray is encountered.
+    while(it != end && !it->initialized())
+    {
+        ++it;
+    }
+
+    // Merge (bitwise or) all non-empty FlagArray's.
+    if(it != end)
+    {
+        ASSERT(it->initialized());
+        result = it->clone();
+        ++it;
+
+        while(it != end)
+        {
+            if(it->initialized())
+            {
+                result |= *it;
+            }
+            ++it;
+        }
+    }
+
+    return result;
+}
+
+} //# namespace BBS
+} //# namespace LOFAR
 
 #endif

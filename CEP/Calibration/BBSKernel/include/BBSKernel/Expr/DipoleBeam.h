@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_DIPOLEBEAM_H
-#define EXPR_DIPOLEBEAM_H
+#ifndef LOFAR_BBSKERNEL_EXPR_DIPOLEBEAM_H
+#define LOFAR_BBSKERNEL_EXPR_DIPOLEBEAM_H
 
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/JonesExpr.h>
@@ -33,7 +33,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class DipoleBeam: public JonesExprRep

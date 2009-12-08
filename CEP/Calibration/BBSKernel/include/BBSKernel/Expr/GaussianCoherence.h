@@ -21,40 +21,39 @@
 //#
 //# $Id$
 
-#ifndef EXPR_GAUSSIANCOHERENCE_H
-#define EXPR_GAUSSIANCOHERENCE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_GAUSSIANCOHERENCE_H
+#define LOFAR_BBSKERNEL_EXPR_GAUSSIANCOHERENCE_H
 
 // \file
 // Spatial coherence function of an elliptical gaussian source.
 
-#include <BBSKernel/Expr/JonesExpr.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 #include <BBSKernel/Expr/GaussianSource.h>
-#include <BBSKernel/Expr/StatUVW.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
-class GaussianCoherence: public JonesExprRep
+class GaussianCoherence: public BasicExpr5<Vector<4>, Vector<2>, Scalar,
+    Vector<3>, Vector<3>, JonesMatrix>
 {
 public:
-    GaussianCoherence(const GaussianSource::ConstPointer &source,
-        const StatUVW::ConstPointer &station1,
-        const StatUVW::ConstPointer &station2);
+    typedef shared_ptr<GaussianCoherence>       Ptr;
+    typedef shared_ptr<const GaussianCoherence> ConstPtr;
 
-    // Calculate the results for the given domain.
-    virtual JonesResult getJResult(const Request &request);
+    GaussianCoherence(const GaussianSource::ConstPtr &source,
+        const Expr<Vector<3> >::ConstPtr &uvwA,
+        const Expr<Vector<3> >::ConstPtr &uvwB);
 
-private:
-    Matrix computeCoherence(const Request &request, const Matrix &uBaseline,
-        const Matrix &vBaseline, const Matrix &major, const Matrix &minor,
-        const Matrix &phi);
-
-    StatUVW::ConstPointer           itsStation1, itsStation2;
+protected:
+    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
+        const Vector<4>::View &stokes, const Vector<2>::View &dimensions,
+        const Scalar::View &orientation, const Vector<3>::View &uvwA,
+        const Vector<3>::View &uvwB) const;
 };
 
 // @}

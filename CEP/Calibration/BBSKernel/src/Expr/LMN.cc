@@ -23,96 +23,49 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/Expr/LMN.h>
-#include <BBSKernel/Expr/Source.h>
-#include <BBSKernel/Expr/PhaseRef.h>
-#include <BBSKernel/Expr/Request.h>
-#include <BBSKernel/Expr/MatrixTmp.h>
-#include <BBSKernel/Expr/PValueIterator.h>
-#include <Common/LofarLogger.h>
+#include <Common/lofar_math.h>
 
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MCDirection.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
+using LOFAR::sin;
+using LOFAR::cos;
 
-LMN::LMN(const Source::Pointer &source,
-    const PhaseRef::ConstPointer &phaseRef)
-    :   itsSource(source),
-        itsPhaseRef(phaseRef)
-{
-    addChild(itsSource->getRa());
-    addChild(itsSource->getDec());
-}
-
-LMN::~LMN()
+LMN::LMN(const casa::MDirection &reference,
+    const Expr<Vector<2> >::ConstPtr &direction)
+    :   BasicUnaryExpr<Vector<2>, Vector<3> >(direction),
+        itsPhaseReference(casa::MDirection::Convert(reference,
+            casa::MDirection::J2000)())
 {
 }
 
-ResultVec LMN::getResultVec(const Request &request)
+const Vector<3>::View LMN::evaluateImpl(const Grid &grid,
+    const Vector<2>::View &direction) const
 {
-    ResultVec result(3);
-    Result &resL = result[0];
-    Result &resM = result[1];
-    Result &resN = result[2];
-    Result raRes, deRes;
+    casa::Quantum<casa::Vector<casa::Double> > angles =
+        itsPhaseReference.getAngle();
+    const double refRa = angles.getBaseValue()(0);
+    const double refDec = angles.getBaseValue()(1);
+    const double refCosDec = cos(refDec);
+    const double refSinDec = sin(refDec);
 
-    const Result &rak = getChild(0).getResultSynced(request, raRes);
-    const Result &deck = getChild(1).getResultSynced(request, deRes);
-    const double refRa = itsPhaseRef->getRa();
-    const double refDec = itsPhaseRef->getDec();
-    const double refSinDec = itsPhaseRef->getSinDec();
-    const double refCosDec = itsPhaseRef->getCosDec();
+    Matrix cosDec(cos(direction(1)));
+    Matrix deltaRa(direction(0) - refRa);
 
-    Matrix cosdec = cos(deck.getValue());
-    Matrix radiff = rak.getValue() - refRa;
-    Matrix lk = cosdec * sin(radiff);
-    Matrix mk = sin(deck.getValue()) * refCosDec - cosdec * refSinDec
-        * cos(radiff);
-    MatrixTmp nks = 1. - sqr(lk) - sqr(mk);
-
-    // Although an N-coordinate of 0.0 is valid as long as the length of the
-    // LMN vector equals 1.0, it will cause problems when dividing by it.
-    // However, this should be checked where the division takes place.
-    ASSERTSTR(min(nks).getDouble() >= 0.0, "Source " << itsSource->getName()
-        << " too far from phase reference " << refRa << ", " << refDec);
-
-    Matrix nk = sqrt(nks);
-    resL.setValue(lk);
-    resM.setValue(mk);
-    resN.setValue(nk);
-
-//    cout << itsSource->getName() << " L: " << lk.getDouble(0, 0) << " M: "
-//        << mk.getDouble(0, 0) << " N: " << nk.getDouble(0, 0) << endl;
-
-    // Compute perturbed values.
-    const Result *pvSet[2] = {&rak, &deck};
-    PValueSetIterator<2> pvIter(pvSet);
-
-    while(!pvIter.atEnd())
-    {
-        const Matrix &pvRa = pvIter.value(0);
-        const Matrix &pvDec = pvIter.value(1);
-        Matrix pradiff = pvRa - refRa;
-        Matrix pcosdec = cos(pvDec);
-        Matrix plk = pcosdec * sin(pradiff);
-        Matrix pmk = sin(pvDec) * refCosDec - pcosdec * refSinDec * cos(pradiff);
-        MatrixTmp nks = MatrixTmp(1.) - sqr(plk) - sqr(pmk);
-        ASSERTSTR(min(nks).getDouble() >= 0.0, "Perturbed source "
-            << itsSource->getName() << " too far from phase reference "
-            << refRa << ", " << refDec);
-        Matrix pnk = sqrt(nks);
-
-        resL.setPerturbedValue(pvIter.key(), plk);
-        resM.setPerturbedValue(pvIter.key(), pmk);
-        resN.setPerturbedValue(pvIter.key(), pnk);
-        
-        pvIter.next();
-    }
+    Vector<3>::View result;
+    result.assign(0, cosDec * sin(deltaRa));
+    result.assign(1, sin(direction(1)) * refCosDec - cosDec * refSinDec
+        * cos(deltaRa));
+    Matrix n = 1.0 - sqr(result(0)) - sqr(result(1));
+    ASSERT(min(n).getDouble() >= 0.0);
+    result.assign(2, sqrt(n));
 
     return result;
 }
-
 
 } // namespace BBS
 } // namespace LOFAR

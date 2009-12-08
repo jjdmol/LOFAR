@@ -1,5 +1,5 @@
 //# HamakerDipole.h: Implementation of J.P. Hamaker's memo
-//# "Mathematical-physical analysis of the generic dual-dipole antenna"
+//# "Mathematical-physical analysis of the generic dual-dipole antenna".
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -21,70 +21,100 @@
 //#
 //# $Id$
 
-#ifndef EXPR_HAMAKERDIPOLE_H
-#define EXPR_HAMAKERDIPOLE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_HAMAKERDIPOLE_H
+#define LOFAR_BBSKERNEL_EXPR_HAMAKERDIPOLE_H
 
 // \file
 // Implementation of J.P. Hamaker's memo "Mathematical-physical analysis of the
 // generic dual-dipole antenna".
 
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/JonesExpr.h>
-#include <BBSKernel/Expr/JonesResult.h>
-
-#include <Common/lofar_smartptr.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 #include <Common/lofar_complex.h>
 
-#include <boost/multi_array.hpp>
+#include <casa/Arrays.h>
+
+namespace casa
+{
+    class Path;
+}
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
-class BeamCoeff
+class HamakerBeamCoeff
 {
 public:
-    BeamCoeff()
-        : freqAvg(0.0), freqRange(1.0)
-    {
-    }
+    HamakerBeamCoeff();
 
-    BeamCoeff(double avg, double range,
-        const shared_ptr<const boost::multi_array<dcomplex, 4> > &ptr)
-        :   freqAvg(avg),
-            freqRange(range),
-            coeff(ptr)
-    {
-    }
+    void init(const casa::Path &coeffFile);
 
-    double  freqAvg, freqRange;
-    shared_ptr<const boost::multi_array<dcomplex, 4> > coeff;
-};
+    // Center frequency used to scale frequency to range [-1.0, 1.0].
+    double center() const;
+    // Width used to scale frequency to range [-1.0, 1.0].
+    double width() const;
 
+    unsigned int shape(unsigned int i) const;
 
-class HamakerDipole: public JonesExprRep
-{
-public:
-    HamakerDipole(const BeamCoeff &coeff, const Expr &azel,
-        const Expr &orientation);
-
-    virtual JonesResult getJResult(const Request &request);
-
-    void evaluate(const Request &request, const Matrix &in_az,
-        const Matrix &in_el, const Matrix &in_orientation,
-        Matrix &out_E11, Matrix &out_E12, 
-        Matrix &out_E21, Matrix &out_E22);
-
+    dcomplex operator()(unsigned int element, unsigned int harmonic,
+        unsigned int powTheta, unsigned int powFreq) const;
 
 private:
-    BeamCoeff   itsBeamCoeff;
+    double                  itsCenter, itsWidth;
+    casa::Array<dcomplex>   itsCoeff;
+};
+
+class HamakerDipole: public BasicBinaryExpr<Vector<2>, Scalar, JonesMatrix>
+{
+public:
+    typedef shared_ptr<HamakerDipole>       Ptr;
+    typedef shared_ptr<const HamakerDipole> ConstPtr;
+
+    HamakerDipole(const HamakerBeamCoeff &coeff,
+        const Expr<Vector<2> >::ConstPtr &azel,
+        const Expr<Scalar>::ConstPtr &orientation);
+
+protected:
+    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
+        const Vector<2>::View &azel, const Scalar::View &orientation) const;
+
+private:
+    HamakerBeamCoeff    itsCoeff;
 };
 
 // @}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: HamakerBeamCoeff                                       - //
+// -------------------------------------------------------------------------- //
+
+inline double HamakerBeamCoeff::center() const
+{
+    return itsCenter;
+}
+
+inline double HamakerBeamCoeff::width() const
+{
+    return itsWidth;
+}
+
+inline unsigned int HamakerBeamCoeff::shape(unsigned int i) const
+{
+    // Reverse axes because casa::Array<> uses fortran order.
+    DBGASSERT(i < 4);
+    return itsCoeff.shape()(3 - i);
+}
+
+inline dcomplex HamakerBeamCoeff::operator()(unsigned int element,
+    unsigned int harmonic, unsigned int powTheta, unsigned int powFreq) const
+{
+    // Reverse axes because casa::Array<> uses fortran order.
+    return itsCoeff(casa::IPosition(4, powFreq, powTheta, harmonic, element));
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

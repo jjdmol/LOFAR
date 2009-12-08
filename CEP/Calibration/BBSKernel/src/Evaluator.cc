@@ -1,5 +1,5 @@
-//# Evaluator.cc: Evaluate a model and assign the result to or subtract it from
-//# the visibility data in the chunk.
+//# Evaluator.h: Evaluate an expression and assign, subtract, or add the result
+//# to / from a buffer of visibility data.
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -22,43 +22,41 @@
 //# $Id$
 
 #include <lofar_config.h>
+
 #include <BBSKernel/Evaluator.h>
 #include <BBSKernel/Exceptions.h>
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
-Evaluator::Evaluator(const VisData::Pointer &chunk, const Model::Pointer &model,
-    uint nThreads)
+string Evaluator::theirTimerNames[Evaluator::N_Timer] =
+    {"ALL",
+    "EVAL_RHS",
+    "APPLY"};
+
+Evaluator::Evaluator(const VisData::Ptr &chunk,
+    const ExprSet<JonesMatrix>::Ptr &expr)
     :   itsChunk(chunk),
-        itsModel(model),
-        itsThreadCount(nThreads)
+        itsExprSet(expr)
 {
-    ASSERT(itsChunk);
-    ASSERT(itsModel);
+    // Set default processing mode.
+    setMode(EQUATE);
 
-#ifndef _OPENMP
-    // Ignore thread count specified in constructor.
-    itsThreadCount = 1;
-#endif    
-    
-    // By default, select all the baselines and polarizations products
-    // available.
-    const VisDimensions &dims = itsChunk->getDimensions();    
+    // Set default visibility selection.
+    const VisDimensions &dims = itsChunk->getDimensions();
     setSelection(dims.getBaselines(), dims.getPolarizations());
-}
 
-Evaluator::~Evaluator()
-{
+    // Set request grid.
+    itsExprSet->setEvalGrid(itsChunk->getDimensions().getGrid());
 }
 
 void Evaluator::setSelection(const vector<baseline_t> &baselines,
         const vector<string> &products)
 {
     itsBaselines = baselines;
-    
+
     // Determine product mask.
     const VisDimensions &dims = itsChunk->getDimensions();
 
@@ -89,205 +87,79 @@ void Evaluator::setSelection(const vector<baseline_t> &baselines,
     }
 }
 
-void Evaluator::process(Mode mode)
+void Evaluator::setMode(Mode mode)
 {
-    BlProcessor blProcessor = 0;
     switch(mode)
     {
-    case ASSIGN:
-        blProcessor = &Evaluator::blAssign;
+    case EQUATE:
+        itsExprProcessor[0] = &Evaluator::procExprWithFlags<OpEq>;
+        itsExprProcessor[1] = &Evaluator::procExpr<OpEq>;
         break;
-    case SUBTRACT:        
-        blProcessor = &Evaluator::blSubtract;
+    case SUBTRACT:
+        itsExprProcessor[0] = &Evaluator::procExprWithFlags<OpSub>;
+        itsExprProcessor[1] = &Evaluator::procExpr<OpSub>;
         break;
-    case ADD:        
-        blProcessor = &Evaluator::blAdd;
+    case ADD:
+        itsExprProcessor[0] = &Evaluator::procExprWithFlags<OpAdd>;
+        itsExprProcessor[1] = &Evaluator::procExpr<OpAdd>;
         break;
     default:
         THROW(BBSKernelException, "Invalid mode specified.");
-    }            
-
-    // Create a request.
-    Request request(itsChunk->getDimensions().getGrid());
-    
-    // Precompute.
-    LOG_DEBUG_STR("Precomputing...");
-    itsTimers[PRECOMPUTE].reset();
-    itsTimers[PRECOMPUTE].start();
-    itsModel->precalculate(request);
-    itsTimers[PRECOMPUTE].stop();
-    LOG_DEBUG_STR("Precomputing... done");
-
-    itsTimers[COMPUTE].reset();
-    itsTimers[COMPUTE].start();
-#pragma omp parallel for num_threads(itsThreadCount) schedule(dynamic)
-    for(int i = 0; i < static_cast<int>(itsBaselines.size()); ++i)
-    {
-#ifdef _OPENMP
-        (this->*blProcessor)(omp_get_thread_num(), itsBaselines[i], request);
-#else
-        (this->*blProcessor)(0, itsBaselines[i], request);
-#endif
-    }
-    itsTimers[COMPUTE].stop();
-
-    LOG_DEBUG("Timings:");
-    LOG_DEBUG_STR("> Precomputation: " << itsTimers[PRECOMPUTE].getElapsed()
-        * 1000.0 << " ms");
-    LOG_DEBUG_STR("> Computation: " << itsTimers[COMPUTE].getElapsed()
-        * 1000.0 << " ms");
-}
-
-void Evaluator::blAssign(uint, const baseline_t &baseline,
-    const Request &request)
-{
-    // Find baseline index.
-    const VisDimensions &dims = itsChunk->getDimensions();    
-    const uint blIndex = dims.getBaselineIndex(baseline);
-
-    // Evaluate the model.
-    JonesResult jresult = itsModel->evaluate(baseline, request);
-
-    // Put the results into a single array for easier handling.
-    const Result *modelJRes[4];
-    modelJRes[0] = &(jresult.getResult11());
-    modelJRes[1] = &(jresult.getResult12());
-    modelJRes[2] = &(jresult.getResult21());
-    modelJRes[3] = &(jresult.getResult22());
-
-    const uint nChannels = dims.getChannelCount();
-    const uint nTimeslots = dims.getTimeslotCount();
-
-    for(size_t i = 0; i < 4; ++i)
-    {
-        if(itsProductMask[i] == -1)
-        {
-            continue;
-        }
-        
-        // Get a view on the relevant slice of the chunk.
-        typedef boost::multi_array<sample_t, 4>::index_range Range;
-        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
-        
-        View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
-            [itsProductMask[i]]]);
-
-        // Get pointers to the real and imaginary values.
-        const double *re = 0, *im = 0;
-        modelJRes[i]->getValue().dcomplexStorage(re, im);
-
-        // Copy visibilities.
-        for(size_t ts = 0; ts < nTimeslots; ++ts)
-        {
-            for(size_t ch = 0; ch < nChannels; ++ch)
-            {
-                vdata[ts][ch] = sample_t(*re, *im);
-                ++re;
-                ++im;
-            }
-        }
     }
 }
 
-void Evaluator::blSubtract(uint, const baseline_t &baseline,
-    const Request &request)
+void Evaluator::process()
 {
-    // Find baseline index.
-    const VisDimensions &dims = itsChunk->getDimensions();    
-    const uint blIndex = dims.getBaselineIndex(baseline);
-
-    // Evaluate the model.
-    JonesResult jresult = itsModel->evaluate(baseline, request);
-
-    // Put the results into a single array for easier handling.
-    const Result *modelJRes[4];
-    modelJRes[0] = &(jresult.getResult11());
-    modelJRes[1] = &(jresult.getResult12());
-    modelJRes[2] = &(jresult.getResult21());
-    modelJRes[3] = &(jresult.getResult22());
-
-    const uint nChannels = dims.getChannelCount();
-    const uint nTimeslots = dims.getTimeslotCount();
-
-    for(size_t i = 0; i < 4; ++i)
+    // Reset statistics.
+    for(size_t i = 0; i < Evaluator::N_Timer; ++i)
     {
-        if(itsProductMask[i] == -1)
-        {
-            continue;
-        }
-        
-        // Get a view on the relevant slice of the chunk.
-        typedef boost::multi_array<sample_t, 4>::index_range Range;
-        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
-        
-        View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
-            [itsProductMask[i]]]);
-
-        // Get pointers to the real and imaginary values.
-        const double *re = 0, *im = 0;
-        modelJRes[i]->getValue().dcomplexStorage(re, im);
-
-        // Subtract from visibilities.
-        for(size_t ts = 0; ts < nTimeslots; ++ts)
-        {
-            for(size_t ch = 0; ch < nChannels; ++ch)
-            {
-                vdata[ts][ch] -= sample_t(*re, *im);
-                ++re;
-                ++im;
-            }
-        }
+        itsTimers[i].reset();
     }
-}
 
-void Evaluator::blAdd(uint, const baseline_t &baseline,
-    const Request &request)
-{
-    // Find baseline index.
-    const VisDimensions &dims = itsChunk->getDimensions();    
-    const uint blIndex = dims.getBaselineIndex(baseline);
-
-    // Evaluate the model.
-    JonesResult jresult = itsModel->evaluate(baseline, request);
-
-    // Put the results into a single array for easier handling.
-    const Result *modelJRes[4];
-    modelJRes[0] = &(jresult.getResult11());
-    modelJRes[1] = &(jresult.getResult12());
-    modelJRes[2] = &(jresult.getResult21());
-    modelJRes[3] = &(jresult.getResult22());
-
-    const uint nChannels = dims.getChannelCount();
-    const uint nTimeslots = dims.getTimeslotCount();
-
-    for(size_t i = 0; i < 4; ++i)
+    itsTimers[ALL].start();
+    for(size_t i = 0; i < itsBaselines.size(); ++i)
     {
-        if(itsProductMask[i] == -1)
-        {
-            continue;
-        }
-        
-        // Get a view on the relevant slice of the chunk.
-        typedef boost::multi_array<sample_t, 4>::index_range Range;
-        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
-        
-        View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
-            [itsProductMask[i]]]);
+        const baseline_t &baseline = itsBaselines[i];
 
-        // Get pointers to the real and imaginary values.
-        const double *re = 0, *im = 0;
-        modelJRes[i]->getValue().dcomplexStorage(re, im);
+//        LOG_DEBUG_STR("Baseline: " << baseline.first << " - "
+//            << baseline.second);
 
-        // Add from visibilities.
-        for(size_t ts = 0; ts < nTimeslots; ++ts)
+        // Evaluate the expression for this baseline.
+        itsTimers[EVAL_RHS].start();
+        const JonesMatrix expr = itsExprSet->evaluate(i);
+        itsTimers[EVAL_RHS].stop();
+
+        itsTimers[APPLY].start();
+        // Process the visibilities according to the current processing mode.
+        if(expr.hasFlags())
         {
-            for(size_t ch = 0; ch < nChannels; ++ch)
+            const FlagArray flags = expr.flags();
+            if(flags.rank() > 0 || flags(0, 0) != 0)
             {
-                vdata[ts][ch] += sample_t(*re, *im);
-                ++re;
-                ++im;
+                (this->*itsExprProcessor[0])(baseline, expr);
+            }
+            else
+            {
+                // Optimization: If the flags of the expression are scalar and
+                // equal to zero (false) then they can be ignored.
+                (this->*itsExprProcessor[1])(baseline, expr);
             }
         }
+        else
+        {
+            (this->*itsExprProcessor[1])(baseline, expr);
+        }
+        itsTimers[APPLY].stop();
+    }
+    itsTimers[ALL].stop();
+
+    // Print statistics.
+    for(size_t i = 0; i < Evaluator::N_Timer; ++i)
+    {
+        const double elapsed = itsTimers[i].getElapsed() * 1e3;
+        const unsigned long long count = itsTimers[i].getCount();
+        LOG_DEBUG_STR("TIMER ms " << Evaluator::theirTimerNames[i] << " total "
+            << elapsed << " count " << count << " avg " << elapsed / count);
     }
 }
 

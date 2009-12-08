@@ -21,7 +21,7 @@
 //# $Id$
 
 #if !defined(EXPR_JONESNODE_H)
-#define EXPR_JONESNODE_H
+#define LOFAR_BBSKERNEL_EXPR_JONESNODE_H
 
 // \file
 // A node in a Jones matrix expression.
@@ -35,7 +35,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 //# Forward Declarations

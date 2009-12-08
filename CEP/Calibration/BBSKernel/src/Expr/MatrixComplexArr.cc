@@ -32,9 +32,9 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
 
-#if defined TIMER
+//#if defined TIMER
 #include <Common/Timer.h>
-#endif
+//#endif
 
 #if defined __SSE2__
 #include <emmintrin.h>
@@ -53,6 +53,8 @@ namespace BBS
 //static size_t           poolArraySize;
 //static int              poolNElements = 0;
 
+size_t MatrixComplexArr::clone_count = 0;
+
 MatrixComplexArr::MatrixComplexArr (int nx, int ny)
 : MatrixRep (nx, ny, ComplexArray)
 {
@@ -69,14 +71,16 @@ MatrixComplexArr::~MatrixComplexArr()
 
 MatrixRep* MatrixComplexArr::clone() const
 {
-#if defined TIMER
-  static NSTimer timer("clone CA", true);
+//#if defined TIMER
+  static NSTimer timer("clone CA", true, true);
   timer.start();
-#endif
+//#endif
+
+  clone_count += nelements();
 
   MatrixComplexArr* v = MatrixComplexArr::allocate(nx(), ny());
 
-#if defined __SSE2__
+//#if defined __SSE2__
   __m128d *src_r = (__m128d *) itsReal, *src_i = (__m128d *) itsImag;
   __m128d *dst_r = (__m128d *) v->itsReal, *dst_i = (__m128d *) v->itsImag;
   int n = (nelements() + 1) / 2;
@@ -85,14 +89,14 @@ MatrixRep* MatrixComplexArr::clone() const
     dst_r[i] = src_r[i];
     dst_i[i] = src_i[i];
   }
-#else
-  memcpy (v->itsReal, itsReal, sizeof(double) * nelements());
-  memcpy (v->itsImag, itsImag, sizeof(double) * nelements());
-#endif
+//#else
+//  memcpy (v->itsReal, itsReal, sizeof(double) * nelements());
+//  memcpy (v->itsImag, itsImag, sizeof(double) * nelements());
+//#endif
 
-#if defined TIMER
+//#if defined TIMER
   timer.stop();
-#endif
+//#endif
 
   return v;
 }
@@ -146,10 +150,10 @@ size_t MatrixComplexArr::memSize(int nelements)
 
 void *MatrixComplexArr::operator new(size_t, int nx, int ny)
 {
-#if defined TIMER
-  static NSTimer timer("new CA", true);
+//#if defined TIMER
+  static NSTimer timer("new CA", true, true);
   timer.start();
-#endif
+//#endif
 
   void *ptr;
 
@@ -165,9 +169,9 @@ void *MatrixComplexArr::operator new(size_t, int nx, int ny)
     ptr = malloc(memSize(nx * ny));
   }
 
-#if defined TIMER
+//#if defined TIMER
   timer.stop();
-#endif
+//#endif
 
   return ptr;
 }
@@ -236,6 +240,14 @@ MatrixRep* MatrixComplexArr::multiply (MatrixRep& right,
 MatrixRep* MatrixComplexArr::divide (MatrixRep& right, bool rightTmp)
 {
   return right.divRep (*this, rightTmp);
+}
+MatrixRep* MatrixComplexArr::min (MatrixRep& right)
+{
+   return MatrixRep::min(right);
+}
+MatrixRep* MatrixComplexArr::max (MatrixRep& right)
+{
+   return MatrixRep::max(right);
 }
 
 void MatrixComplexArr::dcomplexStorage(const double *&realPtr, const double *&imagPtr) const
@@ -705,6 +717,27 @@ MatrixRep* MatrixComplexArr::negate()
 #endif
 
   return this;
+}
+
+MatrixRep* MatrixComplexArr::abs()
+{
+#if defined TIMER
+  static NSTimer timer("abs CA", true);
+  timer.start();
+#endif
+
+  MatrixRealArr* v = MatrixRealArr::allocate(nx(), ny());
+
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    v->itsValue[i] = LOFAR::abs(makedcomplex(itsReal[i], itsImag[i]));
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
 }
 
 MatrixRep* MatrixComplexArr::sin()

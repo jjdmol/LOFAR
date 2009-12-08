@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_JONESSUM_H
-#define EXPR_JONESSUM_H
+#ifndef LOFAR_BBSKERNEL_EXPR_JONESSUM_H
+#define LOFAR_BBSKERNEL_EXPR_JONESSUM_H
 
 // \file
 // A sum of JonesExpr
@@ -35,7 +35,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 

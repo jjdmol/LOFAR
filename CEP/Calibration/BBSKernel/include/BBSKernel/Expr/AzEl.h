@@ -1,4 +1,4 @@
-//# AzEl.h: Azimuth and elevation for a direction (ra,dec) on the sky.
+//# AzEl.h: Azimuth and elevation for a direction (ra, dec) on the sky.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,47 +20,41 @@
 //#
 //# $Id$
 
-#ifndef EXPR_AZEL_H
-#define EXPR_AZEL_H
+#ifndef LOFAR_BBSKERNEL_EXPR_AZEL_H
+#define LOFAR_BBSKERNEL_EXPR_AZEL_H
 
 // \file
-// Azimuth and elevation for a direction (ra,dec) on the sky.
+// Azimuth and elevation for a direction (ra, dec) on the sky.
 
-#include <BBSKernel/Instrument.h>
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ResultVec.h>
-#include <BBSKernel/Expr/Source.h>
+#include <BBSKernel/Expr/BasicExpr.h>
+
+#include <measures/Measures/MPosition.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
-class Request;
-class Matrix;
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
-// AzEl computes azimuth and elevation coordinates for a direction (ra, dec) on
-// the sky as seen from a specific location (ITRF) on earth.
-//
-// \todo The direction on the sky is assumed to be a source and the location
-// on earth is assumed to be a station. This could be generalized if necessary.
-class AzEl: public ExprRep
+// Compute azimuth and elevation coordinates for a direction (ra, dec) (J2000)
+// on the sky as seen from a specific location on earth.
+class AzEl: public BasicUnaryExpr<Vector<2>, Vector<2> >
 {
 public:
-    AzEl(const Station &station, const Source::ConstPointer &source);
-    
-    ResultVec getResultVec(const Request &request);
-    
-private:
-    // Compute (az, el) coordinates. This method will be called multiple times
-    // if any of the input values (ra, dec) have associated perturbed values.
-    void evaluate(const Request &request, const Matrix &in_ra,
-        const Matrix &in_dec, Matrix &out_az, Matrix &out_el);
+    typedef shared_ptr<AzEl>        Ptr;
+    typedef shared_ptr<const AzEl>  ConstPtr;
 
-    Station                 itsStation;
-    Source::ConstPointer    itsSource;
+    AzEl(const casa::MPosition &position,
+        const Expr<Vector<2> >::ConstPtr &direction);
+
+protected:
+    virtual const Vector<2>::View evaluateImpl(const Grid &grid,
+        const Vector<2>::View &direction) const;
+
+private:
+    casa::MPosition itsPosition;
 };
 
 // @}

@@ -1,4 +1,4 @@
-//# VisSelection.h: 
+//# VisSelection.h:
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_BBSKERNEL_VISSELECTION_H
-#define LOFAR_BBS_BBSKERNEL_VISSELECTION_H
+#ifndef LOFAR_BBSKERNEL_VISSELECTION_H
+#define LOFAR_BBSKERNEL_VISSELECTION_H
 
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
@@ -36,6 +36,9 @@ namespace LOFAR
 namespace BBS
 {
 using std::pair;
+
+// \addtogroup BBSKernel
+// @{
 
 class VisSelection
 {
@@ -68,7 +71,7 @@ public:
     { return itsFieldFlags[field]; }
 
     bool empty() const;
-    
+
     void setStartChannel(size_t start);
     void setEndChannel(size_t end);
     void setChannelRange(size_t start, size_t end)
@@ -114,7 +117,7 @@ public:
 
 private:
     bool convertTime(const string &in, double &out) const;
-    
+
     vector<bool>            itsFieldFlags;
     pair<size_t, size_t>    itsChannelRange;
     pair<double, double>    itsTimeRange;
@@ -122,6 +125,8 @@ private:
     set<string>             itsStations;
     BaselineFilter          itsBaselineFilter;
 };
+
+// @}
 
 } //# namespace BBS
 } //# namespace LOFAR

@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPRPARM_H
-#define EXPR_EXPRPARM_H
+#ifndef LOFAR_BBSKERNEL_EXPR_EXPRPARM_H
+#define LOFAR_BBSKERNEL_EXPR_EXPRPARM_H
 
 // \file
 // Parameter that can be used in an expression.
@@ -34,29 +34,31 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
-class ExprParm: public ExprRep
+class ExprParm: public Expr<Scalar>
 {
 public:
-    ExprParm(const ParmProxy::ConstPointer &parm);
-    ~ExprParm();
-    
+    typedef shared_ptr<ExprParm>        Ptr;
+    typedef shared_ptr<const ExprParm>  ConstPtr;
+
+    ExprParm(const ParmProxy::ConstPtr &parm);
+
     void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
+    bool getPValueFlag() const;
     void clearPValueFlag();
-    
-    // Compute a result for the given request.
-    Result getResult(const Request &request);
+
+protected:
+    virtual unsigned int nArguments() const;
+    virtual ExprBase::ConstPtr argument(unsigned int) const;
+
+    virtual const Scalar evaluateExpr(const Request &request, Cache &cache,
+        unsigned int grid) const;
 
 private:
-    ExprParm(const ExprParm &other);
-    ExprParm &operator=(const ExprParm &other);
-
-    ParmProxy::ConstPointer itsParm;
-    bool                    itsPValueFlag;
+    ParmProxy::ConstPtr itsParm;
+    bool                itsPValueFlag;
 };
 
 // @}

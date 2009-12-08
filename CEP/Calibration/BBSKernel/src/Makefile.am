@@ -1,8 +1,10 @@
+#AM_CXXFLAGS = -Wno-ignored-qualifiers -Wconversion -Werror
 lib_LTLIBRARIES = libbbskernel.la
 
 libbbskernel_la_SOURCES = Package__Version.cc \
-	Evaluator.cc \
 	Equator.cc \
+	Evaluator.cc \
+	Instrument.cc \
 	MeasurementAIPS.cc \
 	Model.cc \
 	ModelConfig.cc \
@@ -12,47 +14,52 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	SolverInterfaceTypes.cc \
 	VisData.cc \
 	VisDimensions.cc \
+	VisExpr.cc \
 	VisSelection.cc \
+	Expr/ArrayFactor.cc \
 	Expr/AzEl.cc \
-	Expr/Diag.cc \
+	Expr/Cache.cc \
+	Expr/ConditionNumber.cc \
 	Expr/DFTPS.cc \
 	Expr/Expr.cc \
+	Expr/ExprAdaptors.cc \
 	Expr/ExprParm.cc \
+	Expr/ExprResult.cc \
+	Expr/ExprValueView.cc \
+	Expr/ExprValueIterator.cc \
+	Expr/ExprVisData.cc \
 	Expr/ExternalFunction.cc \
+	Expr/FlagArray.cc \
 	Expr/GaussianCoherence.cc \
 	Expr/GaussianSource.cc \
 	Expr/HamakerDipole.cc \
-	Expr/JonesCMul2.cc \
-	Expr/JonesCMul3.cc \
-	Expr/JonesExpr.cc \
 	Expr/JonesInvert.cc \
-	Expr/JonesMul.cc \
-	Expr/JonesMul2.cc \
-	Expr/JonesMul3.cc \
-	Expr/JonesNode.cc \
-	Expr/JonesSum.cc \
 	Expr/JonesVisData.cc \
+	Expr/Literal.cc \
 	Expr/LMN.cc \
 	Expr/Matrix.cc \
 	Expr/MatrixComplexArr.cc \
 	Expr/MatrixComplexSca.cc \
+	Expr/MatrixMul2.cc \
+	Expr/MatrixMul3.cc \
 	Expr/MatrixRealArr.cc \
 	Expr/MatrixRealSca.cc \
 	Expr/MatrixRep.cc \
+	Expr/MatrixSum.cc \
 	Expr/MatrixTmp.cc \
 	Expr/MIM.cc \
-	Expr/PhaseRef.cc \
-    Expr/PhaseShift.cc \
-    Expr/PiercePoint.cc \
+	Expr/Mul.cc \
+	Expr/PhaseShift.cc \
+	Expr/PiercePoint.cc \
 	Expr/PointCoherence.cc \
 	Expr/PointSource.cc \
 	Expr/Request.cc \
-	Expr/Result.cc \
-	Expr/ResultVec.cc \
-    Expr/Source.cc \
-    Expr/SpectralIndex.cc \
-    Expr/StatUVW.cc \
-    Expr/YatawattaDipole.cc
+	Expr/Resampler.cc \
+	Expr/Source.cc \
+	Expr/SpectralIndex.cc \
+	Expr/StatUVW.cc \
+	Expr/ValueSet.cc \
+	Expr/YatawattaDipole.cc
 
 bin_PROGRAMS = versionbbskernel
 

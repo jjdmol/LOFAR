@@ -20,20 +20,16 @@
 //#
 //# $Id$
 
-#ifndef EXPR_STATUVW_H
-#define EXPR_STATUVW_H
+#ifndef LOFAR_BBSKERNEL_EXPR_STATUVW_H
+#define LOFAR_BBSKERNEL_EXPR_STATUVW_H
 
 // \file
 // UVW coordinates of a station in meters.
 
-#include <BBSKernel/Instrument.h>
-#include <BBSKernel/Expr/Result.h>
-#include <BBSKernel/Expr/Request.h>
-#include <BBSKernel/Expr/PhaseRef.h>
+#include <BBSKernel/Expr/Expr.h>
 
 #include <Common/lofar_map.h>
 #include <Common/lofar_smartptr.h>
-#include <Common/lofar_string.h>
 
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
@@ -43,69 +39,93 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
-class StatUVW
+class StatUVW: public Expr<Vector<3> >
 {
 public:
-    typedef shared_ptr<StatUVW>          Pointer;
-    typedef shared_ptr<const StatUVW>    ConstPointer;
+    typedef shared_ptr<StatUVW>          Ptr;
+    typedef shared_ptr<const StatUVW>    ConstPtr;
 
-    StatUVW(const Station &station, const casa::MPosition &arrayRef,
-        const PhaseRef::ConstPointer &phaseRef);
-    ~StatUVW();
+    StatUVW(const casa::MPosition &position, const casa::MPosition &array,
+        const casa::MDirection &reference);
 
-    void calculate(const Request &request) const;
-
-    const Result &getU(const Request &request) const
-    { if(request.getId() != itsLastReqId) calculate(request); return itsU; }
-    const Result &getV(const Request &request) const
-    { if(request.getId() != itsLastReqId) calculate(request); return itsV; }
-    const Result &getW(const Request &request) const
-    { if(request.getId() != itsLastReqId) calculate(request); return itsW; }
-
-    const string &getName() const
-    { return itsStation.name; }
+protected:
+    virtual unsigned int nArguments() const;
+    virtual ExprBase::ConstPtr argument(unsigned int) const;
+    virtual const Vector<3> evaluateExpr(const Request &request, Cache &cache,
+        unsigned int grid) const;
 
 private:
-    struct Time
+    struct Timestamp
     {
-        Time(double time)
-            : time(time)
-        {}
-
-        bool operator<(const Time &other) const
-        { return time < other.time - 0.000001; }
+        Timestamp(double time);
+        bool operator<(const Timestamp &other) const;
 
         double time;
     };
 
-    struct Uvw
+    struct UVW
     {
-        Uvw()
-        {}
-
-        Uvw(double u, double v, double w)
-            : u(u), v(v), w(w)
-        {}
+        UVW();
+        UVW(double u, double v, double w);
 
         double u, v, w;
     };
 
+    casa::MPosition             itsPosition;
+    casa::MPosition             itsArrayPosition;
+    casa::MDirection            itsPhaseReference;
 
-    Station                  itsStation;
-    casa::MPosition          itsArrayRef;
-    PhaseRef::ConstPointer   itsPhaseRef;
-    mutable map<Time, Uvw>   itsUvwCache;
-
-    mutable Result           itsU;
-    mutable Result           itsV;
-    mutable Result           itsW;
-    mutable RequestId        itsLastReqId;
+    mutable map<Timestamp, UVW> itsUVWCache;
 };
 
 // @}
+
+
+// -------------------------------------------------------------------------- //
+// - Implementation: StatUVW                                                - //
+// -------------------------------------------------------------------------- //
+
+inline unsigned int StatUVW::nArguments() const
+{
+    return 0;
+}
+
+inline ExprBase::ConstPtr StatUVW::argument(unsigned int) const
+{
+    ASSERTSTR(false, "StatUVW has no arguments.");
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: StatUVW::Timestamp                                     - //
+// -------------------------------------------------------------------------- //
+
+inline StatUVW::Timestamp::Timestamp(double time)
+    :   time(time)
+{
+}
+
+inline bool StatUVW::Timestamp::operator<(const Timestamp &other) const
+{
+    return time < other.time - 0.000001;
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: StatUVW::UVW                                           - //
+// -------------------------------------------------------------------------- //
+
+inline StatUVW::UVW::UVW()
+{
+}
+
+inline StatUVW::UVW::UVW(double u, double v, double w)
+    :   u(u),
+        v(v),
+        w(w)
+{
+}
 
 } // namespace BBS
 } // namespace LOFAR

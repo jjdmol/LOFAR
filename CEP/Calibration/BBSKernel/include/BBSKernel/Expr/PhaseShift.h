@@ -1,5 +1,5 @@
-//# PhaseShift.h: Phase delay due to baseline geometry with respect to source
-//# direction.
+//# PhaseShift.h: Phase delay due to baseline geometry with respect to a
+//#     direction on the sky.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -21,36 +21,34 @@
 //#
 //# $Id$
 
-#ifndef EXPR_PHASESHIFT_H
-#define EXPR_PHASESHIFT_H
+#ifndef LOFAR_BBSKERNEL_EXPR_PHASESHIFT_H
+#define LOFAR_BBSKERNEL_EXPR_PHASESHIFT_H
 
 // \file
-// Phase delay due to baseline geometry with respect to source direction.
+// Phase delay due to baseline geometry with respect to a direction on the sky.
 
-//# Includes
-#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
-class PhaseShift: public ExprRep
+class PhaseShift: public BasicBinaryExpr<Vector<2>, Vector<2>, Scalar>
 {
 public:
-    PhaseShift (const Expr& left, const Expr& right);
-    ~PhaseShift();
+    typedef shared_ptr<PhaseShift>          Ptr;
+    typedef shared_ptr<const PhaseShift>    ConstPtr;
 
-    // Calculate the results for the given domain.
-    virtual Result getResult(const Request &request);
+    PhaseShift(const Expr<Vector<2> >::ConstPtr &lhs,
+        const Expr<Vector<2> >::ConstPtr &rhs);
 
-private:
-
-    Expr itsLeft;
-    Expr itsRight;
+protected:
+    virtual const Scalar::View evaluateImpl(const Grid &grid,
+        const Vector<2>::View &lhs, const Vector<2>::View &rhs) const;
 };
 
 // @}

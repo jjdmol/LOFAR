@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#if !defined(EXPR_MATRIX_H)
-#define EXPR_MATRIX_H
+#ifndef LOFAR_BBSKERNEL_EXPR_MATRIX_H
+#define LOFAR_BBSKERNEL_EXPR_MATRIX_H
 
 // \file
 // Matrix for Mns
@@ -51,7 +51,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class Matrix
@@ -209,6 +209,11 @@ public:
   friend MatrixTmp posdiff (const Matrix&, const MatrixTmp&);
   friend MatrixTmp tocomplex (const Matrix&, const Matrix&);
   friend MatrixTmp tocomplex (const Matrix&, const MatrixTmp&);
+  friend MatrixTmp min (const Matrix&, const Matrix&);
+  friend MatrixTmp min (const Matrix&, const MatrixTmp&);
+  friend MatrixTmp max (const Matrix&, const Matrix&);
+  friend MatrixTmp max (const Matrix&, const MatrixTmp&);
+  friend MatrixTmp abs (const Matrix&);
   friend MatrixTmp sin (const Matrix&);
   friend MatrixTmp cos (const Matrix&);
   friend MatrixTmp log (const Matrix&);

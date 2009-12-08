@@ -20,14 +20,15 @@
 //#
 //# $Id$
 
-#ifndef EXPR_SOURCE_H
-#define EXPR_SOURCE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_SOURCE_H
+#define LOFAR_BBSKERNEL_EXPR_SOURCE_H
 
 // \file
 // Abstract base class for holding a source
 
 #include <Common/lofar_string.h>
 #include <Common/lofar_smartptr.h>
+
 #include <BBSKernel/Expr/Expr.h>
 
 namespace LOFAR
@@ -35,33 +36,42 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class Source
 {
 public:
-    typedef shared_ptr<Source>       Pointer;
-    typedef shared_ptr<const Source> ConstPointer;
+    typedef shared_ptr<Source>          Ptr;
+    typedef shared_ptr<const Source>    ConstPtr;
 
-    Source(const string &name, const Expr &ra, const Expr &dec);
+    Source();
+    Source(const string &name, const Expr<Vector<2> >::ConstPtr &position);
     virtual ~Source();
 
-    const string &getName() const
-    { return itsName; }
-
-    const Expr &getRa() const
-    { return itsRa; }
-    const Expr &getDec() const
-    { return itsDec; }
+    const string &getName() const;
+    Expr<Vector<2> >::ConstPtr getPosition() const;
 
 protected:
-    string  itsName;
-    Expr    itsRa;
-    Expr    itsDec;
+    string                      itsName;
+    Expr<Vector<2> >::ConstPtr  itsPosition;
 };
 
 // @}
+
+// -------------------------------------------------------------------------- //
+// - Source implementation                                                  - //
+// -------------------------------------------------------------------------- //
+
+inline const string &Source::getName() const
+{
+    return itsName;
+}
+
+inline Expr<Vector<2> >::ConstPtr Source::getPosition() const
+{
+    return itsPosition;
+}
 
 } // namespace BBS
 } // namespace LOFAR

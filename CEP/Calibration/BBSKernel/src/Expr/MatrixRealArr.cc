@@ -29,6 +29,7 @@
 #include <BBSKernel/Expr/MatrixComplexArr.h>
 #include <BBSKernel/Expr/Pool.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_algorithm.h>
 #include <casa/BasicSL/Constants.h>
 #include <cmath>
 
@@ -223,6 +224,14 @@ MatrixRep* MatrixRealArr::posdiff (MatrixRep& right)
 MatrixRep* MatrixRealArr::tocomplex (MatrixRep& right)
 {
   return right.tocomplexRep (*this);
+}
+MatrixRep* MatrixRealArr::min (MatrixRep& right)
+{
+  return right.minRep (*this);
+}
+MatrixRep* MatrixRealArr::max (MatrixRep& right)
+{
+  return right.maxRep (*this);
 }
 
 const double* MatrixRealArr::doubleStorage() const
@@ -578,7 +587,7 @@ MatrixRep* MatrixRealArr::posdiffRep (MatrixRealSca& left)
   double* value = v->itsValue;
   double* rvalue = itsValue;
   double  lvalue = left.itsValue;
-  int n = left.nelements();
+  int n = nelements();
   for (int i=0; i<n; i++) {
     double diff = lvalue - rvalue[i];
     if (diff < -1 * C::pi) {
@@ -604,7 +613,6 @@ MatrixRep* MatrixRealArr::posdiffRep (MatrixRealArr& left)
   timer.start();
 #endif
 
-  DBGASSERT (nelements() == left.nelements());
   MatrixRealArr* v = allocate(nx(), ny());
   double* value = v->itsValue;
   double* rvalue = itsValue;
@@ -674,6 +682,97 @@ MatrixRep* MatrixRealArr::tocomplexRep (MatrixRealArr& left)
   return v;
 }
 
+MatrixRep* MatrixRealArr::minRep (MatrixRealSca& left)
+{
+#if defined TIMER
+  static NSTimer timer("min RA RS", true);
+  timer.start();
+#endif
+
+  MatrixRealArr* v = allocate(nx(), ny());
+  double* value = v->itsValue;
+  double* rvalue = itsValue;
+  double  lvalue = left.itsValue;
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    value[i] = LOFAR::min(lvalue, rvalue[i]);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
+}
+MatrixRep* MatrixRealArr::minRep (MatrixRealArr& left)
+{
+  DBGASSERT (left.nelements() == nelements());
+#if defined TIMER
+  static NSTimer timer("min RA RA", true);
+  timer.start();
+#endif
+
+  MatrixRealArr* v = allocate(nx(), ny());
+  double* value = v->itsValue;
+  double* rvalue = itsValue;
+  double* lvalue = left.itsValue;
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    value[i] = LOFAR::min(lvalue[i], rvalue[i]);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
+}
+
+MatrixRep* MatrixRealArr::maxRep (MatrixRealSca& left)
+{
+#if defined TIMER
+  static NSTimer timer("max RA RS", true);
+  timer.start();
+#endif
+
+  MatrixRealArr* v = allocate(nx(), ny());
+  double* value = v->itsValue;
+  double* rvalue = itsValue;
+  double  lvalue = left.itsValue;
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    value[i] = LOFAR::max(lvalue, rvalue[i]);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
+}
+MatrixRep* MatrixRealArr::maxRep (MatrixRealArr& left)
+{
+  DBGASSERT (left.nelements() == nelements());
+#if defined TIMER
+  static NSTimer timer("max RA RA", true);
+  timer.start();
+#endif
+
+  MatrixRealArr* v = allocate(nx(), ny());
+  double* value = v->itsValue;
+  double* rvalue = itsValue;
+  double* lvalue = left.itsValue;
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    value[i] = LOFAR::max(lvalue[i], rvalue[i]);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
+}
 
 MatrixRep* MatrixRealArr::negate()
 {
@@ -685,6 +784,25 @@ MatrixRep* MatrixRealArr::negate()
   int n = nelements();
   for (int i=0; i<n; i++) {
     itsValue[i] = -(itsValue[i]);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return this;
+}
+
+MatrixRep* MatrixRealArr::abs()
+{
+#if defined TIMER
+  static NSTimer timer("abs RA", true);
+  timer.start();
+#endif
+
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    itsValue[i] = LOFAR::abs(itsValue[i]);
   }
 
 #if defined TIMER

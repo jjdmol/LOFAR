@@ -58,6 +58,7 @@ MatrixRep* MatrixRep::posdiffRep (MatrixRealArr&)
 {
   throw (AipsError ("MatrixRep::posdiff requires real arguments"));
 }
+
 MatrixRep* MatrixRep::tocomplex (MatrixRep&)
 {
   throw (AipsError ("MatrixRep::tocomplex requires real arguments"));
@@ -69,6 +70,32 @@ MatrixRep* MatrixRep::tocomplexRep (MatrixRealSca&)
 MatrixRep* MatrixRep::tocomplexRep (MatrixRealArr&)
 {
   throw (AipsError ("MatrixRep::tocomplex requires real arguments"));
+}
+
+MatrixRep* MatrixRep::min (MatrixRep&)
+{
+  throw (AipsError ("MatrixRep::min requires a real argument"));
+}
+MatrixRep* MatrixRep::minRep (MatrixRealSca&)
+{
+  throw (AipsError ("MatrixRep::min requires a real argument"));
+}
+MatrixRep* MatrixRep::minRep (MatrixRealArr&)
+{
+  throw (AipsError ("MatrixRep::min requires a real argument"));
+}
+
+MatrixRep* MatrixRep::max (MatrixRep&)
+{
+  throw (AipsError ("MatrixRep::max requires a real argument"));
+}
+MatrixRep* MatrixRep::maxRep (MatrixRealSca&)
+{
+  throw (AipsError ("MatrixRep::max requires a real argument"));
+}
+MatrixRep* MatrixRep::maxRep (MatrixRealArr&)
+{
+  throw (AipsError ("MatrixRep::max requires a real argument"));
 }
 
 void MatrixRep::fillRowWithProducts(dcomplex, dcomplex, int)

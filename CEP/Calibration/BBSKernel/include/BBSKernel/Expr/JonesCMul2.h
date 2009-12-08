@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_JONESCMUL2_H
-#define EXPR_JONESCMUL2_H
+#ifndef LOFAR_BBSKERNEL_EXPR_JONESCMUL2_H
+#define LOFAR_BBSKERNEL_EXPR_JONESCMUL2_H
 
 // \file
 // Calculate A * B^H (the conjugate transpose of B).
@@ -33,7 +33,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 // Calculate A * B^H (the conjugate transpose of B).

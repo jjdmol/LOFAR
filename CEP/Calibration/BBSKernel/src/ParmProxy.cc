@@ -25,10 +25,10 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
-ParmProxy::ParmProxy(uint id, const string &name, const Parm &parm)
+ParmProxy::ParmProxy(unsigned int id, const string &name, const Parm &parm)
     :   itsId(id),
         itsName(name),
         itsParm(parm)
