@@ -1,30 +1,8 @@
-# $Id$
-#
-# Copyright (C) 2008-2009
-# ASTRON (Netherlands Foundation for Research in Astronomy)
-# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-# Try to find FFTW3.
-#
+# - Try to find FFTW3.
 # Usage: find_package(FFTW3 [COMPONENTS [double|single|long-double] [threads]])
-#  
+#
 # Variables used by this module:
 #  FFTW3_ROOT_DIR     - FFTW3 root directory
-#
 # Variables defined by this module:
 #  FFTW3_FOUND        - system has FFTW3
 #  FFTW3_INCLUDE_DIR  - the FFTW3 include directory (cached)
@@ -33,6 +11,26 @@
 #  FFTW3_LIBRARY      - the FFTW3 library (cached)
 #  FFTW3_LIBRARIES    - the FFTW3 libraries
 #                       (identical to FFTW3_LIBRARY)
+
+# Copyright (C) 2009
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# $Id$
 
 set(_usage_msg
   "Usage: find_package(FFTW3 [COMPONENTS [double|single|long-double]"

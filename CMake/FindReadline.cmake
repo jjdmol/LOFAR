@@ -1,35 +1,34 @@
-# $Id$
-#
-# Copyright (C) 2008-2009
-# ASTRON (Netherlands Foundation for Research in Astronomy)
-# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-# Try to find readline, a library for easy editing of command lines.
-#
+# - Try to find readline, a library for easy editing of command lines.
 # Variables used by this module:
 #  READLINE_ROOT_DIR     - Readline root directory
-#
 # Variables defined by this module:
 #  READLINE_FOUND        - system has Readline
 #  READLINE_INCLUDE_DIR  - the Readline include directory (cached)
 #  READLINE_INCLUDE_DIRS - the Readline include directories
 #                          (identical to READLINE_INCLUDE_DIR)
 #  READLINE_LIBRARY      - the Readline library (cached)
-#  READLINE_LIBRARIES    - the Readline library plus the libraries it depends on
+#  READLINE_LIBRARIES    - the Readline library plus the libraries it 
+#                          depends on
+
+# Copyright (C) 2009
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# $Id$
 
 if(NOT READLINE_FOUND)
 

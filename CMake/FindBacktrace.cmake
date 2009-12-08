@@ -1,34 +1,33 @@
-# $Id$
-#
-# Copyright (C) 2008-2009
-# ASTRON (Netherlands Foundation for Research in Astronomy)
-# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-# Check whether the C library provides support for backtrace information.
+# - Check whether the C library provides support for backtrace information.
 # The backtrace() function provides you with stack frame return addresses. 
 # In order to translate these return addresses to filename, line number
 # and function name, we need support from the binutils:
 #   - libbfd contains functions to do the address translation
-#   - liberty contains a function to demangle C++ function names.
+#   - libiberty contains a function to demangle C++ function names.
 #
 # The following variables are set:
-#   BACKTRACE_FOUND - system has backtrace support
+#   BACKTRACE_FOUND     - system has backtrace support
 #   BACKTRACE_LIBRARIES - libraries needed for backtrace support
+
+# Copyright (C) 2009
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# $Id$
 
 include(CheckIncludeFile)
 include(CheckFunctionExists)

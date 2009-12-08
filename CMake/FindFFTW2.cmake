@@ -1,44 +1,41 @@
-# $Id$
-#
-# Copyright (C) 2008-2009
-# ASTRON (Netherlands Foundation for Research in Astronomy)
-# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-# Try to find FFTW2.
-#
+# - Try to find FFTW2.
 # Usage: find_package(FFTW [COMPONENTS [real] [double|single] [mpi|threads]])
 #
 # Variables used by this module:
 #  FFTW2_ROOT_DIR        - FFTW2 root directory
-#
 # Variables defined by this module:
 #  FFTW2_FOUND           - FFTW2 is present for the requested components.
-#  FFTW2_INCLUDE_DIR     - FFTW2 include directory for the requested components
-#                         (cached)
+#  FFTW2_INCLUDE_DIR     - FFTW2 include directory for the requested
+#                          components (cached)
 #  FFTW2_INCLUDE_DIRS    - FFTW2 include directory 
-#                         (identical to FFTW2_INCLUDE_DIR)
+#                          (identical to FFTW2_INCLUDE_DIR)
 #  FFTW2_<YYY>_LIBRARY   - FFTW2 library for the requested component <YYY>
-#                         (cached)
+#                          (cached)
 #  FFTW2_LIBRARIES       - FFTW2 libraries needed to when linking
-#
 #  FFTW2_PRECISION       - FFTW2 precision specified (double|single)
-#                         (cached internal)
-#  FFTW2_PARALLELIZATION - FFTW2 parallelization specified(off|mpi|threads)
-#                         (cached internal)
+#                          (cached internal)
+#  FFTW2_PARALLELIZATION - FFTW2 parallelization specified (off|mpi|threads)
+#                          (cached internal)
+
+# Copyright (C) 2009
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# $Id$
 
 set(_usage_msg 
   "Usage: find_package(FFTW [COMPONENTS [real] [double|single] [mpi|threads]]")
