@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BB_BBS_PARMMANAGER_H
-#define LOFAR_BB_BBS_PARMMANAGER_H
+#ifndef LOFAR_BBSKERNEL_PARMMANAGER_H
+#define LOFAR_BBSKERNEL_PARMMANAGER_H
 
 // \file
 // Manages model parameters from multiple ParmDBs.
@@ -50,30 +50,30 @@ namespace BBS
 class Box;
 class Grid;
 
-// \ingroup BBSKernel
+// \addtogroup BBSKernel
 // @{
 
-typedef set<uint> ParmGroup;
+typedef set<unsigned int> ParmGroup;
 
 class ParmManagerImpl
 {
 public:
-    typedef shared_ptr<ParmManagerImpl>         Pointer;
-    typedef shared_ptr<const ParmManagerImpl>   ConstPointer;
+    typedef shared_ptr<ParmManagerImpl>         Ptr;
+    typedef shared_ptr<const ParmManagerImpl>   ConstPtr;
 
-    void initCategory(uint category, const ParmDB &db);
+    void initCategory(unsigned int category, const ParmDB &db);
 
-    double getDefaultValue(uint category, const string &name,
+    double getDefaultValue(unsigned int category, const string &name,
         double value = 0.0);
 
-    ParmProxy::Pointer get(uint category, const string &name);
-    ParmProxy::Pointer get(uint category, const string &name, ParmGroup &group);
+    ParmProxy::Ptr get(unsigned int category, const string &name);
+    ParmProxy::Ptr get(unsigned int category, const string &name,
+        ParmGroup &group);
 
-    ParmProxy::Pointer get(uint id)
-    { return itsParms[id]; }
-    ParmProxy::ConstPointer get(uint id) const
-    { return itsParms[id]; }
+    ParmProxy::Ptr get(unsigned int id);
+    ParmProxy::ConstPtr get(unsigned int id) const;
 
+    Box domain() const;
     void setDomain(const Box &domain);
 
     void setGrid(const Grid &grid);
@@ -95,19 +95,38 @@ private:
     bool isIncluded(const string &candidate, const vector<casa::Regex> &include,
         const vector<casa::Regex> &exclude) const;
 
-    const ParmDB &getParmDbForCategory(uint category) const;
-    ParmDB &getParmDbForCategory(uint category);
+    const ParmDB &getParmDbForCategory(unsigned int category) const;
+    ParmDB &getParmDbForCategory(unsigned int category);
 
-    ParmSet                         itsParmSet;
-    ParmCache                       itsParmCache;
-    map<uint, ParmDB>               itsCategories;
-    map<string, pair<uint, uint> >  itsParmMap;
-    vector<ParmProxy::Pointer>      itsParms;
+    // TODO: Create domain() method on ParmCache instead of keeping a copy
+    // of the domain as a member here.
+    Box                                             itsDomain;
+    ParmSet                                         itsParmSet;
+    ParmCache                                       itsParmCache;
+    map<unsigned int, ParmDB>                       itsCategories;
+    map<string, pair<unsigned int, unsigned int> >  itsParmMap;
+    vector<ParmProxy::Ptr>                          itsParms;
 };
 
 typedef Singleton<ParmManagerImpl>  ParmManager;
 
 // @}
+
+// -------------------------------------------------------------------------- //
+// - ParmManagerImpl implementation                                         - //
+// -------------------------------------------------------------------------- //
+
+inline ParmProxy::Ptr ParmManagerImpl::get(unsigned int id)
+{
+    DBGASSERT(id < itsParms.size());
+    return itsParms[id];
+}
+
+inline ParmProxy::ConstPtr ParmManagerImpl::get(unsigned int id) const
+{
+    DBGASSERT(id < itsParms.size());
+    return itsParms[id];
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

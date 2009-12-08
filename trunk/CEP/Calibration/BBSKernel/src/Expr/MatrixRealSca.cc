@@ -28,6 +28,7 @@
 #include <casa/BasicMath/Math.h>
 #include <casa/BasicSL/Constants.h>
 #include <Common/lofar_iostream.h>
+#include <Common/lofar_algorithm.h>
 
 using namespace casa;
 
@@ -72,6 +73,14 @@ MatrixRep* MatrixRealSca::posdiff (MatrixRep& right)
 MatrixRep* MatrixRealSca::tocomplex (MatrixRep& right)
 {
   return right.tocomplexRep (*this);
+}
+MatrixRep* MatrixRealSca::min (MatrixRep& right)
+{
+  return right.minRep (*this);
+}
+MatrixRep* MatrixRealSca::max (MatrixRep& right)
+{
+  return right.maxRep (*this);
 }
 
 const double* MatrixRealSca::doubleStorage() const
@@ -201,10 +210,49 @@ MatrixRep* MatrixRealSca::tocomplexRep (MatrixRealArr& left)
   return v;
 }
 
+MatrixRep* MatrixRealSca::minRep (MatrixRealSca& left)
+{
+  return new MatrixRealSca (LOFAR::min(left.itsValue, itsValue));
+}
+MatrixRep* MatrixRealSca::minRep (MatrixRealArr& left)
+{
+  MatrixRealArr* v = MatrixRealArr::allocate(left.nx(), left.ny());
+  double* value = v->itsValue;
+  double  rvalue = itsValue;
+  double* lvalue = left.itsValue;
+  int n = left.nelements();
+  for (int i=0; i<n; i++) {
+    value[i] = LOFAR::min(lvalue[i], rvalue);
+  }
+  return v;
+}
+
+MatrixRep* MatrixRealSca::maxRep (MatrixRealSca& left)
+{
+  return new MatrixRealSca (LOFAR::max(left.itsValue, itsValue));
+}
+MatrixRep* MatrixRealSca::maxRep (MatrixRealArr& left)
+{
+  MatrixRealArr* v = MatrixRealArr::allocate(left.nx(), left.ny());
+  double* value = v->itsValue;
+  double  rvalue = itsValue;
+  double* lvalue = left.itsValue;
+  int n = left.nelements();
+  for (int i=0; i<n; i++) {
+    value[i] = LOFAR::max(lvalue[i], rvalue);
+  }
+  return v;
+}
 
 MatrixRep* MatrixRealSca::negate()
 {
   itsValue = -itsValue;
+  return this;
+}
+
+MatrixRep* MatrixRealSca::abs()
+{
+  itsValue = std::abs(itsValue);
   return this;
 }
 

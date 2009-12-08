@@ -1,5 +1,4 @@
-//# SpectralIndex.h: Frequency dependent scale factor for the base flux given
-//# for a specific reference frequency.
+//# SpectralIndex.h: Frequency dependent flux.
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -21,12 +20,11 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_EXPR_SPECTRALINDEX_H
-#define LOFAR_BBS_EXPR_SPECTRALINDEX_H
+#ifndef LOFAR_BBSKERNEL_EXPR_SPECTRALINDEX_H
+#define LOFAR_BBSKERNEL_EXPR_SPECTRALINDEX_H
 
 // \file
-// Frequency dependent scale factor for the base flux given for a specific
-// reference frequency.
+// Frequency dependent flux.
 
 #include <BBSKernel/Expr/Expr.h>
 
@@ -35,33 +33,59 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
-class SpectralIndex: public ExprRep
+class SpectralIndex: public Expr<Scalar>
 {
 public:
-    template <typename T_Iterator>
-    SpectralIndex(const Expr &refFreq, const Expr &refStokes, T_Iterator first,
-        T_Iterator last);
+    typedef shared_ptr<SpectralIndex>       Ptr;
+    typedef shared_ptr<const SpectralIndex> ConstPtr;
 
-    virtual Matrix getResultValue(const Request &request,
-        const std::vector<const Matrix*> &args);
+    template <typename T_ITER>
+    SpectralIndex(const Expr<Scalar>::ConstPtr &refFreq,
+        const Expr<Scalar>::ConstPtr &refStokes, T_ITER first, T_ITER last);
+
+    virtual ~SpectralIndex();
+
+protected:
+    virtual unsigned int nArguments() const;
+    virtual ExprBase::ConstPtr argument(unsigned int i) const;
+
+    virtual const Scalar evaluateExpr(const Request &request, Cache &cache,
+        unsigned int grid) const;
+
+    virtual const Scalar::View evaluateImpl(const Grid &grid,
+        const Scalar::View &refFreq, const Scalar::View &refStokes,
+        const vector<Scalar::View> &coeff) const;
+
+private:
+    Expr<Scalar>::ConstPtr          itsRefFreq;
+    Expr<Scalar>::ConstPtr          itsRefStokes;
+    vector<Expr<Scalar>::ConstPtr>  itsCoeff;
 };
 
-template <typename T_Iterator>
-SpectralIndex::SpectralIndex(const Expr &refFreq, const Expr &refStokes,
-    T_Iterator first, T_Iterator last)
+// @}
+
+// -------------------------------------------------------------------------- //
+// - SpectralIndex implementation                                           - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_ITER>
+SpectralIndex::SpectralIndex(const Expr<Scalar>::ConstPtr &refFreq,
+    const Expr<Scalar>::ConstPtr &refStokes, T_ITER first, T_ITER last)
+    :   itsRefFreq(refFreq),
+        itsRefStokes(refStokes),
+        itsCoeff(first, last)
 {
-    addChild(refFreq);
-    addChild(refStokes);
-    while(first != last)
+    connect(itsRefFreq);
+    connect(itsRefStokes);
+    for(unsigned int i = 0; i < itsCoeff.size(); ++i)
     {
-        addChild(*first++);
+        connect(itsCoeff[i]);
     }
 }
 
-// @}
 
 } //# namespace BBS
 } //# namespace LOFAR

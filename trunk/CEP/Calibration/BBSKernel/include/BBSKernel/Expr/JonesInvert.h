@@ -20,40 +20,34 @@
 //#
 //# $Id$
 
-#if !defined(EXPR_JONESINVERT_H)
-#define EXPR_JONESINVERT_H
+#ifndef LOFAR_BBS_EXPR_JONESINVERT_H
+#define LOFAR_BBS_EXPR_JONESINVERT_H
 
 // \file
 // The inverse of a Jones matrix expression.
 
-//# Includes
-#include <BBSKernel/Expr/JonesExpr.h>
-
+#include <BBSKernel/Expr/BasicExpr.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
-// This class gets the inverse of a Jones matrix.
-
-class JonesInvert : public JonesExprRep
+class JonesInvert: public BasicUnaryExpr<JonesMatrix, JonesMatrix>
 {
 public:
-  // The default constructor.
-  JonesInvert (const JonesExpr& expr);
-  virtual ~JonesInvert();
+    typedef shared_ptr<JonesInvert>         Ptr;
+    typedef shared_ptr<const JonesInvert>   ConstPtr;
 
-  // Calculate the result of its members.
-  virtual JonesResult getJResult (const Request&);
+    JonesInvert(const Expr<JonesMatrix>::ConstPtr &expr);
 
-private:
-  JonesExpr itsExpr;
+protected:
+    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
+        const JonesMatrix::View &arg0) const;
 };
-
 
 // @}
 

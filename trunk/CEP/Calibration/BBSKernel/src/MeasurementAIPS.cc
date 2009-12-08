@@ -108,7 +108,6 @@ MeasurementAIPS::MeasurementAIPS(const string &filename,
     LOG_DEBUG_STR("Measurement dimensions: " << endl << itsDimensions);
 }
 
-
 VisDimensions MeasurementAIPS::getDimensions(const VisSelection &selection)
     const
 {
@@ -120,8 +119,7 @@ VisDimensions MeasurementAIPS::getDimensions(const VisSelection &selection)
     return getDimensionsImpl(tab_selection, slicer);
 }
 
-
-VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
+VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
     const string &column, bool readUVW) const
 {
     NSTimer readTimer, copyTimer;
@@ -132,7 +130,7 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
         " rows.");
 
     VisDimensions visDims(getDimensionsImpl(tab_selection, slicer));
-    VisData::Pointer buffer(new VisData(visDims));
+    VisData::Ptr buffer(new VisData(visDims));
 
     const VisDimensions &dims = buffer->getDimensions();
     const size_t nChannels = dims.getChannelCount();
@@ -203,8 +201,13 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
                 boost::general_storage_order<3>(order_data, ascending));
 
         boost::multi_array_ref<flag_t, 3>::size_type order_flag[] = {2, 1, 0};
+//        Bool *ptr_flag = const_cast<Bool*>(aips_flag.data());
         Bool *ptr_flag = const_cast<Bool*>(aips_flag.data());
-        boost::multi_array_ref<flag_t, 3> flag(ptr_flag,
+//        boost::multi_array_ref<flag_t, 3> flag(ptr_flag,
+//                boost::extents[nRows][nChannels][nPolarizations],
+//                boost::general_storage_order<3>(order_flag, ascending));
+        boost::multi_array_ref<flag_t, 3>
+            flag(reinterpret_cast<flag_t*>(ptr_flag),
                 boost::extents[nRows][nChannels][nPolarizations],
                 boost::general_storage_order<3>(order_flag, ascending));
 
@@ -249,10 +252,8 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
     return buffer;
 }
 
-
-
 void MeasurementAIPS::write(const VisSelection &selection,
-    VisData::Pointer buffer, const string &column, bool writeFlags)
+    VisData::Ptr buffer, const string &column, bool writeFlags)
 {
     NSTimer readTimer, writeTimer;
 
@@ -372,7 +373,7 @@ void MeasurementAIPS::write(const VisSelection &selection,
 
                 // Write visibility flags.
                 Array<Bool> vis_flag(IPosition(2, nPolarizations, nChannels),
-                    flagBuffer.data(), SHARE);
+                    reinterpret_cast<Bool*>(flagBuffer.data()), SHARE);
                 c_flag.putSlice(i, slicer, vis_flag);
             }
 
@@ -404,7 +405,6 @@ void MeasurementAIPS::write(const VisSelection &selection,
     LOG_DEBUG_STR("Write time: " << writeTimer);
 }
 
-
 void MeasurementAIPS::initInstrument()
 {
     // Get station names and positions in ITRF coordinates.
@@ -414,42 +414,44 @@ void MeasurementAIPS::initInstrument()
     ASSERT(observation.nrow() > itsIdObservation);
     ASSERT(!observation.flagRow()(itsIdObservation));
 
-    itsInstrument.name = observation.telescopeName()(itsIdObservation);
-    itsInstrument.stations.reserve(antenna.nrow());
+    // Get instrument name.
+    string name(observation.telescopeName()(itsIdObservation));
+
+    // Get station positions.
+    vector<Station> stations;
+    stations.reserve(antenna.nrow());
 
     MVPosition centroid;
     for(unsigned int i = 0; i < static_cast<unsigned int>(antenna.nrow()); ++i)
     {
         // Get station name and ITRF position.
-        Station station;
-        station.name = antenna.name()(i);
-        station.position = MPosition::Convert(antenna.positionMeas()(i),
+        casa::MPosition position = MPosition::Convert(antenna.positionMeas()(i),
             MPosition::ITRF)();
 
         // Store station information.
-        itsInstrument.stations.push_back(station);
+        stations.push_back(Station(antenna.name()(i), position));
 
         // Update ITRF centroid.
-        centroid += station.position.getValue();
+        centroid += position.getValue();
     }
 
     // Get the instrument position in ITRF coordinates, or use the centroid
     // of the station positions if the instrument position is unknown.
     MPosition position;
-    if(MeasTable::Observatory(position, itsInstrument.name))
+    if(MeasTable::Observatory(position, name))
     {
-        itsInstrument.position = MPosition::Convert(position,
-            MPosition::ITRF)();
+        position = MPosition::Convert(position, MPosition::ITRF)();
     }
     else
     {
         LOG_WARN("Instrument position unknown; will use centroid of stations.");
         ASSERT(antenna.nrow() != 0);
         centroid *= 1.0 / static_cast<double>(antenna.nrow());
-        itsInstrument.position = MPosition(centroid, MPosition::ITRF);
+        position = MPosition(centroid, MPosition::ITRF);
     }
-}
 
+    itsInstrument = Instrument(name, position, stations);
+}
 
 void MeasurementAIPS::initPhaseCenter()
 {
@@ -461,7 +463,6 @@ void MeasurementAIPS::initPhaseCenter()
     itsPhaseCenter = MDirection::Convert(field.phaseDirMeas(itsIdField),
         MDirection::J2000)();
 }
-
 
 void MeasurementAIPS::initDimensions()
 {
@@ -478,6 +479,8 @@ void MeasurementAIPS::initDimensions()
     ROMSSpWindowColumns window(itsMS.spectralWindow());
     ASSERT(window.nrow() > idWindow);
     ASSERT(!window.flagRow()(idWindow));
+
+    itsReferenceFreq = window.refFrequency()(idWindow);
 
     const unsigned int nChannels = window.numChan()(idWindow);
     Vector<Double> frequency = window.chanFreq()(idWindow);
@@ -572,7 +575,6 @@ void MeasurementAIPS::initDimensions()
     itsDimensions.setPolarizations(names);
 }
 
-
 // NOTE: OPTIMIZATION OPPORTUNITY: Cache implementation specific selection
 // within a specialization of VisSelection or VisData.
 Table MeasurementAIPS::getTableSelection(const Table &table,
@@ -612,9 +614,9 @@ Table MeasurementAIPS::getTableSelection(const Table &table,
 
                 // If the name of a station matches the pattern, add it to the
                 // selection.
-                for(size_t i = 0; i < itsInstrument.stations.size(); ++i)
+                for(size_t i = 0; i < itsInstrument.size(); ++i)
                 {
-                    String name(itsInstrument.stations[i].name);
+                    String name(itsInstrument[i].name());
 
                     if(name.matches(regex))
                     {
@@ -670,7 +672,6 @@ Table MeasurementAIPS::getTableSelection(const Table &table,
     return table(filter);
 }
 
-
 // NOTE: OPTIMIZATION OPPORTUNITY: when reading all channels, do not use a
 // slicer at all.
 Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
@@ -713,7 +714,6 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
 
     return Slicer(start, end, Slicer::endIsLast);
 }
-
 
 VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     const Slicer slicer) const

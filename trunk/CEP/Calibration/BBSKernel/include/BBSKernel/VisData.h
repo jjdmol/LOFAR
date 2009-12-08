@@ -1,4 +1,4 @@
-//# VisData.h: 
+//# VisData.h:
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_BBSKERNEL_VISDATA_H
-#define LOFAR_BBS_BBSKERNEL_VISDATA_H
+#ifndef LOFAR_BBSKERNEL_VISDATA_H
+#define LOFAR_BBSKERNEL_VISDATA_H
 
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_map.h>
@@ -40,10 +40,14 @@ namespace BBS
 {
 using std::pair;
 
+// \addtogroup BBSKernel
+// @{
+
 class VisData
 {
 public:
-    typedef shared_ptr<VisData>     Pointer;
+    typedef shared_ptr<VisData>         Ptr;
+    typedef shared_ptr<const VisData>   ConstPtr;
 
     enum TimeslotFlag
     {
@@ -66,8 +70,10 @@ public:
 
 private:
     // Description of the four dimensions (freq, time, baseline, polarization).
-    VisDimensions                           itsDimensions;    
+    VisDimensions                           itsDimensions;
 };
+
+// @}
 
 } //# namespace BBS
 } //# namespace LOFAR

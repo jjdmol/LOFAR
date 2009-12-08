@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_DIAG_H
-#define EXPR_DIAG_H
+#ifndef LOFAR_BBSKERNEL_EXPR_DIAG_H
+#define LOFAR_BBSKERNEL_EXPR_DIAG_H
 
 // \file
 // A diagonal Jones matrix.
@@ -34,7 +34,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class Expr;

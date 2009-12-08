@@ -20,174 +20,331 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BB_BBS_EQUATOR_H
-#define LOFAR_BB_BBS_EQUATOR_H
+#ifndef LOFAR_BBSKERNEL_EQUATOR_H
+#define LOFAR_BBSKERNEL_EQUATOR_H
 
 // \file
 // Generate normal equations that tie a model to an observation.
 
-#include <BBSKernel/Model.h>
-#include <BBSKernel/Expr/Result.h>
+#include <BBSKernel/ExprSet.h>
 #include <BBSKernel/SolverInterfaceTypes.h>
-#include <BBSKernel/VisData.h>
+#include <BBSKernel/Types.h>
+#include <BBSKernel/Expr/ExprResult.h>
+
 #include <Common/Timer.h>
-#include <Common/LofarTypes.h>
 #include <Common/lofar_map.h>
+#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \ingroup BBSKernel
+// \addtogroup BBSKernel
 // @{
 
 class Equator
 {
 public:
-    // Constructor. NB: nThreads is ignored when compiled without OPENMP.
-    Equator(const VisData::Pointer &chunk, const Model::Pointer &model,
-        const CoeffIndex &index, const Grid &solGrid, uint nMaxCells,
-        uint nThreads = 1);
-    ~Equator();
+    Equator(const ExprSet<JonesMatrix>::Ptr &lhs,
+        const ExprSet<JonesMatrix>::Ptr &rhs, const Grid &evalGrid,
+        const Grid &solGrid, const CoeffIndex &coeffIndex);
 
-    // Set subset of visibility data to process.
-    void setSelection(const vector<baseline_t> &baselines,
-        const vector<string> &products);
+    // Set the (inclusive) range of cells of the solution grid to process.
+    void setCellSelection(const Location &start, const Location &end);
 
-    // Generate normal equations for the given (inclusive) range of cells in
-    // the solution grid.
-    void process(vector<CellEquation> &result, const Location &start,
-        const Location &end);
+    // Generate equations.
+    void process(vector<CellEquation> &out);
 
 private:
-    // Nested struct that represents an interval of cells along an axis. Used to
+    // Nested class that represents an interval of cells along an axis. Used to
     // create the mapping from cells in the solution grid to intervals of cells
     // in the observation grid.
-    struct Interval
+    class Interval
     {
-        Interval()
-            :   start(0),
-                end(0)
-        {
-        }
+    public:
+        Interval();
 
-        uint    start, end;
+        unsigned int    start;
+        unsigned int    end;
+    };
+
+    // Nested class that holds the temporary buffers needed while processing
+    // a single expression from the set and some counters and timers used to
+    // gather processing statistics. This is collected in a nested class such
+    // that it's easy to create a thread-private instance for each thread should
+    // this code be parallelized. Also, it is a way of grouping a number of
+    // members that belong together semantically.
+    class ProcContext
+    {
+    public:
+        ProcContext();
+
+        void resize(unsigned int nCoeff);
+        void reset();
+
+        // Number of expression specific coefficients.
+        size_t                  nCoeff;
+
+        // Mapping from available partial derivatives (parmId, coeffId) to a
+        // coefficient index in the normal matrix.
+        vector<unsigned int>    index;
+        // References to the (appoximated) partial derivatives.
+        vector<Matrix>          partial;
+        // Value of the (approximated) partial derivatives.
+        vector<double>          partialRe, partialIm;
+
+        // Statistics and timers.
+        size_t                  count;
+
+        enum ProcTimer
+        {
+            EVAL_LHS,
+            EVAL_RHS,
+            MERGE_FLAGS,
+            EQUATE,
+            MAKE_COEFF_MAP,
+            TRANSPOSE,
+            MAKE_NORM,
+            N_ProcTimer
+        };
+
+        static string           timerNames[N_ProcTimer];
+        NSTimer                 timers[N_ProcTimer];
     };
 
     // Create a mapping for each axis that maps from cells in the solution grid
-    // to cell intervals in the observation (chunk) grid.
+    // to cell intervals in the evaluation grid.
     void makeGridMapping();
 
-    // Create a mapping from cells of axis "from" to the cell intervals on axis
+    // Create a mapping from cells of axis "from" to cell intervals on axis
     // "to". Additionally, the interval of cells of axis "from" that intersect
     // axis "to" (the domain) is returned.
     pair<Interval, vector<Interval> > makeAxisMapping(const Axis::ShPtr &from,
         const Axis::ShPtr &to) const;
 
-    // Create a mapping that maps each (parmId, coeffId) combination to an
-    // index.
+    // Create a mapping from (parmId, coeffId) to a coefficient index in the
+    // condition equations.
     void makeCoeffMapping(const CoeffIndex &index);
 
-    // Pre-allocate thread private casa::LSQFit instances.
-    void makeContexts();
-    
-    // Generate normal equations for a single baseline.
-    void blConstruct(uint threadId, const baseline_t &baseline,
-        const Request &request, const Location &cellStart,
-        const Location &cellEnd, const Location &visStart);
+    // Compute partial derivatives and generate a look-up table for the index of
+    // the corresponding coefficients in the condition equations for a single
+    // expression from the set.
+    void makeExprCoeffMapping(const ValueSet &lhs, const ValueSet &rhs,
+        ProcContext &context);
 
-    void resetTimers();
-    void printTimers();
+    // Generate normal equations for a single expression from the set.
+    template <typename T_ITER>
+    void procExpr(T_ITER result, size_t idx, ProcContext &context);
 
-    // Nested class containing thread private data structures. Each thread gets
-    // its own private data structures, to avoid unnecessary locking.
-    class ThreadContext
-    {
-    public:
-        ThreadContext();
-        ~ThreadContext();
-        void resize(uint nCoeff, uint nMaxCells);
-        void clear(bool clearEq = false);
+    // Sets of expressions between which the difference is to be minimized.
+    ExprSet<JonesMatrix>::Ptr     itsLHS;
+    ExprSet<JonesMatrix>::Ptr     itsRHS;
 
-        // Normal matrices (one per cell).
-        vector<casa::LSQFit*>   eq;
-        // Mapping from available perturbed values (parmId, coeffId) to a
-        // coefficient index in the normal matrix.
-        vector<uint>            index;
-        // One over the perturbation (delta) used to compute the perturbed
-        // values. This number is used to approximate the partial derivatives
-        // of the model with respect to the solvables using forward differences.
-        vector<double>          inversePert;
-        // Pointers to the real and imaginary components of the perturbed
-        // values.
-        vector<const double*>   pertRe, pertIm;
-        // Value of the (approximated) partial derivatives.
-        // @{
-        vector<double>          partialRe, partialIm;
-        // @}
-
-        // Statistics
-        unsigned long long      count;
-
-        enum ThreadTimer
-        {
-            MODEL_EVAL,
-            PROCESS,
-            BUILD_INDEX,
-            DERIVATIVES,
-            MAKE_NORM,
-            N_ThreadTimer
-        };
-        
-        static string           timerNames[N_ThreadTimer];
-        NSTimer                 timers[N_ThreadTimer];
-    };
-
-    // Observed visibilities.
-    VisData::Pointer                    itsChunk;
-    // Model of the sky and the instrument.
-    Model::Pointer                      itsModel;
+    // Evaluation grid.
+    Grid                                itsEvalGrid;
     // Solution grid.
     Grid                                itsSolGrid;
-    // Maximum number of cells in the solution grid that can be processed
-    // simultaneously.
-    uint                                itsMaxCellCount;
-    // Requested number of threads.
-    uint                                itsThreadCount;
 
-    // Selection of the visibility data to process.
-    vector<baseline_t>                  itsBaselines;
-    int                                 itsProductMask[4];
-    
-    // Location in the solution grid of the current chunk's start and end cell.
-    Location                            itsStartCell, itsEndCell;
+    // Is the intersection between the solution grid and the evaluation grid
+    // empty?
+    bool                                itsIntersectionEmpty;
+    // Location in the solution grid of the start and end of the evaluation
+    // grid.
+    Location                            itsEvalStart, itsEvalEnd;
+    // Location in the solution grid of the current selection (clipped against
+    // the evaluation grid).
+    Location                            itsSelectionStart, itsSelectionEnd;
+    // The number of cells in the current selection (clipped against the
+    // evaluation grid).
+    unsigned int                        itsSelectedCellCount;
+    // Location in the solution grid of the current selection relative to the
+    // start (in the solution grid) of the evaluation grid.
+    Location                            itsEvalSelStart, itsEvalSelEnd;
+    // Location in the evaluation grid of the current selection.
+    Location                            itsReqStart, itsReqEnd;
+
     // Mapping of cells in the solution grid to intervals of cells along the
     // observation grid's axes.
     vector<Interval>                    itsFreqIntervals, itsTimeIntervals;
 
-    // Mapping from (parmId, coeffId) to a coefficient index in the normal
+    // Mapping from (parmId, coeffId) to a coefficient index in the condition
     // equations.
-    map<PValueKey, uint>                itsCoeffMap;
+    map<PValueKey, unsigned int>        itsCoeffMap;
 
-    // Thread private data structures.
-    boost::multi_array<casa::LSQFit, 2> itsThreadEq;
-    vector<ThreadContext>               itsContexts;
-
-    // Timers
-    enum Timer
-    {
-        PROCESS,
-        PRECOMPUTE,
-        COMPUTE,
-        MERGE,
-        N_Timer
-    };
-
-    NSTimer                             itsTimers[N_Timer];
+    // Expression processing buffers.
+    ProcContext                         itsProcContext;
 };
 
 // @}
+
+// -------------------------------------------------------------------------- //
+// - Equator implementation                                                 - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_ITER>
+void Equator::procExpr(T_ITER result, size_t idx, ProcContext &context)
+{
+    // Evaluate the left hand side.
+    context.timers[ProcContext::EVAL_LHS].start();
+    const JonesMatrix LHS = itsLHS->evaluate(idx);
+    context.timers[ProcContext::EVAL_LHS].stop();
+
+    // Evaluate the right hand side.
+    context.timers[ProcContext::EVAL_RHS].start();
+    const JonesMatrix RHS = itsRHS->evaluate(idx);
+    context.timers[ProcContext::EVAL_RHS].stop();
+
+    // If the model contains no flags, assume no samples are flagged.
+    // TODO: This incurs a cost for models that do not contain flags because
+    // a call to virtual FlagArray::operator() is made for each sample.
+    context.timers[ProcContext::MERGE_FLAGS].start();
+
+    FlagArray flags(FlagType(0));
+
+    if(LHS.hasFlags())
+    {
+        flags = flags | LHS.flags();
+    }
+
+    if(RHS.hasFlags())
+    {
+        flags = flags | RHS.flags();
+    }
+    context.timers[ProcContext::MERGE_FLAGS].stop();
+
+    // Construct equations.
+    //
+    // Both LHS and RHS may depend on parameters and any parameter may appear
+    // in both LHS and RHS. Therefore, essentially the model is LHS - RHS (or
+    // alternatively RHS - LHS) and the observables are all zero.
+    //
+    // In the condition equations, the partial derivatives of the model with
+    // respect to the parameters appear with a positive sign. The partial
+    // derivative of LHS - RHS with respect to a parameter p equals:
+    //
+    // (1) d(LHS - RHS)/d(p) = d(LHS)/d(p) - d(RHS)/d(p)
+    //
+    // However, it is often the case that LHS has no associated parameters
+    // (because it represents observed visibility data), while RHS does.
+    // Following equation (1) then requires negation of all the partial
+    // derivatives of RHS. This is avoided by using RHS - LHS as the model
+    // instead of LHS - RHS.
+
+    context.timers[ProcContext::EQUATE].start();
+
+    // Offset in the evaluation grid of the start of the selected solution
+    // cells.
+    const Location visStart(itsFreqIntervals[itsEvalSelStart.first].start,
+        itsTimeIntervals[itsEvalSelStart.second].start);
+
+    for(unsigned int el = 0; el < 4; ++el)
+    {
+        const ValueSet valueSetLHS = LHS.getValueSet(el);
+        const ValueSet valueSetRHS = RHS.getValueSet(el);
+
+        // If there are no coefficients to fit, continue to the next
+        // polarization product.
+        if(valueSetLHS.size() == 1 && valueSetRHS.size() == 1)
+        {
+            continue;
+        }
+
+        // Compute the right hand side of the condition equations:
+        //
+        // 0 - (RHS - LHS) = LHS - RHS
+        //
+        Matrix delta = valueSetLHS.value() - valueSetRHS.value();
+
+        // Compute the partial derivatives of RHS - LHS with respect to the
+        // solvable coefficients and determine a mapping from sequential
+        // coefficient number to coefficient index in the condition equations.
+        context.timers[ProcContext::MAKE_COEFF_MAP].start();
+        makeExprCoeffMapping(valueSetLHS, valueSetRHS, context);
+        context.timers[ProcContext::MAKE_COEFF_MAP].stop();
+
+        // Loop over all selected cells and generate equations, adding them
+        // to the associated normal matrix.
+        T_ITER cellEqIt = result;
+        CellIterator cellIt(itsEvalSelStart, itsEvalSelEnd);
+        while(!cellIt.atEnd())
+        {
+            // Get a reference to the normal matrix associated to this cell.
+            casa::LSQFit &equation = cellEqIt->equation;
+
+            // Samples to process (observed visibilities).
+            const Interval &chInterval = itsFreqIntervals[cellIt->first];
+            const Interval &tsInterval = itsTimeIntervals[cellIt->second];
+
+            for(unsigned int ts = tsInterval.start; ts <= tsInterval.end; ++ts)
+            {
+                // Timeslot index relative to the start of the selection in
+                // evaluation grid coordinates.
+                int tsRel = static_cast<int>(ts - visStart.second);
+
+                // Construct two equations for each unflagged sample.
+                for(unsigned int ch = chInterval.start; ch <= chInterval.end;
+                    ++ch)
+                {
+                    // Channel index relative to the start of the selection in
+                    // evaluation grid coordinates.
+                    int chRel = static_cast<int>(ch - visStart.first);
+
+                    if(flags(chRel, tsRel))
+                    {
+                        continue;
+                    }
+
+                    // Update statistics.
+                    ++context.count;
+
+                    // Load right hand side of the equation pair.
+                    const dcomplex sampleDelta =
+                        delta.getDComplex(chRel, tsRel);
+
+                    // Tranpose the partial derivatives.
+                    context.timers[ProcContext::TRANSPOSE].start();
+                    for(unsigned int i = 0; i < context.nCoeff; ++i)
+                    {
+                        const dcomplex partial =
+                            context.partial[i].getDComplex(chRel, tsRel);
+
+                        context.partialRe[i] = real(partial);
+                        context.partialIm[i] = imag(partial);
+                    }
+                    context.timers[ProcContext::TRANSPOSE].stop();
+
+                    // Generate condition equations.
+                    context.timers[ProcContext::MAKE_NORM].start();
+                    equation.makeNorm(context.nCoeff,
+                        &(context.index[0]),
+                        &(context.partialRe[0]),
+                        1.0,
+                        real(sampleDelta));
+
+                    equation.makeNorm(context.nCoeff,
+                        &(context.index[0]),
+                        &(context.partialIm[0]),
+                        1.0,
+                        imag(sampleDelta));
+                    context.timers[ProcContext::MAKE_NORM].stop();
+
+                    // Move to the next channel.
+                    ++chRel;
+                } // End of loop over frequency.
+
+                // Move to next timeslot.
+                ++tsRel;
+            } // End of loop over time.
+
+            // Move to the next solution cell.
+            ++cellEqIt;
+            ++cellIt;
+        }
+    }
+
+    context.timers[ProcContext::EQUATE].stop();
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

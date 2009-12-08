@@ -21,8 +21,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_RESULT_H
-#define EXPR_RESULT_H
+#ifndef LOFAR_BBSKERNEL_EXPR_RESULT_H
+#define LOFAR_BBSKERNEL_EXPR_RESULT_H
 
 // \file
 // The result of the evaluation of an expression on a given request grid.
@@ -39,7 +39,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 // A key that identifies a perturbed value through its associated (parameter id,

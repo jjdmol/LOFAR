@@ -24,9 +24,6 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/Expr/GaussianCoherence.h>
-#include <BBSKernel/Expr/Matrix.h>
-#include <BBSKernel/Expr/MatrixTmp.h>
-#include <BBSKernel/Expr/PValueIterator.h>
 
 #include <Common/lofar_complex.h>
 #include <Common/lofar_math.h>
@@ -43,172 +40,71 @@ namespace BBS
 using LOFAR::exp;
 using LOFAR::conj;
 
-GaussianCoherence::GaussianCoherence(const GaussianSource::ConstPointer &source,
-    const StatUVW::ConstPointer &station1,
-    const StatUVW::ConstPointer &station2)
-    :   itsStation1(station1),
-        itsStation2(station2)
+GaussianCoherence::GaussianCoherence(const GaussianSource::ConstPtr &source,
+    const Expr<Vector<3> >::ConstPtr &uvwA,
+    const Expr<Vector<3> >::ConstPtr &uvwB)
+    :   BasicExpr5<Vector<4>, Vector<2>, Scalar, Vector<3>, Vector<3>,
+            JonesMatrix>(source->getStokesVector(), source->getDimensions(),
+            source->getOrientation(), uvwA, uvwB)
 {
-	addChild(source->getI());
-	addChild(source->getQ());
-	addChild(source->getU());
-	addChild(source->getV());
-	addChild(source->getMajor());
-	addChild(source->getMinor());
-	addChild(source->getPhi());
 }
 
-JonesResult GaussianCoherence::getJResult(const Request &request)
+const JonesMatrix::View GaussianCoherence::evaluateImpl(const Grid &grid,
+    const Vector<4>::View &stokes, const Vector<2>::View &dimensions,
+    const Scalar::View &orientation, const Vector<3>::View &uvwA,
+    const Vector<3>::View &uvwB) const
 {
-    enum ChildExprIndex
-    {
-        IN_I, IN_Q, IN_U, IN_V, IN_MAJOR, IN_MINOR, IN_PHI
-    };
+    // Assume dimensions and orientation are frequency and time independent.
+    ASSERT(!dimensions(0).isArray());
+    ASSERT(!dimensions(1).isArray());
+    ASSERT(!orientation().isArray());
 
-    // Evaluate source parameters.
-    // Note: The result of any parameter is either scalar or it is 2D and
-    // conforms to the size of the request.
-    Result ikBuf, qkBuf, ukBuf, vkBuf, siBuf, majorBuf, minorBuf, phiBuf;
-    const Result &ik = getChild(IN_I).getResultSynced(request, ikBuf);
-    const Result &qk = getChild(IN_Q).getResultSynced(request, qkBuf);
-    const Result &uk = getChild(IN_U).getResultSynced(request, ukBuf);
-    const Result &vk = getChild(IN_V).getResultSynced(request, vkBuf);
-    const Result &major = getChild(IN_MAJOR).getResultSynced(request, majorBuf);
-    const Result &minor = getChild(IN_MINOR).getResultSynced(request, minorBuf);
-    const Result &phi = getChild(IN_PHI).getResultSynced(request, phiBuf);
-
-    // Assume major, minor, phi are scalar.
-    DBGASSERT(!major.getValue().isArray());
-    DBGASSERT(!minor.getValue().isArray());
-    DBGASSERT(!phi.getValue().isArray());
-
-    // Note: The result of a StatUVW node is always 1D in time.
-    const Result &uStation1 = itsStation1->getU(request);
-    const Result &vStation1 = itsStation1->getV(request);
-    const Result &uStation2 = itsStation2->getU(request);
-    const Result &vStation2 = itsStation2->getV(request);
-
-    // Check pre-conditions.
-    DBGASSERT(uStation1.getValue().nx() == 1
-        && static_cast<uint>(uStation1.getValue().nelements())
-            == request.getTimeslotCount());
-    DBGASSERT(vStation1.getValue().nx() == 1
-        && static_cast<uint>(vStation1.getValue().nelements())
-            == request.getTimeslotCount());
-    DBGASSERT(uStation2.getValue().nx() == 1
-        && static_cast<uint>(uStation2.getValue().nelements())
-            == request.getTimeslotCount());
-    DBGASSERT(vStation2.getValue().nx() == 1
-        && static_cast<uint>(vStation1.getValue().nelements())
-            == request.getTimeslotCount());
-
-    // Allocate the result.
-    JonesResult result;
-    result.init();
-
-    Result &resXX = result.result11();
-    Result &resXY = result.result12();
-    Result &resYX = result.result21();
-    Result &resYY = result.result22();
+    JonesMatrix::View result;
 
     // Compute baseline uv-coordinates (1D in time).
-    Matrix uBaseline = uStation2.getValue() - uStation1.getValue();
-    Matrix vBaseline = vStation2.getValue() - vStation1.getValue();
+    Matrix uBaseline = uvwB(0) - uvwA(0);
+    Matrix vBaseline = uvwB(1) - uvwA(1);
 
-    // Compute spatial coherence for a gaussian source.
-    Matrix coherence_2 = computeCoherence(request, uBaseline, vBaseline,
-        major.getValue(), minor.getValue(), phi.getValue()) * 0.5;
-
-    // Compute main result.
-    Matrix uv = tocomplex(uk.getValue(), vk.getValue());
-
-    resXX.setValue(coherence_2 * (ik.getValue() + qk.getValue()));
-    resXY.setValue(coherence_2 * uv);
-    resYX.setValue(coherence_2 * conj(uv));
-    resYY.setValue(coherence_2 * (ik.getValue() - qk.getValue()));
-
-    // Compute the perturbed values.
-    enum PValues
-    {
-        PV_I, PV_Q, PV_U, PV_V, PV_MAJOR, PV_MINOR, PV_PHI, N_PValues
-    };
-
-    const Result *pvSet[N_PValues] = {&ik, &qk, &uk, &vk, &major, &minor, &phi};
-    PValueSetIterator<N_PValues> pvIter(pvSet);
-
-    while(!pvIter.atEnd())
-    {
-        bool evalIQ = pvIter.hasPValue(PV_I) || pvIter.hasPValue(PV_Q);
-        bool evalUV = pvIter.hasPValue(PV_U) || pvIter.hasPValue(PV_V);
-        bool evalCoh = pvIter.hasPValue(PV_MAJOR) || pvIter.hasPValue(PV_MINOR)
-            || pvIter.hasPValue(PV_PHI);
-
-        Matrix pvUV(uv);
-        Matrix pvCoh_2(coherence_2);
-
-        if(evalUV)
-        {
-            pvUV = tocomplex(pvIter.value(PV_U), pvIter.value(PV_V));
-        }
-
-        if(evalCoh)
-        {
-            pvCoh_2 = computeCoherence(request, uBaseline, vBaseline,
-                pvIter.value(PV_MAJOR), pvIter.value(PV_MINOR),
-                pvIter.value(PV_PHI)) * 0.5;
-        }
-
-        if(evalIQ || evalCoh)
-        {
-            const Matrix &pvI = pvIter.value(PV_I);
-            const Matrix &pvQ = pvIter.value(PV_Q);
-
-            resXX.setPerturbedValue(pvIter.key(), pvCoh_2 * (pvI + pvQ));
-            resYY.setPerturbedValue(pvIter.key(), pvCoh_2 * (pvI - pvQ));
-        }
-
-        if(evalUV || evalCoh)
-        {
-            resXY.setPerturbedValue(pvIter.key(), pvCoh_2 * pvUV);
-            resYX.setPerturbedValue(pvIter.key(), pvCoh_2 * conj(pvUV));
-        }
-
-        pvIter.next();
-    }
-
-    return result;
-}
-
-Matrix GaussianCoherence::computeCoherence(const Request &request,
-    const Matrix &uBaseline, const Matrix &vBaseline,
-    const Matrix &major, const Matrix &minor, const Matrix &phi)
-{
     // Compute dot product of a rotated, scaled uv-vector with itself (1D in
     // time) and pre-multiply with 2.0 * PI^2 / C^2.
-    Matrix cosPhi(cos(phi));
-    Matrix sinPhi(sin(phi));
+    Matrix cosPhi(cos(orientation()));
+    Matrix sinPhi(sin(orientation()));
     Matrix uvTransformed = (2.0 * casa::C::pi * casa::C::pi)
         / (casa::C::c * casa::C::c)
-        * (sqr(major * (uBaseline * cosPhi - vBaseline * sinPhi))
-        + sqr(minor * (uBaseline * sinPhi + vBaseline * cosPhi)));
+        * (sqr(dimensions(0) * (uBaseline * cosPhi - vBaseline * sinPhi))
+        + sqr(dimensions(1) * (uBaseline * sinPhi + vBaseline * cosPhi)));
 
-    // Allocate the result matrix (2D).
-    const uint nChannels = request.getChannelCount();
-    const uint nTimeslots = request.getTimeslotCount();
+    // Compute spatial coherence (2D).
+    const unsigned int nChannels = grid[FREQ]->size();
+    const unsigned int nTimeslots = grid[TIME]->size();
 
-    Matrix result;
-    double *valuep = result.setDoubleFormat(nChannels, nTimeslots);
+    Matrix coherence;
+    double *it = coherence.setDoubleFormat(nChannels, nTimeslots);
 
-    // Compute non-normalized spatial coherence (2D).
-    Axis::ShPtr freqAxis(request.getGrid()[FREQ]);
-    for(uint t = 0; t < nTimeslots; ++t)
+    for(unsigned int ts = 0; ts < nTimeslots; ++ts)
     {
-        const double uv = uvTransformed.getDouble(0, t);
-        for(uint f = 0; f < nChannels; ++f)
+        const double uv = uvTransformed.getDouble(0, ts);
+        for(unsigned int ch = 0; ch < nChannels; ++ch)
         {
-            const double freq = freqAxis->center(f);
-            *(valuep++) = exp(-(freq * freq * uv));
+            const double freq = grid[FREQ]->center(ch);
+            *it++ = exp(-(freq * freq * uv));
         }
+    }
+
+    const bool bound = dimensions.bound(0) || dimensions.bound(1)
+        || orientation.bound();
+
+    if(bound || stokes.bound(0) || stokes.bound(1))
+    {
+        result.assign(0, 0, coherence * 0.5 * (stokes(0) + stokes(1)));
+        result.assign(1, 1, coherence * 0.5 * (stokes(0) - stokes(1)));
+    }
+
+    if(bound || stokes.bound(2) || stokes.bound(3))
+    {
+        Matrix uv = coherence * 0.5 * tocomplex(stokes(2), stokes(3));
+        result.assign(0, 1, uv);
+        result.assign(1, 0, conj(uv));
     }
 
     return result;

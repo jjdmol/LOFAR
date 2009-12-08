@@ -1,4 +1,4 @@
-//# VisDimensions.h: 
+//# VisDimensions.h:
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_BBSKERNEL_VISDIMENSIONS_H
-#define LOFAR_BBS_BBSKERNEL_VISDIMENSIONS_H
+#ifndef LOFAR_BBSKERNEL_VISDIMENSIONS_H
+#define LOFAR_BBSKERNEL_VISDIMENSIONS_H
 
 #include <ParmDB/Axis.h>
 #include <ParmDB/Grid.h>
@@ -36,61 +36,65 @@ namespace LOFAR
 namespace BBS
 {
 
-    class VisDimensions
-    {
-    public:
-        VisDimensions()
-        {}
-        
-        void setGrid(const Grid &grid);
-        void setBaselines(const vector<baseline_t> &baselines);
-        void setPolarizations(const vector<string> &polarizations);
-        
-        const Grid &getGrid() const
-        { return itsGrid; }
+// \addtogroup BBSKernel
+// @{
 
-        const Axis::ShPtr getFreqAxis() const
-        { return itsGrid[FREQ]; }
-        pair<double, double> getFreqRange() const
-        { return itsGrid[FREQ]->range(); }
-        size_t getChannelCount() const
-        { return itsGrid[FREQ]->size(); }
+class VisDimensions
+{
+public:
+    VisDimensions()
+    {}
 
-        const Axis::ShPtr getTimeAxis() const
-        { return itsGrid[TIME]; }
-        pair<double, double> getTimeRange() const
-        { return itsGrid[TIME]->range(); }
-        size_t getTimeslotCount() const
-        { return itsGrid[TIME]->size(); }
+    void setGrid(const Grid &grid);
+    void setBaselines(const vector<baseline_t> &baselines);
+    void setPolarizations(const vector<string> &polarizations);
 
-        const vector<baseline_t> &getBaselines() const
-        { return itsBaselines; }
-        size_t getBaselineCount() const
-        { return itsBaselines.size(); }
-        bool hasBaseline(baseline_t baseline) const;
-        size_t getBaselineIndex(baseline_t baseline) const;
+    const Grid &getGrid() const
+    { return itsGrid; }
 
-        const vector<string> &getPolarizations() const
-        { return itsPolarizations; }
-        size_t getPolarizationCount() const
-        { return itsPolarizations.size(); }
-        bool hasPolarization(const string &polarization) const;
-        size_t getPolarizationIndex(const string &polarization) const;
+    const Axis::ShPtr getFreqAxis() const
+    { return itsGrid[FREQ]; }
+    pair<double, double> getFreqRange() const
+    { return itsGrid[FREQ]->range(); }
+    size_t getChannelCount() const
+    { return itsGrid[FREQ]->size(); }
 
-    private:
-        Grid                    itsGrid;
-        vector<baseline_t>      itsBaselines;
-        vector<string>          itsPolarizations;
+    const Axis::ShPtr getTimeAxis() const
+    { return itsGrid[TIME]; }
+    pair<double, double> getTimeRange() const
+    { return itsGrid[TIME]->range(); }
+    size_t getTimeslotCount() const
+    { return itsGrid[TIME]->size(); }
 
-        map<baseline_t, size_t> itsBaselineIndex;
-        map<string, size_t>     itsPolarizationIndex;
-    };
+    const vector<baseline_t> &getBaselines() const
+    { return itsBaselines; }
+    size_t getBaselineCount() const
+    { return itsBaselines.size(); }
+    bool hasBaseline(baseline_t baseline) const;
+    size_t getBaselineIndex(baseline_t baseline) const;
 
-    // iostream I/O
-    ostream &operator<<(ostream &out, const VisDimensions &obj);
+    const vector<string> &getPolarizations() const
+    { return itsPolarizations; }
+    size_t getPolarizationCount() const
+    { return itsPolarizations.size(); }
+    bool hasPolarization(const string &polarization) const;
+    size_t getPolarizationIndex(const string &polarization) const;
+
+private:
+    Grid                    itsGrid;
+    vector<baseline_t>      itsBaselines;
+    vector<string>          itsPolarizations;
+
+    map<baseline_t, size_t> itsBaselineIndex;
+    map<string, size_t>     itsPolarizationIndex;
+};
+
+// iostream I/O
+ostream &operator<<(ostream &out, const VisDimensions &obj);
+
+// @}
 
 } //# namespace BBS
 } //# namespace LOFAR
 
 #endif
-

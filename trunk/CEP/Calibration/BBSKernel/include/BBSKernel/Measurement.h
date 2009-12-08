@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_BBSKERNEL_MEASUREMENT_H
-#define LOFAR_BBS_BBSKERNEL_MEASUREMENT_H
+#ifndef LOFAR_BBSKERNEL_MEASUREMENT_H
+#define LOFAR_BBSKERNEL_MEASUREMENT_H
 
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/VisData.h>
@@ -34,39 +34,70 @@ namespace LOFAR
 {
 namespace BBS
 {
-    class Measurement
-    {
-    public:
-        typedef shared_ptr<Measurement> Pointer;
 
-        virtual ~Measurement()
-        {
-        }
+// \addtogroup BBSKernel
+// @{
 
-        virtual VisDimensions
-            getDimensions(const VisSelection &selection) const = 0;
+class Measurement
+{
+public:
+    typedef shared_ptr<Measurement>         Ptr;
+    typedef shared_ptr<const Measurement>   ConstPtr;
 
-        virtual VisData::Pointer read(const VisSelection &selection,
-            const string &column = "DATA", bool readUVW = true) const = 0;
+    virtual ~Measurement();
 
-        virtual void write(const VisSelection &selection,
-            VisData::Pointer buffer, const string &column = "CORRECTED_DATA",
-            bool writeFlags = true) = 0;
+    virtual VisDimensions
+        getDimensions(const VisSelection &selection) const = 0;
 
-        const Instrument &getInstrument() const
-        { return itsInstrument; }
+    virtual VisData::Ptr read(const VisSelection &selection,
+        const string &column = "DATA", bool readUVW = true) const = 0;
 
-        const casa::MDirection &getPhaseCenter() const
-        { return itsPhaseCenter; }
+    virtual void write(const VisSelection &selection,
+        VisData::Ptr buffer, const string &column = "CORRECTED_DATA",
+        bool writeFlags = true) = 0;
 
-        const VisDimensions &getDimensions() const
-        { return itsDimensions; }
+    double getReferenceFreq() const;
+    const casa::MDirection &getPhaseCenter() const;
 
-    protected:
-        Instrument              itsInstrument;
-        casa::MDirection        itsPhaseCenter;
-        VisDimensions           itsDimensions;
-    };
+    const Instrument &getInstrument() const;
+    const VisDimensions &getDimensions() const;
+
+protected:
+    double                  itsReferenceFreq;
+    casa::MDirection        itsPhaseCenter;
+    Instrument              itsInstrument;
+    VisDimensions           itsDimensions;
+};
+
+// @}
+
+// -------------------------------------------------------------------------- //
+// - Measurement implementation                                             - //
+// -------------------------------------------------------------------------- //
+
+inline Measurement::~Measurement()
+{
+}
+
+inline const Instrument &Measurement::getInstrument() const
+{
+    return itsInstrument;
+}
+
+inline const casa::MDirection &Measurement::getPhaseCenter() const
+{
+    return itsPhaseCenter;
+}
+
+inline double Measurement::getReferenceFreq() const
+{
+    return itsReferenceFreq;
+}
+
+inline const VisDimensions &Measurement::getDimensions() const
+{
+    return itsDimensions;
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

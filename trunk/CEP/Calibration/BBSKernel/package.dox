@@ -1,4 +1,4 @@
-// \ingroup BB
+// \ingroup Calibration
 
 // \defgroup BBSKernel BBSKernel
 // BBSKernel contains the kernel of the BlackBoard Selfcal system. The kernel

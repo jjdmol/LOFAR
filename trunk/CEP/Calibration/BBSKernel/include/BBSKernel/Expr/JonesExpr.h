@@ -21,7 +21,7 @@
 //# $Id$
 
 #if !defined(EXPR_JONESEXPR_H)
-#define EXPR_JONESEXPR_H
+#define LOFAR_BBSKERNEL_EXPR_JONESEXPR_H
 
 // \file
 // The base class of a Jones matrix expression.
@@ -38,7 +38,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 // This class is the (abstract) base class for a Jones expression.

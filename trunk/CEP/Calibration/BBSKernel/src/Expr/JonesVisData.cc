@@ -31,7 +31,7 @@ namespace LOFAR
 namespace BBS
 {
 
-JonesVisData::JonesVisData(const VisData::Pointer &chunk,
+JonesVisData::JonesVisData(const VisData::Ptr &chunk,
     const baseline_t &baseline)
     : itsChunk(chunk)
 {
@@ -39,15 +39,12 @@ JonesVisData::JonesVisData(const VisData::Pointer &chunk,
     itsBaselineIndex = dims.getBaselineIndex(baseline);
 }
 
-JonesVisData::~JonesVisData()
-{
-}
-
-JonesResult JonesVisData::getJResult(const Request &request)
+const JonesMatrix JonesVisData::evaluateExpr(const Request &request,
+    Cache &cache, unsigned int grid) const
 {
     const VisDimensions &dims = itsChunk->getDimensions();
     const Grid &visGrid = dims.getGrid();
-    const Grid &reqGrid = request.getGrid();
+    const Grid &reqGrid = request[grid];
 
     // Find the offset of the request grid relative to the chunk grid.
     Box reqBox(reqGrid.getBoundingBox());
@@ -55,8 +52,8 @@ JonesResult JonesVisData::getJResult(const Request &request)
 
     // Verify that the request grid is contained within the chunk grid (as it
     // is impossible to return a partial result).
-    uint nChannels = request.getChannelCount();
-    uint nTimeslots = request.getTimeslotCount();
+    unsigned int nChannels = reqGrid[FREQ]->size();
+    unsigned int nTimeslots = reqGrid[TIME]->size();
     ASSERT(start.first + nChannels <= visGrid.shape().first);
     ASSERT(start.second + nTimeslots <= visGrid.shape().second);
 
@@ -64,27 +61,22 @@ JonesResult JonesVisData::getJResult(const Request &request)
 //        << ") Size: " << nChannels << "x" << nTimeslots);
 
     // NB: index_ranges are exclusive.
-    typedef boost::multi_array<sample_t, 4>::index_range Range;
-    Range freqRange(start.first, start.first + nChannels);
-    Range timeRange(start.second, start.second + nTimeslots);
+    typedef boost::multi_array<sample_t, 4>::index_range DRange;
+    DRange freqRange(start.first, start.first + nChannels);
+    DRange timeRange(start.second, start.second + nTimeslots);
 
     // Allocate the result.
-    JonesResult result;
-    result.init();
-    Matrix& m11 = result.result11().getValueRW();
-    Matrix& m12 = result.result12().getValueRW();
-    Matrix& m21 = result.result21().getValueRW();
-    Matrix& m22 = result.result22().getValueRW();
+    Matrix m11, m12, m21, m22;
 
     double *re = 0, *im = 0;
 
     // Copy 11 elements if available.
     try
     {
-        const uint productIndex = dims.getPolarizationIndex("XX");
+        const unsigned int productIndex = dims.getPolarizationIndex("XX");
         m11.setDCMat(nChannels, nTimeslots);
         m11.dcomplexStorage(re, im);
-        copy(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
+        copyData(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
             [timeRange][freqRange][productIndex]]);
     }
     catch(BBSKernelException &ex)
@@ -95,10 +87,10 @@ JonesResult JonesVisData::getJResult(const Request &request)
     // Copy 12 elements if available.
     try
     {
-        const uint productIndex = dims.getPolarizationIndex("XY");
+        const unsigned int productIndex = dims.getPolarizationIndex("XY");
         m12.setDCMat(nChannels, nTimeslots);
         m12.dcomplexStorage(re, im);
-        copy(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
+        copyData(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
             [timeRange][freqRange][productIndex]]);
     }
     catch(BBSKernelException &ex)
@@ -109,10 +101,10 @@ JonesResult JonesVisData::getJResult(const Request &request)
     // Copy 21 elements if available.
     try
     {
-        const uint productIndex = dims.getPolarizationIndex("YX");
+        const unsigned int productIndex = dims.getPolarizationIndex("YX");
         m21.setDCMat(nChannels, nTimeslots);
         m21.dcomplexStorage(re, im);
-        copy(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
+        copyData(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
             [timeRange][freqRange][productIndex]]);
     }
     catch(BBSKernelException &ex)
@@ -124,10 +116,10 @@ JonesResult JonesVisData::getJResult(const Request &request)
     // Copy 22 elements if available.
     try
     {
-        const uint productIndex = dims.getPolarizationIndex("YY");
+        const unsigned int productIndex = dims.getPolarizationIndex("YY");
         m22.setDCMat(nChannels, nTimeslots);
         m22.dcomplexStorage(re, im);
-        copy(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
+        copyData(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
             [timeRange][freqRange][productIndex]]);
     }
     catch(BBSKernelException &ex)
@@ -135,12 +127,45 @@ JonesResult JonesVisData::getJResult(const Request &request)
         m22 = Matrix(makedcomplex(0,0), nChannels, nTimeslots);
     }
 
+    typedef boost::multi_array<sample_t, 4>::index_range FRange;
+    FlagArray flags00(nChannels, nTimeslots);
+    FlagArray flags01(nChannels, nTimeslots);
+    FlagArray flags10(nChannels, nTimeslots);
+    FlagArray flags11(nChannels, nTimeslots);
+
+    copyFlags(flags00.begin(),
+        itsChunk->vis_flag[boost::indices[itsBaselineIndex]
+            [FRange(start.second, start.second + nTimeslots)]
+            [FRange(start.first, start.first + nChannels)][0]]);
+    copyFlags(flags01.begin(),
+        itsChunk->vis_flag[boost::indices[itsBaselineIndex]
+            [FRange(start.second, start.second + nTimeslots)]
+            [FRange(start.first, start.first + nChannels)][1]]);
+    copyFlags(flags10.begin(),
+        itsChunk->vis_flag[boost::indices[itsBaselineIndex]
+            [FRange(start.second, start.second + nTimeslots)]
+            [FRange(start.first, start.first + nChannels)][2]]);
+    copyFlags(flags11.begin(),
+        itsChunk->vis_flag[boost::indices[itsBaselineIndex]
+            [FRange(start.second, start.second + nTimeslots)]
+            [FRange(start.first, start.first + nChannels)][3]]);
+
+    JonesMatrix::View proxy;
+    proxy.assign(0, 0, m11);
+    proxy.assign(0, 1, m12);
+    proxy.assign(1, 0, m21);
+    proxy.assign(1, 1, m22);
+
+    JonesMatrix result;
+    result.setFlags(flags00 | flags01 | flags10 | flags11);
+    result.assign(proxy);
+
     return result;
 }
 
 
-void JonesVisData::copy(double *re, double *im,
-    const boost::multi_array<sample_t, 4>::const_array_view<2>::type &src)
+void JonesVisData::copyData(double *re, double *im,
+    const boost::multi_array<sample_t, 4>::const_array_view<2>::type &src) const
 {
     for(size_t tslot = 0; tslot < src.shape()[0]; ++tslot)
     {
@@ -154,6 +179,17 @@ void JonesVisData::copy(double *re, double *im,
     }
 }
 
+void JonesVisData::copyFlags(FlagArray::iterator dest,
+    const boost::multi_array<flag_t, 4>::const_array_view<2>::type &src) const
+{
+    for(size_t tslot = 0; tslot < src.shape()[0]; ++tslot)
+    {
+        for(size_t chan = 0; chan < src.shape()[1]; ++chan)
+        {
+            *dest++ = src[tslot][chan];
+        }
+    }
+}
 
 } // namespace BBS
 } // namespace LOFAR

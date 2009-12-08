@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_BBSKERNEL_MEASUREMENTAIPS_H
-#define LOFAR_BBS_BBSKERNEL_MEASUREMENTAIPS_H
+#ifndef LOFAR_BBSKERNEL_MEASUREMENTAIPS_H
+#define LOFAR_BBSKERNEL_MEASUREMENTAIPS_H
 
 #include <BBSKernel/Measurement.h>
 #include <Common/LofarTypes.h>
@@ -45,6 +45,9 @@ namespace BBS
 {
 class VisSelection;
 
+// \addtogroup BBSKernel
+// @{
+
 class MeasurementAIPS: public Measurement
 {
 public:
@@ -55,10 +58,10 @@ public:
 
     virtual VisDimensions getDimensions(const VisSelection &selection) const;
 
-    virtual VisData::Pointer read(const VisSelection &selection,
+    virtual VisData::Ptr read(const VisSelection &selection,
         const string &column = "DATA", bool readUVW = true) const;
 
-    virtual void write(const VisSelection &selection, VisData::Pointer buffer,
+    virtual void write(const VisSelection &selection, VisData::Ptr buffer,
         const string &column = "CORRECTED_DATA", bool writeFlags = true);
 
 private:
@@ -81,6 +84,8 @@ private:
     unsigned int            itsIdField;
     unsigned int            itsIdDataDescription;
 };
+
+// @}
 
 } //# namespace BBS
 } //# namespace LOFAR

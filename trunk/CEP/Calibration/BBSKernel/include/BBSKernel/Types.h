@@ -36,24 +36,29 @@ namespace BBS
 {
 using std::pair;
 
-    typedef fcomplex                sample_t;
-    typedef bool                    flag_t;
-    typedef uint8                   tslot_flag_t;
-    typedef pair<uint32, uint32>    baseline_t;
+// \addtogroup BBSKernel
+// @{
 
-    enum AxisName
-    {
-        FREQ,
-        TIME,
-        N_AxisName
-    };
-    
-    enum ParmCategory
-    {
-        INSTRUMENT,
-        SKY,
-        N_ParmCategory
-    };
+typedef fcomplex                sample_t;
+typedef uint8                   flag_t;
+typedef uint8                   tslot_flag_t;
+typedef pair<uint32, uint32>    baseline_t;
+
+enum AxisName
+{
+    FREQ,
+    TIME,
+    N_AxisName
+};
+
+enum ParmCategory
+{
+    INSTRUMENT,
+    SKY,
+    N_ParmCategory
+};
+
+// @}
 
 } // namespace BBS
 } // namespace LOFAR

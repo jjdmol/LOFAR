@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_PHASEREF_H
-#define EXPR_PHASEREF_H
+#ifndef LOFAR_BBSKERNEL_EXPR_PHASEREF_H
+#define LOFAR_BBSKERNEL_EXPR_PHASEREF_H
 
 // \file
 // Phase reference position and derived values.
@@ -35,14 +35,14 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class PhaseRef
 {
 public:
-    typedef shared_ptr<PhaseRef>         Pointer;
-    typedef shared_ptr<const PhaseRef>   ConstPointer;
+    typedef shared_ptr<PhaseRef>         Ptr;
+    typedef shared_ptr<const PhaseRef>   ConstPtr;
 
     PhaseRef();
     PhaseRef(const casa::MDirection &phaseRef);

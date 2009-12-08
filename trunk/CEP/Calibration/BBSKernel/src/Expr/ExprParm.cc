@@ -22,21 +22,16 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/Expr/ExprParm.h>
-
 #include <Common/lofar_iomanip.h>
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
-ExprParm::ExprParm(const ParmProxy::ConstPointer &parm)
+ExprParm::ExprParm(const ParmProxy::ConstPtr &parm)
     :   itsParm(parm),
         itsPValueFlag(false)
-{
-}
-
-ExprParm::~ExprParm()
 {
 }
 
@@ -45,66 +40,86 @@ void ExprParm::setPValueFlag()
     itsPValueFlag = true;
 }
 
+bool ExprParm::getPValueFlag() const
+{
+    return itsPValueFlag;
+}
+
 void ExprParm::clearPValueFlag()
 {
     itsPValueFlag = false;
 }
 
-Result ExprParm::getResult(const Request &request)
+unsigned int ExprParm::nArguments() const
+{
+    return 0;
+}
+
+ExprBase::ConstPtr ExprParm::argument(unsigned int) const
+{
+    ASSERT(false);
+}
+
+const Scalar ExprParm::evaluateExpr(const Request &request, Cache &cache,
+    unsigned int grid) const
 {
     // Get the result from the Parm.
     vector<casa::Array<double> > buffers;
-    itsParm->getResult(buffers, request.getGrid(), itsPValueFlag
-        && request.getPValueFlag());
+    itsParm->getResult(buffers, request[grid], getPValueFlag()); //false);
     ASSERT(buffers.size() > 0);
 
-    // Transform into a Result.
-    Result result;
-    result.init();
+    // Transform into an ExprResult.
+    ValueSet result;
 
-    bool deleteStorage;
+    bool deleteStorage = false;
     const double *storage = 0;
-    
+
     // Copy the main value.
     storage = buffers[0].getStorage(deleteStorage);
     ASSERT(storage);
     if(buffers[0].nelements() == 1)
     {
-        result.setValue(Matrix(storage[0]));
+        result.assign(Matrix(*storage));
     }
     else
     {
         const casa::IPosition &shape = buffers[0].shape();
-        result.setValue(Matrix(storage, shape(0), shape(1)));
+        DBGASSERT(static_cast<unsigned int>(shape(0)) == request[grid][FREQ]->size()
+            && static_cast<unsigned int>(shape(1)) == request[grid][TIME]->size());
+        result.assign(Matrix(storage, shape(0), shape(1)));
     }
     buffers[0].freeStorage(storage, deleteStorage);
 
     // Copy the perturbed values if necessary.
-    if(itsPValueFlag && request.getPValueFlag())
+    if(getPValueFlag())
     {
+        // TODO: check correctness when some coefficients are masked
+        // non-solvable.
         const size_t nCoeff = itsParm->getCoeffCount();
         ASSERT(buffers.size() == nCoeff + 1);
-        
+
         for(size_t i = 0; i < nCoeff; ++i)
         {
             storage = buffers[i + 1].getStorage(deleteStorage);
             ASSERT(storage);
             if(buffers[i + 1].nelements() == 1)
             {
-                result.setPerturbedValue(PValueKey(itsParm->getId(), i),
+                result.assign(PValueKey(itsParm->getId(), i),
                     Matrix(storage[0]));
             }
             else
             {
                 const casa::IPosition &shape = buffers[i + 1].shape();
-                result.setPerturbedValue(PValueKey(itsParm->getId(), i),
-                    Matrix(storage, shape(0), shape(1)));
+                result.assign(PValueKey(itsParm->getId(), i), Matrix(storage,
+                    shape(0), shape(1)));
             }
             buffers[i + 1].freeStorage(storage, deleteStorage);
         }
     }
-    
-    return result;
+
+    Scalar scalar;
+    scalar.setValueSet(result);
+    return scalar;
 }
 
 } //# namespace BBS

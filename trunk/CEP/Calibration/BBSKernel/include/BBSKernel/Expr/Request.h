@@ -1,4 +1,4 @@
-//# Request.h: Request grid on which to evaluate an expression.
+//# Request.h: Request grid(s) on which to evaluate an expression.
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,59 +20,67 @@
 //#
 //# $Id$
 
-#ifndef EXPR_REQUEST_H
-#define EXPR_REQUEST_H
+#ifndef LOFAR_BBSKERNEL_EXPR_REQUEST_H
+#define LOFAR_BBSKERNEL_EXPR_REQUEST_H
 
 // \file
-// Request grid on which to evaluate an expression.
+// Request grid(s) on which to evaluate an expression.
 
-#include <ParmDB/Grid.h>
 #include <BBSKernel/Types.h>
+
+#include <Common/LofarLogger.h>
+#include <ParmDB/Grid.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
-typedef int RequestId;
-const RequestId InitRequestId = -1;
+typedef size_t RequestId;
 
 class Request
 {
 public:
-    Request(const Grid &grid, bool evalPValues = false);
-    ~Request();
-    
-    RequestId getId() const
-    { return itsId; }
+    Request();
+    Request(const Grid &grid);
 
-    Box getBoundingBox() const
-    { return itsGrid.getBoundingBox(); }
-    
-    size_t getChannelCount() const
-    { return itsGrid[FREQ]->size(); }
+    RequestId id() const;
+    const Box &domain() const;
+    const Grid &operator[](unsigned int i) const;
+    void append(const Grid &grid);
 
-    size_t getTimeslotCount() const
-    { return itsGrid[TIME]->size(); }
-
-    const Grid &getGrid() const
-    { return itsGrid; }
-
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
-    
 private:
-    size_t              itsId;
-    Grid                itsGrid;
-    bool                itsPValueFlag;
-    
+    RequestId           itsId;
+    Box                 itsDomain;
+    vector<Grid>        itsGrid;
+
     static RequestId    theirId;
 };
 
 // @}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: Request                                                - //
+// -------------------------------------------------------------------------- //
+
+inline RequestId Request::id() const
+{
+    return itsId;
+}
+
+inline const Box &Request::domain() const
+{
+    return itsDomain;
+}
+
+inline const Grid &Request::operator[](unsigned int i) const
+{
+    DBGASSERT(i < itsGrid.size());
+    return itsGrid[i];
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

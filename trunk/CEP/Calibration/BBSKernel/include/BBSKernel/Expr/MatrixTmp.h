@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#if !defined(EXPR_MATRIXTMP_H)
-#define EXPR_MATRIXTMP_H
+#ifndef LOFAR_BBSKERNEL_EXPR_MATRIXTMP_H
+#define LOFAR_BBSKERNEL_EXPR_MATRIXTMP_H
 
 // \file
 // Temporary matrix for Mns
@@ -38,7 +38,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class MatrixTmp
@@ -150,6 +150,12 @@ public:
   friend MatrixTmp posdiff (const MatrixTmp&, const MatrixTmp&);
   friend MatrixTmp tocomplex (const MatrixTmp&, const Matrix&);
   friend MatrixTmp tocomplex (const MatrixTmp&, const MatrixTmp&);
+  friend MatrixTmp min (const MatrixTmp&, const Matrix&);
+  friend MatrixTmp min (const MatrixTmp&, const MatrixTmp&);
+  friend MatrixTmp max (const MatrixTmp&, const Matrix&);
+  friend MatrixTmp max (const MatrixTmp&, const MatrixTmp&);
+
+  friend MatrixTmp abs (const MatrixTmp&);
   friend MatrixTmp sin (const MatrixTmp&);
   friend MatrixTmp cos (const MatrixTmp&);
   friend MatrixTmp log (const MatrixTmp&);

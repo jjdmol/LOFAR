@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_POOL_H
-#define EXPR_POOL_H
+#ifndef LOFAR_BBSKERNEL_EXPR_POOL_H
+#define LOFAR_BBSKERNEL_EXPR_POOL_H
 
 #include <assert.h>
 #include <stdlib.h>
@@ -30,6 +30,9 @@ namespace LOFAR
 {
 namespace BBS
 {
+
+// \addtogroup Expr
+// @{
 
 // The Pool class is a very fast, stack-based allocator where objects can
 // be temporarily stored that would otherwise be deleted and allocated again.
@@ -75,6 +78,8 @@ template <class T> class Pool {
 
     T *top;
 };
+
+// @}
 
 } // namespace BBS
 } // namespace LOFAR

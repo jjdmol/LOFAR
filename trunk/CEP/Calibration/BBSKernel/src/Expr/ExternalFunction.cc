@@ -24,61 +24,59 @@
 
 #include <BBSKernel/Expr/ExternalFunction.h>
 #include <BBSKernel/Exceptions.h>
-#include <Common/LofarLogger.h>
 
+#include <casa/OS/Path.h>
 #include <dlfcn.h>
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
-    ExternalFunction::ExternalFunction(const string &module, const string &name)
+
+ExternalFunction::ExternalFunction(const casa::Path &module, const string &name)
+    :   itsModule(0)
+{
+    casa::String path = module.expandedName();
+    itsModule = dlopen(path.c_str(), RTLD_LAZY);
+    if(!itsModule)
     {
-        itsModule = dlopen(module.c_str(), RTLD_LAZY);
-        if(!itsModule)
-        {
-            THROW(BBSKernelException, "Failed to open module: " << module);
-        }
-        
-        itsNX = *static_cast<int*>(getSymbol("Nx_" + name));
-        itsNPar = *static_cast<int*>(getSymbol("Npar_" + name));
-        itsFunction =
-            reinterpret_cast<signature_t>(getSymbol(name + "_complex"));
-    }        
-    
-    ExternalFunction::~ExternalFunction()
+        THROW(BBSKernelException, "Unable to open module: " << path);
+    }
+
+    itsNX = *static_cast<int*>(getSymbol("Nx_" + name));
+    itsNPar = *static_cast<int*>(getSymbol("Npar_" + name));
+    itsFunction =
+        reinterpret_cast<signature_t>(getSymbol(name + "_complex"));
+}
+
+ExternalFunction::~ExternalFunction()
+{
+    if(itsModule)
     {
-        ASSERT(itsModule);
         dlclose(itsModule);
     }
+}
 
-    dcomplex ExternalFunction::operator()(const vector<dcomplex> &parms) const
+void *ExternalFunction::getSymbol(const string &name) const
+{
+    ASSERT(itsModule);
+
+    // Clear error flag.
+    dlerror();
+
+    // Attempt to get symbol.
+    void *ptr = dlsym(itsModule, name.c_str());
+
+    // If an error occurred, throw an exception.
+    const char *dlsymError = dlerror();
+    if(dlsymError)
     {
-        ASSERT(parms.size() == static_cast<size_t>(itsNX + itsNPar));
-        return itsFunction(&parms[itsNX], &parms[0]);
+        THROW(BBSKernelException, "Undefined symbol: " << name << " ("
+            << dlsymError << ")");
     }
 
-    void *ExternalFunction::getSymbol(const string &name) const
-    {
-        ASSERT(itsModule);
-        
-        // Clear error flag.
-        dlerror();
-
-        // Attempt to get symbol.
-        void *ptr = dlsym(itsModule, name.c_str());
-
-        // If an error occurred, throw an exception.
-        const char *dlsymError = dlerror();
-        if(dlsymError)
-        {
-            THROW(BBSKernelException, "Failed to get symbol: " << name << " ("
-                << dlsymError << ")");
-        }
-        
-        return ptr;
-    }
+    return ptr;
+}
 
 } // namespace BBS
 } // namespace LOFAR
-

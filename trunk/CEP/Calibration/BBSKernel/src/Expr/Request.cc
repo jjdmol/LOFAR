@@ -25,21 +25,49 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 RequestId Request::theirId = 0;
 
-Request::Request(const Grid &grid, bool evalPValues)
-    :   itsId(theirId++),
-        itsGrid(grid),
-        itsPValueFlag(evalPValues)
-{
-}        
-
-Request::~Request()
+Request::Request()
+    :   itsId(theirId++)
 {
 }
+
+Request::Request(const Grid &grid)
+    :   itsId(theirId++),
+//        itsBoundingBox(grid.getBoundingBox()),
+        itsDomain(grid.getBoundingBox())
+//        itsActiveGrid(0)
+{
+    append(grid);
+}
+
+void Request::append(const Grid &grid)
+{
+#ifdef LOFAR_DEBUG
+    const Box &box = grid.getBoundingBox();
+    DBGASSERT(casa::near(box.lowerX(), itsDomain.lowerX())
+        && casa::near(box.lowerY(), itsDomain.lowerY())
+        && casa::near(box.upperX(), itsDomain.upperX())
+        && casa::near(box.upperY(), itsDomain.upperY()));
+#endif
+
+    itsGrid.push_back(grid);
+}
+
+//void Request::pushGrid() const
+//{
+//    ++itsActiveGrid;
+//    DBGASSERT(itsActiveGrid < itsGrid.size());
+//}
+
+//void Request::popGrid() const
+//{
+//    DBGASSERT(itsActiveGrid > 0);
+//    --itsActiveGrid;
+//}
 
 } //# namespace BBS
 } //# namespace LOFAR

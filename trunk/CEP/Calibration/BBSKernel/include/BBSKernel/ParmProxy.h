@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BB_BBS_PARMPROXY_H
-#define LOFAR_BB_BBS_PARMPROXY_H
+#ifndef LOFAR_BBSKERNEL_PARMPROXY_H
+#define LOFAR_BBSKERNEL_PARMPROXY_H
 
 // \file
 // Wrapper class that stores information related to solving.
@@ -39,32 +39,32 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup BBSKernel
+// \addtogroup BBSKernel
 // @{
 
 class ParmProxy
 {
 public:
-    typedef shared_ptr<ParmProxy>       Pointer;
-    typedef shared_ptr<const ParmProxy> ConstPointer;
+    typedef shared_ptr<ParmProxy>       Ptr;
+    typedef shared_ptr<const ParmProxy> ConstPtr;
 
-    ParmProxy(uint id, const string &name, const Parm &parm);
+    ParmProxy(unsigned int id, const string &name, const Parm &parm);
     ~ParmProxy();
 
     size_t getId() const
     { return itsId; }
-    
+
     const string &getName() const
     { return itsName; }
 
     size_t getCoeffCount() const
     { return itsParm.getCoeffSize(); }
-    
+
     vector<double> getCoeff(const Location &loc, bool useMask = true) const
     { return itsParm.getCoeff(loc, useMask); }
 
-    void setCoeff(const Location &loc, const double* values, uint nvalues,
-        bool useMask = true)
+    void setCoeff(const Location &loc, const double* values,
+        unsigned int nvalues, bool useMask = true)
     { itsParm.setCoeff(loc, values, nvalues, 0, useMask); }
 
     void revertCoeff()
@@ -72,10 +72,10 @@ public:
 
     const vector<double> &getPerturbations() const
     { return itsParm.getPerturbations(); }
-    
-    double getPerturbation(uint index) const
+
+    double getPerturbation(unsigned int index) const
     { return itsParm.getPerturbation(index); }
-    
+
     void setGrid(const Grid &grid)
     { itsParm.setSolveGrid(grid); }
 
@@ -87,9 +87,14 @@ public:
     { itsParm.getResult(result, grid, perturbed); }
 
 private:
-    uint                itsId;
-    string              itsName;
-    mutable Parm        itsParm;
+    unsigned int    itsId;
+    string          itsName;
+
+    //# The Parm class exposes details of lazy intialization through it's
+    //# interface, e.g. by declaring Parm::getCoeffSize() as non-const. We use
+    //# mutable to hide this implementation detail from the clients of
+    //# ParmProxy.
+    mutable Parm    itsParm;
 };
 
 // @}

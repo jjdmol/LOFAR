@@ -284,6 +284,26 @@ MatrixTmp tocomplex (const Matrix& left, const MatrixTmp& right)
 {
     return left.itsRep->tocomplex(*right.rep());
 }
+MatrixTmp min (const Matrix& left, const Matrix& right)
+{
+    return left.itsRep->min(*right.itsRep);
+}
+MatrixTmp min (const Matrix& left, const MatrixTmp& right)
+{
+    return left.itsRep->min(*right.rep());
+}
+MatrixTmp max (const Matrix& left, const Matrix& right)
+{
+    return left.itsRep->max(*right.itsRep);
+}
+MatrixTmp max (const Matrix& left, const MatrixTmp& right)
+{
+    return left.itsRep->max(*right.rep());
+}
+MatrixTmp abs (const Matrix& arg)
+{
+    return abs(MatrixTmp(arg));
+}
 MatrixTmp sin (const Matrix& arg)
 {
     return sin(MatrixTmp(arg));

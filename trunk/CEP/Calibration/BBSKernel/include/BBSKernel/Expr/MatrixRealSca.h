@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#if !defined(EXPR_MATRIXREALSCA_H)
-#define EXPR_MATRIXREALSCA_H
+#ifndef LOFAR_BBSKERNEL_EXPR_MATRIXREALSCA_H
+#define LOFAR_BBSKERNEL_EXPR_MATRIXREALSCA_H
 
 // \file
 // Temporary matrix for Mns
@@ -34,7 +34,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class MatrixRealSca : public MatrixRep
@@ -63,6 +63,8 @@ public:
   virtual MatrixRep* divide   (MatrixRep& right, bool rightTmp);
   virtual MatrixRep* posdiff  (MatrixRep& right);
   virtual MatrixRep* tocomplex(MatrixRep& right);
+  virtual MatrixRep* min      (MatrixRep& right);
+  virtual MatrixRep* max      (MatrixRep& right);
 
 
 private:
@@ -92,8 +94,15 @@ private:
   virtual MatrixRep* tocomplexRep (MatrixRealSca& left);
   virtual MatrixRep* tocomplexRep (MatrixRealArr& left);
 
+  virtual MatrixRep* minRep (MatrixRealSca& left);
+  virtual MatrixRep* minRep (MatrixRealArr& left);
+
+  virtual MatrixRep* maxRep (MatrixRealSca& left);
+  virtual MatrixRep* maxRep (MatrixRealArr& left);
+
   virtual MatrixRep* negate();
 
+  virtual MatrixRep* abs();
   virtual MatrixRep* sin();
   virtual MatrixRep* cos();
   virtual MatrixRep* log();

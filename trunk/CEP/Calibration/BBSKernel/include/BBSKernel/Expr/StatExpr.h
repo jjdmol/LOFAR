@@ -21,7 +21,7 @@
 //# $Id$
 
 #if !defined(EXPR_STATEXPR_H)
-#define EXPR_STATEXPR_H
+#define LOFAR_BBSKERNEL_EXPR_STATEXPR_H
 
 // \file
 // The Jones expression for a station
@@ -35,7 +35,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 //# Forward Declarations
