@@ -30,6 +30,7 @@
 namespace LOFAR
 {
   using std::string;
+  using std::getline;
 }
 
 #endif
