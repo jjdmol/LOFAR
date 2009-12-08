@@ -96,9 +96,6 @@ if test $# != 0; then
   wd=$1
   shift
 fi
-if test "$wd" = ""; then
-  wd="..."         # an empty wd fails in startdistproc
-fi
 logfile=
 if test $# != 0; then
   logfile=$1
