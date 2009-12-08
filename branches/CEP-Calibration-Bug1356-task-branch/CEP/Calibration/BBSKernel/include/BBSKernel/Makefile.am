@@ -58,7 +58,6 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/MergeFlags.h \
 	Expr/MIM.h \
 	Expr/Mul.h \
-	Expr/Neg.h \
 	Expr/PhaseShift.h \
 	Expr/PiercePoint.h \
 	Expr/PointCoherence.h \
