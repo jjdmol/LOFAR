@@ -28,8 +28,8 @@
 # It also creates an file version<package>.cc which is an executable program
 # to print the version.
 # Optionally the CMakeLists.txt files are changed to build the code.
-# Note: Each package's CMakeLists.txt file must contain a line
-#     lofar_add_package(<package> [version] [DEPENDS <depend> [depend]])
+# Note: The CMakeLists.txt file of each leaf package must contain a line
+#     lofar_package(<package> [version] [DEPENDS <depend> [depend]])
 #   for this to work.
 
 # The class name used is <package>Version, for eaxmple CommonVersion.
@@ -37,8 +37,8 @@
 # directory which works fine for the normal cases. However, MAC uses some
 # special directory structure like GCF/TM/include/GCF/TM. It also detects
 # this and sets in this example the package name to GCFTM (removes the /).
-# The package name given in lofar_add_package() has to match the package
-# name found here, thus must be GCFTM in this example.
+# The package name given in lofar_package() has to match the package name
+# found here, thus must be GCFTM in this example.
 
 # Trap handler
 trap 'rm -f version.*.tmp; \
@@ -117,7 +117,7 @@ if [ $hassvn = 0 ]; then
 fi
 # Get the version from the CMakeLists.txt. We'll assume (for the time being)
 # that the project's CMakeLists.txt file contains a line like
-# "lofad_add_package(<name> [version] [DEPENDS <depend> [depend]])
+# "lofad_package(<name> [version] [DEPENDS <depend> [depend]])
 cvers1=`sed -n 's,^[[:space:]]*[lL][oO][fF][aA][rR]_[pP][aA][cC][kK][aA][gG][eE][[:space:]]*([[:space:]]*[^[:space:]]*[[:space:]][[:space:]]*\([0-9.][0-9.]*\).*$,\1,p' CMakeLists.txt`
 if [ "$cvers1" != "" ]; then
   cvers=$cvers1
@@ -305,10 +305,7 @@ if [ $? != 0 ]; then
   # It's not there, add it.
   cat src/CMakeLists.txt > version.mf.tmp
   cat >> version.mf.tmp <<EOF
-add_executable(${versmainname} ${versmainname}.cc)
-target_link_libraries(${versmainname} ${lpkg} \${LOFAR_EXTRA_LIBRARIES})
-install(TARGETS ${versmainname} DESTINATION bin)
-
+lofar_add_bin_program(${versmainname} ${versmainname}.cc)
 EOF
   mv version.mf.tmp src/CMakeLists.txt
   echo "makeversion added ${versmainname}.cc to src/CMakeLists.txt"
