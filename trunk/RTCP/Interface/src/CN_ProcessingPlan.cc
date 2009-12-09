@@ -135,25 +135,25 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
     // send all requested outputs
     if( configuration.outputFilteredData() ) {
-      send( itsFilteredData,                           ".filtered" );
+      send( itsFilteredData,                           ".filtered",          ProcessingPlan::DIST_SUBBAND );
     }
     if( configuration.outputCorrelatedData() ) {
-      send( itsCorrelatedData );
+      send( itsCorrelatedData,                         "",                   ProcessingPlan::DIST_SUBBAND );
     }
     if( configuration.outputBeamFormedData() ) {
-      send( itsBeamFormedData,                         ".beams" );
+      send( itsBeamFormedData,                         ".beams",             ProcessingPlan::DIST_BEAM );
     }
     if( configuration.outputCoherentStokes() && !configuration.stokesIntegrateChannels() ) {
-      send( itsCoherentStokesData,                     ".stokes" );
+      send( itsCoherentStokesData,                     ".stokes",            ProcessingPlan::DIST_BEAM );
     }
     if( configuration.outputCoherentStokes() && configuration.stokesIntegrateChannels() ) {
-      send( itsCoherentStokesDataIntegratedChannels,   ".stokes" );
+      send( itsCoherentStokesDataIntegratedChannels,   ".stokes",            ProcessingPlan::DIST_BEAM );
     }
     if( configuration.outputIncoherentStokes() && !configuration.stokesIntegrateChannels() ) {
-      send( itsIncoherentStokesData,                   ".incoherentstokes" );
+      send( itsIncoherentStokesData,                   ".incoherentstokes",  ProcessingPlan::DIST_SUBBAND );
     }
     if( configuration.outputIncoherentStokes() && configuration.stokesIntegrateChannels() ) {
-      send( itsIncoherentStokesDataIntegratedChannels, ".incoherentstokes" );
+      send( itsIncoherentStokesDataIntegratedChannels, ".incoherentstokes",  ProcessingPlan::DIST_SUBBAND );
     }
   }
 

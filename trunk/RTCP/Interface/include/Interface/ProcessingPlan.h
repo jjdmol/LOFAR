@@ -59,6 +59,8 @@ namespace RTCP {
 class ProcessingPlan
 {
   public:
+    enum distribution_t { DIST_UNKNOWN = 0, DIST_STATION, DIST_SUBBAND, DIST_BEAM };
+
     struct planlet {
       StreamableData     *set;        // 0: barrier, require this source until here
       StreamableData     *source;     // 0: depend on nothing
@@ -68,6 +70,7 @@ class ProcessingPlan
 
       const char         *name;           // name of planlet or data set, for logging purposes
       const char         *filenameSuffix; // for outputs: extension to use for this output
+      distribution_t      distribution;
 
       bool isOutput() const { return output; } // for filtering
     };
@@ -81,7 +84,7 @@ class ProcessingPlan
     void require( StreamableData *source );
 
     // send set (i.e. as output) to be stored in a file or directory with a certain extension
-    void send( StreamableData *set, const char *extension = "" );
+    void send( StreamableData *set, const char *extension, distribution_t distribution );
 
     // ----- Construct the plan: assign an arena to all
     //       products that have to be calculated.
@@ -133,6 +136,7 @@ inline void ProcessingPlan::transform( StreamableData *source, StreamableData *s
   p.output = false;
   p.arena = -1;
   p.name = name;
+  p.distribution = ProcessingPlan::DIST_UNKNOWN;
 
   plan.push_back( p );
 }
@@ -142,12 +146,13 @@ inline void ProcessingPlan::require( StreamableData *source ) {
   plan.back().calculate = true;
 }
 
-inline void ProcessingPlan::send( StreamableData *set, const char *extension ) {
+inline void ProcessingPlan::send( StreamableData *set, const char *extension, ProcessingPlan::distribution_t distribution ) {
   require( set ); // fake planlet to indicate we need this set
 
   // the entry we just created is an output -- configure it as such
   plan.back().output = true;
   plan.back().filenameSuffix = extension;
+  plan.back().distribution = distribution;
 
   // recursively set calculate=true for this item and all ancestors.
   for(unsigned i = plan.size() - 1; plan[i].source; ) {
