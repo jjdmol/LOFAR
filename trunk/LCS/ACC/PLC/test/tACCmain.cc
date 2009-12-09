@@ -26,6 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include "APCmdImpl.h"
+#include <libgen.h>
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;
