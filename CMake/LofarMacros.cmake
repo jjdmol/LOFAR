@@ -179,12 +179,13 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   #
   # Add a test like add_test() does.
   # Furthermore:
-  # - If one or more sources are specfied:
-  #     instructs CMake how to compile and link the test program;
-  #   else if one or more dependencies are specified:
-  #     create a custom target that depends on these targets.
-  # - If there's a shell script <name>.sh, add it to the list of tests;
-  #   otherwise just add the executable <name>.
+  # - If one or more sources are specfied, then instruct CMake how to compile
+  #   and link the test program (this will implicitly create a target <name>);
+  #   else create a custom target <name>.
+  # - If one or more dependencies are specified, then add a dependency for
+  #   <name> on each target <depend>.
+  # - If there's a shell script <name>.sh, then add it to the list of tests;
+  #   else just add the executable <name>.
   # - Adds a dependency for this test on the global target 'check', so that
   #   it will be compiled, linked and run when you do a 'make check'.
   # --------------------------------------------------------------------------
