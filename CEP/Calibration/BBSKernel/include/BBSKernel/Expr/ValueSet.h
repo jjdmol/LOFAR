@@ -33,6 +33,7 @@
 
 #include <Common/lofar_map.h>
 #include <Common/lofar_numeric.h>
+#include <limits>
 
 namespace LOFAR
 {

@@ -51,10 +51,10 @@ namespace LOFAR { namespace CEP {
   {
     delete itsPrediffer;
     itsPrediffer = 0;
-    Measurement::Pointer ms(new MeasurementAIPS(dataPartName,
-						parset.getInt32 ("ObsID", 0),
-						parset.getInt32 ("SubBandID", 0),
-						parset.getInt32 ("FieldID", 0)));
+    Measurement::Ptr ms(new MeasurementAIPS(dataPartName,
+                                            parset.getInt32 ("ObsID", 0),
+                                            parset.getInt32 ("SubBandID", 0),
+                                            parset.getInt32 ("FieldID", 0)));
     ParmDB instDB (ParmDBMeta(parset.getString("ParmDB.Instrument"), "casa"));
     ParmDB skyDB  (ParmDBMeta(parset.getString("ParmDB.LocalSky"), "casa"));
     ///itsPrediffer = new Prediffer (ms, instDB, skyDB);
