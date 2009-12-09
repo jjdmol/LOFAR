@@ -91,6 +91,13 @@ namespace LOFAR { namespace BBS {
     // An empty name pattern is the same as * (all parm names).
     virtual vector<string> getNames (const string& parmNamePattern) const;
 
+    // Get default parameter names matching the pattern.
+    // An empty name pattern is the same as * (all parm names).
+    virtual vector<string> getDefNames (const string& parmNamePattern) const;
+
+    // Get the default values of parameters matching the pattern.
+    virtual casa::Record getDefValues (const string& parmNamePattern) const;
+
     // Get the values of the given parameters on the given regular grid
     // where v1/v2 represents center/width or start/end.
     // The Record contains a map of parameter name to Array<double>.
@@ -142,7 +149,8 @@ namespace LOFAR { namespace BBS {
     void getRecord (BlobIStream& bis, casa::Record& rec);
 
     // Check if the names of remote client inx are equal to the first one.
-    void checkNames (const vector<string>& names, uint inx) const;
+    void checkNames (const vector<string>& firstNames,
+                     const vector<string>& names, uint inx) const;
 
     // Combine the result records from the remote sites.
     casa::Record combineRemote (const vector<casa::Record>& recs) const;
@@ -163,6 +171,7 @@ namespace LOFAR { namespace BBS {
     mutable LOFAR::CEP::SocketConnectionSet itsConn;
     vector<string>        itsPartNames;
     vector<string>        itsParmNames;
+    casa::Record          itsDefValues;
     static int            theirNextPort;
     static vector<string> theirFreePorts;
   };

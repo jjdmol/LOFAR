@@ -36,6 +36,13 @@ using namespace std;
 // tParmFacade.run creates the pdb with parmdb.
 // So it must match the output expected here.
 
+void showDefRec (const Record& rec)
+{
+  for (uint i=0; i<rec.nfields(); ++i) {
+    cout << rec.name(i) << ' ' << rec.asArrayDouble(i) << endl;
+  }
+}
+
 void showRec (const Record& rec)
 {
   cout << ">start<" << endl;
@@ -117,6 +124,14 @@ int main (int argc, const char* argv[])
     ParmFacade acc(argv[1]);
     // Get values.
     showValues (acc, pattern, nf, nt);
+    // Get default values.
+    cout << ">start<" << endl;
+    cout << "get default values ..." << endl;
+    cout << acc.getDefNames() << endl;
+    cout << acc.getDefNames("parm*") << endl;
+    cout << acc.getDefNames("parx*") << endl;
+    showDefRec (acc.getDefValues());
+    cout << ">end<" << endl;
   } catch (std::exception& x) {
     cerr << "Unexpected exception: " << x.what() << endl;
     return 1;

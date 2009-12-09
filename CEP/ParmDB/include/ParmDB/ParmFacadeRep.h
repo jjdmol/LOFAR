@@ -78,6 +78,13 @@ namespace LOFAR { namespace BBS {
     // An empty name pattern is the same as * (all parm names).
     virtual vector<string> getNames (const string& parmNamePattern) const = 0;
 
+    // Get default parameter names matching the pattern.
+    // An empty name pattern is the same as * (all parm names).
+    virtual vector<string> getDefNames (const string& parmNamePattern) const = 0;
+
+    // Get the default values of parameters matching the pattern.
+    virtual casa::Record getDefValues (const string& parmNamePattern) const = 0;
+
     // Get the values of the given parameters on the given regular grid
     // where v1/v2 represents center/width or start/end.
     // The Record contains a map of parameter name to Array<double>.

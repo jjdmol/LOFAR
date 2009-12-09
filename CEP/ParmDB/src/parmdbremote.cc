@@ -196,6 +196,7 @@ int main (int argc, char* argv[])
       MWBlobOut bbo(bufout, 1, 0);
       bbo.blobStream() << fname;
       bbo.blobStream() << parmdb.getNames("*");
+      putRecord (bbo.blobStream(), parmdb.getDefValues("*"));
       bbo.finish();
       conn->write (bufout);
     }
