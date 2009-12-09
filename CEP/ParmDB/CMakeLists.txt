@@ -7,5 +7,4 @@ lofar_find_package(Casacore COMPONENTS casa tables REQUIRED)
 
 add_subdirectory(include/ParmDB)
 add_subdirectory(src)
-add_subdirectory(sql)
 add_subdirectory(test)
