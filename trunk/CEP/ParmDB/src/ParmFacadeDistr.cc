@@ -75,10 +75,17 @@ namespace LOFAR {
         itsPartNames.push_back (fname);
         if (i == 0) {
           bbi.blobStream() >> itsParmNames;
+          getRecord (bbi.blobStream(), itsDefValues);
         } else {
           vector<string> names;
+          Record defValues;
           bbi.blobStream() >> names;
-          checkNames (names, i);
+          getRecord (bbi.blobStream(), defValues);
+          checkNames (itsParmNames, names, i);
+          if (defValues.size() != itsDefValues.size()) {
+            LOG_WARN_STR ("record sizes of parts " << itsPartNames[0] << " and "
+                      << itsPartNames[i] << " differ");
+          }
         }
         bbi.finish();
       }
@@ -160,13 +167,47 @@ namespace LOFAR {
       return result;
     }
 
-    void ParmFacadeDistr::checkNames (const vector<string>& names,
+    vector<string> ParmFacadeDistr::getDefNames (const string& parmNamePattern) const
+    {
+      Regex regex(".*");
+      if (! parmNamePattern.empty()) {
+        regex = Regex(Regex::fromPattern(parmNamePattern));
+      }
+      vector<string> result;
+      result.reserve (itsDefValues.size());
+      for (uInt i=0; i<itsDefValues.size(); ++i) {
+        const String& name = itsDefValues.name(i);
+        if (name.matches (regex)) {
+          result.push_back (name);
+        }
+      }
+      return result;
+    }
+
+    Record ParmFacadeDistr::getDefValues (const string& parmNamePattern) const
+    {
+      if (parmNamePattern.empty()  ||  parmNamePattern == "*") {
+        return itsDefValues;
+      }
+      Regex regex(Regex::fromPattern(parmNamePattern));
+      Record result;
+      for (uInt i=0; i<itsDefValues.size(); ++i) {
+        const String& name = itsDefValues.name(i);
+        if (name.matches (regex)) {
+          result.define (name, itsDefValues.asArrayDouble(i));
+        }
+      }
+      return result;
+    }
+
+    void ParmFacadeDistr::checkNames (const vector<string>& firstNames,
+                                      const vector<string>& names,
                                       uint inx) const
     {
-      bool same = (names.size() == itsParmNames.size());
+      bool same = (names.size() == firstNames.size());
       uint i=0;
       while (same  &&  i<names.size()) {
-        same = (names[i] == itsParmNames[i]);
+        same = (names[i] == firstNames[i]);
         ++i;
       }
       if (!same) {

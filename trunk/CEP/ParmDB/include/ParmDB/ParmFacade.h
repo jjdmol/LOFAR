@@ -74,13 +74,23 @@ namespace LOFAR { namespace BBS {
     // parameters in the table.
     // This is the minimum start value and maximum end value for all parameters.
     // An empty name pattern is the same as * (all parm names).
-    vector<double> getRange (const string& parmNamePattern = "") const
+    vector<double> getRange (const string& parmNamePattern = string()) const
       { return itsRep->getRange (parmNamePattern); }
 
     // Get parameter names in the table matching the pattern.
     // An empty name pattern is the same as * (all parm names).
-    vector<string> getNames (const string& parmNamePattern = "") const
+    vector<string> getNames (const string& parmNamePattern = string()) const
       { return itsRep->getNames (parmNamePattern); }
+
+    // Get default parameter names in the table matching the pattern.
+    // An empty name pattern is the same as * (all parm names).
+    vector<string> getDefNames (const string& parmNamePattern = string()) const
+      { return itsRep->getDefNames (parmNamePattern); }
+
+    // Get default values of parameters in the table matching the pattern.
+    // An empty name pattern is the same as * (all parm names).
+    casa::Record getDefValues (const string& parmNamePattern = string()) const
+      { return itsRep->getDefValues (parmNamePattern); }
 
     // Get the values of the given parameters on the given regular grid
     // where v1/v2 represents center/width or start/end.

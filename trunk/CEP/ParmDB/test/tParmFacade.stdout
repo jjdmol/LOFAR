@@ -78,6 +78,16 @@ parm2 Axis Lengths: [1, 1]  (NB: Matrix in Row/Column order)
   }
 
 >end<
+>start<
+get default values ...
+[parmdef]
+[parmdef]
+[]
+parmdef Axis Lengths: [2, 1]  (NB: Matrix in Row/Column order)
+[3
+ 1]
+
+>end<
 
 >start<
 Names: [parm1,parm2]
@@ -157,5 +167,15 @@ parm2 Axis Lengths: [1, 1]  (NB: Matrix in Row/Column order)
     timewidths: Double array with shape [1]
       [5]
   }
+
+>end<
+>start<
+get default values ...
+[parmdef]
+[parmdef]
+[]
+parmdef Axis Lengths: [2, 1]  (NB: Matrix in Row/Column order)
+[3
+ 1]
 
 >end<

@@ -74,6 +74,43 @@ namespace LOFAR {
       return itsPDB.getNames(pp);
     }
 
+    vector<string> ParmFacadeLocal::getDefNames (const string& parmNamePattern) const
+    {
+      string pp = parmNamePattern;
+      if (pp.empty()) {
+	pp = "*";
+      }
+      ParmMap parmset;
+      itsPDB.getDefValues (parmset, pp);
+      vector<string> names;
+      names.reserve (parmset.size());
+      for (ParmMap::const_iterator iter = parmset.begin();
+           iter != parmset.end();
+           iter++) {
+        names.push_back (iter->first);
+      }
+      return names;
+    }
+
+
+    Record ParmFacadeLocal::getDefValues (const string& parmNamePattern) const
+    {
+      string pp = parmNamePattern;
+      if (pp.empty()) {
+	pp = "*";
+      }
+      ParmMap parmset;
+      itsPDB.getDefValues (parmset, pp);
+      Record result;
+      for (ParmMap::const_iterator iter = parmset.begin();
+           iter != parmset.end();
+           iter++) {
+        // Define name to default value.
+        result.define (iter->first, iter->second.getDefParmValue().getValues());
+      }
+      return result;
+    }
+
     Record ParmFacadeLocal::getValues (const string& parmNamePattern,
                                        double freqv1, double freqv2,
                                        double freqStep,

@@ -26,10 +26,18 @@
 # If first argument is non-empty, only the files are created.
 # It makes it possible to run the debugger on tParmFacadeDistr.
 
-#Set srcdir if undefined (if run outside 'make check')
+# Set srcdir if undefined (if run outside 'make check')
 if test "$srcdir" = ""; then
-  srcdir=../../../src
+  srcdir=../../../test
 fi
+srcdir=`cd $srcdir/../src > /dev/null && pwd`
+curdir=`pwd`
+exedir=`cd ../src > /dev/null && pwd`
+
+# Extend PATH.
+PATH=$curdir:$srcdir:$exedir:$PATH
+export PATH
+
 
 # The test uses 2 remote pdb-s, so create them.
 echo "Filling pdb1"
@@ -37,6 +45,7 @@ echo "Filling pdb1"
  create tablename='tParmFacadeDistr_tmp.pdb1'
  add parm1 domain=[1,4,5,10],values=2
  add parm2 type='polc', domain=[1,4,5,10], values=[2,0.1], nx=2
+ adddef parmdef values=[3,1], nx=2
  quit
 EOF
 if [ $? != 0 ]; then
@@ -48,6 +57,7 @@ echo "Filling pdb2"
  create tablename='tParmFacadeDistr_tmp.pdb2'
  add parm1 domain=[7,10,5,10],values=3
  add parm2 type='polc', domain=[7,10,5,10], values=[6,0.3], nx=2
+ adddef parmdef values=[3,1], nx=2
  quit
 EOF
 if [ $? != 0 ]; then
@@ -97,15 +107,6 @@ Part1.NChan = [64,128]
 Part1.StartFreqs = [20,120]
 Part1.EndFreqs = [100,300]
 EOF
-
-# Make a symlink to scripts in src, so they can be found.
-# Make sure . is in PATH.
-rm -f startparmdbdistr parmdbremote-scr parmdbremote
-ln -s $srcdir/../src/startparmdbdistr
-ln -s $srcdir/../src/parmdbremote-scr
-ln -s ../src/parmdbremote
-PATH=.:$PATH
-export PATH
 
 if test "$1" = ""; then
   $LOFAR_CHECKTOOL ./tParmFacade tParmFacadeDistr_tmp.pdb.vd '*' 12 2 > tParmFacadeDistr_tmp.out1

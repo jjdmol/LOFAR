@@ -87,6 +87,16 @@ parm2 Axis Lengths: [2, 1]  (NB: Matrix in Row/Column order)
 
 >end<
 >start<
+get default values ...
+[parmdef]
+[parmdef]
+[]
+parmdef Axis Lengths: [2, 1]  (NB: Matrix in Row/Column order)
+[3
+ 1]
+
+>end<
+>start<
 Names: [parm1]
 Range: [1,10,5,10]
 >end<
@@ -135,5 +145,15 @@ parm1 Axis Lengths: [2, 1]  (NB: Matrix in Row/Column order)
     freqwidths: Double array with shape [2]
       [3, 3]
   }
+
+>end<
+>start<
+get default values ...
+[parmdef]
+[parmdef]
+[]
+parmdef Axis Lengths: [2, 1]  (NB: Matrix in Row/Column order)
+[3
+ 1]
 
 >end<

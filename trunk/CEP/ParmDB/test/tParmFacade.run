@@ -27,6 +27,7 @@
  create tablename='tParmFacade_tmp.pdb'
  add parm1 domain=[1,4,5,10],values=2
  add parm2 type='polc', domain=[1,4,5,10], values=[2,0.1], nx=2
+ adddef parmdef values=[3,1], nx=2
  quit
 EOF
 if [ $? != 0 ]; then
