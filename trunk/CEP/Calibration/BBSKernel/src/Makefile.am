@@ -1,5 +1,24 @@
 #AM_CXXFLAGS = -Wno-ignored-qualifiers -Wconversion -Werror
-lib_LTLIBRARIES = libbbskernel.la
+lib_LTLIBRARIES = libbbskernel.la \
+	element_beam_YATAWATTA_LBA_phi.la \
+	element_beam_YATAWATTA_LBA_theta.la \
+	element_beam_YATAWATTA_HBA_phi.la \
+	element_beam_YATAWATTA_HBA_theta.la
+
+element_beam_YATAWATTA_LBA_phi_la_SOURCES = Contrib/SBY_DipoleBeam/beam_dr_phi.c
+element_beam_YATAWATTA_LBA_phi_la_LDFLAGS = -module
+element_beam_YATAWATTA_LBA_theta_la_SOURCES = Contrib/SBY_DipoleBeam/beam_dr_theta.c
+element_beam_YATAWATTA_LBA_theta_la_LDFLAGS = -module
+element_beam_YATAWATTA_HBA_phi_la_SOURCES = Contrib/SBY_DipoleBeam/hba_beam_phi.c
+element_beam_YATAWATTA_HBA_phi_la_LDFLAGS = -module
+element_beam_YATAWATTA_HBA_theta_la_SOURCES = Contrib/SBY_DipoleBeam/hba_beam_theta.c
+element_beam_YATAWATTA_HBA_theta_la_LDFLAGS = -module
+
+
+coeffdir = $(datadir)
+dist_coeff_DATA = Contrib/JPH_DipoleBeam/element_beam_HAMAKER_LBA.coeff \
+		  Contrib/JPH_DipoleBeam/element_beam_HAMAKER_HBA.coeff
+
 
 libbbskernel_la_SOURCES = Package__Version.cc \
 	Equator.cc \
