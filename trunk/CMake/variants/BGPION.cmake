@@ -2,8 +2,6 @@
 #
 # $Id$
 
-message(STATUS "ENTER: BGPION.cmake")
-
 # Define compiler suites.
 set(LOFAR_COMPILER_SUITES BGPION)
 
@@ -40,7 +38,11 @@ set(BGPION_COMPILE_DEFINITIONS
   -DHAVE_FCNP
   -I/bgsys/drivers/ppcfloor/comm/include
   -I/bgsys/drivers/ppcfloor/arch/include)
+set(BGPION_COMPILE_DEFINITIONS_DEBUG
+  -DENABLE_DBGASSERT
+  -DENABLE_TRACER
+  -DLOFAR_DEBUG)
 
+# Root directory of the MPI compiler
 set(MPI_ROOT_DIR /bgsys/LOFAR/openmpi-ion)
 
-message(STATUS "LEAVE: BGPION.cmake")
