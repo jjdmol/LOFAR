@@ -143,7 +143,7 @@ int main(int	argc,	char*	argv[])
 		saName = argv[1];
 	}
 
-	GCFScheduler::instance()->init(argc, argv);
+	GCFScheduler::instance()->init(argc, argv, "calinfo");
 	LOG_INFO(formatString("Program %s has started", argv[0]));
 
 	CAL::calinfo		ciTask(saName);
