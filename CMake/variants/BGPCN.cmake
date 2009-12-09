@@ -24,11 +24,11 @@ set(BGPCN_CXX       /usr/bin/g++)
 set(BGPCN_ASM       /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++)
 
 set(BGPCN_C_FLAGS)
-set(BGPCN_C_FLAGS_DEBUG)# "-g")
-set(BGPCN_C_FLAGS_OPT)# "-g -O2")
-set(BGPCN_CXX_FLAGS)# "-W -Wall -Woverloaded-virtual -Wno-unknown-pragmas")
-set(BGPCN_CXX_FLAGS_DEBUG)# "-g")
-set(BGPCN_CXX_FLAGS_OPT)# "-g -O2")
+set(BGPCN_C_FLAGS_DEBUG   "-g")
+set(BGPCN_C_FLAGS_OPT     "-g -O2")
+set(BGPCN_CXX_FLAGS       "-W -Wall -Woverloaded-virtual -Wno-unknown-pragmas")
+set(BGPCN_CXX_FLAGS_DEBUG "-g")
+set(BGPCN_CXX_FLAGS_OPT   "-g -O2")
 set(BGPCN_EXE_LINKER_FLAGS)
 set(BGPCN_EXE_LINKER_FLAGS_DEBUG)
 set(BGPCN_EXE_LINKER_FLAGS_OPT)
@@ -40,6 +40,10 @@ set(BGPCN_COMPILE_DEFINITIONS
   -DHAVE_MPI
   -I/bgsys/drivers/ppcfloor/comm/include
   -I/bgsys/drivers/ppcfloor/arch/include)
+set(BGPCN_COMPILE_DEFINITIONS_DEBUG
+  -DENABLE_DBGASSERT
+  -DENABLE_TRACER
+  -DLOFAR_DEBUG)
 
 # Re-root search to this directory first; needed for cross-compilation
 set(CMAKE_FIND_ROOT_PATH /bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux)
