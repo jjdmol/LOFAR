@@ -61,7 +61,7 @@ if test "$envfile" != ""; then
 fi
 
 # Set the working directory.
-test "$wd" != ""  ||  wd=`dirname dataset`
+test "$wd" != ""  ||  wd=`dirname $dataset`
 cd $wd
 
 # Start the program with its arguments.
