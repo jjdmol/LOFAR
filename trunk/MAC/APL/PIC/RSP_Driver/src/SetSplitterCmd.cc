@@ -90,8 +90,9 @@ SetSplitterCmd::~SetSplitterCmd()
 //
 // ack(cache)
 //
-void SetSplitterCmd::ack(CacheBuffer& /*cache*/)
+void SetSplitterCmd::ack(CacheBuffer& cache)
 {
+	complete(cache);
 	// moved code to the complete function so that the response is
 	// sent back after it was applied.
 }
