@@ -62,12 +62,15 @@ done
 
 # First argument must be parset-name.
 if test $# = 0; then
-  echo "run as:   mwimager [-casa] parset-file [clusterdesc] [wd] [logfile] [dry] [hfn]"
+  echo "run as:   mwimager [-casa] [-dde] parset-file"
+  echo "                   [clusterdesc] [wd] [logfile] [dry] [hfn]"
   echo "       -casa         use casaimager, otherwise askap's cimager"
   echo "                     default is -nocasa"
+  echo "       -dde          apply DDE corrections using mwimager-dd"
   echo "       parset-file   name of parset file"
   echo "       clusterdesc   name of clusterdesc file"
-  echo "                     default is $HOME/CEP.clusterdesc"
+  echo "                     default is ClusterDesc in the GDS-file given"
+  echo "                     in the parset file"
   echo "       wd            working directory in subprocesses which will get"
   echo "                     the images and log files"
   echo "                     default is same directory as MS"
@@ -87,9 +90,6 @@ cdn=
 if test $# != 0; then
   cdn=$1
   shift
-fi
-if test "$cdn" = ""; then
-  cdn=$HOME/CEP.clusterdesc
 fi
 wd=
 if test $# != 0; then
@@ -113,6 +113,17 @@ hfn=
 if test $# != 0; then
   hfn=$1
   shift
+fi
+
+# Get the dataset name.
+msvds=`getparsetvalue $psn dataset` || exit 1
+if test "$cdn" = ""; then
+  if test ! -d $msvds; then
+    cdn=`getparsetvalue -d '' $msvds ClusterDesc`
+  fi
+fi
+if test "$cdn" = ""; then
+  cdn=$HOME/CEP.clusterdesc
 fi
 
 # Make all file names absolute.

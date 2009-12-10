@@ -2,8 +2,8 @@ Images.stokes = [I,Q,U,V]
 Images.shape = [2048, 2048]
 Images.cellSize = [240, 240]
 Images.nchan = 1
-Images.ra = 230.35
-Images.dec = -10.345
+Images.ra = 230.35deg
+Images.dec = -10.345deg
 Images.directionType = J2000
 Images.nfacets = 2
 
@@ -28,5 +28,10 @@ ncycles = 0
 restore = False
 restore_beam = [1, 1, 0]
 
+correct = T
 Correct.column = CORRECTED_DATA
 Correct.instrumentDB = tmwimager-dd_tmp.instdb
+Correct.Model.Beam.Element.Type = "HAMAKER_LBA"
+Correct.Model.Beam.Element.Path = "$LOFARROOT/shareh"
+Correct.Model.Beam.StationConfig.Name = LBA
+Correct.Model.Beam.StationConfig.Path = "$LOFARROOT/sharec"

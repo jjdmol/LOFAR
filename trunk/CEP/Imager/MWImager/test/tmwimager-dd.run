@@ -45,9 +45,10 @@ exedir=`dirname $exedir`
 #  - home directory changed to home
 #  - user name changed to user
 #  - lines containing date/time are removed
+#  - line containing calibrate-part contain a path and are outcommented
 rm -rf tmwimager-dd_tmp.instdb
 mkdir tmwimager-dd_tmp.instdb
-mwimager-dd tmwimager-dd.parset tmwimager-dd.in_cd `pwd` tmwimager-dd_tmp.log dry tmwimager-dd_tmp.hfn "" | sed -e "s%$curdir%curdir%g" -e "s%$exedir%exedir%g" -e "s%$ssdir%ssdir%g" -e "s%$HOME%home%g" -e "s%$USER%user%g" -e 's/_[0-9][0-9]*/_<pid>/g' | egrep -i -v '[a-z]{3} [ 0-9]?[0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
+mwimager-dd tmwimager-dd.parset tmwimager-dd.in_cd `pwd` tmwimager-dd_tmp.log dry tmwimager-dd_tmp.hfn "" | sed -e "s%$curdir%curdir%g" -e "s%$exedir%exedir%g" -e "s%$ssdir%ssdir%g" -e "s%$HOME%home%g" -e "s%$USER%user%g" -e 's/_[0-9][0-9]*/_<pid>/g' | egrep -i -v '[a-z]{3} [ 0-9]?[0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]' | sed -e 's%\(.*calibrate-part.*\)%>>>\1<<<%'
 
 # Append the three log files to the output.
 # Wait for the subprocesses to finish.

@@ -1,7 +1,7 @@
 CHECKTOOLPROGS	= tconvertimagerparset
 
 TESTS		= tconvertimagerparset.sh \
-		  tmwimager.sh
+		  tmwimager.sh \
 		  tmwimager-dd.sh
 
 EXTRA_DIST	= tconvertimagerparset.run \
