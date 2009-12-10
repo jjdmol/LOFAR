@@ -30,26 +30,44 @@
 
 int main (int argc, const char* argv[])
 {
+  int st = 1;
   try {
-    if (argc < 3) {
-      std::cerr << "Run as: getparsetvalue parsetfile parmname [index]"
-		<< "    negative index counts from the end (a la python)"
-		<< std::endl;
-      return 1;
+    bool hasDefVal = false;
+    std::string defVal;
+    while (true) {
+      if (argc < 3) {
+        std::cerr << "Run as: getparsetvalue [-d defaultvalue] parsetfile parmname [index]"
+                  << "    negative index counts from the end (a la python)"
+                  << std::endl;
+        return 1;
+      }
+      if (std::string(argv[st]) == "-d") {
+        hasDefVal = true;
+        defVal = argv[st+1];
+        st += 2;
+        argc -= 2;
+      } else {
+        break;
+      }
     }
     int inx = 0;
     bool useAll = true;
     if (argc > 3) {
-      std::istringstream iss(argv[3]);
+      std::istringstream iss(argv[st+2]);
       iss >> inx;
       useAll = false;
     }
-    LOFAR::ParameterSet parset(argv[1]);
+    LOFAR::ParameterSet parset(argv[st]);
     if (useAll) {
-      std::string value = parset.getString (argv[2]);
+      std::string value;
+      if (hasDefVal) {
+        value = parset.getString (argv[st+1], defVal);
+      } else {
+        value = parset.getString (argv[st+1]);
+      }
       std::cout << value << std::endl;
     } else {
-      std::vector<std::string> values = parset.getStringVector (argv[2]);
+      std::vector<std::string> values = parset.getStringVector (argv[st+1]);
       // Negative index is 
       int i = inx;
       if (i < 0) {
@@ -58,11 +76,12 @@ int main (int argc, const char* argv[])
       ASSERTSTR (i >= 0  &&  i < int(values.size()),
 		 "Index " << inx
 		 << " exceeds value size " << values.size()
-		 << " of parameter " << argv[2]);
+		 << " of parameter " << argv[st+1]);
       std::cout << values[i] << std::endl;
     }
   } catch (std::exception &x) {
-    std::cerr << x.what() << std::endl;
+    std::cerr << x.what() << "; file=" << argv[st] << ", key=" << argv[st+1]
+              << std::endl;
     return 1;
   }
   return 0;
