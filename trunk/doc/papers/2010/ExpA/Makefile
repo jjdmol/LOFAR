@@ -6,7 +6,7 @@ FIG_SOURCES =	delay.fig pencil-beam.fig processing.fig
 
 JGR_SOURCES =	bandpass.jgr
 
-JPG_SOURCES =	
+JPG_SOURCES =	fringe.jpg
 
 PNG_SOURCES =	
 

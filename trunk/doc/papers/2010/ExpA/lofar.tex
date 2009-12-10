@@ -42,9 +42,10 @@ grestore
 %
 \smartqed  % flush right qed marks, e.g. at end of proof
 %
+\usepackage[usenames]{color}
 \usepackage{graphicx}
-%
 \usepackage{mathptmx}      % use Times fonts if available on your TeX system
+\usepackage{wrapfig}
 %
 % insert here the call for the packages your document requires
 %\usepackage{latexsym}
@@ -56,6 +57,22 @@ grestore
 % Insert the name of "your journal" with
 \journalname{Experimental Astronomy}
 %
+
+%\newcounter{theparagraph}
+\setcounter{secnumdepth}{4}
+\renewcommand{\paragraph}[1]{%
+%\addtocounter{\theparagraph}{1}%
+%\vspace{2mm}\noindent\emph{\textbf{\theparagraph #1}} --- }
+\vspace{2mm}\noindent\emph{\textbf{#1}} --- }
+
+\definecolor{Gold}{rgb}{1,0.84,0} 
+\newcommand{\circlenumber}[1]{%
+\begin{picture}(10,10)%
+\put(5,2.5){\circle*{11}}%
+\color{Gold}%
+\put(-.3,0){\makebox[9pt]{\fontfamily{phv}\fontseries{b}\fontshape{sl}\selectfont\small#1}}%
+\end{picture}%
+}
 
 \begin{document}
 
@@ -107,11 +124,11 @@ processing.
 The data is processed in software, by an application commonly called
 ``the correlator''.
 Actually, this term is a misnomer, since the correlator can perform many
-more operations than correlating only, and supports a wide range of
+more operations than correlating only, and will support a wide range of
 observation types.
 
 The LOFAR correlator is the first large-scale correlator that processes
-data in \emph{software}.
+data in \emph{software}, in real time.
 Traditionally, correlators use custom-built hardware to process data, because
 of the high data rates and processing requirements.
 However, the desire to support different observation types demanded a more
@@ -121,6 +138,21 @@ allows this.
 We have to perform all processing in real time, since the data streams
 that come from the stations are simply too large to store.
 
+The correlator supports a number of processing pipelines, with shared pipeline
+components.
+The \emph{standard imaging pipeline\/} filters and correlates station data.
+There is a collection of \emph{pulsar pipelines}, that coherently or
+incoherently filter and beam form station data.
+The \emph{Ultra-High Energy Pipeline (UHEP)\/} will beam form data as well, and
+will search for peaks that should trigger the Transient Buffer Boards.
+Multiple, concurrent observations, even of different types, are supported.
+The software is still in development: the standard imaging pipeline is fully
+functional; the pulsar pipelines are mostly implemented and have already
+been used for pulsar observations, and the UHEP pipeline is in its design
+phase.
+
+The remainder of this article is structured as follows.
+\textbf{To do}.%TODO
 
 
 \section{The IBM Blue Gene/P}
@@ -192,17 +224,31 @@ to roughly four Gb/s in practice.
 \begin{center}
 \includegraphics[width=\textwidth]{processing.pdf}
 \end{center}
-\caption{Bla bla}
+\caption{Overview of the processing pipeline components.
+At the places where the data flow arrows diverge, either path can be chosen,
+with the exception of the correlator and the beam forming pipelines, that can
+run concurrently on the same data.
+The main text uses the circled numbers to refer to the pipeline components.
+}
 \label{fig:processing}
 \end{figure*}
 
 
 \section{Processing pipelines}
 
-The data that come from the LOFAR stations are centrally processed in real
-time on the Blue Gene/P and a cluster of storage nodes.
+The data that comes from the LOFAR stations is centrally processed on the
+Blue Gene/P, in real time.
+Most of the processing is done on the Blue Gene compute nodes, but input
+and output-related tasks run on the Blue Gene I/O nodes.
+The output data is stored on a cluster of storage nodes.
+After an observation, these data are postprocessed.
+Correlated data is flagged, calibrated, and imaged~\cite{Nijboer:10};
+pulsar data is analyzed afterward as well~\cite{Hessels:10}.
+
 Figure~\ref{fig:processing} shows how the data flows through the entire
 processing chain.
+The circled numbers below refer to the pipeline components in the figure.
+The remainder of this section explains these pipeline components.
 
 The HBAs of a core station can be split into two separate substations~\cite{?}.
 The correlator treats a split station as if it were two independent stations,
@@ -211,8 +257,7 @@ mutually.
 
 
 
-\subsubsection{Data Receipt}
-
+\paragraph{Data Receipt \circlenumber{1}}
 The stations send packets with subband data over the Wide-Area Network to the
 Blue Gene.
 The observer selects up to 248 subbands (frequency/beam combinations),
@@ -230,9 +275,7 @@ Missing data is administrated throughout the remainder of the processing
 pipeline, but in practice, hardly any data is lost.
 
 
-\subsubsection{The Circular buffer}
-\label{sec:circular-buffer}
-
+\paragraph{The Circular Buffer \circlenumber{2}}
 A Blue Gene I/O~node receives data from one (sub)station, and stores the
 data in a circular buffer.
 Due to the high data rate and the small amount of available memory,
@@ -242,8 +285,34 @@ In practice, 2.5~seconds is sufficient, due to the good real-time behavior of
 the correlator.
 
 
-\subsubsection{I/O Node to Compute Node transport}
+\begin{wrapfigure}{r}{37mm}
+\vspace{-9mm}
+\begin{center}
+\includegraphics[width=35mm]{delay.pdf}
+\end{center}
+\caption{The left antenna receives the wave later.\vspace{-4mm}}
+\label{fig:delay}
+\end{wrapfigure}
+\paragraph{Delay Compensation \circlenumber{3}}
+Due to the finite speed of electromagnetic waves, the wavefront from a
+celestial source hits stations at different times
+(see Figure~\ref{fig:delay}).
+The time difference depends on the direction of the observed source and on the
+station positions, and is continuously altered by the rotation of the earth.
+Therefore, all station streams must be aligned before the signals can be
+correlated.
 
+Since delays can be larger than the sample period, we perform delay
+compensation in two steps.
+First, we correct for integer multiples of the sample period by simply
+delaying the streams of station samples.
+This shift is performed on the I/O~node, by moving the read pointer of the
+circular buffer.
+Second, the remaining error is corrected by rotating the phase of the signal.
+This is done later in the pipeline (see \circlenumber{7}).
+
+
+\paragraph{I/O Node to Compute Node transport \circlenumber{4}}
 The I/O~node sends the data directly from the circular buffer to the compute
 nodes for further processing, in chunks of up to one second.
 We developed a new network protocol for this purpose, called
@@ -256,8 +325,7 @@ In the exceptional case that (part of the) data is lost due to a missed
 real-time deadline, the missing data is flagged.
 
 
-\subsubsection{Round-Robin distribution}
-
+\paragraph{Round-Robin distribution}
 A processor core is too slow to process one second of data within one second of
 real time (e.g., one second of data from 64~stations requires 5.6~seconds
 processing time).
@@ -269,8 +337,7 @@ In reality, the scheduling of work over the compute nodes is extremely
 complicated, since resource conflicts are avoided.
 
 
-\subsubsection{Data Transpose}
-
+\paragraph{Data Transpose \circlenumber{5}}
 Unfortunately, an I/O~node cannot send the data directly to the compute node
 that must correlate the data, since an I/O~node is connected to only a few
 compute nodes.
@@ -285,9 +352,8 @@ We overlap communication with the computational steps described below,
 to hide the costs of sending and receiving data.
 
 
-\subsubsection{Data Conversion}
-
-First, we convert the 4-bit, 8-bit, or 16-bit integer samples to 32-bit
+\paragraph{Data Conversion}
+We convert the 4-bit, 8-bit, or 16-bit integer samples to 32-bit
 floating point numbers (the stations currently only support 16-bit samples,
 but the correlator is ready for future modes).
 We convert the data to floating point, because the Blue Gene is much better at
@@ -296,9 +362,8 @@ Since the conversion increases the data size, we perform it \emph{after\/} the
 data transpose.
 
 
-\subsubsection{The Poly-Phase Filter Bank}
-
-Next, the subband data is processed by a Poly-Phase Filter bank (PPF) that
+\paragraph{The Poly-Phase Filter Bank \circlenumber{6}}
+Next, the subband data is processed by a Poly-Phase Filter (PPF) bank that
 splits a frequency subband into a number of narrower frequency channels.
 In this step, we trade time resolution for frequency resolution: we split a
 subband into $N$ separate channels, but with an $N$-times lower sampling rate
@@ -308,7 +373,7 @@ higher accuracy later in the pipeline.
 Typically, a 195~KHz subband is split into 256~channels of 763~Hz, but the
 filter supports any reasonable of channels.
 
-The PPF consists of two parts.
+The PPF bank consists of two parts.
 First, the data is filtered using Finite Impulse Response (FIR) filters,
 to avoid leakage between channels.
 A FIR filter simply multiplies a sample with a real weight factor, and
@@ -318,8 +383,8 @@ automatically designs a filter bank with the desired properties and number
 of channels at run time, generating the FIR filter weights on the fly.
 This again demonstrates the flexibility of a software solution.
 For performance reasons, the implementation of the filter is done in assembly.
-Second, the filtered data is Fourier Transformed. We use the Blue
-Gene ``Vienna'' version of FFTW~\cite{Lorenz:05} to do this.
+Second, the filtered data is Fourier Transformed.
+We use the Blue Gene ``Vienna'' version of FFTW~\cite{Lorenz:05} to do this.
 Since the most common observation mode uses 256 channels, we optimized this
 case a bit further, and manually wrote a more efficient assembly
 implementation for the 256-point FFT.
@@ -336,52 +401,26 @@ the lowest and the highest frequencies of the subband are folded into this
 channel, and the different frequencies within this channel cannot be
 disambiguated~\cite{Romein:08}.
 
-\begin{figure*}
-\begin{minipage}[b]{55mm}
-\begin{center}
-\includegraphics[width=40mm]{delay.pdf}
-\end{center}
-\caption{The left antenna receives the wave later.}
-\label{fig:delay}
-\end{minipage}
-\hfill
-\begin{minipage}[b]{55mm}
-\begin{center}
-\includegraphics[width=45mm]{bandpass.pdf}
-\end{center}
-\caption{Channels have different signal powers.}
-\label{fig:bandpass}
-\end{minipage}
-\end{figure*}
 
-
-\subsubsection{Phase Shift Correction}
-\label{sec:delay-compensation}
-
-Due to the finite speed of electromagnetic waves, the wavefront from a
-celestial source hits stations at different times
-(see Figure~\ref{fig:delay}).
-The time difference depends on the direction of the observed source and on the
-station positions, and is continuously altered by the rotation of the earth.
-Therefore, all station streams must be aligned before the signals can be
-correlated.
-
-Since delays can be larger than the sample period, we perform delay
-compensation in two steps.
-First, we correct for integer multiples of the sample period by simply
-delaying the streams of station samples.
-This shift is performed on the I/O~node, by moving the read pointer of the
-circular buffer (see Section~\ref{sec:circular-buffer}).
-
-Second, the remaining error is corrected by rotating the phase of the signal.
+\paragraph{Phase Shift Correction \circlenumber{7}}
+\label{sec:phase-rotation}
+Next, the remaining fraction of the delays are compensated (see
+\circlenumber{3}), by rotating the phase of the signal.
+We apply the correction after creating channels, since the correction factor
+depends on the frequency.
 The phase rotation itself requires a complex multiplication per sample.
 The exact delays are computed for the begin time and end time of a chunk,
 and interpolated in frequency and time for each individual sample (with
 another complex multiplication), so the sky source is followed very accurately.
 
 
-\subsubsection{Bandpass Correction}
-
+\begin{wrapfigure}{r}{51mm}
+\vspace{-6mm}
+\includegraphics[width=51mm]{bandpass.pdf}
+\caption{Channels have different signal powers.}
+\label{fig:bandpass}
+\end{wrapfigure}
+\paragraph{Bandpass Correction \circlenumber{8}}
 The bandpass correction step compensates for an artifact introduced by a
 filter back that runs on the FPGAs in the stations~\cite{Kooistra:10}.
 This filter bank performed the initial division of the antenna signals into
@@ -395,16 +434,14 @@ in channels, not in subbands.
 We describe how the correction factors are computed in~\cite{Romein:08}.
 
 
-\subsubsection{Finalizing the Asynchronous Transpose}
-
+\paragraph{Finalizing the Asynchronous Transpose \circlenumber{5}}
 Up to this point in the pipeline, processing chunks from different stations
 can be done independently, but from here on, the data from all stations are
 required.
 Therefore, the asynchronous transpose ends here, before the beam forming.
 
 
-\subsubsection{Superstations}
-
+\paragraph{Superstations \circlenumber{9}}
 Optionally, any group of stations can be beam formed to create a
 \emph{superstation}.
 Such a superstation is treated as a single station by the correlator.
@@ -416,8 +453,7 @@ This form of beam forming is a special case of the coherent beam former
 described below (Section~\ref{sec:beam-forming}).
 
 
-\subsubsection{The Correlator}
-
+\paragraph{The Correlator \circlenumber{10}}
 Finally, the samples from each pair of individual or grouped stations are
 correlated, by multiplying the sample of one station with the complex conjugate
 of the sample of the other station.
@@ -431,9 +467,8 @@ stations.
 All other steps have a lower time complexity.
 
 
-\subsubsection{Beam Forming}
+\paragraph{Beam Forming}
 \label{sec:beam-forming}
-
 We implemented a variety of beam-forming modes, to support the pulsar pipelines
 and transient pipelines.
 We briefly describe the modes here; more information can be found in the
@@ -443,39 +478,49 @@ The beamforming pipelines fall into two catagories: the coherent modes and
 incoherent modes.
 The coherent modes add the samples from all stations, resulting in a
 complex voltage.
-Optionally, the complex voltage is converted to Stokes~I or to Stokes~I,Q,U,V.
 The incoherent modes first compute the power of each sample, and add the
-powers from the different stations, outputting either Stokes~I or
-Stokes~I,Q,U,V.
+powers from the different stations.
 
 
-\subsubsection{Pencil Beams}
-
-\begin{figure}
+\begin{wrapfigure}{r}{35mm}
+\vspace{-9mm}
 \begin{center}
 \includegraphics[width=25mm]{pencil-beam.pdf}
 \end{center}
-\caption{Multiple pencil beams cover (part of) the station beam.}
+\caption{Multiple pencil beams cover (part of) the station beam.\vspace{-5mm}}
 \label{fig:pencil-beams}
-\end{figure}
-
-The coherent modes can also form multiple \emph{pencil beams}, to cover the
-much larger station beam (see Figure~\ref{fig:pencil-beams}).
+\end{wrapfigure}
+\paragraph{Coherent Beam Forming}
+The coherent modes can form multiple \emph{pencil beams\/}~(\circlenumber{12}),
+to cover the much larger station beam (see Figure~\ref{fig:pencil-beams}).
 The different pointings are computed by rotating the phase of each station
 sample differently for each pencil beam, before the station samples are added.
 Note that the center beam needs no correction, as the phase correction for
 this direction was already performed at high precision (see
-Section~\ref{sec:delay-compensation}).
+Section~\ref{sec:phase-rotation}).
 The other pencil beams are corrected with respect to the center beam.
 
-The directions of the pencil beam can be choosen freely (although observing
+The directions of the pencil beam can be choosen freely (of course, observing
 outside the station beams makes no sense).
 However, there is provision for specifing a honeycomb structure around the
-center beam (as shown in Figure~\ref{fig:pencil-beams}).
-This eases the specification of an observation, since a honeycomb structure
+center beam (see Figure~\ref{fig:pencil-beams}).
+This simplifies the specification of an observation, since a honeycomb structure
 requires only two parameters: the diameter of a pencil beam and the number
 of rings.
 
+Each pencil beam creates its own stream of complex voltages.
+Optionally, the complex voltages can be converted to Stokes
+I,Q,U,V~(\circlenumber{13}), or to Stokes~I only~(\circlenumber{14}).
+
+
+\paragraph{Incoherent Beam Forming}
+Unlike the coherent modes, the incoherent modes add the powers of the signals
+from the different stations, rather than the signals themselves.
+Either Stokes I,Q,U,V~(\circlenumber{15}) or to Stokes~I
+only~(\circlenumber{16}) can be choosen.
+
+
+\paragraph{Integration of Beam-Formed Products \circlenumber{17}}
 The number of pencil beams that can be formed is likely to be limited by the
 output data rate that can be handled (specified at 50~Gb/s).
 The data rate can be reduced by integrating multiple samples.
@@ -483,8 +528,7 @@ We also plan to support conversion from single-precision (32-bit) floating
 point to 16-bit or even smaller bit-count values.
 
 
-\subsubsection{The Second Transpose}
-
+\paragraph{The Second Transpose \circlenumber{18}}
 A Blue Gene compute node computes all beams of (all channels within) a
 single subband; different subbands are necessarily computed by different 
 compute nodes.
@@ -500,21 +544,18 @@ For the transient detection pipeline, the transpose \emph{must\/} be done
 in real time.
 
 
-\subsubsection{Data Transport to the I/O~Node}
-
+\paragraph{Data Transport to the I/O~Node \circlenumber{19}}
 The beam-formed and correlated data is sent back to the I/O~nodes, again
 using FCNP.
 
-\subsubsection{Further Integration}
-
+\paragraph{Further Integration \circlenumber{20}}
 The I/O~node can optionally integrate correlated data over multiple seconds.
 The reason that this is done on the I/O~node and not on the compute node is
 historical, and has to do with the absence of asynchronous communication
 on the BG/L.
 
 
-\subsubsection{The Best-Effort Queues}
-
+\paragraph{The Best-Effort Queues \circlenumber{21}}
 At the very end of the Blue Gene pipelines, the output data is queued to
 be sent to the storage nodes.
 The queue improves real-time behavior and increases fault tolerance, since
@@ -529,16 +570,14 @@ entire correlator and lose \emph{all\/} data.
 Under normal circumstances, no data is lost here.
 
 
-\subsubsection{Data Transport to the Storage Node}
-
+\paragraph{Data Transport to the Storage Node \circlenumber{22}}
 The data from the best-effort queues is dequeued and sent to the storage nodes.
 Unlike the station input, we use TCP here, since a reliable connection here
 is more important than real-time behavior (possible hiccups are handled by
 the best-effort queues).
 
 
-\subsubsection{Storing the Data}
-
+\paragraph{Storing the Data \circlenumber{23}}
 The correlated data is written as CasaCore Measurement Set~\cite{Kemball:00}.
 Initially, we used the CasaCore ``tables'' library to write data, but we
 found that the library consumed far too many CPU cycles to sustain write
@@ -567,19 +606,21 @@ This pipeline beamforms the stations and reverts back to the 200~Mhz
 time-domain, to detect peaks caused by ultra-high-energy particles.
 It largely relies on the pulsar pipeline, since it will use the beam former
 to create many tens of beams.
-However, the second PPF and bandpass correction are bypassed.
+However, the second PPF~(\circlenumber{6}) and bandpass
+correction~(\circlenumber{8}) are bypassed.
 The second transpose, used for the pulsar pipeline will be used to spread the
 beams over different compute nodes and join all frequencies, so that a compute
 node has all frequencies of a single beam.
-This way, the first PPF (at the stations) can be undone, by an inverse PPF.
+This way, the first PPF (at the stations) can be undone, by an inverse PPF bank
+(\circlenumber{24} and \circlenumber{25}).
 Of course, some of the data is lost, since no more than 248~subbands can be
 sent by the stations.
-A peak-detection algorithm inspects the time-series data to generate a trigger
-to freeze the Transient Buffer Boards~\cite{Kooistra:10}
+A peak-detection algorithm (\circlenumber{26}) inspects the time-series data
+to generate a trigger to freeze the Transient Buffer Boards~\cite{Kooistra:10}.
 
 
 
-\section{Multiple Observations}
+\subsection{Multiple Observations}
 
 The correlator is very flexible: multiple, independent observations can
 run concurrently.
@@ -617,6 +658,17 @@ samples.
 This way, the quality of the beam-formed data improves as well.
 
 
+\subsection{Control}
+
+The correlator can both be run under control of MAC~\cite{Overeem:10} and
+using a series of Python scripts.
+The former method is primarily used for production observations by the
+LOFAR Observatory, while the latter is mostly used for development.
+The correlator reads a \emph{parameter set\/} with observation-specific
+parameters, one per observation, provided by MAC or by the Python environment.
+MAC also monitors the log output of the correlator.
+
+
 \section{Computational Performance and I/O capabilities}
 
 The application is highly optimized to achieve extremely high computational
@@ -638,15 +690,30 @@ by 50\%, it also allows full coverage of the interesting 30--78~MHz range
 in a single observation, rather than two.
 
 
-\section{Control}
+\subsection{Results}
 
-The correlator can both be run under control of MAC~\cite{Overeem:10} and
-using a series of Python scripts.
-The former method is primarily used for production observations by the
-LOFAR Observatory, while the latter is mostly used for development.
-The correlator reads a \emph{parameter set\/} with observation-specific
-parameters, one per observation, provided by MAC or by the Python environment.
-MAC also monitors the log output of the correlator.
+\begin{figure}[ht]
+\includegraphics[width=\columnwidth]{fringe.jpg}
+\caption{Correlations from a 9-hour observation.}
+\label{fig:fringe}
+\end{figure}
+
+The system we described is used on a daily basis for observations, using the
+currently available stations.
+A graphical representation of the correlator output is depicted in
+Figure~\ref{fig:fringe}.
+The figure shows the cross-correlations from two of the stations used during a
+9-hour observation.
+The horizontal axis represents time;
+the vertical axis represents the 256~channels of one frequency subband.
+Each pixel corresponds to a (complex) correlation, where the color represents
+the phase of the signal; the intensity matches the amplitude (power).
+The phase changes over time, due to the earth rotation that alters the
+relative position of the observed sources and thus the time difference
+between the two stations.
+The white spots are caused by RFI; these bad data are detected and
+ignored in the remainder of the processing pipeline.
+
 
 
 \begin{acknowledgements}
