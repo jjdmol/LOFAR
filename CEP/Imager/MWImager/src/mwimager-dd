@@ -39,6 +39,8 @@
 #  correct = False
 #  Correct.Model.Beam.Element.Type = ""
 #  Correct.Model.Beam.Element.Path = "$LOFARROOT/share"
+#  Correct.Model.Beam.StationConfig.Name
+#  Correct.Model.Beam.StationConfig.Path
 #  Correct.column       = CORRECTED_DATA   # output column after correction
 #  Correct.instrumentDB
 #  Images.name
@@ -142,7 +144,7 @@ def makeFacetSourceList (name, ra, dec, cellwidth, nfacet, imgshape):
     # Only at the equator 1 arcsec in image width is 1 arcsec in RA.
     # At dec=d 1 arcsec in RA is 1*cos(d) arcsec in image width
     # (like on earth 360deg = 40000km*cos(d) at dec=d).
-    # Note that negative RA is counter-clockwise.
+    # Note that RA is counter-clockwise.
     facetwidth = (cellwidth[0] * imgshape[0] / nfacet,
                   cellwidth[1] * imgshape[1] / nfacet)
     centers = []
@@ -157,15 +159,18 @@ def makeFacetSourceList (name, ra, dec, cellwidth, nfacet, imgshape):
             f.write ("facet-%03d-%03d %.15f %.15f\n" % (i,j,rav,decv))
             rav -= rawidth
         decv += facetwidth[1]
+    f.write ("# imagecenter=%.10f,%.10f  imageshape=%d,%d  cellwidth=%.10f,%.10f\n" % (ra,dec,imgshape[0],imgshape[1],cellwidth[0],cellwidth[1]))
     return centers
 
 def doBBS (ps, i, j, psname, gdsname, cd, wd, dry, instdb, skydb, catname, incol, outcol):
     if dry == 'dry':
         dry = '--dry --verbose'
     print 'doBBS facet',i,j
-    # Get beam files and expand possible env.var. like $LOFARROOT
+    # Get beam info and station config info.
     beamType = ps.getString ('Correct.Model.Beam.Element.Type', '')
     beamPath = ps.getString ('Correct.Model.Beam.Element.Path', '')
+    configName = ps.getString ('Correct.Model.Beam.StationConfig.Name', '')
+    configPath = ps.getString ('Correct.Model.Beam.StationConfig.Path', '')
     # Create the parset file for the calibrate run.
     bbskey = "bbs-%03d-%03d" % (i, j)
     psn = psname + '-' + bbskey
@@ -173,7 +178,7 @@ def doBBS (ps, i, j, psname, gdsname, cd, wd, dry, instdb, skydb, catname, incol
     f.write ('Strategy.Stations = []\n')
     f.write ('Strategy.InputColumn = %s\n' % incol)
     f.write ('Strategy.TimeWindow = []\n')
-    f.write ('Strategy.ChunkSize = 100\n')
+    f.write ('Strategy.ChunkSize = 1000\n')
     f.write ('Strategy.UseSolver = F\n')
     f.write ('Strategy.Correlation.Selection = CROSS\n')
     f.write ('Strategy.Correlation.Type = []\n')
@@ -182,10 +187,12 @@ def doBBS (ps, i, j, psname, gdsname, cd, wd, dry, instdb, skydb, catname, incol
     f.write ('Step.correct.Baselines.Station2 = []\n')
     f.write ('Step.correct.Model.Sources    = [facet-%03d-%03d]\n' % (i,j))
     if len(beamType) > 0:
-        f.write ('Step.correct.Model.Beam.Enable = True\n')
+        f.write ('Step.correct.Model.Beam.Enable = T\n')
         f.write ('Step.correct.Model.Beam.Element.Type = %s\n' % beamType)
         if len(beamPath) > 0:
             f.write ('Step.correct.Model.Beam.Element.Path = %s\n' % beamPath)
+        f.write ('Step.correct.Model.Beam.StationConfig.Name = %s\n' % configName)
+        f.write ('Step.correct.Model.Beam.StationConfig.Path = %s\n' % configPath)
     f.write ('Step.correct.Operation             = CORRECT\n')
     f.write ('Step.correct.OutputColumn          = %s\n' % outcol)
     f.close()
