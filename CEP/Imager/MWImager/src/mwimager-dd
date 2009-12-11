@@ -43,6 +43,11 @@
 #  Correct.Model.Beam.StationConfig.Path = "/home/zwieten/StationConfig"
 #  Correct.column       = CORRECTED_DATA   # output column after correction
 #  Correct.instrumentDB
+#  BBDB.Host = ldb001
+#  BBDB.Port
+#  BBDB.Name
+#  BBDB.Username
+#  BBDB.Password
 #  Images.name
 #  Images.ra            = 10:23:53.68
 #  Images.dec           = 34.51.04.98
@@ -166,6 +171,12 @@ def doBBS (ps, i, j, psname, gdsname, cd, wd, dry, instdb, skydb, catname, incol
     if dry == 'dry':
         dry = '--dry --verbose'
     print 'doBBS facet',i,j
+    # Get BBDB info.
+    bbdbhost = ps.getString ('BBDB.Host', 'ldb001')
+    bbdbport = ps.getString ('BBDB.Port', '')
+    bbdbname = ps.getString ('BBDB.Name', '')
+    bbdbuser = ps.getString ('BBDB.Username', '')
+    bbdbpw   = ps.getString ('BBDB.Password', '')
     # Get beam info and station config info.
     beamType = ps.getString ('Correct.Model.Beam.Element.Type', '')
     beamPath = ps.getString ('Correct.Model.Beam.Element.Path', '$LOFARROOT/share')
@@ -183,6 +194,15 @@ def doBBS (ps, i, j, psname, gdsname, cd, wd, dry, instdb, skydb, catname, incol
     f.write ('Strategy.Correlation.Selection = CROSS\n')
     f.write ('Strategy.Correlation.Type = []\n')
     f.write ('Strategy.Steps = [correct]\n')
+    f.write ('BBDB.Host = %s\n' % bbdbhost)
+    if len(bbdbport) > 0:
+        f.write ('BBDB.Port = %s\n' % bbdbport)
+    if len(bbdbname) > 0:
+        f.write ('BBDB.Name = %s\n' % bbdbname)
+    if len(bbdbuser) > 0:
+        f.write ('BBDB.Username = %s\n' % bbdbuser)
+    if len(bbdbpw) > 0:
+        f.write ('BBDB.Password = %s' % bbdbpw)
     f.write ('Step.correct.Baselines.Station1 = []\n')
     f.write ('Step.correct.Baselines.Station2 = []\n')
     f.write ('Step.correct.Model.Sources    = [facet-%03d-%03d]\n' % (i,j))
