@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/LofarConstants.h>
+#include <ApplCommon/StationConfig.h>
 
 #include <AMCBase/Converter.h>
 #include <AMCBase/Position.h>
@@ -417,7 +418,7 @@ void Beam::calculateHBAdelays(RTC::Timestamp				timestamp,
 	
 	// calculate the mean of all posible delays to hold signal front in the midle of a tile
 	double meanElementDelay = blitz::mean(elementDelays);
-	LOG_DEBUG_STR("mean ElemnetDelay = " << meanElementDelay << " Sec"); 
+	LOG_DEBUG_STR("mean ElementDelay = " << meanElementDelay << " Sec"); 
 
 
 	// Calculate the current values of AzEl.
@@ -454,12 +455,15 @@ void Beam::calculateHBAdelays(RTC::Timestamp				timestamp,
 	CAL::SubArray::RCUmask_t		rcuMask(getSubarray().getRCUMask());
 	LOG_DEBUG_STR("rcumask="<<rcuMask);
 	
-	itsHBAdelays.resize(rcuMask.count(), MEPHeader::N_HBA_DELAYS);
+	itsHBAdelays.resize(rcuMask.count(), N_HBA_ELEM_PER_TILE);
 	itsHBAdelays = 0;	// set all delays to 0
 	
 	int		localrcu  = 0;
 	int		globalrcu = 0;
-	for (globalrcu = 0; globalrcu < MEPHeader::MAX_N_RCUS; globalrcu++) {
+	// Note: the superterp stations have different rotations for each HBA subarray
+	bool	diffHBArotations = (tileDeltas(firstDim) > N_HBA_ELEM_PER_TILE);
+	StationConfig*	gStationConfig = globalStationConfig();
+	for (globalrcu = 0; globalrcu < MAX_RCUS; globalrcu++) {
 		//LOG_DEBUG_STR("globalrcu=" << globalrcu);
 		if (!rcuMask.test(globalrcu)) {
 			continue;
@@ -467,12 +471,14 @@ void Beam::calculateHBAdelays(RTC::Timestamp				timestamp,
 		// RCU is in RCUmask, do the calculations
 		int	antenna(globalrcu/2);
 		int pol	   (globalrcu%2);
-		for (int element = 0; element < MEPHeader::N_HBA_DELAYS; element++) {
+		// set HBAdeltaOffset to 16 or 0
+		int HBAdeltaOffset (diffHBArotations  && (antenna >= (gStationConfig->nrHBAs / 2)) ? N_HBA_ELEM_PER_TILE : 0);
+		for (int element = 0; element < N_HBA_ELEM_PER_TILE; element++) {	// for all elements in a tile
 					
 			// calculate tile delay
 			double	delay =
-				( (itsHBA_L * tileDeltas(element,0)) + 
-				  (itsHBA_M * tileDeltas(element,1)) ) / 
+				( (itsHBA_L * tileDeltas(HBAdeltaOffset + element,0)) + 
+				  (itsHBA_M * tileDeltas(HBAdeltaOffset + element,1)) ) / 
 					SPEED_OF_LIGHT_MS;
 			
 			// signal front stays in midle of tile
@@ -509,7 +515,7 @@ void Beam::calculateHBAdelays(RTC::Timestamp				timestamp,
 		
 	// temporary array needed to LOG "itsHBAdelays"
 	blitz::Array<int,2>	HBAdelays;
-	HBAdelays.resize(rcuMask.count(), MEPHeader::N_HBA_DELAYS);
+	HBAdelays.resize(rcuMask.count(), N_HBA_ELEM_PER_TILE);
 	
 	HBAdelays = itsHBAdelays + 0; // copy to print values (uint8 are handled as chars)
 	LOG_DEBUG_STR("itsHBAdelays Nr = " << HBAdelays);

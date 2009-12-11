@@ -244,7 +244,7 @@ void Beams::sendHBAdelays(RTC::Timestamp				time,
 		RSPSethbaEvent	request;
 		request.timestamp  = time;
 		request.rcumask    = bi->first->getSubarray().getRCUMask();
-		request.settings().resize(request.rcumask.count(), MEPHeader::N_HBA_DELAYS);
+		request.settings().resize(request.rcumask.count(), N_HBA_ELEM_PER_TILE);
 		request.settings() = bi->first->getHBAdelays();
 
 		LOG_INFO_STR("sending HBAdelays for beam " << bi->first->getName());

@@ -108,9 +108,9 @@ void Beamlets::calculate_weights(Array<complex<double>, 3>& weights)
 		// The check that is commented out below is too strict because
 		// pos array can be a subset of the full array because of subarraying
 		// 
-		// pos.extent(firstDim) == nrcus/MEPHeader::N_POL
+		// pos.extent(firstDim) == nrcus/N_POL
 		ASSERT(pos.extent(firstDim) <= weights.extent(secondDim) &&
-				pos.extent(secondDim) == MEPHeader::N_POL &&
+				pos.extent(secondDim) == N_POL &&
 				pos.extent(thirdDim) == NDIM);
 		ASSERTSTR(compute_interval == lmn.extent(firstDim), 
 						compute_interval << "==" << lmn.extent(firstDim));
@@ -134,16 +134,16 @@ void Beamlets::calculate_weights(Array<complex<double>, 3>& weights)
 			for (int pol = 0; pol < pos.extent(secondDim); pol++) {
 				// srcrcu is index in subarray
 				// destrcu is index in total number of rcu's
-				int srcrcu = (antenna * MEPHeader::N_POL) + pol;
+				int srcrcu = (antenna * N_POL) + pol;
 				int destrcu = beam->getSubarray().getRCUIndex(antenna, pol);
 
 				if (destrcu < 0) {
 					continue;
 				}
 				weights(all, destrcu, bi) = exp(scaling *
-					(( pos(srcrcu / MEPHeader::N_POL, srcrcu % MEPHeader::N_POL, 0) * lmn(all, 0))
-					 +(pos(srcrcu / MEPHeader::N_POL, srcrcu % MEPHeader::N_POL, 1) * lmn(all, 1))
-					 +(pos(srcrcu / MEPHeader::N_POL, srcrcu % MEPHeader::N_POL, 2) * lmn(all, 2))));
+					(( pos(srcrcu / N_POL, srcrcu % N_POL, 0) * lmn(all, 0))
+					 +(pos(srcrcu / N_POL, srcrcu % N_POL, 1) * lmn(all, 1))
+					 +(pos(srcrcu / N_POL, srcrcu % N_POL, 2) * lmn(all, 2))));
 			} // for all pols
 		} // for all antennas
 	} // for all beamlets
