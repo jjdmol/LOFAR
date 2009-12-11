@@ -77,6 +77,7 @@ namespace LOFAR {
     map<string,string> emptyMap;
     ParameterSet out;
     ParameterSet in (parset);
+    int nfacets = 1;
     // The image name is formed from the given image name and the MS name
     // by replacing the MS file extension with the image name.
     // In this way it works well for e.g. mwimager-dd where a global
@@ -141,7 +142,7 @@ namespace LOFAR {
         angle2 = in.getString ("msDirDec", string());
         dirType = in.getString ("msDirType", string());
       }
-      int nfacets = imin.getInt ("nfacets", 1);
+      nfacets = imin.getInt ("nfacets", 1);
       imin.remove ("name");
       imin.remove ("ra");
       imin.remove ("dec");
@@ -229,7 +230,8 @@ namespace LOFAR {
       beamStr << beam;
       out.add ("Cimager.restore.beam", beamStr.str());
       map<string,string> defaults;
-      defaults["restore"] = "false";
+      // Restore is needed when doing faceted imaging
+      defaults["restore"] = (nfacets==1 ? "false" : "true");
       defaults["ncycles"] = "1";
       map<string,string> old2new;
       old2new["minUV"] = "MinUV";

@@ -75,11 +75,27 @@ cimager.sh -inputs $psnbase.part$seqnr.cvt
 # Create a symlink using the same name as cimager would create.
 imgname=`getparsetvalue $psnbase.part$seqnr.cvt Cimager.Images.Names`
 newname=`getparsetvalue $psnbase.part$seqnr.cvt imgname`
-if test -d $imgname.restored; then
-  if test ! -d $newname; then
-    echo "ln -s $imgname.restored $newname"
-    ln -s $imgname.restored $newname
+# Do not do it if it already exists as a directory without table.dat.
+# Thus an already existing regular .img is overwritten.
+makelink=1;
+if ! test -L $newname  -a  -d $newname; then
+  if test ! -e $newname/table.dat; then
+    makelink=0
   fi
+fi
+nm=
+if test -e $imgname.restored; then
+  nm=$imgname.restored
+  if test -e $imgname  -a  $imgname -nt $nm; then
+    nm=$imgname
+  fi
+elif test -d $imgname; then
+  nm=$imgname
+fi
+if test $makelink = 1  -a  "$nm" != ""; then
+  echo "ln -s $nm $newname"
+  rm -rf $newname
+  ln -s $nm $newname
 fi
 
 # Convert to FITS.
