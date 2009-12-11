@@ -40,7 +40,7 @@
 #  Correct.Model.Beam.Element.Type = ""
 #  Correct.Model.Beam.Element.Path = "$LOFARROOT/share"
 #  Correct.Model.Beam.StationConfig.Name
-#  Correct.Model.Beam.StationConfig.Path
+#  Correct.Model.Beam.StationConfig.Path = "/home/zwieten/StationConfig"
 #  Correct.column       = CORRECTED_DATA   # output column after correction
 #  Correct.instrumentDB
 #  Images.name
@@ -168,9 +168,9 @@ def doBBS (ps, i, j, psname, gdsname, cd, wd, dry, instdb, skydb, catname, incol
     print 'doBBS facet',i,j
     # Get beam info and station config info.
     beamType = ps.getString ('Correct.Model.Beam.Element.Type', '')
-    beamPath = ps.getString ('Correct.Model.Beam.Element.Path', '')
+    beamPath = ps.getString ('Correct.Model.Beam.Element.Path', '$LOFARROOT/share')
     configName = ps.getString ('Correct.Model.Beam.StationConfig.Name', '')
-    configPath = ps.getString ('Correct.Model.Beam.StationConfig.Path', '')
+    configPath = ps.getString ('Correct.Model.Beam.StationConfig.Path', '/home/zwieten/StationConfig')
     # Create the parset file for the calibrate run.
     bbskey = "bbs-%03d-%03d" % (i, j)
     psn = psname + '-' + bbskey
