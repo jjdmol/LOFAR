@@ -436,6 +436,32 @@ namespace LOFAR
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
+    // Compare two axes for equality within a tolerance (using casa::near()).
+    bool GlobalProcessControl::equal(const Axis::ShPtr &lhs,
+        const Axis::ShPtr &rhs) const
+    {
+      if(lhs->size() != rhs->size()) {
+        return false;
+      }
+
+      if(lhs->isRegular() && rhs->isRegular()) {
+        return casa::near(lhs->start(), rhs->start())
+          && casa::near(lhs->end(), rhs->end());
+      }
+
+      for(size_t i = 0, end = lhs->size(); i < end; ++i)
+      {
+        if(casa::near(lhs->center(i), rhs->center(i))
+          && casa::near(lhs->width(i), rhs->width(i))) {
+          continue;
+        }
+
+        return false;
+      }
+
+      return true;
+    }
+
     Axis::ShPtr GlobalProcessControl::getGlobalTimeAxis() const {
       vector<ProcessId> kernels =
         itsCalSession->getWorkersByType(CalSession::KERNEL);
@@ -450,7 +476,7 @@ namespace LOFAR
             << kernels[i]);
         }
 
-        if(globalAxis && globalAxis != localAxis) {
+        if(globalAxis && !equal(globalAxis, localAxis)) {
           THROW(CalSessionException, "Time axis inconsistent for kernel"
             " process: " << kernels[i]);
         } else {

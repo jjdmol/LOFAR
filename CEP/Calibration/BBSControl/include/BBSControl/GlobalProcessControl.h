@@ -80,6 +80,9 @@ namespace LOFAR
         N_State
       };
 
+      // Compare two axes for equality within a tolerance (using casa::near()).
+      bool equal(const Axis::ShPtr &lhs, const Axis::ShPtr &rhs) const;
+
       // Get the global time axis and verify consistency across all parts.
       Axis::ShPtr getGlobalTimeAxis() const;
 
