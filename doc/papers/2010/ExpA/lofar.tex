@@ -46,6 +46,8 @@ grestore
 \usepackage{graphicx}
 \usepackage{mathptmx}      % use Times fonts if available on your TeX system
 \usepackage{wrapfig}
+\usepackage{txfonts}
+\usepackage{xspace}
 %
 % insert here the call for the packages your document requires
 %\usepackage{latexsym}
@@ -64,6 +66,8 @@ grestore
 %\addtocounter{\theparagraph}{1}%
 %\vspace{2mm}\noindent\emph{\textbf{\theparagraph #1}} --- }
 \vspace{2mm}\noindent\emph{\textbf{#1}} --- }
+
+\newcommand{\us}{\,$\muup$s\xspace}
 
 \definecolor{Gold}{rgb}{1,0.84,0} 
 \newcommand{\circlenumber}[1]{%
@@ -186,8 +190,7 @@ system call (e.g., \texttt{open()}, \texttt{read()}, \texttt{socket()}) on a
 compute node is forwarded by the operating system to a daemon process on
 the I/O~node that performs the real operation.
 However, we found that it is much more efficient to run part of the correlator
-software on the I/O~node~\cite{Iskra:08}, on which we will elaborate in
-Section~\ref{sec:IONProc}.
+software on the I/O~node~\cite{Iskra:08}.
 An I/O~node uses the same hardware as a compute node, but has its
 10~Gb/s Ethernet interface connected and runs another operating system
 (a modified Linux kernel).
@@ -217,10 +220,37 @@ Access) engine.
 Furthermore, the use of 10-Gb/s Ethernet interfaces (as opposed to 1-GbE on
 the BG/L) simplified the connections to the stations.
 However, the relatively slow processor cores of I/O~nodes limit the data rate
-to roughly four Gb/s in practice.
+to a sustained speed of roughly four Gb/s in practice.
 
 
-\begin{figure*}
+
+\section{Processing pipelines}
+
+\begin{wrapfigure}{r}{62mm}
+\vspace{-9mm}
+\begin{center}
+\includegraphics[width=60mm]{overview.pdf}
+\end{center}
+\caption{Data flow through the correlator.}
+\label{fig:overview}
+\end{wrapfigure}
+The LOFAR stations send data via the Wide-Area Network to the correlator
+(see Figure~\ref{fig:overview}).
+The Blue Gene I/O nodes receive the data, and forward the data to the
+compute nodes, where most of the processing is done.
+The resulting data is sent back via the I/O~nodes to a cluster of storage
+nodes, where the data is written to disk.
+After an observation, these data are postprocessed (not shown).
+Correlated data is flagged, calibrated, and imaged~\cite{Nijboer:10};
+pulsar data is dedispersed and folded~\cite{Hessels:10}.
+
+Note that the HBAs of a core station can be split into two separate
+substations~\cite{?}.
+The correlator treats a split station as if it were two independent stations,
+hence both substations are correlated to all other stations, as well as
+mutually.
+
+\begin{figure}
 \begin{center}
 \includegraphics[width=\textwidth]{processing.pdf}
 \end{center}
@@ -231,45 +261,28 @@ run concurrently on the same data.
 The main text uses the circled numbers to refer to the pipeline components.
 }
 \label{fig:processing}
-\end{figure*}
+\end{figure}
 
-
-\section{Processing pipelines}
-
-The data that comes from the LOFAR stations is centrally processed on the
-Blue Gene/P, in real time.
-Most of the processing is done on the Blue Gene compute nodes, but input
-and output-related tasks run on the Blue Gene I/O nodes.
-The output data is stored on a cluster of storage nodes.
-After an observation, these data are postprocessed.
-Correlated data is flagged, calibrated, and imaged~\cite{Nijboer:10};
-pulsar data is analyzed afterward as well~\cite{Hessels:10}.
-
+In the remainder of this section, we explain all pipeline components of
+the correlator.
 Figure~\ref{fig:processing} shows how the data flows through the entire
 processing chain.
 The circled numbers below refer to the pipeline components in the figure.
-The remainder of this section explains these pipeline components.
-
-The HBAs of a core station can be split into two separate substations~\cite{?}.
-The correlator treats a split station as if it were two independent stations,
-hence both substations are correlated to all other stations, as well as
-mutually.
-
 
 
 \paragraph{Data Receipt \circlenumber{1}}
 The stations send packets with subband data over the Wide-Area Network to the
 Blue Gene.
-The observer selects up to 248 subbands (frequency/beam combinations),
-corresponding to 48.4~MHz observation bandwidth.
+The observer selects up to 248 subbands (frequency/beam combinations) of
+195~KHz (assuming a 200~MHz station clock), corresponding to 48.4~MHz
+observation bandwidth.
 Each (sub)station sends 48,828 packets per second, at a rate of 3.1~Gb/s.
 
 We use the UDP datagram protocol for data transport, which is simple, but
 unreliable.
-A reliable protocol like TCP does not guarantee real-time data transport
-and significantly complicates the programming of the station FPGAs, due to
-buffering, flow control, retransmissions, and the necessity to communicate
-in two directions.
+A reliable protocol like TCP would significantly complicate the programming of
+the station FPGAs, due to buffering, flow control, retransmissions, real-time
+issues, and the necessity to communicate in two directions.
 The correlator takes care of out-of-order, duplicated, and lost UDP packets.
 Missing data is administrated throughout the remainder of the processing
 pipeline, but in practice, hardly any data is lost.
@@ -277,7 +290,7 @@ pipeline, but in practice, hardly any data is lost.
 
 \paragraph{The Circular Buffer \circlenumber{2}}
 A Blue Gene I/O~node receives data from one (sub)station, and stores the
-data in a circular buffer.
+data into a circular buffer.
 Due to the high data rate and the small amount of available memory,
 the circular buffer holds only the most recent 2.5~seconds of data, after
 which old data is overwritten by new data.
@@ -304,12 +317,13 @@ correlated.
 
 Since delays can be larger than the sample period, we perform delay
 compensation in two steps.
-First, we correct for integer multiples of the sample period by simply
-delaying the streams of station samples.
-This shift is performed on the I/O~node, by moving the read pointer of the
+First, we delay the stream of station samples by an integer amount.
+For example, a 22\us delay can be achieved by shifting four 5.12\us
+samples; an error of 1.52\us remains.
+The shift is performed on the I/O~node, by adjusting the read pointer of the
 circular buffer.
-Second, the remaining error is corrected by rotating the phase of the signal.
-This is done later in the pipeline (see \circlenumber{7}).
+The remaining error is corrected by rotating the phase of the signal later on
+in the pipeline (see \circlenumber{7}).
 
 
 \paragraph{I/O Node to Compute Node transport \circlenumber{4}}
@@ -327,14 +341,13 @@ real-time deadline, the missing data is flagged.
 
 \paragraph{Round-Robin distribution}
 A processor core is too slow to process one second of data within one second of
-real time (e.g., one second of data from 64~stations requires 5.6~seconds
-processing time).
-The basic idea is to send subsequent chunks to different compute nodes in
-round-robin order (i.e., one after another, in a cyclic manner).
+real time (e.g., filtering and correlating one second of data from 64~stations
+requires 5.6~seconds processing time~\cite{Romein:10a}).
+The basic idea is that the I/O~node sends subsequent chunks to different
+compute nodes in round-robin order (i.e., one after another, in a cyclic
+manner).
 A compute node first receives data from the I/O~node, processes them, sends
 back the results, and idles until the I/O~node sends new data.
-In reality, the scheduling of work over the compute nodes is extremely
-complicated, since resource conflicts are avoided.
 
 
 \paragraph{Data Transpose \circlenumber{5}}
@@ -350,6 +363,9 @@ We use the 3-D torus to switch hundreds of gigabits per second.
 These are challenging data rates, but the torus is well capable of doing so.
 We overlap communication with the computational steps described below,
 to hide the costs of sending and receiving data.
+The program code that performs the transpose is highly efficient but extremely
+complicated; due to the round-robin scheduling of work, the group of compute
+nodes that must exchange data continuously changes over time.
 
 
 \paragraph{Data Conversion}
@@ -427,38 +443,38 @@ This filter bank performed the initial division of the antenna signals into
 subbands.
 Without correction, some channels have a stronger signal than others
 (see Figure~\ref{fig:bandpass}).
-The correction is performed by multiplying each complex sample by a real,
-channel-dependent value that is computed in advance.
+The correction is performed by multiplying each complex sample by a constant,
+real, channel-dependent weight.
 A station cannot correct for this artifact itself, since it is only visible
 in channels, not in subbands.
 We describe how the correction factors are computed in~\cite{Romein:08}.
 
 
 \paragraph{Finalizing the Asynchronous Transpose \circlenumber{5}}
-Up to this point in the pipeline, processing chunks from different stations
-can be done independently, but from here on, the data from all stations are
-required.
-Therefore, the asynchronous transpose ends here, before the beam forming.
+Up to this point in the pipeline, chunks of data from different stations are
+processed independently, in any order, as soon as the data is received.
+However, from here on, the data from all stations is needed together.
+Therefore, the processor waits until the data from all stations is received
+and processed before proceeding with the next step.
 
 
 \paragraph{Superstations \circlenumber{9}}
-Optionally, any group of stations can be beam formed to create a
+Optionally, any group of stations can be beam formed to create a more sensitive
 \emph{superstation}.
-Such a superstation is treated as a single station by the correlator.
+Such a superstation is treated as a single station in the remainder of the
+pipeline.
 A typical use case is the addition of all superterp stations in long-baseline
-observations, so that the superterp forms a very sensitive virtual stations.
+observations, so that the superterp forms a very sensitive virtual station.
 Grouping stations into superstations significantly reduces the number of
 baselines and hence the output data rate of the correlator.
-This form of beam forming is a special case of the coherent beam former
-described below (Section~\ref{sec:beam-forming}).
 
 
 \paragraph{The Correlator \circlenumber{10}}
-Finally, the samples from each pair of individual or grouped stations are
+The samples from each pair of individual or grouped stations are
 correlated, by multiplying the sample of one station with the complex conjugate
 of the sample of the other station.
 To reduce the output size, the products are integrated, by accumulating all
-products.
+products (\circlenumber{11}).
 We typically accumulate 768~correlations at 763~Hz, so that the integration
 time is approximately one second, the size of a chunk.
 The correlator is the most time-consuming operation in the signal
