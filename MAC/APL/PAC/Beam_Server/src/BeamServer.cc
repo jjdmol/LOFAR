@@ -176,8 +176,8 @@ GCFEvent::TResult BeamServer::con2rspdriver(GCFEvent& event, GCFPortInterface& p
 
 		// resize our array to number of current RCUs
 		itsMaxRCUs = ack.n_rcus;
-		m_weights.resize   (itsComputeInterval, itsMaxRCUs, MEPHeader::N_BEAMLETS);
-		m_weights16.resize (itsComputeInterval, itsMaxRCUs, MEPHeader::N_BEAMLETS);
+		m_weights.resize   (itsComputeInterval, itsMaxRCUs, MAX_BEAMLETS);
+		m_weights16.resize (itsComputeInterval, itsMaxRCUs, MAX_BEAMLETS);
 
 		// initialize matrices
 		m_weights   = complex<double>(0,0);
@@ -299,7 +299,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 
 	switch (event.signal) {
 	case F_ENTRY: {
-		itsCalServer->setTimer((long)0); // trigger single recall
+//		itsCalServer->setTimer((long)0); // trigger single recall
 	}
 	break;
 
@@ -320,6 +320,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 	break;
 
 	case F_TIMER: {
+#if 0
 		// Calserver timer?
 		if (&port == itsCalServer) {
 			// recall one deferred event, set timer again if an event was handled
@@ -327,8 +328,9 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 				itsCalServer->setTimer((long)0);
 			}
 		} 
+#endif
 		// Update timer?
-		else if (&port == itsUpdateTimer) {
+		if (&port == itsUpdateTimer) {
 			GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
 			LOG_DEBUG_STR("timer=" << Timestamp(timer->sec, timer->usec));
 			
@@ -564,12 +566,13 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 
 	case F_DISCONNECTED: {
 		LOG_INFO(">>> deferring F_DISCONNECTED event <<<");
-		defer(event, port); // process F_DISCONNECTED again in enabled state
+//		defer(event, port); // process F_DISCONNECTED again in enabled state
 
 		if (&port == m_bt.getPort()) {
 			LOG_WARN("Lost connection, going back to 'enabled' state");
 			TRAN(BeamServer::enabled);
 		}
+		return (GCFEvent::NEXT_STATE);
 	}
 	break;
 
@@ -582,7 +585,8 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 	default:
 		LOG_DEBUG("beamalloc_state:default --> defer command");
 		// all other events are handled in the enabled state
-		defer(event, port);
+//		defer(event, port);
+		return (GCFEvent::NEXT_STATE);
 		break;
 	}
 
@@ -635,12 +639,13 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 
 	case F_DISCONNECTED: {
 		LOG_INFO(">>> deferring F_DISCONNECTED event <<<");
-		defer(event, port); // process F_DISCONNECTED again in enabled state
+//		defer(event, port); // process F_DISCONNECTED again in enabled state
 
 		if (&port == m_bt.getPort()) {
 			LOG_WARN("Lost connection, going back to 'enabled' state");
 			TRAN(BeamServer::enabled);
 		}
+		return (GCFEvent::NEXT_STATE);
 	}
 	break;
 
@@ -658,7 +663,8 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 	default:
 		LOG_DEBUG("beamfree_state:default --> defer command");
 		// all other events are handled in the enabled state
-		defer(event, port);
+//		defer(event, port);
+		return (GCFEvent::NEXT_STATE);
 		break;
 	}
 
@@ -738,8 +744,8 @@ void BeamServer::_createBeamPool()
 	}
 
 	// make a new one based on the current value of the splitter.
-	LOG_INFO_STR("Initializing space for " << (itsSplitterOn ? 2 : 1 ) * MEPHeader::N_BEAMLETS << " beamlets");
-	itsBeamPool = new Beams((itsSplitterOn ? 2 : 1 ) * MEPHeader::N_BEAMLETS, MEPHeader::N_SUBBANDS);
+	LOG_INFO_STR("Initializing space for " << (itsSplitterOn ? 2 : 1 ) * MAX_BEAMLETS << " beamlets");
+	itsBeamPool = new Beams((itsSplitterOn ? 2 : 1 ) * MAX_BEAMLETS, MAX_SUBBANDS);
 	ASSERTSTR(itsBeamPool, "Cannot allocate space for the beamlet administration.");
 }
 
@@ -1077,7 +1083,7 @@ void BeamServer::send_weights(Timestamp time)
 		sw.rcumask.set(i);
 	}
   
-	sw.weights().resize(itsComputeInterval, itsMaxRCUs, MEPHeader::N_BEAMLETS);
+	sw.weights().resize(itsComputeInterval, itsMaxRCUs, MAX_BEAMLETS);
 	sw.weights() = m_weights16;
   
 	LOG_INFO_STR("sending weights for interval " << time << " : " << time + (long)(itsComputeInterval-1));
@@ -1090,6 +1096,10 @@ void BeamServer::send_weights(Timestamp time)
 //	LOG_DEBUG_STR("weights sample=" << sample);
 
 	itsRSPDriver->send(sw);
+
+//REO TEMP FOR TEST Michiel
+//	LOG_INFO_STR("rcumask weights : " << sw.rcumask);
+//	LOG_INFO_STR(sw.weights());
 }
 
 //
@@ -1120,7 +1130,7 @@ void BeamServer::send_sbselection()
 		// of 64 beamlets before the beamlets of beam 1.
 		//
 		ss.subbands.setType(SubbandSelection::BEAMLET);
-		ss.subbands().resize(1, MEPHeader::N_BEAMLETS);
+		ss.subbands().resize(1, MAX_BEAMLETS);
 		ss.subbands() = 0;
 
 		Beamlet2SubbandMap sbsel = itsBeamPool->getSubbandSelection(ringNr);
@@ -1130,12 +1140,12 @@ void BeamServer::send_sbselection()
 											sel != sbsel().end(); ++sel) {
 			LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
 
-			if (sel->first >= MEPHeader::N_BEAMLETS) {
+			if (sel->first >= MAX_BEAMLETS) {
 				LOG_ERROR(formatString("SBSELECTION: invalid src index %d", sel->first));
 				continue;
 			}
 
-			if (sel->second >= MEPHeader::N_SUBBANDS) {
+			if (sel->second >= MAX_SUBBANDS) {
 				LOG_ERROR(formatString("SBSELECTION: invalid tgt index %d", sel->second));
 				continue;
 			}
@@ -1146,9 +1156,14 @@ void BeamServer::send_sbselection()
 
 		LOG_DEBUG_STR("Sending subbandselecton for ring segment " << ringNr);
 		itsRSPDriver->send(ss);
+
+//REO TEMP FOR TEST Michiel
+//		LOG_INFO_STR("rcumask ring " << ringNr << " : " << ss.rcumask);
+//		LOG_INFO_STR("subbands ring " << ringNr << ": " << ss.subbands());
 	}
 }
 
+#if 0
 //
 // defer(event, port)
 //
@@ -1181,6 +1196,6 @@ GCFEvent::TResult BeamServer::recall(GCFPortInterface& /*p*/)
 
 	return (status);
 }
-
+#endif
   } // namespace BS;
 } // namespace LOFAR;

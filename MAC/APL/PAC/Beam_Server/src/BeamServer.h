@@ -161,10 +161,10 @@ public:
 	void send_sbselection();
 
 	// defer event
-	void defer(GCFEvent& e, GCFPortInterface& p);
+//	void defer(GCFEvent& e, GCFPortInterface& p);
 
 	// recall event
-	GCFEvent::TResult recall(GCFPortInterface& p);
+//	GCFEvent::TResult recall(GCFPortInterface& p);
 
 	// (re)create the beampool. Normally done after the splitter state changed.
 	void _createBeamPool();

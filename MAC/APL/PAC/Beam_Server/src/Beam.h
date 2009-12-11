@@ -24,13 +24,13 @@
 #define BEAM_H_
 
 #include <lofar_config.h>
+#include <Common/LofarConstants.h>
 #include <APL/BS_Protocol/Pointing.h>
 #include <APL/BS_Protocol/Beamlet2SubbandMap.h>
 #include <APL/RTCCommon/Timestamp.h>
 #include <APL/CAL_Protocol/SpectralWindow.h>
 #include <APL/CAL_Protocol/SubArray.h>
 #include <APL/CAL_Protocol/AntennaGains.h>
-#include <APL/RSP_Protocol/MEPHeader.h>
 #include <time.h>
 #include <AMCBase/Converter.h>
 

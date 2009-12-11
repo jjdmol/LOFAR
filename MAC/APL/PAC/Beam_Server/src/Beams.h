@@ -23,6 +23,7 @@
 #ifndef BEAMS_H_
 #define BEAMS_H_
 
+#include <Common/LofarConstants.h>
 #include <APL/BS_Protocol/Pointing.h>
 #include <APL/BS_Protocol/Beamlet2SubbandMap.h>
 #include <APL/RTCCommon/Timestamp.h>
@@ -30,7 +31,6 @@
 #include <APL/CAL_Protocol/SpectralWindow.h>
 #include <APL/CAL_Protocol/SubArray.h>
 #include <APL/CAL_Protocol/AntennaGains.h>
-#include <APL/RSP_Protocol/MEPHeader.h>
 #include <GCF/TM/GCF_PortInterface.h>
 #include <time.h>
 #include <AMCBase/Converter.h>
