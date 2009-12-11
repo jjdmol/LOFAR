@@ -25,6 +25,8 @@ install(FILES
   VisDimensions.h
   VisExpr.h
   VisSelection.h
+  DESTINATION include/${PACKAGE_NAME})
+install(FILES
   Expr/ArrayFactor.h
   Expr/AzEl.h
   Expr/BasicExpr.h
@@ -74,4 +76,4 @@ install(FILES
   Expr/StatUVW.h
   Expr/ValueSet.h
   Expr/YatawattaDipole.h
-  DESTINATION include/${PACKAGE_NAME})
+  DESTINATION include/${PACKAGE_NAME}/Expr)
