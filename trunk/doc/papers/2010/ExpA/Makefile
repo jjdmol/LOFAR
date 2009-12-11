@@ -2,7 +2,7 @@ TEX_SOURCES =	lofar.tex
 
 BIB_SOURCES =	lofar.bib
 
-FIG_SOURCES =	delay.fig pencil-beam.fig processing.fig
+FIG_SOURCES =	delay.fig overview.fig pencil-beam.fig processing.fig
 
 JGR_SOURCES =	bandpass.jgr
 
