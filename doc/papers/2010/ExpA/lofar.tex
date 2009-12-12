@@ -419,7 +419,6 @@ disambiguated~\cite{Romein:08}.
 
 
 \paragraph{Phase Shift Correction \circlenumber{7}}
-\label{sec:phase-rotation}
 Next, the remaining fraction of the delays are compensated (see
 \circlenumber{3}), by rotating the phase of the signal.
 We apply the correction after creating channels, since the correction factor
@@ -492,10 +491,14 @@ paper on pulsar modes elsewhere in this issue~\cite{Hessels:10}.
 
 The beamforming pipelines fall into two catagories: the coherent modes and
 incoherent modes.
-The coherent modes add the samples from all stations, resulting in a
+The coherent modes add the complex samples from all stations, resulting in a
 complex voltage.
+The beam of the coherent sum of all stations is much smaller than the station
+beams themselves, and is inversely proportional to the distance of the stations.
 The incoherent modes first compute the power of each sample, and add the
 powers from the different stations.
+The beam of incoherently added stations covers the beam of the individual
+stations.
 
 
 \begin{wrapfigure}{r}{35mm}
@@ -507,13 +510,22 @@ powers from the different stations.
 \label{fig:pencil-beams}
 \end{wrapfigure}
 \paragraph{Coherent Beam Forming}
-The coherent modes can form multiple \emph{pencil beams\/}~(\circlenumber{12}),
-to cover the much larger station beam (see Figure~\ref{fig:pencil-beams}).
-The different pointings are computed by rotating the phase of each station
-sample differently for each pencil beam, before the station samples are added.
+Since the beam of the coherent sum of the stations is narrow, only a small
+part of the sky is covered.
+However, the coherent modes can form multiple
+\emph{pencil beams\/}~(\circlenumber{12}), to cover more of the much larger
+station beam (see Figure~\ref{fig:pencil-beams}).
+The direction of a (pencil) beam is established by applying appropriate
+delays to each station before adding their complex samples, and a delay is
+established by applying an appropriate phase rotation (c.f., \circlenumber{7}).
+In other words, a sample is first multiplied by a (station and
+direction-dependent) complex weight, and then added to the weighted samples
+of the other stations.
+
+To create multiple pencil beams with different directions, different delays
+are appied to a station before addition.
 Note that the center beam needs no correction, as the phase correction for
-this direction was already performed at high precision (see
-Section~\ref{sec:phase-rotation}).
+this direction was already performed at high precision (see \circlenumber{7}).
 The other pencil beams are corrected with respect to the center beam.
 
 The directions of the pencil beam can be choosen freely (of course, observing
@@ -532,6 +544,9 @@ I,Q,U,V~(\circlenumber{13}), or to Stokes~I only~(\circlenumber{14}).
 \paragraph{Incoherent Beam Forming}
 Unlike the coherent modes, the incoherent modes add the powers of the signals
 from the different stations, rather than the signals themselves.
+Since the beam of the incoherent sum covers the station beams, there is no
+need to create multiple pencil beams.
+As a consequence, the output data rate of this mode is much smaller.
 Either Stokes I,Q,U,V~(\circlenumber{15}) or to Stokes~I
 only~(\circlenumber{16}) can be choosen.
 
@@ -541,7 +556,8 @@ The number of pencil beams that can be formed is likely to be limited by the
 output data rate that can be handled (specified at 50~Gb/s).
 The data rate can be reduced by integrating multiple samples.
 We also plan to support conversion from single-precision (32-bit) floating
-point to 16-bit or even smaller bit-count values.
+point to 16-bit or even smaller bit-count values, to reduce the data rate
+even further.
 
 
 \paragraph{The Second Transpose \circlenumber{18}}
@@ -555,7 +571,8 @@ Hence, a second transpose is necessary to reorder the beam-formed data.
 
 We are currently implementing this transpose.
 For the pulsar pipelines, the transpose can be done offline, but it is more
-efficient to do it online on the fast torus network on the Blue Gene.
+convenient and efficient to do it online on the fast torus network on the
+Blue Gene.
 For the transient detection pipeline, the transpose \emph{must\/} be done
 in real time.
 
@@ -572,14 +589,15 @@ on the BG/L.
 
 
 \paragraph{The Best-Effort Queues \circlenumber{21}}
-At the very end of the Blue Gene pipelines, the output data is queued to
-be sent to the storage nodes.
+At the very end of the Blue Gene pipelines, the output data is queued for
+sending to the storage nodes.
 The queue improves real-time behavior and increases fault tolerance, since
 it handles data on a best-effort basis.
 If, for any reason, the data is not sent quickly enough to the storage node,
 the queue fills up and subsequent data is simply discarded until space is
 available.
-This way, we can tolerate (intermittent) disk and network failures.
+This way, we can tolerate intermittent or permanent disk and network failures
+with minimal loss of data.
 The mechanism is important to keep the correlator running in real
 time: it is much better to lose a small part of the data than to stall the
 entire correlator and lose \emph{all\/} data.
@@ -598,13 +616,14 @@ The correlated data is written as CasaCore Measurement Set~\cite{Kemball:00}.
 Initially, we used the CasaCore ``tables'' library to write data, but we
 found that the library consumed far too many CPU cycles to sustain write
 speeds of more than a few tens of megabytes per second per storage node.
-To improve this speed by more than an order of magnitude, we write the
-raw streams of correlations \emph{uninterpreted\/} to disk, and changed
+To improve this speed by more than an order of magnitude, we now write the
+raw streams of correlations \emph{uninterpretedly\/} to disk, and changed
 the CasaCore library so that it supports the raw data format as well,
 without changing the Application Programming Interface of the library.
 This way, legacy applications can read (and write) Measurement Sets that
 internally use the raw data format, by relinking against the new CasaCore
 library, either dynamically or statically.
+A versioning mechanism is provided to support future data formats.
 
 Only the correlations and flagging information are written in the raw
 format, bypassing the CasaCore library.
@@ -618,7 +637,7 @@ Beamformed data is written in HDF5 format~\cite{?}.
 \subsection{The Ultra-High Energy Particle pipeline}
 
 The Ultra-High Energy Particle pipeline is currently in its design phase.
-This pipeline beamforms the stations and reverts back to the 200~Mhz
+This pipeline coherently beamforms the stations and reverts back to the 200~Mhz
 time-domain, to detect peaks caused by ultra-high-energy particles.
 It largely relies on the pulsar pipeline, since it will use the beam former
 to create many tens of beams.
@@ -629,8 +648,8 @@ beams over different compute nodes and join all frequencies, so that a compute
 node has all frequencies of a single beam.
 This way, the first PPF (at the stations) can be undone, by an inverse PPF bank
 (\circlenumber{24} and \circlenumber{25}).
-Of course, some of the data is lost, since no more than 248~subbands can be
-sent by the stations.
+Of course, some of the signal is lost, since only 248 out of 512~subbands can
+be sent by the stations.
 A peak-detection algorithm (\circlenumber{26}) inspects the time-series data
 to generate a trigger to freeze the Transient Buffer Boards~\cite{Kooistra:10}.
 
@@ -706,11 +725,44 @@ by 50\%, it also allows full coverage of the interesting 30--78~MHz range
 in a single observation, rather than two.
 
 
+\subsection{Future Work}
+
+Although the correlator is in production use for daily imaging and pulsar
+observations, we still extend its functionality.
+In addition to the observation modes that are not implemented yet, we list
+some ideas for future work below.
+
+We plan to implement some form of real-time flagging, to discard bad data
+as soon as possible.
+This has several advantages, for example in the beam-forming pipelines,
+where a bad signal from a single station now corrupts the entire sum.
+Also, if a real-time flagger would perform really well, there is opportunity
+to average the visibility data in frequency direction, since RFI is typically
+narrow banded.
+
+We have not yet determined a good real-time flagging algorithm, and are not
+even sure if it is feasible to flag in real time.
+The correlator can hold at most a few seconds of data in main memory, and
+this is rather restrictive.
+Also, it is not clear what is the best place (or places) in the pipeline to
+insert a flagger; for example, the properties of a flagger that will flag
+on correlated data will be quite different from the properties of a flagger
+that will flag on filtered station data.
+
+We would also like to implement some form of real-time calibration.
+The idea is to analyze the visibilities and estimate new gains and phases
+that are applied to the station input stream (somewhere between
+\circlenumber{6} and \circlenumber{9}) in a feed-back loop.
+Since the correlated output is produced with a latency of multiple seconds,
+gain and phase corrections can only be applied to data of a couple of seconds
+later.
+
+
 \subsection{Results}
 
 \begin{figure}[ht]
 \includegraphics[width=\columnwidth]{fringe.jpg}
-\caption{Correlations from a 9-hour observation.}
+\caption{Fringes from a 9-hour observation.}
 \label{fig:fringe}
 \end{figure}
 
@@ -722,13 +774,15 @@ The figure shows the cross-correlations from two of the stations used during a
 9-hour observation.
 The horizontal axis represents time;
 the vertical axis represents the 256~channels of one frequency subband.
-Each pixel corresponds to a (complex) correlation, where the color represents
+Each pixel corresponds to a correlation, where the color represents
 the phase of the signal; the intensity matches the amplitude (power).
-The phase changes over time, due to the earth rotation that alters the
-relative position of the observed sources and thus the time difference
-between the two stations.
-The white spots are caused by RFI; these bad data are detected and
-ignored in the remainder of the processing pipeline.
+%The phase changes over time, due to the earth rotation that alters the
+%relative position of the observed sources and thus the time difference
+%between the two stations.
+The white spots are caused by RFI.
+
+
+\section{conclusions}
 
 
 
