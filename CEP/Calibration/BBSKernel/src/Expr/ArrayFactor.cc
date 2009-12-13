@@ -45,7 +45,7 @@ ArrayFactor::ArrayFactor(const Expr<Vector<2> >::ConstPtr &direction,
 const JonesMatrix::View ArrayFactor::evaluateImpl(const Grid &grid,
     const Vector<2>::View &direction, const Vector<2>::View &reference) const
 {
-    const size_t nStation = itsConfig.size();
+    const size_t nElement = itsConfig.size();
     const size_t nFreq = grid[FREQ]->size();
     const size_t nTime = grid[TIME]->size();
 
@@ -91,20 +91,20 @@ const JonesMatrix::View ArrayFactor::evaluateImpl(const Grid &grid,
 
     // Allocate result (initialized at 0+0i).
     Matrix arrayFactor(makedcomplex(0.0, 0.0), nFreq, nTime);
-    for(size_t i = 0; i < nStation; ++i)
+    for(size_t i = 0; i < nElement; ++i)
     {
         // Compute the delay for a plane wave approaching from the direction of
-        // interest with respect to the phase center of station i.
-        Matrix delay = (1.0 / C::c) * (k[0] * itsConfig(i, 0)
-            + k[1] * itsConfig(i, 1) + k[2] * itsConfig(i, 2));
+        // interest with respect to the phase center of element i.
+        Matrix delay = (k[0] * itsConfig(i, 0) + k[1] * itsConfig(i, 1)
+            + k[2] * itsConfig(i, 2)) / C::c;
 
         // Compute the delay for a plane wave approaching from the phase
-        // reference direction with respect to the phase center of station i.
-        Matrix delay0 = (1.0 / C::c) * (k0[0] * itsConfig(i, 0)
-            + k0[1] * itsConfig(i, 1) + k0[2] * itsConfig(i, 2));
+        // reference direction with respect to the phase center of element i.
+        Matrix delay0 = (k0[0] * itsConfig(i, 0) + k0[1] * itsConfig(i, 1)
+            + k0[2] * itsConfig(i, 2)) / C::c;
 
-        ASSERT(delay.nx() == 1 && delay.ny() == nTime);
-        ASSERT(delay0.nx() == 1 && delay0.ny() == nTime);
+        DBGASSERT(delay.nx() == 1 && delay.ny() == nTime);
+        DBGASSERT(delay0.nx() == 1 && delay0.ny() == nTime);
 
         double *p_delay = delay.doubleStorage();
         double *p_delay0 = delay0.doubleStorage();
@@ -121,8 +121,8 @@ const JonesMatrix::View ArrayFactor::evaluateImpl(const Grid &grid,
                 const double shift = shift0 - C::_2pi * grid[FREQ]->center(f)
                     * delay_t;
 
-                (*p_re) += std::cos(shift) / nStation;
-                (*p_im) += std::sin(shift) / nStation;
+                (*p_re) += std::cos(shift) / nElement;
+                (*p_im) += std::sin(shift) / nElement;
 
                 ++p_re;
                 ++p_im;
@@ -133,7 +133,6 @@ const JonesMatrix::View ArrayFactor::evaluateImpl(const Grid &grid,
         }
     }
 
-//    LOG_DEBUG_STR("ARRAY FACTOR: " << arrayFactor);
     JonesMatrix::View result;
     result.assign(0, 0, arrayFactor);
     result.assign(0, 1, Matrix(makedcomplex(0.0, 0.0)));
