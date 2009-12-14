@@ -194,8 +194,8 @@ def __fetch(db, elements, stations, directions=None):
                     ampl.shape[-1]))
 
             # Copy solutions into result array.
-            assert(result[i][j].shape == ampl.shape)
-            result[i][j] = ampl
+            assert(result[i][0].shape == ampl.shape)
+            result[i][0] = ampl
     else:
         for i in range(0, len(elements)):
             for j in range(0, len(directions)):
