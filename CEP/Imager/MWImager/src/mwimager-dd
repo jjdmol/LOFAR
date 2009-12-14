@@ -42,7 +42,7 @@
 #  Correct.Model.Beam.StationConfig.Name
 #  Correct.Model.Beam.StationConfig.Path = "/home/zwieten/StationConfig"
 #  Correct.column       = CORRECTED_DATA   # output column after correction
-#  Correct.instrumentDB
+#  Correct.instrumentName = instrument
 #  BBDB.Host = ldb001
 #  BBDB.Port
 #  BBDB.Name
@@ -109,13 +109,15 @@ def getBase(name):
 def getInfo (ps, gdsname, nfacet):
     # Get center of image.
     # It can be given in the parset, otherwise take it from the GDS file.
+    pgds = parset.parameterset(gdsname)
     if ps.isDefined ('Images.ra'):
         ra  = ps.getString('Images.ra')
         dec = ps.getString('Images.dec')
     else:
-        pgds = parset.parameterset(gdsname)
         ra  = pgds.getString('FieldDirectionRa')
         dec = pgds.getString('FieldDirectionDec')
+    # Get the directory name of the first MS in the gds file.
+    msdir = os.path.dirname(pgds.getString('Part0.FileName'))
     # Read string and convert to radians.
     qra  = pyquan.quantity(ra)
     qdec = pyquan.quantity(dec)
@@ -140,7 +142,7 @@ def getInfo (ps, gdsname, nfacet):
             csz += 'arcsec'
         qcsz  = pyquan.quantity(csz)
         cellsz[i] = qcsz.get_value("rad")
-    return (ra,dec,cellsz,npix)
+    return (ra,dec,cellsz,npix,msdir)
 
 def makeFacetSourceList (name, ra, dec, cellwidth, nfacet, imgshape):
     # ra and dec give the image center; cellwidth the width in ra and dec.
@@ -154,28 +156,30 @@ def makeFacetSourceList (name, ra, dec, cellwidth, nfacet, imgshape):
                   cellwidth[1] * imgshape[1] / nfacet)
     centers = []
     f = open(name, 'w')
-    f.write ('#( Name Ra Dec )=format\n')
+    f.write ('#( Name,Type,Ra,Dec )=format\n')
     decv = dec - facetwidth[1] * (nfacet-1.)/2.
     for j in range(nfacet):
         rawidth = facetwidth[0] / math.cos(decv)
         rav = ra + rawidth * (nfacet-1.)/2.
         for i in range(nfacet):
             centers.append ((rav, decv))
-            f.write ("facet-%03d-%03d %.15f %.15f\n" % (i,j,rav,decv))
+            f.write ("facet-%03d-%03d, Point, %.15f, %.15f\n" % (i,j,rav,decv))
             rav -= rawidth
         decv += facetwidth[1]
     f.write ("# imagecenter=%.10f,%.10f  imageshape=%d,%d  cellwidth=%.10f,%.10f\n" % (ra,dec,imgshape[0],imgshape[1],cellwidth[0],cellwidth[1]))
     return centers
 
-def doBBS (ps, i, j, psname, gdsname, cd, wd, dry, instdb, skydb, catname, incol, outcol):
+def doBBS (ps, i, j, psname, gdsname, cd, wd, dry, instname, skyname, catname, incol, outcol):
     if dry == 'dry':
         dry = '--dry --verbose'
+    else:
+        dry = '--verbose'
     print 'doBBS facet',i,j
     # Get BBDB info.
     bbdbhost = ps.getString ('BBDB.Host', 'ldb001')
-    bbdbport = ps.getString ('BBDB.Port', '')
+    bbdbport = ps.getString ('BBDB.Port', '5432')
     bbdbname = ps.getString ('BBDB.Name', '')
-    bbdbuser = ps.getString ('BBDB.Username', '')
+    bbdbuser = ps.getString ('BBDB.Username', 'postgres')
     bbdbpw   = ps.getString ('BBDB.Password', '')
     # Get beam info and station config info.
     beamType = ps.getString ('Correct.Model.Beam.Element.Type', '')
@@ -194,15 +198,8 @@ def doBBS (ps, i, j, psname, gdsname, cd, wd, dry, instdb, skydb, catname, incol
     f.write ('Strategy.Correlation.Selection = CROSS\n')
     f.write ('Strategy.Correlation.Type = []\n')
     f.write ('Strategy.Steps = [correct]\n')
-    f.write ('BBDB.Host = %s\n' % bbdbhost)
-    if len(bbdbport) > 0:
-        f.write ('BBDB.Port = %s\n' % bbdbport)
-    if len(bbdbname) > 0:
-        f.write ('BBDB.Name = %s\n' % bbdbname)
-    if len(bbdbuser) > 0:
-        f.write ('BBDB.Username = %s\n' % bbdbuser)
-    if len(bbdbpw) > 0:
-        f.write ('BBDB.Password = %s' % bbdbpw)
+    f.write ('Step.correct.Correlation.Selection = CROSS\n')
+    f.write ('Step.correct.Correlation.Type = []\n')
     f.write ('Step.correct.Baselines.Station1 = []\n')
     f.write ('Step.correct.Baselines.Station2 = []\n')
     f.write ('Step.correct.Model.Sources    = [facet-%03d-%03d]\n' % (i,j))
@@ -214,11 +211,15 @@ def doBBS (ps, i, j, psname, gdsname, cd, wd, dry, instdb, skydb, catname, incol
         f.write ('Step.correct.Model.Beam.StationConfig.Name = %s\n' % configName)
         f.write ('Step.correct.Model.Beam.StationConfig.Path = %s\n' % configPath)
     f.write ('Step.correct.Operation             = CORRECT\n')
-    f.write ('Step.correct.OutputColumn          = %s\n' % outcol)
+    f.write ('Step.correct.Output.Column         = %s\n' % outcol)
     f.close()
     os.system ("cat " + psn)
-    print 'calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --skip-instrument-db --skip-sky-db "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, gdsname, psn, catname, wd)
-    os.system('calibrate %s --key %s --cluster-desc "%s" --instrument-db "%s" --sky-name "%s" --skip-instrument-db --skip-sky-db "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instdb, skydb, gdsname, psn, catname, wd))
+    command = '%s --clean --key %s --cluster-desc "%s" --instrument-name "%s" --sky-name "%s" --skip-instrument-db --skip-sky-db "%s" "%s" "%s" "%s"' % (dry, bbskey, cd, instname, skyname, gdsname, psn, catname, wd)
+    command = ('--db %s:%s --db-user %s ' % (bbdbhost,bbdbport,bbdbuser)) + command
+    if len(bbdbname) > 0:
+        command = ('--db-name %s ' % bbdbname) + command
+    print 'calibrate ' + command
+    os.system('calibrate ' + command)
 
 def doDPPP (i, j, psname, gdsname, cd, dry, freqstep, timestep):
     # Create the parset file.
@@ -290,7 +291,7 @@ def main(argv=None):
         if incol == outcol:
             print sys.stderr, 'datacolumn and correctcolumn have to be different'
             return 1
-        instdb  = ps.getString ('Correct.instrumentDB')
+        instname  = ps.getString ('Correct.instrumentName', 'instrument')
 
     # Get info from the parset file and GDS file.
     nfacet  = ps.getInt('Images.nfacets')
@@ -299,7 +300,10 @@ def main(argv=None):
     freqavg = ps.getInt ('Average.nfreq', 1)
     timeavg = ps.getInt ('Average.ntime', 1)
     average = average and (freqavg!=1 or timeavg!=1)
-    (ra,dec,cellsz,npix) = getInfo (ps, gdsname, nfacet)
+    (ra,dec,cellsz,npix,msdir) = getInfo (ps, gdsname, nfacet)
+    # If no working directory given, use that of the MS.
+    if len(wd) == 0:
+        wd = msdir
     # Form the output image name.
     # Remove parts before / and after .
     imageext  = ps.getString('Images.name', '')
@@ -309,7 +313,7 @@ def main(argv=None):
     # Form the facet centers and source list for BBS.
     gdsdir =  os.path.dirname(gdsname)
     catname = gdsdir + '/facetlist.txt'
-    skydb   = gdsdir + '/' + imagebase + '.facets'
+    skyname = 'facets'
     centers = makeFacetSourceList(catname, ra, dec, cellsz, nfacet, npix)
 
     # Remove the parameters not needed for an image per facet.
@@ -326,15 +330,15 @@ def main(argv=None):
     # Create the source data base for the facet centers.
     if dry == 'dry':
         os.system ('cat %s' % (catname))
-    print 'os.system (setupsourcedb -overwrite %s %s facets "%s" "%s" dry "%s" "%s"' % (gdsname,catname,cd,logfile,hfn,wd)
-    os.system ('setupsourcedb -overwrite %s %s facets "%s" "%s" dry "%s" "%s"' % (gdsname,catname,cd,logfile,hfn,wd))
+    print 'os.system (setupsourcedb -overwrite %s %s facets "%s" "%s" "%s" "%s" "%s"' % (gdsname,catname,cd,logfile,dry,hfn,wd)
+    os.system ('setupsourcedb -overwrite %s %s facets "%s" "%s" "%s" "%s" "%s"' % (gdsname,catname,cd,logfile,dry,hfn,wd))
 
     # Do the processing for each facet.
     inx = 0
     for i in range(nfacet):
         for j in range(nfacet):
             if correct:
-                doBBS (ps, i, j, psn, gdsname, cd, wd, dry, instdb, skydb, catname, incol, outcol)
+                doBBS (ps, i, j, psn, gdsname, cd, wd, dry, instname, skyname, catname, incol, outcol)
             gdsin = gdsname
             if average:
                 gdsin = getGdsbase(gdsname) + '-dppp.gds'
@@ -344,7 +348,7 @@ def main(argv=None):
 
     # Combine all facets.
     print 'makeCombinedImage ...'
-    # Create the parset file for the calibrate run.
+    # Create the parset file for combining the facets.
     psnm = psn + '-combine'
     f = file(psnm, 'w')
     f.write ('useHDF5 = False\n')
