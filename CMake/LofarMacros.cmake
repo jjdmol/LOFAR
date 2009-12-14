@@ -1,3 +1,19 @@
+# - Generic CMake macros for LOFAR
+#
+# Defines the following macros:
+#   force_option(var doc-string [value])
+#   join_arguments(var)
+#   list_append_if(condition var value1..valuen)
+#   lofar_add_bin_program(name)
+#   lofar_add_executable(name)
+#   lofar_add_library(name)
+#   lofar_add_sbin_program(name)
+#   lofar_add_test(name)
+#   lofar_get_date(date)
+#   lofar_get_hostname(name)
+#
+# Please refer to the module source for documentation of these macros.
+
 #  $Id$
 #
 #  Copyright (C) 2008-2009
@@ -18,23 +34,6 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-
-
-# ----------------------------------------------------------------------------
-# Generic CMake macros for LOFAR
-#
-# Defines the following macros:
-#   force_option(var doc-string [value])
-#   join_arguments(var)
-#   list_append_if(condition var value1..valuen)
-#   lofar_add_bin_program(name)
-#   lofar_add_executable(name)
-#   lofar_add_library(name)
-#   lofar_add_sbin_program(name)
-#   lofar_add_test(name)
-#   lofar_get_date(date)
-#   lofar_get_hostname(name)
-# ----------------------------------------------------------------------------
 
 if(NOT DEFINED LOFAR_MACROS_INCLUDED)
 
