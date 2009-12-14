@@ -121,7 +121,14 @@ void changeInfo(string aSelection) {
           // split result to obtain the stationName
           dyn_string aSS = strsplit(aS,\"_\");     
         
-          if (dpExists(aSS[dynlen(aSS)]+\":LOFAR\")) {
+          // check if database exists and is online
+          bool online = false;
+          
+          int iPos=dynContains ( g_connections[ \"NAME\" ],aSS[dynlen(aSS)]+\":\");
+          online = g_connections[\"ONLINE\"][iPos];
+          LOG_ERROR(\"Navigator_fastJumper.pnl:changeInfo| db : \"+aSS[dynlen(aSS)]+\": online: \" + online);
+
+          if (dpExists(aSS[dynlen(aSS)]+\":LOFAR\") && online) {
             dynAppend(datapointList,aSS[dynlen(aSS)]+\":LOFAR\");
           }
         }
@@ -144,6 +151,8 @@ void changeInfo(string aSelection) {
       }
     }  
     dynSortAsc(datapointList);
+    
+    LOG_DEBUG(\"Navigator_fastJumper.pnl:changeInfo datapointList contains: \"+datapointList);
       
     // if only one entry, previous and next can be ignored
     if (dynlen(datapointList) <= 1) {
