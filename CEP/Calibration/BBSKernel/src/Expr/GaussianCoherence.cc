@@ -61,33 +61,46 @@ const JonesMatrix::View GaussianCoherence::evaluateImpl(const Grid &grid,
 
     JonesMatrix::View result;
 
-    // Compute baseline uv-coordinates (1D in time).
-    Matrix uBaseline = uvwB(0) - uvwA(0);
-    Matrix vBaseline = uvwB(1) - uvwA(1);
+    // Compute baseline uv-coordinates in meters (1D in time).
+    Matrix u = uvwB(0) - uvwA(0);
+    Matrix v = uvwB(1) - uvwA(1);
 
-    // Compute dot product of a rotated, scaled uv-vector with itself (1D in
-    // time) and pre-multiply with 2.0 * PI^2 / C^2.
-    Matrix cosPhi(cos(orientation()));
-    Matrix sinPhi(sin(orientation()));
-    Matrix uvTransformed = (2.0 * casa::C::pi * casa::C::pi)
-        / (casa::C::c * casa::C::c)
-        * (sqr(dimensions(0) * (uBaseline * cosPhi - vBaseline * sinPhi))
-        + sqr(dimensions(1) * (uBaseline * sinPhi + vBaseline * cosPhi)));
+    // Convert orientation from degrees to radians and convert to positive
+    // North over East, East is +90 degrees.
+    // TODO: Can probably optimize by changing the rotation matrix instead.
+    Matrix phi = orientation() * (-casa::C::pi/180.0) + casa::C::pi_2;
+    Matrix cosPhi(cos(phi));
+    Matrix sinPhi(sin(phi));
+
+    // Rotate (u, v) by the orientation and scale with the major and minor axis
+    // lengths (FWHM). Take care of the conversion of FWHM to sigma.
+    const double arcsec2rad = (casa::C::pi / 3600.0) / 180.0;
+    const double fwhm2sigma = 1.0 / (2.0 * std::sqrt(2.0 * std::log(2.0)));
+
+    Matrix uPrime =
+        dimensions(0) * (arcsec2rad * fwhm2sigma) * (u * cosPhi - v * sinPhi);
+
+    Matrix vPrime =
+        dimensions(1) * (arcsec2rad * fwhm2sigma) * (u * sinPhi + v * cosPhi);
+
+    // Compute uPrime^2 + vPrime^2 and pre-multiply with -2.0 * PI^2 / C^2.
+    Matrix uvPrime =
+        (-2.0 * casa::C::pi * casa::C::pi) * (sqr(uPrime) + sqr(vPrime));
 
     // Compute spatial coherence (2D).
-    const unsigned int nChannels = grid[FREQ]->size();
-    const unsigned int nTimeslots = grid[TIME]->size();
+    const unsigned int nFreq = grid[FREQ]->size();
+    const unsigned int nTime = grid[TIME]->size();
+    ASSERT(uvPrime.nx() == 1 && uvPrime.ny() == nTime);
 
     Matrix coherence;
-    double *it = coherence.setDoubleFormat(nChannels, nTimeslots);
-
-    for(unsigned int ts = 0; ts < nTimeslots; ++ts)
+    double *it = coherence.setDoubleFormat(nFreq, nTime);
+    for(unsigned int ts = 0; ts < nTime; ++ts)
     {
-        const double uv = uvTransformed.getDouble(0, ts);
-        for(unsigned int ch = 0; ch < nChannels; ++ch)
+        const double uv = uvPrime.getDouble(0, ts);
+        for(unsigned int ch = 0; ch < nFreq; ++ch)
         {
-            const double freq = grid[FREQ]->center(ch);
-            *it++ = exp(-(freq * freq * uv));
+            const double lambda_inv = grid[FREQ]->center(ch) / casa::C::c;
+            *it++ = std::exp(lambda_inv * lambda_inv * uv);
         }
     }
 
