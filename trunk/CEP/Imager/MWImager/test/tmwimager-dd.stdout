@@ -1,8 +1,8 @@
-#( Name Ra Dec )=format
-facet-000-000 4.855300972448005 -0.776293362466211
-facet-001-000 3.185430891489871 -0.776293362466211
-facet-000-001 4.671417106533268 0.415184740228584
-facet-001-001 3.369314757404607 0.415184740228584
+#( Name,Type,Ra,Dec )=format
+facet-000-000, Point, 4.855300972448005, -0.776293362466211
+facet-001-000, Point, 3.185430891489871, -0.776293362466211
+facet-000-001, Point, 4.671417106533268, 0.415184740228584
+facet-001-001, Point, 3.369314757404607, 0.415184740228584
 # imagecenter=4.0203659320,-0.1805543111  imageshape=2048,2048  cellwidth=0.0011635528,0.0011635528
 Distributed sourcedb curdir/tmwimager-dd.facets will be overwritten
 startdistproc -useenv -mode 0 -nomasterhost -dsn 'curdir/tmwimager-dd.in_vd' -hfn 'curdir/tmwimager-dd_tmp.hfn' -cdn 'curdir/tmwimager-dd.in_cd' -logfile 'tmwimager-dd_tmp.log' exedir/setupsourcedb-part 'curdir' 'curdir/facetlist.txt' '' 'facets' '1' 'dry' '10' '0.5'
@@ -19,6 +19,8 @@ Strategy.UseSolver = F
 Strategy.Correlation.Selection = CROSS
 Strategy.Correlation.Type = []
 Strategy.Steps = [correct]
+Step.correct.Correlation.Selection = CROSS
+Step.correct.Correlation.Type = []
 Step.correct.Baselines.Station1 = []
 Step.correct.Baselines.Station2 = []
 Step.correct.Model.Sources    = [facet-000-000]
@@ -28,7 +30,7 @@ Step.correct.Model.Beam.Element.Path = $LOFARROOT/shareh
 Step.correct.Model.Beam.StationConfig.Name = LBA
 Step.correct.Model.Beam.StationConfig.Path = $LOFARROOT/sharec
 Step.correct.Operation             = CORRECT
-Step.correct.OutputColumn          = CORRECTED_DATA
+Step.correct.Output.Column         = CORRECTED_DATA
 
 arguments:
     observation: curdir/tmwimager-dd.in_vd
@@ -39,21 +41,21 @@ arguments:
     verbose: 1
     force: 0
     dry: 1
-    clean: 0
+    clean: 1
     key: bbs-000-000
     cluster_desc: curdir/tmwimager-dd.in_cd
-    db: localhost:5432
+    db: ldb001:5432
     db name: user
-    db user: user
+    db user: postgres
     solver: 0
     port range: 6500:6599
     skip sky db: 1
     replace sky db: 0
     sky db: 
-    sky name: curdir/tmwimager-dd.facets
+    sky name: facets
     skip instrument db: 1
     replace instrument db: 0
-    instrument db: curdir/tmwimager-dd_tmp.instdb
+    instrument db: 
     instrument name: instrument
 
 information from parset:
@@ -74,6 +76,8 @@ Strategy.UseSolver = F
 Strategy.Correlation.Selection = CROSS
 Strategy.Correlation.Type = []
 Strategy.Steps = [correct]
+Step.correct.Correlation.Selection = CROSS
+Step.correct.Correlation.Type = []
 Step.correct.Baselines.Station1 = []
 Step.correct.Baselines.Station2 = []
 Step.correct.Model.Sources    = [facet-000-001]
@@ -83,7 +87,7 @@ Step.correct.Model.Beam.Element.Path = $LOFARROOT/shareh
 Step.correct.Model.Beam.StationConfig.Name = LBA
 Step.correct.Model.Beam.StationConfig.Path = $LOFARROOT/sharec
 Step.correct.Operation             = CORRECT
-Step.correct.OutputColumn          = CORRECTED_DATA
+Step.correct.Output.Column         = CORRECTED_DATA
 
 arguments:
     observation: curdir/tmwimager-dd.in_vd
@@ -94,21 +98,21 @@ arguments:
     verbose: 1
     force: 0
     dry: 1
-    clean: 0
+    clean: 1
     key: bbs-000-001
     cluster_desc: curdir/tmwimager-dd.in_cd
-    db: localhost:5432
+    db: ldb001:5432
     db name: user
-    db user: user
+    db user: postgres
     solver: 0
     port range: 6500:6599
     skip sky db: 1
     replace sky db: 0
     sky db: 
-    sky name: curdir/tmwimager-dd.facets
+    sky name: facets
     skip instrument db: 1
     replace instrument db: 0
-    instrument db: curdir/tmwimager-dd_tmp.instdb
+    instrument db: 
     instrument name: instrument
 
 information from parset:
@@ -129,6 +133,8 @@ Strategy.UseSolver = F
 Strategy.Correlation.Selection = CROSS
 Strategy.Correlation.Type = []
 Strategy.Steps = [correct]
+Step.correct.Correlation.Selection = CROSS
+Step.correct.Correlation.Type = []
 Step.correct.Baselines.Station1 = []
 Step.correct.Baselines.Station2 = []
 Step.correct.Model.Sources    = [facet-001-000]
@@ -138,7 +144,7 @@ Step.correct.Model.Beam.Element.Path = $LOFARROOT/shareh
 Step.correct.Model.Beam.StationConfig.Name = LBA
 Step.correct.Model.Beam.StationConfig.Path = $LOFARROOT/sharec
 Step.correct.Operation             = CORRECT
-Step.correct.OutputColumn          = CORRECTED_DATA
+Step.correct.Output.Column         = CORRECTED_DATA
 
 arguments:
     observation: curdir/tmwimager-dd.in_vd
@@ -149,21 +155,21 @@ arguments:
     verbose: 1
     force: 0
     dry: 1
-    clean: 0
+    clean: 1
     key: bbs-001-000
     cluster_desc: curdir/tmwimager-dd.in_cd
-    db: localhost:5432
+    db: ldb001:5432
     db name: user
-    db user: user
+    db user: postgres
     solver: 0
     port range: 6500:6599
     skip sky db: 1
     replace sky db: 0
     sky db: 
-    sky name: curdir/tmwimager-dd.facets
+    sky name: facets
     skip instrument db: 1
     replace instrument db: 0
-    instrument db: curdir/tmwimager-dd_tmp.instdb
+    instrument db: 
     instrument name: instrument
 
 information from parset:
@@ -184,6 +190,8 @@ Strategy.UseSolver = F
 Strategy.Correlation.Selection = CROSS
 Strategy.Correlation.Type = []
 Strategy.Steps = [correct]
+Step.correct.Correlation.Selection = CROSS
+Step.correct.Correlation.Type = []
 Step.correct.Baselines.Station1 = []
 Step.correct.Baselines.Station2 = []
 Step.correct.Model.Sources    = [facet-001-001]
@@ -193,7 +201,7 @@ Step.correct.Model.Beam.Element.Path = $LOFARROOT/shareh
 Step.correct.Model.Beam.StationConfig.Name = LBA
 Step.correct.Model.Beam.StationConfig.Path = $LOFARROOT/sharec
 Step.correct.Operation             = CORRECT
-Step.correct.OutputColumn          = CORRECTED_DATA
+Step.correct.Output.Column         = CORRECTED_DATA
 
 arguments:
     observation: curdir/tmwimager-dd.in_vd
@@ -204,21 +212,21 @@ arguments:
     verbose: 1
     force: 0
     dry: 1
-    clean: 0
+    clean: 1
     key: bbs-001-001
     cluster_desc: curdir/tmwimager-dd.in_cd
-    db: localhost:5432
+    db: ldb001:5432
     db name: user
-    db user: user
+    db user: postgres
     solver: 0
     port range: 6500:6599
     skip sky db: 1
     replace sky db: 0
     sky db: 
-    sky name: curdir/tmwimager-dd.facets
+    sky name: facets
     skip instrument db: 1
     replace instrument db: 0
-    instrument db: curdir/tmwimager-dd_tmp.instdb
+    instrument db: 
     instrument name: instrument
 
 information from parset:
@@ -261,21 +269,21 @@ npix = [2048,2048]
 nfacet = [2,2]
 Creating global VDS file curdir/tmwimager-dd.img.gds
 4.02036593197 -0.180554311119 [0.0011635528346628863, 0.0011635528346628863] [2048, 2048] 2 False 1 1 False tmwimager-dd
-os.system (setupsourcedb -overwrite curdir/tmwimager-dd.in_vd curdir/facetlist.txt facets "tmwimager-dd.in_cd" "tmwimager-dd_tmp.log" dry "tmwimager-dd_tmp.hfn" "curdir"
+os.system (setupsourcedb -overwrite curdir/tmwimager-dd.in_vd curdir/facetlist.txt facets "tmwimager-dd.in_cd" "tmwimager-dd_tmp.log" "dry" "tmwimager-dd_tmp.hfn" "curdir"
 doBBS facet 0 0
-calibrate --dry --verbose --key bbs-000-000 --cluster-desc "tmwimager-dd.in_cd" --instrument-db "tmwimager-dd_tmp.instdb" --sky-name "curdir/tmwimager-dd.facets" --skip-instrument-db --skip-sky-db "curdir/tmwimager-dd.in_vd" "curdir/tmwimager-dd.parset-bbs-000-000" "curdir/facetlist.txt" "curdir"
+calibrate --db ldb001:5432 --db-user postgres --dry --verbose --clean --key bbs-000-000 --cluster-desc "tmwimager-dd.in_cd" --instrument-name "instrument" --sky-name "facets" --skip-instrument-db --skip-sky-db "curdir/tmwimager-dd.in_vd" "curdir/tmwimager-dd.parset-bbs-000-000" "curdir/facetlist.txt" "curdir"
 doImager facet 0 0 (4.8553009724480045, -0.77629336246621117)
 ssdir/mwimager  curdir/tmwimager-dd.parset-000-000 "tmwimager-dd.in_cd" "curdir" "tmwimager-dd_tmp.log" "dry" "tmwimager-dd_tmp.hfn"
 doBBS facet 0 1
-calibrate --dry --verbose --key bbs-000-001 --cluster-desc "tmwimager-dd.in_cd" --instrument-db "tmwimager-dd_tmp.instdb" --sky-name "curdir/tmwimager-dd.facets" --skip-instrument-db --skip-sky-db "curdir/tmwimager-dd.in_vd" "curdir/tmwimager-dd.parset-bbs-000-001" "curdir/facetlist.txt" "curdir"
+calibrate --db ldb001:5432 --db-user postgres --dry --verbose --clean --key bbs-000-001 --cluster-desc "tmwimager-dd.in_cd" --instrument-name "instrument" --sky-name "facets" --skip-instrument-db --skip-sky-db "curdir/tmwimager-dd.in_vd" "curdir/tmwimager-dd.parset-bbs-000-001" "curdir/facetlist.txt" "curdir"
 doImager facet 0 1 (3.1854308914898715, -0.77629336246621117)
 ssdir/mwimager  curdir/tmwimager-dd.parset-000-001 "tmwimager-dd.in_cd" "curdir" "tmwimager-dd_tmp.log" "dry" "tmwimager-dd_tmp.hfn"
 doBBS facet 1 0
-calibrate --dry --verbose --key bbs-001-000 --cluster-desc "tmwimager-dd.in_cd" --instrument-db "tmwimager-dd_tmp.instdb" --sky-name "curdir/tmwimager-dd.facets" --skip-instrument-db --skip-sky-db "curdir/tmwimager-dd.in_vd" "curdir/tmwimager-dd.parset-bbs-001-000" "curdir/facetlist.txt" "curdir"
+calibrate --db ldb001:5432 --db-user postgres --dry --verbose --clean --key bbs-001-000 --cluster-desc "tmwimager-dd.in_cd" --instrument-name "instrument" --sky-name "facets" --skip-instrument-db --skip-sky-db "curdir/tmwimager-dd.in_vd" "curdir/tmwimager-dd.parset-bbs-001-000" "curdir/facetlist.txt" "curdir"
 doImager facet 1 0 (4.6714171065332684, 0.41518474022858443)
 ssdir/mwimager  curdir/tmwimager-dd.parset-001-000 "tmwimager-dd.in_cd" "curdir" "tmwimager-dd_tmp.log" "dry" "tmwimager-dd_tmp.hfn"
 doBBS facet 1 1
-calibrate --dry --verbose --key bbs-001-001 --cluster-desc "tmwimager-dd.in_cd" --instrument-db "tmwimager-dd_tmp.instdb" --sky-name "curdir/tmwimager-dd.facets" --skip-instrument-db --skip-sky-db "curdir/tmwimager-dd.in_vd" "curdir/tmwimager-dd.parset-bbs-001-001" "curdir/facetlist.txt" "curdir"
+calibrate --db ldb001:5432 --db-user postgres --dry --verbose --clean --key bbs-001-001 --cluster-desc "tmwimager-dd.in_cd" --instrument-name "instrument" --sky-name "facets" --skip-instrument-db --skip-sky-db "curdir/tmwimager-dd.in_vd" "curdir/tmwimager-dd.parset-bbs-001-001" "curdir/facetlist.txt" "curdir"
 doImager facet 1 1 (3.3693147574046067, 0.41518474022858443)
 ssdir/mwimager  curdir/tmwimager-dd.parset-001-001 "tmwimager-dd.in_cd" "curdir" "tmwimager-dd_tmp.log" "dry" "tmwimager-dd_tmp.hfn"
 makeCombinedImage ...
