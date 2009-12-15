@@ -37,8 +37,8 @@ fi
 
 # Handle possible options.
 imager=cimager
-casaopt=
-dde=0
+casaopt=none
+dde=2
 while [ $# != 0 ]
 do
   if [ "$1" = "-casa" ]; then
@@ -113,6 +113,23 @@ hfn=
 if test $# != 0; then
   hfn=$1
   shift
+fi
+
+# If -casa or -nocasa not given, take from parset.
+if test "$casaopt" = "none"; then
+  tmpopt=`getparsetvalue -d cimager $psn imager`
+  if test "$tmpopt" = "casa"  -o  "$tmpopt" = "lwimager"; then
+    casaopt="-casa"
+    imager ="casa"
+  fi
+fi
+
+# Similar for -dde option.
+if test "$dde" = 2; then
+  dde=`getparsetvalue -d 0 $psn dde`
+  if test "$dde" != 1; then
+    dde=0
+  fi
 fi
 
 # Get the dataset name.
