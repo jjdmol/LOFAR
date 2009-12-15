@@ -1,6 +1,0 @@
-status			:ObjectStatus
-RCUX			string
-RCUY			string
-deltaX			float
-deltaY			float
-deltaH			float

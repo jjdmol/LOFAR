@@ -1,9 +1,0 @@
-# new setup
-prefix		= CS010:DigBoardCntl.
-
-CS010:DigBoardCntl.instanceNr	= 0
-
-# TODO: use sampleClock setting of PVSS
-CS010:DigBoardCntl.sampleClock	= 160
-
-
