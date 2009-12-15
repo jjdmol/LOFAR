@@ -77,9 +77,10 @@ imgname=`getparsetvalue $psnbase.part$seqnr.cvt Cimager.Images.Names`
 newname=`getparsetvalue $psnbase.part$seqnr.cvt imgname`
 # Do not do it if it already exists as a directory without table.dat.
 # Thus an already existing regular .img is overwritten.
-makelink=1;
-if ! test -L $newname  -a  -d $newname; then
+makelink=1
+if test ! -L $newname  -a  -d $newname; then
   if test ! -e $newname/table.dat; then
+    echo "Warning, directory $newname already exists, but not as a table"
     makelink=0
   fi
 fi
@@ -89,7 +90,7 @@ if test -e $imgname.restored; then
   if test -e $imgname  -a  $imgname -nt $nm; then
     nm=$imgname
   fi
-elif test -d $imgname; then
+elif test -e $imgname; then
   nm=$imgname
 fi
 if test $makelink = 1  -a  "$nm" != ""; then
