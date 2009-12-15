@@ -1,0 +1,84 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 500 400 N "_3DFace" 0
+"main()
+{
+   baseDP         = g_currentDatapoint;
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
+
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP); 
+}" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+string      baseDP         = \"\";
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+1 2 0 "" 1
+0
+2 1
+"midplaneName"
+""
+1 42 2.000000000000199 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 42 2.000000000000199 144 19
+0 2 2 "0s" 0 0 0 192 0 0  42 2.000000000000199 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 14 OSSubcluster: 
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 0 "selfState"
+"objects\\lofar_self_state.pnl" 358 18 T 0 1 0 1 -350 -18.9999999999998
+0
+0

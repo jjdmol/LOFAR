@@ -1,0 +1,7 @@
+# -- ControlSW --
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  ControlSW    1.0.0  development 'node constraint'  "Control Software"

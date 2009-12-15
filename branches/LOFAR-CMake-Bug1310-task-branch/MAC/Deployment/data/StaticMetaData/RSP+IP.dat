@@ -1,0 +1,22 @@
+# RSP+IP.dat
+# 
+# File that gives a list of RSP IP addresses for the RSP boards of 
+# each station
+#
+# For the moment this is only filled for foreign stations but it can be 
+# expanded for NL stations as well. NL stations have RSP IP addresses 
+# that can be logically derived from the station name, so these are not
+# provided here.
+#
+# Foreign stations work each with separate vlan settings, thence the need for 
+# this file.
+#
+# These addresses will be put into the RSPDriver.conf as the paremeters
+# RSPDriver.LANE_0x_SRCIP, with x between 0 and 3.
+#
+
+DE601_00 10.211.1.0
+DE601_01 10.212.1.0
+DE601_02 10.213.1.0
+DE601_03 10.214.1.0
+
