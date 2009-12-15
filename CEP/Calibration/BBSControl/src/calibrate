@@ -61,7 +61,7 @@ usage()
     echo "  --skip-sky-db     skip setup of a distributed sky model parmdb"
     echo "  --replace-sky-db  replace existing sky model parmdb"
     echo "  --sky-db          path to a non-default sky model parmdb"
-    echo "  --sky-basename    basename for the sky model parmdb"
+    echo "  --sky-name        basename for the sky model parmdb"
     echo "                    (default: sky)"
     echo "  --skip-instrument-db"
     echo "                    skip setup of a distributed instrument model"
@@ -69,8 +69,7 @@ usage()
     echo "  --replace-instrument-db"
     echo "                    replace existing instrument model parmdb"
     echo "  --instrument-db   path to a non-default instrument model parmdb"
-    echo "  --instrument-basename"
-    echo "                    basename for the instrument model parmdb"
+    echo "  --instrument-name basename for the instrument model parmdb"
     echo "                    (default: instrument)"
     exit 1
 }
