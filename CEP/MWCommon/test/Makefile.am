@@ -1,11 +1,11 @@
 check_PROGRAMS	= tClusterDesc tNodeDesc tVdsDesc tVdsPartDesc tWorkersDesc \
-		  tSocketConnection tstartdproc
+		  tSocketConnection tSocketConnectionSet tstartdproc
 
 CHECKTOOLPROGS	= $(CHECK_PROGRAMS)
 
 TESTS		= tClusterDesc.sh tNodeDesc.sh tVdsDesc.sh tVdsPartDesc.sh \
 		  tWorkersDesc.sh \
-		  tSocketConnection.sh \
+		  tSocketConnection.sh tSocketConnectionSet.sh \
 		  tfinddproc.sh tstartdproc.sh trundist.sh
 
 LDADD		= ../src/libmwcommon.la 
@@ -27,6 +27,9 @@ tWorkersDesc_DEPENDENCIES = ../src/libmwcommon.la $(LOFAR_DEPEND)
 
 tSocketConnection_SOURCES 	  = tSocketConnection.cc
 tSocketConnection_DEPENDENCIES	  = ../src/libmwcommon.la $(LOFAR_DEPEND)
+
+tSocketConnectionSet_SOURCES 	  = tSocketConnectionSet.cc
+tSocketConnectionSet_DEPENDENCIES = ../src/libmwcommon.la $(LOFAR_DEPEND)
 
 tstartdproc_SOURCES 	  = tstartdproc.cc
 
