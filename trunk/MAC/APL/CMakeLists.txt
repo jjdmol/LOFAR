@@ -1,5 +1,7 @@
 # $Id$
 
+# Create directory APL in the binary include directory; it will hold symbolic
+# links to the different subcomponents of APL.
 execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
   ${CMAKE_BINARY_DIR}/include/APL)
 
