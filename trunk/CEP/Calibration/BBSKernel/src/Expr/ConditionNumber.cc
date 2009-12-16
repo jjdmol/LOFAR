@@ -43,7 +43,6 @@ const Scalar::View ConditionNumber::evaluateImpl(const Grid &grid,
     Scalar::View result;
     result.assign(max(max(norm00, norm11), 1e-20) / max(min(norm00, norm11),
         1e-20));
-    LOG_DEBUG_STR("Condition#: " << result());
     return result;
 }
 
