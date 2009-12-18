@@ -1,9 +1,10 @@
 # This is test input for tmakesourcedb
  #
 
-#name type   Rah ram ras Decd decm decs I  Q  U  V  Major, Minor, Phi
+# format string is given in command argument in tmakesourcedb.run
+#name type   Rah ram ras Decd decm decs I  Q  U  V  Major Minor Phi Parm1
 
   ""    ""   ""   ""  ""  ""   ''   '' 12
  sun   sun   ""   ""  ""  ''   ""   "" 10
-cygnus point -12  59  60   45   59  60  2, 0, 0, 0,  0.23,  0.15,   1
-lena gaussian 12  59  60  -45   59  60  2, 0, 0, 0,  0.13,  0.25, 1.1
+cygnus point -12  59  60   45   59  60  2, 0, 0, 0,  0.23,  0.15,   1, 0
+lena gaussian 12  59  60  -45   59  60  2, 0, 0, 0,  0.13,  0.25, 1.1, '0'
