@@ -237,7 +237,7 @@ def defineStations( s ):
      s["s%s"   % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
 
      # SXX_1, SXX: 1 full station (4 RSP boards), starting from 10.170.0.XX, input received from station
-     inputs = defaultPorts
+     inputs = defaultPorts['RSP_0']
      s["S%s_1" % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
      s["S%s"   % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
 
@@ -249,7 +249,7 @@ def defineStations( s ):
      s["t%s_1" % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
 
      # TXX_1: 1 full station (4 RSP boards), starting from 10.170.1.XX, input received from station
-     inputs = defaultPorts
+     inputs = defaultPorts['RSP_0']
      s["T%s_1" % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
      s["T%s"   % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
 
