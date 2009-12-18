@@ -381,19 +381,26 @@ SourceInfo::Type string2type (const string& str)
   ASSERTSTR (false, str << " is an invalid source type");
 }
 
+string unquote (const string& value)
+{
+  string res(value);
+  if (res.size() > 1) {
+    int last = res.size() - 1;
+    if (last >= 1  &&  ((res[0] == '"'  && res[last] == '"')  ||
+                        (res[0] == '\'' && res[last] == '\''))) {
+      res = res.substr(1,last-1);
+    }
+  }
+  return res;
+}
+
 string getValue (const vector<string>& values, int nr,
                  const string& defVal=string())
 {
   if (nr < 0) {
     return defVal;
   }
-  string res = values[nr];
-  int last = res.size() - 1;
-  if (last >= 1  &&  ((res[0] == '"'  && res[last] == '"')  ||
-                      (res[0] == '\'' && res[last] == '\''))) {
-    return res.substr(1,last-1);
-  }
-  return res;
+  return unquote (values[nr]);
 }
 
 int string2int (const vector<string>& values, int nr, int defVal)
@@ -591,7 +598,7 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
     values.push_back (value);
     if ((sdbf.types[i] & SKIPFIELD) != SKIPFIELD) {
       if ((sdbf.types[i] & KNOWNFIELD) != KNOWNFIELD) {
-        add (defValues, sdbf.names[i], string2real(value, 0));
+        add (defValues, sdbf.names[i], string2real(unquote(value), 0));
       }
     }
   }
