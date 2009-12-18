@@ -13,6 +13,8 @@
 #ifndef _SYS_TIMEPPS_H_
 #define _SYS_TIMEPPS_H_
 
+#include <time.h>
+
 /* Implementation note: the logical states ``assert'' and ``clear''
  * are implemented in terms of the chip register, i.e. ``assert''
  * means the bit is set.
