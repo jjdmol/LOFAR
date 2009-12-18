@@ -280,11 +280,7 @@ namespace LOFAR {
   }
   void WeightColumn::getArrayfloatV (uInt, Array<Float>* dataPtr)
   {
-    Array<Float>::iterator iterend = dataPtr->end();
-    for (Array<Float>::iterator iter=dataPtr->begin();
-         iter != iterend; ++iter) {
-      *iter = 1.;
-    }
+    *dataPtr = float(1);
   }
 
   SigmaColumn::~SigmaColumn()
@@ -295,11 +291,7 @@ namespace LOFAR {
   }
   void SigmaColumn::getArrayfloatV (uInt, Array<Float>* dataPtr)
   {
-    Array<Float>::iterator iterend = dataPtr->end();
-    for (Array<Float>::iterator iter=dataPtr->begin();
-         iter != iterend; ++iter) {
-      *iter = 1.;
-    }
+    *dataPtr = float(1);
   }
 
   WSpectrumColumn::~WSpectrumColumn()

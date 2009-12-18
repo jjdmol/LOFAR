@@ -1,0 +1,72 @@
+#!/usr/bin/env python
+
+# makeFLAGwritable: make the FLAG column in an MS writable
+#
+# Copyright (C) 2009
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# @author Ger van Diepen <diepen AT astron nl>
+#
+# $Id$
+
+import pyrap.tables as pt
+import sys
+
+# Let the FLAG column use the SSM.
+# This is done by creating a new column, copying the data, and renaming it.
+# Note that first renaming FLAG to, say, FLAGOLD does not work because
+# LofarStMan does not know FLAGOLD.
+
+def makeFlagWritable (msname):
+    ms = pt.table(msname, readonly=False)
+    # Only add if a cell is defined but cannot be written.
+    add = False
+    if ms.iscelldefined('FLAG', 0):
+        try:
+            ms.putcell('FLAG', 0, ms.getcell('FLAG', 0))
+        except:
+            add = True;
+    if add:
+        shape = ms.getcell('FLAG', 0).shape
+        # Define the data manager to be used.
+        dminfo = {'*1': {'TYPE':'StandardStMan','NAME':'SSMFlag','SPEC':{'BUCKETSIZE':32768}}}
+        # Add a column and make it Direct,FixedShape.
+        ms.addcols (pt.maketabdesc (pt.makearrcoldesc("FLAG__TMP", False, options=5, shape=shape)), dminfo)
+        print 'Created new FLAG column; copying old values ...'
+        # Copy the flags.
+        t = pt.taql ('update %s set FLAG__TMP = FLAG' % msname)
+        t = 0
+        # Remove the old column and rename the new one.
+        ms.removecols ('FLAG')
+        ms.renamecol ('FLAG__TMP', 'FLAG')
+        print 'FLAG column now stored with SSM to make it writable'
+    else:
+        print 'FLAG column is already writable'
+    ms.flush()
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    if len(argv) < 2:
+        print 'run as:  makeFLAGwritable msname'
+        return 1
+    makeFlagWritable (argv[1])
+
+if __name__ == "__main__":
+    sys.exit(main())
