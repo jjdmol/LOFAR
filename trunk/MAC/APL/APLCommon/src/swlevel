@@ -112,8 +112,8 @@ start_prog()
 				sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
 				if [ "$prog" = "RSPDriver" ]; then
 					selectImage1
-					echo "Starting RSPDriver with nice -20"
-					sudo -b nice -n -20 $BINDIR/$prog 1>/dev/null 2>&1
+					echo "Starting RSPDriver"
+					sudo -b $BINDIR/$prog 1>/dev/null 2>&1
 				else
 					sudo -b $BINDIR/$prog 1>/dev/null 2>&1
 				fi
