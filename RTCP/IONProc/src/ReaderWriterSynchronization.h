@@ -58,6 +58,8 @@ class SynchronizedReaderAndWriter : public ReaderAndWriterSynchronization
 
     virtual void startWrite(const TimeStamp &begin, const TimeStamp &end);
     virtual void finishedWrite(const TimeStamp &advanceTo);
+
+    void	 noMoreReading();
     
   private:
     SlidingPointer<TimeStamp> itsReadPointer, itsWritePointer;

@@ -417,6 +417,9 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pos
 {
   LOG_DEBUG("BeamletBufferToComputeNode::postprocess");
 
+  for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
+    itsBeamletBuffers[rsp]->noMoreReading();
+
   delete itsDelayComp;	   itsDelayComp	    = 0;
   delete itsRawDataStream; itsRawDataStream = 0;
 

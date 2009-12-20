@@ -391,6 +391,13 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::stopReadTransact
 }
 
 
+template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::noMoreReading()
+{
+  if (!itsIsRealTime)
+    itsSynchronizedReaderWriter->noMoreReading();
+}
+
+
 template class BeamletBuffer<i4complex>;
 template class BeamletBuffer<i8complex>;
 template class BeamletBuffer<i16complex>;
