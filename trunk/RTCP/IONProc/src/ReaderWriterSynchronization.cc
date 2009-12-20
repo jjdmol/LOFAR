@@ -75,6 +75,13 @@ void SynchronizedReaderAndWriter::finishedWrite(const TimeStamp &advanceTo)
 }
 
 
+void SynchronizedReaderAndWriter::noMoreReading()
+{
+  // advance read pointer to infinity, to unblock thread that waits in startWrite
+  itsReadPointer.advanceTo(TimeStamp(0x7FFFFFFFFFFFFFFFLL));
+}
+
+
 
 
 TimeSynchronizedReader::TimeSynchronizedReader(unsigned maximumNetworkLatency)

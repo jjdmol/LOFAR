@@ -65,6 +65,8 @@ template<typename SAMPLE_TYPE> class BeamletBuffer
     unsigned alignmentShift(unsigned beam) const;
     SparseSet<unsigned> readFlags(unsigned beam);
     void     stopReadTransaction();
+
+    void     noMoreReading();
     
     const static unsigned		  itsNrTimesPerPacket = 16;
 
