@@ -1,1 +1,2 @@
 set(PVSS_ROOT_DIR /opt/pvss/pvss2_v3.7)
+set(JNI_ROOT_DIR /usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0/)
