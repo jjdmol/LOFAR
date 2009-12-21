@@ -512,11 +512,6 @@ void BeamFormer::formBeams( const SubbandMetaData *metaData, SampleData<> *sampl
     // for asm routines
     THROW(CNProcException, "nrSamplesPerIntegration (" << itsNrSamplesPerIntegration << ") needs to be a multiple of 16" );
   }
-
-  if( itsNrSamplesPerIntegration % TIMESTEPSIZE > 0 ) {
-    // for blocks around asm routines
-    THROW(CNProcException, "nrSamplesPerIntegration (" << itsNrSamplesPerIntegration << ") needs to be a multiple of " << TIMESTEPSIZE );
-  }
 #endif
 
   // TODO: fetch a list of stations to beam form. for now, we assume
