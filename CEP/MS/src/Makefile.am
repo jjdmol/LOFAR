@@ -39,4 +39,7 @@ versionms_SOURCES      = versionms.cc
 versionms_LDADD        = libbbms.la
 versionms_DEPENDENCIES = libbbms.la $(LOFAR_DEPEND)
 
+#lofarpython_PYTHON	= flagger.py
+#lofarpythondir		= $(pythondir)/lofar
+
 include $(top_srcdir)/Makefile.common
