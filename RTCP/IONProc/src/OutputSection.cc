@@ -75,7 +75,7 @@ OutputSection::OutputSection(const Parset *ps, unsigned psetNumber, unsigned out
   StreamableData *dataTemplate = p.source;
 
   // allocate partial sums -- only for those outputs that need it
-  if( p.source->isIntegratable() && itsParset->IONintegrationSteps() <= 1 ) {
+  if( p.source->isIntegratable() && itsParset->IONintegrationSteps() >= 1 ) {
     itsNrIntegrationSteps = itsParset->IONintegrationSteps();
 
     for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
