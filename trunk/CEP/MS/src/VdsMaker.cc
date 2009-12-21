@@ -245,9 +245,9 @@ void VdsMaker::create (const string& msName, const string& outName,
       oss2a << ',';
       oss2b << ',';
     }
-    oss2a << MVAngle::Format(MVAngle::TIME, 9)
+    oss2a << MVAngle::Format(MVAngle::TIME, 12)
 	  << MVAngle(Quantity(ra[i], "rad"));
-    oss2b << MVAngle::Format(MVAngle::ANGLE, 9)
+    oss2b << MVAngle::Format(MVAngle::ANGLE, 12)
 	  << MVAngle(Quantity(dec[i], "rad"));
   }
   oss2a << ']';
@@ -348,6 +348,7 @@ void VdsMaker::combine (const string& gdsName,
 
   // Set the times in the global desc (using the first part).
   // Set the clusterdesc name.
+  // If defined, set the Extra parameters giving the field directions.
   // Form the global desc.
   globalvpd.setTimes (vpds[0]->getStartTime(),
                       vpds[0]->getEndTime(),
@@ -355,6 +356,15 @@ void VdsMaker::combine (const string& gdsName,
                       vpds[0]->getStartTimes(),
                       vpds[0]->getEndTimes());
   globalvpd.setClusterDescName (vpds[0]->getClusterDescName());
+  if (vpds[0]->getParms().isDefined ("FieldDirectionRa")) {
+    globalvpd.addParm ("FieldDirectionRa",
+                       vpds[0]->getParms().getString ("FieldDirectionRa"));
+    globalvpd.addParm ("FieldDirectionDec",
+                       vpds[0]->getParms().getString ("FieldDirectionDec"));
+    globalvpd.addParm ("FieldDirectionType",
+                       vpds[0]->getParms().getString ("FieldDirectionType",
+                                                      "J2000"));
+  }
   VdsDesc gdesc(globalvpd);
 
   // Now add all parts to the global desc and write it.
@@ -370,7 +380,6 @@ void VdsMaker::combine (const string& gdsName,
     }
     delete vpds[i];
     vpds[i] = 0;
-
   }
   ofstream ostr(gdsName.c_str());
   ASSERTSTR (ostr, "File " << gdsName << " could not be created");

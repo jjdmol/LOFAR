@@ -47,6 +47,9 @@ AC_TYPE_SIZE_T
 dnl Checks for library functions.
 AC_FUNC_VPRINTF
 
+dnl Checks for Python
+lofar_PYTHON
+
 dnl
 dnl Check for LOFAR specific things
 dnl
