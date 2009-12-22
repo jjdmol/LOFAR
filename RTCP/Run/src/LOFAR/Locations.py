@@ -109,12 +109,12 @@ class Locations:
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
-	"rundir":  "/globalhome/lofarsystem/log/L${YEAR}_${MSNUMBER}",
+	"rundir":  "${HOME}/log/L${YEAR}_${MSNUMBER}",
 
         # where to store logs
-	"logdir":  "/globalhome/lofarsystem/log/L${YEAR}_${MSNUMBER}",
+	"logdir":  "${HOME}/log/L${YEAR}_${MSNUMBER}",
 
-        "logsymlink": "/globalhome/lofarsystem/log/latest",
+        "logsymlink": "${HOME}/log/latest",
 
         # location of valgrind suppressions file
         "ionsuppfile": "",
@@ -128,6 +128,7 @@ class Locations:
     else:
       self.files.update( {
 	"basedir": "${HOME}/projects/LOFAR",
+
 	"cnproc":  "${BASEDIR}/installed/%s/bin/CN_Processing" % (self.buildvars["CNProc"],),
 	"ionproc": "${BASEDIR}/installed/%s/bin/IONProc" % (self.buildvars["IONProc"],),
 	"storage": "${BASEDIR}/installed/%s/bin/Storage" % (self.buildvars["Storage"],),
