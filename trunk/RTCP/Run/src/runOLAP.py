@@ -65,6 +65,16 @@ if __name__ == "__main__":
   import os
   import time
 
+  # valid observation parameters
+  validObsParams = [
+    "parset", "stations", "tcp", "null",
+    "start", "stop", "run",
+    "clock", "integration"
+  ]
+
+  def isValidObsParam( key ):
+    return key in validObsParams or "." in key
+
   # default observation parameters
   defaultObsParams = {
     "parset": "RTCP.parset",
@@ -251,6 +261,7 @@ if __name__ == "__main__":
   for obsIndex,obs in enumerate(args):
     info( "===== Parsing observation %s: %s =====" % (obsIndex,obs,) )
 
+    # parse and check the observation parameters
     def splitparam( s ):
       """ Convert a parameter which is either 'key=value' or 'key' into a
           key,value tuple. """
@@ -262,6 +273,10 @@ if __name__ == "__main__":
 
     obsparams = defaultObsParams.copy()
     obsparams.update( dict( map( splitparam, obs.split(",") ) ) )
+
+    for p in obsparams:
+      if not isValidObsParam( p ):
+        fatal("Unknown observation parameter '%s'" % (p,))
 
     if "parset" not in obsparams:
       fatal("Observation '%s' does not define a parset file." % (obs,))
