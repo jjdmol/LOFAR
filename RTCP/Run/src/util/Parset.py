@@ -6,6 +6,17 @@ __all__ = ["Parset"]
 TRUE_VALUES  = ["T","t","1","Y","y","true","True",1,True]
 FALSE_VALUES = ["F","f","0","N","n","false","False",0,False]
 
+def isinteger( x ):
+  """ Returns whether x is numerical (and an integer). """
+  try:
+    int(x)
+  except ValueError:
+    return False
+  except TypeError:
+    return False
+
+  return True
+
 def isnumeric( x ):
   """ Returns whether x is numerical. """
   try:
@@ -69,7 +80,7 @@ def encode( v ):
     # can only compress lists
     return strfy(v)
 
-  if True or len(v) < 3:
+  if len(v) < 3:
     # length 0, 1 or 2 is not worth analysing
     return "[%s]" % (",".join(map( strfy, v )),)
 
@@ -93,9 +104,9 @@ def encode( v ):
 
     # compress ranges
     for j in xrange(i,len(v)+1):
-      if j == len(v) or not isnumeric(v[j]) or float(v[j]) != float(v[i])+j-i:
+      if j == len(v) or not isinteger(v[j]) or int(v[j]) != int(v[i])+j-i:
         if j-i-1 > 2:
-          dst.append( "%s..%s" % (str(v[i]),str(v[i]+j-i-1) ) )
+          dst.append( "%s..%s" % (str(v[i]),str(int(v[i])+j-i-1) ) )
           i = j
           written = True
         break

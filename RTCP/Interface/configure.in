@@ -55,7 +55,6 @@ lofar_MPI
 
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 lofar_INTERNAL(LCS/Stream,Stream,,1,Stream/Stream.h,,)
-lofar_INTERNAL(LCS/ApplCommon,ApplCommon,,0,ApplCommon/Observation.h,,)
 lofar_EXTERNAL(boost,1,boost/date_time/date.hpp,"")
 
 dnl lofar_BLITZ

@@ -37,7 +37,6 @@
 #include <Common/LofarLogger.h> 
 #include <Interface/Config.h>
 #include <Interface/PencilCoordinates.h>
-#include <ApplCommon/Observation.h>
 #include <Stream/Stream.h>
 
 #include <boost/date_time/c_local_time_adjustor.hpp>
@@ -170,11 +169,8 @@ private:
 	double	       getTime(const char *name) const;
 	static int     findIndex(uint32 pset, const vector<uint32> &psets);
 	void           checkSubbandCount(const char *key) const;
-	void           checkSubbandCountFromObservation(const char *key, const vector<uint32> &list) const;
 	
 	vector<double>   centroidPos(const string &stations) const;
-	
-	Observation    itsObservation;
 };
 
 // @}
@@ -382,37 +378,23 @@ inline uint32 Parset::nrCoresPerPset() const
  
 inline unsigned Parset::nrSubbands() const
 {
-  if (isDefined("Observation.subbandList"))
-    return getUint32Vector("Observation.subbandList",true).size();
-  else
-    return itsObservation.getSubbandList().size();   
+  return getUint32Vector("Observation.subbandList",true).size();
 } 
 
 inline vector<unsigned> Parset::subbandToBeamMapping() const
 {
-  if (isDefined("Observation.subbandList"))
-    return getUint32Vector("Observation.beamList",true);
-  else
-    return itsObservation.getBeamList();   
+  return getUint32Vector("Observation.beamList",true);
 }
 
 inline vector<unsigned> Parset::subbandToRSPboardMapping() const
 {
-  if (isDefined("Observation.subbandList"))
-    return getUint32Vector("Observation.rspBoardList",true);
-  else
-    return itsObservation.getRspBoardList();
+  return getUint32Vector("Observation.rspBoardList",true);
 }
-
 
 inline vector<unsigned> Parset::subbandToRSPslotMapping() const
 {
-  if (isDefined("Observation.subbandList"))
-    return getUint32Vector("Observation.rspSlotList",true);
-  else
-    return itsObservation.getRspSlotList();
+  return getUint32Vector("Observation.rspSlotList",true);
 }
-
 
 inline double Parset::channelWidth() const
 {

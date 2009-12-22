@@ -68,16 +68,6 @@ public:
 	// TEMP HACK
 	string getAntennaArrayName(bool hasSplitters) const;
 
-	// REO: The next functions don't make sense, all info is public!!!!!
-	// OLAP: get the subbandList
-	vector<uint32> getSubbandList() const;
-	// OLAP: get the beamList
-	vector<uint32> getBeamList() const;
-	// OLAP: get the rspBoardList
-	vector<uint32> getRspBoardList() const;
-	// OLAP: get the rspSlotList
-	vector<uint32> getRspSlotList() const;
- 
 	// for operator <<
 	ostream& print (ostream&	os) const;
 
@@ -122,16 +112,6 @@ public:
 	string			antennaSet;			// like LBA_INNER, LBA_OUTER, etc.
 	bool			useLongBaselines;
 	bool			splitter;			// On or Off
-
-	vector<Beam>	beams;
-	vector<int>		beamlet2beams;		// to which beam each beamlet belongs
-	vector<int>		beamlet2subbands;	// which subband each beamlet uses.
-	uint			nrRSPboards;		// the number of RSPboads.
-	vector<uint>	subbandList;		// OLAP: subband list.
-	vector<uint>	beamList;	        // OLAP: beam list.
-	vector<uint>	rspBoardList;		// OLAP: RSP board list.
-	vector<uint>	rspSlotList;		// OLAP: RSP Slot list
-	bool			uStation;			// use uStation mode?
 
 	// couple of values of the virtual instrument as compacted strings
 	string			receiverList;
