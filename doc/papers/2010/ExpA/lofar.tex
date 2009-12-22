@@ -43,6 +43,8 @@ grestore
 \smartqed  % flush right qed marks, e.g. at end of proof
 %
 \usepackage[usenames]{color}
+\usepackage{citesort}
+\usepackage{dcolumn}
 \usepackage{graphicx}
 \usepackage{mathptmx}      % use Times fonts if available on your TeX system
 \usepackage{wrapfig}
@@ -78,6 +80,8 @@ grestore
 \end{picture}%
 }
 
+\newcolumntype{.}{D{.}{.}{-1}}
+
 \begin{document}
 
 \title{The LOFAR Correlator%\thanks{Grants or other notes
@@ -111,9 +115,23 @@ grestore
 \maketitle
 
 \begin{abstract}
-This article describes the central, real-time processing of the LOFAR data.
-Since computing correlations is one of its main functions, the software is
-often called ``the correlator''.
+This article describes the LOFAR correlator.
+The LOFAR correlator uses a novel approach to process real-time, streaming
+telescope data, by using \emph{software}.
+Traditional telescopes typically use custom-built hardware, but the need
+for a flexible and reconfigurable instrument that supports multiple processing
+pipelines demands a software solution.
+However, the high data rates and processing requirements compel the use of a
+supercomputer.
+We use an IBM Blue Gene/P to centrally combine the data from the LOFAR stations.
+The correlator is highly optimized and achieves very good computational
+performance and high bandwidths.
+
+In this article, we focus on the functionality of the correlator.
+We describe the standard imaging pipeline and similar pipelines, several pulsar
+pipelines, and the Ultra-High Energy Particles pipeline.
+The correlator supports multiple concurrent observations, even of different
+types.
 
 
 \keywords{LOFAR \and Correlator \and Blue Gene/P}
@@ -135,31 +153,47 @@ The LOFAR correlator is the first large-scale correlator that processes
 data in \emph{software}, in real time.
 Traditionally, correlators use custom-built hardware to process data, because
 of the high data rates and processing requirements.
-However, the desire to support different observation types demanded a more
+However, the desire to support different observation types demands a more
 flexible software solution.
-The availability of sufficiently powerful supercomputer, an IBM Blue Gene/P,
+The availability of a sufficiently powerful supercomputer, an IBM Blue Gene/P,
 allows this.
-We have to perform all processing in real time, since the data streams
+We perform all processing in real time, since the data streams
 that come from the stations are simply too large to store.
 
 The correlator supports a number of processing pipelines, with shared pipeline
 components.
 The \emph{standard imaging pipeline\/} filters and correlates station data.
+The \emph{Epoch of Reionization (EoR)\/} and \emph{Survey\/} pipelines are,
+at least in the real-time part, similar to the standard imaging pipeline.
 There is a collection of \emph{pulsar pipelines}, that coherently or
 incoherently filter and beam form station data.
-The \emph{Ultra-High Energy Pipeline (UHEP)\/} will beam form data as well, and
-will search for peaks that should trigger the Transient Buffer Boards.
+The \emph{Ultra-High Energy Particles (UHEP)\/} pipeline will beam form data as
+well, and will search for peaks that should trigger the Transient Buffer Boards.
 Multiple, concurrent observations, even of different types, are supported.
 The software is still in development: the standard imaging pipeline is fully
-functional; the pulsar pipelines are mostly implemented and have already
-been used for pulsar observations, and the UHEP pipeline is in its design
-phase.
+functional; the pulsar pipelines are mostly implemented and have been used for
+pulsar observations, and the UHEP pipeline is in its design phase.
+Additional pipelines, such as the \emph{Transient Detection\/} pipeline and
+the \emph{High-Energy Cosmic Ray\/} mode will be added later.
+Since they have not been designed in detail yet, we do not discuss them in
+this paper.
+
+This paper focuses on the functionality of the correlator, not on the
+implementation.
+Other papers describe the implementation~\cite{Romein:06,Romein:10a} or
+particular aspects thereof~\cite{Iskra:08,Romein:09a,Kazutomo:10}.
+
 
 The remainder of this article is structured as follows.
-\textbf{To do}.%TODO
+In Section~\ref{sec:BG/P}, we describe the Blue Gene/P hardware.
+Section~\ref{sec:processing} describes all pipeline components for the
+imaging, pulsar, and UHEP modes.
+Section~\ref{sec:results} shows correlator (performance) results.
+Finally, Section~\ref{sec:conclusions} concludes.
 
 
 \section{The IBM Blue Gene/P}
+\label{sec:BG/P}
 
 The Blue Gene/P (BG/P) is a supercomputer that combines powerful computational
 capabilities with a fast interconnect.
@@ -182,49 +216,71 @@ Additional networks exist for fast barriers, initialization, diagnostics, and
 debugging.
 More information on the BG/P can be found elsewhere~\cite{IBM:08}.
 
-Each group of (in our case 16) compute nodes is connected to an I/O~node via
-the collective network.
-Normally, the I/O~node is used as a black box that provides transparent
-communication from the compute nodes to external systems: each I/O-related
-system call (e.g., \texttt{open()}, \texttt{read()}, \texttt{socket()}) on a
-compute node is forwarded by the operating system to a daemon process on
-the I/O~node that performs the real operation.
-However, we found that it is much more efficient to run part of the correlator
+\begin{wrapfigure}{r}{62mm}
+\vspace{-9mm}
+\begin{center}
+\includegraphics[width=60mm]{pset.pdf}
+\end{center}
+\caption{I/O function forwarding on the Blue Gene.}
+\vspace{-5mm}
+\label{fig:pset}
+\end{wrapfigure}
+Compute nodes are not connected directly to external systems, but use
+\emph{I/O~nodes\/} for external communication.
+Each I/O-related system call on a compute node (e.g., \texttt{open()},
+\texttt{read()}, \texttt{socket()}) is forwarded by the operating system to
+a daemon process on the I/O~node that performs the real operation (see
+Figure~\ref{fig:pset}).
+Despite the fact that I/O~nodes were not designed to run application software,
+we found that it is much more efficient to run part of the correlator
 software on the I/O~node~\cite{Iskra:08}.
-An I/O~node uses the same hardware as a compute node, but has its
-10~Gb/s Ethernet interface connected and runs another operating system
-(a modified Linux kernel).
-The group of one I/O~node and its associated compute nodes is called a
-\emph{pset}.
-Our system has 192~psets in total, 64 per rack.
+In Section~\ref{sec:processing}, we will elaborate on this.
+%An I/O~node uses the same hardware as a compute node, but has its
+%10~Gb/s Ethernet interface connected and runs another operating system
+%(a modified Linux kernel).
+%The group of one I/O~node and its associated compute nodes is called a
+%\emph{pset}.
+%Our system has 192~psets in total, 64 per rack.
 
-In 2005, LOFAR used a 6-rack IBM Blue Gene/L (BG/L) supercomputer for real-time
-processing of the station data, which was, at that time, the sixth fastest
-supercomputer in the world.
-In 2008, the system was replaced by its successor, the BG/P.
-Although the architecture of the BG/P does not differ much from that
-of the BG/L, there were several advantages.
-First, the system software of the BG/P is much more mature than that of the
-BG/L.
-For the BG/L, we had to rewrite major parts of the operating system and network
-system software to achieve acceptable I/O
-performance~\cite{Iskra:08,Boonstoppel:08} (which was done in close cooperation
-with Argonne National Laboratory, Chicago).
-Second, the L1 caches of the processor cores are coherent in the BG/P, unlike
-those of the BG/L, where shared-memory processing was virtually impossible.
-Third, provisions were made to transparently recover from L1-cache faults,
-making the system much more reliable.
-Fourth, asynchronous communication (i.e., overlapping of computations and
-communication) on the 3-D~torus was enabled by adding a DMA (Direct Memory
-Access) engine.
-Furthermore, the use of 10-Gb/s Ethernet interfaces (as opposed to 1-GbE on
-the BG/L) simplified the connections to the stations.
-However, the relatively slow processor cores of I/O~nodes limit the data rate
-to a sustained speed of roughly four Gb/s in practice.
+In 2005, LOFAR used a six-rack IBM Blue Gene/L (BG/L) supercomputer for
+real-time processing of the station data, which was, at that time, the sixth
+fastest supercomputer in the world.
+In 2008, the system was replaced by its successor, a three-rack BG/P.
+The biggest improvements of the BG/P were the added L1-cache coherency,
+improved reliability, the ability to overlap computation and communication,
+reduced power consumption, and much more mature system software.
+Especially the latter is appreciated: for the BG/L we had to rewrite major
+parts of the operating system and network system software to achieve acceptable
+I/O performance~\cite{Iskra:08,Boonstoppel:08} (which was done in close
+cooperation with Argonne National Laboratory, Chicago).
+In contrast, on the BG/P we only need a kernel patch to avoid slow TLB-miss
+exceptions~\cite{Kazutomo:10} and a fast, user-space network protocol between
+the compute nodes and the I/O~nodes~\cite{Romein:09a}.
+
+%Although the architecture of the BG/P does not differ much from that
+%of the BG/L, there were several advantages.
+%First, the system software of the BG/P is much more mature than that of the
+%BG/L.
+%For the BG/L, we had to rewrite major parts of the operating system and network
+%system software to achieve acceptable I/O
+%performance~\cite{Iskra:08,Boonstoppel:08} (which was done in close cooperation
+%with Argonne National Laboratory, Chicago).
+%Second, the L1 caches of the processor cores are coherent in the BG/P, unlike
+%those of the BG/L, where shared-memory processing was virtually impossible.
+%Third, provisions were made to transparently recover from L1-cache faults,
+%making the system much more reliable.
+%Fourth, asynchronous communication (i.e., overlapping of computations and
+%communication) on the 3-D~torus was enabled by adding a DMA (Direct Memory
+%Access) engine.
+%Furthermore, the use of 10-Gb/s Ethernet interfaces (as opposed to 1-GbE on
+%the BG/L) simplified the connections to the stations.
+%However, the relatively slow processor cores of I/O~nodes limit the data rate
+%to a sustained speed of roughly four Gb/s in practice.
 
 
 
 \section{Processing pipelines}
+\label{sec:processing}
 
 \begin{wrapfigure}{r}{62mm}
 \vspace{-9mm}
@@ -232,6 +288,7 @@ to a sustained speed of roughly four Gb/s in practice.
 \includegraphics[width=60mm]{overview.pdf}
 \end{center}
 \caption{Data flow through the correlator.}
+\vspace{-5mm}
 \label{fig:overview}
 \end{wrapfigure}
 The LOFAR stations send data via the Wide-Area Network to the correlator
@@ -258,6 +315,8 @@ mutually.
 At the places where the data flow arrows diverge, either path can be chosen,
 with the exception of the correlator and the beam forming pipelines, that can
 run concurrently on the same data.
+Many components are optional, indicated by a bypass path around or beneath the
+component box.
 The main text uses the circled numbers to refer to the pipeline components.
 }
 \label{fig:processing}
@@ -299,7 +358,7 @@ the correlator.
 
 
 \begin{wrapfigure}{r}{37mm}
-\vspace{-9mm}
+\vspace{-5mm}
 \begin{center}
 \includegraphics[width=35mm]{delay.pdf}
 \end{center}
@@ -370,7 +429,7 @@ nodes that must exchange data continuously changes over time.
 
 \paragraph{Data Conversion}
 We convert the 4-bit, 8-bit, or 16-bit integer samples to 32-bit
-floating point numbers (the stations currently only support 16-bit samples,
+floating point numbers (the stations currently support only 16-bit samples,
 but the correlator is ready for future modes).
 We convert the data to floating point, because the Blue Gene is much better at
 floating-point processing than integer processing.
@@ -433,6 +492,7 @@ another complex multiplication), so the sky source is followed very accurately.
 \vspace{-6mm}
 \includegraphics[width=51mm]{bandpass.pdf}
 \caption{Channels have different signal powers.}
+\vspace{-5mm}
 \label{fig:bandpass}
 \end{wrapfigure}
 \paragraph{Bandpass Correction \circlenumber{8}}
@@ -506,7 +566,8 @@ stations.
 \begin{center}
 \includegraphics[width=25mm]{pencil-beam.pdf}
 \end{center}
-\caption{Multiple pencil beams cover (part of) the station beam.\vspace{-5mm}}
+\caption{Multiple pencil beams cover (part of) the station beam.}
+\vspace{-5mm}
 \label{fig:pencil-beams}
 \end{wrapfigure}
 \paragraph{Coherent Beam Forming}
@@ -630,7 +691,8 @@ format, bypassing the CasaCore library.
 All metadata is written in the ``old'' format, using the normal CasaCore
 library primitives; writing the metadata is not on the time-critical path.
 
-Beamformed data is written in HDF5 format~\cite{?}.
+Beamformed data is written in the HDF5 format~\cite{?}.
+There is a large number of tools available that supports this file format.
 
 
 
@@ -704,27 +766,6 @@ parameters, one per observation, provided by MAC or by the Python environment.
 MAC also monitors the log output of the correlator.
 
 
-\section{Computational Performance and I/O capabilities}
-
-The application is highly optimized to achieve extremely high computational
-performance and to sustain the high station data rates.
-For example, all compute-intensive program parts are written in assembly
-that optimally use the Blue Gene hardware.
-C++ reference code is maintained as well, but is much slower.
-The correlator achieves 96\% of the theoretical peak performance
-of the floating-point units during the computational phase.
-Other components also achieve very high performance.
-A separate paper elaborates on the high-performance computing and scaling
-aspects of the correlator~\cite{Romein:10a}.
-
-The very good efficiency and high bandwidths obtained on the Blue Gene led
-to the decision to increase the bandwidth from 32~MHz to 48.4~MHz, the
-maximum data rate that the station FPGAs can handle.
-This does not only increase the efficiency of the entire LOFAR telescope
-by 50\%, it also allows full coverage of the interesting 30--78~MHz range
-in a single observation, rather than two.
-
-
 \subsection{Future Work}
 
 Although the correlator is in production use for daily imaging and pulsar
@@ -739,7 +780,6 @@ where a bad signal from a single station now corrupts the entire sum.
 Also, if a real-time flagger would perform really well, there is opportunity
 to average the visibility data in frequency direction, since RFI is typically
 narrow banded.
-
 We have not yet determined a good real-time flagging algorithm, and are not
 even sure if it is feasible to flag in real time.
 The correlator can hold at most a few seconds of data in main memory, and
@@ -757,11 +797,35 @@ Since the correlated output is produced with a latency of multiple seconds,
 gain and phase corrections can only be applied to data of a couple of seconds
 later.
 
+Also, the latency of the correlator output may be too high to generate
+triggers for the Transient Buffer Boards within time; they must be triggered
+within roughly four seconds, otherwise the interesting data on the TBBs is
+overwritten.
+There are several ways to decrease the latency, some of which require quite
+some programming effort.
+We have not yet determined how much the latency should be reduced.
 
-\subsection{Results}
+Another idea that we might implement in the future is to reduce the output
+data rate by using hybrid integration times: short baselines can be integrated
+longer than long baselines.
+Especially for international observations with very different baseline lengths,
+where short integration times are desired, this can significantly reduce the
+amount of output data.
+However, there are other options to reduce the output data rate with the
+functionality that is already present, e.g., (groups of) core stations can be 
+beam formed prior to correlation, and the channel bandwidth can be increased.
+Hybrid integration times can only be used if the offline software support
+this as well.
+Although this is not the case, there are no fundamental reasons that make it
+impossible to implement.
+It would also be a good demonstrator for the Square Kilometer Array.
+
+
+\section{Results}
+\label{sec:results}
 
 \begin{figure}[ht]
-\includegraphics[width=\columnwidth]{fringe.jpg}
+\includegraphics[width=\columnwidth,height=15mm]{fringe.jpg}
 \caption{Fringes from a 9-hour observation.}
 \label{fig:fringe}
 \end{figure}
@@ -782,8 +846,99 @@ the phase of the signal; the intensity matches the amplitude (power).
 The white spots are caused by RFI.
 
 
-\section{conclusions}
+\subsection{Computational Performance and I/O capabilities}
 
+The application is highly optimized to achieve extremely high computational
+performance and to sustain the high station data rates.
+For example, all compute-intensive program parts are written in assembly
+that optimally use the Blue Gene hardware.
+C++ reference code is maintained as well, but is much slower.
+The correlator achieves 96\% of the theoretical peak performance
+of the floating-point units during the computational phase.
+Other pipeline components also achieve very high performance.
+A separate paper elaborates on the high-performance computing and scaling
+aspects of the correlator~\cite{Romein:10a}.
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|...l|}
+\hline
+%bits/sample		& \multicolumn{2}{|c|}{2x16} & \multicolumn{2}{|c|}{2x8} & \multicolumn{2}{|c|}{2x4} \\ 
+bits/sample		& \multicolumn{1}{c}{2x16} & \multicolumn{1}{c}{2x8} & \multicolumn{1}{c}{2x4} & \\
+\hline
+max.\ nr.\ stations	&   64 &  64 &  48 & \\
+max.\ nr.\ subbands	&  248 & 496 & 992 & \\
+obs.\ bandwidth * beams & 48.4 & 96.9 & 194 & MHz \\
+nr.\ channels/subband   & \multicolumn{1}{c}{1,16--4096} & \multicolumn{1}{c}{1,16--4096} & \multicolumn{1}{c}{1,16--4096} & \\
+min.\ integration time	& 1.0\ensuremath{^{1)}} & 1.0 & 1.0 & s \\
+\hline
+operations per second	& 3.91 & 7.81 & 9.34 & TFLOPS \\
+total input bandwidth	&  198 & 198 & 149 & Gb/s \\
+total output bandwidth	&   35.9 &  71.8\ensuremath{^{2)}} & 81.2\ensuremath{^{2)}} & Gb/s\\
+\hline
+\multicolumn{5}{l}{$^{1)}$ Integration times as low as 0.25~s are supported for smaller numbers of stations.} \\
+\multicolumn{5}{l}{$^{2)}$ Exceeds current storage capacity.} \\
+\end{tabular}
+\end{center}
+\caption{Correlator specifications, assuming one BG/P rack, 1.007~s integration
+time, 256~channels, if not stated otherwise.
+Maximum beam-forming capabilities still have to be determined.}
+\label{tab:correlator-specifications}
+\end{table}
+
+The capabilities of the correlator are listed in
+Table~\ref{tab:correlator-specifications}.
+There are sufficient spare CPU cycles available to run additional observation
+modes concurrently, but the output data rate is quickly exhausted.
+The very good efficiency and high bandwidths obtained on the Blue Gene led
+to the decision to increase the bandwidth from 32~MHz to 48.4~MHz, the
+maximum data rate that the station FPGAs can handle.
+This does not only increase the efficiency of the entire LOFAR telescope
+by 50\%, it also allows full coverage of the interesting 30--78~MHz range
+in a single observation, rather than two.
+
+
+\section{Conclusions}
+\label{sec:conclusions}
+
+%The LOFAR telescope is essentially a distributed sensor network consisting
+%of tens of thousands of simple receivers.
+%Unlike dishes, the receivers monitor the entire sky, and multiple sources
+%can be observed concurrently, while beams can be switched instantaneously.
+%These abilities provide opportunities for new science in radio astronomy and
+%particle physics.
+%Multiple processing pipelines are required for the different observation types.
+
+%To support the full potential of 
+%The LOFAR correlator is evolving to a flexible and versatile application.
+
+%Unlike previous generations of telescopes that typically used special-purpose
+%hardware, the LOFAR correlator is a \emph{software\/} correlator.
+The LOFAR correlator is a \emph{software\/} correlator, unlike previous
+generations of telescopes that typically used special-purpose hardware.
+The use of software increases flexibility, and flexibility is highly needed
+to support the different observation types that make LOFAR a versatile
+instrument.
+However, the high data rates and processing requirements demand the use of
+a supercomputer.
+We use an IBM Blue Gene/P to filter, beam form, and correlate the data.
+Meanwhile, the functionality is still enhancing, as more pipelines and
+pipeline components are developed.
+The standard imaging pipeline is fully functional; several pulsar pipelines
+are mostly implemented and have been successfully used for observations; other
+pipelines are being designed.
+The software supports multiple concurrent observations, even of different
+types.
+
+The application is highly optimized and achieves extremely good performance.
+This comes at a price, as some optimizations complicate the implementation
+considerably.
+In particular, the work distribution scheme and the transpose that
+redistributes the data among the processor cores are complex.
+But the good performance results allow processing of up to 64~stations on a
+\emph{single\/} rack only, and allow observations of 48.4~MHz rather than the
+required 32~MHz, significantly increasing the performance of the
+\emph{entire\/} instrument.
 
 
 \begin{acknowledgements}
@@ -806,7 +961,7 @@ performed in the context of the NWO STARE AstroStream project.
 
 %\bibliographystyle{spbasic}
 \bibliographystyle{plain}
-\bibliography{lofar}
+\bibliography{this-issue,lofar}
 
 
 \end{document}
