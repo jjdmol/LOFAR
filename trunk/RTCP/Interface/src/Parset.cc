@@ -53,8 +53,7 @@ namespace RTCP {
 
 Parset::Parset(const char *name)
 :
-  ParameterSet(name),
-  itsObservation(this)
+  ParameterSet(name)
 {
   maintainBackwardCompatibility();
   check();
@@ -72,25 +71,11 @@ void Parset::checkSubbandCount(const char *key) const
     THROW(InterfaceException, string(key) << " contains wrong number (" << boost::lexical_cast<string>(getUint32Vector(key,true).size()) << ") of subbands (expected " << boost::lexical_cast<string>(nrSubbands()) << ')');
 }
 
-
-void Parset::checkSubbandCountFromObservation(const char *key, const vector<uint32> &list) const
-{
-  if (list.size() != nrSubbands())
-    THROW(InterfaceException, string(key) << " contains wrong number (" << boost::lexical_cast<string>(list.size()) << ") of subbands (expected " << boost::lexical_cast<string>(nrSubbands()) << ')');
-}
-
-
 void Parset::check() const
 {
-  if (isDefined("Observation.subbandList")) {
-    checkSubbandCount("Observation.beamList");
-    checkSubbandCount("Observation.rspBoardList");
-    checkSubbandCount("Observation.rspSlotList");
-  } else {
-    checkSubbandCountFromObservation("Observation.beamList", itsObservation.getBeamList());
-    checkSubbandCountFromObservation("Observation.rspBoardList", itsObservation.getRspBoardList());
-    checkSubbandCountFromObservation("Observation.rspSlotList", itsObservation.getRspSlotList());
-  }
+  checkSubbandCount("Observation.beamList");
+  checkSubbandCount("Observation.rspBoardList");
+  checkSubbandCount("Observation.rspSlotList");
 
   unsigned		slotsPerFrame = nrSlotsInFrame();
   std::vector<unsigned> boards	      = subbandToRSPboardMapping();
@@ -212,11 +197,7 @@ vector<double> Parset::subbandToFrequencyMapping() const
 {
   unsigned	   subbandOffset = 512 * (nyquistZone() - 1);
   
-  vector<unsigned> subbandIds;
-  if (isDefined("Observation.subbandList"))
-    subbandIds = getUint32Vector("Observation.subbandList",true);
-  else
-    subbandIds = itsObservation.getSubbandList();
+  vector<unsigned> subbandIds = getUint32Vector("Observation.subbandList",true);
   vector<double>   subbandFreqs(subbandIds.size());
 
   for (unsigned subband = 0; subband < subbandIds.size(); subband ++)
