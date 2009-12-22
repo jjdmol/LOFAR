@@ -251,6 +251,8 @@ class Parset(dict):
 
       # write them to file
       outf.write( "\n".join( lines ) )
+      if lines:
+        outf.write( "\n" )
 
     def __delitem__(self, key):
       # avoid KeyErrors

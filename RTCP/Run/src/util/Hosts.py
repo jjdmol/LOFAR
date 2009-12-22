@@ -3,6 +3,7 @@
 __all__ = ["ropen","rmkdir","rexists","runlink","rsymlink"]
 
 import os
+import sys
 import subprocess
 import socket
 
@@ -31,6 +32,12 @@ def ropen( filename, mode = "r", buffering = -1 ):
 
   if host == "":
     # a local file
+    if file == "-":
+      if mode == "r":
+        return sys.stdin
+      else:
+        return sys.stdout
+
     return open(file, mode, buffering)
 
   if host == "tcp":
