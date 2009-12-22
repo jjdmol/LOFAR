@@ -155,11 +155,6 @@ if __name__ == "__main__":
   			dest = "partition",
 			type = "string",
   			help = "name of the BlueGene partition [%default]" )
-  hwgroup.add_option( "--storageprocs",
-  			dest = "storageprocs",
-			type = "int",
-                        default = 1,
-  			help = "number of processes per storage node [%default]" )
   hwgroup.add_option( "-M", "--storage-master",
   			dest = "storagemaster",
 			type = "string",
@@ -304,6 +299,8 @@ if __name__ == "__main__":
       parset.parse( "%s=%s" % (k,v) )
 
     # reserve an observation id
+    parset.distill()
+
     if parset.getObsID():
       info( "Distilled observation ID %s from parset." % (parset.getObsID(),) )
     else:  
@@ -318,41 +315,17 @@ if __name__ == "__main__":
       info( "Generated observation ID %s" % (obsid,) )
 
     # override parset with command-line values
-    if options.partition is None:
-      options.partition = parset.distillPartition()
-
-      if options.partition:
-        info( "Distilled partition %s from parset." % (options.partition,) )
-      else:
-        fatal( "No BlueGene partition selected on command line or in first parset." )
-    elif parset.distillPartition() not in ["",options.partition]:
-      # make sure all parsets use the same partition
-      fatal( "Parset selects partition %s, but partition %s was already selected." % (parset.distillPartition(),options.partition) )
-    parset.setPartition( options.partition )
-
-    # define storage nodes
-    if not options.nostorage:
-      storagenodes = parset.distillStorageNodes()
-
-      if storagenodes:
-        info( "Distilled storage nodes %s from parset." % (storagenodes,) )
-      else:
-        fatal( "No storage nodes selected in parset." )
-
-      parset.setStorageNodes( storagenodes * options.storageprocs )
+    if options.partition:
+      parset.setPartition( options.partition )
 
     # set stations
     if "stations" in obsparams:
       stationStr = obsparams["stations"]
+      stationList = Stations.parse( stationStr )
+
+      parset.setStations( stationList )
     else:
-      stationStr = parset.distillStations()
-
-      if stationStr:
-        info( "Distilled stations %s from parset." % (stationStr,) )
-      else:
-        fatal( "No stations or inputs selected on command line or in parset. " )
-
-    stationList = Stations.parse( stationStr )
+      stationList = parset.stations
 
     if "tcp" in obsparams:
       # turn all inputs into tcp:*
@@ -385,6 +358,9 @@ if __name__ == "__main__":
       parset.setStartRunTime( obsparams["start"], defaultRunTime )
 
     info( "Running from %s to %s." % (parset["Observation.startTime"], parset["Observation.stopTime"] ) )
+    info( "Partition     = %s" % (parset.partition,) )
+    info( "Storage Nodes = %s" % (", ".join(parset.storagenodes),) )
+    info( "Stations      = %s" % (", ".join([s.name for s in parset.stations]),) )
 
     # set a few other options
     configmap = {
