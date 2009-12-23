@@ -2259,7 +2259,7 @@ void RSPDriver::rsp_getspustatus(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_getRawBlock(GCFEvent& event, GCFPortInterface& port) 
 {
-	Ptr<GetRawBlockCmd> command = new GetRawBlockCmd(event, port, Command::WRITE);
+	Ptr<GetRawBlockCmd> command = new GetRawBlockCmd(event, port, Command::READ);
 
 	if (!command->validate()) {
 		LOG_ERROR("GetRawBlock: invalid parameter");
