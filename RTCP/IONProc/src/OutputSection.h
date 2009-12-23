@@ -40,7 +40,6 @@ class OutputSection
     ~OutputSection();
 
   private:
-    bool                        stop;
     void			mainLoop();
 
     void			droppingData(unsigned subband, unsigned subbandNumber);

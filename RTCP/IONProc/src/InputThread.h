@@ -57,16 +57,11 @@ template<typename SAMPLE_TYPE> class InputThread
 			  InputThread(ThreadArgs args);
 			  ~InputThread();
 
-    void		  threadFunction();
-    void		  receivePackets();
+    void		  mainLoop();
 
     static const unsigned packetBuffersSize = 128;
 
   private:
-    static void		  sigHandler(int);
-  
-    volatile bool	  stop, stopped;
-
     ThreadArgs		  itsArgs;
     Thread		  *thread;
 };

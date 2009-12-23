@@ -48,6 +48,8 @@ class OutputThread
   private:
     void		    mainLoop();
 
+    volatile bool           connecting;
+
     const Parset            &itsParset;
     const unsigned          itsSubband;
     const unsigned          itsOutput;

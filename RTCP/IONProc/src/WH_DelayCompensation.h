@@ -102,7 +102,6 @@ namespace LOFAR
     private:
       // do the delay compensation calculations in a separate thread to allow bulk
       // calculations and to avoid blocking other threads
-      bool			stop;
       void                      mainLoop();
 
       // the circular buffer to hold the moving beam directions for every second of data

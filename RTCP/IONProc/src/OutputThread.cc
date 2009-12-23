@@ -44,7 +44,8 @@ OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsig
   itsParset(ps),
   itsSubband(subband),
   itsOutput(output),
-  thread(0)
+  thread(0),
+  connecting(false)
 {
   // transpose the data holders: create queues streams for the output streams
   // itsPlans is the owner of the pointers to sample data structures
@@ -64,6 +65,9 @@ OutputThread::~OutputThread()
 {
   itsSendQueue.append(0); // 0 indicates that no more messages will be sent
 
+  if (connecting) {
+    thread->abort();
+  }
   delete thread;
 
   while (!itsSendQueue.empty())
@@ -86,6 +90,8 @@ void OutputThread::mainLoop()
   const string prefix         = "OLAP.OLAP_Conn.IONProc_Storage";
   const string connectionType = itsParset.getString(prefix + "_Transport");
 
+  connecting = true;
+
   if (connectionType == "NULL") {
     LOG_DEBUG_STR("subband " << itsSubband << " written to null:");
     streamToStorage.reset( new NullStream );
@@ -107,6 +113,8 @@ void OutputThread::mainLoop()
     THROW(IONProcException, "unsupported ION->Storage stream type: " << connectionType);
   }
 
+  connecting = false;
+
   // set the maximum number of concurrent writers
   // TODO: race condition on creation
   // TODO: if a storage node blocks, ionproc can't write anymore
@@ -114,7 +122,7 @@ void OutputThread::mainLoop()
   static Semaphore semaphore(2);
   StreamableData *data;
 
-  while ((data = itsSendQueue.remove()) != 0) {
+  while (!thread->stop && (data = itsSendQueue.remove()) != 0) {
     // prevent too many concurrent writers by locking this scope
     semaphore.down();
     try {

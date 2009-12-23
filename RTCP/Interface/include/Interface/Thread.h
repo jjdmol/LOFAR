@@ -27,6 +27,8 @@
 
 #include <pthread.h>
 #include <signal.h>
+#include <unistd.h>
+#include <errno.h>
 
 #include <Common/LofarLogger.h>
 #include <Stream/SystemCallException.h>
@@ -61,26 +63,64 @@ class Thread
     // send signal
     void kill(int sig);
 
+    // abort the thread and wait for it to die
+    void abort();
+
+    // true when the thread should wrap up
+    volatile bool stop;
+
   private:
     template <typename T> static void *stub(void *);
+    static void setSigHandler();
+    static void sigHandler(int);
 
     pthread_t thread;
+
+    volatile bool stopped;
+
+    template <typename T> struct stubParams {
+      T *object;
+      void (T::*method)();
+      Thread *thread;
+    };
 };
 
 
 template <typename T> inline Thread::Thread(T *object, void (T::*method)())
+:
+  stopped(false),
+  stop(false)
 {
   int retval;
 
-  if ((retval = pthread_create(&thread, 0, &Thread::stub<T>, new std::pair<T *, void (T::*)()>(object, method))) != 0)
+  setSigHandler();
+
+  stubParams<T> *params;
+  params = new stubParams<T>();
+  params->object = object;
+  params->method = method;
+  params->thread = this;
+
+  if ((retval = pthread_create(&thread, 0, &Thread::stub<T>, params)) != 0)
     throw SystemCallException("pthread_create", retval, THROW_ARGS);
 }
 
 
 template <typename T> inline Thread::Thread(T *object, void (T::*method)(), size_t stackSize)
+:
+  stopped(false),
+  stop(false)
 {
   pthread_attr_t attr;
   int		 retval;
+
+  setSigHandler();  
+
+  stubParams<T> *params;
+  params = new stubParams<T>();
+  params->object = object;
+  params->method = method;
+  params->thread = this;
 
   if ((retval = pthread_attr_init(&attr)) != 0)
     throw SystemCallException("pthread_attr_init", retval, THROW_ARGS);
@@ -88,7 +128,7 @@ template <typename T> inline Thread::Thread(T *object, void (T::*method)(), size
   if ((retval = pthread_attr_setstacksize(&attr, stackSize)) != 0)
     throw SystemCallException("pthread_attr_setstacksize", retval, THROW_ARGS);
 
-  if ((retval = pthread_create(&thread, &attr, &Thread::stub<T>, new std::pair<T *, void (T::*)()>(object, method))) != 0)
+  if ((retval = pthread_create(&thread, &attr, &Thread::stub<T>, params)) != 0)
     throw SystemCallException("pthread_create", retval, THROW_ARGS);
 
   if ((retval = pthread_attr_destroy(&attr)) != 0)
@@ -118,14 +158,31 @@ inline void Thread::kill(int sig)
     throw SystemCallException("pthread_kill", retval, THROW_ARGS);
 }
 
+inline void Thread::abort()
+{
+  stop = true;
+
+  while (!stopped) {
+    try {
+      kill(SIGUSR1); // interrupt blocking system call
+      usleep(25000);
+    } catch (SystemCallException &) {
+      // ignore the case that the thread just exited
+    }  
+  }
+
+  // our destructor will do the pthread_join
+}
+
 
 template <typename T> inline void *Thread::stub(void *arg)
 {
-  std::pair<T *, void (T::*)()> *object_method = static_cast<std::pair<T *, void (T::*)()> *>(arg);
-  T				*object	       = object_method->first;
-  void				(T::*method)() = object_method->second;
+  stubParams<T> *params = static_cast<stubParams<T>*>(arg);
+  T	                *object        = params->object;
+  void			(T::*method)() = params->method;
+  Thread                *thread        = params->thread;
 
-  delete object_method;
+  delete params;
 
   try {
     (object->*method)();
@@ -136,6 +193,8 @@ template <typename T> inline void *Thread::stub(void *arg)
   } catch (...) {
     LOG_FATAL("caught non-std::exception");
   }
+
+  thread->stopped = true;
 
   return 0;
 }

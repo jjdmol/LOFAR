@@ -55,19 +55,7 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs
 {
   LOG_DEBUG("InputThread::InputThread(...)");
 
-  // we need a signal to interrupt the read() system call when we shut down
-  struct sigaction sa;
-
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags	= 0;
-  sa.sa_handler = sigHandler;
-
-  if (sigaction(SIGUSR1, &sa, 0) != 0) {
-    throw SystemCallException("sigaction", errno, THROW_ARGS);
-  }
-
-  stop = stopped = false;
-  thread = new Thread(this, &InputThread<SAMPLE_TYPE>::threadFunction, 65536);
+  thread = new Thread(this, &InputThread<SAMPLE_TYPE>::mainLoop, 65536);
 }
 
 
@@ -75,41 +63,15 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::~InputThread()
 {
   LOG_DEBUG("InputThread::~InputThread()");
 
-  stop = true;
-
-  while (!stopped)
-    try {
-      thread->kill(SIGUSR1); // interrupt read() system call
-      usleep(25000);
-    } catch (SystemCallException &) {
-      // ignore the case that the thread just exited
-    }  
-
+  thread->abort();
   delete thread;
 }
 
 
-template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::sigHandler(int)
+template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 {
-}
+  // receivePackets
 
-
-template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::threadFunction()
-{
-  // set "stopped", even if exception is thrown
-
-  try {
-    receivePackets();
-    stopped = true;
-  } catch (...) {
-    stopped = true;
-    throw;
-  }
-}
-
-
-template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::receivePackets()
-{
 #if 1 && defined HAVE_BGP_ION
   if (itsArgs.threadID == 0)
     runOnCore0();
@@ -136,7 +98,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::receivePackets()
 
   LOG_DEBUG_STR("input thread " << itsArgs.threadID << " entering loop");
 
-  while (!stop) {
+  while (!thread->stop) {
     try {
       // interruptible read, to allow stopping this thread even if the station
       // does not send data
@@ -192,8 +154,9 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::receivePackets()
     } else {
       actualstamp += itsArgs.nrTimesPerPacket; 
 
-      if (itsArgs.isRealTime)
+      if (itsArgs.isRealTime) {
 	wallClockTime.waitUntil(actualstamp);
+      }
     }
 
     // expected packet received so write data into corresponding buffer
