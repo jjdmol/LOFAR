@@ -59,7 +59,6 @@ GetRawBlockCmd::~GetRawBlockCmd()
 //
 void GetRawBlockCmd::ack(CacheBuffer& cache)
 {
-#if 0
 	RSPGetblockackEvent ack;
 	RawDataBlock_t&		rdb = cache.getRawDataBlock();
 	ack.timestamp = getTimestamp();
@@ -69,7 +68,6 @@ void GetRawBlockCmd::ack(CacheBuffer& cache)
 	memcpy(ack.data, rdb.data, ack.dataLen);
 
 	getPort()->send(ack);
-#endif
 }
 
 //
@@ -103,18 +101,7 @@ void GetRawBlockCmd::apply(CacheBuffer& cache, bool setModFlag)
 //
 void GetRawBlockCmd::complete(CacheBuffer& cache)
 {
-//	ack(cache);
-#if 1
-	RSPGetblockackEvent ack;
-	RawDataBlock_t&		rdb = cache.getRawDataBlock();
-	ack.timestamp = getTimestamp();
-	ack.boardID	  = itsEvent->boardID;
-	ack.status 	  = RSP_SUCCESS;
-	ack.dataLen   = rdb.dataLen;
-	memcpy(ack.data, rdb.data, ack.dataLen);
-
-	getPort()->send(ack);
-#endif
+	ack(cache);
 }
 
 //
