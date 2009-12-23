@@ -86,7 +86,7 @@ grestore
 
 \title{The LOFAR Correlator%\thanks{Grants or other notes
 %about the article that should go on the front page should be
-%placed here. General acknowledgments should be placed at the end of the article.}
+%placed here. General acknowledgements should be placed at the end of the article.}
 }
 %\subtitle{Do you have a subtitle?\\ If so, write it here}
 
@@ -464,7 +464,7 @@ Since the most common observation mode uses 256 channels, we optimized this
 case a bit further, and manually wrote a more efficient assembly
 implementation for the 256-point FFT.
 
-In priciple, any reasonable number of channels per subband is supported.
+In principle, any reasonable number of channels per subband is supported.
 However, powers of two are more efficient, since power-of-two FFT sizes
 are more efficient.
 Also, the number of FIR filter taps is fixed to~16, so the quality of the
@@ -549,7 +549,7 @@ and transient pipelines.
 We briefly describe the modes here; more information can be found in the
 paper on pulsar modes elsewhere in this issue~\cite{Hessels:10}.
 
-The beamforming pipelines fall into two catagories: the coherent modes and
+The beamforming pipelines fall into two categories: the coherent modes and
 incoherent modes.
 The coherent modes add the complex samples from all stations, resulting in a
 complex voltage.
@@ -584,14 +584,14 @@ direction-dependent) complex weight, and then added to the weighted samples
 of the other stations.
 
 To create multiple pencil beams with different directions, different delays
-are appied to a station before addition.
+are applied to a station before addition.
 Note that the center beam needs no correction, as the phase correction for
 this direction was already performed at high precision (see \circlenumber{7}).
 The other pencil beams are corrected with respect to the center beam.
 
-The directions of the pencil beam can be choosen freely (of course, observing
+The directions of the pencil beam can be chosen freely (of course, observing
 outside the station beams makes no sense).
-However, there is provision for specifing a honeycomb structure around the
+However, there is provision for specifying a honeycomb structure around the
 center beam (see Figure~\ref{fig:pencil-beams}).
 This simplifies the specification of an observation, since a honeycomb structure
 requires only two parameters: the diameter of a pencil beam and the number
@@ -609,7 +609,7 @@ Since the beam of the incoherent sum covers the station beams, there is no
 need to create multiple pencil beams.
 As a consequence, the output data rate of this mode is much smaller.
 Either Stokes I,Q,U,V~(\circlenumber{15}) or to Stokes~I
-only~(\circlenumber{16}) can be choosen.
+only~(\circlenumber{16}) can be chosen.
 
 
 \paragraph{Integration of Beam-Formed Products \circlenumber{17}}
