@@ -96,7 +96,7 @@ void InputThread::mainLoop()
   std::auto_ptr<StreamableData> data;
 
   try {
-    for (unsigned count = 0; count < 10; count += increment) {
+    for (unsigned count = 0; !thread->stop && count < 10; count += increment) {
       unsigned o;
       NSTimer queueTimer("retrieve freeQueue item",false,false);
       NSTimer readTimer("read data",false,false);

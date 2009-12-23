@@ -50,7 +50,6 @@ namespace RTCP {
 
 OutputSection::OutputSection(const Parset *ps, unsigned psetNumber, unsigned outputType, const std::vector<Stream *> &streamsFromCNs, bool lastOutput)
 :
-  stop(false),
   itsParset(ps),
   itsPsetIndex(ps->outputPsetIndex(psetNumber)),
   itsOutputType(outputType),
@@ -177,7 +176,7 @@ void OutputSection::mainLoop()
     }
   }
 
-  for( unsigned i = 0; i < nrRuns && !stop; i++ ) {
+  for( unsigned i = 0; i < nrRuns && !thread->stop; i++ ) {
     for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
       // TODO: make sure that there are more free buffers than subbandsPerPset
 

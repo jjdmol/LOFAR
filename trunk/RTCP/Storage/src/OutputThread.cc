@@ -130,7 +130,7 @@ void OutputThread::mainLoop()
   static Semaphore semaphore(4);
 
   
-  for(;;) {
+  while (!thread->stop) {
     NSTimer writeTimer("write data",false,false);
     std::auto_ptr<StreamableData> data( itsInputThread->itsReceiveQueue.remove() );
 
@@ -143,7 +143,12 @@ void OutputThread::mainLoop()
     writeTimer.start();
     semaphore.down();
 
-    itsWriter->write(data.get());
+    try {
+      itsWriter->write(data.get());
+    } catch(...) {
+      semaphore.up();
+      throw;
+    }
 
     semaphore.up();
     writeTimer.stop();

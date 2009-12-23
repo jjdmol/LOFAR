@@ -7,7 +7,8 @@ libinterface_la_SOURCES	        = Package__Version.cc \
 				  CN_ProcessingPlan.cc \
 				  Parset.cc \
 				  PencilCoordinates.cc \
-				  RSPTimeStamp.cc
+				  RSPTimeStamp.cc \
+                                  Thread.cc
 
 configfilesdir			= $(bindir)
 
