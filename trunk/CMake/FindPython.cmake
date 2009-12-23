@@ -7,8 +7,8 @@
 #  PYTHON_FOUND        - system has Python interpreter, Python headers
 #                        files and libraries
 #  PYTHON_INCLUDE_DIRS - path to the Python header files
-#  PYTHON_INSTALL_DIR  - installation directory for Python packages
-#                        (cached)
+#  PYTHON_BUILD_DIR    - build directory for Python packages (cached)
+#  PYTHON_INSTALL_DIR  - installation directory for Python packages (cached)
 
 # Copyright (C) 2009
 # ASTRON (Netherlands Institute for Radio Astronomy)
@@ -47,7 +47,7 @@ if(NOT DEFINED PYTHON_INSTALL_DIR)
   if(PYTHON_EXECUTABLE)
     set(_cmd
       "from distutils.sysconfig import *"
-      "print get_python_lib(prefix='${CMAKE_INSTALL_PREFIX}')")
+      "print get_python_lib(prefix='')")
     execute_process(
       COMMAND "${PYTHON_EXECUTABLE}" "-c" "${_cmd}"
       OUTPUT_VARIABLE _pydir
@@ -56,7 +56,9 @@ if(NOT DEFINED PYTHON_INSTALL_DIR)
     if(_err)
       message(FATAL_ERROR "Python command failed:\n${_err}")
     endif(_err)
-    set(PYTHON_INSTALL_DIR "${_pydir}" CACHE PATH 
+    set(PYTHON_BUILD_DIR "${CMAKE_BINARY_DIR}/${_pydir}" CACHE PATH 
+      "Python site-packages build directory")
+    set(PYTHON_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${_pydir}" CACHE PATH 
       "Python site-packages installation directory")
   endif(PYTHON_EXECUTABLE)
 endif(NOT DEFINED PYTHON_INSTALL_DIR)

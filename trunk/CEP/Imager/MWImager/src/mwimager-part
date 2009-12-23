@@ -72,9 +72,9 @@ if test -d "$vds"  -a  -e "$vds/table.dat"; then
 fi
 
 if test "$img" = "casa"; then
-  $pgmpath/mwimager-casa $psn $seqnr $msn $vds $dry
+  $pgmpath/mwimager-casa $psn $seqnr $msn $vds $dry 2>/dev/null || exit 1
 else
-  $pgmpath/mwimager-askap $psn $seqnr $msn $vds $dry
+  $pgmpath/mwimager-askap $psn $seqnr $msn $vds $dry 2>/dev/null || exit 1
 fi
 
 # Convert to FITS.

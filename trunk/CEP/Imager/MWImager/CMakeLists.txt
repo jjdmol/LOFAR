@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(MWImager 0.1 DEPENDS Common MWCommon)
+lofar_package(MWImager 0.1 DEPENDS Common MWCommon pyparameterset)
 
 lofar_find_package(Casacore COMPONENTS images REQUIRED)
 

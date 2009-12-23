@@ -50,16 +50,28 @@ macro(python_install)
   endif(_dest_dir MATCHES "^$" OR _dest_dir MATCHES ";")
 
   # Set python package install directory.
-  set(_dest_dir "${PYTHON_INSTALL_DIR}/${_dest_dir}")
+  set(_inst_dir "${PYTHON_INSTALL_DIR}/${_dest_dir}")
+  set(_build_dir "${PYTHON_BUILD_DIR}/${_dest_dir}")
+
+  # Make sure that there's a __init__.py file in each directory
+  string(REGEX REPLACE "/" ";" _dir_list ${_dest_dir})
+  set(_init_dir "${PYTHON_BUILD_DIR}")
+  foreach(_dir ${_dir_list})
+    set(_init_dir "${_init_dir}/${_dir}")
+    execute_process(COMMAND 
+      ${CMAKE_COMMAND} -E touch "${_init_dir}/__init__.py")
+  endforeach(_dir ${_dir_list})
 
   # Install and byte-compile each Python file.
   foreach(_py ${_py_files})
-    install(FILES ${_py} DESTINATION ${_dest_dir})
+    get_filename_component(_src_dir ${_py} ABSOLUTE)
+    configure_file(${_src_dir} ${_build_dir}/${_py} COPYONLY)
+    install(FILES ${_py} DESTINATION ${_inst_dir})
     get_filename_component(_py ${_py} NAME)
     set(_py_code
       "import py_compile"
-      "print '-- Byte-compiling: ${_dest_dir}/${_py}'"
-      "py_compile.compile('${_dest_dir}/${_py}')")
+      "print '-- Byte-compiling: ${_inst_dir}/${_py}'"
+      "py_compile.compile('${_inst_dir}/${_py}')")
     install(CODE 
       "execute_process(COMMAND ${PYTHON_EXECUTABLE} -c \"${_py_code}\")")
   endforeach(_py ${_py_files})

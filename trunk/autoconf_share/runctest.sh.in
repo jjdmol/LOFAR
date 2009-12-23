@@ -27,6 +27,12 @@ lofar_sharedir=@lofar_sharedir@; export lofar_sharedir
 prefix=@prefix@; export prefix
 srcdir=@srcdir@; export srcdir
 
+# When using CMake, add the Python build directory to PYTHONPATH.
+if ! echo "@PYTHON_BUILD_DIR@" | grep "[@]PYTHON_BUILD_DIR[@]" > /dev/null
+then
+  PYTHONPATH=@PYTHON_BUILD_DIR@; export PYTHONPATH
+fi
+
 # Start autoconf_share/runtest.sh
 $lofar_sharedir/runtest.sh "$@"
 
