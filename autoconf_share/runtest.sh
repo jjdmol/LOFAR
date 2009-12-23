@@ -167,9 +167,10 @@ else
 fi
 
 # For python files create the lofar/package directory, so the tests can
-# be run as if the python files were installed.
+# be run as if the python files were installed. This is only needed when
+# using the GNU Autotools (note: GNU_AUTOTOOLS is set in Makefile.common).
 # Note that python looks in . before PYTHONPATH.
-if [ "$PYTHONPKG" != "" ]; then
+if [ "$PYTHONPKG" != "" -a "$GNU_AUTOTOOLS" != "" ]; then
   PYTHONDIR=${1}_tmp_pythonpkg_dir           # will be removed automatically
   mkdir -p $PYTHONDIR/lofar/$PYTHONPKG
   touch $PYTHONDIR/lofar/__init__.py
