@@ -60,9 +60,14 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
 
   if (mode == Client) {
     while (connect(fd, (struct sockaddr *) &sa, sizeof sa) < 0)
-      if (errno == ECONNREFUSED)
-	sleep(1);
-      else
+      if (errno == ECONNREFUSED) {
+	if (sleep(1) > 0) {
+          // interrupted by a signal handler -- abort to allow this thread to
+          // be forced to continue after receiving a SIGINT, as with any other
+          // system call in this constructor 
+ 	  throw SystemCallException("sleep", errno, THROW_ARGS);
+        }
+      } else
 	throw SystemCallException("connect", errno, THROW_ARGS);
   } else {
     int on = 1;
