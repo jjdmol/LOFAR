@@ -443,6 +443,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 				if (TS->getSetupRetries(board) >= TS->maxRetries()) {
 					TS->resetActiveBoard(board);
 					TS->setBoardState(board,boardError);
+					TS->setSetupCmdDone(board, true);
 				}
 			}
 		} break;
