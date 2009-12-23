@@ -45,7 +45,7 @@ OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsig
   itsSubband(subband),
   itsOutput(output),
   thread(0),
-  connecting(false)
+  connecting(true) // avoid race condition when checking this at thread start
 {
   // transpose the data holders: create queues streams for the output streams
   // itsPlans is the owner of the pointers to sample data structures
@@ -89,8 +89,6 @@ void OutputThread::mainLoop()
   // connect to storage
   const string prefix         = "OLAP.OLAP_Conn.IONProc_Storage";
   const string connectionType = itsParset.getString(prefix + "_Transport");
-
-  connecting = true;
 
   if (connectionType == "NULL") {
     LOG_DEBUG_STR("subband " << itsSubband << " written to null:");
