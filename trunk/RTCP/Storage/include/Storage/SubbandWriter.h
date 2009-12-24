@@ -50,10 +50,6 @@ class SubbandWriter
 			    SubbandWriter(const Parset *, unsigned rank, unsigned size);
 			    ~SubbandWriter();
 
-    void		    preprocess();
-    void		    process();
-    void		    postprocess();
-
   private:
     const Parset	    *itsPS;
     unsigned		    itsRank;

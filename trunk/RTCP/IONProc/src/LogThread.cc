@@ -46,7 +46,7 @@ LogThread::LogThread(unsigned nrRspBoards)
   itsCounters(nrRspBoards),
   itsShouldStop(false),
   //thread(((void (LogThread::*)(void)) &LOFAR::RTCP::LogThread::logThread), this)
-  thread(this, &LogThread::mainLoop, 65536)
+  thread(this, &LogThread::mainLoop, "LogThread", 65536)
 {
 }
 

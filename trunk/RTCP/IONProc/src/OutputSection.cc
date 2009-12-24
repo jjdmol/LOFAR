@@ -43,6 +43,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include <pthread.h>
+#include <boost/format.hpp>
+
+using boost::format;
 
 
 namespace LOFAR {
@@ -115,7 +118,7 @@ OutputSection::OutputSection(const Parset *ps, unsigned psetNumber, unsigned out
   setPriority(2);
 #endif
 
-  thread = new Thread( this, &OutputSection::mainLoop );
+  thread = new Thread( this, &OutputSection::mainLoop, str(format("OutputSection (obs %d)") % itsParset->observationID()) );
 }
 
 OutputSection::~OutputSection()

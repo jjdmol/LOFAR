@@ -46,7 +46,6 @@ class Job
   private:
     const Parset  itsParset;
     SubbandWriter itsSubbandWriter;
-    Thread	  itsThread;
 };
 
 
@@ -56,18 +55,9 @@ static std::vector<Job *> jobs;
 Job::Job(const char *parsetName, int rank, int size)
 :
   itsParset(parsetName),
-  itsSubbandWriter(&itsParset, rank, size),
-  itsThread(this, &Job::mainLoop)
+  itsSubbandWriter(&itsParset, rank, size)
 {
   LOG_INFO_STR("Created job with parset " << parsetName);
-}
-
-
-void Job::mainLoop()
-{
-  itsSubbandWriter.preprocess();
-  itsSubbandWriter.process();
-  itsSubbandWriter.postprocess();
 }
 
 

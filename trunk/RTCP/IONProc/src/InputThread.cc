@@ -55,7 +55,7 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs
 {
   LOG_DEBUG("InputThread::InputThread(...)");
 
-  thread = new Thread(this, &InputThread<SAMPLE_TYPE>::mainLoop, 65536);
+  thread = new Thread(this, &InputThread<SAMPLE_TYPE>::mainLoop, "InputThread", 65536);
 }
 
 

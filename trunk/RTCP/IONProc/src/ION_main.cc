@@ -55,6 +55,9 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <boost/format.hpp>
+
+using boost::format;
 
 #if defined HAVE_MPI
 #include <mpi.h>
@@ -313,7 +316,7 @@ Job::Job(const char *parsetName)
   itsHasOutputSection = itsParset.outputPsetIndex(myPsetNumber) >= 0;
 
   if (itsHasInputSection || itsHasOutputSection)
-    itsJobThread = new Thread(this, &Job::jobThread, 65536);
+    itsJobThread = new Thread(this, &Job::jobThread, str(format("JobThread (obs %d)") % itsParset.observationID()), 65536);
 }
 
 
@@ -348,19 +351,19 @@ void Job::allocateResources()
     attachToInputSection();
 
   switch (itsParset.nrBitsPerSample()) {
-    case  4 : itsToCNthread = new Thread(this, &Job::toCNthread<i4complex>, 65536);
+    case  4 : itsToCNthread = new Thread(this, &Job::toCNthread<i4complex>, str(format("toCNthread (obs %d)") % itsParset.observationID()), 65536);
 	      break;
 
-    case  8 : itsToCNthread = new Thread(this, &Job::toCNthread<i8complex>, 65536);
+    case  8 : itsToCNthread = new Thread(this, &Job::toCNthread<i8complex>, str(format("toCNthread (obs %d)") % itsParset.observationID()), 65536);
 	      break;
 
-    case 16 : itsToCNthread = new Thread(this, &Job::toCNthread<i16complex>, 65536);
+    case 16 : itsToCNthread = new Thread(this, &Job::toCNthread<i16complex>, str(format("toCNthread (obs %d)") % itsParset.observationID()), 65536);
 	      break;
   }
       
 
   if (itsHasOutputSection)
-    itsFromCNthread = new Thread(this, &Job::fromCNthread, 65536);
+    itsFromCNthread = new Thread(this, &Job::fromCNthread, str(format("fromCNthread (obs %d)") % itsParset.observationID()), 65536);
 }
 
 

@@ -54,8 +54,7 @@ class Thread
     // The thread is joined in the destructor of the Thread object (or detached
     // if the thread deletes itself)
       
-    template <typename T> Thread(T *object, void (T::*method)());
-    template <typename T> Thread(T *object, void (T::*method)(), size_t stackSize);
+    template <typename T> Thread(T *object, void (T::*method)(), string name = "", size_t stackSize = 0);
 
     // join/detach a thread
     ~Thread();
@@ -68,6 +67,9 @@ class Thread
 
     // true when the thread should wrap up
     volatile bool stop;
+
+    // name of the thread
+    const string name;
 
   private:
     template <typename T> static void *stub(void *);
@@ -86,30 +88,11 @@ class Thread
 };
 
 
-template <typename T> inline Thread::Thread(T *object, void (T::*method)())
+template <typename T> inline Thread::Thread(T *object, void (T::*method)(), string name, size_t stackSize)
 :
-  stopped(false),
-  stop(false)
-{
-  int retval;
-
-  setSigHandler();
-
-  stubParams<T> *params;
-  params = new stubParams<T>();
-  params->object = object;
-  params->method = method;
-  params->thread = this;
-
-  if ((retval = pthread_create(&thread, 0, &Thread::stub<T>, params)) != 0)
-    throw SystemCallException("pthread_create", retval, THROW_ARGS);
-}
-
-
-template <typename T> inline Thread::Thread(T *object, void (T::*method)(), size_t stackSize)
-:
-  stopped(false),
-  stop(false)
+  name(name),
+  stop(false),
+  stopped(false)
 {
   pthread_attr_t attr;
   int		 retval;
@@ -122,17 +105,22 @@ template <typename T> inline Thread::Thread(T *object, void (T::*method)(), size
   params->method = method;
   params->thread = this;
 
-  if ((retval = pthread_attr_init(&attr)) != 0)
-    throw SystemCallException("pthread_attr_init", retval, THROW_ARGS);
+  if (stackSize > 0) {
+    if ((retval = pthread_attr_init(&attr)) != 0)
+      throw SystemCallException("pthread_attr_init", retval, THROW_ARGS);
 
-  if ((retval = pthread_attr_setstacksize(&attr, stackSize)) != 0)
-    throw SystemCallException("pthread_attr_setstacksize", retval, THROW_ARGS);
+    if ((retval = pthread_attr_setstacksize(&attr, stackSize)) != 0)
+      throw SystemCallException("pthread_attr_setstacksize", retval, THROW_ARGS);
 
-  if ((retval = pthread_create(&thread, &attr, &Thread::stub<T>, params)) != 0)
-    throw SystemCallException("pthread_create", retval, THROW_ARGS);
+    if ((retval = pthread_create(&thread, &attr, &Thread::stub<T>, params)) != 0)
+      throw SystemCallException("pthread_create", retval, THROW_ARGS);
 
-  if ((retval = pthread_attr_destroy(&attr)) != 0)
-    throw SystemCallException("pthread_attr_destroy", retval, THROW_ARGS);
+    if ((retval = pthread_attr_destroy(&attr)) != 0)
+      throw SystemCallException("pthread_attr_destroy", retval, THROW_ARGS);
+  } else {
+    if ((retval = pthread_create(&thread, 0, &Thread::stub<T>, params)) != 0)
+      throw SystemCallException("pthread_create", retval, THROW_ARGS);
+  }
 }
 
 
@@ -187,11 +175,11 @@ template <typename T> inline void *Thread::stub(void *arg)
   try {
     (object->*method)();
   } catch (Exception &ex) {
-    LOG_FATAL_STR("caught Exception: " << ex);
+    LOG_FATAL_STR("Thread " << thread->name << " caught Exception: " << ex);
   } catch (std::exception &ex) {
-    LOG_FATAL_STR("caught std::exception: " << ex.what());
+    LOG_FATAL_STR("Thread " << thread->name << " caught Exception: " << ex.what());
   } catch (...) {
-    LOG_FATAL("caught non-std::exception");
+    LOG_FATAL_STR("Thread " << thread->name << " caught non-std::exception");
   }
 
   thread->stopped = true;
