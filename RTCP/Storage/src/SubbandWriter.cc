@@ -38,6 +38,9 @@
 #endif
 
 #include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
+
+using boost::format;
 
 #include <time.h>
 #include <sys/stat.h>
@@ -58,24 +61,7 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank, unsigned size)
 #ifdef USE_MAC_PI
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
-}
 
-
-SubbandWriter::~SubbandWriter() 
-{
-#ifdef USE_MAC_PI
-  delete itsPropertySet;
-
-  GCF::Common::GCFPValueArray::iterator it;
-  for (it = itsVArray.begin(); it != itsVArray.end(); it++){
-    delete *it;
-  }
-  itsVArray.clear();
-#endif
-}
-
-void SubbandWriter::preprocess() 
-{
   unsigned nrSubbands           = itsPS->nrSubbands();
   unsigned nrSubbandsPerStorage =
     nrSubbands % itsSize == 0
@@ -134,13 +120,10 @@ void SubbandWriter::preprocess()
   }
 }
 
-void SubbandWriter::process() 
-{
-  // nothing to do.. postprocess() will wait for the threads to finish
-}
 
-void SubbandWriter::postprocess() 
+SubbandWriter::~SubbandWriter() 
 {
+  // wait for all threads to finish
   for (unsigned i = 0; i < itsInputThreads.size(); i++ ) {
     delete itsInputThreads[i];
   }
@@ -150,6 +133,16 @@ void SubbandWriter::postprocess()
     delete itsOutputThreads[i];
   }
   itsOutputThreads.clear();
+
+#ifdef USE_MAC_PI
+  delete itsPropertySet;
+
+  GCF::Common::GCFPValueArray::iterator it;
+  for (it = itsVArray.begin(); it != itsVArray.end(); it++){
+    delete *it;
+  }
+  itsVArray.clear();
+#endif
 }
 
 } // namespace RTCP

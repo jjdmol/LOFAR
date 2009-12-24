@@ -34,6 +34,9 @@
 #include <Stream/SocketStream.h>
 
 #include <memory>
+#include <boost/format.hpp>
+
+using boost::format;
 
 namespace LOFAR {
 namespace RTCP {
@@ -57,7 +60,7 @@ OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsig
     itsFreeQueue.append( clone );
   }
 
-  thread = new Thread(this, &OutputThread::mainLoop, 65536);
+  thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps.observationID() % subband % output), 65536);
 }
 
 

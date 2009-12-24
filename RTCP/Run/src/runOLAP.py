@@ -299,7 +299,7 @@ if __name__ == "__main__":
       parset.parse( "%s=%s" % (k,v) )
 
     # reserve an observation id
-    parset.distill()
+    parset.postRead()
 
     if parset.getObsID():
       info( "Distilled observation ID %s from parset." % (parset.getObsID(),) )
@@ -320,8 +320,7 @@ if __name__ == "__main__":
 
     # set stations
     if "stations" in obsparams:
-      stationStr = obsparams["stations"]
-      stationList = Stations.parse( stationStr )
+      stationList = Stations.parse( obsparams["stations"] )
 
       parset.setStations( stationList )
     else:
@@ -435,7 +434,7 @@ if __name__ == "__main__":
       parset.disableStoragePorts( usedStoragePorts )
 
     # parse final settings (derive some extra keys)
-    parset.finalise()
+    parset.preWrite()
 
     # finalise() allocates the ports that will be used, so don't use them for other observations
     if not options.nostorage:

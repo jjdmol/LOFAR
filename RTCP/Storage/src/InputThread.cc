@@ -29,6 +29,9 @@
 #include <Stream/SocketStream.h>
 #include <Common/DataConvert.h>
 #include <Common/Timer.h>
+#include <boost/format.hpp>
+
+using boost::format;
 
 namespace LOFAR {
 namespace RTCP {
@@ -48,7 +51,7 @@ InputThread::InputThread(const Parset *ps, unsigned subbandNumber, unsigned outp
     itsFreeQueue.append( data );
   }
 
-  thread = new Thread(this, &InputThread::mainLoop);
+  thread = new Thread(this, &InputThread::mainLoop, str(format("InputThread (obs %d sb %d output %d)") % ps->observationID() % subbandNumber % outputNumber));
 }
 
 
@@ -97,7 +100,6 @@ void InputThread::mainLoop()
 
   try {
     for (unsigned count = 0; !thread->stop && count < 10; count += increment) {
-      unsigned o;
       NSTimer queueTimer("retrieve freeQueue item",false,false);
       NSTimer readTimer("read data",false,false);
 
@@ -107,7 +109,7 @@ void InputThread::mainLoop()
       queueTimer.stop();
 
       if( queueTimer.getElapsed() > reportQueueRemoveDelay ) {
-        LOG_WARN_STR( "observation " << itsObservationID << " subband " << itsSubbandNumber << " output " << itsOutputNumber << " " << queueTimer );
+        LOG_WARN_STR( thread->name << " " << queueTimer );
       }
 
       readTimer.start();
@@ -115,7 +117,7 @@ void InputThread::mainLoop()
       readTimer.stop();
 
       if( readTimer.getElapsed() > reportReadDelay ) {
-        LOG_WARN_STR( "observation " << itsObservationID << " subband " << itsSubbandNumber << " output " << itsOutputNumber << " " << readTimer );
+        LOG_WARN_STR( thread->name << " " << readTimer );
       }
 
       itsReceiveQueue.append(data.release());

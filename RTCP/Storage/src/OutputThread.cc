@@ -30,6 +30,9 @@
 #include <Interface/StreamableData.h>
 #include <Common/DataConvert.h>
 #include <stdio.h>
+#include <boost/format.hpp>
+
+using boost::format;
 
 namespace LOFAR {
 namespace RTCP {
@@ -73,7 +76,7 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
   }
 #endif
 
-  thread = new Thread(this, &OutputThread::mainLoop);
+  thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps->observationID() % subbandNumber % outputNumber));
 }
 
 
@@ -113,7 +116,7 @@ void OutputThread::checkForDroppedData(StreamableData *data)
   unsigned droppedBlocks = data->sequenceNumber - expectedSequenceNumber;
 
   if (droppedBlocks > 0) {
-    LOG_WARN_STR("dropped " << droppedBlocks << (droppedBlocks == 1 ? " block for subband " : " blocks for subband ") << itsSubbandNumber << " and output " << itsOutputNumber << " of obsID " << itsObservationID);
+    LOG_WARN_STR(thread->name << " dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
   }
 
   itsNextSequenceNumber = data->sequenceNumber + 1;
@@ -122,9 +125,6 @@ void OutputThread::checkForDroppedData(StreamableData *data)
 
 void OutputThread::mainLoop() 
 {
-  std::stringstream subbandStr;
-  subbandStr << itsSubbandNumber;
-
   /// allow only a limited number of thread to write at a time
   /// TODO: race at creation
   static Semaphore semaphore(4);
@@ -154,7 +154,7 @@ void OutputThread::mainLoop()
     writeTimer.stop();
 
     if( writeTimer.getElapsed() > reportWriteDelay ) {
-      LOG_WARN_STR( "observation " << itsObservationID << " subband " << itsSubbandNumber << " output " << itsOutputNumber << " " << writeTimer );
+      LOG_WARN_STR( thread->name << " " << writeTimer );
     }
 
     itsInputThread->itsFreeQueue.append(data.release());
