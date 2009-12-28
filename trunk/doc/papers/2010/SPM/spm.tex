@@ -791,7 +791,7 @@ number of combinations is $(nrReceivers \times (nrReceivers + 1)) / 2$ (see Sect
 If we substitute this, we find that the $AI = nrReceivers + 1$.  For
 LOFAR, we can assume 64 receivers (each in turn containing many
 antennas), so the $AI$ is 65 in our case.  Therefore, the performance
-bound on NVIDIA hardware is $65 \times 5.6 = 363$ gflops. This is only
+bound on NVIDIA hardware is $65 \times 5.6 = 364$ gflops. This is only
 39\% of the theoretical peak.  Note that this even is optimistic,
 since it assumes perfect overlap of communication and computation.
 %The efficiency can improve if additional processing is performed on the GPU 
