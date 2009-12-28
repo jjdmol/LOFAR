@@ -75,6 +75,7 @@ namespace LOFAR
       setPositionDiffs(ps);
 
       thread = new Thread( this, &WH_DelayCompensation::mainLoop, "DelayCompensation" );
+      thread->start();
     }
 
     WH_DelayCompensation::~WH_DelayCompensation()

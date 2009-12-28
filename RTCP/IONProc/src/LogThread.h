@@ -50,9 +50,6 @@ class LogThread
   private:
     void	mainLoop();
   
-    //# Datamembers
-    volatile bool itsShouldStop;
-
     Thread	  thread;
 
 #if defined HAVE_BGP_ION

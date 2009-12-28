@@ -44,16 +44,17 @@ namespace RTCP {
 LogThread::LogThread(unsigned nrRspBoards)
 :
   itsCounters(nrRspBoards),
-  itsShouldStop(false),
   //thread(((void (LogThread::*)(void)) &LOFAR::RTCP::LogThread::logThread), this)
   thread(this, &LogThread::mainLoop, "LogThread", 65536)
 {
+  thread.start();
 }
 
 
 LogThread::~LogThread()
 {
-  itsShouldStop = true;
+  thread.abort();
+
   LOG_DEBUG("LogThread stopped");
 }
 
@@ -128,7 +129,7 @@ void LogThread::mainLoop()
 
   // non-atomic updates from other threads cause race conditions, but who cares
 
-  while (!itsShouldStop) {
+  while (!thread.stop) {
     std::stringstream logStr;
     bool somethingRejected = false;
 
