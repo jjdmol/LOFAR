@@ -47,8 +47,8 @@ OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsig
   itsParset(ps),
   itsSubband(subband),
   itsOutput(output),
-  thread(0),
-  connecting(true) // avoid race condition when checking this at thread start
+  connecting(true), // avoid race condition when checking this at thread start
+  thread(0)
 {
   // transpose the data holders: create queues streams for the output streams
   // itsPlans is the owner of the pointers to sample data structures
@@ -61,6 +61,7 @@ OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsig
   }
 
   thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps.observationID() % subband % output), 65536);
+  thread->start();
 }
 
 

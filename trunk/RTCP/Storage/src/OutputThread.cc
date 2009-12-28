@@ -77,6 +77,7 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
 #endif
 
   thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps->observationID() % subbandNumber % outputNumber));
+  thread->start();
 }
 
 
@@ -123,12 +124,11 @@ void OutputThread::checkForDroppedData(StreamableData *data)
 }
 
 
-void OutputThread::mainLoop() 
+void OutputThread::mainLoop()
 {
   /// allow only a limited number of thread to write at a time
   /// TODO: race at creation
   static Semaphore semaphore(4);
-
   
   while (!thread->stop) {
     NSTimer writeTimer("write data",false,false);

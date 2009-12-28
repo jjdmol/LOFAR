@@ -52,6 +52,7 @@ InputThread::InputThread(const Parset *ps, unsigned subbandNumber, unsigned outp
   }
 
   thread = new Thread(this, &InputThread::mainLoop, str(format("InputThread (obs %d sb %d output %d)") % ps->observationID() % subbandNumber % outputNumber));
+  thread->start();
 }
 
 
