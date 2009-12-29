@@ -62,18 +62,27 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank, unsigned size)
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
 
-  unsigned nrSubbands           = itsPS->nrSubbands();
-  unsigned nrSubbandsPerStorage =
-    nrSubbands % itsSize == 0
-    ? nrSubbands / itsSize
-    : nrSubbands / itsSize + 1;
-  unsigned firstSubband = itsRank * nrSubbandsPerStorage;
-  unsigned lastSubband  = std::min( firstSubband + nrSubbandsPerStorage, nrSubbands ) - 1;
-  unsigned myNrSubbands = lastSubband - firstSubband + 1;
-
   CN_Configuration configuration(*itsPS);
   CN_ProcessingPlan<> plan(configuration);
   plan.removeNonOutputs();
+
+  // determine the indices for both phase 2 and 3.
+  std::vector<unsigned> phaseTwoSubbands;
+  std::vector<unsigned> subbandStorageList = itsPS->subbandStorageList();
+  for (unsigned sb = 0; sb < subbandStorageList.size(); sb++ ) {
+    if (subbandStorageList[sb] == itsRank ) {
+      phaseTwoSubbands.push_back( sb );
+    }
+  }
+
+  std::vector<unsigned> phaseThreeBeams;
+  std::vector<unsigned> beamStorageList = itsPS->beamStorageList();
+  for (unsigned sb = 0; sb < beamStorageList.size(); sb++ ) {
+    if (beamStorageList[sb] == itsRank ) {
+      phaseThreeBeams.push_back( sb );
+    }
+  }
+
 
 #if defined HAVE_AIPSPP
   LOG_TRACE_FLOW("SubbandWriter enabling PropertySet");
@@ -87,35 +96,48 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank, unsigned size)
   }
 #endif
 
-  if (itsPS->outputCorrelatedData()) {
+  if (!phaseTwoSubbands.empty() && itsPS->outputCorrelatedData()) {
     MeasurementSetFormat myFormat(itsPS, 512);
+
     // create root directory of the observation tree
     if ( (mkdir(itsPS->getMSBaseDir().c_str(), 0770) != 0) && (errno != EEXIST) ) {
       throw SystemCallException(("mkdir " + itsPS->getMSBaseDir()).c_str(), errno, THROW_ARGS);
     }
           
-    for (unsigned sb = firstSubband; sb <= lastSubband; sb++) {
+    for (unsigned i = 0; i < phaseTwoSubbands.size(); i++) {
       /// Make MeasurementSet filestructures and required tables
-      myFormat.addSubband(sb);
+      myFormat.addSubband(phaseTwoSubbands[i]);
     }
 
     LOG_INFO_STR("MeasurementSet created");
   }
 
-  LOG_DEBUG_STR("Subbands per storage = " << nrSubbandsPerStorage << ", I will store " << myNrSubbands << " subbands, nrOutputTypes = " << plan.nrOutputTypes());
-
 #endif // defined HAVE_AIPSPP
 
-  for (unsigned sb = firstSubband; sb <= lastSubband; sb ++) {
-    for (unsigned output = 0; output < plan.nrOutputTypes(); output ++) {
-      ProcessingPlan::planlet &outputConfig = plan.plan[output];
-      StreamableData *dataTemplate = outputConfig.source;
+  for (unsigned outputNr = 0; outputNr < plan.nrOutputTypes(); outputNr ++) {
+    ProcessingPlan::planlet &outputConfig = plan.plan[outputNr];
+    StreamableData *dataTemplate = outputConfig.source;
+    std::vector<unsigned> list;
 
-      InputThread *i = new InputThread(itsPS, sb, output, dataTemplate);
-      OutputThread *o = new OutputThread(itsPS, sb, output, i, outputConfig);
+    switch( outputConfig.distribution ) {
+      case ProcessingPlan::DIST_SUBBAND:
+        list = phaseTwoSubbands;
+        break;
 
-      itsInputThreads.push_back(i);
-      itsOutputThreads.push_back(o);
+      case ProcessingPlan::DIST_BEAM:
+        list = phaseThreeBeams;
+        break;
+
+      default:  
+        continue;
+    }
+
+    for (unsigned i = 0; i < list.size(); i++ ) {
+      InputThread *in = new InputThread(itsPS, list[i], outputNr, dataTemplate);
+      OutputThread *out = new OutputThread(itsPS, list[i], outputNr, in, outputConfig);
+
+      itsInputThreads.push_back(in);
+      itsOutputThreads.push_back(out);
     }
   }
 }

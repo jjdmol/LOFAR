@@ -29,10 +29,8 @@ namespace RTCP {
 // shortcut to automatically name the data sets
 #define TRANSFORM(source,set)   transform(source,set,#set)
 
-template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPlan( CN_Configuration &configuration, bool isInput, bool isOutput )
+template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPlan( CN_Configuration &configuration, bool hasPhaseOne, bool hasPhaseTwo, bool hasPhaseThree )
 :
-  itsIsTransposeInput(isInput),
-  itsIsTransposeOutput(isOutput),
   itsInputData(0),
   itsInputSubbandMetaData(0),
   itsSubbandMetaData(0),
@@ -45,21 +43,23 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
   itsCoherentStokesDataIntegratedChannels(0),
   itsIncoherentStokesDataIntegratedChannels(0)
 {
+  (void)hasPhaseThree;
+
   // in fly's eye mode, every station is a beam
   const unsigned nrBeams = configuration.flysEye() ? configuration.nrMergedStations() : configuration.nrPencilBeams();
 
   const unsigned nrBaselines = configuration.nrMergedStations() * (configuration.nrMergedStations() + 1)/2;
     
-  if (itsIsTransposeInput) {
-    std::vector<unsigned> &outputPsets = configuration.outputPsets();
+  if (hasPhaseOne) {
+    std::vector<unsigned> &phaseTwoPsets = configuration.phaseTwoPsets();
 
-    itsInputData = new InputData<SAMPLE_TYPE>(outputPsets.size(), configuration.nrSamplesToCNProc());
-    itsInputSubbandMetaData = new SubbandMetaData( outputPsets.size(), configuration.nrPencilBeams(), 32 );
+    itsInputData = new InputData<SAMPLE_TYPE>(phaseTwoPsets.size(), configuration.nrSamplesToCNProc());
+    itsInputSubbandMetaData = new SubbandMetaData( phaseTwoPsets.size(), configuration.nrPencilBeams(), 32 );
 
     TRANSFORM( 0, itsInputData );
   }
 
-  if (itsIsTransposeOutput) {
+  if (hasPhaseTwo) {
     // create all data structures (actual matrices are allocated later if needed)
     itsSubbandMetaData = new SubbandMetaData(
       configuration.nrStations(),
@@ -157,7 +157,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     }
   }
 
-  if (itsIsTransposeInput) {
+  if (hasPhaseOne) {
     // we need the input data until the end to allow the async transpose to finish
     require( itsInputData );
   }

@@ -81,7 +81,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   itsNrSamplesPerSubband      = ps->nrSubbandSamples();
   itsNrBeams		      = ps->nrBeams();
   itsNrPencilBeams	      = ps->nrPencilBeams();
-  itsNrOutputPsets	      = ps->outputPsets().size();
+  itsNrPhaseTwoPsets	      = ps->phaseTwoPsets().size();
   itsCurrentComputeCore	      = 0;
   itsNrCoresPerPset	      = ps->nrCoresPerPset();
   itsSampleDuration	      = ps->sampleDuration();
@@ -127,7 +127,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
     LOG_DEBUG("Dumping raw beamformed data only, no further processing done");
 
     vector<string> rawDataOutputs = ps->getStringVector("OLAP.OLAP_Conn.rawDataOutputs",true);
-    unsigned	   psetIndex	  = ps->inputPsetIndex(itsPsetNumber);
+    unsigned	   psetIndex	  = ps->phaseOnePsetIndex(itsPsetNumber);
 
     if (psetIndex >= rawDataOutputs.size())
       THROW(IONProcException, "there are more input section nodes than entries in OLAP.OLAP_Conn.rawDataOutputs");
@@ -259,9 +259,9 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
     if (itsNrInputs > 0) {
       // create and send all metadata in one "large" message, since initiating a message
       // has significant overhead in FCNP.
-      SubbandMetaData metaData(itsNrOutputPsets, itsNrPencilBeams, 16);
+      SubbandMetaData metaData(itsNrPhaseTwoPsets, itsNrPencilBeams, 16);
 
-      for (unsigned psetIndex = 0; psetIndex < itsNrOutputPsets; psetIndex ++) {
+      for (unsigned psetIndex = 0; psetIndex < itsNrPhaseTwoPsets; psetIndex ++) {
 	unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
 
 	if (subband < itsNrSubbands) {
@@ -293,7 +293,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
       metaData.write(stream);
 
       // now send all subband data
-      for (unsigned psetIndex = 0; psetIndex < itsNrOutputPsets; psetIndex ++) {
+      for (unsigned psetIndex = 0; psetIndex < itsNrPhaseTwoPsets; psetIndex ++) {
 	unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
 
 	if (subband < itsNrSubbands) {

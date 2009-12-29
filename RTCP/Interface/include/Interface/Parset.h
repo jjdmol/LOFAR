@@ -85,6 +85,7 @@ public:
 	double         IONintegrationTime() const;
 	uint32         nrSubbandSamples() const;
         uint32         nrSubbandsPerPset() const; 
+        uint32         nrBeamsPerPset() const; 
 	uint32         nrHistorySamples() const;
 	uint32         nrSamplesToCNProc() const;
 	uint32         inputBufferSize() const; // in samples
@@ -100,14 +101,18 @@ public:
 	unsigned short getStoragePort(const string &aKey, unsigned subband, unsigned output) const;
 	string         stationName(int index) const;
 	string         storageHostName(const string& aKey, int index) const;
+        vector<unsigned> subbandStorageList() const;
+        vector<unsigned> beamStorageList() const;
 	uint32	       nrPsetsPerStorage() const;
-	vector<uint32> inputPsets() const;
-	vector<uint32> outputPsets() const;
-	vector<uint32> usedPsets() const; // union of inputPsets and outputPsets
+	vector<uint32> phaseOnePsets() const;
+	vector<uint32> phaseTwoPsets() const;
+	vector<uint32> phaseThreePsets() const;
+	vector<uint32> usedPsets() const; // union of phasePsets
 	bool	       overlappingResources(const Parset *) const;
 	vector<uint32> tabList() const;
-	int	       inputPsetIndex(uint32 pset) const;
-	int	       outputPsetIndex(uint32 pset) const;
+	int	       phaseOnePsetIndex(uint32 pset) const;
+	int	       phaseTwoPsetIndex(uint32 pset) const;
+	int	       phaseThreePsetIndex(uint32 pset) const;
 	string	       getMSname(unsigned sb) const;
 	string         getMSBaseDir() const;
 	string         getTransportType(const string& prefix) const;
@@ -210,6 +215,15 @@ inline string Parset::storageHostName(const string& aKey, int index) const
   return getStringVector(aKey)[getUint32Vector("OLAP.storageNodeList",true)[index]];
 }
 
+inline vector<unsigned> Parset::subbandStorageList() const
+{
+  return getUint32Vector("OLAP.storageNodeList",true);
+}
+
+inline vector<unsigned> Parset::beamStorageList() const
+{
+  return getUint32Vector("OLAP.PencilInfo.storageNodeList",true);
+}
 
 inline string Parset::getTransportType(const string& prefix) const
 {
@@ -356,6 +370,11 @@ inline uint32 Parset::nrSubbandsPerPset() const
   return getUint32("OLAP.subbandsPerPset");
 }
 
+inline uint32 Parset::nrBeamsPerPset() const
+{
+  return getUint32("OLAP.PencilInfo.beamsPerPset");
+}
+
 inline uint32 Parset::nrPPFTaps() const
 {
   return getUint32("OLAP.CNProc.nrPPFTaps");
@@ -426,14 +445,19 @@ inline uint32 Parset::nrPsetsPerStorage() const
   return getUint32("OLAP.psetsPerStorage");
 }
 
-inline vector<uint32> Parset::inputPsets() const
+inline vector<uint32> Parset::phaseOnePsets() const
 {
-  return getUint32Vector("OLAP.CNProc.inputPsets",true);
+  return getUint32Vector("OLAP.CNProc.phaseOnePsets",true);
 }
 
-inline vector<uint32> Parset::outputPsets() const
+inline vector<uint32> Parset::phaseTwoPsets() const
 {
-  return getUint32Vector("OLAP.CNProc.outputPsets",true);
+  return getUint32Vector("OLAP.CNProc.phaseTwoPsets",true);
+}
+
+inline vector<uint32> Parset::phaseThreePsets() const
+{
+  return getUint32Vector("OLAP.CNProc.phaseThreePsets",true);
 }
 
 inline vector<uint32> Parset::tabList() const
@@ -441,14 +465,19 @@ inline vector<uint32> Parset::tabList() const
   return getUint32Vector("OLAP.CNProc.tabList",true);
 }
 
-inline int Parset::inputPsetIndex(uint32 pset) const
+inline int Parset::phaseOnePsetIndex(uint32 pset) const
 {
-  return findIndex(pset, inputPsets());
+  return findIndex(pset, phaseOnePsets());
 }
 
-inline int Parset::outputPsetIndex(uint32 pset) const
+inline int Parset::phaseTwoPsetIndex(uint32 pset) const
 {
-  return findIndex(pset, outputPsets());
+  return findIndex(pset, phaseTwoPsets());
+}
+
+inline int Parset::phaseThreePsetIndex(uint32 pset) const
+{
+  return findIndex(pset, phaseThreePsets());
 }
 
 inline int32 Parset::nrSlotsInFrame() const

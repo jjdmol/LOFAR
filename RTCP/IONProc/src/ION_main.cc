@@ -285,7 +285,7 @@ class Job
     std::vector<Stream *>		itsCNstreams;
     unsigned				itsNrRuns;
     Thread				*itsJobThread, *itsToCNthread, *itsFromCNthread;
-    bool				itsHasInputSection, itsHasOutputSection;
+    bool				itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
     unsigned				itsObservationID;
 
     static void				*theInputSection;
@@ -312,18 +312,22 @@ Job::Job(const char *parsetName)
   LOG_DEBUG_STR("Creating new observation, ObsID = " << itsParset.observationID());
   LOG_DEBUG_STR("ObsID = " << itsParset.observationID() << ", usedCoresInPset = " << itsParset.usedCoresInPset());
 
-  itsHasInputSection  = itsParset.inputPsetIndex(myPsetNumber) >= 0;
-  itsHasOutputSection = itsParset.outputPsetIndex(myPsetNumber) >= 0;
+  itsHasPhaseOne   = itsParset.phaseOnePsetIndex(myPsetNumber) >= 0;
+  itsHasPhaseTwo   = itsParset.phaseTwoPsetIndex(myPsetNumber) >= 0;
+  itsHasPhaseThree = itsParset.phaseThreePsetIndex(myPsetNumber) >= 0;
 
-  if (itsHasInputSection || itsHasOutputSection)
+  if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
     itsJobThread = new Thread(this, &Job::jobThread, str(format("JobThread (obs %d)") % itsParset.observationID()), 65536);
+    itsJobThread->start();
+  } else {
+    itsJobThread = 0;
+  }
 }
 
 
 Job::~Job()
 {
-  if (itsHasInputSection || itsHasOutputSection)
-    delete itsJobThread;
+  delete itsJobThread;
 }
 
 
@@ -347,7 +351,7 @@ void Job::allocateResources()
 
   pthread_mutex_unlock(&allocationMutex);
 
-  if (itsHasInputSection)
+  if (itsHasPhaseOne)
     attachToInputSection();
 
   switch (itsParset.nrBitsPerSample()) {
@@ -360,10 +364,13 @@ void Job::allocateResources()
     case 16 : itsToCNthread = new Thread(this, &Job::toCNthread<i16complex>, str(format("toCNthread (obs %d)") % itsParset.observationID()), 65536);
 	      break;
   }
-      
 
-  if (itsHasOutputSection)
+  itsToCNthread->start();
+
+  if (itsHasPhaseTwo || itsHasPhaseThree) {
     itsFromCNthread = new Thread(this, &Job::fromCNthread, str(format("fromCNthread (obs %d)") % itsParset.observationID()), 65536);
+    itsFromCNthread->start();
+  }
 }
 
 
@@ -372,10 +379,10 @@ void Job::deallocateResources()
   delete itsToCNthread;
   LOG_DEBUG("lofar__fini: to_CN thread joined");
 
-  if (itsHasInputSection)
+  if (itsHasPhaseOne)
     detachFromInputSection();
 
-  if (itsHasOutputSection) {
+  if (itsHasPhaseTwo || itsHasPhaseThree) {
     delete itsFromCNthread;
     LOG_DEBUG("lofar__fini: from_CN thread joined");
   }
@@ -499,7 +506,7 @@ template <typename SAMPLE_TYPE> void Job::toCNthread()
   configureCNs();
 
   std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
-  BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsCNstreams, itsHasInputSection ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
+  BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
 
   beamletBufferToComputeNode.preprocess(&itsParset);
 	
@@ -515,17 +522,56 @@ template <typename SAMPLE_TYPE> void Job::toCNthread()
 
 void Job::fromCNthread()
 {
+  // starts outputSections for phase two and three
+
   CN_Configuration configuration(itsParset);
-  const CN_ProcessingPlan<> plan(configuration);
-  const unsigned nrOutputTypes = plan.nrOutputTypes();
+  CN_ProcessingPlan<> plan(configuration,false,itsHasPhaseTwo,itsHasPhaseThree);
+  plan.removeNonOutputs();
+  unsigned nrOutputTypes = plan.nrOutputTypes();
 
   LOG_DEBUG("starting from_CN thread");
 
   {
-    std::vector<OutputSection *> outputSections( nrOutputTypes );
+    std::vector<OutputSection *> outputSections( nrOutputTypes, 0 );
 
     for (unsigned output = 0; output < nrOutputTypes; output++) {
-      outputSections[output] = new OutputSection(&itsParset, myPsetNumber, output, itsCNstreams, output == nrOutputTypes - 1);
+      unsigned phase, psetIndex, maxlistsize;
+      std::vector<unsigned> list; // list of subbands or beams
+
+      switch( plan.plan[output].distribution ) {
+        case ProcessingPlan::DIST_SUBBAND:
+          phase = 2;
+          psetIndex = itsParset.phaseTwoPsetIndex( myPsetNumber );
+          maxlistsize = itsParset.nrSubbandsPerPset();
+
+          for (unsigned sb = 0; sb < itsParset.nrSubbandsPerPset(); sb++) {
+            unsigned subbandNumber = psetIndex * itsParset.nrSubbandsPerPset() + sb;
+
+            if (subbandNumber < itsParset.nrSubbands()) {
+              list.push_back( subbandNumber );
+            }
+          }
+          break;
+
+        case ProcessingPlan::DIST_BEAM:
+          phase = 3;
+          psetIndex = itsParset.phaseThreePsetIndex( myPsetNumber );
+          maxlistsize = itsParset.nrBeamsPerPset();
+
+          for (unsigned beam = 0;  beam < itsParset.nrBeamsPerPset(); beam++) {
+            unsigned beamNumber = psetIndex * itsParset.nrBeamsPerPset() + beam;
+
+            if (beamNumber < itsParset.nrBeams()) {
+              list.push_back( beamNumber );
+            }
+          }
+          break;
+
+        default:
+          continue;
+      }
+
+      outputSections[output] = new OutputSection(&itsParset, list, maxlistsize, output, itsCNstreams, output == nrOutputTypes - 1);
     }
 
     // destructor of OutputSections will wait for threads to complete

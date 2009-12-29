@@ -222,21 +222,19 @@ class Parset(util.Parset.Parset):
         self["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"] = [Hosts.resolve( s, "back") for s in self.storagenodes]
 
 	self.setdefault('OLAP.nrPsets', nrPsets)
-	self.setdefault('OLAP.CNProc.inputPsets', [s.getPsetIndex(self.partition) for s in self.stations])
-	self.setdefault('OLAP.CNProc.outputSubbandPsets', range(nrPsets))
-	self.setdefault('OLAP.CNProc.outputBeamPsets', range(nrPsets))
-
-        # depricated
-	self.setdefault('OLAP.CNProc.outputPsets', range(nrPsets))
+	self.setdefault('OLAP.CNProc.phaseOnePsets', [s.getPsetIndex(self.partition) for s in self.stations])
+	self.setdefault('OLAP.CNProc.phaseTwoPsets', range(nrPsets))
+	self.setdefault('OLAP.CNProc.phaseThreePsets', range(nrPsets))
 
         # what will be stored where?
         # outputSubbandPsets may well be set before finalize()
-	self.setdefault('OLAP.subbandsPerPset', int( math.ceil(1.0 * nrSubbands / len(self["OLAP.CNProc.outputSubbandPsets"]) ) ) )
+	self.setdefault('OLAP.subbandsPerPset', int( math.ceil(1.0 * nrSubbands / len(self["OLAP.CNProc.phaseTwoPsets"]) ) ) )
 	if nrStorageNodes == 0:
 	  self.setdefault('OLAP.storageNodeList',[0] * nrSubbands)
 	else:  
 	  self.setdefault('OLAP.storageNodeList',[i//int(math.ceil(1.0 * nrSubbands/nrStorageNodes)) for i in xrange(0,nrSubbands)])
 
+	self.setdefault('OLAP.PencilInfo.beamsPerPset', int( math.ceil(1.0 * nrBeams / len(self["OLAP.CNProc.phaseThreePsets"]) ) ) )
 	if nrStorageNodes == 0:
 	  self.setdefault('OLAP.PencilInfo.storageNodeList',[0] * nrBeams)
 	else:  

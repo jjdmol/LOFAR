@@ -86,8 +86,8 @@ void Parset::check() const
       THROW(InterfaceException, "Observation.rspSlotList contains slot numbers >= Observation.nrSlotsInFrame");
   
   // check not needed when using Storage
-  if (isDefined("OLAP.CNProc.inputPsets")) {
-    std::vector<unsigned> inputs = inputPsets();
+  if (isDefined("OLAP.CNProc.phaseOnePsets")) {
+    std::vector<unsigned> inputs = phaseOnePsets();
     
     for (std::vector<unsigned>::const_iterator pset = inputs.begin(); pset != inputs.end(); pset ++) {
       unsigned nrRSPboards = getStationNamesAndRSPboardNumbers(*pset).size();
@@ -370,16 +370,21 @@ string Parset::getBeamDirectionType(const unsigned beam) const
 
 vector<uint32> Parset::usedPsets() const
 {
-  std::vector<uint32> inputs  = inputPsets();
-  std::vector<uint32> outputs = outputPsets();
-  std::vector<uint32> psets(inputs.size() + outputs.size());
+  std::vector<uint32> phaseone   = phaseOnePsets();
+  std::vector<uint32> phasetwo   = phaseTwoPsets();
+  std::vector<uint32> phasethree = phaseThreePsets();
 
-  sort(inputs.begin(),  inputs.end());
-  sort(outputs.begin(), outputs.end());
+  std::vector<uint32> one_two(phaseone.size() + phasetwo.size());
+  std::vector<uint32> one_two_three(phaseone.size() + phasetwo.size() + phasethree.size());
 
-  psets.resize(set_union(inputs.begin(), inputs.end(), outputs.begin(), outputs.end(), psets.begin()) - psets.begin());
+  sort(phaseone.begin(), phaseone.end());
+  sort(phasetwo.begin(), phasetwo.end());
+  sort(phasethree.begin(), phasethree.end());
 
-  return psets;
+  one_two.resize(set_union(phaseone.begin(), phaseone.end(), phasetwo.begin(), phasetwo.end(), one_two.begin()) - one_two.begin());
+  one_two_three.resize(set_union(one_two.begin(), one_two.end(), phasethree.begin(), phasethree.end(), one_two_three.begin()) - one_two_three.begin());
+
+  return one_two_three;
 }
 
 

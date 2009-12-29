@@ -97,11 +97,11 @@ class Thread
     template <typename T> static void *stub(void *);
 
     // deletes any templated data, to be called by the destructor
-    template <typename T> static void *destructTemplate(Thread *);
+    template <typename T> static void destructTemplate(Thread *);
 
     // pointers to templated functions
     void *(*stubInstance)(void*);
-    void *(*destructTemplateInstance)(Thread *);
+    void (*destructTemplateInstance)(Thread *);
 
     // all parameters that we need in stub()
     template <typename T> struct stubParams {
@@ -232,7 +232,7 @@ template <typename T> inline void *Thread::stub(void *arg)
 }
 
 
-template <typename T> inline void *Thread::destructTemplate(Thread *thread)
+template <typename T> inline void Thread::destructTemplate(Thread *thread)
 {
   stubParams<T> *params = static_cast<stubParams<T>*>(thread->arg);
 
