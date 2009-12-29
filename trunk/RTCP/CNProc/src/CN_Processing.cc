@@ -42,8 +42,8 @@
 
 #if defined HAVE_BGP
 //#define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
-#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
-//#define LOG_CONDITION	1
+//#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
+#define LOG_CONDITION	1
 #else
 #define LOG_CONDITION	1
 #endif
@@ -120,14 +120,19 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   unsigned myCoreInPset	    = 0;
 #endif
 
-  std::vector<unsigned> &inputPsets  = configuration.inputPsets();
-  std::vector<unsigned> &outputPsets = configuration.outputPsets();
-  std::vector<unsigned>::const_iterator inputPsetIndex  = std::find(inputPsets.begin(),  inputPsets.end(),  myPset);
-  std::vector<unsigned>::const_iterator outputPsetIndex = std::find(outputPsets.begin(), outputPsets.end(), myPset);
+  std::vector<unsigned> &phaseOnePsets  = configuration.phaseOnePsets();
+  std::vector<unsigned>::const_iterator phaseOnePsetIndex  = std::find(phaseOnePsets.begin(),  phaseOnePsets.end(),  myPset);
+  itsHasPhaseOne             = phaseOnePsetIndex != phaseOnePsets.end();
 
-  itsIsTransposeInput	     = inputPsetIndex  != inputPsets.end();
-  itsIsTransposeOutput	     = outputPsetIndex != outputPsets.end();
+  std::vector<unsigned> &phaseTwoPsets  = configuration.phaseTwoPsets();
+  std::vector<unsigned>::const_iterator phaseTwoPsetIndex  = std::find(phaseTwoPsets.begin(),  phaseTwoPsets.end(),  myPset);
+  itsHasPhaseTwo             = phaseTwoPsetIndex != phaseTwoPsets.end();
 
+  std::vector<unsigned> &phaseThreePsets  = configuration.phaseThreePsets();
+  std::vector<unsigned>::const_iterator phaseThreePsetIndex  = std::find(phaseThreePsets.begin(),  phaseThreePsets.end(),  myPset);
+  itsHasPhaseThree             = phaseThreePsetIndex != phaseThreePsets.end();
+
+  LOG_DEBUG_STR( "Node " << itsLocationInfo.rank() << " phase 1: " << itsHasPhaseOne << " phase 2: " << itsHasPhaseTwo << " phase 3: " << itsHasPhaseThree );
 
   itsNrStations	             = configuration.nrStations();
   itsNrBeamFormedStations    = configuration.nrMergedStations();
@@ -135,7 +140,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsNrSubbands              = configuration.nrSubbands();
   itsNrSubbandsPerPset       = configuration.nrSubbandsPerPset();
   itsNrStokes                = configuration.nrStokes();
-  itsOutputPsetSize          = outputPsets.size();
+  itsPhaseTwoPsetSize        = phaseTwoPsets.size();
+  itsPhaseThreePsetSize      = phaseThreePsets.size();
   itsCenterFrequencies       = configuration.refFreqs();
   itsFlysEye                 = configuration.flysEye();
 
@@ -144,7 +150,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   unsigned nrSamplesPerStokesIntegration = configuration.nrSamplesPerStokesIntegration();
 
   // set up the plan of what to compute and which data set to allocate in which arena
-  itsPlan = new CN_ProcessingPlan<SAMPLE_TYPE>( configuration, itsIsTransposeInput, itsIsTransposeOutput );
+  itsPlan = new CN_ProcessingPlan<SAMPLE_TYPE>( configuration, itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree );
   itsPlan->assignArenas();
 
   for( unsigned i = 0; i < itsPlan->plan.size(); i++ ) {
@@ -165,11 +171,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   // create the arenas and allocate the data sets
   itsMapping.allocate();
 
-  if (itsIsTransposeOutput) {
+  if (itsHasPhaseTwo) {
     std::vector<unsigned> usedCoresInPset  = configuration.usedCoresInPset();
     unsigned		  usedCoresPerPset = usedCoresInPset.size();
     unsigned		  myCoreIndex	   = std::find(usedCoresInPset.begin(), usedCoresInPset.end(), myCoreInPset) - usedCoresInPset.begin();
-    unsigned		  logicalNode	   = usedCoresPerPset * (outputPsetIndex - outputPsets.begin()) + myCoreIndex;
+    unsigned		  logicalNode	   = usedCoresPerPset * (phaseTwoPsetIndex - phaseTwoPsets.begin()) + myCoreIndex;
 
     itsFirstSubband	 = (logicalNode / usedCoresPerPset) * itsNrSubbandsPerPset;
     itsLastSubband	 = itsFirstSubband + itsNrSubbandsPerPset;
@@ -191,9 +197,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   }
 
 #if defined HAVE_MPI
-  if (itsIsTransposeInput || itsIsTransposeOutput) {
-    itsAsyncTranspose = new AsyncTranspose<SAMPLE_TYPE>(itsIsTransposeInput, itsIsTransposeOutput, 
-							myCoreInPset, itsLocationInfo, inputPsets, outputPsets );
+  if (itsHasPhaseOne || itsHasPhaseTwo) {
+    itsAsyncTranspose = new AsyncTranspose<SAMPLE_TYPE>(itsHasPhaseOne, itsHasPhaseTwo, 
+							myCoreInPset, itsLocationInfo, phaseOnePsets, phaseTwoPsets );
   }
 #endif // HAVE_MPI
 }
@@ -202,11 +208,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
 {
 #if defined HAVE_MPI
 
-  if (itsIsTransposeInput) {
+  if (itsHasPhaseOne) {
     itsPlan->itsInputSubbandMetaData->read(itsStream); // sync read the meta data
   }
 
-  if(itsIsTransposeOutput && itsCurrentSubband < itsNrSubbands) {
+  if(itsHasPhaseTwo && itsCurrentSubband < itsNrSubbands) {
     NSTimer postAsyncReceives("post async receives", LOG_CONDITION, true);
     postAsyncReceives.start();
     itsAsyncTranspose->postAllReceives(itsPlan->itsSubbandMetaData,itsPlan->itsTransposedData);
@@ -215,7 +221,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
 
   // We must not try to read data from I/O node if our subband does not exist.
   // Also, we cannot do the async sends in that case.
-  if (itsIsTransposeInput) { 
+  if (itsHasPhaseOne) { 
     static NSTimer readTimer("receive timer", true, true);
 
     if (LOG_CONDITION) {
@@ -224,7 +230,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
     
     NSTimer asyncSendTimer("async send", LOG_CONDITION, true);
 
-    for (unsigned i = 0; i < itsOutputPsetSize; i ++) {
+    for (unsigned i = 0; i < itsPhaseTwoPsetSize; i ++) {
       unsigned subband = (itsCurrentSubband % itsNrSubbandsPerPset) + (i * itsNrSubbandsPerPset);
 
       if (subband < itsNrSubbands) {
@@ -243,11 +249,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
 	asyncSendTimer.stop();
       }
     }
-  } // itsIsTransposeInput
+  }
 
 #else // ! HAVE_MPI
 
-  if (itsIsTransposeInput) {
+  if (itsHasPhaseOne) {
     static NSTimer readTimer("receive timer", true, true);
     readTimer.start();
     itsPlan->itsInputSubbandMetaData->read(itsStream);
@@ -376,10 +382,20 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
   NSTimer totalTimer("total processing", LOG_CONDITION, true);
   totalTimer.start();
 
-  // transpose/obtain input data
-  transpose();
+  /*
+   * PHASE ONE: Receive input data, and send it to the nodes participating in phase two.
+   */
 
-  if (itsIsTransposeOutput && itsCurrentSubband < itsNrSubbands) {
+  if( itsHasPhaseOne || itsHasPhaseTwo ) {
+    // transpose/obtain input data
+    transpose();
+  }
+
+  /*
+   * PHASE TWO: Perform (and possibly output) calculations per subband, and possibly transpose data for phase three.
+   */
+
+  if (itsHasPhaseTwo && itsCurrentSubband < itsNrSubbands) {
     // the order and types of sendOutput have to match
     // what the IONProc and Storage expect to receive
     // (defined in Interface/PipelineOutput.h)
@@ -430,14 +446,20 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
         sendOutput( p.source );
       }
     }
-  } // itsIsTransposeOutput
+  } 
+
+  /*
+   * PHASE THREE: Perform (and possibly output) calculations per beam.
+   */
+
 
   // Just always wait, if we didn't do any sends, this is a no-op.
-  if (itsIsTransposeInput)
+  if (itsHasPhaseOne) {
     finishSendingInput();
+  }
 
 #if defined HAVE_MPI
-  if (itsIsTransposeInput || itsIsTransposeOutput) {
+  if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
     if (LOG_CONDITION)
       LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start idling at " << MPI_Wtime());
   }
@@ -463,13 +485,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
 {
 
-  if (itsIsTransposeInput || itsIsTransposeOutput) {
+  if (itsHasPhaseOne || itsHasPhaseTwo) {
 #if defined HAVE_MPI
       delete itsAsyncTranspose;
 #endif // HAVE_MPI
   }
 
-  if (itsIsTransposeOutput) {
+  if (itsHasPhaseTwo) {
     delete itsBeamFormer;
     delete itsPPF;
     delete itsCorrelator;

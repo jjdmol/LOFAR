@@ -54,7 +54,7 @@ class CN_Configuration
     bool		  &delayCompensation();
     bool		  &correctBandPass();
     double		  &sampleRate();
-    std::vector<unsigned> &inputPsets(), &outputPsets(), &tabList();
+    std::vector<unsigned> &phaseOnePsets(), &phaseTwoPsets(), &phaseThreePsets(), &tabList();
     std::vector<unsigned> &usedCoresInPset();
     std::vector<double>	  &refFreqs();
     std::vector<double>   &refPhaseCentre();
@@ -80,7 +80,7 @@ class CN_Configuration
     static const unsigned MAX_CORES_PER_PSET = 64;
 
   private:
-    std::vector<unsigned> itsInputPsets, itsOutputPsets, itsTabList;
+    std::vector<unsigned> itsPhaseOnePsets, itsPhaseTwoPsets, itsPhaseThreePsets, itsTabList;
     std::vector<unsigned> itsUsedCoresInPset;
     std::vector<double>	  itsRefFreqs;
     std::vector<double>	  itsRefPhaseCentre;
@@ -100,9 +100,9 @@ class CN_Configuration
       bool		  itsDelayCompensation;
       bool		  itsCorrectBandPass;
       double		  itsSampleRate;
-      unsigned		  itsInputPsetsSize, itsOutputPsetsSize, itsTabListSize;
+      unsigned		  itsPhaseOnePsetsSize, itsPhaseTwoPsetsSize, itsPhaseThreePsetsSize, itsTabListSize;
       unsigned		  itsRefFreqsSize;
-      unsigned		  itsInputPsets[MAX_PSETS], itsOutputPsets[MAX_PSETS], itsTabList[MAX_PSETS];
+      unsigned		  itsPhaseOnePsets[MAX_PSETS], itsPhaseTwoPsets[MAX_PSETS], itsPhaseThreePsets[MAX_PSETS], itsTabList[MAX_PSETS];
       unsigned		  itsUsedCoresInPset[MAX_CORES_PER_PSET];
       double		  itsRefFreqs[MAX_SUBBANDS];
       double              itsRefPhaseCentre[3];
@@ -175,14 +175,19 @@ inline double &CN_Configuration::sampleRate()
   return itsMarshalledData.itsSampleRate;
 }
 
-inline std::vector<unsigned> &CN_Configuration::inputPsets()
+inline std::vector<unsigned> &CN_Configuration::phaseOnePsets()
 {
-  return itsInputPsets;
+  return itsPhaseOnePsets;
 }
 
-inline std::vector<unsigned> &CN_Configuration::outputPsets()
+inline std::vector<unsigned> &CN_Configuration::phaseTwoPsets()
 {
-  return itsOutputPsets;
+  return itsPhaseTwoPsets;
+}
+
+inline std::vector<unsigned> &CN_Configuration::phaseThreePsets()
+{
+  return itsPhaseThreePsets;
 }
 
 inline std::vector<unsigned> &CN_Configuration::tabList()

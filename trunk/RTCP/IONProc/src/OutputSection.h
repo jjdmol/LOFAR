@@ -36,14 +36,14 @@ namespace RTCP {
 class OutputSection
 {
   public:
-    OutputSection(const Parset *ps, unsigned psetNumber, unsigned outputType, const std::vector<Stream *> &streamsFromCNs, bool lastOutput);
+    OutputSection(const Parset *ps, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, const std::vector<Stream *> &streamsFromCNs, bool lastOutput);
     ~OutputSection();
 
   private:
     void			mainLoop();
 
-    void			droppingData(unsigned subband, unsigned subbandNumber);
-    void			notDroppingData(unsigned subband, unsigned subbandNumber);
+    void			droppingData(unsigned subband);
+    void			notDroppingData(unsigned subband);
 
     std::vector<unsigned>	itsDroppedCount; // [subband]
     std::vector<OutputThread *> itsOutputThreads; // [subband]
@@ -57,11 +57,10 @@ class OutputSection
     unsigned itsSequenceNumber;
 
     const Parset                *itsParset;
-    const unsigned		itsPsetIndex;
+    std::vector<unsigned>       itsItemList; // list of either subbands or beams
     const unsigned              itsOutputType;
-    unsigned			itsNrComputeCores, itsCurrentComputeCore;
-    const unsigned              itsNrSubbands;
-    const unsigned		itsNrSubbandsPerPset;
+    const unsigned		itsNrComputeCores;
+    unsigned                    itsCurrentComputeCore, itsNrUsedCores;
     const bool                  itsRealTime;
 
     // the main plan, also holds temporary results

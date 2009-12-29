@@ -57,8 +57,9 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   delayCompensation()       = parset.delayCompensation();
   correctBandPass()  	    = parset.correctBandPass();
   sampleRate()              = parset.sampleRate();
-  inputPsets()              = parset.inputPsets();
-  outputPsets()             = parset.outputPsets();
+  phaseOnePsets()           = parset.phaseOnePsets();
+  phaseTwoPsets()           = parset.phaseTwoPsets();
+  phaseThreePsets()         = parset.phaseThreePsets();
   tabList()                 = parset.tabList();
   usedCoresInPset()	    = parset.usedCoresInPset();
   refFreqs()                = parset.subbandToFrequencyMapping();
@@ -77,7 +78,7 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   // Get the phase centres of all station, not just the one we receive input from. The compute nodes
   // need the phase centres for beam forming, which is after the transpose so all stations are present.
 
-  // The order of the stations is the order in which they are defined in inputPsets and parset.getStationNamesAndRSPboardNumbers.
+  // The order of the stations is the order in which they are defined in phaseOnePsets and parset.getStationNamesAndRSPboardNumbers.
   // The CNProc/src/AsyncTranspose module should honor the same order.
   itsPhaseCentres.resize(parset.nrStations(), 3);
   std::vector<double> positions = parset.positions();
@@ -94,11 +95,14 @@ void CN_Configuration::read(Stream *str)
 {
   str->read(&itsMarshalledData, sizeof itsMarshalledData);
 
-  itsInputPsets.resize(itsMarshalledData.itsInputPsetsSize);
-  memcpy(&itsInputPsets[0], itsMarshalledData.itsInputPsets, itsMarshalledData.itsInputPsetsSize * sizeof(unsigned));
+  itsPhaseOnePsets.resize(itsMarshalledData.itsPhaseOnePsetsSize);
+  memcpy(&itsPhaseOnePsets[0], itsMarshalledData.itsPhaseOnePsets, itsMarshalledData.itsPhaseOnePsetsSize * sizeof(unsigned));
 
-  itsOutputPsets.resize(itsMarshalledData.itsOutputPsetsSize);
-  memcpy(&itsOutputPsets[0], itsMarshalledData.itsOutputPsets, itsMarshalledData.itsOutputPsetsSize * sizeof(unsigned));
+  itsPhaseTwoPsets.resize(itsMarshalledData.itsPhaseTwoPsetsSize);
+  memcpy(&itsPhaseTwoPsets[0], itsMarshalledData.itsPhaseTwoPsets, itsMarshalledData.itsPhaseTwoPsetsSize * sizeof(unsigned));
+
+  itsPhaseThreePsets.resize(itsMarshalledData.itsPhaseThreePsetsSize);
+  memcpy(&itsPhaseThreePsets[0], itsMarshalledData.itsPhaseThreePsets, itsMarshalledData.itsPhaseThreePsetsSize * sizeof(unsigned));
 
   itsTabList.resize(itsMarshalledData.itsTabListSize);
   memcpy(&itsTabList[0], itsMarshalledData.itsTabList, itsMarshalledData.itsTabListSize * sizeof(unsigned));
@@ -121,13 +125,17 @@ void CN_Configuration::read(Stream *str)
 
 void CN_Configuration::write(Stream *str)
 {
-  itsMarshalledData.itsInputPsetsSize = itsInputPsets.size();
-  assert(itsMarshalledData.itsInputPsetsSize <= MAX_PSETS);
-  memcpy(itsMarshalledData.itsInputPsets, &itsInputPsets[0], itsMarshalledData.itsInputPsetsSize * sizeof(unsigned));
+  itsMarshalledData.itsPhaseOnePsetsSize = itsPhaseOnePsets.size();
+  assert(itsMarshalledData.itsPhaseOnePsetsSize <= MAX_PSETS);
+  memcpy(itsMarshalledData.itsPhaseOnePsets, &itsPhaseOnePsets[0], itsMarshalledData.itsPhaseOnePsetsSize * sizeof(unsigned));
 
-  itsMarshalledData.itsOutputPsetsSize = itsOutputPsets.size();
-  assert(itsMarshalledData.itsOutputPsetsSize <= MAX_PSETS);
-  memcpy(itsMarshalledData.itsOutputPsets, &itsOutputPsets[0], itsMarshalledData.itsOutputPsetsSize * sizeof(unsigned));
+  itsMarshalledData.itsPhaseTwoPsetsSize = itsPhaseTwoPsets.size();
+  assert(itsMarshalledData.itsPhaseTwoPsetsSize <= MAX_PSETS);
+  memcpy(itsMarshalledData.itsPhaseTwoPsets, &itsPhaseTwoPsets[0], itsMarshalledData.itsPhaseTwoPsetsSize * sizeof(unsigned));
+
+  itsMarshalledData.itsPhaseThreePsetsSize = itsPhaseThreePsets.size();
+  assert(itsMarshalledData.itsPhaseThreePsetsSize <= MAX_PSETS);
+  memcpy(itsMarshalledData.itsPhaseThreePsets, &itsPhaseThreePsets[0], itsMarshalledData.itsPhaseThreePsetsSize * sizeof(unsigned));
 
   itsMarshalledData.itsTabListSize = itsTabList.size();
   assert(itsMarshalledData.itsTabListSize <= MAX_PSETS);

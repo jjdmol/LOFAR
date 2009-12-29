@@ -99,12 +99,12 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned            itsNrSubbands;
     unsigned            itsNrSubbandsPerPset;
     unsigned            itsComputeGroupRank;
-    unsigned            itsOutputPsetSize;
+    unsigned            itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
     Stream	        *itsStream;
     const LocationInfo	&itsLocationInfo;
     std::vector<double> itsCenterFrequencies;
     unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
-    bool		itsIsTransposeInput, itsIsTransposeOutput;
+    bool		itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
     bool		itsStokesIntegrateChannels;
     bool                itsNrStokes;
     

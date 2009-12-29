@@ -25,6 +25,11 @@ Observation.rspSlotList  = [0..61,0..61,0..61,0..61]
 Observation.sampleClock  = 200
 OLAP.nrBitsPerSample     = 16
 
+OLAP.CNProc.usedCores = [0..63]
+#OLAP.CNProc.phaseOnePsets = [0]
+#OLAP.CNProc.phaseTwoPsets = [0]
+#OLAP.CNProc.phaseThreePsets = [0]
+
 # Common coordinates are included at the bottom
 Observation.nrBeams = 1
 Observation.Beam[0].angle1 = 5.2336866848083394 # Cygnus
