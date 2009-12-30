@@ -37,29 +37,49 @@
 
 namespace LOFAR {
 
+// A class which autodestructs a struct addrinfo result list
+class AddrInfoHolder {
+  public:
+    AddrInfoHolder( struct addrinfo *info ): info(info) {}
+    ~AddrInfoHolder() { freeaddrinfo( info ); }
+  private:
+    struct addrinfo *info;
+};
+
 SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, Mode mode)
 {
-  if (protocol == TCP)
-    fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  else
-    fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  int retval;
+  struct addrinfo hints;
+  struct addrinfo *result;
+  
+  // use getaddrinfo, because gethostbyname is not thread safe
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_INET; // IPv4
+  hints.ai_flags = AI_NUMERICSERV; // we only use numeric port numbers, not strings like "smtp"
 
-  if (fd < 0)
+  if (protocol == TCP) {
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+  } else {
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_protocol = IPPROTO_UDP;
+  }
+
+  char portStr[16];
+  snprintf( portStr, sizeof portStr, "%hd", port );
+
+  if ((retval = getaddrinfo(hostname, portStr, &hints, &result)) != 0 )
+    throw SystemCallException("getaddrinfo", retval, THROW_ARGS);
+
+  AddrInfoHolder infoHolder( result ); // make sure result will be freed
+
+  // result is a linked list of resolved addresses, we only use the first
+
+  if ((fd = socket(result->ai_family, result->ai_socktype, result->ai_protocol)) < 0)
     throw SystemCallException("socket", errno, THROW_ARGS);
 
-  struct sockaddr_in sa;
-  struct hostent     *host;
-
-  if ((host = gethostbyname(hostname)) == 0)
-    throw SystemCallException("gethostbyname", errno, THROW_ARGS);
-
-  memset(&sa, 0, sizeof sa);
-  sa.sin_family = AF_INET;
-  sa.sin_port   = htons(port);
-  memcpy(&sa.sin_addr, host->h_addr, host->h_length);
-
   if (mode == Client) {
-    while (connect(fd, (struct sockaddr *) &sa, sizeof sa) < 0)
+    while (connect(fd, result->ai_addr, result->ai_addrlen) < 0)
       if (errno == ECONNREFUSED) {
 	if (sleep(1) > 0) {
           // interrupted by a signal handler -- abort to allow this thread to
@@ -75,7 +95,7 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) < 0)
       throw SystemCallException("setsockopt(SO_REUSEADDR)", errno, THROW_ARGS);
 
-    if (bind(fd, (struct sockaddr *) &sa, sizeof sa) < 0)
+    if (bind(fd, result->ai_addr, result->ai_addrlen) < 0)
       throw SystemCallException("bind", errno, THROW_ARGS);
 
     if (protocol == TCP) {
