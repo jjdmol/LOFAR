@@ -38,16 +38,6 @@ Literal::Literal(dcomplex value)
 {
 }
 
-unsigned int Literal::nArguments() const
-{
-    return 0;
-}
-
-ExprBase::ConstPtr Literal::argument(unsigned int) const
-{
-    ASSERT(false);
-}
-
 const Scalar Literal::evaluateExpr(const Request&, Cache&, unsigned int) const
 {
     Scalar result;

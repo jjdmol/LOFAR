@@ -45,7 +45,7 @@ friend class MatrixComplexSca;
 friend class MatrixComplexArr;
 
 private:
-  MatrixRealArr (int nx, int ny);	// use allocate(nx, ny) instead
+  MatrixRealArr (int nx, int ny);   // use allocate(nx, ny) instead
 
 public:
   virtual ~MatrixRealArr();

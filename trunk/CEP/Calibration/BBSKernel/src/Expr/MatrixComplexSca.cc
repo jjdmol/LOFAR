@@ -56,12 +56,12 @@ MatrixRep* MatrixComplexSca::add (MatrixRep& right, bool rightTmp)
   return right.addRep (*this, rightTmp);
 }
 MatrixRep* MatrixComplexSca::subtract (MatrixRep& right,
-					     bool rightTmp)
+                         bool rightTmp)
 {
   return right.subRep (*this, rightTmp);
 }
 MatrixRep* MatrixComplexSca::multiply (MatrixRep& right,
-					     bool rightTmp)
+                         bool rightTmp)
 {
   return right.mulRep (*this, rightTmp);
 }
@@ -87,7 +87,7 @@ void MatrixComplexSca::dcomplexStorage(const double *&realPtr, const double *&im
 double MatrixComplexSca::getDouble (int, int) const
 {
   ASSERTSTR (imag(itsValue)==0,
-	     "Matrix: dcomplex->double conversion not possible");
+         "Matrix: dcomplex->double conversion not possible");
   return real(itsValue);
 }
 
@@ -99,7 +99,7 @@ dcomplex MatrixComplexSca::getDComplex (int, int) const
 
 #define ExprMATRIXCOMPLEXSCA_OP(NAME, OP, OP2) \
 MatrixRep* MatrixComplexSca::NAME (MatrixRealSca& left, \
-					 bool rightTmp) \
+                     bool rightTmp) \
 { \
   MatrixComplexSca* v = this; \
   if (!rightTmp) { \
@@ -109,7 +109,7 @@ MatrixRep* MatrixComplexSca::NAME (MatrixRealSca& left, \
   return v; \
 } \
 MatrixRep* MatrixComplexSca::NAME (MatrixComplexSca& left, \
-					 bool) \
+                     bool) \
 { \
   left.itsValue OP itsValue; \
   return &left; \

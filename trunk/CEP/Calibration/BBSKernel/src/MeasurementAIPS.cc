@@ -378,9 +378,9 @@ void MeasurementAIPS::write(const VisSelection &selection,
             }
 
             // Copy visibilities and optionally reverse.
-			visBuffer = buffer->vis_data[basel][tslot];
+            visBuffer = buffer->vis_data[basel][tslot];
 
-			// Write visibilities.
+            // Write visibilities.
             Array<Complex> vis_data(IPosition(2, nPolarizations, nChannels),
                 reinterpret_cast<Complex*>(visBuffer.data()), SHARE);
             c_data.putSlice(i, slicer, vis_data);
@@ -701,7 +701,7 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
     }
 
     IPosition start(2, 0, startChannel);
-	IPosition end(2, itsDimensions.getPolarizationCount() - 1, endChannel);
+    IPosition end(2, itsDimensions.getPolarizationCount() - 1, endChannel);
 
     if(itsFreqAxisReversed)
     {

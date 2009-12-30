@@ -99,19 +99,19 @@ dcomplex MatrixRealSca::getDComplex (int, int) const
 
 #define ExprMATRIXREALSCA_OP(NAME, OP, OPX) \
 MatrixRep* MatrixRealSca::NAME (MatrixRealSca& left, \
-				      bool) \
+                      bool) \
 { \
   left.itsValue OP itsValue; \
   return &left; \
 } \
 MatrixRep* MatrixRealSca::NAME (MatrixComplexSca& left, \
-				      bool) \
+                      bool) \
 { \
   left.itsValue OP itsValue; \
   return &left; \
 } \
 MatrixRep* MatrixRealSca::NAME (MatrixRealArr& left,  \
-				      bool) \
+                      bool) \
 { \
   double* value = left.itsValue; \
   double* end = value + left.nelements(); \

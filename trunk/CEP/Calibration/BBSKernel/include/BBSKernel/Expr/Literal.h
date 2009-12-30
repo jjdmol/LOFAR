@@ -36,7 +36,7 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class Literal: public Expr<Scalar>
+class Literal: public NullaryExpr<Scalar>
 {
 public:
     typedef shared_ptr<Literal>         Ptr;
@@ -46,9 +46,6 @@ public:
     Literal(dcomplex value);
 
 protected:
-    virtual unsigned int nArguments() const;
-    virtual ExprBase::ConstPtr argument(unsigned int) const;
-
     virtual const Scalar evaluateExpr(const Request&, Cache&, unsigned int)
         const;
 

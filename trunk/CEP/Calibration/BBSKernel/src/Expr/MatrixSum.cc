@@ -44,6 +44,18 @@ void MatrixSum::connect(const Expr<JonesMatrix>::ConstPtr &expr)
     itsExpr.push_back(expr);
 }
 
+
+unsigned int MatrixSum::nArguments() const
+{
+    return itsExpr.size();
+}
+
+ExprBase::ConstPtr MatrixSum::argument(unsigned int i) const
+{
+    ASSERT(i < itsExpr.size());
+    return itsExpr[i];
+}
+
 const JonesMatrix MatrixSum::evaluateExpr(const Request &request, Cache &cache,
     unsigned int grid) const
 {

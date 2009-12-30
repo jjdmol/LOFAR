@@ -38,16 +38,6 @@ ExprVisData::ExprVisData(const VisData::Ptr &chunk, const baseline_t &baseline)
     itsBaselineIndex = dims.getBaselineIndex(baseline);
 }
 
-unsigned int ExprVisData::nArguments() const
-{
-    return 0;
-}
-
-ExprBase::ConstPtr ExprVisData::argument(unsigned int) const
-{
-    ASSERT(false);
-}
-
 const JonesMatrix ExprVisData::evaluateExpr(const Request &request,
     Cache &cache, unsigned int grid) const
 {

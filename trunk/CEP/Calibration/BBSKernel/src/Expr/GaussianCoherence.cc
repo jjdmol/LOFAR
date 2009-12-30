@@ -90,7 +90,8 @@ const JonesMatrix::View GaussianCoherence::evaluateImpl(const Grid &grid,
     // Compute spatial coherence (2D).
     const unsigned int nFreq = grid[FREQ]->size();
     const unsigned int nTime = grid[TIME]->size();
-    ASSERT(uvPrime.nx() == 1 && uvPrime.ny() == nTime);
+    ASSERT(uvPrime.nx() == 1
+        && static_cast<unsigned int>(uvPrime.ny()) == nTime);
 
     Matrix coherence;
     double *it = coherence.setDoubleFormat(nFreq, nTime);

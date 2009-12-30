@@ -66,8 +66,8 @@ public:
   void set (const dcomplex* values)
     {
       for (int i = 0; i < nelements(); i ++) {
-	itsReal[i] = real(values[i]);
-	itsImag[i] = imag(values[i]);
+    itsReal[i] = real(values[i]);
+    itsImag[i] = imag(values[i]);
       }
     }
 
