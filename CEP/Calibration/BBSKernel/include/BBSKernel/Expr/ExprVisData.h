@@ -38,7 +38,7 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class ExprVisData: public Expr<JonesMatrix>
+class ExprVisData: public NullaryExpr<JonesMatrix>
 {
 public:
     typedef shared_ptr<ExprVisData>        Ptr;
@@ -47,9 +47,6 @@ public:
     ExprVisData(const VisData::Ptr &chunk, const baseline_t &baseline);
 
 protected:
-    virtual unsigned int nArguments() const;
-    virtual ExprBase::ConstPtr argument(unsigned int) const;
-
     virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache,
         unsigned int grid) const;
 

@@ -125,6 +125,18 @@ protected:
         Cache &cache, unsigned int grid) const = 0;
 };
 
+template <typename T_EXPR_VALUE>
+class NullaryExpr: public Expr<T_EXPR_VALUE>
+{
+public:
+    typedef shared_ptr<NullaryExpr>         Ptr;
+    typedef shared_ptr<const NullaryExpr>   ConstPtr;
+
+protected:
+    virtual unsigned int nArguments() const;
+    virtual ExprBase::ConstPtr argument(unsigned int) const;
+};
+
 template <typename T_ARG0, typename T_EXPR_VALUE>
 class UnaryExpr: public Expr<T_EXPR_VALUE>
 {
@@ -215,6 +227,44 @@ private:
 };
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+    typename T_EXPR_VALUE>
+class Expr4: public Expr<T_EXPR_VALUE>
+{
+public:
+    typedef shared_ptr<Expr4>       Ptr;
+    typedef shared_ptr<const Expr4> ConstPtr;
+
+    typedef T_ARG0  Arg0Type;
+    typedef T_ARG1  Arg1Type;
+    typedef T_ARG2  Arg2Type;
+    typedef T_ARG3  Arg3Type;
+
+    using ExprBase::connect;
+    using ExprBase::disconnect;
+
+    Expr4(const typename Expr<T_ARG0>::ConstPtr &arg0,
+        const typename Expr<T_ARG1>::ConstPtr &arg1,
+        const typename Expr<T_ARG2>::ConstPtr &arg2,
+        const typename Expr<T_ARG3>::ConstPtr &arg3);
+    ~Expr4();
+
+protected:
+    virtual unsigned int nArguments() const;
+    virtual ExprBase::ConstPtr argument(unsigned int i) const;
+
+    const typename Expr<T_ARG0>::ConstPtr &argument0() const;
+    const typename Expr<T_ARG1>::ConstPtr &argument1() const;
+    const typename Expr<T_ARG2>::ConstPtr &argument2() const;
+    const typename Expr<T_ARG3>::ConstPtr &argument3() const;
+
+private:
+    typename Expr<T_ARG0>::ConstPtr itsArg0;
+    typename Expr<T_ARG1>::ConstPtr itsArg1;
+    typename Expr<T_ARG2>::ConstPtr itsArg2;
+    typename Expr<T_ARG3>::ConstPtr itsArg3;
+};
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
     typename T_ARG4, typename T_EXPR_VALUE>
 class Expr5: public Expr<T_EXPR_VALUE>
 {
@@ -302,6 +352,23 @@ inline const T_EXPR_VALUE  Expr<T_EXPR_VALUE>::evaluate(const Request &request,
     }
 
     return result;
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: NullaryExpr                                            - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_EXPR_VALUE>
+inline unsigned int NullaryExpr<T_EXPR_VALUE>::nArguments() const
+{
+    return 0;
+}
+
+template <typename T_EXPR_VALUE>
+inline ExprBase::ConstPtr NullaryExpr<T_EXPR_VALUE>::argument(unsigned int)
+    const
+{
+    ASSERTSTR(false, "NullaryExpr does not have arguments.");
 }
 
 // -------------------------------------------------------------------------- //
@@ -479,6 +546,98 @@ inline const typename Expr<T_ARG2>::ConstPtr &TernaryExpr<T_ARG0, T_ARG1,
 }
 
 // -------------------------------------------------------------------------- //
+// - Implementation: Expr4                                                  - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_EXPR_VALUE>
+Expr4<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_EXPR_VALUE>::Expr4
+    (const typename Expr<T_ARG0>::ConstPtr &arg0,
+    const typename Expr<T_ARG1>::ConstPtr &arg1,
+    const typename Expr<T_ARG2>::ConstPtr &arg2,
+    const typename Expr<T_ARG3>::ConstPtr &arg3)
+    :   itsArg0(arg0),
+        itsArg1(arg1),
+        itsArg2(arg2),
+        itsArg3(arg3)
+{
+    connect(itsArg0);
+    connect(itsArg1);
+    connect(itsArg2);
+    connect(itsArg3);
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_EXPR_VALUE>
+Expr4<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_EXPR_VALUE>::~Expr4()
+{
+    disconnect(itsArg3);
+    disconnect(itsArg2);
+    disconnect(itsArg1);
+    disconnect(itsArg0);
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_EXPR_VALUE>
+inline unsigned int Expr4<T_ARG0, T_ARG1, T_ARG2, T_ARG3,
+    T_EXPR_VALUE>::nArguments() const
+{
+    return 4;
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+    typename T_EXPR_VALUE>
+inline ExprBase::ConstPtr Expr4<T_ARG0, T_ARG1, T_ARG2, T_ARG3,
+    T_EXPR_VALUE>::argument(unsigned int i) const
+{
+    switch(i)
+    {
+        case 0:
+            return itsArg0;
+        case 1:
+            return itsArg1;
+        case 2:
+            return itsArg2;
+        case 3:
+            return itsArg3;
+        default:
+            ASSERTSTR(false, "Invalid argument index specified.");
+    }
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG0>::ConstPtr &Expr4<T_ARG0, T_ARG1, T_ARG2,
+    T_ARG3, T_EXPR_VALUE>::argument0() const
+{
+    return itsArg0;
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG1>::ConstPtr &Expr4<T_ARG0, T_ARG1, T_ARG2,
+    T_ARG3, T_EXPR_VALUE>::argument1() const
+{
+    return itsArg1;
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+     typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG2>::ConstPtr &Expr4<T_ARG0, T_ARG1, T_ARG2,
+    T_ARG3, T_EXPR_VALUE>::argument2() const
+{
+    return itsArg2;
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+    typename T_EXPR_VALUE>
+inline const typename Expr<T_ARG3>::ConstPtr &Expr4<T_ARG0, T_ARG1, T_ARG2,
+    T_ARG3, T_EXPR_VALUE>::argument3() const
+{
+    return itsArg3;
+}
+
+// -------------------------------------------------------------------------- //
 // - Implementation: Expr5                                                  - //
 // -------------------------------------------------------------------------- //
 
@@ -546,40 +705,40 @@ inline ExprBase::ConstPtr Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
      typename T_ARG4, typename T_EXPR_VALUE>
-inline const typename Expr<T_ARG0>::ConstPtr &Expr5<T_ARG0, T_ARG1,
-    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument0() const
+inline const typename Expr<T_ARG0>::ConstPtr &Expr5<T_ARG0, T_ARG1, T_ARG2,
+    T_ARG3, T_ARG4, T_EXPR_VALUE>::argument0() const
 {
     return itsArg0;
 }
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
      typename T_ARG4, typename T_EXPR_VALUE>
-inline const typename Expr<T_ARG1>::ConstPtr &Expr5<T_ARG0, T_ARG1,
-    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument1() const
+inline const typename Expr<T_ARG1>::ConstPtr &Expr5<T_ARG0, T_ARG1, T_ARG2,
+    T_ARG3, T_ARG4, T_EXPR_VALUE>::argument1() const
 {
     return itsArg1;
 }
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
      typename T_ARG4, typename T_EXPR_VALUE>
-inline const typename Expr<T_ARG2>::ConstPtr &Expr5<T_ARG0, T_ARG1,
-    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument2() const
+inline const typename Expr<T_ARG2>::ConstPtr &Expr5<T_ARG0, T_ARG1, T_ARG2,
+    T_ARG3, T_ARG4, T_EXPR_VALUE>::argument2() const
 {
     return itsArg2;
 }
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
      typename T_ARG4, typename T_EXPR_VALUE>
-inline const typename Expr<T_ARG3>::ConstPtr &Expr5<T_ARG0, T_ARG1,
-    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument3() const
+inline const typename Expr<T_ARG3>::ConstPtr &Expr5<T_ARG0, T_ARG1, T_ARG2,
+    T_ARG3, T_ARG4, T_EXPR_VALUE>::argument3() const
 {
     return itsArg3;
 }
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
      typename T_ARG4, typename T_EXPR_VALUE>
-inline const typename Expr<T_ARG4>::ConstPtr &Expr5<T_ARG0, T_ARG1,
-    T_ARG2, T_ARG3, T_ARG4, T_EXPR_VALUE>::argument4() const
+inline const typename Expr<T_ARG4>::ConstPtr &Expr5<T_ARG0, T_ARG1, T_ARG2,
+    T_ARG3, T_ARG4, T_EXPR_VALUE>::argument4() const
 {
     return itsArg4;
 }

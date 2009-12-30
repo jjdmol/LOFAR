@@ -39,7 +39,7 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class StationUVW: public Expr<Vector<3> >
+class StationUVW: public NullaryExpr<Vector<3> >
 {
 public:
     typedef shared_ptr<StationUVW>          Ptr;
@@ -49,16 +49,6 @@ public:
         const casa::MDirection &reference);
 
 protected:
-    virtual unsigned int nArguments() const
-    {
-        return 0;
-    }
-
-    virtual ExprBase::ConstPtr argument(unsigned int) const
-    {
-        ASSERTSTR(false, "StationUVW has no arguments.");
-    }
-
     virtual const Vector<3> evaluateExpr(const Request &request, Cache &cache,
         unsigned int grid) const;
 

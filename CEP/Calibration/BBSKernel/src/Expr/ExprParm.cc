@@ -50,16 +50,6 @@ void ExprParm::clearPValueFlag()
     itsPValueFlag = false;
 }
 
-unsigned int ExprParm::nArguments() const
-{
-    return 0;
-}
-
-ExprBase::ConstPtr ExprParm::argument(unsigned int) const
-{
-    ASSERT(false);
-}
-
 const Scalar ExprParm::evaluateExpr(const Request &request, Cache &cache,
     unsigned int grid) const
 {

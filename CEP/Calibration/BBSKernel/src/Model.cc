@@ -36,7 +36,6 @@
 #include <BBSKernel/Expr/GaussianCoherence.h>
 #include <BBSKernel/Expr/GaussianSource.h>
 #include <BBSKernel/Expr/HamakerDipole.h>
-//#include <BBSKernel/Expr/JonesVisData.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/LMN.h>
 #include <BBSKernel/Expr/MatrixInverse.h>
@@ -54,7 +53,6 @@
 #include <BBSKernel/Expr/SpectralIndex.h>
 #include <BBSKernel/Expr/StationShift.h>
 #include <BBSKernel/Expr/StationUVW.h>
-//#include <BBSKernel/Expr/StatUVW.h>
 #include <BBSKernel/Expr/YatawattaDipole.h>
 
 #include <Common/LofarLogger.h>

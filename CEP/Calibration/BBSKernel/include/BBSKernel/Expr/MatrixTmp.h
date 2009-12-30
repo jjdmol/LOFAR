@@ -117,31 +117,31 @@ public:
     { itsRep->show (os); }
 
   friend MatrixTmp operator+ (const MatrixTmp& left,
-				 const MatrixTmp& right)
+                 const MatrixTmp& right)
     { return left.itsRep->add (*right.itsRep, true); }
   friend MatrixTmp operator+ (const MatrixTmp& left,
-				 const Matrix& right)
+                 const Matrix& right)
     { return left.itsRep->add (*right.rep(), false); }
 
   friend MatrixTmp operator- (const MatrixTmp& left,
-				 const MatrixTmp& right)
+                 const MatrixTmp& right)
     { return left.itsRep->subtract (*right.itsRep, true); }
   friend MatrixTmp operator- (const MatrixTmp& left,
-				 const Matrix& right)
+                 const Matrix& right)
     { return left.itsRep->subtract (*right.rep(), false); }
 
   friend MatrixTmp operator* (const MatrixTmp& left,
-				 const MatrixTmp& right)
+                 const MatrixTmp& right)
     { return left.itsRep->multiply (*right.itsRep, true); }
   friend MatrixTmp operator* (const MatrixTmp& left,
-				 const Matrix& right)
+                 const Matrix& right)
     { return left.itsRep->multiply (*right.rep(), false); }
 
   friend MatrixTmp operator/ (const MatrixTmp& left,
-				 const MatrixTmp& right)
+                 const MatrixTmp& right)
     { return left.itsRep->divide (*right.itsRep, true); }
   friend MatrixTmp operator/ (const MatrixTmp& left,
-				 const Matrix& right)
+                 const Matrix& right)
     { return left.itsRep->divide (*right.rep(), false); }
 
   MatrixTmp operator-() const;

@@ -26,6 +26,8 @@
 // \file
 // Request grid(s) on which to evaluate an expression.
 
+// This include defines names for the first axis (FREQ) and second axis (TIME),
+// which are more readable than plain 0 and 1.
 #include <BBSKernel/Types.h>
 
 #include <Common/LofarLogger.h>

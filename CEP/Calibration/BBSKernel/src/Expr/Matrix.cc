@@ -89,7 +89,7 @@ Matrix::Matrix (const Matrix<double>& array)
     bool deleteIt;
     const double* values = array.getStorage (deleteIt);
     MatrixRealArr* v = MatrixRealArr::allocate(array.shape()(0),
-						     array.shape()(1));
+                             array.shape()(1));
     v->set (values);
     itsRep = v->link();
     array.freeStorage (values, deleteIt);
@@ -100,7 +100,7 @@ Matrix::Matrix (const Matrix<dcomplex >& array)
     bool deleteIt;
     const dcomplex* values = array.getStorage (deleteIt);
     MatrixComplexArr* v = MatrixComplexArr::allocate (array.shape()(0),
-							    array.shape()(1));
+                                array.shape()(1));
     v->set (values);
     itsRep = v->link();
     array.freeStorage (values, deleteIt);
@@ -110,7 +110,7 @@ Matrix::Matrix (const Matrix& that)
 : itsRep (that.itsRep)
 {
     if (itsRep != 0) {
-	itsRep->link();
+    itsRep->link();
     }
 }
 
@@ -121,10 +121,10 @@ Matrix& Matrix::operator= (const Matrix& that)
 {
     if (this != &that) {
         MatrixRep::unlink (itsRep);
-	itsRep = that.itsRep;
-	if (itsRep != 0) {
-	    itsRep->link();
-	}
+    itsRep = that.itsRep;
+    if (itsRep != 0) {
+        itsRep->link();
+    }
     }
     return *this;
 }
@@ -367,15 +367,15 @@ LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& bs, const Matrix& vec)
     bs << vec.isDouble() << (vec.nelements()==1);
     if (vec.isDouble()) {
       if (vec.nelements() == 1) {
-	bs << vec.getDouble();
+    bs << vec.getDouble();
       } else {
-	bs << vec.getDoubleMatrix();
+    bs << vec.getDoubleMatrix();
       }
     } else {
       if (vec.nelements() == 1) {
-	bs << vec.getDComplex();
+    bs << vec.getDComplex();
       } else {
-	bs << vec.getDComplexMatrix();
+    bs << vec.getDComplexMatrix();
       }
     }
   }
@@ -386,20 +386,20 @@ LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& bs, const Matrix& vec)
     bs << (unsigned char) rep->type;
     switch (rep->type) {
       case MatrixRep::RealScalar :
-	bs << vec.getDouble();
-	break;
+    bs << vec.getDouble();
+    break;
 
       case MatrixRep::RealArray :
-	bs << vec.getDoubleMatrix();
-	break;
+    bs << vec.getDoubleMatrix();
+    break;
 
       case MatrixRep::ComplexScalar :
-	bs << vec.getDComplex();
-	break;
+    bs << vec.getDComplex();
+    break;
 
       case MatrixRep::ComplexArray :
-	bs << vec.getDComplexMatrix();
-	break;
+    bs << vec.getDComplexMatrix();
+    break;
     }
   }
 #endif
@@ -419,23 +419,23 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, Matrix& vec)
     bs >> isDouble >> isScalar;
     if (isDouble) {
       if (isScalar) {
-	double val;
-	bs >> val;
-	vec = Matrix(val);
+    double val;
+    bs >> val;
+    vec = Matrix(val);
       } else {
-	Matrix<double> mat;
-	bs >> mat;
-	vec = Matrix(mat);
+    Matrix<double> mat;
+    bs >> mat;
+    vec = Matrix(mat);
       }
     } else {
       if (isScalar) {
-	dcomplex val;
-	bs >> val;
-	vec = Matrix(val);
+    dcomplex val;
+    bs >> val;
+    vec = Matrix(val);
       } else {
-	Matrix<dcomplex > mat;
-	bs >> mat;
-	vec = Matrix(mat);
+    Matrix<dcomplex > mat;
+    bs >> mat;
+    vec = Matrix(mat);
       }
     }
   }
@@ -454,24 +454,24 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, Matrix& vec)
     bs >> type;
     switch (type) {
       case MatrixRep::RealScalar :
-	bs >> rval;
-	vec = Matrix(rval);
-	break;
+    bs >> rval;
+    vec = Matrix(rval);
+    break;
 
       case MatrixRep::RealArray :
-	bs >> rmat;
-	vec = Matrix(rmat);
-	break;
+    bs >> rmat;
+    vec = Matrix(rmat);
+    break;
 
       case MatrixRep::ComplexScalar :
-	bs >> cval;
-	vec = Matrix(cval);
-	break;
+    bs >> cval;
+    vec = Matrix(cval);
+    break;
 
       case MatrixRep::ComplexArray :
-	bs >> cmat;
-	vec = Matrix(cmat);
-	break;
+    bs >> cmat;
+    vec = Matrix(cmat);
+    break;
     }
   }
 #endif

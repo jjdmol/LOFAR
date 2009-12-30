@@ -51,10 +51,8 @@ ExprBase::ConstPtr PolynomialPhaseScreen::argument(unsigned int i) const
     {
         return itsPiercePoint;
     }
-    else
-    {
-        return itsCoeff[i - 1];
-    }
+
+    return itsCoeff[i - 1];
 }
 
 const Scalar PolynomialPhaseScreen::evaluateExpr(const Request &request,
@@ -194,14 +192,14 @@ const Scalar::View PolynomialPhaseScreen::evaluateImpl(const Grid &grid,
             res *= rot_x / 1000.0;
             double resy = 0.0;
             for(int ilat = degree - 1; ilat >= 0; --ilat)
-    	    {
+            {
                 resy *= rot_y / 1000.0;
-    	        if(ilon == 0 && ilat == 0)
-    	        {
-    	            continue;
-    	        }
+                if(ilon == 0 && ilat == 0)
+                {
+                    continue;
+                }
                 resy += coeffValue[ilon * degree + ilat - 1];
-    	    }
+            }
             res += resy;
         }
 
@@ -210,7 +208,7 @@ const Scalar::View PolynomialPhaseScreen::evaluateImpl(const Grid &grid,
         // Convert TEC to frequency dependent phase.
         for(size_t f = 0; f < nFreq; ++f)
         {
-    	    double phase = (75e8 / grid[FREQ]->center(f)) * tec;
+            double phase = (75e8 / grid[FREQ]->center(f)) * tec;
             *Z_re++ = std::cos(phase);
             *Z_im++ = std::sin(phase);
         }

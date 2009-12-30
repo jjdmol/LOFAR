@@ -37,7 +37,7 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class ExprParm: public Expr<Scalar>
+class ExprParm: public NullaryExpr<Scalar>
 {
 public:
     typedef shared_ptr<ExprParm>        Ptr;
@@ -50,9 +50,6 @@ public:
     void clearPValueFlag();
 
 protected:
-    virtual unsigned int nArguments() const;
-    virtual ExprBase::ConstPtr argument(unsigned int) const;
-
     virtual const Scalar evaluateExpr(const Request &request, Cache &cache,
         unsigned int grid) const;
 

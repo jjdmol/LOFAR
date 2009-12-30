@@ -106,6 +106,34 @@ protected:
 };
 
 template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+    typename T_EXPR_VALUE>
+class BasicExpr4: public Expr4<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_EXPR_VALUE>
+{
+public:
+    typedef shared_ptr<BasicExpr4>          Ptr;
+    typedef shared_ptr<const BasicExpr4>    ConstPtr;
+
+    using Expr4<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_EXPR_VALUE>::argument0;
+    using Expr4<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_EXPR_VALUE>::argument1;
+    using Expr4<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_EXPR_VALUE>::argument2;
+    using Expr4<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_EXPR_VALUE>::argument3;
+
+    BasicExpr4(const typename Expr<T_ARG0>::ConstPtr &arg0,
+        const typename Expr<T_ARG1>::ConstPtr &arg1,
+        const typename Expr<T_ARG2>::ConstPtr &arg2,
+        const typename Expr<T_ARG3>::ConstPtr &arg3);
+
+protected:
+    virtual const T_EXPR_VALUE evaluateExpr(const Request &request,
+        Cache &cache, unsigned int grid) const;
+
+    virtual const typename T_EXPR_VALUE::View evaluateImpl
+        (const Grid &grid, const typename T_ARG0::View &arg0,
+        const typename T_ARG1::View &arg1, const typename T_ARG2::View &arg2,
+        const typename T_ARG3::View &arg3) const = 0;
+};
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
     typename T_ARG4, typename T_EXPR_VALUE>
 class BasicExpr5: public Expr5<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_ARG4,
     T_EXPR_VALUE>
@@ -283,6 +311,76 @@ const T_EXPR_VALUE BasicTernaryExpr<T_ARG0, T_ARG1, T_ARG2,
         it0.advance(key);
         it1.advance(key);
         it2.advance(key);
+    }
+
+    return result;
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: BasicExpr4                                             - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+    typename T_EXPR_VALUE>
+BasicExpr4<T_ARG0, T_ARG1, T_ARG2, T_ARG3,
+    T_EXPR_VALUE>::BasicExpr4(const typename Expr<T_ARG0>::ConstPtr &arg0,
+        const typename Expr<T_ARG1>::ConstPtr &arg1,
+        const typename Expr<T_ARG2>::ConstPtr &arg2,
+        const typename Expr<T_ARG3>::ConstPtr &arg3)
+    :   Expr4<T_ARG0, T_ARG1, T_ARG2, T_ARG3, T_EXPR_VALUE>(arg0, arg1, arg2,
+            arg3)
+{
+}
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_ARG3,
+    typename T_EXPR_VALUE>
+const T_EXPR_VALUE BasicExpr4<T_ARG0, T_ARG1, T_ARG2, T_ARG3,
+    T_EXPR_VALUE>::evaluateExpr(const Request &request, Cache &cache,
+    unsigned int grid) const
+{
+    // Allocate result.
+    T_EXPR_VALUE result;
+
+    // Evaluate arguments.
+    const T_ARG0 arg0 = argument0()->evaluate(request, cache, grid);
+    const T_ARG1 arg1 = argument1()->evaluate(request, cache, grid);
+    const T_ARG2 arg2 = argument2()->evaluate(request, cache, grid);
+    const T_ARG3 arg3 = argument3()->evaluate(request, cache, grid);
+
+    // Evaluate flags.
+    FlagArray flags[4];
+    flags[0] = arg0.flags();
+    flags[1] = arg1.flags();
+    flags[2] = arg2.flags();
+    flags[3] = arg3.flags();
+    result.setFlags(mergeFlags(flags, flags + 4));
+
+    // Compute main value.
+    result.assign(evaluateImpl(request[grid], arg0.view(), arg1.view(),
+        arg2.view(), arg3.view()));
+
+    // Compute perturbed values.
+    typename T_ARG0::Iterator it0(arg0);
+    typename T_ARG1::Iterator it1(arg1);
+    typename T_ARG2::Iterator it2(arg2);
+    typename T_ARG3::Iterator it3(arg3);
+
+    PValueKey key;
+    bool atEnd = it0.atEnd() && it1.atEnd() && it2.atEnd() && it3.atEnd();
+    while(!atEnd)
+    {
+        key = std::min(it0.key(), it1.key());
+        key = std::min(key, it2.key());
+        key = std::min(key, it3.key());
+
+        result.assign(key, evaluateImpl(request[grid], it0.value(key),
+            it1.value(key), it2.value(key), it3.value(key)));
+
+        it0.advance(key);
+        it1.advance(key);
+        it2.advance(key);
+        it3.advance(key);
+        atEnd = it0.atEnd() && it1.atEnd() && it2.atEnd() && it3.atEnd();
     }
 
     return result;

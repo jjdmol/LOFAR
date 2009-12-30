@@ -138,8 +138,8 @@ private:
     void procExpr(T_ITER result, size_t idx, ProcContext &context);
 
     // Sets of expressions between which the difference is to be minimized.
-    ExprSet<JonesMatrix>::Ptr     itsLHS;
-    ExprSet<JonesMatrix>::Ptr     itsRHS;
+    ExprSet<JonesMatrix>::Ptr           itsLHS;
+    ExprSet<JonesMatrix>::Ptr           itsRHS;
 
     // Evaluation grid.
     Grid                                itsEvalGrid;

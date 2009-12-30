@@ -117,30 +117,30 @@ public:
   virtual MatrixRep* addRep (MatrixRealSca& left, bool rightTmp) = 0;
   virtual MatrixRep* addRep (MatrixRealArr& left, bool rightTmp) = 0;
   virtual MatrixRep* addRep (MatrixComplexSca& left,
-				bool rightTmp) = 0;
+                bool rightTmp) = 0;
   virtual MatrixRep* addRep (MatrixComplexArr& left,
-				bool rightTmp) = 0;
+                bool rightTmp) = 0;
 
   virtual MatrixRep* subRep (MatrixRealSca& left, bool rightTmp) = 0;
   virtual MatrixRep* subRep (MatrixRealArr& left, bool rightTmp) = 0;
   virtual MatrixRep* subRep (MatrixComplexSca& left,
-				bool rightTmp) = 0;
+                bool rightTmp) = 0;
   virtual MatrixRep* subRep (MatrixComplexArr& left,
-				bool rightTmp) = 0;
+                bool rightTmp) = 0;
 
   virtual MatrixRep* mulRep (MatrixRealSca& left, bool rightTmp) = 0;
   virtual MatrixRep* mulRep (MatrixRealArr& left, bool rightTmp) = 0;
   virtual MatrixRep* mulRep (MatrixComplexSca& left,
-				bool rightTmp) = 0;
+                bool rightTmp) = 0;
   virtual MatrixRep* mulRep (MatrixComplexArr& left,
-				bool rightTmp) = 0;
+                bool rightTmp) = 0;
 
   virtual MatrixRep* divRep (MatrixRealSca& left, bool rightTmp) = 0;
   virtual MatrixRep* divRep (MatrixRealArr& left, bool rightTmp) = 0;
   virtual MatrixRep* divRep (MatrixComplexSca& left,
-				bool rightTmp) = 0;
+                bool rightTmp) = 0;
   virtual MatrixRep* divRep (MatrixComplexArr& left,
-				bool rightTmp) = 0;
+                bool rightTmp) = 0;
 
   virtual MatrixRep* posdiffRep (MatrixRealSca& left);
   virtual MatrixRep* posdiffRep (MatrixRealArr& left);

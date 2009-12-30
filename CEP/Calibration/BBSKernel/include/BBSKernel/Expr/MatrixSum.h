@@ -60,18 +60,6 @@ private:
 
 // @}
 
-inline unsigned int MatrixSum::nArguments() const
-{
-    return itsExpr.size();
-}
-
-inline ExprBase::ConstPtr MatrixSum::argument(unsigned int i) const
-{
-    ASSERT(i < itsExpr.size());
-    ASSERT(itsExpr[i]);
-    return itsExpr[i];
-}
-
 } // namespace BBS
 } // namespace LOFAR
 
