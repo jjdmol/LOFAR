@@ -29,7 +29,7 @@
 #include <BBSKernel/ExprSet.h>
 #include <BBSKernel/SolverInterfaceTypes.h>
 #include <BBSKernel/Types.h>
-#include <BBSKernel/Expr/ExprResult.h>
+#include <BBSKernel/Expr/ExprValue.h>
 
 #include <Common/Timer.h>
 #include <Common/lofar_map.h>

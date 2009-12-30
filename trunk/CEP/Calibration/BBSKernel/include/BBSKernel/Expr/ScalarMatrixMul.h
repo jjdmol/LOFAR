@@ -1,4 +1,5 @@
-//# UVW.h: Baseline UVW coordinates in wavelengths.
+//# ScalarMatrixMul.h: Multiplication of a matrix expression by a scalar
+//# expression.
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,14 +21,14 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_UVW_H
-#define LOFAR_BBSKERNEL_EXPR_UVW_H
+#ifndef LOFAR_BBSKERNEL_EXPR_SCALARMATRIXMUL_H
+#define LOFAR_BBSKERNEL_EXPR_SCALARMATRIXMUL_H
 
 // \file
-// Baseline UVW coordinates in wavelengths.
+// ScalarMatrixMul.h: Multiplication of a matrix expression by a scalar
+// expression.
 
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/VisData.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 
 namespace LOFAR
 {
@@ -37,25 +38,23 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class UVW: public ExprTerminus
+class ScalarMatrixMul: public BasicBinaryExpr<Scalar, JonesMatrix, JonesMatrix>
 {
 public:
-    typedef shared_ptr<UVW>         Ptr;
-    typedef shared_ptr<const UVW>   ConstPtr;
+    typedef shared_ptr<ScalarMatrixMul>         Ptr;
+    typedef shared_ptr<const ScalarMatrixMul>   ConstPtr;
 
-    UVW(const VisData::Ptr &chunk, const baseline_t &baseline);
+    ScalarMatrixMul(const Expr<Scalar>::ConstPtr &lhs,
+        const Expr<JonesMatrix>::ConstPtr &rhs);
 
 protected:
-    virtual ValueSet::ConstPtr evaluateImpl(const Grid &grid) const;
-
-private:
-    const VisData::Ptr  itsChunk;
-    baseline_t          itsBaseline;
+    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
+        const Scalar::View &lhs, const JonesMatrix::View &rhs) const;
 };
 
 // @}
 
-} //# namespace BBS
-} //# namespace LOFAR
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

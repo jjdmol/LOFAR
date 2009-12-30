@@ -30,7 +30,7 @@
 
 #include <BBSKernel/ExprSet.h>
 #include <BBSKernel/VisData.h>
-#include <BBSKernel/Expr/ExprResult.h>
+#include <BBSKernel/Expr/ExprValue.h>
 
 #include <Common/Timer.h>
 

@@ -1,4 +1,4 @@
-//# ExprResult.h: The result of an expression.
+//# ExprValue.h: The result of an expression.
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_EXPRRESULT_H
-#define LOFAR_BBSKERNEL_EXPR_EXPRRESULT_H
+#ifndef LOFAR_BBSKERNEL_EXPR_EXPRVALUE_H
+#define LOFAR_BBSKERNEL_EXPR_EXPRVALUE_H
 
 // \file
 // The result of an expression.

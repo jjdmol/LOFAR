@@ -1,4 +1,4 @@
-//# DFTPS.cc: Station part of baseline phase shift.
+//# StationShift.cc: Station part of baseline phase shift for a given direction.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -22,11 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/Expr/DFTPS.h>
-#include <BBSKernel/Expr/StatUVW.h>
-#include <BBSKernel/Expr/LMN.h>
-#include <BBSKernel/Expr/Request.h>
-#include <BBSKernel/Expr/ExprResult.h>
+#include <BBSKernel/Expr/StationShift.h>
 #include <Common/LofarLogger.h>
 
 #include <casa/BasicSL/Constants.h>
@@ -38,13 +34,13 @@ namespace LOFAR
 namespace BBS
 {
 
-DFTPS::DFTPS(const Expr<Vector<3> >::ConstPtr &uvw,
+StationShift::StationShift(const Expr<Vector<3> >::ConstPtr &uvw,
     const Expr<Vector<3> >::ConstPtr &lmn)
     :   BasicBinaryExpr<Vector<3>, Vector<3>, Vector<2> >(uvw, lmn)
 {
 }
 
-const Vector<2>::View DFTPS::evaluateImpl(const Grid &grid,
+const Vector<2>::View StationShift::evaluateImpl(const Grid &grid,
     const Vector<3>::View &uvw, const Vector<3>::View &lmn) const
 {
     // Check precondition (frequency axis must be regular).
@@ -69,8 +65,8 @@ const Vector<2>::View DFTPS::evaluateImpl(const Grid &grid,
 
     // If the grid contains multiple frequencies then a "step" term is computed
     // to be able to efficiently compute the phase shift at different
-    // frequencies in the PhaseShift node (see explanation in the DFTPS header
-    // file).
+    // frequencies in the PhaseShift node (see explanation in the StationShift
+    // header file).
     if(grid[FREQ]->size() > 1)
     {
         phase0 *= dlambda;

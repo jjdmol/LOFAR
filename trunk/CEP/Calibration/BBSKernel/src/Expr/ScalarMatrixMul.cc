@@ -1,5 +1,5 @@
-//# PhaseShiftMS.cc: Phase delay due to baseline geometry with respect to
-//#     source direction.
+//# ScalarMatrixMul.cc: Multiplication of a matrix expression by a scalar
+//# expression.
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/Expr/Mul.h>
+#include <BBSKernel/Expr/ScalarMatrixMul.h>
 #include <BBSKernel/Expr/MatrixTmp.h>
 
 namespace LOFAR
@@ -31,13 +31,13 @@ namespace LOFAR
 namespace BBS
 {
 
-Mul::Mul(const Expr<Scalar>::ConstPtr &lhs,
+ScalarMatrixMul::ScalarMatrixMul(const Expr<Scalar>::ConstPtr &lhs,
     const Expr<JonesMatrix>::ConstPtr &rhs)
     :   BasicBinaryExpr<Scalar, JonesMatrix, JonesMatrix>(lhs, rhs)
 {
 }
 
-const JonesMatrix::View Mul::evaluateImpl(const Grid &grid,
+const JonesMatrix::View ScalarMatrixMul::evaluateImpl(const Grid &grid,
     const Scalar::View &lhs, const JonesMatrix::View &rhs) const
 {
     JonesMatrix::View result;
@@ -61,11 +61,6 @@ const JonesMatrix::View Mul::evaluateImpl(const Grid &grid,
     {
         result.assign(1, 1, lhs() * rhs(1, 1));
     }
-
-//    result.assign(0, 0, lhs() * rhs(0, 0));
-//    result.assign(0, 1, lhs() * rhs(0, 1));
-//    result.assign(1, 0, lhs() * rhs(1, 0));
-//    result.assign(1, 1, lhs() * rhs(1, 1));
 
     return result;
 }

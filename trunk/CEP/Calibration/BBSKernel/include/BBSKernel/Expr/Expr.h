@@ -30,8 +30,8 @@
 #include <Common/lofar_set.h>
 
 #include <BBSKernel/Expr/ExprId.h>
+#include <BBSKernel/Expr/ExprValue.h>
 #include <BBSKernel/Expr/Request.h>
-#include <BBSKernel/Expr/ExprResult.h>
 #include <BBSKernel/Expr/Cache.h>
 
 namespace LOFAR

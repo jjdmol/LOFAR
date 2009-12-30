@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_VISEXPRESSION_H
-#define LOFAR_BBSKERNEL_VISEXPRESSION_H
+#ifndef LOFAR_BBSKERNEL_VISEXPR_H
+#define LOFAR_BBSKERNEL_VISEXPR_H
 
 // \file
 // ExprSet interface to observed visibility data.
@@ -44,8 +44,8 @@ namespace BBS
 class VisExpr: public ExprSet<JonesMatrix>
 {
 public:
-    typedef shared_ptr<VisExpr>       Ptr;
-    typedef shared_ptr<const VisExpr> ConstPtr;
+    typedef shared_ptr<VisExpr>         Ptr;
+    typedef shared_ptr<const VisExpr>   ConstPtr;
 
     VisExpr(const Instrument &instrument,
       const casa::MDirection &reference, const VisData::Ptr &chunk,

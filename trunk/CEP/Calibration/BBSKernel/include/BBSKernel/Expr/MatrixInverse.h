@@ -1,6 +1,6 @@
-//# PhaseRef.h: Phase reference position and derived values.
+//# MatrixInverse.h: The inverse of an expression returning a Jones matrix.
 //#
-//# Copyright (C) 2002
+//# Copyright (C) 2005
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,15 +20,13 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_PHASEREF_H
-#define LOFAR_BBSKERNEL_EXPR_PHASEREF_H
+#ifndef LOFAR_BBS_EXPR_MATRIXINVERSE_H
+#define LOFAR_BBS_EXPR_MATRIXINVERSE_H
 
 // \file
-// Phase reference position and derived values.
+// The inverse of an expression returning a Jones matrix.
 
-#include <Common/lofar_smartptr.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MPosition.h>
+#include <BBSKernel/Expr/BasicExpr.h>
 
 namespace LOFAR
 {
@@ -38,36 +36,17 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class PhaseRef
+class MatrixInverse: public BasicUnaryExpr<JonesMatrix, JonesMatrix>
 {
 public:
-    typedef shared_ptr<PhaseRef>         Ptr;
-    typedef shared_ptr<const PhaseRef>   ConstPtr;
+    typedef shared_ptr<MatrixInverse>       Ptr;
+    typedef shared_ptr<const MatrixInverse> ConstPtr;
 
-    PhaseRef();
-    PhaseRef(const casa::MDirection &phaseRef);
-    ~PhaseRef();
+    MatrixInverse(const Expr<JonesMatrix>::ConstPtr &expr);
 
-    double getRa() const
-    { return itsRa; }
-    double getDec() const
-    { return itsDec; }
-    double getSinDec() const
-    { return itsSinDec; }
-    double getCosDec() const
-    { return itsCosDec; }
-    
-    const casa::MDirection &getPhaseRef() const
-    { return itsPhaseRef; }
-
-private:
-    double  itsRa;
-    double  itsDec;
-    double  itsSinDec;
-    double  itsCosDec;
-
-    casa::MDirection    itsPhaseRef;
-    casa::MPosition     itsArrayRef;
+protected:
+    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
+        const JonesMatrix::View &arg0) const;
 };
 
 // @}

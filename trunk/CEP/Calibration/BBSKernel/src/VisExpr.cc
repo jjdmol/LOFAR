@@ -23,16 +23,16 @@
 #include <lofar_config.h>
 #include <BBSKernel/VisExpr.h>
 
-#include <BBSKernel/Expr/DFTPS.h>
+#include <BBSKernel/Expr/StationShift.h>
 #include <BBSKernel/Expr/ExprParm.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/ExprVisData.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/LMN.h>
-#include <BBSKernel/Expr/Mul.h>
+#include <BBSKernel/Expr/ScalarMatrixMul.h>
 #include <BBSKernel/Expr/PhaseShift.h>
 #include <BBSKernel/Expr/Resampler.h>
-#include <BBSKernel/Expr/StatUVW.h>
+#include <BBSKernel/Expr/StationUVW.h>
 #include <BBSKernel/Exceptions.h>
 
 #include <measures/Measures/MeasConvert.h>
@@ -91,10 +91,10 @@ VisExpr::VisExpr(const Instrument &instrument,
             const casa::MPosition &position =
                 instrument[stations[i]].position();
             Expr<Vector<3> >::Ptr exprUVW =
-                Expr<Vector<3> >::Ptr(new StatUVW(position,
+                Expr<Vector<3> >::Ptr(new StationUVW(position,
                     instrument.position(), reference));
-            exprStationShift(i) = Expr<Vector<2> >::Ptr(new DFTPS(exprUVW,
-                exprTargetLMN));
+            exprStationShift(i) =
+                Expr<Vector<2> >::Ptr(new StationShift(exprUVW, exprTargetLMN));
         }
     }
 
@@ -123,7 +123,8 @@ VisExpr::VisExpr(const Instrument &instrument,
                 exprStationShift(lhs)));
 
             // Phase shift the source coherence.
-            exprVisData = Expr<JonesMatrix>::Ptr(new Mul(shift, exprVisData));
+            exprVisData = Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(shift,
+                exprVisData));
         }
 
         if(itsResampleFlag)

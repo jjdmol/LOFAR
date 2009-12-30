@@ -26,12 +26,11 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/BasicExpr.h \
 	Expr/Cache.h \
 	Expr/ConditionNumber.h \
-	Expr/DFTPS.h \
 	Expr/Expr.h \
 	Expr/ExprId.h \
 	Expr/ExprAdaptors.h \
 	Expr/ExprParm.h \
-	Expr/ExprResult.h \
+	Expr/ExprValue.h \
 	Expr/ExprValueView.h \
 	Expr/ExprValueIterator.h \
 	Expr/ExprVisData.h \
@@ -41,13 +40,12 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/GaussianCoherence.h \
 	Expr/GaussianSource.h \
 	Expr/HamakerDipole.h \
-	Expr/JonesInvert.h \
-	Expr/JonesVisData.h \
 	Expr/Literal.h \
 	Expr/LMN.h \
 	Expr/Matrix.h \
 	Expr/MatrixComplexArr.h \
 	Expr/MatrixComplexSca.h \
+	Expr/MatrixInverse.h \
 	Expr/MatrixMul2.h \
 	Expr/MatrixMul3.h \
 	Expr/MatrixRealArr.h \
@@ -56,18 +54,19 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/MatrixSum.h \
 	Expr/MatrixTmp.h \
 	Expr/MergeFlags.h \
-	Expr/MIM.h \
-	Expr/Mul.h \
 	Expr/PhaseShift.h \
 	Expr/PiercePoint.h \
 	Expr/PointCoherence.h \
 	Expr/PointSource.h \
+	Expr/PolynomialPhaseScreen.h \
 	Expr/RefCounting.h \
 	Expr/Request.h \
 	Expr/Resampler.h \
+	Expr/ScalarMatrixMul.h \
 	Expr/Source.h \
 	Expr/SpectralIndex.h \
-	Expr/StatUVW.h \
+	Expr/StationShift.h \
+	Expr/StationUVW.h \
 	Expr/ValueSet.h \
 	Expr/YatawattaDipole.h
 

@@ -23,7 +23,7 @@ dist_coeff_DATA = Contrib/JPH_DipoleBeam/element_beam_HAMAKER_LBA.coeff \
 libbbskernel_la_SOURCES = Package__Version.cc \
 	Equator.cc \
 	Evaluator.cc \
-	Instrument.cc \
+    Instrument.cc \
 	MeasurementAIPS.cc \
 	Model.cc \
 	ModelConfig.cc \
@@ -39,11 +39,10 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/AzEl.cc \
 	Expr/Cache.cc \
 	Expr/ConditionNumber.cc \
-	Expr/DFTPS.cc \
 	Expr/Expr.cc \
 	Expr/ExprAdaptors.cc \
 	Expr/ExprParm.cc \
-	Expr/ExprResult.cc \
+	Expr/ExprValue.cc \
 	Expr/ExprValueView.cc \
 	Expr/ExprValueIterator.cc \
 	Expr/ExprVisData.cc \
@@ -52,13 +51,12 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/GaussianCoherence.cc \
 	Expr/GaussianSource.cc \
 	Expr/HamakerDipole.cc \
-	Expr/JonesInvert.cc \
-	Expr/JonesVisData.cc \
 	Expr/Literal.cc \
 	Expr/LMN.cc \
 	Expr/Matrix.cc \
 	Expr/MatrixComplexArr.cc \
 	Expr/MatrixComplexSca.cc \
+	Expr/MatrixInverse.cc \
 	Expr/MatrixMul2.cc \
 	Expr/MatrixMul3.cc \
 	Expr/MatrixRealArr.cc \
@@ -66,17 +64,18 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/MatrixRep.cc \
 	Expr/MatrixSum.cc \
 	Expr/MatrixTmp.cc \
-	Expr/MIM.cc \
-	Expr/Mul.cc \
 	Expr/PhaseShift.cc \
 	Expr/PiercePoint.cc \
 	Expr/PointCoherence.cc \
 	Expr/PointSource.cc \
+	Expr/PolynomialPhaseScreen.cc \
 	Expr/Request.cc \
 	Expr/Resampler.cc \
+	Expr/ScalarMatrixMul.cc \
 	Expr/Source.cc \
 	Expr/SpectralIndex.cc \
-	Expr/StatUVW.cc \
+	Expr/StationShift.cc \
+	Expr/StationUVW.cc \
 	Expr/ValueSet.cc \
 	Expr/YatawattaDipole.cc
 

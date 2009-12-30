@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/Expr/ExprValueIterator.h>
-#include <BBSKernel/Expr/ExprResult.h>
+#include <BBSKernel/Expr/ExprValue.h>
 
 namespace LOFAR
 {
