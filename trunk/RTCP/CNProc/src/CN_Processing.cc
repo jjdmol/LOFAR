@@ -28,6 +28,7 @@
 #include <Common/Timer.h>
 #include <Interface/CN_Configuration.h>
 #include <Interface/CN_Mapping.h>
+#include <FCNP_ClientStream.h>
 #include <complex>
 #include <cmath>
 #include <iomanip>
@@ -61,9 +62,10 @@ CN_Processing_Base::~CN_Processing_Base()
 {
 }
 
-template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream *str, const LocationInfo &locationInfo)
+template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream *str, Stream *(*createStream)(unsigned), const LocationInfo &locationInfo)
 :
   itsStream(str),
+  itsCreateStream(createStream),
   itsLocationInfo(locationInfo),
   itsPlan(0),
 #if defined HAVE_MPI
@@ -171,6 +173,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   // create the arenas and allocate the data sets
   itsMapping.allocate();
 
+  itsOutputStreams.resize(itsPlan->nrOutputTypes());
+  for( unsigned i = 0; i < itsPlan->nrOutputTypes(); i++ ) {
+      itsOutputStreams[i] = itsCreateStream(i + 1);
+  }
+
   if (itsHasPhaseTwo) {
     std::vector<unsigned> usedCoresInPset  = configuration.usedCoresInPset();
     unsigned		  usedCoresPerPset = usedCoresInPset.size();
@@ -202,6 +209,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 							myCoreInPset, itsLocationInfo, phaseOnePsets, phaseTwoPsets );
   }
 #endif // HAVE_MPI
+
 }
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
@@ -350,7 +358,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::correlate()
   computeTimer.stop();
 }
 
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( StreamableData *outputData )
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( unsigned outputNr, StreamableData *outputData )
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
@@ -359,7 +367,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( Str
 
   static NSTimer writeTimer("send timer", true, true);
   writeTimer.start();
-  outputData->write(itsStream, false);
+  outputData->write(itsOutputStreams[outputNr], false);
   writeTimer.stop();
 }
 
@@ -439,11 +447,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
     }
 
     // send all requested outputs
-    for( unsigned i = 0; i < itsPlan->plan.size(); i++ ) {
+    for( unsigned i = 0, outputNr = 0; i < itsPlan->plan.size(); i++ ) {
       const ProcessingPlan::planlet &p = itsPlan->plan[i];
 
       if( p.output ) {
-        sendOutput( p.source );
+        sendOutput( outputNr++, p.source );
       }
     }
   } 
@@ -498,6 +506,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
     delete itsCoherentStokes;
     delete itsIncoherentStokes;
   }
+
+  for (unsigned i = 0; i < itsOutputStreams.size(); i++) {
+    delete itsOutputStreams[i];
+  }
+  itsOutputStreams.clear();
 
   delete itsPlan;
 }

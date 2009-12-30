@@ -134,17 +134,36 @@ static const unsigned	     nrCNcoresInPset = 64; // TODO: how to figure out the 
 static pthread_mutex_t	     allocationMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t	     reevaluate	     = PTHREAD_COND_INITIALIZER;
 
+#if defined HAVE_VALGRIND || !defined HAVE_FCNP // FIXME
+static const std::string     streamType = "TCP";
+#else
+static const std::string     streamType = "FCNP";
+#endif
 
 #if defined HAVE_FCNP && defined __PPC__
 static bool	   fcnp_inited;
 #endif
 
-
-
-static void createAllCNstreams(const std::string &streamType)
+static Stream *createCNstream(unsigned core, unsigned channel)
 {
 #if defined HAVE_FCNP && defined __PPC__
-  if (streamType == "FCNP") {
+  if (streamType == "FCNP")
+    return new FCNP_ServerStream(core, channel);
+  else
+#endif
+  if (streamType == "NULL")
+    return new NullStream;
+  else if (streamType == "TCP")
+    return new SocketStream("127.0.0.1", 5000 + core + 1000 * channel, SocketStream::TCP, SocketStream::Server);
+  else
+    THROW(IONProcException, "unknown Stream type between ION and CN");
+}
+
+
+static void createAllCNstreams()
+{
+#if defined HAVE_FCNP && defined __PPC__
+  if (streamType == "FCNP" && !fcnp_inited) {
     FCNP_ION::init(true);
     fcnp_inited = true;
   }
@@ -153,18 +172,7 @@ static void createAllCNstreams(const std::string &streamType)
   allCNstreams.resize(nrCNcoresInPset);
 
   for (unsigned core = 0; core < nrCNcoresInPset; core ++) {
-#if defined HAVE_FCNP && defined __PPC__
-    if (streamType == "FCNP")
-      allCNstreams[core] = new FCNP_ServerStream(core, 0);
-    else
-#endif
-
-    if (streamType == "NULL")
-      allCNstreams[core] = new NullStream;
-    else if (streamType == "TCP")
-      allCNstreams[core] = new SocketStream("127.0.0.1", 5000 + core, SocketStream::TCP, SocketStream::Server);
-    else
-      THROW(IONProcException, "unknown Stream type between ION and CN");
+    allCNstreams[core] = createCNstream(core, 0);
   }
 }
 
@@ -416,7 +424,6 @@ void Job::jobThread()
 
   deallocateResources();
   LOG_DEBUG_STR("resources of job " << itsObservationID << " deallocated");
-  delete this;
 }
 
 
@@ -510,7 +517,7 @@ template <typename SAMPLE_TYPE> void Job::toCNthread()
 
   beamletBufferToComputeNode.preprocess(&itsParset);
 	
-  for (unsigned run = 0; run < itsNrRuns; run ++)
+  for (unsigned run = 0; !itsToCNthread->stop && run < itsNrRuns; run ++)
     beamletBufferToComputeNode.process();
 
   beamletBufferToComputeNode.postprocess();
@@ -571,7 +578,7 @@ void Job::fromCNthread()
           continue;
       }
 
-      outputSections[output] = new OutputSection(&itsParset, list, maxlistsize, output, itsCNstreams, output == nrOutputTypes - 1);
+      outputSections[output] = new OutputSection(&itsParset, list, maxlistsize, output, &createCNstream );
     }
 
     // destructor of OutputSections will wait for threads to complete
@@ -620,12 +627,7 @@ void master_thread(int argc, char **argv)
       exit(1);
     }
 
-    //createAllCNstreams(parset.getTransportType("OLAP.OLAP_Conn.IONProc_CNProc"));
-#if defined HAVE_VALGRIND // FIXME
-    createAllCNstreams("TCP");
-#else
-    createAllCNstreams("FCNP");
-#endif
+    createAllCNstreams();
 
     pthread_mutex_lock(&allocationMutex);
 

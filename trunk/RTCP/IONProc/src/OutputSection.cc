@@ -51,19 +51,18 @@ using boost::format;
 namespace LOFAR {
 namespace RTCP {
 
-OutputSection::OutputSection(const Parset *ps, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, const std::vector<Stream *> &streamsFromCNs, bool lastOutput)
+OutputSection::OutputSection(const Parset *ps, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream *(*createStream)(unsigned,unsigned))
 :
   itsParset(ps),
   itsItemList(itemList),
-  itsNrUsedCores(nrUsedCores),
   itsOutputType(outputType),
+  itsNrUsedCores(nrUsedCores),
   itsNrComputeCores(ps->nrCoresPerPset()),
   itsCurrentComputeCore(0),
   itsRealTime(ps->realTime()),
   itsPlan(0),
-  itsStreamsFromCNs(streamsFromCNs),
-  thread(0),
-  lastOutput(lastOutput)
+  itsStreamsFromCNs(ps->nrCoresPerPset(),0),
+  thread(0)
 {
   itsDroppedCount.resize(itsItemList.size());
 
@@ -96,6 +95,11 @@ OutputSection::OutputSection(const Parset *ps, std::vector<unsigned> &itemList, 
     itsOutputThreads.push_back(new OutputThread(*itsParset, itsItemList[i], itsOutputType, dataTemplate));
   }
 
+  // create the streams to the compute cores
+  for (unsigned core = 0; core < itsNrComputeCores; core++) {
+    itsStreamsFromCNs[core] = createStream(core, outputType + 1);
+  }
+
   itsCurrentIntegrationStep = 0;
   itsSequenceNumber  	    = 0;
   itsTmpSum                 = dataTemplate;
@@ -115,11 +119,14 @@ OutputSection::OutputSection(const Parset *ps, std::vector<unsigned> &itemList, 
 
 OutputSection::~OutputSection()
 {
+  // WAIT for our thread to finish
   delete thread;
 
   for (unsigned i = 0; i < itsItemList.size(); i++ ) {
     notDroppingData(i); // for final warning message
       
+
+    // STOP our output threads  
     delete itsOutputThreads[i];
   }
 
@@ -155,30 +162,11 @@ void OutputSection::mainLoop()
 {
   const unsigned nrRuns = static_cast<unsigned>(ceil((itsParset->stopTime() - itsParset->startTime()) / itsParset->CNintegrationTime()));
 
-  static pthread_mutex_t mutex[64];
-  static pthread_cond_t  condition[64];
-  static unsigned computeCoreStates[64];
-
-  if( itsOutputType == 0 ) {
-    for( unsigned i = 0; i < 64; i++ ) {
-      pthread_mutex_init( &mutex[i], 0 );
-      pthread_cond_init( &condition[i], 0 );
-      computeCoreStates[i] = 0;
-    }
-  }
-
   for( unsigned r = 0; r < nrRuns && !thread->stop; r++ ) {
     // process data from current core, even if we don't have a subband for this
     // core (to stay in sync with other psets).
     for (unsigned i = 0; i < itsNrUsedCores; i++ ) {
       // TODO: make sure that there are more free buffers than subbandsPerPset
-
-      // wait for our turn for this core
-      pthread_mutex_lock(&mutex[itsCurrentComputeCore]);
-      while( computeCoreStates[itsCurrentComputeCore] != itsOutputType ) {
-       pthread_cond_wait(&condition[itsCurrentComputeCore], &mutex[itsCurrentComputeCore]);
-      }
-      pthread_mutex_unlock(&mutex[itsCurrentComputeCore]);
 
       if (i < itsItemList.size()) {
         OutputThread *outputThread = itsOutputThreads[i];
@@ -210,12 +198,6 @@ void OutputSection::mainLoop()
         }
       }  
 
-      // signal next output that we're done with this one
-      pthread_mutex_lock(&mutex[itsCurrentComputeCore]);
-      computeCoreStates[itsCurrentComputeCore] = lastOutput ? 0 : itsOutputType + 1;
-      pthread_cond_broadcast(&condition[itsCurrentComputeCore]);
-      pthread_mutex_unlock(&mutex[itsCurrentComputeCore]);
-      
       if (++ itsCurrentComputeCore == itsNrComputeCores) {
         itsCurrentComputeCore = 0;
       }

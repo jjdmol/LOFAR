@@ -74,6 +74,26 @@ void terminate_with_backtrace()
 
 #endif
 
+static Stream *createIONstream( unsigned channel )
+{
+#if 1 && defined HAVE_FCNP && defined HAVE_BGP_CN && !defined VALGRIND
+    /* preferred */
+    FCNP_CN::init();
+    return new FCNP_ClientStream(channel);
+#elif 1
+    LocationInfo locationInfo;
+
+    /* used by default for !HAVE_FCNP && !HAVE_BGP */ 
+    usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
+
+    return new SocketStream("127.0.0.1", 5000 + locationInfo.rankInPset() + 1000 * channel, SocketStream::TCP, SocketStream::Client);
+#elif 0
+    /* used for testing */
+    return new NullStream;
+#else
+    THROW(CNProcException, "unknown Stream type between ION and CN");
+#endif    
+}
 
 int main(int argc, char **argv)
 {
@@ -114,22 +134,7 @@ int main(int argc, char **argv)
 
     LOG_DEBUG("creating connection to ION ...");
     
-    Stream *ionStream;
-#if 1 && defined HAVE_FCNP && defined HAVE_BGP_CN
-    /* preferred */
-    FCNP_CN::init();
-    ionStream = new FCNP_ClientStream(0);
-#elif 1
-    /* used by default for !HAVE_FCNP && !HAVE_BGP */ 
-    usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
-
-    ionStream = new SocketStream("127.0.0.1", 5000 + locationInfo.rankInPset(), SocketStream::TCP, SocketStream::Client);
-#elif 0
-    /* used for testing */
-    ionStream = new NullStream;
-#else
-    THROW(CNProcException, "unknown Stream type between ION and CN");
-#endif    
+    Stream *ionStream = createIONstream(0);
 
     LOG_DEBUG("connection successful");
 
@@ -144,13 +149,13 @@ int main(int argc, char **argv)
 	case CN_Command::PREPROCESS :	configuration.read(ionStream);
 
 					switch (configuration.nrBitsPerSample()) {
-					  case 4:  proc = new CN_Processing<i4complex>(ionStream, locationInfo);
+					  case 4:  proc = new CN_Processing<i4complex>(ionStream, &createIONstream, locationInfo);
 						   break;
 
-					  case 8:  proc = new CN_Processing<i8complex>(ionStream, locationInfo);
+					  case 8:  proc = new CN_Processing<i8complex>(ionStream, &createIONstream, locationInfo);
 						   break;
 
-					  case 16: proc = new CN_Processing<i16complex>(ionStream, locationInfo);
+					  case 16: proc = new CN_Processing<i16complex>(ionStream, &createIONstream, locationInfo);
 						   break;
 					}
 

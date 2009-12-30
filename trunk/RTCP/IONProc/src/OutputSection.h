@@ -36,7 +36,7 @@ namespace RTCP {
 class OutputSection
 {
   public:
-    OutputSection(const Parset *ps, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, const std::vector<Stream *> &streamsFromCNs, bool lastOutput);
+    OutputSection(const Parset *ps, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream *(*createStream)(unsigned,unsigned));
     ~OutputSection();
 
   private:
@@ -66,7 +66,7 @@ class OutputSection
     // the main plan, also holds temporary results
     CN_ProcessingPlan<>         *itsPlan;
 
-    const std::vector<Stream *> &itsStreamsFromCNs;
+    std::vector<Stream *>       itsStreamsFromCNs;
 
     Thread                      *thread;
 
