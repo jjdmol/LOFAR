@@ -92,11 +92,15 @@ private:
     Expr<Scalar>::Ptr makeSpectralIndexExpr(const SourceInfo &source,
         const string &stokesParm);
 
-    void makeStationUVW();
+//    void makeStationUVW();
+
+    casa::Vector<Expr<Vector<3> >::Ptr>
+        makeUVWExpr(const vector<unsigned int> &stations);
 
     casa::Matrix<Expr<Vector<2> >::Ptr>
         makeStationShiftExpr(const vector<unsigned int> &stations,
-            const vector<Source::Ptr> &sources) const;
+            const vector<Source::Ptr> &sources,
+            const casa::Vector<Expr<Vector<3> >::Ptr> &exprUVW) const;
 
     casa::Vector<Expr<JonesMatrix>::Ptr>
         makeBandpassExpr(const vector<unsigned int> &stations);
@@ -117,17 +121,17 @@ private:
     casa::Matrix<Expr<JonesMatrix>::Ptr>
         makeBeamExpr(const BeamConfig &config,
             const vector<unsigned int> &stations,
-            const casa::Matrix<Expr<Vector<2> >::Ptr> &azel);
+            const casa::Matrix<Expr<Vector<2> >::Ptr> &exprAzEl);
 
 //    casa::Matrix<Expr<JonesMatrix>::Ptr>
 //        makeDipoleBeamExpr(const ModelConfig &config,
 //            const vector<unsigned int> &stations,
-//            const casa::Matrix<Expr<Vector<2> >::Ptr> &azel);
+//            const casa::Matrix<Expr<Vector<2> >::Ptr> &exprAzEl);
 
     casa::Matrix<Expr<JonesMatrix>::Ptr>
         makeIonosphereExpr(const IonosphereConfig &config,
             const vector<unsigned int> &stations,
-            const casa::Matrix<Expr<Vector<2> >::Ptr> &azel);
+            const casa::Matrix<Expr<Vector<2> >::Ptr> &exprAzEl);
 
     Expr<JonesMatrix>::Ptr corrupt(Expr<JonesMatrix>::Ptr &accumulator,
         Expr<JonesMatrix>::Ptr &effect);
@@ -141,7 +145,7 @@ private:
 
     vector<Expr<JonesMatrix>::Ptr>          itsExpr;
     map<unsigned int, ExprParm::Ptr>        itsParms;
-    vector<Expr<Vector<3> >::Ptr>           itsStationUVW;
+//    vector<Expr<Vector<3> >::Ptr>           itsStationUVW;
 };
 
 // @}

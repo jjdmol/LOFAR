@@ -1,4 +1,4 @@
-//# ExprResult.cc: Result of an expression
+//# ExprValue.cc: The result of an expression.
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/Expr/ExprResult.h>
+#include <BBSKernel/Expr/ExprValue.h>
 
 namespace LOFAR
 {

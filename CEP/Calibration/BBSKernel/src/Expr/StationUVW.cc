@@ -48,8 +48,8 @@ StationUVW::StationUVW(const casa::MPosition &position,
 {
 }
 
-const Vector<3> StationUVW::evaluateExpr(const Request &request, Cache &cache)
-    const
+const Vector<3> StationUVW::evaluateExpr(const Request &request, Cache &cache,
+    unsigned int grid) const
 {
     // Get the station position relative to the array reference position
     // (to keep values small).
@@ -73,7 +73,8 @@ const Vector<3> StationUVW::evaluateExpr(const Request &request, Cache &cache)
     // Allocate space for the result.
     // TODO: This is a hack! The Matrix class does not support 1xN or Nx1
     // "matrices".
-    const size_t nTime = request[TIME]->size();
+    Axis::ShPtr timeAxis(request[grid][TIME]);
+    const size_t nTime = timeAxis->size();
 
     Matrix U, V, W;
     double *u = U.setDoubleFormat(1, nTime);
@@ -83,7 +84,7 @@ const Vector<3> StationUVW::evaluateExpr(const Request &request, Cache &cache)
     // Compute UVW coordinates.
     for(size_t i = 0; i < nTime; ++i)
     {
-        const double time = request[TIME]->center(i);
+        const double time = timeAxis->center(i);
 
         qEpoch.setValue(time);
         mEpoch.set(qEpoch);

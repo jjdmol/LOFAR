@@ -22,7 +22,6 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ExprResult.h>
 
 namespace LOFAR
 {

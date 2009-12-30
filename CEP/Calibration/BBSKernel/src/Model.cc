@@ -29,7 +29,6 @@
 
 #include <BBSKernel/Expr/ArrayFactor.h>
 #include <BBSKernel/Expr/AzEl.h>
-#include <BBSKernel/Expr/DFTPS.h>
 #include <BBSKernel/Expr/ConditionNumber.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/ExprVisData.h>
@@ -37,24 +36,25 @@
 #include <BBSKernel/Expr/GaussianCoherence.h>
 #include <BBSKernel/Expr/GaussianSource.h>
 #include <BBSKernel/Expr/HamakerDipole.h>
-#include <BBSKernel/Expr/JonesInvert.h>
-#include <BBSKernel/Expr/JonesVisData.h>
+//#include <BBSKernel/Expr/JonesVisData.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/LMN.h>
+#include <BBSKernel/Expr/MatrixInverse.h>
 #include <BBSKernel/Expr/MatrixMul2.h>
 #include <BBSKernel/Expr/MatrixMul3.h>
 #include <BBSKernel/Expr/MatrixSum.h>
 #include <BBSKernel/Expr/MergeFlags.h>
-#include <BBSKernel/Expr/MIM.h>
-#include <BBSKernel/Expr/Mul.h>
 #include <BBSKernel/Expr/PhaseShift.h>
 #include <BBSKernel/Expr/PiercePoint.h>
 #include <BBSKernel/Expr/PointCoherence.h>
 #include <BBSKernel/Expr/PointSource.h>
+#include <BBSKernel/Expr/PolynomialPhaseScreen.h>
 #include <BBSKernel/Expr/Request.h>
+#include <BBSKernel/Expr/ScalarMatrixMul.h>
 #include <BBSKernel/Expr/SpectralIndex.h>
+#include <BBSKernel/Expr/StationShift.h>
 #include <BBSKernel/Expr/StationUVW.h>
-#include <BBSKernel/Expr/StatUVW.h>
+//#include <BBSKernel/Expr/StatUVW.h>
 #include <BBSKernel/Expr/YatawattaDipole.h>
 
 #include <Common/LofarLogger.h>
@@ -92,7 +92,7 @@ Model::Model(const Instrument &instrument, const SourceDB &sourceDb,
         itsReferenceFreq(referenceFreq)
 {
     // Make station UVW expression for all stations.
-    makeStationUVW();
+//    makeStationUVW();
 }
 
 void Model::clear()
@@ -197,9 +197,12 @@ void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
     const bool haveDependentEffects = config.useDirectionalGain()
         || config.useBeam() || config.useIonosphere();
 
+    // Create an UVW expression per station.
+    casa::Vector<Expr<Vector<3> >::Ptr> exprUVW = makeUVWExpr(stations);
+
     // Create a station shift expression per (station, source) combination.
     casa::Matrix<Expr<Vector<2> >::Ptr> exprStationShift =
-        makeStationShiftExpr(stations, sources);
+        makeStationShiftExpr(stations, sources, exprUVW);
 
     // Create a direction dependent gain expression per (station, source)
     // combination.
@@ -224,7 +227,8 @@ void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
         exprBeam = makeBeamExpr(config.getBeamConfig(), stations, exprAzEl);
     }
 
-    // Create a MIM expression per (station, source) combination.
+    // Create a PolynomialPhaseScreen expression per (station, source)
+    // combination.
     casa::Matrix<Expr<JonesMatrix>::Ptr> exprIonosphere;
     if(config.useIonosphere())
     {
@@ -302,8 +306,11 @@ void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
                         (sources[j]);
 
                 term = Expr<JonesMatrix>::Ptr(new GaussianCoherence(source,
-                    itsStationUVW[baseline.first],
-                    itsStationUVW[baseline.second]));
+                    exprUVW(lhs), exprUVW(rhs)));
+
+//                term = Expr<JonesMatrix>::Ptr(new GaussianCoherence(source,
+//                    itsStationUVW[baseline.first],
+//                    itsStationUVW[baseline.second]));
             }
             else
             {
@@ -315,7 +322,7 @@ void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
                 exprStationShift(j, rhs)));
 
             // Phase shift the source coherence.
-            term = Expr<JonesMatrix>::Ptr(new Mul(shift, term));
+            term = Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(shift, term));
 
             // Apply direction dependent effects.
             if(haveDependentEffects)
@@ -435,7 +442,8 @@ void Model::makeInverseExpr(const ModelConfig &config,
             exprBeam = makeBeamExpr(config.getBeamConfig(), stations, exprAzEl);
         }
 
-        // Create a MIM expression per (station, source) combination.
+        // Create a PolynomialPhaseScreen expression per (station, source)
+        // combination.
         casa::Matrix<Expr<JonesMatrix>::Ptr> exprIonosphere;
         if(config.useIonosphere())
         {
@@ -486,7 +494,7 @@ void Model::makeInverseExpr(const ModelConfig &config,
             }
 
             transform(i) =
-                Expr<JonesMatrix>::Ptr(new JonesInvert(transform(i)));
+                Expr<JonesMatrix>::Ptr(new MatrixInverse(transform(i)));
         }
     }
 
@@ -507,7 +515,8 @@ void Model::makeInverseExpr(const ModelConfig &config,
 
         ASSERT(lhs < stations.size() && rhs < stations.size());
 
-        Expr<JonesMatrix>::Ptr exprVisData(new JonesVisData(chunk, baseline));
+//        Expr<JonesMatrix>::Ptr exprVisData(new JonesVisData(chunk, baseline));
+        Expr<JonesMatrix>::Ptr exprVisData(new ExprVisData(chunk, baseline));
 
         if(haveIndependentEffects || haveDependentEffects)
         {
@@ -828,19 +837,35 @@ Expr<Scalar>::Ptr Model::makeSpectralIndexExpr(const SourceInfo &source,
         coeff.begin(), coeff.end()));
 }
 
-void Model::makeStationUVW()
+//void Model::makeStationUVW()
+//{
+//    itsStationUVW.resize(itsInstrument.size());
+//    for(size_t i = 0; i < itsStationUVW.size(); ++i)
+//    {
+//        itsStationUVW[i].reset(new StatUVW(itsInstrument[i].position(),
+//            itsInstrument.position(), itsPhaseReference));
+//    }
+//}
+
+casa::Vector<Expr<Vector<3> >::Ptr>
+Model::makeUVWExpr(const vector<unsigned int> &stations)
 {
-    itsStationUVW.resize(itsInstrument.size());
-    for(size_t i = 0; i < itsStationUVW.size(); ++i)
+    casa::Vector<Expr<Vector<3> >::Ptr> expr(stations.size());
+
+    for(unsigned int i = 0; i < stations.size(); ++i)
     {
-        itsStationUVW[i].reset(new StatUVW(itsInstrument[i].position(),
+        const Station &station = itsInstrument[stations[i]];
+        expr(i) = StationUVW::Ptr(new StationUVW(station.position(),
             itsInstrument.position(), itsPhaseReference));
     }
+
+    return expr;
 }
 
 casa::Matrix<Expr<Vector<2> >::Ptr>
 Model::makeStationShiftExpr(const vector<unsigned int> &stations,
-    const vector<Source::Ptr> &sources) const
+    const vector<Source::Ptr> &sources,
+    const casa::Vector<Expr<Vector<3> >::Ptr> &exprUVW) const
 {
     casa::Vector<LMN::Ptr> exprLMN(sources.size());
     for(unsigned int i = 0; i < sources.size(); ++i)
@@ -854,16 +879,18 @@ Model::makeStationShiftExpr(const vector<unsigned int> &stations,
     {
         for(unsigned int j = 0; j < sources.size(); ++j)
         {
-            // NOTE: itsStationUVW is indexed on station number, not used
-            // station index (hence the look-up through the provided used
-            // station list).
             expr(j, i) =
-                Expr<Vector<2> >::Ptr(new DFTPS(itsStationUVW[stations[i]],
-                    exprLMN(j)));
+                Expr<Vector<2> >::Ptr(new StationShift(exprUVW(i), exprLMN(j)));
         }
     }
 
     return expr;
+//            // NOTE: itsStationUVW is indexed on station number, not used
+//            // station index (hence the look-up through the provided used
+//            // station list).
+//            expr(j, i) =
+//                Expr<Vector<2> >::Ptr(new StationShift(itsStationUVW[stations[i]],
+//                    exprLMN(j)));
 }
 
 casa::Vector<Expr<JonesMatrix>::Ptr>
@@ -1022,13 +1049,13 @@ Model::makeAzElExpr(const vector<unsigned int> &stations,
 //casa::Matrix<Expr<JonesMatrix>::Ptr>
 //Model::makeDipoleBeamExpr(const ModelConfig &config,
 //    const vector<unsigned int> &stations,
-//    const casa::Matrix<Expr<Vector<2> >::Ptr> &azel)
+//    const casa::Matrix<Expr<Vector<2> >::Ptr> &exprAzEl)
 //{
 //    ASSERT(config.useBeam() && config.getBeamType()
 //        != ModelConfig::UNKNOWN_BEAM_TYPE);
 
-//    const unsigned int nSources = azel.shape()(0);
-//    const unsigned int nStations = azel.shape()(1);
+//    const unsigned int nSources = exprAzEl.shape()(0);
+//    const unsigned int nStations = exprAzEl.shape()(1);
 //    ASSERT(nStations == stations.size());
 
 //    // Allocate result.
@@ -1057,7 +1084,7 @@ Model::makeAzElExpr(const vector<unsigned int> &stations,
 //                for(unsigned int j = 0; j < nSources; ++j)
 //                {
 //                    expr(j, i) = Expr<JonesMatrix>::Ptr(new HamakerDipole(coeff,
-//                        azel(j, i), orientation));
+//                        exprAzEl(j, i), orientation));
 //                }
 //            }
 //            break;
@@ -1086,7 +1113,7 @@ Model::makeAzElExpr(const vector<unsigned int> &stations,
 //                {
 //                    expr(j, i) = Expr<JonesMatrix>::Ptr
 //                        (new YatawattaDipole(beamConfig.getModuleTheta(),
-//                            beamConfig.getModulePhi(), 1.0, azel(j, i),
+//                            beamConfig.getModulePhi(), 1.0, exprAzEl(j, i),
 //                            orientation));
 //                }
 //            }
@@ -1103,12 +1130,12 @@ Model::makeAzElExpr(const vector<unsigned int> &stations,
 casa::Matrix<Expr<JonesMatrix>::Ptr>
 Model::makeBeamExpr(const BeamConfig &config,
     const vector<unsigned int> &stations,
-    const casa::Matrix<Expr<Vector<2> >::Ptr> &azel)
+    const casa::Matrix<Expr<Vector<2> >::Ptr> &exprAzEl)
 {
     ASSERT(config.getElementType() != BeamConfig::UNKNOWN);
 
-    const unsigned int nDirections = azel.shape()(0);
-    const unsigned int nStations = azel.shape()(1);
+    const unsigned int nDirections = exprAzEl.shape()(0);
+    const unsigned int nStations = exprAzEl.shape()(1);
     ASSERT(nStations == stations.size());
 
     LOG_INFO_STR("Using element type: "
@@ -1144,7 +1171,7 @@ Model::makeBeamExpr(const BeamConfig &config,
                 {
                     exprElement(j, i) =
                         Expr<JonesMatrix>::Ptr(new HamakerDipole(coeff,
-                            azel(j, i), orientation));
+                            exprAzEl(j, i), orientation));
                 }
             }
             break;
@@ -1180,7 +1207,7 @@ Model::makeBeamExpr(const BeamConfig &config,
                 {
                     exprElement(j, i) =
                         Expr<JonesMatrix>::Ptr(new YatawattaDipole(moduleTheta,
-                            modulePhi, azel(j, i), orientation));
+                            modulePhi, exprAzEl(j, i), orientation));
                 }
             }
             break;
@@ -1215,7 +1242,7 @@ Model::makeBeamExpr(const BeamConfig &config,
 
         for(unsigned int j = 0; j < nDirections; ++j)
         {
-            Expr<JonesMatrix>::Ptr exprArrayFactor(new ArrayFactor(azel(j, i),
+            Expr<JonesMatrix>::Ptr exprArrayFactor(new ArrayFactor(exprAzEl(j, i),
                 refAzEl, antennaConfig, itsReferenceFreq));
 
             expr(j, i) = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprArrayFactor,
@@ -1229,7 +1256,7 @@ Model::makeBeamExpr(const BeamConfig &config,
 casa::Matrix<Expr<JonesMatrix>::Ptr>
 Model::makeIonosphereExpr(const IonosphereConfig &config,
     const vector<unsigned int> &stations,
-    const casa::Matrix<Expr<Vector<2> >::Ptr> &azel)
+    const casa::Matrix<Expr<Vector<2> >::Ptr> &exprAzEl)
 {
     // Use station 0 as reference position on earth.
     // TODO: Is station 0 a sensible choice for the reference position? Should
@@ -1267,9 +1294,10 @@ Model::makeIonosphereExpr(const IonosphereConfig &config,
         }
     }
 
-    // Create a MIM expression per (station, source) combination.
-    unsigned int nSources = azel.shape()(0);
-    unsigned int nStations = azel.shape()(1);
+    // Create a PolynomialPhaseScreen expression per (station, source)
+    // combination.
+    unsigned int nSources = exprAzEl.shape()(0);
+    unsigned int nStations = exprAzEl.shape()(1);
     ASSERT(nStations == stations.size());
 
     casa::Matrix<Expr<JonesMatrix>::Ptr> expr(nSources, nStations);
@@ -1280,10 +1308,10 @@ Model::makeIonosphereExpr(const IonosphereConfig &config,
 
         for(size_t j = 0; j < nSources; ++j)
         {
-            PiercePoint::Ptr pp(new PiercePoint(position, azel(j, i)));
-            MIM::Ptr mim(new MIM(reference, pp, MIMParms.begin(),
-                MIMParms.end()));
-            expr(j, i) = AsDiagonalMatrix::Ptr(new AsDiagonalMatrix(mim, mim));
+            PiercePoint::Ptr pp(new PiercePoint(position, exprAzEl(j, i)));
+            PolynomialPhaseScreen::Ptr phi(new PolynomialPhaseScreen(reference,
+                pp, MIMParms.begin(), MIMParms.end()));
+            expr(j, i) = AsDiagonalMatrix::Ptr(new AsDiagonalMatrix(phi, phi));
         }
     }
 

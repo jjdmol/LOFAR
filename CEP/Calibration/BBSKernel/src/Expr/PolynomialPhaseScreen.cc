@@ -1,4 +1,5 @@
-//# MIM.cc: Ionospheric disturbance of a (source, station) combination.
+//# PolynomialPhaseScreen.cc: Ionospheric phase for a station, direction pair
+//# due to a global polynomial phase screen.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -22,14 +23,14 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/Expr/MIM.h>
+#include <BBSKernel/Expr/PolynomialPhaseScreen.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-MIM::~MIM()
+PolynomialPhaseScreen::~PolynomialPhaseScreen()
 {
     for(unsigned int i = 0; i < itsCoeff.size(); ++i)
     {
@@ -38,12 +39,12 @@ MIM::~MIM()
     disconnect(itsPiercePoint);
 }
 
-unsigned int MIM::nArguments() const
+unsigned int PolynomialPhaseScreen::nArguments() const
 {
     return itsCoeff.size() + 1;
 }
 
-ExprBase::ConstPtr MIM::argument(unsigned int i) const
+ExprBase::ConstPtr PolynomialPhaseScreen::argument(unsigned int i) const
 {
     DBGASSERT(i < nArguments());
     if(i == 0)
@@ -56,8 +57,8 @@ ExprBase::ConstPtr MIM::argument(unsigned int i) const
     }
 }
 
-const Scalar MIM::evaluateExpr(const Request &request, Cache &cache,
-    unsigned int grid) const
+const Scalar PolynomialPhaseScreen::evaluateExpr(const Request &request,
+    Cache &cache, unsigned int grid) const
 {
     // Allocate result.
     Scalar result;
@@ -131,7 +132,7 @@ const Scalar MIM::evaluateExpr(const Request &request, Cache &cache,
     return result;
 }
 
-const Scalar::View MIM::evaluateImpl(const Grid &grid,
+const Scalar::View PolynomialPhaseScreen::evaluateImpl(const Grid &grid,
     const Vector<4>::View &pp, const vector<Scalar::View> &coeff) const
 {
     const size_t nFreq = grid[FREQ]->size();
@@ -158,7 +159,7 @@ const Scalar::View MIM::evaluateImpl(const Grid &grid,
     const casa::MVPosition &ref_pos = itsRefStation.getValue();
 
     // Calculate rotation matrix. Actually we only need to do this once for
-    // all MIM nodes. Some optimization could be done here.
+    // all PolynomialPhaseScreen nodes. Some optimization could be done here.
     double lon = std::atan2(ref_pos(1), ref_pos(0));
     double lat = std::atan2(ref_pos(2), std::sqrt(ref_pos(0) * ref_pos(0)
         + ref_pos(1) * ref_pos(1)));
@@ -220,8 +221,6 @@ const Scalar::View MIM::evaluateImpl(const Grid &grid,
 
     return result;
 }
-
-//}
 
 } //# namespace BBS
 } //# namespace LOFAR

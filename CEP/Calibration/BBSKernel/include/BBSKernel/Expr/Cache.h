@@ -24,8 +24,8 @@
 #define LOFAR_BBSKERNEL_EXPR_CACHE_H
 
 #include <BBSKernel/Expr/ExprId.h>
+#include <BBSKernel/Expr/ExprValue.h>
 #include <BBSKernel/Expr/Request.h>
-#include <BBSKernel/Expr/ExprResult.h>
 
 #include <Common/lofar_map.h>
 

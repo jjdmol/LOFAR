@@ -1,4 +1,4 @@
-//# StationShift.h: Station part of baseline phase shift.
+//# StationShift.h: Station part of baseline phase shift for a given direction.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,11 +20,11 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_DFTPS_H
-#define LOFAR_BBSKERNEL_EXPR_DFTPS_H
+#ifndef LOFAR_BBSKERNEL_EXPR_STATIONSHIFT_H
+#define LOFAR_BBSKERNEL_EXPR_STATIONSHIFT_H
 
 // \file
-// Station part of baseline phase shift.
+// Station part of baseline phase shift for a given direction.
 
 #include <BBSKernel/Expr/BasicExpr.h>
 #include <Common/lofar_vector.h>
@@ -37,8 +37,8 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-// DFTPS computes the station part of the phase related to a direction (l, m, n)
-// on the sky.
+// StationShift computes the station part of the phase related to a direction
+// (l, m, n) on the sky.
 //
 // It is assumed that the frequency axis of the request is regularly spaced,
 // i.e. the frequency can be written as f0 + k * df where f0 is the frequency of
@@ -51,16 +51,16 @@ namespace BBS
 //       = exp(i * (2.0 * pi / c) * (u . l) * f0)
 //         * exp(i * (2.0 * pi / c) * (u . l) * df) ^ k
 //
-// DFTPS only computes the two exponential terms. PhaseShift computes the phase
-// shift for a baseline for each frequency by combining the results of two
-// DFTPS nodes and applying the above equation.
-class DFTPS: public BasicBinaryExpr<Vector<3>, Vector<3>, Vector<2> >
+// StationShift only computes the two exponential terms. PhaseShift computes the
+// phase shift for a baseline for each frequency by combining the results of two
+// StationShift expressions according to the above equation.
+class StationShift: public BasicBinaryExpr<Vector<3>, Vector<3>, Vector<2> >
 {
 public:
-    typedef shared_ptr<DFTPS>       Ptr;
-    typedef shared_ptr<const DFTPS> ConstPtr;
+    typedef shared_ptr<StationShift>        Ptr;
+    typedef shared_ptr<const StationShift>  ConstPtr;
 
-    DFTPS(const Expr<Vector<3> >::ConstPtr &uvw,
+    StationShift(const Expr<Vector<3> >::ConstPtr &uvw,
         const Expr<Vector<3> >::ConstPtr &lmn);
 
 protected:

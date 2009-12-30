@@ -1,4 +1,4 @@
-//# JonesInvert.cc: The inverse of a Jones matrix expression.
+//# MatrixInverse.cc: The inverse of an expression returning a Jones matrix.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/Expr/JonesInvert.h>
+#include <BBSKernel/Expr/MatrixInverse.h>
 
 // Inverse of a 2x2 matrix:
 //
@@ -44,12 +44,12 @@ namespace LOFAR
 namespace BBS
 {
 
-JonesInvert::JonesInvert(const Expr<JonesMatrix>::ConstPtr &expr)
+MatrixInverse::MatrixInverse(const Expr<JonesMatrix>::ConstPtr &expr)
     :   BasicUnaryExpr<JonesMatrix, JonesMatrix>(expr)
 {
 }
 
-const JonesMatrix::View JonesInvert::evaluateImpl(const Grid &grid,
+const JonesMatrix::View MatrixInverse::evaluateImpl(const Grid &grid,
     const JonesMatrix::View &arg0) const
 {
     JonesMatrix::View result;

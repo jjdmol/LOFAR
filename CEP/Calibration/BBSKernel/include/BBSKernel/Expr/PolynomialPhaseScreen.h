@@ -1,4 +1,5 @@
-//# MIM.h: Ionospheric disturbance of a (source, station) combination.
+//# PolynomialPhaseScreen.h: Ionospheric phase for a station, direction pair
+//# due to a global polynomial phase screen.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,11 +21,12 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_MIM_H
-#define LOFAR_BBSKERNEL_EXPR_MIM_H
+#ifndef LOFAR_BBSKERNEL_EXPR_POLYNOMIALPHASESCREEN_H
+#define LOFAR_BBSKERNEL_EXPR_POLYNOMIALPHASESCREEN_H
 
 // \file
-// Ionospheric disturbance of a (source, station) combination.
+// Ionospheric phase for a station, direction pair due to a global polynomial
+// phase screen.
 
 #include <BBSKernel/Expr/Expr.h>
 
@@ -40,17 +42,17 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class MIM: public Expr<Scalar>
+class PolynomialPhaseScreen: public Expr<Scalar>
 {
 public:
-    typedef shared_ptr<MIM>         Ptr;
-    typedef shared_ptr<const MIM>   ConstPtr;
+    typedef shared_ptr<PolynomialPhaseScreen>       Ptr;
+    typedef shared_ptr<const PolynomialPhaseScreen> ConstPtr;
 
     template <typename T_ITER>
-    MIM(const casa::MPosition &refStation, const Expr<Vector<4> >::ConstPtr &pp,
-        T_ITER first, T_ITER last);
+    PolynomialPhaseScreen(const casa::MPosition &refStation,
+        const Expr<Vector<4> >::ConstPtr &pp, T_ITER first, T_ITER last);
 
-    virtual ~MIM();
+    virtual ~PolynomialPhaseScreen();
 
 protected:
     virtual unsigned int nArguments() const;
@@ -71,11 +73,11 @@ private:
 // @}
 
 // -------------------------------------------------------------------------- //
-// - MIM implementation                                                     - //
+// - PolynomialPhaseScreen implementation                                   - //
 // -------------------------------------------------------------------------- //
 
 template <typename T_ITER>
-MIM::MIM(const casa::MPosition &refStation,
+PolynomialPhaseScreen::PolynomialPhaseScreen(const casa::MPosition &refStation,
     const Expr<Vector<4> >::ConstPtr &pp, T_ITER first, T_ITER last)
     :   itsRefStation(casa::MPosition::Convert(refStation,
             casa::MPosition::ITRF)()),
