@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: AddStep.h 12371 2008-12-23 13:18:31Z loose $
+//# $Id$
 
 #ifndef LOFAR_BBSCONTROL_BBSADDSTEP_H
 #define LOFAR_BBSCONTROL_BBSADDSTEP_H
