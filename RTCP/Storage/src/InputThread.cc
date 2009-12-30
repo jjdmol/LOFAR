@@ -41,7 +41,8 @@ InputThread::InputThread(const Parset *ps, unsigned subbandNumber, unsigned outp
   itsPS(ps),
   itsSubbandNumber(subbandNumber),
   itsOutputNumber(outputNumber),
-  itsObservationID(ps->observationID())
+  itsObservationID(ps->observationID()),
+  connecting(true) // start at true to avoid race condition when aborting a starting thread
 {
   for (unsigned i = 0; i < maxReceiveQueueSize; i ++) {
     StreamableData *data = dataTemplate->clone();
@@ -58,6 +59,10 @@ InputThread::InputThread(const Parset *ps, unsigned subbandNumber, unsigned outp
 
 InputThread::~InputThread()
 {
+  if (connecting) {
+    thread->abort();
+  }
+
   delete thread;
 
   while (!itsReceiveQueue.empty())
@@ -94,6 +99,8 @@ void InputThread::mainLoop()
   } else {
     THROW(StorageException, "unsupported ION->Storage stream type: " << connectionType);
   }
+
+  connecting = false;
 
   // limit reads from NullStream to 10 blocks; otherwise unlimited
   unsigned	 increment = nullInput ? 1 : 0;

@@ -67,6 +67,7 @@ OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsig
 
 OutputThread::~OutputThread()
 {
+  // STOP our thread
   itsSendQueue.append(0); // 0 indicates that no more messages will be sent
 
   if (connecting) {

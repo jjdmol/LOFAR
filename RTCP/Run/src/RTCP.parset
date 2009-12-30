@@ -22,10 +22,14 @@ Observation.subbandList  = [154..401]
 Observation.beamList     = [248*0]
 Observation.rspBoardList = [62*0,62*1,62*2,62*3]
 Observation.rspSlotList  = [0..61,0..61,0..61,0..61]
+#Observation.subbandList  = [154]
+#Observation.beamList     = [0]
+#Observation.rspBoardList = [0]
+#Observation.rspSlotList  = [0]
 Observation.sampleClock  = 200
 OLAP.nrBitsPerSample     = 16
 
-OLAP.CNProc.usedCores = [0..63]
+OLAP.CNProc.usedCoresInPset = [0..63]
 #OLAP.CNProc.phaseOnePsets = [0]
 #OLAP.CNProc.phaseTwoPsets = [0]
 #OLAP.CNProc.phaseThreePsets = [0]

@@ -65,7 +65,7 @@ class CN_Processing_Base // untemplated helper class
 template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base, boost::noncopyable
 {
   public:
-			CN_Processing(Stream *, const LocationInfo &);
+			CN_Processing(Stream *, Stream *(*createStream)(unsigned), const LocationInfo &);
 			~CN_Processing();
 
     virtual void	preprocess(CN_Configuration &);
@@ -81,7 +81,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     void                calculateIncoherentStokes();
     void                correlate();
 
-    void                sendOutput( StreamableData *outputData );
+    void                sendOutput( unsigned outputNr, StreamableData *outputData );
     void                finishSendingInput();
 
 #if 0
@@ -101,6 +101,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned            itsComputeGroupRank;
     unsigned            itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
     Stream	        *itsStream;
+    Stream              *(*itsCreateStream)(unsigned);
+    std::vector<Stream*> itsOutputStreams;
     const LocationInfo	&itsLocationInfo;
     std::vector<double> itsCenterFrequencies;
     unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;

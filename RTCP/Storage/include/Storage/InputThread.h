@@ -58,6 +58,8 @@ class InputThread
     const unsigned          itsSubbandNumber;
     const unsigned          itsOutputNumber;
     const unsigned          itsObservationID;
+
+    volatile bool           connecting;
 };
 
 } // namespace RTCP
