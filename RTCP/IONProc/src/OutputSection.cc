@@ -54,10 +54,11 @@ namespace RTCP {
 OutputSection::OutputSection(const Parset *ps, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream *(*createStream)(unsigned,unsigned))
 :
   itsParset(ps),
+  itsNrRuns(static_cast<unsigned>(ceil((itsParset->stopTime() - itsParset->startTime()) / itsParset->CNintegrationTime()))),
   itsItemList(itemList),
   itsOutputType(outputType),
-  itsNrUsedCores(nrUsedCores),
   itsNrComputeCores(ps->nrCoresPerPset()),
+  itsNrUsedCores(nrUsedCores),
   itsCurrentComputeCore(0),
   itsRealTime(ps->realTime()),
   itsPlan(0),
@@ -158,11 +159,15 @@ void OutputSection::notDroppingData(unsigned subband)
 }
 
 
+void OutputSection::setNrRuns(unsigned nrRuns)
+{
+  itsNrRuns = nrRuns;
+}
+
+
 void OutputSection::mainLoop()
 {
-  const unsigned nrRuns = static_cast<unsigned>(ceil((itsParset->stopTime() - itsParset->startTime()) / itsParset->CNintegrationTime()));
-
-  for( unsigned r = 0; r < nrRuns && !thread->stop; r++ ) {
+  for( unsigned r = 0; r < itsNrRuns && !thread->stop; r++ ) {
     // process data from current core, even if we don't have a subband for this
     // core (to stay in sync with other psets).
     for (unsigned i = 0; i < itsNrUsedCores; i++ ) {

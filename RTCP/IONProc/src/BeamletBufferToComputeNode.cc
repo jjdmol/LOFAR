@@ -378,18 +378,22 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sto
 
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::process()
 {
+  // stay in sync with other psets even if there are no inputs to allow a synchronised early abort
+
   if (itsNrInputs > 0) {
     for (unsigned beam = 0; beam < itsNrBeams; beam ++)
       itsDelayedStamps[beam] = itsCurrentTimeStamp - itsNrHistorySamples;
 
     computeDelays();
+  }
 
-    if (itsIsRealTime) {
-      itsCorrelationStartTime = itsCurrentTimeStamp + itsNrSamplesPerSubband + itsMaxNetworkDelay + itsMaximumDelay;
+  if (itsIsRealTime) {
+    itsCorrelationStartTime = itsCurrentTimeStamp + itsNrSamplesPerSubband + itsMaxNetworkDelay + itsMaximumDelay;
 
-      itsWallClock.waitUntil(itsCorrelationStartTime);
-    }
+    itsWallClock.waitUntil(itsCorrelationStartTime);
+  }
 
+  if (itsNrInputs > 0) {
     startTransaction();
     writeLogMessage();
   }
@@ -405,8 +409,9 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
 
   if (itsNrInputs > 0) {
     stopTransaction();
-    itsCurrentTimeStamp += itsNrSamplesPerSubband;
   }
+
+  itsCurrentTimeStamp += itsNrSamplesPerSubband;
   timer.stop();
 
   LOG_INFO_STR("ObsID: " << itsObservationID << ", ION->CN: " << PrettyTime(timer.getElapsed()));

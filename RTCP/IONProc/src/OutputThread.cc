@@ -46,8 +46,8 @@ OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsig
 :
   itsParset(ps),
   itsSubband(subband),
-  itsOutput(output),
   connecting(true), // avoid race condition when checking this at thread start
+  itsOutput(output),
   thread(0)
 {
   // transpose the data holders: create queues streams for the output streams
