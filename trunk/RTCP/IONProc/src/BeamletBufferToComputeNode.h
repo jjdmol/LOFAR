@@ -49,6 +49,8 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     void			 preprocess(const Parset *ps);
     void			 process();
     void			 postprocess();
+
+    TimeStamp                    getCurrentTimeStamp() const { return itsCurrentTimeStamp; }
     
   private:
     static void			 limitFlagsLength(SparseSet<unsigned> &flags);

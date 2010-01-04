@@ -39,6 +39,8 @@ class OutputSection
     OutputSection(const Parset *ps, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream *(*createStream)(unsigned,unsigned));
     ~OutputSection();
 
+    void setNrRuns(unsigned nrRuns);
+
   private:
     void			mainLoop();
 
@@ -57,6 +59,7 @@ class OutputSection
     unsigned itsSequenceNumber;
 
     const Parset                *itsParset;
+    volatile unsigned           itsNrRuns;
     std::vector<unsigned>       itsItemList; // list of either subbands or beams
     const unsigned              itsOutputType;
     const unsigned		itsNrComputeCores;
@@ -69,9 +72,6 @@ class OutputSection
     std::vector<Stream *>       itsStreamsFromCNs;
 
     Thread                      *thread;
-
-    // hack to syncrhonise multiple outputs per compute core
-    bool                         lastOutput;
 };
 
 

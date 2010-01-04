@@ -76,7 +76,7 @@ void terminate_with_backtrace()
 
 static Stream *createIONstream( unsigned channel )
 {
-#if 1 && defined HAVE_FCNP && defined HAVE_BGP_CN && !defined VALGRIND
+#if 1 && defined HAVE_FCNP && defined HAVE_BGP_CN && !defined HAVE_VALGRIND
     /* preferred */
     FCNP_CN::init();
     return new FCNP_ClientStream(channel);
