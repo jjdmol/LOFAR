@@ -121,6 +121,28 @@ Observation::Observation(ParameterSet*		aParSet) :
 
 	BGLNodeList     = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.BGLNodeList","[]"));
 	storageNodeList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.storageNodeList","[]"));
+
+        // loop over al beams
+        unsigned nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);
+        for (unsigned beam = 0; beam < nrBeams; beam++) {
+                Beam    newBeam;
+                string  beamPrefix(prefix+formatString("Beam[%d].", beam));
+
+                newBeam.angle1            = aParSet->getDouble(beamPrefix+"angle1", 0.0);
+                newBeam.angle2            = aParSet->getDouble(beamPrefix+"angle2", 0.0);
+                newBeam.directionType = aParSet->getString(beamPrefix+"directionType", "");
+                newBeam.subbands = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);
+                newBeam.beamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);
+                if (newBeam.subbands.size() != newBeam.beamlets.size()) {
+                        THROW (Exception, "Number of subbands(" << newBeam.subbands.size() << 
+                                                          ") != number of beamlets(" << newBeam.beamlets.size() << 
+                                                          ") in beam " << beam);
+                }
+        
+                // add beam to vector
+                beams.push_back(newBeam);
+        }
+        
 }
 
 
