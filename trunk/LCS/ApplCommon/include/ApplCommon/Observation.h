@@ -113,6 +113,8 @@ public:
 	bool			useLongBaselines;
 	bool			splitter;			// On or Off
 
+        vector<Beam>            beams;
+
 	// couple of values of the virtual instrument as compacted strings
 	string			receiverList;
 	string			stationList;
