@@ -140,8 +140,8 @@ private:
 
 	// Availability information of Antenna's and circuit boards.
 	bool									itsUseHWinfo;
-	bitset<MAX_RCUS / N_POL * 2>			itsLBArcumask;		// LBA's are tight to LBL AND LBH!!!
-	bitset<MAX_RCUS / N_POL>				itsHBArcumask;
+	bitset<MAX_RCUS>						itsLBArcumask;
+	bitset<MAX_RCUS>						itsHBArcumask;
 	bitset<MAX_RCUS>						itsRCUmask;
 	bitset<MAX_RCUS / NR_RCUS_PER_TBBOARD>	itsTBmask;
 	uint32									itsNrLBAs;
