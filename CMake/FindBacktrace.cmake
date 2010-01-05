@@ -32,6 +32,7 @@
 include(CheckIncludeFile)
 include(CheckFunctionExists)
 include(CheckLibraryExists)
+include(CheckSymbolExists)
 include(FindPackageHandleStandardArgs)
 
 if(NOT BACKTRACE_FOUND)
@@ -51,6 +52,8 @@ if(NOT BACKTRACE_FOUND)
             list(APPEND BACKTRACE_LIBRARIES ${IBERTY_LIBRARY})
             check_include_file(demangle.h HAVE_DEMANGLE_H)
             if(HAVE_DEMANGLE_H)
+              # Check for basename() avoids redeclaration error with g++ >= 4.4
+              check_symbol_exists(basename demangle.h HAVE_DECL_BASENAME)
               set(CMAKE_REQUIRED_LIBRARIES ${IBERTY_LIBRARY})
               check_function_exists(cplus_demangle HAVE_CPLUS_DEMANGLE)
             endif(HAVE_DEMANGLE_H)
