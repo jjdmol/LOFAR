@@ -924,8 +924,6 @@ void StationControl::_databaseEventHandler(GCFEvent& event)
 			(strstr(dpEvent.DPname.c_str(), PN_FSM_LOG_MSG) != 0)) {
 			return;
 		}
- 
-		LOG_WARN_STR("Got VCHANGEMSG signal from unknown property " << dpEvent.DPname);
 	}
 	break;
 
@@ -1210,22 +1208,30 @@ void StationControl::_initAntennaMasks()
 //
 void StationControl::_updateAntennaMasks()
 {
+	// setup constants
+	bool	doubleMappedLBA    (itsNrLBAs > (itsNrRSPboards * NR_ANTENNAS_PER_RSPBOARD));
+	int		doubleMapRCUoffset (itsNrRSPboards * NR_RCUS_PER_RSPBOARD);
+
 	// Note: the definition in StationControl.h and the ASSERT in _initAntennaMasks assure
 	//		 that we never exceed the boundaries of the bitmaps here.
 	for (int rcu = 0; rcu < MAX_RCUS/2 ; rcu+=2) {
 		if (itsRCUmask[rcu] && itsRCUmask[rcu+1]) {		// X and Y
 			itsLBArcumask.set(rcu);
 			itsLBArcumask.set(rcu+1);
-			itsLBArcumask.set(96+rcu);
-			itsLBArcumask.set(96+rcu+1);
+			if (doubleMappedLBA) {
+				itsLBArcumask.set(doubleMapRCUoffset+rcu);
+				itsLBArcumask.set(doubleMapRCUoffset+rcu+1);
+			}
 			itsHBArcumask.set(rcu);
 			itsHBArcumask.set(rcu+1);
 		}
 		else {
 			itsLBArcumask.reset(rcu);
 			itsLBArcumask.reset(rcu+1);
-			itsLBArcumask.reset(96+rcu);
-			itsLBArcumask.reset(96+rcu+1);
+			if (doubleMappedLBA) {
+				itsLBArcumask.reset(doubleMapRCUoffset+rcu);
+				itsLBArcumask.reset(doubleMapRCUoffset+rcu+1);
+			}
 			itsHBArcumask.reset(rcu);
 			itsHBArcumask.reset(rcu+1);
 		}
