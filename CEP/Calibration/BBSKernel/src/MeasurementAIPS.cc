@@ -633,7 +633,7 @@ Table MeasurementAIPS::getTableSelection(const Table &table,
 
         if(stationSelection.empty())
         {
-            LOG_WARN_STR("Station selection criteria did not maych any"
+            LOG_WARN_STR("Station selection criteria did not match any"
                 " station in the MS; criteria will be ignored.");
         }
         else

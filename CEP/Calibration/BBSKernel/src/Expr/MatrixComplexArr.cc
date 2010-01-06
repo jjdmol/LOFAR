@@ -80,7 +80,7 @@ MatrixRep* MatrixComplexArr::clone() const
 
   MatrixComplexArr* v = MatrixComplexArr::allocate(nx(), ny());
 
-//#if defined __SSE2__
+#if defined __SSE2__
   __m128d *src_r = (__m128d *) itsReal, *src_i = (__m128d *) itsImag;
   __m128d *dst_r = (__m128d *) v->itsReal, *dst_i = (__m128d *) v->itsImag;
   int n = (nelements() + 1) / 2;
@@ -89,10 +89,10 @@ MatrixRep* MatrixComplexArr::clone() const
     dst_r[i] = src_r[i];
     dst_i[i] = src_i[i];
   }
-//#else
-//  memcpy (v->itsReal, itsReal, sizeof(double) * nelements());
-//  memcpy (v->itsImag, itsImag, sizeof(double) * nelements());
-//#endif
+#else
+  memcpy (v->itsReal, itsReal, sizeof(double) * nelements());
+  memcpy (v->itsImag, itsImag, sizeof(double) * nelements());
+#endif
 
 //#if defined TIMER
   timer.stop();
