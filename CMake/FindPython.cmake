@@ -42,8 +42,8 @@ find_package(PythonInterp ${_options})
 # Search for the Python header files and libraries
 find_package(PythonLibs ${_options})
 
-# Derive the Python site-packages installation directory 
-if(NOT DEFINED PYTHON_INSTALL_DIR)
+# Derive the Python site-packages installation directory and build directory
+if(NOT PYTHON_FOUND)
   if(PYTHON_EXECUTABLE)
     set(_cmd
       "from distutils.sysconfig import *"
@@ -61,7 +61,7 @@ if(NOT DEFINED PYTHON_INSTALL_DIR)
     set(PYTHON_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${_pydir}" CACHE PATH 
       "Python site-packages installation directory")
   endif(PYTHON_EXECUTABLE)
-endif(NOT DEFINED PYTHON_INSTALL_DIR)
+endif(NOT PYTHON_FOUND)
 
 # Set PYTHON_INCLUDE_DIRS variable, because FindPythonLibs does not do it.
 set(PYTHON_INCLUDE_DIRS "${PYTHON_INCLUDE_PATH}")
