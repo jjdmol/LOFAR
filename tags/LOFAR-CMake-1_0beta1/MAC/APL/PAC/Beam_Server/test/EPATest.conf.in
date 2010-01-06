@@ -1,0 +1,6 @@
+#
+# Configuration file for the EPATest test program
+#
+
+mac.ns.EPATest.beam_server.type=TCP
+mac.top.EPATest.beam_server.remoteservice=BeamServer:acceptor

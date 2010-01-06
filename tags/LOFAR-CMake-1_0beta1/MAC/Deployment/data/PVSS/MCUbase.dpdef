@@ -1,0 +1,200 @@
+# MainCU specific PVSS Database types
+
+# DpType
+TypeName
+navigator.Navigator	1#1
+	TabViews	9#5
+	alarms	1#7
+		time	10#8
+		message	9#9
+		datapoint	9#10
+		state	5#11
+		status	9#12
+		dpResetList	9#13
+		dpResetStates	5#14
+		dpResetMsgs	9#15
+		rereadAlarms	23#16
+		
+TypeName
+NavigatorInstance.NavigatorInstance	1#1
+	fw_viewBox	1#3
+		event	25#5
+		action	25#6
+		selection	9#39
+	fw_viewSelection	1#7
+		event	25#9
+		action	25#10
+		selection	9#40
+	fw_topDetailSelection	1#15
+		event	25#17
+		action	25#18
+		selection	9#42
+	fw_bottomDetailSelection	1#19
+		event	25#21
+		action	25#22
+		selection	9#43
+	fw_locator	1#23
+		event	25#25
+		action	25#26
+		selection	9#44
+	fw_progressBar	1#27
+		event	25#29
+		action	25#30
+		selection	9#45
+	fw_headLines	1#31
+		event	25#33
+		action	25#34
+		selection	9#46
+	fw_alerts	1#35
+		event	25#37
+		action	25#38
+		selection	9#47
+	navigator	1#53
+		event	25#54
+		selection	25#55
+		initiator	25#56
+	user	25#57
+	hardwareList	9#66
+	trigger	23#67
+	objectTrigger	23#69
+	processesList	9#71
+	updateTrigger	1#78
+		objectName	25#79
+		paramList	9#80
+	observationsList	9#81
+	logger	1#82
+		logLevel	21#83
+		logScope	9#84
+		searchString	9#85
+	alarmsTrigger	23#86
+	fw_fastJumper	1#87
+		event	25#88
+		action	25#89
+		selection	9#90
+		
+TypeName
+NavPanelConfig.NavPanelConfig	1#1
+	LOFAR_Processes	9#3
+	LOFAR_Observations	9#4
+	StnLOFAR_Hardware	9#5
+	StnPIC_Hardware	9#6
+	Cabinet_Hardware	9#9
+	SubRack_Hardware	9#10
+	TBBoard_Hardware	9#11
+	RSPBoard_Hardware	9#12
+	RCU_Hardware	9#13
+	StnLOFAR_Processes	9#14
+	CTStartDaemon_Processes	9#15
+	KeyValueLogger_Processes	9#19
+	LogProcessor_Processes	9#20
+	ServiceBroker_Processes	9#21
+	MACScheduler_Processes	9#22
+	SoftwareMonitor_Processes	9#23
+	HardwareMonitor_Processes	9#24
+	ClockControl_Processes	9#25
+	StationControl_Processes	9#26
+	TemperatureMonitor_Processes	9#27
+	BeamControl_Processes	9#28
+	CalibrationControl_Processes	9#29
+	TBBControl_Processes	9#30
+	AMCServer_Processes	9#31
+	ObservationControl_Processes	9#35
+	SASGateway_Processes	9#36
+	Correlator_Processes	9#37
+	StorageAppl_Processes	9#38
+	RSPDriver_Processes	9#39
+	TBBDriver_Processes	9#40
+	CalServer_Processes	9#41
+	BeamServer_Processes	9#42
+	SHMInfoServer_Processes	9#43
+	Observation_Observations	9#44
+	Ring_Hardware	9#45
+	LOFAR_Alerts	9#48
+	LOFAR_Reports	9#50
+	CEPLOFAR_Processes	9#51
+	CEPPIC_Hardware	9#54
+	BGPRack_Hardware	9#55
+	OSRack_Hardware	9#56
+	BGPMidplane_Hardware	9#57
+	OSSubcluster_Hardware	9#58
+	BGPAppl_Processes	9#59
+	CEPHardwareMonitor_Processes	9#60
+	BGPProc_Processes	9#61
+	
+TypeName
+GCFWatchDog.GCFWatchDog	1#1
+	systemID	5#2
+	online	7#3
+	lastUpTime	10#4
+	lastDownTime	10#5
+	name	9#6
+
+
+# create mps for NavPanelConfig and NavigatorInstance
+# Datapoint/DpId 
+DpName	TypeName	ID
+_mp_NavPanelConfig	NavPanelConfig	536
+_dt_NavPanelConfig	_DynamicDatapoints	537
+_mp_NavigatorInstance	NavigatorInstance	2963
+_dt_NavigatorInstance	_DynamicDatapoints	2964
+
+# Create missing CtrlDbg internals, navigator, navPanelConfig and watchdog DP
+# Datapoint/DpId
+DpName	TypeName	ID
+__navigator	Navigator	400
+root	NavPanelConfig	538
+__gcf_cwd	GCFWatchDog	1936
+_CtrlDebug_CTRL_5	_CtrlDebug	0
+_CtrlDebug_CTRL_6	_CtrlDebug	0
+_CtrlDebug_CTRL_7	_CtrlDebug	0
+
+#Fill some defaults
+# DpValue
+ElementName	TypeName	_original.._value	_original.._status	_original.._stime
+__navigator.TabViews	Navigator	"Hardware", "Observations", "Processes", "Reports", "Alerts"	0x101	08.01.2009 12:09:35.919
+root.LOFAR_Processes	NavPanelConfig	"Processes/MainCU_Processes.pnl"	0x101	06.01.2009 11:43:45.796
+root.LOFAR_Observations	NavPanelConfig	"Observations/Observations.pnl"	0x101	06.01.2009 11:43:37.562
+root.StnLOFAR_Hardware	NavPanelConfig	"Hardware/Station.pnl"	0x101	06.01.2009 11:43:28.328
+root.StnPIC_Hardware	NavPanelConfig	"Hardware/Station_Cabinet.pnl"	0x101	06.01.2009 11:43:17.906
+root.Cabinet_Hardware	NavPanelConfig	"Hardware/Station_Cabinet_detailed.pnl"	0x101	06.01.2009 11:42:45.046
+root.SubRack_Hardware	NavPanelConfig	"Hardware\\Station_Subrack.pnl"	0x101	14.01.2008 15:32:35.843
+root.TBBoard_Hardware	NavPanelConfig	"Hardware/Station_TBBoard.pnl"	0x101	25.01.2008 08:47:29.884
+root.RSPBoard_Hardware	NavPanelConfig	"Hardware/Station_RSPBoard.pnl"	0x101	06.02.2008 11:14:45.932
+root.RCU_Hardware	NavPanelConfig	"Hardware/Station_RCU.pnl"	0x101	07.02.2008 08:04:26.263
+root.StnLOFAR_Processes	NavPanelConfig	"Processes/Station_Processes.pnl"	0x101	21.04.2008 14:11:00.093
+root.CTStartDaemon_Processes	NavPanelConfig	"Processes/CTStartDaemon.pnl"	0x101	28.04.2008 10:16:38.921
+root.KeyValueLogger_Processes	NavPanelConfig	"Processes/KeyValueLogger.pnl"	0x101	06.02.2009 12:56:54.015
+root.LogProcessor_Processes	NavPanelConfig	"Processes/LogProcessor.pnl"	0x101	29.04.2008 08:57:56.718
+root.ServiceBroker_Processes	NavPanelConfig	"Processes/ServiceBroker.pnl"	0x101	29.04.2008 08:54:11.921
+root.MACScheduler_Processes	NavPanelConfig	"Processes/MACScheduler.pnl"	0x101	29.04.2008 09:19:14.578
+root.SoftwareMonitor_Processes	NavPanelConfig	"Processes/SoftwareMonitor.pnl"	0x101	13.05.2008 12:07:19.984
+root.HardwareMonitor_Processes	NavPanelConfig	"Processes/HardwareMonitor.pnl"	0x101	13.05.2008 12:20:35.640
+root.ClockControl_Processes	NavPanelConfig	"Processes/ClockControl.pnl"	0x101	06.02.2009 12:57:20.531
+root.StationControl_Processes	NavPanelConfig	"Processes/StationControl.pnl"	0x101	06.02.2009 12:57:36.609
+root.TemperatureMonitor_Processes	NavPanelConfig	"Processes/TemperatureMonitor.pnl"	0x101	19.06.2008 09:13:40.906
+root.BeamControl_Processes	NavPanelConfig	"Processes/BeamControl.pnl"	0x101	06.02.2009 12:57:55.125
+root.CalibrationControl_Processes	NavPanelConfig	"Processes/CalibrationControl.pnl"	0x101	06.02.2009 12:58:12.250
+root.TBBControl_Processes	NavPanelConfig	"Processes/TBBControl.pnl"	0x101	06.02.2009 12:58:30.796
+root.AMCServer_Processes	NavPanelConfig	"Processes/AMCServer.pnl"	0x101	19.05.2008 09:22:52.453
+root.ObservationControl_Processes	NavPanelConfig	"Processes/ObservationControl.pnl"	0x101	06.02.2009 12:58:50.468
+root.SASGateway_Processes	NavPanelConfig	"Processes/SASGateway.pnl"	0x101	19.06.2008 06:58:58.671
+root.Correlator_Processes	NavPanelConfig	"Processes/Correlator.pnl"	0x101	19.06.2008 08:27:45.453
+root.StorageAppl_Processes	NavPanelConfig	"Processes/StorageAppl.pnl"	0x101	19.06.2008 08:27:58.796
+root.RSPDriver_Processes	NavPanelConfig	"Processes/RSPDriver.pnl"	0x101	19.06.2008 08:48:13.890
+root.TBBDriver_Processes	NavPanelConfig	"Processes/TBBDriver.pnl"	0x101	19.06.2008 08:48:26.640
+root.CalServer_Processes	NavPanelConfig	"Processes/CalServer.pnl"	0x101	19.06.2008 08:58:56.843
+root.BeamServer_Processes	NavPanelConfig	"Processes/BeamServer.pnl"	0x101	19.06.2008 09:00:59.265
+root.SHMInfoServer_Processes	NavPanelConfig	"Processes/SHMInfoServer.pnl"	0x101	06.02.2009 12:59:15.125
+root.Observation_Observations	NavPanelConfig	"Observations/Observation_overview.pnl"	0x101	20.06.2008 12:15:08.909
+root.Ring_Hardware	NavPanelConfig	"Hardware/LOFAR_Europe.pnl:LOFAR_PIC_Europe", "Hardware/LOFAR_Remote.pnl:LOFAR_PIC_Remote", "Hardware/LOFAR_Core.pnl:LOFAR_PIC_Core"	0x101	03.02.2009 08:25:02.734
+root.LOFAR_Alerts	NavPanelConfig	"Alerts/lofar_alarms.pnl"	0x101	04.02.2009 08:32:22.968
+root.LOFAR_Reports	NavPanelConfig	"Reports/LOFAR_System.pnl"	0x101	02.03.2009 14:48:48.500
+root.CEPLOFAR_Processes	NavPanelConfig	"Processes/CEP_Processes.pnl"	0x101	04.03.2009 13:13:23.866
+root.CEPPIC_Hardware	NavPanelConfig	"Hardware/CEP.pnl"	0x101	17.04.2009 07:59:51.305
+root.BGPRack_Hardware	NavPanelConfig	"Hardware/CEP_BGPRack_detailed.pnl"	0x101	28.04.2009 12:35:07.765
+root.OSRack_Hardware	NavPanelConfig	"Hardware/CEP_OSRack_detailed.pnl"	0x101	28.04.2009 13:25:52.015
+root.BGPMidplane_Hardware	NavPanelConfig	"Hardware/CEP_Midplane.pnl"	0x101	28.04.2009 14:01:40.953
+root.OSSubcluster_Hardware	NavPanelConfig	"Hardware/CEP_OSSubcluster.pnl"	0x101	07.05.2009 12:26:28.731
+root.BGPAppl_Processes	NavPanelConfig	"Processes/BGPAppl.pnl"	0x101	08.05.2009 08:04:21.950
+root.CEPHardwareMonitor_Processes	NavPanelConfig	"Processes/CEPHardwareMonitor.pnl"	0x101	11.05.2009 09:27:24.765
+root.BGPProc_Processes	NavPanelConfig	"Processes/BGPProc_mainloader.pnl"	0x101	25.05.2009 07:58:20.015
