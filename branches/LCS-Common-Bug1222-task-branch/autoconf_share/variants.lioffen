@@ -1,3 +1,0 @@
-gnu.compiler.conf:	CXX="$CCACHE /usr/bin/g++"
-
-gnu.compiler.aipspp.var: --with-casacore=/app/casacore/ --without-wcs
