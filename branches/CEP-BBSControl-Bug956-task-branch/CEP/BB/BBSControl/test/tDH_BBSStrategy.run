@@ -1,6 +1,0 @@
-#!/bin/sh
-\cp $srcdir/tBBSControl.parset .
-$LOFAR_CHECKTOOL ./tDH_BBSStrategy
-STATUS=$?
-\rm -f tBBSControl.parset
-exit $STATUS
