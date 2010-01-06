@@ -1,8 +1,0 @@
-ClusterName = cl
-NNodes = 2
-Node0.NodeName = node1
-Node0.NodeFileSys = [node1:/usr]
-Node0.NodeMountPoints = [/usr]
-Node1.NodeName = node2
-Node1.NodeFileSys = [node1:/usr]
-Node1.NodeMountPoints = [/usr]

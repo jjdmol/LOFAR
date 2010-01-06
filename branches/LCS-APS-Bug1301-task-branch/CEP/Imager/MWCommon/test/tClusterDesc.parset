@@ -1,7 +1,0 @@
-# Test cluster definition file.
-
-ClusterName  = lifs
-HeadNode     = lifsfen
-ComputeNodes = [ lifs001..lifs003 ]
-LocalDisks   = [ /data ]
-MountPoints  = [ /lifs014../lifs015 ]

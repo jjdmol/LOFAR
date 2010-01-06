@@ -1,6 +1,0 @@
-// \ingroup APL
-// \defgroup RTDBCommon RealTimeDataBase common software.
-//
-// The RTDBCommon package contains functions and tasks for easy communication
-// with the Navigator software in the PVSS database.
-
