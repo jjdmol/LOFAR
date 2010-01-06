@@ -1,6 +1,0 @@
-#!/bin/sh
-OID=$1
-psql -h dop50.astron.nl -U postgres test <<_EOF_
-select A.versionnr,A.itsint,A.itsdouble,A.itsstring,A.itscomplex_real,A.itscomplex_imag,B.versionnr,B.itsbool,B.itsshort,B.itsfloat,B.itsstring,C.versionnr,C.itsblob,C.itsstring from A,B,C where C.objid=$OID and A.owner=C.objid and B.owner=A.objid;
-\q
-_EOF_
