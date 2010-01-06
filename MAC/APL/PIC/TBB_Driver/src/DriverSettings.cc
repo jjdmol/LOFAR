@@ -28,6 +28,7 @@
 #include <Common/Exceptions.h>
 #include <MACIO/MACServiceInfo.h>
 #include <DriverSettings.h>
+#include <cstdio>
 
 using namespace LOFAR;
 	//using namespace GCFCommon;

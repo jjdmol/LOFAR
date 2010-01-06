@@ -21,10 +21,9 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-// #include <APS/ParameterSet.h>
-#include <time.h>
-
 #include <VHECR/VHECRTask.h>
+#include <time.h>
+#include <cstdio>
 
 namespace LOFAR {
   //	using namespace ACC::APS;

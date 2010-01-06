@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
+#include <cstdio>
 
 #include "ReadfCmd.h"
 

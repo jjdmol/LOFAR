@@ -46,6 +46,7 @@
 
 #include <netinet/in.h>
 #include <net/ethernet.h>
+#include <cstdio>
 
 
 #include "tbbctl.h"

@@ -30,6 +30,7 @@
 #include <sys/wait.h>
 
 #include <stdexcept>
+#include <cstdio>
 
 
 using namespace LOFAR;
