@@ -30,6 +30,7 @@
 #include <Common/StringUtil.h>
 #include <netinet/in.h>
 #include <net/ethernet.h>
+#include <cstdio>
 
 namespace LOFAR {
 	namespace TBB {

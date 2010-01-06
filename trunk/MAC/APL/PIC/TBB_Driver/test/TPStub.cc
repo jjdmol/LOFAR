@@ -30,6 +30,7 @@
 #include <sys/time.h>
 #include <string.h>
 #include <math.h>
+#include <cstdio>
 
 #include "TPStub.h"
 #include "TP_Protocol.ph"

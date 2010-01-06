@@ -19,8 +19,8 @@
 //#  $Id: CN_Configuration.cc 14162 2009-10-01 10:57:55Z mol $
 
 #include <lofar_config.h>
-
 #include <Interface/Thread.h>
+#include <cstdio>
 
 namespace LOFAR {
 namespace RTCP {

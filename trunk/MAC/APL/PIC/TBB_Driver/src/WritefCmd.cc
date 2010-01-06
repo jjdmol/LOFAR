@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <time.h>
+#include <cstdio>
 
 #include "WritefCmd.h"
 

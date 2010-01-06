@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <OTDB/misc.h>
+#include <cstdio>
 
 namespace LOFAR {
   namespace OTDB {

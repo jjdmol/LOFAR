@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <climits>
+#include <cstdio>
 
 #include "MsgHandler.h"
 

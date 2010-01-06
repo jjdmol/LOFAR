@@ -24,6 +24,7 @@
 #include <Common/StringUtil.h>
 #include <unistd.h>
 #include <climits>
+#include <cstdio>
 
 #include "APL/APLCommon/APLUtilities.h"
 
