@@ -158,8 +158,8 @@ complex double test_complex(const complex *par,const complex *x){
 
   /* mu/4PI=10e-7  x omega/sin(alpha)*/
   //const double A=1.0;//(1e-7)*2*M_PI*x1/Sin_al;
-  //add normalization constant to make gain almost equal to 1 (b*x+c)
-  const double A=(1e-7)*2*M_PI*x1/Sin_al*(-0.0076*x1/1e6+0.6140);
+  //add normalization constant to make gain almost equal to 0.01 (b*x+c)
+  const double A=(1e-7)*2*M_PI*x1/Sin_al*(-0.0076*x1/1e6+0.6140)/100.0;
 
   complex double tmp=Gamma1(sin_th,cos_th,cos_ph,k);
 /*  complex double Eth=A*tmp*(Cos_al*sin_th-Sin_al*cos_th*cos_ph);
@@ -184,9 +184,11 @@ complex double test_complex(const complex *par,const complex *x){
   tmp=Gamma4(sin_th,cos_th,cos_ph,k);
   complex double Eth4=tmp*(Cos_al*sin_th+Sin_al*cos_th*cos_ph); 
 
-  //complex double Eth=creal(Eth1-Eth2+Eth3-Eth4)-_Complex_I*cimag(Eth1+Eth2+Eth3+Eth4);
-  complex double Eth=conj(Eth1-conj(Eth2)+Eth3-conj(Eth4));
-
+  //enable this for H symmetry
+  //complex double Eth=conj(Eth1-conj(Eth2)+Eth3-conj(Eth4));
+  //this is my original version
+  complex double Eth=Eth1+Eth2+Eth3+Eth4;
+ 
   return (A*Eth);
 }
 int Npar_test=1;
