@@ -643,81 +643,127 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
       boolean aB=false;
 
       // Olap Specific parameters
-      aB=false;
-      if (itsDelayCompensation.limits.equals("true")||itsDelayCompensation.limits.equals("TRUE")) {
-          aB=true;
+      if (itsDelayCompensation!=null) {
+        aB=false;
+        if (itsDelayCompensation.limits.equals("true")||itsDelayCompensation.limits.equals("TRUE")) {
+            aB=true;
+        }
+        inputDelayCompensation.setSelected(aB);
       }
-      inputDelayCompensation.setSelected(aB);
-      inputNrBitsPerSample.setText(itsNrBitsPerSample.limits);
-      inputNrSecondsOfBuffer.setText(itsNrSecondsOfBuffer.limits);
-      inputNrTimesInFrame.setText(itsNrTimesInFrame.limits);
-      aB=false;
-      if (itsCorrectBandPass.limits.equals("true")||itsCorrectBandPass.limits.equals("TRUE")) {
-          aB=true;
+      if (itsNrBitsPerSample!=null) {
+        inputNrBitsPerSample.setText(itsNrBitsPerSample.limits);
       }
-      inputCorrectBandPass.setSelected(aB);
-      aB=false;
-      if (itsOutputCorrelatedData.limits.equals("true")||itsOutputCorrelatedData.limits.equals("TRUE")) {
-          aB=true;
+      if (itsNrSecondsOfBuffer!=null) {
+        inputNrSecondsOfBuffer.setText(itsNrSecondsOfBuffer.limits);
       }
-      inputOutputCorrelatedData.setSelected(aB);
-      aB=false;
-      if (itsOutputFilteredData.limits.equals("true")||itsOutputFilteredData.limits.equals("TRUE")) {
-          aB=true;
+      if (itsNrTimesInFrame!=null) {
+        inputNrTimesInFrame.setText(itsNrTimesInFrame.limits);
       }
-      inputOutputFilteredData.setSelected(aB);
-      aB=false;
-      if (itsOutputBeamFormedData.limits.equals("true")||itsOutputBeamFormedData.limits.equals("TRUE")) {
+      if (itsCorrectBandPass!=null) {
+        aB=false;
+        if (itsCorrectBandPass.limits.equals("true")||itsCorrectBandPass.limits.equals("TRUE")) {
           aB=true;
+        }
+        inputCorrectBandPass.setSelected(aB);
       }
-      inputOutputBeamFormedData.setSelected(aB);
-      aB=false;
-      if (itsOutputCoherentStokes.limits.equals("true")||itsOutputCoherentStokes.limits.equals("TRUE")) {
+      if (itsOutputCorrelatedData!=null) {
+        aB=false;
+        if (itsOutputCorrelatedData.limits.equals("true")||itsOutputCorrelatedData.limits.equals("TRUE")) {
           aB=true;
+        }
+        inputOutputCorrelatedData.setSelected(aB);
       }
-      inputOutputCoherentStokes.setSelected(aB);
-      aB=false;
-      if (itsOutputIncoherentStokes.limits.equals("true")||itsOutputIncoherentStokes.limits.equals("TRUE")) {
+      if (itsOutputFilteredData!=null) {
+        aB=false;
+        if (itsOutputFilteredData.limits.equals("true")||itsOutputFilteredData.limits.equals("TRUE")) {
           aB=true;
+        }
+        inputOutputFilteredData.setSelected(aB);
       }
-      inputOutputIncoherentStokes.setSelected(aB);
-      inputMaxNetworkDelay.setText(itsMaxNetworkDelay.limits);
-      inputNrSubbandsPerFrame.setText(itsNrSubbandsPerFrame.limits);
+      if (itsOutputBeamFormedData!=null) {
+        aB=false;
+        if (itsOutputBeamFormedData.limits.equals("true")||itsOutputBeamFormedData.limits.equals("TRUE")) {
+          aB=true;
+        }
+        inputOutputBeamFormedData.setSelected(aB);
+      }
+      if (itsOutputCoherentStokes!=null) {
+        aB=false;
+        if (itsOutputCoherentStokes.limits.equals("true")||itsOutputCoherentStokes.limits.equals("TRUE")) {
+          aB=true;
+        }
+        inputOutputCoherentStokes.setSelected(aB);
+      }
+      if (itsOutputIncoherentStokes!=null) {
+        aB=false;
+        if (itsOutputIncoherentStokes.limits.equals("true")||itsOutputIncoherentStokes.limits.equals("TRUE")) {
+          aB=true;
+        }
+        inputOutputIncoherentStokes.setSelected(aB);
+      }
+      if (itsMaxNetworkDelay!=null) {
+        inputMaxNetworkDelay.setText(itsMaxNetworkDelay.limits);
+      }
+      if (itsNrSubbandsPerFrame!=null) {
+        inputNrSubbandsPerFrame.setText(itsNrSubbandsPerFrame.limits);
+      }
 
-      //OLAP-CNProc      
-      inputNrPPFTaps.setText(itsNrPPFTaps.limits);
-      inputPartition.setText(itsPartition.limits);
+      //OLAP-CNProc
+      if (itsNrPPFTaps!=null) {
+        inputNrPPFTaps.setText(itsNrPPFTaps.limits);
+      }
+      if (itsPartition!=null) {
+        inputPartition.setText(itsPartition.limits);
+      }
       
       
       //OLAP StorageProc
-      inputSubbandsPerMS.setText(itsSubbandsPerMS.limits);
-      
+      if (itsSubbandsPerMS!=null) {
+        inputSubbandsPerMS.setText(itsSubbandsPerMS.limits);
+      }
+
       // Correlator
-      inputIntegrationTime.setText(itsIntegrationTime.limits);
+      if (itsIntegrationTime!=null) {
+        inputIntegrationTime.setText(itsIntegrationTime.limits);
+      }
 
       // PencilInfo
-      aB=false;
-      if (itsFlysEye.limits.equals("true")||itsFlysEye.limits.equals("TRUE")) {
+      if (itsFlysEye!=null) {
+        aB=false;
+        if (itsFlysEye.limits.equals("true")||itsFlysEye.limits.equals("TRUE")) {
           aB=true;
+        }
+        inputFlysEye.setSelected(aB);
       }
-      inputFlysEye.setSelected(aB);
 
-      inputRingSize.setText(itsRingSize.limits);
-      inputNrRings.setText(itsNrRings.limits);
+      if (itsRingSize!=null) {
+        inputRingSize.setText(itsRingSize.limits);
+      }
+      if (itsNrRings!=null) {
+        inputNrRings.setText(itsNrRings.limits);
+      }
 
       // Stokes
-      inputWhich.setSelectedItem(itsWhich.limits);
-      aB=false;
-      if (itsIntegrateChannels.limits.equals("true")||itsIntegrateChannels.limits.equals("TRUE")) {
-          aB=true;
+      if(itsWhich!=null) {
+        inputWhich.setSelectedItem(itsWhich.limits);
       }
-      inputIntegrateChannels.setSelected(aB);
-      inputIntegrationSteps.setText(itsIntegrationSteps.limits);
+      if (itsIntegrateChannels!=null) {
+        aB=false;
+        if (itsIntegrateChannels.limits.equals("true")||itsIntegrateChannels.limits.equals("TRUE")) {
+          aB=true;
+        }
+        inputIntegrateChannels.setSelected(aB);
+      }
+      if (itsIntegrationSteps!=null) {
+        inputIntegrationSteps.setText(itsIntegrationSteps.limits);
+      }
 
       // Pencils
       // set table back to initial values
-      itsPencilConfigurationTableModel.fillTable(itsTreeType,itsAngle1,itsAngle2);
-
+      if (itsAngle1!=null && itsAngle2!=null) {
+          itsPencilConfigurationTableModel.fillTable(itsTreeType,itsAngle1,itsAngle2);
+      }
+      
       checkSettings();
     }
      
