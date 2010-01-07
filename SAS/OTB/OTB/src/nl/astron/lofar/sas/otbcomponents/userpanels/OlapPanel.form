@@ -33,7 +33,7 @@
     <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
-    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,2,-9,0,0,3,-27"/>
+    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,2,-120,0,0,4,126"/>
   </AuxValues>
 
   <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
@@ -100,7 +100,7 @@
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jPanel4" min="-2" max="-2" attributes="2"/>
-                      <EmptySpace pref="4264" max="32767" attributes="0"/>
+                      <EmptySpace pref="4383" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -108,7 +108,7 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="jPanel4" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="2341" max="32767" attributes="0"/>
+                      <EmptySpace pref="2387" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -119,29 +119,23 @@
               <Layout>
                 <DimensionLayout dim="0">
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Group type="102" alignment="1" attributes="0">
+                      <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="1" attributes="0">
-                              <Component id="jPanel3" alignment="0" pref="930" max="32767" attributes="1"/>
-                              <Group type="102" alignment="1" attributes="0">
-                                  <Component id="CorrelatorPanel" max="32767" attributes="1"/>
-                                  <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="StokesPanel" min="-2" max="-2" attributes="1"/>
-                                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                                  <Component id="PencilInfoPanel" min="-2" max="-2" attributes="1"/>
-                              </Group>
-                              <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
-                                  <Component id="jPanel8" alignment="0" max="32767" attributes="1"/>
-                                  <Group type="102" alignment="0" attributes="0">
-                                      <Component id="jPanel6" min="-2" max="-2" attributes="1"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="jPanel7" max="32767" attributes="1"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="jPanel11" max="32767" attributes="1"/>
-                                          <Component id="jPanel5" alignment="0" pref="313" max="32767" attributes="1"/>
-                                      </Group>
+                              <Component id="jPanel3" alignment="0" pref="811" max="32767" attributes="1"/>
+                              <Component id="jPanel8" alignment="0" max="32767" attributes="1"/>
+                              <Group type="102" alignment="0" attributes="1">
+                                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                      <Component id="jPanel11" max="32767" attributes="1"/>
+                                      <Component id="jPanel7" alignment="0" max="32767" attributes="1"/>
                                   </Group>
+                                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="CorrelatorPanel" max="32767" attributes="1"/>
+                                      <Component id="PencilInfoPanel" min="-2" max="-2" attributes="1"/>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="StokesPanel" max="32767" attributes="1"/>
                               </Group>
                           </Group>
                           <EmptySpace min="-2" max="-2" attributes="0"/>
@@ -150,26 +144,26 @@
                 </DimensionLayout>
                 <DimensionLayout dim="1">
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Group type="102" alignment="0" attributes="0">
+                      <Group type="102" attributes="0">
+                          <EmptySpace min="-2" pref="11" max="-2" attributes="0"/>
                           <Component id="jPanel8" min="-2" max="-2" attributes="1"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Group type="102" attributes="0">
-                                  <Component id="jPanel5" min="-2" max="-2" attributes="1"/>
+                              <Group type="102" alignment="1" attributes="0">
+                                  <Component id="jPanel7" max="32767" attributes="1"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="jPanel11" max="32767" attributes="1"/>
                               </Group>
-                              <Component id="jPanel7" max="32767" attributes="1"/>
-                              <Component id="jPanel6" alignment="1" pref="144" max="32767" attributes="1"/>
+                              <Group type="102" alignment="1" attributes="0">
+                                  <Component id="CorrelatorPanel" max="32767" attributes="1"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="PencilInfoPanel" min="-2" max="-2" attributes="1"/>
+                              </Group>
+                              <Component id="StokesPanel" alignment="1" max="32767" attributes="1"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                              <Component id="StokesPanel" alignment="0" max="32767" attributes="1"/>
-                              <Component id="PencilInfoPanel" alignment="0" max="32767" attributes="1"/>
-                              <Component id="CorrelatorPanel" alignment="0" max="32767" attributes="1"/>
-                          </Group>
-                          <EmptySpace max="-2" attributes="0"/>
-                          <Component id="jPanel3" min="-2" pref="213" max="-2" attributes="1"/>
+                          <Component id="jPanel3" min="-2" pref="206" max="-2" attributes="1"/>
+                          <EmptySpace min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -193,9 +187,8 @@
                           <Group type="102" attributes="0">
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Component id="labelStorageStationNames" alignment="1" max="32767" attributes="1"/>
-                                  <Component id="labelRealTime" max="32767" attributes="1"/>
-                                  <Component id="labelDelayCompensation" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="labelNrSubbandsPerFrame" max="32767" attributes="1"/>
+                                  <Component id="labelDelayCompensation" max="32767" attributes="1"/>
                                   <Component id="labelNrBitsPerSample" alignment="0" max="32767" attributes="1"/>
                                   <Component id="labelNrTimesInFrame" alignment="0" pref="117" max="32767" attributes="1"/>
                               </Group>
@@ -203,149 +196,115 @@
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" attributes="0">
                                       <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="inputDelayCompensation" min="-2" max="-2" attributes="0"/>
-                                          <Component id="inputNrBitsPerSample" min="-2" pref="143" max="-2" attributes="1"/>
-                                          <Component id="inputNrTimesInFrame" alignment="0" min="-2" pref="144" max="-2" attributes="1"/>
-                                          <Component id="inputRealTime" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Component id="inputNrTimesInFrame" min="-2" pref="144" max="-2" attributes="1"/>
+                                          <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
+                                              <Component id="inputNrSubbandsPerFrame" alignment="0" max="32767" attributes="1"/>
+                                              <Component id="inputNrBitsPerSample" alignment="0" pref="143" max="32767" attributes="1"/>
+                                          </Group>
                                       </Group>
-                                      <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
-                                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                          <Component id="labelNrSubbandsPerFrame" alignment="0" max="32767" attributes="1"/>
-                                          <Component id="labelMaxNetworkDelay" alignment="0" max="32767" attributes="1"/>
-                                          <Component id="labelNrSecondsOfBuffer" alignment="0" max="32767" attributes="1"/>
-                                          <Component id="labelCorrectBandPass" alignment="1" max="32767" attributes="1"/>
-                                      </Group>
-                                  </Group>
-                                  <Component id="inputStorageStationNames" min="-2" pref="128" max="-2" attributes="1"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Group type="102" attributes="0">
-                                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                          <Component id="inputNrSubbandsPerFrame" max="32767" attributes="1"/>
-                                          <Component id="inputMaxNetworkDelay" alignment="0" max="32767" attributes="1"/>
-                                          <Component id="inputNrSecondsOfBuffer" alignment="0" pref="137" max="32767" attributes="1"/>
-                                      </Group>
-                                      <EmptySpace max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="0" attributes="0">
-                                          <Group type="102" attributes="0">
-                                              <Component id="subbandsPerFrameDerefText" min="-2" pref="119" max="-2" attributes="1"/>
-                                              <EmptySpace min="-2" pref="23" max="-2" attributes="0"/>
+                                          <Group type="102" alignment="0" attributes="0">
+                                              <EmptySpace min="-2" pref="50" max="-2" attributes="0"/>
                                               <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                                                  <Group type="102" attributes="0">
-                                                      <Component id="labelOutputCorrelatedData" min="-2" pref="110" max="-2" attributes="0"/>
-                                                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                                                      <Component id="inputOutputCorrelatedData" min="-2" max="-2" attributes="0"/>
+                                                  <Component id="labelMaxNetworkDelay" alignment="0" max="32767" attributes="1"/>
+                                                  <Component id="labelNrSecondsOfBuffer" alignment="0" pref="136" max="32767" attributes="1"/>
+                                              </Group>
+                                              <EmptySpace max="-2" attributes="0"/>
+                                              <Group type="103" groupAlignment="0" attributes="0">
+                                                  <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                                      <Component id="inputNrSecondsOfBuffer" min="-2" pref="171" max="-2" attributes="1"/>
+                                                      <Component id="inputMaxNetworkDelay" max="32767" attributes="1"/>
                                                   </Group>
-                                                  <Group type="102" attributes="1">
-                                                      <Component id="labelOutputFilteredData" max="32767" attributes="0"/>
-                                                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                                                      <Component id="inputOutputFilteredData" min="-2" max="-2" attributes="0"/>
-                                                  </Group>
-                                                  <Group type="102" alignment="1" attributes="0">
-                                                      <Component id="labelOutputBeamFormedData" min="-2" pref="110" max="-2" attributes="0"/>
-                                                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                                                      <Component id="inputOutputBeamFormedData" min="-2" max="-2" attributes="0"/>
-                                                  </Group>
-                                                  <Group type="102" alignment="0" attributes="0">
-                                                      <Component id="labelOutputCoherentStokes" min="-2" pref="110" max="-2" attributes="0"/>
-                                                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                                                      <Component id="inputOutputCoherentStokes" min="-2" max="-2" attributes="0"/>
-                                                  </Group>
-                                                  <Group type="102" alignment="1" attributes="0">
-                                                      <Component id="labelOutputIncoherentStokes" min="-2" pref="110" max="-2" attributes="0"/>
-                                                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                                                      <Component id="inputOutputIncoherentStokes" min="-2" max="-2" attributes="0"/>
-                                                  </Group>
+                                                  <Component id="inputCorrectBandPass" min="-2" max="-2" attributes="0"/>
                                               </Group>
                                           </Group>
                                           <Group type="102" alignment="0" attributes="0">
-                                              <EmptySpace min="-2" pref="231" max="-2" attributes="0"/>
-                                              <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
+                                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                                              <Component id="subbandsPerFrameDerefText" min="-2" pref="119" max="-2" attributes="1"/>
                                           </Group>
                                       </Group>
                                   </Group>
-                                  <Component id="inputCorrectBandPass" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputDelayCompensation" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace pref="75" max="32767" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="102" attributes="0">
+                                      <EmptySpace type="separate" min="-2" max="-2" attributes="0"/>
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Component id="inputOutputCorrelatedData" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Component id="inputOutputFilteredData" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Component id="inputOutputBeamFormedData" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Component id="inputOutputCoherentStokes" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Component id="inputOutputIncoherentStokes" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                  </Group>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <EmptySpace min="-2" pref="43" max="-2" attributes="0"/>
+                                      <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
+                              <EmptySpace pref="28" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
                     <DimensionLayout dim="1">
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
-                              <Group type="103" groupAlignment="3" max="-2" attributes="0">
-                                  <Component id="labelNrTimesInFrame" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="labelNrSecondsOfBuffer" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputNrSecondsOfBuffer" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputNrTimesInFrame" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="3" max="-2" attributes="0">
-                                  <Component id="labelNrBitsPerSample" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="labelMaxNetworkDelay" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputMaxNetworkDelay" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="labelOutputCorrelatedData" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputOutputCorrelatedData" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputNrBitsPerSample" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" attributes="0">
-                                      <Group type="103" groupAlignment="0" attributes="0">
-                                          <Group type="102" alignment="0" attributes="0">
-                                              <Group type="103" groupAlignment="3" attributes="0">
-                                                  <Component id="labelNrSubbandsPerFrame" alignment="3" min="-2" max="-2" attributes="0"/>
-                                                  <Component id="inputNrSubbandsPerFrame" alignment="3" min="-2" max="-2" attributes="0"/>
-                                                  <Component id="subbandsPerFrameDerefText" alignment="3" min="-2" max="-2" attributes="0"/>
-                                              </Group>
-                                              <EmptySpace max="-2" attributes="0"/>
-                                              <Group type="103" groupAlignment="0" attributes="0">
-                                                  <Component id="inputCorrectBandPass" min="-2" pref="13" max="-2" attributes="0"/>
-                                                  <Component id="labelCorrectBandPass" alignment="0" min="-2" max="-2" attributes="0"/>
-                                              </Group>
-                                          </Group>
-                                          <Group type="102" alignment="0" attributes="0">
-                                              <Group type="103" groupAlignment="1" attributes="0">
-                                                  <Component id="inputDelayCompensation" min="-2" pref="13" max="-2" attributes="0"/>
-                                                  <Component id="labelDelayCompensation" alignment="1" min="-2" max="-2" attributes="0"/>
-                                              </Group>
-                                              <EmptySpace max="-2" attributes="0"/>
-                                              <Group type="103" groupAlignment="0" attributes="0">
-                                                  <Component id="labelRealTime" min="-2" max="-2" attributes="0"/>
-                                                  <Component id="inputRealTime" alignment="0" min="-2" pref="13" max="-2" attributes="0"/>
-                                              </Group>
-                                          </Group>
+                                      <Group type="103" groupAlignment="3" max="-2" attributes="0">
+                                          <Component id="labelNrTimesInFrame" alignment="3" min="-2" max="-2" attributes="0"/>
+                                          <Component id="inputNrTimesInFrame" alignment="3" min="-2" max="-2" attributes="0"/>
+                                          <Component id="labelNrSecondsOfBuffer" alignment="3" min="-2" max="-2" attributes="0"/>
+                                          <Component id="inputNrSecondsOfBuffer" alignment="3" min="-2" max="-2" attributes="0"/>
                                       </Group>
-                                      <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
-                                      <Group type="103" groupAlignment="3" attributes="0">
-                                          <Component id="labelStorageStationNames" alignment="3" min="-2" max="-2" attributes="0"/>
-                                          <Component id="inputStorageStationNames" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Group type="103" groupAlignment="3" max="-2" attributes="0">
+                                          <Component id="labelNrBitsPerSample" alignment="3" min="-2" max="-2" attributes="0"/>
+                                          <Component id="inputMaxNetworkDelay" alignment="3" min="-2" max="-2" attributes="0"/>
+                                          <Component id="inputNrBitsPerSample" alignment="3" min="-2" max="-2" attributes="0"/>
+                                          <Component id="labelMaxNetworkDelay" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                      <Group type="103" groupAlignment="1" attributes="0">
+                                          <Group type="102" alignment="0" attributes="0">
+                                              <EmptySpace max="-2" attributes="0"/>
+                                              <Group type="103" groupAlignment="0" attributes="0">
+                                                  <Group type="102" alignment="0" attributes="0">
+                                                      <EmptySpace min="-2" pref="23" max="-2" attributes="0"/>
+                                                      <Component id="labelDelayCompensation" min="-2" max="-2" attributes="0"/>
+                                                  </Group>
+                                                  <Group type="102" alignment="0" attributes="0">
+                                                      <Group type="103" groupAlignment="3" attributes="0">
+                                                          <Component id="labelNrSubbandsPerFrame" alignment="3" min="-2" max="-2" attributes="0"/>
+                                                          <Component id="inputNrSubbandsPerFrame" alignment="3" min="-2" max="-2" attributes="0"/>
+                                                          <Component id="subbandsPerFrameDerefText" alignment="3" min="-2" max="-2" attributes="0"/>
+                                                      </Group>
+                                                      <EmptySpace max="-2" attributes="0"/>
+                                                      <Component id="inputCorrectBandPass" min="-2" pref="13" max="-2" attributes="0"/>
+                                                  </Group>
+                                              </Group>
+                                          </Group>
+                                          <Group type="102" alignment="0" attributes="1">
+                                              <EmptySpace min="-2" pref="31" max="-2" attributes="0"/>
+                                              <Component id="inputDelayCompensation" min="-2" pref="13" max="-2" attributes="0"/>
+                                          </Group>
                                       </Group>
                                   </Group>
                                   <Group type="102" alignment="0" attributes="0">
-                                      <Group type="103" groupAlignment="3" max="-2" attributes="0">
-                                          <Component id="labelOutputFilteredData" alignment="3" min="-2" max="-2" attributes="0"/>
-                                          <Component id="inputOutputFilteredData" alignment="3" min="-2" max="-2" attributes="0"/>
-                                      </Group>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Group type="103" groupAlignment="3" max="-2" attributes="0">
-                                          <Component id="labelOutputBeamFormedData" alignment="3" min="-2" max="-2" attributes="0"/>
-                                          <Component id="inputOutputBeamFormedData" alignment="3" min="-2" max="-2" attributes="0"/>
-                                      </Group>
+                                      <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Group type="103" groupAlignment="3" max="-2" attributes="0">
-                                          <Component id="labelOutputCoherentStokes" alignment="3" min="-2" max="-2" attributes="0"/>
-                                          <Component id="inputOutputCoherentStokes" alignment="3" min="-2" max="-2" attributes="0"/>
-                                      </Group>
+                                      <Component id="inputOutputCorrelatedData" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Group type="103" groupAlignment="3" max="-2" attributes="0">
-                                          <Component id="labelOutputIncoherentStokes" alignment="3" min="-2" max="-2" attributes="0"/>
-                                          <Component id="inputOutputIncoherentStokes" alignment="3" min="-2" max="-2" attributes="0"/>
-                                      </Group>
+                                      <Component id="inputOutputFilteredData" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="inputOutputBeamFormedData" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="inputOutputCoherentStokes" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="inputOutputIncoherentStokes" min="-2" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
+                              <EmptySpace pref="7" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -393,13 +352,6 @@
                     </Component>
                     <Component class="javax.swing.JTextField" name="inputNrSecondsOfBuffer">
                     </Component>
-                    <Component class="javax.swing.JLabel" name="labelStorageStationNames">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="storageStationNames:"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JTextField" name="inputStorageStationNames">
-                    </Component>
                     <Component class="javax.swing.JLabel" name="labelMaxNetworkDelay">
                       <Properties>
                         <Property name="text" type="java.lang.String" value="Max Network Delay:"/>
@@ -417,30 +369,9 @@
                         <Property name="toolTipText" type="java.lang.String" value=""/>
                       </Properties>
                     </Component>
-                    <Component class="javax.swing.JLabel" name="labelRealTime">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="RealTime:"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JCheckBox" name="inputRealTime">
-                      <Properties>
-                        <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-                          <Border info="org.netbeans.modules.form.compat2.border.EmptyBorderInfo">
-                            <EmptyBorder bottom="0" left="0" right="0" top="0"/>
-                          </Border>
-                        </Property>
-                        <Property name="margin" type="java.awt.Insets" editor="org.netbeans.beaninfo.editors.InsetsEditor">
-                          <Insets value="[0, 0, 0, 0]"/>
-                        </Property>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JLabel" name="labelCorrectBandPass">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="Correct BandPass:"/>
-                      </Properties>
-                    </Component>
                     <Component class="javax.swing.JCheckBox" name="inputCorrectBandPass">
                       <Properties>
+                        <Property name="text" type="java.lang.String" value="Correct BandPass"/>
                         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
                           <Border info="org.netbeans.modules.form.compat2.border.EmptyBorderInfo">
                             <EmptyBorder bottom="0" left="0" right="0" top="0"/>
@@ -457,11 +388,6 @@
                         <Property name="enabled" type="boolean" value="false"/>
                       </Properties>
                     </Component>
-                    <Component class="javax.swing.JLabel" name="labelOutputCorrelatedData">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="Correlated Data:"/>
-                      </Properties>
-                    </Component>
                     <Component class="javax.swing.JLabel" name="jLabel3">
                       <Properties>
                         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
@@ -471,158 +397,41 @@
                       </Properties>
                     </Component>
                     <Component class="javax.swing.JCheckBox" name="inputOutputCorrelatedData">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Correlated Data"/>
+                      </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputOutputCorrelatedDataActionPerformed"/>
                       </Events>
                     </Component>
-                    <Component class="javax.swing.JLabel" name="labelOutputFilteredData">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="Filtered Data:"/>
-                      </Properties>
-                    </Component>
                     <Component class="javax.swing.JCheckBox" name="inputOutputFilteredData">
-                    </Component>
-                    <Component class="javax.swing.JLabel" name="labelOutputBeamFormedData">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Beamformed Data:"/>
+                        <Property name="text" type="java.lang.String" value="Filtered Data"/>
                       </Properties>
                     </Component>
                     <Component class="javax.swing.JCheckBox" name="inputOutputBeamFormedData">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Beamformed Data"/>
+                      </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputOutputBeamFormedDataActionPerformed"/>
                       </Events>
                     </Component>
-                    <Component class="javax.swing.JLabel" name="labelOutputCoherentStokes">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="Coherent Stokes:"/>
-                      </Properties>
-                    </Component>
                     <Component class="javax.swing.JCheckBox" name="inputOutputCoherentStokes">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Coherent Stokes"/>
+                      </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputOutputCoherentStokesActionPerformed"/>
                       </Events>
                     </Component>
-                    <Component class="javax.swing.JLabel" name="labelOutputIncoherentStokes">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="Incoherent Stokes:"/>
-                      </Properties>
-                    </Component>
                     <Component class="javax.swing.JCheckBox" name="inputOutputIncoherentStokes">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Incoherent Stokes"/>
+                      </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputOutputIncoherentStokesActionPerformed"/>
                       </Events>
-                    </Component>
-                  </SubComponents>
-                </Container>
-                <Container class="javax.swing.JPanel" name="jPanel6">
-                  <Properties>
-                    <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-                      <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                        <TitledBorder title="Olap Conn">
-                          <Font PropertyName="font" name="Tahoma" size="11" style="1"/>
-                          <Color PropertyName="color" blue="0" green="0" red="0" type="rgb"/>
-                        </TitledBorder>
-                      </Border>
-                    </Property>
-                    <Property name="toolTipText" type="java.lang.String" value="Olap Conn"/>
-                  </Properties>
-
-                  <Layout>
-                    <DimensionLayout dim="0">
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" attributes="0">
-                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Component id="labelRawDataOutputOnly" alignment="1" max="32767" attributes="1"/>
-                                  <Component id="labelRawDataOutputs" max="32767" attributes="1"/>
-                                  <Component id="labelIONProcStoragePorts" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelIONProcCNProcTransport" alignment="0" max="32767" attributes="1"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="inputIONProcStoragePorts" alignment="0" pref="142" max="32767" attributes="1"/>
-                                  <Component id="inputIONProcCNProcTransport" alignment="0" pref="142" max="32767" attributes="1"/>
-                                  <Component id="inputRawDataOutputs" alignment="0" pref="142" max="32767" attributes="1"/>
-                                  <Component id="inputRawDataOutputOnly" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                          </Group>
-                      </Group>
-                    </DimensionLayout>
-                    <DimensionLayout dim="1">
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="labelIONProcCNProcTransport" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputIONProcCNProcTransport" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="labelIONProcStoragePorts" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputIONProcStoragePorts" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="labelRawDataOutputs" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputRawDataOutputs" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="1" attributes="0">
-                                  <Component id="labelRawDataOutputOnly" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputRawDataOutputOnly" min="-2" pref="13" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                          </Group>
-                      </Group>
-                    </DimensionLayout>
-                  </Layout>
-                  <SubComponents>
-                    <Component class="javax.swing.JLabel" name="labelIONProcCNProcTransport">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="IONProc-&gt;CNProc Transport:"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JComboBox" name="inputIONProcCNProcTransport">
-                      <Properties>
-                        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                          <StringArray count="4">
-                            <StringItem index="0" value="Item 1"/>
-                            <StringItem index="1" value="Item 2"/>
-                            <StringItem index="2" value="Item 3"/>
-                            <StringItem index="3" value="Item 4"/>
-                          </StringArray>
-                        </Property>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JLabel" name="labelIONProcStoragePorts">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="IONProc-&gt;Storage Ports:"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JTextField" name="inputIONProcStoragePorts">
-                    </Component>
-                    <Component class="javax.swing.JLabel" name="labelRawDataOutputs">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="rawDataOutputs:"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JTextField" name="inputRawDataOutputs">
-                    </Component>
-                    <Component class="javax.swing.JLabel" name="labelRawDataOutputOnly">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="Raw data input only:"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JCheckBox" name="inputRawDataOutputOnly">
-                      <Properties>
-                        <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-                          <Border info="org.netbeans.modules.form.compat2.border.EmptyBorderInfo">
-                            <EmptyBorder bottom="0" left="0" right="0" top="0"/>
-                          </Border>
-                        </Property>
-                        <Property name="margin" type="java.awt.Insets" editor="org.netbeans.beaninfo.editors.InsetsEditor">
-                          <Insets value="[0, 0, 0, 0]"/>
-                        </Property>
-                      </Properties>
                     </Component>
                   </SubComponents>
                 </Container>
@@ -644,20 +453,15 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Group type="102" attributes="1">
-                                      <EmptySpace min="2" pref="2" max="2" attributes="0"/>
-                                      <Component id="labelCoresPerPset" max="32767" attributes="1"/>
-                                  </Group>
                                   <Component id="labelPartition" alignment="0" max="32767" attributes="1"/>
                                   <Component id="labelNrPPFTaps" alignment="0" max="32767" attributes="1"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
                                   <Component id="inputPartition" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="inputCoresPerPset" alignment="0" max="32767" attributes="1"/>
                                   <Component id="inputNrPPFTaps" alignment="0" min="-2" pref="154" max="-2" attributes="1"/>
                               </Group>
-                              <EmptySpace pref="30" max="32767" attributes="0"/>
+                              <EmptySpace pref="33" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -673,12 +477,6 @@
                                   <Component id="labelPartition" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="inputPartition" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="labelCoresPerPset" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputCoresPerPset" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace pref="42" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -695,13 +493,6 @@
                       <Properties>
                         <Property name="text" type="java.lang.String" value="Partition:"/>
                       </Properties>
-                    </Component>
-                    <Component class="javax.swing.JLabel" name="labelCoresPerPset">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="# Cores per Pset:"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JTextField" name="inputCoresPerPset">
                     </Component>
                     <Component class="javax.swing.JTextField" name="inputPartition">
                     </Component>
@@ -726,7 +517,7 @@
                               <Component id="labelSubbandsPerMs" min="-2" max="-2" attributes="1"/>
                               <EmptySpace type="separate" max="-2" attributes="0"/>
                               <Component id="inputSubbandsPerMS" min="-2" pref="125" max="-2" attributes="1"/>
-                              <EmptySpace pref="60" max="32767" attributes="0"/>
+                              <EmptySpace max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -737,7 +528,7 @@
                                   <Component id="labelSubbandsPerMs" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="inputSubbandsPerMS" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace pref="12" max="32767" attributes="0"/>
+                              <EmptySpace pref="46" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -749,167 +540,6 @@
                       </Properties>
                     </Component>
                     <Component class="javax.swing.JTextField" name="inputSubbandsPerMS">
-                    </Component>
-                  </SubComponents>
-                </Container>
-                <Container class="javax.swing.JPanel" name="jPanel5">
-                  <Properties>
-                    <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-                      <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                        <TitledBorder title="Delay Compensation">
-                          <Font PropertyName="font" name="Tahoma" size="11" style="1"/>
-                          <Color PropertyName="color" blue="0" green="0" red="0" type="rgb"/>
-                        </TitledBorder>
-                      </Border>
-                    </Property>
-                    <Property name="toolTipText" type="java.lang.String" value="Delay Compensation"/>
-                  </Properties>
-
-                  <Layout>
-                    <DimensionLayout dim="0">
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" attributes="0">
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="labelNrCalcDelays" min="-2" pref="87" max="-2" attributes="0"/>
-                                  <Component id="labelPositionType" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Component id="inputPositionType" max="32767" attributes="1"/>
-                                  <Component id="inputNrCalcDelays" alignment="0" pref="145" max="32767" attributes="1"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                          </Group>
-                      </Group>
-                    </DimensionLayout>
-                    <DimensionLayout dim="1">
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="labelNrCalcDelays" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputNrCalcDelays" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="labelPositionType" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputPositionType" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                          </Group>
-                      </Group>
-                    </DimensionLayout>
-                  </Layout>
-                  <SubComponents>
-                    <Component class="javax.swing.JLabel" name="labelNrCalcDelays">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="# Calc. Delays:"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JLabel" name="labelPositionType">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="PositionType:"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JTextField" name="inputNrCalcDelays">
-                    </Component>
-                    <Component class="javax.swing.JTextField" name="inputPositionType">
-                    </Component>
-                  </SubComponents>
-                </Container>
-                <Container class="javax.swing.JPanel" name="PencilInfoPanel">
-                  <Properties>
-                    <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-                      <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                        <TitledBorder title="PencilInfo">
-                          <Font PropertyName="font" name="Tahoma" size="11" style="1"/>
-                          <Color PropertyName="color" blue="0" green="0" red="0" type="rgb"/>
-                        </TitledBorder>
-                      </Border>
-                    </Property>
-                    <Property name="toolTipText" type="java.lang.String" value="PencilInfo"/>
-                  </Properties>
-
-                  <Layout>
-                    <DimensionLayout dim="0">
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" attributes="0">
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Component id="labelRingSize" max="32767" attributes="1"/>
-                                  <Component id="labelFlysEye" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelNrRings" alignment="0" max="32767" attributes="1"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="inputFlysEye" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputNrRings" min="-2" pref="99" max="-2" attributes="0"/>
-                                  <Component id="inputRingSize" min="-2" pref="99" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace pref="134" max="32767" attributes="0"/>
-                          </Group>
-                      </Group>
-                    </DimensionLayout>
-                    <DimensionLayout dim="1">
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" attributes="0">
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="inputFlysEye" min="-2" pref="13" max="-2" attributes="0"/>
-                                  <Component id="labelFlysEye" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="labelNrRings" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputNrRings" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="labelRingSize" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputRingSize" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                          </Group>
-                      </Group>
-                    </DimensionLayout>
-                  </Layout>
-                  <SubComponents>
-                    <Component class="javax.swing.JLabel" name="labelFlysEye">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="Flyseye:"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JCheckBox" name="inputFlysEye">
-                      <Properties>
-                        <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-                          <Border info="org.netbeans.modules.form.compat2.border.EmptyBorderInfo">
-                            <EmptyBorder bottom="0" left="0" right="0" top="0"/>
-                          </Border>
-                        </Property>
-                        <Property name="enabled" type="boolean" value="false"/>
-                        <Property name="margin" type="java.awt.Insets" editor="org.netbeans.beaninfo.editors.InsetsEditor">
-                          <Insets value="[0, 0, 0, 0]"/>
-                        </Property>
-                      </Properties>
-                      <Events>
-                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputFlysEyeActionPerformed"/>
-                      </Events>
-                    </Component>
-                    <Component class="javax.swing.JLabel" name="labelNrRings">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="# rings:"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JTextField" name="inputNrRings">
-                      <Properties>
-                        <Property name="enabled" type="boolean" value="false"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JLabel" name="labelRingSize">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="Ring size:"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JTextField" name="inputRingSize">
-                      <Properties>
-                        <Property name="enabled" type="boolean" value="false"/>
-                      </Properties>
                     </Component>
                   </SubComponents>
                 </Container>
@@ -929,13 +559,13 @@
                   <Layout>
                     <DimensionLayout dim="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="1" attributes="0">
-                              <Component id="labelIntegrationTime" pref="168" max="32767" attributes="1"/>
+                          <Group type="102" attributes="0">
+                              <Component id="labelIntegrationTime" min="-2" pref="104" max="-2" attributes="1"/>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Component id="inputIntegrationTime" min="-2" pref="63" max="-2" attributes="1"/>
-                              <EmptySpace min="-2" pref="36" max="-2" attributes="0"/>
+                              <Component id="inputIntegrationTime" min="-2" pref="54" max="-2" attributes="1"/>
+                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
                               <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -944,10 +574,10 @@
                           <Group type="102" attributes="0">
                               <Group type="103" groupAlignment="3" attributes="0">
                                   <Component id="labelIntegrationTime" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="inputIntegrationTime" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace pref="46" max="32767" attributes="0"/>
+                              <EmptySpace pref="26" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -986,26 +616,22 @@
                   <Layout>
                     <DimensionLayout dim="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
-                              <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                                  <Component id="labelIntegrationsteps" alignment="1" max="32767" attributes="1"/>
-                                  <Component id="labelIntegrateChannel" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelWhich" alignment="0" pref="103" max="32767" attributes="1"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
+                          <Group type="102" attributes="0">
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Group type="102" attributes="0">
-                                      <Component id="inputIntegrateChannels" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                  </Group>
-                                  <Group type="102" alignment="1" attributes="0">
-                                      <Group type="103" groupAlignment="1" attributes="0">
-                                          <Component id="inputIntegrationSteps" alignment="0" pref="121" max="32767" attributes="1"/>
-                                          <Component id="inputWhich" alignment="1" pref="121" max="32767" attributes="1"/>
+                                  <Component id="inputIntegrateChannels" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                          <Component id="labelIntegrationsteps" alignment="0" max="32767" attributes="1"/>
+                                          <Component id="labelWhich" alignment="0" pref="103" max="32767" attributes="1"/>
                                       </Group>
-                                      <EmptySpace min="-2" pref="48" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                          <Component id="inputIntegrationSteps" max="32767" attributes="1"/>
+                                          <Component id="inputWhich" alignment="0" pref="173" max="32767" attributes="1"/>
+                                      </Group>
                                   </Group>
                               </Group>
+                              <EmptySpace pref="22" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -1016,16 +642,14 @@
                                   <Component id="labelWhich" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="inputWhich" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="labelIntegrateChannel" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputIntegrateChannels" min="-2" pref="13" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="32767" attributes="0"/>
+                              <EmptySpace min="-2" pref="8" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
                                   <Component id="labelIntegrationsteps" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="inputIntegrationSteps" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
+                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                              <Component id="inputIntegrateChannels" min="-2" pref="13" max="-2" attributes="0"/>
+                              <EmptySpace pref="76" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -1049,13 +673,9 @@
                         <Property name="enabled" type="boolean" value="false"/>
                       </Properties>
                     </Component>
-                    <Component class="javax.swing.JLabel" name="labelIntegrateChannel">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="integrate Channels:"/>
-                      </Properties>
-                    </Component>
                     <Component class="javax.swing.JCheckBox" name="inputIntegrateChannels">
                       <Properties>
+                        <Property name="text" type="java.lang.String" value="integrate Channels"/>
                         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
                           <Border info="org.netbeans.modules.form.compat2.border.EmptyBorderInfo">
                             <EmptyBorder bottom="0" left="0" right="0" top="0"/>
@@ -1101,7 +721,7 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="pencilConfigurationPanel" pref="904" max="32767" attributes="0"/>
+                                  <Component id="pencilConfigurationPanel" pref="785" max="32767" attributes="0"/>
                                   <Group type="102" alignment="0" attributes="0">
                                       <Component id="addPencilButton" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
@@ -1124,7 +744,7 @@
                                   <Component id="addPencilButton" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="deletePencilButton" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
+                              <EmptySpace pref="13" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -1160,6 +780,100 @@
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="deletePencilButtonActionPerformed"/>
                       </Events>
+                    </Component>
+                  </SubComponents>
+                </Container>
+                <Container class="javax.swing.JPanel" name="PencilInfoPanel">
+                  <Properties>
+                    <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                      <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
+                        <TitledBorder title="PencilInfo">
+                          <Font PropertyName="font" name="Tahoma" size="11" style="1"/>
+                          <Color PropertyName="color" blue="0" green="0" red="0" type="rgb"/>
+                        </TitledBorder>
+                      </Border>
+                    </Property>
+                    <Property name="toolTipText" type="java.lang.String" value="PencilInfo"/>
+                  </Properties>
+
+                  <Layout>
+                    <DimensionLayout dim="0">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" attributes="0">
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="102" attributes="0">
+                                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                          <Component id="labelRingSize" max="32767" attributes="1"/>
+                                          <Component id="labelNrRings" alignment="0" max="32767" attributes="1"/>
+                                      </Group>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Component id="inputNrRings" min="-2" pref="99" max="-2" attributes="0"/>
+                                          <Component id="inputRingSize" min="-2" pref="99" max="-2" attributes="0"/>
+                                      </Group>
+                                  </Group>
+                                  <Component id="inputFlysEye" alignment="0" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace pref="39" max="32767" attributes="0"/>
+                          </Group>
+                      </Group>
+                    </DimensionLayout>
+                    <DimensionLayout dim="1">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" attributes="0">
+                              <Component id="inputFlysEye" min="-2" pref="13" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="7" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelNrRings" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputNrRings" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelRingSize" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputRingSize" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                          </Group>
+                      </Group>
+                    </DimensionLayout>
+                  </Layout>
+                  <SubComponents>
+                    <Component class="javax.swing.JCheckBox" name="inputFlysEye">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Flyseye"/>
+                        <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                          <Border info="org.netbeans.modules.form.compat2.border.EmptyBorderInfo">
+                            <EmptyBorder bottom="0" left="0" right="0" top="0"/>
+                          </Border>
+                        </Property>
+                        <Property name="enabled" type="boolean" value="false"/>
+                        <Property name="margin" type="java.awt.Insets" editor="org.netbeans.beaninfo.editors.InsetsEditor">
+                          <Insets value="[0, 0, 0, 0]"/>
+                        </Property>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputFlysEyeActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelNrRings">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="# rings:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputNrRings">
+                      <Properties>
+                        <Property name="enabled" type="boolean" value="false"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelRingSize">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Ring size:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputRingSize">
+                      <Properties>
+                        <Property name="enabled" type="boolean" value="false"/>
+                      </Properties>
                     </Component>
                   </SubComponents>
                 </Container>
