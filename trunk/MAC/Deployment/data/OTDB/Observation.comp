@@ -34,7 +34,7 @@ par  antennaSet		         I    ptext  -      10    0      'LBA_INNER|LBA_OUTER|L
 par  longBaselines           I    pbool  -      10    0      'true|false;false'                               - 'Number of polarisations to use in this observation'
 
 # clock related info
-par  clockMode               I    pnode  -      10    0      '<<Clock160|<<Clock200;<<Clock160'        - 'Mode in which clock is running'
+par  clockMode               I    pnode  -      10    0      '<<Clock160|<<Clock200;<<Clock200'        - 'Mode in which clock is running'
 par  sampleClock             I    dbl    MHz    10    100    >>Observation.clockMode.systemClock       - 'SampleClock'
 par  samplesPerSecond        I    int    -      10    100    >>Observation.clockMode.samplesPerSecond  - 'Samples per second'
 par  subbandWidth            I    dbl    kHz    10    100    >>Observation.clockMode.subbandWidth      - ''
