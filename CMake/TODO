@@ -3,14 +3,6 @@
 =                       TODO - List of things to do                          =
 ==============================================================================
 
-* Solve the CN and ION build problems for RTCP. These problems arise because
-  CN and ION are now defined as variants, whereas they should be defined as
-  different compilers.
-  However, this only solves part of the problem. A *real* solution is to
-  define compilers in separate <compiler-suite>.compiler.conf files. That
-  way we can do per-compiler settings, instead of per-host settings, using a
-  variants file (see bug #1395).
-
 * Solve the problem of running some (distributed) tests, e.g. ParmDB tests,
   which rely on executables and/or scripts that were built as part of another
   LOFAR package. For (C)Make targets, this can be solved by using the target
