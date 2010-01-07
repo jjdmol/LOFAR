@@ -10,8 +10,12 @@ node   CNProc     1.0.4  development 'node constraint'  "Blue Gene Processing"
 #--------------------------------------------------------------------------------------------------------
 par integrationSteps	O	int	-	10	0	768 	 -	"compute node block size (after FFT)"
 par nrPPFTaps		I	int	-	10	0	16	 -	"number of elements in the polyphasefilter"
-par coresPerPset	I	int	-	10	0	64	 -	"compute cores per BlueGene pset"
-par partition		I	text	-	10	0	'R00'	-	"BlueGene partition"
+par partition		I	text	-	10	0	'R00'	 -	"BlueGene partition"
+
+par usedCores           I       vint    -       10      0       '[0..63]' -     "Cores used in each pset for this observation"
+par phaseOnePsets       I       vint    -       10      0       '[]'      -     "Psets used for phase one (input from stations)"
+par phaseTwoPsets       I       vint    -       10      0       '[]'      -     "Psets used for phase two (calculations per subband)"
+par phaseThreePsets     I       vint    -       10      0       '[]'      -     "Psets used for phase three (calculations per pencil beam)"
 
 
 # -- OLAP_Conni --
