@@ -38,7 +38,7 @@ node  Correlator 1.0.1  development 'node constraint'  "Settings for Correlation
 
 #    name         	dir.	type	unit	prun.	vm	value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par integrationTime	I       dbl		s		10		0	0		- 		"Integration time"
+par integrationTime	I       dbl		-		10		0	0		- 		"Integration time"
 
 
 # -- Stokes --
