@@ -47,13 +47,12 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
   # (i.e., option BUILD_<pkg> is OFF).
   #
   # Adding a package implies:
+  # - Add a dependency of the current package on package <pkg>
   # - If the target <pkg> is not yet defined, and if the package source
   #   directory exists:
   #   - define the option BUILD_<pkg>
   #   - add a custom target <pkg>
   #   - add the source directory to the build
-  # - If the target <pkg> is defined:
-  #   - add a dependency of the current project on package <pkg>
   #
   # Furthermore:
   # - if [srcdir] is not supplied, <pkg>_SOURCE_DIR is used as directory name,
@@ -122,8 +121,10 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
   # <pkg> will also be excluded from the build.
   #
   # The include directories of each dependent package will be added to the
-  # include directories of package <pkg>. This is needed, because CMake does
-  # not retain the include path across source directories.
+  # include directories of package <pkg>; this is needed, because CMake does
+  # not retain the include path across source directories. The libraries
+  # created by each dependent package will be added to the list of link 
+  # libraries of package <pkg>.
   #
   # A preprocessor definition for LOFARLOGGER_PACKAGE is added.
   # --------------------------------------------------------------------------
@@ -172,13 +173,17 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
       # lofar_add_package() will guard against it.
       lofar_add_package(${_dep})# REQUIRED)
 
-      # If building of dependent package <dep> is enabled, then add the list
-      # of include directories of <dep> to that of package <pkg>, else disable
-      # building of package <pkg> as well and raise an error.
+      # If building of dependent package <dep> is enabled:
+      #   add list of include directories of <dep> to that of package <pkg>
+      #   add libraries created by <dep> to list of link libraries of <pkg>
+      # else: 
+      #   disable building of package <pkg> as well and raise an error.
       if(BUILD_${_dep})
         get_directory_property(_dirs
           DIRECTORY ${${_dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
         include_directories(${_dirs})
+        get_property(_libs GLOBAL PROPERTY ${_dep}_LIBRARIES)
+        list(APPEND ${_pkg}_LINK_LIBRARIES ${_libs})
       else(BUILD_${_dep})
         set(BUILD_${_pkg} OFF CACHE BOOL "Build package ${_pkg}" FORCE)
         message(SEND_ERROR "Package `${_dep}' is excluded from the build, but "
