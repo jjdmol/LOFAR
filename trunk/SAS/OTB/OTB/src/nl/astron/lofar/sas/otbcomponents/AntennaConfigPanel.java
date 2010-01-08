@@ -145,6 +145,10 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
 
     }
 
+    public jOTDBnode getStationList() {
+        return itsStationList;
+    }
+
     /** saves the given node back to the database
      */
     private void saveNode(jOTDBnode aNode) {
