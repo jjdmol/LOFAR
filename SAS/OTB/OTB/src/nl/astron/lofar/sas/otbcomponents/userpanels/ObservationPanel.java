@@ -383,28 +383,27 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             // Observation VirtualInstrument parameters
 
             if (aKeyName.equals("stationList")) {        
-                this.stationList.setToolTipText(aParam.description);
-                this.itsStationList = aNode;
-
-                //set the checkbox correctly when no stations are provided in the data
-                if(itsStationList.limits == null || itsStationList.limits.equals("[]")){
-                    stationList.setModel(new DefaultListModel());
-                }else{
-                    TitledBorder aBorder = (TitledBorder)this.stationsPanel.getBorder();
-                    if (isRef && aParam != null) {
-                        aBorder.setTitle("Station Names (Referenced)");
-                        LofarUtils.fillList(stationList,aParam.limits,false);
-                    } else {
-                        aBorder.setTitle("Station Names");
-                        LofarUtils.fillList(stationList,aNode.limits,false);
-                    }
-                }
             } else if (aKeyName.equals("storageNodeList")) {
                 this.storageNodeSelectionPanel.setToolTipText(aParam.description);
                 this.itsStorageNodeList = aNode;
                 setStorageNodeLists(aNode.limits);
             }
         }
+    }
+
+    private void setStationList(jOTDBnode aNode) {
+        this.itsStationList = aNode;
+        this.stationList.setToolTipText(aNode.description);
+
+        //set the checkbox correctly when no stations are provided in the data
+        if(itsStationList.limits == null || itsStationList.limits.equals("[]")){
+            stationList.setModel(new DefaultListModel());
+        }else{
+            TitledBorder aBorder = (TitledBorder)this.stationsPanel.getBorder();
+            aBorder.setTitle("Station Names");
+            LofarUtils.fillList(stationList,aNode.limits,false);
+        }
+
     }
 
     /** Fill the Selectable stations for the Beamformer input
@@ -474,6 +473,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      */
     private void restore() {
 
+      setStationList(antennaConfigPanel.getStationList());
       // Observation Specific parameters
       inputMSNameMask.setText(itsMSNameMask.limits);
       inputReceiverList.setText(itsReceiverList.limits);
@@ -1454,9 +1454,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand().equals("Apply")) {
             itsMainFrame.setHourglassCursor();
-            saveInput();
-            // also save the input from the AntennaConfig Panel
+            // save the input from the AntennaConfig Panel
             this.antennaConfigPanel.saveInput();
+            // save the input from the Generic Panel
+            saveInput();
             // reset all buttons, flags and tables to initial start position. So the panel now reflects the new, saved situation
             initPanel();
             itsMainFrame.setNormalCursor();
