@@ -305,6 +305,8 @@ AC_DEFUN([lofar_BACKTRACE],
           AC_SEARCH_LIBS([bfd_init], [bfd], [
             AC_DEFINE(HAVE_BFD, 1, [Define if libbfd is available])
             AC_CHECK_HEADER([demangle.h],[
+              # Check for basename() avoids redeclaration error with g++ >= 4.4
+              AC_CHECK_DECLS([basename], [], [], [[#include <demangle.h>]])
               AC_CHECK_FUNCS([cplus_demangle],,[
                 AC_MSG_WARN([cplus_demangle not found, please install the GNU binutils])])],[
               AC_MSG_WARN([demangle.h not found, please install the GNU binutils])])],[
