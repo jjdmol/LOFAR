@@ -20,7 +20,7 @@
     <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
-    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,3,80,0,0,4,115"/>
+    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,3,73,0,0,4,115"/>
   </AuxValues>
 
   <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
@@ -107,17 +107,22 @@
               <Layout>
                 <DimensionLayout dim="0">
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Group type="102" attributes="0">
-                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                              <Component id="treeDescriptionScrollPane" alignment="0" max="32767" attributes="1"/>
-                              <Component id="descriptionScrollPane" alignment="0" max="32767" attributes="1"/>
-                              <Component id="jPanel3" alignment="0" pref="1102" max="32767" attributes="1"/>
-                              <Group type="102" alignment="0" attributes="0">
-                                  <Component id="jPanel4" min="-2" pref="632" max="-2" attributes="0"/>
-                                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                                  <Component id="jPanel5" min="-2" max="-2" attributes="0"/>
-                              </Group>
+                      <Group type="102" alignment="0" attributes="0">
+                          <Component id="descriptionScrollPane" pref="1757" max="32767" attributes="1"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="102" alignment="0" attributes="0">
+                          <Group type="103" groupAlignment="1" attributes="0">
+                              <Component id="treeDescriptionScrollPane" alignment="0" pref="1102" max="32767" attributes="1"/>
                               <Component id="jPanel10" alignment="0" max="32767" attributes="1"/>
+                              <Group type="103" alignment="0" groupAlignment="0" max="-2" attributes="0">
+                                  <Component id="jPanel3" alignment="0" pref="1102" max="32767" attributes="1"/>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="jPanel4" min="-2" pref="632" max="-2" attributes="0"/>
+                                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                                      <Component id="jPanel5" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
                           </Group>
                           <EmptySpace pref="665" max="32767" attributes="0"/>
                       </Group>
@@ -134,11 +139,11 @@
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="jPanel10" min="-2" max="-2" attributes="1"/>
-                          <EmptySpace min="-2" pref="28" max="-2" attributes="0"/>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
                           <Component id="descriptionScrollPane" min="-2" pref="54" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="treeDescriptionScrollPane" min="-2" pref="60" max="-2" attributes="0"/>
-                          <EmptySpace min="-2" pref="31" max="-2" attributes="0"/>
+                          <Component id="treeDescriptionScrollPane" min="-2" pref="68" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" pref="116" max="-2" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -211,26 +216,25 @@
                   <Layout>
                     <DimensionLayout dim="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" attributes="0">
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="labelMSNameMask" min="-2" pref="103" max="-2" attributes="1"/>
-                                  <Component id="labelReceiverList" min="-2" pref="89" max="-2" attributes="0"/>
-                                  <Component id="labelNrSlotsInFrame" alignment="0" min="-2" max="-2" attributes="1"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
+                          <Group type="102" alignment="0" attributes="0">
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Component id="inputNrSlotsInFrame" max="32767" attributes="1"/>
-                                  <Component id="inputMSNameMask" alignment="0" pref="743" max="32767" attributes="1"/>
-                                  <Component id="inputReceiverList" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="labelReceiverList" max="32767" attributes="1"/>
+                                  <Component id="labelMSNameMask" alignment="0" pref="178" max="32767" attributes="1"/>
+                                  <Component id="labelNrSlotsInFrame" alignment="0" max="32767" attributes="1"/>
                               </Group>
-                              <EmptySpace pref="226" max="32767" attributes="0"/>
+                              <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="inputMSNameMask" pref="870" max="32767" attributes="1"/>
+                                  <Component id="inputNrSlotsInFrame" alignment="0" pref="870" max="32767" attributes="1"/>
+                                  <Component id="inputReceiverList" alignment="0" pref="870" max="32767" attributes="1"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
                     <DimensionLayout dim="1">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" attributes="0">
+                          <Group type="102" alignment="0" attributes="0">
                               <Group type="103" groupAlignment="3" attributes="0">
                                   <Component id="labelMSNameMask" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="inputMSNameMask" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -240,12 +244,12 @@
                                   <Component id="labelNrSlotsInFrame" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="inputNrSlotsInFrame" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace type="separate" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="inputReceiverList" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="labelReceiverList" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputReceiverList" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace pref="26" max="32767" attributes="0"/>
+                              <EmptySpace max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
