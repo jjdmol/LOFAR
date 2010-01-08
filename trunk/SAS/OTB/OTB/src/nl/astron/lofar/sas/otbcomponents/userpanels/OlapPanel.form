@@ -132,7 +132,7 @@
                                   <EmptySpace type="unrelated" max="-2" attributes="0"/>
                                   <Group type="103" groupAlignment="0" attributes="0">
                                       <Component id="PencilInfoPanel" max="32767" attributes="1"/>
-                                      <Component id="CorrelatorPanel" alignment="0" pref="273" max="32767" attributes="1"/>
+                                      <Component id="CorrelatorPanel" alignment="0" max="32767" attributes="1"/>
                                   </Group>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="StokesPanel" max="32767" attributes="1"/>
@@ -562,7 +562,7 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
                               <Component id="labelIntegrationTime" min="-2" pref="143" max="-2" attributes="1"/>
-                              <EmptySpace max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="24" max="-2" attributes="0"/>
                               <Component id="inputIntegrationTime" min="-2" pref="54" max="-2" attributes="1"/>
                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
                               <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
