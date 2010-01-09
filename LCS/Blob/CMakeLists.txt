@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(Blob 1.0 DEPENDS Common)
+lofar_package(Blob 1.2 DEPENDS Common)
 
 include(LofarFindPackage)
 lofar_find_package(Casacore COMPONENTS casa)

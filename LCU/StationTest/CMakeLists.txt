@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(StationTest)
+lofar_package(StationTest 1.0)
 
 # Install files matching regex pattern in current directory and below
 install(DIRECTORY . 

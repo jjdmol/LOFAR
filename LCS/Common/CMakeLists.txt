@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(Common 3.1)
+lofar_package(Common 3.3)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)

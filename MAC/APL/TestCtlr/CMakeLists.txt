@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(TestCtlr 3.1 DEPENDS Common APLCommon MACIO GCFTM)
+lofar_package(TestCtlr 1.0 DEPENDS Common APLCommon MACIO GCFTM)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
