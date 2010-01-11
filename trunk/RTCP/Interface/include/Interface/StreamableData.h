@@ -120,7 +120,9 @@ inline void StreamableData::write(Stream *str, bool withSequenceNumber, unsigned
       void *sn_buf;
       uint32_t sn = sequenceNumber;
 
-      posix_memalign(&sn_buf, align, align);
+      if (posix_memalign(&sn_buf, align, align) != 0) {
+	THROW(InterfaceException,"could not allocate data");
+      }
 
       try {
         dataConvert(BigEndian, &sn, 1);
@@ -144,7 +146,9 @@ inline void StreamableData::write(Stream *str, bool withSequenceNumber, unsigned
       if (align < sizeof(uint32_t)) THROW(AssertError, "Sizeof alignment < sizeof sequencenumber");
 
       void *sn_buf;
-      posix_memalign(&sn_buf, align, align);
+      if (posix_memalign(&sn_buf, align, align) != 0) {
+	THROW(InterfaceException,"could not allocate data");
+      }
 
       try {
         memcpy(sn_buf, &sequenceNumber, sizeof sequenceNumber);
