@@ -65,7 +65,7 @@ SpectralWindow::~SpectralWindow()
 
 double SpectralWindow::getSubbandFreq(int subband) const
 {
-	LOG_TRACE_OBJ_STR("SpectralWindow::getSubbandFreq(" << subband << " of " << m_numsubbands << ")");
+//	LOG_TRACE_OBJ_STR("SpectralWindow::getSubbandFreq(" << subband << " of " << m_numsubbands << ")");
 
 	ASSERT(m_numsubbands);
 	ASSERT(subband >= 0 && subband <= m_numsubbands);
