@@ -40,7 +40,7 @@ enum {
 //
 // The following events are defined in the CAL protocol
 //
-// START		    (subarrayname, arraygroup, receiverset, nyquist, RCUsettings, subbands);
+// START		    (subarrayname, antennaSet, receiverset, RCUsettings);
 // STARTACK			(subarrayname, status);
 // STOP 		    (subarrayname);
 // STOPACK			(subarrayname, status);

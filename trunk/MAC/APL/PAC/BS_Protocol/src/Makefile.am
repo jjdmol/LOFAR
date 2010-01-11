@@ -10,21 +10,18 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(datadir)/MACIO $<
 	cp $*.ph $(top_builddir)/include/APL/BS_Protocol
 
-EXTRA_DIST = \
-	BS_Protocol.prot
+EXTRA_DIST		= BS_Protocol.prot 
 
-BUILT_SOURCES = \
-	BS_Protocol.ph
+BUILT_SOURCES	= BS_Protocol.ph 
 
-pkgincludedir=$(includedir)/APL/BS_Protocol
-pkginclude_HEADERS = \
-	$(BUILT_SOURCES)
+pkgincludedir	= $(includedir)/APL/BS_Protocol
 
-lib_LTLIBRARIES = \
-	libbs_protocol.la
+pkginclude_HEADERS = $(BUILT_SOURCES)
+
+lib_LTLIBRARIES	= libbs_protocol.la 
 
 libbs_protocol_la_SOURCES = Package__Version.cc \
-	$(BUILT_SOURCES) \
+	BS_Protocol.ph \
 	BS_Protocol.cc \
 	Beamlet2SubbandMap.cc \
 	Pointing.cc
