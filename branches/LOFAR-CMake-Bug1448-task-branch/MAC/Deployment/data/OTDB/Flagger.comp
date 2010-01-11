@@ -1,0 +1,18 @@
+# -- Flagger --
+#
+# $Id$
+#
+# --Flagger Global--
+#
+#      name              vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   Flagger        	 1.0.0  development 'node constraint'  "Flagger"
+
+#    name                    dir. type   unit   prun. vm   value                         constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  DataSet                 I    text   -      10    0    >>Observation.MSNameMask      -        'Name of the measurement set'
+par  _nodes                  I    text   -      10    0    '[]'                          -        'Nodes used by the process'
+par  _startstopType          I    text   -      10    0    cmdline,mpirun,bgl            -        'Method of starting the proces'
+par  _executable             I    text   -      10    0    -                             -        'The name of the executable to start'
+par  _hostname               I    text   -      10    0    -                             -        'The hostname of the machine to start the proces on'
+par  _depends                I    text   -      10    0    '[Imager]'                    -        'The processes that must be finished before this process can start'

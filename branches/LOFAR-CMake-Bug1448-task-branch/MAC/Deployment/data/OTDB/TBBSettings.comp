@@ -1,0 +1,61 @@
+# -- TBBsetting --
+#
+# Component description of a TBBoard configuration setting
+#
+# $Id$
+#
+# name          name of the node
+# version       version of this node specification
+# quality       stable | test | development
+# constraint    python script to check multiparameter constrains
+#               may return OK, NotOK, Unknown
+# description   What this module does.
+#
+# Note 1: to seperate the parameterlines from the Node lines each node line
+#         begins with the label 'Node'.
+# Note 2: To define dependancies between nodes the label 'Uses' is used.
+#         A + sign may be added to the versionnr to indicate that the given
+#         versionnr is the minimal version the module should have. (NOT YET IMPLEMENTED)
+#
+
+#########################################################################################################
+# -- TBBsetting --
+#      name              vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  TBBsetting         1.0.1  development  'node constraint'  "RCU settings for the TB boards"
+
+#
+# name				name of the parameter
+# direction			I: input only; O: changes will be logged during runtime; IO: both
+# type				parametertype: should exist in param_type table of OTDB (= ParamTypeConv)
+# unit				name of unit of parameter (should exist in unit table (= UnitConv)
+# pruninglevel		when parameter values are thrown away from the database. (NOT YET USED)
+# validationMoment	moment the parameter values is validated (NOT YET USED)
+# value				value(range) of the parameter.
+# constraint		script to run to check its value
+# description		what the parameter manages.
+#--------------------------------------------------------------------------------------------------------
+#    name                dir. type   unit   prun. vm   value     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  baselevel			 I	  int	 -		10    0	   2048								-	'Common signal level'
+par  startlevel			 I	  int	 -		10    0	   7								-	'Value for the startlevel of the peak'
+par  stoplevel			 I	  int	 -		10    0	   7								-	'Value for the stoplevel of the peak'
+par  filter				 I	  int	 -		10    0	   128								-	'Filter value'
+par  window				 I	  ptext	 -		10    0	   '16B|64B|256B|1K|4K|16K|64K;1K'	-	'Number of samples in the sliding peak-window'
+par  C0					 I	  uint	 -		10    0	   0   								-	'Peak coefficient C0'
+par  C1					 I	  uint	 -		10    0	   0   								-	'Peak coefficient C1'
+par  C2					 I	  uint	 -		10    0	   0   								-	'Peak coefficient C2'
+par  C3					 I	  uint	 -		10    0	   0   								-	'Peak coefficient C3'
+par	 RCUs				 I 	  vint	 -		10	  0    '[]'								-	'The RCUs that must have the above settings'
+par	 subbandList			 I 	  vint	 -		10	  0    '[]'								-	'The subbands involved in these settings'
+par  operatingMode		 I	  pint	 -		10    0	   '1|2;1'   						-	'Transient detection(1) or subband data(2)'
+
+
+#########################################################################################################
+# -- TBB--
+#      name              vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  TBB				1.0.1  development  'node constraint'  "Placeholder for TBBsettings"
+uses  TBBsetting		1.0.1  development  'node constraint'  "RCU settings for the TB boards"
+
+

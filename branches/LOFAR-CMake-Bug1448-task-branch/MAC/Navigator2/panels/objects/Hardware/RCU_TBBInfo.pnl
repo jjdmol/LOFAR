@@ -1,0 +1,270 @@
+V 10
+1
+LANG:1 6 RCUTBB
+PANEL,-1 -1 326 191 N "_3DFace" 0
+"main()
+{
+  baseDP = g_currentDatapoint;
+ 	
+ 	// check if the required datapoint for this view are enabled and accessible
+  if(dpExists(baseDP + \".TBB.error:_online.._value\")) {
+    dpConnect(\"updateTBBDetails\", baseDP + \".TBB.error:_online.._value\",
+				  baseDP + \".TBB.mode:_online.._value\",
+                                  baseDP + \".TBB.startAddr:_online.._value\",
+                                  baseDP + \".TBB.bufSize:_online.._value\",
+                                  baseDP + \".TBB.mode:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)) {
+      updateTBBDetails(\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",true);
+    }
+  } else {
+    setValue(\"txt_error\"        , \"text\", \"?????\");
+    setValue(\"txt_mode\"         , \"text\", \"?????\");
+    setValue(\"txt_startAddress\" , \"text\", \"?????\");
+    setValue(\"txt_bufSize\"      , \"text\", \"?????\");
+  }	
+}
+
+updateTBBDetails(string dp1, int error,
+                 string dp2, string mode,
+                 string dp3, string startAddress,
+                 string dp4, string bufSize,
+                 string dp5, bool invalid)
+{
+  string SymbolCol;
+  if (invalid) {
+    setValue(\"txt_error\"        , \"text\", \"\");
+    setValue(\"txt_mode\"         , \"text\", \"\");
+    setValue(\"txt_startAddress\" , \"text\", \"\");
+    setValue(\"txt_bufSize\"      , \"text\", \"\");
+  } else {
+    setValue(\"txt_error\"        , \"text\", error);
+    setValue(\"txt_mode\"         , \"text\", mode);
+    setValue(\"txt_startAddress\" , \"text\", startAddress);
+    setValue(\"txt_bufSize\"      , \"text\", bufSize);
+  }
+}" 0
+ E E E E 1 0 0 0  16 105
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP=\"\";" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 1
+"rcu_border"
+""
+1 10 133 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 35 207 133
+2 2
+"Text1"
+""
+1 33 38 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 35 40 65 57
+0 2 0 "0s" 0 0 0 192 0 0  35 40 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 6 error:
+2 3
+"Text2"
+""
+1 33 62 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 35 64 71 81
+0 2 0 "0s" 0 0 0 192 0 0  35 64 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 5 mode:
+2 4
+"Text3"
+""
+1 33 86 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 35 88 113 105
+0 2 0 "0s" 0 0 0 192 0 0  35 88 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 13 startAddress:
+2 6
+"Text5"
+""
+1 33 110 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 35 112 96 129
+0 2 0 "0s" 0 0 0 192 0 0  35 112 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 11 bufferSize:
+2 30
+"Text8"
+""
+1 10 14 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+28 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 16 98 37
+0 2 0 "0s" 0 0 0 64 0 0  12 16 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 8 TBB info
+14 31
+"txt_error"
+""
+1 103 40 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+28 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 101 38 205 61
+2 "9s" 9 0 0 2 0 -1  E E E
+14 32
+"txt_mode"
+""
+1 103 63 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+29 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 101 61 205 84
+2 "9s" 9 0 0 2 0 -1  E E E
+14 33
+"txt_startAddress"
+""
+1 103 87 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+30 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 101 85 205 108
+2 "10s" 10 0 0 2 0 -1  E E E
+14 34
+"txt_bufSize"
+""
+1 103 111 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+31 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 101 109 205 132
+2 "9s" 9 0 0 2 0 -1  E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
