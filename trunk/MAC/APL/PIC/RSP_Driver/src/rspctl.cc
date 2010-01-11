@@ -1711,6 +1711,31 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 			}
 			BOARD_ITERATOR_NEXT;
 		} BOARD_ITERATOR_END;
+		
+		BOARD_ITERATOR_BEGIN {
+			BoardStatus&	board = ack.sysstatus.board()(boardin);
+			logMessage(cout, formatString("RSP[%2d] RAD Status        Align    Sync     CRC     Frame cnt", boardout));
+			RADStatus* rs = &(board.ri);
+			logMessage(cout, formatString("RSP[%2d]              ri:      _   %5s   %5s     %9d",
+							boardout,
+							(rs->sync ? "OK" : "ERROR"),
+							(rs->brc ? "ERROR" : "OK"),
+							rs->cnt )); 
+			for (int ap = 0; ap < 8; ap++) {
+				RADStatus* rs = &(board.lane0_crosslet)+ap;
+				logMessage(cout, formatString("RSP[%2d] lane%d %9s:  %5s   %5s   %5s     %9d",
+							boardout, (ap / 2),
+							((ap % 2) == 0 ? "crosslets" : "beamlets"),
+							(rs->align ? "ERROR" : "OK"),
+							(rs->sync ? "OK" : "ERROR"),
+							(rs->brc ? "ERROR" : "OK"),
+							rs->cnt ));
+			}
+			
+			BOARD_ITERATOR_NEXT;
+		} BOARD_ITERATOR_END;
+		
+		
 	}
 		break;
 	}
