@@ -63,6 +63,7 @@
     </Component>
     <Component class="javax.swing.JTextArea" name="descriptionInput">
       <Properties>
+        <Property name="lineWrap" type="boolean" value="true"/>
         <Property name="rows" type="int" value="3"/>
         <Property name="toolTipText" type="java.lang.String" value="Set Description for this tree"/>
       </Properties>

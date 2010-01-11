@@ -503,6 +503,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         jLabel3.setText("Description :");
         getContentPane().add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 420, 130, 20));
 
+        descriptionInput.setLineWrap(true);
         descriptionInput.setRows(3);
         descriptionInput.setToolTipText("Set Description for this tree");
         getContentPane().add(descriptionInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 440, 420, 60));
