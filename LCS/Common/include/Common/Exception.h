@@ -31,17 +31,23 @@
 #include <string>
 #include <iosfwd>
 
-#ifdef HAVE_BOOST
+//#ifdef HAVE_BOOST
 # include <boost/shared_ptr.hpp>
-#else
-# error "The Boost libraries are required. See http://www.boost.org/"
-#endif
+//#else
+//# error "The Boost libraries are required. See http://www.boost.org/"
+//#endif
 
 #ifdef HAVE_BACKTRACE
 # include <Common/Backtrace.h>
 #else
 namespace LOFAR { class Backtrace {}; }
 #endif
+
+//# This might be undefined if used by an external package like ASKAP.
+#ifndef AUTO_FUNCTION_NAME
+# define AUTO_FUNCTION_NAME __FUNCTION__
+#endif
+
 
 namespace LOFAR
 {

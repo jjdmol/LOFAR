@@ -44,7 +44,7 @@ namespace LOFAR { namespace BBS  {
       : ParmFacade (tableName)
     {}
     string version (const string& type) const
-      { return Version::getInfo<pyparmdbVersion> (type); }
+    { return Version::getInfo<pyparmdbVersion> ("parmdb", type); }
   };
 
   Record (ParmFacade::*fgetvalues0)(const string&,
