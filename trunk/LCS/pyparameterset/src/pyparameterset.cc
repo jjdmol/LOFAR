@@ -49,7 +49,8 @@ namespace LOFAR {
       : ParameterSet (fileName, caseInsensitive)
     {}
     string version (const string& type) const
-      { return Version::getInfo<pyparametersetVersion> (type); }
+      { return Version::getInfo<pyparametersetVersion> ("parameterset",
+                                                        type); }
   };
 
   // Define function pointers for overloaded functions to be able to tell

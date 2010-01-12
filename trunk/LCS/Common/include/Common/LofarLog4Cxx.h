@@ -40,6 +40,12 @@
 
 #include <cstring>
 
+//# This might be undefined if used by an external package like ASKAP.
+#ifndef AUTO_FUNCTION_NAME
+# define AUTO_FUNCTION_NAME __FUNCTION__
+#endif
+
+
 namespace LOFAR {
 
   // \ingroup Common

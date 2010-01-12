@@ -42,6 +42,12 @@
 #include <Common/StringUtil.h>
 #endif
 
+//# This might be undefined if used by an external package like ASKAP.
+#ifndef AUTO_FUNCTION_NAME
+# define AUTO_FUNCTION_NAME __FUNCTION__
+#endif
+
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 //# -------------------- Initialisation of the logger module -------------------

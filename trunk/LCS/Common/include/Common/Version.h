@@ -40,10 +40,10 @@
   if (argc == 2) { \
     std::string opt (argv[1]); \
     if (opt == "-v") { \
-      LOFAR::Version::show<pkg##Version>(cout, argv[0], "top"); \
+      LOFAR::Version::show<pkg##Version>(std::cout, argv[0], "top");    \
       return 0; \
     } else if (opt == "-vv") { \
-      LOFAR::Version::show<pkg##Version>(cout, argv[0], "full"); \
+      LOFAR::Version::show<pkg##Version>(std::cout, argv[0], "full");   \
       return 0; \
     } \
   }
