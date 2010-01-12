@@ -245,13 +245,15 @@ def createRSPDriverFile(resultDir, stationName, dataDir):
         RSPconfig = RSPconfig.replace("@IP_SUBNET_01@",   ip_parts[2])
         RSPconfig = RSPconfig.replace("@IP_SUBNET_02@",   ip_parts[2])
         RSPconfig = RSPconfig.replace("@IP_SUBNET_03@",   ip_parts[2])
-    else: 
+        RSPconfig = RSPconfig.replace("@LAST_XLET_OUT@",  "11")
+    else: # Non-NL station
         RSPconfig = RSPconfig.replace("@SPLITTER@",str(0))
         hexStationID = str("%02x" % int(stationName[3:6]))
         ringID = '0'+stationName[2]
         RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName)
         RSPconfig = RSPconfig.replace("@RING_ID@",   ringID)
         RSPconfig = RSPconfig.replace("@STATION_HID@",  hexStationID)
+        RSPconfig = RSPconfig.replace("@LAST_XLET_OUT@",  "23")
         rspinfo = findRSPIP(stationName, dataDir)
         for rspNr in range(len(rspinfo)):        
             rspip = rspinfo[rspNr][1]
