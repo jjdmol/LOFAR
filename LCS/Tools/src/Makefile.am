@@ -42,7 +42,7 @@ dist_template_DATA  = templates/header.cc_template \
 # They have to be sourced; fill in the correct path. 
 install-data-local:
 	@for FIL in lofarinit.sh lofarinit.csh; do \
-	  sed -e "s%[@]prefix[@]%$(prefix)%" -e "s%[@]libdir[@]%$(libdir)%" $(srcdir)/$$FIL.in > $$FIL.tmp; \
+	  sed -e "s%[@]prefix[@]%$(prefix)%" -e "s%[@]libdir[@]%$(libdir)%" $(lofar_top_srcdir)/$$FIL.in > $$FIL.tmp; \
 	  echo "$(INSTALL_DATA) $$FIL.tmp $(prefix)/$$FIL"; \
 	  $(INSTALL_DATA) $$FIL.tmp $(prefix)/$$FIL; \
 	  $(RM) $$FIL.tmp; \

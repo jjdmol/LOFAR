@@ -61,13 +61,3 @@ install(FILES
   templates/test.sh_template  		      
   templates/test_makefile.am_template
   DESTINATION share/templates)
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lofarinit.sh.in
-               ${CMAKE_BINARY_DIR}/lofarinit.sh @ONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lofarinit.csh.in
-               ${CMAKE_BINARY_DIR}/lofarinit.csh @ONLY)
-
-install(FILES
-  ${CMAKE_BINARY_DIR}/lofarinit.sh
-  ${CMAKE_BINARY_DIR}/lofarinit.csh
-  DESTINATION .)
