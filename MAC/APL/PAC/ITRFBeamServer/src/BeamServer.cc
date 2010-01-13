@@ -1382,10 +1382,13 @@ void BeamServer::compute_weights(Timestamp weightTime)
 		blitz::Array<double, 2> rcuPosITRF = LBAfield ? itsAntennaPos->LBARCUPos() : itsAntennaPos->HBARCUPos();
 		LOG_DEBUG_STR("ITRFRCUPos = " << rcuPosITRF);
 
-		// Get geographical location of subarray in ITRF
+		// Get geographical location of subarray in ITRF and place it in an AMC Position class.
 		blitz::Array<double, 1> fieldCentreITRF = LBAfield ? itsAntennaPos->LBACentre() : itsAntennaPos->HBACentre();
 		Position	fieldPositionITRF(Coord3D(blitz2vector(fieldCentreITRF)), Position::ITRF);
 		LOG_DEBUG_STR("ITRF position antennaField: " << fieldPositionITRF);
+
+		// Lengths of the vector of the antennaPosition i.r.t. the fieldCentre,
+		blitz::Array<double,1>	rcuPosLengths = LBAfield ? itsAntennaPos->LBARCULengths() : itsAntennaPos->HBARCULengths();
 
 		// for all beams using this field
 		map<string, Beam*>::iterator	beamIter = itsBeamPool.begin();
@@ -1427,13 +1430,11 @@ void BeamServer::compute_weights(Timestamp weightTime)
 				ResultData	result;
 				itsAMCclient.itrfToJ2000(result, request);
 				vector<double>	direction = result.direction[0].coord().get();
+
 				// Note AMCServer returns an unit vector.
-				double	originalLength = sqrt((rcuPosITRF(rcu,0)*rcuPosITRF(rcu,0)) +
-											  (rcuPosITRF(rcu,1)*rcuPosITRF(rcu,1)) +
-											  (rcuPosITRF(rcu,2)*rcuPosITRF(rcu,2)));
-				J2000SingleRCUPos(0) = direction[0] * originalLength;
-				J2000SingleRCUPos(1) = direction[1] * originalLength;
-				J2000SingleRCUPos(2) = direction[2] * originalLength;
+				J2000SingleRCUPos(0) = direction[0] * rcuPosLengths(rcu);
+				J2000SingleRCUPos(1) = direction[1] * rcuPosLengths(rcu);
+				J2000SingleRCUPos(2) = direction[2] * rcuPosLengths(rcu);
 				LOG_DEBUG_STR("J2000RCUPos[" << rcu << "]=[" << J2000SingleRCUPos(0) << ", " << 
 								J2000SingleRCUPos(1) << ", " << J2000SingleRCUPos(2) << "]");
 				// END OF NOTE.
