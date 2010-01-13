@@ -58,7 +58,7 @@ lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(LCS/ApplCommon, ApplCommon, , 1, ApplCommon/StationInfo.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, , 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/MACIO, MACIO, , 1, MACIO/MACServiceInfo.h,"",)
-dnl lofar_EXTERNAL(boost,1,boost/date_time/date.hpp, boost_date_time)
+lofar_EXTERNAL(BLITZ, 1, blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',, -lm)
 lofar_EXTERNAL(boost,1,boost/date_time/date.hpp, "boost_date_time boost_regex")
 
 dnl
