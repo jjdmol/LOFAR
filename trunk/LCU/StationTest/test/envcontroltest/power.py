@@ -47,6 +47,7 @@ if str(sys.argv[1]) == 'this':
         print 'Error: this script can only run on a LCU'
         exit(0)
 
+    STATION = socket.gethostname()
     # change to ec adres
     HOST = LOCAL_HOST[:LOCAL_HOST.rfind('.1')] + '.3'
 else:
@@ -234,6 +235,13 @@ def resetTrip():
 ##=======================================================================
 if __name__ == "__main__":
     
+    logfile = open('ecPowerActions.log','a')
+    
+    if doResetTrip or doReset48V or doResetLCU: 
+        name = raw_input('Enter your personal name: ')
+    if doPowerOn48V or doPowerOff48V or doPowerOnLCU or doPowerOffLCU:
+        name = raw_input('Enter your personal name: ')
+
     if ((doReset48V + doPowerOn48V + doPowerOff48V) > 1):
         print 'error more than 1 48V cmd selected'
         exit(-1)
@@ -270,4 +278,5 @@ if __name__ == "__main__":
         logfile.write('%sc, %s, ecLcuOff by %s\n' %(string.upper(STATION), time.asctime(), name))
         setPower(LCU,PWR_OFF)
 
+    logfile.close()
     disconnectHost()
