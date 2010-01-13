@@ -22,18 +22,70 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/Expr/PointSource.h>
+#include <BBSKernel/ParmManager.h>
+#include <BBSKernel/Expr/ExprParm.h>
+#include <BBSKernel/Expr/ExprAdaptors.h>
+#include <BBSKernel/Expr/SpectralIndex.h>
+#include <BBSKernel/Expr/PointCoherence.h>
+#include <BBSKernel/Expr/Scope.h>
+
+#include <Common/lofar_sstream.h>
+#include <ParmDB/SourceInfo.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-PointSource::PointSource(const string &name,
-    const Expr<Vector<2> >::ConstPtr &position,
-    const Expr<Vector<4> >::ConstPtr &stokes)
-    :   Source(name, position),
-        itsStokesVector(stokes)
+PointSource::PointSource(const SourceInfo &source, Scope &scope)
+    :   Source(source, scope)
 {
+    ASSERT(source.getType() == SourceInfo::POINT);
+
+    unsigned int degree =
+        static_cast<unsigned int>(ParmManager::instance().getDefaultValue(SKY,
+            "SpectralIndexDegree:" + name()));
+
+    // Reference frequency.
+    ExprParm::Ptr refFreq = scope(SKY, "ReferenceFrequency:" + name());
+
+    // Stokes parameter value at the reference frequency.
+    ExprParm::Ptr refStokes = scope(SKY, "I:" + name());
+
+    vector<Expr<Scalar>::Ptr> coeff;
+    coeff.reserve(degree + 1);
+    for(unsigned int i = 0; i <= degree; ++i)
+    {
+        ostringstream oss;
+        oss << "SpectralIndex:" << i << ":" << name();
+        coeff.push_back(scope(SKY, oss.str()));
+    }
+
+    Expr<Scalar>::Ptr stokesI = Expr<Scalar>::Ptr(new SpectralIndex(refFreq,
+        refStokes, coeff.begin(), coeff.end()));
+    ExprParm::Ptr stokesQ = scope(SKY, "Q:" + name());
+    ExprParm::Ptr stokesU = scope(SKY, "U:" + name());
+    ExprParm::Ptr stokesV = scope(SKY, "V:" + name());
+
+    AsExpr<Vector<4> >::Ptr stokes(new AsExpr<Vector<4> >());
+    stokes->connect(0, stokesI);
+    stokes->connect(1, stokesQ);
+    stokes->connect(2, stokesU);
+    stokes->connect(3, stokesV);
+    itsStokesVector = stokes;
+}
+
+Expr<JonesMatrix>::Ptr
+PointSource::coherence(const Expr<Vector<3> >::ConstPtr &uvwLHS,
+    const Expr<Vector<3> >::ConstPtr &uvwRHS) const
+{
+    if(itsCoherence)
+    {
+        return itsCoherence;
+    }
+
+    itsCoherence = Expr<JonesMatrix>::Ptr(new PointCoherence(itsStokesVector));
+    return itsCoherence;
 }
 
 } // namespace BBS

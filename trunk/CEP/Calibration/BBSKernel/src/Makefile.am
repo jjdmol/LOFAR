@@ -14,16 +14,16 @@ element_beam_YATAWATTA_HBA_phi_la_LDFLAGS = -module
 element_beam_YATAWATTA_HBA_theta_la_SOURCES = Contrib/SBY_DipoleBeam/hba_beam_theta.c
 element_beam_YATAWATTA_HBA_theta_la_LDFLAGS = -module
 
-
 coeffdir = $(datadir)
 dist_coeff_DATA = Contrib/JPH_DipoleBeam/element_beam_HAMAKER_LBA.coeff \
 		  Contrib/JPH_DipoleBeam/element_beam_HAMAKER_HBA.coeff
 
-
 libbbskernel_la_SOURCES = Package__Version.cc \
+	ElementBeamExpr.cc \
 	Equator.cc \
 	Evaluator.cc \
-    Instrument.cc \
+	IonosphereExpr.cc \
+	Instrument.cc \
 	MeasurementAIPS.cc \
 	Model.cc \
 	ModelConfig.cc \
@@ -68,12 +68,14 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/PiercePoint.cc \
 	Expr/PointCoherence.cc \
 	Expr/PointSource.cc \
-	Expr/PolynomialPhaseScreen.cc \
+	Expr/PolynomialLayer.cc \
 	Expr/Request.cc \
 	Expr/Resampler.cc \
 	Expr/ScalarMatrixMul.cc \
+	Expr/Scope.cc \
 	Expr/Source.cc \
 	Expr/SpectralIndex.cc \
+	Expr/EquatorialCentroid.cc \
 	Expr/StationShift.cc \
 	Expr/StationUVW.cc \
 	Expr/ValueSet.cc \

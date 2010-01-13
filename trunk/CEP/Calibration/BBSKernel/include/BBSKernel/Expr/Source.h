@@ -36,6 +36,9 @@ namespace LOFAR
 namespace BBS
 {
 
+class Scope;
+class SourceInfo;
+
 // \addtogroup Expr
 // @{
 
@@ -45,33 +48,25 @@ public:
     typedef shared_ptr<Source>          Ptr;
     typedef shared_ptr<const Source>    ConstPtr;
 
-    Source();
-    Source(const string &name, const Expr<Vector<2> >::ConstPtr &position);
     virtual ~Source();
 
-    const string &getName() const;
-    Expr<Vector<2> >::ConstPtr getPosition() const;
+    static Source::Ptr create(const SourceInfo &source, Scope &scope);
+
+    const string &name() const;
+    Expr<Vector<2> >::ConstPtr position() const;
+
+    virtual Expr<JonesMatrix>::Ptr
+        coherence(const Expr<Vector<3> >::ConstPtr &uvwLHS,
+            const Expr<Vector<3> >::ConstPtr &uvwRHS) const = 0;
 
 protected:
-    string                      itsName;
-    Expr<Vector<2> >::ConstPtr  itsPosition;
+    Source(const SourceInfo &source, Scope &scope);
+
+    string                  itsName;
+    Expr<Vector<2> >::Ptr   itsPosition;
 };
 
 // @}
-
-// -------------------------------------------------------------------------- //
-// - Source implementation                                                  - //
-// -------------------------------------------------------------------------- //
-
-inline const string &Source::getName() const
-{
-    return itsName;
-}
-
-inline Expr<Vector<2> >::ConstPtr Source::getPosition() const
-{
-    return itsPosition;
-}
 
 } // namespace BBS
 } // namespace LOFAR

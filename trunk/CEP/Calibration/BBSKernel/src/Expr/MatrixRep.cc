@@ -98,6 +98,29 @@ MatrixRep* MatrixRep::maxRep (MatrixRealArr&)
   throw (AipsError ("MatrixRep::max requires a real argument"));
 }
 
+MatrixRep* MatrixRep::atan2 (MatrixRep&)
+{
+  throw (AipsError ("MatrixRep::atan2 requires a real argument"));
+}
+MatrixRep* MatrixRep::atan2Rep (MatrixRealSca&)
+{
+  throw (AipsError ("MatrixRep::atan2 requires a real argument"));
+}
+MatrixRep* MatrixRep::atan2Rep (MatrixRealArr&)
+{
+  throw (AipsError ("MatrixRep::atan2 requires a real argument"));
+}
+
+MatrixRep* MatrixRep::asin()
+{
+  throw (AipsError ("MatrixRep::asin requires a real argument"));
+}
+
+MatrixRep* MatrixRep::acos()
+{
+  throw (AipsError ("MatrixRep::acos requires a real argument"));
+}
+
 void MatrixRep::fillRowWithProducts(dcomplex, dcomplex, int)
 {
   throw (AipsError ("MatrixRep::fillRowWithProducts not implemented"));

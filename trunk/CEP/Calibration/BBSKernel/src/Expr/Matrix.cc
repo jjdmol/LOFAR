@@ -300,6 +300,14 @@ MatrixTmp max (const Matrix& left, const MatrixTmp& right)
 {
     return left.itsRep->max(*right.rep());
 }
+MatrixTmp atan2 (const Matrix& left, const Matrix& right)
+{
+    return left.itsRep->atan2(*right.itsRep);
+}
+MatrixTmp atan2 (const Matrix& left, const MatrixTmp& right)
+{
+    return left.itsRep->atan2(*right.rep());
+}
 MatrixTmp abs (const Matrix& arg)
 {
     return abs(MatrixTmp(arg));
@@ -311,6 +319,14 @@ MatrixTmp sin (const Matrix& arg)
 MatrixTmp cos(const Matrix& arg)
 {
     return cos(MatrixTmp(arg));
+}
+MatrixTmp asin (const Matrix& arg)
+{
+    return asin(MatrixTmp(arg));
+}
+MatrixTmp acos(const Matrix& arg)
+{
+    return acos(MatrixTmp(arg));
 }
 MatrixTmp log(const Matrix& arg)
 {

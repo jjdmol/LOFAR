@@ -22,25 +22,58 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/Expr/Source.h>
+#include <BBSKernel/Exceptions.h>
+#include <BBSKernel/Expr/ExprParm.h>
+#include <BBSKernel/Expr/ExprAdaptors.h>
+#include <BBSKernel/Expr/GaussianSource.h>
+#include <BBSKernel/Expr/PointSource.h>
+#include <BBSKernel/Expr/Scope.h>
 
+#include <ParmDB/SourceInfo.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-Source::Source()
+Source::Ptr Source::create(const SourceInfo &source, Scope &scope)
 {
+    switch(source.getType())
+    {
+    case SourceInfo::POINT:
+        return Source::Ptr(new PointSource(source, scope));
+    case SourceInfo::GAUSSIAN:
+        return Source::Ptr(new GaussianSource(source, scope));
+    default:
+        THROW(BBSKernelException, "Unsupported source type: "
+            << source.getType() << " for source: " << source.getName());
+    }
 }
 
-Source::Source(const string &name, const Expr<Vector<2> >::ConstPtr &position)
-    :   itsName(name),
-        itsPosition(position)
+Source::Source(const SourceInfo &source, Scope &scope)
+    :   itsName(source.getName())
 {
+    ExprParm::Ptr ra = scope(SKY, "Ra:" + name());
+    ExprParm::Ptr dec = scope(SKY, "Dec:" + name());
+
+    AsExpr<Vector<2> >::Ptr position(new AsExpr<Vector<2> >());
+    position->connect(0, ra);
+    position->connect(1, dec);
+    itsPosition = position;
 }
 
 Source::~Source()
 {
+}
+
+const string &Source::name() const
+{
+    return itsName;
+}
+
+Expr<Vector<2> >::ConstPtr Source::position() const
+{
+    return itsPosition;
 }
 
 } // namespace BBS

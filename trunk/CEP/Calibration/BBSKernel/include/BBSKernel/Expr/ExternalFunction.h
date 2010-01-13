@@ -63,6 +63,8 @@ private:
     int             itsNX, itsNPar;
 };
 
+// @}
+
 inline unsigned int ExternalFunction::nArguments() const
 {
     return itsNX + itsNPar;
@@ -75,7 +77,6 @@ inline dcomplex ExternalFunction::operator()(const vector<dcomplex> &args) const
     return itsFunction(&args[itsNX], &args[0]);
 }
 
-// @}
 
 } //# namespace BBS
 } //# namespace LOFAR

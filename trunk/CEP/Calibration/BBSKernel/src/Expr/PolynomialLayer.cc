@@ -1,4 +1,4 @@
-//# PolynomialPhaseScreen.cc: Ionospheric phase for a station, direction pair
+//# PolynomialLayer.cc: Ionospheric phase for a station, direction pair
 //# due to a global polynomial phase screen.
 //#
 //# Copyright (C) 2007
@@ -23,14 +23,14 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/Expr/PolynomialPhaseScreen.h>
+#include <BBSKernel/Expr/PolynomialLayer.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-PolynomialPhaseScreen::~PolynomialPhaseScreen()
+PolynomialLayer::~PolynomialLayer()
 {
     for(unsigned int i = 0; i < itsCoeff.size(); ++i)
     {
@@ -39,12 +39,12 @@ PolynomialPhaseScreen::~PolynomialPhaseScreen()
     disconnect(itsPiercePoint);
 }
 
-unsigned int PolynomialPhaseScreen::nArguments() const
+unsigned int PolynomialLayer::nArguments() const
 {
     return itsCoeff.size() + 1;
 }
 
-ExprBase::ConstPtr PolynomialPhaseScreen::argument(unsigned int i) const
+ExprBase::ConstPtr PolynomialLayer::argument(unsigned int i) const
 {
     DBGASSERT(i < nArguments());
     if(i == 0)
@@ -55,7 +55,7 @@ ExprBase::ConstPtr PolynomialPhaseScreen::argument(unsigned int i) const
     return itsCoeff[i - 1];
 }
 
-const Scalar PolynomialPhaseScreen::evaluateExpr(const Request &request,
+const Scalar PolynomialLayer::evaluateExpr(const Request &request,
     Cache &cache, unsigned int grid) const
 {
     // Allocate result.
@@ -130,7 +130,7 @@ const Scalar PolynomialPhaseScreen::evaluateExpr(const Request &request,
     return result;
 }
 
-const Scalar::View PolynomialPhaseScreen::evaluateImpl(const Grid &grid,
+const Scalar::View PolynomialLayer::evaluateImpl(const Grid &grid,
     const Vector<4>::View &pp, const vector<Scalar::View> &coeff) const
 {
     const size_t nFreq = grid[FREQ]->size();
@@ -157,7 +157,7 @@ const Scalar::View PolynomialPhaseScreen::evaluateImpl(const Grid &grid,
     const casa::MVPosition &ref_pos = itsRefStation.getValue();
 
     // Calculate rotation matrix. Actually we only need to do this once for
-    // all PolynomialPhaseScreen nodes. Some optimization could be done here.
+    // all PolynomialLayer nodes. Some optimization could be done here.
     double lon = std::atan2(ref_pos(1), ref_pos(0));
     double lat = std::atan2(ref_pos(2), std::sqrt(ref_pos(0) * ref_pos(0)
         + ref_pos(1) * ref_pos(1)));

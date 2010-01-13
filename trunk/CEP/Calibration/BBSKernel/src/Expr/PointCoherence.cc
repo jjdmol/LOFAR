@@ -29,8 +29,8 @@ namespace LOFAR
 namespace BBS
 {
 
-PointCoherence::PointCoherence(const PointSource::ConstPtr &source)
-    :   BasicUnaryExpr<Vector<4>, JonesMatrix>(source->getStokesVector())
+PointCoherence::PointCoherence(const Expr<Vector<4> >::ConstPtr &stokes)
+    :   BasicUnaryExpr<Vector<4>, JonesMatrix>(stokes)
 {
 }
 

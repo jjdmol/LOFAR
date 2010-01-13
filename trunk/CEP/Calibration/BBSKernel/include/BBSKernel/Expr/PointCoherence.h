@@ -27,7 +27,6 @@
 // Spatial coherence function of a point source.
 
 #include <BBSKernel/Expr/BasicExpr.h>
-#include <BBSKernel/Expr/PointSource.h>
 
 namespace LOFAR
 {
@@ -43,7 +42,7 @@ public:
     typedef shared_ptr<PointCoherence>          Ptr;
     typedef shared_ptr<const PointCoherence>    ConstPtr;
 
-    PointCoherence(const PointSource::ConstPtr &source);
+    PointCoherence(const Expr<Vector<4> >::ConstPtr &stokes);
 
 protected:
     virtual const JonesMatrix::View evaluateImpl(const Grid &grid,

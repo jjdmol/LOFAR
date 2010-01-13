@@ -42,13 +42,18 @@ public:
     typedef shared_ptr<PointSource>         Ptr;
     typedef shared_ptr<const PointSource>   ConstPtr;
 
-    PointSource(const string &name, const Expr<Vector<2> >::ConstPtr &position,
-        const Expr<Vector<4> >::ConstPtr &stokes);
+    PointSource(const SourceInfo &source, Scope &scope);
 
-    Expr<Vector<4> >::ConstPtr getStokesVector() const;
+//    PointSource(const string &name, const Expr<Vector<2> >::ConstPtr &position,
+//        const Expr<Vector<4> >::ConstPtr &stokes);
+
+//    Expr<Vector<4> >::ConstPtr getStokesVector() const;
+    Expr<JonesMatrix>::Ptr coherence(const Expr<Vector<3> >::ConstPtr&,
+        const Expr<Vector<3> >::ConstPtr&) const;
 
 private:
-    Expr<Vector<4> >::ConstPtr  itsStokesVector;
+    Expr<Vector<4> >::Ptr           itsStokesVector;
+    mutable Expr<JonesMatrix>::Ptr  itsCoherence;
 };
 
 // @}
@@ -57,10 +62,10 @@ private:
 // - PointSource implementation                                             - //
 // -------------------------------------------------------------------------- //
 
-inline Expr<Vector<4> >::ConstPtr PointSource::getStokesVector() const
-{
-    return itsStokesVector;
-}
+//inline Expr<Vector<4> >::ConstPtr PointSource::getStokesVector() const
+//{
+//    return itsStokesVector;
+//}
 
 } // namespace BBS
 } // namespace LOFAR

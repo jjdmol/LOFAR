@@ -1,11 +1,13 @@
 pkginclude_Exprdir = $(pkgincludedir)/Expr
 
 pkginclude_HEADERS = Package__Version.h \
+	ElementBeamExpr.h \
 	Equator.h \
 	Evaluator.h \
 	Exceptions.h \
 	ExprSet.h \
 	Instrument.h \
+	IonosphereExpr.h \
 	Measurement.h \
 	MeasurementAIPS.h \
 	Model.h \
@@ -58,13 +60,15 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/PiercePoint.h \
 	Expr/PointCoherence.h \
 	Expr/PointSource.h \
-	Expr/PolynomialPhaseScreen.h \
+	Expr/PolynomialLayer.h \
 	Expr/RefCounting.h \
 	Expr/Request.h \
 	Expr/Resampler.h \
 	Expr/ScalarMatrixMul.h \
+	Expr/Scope.h \
 	Expr/Source.h \
 	Expr/SpectralIndex.h \
+	Expr/EquatorialCentroid.h \
 	Expr/StationShift.h \
 	Expr/StationUVW.h \
 	Expr/ValueSet.h \
