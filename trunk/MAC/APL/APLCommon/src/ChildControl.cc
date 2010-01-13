@@ -141,7 +141,7 @@ void ChildControl::openService(const string&	aServiceName,
 	ASSERTSTR(itsListener, "Can't create a listener port for my children");
 
 	itsListener->setInstanceNr (instanceNr);
-	itsListener->open();
+	itsListener->autoOpen(5,0,1);	// 5 tries with 1 second interval.
 }
 
 //
@@ -955,7 +955,6 @@ void ChildControl::_doGarbageCollection()
 GCFEvent::TResult	ChildControl::initial (GCFEvent&			event, 
 										   GCFPortInterface&	port)
 {
-//	LOG_DEBUG_STR ("initial:" << evtstr(event) << "@" << port.getName());
 	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult	status = GCFEvent::HANDLED;
@@ -978,16 +977,9 @@ GCFEvent::TResult	ChildControl::initial (GCFEvent&			event,
 	case F_DISCONNECTED:
 		port.close();
 		if (&port == itsListener) {
-			port.setTimer(1.0);
+			ASSERTSTR(false, "Unable to open the listener, bailing out.");
 		}
-		else {
-//			_handleDisconnectEvent(event, port);
-		}
-		break;
-
-	case F_TIMER:
-		// is this always the reconnect timer?
-		itsListener->open();
+		ASSERTSTR(false, "Programming error, unexpected port closed");
 		break;
 
 	default:

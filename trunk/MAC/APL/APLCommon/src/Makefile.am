@@ -24,8 +24,9 @@ libaplcommon_la_SOURCES   = Package__Version.cc \
 							CTState.cc \
 							ControllerAdmin.cc \
 							ChildControl.cc \
-							ParentControl.cc 
-
+							ParentControl.cc  \
+							AntennaSets.cc \
+							AntennaPos.cc
 
 BUILT_SOURCES 			= $(ph_HEADERS) swlevel swlevel.conf
 
