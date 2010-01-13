@@ -82,6 +82,10 @@ MatrixRep* MatrixRealSca::max (MatrixRep& right)
 {
   return right.maxRep (*this);
 }
+MatrixRep* MatrixRealSca::atan2 (MatrixRep& right)
+{
+  return right.atan2Rep (*this);
+}
 
 const double* MatrixRealSca::doubleStorage() const
 {
@@ -244,6 +248,23 @@ MatrixRep* MatrixRealSca::maxRep (MatrixRealArr& left)
   return v;
 }
 
+MatrixRep* MatrixRealSca::atan2Rep (MatrixRealSca& left)
+{
+  return new MatrixRealSca (std::atan2(left.itsValue, itsValue));
+}
+MatrixRep* MatrixRealSca::atan2Rep (MatrixRealArr& left)
+{
+  MatrixRealArr* v = MatrixRealArr::allocate(left.nx(), left.ny());
+  double* value = v->itsValue;
+  double  rvalue = itsValue;
+  double* lvalue = left.itsValue;
+  int n = left.nelements();
+  for (int i=0; i<n; i++) {
+    value[i] = std::atan2(lvalue[i], rvalue);
+  }
+  return v;
+}
+
 MatrixRep* MatrixRealSca::negate()
 {
   itsValue = -itsValue;
@@ -265,6 +286,18 @@ MatrixRep* MatrixRealSca::sin()
 MatrixRep* MatrixRealSca::cos()
 {
   itsValue = std::cos(itsValue);
+  return this;
+}
+
+MatrixRep* MatrixRealSca::asin()
+{
+  itsValue = std::asin(itsValue);
+  return this;
+}
+
+MatrixRep* MatrixRealSca::acos()
+{
+  itsValue = std::acos(itsValue);
   return this;
 }
 

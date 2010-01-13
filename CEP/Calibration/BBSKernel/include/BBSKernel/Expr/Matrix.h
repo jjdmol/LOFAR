@@ -213,9 +213,14 @@ public:
   friend MatrixTmp min (const Matrix&, const MatrixTmp&);
   friend MatrixTmp max (const Matrix&, const Matrix&);
   friend MatrixTmp max (const Matrix&, const MatrixTmp&);
+  friend MatrixTmp atan2 (const Matrix&, const Matrix&);
+  friend MatrixTmp atan2 (const Matrix&, const MatrixTmp&);
+
   friend MatrixTmp abs (const Matrix&);
   friend MatrixTmp sin (const Matrix&);
   friend MatrixTmp cos (const Matrix&);
+  friend MatrixTmp asin (const Matrix&);
+  friend MatrixTmp acos (const Matrix&);
   friend MatrixTmp log (const Matrix&);
   friend MatrixTmp exp (const Matrix&);
   friend MatrixTmp log10 (const Matrix&);
@@ -227,7 +232,6 @@ public:
   friend MatrixTmp max (const Matrix&);
   friend MatrixTmp mean(const Matrix&);
   friend MatrixTmp sum (const Matrix&);
-
 
 private:
   MatrixRep* itsRep;

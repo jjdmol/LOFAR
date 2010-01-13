@@ -7,11 +7,13 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 
 # Install header files.
 install(FILES
+  ElementBeamExpr.h
   Equator.h
   Evaluator.h
   Exceptions.h
   ExprSet.h
   Instrument.h
+  IonosphereExpr.h
   Measurement.h
   MeasurementAIPS.h
   Model.h
@@ -64,13 +66,15 @@ install(FILES
   Expr/PiercePoint.h
   Expr/PointCoherence.h
   Expr/PointSource.h
-  Expr/PolynomialPhaseScreen.h
+  Expr/PolynomialLayer.h
   Expr/RefCounting.h
   Expr/Request.h
   Expr/Resampler.h
   Expr/ScalarMatrixMul.h
+  Expr/Scope.h
   Expr/Source.h
   Expr/SpectralIndex.h
+  Expr/EquatorialCentroid.h
   Expr/StationShift.h
   Expr/StationUVW.h
   Expr/ValueSet.h

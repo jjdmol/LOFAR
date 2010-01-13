@@ -28,7 +28,6 @@
 // Spatial coherence function of an elliptical gaussian source.
 
 #include <BBSKernel/Expr/BasicExpr.h>
-#include <BBSKernel/Expr/GaussianSource.h>
 
 namespace LOFAR
 {
@@ -45,7 +44,9 @@ public:
     typedef shared_ptr<GaussianCoherence>       Ptr;
     typedef shared_ptr<const GaussianCoherence> ConstPtr;
 
-    GaussianCoherence(const GaussianSource::ConstPtr &source,
+    GaussianCoherence(const Expr<Vector<4> >::ConstPtr stokes,
+        const Expr<Vector<2> >::ConstPtr dimensions,
+        const Expr<Scalar>::ConstPtr orientation,
         const Expr<Vector<3> >::ConstPtr &uvwA,
         const Expr<Vector<3> >::ConstPtr &uvwB);
 

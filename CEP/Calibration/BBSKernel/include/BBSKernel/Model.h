@@ -23,14 +23,17 @@
 #ifndef LOFAR_BBSKERNEL_MODEL_H
 #define LOFAR_BBSKERNEL_MODEL_H
 
+#include <BBSKernel/ElementBeamExpr.h>
 #include <BBSKernel/ExprSet.h>
 #include <BBSKernel/Instrument.h>
+#include <BBSKernel/IonosphereExpr.h>
 #include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/ParmManager.h>
 #include <BBSKernel/VisData.h>
 
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprParm.h>
+#include <BBSKernel/Expr/Scope.h>
 #include <BBSKernel/Expr/Source.h>
 
 #include <ParmDB/ParmDB.h>
@@ -83,58 +86,69 @@ private:
     vector<unsigned int>
         makeUsedStationList(const vector<baseline_t> &baselines) const;
 
-    ExprParm::Ptr makeExprParm(unsigned int category, const string &name);
+    pair<unsigned int, unsigned int>
+        findStationIndices(const vector<unsigned int> &stations,
+            const baseline_t &baseline) const;
 
-    vector<Source::Ptr> makeSourceList(const vector<string> &patterns);
+    vector<string> makePatchList(const vector<string> &patterns);
 
-    Source::Ptr makeSource(const SourceInfo &source);
+    vector<Source::Ptr> makeSourceList(const string &patch);
 
-    Expr<Scalar>::Ptr makeSpectralIndexExpr(const SourceInfo &source,
-        const string &stokesParm);
+    Expr<Vector<2> >::ConstPtr
+        makePatchCentroidExpr(const vector<Source::Ptr> &sources) const;
 
-//    void makeStationUVW();
+    Expr<JonesMatrix>::Ptr
+        makePatchCoherenceExpr(const vector<Source::Ptr> &sources,
+            const Expr<Vector<3> >::Ptr &uvwLHS,
+            const casa::Vector<Expr<Vector<2> >::Ptr> &shiftLHS,
+            const Expr<Vector<3> >::Ptr &uvwRHS,
+            const casa::Vector<Expr<Vector<2> >::Ptr> &shiftRHS) const;
 
     casa::Vector<Expr<Vector<3> >::Ptr>
         makeUVWExpr(const vector<unsigned int> &stations);
+
+    casa::Vector<Expr<Vector<2> >::Ptr>
+        makeAzElExpr(const vector<unsigned int> &stations,
+            const Expr<Vector<2> >::ConstPtr &direction) const;
+
+    casa::Vector<Expr<Vector<2> >::Ptr>
+        makeRefAzElExpr(const vector<unsigned int> &stations) const;
 
     casa::Matrix<Expr<Vector<2> >::Ptr>
         makeStationShiftExpr(const vector<unsigned int> &stations,
             const vector<Source::Ptr> &sources,
             const casa::Vector<Expr<Vector<3> >::Ptr> &exprUVW) const;
 
-    casa::Vector<Expr<JonesMatrix>::Ptr>
-        makeBandpassExpr(const vector<unsigned int> &stations);
+    void makeBandpassExpr(const vector<unsigned int> &stations,
+        casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
 
-    casa::Vector<Expr<JonesMatrix>::Ptr>
-        makeGainExpr(const ModelConfig &config,
-          const vector<unsigned int> &stations);
-
-    casa::Matrix<Expr<JonesMatrix>::Ptr>
-        makeDirectionalGainExpr(const ModelConfig &config,
+    void makeGainExpr(const ModelConfig &config,
             const vector<unsigned int> &stations,
-            const vector<Source::Ptr> &sources);
+            casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
 
-    casa::Matrix<Expr<Vector<2> >::Ptr>
-        makeAzElExpr(const vector<unsigned int> &stations,
-            const vector<Source::Ptr> &sources) const;
+    void makeDirectionalGainExpr(const ModelConfig &config,
+        const vector<unsigned int> &stations, const string &patch,
+        casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
 
-    casa::Matrix<Expr<JonesMatrix>::Ptr>
-        makeBeamExpr(const BeamConfig &config,
+    void makeBeamExpr(const BeamConfig &config,
             const vector<unsigned int> &stations,
-            const casa::Matrix<Expr<Vector<2> >::Ptr> &exprAzEl);
+            const casa::Vector<Expr<Vector<2> >::Ptr> &exprRefAzEl,
+            const casa::Vector<Expr<Vector<2> >::Ptr> &exprAzEl,
+            const ElementBeamExpr::ConstPtr &exprElement,
+            casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
 
-//    casa::Matrix<Expr<JonesMatrix>::Ptr>
-//        makeDipoleBeamExpr(const ModelConfig &config,
-//            const vector<unsigned int> &stations,
-//            const casa::Matrix<Expr<Vector<2> >::Ptr> &exprAzEl);
+    void makeIonosphereExpr(const vector<unsigned int> &stations,
+            const casa::MPosition &refPosition,
+            const casa::Vector<Expr<Vector<2> >::Ptr> &exprAzEl,
+            const IonosphereExpr::ConstPtr &exprIonosphere,
+            casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
 
-    casa::Matrix<Expr<JonesMatrix>::Ptr>
-        makeIonosphereExpr(const IonosphereConfig &config,
-            const vector<unsigned int> &stations,
-            const casa::Matrix<Expr<Vector<2> >::Ptr> &exprAzEl);
+    Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &accumulator,
+        const Expr<JonesMatrix>::Ptr &effect) const;
 
-    Expr<JonesMatrix>::Ptr corrupt(Expr<JonesMatrix>::Ptr &accumulator,
-        Expr<JonesMatrix>::Ptr &effect);
+    Expr<JonesMatrix>::Ptr corrupt(const Expr<JonesMatrix>::Ptr &lhs,
+        const Expr<JonesMatrix>::Ptr &coherence,
+        const Expr<JonesMatrix>::Ptr &rhs) const;
 
     Instrument                              itsInstrument;
     SourceDB                                itsSourceDb;
@@ -144,8 +158,7 @@ private:
     Cache                                   itsCache;
 
     vector<Expr<JonesMatrix>::Ptr>          itsExpr;
-    map<unsigned int, ExprParm::Ptr>        itsParms;
-//    vector<Expr<Vector<3> >::Ptr>           itsStationUVW;
+    Scope                                   itsScope;
 };
 
 // @}

@@ -154,10 +154,14 @@ public:
   friend MatrixTmp min (const MatrixTmp&, const MatrixTmp&);
   friend MatrixTmp max (const MatrixTmp&, const Matrix&);
   friend MatrixTmp max (const MatrixTmp&, const MatrixTmp&);
+  friend MatrixTmp atan2 (const MatrixTmp&, const Matrix&);
+  friend MatrixTmp atan2 (const MatrixTmp&, const MatrixTmp&);
 
   friend MatrixTmp abs (const MatrixTmp&);
   friend MatrixTmp sin (const MatrixTmp&);
   friend MatrixTmp cos (const MatrixTmp&);
+  friend MatrixTmp asin (const MatrixTmp&);
+  friend MatrixTmp acos (const MatrixTmp&);
   friend MatrixTmp log (const MatrixTmp&);
   friend MatrixTmp exp (const MatrixTmp&);
   friend MatrixTmp log10 (const MatrixTmp&);

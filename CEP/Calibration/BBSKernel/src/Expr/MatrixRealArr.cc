@@ -233,6 +233,10 @@ MatrixRep* MatrixRealArr::max (MatrixRep& right)
 {
   return right.maxRep (*this);
 }
+MatrixRep* MatrixRealArr::atan2 (MatrixRep& right)
+{
+  return right.maxRep (*this);
+}
 
 const double* MatrixRealArr::doubleStorage() const
 {
@@ -774,6 +778,52 @@ MatrixRep* MatrixRealArr::maxRep (MatrixRealArr& left)
   return v;
 }
 
+MatrixRep* MatrixRealArr::atan2Rep (MatrixRealSca& left)
+{
+#if defined TIMER
+  static NSTimer timer("atan2 RA RS", true);
+  timer.start();
+#endif
+
+  MatrixRealArr* v = allocate(nx(), ny());
+  double* value = v->itsValue;
+  double* rvalue = itsValue;
+  double  lvalue = left.itsValue;
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    value[i] = std::atan2(lvalue, rvalue[i]);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
+}
+MatrixRep* MatrixRealArr::atan2Rep (MatrixRealArr& left)
+{
+  DBGASSERT (left.nelements() == nelements());
+#if defined TIMER
+  static NSTimer timer("atan2 RA RA", true);
+  timer.start();
+#endif
+
+  MatrixRealArr* v = allocate(nx(), ny());
+  double* value = v->itsValue;
+  double* rvalue = itsValue;
+  double* lvalue = left.itsValue;
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    value[i] = std::atan2(lvalue[i], rvalue[i]);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
+}
+
 MatrixRep* MatrixRealArr::negate()
 {
 #if defined TIMER
@@ -841,6 +891,44 @@ MatrixRep* MatrixRealArr::cos()
   int n = nelements();
   for (int i=0; i<n; i++) {
     itsValue[i] = std::cos(itsValue[i]);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return this;
+}
+
+MatrixRep* MatrixRealArr::asin()
+{
+#if defined TIMER
+  static NSTimer timer("asin RA", true);
+  timer.start();
+#endif
+
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    itsValue[i] = std::asin(itsValue[i]);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return this;
+}
+
+MatrixRep* MatrixRealArr::acos()
+{
+#if defined TIMER
+  static NSTimer timer("acos RA", true);
+  timer.start();
+#endif
+
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    itsValue[i] = std::acos(itsValue[i]);
   }
 
 #if defined TIMER

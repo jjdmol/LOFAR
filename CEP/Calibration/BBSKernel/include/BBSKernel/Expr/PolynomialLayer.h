@@ -1,4 +1,4 @@
-//# PolynomialPhaseScreen.h: Ionospheric phase for a station, direction pair
+//# PolynomialLayer.h: Ionospheric phase for a station, direction pair
 //# due to a global polynomial phase screen.
 //#
 //# Copyright (C) 2007
@@ -42,17 +42,17 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class PolynomialPhaseScreen: public Expr<Scalar>
+class PolynomialLayer: public Expr<Scalar>
 {
 public:
-    typedef shared_ptr<PolynomialPhaseScreen>       Ptr;
-    typedef shared_ptr<const PolynomialPhaseScreen> ConstPtr;
+    typedef shared_ptr<PolynomialLayer>       Ptr;
+    typedef shared_ptr<const PolynomialLayer> ConstPtr;
 
     template <typename T_ITER>
-    PolynomialPhaseScreen(const casa::MPosition &refStation,
+    PolynomialLayer(const casa::MPosition &refStation,
         const Expr<Vector<4> >::ConstPtr &pp, T_ITER first, T_ITER last);
 
-    virtual ~PolynomialPhaseScreen();
+    virtual ~PolynomialLayer();
 
 protected:
     virtual unsigned int nArguments() const;
@@ -73,11 +73,11 @@ private:
 // @}
 
 // -------------------------------------------------------------------------- //
-// - PolynomialPhaseScreen implementation                                   - //
+// - PolynomialLayer implementation                                   - //
 // -------------------------------------------------------------------------- //
 
 template <typename T_ITER>
-PolynomialPhaseScreen::PolynomialPhaseScreen(const casa::MPosition &refStation,
+PolynomialLayer::PolynomialLayer(const casa::MPosition &refStation,
     const Expr<Vector<4> >::ConstPtr &pp, T_ITER first, T_ITER last)
     :   itsRefStation(casa::MPosition::Convert(refStation,
             casa::MPosition::ITRF)()),

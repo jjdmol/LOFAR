@@ -113,6 +113,7 @@ public:
   virtual MatrixRep* tocomplex(MatrixRep& right);
   virtual MatrixRep* min      (MatrixRep& right);
   virtual MatrixRep* max      (MatrixRep& right);
+  virtual MatrixRep* atan2    (MatrixRep& right);
 
   virtual MatrixRep* addRep (MatrixRealSca& left, bool rightTmp) = 0;
   virtual MatrixRep* addRep (MatrixRealArr& left, bool rightTmp) = 0;
@@ -154,11 +155,16 @@ public:
   virtual MatrixRep* maxRep (MatrixRealSca& left);
   virtual MatrixRep* maxRep (MatrixRealArr& left);
 
+  virtual MatrixRep* atan2Rep (MatrixRealSca& left);
+  virtual MatrixRep* atan2Rep (MatrixRealArr& left);
+
   virtual MatrixRep* negate() = 0;
 
   virtual MatrixRep* abs() = 0;
   virtual MatrixRep* sin() = 0;
   virtual MatrixRep* cos() = 0;
+  virtual MatrixRep* asin();
+  virtual MatrixRep* acos();
   virtual MatrixRep* log() = 0;
   virtual MatrixRep* exp() = 0;
   virtual MatrixRep* log10() = 0;

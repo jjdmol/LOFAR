@@ -28,7 +28,6 @@
 // Class holding the expressions defining a gaussian source.
 
 #include <BBSKernel/Expr/Source.h>
-#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -44,42 +43,41 @@ public:
     typedef shared_ptr<GaussianSource>       Ptr;
     typedef shared_ptr<const GaussianSource> ConstPtr;
 
-    GaussianSource(const string &name,
-        const Expr<Vector<2> >::ConstPtr &position,
-        const Expr<Vector<4> >::ConstPtr &stokes,
-        const Expr<Vector<2> >::ConstPtr &dimensions,
-        const Expr<Scalar>::ConstPtr &orientation);
+    GaussianSource(const SourceInfo &source, Scope &scope);
 
-    Expr<Vector<4> >::ConstPtr getStokesVector() const;
-    Expr<Vector<2> >::ConstPtr getDimensions() const;
-    Expr<Scalar>::ConstPtr getOrientation() const;
+//    Expr<Vector<4> >::ConstPtr getStokesVector() const;
+//    Expr<Vector<2> >::ConstPtr getDimensions() const;
+//    Expr<Scalar>::ConstPtr getOrientation() const;
+
+    Expr<JonesMatrix>::Ptr coherence(const Expr<Vector<3> >::ConstPtr &uvwLHS,
+        const Expr<Vector<3> >::ConstPtr &uvwRHS) const;
 
 private:
-    Expr<Vector<4> >::ConstPtr  itsStokesVector;
-    Expr<Vector<2> >::ConstPtr  itsDimensions;
-    Expr<Scalar>::ConstPtr      itsOrientation;
+    Expr<Vector<4> >::Ptr   itsStokesVector;
+    Expr<Vector<2> >::Ptr   itsDimensions;
+    Expr<Scalar>::Ptr       itsOrientation;
 };
 
 // @}
 
-// -------------------------------------------------------------------------- //
-// - GaussianSource implementation                                          - //
-// -------------------------------------------------------------------------- //
+//// -------------------------------------------------------------------------- //
+//// - GaussianSource implementation                                          - //
+//// -------------------------------------------------------------------------- //
 
-inline Expr<Vector<4> >::ConstPtr GaussianSource::getStokesVector() const
-{
-    return itsStokesVector;
-}
+//inline Expr<Vector<4> >::ConstPtr GaussianSource::getStokesVector() const
+//{
+//    return itsStokesVector;
+//}
 
-inline Expr<Vector<2> >::ConstPtr GaussianSource::getDimensions() const
-{
-    return itsDimensions;
-}
+//inline Expr<Vector<2> >::ConstPtr GaussianSource::getDimensions() const
+//{
+//    return itsDimensions;
+//}
 
-inline Expr<Scalar>::ConstPtr GaussianSource::getOrientation() const
-{
-    return itsOrientation;
-}
+//inline Expr<Scalar>::ConstPtr GaussianSource::getOrientation() const
+//{
+//    return itsOrientation;
+//}
 
 } // namespace BBS
 } // namespace LOFAR

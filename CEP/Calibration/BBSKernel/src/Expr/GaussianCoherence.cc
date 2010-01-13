@@ -40,12 +40,13 @@ namespace BBS
 using LOFAR::exp;
 using LOFAR::conj;
 
-GaussianCoherence::GaussianCoherence(const GaussianSource::ConstPtr &source,
+GaussianCoherence::GaussianCoherence(const Expr<Vector<4> >::ConstPtr stokes,
+    const Expr<Vector<2> >::ConstPtr dimensions,
+    const Expr<Scalar>::ConstPtr orientation,
     const Expr<Vector<3> >::ConstPtr &uvwA,
     const Expr<Vector<3> >::ConstPtr &uvwB)
     :   BasicExpr5<Vector<4>, Vector<2>, Scalar, Vector<3>, Vector<3>,
-            JonesMatrix>(source->getStokesVector(), source->getDimensions(),
-            source->getOrientation(), uvwA, uvwB)
+            JonesMatrix>(stokes, dimensions, orientation, uvwA, uvwB)
 {
 }
 
