@@ -35,7 +35,7 @@ namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	namespace TBB {
 
-static const int DRIVER_VERSION = 223; // TBBDriver V2.23
+static const int DRIVER_VERSION = 224;
 
 enum BoardStateT {noBoard,
 				  setImage1, image1Set,

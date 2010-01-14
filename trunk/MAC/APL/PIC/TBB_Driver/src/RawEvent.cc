@@ -84,7 +84,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 			break;
 		case oc_TRIGGER:
 			buf.event.signal = TP_TRIGGER;
-			buf.event.length = 44;
+			buf.event.length = 48;
 			break;
 		case oc_TRIG_RELEASE:
 			buf.event.signal = TP_TRIG_RELEASE_ACK;
@@ -104,7 +104,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 			break;
 		case oc_TRIG_INFO:
 			buf.event.signal = TP_TRIG_INFO_ACK;
-			buf.event.length = 40;
+			buf.event.length = 44;
 			break;	
 		case oc_READ:
 			buf.event.signal = TP_READ_ACK;
