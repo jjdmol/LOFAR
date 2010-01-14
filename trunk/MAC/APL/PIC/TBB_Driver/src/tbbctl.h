@@ -33,6 +33,7 @@
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>
 #include <Common/lofar_string.h>
+#include <cstdio>
 
 
 namespace LOFAR {
@@ -44,7 +45,7 @@ namespace LOFAR {
 
 GCFTimerPort* itsCmdTimer;
 
-static const int TBBCTL_VERSION = 222; // tbbctl V2.22
+static const int TBBCTL_VERSION = 223; // tbbctl V2.23
 
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 
@@ -860,6 +861,8 @@ public:
 	static const uint32 DATA1POS = 0;
 	static const uint32 DATA2POS = 256;
 private:
+	FILE* itsFile;
+	char itsBaseFileName[PATH_MAX];
 	// values given by user
 	int32  itsRcu;
 	uint32 itsStartPage;

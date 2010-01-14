@@ -2070,6 +2070,7 @@ ReadPageCmd::ReadPageCmd(GCFPortInterface& port) : Command(port),
 	itsFreqBands(0),itsTotalSamples(0),itsTotalBands(0), itsBandNr(0), itsSliceNr(0)
 {
 	for (int i = 0; i < 512; i++) itsData[i] = 0;
+	memset(itsBaseFileName, 0x00, PATH_MAX);
 	cout << endl;
 	cout << "==== TBB-board, readx register ================================================" << endl;
 	cout << endl;
@@ -2167,13 +2168,13 @@ void ReadPageCmd::send()
 //-----------------------------------------------------------------------------
 GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 {
-	char basefilename[PATH_MAX];
+	//static char basefilename[PATH_MAX];
 	char filename[PATH_MAX];
 	char timestring[256];
 
 	int16 val[1400];
 
-	double         bar_size = 50;
+	double  bar_size = 50;
 	static double  bar_interval = 1;
 	static double  bar_buff = 0;
 
@@ -2262,17 +2263,17 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 		bar_buff += 1;
 		if (itsPage == 0) {
 
-			itsStationId = static_cast<int>(itsData[0] & 0xFF);
-			itsRspId = static_cast<int>((itsData[0] >> 8) & 0xFF);
-			itsRcuId = static_cast<int>((itsData[0] >> 16) & 0xFF);
+			itsStationId  = static_cast<int>(itsData[0] & 0xFF);
+			itsRspId      = static_cast<int>((itsData[0] >> 8) & 0xFF);
+			itsRcuId      = static_cast<int>((itsData[0] >> 16) & 0xFF);
 			itsSampleFreq = static_cast<int>((itsData[0] >> 24) & 0xFF);
-			itsTime = static_cast<time_t>(itsData[2]);
-			itsFreqBands = static_cast<int>((itsData[4] >> 16) & 0xFFFF);
+			itsTime       = static_cast<time_t>(itsData[2]);
+			itsFreqBands  = static_cast<int>((itsData[4] >> 16) & 0xFFFF);
 
 			if (itsFreqBands == 0) {
 				itsSampleNr = static_cast<uint32>(itsData[3]);
-
-			} else {
+			} 
+			else {
 				itsBandNr = static_cast<int>(itsData[3] & 0x03FF);
 				itsSliceNr = static_cast<int>(itsData[3] >> 10);
 			}
@@ -2312,9 +2313,14 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			cout << "|" << endl ;
 			cout << "         |" << flush;
 
-			snprintf(basefilename, PATH_MAX, "%s_%s_%02d%02d",(itsFreqBands == 0)?"rw":"sb",timestring,itsStationId,itsRcuId);
+			snprintf(itsBaseFileName, PATH_MAX, "%s_%s_%02d%02d",(itsFreqBands == 0)?"rw":"sb",timestring,itsStationId,itsRcuId);
 			//next row for testset
 			//snprintf(basefilename, PATH_MAX, "%s_board%02d_rcu%02d",(itsFreqBands == 0)?"rw":"sb",itsStationId,itsRcuId);
+			snprintf(filename, PATH_MAX, "%s.dat",itsBaseFileName);
+			itsFile = fopen(filename,"a");
+			if (itsFile == 0) {
+				cout << "opening .dat file not possible" << endl;
+			}
 		}
 		itsSamplesPerFrame = static_cast<uint32>(itsData[4] & 0xFFFF);
 
@@ -2362,14 +2368,12 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 
 			uint32 data[3];
 			itsTotalSamples += itsSamplesPerFrame;
-
 			// 1e convert uint32 to int12
 			while (sample_cnt < itsSamplesPerFrame) {
 				// get 96 bits from received data
 				data[0] = itsData[data_cnt++];
 				data[1] = itsData[data_cnt++];
 				data[2] = itsData[data_cnt++];
-
 				// extract 8 values of 12 bit
 				val[val_cnt++] = static_cast<int16>(  data[0] & 0x00000FFF);
 				val[val_cnt++] = static_cast<int16>(( data[0] & 0x00FFF000) >> 12);
@@ -2379,7 +2383,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 				val[val_cnt++] = static_cast<int16>(((data[1] & 0xF0000000) >> 28) | ((data[2] & 0x000000FF) << 4));
 				val[val_cnt++] = static_cast<int16>(( data[2] & 0x000FFF00) >> 8);
 				val[val_cnt++] = static_cast<int16>(( data[2] & 0xFFF00000) >> 20);
-
+				
 				sample_cnt += 8;
 			}
 
@@ -2449,16 +2453,17 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 		// end CRC-32
 */
 		// write all data to file
-		FILE* file;
-
+		//FILE* file;
+		
 		if (val_cnt > 0) {
 			// save unpacked frame to file
-			snprintf(filename, PATH_MAX, "%s.dat",basefilename);
-			file = fopen(filename,"a");
-			fwrite(&itsData[0],sizeof(uint32),22,file);     // frame header 88 bytes (4 x 22)
-			fwrite(&val[0],sizeof(int16),val_cnt,file);     // payload
-			fwrite(&itsData[509],sizeof(uint32),1,file); // payload CRC 4 bytes (4 x 1)
-			fclose(file);
+			//snprintf(filename, PATH_MAX, "%s.dat",itsBaseFileName);
+			//file = fopen(filename,"a");
+			if (itsFile) {
+				fwrite(&itsData[0],sizeof(uint32),22,itsFile);     // frame header 88 bytes (4 x 22)
+				fwrite(&val[0],sizeof(int16),val_cnt,itsFile);     // payload
+				fwrite(&itsData[509],sizeof(uint32),1,itsFile); // payload CRC 4 bytes (4 x 1)
+			}
 		}
 
 		itsPage++;
@@ -2477,8 +2482,8 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			cout << "Total received samples: " << itsTotalSamples << endl;
 
 			if (val_cnt > 0) {
-				cout << "Filename        : " << basefilename << ".nfo" << endl;
-				cout << "                : " << basefilename << ".dat" << endl;
+				cout << "Filename        : " << itsBaseFileName << ".nfo" << endl;
+				cout << "                : " << itsBaseFileName << ".dat" << endl;
 				cout << endl;
 				cout << "Each frame exists of:" << endl;
 				cout << "  HEADER(88 bytes) + PAYLOAD(see header for size) + PAYLOAD_CRC(4 bytes)" << endl;
@@ -2489,34 +2494,40 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			// save page information to file
 			strftime(timestring, 255, "%Y-%m-%d  %H:%M:%S", gmtime(&itsTime));
 
-			snprintf(filename, PATH_MAX, "%s.nfo",basefilename);
+			snprintf(filename, PATH_MAX, "%s.nfo",itsBaseFileName);
+			FILE* file;
 			file = fopen(filename,"w");
-
-			fprintf(file,  "Station ID      : %d",itsStationId);
-			fprintf(file,  "RSP ID          : %d",itsRspId);
-			fprintf(file,  "RCU ID          : %d",itsRcuId);
-			fprintf(file,  "Sample freq     : %d MHz",itsSampleFreq);
-			if (itsTime < 0) {
-				fprintf(file,"Time            : invalid");
-			} else {
-				fprintf(file,"Time of 1e sample/slice  : %s (%u)",timestring,(uint32)itsTime);
+			if (file) {
+				fprintf(file,  "Station ID      : %d",itsStationId);
+				fprintf(file,  "RSP ID          : %d",itsRspId);
+				fprintf(file,  "RCU ID          : %d",itsRcuId);
+				fprintf(file,  "Sample freq     : %d MHz",itsSampleFreq);
+				if (itsTime < 0) {
+					fprintf(file,"Time            : invalid");
+				} else {
+					fprintf(file,"Time of 1e sample/slice  : %s (%u)",timestring,(uint32)itsTime);
+				}
+				if (itsFreqBands > 0) {
+					fprintf(file,"Slice number of 1e slice : %d",itsSliceNr);
+					fprintf(file,"Band number of 1e sample : %d",itsBandNr);
+					fprintf(file,"Number of bands          : %d",itsFreqBands);
+					fprintf(file,"Data file format         : binary complex(int16 Re, int16 Im)");
+				} else {
+					fprintf(file,"Sample number of 1e sample : %u",itsSampleNr);
+					fprintf(file,"Total number of samples    : %u",itsTotalSamples);
+					fprintf(file,"Data file format           : binary  int16");
+					fprintf(file," ");
+				}
+				fclose(file);			
 			}
-			if (itsFreqBands > 0) {
-				fprintf(file,"Slice number of 1e slice : %d",itsSliceNr);
-				fprintf(file,"Band number of 1e sample : %d",itsBandNr);
-				fprintf(file,"Number of bands          : %d",itsFreqBands);
-				fprintf(file,"Data file format         : binary complex(int16 Re, int16 Im)");
-			} else {
-				fprintf(file,"Sample number of 1e sample : %u",itsSampleNr);
-				fprintf(file,"Total number of samples    : %u",itsTotalSamples);
-				fprintf(file,"Data file format           : binary  int16");
-				fprintf(file," ");
+			else {
+				cout << "opening .nfo file not possible" << endl;
 			}
-			fclose(file);
 		}
 	}
 
 	if (itsPage == itsPages) {
+		if (itsFile) { fclose(itsFile); }
 		setCmdDone(true);
 	}
 
