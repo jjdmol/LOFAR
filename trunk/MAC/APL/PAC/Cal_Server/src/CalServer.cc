@@ -71,6 +71,8 @@ using namespace GCF::TM;
 
 #define NPOL 2
 
+#define SCHEDULING_DELAY 3
+
 //
 // parseOptions
 //
@@ -617,27 +619,62 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 
 			// calibration will start within one second
 
+
+			_enableRCUs(subarray);
+
+
 			//
 			// set the control register of the RCU's 
-			//
+			// if in HBA mode turn on HBAs in groups to prevent resetting of boards
+			// 
 			RSPSetrcuEvent setrcu;
-			setrcu.timestamp = Timestamp(0,0); // immediate
 
-			// TODO: Step20.2: might have to send 2 settings e.g. when using all X-pols
-
-			// mask only available RCUs
 			bitset<MEPHeader::MAX_N_RCUS> validmask;
-			for (int i = 0; i < m_n_rcus; i++) {
-				validmask.set(i);
+			bitset<MEPHeader::MAX_N_RCUS> testmask;
+			Timestamp timeStamp;
+			
+			#define N_PWR_RCUS_PER_STEP 12
+			
+			int nPwrRCUs = m_n_rcus / 2;  // only the even rcus deliver power to the HBAs
+			int steps    = nPwrRCUs / N_PWR_RCUS_PER_STEP;  // 4 steps for NL stations, 8 steps for IS stations
+			int jump     = m_n_rcus / N_PWR_RCUS_PER_STEP;  // jump = 8 for NL stations and 16 for IS stations
+			
+			if (steps == 0) { steps = 1; }  // limit for test cabinet
+			if (jump < 2) { jump = 2; }     // limit for test cabinet
+					
+			// if LBA mode select all rcus in one step
+			if (start.rcumode()(0).getMode() <= 4) { 
+				steps = 1;
+				jump = 2;
 			}
-			setrcu.rcumask = start.subset & validmask;
-			setrcu.settings().resize(1);
-			setrcu.settings()(0) = start.rcumode()(0);
+			
+			for (int step = 0; step < steps; ++step) {
+				validmask.reset();
+				// select 12 even(X) rcus and 12 odd(Y) rcus
+				for (int rcu = (step * 2); rcu < m_n_rcus; rcu += jump) {
+					validmask.set(rcu);   // select X (HBA power supply)
+					validmask.set(rcu+1); // select Y
+				}
+				
+				// if any rcus in this masker send command
+				testmask = start.subset & validmask;
+				if (testmask.any()) {
+					int delay = SCHEDULING_DELAY + step;
+					timeStamp.setNow(delay);
+					setrcu.timestamp = timeStamp; // in steps of 1 second
 
-			// previous LOG statement contained start.rcumask.to_ulong() which
-			// throws an exception because the number of bits = 256!
-			LOG_DEBUG(formatString("Sending RSP_SETRCU(%08X)", start.rcumode()(0).getRaw()));
-			m_rspdriver.send(setrcu);
+					//TODO: Step20.2: might have to send 2 settings e.g. when using all X-pols
+			
+					setrcu.rcumask = start.subset & validmask;
+					setrcu.settings().resize(1);
+					setrcu.settings()(0) = start.rcumode()(0);
+	
+					// previous LOG statement contained start.rcumask.to_ulong() which
+					// throws an exception because the number of bits = 256!
+					LOG_DEBUG(formatString("Sending RSP_SETRCU(%08X)", start.rcumode()(0).getRaw()));
+					m_rspdriver.send(setrcu);
+				}
+			}
 
 			// set the spectral inversion right
 			// prepare RSP command
@@ -651,8 +688,6 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			LOG_DEBUG_STR("NyquistZone = " << start.rcumode()(0).getNyquistZone() 
 							<< " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
 			m_rspdriver.send(specInvCmd);
-
-			_enableRCUs(subarray);
 		}
 	}
 	port.send(ack); // send ack
