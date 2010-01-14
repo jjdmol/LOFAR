@@ -437,8 +437,8 @@ TrigGenerateCmd::TrigGenerateCmd(GCFPortInterface& port) : Command(port)
 	cout << endl;
 	cout << "== TBB ============================ generate trigger on selected rcu's ====" << endl;
 	cout << endl;
-	cout << "RCU  seq_nr     time       sample      sum         samples    peak       pwr_before  pwr_after" << endl;
-	cout << "---  ---------  ---------  ----------  ----------  ---------  ---------  ----------  ---------" << endl;
+	cout << "RCU  seq_nr     time       sample      sum         samples    peak       pwr_before  pwr_after  missed   " << endl;
+	cout << "---  ---------  ---------  ----------  ----------  ---------  ---------  ----------  ---------  ---------" << endl;
 }
 
 //-----------------------------------------------------------------------------
@@ -468,7 +468,7 @@ GCFEvent::TResult TrigGenerateCmd::ack(GCFEvent& e)
 	}
 	if (e.signal == TBB_TRIGGER) {
 		TBBTriggerEvent trig(e);
-		cout << formatString(" %2d  %9u  %9u  %10u  %10u  %9u  %9u  %9u  %9u",
+		cout << formatString(" %2d  %9u  %9u  %10u  %10u  %9u  %9u  %9u  %9u  %9u",
 									trig.rcu,
 									trig.sequence_nr,
 									trig.time,
@@ -477,7 +477,8 @@ GCFEvent::TResult TrigGenerateCmd::ack(GCFEvent& e)
 									trig.trigger_samples,
 									trig.peak_value,
 									trig.power_before,
-									trig.power_after ) << endl;
+									trig.power_after,
+									trig.missed ) << endl;
 		++itsTriggerNr;
 		if (itsTriggerNr == itsMaxChannels) {
 			setCmdDone(true);
@@ -680,8 +681,8 @@ void ListenCmd::send()
 			release.rcu_start_mask = getRcuMask();
 			itsPort.send(release);
 			cout << endl;
-			cout << "RCU  seq_nr     time        sample      sum         samples    peak       pwr_before  pwr_after" << endl;
-			cout << "---  ---------  ----------  ----------  ----------  ---------  ---------  ----------  ---------" << endl;
+			cout << "RCU  seq_nr     time        sample      sum         samples    peak       pwr_before  pwr_after  missed   " << endl;
+			cout << "---  ---------  ----------  ----------  ----------  ---------  ---------  ----------  ---------  ---------" << endl;
 		} break;
 
 		default: {
@@ -716,7 +717,7 @@ GCFEvent::TResult ListenCmd::ack(GCFEvent& e)
 
 			TBBTriggerEvent trig(e);
 			nummer++;
-			cout << formatString(" %2d  %9u  %9u  %10u  %10u  %9u  %9u  %9u  %9u  (stopped) %6d",
+			cout << formatString(" %2d  %9u  %9u  %10u  %10u  %9u  %9u  %9u  %9u  %9u  (stopped) %6d",
 										trig.rcu,
 										trig.sequence_nr,
 										trig.time,
@@ -726,6 +727,7 @@ GCFEvent::TResult ListenCmd::ack(GCFEvent& e)
 										trig.peak_value,
 										trig.power_before,
 										trig.power_after,
+										trig.missed,
 										nummer ) << endl;
 
 			if (itsListenMode == TBB_LISTEN_ONE_SHOT) {

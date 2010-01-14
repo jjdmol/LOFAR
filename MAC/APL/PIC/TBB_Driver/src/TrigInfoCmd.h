@@ -68,6 +68,7 @@ private:
 	uint32 itsPeakValue;
 	uint32 itsPowerBefore;
 	uint32 itsPowerAfter;
+	uint32 itsMissed;
 };
 
 	} // end TBB namespace

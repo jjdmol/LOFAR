@@ -107,6 +107,7 @@ void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
 	tbb_event.peak_value      = tp_event.trigger.peak;
 	tbb_event.power_before    = tp_event.trigger.pwr_bt_at & 0x0000FFFF;
 	tbb_event.power_after     = (tp_event.trigger.pwr_bt_at & 0xFFFF0000) >> 16;
+	tbb_event.missed          = tp_event.trigger.missed;
 				
 	sendTriggerMessage(tbb_event);
 	
@@ -128,7 +129,7 @@ void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
 				itsFile = fopen(itsFileName,"a");
 			}
 		
-			err = fprintf(itsFile,"%d %u %u %u %u %u %u %u %u\n",
+			err = fprintf(itsFile,"%d %u %u %u %u %u %u %u %u %u\n",
 					tbb_event.rcu,
 					tbb_event.sequence_nr,
 					tbb_event.time,
@@ -137,7 +138,8 @@ void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
 					tbb_event.trigger_samples,
 					tbb_event.peak_value,
 					tbb_event.power_before,
-					tbb_event.power_after);
+					tbb_event.power_after,
+					tbb_event.missed );
 			fflush(itsFile);
 		}
 	}

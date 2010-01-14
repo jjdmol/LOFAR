@@ -97,7 +97,7 @@ prelude = << PRELUDE_END
 		uint32 samples;
 		uint32 peak;
 		uint32 pwr_bt_at;
-		uint32 end_code;
+		uint32 missed;
 	};
 
 	typedef struct TpTriggerSetup // setup variables for 1 channel

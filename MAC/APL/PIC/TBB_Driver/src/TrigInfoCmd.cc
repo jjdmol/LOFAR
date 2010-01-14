@@ -36,7 +36,7 @@ using	namespace TBB;
 //--Constructors for a TrigInfoCmd object.----------------------------------------
 TrigInfoCmd::TrigInfoCmd():
 	itsRcu(0), itsSequenceNr(0), itsTime(0), itsSampleNr(0), itsTriggerSum(0),
-	itsTriggerSamples(0), itsPeakValue(0), itsPowerBefore(0), itsPowerAfter(0)
+	itsTriggerSamples(0), itsPeakValue(0), itsPowerBefore(0), itsPowerAfter(0), itsMissed(0)
 {
 	TS = TbbSettings::instance();
 	setWaitAck(true);
@@ -98,6 +98,7 @@ void TrigInfoCmd::saveTpAckEvent(GCFEvent& event)
 			itsPeakValue      = tp_ack.trigger.peak;
 			itsPowerBefore    = tp_ack.trigger.pwr_bt_at & 0x0000FFFF;
 			itsPowerAfter     = (tp_ack.trigger.pwr_bt_at & 0xFFFF0000) >> 16;
+			itsMissed         = tp_ack.trigger.missed;
 		} else {
 			setStatus(0, (tp_ack.status << 24));
 		}
@@ -120,6 +121,8 @@ void TrigInfoCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	tbb_ack.peak_value      = itsPeakValue;
 	tbb_ack.power_before    = itsPowerBefore;
 	tbb_ack.power_after     = itsPowerAfter;
+	tbb_ack.missed          = itsMissed;
+	
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }
