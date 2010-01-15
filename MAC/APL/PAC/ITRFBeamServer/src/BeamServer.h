@@ -25,9 +25,8 @@
 
 #include <Common/lofar_string.h>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
+#include "J2000Converter.h"
 #include "Beam.h"
-
-#include <AMCBase/ConverterClient.h>
 
 #include <GCF/TM/GCF_Control.h>
 //#include <GCF/TM/GCF_TimerPort.h>
@@ -147,7 +146,7 @@ public:
 
 	// Time to compute some more weights.
 	// @param current_seconds Time in seconds since 1 Jan 1970
-	void compute_weights(RTC::Timestamp time);
+	bool compute_weights(RTC::Timestamp time);
 
 	// Send weights to the board.
 	void send_weights(RTC::Timestamp time);
@@ -227,9 +226,9 @@ private:
 
 	BeamTransaction				itsBeamTransaction; 	// current beam transaction
 
+	J2000Converter				itsJ2000Converter;		// casacore based converter to J2000
 	GCFTCPPort* 				itsRSPDriver;			// connection to RSPDriver
 	GCFTCPPort*					itsCalServer;  			// connection to CalServer
-	AMC::ConverterClient		itsAMCclient;
 	GCFTimerPort*  				itsHeartbeatTimer;  	//
 	GCFTimerPort*  				itsTimerPort;		  	// General purpose timer
 	bool     					itsBeamsModified;		//

@@ -25,9 +25,6 @@
 #include <Common/LofarLocators.h>
 #include <Common/LofarConstants.h>
 
-#include <AMCBase/Converter.h>
-#include <AMCBase/Position.h>
-
 #include <APL/RTCCommon/PSAccess.h>
 #include "BeamServerConstants.h"
 #include "Beam.h"
@@ -43,7 +40,6 @@
 
 using namespace blitz;
 using namespace LOFAR;
-using namespace AMC;
 using namespace BS;
 using namespace IBS_Protocol;
 using namespace std;
