@@ -32,7 +32,7 @@ import sys
 # Note that first renaming FLAG to, say, FLAGOLD does not work because
 # LofarStMan does not know FLAGOLD.
 
-def makeFlagWritable (msname):
+def makeFlagWritable (msname, flagtablename):
     ms = pt.table(msname, readonly=False)
     # Only add if a cell is defined but cannot be written.
     add = False
@@ -44,9 +44,22 @@ def makeFlagWritable (msname):
     if add:
         shape = ms.getcell('FLAG', 0).shape
         # Define the data manager to be used.
-        dminfo = {'*1': {'TYPE':'StandardStMan','NAME':'SSMFlag','SPEC':{'BUCKETSIZE':32768}}}
-        # Add a column and make it Direct,FixedShape.
-        ms.addcols (pt.maketabdesc (pt.makearrcoldesc("FLAG__TMP", False, options=5, shape=shape)), dminfo)
+        dminfo = {'*1': {'TYPE':'StandardStMan',
+                         'NAME':'SSMFlag',
+                         'SPEC':{'BUCKETSIZE':32768}}}
+        # Make a column description with option Direct,FixedShape.
+        tabdesc = pt.maketabdesc (pt.makearrcoldesc("FLAG__TMP", False,
+                                                    options=5, shape=shape))
+        if len(flagtablename) > 0:
+            # Create the table to contain the flags
+            flagtab = pt.table (flagtablename, tabdesc, ms.nrows(),
+                                dminfo=dminfo)
+            flagtab.flush()
+            dminfo = {'*1': {'TYPE':'ForwardColumnEngine',
+                             'NAME':'ForwardFlag',
+                             'SPEC':{'FORWARDTABLE':flagtablename}}}
+        # Add the column to the MS.
+        ms.addcols (tabdesc, dminfo)
         print 'Created new FLAG column; copying old values ...'
         # Copy the flags.
         t = pt.taql ('update %s set FLAG__TMP = FLAG' % msname)
@@ -54,19 +67,35 @@ def makeFlagWritable (msname):
         # Remove the old column and rename the new one.
         ms.removecols ('FLAG')
         ms.renamecol ('FLAG__TMP', 'FLAG')
-        print 'FLAG column now stored with SSM to make it writable'
+        ms.flush()
+        if len(flagtablename) == 0:
+            print 'FLAG column now stored with SSM to make it writable'
+        else:
+            flagtab = pt.table (flagtablename, readonly=False)
+            flagtab.renamecol ('FLAG__TMP', 'FLAG')
+            flagtab.flush()
+            print 'FLAG column now forwarded to table', flagtablename
     else:
         print 'FLAG column is already writable'
-    ms.flush()
 
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv
     if len(argv) < 2:
-        print 'run as:  makeFLAGwritable msname'
+        print 'run as:  makeFLAGwritable msname [flagtablename]'
+        print '  If column FLAG in the given MS is not writable, it will replace'
+        print '  by a writable FLAG column and copy the current values.'
+        print '  If a flagtable name is given, it will create that table with a'
+        print '  FLAG column and forward the FLAG column in the MS to it.'
+        print '  In this way the flags can be written on the compute node disk'
+        print '  instead of the storage node disk.'
+        print '  If no flagtable name is given, it will add a normal FLAG column.'
         return 1
-    makeFlagWritable (argv[1])
+    flagtablename = ''
+    if len(argv) > 2:
+        flagtablename = argv[2]
+    makeFlagWritable (argv[1], flagtablename)
 
 if __name__ == "__main__":
     sys.exit(main())
