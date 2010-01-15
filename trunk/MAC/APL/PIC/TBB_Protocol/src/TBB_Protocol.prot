@@ -356,6 +356,10 @@ event = {
 		name = "power_after";
 		type = "uint16";
 	};
+	param = {
+		name = "missed";
+		type = "uint32";
+	};
 };
 
 event = {
@@ -551,6 +555,10 @@ event = {
 	param = {
 		name = "power_after";
 		type = "uint16";
+	};
+	param = {
+		name = "missed";
+		type = "uint32";
 	};
 };
 
