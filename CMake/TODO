@@ -3,6 +3,14 @@
 =                       TODO - List of things to do                          =
 ==============================================================================
 
+* When you've initially built only a small number of packages (e.g. only 
+  Common), and later expand that collection (to e.g. Blob), a rebuild of
+  Common is triggered. This is caused by the fact that lofar_config.h is
+  regenerated, which is caused by the fact that some #cmakedefine's depend
+  on variables that are only set in packages that were added later (e.g. 
+  HAVE_BLITZ and HAVE_AIPSPP in Blob). I don't know yet how to solve this, 
+  and I don't know if this is really a big issue.
+
 * Solve the problem of running some (distributed) tests, e.g. ParmDB tests,
   which rely on executables and/or scripts that were built as part of another
   LOFAR package. For (C)Make targets, this can be solved by using the target
