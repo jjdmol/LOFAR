@@ -35,13 +35,6 @@
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 
-#include <AMCBase/Converter.h>
-#include <AMCBase/RequestData.h>
-#include <AMCBase/ResultData.h>
-#include <AMCBase/Position.h>
-#include <AMCBase/Direction.h>
-#include <AMCBase/Epoch.h>
-
 #include "BeamServer.h"
 #include "BeamServerConstants.h"
 #include "Package__Version.h"
@@ -63,7 +56,6 @@ namespace LOFAR {
   using namespace IBS_Protocol;
   using namespace RSP_Protocol;
   using namespace GCF::TM;
-  using namespace AMC;
   namespace BS {
 
 int	gBeamformerGain = 0;
@@ -78,7 +70,6 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsListener				(0),
 	itsRSPDriver			(0),
 	itsCalServer			(0),
-	itsAMCclient			("localhost"),
 	itsBeamsModified		(false),
 	itsUpdateInterval		(UPDATE_INTERVAL),
 	itsComputeInterval		(COMPUTE_INTERVAL),
@@ -1354,7 +1345,7 @@ inline complex<int16_t> convert2complex_int16_t(complex<double> cd)
 // This method is called once every period of COMPUTE_INTERVAL seconds
 // to calculate the weights for all beamlets.
 //
-void BeamServer::compute_weights(Timestamp weightTime)
+bool BeamServer::compute_weights(Timestamp weightTime)
 {
 	// TEMP CODE FOR EASY TESTING THE BEAMSERVER VALUES
 	if (itsTestSingleShotTimestamp) {
@@ -1382,10 +1373,16 @@ void BeamServer::compute_weights(Timestamp weightTime)
 		blitz::Array<double, 2> rcuPosITRF = LBAfield ? itsAntennaPos->LBARCUPos() : itsAntennaPos->HBARCUPos();
 		LOG_DEBUG_STR("ITRFRCUPos = " << rcuPosITRF);
 
-		// Get geographical location of subarray in ITRF and place it in an AMC Position class.
+		// Get geographical location of subarray in ITRF
 		blitz::Array<double, 1> fieldCentreITRF = LBAfield ? itsAntennaPos->LBACentre() : itsAntennaPos->HBACentre();
-		Position	fieldPositionITRF(Coord3D(blitz2vector(fieldCentreITRF)), Position::ITRF);
-		LOG_DEBUG_STR("ITRF position antennaField: " << fieldPositionITRF);
+		LOG_DEBUG_STR("ITRF position antennaField: " << fieldCentreITRF);
+
+		// convert ITRF position of all antennas to J2000 for timestamp t
+		blitz::Array<double,2>	rcuJ2000Pos;
+		if (!itsJ2000Converter.doConversion("ITRF", rcuPosITRF, fieldCentreITRF, weightTime, rcuJ2000Pos)) {
+			LOG_FATAL_STR("Conversion of antennas to J2000 failed");
+			return(false);
+		}
 
 		// Lengths of the vector of the antennaPosition i.r.t. the fieldCentre,
 		blitz::Array<double,1>	rcuPosLengths = LBAfield ? itsAntennaPos->LBARCULengths() : itsAntennaPos->HBARCULengths();
@@ -1400,18 +1397,15 @@ void BeamServer::compute_weights(Timestamp weightTime)
 			}
 			// Get the right pointing
 			Pointing	currentPointing = beamIter->second->currentPointing(weightTime);
-			double mjd(0);
-			double mjd_fraction(0);
-			currentPointing.time().convertToMJD(mjd, mjd_fraction);
-
-			// Convert pointing of source to J2000 for centre of Antennafield
-			// TODO: REO 111109: next line wil only work for J2000, AZEL to J2000 is not implemented in Pointing.cc
-			blitz::Array<double,1>	sourceJ2000xyz(3);
-			sourceJ2000xyz(Range::all())  = currentPointing.convert(&itsAMCclient, &fieldPositionITRF, Pointing::J2000).cartesian();
+			blitz::Array<double,2>	sourceJ2000xyz;
+			blitz::Array<double,2>	curPoint(1,2);
+			curPoint(0,0) = currentPointing.angle0();
+			curPoint(0,1) = currentPointing.angle1();
+			if (!itsJ2000Converter.doConversion(currentPointing.getType(), curPoint, fieldCentreITRF, weightTime, sourceJ2000xyz)) {
+				LOG_FATAL_STR("Conversion of source to J2000 failed");
+				return(false);
+			}
 			LOG_DEBUG_STR("sourceJ2000xyz:" << sourceJ2000xyz);
-
-			// declare J2000SingleRCUPos
-			blitz::Array<double,1>	J2000SingleRCUPos(3);
 
 			bitset<MAX_RCUS>	RCUallocation(beamIter->second->rcuMask());
 			for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
@@ -1424,19 +1418,8 @@ void BeamServer::compute_weights(Timestamp weightTime)
 				//
 				// Convert the ITRF position of this RCU to J2000 for time=weightTime
 				//
-				RequestData	request(Direction(Coord3D(blitz2vector(rcuPosITRF(rcu, Range::all()))), Direction::ITRF),
-									fieldPositionITRF,
-									Epoch(mjd, mjd_fraction));
-				ResultData	result;
-				itsAMCclient.itrfToJ2000(result, request);
-				vector<double>	direction = result.direction[0].coord().get();
-
-				// Note AMCServer returns an unit vector.
-				J2000SingleRCUPos(0) = direction[0] * rcuPosLengths(rcu);
-				J2000SingleRCUPos(1) = direction[1] * rcuPosLengths(rcu);
-				J2000SingleRCUPos(2) = direction[2] * rcuPosLengths(rcu);
-				LOG_DEBUG_STR("J2000RCUPos[" << rcu << "]=[" << J2000SingleRCUPos(0) << ", " << 
-								J2000SingleRCUPos(1) << ", " << J2000SingleRCUPos(2) << "]");
+				rcuJ2000Pos(rcu, Range::all()) *= rcuPosLengths(rcu);
+				LOG_DEBUG_STR("J2000RCUPos[" << rcu << "]=" << rcuJ2000Pos(rcu, Range::all()));
 				// END OF NOTE.
 
 				//
@@ -1451,9 +1434,9 @@ void BeamServer::compute_weights(Timestamp weightTime)
 					}
 
 					itsWeights(rcu, beamlet) = exp(itsBeamletAllocation[beamlet].scaling * 
-							(J2000SingleRCUPos(0) * sourceJ2000xyz(0) +
-							 J2000SingleRCUPos(1) * sourceJ2000xyz(1) +
-							 J2000SingleRCUPos(2) * sourceJ2000xyz(2)));
+							(rcuJ2000Pos(rcu, 0) * sourceJ2000xyz(0) +
+							 rcuJ2000Pos(rcu, 1) * sourceJ2000xyz(1) +
+							 rcuJ2000Pos(rcu, 2) * sourceJ2000xyz(2)));
 
 					// some debugging
 					if (itsWeights(rcu, beamlet) != complex<double>(1,0)) {
@@ -1462,7 +1445,7 @@ void BeamServer::compute_weights(Timestamp weightTime)
 					// some more debugging
 					if (rcu==4 && beamlet==6) {
 						LOG_DEBUG_STR("###scaling     = " << itsBeamletAllocation[beamlet].scaling);
-						LOG_DEBUG_STR("###J2000RCUpos = " << J2000SingleRCUPos(Range::all()));
+						LOG_DEBUG_STR("###J2000RCUpos = " << rcuJ2000Pos(rcu, Range::all()));
 						LOG_DEBUG_STR("###J2000xyz    = " << sourceJ2000xyz(Range::all()));
 					}
 				} // beamlets
@@ -1474,6 +1457,8 @@ void BeamServer::compute_weights(Timestamp weightTime)
 	itsWeights16 = convert2complex_int16_t(itsWeights);
 
 	LOG_DEBUG(formatString("sizeof(itsWeights16) = %d", itsWeights16.size()*sizeof(int16_t)));
+
+	return (true);
 }
 
 //

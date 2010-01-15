@@ -384,12 +384,13 @@ void beamctl::send_direction(double	longitude, double	latitude, const string&	di
 	pointto.beamName = itsBeamHandle;
 	pointto.pointing.setDirection(longitude, latitude);
 	pointto.analogue = isAnalogue;
+	// TODO UPDATE THIS TO THE NEW CASACORE INTERFACE
 	if (dirType == "J2000") {
-		pointto.pointing.setType(Pointing::J2000);
+		pointto.pointing.setType(dirType);
 	} else if (dirType == "AZEL") {
-		pointto.pointing.setType(Pointing::AZEL);
+		pointto.pointing.setType(dirType);
 	} else if (dirType == "LOFAR_LMN") {
-		pointto.pointing.setType(Pointing::LOFAR_LMN);
+		pointto.pointing.setType(dirType);
 	} else if (dirType != "SKYSCAN") {
 		LOG_FATAL_STR("Error: invalid coordinate type '" << dirType << "'");
 		exit(EXIT_FAILURE);
@@ -403,7 +404,8 @@ void beamctl::send_direction(double	longitude, double	latitude, const string&	di
 	// SKYSCAN
 	Timestamp time, end_time;
 	time.setNow(SKYSCAN_STARTDELAY); // start after appropriate delay
-	pointto.pointing.setType(Pointing::LOFAR_LMN);
+	// TODO HOW TO CONVERT THIS?
+//	pointto.pointing.setType(Pointing::LOFAR_LMN);
 
 	// step through l and m
 	int l_steps = static_cast<int>(longitude);

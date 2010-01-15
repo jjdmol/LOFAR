@@ -23,129 +23,73 @@
 #ifndef POINTING_H_
 #define POINTING_H_
 
-#include <blitz/array.h>
 #include <APL/RTCCommon/Timestamp.h>
 
 namespace LOFAR {
-
-  // forward declarations
-  namespace AMC {
-    class Converter;
-    class Position;
-  };
-
   namespace IBS_Protocol {
 
-    /**
-     * Class with 
-     */
-    class Pointing
-      {
-      public:
-	/**
-	 * A direction can have one of these three types.
-	 */
-	enum Type {
-	  J2000 = 1,
-	  AZEL = 2,
-
-	  /**
-	   * The LOFAR station local coordinate system.
-	   * For the definition of this coordinate system see [ref].
-	   */
-	  LOFAR_LMN = 3,
-	};
-
+class Pointing
+{
+public:
 	//@{
-	/**
-	 * Constructors and destructors for a pointing.
-	 */
+	// Constructors and destructors for a pointing.
 	Pointing();
-	Pointing(double angle0, double angle1, RTC::Timestamp time, Type type);
+	Pointing(double angle0, double angle1, RTC::Timestamp time, const string& type);
 	virtual ~Pointing();
 	//@}
 
 	//@{
-	/**
-	 * 'set' methods to set the time and
-	 * direction of a pointing.
-	 */
+	// 'set' methods to set the time and
+	// direction of a pointing.
 	void setDirection(double angle0, double angle1);
 	void setTime(RTC::Timestamp time);
-	void setType(Type type);
+	void setType(const string& type);
 	//@}
 
 	//@{
-	/**
-	 * Accessor methods. Get the time and
-	 * direction of a pointing.
-	 */
+	// Accessor methods. Get the time and
+	// direction of a pointing.
 	double         			angle0()    const;
 	double         			angle1()    const;
 	RTC::Timestamp 			time()      const;
 	bool           			isTimeSet() const;
-	blitz::Array<double,1>	cartesian() const;	// convert the 2 angles to xyz elements.
+	string					getType()	const;
 	//@}
 
-	/**
-	 * Get the type of pointing.
-	 */
-	Type      getType() const;
-
-	/**
-	 * Convert pointing from J2000 or AZEL format to LMN format
-	 * if it is not already in LMN format.
-	 * param conv Pointer to the converter (must be != 0 for J2000 type).
-	 * param pos Pointer to position on earth for conversion (must be != 0 for J2000 type).
-	 */
-	Pointing convert(AMC::Converter* conv, AMC::Position* pos, Type reqtype = LOFAR_LMN);
-
-	/**
-	 * Compare the time of two pointings.
-	 * Needed for priority queue of pointings.
-	 */
+	// Compare the time of two pointings.
+	// Needed for priority queue of pointings.
 	bool operator<(Pointing const & right) const;
 
-      public:
 	/*@{*/
-	/**
-	 * marshalling methods
-	 */
+	// marshalling methods
 	unsigned int getSize();
 	unsigned int pack  (void* buffer);
 	unsigned int unpack(void *buffer);
 	/*@}*/
 
-      private:
-	double         m_angle0_2pi;
-	double         m_angle1_pi;
-	RTC::Timestamp m_time;
-	Type           m_type;
-      };
-
-    inline void   Pointing::setTime(RTC::Timestamp time) { m_time = time; }
-    inline void   Pointing::setType(Type type) { m_type = type; }
-    inline void   Pointing::setDirection(double angle0, double angle1) { m_angle0_2pi = angle0; m_angle1_pi = angle1; }
-    inline RTC::Timestamp Pointing::time() const      { return m_time;  }
-    inline bool   Pointing::isTimeSet() const { return !(0 == m_time.sec() && 0 == m_time.usec()); }
-    inline Pointing::Type Pointing::getType() const   { return m_type; }
-    inline double Pointing::angle0() const    { return m_angle0_2pi; }
-    inline double Pointing::angle1() const    { return m_angle1_pi; }
-
-	inline blitz::Array<double,1> Pointing::cartesian() const {
-		blitz::Array<double,1> tmpArr(3);
-		tmpArr(0) = ::cos(m_angle1_pi) * ::cos(m_angle0_2pi);  // x
-		tmpArr(1) = ::cos(m_angle1_pi) * ::sin(m_angle0_2pi);  // y
-		tmpArr(2) = ::sin(m_angle1_pi);  // z
-		return (tmpArr);
-	}
-
-    inline bool   Pointing::operator<(Pointing const & right) const
-      {
-        // inverse priority, earlier times are at the front of the queue
-        return (m_time > right.m_time);
-      }
-  };
+private:
+	double         itsAngle2Pi;
+	double         itsAnglePi;
+	RTC::Timestamp itsTime;
+	string         itsType;
 };
+
+inline void			  Pointing::setTime(RTC::Timestamp time) { itsTime = time; }
+inline void			  Pointing::setType(const string& type)	 { itsType = type; }
+inline void			  Pointing::setDirection(double angle0, double angle1) { itsAngle2Pi = angle0; itsAnglePi = angle1; }
+inline RTC::Timestamp Pointing::time() const      { return itsTime;  }
+inline bool			  Pointing::isTimeSet() const { return !(0 == itsTime.sec() && 0 == itsTime.usec()); }
+inline string		  Pointing::getType() const   { return itsType; }
+inline double		  Pointing::angle0() const    { return itsAngle2Pi; }
+inline double		  Pointing::angle1() const    { return itsAnglePi; }
+
+inline bool   Pointing::operator<(Pointing const & right) const
+{
+	// inverse priority, earlier times are at the front of the queue
+	return (itsTime > right.itsTime);
+}
+
+  }; // namespace IBS_Protocol
+}; // namespace LOFAR
 
 #endif /* POINTING_H_ */

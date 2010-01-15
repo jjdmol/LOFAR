@@ -52,6 +52,7 @@ dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
 lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(MAC/MACIO, MACIO, , 1, MACIO/Marshalling.h,,)
 lofar_INTERNAL(MAC/APL/RTCCommon, RTCCommon, , 1, APL/RTCCommon/MarshallBlitz.h,,)
 lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
 

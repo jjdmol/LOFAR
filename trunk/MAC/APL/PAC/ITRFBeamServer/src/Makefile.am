@@ -20,7 +20,7 @@ sysconf_DATA 			=
 bin_PROGRAMS 			= iBeamServer ibeamctl
 
 iBeamServer_SOURCES 		= BeamServerMain.cc BeamServer.h BeamServerConstants.h BeamServer.cc \
-							  Beam.h Beam.cc 
+							  Beam.h Beam.cc J2000Converter.h J2000Converter.cc
 iBeamServer_LDADD 			= 
 iBeamServer_DEPENDENCIES	= $(LOFAR_DEPEND)
 
