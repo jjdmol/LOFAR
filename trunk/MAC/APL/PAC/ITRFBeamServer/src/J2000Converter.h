@@ -64,6 +64,11 @@ public:
 					   RTC::Timestamp					theTime,
 					   blitz::Array<double,2>&			result);
 
+	// some functions to exploid the supported conversion types.
+	bool	isValidType(const string&	refType) 
+			{ return (itsDirectionTypes.find(refType) != itsDirectionTypes.end()); }
+	vector<string>	validTypes();
+
 private:
 	// internal admin structures
 	typedef struct converter {
