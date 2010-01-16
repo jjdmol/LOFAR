@@ -77,7 +77,7 @@ J2000Converter::~J2000Converter()
 }
 
 //
-// _getConverter(types)
+// _getConverter(type)
 //
 J2000Converter::converter_t* J2000Converter::_getConverter(MDirection::Types		theType)
 {
@@ -200,6 +200,22 @@ bool  J2000Converter::doConversion(const string&					sourceType,
 	}
 
 	return (true);
+}
+
+//
+// isValidType(string)
+//
+vector<string>	J2000Converter::validTypes()
+{
+	vector<string>	result;
+	map<string, MDirection::Types>::const_iterator	iter = itsDirectionTypes.begin();
+	map<string, MDirection::Types>::const_iterator	end  = itsDirectionTypes.end ();
+	result.push_back("J2000");
+	while (iter != end) {
+		result.push_back(iter->first);
+		++iter;
+	}
+	return (result);
 }
 
 
