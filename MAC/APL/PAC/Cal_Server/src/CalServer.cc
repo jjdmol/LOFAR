@@ -617,19 +617,37 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 
 			m_subarrays.schedule_add(subarray);
 
-			// calibration will start within one second
-
 
 			_enableRCUs(subarray);
+
+
+			bitset<MEPHeader::MAX_N_RCUS> validmask;
+			
+			for (int rcu = 0; rcu < m_n_rcus; ++rcu) {
+				validmask.set(rcu);   // select rcu
+			}
+			
+			// calibration will start within one second
+			// set the spectral inversion right
+			// prepare RSP command
+			RSPSetbypassEvent	specInvCmd;
+			bool				SIon(start.rcumode()(0).getNyquistZone() == 2);// on or off?
+			specInvCmd.timestamp = Timestamp(0,0);
+			specInvCmd.rcumask   = start.subset & validmask;
+			specInvCmd.settings().resize(1);
+			specInvCmd.settings()(0).setXSI(SIon);
+			specInvCmd.settings()(0).setYSI(SIon);
+			LOG_DEBUG_STR("NyquistZone = " << start.rcumode()(0).getNyquistZone() 
+							<< " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
+			m_rspdriver.send(specInvCmd);
 
 
 			//
 			// set the control register of the RCU's 
 			// if in HBA mode turn on HBAs in groups to prevent resetting of boards
 			// 
+			
 			RSPSetrcuEvent setrcu;
-
-			bitset<MEPHeader::MAX_N_RCUS> validmask;
 			bitset<MEPHeader::MAX_N_RCUS> testmask;
 			Timestamp timeStamp;
 			
@@ -676,18 +694,6 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 				}
 			}
 
-			// set the spectral inversion right
-			// prepare RSP command
-			RSPSetbypassEvent	specInvCmd;
-			bool				SIon(start.rcumode()(0).getNyquistZone() == 2);// on or off?
-			specInvCmd.timestamp = Timestamp(0,0);
-			specInvCmd.rcumask   = setrcu.rcumask;
-			specInvCmd.settings().resize(1);
-			specInvCmd.settings()(0).setXSI(SIon);
-			specInvCmd.settings()(0).setYSI(SIon);
-			LOG_DEBUG_STR("NyquistZone = " << start.rcumode()(0).getNyquistZone() 
-							<< " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
-			m_rspdriver.send(specInvCmd);
 		}
 	}
 	port.send(ack); // send ack
