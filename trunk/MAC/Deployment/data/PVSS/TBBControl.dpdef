@@ -15,6 +15,5 @@ trigger.sum						uint
 trigger.nrSamples				uint
 trigger.peakValue				uint
 trigger.flags					uint
-
 trigger.table					string
-
+trigger.missed					int
