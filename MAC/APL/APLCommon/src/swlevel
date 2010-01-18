@@ -105,7 +105,7 @@ start_prog()
 		echo Starting $prog
 		# PVSS needs special treatment
 		if [ "$prog" = "PVSS00pmon" ]; then
-			start_pvss2
+			start_pvss2 1>/dev/null 2>&1 &
 			sleep 5
 		else
 			if [ -n "$asroot" ]; then
