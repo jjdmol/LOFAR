@@ -53,15 +53,6 @@ macro(python_install)
   set(_inst_dir "${PYTHON_INSTALL_DIR}/${_dest_dir}")
   set(_build_dir "${PYTHON_BUILD_DIR}/${_dest_dir}")
 
-  # Make sure that there's a __init__.py file in each directory
-  string(REGEX REPLACE "/" ";" _dir_list ${_dest_dir})
-  set(_init_dir "${PYTHON_BUILD_DIR}")
-  foreach(_dir ${_dir_list})
-    set(_init_dir "${_init_dir}/${_dir}")
-    execute_process(COMMAND 
-      ${CMAKE_COMMAND} -E touch "${_init_dir}/__init__.py")
-  endforeach(_dir ${_dir_list})
-
   # Install and byte-compile each Python file.
   foreach(_py ${_py_files})
     get_filename_component(_src_dir ${_py} ABSOLUTE)
@@ -75,5 +66,17 @@ macro(python_install)
     install(CODE 
       "execute_process(COMMAND ${PYTHON_EXECUTABLE} -c \"${_py_code}\")")
   endforeach(_py ${_py_files})
+
+  # Make sure that there's a __init__.py file in each build/install directory
+  string(REGEX REPLACE "/" ";" _dir_list ${_dest_dir})
+  set(_init_dir)
+  foreach(_dir ${_dir_list})
+    set(_init_dir "${_init_dir}/${_dir}")
+    execute_process(COMMAND ${CMAKE_COMMAND} -E touch
+      "${PYTHON_BUILD_DIR}${_init_dir}/__init__.py")
+    install(CODE 
+      "execute_process(COMMAND ${CMAKE_COMMAND} -E touch 
+        \"${PYTHON_INSTALL_DIR}${_init_dir}/__init__.py\")")
+  endforeach(_dir ${_dir_list})
 
 endmacro(python_install)

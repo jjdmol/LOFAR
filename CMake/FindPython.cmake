@@ -46,7 +46,7 @@ find_package(PythonLibs ${_options})
 if(NOT PYTHON_FOUND)
   if(PYTHON_EXECUTABLE)
     set(_cmd
-      "from distutils.sysconfig import *"
+      "from distutils.sysconfig import get_python_lib"
       "print get_python_lib(prefix='')")
     execute_process(
       COMMAND "${PYTHON_EXECUTABLE}" "-c" "${_cmd}"
