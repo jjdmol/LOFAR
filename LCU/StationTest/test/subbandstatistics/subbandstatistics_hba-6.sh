@@ -8,13 +8,11 @@ echo "Set the clock speed at 160MHz (wait for 60 seconds)"
 rspctl --clock=160 && sleep 60
 
 rspctl --rcuprsg=0
-sleep 2
 rspctl --wg=0
-sleep 2
 rspctl --splitter=0
 
 swlevel 3
-beamctl --array=HBA --rcus=0:95 --rcumode=6 --subbands=100:110 --beamlets=0:10 --direction=0,0,J2000&
+beamctl --array=HBA --rcus=0:95 --rcumode=6 --subbands=100:110 --beamlets=0:10 --direction=0,0,LOFAR_LMN&
 sleep 2
 
 echo ==========================
