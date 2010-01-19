@@ -8,7 +8,7 @@ rspctl --wg=0
 rspctl --splitter=0
 
 swlevel 3
-beamctl --array=HBA --rcus=0:95 --rcumode=7 --subbands=100:110 --beamlets=0:10 --direction=0,0,J2000&
+beamctl --array=HBA --rcus=0:95 --rcumode=7 --subbands=100:110 --beamlets=0:10 --direction=0,0,LOFAR_LMN&
 sleep 2
 
 echo ==========================
