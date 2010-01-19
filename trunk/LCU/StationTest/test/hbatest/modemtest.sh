@@ -3,18 +3,37 @@
 # Send delays from RCU to HBA and compare results with the expected golden result.
 # To verify modem communication between RCU and HBA
 #
-# Version 1.1   55555 2009   M.J.Norden
+# Version 1.2  18-01-10   M.J.Norden
 
 rm -f hba_modem*.log
 rm -f hba_modem*.diff
 
-declare ontime=4
-
+let ontime=4
 let hbamode=5
 
-eval "rspctl --rcumode=$hbamode"
+station=`hostname -s`
+
+if [ -e /opt/lofar/etc/RemoteStation.conf ]; then
+  let rspboards=`sed -n  's/^\s*RS\.N_RSPBOARDS\s*=\s*\([0-9][0-9]*\).*$/\1/p' /opt/lofar/etc/RemoteStation.conf`
+  let rcus=$rspboards*8
+  let nrcus=$rcus-1
+else
+  echo "Could not find /opt/lofar/etc/RemoteStation.conf"
+  let rspboards=12
+  let rcus=$rspboards*8
+  let nrcus=$rcus-1
+fi
+
+echo "This is station "$station
+echo "The number of RCU's is "$rcus
+
+rspctl --splitter=0
 sleep 2
-eval "rspctl --rcuenable=1"
+
+swlevel 3
+beamctl --array=HBA --rcus=0:$nrcus --rcumode=$hbamode --subbands=100:110 --beamlets=0:10 --direction=0,0,J2000&
+
+sleep 5
 
 echo "The rcumode is "$hbamode 
 sleep 2
