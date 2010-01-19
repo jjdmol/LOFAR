@@ -163,19 +163,22 @@ RS509	189    R    6.813202     53.421924       0       12     6    96    48    N
 ## 200
 # name  ID    ring  long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
 #--------------------------------------------------------------------------------------------------------------
-## effelsberg
+# effelsberg
 DE601   201    E    6.883956633  50.5233189277   358.449 24    12    96    96    No       No
-## garching
+# garching
 DE602   202    E    11.2875855   48.5014681222   0       24    12    96    96    No       No
-# Tautenberg
+# Tautenburg
 #DE603	203    E    11.7106908   50.9796681      382.47  24    12    96    96    No       No
 DE603	203    E    11.7106908   50.9796681      0       24    12    96    96    No       No
 # Potsdam
 DE604	204    E    0.0          0.0             0       24    12    96    96    No       No
 # Juelich
 DE605	205    E    0.0          0.0             0       24    12    96    96    No       No
+# Nancay
 FR606	206    E    0.0          0.0             0       24    12    96    96    No       No
+# Onsala
 SE607	207    E    0.0          0.0             0       24    12    96    96    No       No
+# Chillbolton
 UK608	208    E    0.0          0.0             0       24    12    96    96    No       No
 ## 209 - 255
 ##
