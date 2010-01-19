@@ -234,7 +234,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir):
       
         hexStationID = str("%02x" % int(stationName[3:6]))
         ringID = '0'+stationName[2]
-        RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName)
+        RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName.upper())
         RSPconfig = RSPconfig.replace("@RING_ID@",   ringID)
         RSPconfig = RSPconfig.replace("@STATION_HID@",  hexStationID)
         RSPconfig = RSPconfig.replace("@IP_PREFIX_00@",   ip_prefix)
@@ -250,7 +250,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir):
         RSPconfig = RSPconfig.replace("@SPLITTER@",str(0))
         hexStationID = str("%02x" % int(stationName[3:6]))
         ringID = '0'+stationName[2]
-        RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName)
+        RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName.upper())
         RSPconfig = RSPconfig.replace("@RING_ID@",   ringID)
         RSPconfig = RSPconfig.replace("@STATION_HID@",  hexStationID)
         RSPconfig = RSPconfig.replace("@LAST_XLET_OUT@",  "23")
@@ -315,7 +315,7 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
     hexStationID = str("%02x" % int(stationName[3:6]))
     ringID = '0'+stationName[2]
     
-    TBBconfig = TBBconfig.replace("@STATION_NAME@", stationName)
+    TBBconfig = TBBconfig.replace("@STATION_NAME@", stationName.upper())
     TBBconfig = TBBconfig.replace("@STATION_HID@",  hexStationID)
     TBBconfig = TBBconfig.replace("@STATION_ID@",   stationID)
     TBBconfig = TBBconfig.replace("@RING_ID@",   ringID)
@@ -335,7 +335,7 @@ def createRemoteStationFile(resultDir, stationName, dataDir):
     """
     (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
     RSconfig = open(dataDir+"/RemoteStation.conf.tmpl").read()
-    RSconfig = RSconfig.replace("@STATION_NAME@", stationName)
+    RSconfig = RSconfig.replace("@STATION_NAME@", stationName.upper())
     RSconfig = RSconfig.replace("@STATION_ID@",   stationID)
     RSconfig = RSconfig.replace("@NR_RSP@",       nrRSP)
     RSconfig = RSconfig.replace("@NR_TBB@",       nrTBB)
