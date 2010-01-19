@@ -31,7 +31,7 @@ rspctl --splitter=0
 sleep 2
 
 swlevel 3
-beamctl --array=HBA --rcus=0:$nrcus --rcumode=$hbamode --subbands=100:110 --beamlets=0:10 --direction=0,0,J2000&
+beamctl --array=HBA --rcus=0:$nrcus --rcumode=$hbamode --subbands=100:110 --beamlets=0:10 --direction=0,0,LOFAR_LMN&
 
 sleep 5
 

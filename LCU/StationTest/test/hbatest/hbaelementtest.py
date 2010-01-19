@@ -123,7 +123,7 @@ def main() :
         rm_files(dir_name,'*')
         os.popen3("swlevel 3");
         time.sleep(5)
-        os.popen("beamctl --array=HBA --rcus=0:95 --rcumode=5 --subbands=100:110 --beamlets=0:10 --direction=0,0,J2000&")
+        os.popen("beamctl --array=HBA --rcus=0:95 --rcumode=5 --subbands=100:110 --beamlets=0:10 --direction=0,0,LOFAR_LMN&")
         #os.popen("rspctl --rcumode=5 2>/dev/null")
         #os.popen("rspctl --rcuenable=1 2>/dev/null")
         time.sleep(2)
