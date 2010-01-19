@@ -8,7 +8,9 @@ echo "Set the clock speed at 160MHz (wait for 60 seconds)"
 rspctl --clock=160 && sleep 60
 
 rspctl --rcuprsg=0
+sleep 2
 rspctl --wg=0
+sleep 2
 rspctl --splitter=0
 
 swlevel 3
