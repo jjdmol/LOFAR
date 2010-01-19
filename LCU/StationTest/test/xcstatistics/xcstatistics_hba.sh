@@ -1,15 +1,17 @@
 #!/bin/sh
-# 1.0 xcstatistics test to check SerDes Ring with LBH antennas
-# 8-10-09, M.J Norden
+# 1.1 xcstatistics test to check SerDes Ring with LBH antennas
+# 18-01-10, M.J Norden
 # HBA input with antenna
 
-
+killall beamctl
 rspctl --rcuprsg=0
 rspctl --wg=0
-rspctl --rcumode=5
-rspctl --rcuenable=1
 rspctl --splitter=1
-sleep 2
+
+swlevel 3
+beamctl --array=HBA --rcus=0:47 --rcumode=5 --subbands=100:110 --beamlets=0:10 --direction=0,0,J2000&
+beamctl --array=HBA --rcus=48:95 --rcumode=5 --subbands=100:110 --beamlets=1000:1010 --direction=0,0,J2000&
+sleep 5
 
 echo "check xcstat and xcangle"
 
@@ -25,4 +27,5 @@ echo "Phases" `hostname -s`
 echo ======================
 rspctl --xcangle --xcstatistics &
 sleep 20 && kill $!
+
 
