@@ -45,7 +45,7 @@ def open_file(files, file_nr) :
 		f=open(file_name,'rb')
 		max_frames = size/(512*8)
 		frames_to_process=max_frames
-    		rcu_nr = int(files[file_nr][-7:-4])
+    		rcu_nr = int(files[file_nr][-6:-4])
 		#print 'File nr ' + str(file_nr) + ' RCU nr ' + str(rcu_nr) + '  ' + files[file_nr][-6:-4]
 	else :
 		frames_to_process=0
@@ -121,8 +121,11 @@ def main() :
         #---------------------------------------------
 	# capture reference data (all HBA elements off)
         rm_files(dir_name,'*')
-        os.popen("rspctl --rcumode=5 2>/dev/null")
-        os.popen("rspctl --rcuenable=1 2>/dev/null")
+        os.popen3("swlevel 3");
+        time.sleep(5)
+        os.popen("beamctl --array=HBA --rcus=0:95 --rcumode=5 --subbands=100:110 --beamlets=0:10 --direction=0,0,J2000&")
+        #os.popen("rspctl --rcumode=5 2>/dev/null")
+        #os.popen("rspctl --rcuenable=1 2>/dev/null")
         time.sleep(2)
         for ind in range(hba_elements) :
 		ctrl_string=ctrl_string + '2,'

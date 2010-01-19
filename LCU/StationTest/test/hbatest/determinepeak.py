@@ -79,8 +79,11 @@ def main() :
     #---------------------------------------------
     # capture reference data (all HBA elements off)
     rm_files(dir_name,'*')
-    os.popen("rspctl --rcumode=5 2>/dev/null")
-    os.popen("rspctl --enable 2>/dev/null")
+    os.popen3("swlevel 3");
+    time.sleep(5)
+    os.popen("beamctl --array=HBA --rcus=0:95 --rcumode=5 --subbands=100:110 --beamlets=0:10 --direction=0,0,J2000&")
+    #os.popen("rspctl --rcumode=5 2>/dev/null")
+    #os.popen("rspctl --rcuenable=1 2>/dev/null")
     for ind in range(hba_elements) :
         ctrl_string=ctrl_string + '128,'
     strlength=len(ctrl_string)
