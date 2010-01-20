@@ -93,6 +93,11 @@ void LocationInfo::print() const
 
 #else
 
+unsigned LocationInfo::remapOnTree(unsigned pset, unsigned core) const
+{
+  return core; // or pset?
+}
+
 void LocationInfo::print() const
 {
 }
