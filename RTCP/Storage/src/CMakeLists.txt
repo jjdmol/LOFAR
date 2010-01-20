@@ -2,7 +2,7 @@
 
 include(LofarPackageVersion)
 
-set(storage_LIB_SRCS
+lofar_add_library(storage 
   Package__Version.cc
   InputThread.cc
   OutputThread.cc
@@ -12,7 +12,5 @@ set(storage_LIB_SRCS
   MSWriterFile.cc
   MeasurementSetFormat.cc)
 
-lofar_add_library(storage ${storage_LIB_SRCS})
-
-lofar_add_executable(Storage_main Storage_main.cc)
-lofar_add_executable(versionstorage versionstorage.cc)
+lofar_add_bin_program(Storage_main Storage_main.cc)
+lofar_add_bin_program(versionstorage versionstorage.cc)

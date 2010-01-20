@@ -12,4 +12,4 @@ lofar_add_library(fcnp_cn Package__Version.cc fcnp_cn.cc)
 lofar_add_library(fcnp_ion Package__Version.cc fcnp_ion.cc)
 
 # Add executable
-lofar_add_executable(versionfcnp versionfcnp.cc)
+lofar_add_bin_program(versionfcnp versionfcnp.cc)
