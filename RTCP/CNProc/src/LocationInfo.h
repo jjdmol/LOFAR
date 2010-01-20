@@ -3,7 +3,6 @@
 
 #include <vector>
 
-#if defined HAVE_BGP
 #if defined HAVE_MPI
 // we do not need mpi.h here, but including it after bgp_personality.h leads
 // to compilation errors
@@ -11,6 +10,7 @@
 #include <mpi.h>
 #endif // HAVE_MPI
 
+#if defined HAVE_BGP
 #include <common/bgp_personality.h>
 #endif // HAVE_BGP
 
@@ -23,9 +23,7 @@ class LocationInfo
   public:
 	     LocationInfo();
 
-#if defined HAVE_BGP
     unsigned remapOnTree(unsigned pset, unsigned core) const;
-#endif
 
     void     print() const;
 
