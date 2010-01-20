@@ -27,7 +27,7 @@ set(cnproc_LIB_SRCS
 
 # Maybe we shoud use LOFAR_COMPILER_SUITE, because ASM-BGP_COMPILER_WORKS
 # is not reliable: i.e.
-#if(LOFAR_COMPILER_SUITE STREQUAL GNUBGP)
+#if(LOFAR_COMPILER_SUITE STREQUAL BGPCN)
 if(CMAKE_ASM-BGP_COMPILER_WORKS)
   list(APPEND cnproc_LIB_SRCS
     BeamFormerAsm.S
@@ -35,17 +35,10 @@ if(CMAKE_ASM-BGP_COMPILER_WORKS)
     FIR_Asm.S
     FFT_Asm.S)
 endif(CMAKE_ASM-BGP_COMPILER_WORKS)
-#endif(LOFAR_COMPILER_SUITE STREQUAL GNUBGP)
+#endif(LOFAR_COMPILER_SUITE STREQUAL BGPCN)
 
 lofar_add_library(cnproc ${cnproc_LIB_SRCS})
 
-#message(STATUS "cnproc_LIB_SRCS = ${cnproc_LIB_SRCS}")
-#message(STATUS "ASM-BGP = ${ASM-BGP}")
-#message(STATUS "CMAKE_ASM-BGP_COMPILER_WORKS = ${CMAKE_ASM-BGP_COMPILER_WORKS}")
-#message(STATUS "CMAKE_ASM-BGP_COMPILER = ${CMAKE_ASM-BGP_COMPILER}")
-#message(STATUS "CMAKE_ASM-BGP_COMPILE_OBJECT = ${CMAKE_ASM-BGP_COMPILE_OBJECT}")
-#message(STATUS "CMAKE_ASM-BGP_LINK_EXECUTABLE = ${CMAKE_ASM-BGP_LINK_EXECUTABLE}")
-
-lofar_add_executable(CN_Processing CN_Processing_main.cc)
-lofar_add_executable(versioncnproc versioncnproc.cc)
+lofar_add_bin_program(CN_Processing CN_Processing_main.cc)
+lofar_add_bin_program(versioncnproc versioncnproc.cc)
 

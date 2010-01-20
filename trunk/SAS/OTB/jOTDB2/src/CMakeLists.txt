@@ -15,5 +15,5 @@ lofar_add_library(jotdb2 SHARED
   nl_astron_lofar_sas_otb_jotdb2_jInitCPPLogger.cc
   nl_astron_lofar_sas_otb_jotdb2_jTreeValue.cc)
 
-lofar_add_executable(versionjotdb2 versionjotdb2.cc)
+lofar_add_bin_program(versionjotdb2 versionjotdb2.cc)
 
