@@ -9,8 +9,8 @@ rspctl --wg=0
 rspctl --splitter=1
 
 swlevel 3
-beamctl --array=HBA --rcus=0:47 --rcumode=5 --subbands=100:110 --beamlets=0:10 --direction=0,0,J2000&
-beamctl --array=HBA --rcus=48:95 --rcumode=5 --subbands=100:110 --beamlets=1000:1010 --direction=0,0,J2000&
+beamctl --array=HBA --rcus=0:47 --rcumode=5 --subbands=100:110 --beamlets=0:10 --direction=0,0,LOFAR_LMN&
+beamctl --array=HBA --rcus=48:95 --rcumode=5 --subbands=100:110 --beamlets=1000:1010 --direction=0,0,LOFAR_LMN&
 sleep 5
 
 echo "check xcstat and xcangle"
