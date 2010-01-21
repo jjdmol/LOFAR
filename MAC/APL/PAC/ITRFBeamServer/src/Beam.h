@@ -25,14 +25,11 @@
 
 #include <lofar_config.h>
 #include <Common/lofar_string.h>
+#include <Common/lofar_bitset.h>
+#include <Common/lofar_list.h>
+#include <Common/LofarConstants.h>
 #include <APL/RTCCommon/Timestamp.h>
-#include <APL/IBS_Protocol/Beamlet2SubbandMap.h>
 #include <APL/IBS_Protocol/Pointing.h>
-#include <APL/CAL_Protocol/AntennaGains.h>
-#include <APL/CAL_Protocol/SubArray.h>
-
-#include <queue>
-#include <blitz/array.h>
 
 namespace LOFAR {
   namespace BS {
@@ -45,44 +42,25 @@ public:
 	// Default constructor
 	// @param name String identifying this beam uniquely in the OTDB, used with
 	// key-value logger as nodeid.
-	// @param antennaSet The name of the AntenneField on which this beam is defined.
-	// @param allocation How the subbands of the beam are mapped tot the bemalets.
 	// @param rcuMask The RCUs that participate in this beam.
-	// @param ringNr The serdes segment the allocation is ment for.
-	Beam(const string& 								name, 
-		 const string& 								antenneSet, 
-		 const IBS_Protocol::Beamlet2SubbandMap&	allocation, 
-		 const bitset<MAX_RCUS>&					rcuMask,
-		 uint 										ringNr);
+	Beam(const string& 				name, 
+		 const bitset<MAX_RCUS>&	rcuMask);
+	Beam() {};
 
 	// Default destructor.
 	virtual ~Beam();
 
-	// Add a pointing to a beam.
-	void addPointing(const IBS_Protocol::Pointing& pointing);
-
-	// Get the allocation mapping for this beam.
-	// @return Beamlet2SubbandMap the mapping from beamlet to subband for this beam.
-	IBS_Protocol::Beamlet2SubbandMap& allocation() { return(itsBeamletAllocation); }
+	// Add a pointing to a beam if it not overlaps with other pointings
+	bool addPointing(const IBS_Protocol::Pointing& pointing);
 
 	// @return Current pointing.
-	IBS_Protocol::Pointing currentPointing(const RTC::Timestamp& time);
+	IBS_Protocol::Pointing currentPointing() const { return (itsCurrentPointing); } 
 
-	// Set the subarray (positions & rcu_index)
-//	void setSubarray(const CAL::SubArray& array);
+	// @return Current pointing.
+	IBS_Protocol::Pointing pointingAtTime(const RTC::Timestamp& time);
 
-	// Return a reference to the subarray for this beam.
-	// @return reference to the subarray
-//	const CAL::SubArray& getSubarray() const { return itsSubArray; }
-
-	// setCalibration weights for the receivers
-//	void setCalibration(const CAL::AntennaGains& gains);
-
-	// Get the current calibration values.
-//	const CAL::AntennaGains& getCalibration() const;
-
-	// Get the name of the subarray on which this beam operates.
-	string antennaSetName() const { return (itsAntennaSet); }
+	// Get all pointings in a vector. They are sorted in time order.
+	vector<IBS_Protocol::Pointing> getAllPointings() const;
 
 	// Get beam name (unique name, can be used as key in key-value logger).
 	string name() const { return (itsName); }
@@ -90,57 +68,46 @@ public:
 	// Get beam name (unique name, can be used as key in key-value logger).
 	const bitset<MAX_RCUS>& rcuMask() const { return (itsRCUs); }
 
-	// Get number of ringSegment
-	int ringNr() const	{ return (itsRingNr); }
+	// Output functions for easy debugging
+	void showPointings () const;
 
-	// Set handle (=uniq ID) from the CalServer
-	void  calibrationHandle(void	*handle) { itsCShandle = handle; }
-	void* calibrationHandle()				 { return (itsCShandle); }
+	// print function for operator<<
+	ostream& print (ostream& os) const;
 
-	void calculateHBAdelays(RTC::Timestamp					timestamp,
-						    const blitz::Array<double,2>&	tileDeltas,
-						    const blitz::Array<double,1>&	elementDelays);
 private:
 	// Don't allow copying this object.
-	Beam (const Beam&);            // not implemented
-	Beam& operator= (const Beam&); // not implemented
+//	Beam (const Beam&);            // not implemented
+//	Beam& operator= (const Beam&); // not implemented
 
 	// Method to undo an allocation.
 	void deallocate();
 
-	//# ----- DATAMEMBERS -----
+	void _resolveGaps();
+	bool _pointingOverlaps(const IBS_Protocol::Pointing& pt) const;
 
+	//# ----- DATAMEMBERS -----
 	// Name used as key in key-value logger.
 	string 		itsName;
 
-	// Name of the subarray on which the beam is allocated.
-	string 		itsAntennaSet;
-
-	// Allocation.
-	IBS_Protocol::Beamlet2SubbandMap 	itsBeamletAllocation;
-
 	// RCUs participating in the beam
-	bitset<MAX_RCUS>					itsRCUs;
-
-	// ringSegment the beam is allocated on
-	int									itsRingNr;
+	bitset<MAX_RCUS>		itsRCUs;
 
 	// current direction of the beam
-	IBS_Protocol::Pointing 				itsCurrentPointing;
+	IBS_Protocol::Pointing 	itsCurrentPointing;
 
 	// queue of future pointings as delivered by the user.
-	std::priority_queue<IBS_Protocol::Pointing>	itsPointingQ;
-
-	// The antenna array.
-//	CAL::SubArray 		itsSubArray;
-
-	// calserver handle	
-	// will become obsolete when new ITRF CalServer is used.
-	void*		itsCShandle;
-
+	list<IBS_Protocol::Pointing>	itsPointings;
 };
 
 //# -------------------- inline functions --------------------
+//
+// operator <<
+//
+inline ostream& operator<<(ostream& os, const Beam& beam)
+{
+	return (beam.print(os));
+}
+
 
   }; //# namepsace BS
 }; //# namespace LOFAR

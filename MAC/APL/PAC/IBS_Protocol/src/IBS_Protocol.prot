@@ -15,6 +15,7 @@ include = '<Common/LofarConstants.h>';
 include = '<APL/IBS_Protocol/Beamlet2SubbandMap.h>';
 include = '<APL/IBS_Protocol/Pointing.h>';
 include = '<APL/RTCCommon/Timestamp.h>';
+include = '<MACIO/StringVector.h>';
 
 prelude = << PRELUDE_END
 
@@ -22,10 +23,10 @@ prelude = << PRELUDE_END
 // Errors
 //
 // IBS_NO_ERR			No errors
-// IBS_RANGE_ERR			Range error in message parameters
+// IBS_RANGE_ERR		Range error in message parameters
 // IBS_WRONG_RING_ERR	Rcu's specified in the wrong ring
 // IBS_SPLITTER_OFF_ERR	Splitter is off, no ring 1
-// IBS_BEAMALLOC_ERR		Could not alloc a beam
+// IBS_BEAMALLOC_ERR	Could not alloc a beam
 // IBS_BEAMFREE_ERR		Could not free the beam
 
 //
@@ -38,6 +39,11 @@ prelude = << PRELUDE_END
 // BEAMFREE      		(beamName);
 // BEAMFREEACK   		(beamName, status);
 // BEAMPOINTTO   		(beamName, pointing, analogue);
+//
+// TYPEVALID			(typename);
+// TYPEVALIDACK			(typename, bool);
+// GETTYPES				();
+// GETTYPESACK			(vector<string>);
 //
 // pointing            : angle1, angle2, timestamp, coord.type
 // beamletAllocationMap: map<beamletnr, subbandnr>
@@ -210,6 +216,44 @@ event = {
 	param = {
 		name = "analogue";
 		type = "bool";
+	};
+};
+
+event = {
+	signal = TYPEVALID;
+	dir = IN;
+	param = {
+		name = "typeName";
+		type = "string";
+	};
+};
+
+event = {
+	signal = TYPEVALIDACK;
+	dir = OUT;
+	param = {
+		name = "typeName";
+		type = "string";
+	};
+	param = {
+		name = "valid";
+		type = "bool";
+	};
+};
+
+event = {
+	signal = GETTYPES;
+	dir = IN;
+};
+
+event = {
+	signal = GETTYPESACK;
+	dir = OUT;
+	param = {
+		name = "names";
+		type = "MACIO::StringVector";
+		userdefined;
+		printable;
 	};
 };
 
