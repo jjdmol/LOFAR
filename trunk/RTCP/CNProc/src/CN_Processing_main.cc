@@ -76,7 +76,13 @@ static Stream *createIONstream( unsigned channel )
 {
 #if 1 && defined HAVE_FCNP && defined HAVE_BGP_CN && !defined HAVE_VALGRIND
     /* preferred */
-    FCNP_CN::init();
+    static bool initialized = false;
+
+    if (!initialized) {
+      initialized = true;
+      FCNP_CN::init();
+    }
+
     return new FCNP_ClientStream(channel);
 #elif 1
     LocationInfo locationInfo;
