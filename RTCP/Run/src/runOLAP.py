@@ -126,6 +126,11 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
   			help = "run Storage under valgrind [%default]" )
+  parser.add_option( "--autotools",
+  			dest = "autotools",
+			action = "store_true",
+			default = False,
+			help = "used the autotools environment (instead of cmake)" )
 
   opgroup = OptionGroup(parser, "Output" )
   opgroup.add_option( "-v", "--verbose",
@@ -228,6 +233,9 @@ if __name__ == "__main__":
     Commands.debug = debug
     Logger.DEBUG = True
     Sections.DEBUG = True
+
+  if options.autotools:
+    Locations.AUTOTOOLS = True
 
   if options.valgrind_ion:
     Sections.VALGRIND_ION = True
