@@ -112,7 +112,6 @@ start_prog()
 				sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
 				if [ "$prog" = "RSPDriver" ]; then
 					selectImage1
-					echo "Starting RSPDriver"
 					sudo -b $BINDIR/$prog 1>/dev/null 2>&1
 				else
 					sudo -b $BINDIR/$prog 1>/dev/null 2>&1
@@ -247,8 +246,11 @@ goto_level()
             curlevel=-1
           fi
           if [ ${curlevel} -ge 2 ]; then 
-	    echo "set rcumode to 0 (power save)"
-	    rspctl --rcumode=0 1>/dev/null 2>&1
+	    /sbin/pidof RSPDriver 1>/dev/null 2>&1
+	    if [ $? -eq 0 ]; then
+     	      echo "set rcumode to 0 (power save)"
+	      rspctl --rcumode=0 1>/dev/null 2>&1
+            fi
           fi
 	fi
 
