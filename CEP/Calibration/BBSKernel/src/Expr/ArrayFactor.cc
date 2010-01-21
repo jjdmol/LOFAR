@@ -122,8 +122,8 @@ const JonesMatrix::View ArrayFactor::evaluateImpl(const Grid &grid,
                 const double shift = shift0 - C::_2pi * grid[FREQ]->center(f)
                     * delay_t;
 
-                (*p_re) += std::cos(shift);
-                (*p_im) += std::sin(shift);
+                *p_re += std::cos(shift);
+                *p_im += std::sin(shift);
                 ++p_re;
                 ++p_im;
             }
