@@ -1,4 +1,3 @@
-
 //# Version.cc: Helper class for version info
 //#
 //# Copyright (C) 2007
