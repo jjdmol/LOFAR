@@ -2,6 +2,9 @@
 
 __all__ = ["Locations","Hosts","isProduction","isDevelopment","homeDir"]
 
+# use settings for old build environment (rub without cmake)
+AUTOTOOLS = False
+
 import os
 from socket import gethostbyname
 
@@ -54,6 +57,7 @@ class Locations:
     self.isproduction = isProduction()
 
     self.buildvars = {}
+    self.executables = {}
     self.files = {}
     self.nodes = {}
 
@@ -61,11 +65,28 @@ class Locations:
 
   def setDefaults(self):
     # default build variants
-    self.buildvars.update( {
-	"CNProc":  "gnubgp_cn",
-	"IONProc": "gnubgp_ion",
-	"Storage": "gnu_openmpi-opt",
-    } )
+    if AUTOTOOLS:
+      self.buildvars.update( {
+          "CNProc":  "gnubgp_cn",
+          "IONProc": "gnubgp_ion",
+          "Storage": "gnu_openmpi-opt",
+      } )
+      self.executables.update( {
+          "CNProc":  "CN_Processing",
+          "IONProc": "IONProc",
+          "Storage": "Storage",
+      } )
+    else:
+      self.buildvars.update( {
+          "CNProc":  "bgpcn_opt",
+          "IONProc": "bgpion_opt",
+          "Storage": "gnu_opt",
+      } )
+      self.executables.update( {
+          "CNProc":  "CN_Processing",
+          "IONProc": "ION_Processing",
+          "Storage": "Storage_main",
+      } )
 
     self.files.update( {
         # allows ${HOME} to be resolved in other paths
@@ -103,9 +124,9 @@ class Locations:
 	"basedir": "${HOME}/production/lofar",
 
         # the locations of the main executables
-	"cnproc":  "${BASEDIR}/bgp_cn/bin/CN_Processing",
-	"ionproc": "${BASEDIR}/bgp_ion/bin/IONProc",
-	"storage": "${BASEDIR}/lfe/bin/Storage",
+	"cnproc":  "${BASEDIR}/bgp_cn/bin/%s" % (self.executables["CNProc"],),
+	"ionproc": "${BASEDIR}/bgp_ion/bin/%s" % (self.executables["IONProc"],),
+	"storage": "${BASEDIR}/lfe/bin/%s" % (self.executables["Storage"],),
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
@@ -129,9 +150,9 @@ class Locations:
       self.files.update( {
 	"basedir": "${HOME}/projects/LOFAR",
 
-	"cnproc":  "${BASEDIR}/installed/%s/bin/CN_Processing" % (self.buildvars["CNProc"],),
-	"ionproc": "${BASEDIR}/installed/%s/bin/IONProc" % (self.buildvars["IONProc"],),
-	"storage": "${BASEDIR}/installed/%s/bin/Storage" % (self.buildvars["Storage"],),
+	"cnproc":  "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["CNProc"],self.executables["CNProc"]),
+	"ionproc": "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["IONProc"],self.executables["IONProc"]),
+	"storage": "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["Storage"],self.executables["Storage"]),
 
         # location of valgrind suppressions file
         "ionsuppfile": "${BASEDIR}/RTCP/IONProc/src/IONProc.supp",
