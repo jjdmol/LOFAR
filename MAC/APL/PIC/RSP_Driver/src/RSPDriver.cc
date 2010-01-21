@@ -134,7 +134,7 @@
 #include "Cache.h"
 #include "RawEvent.h"
 #include "Sequencer.h"
-#include "Package__Version.h"
+#include <RSP_Driver/Package__Version.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

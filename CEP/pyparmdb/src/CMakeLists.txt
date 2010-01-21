@@ -2,10 +2,9 @@
 
 include(LofarPackageVersion)
 
-# Create symbolic link to include directory.
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
+# Add current build directory to the include path. This is needed, because
+# pyparmdb.cc #include's Package__Version.cc (yucky!).
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 lofar_add_library(_parmdb MODULE pyparmdb.cc)
 set_target_properties(_parmdb PROPERTIES 
@@ -18,6 +17,8 @@ set_target_properties(_parmdb PROPERTIES
 install(TARGETS _parmdb
   DESTINATION ${PYTHON_INSTALL_DIR}/lofar/parmdb)
 
+# Dummy library, needed because lofar_add_executable() takes its dependencies
+# from libraries added with lofar_add_library() (see bug #1430)
 lofar_add_library(lofar_pyparmdb Package__Version.cc)
 
 lofar_add_bin_program(versionpyparmdb versionpyparmdb.cc)

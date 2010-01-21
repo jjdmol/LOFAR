@@ -38,7 +38,7 @@
 #include "BeamServerConstants.h"
 #include "Beam.h"
 #include "Beamlet.h"
-#include "Package__Version.h"
+#include <Beam_Server/Package__Version.h>
 
 #include <getopt.h>
 #include <iostream>

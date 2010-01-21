@@ -118,8 +118,10 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
   # Define a LOFAR package. 
   #
   # This macro sets the following variables:
-  #   ${pkg}_VERSION       Version number of package <pkg>
-  #   ${pkg}_DEPENDENCIES  List of packages that package <pkg> depends on.
+  #   ${pkg}_VERSION        Version number of package <pkg>
+  #   PACKAGE_VERSION       (idem)
+  #   ${pkg}_DEPENDENCIES   List of packages that package <pkg> depends on.
+  #   PACKAGE_DEPENDENCIES  (idem)
   #
   # Each dependent package is added to the build. If any of these packages is
   # excluded from the build (e.g., because BUILD_<dep> is OFF), then package
@@ -156,6 +158,9 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
         message(FATAL_ERROR ${_errmsg})
       endif(${_pkg}_DEPENDENCIES MATCHES "^$")
     endif(_depends MATCHES "^.+$")
+
+    set(PACKAGE_VERSION ${${_pkg}_VERSION})
+    set(PACKAGE_DEPENDENCIES ${${_pkg}_DEPENDENCIES})
 
     if(LOFAR_VERBOSE_CONFIGURE)
       message(STATUS "  ${_pkg} version: ${${_pkg}_VERSION}")

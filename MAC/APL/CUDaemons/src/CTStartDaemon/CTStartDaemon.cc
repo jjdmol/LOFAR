@@ -36,7 +36,7 @@
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StartDaemon_Protocol.ph>
 #include "CTStartDaemon.h"
-#include "../Package__Version.h"
+#include <CUDaemons/Package__Version.h>
 
 using namespace LOFAR::GCF::TM;
 

@@ -31,9 +31,7 @@
 #include <CNProc/LocationInfo.h>
 #include <CNProc/CN_Processing.h>
 #include <Common/LofarLogger.h>
-#if !defined HAVE_PKVERSION
 #include <CNProc/Package__Version.h>
-#endif
 #include <boost/lexical_cast.hpp>
 #include <execinfo.h>
 

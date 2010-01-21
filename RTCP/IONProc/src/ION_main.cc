@@ -39,9 +39,7 @@
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <Stream/SystemCallException.h>
-#if !defined HAVE_PKVERSION
-#include <Package__Version.h>
-#endif
+#include <IONProc/Package__Version.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
