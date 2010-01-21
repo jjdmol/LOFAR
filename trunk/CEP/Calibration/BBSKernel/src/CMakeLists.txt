@@ -26,6 +26,7 @@ lofar_add_library(bbskernel
   Expr/AzEl.cc
   Expr/Cache.cc
   Expr/ConditionNumber.cc
+  Expr/EquatorialCentroid.cc
   Expr/Expr.cc
   Expr/ExprAdaptors.cc
   Expr/ExprParm.cc
@@ -62,9 +63,9 @@ lofar_add_library(bbskernel
   Expr/Scope.cc
   Expr/Source.cc
   Expr/SpectralIndex.cc
-  Expr/EquatorialCentroid.cc
   Expr/StationShift.cc
   Expr/StationUVW.cc
+  Expr/TileArrayFactor.cc
   Expr/ValueSet.cc
   Expr/YatawattaDipole.cc)
 

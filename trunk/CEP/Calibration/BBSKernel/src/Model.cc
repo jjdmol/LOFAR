@@ -30,6 +30,7 @@
 #include <BBSKernel/Expr/ArrayFactor.h>
 #include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/ConditionNumber.h>
+#include <BBSKernel/Expr/EquatorialCentroid.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/ExprVisData.h>
 #include <BBSKernel/Expr/FlagIf.h>
@@ -49,7 +50,7 @@
 #include <BBSKernel/Expr/Request.h>
 #include <BBSKernel/Expr/ScalarMatrixMul.h>
 #include <BBSKernel/Expr/SpectralIndex.h>
-#include <BBSKernel/Expr/EquatorialCentroid.h>
+#include <BBSKernel/Expr/TileArrayFactor.h>
 #include <BBSKernel/Expr/StationShift.h>
 #include <BBSKernel/Expr/StationUVW.h>
 
@@ -140,7 +141,7 @@ void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
         const BeamConfig &beamConfig = config.getBeamConfig();
 
         // Read antenna configurations.
-        itsInstrument.readAntennaConfigurations(beamConfig.getConfigPath());
+        itsInstrument.readLOFARAntennaConfig(beamConfig.getConfigPath());
 
         // Create a functor to generate element beam expression nodes.
         exprElementBeam = ElementBeamExpr::create(beamConfig, itsScope);
@@ -317,7 +318,7 @@ void Model::makeInverseExpr(const ModelConfig &config,
         const BeamConfig &beamConfig = config.getBeamConfig();
 
         // Read antenna configurations.
-        itsInstrument.readAntennaConfigurations(beamConfig.getConfigPath());
+        itsInstrument.readLOFARAntennaConfig(beamConfig.getConfigPath());
 
         // Create a functor to generate element beam expression nodes.
         exprElementBeam = ElementBeamExpr::create(beamConfig, itsScope);
@@ -863,23 +864,76 @@ void Model::makeBeamExpr(const BeamConfig &config,
 {
     for(unsigned int i = 0; i < stations.size(); ++i)
     {
-        const unsigned int station = stations[i];
-
-        // Get station element configuration.
-        const AntennaConfig &antennaConfig =
-            itsInstrument[station].config(config.getConfigName());
+        const Station &station = itsInstrument[stations[i]];
 
         // Get element orientation.
         Expr<Scalar>::Ptr orientation = itsScope(INSTRUMENT,
-            "AntennaOrientation:" + itsInstrument[station].name());
+            "AntennaOrientation:" + station.name());
+
+        AntennaSelection selection;
+        Expr<JonesMatrix>::Ptr exprBeam(exprElement->construct(exprAzEl(i),
+            orientation));
+
+        // Get LOFAR station name suffix.
+        // NB. THIS IS A TEMPORARY SOLUTION THAT CAN BE REMOVED AS SOON AS THE
+        // DIPOLE INFORMATION IS STORED AS META-DATA INSIDE THE MS.
+        const string suffix = station.name().substr(5);
+        if(suffix == "LBA")
+        {
+            try
+            {
+                selection = station.selection(config.getConfigName());
+            }
+            catch(BBSKernelException &ex)
+            {
+                selection = station.selection("LBA");
+            }
+        }
+        else if(suffix == "HBA0")
+        {
+            selection = station.selection("HBA_0");
+
+            Expr<JonesMatrix>::Ptr exprTileFactor =
+                Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl(i),
+                    exprRefAzEl(i), station.tile(0)));
+
+            exprBeam = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprTileFactor,
+                exprBeam));
+        }
+        else if(suffix == "HBA1")
+        {
+            selection = station.selection("HBA_1");
+
+            Expr<JonesMatrix>::Ptr exprTileFactor =
+                Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl(i),
+                    exprRefAzEl(i), station.tile(1)));
+
+            exprBeam = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprTileFactor,
+                exprBeam));
+        }
+        else if(suffix == "HBA")
+        {
+            selection = station.selection("HBA");
+
+            Expr<JonesMatrix>::Ptr exprTileFactor =
+                Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl(i),
+                    exprRefAzEl(i), station.tile(0)));
+
+            exprBeam = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprTileFactor,
+                exprBeam));
+        }
+        else
+        {
+            THROW(BBSKernelException, "Illegal LOFAR station name encoutered: "
+                << station.name());
+        }
 
         // Create ArrayFactor expression.
         Expr<JonesMatrix>::Ptr exprArrayFactor(new ArrayFactor(exprAzEl(i),
-            exprRefAzEl(i), antennaConfig, itsReferenceFreq));
+            exprRefAzEl(i), selection, itsReferenceFreq));
 
         accumulator(i) = compose(accumulator(i),
-            Expr<JonesMatrix>::Ptr(new MatrixMul2(exprArrayFactor,
-                exprElement->construct(exprAzEl(i), orientation))));
+            Expr<JonesMatrix>::Ptr(new MatrixMul2(exprArrayFactor, exprBeam)));
     }
 }
 

@@ -28,6 +28,7 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/BasicExpr.h \
 	Expr/Cache.h \
 	Expr/ConditionNumber.h \
+	Expr/EquatorialCentroid.h \
 	Expr/Expr.h \
 	Expr/ExprId.h \
 	Expr/ExprAdaptors.h \
@@ -68,9 +69,9 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/Scope.h \
 	Expr/Source.h \
 	Expr/SpectralIndex.h \
-	Expr/EquatorialCentroid.h \
 	Expr/StationShift.h \
 	Expr/StationUVW.h \
+	Expr/TileArrayFactor.h \
 	Expr/ValueSet.h \
 	Expr/YatawattaDipole.h
 
