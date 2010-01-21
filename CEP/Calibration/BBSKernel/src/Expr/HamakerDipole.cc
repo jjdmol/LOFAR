@@ -179,10 +179,8 @@ const JonesMatrix::View HamakerDipole::evaluateImpl(const Grid &grid,
 
     for(size_t t = 0; t < nTime; ++t)
     {
-        // Correct azimuth for dipole orientation and sign flip (because in the
-        // definition of the beam model positive azimuth is defined as North
-        // over West).
-        const double phi = -(az[t] - angle);
+        // Correct azimuth for dipole orientation.
+        const double phi = az[t] - angle;
 
         // NB: The model is parameterized in terms of zenith angle. The
         // appropriate conversion is taken care of below.
