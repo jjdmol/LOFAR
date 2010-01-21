@@ -1,0 +1,28 @@
+Images.stokes = [I,Q,U,V]
+Images.shape = [2048, 2048]
+Images.cellSize = [240, 240]
+Images.nchan = 1
+Images.ra = 230.35
+Images.dec = -10.345
+Images.directionType = J2000
+
+Solver.type = dirty
+Solver.algorithm = MultiScale
+Solver.niter = 10
+Solver.gain = 1.0
+Solver.verbose = True
+Solver.scales = [0, 3]
+
+Gridder.type = WProject
+Gridder.wmax = 75
+Gridder.nwplanes = 201
+Gridder.oversample = 2
+Gridder.maxsupport = 1024
+Gridder.cutoff = 0.001
+
+dataset = tmwimager.in_vd
+datacolumn = CORRECTED_DATA
+minUV = 1.0
+ncycles = 2
+restore = False
+restore_beam = [1, 1, 0]
