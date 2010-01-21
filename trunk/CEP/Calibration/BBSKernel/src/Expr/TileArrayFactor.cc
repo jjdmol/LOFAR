@@ -65,29 +65,24 @@ const JonesMatrix::View TileArrayFactor::evaluateImpl(const Grid &grid,
     // Convert from elevation to zenith angle.
     Matrix theta = Matrix(C::pi_2) - direction(1);
     Matrix sin_theta = sin(theta);
-//    Matrix cos_theta = cos(theta);
 
     Matrix k[2];
     k[0] = -sin_theta * cos_phi;
     k[1] = -sin_theta * sin_phi;
-//    k[2] = -cos_theta;
 
     Matrix sin_phi0 = sin(reference(0));
     Matrix cos_phi0 = cos(reference(0));
     // Convert from elevation to zenith angle.
     Matrix theta0 = Matrix(C::pi_2) - reference(1);
     Matrix sin_theta0 = sin(theta0);
-//    Matrix cos_theta0 = cos(theta0);
 
     Matrix k0[2];
     k0[0] = -sin_theta0 * cos_phi0;
     k0[1] = -sin_theta0 * sin_phi0;
-//    k0[2] = -cos_theta0;
 
     // Compute difference vector.
     k[0] = k0[0] - k[0];
     k[1] = k0[1] - k[1];
-//    k[2] = k0[2] - k[2];
 
     // Allocate result (initialized at 0+0i).
     Matrix arrayFactor(makedcomplex(0.0, 0.0), nFreq, nTime);
@@ -97,33 +92,29 @@ const JonesMatrix::View TileArrayFactor::evaluateImpl(const Grid &grid,
         // direction of interest with respect to the phase center of element i
         // when beamforming in the reference direction using time delays.
         Matrix delay = (k[0] * itsLayout(i, 0) + k[1] * itsLayout(i, 1)) / C::c;
-//        LOG_DEBUG_STR("el: " << i << " x: " << itsLayout(i, 0) << " y: "
-//            << itsLayout(i, 1));
-
         DBGASSERT(delay.nx() == 1 && static_cast<size_t>(delay.ny()) == nTime);
 
         double *p_re, *p_im;
         arrayFactor.dcomplexStorage(p_re, p_im);
-        double *p_delay = delay.doubleStorage();
+        const double *p_delay = delay.doubleStorage();
 
         for(size_t t = 0; t < nTime; ++t)
         {
-            const double delay_t = *p_delay;
+            const double delay_t = *p_delay++;
 
             for(size_t f = 0; f < nFreq; ++f)
             {
                 const double shift = C::_2pi * grid[FREQ]->center(f) * delay_t;
-
-                (*p_re) += std::cos(shift) / nElement;
-                (*p_im) += std::sin(shift) / nElement;
-
+                *p_re += std::cos(shift);
+                *p_im += std::sin(shift);
                 ++p_re;
                 ++p_im;
             }
-
-            ++p_delay;
         }
     }
+
+    // Normalize.
+    arrayFactor /= nElement;
 
     JonesMatrix::View result;
     result.assign(0, 0, arrayFactor);
