@@ -29,6 +29,7 @@
 #include <sys/time.h>
 #include <string.h>
 #include <iostream>
+#include <limits.h>
 
 namespace LOFAR {
 namespace RTC
@@ -112,9 +113,10 @@ namespace RTC
 	   */
 	  long sec()  const;
 	  long usec() const;
+	  static Timestamp maxTime() { return (Timestamp(LONG_MAX, 999999)); };
 	  /*@}*/
 
-      public:
+public:
 	  /*@{*/
 	  /**
 	   * marshalling methods
@@ -124,7 +126,7 @@ namespace RTC
 	  unsigned int unpack(void *buffer);
 	  /*@}*/
 
-      private:
+private:
 	  /**
 	   * The current precision of a timestamp is 1 second.
 	   * @note By using a 'struct timeval' there is the option to
