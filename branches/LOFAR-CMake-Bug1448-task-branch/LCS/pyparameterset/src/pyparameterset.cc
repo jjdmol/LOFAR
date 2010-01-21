@@ -21,7 +21,6 @@
 
 #include <lofar_config.h>
 #include <Common/ParameterSet.h>
-
 #include <pyrap/Converters/PycExcp.h>
 #include <pyrap/Converters/PycBasicData.h>
 #include <pyrap/Converters/PycRecord.h>
@@ -30,6 +29,7 @@
 #include <boost/python/args.hpp>
 
 #include "Package__Version.cc"
+//#include <pyparameterset/Package__Version.h>
 
 using namespace boost::python;
 using namespace casa::pyrap;

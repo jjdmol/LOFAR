@@ -118,13 +118,36 @@ prelude = << PRELUDE_END
     uint8 ffi:1;  // not used
   };
 
-  typedef struct ADOStatus // total size 8 bytes
+  typedef struct ADOStatus // total size 8 bytes x 4 = 32 bytes
   {
     int32 adc_offset_x;
     int32 adc_offset_y;
   };
+  
+  typedef struct RADStatus // total 4 bytes x 9 = 36 bytes
+  {
+    uint32 cnt:18;  // number of frames received in the previous sync interval
+    uint8  brc:1;   // 0 = all frames ok, 1 = one or more frames with crc error
+    uint8  sync:1;  // 0 = sync error, 1 = sync was detected OK
+    uint8  align:1; // 0 = all frames aligned, 1 = one or more frames were discarded
+                    // not applicable for RI status
+    uint16 ffi:11;  // not used
+  };
+  
+  typedef struct TESTStatus // total 16 bytes
+  {
+    uint16 testdata_blp0_rcu_x;
+    uint16 testdata_blp0_rcu_y;
+    uint16 testdata_blp1_rcu_x;
+    uint16 testdata_blp1_rcu_y;
+    uint16 testdata_blp2_rcu_x;
+    uint16 testdata_blp2_rcu_y;
+    uint16 testdata_blp3_rcu_x;
+    uint16 testdata_blp3_rcu_y;
+  };
+  
 
-  typedef struct BoardStatus // total size 164 bytes
+  typedef struct BoardStatus // total size 252 bytes
   {
     RSPStatus  rsp;
     ETHStatus  eth;
@@ -143,6 +166,16 @@ prelude = << PRELUDE_END
     ADOStatus  blp1_adc_offset;
     ADOStatus  blp2_adc_offset;
     ADOStatus  blp3_adc_offset;
+    RADStatus  ri;
+    RADStatus  lane0_crosslet;
+    RADStatus  lane0_beamlet;
+    RADStatus  lane1_crosslet;
+    RADStatus  lane1_beamlet; 
+    RADStatus  lane2_crosslet;
+    RADStatus  lane2_beamlet; 
+    RADStatus  lane3_crosslet;
+    RADStatus  lane3_beamlet;
+    TESTStatus rcuh_test; 
   };
 
   typedef struct RSRVersion

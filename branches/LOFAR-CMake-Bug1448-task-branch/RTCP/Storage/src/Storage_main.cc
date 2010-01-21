@@ -17,10 +17,7 @@
 #include <Interface/Parset.h>
 #include <Interface/Thread.h>
 #include <Storage/SubbandWriter.h>
-
-#if !defined HAVE_PKVERSION
 #include <Storage/Package__Version.h>
-#endif
 #if defined HAVE_MPI
 #include <mpi.h>
 #endif

@@ -31,7 +31,7 @@
 #include <MACIO/LOG_Protocol.ph>
 #include <log4cplus/socketappender.h>
 #include "LogClient.h"
-#include "../Package__Version.h"
+#include <CUDaemons/Package__Version.h>
 
 using namespace log4cplus;
 using namespace log4cplus::helpers;
