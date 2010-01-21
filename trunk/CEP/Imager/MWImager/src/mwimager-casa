@@ -63,9 +63,19 @@ def main(argv=None):
     imsize = ps.getIntVector ('Images.shape')
     cellsz = ps.getStringVector ('Images.cellSize')
     stokes = ps.getStringVector ('Images.stokes', 'I')
-    nfacets  = ps.getInt ('Images.nfacets', 1)
+    nfacets = ps.getInt ('Images.nfacets', 1)
     padding = ps.getString ('Gridder.padding', '1')
     minuv = ps.getDouble ('Images.minuv', 0)
+    algo = ps.getString ('Solver.algorithm', '')
+    fixed = ps.getString ('Solver.fixed', 'False')
+    niter = ps.getInt ('Solver.niter', 1000)
+    gain = ps.getString ('Solver.gain', '0.7')
+    threshold = ps.getString ('Solver.threshold', '0Jy')
+    nscales = ps.getInt ('Solver.nscales', 5)
+    scalevalues = ps.getString('Solver.scalevalues', '0')
+    ncycles = ps.getInt ('ncycles', 5)
+    if ncycles == 0:
+        algo = ''           # no cleaning if 0 cycles (like cimager)
     selectstr = ''
     if minuv > 0:
         selectstr = 'SUMSQR(UVW[1:2] >= %.3f' % minuv*minuv
@@ -124,7 +134,7 @@ def main(argv=None):
     # Add the lwimager columns if needed.
     if dry != 'dry':
         import pyrap.tables as pytab
-        print "Adding MS columns needed for CASA's imager ..."
+        print "If needed, adding MS columns used by CASA's imager ..."
         pytab.addImagingColumns (msname)
 
     command = 'lwimager "ms=%s" "image=%s" "data=%s" "mode=channel" "npix=%d" "cellsize=%s" "stokes=%s" "nchan=%d" "chanstart=%d" "img_nchan=%d" "wprojplanes=%d" "nfacets=%d" "padding=%s" "cachesize=%s"' % (msname,imgname,datacol,imsize,cellsz,stokestr,nchan,schan,imgnchan,nwplanes,nfacets,padding,cachesize)
@@ -134,6 +144,9 @@ def main(argv=None):
         command += phasecenter
     if len(filter) > 0:
         command += filter
+    if len(algo) > 0:
+        cleancmd = ' "operation=%s" "niter=%d" "gain=%s" "threshold=%s" "fixed=%s" "nscales=%d" "scalevalues=%s" "modelname=%s-model" "restoredname="%s-restored" "residualname=%s-residual"' % (algo, niter, gain, threshold, fixed, nscales, scalevalues, imgname, imgname, imgname)
+        command += cleancmd
     print command
     if dry != 'dry':
         os.system (command)
