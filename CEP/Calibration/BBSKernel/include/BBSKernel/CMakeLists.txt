@@ -34,6 +34,7 @@ install(FILES
   Expr/BasicExpr.h
   Expr/Cache.h
   Expr/ConditionNumber.h
+  Expr/EquatorialCentroid.h
   Expr/Expr.h
   Expr/ExprId.h
   Expr/ExprAdaptors.h
@@ -74,9 +75,9 @@ install(FILES
   Expr/Scope.h
   Expr/Source.h
   Expr/SpectralIndex.h
-  Expr/EquatorialCentroid.h
   Expr/StationShift.h
   Expr/StationUVW.h
+  Expr/TileArrayFactor.h
   Expr/ValueSet.h
   Expr/YatawattaDipole.h
   DESTINATION include/${PACKAGE_NAME}/Expr)

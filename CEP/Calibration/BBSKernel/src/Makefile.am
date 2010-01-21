@@ -35,6 +35,7 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	VisDimensions.cc \
 	VisExpr.cc \
 	VisSelection.cc \
+	Expr/EquatorialCentroid.cc \
 	Expr/ArrayFactor.cc \
 	Expr/AzEl.cc \
 	Expr/Cache.cc \
@@ -75,9 +76,9 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/Scope.cc \
 	Expr/Source.cc \
 	Expr/SpectralIndex.cc \
-	Expr/EquatorialCentroid.cc \
 	Expr/StationShift.cc \
 	Expr/StationUVW.cc \
+	Expr/TileArrayFactor.cc \
 	Expr/ValueSet.cc \
 	Expr/YatawattaDipole.cc
 

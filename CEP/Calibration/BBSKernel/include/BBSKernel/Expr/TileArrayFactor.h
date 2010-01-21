@@ -1,4 +1,4 @@
-//# ArrayFactor.h: Compute the array factor of a LOFAR station.
+//# TileArrayFactor.h: Compute the array factor of a LOFAR HBA tile.
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,11 +20,11 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_ARRAYFACTOR_H
-#define LOFAR_BBSKERNEL_EXPR_ARRAYFACTOR_H
+#ifndef LOFAR_BBSKERNEL_EXPR_TILEARRAYFACTOR_H
+#define LOFAR_BBSKERNEL_EXPR_TILEARRAYFACTOR_H
 
 // \file
-// Compute the array factor of a LOFAR station.
+// Compute the array factor of a LOFAR HBA tile.
 
 #include <BBSKernel/Expr/BasicExpr.h>
 #include <BBSKernel/Instrument.h>
@@ -38,12 +38,11 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class ArrayFactor: public BasicBinaryExpr<Vector<2>, Vector<2>, JonesMatrix>
+class TileArrayFactor: public BasicBinaryExpr<Vector<2>, Vector<2>, JonesMatrix>
 {
 public:
-    ArrayFactor(const Expr<Vector<2> >::ConstPtr &direction,
-        const Expr<Vector<2> >::ConstPtr &reference,
-        const AntennaSelection &selection, double referenceFreq);
+    TileArrayFactor(const Expr<Vector<2> >::ConstPtr &direction,
+        const Expr<Vector<2> >::ConstPtr &reference, const TileLayout &layout);
 
 protected:
     virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
@@ -51,8 +50,7 @@ protected:
         const;
 
 private:
-    AntennaSelection    itsSelection;
-    double              itsReferenceFreq;
+    TileLayout  itsLayout;
 };
 
 // @}

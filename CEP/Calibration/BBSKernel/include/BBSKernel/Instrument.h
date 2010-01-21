@@ -41,40 +41,58 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
-class AntennaConfig
+class AntennaSelection
 {
 public:
+    AntennaSelection();
+    AntennaSelection(unsigned int size);
+
     const string &name() const;
-    size_t size() const;
-    double operator()(unsigned int i, unsigned int j) const;
+    unsigned int size() const;
+    const double &operator()(unsigned int i0, unsigned int i1) const;
+    double &operator()(unsigned int i0, unsigned int i1);
 
 private:
-    friend istream &operator>>(istream &in, AntennaConfig &obj);
+    friend istream &operator>>(istream &in, AntennaSelection &obj);
 
     string                  itsName;
     casa::Matrix<double>    itsPositions;
 };
 
-istream &operator>>(istream &in, AntennaConfig &obj);
+istream &operator>>(istream &in, AntennaSelection &obj);
+
+class TileLayout
+{
+public:
+    TileLayout();
+    TileLayout(unsigned int size);
+
+    unsigned int size() const;
+    const double &operator()(unsigned int i0, unsigned int i1) const;
+    double &operator()(unsigned int i0, unsigned int i1);
+
+private:
+    casa::Matrix<double>    itsPositions;
+};
 
 class Station
 {
 public:
-//    Station();
     Station(const string &name, const casa::MPosition &position);
-    Station(const string &name, const casa::MPosition &position,
-        const casa::Path &config);
 
     const string &name() const;
     const casa::MPosition &position() const;
-    const AntennaConfig &config(const string &name) const;
+    const AntennaSelection &selection(const string &name) const;
+    const TileLayout &tile(unsigned int i) const;
 
-    void readAntennaConfigurations(const casa::Path &file);
+    void readAntennaSelection(const casa::Path &file);
+    void readTileLayout(const casa::Path &file);
 
 private:
-    string                      itsName;
-    casa::MPosition             itsPosition;
-    map<string, AntennaConfig>  itsConfig;
+    string                          itsName;
+    casa::MPosition                 itsPosition;
+    map<string, AntennaSelection>   itsAntennaSelection;
+    vector<TileLayout>              itsTileLayout;
 };
 
 class Instrument
@@ -91,7 +109,7 @@ public:
     const Station &operator[](unsigned int i) const;
     const Station &operator[](const string &name) const;
 
-    void readAntennaConfigurations(const casa::Path &path);
+    void readLOFARAntennaConfig(const casa::Path &path);
 
 private:
     string                      itsName;
@@ -103,14 +121,37 @@ private:
 // @}
 
 // -------------------------------------------------------------------------- //
-// - AntennaConfig implementation                                           - //
+// - AntennaSelection implementation                                        - //
 // -------------------------------------------------------------------------- //
 
-inline double AntennaConfig::operator()(unsigned int i, unsigned int j)
+inline const double &AntennaSelection::operator()(unsigned int i0,
+    unsigned int i1) const
+{
+    //# Swap axes to hide the Fortran index convention used by casa::Array.
+    return itsPositions(i1, i0);
+}
+
+inline double &AntennaSelection::operator()(unsigned int i0, unsigned int i1)
+{
+    //# Swap axes to hide the Fortran index convention used by casa::Array.
+    return itsPositions(i1, i0);
+}
+
+// -------------------------------------------------------------------------- //
+// - TileLayout implementation                                              - //
+// -------------------------------------------------------------------------- //
+
+inline const double &TileLayout::operator()(unsigned int i0, unsigned int i1)
     const
 {
     //# Swap axes to hide the Fortran index convention used by casa::Array.
-    return itsPositions(j, i);
+    return itsPositions(i1, i0);
+}
+
+inline double &TileLayout::operator()(unsigned int i0, unsigned int i1)
+{
+    //# Swap axes to hide the Fortran index convention used by casa::Array.
+    return itsPositions(i1, i0);
 }
 
 } // namespace BBS

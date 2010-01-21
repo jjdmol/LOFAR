@@ -31,22 +31,30 @@ namespace LOFAR
 namespace BBS
 {
 
-const string &AntennaConfig::name() const
+AntennaSelection::AntennaSelection()
+{
+}
+
+AntennaSelection::AntennaSelection(unsigned int size)
+    :   itsPositions(3, size, 0.0)
+{
+}
+
+const string &AntennaSelection::name() const
 {
     return itsName;
 }
 
-size_t AntennaConfig::size() const
+unsigned int AntennaSelection::size() const
 {
     return itsPositions.shape()[1];
 }
 
-istream &operator>>(istream &in, AntennaConfig &obj)
+istream &operator>>(istream &in, AntennaSelection &obj)
 {
     string line;
 
     // Parse configuration name.
-//    in >> ws;
     getline(in, line);
     size_t start = line.find_first_not_of(" \t\n");
     size_t end = line.find_first_of(" \t\n", start);
@@ -60,7 +68,6 @@ istream &operator>>(istream &in, AntennaConfig &obj)
     obj.itsName = line.substr(start, end);
 
     // Skip line containing phase center.
-//    in >> ws;
     getline(in, line);
 
     // Parse array shape.
@@ -99,18 +106,24 @@ istream &operator>>(istream &in, AntennaConfig &obj)
     return in;
 }
 
+TileLayout::TileLayout()
+{
+}
+
+TileLayout::TileLayout(unsigned int size)
+    :   itsPositions(2, size, 0.0)
+{
+}
+
+unsigned int TileLayout::size() const
+{
+    return itsPositions.shape()[1];
+}
+
 Station::Station(const string &name, const casa::MPosition &position)
     :   itsName(name),
         itsPosition(position)
 {
-}
-
-Station::Station(const string &name, const casa::MPosition &position,
-    const casa::Path &config)
-    :   itsName(name),
-        itsPosition(position)
-{
-    readAntennaConfigurations(config);
 }
 
 const string &Station::name() const
@@ -123,26 +136,38 @@ const casa::MPosition &Station::position() const
     return itsPosition;
 }
 
-const AntennaConfig &Station::config(const string &name) const
+const AntennaSelection &Station::selection(const string &name) const
 {
-    map<string, AntennaConfig>::const_iterator it = itsConfig.find(name);
-    if(it == itsConfig.end())
+    map<string, AntennaSelection>::const_iterator it =
+        itsAntennaSelection.find(name);
+    if(it == itsAntennaSelection.end())
     {
-        THROW(BBSKernelException, "Unknown antenna configuration for station "
-            << this->name() << ": " << name);
+        THROW(BBSKernelException, "Unknown antenna selection: " << name
+            << " for station: " << this->name());
     }
 
     return it->second;
 }
 
-void Station::readAntennaConfigurations(const casa::Path &file)
+const TileLayout &Station::tile(unsigned int i) const
+{
+    if(i >= itsTileLayout.size())
+    {
+        THROW(BBSKernelException, "Unknown tile: " << i << " for station: "
+            << this->name());
+    }
+
+    return itsTileLayout[i];
+}
+
+void Station::readAntennaSelection(const casa::Path &file)
 {
     casa::String path(file.expandedName());
 
     ifstream ifs;
     ifs.exceptions(ifstream::failbit | ifstream::badbit);
 
-    map<string, AntennaConfig> result;
+    map<string, AntennaSelection> result;
     try
     {
         ifs.open(path.c_str());
@@ -163,7 +188,7 @@ void Station::readAntennaConfigurations(const casa::Path &file)
                 continue;
             }
 
-            AntennaConfig config;
+            AntennaSelection config;
             ifs >> config;
             result[config.name()] = config;
         }
@@ -171,10 +196,74 @@ void Station::readAntennaConfigurations(const casa::Path &file)
     catch(ifstream::failure &e)
     {
         THROW(BBSKernelException, "Error opening/reading antenna configuration"
-          " file: " << path);
+            " file: " << path);
     }
 
-    itsConfig = result;
+    itsAntennaSelection = result;
+    LOG_DEBUG_STR("" << name() << ": read " << result.size() << " antenna"
+        " selection(s) from: " << path);
+}
+
+void Station::readTileLayout(const casa::Path &file)
+{
+    casa::String path(file.expandedName());
+
+    ifstream ifs;
+    ifs.exceptions(ifstream::failbit | ifstream::badbit);
+
+    string line;
+    vector<TileLayout> result;
+    try
+    {
+        ifs.open(path.c_str());
+
+        // Skip to line after header.
+        size_t pos = string::npos;
+        while(pos == string::npos)
+        {
+            getline(ifs, line);
+            pos = line.find("HBAdeltas");
+        }
+
+        // Parse array shape.
+        char sep;
+        unsigned int shape[2];
+        ifs >> shape[0] >> sep >> shape[1] >> sep;
+
+        const unsigned int tileSize = 16;
+        if(!ifs.good() || sep != '[' || shape[0] == 0 || shape[1] != 2
+            || (shape[0] % tileSize != 0))
+        {
+            ifs.setstate(istream::failbit);
+        }
+
+        // Parse array.
+        for(unsigned int j = 0; j < shape[0] / tileSize; ++j)
+        {
+            TileLayout tile(tileSize);
+            for(unsigned int i = 0; i < tileSize; ++i)
+            {
+                ifs >> tile(i, 0) >> tile(i, 1);
+            }
+
+            result.push_back(tile);
+        }
+
+        ifs >> sep;
+        if(!ifs.good() || sep != ']')
+        {
+            ifs.setstate(istream::failbit);
+        }
+    }
+    catch(ifstream::failure &e)
+    {
+        THROW(BBSKernelException, "Error opening/reading tile layout file: "
+            << path);
+    }
+
+    itsTileLayout = result;
+    LOG_DEBUG_STR("" << name() << ": read " << result.size() << " HBA tile"
+        " layout(s) from: " << path);
 }
 
 Instrument::Instrument()
@@ -225,13 +314,24 @@ const Station &Instrument::operator[](const string &name) const
     return itsStations[it->second];
 }
 
-void Instrument::readAntennaConfigurations(const casa::Path &path)
+void Instrument::readLOFARAntennaConfig(const casa::Path &path)
 {
     for(unsigned int i = 0; i < itsStations.size(); ++i)
     {
+        ASSERT(itsStations[i].name().size() >= 5);
+        string name = itsStations[i].name().substr(0, 5);
+
+        // Read station selections.
         casa::Path file(path);
-        file.append(itsStations[i].name() + "-AntennaArrays.conf");
-        itsStations[i].readAntennaConfigurations(file);
+        file.append("AntennaArrays");
+        file.append(name + "-AntennaArrays.conf");
+        itsStations[i].readAntennaSelection(file);
+
+        // Read layout of HBA tiles.
+        file = casa::Path(path);
+        file.append("HBADeltas");
+        file.append(name + "-HBADeltas.conf");
+        itsStations[i].readTileLayout(file);
     }
 }
 
