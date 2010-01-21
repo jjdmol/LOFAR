@@ -171,6 +171,10 @@ void GlobalSolveController::run()
             // Update coefficients.
             setSolution(solutions, chunkStart, chunkEnd);
 
+            // Notify LHS and RHS expressions of coefficient update.
+            itsLHS->solvableParmsChanged();
+            itsRHS->solvableParmsChanged();
+
             // Check if iteration should be terminated.
             done = true;
             for(size_t i = 0; i < solutions.size(); ++i)

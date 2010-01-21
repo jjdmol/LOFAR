@@ -50,6 +50,11 @@ void ExprParm::clearPValueFlag()
     itsPValueFlag = false;
 }
 
+bool ExprParm::isDependent() const
+{
+    return itsPValueFlag;
+}
+
 const Scalar ExprParm::evaluateExpr(const Request &request, Cache &cache,
     unsigned int grid) const
 {

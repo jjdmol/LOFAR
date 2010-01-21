@@ -43,17 +43,29 @@ namespace BBS
 class Cache
 {
 public:
+    enum Policy
+    {
+        NONE,
+        VOLATILE,
+        PERMANENT,
+        N_Policy
+    };
+
     Cache();
     ~Cache();
 
     template <typename T_EXPR_VALUE>
-    void insert(ExprId expr, RequestId request, const T_EXPR_VALUE &result);
+    void insert(ExprId expr, RequestId request, Policy policy,
+        const T_EXPR_VALUE &result);
 
     template <typename T_EXPR_VALUE>
     bool query(ExprId expr, RequestId request, T_EXPR_VALUE &value);
 
     void clear();
+    void clear(Policy policy);
     void clearStats();
+
+    static const string &policyAsString(Policy policy);
 
 private:
     class CacheRecord
@@ -61,8 +73,9 @@ private:
     public:
         CacheRecord();
 
-        RequestId   request;
-        ExprValue   *result;
+        RequestId       request;
+        Policy          policy;
+        ExprValue       *result;
     };
 
     friend ostream &operator<<(ostream &out, const Cache &obj);
@@ -86,7 +99,8 @@ ostream &operator<<(ostream &out, const Cache &obj);
 // -------------------------------------------------------------------------- //
 
 template <typename T_EXPR_VALUE>
-void Cache::insert(ExprId expr, RequestId request, const T_EXPR_VALUE &result)
+void Cache::insert(ExprId expr, RequestId request, Policy policy,
+    const T_EXPR_VALUE &result)
 {
     CacheRecord &record = itsCache[expr];
     itsMaxSize = std::max(itsMaxSize, itsCache.size());
@@ -97,6 +111,7 @@ void Cache::insert(ExprId expr, RequestId request, const T_EXPR_VALUE &result)
         record.result = new T_EXPR_VALUE(result);
         delete tmp;
         record.request = request;
+        record.policy = policy;
     }
 }
 

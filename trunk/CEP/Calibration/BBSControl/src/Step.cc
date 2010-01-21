@@ -177,6 +177,9 @@ namespace LOFAR
           toString(config.getThreshold()));
       }
 
+      ps.add(prefix + "Model.ExperimentalCaching.Enable",
+        toString(itsModelConfig.useExperimentalCaching()));
+
       ps.add(prefix + "Model.Sources", toString(itsModelConfig.getSources()));
 
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
@@ -286,6 +289,9 @@ namespace LOFAR
       } else {
         itsModelConfig.clearFlaggerConfig();
       }
+
+      itsModelConfig.setExperimentalCaching(ps.getBool("Model.ExperimentalCaching.Enable",
+        itsModelConfig.useExperimentalCaching()));
 
       itsModelConfig.setSources(ps.getStringVector("Model.Sources",
         itsModelConfig.getSources()));

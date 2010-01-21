@@ -55,6 +55,24 @@ public:
     // Return the unique id of this expression.
     ExprId id() const;
 
+    unsigned int nConsumers() const;
+
+    virtual bool isDependent() const;
+
+    void setCachePolicy(Cache::Policy policy) const;
+    Cache::Policy getCachePolicy() const;
+
+    // \name Argument access
+    // Provide access to the arguments of an expression. Because the type of the
+    // arguments must be kept, they are stored in the derived classes (where the
+    // type is known). However, access from the base class can be useful to
+    // support visitors or base class functions that need to recurse the tree.
+    //
+    // @{
+    virtual unsigned int nArguments() const = 0;
+    virtual ExprBase::ConstPtr argument(unsigned int i) const = 0;
+    // @}
+
 protected:
     // \name Connection management
     // Connect/disconnect expressions to/from this expression. The connected
@@ -66,18 +84,6 @@ protected:
     // @{
     void connect(const ExprBase::ConstPtr &arg) const;
     void disconnect(const ExprBase::ConstPtr &arg) const;
-    unsigned int nConsumers() const;
-    // @}
-
-    // \name Argument access
-    // Provide access to the arguments of an expression. Because the type of the
-    // arguments must be kept, they are stored in the derived classes (where the
-    // type is known). However, access from the base class can be useful to
-    // support visitors or base class functions that need to recurse the tree.
-    //
-    // @{
-    virtual unsigned int nArguments() const = 0;
-    virtual ExprBase::ConstPtr argument(unsigned int i) const = 0;
     // @}
 
 private:
@@ -100,6 +106,8 @@ private:
     // caching is an implementation detail, anything related to it should not be
     // detectable outside the ExprBase hierarchy.
     mutable unsigned int        itsConsumerCount;
+
+    mutable Cache::Policy       itsCachePolicy;
 
     ExprId                      itsId;
     static ExprId               theirId;
@@ -328,6 +336,16 @@ inline unsigned int ExprBase::nConsumers() const
     return itsConsumerCount;
 }
 
+inline void ExprBase::setCachePolicy(Cache::Policy policy) const
+{
+    itsCachePolicy = policy;
+}
+
+inline Cache::Policy ExprBase::getCachePolicy() const
+{
+    return itsCachePolicy;
+}
+
 // -------------------------------------------------------------------------- //
 // - Implementation: Expr                                                   - //
 // -------------------------------------------------------------------------- //
@@ -338,16 +356,16 @@ inline const T_EXPR_VALUE  Expr<T_EXPR_VALUE>::evaluate(const Request &request,
 {
     T_EXPR_VALUE result;
 
-    // Query the cache.
-    if(nConsumers() < 1 || !cache.query(id(), request.id(), result))
+    if(getCachePolicy() == Cache::NONE || !cache.query(id(), request.id(),
+        result))
     {
         // Compute the result.
         result = evaluateExpr(request, cache, grid);
 
-        // Insert into cache (only if it will be re-used later on).
-        if(nConsumers() > 1)
+        // Insert into cache (only if it can potentially be re-used later on).
+        if(getCachePolicy() != Cache::NONE)
         {
-            cache.insert(id(), request.id(), result);
+            cache.insert(id(), request.id(), getCachePolicy(), result);
         }
     }
 

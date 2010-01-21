@@ -59,6 +59,7 @@ public:
     virtual ParmGroup getSolvableParms() const = 0;
     virtual void setSolvableParms(const ParmGroup &solvables) = 0;
     virtual void clearSolvableParms() = 0;
+    virtual void solvableParmsChanged() = 0;
 
     virtual void setEvalGrid(const Grid &grid) = 0;
     virtual const T_EXPR evaluate(unsigned int i) = 0;
@@ -67,7 +68,7 @@ public:
 // @}
 
 // -------------------------------------------------------------------------- //
-// - Implementation: ExprSet                                          - //
+// - Implementation: ExprSet                                                - //
 // -------------------------------------------------------------------------- //
 
 template <typename T_EXPR>

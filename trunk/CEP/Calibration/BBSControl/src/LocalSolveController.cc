@@ -152,6 +152,10 @@ void LocalSolveController::run()
 
             // Update coefficients.
             setSolution(solutions, chunkStart, chunkEnd);
+
+            // Notify LHS and RHS expressions of coefficient update.
+            itsLHS->solvableParmsChanged();
+            itsRHS->solvableParmsChanged();
         }
 
         // Propagate coefficient values to the next cell chunk.

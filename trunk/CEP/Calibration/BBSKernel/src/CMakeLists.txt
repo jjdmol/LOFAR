@@ -24,6 +24,7 @@ lofar_add_library(bbskernel
   VisSelection.cc
   Expr/ArrayFactor.cc
   Expr/AzEl.cc
+  Expr/CachePolicy.cc
   Expr/Cache.cc
   Expr/ConditionNumber.cc
   Expr/EquatorialCentroid.cc

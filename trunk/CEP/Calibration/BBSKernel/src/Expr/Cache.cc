@@ -51,6 +51,29 @@ void Cache::clear()
     itsCache.clear();
 }
 
+void Cache::clear(Policy policy)
+{
+    unsigned int n = 0;
+
+    map<ExprId, CacheRecord>::iterator it = itsCache.begin();
+    while(it != itsCache.end())
+    {
+        if(it->second.policy == policy)
+        {
+            ++n;
+            delete it->second.result;
+            itsCache.erase(it++);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
+    LOG_DEBUG_STR("Cleaned " << n << " cached results for policy "
+        << policyAsString(policy));
+}
+
 void Cache::clearStats()
 {
     itsQueryCount = itsHitCount = itsMaxSize = 0;
@@ -69,6 +92,13 @@ ostream &operator<<(ostream &out, const Cache &obj)
     return out;
 }
 
+const string &Cache::policyAsString(Policy policy)
+{
+    static const string policyNames[Cache::N_Policy] =
+        {"NONE", "VOLATILE", "PERMANENT"};
+
+    return policyNames[policy];
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

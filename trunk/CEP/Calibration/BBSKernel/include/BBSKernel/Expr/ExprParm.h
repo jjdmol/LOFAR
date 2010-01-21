@@ -49,6 +49,8 @@ public:
     bool getPValueFlag() const;
     void clearPValueFlag();
 
+    virtual bool isDependent() const;
+
 protected:
     virtual const Scalar evaluateExpr(const Request &request, Cache &cache,
         unsigned int grid) const;

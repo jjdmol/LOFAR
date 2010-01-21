@@ -119,12 +119,9 @@ void Equator::setCellSelection(const Location &start, const Location &end)
             << itsReqStart.first << "," << itsReqStart.second << "),("
             << itsReqEnd.first << "," << itsReqEnd.second << ")]");
 
-        // TODO: Change caching behaviour such that we can set the evaluation
-        // grid once here, instead of on every call to process().
-//        // Set evaluation grid.
-//        Grid evalGrid = itsEvalGrid.subset(itsReqStart, itsReqEnd);
-//        itsLHS->setEvalGrid(evalGrid);
-//        itsRHS->setEvalGrid(evalGrid);
+        Grid evalGrid = itsEvalGrid.subset(itsReqStart, itsReqEnd);
+        itsLHS->setEvalGrid(evalGrid);
+        itsRHS->setEvalGrid(evalGrid);
 
         // TODO: Allocate #itsSelectedCellCount thread private LSQFit instances.
     }
@@ -152,11 +149,6 @@ void Equator::process(vector<CellEquation> &out)
         out[i].equation.set(static_cast<unsigned int>(itsCoeffMap.size()));
         ++cellIt;
     }
-
-    // Set evaluation grid.
-    Grid evalGrid = itsEvalGrid.subset(itsReqStart, itsReqEnd);
-    itsLHS->setEvalGrid(evalGrid);
-    itsRHS->setEvalGrid(evalGrid);
 
     // Process all expressions in the set.
     ProcContext &context = itsProcContext;
