@@ -23,17 +23,18 @@
 #include <lofar_config.h>
 #include <BBSKernel/VisExpr.h>
 
-#include <BBSKernel/Expr/StationShift.h>
-#include <BBSKernel/Expr/ExprParm.h>
+#include <BBSKernel/Exceptions.h>
+#include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
+#include <BBSKernel/Expr/ExprParm.h>
 #include <BBSKernel/Expr/ExprVisData.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/LMN.h>
-#include <BBSKernel/Expr/ScalarMatrixMul.h>
 #include <BBSKernel/Expr/PhaseShift.h>
 #include <BBSKernel/Expr/Resampler.h>
+#include <BBSKernel/Expr/ScalarMatrixMul.h>
+#include <BBSKernel/Expr/StationShift.h>
 #include <BBSKernel/Expr/StationUVW.h>
-#include <BBSKernel/Exceptions.h>
 
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCDirection.h>
@@ -136,6 +137,9 @@ VisExpr::VisExpr(const Instrument &instrument,
 
         itsExpr.push_back(exprVisData);
     }
+
+    DefaultCachePolicy policy;
+    policy.apply(itsExpr.begin(), itsExpr.end());
 }
 
 unsigned int VisExpr::size() const
@@ -163,6 +167,10 @@ void VisExpr::setSolvableParms(const ParmGroup&)
 }
 
 void VisExpr::clearSolvableParms()
+{
+}
+
+void VisExpr::solvableParmsChanged()
 {
 }
 
@@ -195,8 +203,8 @@ void VisExpr::setEvalGrid(const Grid &grid)
     }
 
     LOG_DEBUG_STR("" << itsCache);
-    itsCache.clearStats();
     itsCache.clear();
+    itsCache.clearStats();
 }
 
 const JonesMatrix VisExpr::evaluate(unsigned int i)

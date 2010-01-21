@@ -33,6 +33,7 @@ ExprId ExprBase::theirId = 0;
 
 ExprBase::ExprBase()
     :   itsConsumerCount(0),
+        itsCachePolicy(Cache::NONE),
         itsId(theirId++)
 {
 }
@@ -59,6 +60,19 @@ void ExprBase::incConsumerCount() const
 void ExprBase::decConsumerCount() const
 {
     --itsConsumerCount;
+}
+
+bool ExprBase::isDependent() const
+{
+    for(unsigned int i = 0; i < nArguments(); ++i)
+    {
+        if(argument(i)->isDependent())
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 } //# namespace BBS

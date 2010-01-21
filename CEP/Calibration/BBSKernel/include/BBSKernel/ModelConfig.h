@@ -148,11 +148,11 @@ public:
     bool useBandpass() const;
     void setBandpass(bool value = true);
 
-    void setGain(bool value = true);
     bool useGain() const;
+    void setGain(bool value = true);
 
-    void setDirectionalGain(bool value = true);
     bool useDirectionalGain() const;
+    void setDirectionalGain(bool value = true);
 
     bool useBeam() const;
     void setBeamConfig(const BeamConfig &config);
@@ -175,6 +175,9 @@ public:
     const FlaggerConfig &getFlaggerConfig() const;
     void clearFlaggerConfig();
 
+    bool useExperimentalCaching() const;
+    void setExperimentalCaching(bool value = true);
+
     void setSources(const vector<string> &sources);
     const vector<string> &getSources() const;
 
@@ -188,6 +191,7 @@ private:
         BEAM,
         IONOSPHERE,
         FLAGGER,
+        EXPERIMENTAL_CACHING,
         N_ModelOptions
     };
 

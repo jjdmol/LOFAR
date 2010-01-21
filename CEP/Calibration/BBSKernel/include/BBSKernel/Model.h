@@ -31,6 +31,7 @@
 #include <BBSKernel/ParmManager.h>
 #include <BBSKernel/VisData.h>
 
+#include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprParm.h>
 #include <BBSKernel/Expr/Scope.h>
@@ -78,11 +79,14 @@ public:
     virtual ParmGroup getSolvableParms() const;
     virtual void setSolvableParms(const ParmGroup &solvables);
     virtual void clearSolvableParms();
+    virtual void solvableParmsChanged();
 
     virtual void setEvalGrid(const Grid &grid);
     virtual const JonesMatrix evaluate(unsigned int i);
 
 private:
+    void applyCachePolicy(const ModelConfig &config) const;
+
     vector<unsigned int>
         makeUsedStationList(const vector<baseline_t> &baselines) const;
 
@@ -159,6 +163,7 @@ private:
 
     vector<Expr<JonesMatrix>::Ptr>          itsExpr;
     Scope                                   itsScope;
+    CachePolicy::Ptr                        itsCachePolicy;
 };
 
 // @}

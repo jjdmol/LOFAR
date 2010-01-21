@@ -60,6 +60,7 @@ public:
     virtual ParmGroup getSolvableParms() const;
     virtual void setSolvableParms(const ParmGroup&);
     virtual void clearSolvableParms();
+    virtual void solvableParmsChanged();
 
     virtual void setEvalGrid(const Grid &grid);
     virtual const JonesMatrix evaluate(unsigned int i);

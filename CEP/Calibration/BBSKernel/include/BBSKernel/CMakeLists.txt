@@ -33,6 +33,7 @@ install(FILES
   Expr/AzEl.h
   Expr/BasicExpr.h
   Expr/Cache.h
+  Expr/CachePolicy.h
   Expr/ConditionNumber.h
   Expr/EquatorialCentroid.h
   Expr/Expr.h

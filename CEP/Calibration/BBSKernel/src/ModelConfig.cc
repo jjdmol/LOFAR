@@ -259,6 +259,11 @@ const FlaggerConfig &ModelConfig::getFlaggerConfig() const
     return itsConfigFlagger;
 }
 
+bool ModelConfig::useExperimentalCaching() const
+{
+    return itsModelOptions[EXPERIMENTAL_CACHING];
+}
+
 void ModelConfig::setPhasors(bool value)
 {
     itsModelOptions[PHASORS] = value;
@@ -335,6 +340,11 @@ void ModelConfig::clearFlaggerConfig()
 {
     itsConfigFlagger = FlaggerConfig();
     itsModelOptions[FLAGGER] = false;
+}
+
+void ModelConfig::setExperimentalCaching(bool value)
+{
+    itsModelOptions[EXPERIMENTAL_CACHING] = value;
 }
 
 void ModelConfig::setSources(const vector<string> &sources)
@@ -454,6 +464,9 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         Indent id;
         out << endl << obj.getFlaggerConfig();
     }
+
+    out << endl << indent << "Experimental caching enabled: " << boolalpha
+        << obj.useExperimentalCaching() << noboolalpha;
 
     out << endl << indent << "Sources: " << obj.getSources();
     return out;

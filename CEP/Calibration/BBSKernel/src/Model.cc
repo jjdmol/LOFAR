@@ -29,6 +29,7 @@
 
 #include <BBSKernel/Expr/ArrayFactor.h>
 #include <BBSKernel/Expr/AzEl.h>
+#include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/ConditionNumber.h>
 #include <BBSKernel/Expr/EquatorialCentroid.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
@@ -86,7 +87,8 @@ Model::Model(const Instrument &instrument, const SourceDB &sourceDb,
     :   itsInstrument(instrument),
         itsSourceDb(sourceDb),
         itsPhaseReference(reference),
-        itsReferenceFreq(referenceFreq)
+        itsReferenceFreq(referenceFreq),
+        itsCachePolicy(new DefaultCachePolicy())
 {
 }
 
@@ -95,8 +97,14 @@ void Model::clear()
     itsExpr.clear();
     itsScope.clear();
 
-    LOG_DEBUG_STR("" << itsCache);
     itsCache.clear();
+    itsCache.clearStats();
+}
+
+void Model::solvableParmsChanged()
+{
+    LOG_DEBUG_STR("" << itsCache);
+    itsCache.clear(Cache::VOLATILE);
     itsCache.clearStats();
 }
 
@@ -268,6 +276,15 @@ void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
                 diTransform(idx.second));
         }
     }
+
+    // Set caching policy.
+    itsCachePolicy = CachePolicy::Ptr(new DefaultCachePolicy());
+    if(config.useExperimentalCaching())
+    {
+        itsCachePolicy = CachePolicy::Ptr(new ExperimentalCachePolicy());
+    }
+
+    itsCachePolicy->apply(itsExpr.begin(), itsExpr.end());
 }
 
 void Model::makeInverseExpr(const ModelConfig &config,
@@ -415,6 +432,15 @@ void Model::makeInverseExpr(const ModelConfig &config,
 
         itsExpr.push_back(exprVisData);
     }
+
+    // Set caching policy.
+    itsCachePolicy = CachePolicy::Ptr(new DefaultCachePolicy());
+    if(config.useExperimentalCaching())
+    {
+        itsCachePolicy = CachePolicy::Ptr(new ExperimentalCachePolicy());
+    }
+
+    itsCachePolicy->apply(itsExpr.begin(), itsExpr.end());
 }
 
 unsigned int Model::size() const
@@ -474,6 +500,10 @@ void Model::setSolvableParms(const ParmGroup &solvables)
 
         ++solIt;
     }
+
+    itsCache.clear();
+    itsCache.clearStats();
+    itsCachePolicy->apply(itsExpr.begin(), itsExpr.end());
 }
 
 void Model::clearSolvableParms()
@@ -484,14 +514,18 @@ void Model::clearSolvableParms()
         parmIt->second->clearPValueFlag();
         ++parmIt;
     }
+
+    itsCache.clear();
+    itsCache.clearStats();
+    itsCachePolicy->apply(itsExpr.begin(), itsExpr.end());
 }
 
 void Model::setEvalGrid(const Grid &grid)
 {
     itsRequest = Request(grid);
-    LOG_DEBUG_STR("" << itsCache);
-    itsCache.clearStats();
+
     itsCache.clear();
+    itsCache.clearStats();
 
     // TODO: Set cache size in number of Matrix instances... ?
 }
@@ -538,6 +572,20 @@ const JonesMatrix Model::evaluate(unsigned int i)
     }
 
     return result;
+}
+
+void Model::applyCachePolicy(const ModelConfig &config) const
+{
+    if(config.useExperimentalCaching())
+    {
+        ExperimentalCachePolicy policy;
+        policy.apply(itsExpr.begin(), itsExpr.end());
+    }
+    else
+    {
+        DefaultCachePolicy policy;
+        policy.apply(itsExpr.begin(), itsExpr.end());
+    }
 }
 
 vector<unsigned int>
