@@ -107,32 +107,31 @@ const JonesMatrix::View ArrayFactor::evaluateImpl(const Grid &grid,
         DBGASSERT(delay0.nx() == 1
             && static_cast<size_t>(delay0.ny()) == nTime);
 
-        double *p_delay = delay.doubleStorage();
-        double *p_delay0 = delay0.doubleStorage();
         double *p_re, *p_im;
         arrayFactor.dcomplexStorage(p_re, p_im);
+        const double *p_delay = delay.doubleStorage();
+        const double *p_delay0 = delay0.doubleStorage();
 
         for(size_t t = 0; t < nTime; ++t)
         {
-            const double delay_t = *p_delay;
-            const double shift0 = omega0 * (*p_delay0);
+            const double delay_t = *p_delay++;
+            const double shift0 = omega0 * (*p_delay0++);
 
             for(size_t f = 0; f < nFreq; ++f)
             {
                 const double shift = shift0 - C::_2pi * grid[FREQ]->center(f)
                     * delay_t;
 
-                (*p_re) += std::cos(shift) / nElement;
-                (*p_im) += std::sin(shift) / nElement;
-
+                (*p_re) += std::cos(shift);
+                (*p_im) += std::sin(shift);
                 ++p_re;
                 ++p_im;
             }
-
-            ++p_delay;
-            ++p_delay0;
         }
     }
+
+    // Normalize.
+    arrayFactor /= nElement;
 
     JonesMatrix::View result;
     result.assign(0, 0, arrayFactor);
