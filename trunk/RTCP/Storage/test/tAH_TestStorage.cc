@@ -77,9 +77,6 @@ int main(int argc, char *argv[])
 
     SubbandWriter subbandWriter(&parset, rank, size);
 
-    subbandWriter.preprocess();
-    subbandWriter.process();
-    subbandWriter.postprocess();
   } catch (Exception &ex) {
     std::cerr << "caught Exception: " << ex.what() << std::endl;
     exit(1);
