@@ -26,7 +26,7 @@
 #include <Common/lofar_string.h>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include "J2000Converter.h"
-#include "Beam.h"
+#include "DigitalBeam.h"
 
 #include <GCF/TM/GCF_Control.h>
 //#include <GCF/TM/GCF_TimerPort.h>
@@ -56,20 +56,20 @@ private:
 	public:
 		BeamTransaction() : m_port(0), m_beam(0), itsAllocDone(false) {}
 
-		void set(GCFPortInterface* port, Beam* beam) { m_port = port; m_beam = beam; }
+		void set(GCFPortInterface* port, DigitalBeam* beam) { m_port = port; m_beam = beam; }
 		inline void reset() 			{ set(0,0); itsAllocDone = false; }
 		inline void allocationDone() 	{ itsAllocDone = true; }
 		inline bool isAllocationDone()	{ return(itsAllocDone); }
 
 		GCFPortInterface* getPort() const { return m_port; }
-		Beam*             getBeam() const { return m_beam; }
+		DigitalBeam*      getBeam() const { return m_beam; }
 
 	private:
 		// Port on which the transaction is taking place.
 		GCFPortInterface* m_port;
 
 		// Beam that is the subject of the transaction
-		Beam* m_beam;
+		DigitalBeam* m_beam;
 
 		bool	itsAllocDone;
 	};
@@ -87,7 +87,7 @@ public:
 	void  destroyAllBeams(GCFPortInterface* port);
 
 	// Create new beam and update administration
-	Beam*	checkBeam(GCFPortInterface* 					port,
+	DigitalBeam*	checkBeam(GCFPortInterface* 					port,
 					string 								name, 
 					string 								subarrayname, 
 					IBS_Protocol::Beamlet2SubbandMap	allocation,
@@ -177,8 +177,8 @@ public:
 	vector<double>  blitz2vector(const blitz::Array<double,1>&    anBA) const;
 
 	// RCU administration
-	void _registerBeam   (const Beam&	beam);
-	void _unregisterBeam (const Beam&	beam);
+	void _registerBeam   (const DigitalBeam&	beam);
+	void _unregisterBeam (const DigitalBeam&	beam);
 	void _logBeamAdministration();
 
 private:
@@ -222,7 +222,7 @@ private:
 	list<GCFPortInterface*> 	itsClientList;	// list of currently connected clients
 	list<GCFPortInterface*> 	itsDeadClients;	// list of discon. clients to be removed
 
-	map<GCFPortInterface*, set<Beam*> >   itsClientBeams; // mapping from client port to set of beams
+	map<GCFPortInterface*, set<DigitalBeam*> >   itsClientBeams; // mapping from client port to set of beams
 
 	BeamTransaction				itsBeamTransaction; 	// current beam transaction
 
@@ -233,7 +233,7 @@ private:
 	GCFTimerPort*  				itsTimerPort;		  	// General purpose timer
 	bool     					itsBeamsModified;		//
 	bool						itsSplitterOn;			// state of the ringsplitter
-	map<string, Beam*> 			itsBeamPool;			//
+	map<string, DigitalBeam*> 	itsBeamPool;			//
 	
 	// constants
 	int    	itsMaxRCUs;				//

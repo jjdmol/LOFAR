@@ -626,7 +626,7 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 			LOG_DEBUG_STR("ack.subarray.positions=" << ack.subarray.getAntennaPos());
 
 			// set positions on beam
-			Beam*	theBeam = itsBeamTransaction.getBeam();
+			DigitalBeam*	theBeam = itsBeamTransaction.getBeam();
 //TODO			theBeam->setSubarray(ack.subarray);
 
 			// set the scale of the beamlets: (-2PI * freq * i)/lightspeed
@@ -800,7 +800,7 @@ bool BeamServer::beamalloc_start(IBSBeamallocEvent& ba,
 {
 	// allocate the beam
 	int		beamError(IBS_NO_ERR);
-	Beam* beam = checkBeam(&port, ba.beamName, ba.antennaSet, ba.allocation, ba.rcumask, ba.ringNr, &beamError);
+	DigitalBeam* beam = checkBeam(&port, ba.beamName, ba.antennaSet, ba.allocation, ba.rcumask, ba.ringNr, &beamError);
 
 	if (!beam) {
 		LOG_FATAL_STR("BEAMALLOC: failed to allocate beam " << ba.beamName << " on " << ba.antennaSet);
@@ -823,7 +823,7 @@ bool BeamServer::beamalloc_start(IBSBeamallocEvent& ba,
 bool BeamServer::beamfree_start(IBSBeamfreeEvent&  bf,
 								GCFPortInterface& port)
 {
-	map<string, Beam*>::iterator	beamIter = itsBeamPool.find(bf.beamName);
+	map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.find(bf.beamName);
 	if (beamIter == itsBeamPool.end()) { 
 		LOG_FATAL_STR("BEAMFREE failed: beam '" << bf.beamName << "' does not exist");
 
@@ -847,7 +847,7 @@ bool BeamServer::beamfree_start(IBSBeamfreeEvent&  bf,
 bool BeamServer::beampointto_action(IBSBeampointtoEvent& pt,
 									GCFPortInterface& /*port*/)
 {
-	map<string, Beam*>::iterator	beamIter = itsBeamPool.find(pt.beamName);
+	map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.find(pt.beamName);
 	if (beamIter == itsBeamPool.end()) {
 		LOG_ERROR(formatString("BEAMPOINTTO: invalid beam '%s'", pt.beamName.c_str()));
 		return (false);
@@ -922,13 +922,13 @@ void BeamServer::destroyAllBeams(GCFPortInterface* port)
 	ASSERT(port);
 
 	// deallocate all beams for this client
-	set<Beam*>::iterator beamIter = itsClientBeams[port].begin();
-	set<Beam*>::iterator end      = itsClientBeams[port].end();
+	set<DigitalBeam*>::iterator beamIter = itsClientBeams[port].begin();
+	set<DigitalBeam*>::iterator end      = itsClientBeams[port].end();
 	while (beamIter != end) {
 		LOG_INFO_STR("Stopping beam " << (*beamIter)->name());
 		_releaseBeamlets((*beamIter)->allocation(), (*beamIter)->ringNr());
 		_unregisterBeam(**beamIter);
-		Beam*	beam = *beamIter;
+		DigitalBeam*	beam = *beamIter;
 		++beamIter;
 		delete beam;
 	}
@@ -938,7 +938,7 @@ void BeamServer::destroyAllBeams(GCFPortInterface* port)
 //
 // checkBeam(beamTransaction, port , name, subarray, beamletAllocation)
 //
-Beam* BeamServer::checkBeam(GCFPortInterface* 				port,
+DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 						  std::string 						name, 
 						  std::string 						antennaSetName, 
 						  IBS_Protocol::Beamlet2SubbandMap	allocation,
@@ -990,7 +990,7 @@ Beam* BeamServer::checkBeam(GCFPortInterface* 				port,
 		return (0);
 	}
 
-	Beam* beam = new Beam(name, antennaSetName, allocation, rcumask, ringNr);
+	DigitalBeam* beam = new DigitalBeam(name, antennaSetName, allocation, rcumask, ringNr);
 
 	if (beam) { // register new beam
 		itsClientBeams[port].insert(beam);
@@ -1127,7 +1127,7 @@ void BeamServer::_releaseBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 //
 // _registerBeam(beam)
 //
-void BeamServer::_registerBeam(const Beam&	beam)
+void BeamServer::_registerBeam(const DigitalBeam&	beam)
 {
 	bool	isLBAbeam = itsAntennaSets->usesLBAfield(beam.antennaSetName());
 	vector<uint>&		RCUcounts = isLBAbeam ? itsLBArcus : itsHBArcus;
@@ -1150,7 +1150,7 @@ void BeamServer::_registerBeam(const Beam&	beam)
 //
 // _unregisterBeam(beam)
 //
-void BeamServer::_unregisterBeam(const Beam&	beam)
+void BeamServer::_unregisterBeam(const DigitalBeam&	beam)
 {
 	bool	isLBAbeam = itsAntennaSets->usesLBAfield(beam.antennaSetName());
 	vector<uint>&		RCUcounts = isLBAbeam ? itsLBArcus : itsHBArcus;
@@ -1288,12 +1288,12 @@ void BeamServer::getAllHBAElementDelays(string filename)
 //
 void BeamServer::compute_HBAdelays(Timestamp time)
 {
-	map<string, Beam*>::iterator	beamIter = itsBeamPool.begin();
-	map<string, Beam*>::iterator	end		 = itsBeamPool.end();
+	map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.begin();
+	map<string, DigitalBeam*>::iterator	end		 = itsBeamPool.end();
 
 	// calculate HBA delays for all HBA beams.
 	while (beamIter != end) {
-		beamIter->second->calculateHBAdelays(time, itsTileRelPos, itsDelaySteps);
+//		beamIter->second->calculateHBAdelays(time, itsTileRelPos, itsDelaySteps);
 //TODO: pass reference to itsHBAdelays so that the can be updated.
 		beamIter++;
 	}
@@ -1388,15 +1388,15 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 		blitz::Array<double,1>	rcuPosLengths = LBAfield ? itsAntennaPos->LBARCULengths() : itsAntennaPos->HBARCULengths();
 
 		// for all beams using this field
-		map<string, Beam*>::iterator	beamIter = itsBeamPool.begin();
-		map<string, Beam*>::iterator	end		 = itsBeamPool.end();
+		map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.begin();
+		map<string, DigitalBeam*>::iterator	end		 = itsBeamPool.end();
 		for ( ; beamIter != end; ++beamIter) {
 			// must be of the same antenna field.
 			if (itsAntennaSets->usesLBAfield(beamIter->second->antennaSetName()) != LBAfield) {
 				continue;
 			}
 			// Get the right pointing
-			Pointing	currentPointing = beamIter->second->currentPointing(weightTime);
+			Pointing	currentPointing = beamIter->second->pointingAtTime(weightTime);
 			blitz::Array<double,2>	sourceJ2000xyz;
 			blitz::Array<double,2>	curPoint(1,2);
 			curPoint(0,0) = currentPointing.angle0();
@@ -1529,10 +1529,10 @@ void BeamServer::send_sbselection()
 
 		// reconstruct the selection
 		Beamlet2SubbandMap selection;
-		map<string, Beam*>::iterator	beamIter = itsBeamPool.begin();
-		map<string, Beam*>::iterator	beamEnd  = itsBeamPool.end();
+		map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.begin();
+		map<string, DigitalBeam*>::iterator	beamEnd  = itsBeamPool.end();
 		while (beamIter != beamEnd) {
-			Beam*	beam = beamIter->second;
+			DigitalBeam*	beam = beamIter->second;
 			LOG_DEBUG_STR("Beam " << beam->name() << " is in ring " << beam->ringNr());
 			if (beam->ringNr() == ringNr) {
 				selection().insert(beam->allocation()().begin(), beam->allocation()().end());

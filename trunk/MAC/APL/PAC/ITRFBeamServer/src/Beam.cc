@@ -1,4 +1,4 @@
-//#  ABSBeam.h: implementation of the Beam class
+//#  Beam.h: implementation of the Beam class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,42 +22,21 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Common/LofarLocators.h>
-#include <Common/LofarConstants.h>
-
-#include <APL/RTCCommon/PSAccess.h>
-#include "BeamServerConstants.h"
 #include "Beam.h"
 
-#include <math.h>
-#include <iostream>
-#include <sys/time.h>
-#include <queue>
-
-#include <blitz/array.h>
-
-#include <fcntl.h>
-
-using namespace blitz;
 using namespace LOFAR;
 using namespace BS;
 using namespace IBS_Protocol;
-using namespace std;
 using namespace RTC;
+using namespace std;
 
 //
-// Beam(name, subarray, nrSubbands)
+// Beam(name, rcuMask)
 //
 Beam::Beam(const string& 				name, 
-		   const string& 				antennaSet, 
-		   const Beamlet2SubbandMap&	allocation, 
-		   const bitset<MAX_RCUS>&		rcuMask,
-		   uint							ringNr) :
-	itsName				(name), 
-	itsAntennaSet		(antennaSet),
-	itsBeamletAllocation(allocation),
-	itsRCUs				(rcuMask),
-	itsRingNr			(ringNr)
+		   const bitset<MAX_RCUS>&		rcuMask) :
+	itsName	(name), 
+	itsRCUs	(rcuMask)
 {}
 
 //
@@ -65,172 +44,152 @@ Beam::Beam(const string& 				name,
 //
 Beam::~Beam()
 {
-	deallocate();
+	// clear the pointings
+	itsPointings.clear();
 }
 
 //
-// deallocate()
+// _resolveGaps()
 //
-void Beam::deallocate()
+// When there are 'holes' in the pointing sequence, fill them with NIL pointings
+//
+void Beam::_resolveGaps()
 {
-	// reset pointing to zenith
-	itsCurrentPointing = Pointing();
+	// Note: it is possible that there are already NIL pointings in the list.
+	//       To simplify the algorithms we first delete all NIL pointings and than add
+	//		 new NIL pointings again.
+	list<Pointing>::iterator	iter = itsPointings.begin();
+	list<Pointing>::iterator	end  = itsPointings.end();
+	while (iter != end) {
+		if (iter->getType() == "NONE") {
+			iter = itsPointings.erase(iter);
+		}
+		else {
+			++iter;
+		}
+	}
+	
+	// Loop over the new list and fill the gaps again.
+	iter = itsPointings.begin();
+	end  = itsPointings.end();
+	Timestamp	endTime = iter->time();
+	while (iter != end) {
+		// is there a gap between the last endtime and the current begintime add a NIL pointing
+		if (iter->time() > endTime) {
+			Pointing	nilPointing(0.0 ,0.0 ,endTime, int(iter->time()-endTime), "NONE");
+			itsPointings.insert(iter, nilPointing);
+		}
+			
+		if (iter->duration() == 0) {		// current pointings lasts forever?, delete rest of pointings.
+			itsPointings.erase(++iter, end);
+			return;
+		}
 
-	// clear the pointing queue
-	while (!itsPointingQ.empty()) {
-		itsPointingQ.pop();
+		endTime = iter->endTime();
+		++iter;
 	}
 
-	// clear allocation
-	itsBeamletAllocation().clear();
+}
+
+//
+// _pointingOverlaps(pointing)
+//
+// Check is the given pointings overlaps with others.
+//
+bool Beam::_pointingOverlaps(const IBS_Protocol::Pointing& pt) const
+{
+	list<Pointing>::const_iterator    iter = itsPointings.begin();
+	list<Pointing>::const_iterator    end  = itsPointings.end();
+	while (iter != end) {
+		if ((iter->getType() != "NONE") && (iter->overlap(pt))) {
+			return (true);
+		}
+		++iter;
+	}       
+
+	return (false);
 }
 
 //
 // addPointing(pointing)
 //
-void Beam::addPointing(const Pointing& pointing)
+bool Beam::addPointing(const Pointing& pointing)
 {
-	if (itsPointingQ.empty()) {	// make sure that currentPointing is always set
-		itsCurrentPointing = pointing;
+	// add pointing, sort the list and fill gaps with 'NONE' pointings
+	if (_pointingOverlaps(pointing)) {
+		LOG_ERROR_STR("Pointing " << pointing << " is NOT added to beam " << itsName << " because it overlaps with existing pointings");
+		return (false);
 	}
-	itsPointingQ.push(pointing);
+
+	// it's ok to add it, clean up the admin afterwards.
+	itsPointings.push_back(pointing);
+	itsPointings.sort();
+	_resolveGaps();
+	return (true);
 }
 
 //
-// currentPointing(pointing)
+// pointingAtTime(pointing)
 //
-Pointing Beam::currentPointing(const Timestamp& time)
+Pointing Beam::pointingAtTime(const Timestamp& time)
 {
-	if (!itsPointingQ.empty() && itsPointingQ.top().time() <= time) {
-		itsCurrentPointing = itsPointingQ.top();
-		itsPointingQ.pop();
-	}
-	itsCurrentPointing.setTime(time);
-	return (itsCurrentPointing);
-}
-
-#if 0
-//
-// setSubarray(array)
-//
-void Beam::setSubarray(const CAL::SubArray& array)
-{
-	itsSubArray = array;
-}
-#endif
-
-//
-// TODO CHANGE THIS TO IRTF
-//
-// calculateHBAdelays(timestamp, amcconverter, tileRelPosArray)
-// result is stored in itsHBAdelays
-//
-void Beam::calculateHBAdelays(RTC::Timestamp				timestamp,
-							  const blitz::Array<double,2>&	tileDeltas,
-							  const blitz::Array<double,1>&	elementDelays)
-{
-	LOG_DEBUG(formatString("current HBApointing=(%f,%f)",
-							currentPointing(timestamp).angle0(),
-							currentPointing(timestamp).angle1()));
-	
-	// calculate the mean of all posible delays to hold signal front in the midle of a tile
-	double meanElementDelay = blitz::mean(elementDelays);
-	LOG_DEBUG_STR("mean ElementDelay = " << meanElementDelay << " Sec"); 
-
-#if DOEN_WE_LATER
-	// Calculate the current values of AzEl.
-	Pointing	curPointing(itsCurrentPointing);
-	curPointing.setTime(timestamp);
-  // Get geographical location of subarray in WGS84 radians/meters
-	blitz::Array<double, 1> loc = itsSubArray.getGeoLoc();
-	Position location((loc(0) * M_PI) / 180.0,
-					  (loc(1) * M_PI) / 180.0,
-					   loc(2), Position::WGS84);
-	// go to lmn coordinates
-//	Pointing lmn	  = curPointing.convert(conv, &location, Pointing::LOFAR_LMN);
-	double itsHBA_L   = lmn.angle0();
-	double itsHBA_M   = lmn.angle1();
-	
-	// maybe not needed, but this code limits the max. posilble delay
-	if ((itsHBA_L*itsHBA_L + itsHBA_M*itsHBA_M) > 1) {
-		double modus = sqrt(itsHBA_L*itsHBA_L + itsHBA_M*itsHBA_M);
-		itsHBA_L = itsHBA_L / modus;
-		itsHBA_M = itsHBA_M / modus;
-	}
-	
-	LOG_INFO_STR("current HBA-pointing lmn=(" << itsHBA_L << "," << itsHBA_M << ") @" << curPointing.time());
-
-	// get position of antennas
-	// note: pos[antennes, polarisations, coordinates]
-	const Array<double,3>& pos  = itsSubArray.getAntennaPos();
-	int nrAntennas = pos.extent(firstDim);
-	int nrPols     = pos.extent(secondDim);
-	LOG_DEBUG_STR("SA.n_ant="<<nrAntennas <<",SA.n_pols="<<nrPols);
-	LOG_DEBUG_STR("antennaPos="<<pos);
-	
-	// get contributing RCUs
-	CAL::SubArray::RCUmask_t		rcuMask(itsSubArray.getRCUMask());
-	LOG_DEBUG_STR("rcumask="<<rcuMask);
-	
-	itsHBAdelays.resize(rcuMask.count(), MEPHeader::N_HBA_DELAYS);
-	itsHBAdelays = 0;	// set all delays to 0
-	
-	int		localrcu  = 0;
-	int		globalrcu = 0;
-	for (globalrcu = 0; globalrcu < MEPHeader::MAX_N_RCUS; globalrcu++) {
-		//LOG_DEBUG_STR("globalrcu=" << globalrcu);
-		if (!rcuMask.test(globalrcu)) {
+	list<Pointing>::const_iterator	iter = itsPointings.begin();
+	list<Pointing>::const_iterator	end  = itsPointings.end();
+	while (iter != end) {
+		if (iter->duration() == 0) {	// forever?
+			break;
+		}
+		if (iter->endTime() < time) {	// already finished? try next
+			++iter;
 			continue;
 		}
-		// RCU is in RCUmask, do the calculations
-		int	antenna(globalrcu/2);
-		int pol	   (globalrcu%2);
-		for (int element = 0; element < MEPHeader::N_HBA_DELAYS; element++) {
-					
-			// calculate tile delay
-			double	delay =
-				( (itsHBA_L * tileDeltas(element,0)) + 
-				  (itsHBA_M * tileDeltas(element,1)) ) / 
-					SPEED_OF_LIGHT_MS;
-			
-			// signal front stays in midle of tile
-			delay += meanElementDelay;
-			
-			LOG_DEBUG_STR("antenna="<<antenna <<", pol="<<pol <<", element="<<element  <<", delay("<<localrcu<<","<<element<<")="<<delay);
-			
-			// calculate approximate DelayStepNr
-			int delayStepNr = static_cast<int>(delay / 0.5E-9);
-			
-			// look for nearest matching delay step in range "delayStepNr - 2 .. delayStepNr + 2"
-			double minDelayDiff = fabs(delay - elementDelays(delayStepNr));
-			double difference;
-			int minStepNr = delayStepNr;
-			for (int i = (delayStepNr - 2); i <= (delayStepNr + 2); i++){
-				if (i == delayStepNr) continue; // skip approximate nr
-				difference = fabs(delay - elementDelays(i));
-				if (difference < minDelayDiff)	{
-					minStepNr = i;
-					minDelayDiff = difference;
-				}
-			}
-			delayStepNr = minStepNr;
-			
-			// range check for delayStepNr, max. 32 steps (0..31) 
-			if (delayStepNr < 0) delayStepNr = 0;
-			if (delayStepNr > 31) delayStepNr = 31;
-				
-			// bit1=0.25nS(not used), bit2=0.5nS, bit3=1nS, bit4=2nS, bit5=4nS, bit6=8nS 	
-			itsHBAdelays(localrcu,element) = (delayStepNr * 4) + (1 << 7); // assign
-		} // elements in tile
-		localrcu++;	 // globalrcu
 	}
-		
-	// temporary array needed to LOG "itsHBAdelays"
-	blitz::Array<int,2>	HBAdelays;
-	HBAdelays.resize(rcuMask.count(), MEPHeader::N_HBA_DELAYS);
-	
-	HBAdelays = itsHBAdelays + 0; // copy to print values (uint8 are handled as chars)
-	LOG_DEBUG_STR("itsHBAdelays Nr = " << HBAdelays);
-#endif
+
+	// if nothing found, return NIL pointing
+	if (iter == end) {			
+		return (Pointing());
+	}
+
+	Pointing 	result(*iter);
+	result.setTime(time);
+	return (result);
+}
+
+// Get all pointings in a vector. They are sorted in time order.
+vector<Pointing> Beam::getAllPointings() const
+{
+	vector<Pointing>	result;
+	list<Pointing>::const_iterator	iter = itsPointings.begin();
+	list<Pointing>::const_iterator	end  = itsPointings.end();
+	while (iter != end) {
+		result.push_back(*iter);
+		++iter;
+	}
+	return (result);
+}
+
+//
+// print function for operator<<
+//
+ostream& Beam::print (ostream& os) const
+{
+	os << "Beam " << itsName << ": curPt=" << itsCurrentPointing << endl;
+	os << "     RCU's= " << itsRCUs << endl;
+	return (os);
+}
+
+
+//
+// send the pointing administration to the logfile at debug level
+//
+void Beam::showPointings () const
+{
+	LOG_DEBUG_STR("Pointings of beam " << itsName);
+	list<Pointing>::const_iterator	iter = itsPointings.begin();
+	list<Pointing>::const_iterator	end  = itsPointings.end();
+	while (iter != end) {
+		LOG_DEBUG_STR(*iter);
+		++iter;
+	}
 }
 
