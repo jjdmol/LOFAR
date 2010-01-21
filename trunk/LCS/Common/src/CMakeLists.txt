@@ -2,6 +2,9 @@
 
 include(LofarPackageVersion)
 
+set_source_files_properties(Package__Version.cc versioncommon.cc
+  PROPERTIES GENERATED ON)
+
 set(common_LIB_SRCS
   Package__Version.cc
   Allocator.cc

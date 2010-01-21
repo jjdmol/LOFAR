@@ -113,6 +113,8 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   # Furthermore:
   # - Set the link dependencies of this executable on other LOFAR libraries
   #   using the information in ${PACKAGE_NAME}_LIBRARIES.
+  # - Add a dependency of the executable on the PackageVersion target of the
+  #   current package; it has no effect if LofarPackageVersion is not included.
   # - Add a dependency of the current package on this executable.
   #
   # Note: since the libraries of the current package already have all their
@@ -123,6 +125,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     add_executable(${_name} ${ARGN})
     get_property(_libs GLOBAL PROPERTY ${PACKAGE_NAME}_LIBRARIES)
     target_link_libraries(${_name} ${_libs})
+    add_dependencies(${_name} ${PACKAGE_NAME}_PackageVersion)
     add_dependencies(${PACKAGE_NAME} ${_name})
   endmacro(lofar_add_executable _name)
 
@@ -132,12 +135,14 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   #
   # Add a library like add_library() does. 
   # Furthermore:
-  # - add the library to the list of libraries for the current package
+  # - Add the library to the list of libraries for the current package
   #   (global property ${PACKAGE_NAME}_LIBRARIES). 
-  # - set the link dependencies of this library on other LOFAR libraries 
+  # - Set the link dependencies of this library on other LOFAR libraries 
   #   using the information in ${PACKAGE_NAME}_DEPENDENCIES.
-  # - mark the library for install into LOFAR_LIBDIR.
-  # - add a dependency of the current package on the library.
+  # - Mark the library for install into LOFAR_LIBDIR.
+  # - Add a dependency of the library on the PackageVersion target of the
+  #   current package; it has no effect if LofarPackageVersion is not included.
+  # - Add a dependency of the current package on the library.
   #
   # Note: link dependencies are determined by examining the link dependencies
   # of the libraries in the LOFAR packages that the current package depends
@@ -159,6 +164,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
 #      VERSION ${${PACKAGE_NAME}_VERSION}
 #      OUTPUT_NAME lofar_${_name})
     install(TARGETS ${_name} DESTINATION ${LOFAR_LIBDIR})
+    add_dependencies(${_name} ${PACKAGE_NAME}_PackageVersion)
     add_dependencies(${PACKAGE_NAME} ${_name})
   endmacro(lofar_add_library _name)
 

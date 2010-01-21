@@ -66,4 +66,8 @@ macro(mac_add_protocol _protocol _templ_dir)
     ARGS -E copy "${_cxx_hdr}" "${_dest_dir}/${_cxx_hdr}"
     DEPENDS "${_proto_file}")
 
+  # Due to inconsistent use of include path prefixes in #include's, we must
+  # also add the current build directory to the -I path.
+  include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 endmacro(mac_add_protocol _protocol _templ_dir)

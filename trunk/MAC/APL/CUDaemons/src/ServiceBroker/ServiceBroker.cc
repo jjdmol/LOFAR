@@ -32,7 +32,7 @@
 #include <MACIO/GCF_Event.h>
 //#include <GCF/TM/GCF_Protocols.h>
 #include "ServiceBroker.h"
-#include "../Package__Version.h"
+#include <CUDaemons/Package__Version.h>
 
 namespace LOFAR {
     using namespace MACIO;

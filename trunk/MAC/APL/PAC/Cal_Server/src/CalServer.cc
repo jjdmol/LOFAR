@@ -41,7 +41,7 @@
 #include "SubArraySubscription.h"
 #include "RemoteStationCalibration.h"
 #include "CalibrationAlgorithm.h"
-#include "Package__Version.h"
+#include <Cal_Server/Package__Version.h>
 
 #ifdef USE_CAL_THREAD
 #include "CalibrationThread.h"
