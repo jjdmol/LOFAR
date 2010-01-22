@@ -43,7 +43,7 @@ if len(sys.argv) == 1:
     print 'Error: no arguments found'
     print '--------------------------------------------'
     print ''
-    print 'usage power.py host'
+    print 'usage ec_ctrl.py host'
     print '    host = this (get IP based on LCU)'
     print '    host = ip (set ip manualy)'
     print ''
@@ -375,6 +375,7 @@ def getStatus():
         lines.append('heater      |')
 
         for cab in cabs:
+
             lines[0] += '  cabinet %1d |' %(cab)
             lines[1] += '%11s |' %(ec_mode[PL2[(cab*7)]])
             lines[2] += '%11X |' %(PL2[(cab*7)+1])
