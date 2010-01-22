@@ -33,8 +33,14 @@ namespace LOFAR
 
   bool Numeric::isFinite(float f)
   {
-    floatMask_t exponent = *(floatMask_t*)&f & floatExponentMask;
-    return exponent != floatExponentMask;
+    union {
+      floatMask_t mask;
+      float       f;
+    } exponent;
+
+    exponent.f = f;
+    //floatMask_t exponent = *reinterpret_cast<floatMask_t*>(&f) & floatExponentMask;
+    return exponent.mask & floatExponentMask != floatExponentMask;
   }
 
   bool Numeric::isFinite(double d)
