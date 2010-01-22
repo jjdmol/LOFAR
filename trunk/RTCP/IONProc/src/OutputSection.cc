@@ -58,11 +58,11 @@ OutputSection::OutputSection(const Parset *ps, std::vector<unsigned> &itemList, 
   itsItemList(itemList),
   itsOutputType(outputType),
   itsNrComputeCores(ps->nrCoresPerPset()),
-  itsNrUsedCores(nrUsedCores),
   itsCurrentComputeCore(0),
+  itsNrUsedCores(nrUsedCores),
   itsRealTime(ps->realTime()),
   itsPlan(0),
-  itsStreamsFromCNs(ps->nrCoresPerPset(),0),
+  itsStreamsFromCNs(itsNrComputeCores,0),
   thread(0)
 {
   itsDroppedCount.resize(itsItemList.size());
@@ -97,8 +97,10 @@ OutputSection::OutputSection(const Parset *ps, std::vector<unsigned> &itemList, 
   }
 
   // create the streams to the compute cores
-  for (unsigned core = 0; core < itsNrComputeCores; core++) {
-    itsStreamsFromCNs[core] = createStream(core, outputType + 1);
+  for (unsigned i = 0; i < itsNrComputeCores; i++) {
+    unsigned core = itsParset->usedCoresInPset()[i];
+
+    itsStreamsFromCNs[i] = createStream(core, outputType + 1);
   }
 
   itsCurrentIntegrationStep = 0;
@@ -178,7 +180,7 @@ void OutputSection::mainLoop()
         
         bool firstTime = itsCurrentIntegrationStep == 0;
         bool lastTime  = itsCurrentIntegrationStep == itsNrIntegrationSteps - 1;
-        
+
         if (lastTime) {
           if (itsRealTime && outputThread->itsFreeQueue.empty()) {
             droppingData(i);
