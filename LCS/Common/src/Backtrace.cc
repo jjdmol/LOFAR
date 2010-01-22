@@ -42,7 +42,10 @@ namespace LOFAR
     itsNrAddr(0)
   {
     memset(itsAddr, 0, maxNrAddr*sizeof(void*));
-    itsNrAddr = backtrace(itsAddr, maxNrAddr);
+
+    int nraddrs = backtrace(itsAddr, maxNrAddr);
+
+    itsNrAddr = nraddrs >= 0 ? nraddrs : 0;
   }
 
   void Backtrace::print(ostream& os) const
@@ -57,7 +60,7 @@ namespace LOFAR
     ios::fmtflags flags(os.flags());
 
     os.setf(ios::left);
-    for(int i = 1; i < itsNrAddr; ++i) {
+    for(unsigned i = 1; i < itsNrAddr; ++i) {
       if (i > 1) os << endl;
       os << "#" << setw(2) << i-1
          << " " << itsAddr[i];

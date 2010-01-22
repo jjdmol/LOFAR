@@ -180,6 +180,9 @@ Socket::~Socket()
 
 	if (itsIsServer && (itsType == Socket::UNIX) && itsUnixAddr.sun_path[0]) {
 		int32 result = unlink(itsUnixAddr.sun_path);
+
+                (void)result;
+
 		LOG_TRACE_FLOW(formatString("unlink(%s) = %d (%s)", itsUnixAddr.sun_path,
 						(result < 0) ? errno : result, 
 						(result < 0) ? strerror(errno) :" OK"));
@@ -311,6 +314,8 @@ int32 Socket::initUnixSocket(bool		asServer)
 {
 	LOG_TRACE_CALC(formatString("Socket::initUnixSocket(%s,%d)",
 		itsSocketname.c_str(), asServer));
+
+        (void)asServer;        
 
 	// setup socket address
 	string path = itsPort;
