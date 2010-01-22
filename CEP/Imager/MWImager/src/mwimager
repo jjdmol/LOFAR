@@ -114,7 +114,7 @@ if test "$casaopt" = "none"; then
   tmpopt=`getparsetvalue -d cimager $psn imager`
   if test "$tmpopt" = "casa"  -o  "$tmpopt" = "lwimager"; then
     casaopt="-casa"
-    imager ="casa"
+    imager="casa"
   fi
 fi
 
