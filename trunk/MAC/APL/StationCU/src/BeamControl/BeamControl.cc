@@ -39,7 +39,7 @@
 
 #include "BeamControl.h"
 #include "PVSSDatapointDefs.h"
-#include <APL/ClockProtocol/Package__Version.h>
+#include <StationCU/Package__Version.h>
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;

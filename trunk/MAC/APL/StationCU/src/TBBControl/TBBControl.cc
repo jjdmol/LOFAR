@@ -38,7 +38,7 @@
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
 #include <APL/RTCCommon/Timestamp.h>
-#include <APL/ClockProtocol/Package__Version.h>
+#include <StationCU/Package__Version.h>
 
 //# local includes
 #include <VHECR/TBBTrigger.h>

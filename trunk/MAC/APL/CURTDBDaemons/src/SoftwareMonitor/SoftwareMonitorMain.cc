@@ -27,7 +27,7 @@
 
 #include <GCF/RTDB/DP_Protocol.ph>
 #include "SoftwareMonitor.h"
-#include "../Package__Version.h"
+#include <CURTDBDaemons/Package__Version.h>
 
 using namespace LOFAR;
 using namespace LOFAR::GCF;

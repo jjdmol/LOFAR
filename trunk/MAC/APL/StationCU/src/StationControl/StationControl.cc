@@ -49,7 +49,7 @@
 #include "StationControl.h"
 #include "PVSSDatapointDefs.h"
 #include "Clock_Protocol.ph"
-#include <APL/ClockProtocol/Package__Version.h>
+#include <StationCU/Package__Version.h>
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;

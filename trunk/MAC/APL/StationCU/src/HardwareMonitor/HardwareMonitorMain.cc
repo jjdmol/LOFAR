@@ -30,7 +30,7 @@
 #include "RSPMonitor.h"
 #include "TBBMonitor.h"
 #include "ECMonitor.h"
-#include <APL/ClockProtocol/Package__Version.h>
+#include <StationCU/Package__Version.h>
 
 using namespace LOFAR;
 using namespace LOFAR::GCF;
