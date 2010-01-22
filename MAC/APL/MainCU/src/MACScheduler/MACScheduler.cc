@@ -39,7 +39,7 @@
 
 #include "MACScheduler.h"
 #include "PVSSDatapointDefs.h"
-#include "../Package__Version.h"
+#include <MainCU/Package__Version.h>
 
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::TM;

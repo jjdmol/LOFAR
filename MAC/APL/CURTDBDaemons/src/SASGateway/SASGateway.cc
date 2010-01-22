@@ -35,7 +35,7 @@
 #include <OTDB/TreeTypeConv.h>
 #include <OTDB/TreeValue.h>
 #include "SASGateway.h"
-#include "../Package__Version.h"
+#include <CURTDBDaemons/Package__Version.h>
 
 namespace LOFAR {
   using namespace MACIO;

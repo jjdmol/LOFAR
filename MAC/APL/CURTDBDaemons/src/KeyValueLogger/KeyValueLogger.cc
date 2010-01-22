@@ -31,7 +31,7 @@
 #include <GCF/PVSS/PVSSresult.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include "KeyValueLogger.h"
-#include "../Package__Version.h"
+#include <CURTDBDaemons/Package__Version.h>
 
 namespace LOFAR {
   using namespace MACIO;

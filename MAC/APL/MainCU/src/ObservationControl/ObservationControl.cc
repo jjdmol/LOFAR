@@ -39,7 +39,7 @@
 
 #include "ObservationControl.h"
 #include "PVSSDatapointDefs.h"
-#include "../Package__Version.h"
+#include <MainCU/Package__Version.h>
 
 
 namespace LOFAR {
