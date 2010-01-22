@@ -247,6 +247,15 @@ elif [ $hassvn = 0 ]; then
     cp version.h.tmp $incdir/Package__Version.h
   fi
 fi
+# Create a symlink to Package__Version.h in the source directory,
+# if Package__Version.h was created in the include directory. 
+# This dirty hack is needed, since CMake changed the way that
+# Package__Version.h is being generated (see bug #1448) 
+if [ "$incdir" != "src" ]; then 
+  if [ ! -L src/Package__Version.h ]; then
+    ln -s ../$incdir/Package__Version.h src
+  fi
+fi
 
 if [ ! -e src/Package__Version.cc ]; then
   echo "makeversion created src/Package__Version.cc"

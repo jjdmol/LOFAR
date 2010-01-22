@@ -20,5 +20,6 @@ AC_OUTPUT(
 	test/timing/Makefile
 	test/xcstatistics/Makefile
 	test/envcontroltest/Makefile
+	test/subracktest/Makefile
 )
 
