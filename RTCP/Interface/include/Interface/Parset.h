@@ -126,6 +126,9 @@ public:
 	bool           stokesIntegrateChannels() const;
         unsigned       nrStokes() const;
         bool           flysEye() const;
+  string     bandFilter() const;
+  string     antennaSet() const;
+
 
 
 	uint32	       nrPencilBeams() const;
@@ -161,6 +164,7 @@ public:
 
 	string         observerName() const;
 	string         projectName() const;
+  string         contactName() const;
 
 	vector<double> itsStPositions;
 	
@@ -548,14 +552,31 @@ inline bool Parset::flysEye() const
 inline string Parset::observerName() const
 {
   // TODO - this should be included in the Parset from SAS
-  return "LOFAR";
+  return getString("Observation.ObserverName");
 }
 
 inline string Parset::projectName() const
 {
   // TODO - this should be included in the Parset from SAS
-  return "LOFAR";
+  return getString("Observation.ProjectName");
 }
+
+inline string Parset::contactName() const
+{
+  // TODO - this should be included in the Parset from SAS
+  return getString("Observation.ContactName");
+}
+
+inline string Parset::bandFilter() const
+{
+  return getString("Observation.bandFilter");
+}
+
+inline string Parset::antennaSet() const
+{
+  return getString("Observation.antennaSet");
+}
+
 
 } // namespace RTCP
 } // namespace LOFAR
