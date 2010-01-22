@@ -2,7 +2,6 @@
 
 # List of header files that will be installed.
 set(inst_HEADERS
-  Package__Version.h
   AntennaArray.h
   AntennaArrayData.h
   AntennaGains.h
