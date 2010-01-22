@@ -65,20 +65,27 @@ def main(argv=None):
     stokes = ps.getStringVector ('Images.stokes', 'I')
     nfacets = ps.getInt ('Images.nfacets', 1)
     padding = ps.getString ('Gridder.padding', '1')
-    minuv = ps.getDouble ('Images.minuv', 0)
-    algo = ps.getString ('Solver.algorithm', '')
+    minuv = ps.getDouble ('Images.minUV', 0)
+    maxuv = ps.getDouble ('Images.maxUV', 0)
+    solvetype = ps.getString ('Solver.type', 'Dirty').lower()
+    algo = ps.getString ('Solver.algorithm', '').lower()
     fixed = ps.getString ('Solver.fixed', 'False')
     niter = ps.getInt ('Solver.niter', 1000)
     gain = ps.getString ('Solver.gain', '0.7')
     threshold = ps.getString ('Solver.threshold', '0Jy')
     nscales = ps.getInt ('Solver.nscales', 5)
-    scalevalues = ps.getString('Solver.scalevalues', '0')
-    ncycles = ps.getInt ('ncycles', 5)
-    if ncycles == 0:
+    scalevalues = ps.getString('Solver.scales', '0')
+    ncycles = ps.getInt ('ncycles', 1)
+    if ncycles == 0  or  solvetype == 'dirty':
         algo = ''           # no cleaning if 0 cycles (like cimager)
     selectstr = ''
     if minuv > 0:
-        selectstr = 'SUMSQR(UVW[1:2] >= %.3f' % minuv*minuv
+        if maxuv > minuv:
+            selectstr = 'SUMSQR(UVW[1:2] BETWEEN %.5f AND %.5f' % (minuv*minuv, maxuv*maxuv)
+        else:
+            selectstr = 'SUMSQR(UVW[1:2] >= %.5f' % minuv*minuv
+    elif maxuv > 0:
+        selectstr = 'SUMSQR(UVW[1:2] <= %.5f' % (maxuv*maxuv)
     cachesize = ps.getString ('cachesize', '50000000')
     taper = ps.getStringVector ('Filter', '')
     phasecenter = ''
@@ -144,12 +151,18 @@ def main(argv=None):
         command += phasecenter
     if len(filter) > 0:
         command += filter
-    if len(algo) > 0:
-        cleancmd = ' "operation=%s" "niter=%d" "gain=%s" "threshold=%s" "fixed=%s" "nscales=%d" "scalevalues=%s" "modelname=%s-model" "restoredname="%s-restored" "residualname=%s-residual"' % (algo, niter, gain, threshold, fixed, nscales, scalevalues, imgname, imgname, imgname)
-        command += cleancmd
+    # First make the image.
     print command
     if dry != 'dry':
         os.system (command)
+
+    # Do cleaning if needed.
+    if len(algo) > 0:
+        cleancmd = ' "operation=%s" "niter=%d" "gain=%s" "threshold=%s" "fixed=%s" "nscales=%d" "uservector=%s" "model=%s-model" "restored=%s-restored" "residual=%s-residual"' % (algo, niter, gain, threshold, fixed, nscales, scalevalues, imgname, imgname, imgname)
+        command += cleancmd
+        print command
+        if dry != 'dry':
+            os.system (command)
 
 if __name__ == "__main__":
     sys.exit(main())

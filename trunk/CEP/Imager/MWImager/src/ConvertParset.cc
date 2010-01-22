@@ -112,6 +112,13 @@ namespace LOFAR {
       out.add ("Cimager.gridder", type);
       grin.remove ("type");
       grin.remove ("padding");
+      // Make nwplanes odd if needed.
+      if (grin.isDefined("nwplanes")) {
+        int nwplanes = grin.getInt ("nwplanes");
+        if (nwplanes%2 != 1) {
+          grin.replace ("nwplanes", toString(nwplanes+1));
+        }
+      }
       convert (out, grin, emptyMap, emptyMap, "Cimager.gridder."+type+'.');
       if (! padding.empty()) {
         out.add ("Cimager.gridder.padding", padding);

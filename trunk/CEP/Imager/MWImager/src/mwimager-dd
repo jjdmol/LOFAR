@@ -285,7 +285,7 @@ def main(argv=None):
     gdsname = os.path.abspath (ps.getString('dataset'))
     incol = ps.getString('datacolumn')
     outcol = incol
-    correct = ps.getBool ('correct', False)
+    correct = ps.getBool ('correct', True)
     if correct:
         outcol = ps.getString('Correct.column')
         if incol == outcol:
@@ -295,7 +295,7 @@ def main(argv=None):
 
     # Get info from the parset file and GDS file.
     nfacet  = ps.getInt('Images.nfacets')
-    padding = ps.getDouble ('Images.padding', 2)
+    padding = ps.getDouble ('Gridder.padding', 2)
     average = ps.getBool ('average', False)
     freqavg = ps.getInt ('Average.nfreq', 1)
     timeavg = ps.getInt ('Average.ntime', 1)
