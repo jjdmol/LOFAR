@@ -145,6 +145,9 @@ static bool	   fcnp_inited;
 
 static Stream *createCNstream(unsigned core, unsigned channel)
 {
+  // translate logical to physical core number
+  core = CN_Mapping::mapCoreOnPset(core, myPsetNumber);
+
 #if defined HAVE_FCNP && defined __PPC__
   if (streamType == "FCNP")
     return new FCNP_ServerStream(core, channel);
@@ -427,7 +430,7 @@ void Job::createCNstreams()
   itsCNstreams.resize(usedCoresInPset.size());
 
   for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
-    itsCNstreams[core] = allCNstreams[CN_Mapping::mapCoreOnPset(usedCoresInPset[core], myPsetNumber)];
+    itsCNstreams[core] = allCNstreams[usedCoresInPset[core]];
 }
 
 
