@@ -27,6 +27,7 @@
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include "J2000Converter.h"
 #include "DigitalBeam.h"
+#include "AnaBeamMgr.h"
 
 #include <GCF/TM/GCF_Control.h>
 //#include <GCF/TM/GCF_TimerPort.h>
@@ -142,7 +143,7 @@ public:
 	bool beamfree_start(IBSBeamfreeEvent& bf, GCFPortInterface& port);
 
 	// Change the direction of a beam.
-	bool beampointto_action(IBSBeampointtoEvent& pt, GCFPortInterface& port);
+	int beampointto_action(IBSPointtoEvent& pt, GCFPortInterface& port);
 
 	// Time to compute some more weights.
 	// @param current_seconds Time in seconds since 1 Jan 1970
@@ -234,6 +235,7 @@ private:
 	bool     					itsBeamsModified;		//
 	bool						itsSplitterOn;			// state of the ringsplitter
 	map<string, DigitalBeam*> 	itsBeamPool;			//
+	AnaBeamMgr*					itsAnaBeamMgr;			// for managing the analogue beams
 	
 	// constants
 	int    	itsMaxRCUs;				//

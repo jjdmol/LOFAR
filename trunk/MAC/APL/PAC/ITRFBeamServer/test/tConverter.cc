@@ -90,7 +90,6 @@ int main(int	argc, char*	argv[])
 
 		Int	nAll, nExtra;
 		const uInt* typ;
-//		const casa::String*	theTypes = J2000Dir.allTypes(nAll, nExtra, typ);
 		const casa::String*	theTypes = MDirection::allMyTypes(nAll, nExtra, typ);
 		cout << "nAll=" << nAll << ", nExtra=" << nExtra << ", typ=" << typ << endl;
 		for (int i=0; i < nAll; i++) {

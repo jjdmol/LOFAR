@@ -58,6 +58,12 @@ AnaBeamMgr::AnaBeamMgr(uint		nrRCUsPerRing,
 //
 AnaBeamMgr::~AnaBeamMgr()
 {
+	map<string, AnalogueBeam>::const_iterator	bIter = itsBeams.begin();
+	map<string, AnalogueBeam>::const_iterator	bEnd  = itsBeams.end();
+	while (bIter != bEnd) {
+		deleteBeam(bIter->second);
+		++bIter;
+	}
 }
 
 //
@@ -79,7 +85,7 @@ bool AnaBeamMgr::addBeam(const AnalogueBeam& beam)
 	// add the pointing of this beam
 	vector<Pointing>	pointings = beam.getAllPointings();
 	size_t		nrPointings = pointings.size();
-	LOG_INFO_STR("Beam "  << beamName << " has " << nrPointings << " pointings");
+	LOG_DEBUG_STR("Beam "  << beamName << " has " << nrPointings << " analogue pointings");
 	for (size_t p = 0; p < nrPointings; ++p) {
 		PointingInfo	PI;
 		PI.beam		= beam;
@@ -117,6 +123,31 @@ void AnaBeamMgr::deleteBeam(const AnalogueBeam& beam)
 		}
 	}
 	LOG_INFO_STR("Beam " << beamName << " removed from administration");
+}
+
+//
+// addPointing(beamname, pointing)
+//
+bool AnaBeamMgr::addPointing(const string&	beamName, const Pointing&	newPt)
+{
+	// should be a known beam
+	map<string, AnalogueBeam>::const_iterator	iter = itsBeams.find(beamName);
+	if (iter == itsBeams.end()) {
+		LOG_ERROR_STR("Beam " << beamName << " is not in my administration, pointing rejected");
+		return (false);
+	}	
+
+	// add the pointing of this beam
+	PointingInfo	PI;
+	PI.beam		= iter->second;;
+	PI.active	= false;
+	PI.pointing = newPt;
+
+	itsPointings.push_back(PI);
+	itsPointings.sort();
+	LOG_DEBUG_STR("Added analogue pointing for beam " << beamName  << ":" << newPt);
+
+	return (true);
 }
 
 

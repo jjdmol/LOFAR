@@ -38,14 +38,14 @@ prelude = << PRELUDE_END
 // BEAMMODIFYACK 		(beamName, status);
 // BEAMFREE      		(beamName);
 // BEAMFREEACK   		(beamName, status);
-// BEAMPOINTTO   		(beamName, pointing, analogue);
+// BEAMPOINTTO   		(beamName, pointing, analogue, rank);
 //
 // TYPEVALID			(typename);
 // TYPEVALIDACK			(typename, bool);
 // GETTYPES				();
 // GETTYPESACK			(vector<string>);
 //
-// pointing            : angle1, angle2, timestamp, coord.type
+// pointing            : angle1, angle2, coord.type, timestamp, duration
 // beamletAllocationMap: map<beamletnr, subbandnr>
 //
 
@@ -60,12 +60,24 @@ error = {
 	msg = "Range error in message parameters";
 };
 error = {
+	id = NO_NAME;
+	msg = "Beam has no name";
+};
+error = {
+	id = NO_ANTENNASET;
+	msg = "AntennaSet name not specified";
+};
+error = {
 	id = WRONG_RING;
 	msg = "Rcu's specified in the wrong ring";
 };
 error = {
 	id = SPLITTER_OFF;
 	msg = "Splitter is off, ring-segment 1 does not exist";
+};
+error = {
+	id = UNKNOWN_BEAM;
+	msg = "Beam is not in my administration";
 };
 error = {
 	id = BEAMALLOC;
@@ -78,6 +90,22 @@ error = {
 error = {
 	id = BEAMNOTHBA;
 	msg = "Analogue beam is only available for HBA antennas";
+};
+error = {
+	id = PT_OVERLAPS;
+	msg = "Pointing overlaps with other pointings";
+};
+error = {
+	id = INVALID_TYPE;
+	msg = "Invalid coordinatesystem specified";
+};
+error = {
+	id = INVALID_RANK;
+	msg = "Invalid rank specified, 1..5 allowed, 1=high prio, 5=low prio";
+};
+error = {
+	id = NO_MAPPING;
+	msg = "Subband to beamlet mapping is missing";
 };
 
 
@@ -110,7 +138,7 @@ event = {
 	param = {
 		name = "allocation";
 		type = "Beamlet2SubbandMap";
-	userdefined;
+		userdefined;
 	};
 
 	// NEW: so that BeamServer can check for ring inconsistancies.
@@ -202,7 +230,7 @@ event = {
 };
 
 event = {
-	signal = BEAMPOINTTO;
+	signal = POINTTO;
 	dir = IN;
 	param = {
 		name = "beamName";
@@ -212,10 +240,38 @@ event = {
 		name = "pointing";
 		type = "Pointing";
 		userdefined;
+		printable;
 	};
 	param = {
 		name = "analogue";
 		type = "bool";
+	};
+	param = {
+		name = "rank";
+		type = "int";
+	};
+};
+
+event = {
+	signal = POINTTOACK;
+	dir = IN;
+	param = {
+		name = "beamName";
+		type = "string";
+	};
+	param = {
+		name = "pointing";
+		type = "Pointing";
+		userdefined;
+		printable;
+	};
+	param = {
+		name = "analogue";
+		type = "bool";
+	};
+	param = {
+		name = "status";
+		type = "int";
 	};
 };
 

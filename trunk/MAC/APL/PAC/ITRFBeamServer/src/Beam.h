@@ -51,7 +51,7 @@ public:
 	virtual ~Beam();
 
 	// Add a pointing to a beam if it not overlaps with other pointings
-	bool addPointing(const IBS_Protocol::Pointing& pointing);
+	int addPointing(const IBS_Protocol::Pointing& pointing);
 
 	// @return Current pointing.
 	IBS_Protocol::Pointing currentPointing() const { return (itsCurrentPointing); } 

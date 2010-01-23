@@ -54,32 +54,32 @@ int main(int	argc, char*	argv[])
 	// In these first tests we test the addPointing mechanism of the Beam class.
 	AnalogueBeam	beam1("beam1", rcuMask1, 1);
 	LOG_DEBUG("--- POINTING TEST 1: are contiguous pointings added in the right order");
-	beam1.addPointing(Pointing(0.1, 0.1,  Timestamp(1262700000,0), 1000, "J2000"));
-	beam1.addPointing(Pointing(0.1, 0.11, Timestamp(1262700000+1000,0), 1100, "J2000"));
+	beam1.addPointing(Pointing(0.1, 0.1,  "J2000", Timestamp(1262700000,0), 1000));
+	beam1.addPointing(Pointing(0.1, 0.11, "J2000", Timestamp(1262700000+1000,0), 1100));
 	beam1.showPointings();
 
 	LOG_DEBUG("--- POINTING TEST 2: are gaps recognized and filled with NONE pointings");
-	beam1.addPointing(Pointing(0.1, 0.2, Timestamp(1262700000+5000,0), 2200, "J2000"));
+	beam1.addPointing(Pointing(0.1, 0.2, "J2000", Timestamp(1262700000+5000,0), 2200));
 	beam1.showPointings();
 
 	LOG_DEBUG("--- POINTING TEST 3: are overlapping pointings rejected");
-	beam1.addPointing(Pointing(0.1, 0.3, Timestamp(1262700000+1200,0), 200, "J2000"));
+	beam1.addPointing(Pointing(0.1, 0.3, "J2000", Timestamp(1262700000+1200,0), 200));
 	beam1.showPointings();
 	
 	LOG_DEBUG("--- POINTING TEST 4: are gaps splitted when a new pointing is inserted in the gap");
-	beam1.addPointing(Pointing(0.1, 0.4, Timestamp(1262700000+3000,0), 500, "J2000"));
+	beam1.addPointing(Pointing(0.1, 0.4, "J2000", Timestamp(1262700000+3000,0), 500));
 	beam1.showPointings();
 	
 	LOG_DEBUG("--- POINTING TEST 5: can we insert a pointing in 'reverse' order'");
-	beam1.addPointing(Pointing(0.1, 0.5, Timestamp(1262700000-600,0), 600, "J2000"));
+	beam1.addPointing(Pointing(0.1, 0.5, "J2000", Timestamp(1262700000-600,0), 600));
 	beam1.showPointings();
 	
 	LOG_DEBUG("--- POINTING TEST 6: can we insert an everlasting pointing in the middle");
-	beam1.addPointing(Pointing(0.1, 0.6, Timestamp(1262700000+4000,0), 0, "J2000"));
+	beam1.addPointing(Pointing(0.1, 0.6, "J2000", Timestamp(1262700000+4000,0), 0));
 	beam1.showPointings();
 	
 	LOG_DEBUG("--- POINTING TEST 7: can we add an everlasting pointing at the end");
-	beam1.addPointing(Pointing(0.1, 0.7, Timestamp(1262700000+9000,0), 0, "J2000"));
+	beam1.addPointing(Pointing(0.1, 0.7, "J2000", Timestamp(1262700000+9000,0), 0));
 	beam1.showPointings();
 	
 	// In the second set of tests we test the mechanism of activating the right analogueBeams.
@@ -102,7 +102,7 @@ int main(int	argc, char*	argv[])
 
 	LOG_DEBUG("--- SCHEDULE TEST 4: can we add an overlapping beam with the another rank");
 	AnalogueBeam	beam2("beam2", rcuMask2, 3);
-	beam2.addPointing(Pointing(0.2, 0.6, Timestamp(1262700000+2200,0), 400, "AZEL"));
+	beam2.addPointing(Pointing(0.2, 0.6, "AZEL", Timestamp(1262700000+2200,0), 400));
 	beamMgr1.addBeam(beam2);
 	beamMgr1.showAdmin();
 
@@ -112,7 +112,7 @@ int main(int	argc, char*	argv[])
 
 	LOG_DEBUG("--- SCHEDULE TEST 6: can we add an overlapping beam with a higher rank as the previous beam");
 	AnalogueBeam	beam3("beam3", rcuMask3, 2);
-	beam3.addPointing(Pointing(0.3, 0.6, Timestamp(1262700000+2000,0), 1400, "ITRF"));
+	beam3.addPointing(Pointing(0.3, 0.6, "ITRF", Timestamp(1262700000+2000,0), 1400));
 	beamMgr1.addBeam(beam3);
 	beamMgr1.showAdmin();
 
@@ -122,7 +122,7 @@ int main(int	argc, char*	argv[])
 
 	LOG_DEBUG("--- SCHEDULE TEST 8: add an NON overlapping beam with an equal rank as the first beam which starts earlier");
 	AnalogueBeam	beam4("beam4", rcuMask4, 1);
-	beam4.addPointing(Pointing(0.4, 0.6, Timestamp(1262700000+2000,0), 1400, "MOON"));
+	beam4.addPointing(Pointing(0.4, 0.6, "MOON", Timestamp(1262700000+2000,0), 1400));
 	beamMgr1.addBeam(beam4);
 	beamMgr1.showAdmin();
 

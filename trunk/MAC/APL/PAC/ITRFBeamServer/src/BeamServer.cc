@@ -71,6 +71,7 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsRSPDriver			(0),
 	itsCalServer			(0),
 	itsBeamsModified		(false),
+	itsAnaBeamMgr			(0),
 	itsUpdateInterval		(UPDATE_INTERVAL),
 	itsComputeInterval		(COMPUTE_INTERVAL),
 	itsTestSingleShotTimestamp(timestamp)
@@ -467,9 +468,14 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 	}
 	break;
 
-	case IBS_BEAMPOINTTO: {
-		IBSBeampointtoEvent 	pointingEvent(event);
-		beampointto_action (pointingEvent, port);
+	case IBS_POINTTO: {
+		IBSPointtoEvent 	pointingEvent(event);
+		IBSPointtoackEvent	ack;
+		ack.beamName = pointingEvent.beamName;
+		ack.pointing = pointingEvent.pointing;
+		ack.analogue = pointingEvent.analogue;
+		ack.status = beampointto_action (pointingEvent, port);
+		port.send(ack);
 	}
 	break;
 
@@ -844,18 +850,22 @@ bool BeamServer::beamfree_start(IBSBeamfreeEvent&  bf,
 //
 // beampointto_action(pointEvent, port)
 //
-bool BeamServer::beampointto_action(IBSBeampointtoEvent& pt,
+int BeamServer::beampointto_action(IBSPointtoEvent& ptEvent,
 									GCFPortInterface& /*port*/)
 {
-	map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.find(pt.beamName);
+	map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.find(ptEvent.beamName);
 	if (beamIter == itsBeamPool.end()) {
-		LOG_ERROR(formatString("BEAMPOINTTO: invalid beam '%s'", pt.beamName.c_str()));
-		return (false);
+		LOG_ERROR(formatString("BEAMPOINTTO: invalid beam '%s'", ptEvent.beamName.c_str()));
+		return (IBS_UNKNOWN_BEAM_ERR);
 	}
 
-	LOG_INFO_STR("new coordinates for " << beamIter->second->name()
-				 << ": " << pt.pointing.angle0() << ", "
-				 << pt.pointing.angle1() << ", time=" << pt.pointing.time());
+	// sanity check for reference system
+	if (!itsJ2000Converter.isValidType(ptEvent.pointing.getType())) {
+		LOG_ERROR_STR(ptEvent.pointing.getType() << " is not a valid reference system, pointing rejected");
+		return (IBS_INVALID_TYPE_ERR);
+	}
+
+	LOG_INFO_STR("new pointing for " << beamIter->second->name() << ": " << ptEvent.pointing);
 
 	//
 	// If the time is not set, then activate the command
@@ -864,12 +874,18 @@ bool BeamServer::beampointto_action(IBSBeampointtoEvent& pt,
 	//
 	Timestamp actualtime;
 	actualtime.setNow(2 * COMPUTE_INTERVAL);
-	if (pt.pointing.time() == Timestamp(0,0)) {
-		pt.pointing.setTime(actualtime);
+	if (ptEvent.pointing.time() == Timestamp(0,0)) {
+		ptEvent.pointing.setTime(actualtime);
 	}
-	beamIter->second->addPointing(pt.pointing);
-
-	return (true);
+	if (ptEvent.analogue) {
+		// note we don't know if we added the beam before, just do it again and ignore returnvalue.
+		itsAnaBeamMgr->addBeam(AnalogueBeam(ptEvent.beamName, beamIter->second->rcuMask(), ptEvent.rank));
+		return (itsAnaBeamMgr->addPointing(ptEvent.beamName, ptEvent.pointing) ? 
+					IBS_NO_ERR : IBS_UNKNOWN_BEAM_ERR);
+	}
+	else {
+		return (beamIter->second->addPointing(ptEvent.pointing));
+	}
 }
 
 //
@@ -912,6 +928,10 @@ void BeamServer::_createBeamPool()
 	LOG_INFO_STR("Initializing space for " << nrBeamlets << " beamlets");
 	itsBeamletAllocation.clear();
 	itsBeamletAllocation.resize(nrBeamlets, BeamletAlloc_t(0,0.0));
+
+	delete itsAnaBeamMgr;
+	itsAnaBeamMgr = new AnaBeamMgr(itsMaxRCUs, (itsSplitterOn ? 2 : 1 ));
+	ASSERTSTR(itsAnaBeamMgr, "Failed to create an Manager for the analogue beams.");
 }
 
 //
@@ -960,12 +980,12 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 	}
 	if (name.length() == 0) {
 		LOG_ERROR("Name of beam not set, cannot alloc new beam");
-		*beamError = IBS_RANGE_ERR;
+		*beamError = IBS_NO_NAME_ERR;
 		return (0);
 	}
 	if (antennaSetName.length() == 0)  {
 		LOG_ERROR_STR("SubArrayName not set, cannot alloc beam " << name);
-		*beamError = IBS_RANGE_ERR;
+		*beamError = IBS_NO_ANTENNASET_ERR;
 		return (0); 
 	}
 	if (itsSplitterOn) {		// check allocation

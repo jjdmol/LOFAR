@@ -70,10 +70,12 @@ int main(int	argc, char*	argv[])
 	cout << theTime << endl;
 	cout << result;
 
-	bool	good = theConverter.isValidType("MOON");
-	cout << "'MOON' is " << (good ? "" : "NOT ") << "a supported conversion" << endl;
-	bool	bad  = theConverter.isValidType("CYGA");
-	cout << "'CYGA' is " << (bad ? "" : "NOT ") << "a supported conversion" << endl;
+	bool	moon = theConverter.isValidType("MOON");
+	cout << "'MOON' is " << (moon ? "" : "NOT ") << "a supported conversion" << endl;
+	bool	cyga  = theConverter.isValidType("CYGA");
+	cout << "'CYGA' is " << (cyga ? "" : "NOT ") << "a supported conversion" << endl;
+	bool	j2000 = theConverter.isValidType("J2000");
+	cout << "'J2000' is " << (j2000 ? "" : "NOT ") << "a supported conversion" << endl;
 
 	vector<string>	allTypes = theConverter.validTypes();
 	for (int i = 0; i < allTypes.size(); i++) {
