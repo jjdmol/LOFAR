@@ -62,13 +62,6 @@ public:
 	// @return Beamlet2SubbandMap the mapping from beamlet to subband for this beam.
 	IBS_Protocol::Beamlet2SubbandMap& allocation() { return(itsBeamletAllocation); }
 
-	// Set the subarray (positions & rcu_index)
-//	void setSubarray(const CAL::SubArray& array);
-
-	// Return a reference to the subarray for this beam.
-	// @return reference to the subarray
-//	const CAL::SubArray& getSubarray() const { return itsSubArray; }
-
 	// setCalibration weights for the receivers
 //	void setCalibration(const CAL::AntennaGains& gains);
 

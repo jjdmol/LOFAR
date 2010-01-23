@@ -54,6 +54,9 @@ public:
 	// Delete a beam to the manager
 	void deleteBeam(const AnalogueBeam& beam);
 
+	// Add a pointing to the administration
+	bool addPointing(const string& beamName, const IBS_Protocol::Pointing& newPt);
+
 	// Activate all possible analogue beams
 	void activateBeams(const RTC::Timestamp&	now);
 

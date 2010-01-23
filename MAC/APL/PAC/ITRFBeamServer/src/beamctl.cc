@@ -21,16 +21,18 @@
 //#
 //#  $Id$
 
-// this include needs to be first!
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+#include <Common/ParameterSet.h>
+#include <Common/lofar_bitset.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_list.h>
+
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include <APL/RSP_Protocol/RCUSettings.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/TM/GCF_Control.h>
-#include <Common/LofarLocators.h>
-#include <Common/ParameterSet.h>
-
-#include "beamctl.h"
 
 #include <iostream>
 #include <sys/time.h>
@@ -39,70 +41,28 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
-#include <Common/lofar_bitset.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_list.h>
+#include "beamctl.h"
 
-//#define BEAMCTL_ARRAY "beamctl_array"
-#define BEAMCTL_BEAM  "beamctl_beam"
-
-#define ARRAY_FLAG     0x01
-#define RCUS_FLAG      0x02
-#define RCUMODE_FLAG   0x04
-#define DIRECTION_FLAG 0x08
-#define SUBBANDS_FLAG  0x10
-#define BEAMLETS_FLAG  0x20
-#define ALL_FLAGS (  ARRAY_FLAG			\
-			 | RCUS_FLAG			\
-			 | RCUMODE_FLAG		\
-			 | DIRECTION_FLAG		\
-			 | SUBBANDS_FLAG		\
-			 | BEAMLETS_FLAG)
-
+#define BEAMCTL_BEAM  			"beamctl_beam"
 #define SKYSCAN_STARTDELAY 		30.0
 #define	BEAMLET_RING_OFFSET		1000
 
-using namespace std;
 using namespace blitz;
-using namespace LOFAR;
-using namespace BS;
-using namespace RTC;
-using namespace CAL_Protocol;
-using namespace IBS_Protocol;
-using namespace GCF::TM;
+namespace LOFAR {
+  using namespace RTC;
+  using namespace CAL_Protocol;
+  using namespace IBS_Protocol;
+  using namespace GCF::TM;
+  namespace BS {
 
 //
 // beamctl(...)
 //
-beamctl::beamctl(const string& name,
-				 const string& antennaSet,
-				 const list<int>& rcus,
-				 const list<int>& subbands,
-				 const list<int>& beamlets,
-				 RSP_Protocol::RCUSettings& rcumode,
-				 double longitude,   double latitude,   const string& type,
-				 double HBlongitude, double HBlatitude, const string& HBtype) :
-	GCFTask((State)&beamctl::con2calserver, name), 
+beamctl::beamctl(const string&	name) :
+	GCFTask((State)&beamctl::checkUserInput, name), 
 	itsCalServer	(0),
 	itsBeamServer	(0),
-    itsAntSet		(antennaSet), 
-	m_rcus			(rcus), 
-	m_subbands		(subbands), 
-	m_beamlets		(beamlets),
-    m_rcumode		(rcumode), 
-	m_longitude		(longitude), 
-	m_latitude		(latitude), 
-	m_type			(type),
-	m_HBlongitude	(HBlongitude), 
-	m_HBlatitude	(HBlatitude), 
-	m_HBtype		(HBtype),
-    itsSkyScanTotalTime(3600), 
-	itsSkyScanPointTime(2), 
-	itsSkyScanWaitTime(10)
+	itsRCUmode		(-1)
 {
 	registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
 	registerProtocol(IBS_PROTOCOL, IBS_PROTOCOL_STRINGS);
@@ -112,14 +72,9 @@ beamctl::beamctl(const string& name,
 	ASSERTSTR(itsCalServer,  "Cannot allocate port for CalServer");
 	ASSERTSTR(itsBeamServer, "Cannot allocate port for BeamServer");
 
-	try { itsSkyScanTotalTime = globalParameterSet()->getInt32("beamctl.SKYSCAN_TOTAL_TIME"); }
-	catch (...) { LOG_INFO_STR(formatString("beamctl.SKYSCAN_TOTAL_TIME")); }
-
-	try { itsSkyScanPointTime = globalParameterSet()->getInt32("beamctl.SKYSCAN_POINT_TIME"); }
-	catch (...) { LOG_INFO_STR(formatString("beamctl.SKYSCAN_POINT_TIME")); }
-
-	try { itsSkyScanWaitTime = globalParameterSet()->getInt32("beamctl.SKYSCAN_WAIT_TIME"); }
-	catch (...) { LOG_INFO_STR(formatString("beamctl.SKYSCAN_WAIT_TIME")); }
+	itsSkyScanTotalTime = globalParameterSet()->getInt32("beamctl.SKYSCAN_TOTAL_TIME", 3600);
+	itsSkyScanPointTime = globalParameterSet()->getInt32("beamctl.SKYSCAN_POINT_TIME", 2);
+	itsSkyScanWaitTime  = globalParameterSet()->getInt32("beamctl.SKYSCAN_WAIT_TIME",  10);
 }
 
 //
@@ -132,54 +87,36 @@ beamctl::~beamctl()
 }
 
 //
-// con2calserver(event, port)
+// checkUserInput(event, port)
 //
-GCFEvent::TResult beamctl::con2calserver(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult beamctl::checkUserInput(GCFEvent& event, GCFPortInterface& port)
 {
-	switch(e.signal) {
+	LOG_DEBUG_STR("checkUserInput: " << eventName(event) << "@" << port.getName());
+
+	switch (event.signal) {
+	case F_ENTRY:
+		break;
 	case F_INIT:
-	break;
-
-	case F_ENTRY: {
-		cout << "Connecting to CalServer... " << endl;
-		itsCalServer->autoOpen(5, 0, 2);
-	}
-	break;
-
-	case F_CONNECTED: {
-		TRAN(beamctl::con2beamserver);
-	}
-	break;
-
-	case F_DISCONNECTED: {
-		// retry once every second
-		cout << "Can not connect to the CalServer, is it running?" << endl;
-		port.close();
-		port.setTimer(10.0);
-	}
-	break;
-
-	case F_TIMER: {
-		// try again
-		cout << "Stil waiting for CalServer... " << endl;
-		itsCalServer->autoOpen(5, 0, 2);
-	}
-	break;
-
-	default:
-		return (GCFEvent::NOT_HANDLED);
-	break;
+		// create memory for storing the arguments
+		if (parseOptions(GCFScheduler::_argc, GCFScheduler::_argv) && checkOptions()) {
+			TRAN(beamctl::con2beamserver);
+		}
+		else {
+			TRAN(beamctl::final);
+		}
+		break;
 	}
 
 	return (GCFEvent::HANDLED);
 }
 
+
 //
 // con2beamserver(event, port)
 //
-GCFEvent::TResult beamctl::con2beamserver(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult beamctl::con2beamserver(GCFEvent& event, GCFPortInterface& port)
 {
-	switch(e.signal) {
+	switch(event.signal) {
 	case F_ENTRY: {
 		cout << "Connecting to BeamServer... " << endl;
 		itsBeamServer->autoOpen(5, 0, 2);
@@ -187,22 +124,16 @@ GCFEvent::TResult beamctl::con2beamserver(GCFEvent& e, GCFPortInterface& port)
 	break;
 
 	case F_CONNECTED: {
-		TRAN(beamctl::create_subarray);
+//		TRAN(beamctl::validate_pointings);
+		TRAN(beamctl::con2calserver);
 	}
 	break;
 
 	case F_DISCONNECTED: {
-		// retry once every second
-		if (&port == itsCalServer) {
-			cout << "Lost connection with CalServer, trying to reconnect." << endl;
-			itsCalServer->close();
-			TRAN(beamctl::con2calserver);
-		}
-		else {
-			cout << "Can not connect to the BeamServer, is it running?" << endl;
-			port.close();
-			port.setTimer(10.0);
-		}
+		// retry once every 10 seconds
+		cout << "Can not connect to the BeamServer, is it running?" << endl;
+		port.close();
+		port.setTimer(10.0);
 	}
 	break;
 
@@ -222,23 +153,69 @@ GCFEvent::TResult beamctl::con2beamserver(GCFEvent& e, GCFPortInterface& port)
 }
 
 //
+// con2calserver(event, port)
+//
+GCFEvent::TResult beamctl::con2calserver(GCFEvent& event, GCFPortInterface& port)
+{
+	switch(event.signal) {
+	case F_ENTRY: {
+		cout << "Connecting to CalServer... " << endl;
+		itsCalServer->autoOpen(5, 0, 2);
+	}
+	break;
+
+	case F_CONNECTED: {
+		TRAN(beamctl::create_subarray);
+	}
+	break;
+
+	case F_DISCONNECTED: {
+		if (&port == itsBeamServer) {
+			cout << "Lost connection with BeamServer, trying to reconnect." << endl;
+			itsBeamServer->close();
+			TRAN(beamctl::con2beamserver);
+		}
+		else {
+			cout << "Can not connect to the CalServer, is it running?" << endl;
+			port.close();
+			port.setTimer(10.0);
+		}
+	}
+	break;
+
+	case F_TIMER: {
+		// try again
+		cout << "Stil waiting for CalServer... " << endl;
+		itsCalServer->autoOpen(5, 0, 2);
+	}
+	break;
+
+	default:
+		return (GCFEvent::NOT_HANDLED);
+	break;
+	}
+
+	return (GCFEvent::HANDLED);
+}
+
+//
 // create_subarray(event, port)
 //
-GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult beamctl::create_subarray(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	//
 	// Create a new subarray
 	//
-	switch (e.signal) {
+	switch (event.signal) {
 	case F_ENTRY: {
 		CALStartEvent start;
 		start.name   = BEAMCTL_BEAM + formatString("_%d", getpid());
 		start.parent = itsAntSet;
 		start.subset = getRCUMask();
 		start.rcumode().resize(1);
-		start.rcumode()(0) = m_rcumode()(0);
+		start.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)itsRCUmode);
 
 		LOG_INFO(formatString("Rcumode(dec)=%06d", start.rcumode()(0).getRaw()));
 		LOG_INFO(formatString("Rcumode(hex)=%06X", start.rcumode()(0).getRaw()));
@@ -249,7 +226,7 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
 	break;
 
 	case CAL_STARTACK: {
-		CALStartackEvent ack(e);
+		CALStartackEvent ack(event);
 		if (ack.status != CAL_Protocol::CAL_SUCCESS) {
 			cerr << "Error: failed to start calibration" << endl;
 			TRAN(beamctl::final);
@@ -267,9 +244,6 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
 	}
 	break;
 
-	case F_EXIT:
-	break;
-
 	default:
 		status = GCFEvent::NOT_HANDLED;
 	break;
@@ -281,14 +255,14 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
 //
 // create_beam(event, port)
 //
-GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult beamctl::create_beam(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	//
 	// Create a new subarray
 	//
-	switch (e.signal) {
+	switch (event.signal) {
 	case F_ENTRY: {
 		IBSBeamallocEvent 	alloc;
 		alloc.beamName	   = BEAMCTL_BEAM + formatString("_%d", getpid());
@@ -296,11 +270,11 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 		alloc.rcumask	   = getRCUMask();
 		// assume beamletnumbers are right so the ring can be extracted from those numbers.
 		// when the user did this wrong the BeamServer will complain.
-		alloc.ringNr	   = m_beamlets.front() >= BEAMLET_RING_OFFSET;
+		alloc.ringNr	   = itsBeamlets.front() >= BEAMLET_RING_OFFSET;
 
-		list<int>::iterator its = m_subbands.begin();
-		list<int>::iterator itb = m_beamlets.begin();
-		for (; its != m_subbands.end() && itb != m_beamlets.end(); ++its, ++itb) {
+		list<int>::iterator its = itsSubbands.begin();
+		list<int>::iterator itb = itsBeamlets.begin();
+		for (; its != itsSubbands.end() && itb != itsBeamlets.end(); ++its, ++itb) {
 			if (((*itb) >= BEAMLET_RING_OFFSET ? 1 : 0) != alloc.ringNr) {	// all beamlets in the same ring?
 				cerr << "Beamlet " << *itb << " does not lay in ring " << alloc.ringNr << endl;
 				TRAN(beamctl::final);
@@ -309,6 +283,7 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 			alloc.allocation()[(*itb) % BEAMLET_RING_OFFSET] = (*its);
 		}
 		itsBeamServer->send(alloc);
+
 		LOG_INFO_STR("name        : " << alloc.beamName);
 		LOG_INFO_STR("antennaSet  : " << alloc.antennaSet);
 		LOG_INFO_STR("rcumask     : " << alloc.rcumask);
@@ -318,7 +293,7 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 	break;
 
 	case IBS_BEAMALLOCACK: {
-		IBSBeamallocackEvent ack(e);
+		IBSBeamallocackEvent ack(event);
 		if (ack.status != IBS_Protocol::IBS_NO_ERR) {
 			cerr << "Error: " << errorName(ack.status) << endl;
 			TRAN(beamctl::final);
@@ -326,17 +301,8 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 			cout << "BeamServer accepted settings" << endl;
 			itsBeamHandle = ack.beamName;
 			LOG_DEBUG(formatString("got beam_handle=%s for %s", itsBeamHandle.c_str(), ack.antennaGroup.c_str()));
+			TRAN(beamctl::sendPointings);
 		}
-		
-		// send HB analogue pointing?
-		if (m_HBtype[0]) {
-			send_direction(m_HBlongitude, m_HBlatitude, m_HBtype, true);
-		}
-
-		if (m_type[0]) {
-			send_direction(m_longitude, m_latitude, m_type, false);
-		}
-		
 	}
 	break;
 
@@ -347,7 +313,67 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 	}
 	break;
 
-	case F_EXIT:
+	default:
+		status = GCFEvent::NOT_HANDLED;
+	break;
+	}
+
+	return status;
+}
+
+//
+// sendPointings(event, port)
+//
+GCFEvent::TResult beamctl::sendPointings(GCFEvent& event, GCFPortInterface& port)
+{
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	static bool		sendingDigitalPts(true);
+	static list<Pointing>::const_iterator	ptIter = itsDigPointings.begin();
+
+	//
+	// Create a new subarray
+	//
+	switch (event.signal) {
+	case F_ENTRY: {
+		// update iterator to current pointing
+		if (sendingDigitalPts && ptIter == itsDigPointings.end()) {
+			sendingDigitalPts = false;
+			ptIter = itsAnaPointings.begin();
+		}
+		if (!sendingDigitalPts && ptIter == itsAnaPointings.end()) {
+			cout << "All pointings sent and accepted" << endl;
+			return (GCFEvent::HANDLED);
+		}
+			
+		IBSPointtoEvent 	alloc;
+		alloc.beamName = BEAMCTL_BEAM + formatString("_%d", getpid());
+		alloc.pointing = *ptIter;
+		alloc.analogue = !sendingDigitalPts;
+		alloc.rank	   = 6;				// always less important than MAC scheduled beams
+		itsBeamServer->send(alloc);
+
+		cout << "sending pointing: " << *ptIter << endl;
+
+		++ptIter;
+	}
+	break;
+
+	case IBS_POINTTOACK: {
+		IBSPointtoackEvent ack(event);
+		if (ack.status != IBS_Protocol::IBS_NO_ERR) {
+			cerr << "Error: " << errorName(ack.status) << endl;
+			TRAN(beamctl::final);
+		} else {
+			TRAN(beamctl::sendPointings);	// tran to myself to exec the ENTRY state again.
+		}
+	}
+	break;
+
+	case F_DISCONNECTED: {
+		port.close();
+		cerr << "Error: unexpected disconnect" << endl;
+		TRAN(beamctl::final);
+	}
 	break;
 
 	default:
@@ -358,11 +384,14 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 	return status;
 }
 
-GCFEvent::TResult beamctl::final(GCFEvent& e, GCFPortInterface& /*port*/)
+
+
+
+GCFEvent::TResult beamctl::final(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-	switch(e.signal) {
+	switch(event.signal) {
 			case F_ENTRY:
 		GCFScheduler::instance()->stop();
 		break;
@@ -380,7 +409,7 @@ GCFEvent::TResult beamctl::final(GCFEvent& e, GCFPortInterface& /*port*/)
 
 void beamctl::send_direction(double	longitude, double	latitude, const string&	dirType, bool	isAnalogue)
 {
-	IBSBeampointtoEvent pointto;
+	IBSPointtoEvent pointto;
 	pointto.beamName = itsBeamHandle;
 	pointto.pointing.setDirection(longitude, latitude);
 	pointto.analogue = isAnalogue;
@@ -435,29 +464,38 @@ void beamctl::send_direction(double	longitude, double	latitude, const string&	di
 }
 
 
-void usage()
+void beamctl::usage() const
 {
 	cout <<
-"Usage: beamctl\n"
-"  --antennaset=name # name of the antenna (sub)field the RCU's are part of\n"
-"  --rcus=<set>      # optional subselection of RCU's\n"
-"  --rcumode=0..7    # RCU mode to use (may not conflict with antennaset\n"
-"  --subbands=<set>  # set of subbands to use for this beam\n"
-"  --beamlets=<list> # list of beamlets on which to allocate the subbands\n" 
-"                    # beamlet range = 0..247 when Serdes splitter is OFF\n"
-"                    # beamlet range = 0..247 + 1000..1247 when Serdes splitter is ON\n"
-"  --direction=longitude,latitude[,type]\n"
-"                    # lon,lat are floating point values specified in radians\n"
-"                    # type is one of J2000 (default), AZEL, LOFAR_LMN, SKYSCAN\n"
-"                    # SKYSCAN will scan the sky with a L x M grid in the (l,m) plane\n"
-"  --hbdirection=longitude,latitude[,type]\n"
-"                    # direction of the analogue HBA beam\n"
-"  --help            # print this usage\n"
-"\n"
-"This utility connects to the CalServer to create a subarray of --array\n"
-"containing the selected RCU's. The CalServer sets those RCU's in the mode\n"
-"specified by --rcumode. Another connection is made to the BeamServer to create a\n"
-"beam on the created subarray pointing in the direction specified with --direction.\n"
+		"Usage: beamctl <rcuspec> <dataspec> <digpointing> [<digpointing> ...] FOR LBA ANTENNAS\n"
+		"       beamctl <rcuspec> <anapointing> [<anapointing> ...] [<dataspec> <digpointing> [<digpointing> ...]] FOR HBA ANTENNAS\n"
+		"where:\n"
+		"  <rcuspec>      = --antennaset [--rcus] --rcumode \n"
+		"  <dataspec>     = --subbands --beamlets \n"
+		"  <digpointing>  = --digdir \n"
+		"  <anapointing>  = --anadir \n"
+		"with option arguments: \n"
+		"  --antennaset=name # name of the antenna (sub)field the RCU's are part of\n"
+		"  --rcus=<set>      # optional subselection of RCU's\n"
+		"  --rcumode=0..7    # RCU mode to use (may not conflict with antennaset\n"
+		"  --subbands=<set>  # set of subbands to use for this beam\n"
+		"  --beamlets=<list> # list of beamlets on which to allocate the subbands\n" 
+		"                    # beamlet range = 0..247 when Serdes splitter is OFF\n"
+		"                    # beamlet range = 0..247 + 1000..1247 when Serdes splitter is ON\n"
+		"  --digdir=longitude,latitude,type[,duration]\n"
+		"                    # lon,lat are floating point values specified in radians\n"
+		"                    # type is SKYSCAN or olmost any other coordinate system\n"
+		"                    # SKYSCAN will scan the sky with a L x M grid in the (l,m) plane\n"
+		"  --anadir=longitude,latitude,type[,duration]\n"
+		"                    # direction of the analogue HBA beam\n"
+		"  --help            # print this usage\n"
+		"\n"
+		"The order of the arguments is trivial\n"
+		"\n"
+		"This utility connects to the CalServer to create a subarray of --array\n"
+		"containing the selected RCU's. The CalServer sets those RCU's in the mode\n"
+		"specified by --rcumode. Another connection is made to the BeamServer to create a\n"
+		"beam on the created subarray pointing in the direction specified with --direction.\n"
 	<< endl;
 }
 
@@ -467,17 +505,14 @@ bitset<LOFAR::MAX_RCUS> beamctl::getRCUMask() const
 	
 	mask.reset();
 	list<int>::const_iterator it;
-	int count = 0; // limit to ndevices
-	for (it = m_rcus.begin(); it != m_rcus.end(); ++it, ++count) {
-		if (count >= LOFAR::MAX_RCUS) break;
-		
+	for (it = itsRCUs.begin(); it != itsRCUs.end(); ++it) {
 		if (*it < LOFAR::MAX_RCUS)
 			mask.set(*it);
 	}
 	return mask;
 }
 
-static list<int> strtolist(const char* str, int max)
+list<int> beamctl::strtolist(const char* str, int max) const
 {
 	string inputstring(str);
 	char* start = (char*)inputstring.c_str();
@@ -488,8 +523,7 @@ static list<int> strtolist(const char* str, int max)
 
 	resultset.clear();
 
-	while (start)
-	{
+	while (start) {
 		long val = strtol(start, &end, 10); // read decimal numbers
 		start = (end ? (*end ? end + 1 : 0) : 0); // advance
 		if (val >= max || val < 0) {
@@ -522,13 +556,13 @@ static list<int> strtolist(const char* str, int max)
 
 				case ':':
 					range=true;
-					break;
+				break;
 
 				default:
-		cerr << formatString("Error: invalid character %c",*end) << endl;
+					cerr << formatString("Error: invalid character %c",*end) << endl;
 					resultset.clear();
 					return resultset;
-					break;
+				break;
 			}
 		}
 		prevval = val;
@@ -537,235 +571,187 @@ static list<int> strtolist(const char* str, int max)
 	return resultset;
 }
 
-void printList(list<int>&		theList)
+void beamctl::printList(list<int>&		theList) const
 {
-	list<int>::reverse_iterator		riter = theList.rbegin();
-	list<int>::reverse_iterator		rend  = theList.rend();
-	while (riter != rend) {
-		cout << *riter;
-		++riter;
+	list<int>::iterator		iter = theList.begin();
+	list<int>::iterator		end  = theList.end();
+	while (iter != end) {
+		cout << *iter;
+		++iter;
+		if (iter != end) {
+			cout << ",";
+		}	
 	}
 	cout << endl;
 }
 
-void beamctl::mainloop()
+bool beamctl::checkOptions()
 {
-	start(); // make initial transition
-	GCFScheduler::instance()->run();
+	// antennaSet OR rcus must be specified.
+	if (itsAntSet.empty() && itsRCUs.empty()) {
+		cerr << "Error: antennaSet or rcu selection is required." << endl;
+		return (false);
+	}
+
+	if (itsRCUmode < 0 || itsRCUmode > 7) {
+		cerr << "Error: --rcumode=" << itsRCUmode << ", is out of range [0..7]." << endl;
+		return (false);
+	}
+
+	// at least one direction must be entered
+	if (itsAnaPointings.empty() && itsDigPointings.empty()) {
+		cerr << "Error: no direction(s) specified." << endl;
+		return (false);
+	}
+
+	// subbands must match beamlets
+	if (itsSubbands.size() != itsBeamlets.size()) {
+		cerr << "Error: the number of subbands must match the number of beamlets." << endl;
+		return (false);
+	}
+
+	// if a digbeam is setup, we must have subbands
+	if (!itsDigPointings.empty() && itsSubbands.empty()) {
+		cerr << "No subbands specified for the digital beam." << endl;
+		return (false);
+	}
+
+	return (true);
 }
 
-int main(int argc, char** argv)
+//
+// parseOptions
+//
+bool beamctl::parseOptions(int	myArgc, char** myArgv)
 {
-	char *array = "unset";              // --array argument goes here
-	list<int> rcus;                     // --rcus argument goes here
-	list<int> subbands;                 // --subbands argument goed here
-	list<int> beamlets;                 // --beamlets argument goes here
-	RSP_Protocol::RCUSettings rcumode;  // --rcumode argument goes here
-	Pointing direction;                 // --direction argument goed here
-	unsigned char presence = 0;         // keep track of which arguments have been specified
-
-	double latitude  = 0.0;
-	double longitude = 0.0;
-	char   type[11]  = "J2000";
-	double HBlatitude  = 0.0;
-	double HBlongitude = 0.0;
-	char   HBtype[11]  = "J2000";
-
-	// initialize rcus
-	rcus.clear();
-	subbands.clear();
-	beamlets.clear();
-
-	// initialize rcumode
-	rcumode().resize(1);
-	
-	cout << "Reading configuration files" << endl;
-	try {
-		LOFAR::ConfigLocator cl;
-		globalParameterSet()->adoptFile(cl.locate("beamctl.conf"));
+	if (myArgc == 1) {
+		usage();
+		GCFScheduler::instance()->stop();
+		return (false);
 	}
-	catch (LOFAR::Exception& e) {
-		cerr << "Failed to load configuration files: " << e.text() << endl;
-		exit(EXIT_FAILURE);
-	}
-		
-	// parse options
+
+	static struct option long_options[] = {
+		{ "antennaset",	 required_argument, 0, 'a' },
+		{ "rcus",      	 required_argument, 0, 'r' },
+		{ "rcumode",   	 required_argument, 0, 'm' },
+		{ "digdir", 	 required_argument, 0, 'D' },
+		{ "anadir", 	 required_argument, 0, 'A' },
+		{ "subbands",  	 required_argument, 0, 's' },
+		{ "beamlets",  	 required_argument, 0, 'b' },
+		{ "help",      	 no_argument,       0, 'h' },
+		{ 0, 0, 0, 0 },
+	};
+
+	Timestamp		lastDigPtTime;
+	Timestamp		lastAnaPtTime;
+	lastDigPtTime.setNow();
+	lastAnaPtTime.setNow();
 	optind = 0; // reset option parsing
-	while (1) {
-
-		static struct option long_options[] = {
-			{ "antennaset",	 required_argument, 0, 'a' },
-			{ "rcus",      	 required_argument, 0, 'r' },
-			{ "rcumode",   	 required_argument, 0, 'm' },
-			{ "direction", 	 required_argument, 0, 'd' },
-			{ "hbdirection", required_argument, 0, 'D' },
-			{ "subbands",  	 required_argument, 0, 's' },
-			{ "beamlets",  	 required_argument, 0, 'b' },
-			{ "help",      	 no_argument,       0, 'h' },
-			{ 0, 0, 0, 0 },
-		};
-
+	while (true) {
 		int option_index = 0;
-		int c = getopt_long(argc, argv, "a:r:m:d:D:s:b:h", long_options, &option_index);
-
-		if (c == -1) 
+		int c = getopt_long(myArgc, myArgv, "a:r:m:A:D:s:b:h", long_options, &option_index);
+		if (c == -1) {
 			break;
+		}
+		if (c != 'h') {		// only 'h' does not need an argument
+			// note: --xxx  results in !optarg when it is the last option
+			if (!optarg)
+				continue;
+			// note: --xxx=  result in optarg being empty
+			//       --xxx --yyy=zzz  result in --yyy=zzz being the optarg of xxx !!!!!!!!
+			if ((optarg[0]=='\0') || (optarg[0]=='-' && optarg[1]=='-')) { 
+				cerr << "Error: missing value for option " << long_options[option_index].name << endl;
+				continue;
+			}
+		}
 
 		switch (c) {
-		case 'a': {
-			if (!optarg) {
-				cerr << "Error: missing --array value" << endl;
-			} else {
-				array=strdup(optarg);
-				cout << "array=" << array << endl;
-				presence |= ARRAY_FLAG;
-			}
-		}
-		break;
-		 
-		case 'r': {
-			if (!optarg) {
-				cerr << "Error: missing --rcus value" << endl;
-			} else {
-				rcus = strtolist(optarg, LOFAR::MAX_RCUS);
-				presence |= RCUS_FLAG;
-				cout << "rcus=" << optarg << endl;
-			}
+		case 'a': {		// antennaset
+			itsAntSet = optarg;
+			cout << "antennaSet : " << itsAntSet << endl;
 		}
 		break;
 
-		case 'm': {
-			if (!optarg) {
-				cerr << "Error: missing --rcumode value" << endl;
+		case 'r': {		// optional rcu subset
+			itsRCUs = strtolist(optarg, LOFAR::MAX_RCUS);
+			cout << "rcus     : ";  printList(itsRCUs);
+		}
+		break;
+
+		case 'm': {		// optional rcumode
+			itsRCUmode = atoi(optarg);
+			cout << "rcumode  : " << itsRCUmode << endl;
+		}
+		break;
+
+		case 'A': 
+		case 'D':  {
+			double	lat, lon;
+			int		duration(0);	// forever
+			char	dirType[20];
+			int	nargs = sscanf(optarg, "%lf,%lf,%[A-Za-z0-9],%d", &lon, &lat, dirType, &duration);
+			if (nargs < 3) {
+				cerr << "Error: invalid number of parameters for " << long_options[option_index].name << endl;
 			} else {
-				int mode = 0;
-				if ((mode = atoi(optarg)) < 0 || mode > 7) {
-					cerr << formatString("Error: --rcumode=%d, out of range [0..7]", mode) << endl;
-				} else {
-					rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)mode);
-					presence |= RCUMODE_FLAG;
-					cout << "rcumode=" << optarg << endl;
+				if (c == 'D')  {
+					Pointing	pt(lon, lat, dirType, lastDigPtTime, duration);
+					itsDigPointings.push_back(pt);
+					cout << "digdir   : " << pt << endl;
+					lastDigPtTime = pt.endTime();
 				}
-			}
-		}
-		break;
-
-		case 'D': 
-		case 'd': {
-			if (!optarg) {
-				cerr << "Error: missing --direction value" << endl;
-			} else {
-				double	lat, lon;
-				char	dirType[20];
-				int	nargs = sscanf(optarg, "%lf,%lf,%10s", &lon, &lat, dirType);
-				if (nargs < 2) {
-					cerr << "Error: invalid number of parameters for --direction " << endl;
-				} else {
-					cout << formatString("longitude=%lf, latitude=%lf, type=%s", lon, lat, dirType);
-
-					if (string("J2000") == string(type)) {
-						presence |= DIRECTION_FLAG;
-					} else if (string("AZEL") == string(type)) {
-						presence |= DIRECTION_FLAG;
-					} else if (string("LOFAR_LMN") == string(type)) {
-						presence |= DIRECTION_FLAG;
-					} else if (string("SKYSCAN") == string(type)) {
-						presence |= DIRECTION_FLAG;
-					} else {
-						cerr << "Error: invalid coordinate type '" << type << "'" << endl;
-					}
-					// move it to the right variables.
-					if (c == 'd') {
-						longitude = lon;
-						latitude  = lat;
-						strcpy(type, dirType);
-					}
-					else {
-						HBlongitude = lon;
-						HBlatitude  = lat;
-						strcpy(HBtype, dirType);
-					}
+				else {
+					Pointing	pt(lon, lat, dirType, lastAnaPtTime, duration);
+					itsAnaPointings.push_back(pt);
+					cout << "anadir   : " << pt << endl;
+					lastAnaPtTime = pt.endTime();
 				}
 			}
 		}
 		break;
 
 		case 's': {
-			if (!optarg) {
-				cerr << "Error: missing --subbands value" << endl;
-			} else {
-				subbands = strtolist(optarg, LOFAR::MAX_SUBBANDS);
-				presence |= SUBBANDS_FLAG;
-				cout << "subbands = " << optarg << "(" << subbands.size() << ")" << endl;
-			}
+			itsSubbands = strtolist(optarg, LOFAR::MAX_SUBBANDS);
+			cout << "subbands : "; printList(itsSubbands);
 		}
 		break;
 
 		case 'b': {
-			if (!optarg) {
-				cerr << "Error: missing --beamlets value" << endl;
-			} else {
-				beamlets = strtolist(optarg, BEAMLET_RING_OFFSET + LOFAR::MAX_BEAMLETS);
-				presence |= BEAMLETS_FLAG;
-				cout << "beamlets = " << optarg << "(" << beamlets.size() << ")" << endl;
-			}
+			itsBeamlets = strtolist(optarg, BEAMLET_RING_OFFSET + LOFAR::MAX_BEAMLETS);
+			cout << "beamlets : "; printList(itsBeamlets);
 		}
 		break;
 
-		case 'h': {
+		case 'h':
+		default:
 			usage();
-			exit(EXIT_SUCCESS);
-		}
+			GCFScheduler::instance()->stop();
+			return (false);
 		break;
+		} // switch (c)
+	} 
 
-		case '?':
-		default: {
-			//cerr << formatString("Error: unknown argument '%s'", optarg) << endl;
-			exit(EXIT_FAILURE);
-		}
-		break;
-		}
-	}
+	return (true);
 
-	if (! (presence & ARRAY_FLAG)) {
-		cerr << "Error: --array argument missing." << endl;
-	}
-	if (! (presence & RCUS_FLAG)) {
-		cerr << "Error: --rcus argument missing." << endl;
-	}
-	if (! (presence & RCUMODE_FLAG)) {
-		cerr << "Error: --rcumode argument missing." << endl;
-	}
-	if (! (presence & DIRECTION_FLAG)) {
-		cerr << "Error: --direction argument missing." << endl;
-	}
-	if (! (presence & SUBBANDS_FLAG)) {
-		cerr << "Error: --subbands argument missing." << endl;
-	}
-	if (! (presence & BEAMLETS_FLAG)) {
-		cerr << "Error: --beamlets argument missing." << endl;
-	}
+}
 
-	if (presence != ALL_FLAGS) {
-		cerr << "Error: Not all required arguments have been specified correctly." << endl;
-		usage();
-		exit(EXIT_FAILURE);
-	}
+  }; // namespace BS
+}; // namespace LOFAR
 
-	if (subbands.size() != beamlets.size()) {
-		cerr << "Error: length of --subbands value must be equal to length of --beamlets value." << endl;
-		exit(EXIT_FAILURE);
-	}
+using namespace LOFAR;
+using namespace BS;
+using namespace GCF::TM;
 
-	cout << "Argument are ok, creating a task" << endl;
+//
+// main
+//
+int main(int argc, char** argv)
+{
 	GCFScheduler::instance()->init(argc, argv, "beamctl");
-	LOG_INFO(formatString("Program %s has started", argv[0]));
-
-	beamctl ctl("beamctl", array, rcus, subbands, beamlets, rcumode, 
-								longitude, latitude, type, HBlongitude, HBlatitude, HBtype);
 
 	try {
-		ctl.mainloop();
+		beamctl beamctlTask("beamctl");
+		beamctlTask.start();
+		GCFScheduler::instance()->run();
 	} catch (Exception& e) {
 		cerr << "Exception: " << e.text() << endl;
 		exit(EXIT_FAILURE);

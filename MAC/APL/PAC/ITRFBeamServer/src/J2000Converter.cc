@@ -42,7 +42,7 @@ using namespace casa;
 using namespace blitz;
 using namespace RTC;
 
-char*	supportedTypes[] = { "ITRF", "B1950", "AZEL", 
+char*	supportedTypes[] = { "J2000", "ITRF", "B1950", "AZEL", 
 							 "MERCURY", "VENUS", "MARS", "JUPITER", "SATURN", "URANUS", "NEPTUNE", "PLUTO", "SUN", "MOON"  
 							 "" };
 
@@ -203,14 +203,13 @@ bool  J2000Converter::doConversion(const string&					sourceType,
 }
 
 //
-// isValidType(string)
+// validTypes()
 //
 vector<string>	J2000Converter::validTypes()
 {
 	vector<string>	result;
 	map<string, MDirection::Types>::const_iterator	iter = itsDirectionTypes.begin();
 	map<string, MDirection::Types>::const_iterator	end  = itsDirectionTypes.end ();
-	result.push_back("J2000");
 	while (iter != end) {
 		result.push_back(iter->first);
 		++iter;

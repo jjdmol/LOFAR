@@ -34,8 +34,8 @@ public:
 	//@{
 	// Constructors and destructors for a pointing.
 	Pointing();
-	Pointing(double angle0, double angle1, RTC::Timestamp time, uint duration, const string& type);
-	virtual ~Pointing();
+	Pointing(double angle0, double angle1, const string& type, RTC::Timestamp time, uint duration = 0);
+	~Pointing();
 	//@}
 
 	//@{

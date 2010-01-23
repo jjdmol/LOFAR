@@ -39,7 +39,7 @@ Pointing::Pointing() :
 //
 // Pointing(angle, angle, time, type)
 //
-Pointing::Pointing(double angle0, double angle1, RTC::Timestamp time, uint duration, const string& type) :
+Pointing::Pointing(double angle0, double angle1, const string& type, RTC::Timestamp time, uint duration) :
 	itsAngle2Pi(angle0), itsAnglePi(angle1), itsTime(time), itsDuration(duration), itsType(type)
 {}
 
@@ -80,7 +80,11 @@ bool Pointing::overlap(const Pointing&	that) const
 ostream& Pointing::print(ostream& os) const
 {
 	os << "[" << itsAngle2Pi << ", " << itsAnglePi << ", " << itsType << "]@" << 
-				 itsTime << " for " << itsDuration << " seconds";
+				 itsTime << " for";
+	if (itsDuration)
+		os  << " " << itsDuration << " seconds";
+	else
+		os << "ever";
 	return (os);
 }
 

@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include "Beam.h"
 
 using namespace LOFAR;
@@ -76,7 +77,7 @@ void Beam::_resolveGaps()
 	while (iter != end) {
 		// is there a gap between the last endtime and the current begintime add a NIL pointing
 		if (iter->time() > endTime) {
-			Pointing	nilPointing(0.0 ,0.0 ,endTime, int(iter->time()-endTime), "NONE");
+			Pointing	nilPointing(0.0 ,0.0, "NONE", endTime, int(iter->time()-endTime));
 			itsPointings.insert(iter, nilPointing);
 		}
 			
@@ -113,19 +114,19 @@ bool Beam::_pointingOverlaps(const IBS_Protocol::Pointing& pt) const
 //
 // addPointing(pointing)
 //
-bool Beam::addPointing(const Pointing& pointing)
+int Beam::addPointing(const Pointing& pointing)
 {
 	// add pointing, sort the list and fill gaps with 'NONE' pointings
 	if (_pointingOverlaps(pointing)) {
 		LOG_ERROR_STR("Pointing " << pointing << " is NOT added to beam " << itsName << " because it overlaps with existing pointings");
-		return (false);
+		return (IBS_PT_OVERLAPS_ERR);
 	}
 
 	// it's ok to add it, clean up the admin afterwards.
 	itsPointings.push_back(pointing);
 	itsPointings.sort();
 	_resolveGaps();
-	return (true);
+	return (IBS_NO_ERR);
 }
 
 //
