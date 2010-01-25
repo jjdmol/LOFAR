@@ -16,24 +16,30 @@ station=`hostname -s`
 if [ -e /opt/lofar/etc/RemoteStation.conf ]; then
   let rspboards=`sed -n  's/^\s*RS\.N_RSPBOARDS\s*=\s*\([0-9][0-9]*\).*$/\1/p' /opt/lofar/etc/RemoteStation.conf`
   let rcus=$rspboards*8
-  let nrcus=$rcus-1
 else
   echo "Could not find /opt/lofar/etc/RemoteStation.conf"
   let rspboards=12
   let rcus=$rspboards*8
-  let nrcus=$rcus-1
 fi
 
 echo "This is station "$station
 echo "The number of RCU's is "$rcus
 
-rspctl --splitter=0
+rspctl --rcumode=$hbamode --sel=0:31
+sleep 2
+rspctl --rcumode=$hbamode --sel=32:63
+sleep 2
+rspctl --rcumode=$hbamode --sel=64:95
 sleep 2
 
-swlevel 3
-beamctl --array=HBA --rcus=0:$nrcus --rcumode=$hbamode --subbands=100:110 --beamlets=0:10 --direction=0,0,LOFAR_LMN&
-
-sleep 5
+if [ $rcus -eq 192 ]; then
+  rspctl --rcumode=$hbamode --sel=96:127
+  sleep 2
+  rspctl --rcumode=$hbamode --sel=128:159
+  sleep 2
+  rspctl --rcumode=$hbamode --sel=160:191
+  sleep 2
+fi
 
 echo "The rcumode is "$hbamode 
 sleep 2

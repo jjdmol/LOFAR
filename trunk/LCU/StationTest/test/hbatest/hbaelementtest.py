@@ -28,7 +28,7 @@ def open_dir(dirname) :
 
 def rm_files(dir_name,file) :
         cmdstr = 'rm ' + file
-	os.popen(cmdstr)
+	os.popen3(cmdstr)
 	return
 
 def rec_stat(dirname,num_rcu) :
@@ -89,6 +89,26 @@ def capture_data(dir_name,num_rcu,hba_elements,ctrl_word,sleeptime,subband_nr,el
 		f.close
 	return meet_data
 
+# switch on HBA tiles gentle
+def switchon_hba() :
+	
+	try:
+           os.popen3("rspctl --rcumode=5 --sel=0:31")
+           time.sleep(1)
+	   os.popen3("rspctl --rcumode=5 --sel=32:63")
+           time.sleep(1)
+	   os.popen3("rspctl --rcumode=5 --sel=64:95")
+           time.sleep(1)
+	   os.popen3("rspctl --rcumode=5 --sel=96:127")
+           time.sleep(1)
+	   os.popen3("rspctl --rcumode=5 --sel=128:159")
+           time.sleep(1)
+	   os.popen3("rspctl --rcumode=5 --sel=160:191")
+           time.sleep(1)
+	except:
+        os.popen("rspctl --rcuenable=1")
+        return 
+
 # Main loop
 def main() :
 	sub_time=[]
@@ -112,6 +132,7 @@ def main() :
         else :
 		num_rcu = int(sys.argv[2])
         print ' Number of RCUs is ' + str(num_rcu)
+	    print ' Number of Subband is ' + str(subband_nr)
 	# initialize data arrays
 	ref_data=range(0, num_rcu)
 	os.chdir(dir_name)
@@ -121,9 +142,7 @@ def main() :
         #---------------------------------------------
 	# capture reference data (all HBA elements off)
         rm_files(dir_name,'*')
-        os.popen3("swlevel 3");
-        time.sleep(5)
-        os.popen("beamctl --array=HBA --rcus=0:95 --rcumode=5 --subbands=100:110 --beamlets=0:10 --direction=0,0,LOFAR_LMN&")
+        switchon_hba()
         #os.popen("rspctl --rcumode=5 2>/dev/null")
         #os.popen("rspctl --rcuenable=1 2>/dev/null")
         time.sleep(2)
@@ -182,5 +201,4 @@ def main() :
 		
         f_log.close
 	f_logfac.close
-
 main()
