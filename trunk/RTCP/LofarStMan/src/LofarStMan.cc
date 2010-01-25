@@ -257,9 +257,9 @@ void LofarStMan::deleteManager()
 void LofarStMan::init()
 {
   AipsIO aio(fileName() + "meta");
-  uInt vers = aio.getstart ("LofarStMan");
-  if (vers > 1) {
-    throw DataManError ("LofarStMan can only handle up to version 1");
+  itsVersion = aio.getstart ("LofarStMan");
+  if (itsVersion > 2) {
+    throw DataManError ("LofarStMan can only handle up to version 2");
   }
   Bool asBigEndian;
   uInt alignment;
@@ -277,16 +277,45 @@ void LofarStMan::init()
   if (alignment <= 1) {
     itsDataStart = 4;
     itsSampStart = itsDataStart + nrant*itsBLDataSize;
-    itsBlockSize = itsSampStart + nrant*itsNChan*2;
+    switch (itsVersion) {
+    case 1:
+      itsBlockSize = itsSampStart + nrant*itsNChan*2;
+      break;
+    case 2:
+      itsBlockSize = itsSampStart + nrant*4;
+      break;
+    default:
+      throw DataManError("LofarStMan can only handle up to version 2");
+    }
   } else {
     itsDataStart = alignment;
     itsSampStart = itsDataStart + (nrant*itsBLDataSize + alignment-1)
       / alignment * alignment;
-    itsBlockSize = itsSampStart + (nrant*itsNChan*2 + alignment-1)
-      / alignment * alignment;
+    switch (itsVersion) {
+    case 1:
+      itsBlockSize = itsSampStart + (nrant*itsNChan*2 + alignment-1)
+	/ alignment * alignment;
+      break;
+    case 2:
+      itsBlockSize = itsSampStart + (nrant*4 + alignment-1)
+	/ alignment * alignment;
+      break;
+    default:
+      throw DataManError("LofarStMan can only handle up to version 2");
+    }
+
   }
   if (itsDoSwap) {
-    itsNSampleBuf.resize (itsNChan * 2);
+    switch (itsVersion) {
+    case 1:
+      itsNSampleBuf.resize (itsNChan * 2);
+      break;
+    case 2:
+      itsNSampleBufV2.resize(4);
+      break;
+    default:
+      throw;
+    }
   }
 }
 
@@ -356,6 +385,29 @@ const uShort* LofarStMan::getNSample (uInt rownr, Bool swapIfNeeded)
   for (uInt i=0; i<itsNChan; ++i) {
     CanonicalConversion::reverse2 (to+i, from+i);
   }
+  return to;
+}
+
+const uInt* LofarStMan::getNSampleV2 (uInt rownr, Bool swapIfNeeded)
+{
+  uInt blocknr = rownr / itsAnt1.size();
+  uInt baseline = rownr - blocknr*itsAnt1.size();
+
+  uInt offset  = itsSampStart + baseline * 4; 
+
+  std::cout << "V2" << std::endl;
+  
+  const void* ptr = itsFile->getReadPointer (blocknr * itsBlockSize + offset);
+  const uInt* from = (const uInt*)ptr;
+  
+
+  if (!swapIfNeeded || !itsDoSwap) {
+    return from;
+  }
+
+  uInt* to = itsNSampleBufV2.storage();
+  CanonicalConversion::reverse2 (to, from);
+  
   return to;
 }
 

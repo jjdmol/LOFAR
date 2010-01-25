@@ -97,7 +97,7 @@ uInt nalign (uInt size, uInt alignment)
 
 void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
                  Double startTime, Double interval, const Complex& startValue,
-                 uInt alignment, Bool bigEndian)
+                 uInt alignment, Bool bigEndian, uInt myStManVersion=1)
 {
   // Create the baseline vectors (no autocorrelations).
   uInt nrbl = nant*(nant-1)/2;
@@ -118,8 +118,11 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
       bigEndian = HostInfo::bigEndian();
     }
     double maxNSample = 32768;
+
+    AlwaysAssertExit(myStManVersion <= 2);
+
     AipsIO aio("tLofarStMan_tmp.data/table.f0meta", ByteIO::New);
-    aio.putstart ("LofarStMan", 1);     // version 1
+    aio.putstart ("LofarStMan", myStManVersion);     // version 1 or 2
     aio << ant1 << ant2 << startTime << interval << nchan
         << npol << maxNSample << alignment << bigEndian;
   }
@@ -136,15 +139,25 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
   // Create and initialize data and nsample.
   Array<Complex> data(IPosition(2,npol,nchan));
   indgen (data, startValue, Complex(0.01, 0.01));
+
   Array<uShort> nsample(IPosition(1,nchan));
   indgen (nsample);
+  Array<uInt> nsampleV2(IPosition(1,1));
+  indgen(nsampleV2);
+
   // Allocate space for possible block alignment.
   if (alignment < 1) {
     alignment = 1;
   }
   Block<Char> align1(nalign(4, alignment), 0);
   Block<Char> align2(nalign(nrbl*8*data.size(), alignment), 0);
-  Block<Char> align3(nalign(nrbl*2*nsample.size(), alignment), 0);
+
+  uInt nsamplesSize=0;
+  if (myStManVersion == 1) nsamplesSize = nrbl*2*nsample.size();
+  else nsamplesSize = nrbl*2*nsampleV2.size();
+
+  Block<Char> align3(nalign(nsamplesSize, alignment), 0);
+
   // Write the data as nseq blocks.
   for (uInt i=0; i<nseq; ++i) {
     cfile->write (1, &i);
@@ -158,10 +171,19 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
     if (align2.size() > 0) {
       cfile->write (align2.size(), align2.storage());
     }
-    for (uInt j=0; j<nrbl; ++j) {
-      cfile->write (nsample.size(), nsample.data());
-      nsample += uShort(1);
+    
+    if (myStManVersion == 1) {
+      for (uInt j=0; j<nrbl; ++j) {
+	cfile->write (nsample.size(), nsample.data());
+	nsample += uShort(1);
+      }
+    } else {
+      for (uInt j=0; j<nrbl; ++j) {
+	cfile->write (nsampleV2.size(), nsampleV2.data());
+	nsampleV2 += uInt(1);
+      }
     }
+
     if (align3.size() > 0) {
       cfile->write (align3.size(), align3.storage());
     }
@@ -353,6 +375,26 @@ int main (int argc, char* argv[])
       updateTable (nchan, npol, Complex(3.52, 20.3));
       readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(3.52, 20.3));
       copyTable();
+
+      // Create the table.
+      createTable();
+      // Write data in big-endian and check it. Align on 512.
+      createData (nseq, nant, nchan, npol, 1e9, 10., Complex(0.1, 0.1),
+                  512, True, 2);
+      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(0.1, 0.1));
+      // Update the table and check again.
+      updateTable (nchan, npol, Complex(-3.52, -20.3));
+      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(-3.52, -20.3));
+      // Write data in local format and check it. No alignment.
+      createData (nseq, nant, nchan, npol, 1e9, 10., Complex(3.1, -5.2),
+                  0, False);
+      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(3.1, -5.2));
+      // Update the table and check again.
+      updateTable (nchan, npol, Complex(3.52, 20.3));
+      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(3.52, 20.3));
+      copyTable();
+
+
     }
   } catch (AipsError x) {
     cout << "Caught an exception: " << x.getMesg() << endl;
