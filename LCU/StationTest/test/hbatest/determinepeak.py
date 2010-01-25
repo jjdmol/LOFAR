@@ -21,7 +21,7 @@ def open_dir(dirname) :
 
 def rm_files(dir_name,file) :
     cmdstr = 'rm ' + file
-    os.popen(cmdstr)
+    os.popen3(cmdstr)
     return
 
 def rec_stat(dirname,num_rcu) :
@@ -53,6 +53,27 @@ def read_frame(f):
     sst_data = sst_data.tolist()
     return sst_data
 
+# switch on HBA tiles gentle
+def switchon_hba() :
+	
+	try:
+           os.popen3("rspctl --rcumode=5 --sel=0:31")
+           time.sleep(1)
+	   os.popen3("rspctl --rcumode=5 --sel=32:63")
+           time.sleep(1)
+	   os.popen3("rspctl --rcumode=5 --sel=64:95")
+           time.sleep(1)
+	   os.popen3("rspctl --rcumode=5 --sel=96:127")
+           time.sleep(1)
+	   os.popen3("rspctl --rcumode=5 --sel=128:159")
+           time.sleep(1)
+	   os.popen3("rspctl --rcumode=5 --sel=160:191")
+           time.sleep(1)
+	except:
+	   print"NL station"	
+        os.popen("rspctl --rcuenable=1")
+        return 
+
 # Main loop
 def main() :
     sub_time=[]
@@ -79,9 +100,7 @@ def main() :
     #---------------------------------------------
     # capture reference data (all HBA elements off)
     rm_files(dir_name,'*')
-    os.popen3("swlevel 3");
-    time.sleep(5)
-    os.popen("beamctl --array=HBA --rcus=0:95 --rcumode=5 --subbands=100:110 --beamlets=0:10 --direction=0,0,LOFAR_LMN&")
+    switchon_hba()
     #os.popen("rspctl --rcumode=5 2>/dev/null")
     #os.popen("rspctl --rcuenable=1 2>/dev/null")
     for ind in range(hba_elements) :
