@@ -44,6 +44,8 @@ global dyn_string 	itsSelectionDp     = "";
 global string           itsNavigatorObject = "";
 global string           sysName            = "";
 
+global string           g_craftPath        = "http://craft.astron.nl/";
+
 // Define pathchoices to be able to check datapaths in RCU screen
 global bool InputEnable=FALSE;
 global bool LBLEnable=FALSE;
@@ -430,6 +432,8 @@ void navPanel_statePopup(string baseDP) {
  
   int idx=1;
 //  dynInsertAt(popup,"PUSH_BUTTON,Acknowledge All,3,1",idx++);
+  dynInsertAt(popup,"PUSH_BUTTON,Report issue to CRAFT,4,1",idx++);
+  dynInsertAt(popup,"SEPARATOR",idx++);    
   dynInsertAt(popup,"CASCADE_BUTTON,Set State, 1",idx++);
   dynInsertAt(popup,"CASCADE_BUTTON,Set Recursive State, 1",idx++);
   dynInsertAt(popup,"Set State",idx++);
@@ -457,6 +461,13 @@ void navPanel_statePopup(string baseDP) {
     // add 1000 to state to indicate a big non existing state, so we are able to receive that in the monitor reset controller
     // and see it's not a normal reset.
     state+=1000;
+  } else if (state == 4 ) {
+    // This will only work on windows for now    
+    string httpStr=g_craftPath+"craft/edit/setUpReportIssue.do?locationPath="+baseDP+".html";
+//    string httpStr="http://lofartest.astron.nl:8080/craft/edit/setUpReportIssue.do?locationPath="+baseDP+".html";
+    LOG_DEBUG("navPanel.ctl:navPanel_statePopup|httpStr: "+httpStr);
+    std_help(httpStr,true);
+    state=-1;    
   } else if (state == 10 ) {
     state = 0;
   } else if (state == 20) {
@@ -474,7 +485,7 @@ void navPanel_statePopup(string baseDP) {
   
   string database = dpSubStr(baseDP,DPSUB_SYS);
   string bareDP = dpSubStr(baseDP,DPSUB_DP);
-  if (state >= 0 ) {
+  if (state >= 0  ) {
     if (!recursive) {
       LOG_DEBUG("navPanel.ctl:navPanel_statePopup|Operator sets "+baseDP+".status.state to "+getStateName(state)+ " (SINGLE) on database: "+database);
       DPName=baseDP+".status.state";

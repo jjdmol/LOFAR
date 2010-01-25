@@ -183,7 +183,7 @@ void redraw_table() {
       alarmTable.cellBackColRC(alarmTable.lineCount()-1,\"State\",aColor);
     } else if (g_alarms[\"STATUS\"][j] == ACK  && choice == \"Old\") {
       string dp = navFunct_TempToObs(substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\")));
-      alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",aS,
+      alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",dp,
                             \"Message\",g_alarms[\"MESSAGE\"][j],
                             \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]),
                             \"State\",g_alarms[\"STATE\"][j]);

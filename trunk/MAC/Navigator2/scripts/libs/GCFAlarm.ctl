@@ -101,7 +101,7 @@ void alarmSystemTriggered(string dp1, dyn_time times) {
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID+".alarmsTrigger")) {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID+".alarmsTrigger",true);
   }  
-  LOG_DEBUG("GCFAlarm.ctl:alarmSystemTriggered|Nr alarms in global after update: "+ dynlen(g_alarms["TIME"]));      
+  LOG_DEBUG("GCFAlarm.ctl:alarmSystemTriggered|Nr alarms in global after update: ", dynlen(g_alarms["TIME"]));      
   showMapping(g_alarms,"g_alarms");
 
   

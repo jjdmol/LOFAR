@@ -49,7 +49,6 @@ updateTriggerDetails(string dp1, int start,
                      string dp10, int coeff3,
                      string dp11, bool invalid)
 {
-    LOG_TRACE(\"RCU_TriggerInfo.pnl:updateTriggerDetails|Trigger change\");
     if (invalid) {
     setValue(\"txt_startlevel\" , \"text\", \"\");
     setValue(\"txt_baselevel\"  , \"text\", \"\");

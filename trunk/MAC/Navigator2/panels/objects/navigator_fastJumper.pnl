@@ -154,7 +154,7 @@ void changeInfo(string aSelection) {
     }  
     dynSortAsc(datapointList);
     
-    LOG_DEBUG(\"Navigator_fastJumper.pnl:changeInfo datapointList contains: \"+datapointList);
+    LOG_DEBUG(\"Navigator_fastJumper.pnl:changeInfo|datapointList contains: \"+datapointList);
       
     // if only one entry, previous and next can be ignored
     if (dynlen(datapointList) <= 1) {

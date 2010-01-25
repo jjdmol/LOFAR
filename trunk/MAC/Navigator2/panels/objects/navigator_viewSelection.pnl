@@ -235,9 +235,15 @@ main()
 
 EP_childPanelOn()
 {
-  ChildPanelOnCentral(\"Test/Event_Viewer.pnl\",
-      \"Test Panel\",
-      makeDynString(\"\"));
+  if ( isdir (\"c:/data/CS20_CS010/data/configs/\")) {
+    ChildPanelOnCentral(\"Test/Event_Viewer.pnl\",
+                        \"Test Panel\",
+                        makeDynString(\"\"));
+    } else {
+      ChildPanelOnCentral(\"objects/lofar_logger.pnl\",
+                          \"LOFAR logger settings\",
+                          makeDynString(\"\"));
+    }
 }
 
 // SimpleCtrlScript {EP_childPanelOn}

@@ -9,7 +9,7 @@ PANEL,-1 -1 1165 830 N "_3DFace" 0
     delay(2);
     retry++;
     if (retry >= 60) {
-      LOG_FATAL(\"Event_Viewer.pnl retry longer then 2 minutes, navigatorInstance still not ready?\");
+      LOG_FATAL(\"Event_Viewer.pnl:main|retry longer then 2 minutes, navigatorInstance still not ready?\");
       break;
     }
   }
@@ -18,7 +18,7 @@ PANEL,-1 -1 1165 830 N "_3DFace" 0
   itsEventDp     = DPNAME_NAVIGATOR + g_navigatorID + \".navigator.event\";
   itsSelectionDp = DPNAME_NAVIGATOR + g_navigatorID + \".navigator.selection\";
   
-  LOG_DEBUG(\"Event_Viewer.pnl Working with itsEventDp : \" + itsEventDp);
+  LOG_DEBUG(\"Event_Viewer.pnl:main|Event_Viewer.pnl Working with itsEventDp : \" + itsEventDp);
 
   
   
@@ -470,87 +470,87 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 3 1 2 1 E  261 644 279 642
-1 737 0 "" 0
+1 786 0 "" 0
 0
-1 738 1 "" 0
+1 787 1 "" 0
 0
-1 739 2 "" 0
+1 788 2 "" 0
 0
-1 740 4 "" 0
+1 789 4 "" 0
 0
-1 741 5 "" 0
+1 790 5 "" 0
 0
-1 742 6 "" 0
+1 791 6 "" 0
 0
-1 743 7 "" 0
+1 792 7 "" 0
 0
-1 744 7 "" 1
+1 793 7 "" 1
 0
-1 745 7 "" 2
+1 794 7 "" 2
 0
-1 746 7 "" 3
+1 795 7 "" 3
 0
-1 747 7 "" 4
+1 796 7 "" 4
 0
-1 748 9 "" 0
+1 797 9 "" 0
 0
-1 749 9 "" 1
+1 798 9 "" 1
 0
-1 750 9 "" 2
+1 799 9 "" 2
 0
-1 751 9 "" 3
+1 800 9 "" 3
 0
-1 752 9 "" 4
+1 801 9 "" 4
 0
-1 753 12 "" 0
+1 802 12 "" 0
 0
-1 754 12 "" 1
+1 803 12 "" 1
 0
-1 755 12 "" 2
+1 804 12 "" 2
 0
-1 756 12 "" 3
+1 805 12 "" 3
 0
-1 757 12 "" 4
+1 806 12 "" 4
 0
-1 758 14 "" 0
+1 807 14 "" 0
 0
-1 759 14 "" 1
+1 808 14 "" 1
 0
-1 760 14 "" 2
+1 809 14 "" 2
 0
-1 761 14 "" 3
+1 810 14 "" 3
 0
-1 762 14 "" 4
+1 811 14 "" 4
 0
-1 763 17 "" 0
+1 812 17 "" 0
 0
-1 764 17 "" 1
+1 813 17 "" 1
 0
-1 765 17 "" 2
+1 814 17 "" 2
 0
-1 766 17 "" 3
+1 815 17 "" 3
 0
-1 767 17 "" 4
+1 816 17 "" 4
 0
-1 768 18 "" 0
+1 817 18 "" 0
 0
-1 769 18 "" 1
+1 818 18 "" 1
 0
-1 770 18 "" 2
+1 819 18 "" 2
 0
-1 771 18 "" 3
+1 820 18 "" 3
 0
-1 772 18 "" 4
+1 821 18 "" 4
 0
-1 773 19 "" 0
+1 822 19 "" 0
 0
-1 774 19 "" 1
+1 823 19 "" 1
 0
-1 775 19 "" 2
+1 824 19 "" 2
 0
-1 776 19 "" 3
+1 825 19 "" 3
 0
-1 777 19 "" 4
+1 826 19 "" 4
 0
 4 87
 "LINE21"
@@ -608,7 +608,7 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 3 1 2 1 E  184 290 196 290
-1 778 20 "" 0
+1 827 20 "" 0
 0
 14 134
 "txt_datapoint"
@@ -820,95 +820,6 @@ LANG:1 19 show strClaimedDP's
   DebugN(\"strClaimedDPName contains: \"+strClaimDPName);
 }" 0
  E E E
-22 270
-"COMBO_BOX1"
-""
-1 1042 20 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-142 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 1040 18 1144 45
-6
-1
-LANG:1 5 Trace
-
-0
-1
-LANG:1 5 Debug
-
-0
-1
-LANG:1 4 Info
-
-0
-1
-LANG:1 4 Warn
-
-0
-1
-LANG:1 5 Error
-
-0
-1
-LANG:1 5 Fatal
-
-0
-
-E
-"main()
-{
-  string selected=\"\";
-  int sel=0;
-  getValue(\"\",\"text\",selected);
-  if ( selected == \"Trace\") {
-    sel = LOGLEVEL_TRACE;
-  } else if ( selected == \"Debug\") {
-    sel = LOGLEVEL_DEBUG;
-  } else if ( selected == \"Info\") {
-    sel = LOGLEVEL_INFO;
-  } else if ( selected == \"Warn\") {
-    sel = LOGLEVEL_WARN;
-  } else if ( selected == \"Error\") {
-    sel = LOGLEVEL_ERROR;
-  } else if ( selected == \"Fatal\") {
-    sel = LOGLEVEL_FATAL;
-  } 
-  
-  LOG_TRACE(\"Event_Viewer.pnl:Changed| changing loglevel to :\"+selected);
-  setLoglevel(sel);
-                  
-}" 0
-
-E
- 1 0
-2 272
-"PRIMITIVE_TEXT13"
-""
-1 952 26 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-144 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 952 26 1028 40
-0 2 2 "0s" 0 0 0 192 0 0  952 26 1
-1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
-LANG:1 12 Debug Level:
 4 273
 "LINE26"
 ""
@@ -1094,68 +1005,6 @@ LANG:1 24 show g_observationsList
   LOG_DEBUG(\"Event_Viewer.pnl show g_observationsList\");
   for (int i=1; i<= dynlen(g_observationsList);i++) {
     DebugN(\"g_observationsList: \"+ g_observationsList[i]);
-  }
-}" 0
- E E E
-13 407
-"PUSH_BUTTON13"
-""
-1 953 50 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
- E E
-160 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 951 48 1055 72
-
-T 
-1
-LANG:1 18 Clear searchArrays
-"main()
-{
-  // reset scopes and searchStrings:
-  if (dpExists(DPNAME_LOGLEVEL+\".logScope\") && dpExists(DPNAME_LOGLEVEL+\".logScope\")) {
-    dpSet(DPNAME_LOGLEVEL+\".logScope\",makeDynString(\"\"),
-          DPNAME_LOGLEVEL+\".searchString\",makeDynString(\"\"));
-  }
-}" 0
- E E E
-13 408
-"PUSH_BUTTON14"
-""
-1 953 72 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
- E E
-162 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 951 70 1055 94
-
-T 
-1
-LANG:1 17 Show searchArrays
-"main()
-{
-  dyn_string anArray;
-  if (dpExists(DPNAME_LOGLEVEL+\".logScope\")) {
-    dpGet(DPNAME_LOGLEVEL+\".logScope\",anArray);
-    showDynArray(anArray,\"logScope\");
-  }
-  if (dpExists(DPNAME_LOGLEVEL+\".searchString\")) {
-    dpGet(DPNAME_LOGLEVEL+\".searchString\",anArray);
-    showDynArray(anArray,\"searchString\");
   }
 }" 0
  E E E
@@ -1508,17 +1357,17 @@ LANG:1 21 show g_processesList
   }
 }" 0
  E E E
-1 779 21 "" 0
+1 828 21 "" 0
 0
-1 780 21 "" 1
+1 829 21 "" 1
 0
-1 781 21 "" 2
+1 830 21 "" 2
 0
-1 782 21 "" 3
+1 831 21 "" 3
 0
-1 783 21 "" 4
+1 832 21 "" 4
 0
-1 784 22 "" 0
+1 833 22 "" 0
 0
 4 685
 "LINE28"
@@ -1607,6 +1456,51 @@ LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0
 0 ""
  18 792 304 815
 3 "0s" 0 0 0 0 0 -1  E E E
+13 785
+"PUSH_BUTTON20"
+""
+1 950 20 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+208 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 948 18 1072 44
+
+T 
+1
+LANG:1 16 Logger Settings
+
+"// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_childPanelOn();
+}
+
+EP_childPanelOn()
+{
+  ChildPanelOnCentralModal(\"objects/lofar_logger.pnl\",
+      \"Lofar Logger settings\",
+      makeDynString(\"\"));
+}
+
+// SimpleCtrlScript {EP_childPanelOn}
+// Function {ChildPanelOnCentralModal}
+// File {objects/lofar_logger.pnl}
+// Panel {Lofar Logger settings}
+// Parent {}
+// Module {}
+// OffsetX {0}
+// OffsetY {0}
+// SimpleCtrlScriptEnd {EP_childPanelOn}
+" 0
+ E E E
 0
 LAYER, 1 
 1

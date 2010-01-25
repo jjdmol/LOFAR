@@ -51,6 +51,8 @@ global string     g_lastHardwareDatapoint = MainDBName+"LOFAR_PIC_Europe";
 global string     g_lastProcessesDatapoint = MainDBName+"LOFAR_PermSW";
 global string     g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
 
+
+
 global dyn_string g_observationsList;  // holds active observations
 global dyn_string g_processesList;     // holds active software
 global mapping    g_observations;      //
@@ -105,7 +107,14 @@ void navigator_handleEventInitialize()
   // make sure there is a __navigator<id> datapoint of the type GCFNavigatorInstance.
   navConfig_setNavigatorID(navID); 
 
-  // fill global stations lists
+  // initialize the logSystem
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".logger")) {
+    initLog(DPNAME_NAVIGATOR + g_navigatorID + ".logger");
+  } else {
+    DebugN("ERROR: Logsystem hasn't been found.");
+  }
+  
+    // fill global stations lists
   navFunct_fillStationLists();
  
   // Init the connection Watchdog
@@ -116,12 +125,6 @@ void navigator_handleEventInitialize()
   // we can use this to translate a claimed name into a real datapoint name
   claimManager_queryConnectClaims();
   
-  // initialize the logSystem
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".logger")) {
-    initLog(DPNAME_NAVIGATOR + g_navigatorID + ".logger");
-  } else {
-    DebugN("ERROR: Logsystem hasn't been found.");
-  }
 
   // set user to root for now, has to be taken from PVSS login later
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".user")) {
@@ -134,7 +137,7 @@ void navigator_handleEventInitialize()
         
   // Initilaize the alarm system
   initNavigatorAlarms();
-
+ 
   // Do a dpQueryConnectSingle() so that we get a list of observations
   // so that we can easily populate our tables with 'Planned', 'Running' and 'Finished' observations
   navFunct_queryConnectObservations();

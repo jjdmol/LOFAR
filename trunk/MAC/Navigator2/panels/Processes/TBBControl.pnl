@@ -22,11 +22,12 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 		                   baseDP + \".trigger.peakValue\",
 		                   baseDP + \".trigger.flags\",
 		                   baseDP + \".trigger.table\",
+		                   baseDP + \".trigger.missed\",
                                	   baseDP + \".connected:_online.._invalid\") == -1) {
       LOG_ERROR(\"TBBControl.pnl:main|Couldn't  connect to: \"+baseDP);
     }
     if (!navFunct_dpReachable(baseDP)) {
-      updateTBBControl(\"\", false, \"\",0,\"\",0,\"\",\"\",\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",\"\",\"\",true);
+      updateTBBControl(\"\", false, \"\",0,\"\",0,\"\",\"\",\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",\"\",\"\",0,true);
     }
   } else {
     LOG_ERROR(\"TBBControl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
@@ -40,6 +41,7 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
     setValue(\"peakValueText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"flagsText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"tableText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"missedText\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }
   
   reload(); 
@@ -55,7 +57,8 @@ updateTBBControl(string dp1, bool connected,
               string dp8, unsigned peakValue,
               string dp9, unsigned flags,
               string dp10, string table,
-              string dp11, bool invalid)
+              string dp11, string missed,
+              string dp12, bool invalid)
 {
   LOG_TRACE(\"TBBControl.pnl:updateTBBControl|entered\");
   string SymbolCol= \"_Window\";
@@ -74,6 +77,7 @@ updateTBBControl(string dp1, bool connected,
     setValue(\"peakValueText\", \"text\", peakValue);
     setValue(\"flagsText\", \"text\", flags);
     setValue(\"tableText\", \"text\", table);
+    setValue(\"missedText\", \"text\", missed);
     
   } else {
     SymbolCol=\"Lofar_invalid\";
@@ -91,6 +95,7 @@ updateTBBControl(string dp1, bool connected,
   setValue(\"peakValueText\", \"backCol\",SymbolCol);
   setValue(\"flagsText\", \"backCol\", SymbolCol);
   setValue(\"tableText\", \"backCol\", SymbolCol);  
+  setValue(\"missedText\", \"backCol\", SymbolCol);  
 }
 
 void prepareProcesses() {
@@ -580,6 +585,43 @@ LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,
 0 ""
 1
 LANG:1 8 Trigger:
+2 118
+"PRIMITIVE_TEXT20"
+""
+1 32 593 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+74 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 32 593 74 607
+0 2 2 "0s" 0 0 0 192 0 0  32 593 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 7 missed:
+14 119
+"missedText"
+""
+1 110 379 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+76 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 115 587 334 608
+2 "0s" 0 0 0 0 0 -1  E E E
 0
 LAYER, 1 
 1
