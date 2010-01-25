@@ -323,17 +323,18 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 
 	case F_TIMER: 
 //		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
-		LOG_DEBUG ("Trying to reconnect to BeamServer");
+		LOG_DEBUG ("Trying to (re)connect to BeamServer");
 		itsBeamServer->open();		// will result in F_CONN or F_DISCONN
 		break;
 
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
 	case CONTROL_CLAIM: {
 		CONTROLClaimEvent		msg(event);
-		LOG_DEBUG_STR("Received CLAIM(" << msg.cntlrName << ")");
+		LOG_DEBUG_STR("Received CLAIM(" << msg.cntlrName << "), connecting to BeamServer in 5 seconds");
 		setState(CTState::CLAIM);
-		LOG_DEBUG ("Trying to connect to BeamServer");
-		itsBeamServer->open();		// will result in F_CONN or F_DISCONN
+		// wait several seconds before connecting to the BeamServer. When the state of the splitters are changed
+		// the Beamserver will through us out anyway. So don't frustate the BeamServer with needless connections.
+		itsTimerPort->setTimer(5.0);
 		break;
 	}
 
@@ -376,10 +377,10 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 		port.close();
 		ASSERTSTR (&port == itsBeamServer, 
 								"F_DISCONNECTED event from port " << port.getName());
-		LOG_WARN("Connection with BeamServer lost");
+		LOG_WARN("Connection with BeamServer lost, may be due to splitter change, going to reconnect.");
 		setObjectState("Connection with BeamServer lost!", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
-		finish();
-//		TRAN(BeamControl::started_state);
+		itsTimerPort->setTimer(2.0);	// start timer for reconnect and switch state.
+		TRAN(BeamControl::started_state);
 		break;
 	}
 
