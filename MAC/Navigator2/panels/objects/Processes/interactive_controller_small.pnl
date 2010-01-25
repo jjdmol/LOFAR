@@ -166,7 +166,7 @@ void reload(string obsBDP,string station) {
       connected=true;
     }
   } else {
-    LOG_ERROR(\"interactive_controller_small.pnl:reload|Couldn't find DP to connect to: \"+baseDP);
+    LOG_WARN(\"interactive_controller_small.pnl:reload|Couldn't find DP to connect to: \"+baseDP);
     myTable.deleteAllLines();
   }	
   // pass baseDP to selfstate Object to work with

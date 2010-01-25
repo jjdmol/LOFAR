@@ -8,7 +8,6 @@ PANEL,-1 -1 384 349 N "_3DFace" 2
 {
   baseDP=g_currentDatapoint;
 
-  LOG_TRACE(\"DP: \" + baseDP + \"  Component: \"+$Component);
   if (dpExists(baseDP + \".\" + $Component)) {
     setValue(\"txt_comp\", \"text\", $Caption);
     dpConnect(\"controlComponent\", baseDP + \".\" + $Component + \":_online.._value\",

@@ -1,0 +1,665 @@
+V 10
+1
+LANG:1 22 Lofar logging settings
+PANEL,-1 -1 835 636 N "_3DFace" 0
+"main()
+{
+  int oldLevel=0;
+  
+  if(dpExists(DPNAME_LOGLEVEL)) {
+    dyn_errClass err;
+    dpGet(DPNAME_LOGLEVEL+\".logLevel\",oldLevel);
+    err = getLastError();
+    if (dynlen(err) > 0) {
+      errorDialog(err);
+    }
+    if (oldLevel == LOGLEVEL_TRACE) {
+      setValue(\"cb_level\",\"text\",\"Trace\");
+    } else if ( oldLevel == LOGLEVEL_DEBUG) {
+      setValue(\"cb_level\",\"text\",\"Debug\");
+    } else if ( oldLevel == LOGLEVEL_INFO) {
+      setValue(\"cb_level\",\"text\",\"Info\");
+    } else if ( oldLevel == LOGLEVEL_WARN) {
+      setValue(\"cb_level\",\"text\",\"Warn\");
+    } else if ( oldLevel == LOGLEVEL_ERROR) {
+      setValue(\"cb_level\",\"text\",\"Error\");
+    } else if ( oldLevel == LOGLEVEL_FATAL) {
+      setValue(\"cb_level\",\"text\",\"Fatal\");
+    }    
+  }
+  
+  tbl_logScope.deleteAllLines();
+  dyn_string anArray;
+  if (dpExists(DPNAME_LOGLEVEL+\".logScope\")) {
+    dpGet(DPNAME_LOGLEVEL+\".logScope\",anArray);
+    for (int i=1; i<= dynlen(anArray); i++) {
+      setValue(\"tbl_logScope\",\"appendLine\",\"scope\",anArray[i]);
+      dynAppend(scopes,anArray[i]);
+    }
+  }
+  
+  tbl_searchString.deleteAllLines();
+  if (dpExists(DPNAME_LOGLEVEL+\".searchString\")) {
+    dpGet(DPNAME_LOGLEVEL+\".searchString\",anArray);
+    for (int i=1; i<= dynlen(anArray); i++) {
+      setValue(\"tbl_searchString\",\"appendLine\",\"search\",anArray[i]);
+      dynAppend(searchStrings,anArray[i]);
+    }
+  } 
+  
+  deleteScope.enabled(false); 
+  deleteSearch.enabled(false); 
+}" 0
+ E E E E 1 -1 -1 0  30 110
+""0  1
+E "#uses \"GCFLogging.ctl\"
+
+string selection = \"Library\";
+dyn_string scopes;
+dyn_string searchStrings;
+
+
+void writeTables() {
+  if (dpExists(DPNAME_LOGLEVEL+\".logScope\")) {
+    dpSet(DPNAME_LOGLEVEL+\".logScope\",scopes);
+  }
+  
+  if (dpExists(DPNAME_LOGLEVEL+\".searchString\")) {
+    dpSet(DPNAME_LOGLEVEL+\".searchString\",searchStrings);
+  } 
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 0
+"RECTANGLE1"
+""
+1 0 10 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  if (scopeChoice.number() == 0 ) {
+     
+  } else {
+    
+  }
+}" 0
+ 0 1 1 2 1 E 1.227272727272727 0 1 10 0 1 E 0 10 660 610
+22 1
+"cb_level"
+""
+1 40 80 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 38 78 142 105
+6
+1
+LANG:1 5 Trace
+
+0
+1
+LANG:1 5 Debug
+
+0
+1
+LANG:1 4 Info
+
+0
+1
+LANG:1 4 Warn
+
+0
+1
+LANG:1 5 Error
+
+0
+1
+LANG:1 5 Fatal
+
+0
+
+E
+"main()
+{
+  string selected=\"\";
+  int sel=0;
+  getValue(\"\",\"text\",selected);
+  if ( selected == \"Trace\") {
+    sel = LOGLEVEL_TRACE;
+  } else if ( selected == \"Debug\") {
+    sel = LOGLEVEL_DEBUG;
+  } else if ( selected == \"Info\") {
+    sel = LOGLEVEL_INFO;
+  } else if ( selected == \"Warn\") {
+    sel = LOGLEVEL_WARN;
+  } else if ( selected == \"Error\") {
+    sel = LOGLEVEL_ERROR;
+  } else if ( selected == \"Fatal\") {
+    sel = LOGLEVEL_FATAL;
+  } 
+  
+  LOG_TRACE(\"Event_Viewer.pnl:Changed| changing loglevel to :\"+selected);
+  setLoglevel(sel);
+                  
+}" 0
+
+E
+ 1 0
+2 2
+"PRIMITIVE_TEXT13"
+""
+1 40 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 40 60 116 74
+0 2 2 "0s" 0 0 0 192 0 0  40 60 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 12 Debug Level:
+2 5
+"PRIMITIVE_TEXT14"
+""
+1 220 30 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 220 30 382 47
+0 2 2 "0s" 0 0 0 192 0 0  220 30 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 21 LOFAR Logger Settings
+25 7
+"tbl_logScope"
+""
+1 40.00000000000004 150 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+11 0 0 0 0 0
+"main()
+{
+  deleteSearch.enabled(false);   
+  deleteScope.enabled(true);   
+}" 0
+ E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 38 148 482 332
+"main()
+{
+  this.tableMode(TABLE_SELECT_MULTIPLE);
+  this.selectByClick(TABLE_SELECT_LINE);
+}" 0
+"main(int row, string column, string value)
+{
+  deleteScope.enabled(true);    
+}" 0
+ 1 0 1 1 0 "scope" 60 1 0 "s" 1
+LANG:1 5 scope
+E
+1
+LANG:1 165 If there are values in this or the search table, the only logging that will be shown is the logging that matches any of the panels, libraries and searchstrings given
+
+550 
+14 14 10 10
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+0 1 1 4 7
+1 0
+2 8
+"PRIMITIVE_TEXT15"
+""
+1 42 132 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 42 132 129 146
+0 2 2 "0s" 0 0 0 192 0 0  42 132 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 14 Logger scopes:
+25 9
+"tbl_searchString"
+""
+1 40.00000000000004 400 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+15 0 0 0 0 0
+"main()
+{
+  deleteSearch.enabled(true);   
+  deleteScope.enabled(false);   
+}" 0
+ E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 38 398 482 572
+"main()
+{
+  this.tableMode(TABLE_SELECT_MULTIPLE);
+  this.selectByClick(TABLE_SELECT_LINE);  
+}" 0
+"main(int row, string column, string value)
+{
+  deleteSearch.enabled(true);   
+}" 0
+ 1 0 1 1 0 "search" 60 1 0 "s" 1
+LANG:1 6 search
+E
+1
+LANG:1 165 If there are values in this or the search table, the only logging that will be shown is the logging that matches any of the panels, libraries and searchstrings given
+
+550 
+14 14 10 10
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+0 1 1 4 7
+1 0
+2 10
+"PRIMITIVE_TEXT16"
+""
+1 42 382 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 42 382 127 396
+0 2 2 "0s" 0 0 0 192 0 0  42 382 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 15 Search strings:
+13 11
+"deleteScope"
+""
+1 40 340 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 38 338 112 364
+
+T 
+1
+LANG:1 6 Delete
+"main()
+{
+  dyn_int lines;
+  getValue(\"tbl_logScope\",\"getSelectedLines\",lines);
+  for (int i=dynlen(lines);i>0;i--) {
+    // Tables start with 0 dyn_arrays start with 1!!!!!!
+    tbl_logScope.deleteLineN(lines[i]);
+    dynRemove(scopes,lines[i]+1);
+  }
+  writeTables();  
+}" 0
+ E E E
+13 12
+"deleteSearch"
+""
+1 40 580 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 38 578 112 604
+
+T 
+1
+LANG:1 6 Delete
+"main()
+{
+  dyn_int lines;
+  getValue(\"tbl_searchString\",\"getSelectedLines\",lines);
+  for (int i=dynlen(lines);i>0;i--) {
+    // Tables start with 0 dyn_arrays start with 1!!!!!!
+    tbl_searchString.deleteLineN(lines[i]);
+    dynRemove(searchStrings,lines[i]+1);
+  }
+  writeTables();
+}" 0
+ E E E
+13 13
+"applyScope"
+""
+1 580 310 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+21 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 578 308 632 334
+
+T 
+1
+LANG:1 5 Apply
+"main()
+{
+  if (selection ==\"Library\" ) {
+    tbl_logScope.appendLine(\"scope\",Library_box.selectedText());
+    dynAppend(scopes,Library_box.selectedText());
+  } else if (selection == \"Panel\" ){
+    tbl_logScope.appendLine(\"scope\",Panel_box.selectedText());
+    dynAppend(scopes,Panel_box.selectedText());
+  }
+  writeTables();
+}" 0
+ E E E
+19 18
+"scopeChoice"
+""
+1 500 212 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+29 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 498 210 602 304
+2
+T 
+1
+LANG:1 7 Library
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 5 Panel
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E "main(int button)
+{
+  if (this.number() == 0 ) {
+    Library_box.enabled(true);
+    Panel_box.enabled(false);
+    selection = \"Library\";
+  } else {
+    Library_box.enabled(false);
+    Panel_box.enabled(true);
+    selection = \"Panel\";
+  }    
+}" 0
+
+22 19
+"Library_box"
+""
+1 580 232 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+31 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 578 230 802 251
+0
+
+"main()
+{
+  dyn_string libraries = getFileNames(PROJ_PATH+\"/scripts/\",\"*.ctl\"); 
+  Library_box.deleteAllItems();
+  Library_box.items(libraries);
+  Library_box.text(libraries[1]); 
+}" 0
+
+E
+E
+ 0 0
+22 20
+"Panel_box"
+""
+1 580 274 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+33 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 578 262 802 283
+0
+
+"main()
+{
+  dyn_string libraries = getFileNames(PROJ_PATH+\"/scripts/\",\"*.ctl\"); 
+  libraries = getFileNames(PROJ_PATH+\"/panels/\",\"navigator.pnl\");
+  dynAppend(libraries,getFileNames(PROJ_PATH+\"/panels/Hardware/\",\"*.pnl\"));
+  dynAppend(libraries,getFileNames(PROJ_PATH+\"/panels/Observations/\",\"*.pnl\"));
+  dynAppend(libraries,getFileNames(PROJ_PATH+\"/panels/Processes/\",\"*.pnl\"));
+  dynAppend(libraries,getFileNames(PROJ_PATH+\"/panels/Reports/\",\"*.pnl\"));
+  dynAppend(libraries,getFileNames(PROJ_PATH+\"/panels/objects/\",\"*.pnl\"));
+  dynAppend(libraries,getFileNames(PROJ_PATH+\"/panels/objects/Hardware/\",\"*.pnl\"));
+  dynAppend(libraries,getFileNames(PROJ_PATH+\"/panels/objects/Observations/\",\"*.pnl\"));
+  dynAppend(libraries,getFileNames(PROJ_PATH+\"/panels/objects/Processes/\",\"*.pnl\"));
+  dynAppend(libraries,getFileNames(PROJ_PATH+\"/panels/objects/Reports/\",\"*.pnl\"));
+  dynSortAsc(libraries);
+  Panel_box.deleteAllItems();
+  Panel_box.items(libraries);
+  Panel_box.text(libraries[1]);   
+}" 0
+
+E
+E
+ 0 0
+2 21
+"PRIMITIVE_TEXT1"
+""
+1 550 192 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+35 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 550 192 758 206
+0 2 2 "0s" 0 0 0 192 0 0  550 192 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 37 Libraries and panels to add to logger
+14 22
+"searchInput"
+""
+1 580 462 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+36 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 578 460 802 481
+3 "0s" 0 0 0 0 0 -1  E E E
+13 23
+"applySearch"
+""
+1 580 550 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+38 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 578 548 632 574
+
+T 
+1
+LANG:1 5 Apply
+"main()
+{
+  if (searchInput.text() != \"\" ) {
+    tbl_searchString.appendLine(\"search\",searchInput.text());
+    dynAppend(searchStrings,searchInput.text());
+  }
+  writeTables();  
+}" 0
+ E E E
+2 24
+"PRIMITIVE_TEXT17"
+""
+1 550 424 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+40 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 550 424 719 438
+0 2 2 "0s" 0 0 0 192 0 0  550 424 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 30 Searchstring  to add to logger
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

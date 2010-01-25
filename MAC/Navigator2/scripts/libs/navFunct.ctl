@@ -263,8 +263,8 @@ void navFunct_updateObservations(string dp1, dyn_string active,
       g_observations[ "SCHEDULE"       ][iPos]  = "active";
     }      
   }
-  
-    for (int i = 1; i<= dynlen(planned); i++) {
+
+  for (int i = 1; i<= dynlen(planned); i++) {
     string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+planned[i]);
     if (dp != "") {
       iPos=dynAppend(g_observations[ "DP"          ] , dp);
@@ -276,7 +276,7 @@ void navFunct_updateObservations(string dp1, dyn_string active,
     }      
   }
 
-  
+
   // check if tabCtrl has a Panel loaded (indicating init has passed and panels are loaded)
   // in that case a Navigator event should be issued after a change in MACScheduler observations, 
   // so the involved objects can update themselves.
@@ -293,6 +293,7 @@ void navFunct_updateObservations(string dp1, dyn_string active,
       LOG_ERROR("navPanel.ctl:navPanel_setEvent| "+eventDp +" or " +selectionDp + " Does not exist yet");     
     }
   }
+
 }
 
 //*******************************************
@@ -1101,8 +1102,8 @@ void navFunct_fillHardwareLists() {
       string obsName = "LOFAR_ObsSW_"+g_observationsList[i];
       int iPos = dynContains( g_observations[ "NAME"         ], obsName);
       if (iPos <=0) {
-        LOG_DEBUG("navFunct.ctl:navFunct_fillHardwareLists|Observation: "+ obsName+" not in g_observations.");     
-        return;
+        LOG_DEBUG("navFunct.ctl:navFunct_fillHardwareLists|ERROR: Observation "+ obsName+" not in g_observations.");     
+        continue;
       }
   
       dyn_string obsStations = navFunct_listToDynString(g_observations[ "STATIONLIST"    ][iPos]);
@@ -1548,7 +1549,7 @@ void navFunct_fillObservationsTree() {
     int iPos = dynContains(g_observations["NAME"],obsName);
     if (iPos < 1) {
       LOG_DEBUG("navFunct.ctl:navFunct_fillObservationsTree|ERROR, couldn't find "+obsName+" in g_observations");
-      return;
+      continue;
     }
            
     
