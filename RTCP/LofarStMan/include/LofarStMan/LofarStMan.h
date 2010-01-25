@@ -185,7 +185,11 @@ public:
   void getData (uint rownr, casa::Complex* buf);
   void putData (uint rownr, const casa::Complex* buf);
   const casa::uShort* getNSample (uint rownr, bool swapIfNeeded);
+  const casa::uInt* getNSampleV2 (uint rownr, bool swapIfNeeded);
   // </group>
+
+  const uint getLofarStManVersion() const
+    { return itsVersion; }
 
 private:
   // Copy constructor cannot be used.
@@ -292,7 +296,10 @@ private:
   int64  itsSampStart;    //# start of nsamples in a block
   //# Buffer to hold swapped nsample values.
   casa::Block<casa::uShort> itsNSampleBuf;
+  casa::Block<casa::uInt> itsNSampleBufV2;
   double  itsMaxNrSample;  //# weight = nsample / itsMaxNrSample;
+
+  uint itsVersion;        //# Version of LofarStMan MeasurementSet
 };
 
 
