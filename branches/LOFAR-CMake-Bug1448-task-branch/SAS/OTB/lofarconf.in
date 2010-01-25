@@ -1,8 +1,0 @@
-#
-# Add packagenames from pacakages that resort under this Superclass
-# here. Insert a oneline comment
-#
-jOTDB2			#short description
-scripts
-#OTB			#short description
-#MoM-OTDB-adapter	#short description
