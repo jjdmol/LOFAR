@@ -1,0 +1,62 @@
+#!/bin/sh
+
+# Set srcdir if needed.
+# It might not be set if the .run file is executed directly instead of
+# by 'make check'.
+if [ "$srcdir" = "" ]; then
+  srcdir=../../../test
+fi
+
+# Create the ParmDB tables for tMSData.
+$srcdir/makeDemoParmDB tMSData
+
+status=3
+if [ -d $LOFARDATAROOT/BBS2/demo3.MS -a -d $LOFARDATAROOT/BBS2/demo3.MS_p1 ]; then
+  echo "run1 ..."
+  $LOFAR_CHECKTOOL ./tMSData $LOFARDATAROOT/BBS2/demo3.MS $USER $LOFARDATAROOT/BBS2/demo3.MS_p1 tMSData_tmp.demo_instr tMSData_tmp.demo_sky 0 100 MODEL_DATA
+  status=$?
+fi
+
+echo "run2 ..."
+if [ -d $LOFARDATAROOT/BBS2/3C343/10008336.MS -a -d $LOFARDATAROOT/BBS2/3C343/10008336.MS_p1 ]; then
+  $LOFAR_CHECKTOOL ./tMSData $LOFARDATAROOT/BBS2/3C343/10008336.MS $USER $LOFARDATAROOT/BBS2/3C343/10008336.MS_p1 tMSData_tmp.demo_instr tMSData_tmp.demo_sky 0 14 DATA
+  stat=$?
+  if [ $stat != 0 ]; then
+    status=$stat
+  fi
+fi
+
+# Try to do a test with multiple bands by creating an MS with 2 bands.
+if [ ! -d $HOME/WSRT_ANTENNA ]; then
+  exit $status
+fi
+cat > makems.cfg << EOF
+StartFreq=1170e6
+StepFreq=100000
+StartTime=2000/08/03/13:22:30
+StepTime=10
+RightAscension=16:38:28.205274248
+Declination=62.34.44.313606568
+NBands=2
+NFrequencies=100
+NTimes=14
+NParts=1
+WriteAutoCorr=T
+AntennaTableName=$HOME/WSRT_ANTENNA
+MSName=tMSData_tmp.MS
+MSDesPath=.
+EOF
+makems
+\rm -f makems.cfg
+echo "run3 band 0 ..."
+$LOFAR_CHECKTOOL ./tMSData tMSData_tmp.MS_p1 $USER tMSData_tmp.MS_p1 tMSData_tmp.demo_instr tMSData_tmp.demo_sky 0 14 DATA
+stat=$?
+if [ $stat != 0 ]; then
+  status=$stat
+fi
+echo "run3 band 1 ..."
+$LOFAR_CHECKTOOL ./tMSData tMSData_tmp.MS_p1 $USER tMSData_tmp.MS_p1 tMSData_tmp.demo_instr tMSData_tmp.demo_sky 1 14 DATA
+stat=$?
+if [ $stat != 0 ]; then
+  status=$stat
+fi
