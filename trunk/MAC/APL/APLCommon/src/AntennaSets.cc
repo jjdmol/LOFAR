@@ -265,8 +265,8 @@ bool	AntennaSets::usesLBAfield(const string&		setName, uint	stationType) const
 	ASSERTSTR(iter != itsDefinitions.end(), setName << " is not defined in " << itsAntennaSetFile);
 	switch (stationType) {
 	case 0: return (iter->second.core.LBAallocation.count());
-	case 1: return (iter->second.remote.HBAallocation.count());
-	case 2: return (iter->second.europe.HBAallocation.count());
+	case 1: return (iter->second.remote.LBAallocation.count());
+	case 2: return (iter->second.europe.LBAallocation.count());
 	default: ASSERT(false);		// satisfy compiler.
 	}
 }
