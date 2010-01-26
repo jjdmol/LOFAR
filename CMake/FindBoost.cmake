@@ -1,6 +1,7 @@
 # - A tiny wrapper around the FindBoost.cmake macro that comes with CMake. 
 # Its purpose is fourfold:
 #  - Set BOOST_ROOT if BOOST_ROOT_DIR is set.
+#  - Set Boost_USE_MULTITHREADED according to the value of USE_THREADS.
 #  - Remove Boost components that have been disabled explicitly from the
 #    Boost_FIND_COMPONENTS list. Raise an error, if the component is
 #    required.
@@ -33,6 +34,13 @@
 if(BOOST_ROOT_DIR)
   set(BOOST_ROOT ${BOOST_ROOT_DIR})
 endif(BOOST_ROOT_DIR)
+
+# Set Boost_USE_MULTITHREADED according to the value of USE_THREADS
+if(USE_THREADS)
+  set(Boost_USE_MULTITHREADED ON)
+else(USE_THREADS)
+  set(Boost_USE_MULTITHREADED OFF)
+endif(USE_THREADS)
 
 # Boost components that have been disabled explicitly by the user, should be
 # removed from the Boost_FIND_COMPONENTS list.
