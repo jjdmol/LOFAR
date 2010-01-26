@@ -314,6 +314,13 @@
 				<visibility>0</visibility>
 				<open>1</open>
 				<Placemark>
+					<description>RS104</description>
+					<styleUrl>#msn_placemark_circle6</styleUrl>
+					<Point>
+						<coordinates>6.929932,52.943271,0</coordinates>
+					</Point>
+				</Placemark>
+				<Placemark>
 					<description>RS106</description>
 					<styleUrl>#msn_placemark_circle6</styleUrl>
 					<Point>
@@ -321,10 +328,24 @@
 					</Point>
 				</Placemark>
 				<Placemark>
+					<description>RS205</description>
+					<styleUrl>#msn_placemark_circle6</styleUrl>
+					<Point>
+						<coordinates>6.901595,52.855552,0</coordinates>
+					</Point>	
+				</Placemark>
+				<Placemark>
 					<description>RS208</description>
 					<styleUrl>#msn_placemark_circle6</styleUrl>
 					<Point>
 						<coordinates>6.918859,52.670176,0</coordinates>
+					</Point>
+				</Placemark>
+				<Placemark>
+					<description>RS210</description>
+					<styleUrl>#msn_placemark_circle6</styleUrl>
+					<Point>
+						<coordinates>6.74932,52.30149,0</coordinates>
 					</Point>
 				</Placemark>
 				<Placemark>
@@ -342,10 +363,59 @@
 					</Point>
 				</Placemark>
 				<Placemark>
+					<description>RS310</description>
+					<styleUrl>#msn_placemark_circle6</styleUrl>
+					<Point>
+						<coordinates>6.10949205,52.770881,0</coordinates>
+					</Point>
+				</Placemark>
+				<Placemark>
+					<description>RS404</description>
+					<styleUrl>#msn_placemark_circle6</styleUrl>
+					<Point>
+						<coordinates>6.807456,52.928612,0</coordinates>
+					</Point>
+				</Placemark>
+				<Placemark>
+					<description>RS406</description>
+					<styleUrl>#msn_placemark_circle6</styleUrl>
+					<Point>
+						<coordinates>6.787059,52.98817,0</coordinates>
+					</Point>
+				</Placemark>
+				<Placemark>
+					<description>RS407</description>
+					<styleUrl>#msn_placemark_circle6</styleUrl>
+					<Point>
+						<coordinates>6.779768,53.086217,0</coordinates>
+					</Point>
+				</Placemark>
+				<Placemark>
+					<description>RS409</description>
+					<styleUrl>#msn_placemark_circle6</styleUrl>
+					<Point>
+						<coordinates>6.32235,53.01043,0</coordinates>
+					</Point>
+				</Placemark>
+				<Placemark>
+					<description>RS410</description>
+					<styleUrl>#msn_placemark_circle6</styleUrl>
+					<Point>
+						<coordinates>5.83021,52.99421,0</coordinates>
+					</Point>
+				</Placemark>
+				<Placemark>
 					<description>RS503</description>
 					<styleUrl>#sn_shaded_dot</styleUrl>
 					<Point>
 						<coordinates>6.851478,52.943584,0</coordinates>
+					</Point>
+				</Placemark>
+				<Placemark>
+					<description>RS508</description>
+					<styleUrl>#sn_shaded_dot</styleUrl>
+					<Point>
+						<coordinates>6.94461,53.22888,0</coordinates>
 					</Point>
 				</Placemark>
 				<Placemark>
@@ -357,24 +427,10 @@
 				</Placemark>				
 			</Folder>				
 			<Placemark>
-				<description>RS104</description>
-				<styleUrl>#msn_placemark_circle6</styleUrl>
-				<Point>
-					<coordinates>6.929932,52.943271,0</coordinates>
-				</Point>
-			</Placemark>
-			<Placemark>
 				<description>RS107</description>
 				<styleUrl>#msn_placemark_circle6</styleUrl>
 				<Point>
 					<coordinates>7.103304,52.928932,0</coordinates>
-				</Point>
-			</Placemark>
-			<Placemark>
-				<description>RS205</description>
-				<styleUrl>#msn_placemark_circle6</styleUrl>
-				<Point>
-					<coordinates>6.901595,52.855552,0</coordinates>
 				</Point>
 			</Placemark>
 			<Placemark>
@@ -392,13 +448,6 @@
 				</Point>
 			</Placemark>
 			<Placemark>
-				<description>RS210</description>
-				<styleUrl>#msn_placemark_circle6</styleUrl>
-				<Point>
-					<coordinates>6.74932,52.30149,0</coordinates>
-				</Point>
-			</Placemark>
-			<Placemark>
 				<description>RS308</description>
 				<styleUrl>#msn_placemark_circle6</styleUrl>
 				<Point>
@@ -413,13 +462,6 @@
 				</Point>
 			</Placemark>
 			<Placemark>
-				<description>RS310</description>
-				<styleUrl>#msn_placemark_circle6</styleUrl>
-				<Point>
-					<coordinates>6.10949205,52.770881,0</coordinates>
-				</Point>
-			</Placemark>
-			<Placemark>
 				<description>RS311</description>
 				<styleUrl>#msn_placemark_circle6</styleUrl>
 				<Point>
@@ -427,45 +469,10 @@
 				</Point>
 			</Placemark>
 			<Placemark>
-				<description>RS404</description>
-				<styleUrl>#msn_placemark_circle6</styleUrl>
-				<Point>
-					<coordinates>6.807456,52.928612,0</coordinates>
-				</Point>
-			</Placemark>
-			<Placemark>
-				<description>RS406</description>
-				<styleUrl>#msn_placemark_circle6</styleUrl>
-				<Point>
-					<coordinates>6.787059,52.98817,0</coordinates>
-				</Point>
-			</Placemark>
-			<Placemark>
-				<description>RS407</description>
-				<styleUrl>#msn_placemark_circle6</styleUrl>
-				<Point>
-					<coordinates>6.779768,53.086217,0</coordinates>
-				</Point>
-			</Placemark>
-			<Placemark>
 				<description>RS408</description>
 				<styleUrl>#msn_placemark_circle6</styleUrl>
 				<Point>
 					<coordinates>6.461149,53.041274,0</coordinates>
-				</Point>
-			</Placemark>
-			<Placemark>
-				<description>RS409</description>
-				<styleUrl>#msn_placemark_circle6</styleUrl>
-				<Point>
-					<coordinates>6.32235,53.01043,0</coordinates>
-				</Point>
-			</Placemark>
-			<Placemark>
-				<description>RS410</description>
-				<styleUrl>#msn_placemark_circle6</styleUrl>
-				<Point>
-					<coordinates>5.83021,52.99421,0</coordinates>
 				</Point>
 			</Placemark>
 			<Placemark>
@@ -501,13 +508,6 @@
 				<styleUrl>#sn_shaded_dot</styleUrl>
 				<Point>
 					<coordinates>7.02318,53.0722,0</coordinates>
-				</Point>
-			</Placemark>
-			<Placemark>
-				<description>RS508</description>
-				<styleUrl>#sn_shaded_dot</styleUrl>
-				<Point>
-					<coordinates>6.94461,53.22888,0</coordinates>
 				</Point>
 			</Placemark>
 		</Folder>
