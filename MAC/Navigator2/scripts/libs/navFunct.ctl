@@ -1615,8 +1615,33 @@ dyn_string navFunct_listToDynString(string aS) {
 // ****************************************
 void navFunct_fillStationLists() {
   coreStations = makeDynString("CS001","CS002","CS003","CS004","CS005","CS006","CS007",
-                               "CS010","CS012","CS016","CS026","CS027","CS030","CS031","CS032","CS302");
-  remoteStations = makeDynString("RS106","RS208","RS306","RS307","RS503");
+                               "CS017",
+                               "CS021","CS024","CS026",
+                               "CS030","CS032",
+                               "CS101","CS103",
+                               "CS201",
+                               "CS301","CS302",
+                               "CS401",
+                               "CS501");
+//  coreStations = makeDynString("CS001","CS002","CS003","CS004","CS005","CS006","CS007",
+//                               "CS010","CS011","CS012","CS013","CS014","CS016","CS017","CS018",
+//                               "CS020","CS021","CS022","CS023","CS024","CS026","CS028",
+//                               "CS030","CS031","CS032",
+//                               "CS101","CS103",
+//                               "CS201",
+//                               "CS301","CS302",
+//                               "CS401",
+//                               "CS501");
+  remoteStations = makeDynString("RS104","RS106",
+                                 "RS205","RS208","RS210"
+                                 "RS306","RS307","RS310",
+                                 "RS404","RS406","RS407","RS409","RS410",
+                                 "RS503","RS508","RS509");
+//  remoteStations = makeDynString("RS104","RS106","RS107",
+//                                 "RS205","RS206","RS207","RS208",
+//                                 "RS306","RS307","RS308","RS309","RS310","RS311",
+//                                 "RS404","RS406","RS407","RS408","RS409","RS410","RS411","RS412","RS413",
+//                                 "RS503","RS506","RS507","RS508","RS509");
   europeStations = makeDynString("DE601","DE602","DE603","DE604","FR606","SE607","UK608");
 }
 
