@@ -100,7 +100,7 @@ def main() :
         else :
 		num_rcu = int(sys.argv[2])
         print ' Number of RCUs is ' + str(num_rcu)
-	    print ' Number of Subband is ' + str(subband_nr)
+        print ' Number of Subband is ' + str(subband_nr)
         # init log file
         f_log = file('HBA_elements.log', 'w')
         f_log.write(' ************ \n \n LOG File for HBA element test \n \n *************** \n \n')
