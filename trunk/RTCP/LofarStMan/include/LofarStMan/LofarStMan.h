@@ -289,6 +289,7 @@ private:
   vector<LofarColumn*> itsColumns;
   // The data file.
   casa::MMapIO* itsFile;
+  casa::MMapIO* itsSeqFile;
   bool   itsDoSwap;       //# True = byte-swapping is needed
   int64  itsBlockSize;    //# size of a block containing a seqnr
   int64  itsBLDataSize;   //# data size of a single baseline
