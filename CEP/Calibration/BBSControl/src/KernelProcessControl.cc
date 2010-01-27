@@ -855,18 +855,18 @@ namespace LOFAR
                 set<unsigned int> stationGroup1, stationGroup2;
 
                 const Instrument &instrument = itsMeasurement->getInstrument();
-                for(size_t i = 0; i < instrument.size(); ++i)
+                for(size_t j = 0; j < instrument.size(); ++j)
                 {
-                    casa::String stationName(instrument[i].name());
+                    casa::String stationName(instrument[j].name());
 
                     if(stationName.matches(stationRegex1[i]))
                     {
-                        stationGroup1.insert(i);
+                        stationGroup1.insert(j);
                     }
 
                     if(stationName.matches(stationRegex2[i]))
                     {
-                        stationGroup2.insert(i);
+                        stationGroup2.insert(j);
                     }
                 }
 
