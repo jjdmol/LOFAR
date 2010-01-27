@@ -238,7 +238,7 @@ void LofarStMan::mapFile()
   }
   // check the size of the sequencenumber file, close file is it doesn't match
   // FIXME !!! Check this filesize
-  if (itsSeqFile->getFileSize() != itsNrRows * itsAnt1.size() * sizeof(uInt)) {
+  if (itsSeqFile && (itsSeqFile->getFileSize() != itsNrRows * itsAnt1.size() * sizeof(uInt))) {
     delete itsSeqFile;
     itsSeqFile = 0;
   }
