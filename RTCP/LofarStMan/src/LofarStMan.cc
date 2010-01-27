@@ -41,20 +41,23 @@ namespace LOFAR {
 LofarStMan::LofarStMan (const String& dataManName)
 : DataManager    (),
   itsDataManName (dataManName),
-  itsFile        (0)
+  itsFile        (0), 
+  itsSeqFile     (0)
 {}
 
 LofarStMan::LofarStMan (const String& dataManName,
                         const Record&)
 : DataManager    (),
   itsDataManName (dataManName),
-  itsFile        (0)
+  itsFile        (0),
+  itsSeqFile     (0)
 {}
 
 LofarStMan::LofarStMan (const LofarStMan& that)
 : DataManager    (),
   itsDataManName (that.itsDataManName),
-  itsFile        (0)
+  itsFile        (0),
+  itsSeqFile     (0)
 {}
 
 LofarStMan::~LofarStMan()
@@ -63,6 +66,7 @@ LofarStMan::~LofarStMan()
     delete itsColumns[i];
   }
   delete itsFile;
+  if (itsSeqFile) delete itsSeqFile;
 }
 
 DataManager* LofarStMan::clone() const
@@ -223,6 +227,21 @@ void LofarStMan::mapFile()
   }
   // Set correct number of rows.
   itsNrRows = itsFile->getFileSize() / itsBlockSize * itsAnt1.size();
+
+  delete itsSeqFile;
+  itsSeqFile = 0;
+  try {
+    itsSeqFile = new MMapIO (fileName() + "seqnr");
+  } catch (...) {
+    delete itsSeqFile; 
+    itsSeqFile = 0;
+  }
+  // check the size of the sequencenumber file, close file is it doesn't match
+  // FIXME !!! Check this filesize
+  if (itsSeqFile->getFileSize() != itsNrRows * itsAnt1.size() * sizeof(uInt)) {
+    delete itsSeqFile;
+    itsSeqFile = 0;
+  }
 }
 
 void LofarStMan::resync (uInt)
@@ -303,7 +322,6 @@ void LofarStMan::init()
     default:
       throw DataManError("LofarStMan can only handle up to version 2");
     }
-
   }
   if (itsDoSwap) {
     switch (itsVersion) {
@@ -322,7 +340,14 @@ void LofarStMan::init()
 Double LofarStMan::time (uInt blocknr)
 {
   Int seqnr;
-  const void* ptr = itsFile->getReadPointer (blocknr * itsBlockSize);
+  
+  const void* ptr;
+  /// FIXME !! init and check itsSeqFile for correct size
+  if (itsSeqFile) {
+    ptr = itsSeqFile->getReadPointer(blocknr * sizeof(uInt));
+  } else {
+    ptr = itsFile->getReadPointer (blocknr * itsBlockSize);
+  }
   if (itsDoSwap) {
     CanonicalConversion::reverse4 (&seqnr, ptr);
   } else {
@@ -395,7 +420,6 @@ const uInt* LofarStMan::getNSampleV2 (uInt rownr, Bool swapIfNeeded)
 
   uInt offset  = itsSampStart + baseline * 4; 
 
-  std::cout << "V2" << std::endl;
   
   const void* ptr = itsFile->getReadPointer (blocknr * itsBlockSize + offset);
   const uInt* from = (const uInt*)ptr;
