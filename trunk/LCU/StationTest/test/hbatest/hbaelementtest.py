@@ -133,7 +133,7 @@ def main() :
         else :
 		num_rcu = int(sys.argv[2])
         print ' Number of RCUs is ' + str(num_rcu)
-	    print ' Number of Subband is ' + str(subband_nr)
+	print ' Number of Subband is ' + str(subband_nr)
 	# initialize data arrays
 	ref_data=range(0, num_rcu)
 	os.chdir(dir_name)
