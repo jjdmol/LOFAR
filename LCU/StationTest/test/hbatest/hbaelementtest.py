@@ -106,6 +106,7 @@ def switchon_hba() :
 	   os.popen3("rspctl --rcumode=5 --sel=160:191")
            time.sleep(1)
 	except:
+          print "This is a NL station"
         os.popen("rspctl --rcuenable=1")
         return 
 
