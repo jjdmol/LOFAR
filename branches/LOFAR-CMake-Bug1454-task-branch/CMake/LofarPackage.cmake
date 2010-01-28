@@ -34,6 +34,9 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
   # Include LOFAR package list
   include(LofarPackageList)
 
+  # Include LOFAR Subversion macros
+  include(LofarSubversion)
+
   # Create custom target for top-level project (i.e. LOFAR)
   add_custom_target(${CMAKE_PROJECT_NAME})
 
@@ -47,21 +50,24 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
   # (i.e., option BUILD_<pkg> is OFF).
   #
   # Adding a package implies:
-  # - If the target <pkg> is not yet defined, and if the package source
-  #   directory exists:
-  #   - define the option BUILD_<pkg>
-  #   - set the variables PACKAGE_SOURCE_DIR and <pkg>_SOURCE_DIR to the
-  #     source directory of <pkg>, and the variables PACKAGE_BINARY_DIR and
-  #     <pkg>_BINARY_DIR to the binary directory of <pkg>.
-  #   - add a custom target <pkg>
-  #   - add the source directory to the build
+  # - If the target <pkg> is not yet defined:
+  #   - If LOFAR_SVN_UPDATE is ON, or if source directory does not yet exist:
+  #     - Do an 'svn update'
+  #   - If the package source directory exists:
+  #     - Define the option BUILD_<pkg>
+  #     - Set the variables PACKAGE_SOURCE_DIR and <pkg>_SOURCE_DIR to the
+  #       source directory of <pkg>, and the variables PACKAGE_BINARY_DIR and
+  #       <pkg>_BINARY_DIR to the binary directory of <pkg>
+  #     - Add a custom target <pkg>
+  #     - Add the source directory to the build
+  #   - Else: raise an error
   # - If the target <pkg> is defined:
-  #   - add a dependency of the current package on package <pkg>
+  #   - Add a dependency of the current package on package <pkg>
   #
   # Furthermore:
-  # - if [srcdir] is not supplied, <pkg>_SOURCE_DIR, which must be defined in
+  # - If [srcdir] is not supplied, <pkg>_SOURCE_DIR, which must be defined in
   #   that case, is used as directory name;
-  # - it is not an error if the package source directory does not exist, 
+  # - It is not an error if the package source directory does not exist,
   #   unless the REQUIRED keyword is specified.
   #
   # NOTE:
@@ -88,10 +94,16 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
         endif(NOT IS_ABSOLUTE ${_srcdir})
         string(REGEX REPLACE
           ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} _bindir ${_srcdir})
+        message(STATUS "Adding package ${_pkg} ...")
+        if(NOT DEFINED LOFAR_SVN_UPDATE OR LOFAR_SVN_UPDATE)
+          if(LOFAR_SVN_UPDATE OR NOT EXISTS ${_srcdir})
+            message(STATUS "  Updating ${_srcdir} ...")
+            lofar_subversion_update(${_srcdir})
+          endif(LOFAR_SVN_UPDATE OR NOT EXISTS ${_srcdir})
+        endif(NOT DEFINED LOFAR_SVN_UPDATE OR LOFAR_SVN_UPDATE)
         if(EXISTS ${_srcdir})
           option(BUILD_${_pkg} "Build package ${_pkg}?" ON)
           mark_as_advanced(BUILD_${_pkg})
-          message(STATUS "Adding package ${_pkg}...")
           set(PACKAGE_SOURCE_DIR ${_srcdir})
           set(PACKAGE_BINARY_DIR ${_bindir})
           set(${_pkg}_SOURCE_DIR ${_srcdir})
@@ -115,7 +127,7 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
   # --------------------------------------------------------------------------
   # lofar_package(<pkg> [version] [DEPENDS <depend> [depend] ...])
   #
-  # Define a LOFAR package. 
+  # Define a LOFAR package.
   #
   # This macro sets the following variables:
   #   ${pkg}_VERSION        Version number of package <pkg>
@@ -135,7 +147,7 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
   # --------------------------------------------------------------------------
   macro(lofar_package _pkg)
 
-    set(_errmsg 
+    set(_errmsg
       "Wrong arguments supplied to lofar_package().\n"
       "Usage: lofar_package(pkg [version] [DEPENDS depend ...])\n")
 
@@ -201,7 +213,7 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
     string(REGEX REPLACE "^/" "" _lpkg "${_lpkg}")
     string(REPLACE "/" "." _lpkg "${_lpkg}")
     add_definitions(-DLOFARLOGGER_PACKAGE="${_lpkg}")
-    
+
   endmacro(lofar_package)
 
 endif(NOT LOFAR_PACKAGE_INCLUDED)
