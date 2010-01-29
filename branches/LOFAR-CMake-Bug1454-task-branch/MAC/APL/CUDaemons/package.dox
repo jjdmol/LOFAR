@@ -1,7 +1,0 @@
-// \ingroup APL
-// \defgroup CUDaemons	Control Unit Daemons.
-//
-// The CUDaemons package contains several daemons used on the stations and CEP
-// to support the main infrastructure design. Non of the daemons in this package
-// depend on PVSS.
-
