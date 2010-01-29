@@ -44,9 +44,9 @@ namespace RTCP {
 
 OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsigned output, StreamableData *dataTemplate)
 :
+  connecting(true), // avoid race condition when checking this at thread start
   itsParset(ps),
   itsSubband(subband),
-  connecting(true), // avoid race condition when checking this at thread start
   itsOutput(output),
   thread(0)
 {
@@ -89,6 +89,7 @@ void OutputThread::mainLoop()
 
 #if defined HAVE_BGP_ION
   doNotRunOnCore0();
+  //nice(19);
 #endif
 
   // connect to storage
