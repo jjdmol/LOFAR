@@ -2,8 +2,6 @@
 #
 # $Id$
 
-message(STATUS "ENTER: BGPCN.cmake")
-
 # Define compiler suites.
 set(LOFAR_COMPILER_SUITES BGPCN)
 
@@ -50,6 +48,3 @@ set(CMAKE_FIND_ROOT_PATH /bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux)
 #set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 #set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
 #set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
-
-
-message(STATUS "LEAVE: BGPCN.cmake")
