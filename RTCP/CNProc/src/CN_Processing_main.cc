@@ -24,7 +24,6 @@
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Configuration.h>
 #include <Interface/Exceptions.h>
-#include <FCNP_ClientStream.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
@@ -40,7 +39,8 @@
 #include <mpi.h>
 #endif
 
-#if defined HAVE_FCNP && defined HAVE_BGP_CN
+#if defined HAVE_FCNP && defined HAVE_BGP_CN && !defined USE_VALGRIND
+#include <FCNP_ClientStream.h>
 #include <FCNP/fcnp_cn.h>
 #endif
 
