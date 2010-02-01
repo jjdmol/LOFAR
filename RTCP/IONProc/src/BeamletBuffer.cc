@@ -55,7 +55,7 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
   itsSynchronizedReaderWriter(itsIsRealTime ? 0 : new SynchronizedReaderAndWriter(itsSize)), // FIXME: does not work for multiple observations
   itsSBBuffers(boost::extents[itsNrSubbands][itsSize][NR_POLARIZATIONS], 128, hugeMemoryAllocator),
   itsOffset(0),
-#if defined HAVE_BGP
+#if defined HAVE_BGP && !defined USE_VALGRIND
   itsStride(reinterpret_cast<char *>(itsSBBuffers[1].origin()) - reinterpret_cast<char *>(itsSBBuffers[0].origin())),
 #else
   itsStride(reinterpret_cast<SAMPLE_TYPE *>(itsSBBuffers[1].origin()) - reinterpret_cast<SAMPLE_TYPE *>(itsSBBuffers[0].origin())),
@@ -87,7 +87,7 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::~BeamletBuffer()
 }
 
 
-#if defined HAVE_BGP
+#if defined HAVE_BGP && !defined USE_VALGRIND
 
 template<> inline void BeamletBuffer<i4complex>::writePacket(i4complex *dst, const i4complex *src)
 {
