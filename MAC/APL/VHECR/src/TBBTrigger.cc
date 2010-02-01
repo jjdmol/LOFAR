@@ -25,12 +25,13 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Common/StringUtil.h>
 #include <Common/lofar_datetime.h>
-#include <VHECR/TBBTrigger.h>
+#include <Common/StringUtil.h>
+
+#include "TBBTrigger.h"
 
 namespace LOFAR {
-  namespace VHECR {
+  namespace StationCU {
 
 //
 // TBBTrigger(...)
@@ -87,7 +88,9 @@ ostream& TBBTrigger::print(ostream&	os) const
 {
 	os << "RCUnr     : " << itsRcuNr << endl;
 	os << "SeqNr     : " << itsSeqNr << endl;
-	os << "Time      : " << to_simple_string(from_time_t(itsTime)) << endl;
+	char	*timeStr = ctime((const time_t*)&itsTime);
+	timeStr[strlen(timeStr)-1] = '\0';
+	os << "Time      : " << timeStr << endl;
 	os << "SampleNr  : " << itsSampleNr << endl;
 	os << "Sum       : " << itsSum << endl;
 	os << "Nr samples: " << itsNrSamples << endl;
@@ -99,6 +102,6 @@ ostream& TBBTrigger::print(ostream&	os) const
 
 
 // @}
-  } // namespace VHECR
+  } // namespace StationCU
 } // namespace LOFAR
 
