@@ -106,7 +106,7 @@ inline SubbandMetaData::SubbandMetaData(unsigned nrSubbands, unsigned nrBeams, s
   itsMarshallData(static_cast<char*>(allocator.allocate(itsMarshallDataSize, alignment))),
   itsAllocator(allocator)
 {
-#if defined HAVE_VALGRIND
+#if defined USE_VALGRIND
   memset(itsMarshallData, 0, itsMarshallDataSize);
 #endif
 }

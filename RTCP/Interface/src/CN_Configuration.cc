@@ -32,7 +32,7 @@ namespace RTCP {
 
 CN_Configuration::CN_Configuration()
 {
-#if defined HAVE_VALGRIND
+#if defined USE_VALGRIND
   memset(&itsMarshalledData, 0, sizeof itsMarshalledData);
 #endif
 }
@@ -42,7 +42,7 @@ CN_Configuration::CN_Configuration()
 
 CN_Configuration::CN_Configuration(const Parset &parset)
 {
-#if defined HAVE_VALGRIND
+#if defined USE_VALGRIND
   memset(&itsMarshalledData, 0, sizeof itsMarshalledData);
 #endif
 
