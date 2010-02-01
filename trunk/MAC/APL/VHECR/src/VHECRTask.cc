@@ -25,7 +25,7 @@
 #include <time.h>
 #include <fstream>
 
-#include "VHECRTask.h"
+#include "VHECR/VHECRTask.h" // path for use in online version
 
 namespace LOFAR {
   //	using namespace ACC::APS;
