@@ -20,23 +20,23 @@
 //#
 //#  $Id$
 
-#ifndef VHECR_VHECRTASK_H
-#define VHECR_VHECRTASK_H
+#ifndef STATIONCU_TBBCONTROL_VHECRTASK_H
+#define STATIONCU_TBBCONTROL_VHECRTASK_H
 
 //# Common Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_datetime.h>
-#include <VHECR/TBBTrigger.h>
-#include <VHECR/TBBReadCmd.h>
 
 //# local includes
+#include "TBBTrigger.h"
+#include "TBBReadCmd.h"
 
 // forward declaration
 
 
 namespace LOFAR {
-  namespace VHECR {
+  namespace StationCU {
     
     class VHECRTask
     {
@@ -47,14 +47,23 @@ namespace LOFAR {
       // define responsefunctionType
       void readTBBdata(std::vector<TBBReadCmd>	cmdVector);
       void addTrigger(const TBBTrigger&	trigger);
-      
+      struct position {
+        double x, y, z;
+      };
+      string itsOutputFilename;
+      string itsConfigurationFile;
+      string antennaPositionsFile;
+      string antennaSelection;
+      uint32 doDirectionFit;
+      uint32 totalCoincidences, badFits;
+
     private:
 
-#define VHECR_TASK_BUFFER_LENGTH (3*96)
+#define VHECR_TASK_BUFFER_LENGTH (2*96)
 
       int itsNoCoincidenceChannels;
       double itsCoincidenceTime;
-
+      FILE * itsLogfile;
       // avoid defaultconstruction and copying
       VHECRTask(const VHECRTask&);
       VHECRTask& operator=(const VHECRTask&);
@@ -72,7 +81,8 @@ namespace LOFAR {
       // Single element in the buffer
       struct triggerBuffElem {
 	uint32	next;
-	uint32	prev;	
+	uint32	prev;
+	uint32  no;
 	uint32	RcuNr;
 	uint32	SeqNr;
 	uint32	Time;
@@ -80,13 +90,15 @@ namespace LOFAR {
 	uint32	Sum;
 	uint32	NrSamples;
 	uint32	PeakValue;
-	uint64  date;
+        uint64  date;
 	uint32	meanval;
 	uint32	afterval;
       };
-
-      //
-      string readableTime(const uint64 date);
+      
+          
+      position antennaPositions[96]; // much faster than vector<position> !!
+      void VHECRTask::readConfigFile(string fileName);
+      string VHECRTask::readableTime(const uint64 date);
 
       // All buffered triggers
       struct triggerBuffElem trigBuffer[VHECR_TASK_BUFFER_LENGTH];
@@ -96,8 +108,11 @@ namespace LOFAR {
 
       // Insert element into buffer, returns index of inserted element
       uint32 add2buffer(const TBBTrigger& trigger);
+      void printCoincidence(int coincidenceIndex);
 
       int coincidenceCheck(uint32 latestindex, uint32 nChannles, double timeWindow);
+      void fitDirectionToCoincidence(int coincidenceIndex, int nofChannels);
+      void readAntennaPositions(string fileName, string antennaSelection);
 
     };
     

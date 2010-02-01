@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef VHECR_TBBTRIGGER_H
-#define VHECR_TBBTRIGGER_H
+#ifndef STATIONCU_TBBCONTROL_TBBTRIGGER_H
+#define STATIONCU_TBBCONTROL_TBBTRIGGER_H
 
 // Definition of a struct for storing a trigger description
 
@@ -32,7 +32,7 @@
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
-  namespace VHECR {
+  namespace StationCU {
 
 // \addtogroup StationCU
 // @{
@@ -56,7 +56,8 @@ public:
 
 	// --- Datamembers ---
 	// Note that the members are public, we use it as a struct.
-	uint32	itsRcuNr;
+        uint32  itsNo;
+        uint32	itsRcuNr;
 	uint32	itsSeqNr;
 	uint32	itsTime;
 	uint32	itsSampleNr;
