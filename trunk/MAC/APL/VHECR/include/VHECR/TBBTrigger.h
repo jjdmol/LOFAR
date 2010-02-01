@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef STATIONCU_TBBCONTROL_TBBTRIGGER_H
-#define STATIONCU_TBBCONTROL_TBBTRIGGER_H
+#ifndef VHECR_TBBTRIGGER_H
+#define VHECR_TBBTRIGGER_H
 
 // Definition of a struct for storing a trigger description
 
@@ -32,7 +32,7 @@
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
-  namespace StationCU {
+  namespace VHECR {
 
 // \addtogroup StationCU
 // @{
@@ -80,7 +80,7 @@ inline ostream& operator<< (ostream& os, const TBBTrigger& aTBBTrigger)
 
 
 // @}
-  } // namespace StationCU
+  } // namespace VHECR
 } // namespace LOFAR
 
 #endif

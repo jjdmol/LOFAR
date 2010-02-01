@@ -25,12 +25,12 @@
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
 #include <Common/lofar_fstream.h>
-#include "TBBTrigger.h"
-#include "VHECRTask.h"
+#include "VHECR/TBBTrigger.h"
+#include "VHECR/VHECRTask.h"
 
 
 using namespace LOFAR;
-using namespace LOFAR::StationCU;
+using namespace LOFAR::VHECR;
 
 int main(int argc, char* argv[])
 {

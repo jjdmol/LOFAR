@@ -31,7 +31,7 @@
 #include "VHECR/TBBTrigger.h" // path for online use
 
 namespace LOFAR {
-  namespace StationCU {
+  namespace VHECR {
 
 //
 // TBBTrigger(...)
@@ -102,6 +102,6 @@ ostream& TBBTrigger::print(ostream&	os) const
 
 
 // @}
-  } // namespace StationCU
+  } // namespace VHECR
 } // namespace LOFAR
 
