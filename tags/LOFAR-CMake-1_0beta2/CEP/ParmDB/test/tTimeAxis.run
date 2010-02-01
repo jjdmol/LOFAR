@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Skip this test
+exit 3
