@@ -359,7 +359,7 @@ namespace LOFAR {
       }
     } break;
     case 2: {
-      const uInt* data = itsParent->getNSampleV2 (rownr, False);
+      const uInt* data = itsParent->getNSampleV2 (rownr, True);
 
       uInt channel = 0;
       if (dataPtr->contiguousStorage()) {
