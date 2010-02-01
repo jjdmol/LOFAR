@@ -7,7 +7,7 @@
 # -- Observation--
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  Observation        3.0.3  development 'node constraint'  "Observation"
+node  Observation        3.0.4  development 'node constraint'  "Observation"
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
@@ -25,6 +25,7 @@ par  receiverList	         I	  text	 -   	10    0	     []                       
 par  MSNameMask              I    text   -      10    0      '/data/L${YEAR}_${MSNUMBER}/SB${SUBBAND}.MS' - 'Name for the Measurement set for this Observation'
 par  channelsPerSubband      I    int    -      10    100    256                                       - 'Number of channels per subband'
 par  nrBeams                 I    int    -      10    100    1                                         - 'Number of simultaneous beams in this observation'
+par  nrAnaBeams              I    int    -      10    100    1                                         - 'Number of analog beams in this observation'
 par  nrBeamformers           I    int    -      10    100    0                                         - 'Number of beamformers in this observation'
 par  nrPolarisations         I    pint   -      10    100    '1|2;2'                                   - 'Number of polarisations to use in this observation'
 par  nrSlotsInFrame	     I    int    -      10    100    62                                        - '???'
@@ -43,7 +44,8 @@ par  channelWidth            I    dbl    Hz     10    100    >>Observation.clock
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 uses  VirtualInstrument  1.0.0  development '1'		       "Virtual Instrument"
-uses  Beam		 2.0.0  development '1'		       "Beam specification"
+uses  Beam		 2.0.1  development '1'		       "Beam specification"
+uses  AnaBeam    2.0.0  development '1'            "Anolog beam specification"
 uses  Beamformer	 1.0.0  development '1'		       "Beamformet specifications"	
 uses  TBB		 1.0.1  development '1' 	       "TBB settings"
 uses  ObservationControl	         1.1.0  development '1'		       "Observation Control"
