@@ -28,7 +28,7 @@
 #include <Common/lofar_datetime.h>
 #include <Common/StringUtil.h>
 
-#include "TBBTrigger.h"
+#include "VHECR/TBBTrigger.h" // path for online use
 
 namespace LOFAR {
   namespace StationCU {
