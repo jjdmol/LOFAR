@@ -25,41 +25,48 @@
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
 #include <Common/lofar_fstream.h>
-#include <VHECR/TBBTrigger.h>
-#include <VHECR/VHECRTask.h>
+#include "TBBTrigger.h"
+#include "VHECRTask.h"
 
 
 using namespace LOFAR;
-using namespace LOFAR::VHECR;
+using namespace LOFAR::StationCU;
 
 int main(int argc, char* argv[])
 {
+   //     char * outputFilename = "VHECRtaskLogfile.dat";
 	switch (argc) {
+   //       case 3:
+  //          outputFilename = argv[2];
+   //         break;
 	case 2:
 		break;
 	default:
 		cout << "Syntax: " << argv[0] << " triggerfile" << endl;
-		cout << "Note: program needs file ./" << argv[0] << ".log_prop" << " for log-system." << endl;
+		cout << "Note: program needs file " << argv[0] << ".log_prop" << " for log-system." << endl;
 		return (1);
 	}
 
 	string	logFile(argv[0]);
 	logFile.append(".log_prop");
 	INIT_LOGGER (logFile.c_str());
-
+	//cout << logFile.c_str() << endl;
 	ifstream	triggerFile;
 	triggerFile.open(argv[1], ifstream::in);
 	if (!triggerFile) {
 		LOG_FATAL_STR("Cannot open triggerfile " << argv[1]);
+	  cout << "Cannot open trigger file!" << endl;
 		return (1);
 	}
-
+        cout << "Start reading trigger file" << endl;
 	char			triggerLine [4096];
 	TBBTrigger		theTrigger;
 	VHECRTask		theTask;
+        //theTask.itsOutputFilename = outputFilename;
 	theTrigger.itsFlags = 0;
 	// process file
-	while (triggerFile.getline (triggerLine, 4096)) {
+        uint32 n = 0;
+  	while (triggerFile.getline (triggerLine, 4096)) {
 		LOG_DEBUG_STR("input: " << triggerLine);
 		if (sscanf(triggerLine, "%d %u %u %u %u %u %u",
 				&theTrigger.itsRcuNr,
@@ -70,6 +77,8 @@ int main(int argc, char* argv[])
 				&theTrigger.itsNrSamples,
 				&theTrigger.itsPeakValue) == 7) {
 			// call the VHECR task
+                        theTrigger.itsNo = n;
+                        n++;
 			theTask.addTrigger(theTrigger);
 		}
 		else {	// could not read 7 argments
@@ -78,6 +87,6 @@ int main(int argc, char* argv[])
 	}
 
 	triggerFile.close();
-
+        cout << "Total coincidences: " << theTask.totalCoincidences << "; bad fits: " << theTask.badFits << endl;
 	return (0);
 }
