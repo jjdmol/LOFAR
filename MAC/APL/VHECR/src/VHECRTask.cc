@@ -44,7 +44,7 @@ namespace LOFAR {
       itsCoincidenceTime = 1.0e-6;
       totalCoincidences = 0;
       badFits = 0;
-      itsConfigurationFile = "/Users/acorstanje/LOFAR/VHECRtask.conf"; // /opt/lofar/etc/
+      itsConfigurationFile = "/opt/lofar/etc/VHECRtask.conf"; // /opt/lofar/etc/
       readConfigFile(itsConfigurationFile.c_str());
 //      itsOutputFilename = "/opt/lofar/etc/VHECRtaskLogfile.dat";
 //      itsLogfile = fopen(itsOutputFilename.c_str(), "w"); // overwrites existing file...
