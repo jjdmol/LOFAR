@@ -62,7 +62,7 @@ using boost::format;
 #include <mpi.h>
 #endif
 
-#if defined HAVE_FCNP && defined __PPC__
+#if defined HAVE_FCNP && defined __PPC__ && !defined HAVE_VALGRIND
 #include <FCNP/fcnp_ion.h>
 #include <FCNP_ServerStream.h>
 #endif
@@ -139,7 +139,7 @@ static const std::string     streamType = "TCP";
 static const std::string     streamType = "FCNP";
 #endif
 
-#if defined HAVE_FCNP && defined __PPC__
+#if defined HAVE_FCNP && defined __PPC__ && !defined HAVE_VALGRIND
 static bool	   fcnp_inited;
 #endif
 
@@ -148,7 +148,7 @@ static Stream *createCNstream(unsigned core, unsigned channel)
   // translate logical to physical core number
   core = CN_Mapping::mapCoreOnPset(core, myPsetNumber);
 
-#if defined HAVE_FCNP && defined __PPC__
+#if defined HAVE_FCNP && defined __PPC__ && !defined HAVE_VALGRIND
   if (streamType == "FCNP")
     return new FCNP_ServerStream(core, channel);
   else
@@ -164,7 +164,7 @@ static Stream *createCNstream(unsigned core, unsigned channel)
 
 static void createAllCNstreams()
 {
-#if defined HAVE_FCNP && defined __PPC__
+#if defined HAVE_FCNP && defined __PPC__ && !defined HAVE_VALGRIND
   if (streamType == "FCNP" && !fcnp_inited) {
     FCNP_ION::init(true);
     fcnp_inited = true;
@@ -184,7 +184,7 @@ static void deleteAllCNstreams()
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
     delete allCNstreams[core];
 
-#if defined HAVE_FCNP && defined __PPC__
+#if defined HAVE_FCNP && defined __PPC__ && !defined HAVE_VALGRIND
   if (fcnp_inited) {
     FCNP_ION::end();
     fcnp_inited = false;
