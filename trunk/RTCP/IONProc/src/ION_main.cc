@@ -62,12 +62,12 @@ using boost::format;
 #include <mpi.h>
 #endif
 
-#if defined HAVE_FCNP && defined __PPC__ && !defined HAVE_VALGRIND
+#if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
 #include <FCNP/fcnp_ion.h>
 #include <FCNP_ServerStream.h>
 #endif
 
-#ifdef HAVE_VALGRIND
+#ifdef USE_VALGRIND
 extern "C" {
 #include <valgrind.h>
 
@@ -133,13 +133,13 @@ static const unsigned	     nrCNcoresInPset = 64; // TODO: how to figure out the 
 static pthread_mutex_t	     allocationMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t	     reevaluate	     = PTHREAD_COND_INITIALIZER;
 
-#if defined HAVE_VALGRIND || !defined HAVE_FCNP // FIXME
+#if defined USE_VALGRIND || !defined HAVE_FCNP // FIXME
 static const std::string     streamType = "TCP";
 #else
 static const std::string     streamType = "FCNP";
 #endif
 
-#if defined HAVE_FCNP && defined __PPC__ && !defined HAVE_VALGRIND
+#if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
 static bool	   fcnp_inited;
 #endif
 
@@ -148,7 +148,7 @@ static Stream *createCNstream(unsigned core, unsigned channel)
   // translate logical to physical core number
   core = CN_Mapping::mapCoreOnPset(core, myPsetNumber);
 
-#if defined HAVE_FCNP && defined __PPC__ && !defined HAVE_VALGRIND
+#if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
   if (streamType == "FCNP")
     return new FCNP_ServerStream(core, channel);
   else
@@ -164,7 +164,7 @@ static Stream *createCNstream(unsigned core, unsigned channel)
 
 static void createAllCNstreams()
 {
-#if defined HAVE_FCNP && defined __PPC__ && !defined HAVE_VALGRIND
+#if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
   if (streamType == "FCNP" && !fcnp_inited) {
     FCNP_ION::init(true);
     fcnp_inited = true;
@@ -184,7 +184,7 @@ static void deleteAllCNstreams()
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
     delete allCNstreams[core];
 
-#if defined HAVE_FCNP && defined __PPC__ && !defined HAVE_VALGRIND
+#if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
   if (fcnp_inited) {
     FCNP_ION::end();
     fcnp_inited = false;

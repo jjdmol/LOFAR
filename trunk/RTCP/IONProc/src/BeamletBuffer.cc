@@ -73,7 +73,7 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
     itsSynchronizedReaderWriter = new SynchronizedReaderAndWriter(itsSize);
 #endif
 
-#if defined HAVE_VALGRIND
+#if defined USE_VALGRIND
   memset(itsSBBuffers.origin(), 0, itsSBBuffers.num_elements() * sizeof(SAMPLE_TYPE));
 #endif
 
