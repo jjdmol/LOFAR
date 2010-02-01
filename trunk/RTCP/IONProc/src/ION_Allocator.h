@@ -26,7 +26,7 @@
 
 #include <Interface/Allocator.h>
 
-#if defined HAVE_BGP
+#if defined HAVE_BGP && !defined USE_VALGRIND
 #  define FLAT_MEMORY
 #endif
 

@@ -17,7 +17,7 @@
 #
 #  $Id$
 
-#if defined HAVE_BGL || defined HAVE_BGP
+#if defined HAVE_BGP && !defined USE_VALGRIND
 
 .global	_copy_pkt_to_bbuffer_32_bytes
 _copy_pkt_to_bbuffer_32_bytes:
