@@ -23,7 +23,7 @@
 # -- Beam --
 #      name       		 vers   qual  constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  Beam	      2.0.0  development  'node constraint'  "Beam specification"
+node  Beam	      2.0.1  development  'node constraint'  "Beam specification"
 
 #
 # name				name of the parameter
@@ -38,11 +38,11 @@ node  Beam	      2.0.0  development  'node constraint'  "Beam specification"
 #--------------------------------------------------------------------------------------------------------
 #    name                dir. type   unit   prun. vm   value                   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  angle1				 I	  vdbl	 -		10    0	   0   						-	'RightAscention(s) or Azimuth of the source(s) in rad.'
-par  angle2			     I	  vdbl	 -		10    0	   0   						-	'Declination(s) or Elevation of the source(s) in rad.'
-par  directionTypes	     I	  ptext	 -		10    0	   'J2000|AZEL|LMN;J2000'   -   'Coord.system used for the sources'
-par  angleTimes		     I	  vuint	 -		10    0	   0   						-	'Relative time (to starttime) when to activate the angles'
-par  durations		     I	  vuint	 -		10    0	   0   						-	'Time in seconds each sources is followed.'
+par  angle1				 I	  dbl	 -		10    0	   0   						-	'RightAscention(s) or Azimuth of the source(s) in rad.'
+par  angle2			     I	  dbl	 -		10    0	   0   						-	'Declination(s) or Elevation of the source(s) in rad.'
+par  directionType	     I	  ptext	 -		10    0	   'J2000|AZEL|LMN;J2000'   -   'Coord.system used for the sources'
+par  duration		     I	  uint	 -		10    0	   0   						-	'Time in seconds each sources is followed.'
+par  startTime		     I	  text	 -		10    0	   0   						-	'Relative time (to starttime) when to activate the angles'
 par  subbandList         I    text   -      10    0    [0]                      - 	'List of all used subbands, eg.[205,276..300]. Range 0..511.'
 par  beamletList         I    text   -      10    0    [0]                      - 	'Mapping of subbands on beamlets, eg.[0..47]. Range 0..247'
 par  momID		         I    int    -      10    0    0                      - 	'MeasurementID in MoM'
