@@ -15,6 +15,7 @@ option(USE_LOG4CPLUS            "Use log4cplus"            OFF)
 option(USE_READLINE             "Use readline"             OFF)
 option(USE_SHMEM                "Use shmem"                OFF)
 option(USE_THREADS              "Use threads"              ON)
+option(USE_VALGRIND             "Use valgrind"             OFF)
 
 # GNU BG/P compiler suite
 set(BGPION_COMPILERS BGPION_C BGPION_CXX BGPION_ASM)

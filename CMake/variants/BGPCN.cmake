@@ -14,6 +14,7 @@ option(USE_BACKTRACE            "Use backtrace"            ON)
 option(USE_LOG4CPLUS            "Use log4cplus"            OFF)
 option(USE_SHMEM                "Use shmem"                OFF)
 option(USE_THREADS              "Use threads"              OFF)
+option(USE_VALGRIND             "Use valgrind"             OFF)
 
 # GNU BG/P compiler suite
 set(BGPCN_COMPILERS BGPCN_C BGPCN_CXX BGPCN_ASM)
