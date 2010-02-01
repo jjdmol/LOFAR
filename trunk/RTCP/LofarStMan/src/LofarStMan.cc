@@ -419,19 +419,17 @@ const uInt* LofarStMan::getNSampleV2 (uInt rownr, Bool swapIfNeeded)
   uInt baseline = rownr - blocknr*itsAnt1.size();
 
   uInt offset  = itsSampStart + baseline * 4; 
-
   
   const void* ptr = itsFile->getReadPointer (blocknr * itsBlockSize + offset);
   const uInt* from = (const uInt*)ptr;
-  
 
   if (!swapIfNeeded || !itsDoSwap) {
     return from;
   }
 
   uInt* to = itsNSampleBufV2.storage();
-  CanonicalConversion::reverse2 (to, from);
-  
+  CanonicalConversion::reverse4 (to, from);
+
   return to;
 }
 
