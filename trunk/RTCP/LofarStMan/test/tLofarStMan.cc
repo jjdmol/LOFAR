@@ -143,7 +143,6 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
   Array<uShort> nsample(IPosition(1,nchan));
   indgen (nsample);
   Array<uInt> nsampleV2(IPosition(1,1));
-  indgen(nsampleV2);
 
   // Allocate space for possible block alignment.
   if (alignment < 1) {
@@ -154,7 +153,7 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
 
   uInt nsamplesSize=0;
   if (myStManVersion == 1) nsamplesSize = nrbl*2*nsample.size();
-  else nsamplesSize = nrbl*2*nsampleV2.size();
+  else nsamplesSize = nrbl*4*nsampleV2.size();
 
   Block<Char> align3(nalign(nsamplesSize, alignment), 0);
 
@@ -178,9 +177,10 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
 	nsample += uShort(1);
       }
     } else {
+      indgen(nsampleV2, uInt(2048*i));
+
       for (uInt j=0; j<nrbl; ++j) {
 	cfile->write (nsampleV2.size(), nsampleV2.data());
-	nsampleV2 += uInt(1);
       }
     }
 
@@ -234,17 +234,23 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
   
   if (myStManVersion == 1) {
     indgen (weightExp, Float(0),Float(1./32768));
-  }else {
-    indgen (weightExp, Float(0), Float(0));
   }
   // Loop through all rows in the table and check the data.
   uInt row=0;
   for (uInt i=0; i<nseq; ++i) {
+    
+    if (myStManVersion == 2 ) { 
+
+      indgen (weightExp, Float(i*2048*1./32768), Float(0.));
+      weightExp(IPosition(2, 0, 0)) = Float(0.);
+    }
+
     for (uInt j=0; j<nant; ++j) {
       for (uInt k=j+1; k<nant; ++k) {
+
         // Contents must be present except for FLAG_CATEGORY.
-//         AlwaysAssertExit (dataCol.isDefined (row));
-        AlwaysAssertExit (weightCol.isDefined (row));
+	AlwaysAssertExit (dataCol.isDefined (row));
+	AlwaysAssertExit (weightCol.isDefined (row));
         AlwaysAssertExit (wspecCol.isDefined (row));
         AlwaysAssertExit (sigmaCol.isDefined (row));
         AlwaysAssertExit (flagCol.isDefined (row));
@@ -259,15 +265,18 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
         AlwaysAssertExit (weights.shape() == IPosition(2,npol,nchan));
         for (uInt p=0; p<npol; ++p) {
 
-	  std::cout << "weights: " << std::endl;
-	  std::cout << weights(IPosition(2,p,0), IPosition(2,p,nchan-1)) << std::endl;
-	  
-	  std::cout << "wegithExp: " << std::endl;
-	  std::cout << weightExp << std:: endl;
+	  if (!allNear(weights(IPosition(2,p,0),IPosition(2,p,nchan-1)),weightExp, 1e-7)) {
 
-          AlwaysAssertExit (allNear (weights(IPosition(2,p,0),
-                                             IPosition(2,p,nchan-1)),
-                                     weightExp, 1e-7));
+	    std::cout << "weights: " << std::endl;
+	    std::cout << weights(IPosition(2,p,0), IPosition(2,p,nchan-1)) << std::endl;
+	  
+	    std::cout << "wegithExp: " << std::endl;
+	    std::cout << weightExp << std:: endl;
+
+	    AlwaysAssertExit (allNear (weights(IPosition(2,p,0),
+					       IPosition(2,p,nchan-1)),
+				       weightExp, 1e-7));
+	  }
         }
         Array<Bool> flagExp (weights == Float(0));
         AlwaysAssertExit (allEQ (flagCol(row), flagExp));
@@ -277,10 +286,6 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
         dataExp += Complex(0.01, 0.02);
 
         if (myStManVersion == 1) weightExp += Float(1./32768);
-	else {
-	  weightExp += Float(512);
-	  weightExp(IPosition(2,0,0)) = Float(0.);
-	}
         ++row;
       }
     }
@@ -395,22 +400,23 @@ int main (int argc, char* argv[])
       copyTable();
 
       // Create the table.
-//        createTable();
-//        // Write data in big-endian and check it. Align on 512.
-//        createData (nseq, nant, nchan, npol, 1e9, 10., Complex(0.1, 0.1),
-//                    512, True, 2);
-//        readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(0.1, 0.1), 2);
-//       // Update the table and check again.
-//       updateTable (nchan, npol, Complex(-3.52, -20.3));
-//       readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(-3.52, -20.3));
-//       // Write data in local format and check it. No alignment.
-//       createData (nseq, nant, nchan, npol, 1e9, 10., Complex(3.1, -5.2),
-//                   0, False);
-//       readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(3.1, -5.2));
-//       // Update the table and check again.
-//       updateTable (nchan, npol, Complex(3.52, 20.3));
-//       readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(3.52, 20.3));
-//       copyTable();
+      createTable();
+      // Write data in big-endian and check it. Align on 512.
+      createData (nseq, nant, nchan, npol, 1e9, 10., Complex(0.1, 0.1),
+		  512, True, 2);
+      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(0.1, 0.1), 2);
+      // Update the table and check again.
+      updateTable (nchan, npol, Complex(-3.52, -20.3));
+      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(-3.52, -20.3), 2);
+      // Write data in local format and check it. No alignment.
+      createData (nseq, nant, nchan, npol, 1e9, 10., Complex(3.1, -5.2),
+                  0, False, 2);
+      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(3.1, -5.2), 2);
+      // Update the table and check again.
+      updateTable (nchan, npol, Complex(3.52, 20.3));
+      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(3.52,
+      20.3), 2);
+      copyTable();
 
 
     }
