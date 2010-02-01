@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef STATIONCU_TBBCONTROL_VHECRTASK_H
-#define STATIONCU_TBBCONTROL_VHECRTASK_H
+#ifndef VHECR_VHECRTASK_H
+#define VHECR_VHECRTASK_H
 
 //# Common Includes
 #include <Common/LofarLogger.h>
@@ -29,14 +29,14 @@
 #include <Common/lofar_datetime.h>
 
 //# local includes
-#include "TBBTrigger.h"
-#include "TBBReadCmd.h"
+#include "VHECR/TBBTrigger.h"
+#include "VHECR/TBBReadCmd.h"
 
 // forward declaration
 
 
 namespace LOFAR {
-  namespace StationCU {
+  namespace VHECR {
     
     class VHECRTask
     {
@@ -116,6 +116,6 @@ namespace LOFAR {
 
     };
     
-  };//StationCU
+  };//VHECR
 };//LOFAR
 #endif

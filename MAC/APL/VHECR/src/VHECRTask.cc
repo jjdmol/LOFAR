@@ -29,7 +29,7 @@
 
 namespace LOFAR {
   //	using namespace ACC::APS;
-  namespace StationCU {
+  namespace VHECR {
     
     //
     // VHECRTask()
