@@ -92,6 +92,8 @@ namespace LOFAR {
         {
           configFile >> itsOutputFilename;
           itsLogfile = fopen(itsOutputFilename.c_str(), "w"); // overwrites existing file...
+          fprintf(itsLogfile, "Successfully opened log file!\n");
+          fflush(itsLogfile);
 //          cout << "Filename set to: " << itsOutputFilename << endl;
         } else if (temp == "coincidenceChannels:")
         {          
