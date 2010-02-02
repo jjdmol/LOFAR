@@ -383,10 +383,7 @@ if __name__ == "__main__":
       # force settings required to run under valgrind
       parset["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "TCP" # FCNP uses BG/P instructions
       parset["OLAP.nrSecondsOfBuffer"] = 1.5                    # reduce memory footprint
-
-      # default to valgrind builds
-      options.ionproc = "${BASEDIR}/installed/gnubgp_ion-valgrind/bin/IONProc"
-      options.cnproc  = "${BASEDIR}/installed/gnubgp_cn-valgrind/bin/CN_Processing"
+      parset["Observation.nrSlotsInFrame"] = 1                  # reduce memory footprint
 
     # parse specific parset values from the command line (all options containing ".")
     # reapply them in case they got overwritten

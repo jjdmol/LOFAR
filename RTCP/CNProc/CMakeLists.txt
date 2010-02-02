@@ -13,6 +13,11 @@ if(NOT FFTW3_F0UND)
   endif(NOT FFTW2_FOUND)
 endif(NOT FFTW3_F0UND)
 
+lofar_find_package(Valgrind)
+if(USE_VALGRIND)
+  add_definitions(-DUSE_VALGRIND)
+endif(USE_VALGRIND)  
+
 ## ---------------------------------------------------------------------------
 ## Enable BGP specific assembler.
 ## Use the BGP assembler also for linking C/C++ programs.

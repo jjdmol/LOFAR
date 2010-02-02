@@ -28,7 +28,6 @@
 #include <Common/Timer.h>
 #include <Interface/CN_Configuration.h>
 #include <Interface/CN_Mapping.h>
-#include <FCNP_ClientStream.h>
 #include <complex>
 #include <cmath>
 #include <iomanip>
@@ -62,7 +61,7 @@ CN_Processing_Base::~CN_Processing_Base()
 {
 }
 
-template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream *str, Stream *(*createStream)(unsigned), const LocationInfo &locationInfo)
+template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream *str, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo)
 :
   itsStream(str),
   itsCreateStream(createStream),
@@ -175,7 +174,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
   itsOutputStreams.resize(itsPlan->nrOutputTypes());
   for( unsigned i = 0; i < itsPlan->nrOutputTypes(); i++ ) {
-      itsOutputStreams[i] = itsCreateStream(i + 1);
+    itsOutputStreams[i] = itsCreateStream(i + 1, itsLocationInfo);
   }
 
   if (itsHasPhaseTwo) {

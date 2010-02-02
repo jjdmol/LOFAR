@@ -5,6 +5,11 @@ lofar_package(IONProc 1.0
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
+lofar_find_package(Valgrind)
+
+if(USE_VALGRIND)
+  add_definitions(-DUSE_VALGRIND)
+endif(USE_VALGRIND)  
 
 enable_language(ASM-BGP)
 

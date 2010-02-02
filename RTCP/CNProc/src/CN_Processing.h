@@ -65,7 +65,7 @@ class CN_Processing_Base // untemplated helper class
 template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base, boost::noncopyable
 {
   public:
-			CN_Processing(Stream *, Stream *(*createStream)(unsigned), const LocationInfo &);
+			CN_Processing(Stream *, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &);
 			~CN_Processing();
 
     virtual void	preprocess(CN_Configuration &);
@@ -101,7 +101,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned            itsComputeGroupRank;
     unsigned            itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
     Stream	        *itsStream;
-    Stream              *(*itsCreateStream)(unsigned);
+    Stream              *(*itsCreateStream)(unsigned, const LocationInfo &);
     std::vector<Stream*> itsOutputStreams;
     const LocationInfo	&itsLocationInfo;
     std::vector<double> itsCenterFrequencies;

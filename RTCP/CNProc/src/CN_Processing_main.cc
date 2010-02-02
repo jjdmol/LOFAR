@@ -72,12 +72,13 @@ void terminate_with_backtrace()
 
 #endif
 
-static Stream *createIONstream( unsigned channel )
+static Stream *createIONstream( unsigned channel, const LocationInfo &locationInfo )
 {
 #if 1 && defined HAVE_FCNP && defined HAVE_BGP_CN && !defined USE_VALGRIND
     /* preferred */
     static bool initialized = false;
 
+    LOG_DEBUG( "Initializing FCNP" );
     if (!initialized) {
       initialized = true;
       FCNP_CN::init();
@@ -85,8 +86,6 @@ static Stream *createIONstream( unsigned channel )
 
     return new FCNP_ClientStream(channel);
 #elif 1
-    LocationInfo locationInfo;
-
     /* used by default for !HAVE_FCNP && !HAVE_BGP */ 
     usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
 
@@ -138,7 +137,7 @@ int main(int argc, char **argv)
 
     LOG_DEBUG("creating connection to ION ...");
     
-    Stream *ionStream = createIONstream(0);
+    Stream *ionStream = createIONstream(0, locationInfo);
 
     LOG_DEBUG("connection successful");
 
