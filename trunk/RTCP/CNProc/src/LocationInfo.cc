@@ -4,6 +4,7 @@
 
 #include <Interface/CN_Mapping.h>
 #include <Interface/PrintVector.h>
+#include <Interface/Exceptions.h>
 
 #include <Common/LofarLogger.h>
 
@@ -39,6 +40,15 @@ LocationInfo::LocationInfo()
 
 void LocationInfo::getPersonality()
 {
+  // allow this only once due to the MPI_Bcast that needs to be synced.
+  static bool initialised = false;
+
+  if (initialised) {
+    THROW(CNProcException,"LocationInfo::getPersonality called for a second time");
+  }
+
+  initialised = true;
+
   if (Kernel_GetPersonality(&itsPersonality, sizeof itsPersonality) != 0) {
     LOG_FATAL("could not get personality");
     exit(1);

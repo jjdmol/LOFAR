@@ -69,7 +69,7 @@ using boost::format;
 
 #ifdef USE_VALGRIND
 extern "C" {
-#include <valgrind.h>
+#include <valgrind/valgrind.h>
 
 /*
  * Valgrind wrappers to replace functions which use Double Hummer instructions,
@@ -513,6 +513,9 @@ template <typename SAMPLE_TYPE> void Job::CNthread()
 
   LOG_DEBUG("starting CNthread");
 
+  // first: send configuration to compute nodes so they know what to expect
+  configureCNs();
+
   // start output process threads
   for (unsigned output = 0; output < nrOutputTypes; output++) {
     unsigned phase, psetIndex, maxlistsize;
@@ -556,8 +559,6 @@ template <typename SAMPLE_TYPE> void Job::CNthread()
 
   // forward input, if any
   LOG_DEBUG("CNthread processing input");
-
-  configureCNs();
 
   unsigned run;
   std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
