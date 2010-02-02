@@ -4,10 +4,12 @@
 #  Subversion_VERSION_SVN - version of svn command line client
 #  Subversion_FOUND - true if the command line client was found
 # If the command line client executable is found two macros are defined:
-#  Subversion_WC_INFO(<dir> <var-prefix>)
+#  Subversion_WC_INFO(<dir> <var-prefix> [ERROR_QUIET])
 #  Subversion_WC_LOG(<dir> <var-prefix>)
 # Subversion_WC_INFO extracts information of a subversion working copy at
-# a given location. This macro defines the following variables:
+# a given location. ERROR_QUIET causes the macro to suppress errors.
+# The macro defines the following variables:
+#  <var-prefix>_WC_FOUND - if <dir> is a working copy
 #  <var-prefix>_WC_URL - url of the repository (at <dir>)
 #  <var-prefix>_WC_ROOT - root url of the repository
 #  <var-prefix>_WC_REVISION - current revision
@@ -71,8 +73,12 @@ IF(Subversion_SVN_EXECUTABLE)
       OUTPUT_STRIP_TRAILING_WHITESPACE)
 
     IF(NOT ${Subversion_svn_info_result} EQUAL 0)
-      MESSAGE(SEND_ERROR "Command \"${Subversion_SVN_EXECUTABLE} info ${dir}\" failed with output:\n${Subversion_svn_info_error}")
+      SET(${prefix}_WC_FOUND FALSE)
+      IF(NOT "${ARGV2}" STREQUAL "ERROR_QUIET")
+        MESSAGE(SEND_ERROR "Command \"${Subversion_SVN_EXECUTABLE} info ${dir}\" failed with output:\n${Subversion_svn_info_error}")
+      ENDIF(NOT "${ARGV2}" STREQUAL "ERROR_QUIET")
     ELSE(NOT ${Subversion_svn_info_result} EQUAL 0)
+      SET(${prefix}_WC_FOUND TRUE)
 
       STRING(REGEX REPLACE "^(.*\n)?svn, version ([.0-9]+).*"
         "\\2" Subversion_VERSION_SVN "${Subversion_VERSION_SVN}")
