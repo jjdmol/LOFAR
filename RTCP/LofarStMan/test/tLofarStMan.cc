@@ -136,6 +136,7 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
   } else {
     cfile = new RawIO(&file);
   }
+
   // Create and initialize data and nsample.
   Array<Complex> data(IPosition(2,npol,nchan));
   indgen (data, startValue, Complex(0.01, 0.01));
@@ -160,6 +161,7 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
   // Write the data as nseq blocks.
   for (uInt i=0; i<nseq; ++i) {
     cfile->write (1, &i);
+
     if (align1.size() > 0) {
       cfile->write (align1.size(), align1.storage());
     }
@@ -189,7 +191,26 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
     }
   }
   delete cfile;
+
+  if (myStManVersion == 2) {
+    TypeIO* sfile = 0;
+    // create seperate file for sequence numbers if version == 2
+    RegularFileIO file(RegularFile("tLofarStMan_tmp.data/table.f0seqnr"),
+		       ByteIO::New);
+    // Write in canonical (big endian) or local format.
+    if (bigEndian) {
+      sfile = new CanonicalIO(&file);
+    } else {
+      sfile = new RawIO(&file);
+    }
+    for (uInt i=0; i<nseq; ++i) {
+      sfile->write (1, &i);
+    }
+    delete sfile;
+  }
 }
+
+
 
 void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
                 Double startTime, Double interval, const Complex& startValue, 
