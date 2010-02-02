@@ -138,10 +138,16 @@ OutputSection::~OutputSection()
     delete itsSums[i];
   }
 
+  for (unsigned i = 0; i < itsNrComputeCores; i++) {
+    delete itsStreamsFromCNs[i];
+  }
+
   delete itsPlan;
 
   itsOutputThreads.clear();
   itsDroppedCount.clear();
+
+  itsStreamsFromCNs.clear();
 }
 
 
