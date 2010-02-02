@@ -52,6 +52,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         this.addColumn("dirtype");
         this.addColumn("angle 1");
         this.addColumn("angle 2");
+        this.addColumn("duration");
         this.addColumn("subbands");
         this.addColumn("beamlets");
     }
@@ -60,20 +61,21 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
      *
      * @param  aDirTypes   Vector<String> of all direction Types
      * @param  anAngles1   Vector<String> of all direction 1 angles
-     * @param  anAngels2   Vector<String> of all direction 1 angles
+     * @param  anAngels2   Vector<String> of all direction 2 angles
+     * @param  durations   Vector<String> of all durations
      * @param  aSubbands   Vector<String> of all Subbands involved
      * @param  aBeamlets   Vector<String> of all Beamlets involved
      *
      * @return True if succes else False
      */
      public boolean fillTable(String treeType, Vector<String> aDirTypes,Vector<String> anAngles1,Vector<String> anAngles2, 
-                             Vector<String> aSubbands, Vector<String> aBeamlets) {
+                             Vector<String> aDurations,Vector<String> aSubbands, Vector<String> aBeamlets) {
          
         itsTreeType=treeType;
         
         // "clear" the table
         setRowCount(0);
-        if (aDirTypes==null||anAngles1==null||anAngles2==null||aSubbands==null||aBeamlets==null) {
+        if (aDirTypes==null||anAngles1==null||anAngles2==null||aDurations==null||aSubbands==null||aBeamlets==null) {
             logger.error("Error in fillTable, null value in input found.");
             return false;
         }
@@ -90,6 +92,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
             String[]  newRow = { aDirTypes.elementAt(i+offset),
                                  anAngles1.elementAt(i+offset),
                                  anAngles2.elementAt(i+offset),
+                                 aDurations.elementAt(i+offset),
                                  aSubbands.elementAt(i+offset),
                                  aBeamlets.elementAt(i+offset)};
             
@@ -104,21 +107,21 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
      * @param  aDirTypes   Vector<String> of all direction Types
      * @param  anAngles1   Vector<String> of all direction 1 angles
      * @param  anAngels2   Vector<String> of all direction 1 angles
+     * @param  aDurations  Vector<String> of all durations
      * @param  aSubbands   Vector<String> of all Subbands involved
      * @param  aBeamlets   Vector<String> of all Beamlets involved
      *
      * @return True if succes else False
      */
      public boolean getTable(Vector<String> aDirTypes,Vector<String> anAngles1,Vector<String> anAngles2, 
-                             Vector<String> aSubbands, Vector<String> aBeamlets) {
+                             Vector<String> aDurations,Vector<String> aSubbands, Vector<String> aBeamlets) {
          
-        int length = aDirTypes.size();
-        
         // need to skip first entry because it is the default (dummy) TBBsetting
         // empty all elements except the default
         aDirTypes.setSize(1);
         anAngles1.setSize(1);
         anAngles2.setSize(1);
+        aDurations.setSize(1);
         aSubbands.setSize(1);
         aBeamlets.setSize(1);
         
@@ -126,8 +129,9 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
             aDirTypes.addElement((String)getValueAt(i,0));
             anAngles1.addElement((String)getValueAt(i,1));
             anAngles2.addElement((String)getValueAt(i,2));
-            aSubbands.addElement((String)getValueAt(i,3));
-            aBeamlets.addElement((String)getValueAt(i,4));
+            aDurations.addElement((String)getValueAt(i,3));
+            aSubbands.addElement((String)getValueAt(i,4));
+            aBeamlets.addElement((String)getValueAt(i,5));
         }
         return true;    
     }
@@ -138,18 +142,19 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
      * @param  aDirTypes   direction Type
      * @param  anAngles1   direction 1 angle
      * @param  anAngels2   direction 2 angle
+     * @param  aDurations  durations
      * @param  aSubbands   Subbands involved
      * @param  aBeamlets   Beamlets involved
      *
      * @return True if succes else False
      */
-    public boolean addRow(String aDirType,String anAngle1,String anAngle2, String aSubbands, String aBeamlets) {
+    public boolean addRow(String aDirType,String anAngle1,String anAngle2, String aDurations, String aSubbands, String aBeamlets) {
       
-        if (aDirType==null||anAngle1==null||anAngle2==null||aSubbands==null||aBeamlets==null) {
+        if (aDirType==null||anAngle1==null||anAngle2==null||aDurations==null||aSubbands==null||aBeamlets==null) {
             logger.error("Error in addRow, null value in input found.");
             return false;
         }
-        String[]  newRow = { aDirType,anAngle1,anAngle2,aSubbands,aBeamlets};
+        String[]  newRow = { aDirType,anAngle1,anAngle2,aDurations,aSubbands,aBeamlets};
         this.addRow(newRow);
         
         return true;
@@ -167,6 +172,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
             this.setValueAt(newRow[2],row,2);
             this.setValueAt(newRow[3],row,3);
             this.setValueAt(newRow[4],row,4);
+            this.setValueAt(newRow[5],row,5);
         } else {
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
@@ -187,7 +193,8 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
                                    (String)this.getValueAt(row,1),
                                    (String)this.getValueAt(row,2),
                                    (String)this.getValueAt(row,3),
-                                   (String)this.getValueAt(row,4)};
+                                   (String)this.getValueAt(row,4),
+                                   (String)this.getValueAt(row,5)};
             return selection;
         } else {
             return null;
