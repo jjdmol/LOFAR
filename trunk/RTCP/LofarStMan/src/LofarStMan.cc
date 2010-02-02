@@ -237,8 +237,7 @@ void LofarStMan::mapFile()
     itsSeqFile = 0;
   }
   // check the size of the sequencenumber file, close file is it doesn't match
-  // FIXME !!! Check this filesize
-  if (itsSeqFile && (itsSeqFile->getFileSize() != itsNrRows * itsAnt1.size() * sizeof(uInt))) {
+  if (itsSeqFile && (itsSeqFile->getFileSize() / sizeof(uInt) == itsNrRows )) {
     delete itsSeqFile;
     itsSeqFile = 0;
   }
@@ -342,7 +341,6 @@ Double LofarStMan::time (uInt blocknr)
   Int seqnr;
   
   const void* ptr;
-  /// FIXME !! init and check itsSeqFile for correct size
   if (itsSeqFile) {
     ptr = itsSeqFile->getReadPointer(blocknr * sizeof(uInt));
   } else {
