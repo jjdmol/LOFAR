@@ -70,14 +70,15 @@ def packetAnalysis( name, ip, port ):
     rscs,nr,field = name[0:2],name[2:5],name[5:]
     nr1,nr2,nr3 = nr
 
-    macnrs = macaddress.split(":")
-    srcnr = "%s%s" % (macnrs[3],macnrs[4])
+    # the station number is the 4th and the 5th field of the MAC address, encoded in hex per two digits (i.e. 302 => 03:02 and 032 => 00:20)
+    macnrs = map( lambda x: int(x,16), macaddress.split(":") )
+    srcnr = "%01d%02d" % (macnrs[3],macnrs[4])
 
     try:
-      if int(nr) == int(srcnr):
+      if str(nr) == srcnr:
         macline = " OK Source MAC address:  %s" % (macaddress,)
       else:
-        macline = "NOK Source MAC address:  %s (station %d?)" % (macaddress,int(srcnr))
+        macline = "NOK Source MAC address:  %s (station %d?)" % (macaddress,srcnr)
     except ValueError:    
         macline = "NOK Source MAC address:  %s" % (macaddress,)
     
