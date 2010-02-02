@@ -261,7 +261,7 @@ void RTDBPropertySet::configure(const string& apcName)
 //
 string RTDBPropertySet::getFullScope () const 
 { 
-	if (itsScope.find(GCF_SYS_NAME_SEP) == string::npos) {
+	if (itsScope.find(GCF_SYS_NAME_SEP) != string::npos) {
 		return (itsScope);
 	}
 
