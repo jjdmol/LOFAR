@@ -147,7 +147,7 @@ class IONProcSection(Section):
     logfiles = ["%s/run.IONProc.%s.log" % (Locations.files["logdir"],self.partition)] + self.logoutputs
 
     if VALGRIND_ION:
-      valgrind = "/globalhome/mol/root-ppc/bin/valgrind --suppressions=%s --leak-check=no --show-reachable=no" % (Locations.files["ionsuppfile"],)
+      valgrind = "/globalhome/mol/root-ppc/bin/valgrind --suppressions=%s --leak-check=full --show-reachable=no" % (Locations.files["ionsuppfile"],)
     else:
       valgrind = ""
 
