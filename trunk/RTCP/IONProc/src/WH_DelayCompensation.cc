@@ -131,6 +131,14 @@ namespace LOFAR
         // etc.
         ResultData result;
 
+        ASSERTSTR(request.direction.size() == itsNrBeams * itsNrPencilBeams,
+	  	  request.direction.size() << " == " << itsNrBeams * itsNrPencilBeams );
+        ASSERTSTR(request.position.size() == 1,
+	  	  request.position.size() << " == 1");
+
+        ASSERTSTR(request.epoch.size() == itsNrCalcDelays,
+	  	  request.epoch.size() << " == " << itsNrCalcDelays);
+
         casacoreMutex.lock();
         // TODO: hangs if exception is thrown here -- should abort everything instead, since
         // we can't restore casacore.
