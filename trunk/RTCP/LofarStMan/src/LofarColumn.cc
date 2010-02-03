@@ -213,7 +213,7 @@ namespace LOFAR {
         ant = ant2;
       }
       // The UVW of the baseline is the difference of the antennae.
-      *dataPtr = itsAntUvw[ant1] - itsAntUvw[ant2];
+      *dataPtr = itsAntUvw[ant2] - itsAntUvw[ant1];
     }
   }
 
