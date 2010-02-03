@@ -1,3 +1,7 @@
+# ----- Generic information
+Observation.ObserverName = "Developer"
+Observation.ProjectName = "Development"
+
 # ----- Input streams
 Observation.VirtualInstrument.stationList = [CS302]
 #Observation.antennaSet=LBA_INNER
