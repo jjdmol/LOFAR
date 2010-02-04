@@ -1016,26 +1016,26 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 
 		case F_TIMER: {
 			if (&port == itsVHECRtimer) {
-				int isCmd = itsVHECRTask->getReadCmd(itsStopCommandVector);
+				// left empty
 			}
 			else {
 				if (!itsStopCommandVector.empty()) {
 					TBBStopEvent cmd;
-		
+					
+					// first select RCUs to stop
 					vector<TBBReadCmd>::iterator it;
 					for ( it=itsStopCommandVector.begin() ; it < itsStopCommandVector.end(); it++ ) {
-						// look if new read cmd
 						cmd.rcu_mask.set((*it).itsRcuNr);
 					}
 		
-					// info to pvss
 					LOG_DEBUG_STR("send TBB_STOP cmd");
 					itsTBBDriver->send(cmd);
 				}
-				
+				// read CEP status to check if sending data to CEP is finished
 				if (!itsReadCommandVector.empty()) {
 					TBBCepStatusEvent cmd;
 					cmd.boardmask = (1 << (rcuNr / 16));
+					LOG_DEBUG_STR(formatString("send TBB_CEP_STATUS cmd to board %d", (rcuNr / 16)));
 					itsTBBDriver->send(cmd);
 				}
 			}
@@ -1048,7 +1048,10 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 			for (int b = 0; b < MAX_N_TBBOARDS; b++) {
 				if (ack.status_mask[b] != TBB_SUCCESS) {  // if error, check if rcu is used
 					for (int i = (b * 16); i < ((b + 1) * 16); i++) {  // loop over rcu's on board[b]
-						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
+						if (itsObs->allRCUset.test(i)) { 
+							status_ok = false;
+							LOG_DEBUG_STR(formatString("TBB_STOP_ACK err, board=%d rcu=%d", b, i));
+						} // check if rcu is selected
 					}
 				}
 			}
@@ -1056,20 +1059,21 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 			if (!status_ok) {
 				LOG_ERROR_STR ("Failed to stop recording for selected rcus");
 				itsPropertySet->setValue(PN_FSM_ERROR,GCFPVString("stop error"));
+				TRAN(TBBControl::active_state); // go back to active state.
 			} else {
 				vector<TBBReadCmd>::iterator it;
 				for ( it=itsStopCommandVector.begin() ; it < itsStopCommandVector.end(); it++ ) {
-				// add stopped rcus to ReadVector
-				itsReadCommandVector.push_back(*it);
-			}
-			itsStopCommandVector.clear();
+					// add stopped rcus to ReadVector
+					itsReadCommandVector.push_back(*it);
+				}
+				itsStopCommandVector.clear();
 
 				// send read cmd to TBBDriver
-				TBBReadCmd read;
-				TBBReadEvent cmd;
 				if (!itsReadCommandVector.empty()) {
+					TBBReadCmd read;
+					TBBReadEvent cmd;
 					read = itsReadCommandVector.back();
-					rcuNr = static_cast<int>(read.itsRcuNr);
+					rcuNr 			= static_cast<int>(read.itsRcuNr);
 					cmd.rcu 		= static_cast<int>(read.itsRcuNr);
 					cmd.secondstime	= read.itsTime;
 					cmd.sampletime	= read.itsSampleTime;
@@ -1078,9 +1082,7 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 					LOG_DEBUG_STR(formatString("send TBB_READ cmd: %u,%u,%u,%u,%u",
 									read.itsRcuNr, read.itsTime, read.itsSampleTime, read.itsPrePages, read.itsPostPages));
 					itsTBBDriver->send(cmd);
-			}
-			// info to pvss
-
+				}
 			}
 		} break;
 
@@ -1088,23 +1090,27 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 			TBBReadAckEvent ack(event);
 
 			itsReadCommandVector.pop_back();
-			itsTimerPort->setTimer(0.1);
+			itsTimerPort->setTimer(0.01);
 		} break;
 		
 		case TBB_CEP_STATUS_ACK: {
 			TBBCepStatusAckEvent ack(event);
 			if (ack.pages_left[rcuNr / 16] != 0) {
+				LOG_DEBUG_STR(formatString("TBB_CEP_STATUS_ACK pages_left = %d", ack.pages_left[rcuNr / 16]));
 				itsTimerPort->setTimer(0.1);
 			}
 			else if (!itsReadCommandVector.empty()) {
 				TBBReadEvent cmd;
 				TBBReadCmd read;
 				read = itsReadCommandVector.back();
+				rcuNr 			= static_cast<int>(read.itsRcuNr);
 				cmd.rcu 		= static_cast<int>(read.itsRcuNr);
 				cmd.secondstime	= read.itsTime;
 				cmd.sampletime	= read.itsSampleTime;
 				cmd.prepages	= read.itsPrePages;
 				cmd. postpages	= read.itsPostPages;
+				LOG_DEBUG_STR(formatString("send TBB_READ cmd: %u,%u,%u,%u,%u",
+									read.itsRcuNr, read.itsTime, read.itsSampleTime, read.itsPrePages, read.itsPostPages));
 				itsTBBDriver->send(cmd);
 			} else {
 				TBBRecordEvent cmd;
@@ -1134,15 +1140,29 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 				LOG_WARN_STR ("Failed to start recording for the selected rcus");
 				itsPropertySet->setValue(PN_FSM_ERROR,GCFPVString("record error"));
 			}
-			TRAN(TBBControl::active_state); // go back to active state.
-		} break;
+			itsReadCommandVector.clear();
+			
+			// release all channels again
+			TBBTrigReleaseEvent cmd;
 
+			for (int i = 0; i < MAX_N_RCUS; i++) {
+				cmd.rcu_stop_mask.set(i,itsObs->allRCUset.test(i));
+				cmd.rcu_start_mask.set(i,itsObs->allRCUset.test(i));
+			}
+
+			LOG_DEBUG_STR("send TBB_RELEASE cmd");
+			itsTBBDriver->send(cmd);
+		} break;
+			
 		case TBB_TRIGGER:{
 			status = _triggerEventHandler(event);
 		} break;
 
 		case TBB_TRIG_RELEASE_ACK: {
 			status = _triggerReleaseAckEventHandler(event);
+			if (itsReadCommandVector.empty() && itsStopCommandVector.empty()) {
+				TRAN(TBBControl::active_state); // go back to active state.
+			}
 		} break;
 
 		case CONTROL_SUSPEND: {		// nothing to do, just send answer
