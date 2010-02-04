@@ -140,7 +140,8 @@ private:
 	GCFITCPort*			itsParentPort;
 	
 	GCFTimerPort*		itsTimerPort;
-
+	GCFTimerPort*		itsVHECRtimer;
+	
 	GCFTCPPort*			itsTBBDriver;
 	GCFTCPPort*			itsRSPDriver;
 
