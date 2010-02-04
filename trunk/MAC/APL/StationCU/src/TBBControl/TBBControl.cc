@@ -48,16 +48,17 @@
 #include "PVSSDatapointDefs.h"
 #include "TBBObservation.h"
 
-using namespace LOFAR::GCF::TM;
-using namespace LOFAR::GCF::PVSS;
-using namespace LOFAR::GCF::RTDB;
 using namespace std;
+namespace LOFAR {
+	using namespace GCF::TM;
+	using namespace GCF::PVSS;
+	using namespace GCF::RTDB;
+	using namespace VHECR;
+	using namespace APLCommon;
+	using namespace RTC;
+	namespace StationCU {
 
-using namespace LOFAR;
-using namespace LOFAR::VHECR;
-using namespace APLCommon;
-using namespace RTC;
-using namespace StationCU;
+#define VHECR_INTERVAL 0.1
 
 // static pointer to this object for signal handler
 static TBBControl*	thisTBBControl = 0;
@@ -97,7 +98,10 @@ TBBControl::TBBControl(const string&	cntlrName) :
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
-
+	
+	// timer port for calling VHECRTask every 100mS
+	itsVHECRtimer = new GCFTimerPort(*this, "VHECRtimer");
+	
 	// prepare TCP port to TBBDriver.
 	itsTBBDriver = new GCFTCPPort (*this, MAC_SVCMASK_TBBDRIVER,
 											GCFPortInterface::SAP, TBB_PROTOCOL);
@@ -121,7 +125,7 @@ TBBControl::TBBControl(const string&	cntlrName) :
 	itsStopCommandVector.clear();					// clear buffer
 	itsReadCommandVector.clear();					// clear buffer
 
-	itsVHECRTask = new VHECRTask;
+	itsVHECRTask = new VHECRTask();
 	ASSERTSTR(itsVHECRTask, "Could not create the VHECR task");
 	//itsVHECRTask->setSaveTask(this);
 }
@@ -925,6 +929,8 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
 			// update PVSS
 			// itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("active"));
 			itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
+			// start periodic timer to call VHECR task			
+			itsVHECRtimer->setTimer(VHECR_INTERVAL,VHECR_INTERVAL);
 		} break;
 
 		case F_DISCONNECTED: {
@@ -932,12 +938,18 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
 			ASSERTSTR (&port == itsTBBDriver,
 									"F_DISCONNECTED event from port " << port.getName());
 			LOG_WARN_STR("Connection with TBBDriver lost, going to reconnect");
+			itsVHECRtimer->cancelAllTimers();
 			TRAN(TBBControl::started_state);
 		} break;
 
 		case F_TIMER: {
-			// readCmd received from VHECRTask
-			TRAN(TBBControl::doTBBread);
+			if (&port == itsVHECRtimer) {
+				int isCmd = itsVHECRTask->getReadCmd(itsStopCommandVector);
+				if (!itsStopCommandVector.empty()) {
+					itsVHECRtimer->cancelAllTimers();
+					TRAN(TBBControl::doTBBread);
+				}
+			}
 		} break;
 
 		// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
@@ -962,9 +974,9 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
 			setState(CTState::SUSPEND);
 			sendControlResult(port, CONTROL_SUSPENDED, msg.cntlrName, CT_RESULT_NO_ERROR);
 			setState(CTState::SUSPENDED);
+			itsVHECRtimer->cancelAllTimers();
 			TRAN(TBBControl::prepared_state);
 		} break;
-
 
 		// -------------------- EVENTS RECEIVED FROM TBBDRIVER --------------------
 	// TODO TBB
@@ -994,24 +1006,39 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 	LOG_DEBUG_STR ("doTBBread:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-
+	
+	int rcuNr;
+	
 	switch (event.signal) {
 		case F_ENTRY: {
 			itsTimerPort->setTimer(0.0);
 		} break;
 
 		case F_TIMER: {
-			TBBStopEvent cmd;
-
-			vector<TBBReadCmd>::iterator it;
-		for ( it=itsStopCommandVector.begin() ; it < itsStopCommandVector.end(); it++ ) {
-			// look if new read cmd
-			cmd.rcu_mask.set((*it).itsRcuNr);
-		}
-
-			// info to pvss
-			LOG_DEBUG_STR("send TBB_STOP cmd");
-			itsTBBDriver->send(cmd);
+			if (&port == itsVHECRtimer) {
+				int isCmd = itsVHECRTask->getReadCmd(itsStopCommandVector);
+			}
+			else {
+				if (!itsStopCommandVector.empty()) {
+					TBBStopEvent cmd;
+		
+					vector<TBBReadCmd>::iterator it;
+					for ( it=itsStopCommandVector.begin() ; it < itsStopCommandVector.end(); it++ ) {
+						// look if new read cmd
+						cmd.rcu_mask.set((*it).itsRcuNr);
+					}
+		
+					// info to pvss
+					LOG_DEBUG_STR("send TBB_STOP cmd");
+					itsTBBDriver->send(cmd);
+				}
+				
+				if (!itsReadCommandVector.empty()) {
+					TBBCepStatusEvent cmd;
+					cmd.boardmask = (1 << (rcuNr / 16));
+					itsTBBDriver->send(cmd);
+				}
+			}
 		} break;
 
 		case TBB_STOP_ACK: {
@@ -1042,6 +1069,7 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 				TBBReadEvent cmd;
 				if (!itsReadCommandVector.empty()) {
 					read = itsReadCommandVector.back();
+					rcuNr = static_cast<int>(read.itsRcuNr);
 					cmd.rcu 		= static_cast<int>(read.itsRcuNr);
 					cmd.secondstime	= read.itsTime;
 					cmd.sampletime	= read.itsSampleTime;
@@ -1058,12 +1086,19 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 
 		case TBB_READ_ACK: {
 			TBBReadAckEvent ack(event);
-			TBBReadCmd read;
-			TBBReadEvent cmd;
 
 			itsReadCommandVector.pop_back();
-
-			if (!itsReadCommandVector.empty()) {
+			itsTimerPort->setTimer(0.1);
+		} break;
+		
+		case TBB_CEP_STATUS_ACK: {
+			TBBCepStatusAckEvent ack(event);
+			if (ack.pages_left[rcuNr / 16] != 0) {
+				itsTimerPort->setTimer(0.1);
+			}
+			else if (!itsReadCommandVector.empty()) {
+				TBBReadEvent cmd;
+				TBBReadCmd read;
 				read = itsReadCommandVector.back();
 				cmd.rcu 		= static_cast<int>(read.itsRcuNr);
 				cmd.secondstime	= read.itsTime;
@@ -1082,7 +1117,7 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 				itsTBBDriver->send(cmd);
 			}
 		} break;
-
+		
 		case TBB_RECORD_ACK: {
 			TBBTrigCoefAckEvent ack(event);
 			bool status_ok = true;
@@ -1150,7 +1185,6 @@ GCFEvent::TResult TBBControl::doTBBunsubscribe(GCFEvent& event, GCFPortInterface
 
 		case TBB_UNSUBSCRIBE_ACK: {
 			TBBUnsubscribeAckEvent ack(event);
-
 			TRAN(TBBControl::doTBBfree);				// go to next state.
 		} break;
 
@@ -1495,3 +1529,5 @@ case TBB_ALLOC_ACK: {
 			}
 
 */
+	}
+}
