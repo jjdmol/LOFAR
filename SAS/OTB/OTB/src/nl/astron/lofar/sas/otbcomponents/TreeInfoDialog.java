@@ -706,6 +706,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             logger.error(errorMsg );  
         } else {
            if (saveNewTree()) {
+                this.durationValue.setText("");
+                this.inputDurationType.setSelectedIndex(0);
+
                 setVisible(false);
                 dispose();
             }
@@ -713,6 +716,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_saveButtonActionPerformed
 
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
+        this.durationValue.setText("");
+        this.inputDurationType.setSelectedIndex(0);
         setVisible(false);
         dispose();
     }//GEN-LAST:event_cancelButtonActionPerformed
