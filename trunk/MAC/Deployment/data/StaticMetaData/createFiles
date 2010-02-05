@@ -216,7 +216,6 @@ def createRSPDriverFile(resultDir, stationName, dataDir):
 
         # Core stations should have Splitter set to 1; others to 0.
         if (stationName[0:2].upper() == "CS"):
-            RSPconfig = RSPconfig.replace("@SPLITTER@",str(1))
             RSPconfig = RSPconfig.replace("@IP_EXTEN_00@",   "1")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   "2")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_02@",   "3")
@@ -226,7 +225,6 @@ def createRSPDriverFile(resultDir, stationName, dataDir):
             RSPconfig = RSPconfig.replace("@IP_EXTEN_12@",   "3")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_13@",   "4")
         else:
-            RSPconfig = RSPconfig.replace("@SPLITTER@",str(0))
             RSPconfig = RSPconfig.replace("@IP_EXTEN_00@",   "1")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   "2")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_02@",   "3")
@@ -247,7 +245,6 @@ def createRSPDriverFile(resultDir, stationName, dataDir):
         RSPconfig = RSPconfig.replace("@IP_SUBNET_03@",   ip_parts[2])
         RSPconfig = RSPconfig.replace("@LAST_XLET_OUT@",  "11")
     else: # Non-NL station
-        RSPconfig = RSPconfig.replace("@SPLITTER@",str(0))
         hexStationID = str("%02x" % int(stationName[3:6]))
         ringID = '0'+stationName[2]
         RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName.upper())
