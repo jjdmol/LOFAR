@@ -42,6 +42,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     private jOTDBnode itsLongBaselines;
     private jOTDBnode itsStationList;
 
+
     // Clockmode
     private jOTDBnode itsClockMode;
 
@@ -391,6 +392,10 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
 
         aS+="]";
         return aS;
+    }
+
+    public boolean isLBASelected() {
+        return this.inputLBAAntennas.isSelected();
     }
 
      /**

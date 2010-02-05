@@ -1250,6 +1250,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         }        
     }
 
+    private void setAnaBeamConfiguration(boolean flag) {
+        this.anaBeamConfiguration.setVisible(flag);
+   }
+
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -1293,7 +1297,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         jScrollPane2 = new javax.swing.JScrollPane();
         beamformerStationsScrollPane = new javax.swing.JScrollPane();
         beamformerStationList = new javax.swing.JList();
-        jPanel6 = new javax.swing.JPanel();
+        anaBeamConfiguration = new javax.swing.JPanel();
         anaBeamConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         addAnaBeamButton = new javax.swing.JButton();
         editAnaBeamButton = new javax.swing.JButton();
@@ -1398,7 +1402,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Beam Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Digital Beam Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
         jPanel3.setPreferredSize(new java.awt.Dimension(200, 125));
         jPanel3.setRequestFocusEnabled(false);
         jPanel3.setVerifyInputWhenFocusTarget(false);
@@ -1595,7 +1599,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Analog Beam Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        anaBeamConfiguration.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Analog Beam Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        anaBeamConfiguration.setEnabled(false);
 
         anaBeamConfigurationPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -1626,14 +1631,14 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        org.jdesktop.layout.GroupLayout jPanel6Layout = new org.jdesktop.layout.GroupLayout(jPanel6);
-        jPanel6.setLayout(jPanel6Layout);
-        jPanel6Layout.setHorizontalGroup(
-            jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel6Layout.createSequentialGroup()
+        org.jdesktop.layout.GroupLayout anaBeamConfigurationLayout = new org.jdesktop.layout.GroupLayout(anaBeamConfiguration);
+        anaBeamConfiguration.setLayout(anaBeamConfigurationLayout);
+        anaBeamConfigurationLayout.setHorizontalGroup(
+            anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(anaBeamConfigurationLayout.createSequentialGroup()
                 .add(anaBeamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1094, Short.MAX_VALUE)
                 .add(20, 20, 20))
-            .add(jPanel6Layout.createSequentialGroup()
+            .add(anaBeamConfigurationLayout.createSequentialGroup()
                 .add(addAnaBeamButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(editAnaBeamButton)
@@ -1641,13 +1646,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(deleteAnaBeamButton)
                 .addContainerGap())
         );
-        jPanel6Layout.setVerticalGroup(
-            jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel6Layout.createSequentialGroup()
+        anaBeamConfigurationLayout.setVerticalGroup(
+            anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(anaBeamConfigurationLayout.createSequentialGroup()
                 .add(anaBeamConfigurationPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 123, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                .add(anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                         .add(editAnaBeamButton)
                         .add(deleteAnaBeamButton))
                     .add(addAnaBeamButton)))
@@ -1671,7 +1676,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
             .add(jPanel2Layout.createSequentialGroup()
-                .add(jPanel6, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(anaBeamConfiguration, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -1679,7 +1684,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             .add(jPanel2Layout.createSequentialGroup()
                 .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 180, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel6, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(anaBeamConfiguration, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(11, 11, 11)
                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel5, 0, 210, Short.MAX_VALUE)
@@ -1790,6 +1795,11 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             DefaultListModel aM = (DefaultListModel)stationList.getModel();
             checkBeamformers(aM.toArray());
             fillBeamformerStationList();
+            if (this.antennaConfigPanel.isLBASelected()){
+                this.setAnaBeamConfiguration(false);
+            } else {
+                this.setAnaBeamConfiguration(true);
+            }
         }
     }//GEN-LAST:event_jTabbedPane1StateChanged
 
@@ -1798,8 +1808,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     }//GEN-LAST:event_inputReceiverListFocusGained
 
     private void anaBeamConfigurationPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_anaBeamConfigurationPanelMouseClicked
+    if (!this.antennaConfigPanel.isLBASelected()) {
         editAnaBeamButton.setEnabled(true);
         deleteAnaBeamButton.setEnabled(true);
+    }
 }//GEN-LAST:event_anaBeamConfigurationPanelMouseClicked
 
     private void addAnaBeamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addAnaBeamButtonActionPerformed
@@ -1889,6 +1901,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JButton addAnaBeamButton;
     private javax.swing.JButton addBeamButton;
     private javax.swing.JButton addBeamformerButton;
+    private javax.swing.JPanel anaBeamConfiguration;
     private nl.astron.lofar.sas.otbcomponents.TablePanel anaBeamConfigurationPanel;
     private nl.astron.lofar.sas.otbcomponents.AntennaConfigPanel antennaConfigPanel;
     private nl.astron.lofar.sas.otbcomponents.TablePanel beamConfigurationPanel;
@@ -1917,7 +1930,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
-    private javax.swing.JPanel jPanel6;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTabbedPane jTabbedPane1;
