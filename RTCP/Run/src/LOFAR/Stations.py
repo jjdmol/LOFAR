@@ -192,7 +192,7 @@ def defineStations( s ):
   # default port numbers
   defaultPorts = {
     "RSP_0": boards( [0, 1, 2, 3] ),
-    "RSP_1": boards( [8, 9, 10, 11] ),
+    "RSP_1": boards( [6, 7, 8, 9] ),
   }
   defaultFields = {
     "RSP_0": ["LBA","HBA","HBA0"],
@@ -221,7 +221,7 @@ def defineStations( s ):
       } )
 
   # to change the ports of CS302HBA0 for example, use
-  # s["CS302HBA0"][0].inputs = boards( 0, 1, 2, 4 )
+  # s["CS302HBA0"][0].inputs = boards( [0, 1, 2, 4] )
 
   # Simulated stations for experimentation.
 
