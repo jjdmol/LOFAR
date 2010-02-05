@@ -16,6 +16,9 @@
  */
 
 
+#define _FILE_OFFSET_BITS 64
+
+#include <features.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netdb.h>
