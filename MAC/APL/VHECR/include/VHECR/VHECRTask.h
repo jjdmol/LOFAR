@@ -107,6 +107,7 @@ namespace LOFAR {
 
       // Index of first and last element in buffer
       uint32 first, last;
+      int getReadCmd(vector<TBBReadCmd> &outVector);
 
       // Insert element into buffer, returns index of inserted element
       uint32 add2buffer(const TBBTrigger& trigger);
