@@ -124,7 +124,11 @@ namespace LOFAR {
       fprintf(itsLogfile, "Output file: %s\nCoincidence channels required: %d\nAntenna positions file: %s\nAntenna selection: %s\nCoincidence time window: %3.6f\ndo Direction fit: %d\n", 
               itsOutputFilename.c_str(), itsNoCoincidenceChannels, antennaPositionsFile.c_str(), antennaSelection.c_str(), itsCoincidenceTime, doDirectionFit);
     }
-            
+    int VHECRTask::getReadCmd(vector<TBBReadCmd> &outVector)
+    { // outVector gets modified here... return no. of entries
+      return 0;
+    }
+      
       
     //
     // readTBBdata(vector<TBBReadCmd>	cmdVector)
