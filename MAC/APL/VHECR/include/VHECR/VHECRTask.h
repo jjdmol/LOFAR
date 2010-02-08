@@ -97,8 +97,8 @@ namespace LOFAR {
       
           
       position antennaPositions[96]; // much faster than vector<position> !!
-      void VHECRTask::readConfigFile(string fileName);
-      string VHECRTask::readableTime(const uint64 date);
+      void readConfigFile(string fileName);
+      string readableTime(const uint64 date);
 
       // All buffered triggers
       struct triggerBuffElem trigBuffer[VHECR_TASK_BUFFER_LENGTH];
