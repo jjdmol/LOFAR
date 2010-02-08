@@ -167,9 +167,9 @@ def normalize(phase):
 
     return out
 
-def plot(sol, fig, clf=True, sub=None, scatter=False, stack=False, sep=5.0,
-    sep_abs=False, labels=None, show_legend=False, title=None, xlabel=None,
-    ylabel=None):
+def plot(fig, y, x=None, clf=True, sub=None, scatter=False, stack=False,
+    sep=5.0, sep_abs=False, labels=None, show_legend=False, title=None,
+    xlabel=None, ylabel=None):
     """
     Plot a list of signals.
 
@@ -205,29 +205,31 @@ def plot(sol, fig, clf=True, sub=None, scatter=False, stack=False, sep=5.0,
     if not ylabel is None:
         axes.set_ylabel(ylabel)
 
+    if x is None:
+        x = [range(len(yi)) for yi in y]
+
     offset = 0.0
-    for i in range(0,len(sol)):
+    for i in range(0,len(y)):
         if labels is None:
             if scatter:
-                axes.scatter(range(0, len(sol[i])), sol[i] + offset,
-                    edgecolors="None", c=__styles[i % len(__styles)][0],
-                    marker="o")
+                axes.scatter(x[i], y[i] + offset, edgecolors="None",
+                    c=__styles[i % len(__styles)][0], marker="o")
             else:
-                axes.plot(sol[i] + offset, __styles[i % len(__styles)])
+                axes.plot(x[i], y[i] + offset, __styles[i % len(__styles)])
         else:
             if scatter:
-                axes.scatter(range(0, len(sol[i])), sol[i] + offset,
-                    edgecolors="None", c=__styles[i % len(__styles)][0],
-                    marker="o", label=labels[i])
+                axes.scatter(x[i], y[i] + offset, edgecolors="None",
+                    c=__styles[i % len(__styles)][0], marker="o",
+                    label=labels[i])
             else:
-                axes.plot(sol[i] + offset, __styles[i % len(__styles)],
+                axes.plot(x[i], y[i] + offset, __styles[i % len(__styles)],
                     label=labels[i])
 
         if stack:
             if sep_abs:
                 offset += sep
             else:
-                offset += sol[i].mean() + sep * sol[i].std()
+                offset += y[i].mean() + sep * y[i].std()
 
     if not labels is None and show_legend:
         axes.legend(prop=FontProperties(size="x-small"), markerscale=0.5)
@@ -290,10 +292,10 @@ class Parm:
     def _readDomain(self):
         if self._elements is None:
             self._domain = self._db.getRange(self.name())
-
-        domain_el0 = self._db.getRange(self._elements[0])
-        domain_el1 = self._db.getRange(self._elements[1])
-        self._domain = [max(domain_el0[0], domain_el1[0]), min(domain_el0[1], domain_el1[1]), max(domain_el0[2], domain_el1[2]), min(domain_el0[3], domain_el1[3])]
+        else:
+            domain_el0 = self._db.getRange(self._elements[0])
+            domain_el1 = self._db.getRange(self._elements[1])
+            self._domain = [max(domain_el0[0], domain_el1[0]), min(domain_el0[1], domain_el1[1]), max(domain_el0[2], domain_el1[2]), min(domain_el0[3], domain_el1[3])]
 
         self._empty = (self._domain[0] >= self._domain[1]) or (self._domain[2] >= self._domain[3])
 
@@ -383,7 +385,7 @@ class PlotWindow(QFrame):
 
         self.domain = common_domain(self.parms)
 
-        self.shape = (0, 0)
+        self.shape = (1, 1)
         if not self.domain is None:
             self.shape = (self.parms[0].value(self.domain, self.resolution)[0].shape)
             assert(len(self.shape) == 2)
@@ -413,14 +415,18 @@ class PlotWindow(QFrame):
                     el1.append(value[1][self.index, :])
                 labels.append(parm.name())
 
-
         legend = self.show_legend and len(labels) > 0
+        xlabel = ["Time (sample)", "Freq (sample)"][self.axis]
         if self.polar:
-            plot(el0, self.fig, sub="211", labels=labels, show_legend=legend, title="Amplitude")
-            plot(el1, self.fig, clf=False, sub="212", stack=True, scatter=True, labels=labels, show_legend=legend, title="Phase", ylabel="Angle (rad)")
+            plot(self.fig, el0, sub="211", labels=labels, show_legend=legend, xlabel=xlabel, ylabel="Amplitude")
+            plot(self.fig, el1, clf=False, sub="212", stack=True, scatter=True, labels=labels, show_legend=legend, xlabel=xlabel, ylabel="Phase (rad)")
         else:
-            plot(el0, self.fig, sub="211", labels=labels, show_legend=legend, title="Real")
-            plot(el1, self.fig, clf=False, sub="212", labels=labels, show_legend=legend, title="Imaginary")
+            plot(self.fig, el0, sub="211", labels=labels, show_legend=legend, xlabel=xlabel, ylabel="Real")
+            plot(self.fig, el1, clf=False, sub="212", labels=labels, show_legend=legend, xlabel=xlabel, ylabel="Imaginary")
+
+        # Set x-axis scale in number of samples.
+        for ax in self.fig.axes:
+            ax.set_xlim(0, self.shape[self.axis] - 1)
 
         self.canvas.draw()
 
@@ -451,6 +457,8 @@ class MainWindow(QFrame):
     def __init__(self, db):
         QFrame.__init__(self)
         self.db = db
+        self.figures = []
+        self.parms = []
 
 #        self.setWindowTitle("parmdbplot")
 
@@ -490,8 +498,6 @@ class MainWindow(QFrame):
 
         self.setLayout(layout)
 
-        self.figures = []
-        self.parms = []
         self.populate()
 
     def populate(self):
@@ -541,7 +547,7 @@ class MainWindow(QFrame):
                 if not found:
                     self.parms.append(Parm(self.db, name, elements, True))
             else:
-                self.parms.append(Parm(self.db, name))
+                self.parms.append(Parm(self.db, parm))
 
         self.parms = [parm for parm in self.parms if not parm.empty()]
         self.parms.sort(cmp=lambda x, y: cmp(x.name(), y.name()))
