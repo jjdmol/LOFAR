@@ -113,7 +113,9 @@ public:
 	bool			useLongBaselines;
 	bool			splitter;			// On or Off
 
-        vector<Beam>            beams;
+	vector<Beam>	beams;
+	vector<int>		beamlet2beams;		// to which beam each beamlet belongs
+	vector<int>		beamlet2subbands;	// which subband is mapped to each beamlet.
 
 	// couple of values of the virtual instrument as compacted strings
 	string			receiverList;

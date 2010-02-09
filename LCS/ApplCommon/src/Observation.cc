@@ -122,27 +122,48 @@ Observation::Observation(ParameterSet*		aParSet) :
 	BGLNodeList     = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.BGLNodeList","[]"));
 	storageNodeList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.storageNodeList","[]"));
 
-        // loop over al beams
-        unsigned nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);
-        for (unsigned beam = 0; beam < nrBeams; beam++) {
-                Beam    newBeam;
-                string  beamPrefix(prefix+formatString("Beam[%d].", beam));
+	// get the beams info
+	int32	nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);
 
-                newBeam.angle1            = aParSet->getDouble(beamPrefix+"angle1", 0.0);
-                newBeam.angle2            = aParSet->getDouble(beamPrefix+"angle2", 0.0);
-                newBeam.directionType = aParSet->getString(beamPrefix+"directionType", "");
-                newBeam.subbands = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);
-                newBeam.beamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);
-                if (newBeam.subbands.size() != newBeam.beamlets.size()) {
-                        THROW (Exception, "Number of subbands(" << newBeam.subbands.size() << 
-                                                          ") != number of beamlets(" << newBeam.beamlets.size() << 
-                                                          ") in beam " << beam);
-                }
-        
-                // add beam to vector
-                beams.push_back(newBeam);
-        }
-        
+	// allocate beamlet 2 beam mapping and reset to 0
+	nrSlotsInFrame = aParSet->getInt(prefix+"nrSlotsInFrame");
+	beamlet2beams.resize   (4*nrSlotsInFrame, -1);
+	beamlet2subbands.resize(4*nrSlotsInFrame, -1);
+	
+	set<uint32> subbands;		
+
+	// loop over al beams
+	for (int32 beam(0) ; beam < nrBeams; beam++) {
+		Beam	newBeam;
+		string	beamPrefix(prefix+formatString("Beam[%d].", beam));
+		// get all fields
+		newBeam.angle1 		  = aParSet->getDouble(beamPrefix+"angle1", 0.0);
+		newBeam.angle2 		  = aParSet->getDouble(beamPrefix+"angle2", 0.0);
+		newBeam.directionType = aParSet->getString(beamPrefix+"directionType", "");
+//		newBeam.angleTimes 	  = aParSet->get(beamPrefix+"angleTimes", "[]");
+		// subbandList
+		newBeam.subbands = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);	// true:expandable
+		// beamletList
+		newBeam.beamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);	// true:expandable
+		if (newBeam.subbands.size() != newBeam.beamlets.size()) {
+			THROW (Exception, "Number of subbands(" << newBeam.subbands.size() << 
+							  ") != number of beamlets(" << newBeam.beamlets.size() << 
+							  ") in beam " << beam);
+		}
+	
+		// add beam to vector
+		beams.push_back(newBeam);
+
+		// finally update beamlet 2 beam mapping.
+		for (int32  i = newBeam.beamlets.size()-1 ; i > -1; i--) {
+			if (beamlet2beams[newBeam.beamlets[i]] != -1) {
+				THROW (Exception, "beamlet " << i << " of beam " << beam << " clashes with beamlet of other beam"); 
+			}
+			beamlet2beams   [newBeam.beamlets[i]] = beam;
+			beamlet2subbands[newBeam.beamlets[i]] = newBeam.subbands[i];
+			subbands.insert(newBeam.subbands[i]);
+		}
+	}
 }
 
 
@@ -190,6 +211,26 @@ bool	Observation::conflicts(const	Observation&	other) const
 			LOG_DEBUG_STR("receiverConflict: " << resultSet);
 			return (true);
 		}
+	}
+
+	// check beamlets overlap
+	int		maxBeamlets = beamlet2beams.size();
+	for (int bl = 0; bl < maxBeamlets; bl++) {
+		if (beamlet2beams[bl] != -1 && other.beamlet2beams[bl] != -1) {
+			LOG_INFO_STR("Conflict in beamlets between observation " << obsID <<
+						 " and " << other.obsID);
+			LOG_DEBUG_STR("First conflicting beamlet: " << bl);
+			return (true);
+		}
+	}
+
+	// for now also check nr of slots in frame. In the future we might allow
+	// different slotsinFrame for each RSPboard but for now we treat it as a conflict.
+	if (nrSlotsInFrame != other.nrSlotsInFrame) {
+		LOG_INFO_STR("Conflict in nrSlotsInFrame: " << nrSlotsInFrame << "<->"  <<
+					other.nrSlotsInFrame << " for resp. observation " << obsID << 
+					" and " << other.obsID);
+		return (true);
 	}
 
 	return (false);	// no conflicts
@@ -265,7 +306,6 @@ string Observation::getBeamName(uint32	beamIdx) const
 }
 
 //
-//
 // nyquistzoneFromFilter(filtername)
 //
 uint32 Observation::nyquistzoneFromFilter(const string&	filterName)
@@ -317,6 +357,15 @@ ostream& Observation::print (ostream&	os) const
 	os << "Stations     : " << stationList << endl;
 	os << "BLG nodes    : " << BGLNodeList << endl;
 	os << "Storage nodes: " << storageNodeList << endl << endl;
+
+    os << "nrBeams      : " << beams.size() << endl;
+	for (size_t	i(0) ; i < beams.size(); i++) {
+		os << formatString("Beam[%d].pointing   : %f, %f, %s\n", i, beams[i].angle1, beams[i].angle2, beams[i].directionType.c_str());
+		os << "Beam[" << i << "].subbandList: "; writeVector(os, beams[i].subbands, ",", "[", "]"); os << endl;
+		os << "Beam[" << i << "].beamletList: "; writeVector(os, beams[i].beamlets, ",", "[", "]"); os << endl;
+	}
+	os << "beamlet2beams   : "; writeVector(os, beamlet2beams,    ",", "[", "]"); os << endl;
+	os << "beamlet2subbands: "; writeVector(os, beamlet2subbands, ",", "[", "]"); os << endl << endl;
 
 	return (os);
 }
