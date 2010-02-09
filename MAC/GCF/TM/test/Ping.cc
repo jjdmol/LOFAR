@@ -44,7 +44,7 @@ static double time_elapsed(timeval* start, timeval* stop)
     + (stop->tv_usec-start->tv_usec)/(double)1e6; 
 }
 
-Ping::Ping(string name)
+Ping::Ping(const string& name , const string& hostname)
   : GCFTask((State)&Ping::initial, name), ping_timer(-1)
 {
   // register the port for debug tracing
@@ -58,7 +58,10 @@ Ping::Ping(string name)
    * - This is a Service Access Port which uses the
    *   ECHO_PROTOCOL 
    */
-  client.init(*this, "EchoServer:test", GCFPortInterface::SAP, ECHO_PROTOCOL);
+  itsClient = new GCFTCPPort(*this, "EchoServer:test", GCFPortInterface::SAP, ECHO_PROTOCOL);
+  if (hostname != "") {
+	itsClient->setHostName(hostname);
+  }
 }
 
 Ping::~Ping()
@@ -78,7 +81,7 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*port*/)
       break;
 
     case F_ENTRY:
-      client.open();
+      itsClient->open();
       break;
 
     case F_CONNECTED:
@@ -86,17 +89,17 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*port*/)
       // start ping_timer
       // - after 1 second
       // - every 2 seconds
-      ping_timer = client.setTimer(1.0, 0.5);
+      ping_timer = itsClient->setTimer(1.0, 0.5);
 
       TRAN(Ping::connected);
       break;
 
     case F_DISCONNECTED:
-      (void)client.setTimer(1.0); // try connect again after 1 second
+      (void)itsClient->setTimer(1.0); // try connect again after 1 second
       break;
 
     case F_TIMER:
-      client.open();
+      itsClient->open();
       break;
 
     default:
@@ -129,7 +132,7 @@ GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& p)
       ping.seqnr = seqnr++;
       ping.ping_time = ping_time;
     	// send the event
-    	client.send(ping);
+    	itsClient->send(ping);
     
     	cout << "PING sent (seqnr=" << ping.seqnr << ")" << endl;
 
@@ -139,8 +142,8 @@ GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& p)
     }    
 
     case F_DISCONNECTED:
-      //(void)client.open(); // try to reopen
-      (void)client.cancelTimer(ping_timer);
+      //(void)itsClient->open(); // try to reopen
+      (void)itsClient->cancelTimer(ping_timer);
 
       seqnr = 0;
       p.close();      
@@ -186,7 +189,7 @@ GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& p)
     }
 
     case F_DISCONNECTED:
-      (void)client.cancelTimer(ping_timer);
+      (void)itsClient->cancelTimer(ping_timer);
       p.close();      
 	  GCFScheduler::instance()->stop();
       break;
@@ -208,7 +211,11 @@ int main(int argc, char* argv[])
 {
   GCFScheduler::instance()->init(argc, argv);
 
-  Ping ping_task("PING");
+  std::string	hostname;
+  if (argc == 2) {
+	hostname = argv[1];
+  }
+  Ping ping_task("PING", hostname);
 
   ping_task.start(); // make initial transition
 
