@@ -317,6 +317,9 @@ void VdsMaker::combine (const string& gdsName,
 
   // Read all parts.
   // Add a band, but with only its start and end freq (not all freqs).
+  // Determine the minimum and maximum time.
+  double startTime = 1e30;
+  double endTime = 0;
   vector<VdsPartDesc*> vpds;
   vpds.reserve (vdsNames.size());
   for (uint i=0; i<vdsNames.size(); ++i) {
@@ -344,14 +347,17 @@ void VdsMaker::combine (const string& gdsName,
       efreq[0] = ef[inxf-1];
       globalvpd.addBand (nchan, sfreq, efreq);
     }
+    // Get minimum/maximum time.
+    startTime = std::min (startTime, vpd->getStartTime());
+    endTime   = std::max (endTime, vpd->getEndTime());
   }
 
   // Set the times in the global desc (using the first part).
   // Set the clusterdesc name.
   // If defined, set the Extra parameters giving the field directions.
   // Form the global desc.
-  globalvpd.setTimes (vpds[0]->getStartTime(),
-                      vpds[0]->getEndTime(),
+  globalvpd.setTimes (startTime,
+                      endTime,
                       vpds[0]->getStepTime(),
                       vpds[0]->getStartTimes(),
                       vpds[0]->getEndTimes());
