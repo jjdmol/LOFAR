@@ -55,7 +55,7 @@ int main (int	argc, char*argv[])
 
 	// open port	
 	LOG_DEBUG_STR ("Operating in " << ((syncMode) ? "" : "a") << "synchrone mode.");
-	echoPort = new EventPort("ECHO:EchoServer", false, ECHO_PROTOCOL, "", syncMode);
+	echoPort = new EventPort("EchoServer:test", false, ECHO_PROTOCOL, "", syncMode);
 
 	// construct event
 	pingEvent.seqnr = 25;

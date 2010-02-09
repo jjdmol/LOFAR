@@ -68,8 +68,7 @@ public:
 
 	/// result of a dispatch action
 	enum TResult { 
-		ERROR = -1, 
-		HANDLED, 
+		HANDLED = 0, 
 		NOT_HANDLED,
 		NEXT_STATE
 	};

@@ -40,7 +40,8 @@ namespace LOFAR {
 // Note: the difference with GCF-ports is that this port is only based on the
 // LCS/Common sockets and does therefor not depend on GCF_Tasks.
 
-static char			receiveBuffer[24*4096];
+static GCFEvent*	newEventHdr;
+static char*		newEventBuf;
 
 //
 // EventPort (name, type, protocol)
@@ -359,17 +360,24 @@ GCFEvent*	EventPort::receiveEvent(Socket*	aSocket)
 	static int32	gTotalBtsRead(0);
 	static int32	gReadState(0);
 
-	GCFEvent*		header ((GCFEvent*) &receiveBuffer[0]);
+	// make sure we have room for the header
+	if (!newEventHdr) {
+		newEventHdr = new GCFEvent;
+	}
 	int32			btsRead(0);
 
 	// first read signal (= eventtype) field
 	if (gReadState == 0) {
-		btsRead = aSocket->read((void*) &(header->signal), sizeof(header->signal));
+		// cleanup old garbage if any
+		if (newEventBuf) {
+			delete newEventBuf;
+		}
+		btsRead = aSocket->read((void*) &(newEventHdr->signal), sizeof(newEventHdr->signal));
 		if (btsRead < 0) {
 			_peerClosedConnection();
 			return (0);
 		}
-		if (btsRead != sizeof(header->signal)) {
+		if (btsRead != sizeof(newEventHdr->signal)) {
 			if (aSocket->isBlocking()) {
 				ASSERTSTR(false, "Event-type was not received");
 			}
@@ -380,19 +388,29 @@ GCFEvent*	EventPort::receiveEvent(Socket*	aSocket)
 
 	// next read the length of the rest of the message
 	if (gReadState == 1) {
-		btsRead = aSocket->read((void*) &(header->length), sizeof(header->length));
+		btsRead = aSocket->read((void*) &(newEventHdr->length), sizeof(newEventHdr->length));
 		if (btsRead < 0) {
 			_peerClosedConnection();
 			return (0);
 		}
-		if (btsRead != sizeof(header->length)) {
+		if (btsRead != sizeof(newEventHdr->length)) {
 			if (aSocket->isBlocking()) {
 				ASSERTSTR(false, "Event-length was not received");
 			}
 			return (0);		// async socket allows failures.
 		}
 		gReadState++;
-		gBtsToRead = header->length;		// get size of data part
+		gBtsToRead = newEventHdr->length;		// get size of data part
+
+		// When there is addional info (which is normally the case) allocate a
+		// larger buffer to store a complete packed event
+		if (gBtsToRead > 0) {
+			newEventBuf = new char[GCFEvent::sizePackedGCFEvent + newEventHdr->length];
+			ASSERTSTR(newEventBuf, "Could not allocate buffer for " << 
+						GCFEvent::sizePackedGCFEvent + newEventHdr->length << " bytes");
+			memcpy(newEventBuf,					     &newEventHdr->signal, GCFEvent::sizeSignal);
+			memcpy(newEventBuf+GCFEvent::sizeSignal, &newEventHdr->length, GCFEvent::sizeLength);
+		}
 	}
 
 	// finally read the datapart of the event
@@ -401,7 +419,7 @@ GCFEvent*	EventPort::receiveEvent(Socket*	aSocket)
 
 		btsRead = 0;
 		if (gBtsToRead) {
-			btsRead = aSocket->read(&receiveBuffer[sizeof(GCFEvent) + gTotalBtsRead], gBtsToRead);
+			btsRead = aSocket->read(newEventBuf + GCFEvent::sizePackedGCFEvent + gTotalBtsRead, gBtsToRead);
 			if (btsRead < 0) {
 				_peerClosedConnection();
 				return (0);
@@ -419,8 +437,9 @@ GCFEvent*	EventPort::receiveEvent(Socket*	aSocket)
 			gReadState    = 0;
 			gTotalBtsRead = 0;
 			gBtsToRead    = 0;
-//			hexdump(receiveBuffer, sizeof(GCFEvent) + header->length);
-			return (header);
+//			hexdump(newEventBuf, GCFEvent::sizePackedGCFEvent + newEventHdr->length);
+			newEventHdr->_buffer = newEventBuf; // attach buffer to event
+			return (newEventHdr);
 		}
 	}
 
