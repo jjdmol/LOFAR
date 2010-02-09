@@ -45,7 +45,7 @@ class Ping : public GCFTask
    * connection establishment information from the FNameService and FAppTopology
    * configuration files.
    */
-  Ping (string name);
+  Ping (const string& name, const string& hostname);
 
   ~Ping();
   /**
@@ -77,7 +77,7 @@ class Ping : public GCFTask
    * The Ping task is a client to the Echo task. The "client" port can be used
    * to send events to and receive events from the Echo task.
    */
-  GCFPort client;
+  GCFTCPPort* itsClient;
 
   /**
    * Ping messages are sent every 1 second. This variables holds the
