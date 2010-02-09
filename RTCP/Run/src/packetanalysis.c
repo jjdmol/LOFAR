@@ -167,6 +167,12 @@ unsigned diff( struct EPA_header *prev, struct EPA_header *next, uint16_t clock 
 
   if( next_ts == prev_ts ) {
     /* same timestamp -- compare block sequence numbers */
+
+    if( prev_bs > next_bs ) {
+      /* packets were received out of order? ignore */
+      return 0;
+    }
+
     return (next_bs - prev_bs) / prev_times;
   } else {
     /* seconds differ */
@@ -174,6 +180,11 @@ unsigned diff( struct EPA_header *prev, struct EPA_header *next, uint16_t clock 
 
     prev_time = ((uint64_t) prev_ts * clock * 1e6 + 512)/1024 + prev_bs;
     next_time = ((uint64_t) next_ts * clock * 1e6 + 512)/1024 + next_bs;
+
+    if( prev_time > next_time ) {
+      /* packets were received out of order? ignore (clock is probably wrong) */
+      return 0;
+    }
 
     return (next_time - prev_time) / prev_times;
   }
@@ -186,6 +197,8 @@ float get_packetrate( int fd, int port, float seconds, float *lossrate ) {
   struct EPA_header prev;
   unsigned loss = 0;
 
+  memset( &prev, 0, sizeof prev );
+
   nr = 0;
   gettimeofday( &tv, NULL );
   now = tv.tv_sec * 1000000 + tv.tv_usec;
@@ -197,7 +210,6 @@ float get_packetrate( int fd, int port, float seconds, float *lossrate ) {
   while( 1 ) {
     int retval;
     fd_set rfds;
-    char buf[MAX_PACKETSIZE];
 
     FD_ZERO( &rfds );
     FD_SET( fd, &rfds );
@@ -216,7 +228,7 @@ float get_packetrate( int fd, int port, float seconds, float *lossrate ) {
       perror("select");
       exit(1);
     } else if( retval ) {
-      recv( fd, &packet, sizeof buf, 0 );
+      recv( fd, &packet, sizeof packet, 0 );
       if( PACKETFILTER( port ) ) {
         swap32( (char*)&EPA.RSPtimestamp );
         swap32( (char*)&EPA.blockSequenceNumber );
@@ -224,7 +236,17 @@ float get_packetrate( int fd, int port, float seconds, float *lossrate ) {
         if( nr > 0 ) {
           unsigned diff200 = diff( &prev, &EPA, 200 );
           unsigned diff160 = diff( &prev, &EPA, 160 );
-          loss += MIN( diff200, diff160 ) - 1;
+          unsigned diff =
+            diff200 ?
+              diff160 ?
+                /* both clocks could be valid -- use best one */
+                MIN( diff200, diff160 )
+              : diff200 /* 160 clock not valid */
+            : diff160 /* 200 clock not valid -- 160 may not be valid either */;
+
+          if( diff > 0 ) {
+            loss += diff - 1;
+          }
         }
 
         nr++;
@@ -272,7 +294,7 @@ int main( int argc, char **argv ) {
     int zeros = 0;
     int i;
     int elementbits = 0;
-    unsigned elements;
+    signed elements;
 
     do {
       recv( fd, &packet, sizeof packet, 0 );
