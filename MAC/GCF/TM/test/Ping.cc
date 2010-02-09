@@ -176,12 +176,10 @@ GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& p)
     
     	cout << "ECHO received (seqnr=" << echo.seqnr << "): elapsed = "
     	     << time_elapsed(&(echo.ping_time), &echo_time) << " sec."<< endl;
-      if (echo.seqnr == 600)
-      {
+      if (echo.seqnr == 600) {
         GCFScheduler::instance()->stop();
       }
-      else
-      {
+      else {
     	  TRAN(Ping::connected);
       }
       break;
@@ -190,7 +188,7 @@ GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& p)
     case F_DISCONNECTED:
       (void)client.cancelTimer(ping_timer);
       p.close();      
-      TRAN(Ping::initial);
+	  GCFScheduler::instance()->stop();
       break;
 
     default:

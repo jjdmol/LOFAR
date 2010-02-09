@@ -26,9 +26,10 @@
 #include "Echo_Protocol.ph"
 #include "Echo.h"
 
-static 	int		gDelay = 0;
-static	timeval	gTime;
-static	int		gSeqnr;
+static 	int			gDelay = 0;
+static	timeval		gTime;
+static	int			gSeqnr;
+static	LOFAR::GCF::TM::GCFTCPPort*	gClientPort;
 
 namespace LOFAR {
  namespace GCF {
@@ -45,7 +46,7 @@ Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 
 GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 {
-	LOG_DEBUG_STR("Echo::initial: " << eventName(e));
+	LOG_DEBUG_STR("Echo::waitForConnection: " << eventName(e));
 
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -64,43 +65,53 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 		break;
 
     default:
-		LOG_DEBUG_STR("$$$ DEFAULT at initial of " << eventName(e));
-		status = GCFEvent::NOT_HANDLED;
+		status = GCFEvent::HANDLED;
 		break;
 	}
 
 	return (status);
 }
 
-GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult Echo::connected(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR("Echo::connected: " << eventName(e));
+	LOG_DEBUG_STR("Echo::connected: " << eventName(event));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-	switch (e.signal) {
+	switch (event.signal) {
 	case F_ACCEPT_REQ: {
-		GCFTCPPort*		clientSock = new GCFTCPPort();
-		clientSock->init(*this, "clientSock", GCFPortInterface::SPP, ECHO_PROTOCOL);
-		ASSERTSTR(clientSock, "Blerk");
-		server->accept(*clientSock);
+		gClientPort = new GCFTCPPort();
+		ASSERTSTR(gClientPort, "Could not allocate a TCPPort for the client connection");
+		gClientPort->init(*this, "clientSock", GCFPortInterface::SPP, ECHO_PROTOCOL);
+		if (!server->accept(*gClientPort)) {
+			cout << "could not setup a connection!" << endl;
+			delete gClientPort;
+		}
 		break;
 	}
 
 	case F_DISCONNECTED:
-		cout << "Lost connection to client" << endl;
-		p.close();
-		TRAN(Echo::initial);
+		if (&port == gClientPort) {
+			cout << "Lost connection to client" << endl;
+			gClientPort->close();
+			delete gClientPort;
+			gClientPort = 0;
+			server->cancelAllTimers();
+		}
+		else {
+			cout << "Listener closed?" << endl;
+			if (gClientPort) { 
+				gClientPort->close(); 
+				delete gClientPort; 
+				gClientPort = 0; 
+			}
+			server->close(); 
+			TRAN(Echo::initial);
+		}
 		break;
 
 	case ECHO_PING: {
-		EchoPingEvent ping(e);
-		// for instance these 3 lines can force an interrupt on the parallele port if
-		// the pin 9 and 10 are connected together. The interrupt can be seen by means of
-		// the F_DATAIN signal (see below)
-		// Send a string, which starts with a 'S'|'s' means simulate an clock pulse interrupt 
-		// (in the case below only one character is even valid)
-		// otherwise an interrupt will be forced by means of setting the pin 9.
+		EchoPingEvent ping(event);
 		cout << "PING received (seqnr=" << ping.seqnr << ")" << endl;
 		cout << "delay = " << gDelay << endl;
 		server->setTimer((gDelay < 0) ? -1.0 * gDelay : 1.0 * gDelay);
@@ -110,8 +121,14 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
 	}
 
 	case F_TIMER: {
+		if (!gClientPort) {
+			break;
+		}
+
 		if (gDelay < 0) {
-			p.close();
+			gClientPort->close();
+			delete gClientPort;
+			gClientPort = 0;
 			cout << "connection closed by me." << endl;
 			break;
 		}
@@ -123,21 +140,9 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
 		echo.ping_time = gTime;
 		echo.echo_time = echo_time;
 
-		server->send(echo);
+		gClientPort->send(echo);
 
 		cout << "ECHO sent" << endl;
-		break;
-	}
-
-	case F_DATAIN: {
-		cout << "Clock pulse: ";
-		// always the recv has to be invoked. Otherwise this F_DATAIN keeps comming 
-		// on each select
-		char pulse[4096]; // size >= 1
-		p.recv(pulse, 4096); // will always return 1 if an interrupt was occured and 0 if not
-		pulse[1] = 0; // if interrupt occured the first char is filled with a '0' + number of occured interrupts 
-		// in the driver sinds the last recv
-		cout << pulse << endl;
 		break;
 	}
 
@@ -145,8 +150,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
 		break;
 
 	default:
-		LOG_DEBUG_STR("$$$ DEFAULT at connected of " << eventName(e));
-		status = GCFEvent::NOT_HANDLED;
+		status = GCFEvent::HANDLED;
 		break;
 	}
 
