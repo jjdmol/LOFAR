@@ -22,7 +22,7 @@
     <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
-    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,0,-55,0,0,1,68"/>
+    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,0,-83,0,0,1,68"/>
   </AuxValues>
 
   <Layout class="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout">
@@ -45,7 +45,7 @@
       </Properties>
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-          <AbsoluteConstraints x="0" y="0" width="320" height="200"/>
+          <AbsoluteConstraints x="0" y="0" width="320" height="170"/>
         </Constraint>
       </Constraints>
 
@@ -55,44 +55,35 @@
               <Group type="102" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" attributes="0">
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                  <Component id="labelAngle2" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="labelAngle1" alignment="0" max="32767" attributes="1"/>
+                              </Group>
+                              <Component id="labelDirectionType" alignment="0" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                              <Component id="inputDirectionType" alignment="0" min="-2" pref="75" max="-2" attributes="0"/>
+                              <Component id="inputAngle2" alignment="0" pref="185" max="32767" attributes="1"/>
+                              <Component id="inputAngle1" alignment="0" max="32767" attributes="1"/>
+                          </Group>
+                          <EmptySpace pref="16" max="32767" attributes="0"/>
+                      </Group>
                       <Group type="102" alignment="0" attributes="0">
-                          <Group type="103" groupAlignment="0" attributes="0">
-                              <Group type="102" attributes="0">
-                                  <Group type="103" groupAlignment="0" attributes="0">
-                                      <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                                          <Component id="labelAngle2" alignment="0" max="32767" attributes="1"/>
-                                          <Component id="labelAngle1" alignment="0" max="32767" attributes="1"/>
-                                      </Group>
-                                      <Component id="labelDirectionType" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  </Group>
-                                  <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
-                              </Group>
-                              <Group type="102" alignment="0" attributes="0">
-                                  <Component id="labelDuration" pref="93" max="32767" attributes="0"/>
-                                  <EmptySpace max="-2" attributes="0"/>
-                              </Group>
-                              <Group type="102" alignment="0" attributes="0">
-                                  <Component id="labelRank" pref="93" max="32767" attributes="0"/>
-                                  <EmptySpace max="-2" attributes="0"/>
-                              </Group>
-                          </Group>
-                          <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="inputRank" min="-2" pref="75" max="-2" attributes="0"/>
-                              <Group type="103" alignment="0" groupAlignment="0" max="-2" attributes="0">
-                                  <Component id="inputDuration" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="inputDirectionType" alignment="0" min="-2" pref="75" max="-2" attributes="0"/>
-                                  <Component id="inputAngle2" alignment="0" pref="185" max="32767" attributes="1"/>
-                                  <Component id="inputAngle1" alignment="0" max="32767" attributes="1"/>
-                              </Group>
-                          </Group>
+                          <Component id="labelRank" pref="93" max="32767" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="inputRank" min="-2" pref="75" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" pref="126" max="-2" attributes="0"/>
                       </Group>
                       <Group type="102" alignment="0" attributes="0">
                           <Component id="cancelButton" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="saveButton" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace pref="170" max="32767" attributes="0"/>
                       </Group>
                   </Group>
-                  <EmptySpace pref="16" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -115,19 +106,15 @@
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
-                      <Component id="inputDuration" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="labelDuration" alignment="3" min="-2" max="-2" attributes="0"/>
-                  </Group>
-                  <EmptySpace max="-2" attributes="0"/>
-                  <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="inputRank" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="labelRank" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace pref="27" max="32767" attributes="0"/>
+                  <EmptySpace pref="12" max="32767" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="cancelButton" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="saveButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
+                  <EmptySpace max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -155,13 +142,6 @@
           </Properties>
         </Component>
         <Component class="javax.swing.JTextField" name="inputAngle2">
-        </Component>
-        <Component class="javax.swing.JLabel" name="labelDuration">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="Duration :"/>
-          </Properties>
-        </Component>
-        <Component class="javax.swing.JTextField" name="inputDuration">
         </Component>
         <Component class="javax.swing.JLabel" name="labelRank">
           <Properties>

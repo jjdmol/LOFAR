@@ -45,12 +45,7 @@ public class BeamDialog extends javax.swing.JDialog {
      * @param   parent                  Frame where this dialog belongs
      * @param   modal                   Should the Dialog be modal or not
      * @param   usedBeamlets            Bitset of all used beamlets(in case edit, the old ones have been xorred allready)
-     * @param   angle1                  Vector of all Angle1's
-     * @param   angle2                  Vector of all Angle2's
-     * @param   duration                Vector of all durations
-     * @param   directionTypes          Vector of all directionTypes
-     * @param   subbandList             Vector of all subbandLists allready used
-     * @param   beamletList             Vector of all beamLetLists allready used
+     * @param   selection               Vector of all Beam parameters
      * @param   directionTypeChoices    String with all possible choices + default for combobox
      * @param   edit                    indicates edit or add mode
      */
@@ -63,8 +58,10 @@ public class BeamDialog extends javax.swing.JDialog {
         itsAngle1=selection[1];
         itsAngle2=selection[2];
         itsDuration=selection[3];
-        itsSubbandList=selection[4];
-        itsBeamletList=selection[5];
+        itsStartTime=selection[4];
+        itsSubbandList=selection[5];
+        itsBeamletList=selection[6];
+        itsMomID=selection[7];
         editting=edit;
         itsUsedBeamlets=usedBeamlets;
         itsSavedBeamlets=usedBeamlets;
@@ -116,9 +113,9 @@ public class BeamDialog extends javax.swing.JDialog {
         inputDirectionTypes.setSelectedItem(itsDirectionTypes);
         inputAngle1.setText(itsAngle1);
         inputAngle2.setText(itsAngle2);
-        inputDuration.setText(itsDuration);
         inputSubbandList.setText(itsSubbandList);
         inputBeamletList.setText(itsBeamletList);
+
     }
     
     public boolean hasChanged() {
@@ -158,8 +155,6 @@ public class BeamDialog extends javax.swing.JDialog {
         cancelButton = new javax.swing.JButton();
         saveButton = new javax.swing.JButton();
         labelDirectionTypes = new javax.swing.JLabel();
-        labelDuration = new javax.swing.JLabel();
-        inputDuration = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("LOFAR View TreeInfo");
@@ -197,8 +192,6 @@ public class BeamDialog extends javax.swing.JDialog {
 
         labelDirectionTypes.setText("directionTypes :");
 
-        labelDuration.setText("Duration:");
-
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -212,21 +205,23 @@ public class BeamDialog extends javax.swing.JDialog {
                         .add(saveButton))
                     .add(jPanel1Layout.createSequentialGroup()
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                            .add(labelDuration, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .add(labelAngle2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .add(labelAngle1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(labelDirectionTypes, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .add(labelDirectionTypes, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .add(20, 20, 20)
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(inputDirectionTypes, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 75, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                                .add(org.jdesktop.layout.GroupLayout.LEADING, inputAngle2)
+                                .add(org.jdesktop.layout.GroupLayout.LEADING, inputAngle1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 185, Short.MAX_VALUE))))
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                             .add(labelSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .add(labelBeamletList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .add(20, 20, 20)
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 821, Short.MAX_VALUE)
-                            .add(inputDirectionTypes, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 75, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                                .add(org.jdesktop.layout.GroupLayout.LEADING, inputAngle1)
-                                .add(org.jdesktop.layout.GroupLayout.LEADING, inputAngle2)
-                                .add(org.jdesktop.layout.GroupLayout.LEADING, inputDuration, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 159, Short.MAX_VALUE))
-                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputBeamletList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 821, Short.MAX_VALUE))))
+                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 844, Short.MAX_VALUE)
+                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputBeamletList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 844, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -244,10 +239,6 @@ public class BeamDialog extends javax.swing.JDialog {
                     .add(labelAngle2)
                     .add(inputAngle2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(labelDuration)
-                    .add(inputDuration, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(inputSubbandList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(labelSubbandList))
@@ -255,13 +246,13 @@ public class BeamDialog extends javax.swing.JDialog {
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelBeamletList)
                     .add(inputBeamletList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 26, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 17, Short.MAX_VALUE)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(cancelButton)
                     .add(saveButton)))
         );
 
-        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 950, 230));
+        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 950, 190));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -294,6 +285,7 @@ public class BeamDialog extends javax.swing.JDialog {
 
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
         isChanged=false;
+        itsUsedBeamlets=itsSavedBeamlets;
         setVisible(false);
         dispose();
 }//GEN-LAST:event_cancelButtonActionPerformed
@@ -308,9 +300,6 @@ public class BeamDialog extends javax.swing.JDialog {
         if (!itsAngle2.equals(inputAngle2.getText())) {
             isChanged=true;
         }
-        if (!itsDuration.equals(inputDuration.getText())) {
-            isChanged=true;
-        }
         if (!itsSubbandList.equals(inputSubbandList.getText())) {
             isChanged=true;
         }
@@ -323,9 +312,11 @@ public class BeamDialog extends javax.swing.JDialog {
         String[] newRow = {inputDirectionTypes.getSelectedItem().toString(),
         inputAngle1.getText(),
         inputAngle2.getText(),
-        inputDuration.getText(),
+        itsDuration,
+        itsStartTime,
         inputSubbandList.getText(),
-        inputBeamletList.getText()
+        inputBeamletList.getText(),
+        itsMomID
         };
         
         return newRow;
@@ -335,12 +326,14 @@ public class BeamDialog extends javax.swing.JDialog {
     private MainFrame itsMainFrame = null;
     private boolean isChanged=false;
     
+    private String    itsDirectionTypes = "";
     private String    itsAngle1         = "";
     private String    itsAngle2         = "";
-    private String    itsDirectionTypes = "";
     private String    itsDuration       = "";
+    private String    itsStartTime      = "";
     private String    itsSubbandList    = "";
     private String    itsBeamletList    = "";
+    private String    itsMomID          = "";
     private boolean   editting          = false;
     private BitSet    itsUsedBeamlets   = new BitSet(216);
     private BitSet    itsSavedBeamlets  = new BitSet(216);
@@ -351,14 +344,12 @@ public class BeamDialog extends javax.swing.JDialog {
     private javax.swing.JTextField inputAngle2;
     private javax.swing.JTextField inputBeamletList;
     private javax.swing.JComboBox inputDirectionTypes;
-    private javax.swing.JTextField inputDuration;
     private javax.swing.JTextField inputSubbandList;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel labelAngle1;
     private javax.swing.JLabel labelAngle2;
     private javax.swing.JLabel labelBeamletList;
     private javax.swing.JLabel labelDirectionTypes;
-    private javax.swing.JLabel labelDuration;
     private javax.swing.JLabel labelSubbandList;
     private javax.swing.JButton saveButton;
     // End of variables declaration//GEN-END:variables

@@ -44,9 +44,9 @@
       <Layout>
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Group type="102" alignment="0" attributes="0">
+              <Group type="102" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
-                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                  <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Component id="inputLBAAntennas" min="-2" max="-2" attributes="0"/>
@@ -54,17 +54,18 @@
                           </Group>
                           <EmptySpace min="-2" pref="16" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="inputHBAAntennas" min="-2" max="-2" attributes="0"/>
                               <Component id="panelHBASelection1" min="-2" max="-2" attributes="0"/>
-                              <Component id="inputHBAAntennas" alignment="0" min="-2" max="-2" attributes="0"/>
                           </Group>
+                          <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
                       </Group>
-                      <Group type="102" alignment="0" attributes="1">
+                      <Group type="102" alignment="0" attributes="0">
                           <Component id="labelClockMode" min="-2" pref="86" max="-2" attributes="1"/>
                           <EmptySpace max="32767" attributes="0"/>
                           <Component id="inputClockMode" min="-2" pref="131" max="-2" attributes="1"/>
+                          <EmptySpace min="-2" pref="53" max="-2" attributes="0"/>
                       </Group>
                   </Group>
-                  <EmptySpace min="-2" pref="80" max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -77,16 +78,16 @@
                       <Component id="inputHBAAntennas" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
-                  <Group type="103" groupAlignment="1" attributes="0">
-                      <Component id="panelLBASelection" min="-2" max="-2" attributes="1"/>
+                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
                       <Component id="panelHBASelection1" max="32767" attributes="1"/>
+                      <Component id="panelLBASelection" alignment="0" max="32767" attributes="1"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="labelClockMode" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="inputClockMode" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace pref="338" max="32767" attributes="0"/>
+                  <EmptySpace min="-2" pref="253" max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -129,17 +130,18 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" attributes="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="input3080" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="input1090" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="input1070" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="input3070" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel1" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="inputLongBaselines" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="inputYPolesOnly" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="inputXPolesOnly" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="inputSparse" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputSparseEven" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="inputOuterCircle" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="inputInnerCircle" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel1" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="input1070" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputLongBaselines" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="input3070" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="input1090" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="input3090" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputYPolesOnly" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputXPolesOnly" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputSparseOdd" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace pref="14" max="32767" attributes="0"/>
                   </Group>
@@ -152,24 +154,26 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="inputOuterCircle" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="inputSparse" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="inputSparseEven" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                      <Component id="inputSparseOdd" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                       <Component id="inputXPolesOnly" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="inputYPolesOnly" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="29" max="-2" attributes="0"/>
                       <Component id="inputLongBaselines" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="separate" max="-2" attributes="0"/>
                       <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="7" max="-2" attributes="0"/>
+                      <Component id="input1070" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="input3080" min="-2" max="-2" attributes="0"/>
+                      <Component id="input3070" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="input1090" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="input1070" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="32767" attributes="0"/>
-                      <Component id="input3070" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="input3090" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace pref="50" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -197,16 +201,16 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputOuterCircleActionPerformed"/>
               </Events>
             </Component>
-            <Component class="javax.swing.JRadioButton" name="inputSparse">
+            <Component class="javax.swing.JRadioButton" name="inputSparseEven">
               <Properties>
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="AntennaLayoutGroup"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Sparse"/>
+                <Property name="text" type="java.lang.String" value="Sparse Even"/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputSparseActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputSparseEvenEvenActionPerformed"/>
               </Events>
             </Component>
             <Component class="javax.swing.JRadioButton" name="inputXPolesOnly">
@@ -250,16 +254,16 @@
                 <Property name="text" type="java.lang.String" value="Freq. selection"/>
               </Properties>
             </Component>
-            <Component class="javax.swing.JRadioButton" name="input3080">
+            <Component class="javax.swing.JRadioButton" name="input3090">
               <Properties>
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="AntennaFilterGroup"/>
                 </Property>
                 <Property name="selected" type="boolean" value="true"/>
-                <Property name="text" type="java.lang.String" value="30-80 MHz"/>
+                <Property name="text" type="java.lang.String" value="30-90 MHz"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="input3080ActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="input3090ActionPerformed"/>
               </Events>
             </Component>
             <Component class="javax.swing.JRadioButton" name="input1090">
@@ -296,6 +300,18 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="input3070ActionPerformed"/>
               </Events>
             </Component>
+            <Component class="javax.swing.JRadioButton" name="inputSparseOdd">
+              <Properties>
+                <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
+                  <ComponentRef name="AntennaLayoutGroup"/>
+                </Property>
+                <Property name="text" type="java.lang.String" value="Sparse Odd"/>
+                <Property name="enabled" type="boolean" value="false"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputSparseOddActionPerformed"/>
+              </Events>
+            </Component>
           </SubComponents>
         </Container>
         <Container class="javax.swing.JPanel" name="panelHBASelection1">
@@ -313,14 +329,20 @@
                   <Group type="102" attributes="0">
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="inputHBAOne" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputHBATwo" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputHBABoth" alignment="0" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace pref="16" max="32767" attributes="0"/>
+                  </Group>
+                  <Group type="102" alignment="1" attributes="0">
+                      <EmptySpace max="32767" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="jLabel2" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="input110190" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="input170230" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="input210250" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="inputHBATwo" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="inputHBABoth" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="10" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -332,7 +354,7 @@
                       <Component id="inputHBATwo" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="inputHBABoth" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" pref="80" max="-2" attributes="0"/>
+                      <EmptySpace pref="145" max="32767" attributes="0"/>
                       <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="input110190" min="-2" max="-2" attributes="0"/>
@@ -340,7 +362,7 @@
                       <Component id="input170230" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="input210250" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="55" max="32767" attributes="0"/>
+                      <EmptySpace min="-2" pref="75" max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
