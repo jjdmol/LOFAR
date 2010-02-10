@@ -212,6 +212,7 @@ class Parset(util.Parset.Parset):
 
 	# Pset configuration
 	self['OLAP.CNProc.partition'] = self.partition
+        self['OLAP.IONProc.psetList'] = self.psets
 
 	nrPsets = len(self.psets)
 	nrStorageNodes = self.getNrUsedStorageNodes()
