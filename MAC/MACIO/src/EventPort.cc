@@ -371,6 +371,7 @@ GCFEvent*	EventPort::receiveEvent(Socket*	aSocket)
 		// cleanup old garbage if any
 		if (newEventBuf) {
 			delete newEventBuf;
+			newEventBuf = 0;
 		}
 		btsRead = aSocket->read((void*) &(newEventHdr->signal), sizeof(newEventHdr->signal));
 		if (btsRead < 0) {
