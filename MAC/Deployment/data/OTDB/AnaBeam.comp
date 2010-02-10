@@ -44,4 +44,4 @@ par  directionType	     I	  ptext	 -		10    0	   'J2000|AZEL|LMN;J2000'   -   'C
 par  duration		     I	  uint	 -		10    0	   0   						-	'Time in seconds'
 par  startTime		     I	  text   -		10    0	   0   						-	'startTime'
 par  rank                I    pint   -      10    0    '1|2|3|4|5;1'            -   'Rank of importance'
-par  momID		         I    int    -      10    0    0                        - 	'MeasurementID in MoM'
+
