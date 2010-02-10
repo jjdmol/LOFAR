@@ -158,8 +158,8 @@ public abstract class LofarUtils {
 
     /**
      * Fills a JList component with a String representation of the to-be contents<br><br>
-     * Example of input argument theList with removeQuotes : ["123","456","789"]<br>
-     * Example of input argument theList with !removeQuotes: [123,456,789]
+     * Example of input argument theList with !removeQuotes : ["123","456","789"]<br>
+     * Example of input argument theList with removeQuotes: [123,456,789]
      *
      * @param aListComponent the JList component where the data has to be inserted in.
      * @param theList the String representation of a JList component
@@ -221,8 +221,8 @@ public abstract class LofarUtils {
 
     /**
      * Selects items in a JList component using a String representation of the to-be selected contents<br><br>
-     * Example of input argument theList with removeQuotes : ["123","456","789"]<br>
-     * Example of input argument theList with !removeQuotes: [123,456,789]
+     * Example of input argument theList with !removeQuotes : ["123","456","789"]<br>
+     * Example of input argument theList with removeQuotes: [123,456,789]
      *
      * @param aListComponent the JList component where the data has to be inserted in.
      * @param theList the String representation of the selected items in a JList component
