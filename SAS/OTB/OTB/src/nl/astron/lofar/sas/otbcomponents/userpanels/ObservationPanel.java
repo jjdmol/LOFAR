@@ -367,6 +367,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                } else {
                     itsBeamDurations.add(aNode.limits);
                }
+            } else if (aKeyName.equals("startTime")) {
+                if (isRef && aParam != null) {
+                    itsBeamStartTimes.add(aNode.limits + " : " + aParam.limits);
+               } else {
+                    itsBeamStartTimes.add(aNode.limits);
+               }
             } else if (aKeyName.equals("beamletList")) {        
                 if (isRef && aParam != null) {
                     itsBeamBeamletList.add(aNode.limits + " : " + aParam.limits);
@@ -378,7 +384,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     itsBeamSubbandList.add(aNode.limits + " : " + aParam.limits);
                 } else {
                     itsBeamSubbandList.add(aNode.limits);
-                }                
+                }
+            } else if (aKeyName.equals("momID")) {
+                if (isRef && aParam != null) {
+                    itsBeamMomIDs.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsBeamMomIDs.add(aNode.limits);
+                }
             }
         } else if(parentName.contains("AnaBeam")){
             // Observation Analog Beam parameters
@@ -402,6 +414,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     itsAnaBeamDurations.add(aNode.limits + " : " + aParam.limits);
                } else {
                     itsAnaBeamDurations.add(aNode.limits);
+               }
+            } else if (aKeyName.equals("startTime")) {
+                if (isRef && aParam != null) {
+                    itsAnaBeamStartTimes.add(aNode.limits + " : " + aParam.limits);
+               } else {
+                    itsAnaBeamStartTimes.add(aNode.limits);
                }
             } else if (aKeyName.equals("rank")) {
                 itsAnaBeamRankChoices=aParam.limits;
@@ -531,9 +549,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
       }
       // set tables back to initial values
       itsBeamConfigurationTableModel.fillTable(itsTreeType,itsBeamDirectionTypes,itsBeamAngles1,itsBeamAngles2,
-              itsBeamDurations,itsBeamSubbandList,itsBeamBeamletList);
+              itsBeamDurations,itsBeamStartTimes,itsBeamSubbandList,itsBeamBeamletList,itsBeamMomIDs);
       itsAnaBeamConfigurationTableModel.fillTable(itsTreeType,itsAnaBeamDirectionTypes,itsAnaBeamAngles1,itsAnaBeamAngles2,
-              itsAnaBeamDurations,itsAnaBeamRanks);
+              itsAnaBeamDurations,itsAnaBeamStartTimes,itsAnaBeamRanks);
       
       itsBeamformerConfigurationTableModel.fillTable(itsTreeType, itsStations);
       
@@ -608,8 +626,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         beamConfigurationPanel.setColumnSize("dirtype",20);
         beamConfigurationPanel.setColumnSize("angle 1",20);
         beamConfigurationPanel.setColumnSize("angle 2",20);
-        beamConfigurationPanel.setColumnSize("duration",20);
-        beamConfigurationPanel.setColumnSize("subbands",190);
+        beamConfigurationPanel.setColumnSize("angle 2",20);
         beamConfigurationPanel.setColumnSize("beamlets",190);
         beamConfigurationPanel.repaint();
         
@@ -619,7 +636,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         anaBeamConfigurationPanel.setColumnSize("dirtype",40);
         anaBeamConfigurationPanel.setColumnSize("angle 1",40);
         anaBeamConfigurationPanel.setColumnSize("angle 2",40);
-        anaBeamConfigurationPanel.setColumnSize("duration",40);
         anaBeamConfigurationPanel.setColumnSize("rank",40);
         anaBeamConfigurationPanel.repaint();
 
@@ -752,12 +768,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             return false;
         }  
         
-        // Analog Beam
+        // Digital Beam
         i=0;
 
         // now that all Nodes are deleted we should collect the tables input and create new Beams to save to the database.
         itsBeamConfigurationTableModel.getTable(itsBeamDirectionTypes,itsBeamAngles1,itsBeamAngles2,itsBeamDurations,
-                itsBeamSubbandList,itsBeamBeamletList);
+                itsBeamStartTimes,itsBeamSubbandList,itsBeamBeamletList,itsBeamMomIDs);
         // keep default Beams
         jOTDBnode aDefaultNode= itsBeams.elementAt(0);
         try {
@@ -791,10 +807,14 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                             aHWNode.limits=itsBeamAngles2.elementAt(i);
                         } else if (aKeyName.equals("duration")) {
                             aHWNode.limits=itsBeamDurations.elementAt(i);
+                        } else if (aKeyName.equals("startTime")) {
+                            aHWNode.limits=itsBeamStartTimes.elementAt(i);
                         } else if (aKeyName.equals("subbandList")) {
                             aHWNode.limits=itsBeamSubbandList.elementAt(i);
                         } else if (aKeyName.equals("beamletList")) {
                             aHWNode.limits=itsBeamBeamletList.elementAt(i);
+                        } else if (aKeyName.equals("momID")) {
+                            aHWNode.limits=itsBeamMomIDs.elementAt(i);
                         }
                         saveNode(aHWNode);
                     }
@@ -823,8 +843,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         }
 
         // now that all Nodes are deleted we should collect the tables input and create new AnaBeams to save to the database.
-        itsAnaBeamConfigurationTableModel.getTable(itsAnaBeamDirectionTypes,itsAnaBeamAngles1,itsAnaBeamAngles2,itsAnaBeamDurations,
-                itsAnaBeamRanks);
+        itsAnaBeamConfigurationTableModel.getTable(itsAnaBeamDirectionTypes,itsAnaBeamAngles1,itsAnaBeamAngles2,
+                itsAnaBeamDurations,itsAnaBeamStartTimes,itsAnaBeamRanks);
         // keep default Beams
         aDefaultNode= itsAnaBeams.elementAt(0);
         try {
@@ -858,6 +878,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                             aHWNode.limits=itsAnaBeamAngles2.elementAt(i);
                         } else if (aKeyName.equals("duration")) {
                             aHWNode.limits=itsAnaBeamDurations.elementAt(i);
+                        } else if (aKeyName.equals("startTime")) {
+                            aHWNode.limits=itsAnaBeamStartTimes.elementAt(i);
                         } else if (aKeyName.equals("rank")) {
                             aHWNode.limits=itsAnaBeamRanks.elementAt(i);
                         }
@@ -1129,12 +1151,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         // set selection to defaults.
         String [] selection = {itsBeamDirectionTypes.elementAt(0),itsBeamAngles1.elementAt(0),
                                itsBeamAngles2.elementAt(0),itsBeamDurations.elementAt(0),
-                               itsBeamSubbandList.elementAt(0),itsBeamBeamletList.elementAt(0)};
+                               itsBeamStartTimes.elementAt(0), itsBeamSubbandList.elementAt(0),
+                               itsBeamBeamletList.elementAt(0),itsBeamMomIDs.elementAt(0)};
         if (editBeam) {
             itsSelectedRow = beamConfigurationPanel.getSelectedRow();
             selection = itsBeamConfigurationTableModel.getSelection(itsSelectedRow);
                        
-            BitSet oldBeamlets = LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(selection[4]));
+            BitSet oldBeamlets = LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(selection[6]));
             aBS.xor(oldBeamlets);
             // if no row is selected, nothing to be done
             if (selection == null || selection[0].equals("")) {
@@ -1160,7 +1183,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 // set editting = false
                 editBeam=false;
             } else {            
-                itsBeamConfigurationTableModel.addRow(newRow);
+                itsBeamConfigurationTableModel.addRow(newRow[0],newRow[1],newRow[2],newRow[3],newRow[4],newRow[5],newRow[6],newRow[7]);
             }
         }
         
@@ -1180,7 +1203,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         // set selection to defaults.
         String [] selection = {itsAnaBeamDirectionTypes.elementAt(0),itsAnaBeamAngles1.elementAt(0),
                                itsAnaBeamAngles2.elementAt(0),itsAnaBeamDurations.elementAt(0),
-                               itsAnaBeamRanks.elementAt(0)};
+                               itsAnaBeamStartTimes.elementAt(0),itsAnaBeamRanks.elementAt(0)};
         if (editAnaBeam) {
             itsSelectedRow = anaBeamConfigurationPanel.getSelectedRow();
             selection = itsAnaBeamConfigurationTableModel.getSelection(itsSelectedRow);
@@ -1208,7 +1231,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 // set editting = false
                 editAnaBeam=false;
             } else {
-                itsAnaBeamConfigurationTableModel.addRow(newRow);
+                itsAnaBeamConfigurationTableModel.addRow(newRow[0],newRow[1],newRow[2],newRow[3],newRow[4],newRow[5]);
             }
         }
 
@@ -1219,7 +1242,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         } else {
             this.addAnaBeamButton.setEnabled(true);
         }
-
     }
 
     private void checkBeamformers(Object[] stations ){
@@ -1860,8 +1882,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private Vector<String>    itsBeamAngles2         = new Vector<String>();
     private Vector<String>    itsBeamDirectionTypes  = new Vector<String>();
     private Vector<String>    itsBeamDurations       = new Vector<String>();
+    private Vector<String>    itsBeamStartTimes      = new Vector<String>();
     private Vector<String>    itsBeamSubbandList     = new Vector<String>();
     private Vector<String>    itsBeamBeamletList     = new Vector<String>();
+    private Vector<String>    itsBeamMomIDs          = new Vector<String>();
     // Analog Beams
     private Vector<jOTDBnode> itsAnaBeams          = new Vector<jOTDBnode>();
     // Analog Beam parameters
@@ -1869,6 +1893,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private Vector<String>    itsAnaBeamAngles2         = new Vector<String>();
     private Vector<String>    itsAnaBeamDirectionTypes  = new Vector<String>();
     private Vector<String>    itsAnaBeamDurations       = new Vector<String>();
+    private Vector<String>    itsAnaBeamStartTimes      = new Vector<String>();
     private Vector<String>    itsAnaBeamRanks           = new Vector<String>();
 
     // Beamformers
