@@ -139,7 +139,13 @@ Observation::Observation(ParameterSet*		aParSet) :
 		// get all fields
 		newBeam.angle1 		  = aParSet->getDouble(beamPrefix+"angle1", 0.0);
 		newBeam.angle2 		  = aParSet->getDouble(beamPrefix+"angle2", 0.0);
-		newBeam.directionType = aParSet->getString(beamPrefix+"directionType", "");
+		// support both flavor of directiontype(s)
+		if (aParSet->isDefined(beamPrefix+"directionType")) {
+			newBeam.directionType = aParSet->getString(beamPrefix+"directionType", "");
+		}
+		else {
+			newBeam.directionType = aParSet->getString(beamPrefix+"directionTypes", "");
+		}
 //		newBeam.angleTimes 	  = aParSet->get(beamPrefix+"angleTimes", "[]");
 		// subbandList
 		newBeam.subbands = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);	// true:expandable
@@ -318,16 +324,19 @@ uint32 Observation::nyquistzoneFromFilter(const string&	filterName)
 	if (filterName == "HB_100_190") 	{ return(2); }
 	if (filterName == "HB_170_230") 	{ return(3); }
 	if (filterName == "HB_210_240") 	{ return(3); }
+	if (filterName == "LBA_30_80")		{ return(1); }
 
 	// support of new names
-	if (filterName == "LBA_30_80")		{ return(1); }
+	if (filterName == "LBA_10_70")		{ return(1); }
+	if (filterName == "LBA_30_70")		{ return(1); }
 	if (filterName == "LBA_10_90")		{ return(1); }
+	if (filterName == "LBA_30_90")		{ return(1); }
 	if (filterName == "HBA_110_190") 	{ return(2); }
 	if (filterName == "HBA_170_230") 	{ return(3); }
 	if (filterName == "HBA_210_250") 	{ return(3); }
 
 	LOG_ERROR_STR ("filterselection value '" << filterName << 
-											"' not recognized, using LBL_10_80");
+											"' not recognized, using LBA_10_90");
 	return (1);
 }
 
@@ -353,7 +362,7 @@ ostream& Observation::print (ostream&	os) const
     os << "nyquistZone  : " << nyquistZone << endl << endl;
     os << "Meas.set     : " << MSNameMask << endl << endl;
 
-	os << "Receivers    : " << receiverList << endl;
+	os << "(Receivers)  : " << receiverList << endl;
 	os << "Stations     : " << stationList << endl;
 	os << "BLG nodes    : " << BGLNodeList << endl;
 	os << "Storage nodes: " << storageNodeList << endl << endl;
