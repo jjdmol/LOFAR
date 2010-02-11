@@ -459,7 +459,7 @@ if __name__ == "__main__":
   # ========== Run
   info( "========== Run ==========" )
 
-  runObservations( parsets, options.partition, not options.nocnproc, not options.noionproc, not options.nostorage )
+  runObservations( parsets, parsets[0].partition, not options.nocnproc, not options.noionproc, not options.nostorage )
 
   # ========== Clean up
   if not DRYRUN:
