@@ -13,6 +13,10 @@
 
 
 # startBGL starts specific CEP run scripts directly
+PARSET=/opt/lofar/share/CNProc.parset
+
+sed -i 's/.*OLAP.CNProc.integrationSteps.*//' $PARSET
+sed -i 's/.*OLAP.IONProc.integrationSteps.*//' $PARSET
 
 # TODO: /opt/lofar/share is hardcoded in ApplController/lofarDirs.h
 Run/runOLAP.py parset=/opt/lofar/share/CNProc.parset >/globalhome/lofarsystem/log/run.runOLAP.py.log 2>&1 &
