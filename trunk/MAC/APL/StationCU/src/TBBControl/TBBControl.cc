@@ -798,7 +798,9 @@ GCFEvent::TResult TBBControl::doTBBsubscribe(GCFEvent& event, GCFPortInterface& 
 
 		case TBB_SUBSCRIBE_ACK: {
 			TBBSubscribeAckEvent ack(event);
-			TRAN(TBBControl::doTBBrelease);				// go to next state.
+			sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_NO_ERROR);
+			setState(CTState::PREPARED);
+			TRAN(TBBControl::prepared_state);				// go to prepared state.
 		} break;
 
 		default: {
@@ -847,15 +849,13 @@ GCFEvent::TResult TBBControl::doTBBrelease(GCFEvent& event, GCFPortInterface& po
 			}
 
 			if (status_ok) {
-				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_NO_ERROR);
-				setState(CTState::PREPARED);
-				TRAN(TBBControl::prepared_state);				// go to prepared state.
+				TRAN(TBBControl::active_state);
 			} else {
 				LOG_ERROR_STR ("Failed to release the trigger system for the selected rcus");
 				itsPropertySet->setValue(PN_FSM_ERROR,GCFPVString("release error"));
 				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_RELEASE_FAILED);
 				setState(CTState::CLAIMED);
-				TRAN(TBBControl::claimed_state);			// go to claimed_state state.
+				TRAN(TBBControl::prepared_state);
 			}
 		} break;
 
@@ -902,7 +902,7 @@ GCFEvent::TResult TBBControl::prepared_state(GCFEvent& event, GCFPortInterface& 
 			setState(CTState::RESUME);
 			sendControlResult(port, CONTROL_RESUMED, msg.cntlrName, CT_RESULT_NO_ERROR);
 			setState(CTState::RESUMED);
-			TRAN(TBBControl::active_state);
+			TRAN(TBBControl::doTBBrelease);
 		} break;
 
 		default: {
@@ -1007,7 +1007,7 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	
-	int rcuNr;
+	static int rcuNr;
 	
 	switch (event.signal) {
 		case F_ENTRY: {
