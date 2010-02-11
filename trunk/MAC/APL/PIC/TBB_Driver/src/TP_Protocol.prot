@@ -11,8 +11,8 @@ id = "(LOFAR::MACIO::F_APL_PROTOCOL+15)";
 // e.g.
 include = '<sys/time.h>';
 include = '<linux/types.h>';
-//include = '<bitset>';
 include = '<Common/LofarTypes.h>';
+include = '<Common/lofar_bitset.h>';
 
 //include = '<APL/RTCCommon/Timestamp.h>';
 

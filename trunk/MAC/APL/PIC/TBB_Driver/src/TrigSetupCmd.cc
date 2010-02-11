@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
+#include <Common/lofar_bitset.h>
 
 #include "TrigSetupCmd.h"
 
@@ -73,7 +74,7 @@ void TrigSetupCmd::saveTbbEvent(GCFEvent& event)
 		TS->setChTriggerMode(channel, tbb_event.setup[rcunr].trigger_mode);
 	}
 	
-	std::bitset<MAX_N_RCUS> channels;
+	bitset<MAX_N_RCUS> channels;
 	channels.set();
 	setChannels(channels);
 	

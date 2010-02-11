@@ -136,10 +136,9 @@ void RecordCmd::saveTpAckEvent(GCFEvent& event)
 	}
 
 	if (itsChannels == 16) {
-		nextBoardNr();
-	} else {
-		nextChannelNr();
-	}
+		incChannelNr(16);
+	} 
+	nextChannelNr();
 }
 
 // ----------------------------------------------------------------------------

@@ -124,7 +124,7 @@ void Command::setChannel(int32 rcu)
 }
 
 // ----------------------------------------------------------------------------
-void Command::setChannels(std::bitset<MAX_N_RCUS> rcus)
+void Command::setChannels(bitset<MAX_N_RCUS> rcus)
 {
 	// convert rcu-bitmask to tbb-channelmask
 	int32 board;         // board 0 .. 11
