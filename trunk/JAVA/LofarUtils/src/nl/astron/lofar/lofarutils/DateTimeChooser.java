@@ -44,8 +44,7 @@ import javax.swing.event.EventListenerList;
  * Minor changes to adepts to  LOFAR
  */
 public class DateTimeChooser 
-        extends javax.swing.JPanel 
-        implements java.beans.PropertyChangeListener {
+        extends javax.swing.JPanel {
     
 
     
@@ -53,6 +52,8 @@ public class DateTimeChooser
     protected transient ChangeEvent changeEvent = null;
     protected EventListenerList lList = new EventListenerList();
     protected Locale itsLocale;
+    protected boolean isLinked=true;
+    protected boolean initialised=false;
     
     /** Creates a DateTimeChooser with the current date as an initial date */
     public DateTimeChooser() {
@@ -69,16 +70,13 @@ public class DateTimeChooser
     
     /** Creates this component */
     protected void createItself() {
-        hours.addPropertyChangeListener(this);
-        mins.addPropertyChangeListener(this);
         
         hours.loopEnabled(true);
         mins.loopEnabled(true);
         calendar.setWeekOfYearVisible(false);
-        calendar.addPropertyChangeListener(this);
-        calendar.getYearChooser().addPropertyChangeListener(this);
            
         setDate (initialDate == null ? new Date() : initialDate,true);
+        initialised=true;
     }
     
     /** gets the current date from the date-time chooser */
@@ -206,10 +204,17 @@ public class DateTimeChooser
         mins.adjustWidthToMaximumValue();
         now = new javax.swing.JButton();
         zero = new javax.swing.JButton();
+        inputLinked = new javax.swing.JCheckBox();
 
         jLabel1.setText("Hours:");
 
         jLabel2.setText("Minutes:");
+
+        mins.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                minsPropertyChange(evt);
+            }
+        });
 
         now.setText("Set to now");
         now.setToolTipText("Set Date & Time to now");
@@ -227,59 +232,70 @@ public class DateTimeChooser
             }
         });
 
+        inputLinked.setSelected(true);
+        inputLinked.setText("Link Hours & Minutes");
+        inputLinked.setToolTipText("If checked the hours will change when minutes get over or under boundaries");
+        inputLinked.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                inputLinkedActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGap(89, 89, 89))
-                            .addComponent(now, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(hours, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(calendar, javax.swing.GroupLayout.DEFAULT_SIZE, 250, Short.MAX_VALUE)
+                        .addContainerGap())
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(inputLinked)
+                        .addContainerGap(135, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(69, 69, 69)
+                        .addComponent(jLabel2)
+                        .addGap(118, 118, 118))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(hours, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(mins, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(now, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(10, 10, 10)
-                                .addComponent(jLabel2)
-                                .addGap(38, 38, 38))
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(zero)
-                                    .addComponent(mins, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                    .addComponent(calendar, javax.swing.GroupLayout.DEFAULT_SIZE, 210, Short.MAX_VALUE))
-                .addContainerGap())
+                        .addComponent(zero)
+                        .addContainerGap(71, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(calendar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(calendar, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(inputLinked)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
-                    .addComponent(jLabel1))
+                    .addComponent(jLabel1)
+                    .addComponent(jLabel2))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(mins, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(hours, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(20, 20, 20)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(hours, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(mins, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 16, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(zero)
-                    .addComponent(now))
-                .addGap(24, 24, 24))
+                    .addComponent(now)
+                    .addComponent(zero))
+                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
     private void zeroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_zeroActionPerformed
         hours.setValue(0);
-        mins.setValue(0); 
+        mins.setValue(0);
     }//GEN-LAST:event_zeroActionPerformed
 
     private void nowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nowActionPerformed
@@ -296,12 +312,38 @@ public class DateTimeChooser
         }
         DateTimeChooser.this.setDate(aD,false);
     }//GEN-LAST:event_nowActionPerformed
+
+    private void inputLinkedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputLinkedActionPerformed
+        isLinked = inputLinked.isSelected();
+    }//GEN-LAST:event_inputLinkedActionPerformed
+
+    private void minsPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_minsPropertyChange
+        if (initialised && isLinked && evt.getPropertyName().equals("value")) {
+
+            if (((Integer)evt.getOldValue()).intValue() == 0 && ((Integer)evt.getNewValue()).intValue() == 59) {
+                int hr = hours.getValue();
+                hr -= 1;
+                if (hr < 0) {
+                    hr=23;
+                }
+                hours.setValue(hr);
+            } else if(((Integer)evt.getOldValue()).intValue() == 59 && ((Integer)evt.getNewValue()).intValue() == 0 ) {
+                int hr = hours.getValue();
+                hr += 1;
+                if (hr > 23) {
+                    hr=0;
+                }
+                hours.setValue(hr);
+            }
+        }
+    }//GEN-LAST:event_minsPropertyChange
    
 
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private com.toedter.calendar.JCalendar calendar;
     private com.toedter.components.JSpinField hours;
+    private javax.swing.JCheckBox inputLinked;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private com.toedter.components.JSpinField mins;
@@ -361,13 +403,7 @@ public class DateTimeChooser
         }
     }
 
-    
-    /*************************************************************************
-     * Implementing PropertyChangeListener. This implementation only
-     * propagates all property change events as a ChangeEvent.
-     *************************************************************************/
-    public void propertyChange (PropertyChangeEvent evt) {
-	fireStateChanged();
-    }
 
 }
+
+
