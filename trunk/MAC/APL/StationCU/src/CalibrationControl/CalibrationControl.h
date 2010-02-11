@@ -80,6 +80,7 @@ private:
    	void _disconnectedHandler(GCFPortInterface& port);
 
 	GCFEvent::TResult	_defaultEventHandler(GCFEvent&	event, GCFPortInterface&	port);
+	void 				_showBeamAdmin();
 
 	void    setState          	  (CTState::CTstateNr     newState);
 	int32	convertFilterSelection(const string&	bandselection, const string&	antennaSet);
@@ -97,6 +98,7 @@ private:
 	GCFTimerPort*			itsTimerPort;		// general port for timers
 	GCFTCPPort*				itsCalServer;		// connection with CalServer
 	CTState::CTstateNr		itsState;			// 
+	uint32					itsNrBeams;			// according to the Parset, corrected for HBA_BOTH
 	map<string, bool>		itsBeams;			// beam active or not.
 
 	// ParameterSet variables

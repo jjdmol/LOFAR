@@ -24,6 +24,7 @@
 #include <Common/StreamUtil.h>
 #include <Common/Version.h>
 #include <ApplCommon/Observation.h>
+#include <ApplCommon/StationConfig.h>
 #include <ApplCommon/StationInfo.h>
 
 #include <Common/ParameterSet.h>
@@ -599,18 +600,20 @@ bool BeamControl::doPrepare()
 {
 	Observation		theObs(globalParameterSet());	// does all nasty conversions
 
-	GCFPValueArray		subbandArr;
-	GCFPValueArray		beamletArr;
 	GCFPValueArray		angle1Arr;
 	GCFPValueArray		angle2Arr;
 	GCFPValueArray		dirTypesArr;
 //	GCFPValueArray		angleTimesArr;
+	GCFPValueArray		subbandArr;
+	GCFPValueArray		beamletArr;
 	GCFPValueArray		beamIDArr;
 
-	itsNrBeams = theObs.beams.size();
+	LOG_DEBUG_STR(theObs);
+	bool		stereoBeams((theObs.antennaSet == "HBA_BOTH"));
+	itsNrBeams = theObs.beams.size() * (stereoBeams ? 2 : 1);
 	LOG_DEBUG_STR("Controlling " << itsNrBeams << " beams.");
 
-	for (uint32	i(0); i < itsNrBeams; i++) {
+	for (uint32	i(0); i < theObs.beams.size(); i++) {
 		if (theObs.beams[i].subbands.size() != theObs.beams[i].beamlets.size()) {
 			LOG_FATAL_STR("size of subbandList (" << theObs.beams[i].subbands.size() << ") != " <<
 							"size of beamletList (" << theObs.beams[i].beamlets.size() << ")");
@@ -625,6 +628,8 @@ bool BeamControl::doPrepare()
 		beamAllocEvent.name 		= getName();
 		beamAllocEvent.subarrayname = theObs.getBeamName(i);
 		LOG_DEBUG_STR("subarrayName:" << beamAllocEvent.subarrayname);
+		beamAllocEvent.rcumask = theObs.getRCUbitset(0, 0, 0, false);		// get modified set of StationController
+		beamAllocEvent.ringNr  = 0;
 
 		// construct subband to beamlet map
 		vector<int32>::iterator beamletIt = theObs.beams[i].beamlets.begin();
@@ -634,10 +639,32 @@ bool BeamControl::doPrepare()
 			beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;
 		}
 
-		LOG_DEBUG_STR("Sending Alloc event to BeamServer");
-		itsBeamServer->send(beamAllocEvent);		// will result in BS_BEAMALLOCACK;
+		// Note: when HBA_BOTH is selected we should set up a beam on both HBA_0 and HBA_1 field.
+		if (!stereoBeams) {
+			LOG_DEBUG_STR("Sending Alloc event to BeamServer");
+			itsBeamServer->send(beamAllocEvent);		// will result in BS_BEAMALLOCACK;
+		}
+		else {
+			StationConfig	sc;
+			for (int rcu = sc.nrHBAs; rcu < sc.nrHBAs*2; rcu++) {	// clear second half of RCUs
+				beamAllocEvent.rcumask.reset(rcu);
+			}
+			beamAllocEvent.name = "HBA_ONE";
+			beamAllocEvent.subarrayname += "_ONE";
+			LOG_DEBUG_STR("Sending Alloc event to BeamServer for ring 0");
+			itsBeamServer->send(beamAllocEvent);		// will result in BS_BEAMALLOCACK;
 
-// TODO
+			beamAllocEvent.rcumask = theObs.getRCUbitset(0, 0, 0, false);		// get modified set of StationController
+			beamAllocEvent.ringNr  = 1;
+			beamAllocEvent.name    = "HBA_TWO";
+			beamAllocEvent.subarrayname = theObs.getBeamName(i) + "_TWO";
+			for (int rcu = 0; rcu < sc.nrHBAs; rcu++) {	// clear first half of RCUs
+				beamAllocEvent.rcumask.reset(rcu);
+			}
+			LOG_DEBUG_STR("Sending Alloc event to BeamServer for ring 1");
+			itsBeamServer->send(beamAllocEvent);		// will result in BS_BEAMALLOCACK;
+		}
+
 		// store values in PVSS for operator
 		stringstream		os;
 		writeVector(os, theObs.beams[i].subbands);
@@ -696,8 +723,7 @@ uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 	// NOTE: for the time being we don't support multiple pointings for a beam: no other sw supports it.
 	BSBeampointtoEvent beamPointToEvent;
 	beamPointToEvent.handle = ackEvent.handle;
-	beamPointToEvent.pointing.setType(static_cast<Pointing::Type>
-				(convertDirection(theBeam->directionType)));
+	beamPointToEvent.pointing.setType(static_cast<Pointing::Type> (convertDirection(theBeam->directionType)));
 
 	beamPointToEvent.pointing.setTime(RTC::Timestamp()); // asap
 	beamPointToEvent.pointing.setDirection(theBeam->angle1,theBeam->angle2);
