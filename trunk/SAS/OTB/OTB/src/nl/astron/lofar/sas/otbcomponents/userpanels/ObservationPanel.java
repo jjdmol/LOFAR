@@ -1843,7 +1843,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
     private void editAnaBeamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editAnaBeamButtonActionPerformed
         editAnaBeam=true;
-        addBeam();
+        addAnaBeam();
 
 }//GEN-LAST:event_editAnaBeamButtonActionPerformed
 
