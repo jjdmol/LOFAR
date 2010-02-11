@@ -731,7 +731,7 @@ GCFEvent::TResult TBBControl::doTBBrecord(GCFEvent& event, GCFPortInterface& por
 		} break;
 
 		case TBB_RECORD_ACK: {
-			TBBTrigCoefAckEvent ack(event);
+			TBBRecordAckEvent ack(event);
 			bool status_ok = true;
 
 			for (int b = 0; b < MAX_N_TBBOARDS; b++) {
@@ -1095,6 +1095,7 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 		
 		case TBB_CEP_STATUS_ACK: {
 			TBBCepStatusAckEvent ack(event);
+			LOG_DEBUG_STR(formatString("TBB_CEP_STATUS_ACK, rcuNr=%d  board=%d", rcuNr, (rcuNr / 16)));
 			if (ack.pages_left[rcuNr / 16] != 0) {
 				LOG_DEBUG_STR(formatString("TBB_CEP_STATUS_ACK pages_left = %d", ack.pages_left[rcuNr / 16]));
 				itsTimerPort->setTimer(0.1);
@@ -1125,7 +1126,7 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 		} break;
 		
 		case TBB_RECORD_ACK: {
-			TBBTrigCoefAckEvent ack(event);
+			TBBRecordAckEvent ack(event);
 			bool status_ok = true;
 
 			for (int b = 0; b < MAX_N_TBBOARDS; b++) {
