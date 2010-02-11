@@ -423,8 +423,9 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 			itsBeams[ack.name] = false;					// add to beammap
 			setObjectState("Cannot start beam", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
 		}
+		_showBeamAdmin();
 
-		if (itsObsPar.beams.size() == itsBeams.size()) {	// answer for all beams received? report state
+		if (itsBeams.size() == itsNrBeams) {	// answer for all beams received? report state
 			if (gResult == CAL_SUCCESS || gResult == ERR_ALREADY_REGISTERED) {
 				LOG_INFO("Calibration of all beams started sucesfully, going to active-mode");
 				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_NO_ERROR);
@@ -533,11 +534,13 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 		map<string, bool>::iterator	end  = itsBeams.end ();
 		while(iter != end) {
 			if (iter->first == ack.name) {
+				LOG_DEBUG_STR("Removing beam " << ack.name << " from the administration");
 				itsBeams.erase(iter);
 				break;
 			}
 			iter++;
 		}
+		_showBeamAdmin();
 
 		if (itsBeams.empty()) {		// all beams stopped?
 			if (gResult == CAL_SUCCESS) {
@@ -620,15 +623,16 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 //
 bool	CalibrationControl::startCalibration() 
 {
-	uint32	nrBeams = itsObsPar.beams.size();
-	LOG_DEBUG_STR("Calibrating " << nrBeams << " beams.");
-	if (nrBeams == 0) {
+	bool	stereoBeams((itsObsPar.antennaSet == "HBA_BOTH"));
+	itsNrBeams = itsObsPar.beams.size() * (stereoBeams ? 2 : 1);
+	LOG_DEBUG_STR("Calibrating " << itsNrBeams << " beams.");
+	if (itsNrBeams == 0) {
 		LOG_WARN("No beams specified");
 		return (false);
 	}
 
 	GCFPValueArray		beamNameArr;
-	for (uint32	i(0); i < nrBeams; i++) {
+	for (uint32	i(0); i < itsObsPar.beams.size(); i++) {
 		// construct and send CALStartEvent
 		string		beamName(itsObsPar.getBeamName(i));
 
@@ -641,13 +645,39 @@ bool	CalibrationControl::startCalibration()
 		calStartEvent.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)
 											convertFilterSelection(itsObsPar.filter, itsObsPar.antennaSet));
 		calStartEvent.subset = itsObsPar.getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters);
-		LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
-								beamName.c_str(), calStartEvent.parent.c_str(),
-								calStartEvent.rcumode()(0).getRaw()));
 
-		itsCalServer->send(calStartEvent);
-		beamNameArr.push_back(new GCFPVString(beamName));	// update array for PVSS
+		// Note: when HBA_BOTH is selected we should set up a calibration on both HBA_0 and HBA_1 field.
+		if (!stereoBeams) {
+			LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
+									calStartEvent.name.c_str(), calStartEvent.parent.c_str(),
+									calStartEvent.rcumode()(0).getRaw()));
+			itsCalServer->send(calStartEvent);
+			beamNameArr.push_back(new GCFPVString(beamName));	// update array for PVSS
+		}
+		else {
+			for (int rcu = config.nrHBAs; rcu < config.nrHBAs*2; rcu++) {	// clear second half of RCUs
+				calStartEvent.subset.reset(rcu);
+			}
+			calStartEvent.parent = "HBA_ONE";
+			calStartEvent.name   = beamName + "_ONE";
+			LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
+									calStartEvent.name.c_str(), calStartEvent.parent.c_str(),
+									calStartEvent.rcumode()(0).getRaw()));
+			itsCalServer->send(calStartEvent);
+			beamNameArr.push_back(new GCFPVString(calStartEvent.name));	// update array for PVSS
 
+			calStartEvent.subset = itsObsPar.getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters);
+			calStartEvent.parent = "HBA_TWO";
+			calStartEvent.name   = beamName + "_TWO";
+			for (int rcu = 0; rcu < config.nrHBAs; rcu++) {	// clear first half of RCUs
+				calStartEvent.subset.reset(rcu);
+			}
+			LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
+									calStartEvent.name.c_str(), calStartEvent.parent.c_str(),
+									calStartEvent.rcumode()(0).getRaw()));
+			itsCalServer->send(calStartEvent);
+			beamNameArr.push_back(new GCFPVString(calStartEvent.name));	// update array for PVSS
+		}
 	} // for all beams
 
 	// inform operator about these values.
@@ -667,16 +697,16 @@ bool	CalibrationControl::startCalibration()
 //
 bool	CalibrationControl::stopCalibration()
 {
-	uint32 nrBeams = itsObsPar.beams.size();
-	LOG_DEBUG_STR("Stopping calibration of " << nrBeams << " beams.");
+	LOG_DEBUG_STR("Stopping calibration of " << itsBeams.size() << " beams.");
 
-	for (uint32	i(0); i < nrBeams; i++) {
-		// send CALStopEvent
-		string		beamName(itsObsPar.getBeamName(i));
-		LOG_DEBUG_STR ("Sending CALSTOP(" << beamName << ") to CALserver");
+	map<string, bool>::const_iterator	iter = itsBeams.begin();
+	map<string, bool>::const_iterator	end  = itsBeams.end();
+	while (iter != end) {
+		LOG_DEBUG_STR ("Sending CALSTOP(" << iter->first << ") to CALserver");
 		CALStopEvent calStopEvent;
-		calStopEvent.name = beamName;
+		calStopEvent.name = iter->first;
 		itsCalServer->send(calStopEvent);
+		++iter;
 	}
 
 	return (true);
@@ -750,6 +780,18 @@ void CalibrationControl::_disconnectedHandler(GCFPortInterface& port)
 	port.close();
 }
 
+//
+// _showBeamAdmin()
+//
+void CalibrationControl::_showBeamAdmin()
+{
+	map<string, bool>::const_iterator	iter = itsBeams.begin();
+	map<string, bool>::const_iterator	end  = itsBeams.end();
+	while (iter != end) {
+		LOG_DEBUG_STR("Beam " << iter->first << " is " << (iter->second ? "ON" : "OFF"));
+		++iter;
+	}
+}
 
 }; // StationCU
 }; // LOFAR
