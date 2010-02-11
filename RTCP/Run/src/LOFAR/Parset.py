@@ -129,7 +129,7 @@ class Parset(util.Parset.Parset):
 
         def delIfEmpty( k ):
           if k in self and not self[k]:
-            del k
+            del self[k]
 
         # SAS cannot omit keys, so assume that empty keys means 'use default'
         delIfEmpty( "OLAP.CNProc.phaseOnePsets" )
