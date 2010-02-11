@@ -56,7 +56,7 @@ namespace LOFAR {
 	trigBuffer[i].prev = i-1;
 	trigBuffer[i].Time = 0;
 	trigBuffer[i].SampleNr = 0;
-	trigBuffer[i].date = 0.;
+	trigBuffer[i].date = static_cast<uint64>(0.);
       };
       first = 0;
       last = VHECR_TASK_BUFFER_LENGTH-1;
@@ -74,6 +74,7 @@ namespace LOFAR {
     //
     VHECRTask::~VHECRTask()
     {
+      fclose(itsLogfile);
       LOG_DEBUG ("VHECR destruction");
     }
     
@@ -124,12 +125,6 @@ namespace LOFAR {
       fprintf(itsLogfile, "Output file: %s\nCoincidence channels required: %d\nAntenna positions file: %s\nAntenna selection: %s\nCoincidence time window: %3.6f\ndo Direction fit: %d\n", 
               itsOutputFilename.c_str(), itsNoCoincidenceChannels, antennaPositionsFile.c_str(), antennaSelection.c_str(), itsCoincidenceTime, doDirectionFit);
     }
-
-    int VHECRTask::getReadCmd(std::vector<TBBReadCmd> &outVector)
-    { // outVector gets modified here... return no. of entries
-      return 0;
-    }
-      
       
     //
     // readTBBdata(vector<TBBReadCmd>	cmdVector)
@@ -179,20 +174,39 @@ namespace LOFAR {
       }
     }
     
+    // ----------------------------------------------------------------------------
+    // addTrigger(): 
+    //  - called whenever a trigger message arrives
+    //  - adds the trigger message to the buffer
     void VHECRTask::addTrigger(const TBBTrigger& trigger) {
-      int newindex, coincidenceIndex;
+      int newindex;
       //      cout << "Received trigger: " << trigger.itsRcuNr << ", " << trigger.itsTime <<endl;
       
       newindex = add2buffer(trigger);
-      uint64 timeWindow = itsSamplingRate * itsCoincidenceTime;
+    };
+
+
+    // ----------------------------------------------------------------------------
+    // getReadCmd()
+    //  - called at regular intervals (e.g. every 100ms)
+    //  - the parameter is a vector in which we can return the read-commands to dump data
+    //  - the return value is the number of rcus to be dumped (e.g. 0 if not dump is needed)
+    //  - this is where most of the "magic" happends
+    // ***warning:*** handles only one coincidence per call and unthinkingly dumps all 96 RCUs  
+    int VHECRTask::getReadCmd(vector<TBBReadCmd> &readCmd)
+    {
+      int noOfRCUs=0;
+
+      int coincidenceIndex;
+      uint64 timeWindow = static_cast<uint64>(itsSamplingRate * itsCoincidenceTime);
       
-      coincidenceIndex = coincidenceCheck(newindex, itsNoCoincidenceChannels, itsCoincidenceTime);
+      coincidenceIndex = coincidenceCheck(last, itsNoCoincidenceChannels, itsCoincidenceTime);
 //      cout << "Done coincidence check for new index: " << newindex << ", for " << itsNoCoincidenceChannels << " coincindence channels, for window = " << itsCoincidenceTime << " seconds; result = " << coincidenceIndex << endl;
 
       static uint64 latestCoincidenceTime = 0; // we'll ensure that all coincidences we find are at least 1 time window apart.
                                                // That way we won't see every coincidence (n-8) times (n = # single triggers in one pulse)
       static uint32 coincidenceCount = 0;
-      // warning: static vars are class vars, not instance vars! Should be done differently if more than one VHECRtask...
+      // ***warning:*** static vars are class vars, not instance vars! Should be done differently if more than one VHECRtask...
       if ( (coincidenceIndex >= 0) && (trigBuffer[coincidenceIndex].date >= latestCoincidenceTime + timeWindow) )
       {
 	coincidenceCount++;
@@ -223,23 +237,31 @@ namespace LOFAR {
                                              trigBuffer[coincidenceIndex].no, 
                                              readableTime(trigBuffer[coincidenceIndex].date).c_str(), 
                                              trigBuffer[coincidenceIndex].RcuNr);
-        
+	fflush(itsLogfile);   
+
         latestCoincidenceTime = trigBuffer[coincidenceIndex].date;
 	// This adds the trigger to the command queue.
-	uint32 RcuNr      = trigBuffer[coincidenceIndex].RcuNr;
+	//uint32 RcuNr      = trigBuffer[coincidenceIndex].RcuNr;
+	uint32 RcuNr;
 	uint32 Time       = trigBuffer[coincidenceIndex].Time;
 	uint32 sampleTime = trigBuffer[coincidenceIndex].SampleNr;
-	uint32 prePages   = 1;
-	uint32 postPages  = 2;
-	itsCommandVector.push_back(TBBReadCmd(RcuNr, Time, sampleTime, prePages, postPages));	
+	uint32 prePages   = 64;
+	uint32 postPages  = 64;	
+	//itsCommandVector.push_back(TBBReadCmd(RcuNr, Time, sampleTime, prePages, postPages));	
+	//Add all rcus to the command vector.
+	for (RcuNr =0 ; RcuNr<96 ; RcuNr++) {
+	  noOfRCUs++;
+	  readCmd.push_back(TBBReadCmd(RcuNr, Time, sampleTime, prePages, postPages));	
+	};
 	itsNrTriggers++;
-      };
+      }; // end: if ( (coincidenceIndex >= 0) ...
       
       // All code for this event is [TEST] code
-      if (!itsCommandVector.empty()) {
-	readTBBdata(itsCommandVector);			// report that we want everything
-	itsCommandVector.clear();					// clear buffer
-      }
+//       if (!itsCommandVector.empty()) {
+//       readTBBdata(itsCommandVector);			// report that we want everything
+//       itsCommandVector.clear();					// clear buffer
+//       }
+      return noOfRCUs;
     }
     
     // Check the contents of the buffer if a coincidence is found
@@ -248,7 +270,7 @@ namespace LOFAR {
       uint32 startindex,runindex;
       
       uint64 refdate;
-      uint64 timeWindow64 = itsSamplingRate * timeWindow;
+      uint64 timeWindow64 = static_cast<uint64>(itsSamplingRate * timeWindow);
       
       startindex = first;
       while ((startindex!=trigBuffer[latestindex].next) && (startindex < VHECR_TASK_BUFFER_LENGTH)) {
@@ -367,7 +389,7 @@ namespace LOFAR {
           mu = 0; //average = 0; sig2 = 0; sigma = 0;
           sig2=0;
           
-          for (uint32 k=0; k<nofChannels; k++)
+          for (int k=0; k<nofChannels; k++)
           { // loop through all RCUs that are there in this coincidence
 //            if (runningIndex != outlierIndex)
 //            {
@@ -391,7 +413,7 @@ namespace LOFAR {
             minSig2 = fitResult[i][j];
             minTh = twopi/4 - theta;
             minPh = phi;
-            for(uint32 k=0; k<nofChannels; k++)
+            for(int k=0; k<nofChannels; k++)
             {
               minDebugTimeOffsets[k] = debugTimeOffsets[k] - mu/nofChannels;
             }
