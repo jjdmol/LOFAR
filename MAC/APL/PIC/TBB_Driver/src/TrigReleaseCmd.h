@@ -26,6 +26,7 @@
 #define TRIGCLRCMD_H_
 
 #include <Common/LofarTypes.h>
+#include <Common/lofar_bitset.h>
 #include <GCF/TM/GCF_Control.h>
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
@@ -61,8 +62,8 @@ private:
 	TbbSettings *TS;
 	int32  itsStage;
 	int32  itsChannels;
-	std::bitset<MAX_N_RCUS> itsChannelStopMask;
-	std::bitset<MAX_N_RCUS> itsChannelStartMask;
+	bitset<MAX_N_RCUS> itsChannelStopMask;
+	bitset<MAX_N_RCUS> itsChannelStartMask;
 };
 
 	} // end TBB namespace

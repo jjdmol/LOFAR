@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
+#include <Common/lofar_bitset.h>
 
 #include "TrigCoefCmd.h"
 
@@ -70,7 +71,7 @@ void TrigCoefCmd::saveTbbEvent(GCFEvent& event)
 		TS->setChFilterCoefficient(channel, 3, tbb_event.coefficients[rcunr].c3);
 	}
 	
-	std::bitset<MAX_N_RCUS> channels;
+	bitset<MAX_N_RCUS> channels;
 	channels.set();
 	setChannels(channels);
 	

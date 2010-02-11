@@ -292,9 +292,9 @@ public:
 	}
 
 	//--return selected rcus in a mask----------------------
-	std::bitset<MAX_N_RCUS> getRcuMask() const
+	bitset<MAX_N_RCUS> getRcuMask() const
 	{
-		std::bitset<MAX_N_RCUS> rcus;
+		bitset<MAX_N_RCUS> rcus;
 		std::list<int>::const_iterator it;
 
 		rcus.reset();

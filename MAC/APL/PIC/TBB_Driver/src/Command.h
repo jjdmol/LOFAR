@@ -24,6 +24,8 @@
 #define COMMAND_H_
 
 #include <Common/LofarTypes.h>
+#include <Common/lofar_bitset.h>
+
 #include <GCF/TM/GCF_Control.h>
 
 #include "DriverSettings.h"
@@ -92,7 +94,7 @@ public:
 	
 	void setChannel(int32 rcu);
 	
-	void setChannels(std::bitset<MAX_N_RCUS> rcus);
+	void setChannels(bitset<MAX_N_RCUS> rcus);
 	
 	void incChannelNr(int32 inc) { itsChannel += (inc - 1); }
 	
@@ -117,8 +119,8 @@ private:
 	int32  itsBoard;    // board to handle
 	int32  itsChannel;  // channel to handle
 	
-	std::bitset<MAX_N_TBBOARDS> itsBoards;
-	std::bitset<MAX_N_RCUS> itsChannels;
+	bitset<MAX_N_TBBOARDS> itsBoards;
+	bitset<MAX_N_RCUS> itsChannels;
 	uint32 itsStatus[MAX_N_TBBOARDS];
 	double itsSleepTime;
 };
