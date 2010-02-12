@@ -90,6 +90,11 @@ public:
 	//             3: observations that were finished during the last 'period' minutes
 	vector<OTDBtree> getTreeGroup(uint32	groupType, uint32	periodInMinutes);
 
+	// Get a list of all trees that are scheduled in the given period (partially).
+	vector<OTDBtree> getTreesInPeriod(treeType		aTreeType,
+									   const ptime& beginDate = ptime(min_date_time),
+									   const ptime& endDate   = ptime(max_date_time));
+
 	// Show connection characteristics.
 	ostream& print (ostream& os) const;
 

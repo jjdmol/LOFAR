@@ -351,6 +351,58 @@ vector<OTDBtree> OTDBconnection::getTreeGroup(uint32	groupType, uint32 period)
 }
 
 //
+// getTreesInPeriod(treeType, beginDate, endDate): vector<OTDBtree>
+//
+// To get a list of the OTDB trees scheduled in that period
+//
+vector<OTDBtree> OTDBconnection::getTreesInPeriod(
+					treeType 		aTreeType,
+					const ptime&	beginDate,
+					const ptime&	endDate)
+{
+	if (!itsIsConnected && !connect()) {
+		vector<OTDBtree> 	empty;
+		return (empty); 
+	}
+
+	LOG_TRACE_FLOW_STR ("OTDB:getTreesInPeriod(" << aTreeType << "," 
+										<< to_simple_string(beginDate) << ","
+										<< to_simple_string(endDate) << ")");
+	try {
+		// construct a query that calls a stored procedure.
+		work	xAction(*itsConnection, "getTreesInPeriod");
+		string	query("SELECT * from getTreesInPeriod('" +
+						toString(aTreeType) + "','" +
+						to_simple_string(beginDate) + "','" +
+						to_simple_string(endDate) + "')");
+
+		// execute query
+		result	res = xAction.exec(query);
+
+		// show how many records found
+		result::size_type	nrRecords = res.size();
+		LOG_DEBUG_STR (nrRecords << " records in Period(" 
+										<< to_simple_string(beginDate) << ","
+										<< to_simple_string(endDate) << ")");
+	
+		// copy information to output vector
+		vector<OTDBtree>	resultVec;
+		for (result::size_type i = 0; i < nrRecords; ++i) {
+			resultVec.push_back(OTDBtree(res[i]));
+		}
+
+		return (resultVec);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during retrieval of getTreesInPeriod:")
+					 + ex.what();
+	}
+
+	vector<OTDBtree> 	empty;
+	return (empty);
+}
+
+//
 // print(ostream&): os&
 //
 // Show connection characteristics.
