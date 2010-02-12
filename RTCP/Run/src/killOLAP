@@ -15,7 +15,7 @@ for s in `seq 1 24`
 do
   LSENODE=10.174.0.${s}
 
-  ssh $LSENODE $SKILL Storage
+  ssh $LSENODE $SKILL Storage Storage_main
   ssh $LSENODE $SKILL orted
 done  
 
@@ -34,7 +34,7 @@ for s in `seq 1 24`
 do
   LSENODE=10.174.0.${s}
 
-  ssh $LSENODE $HKILL Storage
+  ssh $LSENODE $HKILL Storage Storage_main
   ssh $LSENODE $HKILL orted
 done  
 
@@ -81,9 +81,9 @@ then
   echo ----- Killing and resetting SAS/MAC processes
   for f in bgfen0 bgfen1
   do
-    ssh $f $HKILL ApplController
+    #ssh $f $HKILL ApplController
 
-    $BASEDIR/swlevel 0
-    $BASEDIR/swlevel 1
+    #$BASEDIR/swlevel 0
+    #$BASEDIR/swlevel 1
   done 
 fi  
