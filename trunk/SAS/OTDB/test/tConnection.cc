@@ -212,6 +212,16 @@ int main (int	argc, char*	argv[]) {
 		else {
 			showTreeList(treeList);
 		}
+
+		LOG_INFO("=== Testing time-list ===");
+	 	LOG_INFO("getTreesInPeriod(30, '2009-12-01 12:00:00', '2010-02-05 12:00:00')");
+		treeList = conn.getTreesInPeriod(30, time_from_string("2009-12-01 12:00:00"), time_from_string("2010-02-05 12:00:00"));
+		if (treeList.size() == 0) {
+			LOG_INFO_STR("Error:" << conn.errorMsg());
+		}
+		else {
+			showTreeList(treeList);
+		}
 	}
 	catch (std::exception&	ex) {
 		LOG_FATAL_STR("Unexpected exception: " << ex.what());
