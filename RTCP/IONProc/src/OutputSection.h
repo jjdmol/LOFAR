@@ -71,7 +71,7 @@ class OutputSection
 
     std::vector<Stream *>       itsStreamsFromCNs;
 
-    Thread                      *thread;
+    Thread                      *itsThread;
 };
 
 

@@ -92,7 +92,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputStream
     SocketStream *sstr = dynamic_cast<SocketStream *>(itsInputStreams[i]);
 
     if (sstr != 0)
-      sstr->setReadBufferSize(24 * 1024 * 1024); // stupid kernel multiplies this by 2
+      sstr->setReadBufferSize(8 * 1024 * 1024); // stupid kernel multiplies this by 2
   }
 }
 

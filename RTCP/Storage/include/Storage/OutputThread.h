@@ -54,7 +54,7 @@ class OutputThread
     void		    mainLoop();
 
     const Parset            *itsPS;
-    Thread		    *thread;
+    Thread		    *itsThread;
 
     InputThread             *itsInputThread;
 

@@ -34,9 +34,7 @@
 #include <Stream/SocketStream.h>
 
 #include <memory>
-#include <boost/format.hpp>
 
-using boost::format;
 
 namespace LOFAR {
 namespace RTCP {
@@ -44,11 +42,10 @@ namespace RTCP {
 
 OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsigned output, StreamableData *dataTemplate)
 :
-  connecting(true), // avoid race condition when checking this at thread start
+  itsConnecting(true), // avoid race condition when checking this at thread start
   itsParset(ps),
   itsSubband(subband),
-  itsOutput(output),
-  thread(0)
+  itsOutput(output)
 {
   // transpose the data holders: create queues streams for the output streams
   // itsPlans is the owner of the pointers to sample data structures
@@ -60,8 +57,8 @@ OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsig
     itsFreeQueue.append( clone );
   }
 
-  thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps.observationID() % subband % output), 65536);
-  thread->start();
+  //thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps.observationID() % subband % output), 65536);
+  itsThread = new Thread(this, &OutputThread::mainLoop, 65536);
 }
 
 
@@ -70,10 +67,10 @@ OutputThread::~OutputThread()
   // STOP our thread
   itsSendQueue.append(0); // 0 indicates that no more messages will be sent
 
-  if (connecting) {
-    thread->abort();
-  }
-  delete thread;
+  if (itsConnecting)
+    itsThread->abort();
+
+  delete itsThread;
 
   while (!itsSendQueue.empty())
     delete itsSendQueue.remove();
@@ -85,12 +82,12 @@ OutputThread::~OutputThread()
 
 void OutputThread::mainLoop()
 {
-  std::auto_ptr<Stream> streamToStorage;
-
 #if defined HAVE_BGP_ION
   doNotRunOnCore0();
   //nice(19);
 #endif
+
+  std::auto_ptr<Stream> streamToStorage;
 
   // connect to storage
   const string prefix         = "OLAP.OLAP_Conn.IONProc_Storage";
@@ -117,16 +114,16 @@ void OutputThread::mainLoop()
     THROW(IONProcException, "unsupported ION->Storage stream type: " << connectionType);
   }
 
-  connecting = false;
+  itsConnecting = false;
 
   // set the maximum number of concurrent writers
   // TODO: race condition on creation
   // TODO: if a storage node blocks, ionproc can't write anymore
   //       in any thread
   static Semaphore semaphore(2);
-  StreamableData *data;
+  StreamableData   *data;
 
-  while (!thread->stop && (data = itsSendQueue.remove()) != 0) {
+  while ((data = itsSendQueue.remove()) != 0) {
     // prevent too many concurrent writers by locking this scope
     semaphore.down();
     try {

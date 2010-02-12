@@ -27,10 +27,9 @@
 
 #include <pthread.h>
 #include <signal.h>
-#include <unistd.h>
-#include <errno.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/Semaphore.h>
 #include <Stream/SystemCallException.h>
 
 
@@ -45,7 +44,7 @@ class Thread
     //
     // class C {
     //   public:
-    //     C() : thread(this, &C::method) { thread.start(); }
+    //     C() : thread(this, &C::method) {}
     //   private:
     //     void method() { std::cout << "runs asynchronously" << std::endl; }
     //     Thread thread;
@@ -53,112 +52,95 @@ class Thread
     //
     // The thread is joined in the destructor of the Thread object (or detached
     // if the thread deletes itself)
-     
-    // object:          object containing the thread function to run
-    // method:          name of the thread function
-    // name:            name of the thread, mentioned in error logs
-    // stackSize:       stack size to assign
-
-    template <typename T> Thread(T *object, void (T::*method)(), string name = "", size_t stackSize = 0);
+      
+    template <typename T> Thread(T *object, void (T::*method)(), size_t stackSize = 0);
 
     // join/detach a thread
     ~Thread();
 
-    // start the thread
-    void start();
+  protected:
+    template <typename T> struct Args {
+      Args(T *object, void (T::*method)()) : object(object), method(method) {}
 
-    // send signal
-    void kill(int sig);
-
-    // abort the thread and wait for it to die
-    void abort();
-
-    // name of the thread
-    const string name;
-
-    // true when the thread should wrap up
-    volatile bool stop;
-
-  private:
-    // thread state
-    bool started;
-    volatile bool stopped;
-
-    // capture SIGUSR1 for use in abort()
-    static void setSigHandler();
-    static void sigHandler(int);
-
-    // thread parameters
-    pthread_attr_t attr;
-    pthread_t thread;
-    void *arg;
-
-    // thread wrapper function
-    template <typename T> static void *stub(void *);
-
-    // deletes any templated data, to be called by the destructor
-    template <typename T> static void destructTemplate(Thread *);
-
-    // pointers to templated functions
-    void *(*stubInstance)(void*);
-    void (*destructTemplateInstance)(Thread *);
-
-    // all parameters that we need in stub()
-    template <typename T> struct stubParams {
-      T *object;
+      T	   *object;
       void (T::*method)();
-      Thread *thread;
     };
 
+    template <typename T>	      Thread(void * (*stub)(void *), Args<T> *args, size_t stackSize);
+    template <typename T> static void *stub(void *);
+
+    pthread_t thread;
+
+  private:
+    template <typename T> void	      create(void * (*stub)(void *), Args<T> *args, size_t stackSize);
 };
 
 
-template <typename T> inline Thread::Thread(T *object, void (T::*method)(), string name, size_t stackSize)
-:
-  name(name),
-  stop(false),
-  started(false),
-  stopped(false),
-  stubInstance(&Thread::stub<T>),
-  destructTemplateInstance(&Thread::destructTemplate<T>)
+class InterruptibleThread : public Thread
 {
-  int retval;
+  public:
+    template <typename T> InterruptibleThread(T *object, void (T::*method)(), size_t stackSize = 0);
+			  ~InterruptibleThread();
 
-  setSigHandler();
+    void		  abort();
 
-  stubParams<T> *params = new stubParams<T>();
-  params->object = object;
-  params->method = method;
-  params->thread = this;
-  arg = params;
+  private:
+    struct ExitState {
+      ExitState() : finished(false) {}
 
-  if ((retval = pthread_attr_init(&attr)) != 0)
-    throw SystemCallException("pthread_attr_init", retval, THROW_ARGS);
+      Semaphore     mayExit;
+      volatile bool finished;
+    };
 
-  if (stackSize > 0) {
-    if ((retval = pthread_attr_setstacksize(&attr, stackSize)) != 0)
-      throw SystemCallException("pthread_attr_setstacksize", retval, THROW_ARGS);
-  }
+    template <typename T> struct Args : public Thread::Args<T> {
+      Args(T *object, void (T::*method)(), ExitState *exitState) : Thread::Args<T>(object, method), exitState(exitState) {}
+
+      ExitState *exitState;
+    };
+
+    template <typename T> static void *stub(void *);
+
+    void			      installSignalHandler();
+    static void			      signalHandler(int sig);
+
+    ExitState			      *exitState;
+};
+
+
+template <typename T> inline Thread::Thread(T *object, void (T::*method)(), size_t stackSize)
+{
+  create(&Thread::stub<T>, new Args<T>(object, method), stackSize);
 }
 
 
-inline void Thread::start()
+template <typename T> inline Thread::Thread(void * (*stub)(void *), Args<T> *args, size_t stackSize)
 {
-  // we do not start the thread in the constructor for two reasons:
-  // 1) the constructor might throw an exception after thread start,
-  //    leaving the object unconstructed but the thread started
-  // 2) the started thread might want to refer to this thread, which
-  //    is not necessarily constructed yet when the thread is started,
-  //    leading to a race condition between
-  //        t = new Thread(...)
-  //    and accessing (for instance) t->stop in the started thread
+  create(stub, args, stackSize);
+}
 
+
+template <typename T> inline void Thread::create(void * (*stub)(void *), Args<T> *args, size_t stackSize)
+{
   int retval;
 
-  if ((retval = pthread_create(&thread, &attr, stubInstance, arg)) != 0)
-    throw SystemCallException("pthread_create", retval, THROW_ARGS);
+  if (stackSize != 0) {
+    pthread_attr_t attr;
 
-  started = true;
+    if ((retval = pthread_attr_init(&attr)) != 0)
+      throw SystemCallException("pthread_attr_init", retval, THROW_ARGS);
+
+    if ((retval = pthread_attr_setstacksize(&attr, stackSize)) != 0)
+      throw SystemCallException("pthread_attr_setstacksize", retval, THROW_ARGS);
+
+    if ((retval = pthread_create(&thread, &attr, stub, args)) != 0)
+      throw SystemCallException("pthread_create", retval, THROW_ARGS);
+
+    if ((retval = pthread_attr_destroy(&attr)) != 0)
+      throw SystemCallException("pthread_attr_destroy", retval, THROW_ARGS);
+  } else {
+    if ((retval = pthread_create(&thread, 0, stub, args)) != 0)
+      throw SystemCallException("pthread_create", retval, THROW_ARGS);
+  }
 }
 
 
@@ -166,78 +148,99 @@ inline Thread::~Thread()
 {
   int retval;
 
-  if (started) {
-    if (thread == pthread_self()) {
-      if ((retval = pthread_detach(thread)) != 0)
-        throw SystemCallException("pthread_detach", retval, THROW_ARGS);
-    } else {
-      if ((retval = pthread_join(thread, 0)) != 0)
-        throw SystemCallException("pthread_join", retval, THROW_ARGS);
-    }
+  if (thread == pthread_self()) {
+    if ((retval = pthread_detach(thread)) != 0)
+      throw SystemCallException("pthread_detach", retval, THROW_ARGS);
+  } else {
+    if ((retval = pthread_join(thread, 0)) != 0)
+      throw SystemCallException("pthread_join", retval, THROW_ARGS);
   }
-
-  if ((retval = pthread_attr_destroy(&attr)) != 0)
-    throw SystemCallException("pthread_attr_destroy", retval, THROW_ARGS);
-
-  destructTemplateInstance( this );
 }
 
 
-inline void Thread::kill(int sig)
+template <typename T> inline InterruptibleThread::InterruptibleThread(T *object, void (T::*method)(), size_t stackSize)
+:
+  Thread(&InterruptibleThread::stub<T>, (exitState = new ExitState, new Args<T>(object, method, exitState)), stackSize)
 {
-  int retval;
-
-  if ((retval = pthread_kill(thread, sig)) != 0)
-    throw SystemCallException("pthread_kill", retval, THROW_ARGS);
+  installSignalHandler();
 }
 
 
-inline void Thread::abort()
+inline InterruptibleThread::~InterruptibleThread()
 {
-  stop = true;
-
-  while (!stopped) {
-    try {
-      kill(SIGUSR1); // interrupt blocking system call
-      usleep(25000);
-    } catch (SystemCallException &) {
-      // ignore the case that the thread just exited
-    }  
-  }
-
-  // our destructor will do the pthread_join
+  exitState->mayExit.up();
 }
 
 
 template <typename T> inline void *Thread::stub(void *arg)
 {
-  stubParams<T> *params = static_cast<stubParams<T>*>(arg);
-  T	                *object        = params->object;
-  void			(T::*method)() = params->method;
-  Thread                *thread        = params->thread;
+  Args<T> *args = static_cast<Args<T> *>(arg);
 
   try {
-    (object->*method)();
+    (args->object->*args->method)();
   } catch (Exception &ex) {
-    LOG_FATAL_STR("Thread " << thread->name << " caught Exception: " << ex);
+    LOG_FATAL_STR("caught Exception: " << ex);
   } catch (std::exception &ex) {
-    LOG_FATAL_STR("Thread " << thread->name << " caught Exception: " << ex.what());
+    LOG_FATAL_STR("caught std::exception: " << ex.what());
   } catch (...) {
-    LOG_FATAL_STR("Thread " << thread->name << " caught non-std::exception");
+    LOG_FATAL("caught non-std::exception");
   }
 
-  thread->stopped = true;
+  delete args;
 
   return 0;
 }
 
 
-template <typename T> inline void Thread::destructTemplate(Thread *thread)
+template <typename T> inline void *InterruptibleThread::stub(void *arg)
 {
-  stubParams<T> *params = static_cast<stubParams<T>*>(thread->arg);
+  Args<T>   *args      = static_cast<Args<T> *>(arg);
+  ExitState *exitState = args->exitState;
 
-  delete params;
+  Thread::stub<T>(arg);
+
+  exitState->finished = true;
+  exitState->mayExit.down(); // make sure that no signal is sent to a thread that just exited
+  delete exitState;
+
+  return 0;
 }
+
+
+inline void InterruptibleThread::installSignalHandler()
+{
+  struct sigaction sa;
+  int		   retval;
+
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags   = 0;
+  sa.sa_handler = signalHandler;
+
+  if ((retval = sigaction(SIGUSR1, &sa, 0)) != 0)
+    throw SystemCallException("sigaction", retval, THROW_ARGS);
+}
+
+
+inline void InterruptibleThread::signalHandler(int)
+{
+}
+
+
+inline void InterruptibleThread::abort()
+{
+  // interrupt I/O-related system calls
+  assert(thread != pthread_self());
+
+  while (!exitState->finished) {
+    int retval;
+
+    if ((retval = pthread_kill(thread, SIGUSR1)) != 0)
+      throw SystemCallException("pthread_kill", retval, THROW_ARGS);
+
+    usleep(25000);
+  }
+}
+
 
 } // namespace RTCP
 } // namespace LOFAR

@@ -48,9 +48,10 @@ class LogThread
     std::vector<Counters> itsCounters;
 
   private:
-    void	mainLoop();
+    void	  mainLoop();
   
-    Thread	  thread;
+    volatile bool itsShouldStop;
+    Thread	  itsThread;
 
 #if defined HAVE_BGP_ION
     struct CPUload {

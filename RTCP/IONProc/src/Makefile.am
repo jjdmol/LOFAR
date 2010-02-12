@@ -15,6 +15,7 @@ ReaderWriterSynchronization.h	\
 RSP.h				\
 Scheduling.h			\
 SlidingPointer.h		\
+StreamMultiplexer.h		\
 WallClockTime.h			\
 WH_DelayCompensation.h		\
 FCNP_ServerStream.h
@@ -32,6 +33,7 @@ OutputThread.cc			\
 OutputSection.cc		\
 ReaderWriterSynchronization.cc	\
 Scheduling.cc			\
+StreamMultiplexer.cc		\
 WH_DelayCompensation.cc		\
 FCNP_ServerStream.cc		\
 Package__Version.cc

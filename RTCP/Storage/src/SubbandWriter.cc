@@ -147,17 +147,15 @@ SubbandWriter::~SubbandWriter()
 {
   // wait for all threads to finish
 
-  // wait for OutputThreads first, since they will still be reading data
-  // from the InputThreads
-  for (unsigned i = 0; i < itsOutputThreads.size(); i++ ) {
-    delete itsOutputThreads[i];
-  }
-  itsOutputThreads.clear();
-
-  for (unsigned i = 0; i < itsInputThreads.size(); i++ ) {
+  for (unsigned i = 0; i < itsInputThreads.size(); i++ )
     delete itsInputThreads[i];
-  }
+
   itsInputThreads.clear();
+
+  for (unsigned i = 0; i < itsOutputThreads.size(); i++ )
+    delete itsOutputThreads[i];
+
+  itsOutputThreads.clear();
 
 
 #ifdef USE_MAC_PI

@@ -35,6 +35,7 @@ class Mutex
     bool trylock();
 
   private:
+    friend class Condition;
     pthread_mutex_t mutex;
 };
 
@@ -48,6 +49,19 @@ class ScopedLock
   private:
     Mutex &itsMutex;
 };
+
+
+class Condition
+{
+  public:
+    Condition(), ~Condition();
+
+    void signal(), broadcast(), wait(Mutex &);
+
+  private:
+    pthread_cond_t condition;
+};
+
 
 
 inline Mutex::Mutex()
@@ -92,6 +106,37 @@ inline ScopedLock::~ScopedLock()
 {
   itsMutex.unlock();
 }
+
+
+inline Condition::Condition()
+{
+  pthread_cond_init(&condition, 0);
+}
+
+
+inline Condition::~Condition()
+{
+  pthread_cond_destroy(&condition);
+}
+
+
+inline void Condition::signal()
+{
+  pthread_cond_signal(&condition);
+}
+
+
+inline void Condition::broadcast()
+{
+  pthread_cond_broadcast(&condition);
+}
+
+
+inline void Condition::wait(Mutex &mutex)
+{
+  pthread_cond_wait(&condition, &mutex.mutex);
+}
+
 
 } // namespace RTCP
 } // namespace LOFAR
