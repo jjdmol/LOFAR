@@ -14,7 +14,7 @@
 # name  ID    ring long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
 #--------------------------------------------------------------------------------------------------------------
 ## core (1-59)
-CS001   1     C    0.0          0.0             0       12     6    96    48    Yes      Yes
+CS001   1     C    6.8680483    52.9110414      54.43   12     6    96    48    Yes      Yes
 CS002	2     C    6.8693061    52.9148400      56.31   12     6    96    48    Yes      Yes
 CS003	3     C    6.8693283    52.9159339      55.19   12     6    96    48    Yes      Yes
 CS004	4     C    6.8680911    52.9147486      55.94   12     6    96    48    Yes      Yes
@@ -46,7 +46,7 @@ CS028	28    C    0.0          0.0             0       12     6    96    48    Ye
 CS029	29    C    0.0          0.0             0       12     6    96    48    Yes      Yes
 CS030	30    C    6.8609850    52.9225878      58.01   12     6    96    48    Yes      Yes
 CS031	31    C    0.0          0.0             0       12     6    96    48    Yes      Yes
-CS032	32    C    0.0          0.0             0       12     6    96    48    Yes      Yes
+CS032	32    C    6.8603878    52.9121611      59.31   12     6    96    48    Yes      Yes
 
 # Remote stations with core station layout (i.e., with HBASplit set to 'yes')
 CS101	101   C    0.0          0.0             0       12     6    96    48    Yes      Yes
