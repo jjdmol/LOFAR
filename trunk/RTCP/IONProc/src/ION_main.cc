@@ -39,8 +39,11 @@
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <Stream/SystemCallException.h>
+#include <StreamMultiplexer.h>
 #include <IONProc/Package__Version.h>
+
 #include <algorithm>
+#include <boost/multi_array.hpp>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -54,9 +57,6 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <stdarg.h>
-#include <boost/format.hpp>
-
-using boost::format;
 
 #if defined HAVE_MPI
 #include <mpi.h>
@@ -127,11 +127,12 @@ void terminate_with_backtrace()
 #endif
 
 
-static unsigned		     myPsetNumber;
-static std::vector<Stream *> allCNstreams;
+static unsigned			 	myPsetNumber, nrPsets;
+static boost::multi_array<char, 2>	ipAddresses;
+static std::vector<Stream *>		allCNstreams, allIONstreams;
+static std::vector<StreamMultiplexer *> allIONstreamMultiplexers;
+
 static const unsigned	     nrCNcoresInPset = 64; // TODO: how to figure out the number of CN cores?
-static pthread_mutex_t	     allocationMutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t	     reevaluate	     = PTHREAD_COND_INITIALIZER;
 
 #if defined USE_VALGRIND || !defined HAVE_FCNP // FIXME
 static const std::string     streamType = "TCP";
@@ -155,8 +156,12 @@ static Stream *createCNstream(unsigned core, unsigned channel)
 #endif
   if (streamType == "NULL")
     return new NullStream;
-  else if (streamType == "TCP")
-    return new SocketStream("127.0.0.1", 5000 + core + 1000 * channel, SocketStream::TCP, SocketStream::Server);
+  else if (streamType == "TCP") {
+    LOG_DEBUG_STR("new SocketStream(\"127.0.0.1\", 5000 + " << core << " + 1000 * " << channel << ", ::TCP, ::Server");
+    Stream *str = new SocketStream("127.0.0.1", 5000 + core + 1000 * channel, SocketStream::TCP, SocketStream::Server);
+    LOG_DEBUG_STR("new SocketStream() done");
+    return str;
+  }
   else
     THROW(IONProcException, "unknown Stream type between ION and CN");
 }
@@ -173,9 +178,8 @@ static void createAllCNstreams()
 
   allCNstreams.resize(nrCNcoresInPset);
 
-  for (unsigned core = 0; core < nrCNcoresInPset; core ++) {
+  for (unsigned core = 0; core < nrCNcoresInPset; core ++)
     allCNstreams[core] = createCNstream(core, 0);
-  }
 }
 
 
@@ -203,6 +207,44 @@ static void stopCNs()
     command.write(allCNstreams[core]);
 
   LOG_DEBUG_STR("stopping " << nrCNcoresInPset << " cores done");
+}
+
+
+static void createAllIONstreams()
+{
+  LOG_DEBUG_STR("create streams between I/O nodes");
+
+  if (myPsetNumber == 0) {
+    allIONstreams.resize(nrPsets);
+    allIONstreamMultiplexers.resize(nrPsets);
+
+    for (unsigned ion = 1; ion < nrPsets; ion ++) {
+      allIONstreams[ion] = new SocketStream(ipAddresses[ion].origin(), 4001, SocketStream::TCP, SocketStream::Client);
+      allIONstreamMultiplexers[ion] = new StreamMultiplexer(*allIONstreams[ion]);
+    }
+  } else {
+    allIONstreams.push_back(new SocketStream(ipAddresses[myPsetNumber].origin(), 4001, SocketStream::TCP, SocketStream::Server));
+    allIONstreamMultiplexers.push_back(new StreamMultiplexer(*allIONstreams[0]));
+  }
+
+  LOG_DEBUG_STR("create streams between I/O nodes done");
+}
+
+
+static void deleteAllIONstreams()
+{
+  if (myPsetNumber == 0) {
+    for (unsigned ion = 1; ion < nrPsets; ion ++) {
+      delete allIONstreamMultiplexers[ion];
+      delete allIONstreams[ion];
+    }
+  } else {
+    delete allIONstreamMultiplexers[0];
+    delete allIONstreams[0];
+  }
+
+  allIONstreamMultiplexers.clear();
+  allIONstreams.clear();
 }
 
 
@@ -282,6 +324,8 @@ class Job
     void	createCNstreams();
     void	configureCNs(), unconfigureCNs();
 
+    void	createIONstreams(), deleteIONstreams();
+
     void				 jobThread();
     template <typename SAMPLE_TYPE> void CNthread();
 
@@ -291,12 +335,15 @@ class Job
     void	attachToInputSection();
     void	detachFromInputSection();
 
-    std::vector<Stream *>		itsCNstreams;
+    void	barrier();
+
+    std::vector<Stream *>		itsCNstreams, itsIONstreams;
     unsigned				itsNrRuns;
     TimeStamp                           itsStopTime;
     Thread				*itsJobThread, *itsCNthread;
     bool				itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
-    unsigned				itsObservationID;
+    unsigned				itsJobID, itsObservationID;
+    static unsigned			nextJobID;
 
     static void				*theInputSection;
     static Mutex			theInputSectionMutex;
@@ -304,16 +351,23 @@ class Job
 };
 
 
+unsigned		  Job::nextJobID = 0;
 void			  *Job::theInputSection;
 Mutex			  Job::theInputSectionMutex;
 unsigned		  Job::theInputSectionRefCount = 0;
 
-static std::vector<Job *> jobs;
+static std::vector<Job *> runningJobs;
+static unsigned		  nrJobsCreated;
+static Semaphore	  nrJobsFinished;
+
+static Mutex		  jobQueueMutex;
+static Condition	  reevalutateJobQueue;
 
 
 Job::Job(const char *parsetName)
 :
-  itsParset(parsetName)
+  itsParset(parsetName),
+  itsJobID(nextJobID ++) // no need to make thread safe
 {
   checkParset();
 
@@ -328,56 +382,44 @@ Job::Job(const char *parsetName)
 
   itsStopTime  = TimeStamp(static_cast<int64>(itsParset.stopTime() * itsParset.sampleRate()));
 
-  if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
-    itsJobThread = new Thread(this, &Job::jobThread, str(format("JobThread (obs %d)") % itsParset.observationID()), 65536);
-    itsJobThread->start();
-  } else {
-    itsJobThread = 0;
-  }
+  createCNstreams();
+  createIONstreams();
+
+  itsJobThread = new Thread(this, &Job::jobThread, 65536);
+
+  ++ nrJobsCreated;
 }
 
 
 Job::~Job()
 {
+  LOG_DEBUG("Job::~Job()");
+
   delete itsJobThread;
+  deleteIONstreams();
+
+  nrJobsFinished.up();
 }
 
 
 void Job::allocateResources()
 {
-  createCNstreams();
-
   itsNrRuns = static_cast<unsigned>(ceil((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime()));
   LOG_DEBUG_STR("itsNrRuns = " << itsNrRuns);
-
-  pthread_mutex_lock(&allocationMutex);
-
-  // see if there is a resource conflict with any preceding job
-  for (std::vector<Job *>::iterator job = jobs.begin(); *job != this;)
-    if ((*job)->itsParset.overlappingResources(&itsParset)) {
-      pthread_cond_wait(&reevaluate, &allocationMutex);
-      job = jobs.begin();
-    } else {
-      job ++;
-    }
-
-  pthread_mutex_unlock(&allocationMutex);
 
   if (itsHasPhaseOne)
     attachToInputSection();
 
   switch (itsParset.nrBitsPerSample()) {
-    case  4 : itsCNthread = new Thread(this, &Job::CNthread<i4complex>, str(format("CNthread (obs %d)") % itsParset.observationID()), 65536);
+    case  4 : itsCNthread = new Thread(this, &Job::CNthread<i4complex>, 65536);
 	      break;
 
-    case  8 : itsCNthread = new Thread(this, &Job::CNthread<i8complex>, str(format("CNthread (obs %d)") % itsParset.observationID()), 65536);
+    case  8 : itsCNthread = new Thread(this, &Job::CNthread<i8complex>, 65536);
 	      break;
 
-    case 16 : itsCNthread = new Thread(this, &Job::CNthread<i16complex>, str(format("CNthread (obs %d)") % itsParset.observationID()), 65536);
+    case 16 : itsCNthread = new Thread(this, &Job::CNthread<i16complex>, 65536);
 	      break;
   }
-
-  itsCNthread->start();
 }
 
 
@@ -385,41 +427,82 @@ void Job::deallocateResources()
 {
   // WAIT for thread
   delete itsCNthread;
-  LOG_DEBUG("lofar__fini: CNthread joined");
+  LOG_DEBUG("CNthread joined");
 
   // STOP inputSection
   if (itsHasPhaseOne)
     detachFromInputSection();
-
-  pthread_mutex_lock(&allocationMutex);
-  jobs.erase(find(jobs.begin(), jobs.end(), this));
-  pthread_cond_broadcast(&reevaluate);
-  pthread_mutex_unlock(&allocationMutex);
 }
 
+
+void Job::barrier()
+{
+  char byte = 0;
+
+  if (myPsetNumber == 0) {
+    for (unsigned ion = 1; ion < nrPsets; ion ++)
+      itsIONstreams[ion]->read(&byte, sizeof byte);
+
+    for (unsigned ion = 1; ion < nrPsets; ion ++)
+      itsIONstreams[ion]->write(&byte, sizeof byte);
+  } else {
+    itsIONstreams[0]->write(&byte, sizeof byte);
+    itsIONstreams[0]->read(&byte, sizeof byte);
+  }
+}
 
 
 void Job::jobThread()
 {
-  if (itsParset.realTime()) {
-    // claim resources two seconds before observation start
-    WallClockTime wallClock;
-    time_t     closeToStart = static_cast<time_t>(itsParset.startTime()) - 2;
-    char       buf[26];
-    ctime_r(&closeToStart, buf);
-    buf[24] = '\0';
-    
-    LOG_DEBUG_STR("waiting for job " << itsObservationID << " to start: sleeping until " << buf);
-    wallClock.waitUntil(closeToStart);
+  if (myPsetNumber == 0) {
+    if (itsParset.realTime()) {
+      // claim resources two seconds before observation start
+      WallClockTime wallClock;
+      time_t     closeToStart = static_cast<time_t>(itsParset.startTime()) - 2;
+      char       buf[26];
+      ctime_r(&closeToStart, buf);
+      buf[24] = '\0';
+      
+      LOG_DEBUG_STR("waiting for job " << itsObservationID << " to start: sleeping until " << buf);
+      wallClock.waitUntil(closeToStart);
+    }
+
+    jobQueueMutex.lock();
+
+    retry:
+      for (std::vector<Job *>::iterator job = runningJobs.begin(); job != runningJobs.end(); job ++)
+	if ((*job)->itsParset.overlappingResources(&itsParset)) {
+	  reevalutateJobQueue.wait(jobQueueMutex);
+	  goto retry;
+	}
+
+    runningJobs.push_back(this);
+
+    jobQueueMutex.unlock();
   }
 
-  LOG_DEBUG_STR("claiming resources for observation " << itsObservationID);
-  allocateResources();
+  barrier();
 
-  // do observation
+  if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
+    LOG_DEBUG_STR("claiming resources for observation " << itsObservationID);
+    allocateResources();
 
-  deallocateResources();
-  LOG_DEBUG_STR("resources of job " << itsObservationID << " deallocated");
+    // do observation
+
+    deallocateResources();
+    LOG_DEBUG_STR("resources of job " << itsObservationID << " deallocated");
+  }
+
+  barrier();
+
+  if (myPsetNumber == 0) {    
+    jobQueueMutex.lock();
+    runningJobs.erase(find(runningJobs.begin(), runningJobs.end(), this));
+    reevalutateJobQueue.broadcast();
+    jobQueueMutex.unlock();
+  }
+
+  delete this;
 }
 
 
@@ -431,6 +514,32 @@ void Job::createCNstreams()
 
   for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
     itsCNstreams[core] = allCNstreams[usedCoresInPset[core]];
+}
+
+
+void Job::createIONstreams()
+{
+  if (myPsetNumber == 0) {
+    itsIONstreams.resize(nrPsets);
+
+    for (unsigned ion = 1; ion < nrPsets; ion ++)
+      itsIONstreams[ion] = new MultiplexedStream(*allIONstreamMultiplexers[ion], itsJobID);
+  } else {
+    itsIONstreams.push_back(new MultiplexedStream(*allIONstreamMultiplexers[0], itsJobID));
+  }
+}
+
+
+void Job::deleteIONstreams()
+{
+  if (myPsetNumber == 0) {
+    for (unsigned ion = 1; ion < nrPsets; ion ++)
+      delete itsIONstreams[ion];
+  } else {
+    delete itsIONstreams[0];
+  }
+
+  itsIONstreams.clear();
 }
 
 
@@ -566,7 +675,7 @@ template <typename SAMPLE_TYPE> void Job::CNthread()
 
   beamletBufferToComputeNode.preprocess(&itsParset);
         
-  for (run = 0; !itsCNthread->stop && beamletBufferToComputeNode.getCurrentTimeStamp() < itsStopTime; run ++)
+  for (run = 0; beamletBufferToComputeNode.getCurrentTimeStamp() < itsStopTime; run ++)
     beamletBufferToComputeNode.process();
 
   LOG_DEBUG_STR("CNthread wrapping up after " << run << " of " << itsNrRuns << " runs.");
@@ -606,7 +715,73 @@ void Job::checkParset() const
 }
 
 
-void master_thread(int argc, char **argv)
+static bool	quit	       = false;
+
+
+static void handleCommand(const std::string &command)
+{
+  LOG_DEBUG_STR("command \"" << command << "\" received");
+
+  if (command == "quit") {
+    quit = true;
+  } else if (command.compare(0, 7, "parset ") == 0) {
+    new Job(command.substr(7).c_str());
+  } else if (myPsetNumber == 0) {
+    LOG_ERROR_STR("command \"" << command << "\" not understood");
+  }
+}
+
+
+static void socketListener()
+{
+  while (!quit) {
+    SocketStream sk("0.0.0.0", 4000, SocketStream::TCP, SocketStream::Server);
+
+    try {
+      while (!quit) {
+	std::string command;
+
+	for (char ch; sk.read(&ch, 1), ch != '\n';) // TODO: do not do a syscall per char
+	  command.push_back(ch);
+
+	LOG_DEBUG_STR("read command: " << command);
+	unsigned size = command.size() + 1;
+
+	MPI_Bcast(&size, sizeof size, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(const_cast<char *>(command.c_str()), size, MPI_CHAR, 0, MPI_COMM_WORLD);
+	handleCommand(command);
+      }
+    } catch (Stream::EndOfStreamException &) {
+    }
+  }
+}
+
+
+static void MPI_listener()
+{
+  while (!quit) {
+    unsigned size;
+
+    MPI_Bcast(&size, sizeof size, MPI_INT, 0, MPI_COMM_WORLD);
+
+    char *command = new char[size];
+    MPI_Bcast(command, size, MPI_CHAR, 0, MPI_COMM_WORLD);
+    handleCommand(command);
+    delete [] command;
+  }
+}
+
+
+static void commandServer()
+{
+  if (myPsetNumber == 0)
+    socketListener();
+  else
+    MPI_listener();
+}
+
+
+static void master_thread(int argc, char **argv)
 {
 #if !defined HAVE_PKVERSION
   std::string type = "brief";
@@ -634,32 +809,29 @@ void master_thread(int argc, char **argv)
     }
 
     createAllCNstreams();
+    createAllIONstreams();
 
-    pthread_mutex_lock(&allocationMutex);
+#if 0
+    if (myPsetNumber == 0)
+      for (int arg = 1; arg < argc; arg ++)
+	LOG_DEBUG_STR("manually insert " << argv[arg]);
 
+    commandServer();
+#else
     for (int arg = 1; arg < argc; arg ++) {
       LOG_DEBUG_STR("creating new Job for ParameterSet " << argv[arg]);
-      Job *job = new Job(argv[arg]);
-
-      // insert into sorted jobs list
-      std::vector<Job *>::iterator prev = jobs.begin();
-
-      while (prev != jobs.end() && (*prev)->itsParset.precedes(&job->itsParset))
-	++ prev;
-
-      jobs.insert(prev, job);
+      new Job(argv[arg]);
     }
+#endif
 
-    while (jobs.size() > 0)
-      pthread_cond_wait(&reevaluate, &allocationMutex);
-
-    pthread_mutex_unlock(&allocationMutex);
+    nrJobsFinished.down(nrJobsCreated);
     stopCNs();
 
 #if defined FLAT_MEMORY
     unmapFlatMemory();
 #endif
 
+    deleteAllIONstreams();
     deleteAllCNstreams();
 
 #if defined CATCH_EXCEPTIONS
@@ -683,8 +855,24 @@ int main(int argc, char **argv)
 #endif
   
 #if defined HAVE_MPI
-  MPI_Init(&argc, &argv);
+#if 1
+  if (MPI_Init(&argc, &argv) != MPI_SUCCESS) {
+    std::cerr << "MPI_Init failed" << std::endl;
+    exit(1);
+  }
+#else
+  int provided;
+
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+
+  if (provided != MPI_THREAD_MULTIPLE) {
+    std::cerr << "MPI does not provide MPI_THREAD_MULTIPLE" << std::endl;
+    exit(1);
+  }
+#endif
+
   MPI_Comm_rank(MPI_COMM_WORLD, reinterpret_cast<int *>(&myPsetNumber));
+  MPI_Comm_size(MPI_COMM_WORLD, reinterpret_cast<int *>(&nrPsets));
 #endif
 
 #if defined HAVE_MPI && defined HAVE_BGP_ION
@@ -692,9 +880,19 @@ int main(int argc, char **argv)
   unsigned realPsetNumber = personality.getUint32("BG_PSETNUM");
 
   if (myPsetNumber != realPsetNumber) {
-    LOG_ERROR_STR("myPsetNumber (" << myPsetNumber << ") != realPsetNumber (" << realPsetNumber << ')');
+    std::cerr << "myPsetNumber (" << myPsetNumber << ") != realPsetNumber (" << realPsetNumber << ')' << std::endl;
     exit(1);
   }
+
+  ipAddresses.resize(boost::extents[nrPsets][16]);
+  std::string myIPaddress = personality.getString("BG_IP");
+  strcpy(ipAddresses[myPsetNumber].origin(), myIPaddress.c_str());
+
+  for (unsigned root = 0; root < nrPsets; root ++)
+    if (MPI_Bcast(ipAddresses[root].origin(), sizeof(char [16]), MPI_CHAR, root, MPI_COMM_WORLD) != MPI_SUCCESS) {
+      std::cerr << "MPI_Bcast failed" << std::endl;
+      exit(1);
+    }
 #endif
   
   std::stringstream sysInfo;

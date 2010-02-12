@@ -51,12 +51,11 @@ namespace RTCP {
 
 template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs args /* call by value! */)
 :
-  itsArgs(args)
+  itsShouldStop(false),
+  itsArgs(args),
+  itsThread(this, &InputThread<SAMPLE_TYPE>::mainLoop, 65536)
 {
   LOG_DEBUG("InputThread::InputThread(...)");
-
-  thread = new Thread(this, &InputThread<SAMPLE_TYPE>::mainLoop, "InputThread", 65536);
-  thread->start();
 }
 
 
@@ -64,15 +63,13 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::~InputThread()
 {
   LOG_DEBUG("InputThread::~InputThread()");
 
-  thread->abort();
-  delete thread;
+  itsShouldStop = true;
+  itsThread.abort();
 }
 
 
 template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 {
-  // receivePackets
-
 #if 1 && defined HAVE_BGP_ION
   if (itsArgs.threadID == 0)
     runOnCore0();
@@ -99,7 +96,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 
   LOG_DEBUG_STR("input thread " << itsArgs.threadID << " entering loop");
 
-  while (!thread->stop) {
+  while (!itsShouldStop) {
     try {
       // interruptible read, to allow stopping this thread even if the station
       // does not send data

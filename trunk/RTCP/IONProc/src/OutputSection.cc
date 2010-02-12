@@ -43,9 +43,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <pthread.h>
-#include <boost/format.hpp>
-
-using boost::format;
 
 
 namespace LOFAR {
@@ -63,7 +60,7 @@ OutputSection::OutputSection(const Parset *ps, std::vector<unsigned> &itemList, 
   itsRealTime(ps->realTime()),
   itsPlan(0),
   itsStreamsFromCNs(itsNrComputeCores,0),
-  thread(0)
+  itsThread(0)
 {
   itsDroppedCount.resize(itsItemList.size());
 
@@ -96,12 +93,15 @@ OutputSection::OutputSection(const Parset *ps, std::vector<unsigned> &itemList, 
     itsOutputThreads.push_back(new OutputThread(*itsParset, itsItemList[i], itsOutputType, dataTemplate));
   }
 
-  // create the streams to the compute cores
+  LOG_DEBUG_STR("creating streams between compute nodes and OutputSection");
+
   for (unsigned i = 0; i < itsNrComputeCores; i++) {
     unsigned core = itsParset->usedCoresInPset()[i];
 
     itsStreamsFromCNs[i] = createStream(core, outputType + 1);
   }
+
+  LOG_DEBUG_STR("created streams between compute nodes and OutputSection");
 
   itsCurrentIntegrationStep = 0;
   itsSequenceNumber  	    = 0;
@@ -110,20 +110,13 @@ OutputSection::OutputSection(const Parset *ps, std::vector<unsigned> &itemList, 
   // allocate at the end, since we use it as an unallocated template above
   itsTmpSum->allocate();
 
-
-#if defined HAVE_BGP_ION // FIXME: not in preprocess
-  doNotRunOnCore0();
-  setPriority(2);
-#endif
-
-  thread = new Thread( this, &OutputSection::mainLoop, str(format("OutputSection (obs %d)") % itsParset->observationID()) );
-  thread->start();
+  itsThread = new Thread(this, &OutputSection::mainLoop, 65536);
 }
 
 OutputSection::~OutputSection()
 {
   // WAIT for our thread to finish
-  delete thread;
+  delete itsThread;
 
   for (unsigned i = 0; i < itsItemList.size(); i++ ) {
     notDroppingData(i); // for final warning message
@@ -175,7 +168,12 @@ void OutputSection::setNrRuns(unsigned nrRuns)
 
 void OutputSection::mainLoop()
 {
-  for( unsigned r = 0; r < itsNrRuns && !thread->stop; r++ ) {
+#if defined HAVE_BGP_ION
+  doNotRunOnCore0();
+  setPriority(2);
+#endif
+
+  for (unsigned r = 0; r < itsNrRuns; r ++) {
     // process data from current core, even if we don't have a subband for this
     // core (to stay in sync with other psets).
     for (unsigned i = 0; i < itsNrUsedCores; i++ ) {

@@ -48,12 +48,12 @@ class OutputThread
   private:
     void		    mainLoop();
 
-    volatile bool           connecting;
+    volatile bool           itsConnecting;
 
     const Parset            &itsParset;
     const unsigned          itsSubband;
     const unsigned          itsOutput;
-    Thread		    *thread;
+    Thread		    *itsThread;
 };
 
 } // namespace RTCP

@@ -62,8 +62,9 @@ template<typename SAMPLE_TYPE> class InputThread
     static const unsigned packetBuffersSize = 128;
 
   private:
+    volatile bool	  itsShouldStop;
     ThreadArgs		  itsArgs;
-    Thread		  *thread;
+    InterruptibleThread	  itsThread;
 };
 
 } // namespace RTCP

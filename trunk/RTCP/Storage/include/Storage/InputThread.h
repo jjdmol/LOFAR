@@ -53,13 +53,13 @@ class InputThread
     void		    mainLoop();
 
     const Parset            *itsPS;
-    Thread		    *thread;
+    InterruptibleThread	    *itsThread;
 
     const unsigned          itsSubbandNumber;
     const unsigned          itsOutputNumber;
     const unsigned          itsObservationID;
 
-    volatile bool           connecting;
+    volatile bool           itsConnecting;
 };
 
 } // namespace RTCP

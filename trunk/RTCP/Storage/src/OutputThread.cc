@@ -76,15 +76,14 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
   }
 #endif
 
-  thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps->observationID() % subbandNumber % outputNumber));
-  thread->start();
+  //thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps->observationID() % subbandNumber % outputNumber));
+  itsThread = new Thread(this, &OutputThread::mainLoop);
 }
 
 
 OutputThread::~OutputThread()
 {
-  delete thread;
-
+  delete itsThread;
   delete itsWriter;
 }
 
@@ -116,9 +115,8 @@ void OutputThread::checkForDroppedData(StreamableData *data)
   unsigned expectedSequenceNumber = itsNextSequenceNumber;
   unsigned droppedBlocks = data->sequenceNumber - expectedSequenceNumber;
 
-  if (droppedBlocks > 0) {
-    LOG_WARN_STR(thread->name << " dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
-  }
+  if (droppedBlocks > 0)
+    LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
 
   itsNextSequenceNumber = data->sequenceNumber + 1;
 }
@@ -130,13 +128,12 @@ void OutputThread::mainLoop()
   /// TODO: race at creation
   static Semaphore semaphore(4);
   
-  while (!thread->stop) {
-    NSTimer writeTimer("write data",false,false);
-    std::auto_ptr<StreamableData> data( itsInputThread->itsReceiveQueue.remove() );
+  while (true) {
+    NSTimer writeTimer("write data", false, false);
+    std::auto_ptr<StreamableData> data(itsInputThread->itsReceiveQueue.remove());
 
-    if (data.get() == 0) {
+    if (data.get() == 0)
       break;
-    }
 
     checkForDroppedData(data.get());
 
@@ -145,7 +142,7 @@ void OutputThread::mainLoop()
 
     try {
       itsWriter->write(data.get());
-    } catch(...) {
+    } catch (...) {
       semaphore.up();
       throw;
     }
@@ -153,9 +150,8 @@ void OutputThread::mainLoop()
     semaphore.up();
     writeTimer.stop();
 
-    if( writeTimer.getElapsed() > reportWriteDelay ) {
-      LOG_WARN_STR( thread->name << " " << writeTimer );
-    }
+    if (writeTimer.getElapsed() > reportWriteDelay)
+      LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": " << writeTimer);
 
     itsInputThread->itsFreeQueue.append(data.release());
   }

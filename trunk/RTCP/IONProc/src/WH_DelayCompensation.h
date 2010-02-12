@@ -40,7 +40,7 @@
 #include <Interface/Thread.h>
 
 #include <boost/noncopyable.hpp>
-#include <pthread.h>
+
 
 namespace LOFAR 
 {
@@ -104,6 +104,8 @@ namespace LOFAR
       // calculations and to avoid blocking other threads
       void                      mainLoop();
 
+      volatile bool		stop;
+
       // the circular buffer to hold the moving beam directions for every second of data
       Matrix<AMC::Direction>	itsBuffer;
       size_t			head, tail;
@@ -155,7 +157,7 @@ namespace LOFAR
       
       NSTimer                       itsDelayTimer;
 
-      Thread                        *thread;
+      Thread                        *itsThread;
     };
 
     // @}

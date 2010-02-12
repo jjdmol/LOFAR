@@ -42,7 +42,7 @@ InputThread::InputThread(const Parset *ps, unsigned subbandNumber, unsigned outp
   itsSubbandNumber(subbandNumber),
   itsOutputNumber(outputNumber),
   itsObservationID(ps->observationID()),
-  connecting(true) // start at true to avoid race condition when aborting a starting thread
+  itsConnecting(true)
 {
   for (unsigned i = 0; i < maxReceiveQueueSize; i ++) {
     StreamableData *data = dataTemplate->clone();
@@ -52,18 +52,19 @@ InputThread::InputThread(const Parset *ps, unsigned subbandNumber, unsigned outp
     itsFreeQueue.append( data );
   }
 
-  thread = new Thread(this, &InputThread::mainLoop, str(format("InputThread (obs %d sb %d output %d)") % ps->observationID() % subbandNumber % outputNumber));
-  thread->start();
+  //thread = new Thread(this, &InputThread::mainLoop, str(format("InputThread (obs %d sb %d output %d)") % ps->observationID() % subbandNumber % outputNumber));
+  itsThread = new InterruptibleThread(this, &InputThread::mainLoop);
 }
 
 
 InputThread::~InputThread()
 {
-  if (connecting) {
-    thread->abort();
-  }
+#if 0 // this does not work yet
+  if (itsConnecting)
+    itsThread->abort();
+#endif
 
-  delete thread;
+  delete itsThread;
 
   while (!itsReceiveQueue.empty())
     delete itsReceiveQueue.remove();
@@ -76,61 +77,64 @@ InputThread::~InputThread()
 void InputThread::mainLoop()
 {
   std::auto_ptr<Stream> streamFromION;
-  string   prefix            = "OLAP.OLAP_Conn.IONProc_Storage";
-  string   connectionType    = itsPS->getString(prefix + "_Transport");
-  bool     nullInput         = false;
-
-  if (connectionType == "NULL") {
-    LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from null stream");
-    streamFromION.reset( new NullStream );
-    nullInput = true;
-  } else if (connectionType == "TCP") {
-    std::string    server = itsPS->storageHostName(prefix + "_ServerHosts", itsSubbandNumber);
-    const unsigned short port = itsPS->getStoragePort(prefix, itsSubbandNumber, itsOutputNumber);
-    
-    LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from tcp:" << server << ':' << port);
-    streamFromION.reset( new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Server) );
-  } else if (connectionType == "FILE") {
-    std::string filename = itsPS->getString(prefix + "_BaseFileName") + '.' +
-      boost::lexical_cast<std::string>(itsSubbandNumber);
-    
-    LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from file:" << filename);
-    streamFromION.reset( new FileStream(filename.c_str()) );
-  } else {
-    THROW(StorageException, "unsupported ION->Storage stream type: " << connectionType);
-  }
-
-  connecting = false;
-
-  // limit reads from NullStream to 10 blocks; otherwise unlimited
-  unsigned	 increment = nullInput ? 1 : 0;
-  std::auto_ptr<StreamableData> data;
+  string		prefix         = "OLAP.OLAP_Conn.IONProc_Storage";
+  string		connectionType = itsPS->getString(prefix + "_Transport");
+  bool			nullInput      = false;
 
   try {
-    for (unsigned count = 0; !thread->stop && count < 10; count += increment) {
-      NSTimer queueTimer("retrieve freeQueue item",false,false);
-      NSTimer readTimer("read data",false,false);
+    if (connectionType == "NULL") {
+      LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from null stream");
+      streamFromION.reset(new NullStream);
+      nullInput = true;
+    } else if (connectionType == "TCP") {
+      std::string    server = itsPS->storageHostName(prefix + "_ServerHosts", itsSubbandNumber);
+      unsigned short port = itsPS->getStoragePort(prefix, itsSubbandNumber, itsOutputNumber);
+      
+      LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from tcp:" << server << ':' << port);
+      streamFromION.reset(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Server));
+    } else if (connectionType == "FILE") {
+      std::string filename = itsPS->getString(prefix + "_BaseFileName") + '.' +
+	boost::lexical_cast<std::string>(itsSubbandNumber);
+      
+      LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from file:" << filename);
+      streamFromION.reset(new FileStream(filename.c_str()));
+    } else {
+      itsReceiveQueue.append(0); // no more data
+      THROW(StorageException, "unsupported ION->Storage stream type: " << connectionType);
+    }
 
-      // read data
+    itsConnecting = false; // FIXME: race condition
+
+    // limit reads from NullStream to 10 blocks; otherwise unlimited
+    unsigned			  increment = nullInput ? 1 : 0;
+    std::auto_ptr<StreamableData> data;
+
+    for (unsigned count = 0; count < 10; count += increment) {
+      NSTimer queueTimer("retrieve freeQueue item", false, false);
+      NSTimer readTimer("read data", false, false);
+
       queueTimer.start();
-      data.reset( itsFreeQueue.remove() );
+      data.reset(itsFreeQueue.remove());
       queueTimer.stop();
 
-      if( queueTimer.getElapsed() > reportQueueRemoveDelay ) {
-        LOG_WARN_STR( thread->name << " " << queueTimer );
-      }
+      if (queueTimer.getElapsed() > reportQueueRemoveDelay)
+        LOG_WARN_STR("InputThread: ObsID = " << itsObservationID << ", sb = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": " << queueTimer);
 
       readTimer.start();
       data->read(streamFromION.get(), true);
       readTimer.stop();
 
-      if( readTimer.getElapsed() > reportReadDelay ) {
-        LOG_WARN_STR( thread->name << " " << readTimer );
-      }
+      if (readTimer.getElapsed() > reportReadDelay)
+        LOG_WARN_STR("InputThread: ObsID = " << itsObservationID << ", sb = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": " << readTimer);
 
       itsReceiveQueue.append(data.release());
     }
   } catch (Stream::EndOfStreamException &) {
+  } catch (SystemCallException &ex) {
+    if (ex.error != EINTR) {
+      itsReceiveQueue.append(0); // no more data
+      throw;
+    }
   }
 
   itsReceiveQueue.append(0); // no more data

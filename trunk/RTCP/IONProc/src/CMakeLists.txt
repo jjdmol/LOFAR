@@ -25,6 +25,7 @@ lofar_add_library(ionproc
   OutputSection.cc
   ReaderWriterSynchronization.cc
   Scheduling.cc
+  StreamMultiplexer.cc
   WH_DelayCompensation.cc
   FCNP_ServerStream.cc)
 

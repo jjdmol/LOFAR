@@ -56,6 +56,7 @@ namespace LOFAR
     WH_DelayCompensation::WH_DelayCompensation(const Parset *ps,
                                                const string &stationName,
 					       const TimeStamp &startTime) :
+      stop	   (false),
       itsBuffer    (bufferSize,ps->nrBeams() * ps->nrPencilBeams()),
       head         (0),
       tail         (0),
@@ -73,18 +74,15 @@ namespace LOFAR
     {
       setBeamDirections(ps);
       setPositionDiffs(ps);
-
-      thread = new Thread( this, &WH_DelayCompensation::mainLoop, "DelayCompensation" );
-      thread->start();
+      itsThread = new Thread(this, &WH_DelayCompensation::mainLoop);
     }
 
     WH_DelayCompensation::~WH_DelayCompensation()
     {
       // trigger mainLoop and force it to stop
+      stop = true;
       bufferFree.up( itsNrCalcDelays );
-
-      thread->abort();
-      delete thread;
+      delete itsThread;
     }
 
     void WH_DelayCompensation::mainLoop()
@@ -103,7 +101,7 @@ namespace LOFAR
       // the current time, in samples
       int64 currentTime = itsStartTime;
 
-      while( !thread->stop ) {
+      while (!stop) {
         bufferFree.down( itsNrCalcDelays );
 
 	itsDelayTimer.start();
