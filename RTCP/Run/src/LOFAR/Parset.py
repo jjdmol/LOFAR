@@ -100,6 +100,10 @@ class Parset(util.Parset.Parset):
     def addMissingKeys(self):
         """ Sets some default values which SAS does not yet contain. """
 
+        # meta data
+        self.setdefault("Observation.ObserverName","unknown")
+        self.setdefault("Observation.ProjectName","unknown")
+
         # pencil beam configuration
         self.setdefault("OLAP.PencilInfo.flysEye",False);
         self.setdefault("OLAP.PencilInfo.nrRings",0);
