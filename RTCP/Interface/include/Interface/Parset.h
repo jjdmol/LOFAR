@@ -104,6 +104,7 @@ public:
         vector<unsigned> subbandStorageList() const;
         vector<unsigned> beamStorageList() const;
 	uint32	       nrPsetsPerStorage() const;
+	unsigned       getLofarStManVersion() const;
 	vector<uint32> phaseOnePsets() const;
 	vector<uint32> phaseTwoPsets() const;
 	vector<uint32> phaseThreePsets() const;
@@ -447,6 +448,11 @@ inline bool Parset::correctBandPass() const
 inline uint32 Parset::nrPsetsPerStorage() const
 {
   return getUint32("OLAP.psetsPerStorage");
+}
+
+inline unsigned Parset::getLofarStManVersion() const
+{
+  return getUint32("OLAP.LofarStManVersion", 1); 
 }
 
 inline vector<uint32> Parset::phaseOnePsets() const
