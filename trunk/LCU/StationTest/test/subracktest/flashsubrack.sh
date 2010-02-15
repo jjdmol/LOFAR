@@ -58,9 +58,9 @@ page=1
 station=`hostname -s`
 let rspboards=`sed -n  's/^\s*RS\.N_RSPBOARDS\s*=\s*\([0-9][0-9]*\).*$/\1/p' /opt/lofar/etc/RemoteStation.conf`
 let tbboards=`sed -n  's/^\s*RS\.N_TBBOARDS\s*=\s*\([0-9][0-9]*\).*$/\1/p' /opt/lofar/etc/RemoteStation.conf`
-bphexfile=/localhome/firmware/images/bp3b_v5_15.hex
-aphexfile=/localhome/firmware/images/ap3b_v5_12.hex
-tphexfile=/localhome/firmware/images/tp12_8.hex
+bphexfile=/localhome/firmware/images/bp3b_v6_0.hex
+aphexfile=/localhome/firmware/images/ap3b_v6_0.hex
+tphexfile=/localhome/firmware/images/tp18_11.hex
 mphexfile=/localhome/firmware/images/mp12_8.hex
 
 mplphexfile=/localhome/firmware/images/mp_lp2_2.hex
@@ -117,10 +117,13 @@ sleep 50
 ######## het flashen en resetten van TBB borden ####################
 
 if [ $tbboards != 0 ] ; then
-tbbctl --writeimage=0,$page,4.4,$tphexfile,$mphexfile,0
-tbbctl --writeimage=1,$page,4.4,$tphexfile,$mphexfile,0
-tbbctl --writeimage=0,0,4.4,$tphexfile,$mplphexfile,ad001234
-tbbctl --writeimage=1,0,4.4,$tphexfile,$mplphexfile,ad001234
+tbbctl --writeimage=0,$page,4.7,$tphexfile,$mphexfile,0
+tbbctl --writeimage=1,$page,4.7,$tphexfile,$mphexfile,0
+tbbctl --config=1
+echo " wacht even 30 seconden voor opstart TBB image 1" 
+sleep 30
+tbbctl --writeimage=0,0,4.7,$tphexfile,$mplphexfile,ad001234
+tbbctl --writeimage=1,0,4.7,$tphexfile,$mplphexfile,ad001234
 fi
 
 ######## restart image 1 RSP borden #################################
@@ -179,7 +182,7 @@ sed -i "s/MAC_ADDR_$bn1=10:FA:00:00:..:02/MAC_ADDR_$bn1=10:FA:00:00:$offset3:02/
 echo " wacht hier 50 seconden" 
 sleep 50
 
-tbbctl --reset
+tbbctl --config=1
 
 echo " wacht hier 20 seconden"
 sleep 20

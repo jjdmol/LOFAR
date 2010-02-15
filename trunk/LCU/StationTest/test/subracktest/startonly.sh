@@ -112,8 +112,8 @@ sed -i "s/MAC_ADDR_$bn1=10:FA:00:00:..:02/MAC_ADDR_$bn1=10:FA:00:00:02:02/g" /op
 #sed -i "s/2:u:d:r::RSPDriver/#2:u:d:r::RSPDriver/g" /opt/lofar/etc/swlevel.conf
 eval "swlevel 2"
 #rspctl --regstat
-echo "wacht even 50 seconden voor het opstarten van de RSP & TBB borden"
-sleep 50
+echo "wacht even 70 seconden voor het opstarten van de RSP & TBB borden"
+sleep 70
 
 ######## het opstarten van de RSPDriver en TBBDriver ###############
 
