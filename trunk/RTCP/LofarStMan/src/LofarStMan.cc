@@ -236,7 +236,7 @@ void LofarStMan::mapFile()
     delete itsSeqFile; 
     itsSeqFile = 0;
   }
-  // check the size of the sequencenumber file, close file is it doesn't match
+  // check the size of the sequencenumber file, close file if it doesn't match
   if (itsSeqFile && (itsSeqFile->getFileSize() / sizeof(uInt) == itsNrRows )) {
     delete itsSeqFile;
     itsSeqFile = 0;
