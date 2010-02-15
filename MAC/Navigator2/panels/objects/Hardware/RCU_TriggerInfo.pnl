@@ -12,7 +12,7 @@ PANEL,-1 -1 321 408 N "_3DFace" 0
 				      baseDP + \".Trigger.baselevel:_online.._value\",
                                       baseDP + \".Trigger.stoplevel:_online.._value\",
                                       baseDP + \".Trigger.filter:_online.._value\",
-                                      baseDP + \".Trigger.triggerMode:_online.._value\",
+                                      baseDP + \".Trigger.operatingMode:_online.._value\",
                                       baseDP + \".Trigger.window:_online.._value\",
                                       baseDP + \".Trigger.coeff0:_online.._value\",
                                       baseDP + \".Trigger.coeff1:_online.._value\",
@@ -28,7 +28,7 @@ PANEL,-1 -1 321 408 N "_3DFace" 0
     setValue(\"txt_baselevel\"  , \"text\", \"\");
     setValue(\"txt_stoplevel\"  , \"text\", \"\");
     setValue(\"txt_filter\"     , \"text\", \"\");
-    setValue(\"txt_triggerMode\", \"text\", \"\");
+    setValue(\"txt_operatingMode\", \"text\", \"\");
     setValue(\"txt_window\"     , \"text\", \"\");
     setValue(\"txt_coeff0\"     , \"text\", \"\");
     setValue(\"txt_coeff1\"     , \"text\", \"\");
@@ -41,7 +41,7 @@ updateTriggerDetails(string dp1, int start,
                      string dp2, int base,
                      string dp3, int stop,
                      string dp4, int filter,
-                     string dp5, int triggerMode,
+                     string dp5, int operatingMode,
                      string dp6, int window,
                      string dp7, int coeff0,
                      string dp8, int coeff1,
@@ -54,7 +54,7 @@ updateTriggerDetails(string dp1, int start,
     setValue(\"txt_baselevel\"  , \"text\", \"\");
     setValue(\"txt_stoplevel\"  , \"text\", \"\");
     setValue(\"txt_filter\"     , \"text\", \"\");
-    setValue(\"txt_triggerMode\", \"text\", \"\");
+    setValue(\"txt_operatingMode\", \"text\", \"\");
     setValue(\"txt_window\"     , \"text\", \"\");
     setValue(\"txt_coeff0\"     , \"text\", \"\");
     setValue(\"txt_coeff1\"     , \"text\", \"\");
@@ -66,17 +66,17 @@ updateTriggerDetails(string dp1, int start,
     setValue(\"txt_stoplevel\"  , \"text\", stop);
     setValue(\"txt_filter\"     , \"text\", filter);
     string triggerText=\"\";
-    if (triggerMode == 0) {
+    if (operatingMode == 0) {
         triggerText=\"Local One Shot\";
-    }else if (triggerMode == 1) {
+    }else if (operatingMode == 1) {
         triggerText=\"Local Continues\";
-    }else if (triggerMode == 2) {
+    }else if (operatingMode == 2) {
         triggerText=\"External One Shot\";
-    }else if (triggerMode == 3) {
+    }else if (operatingMode == 3) {
         triggerText=\"External Continues\";
     }
     
-    setValue(\"txt_triggerMode\", \"text\", triggerText);
+    setValue(\"txt_operatingMode\", \"text\", triggerText);
     setValue(\"txt_window\"     , \"text\", window);
     setValue(\"txt_coeff0\"     , \"text\", coeff0);
     setValue(\"txt_coeff1\"     , \"text\", coeff1);
@@ -476,15 +476,15 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 140 85 157
+E E 0 1 1 0 1 E U  0 E 13 140 49 157
 0 2 0 "0s" 0 0 0 192 0 0  13 140 1
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
 1
-LANG:1 12 triggerMode:
+LANG:1 5 mode:
 14 57
-"txt_triggerMode"
+"txt_operatingMode"
 ""
 1 90.12871287128712 140 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E

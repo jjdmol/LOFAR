@@ -168,30 +168,34 @@ void redraw_table() {
   LOG_DEBUG(\"alarms.pnl:redraw_table|deleting all entries from alarms\");
   alarmTable.deleteAllLines();
 
-  LOG_DEBUG(\"alarms.pnl:redraw_table|Nr of alerts in global table: \" + dynlen(g_alarms[\"TIME\"]));
-  
-  //append  all CAME and WENT alarms
-  for (int j=1; j<=dynlen(g_alarms[\"TIME\"])  ; j++) {
-    if (g_alarms[\"STATUS\"][j] != ACK  && choice == \"New\") {
-      string dp = navFunct_TempToObs(substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\")));
-      alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",dp,
-                            \"Message\",g_alarms[\"MESSAGE\"][j],
-                            \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]),
-                            \"State\",g_alarms[\"STATE\"][j]);
+  if (mappinglen(g_alarms)) {
+    LOG_DEBUG(\"alarms.pnl:redraw_table|Nr of alerts in global table: \" + dynlen(g_alarms[\"TIME\"]));
+    
+    //append  all CAME and WENT alarms
+    for (int j=1; j<=dynlen(g_alarms[\"TIME\"])  ; j++) {
+      if (g_alarms[\"STATUS\"][j] != ACK  && choice == \"New\") {
+        string dp = navFunct_TempToObs(substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\")));
+        alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",dp,
+                              \"Message\",g_alarms[\"MESSAGE\"][j],
+                              \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]),
+                              \"State\",g_alarms[\"STATE\"][j]);
 
-      string aColor=getStateColor(g_alarms[\"STATE\"][j]);
-      alarmTable.cellBackColRC(alarmTable.lineCount()-1,\"State\",aColor);
-    } else if (g_alarms[\"STATUS\"][j] == ACK  && choice == \"Old\") {
-      string dp = navFunct_TempToObs(substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\")));
-      alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",dp,
-                            \"Message\",g_alarms[\"MESSAGE\"][j],
-                            \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]),
-                            \"State\",g_alarms[\"STATE\"][j]);
+        string aColor=getStateColor(g_alarms[\"STATE\"][j]);
+        alarmTable.cellBackColRC(alarmTable.lineCount()-1,\"State\",aColor);
+      } else if (g_alarms[\"STATUS\"][j] == ACK  && choice == \"Old\") {
+        string dp = navFunct_TempToObs(substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\")));
+        alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",dp,
+                              \"Message\",g_alarms[\"MESSAGE\"][j],
+                              \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]),
+                              \"State\",g_alarms[\"STATE\"][j]);
 
-      string aColor=getStateColor(g_alarms[\"STATE\"][j]);
-      alarmTable.cellBackColRC(alarmTable.lineCount()-1,\"State\",aColor);
+        string aColor=getStateColor(g_alarms[\"STATE\"][j]);
+        alarmTable.cellBackColRC(alarmTable.lineCount()-1,\"State\",aColor);
+      }
     } 
-  }
+  } else {
+    LOG_WARN(\"alarms.pnl:redraw_table|g_alarms len still < 1, so not possible to check alarms\");
+  }    
 }
 
 void acknowledgeAlarm(int iPos,string dp,string message) {
