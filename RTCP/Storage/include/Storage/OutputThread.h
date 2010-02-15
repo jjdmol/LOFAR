@@ -29,12 +29,16 @@
 #include <Interface/MultiDimArray.h>
 #include <Interface/CN_ProcessingPlan.h>
 #include <Interface/Thread.h>
+#include <Interface/Mutex.h>
 #include <Stream/Stream.h>
+#include <Stream/FileStream.h>
 #include <Storage/InputThread.h>
 #include <Storage/MSWriter.h>
 #include <Common/Semaphore.h>
 #include <Common/Timer.h>
 
+#include <queue>
+#include <vector>
 
 namespace LOFAR {
 namespace RTCP {
@@ -42,14 +46,17 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, InputThread *inputThread, const ProcessingPlan::planlet &outputConfig );
-			    ~OutputThread();
+   OutputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, InputThread *inputThread, const ProcessingPlan::planlet &outputConfig);
+   ~OutputThread();
+    
+    
 
     // report any writes that take longer than this (seconds)
     static const float      reportWriteDelay = 0.05;
 
   private:
     void                    writeLogMessage();
+    void                    flushSeqNumbers();
     void                    checkForDroppedData(StreamableData *data);
     void		    mainLoop();
 
@@ -65,6 +72,10 @@ class OutputThread
 
     MSWriter*               itsWriter;
     unsigned                itsNextSequenceNumber;
+
+    std::vector<unsigned>    itsSequenceNumbers;
+    FileStream               *itsFile;
+
 };
 
 } // namespace RTCP

@@ -9,11 +9,7 @@
 #ifndef LOFAR_STORAGEFORMAT_H
 #define LOFAR_STORAGEFORMAT_H
 
-
-#define FORMATVERSION   1              
 #define ENDIANNESS      0      // data is bigendian
-#define WEIGHTSIZE      2      // weights are 2 byted short per 4 pols
-			       // (#samples correlated)
 
 #include <Interface/Mutex.h>
 #include <Interface/Parset.h>

@@ -382,7 +382,7 @@ void MeasurementSetFormat::createMSMetaFile(unsigned subband)
   string filename = itsPS->getMSname(subband) + "/table.f0meta";
   
   AipsIO aio(filename, ByteIO::New);
-  aio.putstart ("LofarStMan", FORMATVERSION);     // version 1
+  aio.putstart ("LofarStMan", itsPS->getLofarStManVersion()); 
   aio << ant1 << ant2
       << itsStartTime
       << itsPS->IONintegrationTime()
