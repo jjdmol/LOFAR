@@ -80,7 +80,12 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
     itsCorrelatedData = new CorrelatedData(
       nrBaselines,
-      configuration.nrChannelsPerSubband()
+      configuration.nrChannelsPerSubband(),
+#ifdef LOFAR_STMAN_V2
+      2
+#else 
+      1
+#endif
     );
 
     itsBeamFormedData = new BeamFormedData(
