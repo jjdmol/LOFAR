@@ -68,7 +68,7 @@ let rspboards=`sed -n  's/^\s*RS\.N_RSPBOARDS\s*=\s*\([0-9][0-9]*\).*$/\1/p' /op
 let tbboards=`sed -n  's/^\s*RS\.N_TBBOARDS\s*=\s*\([0-9][0-9]*\).*$/\1/p' /opt/lofar/etc/RemoteStation.conf`
 bphexfile=/localhome/firmware/images/bp3b_v5_13.hex
 aphexfile=/localhome/firmware/images/ap3b_v5_12.hex
-tphexfile=/localhome/firmware/images/tp12_8.hex
+tphexfile=/localhome/firmware/images/tp18_11.hex
 mphexfile=/localhome/firmware/images/mp12_8.hex
 
 mplphexfile=/localhome/firmware/images/mp_lp2_2.hex
@@ -127,10 +127,10 @@ sleep 50
 ######## het flashen en resetten van TBB borden ####################
 
 if [ $tbboards != 0 ] ; then
-tbbctl --writeimage=0,$page,3.2,$tphexfile,$mphexfile,ad001234
-tbbctl --writeimage=1,$page,3.2,$tphexfile,$mphexfile,0
-tbbctl --writeimage=0,0,3.0,$tphexfile,$mplphexfile,ad001234
-tbbctl --writeimage=1,0,3.0,$tphexfile,$mplphexfile,0
+tbbctl --writeimage=0,$page,4.7,$tphexfile,$mphexfile,0
+tbbctl --writeimage=1,$page,4.7,$tphexfile,$mphexfile,0
+tbbctl --writeimage=0,0,4.7,$tphexfile,$mplphexfile,ad001234
+tbbctl --writeimage=1,0,4.7,$tphexfile,$mplphexfile,ad001234
 fi
 
 
