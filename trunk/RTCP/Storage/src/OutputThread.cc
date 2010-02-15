@@ -32,6 +32,10 @@
 #include <stdio.h>
 #include <boost/format.hpp>
 
+#include <sys/types.h>
+#include <errno.h>
+#include <fcntl.h>
+
 using boost::format;
 
 namespace LOFAR {
@@ -44,10 +48,11 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
   itsSubbandNumber(subbandNumber),
   itsOutputNumber(outputNumber),
   itsObservationID(ps->observationID()),
-  itsNextSequenceNumber(0)
+  itsNextSequenceNumber(0),
+  itsFile(NULL)
 {
   string filename;
-
+  string seqfilename;
 #if 0
   // null writer
   itsWriters[output] = new MSWriterNull();
@@ -58,6 +63,19 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
     std::stringstream out;
     out << itsPS->getMSname(subbandNumber) << "/table.f" << outputNumber << "data";
     filename = out.str();
+
+    if (itsPS->getLofarStManVersion() == 2) {
+      std::stringstream seq;
+      seq << itsPS->getMSname(subbandNumber) <<"/table.f" << outputNumber << "seqnr";
+      seqfilename = seq.str();
+      
+      try {
+	itsFile = new FileStream(seqfilename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
+      } catch (...) {
+	itsFile = NULL;
+      }
+    }
+
   } else {    
     // raw writer
     std::stringstream out;
@@ -83,7 +101,12 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
 
 OutputThread::~OutputThread()
 {
+  flushSeqNumbers();
+
+  if (itsFile != NULL) delete itsFile;
+
   delete itsThread;
+
   delete itsWriter;
 }
 
@@ -109,6 +132,14 @@ void OutputThread::writeLogMessage()
 */
 }
 
+void OutputThread::flushSeqNumbers() {
+  if (itsFile != NULL) {
+    LOG_INFO_STR("Flushing sequence numbers");
+    itsFile->write(itsSequenceNumbers.data(), itsSequenceNumbers.size()*sizeof(unsigned));
+    itsSequenceNumbers.clear();
+  }
+}
+
 
 void OutputThread::checkForDroppedData(StreamableData *data)
 {
@@ -117,6 +148,15 @@ void OutputThread::checkForDroppedData(StreamableData *data)
 
   if (droppedBlocks > 0)
     LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
+
+  if (itsPS->getLofarStManVersion() == 2 && itsFile != NULL) {
+
+    itsSequenceNumbers.push_back(data->sequenceNumber);
+    
+    if (itsSequenceNumbers.size() > 64) {
+      flushSeqNumbers();
+    }
+  }
 
   itsNextSequenceNumber = data->sequenceNumber + 1;
 }
@@ -155,6 +195,7 @@ void OutputThread::mainLoop()
 
     itsInputThread->itsFreeQueue.append(data.release());
   }
+  flushSeqNumbers();
 }
 
 } // namespace RTCP
