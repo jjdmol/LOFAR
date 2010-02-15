@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 
-#define LOFAR_STMAN_V2 
+//#define LOFAR_STMAN_V2 
 
 namespace LOFAR {
 namespace RTCP {
