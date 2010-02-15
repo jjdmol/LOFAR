@@ -37,18 +37,19 @@ node  TBBsetting         1.0.1  development  'node constraint'  "RCU settings fo
 #--------------------------------------------------------------------------------------------------------
 #    name                dir. type   unit   prun. vm   value     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  baselevel			 I	  int	 -		10    0	   2048								-	'Common signal level'
-par  startlevel			 I	  int	 -		10    0	   7								-	'Value for the startlevel of the peak'
-par  stoplevel			 I	  int	 -		10    0	   7								-	'Value for the stoplevel of the peak'
-par  filter				 I	  int	 -		10    0	   128								-	'Filter value'
+par  baselevel			 I	  int	 -		10    0	   2048									-	'Common signal level'
+par  startlevel		 I	  int	 -		10    0	   7										-	'Value for the startlevel of the peak'
+par  stoplevel			 I	  int	 -		10    0	   7										-	'Value for the stoplevel of the peak'
+par  filter				 I	  int	 -		10    0	   128									-	'Filter value'
 par  window				 I	  ptext	 -		10    0	   '16B|64B|256B|1K|4K|16K|64K;1K'	-	'Number of samples in the sliding peak-window'
 par  C0					 I	  uint	 -		10    0	   0   								-	'Peak coefficient C0'
 par  C1					 I	  uint	 -		10    0	   0   								-	'Peak coefficient C1'
 par  C2					 I	  uint	 -		10    0	   0   								-	'Peak coefficient C2'
 par  C3					 I	  uint	 -		10    0	   0   								-	'Peak coefficient C3'
-par	 RCUs				 I 	  vint	 -		10	  0    '[]'								-	'The RCUs that must have the above settings'
-par	 subbandList			 I 	  vint	 -		10	  0    '[]'								-	'The subbands involved in these settings'
-par  operatingMode		 I	  pint	 -		10    0	   '1|2;1'   						-	'Transient detection(1) or subband data(2)'
+par  RCUs				 I   vint	 -		10	   0    '[]'								-	'The RCUs that must have the above settings'
+par  subbandList		 I   vint	 -		10	   0    '[]'								-	'The subbands involved in these settings'
+par  triggerMode		 I	  pint	 -		10    0    '1|2;1'   						-	'One shot mode(1) or continuous mode(2)'
+par  operatingMode	 I	  pint	 -		10    0    '1|2;1'   			   		-	'Transient detection(1) or subband data(2)'
 
 
 #########################################################################################################
