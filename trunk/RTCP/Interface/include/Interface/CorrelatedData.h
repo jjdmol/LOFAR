@@ -16,13 +16,15 @@
 #include <stdexcept>
 
 
+#define LOFAR_STMAN_V2 
+
 namespace LOFAR {
 namespace RTCP {
 
 class CorrelatedData: public StreamableData
 {
   public:
-    CorrelatedData(unsigned nrBaselines, unsigned nrChannels);
+    CorrelatedData(unsigned nrBaselines, unsigned nrChannels, unsigned lofarStManVersion = 1);
 
     virtual CorrelatedData *clone() const { return new CorrelatedData(*this); }
     virtual size_t requiredSize() const;
@@ -31,7 +33,10 @@ class CorrelatedData: public StreamableData
     virtual StreamableData &operator += (const StreamableData &);
 
     MultiDimArray<fcomplex, 4>	visibilities; //[nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]
-    Matrix<unsigned short>	nrValidSamples; //[nrBaselines][nrChannels]
+
+    Vector<unsigned>    	nrValidSamplesV2; //[nrBaselines]
+    Matrix<unsigned short>      nrValidSamples; //[nrBaselines][nrChannels]
+
     Vector<float>		centroids; //[nrBaselines]
 
   protected:
@@ -41,7 +46,8 @@ class CorrelatedData: public StreamableData
   private:
     const unsigned              itsNrBaselines;
     const unsigned              itsNrChannels;
-    unsigned                    itsAlignment;
+    const unsigned              itsAlignment;
+    const unsigned              itsLofarStManVersion;
 
     void			checkEndianness();
 
@@ -59,7 +65,11 @@ inline size_t CorrelatedData::visibilitiesSize() const
 
 inline size_t CorrelatedData::nrValidSamplesSize() const
 {
-  return align(sizeof(unsigned short) * itsNrBaselines * itsNrChannels, itsAlignment);
+  if (itsLofarStManVersion == 2) {
+    return align(sizeof(unsigned) * itsNrBaselines, itsAlignment);
+  } else {
+    return align(sizeof(unsigned short) * itsNrBaselines * itsNrChannels, itsAlignment);
+  }
 }
 
 
@@ -75,16 +85,17 @@ inline size_t CorrelatedData::requiredSize() const
 }
 
 
-inline CorrelatedData::CorrelatedData(unsigned nrBaselines, unsigned nrChannels)
+inline CorrelatedData::CorrelatedData(unsigned nrBaselines, unsigned nrChannels, unsigned lofarStManVersion)
 :
   StreamableData(true),
   itsNrBaselines(nrBaselines),
   itsNrChannels(nrChannels),
 #ifdef HAVE_BGP
-  itsAlignment(32)
+  itsAlignment(32),
 #else 
-  itsAlignment(512)
+  itsAlignment(512),
 #endif
+  itsLofarStManVersion(lofarStManVersion)
 {
 }
 
@@ -92,14 +103,26 @@ inline void CorrelatedData::allocate(Allocator &allocator)
 {
   /// TODO Should this be aligned as well?? 
   visibilities.resize(boost::extents[itsNrBaselines][itsNrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], itsAlignment, allocator);
-  nrValidSamples.resize(boost::extents[itsNrBaselines][itsNrChannels], itsAlignment, allocator);
+  
+  if (itsLofarStManVersion == 2) {
+    std::cout << "[[CCC]] V2" << std::endl;
+    nrValidSamplesV2.resize(boost::extents[itsNrBaselines], itsAlignment, allocator);
+  } else {
+    nrValidSamples.resize(boost::extents[itsNrBaselines][itsNrChannels], itsAlignment, allocator);
+  }
   centroids.resize(itsNrBaselines, itsAlignment, allocator);
 }
 
 inline void CorrelatedData::readData(Stream *str)
 {
   str->read(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
-  str->read(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(unsigned short));
+
+  if (itsLofarStManVersion == 2) {
+    str->read(nrValidSamplesV2.origin(), nrValidSamplesV2.num_elements() * sizeof(unsigned));
+  } else {
+    str->read(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(unsigned short));
+  }
+
   //str->read(&centroids[0], centroids.size() * sizeof(float));
 #if 0
   checkEndianness();
@@ -114,7 +137,11 @@ inline void CorrelatedData::writeData(Stream *str)
 #endif
 
   str->write(visibilities.origin(), align(visibilities.num_elements() * sizeof(fcomplex), itsAlignment));
-  str->write(nrValidSamples.origin(), align(nrValidSamples.num_elements() * sizeof(unsigned short), itsAlignment));
+  if (itsLofarStManVersion == 2) {
+    str->write(nrValidSamples.origin(), align(nrValidSamples.num_elements() * sizeof(unsigned), itsAlignment));
+  } else {
+    str->write(nrValidSamples.origin(), align(nrValidSamples.num_elements() * sizeof(unsigned short), itsAlignment));
+  }
   //str->write(&centroids[0], centroids.size() * sizeof(float));
 }
 
@@ -144,12 +171,23 @@ inline StreamableData &CorrelatedData::operator += (const StreamableData &other_
 
   // add nr. valid samples
   {
-    unsigned short       *dst  = nrValidSamples.origin();
-    const unsigned short *src  = other.nrValidSamples.origin();
-    unsigned		 count = nrValidSamples.num_elements();
+    if (itsLofarStManVersion == 2) {
+      unsigned             *dst  = nrValidSamplesV2.origin();
+      const unsigned       *src  = other.nrValidSamplesV2.origin();
+      unsigned		   count = nrValidSamplesV2.num_elements();
 
-    for (unsigned i = 0; i < count; i ++)
-      dst[i] += src[i];
+      for (unsigned i = 0; i < count; i ++)
+	dst[i] += src[i];
+
+    } else { 
+      unsigned short       *dst  = nrValidSamples.origin();
+      const unsigned short *src  = other.nrValidSamples.origin();
+      unsigned		   count = nrValidSamples.num_elements();
+
+      for (unsigned i = 0; i < count; i ++)
+	dst[i] += src[i];
+
+    }
   }
 
   return *this;
