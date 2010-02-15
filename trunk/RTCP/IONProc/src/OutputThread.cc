@@ -58,7 +58,7 @@ OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsig
   }
 
   //thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps.observationID() % subband % output), 65536);
-  itsThread = new Thread(this, &OutputThread::mainLoop, 65536);
+  itsThread = new InterruptibleThread(this, &OutputThread::mainLoop, 65536);
 }
 
 

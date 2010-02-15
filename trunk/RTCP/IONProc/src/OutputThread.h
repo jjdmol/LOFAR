@@ -53,7 +53,7 @@ class OutputThread
     const Parset            &itsParset;
     const unsigned          itsSubband;
     const unsigned          itsOutput;
-    Thread		    *itsThread;
+    InterruptibleThread	    *itsThread;
 };
 
 } // namespace RTCP
