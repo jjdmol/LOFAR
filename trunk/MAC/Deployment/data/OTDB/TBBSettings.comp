@@ -48,7 +48,7 @@ par  C2					 I	  uint	 -		10    0	   0   								-	'Peak coefficient C2'
 par  C3					 I	  uint	 -		10    0	   0   								-	'Peak coefficient C3'
 par  RCUs				 I   vint	 -		10	   0    '[]'								-	'The RCUs that must have the above settings'
 par  subbandList		 I   vint	 -		10	   0    '[]'								-	'The subbands involved in these settings'
-par  triggerMode		 I	  pint	 -		10    0    '1|2;1'   						-	'One shot mode(1) or continuous mode(2)'
+par  triggerMode		 I	  pint	 -		10    0    '0|1|2|3;1'   					-	'One-shot normal(0), Continuous normal(1), One-shot external(2), Continuous external(3) '
 par  operatingMode	 I	  pint	 -		10    0    '1|2;1'   			   		-	'Transient detection(1) or subband data(2)'
 
 
