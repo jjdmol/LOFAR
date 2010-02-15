@@ -801,7 +801,7 @@ static void master_thread(int argc, char **argv)
     mmapFlatMemory();
 #endif
 
-    setenv("AIPSPATH", "/globalhome/romein/packages/casacore-0.3.0/stage/", 0); // FIXME
+    setenv("AIPSPATH", "/globalhome/lofarsystem/packages/root/bgp_ion/", 0);
 
     if (argc < 2) {
       LOG_ERROR("unexpected number of arguments");
