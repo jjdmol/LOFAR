@@ -80,7 +80,11 @@ extern "C" {
 
   void _weigh_visibilities(
 	fcomplex *visibilities,
+#ifdef LOFAR_STMAN_V2	
+	unsigned *nrValidSamplesCounted,
+#else
 	unsigned short *nrValidSamplesCounted,
+#endif
 	const float correlationWeights[/*nrSamplesToIntegrate + 1*/],
 	const float bandPassCorrectionFactors[/*nrChannels*/],
 	unsigned nrBaselines,
