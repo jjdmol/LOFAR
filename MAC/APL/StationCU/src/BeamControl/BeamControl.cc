@@ -609,7 +609,7 @@ bool BeamControl::doPrepare()
 	GCFPValueArray		beamIDArr;
 
 	LOG_DEBUG_STR(theObs);
-	bool		stereoBeams((theObs.antennaSet == "HBA_BOTH"));
+	bool		stereoBeams((theObs.antennaSet == "HBA_BOTH") & (stationRingName() == "Core"));
 	itsNrBeams = theObs.beams.size() * (stereoBeams ? 2 : 1);
 	LOG_DEBUG_STR("Controlling " << itsNrBeams << " beams.");
 
@@ -649,15 +649,15 @@ bool BeamControl::doPrepare()
 			for (int rcu = sc.nrHBAs; rcu < sc.nrHBAs*2; rcu++) {	// clear second half of RCUs
 				beamAllocEvent.rcumask.reset(rcu);
 			}
-			beamAllocEvent.name = "HBA_ONE";
-			beamAllocEvent.subarrayname += "_ONE";
+			beamAllocEvent.name = "HBA_0";
+			beamAllocEvent.subarrayname += "_0";
 			LOG_DEBUG_STR("Sending Alloc event to BeamServer for ring 0");
 			itsBeamServer->send(beamAllocEvent);		// will result in BS_BEAMALLOCACK;
 
 			beamAllocEvent.rcumask = theObs.getRCUbitset(0, 0, 0, false);		// get modified set of StationController
 			beamAllocEvent.ringNr  = 1;
-			beamAllocEvent.name    = "HBA_TWO";
-			beamAllocEvent.subarrayname = theObs.getBeamName(i) + "_TWO";
+			beamAllocEvent.name    = "HBA_1";
+			beamAllocEvent.subarrayname = theObs.getBeamName(i) + "_1";
 			for (int rcu = 0; rcu < sc.nrHBAs; rcu++) {	// clear first half of RCUs
 				beamAllocEvent.rcumask.reset(rcu);
 			}

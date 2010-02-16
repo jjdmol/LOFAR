@@ -623,7 +623,7 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 //
 bool	CalibrationControl::startCalibration() 
 {
-	bool	stereoBeams((itsObsPar.antennaSet == "HBA_BOTH"));
+	bool	stereoBeams((itsObsPar.antennaSet == "HBA_BOTH") & (stationRingName() == "Core"));
 	itsNrBeams = itsObsPar.beams.size() * (stereoBeams ? 2 : 1);
 	LOG_DEBUG_STR("Calibrating " << itsNrBeams << " beams.");
 	if (itsNrBeams == 0) {
@@ -658,8 +658,8 @@ bool	CalibrationControl::startCalibration()
 			for (int rcu = config.nrHBAs; rcu < config.nrHBAs*2; rcu++) {	// clear second half of RCUs
 				calStartEvent.subset.reset(rcu);
 			}
-			calStartEvent.parent = "HBA_ONE";
-			calStartEvent.name   = beamName + "_ONE";
+			calStartEvent.parent = "HBA_0";
+			calStartEvent.name   = beamName + "_0";
 			LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
 									calStartEvent.name.c_str(), calStartEvent.parent.c_str(),
 									calStartEvent.rcumode()(0).getRaw()));
@@ -667,8 +667,8 @@ bool	CalibrationControl::startCalibration()
 			beamNameArr.push_back(new GCFPVString(calStartEvent.name));	// update array for PVSS
 
 			calStartEvent.subset = itsObsPar.getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters);
-			calStartEvent.parent = "HBA_TWO";
-			calStartEvent.name   = beamName + "_TWO";
+			calStartEvent.parent = "HBA_1";
+			calStartEvent.name   = beamName + "_1";
 			for (int rcu = 0; rcu < config.nrHBAs; rcu++) {	// clear first half of RCUs
 				calStartEvent.subset.reset(rcu);
 			}
