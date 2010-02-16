@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
-
+#include <Common/hexdump.h>
 #include "StopCmd.h"
 
 using namespace LOFAR;
@@ -61,6 +61,10 @@ void StopCmd::saveTbbEvent(GCFEvent& event)
 	
 	int32 board;
 	int32 rcu;
+	string hdstr;
+	hexdump(hdstr, &tbb_event.rcu_mask, sizeof(tbb_event.rcu_mask));
+	LOG_DEBUG_STR(hdstr);
+	LOG_DEBUG_STR("StopCmd rcu_mask=" << tbb_event);
 	for (int i = 0; i < TS->maxChannels(); i++) {
 		TS->convertCh2Rcu(i,&rcu);
 		if (tbb_event.rcu_mask.test(rcu) == true) {
@@ -69,6 +73,7 @@ void StopCmd::saveTbbEvent(GCFEvent& event)
 			}
 		}
 	}
+	LOG_DEBUG_STR("StopCmd channel_mask=" << getChannels());
 	
 	// select firt channel to handle
 	nextChannelNr();

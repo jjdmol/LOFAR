@@ -72,6 +72,7 @@ void TrigSetupCmd::saveTbbEvent(GCFEvent& event)
 		TS->setChFilterSelect(channel, tbb_event.setup[rcunr].filter_select);
 		TS->setChDetectWindow(channel, tbb_event.setup[rcunr].window);
 		TS->setChTriggerMode(channel, tbb_event.setup[rcunr].trigger_mode);
+		TS->setChOperatingMode(channel, tbb_event.setup[rcunr].operating_mode);
 	}
 	
 	bitset<MAX_N_RCUS> channels;
@@ -91,12 +92,12 @@ void TrigSetupCmd::sendTpEvent()
 
 	tp_event.mp = TS->getChMpNr(getChannelNr());
 	for (int i = 0; i < 4; i++) {
-		tp_event.channel[i].level = static_cast<uint32>(TS->getChTriggerLevel(getChannelNr() + i));
-		tp_event.channel[i].td_mode = static_cast<uint32>((TS->getChTriggerStartMode(getChannelNr() + i) +
+		tp_event.channel[i].level         = static_cast<uint32>(TS->getChTriggerLevel(getChannelNr() + i));
+		tp_event.channel[i].td_mode       = static_cast<uint32>((TS->getChTriggerStartMode(getChannelNr() + i) +
 														  (TS->getChTriggerStopMode(getChannelNr() + i) << 4)));
 		tp_event.channel[i].filter_select = static_cast<uint32>(TS->getChFilterSelect(getChannelNr() + i));
-		tp_event.channel[i].window = static_cast<uint32>(TS->getChDetectWindow(getChannelNr() + i));
-		tp_event.channel[i].dummy = static_cast<uint32>(TS->getChTriggerMode(getChannelNr() + i));
+		tp_event.channel[i].window        = static_cast<uint32>(TS->getChDetectWindow(getChannelNr() + i));
+		tp_event.channel[i].trigger_mode  = static_cast<uint32>(TS->getChTriggerMode(getChannelNr() + i));
 	}
 	
 	TS->boardPort(getBoardNr()).send(tp_event);
