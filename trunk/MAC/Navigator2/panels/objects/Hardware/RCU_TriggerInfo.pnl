@@ -13,6 +13,7 @@ PANEL,-1 -1 321 408 N "_3DFace" 0
                                       baseDP + \".Trigger.stoplevel:_online.._value\",
                                       baseDP + \".Trigger.filter:_online.._value\",
                                       baseDP + \".Trigger.operatingMode:_online.._value\",
+                                      baseDP + \".Trigger.triggerMode:_online.._value\",
                                       baseDP + \".Trigger.window:_online.._value\",
                                       baseDP + \".Trigger.coeff0:_online.._value\",
                                       baseDP + \".Trigger.coeff1:_online.._value\",
@@ -29,6 +30,7 @@ PANEL,-1 -1 321 408 N "_3DFace" 0
     setValue(\"txt_stoplevel\"  , \"text\", \"\");
     setValue(\"txt_filter\"     , \"text\", \"\");
     setValue(\"txt_operatingMode\", \"text\", \"\");
+    setValue(\"txt_triggerMode\", \"text\", \"\");
     setValue(\"txt_window\"     , \"text\", \"\");
     setValue(\"txt_coeff0\"     , \"text\", \"\");
     setValue(\"txt_coeff1\"     , \"text\", \"\");
@@ -42,12 +44,13 @@ updateTriggerDetails(string dp1, int start,
                      string dp3, int stop,
                      string dp4, int filter,
                      string dp5, int operatingMode,
-                     string dp6, int window,
-                     string dp7, int coeff0,
-                     string dp8, int coeff1,
-                     string dp9, int coeff2,
-                     string dp10, int coeff3,
-                     string dp11, bool invalid)
+                     string dp6, int triggerMode,
+                     string dp7, int window,
+                     string dp8, int coeff0,
+                     string dp9, int coeff1,
+                     string dp10, int coeff2,
+                     string dp11, int coeff3,
+                     string dp12, bool invalid)
 {
     if (invalid) {
     setValue(\"txt_startlevel\" , \"text\", \"\");
@@ -55,6 +58,7 @@ updateTriggerDetails(string dp1, int start,
     setValue(\"txt_stoplevel\"  , \"text\", \"\");
     setValue(\"txt_filter\"     , \"text\", \"\");
     setValue(\"txt_operatingMode\", \"text\", \"\");
+    setValue(\"txt_triggerMode\", \"text\", \"\");
     setValue(\"txt_window\"     , \"text\", \"\");
     setValue(\"txt_coeff0\"     , \"text\", \"\");
     setValue(\"txt_coeff1\"     , \"text\", \"\");
@@ -66,17 +70,25 @@ updateTriggerDetails(string dp1, int start,
     setValue(\"txt_stoplevel\"  , \"text\", stop);
     setValue(\"txt_filter\"     , \"text\", filter);
     string triggerText=\"\";
-    if (operatingMode == 0) {
+    if (triggerMode == 0) {
         triggerText=\"Local One Shot\";
-    }else if (operatingMode == 1) {
+    }else if (triggerMode == 1) {
         triggerText=\"Local Continues\";
-    }else if (operatingMode == 2) {
+    }else if (triggerMode == 2) {
         triggerText=\"External One Shot\";
-    }else if (operatingMode == 3) {
+    }else if (triggerMode == 3) {
         triggerText=\"External Continues\";
     }
-    
-    setValue(\"txt_operatingMode\", \"text\", triggerText);
+    setValue(\"txt_triggerMode\", \"text\", triggerText);
+
+    string operatingText=\"\";
+    if (operatingMode == 1) {
+        operatingText=\"Transient detection\";
+    }else if (operatingMode == 2) {
+        operatingText=\"Subband data\";
+    }
+    setValue(\"txt_operatingMode\", \"text\", operatingText);
+
     setValue(\"txt_window\"     , \"text\", window);
     setValue(\"txt_coeff0\"     , \"text\", coeff0);
     setValue(\"txt_coeff1\"     , \"text\", coeff1);
@@ -109,11 +121,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.065989847715736 0 1.159090909090909 -0.6598984771573613 -5.568181818181821 1 E 10 35 207 255
+E E 0 1 1 0 1 E 1.319796954314721 0 1.340909090909091 -3.19796954314721 -11.93181818181819 1 E 10 35 207 255
 2 2
 "Text1"
 ""
-1 11 38 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 3 0 0 0 0 0
 E E E
@@ -123,8 +135,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 40 68 57
-0 2 0 "0s" 0 0 0 192 0 0  13 40 1
+E E 0 1 1 0 1 E U  0 E 13 42 68 59
+0 2 0 "0s" 0 0 0 192 0 0  13 42 1
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
@@ -133,7 +145,7 @@ LANG:1 11 startlevel:
 2 3
 "Text2"
 ""
-1 11 63 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 66 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 4 0 0 0 0 0
 E E E
@@ -143,8 +155,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 65 70 82
-0 2 0 "0s" 0 0 0 192 0 0  13 65 1
+E E 0 1 1 0 1 E U  0 E 13 68 70 85
+0 2 0 "0s" 0 0 0 192 0 0  13 68 1
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
@@ -153,7 +165,7 @@ LANG:1 10 baselevel:
 2 4
 "Text3"
 ""
-1 11 88 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 92 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 E E E
@@ -163,8 +175,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 90 67 107
-0 2 0 "0s" 0 0 0 192 0 0  13 90 1
+E E 0 1 1 0 1 E U  0 E 13 94 67 111
+0 2 0 "0s" 0 0 0 192 0 0  13 94 1
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
@@ -173,7 +185,7 @@ LANG:1 10 stoplevel:
 2 6
 "Text5"
 ""
-1 11 113 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 118 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -183,8 +195,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 115 41 132
-0 2 0 "0s" 0 0 0 192 0 0  13 115 1
+E E 0 1 1 0 1 E U  0 E 13 120 41 137
+0 2 0 "0s" 0 0 0 192 0 0  13 120 1
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
@@ -213,7 +225,7 @@ LANG:1 12 Trigger info
 2 31
 "Text9"
 ""
-1 11 163 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 196 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 29 0 0 0 0 0
 E E E
@@ -223,8 +235,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 165 59 182
-0 2 0 "0s" 0 0 0 192 0 0  13 165 1
+E E 0 1 1 0 1 E U  0 E 13 198 59 215
+0 2 0 "0s" 0 0 0 192 0 0  13 198 1
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
@@ -233,7 +245,7 @@ LANG:1 7 window:
 2 32
 "Text10"
 ""
-1 11 188 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 222 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 30 0 0 0 0 0
 E E E
@@ -243,8 +255,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 190 51 207
-0 2 0 "0s" 0 0 0 192 0 0  13 190 1
+E E 0 1 1 0 1 E U  0 E 13 224 51 241
+0 2 0 "0s" 0 0 0 192 0 0  13 224 1
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
@@ -253,7 +265,7 @@ LANG:1 7 coeff0:
 2 33
 "Text11"
 ""
-1 11 213 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 248 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 31 0 0 0 0 0
 E E E
@@ -263,8 +275,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 215 51 232
-0 2 0 "0s" 0 0 0 192 0 0  13 215 1
+E E 0 1 1 0 1 E U  0 E 13 250 51 267
+0 2 0 "0s" 0 0 0 192 0 0  13 250 1
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
@@ -273,7 +285,7 @@ LANG:1 7 coeff1:
 2 34
 "Text12"
 ""
-1 11 238 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 274 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 32 0 0 0 0 0
 E E E
@@ -283,8 +295,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 240 51 257
-0 2 0 "0s" 0 0 0 192 0 0  13 240 1
+E E 0 1 1 0 1 E U  0 E 13 276 51 293
+0 2 0 "0s" 0 0 0 192 0 0  13 276 1
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
@@ -293,7 +305,7 @@ LANG:1 7 coeff2:
 2 43
 "Text17"
 ""
-1 11 268 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 300 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 41 0 0 0 0 0
 E E E
@@ -303,8 +315,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 270 51 287
-0 2 0 "0s" 0 0 0 192 0 0  13 270 1
+E E 0 1 1 0 1 E U  0 E 13 302 51 319
+0 2 0 "0s" 0 0 0 192 0 0  13 302 1
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
@@ -313,7 +325,7 @@ LANG:1 7 coeff3:
 14 47
 "txt_startlevel"
 ""
-1 90 40 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+1 120 40 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 45 0 0 0 0 0
 E E E
@@ -325,12 +337,12 @@ LANG:1 0
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
- 88 38 218 61
+ 118 38 248 61
 2 "9d" 9 0 0 2 0 -1  E E E
 14 48
 "txt_coeff2"
 ""
-1 90.12871287128712 239 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+1 120.1287128712871 274 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 46 0 0 0 0 0
 E E E
@@ -342,12 +354,12 @@ LANG:1 0
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
- 88 237 218 260
+ 118 272 248 295
 2 "9d" 9 0 0 2 0 -1  E E E
 14 49
 "txt_baselevel"
 ""
-1 90.12871287128712 64 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+1 120.1287128712871 66 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 47 0 0 0 0 0
 E E E
@@ -359,12 +371,12 @@ LANG:1 0
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
- 88 62 218 85
+ 118 64 248 87
 2 "9d" 9 0 0 2 0 -1  E E E
 14 50
 "txt_stoplevel"
 ""
-1 90.12871287128712 89 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+1 120.1287128712871 92 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 48 0 0 0 0 0
 E E E
@@ -376,12 +388,12 @@ LANG:1 0
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
- 88 87 218 110
+ 118 90 248 113
 2 "9d" 9 0 0 2 0 -1  E E E
 14 51
 "txt_filter"
 ""
-1 90.12871287128712 114 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+1 120.1287128712871 118 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 49 0 0 0 0 0
 E E E
@@ -393,12 +405,12 @@ LANG:1 0
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
- 88 112 218 135
+ 118 116 248 139
 2 "9d" 9 0 0 2 0 -1  E E E
 14 52
 "txt_window"
 ""
-1 90.12871287128712 164 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+1 120.1287128712871 196 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 50 0 0 0 0 0
 E E E
@@ -410,12 +422,12 @@ LANG:1 0
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
- 88 162 218 185
+ 118 194 248 217
 2 "9d" 9 0 0 2 0 -1  E E E
 14 53
 "txt_coeff0"
 ""
-1 90.12871287128712 189 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+1 120.1287128712871 222 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 51 0 0 0 0 0
 E E E
@@ -427,12 +439,12 @@ LANG:1 0
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
- 88 187 218 210
+ 118 220 248 243
 2 "9d" 9 0 0 2 0 -1  E E E
 14 54
 "txt_coeff1"
 ""
-1 90.12871287128712 214 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+1 120.1287128712871 248 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 52 0 0 0 0 0
 E E E
@@ -444,12 +456,12 @@ LANG:1 0
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
- 88 212 218 235
+ 118 246 248 269
 2 "9d" 9 0 0 2 0 -1  E E E
 14 55
 "txt_coeff3"
 ""
-1 90.12871287128712 267 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+1 120.1287128712871 300 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 53 0 0 0 0 0
 E E E
@@ -461,12 +473,12 @@ LANG:1 0
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
- 88 265 218 288
+ 118 298 248 321
 2 "9d" 9 0 0 2 0 -1  E E E
 2 56
 "PRIMITIVE_TEXT1"
 ""
-1 11 138 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 144 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 55 0 0 0 0 0
 E E E
@@ -476,17 +488,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 140 49 157
-0 2 0 "0s" 0 0 0 192 0 0  13 140 1
+E E 0 1 1 0 1 E U  0 E 13 146 89 163
+0 2 0 "0s" 0 0 0 192 0 0  13 146 1
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
 1
-LANG:1 5 mode:
+LANG:1 13 trigger mode:
 14 57
-"txt_operatingMode"
+"txt_triggerMode"
 ""
-1 90.12871287128712 140 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+1 120.1287128712871 144 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 57 0 0 0 0 0
 E E E
@@ -498,7 +510,44 @@ LANG:1 0
 1
 LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
- 88 138 218 161
+ 118 142 248 165
+2 "20s" 20 0 0 2 0 -1  E E E
+2 58
+"PRIMITIVE_TEXT2"
+""
+1 11 170 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+59 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 13 172 106 189
+0 2 0 "0s" 0 0 0 192 0 0  13 172 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 15 operating mode:
+14 59
+"txt_operatingMode"
+""
+1 120.1287128712871 170 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+61 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 118 168 248 191
 2 "20s" 20 0 0 2 0 -1  E E E
 0
 LAYER, 1 

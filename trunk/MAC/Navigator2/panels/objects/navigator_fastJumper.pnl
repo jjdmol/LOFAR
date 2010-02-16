@@ -127,7 +127,7 @@ void changeInfo(string aSelection) {
           int iPos=dynContains ( g_connections[ \"NAME\" ],aSS[dynlen(aSS)]+\":\");
           if (iPos > 0) {
             online = g_connections[\"UP\"][iPos];
-            LOG_ERROR(\"Navigator_fastJumper.pnl:changeInfo| db : \"+aSS[dynlen(aSS)]+\": online: \" + online);
+            LOG_DEBUG(\"Navigator_fastJumper.pnl:changeInfo| db : \"+aSS[dynlen(aSS)]+\": online: \" + online);
           }
 
           if (dpExists(aSS[dynlen(aSS)]+\":LOFAR\") && online) {
