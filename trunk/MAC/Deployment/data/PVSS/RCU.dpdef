@@ -43,7 +43,8 @@ Trigger.baselevel		int
 Trigger.stoplevel		int
 Trigger.filter			int
 Trigger.window			int
-Trigger.operatingMode	int
+Trigger.operatingMode		int
+Trigger.triggerMode		int
 Trigger.coeff0			int
 Trigger.coeff1			int
 Trigger.coeff2			int
