@@ -11,8 +11,8 @@ id = "(LOFAR::MACIO::F_APL_PROTOCOL+14)";
 // e.g.
 include = '<sys/time.h>';
 include = '<linux/types.h>';
-include = '<bitset>';
 include = '<Common/LofarTypes.h>';
+include = '<Common/lofar_bitset.h>';
 
 include = '<APL/RTCCommon/Timestamp.h>';
 
@@ -233,7 +233,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "rcu_mask";
-		type = "std::bitset<MAX_N_RCUS>";
+		type = "bitset<MAX_N_RCUS>";
 	};
 };
 
@@ -246,7 +246,7 @@ event = {
 	};
 	param = {
 		name = "rcu_mask";
-		type = "std::bitset<MAX_N_RCUS>";
+		type = "bitset<MAX_N_RCUS>";
 	};
 };
 
@@ -255,7 +255,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "rcu_mask";
-		type = "std::bitset<MAX_N_RCUS>";
+		type = "bitset<MAX_N_RCUS>";
 	};
 };
 
@@ -268,7 +268,7 @@ event = {
 	};
 	param = {
 		name = "rcu_mask";
-		type = "std::bitset<MAX_N_RCUS>";
+		type = "bitset<MAX_N_RCUS>";
 	};
 };
 
@@ -277,7 +277,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "rcu_mask";
-		type = "std::bitset<MAX_N_RCUS>";
+		type = "bitset<MAX_N_RCUS>";
 	};
 };
 
@@ -290,7 +290,7 @@ event = {
 	};
 	param = {
 		name = "rcu_mask";
-		type = "std::bitset<MAX_N_RCUS>";
+		type = "bitset<MAX_N_RCUS>";
 	};
 };
 
@@ -299,7 +299,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "rcu_mask";
-		type = "std::bitset<MAX_N_RCUS>";
+		type = "bitset<MAX_N_RCUS>";
 	};
 };
 
@@ -312,7 +312,7 @@ event = {
 	};
 	param = {
 		name = "rcu_mask";
-		type = "std::bitset<MAX_N_RCUS>";
+		type = "bitset<MAX_N_RCUS>";
 	};
 };
 
@@ -367,11 +367,11 @@ event = {
 	dir = IN;
 	param = {
 		name = "rcu_stop_mask";
-		type = "std::bitset<MAX_N_RCUS>";
+		type = "bitset<MAX_N_RCUS>";
 	};
 	param = {
 		name = "rcu_start_mask";
-		type = "std::bitset<MAX_N_RCUS>";
+		type = "bitset<MAX_N_RCUS>";
 	};
 };
 
@@ -389,7 +389,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "rcu_mask";
-		type = "std::bitset<MAX_N_RCUS>";
+		type = "bitset<MAX_N_RCUS>";
 	};
 };
 
@@ -425,7 +425,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "rcu_mask";
-		type = "std::bitset<MAX_N_RCUS>";
+		type = "bitset<MAX_N_RCUS>";
 	};
 	param = {
 		name = "setup";
@@ -465,7 +465,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "rcu_mask";
-		type = "std::bitset<MAX_N_RCUS>";
+		type = "bitset<MAX_N_RCUS>";
 	};
 	param = {
 		name = "coefficients";
@@ -1341,7 +1341,7 @@ event  = {
 		dir = IN;
 		param = {
 			name = "rcu_mask";
-			type = "std::bitset<MAX_N_RCUS>";
+			type = "bitset<MAX_N_RCUS>";
 		};
 		param = {
 			name = "mode";
