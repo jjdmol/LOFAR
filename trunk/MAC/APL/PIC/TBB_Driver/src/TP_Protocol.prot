@@ -106,7 +106,7 @@ prelude = << PRELUDE_END
 		uint32 td_mode;
 		uint32 filter_select;
 		uint32 window;
-		uint32 dummy;
+		uint32 trigger_mode;
 	};
 		 
 	typedef struct TpFilterCoeffients // filter coeffients for 1 channel

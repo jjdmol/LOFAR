@@ -120,8 +120,7 @@ private:
 	
 	struct TbbEvent{
 		GCFPortInterface *port;
-		uint32 length;
-		uint8  *event;
+		GCFEvent *event;
 	};
 	
 	std::deque<TbbEvent*> *itsTbbQueue;

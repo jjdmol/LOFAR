@@ -96,6 +96,8 @@ public:
 	
 	void setChannels(bitset<MAX_N_RCUS> rcus);
 	
+	bitset<MAX_N_RCUS> getChannels() { return(itsChannels); }
+	
 	void incChannelNr(int32 inc) { itsChannel += (inc - 1); }
 	
 	uint32 getBoardChannels(int32 board);

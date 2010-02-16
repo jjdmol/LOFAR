@@ -70,10 +70,13 @@ void ReadCmd::saveTbbEvent(GCFEvent& event)
 	itsPostpages   = tbb_event.postpages;
 	
 	nextChannelNr();
-	// check if channel is stopped
-	if (TS->getChState(getChannelNr()) != 'S') {
-		setStatus(0, TBB_CH_NOT_STOPPED);
-		setDone(true);
+	
+	if (!isDone()) {
+		// check if channel is stopped
+		if (TS->getChState(getChannelNr()) != 'S') {
+			setStatus(0, TBB_CH_NOT_STOPPED);
+			setDone(true);
+		}
 	}
 }
 

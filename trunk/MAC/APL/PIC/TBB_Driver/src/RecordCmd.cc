@@ -62,6 +62,7 @@ void RecordCmd::saveTbbEvent(GCFEvent& event)
 	
 	int32 board;
 	int32 rcu;
+	LOG_DEBUG_STR("RecordCmd rcu_mask=" << tbb_event.rcu_mask);
 	for (int i = 0; i < TS->maxChannels(); i++) {
 		TS->convertCh2Rcu(i,&rcu);
 		if (tbb_event.rcu_mask.test(rcu) == true) {
@@ -70,6 +71,7 @@ void RecordCmd::saveTbbEvent(GCFEvent& event)
 			}
 		}
 	}
+	LOG_DEBUG_STR("RecordCmd channel_mask=" << getChannels());
 	
 	// select firt channel to handle
 	nextChannelNr();

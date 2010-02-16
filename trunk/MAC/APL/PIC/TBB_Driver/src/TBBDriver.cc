@@ -79,6 +79,7 @@
 
 using namespace LOFAR;
 using namespace GCF::TM;
+using namespace MACIO;
 using namespace TBB;
 
 static bool   itsDaemonize  = false;
@@ -568,12 +569,14 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 					LOG_DEBUG_STR("Client list is empty, the queue is cleared");
 					break;
 				}
-
+#if 1
+				GCFEvent*	e = itsTbbQueue->front()->event;
+#else
 				uint8* bufptr = new uint8[sizeof(GCFEvent) + itsTbbQueue->front()->length];
 
 				GCFEvent* e = new (bufptr) GCFEvent;
 				memcpy(e, &(itsTbbQueue->front()->event), itsTbbQueue->front()->length);
-
+#endif
 
 				LOG_DEBUG_STR("queue:" << eventName(*e) << "@" << (*itsTbbQueue->front()->port).getName());
 
@@ -583,14 +586,15 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 
 					TbbEvent* tmp = itsTbbQueue->front();
 					itsTbbQueue->pop_front();
+					delete e;
 					delete tmp;
-
 					TRAN(TBBDriver::busy_state);
 				} else {
 					sendInfo(*e, *itsTbbQueue->front()->port);
 
 					TbbEvent* tmp = itsTbbQueue->front();
 					itsTbbQueue->pop_front();
+					delete e;
 					delete tmp;
 				}
 			}
@@ -1162,7 +1166,7 @@ bool TBBDriver::addTbbCommandToQueue(GCFEvent& event, GCFPortInterface& port)
 		case TBB_TEMP_LIMIT: {
 			// put event on the queue
 			LOG_DEBUG_STR("Put event on queue");
-
+#if 0
 			uint8* bufptr = new uint8[sizeof(GCFPortInterface*)
 					+ sizeof(uint32)
 					+ sizeof(GCFEvent)
@@ -1172,8 +1176,24 @@ bool TBBDriver::addTbbCommandToQueue(GCFEvent& event, GCFPortInterface& port)
 			memcpy(&(tbbevent->event), &event, (sizeof(GCFEvent) + event.length));
 			tbbevent->length = sizeof(GCFEvent) + event.length;
 			tbbevent->port = &port;
-
 			itsTbbQueue->push_back(tbbevent);
+#else
+		   //e.pack();
+		   TbbEvent* tbbevent = new TbbEvent;
+		   tbbevent->event = new GCFEvent(event.signal);
+		   ASSERTSTR(tbbevent->event, "can't allocate a new event");
+		   tbbevent->event->length  = event.length;   // copy settings of the packedbuffer
+		   tbbevent->event->_buffer = event._buffer;
+		   event.length  = 0; // remove them from the original
+		   event._buffer = 0;
+		   tbbevent->port = &port;
+		   if (event.signal == TBB_STOP) {
+		       itsTbbQueue->push_front(tbbevent);
+		   }
+		   else {
+		       itsTbbQueue->push_back(tbbevent);
+		   }
+#endif
 			event_saved = true;
 		} break;
 

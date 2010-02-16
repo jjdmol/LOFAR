@@ -91,12 +91,12 @@ void TrigSetupSameCmd::sendTpEvent()
 	tp_event.mp = TS->getChMpNr(getChannelNr());
 	int start_channel = TS->getFirstChannelNr(getBoardNr(), TS->getChMpNr(getChannelNr()));
 	for (int i = 0; i < 4; i++) {
-		tp_event.channel[i].level = static_cast<uint32>(TS->getChTriggerLevel(start_channel + i));
-		tp_event.channel[i].td_mode = static_cast<uint32>((TS->getChTriggerStartMode(start_channel + i) +
+		tp_event.channel[i].level         = static_cast<uint32>(TS->getChTriggerLevel(start_channel + i));
+		tp_event.channel[i].td_mode       = static_cast<uint32>((TS->getChTriggerStartMode(start_channel + i) +
 												(TS->getChTriggerStopMode(start_channel + i) << 4)));
 		tp_event.channel[i].filter_select = static_cast<uint32>(TS->getChFilterSelect(start_channel + i));
-		tp_event.channel[i].window = static_cast<uint32>(TS->getChDetectWindow(start_channel + i));
-		tp_event.channel[i].dummy = static_cast<uint32>(TS->getChTriggerMode(start_channel + i));
+		tp_event.channel[i].window        = static_cast<uint32>(TS->getChDetectWindow(start_channel + i));
+		tp_event.channel[i].trigger_mode  = static_cast<uint32>(TS->getChTriggerMode(start_channel + i));
 	}
 	
 	TS->boardPort(getBoardNr()).send(tp_event);
