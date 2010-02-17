@@ -39,16 +39,19 @@ SyntaxError()
 
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
-	echo "Syntax: $(basename $0) [ 0 | 1 | 2 | 3 | 4 | 5 | 6 ]"
-	echo "0: stop all lofar software"
-	echo "1: Lofar daemons and PVSS"
-	echo "2: Lowlevel hardware drivers"
-	echo "3: Calculation services"
-	echo "4: Hardware and software monitors"
-	echo "5: System Health Management"
-	echo "6: MAC is controlling the software"
+	echo "Syntax: $(basename $0) [-s/v] [ 0 | 1 | 2 | 3 | 4 | 5 | 6 ]"
+	echo "-s: Show current level, exit"
+	echo "-v: Show running LOFAR version, exit"
+        echo
+	echo "0:  stop all lofar software"
+	echo "1:  Lofar daemons and PVSS"
+	echo "2:  Lowlevel hardware drivers"
+	echo "3:  Calculation services"
+	echo "4:  Hardware and software monitors"
+	echo "5:  System Health Management"
+	echo "6:  MAC is controlling the software"
 	echo ""
-	exit 1
+	exit 0
 }
 
 #
@@ -286,7 +289,9 @@ goto_level()
 
 
 # Find out if we are running on a PVSS system
-# Note: on PVSS systems LoggingClient must be ignored on non-PVSS system LoggingProcessor.
+# Note: on PVSS systems LoggingClient must be ignored, 
+# On non-PVSS system LoggingProcessor.
+
 logProgToSkip=LoggingProcessor
 if [ -f ${BINDIR}/PVSS00pmon ]; then
 	logProgToSkip=LoggingClient
@@ -307,6 +312,18 @@ if [ -z "$1" -o "$1" = "s" -o "$1" = "-s" ]; then
             status_prog
         fi
         exit $level
+fi
+
+if [ "$1" = "v" -o "$1" = "-v" ]; then
+        if [ -e /opt/lofar/Version.txt ]; then
+          level=`cat /opt/lofar/Version.txt`
+          echo "Current LOFAR version is $level"
+        else
+          level=-1
+          echo "Current LOFAR version unknown"
+        fi
+	exit
+
 fi
 
 # don't allow root to run swlevel because all logfile get root access.
@@ -335,4 +352,6 @@ status_prog
 
 # save for later
 echo $level > /tmp/level.admin
+date=`date +%Y-%m-%d\ %H:%M:%S`
+echo [${date}]:$0 $* >> /log/swlevel.log
 exit $level
