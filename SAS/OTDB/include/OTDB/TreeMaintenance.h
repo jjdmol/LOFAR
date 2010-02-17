@@ -67,7 +67,9 @@ public:
 	//# --- VIC maintenance : Components ---
 	// A VIC tree is build up from single components. The definitions of the
 	// components can loaded from a file with this call
-	nodeIDType	loadComponentFile (const string&	filename);
+	nodeIDType	loadComponentFile (const string&	filename,
+								   const string&	forcedVersionNr = "",
+								   const string&	forcedQualifier = "");
 
 	// Find the top-components in the components table.
 	vector<VICnodeDef>	getComponentList (const string&	name = "%", bool topOnly = false);

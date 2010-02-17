@@ -406,8 +406,13 @@ bool	TreeMaintenance::deleteComponentNode(nodeIDType		aNodeID)
 //
 // a VIC tree is build up from single components. The definition of a
 // component can loaded from a file with this call
-nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
+nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename,
+												const string&	forcedVersionNr,
+												const string&	forcedQualifier)
 {
+	bool	versionNrIsForced(!forcedVersionNr.empty());
+	bool	qualifierIsForced(!forcedQualifier.empty());
+
 	// Check connection
 	if (!itsConn->connect()) {
 		itsError = itsConn->errorMsg();
@@ -463,26 +468,11 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 				break;
 			}
 			// construct object (name, version, classif, constr. descr.)
-		 	VICnodeDef	topNode(args[1], VersionNr(args[2]), 
-										CTconv.get(args[3]), args[4], args[5]);
+		 	VICnodeDef	topNode(args[1], VersionNr(versionNrIsForced ? forcedVersionNr : args[2]), 
+								CTconv.get(qualifierIsForced ? forcedQualifier : args[3]), 
+								args[4], args[5]);
 			saveComponentNode (topNode);			// private call
 			topNodeID = topNode.itsNodeID;
-
-#if 0
-			// add %instances parameter
-			OTDBparam		baseParam;
-			baseParam.itsNodeID   = topNodeID;
-			baseParam.name 		  = "%nrInstances";
-			baseParam.index 	  = 0;
-			baseParam.type 		  = PTconv.get("int");	
-			baseParam.unit 		  =	UTconv.get("-");
-			baseParam.pruning 	  = 0;
-			baseParam.valMoment   = 0;
-			baseParam.runtimeMod  = false;
-			baseParam.limits	  = "1+";
-			baseParam.description = "Number of instances";
-			saveParam (baseParam);
-#endif
 		}
 		// -- USES --
 		else if (!args[0].compare("uses")) {
@@ -498,11 +488,12 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 
 			// Check that module that is referenced exists in the database.
 			VICnodeDef	ParentNode = getNodeDef(args[1], 
-											VersionNr(args[2]), 
-											CTconv.get(args[3]));		// private call
+											VersionNr(versionNrIsForced ? forcedVersionNr  : args[2]), 
+											CTconv.get(qualifierIsForced ? forcedQualifier : args[3]));		// private call
 			if (!ParentNode.nodeID()) {
 				itsError = toString(lineNr) + ": Node " + args[1] +"," +
-									args[2] + "," + args[3] + " not found";
+									(versionNrIsForced ? forcedVersionNr : args[2]) + "," + 
+									(qualifierIsForced ? forcedQualifier : args[3]) + " not found";
 				LOG_FATAL(itsError);
 				inError = true;
 				break;
