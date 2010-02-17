@@ -38,23 +38,41 @@ int main (int	argc, char*	argv[]) {
 
 	INIT_LOGGER ("logger.log_prop");
 
-	string	dbName, hostname, orderFile;
+	string	dbName, hostname, versionNr, qualifier, orderFile;
 
-	switch (argc) {
-		case 3:
-			dbName 	  = argv[1];
-			hostname  = "dop50.astron.nl";
-			orderFile = argv[2];
+	if (argc < 3) {
+		cout << "Usage: " << argv[0] << " databasename orderFile [-h hostname][-v versionNr][-q qualifier]" << endl;
+		cout << "       hostname defaults to dop50.astron.nl" << endl;
+		cout << "       force versionNr (format xx.yy.zz)" << endl;
+		cout << "       force qualifier to be: development|test|operational|example" << endl;
+		return (1);
+	}
+
+	dbName 	  = argv[1];
+	orderFile = argv[2];
+	hostname  = "dop50.astron.nl";
+
+	int	c;
+	while ((c = getopt(argc, argv, "h:q:v:")) >= 0) {
+		switch (c) {
+		case 'h':
+			hostname = optarg;
 			break;
-		case 4:
-			dbName 	  = argv[1];
-			hostname  = argv[2];
-			orderFile = argv[3];
+		case 'v':
+			versionNr = optarg;
 			break;
-		default:
-			cout << "Usage: load_all_comps databasename [hostname] orderFile" << endl;
-			cout << "       hostname defaults to dop50.astron.nl" << endl;
+		case 'q':
+			qualifier = optarg;
+			if (qualifier != "development" && qualifier != "test" && qualifier != "operational" && qualifier != "example") {
+				cout << "Invalid value for qualifier, allowed values are: development|test|operational|example" << endl;
+				return (1);
+			}
+			break;
+		case '?': 
 			return (1);
+		default:
+			return (1);
+		}
 	}
 	
 	// check if file can be opened
@@ -81,7 +99,7 @@ int main (int	argc, char*	argv[]) {
 		char		filename[50];
 		while (inFile.getline(filename, 50)) {
 			cout << "Loading file: " << std::setw(25) << std::left << filename << std::flush;
-			uint32	topNodeID = tm.loadComponentFile (filename);
+			uint32	topNodeID = tm.loadComponentFile (filename, versionNr, qualifier);
 			if (topNodeID) {
 				cout << "OK" << endl;
 			}
