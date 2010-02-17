@@ -623,7 +623,7 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 //
 bool	CalibrationControl::startCalibration() 
 {
-	bool	stereoBeams((itsObsPar.antennaSet == "HBA_BOTH") & (stationRingName() == "Core"));
+	bool	stereoBeams((itsObsPar.antennaSet == "HBA_BOTH") && (stationRingName() == "Core"));
 	itsNrBeams = itsObsPar.beams.size() * (stereoBeams ? 2 : 1);
 	LOG_DEBUG_STR("Calibrating " << itsNrBeams << " beams.");
 	if (itsNrBeams == 0) {

@@ -609,7 +609,7 @@ bool BeamControl::doPrepare()
 	GCFPValueArray		beamIDArr;
 
 	LOG_DEBUG_STR(theObs);
-	bool		stereoBeams((theObs.antennaSet == "HBA_BOTH") & (stationRingName() == "Core"));
+	bool		stereoBeams((theObs.antennaSet == "HBA_BOTH") && (stationRingName() == "Core"));
 	itsNrBeams = theObs.beams.size() * (stereoBeams ? 2 : 1);
 	LOG_DEBUG_STR("Controlling " << itsNrBeams << " beams.");
 
@@ -625,9 +625,11 @@ bool BeamControl::doPrepare()
 
 		// contruct allocation event.
 		BSBeamallocEvent beamAllocEvent;
-		beamAllocEvent.name 		= getName();
+		// TODO: As long as the AntennaArray.conf uses different names as SAS we have to use this dirty hack to 
+		//       get the name of the antennaField.
+		beamAllocEvent.name 		= theObs.getAntennaArrayName(stereoBeams);
 		beamAllocEvent.subarrayname = theObs.getBeamName(i);
-		LOG_DEBUG_STR("subarrayName:" << beamAllocEvent.subarrayname);
+		LOG_DEBUG_STR("subarray@field : " << beamAllocEvent.subarrayname << "@" << beamAllocEvent.name);
 		beamAllocEvent.rcumask = theObs.getRCUbitset(0, 0, 0, false);		// get modified set of StationController
 		beamAllocEvent.ringNr  = 0;
 
