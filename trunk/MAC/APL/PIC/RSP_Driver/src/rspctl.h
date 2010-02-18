@@ -636,6 +636,18 @@ public:
 	virtual GCFEvent::TResult ack(GCFEvent& e);
 };
 
+//
+// class VersionCommand
+//
+class LatencyCommand : public Command
+{
+public:
+	LatencyCommand(GCFPortInterface& port);
+	virtual ~LatencyCommand() {}
+	virtual void send();
+	virtual GCFEvent::TResult ack(GCFEvent& e);
+};
+
 // Controller class for rspctl
 //
 // class RSPCtl

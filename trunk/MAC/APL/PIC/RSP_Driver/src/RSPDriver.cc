@@ -91,6 +91,7 @@
 #include "SetSplitterCmd.h"
 #include "GetSplitterCmd.h"
 #include "UpdSplitterCmd.h"
+#include "GetLatencyCmd.h"
 
 #include "RSUWrite.h"
 #include "BSWrite.h"
@@ -130,6 +131,8 @@
 #include "RawBlockRead.h"
 #include "RawBlockWrite.h"
 #include "TimestampWrite.h"
+#include "LatencyRead.h"
+
 
 #include "Cache.h"
 #include "RawEvent.h"
@@ -703,6 +706,12 @@ void RSPDriver::addAllSyncActions()
 			ASSERT(timestampwrite);
 			m_scheduler.addSyncAction(timestampwrite);
 		}
+		
+		if (1 == GET_CONFIG("RSPDriver.READ_LATENCY", i)) {
+			LatencyRead* latencyread = new LatencyRead(m_boardPorts[boardid], boardid);
+			ASSERT(latencyread);
+			m_scheduler.addSyncAction(latencyread);
+		}
 	} // for (boardid...)
 }
 
@@ -1025,6 +1034,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	case RSP_GETSPLITTER:			rsp_getSplitter(event,port);		break;
 	case RSP_SUBSPLITTER:			rsp_subSplitter(event,port);		break;
 	case RSP_UNSUBSPLITTER:			rsp_unsubSplitter(event,port);		break;
+	case RSP_GETLATENCY:			rsp_latencys(event,port);		break;
 
     case F_TIMER: {
 		if (&port == &m_boardPorts[0]) {
@@ -2408,6 +2418,27 @@ void RSPDriver::rsp_unsubSplitter(GCFEvent& event, GCFPortInterface& port)
 	}
 
 	port.send(ack);
+}
+
+//
+// rsp_latencys (event, port)
+//
+void RSPDriver::rsp_latencys(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<GetLatencyCmd> command = new GetLatencyCmd(event, port, Command::READ);
+
+  if (!command->validate()) {
+    LOG_ERROR("GETLATENCYS: invalid parameter");
+    
+    RSPGetlatencyackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = RSP_FAILURE;
+    port.send(ack);
+    return;
+  }
+  
+	// pass command to the scheduler
+    m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 

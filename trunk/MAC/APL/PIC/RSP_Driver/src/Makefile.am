@@ -78,6 +78,7 @@ RSPDriver_SOURCES	= \
 	SetSplitterCmd.cc \
 	GetSplitterCmd.cc \
 	UpdSplitterCmd.cc \
+	GetLatencyCmd.cc \
 	\
 	SyncAction.cc \
 	WriteReg.cc \
@@ -117,7 +118,8 @@ RSPDriver_SOURCES	= \
 	TBBBandselWrite.cc \
 	BypassWrite.cc \
 	SerdesWrite.cc \
-	SerdesRead.cc
+	SerdesRead.cc \
+	LatencyRead.cc
 
 INSTHDRS	=
 NOINSTHDRS	= \
@@ -172,6 +174,7 @@ NOINSTHDRS	= \
 	SetSplitterCmd.h \
 	GetSplitterCmd.h \
 	UpdSplitterCmd.h \
+	GetLatencyCmd.h \
 	\
 	SyncAction.h \
 	WriteReg.h \
@@ -212,7 +215,8 @@ NOINSTHDRS	= \
 	TBBBandselWrite.h \
 	BypassWrite.h  \
 	SerdesWrite.h \
-	SerdesRead.h
+	SerdesRead.h \
+	LatencyRead.h
 
 RSPDriver_LDADD					= libepa.la $(RTCCOMMON_LDADD)
 RSPDriver_DEPENDENCIES			= libepa.la $(LOFAR_DEPEND)
