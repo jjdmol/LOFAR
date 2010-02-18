@@ -1,6 +1,6 @@
 #!/bin/sh
-# 1.1 xcstatistics test to check SerDes Ring with LBH antennas
-# 18-01-10, M.J Norden
+# 1.2 xcstatistics test to check SerDes Ring with LBH antennas
+# 18-02-10, M.J Norden
 # HBA input with antenna
 
 killall beamctl
@@ -27,5 +27,5 @@ echo "Phases" `hostname -s`
 echo ======================
 rspctl --xcangle --xcstatistics &
 sleep 20 && kill $!
-
+killall beamctl
 
