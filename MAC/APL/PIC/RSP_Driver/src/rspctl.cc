@@ -1726,9 +1726,9 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 				logMessage(cout, formatString("RSP[%2d] lane%d %9s:  %5s   %5s   %5s     %9d",
 							boardout, (ap / 2),
 							((ap % 2) == 0 ? "crosslets" : "beamlets"),
-							(rs->align ? "ERROR" : "OK"),
-							(rs->sync ? "OK" : "ERROR"),
-							(rs->brc ? "ERROR" : "OK"),
+							(rs->align == 0 ? "OK" : "ERROR"),
+							(rs->sync == 1 ? "OK" : "ERROR"),
+							(rs->brc == 0 ? "OK" : "ERROR"),
 							rs->cnt ));
 			}
 			
@@ -1884,7 +1884,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 
 		switch (m_type) {
 			case Statistics::SUBBAND_POWER:
-				gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\"\n");
+				gnuplot_cmd(handle, "set xlabel \"Frequency (Hz)\"\n");
 				gnuplot_cmd(handle, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
 				break;
 			case Statistics::BEAMLET_POWER:
@@ -1971,7 +1971,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	
 			switch (m_type) {
 				case Statistics::SUBBAND_POWER:
-					gnuplot_cmd(handle2, "set xlabel \"Frequency (MHz)\"\n");
+					gnuplot_cmd(handle2, "set xlabel \"Frequency (Hz)\"\n");
 					gnuplot_cmd(handle2, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
 					break;
 				case Statistics::BEAMLET_POWER:
@@ -2341,6 +2341,49 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
 	return GCFEvent::HANDLED;
 }
 
+// show latency of the ring and all lanes 
+LatencyCommand::LatencyCommand(GCFPortInterface& port) : Command(port)
+{
+}
+
+void LatencyCommand::send()
+{
+	RSPGetlatencyEvent getlatency;
+
+	getlatency.timestamp = Timestamp(0,0);
+	getlatency.cache = true;
+
+	m_rspport.send(getlatency);
+}
+
+GCFEvent::TResult LatencyCommand::ack(GCFEvent& e)
+{
+	RSPGetlatencyackEvent ack(e);
+
+	if (RSP_SUCCESS == ack.status) {
+		logMessage(cout,"                Ring   Xlet3  Xlet2  Xlet1  Xlet0  Blet3  Blet2  Blet1  Blet0");
+		for (int rsp=0; rsp < get_ndevices(); rsp++) {
+			logMessage(cout,formatString("RSP[%2d] latency %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d",
+										rsp,
+										ack.latencys()(rsp).ring,
+										ack.latencys()(rsp).crosslet_lane3,
+										ack.latencys()(rsp).crosslet_lane2,
+										ack.latencys()(rsp).crosslet_lane1,
+										ack.latencys()(rsp).crosslet_lane0,
+										ack.latencys()(rsp).beamlet_lane3,
+										ack.latencys()(rsp).beamlet_lane2,
+										ack.latencys()(rsp).beamlet_lane1,
+										ack.latencys()(rsp).beamlet_lane0 ));
+		}
+	}
+	else {
+		logMessage(cerr,"Error: RSP_GETLATENCY command failed.");
+	}
+	GCFScheduler::instance()->stop();
+
+	return GCFEvent::HANDLED;
+}
+
 //
 // RSPCtl()
 //
@@ -2661,6 +2704,7 @@ GCFEvent::TResult RSPCtl::doCommand(GCFEvent& e, GCFPortInterface& port)
 	case RSP_SETSPLITTERACK:
 	case RSP_GETSPLITTERACK:
 	case RSP_GETCLOCKACK:
+	case RSP_GETLATENCYACK:
 		status = itsCommand->ack(e); // handle the acknowledgement
 		gClockChanged = false;
 	break;
@@ -2780,6 +2824,7 @@ static void usage(bool exportMode)
 	cout << "rspctl --spustatus           [--select=<set>]  # get status of SPU board" << endl;
 	cout << "rspctl --realdelays[=<list>] [--select=<set>]  # get the installed 16 delays of one or more HBA's" << endl;
 	cout << "rspctl --regstate                              # show update status of all registers once every second" << endl;
+	cout << "rspctl --latency                               # show latency of ring and all lanes" << endl;
 	cout << endl;
 	cout << "--- Statistics -----------------------------------------------------------------------------------------------" << endl;
 	cout << "rspctl --statistics[=(subband|beamlet)]        # get subband (default) or beamlet statistics" << endl;
@@ -2864,11 +2909,11 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{ "xcangle",        no_argument,       0, 'B' },
 		{ "rspclear",       optional_argument, 0, 'C' },
 		{ "directory"  ,    required_argument, 0, 'D' },
-		{ "cdoenable"  ,    required_argument, 0, 'D' },
 		{ "rcuenable",      optional_argument, 0, 'E' },
 		{ "wgmode",         required_argument, 0, 'G' },
 		{ "hbadelays",      optional_argument, 0, 'H' },
 		{ "specinv",	    optional_argument, 0, 'I' },
+		{ "latency",        no_argument,       0, 'L' }, 
 		{ "phase",          required_argument, 0, 'P' },
 		{ "tdstatus",       no_argument,       0, 'Q' },
 		{ "realdelays",     optional_argument, 0, 'R' },
@@ -2886,7 +2931,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	realDelays = false;
 	while (1) {
 		int option_index = 0;
-		int c = getopt_long(argc, argv, "a::b:c::d:e::f:g::hi:l:m:n:p::qr::s::t::vw::xy:z::A:BC::D:E::G:H::I::P:QR::ST::VX1:2:", long_options, &option_index);
+		int c = getopt_long(argc, argv, "a::b:c::d:e::f:g::hi:l:m:n:p::qr::s::t::vw::xy:z::A:BC::D:E::G:H::I::LP:QR::ST::VX1:2:", long_options, &option_index);
 
 		if (c == -1)	// end of argument list reached?
 			break;
@@ -3407,6 +3452,17 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 					exit(EXIT_FAILURE);
 				}
 			}
+		}
+		break;
+
+		case 'L': // --latency
+		{
+			if (command)
+				delete command;
+			LatencyCommand* latencyCmd = new LatencyCommand(*itsRSPDriver);
+			command = latencyCmd;
+
+			command->set_ndevices(m_nrspboards);
 		}
 		break;
 

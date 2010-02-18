@@ -84,8 +84,9 @@ public:
 	TBBSettings& 			getTBBSettings() 		{ return m_tbbsettings; } 
 	BypassSettings& 		getBypassSettings()		{ return m_bypasssettings; } 
 	RawDataBlock_t&			getRawDataBlock() 		{ return (itsRawDataBlock); } 
-	SerdesBuffer&			getSdsWriteBuffer() 	{ return (itsSdsWriteBuffer); } 
+	SerdesBuffer&			getSdsWriteBuffer() 	{ return (itsSdsWriteBuffer); }
 	SerdesBuffer&			getSdsReadBuffer(int rspBoardNr);
+	Latency&				getLatencys()			{ return (itsLatencys); }
 	
 	bool isSplitterActive() { return(itsSplitterActive); }
 	void setSplitterActive(bool active) { itsSplitterActive = active; }
@@ -142,6 +143,7 @@ private:
 	SerdesBuffer					itsSdsReadBuffer[MAX_N_RSPBOARDS];
 	bool							itsSplitterActive;
 	bool							itsCepEnabled;
+	RSP_Protocol::Latency			itsLatencys;
 	
 	Cache* m_cache;		// pointer to container
 };

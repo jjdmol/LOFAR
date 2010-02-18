@@ -158,6 +158,8 @@ public:
 	void rsp_getSplitter(GCFEvent& event, GCFPortInterface &port);
 	void rsp_subSplitter(GCFEvent& event, GCFPortInterface &port);
 	void rsp_unsubSplitter(GCFEvent& event, GCFPortInterface &port);
+	
+	void rsp_latencys(GCFEvent& event, GCFPortInterface &port);
 	/*@}*/
 
 private:

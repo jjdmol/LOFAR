@@ -80,6 +80,7 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   LOG_DEBUG_STR("m_rawDataBlock.size()         =" << ETH_DATA_LEN + sizeof (uint16));
   LOG_DEBUG_STR("m_SdsWriteBuffer.size()       =" << sizeof(itsSdsWriteBuffer));
   LOG_DEBUG_STR("m_SdsReadBuffer.size()        =" << sizeof(itsSdsReadBuffer));
+  LOG_DEBUG_STR("m_latencys.size()             =" << itsLatencys().size()    * sizeof(EPA_Protocol::RADLatency));
 
   LOG_INFO_STR(formatString("CacheBuffer size = %d bytes",
 	         m_beamletweights().size()    	       
@@ -101,7 +102,8 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 	       + m_bypasssettings().size()
 		   + ETH_DATA_LEN + sizeof(uint16)
 		   + sizeof(itsSdsWriteBuffer)
-		   + sizeof(itsSdsReadBuffer)));
+		   + sizeof(itsSdsReadBuffer)
+		   + itsLatencys().size()));
 }
 
 CacheBuffer::~CacheBuffer()
@@ -124,6 +126,7 @@ CacheBuffer::~CacheBuffer()
   m_spustatus.subrack().free();
   m_tbbsettings().free();
   m_bypasssettings().free();
+  itsLatencys().free();
 }
 
 void CacheBuffer::reset(void)
@@ -265,6 +268,12 @@ void CacheBuffer::reset(void)
 	itsSplitterActive = false;
 	// set CEP port enabled
 	itsCepEnabled = true;
+	
+	// Latency status
+	itsLatencys().resize(StationSettings::instance()->nrRspBoards());
+	RADLatency radlatencyinit;
+	memset(&radlatencyinit, 0, sizeof(RADLatency));
+	itsLatencys() = radlatencyinit;
 }
 
 
