@@ -53,7 +53,7 @@ namespace RTCP {
 template<typename SAMPLE_TYPE> class BeamletBuffer
 {
   public:
-	     BeamletBuffer(const Parset *);
+	     BeamletBuffer(const Parset *, unsigned rspBoard);
 	     ~BeamletBuffer();
 
     void     writePacketData(const SAMPLE_TYPE *data, const TimeStamp &begin);
@@ -75,6 +75,7 @@ template<typename SAMPLE_TYPE> class BeamletBuffer
 
     Mutex				  itsValidDataMutex;
     SparseSet<TimeStamp>		  itsValidData;
+    unsigned				  itsRSPboard;
     unsigned				  itsNrSubbands;
     size_t				  itsPacketSize;
     unsigned				  itsSize, itsHistorySize;

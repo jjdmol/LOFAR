@@ -44,7 +44,7 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const Par
   itsBeamletBuffers.resize(itsNrRSPboards);
 
   for (unsigned rsp = 0; rsp < itsNrRSPboards; rsp ++)
-    itsBeamletBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(ps);
+    itsBeamletBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(ps, rsp);
 
   createInputStreams(ps, inputs);
   createInputThreads(ps);

@@ -45,8 +45,9 @@ template<typename SAMPLE_TYPE> const unsigned BeamletBuffer<SAMPLE_TYPE>::itsNrT
 // itsOffset to a proper value, we can assure that input packets never
 // wrap around the circular buffer
 
-template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const Parset *ps)
+template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const Parset *ps, unsigned rspBoard)
 :
+  itsRSPboard(rspBoard),
   itsNrSubbands(ps->nrSlotsInFrame()),
   itsPacketSize(sizeof(struct RSP::header) + itsNrTimesPerPacket * itsNrSubbands * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE)),
   itsSize(align(ps->inputBufferSize(), itsNrTimesPerPacket)),
@@ -77,7 +78,7 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
   memset(itsSBBuffers.origin(), 0, itsSBBuffers.num_elements() * sizeof(SAMPLE_TYPE));
 #endif
 
-  LOG_DEBUG_STR("Circular buffer at " << itsSBBuffers.origin() << "; contains " << itsSize << " samples");
+  LOG_DEBUG_STR("Circular buffer for RSP board " << rspBoard << " at " << itsSBBuffers.origin() << "; contains " << itsSize << " samples");
 }
 
 
@@ -202,7 +203,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
     ctime_r(&now, buf);
     buf[24] = '\0';
 
-    LOG_DEBUG_STR("[" << buf << "] reset BeamletBuffer at " << newTimeStamp << "; itsOffset was " << oldOffset << " and becomes " << itsOffset);
+    LOG_DEBUG_STR("[" << buf << "] reset BeamletBuffer of RSP board " << itsRSPboard << " at " << newTimeStamp << "; itsOffset was " << oldOffset << " and becomes " << itsOffset);
   }
 }
 
