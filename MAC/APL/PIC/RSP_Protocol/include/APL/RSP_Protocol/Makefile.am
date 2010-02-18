@@ -15,7 +15,8 @@ INSTHDRS = \
 	TDStatus.h \
 	Versions.h \
 	WGSettings.h \
-	XCStatistics.h
+	XCStatistics.h \
+	Latency.h
 
 NOINSTHDRS =
 

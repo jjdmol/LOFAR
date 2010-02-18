@@ -289,6 +289,19 @@ prelude = << PRELUDE_END
 		uint8	vcc;	// * 1 = 3.3
 		uint8	temperature;
 	};
+	
+	// structure for lane latency
+	typedef struct RADLatency {
+		uint16 beamlet_lane0;
+		uint16 crosslet_lane0;
+		uint16 beamlet_lane1;
+		uint16 crosslet_lane1;
+		uint16 beamlet_lane2;
+		uint16 crosslet_lane2;
+		uint16 beamlet_lane3;
+		uint16 crosslet_lane3;
+		uint16 ring;
+	};
 
 #define	RSP_RAW_DATABLOCK_SIZE		1480
 
@@ -980,7 +993,7 @@ event = {
   };
   param = {
     name = "latency";
-    type = "uint16[9]";
+    type = "struct RADLatency";
   };
 };
 

@@ -31,6 +31,7 @@ include = '<APL/RSP_Protocol/SPUStatus.h>';
 include = '<APL/RSP_Protocol/Versions.h>';
 include = '<APL/RSP_Protocol/WGSettings.h>';
 include = '<APL/RSP_Protocol/XCStatistics.h>';
+include = '<APL/RSP_Protocol/Latency.h>';
 
 prelude = << PRELUDE_END
 
@@ -170,6 +171,9 @@ static const int RSP_RAW_BLOCK_SIZE = 1480;
 // UPDSPLITTER			(timestamp,	status,	handle,	splitters)
 // UNSUBSPLITTER		(handle)
 // UNSUBSPLITTERACK		(timestamp,	status,	handle)
+
+// GETLATENCY			(timestamp,	cache)
+// GETLATENCYACK		(timestamp,	status,	latencys)
 
 // 110 commands
 
@@ -2126,3 +2130,35 @@ event = {
 	};
 };
 
+event = {
+  signal = GETLATENCY;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETLATENCYACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "latencys";
+    type = "Latency";
+    userdefined;
+  };
+};

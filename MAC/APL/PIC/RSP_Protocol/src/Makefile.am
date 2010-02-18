@@ -49,7 +49,8 @@ librsp_protocol_la_SOURCES = Package__Version.cc  \
 	TDStatus.cc \
 	Versions.cc \
 	WGSettings.cc \
-	XCStatistics.cc
+	XCStatistics.cc \
+	Latency.cc
 
 clean-local:
 	rm -f *.ph

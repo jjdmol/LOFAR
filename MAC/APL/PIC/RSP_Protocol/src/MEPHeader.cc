@@ -89,6 +89,7 @@ const MEPHeader::FieldsType MEPHeader::TBB_BANDSELX_HDR      = { WRITE, 0, 0, { 
 const MEPHeader::FieldsType MEPHeader::TBB_BANDSELY_HDR      = { WRITE, 0, 0, { DST_BLP0, TBB, TBB_BANDSELY },  0, TBB_BANDSEL_SIZE,  0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::RAD_BP_HDR            = { WRITE, 0, 0, { DST_RSP, RAD, RAD_BP }, 0, RAD_BP_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::RAD_LATENCY_HDR       = { READ , 0, 0, { DST_RSP, RAD, RAD_LATENCY }, 0, RAD_LATENCY_SIZE, 0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::RSP_RAWDATA_WRITE     = { WRITE, 0, 0, { 0xABBA, 0xBB, 0xAA }, 0xEFFE, 0xEBBE, 0x3412, 0 };
 const MEPHeader::FieldsType MEPHeader::RSP_RAWDATA_READ      = { READ , 0, 0, { 0xABBA, 0xBB, 0xAA }, 0xEFFE, 0xEBBE, 0x3412, 0 };
