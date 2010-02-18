@@ -233,8 +233,8 @@ CREATE TABLE treestate (
 	CONSTRAINT statename_uniq	UNIQUE(name)
 )WITHOUT OIDS;
 INSERT INTO treestate VALUES (  0, 'idle');
-INSERT INTO treestate VALUES (100, 'being specified');
-INSERT INTO treestate VALUES (200, 'specified');
+INSERT INTO treestate VALUES (100, 'described');
+INSERT INTO treestate VALUES (200, 'prepared');
 INSERT INTO treestate VALUES (300, 'approved');
 INSERT INTO treestate VALUES (400, 'scheduled');
 INSERT INTO treestate VALUES (500, 'queued');
