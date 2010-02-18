@@ -192,6 +192,7 @@ public:
 	// for the cross-correlation and beamforming data travelling on the
 	// SERDES rings.
 	static const uint8 RAD_BP           = 0x00;
+	static const uint8 RAD_LATENCY      = 0x01;
 
 	static const int MIN_REGID          = 0x00;
 	static const int MAX_REGID          = XST_NR_STATS - 1;
@@ -237,7 +238,7 @@ public:
 
 	/*@{*/
 	// Define size of each register.
-	static const uint16 RSR_STATUS_SIZE       = 200;
+	static const uint16 RSR_STATUS_SIZE       = 252;
 	static const uint16 RSR_VERSION_SIZE      = 2;
 	static const uint16 RSR_TIMESTAMP_SIZE    = 4;
 
@@ -293,7 +294,8 @@ public:
 	static const uint16 TBB_BANDSEL_SIZE  = 64;
 
 	// Size of the RAD_BP register.
-	static const uint16 RAD_BP_SIZE = 4; // four bytes = 32 bits, 8 bits per lane
+	static const uint16 RAD_BP_SIZE      = 4; // four bytes = 32 bits, 8 bits per lane
+	static const uint16 RAD_LATENCY_SIZE = 18; // 2 x 4 lanes (beamlet and crosslet) and 1 ring = 9 x 2bytes = 18 bytes
 
 	// Registers too large to send in a single ethernet frame
 	// (> 1500 bytes) will be sent in a number of fragments of this size.
@@ -415,7 +417,8 @@ public:
 	static const FieldsType TBB_BANDSELY_HDR;
 
 	static const FieldsType RAD_BP_HDR;
-
+	static const FieldsType RAD_LATENCY_HDR;
+	
 	static const FieldsType RSP_RAWDATA_WRITE;
 	static const FieldsType RSP_RAWDATA_READ;
 
