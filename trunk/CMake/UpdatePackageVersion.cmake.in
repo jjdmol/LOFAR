@@ -135,7 +135,7 @@ file(WRITE "${_file}.tmp"
   "}\n"
   "\n"
   "#endif\n")
-execute_process(COMMAND @CMAKE_COMMAND@ -E 
+execute_process(COMMAND "@CMAKE_COMMAND@" -E 
   copy_if_different "${_file}.tmp" "${_file}")
 file(REMOVE "${_file}.tmp")
 
@@ -192,7 +192,7 @@ endforeach(_dep @PACKAGE_DEPENDENCIES@)
 file(APPEND "${_file}.tmp"
   "  }\n"
   "}\n")
-execute_process(COMMAND @CMAKE_COMMAND@ -E 
+execute_process(COMMAND "@CMAKE_COMMAND@" -E 
   copy_if_different "${_file}.tmp" "${_file}")
 file(REMOVE "${_file}.tmp")
 
@@ -217,6 +217,6 @@ file(WRITE "${_file}.tmp"
   "  Version::show<${_pkg}Version> (std::cout, \"${_pkg}\", type);\n"
   "  return 0;\n"
   "}\n")
-execute_process(COMMAND @CMAKE_COMMAND@ -E 
+execute_process(COMMAND "@CMAKE_COMMAND@" -E 
   copy_if_different "${_file}.tmp" "${_file}")
 file(REMOVE "${_file}.tmp")
