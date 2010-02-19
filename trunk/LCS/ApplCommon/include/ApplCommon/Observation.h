@@ -111,7 +111,7 @@ public:
 	// new way of selecting antennas
 	string			antennaSet;			// like LBA_INNER, LBA_OUTER, etc.
 	bool			useLongBaselines;
-	bool			splitter;			// On or Off
+	bool			splitterOn;			// On or Off
 
 	vector<Beam>	beams;
 	vector<int>		beamlet2beams;		// to which beam each beamlet belongs

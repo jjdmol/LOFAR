@@ -790,7 +790,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 		}
 
 		// set the splitters in the right state.
-		bool	splitterState = itsStartingObs->second->obsPar()->splitter;
+		bool	splitterState = itsStartingObs->second->obsPar()->splitterOn;
 		LOG_DEBUG_STR ("Setting the splitters to " << (splitterState ? "ON" : "OFF"));
 		CLKCTRLSetSplittersEvent	setEvent;
 		setEvent.splittersOn = splitterState;
@@ -800,7 +800,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 
 	case CLKCTRL_SET_SPLITTERS_ACK: {
 		CLKCTRLSetSplittersAckEvent		ack(event);
-		bool	splitterState = itsStartingObs->second->obsPar()->splitter;
+		bool	splitterState = itsStartingObs->second->obsPar()->splitterOn;
 		if (ack.status != CLKCTRL_NO_ERR) {
 			LOG_FATAL_STR("Unable to set the splittters to " << (splitterState ? "ON" : "OFF"));
 			_abortObservation(itsStartingObs);
