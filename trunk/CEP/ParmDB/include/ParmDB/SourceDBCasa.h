@@ -30,6 +30,7 @@
 //# Includes
 #include <ParmDB/SourceDB.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_set.h>
 #include <tables/Tables/Table.h>
 
 
@@ -140,10 +141,16 @@ namespace BBS {
     vector<string> findDuplicates (casa::Table& table,
                                    const string& columnName);
 
+    // Fill the patch and source set object from the tables.
+    // They serve as a cache to find out if a patch or source name exists.
+    void fillSets();
 
     //# Data members
-    casa::Table itsPatchTable;
-    casa::Table itsSourceTable;
+    casa::Table      itsPatchTable;
+    casa::Table      itsSourceTable;
+    set<std::string> itsPatchSet;
+    set<std::string> itsSourceSet;
+    bool             itsSetsFilled;
   };
 
   // @}

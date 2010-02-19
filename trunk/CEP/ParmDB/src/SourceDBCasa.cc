@@ -43,7 +43,8 @@ namespace LOFAR {
 namespace BBS {
 
   SourceDBCasa::SourceDBCasa (const ParmDBMeta& pdm, bool forceNew)
-    : SourceDBRep (pdm, forceNew)
+    : SourceDBRep   (pdm, forceNew),
+      itsSetsFilled (false)
   {
     string tableName = pdm.getTableName() + "/SOURCES";
     // Create the table if needed or if it does not exist yet.
@@ -61,14 +62,17 @@ namespace BBS {
 
   void SourceDBCasa::lock (bool lockForWrite)
   {
+    // Lock all tables involved to avoid unwanted flushes.
+    getParmDB().lock (lockForWrite);
     itsSourceTable.lock (lockForWrite);
     itsPatchTable.lock (lockForWrite);
   }
 
   void SourceDBCasa::unlock()
   {
-    itsSourceTable.unlock();
     itsPatchTable.unlock();
+    itsSourceTable.unlock();
+    getParmDB().unlock();
   }
 
   void SourceDBCasa::createTables (const string& tableName)
@@ -163,22 +167,39 @@ namespace BBS {
     return findDuplicates (itsSourceTable, "SOURCENAME");
   }
 
+  void SourceDBCasa::fillSets()
+  {
+    if (!itsSetsFilled) {
+      TableLocker plocker(itsPatchTable, FileLocker::Read);
+      ROScalarColumn<String> patchCol(itsPatchTable, "PATCHNAME");
+      itsPatchSet.clear();
+      for (uint i=0; i<itsPatchTable.nrow(); ++i) {
+        itsPatchSet.insert (patchCol(i));
+      }
+      TableLocker slocker(itsSourceTable, FileLocker::Read);
+      ROScalarColumn<String> sourceCol(itsSourceTable, "SOURCENAME");
+      itsSourceSet.clear();
+      for (uint i=0; i<itsSourceTable.nrow(); ++i) {
+        itsSourceSet.insert (sourceCol(i));
+      }
+      itsSetsFilled = true;
+    }
+  }
+
   bool SourceDBCasa::patchExists (const string& patchName)
   {
-    TableLocker locker(itsPatchTable, FileLocker::Read);
-    // See if existing.
-    Table table = itsPatchTable(itsPatchTable.col("PATCHNAME") ==
-                                String(patchName));
-    return (table.nrow() > 0);
+    if (!itsSetsFilled) {
+      fillSets();
+    }
+    return itsPatchSet.find(patchName) != itsPatchSet.end();
   }
 
   bool SourceDBCasa::sourceExists (const string& sourceName)
   {
-    TableLocker locker(itsSourceTable, FileLocker::Read);
-    // See if existing.
-    Table table = itsSourceTable(itsSourceTable.col("SOURCENAME") ==
-                                 String(sourceName));
-    return (table.nrow() > 0);
+    if (!itsSetsFilled) {
+      fillSets();
+    }
+    return itsSourceSet.find(sourceName) != itsSourceSet.end();
   }
 
   uint SourceDBCasa::addPatch (const string& patchName, int catType,
@@ -193,6 +214,7 @@ namespace BBS {
       ASSERTSTR (!patchExists(patchName),
                  "Patch " << patchName << " already exists");
     }
+    itsPatchSet.insert (patchName);
     // Okay, add it to the patch table.
     ScalarColumn<String> nameCol(itsPatchTable, "PATCHNAME");
     ScalarColumn<uint>   catCol (itsPatchTable, "CATEGORY");
@@ -232,6 +254,7 @@ namespace BBS {
       ASSERTSTR (!sourceExists(sourceName),
                  "Source " << sourceName << " already exists");
     }
+    itsSourceSet.insert (sourceName);
     addSrc (patchId, sourceName, sourceType, defaultParameters, ra, dec);
   }
 
@@ -252,6 +275,8 @@ namespace BBS {
       ASSERTSTR (!sourceExists(sourceName),
                  "Source " << sourceName << " already exists");
     }
+    itsPatchSet.insert  (sourceName);
+    itsSourceSet.insert (sourceName);
     uint patchId = addPatch (sourceName, catType, apparentBrightness,
                              ra, dec, false);
     addSrc (patchId, sourceName, sourceType, defaultParameters, ra, dec);
