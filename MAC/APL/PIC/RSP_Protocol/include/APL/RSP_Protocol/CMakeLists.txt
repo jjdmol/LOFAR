@@ -18,7 +18,8 @@ set(inst_HEADERS
   TDStatus.h 
   Versions.h 
   WGSettings.h
-  XCStatistics.h)
+  XCStatistics.h
+  Latency.h)
 
 # Add definition of include path suffix definition, because the header files
 # reside in a non-standard location. 

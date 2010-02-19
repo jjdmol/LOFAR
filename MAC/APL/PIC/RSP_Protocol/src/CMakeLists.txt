@@ -32,6 +32,7 @@ lofar_add_library(rsp_protocol
   TDStatus.cc
   Versions.cc
   WGSettings.cc
-  XCStatistics.cc)
+  XCStatistics.cc
+  Latency.cc)
 
 lofar_add_bin_program(versionrsp_protocol versionrsp_protocol.cc)
