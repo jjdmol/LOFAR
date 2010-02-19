@@ -300,7 +300,7 @@ string Observation::getAntennaArrayName(bool hasSplitters) const
 //
 string Observation::getBeamName(uint32	beamIdx) const
 {
-	return (formatString("observation[%d]beam[%d]", obsID, beamIdx+1));
+	return (formatString("observation[%d]beam[%d]", obsID, beamIdx));
 }
 
 //
@@ -362,6 +362,7 @@ ostream& Observation::print (ostream&	os) const
 
     os << "nrBeams      : " << beams.size() << endl;
 	for (size_t	i(0) ; i < beams.size(); i++) {
+		os << "Beam[" << i << "] name       : " << getBeamName(i) << endl;
 		os << formatString("Beam[%d].pointing   : %f, %f, %s\n", i, beams[i].angle1, beams[i].angle2, beams[i].directionType.c_str());
 		os << "Beam[" << i << "].subbandList: "; writeVector(os, beams[i].subbands, ",", "[", "]"); os << endl;
 		os << "Beam[" << i << "].beamletList: "; writeVector(os, beams[i].beamlets, ",", "[", "]"); os << endl;
