@@ -67,20 +67,15 @@ def findIPNumber(stationName):
 #
 def copyTestFiles(dataDir):
 
-    testFile = dataDir+"/RSPDriver.conf.test"
-    # the existence of /opt/lofar/etc has been checked in main() already
-    destFile = "/opt/lofar/etc/RSPDriver.conf"
-    command = "cp -f "+testFile+ " " + destFile
-    os.system(command);
-    testFile = dataDir+"/TBBDriver.conf.test"
-    destFile = "/opt/lofar/etc/TBBDriver.conf"
-    command = "cp -f "+testFile+ " " + destFile
-    os.system(command);
-    testFile = dataDir+"/RemoteStation.conf.test"
-    destFile = "/opt/lofar/etc/RemoteStation.conf"
-    command = "cp -f "+testFile+ " " + destFile
-    os.system(command);
-
+    for file in ["RSPDriver.conf.test","TBBDriver.conf.test",
+                     "RemoteStation.conf.test","HardwareMonitor.conf.test"]:
+        
+        testFile = dataDir+"/"+file
+        # the existence of /opt/lofar/etc has been checked in main() already
+        destFile = "/opt/lofar/etc/"+file.split(".")[0]+"."+file.split(".")[1]
+        command = "cp -f "+testFile+ " " + destFile
+        os.system(command);
+        
 #
 # findRSPDestNodes(stationName)
 #
@@ -407,6 +402,26 @@ def createHBADeltasFile(resultDir, stationName, dataDir):
     print command
     os.system(command)
 
+def createHardwareMonitorFile(resultDir, stationName, dataDir):
+    """
+    Creates the right HardwareMonitor.conf file for this station
+
+    """
+    # Find Ip number station
+    ipnumber = findIPNumber(stationName)
+    ip_parts = ipnumber.split('.')
+    ip_parts[3] = "3"
+    HWMip = ip_parts[0]+"."+ip_parts[1]+"."+ip_parts[2]+"."+ip_parts[3]
+    HWMfile = open(dataDir+"/HardwareMonitor.conf.tmpl")
+    HWMconfig = HWMfile.read()
+    HWMfile.close()
+    HWMconfig = HWMconfig.replace("@STATION@",   stationName.upper())
+    HWMconfig = HWMconfig.replace("@IP_ENV_CONTR@", HWMip)
+    outFile = os.open(resultDir+"/HardwareMonitor.conf", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
+    os.write(outFile, HWMconfig)
+    os.close(outFile)
+    
+
 def de601Exceptions(resultDir, stationName, dataDir):
     """
     Handle exceptions for station de601 (Effelsberg)
@@ -453,6 +468,7 @@ if (sys.argv[1] == "localhost"):
             createAntennaArraysFile(resultDir, stationName, dataDir)
             createCableDelaysFile  (resultDir, stationName, dataDir)
             createHBADeltasFile    (resultDir, stationName, dataDir)
+            createHardwareMonitorFile(resultDir, stationName, dataDir)
             de601Exceptions        (resultDir, stationName, dataDir)
     else:
         print "Cannot determine stationname"
@@ -488,6 +504,7 @@ else:
         createAntennaArraysFile(resultDir, stationName, dataDir)
         createCableDelaysFile  (resultDir, stationName, dataDir)
         createHBADeltasFile    (resultDir, stationName, dataDir)
+        createHardwareMonitorFile(resultDir, stationName, dataDir)
         de601Exceptions        (resultDir, stationName, dataDir)
         
 if len(warnings) > 0:
