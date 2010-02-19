@@ -42,7 +42,7 @@ Observation::Observation() :
 	stopTime(0),
 	nyquistZone(0),
 	sampleClock(0),
-	splitter(false)
+	splitterOn(false)
 {
 }
 
@@ -56,7 +56,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 	stopTime(0),
 	nyquistZone(0),
 	sampleClock(0),
-	splitter(false)
+	splitterOn(false)
 {
 	// analyse ParameterSet.
 	string prefix = aParSet->locateModule("Observation") + "Observation.";
@@ -98,17 +98,9 @@ Observation::Observation(ParameterSet*		aParSet) :
 
 	// auto select the right antennaArray when antennaSet variable is used.
 	if (!antennaSet.empty()) {
-		if (antennaSet == "HBA_BOTH") {
-			antennaArray = "HBA";
-			splitter = true;
-		}
-		else if (antennaSet == "HBA_ONE") {
-			antennaArray = "HBA";
-		}
-		else {
-			antennaArray = "LBA";
-		}
+		antennaArray = antennaSet.substr(0,3);
 	}
+	splitterOn = (antennaArray == "HBA");
 
 	RCUset.reset();							// clear RCUset by default.
 	if (aParSet->isDefined(prefix+"receiverList")) {
@@ -203,7 +195,7 @@ bool	Observation::conflicts(const	Observation&	other) const
 	}
 
 	// Observation overlap, check splitters
-	if (other.splitter != splitter) {
+	if (other.splitterOn != splitterOn) {
 		LOG_INFO_STR("Splitters of observation " << obsID << " and " << other.obsID << " conflict");
 		return (true);
 	}
@@ -359,6 +351,7 @@ ostream& Observation::print (ostream&	os) const
     os << "receiver set : " << RCUset << endl;
     os << "sampleClock  : " << sampleClock << endl;
     os << "filter       : " << filter << endl;
+    os << "splitter     : " << (splitterOn ? "ON" : "OFF") << endl;
     os << "nyquistZone  : " << nyquistZone << endl << endl;
     os << "Meas.set     : " << MSNameMask << endl << endl;
 
