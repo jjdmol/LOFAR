@@ -65,6 +65,7 @@ lofar_add_bin_program(RSPDriver
   GetRawBlockCmd.cc
   SetSplitterCmd.cc
   GetSplitterCmd.cc
+  GetLatencyCmd.cc
   SyncAction.cc
   WriteReg.cc
   ReadReg.cc
@@ -104,7 +105,8 @@ lofar_add_bin_program(RSPDriver
   BypassWrite.cc
   SerdesWrite.cc
   SerdesRead.cc
-  UpdSplitterCmd.cc)
+  UpdSplitterCmd.cc
+  LatencyCmd.cc)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/rspctl.conf.in
