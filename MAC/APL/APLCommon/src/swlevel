@@ -225,11 +225,53 @@ status_prog()
 #		ps -ef | grep -v grep | egrep '[0-9][0-9] [a-zA-Z0-9/_.]*/'${prog} 2>&1 >/dev/null
 		/sbin/pidof ${prog} 1>/dev/null 2>&1
 		if [ $? -eq 0 ]; then
-			pid=`/sbin/pidof ${prog}`
+			pid=( `/sbin/pidof ${prog}` )
 		else
 			pid="DOWN"
 		fi
-		echo ${levelnr}:${prog}:${pid} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3 }'
+		echo ${levelnr}:${prog}:${pid[*]} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3 }'
+		# Some Checks
+		# AMCServer needs two instances
+		if [ "$prog" == "AMCServer" ]; then
+		    if [ ${#pid[@]} -lt 2 ]; then 
+		       missing="$missing ${prog}[$levelnr]"
+		    fi
+		    if [ ${#pid[@]} -gt 2 ]; then 
+                       toomany="$toomany ${prog}[$levelnr]"
+		    fi
+		else
+		    # Other controllers only one instance
+		    if [ ${#pid[*]} -ge 2 ]; then 
+                       toomany="$toomany ${prog}[$levelnr]"
+		    fi
+		fi
+		
+		# Check for missing controllers 
+		if [ "$pid" = "DOWN" -o "$pid" = "0" ]; then 
+  		  if [ $levelnr -le $level ]; then 
+		    if [ $levelnr -le 5 ]; then
+			missing="$missing ${prog}[$levelnr]"
+		    else
+			# level 6 only has these two controllers running
+			# Others are started by StationControl when needed
+			if [ "$prog" == "StationControl" \
+			    -o "$prog" == "ClockControl" ]; then 
+			    missing="$missing ${prog}[$levelnr]"
+			fi
+		    fi
+		  fi
+		fi
+		# Print concluding remarks at the bottom of the list
+		if [ "$prog" == "TBBControl" ]; then
+		    echo "----"
+		    if [  $missing ]; then 
+			echo "Missing :"$missing
+		    fi
+		    if [ $toomany ]; then 
+			echo "Too many:"$toomany
+		    fi
+		fi
+		
 	done
 }
 
