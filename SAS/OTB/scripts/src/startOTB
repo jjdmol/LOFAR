@@ -1,28 +1,59 @@
-#!/bin/bash
-#
-# Script to start the OTB (on sas001)
-# Change the first lines when an update is done 
-#
-
-export serverDir=/opt/sas/server_Version21
-export clientDir=/opt/sas/client_Version21
+export serverDir=/opt/sas/server
+export clientDir=/opt/sas/client
 export JAVAHOME=/usr/java/jdk1.6.0_07
-
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$serverDir
 
+start_server()
+{
+      curdate=`date +%Y%m%dT%H%M%S`
+      logfile="/opt/lofar/log/OTDBServer."$curdate
+      echo "Starting server: $JAVAHOME/bin/java -jar $serverDir/jOTDB2.jar paulus boskabouter LOFAR20 sas001 sas001 $port1 $port2 &" | tee -a $logfile
+      $JAVAHOME/bin/java -jar $serverDir/jOTDB2.jar paulus boskabouter LOFAR20 sas001 sas001 $port1 $port2 2>&1 1>$logfile&
+      serverpid=$!
+}
+
+start_client()
+{
+      # Port 13599 is reserved for MOM-OTDB adapter and should be started 
+      # anyway. But only start OTB client if server has portnumber >= 13601 
+      if [ $port1 -ge 13601 ]; then
+        curdate=`date +%Y%m%dT%H%M%S`
+	logfile="/opt/lofar/log/OTBlog."$curdate
+	
+	echo "Starting client: $JAVAHOME/bin/java -jar $clientDir/OTB.jar -p $port1" | tee -a $logfile
+        $JAVAHOME/bin/java -jar $clientDir/OTB.jar -p $port1 2>&1 1>>$logfile
+        break
+      fi
+}
 
 serverpid=0
-ps -ef | grep -v grep | grep java | grep 13599    2>&1 1>/dev/null
-if [ $? -ne 0 ]; then
-        $JAVAHOME/bin/java -jar $serverDir/jOTDB2.jar paulus boskabouter LOFAR20 sas001 sas001 13599 13600 &
-    serverpid=$!
+if [ $# -eq 0 ]; then
+  port1=13599
+else
+  port1=$1
 fi
 
-$JAVAHOME/bin/java -jar $clientDir/OTB.jar -p 13599
+while [ $port1 -le 13620 ] 
+do
+  let port2=port1+1
+  ps -ef | grep -v grep | grep java | grep $port1 2>&1 1>/dev/null
+  if [ $? -ne 0 ]; then
+    start_server
+  fi
+  start_client
+  let port1+=2
+done
 
+# Check if while loop was exited due to too many instances of server process
+if [ $port1 -gt 13620 ]; then 
+  echo "Too many instances of server proces!"
+  exit 1
+fi
 
-if [ $serverpid -ne 0 ]; then
+# When stopping the client, also stop the server!
+if [ $port1 -ge 13601 -a $serverpid -ne 0 ]; then
    echo "Stopping server"
    kill $serverpid
    sleep 1
 fi
+
