@@ -712,10 +712,10 @@ uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 
 	// read new angles from parameterfile.
 	Observation		theObs(globalParameterSet());	// does all nasty conversions
-	uint32			beamIdx(indexValue(ackEvent.subarrayname, "[]")-1);
+	uint32			beamIdx(indexValue(ackEvent.subarrayname, "[]"));
 	if (beamIdx >= theObs.beams.size()) {
-		LOG_FATAL_STR("Beamnr " << beamIdx+1 << " (=beam " << ackEvent.subarrayname << 
-						") is out of range: 1.." << theObs.beams.size());
+		LOG_FATAL_STR("Beamnr " << beamIdx << " (=beam " << ackEvent.subarrayname << 
+						") is out of range: 0.." << theObs.beams.size()-1);
 		setObjectState("Beamlet alloc index error", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
 		return (CT_RESULT_BEAMALLOC_FAILED);
 	}
@@ -831,6 +831,9 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 			LOG_DEBUG_STR("DP " << DPChangedEvent(event).DPname << " was changed"); 
 			result = GCFEvent::HANDLED;
 		}
+		break;
+
+		case DP_SET:
 		break;
 	}
 
