@@ -250,21 +250,21 @@ bitset<MAX_RCUS> Observation::getRCUbitset(int nrLBAs, int nrHBAs, int nrRSPs, b
 	// HBA's in Core stations sometimes use half of the rcus.
 	bool	fullStation(MAX2(nrLBAs, nrHBAs) <= (nrRSPs * NR_ANTENNAS_PER_RSPBOARD));
 	int		nrAnts   = ((antennaSet.find("LBA") == 0) ? nrLBAs : nrHBAs);
-	int		firstRCU = 0;
-	if (!fullStation && (antennaSet.find("LBA") == 0)) {
+	if ((antennaSet.find("LBA") == 0) && !fullStation) {
 		nrAnts /= 2;
 	}
-	else if (hasSplitters && (antennaSet == "HBA_ONE")) {
-		nrAnts /= 2;
+	int		firstRCU = 0;
+	int		lastRCU	 = nrAnts * 2;
+	if (hasSplitters && (antennaSet == "HBA_ONE")) {
+		lastRCU = nrAnts;
 	}
 	else if (hasSplitters && (antennaSet == "HBA_TWO")) {
-		nrAnts /= 2;
 		firstRCU = nrAnts;
 	}
 	
 	// Set up the RCUbits. Remember that we don't care here which of the three inputs is used.
 	RCUset.reset();
-	for (int rcu = firstRCU; rcu < 2*nrAnts; rcu++) {
+	for (int rcu = firstRCU; rcu < lastRCU; rcu++) {
 			RCUset.set(rcu);
 	}
 	return (RCUset);

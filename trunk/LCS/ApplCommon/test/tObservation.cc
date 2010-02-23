@@ -109,6 +109,14 @@ int main (int, char* argv[])
 		cout << "getRCUbitset(96,48,24,false) = " << obs3.getRCUbitset(96,48,24,false) << endl;	// Europe
 		cout << "getRCUbitset(96,96,24,false) = " << obs3.getRCUbitset(96,96,24,false) << endl;	// Europe
 		
+		// tricky test on RCU bitsets
+		obs3.antennaSet = "HBA_TWO";
+		cout << obs3.antennaSet << endl;
+		cout << "getRCUbitset(96,48,12,true)  = " << obs3.getRCUbitset(96,48,12,true) << endl;	// Core
+		cout << "getRCUbitset(96,48,12,false) = " << obs3.getRCUbitset(96,48,12,false) << endl;	// Remote
+		cout << "getRCUbitset(96,48,24,false) = " << obs3.getRCUbitset(96,48,24,false) << endl;	// Europe
+		cout << "getRCUbitset(96,96,24,false) = " << obs3.getRCUbitset(96,96,24,false) << endl;	// Europe
+		
 		cout << "HBA_ONE(false) = " << obs3.getAntennaArrayName(false) << endl;
 		cout << "HBA_ONE(true)  = " << obs3.getAntennaArrayName(true) << endl;
 		obs3.antennaSet = "HBA_TWO";
