@@ -52,6 +52,9 @@ namespace LOFAR
     trace.resize(size);
   
 #ifdef HAVE_BFD
+# ifdef USE_THREADS
+    ScopedLock sc;
+# endif
     bfd* abfd = SymbolTable::instance().getBfd();
     if (!abfd) return;
 
@@ -63,7 +66,7 @@ namespace LOFAR
     
       if (found) {
         if (functionname && *functionname) {
-#ifdef HAVE_CPLUS_DEMANGLE
+# ifdef HAVE_CPLUS_DEMANGLE
           char* res = cplus_demangle(functionname, DMGL_ANSI | DMGL_PARAMS);
           if (res == 0) {
             trace[i].function = functionname;
@@ -72,9 +75,9 @@ namespace LOFAR
             trace[i].function = res;
             free(res);
           }
-#else
+# else
           trace[i].function = functionname;
-#endif
+# endif
         }
         if (filename) {
           const char* h = strrchr(filename,'/');
@@ -89,7 +92,7 @@ namespace LOFAR
       //       break;
     }
 #else
-    addr = addr;  // suppress `unused parameter' warning
+    (void) addr;  // suppress `unused parameter' warning
 #endif
     return;
   }
@@ -98,6 +101,11 @@ namespace LOFAR
   //##----  P r i v a t e   f u n c t i o n s  ----##//
 
 #ifdef HAVE_BFD
+
+# ifdef USE_THREADS
+  pthread_mutex_t
+  AddressTranslator::ScopedLock::mutex = PTHREAD_MUTEX_INITIALIZER;
+# endif
 
   void AddressTranslator::find_address_in_section(bfd*      abfd,
 						  asection* section,

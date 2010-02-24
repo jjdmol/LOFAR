@@ -42,10 +42,7 @@ namespace LOFAR
     itsNrAddr(0)
   {
     memset(itsAddr, 0, maxNrAddr*sizeof(void*));
-
-    int nraddrs = backtrace(itsAddr, maxNrAddr);
-
-    itsNrAddr = nraddrs >= 0 ? nraddrs : 0;
+    itsNrAddr = backtrace(itsAddr, maxNrAddr);
   }
 
   void Backtrace::print(ostream& os) const

@@ -75,14 +75,14 @@ namespace LOFAR
   private:
     // Maximum number of return addresses that we are willing to handle. Add
     // one to the compile time constant, because, later on, we will hide the
-    // first return address (being the construction of %Backtrace itself).
+    // first return address (being the construction of Backtrace itself).
     static const int maxNrAddr = BACKTRACE_MAX_RETURN_ADDRESSES + 1;
 
     // C-array of return addresses.
     void* itsAddr[maxNrAddr];
 
-    // Actual number of return addresses returned by get_addresses().
-    int itsNrAddr;
+    // Actual number of return addresses returned by backtrace().
+    unsigned itsNrAddr;
 
     // Traceback info containing function name, filename, and line number.
     // This vector will be filled by AddressTranslator.operator().
