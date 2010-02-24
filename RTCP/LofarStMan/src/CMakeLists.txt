@@ -10,3 +10,7 @@ lofar_add_library(lofarstman
   )
 
 lofar_add_bin_program(versionlofarstman versionlofarstman.cc)
+
+install(PROGRAMS
+  makeFLAGwritable
+  DESTINATION bin)
