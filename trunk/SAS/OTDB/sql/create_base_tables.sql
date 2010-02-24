@@ -252,14 +252,17 @@ INSERT INTO treestate VALUES (1200, 'obsolete');
 --
 CREATE SEQUENCE	campaignID;
 CREATE TABLE campaign (
-	ID			INT2			NOT NULL DEFAULT nextval('campaignID'),
+	ID			INT2			NOT NULL DEFAULT NEXTVAL('campaignID'),
 	name		VARCHAR(30)		NOT NULL,
+	title		VARCHAR(100)	NOT NULL,
+	PI			VARCHAR(80)		NOT NULL,
+	CO_I		VARCHAR(80),
+	contact		VARCHAR(120),
 	
-	CONSTRAINT	campaign_id_uniq	UNIQUE(ID)
+	CONSTRAINT	campaign_id_uniq	UNIQUE(ID),
+	CONSTRAINT	campaign_name_uniq	UNIQUE(name)
 ) WITHOUT OIDS;
-INSERT INTO campaign(id, name) VALUES (0, 'no campaign');
-INSERT INTO campaign(name) 	   VALUES ('my campaign');
-INSERT INTO campaign(name) 	   VALUES ('your campaign');
+INSERT INTO campaign(id, name, title, PI) VALUES (0, 'no campaign', 'not related to a campaign/project', 'unkwown');
 
 --
 -- Operator table
