@@ -32,6 +32,7 @@ DROP TYPE	OTDBnode		CASCADE;
 DROP TYPE	OTDBparamDef	CASCADE;
 DROP TYPE	OTDBvalue		CASCADE;
 DROP TYPE	OTDBnodeDef		CASCADE;
+DROP TYPE	campaignInfo	CASCADE;
 
 CREATE TYPE treeInfo AS (
 	treeID			INT4,			-- OTDBtree.treeID%TYPE,
@@ -112,3 +113,14 @@ CREATE TYPE OTDBnodeDef AS (
 	constraints		TEXT,
 	description		TEXT
 );
+
+CREATE TYPE campaignInfo AS (
+    ID          INT2,
+    name        VARCHAR(30),
+    title       VARCHAR(100),
+    PI          VARCHAR(80),
+    CO_I        VARCHAR(80),
+    contact     VARCHAR(120)
+);
+
+

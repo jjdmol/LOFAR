@@ -74,3 +74,5 @@
 \i setMomInfo_func.sql
 \i setDescription_func.sql
 
+-- campaign
+\i campaignAPI.sql
