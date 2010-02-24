@@ -60,8 +60,8 @@ for rep in range(repeat):
     tlog.appendFile(21, 'one.log')
     tlog.setResult('FAILED')
     # Stop repeat loop after first error
-    f.close()
-    break
+    #f.close()
+    #break
   f.close()
   tlog.sleep(950)
 
