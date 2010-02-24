@@ -37,13 +37,8 @@ endif
 # Use only the basename of the the lib
 set lfr_libdir=`basename $lfr_libdir`
 
-# Get python version.
-set lfr_pyv=`python -V |& cat --`
-set lfr_pyvv=`echo $lfr_pyv | sed -e "s/Python \([0-9]\.[0-9]\).*/\1/"`
-# Fall-back: if python cannot be found assume Python 2.4
-if ("$lfr_pyv" == "$lfr_pyvv") then
-  set lfr_pyvv=2.4
-endif
+# Get directory for Python extensions
+set lfr_pylibdir=`python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(plat_specific=True, prefix='')"`
 
 # Only modify path variables if $lfr_root is an existing directory.
 if (! (-d $lfr_root) ) then
@@ -64,7 +59,7 @@ else
             setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${lfr_lib}:%:%g" -e "s%^${lfr_lib}:%%"  -e "s%:${lfr_lib}"'$%%' -e "s%^${lfr_lib}"'$%%'`
         endif
         if ($?PYTHONPATH) then
-            set lfr_pyt = "$lfr_path/$lfr_libdir/python$lfr_pyvv/site-packages"
+            set lfr_pyt = "$lfr_path/$lfr_pylibdir"
             setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${lfr_pyt}:%:%g" -e "s%^${lfr_pyt}:%%"  -e "s%:${lfr_pyt}"'$%%' -e "s%^${lfr_pyt}"'$%%'`
         endif
     endif
@@ -91,7 +86,7 @@ else
         setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${lfr_lib}:%:%g" -e "s%^${lfr_lib}:%%"  -e "s%:${lfr_lib}"'$%%' -e "s%^${lfr_lib}"'$%%'`
     endif
     if ($?PYTHONPATH) then
-        set lfr_pyt = "$lfr_path/$lfr_libdir/python$lfr_pyvv/site-packages"
+        set lfr_pyt = "$lfr_path/$lfr_pylibdir"
         setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${lfr_pyt}:%:%g" -e "s%^${lfr_pyt}:%%"  -e "s%:${lfr_pyt}"'$%%' -e "s%^${lfr_pyt}"'$%%'`
     endif
 
@@ -106,7 +101,7 @@ else
     else
         setenv LD_LIBRARY_PATH $LOFARROOT/${lfr_libdir}:$LD_LIBRARY_PATH
     endif
-    set lfr_pyt = "$LOFARROOT/$lfr_libdir/python$lfr_pyvv/site-packages"
+    set lfr_pyt = "$LOFARROOT/$lfr_pylibdir"
     if (! $?PYTHONPATH) then
         setenv PYTHONPATH $lfr_pyt
     else
@@ -130,4 +125,4 @@ else
 
 endif
 
-unset lfr_root lfr_bin lfr_libdir lfr_lib lfr_pyt lfr_pyv lfr_pyvv lfr_path
+unset lfr_root lfr_bin lfr_libdir lfr_lib lfr_pylibdir lfr_pyt lfr_path
