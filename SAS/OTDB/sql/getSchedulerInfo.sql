@@ -22,32 +22,45 @@
 --  $Id: getSchedulerInfo.sql 8438 2006-05-18 19:16:37Z overeem $
 --
 
+DROP TYPE schedulerInfo;
 
 CREATE TYPE schedulerInfo AS (
+	antennaMode						 VARCHAR(20),
 	CEPProcessingUnits     INT4,
-	declination            VARCHAR(20),
-	firstPossibleDate      VARCHAR(20),
+	clockFrequency         VARCHAR(6),
+	contactEmail           VARCHAR(40),
+	contactName            VARCHAR(20),
+	contactPhone           VARCHAR(20),
+	firstPossibleDate      VARCHAR(19),
 	fixedDay               BOOLEAN,
 	fixedTime              BOOLEAN,
-	lastPossibleDate       VARCHAR(20),
+	lastPossibleDate       VARCHAR(19),
 	late                   BOOLEAN,
+	mayNotUnschedule       BOOLEAN,
 	nightTimeWeightFactor  INT4,
 	nrOfSubbands           INT4,
 	offlineProcessingUnits INT4,
-	predMaxTimeDif         VARCHAR(20),
-	predMinTimeDif         VARCHAR(20),
+	predMaxTimeDif         VARCHAR(10),
+	predMinTimeDif         VARCHAR(10),
 	predecessor            INT4,
+	projectName            VARCHAR(20),
 	priority               FLOAT,
-	referenceFrame         VARCHAR(20),
-	rightAscention         VARCHAR(20),
-	sources                TEXT,
+	referenceFrame         VARCHAR(5),
+	scheduledEnd           VARCHAR(20),
+	scheduledStart         VARCHAR(20),
+	sourceDeclination      VARCHAR(20),
+	sourceNames            TEXT,
+	sourceRightAscension   VARCHAR(20),
+	stationID              TEXT,
 	storageUnits           INT4,
-	taskDuration           VARCHAR(20),
+	taskDuration           VARCHAR(10),
+	taskID                 INT4,
+	taskName               VARCHAR(20),
 	taskStatus             VARCHAR(20),
-	taskType               VARCHAR(20),
-	unscheduledReason      VARCHAR(20),
-	windowMaximumTime      VARCHAR(20),
-	windowMinimumTime      VARCHAR(20)
+	taskType               VARCHAR(11),
+	unscheduledReason      VARCHAR(80),
+	windowMaximumTime      VARCHAR(8),
+	windowMinimumTime      VARCHAR(8)
 );
 
 CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
@@ -58,25 +71,37 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 
 	BEGIN
       OPEN fieldList;
+    FETCH fieldList INTO vRecord.antennaMode
 	  FETCH fieldList INTO vRecord.CEPProcessingUnits;
-	  FETCH fieldList INTO vRecord.declination;
+	  FETCH fieldList INTO vRecord.clockFrequency
+	  FETCH fieldList INTO vRecord.contactEmail
+	  FETCH fieldList INTO vRecord.contactName
+	  FETCH fieldList INTO vRecord.contactPhone
 	  FETCH fieldList INTO vRecord.firstPossibleDate;
 	  FETCH fieldList INTO vRecord.fixedDay;
 	  FETCH fieldList INTO vRecord.fixedTime;
 	  FETCH fieldList INTO vRecord.lastPossibleDate;
 	  FETCH fieldList INTO vRecord.late;
+	  FETCH fieldList INTO vRecord.mayNotUnschedule
 	  FETCH fieldList INTO vRecord.nightTimeWeightFactor;
 	  FETCH fieldList INTO vRecord.nrOfSubbands;
 	  FETCH fieldList INTO vRecord.offlineProcessingUnits;
 	  FETCH fieldList INTO vRecord.predMaxTimeDif;
 	  FETCH fieldList INTO vRecord.predMinTimeDif;
 	  FETCH fieldList INTO vRecord.predecessor;
+	  FETCH fieldList INTO vRecord.projectName
 	  FETCH fieldList INTO vRecord.priority;
 	  FETCH fieldList INTO vRecord.referenceFrame;
-	  FETCH fieldList INTO vRecord.rightAscention;
-	  FETCH fieldList INTO vRecord.sources;
+	  FETCH fieldList INTO vRecord.scheduledEnd
+	  FETCH fieldList INTO vRecord.scheduledStart
+	  FETCH fieldList INTO vRecord.sourceDeclination;
+	  FETCH fieldList INTO vRecord.sourceNames;
+	  FETCH fieldList INTO vRecord.sourceRightAscension;
+	  FETCH fieldList INTO vRecord.stationID
 	  FETCH fieldList INTO vRecord.storageUnits;
 	  FETCH fieldList INTO vRecord.taskDuration;
+	  FETCH fieldList INTO vRecord.taskID
+	  FETCH fieldList INTO vRecord.taskName
 	  FETCH fieldList INTO vRecord.taskStatus;
 	  FETCH fieldList INTO vRecord.taskType;
 	  FETCH fieldList INTO vRecord.unscheduledReason;
