@@ -37,6 +37,9 @@
 please install the GNU binutils.
 #else
 # include <bfd.h>
+# ifdef USE_THREADS
+#  include <pthread.h>
+# endif
 #endif
 
 namespace LOFAR
@@ -47,7 +50,8 @@ namespace LOFAR
   // Functor class for translating return addresses to function name,
   // filename, and line number. 
   //
-  // \note The code is based on the utility addr2line.c in the GNU binutils 2.16.
+  // \note The code is based on the utility addr2line.c in the GNU binutils
+  // 2.16.
   class AddressTranslator {
   public:
     AddressTranslator();
@@ -62,11 +66,21 @@ namespace LOFAR
     void operator()(std::vector<Backtrace::TraceLine>& trace, 
                     void* const* addr, int size);
 
-#ifdef HAVE_BFD
   private:
-    // The workhorse that translates addresses 
-    bool translate_addresses();
-
+#ifdef HAVE_BFD
+# ifdef USE_THREADS
+    // Simple scoped lock class. Used to guard access to the BFD routines,
+    // which are not thread-safe.
+    class ScopedLock {
+    public:
+      ScopedLock() { pthread_mutex_lock(&mutex); }
+      ~ScopedLock() { pthread_mutex_unlock(&mutex); }
+    private:
+      ScopedLock(const ScopedLock&);
+      ScopedLock& operator=(const ScopedLock&);
+      static pthread_mutex_t mutex;
+    };
+# endif
     // Helper function to "convert" the member function
     // do_find_addresss_in_section() to a void(*), which can be passed as
     // argument to bfd_map_over_sections().
