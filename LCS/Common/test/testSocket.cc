@@ -30,8 +30,8 @@
 using namespace LOFAR;
 
 #ifdef USE_NOSOCKETS
-int main (int, char*) {
-  cout << "testSocket not run;l sockets are not supported" << endl;
+int main (int, char**) {
+  cout << "testSocket not run; sockets are not supported" << endl;
   return 3;
 }
 #else
