@@ -25,7 +25,6 @@ import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -51,7 +50,7 @@ import org.apache.log4j.Logger;
 
 /**
  * The template maintenance screen is used for modifying repository templates 
- * (status usable, being specified and example).
+ * (status usable, described and example).
  * or specifying an instrument configuration for an observation request.
  *
  * @created 17-03-2006, 13:53

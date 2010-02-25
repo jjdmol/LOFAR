@@ -196,6 +196,8 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
           antennaSet = "LBA_Y";
         } else if (this.inputHBAOne.isSelected()) {
           antennaSet = "HBA_ONE";
+        } else if (this.inputHBATwo.isSelected()) {
+          antennaSet = "HBA_TWO";
         } else if (this.inputHBABoth.isSelected()) {
           antennaSet = "HBA_BOTH";
         }
@@ -269,6 +271,8 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         inputYPolesOnly.setSelected(true);
       } else if (itsAntennaSet.limits.equals("HBA_ONE")) {
         inputHBAOne.setSelected(true);
+      } else if (itsAntennaSet.limits.equals("HBA_TWO")) {
+        inputHBATwo.setSelected(true);
       } else if (itsAntennaSet.limits.equals("HBA_BOTH")) {
         inputHBABoth.setSelected(true);
       } else {
@@ -478,6 +482,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 inputXPolesOnly.setToolTipText(aParam.description);
                 inputYPolesOnly.setToolTipText(aParam.description);
                 inputHBAOne.setToolTipText(aParam.description);
+                inputHBATwo.setToolTipText(aParam.description);
                 inputHBABoth.setToolTipText(aParam.description);
                 this.itsAntennaSet=aNode;
                 if (aNode.limits.equals("LBA_OUTER")) {
@@ -492,6 +497,8 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                     inputYPolesOnly.setSelected(true);
                 } else if (aNode.limits.equals("HBA_ONE")) {
                     inputHBAOne.setSelected(true);
+                } else if (aNode.limits.equals("HBA_TWO")) {
+                    inputHBATwo.setSelected(true);
                 } else if (aNode.limits.equals("HBA_BOTH")) {
                     inputHBABoth.setSelected(true);
                 } else {
