@@ -343,9 +343,6 @@ void MeasurementAIPS::write(const VisSelection &selection,
         ROScalarColumn<Double> c_time(tab_tslot, "TIME");
         ROScalarColumn<Int> c_antenna1(tab_tslot, "ANTENNA1");
         ROScalarColumn<Int> c_antenna2(tab_tslot, "ANTENNA2");
-        ScalarColumn<Bool> c_flag_row(tab_tslot, "FLAG_ROW");
-        ArrayColumn<Complex> c_data(tab_tslot, column);
-        ArrayColumn<Bool> c_flag(tab_tslot, "FLAG");
 
         // Read meta data.
         readTimer.start();
@@ -353,6 +350,18 @@ void MeasurementAIPS::write(const VisSelection &selection,
         Vector<Int> aips_antenna1 = c_antenna1.getColumn();
         Vector<Int> aips_antenna2 = c_antenna2.getColumn();
         readTimer.stop();
+
+        ScalarColumn<Bool> c_flag_row;
+        ArrayColumn<Bool> c_flag;
+        if(writeFlags)
+        {
+            // Open flag columns for writing.
+            c_flag_row.attach(tab_tslot, "FLAG_ROW");
+            c_flag.attach(tab_tslot, "FLAG");
+        }
+
+        // Open data column for writing.
+        ArrayColumn<Complex> c_data(tab_tslot, column);
 
         mismatch = mismatch && (grid[TIME]->center(tslot) == aips_time(0));
 
@@ -398,7 +407,7 @@ void MeasurementAIPS::write(const VisSelection &selection,
 
     if(mismatch)
     {
-        LOG_WARN_STR("Time mismatches detected while writing data.");
+        LOG_WARN_STR("Time mismatch(es) detected while writing data.");
     }
 
     LOG_DEBUG_STR("Read time (meta data): " << readTimer);
