@@ -23,7 +23,11 @@
 package nl.astron.lofar.sas.otbcomponents;
 
 import java.io.File;
+import java.util.Iterator;
+import java.util.TreeMap;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFileChooser;
+import nl.astron.lofar.sas.otb.util.OtdbRmi;
 
 /**
  * @created 26-01-2006, 11:33
@@ -50,6 +54,7 @@ public class LoadFileDialog extends javax.swing.JDialog {
         getRootPane().setDefaultButton(loadButton);
         
         ok=true;
+        init();
     }
     
     public void setType(String aType) {
@@ -63,6 +68,16 @@ public class LoadFileDialog extends javax.swing.JDialog {
     /* Sets the top label with the right information */
     private void setTopLabel() {
         this.topLabelInput.setText("Choose a file to create a new "+itsType);
+    }
+
+    private void init() {
+        DefaultComboBoxModel aStateModel = new DefaultComboBoxModel();
+        TreeMap aStateMap=OtdbRmi.getTreeState();
+        Iterator stateIt = aStateMap.keySet().iterator();
+        while (stateIt.hasNext()) {
+            aStateModel.addElement((String)aStateMap.get(stateIt.next()));
+        }
+        statusInput.setModel(aStateModel);
     }
     
     /** This method is called from within the constructor to
@@ -109,7 +124,6 @@ public class LoadFileDialog extends javax.swing.JDialog {
         statusLabel.setText("Status:");
         getContentPane().add(statusLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, -1, 20));
 
-        statusInput.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "idle", "being specified", "specified", "scheduled", "queued", "active", "finished", "aborted", "obsolete" }));
         statusInput.setToolTipText("State Selection");
         getContentPane().add(statusInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 80, 130, -1));
 

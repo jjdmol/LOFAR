@@ -679,11 +679,10 @@ public class MainPanel extends javax.swing.JPanel
                             JOptionPane.showMessageDialog(null,"New Tree created with ID: "+newTreeID,
                                 "New Tree Message",
                                 JOptionPane.INFORMATION_MESSAGE);
-                            // set back treestate to being specified
+                            // set back treestate to described
                             jOTDBtree aT=OtdbRmi.getRemoteOTDB().getTreeInfo(newTreeID, false); 
-                            String aState=OtdbRmi.getTreeState().get(aT.state);
-                            if (aT.state != OtdbRmi.getRemoteTypes().getTreeState("being specified") ) {
-                                aT.state=OtdbRmi.getRemoteTypes().getTreeState("being specified");
+                            if (aT.state != OtdbRmi.getRemoteTypes().getTreeState("described") ) {
+                                aT.state=OtdbRmi.getRemoteTypes().getTreeState("described");
                                 if (!OtdbRmi.getRemoteMaintenance().setTreeState(aT.treeID(), aT.state)) {
                                     logger.debug("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());                      
                                 }
@@ -993,7 +992,7 @@ public class MainPanel extends javax.swing.JPanel
                 infoOnly=true;
             }
             if (treeID>0) {
-                if ((aTreeState.equals("idle") || aTreeState.endsWith("being specified") || aTreeState.equals("finished")
+                if ((aTreeState.equals("idle") || aTreeState.equals("described") || aTreeState.equals("finished")
                 || aTreeState.equals("aborted") || aTreeState.equals("obsolete")) && !infoOnly) {
                     buttonPanel1.setButtonEnabled("Delete",true);
                 } else {
@@ -1017,8 +1016,8 @@ public class MainPanel extends javax.swing.JPanel
         } else if (itsTabFocus.equals("Templates")) {
             if (treeID > 0) {
                 if (aTreeState.equals("idle") ||
-                        aTreeState.equals("being specified") ||
-                        aTreeState.equals("specified") ||
+                        aTreeState.equals("described") ||
+                        aTreeState.equals("prepared") ||
                         aTreeState.equals("approved")) {
                     buttonPanel1.setButtonEnabled("Duplicate",true);
                     buttonPanel1.setButtonEnabled("Modify",true);
