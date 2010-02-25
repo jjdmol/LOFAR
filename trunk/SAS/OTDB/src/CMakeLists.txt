@@ -16,6 +16,8 @@ lofar_add_library(otdb
   TreeMaintenance.cc
   TreeState.cc
   TreeValue.cc
-  loadCompFile.cc)
+  loadCompFile.cc
+  CampaignInfo.cc
+  Campaign.cc)
 
 lofar_add_bin_program(versionotdb versionotdb.cc)
