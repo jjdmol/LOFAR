@@ -12,13 +12,13 @@ DataSet                 = test.ms           # name of Measurement Set
 
 Strategy.Steps          = [ xyz1, xyz2 ]    # steps
 Strategy.Stations       = [ CS*, RS1*, RS2*, DE* ]   # names of stations to use
-Strategy.InputColumn    = INDATA            # MS input column 
+Strategy.InputColumn    = INDATA            # MS input column
 Strategy.RegionOfInterest = [1175e6, 1176e6, 1000.0, 3000.0] # region of interest to process
 Strategy.Correlation.Selection = ALL        # one of AUTO, CROSS, ALL
 Strategy.Correlation.Type = [ XX, YY ]      # which (cross)correlations to use
 
 BBDB.Host               = dop50.nfra.nl     # hostname/ipaddr of BB DBMS
-BBDB.Port               = 5432              # port used by BB DBMS
+BBDB.Port               =                   # port used by BB DBMS
 BBDB.Name               = bbs               # name of the BB database
 BBDB.Username           = postgres          # username for accessing the DBMS
 BBDB.Password           =                   # password for accessing the DBMS
@@ -28,7 +28,7 @@ ParmDB.Sky        	= test.gsm          # local sky parameters (MS table)
 ParmDB.History          = test.his          # history (MS table)
 
 Step.xyz1.Steps         = [ sl1, sl2, sl4 ] # names of substeps
-Step.xyz1.Baselines.Station1 =            \ # baselines to use 
+Step.xyz1.Baselines.Station1 =            \ # baselines to use
       [ CS*, CS*,  CS*,  RS1*, RS1*, RS2* ]
 Step.xyz1.Baselines.Station2 =            \ # (all if empty)
       [ CS*, RS1*, RS2*, RS1*, RS2*, RS2* ]
@@ -70,7 +70,7 @@ Step.sl1.Solve.CellSize.Freq = 1000         # number of frequency channels
 Step.sl1.Solve.CellSize.Time = 1            # nubmer of time slots
 Step.sl1.Solve.CalibrationGroups = [1, 1]
 Step.sl1.Model.Components = [ BANDPASS ]    # instrument model components
-Step.sl1.Model.Beam.Type = 
+Step.sl1.Model.Beam.Type =
 
 Step.sl2.Operation      = CORRECT         \ # one of SOLVE, SUBTRACT, CORRECT,
                                             # PREDICT, SHIFT, REFIT, NOISE

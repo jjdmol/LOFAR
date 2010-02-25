@@ -53,7 +53,7 @@ usage()
     echo "  --cluster-desc    cluster description file"
     echo "                    (default: ~/CEP.clusterdesc)"
     echo "  --db host:port    host and port where the control db is running"
-    echo "                    (default: localhost:5432)"
+    echo "                    (default: localhost)"
     echo "  --db-name name    name of the control db (default: ${USER})"
     echo "  --db-user user    name of the control db user (default: ${USER})"
     echo "  --port-range      range of ports to try when starting global solver"
@@ -119,7 +119,7 @@ clean=0
 key="default"
 cluster_desc="${HOME}/CEP.clusterdesc"
 db_host="localhost"
-db_port=5432
+db_port=
 db_name=${USER}
 db_user=${USER}
 solver=0
@@ -305,7 +305,12 @@ if test ${verbose} -eq 1; then
     echo "    clean: ${clean}"
     echo "    key: ${key}"
     echo "    cluster_desc: ${cluster_desc}"
-    echo "    db: ${db_host}:${db_port}"
+    echo -n "    db: ${db_host}"
+    if test -n "${db_port}"; then
+        echo ":${db_port}"
+    else
+        echo
+    fi
     echo "    db name: ${db_name}"
     echo "    db user: ${db_user}"
     echo "    solver: ${solver}"
@@ -374,11 +379,20 @@ if test ${clean} -eq 1; then
     event "clean database for key ${key}"
 
     if test ${dry} -eq 0; then
-        psql -h ${db_host} -p ${db_port} -U ${db_user} -d ${db_name} --set ON_ERROR_STOP= >/dev/null 2>&1 << EOF
+        if test -n "${db_port}"; then
+            psql -h ${db_host} -p ${db_port} -U ${db_user} -d ${db_name} --set ON_ERROR_STOP= > "${key}_calibrate_$$.log" 2>&1 << EOF
 DELETE FROM blackboard.session WHERE key='${key}';
 VACUUM;
 ANALYZE;
 EOF
+        else
+            psql -h ${db_host} -U ${db_user} -d ${db_name} --set ON_ERROR_STOP= > "${key}_calibrate_$$.log" 2>&1 << EOF
+DELETE FROM blackboard.session WHERE key='${key}';
+VACUUM;
+ANALYZE;
+EOF
+        fi
+
         if test $? -ne 0; then
             error "clean database for key ${key} failed"
         fi
@@ -402,11 +416,11 @@ if test ${skip_sky_db} -eq 0; then
     if test "${sky_db}"; then
         event "execute setupparmdb"
         if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-            echo "setupparmdb \"${overwrite}\" \"${observation}\" \"${sky_db}\" \"${sky_basename}\" \"${cluster_desc}\" \"${key}_skip_sky_parmdb_$$.log\" nodry"
+            echo "setupparmdb \"${overwrite}\" \"${observation}\" \"${sky_db}\" \"${sky_basename}\" \"${cluster_desc}\" \"${key}_make_sky_parmdb_$$.log\" nodry"
         fi
 
         if test ${dry} -eq 0; then
-          setupparmdb "${overwrite}" "${observation}" "${sky_db}" "${sky_basename}" "${cluster_desc}" "${key}_skip_sky_parmdb_$$.log" nodry
+          setupparmdb "${overwrite}" "${observation}" "${sky_db}" "${sky_basename}" "${cluster_desc}" "${key}_make_sky_parmdb_$$.log" nodry
           if test $? -ne 0; then
               error "setupparmdb or remote setupparmdb-part process(es) failed"
           fi
@@ -414,11 +428,11 @@ if test ${skip_sky_db} -eq 0; then
     else
         event "execute setupsourcedb"
         if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-            echo "setupsourcedb \"${overwrite}\" -makeopt 'format=<' \"${observation}\" \"${catalogue}\" \"${sky_basename}\" \"${cluster_desc}\" \"${key}_skip_sky_parmdb_$$.log\" nodry"
+            echo "setupsourcedb \"${overwrite}\" -makeopt 'format=<' \"${observation}\" \"${catalogue}\" \"${sky_basename}\" \"${cluster_desc}\" \"${key}_make_sky_parmdb_$$.log\" nodry"
         fi
 
         if test ${dry} -eq 0; then
-            setupsourcedb "${overwrite}" -makeopt 'format=<' "${observation}" "${catalogue}" "${sky_basename}" "${cluster_desc}" "${key}_skip_sky_parmdb_$$.log" nodry
+            setupsourcedb "${overwrite}" -makeopt 'format=<' "${observation}" "${catalogue}" "${sky_basename}" "${cluster_desc}" "${key}_make_sky_parmdb_$$.log" nodry
             if test $? -ne 0; then
                 error "setupsourcedb or remote setupsourcedb-part process(es) failed"
             fi
@@ -436,11 +450,11 @@ if test ${skip_instrument_db} -eq 0; then
 
     event "execute setupparmdb"
     if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-        echo "setupparmdb \"${overwrite}\" \"${observation}\" \"${instrument_db}\" \"${instrument_basename}\" \"${cluster_desc}\" \"${key}_skip_instrument_db_$$.log\" nodry"
+        echo "setupparmdb \"${overwrite}\" \"${observation}\" \"${instrument_db}\" \"${instrument_basename}\" \"${cluster_desc}\" \"${key}_make_instrument_db_$$.log\" nodry"
     fi
 
     if test ${dry} -eq 0; then
-        setupparmdb "${overwrite}" "${observation}" "${instrument_db}" "${instrument_basename}" "${cluster_desc}" "${key}_skip_instrument_db_$$.log" nodry
+        setupparmdb "${overwrite}" "${observation}" "${instrument_db}" "${instrument_basename}" "${cluster_desc}" "${key}_make_instrument_db_$$.log" nodry
         if test $? -ne 0; then
             error "setupparmdb or remote setupparmdb-part process(es) failed"
         fi
@@ -459,7 +473,7 @@ BBDB.Key = "${key}"
 BBDB.Name = "${db_name}"
 BBDB.User = "${db_user}"
 BBDB.Host = "${db_host}"
-BBDB.Port = ${db_port}
+BBDB.Port = "${db_port}"
 
 EOF
     cat ${parset} >> "${key}_control_$$.parset"
@@ -474,7 +488,7 @@ BBDB.Key = "${key}"
 BBDB.Name = "${db_name}"
 BBDB.User = "${db_user}"
 BBDB.Host = "${db_host}"
-BBDB.Port = ${db_port}
+BBDB.Port = "${db_port}"
 EOF
     fi
 fi

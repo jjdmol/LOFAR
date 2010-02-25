@@ -170,7 +170,7 @@ namespace LOFAR
           ps->getString("BBDB.User"),
           ps->getString("BBDB.Password", ""),
           ps->getString("BBDB.Host", "localhost"),
-          ps->getString("BBDB.Port", "5432")));
+          ps->getString("BBDB.Port", "")));
 
         // Poll until Control is ready to accept workers.
         while(itsCalSession->getState() == CalSession::WAITING_FOR_CONTROL) {

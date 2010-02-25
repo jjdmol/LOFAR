@@ -113,8 +113,10 @@ CalSession::CalSession(const string &key, const string &db, const string &user,
     itsProcessId = ProcessId(string(hostname), getpid());
 
     // Build connection string.
-    string opts("dbname='" + db + "' user='" + user + "' host='" + host
-      + "' port=" + port);
+    string opts("dbname='" + db + "' user='" + user + "' host='" + host + "'");
+    if(!port.empty()) {
+      opts += " port=" + port;
+    }
     if(!password.empty()) {
       opts += " password='" + password + "'";
     }
