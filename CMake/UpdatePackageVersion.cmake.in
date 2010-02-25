@@ -52,12 +52,9 @@ execute_process(COMMAND svn info @PACKAGE_SOURCE_DIR@
   RESULT_VARIABLE _result
   OUTPUT_FILE "${_svn_tmp}"
   OUTPUT_STRIP_TRAILING_WHITESPACE
-  ERROR_VARIABLE _error
-  ERROR_STRIP_TRAILING_WHITESPACE)
-if(_result)
-  message(SEND_ERROR "${_error}")
-else(_result)
-  # Get version. 
+  ERROR_VARIABLE _error)
+if(_result EQUAL 0)
+  # Get version.
   # It should look like trunk/package or tags/package-version/package
   file(STRINGS "${_svn_tmp}" _url REGEX "^URL:")
   string(REGEX REPLACE "^URL: *(.*)$" "\\1" _url "${_url}")
@@ -89,7 +86,7 @@ else(_result)
     OUTPUT_STRIP_TRAILING_WHITESPACE)
   # Removed temporary file
   file(REMOVE "${_svn_tmp}")
-endif(_result)
+endif(_result EQUAL 0)
 
 # Create/update Package__Version.h. Avoid unnecessary recompilations:
 # first create a temporary file; only copy it if files are different.
