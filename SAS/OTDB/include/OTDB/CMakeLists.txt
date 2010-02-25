@@ -19,8 +19,9 @@ set(inst_HEADERS
   misc.h
   OTDBconnection.h
   TreeMaintenance.h
-  TreeValue.h)
-
+  TreeValue.h
+  CampaignInfo.h
+  Campaign.h)
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
   ${CMAKE_CURRENT_SOURCE_DIR}

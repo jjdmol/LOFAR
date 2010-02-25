@@ -13,7 +13,9 @@ libotdb_la_SOURCES 		= Package__Version.cc  $(DOCHDRS) \
 							TreeMaintenance.cc \
 							TreeState.cc \
 							TreeValue.cc \
-							loadCompFile.cc
+							loadCompFile.cc \
+							CampaignInfo.cc \
+							Campaign.cc
 
 #							OTDBaction.cc	\
 #						    OTDBactionList.cc	\

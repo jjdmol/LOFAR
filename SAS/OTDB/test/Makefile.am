@@ -6,7 +6,8 @@ check_PROGRAMS				= tPICtree \
 							  tVHtree \
 							  tVHvalue \
 							  tConnection \
-							  tParamTypeConv
+							  tParamTypeConv \
+							  tCampaign
 
 tPICtree_SOURCES			= tPICtree.cc
 
@@ -25,17 +26,20 @@ tConnection_SOURCES			= tConnection.cc
 
 tParamTypeConv_SOURCES		= tParamTypeConv.cc
 
+tCampaign_SOURCES			= tCampaign.cc
+
 LDADD						= ../src/libotdb.la -lpqxx
 DEPENDENCIES				= ../src/libotdb.la $(LOFAR_DEPEND)
 
-TESTSCRIPTS					= tParamTypeConv_test.sh \
-							  tPICtree_test.sh \
-							  tPICvalue_test.sh \
-							  tVICcomp_test.sh \
-							  tVTtree_test.sh \
-							  tVHtree_test.sh \
-							  tVHvalue_test.sh \
-							  tConnection_test.sh
+TESTSCRIPTS					= tParamTypeConv.sh \
+							  tPICtree.sh \
+							  tPICvalue.sh \
+							  tVICcomp.sh \
+							  tVTtree.sh \
+							  tVHtree.sh \
+							  tVHvalue.sh \
+							  tConnection.sh \
+							  tCampaign.sh
 
 TESTS						= $(TESTSCRIPTS)
 
@@ -54,6 +58,7 @@ EXTRA_DIST					= DATABASENAME \
 							  tVTtree.in \
 							  tVTtree.log_prop \
 							  tParamTypeConv.log_prop \
+							  tCampaign.log_prop \
 							  $(TESTSCRIPTS)
 
 include $(top_srcdir)/Makefile.common

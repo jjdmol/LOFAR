@@ -138,11 +138,18 @@ CREATE OR REPLACE FUNCTION saveCampaign(INT4, VARCHAR(30), VARCHAR(100), VARCHAR
 		vContact := replace($6, \'\\\'\', \'\');
 
 		-- check if node exists
-		SELECT	ID
-		INTO	vID
-		FROM	campaign
-		WHERE	ID = $1;
-		IF (NOT FOUND) OR ($1 = 0) THEN
+		IF $1 = 0 THEN
+		  SELECT ID
+		  INTO   vID
+		  FROM   campaign
+		  WHERE  name = vName;
+		ELSE
+		  SELECT	ID
+		  INTO	vID
+		  FROM	campaign
+		  WHERE	ID = $1;
+		END IF;
+		IF (NOT FOUND) THEN
 		  -- create new node
 		  vID := nextval(\'campaignID\');
 		  INSERT INTO campaign (id, name, title, PI, CO_I, contact)
