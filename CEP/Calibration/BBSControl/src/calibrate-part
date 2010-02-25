@@ -81,7 +81,12 @@ echo
 echo "    lofarroot: ${lofarroot}"
 echo
 echo "    key: ${key}"
-echo "    db: ${db_host}:${db_port}"
+echo -n "    db: ${db_host}"
+if test -n "${db_port}"; then
+    echo ":${db_port}"
+else
+    echo
+fi
 echo "    db name: ${db_name}"
 echo "    db user: ${db_user}"
 echo "    parmdb: ${parmdb}"
@@ -129,7 +134,7 @@ BBDB.Key = "${key}"
 BBDB.Name = "${db_name}"
 BBDB.User = "${db_user}"
 BBDB.Host = "${db_host}"
-BBDB.Port = ${db_port}
+BBDB.Port = "${db_port}"
 
 ParmDB.Sky = "${part}/${sourcedb}"
 ParmDB.Instrument = "${part}/${parmdb}"

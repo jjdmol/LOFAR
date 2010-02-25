@@ -108,7 +108,7 @@ namespace LOFAR
           ps->getString("BBDB.User"),
           ps->getString("BBDB.Password", ""),
           ps->getString("BBDB.Host", "localhost"),
-          ps->getString("BBDB.Port", "5432")));
+          ps->getString("BBDB.Port", "")));
 
         // Initialize a TCP listen socket that will accept incoming kernel
         // connections.

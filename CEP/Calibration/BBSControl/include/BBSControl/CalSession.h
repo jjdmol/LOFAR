@@ -130,7 +130,7 @@ public:
 
     CalSession(const string &key, const string &db, const string &user,
         const string &password = "", const string &host = "localhost",
-        const string &port = "5432");
+        const string &port = "");
     ~CalSession();
 
     ProcessId getProcessId() const;
