@@ -232,7 +232,7 @@ status_prog()
 		echo ${levelnr}:${prog}:${pid[*]} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3 }'
 		# Some Checks
 		# AMCServer needs two instances
-		if [ "$prog" == "AMCServer" ]; then
+		if [ "$prog" == "AMCServer" -a $level -ge 3 ]; then
 		    if [ ${#pid[@]} -lt 2 ]; then 
 		       missing="$missing ${prog}[$levelnr]"
 		    fi
@@ -264,10 +264,10 @@ status_prog()
 		# Print concluding remarks at the bottom of the list
 		if [ "$prog" == "TBBControl" ]; then
 		    echo "----"
-		    if [  $missing ]; then 
+		    if [ "$missing" ]; then 
 			echo "Missing :"$missing
 		    fi
-		    if [ $toomany ]; then 
+		    if [ "$toomany" ]; then 
 			echo "Too many:"$toomany
 		    fi
 		fi
