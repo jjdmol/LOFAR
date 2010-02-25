@@ -1,27 +1,29 @@
 [license]
-code          = "MCU001 53539018000"
+code          = "CS024C 93447640285"
 version       = 30800002
-comment       = "MainCU"
-sn            = "471_3031_1_Astron_Gen_I_1_38"
+comment       = "Core Station CS024"
+sn            = "471_3031_2_Astron_Gen_II_1_38"
 expire        = 0000.00.00;00:00:00,000
-redundancy    = 1
-ui            = 15
-para          = 4
+redundancy    = 0
+ui            = 2
+para          = 1
 dde           = 5
 event         = 1
 api           = 80
 excelreport   = 5
-http          = 15
-infoserver    = 5000
-ios           = 100000
+http          = 0
+infoserver    = 1000
+ios           = 4000
 comcenter     = 5
-maintenance   = 0
-scheduler     = 0
+maintenance   = 1
+scheduler     = 1
 ssi           = 0
+recipe        = 1
 distributed   = 255
 uifix         = 0
 parafix       = 0
 pararemote    = 0
 ctrlext       = 1
 update        = 0
+
 
