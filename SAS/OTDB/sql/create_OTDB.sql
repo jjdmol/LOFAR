@@ -76,3 +76,7 @@
 
 -- campaign
 \i campaignAPI.sql
+
+-- SchedulerInfo
+\i getSchedulerInfo.sql
+\i saveSchedulerInfo_func.sql
