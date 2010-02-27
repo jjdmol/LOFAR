@@ -21,7 +21,6 @@
 
 package nl.astron.lofar.sas.otb.jotdb2;
 import java.rmi.registry.*;
-import java.rmi.server.RMISocketFactory;
 import nl.astron.lofar.lofarutils.remoteFileAdapter;
 import nl.astron.lofar.lofarutils.remoteFileInterface;
 import org.apache.log4j.Logger;
@@ -52,7 +51,7 @@ public class jOTDBserver {
             String logConfig = "jOTDB2.log_prop";
             
             PropertyConfigurator.configure(logConfig);
-            jInitCPPLogger aCPPLogger=new jInitCPPLogger(logConfig);
+//            jInitCPPLogger aCPPLogger=new jInitCPPLogger(logConfig);
             logger.info("jOTDBServer started. LogPropFile: "+ logConfig);
             
 //	     if (System.getSecurityManager () == null)
@@ -99,8 +98,8 @@ public class jOTDBserver {
             jOTDBconnAdapter = new jOTDBadapter(jOTDBconnAdaptee);
             //A custom port was specified, export the object using the port specified
             if(objectPort!=0){
-                jOTDBconnAdapter.unexportObject(jOTDBconnAdapter,true);
-                jOTDBconnAdapter.exportObject(jOTDBconnAdapter,objectPort);
+                jOTDBadapter.unexportObject(jOTDBconnAdapter,true);
+                jOTDBadapter.exportObject(jOTDBconnAdapter,objectPort);
             }
             logger.info("jOTDBserver publishing service " + jOTDBinterface.SERVICENAME + " in local registry...");
             
@@ -113,8 +112,8 @@ public class jOTDBserver {
             jTreeMainAdapter = new jTreeMaintenanceAdapter(jTreeMainAdaptee);
             //A custom port was specified, export the object using the port specified
             if(objectPort!=0){
-                jTreeMainAdapter.unexportObject(jTreeMainAdapter,true);
-                jTreeMainAdapter.exportObject(jTreeMainAdapter,objectPort);
+                jTreeMaintenanceAdapter.unexportObject(jTreeMainAdapter,true);
+                jTreeMaintenanceAdapter.exportObject(jTreeMainAdapter,objectPort);
             }
             logger.info("jOTDBserver publishing service " + jTreeMaintenanceInterface.SERVICENAME + " in local registry...");
             localRegistry.rebind(jTreeMaintenanceInterface.SERVICENAME, jTreeMainAdapter);
