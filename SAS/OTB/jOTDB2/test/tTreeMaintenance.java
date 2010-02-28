@@ -107,7 +107,7 @@ class tTreeMaintenance
             jClassifConv   CTconv = new jClassifConv();
 
             System.out.println ("Trying to load the componentfile: tVTtree.in");
-            int topNodeID = tm.loadComponentFile ("tTreeMaintenance.in");
+            int topNodeID = tm.loadComponentFile ("tTreeMaintenance.in","","");
             assert topNodeID!=0 : "Loading of componentfile failed";
 
         
