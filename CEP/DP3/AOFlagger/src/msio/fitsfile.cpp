@@ -275,7 +275,7 @@ std::string FitsFile::GetKeywordValue(const std::string &keywordName)
 {
 	char keyValue[FLEN_VALUE];
 	int status = 0;
-	fits_read_keyword(_fptr, keywordName.c_str(), keyValue, NULL, &status);
+	fits_read_keyword(_fptr, const_cast<char *>(keywordName.c_str()), keyValue, NULL, &status);
 	CheckStatus(status);
 	std::string val(keyValue);
 	if(val.length() >= 2 && *val.begin()=='\'' && *val.rbegin()=='\'')

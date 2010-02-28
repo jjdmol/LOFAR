@@ -165,7 +165,7 @@ namespace rfiStrategy {
 				
 				TimeFrequencyMetaDataCPtr metaData = privateImageSet->LoadMetaData(*index);
 		
-				newArtifacts.IOMutex().unlock();
+				IOUnlock();
 	
 				_action.SetProgress(_progress, taskIndex, _action._baselineCount, "Processing baseline", _threadIndex);
 	
@@ -182,7 +182,7 @@ namespace rfiStrategy {
 			if(_threadIndex == 0)
 				_action._resultSet = new ArtifactSet(newArtifacts);
 
-			newArtifacts.IOMutex().unlock();
+			IOUnlock();
 
 		} catch(std::exception &e)
 		{
@@ -195,12 +195,20 @@ namespace rfiStrategy {
 
 	void ForEachBaselineAction::PerformFunction::IOLock()
 	{
-		if(!_action._artifacts->IOMutex().try_lock())
+	  if(_lock != 0)
+	    delete _lock;
+	  _lock = new boost::mutex::scoped_lock(_action._artifacts->IOMutex(), boost::try_to_lock);
+		if(!_lock->owns_lock())
 		{
 			std::cout << "Thread " << _threadIndex << " is waiting for IO lock." << std::endl;
-			_action._artifacts->IOMutex().lock();
+			delete _lock;
+			_lock = new boost::mutex::scoped_lock(_action._artifacts->IOMutex());
 			std::cout << "Thread " << _threadIndex << " received IO lock." << std::endl;
 		}
+	}
+	void ForEachBaselineAction::PerformFunction::IOUnlock()
+	{
+	  _lock->unlock();
 	}
 
 	void ForEachBaselineAction::PerformFunction::OnStartTask(size_t taskNo, size_t taskCount, const std::string &description)
@@ -222,7 +230,7 @@ namespace rfiStrategy {
 
 	void ForEachBaselineAction::SetProgress(ProgressListener &progress, int no, int count, std::string taskName, int threadId)
 	{
-		_mutex.lock();
+	  boost::mutex::scoped_lock lock(_mutex);
 		_progressTaskNo[threadId] = no;
 		_progressTaskCount[threadId] = count;
 		size_t totalCount = 0, totalNo = 0;
@@ -235,7 +243,6 @@ namespace rfiStrategy {
 		std::stringstream str;
 		str << "T" << threadId << ": " << taskName;
 		progress.OnStartTask(totalNo, totalCount, str.str());
-		_mutex.unlock();
 	}
 }
 
