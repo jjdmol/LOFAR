@@ -16,8 +16,10 @@ lofar_find_package(Casacore REQUIRED COMPONENTS casa ms tables scimath scimath_f
 lofar_find_package(Boost REQUIRED COMPONENTS date_time thread filesystem system)
 lofar_find_package(FFTW3 REQUIRED)
 lofar_find_package(LAPACK REQUIRED)
+lofar_find_package(CPPLapack REQUIRED)
 lofar_find_package(BLAS REQUIRED)
 lofar_find_package(PTHREADS REQUIRED)
+lofar_find_package(GSL REQUIRED)
 
 #want the full compiler output?
 #set(CMAKE_VERBOSE_MAKEFILE ON)

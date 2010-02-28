@@ -22,6 +22,8 @@
 #include <AOFlagger/rfi/strategy/artifactset.h>
 #include <AOFlagger/rfi/strategy/imageset.h>
 
+#include <boost/thread.hpp>
+
 namespace rfiStrategy {
 
 	WriteFlagsAction::WriteFlagsAction()

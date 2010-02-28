@@ -64,14 +64,21 @@ namespace rfiStrategy {
 			struct PerformFunction : public ProgressListener
 			{
 				PerformFunction(ForEachBaselineAction &action, ProgressListener &progress, size_t threadIndex)
-					: _action(action), _progress(progress), _threadIndex(threadIndex)
+				  : _action(action), _progress(progress), _lock(0), _threadIndex(threadIndex)
 				{
 				}
+			  ~PerformFunction()
+			    {
+			      if(_lock != 0)
+				delete _lock;
+			    }
 				ForEachBaselineAction &_action;
 				ProgressListener &_progress;
+				boost::mutex::scoped_lock *_lock;
 				size_t _threadIndex;
 				void operator()();
 				void IOLock();
+				void IOUnlock();
 				virtual void OnStartTask(size_t taskNo, size_t taskCount, const std::string &description);
 				virtual void OnEndTask();
 				virtual void OnProgress(size_t progres, size_t maxProgress);
