@@ -37,6 +37,7 @@ using namespace std;
 extern TreeMaintenance* theirTM;
 extern OTDBconnection*  theirConn;
 extern TreeValue*       theirVal;
+extern Campaign*        theirCampaign;
 
 
 //
@@ -202,11 +203,85 @@ jobject convertOTDBvalue (JNIEnv *env, OTDBvalue aValue)
   return jvalue;
 }
 
+jobject convertCampaignInfo (JNIEnv *env, CampaignInfo aCampaignInfo)
+{
+  jobject jCampaignInfo;
+  jclass class_jCampaignInfo = env->FindClass ("nl/astron/lofar/sas/otb/jotdb2/jCampaignInfo");
+  jmethodID mid_jCampaignInfo_cons = env->GetMethodID (class_jCampaignInfo, "<init>", "(I)V");
+  jCampaignInfo = env->NewObject (class_jCampaignInfo, mid_jCampaignInfo_cons, aCampaignInfo.ID());
+
+  jfieldID fid_jCampaignInfo_itsName = env->GetFieldID (class_jCampaignInfo, "itsName", "Ljava/lang/String;");
+  jfieldID fid_jCampaignInfo_itsTitle = env->GetFieldID (class_jCampaignInfo, "itsTitle", "Ljava/lang/String;");
+  jfieldID fid_jCampaignInfo_itsPI = env->GetFieldID (class_jCampaignInfo, "itsPI", "Ljava/lang/String;");
+  jfieldID fid_jCampaignInfo_itsCO_I = env->GetFieldID (class_jCampaignInfo, "itsCO_I", "Ljava/lang/String;");
+  jfieldID fid_jCampaignInfo_itsContact = env->GetFieldID (class_jCampaignInfo, "itsContact", "Ljava/lang/String;");
+
+  env->SetObjectField (jCampaignInfo, fid_jCampaignInfo_itsName, env->NewStringUTF (aCampaignInfo.name.c_str ()));
+  env->SetObjectField (jCampaignInfo, fid_jCampaignInfo_itsTitle, env->NewStringUTF (aCampaignInfo.title.c_str ()));
+  env->SetObjectField (jCampaignInfo, fid_jCampaignInfo_itsPI, env->NewStringUTF (aCampaignInfo.PI.c_str ()));
+  env->SetObjectField (jCampaignInfo, fid_jCampaignInfo_itsCO_I, env->NewStringUTF (aCampaignInfo.CO_I.c_str ()));
+  env->SetObjectField (jCampaignInfo, fid_jCampaignInfo_itsContact, env->NewStringUTF (aCampaignInfo.contact.c_str ()));
+
+
+  return jCampaignInfo;
+}
+
 //
 // java classes ----> c++ classes
 //
 
+CampaignInfo convertjCampaignInfo(JNIEnv *env, jobject jCampaignInfo)
+{
+  jclass class_jCampaignInfo = env->GetObjectClass (jCampaignInfo);
+  jfieldID fid_jCampaignInfo_itsName = env->GetFieldID (class_jCampaignInfo, "itsName", "Ljava/lang/String;");
+  jfieldID fid_jCampaignInfo_itsTitle = env->GetFieldID (class_jCampaignInfo, "itsTitle", "Ljava/lang/String;");
+  jfieldID fid_jCampaignInfo_itsPI = env->GetFieldID (class_jCampaignInfo, "itsPI", "Ljava/lang/String;");
+  jfieldID fid_jCampaignInfo_itsCO_I = env->GetFieldID (class_jCampaignInfo, "itsCO_I", "Ljava/lang/String;");
+  jfieldID fid_jCampaignInfo_itsContact = env->GetFieldID (class_jCampaignInfo, "itsContact", "Ljava/lang/String;");
+  jmethodID mid_jCampaignInfo_ID = env->GetMethodID (class_jCampaignInfo, "ID", "()I");
 
+  // Get original CampaignInfo
+  CampaignInfo aCampaignInfo = theirCampaign->getCampaign (env->CallIntMethod (jCampaignInfo, mid_jCampaignInfo_ID));
+
+  jboolean isCopy;
+
+  // name
+  jstring str = (jstring)env->GetObjectField (jCampaignInfo, fid_jCampaignInfo_itsName);
+  const char* n = env->GetStringUTFChars (str, &isCopy);
+  const string name (n);
+  aCampaignInfo.name = name;
+  env->ReleaseStringUTFChars (str, n);
+
+  // Title
+  jstring tstr = (jstring)env->GetObjectField (jCampaignInfo, fid_jCampaignInfo_itsTitle);
+  const char* t = env->GetStringUTFChars (tstr, &isCopy);
+  const string title (t);
+  aCampaignInfo.title = title;
+  env->ReleaseStringUTFChars (tstr, t);
+
+  // PI
+  jstring pstr = (jstring)env->GetObjectField (jCampaignInfo, fid_jCampaignInfo_itsPI);
+  const char* p = env->GetStringUTFChars (pstr, &isCopy);
+  const string pi (p);
+  aCampaignInfo.PI = pi;
+  env->ReleaseStringUTFChars (pstr, p);
+
+  // CO_I
+  jstring cstr = (jstring)env->GetObjectField (jCampaignInfo, fid_jCampaignInfo_itsCO_I);
+  const char* c = env->GetStringUTFChars (cstr, &isCopy);
+  const string co_i (c);
+  aCampaignInfo.CO_I = co_i;
+  env->ReleaseStringUTFChars (cstr, c);
+
+  // Contact
+  jstring costr = (jstring)env->GetObjectField (jCampaignInfo, fid_jCampaignInfo_itsContact);
+  const char* co = env->GetStringUTFChars (costr, &isCopy);
+  const string contact (co);
+  aCampaignInfo.contact = contact;
+  env->ReleaseStringUTFChars (costr, co);
+
+  return aCampaignInfo;
+}
 
 OTDBnode convertjOTDBnode (JNIEnv *env, jobject jNode)
 {

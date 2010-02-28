@@ -60,10 +60,10 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
     //# --- VIC maintenance : Components ---
     // A VIC tree is build up from single components. The definitions of the
     // components can loaded from a file with this call
-    public  int loadComponentFile (String filename) throws RemoteException {
+    public  int loadComponentFile (String filename,String forcedVersionNr, String forcedQualifier) throws RemoteException {
         int anI;
         try {
-            anI = adaptee.loadComponentFile(filename);
+            anI = adaptee.loadComponentFile(filename,forcedVersionNr,forcedQualifier);
         } catch (Exception ex) {
             logger.error(ex);
             RemoteException anEx=new RemoteException("JNI loadComponentFile error",ex);

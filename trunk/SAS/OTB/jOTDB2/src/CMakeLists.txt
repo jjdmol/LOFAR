@@ -5,6 +5,7 @@ include(LofarPackageVersion)
 lofar_add_library(jotdb2 SHARED 
   Package__Version.cc
   nl_astron_lofar_sas_otb_jotdb2_jCommon.cc
+  nl_astron_lofar_sas_otb_jotdb2_jCampaign.cc
   nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection.cc
   nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance.cc
   nl_astron_lofar_sas_otb_jotdb2_jClassifConv.cc

@@ -2,6 +2,7 @@ lib_LTLIBRARIES         = libjotdb2.la
 
 libjotdb2_la_SOURCES   = $(DOCHDRS) \
 		         nl_astron_lofar_sas_otb_jotdb2_jCommon.cc \
+		         nl_astron_lofar_sas_otb_jotdb2_jCampaign.cc \
 		         nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection.cc \
 		         nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance.cc \
 			 nl_astron_lofar_sas_otb_jotdb2_jClassifConv.cc \

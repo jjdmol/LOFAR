@@ -88,20 +88,28 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_load
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
  * Method:    loadComponentFile
- * Signature: (Ljava/lang/String;)I
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_loadComponentFile(JNIEnv *env, jobject, jstring aName) {
+JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_loadComponentFile(JNIEnv *env, jobject, jstring aName, jstring aForcedVersionNr, jstring aForcedQualifier) {
 
   jint retVal;
   const char* name;
+  const char* forcedVersionNr;
+  const char* forcedQualifier;
   try {
     jboolean isCopy;
     name = env->GetStringUTFChars (aName, &isCopy);
-    retVal = theirTM->loadComponentFile(name);
+    forcedVersionNr = env->GetStringUTFChars (aForcedVersionNr, &isCopy);
+    forcedQualifier = env->GetStringUTFChars (aForcedQualifier, &isCopy);
+    retVal = theirTM->loadComponentFile(name,forcedVersionNr,forcedQualifier);
     env->ReleaseStringUTFChars (aName, name);
+    env->ReleaseStringUTFChars (aForcedVersionNr, forcedVersionNr);
+    env->ReleaseStringUTFChars (aForcedQualifier, forcedQualifier);
   } catch (exception &ex) {
-    cout << "Exception during TreeMaintenance::loadComponentFile(" << name << ") " << ex.what() << endl; 
+    cout << "Exception during TreeMaintenance::loadComponentFile(" << name << "," << forcedVersionNr << "," << forcedQualifier <<") " << ex.what() << endl; 
     env->ReleaseStringUTFChars (aName, name);
+    env->ReleaseStringUTFChars (aForcedVersionNr, forcedVersionNr);
+    env->ReleaseStringUTFChars (aForcedQualifier, forcedQualifier);
 
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
@@ -497,7 +505,7 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_dupN
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
  * Method:    addComponent
- * Signature: (III)I
+ * Signature: (IIILjava/lang/String;)I
  */
 JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_addComponent(JNIEnv *env, jobject, jint compID, jint treeID, jint nodeID, jstring newName) {
 
