@@ -26,10 +26,10 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_load
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
  * Method:    loadComponentFile
- * Signature: (Ljava/lang/String;)I
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
  */
 JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_loadComponentFile
-  (JNIEnv *, jobject, jstring);
+  (JNIEnv *, jobject, jstring, jstring, jstring);
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
@@ -170,7 +170,7 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_dupN
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance
  * Method:    addComponent
- * Signature: (III)I
+ * Signature: (IIILjava/lang/String;)I
  */
 JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jTreeMaintenance_addComponent
   (JNIEnv *, jobject, jint, jint, jint, jstring);
