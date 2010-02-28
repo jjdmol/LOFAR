@@ -4,6 +4,7 @@
 
 
 pkginclude_HEADERS = \
+	  nl_astron_lofar_sas_otb_jotdb2_jCampaign.h \
 	  nl_astron_lofar_sas_otb_jotdb2_jClassifConv.h \
 	  nl_astron_lofar_sas_otb_jotdb2_jCommon.h \
 	  nl_astron_lofar_sas_otb_jotdb2_jInitCPPLogger.h \

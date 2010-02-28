@@ -34,26 +34,29 @@
 #include <OTDB/OTDBnode.h>
 #include <OTDB/OTDBvalue.h>
 #include <OTDB/OTDBtree.h>
+#include <OTDB/Campaign.h>
 #include <OTDB/OTDBparam.h>
 #include <OTDB/TreeState.h>
 #include <OTDB/TreeValue.h>
 #include <OTDB/VICnodeDef.h>
+#include <OTDB/CampaignInfo.h>
 #include <OTDB/TreeMaintenance.h>
 
 using namespace LOFAR::OTDB;
 
-jobject convertOTDBnode   (JNIEnv *env, OTDBnode aNode);
-jobject convertOTDBvalue  (JNIEnv *env, OTDBvalue aValue);
-jobject convertOTDBtree   (JNIEnv *env, OTDBtree aTree);
-jobject convertTreeState  (JNIEnv *env, TreeState aTreeState);
-jobject convertVICnodeDef (JNIEnv *env, VICnodeDef aNodeDef);
-jobject convertOTDBparam  (JNIEnv *env, OTDBparam aParam);
+jobject convertOTDBnode      (JNIEnv *env, OTDBnode aNode);
+jobject convertOTDBvalue     (JNIEnv *env, OTDBvalue aValue);
+jobject convertOTDBtree      (JNIEnv *env, OTDBtree aTree);
+jobject convertTreeState     (JNIEnv *env, TreeState aTreeState);
+jobject convertVICnodeDef    (JNIEnv *env, VICnodeDef aNodeDef);
+jobject convertOTDBparam     (JNIEnv *env, OTDBparam aParam);
+jobject convertCampaignInfo  (JNIEnv *env, CampaignInfo aCampaignInfo);
 
-OTDBnode convertjOTDBnode (JNIEnv *env, jobject jNode);
-VICnodeDef convertjVICnodeDef (JNIEnv *env, jobject jNode);
-OTDBparam convertjOTDBparam (JNIEnv *env, jobject jParam);
-OTDBvalue convertjOTDBvalue (JNIEnv *env, jobject jvalue);
-
+OTDBnode     convertjOTDBnode     (JNIEnv *env, jobject jNode);
+VICnodeDef   convertjVICnodeDef   (JNIEnv *env, jobject jNode);
+OTDBparam    convertjOTDBparam    (JNIEnv *env, jobject jParam);
+OTDBvalue    convertjOTDBvalue    (JNIEnv *env, jobject jvalue);
+CampaignInfo convertjCampaignInfo (JNIEnv *env, jobject jCampaignInfo);
 
 // Used in TreeValue
 void  setTreeValConnection(JNIEnv *env, jobject callerObject);
