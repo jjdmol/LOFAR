@@ -29,7 +29,7 @@
 #include <jOTDB2/nl_astron_lofar_sas_otb_jotdb2_jCampaign.h>
 #include <jOTDB2/nl_astron_lofar_sas_otb_jotdb2_jCommon.h>
 #include <jOTDB2/nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection.h>
-#include <OTDB/Campaingn.h>
+#include <OTDB/Campaign.h>
 #include <OTDB/CampaignInfo.h>
 #include <iostream>
 #include <string>
@@ -62,16 +62,17 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jCampaign_initCampaig
  * Signature: (Ljava/lang/String;)Lnl/astron/lofar/sas/otb/jotdb2/jCampaignInfo;
  */
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jCampaign_getCampaign__Ljava_lang_String_2
-  (JNIEnv *env, jobject, jstring name) {
+  (JNIEnv *env, jobject, jstring aName) {
   const char* name;
+  CampaignInfo aCampaignInfo;
+  jboolean isCopy;
+
   try {
-    CampaingInfo aCampaignInfo;
-    jboolean isCopy;
     name = env->GetStringUTFChars (aName, &isCopy);
-    aCampaignInfo = theirTM->getCampaign(name);
+    aCampaignInfo = theirCampaign->getCampaign(name);
     env->ReleaseStringUTFChars (aName, name);
   } catch (exception &ex) {
-    cout << "Exception during Campaign::getCampaign(" << name << ") " << ex.what() << endl;
+    cout << "Exception during Campaign::getCampaign(" << aName << ") " << ex.what() << endl;
     env->ReleaseStringUTFChars (aName, name);
 
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
@@ -88,10 +89,9 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jCampaign_getCampa
  */
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jCampaign_getCampaign__I
   (JNIEnv *env, jobject, jint anId) {
+  CampaignInfo aCampaignInfo;
   try {
-    CampaingInfo aCampaignInfo;
-    jboolean isCopy;
-    aCampaignInfo = theirTM->getCampaign(anId);
+    aCampaignInfo = theirCampaign->getCampaign(anId);
   } catch (exception &ex) {
     cout << "Exception during Campaign::getCampaign(" << anId << ") " << ex.what() << endl;
 
@@ -110,10 +110,9 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jCampaign_getCampa
   (JNIEnv *env, jobject){
   jobject itemVector;
   try {
-    jboolean isCopy;
-    vector<CampaignInfo> itemList = theirTM->getCampaignList();
+    vector<CampaignInfo> itemList = theirCampaign->getCampaignList();
 
-    vector<CampaignInfo>:iterator itemIterator;
+    vector<CampaignInfo>::iterator itemIterator;
 
     // Construct java Vector
     jclass class_Vector = env->FindClass("java/util/Vector");
