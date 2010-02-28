@@ -47,7 +47,7 @@ public class jTreeMaintenance
     //# --- VIC maintenance : Components ---
     // A VIC tree is build up from single components. The definitions of the
     // components can loaded from a file with this call
-    public native int loadComponentFile (String filename) throws Exception;
+    public native int loadComponentFile (String filename,String forcedVersionNr,String forcedQualifier) throws Exception;
 
     // Find the top-components in the components table.
     public native Vector<jVICnodeDef> getComponentList (String name , boolean topOnly) throws Exception;

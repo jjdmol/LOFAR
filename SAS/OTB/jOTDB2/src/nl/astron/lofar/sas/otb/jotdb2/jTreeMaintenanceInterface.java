@@ -42,7 +42,7 @@ public interface jTreeMaintenanceInterface extends Remote
     //# --- VIC maintenance : Components ---
     // A VIC tree is build up from single components. The definitions of the
     // components can loaded from a file with this call
-    public  int loadComponentFile (String filename) throws RemoteException;
+    public  int loadComponentFile (String filename,String forcedVersionNr, String forcedQualifier) throws RemoteException;
 
     // Find the top-components in the components table.
     public Vector<jVICnodeDef> getComponentList (String name , boolean topOnly) throws RemoteException;
