@@ -71,6 +71,8 @@
        <rmic base="${build.dir}/classes" classname="nl.astron.lofar.sas.otb.jotdb2.jConverterAdapter"/>
        <rmic base="${build.dir}/classes" classname="nl.astron.lofar.sas.otb.jotdb2.jOTDBadapter"/>
        <rmic base="${build.dir}/classes" classname="nl.astron.lofar.sas.otb.jotdb2.jTreeMaintenanceAdapter"/>
-       <rmic base="${build.dir}/classes" classname="nl.astron.lofar.sas.otb.jotdb2.jTreeValueAdapter"/>   
+       <rmic base="${build.dir}/classes" classname="nl.astron.lofar.sas.otb.jotdb2.jTreeValueAdapter"/> 
+       <rmic base="${build.dir}/classes" classname="nl.astron.lofar.sas.otb.jotdb2.jCampaign"/>   
+
     </target>
 </project>
