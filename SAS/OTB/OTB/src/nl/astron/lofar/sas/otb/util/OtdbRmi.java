@@ -26,6 +26,7 @@ import java.rmi.Naming;
 import java.util.TreeMap;
 import nl.astron.lofar.lofarutils.remoteFileInterface;
 import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otb.jotdb2.jCampaignInterface;
 import nl.astron.lofar.sas.otb.jotdb2.jConverterInterface;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBinterface;
 import nl.astron.lofar.sas.otb.jotdb2.jTreeMaintenanceInterface;
@@ -61,13 +62,15 @@ public class OtdbRmi {
     private static String RMIValName         = jTreeValueInterface.SERVICENAME;
     private static String RMIConverterName   = jConverterInterface.SERVICENAME; 
     private static String RMIRemoteFileName  = remoteFileInterface.SERVICENAME;
+    private static String RMICampaignName    = jCampaignInterface.SERVICENAME;
     
     private static boolean isOpened         = false;
     private static boolean isConnected      = false;
     private MainFrame itsMainFrame;
     
      // RMI interfaces
-    private static jOTDBinterface remoteOTDB;    
+    private static jOTDBinterface remoteOTDB;
+    private static jCampaignInterface remoteCampaign;
     private static jTreeMaintenanceInterface remoteMaintenance;
     private static jTreeValueInterface remoteValue;
     private static jConverterInterface remoteTypes;
@@ -123,7 +126,7 @@ public class OtdbRmi {
         return RMIRegistryName;
     }
 
-        /**
+   /**
      * Getter for property RMIMaintenanceName.
      * @return Value of property RMIMaintenanceName.
      */
@@ -131,7 +134,15 @@ public class OtdbRmi {
         return RMIMaintenanceName;
     }
 
-        /**
+   /**
+     * Getter for property RMICampaignName.
+     * @return Value of property RMICampaignName.
+     */
+    public static String getRMICampaignName() {
+        return RMICampaignName;
+    }
+
+    /**
      * Getter for property RMIValName.
      * @return Value of property RMIValName.
      */
@@ -162,6 +173,15 @@ public class OtdbRmi {
     public static jTreeMaintenanceInterface getRemoteMaintenance() {
         return remoteMaintenance;
     }
+
+    /**
+     * Getter for property remoteCampaign.
+     * @return Value of property remoteCampaign.
+     */
+    public static jCampaignInterface getRemoteCampaign() {
+        return remoteCampaign;
+    }
+
     /**
      * Getter for property remoteOTDB.
      * @return Value of property remoteOTDB.
@@ -257,11 +277,12 @@ public class OtdbRmi {
         String aRMV="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIValName;
         String aRMC="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIConverterName;
         String aRFI="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIRemoteFileName;
+        String aRCa="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMICampaignName;
         
 
         isOpened=openRemoteConnection(aRC);
         if (isOpened){
-            if (openRemoteMaintenance(aRMS) && openRemoteValue(aRMV) && openRemoteConverter(aRMC) && openRemoteFile(aRFI)) {  
+            if (openRemoteMaintenance(aRMS) && openRemoteValue(aRMV) && openRemoteConverter(aRMC) && openRemoteFile(aRFI)&& openRemoteCampaign(aRCa)) {
                 logger.debug("Remote connections opened");
                 isConnected=true;
             } else {
@@ -314,6 +335,23 @@ public class OtdbRmi {
         return false;
     }  
     
+    private boolean openRemoteCampaign(String RMICampName) {
+        try {
+            logger.debug("openRemoteCampaign for "+RMICampName);
+
+            // create a remote object
+            remoteCampaign = (jCampaignInterface) Naming.lookup (RMICampName);
+            logger.debug(remoteCampaign);
+
+     	    logger.debug("Connection succesful!");
+            return true;
+          }
+        catch (Exception e)
+	  {
+	     logger.debug("Getting Remote Campaign via RMI and JNI failed: " + e);
+	  }
+        return false;
+    }
         
     private boolean openRemoteValue(String RMIValName) {
         try {
