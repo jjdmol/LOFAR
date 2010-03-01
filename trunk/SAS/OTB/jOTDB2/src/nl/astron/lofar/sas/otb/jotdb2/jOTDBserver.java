@@ -33,6 +33,8 @@ public class jOTDBserver {
     private static jOTDBadapter jOTDBconnAdapter;
     private static jTreeMaintenance jTreeMainAdaptee;
     private static jTreeMaintenanceAdapter jTreeMainAdapter;
+    private static jCampaign jCampaignAdaptee;
+    private static jCampaignAdapter jCampaignAdapter;
     private static jTreeValue jTreeValueAdaptee;
     private static jTreeValueAdapter jTreeValueAdapter;
     private static jConverter jConverterAdaptee;
@@ -118,6 +120,16 @@ public class jOTDBserver {
             logger.info("jOTDBserver publishing service " + jTreeMaintenanceInterface.SERVICENAME + " in local registry...");
             localRegistry.rebind(jTreeMaintenanceInterface.SERVICENAME, jTreeMainAdapter);
             
+            // Export jCampaign
+            jCampaignAdaptee = new jCampaign();
+            //A custom port was specified, export the object using the port specified
+            if(objectPort!=0){
+                jCampaignAdapter.unexportObject(jCampaignAdapter,true);
+                jCampaignAdapter.exportObject(jCampaignAdapter,objectPort);
+            }
+            logger.info("jOTDBserver publishing service " + jCampaignInterface.SERVICENAME + " in local registry...");
+            localRegistry.rebind(jCampaignInterface.SERVICENAME, jCampaignAdapter);
+
             // Export jTreeValue
             jTreeValueAdaptee = new jTreeValue();
             jTreeValueAdapter = new jTreeValueAdapter(jTreeValueAdaptee);
