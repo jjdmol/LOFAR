@@ -32,9 +32,9 @@ class tCampaign
     jCampaignInfo aCampaignInfo;
 	for (int i = 0; i < camps.size (); ++i)
 	    {
-		aCampaignInfo = camps.elementAt(1);
-                showCampaignInfo(aCampaignInfo,firstLine);
-                firstLine=false;
+    		aCampaignInfo = camps.elementAt(i);
+            showCampaignInfo(aCampaignInfo,firstLine);
+            firstLine=false;
 	    }	
 	System.out.println (camps.size () + " records\n");
     }
@@ -45,13 +45,14 @@ class tCampaign
             System.out.println ("----+----------+----------+---------------+---------------+------------------");
         }
 
-        System.out.printf ("%4d|%-10.10s|%-10.10s|%-15.15s|%-15.15s",
+        System.out.printf ("%4d|%-10.10s|%-10.10s|%-15.15s|%-15.15s\n",
                 aCampaignInfo.ID(),
                 aCampaignInfo.itsName,
                 aCampaignInfo.itsTitle,
                 aCampaignInfo.itsPI,
                 aCampaignInfo.itsCO_I,
                 aCampaignInfo.itsContact);
+
     }
     
     
