@@ -353,7 +353,7 @@ class Job
 };
 
 
-unsigned		  Job::nextJobID = 0;
+unsigned		  Job::nextJobID = 1;
 void			  *Job::theInputSection;
 Mutex			  Job::theInputSectionMutex;
 unsigned		  Job::theInputSectionRefCount = 0;
@@ -704,7 +704,7 @@ void Job::checkParset() const
 }
 
 
-static bool	quit	       = false;
+static bool quit = false;
 
 
 static void handleCommand(const std::string &command)
@@ -724,8 +724,13 @@ static void handleCommand(const std::string &command)
 }
 
 
-static void socketListener()
+static void commandMaster()
 {
+  std::vector<MultiplexedStream *> ionStreams(nrPsets);
+
+  for (unsigned ion = 1; ion < nrPsets; ion ++)
+    ionStreams[ion] = new MultiplexedStream(*allIONstreamMultiplexers[ion], 0);
+
   while (!quit) {
     SocketStream sk("0.0.0.0", 4000, SocketStream::TCP, SocketStream::Server);
 
@@ -739,25 +744,37 @@ static void socketListener()
 	LOG_DEBUG_STR("read command: " << command);
 	unsigned size = command.size() + 1;
 
-	MPI_Bcast(&size, sizeof size, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(const_cast<char *>(command.c_str()), size, MPI_CHAR, 0, MPI_COMM_WORLD);
+	//MPI_Bcast(&size, sizeof size, MPI_INT, 0, MPI_COMM_WORLD);
+	//MPI_Bcast(const_cast<char *>(command.c_str()), size, MPI_CHAR, 0, MPI_COMM_WORLD);
+	for (unsigned ion = 1; ion < nrPsets; ion ++) {
+	  ionStreams[ion]->write(&size, sizeof size);
+	  ionStreams[ion]->write(command.c_str(), size);
+	}
+
 	handleCommand(command);
       }
     } catch (Stream::EndOfStreamException &) {
     }
   }
+
+  for (unsigned ion = 1; ion < nrPsets; ion ++)
+    delete ionStreams[ion];
 }
 
 
-static void MPI_listener()
+static void commandSlave()
 {
+  MultiplexedStream streamFromMaster(*allIONstreamMultiplexers[0], 0);
+
   while (!quit) {
     unsigned size;
 
-    MPI_Bcast(&size, sizeof size, MPI_INT, 0, MPI_COMM_WORLD);
+    //MPI_Bcast(&size, sizeof size, MPI_INT, 0, MPI_COMM_WORLD);
+    streamFromMaster.read(&size, sizeof size);
 
     char *command = new char[size];
-    MPI_Bcast(command, size, MPI_CHAR, 0, MPI_COMM_WORLD);
+    //MPI_Bcast(command, size, MPI_CHAR, 0, MPI_COMM_WORLD);
+    streamFromMaster.read(command, size);
     handleCommand(command);
     delete [] command;
   }
@@ -767,9 +784,9 @@ static void MPI_listener()
 static void commandServer()
 {
   if (myPsetNumber == 0)
-    socketListener();
+    commandMaster();
   else
-    MPI_listener();
+    commandSlave();
 }
 
 
