@@ -28,11 +28,11 @@
 #include <Interface/StreamableData.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/CN_ProcessingPlan.h>
+#include <Interface/Queue.h>
 #include <Interface/Thread.h>
 #include <Interface/Mutex.h>
-#include <Stream/Stream.h>
 #include <Stream/FileStream.h>
-#include <Storage/InputThread.h>
+#include <Stream/Stream.h>
 #include <Storage/MSWriter.h>
 #include <Common/Semaphore.h>
 #include <Common/Timer.h>
@@ -46,24 +46,19 @@ namespace RTCP {
 class OutputThread
 {
   public:
-   OutputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, InputThread *inputThread, const ProcessingPlan::planlet &outputConfig);
-   ~OutputThread();
-    
-    
+			    OutputThread(const Parset &, unsigned subbandNumber, unsigned outputNumber, const ProcessingPlan::planlet &outputConfig, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue);
+			    ~OutputThread();
 
     // report any writes that take longer than this (seconds)
     static const float      reportWriteDelay = 0.05;
 
   private:
-    void                    writeLogMessage();
-    void                    flushSeqNumbers();
+    void                    writeLogMessage(unsigned sequenceNumber);
+    void                    flushSequenceNumbers();
     void                    checkForDroppedData(StreamableData *data);
     void		    mainLoop();
 
-    const Parset            *itsPS;
     Thread		    *itsThread;
-
-    InputThread             *itsInputThread;
 
     const unsigned          itsSubbandNumber;
     const unsigned          itsOutputNumber;
@@ -73,9 +68,10 @@ class OutputThread
     MSWriter*               itsWriter;
     unsigned                itsNextSequenceNumber;
 
-    std::vector<unsigned>    itsSequenceNumbers;
-    FileStream               *itsFile;
+    Queue<StreamableData *> &itsFreeQueue, &itsReceiveQueue;
 
+    std::vector<unsigned>   itsSequenceNumbers;
+    FileStream              *itsSequenceNumbersFile;
 };
 
 } // namespace RTCP
