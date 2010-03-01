@@ -38,21 +38,28 @@ namespace RTCP {
 class InputThread
 {
   public:
-			    InputThread(const Parset &, unsigned subbandNumber, unsigned outputNumber, const std::string &inputDescription, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue);
+			    InputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, StreamableData *dataTemplate);
 			    ~InputThread();
+
+    static const unsigned   maxReceiveQueueSize = 3;
+    // report if fetching an item from the receive queue takes longer than this (seconds)
+    static const float      reportQueueRemoveDelay = 0.05;
+    // report if reading data takes longer than this (seconds)
+    static const float      reportReadDelay = 1.10;
+
+    Queue<StreamableData *> itsFreeQueue, itsReceiveQueue;
 
   private:
     void		    mainLoop();
 
+    const Parset            *itsPS;
+    InterruptibleThread	    *itsThread;
+
     const unsigned          itsSubbandNumber;
     const unsigned          itsOutputNumber;
-    const std::string	    itsInputDescription;
     const unsigned          itsObservationID;
 
-    Queue<StreamableData *> &itsFreeQueue, &itsReceiveQueue;
-
     volatile bool           itsConnecting;
-    InterruptibleThread	    itsThread;
 };
 
 } // namespace RTCP

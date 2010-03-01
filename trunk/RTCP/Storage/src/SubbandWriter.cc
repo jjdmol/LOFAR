@@ -32,8 +32,15 @@
 #include <Interface/CN_Configuration.h>
 #include <Interface/CN_ProcessingPlan.h>
 
-#include <boost/lexical_cast.hpp>
+#ifdef USE_MAC_PI
+#include <GCF/GCF_PVDouble.h>
+#include <GCF/GCF_PVString.h>
+#endif
 
+#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
+
+using boost::format;
 
 #include <time.h>
 #include <sys/stat.h>
@@ -41,7 +48,6 @@
 namespace LOFAR {
 namespace RTCP {
 
-#if 0
 SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank, unsigned size) 
 :
   itsPS(ps),
@@ -162,62 +168,6 @@ SubbandWriter::~SubbandWriter()
   itsVArray.clear();
 #endif
 }
-#else
-
-
-SubbandWriter::SubbandWriter(const char *parset, const char *inputDescription, unsigned subband, unsigned outputType)
-:
-  itsParset(parset)
-{
-  CN_Configuration configuration(itsParset);
-  CN_ProcessingPlan<> plan(configuration);
-  plan.removeNonOutputs();
-
-#if defined HAVE_AIPSPP
-  if (outputType == 0 && itsParset.outputCorrelatedData()) {
-    MeasurementSetFormat myFormat(&itsParset, 512);
-
-    // create root directory of the observation tree
-    if (mkdir(itsParset.getMSBaseDir().c_str(), 0770) != 0 && errno != EEXIST) {
-      unsigned savedErrno = errno; // first argument below clears errno
-      throw SystemCallException(("mkdir " + itsParset.getMSBaseDir()).c_str(), savedErrno, THROW_ARGS);
-    }
-          
-    /// Make MeasurementSet filestructures and required tables
-    myFormat.addSubband(subband);
-
-    LOG_INFO_STR("MeasurementSet created");
-  }
-#endif // defined HAVE_AIPSPP
-
-  ProcessingPlan::planlet &outputConfig = plan.plan[outputType];
-  StreamableData	  *dataTemplate = outputConfig.source;
-
-  for (unsigned i = 0; i < maxReceiveQueueSize; i ++) {
-    StreamableData *data = dataTemplate->clone();
-
-    data->allocate();
-    itsFreeQueue.append(data);
-  }
-
-  itsInputThread  = new InputThread(itsParset, subband, outputType, inputDescription, itsFreeQueue, itsReceiveQueue);
-  itsOutputThread = new OutputThread(itsParset, subband, outputType, outputConfig, itsFreeQueue, itsReceiveQueue);
-}
-
-
-SubbandWriter::~SubbandWriter()
-{
-  delete itsInputThread;
-  delete itsOutputThread;
-
-  while (!itsReceiveQueue.empty())
-    delete itsReceiveQueue.remove();
-
-  while (!itsFreeQueue.empty())
-    delete itsFreeQueue.remove();
-}
-
-#endif
 
 } // namespace RTCP
 } // namespace LOFAR
