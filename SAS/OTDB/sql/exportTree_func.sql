@@ -176,7 +176,7 @@ CREATE OR REPLACE FUNCTION exportTree(INT4, INT4, INT4)
 		IF vIsPicTree THEN
 		  vResult := vResult || exportPICSubTree($2, $3, vPrefixLen+2);
 		ELSE
-		  vResult := vResult || exportVICSubTree($2, $3, vPrefixLen+2);
+		  vResult := vResult || exportVICSubTree($2, $3, vPrefixLen+2) || exportCampaign($2, vPrefixLen+2);
 		END IF;
 		RETURN vResult;
 	END;
