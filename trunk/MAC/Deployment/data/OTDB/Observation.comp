@@ -23,7 +23,7 @@ par  bandFilter  	         I	  ptext	 -   	10    0	     'LBA_10_70|LBA_30_70|LBA
 par  antennaArray	         I	  ptext	 -   	10    0	     'LBA|HBA;LBA'			                   - 'Name of the antenneArray (AntennaArrays.conf)'
 par  receiverList	         I	  text	 -   	10    0	     []                                       - 'List of the receivers to use, eg.[0..7,10,11]. Range 0..191.'
 par  MSNameMask              I    text   -      10    0      '/data/L${YEAR}_${MSNUMBER}/SB${SUBBAND}.MS' - 'Name for the Measurement set for this Observation'
-par  channelsPerSubband      I    int    -      10    100    256                                       - 'Number of channels per subband'
+par  channelsPerSubband      I    int    -      10    100    256                                       - 'Number of channels per subband, preferred values:16,32,64,128,192,256'
 par  nrBeams                 I    int    -      10    100    1                                         - 'Number of simultaneous beams in this observation'
 par  nrAnaBeams              I    int    -      10    100    1                                         - 'Number of analog beams in this observation'
 par  nrBeamformers           I    int    -      10    100    0                                         - 'Number of beamformers in this observation'
