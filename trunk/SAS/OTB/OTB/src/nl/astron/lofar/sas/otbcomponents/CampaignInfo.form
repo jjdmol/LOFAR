@@ -27,7 +27,7 @@
                           <Component id="jLabel2" pref="132" max="32767" attributes="1"/>
                           <Component id="jLabel1" pref="132" max="32767" attributes="1"/>
                       </Group>
-                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="inputName" pref="454" max="32767" attributes="1"/>
                           <Component id="inputContact" pref="454" max="32767" attributes="1"/>
@@ -35,15 +35,15 @@
                           <Component id="inputPI" alignment="0" pref="454" max="32767" attributes="1"/>
                           <Component id="inputTitle" alignment="0" pref="454" max="32767" attributes="1"/>
                       </Group>
-                      <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="-2" pref="257" max="-2" attributes="0"/>
                       <Component id="jLabel6" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="244" max="-2" attributes="0"/>
+                      <EmptySpace pref="230" max="-2" attributes="0"/>
                   </Group>
               </Group>
-              <EmptySpace min="-2" pref="11" max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="502" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>

@@ -790,7 +790,7 @@ public class MainPanel extends javax.swing.JPanel
                         if (OtdbRmi.getRemoteFileTrans().uploadFile(uldata,aFileName)) {
                             logger.debug("upload finished");
                             // Create a new Tree from the found file.
-                            int anID=OtdbRmi.getRemoteMaintenance().loadComponentFile(aFileName);
+                            int anID=OtdbRmi.getRemoteMaintenance().loadComponentFile(aFileName,"","");
                             if (anID < 1) {
                                 logger.debug("Error on ComponentfileLoad: " + itsNewFile.getPath());
                             } else {
