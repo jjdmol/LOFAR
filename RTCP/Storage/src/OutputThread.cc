@@ -41,45 +41,40 @@ using boost::format;
 namespace LOFAR {
 namespace RTCP {
 
-OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, InputThread *inputThread, const ProcessingPlan::planlet &outputConfig )
+OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, unsigned outputNumber, const ProcessingPlan::planlet &outputConfig, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue)
 :
-  itsPS(ps),
-  itsInputThread(inputThread),
   itsSubbandNumber(subbandNumber),
   itsOutputNumber(outputNumber),
-  itsObservationID(ps->observationID()),
+  itsObservationID(parset.observationID()),
   itsNextSequenceNumber(0),
-  itsFile(NULL)
+  itsFreeQueue(freeQueue),
+  itsReceiveQueue(receiveQueue),
+  itsSequenceNumbersFile(0)
 {
-  string filename;
-  string seqfilename;
-#if 0
-  // null writer
-  itsWriters[output] = new MSWriterNull();
+  std::string filename, seqfilename;
 
-  LOG_DEBUG_STR("subband " << subbandNumber << " written to null");
-#else    
-  if( dynamic_cast<CorrelatedData*>( outputConfig.source ) ) {
+  if (dynamic_cast<CorrelatedData *>(outputConfig.source)) {
     std::stringstream out;
-    out << itsPS->getMSname(subbandNumber) << "/table.f" << outputNumber << "data";
+    out << parset.getMSname(subbandNumber) << "/table.f" << outputNumber << "data";
     filename = out.str();
 
-    if (itsPS->getLofarStManVersion() == 2) {
+    if (parset.getLofarStManVersion() == 2) {
       std::stringstream seq;
-      seq << itsPS->getMSname(subbandNumber) <<"/table.f" << outputNumber << "seqnr";
+      seq << parset.getMSname(subbandNumber) <<"/table.f" << outputNumber << "seqnr";
       seqfilename = seq.str();
       
       try {
-	itsFile = new FileStream(seqfilename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
+	itsSequenceNumbersFile = new FileStream(seqfilename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
       } catch (...) {
-	itsFile = NULL;
+	LOG_WARN("Could not open sequence numbers file");
+	itsSequenceNumbersFile = 0;
       }
     }
 
   } else {    
     // raw writer
     std::stringstream out;
-    out << itsPS->getMSname(subbandNumber) << outputConfig.filenameSuffix;
+    out << parset.getMSname(subbandNumber) << outputConfig.filenameSuffix;
     filename = out.str();
   }
 
@@ -87,12 +82,10 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
 
   try {
     itsWriter = new MSWriterFile(filename.c_str());
-  } catch( SystemCallException &ex ) {
-    LOG_ERROR_STR( "Cannot open " << filename << ": " << ex );
-
+  } catch (SystemCallException &ex) {
+    LOG_ERROR_STR("Cannot open " << filename << ": " << ex);
     itsWriter = new MSWriterNull();
   }
-#endif
 
   //thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps->observationID() % subbandNumber % outputNumber));
   itsThread = new Thread(this, &OutputThread::mainLoop);
@@ -101,41 +94,33 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
 
 OutputThread::~OutputThread()
 {
-  flushSeqNumbers();
-
-  if (itsFile != NULL) delete itsFile;
-
   delete itsThread;
-
   delete itsWriter;
+
+  flushSequenceNumbers();
+  delete itsSequenceNumbersFile;
 }
 
 
-void OutputThread::writeLogMessage()
+void OutputThread::writeLogMessage(unsigned sequenceNumber)
 {
-/*
-  static int counter = 0;
-  time_t     now     = time(0);
-  char	     buf[26];
+  time_t now = time(0);
+  char	 buf[26];
 
   ctime_r(&now, buf);
   buf[24] = '\0';
 
   LOG_INFO_STR("time = " << buf <<
-	       //", obsID = " << itsObservationID <<
-	       ", count = " << counter ++ <<
-	       ", timestamp = " << itsStartStamp + ((itsPreviousSequenceNumbers[0] + 1) *
-						     itsPS->nrSubbandSamples() *
-						     itsPS->IONintegrationSteps()));
-  
-  //  itsStartStamp += itsPS->nrSubbandSamples() * itsPS->IONintegrationSteps();
-*/
+	       ", obsID = " << itsObservationID <<
+	       ", seqno = " << sequenceNumber);
 }
 
-void OutputThread::flushSeqNumbers() {
-  if (itsFile != NULL) {
+
+void OutputThread::flushSequenceNumbers()
+{
+  if (itsSequenceNumbersFile != 0) {
     LOG_INFO_STR("Flushing sequence numbers");
-    itsFile->write(itsSequenceNumbers.data(), itsSequenceNumbers.size()*sizeof(unsigned));
+    itsSequenceNumbersFile->write(itsSequenceNumbers.data(), itsSequenceNumbers.size()*sizeof(unsigned));
     itsSequenceNumbers.clear();
   }
 }
@@ -144,18 +129,16 @@ void OutputThread::flushSeqNumbers() {
 void OutputThread::checkForDroppedData(StreamableData *data)
 {
   unsigned expectedSequenceNumber = itsNextSequenceNumber;
-  unsigned droppedBlocks = data->sequenceNumber - expectedSequenceNumber;
+  unsigned droppedBlocks	  = data->sequenceNumber - expectedSequenceNumber;
 
   if (droppedBlocks > 0)
     LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
 
-  if (itsPS->getLofarStManVersion() == 2 && itsFile != NULL) {
-
+  if (itsSequenceNumbersFile != 0) {
     itsSequenceNumbers.push_back(data->sequenceNumber);
     
-    if (itsSequenceNumbers.size() > 64) {
-      flushSeqNumbers();
-    }
+    if (itsSequenceNumbers.size() > 64)
+      flushSequenceNumbers();
   }
 
   itsNextSequenceNumber = data->sequenceNumber + 1;
@@ -164,38 +147,26 @@ void OutputThread::checkForDroppedData(StreamableData *data)
 
 void OutputThread::mainLoop()
 {
-  /// allow only a limited number of thread to write at a time
-  /// TODO: race at creation
-  static Semaphore semaphore(4);
-  
   while (true) {
-    NSTimer writeTimer("write data", false, false);
-    std::auto_ptr<StreamableData> data(itsInputThread->itsReceiveQueue.remove());
+    //NSTimer			  writeTimer("write data", false, false);
+    std::auto_ptr<StreamableData> data(itsReceiveQueue.remove());
 
     if (data.get() == 0)
       break;
 
     checkForDroppedData(data.get());
 
-    writeTimer.start();
-    semaphore.down();
+    //writeTimer.start();
+    itsWriter->write(data.get());
+    //writeTimer.stop();
 
-    try {
-      itsWriter->write(data.get());
-    } catch (...) {
-      semaphore.up();
-      throw;
-    }
+    writeLogMessage(data.get()->sequenceNumber);
+    //LOG_INFO_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": " << writeTimer);
 
-    semaphore.up();
-    writeTimer.stop();
-
-    if (writeTimer.getElapsed() > reportWriteDelay)
-      LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": " << writeTimer);
-
-    itsInputThread->itsFreeQueue.append(data.release());
+    itsFreeQueue.append(data.release());
   }
-  flushSeqNumbers();
+
+  flushSequenceNumbers();
 }
 
 } // namespace RTCP

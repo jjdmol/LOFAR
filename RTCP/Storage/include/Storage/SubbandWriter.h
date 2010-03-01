@@ -44,6 +44,7 @@
 namespace LOFAR {
 namespace RTCP {
 
+#if 0
 class SubbandWriter
 {
   public:
@@ -65,6 +66,25 @@ class SubbandWriter
     GCF::Common::GCFPValueArray itsVArray; 
 #endif
 };
+#else
+
+class SubbandWriter
+{
+  public:
+    SubbandWriter(const char *parset, const char *portname, unsigned subband, unsigned outputType);
+    ~SubbandWriter();
+
+  private:
+    static const unsigned   maxReceiveQueueSize = 3;
+    Parset		    itsParset;
+
+    Queue<StreamableData *> itsReceiveQueue, itsFreeQueue;
+
+    InputThread		    *itsInputThread;
+    OutputThread	    *itsOutputThread;
+};
+
+#endif
 
 } // namespace RTCP
 } // namespace LOFAR

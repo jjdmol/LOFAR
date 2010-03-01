@@ -34,6 +34,7 @@ using namespace LOFAR;
 using namespace LOFAR::RTCP;
 
 
+#if 0
 class Job
 {
   public:
@@ -93,6 +94,7 @@ static void child(int argc, char *argv[], int rank, int size)
     exit(1);
   }
 }
+#endif
 
 
 int main(int argc, char *argv[])
@@ -115,6 +117,7 @@ int main(int argc, char *argv[])
   setLevel("Global",8);
 #endif
 
+#if 0
 #if defined HAVE_MPI
   int rank;
   int size;
@@ -167,6 +170,29 @@ int main(int argc, char *argv[])
   MPI_Finalize();
 #endif
 
+#else
+  try {
+    if (argc != 5)
+      throw StorageException(std::string("usage: ") + argv[0] + " parset input subband type"); // TODO: more descriptive
+
+    char stdoutbuf[1024], stderrbuf[1024];
+    setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
+    setvbuf(stderr, stdoutbuf, _IOLBF, sizeof stderrbuf);
+
+    LOG_INFO_STR("started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3] << ' ' << argv[4]);
+    SubbandWriter(argv[1], argv[2], boost::lexical_cast<unsigned>(argv[3]), boost::lexical_cast<unsigned>(argv[4]));
+  } catch (Exception &ex) {
+    LOG_FATAL_STR("caught Exception: " << ex);
+    exit(1);
+  } catch (std::exception &ex) {
+    LOG_FATAL_STR("caught std::exception: " << ex.what());
+    exit(1);
+  } catch (...) {
+    LOG_FATAL_STR("caught non-std::exception: ");
+    exit(1);
+  }
+#endif
+
   LOG_INFO("Program end");
-  return 0; // always return 0, otherwise mpirun kills other storage processes
+  return 0;
 }
