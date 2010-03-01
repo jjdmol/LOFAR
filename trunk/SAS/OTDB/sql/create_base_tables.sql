@@ -256,13 +256,13 @@ CREATE TABLE campaign (
 	name		VARCHAR(30)		NOT NULL,
 	title		VARCHAR(100)	NOT NULL,
 	PI			VARCHAR(80)		NOT NULL,
-	CO_I		VARCHAR(80),
-	contact		VARCHAR(120),
+	CO_I		VARCHAR(80)     DEFAULT '',
+	contact		VARCHAR(120)    DEFAULT '',
 	
 	CONSTRAINT	campaign_id_uniq	UNIQUE(ID),
 	CONSTRAINT	campaign_name_uniq	UNIQUE(name)
 ) WITHOUT OIDS;
-INSERT INTO campaign(id, name, title, PI) VALUES (0, 'no campaign', 'not related to a campaign/project', 'unkwown');
+INSERT INTO campaign(id, name, title, PI) VALUES (0, 'no campaign', 'not related to a campaign/project', 'unknown');
 
 --
 -- Operator table

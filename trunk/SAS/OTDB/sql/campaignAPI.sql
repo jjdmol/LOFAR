@@ -173,3 +173,56 @@ CREATE OR REPLACE FUNCTION saveCampaign(INT4, VARCHAR(30), VARCHAR(100), VARCHAR
 		RETURN vID;
 	END;
 ' LANGUAGE plpgsql;
+
+--
+-- exportCampaign(treeID, prefixLen))
+-- 
+-- Return the campaign as a linefeed separated key-value list
+--
+-- Authorisation: none
+--
+-- Tables:  campaign    read
+--
+-- Types:   none
+--
+CREATE OR REPLACE FUNCTION exportCampaign(INT4, INT4)
+  RETURNS TEXT AS $$
+    DECLARE
+		vResult		TEXT := '';
+		vPrefix		TEXT;
+		vRecord		RECORD;
+		vCID		campaign.id%TYPE;
+		aTreeID		ALIAS FOR $1;
+		aPrefixLen	ALIAS FOR $2;
+
+    BEGIN
+	  SELECT campaign
+	  INTO	 vCID
+	  FROM	 otdbtree
+	  WHERE	 treeID = aTreeID;
+	  IF NOT FOUND THEN
+		RAISE WARNING 'Tree % not found', $1;
+		RETURN vResult;
+	  END IF;
+
+	  SELECT *
+	  INTO	 vRecord
+	  FROM	 campaign
+	  WHERE  ID = vCID;
+	  IF NOT FOUND THEN
+		RAISE WARNING 'Campaign % not found', vCID;
+		RETURN vResult;
+	  END IF;
+
+	  SELECT substr(name,$2)
+	  INTO	 vPrefix
+	  FROM	 getVHitemList($1, '%.Observation');
+	  vResult := vResult || vPrefix || '.Campaign.name='    || vRecord.name    || chr(10);
+	  vResult := vResult || vPrefix || '.Campaign.title='   || vRecord.title   || chr(10);
+	  vResult := vResult || vPrefix || '.Campaign.PI='      || vRecord.PI      || chr(10);
+	  vResult := vResult || vPrefix || '.Campaign.CO_I='    || vRecord.CO_I    || chr(10);
+	  vResult := vResult || vPrefix || '.Campaign.contact=' || vRecord.contact || chr(10);
+      RETURN vResult;
+    END
+$$ LANGUAGE plpgsql;
+
