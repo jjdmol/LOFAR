@@ -25,11 +25,15 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <Interface/StreamableData.h>
+#include <Interface/Mutex.h>
 #include <Interface/Queue.h>
 #include <Interface/Parset.h>
+#include <Interface/StreamableData.h>
 #include <Interface/Thread.h>
 #include <Stream/Stream.h>
+
+#include <stack>
+#include <vector>
 
 
 namespace LOFAR {
@@ -47,13 +51,24 @@ class OutputThread
 
   private:
     void		    mainLoop();
+    void		    forkSSH(), joinSSH();
+    static void		    execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *parset, const char *socketName, const char *subband, const char *output);
+
+    void		    getPortNumber();
+    std::string		    getSocketName();
 
     volatile bool           itsConnecting;
 
     const Parset            &itsParset;
-    const unsigned          itsSubband;
-    const unsigned          itsOutput;
+    const unsigned          itsSubband, itsOutput;
+    const std::string	    itsDescription;
+    unsigned		    itsPortNumber;
+    const std::string	    itsSocketName;
+    unsigned		    itsChildPid;
     InterruptibleThread	    *itsThread;
+
+    static std::stack<unsigned, std::vector<unsigned> > theFreePorts;
+    static Mutex	    theFreePortsMutex, theCheckPasswordFileMutex;
 };
 
 } // namespace RTCP

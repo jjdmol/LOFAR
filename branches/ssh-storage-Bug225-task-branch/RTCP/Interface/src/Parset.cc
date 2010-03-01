@@ -53,7 +53,8 @@ namespace RTCP {
 
 Parset::Parset(const char *name)
 :
-  ParameterSet(name)
+  ParameterSet(name),
+  itsName(name)
 {
   maintainBackwardCompatibility();
   check();

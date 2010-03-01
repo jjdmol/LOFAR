@@ -215,6 +215,7 @@ class IONProcSection(Section):
 
 class StorageSection(Section):
   def run(self):
+    return
     logfiles = ["%s/run.Storage.%s.log" % (Locations.files["logdir"],self.partition)] + self.logoutputs
 
     # create the target directories

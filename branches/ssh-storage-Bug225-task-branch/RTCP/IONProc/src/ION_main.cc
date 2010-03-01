@@ -29,6 +29,7 @@
 #include <Interface/Exceptions.h>
 #include <Interface/Mutex.h>
 #include <Interface/Parset.h>
+#include <Interface/PrintVector.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/Thread.h>
 #include <ION_Allocator.h>
@@ -103,10 +104,6 @@ void *I_WRAP_SONAME_FNNAME_ZZ(Za,memset)( void *dest, int val, size_t len) {
 #define CATCH_EXCEPTIONS
 
 
-using namespace LOFAR;
-using namespace LOFAR::RTCP;
-
-
 #if !defined CATCH_EXCEPTIONS
 
 void terminate_with_backtrace()
@@ -126,6 +123,11 @@ void terminate_with_backtrace()
 
 #endif
 
+
+namespace LOFAR {
+namespace RTCP {
+
+std::string				myIPaddress;
 
 static unsigned			 	myPsetNumber, nrPsets;
 static boost::multi_array<char, 2>	ipAddresses;
@@ -376,6 +378,9 @@ Job::Job(const char *parsetName)
   LOG_DEBUG_STR("Creating new observation, ObsID = " << itsParset.observationID());
   LOG_DEBUG_STR("ObsID = " << itsParset.observationID() << ", usedCoresInPset = " << itsParset.usedCoresInPset());
 
+  itsNrRuns = static_cast<unsigned>(ceil((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime()));
+  LOG_DEBUG_STR("itsNrRuns = " << itsNrRuns);
+
   itsHasPhaseOne   = itsParset.phaseOnePsetIndex(myPsetNumber) >= 0;
   itsHasPhaseTwo   = itsParset.phaseTwoPsetIndex(myPsetNumber) >= 0;
   itsHasPhaseThree = itsParset.phaseThreePsetIndex(myPsetNumber) >= 0;
@@ -404,9 +409,6 @@ Job::~Job()
 
 void Job::allocateResources()
 {
-  itsNrRuns = static_cast<unsigned>(ceil((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime()));
-  LOG_DEBUG_STR("itsNrRuns = " << itsNrRuns);
-
   if (itsHasPhaseOne)
     attachToInputSection();
 
@@ -663,7 +665,7 @@ template <typename SAMPLE_TYPE> void Job::CNthread()
         continue;
     }
 
-    outputSections[output] = new OutputSection(&itsParset, list, maxlistsize, output, &createCNstream );
+    outputSections[output] = new OutputSection(&itsParset, itsNrRuns, list, maxlistsize, output, &createCNstream);
   }
 
   // forward input, if any
@@ -675,21 +677,8 @@ template <typename SAMPLE_TYPE> void Job::CNthread()
 
   beamletBufferToComputeNode.preprocess(&itsParset);
         
-  for (run = 0; beamletBufferToComputeNode.getCurrentTimeStamp() < itsStopTime; run ++)
+  for (run = 0; run < itsNrRuns; run ++)
     beamletBufferToComputeNode.process();
-
-  LOG_DEBUG_STR("CNthread wrapping up after " << run << " of " << itsNrRuns << " runs.");
-
-  if (run < itsNrRuns) { // "run" will be set to the last run + 1
-    // early abort -- signal outputSections to stop waiting for more data.
-    //
-    // We need to do at least one run after this, since the outputSections could be waiting for the next run already.
-    for (unsigned output = 0; output < nrOutputTypes; output++) {
-      outputSections[output]->setNrRuns( run );
-    }
-
-    beamletBufferToComputeNode.process();
-  }
 
   beamletBufferToComputeNode.postprocess();
 
@@ -698,7 +687,7 @@ template <typename SAMPLE_TYPE> void Job::CNthread()
   LOG_DEBUG("CNthread done processing input");
 
   // wait for output process threads to finish 
-  for (unsigned output = 0; output < nrOutputTypes; output++) {
+  for (unsigned output = 0; output < nrOutputTypes; output ++) {
     delete outputSections[output];
   }
 
@@ -725,7 +714,10 @@ static void handleCommand(const std::string &command)
   if (command == "quit") {
     quit = true;
   } else if (command.compare(0, 7, "parset ") == 0) {
-    new Job(command.substr(7).c_str());
+    try {
+      new Job(command.substr(7).c_str());
+    } catch (APSException &) { // if file could not be found
+    }
   } else if (myPsetNumber == 0) {
     LOG_ERROR_STR("command \"" << command << "\" not understood");
   }
@@ -811,7 +803,7 @@ static void master_thread(int argc, char **argv)
     createAllCNstreams();
     createAllIONstreams();
 
-#if 0
+#if 1
     if (myPsetNumber == 0)
       for (int arg = 1; arg < argc; arg ++)
 	LOG_DEBUG_STR("manually insert " << argv[arg]);
@@ -848,8 +840,15 @@ static void master_thread(int argc, char **argv)
 }
 
 
+} // namespace RTCP
+} // namespace LOFAR
+
+
 int main(int argc, char **argv)
 {
+  using namespace LOFAR;
+  using namespace LOFAR::RTCP;
+
 #if !defined CATCH_EXCEPTIONS
   std::set_terminate(terminate_with_backtrace);
 #endif
@@ -885,7 +884,7 @@ int main(int argc, char **argv)
   }
 
   ipAddresses.resize(boost::extents[nrPsets][16]);
-  std::string myIPaddress = personality.getString("BG_IP");
+  myIPaddress = personality.getString("BG_IP");
   strcpy(ipAddresses[myPsetNumber].origin(), myIPaddress.c_str());
 
   for (unsigned root = 0; root < nrPsets; root ++)

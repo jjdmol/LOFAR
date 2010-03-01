@@ -59,6 +59,7 @@ public:
 	Parset(const char *name);
 	~Parset();
 	 
+	std::string    name() const;
 	void           check() const;
 	void	       maintainBackwardCompatibility();
 
@@ -170,6 +171,8 @@ public:
 	vector<double> itsStPositions;
 	
 private:
+	const std::string itsName;
+
 	uint32         nrManualPencilBeams() const;
 	vector<double> getManualPencilBeam(unsigned pencil) const;
 	uint32	       nrPencilRings() const;
@@ -184,6 +187,12 @@ private:
 };
 
 // @}
+
+inline std::string Parset::name() const
+{
+  return itsName;
+}
+
 
 inline uint32 Parset::observationID() const
 {

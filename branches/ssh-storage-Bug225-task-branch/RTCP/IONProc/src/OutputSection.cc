@@ -48,10 +48,10 @@
 namespace LOFAR {
 namespace RTCP {
 
-OutputSection::OutputSection(const Parset *ps, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream *(*createStream)(unsigned,unsigned))
+OutputSection::OutputSection(const Parset *ps, unsigned nrRuns, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream *(*createStream)(unsigned,unsigned))
 :
   itsParset(ps),
-  itsNrRuns(static_cast<unsigned>(ceil((itsParset->stopTime() - itsParset->startTime()) / itsParset->CNintegrationTime()))),
+  itsNrRuns(nrRuns),
   itsItemList(itemList),
   itsOutputType(outputType),
   itsNrComputeCores(ps->nrCoresPerPset()),
@@ -160,12 +160,6 @@ void OutputSection::notDroppingData(unsigned subband)
 }
 
 
-void OutputSection::setNrRuns(unsigned nrRuns)
-{
-  itsNrRuns = nrRuns;
-}
-
-
 void OutputSection::mainLoop()
 {
 #if defined HAVE_BGP_ION
@@ -176,7 +170,7 @@ void OutputSection::mainLoop()
   for (unsigned r = 0; r < itsNrRuns; r ++) {
     // process data from current core, even if we don't have a subband for this
     // core (to stay in sync with other psets).
-    for (unsigned i = 0; i < itsNrUsedCores; i++ ) {
+    for (unsigned i = 0; i < itsNrUsedCores; i ++) {
       // TODO: make sure that there are more free buffers than subbandsPerPset
 
       if (i < itsItemList.size()) {
@@ -191,7 +185,7 @@ void OutputSection::mainLoop()
             itsTmpSum->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
           } else {
             notDroppingData(i);
-            std::auto_ptr<StreamableData> data( outputThread->itsFreeQueue.remove() );
+            std::auto_ptr<StreamableData> data(outputThread->itsFreeQueue.remove());
             
             data->read(itsStreamsFromCNs[itsCurrentComputeCore], false);
             
@@ -209,9 +203,8 @@ void OutputSection::mainLoop()
         }
       }  
 
-      if (++ itsCurrentComputeCore == itsNrComputeCores) {
+      if (++ itsCurrentComputeCore == itsNrComputeCores)
         itsCurrentComputeCore = 0;
-      }
     }
 
     if (++ itsCurrentIntegrationStep == itsNrIntegrationSteps) {
@@ -219,6 +212,9 @@ void OutputSection::mainLoop()
       itsSequenceNumber++;
     }
   }  
+
+  for (unsigned i = 0; i < itsOutputThreads.size(); i ++)
+    itsOutputThreads[i]->itsSendQueue.append(0);
 }
 
 }
