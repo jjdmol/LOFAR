@@ -27,6 +27,7 @@ import java.awt.Component;
 import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.TreeMap;
+import java.util.logging.Level;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
@@ -120,6 +121,14 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     public void setContent(Object anObject) {
         if (anObject != null) {
             itsNode = (jOTDBnode)anObject;
+            try {
+                // refresh the node (it could have been altered meanwhile)
+                itsNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(), itsNode.nodeID());
+            } catch (RemoteException ex) {
+                logger.debug("Error during getNode: "+ ex);
+                itsParam=null;
+                return;
+            }
             getParam(itsNode);
             initPanel();
         } else {
