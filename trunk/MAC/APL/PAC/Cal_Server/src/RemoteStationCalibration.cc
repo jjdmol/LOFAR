@@ -31,17 +31,19 @@
 #include <complex>
 #include <cmath>
 #include <time.h>
+#if 0
 #include <cpplapack.h>
 #include "BlitzMath.h"
+using namespace CPPL;
+using namespace BLITZ_MATH;
+#endif
 
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
 using namespace CAL;
 using namespace RTC;
-using namespace CPPL;
 using namespace AMC;
-using namespace BLITZ_MATH;
 
 
 // fileformat for writing matrix or vector's to a fileformat
@@ -69,6 +71,7 @@ double getClock()
 
 void RemoteStationCalibration::calibrate(const SubArray& subarray, ACC& acc, AntennaGains& gains)
 {
+#if 0
   //
   // BIG WARNING: The order of the axes in the acc array have changed.
   // The order now is: nsubbands x npol x npol x nantennas x nantennas array of complex doubles.
@@ -217,11 +220,11 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, ACC& acc, Ant
     }
   }
   //interpolate_bad_subbands();
-   
+#endif   
   gains.setDone(true); // when finished
 }
 //---------------------------------------------------------------------------------------------------------------------
-
+#if 0
 // detects RFI on each channel
 // returns true if clean
 //  
@@ -1033,4 +1036,5 @@ double RemoteStationCalibration::interp3d(Array<double, 1> xgrid, Array<double, 
   Array<double, 2> dataval2d(dataval(Range::all(), Range::all(), zidx-1) + (dataval(Range::all(), Range::all(), zidx) - dataval(Range::all(), Range::all(), zidx-1)) * zrel);
   return interp2d(xgrid, ygrid, dataval2d, xinterp, yinterp);
 }
+#endif
 
