@@ -122,6 +122,7 @@ public class jOTDBserver {
             
             // Export jCampaign
             jCampaignAdaptee = new jCampaign();
+            jCampaignAdapter = new jCampaignAdapter(jCampaignAdaptee);
             //A custom port was specified, export the object using the port specified
             if(objectPort!=0){
                 jCampaignAdapter.unexportObject(jCampaignAdapter,true);

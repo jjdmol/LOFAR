@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <Form version="1.3" maxVersion="1.3" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
-  <NonVisualComponents>
-    <Container class="javax.swing.JToolBar" name="jToolBar1">
-      <Properties>
-        <Property name="rollover" type="boolean" value="true"/>
-      </Properties>
-
-      <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBoxLayout"/>
-    </Container>
-  </NonVisualComponents>
   <AuxValues>
     <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_autoSetComponentName" type="java.lang.Boolean" value="false"/>
@@ -105,8 +96,8 @@
                 <DimensionLayout dim="0">
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
-                          <Component id="jPanel3" pref="1120" max="32767" attributes="1"/>
-                          <EmptySpace pref="689" max="32767" attributes="0"/>
+                          <Component id="jPanel3" pref="1285" max="32767" attributes="1"/>
+                          <EmptySpace pref="855" max="32767" attributes="0"/>
                       </Group>
                       <Group type="102" alignment="0" attributes="0">
                           <Group type="103" groupAlignment="1" max="-2" attributes="0">
@@ -219,7 +210,7 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" alignment="0" attributes="0">
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Component id="labelReceiverList" max="32767" attributes="1"/>
+                                  <Component id="labelNrChannelsPerSubband" max="32767" attributes="1"/>
                                   <Component id="labelMSNameMask" alignment="0" pref="178" max="32767" attributes="1"/>
                                   <Component id="labelNrSlotsInFrame" alignment="0" max="32767" attributes="1"/>
                               </Group>
@@ -227,7 +218,7 @@
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Component id="inputMSNameMask" pref="870" max="32767" attributes="1"/>
                                   <Component id="inputNrSlotsInFrame" alignment="0" pref="870" max="32767" attributes="1"/>
-                                  <Component id="inputReceiverList" alignment="0" pref="870" max="32767" attributes="1"/>
+                                  <Component id="inputNrChannelsPerSubband" alignment="0" min="-2" pref="102" max="-2" attributes="1"/>
                               </Group>
                               <EmptySpace min="-2" pref="24" max="-2" attributes="0"/>
                           </Group>
@@ -247,8 +238,8 @@
                               </Group>
                               <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="labelReceiverList" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputReceiverList" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="labelNrChannelsPerSubband" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputNrChannelsPerSubband" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="32767" attributes="0"/>
                           </Group>
@@ -276,17 +267,17 @@
                         <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="inputNrSlotsInFrameFocusGained"/>
                       </Events>
                     </Component>
-                    <Component class="javax.swing.JTextField" name="inputReceiverList">
+                    <Component class="javax.swing.JTextField" name="inputNrChannelsPerSubband">
                       <Properties>
                         <Property name="toolTipText" type="java.lang.String" value="This field will be removes as soon as the input in the AntennaConfig tab wil be used for receiver selection."/>
                       </Properties>
                       <Events>
-                        <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="inputReceiverListFocusGained"/>
+                        <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="inputNrChannelsPerSubbandFocusGained"/>
                       </Events>
                     </Component>
-                    <Component class="javax.swing.JLabel" name="labelReceiverList">
+                    <Component class="javax.swing.JLabel" name="labelNrChannelsPerSubband">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Used Receivers"/>
+                        <Property name="text" type="java.lang.String" value="# Channels per Subband"/>
                       </Properties>
                     </Component>
                   </SubComponents>
@@ -313,7 +304,7 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="beamConfigurationPanel" alignment="0" pref="1094" max="32767" attributes="0"/>
+                                  <Component id="beamConfigurationPanel" alignment="0" pref="1259" max="32767" attributes="0"/>
                                   <Group type="102" alignment="0" attributes="0">
                                       <Component id="addBeamButton" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
@@ -720,6 +711,15 @@
             </Container>
           </SubComponents>
         </Container>
+        <Component class="nl.astron.lofar.sas.otbcomponents.CampaignInfo" name="campaignInfoPanel">
+          <Constraints>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+              <JTabbedPaneConstraints tabName="Campaign">
+                <Property name="tabTitle" type="java.lang.String" value="Campaign"/>
+              </JTabbedPaneConstraints>
+            </Constraint>
+          </Constraints>
+        </Component>
       </SubComponents>
     </Container>
     <Component class="nl.astron.lofar.sas.otbcomponents.ButtonPanel" name="buttonPanel1">
