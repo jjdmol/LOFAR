@@ -7,7 +7,7 @@ set -e
 set -x
 
 export DBNAME=LOFAR_1
-export DBUSER=lofarsys
+export DBUSER=postgres
 export DBHOST=sas001
 export DBPORT=5432
 
@@ -35,11 +35,8 @@ export DBPORT=5432
 # even if the database is not found.
 
 dropdb   --host $DBHOST --port $DBPORT --user postgres --echo $DBNAME || true
-#dropuser --host $DBHOST --port $DBPORT --user postgres --echo $DBUSER || true
-
 # Create USER, DB, and add the 'plpgsql' language for stored procedures.
 
-#createuser --host $DBHOST --port $DBPORT --user postgres --no-superuser --createdb --no-createrole --echo $DBUSER
 createdb   --host $DBHOST --port $DBPORT --user postgres --owner $DBUSER --echo $DBNAME
 createlang --host $DBHOST --port $DBPORT --user postgres --dbname $DBNAME  --echo "plpgsql"
 
