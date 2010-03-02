@@ -170,8 +170,8 @@ sr.setId('SPU status - ')
 sr.appendLog(21,'')
 sr.appendLog(21,'### Verify the RSP - SPU I2C interface by reading the SPU sensor data')
 sr.appendLog(21,'')
-#res = cli.command('python i2c_spu.py --sub %s --rep 1 -v 11' %(SubRck,))
-res = cli.command('python i2c_spu.py --sub sub0,sub1,sub2')
+res = cli.command('python i2c_spu.py --sub %s ' % SubRck)
+#res = cli.command('python i2c_spu.py --sub sub0,sub1,sub2')
 if res.find('FAILED')==-1:
   sr.appendLog(11,'>>> RSP - SPU I2c interface test went OK')
 else:
