@@ -148,27 +148,22 @@ void    CalibrationControl::setState(CTState::CTstateNr     newState)
 //
 int32 CalibrationControl::convertFilterSelection(const string&	filterselection, const string&	antennaSet) 
 {
-	// support old filters
-	if (filterselection == "LBL_10_80")		{ return(1); }
-	if (filterselection == "LBL_30_80")		{ return(2); }
-	if (filterselection == "LBH_10_80")		{ return(3); }
-	if (filterselection == "LBH_30_80")		{ return(4); }
-	if (filterselection == "HB_100_190")	{ return(5); }
-	if (filterselection == "HB_170_230")	{ return(6); }
-	if (filterselection == "HB_210_240")	{ return(7); }
-
 	// support new filternames
 	if (antennaSet == "LBA_OUTER") {
-		if (filterselection == "LBA_10_90")	{ return(1); }
-		if (filterselection == "LBA_30_80")	{ return(2); }
+		if (filterselection == "LBA_10_70")	{ return(1); }	// 160 Mhz
+		if (filterselection == "LBA_10_90")	{ return(1); }	// 200 Mhz
+		if (filterselection == "LBA_30_70")	{ return(2); }	// 160 Mhz
+		if (filterselection == "LBA_30_90")	{ return(2); }	// 200 Mhz
 	}
 	if (antennaSet == "LBA_INNER") {
-		if (filterselection == "LBA_10_90")	{ return(3); }
-		if (filterselection == "LBA_30_80")	{ return(4); }
+		if (filterselection == "LBA_10_70")	{ return(3); }	// 160 Mhz
+		if (filterselection == "LBA_10_90")	{ return(3); }	// 200 Mhz
+		if (filterselection == "LBA_30_70")	{ return(4); }	// 160 Mhz
+		if (filterselection == "LBA_30_90")	{ return(4); }	// 200 Mhz
 	}
-	if (filterselection == "HBA_110_190")	{ return(5); }
-	if (filterselection == "HBA_170_230")	{ return(6); }
-	if (filterselection == "HBA_210_250")	{ return(7); }
+	if (filterselection == "HBA_110_190")	{ return(5); }	// 200 Mhz
+	if (filterselection == "HBA_170_230")	{ return(6); }	// 160 Mhz
+	if (filterselection == "HBA_210_250")	{ return(7); }	// 200 Mhz
 
 	LOG_WARN_STR ("filterselection value '" << filterselection << 
 									"' not recognized, using LBL_10_80");
