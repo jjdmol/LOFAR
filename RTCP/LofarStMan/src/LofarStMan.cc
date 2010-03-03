@@ -237,7 +237,7 @@ void LofarStMan::openFile (bool writable)
   // Map the file with seqnrs.
   mapSeqFile();
   // Size the buffer if needed.
-  if (itsBuffer.size() < itsBLDataSize) {
+  if (int64(itsBuffer.size()) < itsBLDataSize) {
     itsBuffer.resize (itsBLDataSize);
   }
 }
