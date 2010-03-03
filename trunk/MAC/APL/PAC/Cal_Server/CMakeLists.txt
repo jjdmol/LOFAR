@@ -5,7 +5,7 @@ lofar_package(Cal_Server 6.0 DEPENDS Common AMCBase ApplCommon MACIO GCFTM TestS
 
 include(LofarFindPackage)
 lofar_find_package(Blitz REQUIRED)
-lofar_find_package(CPPLapack REQUIRED)
+# lofar_find_package(CPPLapack REQUIRED)
 
 add_definitions(-DUSE_CAL_THREAD)
 
