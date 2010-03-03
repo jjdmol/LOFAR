@@ -631,7 +631,7 @@ bool BeamControl::doPrepare()
 		beamAllocEvent.subarrayname = theObs.getBeamName(i);
 		LOG_DEBUG_STR("subarray@field : " << beamAllocEvent.subarrayname << "@" << beamAllocEvent.name);
 		beamAllocEvent.rcumask = theObs.getRCUbitset(0, 0, 0, false);		// get modified set of StationController
-		beamAllocEvent.ringNr  = 0;
+		beamAllocEvent.ringNr  = (theObs.antennaSet == "HBA_TWO" ? 1 : 0);
 
 		// construct subband to beamlet map
 		vector<int32>::iterator beamletIt = theObs.beams[i].beamlets.begin();
