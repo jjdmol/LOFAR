@@ -24,13 +24,11 @@
 
 //# Includes
 #include <tables/Tables/DataManager.h>
+#include <casa/IO/MMapIO.h>
+#include <casa/IO/LargeFiledesIO.h>
 #include <casa/Containers/Block.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
-
-namespace casa {
-  class MMapIO;
-}
 
 
 namespace LOFAR {
@@ -81,7 +79,7 @@ class LofarColumn;
 //   The sequence numbers are ascending, but there can be holes due to
 //   missing time stamps.
 // </ul>
-// The first version of the data file can only handle regularly shaped data
+// The first versions of the data file can only handle regularly shaped data
 // with equal integration times. A future version might be able to deal with
 // varying integration times (depending on baseline length).
 //
@@ -268,8 +266,52 @@ private:
   // Initialize by reading the header info.
   void init();
 
-  // Memory map the data file.
-  void mapFile();
+  // Open the data file and seqnr file.
+  // The seqnr is always memory-mapped (it is very small).
+  // The data file is only memory-mapped in 64 bit systems because the
+  // address space of 32-bit systems is too small for it.
+  void openFile (bool writable);
+
+  // Memory map the data file and seqnr file.
+  void mapFile (bool writable);
+
+  // Memory map the seqnr file.
+  void mapSeqFile();
+
+  // Get a pointer to data to be read.
+  const void* getReadPointer (casa::uInt blocknr, casa::uInt offset,
+                              casa::uInt size)
+  {
+    if (sizeof(void*) <= 4) {
+      return readFile (blocknr, offset, size);
+    } else {
+      return itsMapFile->getReadPointer (blocknr*itsBlockSize + offset);
+    }
+  }
+
+  // Get a pointer where data can be written.
+  void* getWritePointer (casa::uInt blocknr, casa::uInt offset,
+                         casa::uInt size)
+  {
+    if (sizeof(void*) <= 4) {
+      return getBuffer (size);
+    } else {
+      return itsMapFile->getWritePointer (blocknr*itsBlockSize + offset);
+    }
+  }
+
+  // Write the data. It is a no-op if mmap is used.
+  void writeData (casa::uInt blocknr, casa::uInt offset, casa::uInt size)
+  {
+    if (sizeof(void*) <= 4) {
+      writeFile (blocknr, offset, size);
+    }
+  }
+
+  // Read or write the data for regular files.
+  void* readFile  (casa::uInt blocknr, casa::uInt offset, casa::uInt size);
+  void* getBuffer (casa::uInt size);
+  void  writeFile (casa::uInt blocknr, casa::uInt offset, casa::uInt size);
 
 
   //# Declare member variables.
@@ -287,9 +329,13 @@ private:
   uint32 itsNPol;
   // The column objects.
   vector<LofarColumn*> itsColumns;
-  // The data file.
-  casa::MMapIO* itsFile;
-  casa::MMapIO* itsSeqFile;
+  // On 32-bit systems regular IO is used.
+  casa::LargeFiledesIO* itsRegFile;
+  casa::Block<char> itsBuffer;   //# buffer of size itsBLDataSize for regular IO
+  // On 64-bit systems memory-mapped IO is used.
+  casa::MMapIO*     itsMapFile;
+  // The seqnr file (if present) is always memory-mapped because it is small.
+  casa::MMapIO*     itsSeqFile;
   bool   itsDoSwap;       //# True = byte-swapping is needed
   int64  itsBlockSize;    //# size of a block containing a seqnr
   int64  itsBLDataSize;   //# data size of a single baseline
@@ -297,8 +343,8 @@ private:
   int64  itsSampStart;    //# start of nsamples in a block
   //# Buffer to hold swapped nsample values.
   casa::Block<casa::uShort> itsNSampleBuf;
-  casa::Block<casa::uInt> itsNSampleBufV2;
-  double  itsMaxNrSample;  //# weight = nsample / itsMaxNrSample;
+  casa::Block<casa::uInt>   itsNSampleBufV2;
+  double  itsMaxNrSample; //# weight = nsample / itsMaxNrSample;
 
   uint itsVersion;        //# Version of LofarStMan MeasurementSet
 };

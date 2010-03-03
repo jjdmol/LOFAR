@@ -25,7 +25,6 @@
 #include <tables/Tables/DataManError.h>
 #include <casa/Containers/Record.h>
 #include <casa/Containers/BlockIO.h>
-#include <casa/IO/MMapIO.h>
 #include <casa/IO/AipsIO.h>
 #include <casa/OS/CanonicalConversion.h>
 #include <casa/OS/HostInfo.h>
@@ -41,7 +40,8 @@ namespace LOFAR {
 LofarStMan::LofarStMan (const String& dataManName)
 : DataManager    (),
   itsDataManName (dataManName),
-  itsFile        (0), 
+  itsRegFile     (0),
+  itsMapFile     (0), 
   itsSeqFile     (0)
 {}
 
@@ -49,14 +49,16 @@ LofarStMan::LofarStMan (const String& dataManName,
                         const Record&)
 : DataManager    (),
   itsDataManName (dataManName),
-  itsFile        (0),
+  itsRegFile     (0),
+  itsMapFile     (0),
   itsSeqFile     (0)
 {}
 
 LofarStMan::LofarStMan (const LofarStMan& that)
 : DataManager    (),
   itsDataManName (that.itsDataManName),
-  itsFile        (0),
+  itsRegFile     (0),
+  itsMapFile     (0),
   itsSeqFile     (0)
 {}
 
@@ -65,8 +67,9 @@ LofarStMan::~LofarStMan()
   for (uInt i=0; i<ncolumn(); i++) {
     delete itsColumns[i];
   }
-  delete itsFile;
-  if (itsSeqFile) delete itsSeqFile;
+  delete itsRegFile;
+  delete itsMapFile;
+  delete itsSeqFile;
 }
 
 DataManager* LofarStMan::clone() const
@@ -204,7 +207,7 @@ uInt LofarStMan::open1 (uInt, AipsIO&)
 {
   // Read meta info.
   init();
-  mapFile();
+  openFile (table().isWritable());
   return itsNrRows;
 }
 
@@ -215,19 +218,48 @@ void LofarStMan::prepare()
   }
 }
 
-void LofarStMan::mapFile()
+void LofarStMan::openFile (bool writable)
+{
+  // Use mmap-ed IO non 64-bit systems.
+  if (sizeof(void*) == 8) {
+    mapFile (writable);
+    return;
+  }
+  // Open the data file using unbuffered IO.
+  delete itsRegFile;
+  itsRegFile = 0;
+  String fname (fileName() + "data");
+  itsRegFile = new LargeFiledesIO (LargeFiledesIO::open (fname.c_str(),
+                                                         writable),
+                                   fname);
+  // Set correct number of rows.
+  itsNrRows = itsRegFile->length() / itsBlockSize * itsAnt1.size();
+  // Map the file with seqnrs.
+  mapSeqFile();
+  // Size the buffer if needed.
+  if (itsBuffer.size() < itsBLDataSize) {
+    itsBuffer.resize (itsBLDataSize);
+  }
+}
+
+void LofarStMan::mapFile (bool writable)
 {
   // Memory-map the data file.
-  delete itsFile;
-  itsFile = 0;
-  if (table().isWritable()) {
-    itsFile = new MMapIO (fileName() + "data", ByteIO::Update);
+  delete itsMapFile;
+  itsMapFile = 0;
+  if (writable) {
+    itsMapFile = new MMapIO (fileName() + "data", ByteIO::Update);
   } else {
-    itsFile = new MMapIO (fileName() + "data");
+    itsMapFile = new MMapIO (fileName() + "data");
   }
   // Set correct number of rows.
-  itsNrRows = itsFile->getFileSize() / itsBlockSize * itsAnt1.size();
+  itsNrRows = itsMapFile->getFileSize() / itsBlockSize * itsAnt1.size();
+  // Map the file with seqnrs.
+  mapSeqFile();
+}
 
+  void LofarStMan::mapSeqFile()
+{
   delete itsSeqFile;
   itsSeqFile = 0;
   try {
@@ -236,8 +268,8 @@ void LofarStMan::mapFile()
     delete itsSeqFile; 
     itsSeqFile = 0;
   }
-  // check the size of the sequencenumber file, close file if it doesn't match
-  if (itsSeqFile && (itsSeqFile->getFileSize() / sizeof(uInt) == itsNrRows )) {
+  // Check the size of the sequencenumber file, close file if it doesn't match.
+  if (itsSeqFile && (itsSeqFile->getFileSize() / sizeof(uInt) == itsNrRows)) {
     delete itsSeqFile;
     itsSeqFile = 0;
   }
@@ -249,27 +281,35 @@ void LofarStMan::resync (uInt)
 }
 uInt LofarStMan::resync1 (uInt)
 {
-  uInt nrows = itsFile->getFileSize() / itsBlockSize * itsAnt1.size();
-  // Remap file if different nr of rows.
+  uInt nrows;
+  if (sizeof(void*) == 8) {
+    nrows = itsMapFile->getFileSize() / itsBlockSize * itsAnt1.size();
+  } else {
+    nrows = itsRegFile->length() / itsBlockSize * itsAnt1.size();
+  }
+  // Reopen file if different nr of rows.
   if (nrows != itsNrRows) {
-    mapFile();
+    openFile (table().isWritable());
   }
   return itsNrRows;
 }
 
 void LofarStMan::reopenRW()
 {
-  delete itsFile;
-  itsFile = 0;
-  itsFile = new MMapIO (fileName() + "data", ByteIO::Update);
+  openFile (true);
 }
 
 void LofarStMan::deleteManager()
 {
-  delete itsFile;
-  itsFile = 0;
+  delete itsRegFile;
+  itsRegFile = 0;
+  delete itsMapFile;
+  itsMapFile = 0;
+  delete itsSeqFile;
+  itsSeqFile = 0;
   DOos::remove (fileName()+"meta", False, False);
   DOos::remove (fileName()+"data", False, False);
+  DOos::remove (fileName()+"seqnr", False, False);
 }
 
 void LofarStMan::init()
@@ -339,12 +379,11 @@ void LofarStMan::init()
 Double LofarStMan::time (uInt blocknr)
 {
   Int seqnr;
-  
   const void* ptr;
   if (itsSeqFile) {
     ptr = itsSeqFile->getReadPointer(blocknr * sizeof(uInt));
   } else {
-    ptr = itsFile->getReadPointer (blocknr * itsBlockSize);
+    ptr = getReadPointer (blocknr, 0, sizeof(Int));
   }
   if (itsDoSwap) {
     CanonicalConversion::reverse4 (&seqnr, ptr);
@@ -359,7 +398,7 @@ void LofarStMan::getData (uInt rownr, Complex* buf)
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
   uInt offset  = itsDataStart + baseline * itsBLDataSize;
-  const void* ptr = itsFile->getReadPointer (blocknr * itsBlockSize + offset);
+  const void* ptr = getReadPointer (blocknr, offset, itsBLDataSize);
   if (itsDoSwap) {
     const char* from = (const char*)ptr;
     char* to = (char*)buf;
@@ -379,7 +418,7 @@ void LofarStMan::putData (uInt rownr, const Complex* buf)
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
   uInt offset  = itsDataStart + baseline * itsBLDataSize;
-  void* ptr = itsFile->getWritePointer (blocknr * itsBlockSize + offset);
+  void* ptr = getWritePointer (blocknr, offset, itsBLDataSize);
   if (itsDoSwap) {
     const char* from = (const char*)buf;
     char* to = (char*)ptr;
@@ -392,6 +431,7 @@ void LofarStMan::putData (uInt rownr, const Complex* buf)
   } else {
     memcpy (ptr, buf, itsBLDataSize);
   }
+  writeData (blocknr, offset, itsBLDataSize);
 }
 
 const uShort* LofarStMan::getNSample (uInt rownr, Bool swapIfNeeded)
@@ -399,7 +439,7 @@ const uShort* LofarStMan::getNSample (uInt rownr, Bool swapIfNeeded)
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
   uInt offset  = itsSampStart + baseline * itsNChan*2;
-  const void* ptr = itsFile->getReadPointer (blocknr * itsBlockSize + offset);
+  const void* ptr = getReadPointer (blocknr, offset, itsNChan*sizeof(uShort));
   const uShort* from = (const uShort*)ptr;
   if (!swapIfNeeded || !itsDoSwap) {
     return from;
@@ -418,7 +458,7 @@ const uInt* LofarStMan::getNSampleV2 (uInt rownr, Bool swapIfNeeded)
 
   uInt offset  = itsSampStart + baseline * 4; 
   
-  const void* ptr = itsFile->getReadPointer (blocknr * itsBlockSize + offset);
+  const void* ptr = getReadPointer (blocknr, offset, sizeof(uInt));
   const uInt* from = (const uInt*)ptr;
 
   if (!swapIfNeeded || !itsDoSwap) {
@@ -429,6 +469,27 @@ const uInt* LofarStMan::getNSampleV2 (uInt rownr, Bool swapIfNeeded)
   CanonicalConversion::reverse4 (to, from);
 
   return to;
+}
+
+void* LofarStMan::readFile (uInt blocknr, uInt offset, uInt size)
+{
+  AlwaysAssert (size <= itsBuffer.size(), AipsError);
+  itsRegFile->seek (blocknr*itsBlockSize + offset);
+  itsRegFile->read (size, itsBuffer.storage());
+  return itsBuffer.storage();
+}
+
+void* LofarStMan::getBuffer (uInt size)
+{
+  AlwaysAssert (size <= itsBuffer.size(), AipsError);
+  return itsBuffer.storage();
+}
+
+void LofarStMan::writeFile (uInt blocknr, uInt offset, uInt size)
+{
+  AlwaysAssert (size <= itsBuffer.size(), AipsError);
+  itsRegFile->seek (blocknr*itsBlockSize + offset);
+  itsRegFile->write (size, itsBuffer.storage());
 }
 
 } //# end namespace
