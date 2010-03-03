@@ -186,7 +186,7 @@ public:
   const casa::uInt* getNSampleV2 (uint rownr, bool swapIfNeeded);
   // </group>
 
-  const uint getLofarStManVersion() const
+  uint getLofarStManVersion() const
     { return itsVersion; }
 
 private:
