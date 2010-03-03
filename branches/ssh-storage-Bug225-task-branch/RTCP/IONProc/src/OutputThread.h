@@ -64,6 +64,7 @@ class OutputThread
     const std::string	    itsDescription;
     unsigned		    itsPortNumber;
     const std::string	    itsSocketName;
+    bool		    itsHasStorageWriter;
     unsigned		    itsChildPid;
     InterruptibleThread	    *itsThread;
 

@@ -77,8 +77,10 @@ OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsig
     itsFreeQueue.append(clone);
   }
 
+  if (itsHasStorageWriter)
+    forkSSH();
+
   //thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps.observationID() % subband % output), 65536);
-  forkSSH();
   itsThread = new InterruptibleThread(this, &OutputThread::mainLoop, 65536);
 }
 
@@ -93,13 +95,11 @@ OutputThread::~OutputThread()
     itsThread->abort();
 #endif
 
-  LOG_DEBUG_STR(itsDescription << "AAA 1");
-  delete itsThread;
-  LOG_DEBUG_STR(itsDescription << "AAA 2");
+  if (itsHasStorageWriter)
+    joinSSH();
 
   //LOG_INFO_STR(itsDescription << ": waiting for Storage process to finish");
-  joinSSH();
-  LOG_DEBUG_STR(itsDescription << "AAA 3");
+  delete itsThread;
 
   while (!itsSendQueue.empty())
     delete itsSendQueue.remove();
@@ -125,7 +125,6 @@ void OutputThread::execSSH(const char *sshKey, const char *userName, const char 
     "-c", "blowfish",
     "-o", "StrictHostKeyChecking=no",
     "-o", "UserKnownHostsFile=/dev/null",
-    "-q",
     "-l", userName,
     hostName,
     executable,
@@ -136,7 +135,7 @@ void OutputThread::execSSH(const char *sshKey, const char *userName, const char 
     static_cast<void *>(0)
   );
 
-  write(2, "exec failed", 11); // Logger uses threads
+  write(2, "exec failed\n", 12); // Logger uses threads
   exit(1);
 }
 
@@ -167,7 +166,6 @@ void OutputThread::forkSSH()
     "\"-c\", \"blowfish\", "
     "\"-o\", \"StrictHostKeyChecking=no\", "
     "\"-o\", \"UserKnownHostsFile=/dev/null\", "
-    "\"-q\", "
     "\"-l\", \"" << userName << "\", "
     "\"" << hostName << "\", "
     "\"" << executable << "\", "
@@ -226,10 +224,25 @@ void OutputThread::getPortNumber()
 
 std::string OutputThread::getSocketName()
 {
-  getPortNumber();
+  std::string prefix         = "OLAP.OLAP_Conn.IONProc_Storage";
+  std::string connectionType = itsParset.getString(prefix + "_Transport");
 
-  extern std::string myIPaddress;
-  return std::string("tcp:") + myIPaddress + ':' + boost::lexical_cast<std::string>(itsPortNumber);
+  if (connectionType == "NULL") {
+    itsHasStorageWriter = false;
+    return std::string("null:");
+  } else if (connectionType == "TCP") {
+    itsHasStorageWriter = true;
+    getPortNumber();
+
+    extern std::string myIPaddress;
+    return std::string("tcp:") + myIPaddress + ':' + boost::lexical_cast<std::string>(itsPortNumber);
+  } else if (connectionType == "FILE") {
+    itsHasStorageWriter = false;
+    std::string filename = itsParset.getString(prefix + "_BaseFileName") + '.' + boost::lexical_cast<std::string>(itsSubband);
+    return std::string("file:") + filename;
+  } else {
+    throw IONProcException(std::string("unsupported ION->Storage stream type: ") + connectionType, THROW_ARGS);
+  }
 }
 
 
@@ -243,36 +256,6 @@ void OutputThread::mainLoop()
 #if defined HAVE_BGP_ION
   doNotRunOnCore0();
   nice(19);
-#endif
-
-  // connect to storage
-  std::string prefix         = "OLAP.OLAP_Conn.IONProc_Storage";
-  std::string connectionType = itsParset.getString(prefix + "_Transport");
-
-
-#if 0
-  std::auto_ptr<Stream> streamToStorage;
-
-  if (connectionType == "NULL") {
-    LOG_DEBUG_STR("subband " << itsSubband << " written to null:");
-    streamToStorage.reset(new NullStream);
-  } else if (connectionType == "TCP") {
-    std::string    server = itsParset.storageHostName(prefix + "_ServerHosts", itsSubband);
-    unsigned short port   = itsParset.getStoragePort(prefix, itsSubband, itsOutput);
-  
-    LOG_DEBUG_STR("subband " << itsSubband << " written to tcp:" << server << ':' << port << " connecting..");
-    streamToStorage.reset(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Client));
-    LOG_DEBUG_STR("subband " << itsSubband << " written to tcp:" << server << ':' << port << " connect DONE");
-  } else if (connectionType == "FILE") {
-    std::string filename = itsParset.getString(prefix + "_BaseFileName") + '.' +
-      boost::lexical_cast<std::string>(itsSubband);
-    //boost::lexical_cast<std::string>(storagePortIndex);
-  
-    LOG_DEBUG_STR("subband " << itsSubband << " written to file:" << filename);
-    streamToStorage.reset(new FileStream(filename.c_str(), 0666));
-  } else {
-    THROW(IONProcException, "unsupported ION->Storage stream type: " << connectionType);
-  }
 #endif
 
   LOG_INFO_STR(itsDescription << ": waiting for connection to " << itsSocketName);
