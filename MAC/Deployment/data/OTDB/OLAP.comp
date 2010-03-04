@@ -12,6 +12,7 @@ par integrationSteps	O	int	-	10	0	768 	 -	"compute node block size (after FFT)"
 par nrPPFTaps		I	int	-	10	0	16	 -	"number of elements in the polyphasefilter"
 par partition		I	text	-	10	0	'R00'	 -	"BlueGene partition"
 
+par coresPerPset        I       int     -       10      0       64        -     "Total nr of Cores used in each pset for this observation"
 par usedCores           I       vint    -       10      0       '[0..63]' -     "Cores used in each pset for this observation"
 par phaseOnePsets       I       vint    -       10      0       '[]'      -     "Psets used for phase one (input from stations)"
 par phaseTwoPsets       I       vint    -       10      0       '[]'      -     "Psets used for phase two (calculations per subband)"
