@@ -25,30 +25,30 @@
 DROP TYPE schedulerInfo CASCADE;
 
 CREATE TYPE schedulerInfo AS (
-	antennaMode						 VARCHAR(20),
+	antennaMode	       INT4,
 	CEPProcessingUnits     INT4,
-	clockFrequency         VARCHAR(6),
+	clockFrequency         INT4,
 	contactEmail           VARCHAR(40),
 	contactName            VARCHAR(20),
 	contactPhone           VARCHAR(20),
-	firstPossibleDate      VARCHAR(19),
+	firstPossibleDay       VARCHAR(19),
 	fixedDay               BOOLEAN,
 	fixedTime              BOOLEAN,
-	lastPossibleDate       VARCHAR(19),
+	lastPossibleDay        VARCHAR(19),
 	late                   BOOLEAN,
 	mayNotUnschedule       BOOLEAN,
 	nightTimeWeightFactor  INT4,
 	nrOfSubbands           INT4,
 	offlineProcessingUnits INT4,
+	predecessor            INT4,
 	predMaxTimeDif         VARCHAR(10),
 	predMinTimeDif         VARCHAR(10),
-	predecessor            INT4,
-	projectName            VARCHAR(20),
 	priority               FLOAT,
-	referenceFrame         VARCHAR(5),
+	projectName            VARCHAR(20),
+	referenceFrame         INT4,
 	scheduledEnd           VARCHAR(20),
 	scheduledStart         VARCHAR(20),
-	sourceDeclination      VARCHAR(20),
+	sourceDeclination      FLOAT,
 	sourceNames            TEXT,
 	sourceRightAscension   VARCHAR(20),
 	stationID              TEXT,
@@ -56,9 +56,9 @@ CREATE TYPE schedulerInfo AS (
 	taskDuration           VARCHAR(10),
 	taskID                 INT4,
 	taskName               VARCHAR(20),
-	taskStatus             VARCHAR(20),
-	taskType               VARCHAR(11),
-	unscheduledReason      VARCHAR(80),
+	taskStatus             INT4,
+	taskType               INT4,
+	unscheduledReason      INT4,
 	windowMaximumTime      VARCHAR(8),
 	windowMinimumTime      VARCHAR(8)
 );
@@ -71,26 +71,26 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 
 	BEGIN
       OPEN fieldList;
-      FETCH fieldList INTO vRecord.antennaMode;
+          FETCH fieldList INTO vRecord.antennaMode;
 	  FETCH fieldList INTO vRecord.CEPProcessingUnits;
 	  FETCH fieldList INTO vRecord.clockFrequency;
 	  FETCH fieldList INTO vRecord.contactEmail;
 	  FETCH fieldList INTO vRecord.contactName;
 	  FETCH fieldList INTO vRecord.contactPhone;
-	  FETCH fieldList INTO vRecord.firstPossibleDate;
+	  FETCH fieldList INTO vRecord.firstPossibleDay;
 	  FETCH fieldList INTO vRecord.fixedDay;
 	  FETCH fieldList INTO vRecord.fixedTime;
-	  FETCH fieldList INTO vRecord.lastPossibleDate;
+	  FETCH fieldList INTO vRecord.lastPossibleDay;
 	  FETCH fieldList INTO vRecord.late;
 	  FETCH fieldList INTO vRecord.mayNotUnschedule;
 	  FETCH fieldList INTO vRecord.nightTimeWeightFactor;
 	  FETCH fieldList INTO vRecord.nrOfSubbands;
 	  FETCH fieldList INTO vRecord.offlineProcessingUnits;
+	  FETCH fieldList INTO vRecord.predecessor;
 	  FETCH fieldList INTO vRecord.predMaxTimeDif;
 	  FETCH fieldList INTO vRecord.predMinTimeDif;
-	  FETCH fieldList INTO vRecord.predecessor;
-	  FETCH fieldList INTO vRecord.projectName;
 	  FETCH fieldList INTO vRecord.priority;
+	  FETCH fieldList INTO vRecord.projectName;
 	  FETCH fieldList INTO vRecord.referenceFrame;
 	  FETCH fieldList INTO vRecord.scheduledEnd;
 	  FETCH fieldList INTO vRecord.scheduledStart;
