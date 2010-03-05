@@ -4,6 +4,7 @@
 set(inst_HEADERS
   EventPort.h
   GCF_Event.h
+  KVTLogger.h
   MACServiceInfo.h
   Marshalling.h
   ProtocolDefs.h

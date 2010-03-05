@@ -32,7 +32,7 @@ lib_LTLIBRARIES         	= liblog_protocol.la \
 							  libmacio.la
 liblog_protocol_la_SOURCES 	= LOG_Protocol.cc
 libkvt_protocol_la_SOURCES 	= KVT_Protocol.cc
-libmacio_la_SOURCES 		= Package__Version.cc GCF_Event.cc EventPort.cc ProtocolDefs.cc SB_Protocol.cc
+libmacio_la_SOURCES 		= Package__Version.cc GCF_Event.cc EventPort.cc KVTLogger.cc ProtocolDefs.cc SB_Protocol.cc
 
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir				= $(bindir)
