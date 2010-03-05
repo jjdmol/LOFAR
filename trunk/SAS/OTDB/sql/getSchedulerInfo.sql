@@ -25,16 +25,16 @@
 DROP TYPE schedulerInfo CASCADE;
 
 CREATE TYPE schedulerInfo AS (
-	antennaMode	       INT4,
+	antennaMode            INT4,
 	CEPProcessingUnits     INT4,
 	clockFrequency         INT4,
 	contactEmail           VARCHAR(40),
 	contactName            VARCHAR(20),
 	contactPhone           VARCHAR(20),
-	firstPossibleDay       VARCHAR(19),
+	firstPossibleDay       INT4,
 	fixedDay               BOOLEAN,
 	fixedTime              BOOLEAN,
-	lastPossibleDay        VARCHAR(19),
+	lastPossibleDay        INT4,
 	late                   BOOLEAN,
 	mayNotUnschedule       BOOLEAN,
 	nightTimeWeightFactor  INT4,
@@ -71,7 +71,7 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 
 	BEGIN
       OPEN fieldList;
-          FETCH fieldList INTO vRecord.antennaMode;
+    FETCH fieldList INTO vRecord.antennaMode;
 	  FETCH fieldList INTO vRecord.CEPProcessingUnits;
 	  FETCH fieldList INTO vRecord.clockFrequency;
 	  FETCH fieldList INTO vRecord.contactEmail;
