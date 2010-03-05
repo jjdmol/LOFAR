@@ -39,17 +39,29 @@ int main (int	argc, char* argv[])
 
 	// Show the names of the sets.
 	LOG_DEBUG_STR("The AntennaPos1.conf file containes the following definitions:");
-	LOG_DEBUG_STR("LBA count        : " << theAP.nrLBAs());
-	LOG_DEBUG_STR("LBA centre       : " << theAP.LBACentre());
-	LOG_DEBUG_STR("LBA Ant positions: " << theAP.LBAAntPos());
-	LOG_DEBUG_STR("LBA RCU positions: " << theAP.LBARCUPos());
-	LOG_DEBUG_STR("LBA RCU lengths  : " << theAP.LBARCULengths());
+	LOG_DEBUG_STR("LBA count        : " << theAP.nrAnts("HBA"));
+	LOG_DEBUG_STR("LBA centre       : " << theAP.Centre("LBA"));
+	LOG_DEBUG_STR("LBA Ant positions: " << theAP.AntPos("LBA"));
+	LOG_DEBUG_STR("LBA RCU positions: " << theAP.RCUPos("LBA"));
+	LOG_DEBUG_STR("LBA RCU lengths  : " << theAP.RCULengths("LBA"));
 	
-	LOG_DEBUG_STR("HBA count        : " << theAP.nrHBAs());
-	LOG_DEBUG_STR("HBA centre       : " << theAP.HBACentre());
-	LOG_DEBUG_STR("HBA Ant positions: " << theAP.HBAAntPos());
-	LOG_DEBUG_STR("HBA RCU positions: " << theAP.HBARCUPos());
-	LOG_DEBUG_STR("HBA RCU lengths  : " << theAP.HBARCULengths());
+	LOG_DEBUG_STR("HBA count        : " << theAP.nrAnts("HBA"));
+	LOG_DEBUG_STR("HBA centre       : " << theAP.Centre("HBA"));
+	LOG_DEBUG_STR("HBA Ant positions: " << theAP.AntPos("HBA"));
+	LOG_DEBUG_STR("HBA RCU positions: " << theAP.RCUPos("HBA"));
+	LOG_DEBUG_STR("HBA RCU lengths  : " << theAP.RCULengths("HBA"));
+	
+	LOG_DEBUG_STR("HBA0 count        : " << theAP.nrAnts("HBA0"));
+	LOG_DEBUG_STR("HBA0 centre       : " << theAP.Centre("HBA0"));
+	LOG_DEBUG_STR("HBA0 Ant positions: " << theAP.AntPos("HBA0"));
+	LOG_DEBUG_STR("HBA0 RCU positions: " << theAP.RCUPos("HBA0"));
+	LOG_DEBUG_STR("HBA0 RCU lengths  : " << theAP.RCULengths("HBA0"));
+
+	LOG_DEBUG_STR("HBA1 count        : " << theAP.nrAnts("HBA1"));
+	LOG_DEBUG_STR("HBA1 centre       : " << theAP.Centre("HBA1"));
+	LOG_DEBUG_STR("HBA1 Ant positions: " << theAP.AntPos("HBA1"));
+	LOG_DEBUG_STR("HBA1 RCU positions: " << theAP.RCUPos("HBA1"));
+	LOG_DEBUG_STR("HBA1 RCU lengths  : " << theAP.RCULengths("HBA1"));
 
 	return (0);
 }
