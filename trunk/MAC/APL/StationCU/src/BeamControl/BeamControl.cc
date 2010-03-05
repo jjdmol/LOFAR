@@ -331,7 +331,7 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
 	case CONTROL_CLAIM: {
 		CONTROLClaimEvent		msg(event);
-		LOG_DEBUG_STR("Received CLAIM(" << msg.cntlrName << "), connecting to BeamServer in 5 seconds");
+		LOG_INFO_STR("Received CLAIM(" << msg.cntlrName << "), connecting to BeamServer in 5 seconds");
 		setState(CTState::CLAIM);
 		// wait several seconds before connecting to the BeamServer. When the state of the splitters are changed
 		// the Beamserver will through us out anyway. So don't frustate the BeamServer with needless connections.
@@ -388,7 +388,7 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
 	case CONTROL_PREPARE: {
 		CONTROLPrepareEvent		msg(event);
-		LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
+		LOG_INFO_STR("Received PREPARE(" << msg.cntlrName << ")");
 		setState(CTState::PREPARE);
 // TODO
 		gResult = CT_RESULT_NO_ERROR;
@@ -398,7 +398,7 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 						 ", staying in CLAIMED mode");
 			setState(CTState::CLAIMED);
 			setObjectState("Number of subbands != number of beamlets", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
-			LOG_DEBUG_STR("Sending PREPARED(" << getName() << "," << 
+			LOG_INFO_STR("Sending PREPARED(" << getName() << "," << 
 												CT_RESULT_CONFLICTING_ARGS << ")");
 			sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), 
 															CT_RESULT_CONFLICTING_ARGS);
@@ -426,7 +426,7 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 							 ", staying in CLAIMED mode");
 				setState(CTState::CLAIMED);
 			}
-			LOG_DEBUG_STR("Sending PREPARED(" << getName() << "," << gResult << ") event");
+			LOG_INFO_STR("Sending PREPARED(" << getName() << "," << gResult << ") event");
 			sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), gResult);
 		}
 		else {
@@ -481,14 +481,14 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 
 	case CONTROL_SCHEDULE: {
 		CONTROLScheduledEvent		msg(event);
-		LOG_DEBUG_STR("Received SCHEDULE(" << msg.cntlrName << ")");
+		LOG_INFO_STR("Received SCHEDULE(" << msg.cntlrName << ")");
 		// TODO: do something usefull with this information!
 		break;
 	}
 
 	case CONTROL_RESUME: {
 		CONTROLResumeEvent		msg(event);
-		LOG_DEBUG_STR("Received RESUME(" << msg.cntlrName << ")");
+		LOG_INFO_STR("Received RESUME(" << msg.cntlrName << ")");
 		setState(CTState::RESUME);
 		sendControlResult(port, CONTROL_RESUMED, msg.cntlrName, CT_RESULT_NO_ERROR);
 		setState(CTState::RESUMED);
@@ -497,7 +497,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 
 	case CONTROL_SUSPEND: {
 		CONTROLSuspendEvent		msg(event);
-		LOG_DEBUG_STR("Received SUSPEND(" << msg.cntlrName << ")");
+		LOG_INFO_STR("Received SUSPEND(" << msg.cntlrName << ")");
 		setState(CTState::SUSPEND);
 		sendControlResult(port, CONTROL_SUSPENDED, msg.cntlrName, CT_RESULT_NO_ERROR);
 		setState(CTState::SUSPENDED);
@@ -506,7 +506,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 
 	case CONTROL_RELEASE: {
 		CONTROLReleaseEvent		msg(event);
-		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
+		LOG_INFO_STR("Received RELEASED(" << msg.cntlrName << ")");
 		setState(CTState::RELEASE);
 		if (!doRelease()) {
 			LOG_WARN_STR("Cannot release a beam that was not allocated, continuing");
@@ -631,7 +631,8 @@ bool BeamControl::doPrepare()
 		beamAllocEvent.subarrayname = theObs.getBeamName(i);
 		LOG_DEBUG_STR("subarray@field : " << beamAllocEvent.subarrayname << "@" << beamAllocEvent.name);
 		beamAllocEvent.rcumask = theObs.getRCUbitset(0, 0, 0, false);		// get modified set of StationController
-		beamAllocEvent.ringNr  = (theObs.antennaSet == "HBA_TWO" ? 1 : 0);
+		StationConfig	sc;
+		beamAllocEvent.ringNr  = ((sc.hasSplitters && (theObs.antennaSet == "HBA_TWO")) ? 1 : 0);
 
 		// construct subband to beamlet map
 		vector<int32>::iterator beamletIt = theObs.beams[i].beamlets.begin();
@@ -647,7 +648,6 @@ bool BeamControl::doPrepare()
 			itsBeamServer->send(beamAllocEvent);		// will result in BS_BEAMALLOCACK;
 		}
 		else {
-			StationConfig	sc;
 			for (int rcu = sc.nrHBAs; rcu < sc.nrHBAs*2; rcu++) {	// clear second half of RCUs
 				beamAllocEvent.rcumask.reset(rcu);
 			}
@@ -838,7 +838,7 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 	}
 
 	if (result == GCFEvent::NOT_HANDLED) {
-		LOG_WARN_STR("Event " << eventName(event) << " NOT handled in state " << 
+		LOG_DEBUG_STR("Event " << eventName(event) << " NOT handled in state " << 
 					 cts.name(itsState));
 	}
 
