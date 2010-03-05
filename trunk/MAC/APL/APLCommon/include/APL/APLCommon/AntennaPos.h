@@ -28,6 +28,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
+#include <Common/lofar_vector.h>
 #include <blitz/array.h>
 
 // Avoid 'using namespace' in headerfiles
@@ -53,23 +54,26 @@ public:
 
 	// all about the bits
 	// [antNr, pol, xyz]
-	const blitz::Array<double, 3>& LBAAntPos()	const	{ return itsLBAAntPos; }
-	const blitz::Array<double, 3>& HBAAntPos()	const	{ return itsHBAAntPos; }
+	const blitz::Array<double, 3>& AntPos(const string& fieldName) const
+		{ return (itsAntPos[name2Index(fieldName)]); }
 
 	// [rcu, xyz]
-	const blitz::Array<double, 2>& LBARCUPos()	const	{ return itsLBARCUPos; }
-	const blitz::Array<double, 2>& HBARCUPos()	const	{ return itsHBARCUPos; }
+	const blitz::Array<double, 2>& RCUPos(const string& fieldName) const
+		{ return (itsRCUPos[name2Index(fieldName)]); }
 
 	// [xyz]
-	const blitz::Array<double, 1>& LBACentre()	const	{ return itsLBACentre; }
-	const blitz::Array<double, 1>& HBACentre()	const	{ return itsHBACentre; }
+	const blitz::Array<double, 1>& Centre(const string& fieldName) const
+		{ return (itsFieldCentres[name2Index(fieldName)]); }
 
 	// [rcu, xyz]
-	const blitz::Array<double, 1>& LBARCULengths()	const	{ return itsLBARCULengths; }
-	const blitz::Array<double, 1>& HBARCULengths()	const	{ return itsHBARCULengths; }
+	const blitz::Array<double, 1>& RCULengths(const string& fieldName) const
+		{ return (itsRCULengths[name2Index(fieldName)]); }
 
-	int		nrLBAs() const { return itsLBAAntPos.extent(blitz::firstDim); }
-	int		nrHBAs() const { return itsHBAAntPos.extent(blitz::firstDim); }
+	int nrAnts(const string& fieldName) const
+		{ return (itsAntPos[name2Index(fieldName)].extent(blitz::firstDim)); }
+
+	bool isAntennaField(const string&	name) const
+		{ return (name2Index(name) >= 0); }
 
 private:
 	// Copying is not allowed
@@ -77,20 +81,23 @@ private:
 	AntennaPos(const AntennaPos&	that);
 	AntennaPos& operator=(const AntennaPos& that);
 
+	// translate name of antennaField to index in blitzArrays
+	int name2Index(const string& fieldName) const;
+
 	//# --- Datamembers ---
-	blitz::Array<double,1>		itsLBACentre;	// [ (x,y,z) ]
-	blitz::Array<double,1>		itsHBACentre;	// [ (x,y,z) ]
+	// Note: we use a vector<blitz::Array> so that every blitz array can have its own sizes.
+	vector<blitz::Array<double,1> >		itsFieldCentres;	// [ (x,y,z) ]
 
-	blitz::Array<double,2>		itsLBARCUPos;	// [ rcuNr, (x,y,z) ]
-	blitz::Array<double,2>		itsHBARCUPos;	// [ rcuNr, (x,y,z) ]
+	vector<blitz::Array<double,2> >		itsRCUPos;			// [ rcuNr, (x,y,z) ]
 
-	blitz::Array<double,3>		itsLBAAntPos;	// [ antNr, pol, (x,y,z) ]
-	blitz::Array<double,3>		itsHBAAntPos;	// [ antNr, pol, (x,y,z) ]
+	vector<blitz::Array<double,3> >		itsAntPos;			// [ antNr, pol, (x,y,z) ]
 
 	// during calculations we often need the length of the vectors.
-	blitz::Array<double,1>		itsLBARCULengths;	// [ len ]
-	blitz::Array<double,1>		itsHBARCULengths;	// [ len ]
+	vector<blitz::Array<double,1> >		itsRCULengths;		// [ len ]
 };
+
+// Make one instance of the AntennaPos globally accessable.
+AntennaPos* 	globalAntennaPos();
 
 
 // @}

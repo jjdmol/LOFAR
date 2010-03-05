@@ -41,7 +41,8 @@ int main (int	argc, char* argv[])
 	LOG_DEBUG_STR("The AntennaSets.conf file containes the following sets:");
 	vector<string>	theNames = theAS.antennaSetList();
 	for (uint idx = 0; idx < theNames.size(); idx++) {
-		LOG_DEBUG_STR(idx << " : " << theNames[idx] << " : " << (theAS.usesLBAfield(theNames[idx], 0) ? "LBA" : "HBA"));
+		LOG_DEBUG_STR(idx << " : " << theNames[idx] << " : " << (theAS.usesLBAfield(theNames[idx], 0) ? "LBA" : "HBA")
+						<< " on field " << theAS.antennaField(theNames[idx],0));
 	}
 
 	// test namelookup

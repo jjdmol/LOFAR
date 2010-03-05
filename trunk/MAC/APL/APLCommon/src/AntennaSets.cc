@@ -36,6 +36,17 @@ const int	IDX_CORE	= 0;
 const int	IDX_REMOTE	= 1;
 const int	IDX_EUROPE	= 2;
 
+//-------------------------- creation and destroy ---------------------------
+static AntennaSets* globalAntennaSetsInstance = 0;
+
+AntennaSets* globalAntennaSets()
+{
+  if (globalAntennaSetsInstance == 0) {
+    globalAntennaSetsInstance = new AntennaSets("AntennaSets.conf");
+  }
+  return (globalAntennaSetsInstance);
+}
+
 //
 // AntennaSets(fileName)
 //
@@ -49,10 +60,11 @@ AntennaSets::AntennaSets(const string& filename) :
 
 	ASSERTSTR(inputStream.good(), "File " << itsAntennaSetFile << " cannot be opened succesfully.");
 
-	char		line    [2048];
-	char		setName [1024];
-	char		stnType [1024];
-	char		selector[1024];
+	char		line      [2048];
+	char		setName   [1024];
+	char		fieldName [1024];
+	char		stnType   [1024];
+	char		selector  [1024];
 	string		curName;
 	int			lineNr(0);
 	setTriple*	newTriple(0);
@@ -65,7 +77,7 @@ AntennaSets::AntennaSets(const string& filename) :
 			continue;
 		}	
 		
-		ASSERTSTR (sscanf(line, "%s%s%s", setName, stnType, selector) == 3, 
+		ASSERTSTR (sscanf(line, "%s%s%s%s", setName, fieldName, stnType, selector) == 4, 
 							"Line " << lineNr << " (" << line << ") has the wrong format");
 
 		if (stnTypeMask.count() == 0) {
@@ -88,13 +100,13 @@ AntennaSets::AntennaSets(const string& filename) :
 				lineNr << ": Unknown stationType '" << stnType << "'");
 
 		try {
-			if (!strcmp(stnType,"Europe") && _adoptSelector(selector, newTriple->europe, 192)) {
+			if (!strcmp(stnType,"Europe") && _adoptSelector(selector, fieldName, newTriple->europe, 192)) {
 				stnTypeMask.set(IDX_EUROPE);
 			}
-			if (!strcmp(stnType,"Remote") && _adoptSelector(selector, newTriple->remote, 96)) {
+			if (!strcmp(stnType,"Remote") && _adoptSelector(selector, fieldName, newTriple->remote, 96)) {
 				stnTypeMask.set(IDX_REMOTE);
 			}
-			if (!strcmp(stnType,"Core") && _adoptSelector(selector, newTriple->core, 96)) {
+			if (!strcmp(stnType,"Core") && _adoptSelector(selector, fieldName, newTriple->core, 96)) {
 				stnTypeMask.set(IDX_CORE);
 			}
 		}
@@ -130,7 +142,7 @@ AntennaSets::~AntennaSets()
 //
 // _adoptSelector(selector, singleSet, rcuCount)
 //
-bool AntennaSets::_adoptSelector(const string&	selector, singleSet&	antSet, uint rcuCount)
+bool AntennaSets::_adoptSelector(const string&	selector, const string& antennaField, singleSet&	antSet, uint rcuCount)
 {
 	ASSERTSTR(!selector.empty(), "SelectorString may not be empty");
 	ASSERTSTR(rcuCount, "rcuCount must be > 0");
@@ -166,7 +178,7 @@ bool AntennaSets::_adoptSelector(const string&	selector, singleSet&	antSet, uint
 				ASSERTSTR(input=='l' || input=='h' || input=='H' || input=='.', 
 						"character '" << input << 
 						"' not allowed for selecting an RCUinput, only lhH. are allowed.");
-				ASSERTSTR(rcuNr < MAX_RCUS, 
+				ASSERTSTR(rcuNr < (uint)MAX_RCUS, 
 						"selector:'"<< selector << "' specified more than " << MAX_RCUS << " RCUs");
 
 				if (input=='l' || input=='h') {
@@ -180,11 +192,11 @@ bool AntennaSets::_adoptSelector(const string&	selector, singleSet&	antSet, uint
 			} // pattern len
 		} // pattern count
 	} // for whole string
+	antSet.antennaField = antennaField;
 
 	ASSERTSTR(rcuNr == rcuCount, "selector '" << selector << "' specifies " << rcuNr << " inputs, while " << rcuCount << " inputs are required.");
 
 	return (true);
-
 }
 
 //
@@ -267,6 +279,21 @@ bool	AntennaSets::usesLBAfield(const string&		setName, uint	stationType) const
 	case 0: return (iter->second.core.LBAallocation.count());
 	case 1: return (iter->second.remote.LBAallocation.count());
 	case 2: return (iter->second.europe.LBAallocation.count());
+	default: ASSERT(false);		// satisfy compiler.
+	}
+}
+
+//
+// antennaField(setName)
+//
+const string AntennaSets::antennaField(const string&		setName, uint	stationType) const
+{
+	AntSetIter		iter = itsDefinitions.find(setName);
+	ASSERTSTR(iter != itsDefinitions.end(), setName << " is not defined in " << itsAntennaSetFile);
+	switch (stationType) {
+	case 0: return (iter->second.core.antennaField);
+	case 1: return (iter->second.remote.antennaField);
+	case 2: return (iter->second.europe.antennaField);
 	default: ASSERT(false);		// satisfy compiler.
 	}
 }

@@ -53,17 +53,18 @@ public:
 	explicit AntennaSets (const string&	filename);
 	virtual ~AntennaSets();
 
-	// all about the bits
+	// Everthing about the bits
 	string				RCUinputs    (const string&		setName, uint stnType = stationTypeValue()) const;
 	bitset<MAX_RCUS>	LBAallocation(const string&		setName, uint stnType = stationTypeValue()) const;
 	bitset<MAX_RCUS>	HBAallocation(const string&		setName, uint stnType = stationTypeValue()) const;
 
-	// all about the names
+	// Everthing about the names
 	bool				isAntennaSet (const string&	setName) const;
 	vector<string>		antennaSetList() const;
 
-	// type of antennas used in the set
-	bool	usesLBAfield (const string&		setName, uint stnType = stationTypeValue()) const;
+	// Type of antennas used in the set
+	bool			usesLBAfield(const string&	setName, uint stnType = stationTypeValue()) const;
+	const string	antennaField(const string&	setName, uint stnType = stationTypeValue()) const;
 
 	// ... example
 	ostream& print (ostream& os) const
@@ -78,6 +79,7 @@ private:
 	// internal datastructures
 	class singleSet {
 	public:
+		string				antennaField;
 		string				RCUinputs;
 		bitset<MAX_RCUS>	LBAallocation;
 		bitset<MAX_RCUS>	HBAallocation;
@@ -92,7 +94,7 @@ private:
 	};
 	
 	// internal functions
-	bool _adoptSelector(const string&	selector, singleSet&	triple, uint rcuCount);
+	bool _adoptSelector(const string&	selector, const string& antennaField, singleSet&	triple, uint rcuCount);
 
 	//# --- Datamembers ---
 	// name of the file that contains the antennaSets.
@@ -102,6 +104,9 @@ private:
 
 	map<string, setTriple>		itsDefinitions;
 };
+
+// Make one instance of the AntennaSets globally accessable.
+AntennaSets* 	globalAntennaSets();
 
 //# --- Inline functions ---
 
