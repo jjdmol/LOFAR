@@ -768,8 +768,8 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 			TRAN(StationControl::operational_state);
 			break;
 		}
-		// clock was set succesfully, give clock 5 seconds to stabelize
-		LOG_INFO("Stationclock is changed, waiting 5 seconds to let the clock stabelize");
+		// clock was set succesfully, give clock 5 seconds to stabilize
+		LOG_INFO("Stationclock is changed, waiting 5 seconds to let the clock stabilize");
 		itsTimerPort->setTimer(5.0);
 	}
 	break;
