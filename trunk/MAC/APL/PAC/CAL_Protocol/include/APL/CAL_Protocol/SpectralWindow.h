@@ -76,6 +76,9 @@ namespace LOFAR {
 	  // Returns try if spectralWindow is ment for the HBA antennas.
 	  bool isForHBA() const;
 
+	  // Output function
+	  ostream& print (ostream& os) const;
+
     public:
       /*@{*/
       // marshalling methods
@@ -91,6 +94,14 @@ namespace LOFAR {
       uint16      m_numsubbands;   // number of subbands
       uint32      m_rcucontrol;    // RCU control setting
     };
+
+//
+// operator<<
+//
+inline ostream& operator<< (ostream& os, const SpectralWindow& spw)
+{
+	return (spw.print(os));
+}
 
   }; // namespace CAL
 }; // namespace LOFAR

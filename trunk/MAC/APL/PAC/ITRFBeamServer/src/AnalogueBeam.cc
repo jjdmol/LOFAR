@@ -47,9 +47,10 @@ using namespace RTC;
 // AnalogueBeam(name, subarray, nrSubbands)
 //
 AnalogueBeam::AnalogueBeam(const string& 				name, 
+						   const string&				antennaSet,
 						   const bitset<MAX_RCUS>&		rcuMask,
 						   uint							rankNr) :
-	Beam		(name, rcuMask),
+	Beam		(name, antennaSet, rcuMask),
 	itsRankNr	(rankNr)
 {}
 

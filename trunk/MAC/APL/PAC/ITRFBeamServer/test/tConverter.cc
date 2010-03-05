@@ -76,25 +76,25 @@ int main(int	argc, char*	argv[])
 
 	// do the calculations for field 1
 	frame.resetPosition(MPosition(MVPosition(fieldPos(0,0), fieldPos(0,1), fieldPos(0,2)), MPosition::ITRF));
-	frame.resetEpoch(MVTime(2007,1,1,0.25));		// set some other time
-	cout << "01012007 " << MVTime(2007,1,1,0.25) << endl;
+	frame.resetEpoch(MVTime(2010,2,2,0.25));		// set some other time
+	cout << "02022010 " << MVTime(2010,2,2,0.25) << endl;
 	for (int i = 0; i < antPos.extent(firstDim); ++i) {
 		MVDirection	ITRFPos(antPos(i,0), antPos(i,1), antPos(i,2));
 		cout << i << ": Direction: " << ITRFPos << endl;
 		cout << i << ": Position : " << MPosition(MVPosition(fieldPos(0,0), fieldPos(0,1), fieldPos(0,2)), MPosition::ITRF) << endl;
-		cout << i << ": Epoch    : " << MVTime(2007,1,1,0.25) << endl;
+		cout << i << ": Epoch    : " << MVTime(2010,2,2,0.25) << endl;
 		MDirection	J2000Dir = I2Jconverter(ITRFPos);
 		cout << i << ": Result   : " << J2000Dir << endl;
 		casa::Vector<Double> angles = J2000Dir.getValue().get();
 		cout << i << " converted : " << Direction(angles(0),  angles(1), Direction::ITRF) << endl;
+	}
 
-		Int	nAll, nExtra;
-		const uInt* typ;
-		const casa::String*	theTypes = MDirection::allMyTypes(nAll, nExtra, typ);
-		cout << "nAll=" << nAll << ", nExtra=" << nExtra << ", typ=" << typ << endl;
-		for (int i=0; i < nAll; i++) {
-			cout << theTypes[i] << "=" << typ[i] << endl;
-		}
+	Int	nAll, nExtra;
+	const uInt* typ;
+	const casa::String*	theTypes = MDirection::allMyTypes(nAll, nExtra, typ);
+	cout << "nAll=" << nAll << ", nExtra=" << nExtra << ", typ=" << typ << endl;
+	for (int i=0; i < nAll; i++) {
+		cout << theTypes[i] << "=" << typ[i] << endl;
 	}
 
 #if 0
@@ -123,15 +123,15 @@ int main(int	argc, char*	argv[])
 	fieldPosITRFVect[2] = fieldPos(0,2);
 	Position    		fieldPositionITRF(Coord3D(fieldPosITRFVect), Position::ITRF);
 
-	struct tm			jan2007;
-	jan2007.tm_sec  = 0;
-	jan2007.tm_min  = 0;
-	jan2007.tm_hour = 6;
-	jan2007.tm_mday = 1;
-	jan2007.tm_mon  = 0;
-	jan2007.tm_year = 107;
-	cout << asctime(&jan2007) << endl;
-	Timestamp			theTime(timegm(&jan2007), 0);
+	struct tm			feb2010;
+	feb2010.tm_sec  = 0;
+	feb2010.tm_min  = 0;
+	feb2010.tm_hour = 6;
+	feb2010.tm_mday = 2;
+	feb2010.tm_mon  = 1;
+	feb2010.tm_year = 110;
+	cout << asctime(&feb2010) << endl;
+	Timestamp			theTime(timegm(&feb2010), 0);
 	double				mjd, fraction;
 	theTime.convertToMJD(mjd, fraction);
 
@@ -163,6 +163,25 @@ int main(int	argc, char*	argv[])
 		cout << "scaled: " << direction[0] << ", " << direction[1] << ", " << direction[2] << endl;
 #endif
 	}
+
+	complex<double> scaling(0,-0.10643);
+	blitz::Array<double,1>	RCUpos(3);
+	RCUpos(0) = 1.89484;
+	RCUpos(1) = 1.62297;
+	RCUpos(2) = 0.812045;
+	blitz::Array<double,1>	xyz(3);
+	xyz(0) = 0.671212;
+	xyz(1) = 0.565354;
+	xyz(2) = 0.479426;
+
+	cout << "scaling     = " << scaling << endl;
+	cout << "J2000RCUpos = " << RCUpos(Range::all()) << endl;
+	cout << "J2000xyz    = " << xyz(Range::all()) << endl;
+
+	cout << "weight = " << exp(scaling *
+				(RCUpos(0) * xyz(0) +
+				 RCUpos(1) * xyz(1) +
+				 RCUpos(2) * xyz(2))) << endl;
 
 }
 

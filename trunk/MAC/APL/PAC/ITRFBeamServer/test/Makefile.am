@@ -6,7 +6,7 @@ tConverter_DEPENDENCIES	= $(LOFAR_DEPEND)
 tJ2000Converter_SOURCES			= tJ2000Converter.cc ../src/J2000Converter.cc
 tJ2000Converter_DEPENDENCIES	= $(LOFAR_DEPEND)
 
-tAnaBeamMgr_SOURCES			= tAnaBeamMgr.cc ../src/Beam.cc ../src/AnalogueBeam.cc ../src/AnaBeamMgr.cc
+tAnaBeamMgr_SOURCES			= tAnaBeamMgr.cc ../src/Beam.cc ../src/AnalogueBeam.cc ../src/AnaBeamMgr.cc ../src/CasaConverter.cc
 tAnaBeamMgr_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 
