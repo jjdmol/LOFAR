@@ -2,15 +2,15 @@ subscribed, execute command
 
 == TBB ====================================== ID and version information ====
 
-TBBDriver version 2.24
-tbbctl    version 2.24
+TBBDriver version 2.25
+tbbctl    version 2.25
 
 TBB  Board  TP sw  TP hw  MP hw
 ---  -----  -----  -----  -----
-  0  V 0.3  V 4.7  V 2.4  V 2.9
-  1  V 0.3  V 4.7  V 2.4  V 2.9
-  2  V 0.3  V 4.7  V 2.4  V 2.9
-  3  V 0.3  V 4.7  V 2.4  V 2.9
-  4  V 0.3  V 4.7  V 2.4  V 2.9
-  5  V 0.3  V 4.7  V 2.4  V 2.9
+  0  V 0.3  V 4.7  V 2.4  V 2.8
+  1  V 0.3  V 4.7  V 2.4  V 2.8
+  2  V 0.3  V 4.7  V 2.4  V 2.8
+  3  V 0.3  V 4.7  V 2.4  V 2.8
+  4  V 0.3  V 4.7  V 2.4  V 2.8
+  5  V 0.3  V 4.7  V 2.4  V 2.8
 
