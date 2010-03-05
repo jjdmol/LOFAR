@@ -44,6 +44,7 @@ public:
 	// key-value logger as nodeid.
 	// @param rcuMask The RCUs that participate in this beam.
 	Beam(const string& 				name, 
+		 const string&				antennaSet,
 		 const bitset<MAX_RCUS>&	rcuMask);
 	Beam() {};
 
@@ -64,6 +65,9 @@ public:
 
 	// Get beam name (unique name, can be used as key in key-value logger).
 	string name() const { return (itsName); }
+
+	// Get the name of the subarray on which this beam operates.
+	string antennaSetName() const { return (itsAntennaSet); }
 
 	// Get beam name (unique name, can be used as key in key-value logger).
 	const bitset<MAX_RCUS>& rcuMask() const { return (itsRCUs); }
@@ -88,6 +92,9 @@ private:
 	//# ----- DATAMEMBERS -----
 	// Name used as key in key-value logger.
 	string 		itsName;
+
+	// Name of the AntennaSet the beam is allocated on.
+	string 		itsAntennaSet;
 
 	// RCUs participating in the beam
 	bitset<MAX_RCUS>		itsRCUs;

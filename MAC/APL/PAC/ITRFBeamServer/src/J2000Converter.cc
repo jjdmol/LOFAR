@@ -42,7 +42,7 @@ using namespace casa;
 using namespace blitz;
 using namespace RTC;
 
-char*	supportedTypes[] = { "J2000", "ITRF", "B1950", "AZEL", 
+static char*	supportedTypes[] = { "J2000", "ITRF", "B1950", "AZEL", 
 							 "MERCURY", "VENUS", "MARS", "JUPITER", "SATURN", "URANUS", "NEPTUNE", "PLUTO", "SUN", "MOON"  
 							 "" };
 
@@ -137,6 +137,8 @@ bool  J2000Converter::doConversion(const string&					sourceType,
 								   Timestamp						theTime,
 								   blitz::Array<double,2>&			result)
 {
+	LOG_DEBUG_STR("J2000::doConversion(" << sourceType << "," << antPos << "," << ITRFfieldPos << "," << theTime << ")");
+
 	// Are the sources directions or positions?
 	bool	srcIsDirection = (antPos.extent(secondDim) == 2);
 
@@ -156,11 +158,13 @@ bool  J2000Converter::doConversion(const string&					sourceType,
 			for (int i = antPos.extent(firstDim)-1; i >= 0; i--) {
 				result(i, Range::all()) = _cartesian(antPos(i,0), antPos(i,1));
 			}
+			LOG_DEBUG_STR("J2000::doConversion(...)=" << result);
 			return (true);
 		}
 		// source are positions, just copy to the result array.
 		result.resize(antPos.shape());
 		result = antPos;
+		LOG_DEBUG_STR("J2000::doConversion(...)=" << result);
 		return (true);
 	}
 
@@ -172,7 +176,7 @@ bool  J2000Converter::doConversion(const string&					sourceType,
 	}
 
 	converter_t*		theConv = _getConverter(iter->second);
-	if (theConv->conv.isNOP()) {
+	if (!theConv || theConv->conv.isNOP()) {
 		LOG_FATAL_STR("No converter available, returning empty result");
 		return (false);
 	}
@@ -195,10 +199,12 @@ bool  J2000Converter::doConversion(const string&					sourceType,
 		else {
 			J2000Dir = theConv->conv(MVDirection(antPos(d,0), antPos(d,1), antPos(d,2)));
 		}
+		LOG_DEBUG_STR("J2000Dir[" << d << "]= " << J2000Dir);
 		casa::Vector<Double>	angles = J2000Dir.getValue().get();
 		result(d, Range::all()) = _cartesian(angles(0), angles(1));
 	}
 
+	LOG_DEBUG_STR("J2000::doConversion(...)=" << result);
 	return (true);
 }
 

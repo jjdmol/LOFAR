@@ -35,9 +35,11 @@ using namespace std;
 // Beam(name, rcuMask)
 //
 Beam::Beam(const string& 				name, 
+		   const string&				antennaSet,
 		   const bitset<MAX_RCUS>&		rcuMask) :
-	itsName	(name), 
-	itsRCUs	(rcuMask)
+	itsName		 (name), 
+	itsAntennaSet(antennaSet),
+	itsRCUs		 (rcuMask)
 {}
 
 //
@@ -137,13 +139,10 @@ Pointing Beam::pointingAtTime(const Timestamp& time)
 	list<Pointing>::const_iterator	iter = itsPointings.begin();
 	list<Pointing>::const_iterator	end  = itsPointings.end();
 	while (iter != end) {
-		if (iter->duration() == 0) {	// forever?
+		if (iter->time() <= time && iter->endTime() > time) {	// found the right one?
 			break;
 		}
-		if (iter->endTime() < time) {	// already finished? try next
-			++iter;
-			continue;
-		}
+		++iter;
 	}
 
 	// if nothing found, return NIL pointing

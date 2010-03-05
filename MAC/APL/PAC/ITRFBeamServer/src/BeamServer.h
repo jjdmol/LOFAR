@@ -130,10 +130,6 @@ public:
 	// with the calibration server for the specified beam.
 	GCFEvent::TResult beamfree_state(GCFEvent& e, GCFPortInterface& p);
 
-	void getAllHBADeltas(string filename);
-	
-	void getAllHBAElementDelays(string filename);
-		
 	// action methods
 
 	// start allocation of a new beam
@@ -151,13 +147,6 @@ public:
 
 	// Send weights to the board.
 	void send_weights(RTC::Timestamp time);
-
-	// Time to compute the HBA delays
-	// @param current_seconds Time in seconds since 1 Jan 1970
-	void compute_HBAdelays(RTC::Timestamp time);
-
-	// Send HBAdelays to the board.
-	void send_HBAdelays(RTC::Timestamp	time);
 
 	// Send subbands selection to the board.
 	void send_sbselection();
@@ -178,28 +167,12 @@ public:
 	vector<double>  blitz2vector(const blitz::Array<double,1>&    anBA) const;
 
 	// RCU administration
-	void _registerBeam   (const DigitalBeam&	beam);
-	void _unregisterBeam (const DigitalBeam&	beam);
+	void _registerBeamRCUs   (const DigitalBeam&	beam);
+	void _unregisterBeamRCUs (const DigitalBeam&	beam);
 	void _logBeamAdministration();
 
 private:
 	// --- data members ---
-
-	// Weights array [MAX_RCUS, MAX_BEAMLETS]
-	blitz::Array<std::complex<double>,  2> itsWeights;
-	blitz::Array<std::complex<int16_t>, 2> itsWeights16;
-
-	// Antenna positions in ITRF and subsets of the antennafields.
-	APLCommon::AntennaPos*		itsAntennaPos;			// positions of LBA and HBA antennas
-	APLCommon::AntennaSets*		itsAntennaSets;			// all possible antennaSets
-
-	// Administration for the analogue HBA beamforming
-	// Relative positions of the elements of the HBA tile.
-	blitz::Array<double, 2>		itsTileRelPos;	// [N_HBA_ELEMENTS,x|y] = [16,2]
-	// Delay steps [0..31] of an element
-	blitz::Array<double, 1>		itsDelaySteps; // [N_HBA_DELAYS] = [32,1] 	
-	// The caluclated delays for each element for each HBA tile.
-	blitz::Array<uint8, 2> 		itsHBAdelays;		// [rcus, N_HBA_ELEM_PER_TILE]
 
 	// BeamletAllocation
 	typedef struct BeamletAllocation {
@@ -208,6 +181,10 @@ private:
 		BeamletAllocation(int sb, std::complex<double> scale) : subbandNr(sb), scaling(scale) {};
 	} BeamletAlloc_t;
 	vector<BeamletAlloc_t>		itsBeamletAllocation;
+
+	// Weights array [MAX_RCUS, MAX_BEAMLETS]
+	blitz::Array<std::complex<double>,  2> itsWeights;
+	blitz::Array<std::complex<int16_t>, 2> itsWeights16;
 
 	// RCU Allocations in the AntennaArrays. Remember that each RCU can participate 
 	// in more than one beam.
@@ -230,8 +207,9 @@ private:
 	J2000Converter				itsJ2000Converter;		// casacore based converter to J2000
 	GCFTCPPort* 				itsRSPDriver;			// connection to RSPDriver
 	GCFTCPPort*					itsCalServer;  			// connection to CalServer
-	GCFTimerPort*  				itsHeartbeatTimer;  	//
-	GCFTimerPort*  				itsTimerPort;		  	// General purpose timer
+	GCFTimerPort*  				itsDigHeartbeat;	  	// heartbeat for digital beamformer weights
+	GCFTimerPort*  				itsAnaHeartbeat;  		// heartbeat for analogue beamformer delays
+	GCFTimerPort*  				itsConnectTimer;	  	// General (re)connect timer
 	bool     					itsBeamsModified;		//
 	bool						itsSplitterOn;			// state of the ringsplitter
 	map<string, DigitalBeam*> 	itsBeamPool;			//

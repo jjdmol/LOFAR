@@ -25,7 +25,8 @@ iBeamServer_SOURCES 		= BeamServerMain.cc BeamServerConstants.h \
 							  DigitalBeam.h DigitalBeam.cc \
 							  AnalogueBeam.h AnalogueBeam.cc \
 							  AnaBeamMgr.h AnaBeamMgr.cc \
-							  J2000Converter.h J2000Converter.cc
+							  J2000Converter.h J2000Converter.cc \
+							  CasaConverter.h CasaConverter.cc
 iBeamServer_LDADD 			= 
 iBeamServer_DEPENDENCIES	= $(LOFAR_DEPEND)
 

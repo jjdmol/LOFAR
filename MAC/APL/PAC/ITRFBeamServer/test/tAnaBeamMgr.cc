@@ -52,7 +52,7 @@ int main(int	argc, char*	argv[])
 	bitset<MAX_RCUS>		rcuMask4(0x00000F00);	// overlaps with 2
 
 	// In these first tests we test the addPointing mechanism of the Beam class.
-	AnalogueBeam	beam1("beam1", rcuMask1, 1);
+	AnalogueBeam	beam1("beam1", "LBA_INNER", rcuMask1, 1);
 	LOG_DEBUG("--- POINTING TEST 1: are contiguous pointings added in the right order");
 	beam1.addPointing(Pointing(0.1, 0.1,  "J2000", Timestamp(1262700000,0), 1000));
 	beam1.addPointing(Pointing(0.1, 0.11, "J2000", Timestamp(1262700000+1000,0), 1100));
@@ -101,7 +101,7 @@ int main(int	argc, char*	argv[])
 	beamMgr1.showAdmin();
 
 	LOG_DEBUG("--- SCHEDULE TEST 4: can we add an overlapping beam with the another rank");
-	AnalogueBeam	beam2("beam2", rcuMask2, 3);
+	AnalogueBeam	beam2("beam2", "LBA_INNER", rcuMask2, 3);
 	beam2.addPointing(Pointing(0.2, 0.6, "AZEL", Timestamp(1262700000+2200,0), 400));
 	beamMgr1.addBeam(beam2);
 	beamMgr1.showAdmin();
@@ -111,7 +111,7 @@ int main(int	argc, char*	argv[])
 	beamMgr1.showAdmin();
 
 	LOG_DEBUG("--- SCHEDULE TEST 6: can we add an overlapping beam with a higher rank as the previous beam");
-	AnalogueBeam	beam3("beam3", rcuMask3, 2);
+	AnalogueBeam	beam3("beam3", "LBA_INNER", rcuMask3, 2);
 	beam3.addPointing(Pointing(0.3, 0.6, "ITRF", Timestamp(1262700000+2000,0), 1400));
 	beamMgr1.addBeam(beam3);
 	beamMgr1.showAdmin();
@@ -121,7 +121,7 @@ int main(int	argc, char*	argv[])
 	beamMgr1.showAdmin();
 
 	LOG_DEBUG("--- SCHEDULE TEST 8: add an NON overlapping beam with an equal rank as the first beam which starts earlier");
-	AnalogueBeam	beam4("beam4", rcuMask4, 1);
+	AnalogueBeam	beam4("beam4", "LBA_INNER", rcuMask4, 1);
 	beam4.addPointing(Pointing(0.4, 0.6, "MOON", Timestamp(1262700000+2000,0), 1400));
 	beamMgr1.addBeam(beam4);
 	beamMgr1.showAdmin();
@@ -131,7 +131,7 @@ int main(int	argc, char*	argv[])
 	beamMgr1.showAdmin();
 
 	LOG_DEBUG("--- SCHEDULE TEST 10: delete beam 1");
-	beamMgr1.deleteBeam(beam1);	
+	beamMgr1.deleteBeam(beam1.name());	
 	beamMgr1.showAdmin();
 
 	LOG_DEBUG("--- SCHEDULE TEST 11: will the third beam become active also (it should)");

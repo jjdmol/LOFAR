@@ -68,9 +68,6 @@ public:
 	// Get the current calibration values.
 //	const CAL::AntennaGains& getCalibration() const;
 
-	// Get the name of the subarray on which this beam operates.
-	string antennaSetName() const { return (itsAntennaSet); }
-
 	// Get number of ringSegment
 	int ringNr() const	{ return (itsRingNr); }
 
@@ -87,9 +84,6 @@ private:
 	void deallocate();
 
 	//# ----- DATAMEMBERS -----
-
-	// Name of the subarray on which the beam is allocated.
-	string 		itsAntennaSet;
 
 	// Allocation.
 	IBS_Protocol::Beamlet2SubbandMap 	itsBeamletAllocation;

@@ -107,6 +107,16 @@ bool SpectralWindow::isForHBA() const
 	return (false);		// assume LBA
 }
 
+//
+// print
+//
+ostream& SpectralWindow::print(ostream& os) const
+{
+	os << formatString("SpectralWindow(name=%s,f=%f,nyq=%d,#sub=%d,rcuctrl=%08X)", 
+						m_name.c_str(), m_sampling_freq, m_nyquist_zone, m_numsubbands, m_rcucontrol);
+	return (os);
+}
+
 
 unsigned int SpectralWindow::getSize() const
 {

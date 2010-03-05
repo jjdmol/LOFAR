@@ -24,8 +24,13 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/LofarConstants.h>
+#include <ApplCommon/StationConfig.h>
+#include <APL/APLCommon/AntennaSets.h>
+#include <APL/APLCommon/AntennaPos.h>
+#include <APL/RTCCommon/PSAccess.h>		// ParameterSet macros
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
 
-#include <APL/RTCCommon/PSAccess.h>
+#include "BeamServerConstants.h"
 #include "AnaBeamMgr.h"
 
 #include <math.h>
@@ -43,6 +48,7 @@ using namespace BS;
 using namespace IBS_Protocol;
 using namespace std;
 using namespace RTC;
+using namespace APLCommon;
 
 //
 // AnaBeamMgr(name, subarray, nrSubbands)
@@ -51,7 +57,21 @@ AnaBeamMgr::AnaBeamMgr(uint		nrRCUsPerRing,
 					   uint		nrRings) :
 	itsRCUsPerRing		(nrRCUsPerRing),
 	itsNrRings			(nrRings)
-{}
+{
+	ConfigLocator	cl;
+	// load the HBA Deltas file
+	getAllHBADeltas(cl.locate(GET_CONFIG_STRING("BeamServer.HBADeltasFile")));
+	LOG_DEBUG("Loaded HBADeltas file");
+
+	// load the HBA Delays file
+	getAllHBAElementDelays(cl.locate(GET_CONFIG_STRING("BeamServer.HBAElementDelaysFile")));
+	LOG_DEBUG("Loaded HBADelays file");
+
+	// initialize size of array for HBA delay calculation
+	StationConfig	sc;
+	itsHBAdelays.resize(sc.nrRSPs * NR_RCUS_PER_RSPBOARD, N_HBA_ELEM_PER_TILE);
+
+}
 
 //
 // ~AnaBeamMgr
@@ -61,7 +81,7 @@ AnaBeamMgr::~AnaBeamMgr()
 	map<string, AnalogueBeam>::const_iterator	bIter = itsBeams.begin();
 	map<string, AnalogueBeam>::const_iterator	bEnd  = itsBeams.end();
 	while (bIter != bEnd) {
-		deleteBeam(bIter->second);
+		deleteBeam(bIter->second.name());
 		++bIter;
 	}
 }
@@ -101,9 +121,8 @@ bool AnaBeamMgr::addBeam(const AnalogueBeam& beam)
 //
 // deleteBeam(beam)
 //
-void AnaBeamMgr::deleteBeam(const AnalogueBeam& beam) 
+void AnaBeamMgr::deleteBeam(const string& beamName) 
 {
-	string		beamName(beam.name());
 	map<string, AnalogueBeam>::const_iterator	iter = itsBeams.find(beamName);
 	if (iter == itsBeams.end()) {
 		LOG_ERROR_STR("Beam " << beamName << " is not in my admistration, it cannot be deleted");
@@ -157,17 +176,22 @@ bool AnaBeamMgr::addPointing(const string&	beamName, const Pointing&	newPt)
 void AnaBeamMgr::activateBeams(const Timestamp&	now)
 {
 	LOG_DEBUG_STR("activateBeams(" << now << ")");
+	if (now < itsTargetTime) {
+		LOG_ERROR_STR("activateBeams is called with a date in the past, results are not garanteed. " <<
+						now << " < " << itsTargetTime);
+	}
+	itsTargetTime = now;
 
 	// Note the pointings are in the order: rank, active, beamname, pointing time.
 	list<PointingInfo>::iterator	iter = itsPointings.begin();
 	list<PointingInfo>::iterator	end  = itsPointings.end();
-	bitset<MAX_RCUS>	usedRCUs;
+	itsActiveRCUs.reset();
 	while (iter != end) {
 		string	beamName(iter->beam.name());						// handle everything per beam
 
 		// Note: remember that the pointings/beams are already in order of importance. Whenever an active beam
 		//       conflicts with a (more important) beam we handled before we are allowed to switch it off.
-		bitset<MAX_RCUS>	conflictingRCUs = usedRCUs;				// calc conflicting RCUs.
+		bitset<MAX_RCUS>	conflictingRCUs = itsActiveRCUs;		// calc conflicting RCUs.
 		conflictingRCUs &= iter->beam.rcuMask();
 		if (conflictingRCUs.any() && iter->active) {				// if there is a conflict, switch it off.
 			LOG_INFO_STR("Beam " << beamName << " is switched OFF");
@@ -189,13 +213,13 @@ void AnaBeamMgr::activateBeams(const Timestamp&	now)
 		
 		if (beamIsActive) {									// active beams should stay active.
 			iter->active = true;							// make that pointing the active one
-			usedRCUs |= iter->beam.rcuMask();				// update occupied rcus
+			itsActiveRCUs |= iter->beam.rcuMask();				// update occupied rcus
 		}
 		else {		// beam is not active try to activate it 
 			// activate the beam when that is possible.
 			if (conflictingRCUs.none() && iter->pointing.time() <= now) {
 				iter->active = true;
-				usedRCUs |= iter->beam.rcuMask();					// update occupied rcus
+				itsActiveRCUs |= iter->beam.rcuMask();					// update occupied rcus
 				LOG_INFO_STR("Beam " << beamName << " is switched ON");
 			}
 		}
@@ -229,6 +253,275 @@ void AnaBeamMgr::showAdmin() const
 	}
 }
 
+
+//
+// calculateHBAdelays(timestamp, amcconverter, tileRelPosArray)
+// result is stored in itsHBAdelays
+//
+void AnaBeamMgr::calculateHBAdelays(RTC::Timestamp	targetTime, J2000Converter&	aJ2000Conv)
+{
+	// make sure that we use the right pointings.
+	if (targetTime != itsTargetTime) {
+		activateBeams(targetTime);
+	}
+
+	// Are there any beams and pointings left?
+	if (itsBeams.empty() || itsPointings.empty()) {
+		itsTargetTime = Timestamp(0,0);
+		return;
+	}
+
+	showAdmin();
+	LOG_INFO_STR("Calculating HBAdelays for time " << targetTime);
+
+	itsHBAdelays(Range::all(), Range::all()) = 0;
+	itsTargetTime = targetTime;
+
+	// When have to do the calculations on the HBA, HBA0 and HBA1 field. (at least we have to check those fields).
+	// To prevent needless conversions we first scan the pointings for each field to see if something active
+	// is in that field. If so, we do the rest.
+
+	for (int fieldNr = 0; fieldNr < 3; ++fieldNr) {
+		string	fieldName;
+		switch(fieldNr) {
+			case 0:	fieldName = "HBA";	break;
+			case 1:	fieldName = "HBA0";	break;
+			case 2:	fieldName = "HBA1";	break;
+		}
+
+		list<PointingInfo>::const_iterator		pIter = itsPointings.begin();
+		list<PointingInfo>::const_iterator		pEnd  = itsPointings.end();
+		while(pIter != pEnd && (!pIter->active || globalAntennaSets()->antennaField(pIter->beam.antennaSetName()) != fieldName)) {
+			++pIter;
+		}
+		if (pIter == pEnd) {
+			LOG_DEBUG_STR("No active beams in the " << fieldName << " field");
+			continue;		// try next field
+		}
+
+		// we found an active beam in this HBA field, calculate the delays for all 
+		// active beams in this field
+
+		// Get geographical location of antennaField in ITRF
+		blitz::Array<double, 1> fieldCentreITRF = globalAntennaPos()->Centre(fieldName);
+		LOG_DEBUG_STR("ITRF position antennaField " << fieldName << ": " << fieldCentreITRF);
+
+		LOG_DEBUG_STR("itsTileRelPos = " << itsTileRelPos);
+
+		// Calc length of vectors of rel. positions of the tile elements
+		blitz::Array<double, 1>		tileRelLength(itsTileRelPos.extent(firstDim));
+		for (int i = 0; i < itsTileRelPos.extent(firstDim); i++) {
+			tileRelLength(i) = sqrt((itsTileRelPos(i,0) * itsTileRelPos(i,0)) +
+									 (itsTileRelPos(i,1) * itsTileRelPos(i,1)) +
+									 (itsTileRelPos(i,2) * itsTileRelPos(i,2)));
+		}
+		LOG_DEBUG_STR("tileRelLength:" << tileRelLength);
+		
+		// for all active pointings in this antennafield
+		while (pIter != pEnd) {
+			// must be of the same antenna field.
+			LOG_DEBUG_STR(pIter->beam.name() << "@" << pIter->beam.antennaSetName());
+			if (!pIter->active || globalAntennaSets()->antennaField(pIter->beam.antennaSetName()) != fieldName) {
+				++pIter;
+				continue;
+			}
+			// Get the right pointing
+			Pointing	currentPointing = pIter->pointing;
+			LOG_DEBUG_STR("current analogue Pointing = " << currentPointing);
+			if (currentPointing.getType() == "NONE") {
+				++pIter;
+				continue;
+			}
+
+			blitz::Array<double,2>	sourceJ2000xyz;		// [rcu, xyz]
+			blitz::Array<double,2>	curPoint(1,2);		// [1, angles]
+			curPoint(0,0) = currentPointing.angle0();
+			curPoint(0,1) = currentPointing.angle1();
+
+			if (!aJ2000Conv.doConversion(currentPointing.getType(), curPoint, fieldCentreITRF, targetTime, sourceJ2000xyz)) {
+				LOG_FATAL_STR("Conversion of source to J2000 failed for beam " << pIter->beam.name());
+				++pIter;
+				continue;	// try next pointing
+			}
+			LOG_DEBUG_STR("sourceJ2000xyz:" << sourceJ2000xyz);
+
+			blitz::Array<double, 2>	tileRelPosJ2000;
+			if (!aJ2000Conv.doConversion("ITRF", itsTileRelPos, fieldCentreITRF, targetTime, tileRelPosJ2000)) {
+				LOG_FATAL_STR("Conversion of deltas to J2000 failed for beam " << pIter->beam.name());
+				++pIter;
+				continue;	// try next pointing
+			}
+			tileRelPosJ2000 = tileRelPosJ2000(tensor::i, tensor::j) * tileRelLength(tensor::i);
+			LOG_DEBUG_STR("tileRelPosJ2000:" << tileRelPosJ2000);
+
+			bitset<MAX_RCUS>	RCUallocation(pIter->beam.rcuMask());
+			LOG_DEBUG_STR("Rcuallocation: " << RCUallocation);
+			for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
+				if (!RCUallocation.test(rcu)) {			// all RCUS switched on in LBA/HBA mode
+					continue;
+				}
+
+				for (int element = 0; element < N_HBA_ELEM_PER_TILE; ++ element) {
+					// calculate tile delay.
+					double	delay = ( (sourceJ2000xyz(0,0) * tileRelPosJ2000(element,0)) +
+									  (sourceJ2000xyz(0,1) * tileRelPosJ2000(element,1)) +
+									  (sourceJ2000xyz(0,2) * tileRelPosJ2000(element,2)) ) / SPEED_OF_LIGHT_MS;
+					
+					// signal front stays in the middle of the tile
+					delay += itsMeanElementDelay;
+
+					LOG_DEBUG_STR("antenna="<<rcu/2 <<", pol="<<rcu%2 <<", element="<<element  <<", delay("<<rcu<<","<<element<<")="<<delay);
+					// calculate approximate DelayStepNr
+					int delayStepNr = static_cast<int>(delay / 0.5E-9);
+					
+					// look for nearest matching delay step in range "delayStepNr - 2 .. delayStepNr + 2"
+					double minDelayDiff = fabs(delay - itsDelaySteps(delayStepNr));
+					double difference;
+					int minStepNr = delayStepNr;
+					for (int i = (delayStepNr - 2); i <= (delayStepNr + 2); i++){
+						if (i == delayStepNr) 
+							continue; // skip approximate nr
+						difference = fabs(delay - itsDelaySteps(i));
+						if (difference < minDelayDiff)	{
+							minStepNr = i;
+							minDelayDiff = difference;
+						}
+					}
+					delayStepNr = minStepNr;
+					
+					// range check for delayStepNr, max. 32 steps (0..31) 
+					if (delayStepNr < 0)  delayStepNr = 0;
+					if (delayStepNr > 31) delayStepNr = 31;
+						
+					// bit1=0.25nS(not used), bit2=0.5nS, bit3=1nS, bit4=2nS, bit5=4nS, bit6=8nS 	
+					itsHBAdelays(rcu,element) = (delayStepNr * 4) + (1 << 7); // assign
+				} // for element
+			} // rcus
+			++pIter;
+		} // pointings
+	} // antennafield
+}
+
+void AnaBeamMgr::sendHBAdelays(GCF::TM::GCFPortInterface&	port)
+{
+	RSPSethbaEvent  request;
+	request.timestamp  = itsTargetTime;
+	request.rcumask    = itsActiveRCUs;
+	// note: the RSPDriver expects settings for the active RCU's only.
+	// TODO: CHANGE THIS SO WE CAN POINT THE UNUSED TILES TO ZENITH
+	request.settings().resize(itsActiveRCUs.count(), N_HBA_ELEM_PER_TILE);
+	int nrRCUs = itsActiveRCUs.size(); 
+	int	requestIdx(0);
+	for (int r = 0; r < nrRCUs; r++) {
+		if (itsActiveRCUs.test(r)) {
+			request.settings()(requestIdx) = itsHBAdelays(r);
+			requestIdx++;
+		}
+	}
+
+	LOG_INFO("sending HBAdelays");
+	port.send(request);
+
+	for(int i = 0; i < requestIdx; i++) {
+		ostringstream	os;
+		for (int j = 0; j < N_HBA_ELEM_PER_TILE; j++) {
+			os.width(4);
+			os << (int) request.settings()(i, j);
+		}
+		LOG_DEBUG_STR(os.str());
+	}
+
+}
+
+// --------------- READ CONFIGURATIONFILES ---------------
+
+//
+// getAllHBADeltas 
+//
+void AnaBeamMgr::getAllHBADeltas(const string& filename)
+{
+	ifstream	itsFile;
+	string 		itsName;
+
+	LOG_DEBUG_STR("Trying to read the relative HBA element positions from file " << filename);
+	// open new file
+	if (itsFile.is_open()) {
+		itsFile.close();
+	}
+	itsFile.open(filename.c_str());
+
+	if (!itsFile.good()) {
+		itsFile.close();
+		return;
+	}
+
+	// The file may have comment lines at the top, starting with '#'
+	// These must be skipped
+	getline(itsFile, itsName); // read name or comment
+	while (itsName[0] == '#') {
+		LOG_DEBUG_STR("HBADeltas comment = " << itsName);
+		getline(itsFile, itsName); // read name or comment
+	}
+	
+	if ("" == itsName) {
+		itsFile.close();
+		return;
+	}
+	
+	LOG_DEBUG_STR("HBADeltas name = " << itsName);
+	
+	// Now comment lines are skipped, so we can read the full array.
+	itsFile >> itsTileRelPos; // read HBA deltas array
+	LOG_DEBUG_STR("HBADeltas = " << itsTileRelPos);
+
+	LOG_INFO_STR("Relative HBA element positions read from file " << filename);
+}
+
+//
+// getAllHBAElementDelays 
+//
+void AnaBeamMgr::getAllHBAElementDelays(const string& filename)
+{
+	ifstream	itsFile;
+	string		itsName;
+
+	LOG_DEBUG_STR("Trying to read the HBA element delay steps  from file " << filename);
+
+	// open new file
+	if (itsFile.is_open()) { 
+		itsFile.close();
+	}
+	itsFile.open(filename.c_str());
+
+	if (!itsFile.good()) {
+		itsFile.close();
+		return;
+	}
+
+	// The file may have comment lines at the top, starting with '#'
+	// These must be skipped
+	getline(itsFile, itsName); // read name or comment
+	while (itsName[0] == '#') {
+		LOG_DEBUG_STR("HBA ElementDelays comment = " << itsName);
+		getline(itsFile, itsName); // read name or comment
+	}
+	
+	if ("" == itsName) {
+		itsFile.close();
+		return;
+	}
+
+	LOG_DEBUG_STR("HBA ElementDelays Name = " << itsName);
+	
+	// Now comment lines are skipped, so we can read the full array.
+	itsFile >> itsDelaySteps; // read HBA element delays array
+	//itsDelaySteps *= 1E-9; // convert from nSec to Secs
+	LOG_DEBUG_STR("HBA ElementDelays = " << itsDelaySteps);
+
+	LOG_INFO_STR("HBA element delay steps read from file " << filename);
+	itsMeanElementDelay = blitz::mean(itsDelaySteps);
+	LOG_INFO_STR("mean ElementDelay = " << itsMeanElementDelay);
+}
 
 #if 0
 //
