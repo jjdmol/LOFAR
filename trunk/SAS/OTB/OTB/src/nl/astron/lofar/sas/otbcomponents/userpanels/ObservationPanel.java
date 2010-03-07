@@ -111,7 +111,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         this.antennaConfigPanel.setMainFrame(this.itsMainFrame);
         this.antennaConfigPanel.setContent(this.itsNode);
 
-        this.campaignInfoPanel.setMainFrame(this.itsMainFrame);
+        this.campaignInfoPanel.setMainFrame(this.itsMainFrame,false);
         this.storageNodeSelectionPanel.init();
 
         jOTDBparam aParam=null;
@@ -1104,7 +1104,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private void deleteBeam() {
         int row = beamConfigurationPanel.getSelectedRow();
         // if removed then the old Beamlets's should be removed form the checklist also
-        String oldBeamlets = itsBeamConfigurationTableModel.getSelection(row)[4];
+        String oldBeamlets = itsBeamConfigurationTableModel.getSelection(row)[6];
         BitSet beamletSet = LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(oldBeamlets));
         
         if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this Beam ?","Delete Beam",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
