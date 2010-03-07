@@ -12,6 +12,9 @@
 package nl.astron.lofar.sas.otbcomponents;
 
 import java.rmi.RemoteException;
+import java.util.Iterator;
+import java.util.Vector;
+import java.util.logging.Level;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jCampaignInfo;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
@@ -43,24 +46,36 @@ public class CampaignInfo extends javax.swing.JPanel {
     public CampaignInfo(MainFrame aMainFrame) {
         initComponents();
         itsMainFrame = aMainFrame;
+        isEditable=false;
         initPanel();
     }
 
-    public void setMainFrame(MainFrame aMainFrame) {
+    public void setMainFrame(MainFrame aMainFrame,boolean edit) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
+            isEditable=edit;
             initPanel();
         } else {
             logger.debug("No Mainframe supplied");
         }
     }
 
+    public void refresh() {
+        initPanel();
+    }
+
     private void initPanel() {
 
         itsMainFrame.setHourglassCursor();
 
-
-        this.inputName.setText("");
+        if (isEditable && itsCampaignName.equalsIgnoreCase("No Campaign")) {
+            this.inputNameCombo.setVisible(isEditable);
+            this.inputNameTxt.setVisible(!isEditable);
+        } else {
+            this.inputNameCombo.setVisible(isEditable);
+            this.inputNameTxt.setVisible(!isEditable);
+        }
+        this.inputNameTxt.setText("");
         this.inputTitle.setText("");
         this.inputPI.setText("");
         this.inputCO_I.setText("");
@@ -83,20 +98,34 @@ public class CampaignInfo extends javax.swing.JPanel {
 
          if (itsMainFrame != null) {
             try {
+
                 itsTree=OtdbRmi.getRemoteOTDB().getTreeInfo(itsMainFrame.getSharedVars().getTreeID(),false);
                 //get the CampaignName from the tree
                 itsCampaignName=itsTree.campaign;
 
+                // get all existing campaigns to fill the combobox, set default to original CampainName
+                // only possible for Campaigns that have NoCampaign
+                if (isEditable && itsCampaignName.equalsIgnoreCase("No Campaign")) {
+                    Vector<jCampaignInfo> aCampaignList=OtdbRmi.getRemoteCampaign().getCampaignList();
+                    if (aCampaignList.size() > 0) {
+                        Iterator itr = aCampaignList.iterator();
+                        while (itr.hasNext()){
+                            this.inputNameCombo.addItem(((jCampaignInfo)itr.next()).itsName);
+                        }
+                        this.inputNameCombo.setSelectedIndex(0);
+                    }
+                } else {
+                    this.inputNameTxt.setText(itsCampaignName);
+                }
                 // get the CampaignInfo from the tree
                 itsCampaignInfo = OtdbRmi.getRemoteCampaign().getCampaign(itsCampaignName);
                 if  (itsCampaignInfo != null) {
-                   this.inputName.setText(itsCampaignInfo.itsName);
                     this.inputTitle.setText(itsCampaignInfo.itsTitle);
                     this.inputPI.setText(itsCampaignInfo.itsPI);
                     this.inputCO_I.setText(itsCampaignInfo.itsCO_I);
                     this.inputContact.setText(itsCampaignInfo.itsContact);
                 } else {
-                    this.inputName.setText("");
+                    this.inputNameTxt.setText("");
                     this.inputTitle.setText("");
                     this.inputPI.setText("");
                     this.inputCO_I.setText("");
@@ -104,7 +133,7 @@ public class CampaignInfo extends javax.swing.JPanel {
                 }
             } catch (RemoteException ex) {
                 logger.debug("ObservationPanel: Error getting treeInfo/campaignInfo" + ex);
-                this.inputName.setText("");
+                this.inputNameTxt.setText("");
                 this.inputTitle.setText("");
                 this.inputPI.setText("");
                 this.inputCO_I.setText("");
@@ -117,10 +146,30 @@ public class CampaignInfo extends javax.swing.JPanel {
 
     }
 
+    public boolean hasChanged() {
+        if (isEditable) {
+            if (!itsCampaignName.equals(inputNameCombo.getSelectedItem())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void saveCampaign() {
+        if (isEditable && hasChanged()) {
+            itsCampaignInfo.itsName = (String) inputNameCombo.getSelectedItem();
+            try {
+                OtdbRmi.getRemoteCampaign().saveCampaign(itsCampaignInfo);
+            } catch (RemoteException ex) {
+                logger.debug("ObservationPanel: Error saving changed campaignInfo" + ex);            }
+        }
+    }
+
     private MainFrame       itsMainFrame    = null;
     private String          itsCampaignName = "";
     private jOTDBtree       itsTree=null;
     private jCampaignInfo   itsCampaignInfo = null;
+    private boolean         isEditable=false;
 
     /** This method is called from within the constructor to
      * initialize the form.
@@ -136,91 +185,51 @@ public class CampaignInfo extends javax.swing.JPanel {
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
-        inputName = new javax.swing.JTextField();
         inputTitle = new javax.swing.JTextField();
         inputPI = new javax.swing.JTextField();
         inputCO_I = new javax.swing.JTextField();
         inputContact = new javax.swing.JTextField();
         jLabel6 = new javax.swing.JLabel();
+        inputNameCombo = new javax.swing.JComboBox();
+        inputNameTxt = new javax.swing.JTextField();
+
+        setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel1.setText("Name");
+        add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 60, 80, -1));
 
         jLabel2.setText("Title");
+        add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 90, 80, -1));
 
         jLabel3.setText("Principal Investigator(s)");
+        add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 120, -1, -1));
 
         jLabel4.setText("Co Investigator(s)");
+        add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 150, -1, -1));
 
         jLabel5.setText("Contact");
-
-        inputName.setEditable(false);
+        add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 180, -1, -1));
 
         inputTitle.setEditable(false);
+        add(inputTitle, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 90, 360, -1));
 
         inputPI.setEditable(false);
+        add(inputPI, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 120, 360, -1));
 
         inputCO_I.setEditable(false);
+        add(inputCO_I, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 150, 360, -1));
 
         inputContact.setEditable(false);
+        add(inputContact, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 180, 360, -1));
 
         jLabel6.setFont(new java.awt.Font("Tahoma", 1, 14));
         jLabel6.setText("Campaign Info");
+        add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 10, -1, -1));
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(33, 33, 33)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
-                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
-                            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(inputName, javax.swing.GroupLayout.DEFAULT_SIZE, 454, Short.MAX_VALUE)
-                            .addComponent(inputContact, javax.swing.GroupLayout.DEFAULT_SIZE, 454, Short.MAX_VALUE)
-                            .addComponent(inputCO_I, javax.swing.GroupLayout.DEFAULT_SIZE, 454, Short.MAX_VALUE)
-                            .addComponent(inputPI, javax.swing.GroupLayout.DEFAULT_SIZE, 454, Short.MAX_VALUE)
-                            .addComponent(inputTitle, javax.swing.GroupLayout.DEFAULT_SIZE, 454, Short.MAX_VALUE))
-                        .addGap(20, 20, 20))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(257, 257, 257)
-                        .addComponent(jLabel6)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 230, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(502, 502, 502))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel6)
-                .addGap(43, 43, 43)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(inputName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(inputTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(inputPI, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(inputCO_I, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(inputContact, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel5))
-                .addContainerGap(269, Short.MAX_VALUE))
-        );
+        add(inputNameCombo, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 60, 360, -1));
+
+        inputNameTxt.setText("jTextField1");
+        add(inputNameTxt, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 60, 360, -1));
     }// </editor-fold>//GEN-END:initComponents
 
 
@@ -228,7 +237,8 @@ public class CampaignInfo extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField inputCO_I;
     private javax.swing.JTextField inputContact;
-    private javax.swing.JTextField inputName;
+    private javax.swing.JComboBox inputNameCombo;
+    private javax.swing.JTextField inputNameTxt;
     private javax.swing.JTextField inputPI;
     private javax.swing.JTextField inputTitle;
     private javax.swing.JLabel jLabel1;
