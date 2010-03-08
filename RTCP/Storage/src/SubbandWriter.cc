@@ -100,8 +100,9 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank, unsigned size)
     MeasurementSetFormat myFormat(itsPS, 512);
 
     // create root directory of the observation tree
-    if ( (mkdir(itsPS->getMSBaseDir().c_str(), 0770) != 0) && (errno != EEXIST) ) {
-      throw SystemCallException(("mkdir " + itsPS->getMSBaseDir()).c_str(), errno, THROW_ARGS);
+    if (mkdir(itsPS->getMSBaseDir().c_str(), 0770) != 0 && errno != EEXIST) {
+      int savedErrno = errno;
+      throw SystemCallException(("mkdir " + itsPS->getMSBaseDir()).c_str(), savedErrno, THROW_ARGS);
     }
           
     for (unsigned i = 0; i < phaseTwoSubbands.size(); i++) {
