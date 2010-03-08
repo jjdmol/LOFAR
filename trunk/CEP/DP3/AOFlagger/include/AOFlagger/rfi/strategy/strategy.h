@@ -46,9 +46,10 @@ namespace rfiStrategy {
 			void StartPerformThread(const class ArtifactSet &artifacts, class ProgressListener &progress);
 			ArtifactSet *JoinThread();
 
+			static void LoadDefaultSingleStrategy(ActionBlock &block);
 			void LoadDefaultSingleStrategy();
 			void LoadOldDefaultSingleStrategy();
-			void LoadDefaultStrategy(size_t threadCount=3);
+			void LoadDefaultStrategy();
 
 			void LoadFastStrategy();
 			void LoadAverageStrategy();

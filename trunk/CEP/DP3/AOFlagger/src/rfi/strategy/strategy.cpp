@@ -45,9 +45,14 @@ namespace rfiStrategy {
 
 	void Strategy::LoadDefaultSingleStrategy()
 	{
-		Add(new SetFlaggingAction());
+		LoadDefaultSingleStrategy(*this);
+	}
+
+	void Strategy::LoadDefaultSingleStrategy(ActionBlock &block)
+	{
+		block.Add(new SetFlaggingAction());
 		ForEachPolarisationBlock *fepBlock = new ForEachPolarisationBlock();
-		Add(fepBlock);
+		block.Add(fepBlock);
 
 		Adapter *adapter = new Adapter();
 		fepBlock->Add(adapter);
@@ -55,8 +60,6 @@ namespace rfiStrategy {
 		ThresholdAction *t1 = new ThresholdAction();
 		t1->SetBaseSensitivity(4.0);
 		adapter->Add(t1);
-
-		adapter->Add(new StatisticalFlagAction());
 
 		CombineFlagResults *cfr1 = new CombineFlagResults();
 		adapter->Add(cfr1);
@@ -71,8 +74,6 @@ namespace rfiStrategy {
 		ThresholdAction *t2 = new ThresholdAction();
 		t2->SetBaseSensitivity(2.0);
 		adapter->Add(t2);
-
-		adapter->Add(new StatisticalFlagAction());
 
 		CombineFlagResults *cfr2 = new CombineFlagResults();
 		adapter->Add(cfr2);
@@ -117,41 +118,14 @@ namespace rfiStrategy {
 		//adapter->Add(new StatisticalFlagAction());
 	}
 
-	void Strategy::LoadDefaultStrategy(size_t threadCount)
+	void Strategy::LoadDefaultStrategy()
 	{
 		LoadAverageStrategy();
 	}
 
 	void Strategy::LoadFastStrategy()
 	{
-		ForEachBaselineAction *feBaseBlock = new ForEachBaselineAction();
-		Add(feBaseBlock);
-
-		LoadImageAction *loadImageAction = new LoadImageAction();
-		loadImageAction->SetReadStokesI();
-		feBaseBlock->Add(loadImageAction);
-		feBaseBlock->Add(new SetFlaggingAction());
-		ForEachPolarisationBlock *fePolBlock = new ForEachPolarisationBlock();
-		feBaseBlock->Add(fePolBlock);
-	
-		Adapter *adapter = new Adapter();
-		fePolBlock->Add(adapter);
-	
-		IterationBlock *iteration = new IterationBlock();
-		iteration->SetIterationCount(3);
-		adapter->Add(iteration);
-	
-		iteration->Add(new ThresholdAction());
-		iteration->Add(new SetImageAction());
-
-		SlidingWindowFitAction *fitAction = new SlidingWindowFitAction();
-		fitAction->Parameters().timeDirectionWindowSize = 20;
-		fitAction->Parameters().timeDirectionKernelSize = 7.5;
-		iteration->Add(fitAction);
-
-		adapter->Add(new ThresholdAction());
-
-		feBaseBlock->Add(new WriteFlagsAction());
+		LoadDefaultStrategy();
 	}
 
 	void Strategy::LoadAverageStrategy()
@@ -161,27 +135,10 @@ namespace rfiStrategy {
 
 		LoadImageAction *loadImageAction = new LoadImageAction();
 		loadImageAction->SetReadStokesI();
+
 		feBaseBlock->Add(loadImageAction);
-		feBaseBlock->Add(new SetFlaggingAction());
-		ForEachPolarisationBlock *fePolBlock = new ForEachPolarisationBlock();
-		feBaseBlock->Add(fePolBlock);
-	
-		Adapter *adapter = new Adapter();
-		fePolBlock->Add(adapter);
-	
-		IterationBlock *iteration = new IterationBlock();
-		iteration->SetIterationCount(4);
-		adapter->Add(iteration);
-	
-		iteration->Add(new ThresholdAction());
-		iteration->Add(new SetImageAction());
-
-		SlidingWindowFitAction *fitAction = new SlidingWindowFitAction();
-		fitAction->Parameters().timeDirectionWindowSize = 40;
-		fitAction->Parameters().timeDirectionKernelSize = 15.0;
-		iteration->Add(fitAction);
-
-		adapter->Add(new ThresholdAction());
+		
+		LoadDefaultSingleStrategy(*feBaseBlock);
 
 		feBaseBlock->Add(new WriteFlagsAction());
 	}
@@ -193,54 +150,10 @@ namespace rfiStrategy {
 
 		LoadImageAction *loadImageAction = new LoadImageAction();
 		loadImageAction->SetReadAllPolarisations();
+
 		feBaseBlock->Add(loadImageAction);
-		feBaseBlock->Add(new SetFlaggingAction());
-		ForEachPolarisationBlock *fePolBlock1 = new ForEachPolarisationBlock();
-		feBaseBlock->Add(fePolBlock1);
-	
-		Adapter *adapter1 = new Adapter();
-		fePolBlock1->Add(adapter1);
-	
-		IterationBlock *iteration1 = new IterationBlock();
-		adapter1->Add(iteration1);
-		iteration1->SetIterationCount(5);
-	
-		iteration1->Add(new ThresholdAction());
-		iteration1->Add(new SetImageAction());
-
-		SlidingWindowFitAction *fitAction1 = new SlidingWindowFitAction();
-		fitAction1->Parameters().timeDirectionWindowSize = 50;
-		fitAction1->Parameters().timeDirectionKernelSize = 18.0;
-		iteration1->Add(fitAction1);
-
-		adapter1->Add(new ThresholdAction());
-
-		SetFlaggingAction *setFlaggingAction = new SetFlaggingAction();
-		setFlaggingAction->SetNewFlagging(SetFlaggingAction::PolarisationsEqual);
-		feBaseBlock->Add(setFlaggingAction);
-
-		/*
-		// One last iteration
-		ForEachPolarisationBlock *fePolBlock2 = new ForEachPolarisationBlock();
-		feBaseBlock->Add(fePolBlock2);
-	
-		Adapter *adapter2 = new Adapter();
-		fePolBlock2->Add(adapter2);
-	
-		IterationBlock *iteration2 = new IterationBlock();
-		adapter2->Add(iteration2);
-		iteration2->SetIterationCount(1);
-	
-		iteration2->Add(new SetImageAction());
-
-		SlidingWindowFitAction *fitAction2 = new SlidingWindowFitAction();
-		fitAction2->Parameters().timeDirectionWindowSize = 50;
-		fitAction2->Parameters().timeDirectionKernelSize = 18.0;
-		iteration2->Add(fitAction2);
-
-		iteration2->Add(new ThresholdAction());*/
-
-		feBaseBlock->Add(new StatisticalFlagAction());
+		
+		LoadDefaultSingleStrategy(*feBaseBlock);
 
 		feBaseBlock->Add(new WriteFlagsAction());
 	}
