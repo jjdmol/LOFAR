@@ -3,6 +3,23 @@
 =                       TODO - List of things to do                          =
 ==============================================================================
 
+* Maybe it's a good idea to add a check for in-source builds. Although this
+  clearly is not supported, because the compiler name and build type are 
+  derived from the name of the build directory, it DOES screw up the cache!
+  As such, attempting to do an out-of-source build after the first in-source
+  build attempt will always fail, with the mysical error message that the
+  LOFAR compiler cannot be found.
+
+* Should we use Python EXEC_PREFIX when installing compiled modules, or just
+  use PREFIX, as we used to do with the Autotools. The latter options causes
+  64-bit modules to end up in <prefix>/lib/python/site-packages, instead of
+  the correct one <prefix>/lib64/python/site-packages.
+  On the other hand, if we choose the former option, then we have to make a 
+  distinction between pure Python modules (which are platform-independent)
+  and compiles modules (which are (platform-dependent). Otherwise, pure 
+  Python modules will end up in <prefix>/lib64/python/site-packages, which
+  is also incorrect.
+
 * When you've initially built only a small number of packages (e.g. only 
   Common), and later expand that collection (to e.g. Blob), a rebuild of
   Common is triggered. This is caused by the fact that lofar_config.h is
