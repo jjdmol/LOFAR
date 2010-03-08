@@ -230,8 +230,7 @@ void LofarStMan::openFile (bool writable)
   itsRegFile = 0;
   String fname (fileName() + "data");
   itsRegFile = new LargeFiledesIO (LargeFiledesIO::open (fname.c_str(),
-                                                         writable),
-                                   fname);
+                                                         writable));
   // Set correct number of rows.
   itsNrRows = itsRegFile->length() / itsBlockSize * itsAnt1.size();
   // Map the file with seqnrs.
