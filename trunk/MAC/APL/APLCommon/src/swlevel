@@ -204,6 +204,7 @@ status_prog()
 	do
 		levelnr=`echo $line | cut -d":" -f1`
 		prog=`echo $line | cut -d":" -f6`
+                pid=("")
 
 		# special check for logging-daemons
 		[ $prog == $logProgToSkip ] && continue
