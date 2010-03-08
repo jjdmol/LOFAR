@@ -2,7 +2,7 @@
 # StationInfo
 #
 # $Id:$
-#
+##
 # ID: Unique station identifier (used for PVSS, SAS, etc)
 # ring: Location C=Core, R=Remote, E=European
 # Long, lat and height are in WGS84 and are for initial position guess 
