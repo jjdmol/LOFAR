@@ -79,7 +79,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 
   const unsigned maxNrPackets = 128;
   TimeStamp	 actualstamp  = itsArgs.startTime - itsArgs.nrTimesPerPacket;
-  unsigned	 packetSize   = sizeof(struct RSP::header) + itsArgs.nrSlotsPerPacket * itsArgs.nrTimesPerPacket * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE);
+  unsigned	 packetSize   = sizeof(struct RSP::Header) + itsArgs.nrSlotsPerPacket * itsArgs.nrTimesPerPacket * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE);
 
   std::vector<TimeStamp> timeStamps(maxNrPackets);
   boost::multi_array<char, 2, AlignedStdAllocator<char, 32> > packets(boost::extents[maxNrPackets][packetSize]);
@@ -112,14 +112,22 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
     ++ itsArgs.packetCounters->nrPacketsReceived;
 
     if (dataShouldContainValidStamp) {
+      RSP::Header &header = reinterpret_cast<RSP *>(currentPacketPtr)->header;
+
+      // check if there was a CRC error on the Serdes ring
+      if (header.sourceInfo & (1 << 6)) {
+	++ itsArgs.packetCounters->nrCRCerrors;
+	continue;
+      }
+
 #if defined __PPC__
       unsigned seqid, blockid;
 
       asm volatile ("lwbrx %0,%1,%2" : "=r" (seqid)   : "b" (currentPacketPtr), "r" (offsetof(RSP, header.timestamp)));
       asm volatile ("lwbrx %0,%1,%2" : "=r" (blockid) : "b" (currentPacketPtr), "r" (offsetof(RSP, header.blockSequenceNumber)));
 #else
-      unsigned seqid   = reinterpret_cast<RSP *>(currentPacketPtr)->header.timestamp;
-      unsigned blockid = reinterpret_cast<RSP *>(currentPacketPtr)->header.blockSequenceNumber;
+      unsigned seqid   = header.timestamp;
+      unsigned blockid = header.blockSequenceNumber;
 
 #if defined WORDS_BIGENDIAN
       seqid   = byteSwap(seqid);
@@ -127,9 +135,9 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 #endif
 #endif
 
-      //if the seconds counter is 0xFFFFFFFF, the data cannot be trusted.
+      // if the seconds counter is 0xFFFFFFFF, the data cannot be trusted.
       if (seqid == ~0U) {
-	++ itsArgs.packetCounters->nrPacketsRejected;
+	++ itsArgs.packetCounters->nrTimeStampErrors;
 	continue;
       }
 
@@ -140,7 +148,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
       // reliable.
       if (seqid >= previousSeqid + 10 && previousSeqidIsAccepted) {
 	previousSeqidIsAccepted = false;
-	++ itsArgs.packetCounters->nrPacketsRejected;
+	++ itsArgs.packetCounters->nrTimeStampErrors;
 	continue;
       }
 

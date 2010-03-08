@@ -128,24 +128,37 @@ void LogThread::mainLoop()
   // non-atomic updates from other threads cause race conditions, but who cares
 
   while (!itsShouldStop) {
-    std::stringstream logStr;
-    bool somethingRejected = false;
+    std::stringstream	  logStr;
 
-    for (unsigned rsp = 0; rsp < itsCounters.size(); rsp ++) {
-      logStr << (rsp == 0 ? "received [" : ",") << itsCounters[rsp].nrPacketsReceived;
-      itsCounters[rsp].nrPacketsReceived = 0;
+    unsigned		  nrRSPboards = itsCounters.size();
+    std::vector<unsigned> received(nrRSPboards);
+    std::vector<unsigned> timeStampErrors(nrRSPboards);
+    std::vector<unsigned> crcErrors(nrRSPboards);
 
-      if (itsCounters[rsp].nrPacketsRejected > 0)
-	somethingRejected = true;
+    unsigned totalTimeStampErrors = 0, totalCRCerrors = 0;
+
+    for (unsigned rsp = 0; rsp < nrRSPboards; rsp ++) {
+      Counters &counters    = itsCounters[rsp];
+
+      received[rsp]	    = counters.nrPacketsReceived;
+      timeStampErrors[rsp]  = counters.nrTimeStampErrors;
+      crcErrors[rsp]	    = counters.nrCRCerrors;
+
+      totalTimeStampErrors += counters.nrTimeStampErrors;
+      totalCRCerrors	   += counters.nrCRCerrors;
+
+      counters.nrPacketsReceived = 0;
+      counters.nrTimeStampErrors = 0;
+      counters.nrCRCerrors	 = 0;
     }
 
-    if (somethingRejected)
-      for (unsigned rsp = 0; rsp < itsCounters.size(); rsp ++) {
-	logStr << (rsp == 0 ? "] packets, rejected [" : ",") << itsCounters[rsp].nrPacketsRejected;
-	itsCounters[rsp].nrPacketsRejected = 0;
-      }
+    logStr << "received " << received << " packets";
 
-    logStr << "] packets";
+    if (totalTimeStampErrors > 0)
+      logStr << ", timestamp errors = " << timeStampErrors;
+
+    if (totalCRCerrors > 0)
+      logStr << ", CRC errors = " << crcErrors;
 
 #if defined HAVE_BGP_ION
     writeCPUstats(logStr);

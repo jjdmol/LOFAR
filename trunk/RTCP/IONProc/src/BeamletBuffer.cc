@@ -49,7 +49,7 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
 :
   itsRSPboard(rspBoard),
   itsNrSubbands(ps->nrSlotsInFrame()),
-  itsPacketSize(sizeof(struct RSP::header) + itsNrTimesPerPacket * itsNrSubbands * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE)),
+  itsPacketSize(sizeof(struct RSP::Header) + itsNrTimesPerPacket * itsNrSubbands * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE)),
   itsSize(align(ps->inputBufferSize(), itsNrTimesPerPacket)),
   itsHistorySize(ps->nrHistorySamples()),
   itsIsRealTime(ps->realTime()),
@@ -211,7 +211,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
 template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writeMultiplePackets(const void *rspData, const std::vector<TimeStamp> &timeStamps)
 {
   itsWriteTimer.start();
-  itsCurrentPacketPtr = reinterpret_cast<const char *>(rspData) + sizeof(struct RSP::header);
+  itsCurrentPacketPtr = reinterpret_cast<const char *>(rspData) + sizeof(struct RSP::Header);
 
   for (unsigned first = 0, last; first < timeStamps.size();) {
     if (timeStamps[first] != itsCurrentTimeStamp)

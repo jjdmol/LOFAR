@@ -33,8 +33,9 @@ namespace RTCP {
 // All data is in Little Endian format!
 
 struct RSP {
-  struct header {
-    uint16_t version;
+  struct Header {
+    uint8_t  version;
+    uint8_t  sourceInfo;
     uint16_t configuration;
     uint16_t station;
     uint8_t  nrBeamlets;
