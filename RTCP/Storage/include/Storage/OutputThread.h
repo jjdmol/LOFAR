@@ -55,8 +55,8 @@ class OutputThread
     static const float      reportWriteDelay = 0.05;
 
   private:
-    void                    writeLogMessage();
-    void                    flushSeqNumbers();
+    void                    writeLogMessage(unsigned sequenceNumber);
+    void                    flushSequenceNumbers();
     void                    checkForDroppedData(StreamableData *data);
     void		    mainLoop();
 
@@ -73,8 +73,8 @@ class OutputThread
     MSWriter*               itsWriter;
     unsigned                itsNextSequenceNumber;
 
-    std::vector<unsigned>    itsSequenceNumbers;
-    FileStream               *itsFile;
+    std::vector<unsigned>   itsSequenceNumbers;
+    FileStream              *itsSequenceNumbersFile;
 
 };
 
