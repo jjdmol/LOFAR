@@ -127,6 +127,9 @@ void InputThread::mainLoop()
       if (readTimer.getElapsed() > reportReadDelay)
         LOG_WARN_STR("InputThread: ObsID = " << itsObservationID << ", sb = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": " << readTimer);
 
+      if (nullInput)
+	data->sequenceNumber = count;
+
       itsReceiveQueue.append(data.release());
     }
   } catch (Stream::EndOfStreamException &) {
