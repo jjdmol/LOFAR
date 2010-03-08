@@ -41,8 +41,8 @@ class LogThread
     ~LogThread();
 
     struct Counters {
-      unsigned nrPacketsReceived, nrPacketsRejected;
-      unsigned pad[6]; // pad to cache line size to avoid false sharing 
+      unsigned nrPacketsReceived, nrTimeStampErrors, nrCRCerrors;
+      unsigned pad[5]; // pad to cache line size to avoid false sharing 
     };
 
     std::vector<Counters> itsCounters;
