@@ -48,6 +48,11 @@ namespace LOFAR {
   // total time, as well as the number of iterations are printed.
   // The measured time is real time (as opposed to user or system time).
   // The timer can be used to measure from 10 nanosecond to a century interval.
+  //
+  // The internal class NSTimer::StartStop can be used to do the start/stop.
+  // The constructor starts the timer, while the destructor stops it. It has
+  // the advantage that no explicit stop has to be given.
+  // Moreover, it makes the start/stop exception-safe.
 
   class NSTimer {
   public:
@@ -80,6 +85,18 @@ namespace LOFAR {
 
     // Get the total number of times start/stop is done.
     unsigned long long getCount() const;
+
+    // Internal class to do an automatic start/stop.
+    class StartStop {
+    public:
+      StartStop(NSTimer& timer) : itsTimer(timer) { itsTimer.start(); }
+      ~StartStop() { itsTimer.stop(); }
+      private:
+        // Forbid copy.
+        StartStop (const StartStop&);
+        StartStop& operator= (StartStop&);
+        NSTimer& itsTimer;
+    };
 
   private:
     void print_time(std::ostream &, const char *which, double time) const;
