@@ -14,7 +14,6 @@ package nl.astron.lofar.sas.otbcomponents;
 import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.Vector;
-import java.util.logging.Level;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jCampaignInfo;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
@@ -68,7 +67,7 @@ public class CampaignInfo extends javax.swing.JPanel {
 
         itsMainFrame.setHourglassCursor();
 
-        if (isEditable && itsCampaignName.equalsIgnoreCase("No Campaign")) {
+        if (isEditable) {
             this.inputNameCombo.setVisible(isEditable);
             this.inputNameTxt.setVisible(!isEditable);
         } else {
@@ -105,10 +104,10 @@ public class CampaignInfo extends javax.swing.JPanel {
 
                 // get all existing campaigns to fill the combobox, set default to original CampainName
                 // only possible for Campaigns that have NoCampaign
-                if (isEditable && itsCampaignName.equalsIgnoreCase("No Campaign")) {
-                    Vector<jCampaignInfo> aCampaignList=OtdbRmi.getRemoteCampaign().getCampaignList();
-                    if (aCampaignList.size() > 0) {
-                        Iterator itr = aCampaignList.iterator();
+                if (isEditable) {
+                    itsCampaignList=OtdbRmi.getRemoteCampaign().getCampaignList();
+                    if (itsCampaignList.size() > 0) {
+                        Iterator itr = itsCampaignList.iterator();
                         while (itr.hasNext()){
                             this.inputNameCombo.addItem(((jCampaignInfo)itr.next()).itsName);
                         }
@@ -148,18 +147,16 @@ public class CampaignInfo extends javax.swing.JPanel {
 
     public boolean hasChanged() {
         if (isEditable) {
-            if (!itsCampaignName.equals(inputNameCombo.getSelectedItem())) {
-                return true;
-            }
+            return isChanged;
         }
         return false;
     }
-
+    
     public void saveCampaign() {
         if (isEditable && hasChanged()) {
-            itsCampaignInfo.itsName = (String) inputNameCombo.getSelectedItem();
+            jCampaignInfo aCampaignInfo=itsCampaignList.get(inputNameCombo.getSelectedIndex());
             try {
-                OtdbRmi.getRemoteCampaign().saveCampaign(itsCampaignInfo);
+                OtdbRmi.getRemoteCampaign().saveCampaign(aCampaignInfo);
             } catch (RemoteException ex) {
                 logger.debug("ObservationPanel: Error saving changed campaignInfo" + ex);            }
         }
@@ -170,6 +167,8 @@ public class CampaignInfo extends javax.swing.JPanel {
     private jOTDBtree       itsTree=null;
     private jCampaignInfo   itsCampaignInfo = null;
     private boolean         isEditable=false;
+    private boolean         isChanged=false;
+    Vector<jCampaignInfo>   itsCampaignList=null;
 
     /** This method is called from within the constructor to
      * initialize the form.
@@ -226,11 +225,29 @@ public class CampaignInfo extends javax.swing.JPanel {
         jLabel6.setText("Campaign Info");
         add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 10, -1, -1));
 
+        inputNameCombo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                inputNameComboActionPerformed(evt);
+            }
+        });
         add(inputNameCombo, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 60, 360, -1));
 
+        inputNameTxt.setEditable(false);
         inputNameTxt.setText("jTextField1");
+        inputNameTxt.setEnabled(false);
         add(inputNameTxt, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 60, 360, -1));
     }// </editor-fold>//GEN-END:initComponents
+
+    private void inputNameComboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputNameComboActionPerformed
+        int idx = inputNameCombo.getSelectedIndex();
+        if (itsCampaignList != null && !itsCampaignList.get(idx).itsName.equals(itsCampaignName)) {
+            isChanged=true;
+            this.inputTitle.setText(itsCampaignList.get(idx).itsTitle);
+            this.inputPI.setText(itsCampaignList.get(idx).itsPI);
+            this.inputCO_I.setText(itsCampaignList.get(idx).itsCO_I);
+            this.inputContact.setText(itsCampaignList.get(idx).itsContact);
+        }
+    }//GEN-LAST:event_inputNameComboActionPerformed
 
 
 

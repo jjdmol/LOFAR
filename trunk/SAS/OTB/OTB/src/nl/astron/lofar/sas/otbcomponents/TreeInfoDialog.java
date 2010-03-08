@@ -328,11 +328,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             descriptionInput.setEnabled(true);                
             // VICtemplate    
         } else if (itsTreeType.equals("VItemplate")) {
-            if (itsTree.momID() < 1) {
-                campaignLabel.setVisible(false);
-                campaignInput.setVisible(false);        
-                showCampaignButton.setVisible(false);
-            }
+            campaignLabel.setVisible(false);
+            campaignInput.setVisible(false);        
+            showCampaignButton.setVisible(false);
             startTimeLabel.setVisible(false);
             startTimeInput.setVisible(false);
             durationLabel.setVisible(false);
@@ -953,20 +951,14 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_inputDurationHoursPropertyChange
 
     private void showCampaignButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_showCampaignButtonMouseClicked
-        if (!this.campaignInput.getText().equals("")) {
-            // show campaignInfo dialog
-            if (campaignInfoDialog == null ) {
-                campaignInfoDialog = new CampaignInfoDialog(true,itsMainFrame,true);
-            } else {
-                campaignInfoDialog.refresh();
-            }
-            campaignInfoDialog.setLocationRelativeTo(this);
-            campaignInfoDialog.setVisible(true);
-
-
+        // show campaignInfo dialog
+        if (campaignInfoDialog == null ) {
+            campaignInfoDialog = new CampaignInfoDialog(true,itsMainFrame,true);
         } else {
-            logger.debug("no campaign");
+            campaignInfoDialog.refresh();
         }
+        campaignInfoDialog.setLocationRelativeTo(this);
+        campaignInfoDialog.setVisible(true);
     }//GEN-LAST:event_showCampaignButtonMouseClicked
 
 
