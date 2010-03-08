@@ -44,9 +44,8 @@ int main()
     class NSTimer timer("test");
 
     for (int i = 0; i < 100000; i ++) {
-	timer.start();
-	a = pow(a, a);
-	timer.stop();
+      NSTimer::StartStop timeOnce(timer);
+      a = pow(a, a);
     }
 
     std::cout << timer << std::endl;
