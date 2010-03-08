@@ -49,7 +49,7 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
   itsOutputNumber(outputNumber),
   itsObservationID(ps->observationID()),
   itsNextSequenceNumber(0),
-  itsFile(NULL)
+  itsSequenceNumbersFile(0)
 {
   string filename;
   string seqfilename;
@@ -59,7 +59,7 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
 
   LOG_DEBUG_STR("subband " << subbandNumber << " written to null");
 #else    
-  if( dynamic_cast<CorrelatedData*>( outputConfig.source ) ) {
+  if (dynamic_cast<CorrelatedData *>(outputConfig.source) != 0) {
     std::stringstream out;
     out << itsPS->getMSname(subbandNumber) << "/table.f" << outputNumber << "data";
     filename = out.str();
@@ -70,9 +70,10 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
       seqfilename = seq.str();
       
       try {
-	itsFile = new FileStream(seqfilename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
+	itsSequenceNumbersFile = new FileStream(seqfilename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
       } catch (...) {
-	itsFile = NULL;
+	LOG_WARN("Could not open sequence numbers file");
+	itsSequenceNumbersFile = NULL;
       }
     }
 
@@ -101,41 +102,32 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
 
 OutputThread::~OutputThread()
 {
-  flushSeqNumbers();
-
-  if (itsFile != NULL) delete itsFile;
-
   delete itsThread;
-
   delete itsWriter;
+
+  flushSequenceNumbers();
+  delete itsSequenceNumbersFile;
 }
 
 
-void OutputThread::writeLogMessage()
+void OutputThread::writeLogMessage(unsigned sequenceNumber)
 {
-/*
-  static int counter = 0;
-  time_t     now     = time(0);
-  char	     buf[26];
+  time_t now = time(0);
+  char	 buf[26];
 
   ctime_r(&now, buf);
   buf[24] = '\0';
 
   LOG_INFO_STR("time = " << buf <<
-	       //", obsID = " << itsObservationID <<
-	       ", count = " << counter ++ <<
-	       ", timestamp = " << itsStartStamp + ((itsPreviousSequenceNumbers[0] + 1) *
-						     itsPS->nrSubbandSamples() *
-						     itsPS->IONintegrationSteps()));
-  
-  //  itsStartStamp += itsPS->nrSubbandSamples() * itsPS->IONintegrationSteps();
-*/
+	       ", obsID = " << itsObservationID <<
+	       ", seqno = " << sequenceNumber);
 }
 
-void OutputThread::flushSeqNumbers() {
-  if (itsFile != NULL) {
+void OutputThread::flushSequenceNumbers()
+{
+  if (itsSequenceNumbersFile != 0) {
     LOG_INFO_STR("Flushing sequence numbers");
-    itsFile->write(itsSequenceNumbers.data(), itsSequenceNumbers.size()*sizeof(unsigned));
+    itsSequenceNumbersFile->write(itsSequenceNumbers.data(), itsSequenceNumbers.size() * sizeof(unsigned));
     itsSequenceNumbers.clear();
   }
 }
@@ -149,25 +141,23 @@ void OutputThread::checkForDroppedData(StreamableData *data)
   if (droppedBlocks > 0)
     LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
 
-  if (itsPS->getLofarStManVersion() == 2 && itsFile != NULL) {
+  if (itsPS->getLofarStManVersion() == 2 && itsSequenceNumbersFile != 0) {
 
     itsSequenceNumbers.push_back(data->sequenceNumber);
     
-    if (itsSequenceNumbers.size() > 64) {
-      flushSeqNumbers();
-    }
+    if (itsSequenceNumbers.size() > 64)
+      flushSequenceNumbers();
   }
 
   itsNextSequenceNumber = data->sequenceNumber + 1;
 }
 
 
+/// allow only a limited number of thread to write at a time
+static Semaphore semaphore(4);
+
 void OutputThread::mainLoop()
 {
-  /// allow only a limited number of thread to write at a time
-  /// TODO: race at creation
-  static Semaphore semaphore(4);
-  
   while (true) {
     NSTimer writeTimer("write data", false, false);
     std::auto_ptr<StreamableData> data(itsInputThread->itsReceiveQueue.remove());
@@ -195,7 +185,8 @@ void OutputThread::mainLoop()
 
     itsInputThread->itsFreeQueue.append(data.release());
   }
-  flushSeqNumbers();
+
+  flushSequenceNumbers();
 }
 
 } // namespace RTCP
