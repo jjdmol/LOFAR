@@ -95,10 +95,10 @@ public interface jTreeMaintenanceInterface extends Remote
     public boolean saveParam(jOTDBparam aParam) throws RemoteException;
 
     // Get a number of levels of children.
-    public Vector getItemList (int aTreeID, int topNode, int depth) throws RemoteException;
+    public Vector<jOTDBnode> getItemList (int aTreeID, int topNode, int depth) throws RemoteException;
 
     // Get a list of nodes based on a namefragment. Use '%' as wildchar.
-    public Vector getItemList (int aTreeID, String aNameFragment) throws RemoteException;
+    public Vector<jOTDBnode> getItemList (int aTreeID, String aNameFragment) throws RemoteException;
 
     // Duplicates the given node (and its parameters and children)
     // in the template database. The duplicate gets the new index.

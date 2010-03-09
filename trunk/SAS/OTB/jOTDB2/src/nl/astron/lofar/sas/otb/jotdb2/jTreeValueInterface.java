@@ -41,7 +41,7 @@ public interface jTreeValueInterface extends Remote
 
     //    public boolean addKVTparamSet(jParamterSet aPS) throws RemoteException;
 
-    public Vector searchInPeriod (int topNode, int depth, String beginDate, 
+    public Vector<jOTDBvalue> searchInPeriod (int topNode, int depth, String beginDate,
 				  String endDate, boolean mostRecentlyOnly) throws RemoteException;
 
 
