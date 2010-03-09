@@ -381,7 +381,6 @@
     <Component class="javax.swing.JButton" name="setDurationButton">
       <Properties>
         <Property name="text" type="java.lang.String" value="set"/>
-        <Property name="enabled" type="boolean" value="false"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="setDurationButtonActionPerformed"/>
@@ -394,7 +393,6 @@
     </Component>
     <Component class="com.toedter.components.JSpinField" name="inputDurationDays">
       <Properties>
-        <Property name="enabled" type="boolean" value="false"/>
         <Property name="name" type="java.lang.String" value="Days" noResource="true"/>
       </Properties>
       <AuxValues>
@@ -409,7 +407,6 @@
     </Component>
     <Component class="com.toedter.components.JSpinField" name="inputDurationHours">
       <Properties>
-        <Property name="enabled" type="boolean" value="false"/>
         <Property name="name" type="java.lang.String" value="Hours" noResource="true"/>
       </Properties>
       <Events>
@@ -427,7 +424,6 @@
     </Component>
     <Component class="com.toedter.components.JSpinField" name="inputDurationSeconds">
       <Properties>
-        <Property name="enabled" type="boolean" value="false"/>
         <Property name="name" type="java.lang.String" value="Seconds&#xa;" noResource="true"/>
       </Properties>
       <Events>
@@ -445,7 +441,6 @@
     </Component>
     <Component class="com.toedter.components.JSpinField" name="inputDurationMinutes">
       <Properties>
-        <Property name="enabled" type="boolean" value="false"/>
         <Property name="name" type="java.lang.String" value="Minutes" noResource="true"/>
       </Properties>
       <Events>

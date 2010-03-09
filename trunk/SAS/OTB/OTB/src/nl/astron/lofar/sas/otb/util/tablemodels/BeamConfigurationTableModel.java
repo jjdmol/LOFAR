@@ -58,6 +58,8 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
 
     private int offset=1;
 
+    private boolean isChanged=false;
+
     /** Creates a new instance of BeamConfigurationTableModel */
     public BeamConfigurationTableModel() { 
         this.addColumn("dirtype");
@@ -132,6 +134,8 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
             
             this.addRow(newRow);
         }
+        // set isChanged to false, since it's the initial fill of the table.
+        isChanged=false;
         fireTableDataChanged();
         return true;    
     }
@@ -211,7 +215,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         String[]  newRow = { aDirType,anAngle1,anAngle2,aSubbands,aBeamlets};
         this.addRow(newRow);
 
-        
+        isChanged=true;
         return true;
     }
     
@@ -247,6 +251,8 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
         }
+        isChanged=true;
+
         fireTableDataChanged();
         return true;
     }
@@ -273,9 +279,9 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         }                           
     }
 
-
-
-
+    public boolean changed() {
+        return isChanged;
+    }
 
     @Override
     public void removeRow(int row) {
@@ -288,6 +294,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         itsSubbands.remove(row+offset);
         itsBeamlets.remove(row+offset);
         itsMomIDs.remove(row+offset);
+        isChanged=true;
     }
 
     /** returns the isEditable flag from the given row and column.

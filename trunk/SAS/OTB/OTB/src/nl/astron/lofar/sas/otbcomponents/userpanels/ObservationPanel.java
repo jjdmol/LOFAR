@@ -758,211 +758,219 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     
     private boolean saveInput() {
         // Digital Beam
-        int i=0;
+        if (itsBeamConfigurationTableModel.changed()) {
+           int i=0;
 
-        //delete all Beams from the table (excluding the Default one); 
-        // Keep the 1st one, it's the default Beam
-        try {
-            for (i=1; i< itsBeams.size(); i++) {
-                OtdbRmi.getRemoteMaintenance().deleteNode(itsBeams.elementAt(i));  
-            }        
-        } catch (RemoteException ex) {
-            logger.error("Error during deletion of default beam node: "+ex);
-            return false;
-        }  
+            //delete all Beams from the table (excluding the Default one);
+            // Keep the 1st one, it's the default Beam
+           try {
+              for (i=1; i< itsBeams.size(); i++) {
+                    OtdbRmi.getRemoteMaintenance().deleteNode(itsBeams.elementAt(i));
+                }
+           } catch (RemoteException ex) {
+                logger.error("Error during deletion of default beam node: "+ex);
+                return false;
+            }
         
-        // Digital Beam
-        i=0;
+            // Digital Beam
+           i=0;
 
-        // now that all Nodes are deleted we should collect the tables input and create new Beams to save to the database.
-        itsBeamConfigurationTableModel.getTable(itsBeamDirectionTypes,itsBeamAngles1,itsBeamAngles2,itsBeamDurations,
-                itsBeamStartTimes,itsBeamSubbandList,itsBeamBeamletList,itsBeamMomIDs);
-        // keep default Beams
-        jOTDBnode aDefaultNode= itsBeams.elementAt(0);
-        try {
-            // for all elements
-            for (i=1; i < itsBeamDirectionTypes.size();i++) {
+            // now that all Nodes are deleted we should collect the tables input and create new Beams to save to the database.
+            itsBeamConfigurationTableModel.getTable(itsBeamDirectionTypes,itsBeamAngles1,itsBeamAngles2,itsBeamDurations,
+                    itsBeamStartTimes,itsBeamSubbandList,itsBeamBeamletList,itsBeamMomIDs);
+           // keep default Beams
+           jOTDBnode aDefaultNode= itsBeams.elementAt(0);
+            try {
+               // for all elements
+                for (i=1; i < itsBeamDirectionTypes.size();i++) {
 
-                // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
-                // with the values from the set fields and save the elements again
-                //
-                // Duplicates the given node (and its parameters and children)
-                int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultNode.nodeID(),(short)(i-1));
-                if (aN <= 0) {
-                    logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
-                } else {
-                    // we got a new duplicate whos children need to be filled with the settings from the panel.
-                    jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
-                    // store new duplicate in itsBeams.
-                    itsBeams.add(aNode);
+                    // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
+                    // with the values from the set fields and save the elements again
+                   //
+                    // Duplicates the given node (and its parameters and children)
+                    int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultNode.nodeID(),(short)(i-1));
+                    if (aN <= 0) {
+                        logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
+                    } else {
+                        // we got a new duplicate whos children need to be filled with the settings from the panel.
+                        jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
+                        // store new duplicate in itsBeams.
+                        itsBeams.add(aNode);
 
-                    Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-                    // get all the params per child
-                    Enumeration e1 = HWchilds.elements();
-                    while( e1.hasMoreElements()  ) {
-                        jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
-                        String aKeyName = LofarUtils.keyName(aHWNode.name);
-                        if (aKeyName.equals("directionType")) {
-                            aHWNode.limits=itsBeamDirectionTypes.elementAt(i);
-                        } else if (aKeyName.equals("angle1")) {
-                            aHWNode.limits=itsBeamAngles1.elementAt(i);
-                        } else if (aKeyName.equals("angle2")) {
-                            aHWNode.limits=itsBeamAngles2.elementAt(i);
-                        } else if (aKeyName.equals("duration")) {
-                            aHWNode.limits=itsBeamDurations.elementAt(i);
-                        } else if (aKeyName.equals("startTime")) {
-                            aHWNode.limits=itsBeamStartTimes.elementAt(i);
-                        } else if (aKeyName.equals("subbandList")) {
-                            aHWNode.limits=itsBeamSubbandList.elementAt(i);
-                        } else if (aKeyName.equals("beamletList")) {
-                            aHWNode.limits=itsBeamBeamletList.elementAt(i);
-                        } else if (aKeyName.equals("momID")) {
-                            aHWNode.limits=itsBeamMomIDs.elementAt(i);
+                        Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+                        // get all the params per child
+                        Enumeration e1 = HWchilds.elements();
+                        while( e1.hasMoreElements()  ) {
+                            jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+                            String aKeyName = LofarUtils.keyName(aHWNode.name);
+                            if (aKeyName.equals("directionType")) {
+                                aHWNode.limits=itsBeamDirectionTypes.elementAt(i);
+                            } else if (aKeyName.equals("angle1")) {
+                                aHWNode.limits=itsBeamAngles1.elementAt(i);
+                            } else if (aKeyName.equals("angle2")) {
+                                aHWNode.limits=itsBeamAngles2.elementAt(i);
+                            } else if (aKeyName.equals("duration")) {
+                                aHWNode.limits=itsBeamDurations.elementAt(i);
+                            } else if (aKeyName.equals("startTime")) {
+                                aHWNode.limits=itsBeamStartTimes.elementAt(i);
+                            } else if (aKeyName.equals("subbandList")) {
+                                aHWNode.limits=itsBeamSubbandList.elementAt(i);
+                            } else if (aKeyName.equals("beamletList")) {
+                                aHWNode.limits=itsBeamBeamletList.elementAt(i);
+                            } else if (aKeyName.equals("momID")) {
+                                aHWNode.limits=itsBeamMomIDs.elementAt(i);
+                            }
+                            saveNode(aHWNode);
                         }
-                        saveNode(aHWNode);
                     }
                 }
+
+                // store new number of instances in baseSetting
+                aDefaultNode.instances=(short)(itsBeamDirectionTypes.size()-1); // - default at -1
+                saveNode(aDefaultNode);
+
+            } catch (RemoteException ex) {
+                logger.error("Error during duplication and save : " + ex);
+                return false;
             }
 
-            // store new number of instances in baseSetting
-            aDefaultNode.instances=(short)(itsBeamDirectionTypes.size()-1); // - default at -1
-            saveNode(aDefaultNode);
-
-        } catch (RemoteException ex) {
-            logger.error("Error during duplication and save : " + ex);
-            return false;
         }
 
-        // same for Analog Beams
-        // delete all Analog Beams from the table (excluding the Default one);
-        // Keep the 1st one, it's the default Analog Beam
-        try {
-            for (i=1; i< itsAnaBeams.size(); i++) {
-                OtdbRmi.getRemoteMaintenance().deleteNode(itsAnaBeams.elementAt(i));
+        if (itsAnaBeamConfigurationTableModel.changed()) {
+            // same for Analog Beams
+            // delete all Analog Beams from the table (excluding the Default one);
+            // Keep the 1st one, it's the default Analog Beam
+            int i=0;
+            try {
+                for (i=1; i< itsAnaBeams.size(); i++) {
+                    OtdbRmi.getRemoteMaintenance().deleteNode(itsAnaBeams.elementAt(i));
+                }
+            } catch (RemoteException ex) {
+                logger.error("Error during deletion of default analog beam node: "+ex);
+                return false;
             }
-        } catch (RemoteException ex) {
-            logger.error("Error during deletion of default analog beam node: "+ex);
-            return false;
-        }
 
-        // now that all Nodes are deleted we should collect the tables input and create new AnaBeams to save to the database.
-        itsAnaBeamConfigurationTableModel.getTable(itsAnaBeamDirectionTypes,itsAnaBeamAngles1,itsAnaBeamAngles2,
-                itsAnaBeamDurations,itsAnaBeamStartTimes,itsAnaBeamRanks);
-        // keep default Beams
-        aDefaultNode= itsAnaBeams.elementAt(0);
-        try {
-            // for all elements
-            for (i=1; i < itsAnaBeamDirectionTypes.size();i++) {
+            // now that all Nodes are deleted we should collect the tables input and create new AnaBeams to save to the database.
+            itsAnaBeamConfigurationTableModel.getTable(itsAnaBeamDirectionTypes,itsAnaBeamAngles1,itsAnaBeamAngles2,
+                    itsAnaBeamDurations,itsAnaBeamStartTimes,itsAnaBeamRanks);
+            // keep default Beams
+            jOTDBnode aDefaultNode= itsAnaBeams.elementAt(0);
+            try {
+                // for all elements
+                for (i=1; i < itsAnaBeamDirectionTypes.size();i++) {
 
-                // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
-                // with the values from the set fields and save the elements again
-                //
-                // Duplicates the given node (and its parameters and children)
-                int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultNode.nodeID(),(short)(i-1));
-                if (aN <= 0) {
-                    logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
-                } else {
-                    // we got a new duplicate whos children need to be filled with the settings from the panel.
-                    jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
-                    // store new duplicate in itsBeams.
-                    itsAnaBeams.add(aNode);
+                    // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
+                    // with the values from the set fields and save the elements again
+                    //
+                    // Duplicates the given node (and its parameters and children)
+                    int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultNode.nodeID(),(short)(i-1));
+                    if (aN <= 0) {
+                        logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
+                    } else {
+                        // we got a new duplicate whos children need to be filled with the settings from the panel.
+                        jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
+                        // store new duplicate in itsBeams.
+                        itsAnaBeams.add(aNode);
 
-                    Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-                    // get all the params per child
-                    Enumeration e1 = HWchilds.elements();
-                    while( e1.hasMoreElements()  ) {
-                        jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
-                        String aKeyName = LofarUtils.keyName(aHWNode.name);
-                        if (aKeyName.equals("directionType")) {
-                            aHWNode.limits=itsAnaBeamDirectionTypes.elementAt(i);
-                        } else if (aKeyName.equals("angle1")) {
-                            aHWNode.limits=itsAnaBeamAngles1.elementAt(i);
-                        } else if (aKeyName.equals("angle2")) {
-                            aHWNode.limits=itsAnaBeamAngles2.elementAt(i);
-                        } else if (aKeyName.equals("duration")) {
-                            aHWNode.limits=itsAnaBeamDurations.elementAt(i);
-                        } else if (aKeyName.equals("startTime")) {
-                            aHWNode.limits=itsAnaBeamStartTimes.elementAt(i);
-                        } else if (aKeyName.equals("rank")) {
-                            aHWNode.limits=itsAnaBeamRanks.elementAt(i);
+                        Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+                        // get all the params per child
+                        Enumeration e1 = HWchilds.elements();
+                        while( e1.hasMoreElements()  ) {
+                            jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+                            String aKeyName = LofarUtils.keyName(aHWNode.name);
+                            if (aKeyName.equals("directionType")) {
+                                aHWNode.limits=itsAnaBeamDirectionTypes.elementAt(i);
+                            } else if (aKeyName.equals("angle1")) {
+                                aHWNode.limits=itsAnaBeamAngles1.elementAt(i);
+                            } else if (aKeyName.equals("angle2")) {
+                                aHWNode.limits=itsAnaBeamAngles2.elementAt(i);
+                            } else if (aKeyName.equals("duration")) {
+                                aHWNode.limits=itsAnaBeamDurations.elementAt(i);
+                            } else if (aKeyName.equals("startTime")) {
+                                aHWNode.limits=itsAnaBeamStartTimes.elementAt(i);
+                            } else if (aKeyName.equals("rank")) {
+                                aHWNode.limits=itsAnaBeamRanks.elementAt(i);
+                            }
+                            saveNode(aHWNode);
                         }
-                        saveNode(aHWNode);
                     }
                 }
+
+                // store new number of instances in baseSetting
+                aDefaultNode.instances=(short)(itsAnaBeamDirectionTypes.size()-1); // - default at -1
+                saveNode(aDefaultNode);
+
+            } catch (RemoteException ex) {
+                logger.error("Error during duplication and save : " + ex);
+                return false;
             }
-
-            // store new number of instances in baseSetting
-            aDefaultNode.instances=(short)(itsAnaBeamDirectionTypes.size()-1); // - default at -1
-            saveNode(aDefaultNode);
-
-        } catch (RemoteException ex) {
-            logger.error("Error during duplication and save : " + ex);
-            return false;
         }
 
 
 
         // same for beamformer
-        i=0;
-        //delete all Beamformers from the table (excluding the Default one); 
+        if (itsBeamformerConfigurationTableModel.changed()) {
+            int i=0;
+            //delete all Beamformers from the table (excluding the Default one);
         
-        // Keep the 1st one, it's the default Beam
-        try {
-            for (i=1; i< itsBeamformers.size(); i++) {
-                OtdbRmi.getRemoteMaintenance().deleteNode(itsBeamformers.elementAt(i));  
-            }        
-        } catch (RemoteException ex) {
-            logger.error("Error during deletion of defaultNode: "+ex);
-            return false;
-        }  
-
-        itsBeamformerConfigurationTableModel.getTable(itsStations);
-        // keep default save
-        jOTDBnode aDefaultBFNode= itsBeamformers.elementAt(0);
-        // validate table
-        for (int j=0; j< itsStations.size(); j++) {
-            if (itsStations.get(j).equals("")) {
-                itsStations.remove(j);
+            // Keep the 1st one, it's the default Beam
+            try {
+                for (i=1; i< itsBeamformers.size(); i++) {
+                    OtdbRmi.getRemoteMaintenance().deleteNode(itsBeamformers.elementAt(i));
+                }
+            } catch (RemoteException ex) {
+                logger.error("Error during deletion of defaultNode: "+ex);
+                return false;
             }
-        }
-        try {
-            // for all elements
-            for (i=1; i < itsStations.size();i++) {
-        
-                // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
-                // with the values from the set fields and save the elements again
-                //
-                // Duplicates the given node (and its parameters and children)
-                int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultBFNode.nodeID(),(short)(i-1));
-                if (aN <= 0) {
-                    logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
-                } else {
-                    // we got a new duplicate whos children need to be filled with the settings from the panel.
-                    jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
-                    // store new duplicate in itsBeamformers.
-                    itsBeamformers.add(aNode);
-                
-                    Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-                    // get all the params per child
-                    Enumeration e1 = HWchilds.elements();
-                    while( e1.hasMoreElements()  ) {
-                        jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
-                        String aKeyName = LofarUtils.keyName(aHWNode.name);
-                        if (aKeyName.equals("stationList")) {
-                            aHWNode.limits=itsStations.elementAt(i);
-                        }
-                        saveNode(aHWNode);
-                    }
+
+            itsBeamformerConfigurationTableModel.getTable(itsStations);
+            // keep default save
+            jOTDBnode aDefaultBFNode= itsBeamformers.elementAt(0);
+            // validate table
+            for (int j=0; j< itsStations.size(); j++) {
+                if (itsStations.get(j).equals("")) {
+                    itsStations.remove(j);
                 }
             }
-            
-            // store new number of instances in baseSetting
-            aDefaultBFNode.instances=(short)(itsStations.size()-1); // - default at -1
-            saveNode(aDefaultBFNode);
+            try {
+                // for all elements
+                for (i=1; i < itsStations.size();i++) {
+        
+                    // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
+                    // with the values from the set fields and save the elements again
+                    //
+                    // Duplicates the given node (and its parameters and children)
+                    int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultBFNode.nodeID(),(short)(i-1));
+                    if (aN <= 0) {
+                        logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
+                    } else {
+                        // we got a new duplicate whos children need to be filled with the settings from the panel.
+                        jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
+                        // store new duplicate in itsBeamformers.
+                        itsBeamformers.add(aNode);
 
-        } catch (RemoteException ex) {
-            logger.error("Error during duplication and save : " + ex);
-            return false;
+                        Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+                        // get all the params per child
+                        Enumeration e1 = HWchilds.elements();
+                        while( e1.hasMoreElements()  ) {
+                            jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+                            String aKeyName = LofarUtils.keyName(aHWNode.name);
+                            if (aKeyName.equals("stationList")) {
+                                aHWNode.limits=itsStations.elementAt(i);
+                            }
+                            saveNode(aHWNode);
+                        }
+                    }
+                }
+            
+                // store new number of instances in baseSetting
+                aDefaultBFNode.instances=(short)(itsStations.size()-1); // - default at -1
+                saveNode(aDefaultBFNode);
+
+            } catch (RemoteException ex) {
+                logger.error("Error during duplication and save : " + ex);
+                return false;
+            }
         }
 
         // Virtual Instrument storageNodes

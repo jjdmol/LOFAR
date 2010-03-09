@@ -856,61 +856,63 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private void saveInput() {
         boolean hasChanged = false;
 
-        int i=1;
+        if (itsPencilConfigurationTableModel.changed()) {
+            int i=1;
 
-        //delete all Pencils from the table (excluding the Default one);
-        // Keep the 1st one, it's the default Pencil
-        try {
-            for (i=1; i< itsPencils.size(); i++) {
-                OtdbRmi.getRemoteMaintenance().deleteNode(itsPencils.elementAt(i));
+            //delete all Pencils from the table (excluding the Default one);
+            // Keep the 1st one, it's the default Pencil
+            try {
+                for (i=1; i< itsPencils.size(); i++) {
+                    OtdbRmi.getRemoteMaintenance().deleteNode(itsPencils.elementAt(i));
+                }
+            } catch (RemoteException ex) {
+                logger.error("Error during deletion of PencilNode: "+ex);
             }
-        } catch (RemoteException ex) {
-            logger.error("Error during deletion of PencilNode: "+ex);
-        }
 
-        // now that all Nodes are deleted we should collect the tables input and create new Beams to save to the database.
-        itsPencilConfigurationTableModel.getTable(itsAngle1,itsAngle2);
-        // keep default Beams
-        jOTDBnode aDefaultNode= itsPencils.elementAt(0);
-        try {
-            // for all elements
-            for (i=1; i < itsAngle1.size();i++) {
+            // now that all Nodes are deleted we should collect the tables input and create new Beams to save to the database.
+            itsPencilConfigurationTableModel.getTable(itsAngle1,itsAngle2);
+            // keep default Pencils
+            jOTDBnode aDefaultNode= itsPencils.elementAt(0);
+            try {
+                // for all elements
+                for (i=1; i < itsAngle1.size();i++) {
 
-                // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
-                // with the values from the set fields and save the elements again
-                //
-                // Duplicates the given node (and its parameters and children)
-                int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultNode.nodeID(),(short)(i-1));
-                if (aN <= 0) {
-                    logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
-                } else {
-                    // we got a new duplicate whos children need to be filled with the settings from the panel.
-                    jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
-                    // store new duplicate in itsPencilss.
-                    itsPencils.add(aNode);
+                    // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
+                    // with the values from the set fields and save the elements again
+                    //
+                    // Duplicates the given node (and its parameters and children)
+                    int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultNode.nodeID(),(short)(i-1));
+                    if (aN <= 0) {
+                        logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
+                    } else {
+                        // we got a new duplicate whos children need to be filled with the settings from the panel.
+                        jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
+                        // store new duplicate in itsPencilss.
+                        itsPencils.add(aNode);
 
-                    Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-                    // get all the params per child
-                    Enumeration e1 = HWchilds.elements();
-                    while( e1.hasMoreElements()  ) {
-                        jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
-                        String aKeyName = LofarUtils.keyName(aHWNode.name);
-                        if (aKeyName.equals("angle1")) {
-                            aHWNode.limits=itsAngle1.elementAt(i);
-                        } else if (aKeyName.equals("angle2")) {
-                            aHWNode.limits=itsAngle2.elementAt(i);
+                        Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+                        // get all the params per child
+                        Enumeration e1 = HWchilds.elements();
+                        while( e1.hasMoreElements()  ) {
+                            jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+                            String aKeyName = LofarUtils.keyName(aHWNode.name);
+                            if (aKeyName.equals("angle1")) {
+                                aHWNode.limits=itsAngle1.elementAt(i);
+                            } else if (aKeyName.equals("angle2")) {
+                                aHWNode.limits=itsAngle2.elementAt(i);
+                            }
+                            saveNode(aHWNode);
                         }
-                        saveNode(aHWNode);
                     }
                 }
+
+                // store new number of instances in baseSetting
+                aDefaultNode.instances=(short)(itsAngle1.size()-1); // - default at -1
+                saveNode(aDefaultNode);
+
+            } catch (RemoteException ex) {
+                logger.error("Error during duplication and save : " + ex);
             }
-
-            // store new number of instances in baseSetting
-            aDefaultNode.instances=(short)(itsAngle1.size()-1); // - default at -1
-            saveNode(aDefaultNode);
-
-        } catch (RemoteException ex) {
-            logger.error("Error during duplication and save : " + ex);
         }
 
         // Generic OLAP       

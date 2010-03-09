@@ -46,11 +46,14 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
     static String name = "TBBConfigurationTableModel";
     
     private String itsTreeType;
+
+    private boolean isChanged=false;
     
     
     /** Creates a new instance of TBBConfigurationTableModel */
     public TBBConfigurationTableModel() { 
         this.addColumn("mode");
+        this.addColumn("trigger");
         this.addColumn("base");
         this.addColumn("start");
         this.addColumn("stop");
@@ -68,6 +71,7 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
     /** fills the table with the initial settings
      *
      * @param  aMode          Vector<String> of all OperatingModes
+     * @param  aTrigger       Vector<String> of all TriggerModes
      * @param  aBase          Vector<String> of all Baselevels
      * @param  aStart         Vector<String> of all Startlevels
      * @param  aStop          Vector<String> of all Stoplevels
@@ -82,7 +86,7 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
      *
      * @return True if succes else False
      */
-     public boolean fillTable(String treeType,Vector<String> aMode,Vector<String> aBase,Vector<String> aStart, 
+     public boolean fillTable(String treeType,Vector<String> aMode,Vector<String> aTrigger,Vector<String> aBase,Vector<String> aStart,
                              Vector<String> aStop, Vector<String> aFilter, Vector<String> aWindow, Vector<String> aC0, 
                              Vector<String> aC1, Vector<String> aC2, Vector<String> aC3, Vector<String> aRCUs,
                              Vector<String> aSubbandList) {
@@ -90,7 +94,7 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
         itsTreeType=treeType;
         // "clear" the table
         setRowCount(0);
-        if (aMode==null||aBase==null||aStart==null||aStop==null||aFilter==null||aWindow==null||aC0==null||aC1==null||
+        if (aMode==null||aTrigger==null||aBase==null||aStart==null||aStop==null||aFilter==null||aWindow==null||aC0==null||aC1==null||
                 aC2==null||aC3==null||aRCUs==null) {
             logger.error("Error in fillTable, null value in input found.");
             return false;
@@ -104,6 +108,7 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
         }
         for (int i=0; i<length-offset; i++) {
             String[]  newRow = { aMode.elementAt(i+offset),
+                                 aTrigger.elementAt(i+offset),
                                  aBase.elementAt(i+offset),
                                  aStart.elementAt(i+offset),
                                  aStop.elementAt(i+offset),
@@ -117,6 +122,8 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
                                  aSubbandList.elementAt(i+offset)};
             this.addRow(newRow);
         }
+        // only initial settings added
+        isChanged=false;
         fireTableDataChanged();
         return true;    
     }
@@ -124,6 +131,7 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
     /** fills the table with the initial settings
      *
      * @param  aMode          Vector<String> of all OperatingModes
+     * @param  aTrigger       Vector<String> of all triggerModes
      * @param  aBase          Vector<String> of all Baselevels
      * @param  aStart         Vector<String> of all Startlevels
      * @param  aStop          Vector<String> of all Stoplevels
@@ -138,7 +146,7 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
      *
      * @return True if succes else False
      */
-     public boolean getTable(Vector<String> aMode,Vector<String> aBase,Vector<String> aStart, 
+     public boolean getTable(Vector<String> aMode,Vector<String> aTrigger,Vector<String> aBase,Vector<String> aStart,
                              Vector<String> aStop, Vector<String> aFilter, Vector<String> aWindow, Vector<String> aC0, 
                              Vector<String> aC1, Vector<String> aC2, Vector<String> aC3, Vector<String> aRCUs,
                              Vector<String> aSubbandList) {
@@ -148,6 +156,7 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
         // need to skip first entry because it is the default (dummy) TBBsetting
         // empty all elements except the default
         aMode.setSize(1);
+        aTrigger.setSize(1);
         aBase.setSize(1);
         aStart.setSize(1);
         aStop.setSize(1);
@@ -163,6 +172,7 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
         
         for (int i=0; i<getRowCount(); i++) {
             aMode.addElement((String)getValueAt(i,0));
+            aTrigger.addElement((String)getValueAt(i,0));
             aBase.addElement((String)getValueAt(i,1));
             aStart.addElement((String)getValueAt(i,2));
             aStop.addElement((String)getValueAt(i,3));
@@ -182,6 +192,7 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
     /**  Add an entry to the tableModel
      *
      * @param  aMode        String OperatingMode
+     * @param  aTrigger     String TriggerMode
      * @param  aBase        String Baselevel
      * @param  aStart       String Startlevel
      * @param  aStop        String Stoplevel
@@ -196,17 +207,18 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
      *
      * @return True if succes else False
      */
-    public boolean addRow(String aMode,String aBase,String aStart, String aStop, String aFilter, 
+    public boolean addRow(String aMode,String aTrigger,String aBase,String aStart, String aStop, String aFilter,
                           String aWindow,String aC0, String aC1, String aC2, String aC3, String aRCUs) {
       
-        if (aMode==null||aBase==null||aStart==null||aStop==null||aFilter==null||aWindow==null||aC0==null||aC1==null||
+        if (aMode==null||aTrigger==null||aBase==null||aStart==null||aStop==null||aFilter==null||aWindow==null||aC0==null||aC1==null||
                 aC2==null||aC3==null||aRCUs==null) {
             logger.error("Error in addRow, null value in input found.");
             return false;
         }
-        String[]  newRow = { aMode,aBase,aStart,aStop,aFilter,aWindow,aC0,aC1,aC2,aC3,aRCUs };
+        String[]  newRow = { aMode,aTrigger,aBase,aStart,aStop,aFilter,aWindow,aC0,aC1,aC2,aC3,aRCUs };
         this.addRow(newRow);
-        
+
+        isChanged=true;
         return true;
     }
     
@@ -229,10 +241,12 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
             this.setValueAt(newRow[9],row,9);
             this.setValueAt(newRow[10],row,10);
             this.setValueAt(newRow[11],row,11);
+            this.setValueAt(newRow[12],row,12);
         } else {
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
         }
+        isChanged=true;
         fireTableDataChanged();
         return true;
     }
@@ -256,7 +270,8 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
                                    (String)this.getValueAt(row,8),
                                    (String)this.getValueAt(row,9),
                                    (String)this.getValueAt(row,10),
-                                   (String)this.getValueAt(row,11)};
+                                   (String)this.getValueAt(row,11),
+                                   (String)this.getValueAt(row,12)};
             return selection;
         } else {
             return null;
@@ -264,6 +279,15 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
                                
     }
 
+    @Override
+    public void removeRow(int row) {
+        isChanged=true;
+        super.removeRow(row);
+    }
+
+    public boolean changed() {
+        return isChanged;
+    }
     /** returns the isEditable flag from the given row and column.
      *  we need to override this method, since originally all ros/colums from the DefaultTableModel are editable
      *
