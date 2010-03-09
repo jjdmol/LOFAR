@@ -330,7 +330,7 @@ class TimeFrequencyData
 		void SetIndividualPolarisationMasks(Mask2DCPtr xxMask, Mask2DCPtr yyMask)
 		{
 			if(_polarisationType != AutoDipolePolarisation)
-				throw BadUsageException("Trying to set four individual mask in non-dipole time frequency data");
+				throw BadUsageException("Trying to set two individual mask in non-dipole time frequency data");
 			_flagging.clear();
 			_flagging.push_back(xxMask);
 			_flagging.push_back(yyMask);

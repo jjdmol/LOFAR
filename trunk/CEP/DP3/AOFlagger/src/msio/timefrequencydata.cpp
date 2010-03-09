@@ -319,7 +319,17 @@ void TimeFrequencyData::JoinMask(const TimeFrequencyData &other)
 		Mask2DPtr mask = Mask2D::CreateCopy(_flagging[0]);
 		mask->Join(other.GetSingleMask());
 		_flagging[0] = mask;
-	} 
+	} else if(other._flagging.empty())
+	{
+		// Nothing to be done; other has no flags
+	}	else if(_flagging.empty())
+	{
+		for(std::vector<Mask2DCPtr>::const_iterator i=other._flagging.begin();
+			i!=other._flagging.end();++i)
+		{
+			_flagging.push_back(*i);
+		}
+	}
 	else
 		throw BadUsageException("Joining time frequency flagging with incompatible structures");
 }

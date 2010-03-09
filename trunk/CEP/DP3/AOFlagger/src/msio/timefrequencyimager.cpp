@@ -34,7 +34,6 @@ TimeFrequencyImager::TimeFrequencyImager(MeasurementSet &measurementSet)
 		_readXX(true), _readXY(true), _readYX(true), _readYY(true), _readStokesI(false),
 		_measurementSet(&measurementSet), _imageKind(Corrected), _sortedTable(0)
 {
-	std::cout << "A new TimeFrequencyImager was created." << std::endl;
 }
 
 TimeFrequencyImager::~TimeFrequencyImager()
