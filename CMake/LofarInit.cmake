@@ -52,11 +52,27 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
 
   set(LOFAR_INIT_INCLUDED TRUE)
 
-  # Root directory of the LOFAR source code tree
+  # Bail out if the user is doing an in-source build.
+  if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+    message(FATAL_ERROR 
+      "You've attempted to do an in-source build. Please remove the cache "
+      "file and re-run CMake outside your source tree.")
+  endif("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+
+  # Bail out if there's a cache file in the source directory.
+  if(EXISTS "${CMAKE_SOURCE_DIR}/CMakeCache.txt")
+    message(FATAL_ERROR 
+      "CMake found a cache file in your source tree. Please remove it "
+      "manually and re-run CMake outside your source tree.")
+  endif(EXISTS "${CMAKE_SOURCE_DIR}/CMakeCache.txt")
+
+  # Bail out if the top-level source directory name is not LOFAR
   if(NOT CMAKE_SOURCE_DIR MATCHES "/LOFAR$")
     message(FATAL_ERROR 
       "${CMAKE_SOURCE_DIR} is not inside the LOFAR source code tree!")
   endif(NOT CMAKE_SOURCE_DIR MATCHES "/LOFAR$")
+
+  # Root directory of the LOFAR source code tree
   set(LOFAR_ROOT ${CMAKE_SOURCE_DIR} CACHE INTERNAL "LOFAR root directory")
 
   # Here's where we keep our own CMake modules.
