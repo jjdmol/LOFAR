@@ -43,13 +43,11 @@
       <makebin>/usr/bin/make </makebin>
       <selectedenvironment>default</selectedenvironment>
       <environments>
-        <default>
-          <envvar value="1" name="VERBOSE" />
-        </default>
+        <default/>
       </environments>
       <prio>0</prio>
       <defaulttarget></defaulttarget>
-      <makeoptions></makeoptions>
+      <makeoptions>-s</makeoptions>
     </make>
     <blacklist/>
     <filetypes>

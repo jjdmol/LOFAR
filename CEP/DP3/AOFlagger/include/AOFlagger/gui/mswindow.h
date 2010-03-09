@@ -118,6 +118,7 @@ class MSWindow : public Gtk::Window {
 		void onQuit() { hide(); }
 		void onActionFileOpen();
 		void onActionDirectoryOpen();
+		void onActionDirectoryOpenForSpatial();
 		void onShowImagePlane();
 		void onAddToImagePlane();
 		void onClearAltFlagsPressed();

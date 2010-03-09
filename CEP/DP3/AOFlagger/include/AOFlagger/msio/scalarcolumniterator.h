@@ -29,22 +29,28 @@ template<typename T>
 class ScalarColumnIterator {
 	public:
 		ScalarColumnIterator(class casa::ROScalarColumn<T> &column, unsigned row) :
-			_column(column), _row(row)
+			_column(&column), _row(row)
 		{
 		}
 		ScalarColumnIterator(const ScalarColumnIterator<T> &source) :
 			_column(source._column), _row(source._row)
 		{ }
 		~ScalarColumnIterator() { }
+		ScalarColumnIterator &operator=(const ScalarColumnIterator<T> &source)
+		{
+			_column = source._column;
+			_row = source._row;
+			return *this;
+		}
 		ScalarColumnIterator<T> &operator++() {
 			_row++;
 			return *this;
 		}
 		T *operator->() const {
-			return _column(_row);
+			return (*_column)(_row);
 		}
 		T operator*() const {
-			return _column(_row);
+			return (*_column)(_row);
 		}
 		bool operator!=(const ScalarColumnIterator<T> &other) const {
 			return _row!=other._row;
@@ -61,7 +67,7 @@ class ScalarColumnIterator {
 			return ScalarColumnIterator<T>(column, 0);
 		}
 	private:
-		casa::ROScalarColumn<T> &_column;
+		casa::ROScalarColumn<T> *_column;
 		unsigned _row;
 };
 

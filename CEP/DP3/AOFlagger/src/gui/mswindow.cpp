@@ -25,6 +25,7 @@
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/inputdialog.h>
 
+#include <AOFlagger/msio/baselinematrixloader.h>
 #include <AOFlagger/msio/measurementset.h>
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/msio/timefrequencydata.h>
@@ -32,6 +33,7 @@
 
 #include <AOFlagger/rfi/strategy/artifactset.h>
 #include <AOFlagger/rfi/strategy/msimageset.h>
+#include <AOFlagger/rfi/strategy/spatialmsimageset.h>
 #include <AOFlagger/rfi/strategy/strategy.h>
 
 #include <AOFlagger/rfi/antennaflagcountplot.h>
@@ -105,7 +107,6 @@ MSWindow::~MSWindow()
 
 void MSWindow::onActionDirectoryOpen()
 {
-
   Gtk::FileChooserDialog dialog("Select a measurement set",
           Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
   dialog.set_transient_for(*this);
@@ -121,6 +122,24 @@ void MSWindow::onActionDirectoryOpen()
 		Gtk::Window *window = new MSOptionWindow(*this, dialog.get_filename());
 		window->show();
 		_subWindows.push_back(window);
+	}
+}
+
+void MSWindow::onActionDirectoryOpenForSpatial()
+{
+  Gtk::FileChooserDialog dialog("Select a measurement set",
+          Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+  dialog.set_transient_for(*this);
+
+  //Add response buttons the the dialog:
+  dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  dialog.add_button("Open", Gtk::RESPONSE_OK);
+
+  int result = dialog.run();
+
+  if(result == Gtk::RESPONSE_OK)
+	{
+		SetImageSet(new rfiStrategy::SpatialMSImageSet(dialog.get_filename()));
 	}
 }
 
@@ -367,6 +386,8 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onActionFileOpen) );
 	_actionGroup->add( Gtk::Action::create("OpenDirectory", Gtk::Stock::OPEN, "Open _directory"),
   sigc::mem_fun(*this, &MSWindow::onActionDirectoryOpen) );
+	_actionGroup->add( Gtk::Action::create("OpenDirectorySpatial", Gtk::Stock::OPEN, "Open _directory as spatial"),
+  sigc::mem_fun(*this, &MSWindow::onActionDirectoryOpenForSpatial) );
 	_actionGroup->add( Gtk::Action::create("OpenTestSet", "Open _testset") );
 
 	Gtk::RadioButtonGroup testSetGroup;
@@ -535,6 +556,7 @@ void MSWindow::createToolbar()
     "    <menu action='MenuFile'>"
     "      <menuitem action='OpenFile'/>"
     "      <menuitem action='OpenDirectory'/>"
+    "      <menuitem action='OpenDirectorySpatial'/>"
     "      <menu action='OpenTestSet'>"
 		"        <menuitem action='GaussianTestSets'/>"
 		"        <menuitem action='RayleighTestSets'/>"
@@ -1121,7 +1143,7 @@ void MSWindow::onGoToPressed()
 
 bool MSWindow::onTFWidgetMotion(GdkEventMotion* event)
 {
-	if(HasImage())
+	if(HasImage() && _metaData != 0)
 	{
 		Image2DCPtr image = _timeFrequencyWidget.Image();
 		size_t posX = (size_t) roundl((long double) event->x * image->Width() / _timeFrequencyWidget.get_width() - 0.5L);
