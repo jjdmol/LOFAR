@@ -55,6 +55,8 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
 
     private int offset=1;
 
+    private boolean isChanged=false;
+
     
     /** Creates a new instance of BeamConfigurationTableModel */
     public AnaBeamConfigurationTableModel() { 
@@ -123,6 +125,8 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
             
             this.addRow(newRow);
         }
+        // set isChanged to false, since it's the initial fill of the table.
+        isChanged=false;
         fireTableDataChanged();
         return true;    
     }
@@ -192,7 +196,8 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
 
         String[]  newRow = { aDirType,anAngle1,anAngle2,aRank};
         this.addRow(newRow);
-        
+
+        isChanged=true;
         return true;
     }
     
@@ -223,6 +228,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
         }
+        isChanged=true;
         fireTableDataChanged();
         return true;
     }
@@ -257,6 +263,11 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         itsDurations.remove(row+offset);
         itsStartTimes.remove(row+offset);
         itsRanks.remove(row+offset);
+        isChanged=true;
+    }
+
+    public boolean changed() {
+        return isChanged;
     }
 
 

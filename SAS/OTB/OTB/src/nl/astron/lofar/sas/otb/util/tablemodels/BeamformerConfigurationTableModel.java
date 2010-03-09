@@ -45,7 +45,8 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
     static Logger logger = Logger.getLogger(BeamformerConfigurationTableModel.class);
     static String name = "BeamConfigurationTableModel";
 
-    private String itsTreeType;    
+    private String itsTreeType;
+    private boolean isChanged=false;
     
     /** Creates a new instance of BeamConfigurationTableModel */
     public BeamformerConfigurationTableModel() { 
@@ -83,6 +84,8 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
             
             this.addRow(newRow);
         }
+        // set isChanged to false, since it's the initial fill of the table.
+        isChanged=false;
         fireTableDataChanged();
         return true;    
     }
@@ -122,7 +125,8 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
         }
         String[]  newRow = { Integer.toString(this.getRowCount()+1),stations};
         this.addRow(newRow);
-        
+        isChanged=true;
+
         return true;
     }
     
@@ -138,8 +142,15 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
         }
+        isChanged=true;
         fireTableDataChanged();
         return true;
+    }
+
+    @Override
+    public void removeRow(int row) {
+        isChanged=true;
+        super.removeRow(row);
     }
     
     /** get the values from the given row
@@ -158,6 +169,9 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
                                
     }
     
+    public boolean changed() {
+        return isChanged;
+    }
 
     /** returns the isEditable flag from the given row and column.
      *  we need to override this method, since originally all ros/colums from the DefaultTableModel are editable

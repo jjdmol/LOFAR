@@ -45,7 +45,9 @@ public class PencilConfigurationTableModel extends javax.swing.table.DefaultTabl
     static Logger logger = Logger.getLogger(PencilConfigurationTableModel.class);
     static String name = "PencilConfigurationTableModel";
 
-    private String itsTreeType;    
+    private String itsTreeType;
+
+    private boolean isChanged=false;
     
     /** Creates a new instance of BeamConfigurationTableModel */
     public PencilConfigurationTableModel() {
@@ -85,6 +87,9 @@ public class PencilConfigurationTableModel extends javax.swing.table.DefaultTabl
             
             this.addRow(newRow);
         }
+        
+        // initial settings done
+        isChanged=false;
         fireTableDataChanged();
         return true;    
     }
@@ -128,7 +133,8 @@ public class PencilConfigurationTableModel extends javax.swing.table.DefaultTabl
         }
         String[]  newRow = { anAngle1,anAngle2};
         this.addRow(newRow);
-        
+
+        isChanged=true;
         return true;
     }
     
@@ -145,6 +151,7 @@ public class PencilConfigurationTableModel extends javax.swing.table.DefaultTabl
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
         }
+        isChanged=true;
         fireTableDataChanged();
         return true;
     }
@@ -164,6 +171,16 @@ public class PencilConfigurationTableModel extends javax.swing.table.DefaultTabl
             return null;
         }
                                
+    }
+
+    @Override
+    public void removeRow(int row) {
+        isChanged=true;
+        super.removeRow(row);
+    }
+
+    public boolean changed() {
+        return isChanged;
     }
 
     /** returns the isEditable flag from the given row and column.

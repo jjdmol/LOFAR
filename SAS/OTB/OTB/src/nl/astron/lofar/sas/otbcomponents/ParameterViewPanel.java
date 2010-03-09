@@ -27,9 +27,9 @@ import java.awt.Component;
 import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.TreeMap;
-import java.util.logging.Level;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import nl.astron.lofar.lofarutils.LofarUtils;
@@ -123,7 +123,16 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
             itsNode = (jOTDBnode)anObject;
             try {
                 // refresh the node (it could have been altered meanwhile)
+                // in the case of nodes that have multiple instances it is possible that a save has
+                // thrown away the old instances and created new ones.
+                // in that case a user might have clicked on an "old" instance that now is away in the database.
+                // then getNode will return and empty Node with ID's seet to 0
                 itsNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(), itsNode.nodeID());
+                if (itsNode.nodeID()== 0) {
+             // create an Info popup.
+                    JOptionPane.showMessageDialog(this,"This node has been deleted, please refresh tree!!","Warning",JOptionPane.WARNING_MESSAGE);
+                    itsNode=null;
+                }
             } catch (RemoteException ex) {
                 logger.debug("Error during getNode: "+ ex);
                 itsParam=null;

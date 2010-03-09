@@ -274,10 +274,10 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         inputStoplevel.setEnabled(enabled);
         inputFilter.setEnabled(enabled);
         inputWindow.setEnabled(enabled);
-        inputC0.setEnabled(enabled);
-        inputC1.setEnabled(enabled);
-        inputC2.setEnabled(enabled);
-        inputC3.setEnabled(enabled);
+        inputCoeff0.setEnabled(enabled);
+        inputCoeff1.setEnabled(enabled);
+        inputCoeff2.setEnabled(enabled);
+        inputCoeff3.setEnabled(enabled);
         inputRCUs.setEnabled(enabled);
         inputSubbandList.setEnabled(enabled);
     }
@@ -325,6 +325,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         TBBConfigurationPanel.setTableModel(itsTBBConfigurationTableModel);
         TBBConfigurationPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         TBBConfigurationPanel.setColumnSize("mode",8);
+        TBBConfigurationPanel.setColumnSize("trigger",8);
         TBBConfigurationPanel.setColumnSize("base",8);
         TBBConfigurationPanel.setColumnSize("start",8);
         TBBConfigurationPanel.setColumnSize("stop",8);
@@ -413,6 +414,13 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             }
             itsOperatingModes.add(aNode.limits);
             
+        } else if (aKeyName.equals("triggerMode")) {
+            // TriggerMode
+            if (!isInitialized) {
+               inputTriggerMode.setToolTipText(aParam.description);
+               LofarUtils.setPopupComboChoices(inputTriggerMode,aParam.limits);
+            }
+            itsTriggerModes.add(aNode.limits);
         } else if (aKeyName.equals("baselevel")) {
             // Baselevel
             if (!isInitialized) {
@@ -465,48 +473,48 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             }
             itsWindows.add(aNode.limits);
 
-        } else if (aKeyName.equals("C0")) {
+        } else if (aKeyName.equals("coeff0")) {
             // Coeff0
             if (!isInitialized) {
-               inputC0.setToolTipText(aParam.description);
+               inputCoeff0.setToolTipText(aParam.description);
             }
             if (isRef && aParam != null) {
-                itsC0s.add(aNode.limits + " : " + aParam.limits);
+                itsCoeff0s.add(aNode.limits + " : " + aParam.limits);
             } else {
-                itsC0s.add(aNode.limits);
+                itsCoeff0s.add(aNode.limits);
             }
             
-        } else if (aKeyName.equals("C1")) {
+        } else if (aKeyName.equals("coeff1")) {
             // Coeff1
             if (!isInitialized) {
-               inputC1.setToolTipText(aParam.description);
+               inputCoeff1.setToolTipText(aParam.description);
             }
             if (isRef && aParam != null) {
-                itsC1s.add(aNode.limits + " : " + aParam.limits);
+                itsCoeff1s.add(aNode.limits + " : " + aParam.limits);
             } else {
-                itsC1s.add(aNode.limits);
+                itsCoeff1s.add(aNode.limits);
             }
             
-        } else if (aKeyName.equals("C2")) {
+        } else if (aKeyName.equals("coeff2")) {
             // Coeff2
             if (!isInitialized) {
-               inputC2.setToolTipText(aParam.description);
+               inputCoeff2.setToolTipText(aParam.description);
             }
             if (isRef && aParam != null) {
-                itsC2s.add(aNode.limits + " : " + aParam.limits);
+                itsCoeff2s.add(aNode.limits + " : " + aParam.limits);
             } else {
-                itsC2s.add(aNode.limits);
+                itsCoeff2s.add(aNode.limits);
             }
             
-        } else if (aKeyName.equals("C3")) {
+        } else if (aKeyName.equals("coeff3")) {
             // Coeff3
             if (!isInitialized) {
-               inputC3.setToolTipText(aParam.description);
+               inputCoeff3.setToolTipText(aParam.description);
             }
             if (isRef && aParam != null) {
-                itsC3s.add(aNode.limits + " : " + aParam.limits);
+                itsCoeff3s.add(aNode.limits + " : " + aParam.limits);
             } else {
-                itsC3s.add(aNode.limits);
+                itsCoeff3s.add(aNode.limits);
             }
             
         } else if (aKeyName.equals("RCUs")) {
@@ -544,7 +552,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         }
 
         // set table back to initial values
-        itsTBBConfigurationTableModel.fillTable(itsTreeType,itsOperatingModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsC0s,itsC1s,itsC2s,itsC3s,itsRCUs,itsSubbandList);
+        itsTBBConfigurationTableModel.fillTable(itsTreeType,itsOperatingModes,itsTriggerModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsCoeff0s,itsCoeff1s,itsCoeff2s,itsCoeff3s,itsRCUs,itsSubbandList);
         
         buttonPanel1.setButtonEnabled("Restore",false);
         buttonPanel1.setButtonEnabled("Apply",false);
@@ -565,6 +573,10 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         if (!itsOperatingModes.elementAt(index).equals("")) {
            inputOperatingMode.setSelectedItem(itsOperatingModes.elementAt(index));
         }
+        // TriggerMode
+        if (!itsTriggerModes.elementAt(index).equals("")) {
+           inputTriggerMode.setSelectedItem(itsTriggerModes.elementAt(index));
+        }
         // Baselevel
          inputBaselevel.setText(itsBaselevels.elementAt(index));
             
@@ -583,16 +595,16 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
          }
             
          // Coeff0
-         inputC0.setText(itsC0s.elementAt(index));
+         inputCoeff0.setText(itsCoeff0s.elementAt(index));
 
          // Coeff1
-         inputC1.setText(itsC1s.elementAt(index));
+         inputCoeff1.setText(itsCoeff1s.elementAt(index));
 
          // Coeff2
-         inputC2.setText(itsC2s.elementAt(index));
+         inputCoeff2.setText(itsCoeff2s.elementAt(index));
 
          // Coeff3
-         inputC3.setText(itsC3s.elementAt(index));
+         inputCoeff3.setText(itsCoeff3s.elementAt(index));
 
          // RCUs
          inputRCUs.setText(itsRCUs.elementAt(index));
@@ -683,27 +695,27 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         }
         
         // Coeff0
-        if (Integer.valueOf(inputC0.getText())<0 || Integer.valueOf(inputC0.getText())>65535) {
+        if (Integer.valueOf(inputCoeff0.getText())<0 || Integer.valueOf(inputCoeff0.getText())>65535) {
             error=true;
-            errorMsg += "C0 \n";
+            errorMsg += "Coeff0 \n";
         }
         
         // Coeff1
-        if (Integer.valueOf(inputC1.getText())<0 || Integer.valueOf(inputC1.getText())>65535) {
+        if (Integer.valueOf(inputCoeff1.getText())<0 || Integer.valueOf(inputCoeff1.getText())>65535) {
             error=true;
-            errorMsg += "C1 \n";
+            errorMsg += "Coeff1 \n";
         }
         
         // Coeff2
-        if (Integer.valueOf(inputC2.getText())<0 || Integer.valueOf(inputC2.getText())>65535) {
+        if (Integer.valueOf(inputCoeff2.getText())<0 || Integer.valueOf(inputCoeff2.getText())>65535) {
             error=true;
-            errorMsg += "C2 \n";
+            errorMsg += "Coeff2 \n";
         }
         
         // Coeff3
-        if (Integer.valueOf(inputC3.getText())<0 || Integer.valueOf(inputC3.getText())>65535) {
+        if (Integer.valueOf(inputCoeff3.getText())<0 || Integer.valueOf(inputCoeff3.getText())>65535) {
             error=true;
-            errorMsg += "C3 \n";
+            errorMsg += "Coeff3 \n";
         }
         
         // RCUs
@@ -775,15 +787,16 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         
         // check if we are editting an entry or adding a new entry
         String[] newRow = {inputOperatingMode.getSelectedItem().toString(),
+                           inputTriggerMode.getSelectedItem().toString(),
                            inputBaselevel.getText(),
                            inputStartlevel.getText(),
                            inputStoplevel.getText(),
                            inputFilter.getText(),
                            inputWindow.getSelectedItem().toString(),
-                           inputC0.getText(),
-                           inputC1.getText(),
-                           inputC2.getText(),
-                           inputC3.getText(),
+                           inputCoeff0.getText(),
+                           inputCoeff1.getText(),
+                           inputCoeff2.getText(),
+                           inputCoeff3.getText(),
                            inputRCUs.getText(),
                            inputSubbandList.getText()
         };
@@ -822,91 +835,96 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     /** delete all old TBBsettings, and save new table back to the database
      */
     private boolean save() {
+
+        if (itsTBBConfigurationTableModel.changed()) {
+            int i=0;
+            //delete all TBBsettings from the table (excluding the Default one);
         
-        int i=0;
-        //delete all TBBsettings from the table (excluding the Default one); 
+            // Keep the 1st one, it's the default TBBsetting
+            try {
+                for (i=1; i< itsTBBsettings.size(); i++) {
+                    OtdbRmi.getRemoteMaintenance().deleteNode(itsTBBsettings.elementAt(i));
+                }
+            } catch (RemoteException ex) {
+                logger.error("Error during deletion of defaultNode: "+ex);
+                return false;
+            }
         
-        // Keep the 1st one, it's the default TBBsetting
-        try {
-            for (i=1; i< itsTBBsettings.size(); i++) {
-                OtdbRmi.getRemoteMaintenance().deleteNode(itsTBBsettings.elementAt(i));  
-            }        
-        } catch (RemoteException ex) {
-            logger.error("Error during deletion of defaultNode: "+ex);
-            return false;
-        }  
+            // now that all Nodes are deleted we should collect the tables input and create new TBBsettings to save to the database.
         
-        // now that all Nodes are deleted we should collect the tables input and create new TBBsettings to save to the database.
+            itsTBBConfigurationTableModel.getTable(itsOperatingModes,itsTriggerModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsCoeff0s,itsCoeff1s,itsCoeff2s,itsCoeff3s,itsRCUs,itsSubbandList);
+            itsTBBsettings.clear();
         
-        itsTBBConfigurationTableModel.getTable(itsOperatingModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsC0s,itsC1s,itsC2s,itsC3s,itsRCUs,itsSubbandList);
-        itsTBBsettings.clear();
+            try {
+                // for all elements
+                for (i=1; i < itsCoeff0s.size();i++) {
         
-        try {
-            // for all elements
-            for (i=1; i < itsC0s.size();i++) {
-        
-                // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
-                // with the values from the set fields and save the elements again
-                //
-                // Duplicates the given node (and its parameters and children)
-                int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),itsDefaultNode.nodeID(),(short)(i-1));
-                if (aN <= 0) {
-                    logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
-                } else {
-                    // we got a new duplicate whos children need to be filled with the settings from the panel.
-                    jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
-                    // store new duplicate in itsTBBsettings.
-                    itsTBBsettings.add(aNode);
-                
-                    Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-                    // get all the params per child
-                    Enumeration e1 = HWchilds.elements();
-                    while( e1.hasMoreElements()  ) {
-                        jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
-                        String aKeyName = LofarUtils.keyName(aHWNode.name);
-                        if (aKeyName.equals("operatingMode")) {
-                            aHWNode.limits=itsOperatingModes.elementAt(i);
-                        } else if (aKeyName.equals("baselevel")) {
-                            aHWNode.limits=itsBaselevels.elementAt(i);
-                        } else if (aKeyName.equals("startlevel")) {
-                            aHWNode.limits=itsStartlevels.elementAt(i);
-                        } else if (aKeyName.equals("stoplevel")) {
-                            aHWNode.limits=itsStoplevels.elementAt(i);
-                        } else if (aKeyName.equals("filter")) {
-                            aHWNode.limits=itsFilters.elementAt(i);
-                        } else if (aKeyName.equals("window")) {
-                            aHWNode.limits=itsWindows.elementAt(i);
-                        } else if (aKeyName.equals("C0")) {
-                            aHWNode.limits=itsC0s.elementAt(i);
-                        } else if (aKeyName.equals("C1")) {
-                            aHWNode.limits=itsC1s.elementAt(i);
-                        } else if (aKeyName.equals("C2")) {
-                            aHWNode.limits=itsC2s.elementAt(i);
-                        } else if (aKeyName.equals("C3")) {
-                            aHWNode.limits=itsC3s.elementAt(i);
-                        } else if (aKeyName.equals("RCUs")) {
-                            aHWNode.limits=itsRCUs.elementAt(i);
-                        } else if (aKeyName.equals("subbandList")) {
-                            aHWNode.limits=itsSubbandList.elementAt(i);
+                    // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
+                    // with the values from the set fields and save the elements again
+                    //
+                    // Duplicates the given node (and its parameters and children)
+                    int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),itsDefaultNode.nodeID(),(short)(i-1));
+                    if (aN <= 0) {
+                        logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
+                    } else {
+                        // we got a new duplicate whos children need to be filled with the settings from the panel.
+                        jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
+                        // store new duplicate in itsTBBsettings.
+                        itsTBBsettings.add(aNode);
+
+                        Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+                        // get all the params per child
+                        Enumeration e1 = HWchilds.elements();
+                        while( e1.hasMoreElements()  ) {
+                            jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+                            String aKeyName = LofarUtils.keyName(aHWNode.name);
+                            if (aKeyName.equals("operatingMode")) {
+                                aHWNode.limits=itsOperatingModes.elementAt(i);
+                            } else if (aKeyName.equals("triggerMode")) {
+                                aHWNode.limits=itsTriggerModes.elementAt(i);
+                            } else if (aKeyName.equals("baselevel")) {
+                                aHWNode.limits=itsBaselevels.elementAt(i);
+                            } else if (aKeyName.equals("startlevel")) {
+                                aHWNode.limits=itsStartlevels.elementAt(i);
+                            } else if (aKeyName.equals("stoplevel")) {
+                                aHWNode.limits=itsStoplevels.elementAt(i);
+                            } else if (aKeyName.equals("filter")) {
+                                aHWNode.limits=itsFilters.elementAt(i);
+                            } else if (aKeyName.equals("window")) {
+                                aHWNode.limits=itsWindows.elementAt(i);
+                            } else if (aKeyName.equals("coeff0")) {
+                                aHWNode.limits=itsCoeff0s.elementAt(i);
+                            } else if (aKeyName.equals("coeff1")) {
+                                aHWNode.limits=itsCoeff1s.elementAt(i);
+                            } else if (aKeyName.equals("coeff2")) {
+                                aHWNode.limits=itsCoeff2s.elementAt(i);
+                            } else if (aKeyName.equals("coeff3")) {
+                                aHWNode.limits=itsCoeff3s.elementAt(i);
+                            } else if (aKeyName.equals("RCUs")) {
+                                aHWNode.limits=itsRCUs.elementAt(i);
+                            } else if (aKeyName.equals("subbandList")) {
+                                aHWNode.limits=itsSubbandList.elementAt(i);
+                            }
+                            saveNode(aHWNode);
                         }
-                        saveNode(aHWNode);
                     }
                 }
-            }
-            
-            // store new number of instances in baseSetting
-            itsDefaultNode.instances=(short)(itsC0s.size()-1); // - default at 0
-            saveNode(itsDefaultNode);
 
-            // reset all buttons, flags and tables to initial start position. So the panel now reflects the new, saved situation
-            initPanel();
             
-            itsMainFrame.setChanged("Template_Maintenance("+itsNode.treeID()+")" ,true);
-            itsMainFrame.checkChanged("Template_Maintenance("+itsNode.treeID()+")");
+                // store new number of instances in baseSetting
+                itsDefaultNode.instances=(short)(itsCoeff0s.size()-1); // - default at 0
+                saveNode(itsDefaultNode);
+
+                // reset all buttons, flags and tables to initial start position. So the panel now reflects the new, saved situation
+                initPanel();
             
-        } catch (RemoteException ex) {
-            logger.error("Error during duplication and save : " + ex);
-            return false;
+                itsMainFrame.setChanged("Template_Maintenance("+itsNode.treeID()+")" ,true);
+                itsMainFrame.checkChanged("Template_Maintenance("+itsNode.treeID()+")");
+            
+            } catch (RemoteException ex) {
+                logger.error("Error during duplication and save : " + ex);
+                return false;
+            }
         }
         return true;
     }
@@ -920,41 +938,43 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         if (!selection[0].equals("")) {
            inputOperatingMode.setSelectedItem(selection[0]);
         }
-        
+        // TriggerMode
+        inputTriggerMode.setSelectedItem(selection[1]);
+
         // Baselevel
-         inputBaselevel.setText(selection[1]);
+        inputBaselevel.setText(selection[2]);
             
          // Startlevel
-         inputStartlevel.setText(selection[2]);
+         inputStartlevel.setText(selection[3]);
  
          // Stoplevel
-         inputStoplevel.setText(selection[3]);
+         inputStoplevel.setText(selection[4]);
             
          // Filter
-         inputFilter.setText(selection[4]);
+         inputFilter.setText(selection[5]);
 
          // Window
-         if (!(selection[5]).equals("")) {
-            inputWindow.setSelectedItem(selection[5]);
+         if (!(selection[6]).equals("")) {
+            inputWindow.setSelectedItem(selection[6]);
          }
             
          // Coeff0
-         inputC0.setText(selection[6]);
+         inputCoeff0.setText(selection[7]);
 
          // Coeff1
-         inputC1.setText(selection[7]);
+         inputCoeff1.setText(selection[8]);
 
          // Coeff2
-         inputC2.setText(selection[8]);
+         inputCoeff2.setText(selection[9]);
 
          // Coeff3
-         inputC3.setText(selection[9]);
+         inputCoeff3.setText(selection[10]);
 
          // RCUs
-         inputRCUs.setText(selection[10]);        
+         inputRCUs.setText(selection[11]);
 
          // subbandList
-         inputSubbandList.setText(selection[11]);
+         inputSubbandList.setText(selection[12]);
     }
         
     /** Edit chosen configuration.
@@ -973,7 +993,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         }
         
         // keep old RCUs
-        itsSavedRCUs=selection[10];
+        itsSavedRCUs=selection[11];
         
         //fill table with entry to be editted
         // 0 in lists represent default
@@ -992,7 +1012,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private void deleteConfig() {
         int row = TBBConfigurationPanel.getSelectedRow();
         // if removed then the old RCU's should be removed form the checklist also
-        String oldRCUs = itsTBBConfigurationTableModel.getSelection(row)[10];
+        String oldRCUs = itsTBBConfigurationTableModel.getSelection(row)[11];
         BitSet rcuSet = rcuToBitSet(LofarUtils.expandedArrayString(oldRCUs));
         
         if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this configuration ?","Delete Configuration",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
@@ -1035,10 +1055,10 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         labelStoplevel = new javax.swing.JLabel();
         labelFilter = new javax.swing.JLabel();
         labelWindow = new javax.swing.JLabel();
-        labelC0 = new javax.swing.JLabel();
-        labelC1 = new javax.swing.JLabel();
-        labelC2 = new javax.swing.JLabel();
-        labelC3 = new javax.swing.JLabel();
+        labelCoeff0 = new javax.swing.JLabel();
+        labelCoeff1 = new javax.swing.JLabel();
+        labelCoeff2 = new javax.swing.JLabel();
+        labelCoeff3 = new javax.swing.JLabel();
         labelRCUs = new javax.swing.JLabel();
         inputOperatingMode = new javax.swing.JComboBox();
         inputBaselevel = new javax.swing.JTextField();
@@ -1046,28 +1066,30 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         inputStoplevel = new javax.swing.JTextField();
         inputFilter = new javax.swing.JTextField();
         inputWindow = new javax.swing.JComboBox();
-        inputC0 = new javax.swing.JTextField();
-        inputC1 = new javax.swing.JTextField();
-        inputC2 = new javax.swing.JTextField();
-        inputC3 = new javax.swing.JTextField();
+        inputCoeff0 = new javax.swing.JTextField();
+        inputCoeff1 = new javax.swing.JTextField();
+        inputCoeff2 = new javax.swing.JTextField();
+        inputCoeff3 = new javax.swing.JTextField();
         inputRCUs = new javax.swing.JTextField();
         limitsBaselevel = new javax.swing.JLabel();
         limitsStartlevel = new javax.swing.JLabel();
         limitsStoplevel = new javax.swing.JLabel();
         limitsFilter = new javax.swing.JLabel();
-        limitsC0 = new javax.swing.JLabel();
-        limitsC1 = new javax.swing.JLabel();
-        limitsC2 = new javax.swing.JLabel();
-        limitsC3 = new javax.swing.JLabel();
+        limitsCoeff0 = new javax.swing.JLabel();
+        limitsCoeff1 = new javax.swing.JLabel();
+        limitsCoeff2 = new javax.swing.JLabel();
+        limitsCoeff3 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         editConfigButton = new javax.swing.JButton();
-        deleteConfigButton = new javax.swing.JButton();
         addConfigButton = new javax.swing.JButton();
+        deleteConfigButton = new javax.swing.JButton();
         cancelEditButton = new javax.swing.JButton();
         cancelEditButton.setVisible(false);
         TBBConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         labelSubbandList = new javax.swing.JLabel();
         inputSubbandList = new javax.swing.JTextField();
+        labelTriggerMode = new javax.swing.JLabel();
+        inputTriggerMode = new javax.swing.JComboBox();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setMinimumSize(new java.awt.Dimension(800, 400));
@@ -1082,7 +1104,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1036, Short.MAX_VALUE)
+            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1169, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1107,17 +1129,17 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
 
         labelWindow.setText("window:");
 
-        labelC0.setText("C0:");
+        labelCoeff0.setText("coeff0:");
 
-        labelC1.setText("C1:");
+        labelCoeff1.setText("coeff1:");
 
-        labelC2.setText("C2:");
+        labelCoeff2.setText("coeff2:");
 
-        labelC3.setText("C3:");
+        labelCoeff3.setText("coeff3:");
 
         labelRCUs.setText("RCUs:");
 
-        inputOperatingMode.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "1", "2" }));
+        inputOperatingMode.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Transient Detection", "Subband Data", " " }));
         inputOperatingMode.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
@@ -1155,25 +1177,25 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             }
         });
 
-        inputC0.addActionListener(new java.awt.event.ActionListener() {
+        inputCoeff0.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
 
-        inputC1.addActionListener(new java.awt.event.ActionListener() {
+        inputCoeff1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
 
-        inputC2.addActionListener(new java.awt.event.ActionListener() {
+        inputCoeff2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
 
-        inputC3.addActionListener(new java.awt.event.ActionListener() {
+        inputCoeff3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
@@ -1193,13 +1215,13 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
 
         limitsFilter.setText("(1-255)");
 
-        limitsC0.setText("(0-65535)");
+        limitsCoeff0.setText("(0-65535)");
 
-        limitsC1.setText("(0-65535)");
+        limitsCoeff1.setText("(0-65535)");
 
-        limitsC2.setText("(0-65535)");
+        limitsCoeff2.setText("(0-65535)");
 
-        limitsC3.setText("(0-65535)");
+        limitsCoeff3.setText("(0-65535)");
 
         jLabel2.setText("Current configurations");
 
@@ -1212,20 +1234,20 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             }
         });
 
+        addConfigButton.setText("Apply Configuration");
+        addConfigButton.setToolTipText("add composed Configuration to table");
+        addConfigButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addConfigButtonActionPerformed(evt);
+            }
+        });
+
         deleteConfigButton.setText("Delete Configuration");
         deleteConfigButton.setToolTipText("delete the selected configuration from the table");
         deleteConfigButton.setEnabled(false);
         deleteConfigButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 deleteConfigButtonActionPerformed(evt);
-            }
-        });
-
-        addConfigButton.setText("Apply Configuration");
-        addConfigButton.setToolTipText("add composed Configuration to table");
-        addConfigButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                addConfigButtonActionPerformed(evt);
             }
         });
 
@@ -1251,68 +1273,86 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             }
         });
 
+        labelTriggerMode.setText("triggerMode:");
+
+        inputTriggerMode.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "One-shot normal", "Continues normal", "One-shot external", "Continue external", "" }));
+        inputTriggerMode.setSelectedItem("Continues normal");
+        inputTriggerMode.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                inputTriggerModeinputActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(labelCoeff2, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(cancelEditButton)
-                        .addGap(9, 9, 9)
-                        .addComponent(addConfigButton))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(labelC2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(labelC1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(labelC0, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(labelWindow, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(labelFilter, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(labelStoplevel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(labelBaselevel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(labelOperatingMode, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(labelStartlevel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(labelC3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(labelRCUs, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(labelSubbandList, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(labelBaselevel, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                            .addComponent(labelOperatingMode, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                            .addComponent(labelTriggerMode, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                            .addComponent(labelStartlevel, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                            .addComponent(labelFilter, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                            .addComponent(labelWindow, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                            .addComponent(labelStoplevel, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                            .addComponent(labelCoeff0, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                            .addComponent(labelCoeff1, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                            .addComponent(labelCoeff3, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                            .addComponent(labelRCUs, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                            .addComponent(labelSubbandList, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE))
+                        .addGap(10, 10, 10)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(inputC3)
-                                    .addComponent(inputC2)
-                                    .addComponent(inputC1)
-                                    .addComponent(inputC0)
-                                    .addComponent(inputWindow, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(inputFilter)
-                                    .addComponent(inputStoplevel)
-                                    .addComponent(inputStartlevel)
-                                    .addComponent(inputBaselevel)
-                                    .addComponent(inputOperatingMode, 0, 67, Short.MAX_VALUE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(limitsC3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(limitsC2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(limitsC1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(limitsBaselevel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(limitsStartlevel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(limitsStoplevel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(limitsFilter, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(limitsC0, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(inputStartlevel, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                                    .addComponent(inputBaselevel, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                                    .addComponent(inputStoplevel, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                                    .addComponent(inputFilter, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                                    .addComponent(inputWindow, 0, 146, Short.MAX_VALUE)
+                                    .addComponent(inputCoeff0, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                                    .addComponent(inputCoeff1, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                                    .addComponent(inputTriggerMode, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(inputOperatingMode, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(inputCoeff2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                                    .addComponent(inputCoeff3, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addGroup(jPanel2Layout.createSequentialGroup()
-                                        .addGap(246, 246, 246)
-                                        .addComponent(editConfigButton)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(deleteConfigButton))
-                                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(TBBConfigurationPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 806, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 18, Short.MAX_VALUE))
-                            .addComponent(inputRCUs, javax.swing.GroupLayout.DEFAULT_SIZE, 949, Short.MAX_VALUE)
-                            .addComponent(inputSubbandList, javax.swing.GroupLayout.DEFAULT_SIZE, 949, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                            .addComponent(limitsCoeff2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
+                                            .addComponent(limitsCoeff1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
+                                            .addComponent(limitsCoeff0, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
+                                            .addComponent(limitsBaselevel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
+                                            .addComponent(limitsStartlevel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
+                                            .addComponent(limitsStoplevel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
+                                            .addComponent(limitsFilter, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE))
+                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                                .addGap(310, 310, 310)
+                                                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGap(322, 322, 322))
+                                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                                        .addComponent(editConfigButton)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(deleteConfigButton)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(addConfigButton)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(cancelEditButton))
+                                                    .addComponent(TBBConfigurationPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 830, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addGap(18, 18, 18))))
+                                    .addComponent(limitsCoeff3)))
+                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                .addComponent(inputSubbandList, javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(inputRCUs, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 1040, Short.MAX_VALUE)))))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -1320,25 +1360,31 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
                     .addComponent(labelOperatingMode)
-                    .addComponent(inputOperatingMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(inputOperatingMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(labelBaselevel)
-                            .addComponent(inputBaselevel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(6, 6, 6)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(labelTriggerMode)
+                                    .addComponent(inputTriggerMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(labelBaselevel)
+                                    .addComponent(inputBaselevel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                             .addComponent(limitsBaselevel))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(labelStartlevel)
                             .addComponent(inputStartlevel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(limitsStartlevel))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGap(6, 6, 6)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(labelStoplevel)
                             .addComponent(inputStoplevel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(labelStoplevel)
                             .addComponent(limitsStoplevel))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -1349,45 +1395,42 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(labelWindow)
                             .addComponent(inputWindow, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(labelC0)
-                            .addComponent(inputC0, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(limitsC0))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(limitsCoeff0)
+                            .addComponent(inputCoeff0, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(labelCoeff0))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(labelC1)
-                            .addComponent(inputC1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(limitsC1))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(labelC2)
-                            .addComponent(inputC2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(limitsC2))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(inputC3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(limitsC3)
-                            .addComponent(labelC3)))
+                            .addComponent(labelCoeff1)
+                            .addComponent(inputCoeff1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(limitsCoeff1)))
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(TBBConfigurationPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(deleteConfigButton)
-                            .addComponent(editConfigButton))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(inputRCUs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(labelRCUs))
-                .addGap(15, 15, 15)
+                        .addComponent(TBBConfigurationPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(12, 12, 12)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(inputSubbandList, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(labelSubbandList))
-                .addGap(35, 35, 35)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelCoeff2)
+                    .addComponent(inputCoeff2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(limitsCoeff2)
+                    .addComponent(editConfigButton)
+                    .addComponent(deleteConfigButton)
                     .addComponent(addConfigButton)
                     .addComponent(cancelEditButton))
-                .addContainerGap())
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelCoeff3)
+                    .addComponent(inputCoeff3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(limitsCoeff3))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelRCUs)
+                    .addComponent(inputRCUs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelSubbandList)
+                    .addComponent(inputSubbandList, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(23, Short.MAX_VALUE))
         );
 
         labelBaselevel.getAccessibleContext().setAccessibleName("labelBaselevel");
@@ -1451,6 +1494,10 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private void addConfigButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addConfigButtonActionPerformed
         addConfig();
     }//GEN-LAST:event_addConfigButtonActionPerformed
+
+    private void inputTriggerModeinputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputTriggerModeinputActionPerformed
+        // TODO add your handling code here:
+}//GEN-LAST:event_inputTriggerModeinputActionPerformed
     
     private jOTDBnode                  itsNode        = null;
     private jOTDBnode                  itsDefaultNode = null;
@@ -1472,15 +1519,16 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private Vector<jOTDBnode> itsTBBsettings = new Vector<jOTDBnode>();
     // All TBBsetting nodes
     private Vector<String>    itsOperatingModes = new Vector<String>();
+    private Vector<String>    itsTriggerModes = new Vector<String>();
     private Vector<String>    itsBaselevels= new Vector<String>();
     private Vector<String>    itsStartlevels= new Vector<String>();
     private Vector<String>    itsStoplevels= new Vector<String>();
     private Vector<String>    itsFilters= new Vector<String>();
     private Vector<String>    itsWindows= new Vector<String>();
-    private Vector<String>    itsC0s= new Vector<String>();
-    private Vector<String>    itsC1s= new Vector<String>();
-    private Vector<String>    itsC2s= new Vector<String>();
-    private Vector<String>    itsC3s= new Vector<String>();
+    private Vector<String>    itsCoeff0s= new Vector<String>();
+    private Vector<String>    itsCoeff1s= new Vector<String>();
+    private Vector<String>    itsCoeff2s= new Vector<String>();
+    private Vector<String>    itsCoeff3s= new Vector<String>();
     private Vector<String>    itsRCUs= new Vector<String>();
     private Vector<String>    itsSubbandList= new Vector<String>();
     
@@ -1493,38 +1541,40 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private javax.swing.JButton deleteConfigButton;
     private javax.swing.JButton editConfigButton;
     private javax.swing.JTextField inputBaselevel;
-    private javax.swing.JTextField inputC0;
-    private javax.swing.JTextField inputC1;
-    private javax.swing.JTextField inputC2;
-    private javax.swing.JTextField inputC3;
+    private javax.swing.JTextField inputCoeff0;
+    private javax.swing.JTextField inputCoeff1;
+    private javax.swing.JTextField inputCoeff2;
+    private javax.swing.JTextField inputCoeff3;
     private javax.swing.JTextField inputFilter;
     private javax.swing.JComboBox inputOperatingMode;
     private javax.swing.JTextField inputRCUs;
     private javax.swing.JTextField inputStartlevel;
     private javax.swing.JTextField inputStoplevel;
     private javax.swing.JTextField inputSubbandList;
+    private javax.swing.JComboBox inputTriggerMode;
     private javax.swing.JComboBox inputWindow;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JLabel labelBaselevel;
-    private javax.swing.JLabel labelC0;
-    private javax.swing.JLabel labelC1;
-    private javax.swing.JLabel labelC2;
-    private javax.swing.JLabel labelC3;
+    private javax.swing.JLabel labelCoeff0;
+    private javax.swing.JLabel labelCoeff1;
+    private javax.swing.JLabel labelCoeff2;
+    private javax.swing.JLabel labelCoeff3;
     private javax.swing.JLabel labelFilter;
     private javax.swing.JLabel labelOperatingMode;
     private javax.swing.JLabel labelRCUs;
     private javax.swing.JLabel labelStartlevel;
     private javax.swing.JLabel labelStoplevel;
     private javax.swing.JLabel labelSubbandList;
+    private javax.swing.JLabel labelTriggerMode;
     private javax.swing.JLabel labelWindow;
     private javax.swing.JLabel limitsBaselevel;
-    private javax.swing.JLabel limitsC0;
-    private javax.swing.JLabel limitsC1;
-    private javax.swing.JLabel limitsC2;
-    private javax.swing.JLabel limitsC3;
+    private javax.swing.JLabel limitsCoeff0;
+    private javax.swing.JLabel limitsCoeff1;
+    private javax.swing.JLabel limitsCoeff2;
+    private javax.swing.JLabel limitsCoeff3;
     private javax.swing.JLabel limitsFilter;
     private javax.swing.JLabel limitsStartlevel;
     private javax.swing.JLabel limitsStoplevel;
