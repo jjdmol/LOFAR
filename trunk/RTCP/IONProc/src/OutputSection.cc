@@ -216,9 +216,12 @@ void OutputSection::mainLoop()
 
     if (++ itsCurrentIntegrationStep == itsNrIntegrationSteps) {
       itsCurrentIntegrationStep = 0;
-      itsSequenceNumber++;
+      ++ itsSequenceNumber;
     }
   }  
+
+  for (unsigned i = 0; i < itsOutputThreads.size(); i ++)
+    itsOutputThreads[i]->itsSendQueue.append(0);
 }
 
 }
