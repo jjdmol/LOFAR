@@ -80,6 +80,9 @@ OutputThread::~OutputThread()
 }
 
 
+static Semaphore semaphore(2);
+
+
 void OutputThread::mainLoop()
 {
 #if defined HAVE_BGP_ION
@@ -117,21 +120,20 @@ void OutputThread::mainLoop()
   itsConnecting = false;
 
   // set the maximum number of concurrent writers
-  // TODO: race condition on creation
   // TODO: if a storage node blocks, ionproc can't write anymore
   //       in any thread
-  static Semaphore semaphore(2);
   StreamableData   *data;
 
   while ((data = itsSendQueue.remove()) != 0) {
     // prevent too many concurrent writers by locking this scope
     semaphore.down();
+
     try {
       // write data, including serial nr
       data->write(streamToStorage.get(), true);
-    } catch( ... ) {
+    } catch (...) {
       semaphore.up();
-      itsFreeQueue.append( data ); // make sure data will be freed
+      itsFreeQueue.append(data); // make sure data will be freed
       throw;
     }
 
