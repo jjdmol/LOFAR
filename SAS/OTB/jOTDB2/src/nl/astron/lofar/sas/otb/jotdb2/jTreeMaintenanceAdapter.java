@@ -262,8 +262,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
     }
 
     // Get a number of levels of children.
-    public Vector getItemList (int aTreeID, int topNode, int depth) throws RemoteException {
-        Vector aV=null;
+    public Vector<jOTDBnode> getItemList (int aTreeID, int topNode, int depth) throws RemoteException {
+        Vector<jOTDBnode> aV=null;
         try {
             aV = adaptee.getItemList (aTreeID, topNode, depth);
         } catch (Exception ex) {
@@ -275,8 +275,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
      }
    
     // Get a list of nodes based on a namefragment. Use '%' as wildchar.
-    public Vector getItemList (int aTreeID, String aNameFragment) throws RemoteException {
-        Vector aV=null;
+    public Vector<jOTDBnode> getItemList (int aTreeID, String aNameFragment) throws RemoteException {
+        Vector<jOTDBnode> aV=null;
         try {
             aV = adaptee.getItemList (aTreeID, aNameFragment);
         } catch (Exception ex) {

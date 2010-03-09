@@ -101,10 +101,10 @@ public class jTreeMaintenance
     public native boolean saveParam(jOTDBparam aParam) throws Exception;
 
     // Get a number of levels of children.
-    public native Vector getItemList (int aTreeID, int topNode, int depth) throws Exception;
+    public native Vector<jOTDBnode> getItemList (int aTreeID, int topNode, int depth) throws Exception;
 
     // Get a list of nodes based on a namefragment. Use '%' as wildchar.
-    public native Vector getItemList (int aTreeID, String aNameFragment) throws Exception;
+    public native Vector<jOTDBnode> getItemList (int aTreeID, String aNameFragment) throws Exception;
 
     // Duplicates the given node (and its parameters and children)
     // in the template database. The duplicate gets the new index.

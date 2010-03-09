@@ -91,9 +91,9 @@ public class jTreeValueAdapter extends UnicastRemoteObject implements jTreeValue
     //    }
 
 
-    public Vector searchInPeriod (int topNode, int depth, String beginDate,
+    public Vector<jOTDBvalue> searchInPeriod (int topNode, int depth, String beginDate,
 				  String endDate, boolean mostRecentlyOnly) throws RemoteException {
-        Vector aV=null;
+        Vector<jOTDBvalue> aV=null;
         try {
             aV = adaptee.searchInPeriod (topNode, depth, beginDate, endDate, mostRecentlyOnly);
         } catch (Exception ex) {

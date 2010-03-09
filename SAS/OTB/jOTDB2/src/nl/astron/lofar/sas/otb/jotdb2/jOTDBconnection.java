@@ -57,11 +57,11 @@ public class jOTDBconnection
     // get OTDBtree of one specific tree
     public native jOTDBtree getTreeInfo (int atreeID, boolean isMomID)throws Exception ;
     
-    public native Vector getStateList(int atreeID, boolean isMomID ,String beginDate, String endDate) throws Exception;
+    public native Vector<jTreeState> getStateList(int atreeID, boolean isMomID ,String beginDate, String endDate) throws Exception;
 
 
     // To get a list of all OTDB trees available in the database.
-    public native Vector getTreeList(short treeType, short classifiType) throws Exception;
+    public native Vector<jOTDBtree> getTreeList(short treeType, short classifiType) throws Exception;
     
     public native String errorMsg() throws Exception;
 
