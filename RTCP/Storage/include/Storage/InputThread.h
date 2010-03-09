@@ -43,9 +43,6 @@ class InputThread
 
     static const unsigned   maxReceiveQueueSize = 3;
     // report if fetching an item from the receive queue takes longer than this (seconds)
-    static const float      reportQueueRemoveDelay = 0.05;
-    // report if reading data takes longer than this (seconds)
-    static const float      reportReadDelay = 1.10;
 
     Queue<StreamableData *> itsFreeQueue, itsReceiveQueue;
 

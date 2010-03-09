@@ -88,8 +88,8 @@ OutputThread::OutputThread(const Parset *ps, unsigned subbandNumber, unsigned ou
 
   try {
     itsWriter = new MSWriterFile(filename.c_str());
-  } catch( SystemCallException &ex ) {
-    LOG_ERROR_STR( "Cannot open " << filename << ": " << ex );
+  } catch (SystemCallException &ex) {
+    LOG_ERROR_STR("Cannot open " << filename << ": " << ex);
 
     itsWriter = new MSWriterNull();
   }
@@ -142,7 +142,6 @@ void OutputThread::checkForDroppedData(StreamableData *data)
     LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
 
   if (itsPS->getLofarStManVersion() == 2 && itsSequenceNumbersFile != 0) {
-
     itsSequenceNumbers.push_back(data->sequenceNumber);
     
     if (itsSequenceNumbers.size() > 64)
@@ -153,13 +152,10 @@ void OutputThread::checkForDroppedData(StreamableData *data)
 }
 
 
-/// allow only a limited number of thread to write at a time
-static Semaphore semaphore(4);
-
 void OutputThread::mainLoop()
 {
   while (true) {
-    NSTimer writeTimer("write data", false, false);
+    //NSTimer			  writeTimer("write data", false, false);
     std::auto_ptr<StreamableData> data(itsInputThread->itsReceiveQueue.remove());
 
     if (data.get() == 0)
@@ -167,21 +163,12 @@ void OutputThread::mainLoop()
 
     checkForDroppedData(data.get());
 
-    writeTimer.start();
-    semaphore.down();
+    //writeTimer.start();
+    itsWriter->write(data.get());
+    //writeTimer.stop();
 
-    try {
-      itsWriter->write(data.get());
-    } catch (...) {
-      semaphore.up();
-      throw;
-    }
-
-    semaphore.up();
-    writeTimer.stop();
-
-    if (writeTimer.getElapsed() > reportWriteDelay)
-      LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": " << writeTimer);
+    writeLogMessage(data->sequenceNumber);
+    //LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": " << writeTimer);
 
     itsInputThread->itsFreeQueue.append(data.release());
   }

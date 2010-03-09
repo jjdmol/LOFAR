@@ -49,11 +49,6 @@ class OutputThread
    OutputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, InputThread *inputThread, const ProcessingPlan::planlet &outputConfig);
    ~OutputThread();
     
-    
-
-    // report any writes that take longer than this (seconds)
-    static const float      reportWriteDelay = 0.05;
-
   private:
     void                    writeLogMessage(unsigned sequenceNumber);
     void                    flushSequenceNumbers();

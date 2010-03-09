@@ -107,25 +107,16 @@ void InputThread::mainLoop()
 
     // limit reads from NullStream to 10 blocks; otherwise unlimited
     unsigned			  increment = nullInput ? 1 : 0;
-    std::auto_ptr<StreamableData> data;
 
     for (unsigned count = 0; count < 10; count += increment) {
-      NSTimer queueTimer("retrieve freeQueue item", false, false);
-      NSTimer readTimer("read data", false, false);
-
-      queueTimer.start();
-      data.reset(itsFreeQueue.remove());
-      queueTimer.stop();
-
-      if (queueTimer.getElapsed() > reportQueueRemoveDelay)
-        LOG_WARN_STR("InputThread: ObsID = " << itsObservationID << ", sb = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": " << queueTimer);
+      NSTimer			    readTimer("read data", false, false);
+      std::auto_ptr<StreamableData> data(itsFreeQueue.remove());
 
       readTimer.start();
       data->read(streamFromION.get(), true);
       readTimer.stop();
 
-      if (readTimer.getElapsed() > reportReadDelay)
-        LOG_WARN_STR("InputThread: ObsID = " << itsObservationID << ", sb = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": " << readTimer);
+      LOG_INFO_STR("InputThread: ObsID = " << itsObservationID << ", sb = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": " << readTimer);
 
       if (nullInput)
 	data->sequenceNumber = count;
@@ -133,6 +124,7 @@ void InputThread::mainLoop()
       itsReceiveQueue.append(data.release());
     }
   } catch (Stream::EndOfStreamException &) {
+    LOG_INFO("caught Stream::EndOfStreamException (this is normal, and indicates the end of the observation)");
   } catch (SystemCallException &ex) {
     if (ex.error != EINTR) {
       itsReceiveQueue.append(0); // no more data
