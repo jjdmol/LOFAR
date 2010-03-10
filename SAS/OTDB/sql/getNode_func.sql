@@ -142,7 +142,8 @@ CREATE OR REPLACE FUNCTION getNode(INT4, INT4)
 				   h.index,
 			  	   h.leaf,
 				   1::int2,
-				   \'1\'::text,		--	limits,
+				   h.value,
+--				   \'1\'::text,		--	limits,
 				   p.description
 		    INTO   vNode
 		    FROM   VIChierarchy h

@@ -43,8 +43,9 @@ CREATE OR REPLACE FUNCTION getTreesInPeriod(INT2, TIMESTAMP, TIMESTAMP)
 
 	BEGIN
 	  -- Construct where clause
-      vQuery := \'WHERE t.treetype = \' || chr(39) || $1 || chr(39) || \' AND (t.starttime <= \';
+      vQuery := \'WHERE t.treetype = \' || chr(39) || $1 || chr(39) || \' AND ((t.starttime <= \';
 	  vQuery := vQuery || chr(39) || $3 || chr(39) || \' AND t.stoptime >= \' || chr(39) || $2 || chr(39) || \')\';
+	  vQuery := vQuery || \' OR t.starttime IS NULL OR t.stoptime IS NULL)\';
 	  -- do selection
 	  FOR vRecord IN  EXECUTE \'
 		SELECT t.treeID, 
