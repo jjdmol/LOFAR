@@ -95,6 +95,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     
     private void init() {
 
+        timeWarningLabel.setVisible(false);
+
         isInitialized=false;
         SimpleDateFormat id = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss",itsLocale);
         if (itsMultiple) {
@@ -466,7 +468,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         
         // make sure that if a VICtree is selected we check the start-end time first. If they are not correct, pop up a dialog.
         
-        if (itsTreeType.equals("VHtree") && itsTreeState.equals("Scheduled")) {
+        if (itsTreeType.equals("VHtree") && itsTreeState.equalsIgnoreCase("Scheduled") || itsTreeState.equalsIgnoreCase("approved")) {
             if ( ! checkTimes()) {
                 return false;
             }
@@ -535,7 +537,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 // Next for VIC only
                 if (itsTreeType.equals("VHtree")) {
                     if (itsStarttime != null && itsStoptime != null &&
-                            (!itsStarttime.replace("T", " ").equals(startTimeInput.getText().replace("T", " ")) || !itsStoptime.replace("T", " ").equals(stopTimeInput.getText().replace("T", " ")))) {
+                            (!itsStarttime.replace("T", " ").equals(itsTree.starttime.replace("T", " ")) || !itsStoptime.replace("T", " ").equals(itsTree.stoptime.replace("T", " ")))) {
                         if (startTimeInput.getText().length() > 0 && stopTimeInput.getText().length() > 0 ) {
                            hasChanged=true;
                            itsTree.starttime = startTimeInput.getText();
@@ -801,7 +803,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
         timeWarningLabel.setForeground(new java.awt.Color(255, 0, 0));
         timeWarningLabel.setText("WARNING: Observation exceeds maximum length !!!!!!!!!");
-        getContentPane().add(timeWarningLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 390, 270, -1));
+        getContentPane().add(timeWarningLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 390, 440, -1));
 
         showCampaignButton.setText("show");
         showCampaignButton.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -844,7 +846,12 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         DateTimeChooser chooser = new DateTimeChooser(initialDate);
         itsStopDate = DateTimeChooser.showDialog(this,"StopTime",chooser);
         composeTimeString("stop");
-        setStartTime();
+        if (itsStarttime.equals("not-a-date-time") || itsStarttime.equals("") ) {
+           setStartTime();
+        } else {
+           setDuration();
+        }
+
     }//GEN-LAST:event_setStopDateButtonActionPerformed
 
     private void setStartDateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setStartDateButtonActionPerformed
