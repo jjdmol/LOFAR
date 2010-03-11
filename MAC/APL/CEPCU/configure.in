@@ -79,6 +79,7 @@ src/CEPlogProcessor/Makefile
 src/BGPlogProcessor/Makefile
 src/OnlineControl/Makefile
 dnl src/OfflineControl/Makefile
+src/PythonControl/Makefile
 Makefile
 CEPCU.spec
 )

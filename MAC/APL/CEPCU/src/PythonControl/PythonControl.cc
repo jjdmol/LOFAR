@@ -180,25 +180,27 @@ bool PythonControl::_startPython(const string&	pythonProg,
 	}
 
 	// get full path to start script (should be on the same place on each machine)
-	string	startScript = PL.locate("startController.sh");
+	string	startScript = PL.locate("startPython.sh");
 	if (executable.empty()) {
-		LOG_ERROR("StartScript 'startController.sh' not found.");
+		LOG_ERROR("StartScript 'startPython.sh' not found.");
 		return (false);
 	}
 
 	// construct system command
 	string	startCmd;
+	itsPythonName = formatString("PythonServer{%d}@%s", obsID, pythonHost.c_str());
+
 	if (onRemoteMachine) {
-		startCmd = formatString("ssh %s %s %s %s %s %s", 
+		startCmd = formatString("ssh %s %s %s %s %s %s %s", 
 								pythonHost.c_str(), startScript.c_str(),
 								executable.c_str(), parSetName.c_str(),
-								myHostname(true).c_str(), parentService.c_str());
+								myHostname(true).c_str(), parentService.c_str(), itsPythonName.c_str());
 	}
 	else {
-		startCmd = formatString("%s %s %s %s %s", 
+		startCmd = formatString("%s %s %s %s %s %s", 
 								startScript.c_str(),
 								executable.c_str(), parSetName.c_str(),
-								myHostname(true).c_str(), parentService.c_str());
+								myHostname(true).c_str(), parentService.c_str(), itsPythonName.c_str());
 	}
 	LOG_INFO_STR("About to start: " << startCmd);
 
@@ -267,16 +269,18 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event,
 		break;
 
 	case CONTROL_CONNECT: {
+		CONTROLConnectEvent		msg(event);
+		itsMyName  = msg.cntlrName;
+
 		// request from parent task to start up the child side.
 		ParameterSet*   thePS  = globalParameterSet();      // shortcut to global PS.
 		string  myPrefix(thePS->locateModule("PythonControl")+"PythonControl.");
 		string	pythonProg(thePS->getString(myPrefix+"pythonProgram", "@pythonProgram@"));
 		string	pythonHost(thePS->getString(myPrefix+"pythonHost", "@pythonHost@"));
 		// START PYTHON
-		bool	startOK = _startPython(pythonProg, getObservationNr(getName()), pythonHost, itsListener->makeServiceName());
+		bool	startOK = _startPython(pythonProg, getObservationNr(getName()), realHostname(pythonHost), itsListener->makeServiceName());
 		if (!startOK) {
 			LOG_ERROR("Failed to start the Python environment.");
-			CONTROLConnectEvent		msg(event);
 			CONTROLConnectedEvent	answer;
 			answer.cntlrName = msg.cntlrName;
 			answer.result    = CONTROL_LOST_CONN_ERR;
@@ -294,6 +298,7 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event,
 		break;
 
 	case F_DISCONNECTED:
+		port.close();
 		break;
 	
 	default:
@@ -335,8 +340,15 @@ GCFEvent::TResult PythonControl::waitForConnection_state(GCFEvent& event, GCFPor
 		CONTROLConnectEvent		ccEvent(event);
 		itsPythonName = ccEvent.cntlrName;
 		LOG_INFO_STR("Python identified itself as " << itsPythonName << ". Going to operational state.");
+		// inform python
+		LOG_INFO_STR("Sending CONNECTED(" << itsPythonName << ") to python");
 		CONTROLConnectedEvent	answer;
+		answer.cntlrName = itsPythonName;
 		answer.result = CT_RESULT_NO_ERROR;
+		itsPythonPort->send(answer);
+		// inform Parent
+		LOG_INFO_STR("Sending CONNECTED(" << itsMyName << ") to Parent");
+		answer.cntlrName = itsMyName;
 		itsParentPort->send(answer);
 		TRAN(PythonControl::operational_state);
 	}
@@ -463,6 +475,63 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 		break;
 	}
 
+	// -------------------- RECEIVED FROM PYTHON SIDE --------------------
+	case CONTROL_CLAIMED: {
+		CONTROLClaimedEvent		msg(event);
+		LOG_DEBUG_STR("Received CLAIMED(" << msg.cntlrName << ")");
+		msg.cntlrName = itsMyName;
+		msg.result = CT_RESULT_NO_ERROR;
+		itsParentPort->send(msg);
+		break;
+	}
+
+	case CONTROL_PREPARED: {
+		CONTROLPreparedEvent		msg(event);
+		LOG_DEBUG_STR("Received PREPARED(" << msg.cntlrName << ")");
+		msg.cntlrName = itsMyName;
+		msg.result = CT_RESULT_NO_ERROR;
+		itsParentPort->send(msg);
+		break;
+	}
+
+	case CONTROL_RESUMED: {
+		CONTROLResumedEvent		msg(event);
+		LOG_DEBUG_STR("Received RESUMED(" << msg.cntlrName << ")");
+		msg.cntlrName = itsMyName;
+		msg.result = CT_RESULT_NO_ERROR;
+		itsParentPort->send(msg);
+		break;
+	}
+
+	case CONTROL_SUSPENDED: {
+		CONTROLSuspendedEvent		msg(event);
+		LOG_DEBUG_STR("Received SUSPENDED(" << msg.cntlrName << ")");
+		msg.cntlrName = itsMyName;
+		msg.result = CT_RESULT_NO_ERROR;
+		itsParentPort->send(msg);
+		break;
+	}
+
+	case CONTROL_RELEASED: {
+		CONTROLReleasedEvent		msg(event);
+		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
+		msg.cntlrName = itsMyName;
+		msg.result = CT_RESULT_NO_ERROR;
+		itsParentPort->send(msg);
+		break;
+	}
+
+	case CONTROL_QUITED: {
+		CONTROLQuitedEvent		msg(event);
+		LOG_DEBUG_STR("Received QUITED(" << msg.cntlrName << ")");
+		msg.cntlrName = itsMyName;
+		msg.result = CT_RESULT_NO_ERROR;
+		itsParentPort->send(msg);
+		LOG_INFO("Python environment has quited, quiting too.");
+		TRAN(PythonControl::finishing_state);
+		break;
+	}
+
 	default:
 		LOG_DEBUG("operational_state, default");
 		status = GCFEvent::NOT_HANDLED;
@@ -485,10 +554,12 @@ GCFEvent::TResult PythonControl::finishing_state(GCFEvent& event, GCFPortInterfa
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
+
+#ifdef USE_PVSS_DATABASE
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("finished"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
-
-		itsTimerPort->setTimer(1.0);
+#endif
+		itsTimerPort->setTimer(3.0);
 		break;
 	}
 
@@ -496,6 +567,10 @@ GCFEvent::TResult PythonControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		GCFScheduler::instance()->stop();
 		break;
 
+	case F_DISCONNECTED:
+		port.close();
+		break;
+	
 	default:
 		LOG_DEBUG("finishing_state, default");
 		status = GCFEvent::NOT_HANDLED;

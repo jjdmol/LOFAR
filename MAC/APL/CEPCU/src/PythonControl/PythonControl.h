@@ -91,6 +91,8 @@ private:
    	RTDBPropertySet*           	itsPropertySet;
 	bool					  	itsPropertySetInitialized;
 
+	string					itsMyName;
+
 	// pointer to parent control task
 	ParentControl*			itsParentControl;
 	GCFITCPort*				itsParentPort;
