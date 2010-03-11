@@ -510,7 +510,7 @@ int16 ControllerMenu::_chooseController()
 	cout << " 8. BeamControl" << endl;
 	cout << " 9. CalibrationControl" << endl;
 	cout << "10. TBBControl" << endl;
-//	cout << "11. StationInfraControl" << endl;
+	cout << "11. PythonControl" << endl;
 	cout << "12. TestController" << endl;
 	cout << endl;
 	cout << " 0. stop" << endl;
