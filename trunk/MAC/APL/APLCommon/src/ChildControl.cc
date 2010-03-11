@@ -1049,7 +1049,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 
 				
 				// found controller, close port
-				if (controller->currentState >= CTState::QUIT) {// expected disconnect?
+				if (controller->currentState >= CTState::RELEASED) {// expected disconnect?
 					LOG_DEBUG_STR("Removing " << controller->cntlrName << 
 															" from the controllerList");
 					port.close();

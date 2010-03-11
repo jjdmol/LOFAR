@@ -30,7 +30,7 @@
 #include <Common/hexdump.h>
 #include <MACIO/MACServiceInfo.h>
 #include <MACIO/KVTLogger.h>
-#include <MACIO/KVT_Protocol.ph>
+#include <KVT_Protocol.ph>
 
 namespace LOFAR {
   namespace MACIO {
