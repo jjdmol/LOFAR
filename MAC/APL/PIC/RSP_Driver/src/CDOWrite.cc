@@ -220,7 +220,7 @@ void CDOWrite::sendrequest()
 				cdo.control.enable = 0;
 			}
 			cdo.control.lane       = lane;
-			cdo.control.fb_enable  = GET_CONFIG("RSPDriver.FB_ENABLE", i);
+			cdo.control.fb_enable  = 0;
 			cdo.control.arp_enable = 1;
 			
 			// set source and destination MAC address
