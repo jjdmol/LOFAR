@@ -1,0 +1,6 @@
+#
+# Configuration file for the SweepTest test program
+#
+
+mac.ns.SweepTest.beam_server.type=TCP
+mac.top.SweepTest.beam_server.remoteservice=BeamServer:acceptor

@@ -1,0 +1,9 @@
+// \ingroup DP3
+//
+// \defgroup IDPPP Integrated Default Pre-Processing Pipeline
+//
+// Library for post processing data
+//
+// It contains a couple of Python files I don't know how to add to doxygen and
+// it contains the files for constructing CS1_IDPPP - the integrated
+// Bandpass/flagger/datasquasher tool.

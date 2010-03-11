@@ -1,0 +1,345 @@
+V 10
+1
+LANG:1 9 Navigator
+PANEL,-1 -1 1232 873 N "_3DFace" 0
+"main()
+{
+  //  LOG_TRACE(\"navigator.pnl:Initialize| init start baseDP: \"+$baseDP);
+  //  initialize Navigator (instance)
+    navigator_handleEventInitialize();
+ 
+
+  
+  // Wait till initialising process ended
+  while (g_initializing) {
+  } 
+
+  // connect to all event DP's from the objects so when something happens it can be 
+  // seen by the framework and the suited actions can be taken
+  // Only the framework knows the connections between it's different objects. And decides
+  // what each of them has to do.
+  
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".fw_viewBox\")) {
+    if (dpConnect(\"fw_viewBoxEvent\",false,DPNAME_NAVIGATOR + g_navigatorID + \".fw_viewBox.event\")== -1) {
+      DebugTN(\"Navigator.pnl:main|Couldn't connect to \"+DPNAME_NAVIGATOR + g_navigatorID + \".fw_viewBox.event \"+getLasteError());
+    }
+  } else {
+		setValue(fw_viewBox,\"backCol\",\"Lofar_dpdoesnotexist\");
+  } 
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".fw_viewSelection\")) {
+    if (dpConnect(\"fw_viewSelectionEvent\",false,DPNAME_NAVIGATOR + g_navigatorID + \".fw_viewSelection.event\") == -1) {
+      DebugTN(\"Navigator.pnl:main|Couldn't connect to \"+DPNAME_NAVIGATOR + g_navigatorID + \".fw_viewSelection.event \"+getLasteError());
+    }
+  } else {
+		setValue(fw_viewSelection,\"backCol\",\"Lofar_dpdoesnotexist\");
+  } 
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".fw_topDetailSelection\")) {
+    if (dpConnect(\"fw_topDetailSelectionEvent\",false,DPNAME_NAVIGATOR + g_navigatorID + \".fw_topDetailSelection.event\")== -1) {
+      DebugTN(\"Navigator.pnl:main|Couldn't connect to \"+DPNAME_NAVIGATOR + g_navigatorID + \".fw_topDetailSelection.event \"+getLasteError());
+    }
+  } else {
+		setValue(fw_topDetailSelection,\"backCol\",\"Lofar_dpdoesnotexist\");
+  } 
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".fw_bottomDetailSelection\")) {
+    if (dpConnect(\"fw_bottomDetailSelectionEvent\",false,DPNAME_NAVIGATOR + g_navigatorID + \".fw_bottomDetailSelection.event\")== -1) {
+      DebugTN(\"Navigator.pnl:main|Couldn't connect to \"+DPNAME_NAVIGATOR + g_navigatorID + \".fw_bottomDetailSelection.event \"+getLasteError());
+    }
+  } else {
+		setValue(fw_bottomDetailSelection,\"backCol\",\"Lofar_dpdoesnotexist\");
+  } 
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".fw_locator\")) {
+    if (dpConnect(\"fw_locatorEvent\",false,DPNAME_NAVIGATOR + g_navigatorID + \".fw_locator.event\")== -1) {
+      DebugTN(\"Navigator.pnl:main|Couldn't connect to \"+DPNAME_NAVIGATOR + g_navigatorID + \".fw_locator.event \"+getLasteError());
+    }
+  } else {
+		setValue(fw_locator,\"backCol\",\"Lofar_dpdoesnotexist\");
+  } 
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".fw_progressBar\")) {
+    if (dpConnect(\"fw_progressBarEvent\",false,DPNAME_NAVIGATOR + g_navigatorID + \".fw_progressBar.event\")== -1) {
+      DebugTN(\"Navigator.pnl:main|Couldn't connect to \"+DPNAME_NAVIGATOR + g_navigatorID + \".fw_progressBar.event \"+getLasteError());
+    }
+  } else {
+		setValue(fw_progressBar,\"backCol\",\"Lofar_dpdoesnotexist\");
+  } 
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".fw_headLines\")) {
+    if (dpConnect(\"fw_headLinesEvent\",false,DPNAME_NAVIGATOR + g_navigatorID + \".fw_headLines.event\")== -1) {
+      DebugTN(\"Navigator.pnl:main|Couldn't connect to \"+DPNAME_NAVIGATOR + g_navigatorID + \".fw_headLines.event \"+getLasteError());
+    }
+  } else {
+		setValue(fw_headLines,\"backCol\",\"Lofar_dpdoesnotexist\");
+  } 
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".fw_alerts\")) {
+    if (dpConnect(\"fw_alertsEvent\",false,DPNAME_NAVIGATOR + g_navigatorID + \".fw_alerts.event\")== -1) {
+      DebugTN(\"Navigator.pnl:main|Couldn't connect to \"+DPNAME_NAVIGATOR + g_navigatorID + \".fw_alerts.event \"+getLasteError());
+    }
+  } else {
+		setValue(fw_alerts,\"backCol\",\"Lofar_dpdoesnotexist\");
+  } 
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".fw_fastJumper\")) {
+    if (dpConnect(\"fw_fastJumperEvent\",false,DPNAME_NAVIGATOR + g_navigatorID + \".fw_fastJumper.event\")== -1) {
+      DebugTN(\"Navigator.pnl:main|Couldn't connect to \"+DPNAME_NAVIGATOR + g_navigatorID + \".fw_fastJumper.event \"+getLasteError());
+    }
+  } else {
+		setValue(fw_fastJumper,\"backCol\",\"Lofar_dpdoesnotexist\");
+  } 
+
+
+
+  
+  
+  
+  LOG_TRACE(\"navigator.pnl:Initialize|end\");  
+}
+
+
+void fw_viewBoxEvent(string dp, string event) {
+	LOG_TRACE(\"navigator.pnl:fw_viewBoxEvent| trigger: \" + event);
+  if (event != \"\") {
+	  navCtrl_handleViewBoxEvent(dp,event);
+          
+  }     
+}
+
+        
+void fw_viewSelectionEvent(string dp, string event) {
+	LOG_TRACE(\"navigator.pnl:fw_viewSelectionEvent| trigger: \" + event);
+  if (event != \"\") {
+	  navCtrl_handleViewSelectionEvent(dp,event);
+  }     
+}
+
+void fw_topDetailSelectionEvent(string dp, string event) {
+	LOG_TRACE(\"navigator.pnl:fw_topDetailSelectionEvent| trigger: \" + event);
+  if (event != \"\") {
+	  navCtrl_handleTopDetailSelectionEvent(dp,event);
+  }     
+}
+
+void fw_bottomDetailSelectionEvent(string dp, string event) {
+	LOG_TRACE(\"navigator.pnl:fw_bottomDetailSelectionEvent| trigger: \" + event);
+  if (event != \"\") {
+	  navCtrl_handleBottomDetailSelectionEvent(dp,event);
+  }     
+}
+
+void fw_locatorEvent(string dp, string event) {
+	LOG_TRACE(\"navigator.pnl:fw_locatorEvent| trigger: \" + event);
+  if (event != \"\") {
+	  navCtrl_handleLocatorEvent(dp,event);
+  }     
+}
+
+void fw_progressBarEvent(string dp, string event) {
+	LOG_TRACE(\"navigator.pnl:fw_progressBarEvent| trigger: \" + event);
+  if (event != \"\") {
+	  navCtrl_handleProgressBarEvent(dp,event);
+  }     
+}
+
+void fw_headLinesEvent(string dp, string event) {
+	LOG_TRACE(\"navigator.pnl:fw_headLinesEvent| trigger: \" + event);
+  if (event != \"\") {
+	  navCtrl_handleHeadLinesEvent(dp,event);
+  }     
+}
+void fw_alertsEvent(string dp, string event) {
+	LOG_TRACE(\"navigator.pnl:fw_alertsEvent| trigger: \" + event);
+  if (event != \"\") {
+	  navCtrl_handleAlertsEvent(dp,event);
+  }     
+}
+void fw_fastJumperEvent(string dp, string event) {
+	LOG_TRACE(\"navigator.pnl:fw_fastJumperEvent| trigger: \" + event);
+  if (event != \"\") {
+	  navCtrl_handleFastJumperEvent(dp,event);
+  }     
+}
+" 0
+ "main()
+{
+	navigator_handleEventTerminate();
+}" 0
+ E E E 1 -1 -1 0  325 170
+""0  1
+E "#uses \"navigator.ctl\"
+
+
+string progressBarDPE;" 0
+ 2
+"CBRef" "1"
+"EClose" "main()
+{
+	navigator_handleEventClose();
+}" 0
+
+""
+NC
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+1 42 5 "" 0
+0
+1 44 9 "" 2
+0
+1 45 9 "" 3
+0
+1 46 9 "" 0
+0
+1 47 9 "" 1
+0
+1 34 3 "" 6
+0
+1 35 3 "" 7
+0
+1 36 3 "" 5
+0
+1 37 3 "" 11
+0
+1 38 4 "" 6
+0
+1 39 4 "" 7
+0
+1 40 4 "" 5
+0
+1 41 4 "" 11
+0
+1 43 6 "" 2
+0
+1 48 12 "" 0
+1 "selectionChanged" 1 1 "main()
+{
+  string aS;
+  getValue (\"\", \"namedActiveRegister\", aS);
+
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".fw_currentTab\") ){
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".fw_currentTab\",aS);
+  }
+
+  setEvent(aS,\"TabChanged\");
+}" 0
+ 
+0
+1 49 12 "" 5
+0
+1 50 12 "" 7
+0
+1 51 12 "" 9
+0
+1 52 12 "" 11
+0
+1 53 12 "" 13
+0
+1 54 12 "" 14
+0
+1 55 12 "0" 1
+0
+1 56 12 "1" 1
+0
+1 57 12 "2" 1
+0
+1 58 13 "" 9
+0
+1 59 13 "" 11
+0
+1 60 13 "" 16
+0
+1 61 16 "" 1
+0
+1 62 16 "" 2
+0
+15 33
+"CLOCK1"
+""
+1 780 1 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+26 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 780 1 900 23
+E 1 1 "%H:%M:%S" "%d/%m/%y"
+1 1 1 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+
+1 63 20 "" 1
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 3 "fw_topDetailSelection"
+"objects\\navigator_typeSelector.pnl" 1002 89 T 16 1 0 1 -260 -123
+2
+"$name""fw_topDetailSelection"
+"$selection""Hardware"
+3 4 "fw_bottomDetailSelection"
+"objects\\navigator_typeSelector.pnl" 1084 468 T 17 1 0 1 -344 -125
+2
+"$name""fw_bottomDetailSelection"
+"$selection""Processes"
+3 5 "fw_headLines"
+"objects\\navigator_headlines.pnl" 87 765 T 19 1 0 1 -87 -5
+1
+"$name""fw_headLines"
+3 6 "fw_locator"
+"objects\\navigator_locator.pnl" 1065 798 T 20 1.00104275286757 0 1 -34.1105318039622 -36
+1
+"$name""fw_locator"
+3 9 "fw_progressBar"
+"objects\\navigator_progressBar.pnl" 815 767 T 23 1.305 0 1 -47.5749999999999 -6
+2
+"$name""fw_progressBar"
+"$progressBarDPE""Test"
+3 12 "fw_viewSelection"
+"objects\\navigator_viewSelection.pnl" -6 -6.99999999999989 T 25 0.996062992125984 0 1 5.976377952755904 6
+1
+"$name""fw_viewSelection"
+3 13 "fw_alerts"
+"objects\\navigator_alerts.pnl" 727 845 T 26 1 0 0.89 -737 29.0500000000001
+1
+"$name""fw_alerts"
+3 16 "PANEL_REF17"
+"objects\\navigator_fastJumper.pnl" 580 10 T 26 1 0 1 -10 -9
+1
+"$name""fw_fastJumper"
+3 20 "PANEL_REF21"
+"objects\\show_legenda.pnl" 500 110 T 28 1 0 1 -24 -7
+0
+0
