@@ -87,7 +87,7 @@ void GSAPvssApi::doWork()
 
 void GSAPvssApi::stop()
 {
-
+//	Manager::exit(0);		// TODO: 110310 Shouldn't this call be here? In the OnlineController the PVSS task remains running sometimes.
 }
   } // namespace PVSS
  } // namespace GCF
