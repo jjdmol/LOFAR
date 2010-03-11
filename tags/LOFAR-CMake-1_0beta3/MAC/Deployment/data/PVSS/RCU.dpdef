@@ -1,0 +1,61 @@
+#
+# RCU board information
+#
+
+# RSPboard info
+Delay					float
+InputEnable				bool
+
+# Power on the input
+LBLEnable				bool
+LBHEnable				bool
+HBAEnable				bool
+
+# HBA selection
+bandSelLbaHba			bool
+HBAFilterSel			uint
+
+# Power on sections of the RCUboard
+VlEnable				bool
+VhEnable				bool
+VddVccEnable			bool
+
+# LBA selection
+bandSelLblLbh			bool
+LBAFilterSel			uint
+
+# Attenuation
+Attenuation				float
+
+# Info from RSPboard or derived
+nofOverflow				uint
+ADCStatistics.overflow	bool
+
+# TBB proces info
+TBB.error				int
+TBB.mode				string
+TBB.startAddr			string
+TBB.bufSize				string
+
+# Trigger settings
+Trigger.startlevel		int
+Trigger.baselevel		int
+Trigger.stoplevel		int
+Trigger.filter			int
+Trigger.window			int
+Trigger.operatingMode		int
+Trigger.triggerMode		int
+Trigger.coeff0			int
+Trigger.coeff1			int
+Trigger.coeff2			int
+Trigger.coeff3			int
+
+#
+# Obsolete: Replaced with xBAFilterSel
+# filSel1			bool
+# filSel0			bool
+#
+#LBL.state				int
+#LBH.state				int
+#HBA.state				int
+
