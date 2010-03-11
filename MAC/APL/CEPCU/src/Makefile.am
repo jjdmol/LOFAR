@@ -2,7 +2,7 @@ pkginclude_HEADERS = Package__Version.h
 
 SUBDIRS = ApplController
 if HAVE_PVSS
-  SUBDIRS += OnlineControl CEPlogProcessor BGPlogProcessor # OfflineControl 
+  SUBDIRS += OnlineControl CEPlogProcessor BGPlogProcessor PythonControl # OfflineControl 
 endif
 
 bin_PROGRAMS = versioncepcu
