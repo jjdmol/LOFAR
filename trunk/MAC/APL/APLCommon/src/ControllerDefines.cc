@@ -60,7 +60,7 @@ static cntlrDefinition_t controllerTable[] = {
 	{	"BeamControl", 			"BeamControl",			false	},
 	{	"CalibrationControl", 	"CalControl",			false	},
 	{	"TBBControl",		 	"TBBControl",			false	},
-	{	"StationInfraControl", 	"StsInfraControl",		true	},
+	{	"PythonControl", 		"PythonControl",		false	},
 	{	"TestController", 		"TestControl",			false	},
 	{	"",						"",						false	}
 };
