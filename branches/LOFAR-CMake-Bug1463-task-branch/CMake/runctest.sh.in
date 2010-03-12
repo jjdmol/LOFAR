@@ -22,16 +22,12 @@
 #
 #  $Id: runctest.sh 13275 2009-05-15 15:42:36Z loose $
 
-# These "Autotools variables" are used by autoconf_share/runtest.sh
-lofar_sharedir=@lofar_sharedir@; export lofar_sharedir
-prefix=@prefix@; export prefix
+# We still need these variable, because they're used by runtest.sh and assay
+lofar_sharedir="@LOFAR_ROOT@/CMake"; export lofar_sharedir
 srcdir=@srcdir@; export srcdir
 
-# When using CMake, add the Python build directory to PYTHONPATH.
-if ! echo "@PYTHON_BUILD_DIR@" | grep "[@]PYTHON_BUILD_DIR[@]" > /dev/null
-then
-  PYTHONPATH=@PYTHON_BUILD_DIR@; export PYTHONPATH
-fi
+# Add the Python build directory to PYTHONPATH.
+PYTHONPATH=@PYTHON_BUILD_DIR@; export PYTHONPATH
 
 # Start CMake/runtest.sh
 "@LOFAR_ROOT@/CMake/runtest.sh" "$@"

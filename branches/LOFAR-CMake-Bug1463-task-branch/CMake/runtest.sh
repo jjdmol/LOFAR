@@ -26,12 +26,14 @@
 NEEDOUTFIL=0
 PYTHONPKG=
 
-# Set srcdir if not defined (in case run by hand).
-if test "$srcdir" = ""; then
-  srcdir="../../../test"
+# Sanity check! Can be removed once things work OK.
+if test "$srcdir" == ""; then
+  echo "FATAL ERROR: srcdir is not set"
+  exit 1
 fi
 
-# Handle possible options.
+# Handle possible options. The pythonpkg options are obsolete, but we still
+# need to parse them in order to be backward compatible.
 while [ $# != 0 ]
 do
   # Special cvs command?
@@ -54,7 +56,7 @@ do
 done
 
 if test $# -lt 1 || test $# -gt 3; then
-  echo "usage: runtest.sh [-stdout] [-pythonpkg package] <testname> [<max run-time>] [<precision>]"
+  echo "usage: runtest.sh [-stdout] <testname> [<max run-time>] [<precision>]"
   exit 1
 fi
 
@@ -73,53 +75,6 @@ fi
 # Get directory of this script.
 lfr_share_dir=`dirname $0`
 lfr_share_dir=`cd $lfr_share_dir && pwd`
-
-findvars=`cd .. && $lfr_share_dir/findpkg -l`
-LOFAR_BUILDCOMP=`echo $findvars | awk '{print $1}'`
-export LOFAR_BUILDCOMP
-LOFAR_BUILDVAR=`echo $findvars | awk '{print $2}'`
-export LOFAR_BUILDVAR
-
-# Set source directory if not defined.
-curwd=`pwd`
-if [ "$srcdir" = "" ]; then
-  basenm=`basename $curwd`
-  srcdir=$lfr_share_dir/../`echo $findvars | awk '{print $5}'`/$basenm
-fi
-
-# Make directory writable (needed for make distcheck).
-chmod +w .
-
-# Initialize LOFAR (if needed). Use make variable $prefix, if defined;
-# otherwise use fallback LOFAR/LCS/Tools/src
-# Note that if LOFARROOT is already set, it won't be changed because the
-# Tools/src directory does not have a bin directory.
-if test -f "$prefix/lofarinit.sh"; then
-  lofarinitdir=$prefix
-else
-  lofarinitdir=`pwd | sed -e 's%\(.*/LOFAR\)/.*%\1/LCS/Tools/src%'`
-fi
-
-if test -r "$lofarinitdir/lofarinit.sh"; then
-  cd "$lofarinitdir"
-  . ./lofarinit.sh
-fi
-cd $curwd
-
-# Initialize AIPS++.
-if test "$AIPSPP" != ""; then
-  aipsroot=`dirname $AIPSPP`
-  if test -r $aipsroot/aipsinit.sh; then
-    . $aipsroot/aipsinit.sh
-    # Set correct AIPS++ variant.
-    aipsd=`basename $AIPSPP`
-    aipsv=`echo $AIPSPATH | awk '{print $2}'`
-    AIPSPATH=`echo $AIPSPATH | sed -e "s% $aipsv % $aipsd %"`
-  else
-    AIPSPATH=`dirname $AIPSPP`
-  fi
-  export AIPSPATH
-fi
 
 # Add the current directory to the path. We don't care if it's already in.
 PATH=.:$PATH
@@ -166,35 +121,7 @@ else
   fi
 fi
 
-# For python files create the lofar/package directory, so the tests can
-# be run as if the python files were installed. This is only needed when
-# using the GNU Autotools (note: GNU_AUTOTOOLS is set in Makefile.common).
-# Note that python looks in . before PYTHONPATH.
-if [ "$PYTHONPKG" != "" -a "$GNU_AUTOTOOLS" != "" ]; then
-  PYTHONDIR=${1}_tmp_pythonpkg_dir           # will be removed automatically
-  mkdir -p $PYTHONDIR/lofar/$PYTHONPKG
-  touch $PYTHONDIR/lofar/__init__.py
-  rm -f $PYTHONDIR/lofar/$PYTHONPKG/*
-  for FIL in $srcdir/../src/*.py
-  do
-      ln -s $FIL $PYTHONDIR/lofar/$PYTHONPKG
-  done
-  if test -d `pwd`/../src/.libs; then
-    bdir="`pwd`/../src/.libs"  # Autotools 
-  else
-    bdir="`pwd`/../src"        # CMake
-  fi
-  for FIL in "$bdir"/*.so
-  do
-      ln -s $FIL $PYTHONDIR/lofar/$PYTHONPKG
-  done
-  PYTHONPATH=`pwd`/$PYTHONDIR:$PYTHONPATH
-  export PYTHONPATH
-fi
-
-# Define source directory and run assay
-LOFAR_PKGSRCDIR=$srcdir
-export LOFAR_PKGSRCDIR
+# Run assay
 $lfr_share_dir/assay $1 $MAXTIME $PREC $NEEDOUTFIL
 STS=$?
 
