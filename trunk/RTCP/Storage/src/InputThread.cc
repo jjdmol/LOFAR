@@ -46,10 +46,8 @@ InputThread::InputThread(const Parset *ps, unsigned subbandNumber, unsigned outp
 {
   for (unsigned i = 0; i < maxReceiveQueueSize; i ++) {
     StreamableData *data = dataTemplate->clone();
-
     data->allocate();
-
-    itsFreeQueue.append( data );
+    itsFreeQueue.append(data);
   }
 
   //thread = new Thread(this, &InputThread::mainLoop, str(format("InputThread (obs %d sb %d output %d)") % ps->observationID() % subbandNumber % outputNumber));
@@ -65,6 +63,7 @@ InputThread::~InputThread()
 #endif
 
   delete itsThread;
+  itsOutputThreadFinished.down();
 
   while (!itsReceiveQueue.empty())
     delete itsReceiveQueue.remove();

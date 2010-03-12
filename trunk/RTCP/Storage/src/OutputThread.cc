@@ -174,6 +174,7 @@ void OutputThread::mainLoop()
   }
 
   flushSequenceNumbers();
+  itsInputThread->itsOutputThreadFinished.up();
 }
 
 } // namespace RTCP
