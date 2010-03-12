@@ -25,6 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+#include <Common/Semaphore.h>
 #include <Interface/StreamableData.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/Queue.h>
@@ -45,6 +46,7 @@ class InputThread
     // report if fetching an item from the receive queue takes longer than this (seconds)
 
     Queue<StreamableData *> itsFreeQueue, itsReceiveQueue;
+    Semaphore		    itsOutputThreadFinished;
 
   private:
     void		    mainLoop();
