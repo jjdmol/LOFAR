@@ -28,7 +28,7 @@ tbbctl --free
 tbbctl --alloc
 tbbctl --rec
 
-sleep 0.1
+sleep 1
 
 # Freeze and get the captured data from TBB
 cd ./prbs
