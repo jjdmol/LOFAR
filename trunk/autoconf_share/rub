@@ -37,6 +37,16 @@
 # The command has to be run from the LOFAR source directory in the user's tree.
 
 
+echo "#######################################################################"
+echo "#                                                                     #"
+echo "#                            W A R N I N G                            #"
+echo "#                                                                     #"
+echo "#         The Autotools-based build environment is obsolete!          #"
+echo "#  It is no longer supported and will be removed in the near future.  #"
+echo "#        Please use the CMake-based build environment instead.        #"
+echo "#                                                                     #"
+echo "#######################################################################"
+
 # Find the path used to start the script.
 pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`

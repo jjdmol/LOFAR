@@ -30,6 +30,16 @@
 #    lofarconf configure-directory [-norecursive] [configure-options]
 
 
+echo "#######################################################################"
+echo "#                                                                     #"
+echo "#                            W A R N I N G                            #"
+echo "#                                                                     #"
+echo "#         The Autotools-based build environment is obsolete!          #"
+echo "#  It is no longer supported and will be removed in the near future.  #"
+echo "#        Please use the CMake-based build environment instead.        #"
+echo "#                                                                     #"
+echo "#######################################################################"
+
 # Get the current directory.
 lfr_curdir=`pwd`
 # Get the LOFAR base from the full path of this script.
