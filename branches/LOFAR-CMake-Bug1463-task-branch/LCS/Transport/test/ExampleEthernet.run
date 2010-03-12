@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# Run the ExampleEthernet test program by starting it twice.
+# Once as receiver and once as sender on lofar17.
+
+if [ $HOSTNAME != "lofar17" ]; then
+  echo "ExampleEthernet test must run on lofar17!"
+  exit 1
+else
+  ($LOFAR_CHECKTOOL ./ExampleEthernet -r eth0 00:30:48:12:47:D8 >ExampleEthernet_tmp.outr; echo $? >>ExampleEthernet_tmp.result)&
+  sleep 1
+  $LOFAR_CHECKTOOL ./ExampleEthernet -s eth0 00:30:48:12:47:D8 >ExampleEthernet_tmp.outs; echo $? >>ExampleEthernet_tmp.result
+  
+  grep "1" ExampleEthernet_tmp.result
+  if [ $? -ne 1 ]; then 
+    echo "test failed!"
+    exit 1
+  fi  
+  cat ExampleEthernet_tmp.outs ExampleEthernet_tmp.outr
+  echo "test successful"
+fi
+
+
+
+
+
+
+
