@@ -1,7 +1,7 @@
-DEBUG APL.PIC.RSPDriver - Reading attenuations from file: ./tRCUCables.in_CableAtts [CableAttenuation.cc:45]
-DEBUG APL.PIC.RSPDriver - Cable lenghts: 5
+DEBUG APL.PIC.RSP_Driver - Reading attenuations from file: ./tRCUCables.in_CableAtts [CableAttenuation.cc:45]
+DEBUG APL.PIC.RSP_Driver - Cable lenghts: 5
  [        50        80        85       115       130  ] [CableAttenuation.cc:80]
-DEBUG APL.PIC.RSPDriver - 8 x 5
+DEBUG APL.PIC.RSP_Driver - 8 x 5
 [         0         0         0         0         0 
       -2.05     -3.32     -3.53     -4.74      -5.4 
       -2.05     -3.32     -3.53     -4.74      -5.4 
@@ -11,46 +11,46 @@ DEBUG APL.PIC.RSPDriver - 8 x 5
       -4.24     -6.82     -7.21      -9.7    -11.06 
       -4.46     -7.19     -7.58    -10.18    -11.61 ]
  [CableAttenuation.cc:103]
-DEBUG APL.PIC.RSPDriver - Reading cable-delays from file: ./tRCUCables.in_1 [RCUCables.cc:51]
-DEBUG APL.PIC.RSPDriver - Found cable specs for 191 RCUs [RCUCables.cc:107]
-DEBUG APL.PIC.RSPDriver - Shortest LBA cable is 80m [RCUCables.cc:108]
-DEBUG APL.PIC.RSPDriver - Shortest HBA cable is 115m [RCUCables.cc:109]
-DEBUG APL.PIC.RSPDriver - Largest delay for mode   0: 0 [tRCUCables.cc:43]
-DEBUG APL.PIC.RSPDriver - Largest delay for mode   1: 326.964 [tRCUCables.cc:43]
-DEBUG APL.PIC.RSPDriver - Largest delay for mode   2: 326.964 [tRCUCables.cc:43]
-DEBUG APL.PIC.RSPDriver - Largest delay for mode   3: 326.964 [tRCUCables.cc:43]
-DEBUG APL.PIC.RSPDriver - Largest delay for mode   4: 326.964 [tRCUCables.cc:43]
-DEBUG APL.PIC.RSPDriver - Largest delay for mode   5: 465.525 [tRCUCables.cc:43]
-DEBUG APL.PIC.RSPDriver - Largest delay for mode   6: 465.525 [tRCUCables.cc:43]
-DEBUG APL.PIC.RSPDriver - Largest delay for mode   7: 465.525 [tRCUCables.cc:43]
-DEBUG APL.PIC.RSPDriver - Largest atten for mode   0: 0 [tRCUCables.cc:46]
-DEBUG APL.PIC.RSPDriver - Largest atten for mode   1: -3.32 [tRCUCables.cc:46]
-DEBUG APL.PIC.RSPDriver - Largest atten for mode   2: -3.32 [tRCUCables.cc:46]
-DEBUG APL.PIC.RSPDriver - Largest atten for mode   3: -3.32 [tRCUCables.cc:46]
-DEBUG APL.PIC.RSPDriver - Largest atten for mode   4: -3.32 [tRCUCables.cc:46]
-DEBUG APL.PIC.RSPDriver - Largest atten for mode   5: -8.35 [tRCUCables.cc:46]
-DEBUG APL.PIC.RSPDriver - Largest atten for mode   6: -9.7 [tRCUCables.cc:46]
-DEBUG APL.PIC.RSPDriver - Largest atten for mode   7: -10.18 [tRCUCables.cc:46]
-DEBUG APL.PIC.RSPDriver - Delay for RCU 5 in mode 0: 0 [tRCUCables.cc:49]
-DEBUG APL.PIC.RSPDriver - Delay for RCU 5 in mode 1: 199.257 [tRCUCables.cc:49]
-DEBUG APL.PIC.RSPDriver - Delay for RCU 5 in mode 2: 199.257 [tRCUCables.cc:49]
-DEBUG APL.PIC.RSPDriver - Delay for RCU 5 in mode 3: 326.964 [tRCUCables.cc:49]
-DEBUG APL.PIC.RSPDriver - Delay for RCU 5 in mode 4: 326.964 [tRCUCables.cc:49]
-DEBUG APL.PIC.RSPDriver - Delay for RCU 5 in mode 5: 465.525 [tRCUCables.cc:49]
-DEBUG APL.PIC.RSPDriver - Delay for RCU 5 in mode 6: 465.525 [tRCUCables.cc:49]
-DEBUG APL.PIC.RSPDriver - Delay for RCU 5 in mode 7: 465.525 [tRCUCables.cc:49]
-DEBUG APL.PIC.RSPDriver - Atten for RCU 5 in mode 0: 0 [tRCUCables.cc:52]
-DEBUG APL.PIC.RSPDriver - Atten for RCU 5 in mode 1: -2.05 [tRCUCables.cc:52]
-DEBUG APL.PIC.RSPDriver - Atten for RCU 5 in mode 2: -2.05 [tRCUCables.cc:52]
-DEBUG APL.PIC.RSPDriver - Atten for RCU 5 in mode 3: -3.32 [tRCUCables.cc:52]
-DEBUG APL.PIC.RSPDriver - Atten for RCU 5 in mode 4: -3.32 [tRCUCables.cc:52]
-DEBUG APL.PIC.RSPDriver - Atten for RCU 5 in mode 5: -8.35 [tRCUCables.cc:52]
-DEBUG APL.PIC.RSPDriver - Atten for RCU 5 in mode 6: -9.7 [tRCUCables.cc:52]
-DEBUG APL.PIC.RSPDriver - Atten for RCU 5 in mode 7: -10.18 [tRCUCables.cc:52]
-DEBUG APL.PIC.RSPDriver - Reading attenuations from file: ./tRCUCables.in_CableAtts [CableAttenuation.cc:45]
-DEBUG APL.PIC.RSPDriver - Cable lenghts: 5
+DEBUG APL.PIC.RSP_Driver - Reading cable-delays from file: ./tRCUCables.in_1 [RCUCables.cc:51]
+DEBUG APL.PIC.RSP_Driver - Found cable specs for 191 RCUs [RCUCables.cc:107]
+DEBUG APL.PIC.RSP_Driver - Shortest LBA cable is 80m [RCUCables.cc:108]
+DEBUG APL.PIC.RSP_Driver - Shortest HBA cable is 115m [RCUCables.cc:109]
+DEBUG APL.PIC.RSP_Driver - Largest delay for mode   0: 0 [tRCUCables.cc:43]
+DEBUG APL.PIC.RSP_Driver - Largest delay for mode   1: 326.964 [tRCUCables.cc:43]
+DEBUG APL.PIC.RSP_Driver - Largest delay for mode   2: 326.964 [tRCUCables.cc:43]
+DEBUG APL.PIC.RSP_Driver - Largest delay for mode   3: 326.964 [tRCUCables.cc:43]
+DEBUG APL.PIC.RSP_Driver - Largest delay for mode   4: 326.964 [tRCUCables.cc:43]
+DEBUG APL.PIC.RSP_Driver - Largest delay for mode   5: 465.525 [tRCUCables.cc:43]
+DEBUG APL.PIC.RSP_Driver - Largest delay for mode   6: 465.525 [tRCUCables.cc:43]
+DEBUG APL.PIC.RSP_Driver - Largest delay for mode   7: 465.525 [tRCUCables.cc:43]
+DEBUG APL.PIC.RSP_Driver - Largest atten for mode   0: 0 [tRCUCables.cc:46]
+DEBUG APL.PIC.RSP_Driver - Largest atten for mode   1: -3.32 [tRCUCables.cc:46]
+DEBUG APL.PIC.RSP_Driver - Largest atten for mode   2: -3.32 [tRCUCables.cc:46]
+DEBUG APL.PIC.RSP_Driver - Largest atten for mode   3: -3.32 [tRCUCables.cc:46]
+DEBUG APL.PIC.RSP_Driver - Largest atten for mode   4: -3.32 [tRCUCables.cc:46]
+DEBUG APL.PIC.RSP_Driver - Largest atten for mode   5: -8.35 [tRCUCables.cc:46]
+DEBUG APL.PIC.RSP_Driver - Largest atten for mode   6: -9.7 [tRCUCables.cc:46]
+DEBUG APL.PIC.RSP_Driver - Largest atten for mode   7: -10.18 [tRCUCables.cc:46]
+DEBUG APL.PIC.RSP_Driver - Delay for RCU 5 in mode 0: 0 [tRCUCables.cc:49]
+DEBUG APL.PIC.RSP_Driver - Delay for RCU 5 in mode 1: 199.257 [tRCUCables.cc:49]
+DEBUG APL.PIC.RSP_Driver - Delay for RCU 5 in mode 2: 199.257 [tRCUCables.cc:49]
+DEBUG APL.PIC.RSP_Driver - Delay for RCU 5 in mode 3: 326.964 [tRCUCables.cc:49]
+DEBUG APL.PIC.RSP_Driver - Delay for RCU 5 in mode 4: 326.964 [tRCUCables.cc:49]
+DEBUG APL.PIC.RSP_Driver - Delay for RCU 5 in mode 5: 465.525 [tRCUCables.cc:49]
+DEBUG APL.PIC.RSP_Driver - Delay for RCU 5 in mode 6: 465.525 [tRCUCables.cc:49]
+DEBUG APL.PIC.RSP_Driver - Delay for RCU 5 in mode 7: 465.525 [tRCUCables.cc:49]
+DEBUG APL.PIC.RSP_Driver - Atten for RCU 5 in mode 0: 0 [tRCUCables.cc:52]
+DEBUG APL.PIC.RSP_Driver - Atten for RCU 5 in mode 1: -2.05 [tRCUCables.cc:52]
+DEBUG APL.PIC.RSP_Driver - Atten for RCU 5 in mode 2: -2.05 [tRCUCables.cc:52]
+DEBUG APL.PIC.RSP_Driver - Atten for RCU 5 in mode 3: -3.32 [tRCUCables.cc:52]
+DEBUG APL.PIC.RSP_Driver - Atten for RCU 5 in mode 4: -3.32 [tRCUCables.cc:52]
+DEBUG APL.PIC.RSP_Driver - Atten for RCU 5 in mode 5: -8.35 [tRCUCables.cc:52]
+DEBUG APL.PIC.RSP_Driver - Atten for RCU 5 in mode 6: -9.7 [tRCUCables.cc:52]
+DEBUG APL.PIC.RSP_Driver - Atten for RCU 5 in mode 7: -10.18 [tRCUCables.cc:52]
+DEBUG APL.PIC.RSP_Driver - Reading attenuations from file: ./tRCUCables.in_CableAtts [CableAttenuation.cc:45]
+DEBUG APL.PIC.RSP_Driver - Cable lenghts: 5
  [        50        80        85       115       130  ] [CableAttenuation.cc:80]
-DEBUG APL.PIC.RSPDriver - 8 x 5
+DEBUG APL.PIC.RSP_Driver - 8 x 5
 [         0         0         0         0         0 
       -2.05     -3.32     -3.53     -4.74      -5.4 
       -2.05     -3.32     -3.53     -4.74      -5.4 
@@ -60,13 +60,13 @@ DEBUG APL.PIC.RSPDriver - 8 x 5
       -4.24     -6.82     -7.21      -9.7    -11.06 
       -4.46     -7.19     -7.58    -10.18    -11.61 ]
  [CableAttenuation.cc:103]
-DEBUG APL.PIC.RSPDriver - Reading cable-delays from file: ./tRCUCables.in_2 [RCUCables.cc:51]
-DEBUG PIC.RSPDriver.EXCEPTION - Assertion: rcuNr == prevRcuNr + 1; Expected line with rcuNr 0 [RCUCables.cc:77]
-INFO  APL.PIC.RSPDriver - Expected exception:Assertion: rcuNr == prevRcuNr + 1; Expected line with rcuNr 0 [tRCUCables.cc:59]
-DEBUG APL.PIC.RSPDriver - Reading attenuations from file: ./tRCUCables.in_CableAtts [CableAttenuation.cc:45]
-DEBUG APL.PIC.RSPDriver - Cable lenghts: 5
+DEBUG APL.PIC.RSP_Driver - Reading cable-delays from file: ./tRCUCables.in_2 [RCUCables.cc:51]
+DEBUG PIC.RSP_Driver.EXCEPTION - Assertion: rcuNr == prevRcuNr + 1; Expected line with rcuNr 0 [RCUCables.cc:77]
+INFO  APL.PIC.RSP_Driver - Expected exception:Assertion: rcuNr == prevRcuNr + 1; Expected line with rcuNr 0 [tRCUCables.cc:59]
+DEBUG APL.PIC.RSP_Driver - Reading attenuations from file: ./tRCUCables.in_CableAtts [CableAttenuation.cc:45]
+DEBUG APL.PIC.RSP_Driver - Cable lenghts: 5
  [        50        80        85       115       130  ] [CableAttenuation.cc:80]
-DEBUG APL.PIC.RSPDriver - 8 x 5
+DEBUG APL.PIC.RSP_Driver - 8 x 5
 [         0         0         0         0         0 
       -2.05     -3.32     -3.53     -4.74      -5.4 
       -2.05     -3.32     -3.53     -4.74      -5.4 
@@ -76,13 +76,13 @@ DEBUG APL.PIC.RSPDriver - 8 x 5
       -4.24     -6.82     -7.21      -9.7    -11.06 
       -4.46     -7.19     -7.58    -10.18    -11.61 ]
  [CableAttenuation.cc:103]
-DEBUG APL.PIC.RSPDriver - Reading cable-delays from file: ./tRCUCables.in_3 [RCUCables.cc:51]
-DEBUG PIC.RSPDriver.EXCEPTION - Assertion: rcuNr == prevRcuNr + 1; Expected line with rcuNr 10 [RCUCables.cc:77]
-INFO  APL.PIC.RSPDriver - Expected exception:Assertion: rcuNr == prevRcuNr + 1; Expected line with rcuNr 10 [tRCUCables.cc:66]
-DEBUG APL.PIC.RSPDriver - Reading attenuations from file: ./tRCUCables.in_CableAtts [CableAttenuation.cc:45]
-DEBUG APL.PIC.RSPDriver - Cable lenghts: 5
+DEBUG APL.PIC.RSP_Driver - Reading cable-delays from file: ./tRCUCables.in_3 [RCUCables.cc:51]
+DEBUG PIC.RSP_Driver.EXCEPTION - Assertion: rcuNr == prevRcuNr + 1; Expected line with rcuNr 10 [RCUCables.cc:77]
+INFO  APL.PIC.RSP_Driver - Expected exception:Assertion: rcuNr == prevRcuNr + 1; Expected line with rcuNr 10 [tRCUCables.cc:66]
+DEBUG APL.PIC.RSP_Driver - Reading attenuations from file: ./tRCUCables.in_CableAtts [CableAttenuation.cc:45]
+DEBUG APL.PIC.RSP_Driver - Cable lenghts: 5
  [        50        80        85       115       130  ] [CableAttenuation.cc:80]
-DEBUG APL.PIC.RSPDriver - 8 x 5
+DEBUG APL.PIC.RSP_Driver - 8 x 5
 [         0         0         0         0         0 
       -2.05     -3.32     -3.53     -4.74      -5.4 
       -2.05     -3.32     -3.53     -4.74      -5.4 
@@ -92,15 +92,15 @@ DEBUG APL.PIC.RSPDriver - 8 x 5
       -4.24     -6.82     -7.21      -9.7    -11.06 
       -4.46     -7.19     -7.58    -10.18    -11.61 ]
  [CableAttenuation.cc:103]
-DEBUG APL.PIC.RSPDriver - Reading cable-delays from file: ./tRCUCables.in_4 [RCUCables.cc:51]
-DEBUG PIC.RSPDriver.EXCEPTION - Assertion: false; Cablelength 81 is not a legal cablelength:5
+DEBUG APL.PIC.RSP_Driver - Reading cable-delays from file: ./tRCUCables.in_4 [RCUCables.cc:51]
+DEBUG PIC.RSP_Driver.EXCEPTION - Assertion: false; Cablelength 81 is not a legal cablelength:5
  [        50        80        85       115       130  ] [CableAttenuation.cc:132]
-DEBUG PIC.RSPDriver.EXCEPTION - Assertion: itsCableAtts->isLegalLength(LBHlen); LBH cablelength 81 is not allowed [RCUCables.cc:82]
-INFO  APL.PIC.RSPDriver - Expected exception:Assertion: itsCableAtts->isLegalLength(LBHlen); LBH cablelength 81 is not allowed [tRCUCables.cc:73]
-DEBUG APL.PIC.RSPDriver - Reading attenuations from file: ./tRCUCables.in_CableAtts [CableAttenuation.cc:45]
-DEBUG APL.PIC.RSPDriver - Cable lenghts: 5
+DEBUG PIC.RSP_Driver.EXCEPTION - Assertion: itsCableAtts->isLegalLength(LBHlen); LBH cablelength 81 is not allowed [RCUCables.cc:82]
+INFO  APL.PIC.RSP_Driver - Expected exception:Assertion: itsCableAtts->isLegalLength(LBHlen); LBH cablelength 81 is not allowed [tRCUCables.cc:73]
+DEBUG APL.PIC.RSP_Driver - Reading attenuations from file: ./tRCUCables.in_CableAtts [CableAttenuation.cc:45]
+DEBUG APL.PIC.RSP_Driver - Cable lenghts: 5
  [        50        80        85       115       130  ] [CableAttenuation.cc:80]
-DEBUG APL.PIC.RSPDriver - 8 x 5
+DEBUG APL.PIC.RSP_Driver - 8 x 5
 [         0         0         0         0         0 
       -2.05     -3.32     -3.53     -4.74      -5.4 
       -2.05     -3.32     -3.53     -4.74      -5.4 
@@ -110,13 +110,13 @@ DEBUG APL.PIC.RSPDriver - 8 x 5
       -4.24     -6.82     -7.21      -9.7    -11.06 
       -4.46     -7.19     -7.58    -10.18    -11.61 ]
  [CableAttenuation.cc:103]
-DEBUG APL.PIC.RSPDriver - Reading cable-delays from file: ./tRCUCables.in_5 [RCUCables.cc:51]
-DEBUG PIC.RSPDriver.EXCEPTION - Assertion: rcuNr >= 0 && rcuNr < MAX_RCUS; RCUNumber 192 not in range [0..191] [RCUCables.cc:78]
-INFO  APL.PIC.RSPDriver - Expected exception:Assertion: rcuNr >= 0 && rcuNr < MAX_RCUS; RCUNumber 192 not in range [0..191] [tRCUCables.cc:81]
-DEBUG APL.PIC.RSPDriver - Reading attenuations from file: ./tRCUCables.in_CableAtts [CableAttenuation.cc:45]
-DEBUG APL.PIC.RSPDriver - Cable lenghts: 5
+DEBUG APL.PIC.RSP_Driver - Reading cable-delays from file: ./tRCUCables.in_5 [RCUCables.cc:51]
+DEBUG PIC.RSP_Driver.EXCEPTION - Assertion: rcuNr >= 0 && rcuNr < MAX_RCUS; RCUNumber 192 not in range [0..191] [RCUCables.cc:78]
+INFO  APL.PIC.RSP_Driver - Expected exception:Assertion: rcuNr >= 0 && rcuNr < MAX_RCUS; RCUNumber 192 not in range [0..191] [tRCUCables.cc:81]
+DEBUG APL.PIC.RSP_Driver - Reading attenuations from file: ./tRCUCables.in_CableAtts [CableAttenuation.cc:45]
+DEBUG APL.PIC.RSP_Driver - Cable lenghts: 5
  [        50        80        85       115       130  ] [CableAttenuation.cc:80]
-DEBUG APL.PIC.RSPDriver - 8 x 5
+DEBUG APL.PIC.RSP_Driver - 8 x 5
 [         0         0         0         0         0 
       -2.05     -3.32     -3.53     -4.74      -5.4 
       -2.05     -3.32     -3.53     -4.74      -5.4 
@@ -126,6 +126,6 @@ DEBUG APL.PIC.RSPDriver - 8 x 5
       -4.24     -6.82     -7.21      -9.7    -11.06 
       -4.46     -7.19     -7.58    -10.18    -11.61 ]
  [CableAttenuation.cc:103]
-DEBUG APL.PIC.RSPDriver - Reading cable-delays from file: ./tRCUCables.in_6 [RCUCables.cc:51]
-DEBUG PIC.RSPDriver.EXCEPTION - Assertion: nrArgs == EXPECTED_NR_COLUMNS; Expected 7 fields on line: 5		50	199.2573	80	 [RCUCables.cc:79]
-INFO  APL.PIC.RSPDriver - Expected exception:Assertion: nrArgs == EXPECTED_NR_COLUMNS; Expected 7 fields on line: 5		50	199.2573	80	 [tRCUCables.cc:88]
+DEBUG APL.PIC.RSP_Driver - Reading cable-delays from file: ./tRCUCables.in_6 [RCUCables.cc:51]
+DEBUG PIC.RSP_Driver.EXCEPTION - Assertion: nrArgs == EXPECTED_NR_COLUMNS; Expected 7 fields on line: 5		50	199.2573	80	 [RCUCables.cc:79]
+INFO  APL.PIC.RSP_Driver - Expected exception:Assertion: nrArgs == EXPECTED_NR_COLUMNS; Expected 7 fields on line: 5		50	199.2573	80	 [tRCUCables.cc:88]
