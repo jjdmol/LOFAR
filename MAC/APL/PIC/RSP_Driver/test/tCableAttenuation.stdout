@@ -1,7 +1,7 @@
-DEBUG APL.PIC.RSPDriver - Reading attenuations from file: ./tCableAttenuation.in_1 [CableAttenuation.cc:45]
-DEBUG APL.PIC.RSPDriver - Cable lenghts: 5
+DEBUG APL.PIC.RSP_Driver - Reading attenuations from file: ./tCableAttenuation.in_1 [CableAttenuation.cc:45]
+DEBUG APL.PIC.RSP_Driver - Cable lenghts: 5
  [        50        80        85       115       130  ] [CableAttenuation.cc:80]
-DEBUG APL.PIC.RSPDriver - 8 x 5
+DEBUG APL.PIC.RSP_Driver - 8 x 5
 [         0         0         0         0         0 
       -2.05     -3.32     -3.53     -4.74      -5.4 
       -2.05     -3.32     -3.53     -4.74      -5.4 
@@ -11,32 +11,32 @@ DEBUG APL.PIC.RSPDriver - 8 x 5
       -4.24     -6.82     -7.21      -9.7    -11.06 
       -4.46     -7.19     -7.58    -10.18    -11.61 ]
  [CableAttenuation.cc:103]
-DEBUG APL.PIC.RSPDriver - Length  50 is  a legal length [tCableAttenuation.cc:41]
-DEBUG PIC.RSPDriver.EXCEPTION - Assertion: false; Cablelength 60 is not a legal cablelength:5
+DEBUG APL.PIC.RSP_Driver - Length  50 is  a legal length [tCableAttenuation.cc:41]
+DEBUG PIC.RSP_Driver.EXCEPTION - Assertion: false; Cablelength 60 is not a legal cablelength:5
  [        50        80        85       115       130  ] [CableAttenuation.cc:132]
-DEBUG APL.PIC.RSPDriver - Length  60 is NOT a legal length [tCableAttenuation.cc:42]
-DEBUG APL.PIC.RSPDriver - Length  80 is  a legal length [tCableAttenuation.cc:43]
-DEBUG APL.PIC.RSPDriver - Length 130 is  a legal length [tCableAttenuation.cc:44]
-DEBUG APL.PIC.RSPDriver - Reading attenuations from file: ./tCableAttenuation.in_2 [CableAttenuation.cc:45]
-DEBUG PIC.RSPDriver.EXCEPTION - Assertion: strToInt(column[0]) == 0; Table must begin with line for rcumode 0 [CableAttenuation.cc:70]
-INFO  APL.PIC.RSPDriver - Expected exception:Assertion: strToInt(column[0]) == 0; Table must begin with line for rcumode 0 [tCableAttenuation.cc:50]
-DEBUG APL.PIC.RSPDriver - Reading attenuations from file: ./tCableAttenuation.in_3 [CableAttenuation.cc:45]
-DEBUG APL.PIC.RSPDriver - Cable lenghts: 5
+DEBUG APL.PIC.RSP_Driver - Length  60 is NOT a legal length [tCableAttenuation.cc:42]
+DEBUG APL.PIC.RSP_Driver - Length  80 is  a legal length [tCableAttenuation.cc:43]
+DEBUG APL.PIC.RSP_Driver - Length 130 is  a legal length [tCableAttenuation.cc:44]
+DEBUG APL.PIC.RSP_Driver - Reading attenuations from file: ./tCableAttenuation.in_2 [CableAttenuation.cc:45]
+DEBUG PIC.RSP_Driver.EXCEPTION - Assertion: strToInt(column[0]) == 0; Table must begin with line for rcumode 0 [CableAttenuation.cc:70]
+INFO  APL.PIC.RSP_Driver - Expected exception:Assertion: strToInt(column[0]) == 0; Table must begin with line for rcumode 0 [tCableAttenuation.cc:50]
+DEBUG APL.PIC.RSP_Driver - Reading attenuations from file: ./tCableAttenuation.in_3 [CableAttenuation.cc:45]
+DEBUG APL.PIC.RSP_Driver - Cable lenghts: 5
  [        50        80        85       115       130  ] [CableAttenuation.cc:80]
-DEBUG PIC.RSPDriver.EXCEPTION - Assertion: rcuMode == prevRcuMode + 1; Expected line with rcumode 3 [CableAttenuation.cc:85]
-INFO  APL.PIC.RSPDriver - Expected exception:Assertion: rcuMode == prevRcuMode + 1; Expected line with rcumode 3 [tCableAttenuation.cc:57]
-DEBUG APL.PIC.RSPDriver - Reading attenuations from file: ./tCableAttenuation.in_4 [CableAttenuation.cc:45]
-DEBUG APL.PIC.RSPDriver - Cable lenghts: 5
+DEBUG PIC.RSP_Driver.EXCEPTION - Assertion: rcuMode == prevRcuMode + 1; Expected line with rcumode 3 [CableAttenuation.cc:85]
+INFO  APL.PIC.RSP_Driver - Expected exception:Assertion: rcuMode == prevRcuMode + 1; Expected line with rcumode 3 [tCableAttenuation.cc:57]
+DEBUG APL.PIC.RSP_Driver - Reading attenuations from file: ./tCableAttenuation.in_4 [CableAttenuation.cc:45]
+DEBUG APL.PIC.RSP_Driver - Cable lenghts: 5
  [        50        80        85       115       130  ] [CableAttenuation.cc:80]
-DEBUG PIC.RSPDriver.EXCEPTION - Assertion: prevRcuMode == MAX_RCU_MODE; Expected settings for all 7 rcumodes. [CableAttenuation.cc:102]
-INFO  APL.PIC.RSPDriver - Expected exception:Assertion: prevRcuMode == MAX_RCU_MODE; Expected settings for all 7 rcumodes. [tCableAttenuation.cc:64]
-DEBUG APL.PIC.RSPDriver - Reading attenuations from file: ./tCableAttenuation.in_5 [CableAttenuation.cc:45]
-DEBUG APL.PIC.RSPDriver - Cable lenghts: 5
+DEBUG PIC.RSP_Driver.EXCEPTION - Assertion: prevRcuMode == MAX_RCU_MODE; Expected settings for all 7 rcumodes. [CableAttenuation.cc:102]
+INFO  APL.PIC.RSP_Driver - Expected exception:Assertion: prevRcuMode == MAX_RCU_MODE; Expected settings for all 7 rcumodes. [tCableAttenuation.cc:64]
+DEBUG APL.PIC.RSP_Driver - Reading attenuations from file: ./tCableAttenuation.in_5 [CableAttenuation.cc:45]
+DEBUG APL.PIC.RSP_Driver - Cable lenghts: 5
  [        50        80        85       115       130  ] [CableAttenuation.cc:80]
-DEBUG PIC.RSPDriver.EXCEPTION - Assertion: rcuMode <= MAX_RCU_MODE; RCUmode 8 not in range [0..7] [CableAttenuation.cc:88]
-INFO  APL.PIC.RSPDriver - Expected exception:Assertion: rcuMode <= MAX_RCU_MODE; RCUmode 8 not in range [0..7] [tCableAttenuation.cc:71]
-DEBUG APL.PIC.RSPDriver - Reading attenuations from file: ./tCableAttenuation.in_6 [CableAttenuation.cc:45]
-DEBUG APL.PIC.RSPDriver - Cable lenghts: 5
+DEBUG PIC.RSP_Driver.EXCEPTION - Assertion: rcuMode <= MAX_RCU_MODE; RCUmode 8 not in range [0..7] [CableAttenuation.cc:88]
+INFO  APL.PIC.RSP_Driver - Expected exception:Assertion: rcuMode <= MAX_RCU_MODE; RCUmode 8 not in range [0..7] [tCableAttenuation.cc:71]
+DEBUG APL.PIC.RSP_Driver - Reading attenuations from file: ./tCableAttenuation.in_6 [CableAttenuation.cc:45]
+DEBUG APL.PIC.RSP_Driver - Cable lenghts: 5
  [        50        80        85       115       130  ] [CableAttenuation.cc:80]
-DEBUG PIC.RSPDriver.EXCEPTION - Assertion: column.size() == nrOfColumns; Expected 6 fields on line: 4 -2.05 -3.32  [CableAttenuation.cc:86]
-INFO  APL.PIC.RSPDriver - Expected exception:Assertion: column.size() == nrOfColumns; Expected 6 fields on line: 4 -2.05 -3.32  [tCableAttenuation.cc:78]
+DEBUG PIC.RSP_Driver.EXCEPTION - Assertion: column.size() == nrOfColumns; Expected 6 fields on line: 4 -2.05 -3.32  [CableAttenuation.cc:86]
+INFO  APL.PIC.RSP_Driver - Expected exception:Assertion: column.size() == nrOfColumns; Expected 6 fields on line: 4 -2.05 -3.32  [tCableAttenuation.cc:78]
