@@ -23,14 +23,14 @@
 #  $Id: runctest.sh 13275 2009-05-15 15:42:36Z loose $
 
 # We still need these variable, because they're used by runtest.sh and assay
-lofar_sharedir="@LOFAR_ROOT@/CMake"; export lofar_sharedir
+lofar_sharedir="@LOFAR_ROOT@/CMake/testscripts"; export lofar_sharedir
 srcdir=@srcdir@; export srcdir
 
 # Add the Python build directory to PYTHONPATH.
 PYTHONPATH=@PYTHON_BUILD_DIR@; export PYTHONPATH
 
-# Start CMake/runtest.sh
-"@LOFAR_ROOT@/CMake/runtest.sh" "$@"
+# Start CMake/testscripts/runtest.sh
+"@LOFAR_ROOT@/CMake/testscripts/runtest.sh" "$@"
 
 # The Autotools use the magic return value 77 for skipped tests. CMake can
 # only handle zero and non-zero return values. To avoid that CMake will flag a
