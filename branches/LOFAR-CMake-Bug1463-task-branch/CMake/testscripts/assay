@@ -142,27 +142,14 @@
   NEEDOUTFIL=$1
   shift
 
-# If running on a Cray cluster, we have to use qsub and yod.
-# If found, the result is a path, thus starts with a slash.
-  LOFAR_USECRAY=1
-  QSUBP=`which qsub 2>&1 | sed -e 's%^[^/].*%%'`
-  YODP=`which yod 2>&1 | sed -e 's%^[^/].*%%'`
-  if [ "$QSUBP" = ""  -o  "$YODP" = "" ]
-  then
-    LOFAR_USECRAY=0         # No Cray
-  fi
-  export LOFAR_USECRAY
-
 # Use LimitExec if possible and available.
   LOFAR_LIMITEXEC=
-  if [ LOFAR_USECRAY = 0 ]; then
-    if [ -x $LOFARROOT/bin/LimitExec ]
-    then
-      LOFAR_LIMITEXEC="$LOFARROOT/bin/LimitExec"
-    elif [ -x $lfr_script_dir/limitexec.sh ]
-    then
-      LOFAR_LIMITEXEC="$lfr_script_dir/limitexec.sh"
-    fi
+  if [ -x $LOFARROOT/bin/LimitExec ]
+  then
+    LOFAR_LIMITEXEC="$LOFARROOT/bin/LimitExec"
+  elif [ -x $lfr_script_dir/limitexec.sh ]
+  then
+    LOFAR_LIMITEXEC="$lfr_script_dir/limitexec.sh"
   fi
   export LOFAR_LIMITEXEC
   if [ "$LOFAR_LIMITEXEC" != "" ]
@@ -206,60 +193,19 @@
     LOFAR_CHECKTOOL=
   fi
 
-# If there is a .run file then use it (not on the Cray).
+# If there is a .run file then use it.
 # Note: this must be tested after the test on .py file, otherwise it gets
 # overwritten if there is a .py file.
   if [ -f "$PROG.run" ]
   then
-    if [ $LOFAR_USECRAY = 1 ]; then
-      echo "UNTESTED (no .run support): $*"
-      exit 3
-    fi
     COMMAND="./$PROG.run"
     LOFAR_CHECKTOOL="$CHKTOOL"
     export LOFAR_CHECKTOOL
   fi
 
 # Execute the command.
-  if [ $LOFAR_USECRAY = 1 ]; then
-    # On the Cray create a batch job which will use a single processor.
-    # Copy the AIPSPATH definition (if defined).
-    # Because the job does not wait, we do that by using a wait file.
-    # Note that yod does wait.
-    if test "$AIPSPATH" != ""; then
-      PBS_AIPSPATH="PBS -v $AIPSPATH"
-    fi
-    rm -f ${PROG}_tmp.wait
-    cat > ${PROG}_tmp.qsub <<EOF
-#PBS -l size=1
-#PBS -N ${PROG}_tmp_job
-#PBS -j oe
-#$PBS_AIPSPATH
-cd \$PBS_O_WORKDIR
-yod -sz 1 ./$PROG > ${PROG}_tmp.out
-touch ${PROG}_tmp.wait
-EOF
-    # Submit the job and wait for it to be finished.
-    # Do not wait longer than 10 minutes.
-    qsub ${PROG}_tmp.qsub
-    NRTIMES=0
-    while [ ! -f ${PROG}_tmp.wait ]
-    do
-      if test $NRTIMES -gt 600
-      then
-        # Keep job file.
-        mv $PROG_tmp_job $PROG.err
-        echo "FAIL (execution killed): $*"
-        exit 1
-      fi
-      sleep 1
-      NRTIMES=`expr $NRTIMES + 1`
-    done
-    STATUS=0
-  else
-    eval "$COMMAND" > ${PROG}_tmp.out
-    STATUS=$?
-  fi
+  eval "$COMMAND" > ${PROG}_tmp.out
+  STATUS=$?
 
   # Check the status.
   case $STATUS in 
