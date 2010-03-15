@@ -456,9 +456,9 @@ void Job::jobThread()
 {
   if (myPsetNumber == 0) {
     if (itsParset.realTime()) {
-      // claim resources two seconds before observation start
+      // claim resources ten seconds before observation start
       WallClockTime wallClock;
-      time_t     closeToStart = static_cast<time_t>(itsParset.startTime()) - 2;
+      time_t     closeToStart = static_cast<time_t>(itsParset.startTime()) - 10;
       char       buf[26];
       ctime_r(&closeToStart, buf);
       buf[24] = '\0';
