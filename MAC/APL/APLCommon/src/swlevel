@@ -198,9 +198,9 @@ status_prog()
 {
 	echo
 	echo Status of all software level:
-
 	prevlevel=1
-	cat $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' | while read line
+	list=( `cat $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' ` )
+	for line in ${list[@]}
 	do
 		levelnr=`echo $line | cut -d":" -f1`
 		prog=`echo $line | cut -d":" -f6`
@@ -241,8 +241,8 @@ status_prog()
                        toomany="$toomany ${prog}[$levelnr]"
 		    fi
 		else
-		    # Other controllers only one instance
-		    if [ ${#pid[*]} -ge 2 ]; then 
+		    # Other controllers must have one instance, only
+		    if [ ${#pid[@]} -ge 2 ]; then 
                        toomany="$toomany ${prog}[$levelnr]"
 		    fi
 		fi
@@ -253,27 +253,26 @@ status_prog()
 		    if [ $levelnr -le 5 ]; then
 			missing="$missing ${prog}[$levelnr]"
 		    else
-			# level 6 only has these two controllers running
-			# Others are started by StationControl when needed
+			# LCU level 6 has two permanent controllers running
 			if [ "$prog" == "StationControl" \
 			    -o "$prog" == "ClockControl" ]; then 
+			    missing="$missing ${prog}[$levelnr]"
+			fi
+			# MCU level 6 must have MACScheduler running
+			if [ "$prog" == "MACScheduler" ]; then 
 			    missing="$missing ${prog}[$levelnr]"
 			fi
 		    fi
 		  fi
 		fi
-		# Print concluding remarks at the bottom of the list
-		if [ "$prog" == "TBBControl" ]; then
-		    echo "----"
-		    if [ "$missing" ]; then 
-			echo "Missing :"$missing
-		    fi
-		    if [ "$toomany" ]; then 
-			echo "Too many:"$toomany
-		    fi
-		fi
-		
 	done
+	echo "---"
+	if [ "$missing" ]; then 
+		echo "Missing :"$missing
+	fi
+	if [ "$toomany" ]; then 
+		echo "Too many:"$toomany
+	fi
 }
 
 #
