@@ -27,7 +27,7 @@ NEEDOUTFIL=0
 PYTHONPKG=
 
 # Sanity check! Can be removed once things work OK.
-if test "$srcdir" == ""; then
+if test -z "$srcdir"; then
   echo "FATAL ERROR: srcdir is not set"
   exit 1
 fi
@@ -73,8 +73,11 @@ else
 fi
 
 # Get directory of this script.
-lfr_share_dir=`dirname $0`
-lfr_share_dir=`cd $lfr_share_dir && pwd`
+lfr_script_dir=`dirname $0`
+lfr_script_dir=`cd $lfr_script_dir && pwd`
+
+# Export lfr_script_dir, so that it can be used by assay
+export lfr_script_dir
 
 # Add the current directory to the path. We don't care if it's already in.
 PATH=.:$PATH
@@ -117,12 +120,12 @@ if test -f "$srcdir/$1.log_prop"; then
   \cp $srcdir/$1.log_prop .
 else
   if test ! -f "$1.log_prop"; then
-    sed -e "s%<LOGFILENAME>%$1_tmp.log%" $lfr_share_dir/default.log_prop > $1.log_prop
+    sed -e "s%<LOGFILENAME>%$1_tmp.log%" $lfr_script_dir/default.log_prop > $1.log_prop
   fi
 fi
 
 # Run assay
-$lfr_share_dir/assay $1 $MAXTIME $PREC $NEEDOUTFIL
+$lfr_script_dir/assay $1 $MAXTIME $PREC $NEEDOUTFIL
 STS=$?
 
 # Cleanup (mainly for make distcheck).
