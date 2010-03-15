@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh -pythonpkg parameterset tpyparameterset > tpyparameterset.log 2>&1
+./runctest.sh tpyparameterset > tpyparameterset.log 2>&1

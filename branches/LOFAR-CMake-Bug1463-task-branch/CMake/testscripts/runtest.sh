@@ -24,7 +24,6 @@
 
 # Set default options.
 NEEDOUTFIL=0
-PYTHONPKG=
 
 # Sanity check! Can be removed once things work OK.
 if test -z "$srcdir"; then
@@ -32,8 +31,7 @@ if test -z "$srcdir"; then
   exit 1
 fi
 
-# Handle possible options. The pythonpkg options are obsolete, but we still
-# need to parse them in order to be backward compatible.
+# Handle possible options. 
 while [ $# != 0 ]
 do
   # Special cvs command?
@@ -42,13 +40,6 @@ do
     shift
   elif [ "$1" = "-nostdout" ]; then
     NEEDOUTFIL=0
-    shift
-  elif [ "$1" = "-pythonpkg" ]; then
-    shift
-    PYTHONPKG=$1
-    shift
-  elif [ "$1" = "-nopythonpkg" ]; then
-    PYTHONPKG=
     shift
   else
     break
