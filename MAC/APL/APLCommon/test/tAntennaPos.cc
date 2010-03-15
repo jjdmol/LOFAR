@@ -35,10 +35,10 @@ int main (int	argc, char* argv[])
 {
 	INIT_VAR_LOGGER(argv[0], argv[0]);
 
-	AntennaPos	theAP("AntennaPos1.conf");	// read the AntennaPos.conf file into memory
+	AntennaPos	theAP("tAntennaPos.in");	// read the tAntennaPos.in file into memory
 
 	// Show the names of the sets.
-	LOG_DEBUG_STR("The AntennaPos1.conf file containes the following definitions:");
+	LOG_DEBUG_STR("The tAntennaPos.in file containes the following definitions:");
 	LOG_DEBUG_STR("LBA count        : " << theAP.nrAnts("HBA"));
 	LOG_DEBUG_STR("LBA centre       : " << theAP.Centre("LBA"));
 	LOG_DEBUG_STR("LBA Ant positions: " << theAP.AntPos("LBA"));

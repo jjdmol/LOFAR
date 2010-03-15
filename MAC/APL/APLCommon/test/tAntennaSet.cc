@@ -35,7 +35,7 @@ int main (int	argc, char* argv[])
 {
 	INIT_VAR_LOGGER(argv[0], argv[0]);
 
-	AntennaSets	theAS("AntennaSets1.conf");	// read the AntennaSets.conf file into memory
+	AntennaSets	theAS("tAntennaSet.in_1");	// read the AntennaSets.conf file into memory
 
 	// Show the names of the sets.
 	LOG_DEBUG_STR("The AntennaSets.conf file containes the following sets:");
@@ -81,32 +81,37 @@ int main (int	argc, char* argv[])
 
 	LOG_DEBUG(" ");
 	LOG_DEBUG("----- Finally testing some corrupt AntennaSet files, expecting 5 exceptions... -----");
+	uint nrExceptions(0);
 	try {
-		AntennaSets	theWrongAS("AntennaSets2.conf");	// wrong line format
+		AntennaSets	theWrongAS("tAntennaSet.in_2");	// wrong line format
+		LOG_ERROR("==>  Expected exception: wrong line format");
 	}
-	catch (Exception&	e) {}
-
-	try {
-		AntennaSets	theWrongAS("AntennaSets3.conf");	// 1 station type forgotten
-	}
-	catch (Exception&	e) {}
+	catch (Exception&	e) { nrExceptions++; }
 
 	try {
-		AntennaSets	theWrongAS("AntennaSets4.conf");	// double definition of stationType
+		AntennaSets	theWrongAS("tAntennaSet.in_3");	// 1 station type forgotten
+		LOG_ERROR("==>  Expected exception: 1 station type forgotten");
 	}
-	catch (Exception&	e) {}
+	catch (Exception&	e) { nrExceptions++; }
 
 	try {
-		AntennaSets	theWrongAS("AntennaSets5.conf");	// double definition of AntennaSet
+		AntennaSets	theWrongAS("tAntennaSet.in_4");	// double definition of stationType
+		LOG_ERROR("==>  Expected exception: double definition of stationType");
 	}
-	catch (Exception&	e) {}
+	catch (Exception&	e) { nrExceptions++; }
 
 	try {
-		AntennaSets	theWrongAS("AntennaSets6.conf");	// incomplete definition at end of file.
+		AntennaSets	theWrongAS("tAntennaSet.in_5");	// double definition of AntennaSet
+		LOG_ERROR("==>  Expected exception: double definition of AntennaSet");
 	}
-	catch (Exception&	e) {}
+	catch (Exception&	e) { nrExceptions++; }
 
-
-	return (0);
+	try {
+		AntennaSets	theWrongAS("tAntennaSet.in_6");	// incomplete definition at end of file.
+		LOG_ERROR("==>  Expected exception: incomplete definition at end of file");
+	}
+	catch (Exception&	e) { nrExceptions++; }
+        
+	return (nrExceptions == 5) ? 0 : 1;
 }
 
