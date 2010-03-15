@@ -9,4 +9,4 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${_parmdb_main}
   ${CMAKE_CURRENT_BINARY_DIR}/parmdb_main)
 
-lofar_add_test(tpyparmdb DEPENDS parmdb_main)
+lofar_add_test(tpyparmdb DEPENDS parmdb_main _parmdb)

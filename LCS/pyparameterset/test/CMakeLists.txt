@@ -2,4 +2,4 @@
 
 include(LofarCTest)
 
-lofar_add_test(tpyparameterset)
+lofar_add_test(tpyparameterset DEPENDS _pyparameterset)
