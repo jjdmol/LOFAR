@@ -218,12 +218,12 @@ if __name__ == "__main__":
     # check partition if requested so
     if options.check:
       expected_owner = os.environ["USER"]
-      real_owner = owner( options.partition )
+      real_owner = owner( partition )
 
       print "Partition Owner : %-40s" % (real_owner,)
 
       expected_job = None
-      real_job = runningJob( options.partition )
+      real_job = runningJob( partition )
 
       print "Running Job     : %-40s" % (real_job,)
 
