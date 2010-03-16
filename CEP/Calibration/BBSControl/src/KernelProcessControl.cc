@@ -395,8 +395,8 @@ namespace LOFAR
       const pair<double, double> freqRangeObs(dimsObs.getFreqRange());
       ASSERT((freqRangeObs.first >= freqRangeCmd.first
         || casa::near(freqRangeObs.first, freqRangeCmd.first))
-        && (freqRangeObs.second <= freqRangeCmd.second)
-        || casa::near(freqRangeObs.second, freqRangeCmd.second));
+        && (freqRangeObs.second <= freqRangeCmd.second
+        || casa::near(freqRangeObs.second, freqRangeCmd.second)));
 
       // Update domain.
       const pair<double, double> timeRangeCmd(command.getTimeRange());

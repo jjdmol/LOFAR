@@ -1,4 +1,4 @@
-//#  Step.cc:
+//# Step.cc:
 //#
 //# Copyright (C) 2002-2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -147,6 +147,8 @@ namespace LOFAR
         toString(itsModelConfig.useGain()));
       ps.add(prefix + "Model.DirectionalGain.Enable",
         toString(itsModelConfig.useDirectionalGain()));
+      ps.add(prefix + "Model.FaradayRotation.Enable",
+        toString(itsModelConfig.useFaradayRotation()));
 
       ps.add(prefix + "Model.Beam.Enable", toString(itsModelConfig.useBeam()));
       if(itsModelConfig.useBeam()) {
@@ -216,6 +218,10 @@ namespace LOFAR
       itsModelConfig.setDirectionalGain
         (ps.getBool("Model.DirectionalGain.Enable",
           itsModelConfig.useDirectionalGain()));
+
+      itsModelConfig.setFaradayRotation
+        (ps.getBool("Model.FaradayRotation.Enable",
+          itsModelConfig.useFaradayRotation()));
 
       if(ps.getBool("Model.Beam.Enable", itsModelConfig.useBeam())) {
         BeamConfig parentConfig = itsModelConfig.getBeamConfig();

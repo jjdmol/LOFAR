@@ -154,6 +154,9 @@ public:
     bool useDirectionalGain() const;
     void setDirectionalGain(bool value = true);
 
+    bool useFaradayRotation() const;
+    void setFaradayRotation(bool value = true);
+
     bool useBeam() const;
     void setBeamConfig(const BeamConfig &config);
     const BeamConfig &getBeamConfig() const;
@@ -188,6 +191,7 @@ private:
         BANDPASS,
         GAIN,
         DIRECTIONAL_GAIN,
+        FARADAY_ROTATION,
         BEAM,
         IONOSPHERE,
         FLAGGER,

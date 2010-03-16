@@ -204,6 +204,11 @@ bool ModelConfig::useDirectionalGain() const
     return itsModelOptions[DIRECTIONAL_GAIN];
 }
 
+bool ModelConfig::useFaradayRotation() const
+{
+    return itsModelOptions[FARADAY_ROTATION];
+}
+
 bool ModelConfig::useBeam() const
 {
     return itsModelOptions[BEAM];
@@ -282,6 +287,11 @@ void ModelConfig::setGain(bool value)
 void ModelConfig::setDirectionalGain(bool value)
 {
     itsModelOptions[DIRECTIONAL_GAIN] = value;
+}
+
+void ModelConfig::setFaradayRotation(bool value)
+{
+    itsModelOptions[FARADAY_ROTATION] = value;
 }
 
 void ModelConfig::setBeamConfig(const BeamConfig &config)
@@ -413,6 +423,8 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.useGain() << noboolalpha;
     out << endl << indent << "Direction dependent gain enabled: " << boolalpha
         << obj.useDirectionalGain() << noboolalpha;
+    out << endl << indent << "Faraday rotation enabled: " << boolalpha
+        << obj.useFaradayRotation() << noboolalpha;
 
     out << endl << indent << "Beam enabled: " << boolalpha << obj.useBeam()
         << noboolalpha;
