@@ -71,6 +71,7 @@ enum PTCommand {
   NEWDEF,
   UPDDEF,
   DELDEF,
+  EXPORT,
   QUIT
 };
 
@@ -152,6 +153,7 @@ void showHelp()
   cerr << " adddef parmname valuespec" << endl;
   cerr << " updatedef parmname_pattern valuespec" << endl;
   cerr << " removedef parmname_pattern" << endl;
+  cerr << " export parmname_pattern dbtype='casa' tablename='name' append=0" << endl;
   cerr << endl;
   cerr << " range [parmname_pattern]       (show the total domain range)" << endl;
   cerr << " show [parmname_pattern] [domain=...]" << endl;
@@ -208,6 +210,8 @@ PTCommand getCommand (string& line)
     cmd = UPDDEF;
   } else if (sc == "deletedef"  ||  sc == "removedef"  || sc == "erasedef") {
     cmd = DELDEF;
+  } else if (sc == "export") {
+    cmd = EXPORT;
   } else if (sc == "open") {
     cmd = OPEN;
   } else if (sc == "close") {
@@ -350,7 +354,7 @@ Block<bool> getMask (const KeyValueMap& kvmap, const string& arrName,
   return res;
 }
 
-Box getDomain (const KeyValueMap& kvmap, int size=2)
+Box getDomain (const KeyValueMap& kvmap, int size=2, double defEnd=0)
 {
   KeyValueMap::const_iterator value = kvmap.find("domain");
   vector<double> st;
@@ -426,7 +430,7 @@ Box getDomain (const KeyValueMap& kvmap, int size=2)
     int nr = size - st.size();
     for (int i=0; i<nr; ++i) {
       st.push_back (0);
-      end.push_back (0);
+      end.push_back (defEnd);
     }
   }
   return Box(make_pair(st[0], st[1]), make_pair(end[0], end[1]));
@@ -525,7 +529,7 @@ void newParm (const string& parmName, const KeyValueMap& kvmap, ostream& ostr)
   ParmSet parmset;
   ParmId parmid = parmset.addParm (*parmtab, parmName);
   // Get domain and values (if existing).
-  Box domain = getDomain (kvmap, 2);
+  Box domain = getDomain (kvmap, 2, 1.);
   ParmCache cache (parmset, domain);
   ParmValueSet& pvset = cache.getValueSet(parmid);
   // Assure no value exists yet.
@@ -677,6 +681,24 @@ void updateDefParms (ParmMap& parmSet, KeyValueMap& kvmap, ostream& ostr)
   }
 }
 
+// Copy constant scalar values to default values in the new table.
+int exportParms (const ParmMap& parmset, ParmDB& newtab)
+{
+  int ncopy = 0;
+  for (ParmMap::const_iterator iter = parmset.begin();
+       iter != parmset.end(); ++iter) {
+    const string& name = iter->first;
+    const ParmValueSet& pset = iter->second;
+    if (pset.size() == 1) {
+      const ParmValue& pval = pset.getParmValue(0);
+      if (pval.nx() == 1  &  pval.ny() == 1) {
+        newtab.putDefValue (name, pset);
+        ncopy++;
+      }
+    }
+  }
+  return ncopy;
+}
 
 void doIt (bool noPrompt, ostream& ostr)
 {
@@ -742,7 +764,7 @@ void doIt (bool noPrompt, ostream& ostr)
             // Other commands expect a possible parmname and keywords
             parmName = getParmName (line);
             KeyValueMap kvmap = KeyParser::parse (line);
-            // For list functions the parmname defaults to *.
+            // For export and list functions the parmname defaults to *.
             // Otherwise a parmname or pattern must be given.
             if (cmd!=RANGE && cmd!=SHOW && cmd!=SHOWDEF &&
                 cmd!=NAMES && cmd!=NAMESDEF) {
@@ -791,6 +813,23 @@ void doIt (bool noPrompt, ostream& ostr)
                 ostr << "Deleted " << nrvalrec << " value records (of "
                      << nrparm << " parms)" << endl;
               }
+            } else if (cmd==EXPORT) {
+              // Read the table type and name and append switch.
+              KeyValueMap kvmap = KeyParser::parse (line);
+              string dbUser = kvmap.getString ("user", getUserName());
+              string dbHost = kvmap.getString ("host", "dop50.astron.nl");
+              string dbName = kvmap.getString ("db", dbUser);
+              string dbType = kvmap.getString ("dbtype", "casa");
+              string tableName = kvmap.getString ("tablename", "MeqParm");
+              int append = kvmap.getInt ("append", 0);
+              ParmDBMeta meta (dbType, tableName);
+              meta.setSQLMeta (dbName, dbUser, "", dbHost);
+              ParmDB newtab(meta, append==1);
+              ParmMap parmset;
+              parmtab->getValues (parmset, parmName, Box());
+              int ncopy = exportParms (parmset, newtab);
+              ostr << "Exported " << ncopy << " parms to "
+                   << tableName << endl;
             } else if (cmd==NAMES || cmd==NAMESDEF)  {
               // show names matching the pattern.
               showNames (parmName, cmd, ostr);

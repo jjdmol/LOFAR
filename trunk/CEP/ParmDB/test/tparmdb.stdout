@@ -45,6 +45,12 @@ def  type=polc
     values:  4,5,6  shape=[3, 1]
     pert=1e-06 pert_rel=y
 Wrote new record for parameter def
+parm1  type=scalar
+    domain:  freq=[0 MHz +0.001 KHz] time=[1858/11/17/00:00:00 +1 sec]
+    values:  3.1  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+Wrote new record for parameter parm1
+Exported 1 parms to tparmdb_tmp.pdb2
 abc  type=scalar
     domain:  freq=[1e-06 MHz +0.002 KHz] time=[1858/11/17/00:00:02 +2 sec]
     values:  -1,-2  shape=[2, 1]
@@ -57,7 +63,11 @@ def  type=polc
     domain:  freq=[6e-06 MHz +0.002 KHz] time=[1858/11/17/00:00:07 +2 sec]
     values:  4,5,6  shape=[3, 1]
     pert=1e-06 pert_rel=y
-2 parms and 3 values found
+parm1  type=scalar
+    domain:  freq=[0 MHz +0.001 KHz] time=[1858/11/17/00:00:00 +1 sec]
+    values:  3.1  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+3 parms and 4 values found
 defg  type=polclog
     domain:  freq=[6e-06 MHz +0.002 KHz] time=[1858/11/17/00:00:07 +2 sec]
     values:  17,18,19,20,21  shape=[5, 1]  errors=0.01,0.02,0.03,0.04,0.05
@@ -79,7 +89,11 @@ defg  type=polclog
     domain:  freq=[6e-06 MHz +0.002 KHz] time=[1858/11/17/00:00:07 +2 sec]
     values:  17,18,19,20,21  shape=[5, 1]  errors=0.01,0.02,0.03,0.04,0.05
     pert=1e-06 pert_rel=y
-3 parms and 4 values found
+parm1  type=scalar
+    domain:  freq=[0 MHz +0.001 KHz] time=[1858/11/17/00:00:00 +1 sec]
+    values:  3.1  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+4 parms and 5 values found
 Deleted 1 value records (of 1 parms)
 abc  type=scalar
     domain:  freq=[4e-06 MHz +0.002 KHz] time=[1858/11/17/00:00:02 +2 sec]
@@ -93,4 +107,11 @@ defg  type=polclog
     domain:  freq=[6e-06 MHz +0.002 KHz] time=[1858/11/17/00:00:07 +2 sec]
     values:  17,18,19,20,21  shape=[5, 1]  errors=0.01,0.02,0.03,0.04,0.05
     pert=1e-06 pert_rel=y
-3 parms and 3 values found
+parm1  type=scalar
+    domain:  freq=[0 MHz +0.001 KHz] time=[1858/11/17/00:00:00 +1 sec]
+    values:  3.1  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+4 parms and 4 values found
+parm1  type=scalar
+    values:  3.1  shape=[1, 1]
+    pert=1e-06 pert_rel=y
