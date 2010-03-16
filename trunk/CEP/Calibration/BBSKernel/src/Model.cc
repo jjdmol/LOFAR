@@ -34,6 +34,7 @@
 #include <BBSKernel/Expr/EquatorialCentroid.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/ExprVisData.h>
+#include <BBSKernel/Expr/FaradayRotation.h>
 #include <BBSKernel/Expr/FlagIf.h>
 #include <BBSKernel/Expr/GaussianCoherence.h>
 #include <BBSKernel/Expr/GaussianSource.h>
@@ -166,8 +167,9 @@ void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
     }
 
     // Direction dependent effects.
-    const bool haveDependentEffects = config.useDirectionalGain()
-        || config.useBeam() || config.useIonosphere();
+    const bool haveDependentEffects = config.useFaradayRotation()
+        || config.useDirectionalGain() || config.useBeam()
+        || config.useIonosphere();
 
     vector<MatrixSum::Ptr> coherence(baselines.size());
     for(unsigned int i = 0; i < patches.size(); ++i)
@@ -179,6 +181,12 @@ void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
         if(haveDependentEffects)
         {
             ddTransform.resize(stations.size());
+
+            if(config.useFaradayRotation())
+            {
+                makeFaradayRotationExpr(config, stations, patches[i],
+                    ddTransform);
+            }
 
             if(config.useDirectionalGain())
             {
@@ -325,8 +333,9 @@ void Model::makeInverseExpr(const ModelConfig &config,
     }
 
     // Direction dependent effects.
-    const bool haveDependentEffects = config.useDirectionalGain()
-        || config.useBeam() || config.useIonosphere();
+    const bool haveDependentEffects = config.useFaradayRotation()
+        || config.useDirectionalGain() || config.useBeam()
+        || config.useIonosphere();
 
     ElementBeamExpr::Ptr exprElementBeam;
     casa::Vector<Expr<Vector<2> >::Ptr> exprRefAzEl;
@@ -361,6 +370,11 @@ void Model::makeInverseExpr(const ModelConfig &config,
             THROW(BBSKernelException, "No patch, or more than one patch"
                 " selected, yet corrections can only be applied for a single"
                 " direction on the sky");
+        }
+
+        if(config.useFaradayRotation())
+        {
+            makeFaradayRotationExpr(config, stations, patches[0], transform);
         }
 
         if(config.useDirectionalGain())
@@ -1000,6 +1014,22 @@ void Model::makeIonosphereExpr(const vector<unsigned int> &stations,
 
         accumulator(i) = compose(accumulator(i),
             exprIonosphere->construct(refPosition, piercePoint));
+    }
+}
+
+void Model::makeFaradayRotationExpr(const ModelConfig &config,
+    const vector<unsigned int> &stations, const string &patch,
+    casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
+{
+    for(unsigned int i = 0; i < stations.size(); ++i)
+    {
+        const unsigned int station = stations[i];
+
+        ExprParm::Ptr rm = itsScope(INSTRUMENT, "RotationMeasure:"
+            + itsInstrument[station].name() + ":" + patch);
+
+        accumulator(i) = compose(accumulator(i),
+            Expr<JonesMatrix>::Ptr(new FaradayRotation(rm)));
     }
 }
 

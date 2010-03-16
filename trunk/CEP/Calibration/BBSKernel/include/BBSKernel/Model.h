@@ -147,6 +147,10 @@ private:
             const IonosphereExpr::ConstPtr &exprIonosphere,
             casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
 
+    void makeFaradayRotationExpr(const ModelConfig &config,
+        const vector<unsigned int> &stations, const string &patch,
+        casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
+
     Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &accumulator,
         const Expr<JonesMatrix>::Ptr &effect) const;
 

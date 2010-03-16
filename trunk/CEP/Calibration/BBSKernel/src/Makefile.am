@@ -48,6 +48,7 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/ExprValueIterator.cc \
 	Expr/ExprVisData.cc \
 	Expr/ExternalFunction.cc \
+	Expr/FaradayRotation.cc \
 	Expr/FlagArray.cc \
 	Expr/GaussianCoherence.cc \
 	Expr/GaussianSource.cc \

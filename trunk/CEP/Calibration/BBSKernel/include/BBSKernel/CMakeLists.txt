@@ -45,6 +45,7 @@ install(FILES
   Expr/ExprValueIterator.h
   Expr/ExprVisData.h
   Expr/ExternalFunction.h
+  Expr/FaradayRotation.h
   Expr/FlagArray.h
   Expr/FlagIf.h
   Expr/GaussianCoherence.h

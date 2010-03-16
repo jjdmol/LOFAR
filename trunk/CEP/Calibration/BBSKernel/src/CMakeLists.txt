@@ -36,6 +36,7 @@ lofar_add_library(bbskernel
   Expr/ExprValueIterator.cc
   Expr/ExprVisData.cc
   Expr/ExternalFunction.cc
+  Expr/FaradayRotation.cc
   Expr/FlagArray.cc
   Expr/GaussianCoherence.cc
   Expr/GaussianSource.cc
