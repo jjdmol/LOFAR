@@ -33,9 +33,9 @@
 if(NOT PYRAP_FOUND)
 
   find_path(PYRAP_INCLUDE_DIR pyrap/Converters.h
-    PATHS ${PYRAP_ROOT_DIR} PATH_SUFFIXES include)
+    HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES include)
   find_library(PYRAP_LIBRARY pyrap
-    PATHS ${PYRAP_ROOT_DIR} PATH_SUFFIXES lib)
+    HINTS ${PYRAP_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(PYRAP_INCLUDE_DIR PYRAP_LIBRARY)
 
   # Pyrap also depends on Casacore

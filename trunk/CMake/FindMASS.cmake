@@ -36,11 +36,11 @@
 if(NOT MASS_FOUND)
 
   find_path(MASS_INCLUDE_DIR massv.h
-    PATHS ${MASS_ROOT_DIR} PATH_SUFFIXES include)
+    HINTS ${MASS_ROOT_DIR} PATH_SUFFIXES include)
   find_library(MASS_LIBRARY mass
-    PATHS ${MASS_ROOT_DIR} PATH_SUFFIXES lib)
+    HINTS ${MASS_ROOT_DIR} PATH_SUFFIXES lib)
   find_library(MASSV_LIBRARY massv
-    PATHS ${MASS_ROOT_DIR} PATH_SUFFIXES lib)
+    HINTS ${MASS_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(MASS_INCLUDE_DIR MASS_LIBRARY MASSV_LIBRARY)
 
   include(FindPackageHandleStandardArgs)

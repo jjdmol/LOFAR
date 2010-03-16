@@ -33,9 +33,9 @@
 if(NOT READLINE_FOUND)
 
   find_path(READLINE_INCLUDE_DIR readline/readline.h
-    PATHS ${READLINE_ROOT_DIR} PATH_SUFFIXES include)
+    HINTS ${READLINE_ROOT_DIR} PATH_SUFFIXES include)
   find_library(READLINE_LIBRARY readline
-    PATHS ${READLINE_ROOT_DIR} PATH_SUFFIXES lib)
+    HINTS ${READLINE_ROOT_DIR} PATH_SUFFIXES lib)
   find_library(NCURSES_LIBRARY ncurses)   # readline depends on libncurses
   mark_as_advanced(READLINE_INCLUDE_DIR READLINE_LIBRARY NCURSES_LIBRARY)
 

@@ -34,11 +34,11 @@
 if(NOT PQXX_FOUND)
 
   find_path(PQXX_INCLUDE_DIR pqxx/pqxx
-    PATHS ${PQXX_ROOT_DIR} PATH_SUFFIXES include)
+    HINTS ${PQXX_ROOT_DIR} PATH_SUFFIXES include)
   find_library(PQXX_LIBRARY pqxx
-    PATHS ${PQXX_ROOT_DIR} PATH_SUFFIXES lib)
+    HINTS ${PQXX_ROOT_DIR} PATH_SUFFIXES lib)
   find_library(PQ_LIBRARY pq
-    PATHS ${PQ_ROOT_DIR} PATH_SUFFIXES lib)
+    HINTS ${PQ_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(PQXX_INCLUDE_DIR PQXX_LIBRARY PQ_LIBRARY)
 
   include(FindPackageHandleStandardArgs)

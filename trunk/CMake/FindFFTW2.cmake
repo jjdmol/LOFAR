@@ -143,7 +143,7 @@ set(FFTW2_LIBRARIES)
 foreach(_lib ${_libraries})
   string(TOUPPER "${_lib}2" _LIB)
   find_library(${_LIB}_LIBRARY NAMES ${_lib} ${_prec}${_lib}
-    PATHS ${FFTW2_ROOT_DIR} PATH_SUFFIXES lib)
+    HINTS ${FFTW2_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(${_LIB}_LIBRARY)
   list(APPEND FFTW2_LIBRARIES ${${_LIB}_LIBRARY})
   list(APPEND _check_list ${_LIB}_LIBRARY)
@@ -151,7 +151,7 @@ endforeach(_lib ${_libraries})
 
 # Search for header file, with and without prefix.
 find_path(FFTW2_INCLUDE_DIR NAMES ${_prec}${_headerfile} ${_headerfile}
-  PATHS ${FFTW2_ROOT_DIR} PATH_SUFFIXES include)
+  HINTS ${FFTW2_ROOT_DIR} PATH_SUFFIXES include)
 mark_as_advanced(FFTW2_INCLUDE_DIR)
 list(APPEND _check_list FFTW2_INCLUDE_DIR)
 
