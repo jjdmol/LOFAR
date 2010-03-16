@@ -72,7 +72,7 @@ if(NOT PVSS_FOUND)
   # Use hard-coded value if version information file cannot be found.
   find_file(PVSS_VERSINFO_MK
     NAMES VersInfo.mk
-    PATHS ${PVSS_ROOT_DIR}
+    HINTS ${PVSS_ROOT_DIR}
     PATH_SUFFIXES api)
   mark_as_advanced(PVSS_VERSINFO_MK)
   if(NOT PVSS_VERSINFO_MK)
@@ -88,7 +88,7 @@ if(NOT PVSS_FOUND)
   # Search for the PVSS include directory
   find_path(PVSS_INCLUDE_DIR
     NAMES Basics/Utilities/Util.hxx
-    PATHS ${PVSS_ROOT_DIR}
+    HINTS ${PVSS_ROOT_DIR}
     PATH_SUFFIXES api/include)
   set(PVSS_INCLUDE_DIRS ${PVSS_INCLUDE_DIR})
   set(pvss_check_list PVSS_INCLUDE_DIR)
@@ -98,7 +98,7 @@ if(NOT PVSS_FOUND)
   foreach(lib ${pvss_libraries})
     find_library(PVSS_${lib}_LIBRARY
       NAMES ${lib}${pvss_version}
-      PATHS ${PVSS_ROOT_DIR}
+      HINTS ${PVSS_ROOT_DIR}
       PATH_SUFFIXES api/lib.${osname})
     list(APPEND pvss_check_list PVSS_${lib}_LIBRARY)
   endforeach(lib Manager Messages Datapoint Basics bcm)

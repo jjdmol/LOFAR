@@ -33,9 +33,9 @@
 if(NOT LOG4CPLUS_FOUND)
 
   find_path(LOG4CPLUS_INCLUDE_DIR log4cplus/logger.h
-    PATHS ${LOG4CPLUS_ROOT_DIR} PATH_SUFFIXES include)
+    HINTS ${LOG4CPLUS_ROOT_DIR} PATH_SUFFIXES include)
   find_library(LOG4CPLUS_LIBRARY log4cplus
-    PATHS ${LOG4CPLUS_ROOT_DIR} PATH_SUFFIXES lib)
+    HINTS ${LOG4CPLUS_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(LOG4CPLUS_INCLUDE_DIR LOG4CPLUS_LIBRARY)
 
   include(FindPackageHandleStandardArgs)

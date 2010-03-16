@@ -32,7 +32,7 @@
 if(NOT VALGRIND_FOUND)
 
   find_path(VALGRIND_INCLUDE_DIR valgrind/valgrind.h
-    PATHS ${VALGRIND_ROOT_DIR} PATH_SUFFIXES include)
+    HINTS ${VALGRIND_ROOT_DIR} PATH_SUFFIXES include)
   mark_as_advanced(VALGRIND_INCLUDE_DIR)
 
   include(FindPackageHandleStandardArgs)
