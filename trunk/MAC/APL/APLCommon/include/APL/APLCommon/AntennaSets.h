@@ -31,6 +31,7 @@
 #include <Common/LofarConstants.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_map.h>
+#include <Common/lofar_vector.h>
 #include <ApplCommon/StationInfo.h>
 
 // Avoid 'using namespace' in headerfiles
