@@ -42,7 +42,7 @@ OLAP.CNProc.usedCoresInPset = [0..63]
 Observation.nrBeams = 1
 Observation.Beam[0].angle1 = 5.2336866848083394 # Cygnus
 Observation.Beam[0].angle2 = 0.71094251447010637
-Observation.Beam[0].directionTypes = J2000
+Observation.Beam[0].directionType = J2000
 
 # ----- Output streams
 Observation.MSNameMask = /data1/D${YEAR}_${MSNUMBER}/SB${SUBBAND}.MS
