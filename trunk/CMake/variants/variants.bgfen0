@@ -18,7 +18,7 @@ option(USE_LOG4CPLUS "Use Log4Cplus" OFF)
 option(USE_MPI       "Use MPI"       ON)
 
 # Host specific paths to third party packages
-set(CASACORE_ROOT_DIR /globalhome/lofarsystem/packages/root/bgp_ion)
+set(CASACORE_ROOT_DIR /globalhome/lofarsystem/packages/root/bgp_ion/casacore)
 set(CASACORE_MAKE_REQUIRED_EXTERNALS_OPTIONAL ON)
 set(VALGRIND_ROOT_DIR /globalhome/mol/root-ppc)
 set(MASS_ROOT_DIR /opt/mass)
