@@ -51,7 +51,7 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-lofar_BLITZ
+dnl lofar_BLITZ
 dnl lofar_MPI
 lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/MACIO, MACIO, , 1, MACIO/GCF_Event.h,,)
@@ -66,6 +66,7 @@ AC_OUTPUT(
 include/Makefile
 include/MD_Protocol/Makefile
 src/Makefile
+test/Makefile
 Makefile
 MD_Protocol.spec
 )

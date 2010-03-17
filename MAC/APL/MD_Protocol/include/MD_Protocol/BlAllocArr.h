@@ -24,9 +24,11 @@
 #define LOFAR_MD_PROTOCOL_BL_ALLOC_ARR_H
 
 // \file
-// Allocation tripled for 1 beamlet
+// Streamable container of BeamletAllocations
 
 //# Includes
+#include <Common/LofarConstants.h>
+#include <Common/lofar_iostream.h>
 #include <Common/lofar_vector.h>
 #include <MD_Protocol/BeamletAllocation.h>
 
@@ -36,7 +38,7 @@ namespace LOFAR {
 class BlAllocArr
 { 
 public:
-	// Allocation
+	// construction
 	explicit BlAllocArr(int	nrElements);
 	~BlAllocArr();
 	// default construction needed for protocol
@@ -44,6 +46,15 @@ public:
 
 	BeamletAllocation&	operator[](uint	index);
 	const BeamletAllocation&	operator[](uint	index) const;
+
+	// print function for operator<<
+	ostream& print (ostream& os) const;
+
+	void set		(uint idx, uint subband, int beam, uint observation);
+	void clear		(uint idx);
+	void clear		(uint idx, uint	count);
+	void clearRange (uint lowlimit, uint upperlimit);
+	void clearRSP   (uint rspNr);
 
 	//@{
 	// marshalling methods
@@ -61,6 +72,15 @@ private:
 	uint						itsSize;
 	vector<BeamletAllocation>	itsPool;
 };
+
+//#
+//# operator<<
+//#
+inline ostream& operator<< (ostream& os, const BlAllocArr& aBAA)
+{	
+	return (aBAA.print(os));
+}
+
 
   } // namespace MD_Protocol
 } // namespace LOFAR
