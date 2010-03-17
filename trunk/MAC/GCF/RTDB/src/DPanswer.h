@@ -25,6 +25,7 @@
 
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Task.h>
+#include <GCF/TM/GCF_Scheduler.h>
 #include <GCF/PVSS/PVSSresponse.h>
 #include <GCF/PVSS/GCF_PVDynArr.h>
 
