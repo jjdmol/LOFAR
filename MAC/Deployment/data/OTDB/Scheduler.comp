@@ -5,12 +5,13 @@ node	Scheduler	1.0.0	development	'node constraint'	"Scheduler"
 
 #	name			dir.	type	unit	prun.	vm	value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par antennaMode			I	uint	-	10	0 	0	-	"antenna mode"
+par antennaMode			I	uint	-	10	0 	0	-	"Station antenna mode"
 par CEPProcessingUnits		I	uint	-	10	0 	0	-	"CEP processing requirements"
 par clockFrequency		I	uint	-	10	0 	0	-	"station clock frequency (0=160MHz,1=200MHz)"
 par contactEmail		I	text	-	10	0 	''	-	"email of contact person"
 par contactName			I	text	-	10	0 	''	-	"name of contact person"
 par contactPhone		I	text	-	10	0 	''	-	"phone number of contact person"
+par filterType                  I       uint    -       10      0       0       -       "Station filter type"
 par firstPossibleDay		I	uint	-	10	0 	0	-	"first possible date for scheduling"
 par fixedDay			I	bool	-	10	0	false	-	"fixes the task to the scheduled day"
 par fixedTime			I	bool	-	10	0	false	-	"fixes the task to the scheduled time (not day)"
