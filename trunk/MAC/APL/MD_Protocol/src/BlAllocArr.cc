@@ -25,7 +25,9 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/LofarConstants.h>
 #include <MD_Protocol/BlAllocArr.h>
+#include <MD_Protocol/BeamletAllocation.h>
 
 
 namespace LOFAR {
@@ -65,6 +67,68 @@ const BeamletAllocation&	BlAllocArr::operator[](uint	index) const
 	ASSERTSTR(index < itsSize, "There are only " << itsSize << " beamletAllocations, not " << index);
 	return (itsPool[index]);
 }
+
+
+//
+// Access functions
+//
+void BlAllocArr::set		(uint index, uint subband, int beam, uint observation)
+{
+	ASSERTSTR(index < itsSize, "There are only " << itsSize << " beamletAllocations, not " << index);
+
+	if (itsPool[index].observation) {
+		LOG_WARN(formatString("Overwriting beamlet allocation %d: Was: %d %d.%d, will be: %d %d.%d",
+			index, itsPool[index].subband, itsPool[index].observation, itsPool[index].beam, subband, observation, beam));
+	}
+	itsPool[index].subband 	 = subband;
+	itsPool[index].beam    	 = beam;
+	itsPool[index].observation = observation;
+}
+
+void BlAllocArr::clear		(uint index)
+{
+	ASSERTSTR(index < itsSize, "There are only " << itsSize << " beamletAllocations, not " << index);
+	itsPool[index] = BeamletAllocation();
+}
+
+void BlAllocArr::clear		(uint index, uint	count)
+{
+	ASSERTSTR(index < itsSize, "There are only " << itsSize << " beamletAllocations, not " << index);
+	ASSERTSTR(index+count < itsSize, "There are only " << itsSize << " beamletAllocations, not " << index+count);
+	for (uint i = index; i < index+count; i++) {
+		itsPool[i] = BeamletAllocation();
+	}
+}
+
+void BlAllocArr::clearRange (uint lowlimit, uint upperlimit)
+{
+	ASSERTSTR(upperlimit < itsSize, "There are only " << itsSize << " beamletAllocations, not " << upperlimit);
+	for (uint i = lowlimit; i < upperlimit; i++) {
+		itsPool[i] = BeamletAllocation();
+	}
+
+}
+
+void BlAllocArr::clearRSP   (uint rspNr)
+{
+	clear(rspNr * MAX_BEAMLETS_PER_RSP, MAX_BEAMLETS_PER_RSP);
+}
+
+//
+// print function for operator<<
+//
+ostream& BlAllocArr::print (ostream& os) const
+{
+	os << "BAA capacity: " << itsSize << endl;
+	os << "index: sub   obs.beam" << endl;
+	for (uint i = 0; i < itsSize; i++) {
+		if (itsPool[i].observation) {
+			os << formatString("%3d: %3d %5d.%d\n", i, itsPool[i].subband, itsPool[i].observation, itsPool[i].beam);
+		}
+	}
+	return (os);
+}
+
 
 
 //
