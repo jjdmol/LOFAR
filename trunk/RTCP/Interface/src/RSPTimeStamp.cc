@@ -26,8 +26,6 @@
 namespace LOFAR {
 namespace RTCP {
 
-unsigned TimeStamp::clockSpeed = 20000000;
-
 ostream &operator << (ostream &os, const TimeStamp &ts)
 {
   return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "]";

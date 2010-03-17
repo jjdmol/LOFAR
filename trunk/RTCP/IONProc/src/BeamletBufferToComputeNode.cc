@@ -90,7 +90,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
   itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping();
   itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping();
-  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps->startTime() * itsSampleRate));
+  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps->startTime() * itsSampleRate), ps->clockSpeed());
   itsIsRealTime		      = ps->realTime();
   itsMaxNetworkDelay	      = ps->maxNetworkDelay();
   itsDumpRawData	      = ps->dumpRawData();
