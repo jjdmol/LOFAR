@@ -30,6 +30,7 @@
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/msio/timefrequencydata.h>
 #include <AOFlagger/msio/segmentedimage.h>
+#include <AOFlagger/msio/spatialmatrixmetadata.h>
 
 #include <AOFlagger/rfi/strategy/artifactset.h>
 #include <AOFlagger/rfi/strategy/msimageset.h>
@@ -63,9 +64,12 @@
 #include <AOFlagger/gui/progresswindow.h>
 #include <AOFlagger/gui/zoomwindow.h>
 
+#include <AOFlagger/imaging/model.h>
+#include <AOFlagger/imaging/observatorium.h>
+
 #include <iostream>
 
-MSWindow::MSWindow() : _imagePlaneWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true)
+MSWindow::MSWindow() : _imagePlaneWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0)
 {
 	createToolbar();
 
@@ -103,6 +107,8 @@ MSWindow::~MSWindow()
 		delete _imageSetIndex;
 		delete _imageSet;
 	}
+	if(_spatialMetaData != 0)
+		delete _spatialMetaData;
 }
 
 void MSWindow::onActionDirectoryOpen()
@@ -189,6 +195,15 @@ void MSWindow::loadCurrentTFData()
 			TimeFrequencyData *data = _imageSet->LoadData(*_imageSetIndex);
 			_timeFrequencyWidget.SetNewData(*data, _metaData);
 			delete data;
+			if(_spatialMetaData != 0)
+			{
+				delete _spatialMetaData;
+				_spatialMetaData = 0;
+			}
+			if(dynamic_cast<rfiStrategy::SpatialMSImageSet*>(_imageSet) != 0)
+			{
+				_spatialMetaData = new SpatialMatrixMetaData(static_cast<rfiStrategy::SpatialMSImageSet*>(_imageSet)->SpatialMetaData());
+			}
 			_timeFrequencyWidget.Update();
 			_statusbar.pop();
 			_statusbar.push(std::string() + _imageSet->Name() + ": " + _imageSetIndex->Description());
@@ -474,6 +489,11 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onShowImagePlane) );
 	_actionGroup->add( Gtk::Action::create("AddToImagePlane", "Add to _image plane"),
   sigc::mem_fun(*this, &MSWindow::onAddToImagePlane) );
+	_actionGroup->add( Gtk::Action::create("SimulateCorrelation", "Simulate correlation"),
+  sigc::mem_fun(*this, &MSWindow::onSimulateCorrelation) );
+	_actionGroup->add( Gtk::Action::create("SimulateFourProductCorrelation", "Simulate 4-p correlation"),
+  sigc::mem_fun(*this, &MSWindow::onSimulateFourProductCorrelation) );
+
 	_actionGroup->add( Gtk::Action::create("EditStrategy", "_Edit strategy"),
   sigc::mem_fun(*this, &MSWindow::onEditStrategyPressed) );
 	_actionGroup->add( Gtk::Action::create("ExecuteStrategy", "E_xecute strategy"),
@@ -606,6 +626,9 @@ void MSWindow::createToolbar()
     "      <separator/>"
     "      <menuitem action='ShowImagePlane'/>"
     "      <menuitem action='AddToImagePlane'/>"
+    "      <separator/>"
+    "      <menuitem action='SimulateCorrelation'/>"
+    "      <menuitem action='SimulateFourProductCorrelation'/>"
 	  "    </menu>"
     "    <menu action='MenuGo'>"
     "      <menuitem action='LargeStepPrevious'/>"
@@ -1285,4 +1308,19 @@ void MSWindow::showError(const std::string &description)
 {
 	Gtk::MessageDialog dialog(*this, description, false, Gtk::MESSAGE_ERROR);
 	dialog.run();
+}
+
+void MSWindow::onSimulateCorrelation()
+{
+	Model model;
+	model.AddSource(0.1,0.1,0.5);
+	model.AddSource(0.1,0.0,0.35);
+	model.AddSource(.101,0.001,0.45);
+	WSRTObservatorium wsrtObservatorium;
+	model.SimulateObservation(*_imagePlaneWindow->GetImager(), wsrtObservatorium, -M_PI-0.05, 0.05, 100000000.0);
+	_imagePlaneWindow->Update();
+}
+
+void MSWindow::onSimulateFourProductCorrelation()
+{
 }

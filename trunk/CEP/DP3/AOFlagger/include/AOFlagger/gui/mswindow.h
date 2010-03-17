@@ -180,6 +180,8 @@ class MSWindow : public Gtk::Window {
 		void onFrequencyGraphButtonPressed();
 		void onUnrollPhaseButtonPressed();
 		void showError(const std::string &description);
+		void onSimulateCorrelation();
+		void onSimulateFourProductCorrelation();
 
 		void openTestSet(unsigned index);
 		
@@ -209,6 +211,7 @@ class MSWindow : public Gtk::Window {
 		bool _gaussianTestSets;
 		boost::mutex _ioMutex;
 		SegmentedImagePtr _segmentedImage;
+		class SpatialMatrixMetaData *_spatialMetaData;
 };
 
 #endif

@@ -17,21 +17,16 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <iostream>
 #include <cstdlib>
 #include <sstream>
 #include <vector>
 
-#include "msio/measurementset.h"
-#include "msio/antennainfo.h"
-#include "msio/timefrequencyimager.h"
+#include <AOFlagger/msio/measurementset.h>
+#include <AOFlagger/msio/antennainfo.h>
+#include <AOFlagger/msio/timefrequencyimager.h>
 
-#include "rfi/thresholdtools.h"
+#include <AOFlagger/rfi/thresholdtools.h>
 
 using namespace std;
 

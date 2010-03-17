@@ -21,13 +21,17 @@
 #define MODEL_H
 
 #include <vector>
+#include <cmath>
+
+#include <AOFlagger/msio/image2d.h>
+#include <AOFlagger/msio/types.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 class Model {
 	struct PointSource {
-		long double dec, ra, fluxIntensity;
+		long double dec, ra, fluxIntensity, sqrtFluxIntensity;
 	};
 	public:
 		Model();
@@ -39,15 +43,19 @@ class Model {
 			source->dec = dec;
 			source->ra = ra;
 			source->fluxIntensity = fluxIntensity;
+			source->sqrtFluxIntensity = sqrt(fluxIntensity);
 			_sources.push_back(source);
 		}
-
+		void SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, num_t earthLattitude, num_t &r, num_t &i);
+		void SimulateCorrelation(class UVImager &imager, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, double totalTime, double integrationTime);
+		void SimulateObservation(class UVImager &imager, class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
 	private:
 		std::vector<PointSource *> _sources;
 		
-		void AddFTOfSources(long double u, long double v, long double &r, long double &i);
-		void AddFTOfSource(long double u, long double v, long double &r, long double &i, const PointSource *source);
-		static void GetUVPosition(long double &u, long double &v, long double earthLattitudeAngle, long double delayDirectionDEC, long double delayDirectionRA, long double dx, long double dy, long double dz, long double waveLength);
+		void AddFTOfSources(num_t u, num_t v, num_t &r, num_t &i);
+		void AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const PointSource *source);
+		static void GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t waveLength);
+		static num_t GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngleStart, num_t earthLattitudeAngleEnd, num_t dx, num_t dy);
 };
 
 #endif

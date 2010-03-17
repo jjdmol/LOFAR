@@ -10,7 +10,7 @@ SET (LOFAR_FILES lofar/LofarColumn.cc lofar/LofarStMan.cc lofar/Register.cc )
 SET (MSIO_FILES msio/baselinematrixloader msio/colormap msio/fitsfile msio/image2d msio/mask2d msio/measurementset msio/pngfile msio/samplerow msio/segmentedimage msio/stokesimager msio/timefrequencydata msio/timefrequencyimager)
 SET (RFI_STRATEGY_FILES rfi/strategy/actionfactory rfi/strategy/changeresolutionaction rfi/strategy/fitsimageset rfi/strategy/foreachbaselineaction rfi/strategy/foreachmsaction rfi/strategy/frequencyselectionaction rfi/strategy/fringestopaction rfi/strategy/imageraction rfi/strategy/imageset rfi/strategy/loadflagsaction rfi/strategy/loadimageaction rfi/strategy/msimageset rfi/strategy/plotaction rfi/strategy/slidingwindowfitaction rfi/strategy/statisticalflagaction rfi/strategy/strategy rfi/strategy/svdaction rfi/strategy/timeselectionaction rfi/strategy/writeflagsaction rfi/strategy/xmlreader rfi/strategy/xmlwriter)
 SET (RFI_FILES rfi/antennaflagcountplot rfi/frequencyflagcountplot rfi/frequencypowerplot rfi/fringestoppingfitter rfi/fringetestcreater rfi/imagetile rfi/localfitmethod rfi/methoditerator rfi/mitigationtester rfi/morphology rfi/rfiplots rfi/rfistatistics rfi/sinusfitter rfi/statisticalflagger rfi/svdmitigater rfi/thresholdconfig rfi/thresholdmitigater rfi/thresholdtools rfi/tiledimage rfi/timeflagcountplot ${RFI_STRATEGY_FILES})
-SET (IMAGING_FILES imaging/uvimager imaging/model)
+SET (IMAGING_FILES imaging/uvimager imaging/model imaging/fourproductcorrelatortester)
 SET (UTIL_FILES util/ffttools util/integerdomain util/multiplot util/plot util/rng util/statwriter util/stopwatch)
 
 lofar_add_library(rfiengine ${IMAGING_FILES} ${LOFAR_FILES} ${MSIO_FILES} ${RFI_FILES} ${UTIL_FILES})
@@ -38,6 +38,10 @@ SET_TARGET_PROPERTIES(rficonsole PROPERTIES LINKER_LANGUAGE C)
 lofar_add_executable(rfistrategy rfistrategy)
 TARGET_LINK_LIBRARIES(rfistrategy ${GENERIC_LIBRARIES})
 SET_TARGET_PROPERTIES(rfistrategy PROPERTIES LINKER_LANGUAGE C)
+
+lofar_add_executable(msinfo msinfo)
+TARGET_LINK_LIBRARIES(msinfo ${GENERIC_LIBRARIES})
+SET_TARGET_PROPERTIES(msinfo PROPERTIES LINKER_LANGUAGE C)
 
 install(PROGRAMS
   rfistrategy

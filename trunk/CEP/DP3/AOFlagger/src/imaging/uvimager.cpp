@@ -30,6 +30,7 @@
 UVImager::UVImager(unsigned long xRes, unsigned long yRes, ImageKind imageKind) : _xRes(xRes), _yRes(yRes), _xResFT(xRes), _yResFT(yRes), _uvReal(0), _uvImaginary(0), _uvWeights(0), _uvFTReal(0), _uvFTImaginary(0), _antennas(0), _fields(0), _imageKind(imageKind), _invertFlagging(false), _directFT(false), _ignoreBoundWarnings(false)
 {
 	_uvScaling = 0.00025; // testing
+	Empty();
 }
 
 
