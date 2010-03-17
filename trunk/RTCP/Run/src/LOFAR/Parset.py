@@ -104,6 +104,8 @@ class Parset(util.Parset.Parset):
         self.setdefault("Observation.ObserverName","unknown")
         self.setdefault("Observation.ProjectName","unknown")
 
+	self.setdefault("OLAP.CNProc.coresPerPset",64)
+
         # pencil beam configuration
         self.setdefault("OLAP.PencilInfo.flysEye",False);
         self.setdefault("OLAP.PencilInfo.nrRings",0);
