@@ -31,6 +31,7 @@ CREATE TYPE schedulerInfo AS (
 	contactEmail           VARCHAR(40),
 	contactName            VARCHAR(20),
 	contactPhone           VARCHAR(20),
+	filterType	       INT4,
 	firstPossibleDay       INT4,
 	fixedDay               BOOLEAN,
 	fixedTime              BOOLEAN,
@@ -70,43 +71,44 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
       SELECT limits FROM getvhitemlist($1, \'%Observation.Scheduler.%\') ORDER BY name ASC;
 
 	BEGIN
-      OPEN fieldList;
-    FETCH fieldList INTO vRecord.antennaMode;
-	  FETCH fieldList INTO vRecord.CEPProcessingUnits;
-	  FETCH fieldList INTO vRecord.clockFrequency;
-	  FETCH fieldList INTO vRecord.contactEmail;
-	  FETCH fieldList INTO vRecord.contactName;
-	  FETCH fieldList INTO vRecord.contactPhone;
-	  FETCH fieldList INTO vRecord.firstPossibleDay;
-	  FETCH fieldList INTO vRecord.fixedDay;
-	  FETCH fieldList INTO vRecord.fixedTime;
-	  FETCH fieldList INTO vRecord.lastPossibleDay;
-	  FETCH fieldList INTO vRecord.late;
-	  FETCH fieldList INTO vRecord.mayNotUnschedule;
-	  FETCH fieldList INTO vRecord.nightTimeWeightFactor;
-	  FETCH fieldList INTO vRecord.nrOfSubbands;
-	  FETCH fieldList INTO vRecord.offlineProcessingUnits;
-	  FETCH fieldList INTO vRecord.predecessor;
-	  FETCH fieldList INTO vRecord.predMaxTimeDif;
-	  FETCH fieldList INTO vRecord.predMinTimeDif;
-	  FETCH fieldList INTO vRecord.priority;
-	  FETCH fieldList INTO vRecord.projectName;
-	  FETCH fieldList INTO vRecord.referenceFrame;
-	  FETCH fieldList INTO vRecord.scheduledEnd;
-	  FETCH fieldList INTO vRecord.scheduledStart;
-	  FETCH fieldList INTO vRecord.sourceDeclination;
-	  FETCH fieldList INTO vRecord.sourceNames;
-	  FETCH fieldList INTO vRecord.sourceRightAscension;
-	  FETCH fieldList INTO vRecord.stationID;
-	  FETCH fieldList INTO vRecord.storageUnits;
-	  FETCH fieldList INTO vRecord.taskDuration;
-	  FETCH fieldList INTO vRecord.taskID;
-	  FETCH fieldList INTO vRecord.taskName;
-	  FETCH fieldList INTO vRecord.taskStatus;
-	  FETCH fieldList INTO vRecord.taskType;
-	  FETCH fieldList INTO vRecord.unscheduledReason;
-	  FETCH fieldList INTO vRecord.windowMaximumTime;
-	  FETCH fieldList INTO vRecord.windowMinimumTime;
+      	OPEN fieldList;
+      	FETCH fieldList INTO vRecord.antennaMode;
+     	FETCH fieldList INTO vRecord.CEPProcessingUnits;
+	FETCH fieldList INTO vRecord.clockFrequency;
+	FETCH fieldList INTO vRecord.contactEmail;
+	FETCH fieldList INTO vRecord.contactName;
+	FETCH fieldList INTO vRecord.contactPhone;
+	FETCH fieldList INTO vRecord.filterType;
+	FETCH fieldList INTO vRecord.firstPossibleDay;
+	FETCH fieldList INTO vRecord.fixedDay;
+	FETCH fieldList INTO vRecord.fixedTime;
+	FETCH fieldList INTO vRecord.lastPossibleDay;
+	FETCH fieldList INTO vRecord.late;
+	FETCH fieldList INTO vRecord.mayNotUnschedule;
+	FETCH fieldList INTO vRecord.nightTimeWeightFactor;
+	FETCH fieldList INTO vRecord.nrOfSubbands;
+	FETCH fieldList INTO vRecord.offlineProcessingUnits;
+	FETCH fieldList INTO vRecord.predecessor;
+	FETCH fieldList INTO vRecord.predMaxTimeDif;
+	FETCH fieldList INTO vRecord.predMinTimeDif;
+	FETCH fieldList INTO vRecord.priority;
+	FETCH fieldList INTO vRecord.projectName;
+	FETCH fieldList INTO vRecord.referenceFrame;
+	FETCH fieldList INTO vRecord.scheduledEnd;
+	FETCH fieldList INTO vRecord.scheduledStart;
+	FETCH fieldList INTO vRecord.sourceDeclination;
+	FETCH fieldList INTO vRecord.sourceNames;
+	FETCH fieldList INTO vRecord.sourceRightAscension;
+	FETCH fieldList INTO vRecord.stationID;
+	FETCH fieldList INTO vRecord.storageUnits;
+	FETCH fieldList INTO vRecord.taskDuration;
+	FETCH fieldList INTO vRecord.taskID;
+	FETCH fieldList INTO vRecord.taskName;
+	FETCH fieldList INTO vRecord.taskStatus;
+	FETCH fieldList INTO vRecord.taskType;
+	FETCH fieldList INTO vRecord.unscheduledReason;
+	FETCH fieldList INTO vRecord.windowMaximumTime;
+	FETCH fieldList INTO vRecord.windowMinimumTime;
       RETURN vRecord;
     END;
 ' language plpgsql;
