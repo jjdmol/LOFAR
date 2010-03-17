@@ -110,7 +110,7 @@ void TimeFrequencyWidget::Update() throw()
 		if(_metaData != 0)
 			_vertScale = new VerticalNumericScale(get_window(), round(_metaData->Band().channels[_startFrequency].frequencyHz / 1e5) / 10.0, round(_metaData->Band().channels[_endFrequency-1].frequencyHz / 1e5) / 10.0);
 		else
-			_vertScale = new VerticalNumericScale(get_window(), 0, 1);
+			_vertScale = new VerticalNumericScale(get_window(), _startFrequency, _endFrequency-1);
 
 		_leftBorderSize = _vertScale->GetWidth();
 		_rightBorderSize = 10;

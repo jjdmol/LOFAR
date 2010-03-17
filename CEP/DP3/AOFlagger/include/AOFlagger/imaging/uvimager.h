@@ -74,6 +74,7 @@ class UVImager {
 			_uvScaling = newScale;
 		}
 		void ApplyWeightsToUV();
+		void SetUVValue(long double u, long double v, long double r, long double i, long double weight);
 	private:
 		void Clear();
 		struct AntennaCache {
@@ -86,7 +87,6 @@ class UVImager {
 
 		// This is the fast variant.
 		void GetUVPosition(long double &u, long double &v, const SingleFrequencySingleBaselineData &data, const AntennaCache &cache);
-		void SetUVValue(long double u, long double v, long double r, long double i, long double weight);
 		void SetUVFTValue(long double u, long double v, long double r, long double i, long double weight);
 
 

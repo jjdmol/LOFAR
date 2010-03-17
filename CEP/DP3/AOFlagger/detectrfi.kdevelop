@@ -1,8 +1,8 @@
 <?xml version = '1.0'?>
 <kdevelop>
   <general>
-    <author></author>
-    <email></email>
+    <author/>
+    <email/>
     <version>$VERSION$</version>
     <projectmanagement>KDevCustomProject</projectmanagement>
     <primarylanguage>C++</primarylanguage>
@@ -13,7 +13,7 @@
       <language>C</language>
     </secondaryLanguages>
     <projectname>detectrfi</projectname>
-    <description></description>
+    <description/>
     <defaultencoding/>
   </general>
   <kdevcustomproject>
@@ -22,7 +22,7 @@
       <mainprogram>CEP/DP3/AOFlagger/src/rfigui</mainprogram>
       <directoryradio>executable</directoryradio>
       <customdirectory>/</customdirectory>
-      <programargs></programargs>
+      <programargs/>
       <terminal>false</terminal>
       <autocompile>true</autocompile>
       <envvars/>
@@ -46,7 +46,7 @@
         <default/>
       </environments>
       <prio>0</prio>
-      <defaulttarget></defaulttarget>
+      <defaulttarget/>
       <makeoptions>-s</makeoptions>
     </make>
     <blacklist/>
@@ -142,7 +142,7 @@
       <designerpluginpaths/>
     </qt>
     <creategettersetter>
-      <prefixGet></prefixGet>
+      <prefixGet/>
       <prefixSet>set</prefixSet>
       <prefixVariable>m_,_</prefixVariable>
       <parameterName>theValue</parameterName>
@@ -185,16 +185,16 @@
   </substmap>
   <kdevdebugger>
     <general>
-      <gdbpath></gdbpath>
-      <dbgshell></dbgshell>
-      <configGdbScript></configGdbScript>
-      <runShellScript></runShellScript>
-      <runGdbScript></runGdbScript>
+      <gdbpath/>
+      <dbgshell/>
+      <configGdbScript/>
+      <runShellScript/>
+      <runGdbScript/>
       <breakonloadinglibs>true</breakonloadinglibs>
       <separatetty>false</separatetty>
       <floatingtoolbar>false</floatingtoolbar>
       <raiseGDBOnStart>false</raiseGDBOnStart>
-      <programargs></programargs>
+      <programargs/>
     </general>
     <display>
       <staticmembers>false</staticmembers>

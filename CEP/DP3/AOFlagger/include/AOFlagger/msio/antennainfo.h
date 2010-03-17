@@ -34,6 +34,9 @@ struct EarthPosition {
 	num_t x, y, z;
 	std::string ToString() {
 		std::stringstream s;
+		s.setf(std::ios::fixed,std::ios::floatfield);
+		s.width(16);
+		s.precision(16);
 		s << x << "," << y << "," << z << " (alt " << sqrtl(x*x+y*y+z*z) << ")";
 		return s.str();
 	}
@@ -45,6 +48,11 @@ struct UVW {
 };
 
 struct AntennaInfo {
+	AntennaInfo() { }
+	AntennaInfo(const AntennaInfo &source)
+		: id(source.id), position(source.position), name(source.name), diameter(source.diameter), mount(source.mount), station(source.station)
+	{
+	}
 	unsigned id;
 	EarthPosition position;
 	std::string name;
@@ -72,6 +80,13 @@ struct BandInfo {
 		channelCount(source.channelCount),
 		channels(source.channels)
 	{
+	}
+	num_t CenterFrequencyHz() const
+	{
+		num_t total = 0.0;
+		for(std::vector<ChannelInfo>::const_iterator i=channels.begin();i!=channels.end();++i)
+			total += i->frequencyHz;
+		return total / channels.size();
 	}
 };
 

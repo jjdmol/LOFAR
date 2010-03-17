@@ -86,6 +86,10 @@ namespace rfiStrategy {
 			{
 				return TimeFrequencyMetaDataCPtr();
 			}
+			SpatialMatrixMetaData &SpatialMetaData()
+			{
+				return _loader.MetaData();
+			}
 			virtual void WriteFlags(ImageSetIndex &index, TimeFrequencyData &data)
 			{
 			}

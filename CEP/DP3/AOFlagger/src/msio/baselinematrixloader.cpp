@@ -7,9 +7,10 @@
 
 #include <AOFlagger/msio/arraycolumniterator.h>
 #include <AOFlagger/msio/scalarcolumniterator.h>
+#include <AOFlagger/msio/spatialmatrixmetadata.h>
 
 BaselineMatrixLoader::BaselineMatrixLoader(MeasurementSet &measurementSet)
-	: _sortedTable(0), _measurementSet(measurementSet), _timeIndexCount(0)
+	: _sortedTable(0), _measurementSet(measurementSet), _timeIndexCount(0), _metaData(0)
 {
 	casa::Table *rawTable = _measurementSet.OpenTable(MeasurementSet::MainTable);
 	casa::Block<casa::String> names(4);
@@ -35,6 +36,8 @@ BaselineMatrixLoader::~BaselineMatrixLoader()
 {
 	if(_sortedTable != 0)
 		delete _sortedTable;
+	if(_metaData != 0)
+		delete _metaData;
 }
 
 TimeFrequencyData BaselineMatrixLoader::Load(size_t timeIndex)
@@ -56,15 +59,9 @@ TimeFrequencyData BaselineMatrixLoader::Load(size_t timeIndex)
 	casa::Table table = iter.table();
 	casa::ROScalarColumn<int> antenna1Column(table, "ANTENNA1"); 
 	casa::ROScalarColumn<int> antenna2Column(table, "ANTENNA2");
-	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
-	casa::ROArrayColumn<casa::Complex> dataColumn(table, "DATA");
 
 	ScalarColumnIterator<int> antenna1Iter = ScalarColumnIterator<int>::First(antenna1Column);
 	ScalarColumnIterator<int> antenna2Iter = ScalarColumnIterator<int>::First(antenna2Column);
-	ROArrayColumnIterator<casa::Complex> dataIter = 
-		ROArrayColumnIterator<casa::Complex>::First(dataColumn);
-	ROArrayColumnIterator<bool> flagIter = 
-		ROArrayColumnIterator<bool>::First(flagColumn);
 
 	// Find highest antenna index
 	int nrAntenna = 0;
@@ -84,8 +81,22 @@ TimeFrequencyData BaselineMatrixLoader::Load(size_t timeIndex)
 	}
 	++nrAntenna;
 
+	if(_metaData != 0)
+		delete _metaData;
+	_metaData = new SpatialMatrixMetaData(nrAntenna);
+
+	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
+	casa::ROArrayColumn<casa::Complex> dataColumn(table, "DATA");
+	casa::ROArrayColumn<double> uvwColumn(table, "UVW");
+
 	antenna1Iter = ScalarColumnIterator<int>::First(antenna1Column);
 	antenna2Iter = ScalarColumnIterator<int>::First(antenna2Column);
+	ROArrayColumnIterator<casa::Complex> dataIter = 
+		ROArrayColumnIterator<casa::Complex>::First(dataColumn);
+	ROArrayColumnIterator<bool> flagIter = 
+		ROArrayColumnIterator<bool>::First(flagColumn);
+	ROArrayColumnIterator<double> uvwIter = 
+		ROArrayColumnIterator<double>::First(uvwColumn);
 
 	Image2DPtr
 		xxRImage = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
@@ -152,41 +163,61 @@ TimeFrequencyData BaselineMatrixLoader::Load(size_t timeIndex)
 			}
 		}
 
-		xxRImage->SetValue(a1, a2, xxr);
-		xxIImage->SetValue(a1, a2, xxi);
-		xyRImage->SetValue(a1, a2, xyr);
-		xyIImage->SetValue(a1, a2, xyi);
-		yxRImage->SetValue(a1, a2, yxr);
-		yxIImage->SetValue(a1, a2, yxi);
-		yyRImage->SetValue(a1, a2, yyr);
-		yyIImage->SetValue(a1, a2, yyi);
+		xxRImage->SetValue(a1, a2, xxr / xxc);
+		xxIImage->SetValue(a1, a2, xxi / xxc);
+		xyRImage->SetValue(a1, a2, xyr / xxc);
+		xyIImage->SetValue(a1, a2, xyi / xxc);
+		yxRImage->SetValue(a1, a2, yxr / xxc);
+		yxIImage->SetValue(a1, a2, yxi / xxc);
+		yyRImage->SetValue(a1, a2, yyr / xxc);
+		yyIImage->SetValue(a1, a2, yyi / xxc);
 
 		xxMask->SetValue(a1, a2, xxc == 0);
 		xyMask->SetValue(a1, a2, xyc == 0);
 		yxMask->SetValue(a1, a2, yxc == 0);
 		yyMask->SetValue(a1, a2, yyc == 0);
 
+		UVW uvw;
+		casa::Array<double> arr = *uvwIter;
+		casa::Array<double>::const_iterator uvwArrayIterator = arr.begin();
+		uvw.u = *uvwArrayIterator;
+		++uvwArrayIterator;
+		uvw.v = *uvwArrayIterator;
+		++uvwArrayIterator;
+		uvw.w = *uvwArrayIterator;
+		_metaData->SetUVW(a1, a2, uvw);
+
 		if(a1 != a2)
 		{
-			xxRImage->SetValue(a2, a1, xxr);
-			xxIImage->SetValue(a2, a1, -xxi);
-			xyRImage->SetValue(a2, a1, xyr);
-			xyIImage->SetValue(a2, a1, -xyi);
-			yxRImage->SetValue(a2, a1, yxr);
-			yxIImage->SetValue(a2, a1, -yxi);
-			yyRImage->SetValue(a2, a1, yyr);
-			yyIImage->SetValue(a2, a1, -yyi);
+			xxRImage->SetValue(a2, a1, xxr / xxc);
+			xxIImage->SetValue(a2, a1, -xxi / xxc);
+			xyRImage->SetValue(a2, a1, xyr / xxc);
+			xyIImage->SetValue(a2, a1, -xyi / xxc);
+			yxRImage->SetValue(a2, a1, yxr / xxc);
+			yxIImage->SetValue(a2, a1, -yxi / xxc);
+			yyRImage->SetValue(a2, a1, yyr / xxc);
+			yyIImage->SetValue(a2, a1, -yyi / xxc);
 
 			xxMask->SetValue(a2, a1, xxc == 0);
 			xyMask->SetValue(a2, a1, xyc == 0);
 			yxMask->SetValue(a2, a1, yxc == 0);
 			yyMask->SetValue(a2, a1, yyc == 0);
+
+			uvw.u = -uvw.u;
+			uvw.v = -uvw.v;
+			uvw.w = -uvw.w;
+			_metaData->SetUVW(a2, a1, uvw);
 		}
 
 		++antenna1Iter;
 		++antenna2Iter;
 		++dataIter;
+		++uvwIter;
 	}
+	casa::ROScalarColumn<int> bandColumn(table, "DATA_DESC_ID");
+	BandInfo band = _measurementSet.GetBandInfo(bandColumn(0));
+	_metaData->SetFrequency(band.CenterFrequencyHz());
+
 	TimeFrequencyData data(xxRImage, xxIImage, xyRImage, xyIImage, yxRImage, yxIImage, yyRImage, yyIImage);
 	data.SetIndividualPolarisationMasks(xxMask, xyMask, yxMask, yyMask);
 	return data;
