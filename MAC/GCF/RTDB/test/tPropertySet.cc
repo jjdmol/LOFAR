@@ -93,6 +93,7 @@ GCFEvent::TResult tPropertySet::createPS(GCFEvent& e, GCFPortInterface& /*p*/)
 
 	case F_TIMER:
 		LOG_DEBUG_STR("Creation of DP " << (gTestPassed ? "was successful" : "FAILED"));
+		LOG_DEBUG_STR("fullScope of PS: " << itsPropSet->getFullScope());
 		TRAN(tPropertySet::WriteTest);
 	break;
 
