@@ -1,0 +1,597 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Creator: fig2dev Version 3.2 Patchlevel 5 -->
+<!-- CreationDate: Wed Jun 24 14:57:21 2009 -->
+<!-- Magnification: 1.000 -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="6.9in"
+   height="7.0in"
+   viewBox="1746 846 8319 8394"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.46"
+   sodipodi:docname="correlation-triangle.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape">
+  <metadata
+     id="metadata121">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs119">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 315 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="621 : 315 : 1"
+       inkscape:persp3d-origin="310.5 : 210 : 1"
+       id="perspective123" />
+  </defs>
+  <sodipodi:namedview
+     inkscape:window-height="726"
+     inkscape:window-width="645"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     guidetolerance="10.0"
+     gridtolerance="10.0"
+     objecttolerance="10.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base"
+     showgrid="false"
+     inkscape:zoom="0.78412698"
+     inkscape:cx="310.5"
+     inkscape:cy="315"
+     inkscape:window-x="0"
+     inkscape:window-y="49"
+     inkscape:current-layer="svg2" />
+  <g
+     style="stroke-width:.025in; stroke:black; fill:none"
+     id="g4">
+<!-- Line -->    <polygon
+       points="9000,8100 9000,900 8400,900 8400,1500 7800,1500 7800,2100 7200,2100 7200,2700 6600,2700 6600,3300 6000,3300 6000,3900 5400,3900 5400,4500 4800,4500 4800,5100 4200,5100 4200,5700 3600,5700 3600,6300 3000,6300 3000,6900 2400,6900 2400,7500 1800,7500 1800,8100 9000,8100 "
+       style="stroke:#000000;stroke-width:60; stroke-linejoin:miter; stroke-linecap:butt; fill:#ffd600; "
+       id="polygon6" />
+<!-- Line: box -->    <rect
+       x="6600"
+       y="3300"
+       width="2400"
+       height="2400"
+       rx="0"
+       style="stroke:#000000;stroke-width:60; stroke-linejoin:miter; stroke-linecap:butt; fill:#ff0000; "
+       id="rect8" />
+<!-- Line -->    <polyline
+       points="6000,9075 6525,9075 "
+       style="stroke:#000000;stroke-width:30; stroke-linejoin:miter; stroke-linecap:butt; "
+       id="polyline10" />
+<!-- Arrowhead on XXXpoint 6000 9075 - 6720 9075-->    <polygon
+       points="6490 9150 6678 9075 6490 9000 6528 9075 6490 9150  "
+       style="stroke:#000000;stroke-width:30; fill:#000000;"
+       id="polygon12" />
+<!-- Line -->    <polyline
+       points="9900,4275 9900,3749 "
+       style="stroke:#000000;stroke-width:30; stroke-linejoin:miter; stroke-linecap:butt; "
+       id="polyline14" />
+<!-- Arrowhead on XXXpoint 9900 4275 - 9900 3555-->    <polygon
+       points="9975 3784 9900 3597 9825 3784 9900 3747 9975 3784  "
+       style="stroke:#000000;stroke-width:30; fill:#000000;"
+       id="polygon16" />
+<!-- Line -->    <polyline
+       points="2400,8100 2400,7500 9000,7500 "
+       style="stroke:#000000;stroke-width:15; stroke-linejoin:miter; stroke-linecap:butt; "
+       id="polyline18" />
+<!-- Line -->    <polyline
+       points="3000,8100 3000,6900 9000,6900 "
+       style="stroke:#000000;stroke-width:15; stroke-linejoin:miter; stroke-linecap:butt; "
+       id="polyline20" />
+<!-- Line -->    <polyline
+       points="3600,8100 3600,6300 9000,6300 "
+       style="stroke:#000000;stroke-width:15; stroke-linejoin:miter; stroke-linecap:butt; "
+       id="polyline22" />
+<!-- Line -->    <polyline
+       points="4800,8100 4800,5100 9000,5100 "
+       style="stroke:#000000;stroke-width:15; stroke-linejoin:miter; stroke-linecap:butt; "
+       id="polyline24" />
+<!-- Line -->    <polyline
+       points="5400,8100 5400,4500 9000,4500 "
+       style="stroke:#000000;stroke-width:15; stroke-linejoin:miter; stroke-linecap:butt; "
+       id="polyline26" />
+<!-- Line -->    <polyline
+       points="6000,8100 6000,3900 9000,3900 "
+       style="stroke:#000000;stroke-width:15; stroke-linejoin:miter; stroke-linecap:butt; "
+       id="polyline28" />
+<!-- Line -->    <polyline
+       points="7200,8100 7200,2700 9000,2700 "
+       style="stroke:#000000;stroke-width:15; stroke-linejoin:miter; stroke-linecap:butt; "
+       id="polyline30" />
+<!-- Line -->    <polyline
+       points="7800,8100 7800,2100 9000,2100 "
+       style="stroke:#000000;stroke-width:15; stroke-linejoin:miter; stroke-linecap:butt; "
+       id="polyline32" />
+<!-- Line -->    <polyline
+       points="8400,8100 8400,1500 9000,1500 "
+       style="stroke:#000000;stroke-width:15; stroke-linejoin:miter; stroke-linecap:butt; "
+       id="polyline34" />
+<!-- Line -->    <polyline
+       points="4200,8100 4200,5700 9000,5700 "
+       style="stroke:#000000;stroke-width:60; stroke-linejoin:miter; stroke-linecap:butt; "
+       id="polyline36" />
+<!-- Line -->    <polyline
+       points="6600,8100 6600,3300 9000,3300 "
+       style="stroke:#000000;stroke-width:60; stroke-linejoin:miter; stroke-linecap:butt; "
+       id="polyline38" />
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="2100"
+       y="7950"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="bold"
+       font-size="360"
+       text-anchor="middle"
+       id="text40">A</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="2700"
+       y="7350"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="bold"
+       font-size="360"
+       text-anchor="middle"
+       id="text42">A</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="3300"
+       y="6750"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="bold"
+       font-size="360"
+       text-anchor="middle"
+       id="text44">A</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="3900"
+       y="6150"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="bold"
+       font-size="360"
+       text-anchor="middle"
+       id="text46">A</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="4500"
+       y="5550"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="bold"
+       font-size="360"
+       text-anchor="middle"
+       id="text48">A</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="5100"
+       y="4950"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="bold"
+       font-size="360"
+       text-anchor="middle"
+       id="text50">A</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="5700"
+       y="4350"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="bold"
+       font-size="360"
+       text-anchor="middle"
+       id="text52">A</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="6300"
+       y="3750"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="bold"
+       font-size="360"
+       text-anchor="middle"
+       id="text54">A</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="6900"
+       y="3150"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="bold"
+       font-size="360"
+       text-anchor="middle"
+       id="text56">A</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="7500"
+       y="2550"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="bold"
+       font-size="360"
+       text-anchor="middle"
+       id="text58">A</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="8100"
+       y="1950"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="bold"
+       font-size="360"
+       text-anchor="middle"
+       id="text60">A</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="5100"
+       y="9225"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="bold"
+       font-size="360"
+       text-anchor="middle"
+       id="text62">station</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="2100"
+       y="8625"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="middle"
+       id="text64">0</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="2700"
+       y="8625"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="middle"
+       id="text66">1</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="3900"
+       y="8625"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="middle"
+       id="text68">3</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="4500"
+       y="8625"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="middle"
+       id="text70">4</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="5100"
+       y="8625"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="middle"
+       id="text72">5</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="5700"
+       y="8625"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="middle"
+       id="text74">6</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="6300"
+       y="8625"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="middle"
+       id="text76">7</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="6900"
+       y="8625"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="middle"
+       id="text78">8</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="7500"
+       y="8625"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="middle"
+       id="text80">9</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="8100"
+       y="8625"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="middle"
+       id="text82">10</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="3300"
+       y="8625"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="middle"
+       id="text84">2</text>
+<!-- Text -->    <g
+       transform="translate(10050,5175) rotate(-90.00021046)"
+       id="g86">
+      <text
+         xml:space="preserve"
+         x="0"
+         y="0"
+         stroke="#000000"
+         fill="#000000"
+         font-family="Helvetica"
+         font-style="normal"
+         font-weight="bold"
+         font-size="360"
+         text-anchor="middle"
+         id="text88">station</text>
+    </g>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="9225"
+       y="7950"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="start"
+       id="text90">0</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="9225"
+       y="7350"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="start"
+       id="text92">1</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="9225"
+       y="6150"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="start"
+       id="text94">3</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="9225"
+       y="4950"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="start"
+       id="text96">5</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="9225"
+       y="4350"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="start"
+       id="text98">6</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="9225"
+       y="3750"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="start"
+       id="text100">7</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="9225"
+       y="3150"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="start"
+       id="text102">8</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="9225"
+       y="2550"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="start"
+       id="text104">9</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="9225"
+       y="5550"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="start"
+       id="text106">4</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="9225"
+       y="6750"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="start"
+       id="text108">2</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="9225"
+       y="1950"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="start"
+       id="text110">10</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="9225"
+       y="1350"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="start"
+       id="text112">11</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="8700"
+       y="8625"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="normal"
+       font-size="360"
+       text-anchor="middle"
+       id="text114">11</text>
+<!-- Text -->    <text
+       xml:space="preserve"
+       x="8700"
+       y="1350"
+       stroke="#000000"
+       fill="#000000"
+       font-family="Helvetica"
+       font-style="normal"
+       font-weight="bold"
+       font-size="360"
+       text-anchor="middle"
+       id="text116">A</text>
+  </g>
+</svg>

@@ -1,0 +1,308 @@
+\documentclass[11pt,twoside]{article}  % Leave intact
+\usepackage{adassconf}
+
+% If you have the old LaTeX 2.09, and not the current LaTeX2e, comment
+% out the \documentclass and \usepackage lines above and uncomment
+% the following:
+
+%\documentstyle[11pt,twoside,adassconf]{article}
+
+\begin{document}   % Leave intact
+
+\paperID{O01-4}
+% If your title is so long as to fill the page header when you print it,
+% then please supply a short form as a \titlemark.
+\title{The LOFAR Global Sky Model: Some Design Challenges}
+%\titlemark{The LOFAR Global Sky Model}
+
+\author{Oleg M. Smirnov, Jan E. Noordam}
+\affil{Netherlands Foundation for Research in Astronomy (ASTRON)}
+
+\contact{Oleg Smirnov}
+\email{smirnov@astron.nl}
+
+\paindex{Smirnov, O.M.}
+\aindex{Noordam, J.E.}     % Remove this line if there is only one author
+
+\authormark{Smirnov \& Noordam}
+
+\keywords{telescopes: LOFAR, astronomy: radio, calibration: selfcal,
+calibration: polarization, interferometry: radio, sky model}
+
+\begin{abstract}          
+
+The LOFAR Global Sky Model (GSM) will be an all-sky database of some 100
+million objects, with flux \& polarization measurements in the 20--200 MHz
+range. The primary function of the GSM is to support LOFAR calibration and data
+reduction. The GSM is expected to provide a model of all sufficiently  bright
+sources in any given field, having enough detail and precision to calibrate and
+subtract these sources and yield residual images of the faint background. The
+GSM is expected to be continuously updated and refined during LOFAR operation
+in a ``closed loop'' of sorts. The GSM is also a valuable stand-alone data
+product that can be made compatible with the VO.
+
+The instrumental characteristics of LOFAR pose large challenges to GSM design,
+some of them unique even in the field of very large catalogues. Besides sheer
+size, this includes highly complex source models (thus making for a very
+non-uniform database structure), stringent performance requirements for
+operational use, the need to update source models operationally, and various
+data management issues. This paper will focus on some of these challenges,
+discuss our approaches to dealing with them, and present a prototype GSM being
+developed for the LOFAR Pilot Selfcal System (PSS).
+
+\end{abstract}
+
+\section{Introduction}
+
+\htmladdnormallinkfoot{LOFAR}{http://www.lofar.org} is a a large, distributed
+radio telescope being designed by an international consortium (ASTRON, ATNF,
+MIT Haystack, NRL). Some architectural features of the current design are:
+
+\begin{itemize}
+\item 20--200 MHz range;
+\item $>100$ phased array stations combined into an aperture synthesis array;
+\item Log-spiral configuration with a dense central core, largest baseline is
+$\approx$300 km.
+\end{itemize}
+
+The unique instrumental characteristics of LOFAR pose new challenges to
+calibration. This has led us to formulate a requirement for a Global Sky Model
+(GSM):
+
+\begin{itemize}
+
+\item The GSM itself, being a very large source catalog updated over the
+lifetime of the telescope, is one of the main LOFAR deliverables. As such, it
+will be made available in the VO.
+
+\item Calibration of LOFAR for any observation requires reference sources from
+all over the sky, due to the extensive sidelobes of the instrument.
+
+\item The instrument will have a very wide field of view, and will utilize
+multiple beams. Thus, full data reduction will require {\em facet imaging},
+which needs a global grid of reference sources to align the individual images
+in position and flux.
+
+\end{itemize}
+
+\section{GSM: the next step in radio sky models}
+
+The self-calibration algorithm employed in radio astronomy is simple in
+essence, but extremely difficult in the details. The basic selfcal step is
+predict sky -- apply instrumental effects -- compare to observed data. The
+current record for dynamic range with selfcal is $10^6$, achieved at the WSRT
+(***WSRT). The LOFAR design target is $10^8$. A proof of concept study will be
+carried out using WSRT data, which should be able to go up to $10^7$, given a
+sophisticated enough calibration approach.
+
+One of the main limiting factors in the dynamic range of selfcal is accuracy of
+the predict step. An accurate predict requires a sufficiently complex \&
+flexible flux source representation:
+
+\begin{itemize}
+
+\item The traditional sky model -- still widely used today by packages such as
+\htmladdnormallink{AIPS}{http://www.aoc.nrao.edu/aips/} -- is a collection of
+CLEAN components. This is well-suited to representing point sources, but fails
+to model extended emission with any sort of accuracy. Various refinements of
+CLEAN (see Cornwell 2004 for an overview), have been developed over the years
+to address this shortcoming.
+
+\item \htmladdnormallink{NEWSTAR}{http://www.astron.nl/newstar/}, the WSRT data
+reduction package, introduced a parametrized source representation ($IQUV$
+fluxes, rotation measure, spectral index), as well as elliptical gaussians to
+model extended sources.
+
+\end{itemize}
+
+LOFAR (and other upcoming instruments such as SKA) requires us to take the next
+step. This includes more sophisticated source models, in particular spatially
+extended sources, as well as time and frequency variability of all source
+parameters. 
+
+\subsection{Some features of the LOFAR GSM}
+
+\begin{itemize}
+\item Expected size: 100 million objects. All-sky coverage.
+\item Fluxes and polarizations in the 20--200 MHz range.
+\item Very rich with spatially extended sources. Needs sophisticated
+parametrizations, with all parameters potentially being functions of time and
+frequency.
+\item Must support a variety of object morphologies: point sources, extended
+sources as shapelets, pixons, CLEAN components, images, et al.  Morphology can
+change qualitatively with frequency.
+\item Initially populated from existing catalogues and updated over the lifetime
+of the instrument.
+\item One of the two main deliverables of LOFAR.
+\end{itemize}
+
+\subsection{The GSM lifecycle}
+
+Operationally, the GSM software must support the following lifecycle:
+
+\begin{enumerate}
+\item For any observation, a required subset is extracted into a Local Sky Model
+(LSM);
+\item Calibration is performed, the LSM is updated with new calibration
+solutions and possibly new sources;
+\item Changes are optionally committed back to the GSM;
+\item After imaging (which produces the data products), images of faint sources
+may also be added to the GSM.
+\end{enumerate}
+
+\section{Data representation in the GSM}
+
+The question of data representation has emerged as one of the central issues of
+GSM design. This representation must be sufficiently flexible to capture
+sufficient detail for calibration and imaging. Because of the 
+GSM--calibration--GSM ``closed loop'', the notion of parametrized sources must
+be explicitly supported by the GSM itself. Thus, what is really required is a
+non-uniform and extensible source representation.
+
+\subsection{MeqTrees}
+
+{\em MeqTrees} (Measurement Equation Trees) are a mechanism being developed in
+the LOFAR Pilot Selfcal System (PSS). A MeqTree\footnote{Strictly speaking,
+these are not limited to tree structures, but are a more general type of graph
+-- the directed acyclic graph (DAG); the name {\em MeqTree} is now entrenched
+for historical reasons.} corresponds to a mathematical expression. The leaf
+nodes represent parameters and data sources, while a root node represent 
+derived expressions, such as the predicted visibility of a source in a given
+direction.
+
+A MeqTree can recursively evaluate its expression, and estimate partial
+derivatives w.r.t. specific parameters. Thus, a MeqTree can be employed to
+iteratively solve an equation for a set of parameters. All parameters in the
+tree ({\em MeqParms\/}) are polynomials (and in the future, possibly other
+smooth functions) of frequency and time, so the actual solvables are the
+individual polynomial coefficients.
+
+Since any mathematical equation can be represented in tree form, PSS-4 (the
+current development cycle of PSS) should be able to solve for arbitrary
+measurement equations. Operationally, the system uses a scripting layer (the
+Glish language of
+\htmladdnormallink{AIPS++}{http://aips2.nrao.edu/docs/aips++.html})  to set up
+trees, and a fast C++ kernel to evaluate and solve them.
+
+\subsection{The GSM as a collection of trees}
+
+MeqTrees provide a perfect answer to the issue of GSM data representation. To
+predict the sky, we need to be able to predict the visibility contribution of
+each source in a particular direction. This, however, may need to be computed
+differently for different types of sources. By representing a source (or rather,
+the components of a source, such as ``the Stokes $I$ flux in a specific
+direction for a specific interferometer'') as a MeqTree, we reap a number of 
+benefits:
+
+\begin{itemize}
+
+\item {\bf Polymorphism:} all sources appear the same way (that is, as the root node of
+a tree) both to the user and to the calibration system, regardless of specific
+internal representation.
+
+\item {\bf Extensibility:} source structure can be represented and paremetrized to
+any level of complexity
+
+\item {\bf Parellelization:} trees allow for fine-grained parallelizm, which is very
+important considering the immense computing requirements of LOFAR calibration.
+
+\item {\bf Rapid experimentation:} trees can be torn down and rebuilt at run-time. This
+allows for quick experiments with alternative source representarions.
+
+\end{itemize}
+
+Of course, this approach also incurs a number of trade-offs:
+
+\begin{itemize}
+
+\item {\bf Computational overhead:} trees require more complicated housekeeping and
+data management compared to a ``hard-wired'' source reprsentation.
+
+\item {\bf DB complications:} this type of structure is rather difficult to represent
+in a traditional relational database.
+
+\end{itemize}
+
+\section{Development plan}
+
+An initial version of the LOFAR GSM (GSM-0), is being developed as part of
+the PSS-4 cycle. This is meant as proof-of-concept implementation, thus we have
+set the following modest goals:
+
+\begin{itemize}
+
+\item A homogenous source representation borrowed from NEWSTAR, with a fixed
+set of source parameters: RA/Dec, $IQUV$ fluxes at a reference frequency,
+spectral index, rotation measure. Extended sources will be modeled  by
+elliptical gaussians requiring three additional parameters: major/minor axis
+size, and orientation. 
+
+\item All parameters can be 2D polynomials of time and frequency.
+
+\item GSM-0 is stored in a simple flat table. In the background, we will work
+towards a full database implementation of MeqTrees.
+
+\item Internally, PSS-4 will use fully-featured MeqTrees. These will be
+constructed on-the-fly in the GSM-0 code, using parameters from the GSM table.
+Thus, we will be able to test calibration will fully featured MeqTrees, but the
+structure of the trees will be hardwired in GSM-0.
+
+\end{itemize}
+
+
+
+
+
+%-----------------------------------------------------------------------
+%			      References
+%-----------------------------------------------------------------------
+% List your references below within the reference environment
+% (i.e. between the \begin{references} and \end{references} tags).
+% Each new reference should begin with a \reference command which sets
+% up the proper indentation.  Observe the following order when listing
+% bibliographical information for each reference:  author name(s),
+% publication year, journal name, volume, and page number for
+% articles.  Note that many journal names are available as macros; see
+% the User Guide listing "macro-ized" journals.   
+%
+% EXAMPLE:  \reference Hagiwara, K., \& Zeppenfeld, D.\  1986, 
+%                Nucl.Phys., 274, 1
+%           \reference H\'enon, M.\  1961, Ann.d'Ap., 24, 369
+%           \reference King, I.\ R.\  1966, \aj, 71, 276
+%           \reference King, I.\ R.\  1975, in Dynamics of Stellar 
+%                Systems, ed.\ A.\ Hayli (Dordrecht: Reidel), 99
+%           \reference Tody, D.\  1998, \adassvii, 146
+%           \reference Zacharias, N.\ \& Zacharias, M.\ 2003,
+%                \adassxii, \paperref{P7.6}
+% 
+% Note the following tricks used in the example above:
+%
+%   o  \& is used to format an ampersand symbol (&).
+%   o  \'e puts an accent agu over the letter e.  See the User Guide
+%      and the sample files for details on formatting special
+%      characters.  
+%   o  "\ " after a period prevents LaTeX from interpreting the period 
+%      as an end of a sentence.
+%   o  \aj is a macro that expands to "Astron. J."  See the User Guide
+%      for a full list of journal macros
+%   o  \adassvii is a macro that expands to the full title, editor,
+%      and publishing information for the ADASS VII conference
+%      proceedings.  Such macros are defined for ADASS conferences I
+%      through XI.
+%   o  When referencing a paper in the current volume, use the
+%      \adassxii and \paperref macros.  The argument to \paperref is
+%      the paper ID code for the paper you are referencing.  See the 
+%      note in the "Paper ID Code" section above for details on how to 
+%      determine the paper ID code for the paper you reference.  
+%
+\begin{references}
+
+AIPS, AIPS++, NEWSTAR papers?
+\reference WSRT dynamic range
+\reference Cornwell, T.J.\ 2004, \adassxiii, \paperref{O2-2}
+
+\end{references}
+
+% Do not place any material after the references section
+
+\end{document}  % Leave intact
