@@ -36,7 +36,7 @@ namespace rfiStrategy {
 				All, CrossCorrelations, AutoCorrelations, EqualToCurrent, AutoCorrelationsOfCurrentAntennae, Current
 			};
 
-			ForEachBaselineAction() : _threadCount(3), _selection(All), _resultSet(0), _exceptionOccured(false)
+			ForEachBaselineAction() : _threadCount(3), _selection(All), _hasInitAntennae(false), _resultSet(0), _exceptionOccured(false)
 			{
 			}
 			virtual ~ForEachBaselineAction()
@@ -89,6 +89,7 @@ namespace rfiStrategy {
 			size_t _threadCount;
 			BaselineSelection _selection;
 			AntennaInfo _initAntenna1, _initAntenna2;
+			bool _hasInitAntennae;
 			size_t _initPartIndex;
 			ImageSetIndex *_loopIndex;
 			ArtifactSet *_artifacts, *_resultSet;

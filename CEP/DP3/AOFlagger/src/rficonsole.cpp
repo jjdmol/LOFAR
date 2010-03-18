@@ -28,6 +28,8 @@
 #include <AOFlagger/util/progresslistener.h>
 #include <AOFlagger/util/stopwatch.h>
 
+#include <AOFlagger/lofar/LofarStMan/Register.h>
+
 class ConsoleProgressHandler : public ProgressListener {
 	private:
 		boost::mutex _mutex;
@@ -88,6 +90,8 @@ int main(int argc, char **argv)
 	}
 	else
 	{
+		register_lofarstman();
+
 		size_t threadCount = 3;
 		std::string strategyFile;
 		size_t parameterIndex = 1;
