@@ -12,6 +12,8 @@ def unwrap(phase, tol=0.25, delta_tol=0.25):
 
     If this is impossible, the closest phase (modulo 2*pi) is used and tol is
     increased by delta_tol (tol is capped at pi).
+
+    The "phase" argument is assumed to be a 1-D array of phase values.
     """
 
     assert(tol < math.pi)
@@ -48,6 +50,8 @@ def unwrap(phase, tol=0.25, delta_tol=0.25):
 def unwrap_windowed(phase, window_size=5):
     """
     Unwrap phase by estimating the trend of the phase signal.
+
+    The "phase" argument is assumed to be a 1-D array of phase values.
     """
 
     # Allocate result.
@@ -108,7 +112,7 @@ def normalize(phase):
 def plot(sol, fig=None, sub=None, scatter=False, stack=False, sep=5.0,
     sep_abs=False, labels=None, show_legend=False):
     """
-    Plot a list of signals.
+    Plot a sequence of 1-D real valued signals.
 
     If 'fig' is equal to None, a new figure will be created. Otherwise, the
     specified figure number is used. The 'sub' argument can be used to create
