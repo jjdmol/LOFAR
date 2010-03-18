@@ -26,7 +26,8 @@ def fetch(db, stations, phasors=False, parm="Gain:0:0", direction=None,
     asPolar=True):
     """
     Fetch the value of a complex, station bound, parameter from a LOFAR
-    parameter database.
+    parameter database. The parameter values for all station given in "stations"
+    should be defined on the same grid.
 
     db:         A lofar.parmdb.parmdb instance.
     stations:   List of stations for which to retrieve the associated value
