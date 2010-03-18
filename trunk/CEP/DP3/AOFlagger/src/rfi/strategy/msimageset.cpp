@@ -284,8 +284,10 @@ namespace rfiStrategy {
 
 			if(data.PolarisationType() == TimeFrequencyData::AutoDipolePolarisation)
 			{
-				xy = Mask2D::CreateSetMaskPtr<false>(data.ImageWidth(), data.ImageHeight());
-				yx = xy;
+				Mask2DPtr joined = Mask2D::CreateCopy(xx);
+				joined->Join(yy);
+				xy = joined;
+				yx = joined;
 			} else
 			{
 				xy = data.GetMask(TimeFrequencyData::XY);

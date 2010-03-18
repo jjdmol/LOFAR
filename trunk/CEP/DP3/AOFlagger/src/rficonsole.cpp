@@ -54,9 +54,9 @@ class ConsoleProgressHandler : public ProgressListener {
 		virtual void OnEndTask()
 		{
 			boost::mutex::scoped_lock lock(_mutex);
-			ProgressListener::OnEndTask();
 			
 			double totalProgress = TotalProgress();
+			ProgressListener::OnEndTask();
 			std::cout << round(totalProgress*1000.0)/10.0 << "% : ";
 						
 			for(size_t i=1;i<Depth();++i)
