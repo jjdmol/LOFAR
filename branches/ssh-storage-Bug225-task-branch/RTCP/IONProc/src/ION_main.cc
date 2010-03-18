@@ -732,9 +732,9 @@ static void commandMaster()
     ionStreams[ion] = new MultiplexedStream(*allIONstreamMultiplexers[ion], 0);
 
   while (!quit) {
-    SocketStream sk("0.0.0.0", 4000, SocketStream::TCP, SocketStream::Server);
-
     try {
+      SocketStream sk("0.0.0.0", 400, SocketStream::TCP, SocketStream::Server);
+
       while (!quit) {
 	std::string command;
 
@@ -754,6 +754,13 @@ static void commandMaster()
 	handleCommand(command);
       }
     } catch (Stream::EndOfStreamException &) {
+    } catch (SystemCallException &ex) {
+      if (ex.error == EADDRINUSE) {
+	LOG_WARN("address in use");
+	sleep(1);
+      } else {
+	throw;
+      }
     }
   }
 
