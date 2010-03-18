@@ -32,7 +32,7 @@
 using namespace LOFAR;
 using namespace LOFAR::MACIO;
 
-int main (int	argc, char* argv[]) 
+int main (int	/*argc*/, char* argv[]) 
 {
 	INIT_LOGGER(argv[0]);
 
