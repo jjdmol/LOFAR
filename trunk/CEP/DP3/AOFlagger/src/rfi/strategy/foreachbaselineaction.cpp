@@ -44,8 +44,12 @@ namespace rfiStrategy {
 			ImageSet *imageSet = artifacts.ImageSet();
 			ImageSetIndex *iteratorIndex = imageSet->StartIndex();
 
-			_initAntenna1 = artifacts.MetaData()->Antenna1();
-			_initAntenna2 = artifacts.MetaData()->Antenna2();
+			if(artifacts.MetaData() != 0)
+			{
+				_initAntenna1 = artifacts.MetaData()->Antenna1();
+				_initAntenna2 = artifacts.MetaData()->Antenna2();
+				_hasInitAntennae = true;
+			}
 			_artifacts = &artifacts;
 			_initPartIndex = imageSet->GetPart(*artifacts.ImageSetIndex());
 
@@ -106,6 +110,8 @@ namespace rfiStrategy {
 			case AutoCorrelations:
 				return a1id == a2id;
 			case EqualToCurrent: {
+				if(!_hasInitAntennae)
+					throw BadUsageException("For each baseline over 'EqualToCurrent' with no current baseline");
 				TimeFrequencyMetaDataCPtr metaData = imageSet->LoadMetaData(index);
 				const AntennaInfo
 					&a1 = metaData->Antenna1(),
@@ -116,6 +122,8 @@ namespace rfiStrategy {
 					roundl(b.Angle()/5) == roundl(initB.Angle()/5));
 			}
 			case AutoCorrelationsOfCurrentAntennae:
+				if(!_hasInitAntennae)
+					throw BadUsageException("For each baseline over 'AutoCorrelationsOfCurrentAntennae' with no current baseline");
 				return a1id == a2id && (_initAntenna1.id == a1id || _initAntenna2.id == a1id) && _initPartIndex == imageSet->GetPart(index);
 			default:
 				return false;
