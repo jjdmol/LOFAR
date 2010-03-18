@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 			<< "\t\tStokes-I values, and by using a relatively small\n"
 			<< "\t\tsliding window.\n"
 			<< "\taverage\tBest trade-off between speed and quality. Will\n"
-			<< "\t\tflag the measurement set using stokes I values using\n"
+			<< "\t\tflag the measurement set using XX and YY values using\n"
 			<< "\t\tan average sliding window size.\n"
 			<< "\tbest\tHighest quality detection. Will flag each\n"
 			<< "\t\tpolarization individually, using a relatively large\n"

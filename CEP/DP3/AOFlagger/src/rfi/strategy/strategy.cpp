@@ -92,6 +92,10 @@ namespace rfiStrategy {
 		adapter->Add(cfr3);
 		cfr3->Add(new FrequencySelectionAction());
 		cfr3->Add(new TimeSelectionAction());
+		
+		SetFlaggingAction *setFlagsInAllPolarizations = new SetFlaggingAction();
+		setFlagsInAllPolarizations->SetNewFlagging(SetFlaggingAction::PolarisationsEqual);
+		block.Add(setFlagsInAllPolarizations);
 	}
 
 	void Strategy::LoadOldDefaultSingleStrategy()
@@ -134,7 +138,7 @@ namespace rfiStrategy {
 		Add(feBaseBlock);
 
 		LoadImageAction *loadImageAction = new LoadImageAction();
-		loadImageAction->SetReadStokesI();
+		loadImageAction->SetReadDipoleAutoPolarisations();
 
 		feBaseBlock->Add(loadImageAction);
 		

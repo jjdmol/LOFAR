@@ -111,6 +111,7 @@ namespace rfiStrategy {
 						artifacts.SetOriginalData(*newTF);
 						delete newTF;
 					}
+					break;
 					case TimeFrequencyData::CrossDipolePolarisation:
 					{
 						bool changeBoth = (artifacts.RevisedData().PolarisationType() == artifacts.ContaminatedData().PolarisationType());
