@@ -1,4 +1,4 @@
-//# parmdb_main.cc: put values in the ParmDB database
+//# parmdbm.cc: put values in the ParmDB database
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Institute for Radio Astronomy)

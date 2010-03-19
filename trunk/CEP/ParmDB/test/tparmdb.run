@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# tparmdb.run: Script to test program parmdb_main
+# tparmdb.run: Script to test program parmdbm
 #
 # Copyright (C) 2008
 # ASTRON (Netherlands Institute for Radio Astronomy)
@@ -23,6 +23,6 @@
 # $Id$
 
 
-../src/parmdb_main tparmdb_tmp.stdout < tparmdb.in > /dev/null
+../src/parmdbm tparmdb_tmp.stdout < tparmdb.in > /dev/null
 cat tparmdb_tmp.stdout
 #sed -e '/Assertion: /d' tparmdb_tmp.outtmp

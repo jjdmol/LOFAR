@@ -15,11 +15,11 @@ SourceDB.cc SourceDBCasa.cc
 # LEX_OUTPUT_ROOT         = lex.KeyTokenize
 
 bin_PROGRAMS = versionparmdb \
-		parmdb_main parmdbremote makesourcedb
+		parmdbm parmdbremote makesourcedb
 
-parmdb_main_SOURCES		= parmdb_main.cc
-parmdb_main_LDADD		= libparmdb.la
-parmdb_main_DEPENDENCIES	= libparmdb.la $(LOFAR_DEPEND)
+parmdbm_SOURCES			= parmdbm.cc
+parmdbm_LDADD			= libparmdb.la
+parmdbm_DEPENDENCIES		= libparmdb.la $(LOFAR_DEPEND)
 
 parmdbremote_SOURCES		= parmdbremote.cc
 parmdbremote_LDADD		= libparmdb.la
