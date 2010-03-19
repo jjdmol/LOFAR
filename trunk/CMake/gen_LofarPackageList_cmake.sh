@@ -60,7 +60,8 @@ if(NOT DEFINED LOFAR_PACKAGE_LIST_INCLUDED)
 EOF
 
 # Set internal field separator (IFS) to newline only.
-IFS=$'\n'
+IFS='
+'
 
 # Add a trailing slash to the directory path $lofar_root to ensure that, if
 # it is a symbolic link, it is translated to the directory it links to.
