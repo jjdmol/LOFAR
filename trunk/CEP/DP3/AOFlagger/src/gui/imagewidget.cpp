@@ -62,39 +62,43 @@ void ImageWidget::Update()
 	
 		long double min, max;
 		findMinMax(_image, min, max);
-		guint8* data = _pixbuf->get_pixels();
-		size_t rowStride = _pixbuf->get_rowstride();
 
-		for(unsigned long y=0;y<_image->Height();++y) {
-			guint8* rowpointer = data + rowStride * y;
-			for(unsigned long x=0;x<_image->Width();++x) {
-				int xa = x * 4;
-				char r,g,b,a;
-				if(!_image->IsSet(x, y) || !std::isfinite(_image->Value(x, y))) {
-					// Not set; output purely transparent pixel
-					r = 0; g = 0; b = 0; a = 255;
-				} else {
-					long double val = _image->Value(x, y);
-					if(val > max) val = max;
-					else if(val < min) val = min;
-	
-					val = (_image->Value(x, y) - min) * 2.0 / (max - min) - 1.0;
-					if(val < -1.0) val = -1.0;
-					else if(val > 1.0) val = 1.0;
-					r = colorMap->ValueToColorR(val);
-					g = colorMap->ValueToColorG(val);
-					b = colorMap->ValueToColorB(val);
-					a = colorMap->ValueToColorA(val);
+		if(min != max || !std::isfinite(min) || !std::isfinite(max))
+		{
+			guint8* data = _pixbuf->get_pixels();
+			size_t rowStride = _pixbuf->get_rowstride();
+
+			for(unsigned long y=0;y<_image->Height();++y) {
+				guint8* rowpointer = data + rowStride * y;
+				for(unsigned long x=0;x<_image->Width();++x) {
+					int xa = x * 4;
+					char r,g,b,a;
+					if(!_image->IsSet(x, y) || !std::isfinite(_image->Value(x, y))) {
+						// Not set; output purely transparent pixel
+						r = 0; g = 0; b = 0; a = 255;
+					} else {
+						long double val = _image->Value(x, y);
+						if(val > max) val = max;
+						else if(val < min) val = min;
+		
+						val = (_image->Value(x, y) - min) * 2.0 / (max - min) - 1.0;
+						if(val < -1.0) val = -1.0;
+						else if(val > 1.0) val = 1.0;
+						r = colorMap->ValueToColorR(val);
+						g = colorMap->ValueToColorG(val);
+						b = colorMap->ValueToColorB(val);
+						a = colorMap->ValueToColorA(val);
+					}
+					rowpointer[xa]=r;
+					rowpointer[xa+1]=g;
+					rowpointer[xa+2]=b;
+					rowpointer[xa+3]=a;
 				}
-				rowpointer[xa]=r;
-				rowpointer[xa+1]=g;
-				rowpointer[xa+2]=b;
-				rowpointer[xa+3]=a;
 			}
+			delete colorMap;
+			_isInitialized = true;
+			redraw();
 		}
-		delete colorMap;
-		_isInitialized = true;
-		redraw();
 	}
 } 
 

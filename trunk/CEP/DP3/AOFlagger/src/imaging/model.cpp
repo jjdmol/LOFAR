@@ -25,7 +25,6 @@
 
 #include <iostream>
 
-
 Model::Model()
 {
 }
@@ -36,19 +35,26 @@ Model::~Model()
 
 void Model::SimulateObservation(UVImager &imager, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency)
 {
-	for(size_t i=0;i<observatorium.AntennaCount();++i)
+	size_t frequencySteps = 1;
+
+	for(size_t f=0;f<frequencySteps;++f)
 	{
-		for(size_t j=i+1;j<observatorium.AntennaCount();++j)
+		double channelFrequency = frequency + observatorium.ChannelWidthHz() * f * 256/frequencySteps;
+		for(size_t i=0;i<observatorium.AntennaCount();++i)
 		{
-			const AntennaInfo
-				&antenna1 = observatorium.GetAntenna(i),
-				&antenna2 = observatorium.GetAntenna(j);
-			double
-				dx = antenna1.position.x - antenna2.position.x,
-				dy = antenna1.position.y - antenna2.position.y,
-				dz = antenna1.position.z - antenna2.position.z;
-			SimulateCorrelation(imager, delayDirectionDEC, delayDirectionRA, dx, dy, dz, frequency, 12*60*60, 10.0);
-		} 
+			for(size_t j=i+1;j<observatorium.AntennaCount();++j)
+			{
+				const AntennaInfo
+					&antenna1 = observatorium.GetAntenna(i),
+					&antenna2 = observatorium.GetAntenna(j);
+				double
+					dx = antenna1.position.x - antenna2.position.x,
+					dy = antenna1.position.y - antenna2.position.y,
+					dz = antenna1.position.z - antenna2.position.z;
+
+				SimulateCorrelation(imager, delayDirectionDEC, delayDirectionRA, dx, dy, dz, channelFrequency, 12*60*60, 10.0);
+			}
+		}
 	}
 }
 
@@ -57,26 +63,31 @@ void Model::SimulateCorrelation(UVImager &imager, num_t delayDirectionDEC, num_t
 	num_t wavelength = 1.0L / frequency;
 	for(num_t t=0.0;t<totalTime;t+=integrationTime)
 	{
-		num_t u, v, r, i;
-		GetUVPosition(u, v, t*(M_PI/12.0/60.0/60.0), delayDirectionDEC, delayDirectionRA, dx, dy, dz, wavelength);
-		SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, dz, frequency, t, r, i);
+		num_t earthLattitudeApprox = t*(M_PI/12.0/60.0/60.0);
+		num_t u, v, r1, i1, r2, i2;
+		GetUVPosition(u, v, earthLattitudeApprox, delayDirectionDEC, delayDirectionRA, dx, dy, dz, wavelength);
+		SimulateAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, 0, frequency, earthLattitudeApprox, r1, i1);
+		SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, dz, frequency, earthLattitudeApprox, r2, i2);
+		num_t
+			r = r1 * r2 - (i1 * -i2),
+			i = r1 * -i2 + r2 * i1;;
 		imager.SetUVValue(u, v, r, i, 1.0);
 		imager.SetUVValue(-u, -v, r, -i, 1.0);
-		//imager.SetUVValue(u, v, 1.0, 1.0, 1.0);
-		//imager.SetUVValue(-u, -v, 1.0, -1.0, 1.0);
 	}
 }
 
 void Model::SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, num_t earthLattitude, num_t &r, num_t &i)
 {
-	num_t w = GetWPosition(delayDirectionDEC, delayDirectionRA, frequency, 0.0, earthLattitude, dx, dy);
 	r = 0.0;
 	i = 0.0;
+	num_t delayW = GetWPosition(delayDirectionDEC, delayDirectionRA, frequency, 0.0, earthLattitude, dx, dy);
 	for(std::vector<PointSource *>::const_iterator iter=_sources.begin();iter!=_sources.end();++iter)
 	{
-		num_t fieldStrength = (*iter)->sqrtFluxIntensity;
-		r += fieldStrength * cos(w * M_PI * 2.0);
-		i += fieldStrength * sin(w * M_PI * 2.0);
+		PointSource &source = **iter;
+		num_t w = GetWPosition(source.dec, source.ra, frequency, 0.0, earthLattitude, dx, dy);
+		num_t fieldStrength = source.sqrtFluxIntensity;
+		r += fieldStrength * cos((w - delayW) * M_PI * 2.0);
+		i += fieldStrength * sin((w - delayW) * M_PI * 2.0);
 	}
 }
 
@@ -89,8 +100,8 @@ void Model::SimulateBaseline(long double delayDirectionDEC, long double delayDir
 		for(unsigned tIndex=0;tIndex<destR.Width();++tIndex)
 		{
 			long double timeRotation =
-				(long double) tIndex * M_PI * 2.0L * seconds /
-				(24.0L*60.0L*60.0L * destR.Width());
+				(long double) tIndex * M_PI * seconds /
+				(12.0L*60.0L*60.0L * destR.Width());
 
 			num_t u,v;
 			GetUVPosition(u, v, timeRotation, delayDirectionDEC, delayDirectionRA, dx, dy, dz, 1.0L/frequency);
@@ -140,16 +151,14 @@ void Model::GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t d
 num_t Model::GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngleStart, num_t earthLattitudeAngleEnd, num_t dx, num_t dy)
 {
 	num_t wavelength = 299792458.0L / frequency;
-	num_t raSinStart = sinl(-delayDirectionRA - earthLattitudeAngleStart);
-	num_t raCosStart = cosl(-delayDirectionRA - earthLattitudeAngleStart);
+	//num_t raSinStart = sinl(-delayDirectionRA - earthLattitudeAngleStart);
+	//num_t raCosStart = cosl(-delayDirectionRA - earthLattitudeAngleStart);
 	num_t raSinEnd = sinl(-delayDirectionRA - earthLattitudeAngleEnd);
 	num_t raCosEnd = cosl(-delayDirectionRA - earthLattitudeAngleEnd);
 	num_t decCos = cosl(delayDirectionDec);
 	// term "+ dz * decCos" is eliminated because of subtraction
 	num_t wPosition =
-		( (dx*raCosStart - dy*raSinStart)
-		-
-		(dx*raCosEnd - dy*raSinEnd) ) * (-decCos) / wavelength;
+		(dx*raCosEnd - dy*raSinEnd) * (-decCos) / wavelength;
 	return wPosition;
 }
 

@@ -66,6 +66,7 @@
 
 #include <AOFlagger/imaging/model.h>
 #include <AOFlagger/imaging/observatorium.h>
+#include <AOFlagger/imaging/fourproductcorrelatortester.h>
 
 #include <iostream>
 
@@ -1313,14 +1314,24 @@ void MSWindow::showError(const std::string &description)
 void MSWindow::onSimulateCorrelation()
 {
 	Model model;
-	model.AddSource(0.1,0.1,0.5);
-	model.AddSource(0.1,0.0,0.35);
-	model.AddSource(.101,0.001,0.45);
+	model.AddSource(-M_PI - 0.04,0.04,0.5);
+	model.AddSource(-M_PI - 0.04075,0.04075,0.2);
+	model.AddSource(-M_PI + 0.1,0.0,0.35);
+	model.AddSource(-M_PI + .101,0.001,0.45);
 	WSRTObservatorium wsrtObservatorium;
-	model.SimulateObservation(*_imagePlaneWindow->GetImager(), wsrtObservatorium, -M_PI-0.05, 0.05, 100000000.0);
+	model.SimulateObservation(*_imagePlaneWindow->GetImager(), wsrtObservatorium, -M_PI-0.05, 0.05, 147000000.0);
 	_imagePlaneWindow->Update();
 }
 
 void MSWindow::onSimulateFourProductCorrelation()
 {
+	Model model;
+	model.AddSource(-M_PI - 0.04,0.04,0.5);
+	model.AddSource(-M_PI - 0.04075,0.04075,0.2);
+	model.AddSource(-M_PI + 0.1,0.0,0.35);
+	model.AddSource(-M_PI + .101,0.001,0.45);
+	WSRTObservatorium wsrtObservatorium;
+	FourProductCorrelatorTester fpcTester(model, *_imagePlaneWindow->GetImager(), wsrtObservatorium);
+	fpcTester.SimulateObservation(-M_PI-0.05, 0.05, 147000000.0);
+	_imagePlaneWindow->Update();
 }
