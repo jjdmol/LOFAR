@@ -71,6 +71,8 @@ void UVImager::Empty()
 	_uvReal = Image2D::CreateZeroImage(_xRes, _yRes);
 	_uvImaginary = Image2D::CreateZeroImage(_xRes, _yRes);
 	_uvWeights = Image2D::CreateZeroImage(_xRes, _yRes);
+	_uvFTReal = Image2D::CreateZeroImage(_xRes, _yRes);
+	_uvFTImaginary = Image2D::CreateZeroImage(_xRes, _yRes);
 }
 
 void UVImager::Image(class MeasurementSet &measurementSet, unsigned band)

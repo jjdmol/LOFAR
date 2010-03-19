@@ -14,14 +14,21 @@ class Observatorium
 		}
 		size_t AntennaCount() const { return _antennae.size(); }
 		const AntennaInfo &GetAntenna(size_t index) const { return _antennae[index]; }
+		void SetChannelWidthHz(double channelWidthHz)
+		{
+			_channelWidthHz = channelWidthHz;
+		}
+		double ChannelWidthHz() const { return _channelWidthHz; }
 	private:
 		std::vector<AntennaInfo> _antennae;
+		double _channelWidthHz;
 };
 
 struct WSRTObservatorium : public Observatorium
 {
 	WSRTObservatorium()
 	{
+		SetChannelWidthHz(10000.0);
 		AntennaInfo antennas[14];
 		for(unsigned i=0;i<14;++i)
 			WSRTCommon(antennas[i]);
@@ -39,7 +46,7 @@ struct WSRTObservatorium : public Observatorium
 		WSRTB(antennas[11]);
 		WSRTC(antennas[12]);
 		WSRTD(antennas[13]);
-		for(unsigned i=0;i<4;++i)  // ONLY USE FIRST 4 FOR NOW
+		for(unsigned i=0;i<14;++i)
 			AddAntenna(antennas[i]);
 	}
 
@@ -86,80 +93,80 @@ struct WSRTObservatorium : public Observatorium
 		{
 			antenna.id = 4;
 			antenna.name = "RT4";
-			antenna.position.x = 0;
-			antenna.position.y = 0;
+			antenna.position.x = 3.8287e+06;
+			antenna.position.y = 443021;
 			antenna.position.z = 5.06492e+06;
 		}
 		void WSRT5(AntennaInfo &antenna)
 		{
 			antenna.id = 5;
 			antenna.name = "RT5";
-			antenna.position.x = 0;
-			antenna.position.y = 0;
+			antenna.position.x = 3.82868e+06;
+			antenna.position.y = 443164;
 			antenna.position.z = 5.06492e+06;
 		}
 		void WSRT6(AntennaInfo &antenna)
 		{
 			antenna.id = 6;
 			antenna.name = "RT6";
-			antenna.position.x = 0;
-			antenna.position.y = 0;
+			antenna.position.x = 3.82866e+06;
+			antenna.position.y = 443307;
 			antenna.position.z = 5.06492e+06;
 		}
 		void WSRT7(AntennaInfo &antenna)
 		{
 			antenna.id = 7;
 			antenna.name = "RT7";
-			antenna.position.x = 0;
-			antenna.position.y = 0;
+			antenna.position.x = 3.82865e+06;
+			antenna.position.y = 443450;
 			antenna.position.z = 5.06492e+06;
 		}
 		void WSRT8(AntennaInfo &antenna)
 		{
 			antenna.id = 8;
 			antenna.name = "RT8";
-			antenna.position.x = 0;
-			antenna.position.y = 0;
+			antenna.position.x = 3.82863e+06;
+			antenna.position.y = 443593;
 			antenna.position.z = 5.06492e+06;
 		}
 		void WSRT9(AntennaInfo &antenna)
 		{
 			antenna.id = 9;
 			antenna.name = "RT9";
-			antenna.position.x = 0;
-			antenna.position.y = 0;
+			antenna.position.x = 3.82861e+06;
+			antenna.position.y = 443736;
 			antenna.position.z = 5.06492e+06;
 		}
 		void WSRTA(AntennaInfo &antenna)
 		{
 			antenna.id = 10;
 			antenna.name = "RTA";
-			antenna.position.x = 0;
-			antenna.position.y = 0;
+			antenna.position.x = 3.8286e+06;
+			antenna.position.y = 443832;
 			antenna.position.z = 5.06492e+06;
 		}
 		void WSRTB(AntennaInfo &antenna)
 		{
 			antenna.id = 11;
 			antenna.name = "RTB";
-			antenna.position.x = 0;
-			antenna.position.y = 0;
+			antenna.position.x = 3.82859e+06;
+			antenna.position.y = 443903;
 			antenna.position.z = 5.06492e+06;
 		}
 		void WSRTC(AntennaInfo &antenna)
 		{
 			antenna.id = 12;
 			antenna.name = "RTC";
-			antenna.position.x = 0;
-			antenna.position.y = 0;
+			antenna.position.x = 3.82845e+06;
+			antenna.position.y = 445119;
 			antenna.position.z = 5.06492e+06;
 		}
 		void WSRTD(AntennaInfo &antenna)
 		{
 			antenna.id = 13;
 			antenna.name = "RTD";
-			antenna.position.x = 0;
-			antenna.position.y = 0;
+			antenna.position.x = 3.82845e+06;
+			antenna.position.y = 445191;
 			antenna.position.z = 5.06492e+06;
 		}
 };
