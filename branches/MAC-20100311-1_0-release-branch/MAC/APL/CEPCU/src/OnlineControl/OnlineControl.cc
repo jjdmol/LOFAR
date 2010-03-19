@@ -79,8 +79,9 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsTreePrefix       (""),
 	itsInstanceNr       (0),
 	itsStartTime        (),
-	itsStopTime         ()
-//	itsStopTimerID      (0)
+	itsStopTime         (),
+	itsStopTimerID      (0),
+	itsFinishTimerID 	(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -91,13 +92,8 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	// Readin some parameters from the ParameterSet.
 	itsTreePrefix = globalParameterSet()->getString("prefix");
 	itsInstanceNr = globalParameterSet()->getUint32("_instanceNr");
-
-	// get Observation based information
-// REO do we need those????
-	itsStartTime     = time_from_string(globalParameterSet()->
-											 getString("Observation.startTime"));
-	itsStopTime      = time_from_string(globalParameterSet()->
-											 getString("Observation.stopTime"));
+	itsStartTime  = time_from_string(globalParameterSet()->getString("Observation.startTime"));
+	itsStopTime   = time_from_string(globalParameterSet()->getString("Observation.stopTime"));
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
@@ -130,7 +126,7 @@ OnlineControl::~OnlineControl()
 //
 void OnlineControl::signalHandler(int	signum)
 {
-	LOG_DEBUG (formatString("SIGNAL %d detected", signum));
+	LOG_INFO (formatString("SIGNAL %d detected", signum));
 
 	if (thisOnlineControl) {
 		thisOnlineControl->finish();
@@ -172,6 +168,9 @@ void	OnlineControl::startNewState(CTState::CTstateNr		newState,
 {
 	// TODO: check if previous state has ended?
 
+	CTState		cts;
+	LOG_INFO_STR("startNewState(" << cts.name(newState) << "," << options << ")");
+
 	_setState (newState);
 
 	if (!itsUseApplOrder) { 		// no depencies between applications?
@@ -204,14 +203,14 @@ void	OnlineControl::startNewState(CTState::CTstateNr		newState,
 // When the applications are dependant of each order send the same command to 
 // the next application.
 //
-// note: function is called by CEPApplMgr
+// NOTE: FUNCTION IS CALLED BY CEPApplMgr
 //
 void	OnlineControl::appSetStateResult(const string&			procName, 
 										 CTState::CTstateNr		aState,
 										 uint16					result)
 {
 	CTState		cts;
-	LOG_DEBUG_STR("setStateResult(" << procName <<","<< cts.name(aState) 
+	LOG_INFO_STR("setStateResult(" << procName <<","<< cts.name(aState) 
 												<<","<< result <<")");
 
 	// is the result in sync?
@@ -300,7 +299,7 @@ void OnlineControl::_databaseEventHandler(GCFEvent& event)
 GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
+	LOG_INFO_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -336,6 +335,11 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("initial"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 	  
+		// start StopTimer for safety.
+		LOG_INFO_STR("Starting QUIT timer that expires 5 seconds after end of observation");
+		ptime	now(second_clock::universal_time());
+		itsStopTimerID = itsTimerPort->setTimer(time_duration(now - itsStopTime).total_seconds() + 5.0);
+
 		// Start ParentControl task
 		LOG_DEBUG ("Enabling ParentControl task");
 		itsParentPort = itsParentControl->registerTask(this);
@@ -370,7 +374,7 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 //
 GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("active:" << eventName(event) << "@" << port.getName());
+	LOG_INFO_STR ("active:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -400,14 +404,20 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		break;
 
 	case F_TIMER:  {
-//		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
-//		if (timerEvent.id == itsStopTimerID) {
-//			LOG_DEBUG("StopTimer expired, starting QUIT sequence");
-//			startNewState(CTState::QUIT, ""/*options*/);
-//		}
-//		else {
-//			LOG_WARN_STR("Received unknown timer event");
-//		}
+		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
+		if (timerEvent.id == itsStopTimerID) {
+			LOG_DEBUG("StopTimer expired, starting QUIT sequence");
+			startNewState(CTState::QUIT, ""/*options*/);
+			itsStopTimerID = 0;
+			itsFinishTimerID = itsTimerPort->setTimer(5.0);
+		}
+		else if (timerEvent.id == itsFinishTimerID) {
+			LOG_INFO("Forcing quit");
+			finish();
+		}
+		else {
+			LOG_WARN_STR("Received unknown timer event");
+		}
 	}
 	break;
 
@@ -497,7 +507,7 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 //
 GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("finishing:" << eventName(event) << "@" << port.getName());
+	LOG_INFO_STR ("finishing:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 

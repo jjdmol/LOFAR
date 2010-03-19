@@ -148,7 +148,8 @@ private:
 	uint32					itsInstanceNr;
 	ptime					itsStartTime;
 	ptime					itsStopTime;
-//	uint16					itsStopTimerID;
+	uint16					itsStopTimerID;
+	uint16					itsFinishTimerID;
 };
 
   };//CEPCU
