@@ -5,6 +5,7 @@ from LOFAR.ObservationID import ObservationID
 from LOFAR.Logger import debug,info,warning,error,fatal
 from LOFAR import Sections
 from LOFAR.Parset import Parset
+from LOFAR.Partitions import owner,allocatePartition
 from LOFAR.Stations import Stations
 from util import Commands
 from util.dateutil import format
@@ -160,6 +161,11 @@ if __name__ == "__main__":
   			dest = "partition",
 			type = "string",
   			help = "name of the BlueGene partition [%default]" )
+  hwgroup.add_option( "-A", "--allocate-partition",
+  			dest = "allocatepartition",
+			action = "store_true",
+			default = False,
+  			help = "allocate the partition if it is unused [%default]" )
   hwgroup.add_option( "-M", "--storage-master",
   			dest = "storagemaster",
 			type = "string",
@@ -325,6 +331,12 @@ if __name__ == "__main__":
     # override parset with command-line values
     if options.partition:
       parset.setPartition( options.partition )
+
+    # allocate partition if requested and free
+    if obsIndex == 0 and options.allocatepartition:
+      if owner( parset.partition ) is None:
+        info( "Allocating partition %s" % (parset.partition,) )
+        allocatePartition( parset.partition )
 
     # set stations
     if "stations" in obsparams:
