@@ -27,6 +27,8 @@ set(inst_HEADERS
   BFRawFormat.h
   Thread.h
   TransposedData.h
+  TransposedBeamFormedData.h
+  InverseFilteredData.h
   InputData.h)
 
 # Create symbolic link to include directory.
