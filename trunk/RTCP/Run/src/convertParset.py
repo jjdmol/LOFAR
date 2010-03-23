@@ -97,24 +97,6 @@ if __name__ == "__main__":
   			help = "name of the BlueGene partition [%default]" )
   parser.add_option_group( hwgroup )
 
-  secgroup = OptionGroup(parser, "Sections" )
-  secgroup.add_option( "--nocnproc",
-  			dest = "nocnproc",
-			action = "store_true",
-			default = False,
-			help = "disable the CNProc section [%default]" )
-  secgroup.add_option( "--noionproc",
-  			dest = "noionproc",
-			action = "store_true",
-			default = False,
-			help = "disable the IONProc section [%default]" )
-  secgroup.add_option( "--nostorage",
-  			dest = "nostorage",
-			action = "store_true",
-			default = False,
-			help = "disable the storage section [%default]" )
-  parser.add_option_group( secgroup )
-
   # parse arguments
   (options, args) = parser.parse_args()
 
@@ -258,20 +240,11 @@ if __name__ == "__main__":
 
       parset.parse( "%s=%s" % (k,v) )
 
-    # disable sections we won't start
-    if options.nocnproc:
-      parset.disableCNProc() 
-    if options.noionproc:
-      parset.disableIONProc()
-    if options.nostorage:
-      parset.disableStorage()
-
   # finalise and save parsets
   usedStoragePorts = []
 
   for obsIndex,parset in enumerate(parsets):
-    if not options.nostorage:
-      parset.disableStoragePorts( usedStoragePorts )
+    parset.disableStoragePorts( usedStoragePorts )
 
     # parse final settings (derive some extra keys)
     parset.preWrite()
