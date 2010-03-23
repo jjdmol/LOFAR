@@ -247,12 +247,12 @@ def defineStations( s ):
 
      # tXX_1: 1 full station (1 RSP board), starting from 10.170.1.XX, input received from station
      inputs = ports( [4346] )
-     s["t%s_1" % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
+     s["t%s_1" % (suffix,)] = [Station("T%s" % (suffix,), ip, inputs)]
 
      # TXX_1: 1 full station (4 RSP boards), starting from 10.170.1.XX, input received from station
      inputs = defaultPorts['RSP_0']
-     s["T%s_1" % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
-     s["T%s"   % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
+     s["T%s_1" % (suffix,)] = [Station("T%s" % (suffix,), ip, inputs)]
+     s["T%s"   % (suffix,)] = [Station("T%s" % (suffix,), ip, inputs)]
 
   # define sets of various sizes 
   for setsize in xrange(2,65):

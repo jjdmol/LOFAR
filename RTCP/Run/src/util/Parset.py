@@ -55,7 +55,17 @@ def decode(s):
       return range(int(a),int(b)+1)
 
   # a single value
-  return [s] 
+  return [unstrfy(s)] 
+
+def unstrfy( s ):
+  # 'xxx' = xxx
+  if s[0] == "'" and s[-1] == "'":
+    s = s[1:-1]
+  # "xxx" = xxx
+  elif s[0] == '"' and s[-1] == '"':
+    s = s[1:-1]
+
+  return s  
 
 def encode( v ):
   """ Compress a value v: if v is an array, try using ... or * to shorten ranges. """
@@ -231,7 +241,7 @@ class Parset(dict):
 
             tokens.append(t)
 
-          value = "".join(tokens).strip()
+          value = unstrfy( "".join(tokens).strip() )
 
         # store the key,value pair
         self[key] = value

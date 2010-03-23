@@ -6,7 +6,7 @@ DEBUG=False
 VERBOSE=False
 
 def log( level, str ):
-  print "%-5s|%s|%s" % (level,APPNAME,str)
+  print >>sys.stderr,"%-5s|%s|%s" % (level,APPNAME,str)
 
 def debug( str ):
   if DEBUG:
