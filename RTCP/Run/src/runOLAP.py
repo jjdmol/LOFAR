@@ -5,30 +5,14 @@ from LOFAR.ObservationID import ObservationID
 from LOFAR.Logger import debug,info,warning,error,fatal
 from LOFAR import Sections
 from LOFAR.Parset import Parset
-from LOFAR.Partitions import owner,allocatePartition
-from LOFAR.Stations import Stations
 from util import Commands
 from util.dateutil import format
 from LOFAR.Locations import Locations,isDevelopment
 from util.Hosts import ropen,rmkdir,rexists,runlink,rsymlink
+import convertParset
 import sys
 
 DRYRUN = False
-
-def print_exception( str ):
-  import traceback
-
-  print >>sys.stderr, str
-
-  traceback.print_exc()
-
-def extend_basedir( basedir, path ):
-  """ Resolve a path relative to a certain base directory. """
-
-  if path[:1] == "/":
-    return path
-  else:
-    return "%s/%s" % (basedir,path)
 
 def runObservations( parsets, partition, start_cnproc = True, start_ionproc = True, start_storage = True ):
   """ Run an observation using the provided parsets. """
@@ -65,29 +49,6 @@ if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
   import os
   import time
-
-  # valid observation parameters
-  validObsParams = [
-    "parset", "stations", "tcp", "null",
-    "start", "stop", "run",
-    "clock", "integration",
-    "converted",
-  ]
-
-  def isValidObsParam( key ):
-    return key in validObsParams or "." in key
-
-  # default observation parameters
-  defaultObsParams = {
-    "parset": "RTCP.parset",
-    "start": "+15",
-  }
-  defaultRunTime = "00:01:00"
-
-  # define no default run or stop time in defaultObsParams,
-  # otherwise it will always overrule the parset
-  assert "stop" not in defaultObsParams
-  assert "run" not in defaultObsParams
 
   # parse the command line
   parser = OptionParser( usage = """usage: %prog [options] observation [observation] ...
@@ -163,11 +124,6 @@ if __name__ == "__main__":
   			dest = "partition",
 			type = "string",
   			help = "name of the BlueGene partition [%default]" )
-  hwgroup.add_option( "-A", "--allocate-partition",
-  			dest = "allocatepartition",
-			action = "store_true",
-			default = False,
-  			help = "allocate the partition if it is unused [%default]" )
   hwgroup.add_option( "-M", "--storage-master",
   			dest = "storagemaster",
 			type = "string",
@@ -253,11 +209,13 @@ if __name__ == "__main__":
 
   if not options.quiet:
     DEBUG = True
+    convertParset.DEBUG = True
     Sections.DEBUG = True
     Logger.VERBOSE = True
 
   if options.dryrun:
     DRYRUN = True
+    convertParset.DRYRUN = True
     Commands.DRYRUN = True
     ObservationID.DRYRUN = True
     Sections.DRYRUN = True
@@ -268,135 +226,9 @@ if __name__ == "__main__":
   Locations.nodes["logserver"] = options.logserver
 
   # ========== Observations
-  parsets = []
-  for obsIndex,obs in enumerate(args):
-    info( "===== Parsing observation %s: %s =====" % (obsIndex,obs,) )
+  parsets = convertParset.convertParsets( args, options.olapparset, options.partition )
 
-    # parse and check the observation parameters
-    def splitparam( s ):
-      """ Convert a parameter which is either 'key=value' or 'key' into a
-          key,value tuple. """
-
-      if "=" in s:
-        return s.split("=",1)
-
-      return (s,None)
-
-    obsparams = defaultObsParams.copy()
-    obsparams.update( dict( map( splitparam, obs.split(",") ) ) )
-
-    converted = "converted" in obsparams  
-
-    for p in obsparams:
-      if not isValidObsParam( p ):
-        fatal("Unknown observation parameter '%s'" % (p,))
-
-    if "parset" not in obsparams:
-      fatal("Observation '%s' does not define a parset file." % (obs,))
-
-    parset = Parset()
-    parsets.append( parset )
-
-    # read the parset file
-    def addParset( f ):
-      info( "Reading parset %s..." % (f,) )
-      parset.readFile( Locations.resolvePath( f ) )
-
-
-    try:
-      if not converted:
-        addParset( options.olapparset )
-      addParset( obsparams["parset"] )  
-    except IOError,e:
-      fatal("ERROR: Cannot read parset file: %s" % (e,))
-
-    # parse specific parset values from the command line (all options containing ".")
-    # apply them so that we will parse them instead of the parset values
-    for k,v in obsparams.iteritems():
-      if "." not in k:
-        continue
-
-      parset.parse( "%s=%s" % (k,v) )
-
-    # reserve an observation id
-    parset.postRead()
-
-    if parset.getObsID():
-      info( "Distilled observation ID %s from parset." % (parset.getObsID(),) )
-    else: 
-      try:
-        obsid = ObservationID().generateID()
-      except IOError,e:
-        print_exception("Could not generate observation ID: %s" % (e,))
-        sys.exit(1)  
-
-      parset.setObsID( obsid )
-
-      info( "Generated observation ID %s" % (obsid,) )
-
-    # override parset with command-line values
-    if options.partition:
-      parset.setPartition( options.partition )
-
-    # allocate partition if requested and free
-    if obsIndex == 0 and options.allocatepartition:
-      if owner( parset.partition ) is None:
-        info( "Allocating partition %s" % (parset.partition,) )
-        allocatePartition( parset.partition )
-
-    # set stations
-    if "stations" in obsparams:
-      stationList = Stations.parse( obsparams["stations"] )
-
-      parset.forceStations( stationList )
-    else:
-      stationList = parset.stations
-
-    if "tcp" in obsparams:
-      # turn all inputs into tcp:*
-      def tcpify( input ):
-        if input.startswith("tcp:") or input.startswith("file:"):
-          return input
-        elif input.startswith("udp:"):
-          return "tcp:"+input[4:]
-        else:
-          return "tcp:"+input
-
-      for s in stationList:
-        s.inputs = map( tcpify, s.inputs )
-
-    if "null" in obsparams:
-      # turn all inputs into null:
-      for s in stationList:
-        s.inputs = ["null:"] * len(s.inputs)
-
-    parset.setStations( stationList )
-
-    # set runtime
-    if "start" in obsparams and "stop" in obsparams:
-      parset.setStartStopTime( obsparams["start"], obsparams["stop"] )
-    elif "start" in obsparams and "run" in obsparams:
-      parset.setStartRunTime( obsparams["start"], obsparams["run"] )
-    elif "Observation.startTime" in parset and "Observation.stopTime" in parset:
-      parset.setStartStopTime( parset["Observation.startTime"], parset["Observation.stopTime"] )
-    elif not converted:
-      parset.setStartRunTime( obsparams["start"], defaultRunTime )
-
-    info( "Running from %s to %s." % (parset["Observation.startTime"], parset["Observation.stopTime"] ) )
-    info( "Partition     = %s" % (parset.partition,) )
-    info( "Storage Nodes = %s" % (", ".join(parset.storagenodes),) )
-    info( "Stations      = %s" % (", ".join([s.name for s in parset.stations]),) )
-
-    # set a few other options
-    configmap = {
-      "clock": parset.setClock,
-      "integration": parset.setIntegrationTime,
-    }
-
-    for k,v in configmap.iteritems():
-      if k in obsparams:
-        v( obsparams[k] )
-
+  for parset in parsets:
     if options.valgrind_ion:
       # force settings required to run under valgrind
       parset["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "TCP" # FCNP uses BG/P instructions
@@ -404,13 +236,6 @@ if __name__ == "__main__":
       parset["Observation.nrSlotsInFrame"] = 1                  # reduce memory footprint
 
     # parse specific parset values from the command line (all options containing ".")
-    # reapply them in case they got overwritten
-    for k,v in obsparams.iteritems():
-      if "." not in k:
-        continue
-
-      parset.parse( "%s=%s" % (k,v) )
-
     # disable sections we won't start
     if options.nocnproc:
       parset.disableCNProc() 
@@ -418,7 +243,6 @@ if __name__ == "__main__":
       parset.disableIONProc()
     if options.nostorage:
       parset.disableStorage()
-
 
   # resolve all paths now that parsets are set up and the observation ID is known
   for opt in dirgroup.option_list:
@@ -453,17 +277,6 @@ if __name__ == "__main__":
   usedStoragePorts = []
 
   for obsIndex,parset in enumerate(parsets):
-    if not options.nostorage:
-      parset.disableStoragePorts( usedStoragePorts )
-
-    # parse final settings (derive some extra keys)
-    parset.preWrite()
-
-    # finalise() allocates the ports that will be used, so don't use them for other observations
-    if not options.nostorage:
-      for ports in parset.getStoragePorts().itervalues():
-        usedStoragePorts.extend( ports )
-
     # sanity check on parset
     parset.check()
 

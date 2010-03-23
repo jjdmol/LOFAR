@@ -18,11 +18,7 @@ def print_exception( str ):
 
   traceback.print_exc()
 
-if __name__ == "__main__":
-  from optparse import OptionParser,OptionGroup
-  import os
-  import time
-
+def convertParsets( args, olapparset, partition = None ):
   # valid observation parameters
   validObsParams = [
     "parset", "output", "stations", "tcp", "null",
@@ -45,73 +41,6 @@ if __name__ == "__main__":
   # otherwise it will always overrule the parset
   assert "stop" not in defaultObsParams
   assert "run" not in defaultObsParams
-
-  # parse the command line
-  parser = OptionParser( usage = """usage: %prog [options] observation [observation] ...
-
-    'observation' is a comma-separated list of the following options:
-
-    parset=name       (mandatory) the filename of the parset to read
-    output=name       the filename of the parset to write (default: stdout)
-    stations=xxx+yyy  use stations xxx and yyy
-    tcp               station input arrives over TCP
-    null              station input is generated from null:
-
-    start=xxx         start/stop time. allowed syntax:
-    stop=xxx            [YYYY-MM-DD] HH:MM[:SS]
-                        timestamp
-                        +seconds
-                        +HH:MM[:SS]
-    run=xxx           run time. allowed syntax:
-                        HH:MM[:SS]
-                        seconds
-
-    clock=xxx         use a station clock of xxx MHz
-    integration=xxx   use xxx seconds of integration time on the IO node
-
-    foo.bar=value     override parset key 'foo.bar' with 'value'.
-    """ )
-
-  opgroup = OptionGroup(parser, "Output" )
-  opgroup.add_option( "-v", "--verbose",
-  			dest = "verbose",
-			action = "store_true",
-			default = False,
-  			help = "be verbose [%default]" )
-  opgroup.add_option( "-q", "--quiet",
-  			dest = "quiet",
-			action = "store_true",
-			default = False,
-  			help = "be quiet [%default]" )
-  parser.add_option_group( opgroup )
-
-  hwgroup = OptionGroup(parser, "Hardware" )
-  hwgroup.add_option( "-O", "--olap-parset",
-  			dest = "olapparset",
-			type = "string",
-                        default = "%s/OLAP.parset" % (os.path.dirname(__file__),),
-  			help = "the parset containing station definitions [%default]" )
-  hwgroup.add_option( "-P", "--partition",
-  			dest = "partition",
-			type = "string",
-  			help = "name of the BlueGene partition [%default]" )
-  parser.add_option_group( hwgroup )
-
-  # parse arguments
-  (options, args) = parser.parse_args()
-
-  # ========== Global options
-
-  if not args:
-    parser.print_help()
-    sys.exit(1)
-
-  if options.verbose:
-    Logger.DEBUG = True
-
-  if not options.quiet:
-    DEBUG = True
-    Logger.VERBOSE = True
 
   # ========== Observations
   parsets = []
@@ -147,7 +76,7 @@ if __name__ == "__main__":
       parset.readFile( Locations.resolvePath( f ) )
 
     try:
-      addParset( options.olapparset )
+      addParset( olapparset )
       addParset( obsparams["parset"] )  
     except IOError,e:
       fatal("ERROR: Cannot read parset file: %s" % (e,))
@@ -177,8 +106,8 @@ if __name__ == "__main__":
       info( "Generated observation ID %s" % (obsid,) )
 
     # override parset with command-line values
-    if options.partition:
-      parset.setPartition( options.partition )
+    if partition:
+      parset.setPartition( partition )
 
     # set stations
     if "stations" in obsparams:
@@ -250,15 +179,92 @@ if __name__ == "__main__":
     parset.preWrite()
 
     # finalise() allocates the ports that will be used, so don't use them for other observations
-    if not options.nostorage:
-      for ports in parset.getStoragePorts().itervalues():
-        usedStoragePorts.extend( ports )
+    for ports in parset.getStoragePorts().itervalues():
+      usedStoragePorts.extend( ports )
 
     # sanity check on parset
     parset.check()
 
-    # wtite parset to stdout
-    parset.writeFile( obsparams["output"] )
-
   info( "========== Done ==========" )
+
+  return parsets
+
+if __name__ == "__main__":
+  from optparse import OptionParser,OptionGroup
+  import os
+  import time
+
+  # parse the command line
+  parser = OptionParser( usage = """usage: %prog [options] observation [observation] ...
+
+    'observation' is a comma-separated list of the following options:
+
+    parset=name       (mandatory) the filename of the parset to read
+    output=name       the filename of the parset to write (default: stdout)
+    stations=xxx+yyy  use stations xxx and yyy
+    tcp               station input arrives over TCP
+    null              station input is generated from null:
+
+    start=xxx         start/stop time. allowed syntax:
+    stop=xxx            [YYYY-MM-DD] HH:MM[:SS]
+                        timestamp
+                        +seconds
+                        +HH:MM[:SS]
+    run=xxx           run time. allowed syntax:
+                        HH:MM[:SS]
+                        seconds
+
+    clock=xxx         use a station clock of xxx MHz
+    integration=xxx   use xxx seconds of integration time on the IO node
+
+    foo.bar=value     override parset key 'foo.bar' with 'value'.
+    """ )
+
+  opgroup = OptionGroup(parser, "Output" )
+  opgroup.add_option( "-v", "--verbose",
+  			dest = "verbose",
+			action = "store_true",
+			default = False,
+  			help = "be verbose [%default]" )
+  opgroup.add_option( "-q", "--quiet",
+  			dest = "quiet",
+			action = "store_true",
+			default = False,
+  			help = "be quiet [%default]" )
+  parser.add_option_group( opgroup )
+
+  hwgroup = OptionGroup(parser, "Hardware" )
+  hwgroup.add_option( "-O", "--olap-parset",
+  			dest = "olapparset",
+			type = "string",
+                        default = "%s/OLAP.parset" % (os.path.dirname(__file__),),
+  			help = "the parset containing station definitions [%default]" )
+  hwgroup.add_option( "-P", "--partition",
+  			dest = "partition",
+			type = "string",
+  			help = "name of the BlueGene partition [%default]" )
+  parser.add_option_group( hwgroup )
+
+  # parse arguments
+  (options, args) = parser.parse_args()
+
+  # ========== Global options
+
+  if not args:
+    parser.print_help()
+    sys.exit(1)
+
+  if options.verbose:
+    Logger.DEBUG = True
+
+  if not options.quiet:
+    DEBUG = True
+    Logger.VERBOSE = True
+
+  # read and convert parsets
+  parsets = convertParsets( args, options.olapparset, options.partition )  
+
+  # output them to stdout or file
+  for parset in parsets:
+    parset.writeFile( obsparams["output"] )
 
