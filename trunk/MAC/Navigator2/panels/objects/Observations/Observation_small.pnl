@@ -89,9 +89,12 @@ updateObservations(string dp1, dyn_string obs,
   if (invalid) {
     return;
   }
+  
   for (int i=1; i<= dynlen(obs);i++) {
     // get real name from claimmanager
     obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+obs[i]);
+    
+    
     if (dpExists(obsDP)) {
       myTable.appendLine(\"Name\",obs[i]);
     
@@ -100,10 +103,11 @@ updateObservations(string dp1, dyn_string obs,
                                                     obsDP + \".stopTime\",
                                                     obsDP + \".runState\",
                                                     obsDP + \".stationList\",
-                                                    obsDP + \".status.state:_online.._invalid\") == -1) {
+                                                    obsDP + \".startTime:_online.._invalid\") == -1) {
         LOG_ERROR(\"Observation_small.pnl:updateObservations|ERROR: couldn't connect to : \"+obsDP+ \" \" + getLastError());
       }
       if (!navFunct_dpReachable(obsDP) ){
+        LOG_ERROR(\"Observation_small.pnl:updateObservations|DP unreachable\");
         updateObservationsTableValues(\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",true);
       }
          
@@ -120,16 +124,20 @@ updateObservationsTableValues(string dp1, int state,
                               string dp5, string stationList,
                               string dp6, bool invalid)                              
 {
+  
   string col=getStateColor(state);
   dyn_string d1=makeDynString(\" \",col);  
   
     // this is the temp name
   string dp = dpSubStr(dp1,DPSUB_DP);
+  
   // get the connected Observation
-  string name = claimManager_realNameToName(MainDBName+dp);
+  string name = claimManager_realNameToName(dp);
+  
   
   for(int i=0; i < myTable.lineCount; i++)
   {
+    
     if(name == \"LOFAR_ObsSW_\"+myTable.cellValueRC(i,\"Name\"))
     {
       myTable.cellValueRC(i,\"State\",d1);
