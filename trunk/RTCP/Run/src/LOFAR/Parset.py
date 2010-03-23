@@ -40,13 +40,16 @@ class Parset(util.Parset.Parset):
         """ Distill station names to use from the parset file and return them. """
 
         if key not in self:
-          return ""
+          return "+".join(self.get('OLAP.storageStationNames',""))
 
         # translate station name + antenna set to CEP comprehensable names
         antennaset = self["Observation.antennaSet"]
 
         def applyAntennaSet( station, antennaset ):
-          if antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE"]:
+          if antennaset == "":
+            # useful for manually entered complete station names like CS302HBA1
+            suffix = ""
+          elif antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE"]:
             suffix = ["LBA"]
           elif station.startswith("CS"):
             if antennaset == "HBA_ONE":
@@ -326,10 +329,19 @@ class Parset(util.Parset.Parset):
 	self.setdefault('OLAP.CNProc.tabList', tabList)
 
     def setStations(self,stations):
-	""" Define the set of stations to use. """
+	""" Set the array of stations to use (used internally). """
 	
 	self.stations = stations
-	
+
+    def forceStations(self,stations):
+	""" Override the set of stations to use (from the command line). """
+
+	self.setStations(stations)
+
+        self['OLAP.storageStationNames'] = [s.name for s in self.stations]
+        del self['Observation.VirtualInstrument.stationList']
+        del self['Observation.antennaSet']
+        
     def setPartition(self,partition):
 	""" Define the partition to use. """
 
