@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
   # valid observation parameters
   validObsParams = [
-    "parset", "stations", "tcp", "null",
+    "parset", "output", "stations", "tcp", "null",
     "start", "stop", "run",
     "clock", "integration"
   ]
@@ -37,6 +37,7 @@ if __name__ == "__main__":
   defaultObsParams = {
     "parset": "RTCP.parset",
     "start": "+15",
+    "output": "-",
   }
   defaultRunTime = "00:01:00"
 
@@ -50,7 +51,8 @@ if __name__ == "__main__":
 
     'observation' is a comma-separated list of the following options:
 
-    parset=name       (mandatory) the filename of the parset to use
+    parset=name       (mandatory) the filename of the parset to read
+    output=name       the filename of the parset to write (default: stdout)
     stations=xxx+yyy  use stations xxx and yyy
     tcp               station input arrives over TCP
     null              station input is generated from null:
@@ -283,7 +285,7 @@ if __name__ == "__main__":
     parset.check()
 
     # wtite parset to stdout
-    parset.writeFile( "-" )
+    parset.writeFile( obsparams["output"] )
 
   info( "========== Done ==========" )
 
