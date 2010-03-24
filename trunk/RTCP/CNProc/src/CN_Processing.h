@@ -73,7 +73,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     virtual void	postprocess();
 
   private:
-    void                transpose();
+    void                transposeInput();
     void                filter();
     void                mergeStations();
     void                formBeams();
@@ -114,7 +114,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     ArenaMapping        itsMapping; // needs to be a member to ensure that its lifetime extends beyond that of its data sets
 
 #if defined HAVE_MPI
-    AsyncTranspose<SAMPLE_TYPE> *itsAsyncTranspose;
+    AsyncTranspose<SAMPLE_TYPE> *itsAsyncTransposeInput;
 #endif
 
     PPF<SAMPLE_TYPE>	*itsPPF;
