@@ -21,7 +21,7 @@ if(HAVE_MPI)
       -DMORECORE_CONTIGUOUS=0
       -DMORECORE_CANNOT_TRIM=1
       -DSHMEM_ALLOC)
-    join_arguments(shmem_COMPILE_FLAGS)
+    lofar_join_arguments(shmem_COMPILE_FLAGS)
     set_source_files_properties(ExampleShMem.cc 
       PROPERTIES COMPILE_FLAGS ${shmem_COMPILE_FLAGS})
     lofar_add_test(ExampleShMem ExampleShMem.cc DH_Example.cc DH_ExampleExtra.cc)

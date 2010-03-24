@@ -60,7 +60,7 @@ if(HAVE_SHMEM)
     -DMORECORE_CANNOT_TRIM=1
     -DSHMEM_ALLOC
     -DHAVE_USR_INCLUDE_MALLOC_H)
-  join_arguments(shmem_COMPILE_FLAGS)
+  lofar_join_arguments(shmem_COMPILE_FLAGS)
   set_source_files_properties(${shmem_LIB_SRCS} 
     PROPERTIES COMPILE_FLAGS ${shmem_COMPILE_FLAGS})
   list(APPEND common_LIB_SRCS ${shmem_LIB_SRCS})

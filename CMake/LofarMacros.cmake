@@ -1,16 +1,12 @@
 # - Generic CMake macros for LOFAR
 #
 # Defines the following macros:
-#   force_option(var doc-string [value])
-#   join_arguments(var)
-#   list_append_if(condition var value1..valuen)
 #   lofar_add_bin_program(name)
 #   lofar_add_executable(name)
 #   lofar_add_library(name)
 #   lofar_add_sbin_program(name)
 #   lofar_add_test(name)
-#   lofar_get_date(date)
-#   lofar_get_hostname(name)
+#   lofar_join_arguments(var)
 #
 # Please refer to the module source for documentation of these macros.
 
@@ -40,61 +36,6 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   set(LOFAR_MACROS_INCLUDED TRUE)
 
   # --------------------------------------------------------------------------
-  # force_option(option doc-string [value])
-  #
-  # The built-in CMake option() command will not let you modify an already set
-  # option. With this macro you can forcibly set <option> to <value>.
-  # --------------------------------------------------------------------------
-  macro(force_option _option _doc)
-    if(${ARGC} GREATER 3)
-      message(SEND_ERROR 
-        "force_option invoked with incorrect number of arguments")
-    endif()
-    string(TOUPPER "${ARGV2}" _value)
-    # Test if value is really ON like option() does; 
-    # ref. CMake sources cmOptionCommand.cxx and cmSystemTools.cxx
-    if( _value STREQUAL "ON" OR
-        _value STREQUAL "1" OR
-        _value STREQUAL "YES" OR
-        _value STREQUAL "TRUE" OR
-        _value STREQUAL "Y" )
-      set(${_option} ON CACHE BOOL "${_doc}" FORCE)
-    else()
-      set(${_option} OFF CACHE BOOL "${_doc}" FORCE)
-    endif()
-  endmacro(force_option)
-
-
-  # --------------------------------------------------------------------------
-  # join_arguments(var)
-  #
-  # Join the arguments in the (semi-colon separated) list VAR into one space
-  # separated string. The string will be returned in the variable VAR.
-  # This command is the opposite of the built-in command separate_arguments().
-  # --------------------------------------------------------------------------
-  macro(join_arguments var)
-    set(_var)
-    foreach(_v ${${var}})
-      set(_var "${_var} ${_v}")
-    endforeach(_v ${${var}})
-    string(STRIP ${_var} _var)
-    set(${var} ${_var})
-  endmacro(join_arguments)
-
-
-  # --------------------------------------------------------------------------
-  # list_append_if(condition var value1..valuen)
-  #
-  # Apppend the values VALUE1 upto VALUEN to the list VAR if CONDITION is TRUE.
-  # --------------------------------------------------------------------------
-  macro(list_append_if _cond _list)
-    if(${_cond})
-      list(APPEND ${_list} ${ARGN})
-    endif(${_cond})
-  endmacro(list_append_if _cond _list)
-
-
-  # --------------------------------------------------------------------------
   # lofar_add_bin_program(name)
   #
   # Add <name> to the list of programs that need to be compiled, linked and
@@ -103,7 +44,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   macro(lofar_add_bin_program _name)
     lofar_add_executable(${_name} ${ARGN})
     install(TARGETS ${_name} DESTINATION bin)
-  endmacro(lofar_add_bin_program _name)
+  endmacro(lofar_add_bin_program)
 
 
   # --------------------------------------------------------------------------
@@ -123,7 +64,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
       ${${PACKAGE_NAME}_LINK_LIBRARIES} ${LOFAR_EXTRA_LIBRARIES})
     add_dependencies(${_name} ${PACKAGE_NAME}_PackageVersion)
     add_dependencies(${PACKAGE_NAME} ${_name})
-  endmacro(lofar_add_executable _name)
+  endmacro(lofar_add_executable)
 
 
   # --------------------------------------------------------------------------
@@ -161,7 +102,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     install(TARGETS ${_name} DESTINATION ${LOFAR_LIBDIR})
     add_dependencies(${_name} ${PACKAGE_NAME}_PackageVersion)
     add_dependencies(${PACKAGE_NAME} ${_name})
-  endmacro(lofar_add_library _name)
+  endmacro(lofar_add_library)
 
 
   # --------------------------------------------------------------------------
@@ -173,7 +114,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   macro(lofar_add_sbin_program _name)
     lofar_add_executable(${_name} ${ARGN})
     install(TARGETS ${_name} DESTINATION sbin)
-  endmacro(lofar_add_sbin_program _name)
+  endmacro(lofar_add_sbin_program)
 
 
   # --------------------------------------------------------------------------
@@ -211,30 +152,23 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
       endif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.sh)
       add_dependencies(check ${_name})
     endif(BUILD_TESTING)
-  endmacro(lofar_add_test _name)
+  endmacro(lofar_add_test)
 
 
   # --------------------------------------------------------------------------
-  # lofar_get_date(date)
+  # lofar_join_arguments(var)
   #
-  # Return the current date and time in the variable DATE.
+  # Join the arguments in the (semi-colon separated) list VAR into one space
+  # separated string. The string will be returned in the variable VAR.
+  # This command is the opposite of the built-in command separate_arguments().
   # --------------------------------------------------------------------------
-  macro(lofar_get_date _date)
-    execute_process(COMMAND date
-      OUTPUT_VARIABLE ${_date}
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-  endmacro(lofar_get_date _date)
-
-
-  # --------------------------------------------------------------------------
-  # lofar_get_hostname(name)
-  #
-  # Return the machine name (hostname) in the variable _hostname.
-  # --------------------------------------------------------------------------
-  macro(lofar_get_hostname _hostname)
-    execute_process(COMMAND hostname -s
-      OUTPUT_VARIABLE ${_hostname}
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-  endmacro(lofar_get_hostname _hostname)
+  macro(lofar_join_arguments var)
+    set(_var)
+    foreach(_v ${${var}})
+      set(_var "${_var} ${_v}")
+    endforeach(_v ${${var}})
+    string(STRIP ${_var} _var)
+    set(${var} ${_var})
+  endmacro(lofar_join_arguments)
 
 endif(NOT DEFINED LOFAR_MACROS_INCLUDED)
