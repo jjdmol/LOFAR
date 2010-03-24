@@ -22,8 +22,6 @@
 #  global 'variants' file. These files must be located in the directory
 #  ${LOFAR_ROOT}/CMake/variants.
 
-include(LofarMacros)
-
 if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
 
   set(LOFAR_VARIANTS_INCLUDED TRUE)
@@ -31,8 +29,8 @@ if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
   ## --------------------------------------------------------------------------
   ## First, include host-specific variants file, if present
   ## --------------------------------------------------------------------------
-  lofar_get_hostname(hostname)
-  set(variants_file ${CMAKE_MODULE_PATH}/variants/variants.${hostname})
+  site_name(_hostname)
+  set(variants_file ${CMAKE_MODULE_PATH}/variants/variants.${_hostname})
   
   if (EXISTS ${variants_file})
     message(STATUS "Loading host-specific variants file")
