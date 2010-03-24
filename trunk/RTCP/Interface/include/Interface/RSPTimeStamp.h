@@ -34,7 +34,9 @@ namespace LOFAR {
 
     class TimeStamp {
     public:
-      TimeStamp(int64 time = 0, unsigned clockSpeed = 0);
+      TimeStamp(); // empty constructor to be able to create vectors of TimeStamps
+      TimeStamp(int64 time); // for conversion from ints, used to convert values like 0x7FFFFFFF and 0x0 for special cases.
+      TimeStamp(int64 time, unsigned clockSpeed);
       TimeStamp(unsigned seqId, unsigned blockId, unsigned clockSpeed);
 
       TimeStamp	    &setStamp(unsigned seqId, unsigned blockId);
@@ -68,6 +70,18 @@ namespace LOFAR {
       int64	      itsTime;
       unsigned        itsClockSpeed;
     };
+
+    inline TimeStamp::TimeStamp():
+      itsTime(0),
+      itsClockSpeed(0)
+      {
+      }
+
+    inline TimeStamp::TimeStamp(int64 time):
+      itsTime(time),
+      itsClockSpeed(0)
+      {
+      }
 
     inline TimeStamp::TimeStamp(int64 time, unsigned clockSpeed):
       itsTime(time),
