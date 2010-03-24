@@ -2,7 +2,7 @@
 #define FORMAT_H
 
 #define MAX_CORES	64
-#define MAX_CHANNELS	 2
+#define MAX_CHANNELS	 8
 
 
 struct RequestPacket {
