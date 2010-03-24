@@ -87,16 +87,17 @@ OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsig
 
 OutputThread::~OutputThread()
 {
-#if 0
   if (itsConnecting)
     itsThread->abort();
-#endif
 
   if (itsHasStorageWriter)
     joinSSH();
 
   //LOG_INFO_STR(itsDescription << ": waiting for Storage process to finish");
   delete itsThread;
+
+  if (!itsSendQueue.empty())
+    LOG_WARN_STR(itsDescription << ": dropped " << itsSendQueue.size() << " blocks");
 
   while (!itsSendQueue.empty())
     delete itsSendQueue.remove();
@@ -256,30 +257,37 @@ void OutputThread::mainLoop()
 #endif
 
   LOG_INFO_STR(itsDescription << ": waiting for connection to " << itsSocketName);
-  std::auto_ptr<Stream> streamToStorage(Parset::createStream(itsSocketName, true));
-  itsConnecting = false;
-  LOG_INFO_STR(itsDescription << ": connection to " << itsSocketName << " successful");
+  std::auto_ptr<Stream> streamToStorage;
 
-  // TODO: race condition on creation
-  // TODO: if a storage node blocks, ionproc can't write anymore
-  //       in any thread
-  StreamableData *data;
+  try {
+    streamToStorage.reset(Parset::createStream(itsSocketName, true));
+    itsConnecting = false;
+    LOG_INFO_STR(itsDescription << ": connection to " << itsSocketName << " successful");
+  } catch (SystemCallException &ex) {
+    if (ex.error == EINTR) {
+      LOG_WARN_STR(itsDescription << ": connection to " << itsSocketName << " failed");
+      return;
+    } else {
+      throw;
+    }
+  }
 
-  while ((data = itsSendQueue.remove()) != 0) {
+  // TODO: if a storage node blocks, ionproc can't write anymore in any thread
+
+  for (StreamableData *data; (data = itsSendQueue.remove()) != 0;) {
     // prevent too many concurrent writers by locking this scope
     semaphore.down();
+
     try {
       // write data, including serial nr
       data->write(streamToStorage.get(), true);
     } catch (...) {
       semaphore.up();
-      itsFreeQueue.append(data); // make sure data will be freed
+      itsFreeQueue.append(data);
       throw;
     }
 
     semaphore.up();
-
-    // data can now be reused
     itsFreeQueue.append(data);
   }
 
