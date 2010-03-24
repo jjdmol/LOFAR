@@ -40,12 +40,19 @@ namespace LOFAR {
     itsInitialized (false)
     {
       // set default parameters for coincidence
+      itsLogfile = NULL;
+      antennaPositionsFile = "";
       itsNoCoincidenceChannels = 32;
       itsCoincidenceTime = 1.0e-6;
+      doDirectionFit = 0;
       totalCoincidences = 0;
       badFits = 0;
       itsConfigurationFile = "/opt/lofar/etc/VHECRtask.conf"; // /opt/lofar/etc/
       readConfigFile(itsConfigurationFile.c_str());
+      if (itsLogfile == NULL) {
+	cout << "VHECRtask: logfile not set, writing log-output to stdout." << endl;
+	itsLogfile = stdout;
+      };
 //      itsOutputFilename = "/opt/lofar/etc/VHECRtaskLogfile.dat";
 //      itsLogfile = fopen(itsOutputFilename.c_str(), "w"); // overwrites existing file...
 
@@ -83,6 +90,12 @@ namespace LOFAR {
 //      cout << "Reading in config file..." << endl;
       
       std::ifstream configFile(fileName.c_str()); 
+      if (configFile.is_open() != true)
+      {
+	LOG_FATAL("Failed to open config file!");
+	//cerr << "VHECRTask: Failed to open config file!" << endl;
+	return;
+      };
       string temp;
       
       while(configFile.eof() != true)
@@ -103,11 +116,6 @@ namespace LOFAR {
         } else if (temp == "antennaPositionsFile:")
         {        
           configFile >> antennaPositionsFile;
-          if (antennaSelection != "")
-          {
-//            cout << antennaSelection << " reading in positions." << endl;
-            readAntennaPositions(antennaPositionsFile, antennaSelection);
-          }
         } else if (temp == "antennaSelection:")
         {
           configFile >> antennaSelection;
@@ -122,8 +130,16 @@ namespace LOFAR {
           LOG_DEBUG("Error reading config file!");
         }
       }
-      fprintf(itsLogfile, "Output file: %s\nCoincidence channels required: %d\nAntenna positions file: %s\nAntenna selection: %s\nCoincidence time window: %3.6f\ndo Direction fit: %d\n", 
-              itsOutputFilename.c_str(), itsNoCoincidenceChannels, antennaPositionsFile.c_str(), antennaSelection.c_str(), itsCoincidenceTime, doDirectionFit);
+      if ((antennaSelection != "")&&(antennaPositionsFile != "")) {
+	//            cout << antennaSelection << " reading in positions." << endl;
+	readAntennaPositions(antennaPositionsFile, antennaSelection);
+      } else {
+	doDirectionFit = 0;
+      };
+      if (itsLogfile != NULL) {
+	fprintf(itsLogfile, "Output file: %s\nCoincidence channels required: %d\nAntenna positions file: %s\nAntenna selection: %s\nCoincidence time window: %3.6f\ndo Direction fit: %d\n", 
+		itsOutputFilename.c_str(), itsNoCoincidenceChannels, antennaPositionsFile.c_str(), antennaSelection.c_str(), itsCoincidenceTime, doDirectionFit);
+      };
     }
       
     //
@@ -193,7 +209,7 @@ namespace LOFAR {
     //  - the return value is the number of rcus to be dumped (e.g. 0 if not dump is needed)
     //  - this is where most of the "magic" happends
     // ***warning:*** handles only one coincidence per call and unthinkingly dumps all 96 RCUs  
-    int VHECRTask::getReadCmd(vector<TBBReadCmd> &readCmd)
+    int VHECRTask::getReadCmd(std::vector<TBBReadCmd> &readCmd)
     {
       int noOfRCUs=0;
 
@@ -448,6 +464,13 @@ namespace LOFAR {
 //      cout << "Reading in antenna positions..." << endl;
           
       std::ifstream antennaFile(fileName.c_str()); 
+      if (antennaFile.is_open() != true)
+      {
+	LOG_FATAL("Failed to open Antenna Positions file!");
+	//cerr << "VHECRTask: Failed to open Antenna Positions file!" << endl;
+	doDirectionFit=0;
+	return;
+      };
       string temp;
       int nrAntennas, nrPolarizations, nrDirections;
       //casa::Vector<MVPosition> all_positions;
