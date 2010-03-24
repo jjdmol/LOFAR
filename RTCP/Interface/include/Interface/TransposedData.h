@@ -23,17 +23,12 @@ template <typename SAMPLE_TYPE> class TransposedData: public SampleData<SAMPLE_T
     TransposedData(const unsigned nrStations, const unsigned nrSamplesToCNProc);
 
     virtual TransposedData *clone() const { return new TransposedData(*this); }
-  private:
-    const unsigned		itsNrStations;
-    const unsigned		itsNrSamplesToCNProc;
 };
 
 
 template <typename SAMPLE_TYPE> inline TransposedData<SAMPLE_TYPE>::TransposedData(const unsigned nrStations, const unsigned nrSamplesToCNProc)
 :
-  SuperType(false,boost::extents[nrStations][nrSamplesToCNProc][NR_POLARIZATIONS],0),
-  itsNrStations(nrStations),
-  itsNrSamplesToCNProc(nrSamplesToCNProc)
+  SuperType(false,boost::extents[nrStations][nrSamplesToCNProc][NR_POLARIZATIONS],0)
 {
 }
 
