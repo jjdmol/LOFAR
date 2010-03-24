@@ -2,14 +2,8 @@
 #define LOFAR_CNPROC_TRANSPOSED_DATA_H
 
 #include <Common/lofar_complex.h>
-#include <Interface/Align.h>
-#include <Common/LofarLogger.h>
 #include <Interface/Config.h>
-#include <Interface/MultiDimArray.h>
 #include <Interface/StreamableData.h>
-#include <Interface/SubbandMetaData.h>
-
-#include <vector>
 
 
 namespace LOFAR {
