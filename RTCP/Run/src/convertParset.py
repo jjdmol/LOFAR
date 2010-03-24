@@ -185,6 +185,8 @@ def convertParsets( args, olapparset, partition = None ):
     # sanity check on parset
     parset.check()
 
+    parset.setFilename( obsparams["output"] )
+
   info( "========== Done ==========" )
 
   return parsets
@@ -266,5 +268,5 @@ if __name__ == "__main__":
 
   # output them to stdout or file
   for parset in parsets:
-    parset.writeFile( obsparams["output"] )
+    parset.save()
 
