@@ -36,8 +36,6 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const Par
 :
   itsLogThread(0)
 {
-  TimeStamp::setStationClockSpeed(ps->clockSpeed());
-
   std::vector<Parset::StationRSPpair> inputs = ps->getStationNamesAndRSPboardNumbers(psetNumber);
   itsNrRSPboards = inputs.size();
 
@@ -65,9 +63,6 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::~InputSection()
     delete itsBeamletBuffers[i];
 
   delete itsLogThread;
-
-  // do not use the station clock when no InputSection is active
-  TimeStamp::setStationClockSpeed(0);
 }
 
 
@@ -109,7 +104,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputThread
   args.nrTimesPerPacket    = ps->getInt32("OLAP.nrTimesInFrame");
   args.nrSlotsPerPacket    = ps->nrSlotsInFrame();
   args.isRealTime	   = ps->realTime();
-  args.startTime	   = TimeStamp(static_cast<int64>(ps->startTime() * ps->sampleRate()));
+  args.startTime	   = TimeStamp(static_cast<int64>(ps->startTime() * ps->sampleRate()), ps->clockSpeed());
 
   itsInputThreads.resize(itsNrRSPboards);
 

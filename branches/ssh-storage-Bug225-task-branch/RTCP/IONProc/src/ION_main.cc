@@ -385,7 +385,7 @@ Job::Job(const char *parsetName)
   itsHasPhaseTwo   = itsParset.phaseTwoPsetIndex(myPsetNumber) >= 0;
   itsHasPhaseThree = itsParset.phaseThreePsetIndex(myPsetNumber) >= 0;
 
-  itsStopTime  = TimeStamp(static_cast<int64>(itsParset.stopTime() * itsParset.sampleRate()));
+  itsStopTime  = TimeStamp(static_cast<int64>(itsParset.stopTime() * itsParset.sampleRate()), itsParset.clockSpeed());
 
   createCNstreams();
   createIONstreams();
