@@ -492,26 +492,21 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
 {
 
-  if (itsHasPhaseOne || itsHasPhaseTwo) {
 #if defined HAVE_MPI
-      delete itsAsyncTransposeInput;
+  delete itsAsyncTransposeInput; itsAsyncTransposeInput = 0;
 #endif // HAVE_MPI
-  }
-
-  if (itsHasPhaseTwo) {
-    delete itsBeamFormer;
-    delete itsPPF;
-    delete itsCorrelator;
-    delete itsCoherentStokes;
-    delete itsIncoherentStokes;
-  }
+  delete itsBeamFormer;          itsBeamFormer = 0;
+  delete itsPPF;                 itsPPF = 0;
+  delete itsCorrelator;          itsCorrelator = 0;
+  delete itsCoherentStokes;      itsCoherentStokes = 0;
+  delete itsIncoherentStokes;    itsIncoherentStokes = 0;
 
   for (unsigned i = 0; i < itsOutputStreams.size(); i++) {
     delete itsOutputStreams[i];
   }
   itsOutputStreams.clear();
 
-  delete itsPlan;
+  delete itsPlan;               itsPlan = 0;
 }
 
 
