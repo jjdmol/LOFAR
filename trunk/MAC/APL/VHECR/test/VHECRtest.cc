@@ -66,26 +66,36 @@ int main(int argc, char* argv[])
 	theTrigger.itsFlags = 0;
 	// process file
         uint32 n = 0;
+	double ddate, lastCoinCall=0.;
   	while (triggerFile.getline (triggerLine, 4096)) {
-		LOG_DEBUG_STR("input: " << triggerLine);
-		if (sscanf(triggerLine, "%d %u %u %u %u %u %u",
-				&theTrigger.itsRcuNr,
-				&theTrigger.itsSeqNr,
-				&theTrigger.itsTime,
-				&theTrigger.itsSampleNr,
-				&theTrigger.itsSum,
-				&theTrigger.itsNrSamples,
-				&theTrigger.itsPeakValue) == 7) {
-			// call the VHECR task
-                        theTrigger.itsNo = n;
-                        n++;
-			theTask.addTrigger(theTrigger);
-		}
-		else {	// could not read 7 argments
-			LOG_ERROR_STR("Can not interpret line: " << triggerLine);
-		}
+	  LOG_DEBUG_STR("input: " << triggerLine);
+	  if (sscanf(triggerLine, "%d %u %u %u %u %u %u",
+		     &theTrigger.itsRcuNr,
+		     &theTrigger.itsSeqNr,
+		     &theTrigger.itsTime,
+		     &theTrigger.itsSampleNr,
+		     &theTrigger.itsSum,
+		     &theTrigger.itsNrSamples,
+		     &theTrigger.itsPeakValue) == 7) {
+	    // call the VHECR task
+	    theTrigger.itsNo = n;
+	    n++;
+	    theTask.addTrigger(theTrigger);
+	    // call the coincidence-check if the last call was more than 100 ms ago
+	    ddate = theTrigger.itsTime + theTrigger.itsSampleNr/200e6;
+	    if ((ddate-lastCoinCall) > 0.1) { 
+	      std::vector<TBBReadCmd> readCmds;
+	      LOG_DEBUG_STR("Calling getReadCmd() at time:" << ddate);
+	      theTask.getReadCmd(readCmds);
+	      lastCoinCall=ddate;
+	    };
+	    
+	  }
+	  else {	// could not read 7 argments
+	    LOG_ERROR_STR("Can not interpret line: " << triggerLine);
+	  }
 	}
-
+	
 	triggerFile.close();
         cout << "Total coincidences: " << theTask.totalCoincidences << "; bad fits: " << theTask.badFits << endl;
 	return (0);
