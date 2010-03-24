@@ -21,8 +21,6 @@
 #
 #  $Id$
 
-include(LofarVariants)
-
 # ----------------------------------------------------------------------------
 # macro lofar_search_path(path package)
 #
