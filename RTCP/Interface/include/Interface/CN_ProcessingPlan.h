@@ -54,7 +54,7 @@ template <typename SAMPLE_TYPE = i8complex> class CN_ProcessingPlan: public Proc
     InputData<SAMPLE_TYPE>	 *itsInputData;
     SubbandMetaData              *itsInputSubbandMetaData;
     SubbandMetaData              *itsSubbandMetaData;
-    TransposedData<SAMPLE_TYPE>	 *itsTransposedData;
+    TransposedData<SAMPLE_TYPE>	 *itsTransposedInputData;
     FilteredData		 *itsFilteredData;
     CorrelatedData		 *itsCorrelatedData;
     BeamFormedData               *itsBeamFormedData;

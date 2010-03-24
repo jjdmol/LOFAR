@@ -34,7 +34,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
   itsInputData(0),
   itsInputSubbandMetaData(0),
   itsSubbandMetaData(0),
-  itsTransposedData(0),
+  itsTransposedInputData(0),
   itsFilteredData(0),
   itsCorrelatedData(0),
   itsBeamFormedData(0),
@@ -67,7 +67,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       32
     );
 
-    itsTransposedData = new TransposedData<SAMPLE_TYPE>(
+    itsTransposedInputData = new TransposedData<SAMPLE_TYPE>(
       configuration.nrStations(),
       configuration.nrSamplesToCNProc()
     );
@@ -129,8 +129,8 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     );
 
     // define TRANSFORMations in chronological order
-    TRANSFORM( itsInputData,            itsTransposedData );
-    TRANSFORM( itsTransposedData,       itsFilteredData   );
+    TRANSFORM( itsInputData,            itsTransposedInputData );
+    TRANSFORM( itsTransposedInputData,  itsFilteredData   );
     TRANSFORM( itsFilteredData,         itsBeamFormedData );
     TRANSFORM( itsFilteredData,         itsCorrelatedData );
     TRANSFORM( itsBeamFormedData,       itsCoherentStokesData );
@@ -173,7 +173,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::~CN_ProcessingPl
   delete itsInputData;
   delete itsInputSubbandMetaData;
   delete itsSubbandMetaData;
-  delete itsTransposedData;
+  delete itsTransposedInputData;
   delete itsFilteredData;
   delete itsCorrelatedData;
   delete itsBeamFormedData;

@@ -68,7 +68,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsLocationInfo(locationInfo),
   itsPlan(0),
 #if defined HAVE_MPI
-  itsAsyncTranspose(0),
+  itsAsyncTransposeInput(0),
 #endif
   itsPPF(0),
   itsBeamFormer(0),
@@ -204,14 +204,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
 #if defined HAVE_MPI
   if (itsHasPhaseOne || itsHasPhaseTwo) {
-    itsAsyncTranspose = new AsyncTranspose<SAMPLE_TYPE>(itsHasPhaseOne, itsHasPhaseTwo, 
+    itsAsyncTransposeInput = new AsyncTranspose<SAMPLE_TYPE>(itsHasPhaseOne, itsHasPhaseTwo, 
 							myCoreInPset, itsLocationInfo, phaseOnePsets, phaseTwoPsets );
   }
 #endif // HAVE_MPI
 
 }
 
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput()
 {
 #if defined HAVE_MPI
 
@@ -222,7 +222,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
   if(itsHasPhaseTwo && itsCurrentSubband < itsNrSubbands) {
     NSTimer postAsyncReceives("post async receives", LOG_CONDITION, true);
     postAsyncReceives.start();
-    itsAsyncTranspose->postAllReceives(itsPlan->itsSubbandMetaData,itsPlan->itsTransposedData);
+    itsAsyncTransposeInput->postAllReceives(itsPlan->itsSubbandMetaData,itsPlan->itsTransposedInputData);
     postAsyncReceives.stop();
   }
 
@@ -252,7 +252,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
 	//  LOG_DEBUG("transpose: send subband " << subband << " to pset id " << i);
         //}
 
-	itsAsyncTranspose->asyncSend(i, itsPlan->itsInputSubbandMetaData, itsPlan->itsInputData); // Asynchronously send one subband to another pset.
+	itsAsyncTransposeInput->asyncSend(i, itsPlan->itsInputSubbandMetaData, itsPlan->itsInputData); // Asynchronously send one subband to another pset.
 	asyncSendTimer.stop();
       }
     }
@@ -281,21 +281,21 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 
   for (unsigned i = 0; i < itsNrStations; i ++) {
     asyncReceiveTimer.start();
-    const unsigned stat = itsAsyncTranspose->waitForAnyReceive();
+    const unsigned stat = itsAsyncTransposeInput->waitForAnyReceive();
     asyncReceiveTimer.stop();
 
 //    LOG_DEBUG("transpose: received subband " << itsCurrentSubband << " from " << stat);
 
     computeTimer.start();
     itsPPF->computeFlags(stat, itsPlan->itsSubbandMetaData, itsPlan->itsFilteredData);
-    itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsPlan->itsSubbandMetaData, itsPlan->itsTransposedData, itsPlan->itsFilteredData);
+    itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsPlan->itsSubbandMetaData, itsPlan->itsTransposedInputData, itsPlan->itsFilteredData);
     computeTimer.stop();
   }
 #else // NO MPI
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
     computeTimer.start();
     itsPPF->computeFlags(stat, itsPlan->itsSubbandMetaData, itsPlan->itsFilteredData);
-    itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsPlan->itsSubbandMetaData, itsPlan->itsTransposedData, itsPlan->itsFilteredData);
+    itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsPlan->itsSubbandMetaData, itsPlan->itsTransposedInputData, itsPlan->itsFilteredData);
     computeTimer.stop();
   }
 #endif // HAVE_MPI
@@ -378,7 +378,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingIn
 
   NSTimer waitAsyncSendTimer("wait for all async sends", LOG_CONDITION, true);
   waitAsyncSendTimer.start();
-  itsAsyncTranspose->waitForAllSends();
+  itsAsyncTransposeInput->waitForAllSends();
   waitAsyncSendTimer.stop();
 #endif
 }
@@ -395,7 +395,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 
   if( itsHasPhaseOne || itsHasPhaseTwo ) {
     // transpose/obtain input data
-    transpose();
+    transposeInput();
   }
 
   /*
@@ -494,7 +494,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
 
   if (itsHasPhaseOne || itsHasPhaseTwo) {
 #if defined HAVE_MPI
-      delete itsAsyncTranspose;
+      delete itsAsyncTransposeInput;
 #endif // HAVE_MPI
   }
 
