@@ -20,32 +20,21 @@
 
 #include <lofar_config.h>
 
-#include <BeamletBufferToComputeNode.h>
+#include <CommandServer.h>
 #include <Common/LofarLogger.h>
-#include <Common/Exceptions.h>
 #include <Interface/CN_Command.h>
-#include <Interface/CN_Configuration.h>
 #include <Interface/CN_Mapping.h>
 #include <Interface/Exceptions.h>
-#include <Interface/Mutex.h>
 #include <Interface/Parset.h>
-#include <Interface/PrintVector.h>
-#include <Interface/RSPTimeStamp.h>
-#include <Interface/Thread.h>
 #include <ION_Allocator.h>
-#include <InputSection.h>
-#include <OutputSection.h>
-#include <PLC/ACCmain.h>
-#include <Stream/FileStream.h>
+#include <Job.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <Stream/SystemCallException.h>
 #include <StreamMultiplexer.h>
 #include <IONProc/Package__Version.h>
 
-#include <algorithm>
 #include <boost/multi_array.hpp>
-#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <execinfo.h>
@@ -55,9 +44,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/mman.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <stdarg.h>
 
 #if defined HAVE_MPI
 #include <mpi.h>
@@ -127,14 +113,14 @@ void terminate_with_backtrace()
 namespace LOFAR {
 namespace RTCP {
 
-std::string				myIPaddress;
+std::string			   myIPaddress;
 
-static unsigned			 	myPsetNumber, nrPsets;
-static boost::multi_array<char, 2>	ipAddresses;
-static std::vector<Stream *>		allCNstreams, allIONstreams;
-static std::vector<StreamMultiplexer *> allIONstreamMultiplexers;
+unsigned			   myPsetNumber, nrPsets;
+static boost::multi_array<char, 2> ipAddresses;
+std::vector<Stream *>		   allCNstreams, allIONstreams;
+std::vector<StreamMultiplexer *>   allIONstreamMultiplexers;
 
-static const unsigned	     nrCNcoresInPset = 64; // TODO: how to figure out the number of CN cores?
+unsigned			   nrCNcoresInPset = 64; // TODO: how to figure out the number of CN cores?
 
 #if defined USE_VALGRIND || !defined HAVE_FCNP // FIXME
 static const std::string     streamType = "TCP";
@@ -146,7 +132,7 @@ static const std::string     streamType = "FCNP";
 static bool	   fcnp_inited;
 #endif
 
-static Stream *createCNstream(unsigned core, unsigned channel)
+Stream *createCNstream(unsigned core, unsigned channel)
 {
   // translate logical to physical core number
   core = CN_Mapping::mapCoreOnPset(core, myPsetNumber);
@@ -165,7 +151,7 @@ static Stream *createCNstream(unsigned core, unsigned channel)
     return str;
   }
   else
-    THROW(IONProcException, "unknown Stream type between ION and CN");
+    throw IONProcException("unknown Stream type between ION and CN", THROW_ARGS);
 }
 
 
@@ -313,490 +299,6 @@ static void unmapFlatMemory()
 #endif
 
 
-class Job
-{
-  public:
-    Job(const char *parsetName);
-    ~Job();
-
-    const Parset itsParset;
-
-  private:
-    void	checkParset() const;
-    void	createCNstreams();
-    void	configureCNs(), unconfigureCNs();
-
-    void	createIONstreams(), deleteIONstreams();
-
-    void				 jobThread();
-    template <typename SAMPLE_TYPE> void CNthread();
-
-    void	allocateResources();
-    void	deallocateResources();
-
-    void	attachToInputSection();
-    void	detachFromInputSection();
-
-    void	barrier();
-
-    std::vector<Stream *>		itsCNstreams, itsIONstreams;
-    unsigned				itsNrRuns;
-    TimeStamp                           itsStopTime;
-    Thread				*itsJobThread, *itsCNthread;
-    bool				itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
-    unsigned				itsJobID, itsObservationID;
-    static unsigned			nextJobID;
-
-    static void				*theInputSection;
-    static Mutex			theInputSectionMutex;
-    static unsigned			theInputSectionRefCount;
-};
-
-
-unsigned		  Job::nextJobID = 1;
-void			  *Job::theInputSection;
-Mutex			  Job::theInputSectionMutex;
-unsigned		  Job::theInputSectionRefCount = 0;
-
-static std::vector<Job *> runningJobs;
-static unsigned		  nrJobsCreated;
-static Semaphore	  nrJobsFinished;
-
-static Mutex		  jobQueueMutex;
-static Condition	  reevalutateJobQueue;
-
-
-Job::Job(const char *parsetName)
-:
-  itsParset(parsetName),
-  itsJobID(nextJobID ++) // no need to make thread safe
-{
-  checkParset();
-
-  itsObservationID = itsParset.observationID();
-
-  LOG_DEBUG_STR("Creating new observation, ObsID = " << itsParset.observationID());
-  LOG_DEBUG_STR("ObsID = " << itsParset.observationID() << ", usedCoresInPset = " << itsParset.usedCoresInPset());
-
-  itsNrRuns = static_cast<unsigned>(ceil((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime()));
-  LOG_DEBUG_STR("itsNrRuns = " << itsNrRuns);
-
-  itsHasPhaseOne   = itsParset.phaseOnePsetIndex(myPsetNumber) >= 0;
-  itsHasPhaseTwo   = itsParset.phaseTwoPsetIndex(myPsetNumber) >= 0;
-  itsHasPhaseThree = itsParset.phaseThreePsetIndex(myPsetNumber) >= 0;
-
-  itsStopTime  = TimeStamp(static_cast<int64>(itsParset.stopTime() * itsParset.sampleRate()), itsParset.clockSpeed());
-
-  createCNstreams();
-  createIONstreams();
-
-  itsJobThread = new Thread(this, &Job::jobThread, 65536);
-
-  ++ nrJobsCreated;
-}
-
-
-Job::~Job()
-{
-  LOG_DEBUG("Job::~Job()");
-
-  delete itsJobThread;
-  deleteIONstreams();
-
-  nrJobsFinished.up();
-}
-
-
-void Job::allocateResources()
-{
-  if (itsHasPhaseOne)
-    attachToInputSection();
-
-  switch (itsParset.nrBitsPerSample()) {
-    case  4 : itsCNthread = new Thread(this, &Job::CNthread<i4complex>, 65536);
-	      break;
-
-    case  8 : itsCNthread = new Thread(this, &Job::CNthread<i8complex>, 65536);
-	      break;
-
-    case 16 : itsCNthread = new Thread(this, &Job::CNthread<i16complex>, 65536);
-	      break;
-  }
-}
-
-
-void Job::deallocateResources()
-{
-  // WAIT for thread
-  delete itsCNthread;
-  LOG_DEBUG("CNthread joined");
-
-  // STOP inputSection
-  if (itsHasPhaseOne)
-    detachFromInputSection();
-}
-
-
-void Job::barrier()
-{
-  char byte = 0;
-
-  if (myPsetNumber == 0) {
-    for (unsigned ion = 1; ion < nrPsets; ion ++)
-      itsIONstreams[ion]->read(&byte, sizeof byte);
-
-    for (unsigned ion = 1; ion < nrPsets; ion ++)
-      itsIONstreams[ion]->write(&byte, sizeof byte);
-  } else {
-    itsIONstreams[0]->write(&byte, sizeof byte);
-    itsIONstreams[0]->read(&byte, sizeof byte);
-  }
-}
-
-
-void Job::jobThread()
-{
-  if (myPsetNumber == 0) {
-    if (itsParset.realTime()) {
-      // claim resources ten seconds before observation start
-      WallClockTime wallClock;
-      time_t     closeToStart = static_cast<time_t>(itsParset.startTime()) - 10;
-      char       buf[26];
-      ctime_r(&closeToStart, buf);
-      buf[24] = '\0';
-      
-      LOG_DEBUG_STR("waiting for job " << itsObservationID << " to start: sleeping until " << buf);
-      wallClock.waitUntil(closeToStart);
-    }
-
-    jobQueueMutex.lock();
-
-    retry:
-      for (std::vector<Job *>::iterator job = runningJobs.begin(); job != runningJobs.end(); job ++)
-	if ((*job)->itsParset.overlappingResources(&itsParset)) {
-	  reevalutateJobQueue.wait(jobQueueMutex);
-	  goto retry;
-	}
-
-    runningJobs.push_back(this);
-
-    jobQueueMutex.unlock();
-  }
-
-  barrier();
-
-  if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
-    LOG_DEBUG_STR("claiming resources for observation " << itsObservationID);
-    allocateResources();
-
-    // do observation
-
-    deallocateResources();
-    LOG_DEBUG_STR("resources of job " << itsObservationID << " deallocated");
-  }
-
-  barrier();
-
-  if (myPsetNumber == 0) {    
-    jobQueueMutex.lock();
-    runningJobs.erase(find(runningJobs.begin(), runningJobs.end(), this));
-    reevalutateJobQueue.broadcast();
-    jobQueueMutex.unlock();
-  }
-
-  delete this;
-}
-
-
-void Job::createCNstreams()
-{
-  std::vector<unsigned> usedCoresInPset = itsParset.usedCoresInPset();
-
-  itsCNstreams.resize(usedCoresInPset.size());
-
-  for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
-    itsCNstreams[core] = allCNstreams[usedCoresInPset[core]];
-}
-
-
-void Job::createIONstreams()
-{
-  if (myPsetNumber == 0) {
-    itsIONstreams.resize(nrPsets);
-
-    for (unsigned ion = 1; ion < nrPsets; ion ++)
-      itsIONstreams[ion] = new MultiplexedStream(*allIONstreamMultiplexers[ion], itsJobID);
-  } else {
-    itsIONstreams.push_back(new MultiplexedStream(*allIONstreamMultiplexers[0], itsJobID));
-  }
-}
-
-
-void Job::deleteIONstreams()
-{
-  if (myPsetNumber == 0) {
-    for (unsigned ion = 1; ion < nrPsets; ion ++)
-      delete itsIONstreams[ion];
-  } else {
-    delete itsIONstreams[0];
-  }
-
-  itsIONstreams.clear();
-}
-
-
-void Job::attachToInputSection()
-{
-  theInputSectionMutex.lock();
-
-  if (theInputSectionRefCount ++ == 0)
-    switch (itsParset.nrBitsPerSample()) {
-      case  4 : theInputSection = new InputSection<i4complex>(&itsParset, myPsetNumber);
-		break;
-
-      case  8 : theInputSection = new InputSection<i8complex>(&itsParset, myPsetNumber);
-		break;
-
-      case 16 : theInputSection = new InputSection<i16complex>(&itsParset, myPsetNumber);
-		break;
-    }
-
-  theInputSectionMutex.unlock();
-}
-
-
-void Job::detachFromInputSection()
-{
-  theInputSectionMutex.lock();
-
-  if (-- theInputSectionRefCount == 0)
-    switch (itsParset.nrBitsPerSample()) {
-      case  4 : delete static_cast<InputSection<i4complex> *>(theInputSection);
-		break;
-
-      case  8 : delete static_cast<InputSection<i8complex> *>(theInputSection);
-		break;
-
-      case 16 : delete static_cast<InputSection<i16complex> *>(theInputSection);
-		break;
-    }
-
-  theInputSectionMutex.unlock();
-}
-
-
-void Job::configureCNs()
-{
-  CN_Command	   command(CN_Command::PREPROCESS);
-  CN_Configuration configuration(itsParset);
-  
-  LOG_DEBUG_STR("configuring cores " << itsParset.usedCoresInPset() << " ...");
-
-  for (unsigned core = 0; core < itsCNstreams.size(); core ++) {
-    command.write(itsCNstreams[core]);
-    configuration.write(itsCNstreams[core]);
-  }
-  
-  LOG_DEBUG_STR("configuring cores " << itsParset.usedCoresInPset() << " done");
-}
-
-
-void Job::unconfigureCNs()
-{
-  CN_Command command(CN_Command::POSTPROCESS);
-
-  LOG_DEBUG_STR("unconfiguring cores " << itsParset.usedCoresInPset() << " ...");
-
-  for (unsigned core = 0; core < itsCNstreams.size(); core ++)
-    command.write(itsCNstreams[core]);
-
-  LOG_DEBUG_STR("unconfiguring cores " << itsParset.usedCoresInPset() << " done");
-}
-
-
-template <typename SAMPLE_TYPE> void Job::CNthread()
-{
-  CN_Configuration configuration(itsParset);
-  CN_ProcessingPlan<> plan(configuration,itsHasPhaseOne,itsHasPhaseTwo,itsHasPhaseThree);
-  plan.removeNonOutputs();
-  unsigned nrOutputTypes = plan.nrOutputTypes();
-  std::vector<OutputSection *> outputSections( nrOutputTypes, 0 );
-
-  LOG_DEBUG("starting CNthread");
-
-  // first: send configuration to compute nodes so they know what to expect
-  configureCNs();
-
-  // start output process threads
-  for (unsigned output = 0; output < nrOutputTypes; output++) {
-    unsigned phase, psetIndex, maxlistsize;
-    std::vector<unsigned> list; // list of subbands or beams
-
-    switch( plan.plan[output].distribution ) {
-      case ProcessingPlan::DIST_SUBBAND:
-        phase = 2;
-        psetIndex = itsParset.phaseTwoPsetIndex( myPsetNumber );
-        maxlistsize = itsParset.nrSubbandsPerPset();
-
-        for (unsigned sb = 0; sb < itsParset.nrSubbandsPerPset(); sb++) {
-          unsigned subbandNumber = psetIndex * itsParset.nrSubbandsPerPset() + sb;
-
-          if (subbandNumber < itsParset.nrSubbands()) {
-            list.push_back( subbandNumber );
-          }
-        }
-        break;
-
-      case ProcessingPlan::DIST_BEAM:
-        phase = 3;
-        psetIndex = itsParset.phaseThreePsetIndex( myPsetNumber );
-        maxlistsize = itsParset.nrBeamsPerPset();
-
-        for (unsigned beam = 0;  beam < itsParset.nrBeamsPerPset(); beam++) {
-          unsigned beamNumber = psetIndex * itsParset.nrBeamsPerPset() + beam;
-
-          if (beamNumber < itsParset.nrBeams()) {
-            list.push_back( beamNumber );
-          }
-        }
-        break;
-
-      default:
-        continue;
-    }
-
-    outputSections[output] = new OutputSection(&itsParset, itsNrRuns, list, maxlistsize, output, &createCNstream);
-  }
-
-  // forward input, if any
-  LOG_DEBUG("CNthread processing input");
-
-  unsigned run;
-  std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
-  BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
-
-  beamletBufferToComputeNode.preprocess(&itsParset);
-        
-  for (run = 0; run < itsNrRuns; run ++)
-    beamletBufferToComputeNode.process();
-
-  beamletBufferToComputeNode.postprocess();
-
-  unconfigureCNs();
-
-  LOG_DEBUG("CNthread done processing input");
-
-  // wait for output process threads to finish 
-  for (unsigned output = 0; output < nrOutputTypes; output ++) {
-    delete outputSections[output];
-  }
-
-  LOG_DEBUG("CNthread finished");
-}
-
-
-void Job::checkParset() const
-{
-  if (itsParset.nrCoresPerPset() > nrCNcoresInPset) {
-    LOG_ERROR_STR("nrCoresPerPset (" << itsParset.nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
-    exit(1);
-  }
-}
-
-
-static bool quit = false;
-
-
-static void handleCommand(const std::string &command)
-{
-  LOG_DEBUG_STR("command \"" << command << "\" received");
-
-  if (command == "quit") {
-    quit = true;
-  } else if (command.compare(0, 7, "parset ") == 0) {
-    try {
-      new Job(command.substr(7).c_str());
-    } catch (APSException &) { // if file could not be found
-    }
-  } else if (myPsetNumber == 0) {
-    LOG_ERROR_STR("command \"" << command << "\" not understood");
-  }
-}
-
-
-static void commandMaster()
-{
-  std::vector<MultiplexedStream *> ionStreams(nrPsets);
-
-  for (unsigned ion = 1; ion < nrPsets; ion ++)
-    ionStreams[ion] = new MultiplexedStream(*allIONstreamMultiplexers[ion], 0);
-
-  while (!quit) {
-    try {
-      SocketStream sk("0.0.0.0", 400, SocketStream::TCP, SocketStream::Server);
-
-      while (!quit) {
-	std::string command;
-
-	for (char ch; sk.read(&ch, 1), ch != '\n';) // TODO: do not do a syscall per char
-	  command.push_back(ch);
-
-	LOG_DEBUG_STR("read command: " << command);
-	unsigned size = command.size() + 1;
-
-	//MPI_Bcast(&size, sizeof size, MPI_INT, 0, MPI_COMM_WORLD);
-	//MPI_Bcast(const_cast<char *>(command.c_str()), size, MPI_CHAR, 0, MPI_COMM_WORLD);
-	for (unsigned ion = 1; ion < nrPsets; ion ++) {
-	  ionStreams[ion]->write(&size, sizeof size);
-	  ionStreams[ion]->write(command.c_str(), size);
-	}
-
-	handleCommand(command);
-      }
-    } catch (Stream::EndOfStreamException &) {
-    } catch (SystemCallException &ex) {
-      if (ex.error == EADDRINUSE) {
-	LOG_WARN("address in use");
-	sleep(1);
-      } else {
-	throw;
-      }
-    }
-  }
-
-  for (unsigned ion = 1; ion < nrPsets; ion ++)
-    delete ionStreams[ion];
-}
-
-
-static void commandSlave()
-{
-  MultiplexedStream streamFromMaster(*allIONstreamMultiplexers[0], 0);
-
-  while (!quit) {
-    unsigned size;
-
-    //MPI_Bcast(&size, sizeof size, MPI_INT, 0, MPI_COMM_WORLD);
-    streamFromMaster.read(&size, sizeof size);
-
-    char *command = new char[size];
-    //MPI_Bcast(command, size, MPI_CHAR, 0, MPI_COMM_WORLD);
-    streamFromMaster.read(command, size);
-    handleCommand(command);
-    delete [] command;
-  }
-}
-
-
-static void commandServer()
-{
-  if (myPsetNumber == 0)
-    commandMaster();
-  else
-    commandSlave();
-}
-
-
 static void master_thread(int argc, char **argv)
 {
 #if !defined HAVE_PKVERSION
@@ -840,7 +342,7 @@ static void master_thread(int argc, char **argv)
     }
 #endif
 
-    nrJobsFinished.down(nrJobsCreated);
+    Job::waitUntilAllJobsAreFinished();
     stopCNs();
 
 #if defined FLAT_MEMORY

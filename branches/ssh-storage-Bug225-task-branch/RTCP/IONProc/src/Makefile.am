@@ -3,10 +3,13 @@
 pkginclude_HEADERS = Package__Version.h \
 BeamletBuffer.h			\
 BeamletBufferToComputeNode.h	\
+CommandServer.h			\
 InputSection.h			\
 InputThread.h			\
 InputThreadAsm.h		\
 ION_Allocator.h			\
+ION_main.h			\
+Job.h				\
 LockedRanges.h			\
 LogThread.h			\
 OutputThread.h			\
@@ -23,11 +26,13 @@ FCNP_ServerStream.h
 liblofar_impl_la_SOURCES = $(pkginclude_HEADERS) \
 BeamletBuffer.cc		\
 BeamletBufferToComputeNode.cc	\
+CommandServer.cc		\
 ION_main.cc		 	\
 InputSection.cc			\
 InputThread.cc			\
 InputThreadAsm.S		\
 ION_Allocator.cc		\
+Job.cc				\
 LogThread.cc			\
 OutputThread.cc			\
 OutputSection.cc		\
