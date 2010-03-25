@@ -219,13 +219,6 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
       make_directory ${CMAKE_BINARY_DIR}/include)
   endif(NOT EXISTS ${CMAKE_BINARY_DIR}/include)
 
-  # Add a custom target, so that we can do a 'make check', like we did with
-  # the GNU Autotools. 
-  # Tests should be added with:
-  #   - add_executable(<testprog> EXCLUDE_FROM_ALL ...) 
-  #   - add_dependencies(check <testprog>)
-  add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
-
   ## --------------------------------------------------------------------------
   ## Several "Auto-tools variables" needed for backward compatibility
   ## --------------------------------------------------------------------------
