@@ -7,6 +7,7 @@
 #   lofar_add_sbin_program(name)
 #   lofar_add_test(name)
 #   lofar_join_arguments(var)
+#   lofar_search_path(path package)
 #
 # Please refer to the module source for documentation of these macros.
 
@@ -170,5 +171,29 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     string(STRIP ${_var} _var)
     set(${var} ${_var})
   endmacro(lofar_join_arguments)
+
+
+  # --------------------------------------------------------------------------
+  # lofar_search_path(path package)
+  #
+  # Return search path to use when searching for <package> as <path>. Replace
+  # placeholders in ${LOFAR_SEARCH_PATH} with actual values. Note that we need
+  # to quote the variables, because they may be undefined.
+  # --------------------------------------------------------------------------
+  macro(lofar_search_path _path _pkg)
+    set(${_path})
+    string(TOLOWER "${LOFAR_COMPILER_SUITE}" comp)
+    foreach(_dir ${LOFAR_SEARCH_PATH})
+      string(REPLACE "+prefix" "${CMAKE_INSTALL_PREFIX}" _dir "${_dir}")
+      string(REPLACE "+root" "${LOFAR_ROOT}" _dir "${_dir}")
+      string(REPLACE "+pkg" "${_pkg}" _dir "${_dir}")
+      string(REPLACE "+vers" "${${_pkg}-version}" _dir "${_dir}")
+      string(REPLACE "+comp" "${comp}" _dir "${_dir}")
+      file(TO_CMAKE_PATH "${_dir}" _dir)    # remove trailing slash(es)
+      list(APPEND ${_path} ${_dir})
+    endforeach(_dir in ${LOFAR_SEARCH_PATH})
+    list(REMOVE_DUPLICATES ${_path})
+  endmacro(lofar_search_path _path _pkg)
+
 
 endif(NOT DEFINED LOFAR_MACROS_INCLUDED)
