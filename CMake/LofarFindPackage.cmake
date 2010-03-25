@@ -20,8 +20,7 @@
 #
 #  $Id$
 
-include(LofarSearchPath)
-include(FindPackageHandleStandardArgs)
+include(LofarMacros)
 
 # ----------------------------------------------------------------------------
 # function lofar_find_package(package)

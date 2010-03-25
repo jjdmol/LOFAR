@@ -34,9 +34,6 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
   # Include LOFAR package list
   include(LofarPackageList)
 
-  # Include LOFAR macros
-  include(LofarMacros)
-
   # Include LOFAR Subversion macros
   include(LofarSubversion)
 
