@@ -96,7 +96,7 @@ OutputThread::~OutputThread()
   //LOG_INFO_STR(itsDescription << ": waiting for Storage process to finish");
   delete itsThread;
 
-  if (!itsSendQueue.size() > 0) // the final null pointer does not count
+  if (itsSendQueue.size() > 0) // the final null pointer does not count
     LOG_WARN_STR(itsDescription << ": dropped " << itsSendQueue.size() - 1 << " blocks");
 
   while (!itsSendQueue.empty())
