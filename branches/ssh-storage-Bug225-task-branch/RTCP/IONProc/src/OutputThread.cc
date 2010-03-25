@@ -96,8 +96,8 @@ OutputThread::~OutputThread()
   //LOG_INFO_STR(itsDescription << ": waiting for Storage process to finish");
   delete itsThread;
 
-  if (!itsSendQueue.empty())
-    LOG_WARN_STR(itsDescription << ": dropped " << itsSendQueue.size() << " blocks");
+  if (!itsSendQueue.size() > 0) // the final null pointer does not count
+    LOG_WARN_STR(itsDescription << ": dropped " << itsSendQueue.size() - 1 << " blocks");
 
   while (!itsSendQueue.empty())
     delete itsSendQueue.remove();
@@ -133,7 +133,7 @@ void OutputThread::execSSH(const char *sshKey, const char *userName, const char 
     static_cast<void *>(0)
   );
 
-  write(2, "exec failed\n", 12); // Logger uses threads
+  write(2, "exec failed\n", 12); // Logger uses mutex, hence write directly
   exit(1);
 }
 
