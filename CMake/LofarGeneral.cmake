@@ -98,4 +98,10 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
   ## --------------------------------------------------------------------------
   find_package(Doxygen)
 
+  ## --------------------------------------------------------------------------
+  ## Define custom target 'check', so that we can do 'make check', like we did
+  ## with the GNU Autotools. Tests should be added with lofar_add_test().
+  ## --------------------------------------------------------------------------
+  add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
+
 endif(NOT DEFINED LOFAR_GENERAL_INCLUDED)
