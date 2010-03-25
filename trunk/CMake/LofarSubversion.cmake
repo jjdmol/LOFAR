@@ -28,16 +28,17 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-find_package(Subversion)
+# Intentionally using the same variable as CTest.
+find_program(SVNCOMMAND svn)
 
 # --------------------------------------------------------------------------
 # lofar_subversion_update([path...])
 # --------------------------------------------------------------------------
 macro(lofar_subversion_update)
-  if(NOT Subversion_FOUND)
+  if(NOT SVNCOMMAND)
     message(SEND_ERROR "Subversion was NOT found, but is needed.")
-  else(NOT Subversion_FOUND)
-    set(_svn_update ${Subversion_SVN_EXECUTABLE} --non-interactive update -q)
+  else(NOT SVNCOMMAND)
+    set(_svn_update ${SVNCOMMAND} --non-interactive update -q)
     foreach(_path ${ARGV})
       if(NOT IS_ABSOLUTE ${_path})
         get_filename_component(_path ${_path} ABSOLUTE)
@@ -61,6 +62,6 @@ macro(lofar_subversion_update)
         endif(_result)
       endforeach(_dir ${_dirs})
     endforeach(_path ${ARGV})
-  endif(NOT Subversion_FOUND)
+  endif(NOT SVNCOMMAND)
 endmacro(lofar_subversion_update)
 
