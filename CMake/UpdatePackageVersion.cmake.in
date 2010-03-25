@@ -48,7 +48,7 @@ string(TOUPPER ${_pkg} _upkg)
 # Retrieve version and revision information from the repository, using
 # 'svn info' and 'svn status'
 set(_svn_tmp "@PACKAGE_BINARY_DIR@/version.svn.tmp")
-execute_process(COMMAND svn info @PACKAGE_SOURCE_DIR@
+execute_process(COMMAND @SVNCOMMAND@ info @PACKAGE_SOURCE_DIR@
   RESULT_VARIABLE _result
   OUTPUT_FILE "${_svn_tmp}"
   OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -80,7 +80,7 @@ if(_result EQUAL 0)
   file(STRINGS "${_svn_tmp}" _lrev REGEX "^Last Changed Rev:")
   string(REGEX REPLACE "^Last Changed Rev: *(.*)$" "\\1" _lrev "${_lrev}")
   # Count the number of locally added/deleted/modified/replaced files.
-  execute_process(COMMAND svn status -q @PACKAGE_SOURCE_DIR@
+  execute_process(COMMAND @SVNCOMMAND@ status -q @PACKAGE_SOURCE_DIR@
     COMMAND grep -c "^[ADMR]"
     OUTPUT_VARIABLE _nrch
     OUTPUT_STRIP_TRAILING_WHITESPACE)
