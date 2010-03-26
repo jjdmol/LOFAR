@@ -28,7 +28,6 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
-//#include <APL/APLCommon/APLUtilities.h>
 #include <Interface/Parset.h>
 #include <Interface/Exceptions.h>
 #include <Interface/PrintVector.h>
@@ -146,24 +145,46 @@ string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNu
 }
 
 
-Stream *Parset::createStream(const string &description, bool asReader)
+Stream *Parset::createStream(const string &description, bool asServer)
 {
   vector<string> split = StringUtil::split(description, ':');
 
   if (description == "null:")
     return new NullStream;
   else if (split.size() == 3 && split[0] == "udp")
-    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::UDP, asReader ? SocketStream::Server : SocketStream::Client);
+    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client);
   else if (split.size() == 3 && split[0] == "tcp")
-    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::TCP, asReader ? SocketStream::Server : SocketStream::Client);
+    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client);
   else if (split.size() == 2 && split[0] == "file")
-    return asReader ? new FileStream(split[1].c_str()) : new FileStream(split[1].c_str(), 0666);
+    return asServer ? new FileStream(split[1].c_str()) : new FileStream(split[1].c_str(), 0666);
   else if (split.size() == 2)
-    return new SocketStream(split[0].c_str(), boost::lexical_cast<short>(split[1]), SocketStream::UDP, asReader ? SocketStream::Server : SocketStream::Client);
+    return new SocketStream(split[0].c_str(), boost::lexical_cast<short>(split[1]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client);
   else if (split.size() == 1)
-    return asReader ? new FileStream(split[0].c_str()) : new FileStream(split[0].c_str(), 0666);
+    return asServer ? new FileStream(split[0].c_str()) : new FileStream(split[0].c_str(), 0666);
   else
     THROW(InterfaceException, string("unrecognized connector format: \"" + description + '"'));
+}
+
+
+std::string Parset::getStreamDescriptorBetweenIONandStorage(unsigned subband, unsigned output) const
+{
+  std::string prefix	     = "OLAP.OLAP_Conn.IONProc_Storage";
+  std::string connectionType = getString(prefix + "_Transport");
+
+  if (connectionType == "NULL") {
+    return "null:";
+  } else if (connectionType == "TCP") {
+    std::string    server = storageHostName(prefix + "_ServerHosts", subband);
+    unsigned short port   = getStoragePort(prefix, subband, output);
+
+    return std::string("tcp:") + server + ':' + boost::lexical_cast<std::string>(port);
+  } else if (connectionType == "FILE") {
+    std::string filename = getString(prefix + "_BaseFileName") + '.' + boost::lexical_cast<std::string>(subband);
+
+    return std::string("file:") + filename;
+  } else {
+    THROW(InterfaceException, "unsupported ION->Storage stream type: " << connectionType);
+  }
 }
 
 

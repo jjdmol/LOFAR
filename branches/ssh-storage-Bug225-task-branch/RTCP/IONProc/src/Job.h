@@ -66,6 +66,16 @@ class Job
 
     void				barrier();
 
+    static void				execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset);
+    void				forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, int &storagePID);
+    void				joinSSH(int childPID, const std::string &hostName);
+
+    void				startStorageProcesses();
+    void				stopStorageProcesses();
+
+    std::vector<std::string>		itsStorageHostNames;
+    std::vector<int>			itsStoragePIDs;
+
     std::vector<Stream *>		itsCNstreams, itsIONstreams;
     unsigned				itsNrRuns;
     TimeStamp                           itsStopTime;

@@ -38,12 +38,13 @@ namespace RTCP {
 class InputThread
 {
   public:
-			    InputThread(const Parset &, unsigned subbandNumber, unsigned outputNumber, const std::string &inputDescription, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue);
+			    InputThread(const Parset &, unsigned subbandNumber, unsigned outputNumber, /*const std::string &inputDescription,*/ Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue);
 			    ~InputThread();
 
   private:
     void		    mainLoop();
 
+    const Parset	    &itsParset;
     const unsigned          itsSubbandNumber;
     const unsigned          itsOutputNumber;
     const std::string	    itsInputDescription;

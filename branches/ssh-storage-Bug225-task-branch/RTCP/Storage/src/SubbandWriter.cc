@@ -41,146 +41,21 @@
 namespace LOFAR {
 namespace RTCP {
 
-#if 0
-SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank, unsigned size) 
-:
-  itsPS(ps),
-  itsRank(rank),
-  itsSize(size),
-  itsObservationID(ps->observationID())
-#ifdef USE_MAC_PI
-,itsPropertySet(0)
-#endif
+
+SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, unsigned outputType)
 {
-#ifdef USE_MAC_PI
-  itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
-#endif
-
-  CN_Configuration configuration(*itsPS);
-  CN_ProcessingPlan<> plan(configuration);
-  plan.removeNonOutputs();
-
-  // determine the indices for both phase 2 and 3.
-  std::vector<unsigned> phaseTwoSubbands;
-  std::vector<unsigned> subbandStorageList = itsPS->subbandStorageList();
-  for (unsigned sb = 0; sb < subbandStorageList.size(); sb++ ) {
-    if (subbandStorageList[sb] == itsRank ) {
-      phaseTwoSubbands.push_back( sb );
-    }
-  }
-
-  std::vector<unsigned> phaseThreeBeams;
-  std::vector<unsigned> beamStorageList = itsPS->beamStorageList();
-  for (unsigned sb = 0; sb < beamStorageList.size(); sb++ ) {
-    if (beamStorageList[sb] == itsRank ) {
-      phaseThreeBeams.push_back( sb );
-    }
-  }
-
-
-#if defined HAVE_AIPSPP
-  LOG_TRACE_FLOW("SubbandWriter enabling PropertySet");
-#ifdef USE_MAC_PI
-  if (itsWriteToMAC) {
-    itsPropertySet = new GCF::CEPPMLlight::CEPPropertySet("CEP_TFCD", "TTeraFlopCorrelator", GCF::Common::PS_CAT_PERMANENT);
-    itsPropertySet->enable();
-    LOG_TRACE_FLOW("SubbandWriter PropertySet enabled");
-  } else {
-    LOG_TRACE_FLOW("SubbandWriter PropertySet not enabled");
-  }
-#endif
-
-  if (!phaseTwoSubbands.empty() && itsPS->outputCorrelatedData()) {
-    MeasurementSetFormat myFormat(itsPS, 512);
-
-    // create root directory of the observation tree
-    if ( (mkdir(itsPS->getMSBaseDir().c_str(), 0770) != 0) && (errno != EEXIST) ) {
-      throw SystemCallException(("mkdir " + itsPS->getMSBaseDir()).c_str(), errno, THROW_ARGS);
-    }
-          
-    for (unsigned i = 0; i < phaseTwoSubbands.size(); i++) {
-      /// Make MeasurementSet filestructures and required tables
-      myFormat.addSubband(phaseTwoSubbands[i]);
-    }
-
-    LOG_INFO_STR("MeasurementSet created");
-  }
-
-#endif // defined HAVE_AIPSPP
-
-  for (unsigned outputNr = 0; outputNr < plan.nrOutputTypes(); outputNr ++) {
-    ProcessingPlan::planlet &outputConfig = plan.plan[outputNr];
-    StreamableData *dataTemplate = outputConfig.source;
-    std::vector<unsigned> list;
-
-    switch( outputConfig.distribution ) {
-      case ProcessingPlan::DIST_SUBBAND:
-        list = phaseTwoSubbands;
-        break;
-
-      case ProcessingPlan::DIST_BEAM:
-        list = phaseThreeBeams;
-        break;
-
-      default:  
-        continue;
-    }
-
-    for (unsigned i = 0; i < list.size(); i++ ) {
-      InputThread *in = new InputThread(itsPS, list[i], outputNr, dataTemplate);
-      OutputThread *out = new OutputThread(itsPS, list[i], outputNr, in, outputConfig);
-
-      itsInputThreads.push_back(in);
-      itsOutputThreads.push_back(out);
-    }
-  }
-}
-
-
-SubbandWriter::~SubbandWriter() 
-{
-  // wait for all threads to finish
-
-  for (unsigned i = 0; i < itsInputThreads.size(); i++ )
-    delete itsInputThreads[i];
-
-  itsInputThreads.clear();
-
-  for (unsigned i = 0; i < itsOutputThreads.size(); i++ )
-    delete itsOutputThreads[i];
-
-  itsOutputThreads.clear();
-
-
-#ifdef USE_MAC_PI
-  delete itsPropertySet;
-
-  GCF::Common::GCFPValueArray::iterator it;
-  for (it = itsVArray.begin(); it != itsVArray.end(); it++){
-    delete *it;
-  }
-  itsVArray.clear();
-#endif
-}
-#else
-
-
-SubbandWriter::SubbandWriter(const char *parset, const char *inputDescription, unsigned subband, unsigned outputType)
-:
-  itsParset(parset)
-{
-  CN_Configuration configuration(itsParset);
+  CN_Configuration configuration(parset);
   CN_ProcessingPlan<> plan(configuration);
   plan.removeNonOutputs();
 
 #if defined HAVE_AIPSPP
-  if (outputType == 0 && itsParset.outputCorrelatedData()) {
-    MeasurementSetFormat myFormat(&itsParset, 512);
+  if (outputType == 0 && parset.outputCorrelatedData()) {
+    MeasurementSetFormat myFormat(&parset, 512);
 
     // create root directory of the observation tree
-    if (mkdir(itsParset.getMSBaseDir().c_str(), 0770) != 0 && errno != EEXIST) {
+    if (mkdir(parset.getMSBaseDir().c_str(), 0770) != 0 && errno != EEXIST) {
       unsigned savedErrno = errno; // first argument below clears errno
-      throw SystemCallException(("mkdir " + itsParset.getMSBaseDir()).c_str(), savedErrno, THROW_ARGS);
+      throw SystemCallException(("mkdir " + parset.getMSBaseDir()).c_str(), savedErrno, THROW_ARGS);
     }
           
     /// Make MeasurementSet filestructures and required tables
@@ -200,8 +75,8 @@ SubbandWriter::SubbandWriter(const char *parset, const char *inputDescription, u
     itsFreeQueue.append(data);
   }
 
-  itsInputThread  = new InputThread(itsParset, subband, outputType, inputDescription, itsFreeQueue, itsReceiveQueue);
-  itsOutputThread = new OutputThread(itsParset, subband, outputType, outputConfig, itsFreeQueue, itsReceiveQueue);
+  itsInputThread  = new InputThread(parset, subband, outputType, itsFreeQueue, itsReceiveQueue);
+  itsOutputThread = new OutputThread(parset, subband, outputType, outputConfig, itsFreeQueue, itsReceiveQueue);
 }
 
 
@@ -216,8 +91,6 @@ SubbandWriter::~SubbandWriter()
   while (!itsFreeQueue.empty())
     delete itsFreeQueue.remove();
 }
-
-#endif
 
 } // namespace RTCP
 } // namespace LOFAR

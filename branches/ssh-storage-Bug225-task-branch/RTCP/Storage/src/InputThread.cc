@@ -36,18 +36,18 @@ using boost::format;
 namespace LOFAR {
 namespace RTCP {
 
-InputThread::InputThread(const Parset &parset, unsigned subbandNumber, unsigned outputNumber, const std::string &inputDescription, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue)
+InputThread::InputThread(const Parset &parset, unsigned subbandNumber, unsigned outputNumber, /*const std::string &inputDescription,*/ Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue)
 :
+  itsParset(parset),
   itsSubbandNumber(subbandNumber),
   itsOutputNumber(outputNumber),
-  itsInputDescription(inputDescription),
+  //itsInputDescription(inputDescription),
   itsObservationID(parset.observationID()),
   itsFreeQueue(freeQueue),
   itsReceiveQueue(receiveQueue),
   itsConnecting(true),
   itsThread(this, &InputThread::mainLoop)
 {
-  //thread = new Thread(this, &InputThread::mainLoop, str(format("InputThread (obs %d sb %d output %d)") % ps->observationID() % subbandNumber % outputNumber));
 }
 
 
@@ -64,39 +64,13 @@ InputThread::~InputThread()
 void InputThread::mainLoop()
 {
   try {
-    std::auto_ptr<Stream> streamFromION;
-#if 0
-    std::string		  prefix         = "OLAP.OLAP_Conn.IONProc_Storage";
-    std::string		  connectionType = itsPS->getString(prefix + "_Transport");
+    std::string inputDescriptor = itsParset.getStreamDescriptorBetweenIONandStorage(itsSubbandNumber, itsOutputNumber);
 
-    bool nullInput = false;
+    LOG_INFO_STR("Creating connection from " << inputDescriptor);
+    std::auto_ptr<Stream> streamFromION(Parset::createStream(inputDescriptor, true));
+    LOG_INFO_STR("Created connection from " << inputDescriptor);
 
-    if (connectionType == "NULL") {
-      LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from null stream");
-      streamFromION.reset(new NullStream);
-      nullInput = true;
-    } else if (connectionType == "TCP") {
-      std::string    server = itsPS->storageHostName(prefix + "_ServerHosts", itsSubbandNumber);
-      unsigned short port = itsPS->getStoragePort(prefix, itsSubbandNumber, itsOutputNumber);
-      
-      LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from tcp:" << server << ':' << port);
-      streamFromION.reset(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Server));
-    } else if (connectionType == "FILE") {
-      std::string filename = itsPS->getString(prefix + "_BaseFileName") + '.' +
-	boost::lexical_cast<std::string>(itsSubbandNumber);
-      
-      LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from file:" << filename);
-      streamFromION.reset(new FileStream(filename.c_str()));
-    } else {
-      itsReceiveQueue.append(0); // no more data
-      THROW(StorageException, "unsupported ION->Storage stream type: " << connectionType);
-    }
-#endif
-
-    LOG_INFO_STR("Creating connection to " << itsInputDescription);
-    streamFromION.reset(Parset::createStream(itsInputDescription, false));
     itsConnecting = false; // FIXME: race condition
-    LOG_INFO_STR("Created connection to " << itsInputDescription);
 
     // limit reads from NullStream to 10 blocks; otherwise unlimited
     bool     nullInput = dynamic_cast<NullStream *>(streamFromION.get()) != 0;
@@ -118,7 +92,7 @@ void InputThread::mainLoop()
       itsReceiveQueue.append(data.release());
     }
   } catch (Stream::EndOfStreamException &) {
-    LOG_INFO("caught Stream::EndOfStreamException (this is normal, and indicates the end of the observation)");
+    LOG_INFO("no more input data");
   } catch (SystemCallException &ex) {
     if (ex.error != EINTR) {
       itsReceiveQueue.append(0); // no more data
@@ -126,7 +100,6 @@ void InputThread::mainLoop()
     }
   }
 
-  LOG_DEBUG("no more data blocks");
   itsReceiveQueue.append(0); // no more data
 }
 

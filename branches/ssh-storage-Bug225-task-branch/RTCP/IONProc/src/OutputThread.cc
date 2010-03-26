@@ -48,23 +48,13 @@ namespace LOFAR {
 namespace RTCP {
 
 
-std::stack<unsigned, std::vector<unsigned> > OutputThread::theFreePorts;
-
-Mutex OutputThread::theFreePortsMutex;
-Mutex OutputThread::theCheckPasswordFileMutex;
-
-
-OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsigned output, StreamableData *dataTemplate)
+OutputThread::OutputThread(const Parset &parset, const unsigned subband, const unsigned output, StreamableData *dataTemplate)
 :
   itsConnecting(true), // avoid race condition when checking this at thread start
-  itsParset(ps),
+  itsParset(parset),
   itsSubband(subband),
   itsOutput(output),
-  //itsDescription(std::string("OutputThread: ObsID = ") + boost::lexical_cast<unsigned>(ps.observationID()) + ", subband = " + boost::lexical_cast<unsigned>(subband) + ", output = " + boost::lexical_cast<unsigned>(output)),
-  itsDescription(boost::str(boost::format("OutputThread: ObsID = %u, subband = %u, output = %u") % ps.observationID() % subband % output)),
-  itsPortNumber(0),
-  itsSocketName(getSocketName()),
-  itsChildPid(0)
+  itsDescription(boost::str(boost::format("OutputThread: ObsID = %u, subband = %u, output = %u") % parset.observationID() % subband % output))
 {
   LOG_DEBUG_STR(itsDescription << ": OutputThread::OutputThread()");
 
@@ -77,10 +67,6 @@ OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsig
     itsFreeQueue.append(clone);
   }
 
-  if (itsHasStorageWriter)
-    forkSSH();
-
-  //thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps.observationID() % subband % output), 65536);
   itsThread = new InterruptibleThread(this, &OutputThread::mainLoop, 65536);
 }
 
@@ -90,10 +76,6 @@ OutputThread::~OutputThread()
   if (itsConnecting)
     itsThread->abort();
 
-  if (itsHasStorageWriter)
-    joinSSH();
-
-  //LOG_INFO_STR(itsDescription << ": waiting for Storage process to finish");
   delete itsThread;
 
   if (itsSendQueue.size() > 0) // the final null pointer does not count
@@ -104,143 +86,6 @@ OutputThread::~OutputThread()
 
   while (!itsFreeQueue.empty())
     delete itsFreeQueue.remove();
-
-  if (itsPortNumber != 0) {
-    ScopedLock scopedLock(theFreePortsMutex);
-    theFreePorts.push(itsPortNumber);
-  }
-}
-
-
-void OutputThread::execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *parset, const char *socketName, const char *subband, const char *output)
-{
-  // DO NOT DO ANY CALL THAT GRABS A LOCK, since the lock may be held by a thread
-  // that is no longer part of our address space
-
-  execl("/usr/bin/ssh",
-    "ssh",
-    "-i", sshKey,
-    "-c", "blowfish",
-    "-o", "StrictHostKeyChecking=no",
-    "-o", "UserKnownHostsFile=/dev/null",
-    "-l", userName,
-    hostName,
-    executable,
-    parset,
-    socketName,
-    subband,
-    output,
-    static_cast<void *>(0)
-  );
-
-  write(2, "exec failed\n", 12); // Logger uses mutex, hence write directly
-  exit(1);
-}
-
-
-void OutputThread::forkSSH()
-{
-  std::string userName	 = itsParset.getString("OLAP.Storage.userName");
-  std::string sshKey	 = std::string("/globalhome/") + userName + "/.ssh/id_rsa";
-  std::string hostName	 = itsParset.storageHostName("OLAP.OLAP_Conn.IONProc_Storage_ServerHosts", itsSubband);
-  std::string executable = itsParset.getString("OLAP.Storage.msWriter");
-  std::string parset	 = itsParset.name();
-  std::string subband	 = boost::lexical_cast<std::string>(itsSubband);
-  std::string output	 = boost::lexical_cast<std::string>(itsOutput);
-
-  const char *sshKeyPtr	    = sshKey.c_str();
-  const char *userNamePtr   = userName.c_str();
-  const char *hostNamePtr   = hostName.c_str();
-  const char *executablePtr = executable.c_str();
-  const char *parsetPtr	    = parset.c_str();
-  const char *socketNamePtr = itsSocketName.c_str();
-  const char *subbandPtr    = subband.c_str();
-  const char *outputPtr     = output.c_str();
-
-  LOG_INFO_STR(itsDescription << ": child will exec("
-    "\"/usr/bin/ssh\", "
-    "\"ssh\", "
-    "\"-i\", \"" << sshKey << "\", "
-    "\"-c\", \"blowfish\", "
-    "\"-o\", \"StrictHostKeyChecking=no\", "
-    "\"-o\", \"UserKnownHostsFile=/dev/null\", "
-    "\"-l\", \"" << userName << "\", "
-    "\"" << hostName << "\", "
-    "\"" << executable << "\", "
-    "\"" << parset << "\", "
-    "\"" << itsSocketName << "\", "
-    "\"" << itsSubband << "\", "
-    "\"" << itsOutput << "\", "
-    "0)"
-  );
-
-  switch (itsChildPid = fork()) {
-    case -1 : throw SystemCallException("fork", errno, THROW_ARGS);
-
-    case  0 : execSSH(sshKeyPtr, userNamePtr, hostNamePtr, executablePtr, parsetPtr, socketNamePtr, subbandPtr, outputPtr);
-  }
-}
-
-
-void OutputThread::joinSSH()
-{
-  if (itsChildPid != 0) {
-    int status;
-
-    if (waitpid(itsChildPid, &status, 0) == -1)
-      LOG_WARN_STR(itsDescription << ": waitpid failed"); // do not throw exception, may be in destructor
-    else if (WIFSIGNALED(status) != 0)
-      LOG_WARN_STR(itsDescription << ": storage writer was killed by signal " << WTERMSIG(status));
-    else if (WEXITSTATUS(status) != 0)
-      LOG_WARN_STR(itsDescription << ": storage writer exited with exit code " << WEXITSTATUS(status));
-    else
-      LOG_INFO_STR(itsDescription << ": storage writer terminated normally");
-  }
-}
-
-
-void OutputThread::getPortNumber()
-{
-  ScopedLock scopedLock(theFreePortsMutex);
-
-  static bool initialized;
-
-  if (!initialized) {
-    for (unsigned port = 6300; port < 6500; port ++)
-      theFreePorts.push(port);
-
-    initialized = true;
-  }
-
-  if (theFreePorts.empty())
-    throw IONProcException("no free TCP ports to Storage left", THROW_ARGS);
-
-  itsPortNumber = theFreePorts.top();
-  theFreePorts.pop();
-}
-
-
-std::string OutputThread::getSocketName()
-{
-  std::string prefix         = "OLAP.OLAP_Conn.IONProc_Storage";
-  std::string connectionType = itsParset.getString(prefix + "_Transport");
-
-  if (connectionType == "NULL") {
-    itsHasStorageWriter = false;
-    return std::string("null:");
-  } else if (connectionType == "TCP") {
-    itsHasStorageWriter = true;
-    getPortNumber();
-
-    extern std::string myIPaddress;
-    return std::string("tcp:") + myIPaddress + ':' + boost::lexical_cast<std::string>(itsPortNumber);
-  } else if (connectionType == "FILE") {
-    itsHasStorageWriter = false;
-    std::string filename = itsParset.getString(prefix + "_BaseFileName") + '.' + boost::lexical_cast<std::string>(itsSubband);
-    return std::string("file:") + filename;
-  } else {
-    throw IONProcException(std::string("unsupported ION->Storage stream type: ") + connectionType, THROW_ARGS);
-  }
 }
 
 
@@ -256,16 +101,18 @@ void OutputThread::mainLoop()
   nice(19);
 #endif
 
-  LOG_INFO_STR(itsDescription << ": waiting for connection to " << itsSocketName);
   std::auto_ptr<Stream> streamToStorage;
+  std::string		outputDescriptor = itsParset.getStreamDescriptorBetweenIONandStorage(itsSubband, itsOutput);
+
+  LOG_INFO_STR(itsDescription << ": creating connection to " << outputDescriptor);
 
   try {
-    streamToStorage.reset(Parset::createStream(itsSocketName, true));
+    streamToStorage.reset(Parset::createStream(outputDescriptor, false));
     itsConnecting = false;
-    LOG_INFO_STR(itsDescription << ": connection to " << itsSocketName << " successful");
+    LOG_INFO_STR(itsDescription << ": created connection to " << outputDescriptor);
   } catch (SystemCallException &ex) {
     if (ex.error == EINTR) {
-      LOG_WARN_STR(itsDescription << ": connection to " << itsSocketName << " failed");
+      LOG_WARN_STR(itsDescription << ": connection to " << outputDescriptor << " failed");
       return;
     } else {
       throw;

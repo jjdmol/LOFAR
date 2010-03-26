@@ -172,15 +172,30 @@ int main(int argc, char *argv[])
 
 #else
   try {
-    if (argc != 5)
-      throw StorageException(std::string("usage: ") + argv[0] + " parset input subband type"); // TODO: more descriptive
+    if (argc != 3)
+      throw StorageException(std::string("usage: ") + argv[0] + " rank parset", THROW_ARGS);
 
     char stdoutbuf[1024], stderrbuf[1024];
     setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
     setvbuf(stderr, stdoutbuf, _IOLBF, sizeof stderrbuf);
 
-    LOG_INFO_STR("started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3] << ' ' << argv[4]);
-    SubbandWriter(argv[1], argv[2], boost::lexical_cast<unsigned>(argv[3]), boost::lexical_cast<unsigned>(argv[4]));
+    LOG_INFO_STR("started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2]);
+
+    unsigned			 myRank = boost::lexical_cast<unsigned>(argv[1]);
+    Parset			 parset(argv[2]);
+    unsigned			 nrOutputsPerSubband = parset.nrOutputsPerSubband();
+    std::vector<unsigned>	 storageNodeList = parset.subbandStorageList();
+    std::vector<SubbandWriter *> subbandWriters;
+
+    // FIXME: implement beamformed data writer
+    for (unsigned subband = 0; subband < storageNodeList.size(); subband ++)
+      if (storageNodeList[subband] == myRank)
+	for (unsigned output = 0; output < nrOutputsPerSubband; output ++)
+	  subbandWriters.push_back(new SubbandWriter(parset, subband, output));
+
+    for (unsigned writer = 0; writer < subbandWriters.size(); writer ++)
+      delete subbandWriters[writer];
+
   } catch (Exception &ex) {
     LOG_FATAL_STR("caught Exception: " << ex);
     exit(1);

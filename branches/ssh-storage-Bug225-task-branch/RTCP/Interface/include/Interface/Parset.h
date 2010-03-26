@@ -99,6 +99,7 @@ public:
 	bool	       delayCompensation() const;
 	uint32	       nrCalcDelays() const;
 	bool	       correctBandPass() const;
+	bool	       hasStorage() const;
 	unsigned short getStoragePort(const string &aKey, unsigned subband, unsigned output) const;
 	string         stationName(int index) const;
 	string         storageHostName(const string& aKey, int index) const;
@@ -124,6 +125,7 @@ public:
         bool           outputBeamFormedData() const;
         bool           outputCoherentStokes() const;
         bool           outputIncoherentStokes() const;
+	unsigned       nrOutputsPerSubband() const;
 
 	bool           stokesIntegrateChannels() const;
         unsigned       nrStokes() const;
@@ -163,6 +165,7 @@ public:
 
 	string         getInputStreamName(const string &stationName, unsigned rspBoardNumber) const;
 	static Stream  *createStream(const string &description, bool asReader);
+	string	       getStreamDescriptorBetweenIONandStorage(unsigned subband, unsigned output) const;
 
 	string         observerName() const;
 	string         projectName() const;
@@ -227,6 +230,11 @@ inline string Parset::stationName(int index) const
 inline string Parset::storageHostName(const string& aKey, int index) const
 {
   return getStringVector(aKey)[getUint32Vector("OLAP.storageNodeList",true)[index]];
+}
+
+inline bool Parset::hasStorage() const
+{
+  return getString("OLAP.OLAP_Conn.IONProc_Storage_Transport") != "NULL";
 }
 
 inline vector<unsigned> Parset::subbandStorageList() const
@@ -330,6 +338,15 @@ inline bool Parset::outputIncoherentStokes() const
 {
   return getBool("OLAP.outputIncoherentStokesI",false)
       || getBool("OLAP.outputIncoherentStokes",false);
+}
+
+inline unsigned Parset::nrOutputsPerSubband() const
+{
+  return outputFilteredData()	  ? 1 : 0 +
+	 outputCorrelatedData()	  ? 1 : 0 +
+	 outputBeamFormedData()	  ? 1 : 0 +
+	 outputCoherentStokes()	  ? 1 : 0 +
+	 outputIncoherentStokes() ? 1 : 0;
 }
 
 inline unsigned Parset::nrStokes() const

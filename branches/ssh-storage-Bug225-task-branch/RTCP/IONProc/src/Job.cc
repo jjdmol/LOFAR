@@ -33,6 +33,10 @@
 #include <OutputSection.h>
 #include <StreamMultiplexer.h>
 
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
 #include <algorithm>
 
 
@@ -146,6 +150,98 @@ void Job::barrier()
 }
 
 
+void Job::execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset)
+{
+  // DO NOT DO ANY CALL THAT GRABS A LOCK, since the lock may be held by a
+  // thread that is no longer part of our address space
+
+  execl("/usr/bin/ssh",
+    "ssh",
+    "-i", sshKey,
+    "-c", "blowfish",
+    "-o", "StrictHostKeyChecking=no",
+    "-o", "UserKnownHostsFile=/dev/null",
+    "-l", userName,
+    hostName,
+    executable,
+    rank,
+    parset,
+    static_cast<void *>(0)
+  );
+
+  write(2, "exec failed\n", 12); // Logger uses mutex, hence write directly
+  exit(1);
+}
+
+
+void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, int &storagePID)
+{
+  LOG_INFO_STR("child will exec("
+    "\"/usr/bin/ssh\", "
+    "\"ssh\", "
+    "\"-i\", \"" << sshKey << "\", "
+    "\"-c\", \"blowfish\", "
+    "\"-o\", \"StrictHostKeyChecking=no\", "
+    "\"-o\", \"UserKnownHostsFile=/dev/null\", "
+    "\"-l\", \"" << userName << "\", "
+    "\"" << hostName << "\", "
+    "\"" << executable << "\", "
+    "\"" << rank << "\", "
+    "\"" << parset << "\", "
+    "0)"
+  );
+
+  switch (storagePID = fork()) {
+    case -1 : throw SystemCallException("fork", errno, THROW_ARGS);
+
+    case  0 : execSSH(sshKey, userName, hostName, executable, rank, parset);
+  }
+}
+
+
+void Job::joinSSH(int childPID, const std::string &hostName)
+{
+  if (childPID != 0) {
+    int status;
+
+    if (waitpid(childPID, &status, 0) == -1)
+      LOG_WARN_STR("storage writer on " << hostName << " : waitpid() failed");
+    else if (WIFSIGNALED(status) != 0)
+      LOG_WARN_STR("storage writer on " << hostName << " was killed by signal " << WTERMSIG(status));
+    else if (WEXITSTATUS(status) != 0)
+      LOG_WARN_STR("storage writer on " << hostName << " exited with exit code " << WEXITSTATUS(status));
+    else
+      LOG_INFO_STR("storage writer on " << hostName << " terminated normally");
+  }
+}
+
+
+void Job::startStorageProcesses()
+{
+  //itsStorageHostNames = itsParset.getStringVector("Observation.VirtualInstrument.storageNodeList");
+// use IP addresses, since the I/O node cannot resolve host names
+  itsStorageHostNames = itsParset.getStringVector("OLAP.OLAP_Conn.IONProc_Storage_ServerHosts");
+
+  const char *userName   = itsParset.getString("OLAP.Storage.userName").c_str();
+  const char *sshKey     = (std::string("/globalhome/") + userName + "/.ssh/id_rsa").c_str();
+  const char *executable = itsParset.getString("OLAP.Storage.msWriter").c_str();
+  const char *parset     = itsParset.name().c_str();
+
+  itsStoragePIDs.resize(itsStorageHostNames.size());
+
+  for (unsigned rank = 0; rank < itsStorageHostNames.size(); rank ++)
+    forkSSH(sshKey, userName, itsStorageHostNames[rank].c_str(), executable, boost::lexical_cast<std::string>(rank).c_str(), parset, itsStoragePIDs[rank]);
+}
+
+
+
+void Job::stopStorageProcesses()
+{
+  for (unsigned rank = 0; rank < itsStorageHostNames.size(); rank ++)
+    joinSSH(itsStoragePIDs[rank], itsStorageHostNames[rank]);
+}
+
+
 void Job::jobThread()
 {
   if (myPsetNumber == 0) {
@@ -173,6 +269,9 @@ void Job::jobThread()
     theRunningJobs.push_back(this);
 
     theJobQueueMutex.unlock();
+
+    if (itsParset.hasStorage())
+      startStorageProcesses();
   }
 
   barrier();
@@ -190,6 +289,9 @@ void Job::jobThread()
   barrier();
 
   if (myPsetNumber == 0) {    
+    if (itsParset.hasStorage())
+      stopStorageProcesses();
+
     theJobQueueMutex.lock();
     theRunningJobs.erase(find(theRunningJobs.begin(), theRunningJobs.end(), this));
     theReevaluateJobQueue.broadcast();

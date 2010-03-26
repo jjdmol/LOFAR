@@ -51,25 +51,13 @@ class OutputThread
 
   private:
     void		    mainLoop();
-    void		    forkSSH(), joinSSH();
-    static void		    execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *parset, const char *socketName, const char *subband, const char *output);
-
-    void		    getPortNumber();
-    std::string		    getSocketName();
 
     volatile bool           itsConnecting;
 
     const Parset            &itsParset;
     const unsigned          itsSubband, itsOutput;
     const std::string	    itsDescription;
-    unsigned		    itsPortNumber;
-    const std::string	    itsSocketName;
-    bool		    itsHasStorageWriter;
-    unsigned		    itsChildPid;
     InterruptibleThread	    *itsThread;
-
-    static std::stack<unsigned, std::vector<unsigned> > theFreePorts;
-    static Mutex	    theFreePortsMutex, theCheckPasswordFileMutex;
 };
 
 } // namespace RTCP
