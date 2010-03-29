@@ -30,6 +30,7 @@
 
 #include <errno.h>
 #include <netdb.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -46,9 +47,9 @@ class AddrInfoHolder {
     struct addrinfo *info;
 };
 
-SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, Mode mode)
+SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, Mode mode, time_t timeout)
 {
-  int retval;
+  int		  retval;
   struct addrinfo hints;
   struct addrinfo *result;
   
@@ -66,12 +67,12 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
   }
 
   char portStr[16];
-  snprintf( portStr, sizeof portStr, "%hd", port );
+  snprintf(portStr, sizeof portStr, "%hd", port);
 
-  if ((retval = getaddrinfo(hostname, portStr, &hints, &result)) != 0 )
+  if ((retval = getaddrinfo(hostname, portStr, &hints, &result)) != 0)
     throw SystemCallException("getaddrinfo", retval, THROW_ARGS);
 
-  AddrInfoHolder infoHolder( result ); // make sure result will be freed
+  AddrInfoHolder infoHolder(result); // make sure result will be freed
 
   // result is a linked list of resolved addresses, we only use the first
 
@@ -79,9 +80,14 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
     throw SystemCallException("socket", errno, THROW_ARGS);
 
   if (mode == Client) {
+    time_t latestTime = time(0) + timeout;
+
     while (connect(fd, result->ai_addr, result->ai_addrlen) < 0)
       if (errno == ECONNREFUSED) {
-	if (sleep(1) > 0) {
+	if (timeout > 0 && time(0) >= latestTime)
+ 	  throw TimeOutException("client socket", THROW_ARGS);
+
+	if (usleep(999999) > 0) {
           // interrupted by a signal handler -- abort to allow this thread to
           // be forced to continue after receiving a SIGINT, as with any other
           // system call in this constructor 
@@ -101,6 +107,24 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
     if (protocol == TCP) {
       if (listen(fd, 5) < 0)
 	throw SystemCallException("listen", errno, THROW_ARGS);
+
+      if (timeout > 0) {
+	fd_set fds;
+
+	FD_ZERO(&fds);
+	FD_SET(fd, &fds);
+
+	struct timeval timeval;
+
+	timeval.tv_sec  = timeout;
+	timeval.tv_usec = 0;
+
+	switch (select(fd + 1, &fds, 0, 0, &timeval)) {
+	  case -1 : throw SystemCallException("select", errno, THROW_ARGS);
+
+	  case  0 : throw TimeOutException("server socket", THROW_ARGS);
+	}
+      }
 
       int sk;
 
