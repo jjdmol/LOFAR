@@ -192,8 +192,10 @@ unsigned Parset::nyquistZone() const
 {
   string bandFilter = getString("Observation.bandFilter");
 
-  if (bandFilter == "LBA_30_80" ||
-      bandFilter == "LBA_10_90" )
+  if (bandFilter == "LBA_10_70" ||
+      bandFilter == "LBA_30_70" ||
+      bandFilter == "LBA_10_90" ||
+      bandFilter == "LBA_30_90" )
     return 1;
 
   if (bandFilter == "HBA_110_190")
