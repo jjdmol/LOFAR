@@ -131,10 +131,14 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
       if ((sk = accept(fd, 0, 0)) < 0)
 	throw SystemCallException("accept", errno, THROW_ARGS);
 
-      if (close(fd) < 0)
-	throw SystemCallException("close", errno, THROW_ARGS);
+      // make sure that all sockets are closed when exception is thrown
+      // (fd will be closed by ~FileDescriptorBasedSocket(); sk will not)
+      int listen_sk = fd;
 
       fd = sk;
+
+      if (close(listen_sk) < 0)
+	throw SystemCallException("close", errno, THROW_ARGS);
     }
   }
 }
