@@ -33,6 +33,11 @@ else(NOT DEFINED BUILD_PACKAGES)
 endif(NOT DEFINED BUILD_PACKAGES)
 
 ## ---------------------------------------------------------------------------
+## Check if Doxygen is present; if so, generate doxygen configuration file.
+## ---------------------------------------------------------------------------
+include(LofarDoxygen)
+
+## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
