@@ -52,8 +52,6 @@ class OutputThread
   private:
     void		    mainLoop();
 
-    volatile bool           itsConnecting;
-
     const Parset            &itsParset;
     const unsigned          itsSubband, itsOutput;
     const std::string	    itsDescription;

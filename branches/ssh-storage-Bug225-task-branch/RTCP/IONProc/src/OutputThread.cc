@@ -50,7 +50,6 @@ namespace RTCP {
 
 OutputThread::OutputThread(const Parset &parset, const unsigned subband, const unsigned output, StreamableData *dataTemplate)
 :
-  itsConnecting(true), // avoid race condition when checking this at thread start
   itsParset(parset),
   itsSubband(subband),
   itsOutput(output),
@@ -73,9 +72,6 @@ OutputThread::OutputThread(const Parset &parset, const unsigned subband, const u
 
 OutputThread::~OutputThread()
 {
-  if (itsConnecting)
-    itsThread->abort();
-
   delete itsThread;
 
   if (itsSendQueue.size() > 0) // the final null pointer does not count
@@ -108,7 +104,6 @@ void OutputThread::mainLoop()
 
   try {
     streamToStorage.reset(Parset::createStream(outputDescriptor, false));
-    itsConnecting = false;
     LOG_INFO_STR(itsDescription << ": created connection to " << outputDescriptor);
   } catch (SystemCallException &ex) {
     if (ex.error == EINTR) {

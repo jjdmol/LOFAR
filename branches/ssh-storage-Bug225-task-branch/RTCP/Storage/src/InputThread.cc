@@ -45,7 +45,6 @@ InputThread::InputThread(const Parset &parset, unsigned subbandNumber, unsigned 
   itsObservationID(parset.observationID()),
   itsFreeQueue(freeQueue),
   itsReceiveQueue(receiveQueue),
-  itsConnecting(true),
   itsThread(this, &InputThread::mainLoop)
 {
 }
@@ -53,10 +52,6 @@ InputThread::InputThread(const Parset &parset, unsigned subbandNumber, unsigned 
 
 InputThread::~InputThread()
 {
-#if 0 // TODO: this does not work yet
-  if (itsConnecting)
-    itsThread.abort();
-#endif
   LOG_DEBUG("InputThread::~InputThread()");
 }
 
@@ -69,8 +64,6 @@ void InputThread::mainLoop()
     LOG_INFO_STR("Creating connection from " << inputDescriptor);
     std::auto_ptr<Stream> streamFromION(Parset::createStream(inputDescriptor, true));
     LOG_INFO_STR("Created connection from " << inputDescriptor);
-
-    itsConnecting = false; // FIXME: race condition
 
     // limit reads from NullStream to 10 blocks; otherwise unlimited
     bool     nullInput = dynamic_cast<NullStream *>(streamFromION.get()) != 0;

@@ -52,7 +52,6 @@ class InputThread
 
     Queue<StreamableData *> &itsFreeQueue, &itsReceiveQueue;
 
-    volatile bool           itsConnecting;
     InterruptibleThread	    itsThread;
 };
 
