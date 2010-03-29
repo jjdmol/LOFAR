@@ -94,11 +94,6 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
   endforeach(func_name)
 
   ## --------------------------------------------------------------------------
-  ## Locate the Doxygen documentation tool
-  ## --------------------------------------------------------------------------
-  find_package(Doxygen)
-
-  ## --------------------------------------------------------------------------
   ## Define custom target 'check', so that we can do 'make check', like we did
   ## with the GNU Autotools. Tests should be added with lofar_add_test().
   ## --------------------------------------------------------------------------
