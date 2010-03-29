@@ -412,12 +412,12 @@ vector<uint32> Parset::usedPsets() const
 }
 
 
-bool Parset::overlappingResources(const Parset *otherParset) const
+bool Parset::overlappingResources(const Parset &otherParset) const
 {
   // return true if jobs (partially) use same cores within psets
 
   std::vector<uint32> myPsets    = usedPsets();
-  std::vector<uint32> otherPsets = otherParset->usedPsets();
+  std::vector<uint32> otherPsets = otherParset.usedPsets();
   std::vector<uint32> psets(myPsets.size() + otherPsets.size());
 
   bool overlappingPsets = set_intersection(myPsets.begin(), myPsets.end(), otherPsets.begin(), otherPsets.end(), psets.begin()) != psets.begin();
@@ -426,7 +426,7 @@ bool Parset::overlappingResources(const Parset *otherParset) const
     return false;
 
   std::vector<uint32> myCores    = usedCoresInPset();
-  std::vector<uint32> otherCores = otherParset->usedCoresInPset();
+  std::vector<uint32> otherCores = otherParset.usedCoresInPset();
   std::vector<uint32> cores(myCores.size() + otherCores.size());
 
   sort(myCores.begin(),    myCores.end());
@@ -435,6 +435,30 @@ bool Parset::overlappingResources(const Parset *otherParset) const
   bool overlappingCores = set_intersection(myCores.begin(), myCores.end(), otherCores.begin(), otherCores.end(), cores.begin()) != cores.begin();
 
   return overlappingCores;
+}
+
+
+bool Parset::compatibleInputSection(const Parset &otherParset) const
+{
+  std::vector<uint32> myStations    = phaseOnePsets();
+  std::vector<uint32> otherStations = otherParset.phaseOnePsets();
+  std::vector<uint32> psets(myStations.size() + otherStations.size());
+
+  bool overlappingStations = set_intersection(myStations.begin(), myStations.end(), otherStations.begin(), otherStations.end(), psets.begin()) != psets.begin();
+
+  if (!overlappingStations)
+    return true;
+
+  if (nrBitsPerSample() != otherParset.nrBitsPerSample())
+    return false;
+
+  if (clockSpeed() != otherParset.clockSpeed())
+    return false;
+
+  if (nrSlotsInFrame() != otherParset.nrSlotsInFrame())
+    return false;
+
+  return true;
 }
 
 

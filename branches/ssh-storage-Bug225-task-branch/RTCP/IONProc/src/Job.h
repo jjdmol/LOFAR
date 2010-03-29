@@ -24,6 +24,7 @@
 #if !defined LOFAR_RTCP_JOB_H
 #define LOFAR_RTCP_JOB_H
 
+#include <InputSection.h>
 #include <Common/Semaphore.h>
 #include <Interface/Mutex.h>
 #include <Interface/Parset.h>
@@ -84,7 +85,7 @@ class Job
     unsigned				itsJobID, itsObservationID;
     static unsigned			nextJobID;
 
-    static void				*theInputSection;
+    static InputSectionParent		*theInputSection;
     static Mutex			theInputSectionMutex;
     static unsigned			theInputSectionRefCount;
 

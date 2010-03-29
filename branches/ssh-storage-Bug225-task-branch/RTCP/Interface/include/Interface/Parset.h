@@ -66,7 +66,6 @@ public:
 	uint32         observationID() const;
 	double         startTime() const;
 	double         stopTime() const;
-	bool	       precedes(const Parset *) const;
 	uint32	       nrStations() const;
 	uint32	       nrTabStations() const;
 	uint32	       nrBaselines() const;
@@ -111,7 +110,8 @@ public:
 	vector<uint32> phaseTwoPsets() const;
 	vector<uint32> phaseThreePsets() const;
 	vector<uint32> usedPsets() const; // union of phasePsets
-	bool	       overlappingResources(const Parset *) const;
+	bool	       overlappingResources(const Parset &) const;
+	bool	       compatibleInputSection(const Parset &) const;
 	vector<uint32> tabList() const;
 	int	       phaseOnePsetIndex(uint32 pset) const;
 	int	       phaseTwoPsetIndex(uint32 pset) const;
@@ -215,11 +215,6 @@ inline double Parset::startTime() const
 inline double Parset::stopTime() const
 {
   return getTime("Observation.stopTime");
-}
-
-inline bool Parset::precedes(const Parset *other) const
-{
-    return startTime() < other->startTime() || (startTime() == other->startTime() && observationID() < other->observationID());
 }
 
 inline string Parset::stationName(int index) const

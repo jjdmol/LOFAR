@@ -44,7 +44,7 @@ namespace LOFAR {
 namespace RTCP {
 
 unsigned	   Job::nextJobID = 1;
-void		   *Job::theInputSection;
+InputSectionParent *Job::theInputSection;
 Mutex		   Job::theInputSectionMutex;
 unsigned	   Job::theInputSectionRefCount = 0;
 
@@ -261,7 +261,8 @@ void Job::jobThread()
 
     retry:
       for (std::vector<Job *>::iterator job = theRunningJobs.begin(); job != theRunningJobs.end(); job ++)
-	if ((*job)->itsParset.overlappingResources(&itsParset)) {
+	if ((*job)->itsParset.overlappingResources(itsParset) || !(*job)->itsParset.compatibleInputSection(itsParset)) {
+	  LOG_WARN_STR("ObsID = " << itsObservationID << ": postponed due to resource conflicts");
 	  theReevaluateJobQueue.wait(theJobQueueMutex);
 	  goto retry;
 	}
@@ -345,13 +346,13 @@ void Job::attachToInputSection()
 
   if (theInputSectionRefCount ++ == 0)
     switch (itsParset.nrBitsPerSample()) {
-      case  4 : theInputSection = new InputSection<i4complex>(&itsParset, myPsetNumber);
+      case  4 : theInputSection = new InputSection<i4complex>(itsParset, myPsetNumber);
 		break;
 
-      case  8 : theInputSection = new InputSection<i8complex>(&itsParset, myPsetNumber);
+      case  8 : theInputSection = new InputSection<i8complex>(itsParset, myPsetNumber);
 		break;
 
-      case 16 : theInputSection = new InputSection<i16complex>(&itsParset, myPsetNumber);
+      case 16 : theInputSection = new InputSection<i16complex>(itsParset, myPsetNumber);
 		break;
     }
 
@@ -364,16 +365,7 @@ void Job::detachFromInputSection()
   theInputSectionMutex.lock();
 
   if (-- theInputSectionRefCount == 0)
-    switch (itsParset.nrBitsPerSample()) {
-      case  4 : delete static_cast<InputSection<i4complex> *>(theInputSection);
-		break;
-
-      case  8 : delete static_cast<InputSection<i8complex> *>(theInputSection);
-		break;
-
-      case 16 : delete static_cast<InputSection<i16complex> *>(theInputSection);
-		break;
-    }
+    delete theInputSection;
 
   theInputSectionMutex.unlock();
 }
