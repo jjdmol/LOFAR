@@ -199,7 +199,7 @@ used when documenting LOFAR software. It contains the following subsections:
 
 \subsection dqg_strucind Structural Indicators
 
-\subsubsection dqg_cmdaddtogroup \addtogroup <name> [(title)]
+\subsubsection dqg_cmdaddtogroup \\addtogroup <name> [(title)]
 
   Defines a group just like \ref dqg_cmddefgroup "\\defgroup", but in contrast
   to that command using the same \<name\> more than once will not result in a
@@ -225,7 +225,7 @@ used when documenting LOFAR software. It contains the following subsections:
 \endverbatim
 
 
-\subsubsection dqg_cmddefgroup \defgroup <name> (group title)
+\subsubsection dqg_cmddefgroup \\defgroup <name> (group title)
 
   Indicates that a comment block contains documentation for a
   \ref dqg_modules "group" of classes, files or namespaces. This can be used to
@@ -236,14 +236,14 @@ used when documenting LOFAR software. It contains the following subsections:
   The \<name\> argument should be a single-word identifier.
   
 
-\subsubsection dqg_cmdingroup \ingroup (<groupname> [<groupname> <groupname>])
+\subsubsection dqg_cmdingroup \\ingroup (<groupname> [<groupname> <groupname>])
 
   If the \\ingroup command is placed in a comment block of a class, file or
   namespace, then it will be added to the \ref dqg_modules "group" or groups
   identified by \<groupname\>.
 
 
-\subsubsection dqg_cmdname \name (header)
+\subsubsection dqg_cmdname \\name (header)
 
   This command turns a comment block into a header definition of a 
   \ref dqg_memgroup "member group". The comment block should be followed by a 
@@ -258,14 +258,14 @@ used when documenting LOFAR software. It contains the following subsections:
 \subsection dqg_secind Section Indicators
 
 
-\subsubsection dqg_cmdnote \note { text }
+\subsubsection dqg_cmdnote \\note { text }
 
   Starts a paragraph where a note can be entered. The paragraph will be 
   indented. The text of the paragraph has no special internal structure. 
   All visual enhancement commands may be used inside the paragraph.
 
 
-\subsubsection dqg_cmdpar \par [(paragraph title)] { paragraph }
+\subsubsection dqg_cmdpar \\par [(paragraph title)] { paragraph }
 
   If a paragraph title is given this command starts a paragraph with a user
   defined heading. The heading extends until the end of the line. The
@@ -276,7 +276,7 @@ used when documenting LOFAR software. It contains the following subsections:
   enhancement commands may be used inside the paragraph.
 
 
-\subsubsection dqg_cmdpost \post { description of the postcondition }
+\subsubsection dqg_cmdpost \\post { description of the postcondition }
 
   Starts a paragraph where the postcondition of an entity can be described.
   The paragraph will be indented. The text of the paragraph has no special
@@ -284,7 +284,7 @@ used when documenting LOFAR software. It contains the following subsections:
   paragraph.
 
 
-\subsubsection dqg_cmdpre \pre { description of the precondition }
+\subsubsection dqg_cmdpre \\pre { description of the precondition }
 
   Starts a paragraph where the precondition of an entity can be described.
   The paragraph will be indented. The text of the paragraph has no special
@@ -292,14 +292,14 @@ used when documenting LOFAR software. It contains the following subsections:
   paragraph.
   
 
-\subsubsection dqg_cmdreturn \return { description of the return value }
+\subsubsection dqg_cmdreturn \\return { description of the return value }
 
   Starts a return value description for a function. The text of the paragraph
   has no special internal structure. All visual enhancement commands may be
   used inside the paragraph.
   
 
-\subsubsection dqg_cmdsa \sa { references }
+\subsubsection dqg_cmdsa \\sa { references }
 
   Starts a paragraph where one or more cross-references to classes, functions,
   methods, variables, files or URL may be specified.  Two names joined by
@@ -311,7 +311,7 @@ used when documenting LOFAR software. It contains the following subsections:
   Synonymous to \\see.
 
 
-\subsubsection dqg_cmdthrow \throw <exception-object> { exception description }
+\subsubsection dqg_cmdthrow \\throw <exception-object> { exception description }
 
   Starts an exception description for an exception object with name
   \<exception-object\>. Followed by a description of the exception. The
@@ -323,14 +323,14 @@ used when documenting LOFAR software. It contains the following subsections:
   Synonymous to \\exception.
 
 
-\subsubsection dqg_cmdtodo \todo { paragraph describing what is to be done }
+\subsubsection dqg_cmdtodo \\todo { paragraph describing what is to be done }
 
   Starts a paragraph where a TODO item is described. The description will also
   add an item to a separate TODO list. The two instances of the description
   will be cross-referenced.
 
 
-\subsubsection dqg_cmdwarning \warning { warning message }
+\subsubsection dqg_cmdwarning \\warning { warning message }
 
   Starts a paragraph where one or more warning messages may be entered. The
   paragraph will be indented. The text of the paragraph has no special
@@ -346,7 +346,7 @@ used when documenting LOFAR software. It contains the following subsections:
 
 \subsection dqg_visenh Commands for Visual Enhancements
 
-\subsubsection dqg_cmda \a <word>
+\subsubsection dqg_cmda \\a <word>
 
   Displays the argument \<word\> using a special font.
   Use this command to refer to member arguments in the running text.
@@ -359,14 +359,14 @@ used when documenting LOFAR software. It contains the following subsections:
   ... the \a x and \a y coordinates are used to ...
 
 
-\subsubsection dqg_cmdb \b <word>
+\subsubsection dqg_cmdb \\b <word>
 
   Displays the argument \<word\> using a bold font. 
 
   To put multiple words in bold use \<b\>multiple words\</b\>.
 
   
-\subsubsection dqg_cmdc \c <word>
+\subsubsection dqg_cmdc \\c <word>
 
   Displays the argument \<word\> using a typewriter font.
   Use this to refer to a word of code.
@@ -382,7 +382,7 @@ used when documenting LOFAR software. It contains the following subsections:
   To put multiple words in typewriter font use \<tt\>multiple words\</tt\>.
 
 
-\subsubsection dqg_cmdcode \code
+\subsubsection dqg_cmdcode \\code
 
   Starts a block of code. A code block is treated differently
   from ordinary text. It is interpreted as C/C++ code. The names of the
@@ -392,7 +392,7 @@ used when documenting LOFAR software. It contains the following subsections:
   \sa \ref dqg_cmdendcode "\\endcode", and \ref dqg_cmdverbatim "\\verbatim"
 
 
-\subsubsection dqg_cmde \e <word>
+\subsubsection dqg_cmde \\e <word>
 
   Displays the argument \<word\> in italics.
   Use this command to emphasize words.
@@ -409,13 +409,13 @@ used when documenting LOFAR software. It contains the following subsections:
   To emphasize multiple words use \<em\>multiple words\</em\>.
 
 
-\subsubsection dqg_cmdendcode \endcode
+\subsubsection dqg_cmdendcode \\endcode
 
   Ends a block of code.
   \sa section \ref dqg_cmdcode "\\code"
  
 
-\subsubsection dqg_cmdverbatim \verbatim
+\subsubsection dqg_cmdverbatim \\verbatim
 
   Starts a block of text that will be verbatim included in both the HTML and
   the \f$\mbox{\LaTeX}\f$ documentation. The block should end with a
