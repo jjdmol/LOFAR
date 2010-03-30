@@ -22,7 +22,7 @@
 
 include(LofarMacros)
 
-if(USE_DOXYGEN)
+if(BUILD_DOCUMENTATION)
   # Locate the doxygen programs.
   find_package(Doxygen REQUIRED)
 
@@ -62,4 +62,4 @@ if(USE_DOXYGEN)
     "${CMAKE_SOURCE_DIR}/CMake/docscripts/doxygen.cfg.in"
     "${DOXYGEN_CONFIG_FILE}" @ONLY)
 
-endif(USE_DOXYGEN)
+endif(BUILD_DOCUMENTATION)
