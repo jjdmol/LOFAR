@@ -37,11 +37,11 @@ using LOFAR::RTCP::TimeStamp;
 
 int main()
 {
-  TimeStamp::setStationClockSpeed(static_cast<unsigned>(1024 * SAMPLERATE));
+  unsigned clock = 1024 * SAMPLERATE;
 
   for (int64 timecounter = TESTSTART; timecounter >= TESTEND; timecounter--) {
-    TimeStamp one(timecounter);
-    TimeStamp other(one.getSeqId(), one.getBlockId());
+    TimeStamp one(timecounter, clock);
+    TimeStamp other(one.getSeqId(), one.getBlockId(), clock);
     ASSERTSTR(one == other, one << " == " << other << " counter was " << timecounter);
   }
 
