@@ -48,16 +48,19 @@ static void handleCommand(const std::string &command)
 {
   LOG_DEBUG_STR("command \"" << command << "\" received");
 
-  if (command == "quit") {
-    quit = true;
-  } else if (command.compare(0, 7, "cancel ") == 0) {
+  if (command.compare(0, 7, "cancel ") == 0) {
     if (myPsetNumber == 0)
       jobQueue.cancel(boost::lexical_cast<unsigned>(command.substr(7)));
+  } else if (command == "list_jobs") {
+    if (myPsetNumber == 0)
+      jobQueue.listJobs();
   } else if (command.compare(0, 7, "parset ") == 0) {
     try {
       jobQueue.insert(new Job(command.substr(7).c_str()));
     } catch (APSException &) { // if file could not be found
     }
+  } else if (command == "quit") {
+    quit = true;
   } else if (myPsetNumber == 0) {
     LOG_ERROR_STR("command \"" << command << "\" not understood");
   }

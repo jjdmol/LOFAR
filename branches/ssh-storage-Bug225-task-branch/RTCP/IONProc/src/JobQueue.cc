@@ -83,6 +83,15 @@ void JobQueue::cancel(unsigned observationID)
 }
 
 
+void JobQueue::listJobs() const
+{
+  ScopedLock scopedLock(itsMutex);
+
+  for (std::vector<Job *>::const_iterator job = itsJobs.begin(); job != itsJobs.end(); job ++)
+    LOG_INFO_STR("JobID = " << (*job)->itsJobID << ", ObsID = " << (*job)->itsObservationID << ", " << ((*job)->itsIsRunning ? "running" : "not running"));
+}
+
+
 void JobQueue::waitUntilAllJobsAreFinished()
 {
   ScopedLock scopedLock(itsMutex);

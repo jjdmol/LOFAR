@@ -86,11 +86,11 @@ class Job
     TimeStamp                           itsStopTime;
     Thread				*itsJobThread, *itsCNthread;
     bool				itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
+    bool				itsIsRunning, itsIsCancelled;
     unsigned				itsJobID, itsObservationID;
     static unsigned			nextJobID;
 
     WallClockTime			itsWallClockTime;
-    bool				itsIsRunning, itsIsCancelled;
 
     static InputSectionParent		*theInputSection;
     static Mutex			theInputSectionMutex;

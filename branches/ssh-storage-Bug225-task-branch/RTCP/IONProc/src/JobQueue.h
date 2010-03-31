@@ -43,12 +43,14 @@ class JobQueue
     void		claimResources(Job *);
     void		cancel(unsigned observationID);
 
+    void		listJobs() const;
+
     void		waitUntilAllJobsAreFinished();
 
   private:
     std::vector<Job *>	itsJobs;
 
-    Mutex		itsMutex;
+    mutable Mutex	itsMutex;
     Condition		itsReevaluate;
 };
 

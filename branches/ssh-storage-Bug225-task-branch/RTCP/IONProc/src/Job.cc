@@ -50,9 +50,9 @@ unsigned	   Job::theInputSectionRefCount = 0;
 Job::Job(const char *parsetName)
 :
   itsParset(parsetName),
-  itsJobID(nextJobID ++), // no need to make thread safe
   itsIsRunning(false),
-  itsIsCancelled(false)
+  itsIsCancelled(false),
+  itsJobID(nextJobID ++) // no need to make thread safe
 {
   checkParset();
 
