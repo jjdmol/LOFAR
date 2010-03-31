@@ -37,8 +37,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include <algorithm>
-
 
 namespace LOFAR {
 namespace RTCP {
@@ -48,18 +46,13 @@ InputSectionParent *Job::theInputSection;
 Mutex		   Job::theInputSectionMutex;
 unsigned	   Job::theInputSectionRefCount = 0;
 
-unsigned	   Job::theNrJobsCreated;
-Semaphore	   Job::theNrJobsFinished;
-
-Mutex		   Job::theJobQueueMutex;
-Condition	   Job::theReevaluateJobQueue;
-std::vector<Job *> Job::theRunningJobs;
-
 
 Job::Job(const char *parsetName)
 :
   itsParset(parsetName),
-  itsJobID(nextJobID ++) // no need to make thread safe
+  itsJobID(nextJobID ++), // no need to make thread safe
+  itsIsRunning(false),
+  itsIsCancelled(false)
 {
   checkParset();
 
@@ -81,8 +74,6 @@ Job::Job(const char *parsetName)
   createIONstreams();
 
   itsJobThread = new Thread(this, &Job::jobThread, 65536);
-
-  ++ theNrJobsCreated;
 }
 
 
@@ -93,13 +84,7 @@ Job::~Job()
   delete itsJobThread;
   deleteIONstreams();
 
-  theNrJobsFinished.up();
-}
-
-
-void Job::waitUntilAllJobsAreFinished()
-{
-  theNrJobsFinished.down(theNrJobsCreated);
+  jobQueue.remove(this);
 }
 
 
@@ -123,11 +108,9 @@ void Job::allocateResources()
 
 void Job::deallocateResources()
 {
-  // WAIT for thread
   delete itsCNthread;
   LOG_DEBUG("CNthread joined");
 
-  // STOP inputSection
   if (itsHasPhaseOne)
     detachFromInputSection();
 }
@@ -146,6 +129,17 @@ void Job::barrier()
   } else {
     itsIONstreams[0]->write(&byte, sizeof byte);
     itsIONstreams[0]->read(&byte, sizeof byte);
+  }
+}
+
+
+template <typename T> void Job::broadcast(T &value)
+{
+  if (myPsetNumber == 0) {
+    for (unsigned ion = 1; ion < nrPsets; ion ++)
+      itsIONstreams[ion]->write(&value, sizeof value);
+  } else {
+    itsIONstreams[0]->read(&value, sizeof value);
   }
 }
 
@@ -244,62 +238,68 @@ void Job::stopStorageProcesses()
 
 void Job::jobThread()
 {
+  bool storageStarted = false;
+
   if (myPsetNumber == 0) {
     if (itsParset.realTime()) {
       // claim resources ten seconds before observation start
-      WallClockTime wallClock;
       time_t     closeToStart = static_cast<time_t>(itsParset.startTime()) - 10;
       char       buf[26];
       ctime_r(&closeToStart, buf);
       buf[24] = '\0';
       
       LOG_DEBUG_STR("waiting for job " << itsObservationID << " to start: sleeping until " << buf);
-      wallClock.waitUntil(closeToStart);
+
+      itsWallClockTime.waitUntil(closeToStart);
     }
 
-    theJobQueueMutex.lock();
+    jobQueue.claimResources(this);
 
-    retry:
-      for (std::vector<Job *>::iterator job = theRunningJobs.begin(); job != theRunningJobs.end(); job ++)
-	if ((*job)->itsParset.overlappingResources(itsParset) || !(*job)->itsParset.compatibleInputSection(itsParset)) {
-	  LOG_WARN_STR("ObsID = " << itsObservationID << ": postponed due to resource conflicts");
-	  theReevaluateJobQueue.wait(theJobQueueMutex);
-	  goto retry;
-	}
-
-    theRunningJobs.push_back(this);
-
-    theJobQueueMutex.unlock();
-
-    if (itsParset.hasStorage())
+    if (itsIsRunning && itsParset.hasStorage()) {
       startStorageProcesses();
+      storageStarted = true;
+    }
   }
 
-  barrier();
+  broadcast(itsIsRunning);
 
-  if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
-    LOG_DEBUG_STR("claiming resources for observation " << itsObservationID);
-    allocateResources();
+  if (itsIsRunning) {
+    if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
+      LOG_DEBUG_STR("claiming resources for observation " << itsObservationID);
+      allocateResources();
 
-    // do observation
+      // do observation
 
-    deallocateResources();
-    LOG_DEBUG_STR("resources of job " << itsObservationID << " deallocated");
-  }
+      deallocateResources();
+      LOG_DEBUG_STR("resources of job " << itsObservationID << " deallocated");
+    }
 
-  barrier();
+    barrier();
 
-  if (myPsetNumber == 0) {    
-    if (itsParset.hasStorage())
+    if (storageStarted)
       stopStorageProcesses();
-
-    theJobQueueMutex.lock();
-    theRunningJobs.erase(find(theRunningJobs.begin(), theRunningJobs.end(), this));
-    theReevaluateJobQueue.broadcast();
-    theJobQueueMutex.unlock();
   }
+
+  if (itsIsCancelled)
+    LOG_INFO_STR("ObsID = " << itsObservationID << ": cancelled successfully");
 
   delete this;
+}
+
+
+void Job::cancel()
+{
+  // note that JobQueue holds lock, so that this function executes atomically
+
+  if (itsIsCancelled) {
+    LOG_WARN_STR("ObsID = " << itsObservationID << ": already cancelled");
+    return;
+  }
+
+  itsIsCancelled = true;
+
+  if (itsParset.realTime())
+    itsWallClockTime.cancelWait();
 }
 
 
@@ -342,9 +342,9 @@ void Job::deleteIONstreams()
 
 void Job::attachToInputSection()
 {
-  theInputSectionMutex.lock();
+  ScopedLock scopedLock(theInputSectionMutex);
 
-  if (theInputSectionRefCount ++ == 0)
+  if (theInputSectionRefCount == 0) {
     switch (itsParset.nrBitsPerSample()) {
       case  4 : theInputSection = new InputSection<i4complex>(itsParset, myPsetNumber);
 		break;
@@ -356,18 +356,17 @@ void Job::attachToInputSection()
 		break;
     }
 
-  theInputSectionMutex.unlock();
+    ++ theInputSectionRefCount;
+  }
 }
 
 
 void Job::detachFromInputSection()
 {
-  theInputSectionMutex.lock();
+  ScopedLock scopedLock(theInputSectionMutex);
 
   if (-- theInputSectionRefCount == 0)
     delete theInputSection;
-
-  theInputSectionMutex.unlock();
 }
 
 

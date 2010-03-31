@@ -10,6 +10,7 @@ InputThreadAsm.h		\
 ION_Allocator.h			\
 ION_main.h			\
 Job.h				\
+JobQueue.h			\
 LockedRanges.h			\
 LogThread.h			\
 OutputThread.h			\
@@ -33,6 +34,7 @@ InputThread.cc			\
 InputThreadAsm.S		\
 ION_Allocator.cc		\
 Job.cc				\
+JobQueue.cc			\
 LogThread.cc			\
 OutputThread.cc			\
 OutputSection.cc		\

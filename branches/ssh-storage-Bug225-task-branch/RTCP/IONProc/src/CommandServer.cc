@@ -25,6 +25,7 @@
 #include <Common/Exceptions.h>
 #include <ION_main.h>
 #include <Job.h>
+#include <JobQueue.h>
 #include <Stream/SocketStream.h>
 #include <Stream/SystemCallException.h>
 #include <StreamMultiplexer.h>
@@ -39,9 +40,6 @@
 namespace LOFAR {
 namespace RTCP {
 
-extern unsigned				myPsetNumber, nrPsets;
-extern std::vector<StreamMultiplexer *> allIONstreamMultiplexers;
-
 
 static bool quit = false;
 
@@ -52,9 +50,12 @@ static void handleCommand(const std::string &command)
 
   if (command == "quit") {
     quit = true;
+  } else if (command.compare(0, 7, "cancel ") == 0) {
+    if (myPsetNumber == 0)
+      jobQueue.cancel(boost::lexical_cast<unsigned>(command.substr(7)));
   } else if (command.compare(0, 7, "parset ") == 0) {
     try {
-      new Job(command.substr(7).c_str());
+      jobQueue.insert(new Job(command.substr(7).c_str()));
     } catch (APSException &) { // if file could not be found
     }
   } else if (myPsetNumber == 0) {
@@ -95,7 +96,7 @@ static void commandMaster()
     } catch (Stream::EndOfStreamException &) {
     } catch (SystemCallException &ex) {
       if (ex.error == EADDRINUSE) {
-	LOG_WARN("address in use");
+	LOG_WARN("CommandServer binding to socket: address in use");
 	sleep(1);
       } else {
 	throw;

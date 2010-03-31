@@ -22,6 +22,7 @@ lofar_add_library(ionproc
   InputThreadAsm.S
   ION_Allocator.cc
   Job.cc
+  JobQueue.cc
   LogThread.cc
   OutputThread.cc
   OutputSection.cc

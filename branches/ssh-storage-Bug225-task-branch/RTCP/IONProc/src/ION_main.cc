@@ -28,6 +28,7 @@
 #include <Interface/Parset.h>
 #include <ION_Allocator.h>
 #include <Job.h>
+#include <JobQueue.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <Stream/SystemCallException.h>
@@ -338,11 +339,11 @@ static void master_thread(int argc, char **argv)
 #else
     for (int arg = 1; arg < argc; arg ++) {
       LOG_DEBUG_STR("creating new Job for ParameterSet " << argv[arg]);
-      new Job(argv[arg]);
+      jobQueue.insert(new Job(argv[arg]));
     }
 #endif
 
-    Job::waitUntilAllJobsAreFinished();
+    jobQueue.waitUntilAllJobsAreFinished();
     stopCNs();
 
 #if defined FLAT_MEMORY

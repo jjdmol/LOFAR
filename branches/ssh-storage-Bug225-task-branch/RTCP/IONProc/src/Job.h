@@ -25,12 +25,13 @@
 #define LOFAR_RTCP_JOB_H
 
 #include <InputSection.h>
-#include <Common/Semaphore.h>
 #include <Interface/Mutex.h>
 #include <Interface/Parset.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/Thread.h>
+#include <JobQueue.h>
 #include <Stream/Stream.h>
+#include <WallClockTime.h>
 
 #include <vector>
 
@@ -45,11 +46,13 @@ class Job
 					Job(const char *parsetName);
 					~Job();
 
-    static void				waitUntilAllJobsAreFinished();
+    void				cancel();
 
     const Parset			itsParset;
 
   private:
+    friend class JobQueue;
+
     void				checkParset() const;
     void				createCNstreams();
     void				configureCNs(), unconfigureCNs();
@@ -57,7 +60,7 @@ class Job
     void				createIONstreams(), deleteIONstreams();
 
     void				jobThread();
-    template <typename SAMPLE_TYPE>	void CNthread();
+    template <typename SAMPLE_TYPE> void CNthread();
 
     void				allocateResources();
     void				deallocateResources();
@@ -66,6 +69,7 @@ class Job
     void				detachFromInputSection();
 
     void				barrier();
+    template <typename T> void		broadcast(T &);
 
     static void				execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset);
     void				forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, int &storagePID);
@@ -85,16 +89,12 @@ class Job
     unsigned				itsJobID, itsObservationID;
     static unsigned			nextJobID;
 
+    WallClockTime			itsWallClockTime;
+    bool				itsIsRunning, itsIsCancelled;
+
     static InputSectionParent		*theInputSection;
     static Mutex			theInputSectionMutex;
     static unsigned			theInputSectionRefCount;
-
-    static unsigned			theNrJobsCreated;
-    static Semaphore			theNrJobsFinished;
-
-    static Mutex			theJobQueueMutex;
-    static Condition			theReevaluateJobQueue;
-    static std::vector<Job *>		theRunningJobs;
 };
 
 
