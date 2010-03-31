@@ -23,6 +23,9 @@
 
 #include <pthread.h>
 
+#include <Stream/SystemCallException.h>
+
+
 namespace LOFAR {
 namespace RTCP {
 
@@ -56,7 +59,9 @@ class Condition
   public:
     Condition(), ~Condition();
 
-    void signal(), broadcast(), wait(Mutex &);
+    void signal(), broadcast();
+    void wait(Mutex &);
+    bool wait(Mutex &, const struct timespec &);
 
   private:
     pthread_cond_t condition;
@@ -66,31 +71,51 @@ class Condition
 
 inline Mutex::Mutex()
 {
-  pthread_mutex_init(&mutex, 0);
+  int error = pthread_mutex_init(&mutex, 0);
+
+  if (error != 0)
+    throw SystemCallException("pthread_mutex_init", error, THROW_ARGS);
 }
 
 
 inline Mutex::~Mutex()
 {
-  pthread_mutex_destroy(&mutex);
+  int error = pthread_mutex_destroy(&mutex);
+
+  if (error != 0)
+    throw SystemCallException("pthread_mutex_destroy", error, THROW_ARGS);
 }
 
 
 inline void Mutex::lock()
 {
-  pthread_mutex_lock(&mutex);
+  int error = pthread_mutex_lock(&mutex);
+
+  if (error != 0)
+    throw SystemCallException("pthread_mutex_destroy", error, THROW_ARGS);
 }
 
 
 inline void Mutex::unlock()
 {
-  pthread_mutex_unlock(&mutex);
+  int error = pthread_mutex_unlock(&mutex);
+
+  if (error != 0)
+    throw SystemCallException("pthread_mutex_destroy", error, THROW_ARGS);
 }
 
 
 inline bool Mutex::trylock()
 {
-  return pthread_mutex_trylock(&mutex) == 0;
+  int error = pthread_mutex_trylock(&mutex);
+
+  switch (error) {
+    case 0     : return true;
+
+    case EBUSY : return false;
+
+    default    : throw SystemCallException("pthread_mutex_trylock", error, THROW_ARGS);
+  }
 }
 
 
@@ -110,31 +135,60 @@ inline ScopedLock::~ScopedLock()
 
 inline Condition::Condition()
 {
-  pthread_cond_init(&condition, 0);
+  int error = pthread_cond_init(&condition, 0);
+
+  if (error != 0)
+    throw SystemCallException("pthread_cond_init", error, THROW_ARGS);
 }
 
 
 inline Condition::~Condition()
 {
-  pthread_cond_destroy(&condition);
+  int error = pthread_cond_destroy(&condition);
+
+  if (error != 0)
+    throw SystemCallException("pthread_cond_destroy", error, THROW_ARGS);
 }
 
 
 inline void Condition::signal()
 {
-  pthread_cond_signal(&condition);
+  int error = pthread_cond_signal(&condition);
+
+  if (error != 0)
+    throw SystemCallException("pthread_cond_signal", error, THROW_ARGS);
 }
 
 
 inline void Condition::broadcast()
 {
-  pthread_cond_broadcast(&condition);
+  int error = pthread_cond_broadcast(&condition);
+
+  if (error != 0)
+    throw SystemCallException("pthread_cond_broadcast", error, THROW_ARGS);
 }
 
 
 inline void Condition::wait(Mutex &mutex)
 {
-  pthread_cond_wait(&condition, &mutex.mutex);
+  int error = pthread_cond_wait(&condition, &mutex.mutex);
+
+  if (error != 0)
+    throw SystemCallException("pthread_cond_wait", error, THROW_ARGS);
+}
+
+
+inline bool Condition::wait(Mutex &mutex, const struct timespec &timespec)
+{
+  int error = pthread_cond_timedwait(&condition, &mutex.mutex, &timespec);
+
+  switch (error) {
+    case 0	   : return true;
+
+    case ETIMEDOUT : return false;
+
+    default	   : throw SystemCallException("pthread_cond_timedwait", error, THROW_ARGS);
+  }
 }
 
 
