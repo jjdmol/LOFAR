@@ -26,6 +26,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 import org.apache.log4j.Logger;
 
+
+
 public class jCampaignAdapter extends UnicastRemoteObject implements jCampaignInterface
 {
 
