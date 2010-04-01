@@ -253,8 +253,9 @@ namespace LOFAR {
     uInt npol = itsParent->npol();
     
     switch(itsParent->getLofarStManVersion()) {
-    case 1: {
-      
+    case 1:
+    case 2:
+    {
       const uShort* data = itsParent->getNSample (rownr, False);
       const uShort* dataEnd = data + itsParent->nchan();
       if (dataPtr->contiguousStorage()) {
@@ -275,7 +276,7 @@ namespace LOFAR {
 	}
       }
     } break;
-    case 2: {
+    case 3: {
       const uInt* data = itsParent->getNSampleV2 (rownr, False);
 
       uInt channel = 0;
@@ -336,8 +337,9 @@ namespace LOFAR {
     uInt npol = itsParent->npol();
 
     switch (itsParent->getLofarStManVersion()) {
-    case 1: {
-
+    case 1:
+    case 2:
+    {
       const uShort* data = itsParent->getNSample (rownr, True);
       const uShort* dataEnd = data + itsParent->nchan();
       if (dataPtr->contiguousStorage()) {
@@ -358,7 +360,7 @@ namespace LOFAR {
 	}
       }
     } break;
-    case 2: {
+    case 3: {
       const uInt* data = itsParent->getNSampleV2 (rownr, True);
 
       uInt channel = 0;

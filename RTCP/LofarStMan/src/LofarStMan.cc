@@ -315,8 +315,8 @@ void LofarStMan::init()
 {
   AipsIO aio(fileName() + "meta");
   itsVersion = aio.getstart ("LofarStMan");
-  if (itsVersion > 2) {
-    throw DataManError ("LofarStMan can only handle up to version 2");
+  if (itsVersion > 3) {
+    throw DataManError ("LofarStMan can only handle up to version 3");
   }
   Bool asBigEndian;
   uInt alignment;
@@ -336,13 +336,14 @@ void LofarStMan::init()
     itsSampStart = itsDataStart + nrant*itsBLDataSize;
     switch (itsVersion) {
     case 1:
+    case 2:
       itsBlockSize = itsSampStart + nrant*itsNChan*2;
       break;
-    case 2:
+    case 3:
       itsBlockSize = itsSampStart + nrant*4;
       break;
     default:
-      throw DataManError("LofarStMan can only handle up to version 2");
+      throw DataManError("LofarStMan can only handle up to version 3");
     }
   } else {
     itsDataStart = alignment;
@@ -350,23 +351,25 @@ void LofarStMan::init()
       / alignment * alignment;
     switch (itsVersion) {
     case 1:
+    case 2:
       itsBlockSize = itsSampStart + (nrant*itsNChan*2 + alignment-1)
 	/ alignment * alignment;
       break;
-    case 2:
+    case 3:
       itsBlockSize = itsSampStart + (nrant*4 + alignment-1)
 	/ alignment * alignment;
       break;
     default:
-      throw DataManError("LofarStMan can only handle up to version 2");
+      throw DataManError("LofarStMan can only handle up to version 3");
     }
   }
   if (itsDoSwap) {
     switch (itsVersion) {
     case 1:
+    case 2:
       itsNSampleBuf.resize (itsNChan * 2);
       break;
-    case 2:
+    case 3:
       itsNSampleBufV2.resize(4);
       break;
     default:
@@ -410,6 +413,12 @@ void LofarStMan::getData (uInt rownr, Complex* buf)
   } else {
     memcpy (buf, ptr, itsBLDataSize);
   }
+  if (itsVersion == 1) {
+    // The first RTCP version generated conjugate data.
+    for (uint i=0; i<itsBLDataSize/sizeof(Complex); ++i) {
+      buf[i] = conj(buf[i]);
+    }
+  }
 }
 
 void LofarStMan::putData (uInt rownr, const Complex* buf)
@@ -418,7 +427,25 @@ void LofarStMan::putData (uInt rownr, const Complex* buf)
   uInt baseline = rownr - blocknr*itsAnt1.size();
   uInt offset  = itsDataStart + baseline * itsBLDataSize;
   void* ptr = getWritePointer (blocknr, offset, itsBLDataSize);
-  if (itsDoSwap) {
+  // The first RTCP version generated conjugate data.
+  if (itsVersion == 1) {
+    Complex val;
+    const Complex* from = buf;
+    char* to = (char*)ptr;
+    char* toend = to + itsBLDataSize;
+    while (to < toend) {
+      val = conj(*from);
+      if (itsDoSwap) {
+        CanonicalConversion::reverse4 (to, &val);
+        CanonicalConversion::reverse4 (to + sizeof(float),
+                                       ((char*)(&val)) + sizeof(float));
+      } else {
+        memcpy (to, &val, sizeof(Complex));
+      }
+      to += sizeof(Complex);
+      from++;
+    }
+  } else if (itsDoSwap) {
     const char* from = (const char*)buf;
     char* to = (char*)ptr;
     const char* fromend = from + itsBLDataSize;
