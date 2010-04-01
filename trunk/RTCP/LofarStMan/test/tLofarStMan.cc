@@ -119,10 +119,10 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
     }
     double maxNSample = 32768;
 
-    AlwaysAssertExit(myStManVersion <= 2);
+    AlwaysAssertExit(myStManVersion <= 3);
 
     AipsIO aio("tLofarStMan_tmp.data/table.f0meta", ByteIO::New);
-    aio.putstart ("LofarStMan", myStManVersion);     // version 1 or 2
+    aio.putstart ("LofarStMan", myStManVersion);     // version 1, 2, or 3
     aio << ant1 << ant2 << startTime << interval << nchan
         << npol << maxNSample << alignment << bigEndian;
   }
@@ -153,8 +153,11 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
   Block<Char> align2(nalign(nrbl*8*data.size(), alignment), 0);
 
   uInt nsamplesSize=0;
-  if (myStManVersion == 1) nsamplesSize = nrbl*2*nsample.size();
-  else nsamplesSize = nrbl*4*nsampleV2.size();
+  if (myStManVersion < 3) {
+    nsamplesSize = nrbl*2*nsample.size();
+  } else {
+    nsamplesSize = nrbl*4*nsampleV2.size();
+  }
 
   Block<Char> align3(nalign(nsamplesSize, alignment), 0);
 
@@ -166,21 +169,26 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
       cfile->write (align1.size(), align1.storage());
     }
     for (uInt j=0; j<nrbl; ++j) {
-      cfile->write (data.size(), data.data());
+      // The RTCP wrote the conj of the data for version 1.
+      if (myStManVersion == 1) {
+        Array<Complex> cdata = conj(data);
+        cfile->write (data.size(), cdata.data());
+      } else {
+        cfile->write (data.size(), data.data());
+      }
       data += Complex(0.01, 0.02);
     }
     if (align2.size() > 0) {
       cfile->write (align2.size(), align2.storage());
     }
     
-    if (myStManVersion == 1) {
+    if (myStManVersion < 3) {
       for (uInt j=0; j<nrbl; ++j) {
 	cfile->write (nsample.size(), nsample.data());
 	nsample += uShort(1);
       }
     } else {
       indgen(nsampleV2, uInt(2048*i));
-
       for (uInt j=0; j<nrbl; ++j) {
 	cfile->write (nsampleV2.size(), nsampleV2.data());
       }
@@ -192,9 +200,9 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
   }
   delete cfile;
 
-  if (myStManVersion == 2) {
+  if (myStManVersion == 3) {
     TypeIO* sfile = 0;
-    // create seperate file for sequence numbers if version == 2
+    // create seperate file for sequence numbers if version == 3
     RegularFileIO file(RegularFile("tLofarStMan_tmp.data/table.f0seqnr"),
 		       ByteIO::New);
     // Write in canonical (big endian) or local format.
@@ -253,15 +261,14 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
   indgen (dataExp, startValue, Complex(0.01, 0.01));
   Array<Float> weightExp(IPosition(2,1,nchan));
   
-  if (myStManVersion == 1) {
+  if (myStManVersion < 3) {
     indgen (weightExp, Float(0),Float(1./32768));
   }
   // Loop through all rows in the table and check the data.
   uInt row=0;
   for (uInt i=0; i<nseq; ++i) {
     
-    if (myStManVersion == 2 ) { 
-
+    if (myStManVersion == 3 ) { 
       indgen (weightExp, Float(i*2048*1./32768), Float(0.));
       weightExp(IPosition(2, 0, 0)) = Float(0.);
     }
@@ -291,7 +298,7 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
 	    std::cout << "weights: " << std::endl;
 	    std::cout << weights(IPosition(2,p,0), IPosition(2,p,nchan-1)) << std::endl;
 	  
-	    std::cout << "wegithExp: " << std::endl;
+	    std::cout << "weigthExp: " << std::endl;
 	    std::cout << weightExp << std:: endl;
 
 	    AlwaysAssertExit (allNear (weights(IPosition(2,p,0),
@@ -306,7 +313,9 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
         AlwaysAssertExit (ant2Col(row) == int32(k));
         dataExp += Complex(0.01, 0.02);
 
-        if (myStManVersion == 1) weightExp += Float(1./32768);
+        if (myStManVersion < 3) {
+          weightExp += Float(1./32768);
+        }
         ++row;
       }
     }
@@ -338,6 +347,11 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
   AlwaysAssertExit (allEQ(stidCol.getColumn(), 0));
   AlwaysAssertExit (allEQ(scnrCol.getColumn(), 0));
   AlwaysAssertExit (allEQ(flagrowCol.getColumn(), False));
+
+  RefRows rownrs(0,2,1);
+  Slicer slicer(IPosition(2,0,0), IPosition(2,1,1));
+  cout << wspecCol(0).shape() << endl;
+  Array<float> wg = wspecCol.getColumnCells (rownrs);
 }
 
 void updateTable (uInt nchan, uInt npol, const Complex& startValue)
@@ -402,44 +416,27 @@ int main (int argc, char* argv[])
         istringstream istr(argv[4]);
         istr >> npol;
       }
-      // Create the table.
-      createTable();
-      // Write data in big-endian and check it. Align on 512.
-      createData (nseq, nant, nchan, npol, 1e9, 10., Complex(0.1, 0.1),
-                  512, True);
-      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(0.1, 0.1));
-      // Update the table and check again.
-      updateTable (nchan, npol, Complex(-3.52, -20.3));
-      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(-3.52, -20.3));
-      // Write data in local format and check it. No alignment.
-      createData (nseq, nant, nchan, npol, 1e9, 10., Complex(3.1, -5.2),
-                  0, False);
-      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(3.1, -5.2));
-      // Update the table and check again.
-      updateTable (nchan, npol, Complex(3.52, 20.3));
-      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(3.52, 20.3));
-      copyTable();
-
-      // Create the table.
-      createTable();
-      // Write data in big-endian and check it. Align on 512.
-      createData (nseq, nant, nchan, npol, 1e9, 10., Complex(0.1, 0.1),
-		  512, True, 2);
-      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(0.1, 0.1), 2);
-      // Update the table and check again.
-      updateTable (nchan, npol, Complex(-3.52, -20.3));
-      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(-3.52, -20.3), 2);
-      // Write data in local format and check it. No alignment.
-      createData (nseq, nant, nchan, npol, 1e9, 10., Complex(3.1, -5.2),
-                  0, False, 2);
-      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(3.1, -5.2), 2);
-      // Update the table and check again.
-      updateTable (nchan, npol, Complex(3.52, 20.3));
-      readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(3.52,
-      20.3), 2);
-      copyTable();
-
-
+      // Test the various versions.
+      for (int v=1; v<4; ++v) {
+        cout << "Test version " << v << endl;
+        // Create the table.
+        createTable();
+        // Write data in big-endian and check it. Align on 512.
+        createData (nseq, nant, nchan, npol, 1e9, 10., Complex(0.1, 0.1),
+                    512, True, v);
+        readTable (nseq, nant, nchan, npol, 1e9, 10., Complex(0.1, 0.1), v);
+        // Update the table and check again.
+        updateTable (nchan, npol, Complex(-3.52, -20.3));
+        readTable (nseq, nant, nchan, npol, 1e9, 10., Complex(-3.52, -20.3), v);
+        // Write data in local format and check it. No alignment.
+        createData (nseq, nant, nchan, npol, 1e9, 10., Complex(3.1, -5.2),
+                    0, False, v);
+        readTable (nseq, nant, nchan, npol, 1e9, 10., Complex(3.1, -5.2), v);
+        // Update the table and check again.
+        updateTable (nchan, npol, Complex(3.52, 20.3));
+        readTable (nseq, nant, nchan, npol, 1e9, 10., Complex(3.52, 20.3), v);
+        copyTable();
+      }
     }
   } catch (AipsError x) {
     cout << "Caught an exception: " << x.getMesg() << endl;
