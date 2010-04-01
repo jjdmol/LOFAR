@@ -20,22 +20,26 @@
 #ifndef RNG_H
 #define RNG_H
 
+#include <AOFlagger/msio/types.h>
+
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 class RNG{
 	public:
-		static double Guassian() throw();
-		static double GuassianProduct() throw();
-		static double GuassianPartialProduct() throw();
-		static double GuassianComplex() throw();
-		static double Rayleigh() throw();
-		static double Uniform() throw();
-		static double EvaluateRayleigh(double x, double sigma) throw();
-		static long double EvaluateGaussian(long double x, long double sigma) throw();
-		static double EvaluateGaussian2D(long double x1, long double x2, long double sigmaX1, long double sigmaX2) throw();
-		static double IntegrateGaussian(long double upperLimit) throw();
-		static void DoubleGaussian(long double &a, long double &b) throw();
+		static double Guassian();
+		static double GuassianProduct();
+		static double GuassianPartialProduct();
+		static double GuassianComplex();
+		static double Rayleigh();
+		static double Uniform();
+		static double EvaluateRayleigh(double x, double sigma);
+		static long double EvaluateGaussian(long double x, long double sigma);
+		static double EvaluateGaussian2D(long double x1, long double x2, long double sigmaX1, long double sigmaX2);
+		static double IntegrateGaussian(long double upperLimit);
+		static void DoubleGaussian(long double &a, long double &b);
+		static void ComplexGaussianAmplitude(long double &r, long double &i);
+		static void ComplexGaussianAmplitude(num_t &r, num_t &i);
 	private: 
 		RNG();
 };

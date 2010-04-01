@@ -14,7 +14,7 @@ SET (UTIL_FILES util/ffttools util/integerdomain util/multiplot util/plot util/r
 
 lofar_add_library(rfiengine ${IMAGING_FILES} ${MSIO_FILES} ${RFI_FILES} ${UTIL_FILES})
 
-set(GENERIC_LIBRARIES rfiengine ${Boost_LIBRARIES} ${CASA_LIBRARIES} cfitsio dl ${FFTW3_LIBRARIES} ${GSL_LIBRARIES} m nsl png util z ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${PTHREADS_LIBRARIES} xml2 ${GTKMM_LIBRARIES} ${CPPLapack_LIBRARIES}  lofarstman)
+set(GENERIC_LIBRARIES rfiengine ${Boost_LIBRARIES} ${Casacore_LIBRARIES} cfitsio dl ${FFTW3_LIBRARIES} ${GSL_LIBRARIES} m nsl png util z ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${PTHREADS_LIBRARIES} xml2 ${GTKMM_LIBRARIES} ${CPPLapack_LIBRARIES}  lofarstman)
 
 IF(GTKMM_FOUND)
   INCLUDE_DIRECTORIES(${GTKMM_INCLUDE_DIRS})

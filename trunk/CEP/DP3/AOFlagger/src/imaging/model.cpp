@@ -100,26 +100,20 @@ void Model::SimulateUncoherentAntenna(num_t delayDirectionDEC, num_t delayDirect
 {
 	num_t delayW = GetWPosition(delayDirectionDEC, delayDirectionRA, frequency, 0.0, earthLattitude, dx, dy);
 
-	if(index%(_sources.size()+1) == _sources.size())
-	{
-		long double n1, n2;
-		RNG::DoubleGaussian(n1, n2);
-		if(n1 > 0)
-			n1 = sqrt(n1);
-		else
-			n1 = -sqrt(-n1);
-		if(n2 > 0)
-			n2 = sqrt(n2);
-		else
-			n2 = -sqrt(-n2);
-	}
-	else {
-		PointSource &source = *_sources[index%(_sources.size()+1)];
+	//if(index%(_sources.size()+1) == _sources.size())
+	//{
+	num_t noiser, noisei;
+	RNG::ComplexGaussianAmplitude(noiser, noisei);
+	noiser *= _noiseSigma;
+	noisei *= _noiseSigma;
+	//}
+	//else {
+		PointSource &source = *_sources[index%_sources.size()];
 		num_t w = GetWPosition(source.dec, source.ra, frequency, 0.0, earthLattitude, dx, dy);
 		num_t fieldStrength = source.sqrtFluxIntensity;
-		r = fieldStrength * cos((w - delayW) * M_PI * 2.0);
-		i = fieldStrength * sin((w - delayW) * M_PI * 2.0);
-	}
+		r = fieldStrength * cos((w - delayW) * M_PI * 2.0) + noiser;
+		i = fieldStrength * sin((w - delayW) * M_PI * 2.0) + noisei;
+	//}
 }
 
 void Model::SimulateBaseline(long double delayDirectionDEC, long double delayDirectionRA, long double dx, long double dy, long double dz, long double frequencyStart, long double frequencyEnd, long double seconds, class Image2D &destR, class Image2D &destI)
