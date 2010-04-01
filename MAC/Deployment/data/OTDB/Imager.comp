@@ -16,7 +16,7 @@ par frequency		I	vint	-	10	0	'[37987899,38183212]'	-	"frequency"
 par nchan		I	int	-	10	0	1	 		-	"number of channels"
 par angle1		I   	vdbl    -   	10 	0	>>Beam.angle1		-	'direction angle1'
 par angle2		I   	vdbl    -   	10 	0	>>Beam.angle2		-	'direction angle2'
-par directionType	I	text	-	10	0	>>Beam.directionTypes 	-	'direction type'
+par directionType	I	text	-	10	0	>>Beam.directionType 	-	'direction type'
 
 
 # -- Solver --
