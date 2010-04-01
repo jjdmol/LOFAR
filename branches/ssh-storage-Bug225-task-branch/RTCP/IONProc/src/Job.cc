@@ -50,13 +50,13 @@ unsigned Job::theInputSectionRefCount = 0;
 Job::Job(const char *parsetName)
 :
   itsParset(parsetName),
+  itsJobID(nextJobID ++), // no need to make thread safe
+  itsObservationID(itsParset.observationID()),
   itsIsRunning(false),
-  itsDoCancel(false),
-  itsJobID(nextJobID ++) // no need to make thread safe
+  itsDoCancel(false)
 {
   checkParset();
 
-  itsObservationID = itsParset.observationID();
 
   LOG_DEBUG_STR("Creating new observation, ObsID = " << itsParset.observationID());
   LOG_DEBUG_STR("ObsID = " << itsParset.observationID() << ", usedCoresInPset = " << itsParset.usedCoresInPset());
@@ -242,6 +242,41 @@ void Job::waitUntilCloseToStartOfObservation(time_t secondsPriorToStart)
 }
 
 
+void Job::cancel()
+{
+  // note that JobQueue holds lock, so that this function executes atomically
+
+  if (itsDoCancel) {
+    LOG_WARN_STR("ObsID = " << itsObservationID << ": already cancelled");
+  } else {
+    itsDoCancel = true;
+    jobQueue.itsReevaluate.broadcast();
+
+    if (itsParset.realTime())
+      itsWallClockTime.cancelWait();
+  }
+}
+
+
+void Job::claimResources()
+{
+  ScopedLock scopedLock(jobQueue.itsMutex);
+
+retry:
+  if (itsDoCancel)
+    return;
+
+  for (std::vector<Job *>::iterator job = jobQueue.itsJobs.begin(); job != jobQueue.itsJobs.end(); job ++)
+    if ((*job)->itsIsRunning && ((*job)->itsParset.overlappingResources(itsParset) || !(*job)->itsParset.compatibleInputSection(itsParset))) {
+      LOG_WARN_STR("ObsID = " << itsObservationID << ": postponed due to resource conflicts");
+      jobQueue.itsReevaluate.wait(jobQueue.itsMutex);
+      goto retry;
+    }
+
+  itsIsRunning = true;
+}
+
+
 void Job::jobThread()
 {
   if (myPsetNumber == 0 || itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
@@ -254,7 +289,7 @@ void Job::jobThread()
       if (itsParset.realTime())
 	waitUntilCloseToStartOfObservation(10);
 
-      jobQueue.claimResources(this);
+      claimResources();
 
       if (itsIsRunning && itsParset.hasStorage()) {
 	startStorageProcesses();
@@ -290,22 +325,6 @@ void Job::jobThread()
   }
 
   delete this;
-}
-
-
-void Job::cancel()
-{
-  // note that JobQueue holds lock, so that this function executes atomically
-
-  if (itsDoCancel) {
-    LOG_WARN_STR("ObsID = " << itsObservationID << ": already cancelled");
-    return;
-  }
-
-  itsDoCancel = true;
-
-  if (itsParset.realTime())
-    itsWallClockTime.cancelWait();
 }
 
 
@@ -476,6 +495,12 @@ void Job::checkParset() const
     LOG_ERROR_STR("nrCoresPerPset (" << itsParset.nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
     exit(1);
   }
+}
+
+
+void Job::printInfo() const
+{
+  LOG_INFO_STR("JobID = " << itsJobID << ", ObsID = " << itsObservationID << ", " << (itsIsRunning ? "running" : "not running"));
 }
 
 

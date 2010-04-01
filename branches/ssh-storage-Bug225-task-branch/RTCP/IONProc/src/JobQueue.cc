@@ -49,25 +49,6 @@ void JobQueue::remove(Job *job)
 }
 
 
-void JobQueue::claimResources(Job *job)
-{
-  ScopedLock scopedLock(itsMutex);
-
-retry:
-  if (job->itsDoCancel)
-    return;
-
-  for (std::vector<Job *>::iterator other = itsJobs.begin(); other != itsJobs.end(); other ++)
-    if ((*other)->itsIsRunning && ((*other)->itsParset.overlappingResources(job->itsParset) || !(*other)->itsParset.compatibleInputSection(job->itsParset))) {
-      LOG_WARN_STR("ObsID = " << job->itsObservationID << ": postponed due to resource conflicts");
-      itsReevaluate.wait(itsMutex);
-      goto retry;
-    }
-
-  job->itsIsRunning = true;
-}
-
-
 void JobQueue::cancel(unsigned observationID)
 {
   ScopedLock scopedLock(itsMutex);
@@ -75,7 +56,6 @@ void JobQueue::cancel(unsigned observationID)
   for (std::vector<Job *>::iterator job = itsJobs.begin(); job != itsJobs.end(); job ++)
     if ((*job)->itsObservationID == observationID) {
       (*job)->cancel();
-      itsReevaluate.broadcast();
       return;
     }
 
@@ -88,7 +68,7 @@ void JobQueue::listJobs() const
   ScopedLock scopedLock(itsMutex);
 
   for (std::vector<Job *>::const_iterator job = itsJobs.begin(); job != itsJobs.end(); job ++)
-    LOG_INFO_STR("JobID = " << (*job)->itsJobID << ", ObsID = " << (*job)->itsObservationID << ", " << ((*job)->itsIsRunning ? "running" : "not running"));
+    (*job)->printInfo();
 }
 
 

@@ -38,16 +38,16 @@ class Job;
 class JobQueue
 {
   public:
-    void		insert(Job *);
-    void		remove(Job *);
-    void		claimResources(Job *);
-    void		cancel(unsigned observationID);
+    void		insert(Job *), remove(Job *);
 
+    void		cancel(unsigned observationID);
     void		listJobs() const;
 
     void		waitUntilAllJobsAreFinished();
 
   private:
+    friend class Job;
+
     std::vector<Job *>	itsJobs;
 
     mutable Mutex	itsMutex;

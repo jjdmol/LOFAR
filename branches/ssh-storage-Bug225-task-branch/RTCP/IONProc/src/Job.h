@@ -48,12 +48,12 @@ class Job
 					 ~Job();
 
     void				 cancel();
+    void				 printInfo() const;
 
     const Parset			 itsParset;
+    const unsigned			 itsJobID, itsObservationID;
 
   private:
-    friend class JobQueue;
-
     void				 checkParset() const;
     void				 createCNstreams();
     void				 configureCNs(), unconfigureCNs();
@@ -61,6 +61,8 @@ class Job
     void				 createIONstreams(), deleteIONstreams();
     void				 barrier();
     template <typename T> void		 broadcast(T &);
+
+    void				 claimResources();
 
     bool				 isCancelled();
 
@@ -90,7 +92,6 @@ class Job
 
     unsigned				 itsNrRunTokens, itsNrRunTokensPerBroadcast;
 
-    unsigned				 itsJobID, itsObservationID;
     static unsigned			 nextJobID;
 
     WallClockTime			 itsWallClockTime;
