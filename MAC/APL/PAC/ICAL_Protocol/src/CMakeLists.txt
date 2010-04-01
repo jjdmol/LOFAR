@@ -19,4 +19,4 @@ lofar_add_library(cal_protocol
   SubArray.cc
   ACC.cc)
 
-lofar_add_bin_program(versioncal_protocol versioncal_protocol.cc)
+lofar_add_bin_program(versionical_protocol versionical_protocol.cc)

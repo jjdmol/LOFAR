@@ -137,13 +137,13 @@ SubArray::~SubArray()
 	}
 }
 
-void SubArray::calibrate(CalibrationInterface* cal, ACC& acc)
+void SubArray::calibrate(CalibrationInterface* cal)
 {
 	ASSERT(m_result[FRONT]);
 
-	acc.setSelection(m_antenna_selection);
+//	acc.setSelection(m_antenna_selection);
 	if (cal) {
-		cal->calibrate(*this, acc, *m_result[FRONT]);
+		cal->calibrateSubArray(*this, *m_result[FRONT]);
 	}
 	m_result[FRONT]->setDone();
 }

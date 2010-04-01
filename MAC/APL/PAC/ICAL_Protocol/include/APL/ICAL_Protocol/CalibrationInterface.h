@@ -42,7 +42,9 @@ namespace LOFAR {
        * @param subarray The subarray to calibrate. Use SubArray methods to get relevant parameters.
        * @param result The calibration result should be stored in this object.
        */
-      virtual void calibrate(const SubArray& subarray, ACC& acc, AntennaGains& gains) = 0;
+      virtual void calibrateSubArray(const SubArray& subarray, AntennaGains& gains) = 0;
+
+	  virtual void repositionSources(time_t theTime) = 0;
     };
 
   }; // namespace CAL
