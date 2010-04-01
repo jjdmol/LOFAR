@@ -48,23 +48,22 @@
 namespace LOFAR {
 namespace RTCP {
 
-OutputSection::OutputSection(const Parset *ps, unsigned nrRuns, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream *(*createStream)(unsigned,unsigned))
+OutputSection::OutputSection(const Parset &parset, Semaphore &nrIterationsToDo, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream *(*createStream)(unsigned,unsigned))
 :
-  itsParset(ps),
-  itsNrRuns(nrRuns),
+  itsNrIterationsToDo(nrIterationsToDo),
   itsItemList(itemList),
   itsOutputType(outputType),
-  itsNrComputeCores(ps->nrCoresPerPset()),
+  itsNrComputeCores(parset.nrCoresPerPset()),
   itsCurrentComputeCore(0),
   itsNrUsedCores(nrUsedCores),
-  itsRealTime(ps->realTime()),
+  itsRealTime(parset.realTime()),
   itsPlan(0),
   itsStreamsFromCNs(itsNrComputeCores,0),
   itsThread(0)
 {
   itsDroppedCount.resize(itsItemList.size());
 
-  CN_Configuration configuration(*itsParset);
+  CN_Configuration configuration(parset);
 
   // define output structures and temporary data holders
   itsPlan = new CN_ProcessingPlan<>(configuration);
@@ -73,8 +72,8 @@ OutputSection::OutputSection(const Parset *ps, unsigned nrRuns, std::vector<unsi
   StreamableData *dataTemplate = p.source;
 
   // allocate partial sums -- only for those outputs that need it
-  if( p.source->isIntegratable() && itsParset->IONintegrationSteps() >= 1 ) {
-    itsNrIntegrationSteps = itsParset->IONintegrationSteps();
+  if( p.source->isIntegratable() && parset.IONintegrationSteps() >= 1 ) {
+    itsNrIntegrationSteps = parset.IONintegrationSteps();
 
     for (unsigned i = 0; i < itsItemList.size(); i++ ) {
       StreamableData *clone = dataTemplate->clone();
@@ -90,13 +89,13 @@ OutputSection::OutputSection(const Parset *ps, unsigned nrRuns, std::vector<unsi
 
   // create an output thread for this subband
   for (unsigned i = 0; i < itsItemList.size(); i++ ) {
-    itsOutputThreads.push_back(new OutputThread(*itsParset, itsItemList[i], itsOutputType, dataTemplate));
+    itsOutputThreads.push_back(new OutputThread(parset, itsItemList[i], itsOutputType, dataTemplate));
   }
 
   LOG_DEBUG_STR("creating streams between compute nodes and OutputSection");
 
   for (unsigned i = 0; i < itsNrComputeCores; i++) {
-    unsigned core = itsParset->usedCoresInPset()[i];
+    unsigned core = parset.usedCoresInPset()[i];
 
     itsStreamsFromCNs[i] = createStream(core, outputType + 1);
   }
@@ -167,7 +166,7 @@ void OutputSection::mainLoop()
   setPriority(2);
 #endif
 
-  for (unsigned r = 0; r < itsNrRuns; r ++) {
+  while (itsNrIterationsToDo.down()) {
     // process data from current core, even if we don't have a subband for this
     // core (to stay in sync with other psets).
     for (unsigned i = 0; i < itsNrUsedCores; i ++) {

@@ -42,31 +42,24 @@
 namespace LOFAR {
 namespace RTCP {
 
-class InputSectionParent
+template <typename SAMPLE_TYPE> class InputSection
 {
   public:
-    virtual			~InputSectionParent();
-};
-
-
-template <typename SAMPLE_TYPE> class InputSection : public InputSectionParent
-{
-  public:
-    				 InputSection(const Parset &, unsigned psetNumber);
-    virtual			 ~InputSection();
+					      InputSection(const Parset &, unsigned psetNumber);
+					      ~InputSection();
   
     std::vector<BeamletBuffer<SAMPLE_TYPE> *> itsBeamletBuffers;
 
   private:
-    void			 createInputStreams(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
-    void			 createInputThreads(const Parset &);
+    void				      createInputStreams(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
+    void				      createInputThreads(const Parset &);
 
-    std::vector<Stream *>	 itsInputStreams;
+    std::vector<Stream *>		      itsInputStreams;
     
-    unsigned			 itsNrRSPboards;
+    unsigned				      itsNrRSPboards;
    
-    LogThread				    *itsLogThread;
-    std::vector<InputThread<SAMPLE_TYPE> *> itsInputThreads;
+    LogThread				      *itsLogThread;
+    std::vector<InputThread<SAMPLE_TYPE> *>   itsInputThreads;
 };
 
 } // namespace RTCP

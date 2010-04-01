@@ -54,7 +54,7 @@ void JobQueue::claimResources(Job *job)
   ScopedLock scopedLock(itsMutex);
 
 retry:
-  if (job->itsIsCancelled)
+  if (job->itsDoCancel)
     return;
 
   for (std::vector<Job *>::iterator other = itsJobs.begin(); other != itsJobs.end(); other ++)

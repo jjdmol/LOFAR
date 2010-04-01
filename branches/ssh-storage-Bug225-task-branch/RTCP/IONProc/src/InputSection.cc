@@ -32,11 +32,6 @@ namespace LOFAR {
 namespace RTCP {
 
 
-InputSectionParent::~InputSectionParent()
-{
-}
-
-
 template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const Parset &parset, unsigned psetNumber)
 :
   itsLogThread(0)

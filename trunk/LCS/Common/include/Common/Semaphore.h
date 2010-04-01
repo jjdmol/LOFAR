@@ -26,27 +26,31 @@
 #if 1 || defined HAVE_THREADS // broken in build environment
 
 #include <pthread.h>
-#include <boost/noncopyable.hpp>
+
  
-class Semaphore: boost::noncopyable
+class Semaphore
 {
   public:
     Semaphore(unsigned level = 0);
     ~Semaphore();
 
     void up(unsigned count = 1);
-    void down(unsigned count = 1);
+    bool down(unsigned count = 1);
+
+    void noMore();
     
   private:
     pthread_mutex_t mutex;
     pthread_cond_t  condition;
     unsigned	    level;
+    bool	    itsNoMore;
 };
 
 
 inline Semaphore::Semaphore(unsigned level)
 :
-  level(level)
+  level(level),
+  itsNoMore(false)
 {
   pthread_mutex_init(&mutex, 0);
   pthread_cond_init(&condition, 0);
@@ -69,14 +73,29 @@ inline void Semaphore::up(unsigned count)
 }
 
 
-inline void Semaphore::down(unsigned count)
+inline bool Semaphore::down(unsigned count)
 {
   pthread_mutex_lock(&mutex);
 
-  while (level < count)
+  while (!itsNoMore && level < count)
     pthread_cond_wait(&condition, &mutex);
 
-  level -= count;
+  if (level >= count) {
+    level -= count;
+    pthread_mutex_unlock(&mutex);
+    return true;
+  } else {
+    pthread_mutex_unlock(&mutex);
+    return false;
+  }
+}
+
+
+inline void Semaphore::noMore()
+{
+  pthread_mutex_lock(&mutex);
+  itsNoMore = true;
+  pthread_cond_broadcast(&condition);
   pthread_mutex_unlock(&mutex);
 }
 

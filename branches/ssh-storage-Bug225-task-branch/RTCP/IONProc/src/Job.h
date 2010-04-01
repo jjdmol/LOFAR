@@ -27,11 +27,12 @@
 #include <InputSection.h>
 #include <Interface/Mutex.h>
 #include <Interface/Parset.h>
-#include <Interface/RSPTimeStamp.h>
 #include <Interface/Thread.h>
 #include <JobQueue.h>
 #include <Stream/Stream.h>
 #include <WallClockTime.h>
+
+#include <sys/time.h>
 
 #include <vector>
 
@@ -43,58 +44,60 @@ namespace RTCP {
 class Job
 {
   public:
-					Job(const char *parsetName);
-					~Job();
+					 Job(const char *parsetName);
+					 ~Job();
 
-    void				cancel();
+    void				 cancel();
 
-    const Parset			itsParset;
+    const Parset			 itsParset;
 
   private:
     friend class JobQueue;
 
-    void				checkParset() const;
-    void				createCNstreams();
-    void				configureCNs(), unconfigureCNs();
+    void				 checkParset() const;
+    void				 createCNstreams();
+    void				 configureCNs(), unconfigureCNs();
 
-    void				createIONstreams(), deleteIONstreams();
+    void				 createIONstreams(), deleteIONstreams();
+    void				 barrier();
+    template <typename T> void		 broadcast(T &);
 
-    void				jobThread();
-    template <typename SAMPLE_TYPE> void CNthread();
+    bool				 isCancelled();
 
-    void				allocateResources();
-    void				deallocateResources();
+    void				 jobThread();
+    template <typename SAMPLE_TYPE> void doObservation();
 
-    void				attachToInputSection();
-    void				detachFromInputSection();
+    template <typename SAMPLE_TYPE> void attachToInputSection();
+    template <typename SAMPLE_TYPE> void detachFromInputSection();
 
-    void				barrier();
-    template <typename T> void		broadcast(T &);
+    static void				 execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset);
+    static void				 forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, int &storagePID);
+    static void				 joinSSH(int childPID, const std::string &hostName);
 
-    static void				execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset);
-    void				forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, int &storagePID);
-    void				joinSSH(int childPID, const std::string &hostName);
+    void				 startStorageProcesses();
+    void				 stopStorageProcesses();
 
-    void				startStorageProcesses();
-    void				stopStorageProcesses();
+    void				 waitUntilCloseToStartOfObservation(time_t secondsPriorToStart);
 
-    std::vector<std::string>		itsStorageHostNames;
-    std::vector<int>			itsStoragePIDs;
+    std::vector<std::string>		 itsStorageHostNames;
+    std::vector<int>			 itsStoragePIDs;
 
-    std::vector<Stream *>		itsCNstreams, itsIONstreams;
-    unsigned				itsNrRuns;
-    TimeStamp                           itsStopTime;
-    Thread				*itsJobThread, *itsCNthread;
-    bool				itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
-    bool				itsIsRunning, itsIsCancelled;
-    unsigned				itsJobID, itsObservationID;
-    static unsigned			nextJobID;
+    std::vector<Stream *>		 itsCNstreams, itsIONstreams;
+    unsigned				 itsNrRuns;
+    Thread				 *itsJobThread;
+    bool				 itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
+    bool				 itsIsRunning, itsDoCancel;
 
-    WallClockTime			itsWallClockTime;
+    unsigned				 itsNrRunTokens, itsNrRunTokensPerBroadcast;
 
-    static InputSectionParent		*theInputSection;
-    static Mutex			theInputSectionMutex;
-    static unsigned			theInputSectionRefCount;
+    unsigned				 itsJobID, itsObservationID;
+    static unsigned			 nextJobID;
+
+    WallClockTime			 itsWallClockTime;
+
+    static void				 *theInputSection;
+    static Mutex			 theInputSectionMutex;
+    static unsigned			 theInputSectionRefCount;
 };
 
 

@@ -41,17 +41,17 @@
 namespace LOFAR {
 namespace RTCP {
 
-unsigned	   Job::nextJobID = 1;
-InputSectionParent *Job::theInputSection;
-Mutex		   Job::theInputSectionMutex;
-unsigned	   Job::theInputSectionRefCount = 0;
+unsigned Job::nextJobID = 1;
+void	 *Job::theInputSection;
+Mutex	 Job::theInputSectionMutex;
+unsigned Job::theInputSectionRefCount = 0;
 
 
 Job::Job(const char *parsetName)
 :
   itsParset(parsetName),
   itsIsRunning(false),
-  itsIsCancelled(false),
+  itsDoCancel(false),
   itsJobID(nextJobID ++) // no need to make thread safe
 {
   checkParset();
@@ -64,14 +64,13 @@ Job::Job(const char *parsetName)
   itsNrRuns = static_cast<unsigned>(ceil((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime()));
   LOG_DEBUG_STR("itsNrRuns = " << itsNrRuns);
 
+  // synchronize roughly every 5 seconds to see if the job is cancelled
+  itsNrRunTokensPerBroadcast = static_cast<unsigned>(ceil(5.0 / itsParset.CNintegrationTime()));
+  itsNrRunTokens	     = itsNrRunTokensPerBroadcast;
+
   itsHasPhaseOne   = itsParset.phaseOnePsetIndex(myPsetNumber) >= 0;
   itsHasPhaseTwo   = itsParset.phaseTwoPsetIndex(myPsetNumber) >= 0;
   itsHasPhaseThree = itsParset.phaseThreePsetIndex(myPsetNumber) >= 0;
-
-  itsStopTime  = TimeStamp(static_cast<int64>(itsParset.stopTime() * itsParset.sampleRate()), itsParset.clockSpeed());
-
-  createCNstreams();
-  createIONstreams();
 
   itsJobThread = new Thread(this, &Job::jobThread, 65536);
 }
@@ -79,40 +78,36 @@ Job::Job(const char *parsetName)
 
 Job::~Job()
 {
-  LOG_DEBUG("Job::~Job()");
-
   delete itsJobThread;
-  deleteIONstreams();
-
   jobQueue.remove(this);
+
+  LOG_INFO_STR("ObsID = " << itsObservationID << ": " << (itsIsRunning ? "ended" : "cancelled") << " successfully");
 }
 
 
-void Job::allocateResources()
+void Job::createIONstreams()
 {
-  if (itsHasPhaseOne)
-    attachToInputSection();
+  if (myPsetNumber == 0) {
+    std::vector<unsigned> involvedPsets = itsParset.usedPsets();
 
-  switch (itsParset.nrBitsPerSample()) {
-    case  4 : itsCNthread = new Thread(this, &Job::CNthread<i4complex>, 65536);
-	      break;
-
-    case  8 : itsCNthread = new Thread(this, &Job::CNthread<i8complex>, 65536);
-	      break;
-
-    case 16 : itsCNthread = new Thread(this, &Job::CNthread<i16complex>, 65536);
-	      break;
+    for (unsigned i = 0; i < involvedPsets.size(); i ++)
+      if (involvedPsets[i] != 0) // do not send to itself
+	itsIONstreams.push_back(new MultiplexedStream(*allIONstreamMultiplexers[involvedPsets[i]], itsJobID));
+  } else {
+    itsIONstreams.push_back(new MultiplexedStream(*allIONstreamMultiplexers[0], itsJobID));
   }
 }
 
 
-void Job::deallocateResources()
+void Job::deleteIONstreams()
 {
-  delete itsCNthread;
-  LOG_DEBUG("CNthread joined");
+  if (myPsetNumber == 0)
+    for (unsigned i = 0; i < itsIONstreams.size(); i ++)
+      delete itsIONstreams[i];
+  else
+    delete itsIONstreams[0];
 
-  if (itsHasPhaseOne)
-    detachFromInputSection();
+  itsIONstreams.clear();
 }
 
 
@@ -121,11 +116,10 @@ void Job::barrier()
   char byte = 0;
 
   if (myPsetNumber == 0) {
-    for (unsigned ion = 1; ion < nrPsets; ion ++)
-      itsIONstreams[ion]->read(&byte, sizeof byte);
-
-    for (unsigned ion = 1; ion < nrPsets; ion ++)
-      itsIONstreams[ion]->write(&byte, sizeof byte);
+    for (unsigned i = 0; i < itsIONstreams.size(); i ++) {
+      itsIONstreams[i]->read(&byte, sizeof byte);
+      itsIONstreams[i]->write(&byte, sizeof byte);
+    }
   } else {
     itsIONstreams[0]->write(&byte, sizeof byte);
     itsIONstreams[0]->read(&byte, sizeof byte);
@@ -135,12 +129,11 @@ void Job::barrier()
 
 template <typename T> void Job::broadcast(T &value)
 {
-  if (myPsetNumber == 0) {
-    for (unsigned ion = 1; ion < nrPsets; ion ++)
-      itsIONstreams[ion]->write(&value, sizeof value);
-  } else {
+  if (myPsetNumber == 0)
+    for (unsigned i = 0; i < itsIONstreams.size(); i ++)
+      itsIONstreams[i]->write(&value, sizeof value);
+  else
     itsIONstreams[0]->read(&value, sizeof value);
-  }
 }
 
 
@@ -228,7 +221,6 @@ void Job::startStorageProcesses()
 }
 
 
-
 void Job::stopStorageProcesses()
 {
   for (unsigned rank = 0; rank < itsStorageHostNames.size(); rank ++)
@@ -236,52 +228,66 @@ void Job::stopStorageProcesses()
 }
 
 
+void Job::waitUntilCloseToStartOfObservation(time_t secondsPriorToStart)
+{
+  time_t closeToStart = static_cast<time_t>(itsParset.startTime()) - secondsPriorToStart;
+  char   buf[26];
+
+  ctime_r(&closeToStart, buf);
+  buf[24] = '\0';
+  
+  LOG_DEBUG_STR("waiting for job " << itsObservationID << " to start: sleeping until " << buf);
+
+  itsWallClockTime.waitUntil(closeToStart);
+}
+
+
 void Job::jobThread()
 {
-  bool storageStarted = false;
+  if (myPsetNumber == 0 || itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
+    createCNstreams();
+    createIONstreams();
 
-  if (myPsetNumber == 0) {
-    if (itsParset.realTime()) {
-      // claim resources ten seconds before observation start
-      time_t     closeToStart = static_cast<time_t>(itsParset.startTime()) - 10;
-      char       buf[26];
-      ctime_r(&closeToStart, buf);
-      buf[24] = '\0';
-      
-      LOG_DEBUG_STR("waiting for job " << itsObservationID << " to start: sleeping until " << buf);
+    bool storageStarted = false;
 
-      itsWallClockTime.waitUntil(closeToStart);
+    if (myPsetNumber == 0) {
+      if (itsParset.realTime())
+	waitUntilCloseToStartOfObservation(10);
+
+      jobQueue.claimResources(this);
+
+      if (itsIsRunning && itsParset.hasStorage()) {
+	startStorageProcesses();
+	storageStarted = true;
+      }
     }
 
-    jobQueue.claimResources(this);
+    broadcast(itsIsRunning);
 
-    if (itsIsRunning && itsParset.hasStorage()) {
-      startStorageProcesses();
-      storageStarted = true;
+    if (itsIsRunning) {
+      if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree)
+	switch (itsParset.nrBitsPerSample()) {
+	  case  4 : doObservation<i4complex>();
+		    break;
+
+	  case  8 : doObservation<i8complex>();
+		    break;
+
+	  case 16 : doObservation<i16complex>();
+		    break;
+	}
+      else // force pset 0 to broadcast itsIsRunning periodically
+	for (unsigned i = 0; i < itsNrRuns && !isCancelled(); i ++)
+	  ;
+
+      barrier();
+
+      if (storageStarted)
+	stopStorageProcesses();
     }
+
+    deleteIONstreams();
   }
-
-  broadcast(itsIsRunning);
-
-  if (itsIsRunning) {
-    if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
-      LOG_DEBUG_STR("claiming resources for observation " << itsObservationID);
-      allocateResources();
-
-      // do observation
-
-      deallocateResources();
-      LOG_DEBUG_STR("resources of job " << itsObservationID << " deallocated");
-    }
-
-    barrier();
-
-    if (storageStarted)
-      stopStorageProcesses();
-  }
-
-  if (itsIsCancelled)
-    LOG_INFO_STR("ObsID = " << itsObservationID << ": cancelled successfully");
 
   delete this;
 }
@@ -291,12 +297,12 @@ void Job::cancel()
 {
   // note that JobQueue holds lock, so that this function executes atomically
 
-  if (itsIsCancelled) {
+  if (itsDoCancel) {
     LOG_WARN_STR("ObsID = " << itsObservationID << ": already cancelled");
     return;
   }
 
-  itsIsCancelled = true;
+  itsDoCancel = true;
 
   if (itsParset.realTime())
     itsWallClockTime.cancelWait();
@@ -314,59 +320,23 @@ void Job::createCNstreams()
 }
 
 
-void Job::createIONstreams()
-{
-  if (myPsetNumber == 0) {
-    itsIONstreams.resize(nrPsets);
-
-    for (unsigned ion = 1; ion < nrPsets; ion ++)
-      itsIONstreams[ion] = new MultiplexedStream(*allIONstreamMultiplexers[ion], itsJobID);
-  } else {
-    itsIONstreams.push_back(new MultiplexedStream(*allIONstreamMultiplexers[0], itsJobID));
-  }
-}
-
-
-void Job::deleteIONstreams()
-{
-  if (myPsetNumber == 0) {
-    for (unsigned ion = 1; ion < nrPsets; ion ++)
-      delete itsIONstreams[ion];
-  } else {
-    delete itsIONstreams[0];
-  }
-
-  itsIONstreams.clear();
-}
-
-
-void Job::attachToInputSection()
+template <typename SAMPLE_TYPE> void Job::attachToInputSection()
 {
   ScopedLock scopedLock(theInputSectionMutex);
 
   if (theInputSectionRefCount == 0) {
-    switch (itsParset.nrBitsPerSample()) {
-      case  4 : theInputSection = new InputSection<i4complex>(itsParset, myPsetNumber);
-		break;
-
-      case  8 : theInputSection = new InputSection<i8complex>(itsParset, myPsetNumber);
-		break;
-
-      case 16 : theInputSection = new InputSection<i16complex>(itsParset, myPsetNumber);
-		break;
-    }
-
+    theInputSection = new InputSection<SAMPLE_TYPE>(itsParset, myPsetNumber);
     ++ theInputSectionRefCount;
   }
 }
 
 
-void Job::detachFromInputSection()
+template <typename SAMPLE_TYPE> void Job::detachFromInputSection()
 {
   ScopedLock scopedLock(theInputSectionMutex);
 
   if (-- theInputSectionRefCount == 0)
-    delete theInputSection;
+    delete static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection);
 }
 
 
@@ -399,84 +369,104 @@ void Job::unconfigureCNs()
 }
 
 
-template <typename SAMPLE_TYPE> void Job::CNthread()
+bool Job::isCancelled()
 {
+  if (-- itsNrRunTokens == 0) {
+    itsNrRunTokens = itsNrRunTokensPerBroadcast;
+    itsIsRunning   = !itsDoCancel;
+    broadcast(itsIsRunning);
+  }
+
+  return !itsIsRunning;
+}
+
+
+template <typename SAMPLE_TYPE> void Job::doObservation()
+{
+  if (itsHasPhaseOne)
+    attachToInputSection<SAMPLE_TYPE>();
+
   CN_Configuration configuration(itsParset);
-  CN_ProcessingPlan<> plan(configuration,itsHasPhaseOne,itsHasPhaseTwo,itsHasPhaseThree);
+  CN_ProcessingPlan<> plan(configuration, itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree);
   plan.removeNonOutputs();
   unsigned nrOutputTypes = plan.nrOutputTypes();
-  std::vector<OutputSection *> outputSections( nrOutputTypes, 0 );
+  std::vector<OutputSection *> outputSections(nrOutputTypes, 0);
 
-  LOG_DEBUG("starting CNthread");
+  LOG_DEBUG("starting doObservation");
 
   // first: send configuration to compute nodes so they know what to expect
   configureCNs();
 
+  Semaphore outputSectionRunToken;
+
   // start output process threads
-  for (unsigned output = 0; output < nrOutputTypes; output++) {
+  for (unsigned output = 0; output < nrOutputTypes; output ++) {
     unsigned phase, psetIndex, maxlistsize;
     std::vector<unsigned> list; // list of subbands or beams
 
-    switch( plan.plan[output].distribution ) {
+    switch (plan.plan[output].distribution) {
       case ProcessingPlan::DIST_SUBBAND:
         phase = 2;
-        psetIndex = itsParset.phaseTwoPsetIndex( myPsetNumber );
+        psetIndex = itsParset.phaseTwoPsetIndex(myPsetNumber);
         maxlistsize = itsParset.nrSubbandsPerPset();
 
-        for (unsigned sb = 0; sb < itsParset.nrSubbandsPerPset(); sb++) {
+        for (unsigned sb = 0; sb < itsParset.nrSubbandsPerPset(); sb ++) {
           unsigned subbandNumber = psetIndex * itsParset.nrSubbandsPerPset() + sb;
 
-          if (subbandNumber < itsParset.nrSubbands()) {
-            list.push_back( subbandNumber );
-          }
+          if (subbandNumber < itsParset.nrSubbands())
+            list.push_back(subbandNumber);
         }
+
         break;
 
       case ProcessingPlan::DIST_BEAM:
         phase = 3;
-        psetIndex = itsParset.phaseThreePsetIndex( myPsetNumber );
+        psetIndex = itsParset.phaseThreePsetIndex(myPsetNumber);
         maxlistsize = itsParset.nrBeamsPerPset();
 
-        for (unsigned beam = 0;  beam < itsParset.nrBeamsPerPset(); beam++) {
+        for (unsigned beam = 0;  beam < itsParset.nrBeamsPerPset(); beam ++) {
           unsigned beamNumber = psetIndex * itsParset.nrBeamsPerPset() + beam;
 
-          if (beamNumber < itsParset.nrBeams()) {
-            list.push_back( beamNumber );
-          }
+          if (beamNumber < itsParset.nrBeams())
+            list.push_back(beamNumber);
         }
+
         break;
 
       default:
         continue;
     }
 
-    outputSections[output] = new OutputSection(&itsParset, itsNrRuns, list, maxlistsize, output, &createCNstream);
+    outputSections[output] = new OutputSection(itsParset, outputSectionRunToken, list, maxlistsize, output, &createCNstream);
   }
 
-  // forward input, if any
-  LOG_DEBUG("CNthread processing input");
+  LOG_DEBUG("doObservation processing input");
 
-  unsigned run;
+  unsigned				    run;
   std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
   BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
 
   beamletBufferToComputeNode.preprocess(&itsParset);
         
-  for (run = 0; run < itsNrRuns; run ++)
+  for (run = 0; run < itsNrRuns && !isCancelled(); run ++) {
+    outputSectionRunToken.up(nrOutputTypes);
     beamletBufferToComputeNode.process();
+  }
 
+  outputSectionRunToken.noMore();
   beamletBufferToComputeNode.postprocess();
 
   unconfigureCNs();
 
-  LOG_DEBUG("CNthread done processing input");
+  LOG_DEBUG("doObservation done processing input");
 
-  // wait for output process threads to finish 
-  for (unsigned output = 0; output < nrOutputTypes; output ++) {
+  for (unsigned output = 0; output < nrOutputTypes; output ++)
     delete outputSections[output];
-  }
 
-  LOG_DEBUG("CNthread finished");
+  if (itsHasPhaseOne)
+    detachFromInputSection<SAMPLE_TYPE>();
+
+  LOG_DEBUG("doObservation finished");
 }
 
 
