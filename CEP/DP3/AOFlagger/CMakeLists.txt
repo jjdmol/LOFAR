@@ -12,7 +12,7 @@ pkg_check_modules(LIBXML2 REQUIRED libxml-2.0)
 
 lofar_package(AOFlagger 1.0 DEPENDS LofarStMan)
 include(LofarFindPackage)
-lofar_find_package(Casacore REQUIRED COMPONENTS casa ms tables scimath scimath_f measures)
+lofar_find_package(Casacore REQUIRED COMPONENTS ms casa measures tables scimath scimath_f)
 lofar_find_package(Boost REQUIRED COMPONENTS date_time thread filesystem system)
 lofar_find_package(FFTW3 REQUIRED)
 lofar_find_package(LAPACK REQUIRED)
