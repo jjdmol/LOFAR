@@ -17,13 +17,14 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#include <AOFlagger/util/stopwatch.h>
+
 #include <AOFlagger/rfi/svdmitigater.h>
 
-#include <AOFlagger/util/stopwatch.h>
 #include <AOFlagger/util/plot.h>
 
-#include <gsl/gsl_complex.h>
-#include <gsl/gsl_complex_math.h>
+//#include <gsl/gsl_complex.h>
+//#include <gsl/gsl_complex_math.h>
 
 extern "C" {
 	#include <clapack.h>
