@@ -4,7 +4,7 @@
 autogen definitions protocol;
 
 description = "Protocol for the Calibration Server";
-prefix = "CAL"; // for the signal names
+prefix = "ICAL"; // for the signal names
 id = "(LOFAR::MACIO::F_APL_PROTOCOL+13)";
 
 // specify extra include files
@@ -27,7 +27,7 @@ prelude = << PRELUDE_END
 typedef	void*	memptr_t;
 
 enum {
-	CAL_SUCCESS = 0,
+	ICAL_SUCCESS = 0,
 	ERR_RANGE,       		// range error in message parameters
 	ERR_NO_PARENT,   		// no parent antenna array by that name found
 	ERR_NO_SUBARRAY, 		// no subarray by that name found

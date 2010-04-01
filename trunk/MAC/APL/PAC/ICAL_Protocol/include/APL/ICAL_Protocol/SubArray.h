@@ -75,7 +75,7 @@ public:
 	// using the specified algorithm and ACC as input.
 	// @param cal The calibration algorithm to use.
 	// @param acc The Array Correlation Cube on which to calibrate.
-	void calibrate(CalibrationInterface* cal, ACC& acc);
+	void calibrate(CalibrationInterface* cal);
 
 	// Get calibration result (if available).
 	// @param cal Calibration result
