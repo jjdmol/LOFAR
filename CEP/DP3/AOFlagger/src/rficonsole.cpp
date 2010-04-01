@@ -28,7 +28,7 @@
 #include <AOFlagger/util/progresslistener.h>
 #include <AOFlagger/util/stopwatch.h>
 
-#include <AOFlagger/lofar/LofarStMan/Register.h>
+#include <LofarStMan/Register.h>
 
 class ConsoleProgressHandler : public ProgressListener {
 	private:

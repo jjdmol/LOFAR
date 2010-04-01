@@ -22,10 +22,11 @@
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/imaging/uvimager.h>
 #include <AOFlagger/imaging/observatorium.h>
+#include <AOFlagger/util/rng.h>
 
 #include <iostream>
 
-Model::Model()
+Model::Model() : _noiseSigma(1)
 {
 }
 
@@ -61,18 +62,20 @@ void Model::SimulateObservation(UVImager &imager, Observatorium &observatorium, 
 void Model::SimulateCorrelation(UVImager &imager, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, double totalTime, double integrationTime)
 {
 	num_t wavelength = 1.0L / frequency;
+	size_t index = 0;
 	for(num_t t=0.0;t<totalTime;t+=integrationTime)
 	{
 		num_t earthLattitudeApprox = t*(M_PI/12.0/60.0/60.0);
 		num_t u, v, r1, i1, r2, i2;
 		GetUVPosition(u, v, earthLattitudeApprox, delayDirectionDEC, delayDirectionRA, dx, dy, dz, wavelength);
-		SimulateAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, 0, frequency, earthLattitudeApprox, r1, i1);
-		SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, dz, frequency, earthLattitudeApprox, r2, i2);
+		SimulateUncoherentAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, 0, frequency, earthLattitudeApprox, r1, i1, index);
+		SimulateUncoherentAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, dz, frequency, earthLattitudeApprox, r2, i2, index);
 		num_t
 			r = r1 * r2 - (i1 * -i2),
-			i = r1 * -i2 + r2 * i1;;
+			i = r1 * -i2 + r2 * i1;
 		imager.SetUVValue(u, v, r, i, 1.0);
 		imager.SetUVValue(-u, -v, r, -i, 1.0);
+		++index;
 	}
 }
 
@@ -86,8 +89,36 @@ void Model::SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num
 		PointSource &source = **iter;
 		num_t w = GetWPosition(source.dec, source.ra, frequency, 0.0, earthLattitude, dx, dy);
 		num_t fieldStrength = source.sqrtFluxIntensity;
-		r += fieldStrength * cos((w - delayW) * M_PI * 2.0);
-		i += fieldStrength * sin((w - delayW) * M_PI * 2.0);
+		long double n1, n2;
+		RNG::DoubleGaussian(n1, n2);
+		r += fieldStrength * cos((w - delayW) * M_PI * 2.0) + n1 * _noiseSigma;
+		i += fieldStrength * sin((w - delayW) * M_PI * 2.0) + n2 * _noiseSigma;
+	}
+}
+
+void Model::SimulateUncoherentAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, num_t earthLattitude, num_t &r, num_t &i, size_t index)
+{
+	num_t delayW = GetWPosition(delayDirectionDEC, delayDirectionRA, frequency, 0.0, earthLattitude, dx, dy);
+
+	if(index%(_sources.size()+1) == _sources.size())
+	{
+		long double n1, n2;
+		RNG::DoubleGaussian(n1, n2);
+		if(n1 > 0)
+			n1 = sqrt(n1);
+		else
+			n1 = -sqrt(-n1);
+		if(n2 > 0)
+			n2 = sqrt(n2);
+		else
+			n2 = -sqrt(-n2);
+	}
+	else {
+		PointSource &source = *_sources[index%(_sources.size()+1)];
+		num_t w = GetWPosition(source.dec, source.ra, frequency, 0.0, earthLattitude, dx, dy);
+		num_t fieldStrength = source.sqrtFluxIntensity;
+		r = fieldStrength * cos((w - delayW) * M_PI * 2.0);
+		i = fieldStrength * sin((w - delayW) * M_PI * 2.0);
 	}
 }
 

@@ -35,9 +35,9 @@ class RNG{
 		static long double EvaluateGaussian(long double x, long double sigma) throw();
 		static double EvaluateGaussian2D(long double x1, long double x2, long double sigmaX1, long double sigmaX2) throw();
 		static double IntegrateGaussian(long double upperLimit) throw();
+		static void DoubleGaussian(long double &a, long double &b) throw();
 	private: 
 		RNG();
-		static void DoubleGaussian(long double &a, long double &b) throw();
 };
 
 #endif

@@ -47,6 +47,7 @@ class Model {
 			_sources.push_back(source);
 		}
 		void SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, num_t earthLattitude, num_t &r, num_t &i);
+		void SimulateUncoherentAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, num_t earthLattitude, num_t &r, num_t &i, size_t index);
 		void SimulateCorrelation(class UVImager &imager, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, double totalTime, double integrationTime);
 		void SimulateObservation(class UVImager &imager, class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
 
@@ -54,6 +55,7 @@ class Model {
 		static num_t GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngleStart, num_t earthLattitudeAngleEnd, num_t dx, num_t dy);
 	private:
 		std::vector<PointSource *> _sources;
+		double _noiseSigma;
 		
 		void AddFTOfSources(num_t u, num_t v, num_t &r, num_t &i);
 		void AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const PointSource *source);
