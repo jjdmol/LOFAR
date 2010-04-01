@@ -23,9 +23,9 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <APL/CAL_Protocol/SubArray.h>
+#include <APL/ICAL_Protocol/SubArray.h>
 #include "SubArraySubscription.h"
-#include <APL/CAL_Protocol/CAL_Protocol.ph>
+#include <APL/ICAL_Protocol/ICAL_Protocol.ph>
 
 using namespace LOFAR;
 using namespace CAL;
@@ -40,9 +40,9 @@ void SubArraySubscription::update(Subject* subject)
   // get gains from the FRONT buffer
   if (m_subarray->getGains(calibratedGains, SubArray::FRONT)) {
 
-    CALUpdateEvent update;
+    ICALUpdateEvent update;
     update.timestamp.setNow(0);
-    update.status = CAL_SUCCESS;
+    update.status = ICAL_SUCCESS;
     update.handle = (memptr_t)this;
 
     update.gains = *calibratedGains;

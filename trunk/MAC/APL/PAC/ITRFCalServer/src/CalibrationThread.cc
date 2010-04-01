@@ -26,7 +26,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <APL/RTCCommon/PSAccess.h>					// GET_CONFIG macro's
-#include <APL/CAL_Protocol/CalibrationInterface.h>
+#include <APL/ICAL_Protocol/CalibrationInterface.h>
 
 #include <pthread.h>
 #include "SubArrays.h"

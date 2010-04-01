@@ -32,7 +32,7 @@
 
 #include <APL/APLCommon/AntennaPos.h>
 #include <APL/RTCCommon/ResourceCache.h>
-#include <APL/CAL_Protocol/CAL_Protocol.ph>
+#include <APL/ICAL_Protocol/ICAL_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/LBA_Calibration/lba_calibration.h>		// the matlab stuff
 
@@ -67,7 +67,7 @@ using namespace blitz;
 namespace LOFAR {
   using namespace RTC;
   using namespace RSP_Protocol;
-  using namespace CAL_Protocol;
+  using namespace ICAL_Protocol;
   namespace CAL {
 
 //
@@ -95,8 +95,8 @@ CalServer::CalServer(const string&			name,
 
 //	LOG_INFO(Version::getInfo<CalServerVersion>("CalServer"));
 
-	registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
-	itsListener = new GCFTCPPort(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::MSPP, CAL_PROTOCOL);
+	registerProtocol(ICAL_PROTOCOL, ICAL_PROTOCOL_STRINGS);
+	itsListener = new GCFTCPPort(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::MSPP, ICAL_PROTOCOL);
 	ASSERTSTR(itsListener, "Can't create a listener socket");
 
 	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
@@ -326,7 +326,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	case F_ACCEPT_REQ: {
 		GCFTCPPort* client = new GCFTCPPort();
-		client->init(*this, "client", GCFPortInterface::SPP, CAL_PROTOCOL);
+		client->init(*this, "client", GCFPortInterface::SPP, ICAL_PROTOCOL);
 		if (!itsListener->accept(*client)) {
 			delete client;
 			LOG_ERROR ("Could not setup a connection with a new client");
@@ -438,23 +438,23 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	}
 	break;
 
-	case CAL_START:
+	case ICAL_START:
 		status = handle_cal_start(e, port);
 	break;
 
-	case CAL_STOP:
+	case ICAL_STOP:
 		status = handle_cal_stop(e, port);
 	break;
 
-	case CAL_SUBSCRIBE:
+	case ICAL_SUBSCRIBE:
 		status = handle_cal_subscribe(e, port);
 	break;
 
-	case CAL_UNSUBSCRIBE:
+	case ICAL_UNSUBSCRIBE:
 		status = handle_cal_unsubscribe(e, port);
 	break;
 
-	case CAL_GETSUBARRAY:
+	case ICAL_GETSUBARRAY:
 		status = handle_cal_getsubarray(e, port);
 	break;
 
@@ -476,10 +476,10 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-	CALStartEvent 	 start(e);
-	CALStartackEvent ack;
+	ICALStartEvent 	 start(e);
+	ICALStartackEvent ack;
 
-	ack.status = CAL_Protocol::CAL_SUCCESS; // assume succes, until otherwise
+	ack.status = ICAL_Protocol::ICAL_SUCCESS; // assume succes, until otherwise
 	ack.name   = start.name;
 
 	if (m_subarrays.getByName(start.name)) {
@@ -607,10 +607,10 @@ GCFEvent::TResult CalServer::handle_cal_stop(GCFEvent& e, GCFPortInterface &port
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	// prepare and send a response
-	CALStopEvent stop(e);
-	CALStopackEvent ack;
+	ICALStopEvent stop(e);
+	ICALStopackEvent ack;
 	ack.name = stop.name;
-	ack.status = CAL_Protocol::SUCCESS;		// return success: don't bother client with our admin
+	ack.status = ICAL_Protocol::SUCCESS;		// return success: don't bother client with our admin
 	port.send(ack);
 
 	m_subarrays.schedule_remove(stop.name);	// stop calibration
@@ -636,9 +636,9 @@ GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface 
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-	CALSubscribeEvent subscribe(e);
-	CALSubscribeackEvent ack;
-	ack.status = CAL_Protocol::SUCCESS;
+	ICALSubscribeEvent subscribe(e);
+	ICALSubscribeackEvent ack;
+	ack.status = ICAL_Protocol::SUCCESS;
 
 	// get subarray by name
 	SubArray* subarray = m_subarrays.getByName(subscribe.name);
@@ -649,7 +649,7 @@ GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface 
 														subscribe.subbandset,
 														port);
 
-		ack.handle = (CAL_Protocol::memptr_t)subscription;
+		ack.handle = (ICAL_Protocol::memptr_t)subscription;
 		subarray->attach(subscription); // attach subscription to the subarray
 		ack.subarray = *subarray; 		// return subarray positions
 
@@ -679,13 +679,13 @@ GCFEvent::TResult CalServer::handle_cal_unsubscribe(GCFEvent& e, GCFPortInterfac
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-	CALUnsubscribeEvent unsubscribe(e);
+	ICALUnsubscribeEvent unsubscribe(e);
 
 	// create ack
-	CALUnsubscribeackEvent ack;
+	ICALUnsubscribeackEvent ack;
 	ack.name = unsubscribe.name;
 	ack.handle = unsubscribe.handle;
-	ack.status = CAL_Protocol::SUCCESS;
+	ack.status = ICAL_Protocol::SUCCESS;
 
 	// find associated subarray
 	SubArray* subarray = m_subarrays.getByName(unsubscribe.name);
@@ -713,9 +713,9 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-	CALGetsubarrayEvent	 	request(e);
-	CALGetsubarrayackEvent	ack;
-	ack.status = CAL_Protocol::SUCCESS;
+	ICALGetsubarrayEvent	 	request(e);
+	ICALGetsubarrayackEvent	ack;
+	ack.status = ICAL_Protocol::SUCCESS;
 	ack.subarraymap = m_subarrays.getSubArrays(request.subarrayname);	// let SubArrays do the job
 
 	// correct status is name was given but nothing was found.
@@ -733,11 +733,11 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  CALGetsubarrayEvent getsubarray(e);
+  ICALGetsubarrayEvent getsubarray(e);
 
   // create ack
-  CALGetsubarrayackEvent ack;
-  ack.status = CAL_Protocol::SUCCESS;
+  ICALGetsubarrayackEvent ack;
+  ack.status = ICAL_Protocol::SUCCESS;
 
   // find associated subarray
   SubArray* subarray = m_subarrays.getByName(getsubarray.name);

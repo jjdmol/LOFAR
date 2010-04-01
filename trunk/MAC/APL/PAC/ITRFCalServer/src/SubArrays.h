@@ -24,11 +24,11 @@
 #ifndef SUBARRAYS_H_
 #define SUBARRAYS_H_
 
-#include <APL/CAL_Protocol/SubArray.h>
+#include <APL/ICAL_Protocol/SharedResource.h>
+#include <APL/ICAL_Protocol/SubArray.h>
 
 namespace LOFAR {
   using EPA_Protocol::MEPHeader;
-  using RTC::SharedResource;
   namespace CAL {
 
 // forward declarations
