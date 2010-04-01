@@ -21,4 +21,4 @@ file(GLOB staticmeta_data
 install(FILES
   ${staticmeta_data}
   DESTINATION etc/StaticMetaData)
-  
+
