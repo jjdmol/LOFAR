@@ -15,20 +15,17 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 lofar_add_library(caldevel
   Package__Version.cc
-  CalibrationAlgorithm.cc
   CalibrationThread.cc
   DipoleModel.cc
   DipoleModelData.cc
-  RemoteStationCalibration.cc
   Source.cc
   SourceData.cc
   SubArrays.cc
   SubArraySubscription.cc)
   
-lofar_add_bin_program(versioncal_server versioncal_server.cc)
+lofar_add_bin_program(versionitrfcalserver versionitrfcalserver.cc)
 lofar_add_bin_program(CalServer CalServer.cc ACMProxy.cc)
 lofar_add_bin_program(calinfo calinfo.cc)
-lofar_add_sbin_program(juggle_acc juggle_acc.cc)
 
 foreach(file CalServer.conf DipoleModel.conf SourceCatalog.conf)
   configure_file(

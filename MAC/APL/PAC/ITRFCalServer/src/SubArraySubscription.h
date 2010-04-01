@@ -25,7 +25,7 @@
 #define SUBARRAYSUBSCRIPTION_H_
 
 #include <APL/RTCCommon/Observer.h>
-#include <APL/CAL_Protocol/CAL_Protocol.ph>
+#include <APL/ICAL_Protocol/ICAL_Protocol.ph>
 #include <GCF/TM/GCF_Control.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_bitset.h>

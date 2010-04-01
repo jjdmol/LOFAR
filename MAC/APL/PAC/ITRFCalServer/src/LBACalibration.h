@@ -25,9 +25,9 @@
 #define LOFAR_CAL_LBACALIBRATION_H
 
 #include <APL/RTCCommon/ResourceCache.h>
-#include <APL/CAL_Protocol/AntennaGains.h>
-#include <APL/CAL_Protocol/SubArray.h>
-#include <APL/CAL_Protocol/CalibrationInterface.h>
+#include <APL/ICAL_Protocol/AntennaGains.h>
+#include <APL/ICAL_Protocol/SubArray.h>
+#include <APL/ICAL_Protocol/CalibrationInterface.h>
 #include <AMCBase/ConverterClient.h>
 #include <AMCBase/Direction.h>
 #include <blitz/array.h>

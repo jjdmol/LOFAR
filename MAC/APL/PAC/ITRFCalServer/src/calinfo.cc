@@ -26,7 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
-#include <APL/CAL_Protocol/CAL_Protocol.ph>
+#include <APL/ICAL_Protocol/ICAL_Protocol.ph>
 #include <MACIO/MACServiceInfo.h>
 #include "calinfo.h" 
 
@@ -39,9 +39,9 @@ calinfo::calinfo(const string&	name) :
 	GCFTask((State)&calinfo::initial, "calinfo"),
 	itsSAname(name)
 {
-	registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
+	registerProtocol(ICAL_PROTOCOL, ICAL_PROTOCOL_STRINGS);
 
-	itsCalPort.init(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::SAP, CAL_PROTOCOL);
+	itsCalPort.init(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::SAP, ICAL_PROTOCOL);
 }
 
 calinfo::~calinfo()
@@ -81,15 +81,15 @@ GCFEvent::TResult	calinfo::getInfo(GCFEvent&	event, GCFPortInterface&	port)
 
 	switch (event.signal) {
 	case F_ENTRY: {
-			CALGetsubarrayEvent		request;
+			ICALGetsubarrayEvent		request;
 			request.subarrayname = itsSAname;
 			itsCalPort.send(request);
 		}
 		break;
 
-	case CAL_GETSUBARRAYACK: {
-		CALGetsubarrayackEvent		answer(event);
-		if (answer.status != CAL_Protocol::CAL_SUCCESS) {
+	case ICAL_GETSUBARRAYACK: {
+		ICALGetsubarrayackEvent		answer(event);
+		if (answer.status != ICAL_Protocol::ICAL_SUCCESS) {
 			cout << "CalServer returned error " << answer.status << endl;
 			TRAN(calinfo::finish);
 			break;
