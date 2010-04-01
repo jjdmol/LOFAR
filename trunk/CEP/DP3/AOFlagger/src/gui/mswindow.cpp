@@ -1332,6 +1332,6 @@ void MSWindow::onSimulateFourProductCorrelation()
 	model.AddSource(-M_PI + .101,0.001,0.45);
 	WSRTObservatorium wsrtObservatorium;
 	FourProductCorrelatorTester fpcTester(model, *_imagePlaneWindow->GetImager(), wsrtObservatorium);
-	fpcTester.SimulateObservation(-M_PI-0.05, 0.05, 147000000.0);
+	fpcTester.SimulateTwoProdObservation(-M_PI-0.05, 0.05, 147000000.0); //TwoProd
 	_imagePlaneWindow->Update();
 }

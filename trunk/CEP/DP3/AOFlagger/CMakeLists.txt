@@ -10,7 +10,7 @@ PKG_CHECK_MODULES(GTKMM gtkmm-2.4)
 
 pkg_check_modules(LIBXML2 REQUIRED libxml-2.0)
 
-lofar_package(AOFlagger 1.0)
+lofar_package(AOFlagger 1.0 DEPENDS LofarStMan)
 include(LofarFindPackage)
 lofar_find_package(Casacore REQUIRED COMPONENTS casa ms tables scimath scimath_f measures)
 lofar_find_package(Boost REQUIRED COMPONENTS date_time thread filesystem system)

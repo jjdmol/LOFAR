@@ -21,7 +21,7 @@
 
 #include <gtkmm.h>
 
-#include <AOFlagger/lofar/LofarStMan/Register.h>
+#include <LofarStMan/Register.h>
 
 #include <AOFlagger/gui/mswindow.h>
 
