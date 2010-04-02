@@ -422,7 +422,7 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 				TRAN(BeamControl::active_state);
 			}
 			else {
-				LOG_WARN_STR("Beamallocation failed with error " << gResult << 
+				LOG_WARN_STR("Beamallocation failed with error " << errorName(gResult) << 
 							 ", staying in CLAIMED mode");
 				setState(CTState::CLAIMED);
 			}
@@ -702,7 +702,7 @@ uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 	BSBeamallocackEvent ackEvent(event);
 	if (ackEvent.status != BS_NO_ERR) {
 		LOG_ERROR_STR("Beamlet allocation for beam " << ackEvent.subarrayname 
-					  << " failed with errorcode: " << ackEvent.status);
+					  << " failed with errorcode: " << errorName(ackEvent.status));
 		itsBeamIDs[ackEvent.subarrayname] = 0;
 		setObjectState("Beamlet alloc error", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
 		return (CT_RESULT_BEAMALLOC_FAILED);
@@ -762,7 +762,7 @@ bool BeamControl::handleBeamFreeAck(GCFEvent&		event)
 {
 	BSBeamfreeackEvent	ack(event);
 	if (ack.status != BS_NO_ERR) {
-		LOG_ERROR_STR("Beam de-allocation failed with errorcode: " << ack.status);
+		LOG_ERROR_STR("Beam de-allocation failed with errorcode: " << errorName(ack.status));
 		itsPropertySet->setValue(PN_FSM_ERROR,GCFPVString("De-allocation of the beam failed."));
 		return (false);	
 	}
