@@ -122,13 +122,14 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank, unsigned size)
 
     switch( outputConfig.distribution ) {
       case ProcessingPlan::DIST_SUBBAND:
+      case ProcessingPlan::DIST_BEAM:
         list = phaseTwoSubbands;
         break;
-
+#if 0
       case ProcessingPlan::DIST_BEAM:
         list = phaseThreeBeams;
         break;
-
+#endif
       default:  
         continue;
     }
