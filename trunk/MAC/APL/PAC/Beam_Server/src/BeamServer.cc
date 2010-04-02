@@ -817,14 +817,17 @@ Beam* BeamServer::newBeam(BeamTransaction& 					bt,
 		return (0);
 	}
 
+	// looks good so far, try to create a beam
 	Beam* beam = itsBeamPool->create(name, subarrayname, allocation, ringNr);
-
-	if (beam) { // register new beam
-		m_client_beams[port].insert(beam);
-		m_beams_modified = true;
-		bt.set(port, beam);
+	if (!beam) { 
+		*beamError = BS_BEAMALLOC_ERR;
+		return (0);
 	}
 
+	// register new beam
+	m_client_beams[port].insert(beam);
+	m_beams_modified = true;
+	bt.set(port, beam);
 	return (beam);
 }
 

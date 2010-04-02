@@ -265,6 +265,7 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 
 	case RSP_GETCONFIGACK: {
 		RSPGetconfigackEvent	ack(event);
+		// TODO cheack status?
 	
 		// calc size of the propertyset vectors
 		itsNrRCUs	   = ack.n_rcus;
@@ -551,7 +552,7 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 	case RSP_GETVERSIONACK: {
 		RSPGetversionackEvent		ack(event);
 		if ((ack.status != RSP_SUCCESS) || (ack.versions.bp()(0).rsp_version == 0)) {
-			LOG_ERROR_STR ("RSP:Failed to get the version information, retry in 5 seconds");
+			LOG_ERROR_STR ("RSP:Failed to get the version information, retry in 5 seconds.");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getVersion error"));
 			itsTimerPort->setTimer(5.0);
 			break;
@@ -650,7 +651,7 @@ GCFEvent::TResult RSPMonitor::askSplitterInfo(GCFEvent& event,
 		itsTimerPort->cancelAllTimers();
 		RSPGetsplitterackEvent		ack(event);
 		if (ack.status != RSP_SUCCESS) {
-			LOG_ERROR_STR ("RSP:Failed to get the splitter information, trying status information");
+			LOG_ERROR ("RSP:Failed to get the splitter information. Trying status information");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getSplitter error"));
 		}
 		else {
@@ -725,7 +726,7 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 		itsTimerPort->cancelAllTimers();
 		RSPGetstatusackEvent		ack(event);
 		if (ack.status != RSP_SUCCESS) {
-			LOG_ERROR_STR ("RSP:Failed to get the status information, trying other information");
+			LOG_ERROR ("RSP:Failed to get the status information. Trying other information");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getStatus error"));
 			TRAN(RSPMonitor::askRCUinfo);				// go to next state.
 			break;
@@ -875,7 +876,7 @@ GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event, GCFPortInterface& por
 		itsTimerPort->cancelAllTimers();
 		RSPGettdstatusackEvent		ack(event);
 		if (ack.status != RSP_SUCCESS) {
-			LOG_ERROR_STR ("RSP:Failed to get information of the TD board, trying again in next run");
+			LOG_ERROR_STR ("RSP:Failed to get information of the TD board. Trying again in next run");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getClockboard error"));
 			// mark the boards as offline
 			for (uint32	subrack = 0; subrack < itsNrSubracks; subrack++) {
@@ -989,7 +990,7 @@ GCFEvent::TResult RSPMonitor::askSPUstatus(GCFEvent& event, GCFPortInterface& po
 		itsTimerPort->cancelAllTimers();
 		RSPGetspustatusackEvent		ack(event);
 		if (ack.status != RSP_SUCCESS) {
-			LOG_ERROR_STR ("RSP:Failed to get information of the power board, trying again in next run");
+			LOG_ERROR ("RSP:Failed to get information of the power board. Trying again in next run");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:get powerboard error"));
 			// mark the boards as off-line
 			for (uint32	subrack = 0; subrack < itsNrSubracks; subrack++) {
@@ -1081,7 +1082,7 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 		itsTimerPort->cancelAllTimers();
 		RSPGetrcuackEvent	ack(event);
 		if (ack.status != RSP_SUCCESS) {
-			LOG_ERROR_STR ("RSP:Failed to get the RCU information, trying other information");
+			LOG_ERROR ("RSP:Failed to get the RCU information. Trying other information");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getRCU error"));
 			TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
 			break;

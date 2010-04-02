@@ -321,7 +321,7 @@ GCFEvent::TResult ClockControl::connect2RSP_state(GCFEvent& event,
 	case RSP_GETCLOCKACK: {
 		RSPGetclockackEvent		ack(event);
 		if (ack.status != RSP_SUCCESS) {
-			LOG_ERROR_STR ("Clock could not be get. Ignoring that for now.");
+			LOG_ERROR ("Clock could not be get. Ignoring that for now.");
 		}
 		else {
 			itsClock = ack.clock;
@@ -456,7 +456,7 @@ GCFEvent::TResult ClockControl::subscribeSplitter_state(GCFEvent& event,
 	case RSP_SUBSPLITTERACK: {
 		RSPSubsplitterackEvent	ack(event);
 		if (ack.status != RSP_SUCCESS) {
-			LOG_WARN ("Could not get subscribtion on splitter, retry in 2 seconds");
+			LOG_WARN ("Could not get subscribtion on splitter, retry in 2 seconds." );
 			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("subscribe failed"));
 			itsTimerPort->setTimer(2.0);
 			break;
@@ -529,7 +529,7 @@ GCFEvent::TResult ClockControl::subscribeClock_state(GCFEvent& event,
 	case RSP_SUBCLOCKACK: {
 		RSPSubclockackEvent	ack(event);
 		if (ack.status != RSP_SUCCESS) {
-			LOG_WARN ("Could not get subscription on clock, retry in 2 seconds");
+			LOG_WARN ("Could not get subscription on clock, retry in 2 seconds.");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("subscribe failed"));
 			itsTimerPort->setTimer(2.0);
 			break;
@@ -594,8 +594,7 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
 	case RSP_SETCLOCKACK: {
 		RSPSetclockackEvent		ack(event);
 		if (ack.status != RSP_SUCCESS) {
-			LOG_ERROR_STR ("Clock could not be set to " << itsClock << 
-															", retry in 5 seconds.");
+			LOG_ERROR_STR ("Clock could not be set to " << itsClock << ", retry in 5 seconds.");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("clockset error"));
 			itsTimerPort->setTimer(5.0);
 			break;
@@ -664,7 +663,7 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
 		RSPSetsplitterackEvent		ack(event);
 		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR_STR ("Splitters could not be set to " << (itsSplitterRequest ? "ON" : "OFF") << 
-															", retry in 5 seconds.");
+						", retry in 5 seconds.");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("splitter set error"));
 			itsTimerPort->setTimer(5.0);
 			break;

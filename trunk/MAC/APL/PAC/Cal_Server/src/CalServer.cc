@@ -285,6 +285,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_GETCONFIGACK: {
 		RSPGetconfigackEvent ack(e);
+		// TODO: check status
 		m_n_rspboards = ack.n_rspboards;
 		m_n_rcus = ack.n_rcus;
 		LOG_INFO_STR("nrRSPboards=" << m_n_rspboards << ", nrRCUS=" << m_n_rcus);
@@ -302,7 +303,6 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_GETCLOCKACK: {
 		RSPGetclockackEvent getclockack(e);
-
 		if (getclockack.status != RSP_Protocol::RSP_SUCCESS) {
 			LOG_FATAL("Failed to get sampling frequency setting");
 			exit(EXIT_FAILURE);
@@ -324,7 +324,6 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_SUBCLOCKACK: {
 		RSPSubclockackEvent ack(e);
-
 		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
 			LOG_FATAL("Failed to subscribe to clock status updates.");
 			exit(EXIT_FAILURE);
@@ -400,7 +399,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	case RSP_SETRCUACK: {
 		RSPSetrcuackEvent ack(e);
 		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
-			LOG_FATAL_STR("Failed to set RCU control register, error = " << ack.status);
+			LOG_FATAL_STR("Failed to set RCU control register.");
 			exit (EXIT_FAILURE);
 		}
 	}
@@ -409,7 +408,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	case RSP_SETBYPASSACK: {
 		RSPSetbypassackEvent ack(e);
 		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
-			LOG_FATAL_STR("Failed to set Spectral Inversion control register, error = " << ack.status);
+			LOG_FATAL_STR("Failed to set Spectral Inversion control register.");
 			exit (EXIT_FAILURE);
 		}
 	}

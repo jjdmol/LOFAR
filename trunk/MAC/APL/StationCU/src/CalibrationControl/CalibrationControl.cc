@@ -413,8 +413,8 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 			itsBeams[ack.name] = true;					// add to beammap
 		}
 		else {
-			LOG_ERROR_STR("Start of calibration of beam " << ack.name << 
-															" failed, staying in CLAIMED mode");
+			LOG_ERROR_STR("Start of calibration of beam " << ack.name << " failed with code: " <<
+						errorName(gResult) << ", staying in CLAIMED mode");
 			itsBeams[ack.name] = false;					// add to beammap
 			setObjectState("Cannot start beam", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
 		}
@@ -521,7 +521,8 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 			LOG_INFO_STR ("Calibration of beam " << ack.name << " successfully stopped");
 		}
 		else {
-			LOG_WARN_STR ("Calibration of beam " << ack.name << " stopped with ERRORs");
+			LOG_WARN_STR ("Calibration of beam " << ack.name << " stopped with ERROR:" 
+						<< errorName(ack.status));
 		}
 
 		// remove beam from the map
