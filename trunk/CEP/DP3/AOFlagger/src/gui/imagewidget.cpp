@@ -23,7 +23,7 @@
 
 #include <iostream>
 
-ImageWidget::ImageWidget() : _image(), _isInitialized(false), _winsorizedStretch(false)
+ImageWidget::ImageWidget() : _image(), _isInitialized(false), _winsorizedStretch(false), _automaticMin(true)
 {
 	signal_expose_event().connect(sigc::mem_fun(*this, &ImageWidget::onExposeEvent) );
 }
@@ -52,7 +52,7 @@ void ImageWidget::Update()
 {
 	if(_image != 0)
 	{
-		ColorMap *colorMap = new MonochromeMap();
+		MonochromeMap *colorMap = new MonochromeMap();
 		
 		//std::cout << "Creating pix buf of " << _image->Width() << " x " << _image->Height() << std::endl;
 
@@ -60,9 +60,11 @@ void ImageWidget::Update()
 		_pixbuf =
 			Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, true, sampleSize, _image->Width(), _image->Height());
 	
-		long double min, max;
+		num_t min, max;
 		findMinMax(_image, min, max);
-
+		if(!_automaticMin)
+			min = _min;
+	
 		if(min != max || !std::isfinite(min) || !std::isfinite(max))
 		{
 			guint8* data = _pixbuf->get_pixels();
@@ -73,20 +75,29 @@ void ImageWidget::Update()
 				for(unsigned long x=0;x<_image->Width();++x) {
 					int xa = x * 4;
 					char r,g,b,a;
+					bool altMap = false;
 					if(!_image->IsSet(x, y) || !std::isfinite(_image->Value(x, y))) {
 						// Not set; output purely transparent pixel
 						r = 0; g = 0; b = 0; a = 255;
 					} else {
-						long double val = _image->Value(x, y);
-						if(val > max) val = max;
-						else if(val < min) val = min;
-		
-						val = (_image->Value(x, y) - min) * 2.0 / (max - min) - 1.0;
-						if(val < -1.0) val = -1.0;
+						num_t val = (_image->Value(x, y) - min) * 2.0 / (max - min) - 1.0;
+						if(val < -1.0)
+						{
+							altMap = true;
+							val = -2.0-val;
+							if(val > 1.0)
+								val = 1.0;
+						}
 						else if(val > 1.0) val = 1.0;
 						r = colorMap->ValueToColorR(val);
-						g = colorMap->ValueToColorG(val);
-						b = colorMap->ValueToColorB(val);
+						if(altMap)
+						{
+							g = 0;
+							b = 0;
+						} else {
+							g = colorMap->ValueToColorG(val);
+							b = colorMap->ValueToColorB(val);
+						}
 						a = colorMap->ValueToColorA(val);
 					}
 					rowpointer[xa]=r;
@@ -102,7 +113,7 @@ void ImageWidget::Update()
 	}
 } 
 
-void ImageWidget::findMinMax(Image2DCPtr image, long double &min, long double &max)
+void ImageWidget::findMinMax(Image2DCPtr image, num_t &min, num_t &max)
 {
 	if(_winsorizedStretch) {
 		long double mean, stddev, genMax, genMin;

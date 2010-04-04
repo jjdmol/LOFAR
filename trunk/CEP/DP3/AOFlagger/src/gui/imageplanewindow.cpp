@@ -22,6 +22,9 @@
 ImagePlaneWindow::ImagePlaneWindow()
  : _imager(1536*2, 1536*2), _clearButton("Clear"),
 	_applyWeightsButton("Apply weights"),
+	_memoryStoreButton("MS"),
+	_memoryMultiplyButton("Mx"),
+	_sqrtButton("sqrt"),
 	_uvPlaneButton("UV plane"), _imagePlaneButton("Image plane"),
 	_zoomXd4Button("x1/4"), _zoomXd2Button("x1/2"),
 	_zoomX1Button("x1"), _zoomX2Button("x2"), _zoomX4Button("x4"),
@@ -111,6 +114,18 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_zoomX128Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 	_zoomX128Button.show();
 
+	_topBox.pack_start(_memoryStoreButton, false, true);
+	_memoryStoreButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryStoreClicked));
+	_memoryStoreButton.show();
+
+	_topBox.pack_start(_memoryMultiplyButton, false, true);
+	_memoryMultiplyButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryMultiplyClicked));
+	_memoryMultiplyButton.show();
+
+	_topBox.pack_start(_sqrtButton, false, true);
+	_sqrtButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onSqrtClicked));
+	_sqrtButton.show();
+
 	// Show containers
 	_box.pack_start(_topBox, false, true);
 	_topBox.show();
@@ -120,6 +135,8 @@ ImagePlaneWindow::ImagePlaneWindow()
 
 	add(_box);
 	_box.show();
+
+	onZoomButtonClicked();
 }
 
 
@@ -181,6 +198,7 @@ void ImagePlaneWindow::Update()
 	{
 		if(_imager.HasUV()) {
 			_imageWidget.SetImage(Image2D::CreateCopyPtr(_imager.RealUVImage()));
+			_imageWidget.SetAutomaticMin();
 			_imageWidget.Update();
 			_displayingUV = true;
 		}
@@ -192,7 +210,9 @@ void ImagePlaneWindow::Update()
 
 		if(_imager.HasFFT()) {
 			_imageWidget.SetImage(Image2D::CreateCopyPtr(_imager.FTReal()));
+			_imageWidget.SetMin(0.0);
 			_imageWidget.Update();
+		printStats();
 			_displayingUV = false;
 		}
 	}
@@ -202,4 +222,54 @@ void ImagePlaneWindow::onApplyWeightsClicked()
 {
 	_imager.ApplyWeightsToUV();
 	Update();
+}
+
+void ImagePlaneWindow::onMemoryStoreClicked()
+{
+	_memory = Image2D::CreateCopyPtr(_imager.FTReal());
+}
+
+void ImagePlaneWindow::onMemoryMultiplyClicked()
+{
+	Image2DPtr multiplied = Image2D::CreateCopy(_memory);
+	const Image2D &old = _imager.FTReal();
+	for(size_t y=0;y<multiplied->Height();++y)
+	{
+		for(size_t x=0;x<multiplied->Width();++x)
+		{
+			multiplied->SetValue(x, y, multiplied->Value(x, y) * old.Value(x, y));
+		}
+	}
+	_imageWidget.SetImage(multiplied);
+	_imageWidget.Update();
+	printStats();
+}
+
+void ImagePlaneWindow::onSqrtClicked()
+{
+	Image2DPtr sqrtImage = Image2D::CreateCopy(_imageWidget.Image());
+	for(size_t y=0;y<sqrtImage->Height();++y)
+	{
+		for(size_t x=0;x<sqrtImage->Width();++x)
+		{
+			if(sqrtImage->Value(x, y) >= 0.0)
+				sqrtImage->SetValue(x, y, sqrt(sqrtImage->Value(x, y)));
+			else
+				sqrtImage->SetValue(x, y, -sqrt(-sqrtImage->Value(x, y)));
+		}
+	}
+	_imageWidget.SetImage(sqrtImage);
+	_imageWidget.Update();
+	printStats();
+}
+
+void ImagePlaneWindow::printStats()
+{
+	num_t topLeftRMS = _imageWidget.Image()->GetRMS(0, 0, _imageWidget.Image()->Width()/3, _imageWidget.Image()->Height()/3);
+	std::cout << "RMS=" << _imageWidget.Image()->GetRMS()
+		<< ", max=" << _imageWidget.Image()->GetMaximum()
+		<< ", min=" << _imageWidget.Image()->GetMinimum()
+		<< ", top left RMS=" << topLeftRMS
+		<< ", SNR=" << _imageWidget.Image()->GetMaximum()/topLeftRMS
+		<< std::endl;
 }

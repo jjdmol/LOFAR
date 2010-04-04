@@ -5,7 +5,7 @@
 #include <AOFlagger/imaging/uvimager.h>
 
 FourProductCorrelatorTester::FourProductCorrelatorTester(class Model &model, class UVImager &imager, class Observatorium &observatorium)
-	: _model(model), _imager(imager), _observatorium(observatorium)
+	: _model(model), _imager(imager), _observatorium(observatorium), _incoherent(false)
 {
 }
 
@@ -56,6 +56,13 @@ void FourProductCorrelatorTester::complexSqrt(num_t &r, num_t &i)
 		i = i / sqrt(2.0*(a + rtmp));
 }
 
+void FourProductCorrelatorTester::amplitudeSqrt(num_t &r, num_t &i)
+{
+	num_t factor = 1.0 / pow(r*r + i*i, 1.0/4.0);
+	r *= factor;
+	i *= factor;
+}
+
 void FourProductCorrelatorTester::phaseMul2(num_t &r, num_t &i)
 {
 	num_t rtmp = r;
@@ -64,34 +71,45 @@ void FourProductCorrelatorTester::phaseMul2(num_t &r, num_t &i)
 	i = (2.0 * rtmp * i) / a;
 }
 
+void FourProductCorrelatorTester::SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, num_t earthLattitude, num_t &r, num_t &i, size_t index)
+{
+	if(_incoherent)
+		_model.SimulateUncoherentAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, dz, frequency, earthLattitude, r, i, index);
+	else
+		_model.SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, dz, frequency, earthLattitude, r, i);
+}
+
 void FourProductCorrelatorTester::SimulateCorrelation(num_t delayDirectionDEC, num_t delayDirectionRA, const AntennaInfo &a1, const AntennaInfo &a2, const AntennaInfo &a3, const AntennaInfo &a4, num_t frequency, double totalTime, double integrationTime)
 {
 	num_t
 		x = a1.position.x,
 		y = a1.position.y,
 		z = a1.position.z,
-		dx2 = a2.position.x - x,
-		dy2 = a2.position.y - y,
-		dz2 = a2.position.z - z,
-		dx3 = a3.position.x - x,
-		dy3 = a3.position.y - y,
-		dz3 = a3.position.z - z,
-		dx4 = a4.position.x - x,
-		dy4 = a4.position.y - y,
-		dz4 = a4.position.z - z,
-		combdx = dx3 - dx2 - dx4,
-		combdy = dy3 - dy2 - dy4,
-		combdz = dz3 - dz2 - dz4;
+		dx2 = x - a2.position.x,
+		dy2 = y - a2.position.y,
+		dz2 = z - a2.position.z,
+		dx3 = x - a3.position.x,
+		dy3 = y - a3.position.y,
+		dz3 = z - a3.position.z,
+		dx4 = x - a4.position.x,
+		dy4 = y - a4.position.y,
+		dz4 = z - a4.position.z,
+		combdx = dx2 - dx3 + dx4,
+		combdy = dy2 - dy3 + dy4,
+		combdz = dz2 - dz3 + dz4;
 
 	num_t wavelength = 1.0L / frequency;
+	int index = 0;
 	for(num_t t=0.0;t<totalTime;t+=integrationTime)
 	{
+		++index;
 		double earthLattitudeApprox = t*(M_PI/12.0/60.0/60.0);
 		num_t u, v, rsub1, isub1, rsub2, isub2, rsub3, isub3, rsub4, isub4, r, i;
 		_model.GetUVPosition(u, v, earthLattitudeApprox, delayDirectionDEC, delayDirectionRA, combdx, combdy, combdz, wavelength);
 
 		// First product
-		_model.SimulateAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, 0, frequency, earthLattitudeApprox, rsub1, isub1);
+		SimulateAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, 0, frequency, earthLattitudeApprox, rsub1, isub1, index);
+		amplitudeSqrt(rsub1, isub1);
 		r = rsub1;
 		i = isub1;
 
@@ -101,7 +119,8 @@ void FourProductCorrelatorTester::SimulateCorrelation(num_t delayDirectionDEC, n
 			rsub2 = rsub1;
 			isub2 = isub1;
 		} else {
-			_model.SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx2, dy2, dz2, frequency, earthLattitudeApprox, rsub2, isub2);
+			SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx2, dy2, dz2, frequency, earthLattitudeApprox, rsub2, isub2, index);
+			amplitudeSqrt(rsub2, isub2);
 		}
 		num_t rtmp = r;
 		r = r*rsub2 - (i*-isub2);
@@ -117,7 +136,8 @@ void FourProductCorrelatorTester::SimulateCorrelation(num_t delayDirectionDEC, n
 			rsub3 = rsub2;
 			isub3 = isub2;
 		} else {
-			_model.SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx3, dy3, dz3, frequency, earthLattitudeApprox, rsub3, isub3);
+			SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx3, dy3, dz3, frequency, earthLattitudeApprox, rsub3, isub3, index);
+			amplitudeSqrt(rsub3, isub3);
 		}
 		rtmp = r;
 		r = r*rsub3 - (i*isub3);
@@ -137,7 +157,8 @@ void FourProductCorrelatorTester::SimulateCorrelation(num_t delayDirectionDEC, n
 			rsub4 = rsub3;
 			isub4 = isub3;
 		} else { 
- 			_model.SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx4, dy4, dz4, frequency, earthLattitudeApprox, rsub4, isub4);
+ 			SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx4, dy4, dz4, frequency, earthLattitudeApprox, rsub4, isub4, index);
+			amplitudeSqrt(rsub4, isub4);
 		}
 		rtmp = r;
 		r = r*rsub4 - (i*-isub4);
@@ -193,7 +214,7 @@ void FourProductCorrelatorTester::SimulateTwoProdCorrelation(num_t delayDirectio
 		_model.GetUVPosition(u, v, earthLattitudeApprox, delayDirectionDEC, delayDirectionRA, dx2*2.0, dy2*2.0, dz2*2.0, wavelength);
 
 		// First product
-		_model.SimulateUncoherentAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, 0, frequency, earthLattitudeApprox, rsub1, isub1, index);
+		SimulateAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, 0, frequency, earthLattitudeApprox, rsub1, isub1, index);
 		phaseMul2(rsub1, isub1);
 		r = rsub1;
 		i = isub1;
@@ -204,7 +225,7 @@ void FourProductCorrelatorTester::SimulateTwoProdCorrelation(num_t delayDirectio
 			rsub2 = rsub1;
 			isub2 = isub1;
 		} else {
-			_model.SimulateUncoherentAntenna(delayDirectionDEC, delayDirectionRA, dx2, dy2, dz2, frequency, earthLattitudeApprox, rsub2, isub2, index);
+			SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx2, dy2, dz2, frequency, earthLattitudeApprox, rsub2, isub2, index);
 			phaseMul2(rsub2, isub2);
 		}
 		num_t rtmp = r;

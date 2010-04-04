@@ -52,6 +52,7 @@ class ImagePlaneWindow : public Gtk::Window {
 		Gtk::HButtonBox _buttonBox;
 		Gtk::Button _clearButton;
 		Gtk::Button _applyWeightsButton;
+		Gtk::Button _memoryStoreButton, _memoryMultiplyButton, _sqrtButton;
 		Gtk::RadioButton _uvPlaneButton, _imagePlaneButton;
 		Gtk::RadioButton
 			_zoomXd4Button, _zoomXd2Button, _zoomX1Button, _zoomX2Button, _zoomX4Button, _zoomX8Button,
@@ -59,12 +60,18 @@ class ImagePlaneWindow : public Gtk::Window {
 		long double _zoom;
 
 		bool _displayingUV;
+		Image2DCPtr _memory;
 		
 		void onClearClicked();
 		void onApplyWeightsClicked();
 		void onUVPlaneButtonClicked();
 		void onImagePlaneButtonClicked();
 		void onZoomButtonClicked();
+		void onMemoryStoreClicked();
+		void onMemoryMultiplyClicked();
+		void onSqrtClicked();
+
+		void printStats();
 };
 
 #endif
