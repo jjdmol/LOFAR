@@ -19,7 +19,7 @@
   <kdevcustomproject>
     <filelistdirectory>/</filelistdirectory>
     <run>
-      <mainprogram>CEP/DP3/AOFlagger/src/rfigui</mainprogram>
+      <mainprogram>/home/anoko/projects/LOFAR/build/gnu_opt/CEP/DP3/AOFlagger/src/rfigui</mainprogram>
       <directoryradio>executable</directoryradio>
       <customdirectory>/</customdirectory>
       <programargs/>
@@ -27,14 +27,14 @@
       <autocompile>true</autocompile>
       <envvars/>
       <globaldebugarguments/>
-      <globalcwd/>
+      <globalcwd>/home/anoko/projects/LOFAR/build/gnu_opt</globalcwd>
       <useglobalprogram>false</useglobalprogram>
       <autoinstall>false</autoinstall>
       <autokdesu>false</autokdesu>
     </run>
     <build>
       <buildtool>make</buildtool>
-      <builddir>/data/users/offringa/LOFAR/build/gnu_opt</builddir>
+      <builddir>/home/anoko/projects/LOFAR/build/gnu_opt</builddir>
     </build>
     <make>
       <abortonerror>false</abortonerror>
@@ -138,7 +138,7 @@
       <root>/usr/share/qt3</root>
       <designerintegration>EmbeddedKDevDesigner</designerintegration>
       <qmake>/usr/bin/qmake-qt3</qmake>
-      <designer/>
+      <designer></designer>
       <designerpluginpaths/>
     </qt>
     <creategettersetter>

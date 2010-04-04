@@ -181,6 +181,7 @@ class MSWindow : public Gtk::Window {
 		void onUnrollPhaseButtonPressed();
 		void showError(const std::string &description);
 		void onSimulateCorrelation();
+		void onSimulateDoubledBaselineCorrelation();
 		void onSimulateFourProductCorrelation();
 
 		void openTestSet(unsigned index);

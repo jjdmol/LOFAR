@@ -36,16 +36,30 @@ class ImageWidget : public Gtk::DrawingArea {
 
 		void Update();
 		void SetImage(Image2DCPtr image) { _image = image; }
+		Image2DCPtr Image() { return _image; }
 		void Clear() { _image = Image2DCPtr(); _pixbuf=Glib::RefPtr<Gdk::Pixbuf>(); _isInitialized = false; } 
+		void SetMin(num_t min)
+		{
+			_automaticMin = false;
+			_min = min;
+		}
+		void SetAutomaticMin()
+		{
+			_automaticMin = true;
+		}
 	private:
 		void redraw();
-		void findMinMax(Image2DCPtr image, long double &min, long double &max);
+		void findMinMax(Image2DCPtr image, num_t &min, num_t &max);
 		bool onExposeEvent(GdkEventExpose* ev);
+
 
 		Glib::RefPtr<Gdk::Pixbuf> _pixbuf;
 		Image2DCPtr _image;
 
 		bool _isInitialized, _winsorizedStretch;
+		bool _automaticMin;
+
+		num_t _min;
 };
 
 #endif

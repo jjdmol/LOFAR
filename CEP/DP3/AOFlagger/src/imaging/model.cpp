@@ -26,7 +26,7 @@
 
 #include <iostream>
 
-Model::Model() : _noiseSigma(1)
+Model::Model() : _noiseSigma(1), _sourceSigma(1)
 {
 }
 
@@ -68,8 +68,8 @@ void Model::SimulateCorrelation(UVImager &imager, num_t delayDirectionDEC, num_t
 		num_t earthLattitudeApprox = t*(M_PI/12.0/60.0/60.0);
 		num_t u, v, r1, i1, r2, i2;
 		GetUVPosition(u, v, earthLattitudeApprox, delayDirectionDEC, delayDirectionRA, dx, dy, dz, wavelength);
-		SimulateUncoherentAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, 0, frequency, earthLattitudeApprox, r1, i1, index);
-		SimulateUncoherentAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, dz, frequency, earthLattitudeApprox, r2, i2, index);
+		SimulateAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, 0, frequency, earthLattitudeApprox, r1, i1);
+		SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, dz, frequency, earthLattitudeApprox, r2, i2);
 		num_t
 			r = r1 * r2 - (i1 * -i2),
 			i = r1 * -i2 + r2 * i1;
@@ -88,11 +88,11 @@ void Model::SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num
 	{
 		PointSource &source = **iter;
 		num_t w = GetWPosition(source.dec, source.ra, frequency, 0.0, earthLattitude, dx, dy);
-		num_t fieldStrength = source.sqrtFluxIntensity;
-		long double n1, n2;
-		RNG::DoubleGaussian(n1, n2);
-		r += fieldStrength * cos((w - delayW) * M_PI * 2.0) + n1 * _noiseSigma;
-		i += fieldStrength * sin((w - delayW) * M_PI * 2.0) + n2 * _noiseSigma;
+		num_t fieldStrength = source.sqrtFluxIntensity + RNG::Guassian() * _sourceSigma;
+		num_t noiser, noisei;
+		RNG::ComplexGaussianAmplitude(noiser, noisei);
+		r += fieldStrength * cos((w - delayW) * M_PI * 2.0) + noiser * _noiseSigma;
+		i += fieldStrength * sin((w - delayW) * M_PI * 2.0) + noisei * _noiseSigma;
 	}
 }
 
@@ -110,7 +110,7 @@ void Model::SimulateUncoherentAntenna(num_t delayDirectionDEC, num_t delayDirect
 	//else {
 		PointSource &source = *_sources[index%_sources.size()];
 		num_t w = GetWPosition(source.dec, source.ra, frequency, 0.0, earthLattitude, dx, dy);
-		num_t fieldStrength = source.sqrtFluxIntensity;
+		num_t fieldStrength = source.sqrtFluxIntensity + RNG::Guassian() * _sourceSigma;
 		r = fieldStrength * cos((w - delayW) * M_PI * 2.0) + noiser;
 		i = fieldStrength * sin((w - delayW) * M_PI * 2.0) + noisei;
 	//}
@@ -204,4 +204,22 @@ void Model::AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const PointSourc
 	long double fftRotation = (u * source->dec/180.0L + v * source->ra/180.0L) * -2.0L * M_PI;
 	r += cosl(fftRotation) * source->fluxIntensity;
 	i += sinl(fftRotation) * source->fluxIntensity;
+}
+
+void Model::loadUrsaMajor()
+{
+	double
+		s = 0.00005, //scale
+		rs = 8.0; // stretch in dec
+	double cd = -M_PI - 0.05;
+	double cr = 0.05;
+	double fluxoffset = 0.0;
+
+	AddSource(cd + s*rs*40, cr + s*72, 8.0/8.0 + fluxoffset); // Dubhe
+	AddSource(cd + s*rs*-16, cr + s*81, 4.0/8.0 + fluxoffset); // Beta
+	AddSource(cd + s*rs*-45, cr + s*2, 3.0/8.0 + fluxoffset); // Gamma
+	AddSource(cd + s*rs*-6, cr + s*-27, 2.0/8.0 + fluxoffset); // Delta
+	AddSource(cd + s*rs*-4, cr + s*-85, 6.0/8.0 + fluxoffset); // Alioth
+	AddSource(cd + s*rs*2, cr + s*-131, 5.0/8.0 + fluxoffset); // Zeta
+	AddSource(cd + s*rs*-36, cr + s*-192, 7.0/8.0 + fluxoffset); // Alkaid
 }

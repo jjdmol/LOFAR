@@ -53,9 +53,11 @@ class Model {
 
 		static void GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t waveLength);
 		static num_t GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngleStart, num_t earthLattitudeAngleEnd, num_t dx, num_t dy);
+
+		void loadUrsaMajor();
 	private:
 		std::vector<PointSource *> _sources;
-		double _noiseSigma;
+		double _noiseSigma, _sourceSigma;
 		
 		void AddFTOfSources(num_t u, num_t v, num_t &r, num_t &i);
 		void AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const PointSource *source);
