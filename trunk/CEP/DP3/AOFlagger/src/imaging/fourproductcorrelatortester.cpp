@@ -24,7 +24,7 @@ void FourProductCorrelatorTester::SimulateObservation(num_t delayDirectionDEC, n
 				{
 					for(size_t l=j;l<_observatorium.AntennaCount();++l)
 					{
-						bool notAnyAutoCorrelation = false;
+						bool notAnyAutoCorrelation = true;
 						if(!notAnyAutoCorrelation || !(i==j || i==k || i==l || j==k || j==l || k==l))
 						{
 							if(!(i == j && j == k && k == l))

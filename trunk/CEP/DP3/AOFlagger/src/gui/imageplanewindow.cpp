@@ -22,7 +22,9 @@
 ImagePlaneWindow::ImagePlaneWindow()
  : _imager(1536*2, 1536*2), _clearButton("Clear"),
 	_applyWeightsButton("Apply weights"),
+	_refreshCurrentButton("R"),
 	_memoryStoreButton("MS"),
+	_memoryRecallButton("MR"),
 	_memoryMultiplyButton("Mx"),
 	_sqrtButton("sqrt"),
 	_uvPlaneButton("UV plane"), _imagePlaneButton("Image plane"),
@@ -114,9 +116,17 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_zoomX128Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 	_zoomX128Button.show();
 
+	_topBox.pack_start(_refreshCurrentButton, false, true);
+	_refreshCurrentButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onRefreshCurrentClicked));
+	_refreshCurrentButton.show();
+
 	_topBox.pack_start(_memoryStoreButton, false, true);
 	_memoryStoreButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryStoreClicked));
 	_memoryStoreButton.show();
+
+	_topBox.pack_start(_memoryRecallButton, false, true);
+	_memoryRecallButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryRecallClicked));
+	_memoryRecallButton.show();
 
 	_topBox.pack_start(_memoryMultiplyButton, false, true);
 	_memoryMultiplyButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryMultiplyClicked));
@@ -132,6 +142,8 @@ ImagePlaneWindow::ImagePlaneWindow()
 
 	_box.pack_start(_imageWidget);
 	_imageWidget.show();
+	_imageWidget.add_events(Gdk::BUTTON_RELEASE_MASK | Gdk::BUTTON_PRESS_MASK);
+	_imageWidget.signal_button_release_event().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onButtonReleased));
 
 	add(_box);
 	_box.show();
@@ -224,20 +236,32 @@ void ImagePlaneWindow::onApplyWeightsClicked()
 	Update();
 }
 
+void ImagePlaneWindow::onRefreshCurrentClicked()
+{
+	_imageWidget.SetImage(Image2D::CreateCopyPtr(_imager.FTReal()));
+	_imageWidget.Update();
+}
+
 void ImagePlaneWindow::onMemoryStoreClicked()
 {
-	_memory = Image2D::CreateCopyPtr(_imager.FTReal());
+	_memory = _imageWidget.Image();
+}
+
+void ImagePlaneWindow::onMemoryRecallClicked()
+{
+	_imageWidget.SetImage(_memory);
+	_imageWidget.Update();
 }
 
 void ImagePlaneWindow::onMemoryMultiplyClicked()
 {
 	Image2DPtr multiplied = Image2D::CreateCopy(_memory);
-	const Image2D &old = _imager.FTReal();
+	Image2DCPtr old = _imageWidget.Image();
 	for(size_t y=0;y<multiplied->Height();++y)
 	{
 		for(size_t x=0;x<multiplied->Width();++x)
 		{
-			multiplied->SetValue(x, y, multiplied->Value(x, y) * old.Value(x, y));
+			multiplied->SetValue(x, y, multiplied->Value(x, y) * old->Value(x, y));
 		}
 	}
 	_imageWidget.SetImage(multiplied);
@@ -272,4 +296,29 @@ void ImagePlaneWindow::printStats()
 		<< ", top left RMS=" << topLeftRMS
 		<< ", SNR=" << _imageWidget.Image()->GetMaximum()/topLeftRMS
 		<< std::endl;
+}
+
+bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
+{
+	size_t 
+		width = _imageWidget.Image()->Width(),
+		height = _imageWidget.Image()->Height();
+	size_t posX = (size_t) roundl((long double) event->x * width / _imageWidget.get_width() - 0.5L);
+	size_t posY = (size_t) roundl((long double) event->y * height / _imageWidget.get_height() - 0.5L);
+	if(posX >= width)
+		posX = width - 1;
+	if(posY >= height)
+		posY = height - 1;
+
+	int left = posX - 3, right = posX + 3, top = posY - 3, bottom = posY + 3;
+	if(left < 0) left = 0;
+	if(right >= width) right = width - 1;
+	if(top < 0) top = 0;
+	if(bottom >= height) bottom = height - 1;
+	
+	num_t rms = _imageWidget.Image()->GetRMS(left, top, right, bottom);
+	std::cout << "RMS=" << _imageWidget.Image()->GetRMS()
+		<< std::endl;
+	
+	return true;
 }
