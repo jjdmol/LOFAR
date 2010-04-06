@@ -26,7 +26,7 @@
 
 #include <iostream>
 
-Model::Model() : _noiseSigma(1), _sourceSigma(1)
+Model::Model() : _noiseSigma(5), _sourceSigma(1)
 {
 }
 
