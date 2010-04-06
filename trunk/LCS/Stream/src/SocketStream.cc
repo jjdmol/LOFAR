@@ -41,13 +41,16 @@ namespace LOFAR {
 // A class which autodestructs a struct addrinfo result list
 class AddrInfoHolder {
   public:
-    AddrInfoHolder( struct addrinfo *info ): info(info) {}
-    ~AddrInfoHolder() { freeaddrinfo( info ); }
+    AddrInfoHolder(struct addrinfo *info): info(info) {}
+    ~AddrInfoHolder() { freeaddrinfo(info); }
   private:
     struct addrinfo *info;
 };
 
+
 SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, Mode mode, time_t timeout)
+:
+  listen_sk(-1)
 {
   int		  retval;
   struct addrinfo hints;
@@ -105,7 +108,10 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
       throw SystemCallException("bind", errno, THROW_ARGS);
 
     if (protocol == TCP) {
-      if (listen(fd, 5) < 0)
+      listen_sk = fd;
+      fd	= -1;
+
+      if (listen(listen_sk, 5) < 0)
 	throw SystemCallException("listen", errno, THROW_ARGS);
 
       if (timeout > 0) {
@@ -126,19 +132,8 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
 	}
       }
 
-      int sk;
-
-      if ((sk = accept(fd, 0, 0)) < 0)
+      if ((fd = accept(listen_sk, 0, 0)) < 0)
 	throw SystemCallException("accept", errno, THROW_ARGS);
-
-      // make sure that all sockets are closed when exception is thrown
-      // (fd will be closed by ~FileDescriptorBasedSocket(); sk will not)
-      int listen_sk = fd;
-
-      fd = sk;
-
-      if (close(listen_sk) < 0)
-	throw SystemCallException("close", errno, THROW_ARGS);
     }
   }
 }
@@ -146,11 +141,25 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
 
 SocketStream::~SocketStream()
 {
+  if (listen_sk >= 0 && close(listen_sk) < 0)
+    throw SystemCallException("close listen_sk", errno, THROW_ARGS);
+}
+
+
+void SocketStream::reaccept()
+{
+  if (close(fd) < 0)
+    throw SystemCallException("close", errno, THROW_ARGS);
+
+  if ((fd = accept(listen_sk, 0, 0)) < 0)
+    throw SystemCallException("accept", errno, THROW_ARGS);
 }
 
 
 void SocketStream::setReadBufferSize(size_t size)
 {
   if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &size, sizeof size) < 0)
-    perror("setsockopt failed");}
+    perror("setsockopt failed");
+}
+
 } // namespace LOFAR

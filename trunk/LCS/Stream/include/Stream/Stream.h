@@ -32,7 +32,7 @@ namespace LOFAR {
 class Stream
 {
   public:
-    EXCEPTION_CLASS( EndOfStreamException, LOFAR::Exception );
+    EXCEPTION_CLASS(EndOfStreamException, LOFAR::Exception);
 
     virtual	 ~Stream();
 

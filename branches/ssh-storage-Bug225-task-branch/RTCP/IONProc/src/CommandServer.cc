@@ -74,37 +74,30 @@ static void commandMaster()
   for (unsigned ion = 1; ion < nrPsets; ion ++)
     ionStreams[ion] = new MultiplexedStream(*allIONstreamMultiplexers[ion], 0);
 
+  SocketStream sk("0.0.0.0", 400, SocketStream::TCP, SocketStream::Server);
+
   while (!quit) {
+    std::string command;
+
     try {
-      SocketStream sk("0.0.0.0", 400, SocketStream::TCP, SocketStream::Server);
-
-      while (!quit) {
-	std::string command;
-
-	for (char ch; sk.read(&ch, 1), ch != '\n';) // TODO: do not do a syscall per char
-	  command.push_back(ch);
-
-	LOG_DEBUG_STR("read command: " << command);
-	unsigned size = command.size() + 1;
-
-	//MPI_Bcast(&size, sizeof size, MPI_INT, 0, MPI_COMM_WORLD);
-	//MPI_Bcast(const_cast<char *>(command.c_str()), size, MPI_CHAR, 0, MPI_COMM_WORLD);
-	for (unsigned ion = 1; ion < nrPsets; ion ++) {
-	  ionStreams[ion]->write(&size, sizeof size);
-	  ionStreams[ion]->write(command.c_str(), size);
-	}
-
-	handleCommand(command);
-      }
+      for (char ch; sk.read(&ch, 1), ch != '\n';) // TODO: do not do a syscall per char
+	command.push_back(ch);
     } catch (Stream::EndOfStreamException &) {
-    } catch (SystemCallException &ex) {
-      if (ex.error == EADDRINUSE) {
-	LOG_WARN("CommandServer binding to socket: address in use");
-	sleep(1);
-      } else {
-	throw;
-      }
+      sk.reaccept();
+      continue;
     }
+
+    LOG_DEBUG_STR("read command: " << command);
+    unsigned size = command.size() + 1;
+
+    //MPI_Bcast(&size, sizeof size, MPI_INT, 0, MPI_COMM_WORLD);
+    //MPI_Bcast(const_cast<char *>(command.c_str()), size, MPI_CHAR, 0, MPI_COMM_WORLD);
+    for (unsigned ion = 1; ion < nrPsets; ion ++) {
+      ionStreams[ion]->write(&size, sizeof size);
+      ionStreams[ion]->write(command.c_str(), size);
+    }
+
+    handleCommand(command);
   }
 
   for (unsigned ion = 1; ion < nrPsets; ion ++)
