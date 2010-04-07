@@ -122,11 +122,23 @@ class Image2D {
 		num_t GetMaximum() const;
 		
 		/**
+		 * Returns the maximum value in the specified range.
+		 * @return The maximimum value.
+		 */
+		num_t GetMaximum(unsigned xOffset, unsigned yOffset, unsigned width, unsigned height) const;
+
+		/**
 		 * Returns the minimum value in the image.
 		 * @return The minimum value.
 		 */
 		num_t GetMinimum() const;
 		
+		/**
+		 * Returns the minimum value in the specified range.
+		 * @return The minimum value.
+		 */
+		num_t GetMinimum(unsigned xOffset, unsigned yOffset, unsigned width, unsigned height) const;
+
 		/**
 		 * Returns the maximum value in the image.
 		 * @return The maximimum value.
@@ -294,6 +306,12 @@ class Image2D {
 		 * with an integer factor.
 		 */
 		Image2DPtr ShrinkHorizontally(int factor) const;
+
+		/**
+		 * Resample the image horizontally by inreasing the width
+		 * with an integer factor.
+		 */
+		Image2DPtr EnlargeHorizontally(int factor, size_t newWidth) const;
 
 		Image2DPtr Trim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY) const;
 		void SetTrim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY);

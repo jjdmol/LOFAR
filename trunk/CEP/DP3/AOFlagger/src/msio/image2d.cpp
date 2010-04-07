@@ -22,6 +22,7 @@
 #include <AOFlagger/msio/fitsfile.h>
 
 #include <algorithm>
+#include <limits>
 
 #include <iostream>
 
@@ -351,6 +352,22 @@ Image2DPtr Image2D::ShrinkHorizontally(int factor) const
 	return Image2DPtr(newImage);
 }
 
+Image2DPtr Image2D::EnlargeHorizontally(int factor, size_t newWidth) const
+{
+	Image2D *newImage = new Image2D(newWidth, _height);
+
+	for(size_t x=0;x<newWidth;++x)
+	{
+		size_t xOld = x / factor;
+
+		for(size_t y=0;y<_height;++y)
+		{
+			newImage->SetValue(x, y, Value(xOld, y));
+		}
+	}
+	return Image2DPtr(newImage);
+}
+
 Image2DPtr Image2D::Trim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY) const
 {
 	unsigned
@@ -398,3 +415,56 @@ void Image2D::SetTrim(unsigned long startX, unsigned long startY, unsigned long 
 	_width = newWidth;
 	_height = newHeight;
 }
+
+/**
+	* Returns the maximum value in the specified range.
+	* @return The maximimum value.
+	*/
+num_t Image2D::GetMaximum(unsigned xOffset, unsigned yOffset, unsigned width, unsigned height) const
+{
+	size_t count = 0;
+	num_t max =0.0;
+	for(unsigned long y=yOffset;y<height+yOffset;++y) {
+		for(unsigned long x=xOffset;x<width+xOffset;++x)
+		{
+			if(IsSet(x,y))
+			{
+				if(Value(x,y) > max || count==0)
+				{
+					max = Value(x, y);
+					++count;
+				}
+			}
+		}
+	}
+	if(count == 0)
+		return std::numeric_limits<num_t>::quiet_NaN();
+	return max;
+}
+
+/**
+	* Returns the minimum value in the specified range.
+	* @return The minimum value.
+	*/
+num_t Image2D::GetMinimum(unsigned xOffset, unsigned yOffset, unsigned width, unsigned height) const
+{
+	size_t count = 0;
+	num_t min = 0.0;
+	for(unsigned long y=yOffset;y<height+yOffset;++y) {
+		for(unsigned long x=xOffset;x<width+xOffset;++x)
+		{
+			if(IsSet(x,y))
+			{
+				if(Value(x,y) < min || count==0)
+				{
+					min = Value(x, y);
+					++count;
+				}
+			}
+		}
+	}
+	if(count == 0)
+		return std::numeric_limits<num_t>::quiet_NaN();
+	return min;
+}
+

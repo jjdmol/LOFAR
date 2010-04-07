@@ -300,25 +300,28 @@ void ImagePlaneWindow::printStats()
 
 bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 {
-	size_t 
-		width = _imageWidget.Image()->Width(),
-		height = _imageWidget.Image()->Height();
-	size_t posX = (size_t) roundl((long double) event->x * width / _imageWidget.get_width() - 0.5L);
-	size_t posY = (size_t) roundl((long double) event->y * height / _imageWidget.get_height() - 0.5L);
-	if(posX >= width)
-		posX = width - 1;
-	if(posY >= height)
-		posY = height - 1;
-
-	int left = posX - 3, right = posX + 3, top = posY - 3, bottom = posY + 3;
-	if(left < 0) left = 0;
-	if(right >= width) right = width - 1;
-	if(top < 0) top = 0;
-	if(bottom >= height) bottom = height - 1;
+	if(_imageWidget.IsInitialized())
+	{
+		size_t 
+			width = _imageWidget.Image()->Width(),
+			height = _imageWidget.Image()->Height();
+		size_t posX = (size_t) roundl((long double) event->x * width / _imageWidget.get_width() - 0.5L);
+		size_t posY = (size_t) roundl((long double) event->y * height / _imageWidget.get_height() - 0.5L);
+		if(posX >= width)
+			posX = width - 1;
+		if(posY >= height)
+			posY = height - 1;
 	
-	num_t rms = _imageWidget.Image()->GetRMS(left, top, right, bottom);
-	std::cout << "RMS=" << _imageWidget.Image()->GetRMS()
-		<< std::endl;
-	
+		int left = posX - 3, right = posX + 3, top = posY - 3, bottom = posY + 3;
+		if(left < 0) left = 0;
+		if(right >= width) right = width - 1;
+		if(top < 0) top = 0;
+		if(bottom >= height) bottom = height - 1;
+		
+		num_t rms = _imageWidget.Image()->GetRMS(left, top, right-left, bottom-top);
+		num_t max = _imageWidget.Image()->GetMaximum(left, top, right-left, bottom-top);
+		std::cout << "RMS=" << rms << ", max=" << max
+			<< std::endl;
+	}
 	return true;
 }

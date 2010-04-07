@@ -45,16 +45,20 @@ int main(int argc, char *argv[])
 	{
 		std::cerr << "Usage: " << argv[0] << " <profile> <filename>\n\n"
 			<< "Profiles:\n"
-			<< "\tfast\tFastest strategy that provides a moderate\n"
-			<< "\t\tresult in quality. Will flag the measurement set using\n"
-			<< "\t\tStokes-I values, and by using a relatively small\n"
-			<< "\t\tsliding window.\n"
-			<< "\taverage\tBest trade-off between speed and quality. Will\n"
-			<< "\t\tflag the measurement set using XX and YY values using\n"
-			<< "\t\tan average sliding window size.\n"
-			<< "\tbest\tHighest quality detection. Will flag each\n"
-			<< "\t\tpolarization individually, using a relatively large\n"
-			<< "\t\tsliding window.\n"
+			<< "  fast     Fastest strategy that provides a moderate\n"
+			<< "           result in quality. Will flag the measurement set using\n"
+			<< "           Stokes-I values, and by using a relatively small\n"
+			<< "           sliding window.\n"
+			<< "  average  Best trade-off between speed and quality. Will\n"
+			<< "           flag the measurement set using XX and YY values using\n"
+			<< "           an average sliding window size.\n"
+			<< "  best     Highest quality detection. Will flag each\n"
+			<< "           polarization individually, using a relatively large\n"
+			<< "           sliding window.\n"
+			<< "  pedantic Pedantic detection. Like the 'best' profile,\n"
+			<< "           but will flag all channels completely that are still\n"
+			<< "           deviating from others after flagging. Flags about twice\n"
+			<< "           as much.\n"
 			<< "<filename> is the filename to which the strategy is written. This\n"
 			<< "file should have the extension \".rfis\".\n\n"
 			<< "All profiles implement the SumThreshold method. The details of this\n"
@@ -73,6 +77,8 @@ int main(int argc, char *argv[])
 		strategy->LoadAverageStrategy();
 	else if(profile == "best")
 		strategy->LoadBestStrategy();
+	else if(profile == "pedantic")
+		strategy->LoadBestStrategy(true);
 	else {
 		std::cerr << "Unknown profile: " << profile << std::endl;
 		return 1;

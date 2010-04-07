@@ -30,15 +30,26 @@ namespace rfiStrategy {
 			ArtifactSet artifactsCopy(artifacts);
 			artifactsCopy.SetNoImageSet();
 	
+			TimeFrequencyData oldContaminated = artifacts.ContaminatedData();
+
 			DecreaseSize(artifactsCopy.OriginalData());
 			DecreaseSize(artifactsCopy.ContaminatedData());
 			DecreaseSize(artifactsCopy.RevisedData());
 	
 			ActionBlock::Perform(artifactsCopy, listener);
 	
-			IncreaseSize(artifacts.OriginalData(), artifactsCopy.OriginalData());
-			IncreaseSize(artifacts.ContaminatedData(), artifactsCopy.ContaminatedData());
-			IncreaseSize(artifacts.RevisedData(), artifactsCopy.RevisedData());
+			IncreaseSize(artifacts.OriginalData(), artifactsCopy.OriginalData(), false);
+			IncreaseSize(artifacts.ContaminatedData(), artifactsCopy.ContaminatedData(), false);
+			IncreaseSize(artifacts.RevisedData(), artifactsCopy.RevisedData(), _restoreRevised);
+
+			if(_restoreRevised)
+			{
+				TimeFrequencyData *contaminatedData =
+					TimeFrequencyData::CreateTFDataFromDiff(oldContaminated, artifacts.RevisedData());
+				contaminatedData->SetMaskFrom(oldContaminated);
+				artifacts.SetContaminatedData(*contaminatedData);
+				delete contaminatedData;
+			}
 		} else {
 			ActionBlock::Perform(artifacts, listener);
 		}
@@ -62,15 +73,28 @@ namespace rfiStrategy {
 		}
 	}
 
-	void ChangeResolutionAction::IncreaseSize(TimeFrequencyData &originalData, TimeFrequencyData &changedData)
+	void ChangeResolutionAction::IncreaseSize(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage)
 	{
-		size_t maskCount = changedData.MaskCount();
-		for(size_t i=0;i<maskCount;++i)
+		if(restoreImage)
 		{
-			Mask2DCPtr mask = changedData.GetMask(i);
-			Mask2DPtr newMask = Mask2D::CreateUnsetMaskPtr(originalData.ImageWidth(), originalData.ImageHeight());
-			newMask->EnlargeHorizontallyAndSet(mask, _decreaseFactor);
-			originalData.SetMask(i, newMask);
+			size_t imageCount = originalData.ImageCount();
+			for(size_t i=0;i<imageCount;++i)
+			{
+				Image2DCPtr image = changedData.GetImage(i);
+				Image2DPtr newImage = image->EnlargeHorizontally(_decreaseFactor, originalData.ImageWidth());
+				originalData.SetImage(i, newImage);
+			}
+		}
+		if(_restoreMasks)
+		{
+			size_t maskCount = changedData.MaskCount();
+			for(size_t i=0;i<maskCount;++i)
+			{
+				Mask2DCPtr mask = changedData.GetMask(i);
+				Mask2DPtr newMask = Mask2D::CreateUnsetMaskPtr(originalData.ImageWidth(), originalData.ImageHeight());
+				newMask->EnlargeHorizontallyAndSet(mask, _decreaseFactor);
+				originalData.SetMask(i, newMask);
+			}
 		}
 	}
 }

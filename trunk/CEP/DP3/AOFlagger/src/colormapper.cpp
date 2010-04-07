@@ -27,11 +27,11 @@
 #include <vector>
 #include <algorithm>
 
-#include "msio/fitsfile.h"
-#include "msio/image2d.h"
-#include "msio/pngfile.h"
+#include <AOFlagger/msio/fitsfile.h>
+#include <AOFlagger/msio/image2d.h>
+#include <AOFlagger/msio/pngfile.h>
 
-#include "util/ffttools.h"
+#include <AOFlagger/util/ffttools.h>
 
 using namespace std;
 

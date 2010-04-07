@@ -47,6 +47,10 @@ class ImageWidget : public Gtk::DrawingArea {
 		{
 			_automaticMin = true;
 		}
+		bool IsInitialized() const
+		{
+			return _isInitialized;
+		}
 	private:
 		void redraw();
 		void findMinMax(Image2DCPtr image, num_t &min, num_t &max);
