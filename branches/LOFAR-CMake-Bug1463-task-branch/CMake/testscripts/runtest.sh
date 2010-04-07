@@ -34,7 +34,6 @@ fi
 # Handle possible options. 
 while [ $# != 0 ]
 do
-  # Special cvs command?
   if [ "$1" = "-stdout" ]; then
     NEEDOUTFIL=1
     shift
