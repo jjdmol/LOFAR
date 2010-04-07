@@ -31,7 +31,7 @@ namespace rfiStrategy {
 	*/
 	class ChangeResolutionAction : public ActionBlock {
 		public:
-			ChangeResolutionAction() : _decreaseFactor(10)
+			ChangeResolutionAction() : _decreaseFactor(10), _restoreRevised(true), _restoreMasks(false)
 			{
 			}
 
@@ -50,7 +50,10 @@ namespace rfiStrategy {
 		private:
 			int _decreaseFactor;
 			void DecreaseSize(TimeFrequencyData &data);
-			void IncreaseSize(TimeFrequencyData &originalData, TimeFrequencyData &changedData);
+			void IncreaseSize(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage);
+
+			bool _restoreRevised;
+			bool _restoreMasks;
 	};
 
 }

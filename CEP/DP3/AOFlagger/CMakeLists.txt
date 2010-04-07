@@ -20,6 +20,7 @@ lofar_find_package(CPPLapack REQUIRED)
 lofar_find_package(BLAS REQUIRED)
 lofar_find_package(PTHREADS REQUIRED)
 lofar_find_package(GSL REQUIRED)
+lofar_find_package(CFITSIO REQUIRED)
 
 #want the full compiler output?
 #set(CMAKE_VERBOSE_MAKEFILE ON)

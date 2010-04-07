@@ -20,6 +20,7 @@
 #include <AOFlagger/rfi/strategy/strategy.h>
 
 #include <AOFlagger/rfi/strategy/adapter.h>
+#include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
@@ -43,12 +44,12 @@ namespace rfiStrategy {
 		return strategy;
 	}
 
-	void Strategy::LoadDefaultSingleStrategy()
+	void Strategy::LoadDefaultSingleStrategy(bool pedantic)
 	{
-		LoadDefaultSingleStrategy(*this);
+		LoadDefaultSingleStrategy(*this, pedantic);
 	}
 
-	void Strategy::LoadDefaultSingleStrategy(ActionBlock &block)
+	void Strategy::LoadDefaultSingleStrategy(ActionBlock &block, bool pedantic)
 	{
 		block.Add(new SetFlaggingAction());
 		ForEachPolarisationBlock *fepBlock = new ForEachPolarisationBlock();
@@ -68,7 +69,16 @@ namespace rfiStrategy {
 		cfr1->Add(new TimeSelectionAction());
 	
 		adapter->Add(new SetImageAction());
-		adapter->Add(new SlidingWindowFitAction());
+
+		ChangeResolutionAction *changeResAction1 = new ChangeResolutionAction();
+		changeResAction1->SetDecreaseFactor(3);
+
+		SlidingWindowFitAction *swfAction1 = new SlidingWindowFitAction();
+		swfAction1->Parameters().timeDirectionKernelSize = 2.5;
+		swfAction1->Parameters().timeDirectionWindowSize = 10;
+		changeResAction1->Add(swfAction1);
+
+		adapter->Add(changeResAction1);
 		adapter->Add(new SetFlaggingAction());
 
 		ThresholdAction *t2 = new ThresholdAction();
@@ -82,16 +92,29 @@ namespace rfiStrategy {
 		cfr2->Add(new TimeSelectionAction());
 	
 		adapter->Add(new SetImageAction());
-		adapter->Add(new SlidingWindowFitAction());
+		ChangeResolutionAction *changeResAction2 = new ChangeResolutionAction();
+		changeResAction2->SetDecreaseFactor(3);
+
+		SlidingWindowFitAction *swfAction2 = new SlidingWindowFitAction();
+		swfAction2->Parameters().timeDirectionKernelSize = 2.5;
+		swfAction2->Parameters().timeDirectionWindowSize = 10;
+		changeResAction2->Add(swfAction2);
+
+		adapter->Add(changeResAction2);
 		adapter->Add(new SetFlaggingAction());
 
 		adapter->Add(new ThresholdAction());
 		adapter->Add(new StatisticalFlagAction());
 
-		CombineFlagResults *cfr3 = new CombineFlagResults();
-		adapter->Add(cfr3);
-		cfr3->Add(new FrequencySelectionAction());
-		cfr3->Add(new TimeSelectionAction());
+		if(pedantic)
+		{
+			CombineFlagResults *cfr3 = new CombineFlagResults();
+			adapter->Add(cfr3);
+			cfr3->Add(new FrequencySelectionAction());
+			cfr3->Add(new TimeSelectionAction());
+		} else {
+			adapter->Add(new TimeSelectionAction());
+		}
 		
 		SetFlaggingAction *setFlagsInAllPolarizations = new SetFlaggingAction();
 		setFlagsInAllPolarizations->SetNewFlagging(SetFlaggingAction::PolarisationsEqual);
@@ -147,7 +170,7 @@ namespace rfiStrategy {
 		feBaseBlock->Add(new WriteFlagsAction());
 	}
 
-	void Strategy::LoadBestStrategy()
+	void Strategy::LoadBestStrategy(bool pedantic)
 	{
 		ForEachBaselineAction *feBaseBlock = new ForEachBaselineAction();
 		Add(feBaseBlock);
@@ -157,7 +180,7 @@ namespace rfiStrategy {
 
 		feBaseBlock->Add(loadImageAction);
 		
-		LoadDefaultSingleStrategy(*feBaseBlock);
+		LoadDefaultSingleStrategy(*feBaseBlock, pedantic);
 
 		feBaseBlock->Add(new WriteFlagsAction());
 	}

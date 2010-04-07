@@ -14,7 +14,7 @@ SET (UTIL_FILES util/ffttools util/integerdomain util/multiplot util/plot util/r
 
 lofar_add_library(rfiengine ${IMAGING_FILES} ${MSIO_FILES} ${RFI_FILES} ${UTIL_FILES})
 
-set(GENERIC_LIBRARIES rfiengine ${Boost_LIBRARIES} ${Casacore_LIBRARIES} cfitsio dl ${FFTW3_LIBRARIES} ${GSL_LIBRARIES} m nsl png util z ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${PTHREADS_LIBRARIES} xml2 ${GTKMM_LIBRARIES} ${CPPLapack_LIBRARIES}  lofarstman)
+set(GENERIC_LIBRARIES rfiengine ${Boost_LIBRARIES} ${Casacore_LIBRARIES} ${CFITSIO_LIBRARIES} dl ${FFTW3_LIBRARIES} ${GSL_LIBRARIES} m nsl png util z ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${PTHREADS_LIBRARIES} xml2 ${GTKMM_LIBRARIES} ${CPPLapack_LIBRARIES}  lofarstman)
 
 IF(GTKMM_FOUND)
   INCLUDE_DIRECTORIES(${GTKMM_INCLUDE_DIRS})
@@ -40,6 +40,10 @@ SET_TARGET_PROPERTIES(rfistrategy PROPERTIES LINKER_LANGUAGE C)
 lofar_add_executable(msinfo msinfo)
 TARGET_LINK_LIBRARIES(msinfo ${GENERIC_LIBRARIES})
 SET_TARGET_PROPERTIES(msinfo PROPERTIES LINKER_LANGUAGE C)
+
+lofar_add_executable(colormapper colormapper)
+TARGET_LINK_LIBRARIES(colormapper ${GENERIC_LIBRARIES})
+SET_TARGET_PROPERTIES(colormapper PROPERTIES LINKER_LANGUAGE C)
 
 install(PROGRAMS
   rfistrategy
