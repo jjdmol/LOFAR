@@ -52,9 +52,13 @@ void ThresholdConfig::InitializeLengthsFrom(unsigned count, unsigned startLength
 	o[3].length = startLength + 7;
 	o[4].length = startLength + 15;
 	o[5].length = startLength + 63;
-	_operations.clear();
+	_horizontalOperations.clear();
+	_verticalOperations.clear();
 	for(unsigned i=0;i<count;++i)
-		_operations.push_back(o[i]);
+	{
+		_horizontalOperations.push_back(o[i]);
+		_verticalOperations.push_back(o[i]);
+	}
 }
 
 void ThresholdConfig::InitializeLengthsDefault(unsigned count)
@@ -71,16 +75,21 @@ void ThresholdConfig::InitializeLengthsDefault(unsigned count)
 	o[6].length = 64;
 	o[7].length = 128;
 	o[8].length = 256;
-	_operations.clear();
+	_horizontalOperations.clear();
+	_verticalOperations.clear();
 	for(unsigned i=0;i<count;++i)
-		_operations.push_back(o[i]);
+	{
+		_horizontalOperations.push_back(o[i]);
+		_verticalOperations.push_back(o[i]);
+	}
 }
 
 void ThresholdConfig::InitializeLengthsSingleSample()
 {
 	ThresholdOperation operation;
 	operation.length = 1;
-	_operations.push_back(operation);
+	_horizontalOperations.push_back(operation);
+	_verticalOperations.push_back(operation);
 }
 
 void ThresholdConfig::InitializeThresholdsFromFirstThreshold(long double firstThreshold, enum Distribution noiseDistribution)
@@ -99,9 +108,13 @@ void ThresholdConfig::InitializeThresholdsFromFirstThreshold(long double firstTh
 			break;
 		}
 	}
-	for(unsigned i=0;i<_operations.size();++i)
+	for(unsigned i=0;i<_horizontalOperations.size();++i)
 	{
-		_operations[i].threshold = firstThreshold * powl(expFactor, logl(_operations[i].length)/logl(2.0)) / (long double) _operations[i].length;
+		_horizontalOperations[i].threshold = firstThreshold * pow(expFactor, log(_horizontalOperations[i].length)/log(2.0)) / (num_t) _horizontalOperations[i].length;
+	}
+	for(unsigned i=0;i<_verticalOperations.size();++i)
+	{
+		_verticalOperations[i].threshold = firstThreshold * pow(expFactor, log(_verticalOperations[i].length)/log(2.0)) / (num_t) _verticalOperations[i].length;
 	}
 	_distribution = noiseDistribution;
 }
@@ -110,8 +123,8 @@ void ThresholdConfig::InitializeThresholdsWithFalseRate(size_t resolution, long 
 {
 	InitializeThresholdsFromFirstThreshold(1.0, noiseDistribution);
 	BinarySearch(falseAlarmRate, falseAlarmRate / 25.0, resolution);
-	for(unsigned i=0;i<_operations.size();++i)
-		std::cout << "/ " << _operations[i].threshold;
+	for(unsigned i=0;i<_horizontalOperations.size();++i)
+		std::cout << "/ " << _horizontalOperations[i].threshold;
 	std::cout << std::endl;
 }
 
@@ -119,29 +132,45 @@ void ThresholdConfig::BinarySearch(long double probability, long double accuracy
 {
 	long double leftLimit = 0.0;
 	long double rightLimit = 1.0;
-	for(unsigned i=0;i<_operations.size();++i)
-		_operations[i].threshold *= rightLimit;
+	for(unsigned i=0;i<_horizontalOperations.size();++i)
+		_horizontalOperations[i].threshold *= rightLimit;
+	for(unsigned i=0;i<_verticalOperations.size();++i)
+		_verticalOperations[i].threshold *= rightLimit;
 	long double p = CalculateFalseAlarmRate(resolution, _distribution);
-	for(unsigned i=0;i<_operations.size();++i)
-		_operations[i].threshold /= rightLimit;
+	for(unsigned i=0;i<_horizontalOperations.size();++i)
+		_horizontalOperations[i].threshold /= rightLimit;
+	for(unsigned i=0;i<_verticalOperations.size();++i)
+		_verticalOperations[i].threshold /= rightLimit;
 	//cout << "P(" << rightLimit << "," << samples << ")=" << p << endl;
 	while(p > probability) {
 		rightLimit *= 2;
 
-		for(unsigned i=0;i<_operations.size();++i)
-			_operations[i].threshold *= rightLimit;
+		for(unsigned i=0;i<_horizontalOperations.size();++i)
+			_horizontalOperations[i].threshold *= rightLimit;
+		for(unsigned i=0;i<_verticalOperations.size();++i)
+			_verticalOperations[i].threshold *= rightLimit;
+		
 		p =  CalculateFalseAlarmRate(resolution, _distribution);
-		for(unsigned i=0;i<_operations.size();++i)
-			_operations[i].threshold /= rightLimit;
+		
+		for(unsigned i=0;i<_horizontalOperations.size();++i)
+			_horizontalOperations[i].threshold /= rightLimit;
+		for(unsigned i=0;i<_verticalOperations.size();++i)
+			_verticalOperations[i].threshold /= rightLimit;
 		//cout << "P(" << rightLimit << "," << samples << ")=" << p << endl;
 	}
 	long double m = (rightLimit - leftLimit) / 2.0;
 
-	for(unsigned i=0;i<_operations.size();++i)
-		_operations[i].threshold *= m;
+	for(unsigned i=0;i<_horizontalOperations.size();++i)
+		_horizontalOperations[i].threshold *= m;
+	for(unsigned i=0;i<_verticalOperations.size();++i)
+		_verticalOperations[i].threshold *= m;
+	
 	p =  CalculateFalseAlarmRate(resolution, _distribution);
-	for(unsigned i=0;i<_operations.size();++i)
-		_operations[i].threshold /= m;
+	
+	for(unsigned i=0;i<_horizontalOperations.size();++i)
+		_horizontalOperations[i].threshold /= m;
+	for(unsigned i=0;i<_verticalOperations.size();++i)
+		_verticalOperations[i].threshold /= m;
 
 	//cout << "P(" << m << "," << samples << ")=" << p << endl;
 	int iterations = 0;
@@ -153,17 +182,25 @@ void ThresholdConfig::BinarySearch(long double probability, long double accuracy
 			rightLimit = m;
 		m = (rightLimit + leftLimit) / 2.0;
 
-		for(unsigned i=0;i<_operations.size();++i)
-			_operations[i].threshold *= m;
+		for(unsigned i=0;i<_horizontalOperations.size();++i)
+			_horizontalOperations[i].threshold *= m;
+		for(unsigned i=0;i<_verticalOperations.size();++i)
+			_verticalOperations[i].threshold *= m;
+		
 		p =  CalculateFalseAlarmRate(resolution, _distribution);
-		for(unsigned i=0;i<_operations.size();++i)
-			_operations[i].threshold /= m;
+		
+		for(unsigned i=0;i<_horizontalOperations.size();++i)
+			_horizontalOperations[i].threshold /= m;
+		for(unsigned i=0;i<_verticalOperations.size();++i)
+			_verticalOperations[i].threshold /= m;
 
 		std::cout << "P(" << m << ")=" << p << std::endl;
 		++iterations;
 	}
-	for(unsigned i=0;i<_operations.size();++i)
-		_operations[i].threshold *= m;
+	for(unsigned i=0;i<_horizontalOperations.size();++i)
+		_horizontalOperations[i].threshold *= m;
+	for(unsigned i=0;i<_verticalOperations.size();++i)
+		_verticalOperations[i].threshold *= m;
 }
 
 void ThresholdConfig::Execute(Image2DCPtr image, Mask2DPtr mask, bool additive, long double sensitivity) const
@@ -182,7 +219,7 @@ void ThresholdConfig::Execute(Image2DCPtr image, Mask2DPtr mask, bool additive, 
 		else
 			factor = stddev * sensitivity;
 		if(_verbose)
-			std::cout << "Stddev=" << stddev << " first threshold=" << _operations[0].threshold << std::endl; 
+			std::cout << "Stddev=" << stddev << " first threshold=" << _horizontalOperations[0].threshold << std::endl; 
 		} break;
 		case Rayleigh: {
 		long double mode = ThresholdTools::WinsorizedMode(image, mask);
@@ -193,7 +230,7 @@ void ThresholdConfig::Execute(Image2DCPtr image, Mask2DPtr mask, bool additive, 
 		if(_verbose) {
 			long double mean, stddev;
 			ThresholdTools::WinsorizedMeanAndStdDev(image, mask, mean, stddev);
-			std::cout << "Mode=" << mode << " first threshold=" << _operations[0].threshold*factor << std::endl;
+			std::cout << "Mode=" << mode << " first threshold=" << _horizontalOperations[0].threshold*factor << std::endl;
 			std::cout << "Stddev=" << stddev << std::endl; 
 		} 
 		} break;
@@ -202,19 +239,33 @@ void ThresholdConfig::Execute(Image2DCPtr image, Mask2DPtr mask, bool additive, 
 		break;
 	}
 
-	for(unsigned i=0;i<_operations.size();++i) {
+	size_t operationCount = _horizontalOperations.size() > _verticalOperations.size() ?
+		_horizontalOperations.size() : _verticalOperations.size();
+	for(unsigned i=0;i<operationCount;++i) {
 		switch(_method) {
 			case SumThreshold:
-			if(_verbose)
-				std::cout << "Performing SumThreshold with length " << _operations[i].length 
-					<< ", threshold " << _operations[i].threshold*factor << "..." << std::endl;
-			ThresholdMitigater::SumThresholdLarge(image, mask, _operations[i].length, _operations[i].threshold*factor);
+			
+			if(i < _horizontalOperations.size())
+			{
+				if(_verbose)
+					std::cout << "Performing SumThreshold with length " << _horizontalOperations[i].length 
+						<< ", threshold " << _horizontalOperations[i].threshold*factor << "..." << std::endl;
+				ThresholdMitigater::HorizontalSumThresholdLarge(image, mask, _horizontalOperations[i].length, _horizontalOperations[i].threshold*factor);
+			}
+			
+			if(i < _verticalOperations.size())
+				ThresholdMitigater::VerticalSumThresholdLarge(image, mask, _verticalOperations[i].length, _verticalOperations[i].threshold*factor);
 			break;
 			case VarThreshold:
-			if(_verbose)
-				std::cout << "Performing VarThreshold with length " << _operations[i].length 
-					<< ", threshold " << _operations[i].threshold*factor << "..." << std::endl;
-			ThresholdMitigater::VarThreshold(image, mask, _operations[i].length, _operations[i].threshold*factor);
+			if(i < _horizontalOperations.size())
+			{
+				if(_verbose)
+					std::cout << "Performing VarThreshold with length " << _horizontalOperations[i].length 
+						<< ", threshold " << _horizontalOperations[i].threshold*factor << "..." << std::endl;
+				ThresholdMitigater::HorizontalVarThreshold(image, mask, _horizontalOperations[i].length, _horizontalOperations[i].threshold*factor);
+			}
+			if(i < _verticalOperations.size())
+				ThresholdMitigater::HorizontalVarThreshold(image, mask, _verticalOperations[i].length, _verticalOperations[i].threshold*factor);
 			break;
 		}
 	}
@@ -264,9 +315,14 @@ long double ThresholdConfig::CalculateFalseAlarmRate(size_t resolution, enum Dis
 	for(unsigned j=1;j<33;++j) {
 		if(_verbose)
 			std::cout << "," << (long double)  lengths[j-1]*j / (resolution*resolution);
-		for(unsigned i=0;i<_operations.size();++i) {
-			if(j == _operations[i].length) {
-				_operations[i].rate = (long double) lengths[j-1]*j / (resolution*resolution*j);
+		for(unsigned i=0;i<_horizontalOperations.size();++i) {
+			if(j == _horizontalOperations[i].length) {
+				_horizontalOperations[i].rate = (long double) lengths[j-1]*j / (resolution*resolution*j);
+			}
+		}
+		for(unsigned i=0;i<_verticalOperations.size();++i) {
+			if(j == _verticalOperations[i].length) {
+				_verticalOperations[i].rate = (long double) lengths[j-1]*j / (resolution*resolution*j);
 			}
 		}
 	}
