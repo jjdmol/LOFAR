@@ -490,12 +490,12 @@ void beamctl::usage() const
 		"                    # direction of the analogue HBA beam\n"
 		"  --help            # print this usage\n"
 		"\n"
-		"The order of the arguments is trivial\n"
+		"The order of the arguments is trivial.\n"
 		"\n"
-		"This utility connects to the CalServer to create a subarray of --array\n"
+		"This utility connects to the CalServer to activate the antennas in set --antennaSet\n"
 		"containing the selected RCU's. The CalServer sets those RCU's in the mode\n"
 		"specified by --rcumode. Another connection is made to the BeamServer to create a\n"
-		"beam on the created subarray pointing in the direction specified with --direction.\n"
+		"beam on the selected antennafield pointing in the direction specified with --digdir.\n"
 	<< endl;
 }
 

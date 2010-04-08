@@ -306,8 +306,10 @@ void AnaBeamMgr::calculateHBAdelays(RTC::Timestamp	targetTime, J2000Converter&	a
 		blitz::Array<double, 1> fieldCentreITRF = globalAntennaPos()->Centre(fieldName);
 		LOG_DEBUG_STR("ITRF position antennaField " << fieldName << ": " << fieldCentreITRF);
 
+		// HBA delta array
 		LOG_DEBUG_STR("itsTileRelPos = " << itsTileRelPos);
 
+		// TODO: shuold be outside all loops, is static info
 		// Calc length of vectors of rel. positions of the tile elements
 		blitz::Array<double, 1>		tileRelLength(itsTileRelPos.extent(firstDim));
 		for (int i = 0; i < itsTileRelPos.extent(firstDim); i++) {
@@ -338,24 +340,27 @@ void AnaBeamMgr::calculateHBAdelays(RTC::Timestamp	targetTime, J2000Converter&	a
 			curPoint(0,0) = currentPointing.angle0();
 			curPoint(0,1) = currentPointing.angle1();
 
+			// convert the pointing to J2000
 			if (!aJ2000Conv.doConversion(currentPointing.getType(), curPoint, fieldCentreITRF, targetTime, sourceJ2000xyz)) {
 				LOG_FATAL_STR("Conversion of source to J2000 failed for beam " << pIter->beam.name());
 				++pIter;
 				continue;	// try next pointing
 			}
-			LOG_DEBUG_STR("sourceJ2000xyz:" << sourceJ2000xyz);
+//			LOG_DEBUG_STR("sourceJ2000xyz:" << sourceJ2000xyz);
 
+			// Convert tile deltas to J2000
 			blitz::Array<double, 2>	tileRelPosJ2000;
 			if (!aJ2000Conv.doConversion("ITRF", itsTileRelPos, fieldCentreITRF, targetTime, tileRelPosJ2000)) {
 				LOG_FATAL_STR("Conversion of deltas to J2000 failed for beam " << pIter->beam.name());
 				++pIter;
 				continue;	// try next pointing
 			}
+			// denormalize length of vectors
 			tileRelPosJ2000 = tileRelPosJ2000(tensor::i, tensor::j) * tileRelLength(tensor::i);
-			LOG_DEBUG_STR("tileRelPosJ2000:" << tileRelPosJ2000);
+//			LOG_DEBUG_STR("tileRelPosJ2000:" << tileRelPosJ2000);
 
 			bitset<MAX_RCUS>	RCUallocation(pIter->beam.rcuMask());
-			LOG_DEBUG_STR("Rcuallocation: " << RCUallocation);
+//			LOG_DEBUG_STR("Rcuallocation: " << RCUallocation);
 			for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
 				if (!RCUallocation.test(rcu)) {			// all RCUS switched on in LBA/HBA mode
 					continue;
@@ -370,7 +375,7 @@ void AnaBeamMgr::calculateHBAdelays(RTC::Timestamp	targetTime, J2000Converter&	a
 					// signal front stays in the middle of the tile
 					delay += itsMeanElementDelay;
 
-					LOG_DEBUG_STR("antenna="<<rcu/2 <<", pol="<<rcu%2 <<", element="<<element  <<", delay("<<rcu<<","<<element<<")="<<delay);
+//					LOG_DEBUG_STR("antenna="<<rcu/2 <<", pol="<<rcu%2 <<", element="<<element  <<", delay("<<rcu<<","<<element<<")="<<delay);
 					// calculate approximate DelayStepNr
 					int delayStepNr = static_cast<int>(delay / 0.5E-9);
 					
@@ -414,7 +419,7 @@ void AnaBeamMgr::sendHBAdelays(GCF::TM::GCFPortInterface&	port)
 	int	requestIdx(0);
 	for (int r = 0; r < nrRCUs; r++) {
 		if (itsActiveRCUs.test(r)) {
-			request.settings()(requestIdx) = itsHBAdelays(r);
+			request.settings()(requestIdx, Range::all()) = itsHBAdelays(r, Range::all());
 			requestIdx++;
 		}
 	}
@@ -522,121 +527,4 @@ void AnaBeamMgr::getAllHBAElementDelays(const string& filename)
 	itsMeanElementDelay = blitz::mean(itsDelaySteps);
 	LOG_INFO_STR("mean ElementDelay = " << itsMeanElementDelay);
 }
-
-#if 0
-//
-// TODO CHANGE THIS TO IRTF
-//
-// calculateHBAdelays(timestamp, amcconverter, tileRelPosArray)
-// result is stored in itsHBAdelays
-//
-void Beam::calculateHBAdelays(RTC::Timestamp				timestamp,
-							  const blitz::Array<double,2>&	tileDeltas,
-							  const blitz::Array<double,1>&	elementDelays)
-{
-	LOG_DEBUG(formatString("current HBApointing=(%f,%f)",
-							currentPointing(timestamp).angle0(),
-							currentPointing(timestamp).angle1()));
-	
-	// calculate the mean of all posible delays to hold signal front in the midle of a tile
-	double meanElementDelay = blitz::mean(elementDelays);
-	LOG_DEBUG_STR("mean ElementDelay = " << meanElementDelay << " Sec"); 
-
-#if DOEN_WE_LATER
-	// Calculate the current values of AzEl.
-	Pointing	curPointing(itsCurrentPointing);
-	curPointing.setTime(timestamp);
-  // Get geographical location of subarray in WGS84 radians/meters
-	blitz::Array<double, 1> loc = itsSubArray.getGeoLoc();
-	Position location((loc(0) * M_PI) / 180.0,
-					  (loc(1) * M_PI) / 180.0,
-					   loc(2), Position::WGS84);
-	// go to lmn coordinates
-//	Pointing lmn	  = curPointing.convert(conv, &location, Pointing::LOFAR_LMN);
-	double itsHBA_L   = lmn.angle0();
-	double itsHBA_M   = lmn.angle1();
-	
-	// maybe not needed, but this code limits the max. posilble delay
-	if ((itsHBA_L*itsHBA_L + itsHBA_M*itsHBA_M) > 1) {
-		double modus = sqrt(itsHBA_L*itsHBA_L + itsHBA_M*itsHBA_M);
-		itsHBA_L = itsHBA_L / modus;
-		itsHBA_M = itsHBA_M / modus;
-	}
-	
-	LOG_INFO_STR("current HBA-pointing lmn=(" << itsHBA_L << "," << itsHBA_M << ") @" << curPointing.time());
-
-	// get position of antennas
-	// note: pos[antennes, polarisations, coordinates]
-	const Array<double,3>& pos  = itsSubArray.getAntennaPos();
-	int nrAntennas = pos.extent(firstDim);
-	int nrPols     = pos.extent(secondDim);
-	LOG_DEBUG_STR("SA.n_ant="<<nrAntennas <<",SA.n_pols="<<nrPols);
-	LOG_DEBUG_STR("antennaPos="<<pos);
-	
-	// get contributing RCUs
-	CAL::SubArray::RCUmask_t		rcuMask(itsSubArray.getRCUMask());
-	LOG_DEBUG_STR("rcumask="<<rcuMask);
-	
-	itsHBAdelays.resize(rcuMask.count(), MEPHeader::N_HBA_DELAYS);
-	itsHBAdelays = 0;	// set all delays to 0
-	
-	int		localrcu  = 0;
-	int		globalrcu = 0;
-	for (globalrcu = 0; globalrcu < MEPHeader::MAX_N_RCUS; globalrcu++) {
-		//LOG_DEBUG_STR("globalrcu=" << globalrcu);
-		if (!rcuMask.test(globalrcu)) {
-			continue;
-		}
-		// RCU is in RCUmask, do the calculations
-		int	antenna(globalrcu/2);
-		int pol	   (globalrcu%2);
-		for (int element = 0; element < MEPHeader::N_HBA_DELAYS; element++) {
-					
-			// calculate tile delay
-			double	delay =
-				( (itsHBA_L * tileDeltas(element,0)) + 
-				  (itsHBA_M * tileDeltas(element,1)) ) / 
-					SPEED_OF_LIGHT_MS;
-			
-			// signal front stays in midle of tile
-			delay += meanElementDelay;
-			
-			LOG_DEBUG_STR("antenna="<<antenna <<", pol="<<pol <<", element="<<element  <<", delay("<<localrcu<<","<<element<<")="<<delay);
-			
-			// calculate approximate DelayStepNr
-			int delayStepNr = static_cast<int>(delay / 0.5E-9);
-			
-			// look for nearest matching delay step in range "delayStepNr - 2 .. delayStepNr + 2"
-			double minDelayDiff = fabs(delay - elementDelays(delayStepNr));
-			double difference;
-			int minStepNr = delayStepNr;
-			for (int i = (delayStepNr - 2); i <= (delayStepNr + 2); i++){
-				if (i == delayStepNr) continue; // skip approximate nr
-				difference = fabs(delay - elementDelays(i));
-				if (difference < minDelayDiff)	{
-					minStepNr = i;
-					minDelayDiff = difference;
-				}
-			}
-			delayStepNr = minStepNr;
-			
-			// range check for delayStepNr, max. 32 steps (0..31) 
-			if (delayStepNr < 0) delayStepNr = 0;
-			if (delayStepNr > 31) delayStepNr = 31;
-				
-			// bit1=0.25nS(not used), bit2=0.5nS, bit3=1nS, bit4=2nS, bit5=4nS, bit6=8nS 	
-			itsHBAdelays(localrcu,element) = (delayStepNr * 4) + (1 << 7); // assign
-		} // elements in tile
-		localrcu++;	 // globalrcu
-	}
-		
-	// temporary array needed to LOG "itsHBAdelays"
-	blitz::Array<int,2>	HBAdelays;
-	HBAdelays.resize(rcuMask.count(), MEPHeader::N_HBA_DELAYS);
-	
-	HBAdelays = itsHBAdelays + 0; // copy to print values (uint8 are handled as chars)
-	LOG_DEBUG_STR("itsHBAdelays Nr = " << HBAdelays);
-#endif
-}
-#endif
 

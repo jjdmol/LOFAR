@@ -1295,6 +1295,10 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 
 		// Get ITRF position of the RCU's [rcu, xyz]
 		blitz::Array<double, 2> rcuPosITRF = globalAntennaPos()->RCUPos(fieldName);
+		if (rcuPosITRF.size() == 0) {
+			LOG_DEBUG_STR("No antennas defined in this field");
+			continue;
+		}
 		LOG_DEBUG_STR("ITRFRCUPos = " << rcuPosITRF);
 
 		// Get geographical location of subarray in ITRF
@@ -1344,7 +1348,8 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 	
 				//
 				// For all beamlets that belong to this beam calculate the weight
-				// Note: weight is in-procduct for RCUpos and source Pos and depends on frequency of the subband.
+				// Note: weight is in-procduct for RCUpos and source Pos and depends on 
+				// the frequency of the subband.
 				//
 				bitset<MAX_BEAMLETS>	beamletAllocation = beamIter->second->allocation().getBeamletBitset();
 				int		nrBeamlets = beamletAllocation.size();
@@ -1365,12 +1370,6 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 						str << "itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet);
 						LOG_DEBUG_STR(str.str());
 //						LOG_DEBUG_STR("itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet));
-					}
-					// some more debugging
-					if (rcu==3 && beamlet==6) {
-						LOG_DEBUG_STR("###scaling     = " << itsBeamletAllocation[beamlet].scaling);
-						LOG_DEBUG_STR("###J2000RCUpos = " << rcuJ2000Pos(rcu, Range::all()));
-						LOG_DEBUG_STR("###J2000xyz    = " << sourceJ2000xyz(0,Range::all()));
 					}
 				} // beamlets
 			} // rcus
