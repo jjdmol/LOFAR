@@ -1,7 +1,0 @@
-#!/bin/sh
-
-./tHexdump
-STATUS=$?
-cat tHexdump_tmp.txt
-exit $STATUS
-

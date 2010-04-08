@@ -1,8 +1,0 @@
-// \ingroup Imager
-
-// \defgroup MWImager MWImager
-// MWImager is a little wrapper around ASKAPsoft's cimager program.
-// It has a little class to convert a .parset file using the LOFAR
-// conventions to a .parset file for cimager.
-// Furthermore it contains scripts to start cimager in a distributed way
-// using the functionality in the MWCommon package.
