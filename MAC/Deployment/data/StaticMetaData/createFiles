@@ -359,6 +359,24 @@ def createAntennaArraysFile(resultDir, stationName, dataDir):
     print command
     os.system(command)
 
+def createAntennaPosFile(resultDir, stationName, dataDir):
+    """
+    Copies the right AntennaPos.conf file for this station
+    """
+    # Copy file <stationname>-AntennaPos.conf> to
+    # /opt/lofar/etc/AntennaPos.conf
+    srcFile = dataDir + "/" + stationName.upper() + "-AntennaPos.conf"
+    if (os.access(srcFile,os.F_OK) == False):
+        print "Cannot find or open file ",srcFile," for creating AntennaPos.conf"
+        print "Will create AntennaPos_default.conf instead"
+        srcFile = dataDir + "/AntennaPos_default.conf"
+        destFile= resultDir + "/AntennaPos.conf"
+    else:
+        destFile = resultDir + "/AntennaPos.conf"
+
+    command = "cp -f "+srcFile+ " " + destFile
+    print command
+    os.system(command)
 
 def createCableDelaysFile(resultDir, stationName, dataDir):
     """
@@ -397,6 +415,27 @@ def createHBADeltasFile(resultDir, stationName, dataDir):
         destFile= resultDir + "/HBADeltas.conf"
     else:
         destFile = resultDir + "/HBADeltas.conf"
+
+    command = "cp -f "+srcFile+ " " + destFile
+    print command
+    os.system(command)
+
+def createiHBADeltasFile(resultDir, stationName, dataDir):
+    """
+    Copies the right iHBADeltas.conf file for this station
+    """
+    # Copy file <stationname>-iHBADeltas.conf> to
+    # /opt/lofar/etc/iHBADeltas.conf
+    
+    # stationName is in lowercase!
+    srcFile = dataDir + "/" + stationName.upper() + "-iHBADeltas.conf"
+    if (os.access(srcFile,os.F_OK) == False):
+        print "Cannot find or open file ",srcFile," for creating iHBADeltas.conf"
+        print "Will create iHBADeltas_default.conf instead"
+        srcFile = dataDir + "/iHBADeltas_default.conf"
+        destFile= resultDir + "/iHBADeltas.conf"
+    else:
+        destFile = resultDir + "/iHBADeltas.conf"
 
     command = "cp -f "+srcFile+ " " + destFile
     print command
@@ -466,8 +505,10 @@ if (sys.argv[1] == "localhost"):
             createTBBDriverFile    (resultDir, stationName, dataDir)
             createRemoteStationFile(resultDir, stationName, dataDir)
             createAntennaArraysFile(resultDir, stationName, dataDir)
+            createAntennaPosFile   (resultDir, stationName, dataDir)
             createCableDelaysFile  (resultDir, stationName, dataDir)
             createHBADeltasFile    (resultDir, stationName, dataDir)
+            createiHBADeltasFile   (resultDir, stationName, dataDir)
             createHardwareMonitorFile(resultDir, stationName, dataDir)
             de601Exceptions        (resultDir, stationName, dataDir)
     else:
@@ -502,8 +543,10 @@ else:
         createTBBDriverFile    (resultDir, stationName, dataDir)
         createRemoteStationFile(resultDir, stationName, dataDir)
         createAntennaArraysFile(resultDir, stationName, dataDir)
+        createAntennaPosFile   (resultDir, stationName, dataDir)
         createCableDelaysFile  (resultDir, stationName, dataDir)
         createHBADeltasFile    (resultDir, stationName, dataDir)
+        createiHBADeltasFile   (resultDir, stationName, dataDir)
         createHardwareMonitorFile(resultDir, stationName, dataDir)
         de601Exceptions        (resultDir, stationName, dataDir)
         
