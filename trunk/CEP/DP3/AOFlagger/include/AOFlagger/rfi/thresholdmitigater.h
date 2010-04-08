@@ -48,12 +48,13 @@ class ThresholdMitigater{
 		static void VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, num_t threshold) throw();
 
 		template<size_t Length>
-		static void SumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, num_t threshold) throw()
+		static void SumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, num_t hThreshold, num_t vThreshold) throw()
 		{
-			HorizontalSumThresholdLarge<Length>(input, mask, threshold);
-			VerticalSumThresholdLarge<Length>(input, mask, threshold);
+			HorizontalSumThresholdLarge<Length>(input, mask, hThreshold);
+			VerticalSumThresholdLarge<Length>(input, mask, vThreshold);
 		}
-		static void SumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw();
+		static void VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw();
+		static void HorizontalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw();
 
 		static void VarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw();
 		static void HorizontalVarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw();

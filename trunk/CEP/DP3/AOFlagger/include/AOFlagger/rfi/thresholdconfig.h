@@ -41,15 +41,19 @@ class ThresholdConfig {
 		void InitializeThresholdsWithFalseRate(size_t resolution, long double falseAlarmRate, enum Distribution noiseDistribution);
 		long double CalculateFalseAlarmRate(size_t resolution, enum Distribution noiseDistribution);
 		void Execute(Image2DCPtr image, Mask2DPtr mask, bool additive, long double sensitivity) const;
-		void SetVerbose(bool verbose) throw() { _verbose = verbose; }
-		void SetMethod(Method method) throw() { _method = method; }
-		void SetExpThresholdFactor(long double expFactor) throw() { _expFactor=expFactor; }
-		void SetFitBackground(class SurfaceFitMethod *method) throw() { _fitMethod = method; }
-		long double GetThreshold(unsigned index) const throw() { return _operations[index].threshold; }
-		void SetThreshold(unsigned index, long double threshold) throw() { _operations[index].threshold = threshold; }
-		size_t GetLength(unsigned index) const throw() { return _operations[index].length; }
-		size_t GetOperations() const throw() { return _operations.size(); }
-		void SetMinimumConnectedSamples(size_t val) throw() { _minConnectedSamples = val; }
+		void SetVerbose(bool verbose) { _verbose = verbose; }
+		void SetMethod(Method method) { _method = method; }
+		void SetExpThresholdFactor(long double expFactor) { _expFactor=expFactor; }
+		void SetFitBackground(class SurfaceFitMethod *method) { _fitMethod = method; }
+		num_t GetHorizontalThreshold(unsigned index) const { return _horizontalOperations[index].threshold; }
+		num_t GetVerticalThreshold(unsigned index) const { return _verticalOperations[index].threshold; }
+		void SetHorizontalThreshold(unsigned index, num_t threshold) { _horizontalOperations[index].threshold = threshold; }
+		void SetVerticalThreshold(unsigned index, num_t threshold) { _verticalOperations[index].threshold = threshold; }
+		size_t GetHorizontalLength(unsigned index) const { return _horizontalOperations[index].length; }
+		size_t GetVerticalLength(unsigned index) const { return _verticalOperations[index].length; }
+		size_t GetHorizontalOperations() const { return _horizontalOperations.size(); }
+		size_t GetVerticalOperations() const { return _horizontalOperations.size(); }
+		void SetMinimumConnectedSamples(size_t val) { _minConnectedSamples = val; }
 	private:
 		void BinarySearch(long double probability, long double accuracy, size_t resolution);
 		struct ThresholdOperation {
@@ -57,7 +61,8 @@ class ThresholdConfig {
 			long double threshold;
 			long double rate;
 		};
-		std::vector<ThresholdOperation> _operations;
+		std::vector<ThresholdOperation> _horizontalOperations;
+		std::vector<ThresholdOperation> _verticalOperations;
 		Method _method;
 		Distribution _distribution;
 		bool _verbose;

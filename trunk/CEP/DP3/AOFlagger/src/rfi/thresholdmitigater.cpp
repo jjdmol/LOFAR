@@ -182,19 +182,36 @@ void ThresholdMitigater::VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr 
 	(*mask) = maskCopy;
 }
 
-void ThresholdMitigater::SumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw()
+void ThresholdMitigater::HorizontalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw()
 {
 	switch(length)
 	{
-		case 1: SumThreshold(input, mask, 1, threshold); break;
-		case 2: SumThreshold(input, mask, 2, threshold); break;
-		case 4: SumThresholdLarge<4>(input, mask, threshold); break;
-		case 8: SumThresholdLarge<8>(input, mask, threshold); break;
-		case 16: SumThresholdLarge<16>(input, mask, threshold); break;
-		case 32: SumThresholdLarge<32>(input, mask, threshold); break;
-		case 64: SumThresholdLarge<64>(input, mask, threshold); break;
-		case 128: SumThresholdLarge<128>(input, mask, threshold); break;
-		case 256: SumThresholdLarge<256>(input, mask, threshold); break;
+		case 1: HorizontalSumThreshold(input, mask, 1, threshold); break;
+		case 2: HorizontalSumThreshold(input, mask, 2, threshold); break;
+		case 4: HorizontalSumThresholdLarge<4>(input, mask, threshold); break;
+		case 8: HorizontalSumThresholdLarge<8>(input, mask, threshold); break;
+		case 16: HorizontalSumThresholdLarge<16>(input, mask, threshold); break;
+		case 32: HorizontalSumThresholdLarge<32>(input, mask, threshold); break;
+		case 64: HorizontalSumThresholdLarge<64>(input, mask, threshold); break;
+		case 128: HorizontalSumThresholdLarge<128>(input, mask, threshold); break;
+		case 256: HorizontalSumThresholdLarge<256>(input, mask, threshold); break;
+		default: throw BadUsageException("Invalid value for length");
+	}	
+}
+
+void ThresholdMitigater::VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw()
+{
+	switch(length)
+	{
+		case 1: VerticalSumThreshold(input, mask, 1, threshold); break;
+		case 2: VerticalSumThreshold(input, mask, 2, threshold); break;
+		case 4: VerticalSumThresholdLarge<4>(input, mask, threshold); break;
+		case 8: VerticalSumThresholdLarge<8>(input, mask, threshold); break;
+		case 16: VerticalSumThresholdLarge<16>(input, mask, threshold); break;
+		case 32: VerticalSumThresholdLarge<32>(input, mask, threshold); break;
+		case 64: VerticalSumThresholdLarge<64>(input, mask, threshold); break;
+		case 128: VerticalSumThresholdLarge<128>(input, mask, threshold); break;
+		case 256: VerticalSumThresholdLarge<256>(input, mask, threshold); break;
 		default: throw BadUsageException("Invalid value for length");
 	}	
 }
