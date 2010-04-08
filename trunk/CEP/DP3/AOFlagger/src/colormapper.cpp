@@ -58,6 +58,9 @@ int main(int argc, char *argv[])
 	long double scaleValue = 1.0;
 	std::string subtractFile;
 	bool subtract = false, redblue = false, rms = false, individualMaximization = false, displayMax = false;
+	bool window = false, cutWindow = false;
+	size_t windowX = 0, windowY = 0, windowWidth = 0, windowHeight = 0;
+	size_t cutWindowX = 0, cutWindowY = 0, cutWindowWidth = 0, cutWindowHeight = 0;
 
 	while(pindex < argc && argv[pindex][0] == '-') {
 		string parameter = argv[pindex]+1;
@@ -73,6 +76,20 @@ int main(int argc, char *argv[])
 		else if(parameter == "rb") { redblue=true; }
 		else if(parameter == "rms") { rms=true; }
 		else if(parameter == "max") { displayMax=true; }
+		else if(parameter == "w") {
+			window = true;
+			++pindex; windowX = atoi(argv[pindex]);
+			++pindex; windowY = atoi(argv[pindex]);
+			++pindex; windowWidth = atoi(argv[pindex]);
+			++pindex; windowHeight = atoi(argv[pindex]);
+		}
+		else if(parameter == "wc") {
+			cutWindow = true;
+			++pindex; cutWindowX = atoi(argv[pindex]);
+			++pindex; cutWindowY = atoi(argv[pindex]);
+			++pindex; cutWindowWidth = atoi(argv[pindex]);
+			++pindex; cutWindowHeight = atoi(argv[pindex]);
+		}
 		else {
 			cerr << "Unknown parameter: -" << parameter << endl;
 			return -1;
@@ -85,7 +102,8 @@ int main(int argc, char *argv[])
 				"\toptions:\n\t-s use spectrum (default)\n\t-c use color circle\n"
 				"\t-fm scale colors for maximum contrast, upper 0.02% of the data will be oversaturated (default)\n"
 				"\t-fv <value> scale so that <value> flux is full brightness\n"
-
+				"\t-w <x> <y> <width> <height> select a window of each frame only\n"
+				"\t-wc <x> <y> <width> <height> cut a window in each frame\n"
 				"\t-m add colormap to image\n"
 				"\t-fft perform fft before combining\n"
 				"\t-d <fitsfile> subtract the file from the image\n"
@@ -177,6 +195,25 @@ int main(int argc, char *argv[])
 				delete image;
 				image = AminB;
 				delete imageB;
+			}
+			if(window)
+			{
+				Image2D *empty = Image2D::CreateZeroImage(image->Width(), image->Height());
+				for(unsigned y=image->Height()-windowY-windowHeight;y<image->Height()-windowY;++y)
+				{
+					for(unsigned x=windowX;x<windowX+windowWidth;++x)
+						empty->SetValue(x, y, image->Value(x, y));
+				}
+				delete image;
+				image = empty;
+			}
+			if(cutWindow)
+			{
+				for(unsigned y=image->Height()-cutWindowY-cutWindowHeight;y<image->Height()-cutWindowY;++y)
+				{
+					for(unsigned x=cutWindowX;x<cutWindowX+cutWindowWidth;++x)
+						image->SetValue(x, y, 0.0);
+				}
 			}
 			if(fft) {
 				Image2D *fft = FFTTools::CreateFFTImage(*image, FFTTools::Absolute);
