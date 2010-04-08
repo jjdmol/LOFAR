@@ -54,6 +54,8 @@ class ThresholdConfig {
 		size_t GetHorizontalOperations() const { return _horizontalOperations.size(); }
 		size_t GetVerticalOperations() const { return _horizontalOperations.size(); }
 		void SetMinimumConnectedSamples(size_t val) { _minConnectedSamples = val; }
+		void RemoveHorizontalOperations() { _horizontalOperations.clear(); }
+		void RemoveVerticalOperations() { _verticalOperations.clear(); }
 	private:
 		void BinarySearch(long double probability, long double accuracy, size_t resolution);
 		struct ThresholdOperation {

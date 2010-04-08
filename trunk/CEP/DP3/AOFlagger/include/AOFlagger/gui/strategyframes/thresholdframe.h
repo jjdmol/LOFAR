@@ -38,6 +38,8 @@ class ThresholdFrame : public Gtk::Frame {
 		_editStrategyWindow(editStrategyWindow), _action(action),
 		_sensitivityLabel("Base sensitivity: (low = sensitive)"),
 		_sensitivityScale(0, 10, 0.1),
+		_timeDirectionButton("In time direction"),
+		_frequencyDirectionButton("In frequency direction"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
 			_box.pack_start(_sensitivityLabel);
@@ -46,6 +48,14 @@ class ThresholdFrame : public Gtk::Frame {
 			_box.pack_start(_sensitivityScale);
 			_sensitivityScale.set_value(_action.BaseSensitivity());
 			_sensitivityScale.show();
+			
+			_timeDirectionButton.set_active(_action.TimeDirectionFlagging());
+			_buttonBox.pack_start(_timeDirectionButton);
+			_timeDirectionButton.show();
+
+			_frequencyDirectionButton.set_active(_action.FrequencyDirectionFlagging());
+			_buttonBox.pack_start(_frequencyDirectionButton);
+			_frequencyDirectionButton.show();
 
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &ThresholdFrame::onApplyClicked));
@@ -65,11 +75,14 @@ class ThresholdFrame : public Gtk::Frame {
 		Gtk::HButtonBox _buttonBox;
 		Gtk::Label _sensitivityLabel;
 		Gtk::HScale _sensitivityScale;
+		Gtk::CheckButton _timeDirectionButton, _frequencyDirectionButton;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
 		{
 			_action.SetBaseSensitivity(_sensitivityScale.get_value());
+			_action.SetTimeDirectionFlagging(_timeDirectionButton.get_active());
+			_action.SetFrequencyDirectionFlagging(_frequencyDirectionButton.get_active());
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };

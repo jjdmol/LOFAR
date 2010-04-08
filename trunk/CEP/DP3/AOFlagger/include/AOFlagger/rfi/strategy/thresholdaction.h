@@ -30,7 +30,7 @@ namespace rfiStrategy {
 	class ThresholdAction : public Action
 	{
 			public:
-				ThresholdAction() : _baseSensitivity(1.0)
+				ThresholdAction() : _baseSensitivity(1.0), _inTimeDirection(true), _inFrequencyDirection(true)
 				{
 					_thresholdConfig.InitializeLengthsDefault();
 					_thresholdConfig.InitializeThresholdsFromFirstThreshold(6.0L, ThresholdConfig::Rayleigh);
@@ -41,6 +41,11 @@ namespace rfiStrategy {
 				}
 				virtual void Perform(ArtifactSet &artifacts, class ProgressListener &)
 				{
+					if(!_inTimeDirection)
+						_thresholdConfig.RemoveHorizontalOperations();
+					if(!_inFrequencyDirection)
+						_thresholdConfig.RemoveVerticalOperations();
+					
 					TimeFrequencyData &contaminated = artifacts.ContaminatedData();
 					Mask2DPtr mask = Mask2D::CreateCopy(contaminated.GetSingleMask());
 					//_thresholdConfig.SetVerbose(true);
@@ -52,10 +57,18 @@ namespace rfiStrategy {
 				{
 					_baseSensitivity = baseSensitivity;
 				}
-			virtual ActionType Type() const { return ThresholdActionType; }
+				virtual ActionType Type() const { return ThresholdActionType; }
+				
+				bool TimeDirectionFlagging() const { return _inTimeDirection; }
+				void SetTimeDirectionFlagging(bool timeDirection) { _inTimeDirection = timeDirection; }
+				
+				bool FrequencyDirectionFlagging() const { return _inFrequencyDirection; }
+				void SetFrequencyDirectionFlagging(bool frequencyDirection) { _inFrequencyDirection = frequencyDirection; }
 			private:
 				ThresholdConfig _thresholdConfig;
 				num_t _baseSensitivity;
+				bool _inTimeDirection;
+				bool _inFrequencyDirection;
 	};
 
 } // namespace
