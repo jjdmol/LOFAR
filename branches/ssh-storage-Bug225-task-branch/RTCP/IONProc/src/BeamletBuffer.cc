@@ -326,7 +326,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::startReadTransac
   itsMaxEndI	     = *std::max_element(itsEndI.begin(),   itsEndI.end());
 
   // do not read from circular buffer section that is being written
-  itsLockedRanges.lock(itsMinStartI, itsMaxEndI, itsMaxEndI - itsMinStartI);
+  itsLockedRanges.lock(itsMinStartI, itsMaxEndI, itsSize);
 }
 
 
@@ -380,7 +380,7 @@ template<typename SAMPLE_TYPE> SparseSet<unsigned> BeamletBuffer<SAMPLE_TYPE>::r
 
 template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::stopReadTransaction()
 {
-  itsLockedRanges.unlock(itsMinStartI, itsMaxEndI, itsMaxEndI - itsMinStartI);
+  itsLockedRanges.unlock(itsMinStartI, itsMaxEndI, itsSize);
 
   if (!itsIsRealTime)
     itsSynchronizedReaderWriter->finishedRead(itsMinEnd - (itsHistorySize + 16));
