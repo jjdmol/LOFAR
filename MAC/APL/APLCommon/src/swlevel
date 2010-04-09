@@ -411,6 +411,7 @@ status_prog
 
 # save for later
 echo $level > /tmp/level.admin
+chmod ug+rw /tmp/level.admin
 date=`date +%Y-%m-%d\ %H:%M:%S`
 echo [${date}]:$0 $* >> /log/swlevel.log
 exit $level
