@@ -1,6 +1,6 @@
 <?php
 $name = $_REQUEST["name"];
-$realname= str_replace("_","/",$name);
+$realname= str_replace("~","/",$name);
 $isUsed=file_exists("../dep/".$name.".used.html");
 $isUses=file_exists("../dep/".$name.".uses.html");
 $isFlat=file_exists("../dep/".$name.".flat.html");
@@ -22,7 +22,8 @@ echo $realname;
 if ($isUsed) {
 ?>
   --  <a href="../dep/<?php echo $name;?>.used.html" title="(shows in a
-  recursive way the packages where <?php echo $name;?> is used)" target="depend"> Used </a>
+  recursive way the packages where <?php echo $realname;?> is used)" 
+  target="depend"> Used</a>
 <?php
 } else {
 ?>
@@ -34,7 +35,8 @@ if ($isUsed) {
 if ($isUses) {
 ?>
   --  <a href="../dep/<?php echo $name;?>.uses.html" title="(shows in a
-  recursive way the packages used by <?php echo $name;?>)" target="depend"> Uses </a>
+  recursive way the packages used by <?php echo $realname;?>)" 
+  target="depend"> Uses</a>
 <?php
 } else {
 ?>
@@ -46,13 +48,12 @@ if ($isUses) {
 if ($isFlat) {
 ?>
   --  <a href="../dep/<?php echo $name;?>.flat.html" title="(shows the
-  packages used by <?php echo $name;?>)" target="depend"> Flat </a>
+  packages used by <?php echo $realname;?>)" target="depend"> Flat</a>
 <?php
 }
 ?>
- --- Build results: 
-    <A HREF="../../BuildResults/thisWeek/" target="_top">this week</a>
- -- <A HREF="../../BuildResults/lastWeek/" target="_top">last week</a>
+  ---  <a href="http://svn.astron.nl/CDash/index.php?project=LOFAR" 
+  target="_blank">Build results</a>
 </center>
 </body>
 </html>

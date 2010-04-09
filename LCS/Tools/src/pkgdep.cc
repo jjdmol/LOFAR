@@ -68,7 +68,7 @@ string replaceSlash (const string& str)
   string out = str;
   string::size_type idx = out.find('/');
   while (idx != string::npos) {
-    out.replace (idx, 1, 1, '_');
+    out.replace (idx, 1, 1, '~');
     idx = out.find('/');
   }
   return out;
