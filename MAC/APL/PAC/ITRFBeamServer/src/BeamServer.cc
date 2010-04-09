@@ -333,10 +333,11 @@ GCFEvent::TResult BeamServer::con2calserver(GCFEvent& event, GCFPortInterface& p
 
 	case F_CONNECTED: {
 		// start update timer and start accepting clients
-//		LOG_DEBUG_STR("Starting Heartbeat timer with interval: " << itsUpdateInterval << " secs");
-//		itsDigHeartbeat->setTimer(0, 0, itsUpdateInterval, 0);
-		itsDigHeartbeat->setTimer(10.0);	// FOR TEST SET TIMER ONCE !!!
-		itsAnaHeartbeat->setTimer(15.0);	// FOR TEST SET TIMER ONCE !!!
+		LOG_DEBUG_STR("Starting Heartbeat timer with interval: " << itsUpdateInterval << " secs");
+		itsDigHeartbeat->setTimer(0, 0, itsUpdateInterval, 0);
+		itsAnaHeartbeat->setTimer(itsUpdateInterval/2.0, 0, itsUpdateInterval, 0);
+//		itsDigHeartbeat->setTimer(10.0);	// FOR TEST SET TIMER ONCE !!!
+//		itsAnaHeartbeat->setTimer(15.0);	// FOR TEST SET TIMER ONCE !!!
 
 		if ((itsListener->getState() != GCFPortInterface::S_CONNECTING) &&
 			(itsListener->getState() != GCFPortInterface::S_CONNECTED)) {
