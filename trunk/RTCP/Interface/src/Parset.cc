@@ -248,7 +248,7 @@ vector<double> Parset::positions() const
     stNames = getStringVector("OLAP.storageStationNames",true);
     nStations = nrStations();
   }
-  
+
   for (uint i = 0; i < nStations; i++)
   {
     if (stNames[i].find("+") != string::npos)
@@ -267,6 +267,9 @@ vector<double> Parset::getRefPhaseCentres() const
   vector<double> list;
   vector<string> stNames = getStringVector("OLAP.storageStationNames",true);
   int index;
+  
+  if (stNames.size() == 0) 
+    THROW(InterfaceException, "No stations selected (OLAP.storageStationNames empty)");
   
   index = stNames[0].find("_");
   list = getDoubleVector(locateModule(stNames[0].substr(0,index)) + stNames[0].substr(0,index)  + ".phaseCenter");
