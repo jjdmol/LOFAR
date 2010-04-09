@@ -50,8 +50,8 @@ if [ "$a_pkgdep" = ""  -o  ! -x "$a_pkgdep" ]; then
 fi
 
 # Execute finddep.
-echo "Executing $a_finddep ..."
-$a_finddep
+echo "Executing $a_finddep $a_root  ..."
+$a_finddep $a_root
 
 # Execute pkgdep
 echo "Executing $a_pkgdep ..."

@@ -36,52 +36,15 @@
 #    rootdir:   root of LOFAR software tree
 #                 (default is /home/lofar/weekly/LOFAR)
 
+bindir=`dirname $0`
 rootdir="$1"
 if [ "$rootdir" = "" ]; then
   rootdir="/home/lofar/weekly/LOFAR";
 fi
 
-# Find all used packages from all configure.in files.
+# Get all dependencies and sort on name.
 # It gives the 'uses' relation.
-find $rootdir -name configure.in > tmp.fil
-egrep '^lofar_' `cat tmp.fil` | \
-sed -e 's%.*/LOFAR/%LOFAR/%' -e 's/,.*//' -e 's/).*//' -e 's%/configure.in:lofar_% %' | \
-egrep -v ' GENERAL$' | fgrep -v ' GENERAL(' | \
-sed -e 's% PACKAGE(% LOFAR/%' -e 's% INTERNAL(% LOFAR/%' -e 's% EXTERNAL(% %' -e s'%(.*%%' > tmp.uses
-
-# Find all high level packages containing a lofarconf.in, but not containing
-# leaf packages.
-rm -f tmp.out
-touch tmp.out
-for FIL in `find $rootdir -name lofarconf.in`
-do
-  fildir=`dirname $FIL`
-  nm=`find $fildir -name configure.in`
-  if test "$nm" = ""; then
-    echo $fildir >> tmp.out
-  fi
-done
-# Add those packages to the dependencies.
-for fildir in `cat tmp.out`
-do
-  # Get the packages out of the lofarconf.in file. Remove comments.
-  pkgs=`awk '{print $1 $2;}' $fildir/lofarconf.in | sed -e 's/ *#.*//'`
-  for pkg in $pkgs
-  do
-    fildir=`echo $fildir | sed -e 's%.*/LOFAR/%%'`
-    # If pkg does not start with a slash, it is relative to this level.
-    pkgnm=$fildir/$pkg
-    case $pkg in
-    /*)
-      # Remove leading slash
-      pkgnm=`echo $pkg | sed 's%^/%%'`;;
-    esac
-    echo LOFAR/$fildir LOFAR/$pkgnm >> tmp.uses
-  done
-done
-
-# Sort the file on name.
-sort tmp.uses > finddep.uses
+$bindir/finddep.py $rootdir | sort > finddep.uses
 # Make a reversed copy to get the 'used by' relation.
 awk '{ print $2, $1 }' finddep.uses | sort > finddep.used
 
@@ -91,7 +54,7 @@ for FIL in `cat tmp.fil`
 do
   lfr=`echo $FIL | sed -e 's%.*/LOFAR/%LOFAR/%'`
   first=`echo $lfr | sed -e 's%/.*%%'`
-  last=`echo $lfr | sed -e "s%$first/% %" -e 's%/configure.in%%'`
+  last=`echo $lfr | sed -e "s%$first/% %"`
   parts=`echo $last | sed -e 's%/% %g'`
   for PART in $parts
   do
@@ -100,7 +63,7 @@ do
   done
 done
 sort tmp.out | uniq | sed -e 's/#/ /' > finddep.pkg
-rm -f tmp.out tmp.fil tmp.uses
+rm -f tmp.out tmp.fil
 
 # Now 'expand' the uses and used file to get the relations for the
 # higher level packages.

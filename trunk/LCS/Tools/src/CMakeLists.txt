@@ -29,6 +29,7 @@ install(PROGRAMS
   countpurecodecomm
   fillreview
   finddep
+  finddep.py
   lofarcvsmv
   lofarcvsx
   makecov
