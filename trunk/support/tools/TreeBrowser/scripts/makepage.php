@@ -1,9 +1,7 @@
 <?php
-$name      = $_REQUEST["name"];
-$realname  = str_replace("_","/",$name);
-$namearray = explode('_',$name);
-$shortname = $namearray[sizeof($namearray)-1];
-$docname   = "group__".$shortname.".html";
+$name     = $_REQUEST["name"];
+$realname = str_replace("~","/",$name);
+$docname  = "group__" .str_replace("_","__",end(explode('~',$name))). ".html";
 ?>
 <html>
 <head>
