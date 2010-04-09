@@ -47,18 +47,19 @@ int main(int argc, char *argv[])
 			<< "Profiles:\n"
 			<< "  fast     Fastest strategy that provides a moderate\n"
 			<< "           result in quality. Will flag the measurement set using\n"
-			<< "           Stokes-I values, and by using a relatively small\n"
-			<< "           sliding window.\n"
+			<< "           Stokes-I values.\n"
 			<< "  average  Best trade-off between speed and quality. Will\n"
 			<< "           flag the measurement set using XX and YY values using\n"
 			<< "           an average sliding window size.\n"
 			<< "  best     Highest quality detection. Will flag each\n"
-			<< "           polarization individually, using a relatively large\n"
-			<< "           sliding window.\n"
+			<< "           polarization individually.\n"
 			<< "  pedantic Pedantic detection. Like the 'best' profile,\n"
 			<< "           but will flag all channels completely that are still\n"
 			<< "           deviating from others after flagging. Flags about twice\n"
 			<< "           as much.\n"
+			<< "  pulsar   Like the best strategy, but will not assume\n"
+			<< "           smoothness in time; especially usefull for pulsar\n"
+			<< "           observations.\n"
 			<< "<filename> is the filename to which the strategy is written. This\n"
 			<< "file should have the extension \".rfis\".\n\n"
 			<< "All profiles implement the SumThreshold method. The details of this\n"
@@ -79,6 +80,8 @@ int main(int argc, char *argv[])
 		strategy->LoadBestStrategy();
 	else if(profile == "pedantic")
 		strategy->LoadBestStrategy(true);
+	else if(profile == "pulsar")
+		strategy->LoadBestStrategy(true, true);
 	else {
 		std::cerr << "Unknown profile: " << profile << std::endl;
 		return 1;
