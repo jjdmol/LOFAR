@@ -97,6 +97,9 @@ void Parset::check() const
 	  THROW(InterfaceException, "Observation.rspBoardList contains rsp board numbers that do not exist");
     }
   }
+
+  if (nrStations() == 0 && nrTabStations() == 0)
+    THROW(InterfaceException, "OLAP.storageStationNames and OLAP.tiedArrayStationNames empty, no stations selected");
 }
 
 
@@ -267,9 +270,6 @@ vector<double> Parset::getRefPhaseCentres() const
   vector<double> list;
   vector<string> stNames = getStringVector("OLAP.storageStationNames",true);
   int index;
-  
-  if (stNames.size() == 0) 
-    THROW(InterfaceException, "No stations selected (OLAP.storageStationNames empty)");
   
   index = stNames[0].find("_");
   list = getDoubleVector(locateModule(stNames[0].substr(0,index)) + stNames[0].substr(0,index)  + ".phaseCenter");
