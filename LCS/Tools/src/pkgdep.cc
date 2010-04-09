@@ -75,10 +75,15 @@ string replaceSlash (const string& str)
 }
 
 // Write the dependency tree in ASCII format.
-void writeASCII (ostream& os, const string& pkg, UsedMap& dep,
+bool writeASCII (ostream& os, const string& pkg, UsedMap& dep,
 		 const string& indent,
 		 int depth, int maxdepth, bool strip)
 {
+  // Check if endless recursion.
+  if (depth > 50) {
+    cerr << "Endless recursion for package=" << pkg << endl;
+    return false;
+  }
   os << indent << baseName(pkg,strip) << endl;
   // write used packages if any and if maxdepth not reached.
   if (maxdepth < 0  ||  depth < maxdepth) {
@@ -87,9 +92,13 @@ void writeASCII (ostream& os, const string& pkg, UsedMap& dep,
     for (set<string>::const_iterator iter = uses.begin();
 	 iter != uses.end();
 	 ++iter) {
-      writeASCII (os, *iter, dep, newIndent, depth+1, maxdepth, strip);
+      if (! writeASCII (os, *iter, dep, newIndent, depth+1, maxdepth, strip)) {
+	cerr << "                              " << pkg << endl;
+        return false;
+      }
     }
   }
+  return true;
 }
 
 // Write JavaScript header.
@@ -119,11 +128,16 @@ void writeJSFooter (ostream& os)
 }
 
 // Write the dependency tree in JavaScript format.
-void writeJS (ostream& os, const string& pkg, UsedMap& dep,
+bool writeJS (ostream& os, const string& pkg, UsedMap& dep,
 	      const string& parent,
 	      int depth, int maxdepth, int seqnr, bool strip,
 	      const string& hreftxt)
 {
+  // Check if endless recursion.
+  if (depth > 50) {
+    cerr << "Endless recursion for package=" << pkg << endl;
+    return false;
+  }
   // Form the name for this node.
   ostringstream oss;
   oss << parent << '_' << seqnr+1;
@@ -144,10 +158,14 @@ void writeJS (ostream& os, const string& pkg, UsedMap& dep,
     for (set<string>::const_iterator iter = uses.begin();
 	 iter != uses.end();
 	 ++iter, ++newSeqnr) {
-      writeJS (os, *iter, dep, oss.str(), depth+1, maxdepth, newSeqnr,
-	       strip, hreftxt);
+      if (! writeJS (os, *iter, dep, oss.str(), depth+1, maxdepth, newSeqnr,
+                     strip, hreftxt)) {
+	cerr << "                              " << pkg << endl;
+        return false;
+      }
     }
   }
+  return true;
 }
 
 void writeXHTMLHeader (ostream& os, const string& hdrtxt, const string& pkg,
@@ -439,15 +457,25 @@ void writeFooter (ostream& os, OutType outtype)
 }
 
 // Determine all dependencies.
-void findFlatDep (const string& pkg, UsedMap& dep, set<string>& flatUses)
+bool findFlatDep (const string& pkg, UsedMap& dep, set<string>& flatUses,
+                  int depth)
 {
+  // Check if endless recursion.
+  if (depth > 50) {
+    cerr << "Endless recursion for package=" << pkg << endl;
+    return false;
+  }
   set<string> uses = dep[pkg].itsUses;
   for (set<string>::const_iterator iter = uses.begin();
        iter != uses.end();
        ++iter) {
     flatUses.insert (*iter);
-    findFlatDep (*iter, dep, flatUses);
+    if (! findFlatDep (*iter, dep, flatUses, depth+1)) {
+      cerr << "                              " << pkg << endl;
+      return false;
+    }
   }
+  return true;
 }
 
 int main(int argc, const char* argv[])
@@ -523,7 +551,9 @@ int main(int argc, const char* argv[])
     for (UsedMap::const_iterator iter = dep.begin();
 	 iter != dep.end();
 	 ++iter) {
-      findFlatDep (iter->first, dep, flatdep[iter->first].itsUses);
+      if (! findFlatDep (iter->first, dep, flatdep[iter->first].itsUses, 0)) {
+        return 1;
+      }
     }
     depPtr = &flatdep;
   }

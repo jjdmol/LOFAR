@@ -39,8 +39,9 @@ def readPackageList (dir):
     regrepn = re.compile (r'.*\((.*)_SOURCE_DIR .*\n?')
     regrepp = re.compile (r'.*} */(.*) *\).*\n?')
     # Iterate over the lines in the file.
-    f = open (dir + '/CMake/LofarPackageList.cmake', 'r')
-    for line in f:
+    fin  = open (dir + '/CMake/LofarPackageList.cmake', 'r')
+    fout = open ('tmp.fil', 'w')
+    for line in fin:
         if regfind.match (line):
             # A matching line; extract package name and path.
             name = regrepn.sub (r'\1', line)
@@ -48,20 +49,23 @@ def readPackageList (dir):
             if pkgmap.has_key(name):
                 print 'Package', name, 'is multiply defined'
             pkgmap[name] = path
-    f.close()
+            fout.write (path+'\n')
+    fin.close()
+    fout.close()
     return pkgmap
 
-def writeDependencies(pkgpath, pkgmap):
-    # Get the package name from LOFAR/ or ./ on.
-    repkg = re.compile ('(^LOFAR/)|^\./|(.*/LOFAR/)')
-    pkgname = repkg.sub ('', pkgpath)
+def writeDependencies(dir, pkgname, pkgmap):
     # Open the CMakeLists.txt file of the package.
     # The package can contain a line like:
     #   lofar_package(BBSKernel 1.0 DEPENDS ParmDB Blob Common)      or
     #   lofar_package(Common 1.0)
     # Furthermore external packages are retrieved looking like:
     #   lofar_find_package(Casacore ...
-    f = open (pkgpath+'/CMakeLists.txt', 'r')
+    try:
+        f = open (dir+'/'+pkgname+'/CMakeLists.txt', 'r')
+    except:
+        # File does not need to exist.
+        return
     reline = re.compile (r'(#.*)?\n?')   # to remove comment
     command=''
     for line in f:
@@ -105,13 +109,12 @@ def writeDependencies(pkgpath, pkgmap):
 
 # Find packages; i.e. directories with a CMakeLists.txt. Ignore src,test,include
 def findPkg (dir):
-    os.system ('find ' + dir + ' -name CMakeLists.txt | grep -v /src/ | grep -v /include/ | grep -v /test/ | sed "s%/CMakeLists.txt%%" > tmp.fil')
     pkgmap = readPackageList (dir)
     # Iterate over the lines in the file and write a line for each dependency.
     fin  = open ('tmp.fil', 'r')
     for line in fin:
         pkg = line[:-1]  # remove newline
-        writeDependencies (pkg, pkgmap)
+        writeDependencies (dir, pkg, pkgmap)
 
 
 def main(argv=None):
@@ -119,7 +122,7 @@ def main(argv=None):
         argv = sys.argv
     pgmpath = os.path.dirname(argv[0])
     if len(argv) < 2:
-        print sys.stderr, 'run as:  finddep.py dir'
+        print sys.stderr, 'run as:  finddep.py lofar_root_dir'
         return 1
     findPkg (argv[1]);
 
