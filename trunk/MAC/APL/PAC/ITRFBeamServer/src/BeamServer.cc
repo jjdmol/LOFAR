@@ -38,7 +38,7 @@
 
 #include "BeamServer.h"
 #include "BeamServerConstants.h"
-#include "Package__Version.h"
+#include <ITRFBeamServer/Package__Version.h>
 
 #include <getopt.h>
 #include <iostream>
@@ -77,7 +77,7 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsComputeInterval		(COMPUTE_INTERVAL),
 	itsTestSingleShotTimestamp(timestamp)
 {
-//	LOG_INFO(Version::getInfo<Beam_ServerVersion>("BeamServer"));
+//	LOG_INFO(Version::getInfo<ITRFBeamServerVersion>("ITRFBeamServer"));
 
 	// register protocols for debugging
 	registerProtocol(IBS_PROTOCOL, IBS_PROTOCOL_STRINGS);
@@ -335,7 +335,7 @@ GCFEvent::TResult BeamServer::con2calserver(GCFEvent& event, GCFPortInterface& p
 		// start update timer and start accepting clients
 		LOG_DEBUG_STR("Starting Heartbeat timer with interval: " << itsUpdateInterval << " secs");
 		itsDigHeartbeat->setTimer(0, 0, itsUpdateInterval, 0);
-		itsAnaHeartbeat->setTimer(itsUpdateInterval/2.0, 0, itsUpdateInterval, 0);
+		itsAnaHeartbeat->setTimer(itsUpdateInterval/2, 0, itsUpdateInterval, 0);
 //		itsDigHeartbeat->setTimer(10.0);	// FOR TEST SET TIMER ONCE !!!
 //		itsAnaHeartbeat->setTimer(15.0);	// FOR TEST SET TIMER ONCE !!!
 

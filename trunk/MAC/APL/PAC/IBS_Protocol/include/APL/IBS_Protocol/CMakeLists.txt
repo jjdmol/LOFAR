@@ -25,10 +25,11 @@ set(inst_HEADERS
 
 # Add definition of include path suffix definition, because the header files
 # reside in a non-standard location. 
-set(${PROJECT_NAME}_INCLUDE_PATH_SUFFIX APL/IBS_Protocol
-  CACHE INTERNAL "Include path suffix for package \"${PROJECT_NAME}\"")
+set(${PACKAGE_NAME}_INCLUDE_PATH_SUFFIX APL/IBS_Protocol
+  CACHE INTERNAL "Include path suffix for package \"${PACKAGE_NAME}\"")
 
 # Create symbolic link to include directory.
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include/APL)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}/include/APL/IBS_Protocol)
