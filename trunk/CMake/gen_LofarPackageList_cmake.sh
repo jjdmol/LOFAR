@@ -73,8 +73,14 @@ do
   # lofar_add_package (MyPackage [MyPackageDir])
   for pkg in $(sed -n "s|^[[:space:]]*[Ll][Oo][Ff][Aa][Rr]_[Aa][Dd][Dd]_[Pp][Aa][Cc][Kk][Aa][Gg][Ee][[:space:]]*([[:space:]]*\([^)]\+\)).*$|\1|p" $f)
   do
+    # Strip optional command options to lofar_add_package()
+    pkg=$(echo $pkg | sed "s|[[:space:]]\+REQUIRED||")
     # First argument is the package name
     pkgnam=$(echo $pkg | sed "s|[[:space:]].*||")
+    # Continue with next package if package name is a variable
+    if echo $pkgnam | grep "\${.*}" > /dev/null; then 
+      continue;
+    fi
     # Remaining part is the package source dir
     pkgdir=$(echo $pkg | sed -e "s|[^[:space:]]\+[[:space:]]\+||")
     # Prefix pkgdir with bdir unless bdir is empty
