@@ -34,7 +34,8 @@ Plot::Plot(const std::string &pdfFile)
 		_cbRangeHasMin(false), _cbRangeHasMax(false),
 		_clipZ(false),
 		_logX(false), _logY(false), _logZ(false),
-		_hasBoxes(false)
+		_hasBoxes(false),
+		_fontSize(24)
 {
 	_open = true;
 	_curLineFd = -1;
@@ -60,7 +61,11 @@ void Plot::Close()
 		}
 		std::stringstream header;
 		header
-			<< "set term postscript enhanced color font \"Helvetica,24\""
+			<< "set term postscript enhanced color font \"Helvetica";
+		if(_fontSize>0)
+			header << "," << _fontSize;
+		header
+			<< "\""
 			<< "\nset title \"" << _title << '\"'
 		  << "\nset pm3d map" // at s
 			<< "\nset palette rgbformulae 33,13,10"

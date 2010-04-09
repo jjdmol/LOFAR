@@ -21,6 +21,7 @@
 #define FREQUENCYPOWERPLOT_H
 
 #include <map>
+#include <string>
 
 #include "../msio/timefrequencymetadata.h"
 
@@ -29,21 +30,27 @@
 */
 class FrequencyPowerPlot {
 	public:
-		FrequencyPowerPlot() { }
-		~FrequencyPowerPlot() { }
+		FrequencyPowerPlot() : _plot(0), _logYAxis(false) { }
+		~FrequencyPowerPlot();
 
 		void Add(class TimeFrequencyData &data, TimeFrequencyMetaDataCPtr meta);
 		void WriteToText();
 		bool HasData() { return !_values.empty(); }
 		void MakePlot();
+		void StartNewLine(const std::string &lineTitle);
+		void SetLogYAxis(bool logYAxis) { _logYAxis = logYAxis; }
 	private:
+		void AddCurrentLine(class Plot &plot);
+
 		struct MapItem {
 			MapItem() : count(0), total(0.0L) { }
 			long long count;
 			long double total;
 		};
-
 		std::map<double, struct MapItem> _values;
+		std::string _currentLineText;
+		class Plot *_plot;
+		bool _logYAxis;
 };
 
 #endif
