@@ -18,35 +18,9 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-cmake_minimum_required(VERSION 2.6)
+lofar_package(${PROJECT_NAME} 1.0 DEPENDS Common MACIO RTCCommon RSP_Protocol)
 
-## ---------------------------------------------------------------------------
-## Preamble: set compilers
-## ---------------------------------------------------------------------------
-include(LofarInit)
-
-## ---------------------------------------------------------------------------
-## Project characteristics
-## ---------------------------------------------------------------------------
-project(IBS_Protocol)
-include(LofarGeneral)
-
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common AMCBase MACIO RTCCommon RSP_Protocol)
-
-## ---------------------------------------------------------------------------
-## External packages
-## ---------------------------------------------------------------------------
-include(LofarFindPackage)
-
-## ---------------------------------------------------------------------------
-## Generate configuration header file.
-## ---------------------------------------------------------------------------
-include(LofarConfig)
-
-## ---------------------------------------------------------------------------
-## Subdirectories
-## ---------------------------------------------------------------------------
 add_subdirectory(include/APL/IBS_Protocol)
 add_subdirectory(src)
-add_subdirectory(test)
+#add_subdirectory(test)
+

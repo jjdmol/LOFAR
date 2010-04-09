@@ -7,4 +7,4 @@ lofar_find_package(Blitz REQUIRED)
 
 add_subdirectory(include/APL/CAL_Protocol)
 add_subdirectory(src)
-add_subdirectory(test)
+#add_subdirectory(test)

@@ -120,7 +120,7 @@ GCFEvent::TResult	calinfo::getInfo(GCFEvent&	event, GCFPortInterface&	port)
 	return (GCFEvent::HANDLED);
 }
 
-GCFEvent::TResult	calinfo::finish(GCFEvent&	event, GCFPortInterface&	port) {
+GCFEvent::TResult	calinfo::finish(GCFEvent&	/*event*/, GCFPortInterface&	/*port*/) {
 	GCFScheduler::instance()->stop();
 	return (GCFEvent::HANDLED);
 }

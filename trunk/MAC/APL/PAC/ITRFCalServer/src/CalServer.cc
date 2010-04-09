@@ -31,7 +31,7 @@
 #include <Common/Version.h>
 
 #include <APL/APLCommon/AntennaPos.h>
-#include <APL/RTCCommon/ResourceCache.h>
+##include <APL/APLCommon/ResourceCache.h>
 #include <APL/ICAL_Protocol/ICAL_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/LBA_Calibration/lba_calibration.h>		// the matlab stuff
