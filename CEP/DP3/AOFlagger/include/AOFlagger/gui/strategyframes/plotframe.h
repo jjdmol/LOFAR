@@ -23,6 +23,7 @@
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
 #include <gtkmm/buttonbox.h>
+#include <gtkmm/checkbutton.h>
 #include <gtkmm/frame.h>
 #include <gtkmm/label.h>
 #include <gtkmm/radiobutton.h>
@@ -42,6 +43,8 @@ class StrategyPlotFrame : public Gtk::Frame {
 		_frequencyVsFlagsButton("Frequency vs. flags"),
 		_frequencyVsPowerButton("Frequency vs. power"),
 		_timeVsFlagsButton("Time vs. flgs"),
+		_baselineSpectrumPlotButton("Spectrum per baseline"),
+		_logYScaleButton("Logarithmic y-axis"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
 			_box.pack_start(_plotKindLabel);
@@ -65,6 +68,10 @@ class StrategyPlotFrame : public Gtk::Frame {
 			_timeVsFlagsButton.set_group(group);
 			_timeVsFlagsButton.show();
 
+			_box.pack_start(_baselineSpectrumPlotButton);
+			_baselineSpectrumPlotButton.set_group(group);
+			_baselineSpectrumPlotButton.show();
+
 			switch(_action.PlotKind())
 			{
 				case rfiStrategy::PlotAction::AntennaFlagCountPlot:
@@ -79,7 +86,14 @@ class StrategyPlotFrame : public Gtk::Frame {
 				case rfiStrategy::PlotAction::TimeFlagCountPlot:
 				_timeVsFlagsButton.set_active(true);
 					break;
+				case rfiStrategy::PlotAction::BaselineSpectrumPlot:
+					_baselineSpectrumPlotButton.set_active(true);
+					break;
 			}
+
+			_logYScaleButton.set_active(_action.LogarithmicYAxis());
+			_box.pack_start(_logYScaleButton);
+			_logYScaleButton.show();
 
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &StrategyPlotFrame::onApplyClicked));
@@ -99,7 +113,9 @@ class StrategyPlotFrame : public Gtk::Frame {
 		Gtk::HButtonBox _buttonBox;
 		Gtk::Label _plotKindLabel;
 		Gtk::RadioButton
-			_antennaVsFlagsButton, _frequencyVsFlagsButton, _frequencyVsPowerButton, _timeVsFlagsButton;
+			_antennaVsFlagsButton, _frequencyVsFlagsButton, _frequencyVsPowerButton, _timeVsFlagsButton,
+			_baselineSpectrumPlotButton;
+		Gtk::CheckButton _logYScaleButton;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
@@ -112,6 +128,9 @@ class StrategyPlotFrame : public Gtk::Frame {
 				_action.SetPlotKind(rfiStrategy::PlotAction::FrequencyPowerPlot);
 			else if(_timeVsFlagsButton.get_active())
 				_action.SetPlotKind(rfiStrategy::PlotAction::TimeFlagCountPlot);
+			else if(_baselineSpectrumPlotButton.get_active())
+				_action.SetPlotKind(rfiStrategy::PlotAction::BaselineSpectrumPlot);
+			_action.SetLogarithmicYAxis(_logYScaleButton.get_active());
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };

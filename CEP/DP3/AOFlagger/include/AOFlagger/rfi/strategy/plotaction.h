@@ -28,9 +28,12 @@ namespace rfiStrategy {
 	class PlotAction : public Action
 	{
 		public:
-			enum PlotKind { AntennaFlagCountPlot, FrequencyFlagCountPlot, FrequencyPowerPlot, TimeFlagCountPlot };
+			enum PlotKind {
+				AntennaFlagCountPlot, FrequencyFlagCountPlot, FrequencyPowerPlot, TimeFlagCountPlot,
+				BaselineSpectrumPlot
+			};
 
-			PlotAction() : _plotKind(FrequencyPowerPlot) { }
+			PlotAction() : _plotKind(FrequencyPowerPlot), _logYAxis(false) { }
 			virtual ~PlotAction() { }
 			virtual std::string Description()
 			{
@@ -44,6 +47,8 @@ namespace rfiStrategy {
 					return "Plot frequency power";
 					case TimeFlagCountPlot:
 					return "Plot time flag counts";
+					case BaselineSpectrumPlot:
+					return "Plot spectrum per baseline";
 					default:
 					return "Unknown plot action";
 				}
@@ -54,13 +59,18 @@ namespace rfiStrategy {
 
 			enum PlotKind PlotKind() const { return _plotKind; }
 			void SetPlotKind(enum PlotKind plotKind) { _plotKind = plotKind; }
+
+			bool LogarithmicYAxis() const { return _logYAxis; }
+			void SetLogarithmicYAxis(bool logYAxis) { _logYAxis = logYAxis; }
 		private:
 			enum PlotKind _plotKind;
+			bool _logYAxis;
 
 			void plotAntennaFlagCounts(class ArtifactSet &artifacts);
 			void plotFrequencyFlagCounts(class ArtifactSet &artifacts);
 			void plotFrequencyPower(class ArtifactSet &artifacts);
 			void plotTimeFlagCounts(class ArtifactSet &artifacts);
+			void plotSpectrumPerBaseline(class ArtifactSet &artifacts);
 	};
 
 }

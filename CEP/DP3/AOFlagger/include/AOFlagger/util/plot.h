@@ -103,6 +103,10 @@ class Plot {
 			_logY = y;
 			_logZ = z;
 		}
+		void SetFontSize(size_t newSize)
+		{
+			_fontSize = newSize;
+		}
 		void Show();
 	private:
 		enum Type { Line, Scatter, Boxes, Grid } _curType;
@@ -133,6 +137,7 @@ class Plot {
 		
 		bool _logX, _logY, _logZ;
 		bool _hasBoxes;
+		size_t _fontSize;
 };
 
 #endif

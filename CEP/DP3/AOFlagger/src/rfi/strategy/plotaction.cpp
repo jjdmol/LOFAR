@@ -43,6 +43,9 @@ namespace rfiStrategy {
 			case TimeFlagCountPlot:
 				plotTimeFlagCounts(artifacts);
 				break;
+			case BaselineSpectrumPlot:
+				plotSpectrumPerBaseline(artifacts);
+				break;
 		}
 	}
 
@@ -84,5 +87,17 @@ namespace rfiStrategy {
 		TimeFrequencyData &data = artifacts.ContaminatedData();
 		TimeFrequencyMetaDataCPtr meta = artifacts.MetaData();
 		artifacts.TimeFlagCountPlot()->Add(data, meta);
+	}
+
+	void PlotAction::plotSpectrumPerBaseline(ArtifactSet &artifacts)
+	{
+		if(artifacts.FrequencyPowerPlot() == 0)
+			throw BadUsageException("No frequency power plot in the artifact set");
+
+		TimeFrequencyData &data = artifacts.ContaminatedData();
+		TimeFrequencyMetaDataCPtr meta = artifacts.MetaData();
+		artifacts.FrequencyPowerPlot()->SetLogYAxis(_logYAxis);
+		artifacts.FrequencyPowerPlot()->StartNewLine(meta->Antenna1().name + " x " + meta->Antenna2().name);
+		artifacts.FrequencyPowerPlot()->Add(data, meta);
 	}
 }
