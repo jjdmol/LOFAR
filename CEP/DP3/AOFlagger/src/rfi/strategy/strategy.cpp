@@ -44,12 +44,12 @@ namespace rfiStrategy {
 		return strategy;
 	}
 
-	void Strategy::LoadDefaultSingleStrategy(bool pedantic)
+	void Strategy::LoadDefaultSingleStrategy(bool pedantic, bool pulsar)
 	{
-		LoadDefaultSingleStrategy(*this, pedantic);
+		LoadDefaultSingleStrategy(*this, pedantic, pulsar);
 	}
 
-	void Strategy::LoadDefaultSingleStrategy(ActionBlock &block, bool pedantic)
+	void Strategy::LoadDefaultSingleStrategy(ActionBlock &block, bool pedantic, bool pulsar)
 	{
 		block.Add(new SetFlaggingAction());
 		ForEachPolarisationBlock *fepBlock = new ForEachPolarisationBlock();
@@ -60,22 +60,33 @@ namespace rfiStrategy {
 	
 		ThresholdAction *t1 = new ThresholdAction();
 		t1->SetBaseSensitivity(4.0);
+		if(pulsar)
+			t1->SetFrequencyDirectionFlagging(false);
 		adapter->Add(t1);
 
 		CombineFlagResults *cfr1 = new CombineFlagResults();
 		adapter->Add(cfr1);
 
 		cfr1->Add(new FrequencySelectionAction());
-		cfr1->Add(new TimeSelectionAction());
+		if(!pulsar)
+			cfr1->Add(new TimeSelectionAction());
 	
 		adapter->Add(new SetImageAction());
 
 		ChangeResolutionAction *changeResAction1 = new ChangeResolutionAction();
-		changeResAction1->SetDecreaseFactor(3);
+		if(pulsar)
+			changeResAction1->SetDecreaseFactor(1);
+		else
+			changeResAction1->SetDecreaseFactor(3);
 
 		SlidingWindowFitAction *swfAction1 = new SlidingWindowFitAction();
-		swfAction1->Parameters().timeDirectionKernelSize = 2.5;
-		swfAction1->Parameters().timeDirectionWindowSize = 10;
+		if(pulsar)
+		{
+			swfAction1->Parameters().timeDirectionWindowSize = 1;
+		} else {
+			swfAction1->Parameters().timeDirectionKernelSize = 2.5;
+			swfAction1->Parameters().timeDirectionWindowSize = 10;
+		}
 		changeResAction1->Add(swfAction1);
 
 		adapter->Add(changeResAction1);
@@ -83,27 +94,41 @@ namespace rfiStrategy {
 
 		ThresholdAction *t2 = new ThresholdAction();
 		t2->SetBaseSensitivity(2.0);
+		if(pulsar)
+			t2->SetFrequencyDirectionFlagging(false);
 		adapter->Add(t2);
 
 		CombineFlagResults *cfr2 = new CombineFlagResults();
 		adapter->Add(cfr2);
 
 		cfr2->Add(new FrequencySelectionAction());
-		cfr2->Add(new TimeSelectionAction());
+		if(!pulsar)
+			cfr2->Add(new TimeSelectionAction());
 	
 		adapter->Add(new SetImageAction());
 		ChangeResolutionAction *changeResAction2 = new ChangeResolutionAction();
-		changeResAction2->SetDecreaseFactor(3);
+		if(pulsar)
+			changeResAction2->SetDecreaseFactor(1);
+		else
+			changeResAction2->SetDecreaseFactor(3);
 
 		SlidingWindowFitAction *swfAction2 = new SlidingWindowFitAction();
-		swfAction2->Parameters().timeDirectionKernelSize = 2.5;
-		swfAction2->Parameters().timeDirectionWindowSize = 10;
+		if(pulsar)
+		{
+			swfAction2->Parameters().timeDirectionWindowSize = 1;
+		} else {
+			swfAction2->Parameters().timeDirectionKernelSize = 2.5;
+			swfAction2->Parameters().timeDirectionWindowSize = 10;
+		}
 		changeResAction2->Add(swfAction2);
 
 		adapter->Add(changeResAction2);
 		adapter->Add(new SetFlaggingAction());
 
-		adapter->Add(new ThresholdAction());
+		ThresholdAction *t3 = new ThresholdAction();
+		if(pulsar)
+			t3->SetFrequencyDirectionFlagging(false);
+		adapter->Add(t3);
 		adapter->Add(new StatisticalFlagAction());
 
 		if(pedantic)
@@ -111,9 +136,11 @@ namespace rfiStrategy {
 			CombineFlagResults *cfr3 = new CombineFlagResults();
 			adapter->Add(cfr3);
 			cfr3->Add(new FrequencySelectionAction());
-			cfr3->Add(new TimeSelectionAction());
+			if(!pulsar)
+				cfr3->Add(new TimeSelectionAction());
 		} else {
-			adapter->Add(new TimeSelectionAction());
+			if(!pulsar)
+				adapter->Add(new TimeSelectionAction());
 		}
 		
 		SetFlaggingAction *setFlagsInAllPolarizations = new SetFlaggingAction();
@@ -150,12 +177,22 @@ namespace rfiStrategy {
 		LoadAverageStrategy();
 	}
 
-	void Strategy::LoadFastStrategy()
+	void Strategy::LoadFastStrategy(bool pedantic, bool pulsar)
 	{
-		LoadDefaultStrategy();
+		ForEachBaselineAction *feBaseBlock = new ForEachBaselineAction();
+		Add(feBaseBlock);
+
+		LoadImageAction *loadImageAction = new LoadImageAction();
+		loadImageAction->SetReadStokesI();
+
+		feBaseBlock->Add(loadImageAction);
+		
+		LoadDefaultSingleStrategy(*feBaseBlock, pedantic, pulsar);
+
+		feBaseBlock->Add(new WriteFlagsAction());
 	}
 
-	void Strategy::LoadAverageStrategy()
+	void Strategy::LoadAverageStrategy(bool pedantic, bool pulsar)
 	{
 		ForEachBaselineAction *feBaseBlock = new ForEachBaselineAction();
 		Add(feBaseBlock);
@@ -165,12 +202,12 @@ namespace rfiStrategy {
 
 		feBaseBlock->Add(loadImageAction);
 		
-		LoadDefaultSingleStrategy(*feBaseBlock);
+		LoadDefaultSingleStrategy(*feBaseBlock, pedantic, pulsar);
 
 		feBaseBlock->Add(new WriteFlagsAction());
 	}
 
-	void Strategy::LoadBestStrategy(bool pedantic)
+	void Strategy::LoadBestStrategy(bool pedantic, bool pulsar)
 	{
 		ForEachBaselineAction *feBaseBlock = new ForEachBaselineAction();
 		Add(feBaseBlock);
@@ -180,7 +217,7 @@ namespace rfiStrategy {
 
 		feBaseBlock->Add(loadImageAction);
 		
-		LoadDefaultSingleStrategy(*feBaseBlock, pedantic);
+		LoadDefaultSingleStrategy(*feBaseBlock, pedantic, pulsar);
 
 		feBaseBlock->Add(new WriteFlagsAction());
 	}
