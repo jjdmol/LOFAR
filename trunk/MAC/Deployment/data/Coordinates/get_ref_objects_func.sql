@@ -23,10 +23,10 @@
 --
 
 --
--- get_objects(<stationname>|all, lba|hba|all)
+-- get_ref_objects(<stationname>|all, lba|hba|all)
 --
 CREATE OR REPLACE FUNCTION get_ref_objects(VARCHAR(10), VARCHAR(10))
-  RETURNS SETOF GenCoord AS $$
+  RETURNS SETOF genCoord AS $$
 	DECLARE
 		aStation	ALIAS FOR $1;
 		aType		ALIAS FOR $2;
@@ -55,6 +55,7 @@ CREATE OR REPLACE FUNCTION get_ref_objects(VARCHAR(10), VARCHAR(10))
 		  SELECT o.stationname,
 				 o.type,
 				 o.number,
+				 r.ref_frame,
 				 r.x,
 				 r.y,
 				 r.z
