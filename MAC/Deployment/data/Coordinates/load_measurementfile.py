@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 #coding: iso-8859-15
 import re,sys,pgdb,pg
+from database import *
+
+# get info from database.py
+dbName=getDBname()
+dbHost=getDBhost()
 
 #
 # getHeaderLines
@@ -12,8 +17,9 @@ def getHeaderLines(filename):
     pattern=re.compile("^[a-zA-Z]+.*", re.IGNORECASE | re.MULTILINE)
     answer = {}
     for line in pattern.findall(open(filename).read()):
-        (key, value, dummy) = line.split(';',2) 
-        answer[key]=value
+        if line.count(';') == 1:
+            (key, value) = line.split(';') 
+            answer[key]=value
     return answer
 
 #
@@ -59,7 +65,7 @@ if __name__ == '__main__':
     objtype = []
     objtype.append(objecttype)
 
-    db = pgdb.connect(user="postgres", host="dop50", database="coordtest")
+    db = pgdb.connect(user="postgres", host=dbHost, database=dbName)
     cursor = db.cursor()
     # check stationname
     cursor.execute("select name from station")
@@ -122,7 +128,7 @@ if __name__ == '__main__':
        sys.exit(1)
 
     # calling stored procedures only works from the pg module for some reason.
-    db = pg.connect(user="postgres", host="dop50", dbname="coordtest")
+    db = pg.connect(user="postgres", host=dbHost, dbname=dbName)
     for cline in getCoordLines(sys.argv[1]):
         ( number, X, Y, Z, sX, sY, sZ ) = cline.split(';')
         print objecttype, number
