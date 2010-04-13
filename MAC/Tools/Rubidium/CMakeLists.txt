@@ -1,8 +1,6 @@
 # $Id$
 
-if(HAVE_SYS_TIMEPPS_H)
-  lofar_add_sbin_program(tci tci.c)
-endif(HAVE_SYS_TIMEPPS_H)
+lofar_add_sbin_program(tci tci.c)
 
 install(PROGRAMS 
   plotrubidium 
