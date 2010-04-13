@@ -18,7 +18,7 @@ lofar_find_package(FFTW3 REQUIRED)
 lofar_find_package(LAPACK REQUIRED)
 lofar_find_package(CPPLapack REQUIRED)
 lofar_find_package(BLAS REQUIRED)
-lofar_find_package(PTHREADS REQUIRED)
+lofar_find_package(Pthreads REQUIRED)
 lofar_find_package(GSL REQUIRED)
 lofar_find_package(CFITSIO REQUIRED)
 
