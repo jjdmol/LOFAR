@@ -28,6 +28,15 @@
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
+#include <measures/TableMeasures/TableMeasRefDesc.h>
+#include <measures/TableMeasures/TableMeasValueDesc.h>
+#include <measures/TableMeasures/TableMeasDesc.h>
+#include <measures/TableMeasures/ScalarMeasColumn.h>
+#include <measures/TableMeasures/ArrayMeasColumn.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MCDirection.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MCPosition.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayIO.h>
@@ -49,9 +58,69 @@ using namespace casa;
 // This program tests the class LofarStMan and related classes.
 // The results are written to stdout. The script executing this program,
 // compares the results with the reference output file.
+//
+// It uses the given phase center, station positions, times, and baselines to
+// get known UVW coordinates. In this way the UVW calculation can be checked.
 
 
-void createTable()
+void createField (Table& mainTable)
+{
+  // Build the table description.
+  TableDesc td;
+  td.addColumn (ArrayColumnDesc<Double>("PHASE_DIR"));
+  TableMeasRefDesc measRef(MDirection::J2000);
+  TableMeasValueDesc measVal(td, "PHASE_DIR");
+  TableMeasDesc<MDirection> measCol(measVal, measRef);
+  measCol.write (td);
+  // Now create a new table from the description.
+  SetupNewTable newtab("tLofarStMan_tmp.data/FIELD", td, Table::New);
+  Table tab(newtab, 1);
+  ArrayMeasColumn<MDirection> fldcol (tab, "PHASE_DIR");
+  Vector<MDirection> phaseDir(1);
+  phaseDir[0] = MDirection(MVDirection(Quantity(-1.92653768, "rad"),
+                                       Quantity(1.09220917, "rad")),
+                           MDirection::J2000);
+  fldcol.put (0, phaseDir);
+  mainTable.rwKeywordSet().defineTable ("FIELD", tab);
+}
+
+void createAntenna (Table& mainTable, uInt nant)
+{
+  // Build the table description.
+  TableDesc td;
+  td.addColumn (ArrayColumnDesc<Double>("POSITION"));
+  TableMeasRefDesc measRef(MPosition::ITRF);
+  TableMeasValueDesc measVal(td, "POSITION");
+  TableMeasDesc<MPosition> measCol(measVal, measRef);
+  measCol.write (td);
+  // Now create a new table from the description.
+  SetupNewTable newtab("tLofarStMan_tmp.data/ANTENNA", td, Table::New);
+  Table tab(newtab, nant);
+  ScalarMeasColumn<MPosition> poscol (tab, "POSITION");
+  // Use the positions of WSRT RT0-3.
+  Vector<double> vals(3);
+  vals[0] = 3828763; vals[1] = 442449; vals[2] = 5064923;
+  poscol.put (0, MPosition(Quantum<Vector<double> >(vals,"m"),
+                           MPosition::ITRF));
+  vals[0] = 3828746; vals[1] = 442592; vals[2] = 5064924;
+  poscol.put (1, MPosition(Quantum<Vector<double> >(vals,"m"),
+                           MPosition::ITRF));
+  vals[0] = 3828729; vals[1] = 442735; vals[2] = 5064925;
+  poscol.put (2, MPosition(Quantum<Vector<double> >(vals,"m"),
+                           MPosition::ITRF));
+  vals[0] = 3828713; vals[1] = 442878; vals[2] = 5064926;
+  poscol.put (3, MPosition(Quantum<Vector<double> >(vals,"m"),
+                           MPosition::ITRF));
+  // Write the remaining columns with the same position.
+  // They are not used in the UVW check.
+  for (uInt i=4; i<nant; ++i) {
+    poscol.put (i, MPosition(Quantum<Vector<double> >(vals,"m"),
+                             MPosition::ITRF));
+  }
+  mainTable.rwKeywordSet().defineTable ("ANTENNA", tab);
+}
+
+void createTable (uInt nant)
 {
   // Build the table description.
   // Add all mandatory columns of the MS main table.
@@ -88,6 +157,9 @@ void createTable()
   newtab.bindAll (sm1);
   // Finally create the table. The destructor writes it.
   Table tab(newtab);
+  // Create the subtables needed to calculate UVW coordinates.
+  createField (tab);
+  createAntenna (tab, nant);
 }
 
 uInt nalign (uInt size, uInt alignment)
@@ -100,12 +172,13 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
                  uInt alignment, Bool bigEndian, uInt myStManVersion=1)
 {
   // Create the baseline vectors (no autocorrelations).
-  uInt nrbl = nant*(nant-1)/2;
+  uInt nrbl = nant*nant;
   Block<Int> ant1(nrbl);
   Block<Int> ant2(nrbl);
   uInt inx=0;
+  // Use baselines 0,0, 0,1, ... 1,0, 1,1 ... n,n
   for (uInt i=0; i<nant; ++i) {
-    for (uInt j=i+1; j<nant; ++j) {
+    for (uInt j=0; j<nant; ++j) {
       ant1[inx] = i;
       ant2[inx] = j;
       ++inx;
@@ -219,12 +292,61 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
 }
 
 
+void checkUVW (uInt row, uInt nant, Vector<Double> uvw)
+{
+  // Expected outcome of UVW for antenna 0-3 and seqnr 0-1
+  static double uvwVals[] = {
+    0, 0, 0,
+    0.423756, -127.372, 67.1947,
+    0.847513, -254.744, 134.389,
+    0.277918, -382.015, 201.531,
+    -0.423756, 127.372, -67.1947,
+    0, 0, 0,
+    0.423756, -127.372, 67.1947,
+    -0.145838, -254.642, 134.336,
+    -0.847513, 254.744, -134.389,
+    -0.423756, 127.372, -67.1947,
+    0, 0, 0,
+    -0.569594, -127.27, 67.1417,
+    -0.277918, 382.015, -201.531,
+    0.145838, 254.642, -134.336,
+    0.569594, 127.27, -67.1417,
+    0, 0, 0,
+    0, 0, 0,
+    0.738788, -127.371, 67.1942,
+    1.47758, -254.742, 134.388,
+    1.22276, -382.013, 201.53,
+    -0.738788, 127.371, -67.1942,
+    0, 0, 0,
+    0.738788, -127.371, 67.1942,
+    0.483976, -254.642, 134.336,
+    -1.47758, 254.742, -134.388,
+    -0.738788, 127.371, -67.1942,
+    0, 0, 0,
+    -0.254812, -127.271, 67.1421,
+    -1.22276, 382.013, -201.53,
+    -0.483976, 254.642, -134.336,
+    0.254812, 127.271, -67.1421,
+    0, 0, 0
+  };
+  uInt nrbl = nant*nant;
+  uInt seqnr = row / nrbl;
+  uInt bl = row % nrbl;
+  uInt ant1 = bl / nant;
+  uInt ant2 = bl % nant;
+  // Only check first two time stamps and first four antennae.
+  if (seqnr < 2  &&  ant1 < 4  &&  ant2 < 4) {
+    AlwaysAssertExit (near(uvw[0],
+                           uvwVals[3*(seqnr*16 + 4*ant1 + ant2)],
+                           1e-5));
+  }
+}
 
 void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
                 Double startTime, Double interval, const Complex& startValue, 
 		uInt myStManVersion=1)
 {
-  uInt nbasel = nant*(nant-1)/2;
+  uInt nbasel = nant*nant;
   // Open the table and check if #rows is as expected.
   Table tab("tLofarStMan_tmp.data");
   uInt nrow = tab.nrow();
@@ -274,7 +396,7 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
     }
 
     for (uInt j=0; j<nant; ++j) {
-      for (uInt k=j+1; k<nant; ++k) {
+      for (uInt k=0; k<nant; ++k) {
 
         // Contents must be present except for FLAG_CATEGORY.
 	AlwaysAssertExit (dataCol.isDefined (row));
@@ -332,11 +454,10 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
     }
     startTime += interval;
   }
-  // Check the other columns (UVW is 0).
+  // Check the other columns.
   AlwaysAssertExit (allNear(centCol.getColumn(), times, 1e-13));
   AlwaysAssertExit (allNear(intvCol.getColumn(), interval, 1e-13));
   AlwaysAssertExit (allNear(expoCol.getColumn(), interval, 1e-13));
-  AlwaysAssertExit (allEQ(uvwCol.getColumn(), 0.));
   AlwaysAssertExit (allEQ(feed1Col.getColumn(), 0));
   AlwaysAssertExit (allEQ(feed2Col.getColumn(), 0));
   AlwaysAssertExit (allEQ(ddidCol.getColumn(), 0));
@@ -347,7 +468,10 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
   AlwaysAssertExit (allEQ(stidCol.getColumn(), 0));
   AlwaysAssertExit (allEQ(scnrCol.getColumn(), 0));
   AlwaysAssertExit (allEQ(flagrowCol.getColumn(), False));
-
+  // Check the UVW coordinates.
+  for (uInt i=0; i<nrow; ++i) {
+    checkUVW (i, nant, uvwCol(i));
+  }
   RefRows rownrs(0,2,1);
   Slicer slicer(IPosition(2,0,0), IPosition(2,1,1));
   cout << wspecCol(0).shape() << endl;
@@ -420,21 +544,29 @@ int main (int argc, char* argv[])
       for (int v=1; v<4; ++v) {
         cout << "Test version " << v << endl;
         // Create the table.
-        createTable();
+        createTable (nant);
         // Write data in big-endian and check it. Align on 512.
-        createData (nseq, nant, nchan, npol, 1e9, 10., Complex(0.1, 0.1),
-                    512, True, v);
-        readTable (nseq, nant, nchan, npol, 1e9, 10., Complex(0.1, 0.1), v);
+        // Use this start time and interval to get known UVWs.
+        // They are the same as used in DPPP/tUVWFlagger.
+        double interval= 30.;
+        double startTime = 4472025740.0 - interval*0.5;
+        createData (nseq, nant, nchan, npol, startTime, interval,
+                    Complex(0.1, 0.1), 512, True, v);
+        readTable (nseq, nant, nchan, npol, startTime, interval,
+                   Complex(0.1, 0.1), v);
         // Update the table and check again.
         updateTable (nchan, npol, Complex(-3.52, -20.3));
-        readTable (nseq, nant, nchan, npol, 1e9, 10., Complex(-3.52, -20.3), v);
+        readTable (nseq, nant, nchan, npol, startTime, interval,
+                   Complex(-3.52, -20.3), v);
         // Write data in local format and check it. No alignment.
-        createData (nseq, nant, nchan, npol, 1e9, 10., Complex(3.1, -5.2),
-                    0, False, v);
-        readTable (nseq, nant, nchan, npol, 1e9, 10., Complex(3.1, -5.2), v);
+        createData (nseq, nant, nchan, npol, startTime, interval,
+                    Complex(3.1, -5.2), 0, False, v);
+        readTable (nseq, nant, nchan, npol, startTime, interval,
+                   Complex(3.1, -5.2), v);
         // Update the table and check again.
         updateTable (nchan, npol, Complex(3.52, 20.3));
-        readTable (nseq, nant, nchan, npol, 1e9, 10., Complex(3.52, 20.3), v);
+        readTable (nseq, nant, nchan, npol, startTime, interval,
+                   Complex(3.52, 20.3), v);
         copyTable();
       }
     }
