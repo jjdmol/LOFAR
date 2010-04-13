@@ -255,10 +255,10 @@ bitset<MAX_RCUS> Observation::getRCUbitset(int nrLBAs, int nrHBAs, int nrRSPs, b
 	}
 	int		firstRCU = 0;
 	int		lastRCU	 = nrAnts * 2;
-	if (hasSplitters && (antennaSet == "HBA_ONE")) {
+	if (hasSplitters && (antennaSet == "HBA_ZERO")) {
 		lastRCU = nrAnts;
 	}
-	else if (hasSplitters && (antennaSet == "HBA_TWO")) {
+	else if (hasSplitters && (antennaSet == "HBA_ONE")) {
 		firstRCU = nrAnts;
 	}
 	
@@ -287,9 +287,9 @@ string Observation::getAntennaArrayName(bool hasSplitters) const
 		if (result.find("HBA") == 0) return ("HBA");
 	}
 	else {						// has splitter, translate SAS names to AntennaArray.conf names
-		if (result == "HBA_ONE") 	return ("HBA_0");
-		if (result == "HBA_TWO") 	return ("HBA_1");
-		if (result == "HBA_BOTH")	return ("HBA");
+		if (result == "HBA_ZERO") 	return ("HBA_0");
+		if (result == "HBA_ONE") 	return ("HBA_1");
+		return ("HBA");
 	}
 
 	return (result);
