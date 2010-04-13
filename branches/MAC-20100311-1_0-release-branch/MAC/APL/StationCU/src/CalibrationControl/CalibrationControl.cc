@@ -618,7 +618,7 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 //
 bool	CalibrationControl::startCalibration() 
 {
-	bool	stereoBeams((itsObsPar.antennaSet == "HBA_BOTH") && (stationRingName() == "Core"));
+	bool	stereoBeams((itsObsPar.antennaSet == "HBA_DUAL") && (stationRingName() == "Core"));
 	itsNrBeams = itsObsPar.beams.size() * (stereoBeams ? 2 : 1);
 	LOG_DEBUG_STR("Calibrating " << itsNrBeams << " beams.");
 	if (itsNrBeams == 0) {
@@ -641,7 +641,7 @@ bool	CalibrationControl::startCalibration()
 											convertFilterSelection(itsObsPar.filter, itsObsPar.antennaSet));
 		calStartEvent.subset = itsObsPar.getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters);
 
-		// Note: when HBA_BOTH is selected we should set up a calibration on both HBA_0 and HBA_1 field.
+		// Note: when HBA_DUAL is selected we should set up a calibration on both HBA_0 and HBA_1 field.
 		if (!stereoBeams) {
 			LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
 									calStartEvent.name.c_str(), calStartEvent.parent.c_str(),

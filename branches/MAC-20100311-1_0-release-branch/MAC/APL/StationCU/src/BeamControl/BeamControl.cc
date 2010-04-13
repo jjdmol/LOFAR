@@ -609,7 +609,7 @@ bool BeamControl::doPrepare()
 	GCFPValueArray		beamIDArr;
 
 	LOG_DEBUG_STR(theObs);
-	bool		stereoBeams((theObs.antennaSet == "HBA_BOTH") && (stationRingName() == "Core"));
+	bool		stereoBeams((theObs.antennaSet == "HBA_DUAL") && (stationRingName() == "Core"));
 	itsNrBeams = theObs.beams.size() * (stereoBeams ? 2 : 1);
 	LOG_DEBUG_STR("Controlling " << itsNrBeams << " beams.");
 
@@ -632,7 +632,7 @@ bool BeamControl::doPrepare()
 		LOG_DEBUG_STR("subarray@field : " << beamAllocEvent.subarrayname << "@" << beamAllocEvent.name);
 		beamAllocEvent.rcumask = theObs.getRCUbitset(0, 0, 0, false);		// get modified set of StationController
 		StationConfig	sc;
-		beamAllocEvent.ringNr  = ((sc.hasSplitters && (theObs.antennaSet == "HBA_TWO")) ? 1 : 0);
+		beamAllocEvent.ringNr  = ((sc.hasSplitters && (theObs.antennaSet == "HBA_ONE")) ? 1 : 0);
 
 		// construct subband to beamlet map
 		vector<int32>::iterator beamletIt = theObs.beams[i].beamlets.begin();
@@ -642,7 +642,7 @@ bool BeamControl::doPrepare()
 			beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;
 		}
 
-		// Note: when HBA_BOTH is selected we should set up a beam on both HBA_0 and HBA_1 field.
+		// Note: when HBA_DUAL is selected we should set up a beam on both HBA_0 and HBA_1 field.
 		if (!stereoBeams) {
 			LOG_DEBUG_STR("Sending Alloc event to BeamServer");
 			itsBeamServer->send(beamAllocEvent);		// will result in BS_BEAMALLOCACK;
