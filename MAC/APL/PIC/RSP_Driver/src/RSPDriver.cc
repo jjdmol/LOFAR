@@ -92,6 +92,9 @@
 #include "GetSplitterCmd.h"
 #include "UpdSplitterCmd.h"
 #include "GetLatencyCmd.h"
+#include "SetDatastreamCmd.h"
+#include "GetDatastreamCmd.h"
+
 
 #include "RSUWrite.h"
 #include "BSWrite.h"
@@ -1034,7 +1037,9 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	case RSP_GETSPLITTER:			rsp_getSplitter(event,port);		break;
 	case RSP_SUBSPLITTER:			rsp_subSplitter(event,port);		break;
 	case RSP_UNSUBSPLITTER:			rsp_unsubSplitter(event,port);		break;
-	case RSP_GETLATENCY:			rsp_latencys(event,port);		break;
+	case RSP_GETLATENCY:			rsp_latencys(event,port);		    break;
+	case RSP_SETDATASTREAM:         rsp_setDatastream(event,port);      break;
+	case RSP_GETDATASTREAM:         rsp_getDatastream(event,port);      break;
 
     case F_TIMER: {
 		if (&port == &m_boardPorts[0]) {
@@ -2436,11 +2441,50 @@ void RSPDriver::rsp_latencys(GCFEvent& event, GCFPortInterface& port)
     port.send(ack);
     return;
   }
+}
   
-	// pass command to the scheduler
-    m_scheduler.enter(Ptr<Command>(&(*command)));
+//
+// rsp_setDatastream(event, port)
+//
+void RSPDriver::rsp_setDatastream(GCFEvent& event, GCFPortInterface& port) 
+{
+	Ptr<SetDatastreamCmd> command = new SetDatastreamCmd(event, port, Command::WRITE);
+
+	if (!command->validate()) {
+		LOG_ERROR("SetDatastream: invalid parameter");
+
+		RSPSetdatastreamackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_FAILURE;
+		port.send(ack);
+		return;
+	}
+
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
+//
+// rsp_getDatastream(event, port)
+//
+void RSPDriver::rsp_getDatastream(GCFEvent& event, GCFPortInterface& port) 
+{
+	Ptr<GetDatastreamCmd> command = new GetDatastreamCmd(event, port, Command::READ);
+
+	if (!command->validate()) {
+		LOG_ERROR("GetDatastream: invalid parameter");
+
+		RSPGetdatastreamackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_FAILURE;
+		port.send(ack);
+		return;
+	}
+
+	LOG_INFO("@@@Scheduling GetDatastreamCmd");
+
+	// command is ok, schedule it.
+	m_scheduler.enter(Ptr<Command>(&(*command)));
+}
 
   } // namespace RSP
 } // namespace LOFAR

@@ -66,6 +66,8 @@ lofar_add_bin_program(RSPDriver
   SetSplitterCmd.cc
   GetSplitterCmd.cc
   GetLatencyCmd.cc
+  SetDatastreamCmd.cc
+  GetDatastreamCmd.cc
   SyncAction.cc
   WriteReg.cc
   ReadReg.cc
@@ -107,7 +109,7 @@ lofar_add_bin_program(RSPDriver
   SerdesRead.cc
   UpdSplitterCmd.cc
   LatencyRead.cc)
-
+ 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/rspctl.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/rspctl.conf)
