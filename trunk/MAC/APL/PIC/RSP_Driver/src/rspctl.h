@@ -554,6 +554,23 @@ private:
 };
 
 //
+// class DataStreamCommand
+//
+class DataStreamCommand : public Command
+{
+public:
+	DataStreamCommand(GCFPortInterface& port);
+	virtual ~DataStreamCommand() {}
+	virtual void send();
+	virtual GCFEvent::TResult ack(GCFEvent& e);
+	void setStream(bool	streamOn) {
+		itsStreamOn = streamOn;
+	}
+private:
+	bool itsStreamOn;
+};
+
+//
 // class RegisterStateCommand
 //
 class RegisterStateCommand : public Command
