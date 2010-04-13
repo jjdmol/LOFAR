@@ -45,7 +45,7 @@ lofar_add_executable(colormapper colormapper)
 TARGET_LINK_LIBRARIES(colormapper ${GENERIC_LIBRARIES})
 SET_TARGET_PROPERTIES(colormapper PROPERTIES LINKER_LANGUAGE C)
 
-install(PROGRAMS
+install(TARGETS
   rfistrategy
   rficonsole
   DESTINATION bin)
