@@ -116,11 +116,14 @@ I:lena  type=scalar
 I:sun  type=scalar
     values:  10  shape=[1, 1]
     pert=1e-06 pert_rel=y
-Major:lena  type=scalar
+MajorAxis:lena  type=scalar
     values:  0.13  shape=[1, 1]
     pert=1e-06 pert_rel=y
-Minor:lena  type=scalar
+MinorAxis:lena  type=scalar
     values:  0.25  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+Orientation:lena  type=scalar
+    values:  1.1  shape=[1, 1]
     pert=1e-06 pert_rel=y
 Parm1:cygnus  type=scalar
     values:  0  shape=[1, 1]
@@ -130,9 +133,6 @@ Parm1:lena  type=scalar
     pert=1e-06 pert_rel=y
 Parm1:sun  type=scalar
     values:  0  shape=[1, 1]
-    pert=1e-06 pert_rel=y
-Phi:lena  type=scalar
-    values:  1.1  shape=[1, 1]
     pert=1e-06 pert_rel=y
 Q:cygnus  type=scalar
     values:  0  shape=[1, 1]
