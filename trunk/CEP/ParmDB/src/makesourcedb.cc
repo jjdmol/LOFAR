@@ -39,7 +39,8 @@
 // The format string can be given as an argument. If its value starts with a <
 // it means that it is read from the file following it. No file means from the
 // text file (headers) itself. A format string in a file is like a normal
-// format string, but preceeded with '#(' and followed by ')=format'.
+// format string, but preceeded with 'format='. For backward compatibility
+// it can also be preceeded by '#(' and followed by ')=format'.
 // Whitespace is allowed between these characters.
 //
 // A format string looks like:
@@ -49,7 +50,7 @@
 // Note that both in the format string and input file whitespace is ignored
 // unless used as separator.
 // The default format string is:
-//     "Name,Type,Ra,Dec,I,Q,U,V,SpInx,Major,Minor,Phi"
+//     "Name,Type,Ra,Dec,I,Q,U,V,SpInx,MajorAxis,MinorAxis,Orientation"
 // thus all fields are separated by commas.
 // If the format string contains only one character, the default format is used
 // with that one character as separator.
@@ -135,7 +136,7 @@ using namespace BBS;
 enum FieldNr {
   // First the standard fields.
   NameNr, TypeNr, RaNr, DecNr, INr, QNr, UNr, VNr, SpInxNr,
-  MajorNr, MinorNr, PhiNr,
+  MajorNr, MinorNr, OrientNr,
   NrKnownFields,
   // Now other fields
   CatNr=NrKnownFields, PatchNr,
@@ -159,9 +160,9 @@ vector<string> fillKnown()
   names.push_back ("U");
   names.push_back ("V");
   names.push_back ("SpInx");
-  names.push_back ("Major");
-  names.push_back ("Minor");
-  names.push_back ("Phi");
+  names.push_back ("MajorAxis");
+  names.push_back ("MinorAxis");
+  names.push_back ("Orientation");
   names.push_back ("Category");
   names.push_back ("Patch");
   names.push_back ("rah");
@@ -636,9 +637,12 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
 
 //   double ra = string2pos (fields, 2, -1e9);
   if (srctype == SourceInfo::GAUSSIAN) {
-    add (defValues, "Major", string2real (values, sdbf.fieldNrs[MajorNr], 1));
-    add (defValues, "Minor", string2real (values, sdbf.fieldNrs[MinorNr], 1));
-    add (defValues, "Phi",   string2real (values, sdbf.fieldNrs[PhiNr], 1));
+    add (defValues, "MajorAxis",
+         string2real (values, sdbf.fieldNrs[MajorNr], 1));
+    add (defValues, "MinorAxis",
+         string2real (values, sdbf.fieldNrs[MinorNr], 1));
+    add (defValues, "Orientation",
+         string2real (values, sdbf.fieldNrs[OrientNr], 1));
   }
   // Add the source.
   // Do not check for duplicates yet.
@@ -682,17 +686,25 @@ void make (const string& in, const string& out,
   } else {
     ifstream infile(in.c_str());
     ASSERTSTR (infile, "File " << in << " could not be opened");
+    casa::Regex regexf("^[ \t]*[fF][oO][rR][mM][aA][tT][ \t]*=.*");
     string line;
     // Read first line.
     getline (infile, line);
     while (infile) {
-      // Remove comments.
+      // Remove comment lines, empty lines, and possible format line.
       bool skip = true;
       for (uint i=0; i<line.size(); ++i) {
         if (line[i] == '#') {
           break;
         }
         if (line[i] != ' '  &&  line[i] != '\t') {
+          if (line[i] == 'f'  ||  line[i] == 'F') {
+            String sline(line);
+            if (sline.matches (regexf)) {
+              break;
+            }
+          }
+          // Empty nor format line, thus use it.
           skip = false;
           break;
         }
@@ -732,9 +744,9 @@ string readFormat (string file, const string& catFile)
              << " containing format string could not be opened");
   string line;
   getline (infile, line);
-  casa::Regex regex("^ *# *\\( *.* *\\) *= *format *$");
-  casa::Regex regexs1("^ *# *\\( *");
-  casa::Regex regexs2("\\) *= *format *$");
+  casa::Regex regex("^[ \t]*#[ \t]*\\([ \t]*.*\\)[ \t]*=[ \t]*[fF][oO][rR][mM][aA][tT][ \t]*$");
+  casa::Regex regexs1("^[ \t]*#[ \t]*\\([ \t]*");
+  casa::Regex regexs2("\\)[ \t]*=[ \t]*[fF][oO][rR][mM][aA][tT][ \t]*$");
   while (infile) {
     uInt st=0;
     st = lskipws(line, st, line.size());   // skip whitespace
@@ -744,12 +756,20 @@ string readFormat (string file, const string& catFile)
       }
       casa::String sline(line);
       if (sline.matches (regex)) {
-        sline.gsub (regexs1, string());
-        sline.gsub (regexs2, string());
+        sline.gsub (regexs1, String());
+        sline.gsub (regexs2, String());
         return sline;
       }
     }
     getline (infile, line);
+  }
+  // See if a format line is given as "format=".
+  casa::Regex regexf("^[ \t]*[fF][oO][rR][mM][aA][tT][ \t]*=.*$");
+  casa::Regex regexf1("^[ \t]*[fF][oO][rR][mM][aA][tT][ \t]*=[ \t]*");
+  casa::String sline(line);
+  if (sline.matches (regexf)) {
+    sline.gsub (regexf1, String());
+    return sline;
   }
   // No format line found, so use default.
   return string();
@@ -768,7 +788,8 @@ int main (int argc, char* argv[])
                   "Input file name", "string");
     inputs.create("out", "",
                   "Output sourcedb name", "string");
-    inputs.create("format", "Name,Type,Ra,Dec,I,Q,U,V,SpInx,Major,Minor,Phi",
+    inputs.create("format", "Name,Type,Ra,Dec,I,Q,U,V,SpInx,MajorAxis,"
+                            "MinorAxis,Orientation",
                   "Format of the input lines or name of file containing format",
                   "string");
     inputs.create("append", "true",
@@ -782,13 +803,13 @@ int main (int argc, char* argv[])
     inputs.create("width", "",
                   "Search box width as 1 or 2 values (e.g. 2deg,3deg)",
                   "string");
-    inputs.create("minflux", "",
-                  "Only select sources >= minflux Jy", "string");
-    inputs.create("maxflux", "",
-                  "Always select sources >= maxflux Jy", "string");
-    inputs.create("beammodel", "",
-                  "If given, apply beammodel to make fluxes apparent",
-                  "WSRT or LOFAR");
+    ///    inputs.create("minflux", "",
+    ///                  "Only select sources >= minflux Jy", "string");
+    ///    inputs.create("maxflux", "",
+    ///                  "Always select sources >= maxflux Jy", "string");
+    ///    inputs.create("beammodel", "",
+    ///                  "If given, apply beammodel to make fluxes apparent",
+    ///                  "WSRT or LOFAR");
     inputs.readArguments(argc, argv);
     string in = inputs.getString("in");
     string out = inputs.getString("out");
@@ -799,11 +820,11 @@ int main (int argc, char* argv[])
     string center = inputs.getString ("center");
     string radius = inputs.getString ("radius");
     string width  = inputs.getString ("width");
-//    double minFlux = inputs.getDouble ("minflux");
-//    double maxFlux = inputs.getDouble ("maxflux");
-    string beamModel = inputs.getString ("beammodel");
+///    double minFlux = inputs.getDouble ("minflux");
+///    double maxFlux = inputs.getDouble ("maxflux");
+///    string beamModel = inputs.getString ("beammodel");
     // Check if the format has to be read from a file.
-    // It is if it starts with a <. Te filename should follow it. An empty
+    // It is if it starts with a <. The filename should follow it. An empty
     // filename means reading from the catalog file itself.
     if (! format.empty()  &&  format[0] == '<') {
       // Skip optional whitespace.
