@@ -54,6 +54,7 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
   itsHistorySize(ps->nrHistorySamples()),
   itsIsRealTime(ps->realTime()),
   itsSynchronizedReaderWriter(itsIsRealTime ? 0 : new SynchronizedReaderAndWriter(itsSize)), // FIXME: does not work for multiple observations
+  itsLockedRanges(itsSize),
   itsSBBuffers(boost::extents[itsNrSubbands][itsSize][NR_POLARIZATIONS], 128, hugeMemoryAllocator),
   itsOffset(0),
 #if defined HAVE_BGP && !defined USE_VALGRIND
@@ -152,7 +153,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writeConsecutive
     itsSynchronizedReaderWriter->startWrite(begin, end);
 
   // do not write in circular buffer section that is being read
-  itsLockedRanges.lock(startI, endI, itsSize);
+  itsLockedRanges.lock(startI, endI);
 
   while (itsCurrentI != endI) {
     writePacket(dst, reinterpret_cast<const SAMPLE_TYPE *>(itsCurrentPacketPtr));
@@ -168,7 +169,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writeConsecutive
   itsCurrentTimeStamp = end;
   updateValidData(begin, end);
 
-  itsLockedRanges.unlock(startI, endI, itsSize);
+  itsLockedRanges.unlock(startI, endI);
 
   if (!itsIsRealTime)
     itsSynchronizedReaderWriter->finishedWrite(end);
@@ -185,7 +186,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
   if (!aligned(itsCurrentI, itsNrTimesPerPacket)) {
     // RSP board reset?  Recompute itsOffset and clear the entire buffer.
 
-    itsLockedRanges.lock(0, itsSize, itsSize); // avoid reset while other thread reads
+    itsLockedRanges.lock(0, itsSize); // avoid reset while other thread reads
 
     int oldOffset = itsOffset;
     itsOffset   = - (newTimeStamp % itsNrTimesPerPacket);
@@ -196,7 +197,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
     itsValidData.reset();
     itsValidDataMutex.unlock();
 
-    itsLockedRanges.unlock(0, itsSize, itsSize);
+    itsLockedRanges.unlock(0, itsSize);
 
     time_t now = time(0);
     char   buf[26];
@@ -269,7 +270,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writePacketData(
     itsSynchronizedReaderWriter->startWrite(begin, end);
 
   // do not write in circular buffer section that is being read
-  itsLockedRanges.lock(startI, endI, itsSize);
+  itsLockedRanges.lock(startI, endI);
 
   writePacket(itsSBBuffers[0][startI].origin(), data);
   
@@ -286,7 +287,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writePacketData(
 
   itsValidDataMutex.unlock();
 
-  itsLockedRanges.unlock(startI, endI, itsSize);
+  itsLockedRanges.unlock(startI, endI);
 
   if (!itsIsRealTime)
     itsSynchronizedReaderWriter->finishedWrite(end);
@@ -326,7 +327,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::startReadTransac
   itsMaxEndI	     = *std::max_element(itsEndI.begin(),   itsEndI.end());
 
   // do not read from circular buffer section that is being written
-  itsLockedRanges.lock(itsMinStartI, itsMaxEndI, itsSize);
+  itsLockedRanges.lock(itsMinStartI, itsMaxEndI);
 }
 
 
@@ -380,7 +381,7 @@ template<typename SAMPLE_TYPE> SparseSet<unsigned> BeamletBuffer<SAMPLE_TYPE>::r
 
 template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::stopReadTransaction()
 {
-  itsLockedRanges.unlock(itsMinStartI, itsMaxEndI, itsSize);
+  itsLockedRanges.unlock(itsMinStartI, itsMaxEndI);
 
   if (!itsIsRealTime)
     itsSynchronizedReaderWriter->finishedRead(itsMinEnd - (itsHistorySize + 16));
