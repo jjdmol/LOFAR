@@ -129,23 +129,24 @@ namespace rfiStrategy {
 		if(pulsar)
 			t3->SetFrequencyDirectionFlagging(false);
 		adapter->Add(t3);
-		adapter->Add(new StatisticalFlagAction());
+		
+		SetFlaggingAction *setFlagsInAllPolarizations = new SetFlaggingAction();
+		setFlagsInAllPolarizations->SetNewFlagging(SetFlaggingAction::PolarisationsEqual);
+		
+		block.Add(setFlagsInAllPolarizations);
+		block.Add(new StatisticalFlagAction());
 
 		if(pedantic)
 		{
 			CombineFlagResults *cfr3 = new CombineFlagResults();
-			adapter->Add(cfr3);
+			block.Add(cfr3);
 			cfr3->Add(new FrequencySelectionAction());
 			if(!pulsar)
 				cfr3->Add(new TimeSelectionAction());
 		} else {
 			if(!pulsar)
-				adapter->Add(new TimeSelectionAction());
+				block.Add(new TimeSelectionAction());
 		}
-		
-		SetFlaggingAction *setFlagsInAllPolarizations = new SetFlaggingAction();
-		setFlagsInAllPolarizations->SetNewFlagging(SetFlaggingAction::PolarisationsEqual);
-		block.Add(setFlagsInAllPolarizations);
 	}
 
 	void Strategy::LoadOldDefaultSingleStrategy()
