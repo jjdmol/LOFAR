@@ -53,6 +53,10 @@
 // thus all fields are separated by commas.
 // If the format string contains only one character, the default format is used
 // with that one character as separator.
+// A field name can consists of alphanumeric characters, underscores and colons.
+// However, a colon can not be used as the first character.
+// In this way a colon can be used as separator as long as it is surrounded by
+// whitespace (otherwise it would be part of the field name).
 //
 // It is possible to define default values in the format string by giving a
 // value to a field. The default value will be used if the field in the
@@ -271,7 +275,7 @@ SdbFormat getFormat (const string& format)
     if ((format[i] >= 'a'  &&  format[i] <= 'z')  ||
         (format[i] >= 'A'  &&  format[i] <= 'Z')  ||
         (format[i] >= '0'  &&  format[i] <= '9')  ||
-        format[i] == '_'  ||  format[i] == ':') {
+        format[i] == '_'  ||  (format[i] == ':'  &&  i > st)) {
       ++i;    // part of name
     } else {
       // End of name
@@ -319,7 +323,7 @@ SdbFormat getFormat (const string& format)
       if (!((format[i] >= 'a'  &&  format[i] <= 'z')  ||
             (format[i] >= 'A'  &&  format[i] <= 'Z')  ||
             (format[i] >= '0'  &&  format[i] <= '9')  ||
-            format[i] == '_'  ||  format[i] == ':')) {
+            format[i] == '_')) {
         sep = format[i];
         i = ltrim(format, i+1, end);
       }
@@ -432,13 +436,17 @@ double string2real (const vector<string>& values, int nr, double defVal)
 }
 
 double string2pos (const vector<string>& values, int pnr, int hnr, int dnr,
-                   int mnr, int snr)
+                   int mnr, int snr, bool canUseColon)
 {
   double deg = 0;
   bool fnd = false;
   if (pnr >= 0) {
     string value = getValue(values, pnr);
     if (! value.empty()) {
+      if (!canUseColon) {
+        ASSERTSTR (value.find(':') == string::npos,
+                   "Colons cannot be used in declination value " << value);
+      }
       Quantity q;
       ASSERT (MVAngle::read (q, values[pnr]));
       deg = q.getValue ("deg");
@@ -507,8 +515,8 @@ SearchInfo getSearchInfo (const string& center, const string& radius,
     searchInfo.search = true;
     vector<string> pos = StringUtil::split (center, ',');
     ASSERTSTR (pos.size() == 2, "center not specified as ra,dec");
-    searchInfo.ra  = string2pos (pos, 0, -1, -1, -1, -1);
-    searchInfo.dec = string2pos (pos, 1, -1, -1, -1, -1);
+    searchInfo.ra  = string2pos (pos, 0, -1, -1, -1, -1, true);
+    searchInfo.dec = string2pos (pos, 1, -1, -1, -1, -1, false);
     searchInfo.sinDec = sin(searchInfo.dec);
     searchInfo.cosDec = cos(searchInfo.dec);
     ASSERTSTR (radius.empty() != width.empty(),
@@ -519,9 +527,9 @@ SearchInfo getSearchInfo (const string& center, const string& radius,
       pos = StringUtil::split(width, ',');
       ASSERTSTR (pos.size() == 1  ||  pos.size() == 2,
                  "width should be specified as 1 or 2 values");
-      raw = string2pos (pos, 0, -1, -1, -1, -1);
+      raw = string2pos (pos, 0, -1, -1, -1, -1, true);
       if (pos.size() > 1) {
-        decw = string2pos (pos, 1, -1, -1, -1, -1);
+        decw = string2pos (pos, 1, -1, -1, -1, -1, false);
       } else {
         decw = raw;
       }
@@ -532,7 +540,7 @@ SearchInfo getSearchInfo (const string& center, const string& radius,
     } else {
       searchInfo.asCone = true;
       pos[0] = radius;
-      searchInfo.cosRadius = cos (string2pos (pos, 0, -1, -1, -1, -1));
+      searchInfo.cosRadius = cos (string2pos (pos, 0, -1, -1, -1, -1, false));
     }
   }
   return searchInfo;
@@ -609,12 +617,14 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
                           sdbf.fieldNrs[RahNr],
                           sdbf.fieldNrs[RadNr],
                           sdbf.fieldNrs[RamNr],
-                          sdbf.fieldNrs[RasNr]);
+                          sdbf.fieldNrs[RasNr],
+                          true);
   double dec = string2pos (values, sdbf.fieldNrs[DecNr],
                            sdbf.fieldNrs[DechNr],
                            sdbf.fieldNrs[DecdNr],
                            sdbf.fieldNrs[DecmNr],
-                           sdbf.fieldNrs[DecsNr]);
+                           sdbf.fieldNrs[DecsNr],
+                           false);
   int cat = string2int (values, sdbf.fieldNrs[CatNr], 2);
   double fluxI = string2real (values, sdbf.fieldNrs[INr], 1);
   add (defValues, "I", fluxI);

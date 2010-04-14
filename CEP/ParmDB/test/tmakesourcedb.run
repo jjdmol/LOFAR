@@ -39,7 +39,7 @@ EOF
 cat tmakesourcedb_tmp.stdout
 
 echo ""
-../src/makesourcedb in=tmakesourcedb.in_2 out=tmakesourcedb_tmp.sdb append=0 format="category=fixed'3', patch=fixed'patch1' Name Type Rah ram ras Decd decm decs I, Q, U, V, SpInx=fixed'1.5', Major, Minor, Phi, Parm1, a0:b=fixed'3.0'" | grep -v ' Version '
+../src/makesourcedb in=tmakesourcedb.in_2 out=tmakesourcedb_tmp.sdb append=0 format="category=fixed'3', patch=fixed'patch1' Name Type Rah ram ras Decd : decm : decs I, Q, U, V, SpInx=fixed'1.5', Major, Minor, Phi, Parm1, a0:b=fixed'3.0'" | grep -v ' Version '
 ../src/parmdb_main tmakesourcedb_tmp.stdout > /dev/null <<EOF
 open tablename='tmakesourcedb_tmp.sdb'
 showdef
