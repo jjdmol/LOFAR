@@ -52,7 +52,7 @@ awk '{ print $2, $1 }' finddep.uses | sort > finddep.used
 rm -f tmp.out
 for FIL in `cat tmp.fil`
 do
-  lfr=`echo $FIL | sed -e 's%.*/LOFAR/%LOFAR/%'`
+  lfr="LOFAR/$FIL"
   first=`echo $lfr | sed -e 's%/.*%%'`
   last=`echo $lfr | sed -e "s%$first/% %"`
   parts=`echo $last | sed -e 's%/% %g'`
@@ -63,6 +63,7 @@ do
   done
 done
 sort tmp.out | uniq | sed -e 's/#/ /' > finddep.pkg
+mv tmp.fil finddep.fil
 rm -f tmp.out tmp.fil
 
 # Now 'expand' the uses and used file to get the relations for the
