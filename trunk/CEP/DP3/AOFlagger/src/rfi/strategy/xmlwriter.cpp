@@ -306,6 +306,7 @@ namespace rfiStrategy {
 	void XmlWriter::writeThresholdAction(const ThresholdAction &action)
 	{
 		Attribute("type", "ThresholdAction");
+		Write<num_t>("base-sensitivity", action.BaseSensitivity());
 		Write<bool>("time-direction-flagging", action.TimeDirectionFlagging());
 		Write<bool>("frequency-direction-flagging", action.FrequencyDirectionFlagging());
 	}
