@@ -503,6 +503,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="WARNING: Observation exceeds maximum length !!!!!!!!!"/>
       </Properties>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_CreateCodePost" type="java.lang.String" value="timeWarningLabel.setVisible(false);"/>
+      </AuxValues>
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
           <AbsoluteConstraints x="100" y="390" width="270" height="-1"/>

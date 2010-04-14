@@ -135,6 +135,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 if (itsMaxBeamDuration > 0 ) {
                     //calcDuration takes miliseconds, and beamdurations are in secs.
                     calcDuration(itsMaxBeamDuration*1000);
+                } else {
+                    calcDuration(0);
                 }
             } catch (RemoteException e) {
                 logger.debug("Error getting the Beams " + e);
@@ -235,7 +237,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     // Calculate days/hours/minutes/secs from milisecs
     // @param secs = time in miliseconds
     private void calcDuration(long msecs) {
-        timeWarningLabel.setVisible(false);
         if (msecs > 0) {
             long days=msecs/86400000;
             msecs-=days*86400000;
@@ -264,6 +265,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }
 
     private void setStartTime() {
+        if (itsStopDate == null) {
+            return;
+        }
         // create new startdate based on stopdate - duration
         Calendar cal = Calendar.getInstance();
         cal.setTime(itsStopDate);
@@ -280,6 +284,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
     private void setStopTime() {
         // create new stopdate based on startdate + duration
+        if (itsStartDate == null) {
+            return;
+        }
         Calendar cal = Calendar.getInstance();
         cal.setTime(itsStartDate);
         cal.set(Calendar.DAY_OF_YEAR,cal.get(Calendar.DAY_OF_YEAR)+Integer.valueOf(inputDurationDays.getValue()));
@@ -300,6 +307,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
             dur = itsStopDate.getTime()-itsStartDate.getTime();
             calcDuration(dur);
+        } else {
+            calcDuration(0);
         }
    }
 
@@ -466,7 +475,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         
         // make sure that if a VICtree is selected we check the start-end time first. If they are not correct, pop up a dialog.
         
-        if (itsTreeType.equals("VHtree") && itsTreeState.equals("Scheduled")) {
+        if (itsTreeType.equals("VHtree") && itsTreeState.equalsIgnoreCase("Scheduled")) {
             if ( ! checkTimes()) {
                 return false;
             }
@@ -535,7 +544,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 // Next for VIC only
                 if (itsTreeType.equals("VHtree")) {
                     if (itsStarttime != null && itsStoptime != null &&
-                            (!itsStarttime.replace("T", " ").equals(startTimeInput.getText().replace("T", " ")) || !itsStoptime.replace("T", " ").equals(stopTimeInput.getText().replace("T", " ")))) {
+                            (!itsStarttime.replace("T", " ").equals(itsTree.starttime.replace("T", " ")) || !itsStoptime.replace("T", " ").equals(itsTree.stoptime.replace("T", " ")))) {
                         if (startTimeInput.getText().length() > 0 && stopTimeInput.getText().length() > 0 ) {
                            hasChanged=true;
                            itsTree.starttime = startTimeInput.getText();
@@ -607,6 +616,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         durationHourLabel = new javax.swing.JLabel();
         durationMinuteLabel = new javax.swing.JLabel();
         timeWarningLabel = new javax.swing.JLabel();
+        timeWarningLabel.setVisible(false);
         showCampaignButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
@@ -844,6 +854,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         DateTimeChooser chooser = new DateTimeChooser(initialDate);
         itsStopDate = DateTimeChooser.showDialog(this,"StopTime",chooser);
         composeTimeString("stop");
+        setDuration();
         setStartTime();
     }//GEN-LAST:event_setStopDateButtonActionPerformed
 
@@ -862,6 +873,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         DateTimeChooser chooser = new DateTimeChooser(initialDate);
         itsStartDate = DateTimeChooser.showDialog(this,"StartTime",chooser);
         composeTimeString("start");
+        setDuration();
         setStopTime();
     }//GEN-LAST:event_setStartDateButtonActionPerformed
 
