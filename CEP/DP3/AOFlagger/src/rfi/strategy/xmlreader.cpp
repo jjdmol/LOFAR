@@ -373,6 +373,7 @@ class Action *XmlReader::parseSVDAction(xmlNode *node)
 class Action *XmlReader::parseThresholdAction(xmlNode *node)
 {
 	ThresholdAction *newAction = new ThresholdAction();
+	newAction->SetBaseSensitivity(getDouble(node, "base-sensitivity"));
 	newAction->SetTimeDirectionFlagging(getBool(node, "time-direction-flagging"));
 	newAction->SetFrequencyDirectionFlagging(getBool(node, "frequency-direction-flagging"));
 	return newAction;
