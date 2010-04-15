@@ -24,6 +24,8 @@
 #define LOFAR_LCS_STREAM_STREAM_H
 
 #include <cstddef>
+#include <string>
+
 #include <Common/Exception.h>
 
 
@@ -34,12 +36,17 @@ class Stream
   public:
     EXCEPTION_CLASS(EndOfStreamException, LOFAR::Exception);
 
-    virtual	 ~Stream();
+    virtual	   ~Stream();
 
-    virtual void read(void *ptr, size_t size) = 0;
-    virtual void write(const void *ptr, size_t size) = 0;
+    virtual size_t tryRead(void *ptr, size_t size) = 0;
+    void	   read(void *ptr, size_t size); // does not return until all bytes are read
 
-    virtual void sync();
+    virtual size_t tryWrite(const void *ptr, size_t size) = 0;
+    void	   write(const void *ptr, size_t size); // does not return until all bytes are written
+
+    std::string    readLine(); // excludes '\n'
+
+    virtual void   sync();
 };
 
 } // namespace LOFAR

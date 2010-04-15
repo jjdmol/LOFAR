@@ -33,10 +33,10 @@ namespace LOFAR {
 class NullStream : public Stream
 {
   public:
-    virtual	 ~NullStream();
+    virtual	   ~NullStream();
 
-    virtual void read(void *ptr, size_t size);
-    virtual void write(const void *ptr, size_t size);
+    virtual size_t tryRead(void *ptr, size_t size);
+    virtual size_t tryWrite(const void *ptr, size_t size);
 };
 
 } // namespace LOFAR

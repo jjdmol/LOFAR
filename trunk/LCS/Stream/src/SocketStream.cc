@@ -118,14 +118,14 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
 	fd_set fds;
 
 	FD_ZERO(&fds);
-	FD_SET(fd, &fds);
+	FD_SET(listen_sk, &fds);
 
 	struct timeval timeval;
 
 	timeval.tv_sec  = timeout;
 	timeval.tv_usec = 0;
 
-	switch (select(fd + 1, &fds, 0, 0, &timeval)) {
+	switch (select(listen_sk + 1, &fds, 0, 0, &timeval)) {
 	  case -1 : throw SystemCallException("select", errno, THROW_ARGS);
 
 	  case  0 : throw TimeOutException("server socket", THROW_ARGS);

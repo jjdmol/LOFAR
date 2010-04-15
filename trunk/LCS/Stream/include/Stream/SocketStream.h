@@ -47,11 +47,11 @@ class SocketStream : public FileDescriptorBasedStream
   	    SocketStream(const char *hostname, short port, Protocol, Mode, time_t timeout = 0);
     virtual ~SocketStream();
 
-    void reaccept(); // only for TCP server socket
-    void setReadBufferSize(size_t size);
+    void    reaccept(); // only for TCP server socket
+    void    setReadBufferSize(size_t size);
 
   private:
-    int  listen_sk;
+    int     listen_sk;
 };
 
 } // namespace LOFAR
