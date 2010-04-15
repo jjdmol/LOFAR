@@ -34,18 +34,17 @@ namespace RTCP {
 class FCNP_ServerStream : public Stream
 {
   public:
-		 FCNP_ServerStream(unsigned core, unsigned channel);
-    virtual	 ~FCNP_ServerStream();
+		   FCNP_ServerStream(unsigned core, unsigned channel);
+    virtual	   ~FCNP_ServerStream();
 
-    virtual void read(void *ptr, size_t size);
-    virtual void write(const void *ptr, size_t size);
+    virtual size_t tryRead(void *ptr, size_t size);
+    virtual size_t tryWrite(const void *ptr, size_t size);
 
   private:
     static std::vector<FCNP_ServerStream *> allStreams;
 
-  private:
-    unsigned	 itsCore;
-    unsigned	 itsChannel;
+    unsigned	   itsCore;
+    unsigned	   itsChannel;
 };
 
 } // namespace RTCP

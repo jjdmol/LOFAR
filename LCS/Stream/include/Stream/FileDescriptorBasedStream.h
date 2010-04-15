@@ -31,17 +31,17 @@ namespace LOFAR {
 class FileDescriptorBasedStream : public Stream
 {
   public:
-    virtual	 ~FileDescriptorBasedStream();
+    virtual	   ~FileDescriptorBasedStream();
 
-    virtual void read(void *ptr, size_t size);
-    virtual void write(const void *ptr, size_t size);
+    virtual size_t tryRead(void *ptr, size_t size);
+    virtual size_t tryWrite(const void *ptr, size_t size);
 
-    virtual void sync();
+    virtual void   sync();
 
   protected:
-		 FileDescriptorBasedStream(): fd(-1) {} // do not create directly
+		   FileDescriptorBasedStream() : fd(-1) {} // do not create directly
 
-    int		 fd;
+    int		   fd;
 };
 
 } // namespace LOFAR

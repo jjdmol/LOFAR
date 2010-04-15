@@ -34,14 +34,16 @@ NullStream::~NullStream()
 }
 
 
-void NullStream::read(void *ptr, size_t size)
+size_t NullStream::tryRead(void *ptr, size_t size)
 {
   memset(ptr, 0, size);
+  return size;
 }
 
 
-void NullStream::write(const void *, size_t)
+size_t NullStream::tryWrite(const void *, size_t size)
 {
+  return size;
 }
 
 } // namespace LOFAR
