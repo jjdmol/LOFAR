@@ -41,6 +41,7 @@ namespace LOFAR {
   using GCF::TM::GCFPort;
   using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFPortInterface;
+  using GCF::TM::GCFTimerPort;
   namespace CAL {
 
 // forward declarations
@@ -71,7 +72,7 @@ public:
 	void remove_client(GCFPortInterface* port);
 
 	// increment RCU usagecounters and enable newly used RCUs
-	void _enableRCUs(SubArray*	subarray);
+	void _enableRCUs(SubArray*	subarray, int delay);
 
 	// decrement RCU usagecounters and disable unused RCUs
 	void _disableRCUs(SubArray*	subarray);
@@ -80,6 +81,7 @@ public:
 	// States
 	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &port);
 	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &port);
+		
 	/*@}*/
 
 	/*@{*/
@@ -90,7 +92,7 @@ public:
 	GCFEvent::TResult handle_cal_unsubscribe(GCFEvent& e, GCFPortInterface &port);
 	GCFEvent::TResult handle_cal_getsubarray(GCFEvent& e, GCFPortInterface &port);
 	/*@}*/
-
+    
 	// Write ACC to file if configured to do so.
 	void write_acc();
 
@@ -124,6 +126,7 @@ private:
 	// Ports
 	GCFTCPPort m_acceptor;  // connect point for clients
 	GCFPort    m_rspdriver; // connect to RSPDriver for RSP_CONFIG and RSP_SETRCU events
+	GCFTimerPort* itsCheckTimer;
 
 	// Client/Server management member variables.
 	map<string, GCFPortInterface*> 	m_clients;      // list of subarraynames with related clients
