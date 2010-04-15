@@ -128,5 +128,6 @@ rm ${COMPORDERFILE} ${FILERELFILE}
 databasename=$1
 shift
 echo ../../build/gnunew_debug/data/bin/load_OTDB_comps $databasename ${RESULTFILE} $*
-../../build/gnunew_debug/data/bin/load_OTDB_comps $databasename ${RESULTFILE} $*
+#../../build/gnunew_debug/data/bin/load_OTDB_comps $databasename ${RESULTFILE} $*
+../../../../../LOFAR/installed/gnu_debug/bin/load_OTDB_comps $databasename ${RESULTFILE} -h RS005 $*
 rm ${RESULTFILE}
