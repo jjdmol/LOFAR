@@ -37,7 +37,7 @@ class ImageTile {
 	void FirstWindowGuess(long double mean, long double variance);
 	void FitBackground();
 	void AddBaseline(Image2D &dest, double sign);
-	void SetWindows(long double mean, long double variance, bool convolve);
+	void SetWindows(long double variance, bool convolve);
 	long double EvaluateBaselineFunction(unsigned scan, unsigned channel) const;
 	void SaveBackgroundToPng(const std::string &filename);
 	unsigned WindowCount() const;
@@ -103,7 +103,7 @@ private:
 		return GSL_SUCCESS;
 	}
 
-	void PrintState(unsigned iter, gsl_multifit_fdfsolver *solver);
+	//void PrintState(unsigned iter, gsl_multifit_fdfsolver *solver);
 };
 
 #endif

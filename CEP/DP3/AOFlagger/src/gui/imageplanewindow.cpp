@@ -302,11 +302,12 @@ bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 {
 	if(_imageWidget.IsInitialized())
 	{
-		size_t 
+		int 
 			width = _imageWidget.Image()->Width(),
-			height = _imageWidget.Image()->Height();
-		size_t posX = (size_t) roundl((long double) event->x * width / _imageWidget.get_width() - 0.5L);
-		size_t posY = (size_t) roundl((long double) event->y * height / _imageWidget.get_height() - 0.5L);
+			height = _imageWidget.Image()->Height(),
+			posX = (size_t) roundl((long double) event->x * width / _imageWidget.get_width() - 0.5L),
+			posY = (size_t) roundl((long double) event->y * height / _imageWidget.get_height() - 0.5L);
+			
 		if(posX >= width)
 			posX = width - 1;
 		if(posY >= height)

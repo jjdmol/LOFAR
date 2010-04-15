@@ -30,7 +30,7 @@
 
 namespace rfiStrategy {
 
-	void LoadImageAction::Perform(class ArtifactSet &artifacts, class ProgressListener &listener)
+	void LoadImageAction::Perform(class ArtifactSet &artifacts, class ProgressListener &)
 	{
 		ImageSet *imageSet = artifacts.ImageSet();
 		ImageSetIndex *index = artifacts.ImageSetIndex();

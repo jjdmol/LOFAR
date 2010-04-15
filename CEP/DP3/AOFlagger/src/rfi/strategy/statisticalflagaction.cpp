@@ -27,7 +27,7 @@
 
 namespace rfiStrategy {
 
-	void StatisticalFlagAction::Perform(ArtifactSet &artifacts, class ProgressListener &listener)
+	void StatisticalFlagAction::Perform(ArtifactSet &artifacts, class ProgressListener &)
 	{
 		TimeFrequencyData &data = artifacts.ContaminatedData();
 		Mask2DPtr mask = Mask2D::CreateCopy(data.GetSingleMask());

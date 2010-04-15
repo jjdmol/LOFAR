@@ -31,7 +31,7 @@ class TiledImage : public SurfaceFitMethod {
 		TiledImage();
 		~TiledImage();
 		void SetParameters(int polynomialTimeOrder, int polynomialFequencyOrder, size_t scanTileSize, size_t frequencyTileSize);
-		virtual void Initialize(TimeFrequencyData data);
+		virtual void Initialize(const TimeFrequencyData &data);
 		virtual unsigned TaskCount() { return _vTileCount; }
 		virtual void FitBackground(unsigned taskNumber);
 		TimeFrequencyData Background();

@@ -18,7 +18,7 @@ class FourProductCorrelatorTester
 	
 		void SimulateTwoProdCorrelation(num_t delayDirectionDEC, num_t delayDirectionRA, const class AntennaInfo &a1, const class AntennaInfo &a2, num_t frequency, double totalTime, double integrationTime);
 	private:
-		void SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, num_t earthLattitude, num_t &r, num_t &i, size_t index);
+		void SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i, size_t index);
 
 		void complexSqrt(num_t &r, num_t &i);
 		void phaseMul2(num_t &r, num_t &i);

@@ -27,7 +27,7 @@
 
 namespace rfiStrategy {
 	
-	void PlotAction::Perform(ArtifactSet &artifacts, ProgressListener &listener)
+	void PlotAction::Perform(ArtifactSet &artifacts, ProgressListener &)
 	{
 		switch(_plotKind)
 		{

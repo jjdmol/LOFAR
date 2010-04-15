@@ -381,22 +381,22 @@ void Morphology::Cluster(SegmentedImagePtr segmentedImage)
 	
 				// The MERGE criteria
 				bool cluster = false;
-				int minDist = hDist > vDist ? vDist : hDist;
+				//int minDist = hDist > vDist ? vDist : hDist;
 				int maxDist = hDist > vDist ? hDist : vDist;
-				int maxCount = info1.count > info2.count ? info1.count : info2.count;
+				//int maxCount = info1.count > info2.count ? info1.count : info2.count;
 				int minCount = info1.count > info2.count ? info2.count : info1.count;
 				int maxWidth = info1.width > info2.width ? info1.width : info2.width;
 				int maxHeight = info1.height > info2.height ? info1.height : info2.height;
 				int minHeight = info1.height > info2.height ? info2.height : info1.height;
-				int lDist = abs((int) info1.left - (int) info2.left);
-				int rDist = abs((int) info1.right - (int) info2.right);
-				int tDist = abs((int) info1.top - (int) info2.top);
-				int bDist = abs((int) info1.bottom - (int) info2.bottom);
+				//int lDist = abs((int) info1.left - (int) info2.left);
+				//int rDist = abs((int) info1.right - (int) info2.right);
+				//int tDist = abs((int) info1.top - (int) info2.top);
+				//int bDist = abs((int) info1.bottom - (int) info2.bottom);
 				int widthDist = abs((int) info1.width - (int) info2.width);
 				int heightDist = abs((int) info1.height - (int) info2.height);
-				double x1Mean = (double) info1.xTotal / info1.count; 
-				double x2Mean = (double) info2.xTotal / info2.count;
-				double xMeanDist = fabs(x1Mean - x2Mean); 
+				//double x1Mean = (double) info1.xTotal / info1.count; 
+				//double x2Mean = (double) info2.xTotal / info2.count;
+				//double xMeanDist = fabs(x1Mean - x2Mean); 
 				double y1Mean = (double) info1.yTotal / info1.count; 
 				double y2Mean = (double) info2.yTotal / info2.count;
 				double yMeanDist = fabs(y1Mean - y2Mean); 

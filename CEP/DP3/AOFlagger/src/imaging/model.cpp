@@ -68,8 +68,8 @@ void Model::SimulateCorrelation(UVImager &imager, num_t delayDirectionDEC, num_t
 		num_t earthLattitudeApprox = t*(M_PI/12.0/60.0/60.0);
 		num_t u, v, r1, i1, r2, i2;
 		GetUVPosition(u, v, earthLattitudeApprox, delayDirectionDEC, delayDirectionRA, dx, dy, dz, wavelength);
-		SimulateAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, 0, frequency, earthLattitudeApprox, r1, i1);
-		SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, dz, frequency, earthLattitudeApprox, r2, i2);
+		SimulateAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, frequency, earthLattitudeApprox, r1, i1);
+		SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, frequency, earthLattitudeApprox, r2, i2);
 		num_t
 			r = r1 * r2 - (i1 * -i2),
 			i = r1 * -i2 + r2 * i1;
@@ -79,15 +79,15 @@ void Model::SimulateCorrelation(UVImager &imager, num_t delayDirectionDEC, num_t
 	}
 }
 
-void Model::SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, num_t earthLattitude, num_t &r, num_t &i)
+void Model::SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i)
 {
 	r = 0.0;
 	i = 0.0;
-	num_t delayW = GetWPosition(delayDirectionDEC, delayDirectionRA, frequency, 0.0, earthLattitude, dx, dy);
+	num_t delayW = GetWPosition(delayDirectionDEC, delayDirectionRA, frequency, earthLattitude, dx, dy);
 	for(std::vector<PointSource *>::const_iterator iter=_sources.begin();iter!=_sources.end();++iter)
 	{
 		PointSource &source = **iter;
-		num_t w = GetWPosition(source.dec, source.ra, frequency, 0.0, earthLattitude, dx, dy);
+		num_t w = GetWPosition(source.dec, source.ra, frequency, earthLattitude, dx, dy);
 		num_t fieldStrength = source.sqrtFluxIntensity + RNG::Guassian() * _sourceSigma;
 		num_t noiser, noisei;
 		RNG::ComplexGaussianAmplitude(noiser, noisei);
@@ -96,9 +96,9 @@ void Model::SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num
 	}
 }
 
-void Model::SimulateUncoherentAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, num_t earthLattitude, num_t &r, num_t &i, size_t index)
+void Model::SimulateUncoherentAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i, size_t index)
 {
-	num_t delayW = GetWPosition(delayDirectionDEC, delayDirectionRA, frequency, 0.0, earthLattitude, dx, dy);
+	num_t delayW = GetWPosition(delayDirectionDEC, delayDirectionRA, frequency, earthLattitude, dx, dy);
 
 	//if(index%(_sources.size()+1) == _sources.size())
 	//{
@@ -109,7 +109,7 @@ void Model::SimulateUncoherentAntenna(num_t delayDirectionDEC, num_t delayDirect
 	//}
 	//else {
 		PointSource &source = *_sources[index%_sources.size()];
-		num_t w = GetWPosition(source.dec, source.ra, frequency, 0.0, earthLattitude, dx, dy);
+		num_t w = GetWPosition(source.dec, source.ra, frequency, earthLattitude, dx, dy);
 		num_t fieldStrength = source.sqrtFluxIntensity + RNG::Guassian() * _sourceSigma;
 		r = fieldStrength * cos((w - delayW) * M_PI * 2.0) + noiser;
 		i = fieldStrength * sin((w - delayW) * M_PI * 2.0) + noisei;
@@ -173,13 +173,11 @@ void Model::GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t d
 	v = -sinl(baselineAngle)*baselineLength;
 }
 
-num_t Model::GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngleStart, num_t earthLattitudeAngleEnd, num_t dx, num_t dy)
+num_t Model::GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngle, num_t dx, num_t dy)
 {
 	num_t wavelength = 299792458.0L / frequency;
-	//num_t raSinStart = sinl(-delayDirectionRA - earthLattitudeAngleStart);
-	//num_t raCosStart = cosl(-delayDirectionRA - earthLattitudeAngleStart);
-	num_t raSinEnd = sinl(-delayDirectionRA - earthLattitudeAngleEnd);
-	num_t raCosEnd = cosl(-delayDirectionRA - earthLattitudeAngleEnd);
+	num_t raSinEnd = sinl(-delayDirectionRA - earthLattitudeAngle);
+	num_t raCosEnd = cosl(-delayDirectionRA - earthLattitudeAngle);
 	num_t decCos = cosl(delayDirectionDec);
 	// term "+ dz * decCos" is eliminated because of subtraction
 	num_t wPosition =

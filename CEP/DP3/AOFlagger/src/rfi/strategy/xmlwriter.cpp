@@ -32,6 +32,7 @@
 #include <AOFlagger/rfi/strategy/iterationblock.h>
 #include <AOFlagger/rfi/strategy/loadflagsaction.h>
 #include <AOFlagger/rfi/strategy/loadimageaction.h>
+#include <AOFlagger/rfi/strategy/plotaction.h>
 #include <AOFlagger/rfi/strategy/setflaggingaction.h>
 #include <AOFlagger/rfi/strategy/setimageaction.h>
 #include <AOFlagger/rfi/strategy/slidingwindowfitaction.h>
@@ -91,6 +92,8 @@ namespace rfiStrategy {
 		Start("action");
 		switch(action.Type())
 		{
+			case ActionBlockType:
+				throw std::runtime_error("Can not store action blocks");
 			case AdapterType:
 				writeAdapter(static_cast<const Adapter&>(action));
 				break;
@@ -126,6 +129,9 @@ namespace rfiStrategy {
 				break;
 			case LoadImageActionType:
 				writeLoadImageAction(static_cast<const LoadImageAction&>(action));
+				break;
+			case PlotActionType:
+				writePlotAction(static_cast<const PlotAction&>(action));
 				break;
 			case SetFlaggingActionType:
 				writeSetFlaggingAction(static_cast<const SetFlaggingAction&>(action));
@@ -229,7 +235,7 @@ namespace rfiStrategy {
 		Write<int>("window-size", action.WindowSize());
 	}
 
-	void XmlWriter::writeImagerAction(const ImagerAction &action)
+	void XmlWriter::writeImagerAction(const ImagerAction &)
 	{
 		Attribute("type", "ImagerAction");
 	}
@@ -255,6 +261,13 @@ namespace rfiStrategy {
 		Write<bool>("read-all-polarisations", action.ReadAllPolarisations());
 		Write<bool>("read-dipole-auto-polarisations", action.ReadDipoleAutoPolarisations());
 		Write<bool>("read-stokes-i", action.ReadStokesI());
+	}
+
+	void XmlWriter::writePlotAction(const class PlotAction &action)
+	{
+		Attribute("type", "PlotAction");
+		Write<int>("plot-kind", action.PlotKind());
+		Write<bool>("logarithmic-y-axis", action.LogarithmicYAxis());
 	}
 
 	void XmlWriter::writeSetFlaggingAction(const SetFlaggingAction &action)
@@ -317,7 +330,7 @@ namespace rfiStrategy {
 		Write<double>("threshold", action.Threshold());
 	}
 
-	void XmlWriter::writeWriteFlagsAction(const WriteFlagsAction &action)
+	void XmlWriter::writeWriteFlagsAction(const WriteFlagsAction &)
 	{
 		Attribute("type", "WriteFlagsAction");
 	}

@@ -26,7 +26,7 @@ Stopwatch::Stopwatch() : _running(false), _sum(boost::posix_time::seconds(0))
 }
 
 Stopwatch::Stopwatch(bool start) :
-	_running(true),
+	_running(start),
 	_startTime(boost::posix_time::microsec_clock::local_time()),
 	_sum(boost::posix_time::seconds(0))
 {

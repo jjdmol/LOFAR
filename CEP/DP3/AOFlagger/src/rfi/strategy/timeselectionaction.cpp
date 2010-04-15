@@ -35,7 +35,7 @@
 
 namespace rfiStrategy {
 
-void TimeSelectionAction::ManualSelection(ArtifactSet &artifacts, class ProgressListener &listener)
+void TimeSelectionAction::ManualSelection(ArtifactSet &artifacts)
 {
 	TimeFrequencyData &model = artifacts.RevisedData();
 	TimeFrequencyData &original = artifacts.OriginalData();
@@ -76,7 +76,7 @@ void TimeSelectionAction::ManualSelection(ArtifactSet &artifacts, class Progress
 	contaminated.SetGlobalMask(mask);
 }
 
-void TimeSelectionAction::AutomaticSelection(ArtifactSet &artifacts, class ProgressListener &listener)
+void TimeSelectionAction::AutomaticSelection(ArtifactSet &artifacts)
 {
 	Image2DCPtr image = artifacts.ContaminatedData().GetSingleImage();
 	SampleRowPtr channels = SampleRow::CreateEmpty(image->Width());

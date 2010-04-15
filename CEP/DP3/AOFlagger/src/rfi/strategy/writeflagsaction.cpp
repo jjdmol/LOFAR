@@ -35,7 +35,7 @@ namespace rfiStrategy {
 	{
 	}
 	
-	void WriteFlagsAction::Perform(class ArtifactSet &artifacts, ProgressListener &progress)
+	void WriteFlagsAction::Perform(class ArtifactSet &artifacts, ProgressListener &)
 	{
 		if(!artifacts.HasImageSet())
 			throw BadUsageException("No image set active: can not write flags");

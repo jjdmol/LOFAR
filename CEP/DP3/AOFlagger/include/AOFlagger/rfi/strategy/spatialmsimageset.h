@@ -79,10 +79,10 @@ namespace rfiStrategy {
 				SpatialMSImageSetIndex &sIndex = static_cast<SpatialMSImageSetIndex&>(index);
 				return new TimeFrequencyData(_loader.Load(sIndex._timeIndex));
 			}
-			virtual void LoadFlags(ImageSetIndex &index, TimeFrequencyData &destination)
+			virtual void LoadFlags(ImageSetIndex &/*index*/, TimeFrequencyData &/*destination*/)
 			{
 			}
-			virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index)
+			virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &/*index*/)
 			{
 				return TimeFrequencyMetaDataCPtr();
 			}
@@ -90,18 +90,18 @@ namespace rfiStrategy {
 			{
 				return _loader.MetaData();
 			}
-			virtual void WriteFlags(ImageSetIndex &index, TimeFrequencyData &data)
+			virtual void WriteFlags(ImageSetIndex &/*index*/, TimeFrequencyData &/*data*/)
 			{
 			}
-			virtual size_t GetPart(ImageSetIndex &index)
-			{
-				return 0;
-			}
-			virtual size_t GetAntenna1(ImageSetIndex &index)
+			virtual size_t GetPart(ImageSetIndex &/*index*/)
 			{
 				return 0;
 			}
-			virtual size_t GetAntenna2(ImageSetIndex &index)
+			virtual size_t GetAntenna1(ImageSetIndex &/*index*/)
+			{
+				return 0;
+			}
+			virtual size_t GetAntenna2(ImageSetIndex &/*index*/)
 			{
 				return 0;
 			}

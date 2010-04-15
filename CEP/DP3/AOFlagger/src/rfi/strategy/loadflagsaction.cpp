@@ -27,7 +27,7 @@
 #include <AOFlagger/msio/timefrequencydata.h>
 
 namespace rfiStrategy {
-	void LoadFlagsAction::Perform(class ArtifactSet &artifacts, class ProgressListener &listener)
+	void LoadFlagsAction::Perform(class ArtifactSet &artifacts, class ProgressListener &)
 	{
 		ImageSet *imageSet = artifacts.ImageSet();
 		ImageSetIndex *index = artifacts.ImageSetIndex();

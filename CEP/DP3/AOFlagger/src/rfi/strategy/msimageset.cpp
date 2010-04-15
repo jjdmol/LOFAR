@@ -107,7 +107,7 @@ namespace rfiStrategy {
 		}
 	}
 
-	bool MSImageSet::InitImager(MSImageSetIndex &index)
+	bool MSImageSet::InitImager(MSImageSetIndex &)
 	{
 		if(_imager == 0 )
 			_imager = new TimeFrequencyImager(_set);

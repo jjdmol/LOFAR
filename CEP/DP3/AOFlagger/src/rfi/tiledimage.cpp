@@ -54,7 +54,7 @@ void TiledImage::SetParameters(int polynomialTimeOrder, int polynomialFequencyOr
 	_polynomialFequencyOrder = polynomialFequencyOrder;
 }
 
-void TiledImage::Initialize(TimeFrequencyData data)
+void TiledImage::Initialize(const TimeFrequencyData &data)
 {
 	_data = data;
 	_original = data.GetSingleImage();
