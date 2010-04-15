@@ -36,11 +36,13 @@
 #    rootdir:   root of LOFAR software tree
 #                 (default is /home/lofar/weekly/LOFAR)
 
-bindir=`dirname $0`
-rootdir="$1"
-if [ "$rootdir" = "" ]; then
-  rootdir="/home/lofar/weekly/LOFAR";
+if [ $# -lt 1 ]; then
+  echo "Usage: `basename $0` <LOFAR source root directory>"
+  exit 1
 fi
+
+bindir=`dirname $0`
+rootdir=$1
 
 # Get all dependencies and sort on name.
 # It gives the 'uses' relation.

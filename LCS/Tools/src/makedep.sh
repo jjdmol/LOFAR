@@ -22,31 +22,26 @@
 #
 # $Id$
 
-
-# Get LOFAR root directory from this script's name.
-a_dir=`dirname $0`
-a_dir=`cd $a_dir > /dev/null 2>&1; pwd`
-a_root=`echo $a_dir | sed -e 's%/LOFAR/.*%/LOFAR%'`
-
-# Find out where finddep and pkgdep are located.
-if [ -f $a_dir/pkgdep ]; then
-  a_pkgdep=$a_dir/pkgdep
-  a_finddep=$a_dir/finddep
-else
-  a_pkgdep=$a_root/LCS/Tools/build/gnu_debug/src/pkgdep
-  a_finddep=$a_root/LCS/Tools/src/finddep
+if [ $# -lt 1 ]; then
+  echo "Usage: `basename $0` <LOFAR source root directory>"
+  exit 1
 fi
-if [ "$a_pkgdep" = ""  -o  ! -x "$a_pkgdep" ]; then
-  a_pkgdep=`which pkgdep`
-  if [ "$a_pkgdep" = ""  -o  ! -x "$a_pkgdep" ]; then
-    echo "Fatal error: could not locate program \`pkgdep'"
-    exit 1
-  fi
-  a_finddep=`which finddep`
-  if [ "$a_finddep" = ""  -o  ! -x "$a_finddep" ]; then
-    echo "Fatal error: could not locate program \`finddep'"
-    exit 1
-  fi
+
+a_dir=`dirname $0`
+a_root=$1
+
+# Check if pkgdep is present in the same directory as this script.
+a_pkgdep=$a_dir/pkgdep
+if [ ! -x "$a_pkgdep" ]; then
+  echo "Fatal error: could not locate program \`pkgdep'"
+  exit 1
+fi
+
+# Check if finddep is present in the same directory as this script.
+a_finddep=$a_dir/finddep
+if [ ! -x "$a_finddep" ]; then
+  echo "Fatal error: could not locate program \`finddep'"
+  exit 1
 fi
 
 # Execute finddep.
