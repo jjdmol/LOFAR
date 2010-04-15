@@ -219,7 +219,7 @@ namespace rfiStrategy {
 	  _lock->unlock();
 	}
 
-	void ForEachBaselineAction::PerformFunction::OnStartTask(size_t taskNo, size_t taskCount, const std::string &description)
+	void ForEachBaselineAction::PerformFunction::OnStartTask(size_t /*taskNo*/, size_t /*taskCount*/, const std::string &/*description*/)
 	{
 	}
 
@@ -227,7 +227,7 @@ namespace rfiStrategy {
 	{
 	}
 
-	void ForEachBaselineAction::PerformFunction::OnProgress(size_t progres, size_t maxProgress)
+	void ForEachBaselineAction::PerformFunction::OnProgress(size_t /*progres*/, size_t /*maxProgress*/)
 	{
 	}
 

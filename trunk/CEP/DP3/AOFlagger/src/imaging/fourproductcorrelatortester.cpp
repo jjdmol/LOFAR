@@ -71,12 +71,12 @@ void FourProductCorrelatorTester::phaseMul2(num_t &r, num_t &i)
 	i = (2.0 * rtmp * i) / a;
 }
 
-void FourProductCorrelatorTester::SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, num_t earthLattitude, num_t &r, num_t &i, size_t index)
+void FourProductCorrelatorTester::SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i, size_t index)
 {
 	if(_incoherent)
-		_model.SimulateUncoherentAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, dz, frequency, earthLattitude, r, i, index);
+		_model.SimulateUncoherentAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, frequency, earthLattitude, r, i, index);
 	else
-		_model.SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, dz, frequency, earthLattitude, r, i);
+		_model.SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx, dy, frequency, earthLattitude, r, i);
 }
 
 void FourProductCorrelatorTester::SimulateCorrelation(num_t delayDirectionDEC, num_t delayDirectionRA, const AntennaInfo &a1, const AntennaInfo &a2, const AntennaInfo &a3, const AntennaInfo &a4, num_t frequency, double totalTime, double integrationTime)
@@ -108,7 +108,7 @@ void FourProductCorrelatorTester::SimulateCorrelation(num_t delayDirectionDEC, n
 		_model.GetUVPosition(u, v, earthLattitudeApprox, delayDirectionDEC, delayDirectionRA, combdx, combdy, combdz, wavelength);
 
 		// First product
-		SimulateAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, 0, frequency, earthLattitudeApprox, rsub1, isub1, index);
+		SimulateAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, frequency, earthLattitudeApprox, rsub1, isub1, index);
 		amplitudeSqrt(rsub1, isub1);
 		r = rsub1;
 		i = isub1;
@@ -119,7 +119,7 @@ void FourProductCorrelatorTester::SimulateCorrelation(num_t delayDirectionDEC, n
 			rsub2 = rsub1;
 			isub2 = isub1;
 		} else {
-			SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx2, dy2, dz2, frequency, earthLattitudeApprox, rsub2, isub2, index);
+			SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx2, dy2, frequency, earthLattitudeApprox, rsub2, isub2, index);
 			amplitudeSqrt(rsub2, isub2);
 		}
 		num_t rtmp = r;
@@ -136,7 +136,7 @@ void FourProductCorrelatorTester::SimulateCorrelation(num_t delayDirectionDEC, n
 			rsub3 = rsub2;
 			isub3 = isub2;
 		} else {
-			SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx3, dy3, dz3, frequency, earthLattitudeApprox, rsub3, isub3, index);
+			SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx3, dy3, frequency, earthLattitudeApprox, rsub3, isub3, index);
 			amplitudeSqrt(rsub3, isub3);
 		}
 		rtmp = r;
@@ -157,7 +157,7 @@ void FourProductCorrelatorTester::SimulateCorrelation(num_t delayDirectionDEC, n
 			rsub4 = rsub3;
 			isub4 = isub3;
 		} else { 
- 			SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx4, dy4, dz4, frequency, earthLattitudeApprox, rsub4, isub4, index);
+ 			SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx4, dy4, frequency, earthLattitudeApprox, rsub4, isub4, index);
 			amplitudeSqrt(rsub4, isub4);
 		}
 		rtmp = r;
@@ -214,7 +214,7 @@ void FourProductCorrelatorTester::SimulateTwoProdCorrelation(num_t delayDirectio
 		_model.GetUVPosition(u, v, earthLattitudeApprox, delayDirectionDEC, delayDirectionRA, dx2*2.0, dy2*2.0, dz2*2.0, wavelength);
 
 		// First product
-		SimulateAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, 0, frequency, earthLattitudeApprox, rsub1, isub1, index);
+		SimulateAntenna(delayDirectionDEC, delayDirectionRA, 0, 0, frequency, earthLattitudeApprox, rsub1, isub1, index);
 		phaseMul2(rsub1, isub1);
 		r = rsub1;
 		i = isub1;
@@ -225,7 +225,7 @@ void FourProductCorrelatorTester::SimulateTwoProdCorrelation(num_t delayDirectio
 			rsub2 = rsub1;
 			isub2 = isub1;
 		} else {
-			SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx2, dy2, dz2, frequency, earthLattitudeApprox, rsub2, isub2, index);
+			SimulateAntenna(delayDirectionDEC, delayDirectionRA, dx2, dy2, frequency, earthLattitudeApprox, rsub2, isub2, index);
 			phaseMul2(rsub2, isub2);
 		}
 		num_t rtmp = r;

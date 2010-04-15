@@ -41,12 +41,12 @@ namespace rfiStrategy {
 			{
 				return "Time selection";
 			}
-			virtual void Perform(ArtifactSet &artifacts, class ProgressListener &listener)
+			virtual void Perform(ArtifactSet &artifacts, class ProgressListener &)
 			{
 				if(_manualSelection)
-					ManualSelection(artifacts, listener);
+					ManualSelection(artifacts);
 				else
-					AutomaticSelection(artifacts, listener);
+					AutomaticSelection(artifacts);
 			}
 			virtual ActionType Type() const { return TimeSelectionActionType; }
 
@@ -59,8 +59,8 @@ namespace rfiStrategy {
 			num_t Threshold() const { return _threshold; }
 			void SetThreshold(num_t threshold) { _threshold = threshold; }
 		private:
-			void ManualSelection(ArtifactSet &artifacts, class ProgressListener &listener);
-			void AutomaticSelection(ArtifactSet &artifacts, class ProgressListener &listener);
+			void ManualSelection(ArtifactSet &artifacts);
+			void AutomaticSelection(ArtifactSet &artifacts);
 
 			size_t _partCount;
 			size_t _selectionCount;

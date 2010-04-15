@@ -62,7 +62,7 @@ class StatWriter {
 		void SetValueInc(long double value) { SetValue(value); NextMethod(); }
 		void SetValueInc(long double value, unsigned significantDigits) { SetValue(value, significantDigits); NextMethod(); }
 	private:
-		void MakeAccessable(unsigned column, unsigned row)
+		void MakeAccessable(unsigned /*column*/, unsigned row)
 		{
 			//while(column >= _width)
 			//	AddColumn();

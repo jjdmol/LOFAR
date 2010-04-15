@@ -273,7 +273,7 @@ int ImageTile::BaselineDerivativeMPF(const gsl_vector * x, void *data, gsl_matri
 	return GSL_SUCCESS;
 }*/
 
-void ImageTile::PrintState(unsigned iter, gsl_multifit_fdfsolver *solver)
+/*void ImageTile::PrintState(unsigned iter, gsl_multifit_fdfsolver *solver)
 {
 	std::cout << "f[v,t] := " << gsl_vector_get(solver->x, 0);
 	for(int i=1;i<=_freqOrder;++i)
@@ -284,7 +284,7 @@ void ImageTile::PrintState(unsigned iter, gsl_multifit_fdfsolver *solver)
 	
 	//std::cout << std::endl << "Iteration " << iter << ": |f(x)|=" << gsl_blas_dnrm2(solver->f) << ", mean = " << _mean << ", variance = " << _variance << ", " << WindowCount() << "/" << (_channelCount*_scanCount);
 	std::cout << std::endl;
-}
+}*/
 
 unsigned ImageTile::WindowCount() const {
 	unsigned count = 0;
@@ -381,9 +381,9 @@ void ImageTile::FirstWindowGuess(long double mean, long double variance)
 	}
 }
 
+/*
 long double ImageTile::EvaluateBaselineFunction(unsigned scan, unsigned channel) const 
 {
-  /*
 	mpf_t term, tmpA, tmpB;
 	mpf_init(term);
 	mpf_init(tmpA);
@@ -409,7 +409,12 @@ long double ImageTile::EvaluateBaselineFunction(unsigned scan, unsigned channel)
 	mpf_clear(term);
 	mpf_clear(tmpA);
 	mpf_clear(tmpB);
-	return result; */
+	return result;
+}*/
+
+long double ImageTile::EvaluateBaselineFunction(unsigned, unsigned) const 
+{
+	return 0.0; // TODO
 }
 
 void ImageTile::AddBaseline(Image2D &dest, double sign)
@@ -424,7 +429,7 @@ void ImageTile::AddBaseline(Image2D &dest, double sign)
 	}
 }
 
-void ImageTile::SetWindows(long double mean, long double variance, bool convolve) {
+void ImageTile::SetWindows(long double variance, bool convolve) {
 	bool methodA = false;
 	bool methodB = false;
 	bool methodC = true;
@@ -507,9 +512,7 @@ void ImageTile::LineThreshold(bool evaluateBaseline, long double mean, long doub
 bool ImageTile::TriggeredRaise(unsigned channelA, unsigned scanA, unsigned channelB, unsigned scanB, long double variance) const
 {
 	if(channelB >= _channelCount) return false;
-	if(channelB < 0) return false;
 	if(scanB >= _scanCount) return false;
-	if(scanB < 0) return false;
 	long double value = GetValueAt(channelA, scanA) - GetValueAt(channelB, scanB);
 	return value > _trigger * variance * 2.0;
 }

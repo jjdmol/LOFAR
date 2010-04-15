@@ -32,6 +32,7 @@
 #include <AOFlagger/rfi/strategy/iterationblock.h>
 #include <AOFlagger/rfi/strategy/loadflagsaction.h>
 #include <AOFlagger/rfi/strategy/loadimageaction.h>
+#include <AOFlagger/rfi/strategy/plotaction.h>
 #include <AOFlagger/rfi/strategy/setflaggingaction.h>
 #include <AOFlagger/rfi/strategy/setimageaction.h>
 #include <AOFlagger/rfi/strategy/slidingwindowfitaction.h>
@@ -185,6 +186,8 @@ Action *XmlReader::parseAction(xmlNode *node)
 		newAction = parseLoadFlagsAction(node);
 	else if(typeStr == "LoadImageAction")
 		newAction = parseLoadImageAction(node);
+	else if(typeStr == "PlotAction")
+		newAction = parsePlotAction(node);
 	else if(typeStr == "SetFlaggingAction")
 		newAction = parseSetFlaggingAction(node);
 	else if(typeStr == "SetImageAction")
@@ -290,7 +293,7 @@ class Action *XmlReader::parseFringeStopAction(xmlNode *node)
 	return newAction;
 }
 
-class Action *XmlReader::parseImagerAction(xmlNode *node)
+class Action *XmlReader::parseImagerAction(xmlNode *)
 {
 	ImagerAction *newAction = new ImagerAction();
 	return newAction;
@@ -329,6 +332,14 @@ Action *XmlReader::parseSetFlaggingAction(xmlNode *node)
 {
 	SetFlaggingAction *newAction = new SetFlaggingAction();
 	newAction->SetNewFlagging((enum SetFlaggingAction::NewFlagging) getInt(node, "new-flagging"));
+	return newAction;
+}
+
+Action *XmlReader::parsePlotAction(xmlNode *node)
+{
+	PlotAction *newAction = new PlotAction();
+	newAction->SetPlotKind((enum PlotAction::PlotKind) getInt(node, "plot-kind"));
+	newAction->SetLogarithmicYAxis(getBool(node, "logarithmic-y-axis"));
 	return newAction;
 }
 
@@ -386,7 +397,7 @@ class Action *XmlReader::parseTimeSelectionAction(xmlNode *node)
 	return newAction;
 }
 
-class Action *XmlReader::parseWriteFlagsAction(xmlNode *node)
+class Action *XmlReader::parseWriteFlagsAction(xmlNode *)
 {
 	WriteFlagsAction *newAction = new WriteFlagsAction();
 	return newAction;

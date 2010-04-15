@@ -67,6 +67,7 @@ class XmlReader{
 		class Action *parseIterationBlock(xmlNode *node);
 		class Action *parseLoadFlagsAction(xmlNode *node);
 		class Action *parseLoadImageAction(xmlNode *node);
+		class Action *parsePlotAction(xmlNode *node);
 		class Action *parseSetFlaggingAction(xmlNode *node);
 		class Action *parseSetImageAction(xmlNode *node);
 		class Action *parseSlidingWindowFitAction(xmlNode *node);

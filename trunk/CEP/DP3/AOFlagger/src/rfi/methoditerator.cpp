@@ -236,7 +236,7 @@ void MethodIterator::ExecuteThreshold(Image2DCPtr image, Image2DCPtr background,
 	}
 }
 
-void MethodIterator::OutputMethodDetails(const SurfaceFitMethod &method, const Stopwatch &watch, StatWriter &statWriter)
+void MethodIterator::OutputMethodDetails(const SurfaceFitMethod &, const Stopwatch &watch, StatWriter &)
 {
 	std::cout
 		<< "Creating background in this iteration took: " << watch.ToString() 
