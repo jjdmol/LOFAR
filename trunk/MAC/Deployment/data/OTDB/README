@@ -1,18 +1,64 @@
-!!!  IMPORTANT  !!!
-The files in this directory depend on files in other directories!
-Read the instructions below!
+# NODE DEFINITION
+#
+# name          name of the node
+# version       version of this node specification
+# quality       stable | test | development
+# constraint    python script to check multiparameter constrains
+#               may return OK, NotOK, Unknown
+# description   What this module does.
+#
+# Note 1: to seperate the parameterlines from the Node lines each node line
+#         begins with the label 'Node'.
+# Note 2: To define dependancies between nodes the label 'Uses' is used.
+#         A + sign may be added to the versionnr to indicate that the given
+#         versionnr is the minimal version the module should have. (NOT YET IMPLEMENTED)
+#
+
+#########################################################################################################
+# -- TBBsetting --
+#      name              vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  myNode         1.0.0  development  'node constraint'  "This is what myNode does"
+
+# PARAMETER DEFINITION
+#
+# name				name of the parameter
+# direction			I: input only; O: changes will be logged during runtime; IO: both
+# type				parametertype: should exist in param_type table of OTDB (= ParamTypeConv)
+# unit				name of unit of parameter (should exist in unit table (= UnitConv)
+# pruninglevel		when parameter values are thrown away from the database. (NOT YET USED)
+# validationMoment	moment the parameter values is validated (NOT YET USED)
+# value				value(range) of the parameter.
+# constraint		script to run to check its value
+# description		what the parameter manages.
+#--------------------------------------------------------------------------------------------------------
+#    name                dir. type   unit   prun. vm   value     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  myParameter		IO		text	-		10	0	"content"	"par constraint"	"What this parameter manages"
 
 
-This directory contains the component files that need to be loaded in the OTDB.
-Several components like the stations and the compute-nodes can be generated using
-the '.base' files in the ../PVSS directory(!) with the command 'create_OTDB_files'.
+# ALLOWED VALUES FOR TYPE:
 
-All the '.comp' files and the generated '.gcomp' file can now be loaded manually
-into a database using the OTB. To load all components into a database the 
-load_all_comps.cc needs to be compiled first because we need the C++ layer of the
-OTDB. To compile this program run 'make' in LOFAR/MAC/Deployment(/build/gnu_debug).
+'bool'	boolean
+'int'	integer
+'uint'	unsigned integer
+'long'	long integer
+'ulng'	unsigned long integer
+'flt'	float
+'dbl'	double
+'icpx'	integer complex
+'lcpx'	long integer complex
+'fcpx'	float complex
+'dcpx'	double complex
+'text'	text / string
+'bin'	binary
+'time'	timestring
+'date'	date (+time) string
 
-When 'create_OTDB_files' and he 'make' both succeeded you are ready to load all
-components in this directory into a database, type 'load_components <databasename>'
-e.g.:	load_components CDR
+REMARK 1: All the types can be preceeded by a 'v' when the contents is a vector of that type.
+
+REMARK 2: All the types can be preceeded by a 'p' when the contents is limited to a popup menu. 
+In that case the value field has the syntax:
+<value1>[[|<value>]...][;default_value]
+e.g.:  "Red|Orange|Yellow|Green|Blue|Indigo|Violet;Blue"
 
