@@ -70,9 +70,9 @@ class TimeFrequencyImager {
 		void SetReadYX(bool readYX) { _readYX = readYX; }
 		void SetReadYY(bool readYY) { _readYY = readYY; }
 
-		void WriteNewFlags(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY) const;
-		void WriteNewFlags(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY, int antenna1, int antenna2, int spectralWindow) const;
-		void WriteNewFlagsPart(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY, int antenna1, int antenna2, int spectralWindow, size_t timeOffset, size_t timeEnd, size_t leftBorder=0, size_t rightBorder=0) const;
+		void WriteNewFlags(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY);
+		void WriteNewFlags(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY, int antenna1, int antenna2, int spectralWindow);
+		void WriteNewFlagsPart(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY, int antenna1, int antenna2, int spectralWindow, size_t timeOffset, size_t timeEnd, size_t leftBorder=0, size_t rightBorder=0);
 		void SetImageKind(enum ImageKind kind) { _imageKind = kind; }
 
 		const class BandInfo &BandInfo() const { return _bandInfo; }
@@ -86,6 +86,8 @@ class TimeFrequencyImager {
 		const std::vector<class UVW> &UVW() const { return _uvw; }
 	private:
 		void Clear();
+		void initializePolarizations();
+		void checkPolarizations();
 		void image(size_t antenna1Select, size_t antenna2Select, size_t spectralWindowSelect, size_t startIndex, size_t endIndex);
 
 		static void setObservationTimes(MeasurementSet &set, std::map<double,size_t> &observationTimes);
@@ -111,7 +113,8 @@ class TimeFrequencyImager {
 
 		bool _readData, _readFlags;
 
-		bool _readXX, _readXY, _readYX, _readYY, _readStokesI;
+		bool _readXX, _readXY, _readYX, _readYY, _readStokesI, _readStokesIDirectly;
+		int _xxIndex, _xyIndex, _yxIndex, _yyIndex, _stokesIIndex;
 
 		class MeasurementSet *_measurementSet;
 		size_t _antenna1Select;
