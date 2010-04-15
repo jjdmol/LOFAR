@@ -31,7 +31,7 @@
 
 TimeFrequencyImager::TimeFrequencyImager(MeasurementSet &measurementSet)
 	: _readData(true), _readFlags(false),
-		_readXX(true), _readXY(true), _readYX(true), _readYY(true), _readStokesI(false),
+		_readXX(true), _readXY(true), _readYX(true), _readYY(true), _readStokesI(false), _readStokesIDirectly(false),
 		_measurementSet(&measurementSet), _imageKind(Corrected), _sortedTable(0)
 {
 }
@@ -117,6 +117,9 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 {
 	size_t timeCount = _observationTimes.size();
 	int frequencyCount = _measurementSet->FrequencyCount();
+
+	initializePolarizations();
+	checkPolarizations();
 
 	if(_sortedTable == 0)
 	{
@@ -308,18 +311,21 @@ casa::ROArrayColumn<casa::Complex> *TimeFrequencyImager::CreateDataColumn(ImageK
 	}
 }
 
-void TimeFrequencyImager::WriteNewFlags(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY) const
+void TimeFrequencyImager::WriteNewFlags(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY)
 {
 	WriteNewFlagsPart(newXX, newXY, newYX, newYY, _antenna1Select, _antenna2Select, _spectralWindowSelect, 0, newXX->Width());
 }
 
-void TimeFrequencyImager::WriteNewFlags(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY, int antenna1, int antenna2, int spectralWindow) const
+void TimeFrequencyImager::WriteNewFlags(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY, int antenna1, int antenna2, int spectralWindow)
 {
 	WriteNewFlagsPart(newXX, newXY, newYX, newYY, antenna1, antenna2, spectralWindow, 0, newXX->Width());
 }
 
-void TimeFrequencyImager::WriteNewFlagsPart(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY, int antenna1, int antenna2, int spectralWindow, size_t timeOffset, size_t timeEnd, size_t leftBorder, size_t rightBorder) const
+void TimeFrequencyImager::WriteNewFlagsPart(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY, int antenna1, int antenna2, int spectralWindow, size_t timeOffset, size_t timeEnd, size_t leftBorder, size_t rightBorder)
 {
+	initializePolarizations();
+	checkPolarizations();
+
 	size_t frequencyCount = _measurementSet->FrequencyCount();
 
 	std::map<double,size_t> observationTimes;
@@ -360,19 +366,31 @@ void TimeFrequencyImager::WriteNewFlagsPart(Mask2DCPtr newXX, Mask2DCPtr newXY, 
 				casa::Array<bool> flag = *flagIter;
 				casa::Array<bool>::iterator j = flag.begin();
 				for(size_t f=0;f<(size_t) frequencyCount;++f) {
-					bool xxF = newXX->Value(timeIndex - timeOffset, f);
-					bool xyF = newXY->Value(timeIndex - timeOffset, f);
-					bool yxF = newYX->Value(timeIndex - timeOffset, f);
-					bool yyF = newYY->Value(timeIndex - timeOffset, f);
-	
-					*j = xxF;
-					++j;
-					*j = xyF;
-					++j;
-					*j = yxF;
-					++j;
-					*j = yyF;
-					++j;
+					if(_stokesIIndex >= 0)
+					{
+						if(_readStokesI) *j = newXX->Value(timeIndex - timeOffset, f);
+						++j;
+					}
+					if(_xxIndex >= 0)
+					{
+						if(_readXX) *j = newXX->Value(timeIndex - timeOffset, f);
+						++j;
+					}
+					if(_xyIndex >= 0)
+					{
+						if(_readXY) *j = newXY->Value(timeIndex - timeOffset, f);
+						++j;
+					}
+					if(_yxIndex >= 0)
+					{
+						if(_readYX) *j = newYX->Value(timeIndex - timeOffset, f);
+						++j;
+					}
+					if(_yyIndex >= 0)
+					{
+						if(_readYY) *j = newYY->Value(timeIndex - timeOffset, f);
+						++j;
+					}
 				}
 				flagIter.Set(flag);
 				++rowsWritten;
@@ -398,26 +416,31 @@ void TimeFrequencyImager::ReadTimeData(size_t xOffset, int frequencyCount, const
 		m = model->begin();
 
 	for(size_t f=0;f<(size_t) frequencyCount;++f) {
-		double xxr, xxi, xyr, xyi, yxr, yxi, yyr, yyi;
+		double xxr, xxi, xyr, xyi, yxr, yxi, yyr, yyi, ir, ii;
 
 		if(_imageKind == Residual) {
-			const casa::Complex &xxData = *i;
-			++i;
-			const casa::Complex &xyData = *i;
-			++i;
-			const casa::Complex &yxData = *i;
-			++i;
-			const casa::Complex &yyData = *i;
-			++i;
-			const casa::Complex &xxModel = *m;
-			++m;
-			const casa::Complex &xyModel = *m;
-			++m;
-			const casa::Complex &yxModel = *m;
-			++m;
-			const casa::Complex &yyModel = *m;
-			++m;
+			const casa::Complex &iData = *i;
+			const casa::Complex &iModel = *m;
+			if(_stokesIIndex >= 0) { ++i; ++m; }
 
+			const casa::Complex &xxData = *i;
+			const casa::Complex &xxModel = *m;
+			if(_xxIndex >= 0) { ++i; ++m; }
+
+			const casa::Complex &xyData = *i;
+			const casa::Complex &xyModel = *m;
+			if(_xyIndex >= 0) { ++i; ++m; }
+
+			const casa::Complex &yxData = *i;
+			const casa::Complex &yxModel = *m;
+			if(_yxIndex >= 0) { ++i; ++m; }
+
+			const casa::Complex &yyData = *i;
+			const casa::Complex &yyModel = *m;
+			if(_yyIndex >= 0) { ++i; ++m; }
+
+			ir = iData.real() - iModel.real();
+			ii = iData.imag() - iModel.imag();
 			xxr = xxData.real() - xxModel.real();
 			xxi = xxData.imag() - xxModel.imag();
 			xyr = xyData.real() - xyModel.real();
@@ -427,14 +450,17 @@ void TimeFrequencyImager::ReadTimeData(size_t xOffset, int frequencyCount, const
 			yyr = yyData.real() - yyModel.real();
 			yyi = yyData.imag() - yyModel.imag();
 		} else {
+			const casa::Complex &stokesI = *i;
+			if(_stokesIIndex >= 0) ++i;
 			const casa::Complex &xx = *i;
-			++i;
+			if(_xxIndex >= 0) ++i;
 			const casa::Complex &xy = *i;
-			++i;
+			if(_xyIndex >= 0) ++i;
 			const casa::Complex &yx = *i;
-			++i;
+			if(_yxIndex >= 0) ++i;
 			const casa::Complex &yy = *i;
-			++i;
+			if(_yyIndex >= 0) ++i;
+
 			xxr = xx.real();
 			xxi = xx.imag();
 			xyr = xy.real();
@@ -443,6 +469,8 @@ void TimeFrequencyImager::ReadTimeData(size_t xOffset, int frequencyCount, const
 			yxi = yx.imag();
 			yyr = yy.real();
 			yyi = yy.imag();
+			ir = stokesI.real();
+			ii = stokesI.imag();
 		}
 	
 		if(_readXX)
@@ -467,8 +495,13 @@ void TimeFrequencyImager::ReadTimeData(size_t xOffset, int frequencyCount, const
 		}
 		if(_readStokesI)
 		{
-			_realStokesI->SetValue(xOffset, f, xxr + yyr);
-			_imaginaryStokesI->SetValue(xOffset, f, xxi + yyi);
+			if(_readStokesIDirectly) {
+				_realStokesI->SetValue(xOffset, f, ir);
+				_imaginaryStokesI->SetValue(xOffset, f, ii);
+			} else {
+				_realStokesI->SetValue(xOffset, f, xxr + yyr);
+				_imaginaryStokesI->SetValue(xOffset, f, xxi + yyi);
+			}
 		}
 	}
 }
@@ -477,14 +510,17 @@ void TimeFrequencyImager::ReadTimeFlags(size_t xOffset, int frequencyCount, cons
 {
 	casa::Array<bool>::const_iterator j = flag.begin();
 	for(size_t f=0;f<(size_t) frequencyCount;++f) {
+		bool stokesIF = *j;
+		if(_stokesIIndex >= 0) ++j;
 		bool xxF = *j;
-		++j;
+		if(_xxIndex >= 0) ++j;
 		bool xyF = *j;
-		++j;
+		if(_xyIndex >= 0) ++j;
 		bool yxF = *j;
-		++j;
+		if(_yxIndex >= 0) ++j;
 		bool yyF = *j;
-		++j;
+		if(_yyIndex >= 0) ++j;
+
 		if(_readXX)
 			_flagXX->SetValue(xOffset, f, xxF);
 		if(_readXY)
@@ -494,7 +530,12 @@ void TimeFrequencyImager::ReadTimeFlags(size_t xOffset, int frequencyCount, cons
 		if(_readYY)
 		_flagYY->SetValue(xOffset, f, yyF);
 		if(_readStokesI)
-		_flagCombined->SetValue(xOffset, f, xxF || xyF || yxF || yyF);
+		{
+			if(_readStokesIDirectly)
+				_flagCombined->SetValue(xOffset, f, stokesIF);
+			else
+				_flagCombined->SetValue(xOffset, f, xxF || xyF || yxF || yyF);
+		}
 	} 
 }
 
@@ -589,3 +630,71 @@ void TimeFrequencyImager::PartInfo(const std::string &msFile, size_t maxTimeScan
 	}
 }
 
+void TimeFrequencyImager::initializePolarizations()
+{
+	casa::Table *table = _measurementSet->OpenTable(MeasurementSet::PolarizationTable, false);
+	casa::ROArrayColumn<int> corTypeColumn(*table, "CORR_TYPE"); 
+	casa::Array<int> corType = corTypeColumn(0);
+	casa::Array<int>::iterator iterend(corType.end());
+	_xxIndex = -1, _xyIndex = -1, _yxIndex = -1, _yyIndex = -1; _stokesIIndex = -1;
+	int polarizationCount = 0;
+	for (casa::Array<int>::iterator iter=corType.begin(); iter!=iterend; ++iter)
+	{
+		switch(*iter) {
+			case 1: _stokesIIndex = polarizationCount; break;
+			case 5:
+			case 9: _xxIndex = polarizationCount; break;
+			case 6:
+			case 10: _xyIndex = polarizationCount; break;
+			case 7:
+			case 11: _yxIndex = polarizationCount; break;
+			case 8:
+			case 12: _yyIndex = polarizationCount; break;
+			default:
+			{
+				std::stringstream s;
+				s << "There is a polarization in the measurement set that I can not handle (" << *iter << ", polarization index " << polarizationCount << ").";
+				throw std::runtime_error(s.str());
+			}
+		}
+		++polarizationCount;
+  }
+	delete table;
+}
+
+void TimeFrequencyImager::checkPolarizations()
+{
+	if(_readXX && _xxIndex < 0)
+	{
+		std::cerr << "Warning: trying to read XX polarization, but polarization not available." << std::endl;
+		_readXX = false;
+	}
+	if(_readXY && _xyIndex < 0)
+	{
+		std::cerr << "Warning: trying to read XY polarization, but polarization not available." << std::endl;
+		_readXY = false;
+	}
+	if(_readYX && _yxIndex < 0)
+	{
+		std::cerr << "Warning: trying to read YX polarization, but polarization not available." << std::endl;
+		_readYX = false;
+	}
+	if(_readYY && _yyIndex < 0)
+	{
+		std::cerr << "Warning: trying to read YY polarization, but polarization not available." << std::endl;
+		_readYY = false;
+	}
+	if(_readStokesI)
+	{
+		if(_stokesIIndex >= 0)
+			_readStokesIDirectly = true;
+		else if(_xxIndex >= 0 && _yyIndex >= 0)
+		{
+			_readStokesIDirectly = false;
+		} else
+		{
+			std::cerr << "Warning: trying to read StokesI polarization, but polarization not available." << std::endl;
+			_readStokesI = false;
+		}
+	}
+}

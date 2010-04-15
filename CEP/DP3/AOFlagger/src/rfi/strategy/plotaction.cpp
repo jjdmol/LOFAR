@@ -17,6 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#include <boost/thread.hpp>
+
 #include <AOFlagger/rfi/antennaflagcountplot.h>
 #include <AOFlagger/rfi/frequencyflagcountplot.h>
 #include <AOFlagger/rfi/frequencypowerplot.h>
@@ -29,6 +31,7 @@ namespace rfiStrategy {
 	
 	void PlotAction::Perform(ArtifactSet &artifacts, ProgressListener &)
 	{
+		boost::mutex::scoped_lock lock(artifacts.IOMutex());
 		switch(_plotKind)
 		{
 			case AntennaFlagCountPlot:

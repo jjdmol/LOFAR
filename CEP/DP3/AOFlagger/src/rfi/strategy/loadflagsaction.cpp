@@ -26,9 +26,13 @@
 
 #include <AOFlagger/msio/timefrequencydata.h>
 
+#include <AOFlagger/util/stopwatch.h>
+
 namespace rfiStrategy {
 	void LoadFlagsAction::Perform(class ArtifactSet &artifacts, class ProgressListener &)
 	{
+		Stopwatch watch(true);
+
 		ImageSet *imageSet = artifacts.ImageSet();
 		ImageSetIndex *index = artifacts.ImageSetIndex();
 
@@ -46,6 +50,10 @@ namespace rfiStrategy {
 				case TimeFrequencyData::StokesI:
 					msImageSet->SetReadStokesI();
 					break;
+				case TimeFrequencyData::AutoDipolePolarisation:
+					msImageSet->SetReadDipoleAutoPolarisations();
+					break;
+				case TimeFrequencyData::CrossDipolePolarisation:
 				default:
 					throw BadUsageException("Unimplemented polarisation type for reading flags");
 					break;
@@ -69,5 +77,7 @@ namespace rfiStrategy {
 	
 			artifacts.ContaminatedData().SetMaskFrom(data);
 		}
+
+		std::cout << "Flags load time: " << watch.ToString() << std::endl;
 	}
 } // end of namespace

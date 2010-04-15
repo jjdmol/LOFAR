@@ -46,7 +46,7 @@ void TimeFlagCountPlot::Add(class TimeFrequencyData &data, TimeFrequencyMetaData
 			}
 			MapItem item = _counts[time];
 			item.count += count;
-			item.total += mask->Width();
+			item.total += mask->Height();
 			_counts[time] = item;
 		}
 	}

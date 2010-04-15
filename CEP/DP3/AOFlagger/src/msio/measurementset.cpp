@@ -44,15 +44,15 @@ MeasurementSet::~MeasurementSet()
 
 casa::Table *MeasurementSet::OpenTable(TableType type, bool update) const
 {
-	if(type == MainTable) {
-		casa::Table *table;
-		if(update)
-			table = new casa::Table(_location, casa::Table::Update);
-		else
-			table = new casa::Table(_location);
-		return table;
-	} else
-	return 0;
+	std::string tableLocation = _location;
+	if(type == PolarizationTable)
+		tableLocation += "/POLARIZATION";
+	casa::Table *table;
+	if(update)
+		table = new casa::Table(tableLocation, casa::Table::Update);
+	else
+		table = new casa::Table(tableLocation);
+	return table;
 }
 
 size_t MeasurementSet::MaxSpectralBandIndex()

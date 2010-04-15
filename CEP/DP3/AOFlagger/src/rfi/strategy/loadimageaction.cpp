@@ -28,10 +28,14 @@
 #include <AOFlagger/rfi/strategy/loadimageaction.h>
 #include <AOFlagger/rfi/strategy/msimageset.h>
 
+#include <AOFlagger/util/stopwatch.h>
+
 namespace rfiStrategy {
 
 	void LoadImageAction::Perform(class ArtifactSet &artifacts, class ProgressListener &)
 	{
+		Stopwatch watch(true);
+
 		ImageSet *imageSet = artifacts.ImageSet();
 		ImageSetIndex *index = artifacts.ImageSetIndex();
 
@@ -71,5 +75,7 @@ namespace rfiStrategy {
 		delete zero;
 		artifacts.SetMetaData(newMetaData);
 		delete newData;
+
+		std::cout << "Image load time: " << watch.ToString() << std::endl;
 	}
 } // end of namespace

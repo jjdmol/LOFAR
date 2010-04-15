@@ -92,7 +92,7 @@ class MSIterator {
 
 class MeasurementSet {
 	public:
-		enum TableType { MainTable };
+		enum TableType { MainTable, PolarizationTable };
 		MeasurementSet(const std::string &location) throw()
 			: _location(location), _maxSpectralBandIndex(-1),
 			_maxFrequencyIndex(-1), _maxScanIndex(-1), _cacheInitialized(false)
