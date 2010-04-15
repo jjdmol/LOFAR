@@ -7,9 +7,11 @@ Observation.VirtualInstrument.stationList = [CS302]
 #Observation.antennaSet=LBA_INNER
 #Observation.antennaSet=LBA_OUTER
 #Observation.antennaSet=LBA_X
+#Observation.antennaSet=HBA_ZERO
 #Observation.antennaSet=HBA_ONE
-#Observation.antennaSet=HBA_TWO
-Observation.antennaSet=HBA_BOTH
+#Observation.antennaSet=HBA_DUAL
+#Observation.antennaSet=HBA_JOINED
+Observation.antennaSet=LBA_INNER
 
 OLAP.realTime = T # T when reading data from stations, F when reading from disk
 
