@@ -16,6 +16,7 @@ set(parmdb_LIB_SRCS
   ParmDB.cc
   ParmDBCasa.cc
   ParmDBLocker.cc
+  ParmDBLog.cc
   Parm.cc
   ParmFacadeRep.cc
   ParmFacadeLocal.cc
