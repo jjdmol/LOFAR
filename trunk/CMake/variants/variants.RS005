@@ -9,3 +9,6 @@ set(CPPLAPACK_ROOT_DIR /usr)
 
 # Path to PVSS
 set(PVSS_ROOT_DIR /opt/pvss/pvss2_v3.7)
+
+# Path to Matlab
+set(MATLAB_ROOT_DIR /usr/local/matlab-2008a)
