@@ -202,16 +202,19 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 		}
 	}
 	if(_readFlags) {
+		// The flags should be initialized to true, as this baseline might
+		// miss some time scans that other baselines do have, and these
+		// should be flagged.
 		if(_flagXX==0 && _readXX)
-			_flagXX = Mask2D::CreateUnsetMaskPtr(width, frequencyCount);
+			_flagXX = Mask2D::CreateSetMaskPtr<true>(width, frequencyCount);
 		if(_flagXY==0 && _readXY)
-			_flagXY = Mask2D::CreateUnsetMaskPtr(width, frequencyCount);
+			_flagXY = Mask2D::CreateSetMaskPtr<true>(width, frequencyCount);
 		if(_flagYX==0 && _readYX)
-			_flagYX = Mask2D::CreateUnsetMaskPtr(width, frequencyCount);
+			_flagYX = Mask2D::CreateSetMaskPtr<true>(width, frequencyCount);
 		if(_flagYY==0 && _readYY)
-			_flagYY = Mask2D::CreateUnsetMaskPtr(width, frequencyCount);
+			_flagYY = Mask2D::CreateSetMaskPtr<true>(width, frequencyCount);
 		if(_flagCombined==0 && _readStokesI)
-			_flagCombined = Mask2D::CreateUnsetMaskPtr(width, frequencyCount);
+			_flagCombined = Mask2D::CreateSetMaskPtr<true>(width, frequencyCount);
 	}
 	_uvw.resize(width);
 
@@ -257,13 +260,13 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 			else if(modelIter == 0)
 				ReadTimeData(timeIndex-startIndex, frequencyCount, *dataIter, 0);
 			else {
-				const casa::Array<casa::Complex> &model = **modelIter; 
+				const casa::Array<casa::Complex> model = **modelIter; 
 				ReadTimeData(timeIndex-startIndex, frequencyCount, *dataIter, &model);
 			}
 		}
 		if(_readFlags && timeIsSelected) {
 			const casa::Array<bool> flag = *flagIter;
-			ReadTimeFlags(timeIndex-startIndex, frequencyCount, *flagIter);
+			ReadTimeFlags(timeIndex-startIndex, frequencyCount, flag);
 		}
 		if(timeIsSelected) {
 			casa::Array<double> arr = *uvwIter;
@@ -368,7 +371,7 @@ void TimeFrequencyImager::WriteNewFlagsPart(Mask2DCPtr newXX, Mask2DCPtr newXY, 
 				for(size_t f=0;f<(size_t) frequencyCount;++f) {
 					if(_stokesIIndex >= 0)
 					{
-						if(_readStokesI) *j = newXX->Value(timeIndex - timeOffset, f);
+						if(_readStokesIDirectly) *j = newXX->Value(timeIndex - timeOffset, f);
 						++j;
 					}
 					if(_xxIndex >= 0)
@@ -408,7 +411,7 @@ void TimeFrequencyImager::WriteNewFlagsPart(Mask2DCPtr newXX, Mask2DCPtr newXY, 
 	delete table;
 }
 
-void TimeFrequencyImager::ReadTimeData(size_t xOffset, int frequencyCount, const casa::Array<casa::Complex> &data, const casa::Array<casa::Complex> *model)
+void TimeFrequencyImager::ReadTimeData(size_t xOffset, int frequencyCount, const casa::Array<casa::Complex> data, const casa::Array<casa::Complex> *model)
 {
 	casa::Array<casa::Complex>::const_iterator i = data.begin();
 	casa::Array<casa::Complex>::const_iterator m;
@@ -506,40 +509,48 @@ void TimeFrequencyImager::ReadTimeData(size_t xOffset, int frequencyCount, const
 	}
 }
 
-void TimeFrequencyImager::ReadTimeFlags(size_t xOffset, int frequencyCount, const casa::Array<bool> &flag)
+void TimeFrequencyImager::ReadTimeFlags(size_t xOffset, int frequencyCount, const casa::Array<bool> flag)
 {
 	casa::Array<bool>::const_iterator j = flag.begin();
 	for(size_t f=0;f<(size_t) frequencyCount;++f) {
-		bool stokesIF = *j;
-		if(_stokesIIndex >= 0) ++j;
-		bool xxF = *j;
-		if(_xxIndex >= 0) ++j;
-		bool xyF = *j;
-		if(_xyIndex >= 0) ++j;
-		bool yxF = *j;
-		if(_yxIndex >= 0) ++j;
-		bool yyF = *j;
-		if(_yyIndex >= 0) ++j;
-
-		if(_readXX)
-			_flagXX->SetValue(xOffset, f, xxF);
-		if(_readXY)
-		_flagXY->SetValue(xOffset, f, xyF);
-		if(_readYX)
-		_flagYX->SetValue(xOffset, f, yxF);
-		if(_readYY)
-		_flagYY->SetValue(xOffset, f, yyF);
+		bool stokesIF = false;
+		if(_stokesIIndex >= 0) {
+			stokesIF = *j;
+			++j;
+		}
+		if(_xxIndex >= 0)
+		{
+			if(_readXX) _flagXX->SetValue(xOffset, f, *j);
+			stokesIF |= *j;
+			++j;
+		}
+		if(_xyIndex >= 0)
+		{
+			if(_readXY) _flagXY->SetValue(xOffset, f, *j);
+			stokesIF |= *j;
+			++j;
+		}
+		if(_yxIndex >= 0)
+		{
+			if(_readYX) _flagYX->SetValue(xOffset, f, *j);
+			stokesIF |= *j;
+			++j;
+		}
+		if(_yyIndex >= 0)
+		{
+			if(_readYY) _flagYY->SetValue(xOffset, f, *j);
+			stokesIF |= *j;
+			++j;
+			if( _flagYY->Value(xOffset, f)) std::cout << "Y";
+		}
 		if(_readStokesI)
 		{
-			if(_readStokesIDirectly)
-				_flagCombined->SetValue(xOffset, f, stokesIF);
-			else
-				_flagCombined->SetValue(xOffset, f, xxF || xyF || yxF || yyF);
+			_flagCombined->SetValue(xOffset, f, stokesIF);
 		}
 	} 
 }
 
-void TimeFrequencyImager::ReadWeights(size_t xOffset, int frequencyCount, const casa::Array<float> &weight)
+void TimeFrequencyImager::ReadWeights(size_t xOffset, int frequencyCount, const casa::Array<float> weight)
 {
 	casa::Array<float>::const_iterator j = weight.begin();
 	float xx = *j;
@@ -599,7 +610,7 @@ TimeFrequencyData TimeFrequencyImager::GetData() const
 		data = TimeFrequencyData(TimeFrequencyData::StokesI, _realStokesI, _imaginaryStokesI);
 	}
 
-	if(_flagXX != 0 && _flagXY != 0 && _flagYX != 0 && _flagYY != 0)
+	if(_flagXX != 0 && _flagXY != 0 && _flagYX != 0 && _flagYY != 0 && data.PolarisationType() == TimeFrequencyData::DipolePolarisation)
 	{
 		data.SetIndividualPolarisationMasks(_flagXX, _flagXY, _flagYX, _flagYY);
 	} else if(_flagXX != 0 && _flagYY != 0 && data.PolarisationType() == TimeFrequencyData::AutoDipolePolarisation)

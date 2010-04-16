@@ -117,7 +117,7 @@ namespace rfiStrategy {
 		_imager->SetReadXX(_readDipoleAutoPolarisations);
 		_imager->SetReadYY(_readDipoleAutoPolarisations);
 		_imager->SetReadXY(_readDipoleCrossPolarisations);
-		_imager->SetReadXY(_readDipoleCrossPolarisations);
+		_imager->SetReadYX(_readDipoleCrossPolarisations);
 		_imager->SetReadStokesI(_readStokesI);
 		return true;
 	}

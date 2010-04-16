@@ -94,9 +94,9 @@ class TimeFrequencyImager {
 		void readUVWData();
 
 		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(ImageKind kind, class casa::Table &table);
-		void ReadTimeData(size_t xOffset, int frequencyCount, const casa::Array<casa::Complex> &data, const casa::Array<casa::Complex> *model);
-		void ReadTimeFlags(size_t xOffset, int frequencyCount, const casa::Array<bool> &flag);
-		void ReadWeights(size_t xOffset, int frequencyCount, const casa::Array<float> &weight);
+		void ReadTimeData(size_t xOffset, int frequencyCount, const casa::Array<casa::Complex> data, const casa::Array<casa::Complex> *model);
+		void ReadTimeFlags(size_t xOffset, int frequencyCount, const casa::Array<bool> flag);
+		void ReadWeights(size_t xOffset, int frequencyCount, const casa::Array<float> weight);
 
 		Image2DPtr _realXX, _imaginaryXX;
 		Image2DPtr _realXY, _imaginaryXY;
