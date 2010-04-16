@@ -541,7 +541,6 @@ void TimeFrequencyImager::ReadTimeFlags(size_t xOffset, int frequencyCount, cons
 			if(_readYY) _flagYY->SetValue(xOffset, f, *j);
 			stokesIF |= *j;
 			++j;
-			if( _flagYY->Value(xOffset, f)) std::cout << "Y";
 		}
 		if(_readStokesI)
 		{
