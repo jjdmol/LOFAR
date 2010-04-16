@@ -318,7 +318,7 @@ class TimeFrequencyData
 				else if(polarisation == StokesI)
 					return GetSingleMask();
 				else if(polarisation == SinglePolarisation)
-					throw BadUsageException("Requesting single polarisation mask from auto dipole information, which polarisation to return?");
+					throw BadUsageException("Requesting single polarisation mask from cross dipole information, which polarisation to return?");
 			}
 			else if((_flagCoverage==GlobalFlagCoverage || _flagCoverage==IndividualPolarisationFlagCoverage) && ( _polarisationType == SinglePolarisation || _polarisationType == StokesI)) {
 				if(polarisation == XX || polarisation == XY || polarisation == YX || polarisation == YY || polarisation == StokesI || polarisation == SinglePolarisation)
@@ -897,9 +897,10 @@ class TimeFrequencyData
 				data->SetGlobalMask(_flagging[0]);
 			else if(_flagCoverage == IndividualPolarisationFlagCoverage)
 			{
-				if(data->PolarisationType() == DipolePolarisation)
+				if(PolarisationType() == DipolePolarisation && data->PolarisationType() == DipolePolarisation)
 					data->SetIndividualPolarisationMasks(_flagging[0], _flagging[1], _flagging[2], _flagging[3]);
-				else if(data->PolarisationType() == AutoDipolePolarisation || data->PolarisationType() == CrossDipolePolarisation)
+				else if((PolarisationType()==AutoDipolePolarisation && data->PolarisationType() == AutoDipolePolarisation)
+					|| (PolarisationType()==CrossDipolePolarisation && data->PolarisationType() == CrossDipolePolarisation))
 					data->SetIndividualPolarisationMasks(_flagging[0], _flagging[1]);
 				else
 					throw BadUsageException("Trying to copy flagging from dipole time frequency data to single polarisation time frequency data");
