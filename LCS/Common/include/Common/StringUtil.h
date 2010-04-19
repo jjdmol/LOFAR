@@ -102,7 +102,7 @@ namespace LOFAR
 // formatted string. It can be used e.g. in cout constructions:
 // cout << formatString("Opening connection with host %%s", hostName);
 //# In real life this must be %s ofcourse but doxygen need a double %%.
-const string formatString(const	char* format, ...);
+const string formatString(const char* format, ...);
 
 //
 // timeString(aTime [, gmt, format]) --> string
@@ -111,7 +111,7 @@ const string formatString(const	char* format, ...);
 // format. The default format is yyyy-mm-dd hh:mm:ss
 const string timeString(time_t     aTime, 
 						bool       gmt = true,
-						char*      format = "%F %T");
+						const char* format = "%F %T");
 
 // Skip leading whitespace (blanks and horizontal tabs) starting at st.
 // It returns the position of the first non-whitespace character.
@@ -135,9 +135,10 @@ uint skipQuoted (const string& str, uint st);
 // are also skipped. Delimiters in quoted parts are ignored.
 // The starting delimiter is the first character in the string (at position st).
 // The ending delimiter is given as an argument.
-// The function works well if starting and ending delimiter are the same.
-// An exception is thrown if the delimiters are not balanced.
-// For example, it will skip something like '[[1,2,3],[4,5,6]]'.
+// The function also works fine if starting and ending delimiter are the same.
+// <br>An exception is thrown if the delimiters are not balanced, thus if no
+// end delimiter is found before position end.
+// <br>For example, it will skip something like '[[1,2,3],[4,5,6]]'.
 uint skipBalanced (const string& str, uint st, uint end, char endChar);
 
 //
@@ -150,21 +151,21 @@ uint skipBalanced (const string& str, uint st, uint end, char endChar);
 //
 // NOTE: original string is truncated!
 //
-int32 	rtrim(char*	aCstring, int32		len = 0, char* whiteSpace = " 	");
+int32 	rtrim(char*	aCstring, int32		len = 0, const char* whiteSpace = " \t");
 
 //
 // char* ltrim(char*	Cstring)
 //
 // Skip leading spaces. A pointer to the first non-whitespace char is
 // returned. (points into original string)
-char*	ltrim(char*	aCstring, char* whiteSpace = " 	");
+char*	ltrim(char*	aCstring, const char* whiteSpace = " \t");
 
 //
 // rtrim(aString)
 //
 // Removes trailing whitespace from the string.
 //
-inline void rtrim(string&		aString, const string& whiteSpace = " 	")
+inline void rtrim(string&		aString, const string& whiteSpace = " \t")
 {
 	aString = aString.erase(aString.find_last_not_of(whiteSpace)+1);
 }
@@ -174,7 +175,7 @@ inline void rtrim(string&		aString, const string& whiteSpace = " 	")
 //
 // Removes leading whitespace from the string.
 //
-inline void ltrim(string&		aString, const string&	whiteSpace = " 	")
+inline void ltrim(string&		aString, const string&	whiteSpace = " \t")
 {
 	aString = aString.erase(0, aString.find_first_not_of(whiteSpace));
 }
