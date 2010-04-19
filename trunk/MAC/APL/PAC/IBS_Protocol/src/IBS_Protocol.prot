@@ -38,7 +38,7 @@ prelude = << PRELUDE_END
 // BEAMMODIFYACK 		(beamName, status);
 // BEAMFREE      		(beamName);
 // BEAMFREEACK   		(beamName, status);
-// BEAMPOINTTO   		(beamName, pointing, analogue, rank);
+// BEAMPOINTTO   		(beamName, pointing, analogue, rank, isLast);
 //
 // TYPEVALID			(typename);
 // TYPEVALIDACK			(typename, bool);
@@ -249,6 +249,10 @@ event = {
 	param = {
 		name = "rank";
 		type = "int";
+	};
+	param = {
+		name = "isLast";
+		type = "bool";
 	};
 };
 
