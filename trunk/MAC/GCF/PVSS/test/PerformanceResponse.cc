@@ -34,7 +34,7 @@ void PerformanceResponse::dpeUnsubscribed(const string& propName, PVSSresult /*r
 	LOG_DEBUG(formatString("RESPONSE:Property '%s' unsubscribed", propName.c_str()));
 }
 
-void PerformanceResponse::dpeValueGet(const string& propName, PVSSresult /*result*/, const GCFPValue& value)
+void PerformanceResponse::dpeValueGet(const string& /*propName*/, PVSSresult /*result*/, const GCFPValue& /*value*/)
 {
 	//	GCFPVInteger	theValue = ((GCFPVInteger *)&value)->getValue();
 	//	if (value < 23 || value > (23 + NR_OF_DPS)) {
@@ -69,9 +69,9 @@ void PerformanceResponse::dpQueryUnsubscribed(uint32 queryId, PVSSresult /*resul
 }
 
 void PerformanceResponse::dpQueryChanged (uint32 queryId, PVSSresult result,
-										  const GCFPVDynArr&	DPnames,
-										  const GCFPVDynArr&	DPvalues,
-										  const GCFPVDynArr&	DPtimes)
+										  const GCFPVDynArr&	/*DPnames*/,
+										  const GCFPVDynArr&	/*DPvalues*/,
+										  const GCFPVDynArr&	/*DPtimes*/)
 {
 	LOG_DEBUG(formatString("RESPONSE:dpQueryChanges: id=%d (err=%d)", queryId, result));
 }

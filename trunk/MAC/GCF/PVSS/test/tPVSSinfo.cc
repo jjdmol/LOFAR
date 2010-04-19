@@ -77,7 +77,6 @@ GCFEvent::TResult tPVSSinfo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 
 	case F_INIT:  {
 		itsService = new PVSSservice(itsResponse);
-		PVSSresult		  result;
 
 		try {
 			cout << "getLocalSystemId  : " << (int)PVSSinfo::getLocalSystemId() << endl;
