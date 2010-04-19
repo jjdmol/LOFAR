@@ -165,9 +165,16 @@ public:
 	void printEventQueue();
 	void disableQueue() { itsUseQueue = false; }
 
+protected:
+	// makes sure that the current task makes a transition to the new state.
+    typedef GCFEvent::TResult (GCFFsm::*State)(GCFEvent& event, GCFPortInterface& port); // ptr to state handler type
+	void queueTransition(GCFFsm*	task, State target, const char* from, const char* to);
+	friend class GCFFsm;	// to use this queueTransition function.
+
 private:
-	void _addEvent (GCFFsm*	task, GCFEvent&	event, GCFPortInterface* port, GCFEvent::TResult status);
-	GCFEvent::TResult  _sendEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface* port);
+	void				_addEvent   (GCFFsm* task, GCFEvent& event, GCFPortInterface* port);
+	void 				_injectEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface* port, bool deepCopy=true);
+	GCFEvent::TResult	_sendEvent  (GCFFsm* task, GCFEvent& event, GCFPortInterface* port);
 
     // Singleton
     GCFScheduler();
@@ -189,7 +196,6 @@ private:
 		GCFEvent*			event;
 		GCFPortInterface*	port;
 		GCFFsm*				task;
-		int					handlingType;
 		int					seqNr;
 	} waitingEvent_t;
 	list<waitingEvent_t*>	theEventQueue;

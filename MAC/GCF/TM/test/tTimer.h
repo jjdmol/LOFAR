@@ -39,8 +39,6 @@ namespace LOFAR {
 // communication.
 //
 
-static int32	gError;	// used for synchronisation
-
 class tTimer : public GCFTask
 {
 public:

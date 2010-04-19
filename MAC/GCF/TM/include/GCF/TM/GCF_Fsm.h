@@ -23,19 +23,22 @@
 #ifndef GCF_FSM_H
 #define GCF_FSM_H
 
+#include <Common/lofar_list.h>
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_PortInterface.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <GCF/TM/GCF_Scheduler.h>
+//#include <GCF/TM/GCF_Scheduler.h>
 
 namespace LOFAR {
   using MACIO::GCFEvent;
   namespace GCF {
 	namespace TM {
 
+class GCFScheduler;
+
 #define TRAN(_target_) \
   { \
-    tran(this, static_cast<State>(&_target_), __func__, #_target_); \
+    tran(static_cast<State>(&_target_), __func__, #_target_); \
   }
 
 /**
@@ -88,10 +91,7 @@ protected: // constructors && destructors
 		State 	state;
 	};
 
-    explicit  GCFFsm (State initial) : itsState(initial) {
-		itsScheduler = GCFScheduler::instance();
-	}
-
+    explicit  GCFFsm (State initial);
     virtual ~GCFFsm () {;}
   
     /// starts the statemachine with a F_ENTRY signal followed by a F_INIT signal
@@ -106,15 +106,15 @@ protected: // constructors && destructors
     // @param target new state
     // @param from text of the current state
     // @param to text of the new state
-    void tran (GCFFsm*	task,
-			   State target, 
+    void tran (State target, 
                const char* from, 
                const char* to);
   
 	// Allow the scheduler to manipulate my eventQueue.
 	friend class GCFScheduler;
 	void queueTaskEvent(GCFEvent&	event, GCFPortInterface&	port);
-	void handleTaskQueue();
+//	void handleTaskQueue();
+	bool unqueueTaskEvent(GCFEvent**	eventPtr, GCFPortInterface**port);
 
 private:
 	// Default construction and copying is not allowed.

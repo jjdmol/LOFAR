@@ -46,7 +46,7 @@ tServer::tServer(string name, uint	startupDelay) :
 	ASSERTSTR(itsTimerPort, "failed to alloc listener");
 }
 
-GCFEvent::TResult tServer::initial(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult tServer::initial(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
