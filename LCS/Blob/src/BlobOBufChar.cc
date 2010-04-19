@@ -97,7 +97,7 @@ int64 BlobOBufChar::setPos (int64 pos)
   // This means that the buffer size increases.
   // Expand the buffer if needed.
   // Initialize the new buffer positions with zeroes.
-  if (pos > itsSize) {
+  if (uint64(pos) > itsSize) {
     if (! resizeIfNeeded (pos)) {
       THROW(BlobException,
 	    "BlobOBufChar::setPos - buffer cannot be expanded");
