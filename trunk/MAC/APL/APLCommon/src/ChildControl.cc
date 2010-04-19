@@ -1116,7 +1116,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 												" invalid because startup failed.");
 				CIiter	controller = findController(result.cntlrName);
 				if (controller != itsCntlrList->end()) {
-					controller->port == (GCFPortInterface*)-1;
+					controller->port = (GCFPortInterface*)-1;
 				}
 
 				// Start garbagetimer to cleanup the idle controller entry.
