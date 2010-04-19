@@ -328,6 +328,8 @@ GCFEvent::TResult beamctl::sendPointings(GCFEvent& event, GCFPortInterface& port
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	static bool		sendingDigitalPts(true);
+	static uint		nrPointings(itsDigPointings.size() + itsiAnaPointings+size());
+	static uint		curPtNr(1);
 	static list<Pointing>::const_iterator	ptIter = itsDigPointings.begin();
 
 	//
@@ -350,11 +352,13 @@ GCFEvent::TResult beamctl::sendPointings(GCFEvent& event, GCFPortInterface& port
 		alloc.pointing = *ptIter;
 		alloc.analogue = !sendingDigitalPts;
 		alloc.rank	   = 6;				// always less important than MAC scheduled beams
+		alloc.isLast   = (curPtNr == nrPointings);
 		itsBeamServer->send(alloc);
 
-		cout << "sending pointing: " << *ptIter << endl;
+		cout << "sending " << (isLast ? " last " : "") << " pointing: " << *ptIter << endl;
 
 		++ptIter;
+		++curPtNr;
 	}
 	break;
 
