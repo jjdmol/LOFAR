@@ -16,7 +16,6 @@ lofar_find_package(Casacore REQUIRED COMPONENTS ms casa measures tables scimath 
 lofar_find_package(Boost REQUIRED COMPONENTS date_time thread filesystem system)
 lofar_find_package(FFTW3 REQUIRED)
 lofar_find_package(LAPACK REQUIRED)
-lofar_find_package(CPPLapack REQUIRED)
 lofar_find_package(BLAS REQUIRED)
 lofar_find_package(Pthreads REQUIRED)
 lofar_find_package(GSL REQUIRED)

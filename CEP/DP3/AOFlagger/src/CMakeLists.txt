@@ -1,8 +1,8 @@
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} ${Casacore_INCLUDE_DIRS} ${LIBXML2_INCLUDE_DIRS} ${PTHREADS_INCLUDE_DIRS} ${GSL_INCLUDE_DIRS} ${CPPLapack_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} ${Casacore_INCLUDE_DIRS} ${LIBXML2_INCLUDE_DIRS} ${PTHREADS_INCLUDE_DIRS} ${GSL_INCLUDE_DIRS})
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-LINK_DIRECTORIES(${LIBXML2_LIBRARY_DIRS} ${Casacore_LIBRARY_DIRS} ${LAPACK_LIBRARY_DIRS} ${BLAS_LIBRARY_DIRS} ${PTHREADS_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS} ${GSL_LIBRARY_DIRS} ${CPPLapack_LIBRARY_DIRS})
+LINK_DIRECTORIES(${LIBXML2_LIBRARY_DIRS} ${Casacore_LIBRARY_DIRS} ${LAPACK_LIBRARY_DIRS} ${BLAS_LIBRARY_DIRS} ${PTHREADS_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS} ${GSL_LIBRARY_DIRS})
 
 SET (GUI_PLOT_FILES gui/plot/plot2d gui/plot/plotwidget gui/plot/verticalplotscale)
 SET (GUI_FILES gui/application gui/complexplaneplotwindow gui/editstrategywindow gui/gotowindow gui/highlightwindow gui/imageplanewindow gui/imagewidget gui/msoptionwindow gui/mswindow gui/newstrategyactionframe gui/plotframe gui/progresswindow gui/timefrequencywidget gui/zoomwindow ${GUI_PLOT_FILES})
@@ -14,7 +14,7 @@ SET (UTIL_FILES util/ffttools util/integerdomain util/multiplot util/plot util/r
 
 lofar_add_library(rfiengine ${IMAGING_FILES} ${MSIO_FILES} ${RFI_FILES} ${UTIL_FILES})
 
-set(GENERIC_LIBRARIES rfiengine ${Boost_LIBRARIES} ${Casacore_LIBRARIES} ${CFITSIO_LIBRARIES} dl ${FFTW3_LIBRARIES} ${GSL_LIBRARIES} m nsl png util z ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${PTHREADS_LIBRARIES} xml2 ${GTKMM_LIBRARIES} ${CPPLapack_LIBRARIES}  lofarstman)
+set(GENERIC_LIBRARIES rfiengine ${Boost_LIBRARIES} ${Casacore_LIBRARIES} ${CFITSIO_LIBRARIES} dl ${FFTW3_LIBRARIES} ${GSL_LIBRARIES} m nsl png util z ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${PTHREADS_LIBRARIES} xml2 ${GTKMM_LIBRARIES} lofarstman)
 
 IF(GTKMM_FOUND)
   INCLUDE_DIRECTORIES(${GTKMM_INCLUDE_DIRS})
