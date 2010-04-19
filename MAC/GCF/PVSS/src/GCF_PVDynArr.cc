@@ -140,7 +140,7 @@ unsigned int GCFPVDynArr::getConcreteSize() const
 //
 // setvalue(string)
 //
-TGCFResult GCFPVDynArr::setValue(const string& value)
+TGCFResult GCFPVDynArr::setValue(const string& /*value*/)
 {
 	LOG_ERROR("setValue(string) is not possible on a dynArray!");
 	return (GCF_DIFFERENT_TYPES);

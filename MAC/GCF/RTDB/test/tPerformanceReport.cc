@@ -253,7 +253,6 @@ GCFEvent::TResult tPerformance::test1getvalue(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("test1getvalue:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	PVSSresult		  result;
 	static NSTimer		timer("Getting");
 
 	switch (e.signal) {

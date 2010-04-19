@@ -131,7 +131,6 @@ GCFEvent::TResult tMonitorState::watching(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("watching:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {

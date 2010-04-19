@@ -135,7 +135,7 @@ GCFEvent::TResult tPerformance::test1cleanup(GCFEvent& e, GCFPortInterface& p)
 	case F_ENTRY: {
 		// test PVSSInfo class
 		bool	DBok (PVSSinfo::typeExists("ExampleDP_Int"));
-		LOG_INFO_STR("typeExist(ExampleDP_Int): " << DBok ? "Yes" : "no");
+		LOG_INFO_STR("typeExist(ExampleDP_Int): " << (DBok ? "Yes" : "no"));
 		ASSERTSTR(DBok, "type ExampleDP_Int does not exist in PVSS");
 
 		LOG_INFO_STR("Cleaning up old datapoints if any");
