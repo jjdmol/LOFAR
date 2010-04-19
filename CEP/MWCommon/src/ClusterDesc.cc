@@ -45,7 +45,6 @@ namespace LOFAR { namespace CEP {
     String fullName = Path(parsetName).absoluteName();
     ParameterSet parset(fullName);
     itsName = parset.getString ("ClusterName");
-    string headNode = parset.getString ("HeadNode", string());
     if (parset.isDefined ("Node0.NodeName")) {
       // The cluster can be heterogeneous and is described in detail.
       getHetCluster (parset);
