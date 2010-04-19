@@ -170,7 +170,7 @@ GCFEvent::TResult tStateResult::collecting(GCFEvent& event, GCFPortInterface& /*
 // Start a server task that will open the listener after 25 second. Start an autoOpen call
 // in this taks and wait till the connection is established.
 //
-GCFEvent::TResult tStateResult::lastState(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult tStateResult::lastState(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	LOG_DEBUG_STR ("tStateResult::lastState: " << eventName(event.signal));

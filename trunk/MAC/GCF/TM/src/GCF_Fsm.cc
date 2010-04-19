@@ -25,11 +25,21 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <GCF/TM/GCF_Fsm.h>
+#include <GCF/TM/GCF_Scheduler.h>
 
 namespace LOFAR {
  using MACIO::GCFEvent;
  namespace GCF {
   namespace TM {
+
+//
+// GCFFsm(state)
+//
+GCFFsm::GCFFsm (State initial) : 
+	itsState	(initial),
+	itsScheduler(GCFScheduler::instance())
+{
+}
 
 //
 // initFsm()
@@ -46,18 +56,9 @@ void GCFFsm::initFsm()
 //
 // tran(target, from, to)
 //
-void GCFFsm::tran(GCFFsm*	task, State target, const char* from, const char* to)
+void GCFFsm::tran(State target, const char* from, const char* to)
 {
-	GCFEvent	exitEvent(F_EXIT);
-	itsScheduler->queueEvent(this, exitEvent, 0);
-
-	LOG_DEBUG(LOFAR::formatString ( "State transition to %s <<== %s", to, from));
-	GCFTranEvent	tranEvent;
-	tranEvent.state = target;
-	itsScheduler->queueEvent(this, tranEvent, 0);
-
-	GCFEvent	entryEvent(F_ENTRY);
-	itsScheduler->queueEvent(this, entryEvent, 0);
+	itsScheduler->queueTransition(this, target, from, to);
 }
 
 //
@@ -84,27 +85,22 @@ void GCFFsm::queueTaskEvent(GCFEvent&	event, GCFPortInterface&	port)
 }
 
 //
-// handleTaskQueue()
+// unqueueTaskEvent(&event,&port)
 //
-// Send all the events in the task queue ONCE to the task. If the task does not handle them log this
-// problem and continue.
+// Removes and returns the most recent task from the taskQueue
 //
-void GCFFsm::handleTaskQueue()
+bool GCFFsm::unqueueTaskEvent(GCFEvent**	eventPtr, GCFPortInterface**portPtr)
 {
-	while (!itsEventQueue.empty()) {
-		waitingTaskEvent_t*		theEvent = itsEventQueue.front();
-		LOG_DEBUG_STR("handleTaskQueue:(" << eventName(*(theEvent->event)) << "@" << theEvent->port->getName() << ")");
-		
-		GCFEvent::TResult result = (this->*itsState)(*(theEvent->event), *(theEvent->port));
-		if (result != GCFEvent::HANDLED) {
-			LOG_WARN_STR("Result on taskEvent " << eventName(*(theEvent->event)) << 
-						  " was NOT HANDLED, DELETING event.");
-		}
-		itsEventQueue.pop_front();
-//		LOG_DEBUG("delete theEvent->event");
-		delete theEvent->event;
-		delete theEvent;
+	if (itsEventQueue.empty()) {
+		return (false);
 	}
+
+	waitingTaskEvent_t*		newestEvent = itsEventQueue.back();
+	*eventPtr = newestEvent->event;
+	*portPtr  = newestEvent->port;
+	itsEventQueue.pop_back();
+	delete newestEvent;		// NOTE: DON't delete newestEvent->event, let the user do that.
+	return(true);
 }
 
   } // namespace TM

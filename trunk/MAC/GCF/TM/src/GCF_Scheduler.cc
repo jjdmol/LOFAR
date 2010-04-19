@@ -41,10 +41,15 @@ namespace LOFAR {
   namespace GCF {
     namespace TM {
 
+
 // static member initialisation
 GCFScheduler*		GCFScheduler::theirGCFScheduler = 0;
 int 				GCFScheduler::_argc = 0;
 char** 				GCFScheduler::_argv = 0;
+
+static const uint	BATCH_SIZE = 3;		// number of message handled before control is returned to other workProcs.
+#define MAX2(a,b) ((a) > (b)) ? (a) : (b)
+#define MIN2(a,b) ((a) < (b)) ? (a) : (b)
 
 //
 // instance()
@@ -260,6 +265,40 @@ GCFEvent::TResult GCFScheduler::_sendEvent(GCFFsm* task, GCFEvent& event, GCFPor
 }
 
 //
+// queueTransition
+//
+void GCFScheduler::queueTransition(GCFFsm* task, State	target, const char* from, const char* to)
+{
+	LOG_TRACE_CALC_STR("queueTransition from " << from << " to " << to);
+	if (!itsUseQueue) {
+		// when the queues are not used send them directly (in the right order).
+		GCFEvent	exitEvent(F_EXIT);
+		_sendEvent(task, exitEvent, 0);
+
+		LOG_DEBUG(LOFAR::formatString ( "State transition to %s <<== %s", to, from));
+		GCFFsm::GCFTranEvent	tranEvent;
+		tranEvent.state = target;
+		_sendEvent(task, tranEvent, 0);
+
+		GCFEvent	entryEvent(F_ENTRY);
+		_sendEvent(task, entryEvent, 0);
+		return;
+	}
+
+	GCFEvent	entryEvent(F_ENTRY);
+	_injectEvent(task, entryEvent, 0);
+
+	LOG_DEBUG(LOFAR::formatString ( "State transition to %s <<== %s", to, from));
+	GCFFsm::GCFTranEvent	tranEvent;
+	tranEvent.state = target;
+	_injectEvent(task, tranEvent, 0);
+
+	GCFEvent	exitEvent(F_EXIT);
+	_injectEvent(task, exitEvent, 0);
+}
+
+
+//
 // queueEvent
 //
 void GCFScheduler::queueEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface*    port)
@@ -273,7 +312,7 @@ void GCFScheduler::queueEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface*  
 
 	// Framework events are always queued,
 	if (F_EVT_PROTOCOL(event) == F_FSM_PROTOCOL || F_EVT_PROTOCOL(event) == F_PORT_PROTOCOL) {
-		_addEvent(task, event, port, GCFEvent::NOT_HANDLED);
+		_addEvent(task, event, port);
 		return;
 	}
 
@@ -294,6 +333,9 @@ void GCFScheduler::queueEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface*  
 							" to eventQ of task, waiting there for state switch");
 		task->queueTaskEvent(event, *port);
 		break;
+
+	case GCFEvent::HANDLED:
+		break;
 	} // switch
 }
 
@@ -303,13 +345,12 @@ void GCFScheduler::queueEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface*  
 // Should only be called direct after an (external) event was received at a port.
 //
 void GCFScheduler::_addEvent(GCFFsm*			task, GCFEvent&			event, 
-							 GCFPortInterface*	port, GCFEvent::TResult	status)
+							 GCFPortInterface*	port)
 {
 	LOG_TRACE_CALC_STR("_addEvent " << eventName(event));
 	waitingEvent_t*	newWE = new waitingEvent_t;
 	newWE->task = task;
 	newWE->port = (port ? port : itsFrameworkPort);
-	newWE->handlingType = 1;	// TODO: do something with this irt seqNr and place in queue
 	newWE->seqNr = 0;
 	newWE->event = event.clone();
 
@@ -321,6 +362,27 @@ void GCFScheduler::_addEvent(GCFFsm*			task, GCFEvent&			event,
 }
 
 //
+// _injectEvent(task, event, port)
+//
+// Injects an event in FRONT of the queue
+//
+void GCFScheduler::_injectEvent(GCFFsm*				task, GCFEvent&		event, 
+							 	GCFPortInterface*	port, bool			deepCopy)
+{
+	LOG_TRACE_CALC_STR("_injectEvent " << eventName(event));
+	waitingEvent_t*	newWE = new waitingEvent_t;
+	newWE->task = task;
+	newWE->port = (port ? port : itsFrameworkPort);
+	newWE->seqNr = 0;
+	newWE->event = deepCopy ? event.clone() : &event;
+
+	string	taskName((task ? ((GCFTask*)task)->getName() : "?"));
+	LOG_TRACE_STAT_STR("theEventQueue.inject(" << eventName(event) << "@" << newWE->port->getName() << 
+				  " for " << taskName << ") => " << theEventQueue.size() + 1);
+
+	theEventQueue.push_front(newWE);
+}
+//
 // handleEventQueue
 //
 void GCFScheduler::handleEventQueue()
@@ -331,8 +393,8 @@ void GCFScheduler::handleEventQueue()
 
 	printEventQueue();
 
-	int	eventsInQ = theEventQueue.size(); // only handle the event that are in the queue NOW.
-	for (int eventNr = 0; eventNr < eventsInQ; eventNr++) {
+	int	events2Handle = MIN2(BATCH_SIZE,theEventQueue.size()); // only handle the event that are in the queue NOW.
+	while(events2Handle > 0) {
 		waitingEvent_t*		theQueueEntry = theEventQueue.front();
 
 		string	taskName((theQueueEntry->task ? ((GCFTask*)theQueueEntry->task)->getName() : "?"));
@@ -340,7 +402,10 @@ void GCFScheduler::handleEventQueue()
 					   theQueueEntry->port->getName() << " for " << taskName << 
 					   ") <= " << theEventQueue.size());
 
-		// TODO: add handling dependant from the handlingType
+		// remove the event from the Q so that transitions can be put in front of it.
+		theEventQueue.pop_front();
+
+		// pass it to the task
 		GCFEvent::TResult	status = _sendEvent(theQueueEntry->task, *(theQueueEntry->event), 
 												theQueueEntry->port);
 	
@@ -352,9 +417,15 @@ void GCFScheduler::handleEventQueue()
 				LOG_TRACE_COND_STR("Event " << eventName(*(theQueueEntry->event)) << " in task " << taskName << 
 							 " NOT HANDLED, deleting it");
 			}
-			// when this command was an entry in a new state, empty the task queue first
+			// when this command was an entry in a new state, inject the task queue into the current queue
 			if (theQueueEntry->event->signal == F_ENTRY) {
-				theQueueEntry->task->handleTaskQueue();
+				GCFFsm*				task(theQueueEntry->task);
+				GCFEvent*			eventPtr;
+				GCFPortInterface*	portPtr;
+				while (task->unqueueTaskEvent(&eventPtr, &portPtr)) {
+					LOG_DEBUG_STR("Injecting deferred taskEvent " << eventName(*eventPtr) << "into the event queue");
+					_injectEvent(task, *eventPtr, portPtr, false);	// false=don't copy event(it's already cloned)
+				}
 			}
 		}
 		else { // all other protocols
@@ -363,9 +434,6 @@ void GCFScheduler::handleEventQueue()
 				break;
 
 			case GCFEvent::NOT_HANDLED:
-//				LOG_DEBUG("Returning event to the queue because status is NOT_HANDLED");
-//				theEventQueue.push_back(theQueueEntry);
-//				handled = false;
 				LOG_TRACE_COND_STR("DELETING event " << eventName(*(theQueueEntry->event)) << 
 							  " because return status is NOT_HANDLED");
 				handled = true;
@@ -380,19 +448,22 @@ void GCFScheduler::handleEventQueue()
 			} // switch
 		} // else
 
-		// throw away the handled event
-		theEventQueue.pop_front();
-//		if (handled) {
-			LOG_TRACE_STAT_STR("Event " << eventName(*(theQueueEntry->event)) << " in task " << taskName << 
+		// when we started (an injected) transition make sure we finish the transaction before returning
+		// control to other workProcs.
+		if (theQueueEntry->event->signal == F_EXIT) {
+			events2Handle = MAX2(events2Handle, 3);
+		}
+
+		// release memory
+		LOG_TRACE_STAT_STR("Event " << eventName(*(theQueueEntry->event)) << " in task " << taskName << 
 							 " removed from queue");
-//			if (status != GCFEvent::NEXT_STATE) {
-				delete theQueueEntry->event;
-				theQueueEntry->event = 0;
-//			}
-			delete theQueueEntry;
-//		}
+		delete theQueueEntry->event;
+		theQueueEntry->event = 0;
+		delete theQueueEntry;
 		
-	} // for
+		// one less to go.
+		events2Handle--;
+	} // while
 }
 
 //

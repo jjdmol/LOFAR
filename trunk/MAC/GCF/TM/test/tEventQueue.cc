@@ -226,7 +226,7 @@ GCFEvent::TResult tEventQueue::listenerTest(GCFEvent& event, GCFPortInterface& p
 //
 // Opening a listener port
 //
-GCFEvent::TResult tEventQueue::wait4client2connect(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult tEventQueue::wait4client2connect(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	LOG_DEBUG_STR ("tEventQueue::wait4client2connect: " << eventName(event.signal));
