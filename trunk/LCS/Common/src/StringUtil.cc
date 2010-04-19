@@ -95,7 +95,7 @@ const string formatString(const	char* format, ...) {
 //
 const string timeString(time_t		aTime, 
 							 bool		gmt,
-							 char* 		format)
+							 const char*	format)
 {
 	char	theTimeString [256];
 	strftime(theTimeString, 256, format, gmt ? gmtime(&aTime) 
@@ -134,7 +134,7 @@ uint rskipws (const string& value, uint st, uint end)
 //
 // NOTE: original string is truncated!
 //
-int32 rtrim(char*	aCstring, int32		len, char*	whiteSpace)
+int32 rtrim(char*	aCstring, int32		len, const char*	whiteSpace)
 {
 	if (!aCstring || !(*aCstring)) {		// aCstring must be valid
 		return (0);
@@ -157,7 +157,7 @@ int32 rtrim(char*	aCstring, int32		len, char*	whiteSpace)
 //
 // skip leading spaces. A pointer to the first non-whitespace char is
 // returned.
-char*	ltrim(char*	aCstring, char*	whiteSpace)
+char*	ltrim(char*	aCstring, const char*	whiteSpace)
 {
 	aCstring += strspn(aCstring, whiteSpace);
 

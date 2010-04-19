@@ -29,6 +29,7 @@
 #include <Common/lofar_set.h>
 #include <Common/lofar_iostream.h>
 #include <cmath>
+#include <cstring>
 #include <limits>
 
 using namespace LOFAR;
@@ -107,12 +108,12 @@ bool testTrim()
   cout << ">" << r2 << "<" << endl;
   cout << ">" << r3 << "<" << endl;
 
-  char c1[] = { " 	 	 a String with leading and trailing whitespace	 " };
-  char c2[] = { "a String without leading and trailing whitespace" };
-  char c3[] = { "1) String with(out) itemnr and arrayindex[123]" };
-  char* p1 = c1;
-  char* p2 = c2;
-  char* p3 = c3;
+  char* p1 =
+    strdup(" 	 	 a String with leading and trailing whitespace	 ");
+  char* p2 =
+    strdup("a String without leading and trailing whitespace");
+  char* p3 =
+    strdup("1) String with(out) itemnr and arrayindex[123]");
   int32 len1, len2, len3;
 
   len1 = rtrim(p1 = ltrim(p1));
