@@ -43,12 +43,6 @@
   about the components it has found. Must be possible to do this somehow, with
   the standard FindPackageMessage CMake module.
 
-* Define ${PACKAGE_NAME}_LINK_LIBRARIES in LofarPackage.cmake, which can
-  then be used by lofar_add_library() and lofar_add_executable() in
-  LofarMacros.cmake. This avoids the need to create a "dummy" project library,
-  solely to resolve all library dependencies on other packages when linking
-  executables. (Bug #1430)
-
 * Define ${PACKAGE_NAME}_INCLUDE_PATH_SUFFIX in LofarPackage.cmake.
   The user can then override the default value. There will be no need for
   caching anymore (as far as I can see).
