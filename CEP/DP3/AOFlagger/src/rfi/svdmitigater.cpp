@@ -23,11 +23,11 @@
 
 #include <AOFlagger/util/plot.h>
 
-//#include <gsl/gsl_complex.h>
-//#include <gsl/gsl_complex_math.h>
-
 extern "C" {
-	#include <clapack.h>
+  int zgesvd_(char *jobu, char *jobvt, integer *m, integer *n, 
+	      doublecomplex *a, integer *lda, doublereal *s, doublecomplex *u, 
+	      integer *ldu, doublecomplex *vt, integer *ldvt, doublecomplex *work, 
+	      integer *lwork, doublereal *rwork, integer *info);
 }
 
 SVDMitigater::SVDMitigater() : _background(0), _singularValues(0), _leftSingularVectors(0), _rightSingularVectors(0), _iteration(0), _removeCount(10),  _verbose(false)
