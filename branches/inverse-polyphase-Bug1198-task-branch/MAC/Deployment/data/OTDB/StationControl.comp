@@ -1,0 +1,12 @@
+# -- StationControl --
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  StationControl   1.1.0  development 'node constraint'  "Main controller for a station"
+
+#    name          dir. type   unit   prun. vm   value                     			constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  _hostname     I    text   -      10    100  >>VirtualInstrument.stationList    -        "Machine(s) the program should run on, eg. [CS010C,CS016C]"
+

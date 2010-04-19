@@ -1,0 +1,67 @@
+#!/bin/sh
+
+# trundist.run: Test script for rundist
+#
+# Copyright (C) 2009
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# @author Ger van Diepen <diepen AT astron nl>
+#
+# $Id$
+
+
+# Set srcdir if not set.
+if test "$srcdir" = ""; then
+  srcdir=../../../test
+fi
+curdir=`pwd`
+# Set the src and make it absolute.
+ssdir=`cd $srcdir/../src > /dev/null 2>&1; pwd`
+sedir=`cd ../src > /dev/null 2>&1; pwd`
+
+# Add srcdir to PATH, so runlogpid can be found.
+# Add ../src to PATH, so finddproc can be found
+# Add test to PATH, so tstartdproc can be found.
+PATH=$ssdir:$sedir:$curdir:$PATH
+export PATH
+
+# Run in dry mode.
+echo 'echo "argc=$#"' > trundist_tmp.sh
+echo 'echo "argv=$*"' >> trundist_tmp.sh
+chmod 755 trundist_tmp.sh
+rundist -dry -cdn trundist.in_cd -hfn trundist_tmp.hfn -envfile trundist_tmp.env \
+$curdir/trundist_tmp.sh trundist.in_vd -arg "a b c d" > trundist_tmp.log
+echo "status=$?"
+cat trundist_tmp.hfn
+# Remove absolute directory path from logfiles.
+sed -e "s%$curdir%curdir%g" -e "s%$ssdir%ssdir%g" trundist_tmp.log
+
+# Run in real mode and create output GDS.
+echo 'echo "argc=$#"' > trundist_tmp.sh
+echo 'echo "argv=$*"' >> trundist_tmp.sh
+chmod 755 trundist_tmp.sh
+rundist -cdn trundist.in_cd -hfn trundist_tmp.hfn -envfile trundist_tmp.env \
+-logfile trundist_tmp.logx -gdsout img \
+$curdir/trundist_tmp.sh trundist.in_vd -arg "a b c d" > trundist_tmp.log
+echo "status=$?"
+cat trundist_tmp.hfn
+# Remove absolute directory path from logfile.
+sed -e "s%$curdir%curdir%g" -e "s%$ssdir%ssdir%g" trundist_tmp.log
+sed -e "s%$curdir%curdir%g" -e "s%$ssdir%ssdir%g" trundist_tmp.logx-0 trundist_tmp.logx-1 trundist_tmp.logx-2
+cat trundist.img
+rm -f trundist.img
