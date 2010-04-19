@@ -83,7 +83,7 @@ void GCFEvent::resizeBuf(uint32 requiredSize)
 GCFEvent* GCFEvent::clone() 
 {
 	if (length == 0) {
-		LOG_TRACE_CALC(formatString("The %04X clone is %d bytes", signal, sizePackedGCFEvent, length));
+		LOG_TRACE_CALC(formatString("The %04X clone is %d bytes", signal, sizeof(GCFEvent)));
 		// Cloning is easy, just call the copy constructor.
 		return (new GCFEvent(*this));
 	}
