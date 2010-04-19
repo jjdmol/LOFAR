@@ -78,7 +78,7 @@ class parmdb(ParmDB):
         return self._getDefNames (parmnamepattern)
 
     def getDefValues (self, parmnamepattern=''):
-	"""Return a the default values of matching parameter names.
+	"""Return the default values of matching parameter names.
 
         The pattern must be given as a shell-like filename pattern.
         An empty pattern (the default) means '*' (thus all names).
@@ -90,13 +90,13 @@ class parmdb(ParmDB):
                    sfreq=-1e30, efreq=1e30,
                    stime=-1e30, etime=1e30,
                    asStartEnd=True):
-        """Get the parameter values for the given names and grid.
+        """Return the parameter values for the given names and grid.
 
         The values are calculated on a grid defined by the given frequency
         and time domain(s). If the domain values are given as scalar values,
         they are treated as the boundary box of the grid. The grid itself is
         defined by the default frequency and time grid width in the parameter
-        database which is normally equal to those in the MeasurementSet.
+        database which are normally equal to those in the MeasurementSet.
         If the domain values are given as vectors, they are treated as defining
         the grid.
 
