@@ -23,9 +23,9 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+#include <Common/LofarLogger.h>
+#include <Interface/Mutex.h>
 #include <Interface/SparseSet.h>
-
-#include <pthread.h>
 
 
 namespace LOFAR {
@@ -34,56 +34,58 @@ namespace RTCP {
 class LockedRanges
 {
   public:
-	 LockedRanges();
-	 ~LockedRanges();
+    LockedRanges(unsigned bufferSize);
 
-    void lock(unsigned begin, unsigned end, unsigned size);
-    void unlock(unsigned begin, unsigned end, unsigned size);
+    void lock(unsigned begin, unsigned end);
+    void unlock(unsigned begin, unsigned end);
 
   private:
     SparseSet<unsigned> itsLockedRanges;
-    pthread_mutex_t	itsMutex;
-    pthread_cond_t	itsRangeUnlocked;
+    Mutex		itsMutex;
+    Condition		itsRangeUnlocked;
+    const unsigned	itsBufferSize;
 };
 
 
-inline LockedRanges::LockedRanges()
+inline LockedRanges::LockedRanges(unsigned bufferSize)
+:
+  itsBufferSize(bufferSize)
 {
-  pthread_mutex_init(&itsMutex, 0);
-  pthread_cond_init(&itsRangeUnlocked, 0);
 }
 
 
-inline LockedRanges::~LockedRanges()
+inline void LockedRanges::lock(unsigned begin, unsigned end)
 {
-  pthread_mutex_destroy(&itsMutex);
-  pthread_cond_destroy(&itsRangeUnlocked);
+  ScopedLock scopedLock(itsMutex);
+
+  if (begin < end) {
+    while (itsLockedRanges.subset(begin, end).count() > 0) {
+      LOG_WARN_STR("Circular buffer: reader & writer try to use overlapping sections, range to lock = (" << begin << ", " << end << "), already locked = " << itsLockedRanges);
+      itsRangeUnlocked.wait(itsMutex);
+    }
+
+    itsLockedRanges.include(begin, end);
+  } else {
+    while (itsLockedRanges.subset(begin, itsBufferSize).count() > 0 || itsLockedRanges.subset(0, end).count() > 0) {
+      LOG_WARN_STR("Circular buffer: reader & writer try to use overlapping sections, range to lock = (" << begin << ", " << end << "), already locked = " << itsLockedRanges);
+      itsRangeUnlocked.wait(itsMutex);
+    }
+
+    itsLockedRanges.include(begin, itsBufferSize).include(0, end);
+  }
 }
 
 
-inline void LockedRanges::lock(unsigned begin, unsigned end, unsigned bufferSize)
+inline void LockedRanges::unlock(unsigned begin, unsigned end)
 {
-  pthread_mutex_lock(&itsMutex);
-
-  while ((begin < end ? itsLockedRanges.subset(begin, end) : itsLockedRanges.subset(begin, bufferSize) | itsLockedRanges.subset(0, end)).count() > 0)
-    pthread_cond_wait(&itsRangeUnlocked, &itsMutex);
-
-  itsLockedRanges.include(begin, end);
-  pthread_mutex_unlock(&itsMutex);
-}
-
-
-inline void LockedRanges::unlock(unsigned begin, unsigned end, unsigned bufferSize)
-{
-  pthread_mutex_lock(&itsMutex);
+  ScopedLock scopedLock(itsMutex);
   
   if (begin < end)
     itsLockedRanges.exclude(begin, end);
   else
-    itsLockedRanges.exclude(end, bufferSize).exclude(0, begin);
+    itsLockedRanges.exclude(end, itsBufferSize).exclude(0, begin);
 
-  pthread_cond_signal(&itsRangeUnlocked);
-  pthread_mutex_unlock(&itsMutex);
+  itsRangeUnlocked.broadcast();
 }
 
 } // namespace RTCP
