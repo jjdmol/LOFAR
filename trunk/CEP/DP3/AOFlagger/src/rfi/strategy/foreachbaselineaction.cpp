@@ -70,7 +70,10 @@ namespace rfiStrategy {
 
 			boost::thread_group threadGroup;
 			for(unsigned i=0;i<_threadCount;++i)
-				threadGroup.create_thread(PerformFunction(*this, progress, i));
+			{
+				PerformFunction function(*this, progress, i);
+				threadGroup.create_thread(function);
+			}
 			
 			threadGroup.join_all();
 			progress.OnEndTask();
