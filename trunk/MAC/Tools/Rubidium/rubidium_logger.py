@@ -110,7 +110,7 @@ def callCommand(cmd):
 # 7. re-open stdin, stdout, and stderr; for instance, point stdout and stderr to a log file, or
 #    simply redirect to /dev/null.
 #
-def daemonize():
+def daemonize(logfile):
     try:
         no_file = resource.getrlimit(resource.RLIMIT_NOFILE)
     except ValueError, ex:
@@ -187,10 +187,10 @@ def daemonize():
         # 7. re-open stdin, stdout, and stderr as /dev/null
         # for python >= 2.4 use os.devnull
         sys.stdin = open("/dev/null", "r")
-        sys.stdout = open("/dev/null", "w")
-        sys.stderr = open("/dev/null", "w")
+        sys.stdout = open(logfile, "a")
+        sys.stderr = open(logfile, "a")
     except (IOError, OSError), ex:
-        syslog.syslog(syslog.LOG_ERR, "unable to chdir, close open file descriptors, or open /dev/null; daemon not started (%s)" % ex)
+        syslog.syslog(syslog.LOG_ERR, "unable to chdir, close open file descriptors, or open %s; daemon not started (%s)" % logfile, ex)
         sys.exit(EXIT_ERROR)
 
     #
@@ -243,7 +243,7 @@ def main():
         ttyFp.close()
 
     # Now make yourself a daemon...!
-    daemonize()
+    daemonize(logPath)
 
     first = True
     oldCur = -1
