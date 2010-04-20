@@ -8,6 +8,7 @@ from time import sleep
 import termios
 import tty
 import fcntl
+import resource
 import os
 import datetime
 import logging
@@ -79,7 +80,7 @@ def checkSettings(fp):
         return True
 
 def callCommand(cmd):
-    cmd1 = "./tci/tci.exe "
+    cmd1 = "/opt/lofar/sbin/tci "
     cmd1 += cmd
     result = "None"
     cf = Popen(cmd1, shell = True, stdout = PIPE, stderr = PIPE)
@@ -87,6 +88,114 @@ def callCommand(cmd):
     (res,resErr) = cf.communicate()
     result = res
     return result
+
+
+# How to become a daemon
+# ----------------------
+# See Advanced Programming in the UNIX Environment by Stevens and Rago, section 13.3, pp. 425/426.
+# See also the UNIX Programming FAW (http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16)
+#
+# 1. call umask(0) to clear the file mode creation mask. the umask is inherited and may be set to
+#    deny certain permissions.
+# 2. fork() and let the parent exit. this returns control to the shell. also, the child inherits
+#    the parent's process group id, but gets its own process id. by definition, it is therefore
+#    not a process group leader. this is a prerequisite for calling setsid(), which is the next
+#    step.
+# 3. call setsid() to create a new session. the process becomes leader of a new sessions, process
+#    group leader of a new process group and has no controlling terminal.
+# 4. fork() again to ensure the process is not a session leader. (System V systems may allocate a
+#    controlling terminal for session leaders under certain conditions).
+# 5. chdir("/") to ensure that the daemon does not tie up any mounted file systems.
+# 6. close all open file descriptors we may have inherited from our parent.
+# 7. re-open stdin, stdout, and stderr; for instance, point stdout and stderr to a log file, or
+#    simply redirect to /dev/null.
+#
+def daemonize():
+    try:
+        no_file = resource.getrlimit(resource.RLIMIT_NOFILE)
+    except ValueError, ex:
+        print "error: unable to determine NOFILE resource limit; daemon not started (%s)" % ex
+        sys.exit(EXIT_ERROR)
+
+    # 1. clear umask
+    try:
+        os.umask(0)
+    except OSError, ex:
+        print "error: unable to set umask; daemon not started %s" % ex
+        sys.exit(EXIT_ERROR)
+
+    # 2. fork and let parent exit
+    try:
+        pid = os.fork()
+    except OSError, ex:
+        print "error: unable to fork; daemon not started (%s)" % ex
+        sys.exit(EXIT_ERROR)
+
+    if pid != 0:
+        # parent exits
+        # NOTE: Steven and Rago specify a standard exit(0) here, while the UNIX Programming FAQ
+        # recommends _exit(0) (see http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC6). We favour
+        # the latter approach, because it seems correct to only do user-mode clean-up once.
+        os._exit(0)
+
+    #
+    #    FIRST CHILD PROCESS
+    #
+
+    # 3. create a new session
+    try:
+        sid = os.setsid()
+    except OSError, ex:
+        print "error: unable to create a new session; daemon not started (%s)" % ex
+        sys.exit(EXIT_ERROR)
+
+    # 4. second fork
+    try:
+        pid = os.fork()
+    except OSError, ex:
+        print "error: unable to fork; daemon not started (%s)" % ex
+        sys.exit(EXIT_ERROR)
+
+    if pid != 0:
+        # parent exits
+        # NOTE: Steven and Rago specify a standard exit(0) here, while the UNIX Programming FAQ
+        # recommends _exit(0) (see http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC6). We favour
+        # the latter approach, because it seems correct to only do user-mode clean-up once.
+        os._exit(0)
+
+    #
+    #    SECOND CHILD PROCESS
+    #
+
+    try:
+        # 5. change the working directory
+        os.chdir("/")
+
+        print "closing stdout; from this moment on, any errors will be sent to the syslog."
+
+        # 6a. flush stdout and stderr
+        sys.stdout.flush()
+        sys.stderr.flush()
+
+        # 6b. close all open file descriptors (uses soft NO_FILE limit)
+        for fd in range(0, max(no_file[0], 1024)):
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+
+        # 7. re-open stdin, stdout, and stderr as /dev/null
+        # for python >= 2.4 use os.devnull
+        sys.stdin = open("/dev/null", "r")
+        sys.stdout = open("/dev/null", "w")
+        sys.stderr = open("/dev/null", "w")
+    except (IOError, OSError), ex:
+        syslog.syslog(syslog.LOG_ERR, "unable to chdir, close open file descriptors, or open /dev/null; daemon not started (%s)" % ex)
+        sys.exit(EXIT_ERROR)
+
+    #
+    # properly daemonized from now on...
+    #
 
 
 def main():
@@ -114,13 +223,10 @@ def main():
         logPath)
 
     rub_logger.addHandler(handler)
-
-
-    
     
     try:
         logFp = open(logPath,'a')
-        foo = 1
+
     except Exception, e:
         print "Trouble while opening a log file, details: " + e.__str__()
         sys.exit()
@@ -136,8 +242,9 @@ def main():
     if ttyFp != None:
         ttyFp.close()
 
+    # Now make yourself a daemon...!
+    daemonize()
 
-    print "running"
     first = True
     oldCur = -1
     cur = -1
