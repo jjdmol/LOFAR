@@ -1,6 +1,8 @@
 #!/bin/bash
 #
-# rubidium	This shell script takes care of starting and stopping
+# chkconfig: 2345 30 70
+#
+# description: This takes care of starting and stopping \
 #		/opt/lofar/sbin/rubidium_logger.py
 #
 
