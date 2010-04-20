@@ -199,6 +199,9 @@ def daemonize(logfile):
 
 
 def main():
+    # Now make yourself a daemon...!
+    daemonize("/var/log/ntpstats/rubidium_logger.log")
+
     global ttyFp, logFp, rub_logger
     args = sys.argv[1:]
     logFilePath = '/var/log/ntpstats/'
@@ -241,9 +244,6 @@ def main():
     checkSettings(ttyFp)
     if ttyFp != None:
         ttyFp.close()
-
-    # Now make yourself a daemon...!
-    daemonize(logPath)
 
     first = True
     oldCur = -1
