@@ -68,7 +68,7 @@ namespace rfiStrategy {
 				{
 				}
 				PerformFunction(const PerformFunction &source)
-					: _action(source._action), _progress(source._progress), _lock(source._lock), _threadIndex(source._threadIndex)
+					: ProgressListener(source), _action(source._action), _progress(source._progress), _lock(source._lock), _threadIndex(source._threadIndex)
 				{
 					if(source._lock != 0)
 						throw std::runtime_error("Trying to copy PerformFunction with active lock.");
