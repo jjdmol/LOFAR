@@ -68,10 +68,10 @@ namespace rfiStrategy {
 				{
 				}
 			  ~PerformFunction()
-			    {
-			      if(_lock != 0)
-				delete _lock;
-			    }
+				{
+					if(_lock != 0)
+						delete _lock;
+				}
 				ForEachBaselineAction &_action;
 				ProgressListener &_progress;
 				boost::mutex::scoped_lock *_lock;
