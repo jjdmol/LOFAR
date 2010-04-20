@@ -762,7 +762,7 @@ namespace LOFAR
     Axis::ShPtr KernelProcessControl::getCalGroupFreqAxis
       (const vector<uint32> &groups) const
     {
-      ASSERT(itsKernelIndex > 0);
+      ASSERT(itsKernelIndex >= 0);
       unsigned int kernel = static_cast<unsigned int>(itsKernelIndex);
 
       unsigned int idx = 0, count = groups[0];
