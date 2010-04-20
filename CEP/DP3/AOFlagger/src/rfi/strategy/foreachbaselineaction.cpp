@@ -208,13 +208,13 @@ namespace rfiStrategy {
 	  //_lock = new boost::mutex::scoped_lock(_action._artifacts->IOMutex(), boost::try_to_lock);
 		// TODO
 	  _lock = new boost::mutex::scoped_lock(_action._artifacts->IOMutex());
-		if(!_lock->owns_lock())
-		{
-			std::cout << "Thread " << _threadIndex << " is waiting for IO lock." << std::endl;
-			delete _lock;
-			_lock = new boost::mutex::scoped_lock(_action._artifacts->IOMutex());
-			std::cout << "Thread " << _threadIndex << " received IO lock." << std::endl;
-		}
+	  //	if(!_lock->owns_lock())
+	  //	{
+	  //		std::cout << "Thread " << _threadIndex << " is waiting for IO lock." << std::endl;
+	  //		delete _lock;
+	  //		_lock = new boost::mutex::scoped_lock(_action._artifacts->IOMutex());
+	  //		std::cout << "Thread " << _threadIndex << " received IO lock." << std::endl;
+	  //	}
 	}
 	void ForEachBaselineAction::PerformFunction::IOUnlock()
 	{
