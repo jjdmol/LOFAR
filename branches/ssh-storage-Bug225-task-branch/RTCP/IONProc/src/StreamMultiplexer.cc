@@ -101,9 +101,8 @@ void StreamMultiplexer::receiveThread()
 				  msg.reqPtr->received.up();
 				  break;
 
-      case RequestMsg::RECV_ACK : itsStream.read(*msg.recvPtr, msg.size);
-				  *msg.recvPtr = static_cast<void *>(static_cast<char *>(*msg.recvPtr) + msg.size);
-				  *msg.sizePtr -= msg.size;
+      case RequestMsg::RECV_ACK : itsStream.read(msg.recvPtr, msg.size);
+				  *msg.sizePtr = msg.size;
 				  msg.recvFinished->up();
 				  break;
 
@@ -116,47 +115,43 @@ void StreamMultiplexer::receiveThread()
 }
 
 
-void StreamMultiplexer::read(MultiplexedStream *stream, void *ptr, size_t size)
+size_t StreamMultiplexer::tryRead(MultiplexedStream *stream, void *ptr, size_t size)
 {
-  Semaphore recvFinished;
+  Semaphore  recvFinished;
+  RequestMsg msg;
 
-  while (size > 0) {
-    RequestMsg msg;
+  msg.type	   = RequestMsg::RECV_REQ;
+  msg.size	   = size;
+  msg.reqPtr       = stream->itsPeerRequestAddr;
+  msg.sizePtr	   = &size;
+  msg.recvPtr	   = ptr;
+  msg.recvFinished = &recvFinished;
 
-    msg.type	     = RequestMsg::RECV_REQ;
-    msg.size	     = size;
-    msg.reqPtr       = stream->itsPeerRequestAddr;
-    msg.sizePtr	     = &size;
-    msg.recvPtr	     = &ptr;
-    msg.recvFinished = &recvFinished;
+  itsSendMutex.lock();
+  itsStream.write(&msg, sizeof msg);
+  itsSendMutex.unlock();
 
-    itsSendMutex.lock();
-    itsStream.write(&msg, sizeof msg);
-    itsSendMutex.unlock();
+  recvFinished.down();
 
-    recvFinished.down();
-  }
+  return size;
 }
 
 
-void StreamMultiplexer::write(MultiplexedStream *stream, const void *ptr, size_t size)
+size_t StreamMultiplexer::tryWrite(MultiplexedStream *stream, const void *ptr, size_t size)
 {
-  while (size > 0) {
-    stream->itsRequest.received.down();
+  stream->itsRequest.received.down();
 
-    RequestMsg ack = stream->itsRequest.msg;
+  RequestMsg ack = stream->itsRequest.msg;
 
-    ack.type = RequestMsg::RECV_ACK;
-    ack.size = std::min(size, ack.size);
+  ack.type = RequestMsg::RECV_ACK;
+  ack.size = std::min(size, ack.size);
 
-    itsSendMutex.lock();
-    itsStream.write(&ack, sizeof ack);
-    itsStream.write(ptr, ack.size);
-    itsSendMutex.unlock();
+  itsSendMutex.lock();
+  itsStream.write(&ack, sizeof ack);
+  itsStream.write(ptr, ack.size);
+  itsSendMutex.unlock();
 
-    ptr = static_cast<const void *>(static_cast<const char *>(ptr) + ack.size);
-    size -= ack.size;
-  }
+  return ack.size;
 }
 
 
@@ -173,15 +168,15 @@ MultiplexedStream::~MultiplexedStream()
 }
 
 
-void MultiplexedStream::read(void *ptr, size_t size)
+size_t MultiplexedStream::tryRead(void *ptr, size_t size)
 {
-  itsMultiplexer.read(this, ptr, size);
+  return itsMultiplexer.tryRead(this, ptr, size);
 }
 
 
-void MultiplexedStream::write(const void *ptr, size_t size)
+size_t MultiplexedStream::tryWrite(const void *ptr, size_t size)
 {
-  itsMultiplexer.write(this, ptr, size);
+  return itsMultiplexer.tryWrite(this, ptr, size);
 }
 
 

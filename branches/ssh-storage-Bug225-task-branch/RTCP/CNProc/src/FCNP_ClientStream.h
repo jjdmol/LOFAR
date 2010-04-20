@@ -33,11 +33,11 @@ namespace RTCP {
 class FCNP_ClientStream : public Stream
 {
   public:
-		 FCNP_ClientStream(unsigned channel);
-    virtual	 ~FCNP_ClientStream();
+		   FCNP_ClientStream(unsigned channel);
+    virtual	   ~FCNP_ClientStream();
 
-    virtual void read(void *ptr, size_t size);
-    virtual void write(const void *ptr, size_t size);
+    virtual size_t tryRead(void *ptr, size_t size);
+    virtual size_t tryWrite(const void *ptr, size_t size);
 
   private:
     const unsigned itsChannel;

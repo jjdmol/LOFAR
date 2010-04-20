@@ -61,7 +61,7 @@ FCNP_ServerStream::~FCNP_ServerStream()
 }
 
 
-void FCNP_ServerStream::write(const void *buf, size_t size)
+size_t FCNP_ServerStream::tryWrite(const void *buf, size_t size)
 {
   //LOG_DEBUG_STR("FCNP_ServerStream::write(" << std::hex << buf << ", " << std::dec << size << ") to " << itsCore);
 
@@ -74,10 +74,12 @@ void FCNP_ServerStream::write(const void *buf, size_t size)
   } else {
     FCNP_ION::IONtoCN_ZeroCopy(itsCore, itsChannel, buf, size);
   }
+
+  return size;
 }
 
 
-void FCNP_ServerStream::read(void *buf, size_t size)
+size_t FCNP_ServerStream::tryRead(void *buf, size_t size)
 {
   //LOG_DEBUG_STR(std::dec << "FCNP_ServerStream::read(" << std::hex << buf << ", " << std::dec << size << ") from " << itsCore);
 
@@ -90,6 +92,8 @@ void FCNP_ServerStream::read(void *buf, size_t size)
   } else {
     FCNP_ION::CNtoION_ZeroCopy(itsCore, itsChannel, buf, size);
   }
+
+  return size;
 }
 
 } // namespace RTCP

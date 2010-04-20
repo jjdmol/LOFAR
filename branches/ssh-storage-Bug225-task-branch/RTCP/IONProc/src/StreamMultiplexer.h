@@ -39,18 +39,18 @@ class MultiplexedStream;
 class StreamMultiplexer
 {
   public:
-    StreamMultiplexer(Stream &);
-    ~StreamMultiplexer();
+	   StreamMultiplexer(Stream &);
+	   ~StreamMultiplexer();
 
-    void registerChannel(MultiplexedStream *, unsigned channel);
+    void   registerChannel(MultiplexedStream *, unsigned channel);
 
-    void read(MultiplexedStream *, void *ptr, size_t size);
-    void write(MultiplexedStream *, const void *ptr, size_t size);
+    size_t tryRead(MultiplexedStream *, void *ptr, size_t size);
+    size_t tryWrite(MultiplexedStream *, const void *ptr, size_t size);
 
   private:
     friend class MultiplexedStream;
 
-    void			  receiveThread();
+    void   receiveThread();
 
     struct Request;
 
@@ -59,17 +59,17 @@ class StreamMultiplexer
       size_t			  size;
       Request			  *reqPtr;	 // in addr space of callee
       size_t			  *sizePtr;	 // in addr space of caller
-      void			  **recvPtr;	 // in addr space of caller
+      void			  *recvPtr;	 // in addr space of caller
       Semaphore			  *recvFinished; // in addr space of caller
     };
 
     struct Request {
-      RequestMsg      msg;
-      Semaphore	      received;
+      RequestMsg msg;
+      Semaphore	 received;
     };
 
-    Stream			  &itsStream;
-    Mutex			  itsSendMutex;
+    Stream &itsStream;
+    Mutex  itsSendMutex;
 
     template <typename K, typename V> class Map {
       public:
@@ -82,23 +82,23 @@ class StreamMultiplexer
 	Condition	itsReevaluate;
     };
 
-    Map<unsigned, Request *>	  itsOutstandingRegistrations;
+    Map<unsigned, Request *> itsOutstandingRegistrations;
 
-    Thread			  itsReceiveThread;
+    Thread		     itsReceiveThread;
 };
 
 
 class MultiplexedStream : public Stream
 {
   public:
-		 MultiplexedStream(StreamMultiplexer &, unsigned channel);
-    virtual	 ~MultiplexedStream();
+		   MultiplexedStream(StreamMultiplexer &, unsigned channel);
+    virtual	   ~MultiplexedStream();
 
-    virtual void read(void *ptr, size_t size);
-    virtual void write(const void *ptr, size_t size);
+    virtual size_t tryRead(void *ptr, size_t size);
+    virtual size_t tryWrite(const void *ptr, size_t size);
 
   private:
-    friend class StreamMultiplexer;
+    friend class   StreamMultiplexer;
 
     StreamMultiplexer &itsMultiplexer;
     unsigned	      itsChannel;

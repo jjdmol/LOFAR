@@ -97,11 +97,13 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
   LOG_DEBUG_STR("input thread " << itsArgs.threadID << " entering loop");
 
   while (!itsShouldStop) {
+    size_t size;
+
     try {
       // interruptible read, to allow stopping this thread even if the station
       // does not send data
 
-      itsArgs.stream->read(currentPacketPtr, packetSize);
+      size = itsArgs.stream->tryRead(currentPacketPtr, packetSize);
     } catch (SystemCallException &ex) {
       if (ex.error == EINTR)
 	break;
@@ -109,7 +111,12 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 	throw;
     }
 
-    ++ itsArgs.packetCounters->nrPacketsReceived;
+    ++ itsArgs.packetCounters->received;
+
+    if (size != packetSize) {
+      ++ itsArgs.packetCounters->badSize;
+      continue;
+    }
 
     if (dataShouldContainValidStamp) {
 #if defined __PPC__
@@ -129,7 +136,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 
       //if the seconds counter is 0xFFFFFFFF, the data cannot be trusted.
       if (seqid == ~0U) {
-	++ itsArgs.packetCounters->nrPacketsRejected;
+	++ itsArgs.packetCounters->badTimeStamp;
 	continue;
       }
 
@@ -140,7 +147,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
       // reliable.
       if (seqid >= previousSeqid + 10 && previousSeqidIsAccepted) {
 	previousSeqidIsAccepted = false;
-	++ itsArgs.packetCounters->nrPacketsRejected;
+	++ itsArgs.packetCounters->badTimeStamp;
 	continue;
       }
 

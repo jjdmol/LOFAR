@@ -80,14 +80,13 @@ static void commandMaster()
     std::string command;
 
     try {
-      for (char ch; sk.read(&ch, 1), ch != '\n';) // TODO: do not do a syscall per char
-	command.push_back(ch);
+      command = sk.readLine();
+      LOG_DEBUG_STR("read command: " << command);
     } catch (Stream::EndOfStreamException &) {
       sk.reaccept();
       continue;
     }
 
-    LOG_DEBUG_STR("read command: " << command);
     unsigned size = command.size() + 1;
 
     //MPI_Bcast(&size, sizeof size, MPI_INT, 0, MPI_COMM_WORLD);

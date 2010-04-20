@@ -128,30 +128,37 @@ void LogThread::mainLoop()
   // non-atomic updates from other threads cause race conditions, but who cares
 
   while (!itsShouldStop) {
-    std::stringstream logStr;
-    bool somethingRejected = false;
+    std::stringstream	  logStr;
+    std::vector<unsigned> counts(itsCounters.size());
 
     for (unsigned rsp = 0; rsp < itsCounters.size(); rsp ++) {
-      logStr << (rsp == 0 ? "received [" : ",") << itsCounters[rsp].nrPacketsReceived;
-      itsCounters[rsp].nrPacketsReceived = 0;
-
-      if (itsCounters[rsp].nrPacketsRejected > 0)
-	somethingRejected = true;
+      counts[rsp]		= itsCounters[rsp].received;
+      itsCounters[rsp].received = 0;
     }
 
-    if (somethingRejected)
-      for (unsigned rsp = 0; rsp < itsCounters.size(); rsp ++) {
-	logStr << (rsp == 0 ? "] packets, rejected [" : ",") << itsCounters[rsp].nrPacketsRejected;
-	itsCounters[rsp].nrPacketsRejected = 0;
-      }
+    logStr << "received packets = " << counts;
 
-    logStr << "] packets";
+    for (unsigned rsp = 0; rsp < itsCounters.size(); rsp ++) {
+      counts[rsp]	       = itsCounters[rsp].badSize;
+      itsCounters[rsp].badSize = 0;
+    }
+
+    if (static_cast<unsigned>(std::count(counts.begin(), counts.end(), 0U)) != counts.size())
+      logStr << ", bad size = " << counts;
+
+    for (unsigned rsp = 0; rsp < itsCounters.size(); rsp ++) {
+      counts[rsp]		    = itsCounters[rsp].badTimeStamp;
+      itsCounters[rsp].badTimeStamp = 0;
+    }
+
+    if (static_cast<unsigned>(std::count(counts.begin(), counts.end(), 0U)) != counts.size())
+      logStr << ", bad timestamps = " << counts;
 
 #if defined HAVE_BGP_ION
     writeCPUstats(logStr);
 #endif
 
-    LOG_INFO_STR(logStr.str());
+    LOG_INFO(logStr.str());
     sleep(1);
   }
 }
