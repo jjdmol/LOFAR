@@ -57,6 +57,7 @@ class CN_Configuration
     std::vector<unsigned> &phaseOnePsets(), &phaseTwoPsets(), &phaseThreePsets(), &tabList();
     std::vector<unsigned> &usedCoresInPset();
     std::vector<double>	  &refFreqs();
+    std::vector<unsigned> &subbandList();
     std::vector<double>   &refPhaseCentre();
     Matrix<double>        &phaseCentres();
 
@@ -83,6 +84,7 @@ class CN_Configuration
     std::vector<unsigned> itsPhaseOnePsets, itsPhaseTwoPsets, itsPhaseThreePsets, itsTabList;
     std::vector<unsigned> itsUsedCoresInPset;
     std::vector<double>	  itsRefFreqs;
+    std::vector<unsigned> itsSubbandList;
     std::vector<double>	  itsRefPhaseCentre;
     Matrix<double>        itsPhaseCentres;
 
@@ -102,9 +104,11 @@ class CN_Configuration
       double		  itsSampleRate;
       unsigned		  itsPhaseOnePsetsSize, itsPhaseTwoPsetsSize, itsPhaseThreePsetsSize, itsTabListSize;
       unsigned		  itsRefFreqsSize;
+      unsigned		  itsSubbandListSize;
       unsigned		  itsPhaseOnePsets[MAX_PSETS], itsPhaseTwoPsets[MAX_PSETS], itsPhaseThreePsets[MAX_PSETS], itsTabList[MAX_PSETS];
       unsigned		  itsUsedCoresInPset[MAX_CORES_PER_PSET];
       double		  itsRefFreqs[MAX_SUBBANDS];
+      unsigned		  itsSubbandList[MAX_SUBBANDS];
       double              itsRefPhaseCentre[3];
       double              itsPhaseCentres[MAX_STATIONS * 3];
       unsigned            itsNrPencilBeams;
@@ -203,6 +207,11 @@ inline std::vector<unsigned> &CN_Configuration::usedCoresInPset()
 inline std::vector<double> & CN_Configuration::refFreqs()
 {
   return itsRefFreqs;
+}
+
+inline std::vector<unsigned> & CN_Configuration::subbandList()
+{
+  return itsSubbandList;
 }
 
 inline unsigned &CN_Configuration::nrPencilBeams()

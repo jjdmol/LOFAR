@@ -135,6 +135,7 @@ public:
 	uint32	       nrPencilBeams() const;
 	PencilCoordinates pencilBeams() const;
 
+	vector<unsigned> subbandList() const;
 	unsigned         nrSubbands() const;
 	unsigned         nrBeams() const;
 	unsigned	 nyquistZone() const;
@@ -400,6 +401,11 @@ inline uint32 Parset::nrCoresPerPset() const
   return usedCoresInPset().size();
 }  
  
+inline vector<unsigned> Parset::subbandList() const
+{
+  return getUint32Vector("Observation.subbandList",true);
+} 
+
 inline unsigned Parset::nrSubbands() const
 {
   return getUint32Vector("Observation.subbandList",true).size();

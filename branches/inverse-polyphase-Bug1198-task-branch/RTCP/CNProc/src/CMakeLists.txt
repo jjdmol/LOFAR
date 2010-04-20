@@ -23,6 +23,8 @@ set(cnproc_LIB_SRCS
   LocationInfo.cc
   PencilBeams.cc
   PPF.cc
+  InversePPF.cc
+  FilterBank.cc
   Stokes.cc)
 
 # Maybe we shoud use LOFAR_COMPILER_SUITE, because ASM-BGP_COMPILER_WORKS

@@ -10,20 +10,22 @@
 namespace LOFAR {
 namespace RTCP {
 
-class TransposedBeamFormedData: public SampleData<fcomplex,5>
+// Polarizations are seperated, otherwise the buffers do not fit in memory.
+
+class TransposedBeamFormedData: public SampleData<fcomplex,3>
 {
   public:
-    typedef SampleData<fcomplex,5> SuperType;
+    typedef SampleData<fcomplex,3> SuperType;
 
-    TransposedBeamFormedData(unsigned nrBeams, unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration);
+    TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration);
 
     virtual TransposedBeamFormedData *clone() const { return new TransposedBeamFormedData(*this); }
 };
 
 
-inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrBeams, unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration)
+inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration)
 :
-  SuperType(false,boost::extents[nrBeams][nrSubbands][nrChannels][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrBeams)
+  SuperType(false,boost::extents[nrSubbands][nrChannels][nrSamplesPerIntegration | 2], 1)
 {
 }
 

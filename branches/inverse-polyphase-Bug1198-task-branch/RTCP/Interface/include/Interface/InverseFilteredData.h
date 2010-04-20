@@ -13,26 +13,26 @@ namespace LOFAR {
 namespace RTCP {
 
 // This assumes the nrChannels == 1
+// We store the data for only 1 beam, 1 polarization.
 // nrSamplesPerIntegration is the original nrSamplesPerIntegration, and now becomes the "major time" index.
 // The stationFilterSize is the minor time index.
 
-class InverseFilteredData: public SampleData<float,4>
+class InverseFilteredData: public SampleData<float,1>
 {
   public:
-    typedef SampleData<float,4> SuperType;
+    typedef SampleData<float,1> SuperType;
 
-    InverseFilteredData(unsigned nrBeams, unsigned nrSamplesPerIntegration, unsigned stationFilterSize);
+    InverseFilteredData(unsigned nrSamplesPerIntegration, unsigned stationFilterSize);
 
   protected:
-    const unsigned              itsNrBeams;
     const unsigned              itsNrSamplesPerIntegration;
     const unsigned              itsStationFilterSize;
+    
 };
 
-inline InverseFilteredData::InverseFilteredData(unsigned nrBeams, unsigned nrSamplesPerIntegration, unsigned stationFilterSize)
+inline InverseFilteredData::InverseFilteredData(unsigned nrSamplesPerIntegration, unsigned stationFilterSize)
 :
-  SuperType::SampleData(false,boost::extents[nrBeams][NR_POLARIZATIONS][nrSamplesPerIntegration][stationFilterSize], nrBeams),
-  itsNrBeams(nrBeams),
+  SuperType::SampleData(false, boost::extents[nrSamplesPerIntegration*stationFilterSize], 1),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsStationFilterSize(stationFilterSize)
 {

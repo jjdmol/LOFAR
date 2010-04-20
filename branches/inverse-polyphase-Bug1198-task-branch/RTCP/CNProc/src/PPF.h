@@ -7,6 +7,7 @@
 
 
 #include <BandPass.h>
+#include <FilterBank.h>
 #include <FIR.h>
 #include <Interface/TransposedData.h>
 #include <Interface/FilteredData.h>
@@ -50,18 +51,22 @@ template <typename SAMPLE_TYPE> class PPF: boost::noncopyable
     void     computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], double delayAtBegin, double delayAfterEnd, double baseFrequency) const;
 #endif
 
-    const unsigned itsNrStations, itsNrSamplesPerIntegration;
+    const unsigned itsNrStations;
+    const unsigned itsNrSamplesPerIntegration;
     const unsigned itsNrChannels;
     unsigned       itsLogNrChannels;
     const double   itsChannelBandwidth;
     const bool     itsDelayCompensation;
-    BandPass itsBandPass;
+    BandPass       itsBandPass;
+
+    FilterBank     itsFilterBank;
+
+    boost::multi_array<FIR<fcomplex>, 3> itsFIRs; //[itsNrStations][NR_POLARIZATIONS][itsNrChannels]
 
 #if defined PPF_C_IMPLEMENTATION
-    boost::multi_array<FIR, 3> itsFIRs; //[itsNrStations][NR_POLARIZATIONS][itsNrChannels]
     boost::multi_array<fcomplex, 3> itsFFTinData; //[NR_TAPS - 1 + itsNrSamplesPerIntegration][NR_POLARIZATIONS][itsNrChannels]
 #else
-    boost::multi_array<fcomplex, 2, AlignedStdAllocator<fcomplex, 32> > itsTmp; //[4][itsNrSamplesPerIntegration]
+    boost::multi_array<fcomplex, 2, AlignedStdAllocator<fcomplex, 32> > itsTmpDelaylines; //[4][itsNrSamplesPerIntegration]
     boost::multi_array<fcomplex, 3, AlignedStdAllocator<fcomplex, 32> > itsFFTinData; //[itsNrSamplesPerIntegration][NR_POLARIZATIONS][itsNrChannels + 4]
     boost::multi_array<fcomplex, 3, AlignedStdAllocator<fcomplex, 32> > itsFFToutData; //[2][NR_POLARIZATIONS][itsNrChannels]
 #endif
