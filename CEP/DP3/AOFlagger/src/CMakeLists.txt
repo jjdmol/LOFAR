@@ -1,51 +1,114 @@
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} ${Casacore_INCLUDE_DIRS} ${LIBXML2_INCLUDE_DIRS} ${PTHREADS_INCLUDE_DIRS} ${GSL_INCLUDE_DIRS})
+# $Id$
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
+include(LofarPackageVersion)
 
-LINK_DIRECTORIES(${LIBXML2_LIBRARY_DIRS} ${Casacore_LIBRARY_DIRS} ${LAPACK_LIBRARY_DIRS} ${BLAS_LIBRARY_DIRS} ${PTHREADS_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS} ${GSL_LIBRARY_DIRS})
+set(GUI_PLOT_FILES
+  gui/plot/plot2d.cpp
+  gui/plot/plotwidget.cpp
+  gui/plot/verticalplotscale.cpp)
 
-SET (GUI_PLOT_FILES gui/plot/plot2d gui/plot/plotwidget gui/plot/verticalplotscale)
-SET (GUI_FILES gui/application gui/complexplaneplotwindow gui/editstrategywindow gui/gotowindow gui/highlightwindow gui/imageplanewindow gui/imagewidget gui/msoptionwindow gui/mswindow gui/newstrategyactionframe gui/plotframe gui/progresswindow gui/timefrequencywidget gui/zoomwindow ${GUI_PLOT_FILES})
-SET (MSIO_FILES msio/baselinematrixloader msio/colormap msio/fitsfile msio/image2d msio/mask2d msio/measurementset msio/pngfile msio/samplerow msio/segmentedimage msio/stokesimager msio/timefrequencydata msio/timefrequencyimager)
-SET (RFI_STRATEGY_FILES rfi/strategy/actionfactory rfi/strategy/changeresolutionaction rfi/strategy/fitsimageset rfi/strategy/foreachbaselineaction rfi/strategy/foreachmsaction rfi/strategy/frequencyselectionaction rfi/strategy/fringestopaction rfi/strategy/imageraction rfi/strategy/imageset rfi/strategy/loadflagsaction rfi/strategy/loadimageaction rfi/strategy/msimageset rfi/strategy/plotaction rfi/strategy/slidingwindowfitaction rfi/strategy/statisticalflagaction rfi/strategy/strategy rfi/strategy/svdaction rfi/strategy/timeselectionaction rfi/strategy/writeflagsaction rfi/strategy/xmlreader rfi/strategy/xmlwriter)
-SET (RFI_FILES rfi/antennaflagcountplot rfi/frequencyflagcountplot rfi/frequencypowerplot rfi/fringestoppingfitter rfi/fringetestcreater rfi/imagetile rfi/localfitmethod rfi/methoditerator rfi/mitigationtester rfi/morphology rfi/rfiplots rfi/rfistatistics rfi/sinusfitter rfi/statisticalflagger rfi/svdmitigater rfi/thresholdconfig rfi/thresholdmitigater rfi/thresholdtools rfi/tiledimage rfi/timeflagcountplot ${RFI_STRATEGY_FILES})
-SET (IMAGING_FILES imaging/uvimager imaging/model imaging/fourproductcorrelatortester)
-SET (UTIL_FILES util/ffttools util/integerdomain util/multiplot util/plot util/rng util/statwriter util/stopwatch)
+set(GUI_FILES
+  gui/application.cpp
+  gui/complexplaneplotwindow.cpp
+  gui/editstrategywindow.cpp
+  gui/gotowindow gui/highlightwindow.cpp
+  gui/imageplanewindow gui/imagewidget.cpp
+  gui/msoptionwindow.cpp
+  gui/mswindow.cpp
+  gui/newstrategyactionframe.cpp
+  gui/plotframe.cpp
+  gui/progresswindow.cpp
+  gui/timefrequencywidget.cpp
+  gui/zoomwindow.cpp
+  ${GUI_PLOT_FILES})
 
-lofar_add_library(rfiengine ${IMAGING_FILES} ${MSIO_FILES} ${RFI_FILES} ${UTIL_FILES})
+set(MSIO_FILES
+  msio/baselinematrixloader.cpp
+  msio/colormap.cpp
+  msio/fitsfile.cpp
+  msio/image2d.cpp
+  msio/mask2d.cpp
+  msio/measurementset.cpp
+  msio/pngfile.cpp
+  msio/samplerow.cpp
+  msio/segmentedimage.cpp
+  msio/stokesimager.cpp
+  msio/timefrequencydata.cpp
+  msio/timefrequencyimager.cpp)
 
-set(GENERIC_LIBRARIES rfiengine ${Boost_LIBRARIES} ${Casacore_LIBRARIES} ${CFITSIO_LIBRARIES} dl ${FFTW3_LIBRARIES} ${GSL_LIBRARIES} m nsl png util z ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${PTHREADS_LIBRARIES} xml2 ${GTKMM_LIBRARIES} lofarstman)
+set(RFI_STRATEGY_FILES
+  rfi/strategy/actionfactory.cpp
+  rfi/strategy/changeresolutionaction.cpp
+  rfi/strategy/fitsimageset.cpp
+  rfi/strategy/foreachbaselineaction.cpp
+  rfi/strategy/foreachmsaction.cpp
+  rfi/strategy/frequencyselectionaction.cpp
+  rfi/strategy/fringestopaction.cpp
+  rfi/strategy/imageraction.cpp
+  rfi/strategy/imageset.cpp
+  rfi/strategy/loadflagsaction.cpp
+  rfi/strategy/loadimageaction.cpp
+  rfi/strategy/msimageset.cpp
+  rfi/strategy/plotaction.cpp
+  rfi/strategy/slidingwindowfitaction.cpp
+  rfi/strategy/statisticalflagaction.cpp
+  rfi/strategy/strategy.cpp
+  rfi/strategy/svdaction.cpp
+  rfi/strategy/timeselectionaction.cpp
+  rfi/strategy/writeflagsaction.cpp
+  rfi/strategy/xmlreader.cpp
+  rfi/strategy/xmlwriter.cpp)
 
-IF(GTKMM_FOUND)
-  INCLUDE_DIRECTORIES(${GTKMM_INCLUDE_DIRS})
-  LINK_DIRECTORIES(${GTKMM_LIBRARY_DIRS})
+set(RFI_FILES
+  rfi/antennaflagcountplot.cpp
+  rfi/frequencyflagcountplot.cpp
+  rfi/frequencypowerplot.cpp
+  rfi/fringestoppingfitter.cpp
+  rfi/fringetestcreater.cpp
+  rfi/imagetile.cpp
+  rfi/localfitmethod.cpp
+  rfi/methoditerator.cpp
+  rfi/mitigationtester.cpp
+  rfi/morphology.cpp
+  rfi/rfiplots.cpp
+  rfi/rfistatistics.cpp
+  rfi/sinusfitter.cpp
+  rfi/statisticalflagger.cpp
+  rfi/svdmitigater.cpp
+  rfi/thresholdconfig.cpp
+  rfi/thresholdmitigater.cpp
+  rfi/thresholdtools.cpp
+  rfi/tiledimage.cpp
+  rfi/timeflagcountplot.cpp
+  ${RFI_STRATEGY_FILES})
 
-  lofar_add_executable(rfigui rfigui ${GUI_FILES})
-  TARGET_LINK_LIBRARIES(rfigui ${GENERIC_LIBRARIES})
-  SET_TARGET_PROPERTIES(rfigui PROPERTIES LINKER_LANGUAGE C)
+set(IMAGING_FILES
+  imaging/uvimager.cpp
+  imaging/model.cpp
+  imaging/fourproductcorrelatortester.cpp)
 
-  install(PROGRAMS rfigui DESTINATION bin)
-ELSE()
+set(UTIL_FILES
+  util/ffttools.cpp
+  util/integerdomain.cpp
+  util/multiplot.cpp
+  util/plot.cpp
+  util/rng.cpp
+  util/statwriter.cpp
+  util/stopwatch.cpp)
+
+lofar_add_library(rfiengine
+  ${IMAGING_FILES} ${MSIO_FILES} ${RFI_FILES} ${UTIL_FILES})
+
+if(GTKMM_FOUND)
+  include_directories(${GTKMM_INCLUDE_DIRS})
+  lofar_add_bin_program(rfigui rfigui.cpp ${GUI_FILES})
+  target_link_libraries(rfigui ${GTKMM_LIBRARIES})
+else()
   message(WARNING " The graphical user interface library GTKMM was not found; rfigui will not be compiled.")
-ENDIF(GTKMM_FOUND)
+endif(GTKMM_FOUND)
 
-lofar_add_executable(rficonsole rficonsole)
-TARGET_LINK_LIBRARIES(rficonsole ${GENERIC_LIBRARIES})
-SET_TARGET_PROPERTIES(rficonsole PROPERTIES LINKER_LANGUAGE C)
-
-lofar_add_executable(rfistrategy rfistrategy)
-TARGET_LINK_LIBRARIES(rfistrategy ${GENERIC_LIBRARIES})
-SET_TARGET_PROPERTIES(rfistrategy PROPERTIES LINKER_LANGUAGE C)
-
-lofar_add_executable(msinfo msinfo)
-TARGET_LINK_LIBRARIES(msinfo ${GENERIC_LIBRARIES})
-SET_TARGET_PROPERTIES(msinfo PROPERTIES LINKER_LANGUAGE C)
-
-lofar_add_executable(colormapper colormapper)
-TARGET_LINK_LIBRARIES(colormapper ${GENERIC_LIBRARIES})
-SET_TARGET_PROPERTIES(colormapper PROPERTIES LINKER_LANGUAGE C)
-
-install(TARGETS
-  rfistrategy
-  rficonsole
-  DESTINATION bin)
+lofar_add_bin_program(rficonsole rficonsole.cpp)
+lofar_add_bin_program(rfistrategy rfistrategy.cpp)
+lofar_add_bin_program(msinfo msinfo.cpp)
+lofar_add_bin_program(colormapper colormapper.cpp)
+lofar_add_bin_program(versionaoflagger versionaoflagger.cc Package__Version.cc)
