@@ -50,11 +50,13 @@ public class LoginDialog extends javax.swing.JDialog {
     private void initComponents() {
 
         jLabel1 = new javax.swing.JLabel();
-        jUserNameField = new javax.swing.JTextField();
+        jDatabaseField = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         jPasswordField = new javax.swing.JPasswordField();
         jButtonCancel = new javax.swing.JButton();
         jButtonOK = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
+        jUserNameField1 = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Lofar OTB login");
@@ -66,7 +68,9 @@ public class LoginDialog extends javax.swing.JDialog {
 
         jLabel1.setText("User name");
         getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, -1, -1));
-        getContentPane().add(jUserNameField, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 30, 200, -1));
+
+        jDatabaseField.setText("LOFAR_1");
+        getContentPane().add(jDatabaseField, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 70, 200, -1));
 
         jLabel2.setText("Password");
         getContentPane().add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 66, -1));
@@ -87,6 +91,10 @@ public class LoginDialog extends javax.swing.JDialog {
             }
         });
         getContentPane().add(jButtonOK, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 110, -1, -1));
+
+        jLabel3.setText("Database");
+        getContentPane().add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 70, 66, -1));
+        getContentPane().add(jUserNameField1, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 30, 200, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -117,10 +125,12 @@ public class LoginDialog extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonCancel;
     private javax.swing.JButton jButtonOK;
+    private javax.swing.JTextField jDatabaseField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JPasswordField jPasswordField;
-    private javax.swing.JTextField jUserNameField;
+    private javax.swing.JTextField jUserNameField1;
     // End of variables declaration//GEN-END:variables
 
     /**
@@ -141,7 +151,7 @@ public class LoginDialog extends javax.swing.JDialog {
      * @return Value of property userName.
      */
     public String getUserName() {
-        return jUserNameField.getText();
+        return new String(jDatabaseField.getText());
     }
 
     /**
@@ -152,4 +162,11 @@ public class LoginDialog extends javax.swing.JDialog {
         return new String(jPasswordField.getPassword());
     }
     
+    /**
+     * Getter for property databaseName
+     * @return Value of property databaseName.
+     */
+    public String getDBName() {
+        return new String(jDatabaseField.getText());
+    }
 }

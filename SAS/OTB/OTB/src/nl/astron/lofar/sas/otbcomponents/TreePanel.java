@@ -103,7 +103,7 @@ public class TreePanel extends javax.swing.JPanel {
         jScrollPane1.setViewportView(jTree1);
         if(rows != null && rows.length > 0) {
             jTree1.setSelectionRows(rows);
-        } else {
+        } else if (jTree1.getRowCount() > 1){
             jTree1.setSelectionRow(0);
         }
     }

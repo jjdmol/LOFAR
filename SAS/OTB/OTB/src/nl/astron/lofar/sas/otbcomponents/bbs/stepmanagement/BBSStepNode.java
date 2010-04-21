@@ -22,7 +22,8 @@
  */
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
+import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
+
 /**
  * Represents a specific BBSStep object inside the Steps Tree of the BBS Strategy panel.
  *
