@@ -33,7 +33,7 @@ namespace RTCP {
 // All data is in Little Endian format!
 
 struct RSP {
-  struct header {
+  struct Header {
     uint16_t version;
     uint16_t configuration;
     uint16_t station;

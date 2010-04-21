@@ -79,7 +79,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 
   const unsigned maxNrPackets = 128;
   TimeStamp	 actualstamp  = itsArgs.startTime - itsArgs.nrTimesPerPacket;
-  unsigned	 packetSize   = sizeof(struct RSP::header) + itsArgs.nrSlotsPerPacket * itsArgs.nrTimesPerPacket * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE);
+  unsigned	 packetSize   = sizeof(struct RSP::Header) + itsArgs.nrSlotsPerPacket * itsArgs.nrTimesPerPacket * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE);
 
   std::vector<TimeStamp> timeStamps(maxNrPackets);
   boost::multi_array<char, 2, AlignedStdAllocator<char, 32> > packets(boost::extents[maxNrPackets][packetSize]);
