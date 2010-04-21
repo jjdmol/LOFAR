@@ -24,8 +24,8 @@
 package nl.astron.lofar.sas.otb.panels;
 import java.rmi.RemoteException;
 import nl.astron.lofar.sas.otb.MainFrame;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
-import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
+import nl.astron.lofar.sas.otb.jotdb3.jOTDBparam;
+import nl.astron.lofar.sas.otb.jotdb3.jVICnodeDef;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.treemanagers.OTDBParamTreeManager;

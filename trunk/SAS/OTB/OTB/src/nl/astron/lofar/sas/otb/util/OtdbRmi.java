@@ -26,11 +26,15 @@ import java.rmi.Naming;
 import java.util.TreeMap;
 import nl.astron.lofar.lofarutils.remoteFileInterface;
 import nl.astron.lofar.sas.otb.MainFrame;
-import nl.astron.lofar.sas.otb.jotdb2.jCampaignInterface;
-import nl.astron.lofar.sas.otb.jotdb2.jConverterInterface;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBinterface;
-import nl.astron.lofar.sas.otb.jotdb2.jTreeMaintenanceInterface;
-import nl.astron.lofar.sas.otb.jotdb2.jTreeValueInterface;
+import nl.astron.lofar.sas.otb.exceptions.ConnectionFailedException;
+import nl.astron.lofar.sas.otb.exceptions.NoAccessException;
+import nl.astron.lofar.sas.otb.jotdb3.jCampaignInterface;
+import nl.astron.lofar.sas.otb.jotdb3.jConverterInterface;
+import nl.astron.lofar.sas.otb.jotdb3.jOTDBaccessInterface;
+import nl.astron.lofar.sas.otb.jotdb3.jOTDBinterface;
+import nl.astron.lofar.sas.otb.jotdb3.jTreeMaintenanceInterface;
+import nl.astron.lofar.sas.otb.jotdb3.jTreeValueInterface;
+
 import nl.astron.lofar.sas.otbcomponents.SetServerDialog;
 import org.apache.log4j.Logger;
 
@@ -57,18 +61,16 @@ public class OtdbRmi {
     private static String RMIServerName      = "lofar17.astron.nl";
     private static String RMIServerPort      = "1099";
 
-    private static String RMIRegistryName    = jOTDBinterface.SERVICENAME;
-    private static String RMIMaintenanceName = jTreeMaintenanceInterface.SERVICENAME;
-    private static String RMIValName         = jTreeValueInterface.SERVICENAME;
-    private static String RMIConverterName   = jConverterInterface.SERVICENAME; 
-    private static String RMIRemoteFileName  = remoteFileInterface.SERVICENAME;
-    private static String RMICampaignName    = jCampaignInterface.SERVICENAME;
-    
+    private static String RMIAccessName      = jOTDBaccessInterface.SERVICENAME;
+    private static String RMIRegistryName    = "";
+
+
     private static boolean isOpened         = false;
     private static boolean isConnected      = false;
     private MainFrame itsMainFrame;
     
      // RMI interfaces
+    private static jOTDBaccessInterface remoteOTDBaccess;
     private static jOTDBinterface remoteOTDB;
     private static jCampaignInterface remoteCampaign;
     private static jTreeMaintenanceInterface remoteMaintenance;
@@ -122,49 +124,26 @@ public class OtdbRmi {
      * Getter for property RMIRegistryName.
      * @return Value of property RMIRegistryName.
      */
+    public static String getRMIAccessName() {
+        return RMIAccessName;
+    }
+
+    /**
+     * Getter for property RMIRegistryName.
+     * @return Value of property RMIRegistryName.
+     */
     public static String getRMIRegistryName() {
         return RMIRegistryName;
     }
 
-   /**
-     * Getter for property RMIMaintenanceName.
-     * @return Value of property RMIMaintenanceName.
-     */
-    public static String getRMIMaintenanceName() {
-        return RMIMaintenanceName;
-    }
-
-   /**
-     * Getter for property RMICampaignName.
-     * @return Value of property RMICampaignName.
-     */
-    public static String getRMICampaignName() {
-        return RMICampaignName;
-    }
-
     /**
-     * Getter for property RMIValName.
-     * @return Value of property RMIValName.
+     * Setter for property RMIRegistryName.
      */
-    public static String getRMIValName() {
-        return RMIValName;
+    public static void setRMIRegistryName(String aName) {
+        OtdbRmi.RMIRegistryName=aName;
     }
 
-    /**
-     * Getter for property RMIConverterName.
-     * @return Value of property RMIConverterName.
-     */
-    public static String getRMIConverterName() {
-        return RMIConverterName;
-    }
 
-        /**
-     * Getter for property RMIRemoteFileName.
-     * @return Value of property RMIRemoteFileName.
-     */
-    public static String getRMIRemoteFileName() {
-        return RMIRemoteFileName;
-    }
 
     /**
      * Getter for property remoteMaintenance.
@@ -189,6 +168,15 @@ public class OtdbRmi {
     public static jOTDBinterface getRemoteOTDB() {
 
         return OtdbRmi.remoteOTDB;
+    }
+
+    /**
+     * Getter for property remoteOTDBaccess.
+     * @return Value of property remoteOTDBaccess.
+     */
+    public static jOTDBaccessInterface getRemoteOTDBaccess() {
+
+        return OtdbRmi.remoteOTDBaccess;
     }
 
     /**
@@ -271,41 +259,62 @@ public class OtdbRmi {
         return isOpened;
     }
 
-    public boolean openConnections() {
-        String aRC="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIRegistryName;
-        String aRMS="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIMaintenanceName;
-        String aRMV="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIValName;
-        String aRMC="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIConverterName;
-        String aRFI="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIRemoteFileName;
-        String aRCa="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMICampaignName;
-        
-
-        isOpened=openRemoteConnection(aRC);
+    public boolean openAccessConnection() throws NoAccessException {
+        String aRa="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIAccessName;
+        isOpened=openRemoteAccess(aRa);
         if (isOpened){
-            if (openRemoteMaintenance(aRMS) && openRemoteValue(aRMV) && openRemoteConverter(aRMC) && openRemoteFile(aRFI)&& openRemoteCampaign(aRCa)) {
-                logger.debug("Remote connections opened");
-                isConnected=true;
-            } else {
-                logger.debug("Error opening remote connections");           
-            }
+            logger.debug("Remote access connection opened");
+            isConnected=true;
         } else {
-            logger.debug("Failed to open remote connection");
+            throw new NoAccessException("Couldn't open remote access object: "+aRa);
         }
         return isConnected;
     }
     
-    private boolean openRemoteConnection(String RMIRegHostName) {
+    public static boolean openConnections() throws ConnectionFailedException {
+        if (openRemoteConnection() && openRemoteMaintenance() && openRemoteValue() && openRemoteConverter() && openRemoteFile()&& openRemoteCampaign()) {
+            logger.debug("Remote connections opened");
+            isConnected=true;
+        } else {
+            throw new ConnectionFailedException("Couldn't open all connections");
+        }
+        return isConnected;
+    }
+
+    private boolean openRemoteAccess(String RMIRegHostName) {
         try {
-            logger.debug("openRemoteConnection for "+RMIRegHostName);
+            logger.debug("openRemoteAccess for "+RMIRegHostName);
+
+            // create a remote object
+//            Registry registry = LocateRegistry.getRegistry(RMIServerName,Integer.parseInt(RMIServerPort));
+            remoteOTDBaccess = (jOTDBaccessInterface) Naming.lookup (RMIRegHostName);
+            logger.debug(remoteOTDBaccess);
+
+	    logger.debug("Connection to RemoteAccess succesful!");
+            return true;
+          }
+        catch (Exception e)
+	  {
+	     logger.debug("Open Remote Access via RMI and JNI failed: " + e);
+	  }
+        return false;
+    }
+
+    private static boolean openRemoteConnection() {
+        try {
+            logger.debug("openRemoteConnection for jOTDB_"+RMIRegistryName);
+            String aRegName = "rmi://"+RMIServerName+":"+RMIServerPort+"/"+"jOTDB_"+RMIRegistryName;
         
             // create a remote object
-            remoteOTDB = (jOTDBinterface) Naming.lookup (RMIRegHostName);     
+            remoteOTDB = (jOTDBinterface) Naming.lookup (aRegName);
             logger.debug(remoteOTDB);
 					    
 	    // do the test	
 	    logger.debug("Trying to connect to the database");
-	    assert remoteOTDB.connect() : "Connection failed";	
-	    assert remoteOTDB.isConnected() : "Connnection flag failed";
+            boolean c = remoteOTDB.connect();
+	    assert c : "Connection failed";
+            c = remoteOTDB.isConnected();
+	    assert c : "Connnection flag failed";
 	     
 	    logger.debug("Connection succesful!");   
             return true;
@@ -317,15 +326,16 @@ public class OtdbRmi {
         return false;
     }   
     
-    private boolean openRemoteMaintenance(String RMIMaintName) {
+    private static boolean openRemoteMaintenance() {
         try {
-            logger.debug("openRemoteMaintenance for "+RMIMaintName);
+            String aRegName = "rmi://"+RMIServerName+":"+RMIServerPort+"/"+ "jTreeMaintenance_" + RMIRegistryName;
+            logger.debug("openRemoteMaintenance for "+aRegName);
         
             // create a remote object
-            remoteMaintenance = (jTreeMaintenanceInterface) Naming.lookup (RMIMaintName);     
+            remoteMaintenance = (jTreeMaintenanceInterface) Naming.lookup (aRegName);
             logger.debug(remoteMaintenance);
-					    
-     	    logger.debug("Connection succesful!");   
+
+     	    logger.debug("Connection succesful!");
             return true;
           }
         catch (Exception e)
@@ -333,14 +343,15 @@ public class OtdbRmi {
 	     logger.debug("Getting Remote Maintenance via RMI and JNI failed: " + e);
 	  }
         return false;
-    }  
-    
-    private boolean openRemoteCampaign(String RMICampName) {
+    }
+        
+    private static boolean openRemoteCampaign() {
         try {
-            logger.debug("openRemoteCampaign for "+RMICampName);
+            String aRegName = "rmi://"+RMIServerName+":"+RMIServerPort+"/"+ "jCampaign_" + RMIRegistryName;
+            logger.debug("openRemoteCampaign for "+aRegName);
 
             // create a remote object
-            remoteCampaign = (jCampaignInterface) Naming.lookup (RMICampName);
+            remoteCampaign = (jCampaignInterface) Naming.lookup (aRegName);
             logger.debug(remoteCampaign);
 
      	    logger.debug("Connection succesful!");
@@ -352,13 +363,14 @@ public class OtdbRmi {
 	  }
         return false;
     }
-        
-    private boolean openRemoteValue(String RMIValName) {
+
+    private static boolean openRemoteValue() {
         try {
-            logger.debug("OpenRemoteValue for "+RMIValName);
+            String aRegName = "rmi://"+RMIServerName+":"+RMIServerPort+"/"+ "jTreeValue_" + RMIRegistryName;
+            logger.debug("OpenRemoteValue for "+aRegName);
         
             // create a remote object
-            remoteValue = (jTreeValueInterface) Naming.lookup (RMIValName);     
+            remoteValue = (jTreeValueInterface) Naming.lookup (aRegName);
             logger.debug(remoteValue);
 					    
      	    logger.debug("Connection succesful!");   
@@ -371,12 +383,13 @@ public class OtdbRmi {
         return false;
     }
 
-    private boolean openRemoteConverter(String RMIConverterName) {
+    private static boolean openRemoteConverter() {
         try {
-            logger.debug("openRemoteConverter for "+RMIConverterName);
+            String aRegName = "rmi://"+RMIServerName+":"+RMIServerPort+"/"+ "jConverter_" + RMIRegistryName;
+            logger.debug("openRemoteConverter for "+aRegName);
         
-            // create a remote object\
-            remoteTypes = (jConverterInterface) Naming.lookup (RMIConverterName); 
+            // create a remote object
+            remoteTypes = (jConverterInterface) Naming.lookup (aRegName);
             logger.debug(remoteValue);
 					    
      	    logger.debug("Connection succesful!");  
@@ -391,12 +404,13 @@ public class OtdbRmi {
         return false;
     }
     
-    private boolean openRemoteFile(String RMIRemoteFileName) {
+    private static boolean openRemoteFile() {
         try {
-            logger.debug("OpenRemoteFile for "+RMIRemoteFileName);
+            String aRegName = "rmi://"+RMIServerName+":"+RMIServerPort+"/"+ "remoteFile_" + RMIRegistryName;
+            logger.debug("OpenRemoteFile for "+aRegName);
         
             // create a remote object
-            remoteFileTrans = (remoteFileInterface) Naming.lookup (RMIRemoteFileName);     
+            remoteFileTrans = (remoteFileInterface) Naming.lookup (aRegName);
             logger.debug(remoteFileTrans);
 					    
      	    logger.debug("Connection succesful!");   
@@ -409,7 +423,7 @@ public class OtdbRmi {
         return false;
     }
 
-    private boolean loadConversionTypes() {
+    private static boolean loadConversionTypes() {
         try {
             logger.debug("Get ConversionTypes");
             itsClassifs   =new TreeMap<Short,String>(OtdbRmi.remoteTypes.getClassif());
@@ -424,7 +438,4 @@ public class OtdbRmi {
         }
         return false;
     }
-
-
-    
 }

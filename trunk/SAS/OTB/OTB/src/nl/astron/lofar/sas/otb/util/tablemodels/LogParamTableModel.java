@@ -25,7 +25,7 @@ package nl.astron.lofar.sas.otb.util.tablemodels;
 import java.util.Vector;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.SharedVars;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBvalue;
+import nl.astron.lofar.sas.otb.jotdb3.jOTDBvalue;
 import nl.astron.lofar.sas.otb.util.*;
 import org.apache.log4j.Logger;
 

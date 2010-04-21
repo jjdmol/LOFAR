@@ -40,15 +40,13 @@ public class UserAccount {
     static Logger logger = Logger.getLogger(UserAccount.class);
 
     // fields
-    private OtdbRmi itsOtdbRmi;
     private int itsRoleMask;
     private String itsUserName;
 
     /**
      * Creates a new instance of UserAccount 
      */
-    public UserAccount(OtdbRmi otdbrmi, String userName, String password) throws NoAccessException {
-        itsOtdbRmi = otdbrmi;
+    public UserAccount(String userName, String password) throws NoAccessException {
         itsRoleMask = 0;
         itsUserName=userName;
         

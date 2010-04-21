@@ -29,8 +29,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Vector;
 import nl.astron.lofar.lofarutils.LofarUtils;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
-import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
+import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
+import nl.astron.lofar.sas.otb.jotdb3.jVICnodeDef;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import org.apache.log4j.Logger;
 

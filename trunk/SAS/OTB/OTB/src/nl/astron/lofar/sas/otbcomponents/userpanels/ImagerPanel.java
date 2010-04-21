@@ -36,9 +36,9 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
+import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
+import nl.astron.lofar.sas.otb.jotdb3.jOTDBparam;
+import nl.astron.lofar.sas.otb.jotdb3.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
@@ -551,7 +551,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
     
     private void saveInput() {
         //Imager specific parameters       
-        if (itsDataSet != null && !inputDataset.equals(itsDataSet.limits)) {  
+        if (itsDataSet != null && !inputDataset.getText().equals(itsDataSet.limits)) {
             itsDataSet.limits = inputDataset.getText();
             saveNode(itsDataSet);
         }        
@@ -559,7 +559,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
             itsDataColumn.limits = inputDatacolumn.getSelectedItem().toString();
             saveNode(itsDataColumn);
         }        
-        if (itsMinUV != null && !inputMinUV.equals(itsMinUV.limits)) {  
+        if (itsMinUV != null && !inputMinUV.getText().equals(itsMinUV.limits)) {
             itsMinUV.limits = inputMinUV.getText();
             saveNode(itsMinUV);
         }        
@@ -569,23 +569,23 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
             itsType.limits = inputType.getSelectedItem().toString();
             saveNode(itsType);
         }        
-        if (itsWMax != null && !inputWmax.equals(itsWMax.limits)) {  
+        if (itsWMax != null && !inputWmax.getText().equals(itsWMax.limits)) {
             itsWMax.limits = inputWmax.getText();
             saveNode(itsWMax);
         }        
-        if (itsNWPlanes != null && !inputNWPlanes.equals(itsNWPlanes.limits)) {  
+        if (itsNWPlanes != null && !inputNWPlanes.getText().equals(itsNWPlanes.limits)) {
             itsNWPlanes.limits = inputNWPlanes.getText();
             saveNode(itsNWPlanes);
         }        
-        if (itsOverSample != null && !inputOversample.equals(itsOverSample.limits)) {  
+        if (itsOverSample != null && !inputOversample.getText().equals(itsOverSample.limits)) {
             itsOverSample.limits = inputOversample.getText();
             saveNode(itsOverSample);
         }        
-        if (itsCutOff != null && !inputCutOff.equals(itsCutOff.limits)) {  
+        if (itsCutOff != null && !inputCutOff.getText().equals(itsCutOff.limits)) {
             itsCutOff.limits = inputCutOff.getText();
             saveNode(itsCutOff);
         }        
-        if (itsNFacets != null && !inputNFacets.equals(itsNFacets.limits)) {  
+        if (itsNFacets != null && !inputNFacets.getText().equals(itsNFacets.limits)) {
             itsNFacets.limits = inputNFacets.getText();
             saveNode(itsNFacets);
         }        
@@ -595,11 +595,11 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
             itsStokes.limits = getStokes();
             saveNode(itsStokes);
         }        
-        if (itsShape != null && !inputShape.equals(itsNFacets.limits)) {  
+        if (itsShape != null && !inputShape.getText().equals(itsNFacets.limits)) {
             itsShape.limits = inputShape.getText();
             saveNode(itsShape);
         }        
-        if (itsCellSize != null && !inputCellSize.equals(itsCellSize.limits)) {  
+        if (itsCellSize != null && !inputCellSize.getText().equals(itsCellSize.limits)) {
             itsCellSize.limits = inputCellSize.getText();
             saveNode(itsCellSize);
         }        

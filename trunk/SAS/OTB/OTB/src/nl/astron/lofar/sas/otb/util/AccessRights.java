@@ -23,7 +23,7 @@
 package nl.astron.lofar.sas.otb.util;
 
 import nl.astron.lofar.sas.otb.MainFrame;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
+import nl.astron.lofar.sas.otb.jotdb3.jOTDBparam;
 
 /**
  * @created 24-01-2007, 12:48

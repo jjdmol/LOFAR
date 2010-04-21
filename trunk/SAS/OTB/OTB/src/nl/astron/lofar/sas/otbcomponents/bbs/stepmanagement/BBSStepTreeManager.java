@@ -23,7 +23,7 @@
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
 import javax.swing.event.TreeModelEvent;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
+import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.treemanagers.GenericTreeManager;
 import nl.astron.lofar.sas.otb.util.treemanagers.ITreeManager;

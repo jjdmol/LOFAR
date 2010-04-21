@@ -61,7 +61,7 @@
                       </Group>
                       <Group type="102" alignment="0" attributes="0">
                           <Component id="labelClockMode" min="-2" pref="86" max="-2" attributes="1"/>
-                          <EmptySpace pref="10" max="32767" attributes="0"/>
+                          <EmptySpace pref="8" max="32767" attributes="0"/>
                           <Component id="inputClockMode" min="-2" pref="131" max="-2" attributes="1"/>
                           <EmptySpace min="-2" pref="53" max="-2" attributes="0"/>
                       </Group>
@@ -509,7 +509,7 @@
                   <Component id="remoteStationSelectionPanel" min="-2" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="31" max="-2" attributes="0"/>
                   <Component id="europeStationSelectionPanel" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace pref="113" max="32767" attributes="0"/>
+                  <EmptySpace pref="116" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -540,9 +540,9 @@
       <Layout>
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Component id="europeStationLayout" alignment="0" pref="411" max="32767" attributes="1"/>
-              <Component id="remoteStationLayout" alignment="0" pref="411" max="32767" attributes="1"/>
-              <Component id="coreStationLayout" alignment="1" pref="411" max="32767" attributes="1"/>
+              <Component id="europeStationLayout" alignment="0" pref="419" max="32767" attributes="1"/>
+              <Component id="remoteStationLayout" alignment="0" pref="419" max="32767" attributes="1"/>
+              <Component id="coreStationLayout" alignment="1" pref="419" max="32767" attributes="1"/>
           </Group>
         </DimensionLayout>
         <DimensionLayout dim="1">

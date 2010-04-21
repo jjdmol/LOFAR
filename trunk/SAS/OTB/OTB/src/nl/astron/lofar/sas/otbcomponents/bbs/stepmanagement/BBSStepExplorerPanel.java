@@ -32,10 +32,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.table.DefaultTableModel;
 import nl.astron.lofar.sas.otb.MainFrame;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
-import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStep;
-import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepData;
-import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepDataManager;
+import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.operations.IBBSStepOperationPanel;
 import org.apache.log4j.Logger;
 
@@ -175,6 +172,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
      *
      * @parm theBBSStep the BBSStep object to show data of.
      */
+    @SuppressWarnings("static-access")
     private void fillBBSGui(BBSStep theBBSStep) {
         
         this.stepExplorerStepNameText.setText(theBBSStep.getName());
@@ -1559,6 +1557,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
     }//GEN-LAST:event_addInstrumentButtonActionPerformed
     
+    @SuppressWarnings("static-access")
     private void noInstrumentModelCheckboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_noInstrumentModelCheckboxItemStateChanged
      if(this.noInstrumentModelCheckbox.isSelected()){
             this.stepExplorerInstrumentModelList.setEnabled(false);
@@ -1578,6 +1577,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
     }//GEN-LAST:event_noInstrumentModelCheckboxItemStateChanged
     
+    @SuppressWarnings("static-access")
     private void writeOutputCheckboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_writeOutputCheckboxItemStateChanged
         if(this.writeOutputCheckbox.isSelected()){
             this.stepExplorerOutputDataText.setEnabled(false);
@@ -1588,6 +1588,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
     }//GEN-LAST:event_writeOutputCheckboxItemStateChanged
         
+    @SuppressWarnings("static-access")
     private void useAllSourcesCheckboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_useAllSourcesCheckboxItemStateChanged
         if(this.useAllSourcesCheckbox.isSelected()){
             this.stepExplorerNSourcesList.setEnabled(false);
@@ -1607,6 +1608,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
     }//GEN-LAST:event_useAllSourcesCheckboxItemStateChanged
         
+    @SuppressWarnings("static-access")
     private void stepExplorerOperationComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_stepExplorerOperationComboBoxItemStateChanged
         stepExplorerOperationComboBox.setBackground(this.NOT_INHERITED_FROM_PARENT);
         String item = stepExplorerOperationComboBox.getSelectedItem().toString();
@@ -1628,6 +1630,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
     }//GEN-LAST:event_stepExplorerOperationComboBoxItemStateChanged
     
+    @SuppressWarnings({"static-access", "static-access"})
     private void baselineUseAllCheckboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_baselineUseAllCheckboxItemStateChanged
         if(baselineUseAllCheckbox.isSelected()){
             this.baselineStationsTable.setBackground(Color.LIGHT_GRAY);

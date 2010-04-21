@@ -57,10 +57,22 @@ public class MainFrame extends javax.swing.JFrame {
     private String itsServer               = "";
     private String itsPort                 = "";
     private String itsDBName               = "No Database";
-    
+
+    private String itsServiceName          = "";
+
+
     
     /** nested class for plugin panel administration */
     public class PluginPanelInfo {
+        /** panel reference */
+        public JPanel panel;
+        /** classname including complete package name */
+        public String className;
+        /** toolbar button reference */
+        public JButton toolbarButton;
+        /** menuitem reference */
+        public JMenuItem menuItem;
+
         /** Creates new PluginPanelInfo */
         public PluginPanelInfo(JPanel p, String s) {
             this(p,s,null,null);
@@ -81,14 +93,6 @@ public class MainFrame extends javax.swing.JFrame {
             menuItem = m;
         }
         
-        /** panel reference */
-        public JPanel panel;
-        /** classname including complete package name */
-        public String className;
-        /** toolbar button reference */
-        public JButton toolbarButton;
-        /** menuitem reference */
-        public JMenuItem menuItem;
     }
     
     /** Todo Stub can be used to place ToDo panels on methods that still need to be coded during development */
@@ -462,46 +466,68 @@ public class MainFrame extends javax.swing.JFrame {
             if(loginDialog.isOk()) {
                 String userName = loginDialog.getUserName();
                 String password = loginDialog.getPassword();
+                itsDBName       = loginDialog.getDBName();
 
                 logger.info("User: " + userName);
 
-                // create a useraccount object
+                // create a useraccount object Interaction object
                 try {
-                    itsUserAccount = new UserAccount(SharedVars.getOTDBrmi(), userName, password);
-                    accessAllowed = true;
+                    itsUserAccount = new UserAccount(userName, password);
                     itsMACInteraction.setCurrentUser(userName,password);
-                    
+
+
                     statusPanelMainFrame.setText(StatusPanel.MIDDLE,"User: "+userName);
+
                     String aC = "NO Main DB connection";
-                    // Start the actual RMI connection
+                  // Start the actual RMI connection
                     if (! SharedVars.getOTDBrmi().isConnected()) {
-                        if (! SharedVars.getOTDBrmi().openConnections()) {
-                            logger.debug("Error: failed to open RMI Connections");
+                        if (! SharedVars.getOTDBrmi().openAccessConnection()) {
+                            logger.debug("Error: failed to open RMI Access Connections");
                         } else {
                             aC = "DB connection to: "+OtdbRmi.getRMIServerName()+" Port: "+OtdbRmi.getRMIServerPort();
                         }
                     }
                     statusPanelMainFrame.setText(StatusPanel.LEFT,aC);
-                    logger.debug("Trying to get DatabaseName");
-                    if (itsSharedVars == null || SharedVars.getOTDBrmi() == null || 
-                           OtdbRmi.getRemoteOTDB() == null) {
+
+                    if (itsSharedVars == null || SharedVars.getOTDBrmi() == null ||
+                            OtdbRmi.getRemoteOTDBaccess()==null) {
                         logger.info("Can't connect to Server. Session cancelled");
                         System.exit(0);
+                   } else {
+
+                        // we now have the OTDBaccess object and we can login, and obtain the OTDBconnection servicename.
+                        logger.trace("remoteAccess object available, trying to login");
+                        try {
+                            itsServiceName = OtdbRmi.getRemoteOTDBaccess().login(userName,password,itsDBName);
+                            if (!itsServiceName.equals("")) {
+                                OtdbRmi.setRMIRegistryName(itsServiceName);
+
+                                // now we have the registry name available we can open the remaining connections
+                                if (!OtdbRmi.openConnections()) {
+                                    logger.info("Couldn't open remaining connections. Session cancelled");
+                                    System.exit(0);
+                                }
+                            } else {
+                                throw new NoAccessException("Couldn't get a servicename from server. Name/Pwd/DBname wrong?");
+                            }
+                       } catch (RemoteException ex){
+                            logger.debug("Failed to login on RemoteAccess");
+                       }
                     }
-                    try {
-                         itsDBName=OtdbRmi.getRemoteOTDB().getDBName();
-                    } catch (RemoteException ex) {
-                        logger.error("Couldn't get DatabaseName"+ ex);
-                    }
+
+
 
                     logger.debug("DatabaseName found: "+ itsDBName);
                     statusPanelMainFrame.setText(StatusPanel.RIGHT,"Used Database: " +itsDBName);
+                    accessAllowed = true;
                     registerDefaultPlugins();
                     registerUserPlugins();
-                }
-                catch(NoAccessException e) {
+                } catch(NoAccessException e) {
                     logger.fatal("Access Violation: " + e.getMessage());
-                    JOptionPane.showMessageDialog(this,"The supplied username/password combination is unknown","Unknown username/password",JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this,"The supplied username/password/database combination is unknown","Unknown username/password/database",JOptionPane.ERROR_MESSAGE);
+                    accessAllowed = false;
+                } catch(ConnectionFailedException e) {
+                    JOptionPane.showMessageDialog(this,e.getMessage(),e.getMessage(),JOptionPane.ERROR_MESSAGE);
                     accessAllowed = false;
                 }
             }
