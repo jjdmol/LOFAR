@@ -209,15 +209,21 @@ void Job::startStorageProcesses()
 // use IP addresses, since the I/O node cannot resolve host names
   itsStorageHostNames = itsParset.getStringVector("OLAP.OLAP_Conn.IONProc_Storage_ServerHosts");
 
-  const char *userName   = itsParset.getString("OLAP.Storage.userName").c_str();
-  const char *sshKey     = (std::string("/globalhome/") + userName + "/.ssh/id_rsa").c_str();
-  const char *executable = itsParset.getString("OLAP.Storage.msWriter").c_str();
-  const char *parset     = itsParset.name().c_str();
+  std::string userName   = itsParset.getString("OLAP.Storage.userName");
+  std::string sshKey     = std::string("/globalhome/") + userName + "/.ssh/id_rsa";
+  std::string executable = itsParset.getString("OLAP.Storage.msWriter");
+  std::string parset     = itsParset.name();
 
   itsStoragePIDs.resize(itsStorageHostNames.size());
 
   for (unsigned rank = 0; rank < itsStorageHostNames.size(); rank ++)
-    forkSSH(sshKey, userName, itsStorageHostNames[rank].c_str(), executable, boost::lexical_cast<std::string>(rank).c_str(), parset, itsStoragePIDs[rank]);
+    forkSSH(sshKey.c_str(),
+	    userName.c_str(),
+	    itsStorageHostNames[rank].c_str(),
+	    executable.c_str(),
+	    boost::lexical_cast<std::string>(rank).c_str(),
+	    parset.c_str(),
+	    itsStoragePIDs[rank]);
 }
 
 
