@@ -22,6 +22,7 @@
 package nl.astron.lofar.sas.otb.jotdb3;
 
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import nl.astron.lofar.lofarutils.remoteFile;
@@ -38,6 +39,7 @@ public class jOTDBaccess implements jOTDBaccessInterface
     private String itsDBpwd="";
     private String itsDB="";
     private String itsDBhost="";
+    private String itsRMIhost="";
     private int itsRMIobjectPort=0;
     private int itsRMIport = 0;
     private Registry itsLocalRegistry = null;
@@ -56,12 +58,14 @@ public class jOTDBaccess implements jOTDBaccessInterface
         System.loadLibrary("jotdb3");
     }
 
-   public jOTDBaccess( String aDBhost, int anRMIport, int anRMIobjectPort,Registry aLocalRegistry) throws RemoteException
+   public jOTDBaccess( String aDBhost, String anRMIhost,int anRMIport, int anRMIobjectPort,Registry aLocalRegistry) throws RemoteException
    {
        itsDBhost=aDBhost;
+       itsRMIhost=anRMIhost;
        itsRMIport=anRMIport;
        itsRMIobjectPort=anRMIobjectPort;
        itsLocalRegistry=aLocalRegistry;
+       itsLocalRegistry = LocateRegistry.getRegistry(aDBhost, itsRMIport);
        // each server has an unique rmi port, so make seqNr equal 
        // to that to obtain more or less unique name_nr names
        seqNr=itsRMIport;
@@ -136,7 +140,7 @@ public class jOTDBaccess implements jOTDBaccessInterface
 
             //A custom port was specified, export the object using the port specified
             jOTDBinterface stub =
-                    (jOTDBinterface) UnicastRemoteObject.exportObject((jOTDBinterface)connection, itsRMIport);
+                    (jOTDBinterface) UnicastRemoteObject.exportObject((jOTDBinterface)connection, itsRMIobjectPort);
             if (stub != null) {
                 logger.info("set up new jOTDBconnection: " + stub);
                 logger.info("jOTDBserver publishing service " + serviceName + " in local registry...");
@@ -162,7 +166,7 @@ public class jOTDBaccess implements jOTDBaccessInterface
 
             //A custom port was specified, export the object using the port specified
             jTreeMaintenanceInterface stub =
-                    (jTreeMaintenanceInterface) UnicastRemoteObject.exportObject(treeMaintenance, itsRMIport);
+                    (jTreeMaintenanceInterface) UnicastRemoteObject.exportObject(treeMaintenance, itsRMIobjectPort);
             if (stub != null) {
                 logger.info("set up new jTreeMaintenance: " + stub);
                 logger.info("jOTDBserver publishing service " + serviceName + " in local registry...");
@@ -188,7 +192,7 @@ public class jOTDBaccess implements jOTDBaccessInterface
 
             //A custom port was specified, export the object using the port specified
             jCampaignInterface stub =
-                    (jCampaignInterface) UnicastRemoteObject.exportObject(campaign, itsRMIport);
+                    (jCampaignInterface) UnicastRemoteObject.exportObject(campaign, itsRMIobjectPort);
             if (stub != null) {
                 logger.info("set up new jCampaign: " + stub);
                 logger.info("jOTDBserver publishing service " + serviceName + " in local registry...");
@@ -214,7 +218,7 @@ public class jOTDBaccess implements jOTDBaccessInterface
 
             //A custom port was specified, export the object using the port specified
             jTreeValueInterface stub =
-                    (jTreeValueInterface) UnicastRemoteObject.exportObject(treeValue, itsRMIport);
+                    (jTreeValueInterface) UnicastRemoteObject.exportObject(treeValue, itsRMIobjectPort);
             if (stub != null) {
                 logger.info("set up new jTreeValue: " + stub);
                 logger.info("jOTDBserver publishing service " + serviceName + " in local registry...");
@@ -240,7 +244,7 @@ public class jOTDBaccess implements jOTDBaccessInterface
 
             //A custom port was specified, export the object using the port specified
             jConverterInterface stub =
-                    (jConverterInterface) UnicastRemoteObject.exportObject(converter, itsRMIport);
+                    (jConverterInterface) UnicastRemoteObject.exportObject(converter, itsRMIobjectPort);
             if (stub != null) {
                 logger.info("set up new jConverter: " + stub);
                 logger.info("jOTDBserver publishing service " + serviceName + " in local registry...");
@@ -266,7 +270,7 @@ public class jOTDBaccess implements jOTDBaccessInterface
 
             //A custom port was specified, export the object using the port specified
             remoteFileInterface stub =
-                    (remoteFileInterface) UnicastRemoteObject.exportObject(aRemoteFile, itsRMIport);
+                    (remoteFileInterface) UnicastRemoteObject.exportObject(aRemoteFile, itsRMIobjectPort);
             if (stub != null) {
                 logger.info("set up new remoteFile: " + stub);
                 logger.info("jOTDBserver publishing service " + serviceName + " in local registry...");

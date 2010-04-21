@@ -108,7 +108,7 @@ public class jOTDBserver {
                 logger.info("jOTDBserver setting up RMI server objects on port "+rmiObjectPort+" ...");
             }
 
-            access = new jOTDBaccess(args[0], rmiPort,rmiObjectPort,registry);
+            access = new jOTDBaccess(args[0], args[1],rmiPort,rmiObjectPort,registry);
             jOTDBaccessInterface stub =
                 (jOTDBaccessInterface) UnicastRemoteObject.exportObject(access, rmiObjectPort);
 
