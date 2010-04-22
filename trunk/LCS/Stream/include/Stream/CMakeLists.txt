@@ -4,8 +4,7 @@ set (inst_HEADERS
   FileStream.h
   NullStream.h
   SocketStream.h
-  Stream.h
-  SystemCallException.h)
+  Stream.h)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 

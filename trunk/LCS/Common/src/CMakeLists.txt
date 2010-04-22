@@ -24,6 +24,7 @@ set(common_LIB_SRCS
   Stopwatch.cc
   StreamUtil.cc
   StringUtil.cc
+  SystemCallException.cc
   SystemUtil.cc
   Timer.cc
   TypeNames.cc

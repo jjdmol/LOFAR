@@ -25,14 +25,13 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <Common/LofarLogger.h>
-#include <Common/hexdump.h>
 #include <Common/DataConvert.h>
+#include <Common/LofarLogger.h>
+#include <Common/SystemCallException.h>
 #include <Common/Timer.h>
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/Exceptions.h>
 #include <Stream/NullStream.h>
-#include <Stream/SystemCallException.h>
 #include <BeamletBuffer.h>
 #include <InputThread.h>
 #include <RSP.h>

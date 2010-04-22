@@ -21,13 +21,13 @@
 #include <lofar_config.h>
 
 #include <CommandServer.h>
-#include <Common/LofarLogger.h>
 #include <Common/Exceptions.h>
+#include <Common/LofarLogger.h>
+#include <Common/SystemCallException.h>
 #include <ION_main.h>
 #include <Job.h>
 #include <JobQueue.h>
 #include <Stream/SocketStream.h>
-#include <Stream/SystemCallException.h>
 #include <StreamMultiplexer.h>
 
 #include <string>

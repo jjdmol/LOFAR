@@ -8,7 +8,6 @@ lofar_add_library(stream
   FileStream.cc
   NullStream.cc
   SocketStream.cc
-  Stream.cc
-  SystemCallException.cc)
+  Stream.cc)
 
 lofar_add_bin_program(versionstream versionstream.cc)
