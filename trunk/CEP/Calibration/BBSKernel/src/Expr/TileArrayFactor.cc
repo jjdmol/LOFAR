@@ -59,26 +59,26 @@ const JonesMatrix::View TileArrayFactor::evaluateImpl(const Grid &grid,
     ASSERT(reference(1).nx() == 1
         && static_cast<size_t>(reference(1).ny()) == nTime);
 
-    // Compute propagation vectors.
-    Matrix sin_phi = sin(direction(0));
-    Matrix cos_phi = cos(direction(0));
-    // Convert from elevation to zenith angle.
-    Matrix theta = Matrix(C::pi_2) - direction(1);
-    Matrix sin_theta = sin(theta);
+    // Compute propagation vectors. Note: The propagation vectors are computed
+    // in the local East, North, Up coordinate system, to allow subsequent
+    // computation of the inner product with the element (dipole) position
+    // vectors (which are expressed in the same system). Azimuth is defined
+    // North over East.
+    Matrix sin_az = sin(direction(0));
+    Matrix cos_az = cos(direction(0));
+    Matrix cos_el = cos(direction(1));
 
     Matrix k[2];
-    k[0] = -sin_theta * cos_phi;
-    k[1] = -sin_theta * sin_phi;
+    k[0] = -cos_el * sin_az;
+    k[1] = -cos_el * cos_az;
 
-    Matrix sin_phi0 = sin(reference(0));
-    Matrix cos_phi0 = cos(reference(0));
-    // Convert from elevation to zenith angle.
-    Matrix theta0 = Matrix(C::pi_2) - reference(1);
-    Matrix sin_theta0 = sin(theta0);
+    Matrix sin_az0 = sin(reference(0));
+    Matrix cos_az0 = cos(reference(0));
+    Matrix cos_el0 = cos(reference(1));
 
     Matrix k0[2];
-    k0[0] = -sin_theta0 * cos_phi0;
-    k0[1] = -sin_theta0 * sin_phi0;
+    k0[0] = -cos_el0 * sin_az0;
+    k0[1] = -cos_el0 * cos_az0;
 
     // Compute difference vector.
     k[0] = k0[0] - k[0];
