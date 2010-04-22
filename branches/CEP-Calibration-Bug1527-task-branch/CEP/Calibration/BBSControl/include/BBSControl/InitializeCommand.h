@@ -38,7 +38,7 @@ namespace LOFAR
   namespace BBS
   {
     class Strategy;
-    
+
     // \addtogroup BBSControl
     // @{
 
@@ -75,31 +75,36 @@ namespace LOFAR
       // Accept a CommandVisitor that wants to process \c *this.
       virtual CommandResult accept(CommandVisitor &visitor) const;
 
-      string getInputColumn() const
+      string inputColumn() const
       { return itsInputColumn; }
 
-      vector<string> getStations() const
-      { return itsStations; }
-      
-      Correlation getCorrelation() const
-      { return itsCorrelation; }
-      
+      Selection selection() const
+      { return itsSelection; }
+
+//      vector<string> getStations() const
+//      { return itsStations; }
+
+//      CorrelationFilter getCorrelationFilter() const
+//      { return itsCorrelationFilter; }
+
       bool useSolver() const
       { return itsUseSolver; }
 
     private:
       // Name of the input column.
-      string                 itsInputColumn;
+      string            itsInputColumn;
 
-      // Names of the stations to use. Names may contains wildcards, like \c *
-      // and \c ?.
-      vector<string>         itsStations;
+      Selection         itsSelection;
 
-      // Correlation product selection.
-      Correlation            itsCorrelation;
+//      // Names of the stations to use. Names may contains wildcards, like \c *
+//      // and \c ?.
+//      vector<string>    itsStations;
+
+//      // Correlation product selection.
+//      CorrelationFilter itsCorrelationFilter;
 
       // Connect to the global solver?
-      bool                   itsUseSolver;
+      bool              itsUseSolver;
     };
 
     // @}

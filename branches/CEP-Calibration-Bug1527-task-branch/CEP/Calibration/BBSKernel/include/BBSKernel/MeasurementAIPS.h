@@ -56,7 +56,7 @@ public:
         unsigned int idField = 0,
         unsigned int idDataDescription = 0);
 
-    virtual VisDimensions getDimensions(const VisSelection &selection) const;
+    virtual VisDimensions dimensions(const VisSelection &selection) const;
 
     virtual VisData::Ptr read(const VisSelection &selection,
         const string &column = "DATA", bool readUVW = true) const;
@@ -70,10 +70,10 @@ private:
     void initDimensions();
 
     casa::Table getTableSelection(const casa::Table &table,
-        const VisSelection &selection) const;
+        const VisSelection &selection, const BaselineMask &mask) const;
     casa::Slicer getCellSlicer(const VisSelection &selection) const;
     VisDimensions getDimensionsImpl(const casa::Table tab_selection,
-        const casa::Slicer slicer) const;
+        const BaselineMask &mask, const casa::Slicer slicer) const;
 
     casa::MeasurementSet    itsMS;
     casa::Table             itsMainTableView;

@@ -1,6 +1,7 @@
-//# Types.h: Types used in the kernel.
+//# LinearToCircularRL.h: Jones matrix to convert from linear polarization
+//# coordinates to circular (RL) coordinates.
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2010
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,65 +21,42 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_TYPES_H
-#define LOFAR_BBSKERNEL_TYPES_H
+#ifndef LOFAR_BBS_EXPR_LINEARTOCIRCULARRL_H
+#define LOFAR_BBS_EXPR_LINEARTOCIRCULARRL_H
 
-#include <Common/lofar_iosfwd.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
-#include <Common/LofarTypes.h>
+// \file
+// Jones matrix to convert from linear polarization coordinates to circular (RL)
+// coordinates.
 
-#include <utility>
+#include <BBSKernel/Expr/Expr.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
-using std::pair;
 
-// \addtogroup BBSKernel
+// \addtogroup Expr
 // @{
 
-typedef fcomplex                sample_t;
-typedef uint8                   flag_t;
-typedef uint8                   tslot_flag_t;
-typedef pair<uint32, uint32>    baseline_t;
-
-enum AxisName
-{
-    FREQ,
-    TIME,
-    N_AxisName
-};
-
-enum ParmCategory
-{
-    INSTRUMENT,
-    SKY,
-    N_ParmCategory
-};
-
-template <typename T_VALUE>
-class Interval
+class LinearToCircularRL: public NullaryExpr<JonesMatrix>
 {
 public:
-    Interval()
-    {
-    }
+    typedef shared_ptr<LinearToCircularRL>          Ptr;
+    typedef shared_ptr<const LinearToCircularRL>    ConstPtr;
 
-    Interval(T_VALUE start, T_VALUE end)
-        :   start(start),
-            end(end)
-    {
-    }
+    LinearToCircularRL();
 
-    T_VALUE start;
-    T_VALUE end;
+protected:
+    virtual const JonesMatrix evaluateExpr(const Request&, Cache&, unsigned int)
+        const;
+
+private:
+    JonesMatrix itsH;
 };
 
 // @}
 
-} // namespace BBS
-} // namespace LOFAR
+} //# namespace BBS
+} //# namespace LOFAR
 
 #endif

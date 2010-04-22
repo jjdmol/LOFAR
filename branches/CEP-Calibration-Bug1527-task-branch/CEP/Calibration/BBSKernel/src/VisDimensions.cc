@@ -1,4 +1,5 @@
-//# VisDimensions.cc: 
+//# VisDimensions.cc: Represents the dimensions of a block of visibility data
+//# along for axes (frequency, time, baseline, correlation).
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -23,7 +24,7 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/VisDimensions.h>
-#include <BBSKernel/Exceptions.h>
+
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_iomanip.h>
@@ -33,115 +34,45 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 using LOFAR::operator<<;
-
 
 void VisDimensions::setGrid(const Grid &grid)
 {
     itsGrid = grid;
 }
 
-
-void VisDimensions::setBaselines(const vector<baseline_t> &baselines)
-{
-    itsBaselineIndex.clear();
-    itsBaselines = baselines;
-        
-    for(size_t i = 0; i < itsBaselines.size(); ++i)
-    {
-        itsBaselineIndex[itsBaselines[i]] = i;
-    }
-}
-
-
-void VisDimensions::setPolarizations(const vector<string> &polarizations)
-{
-    itsPolarizationIndex.clear();
-    itsPolarizations = polarizations;
-        
-    for(size_t i = 0; i < itsPolarizations.size(); ++i)
-    {
-        itsPolarizationIndex[itsPolarizations[i]] = i;
-    }
-}
-
-
-bool VisDimensions::hasBaseline(baseline_t baseline) const
-{
-    return (itsBaselineIndex.find(baseline) != itsBaselineIndex.end());
-}
-
-
-size_t VisDimensions::getBaselineIndex(baseline_t baseline) const
-{
-    map<baseline_t, size_t>::const_iterator it =
-        itsBaselineIndex.find(baseline);
-
-    if(it != itsBaselineIndex.end())
-    {
-        return it->second;
-    }
-    THROW(BBSKernelException, "Request for index of unknown baseline "
-        << baseline.first << " - " << baseline.second);
-}
-
-
-bool VisDimensions::hasPolarization(const string &polarization) const
-{
-    return (itsPolarizationIndex.find(polarization) !=
-        itsPolarizationIndex.end());
-}
-
-
-size_t VisDimensions::getPolarizationIndex(const string &polarization) const
-{
-    map<string, size_t>::const_iterator it =
-        itsPolarizationIndex.find(polarization);
-        
-    if(it != itsPolarizationIndex.end())
-    {
-        return it->second;
-    }
-    THROW(BBSKernelException, "Request for index of unknown polarization "
-        << polarization);
-}
-
-
 ostream &operator<<(ostream &out, const VisDimensions &obj)
 {
-    pair<double, double> freqRange = obj.getFreqRange();
-    pair<double, double> timeRange = obj.getTimeRange();
+    pair<double, double> freqRange = obj[FREQ]->range();
+    pair<double, double> timeRange = obj[TIME]->range();
 
-    out << "Frequency      : "
+    out << "Frequency     : "
         << setprecision(3) << freqRange.first / 1e6 << " MHz"
         << " - "
         << setprecision(3) << freqRange.second / 1e6 << " MHz" << endl;
-    out << "Bandwidth      : "
-        << setprecision(3) << (freqRange.second - freqRange.first) / 1e3
-        << " kHz (" << obj.getChannelCount() << " channel(s) of "
-        << setprecision(3)
-        << (freqRange.second - freqRange.first) / obj.getChannelCount()
-        << " Hz)" << endl;
-    out << "Time           : "
+    out << "Bandwidth     : "
+        << setprecision(3) << (freqRange.second - freqRange.first) / 1e6
+        << " MHz (" << obj.nFreq() << " channel(s) of " << setprecision(3)
+        << (freqRange.second - freqRange.first) / obj.nFreq() << " Hz)" << endl;
+    out << "Time          : "
         << casa::MVTime::Format(casa::MVTime::YMD, 6)
         << casa::MVTime(casa::Quantum<casa::Double>(timeRange.first, "s"))
         << " - "
         << casa::MVTime::Format(casa::MVTime::YMD, 6)
         << casa::MVTime(casa::Quantum<casa::Double>(timeRange.second, "s"))
         << endl;
-    out << "Duration       : "
+    out << "Duration      : "
         << setprecision(3) << (timeRange.second - timeRange.first) / 3600.0
-        << " hour (" << obj.getTimeslotCount() << " sample(s) of "
-        << setprecision(3)
-        << (timeRange.second - timeRange.first) / obj.getTimeslotCount()
+        << " hour (" << obj.nTime() << " sample(s) of " << setprecision(3)
+        << (timeRange.second - timeRange.first) / obj.nTime()
         << " s on average)" << endl;
-    out << "Baseline count : " << obj.getBaselineCount() << endl;
-    out << "Polarization(s): " << obj.getPolarizations();
-    
+    out << "Baseline count: " << obj.nBaselines() << endl;
+    out << "Correlation(s): " << obj.correlations();
+
     return out;
-}    
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

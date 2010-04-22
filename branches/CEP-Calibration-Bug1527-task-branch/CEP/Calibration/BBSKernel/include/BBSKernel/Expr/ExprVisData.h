@@ -1,5 +1,5 @@
-//# ExprVisData.h: Make visibility data from an observation available to the
-//# expression tree.
+//# ExprVisData.h: Make visibility data from an observation available for use
+//# in an expression tree.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,7 +28,8 @@
 #include <BBSKernel/VisData.h>
 
 // \file
-// Make visibility data from an observation available to the expression tree.
+// Make visibility data from an observation available for use in an expression
+// tree.
 
 namespace LOFAR
 {
@@ -44,27 +45,91 @@ public:
     typedef shared_ptr<ExprVisData>        Ptr;
     typedef shared_ptr<const ExprVisData>  ConstPtr;
 
-    ExprVisData(const VisData::Ptr &chunk, const baseline_t &baseline);
+    ExprVisData(const VisData::Ptr &chunk, const baseline_t &baseline,
+        Correlation element00 = XX, Correlation element01 = XY,
+        Correlation element10 = YX, Correlation element11 = YY);
+
+//    void setCorrelations(Correlation element00, Correlation element01, Correlation element10,
+//        Correlation element11);
 
 protected:
-    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache,
+    virtual const JonesMatrix evaluateExpr(const Request &request, Cache&,
         unsigned int grid) const;
 
 private:
-    vector<pair<size_t, size_t> > makeAxisMapping(const Axis::ShPtr &from,
-        const Axis::ShPtr &to) const;
+    template <typename T_ITER>
+    void makeAxisMapping(const Axis::ShPtr &from, const Axis::ShPtr &to,
+        T_ITER out) const;
 
-    FlagArray copyFlags(const Grid &grid, const string &product,
+    void setCorrelation(size_t element, Correlation correlation);
+
+    FlagArray copyFlags(const Grid &grid, size_t element,
         const vector<pair<size_t, size_t> > (&mapping)[2]) const;
 
-    Matrix copyData(const Grid &grid, const string &product,
+    Matrix copyData(const Grid &grid, size_t element,
         const vector<pair<size_t, size_t> > (&mapping)[2]) const;
 
     VisData::Ptr    itsChunk;
-    unsigned int    itsBaselineIndex;
+    size_t          itsBaseline;
+    bool            itsCorrMask[4];
+    size_t          itsCorr[4];
 };
 
 // @}
+
+// -------------------------------------------------------------------------- //
+// - ExprVisData implementation                                             - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_ITER>
+void ExprVisData::makeAxisMapping(const Axis::ShPtr &from,
+    const Axis::ShPtr &to, T_ITER out) const
+{
+    Interval<double> overlap(std::max(from->start(), to->start()),
+        std::min(from->end(), to->end()));
+
+    if(overlap.start >= overlap.end || casa::near(overlap.start, overlap.end))
+    {
+        return;
+    }
+
+    Interval<size_t> domain;
+    domain.start = from->locate(overlap.start);
+    domain.end = from->locate(overlap.end, false, domain.start);
+
+    // Intervals are inclusive by convention.
+    const size_t nCells = domain.end - domain.start + 1;
+
+    // Special case for the first cell: cell center may be located outside of
+    // the overlap between the "from" and "to" axis.
+    size_t target = 0;
+    double center = from->center(domain.start);
+    if(center > overlap.start || casa::near(center, overlap.start))
+    {
+        target = to->locate(center);
+        *out++ = make_pair(domain.start, target);
+    }
+
+    for(size_t i = domain.start + 1; i < domain.end; ++i)
+    {
+        target = to->locate(from->center(i), true, target);
+        *out++ = make_pair(i, target);
+    }
+
+    if(nCells > 1)
+    {
+        // Special case for the last cell: cell center may be located outside of
+        // the overlap between the "from" and "to" axis.
+        center = from->center(domain.end);
+        if(center < overlap.end && !casa::near(center, overlap.end))
+        {
+            target = to->locate(center, false, target);
+            *out++ = make_pair(domain.end, target);
+        }
+    }
+}
+
+
 
 } // namespace BBS
 } // namespace LOFAR

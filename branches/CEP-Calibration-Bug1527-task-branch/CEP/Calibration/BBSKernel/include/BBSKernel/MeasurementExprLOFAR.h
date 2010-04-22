@@ -1,4 +1,5 @@
-//# Model.h: Measurement equation for the LOFAR telescope and its environment.
+//# MeasurementExprLOFAR.h: Measurement equation for the LOFAR telescope and its
+//# environment.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -20,20 +21,22 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_MODEL_H
-#define LOFAR_BBSKERNEL_MODEL_H
+#ifndef LOFAR_BBSKERNEL_MEASUREMENTEXPRLOFAR_H
+#define LOFAR_BBSKERNEL_MEASUREMENTEXPRLOFAR_H
+
+// \file
+// Measurement equation for the LOFAR telescope and its environment.
 
 #include <BBSKernel/ElementBeamExpr.h>
-#include <BBSKernel/ExprSet.h>
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/IonosphereExpr.h>
+#include <BBSKernel/MeasurementExpr.h>
 #include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/ParmManager.h>
 #include <BBSKernel/VisData.h>
 
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ExprParm.h>
 #include <BBSKernel/Expr/Scope.h>
 #include <BBSKernel/Expr/Source.h>
 
@@ -50,18 +53,16 @@ namespace LOFAR
 {
 namespace BBS
 {
-class ModelConfig;
-
 // \addtogroup BBSKernel
 // @{
 
-class Model: public ExprSet<JonesMatrix>
+class MeasurementExprLOFAR: public MeasurementExpr
 {
 public:
-    typedef shared_ptr<Model>       Ptr;
-    typedef shared_ptr<const Model> ConstPtr;
+    typedef shared_ptr<MeasurementExprLOFAR>        Ptr;
+    typedef shared_ptr<const MeasurementExprLOFAR>  ConstPtr;
 
-    Model(const Instrument &instrument, const SourceDB &sourceDb,
+    MeasurementExprLOFAR(const Instrument &instrument, const SourceDB &sourceDb,
         const casa::MDirection &reference, double referenceFreq);
 
     void clear();
@@ -72,17 +73,26 @@ public:
     void makeInverseExpr(const ModelConfig &config, const VisData::Ptr &chunk,
         const vector<baseline_t> &baselines);
 
+    // \name MeasurementExpr interface implementation
+    // These methods form an implementation of the MeasurementExpr interface
+    // (and consequently of the ExprSet interface as well).
+    //
+    // @{
+    virtual const BaselineSeq &baselines() const;
+    virtual const CorrelationSeq &correlations() const;
+
     virtual unsigned int size() const;
     virtual Box domain() const;
 
-    virtual ParmGroup getParms() const;
-    virtual ParmGroup getSolvableParms() const;
-    virtual void setSolvableParms(const ParmGroup &solvables);
-    virtual void clearSolvableParms();
-    virtual void solvableParmsChanged();
+    virtual ParmGroup parms() const;
+    virtual ParmGroup solvables() const;
+    virtual void setSolvables(const ParmGroup &solvables);
+    virtual void clearSolvables();
+    virtual void solvablesChanged();
 
     virtual void setEvalGrid(const Grid &grid);
     virtual const JonesMatrix evaluate(unsigned int i);
+    // @}
 
 private:
     void applyCachePolicy(const ModelConfig &config) const;
@@ -158,16 +168,20 @@ private:
         const Expr<JonesMatrix>::Ptr &coherence,
         const Expr<JonesMatrix>::Ptr &rhs) const;
 
-    Instrument                              itsInstrument;
-    SourceDB                                itsSourceDb;
-    casa::MDirection                        itsPhaseReference;
-    double                                  itsReferenceFreq;
-    Request                                 itsRequest;
-    Cache                                   itsCache;
+    Instrument                      itsInstrument;
+    SourceDB                        itsSourceDb;
+    casa::MDirection                itsPhaseReference;
+    double                          itsReferenceFreq;
 
-    vector<Expr<JonesMatrix>::Ptr>          itsExpr;
-    Scope                                   itsScope;
-    CachePolicy::Ptr                        itsCachePolicy;
+    BaselineSeq                     itsBaselines;
+    CorrelationSeq                  itsCorrelations;
+
+    Request                         itsRequest;
+    Cache                           itsCache;
+
+    vector<Expr<JonesMatrix>::Ptr>  itsExpr;
+    Scope                           itsScope;
+    CachePolicy::Ptr                itsCachePolicy;
 };
 
 // @}

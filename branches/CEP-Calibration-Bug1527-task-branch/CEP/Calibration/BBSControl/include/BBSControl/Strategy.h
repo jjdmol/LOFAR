@@ -60,21 +60,24 @@ namespace LOFAR
       // Destructor.
       ~Strategy();
 
-      string getInputColumn() const
+      string inputColumn() const
       { return itsInputColumn; }
 
-      vector<string> getStations() const
-      { return itsStations; }
-      
-      Correlation getCorrelation() const
-      { return itsCorrelation; }
-      
+      Selection selection() const
+      { return itsSelection; }
+
+//      vector<string> getStations() const
+//      { return itsStations; }
+
+//      CorrelationFilter getCorrelationFilter() const
+//      { return itsCorrelationFilter; }
+
       vector<string> getTimeWindow() const
       { return itsTimeWindow; }
-      
+
       size_t getChunkSize() const
       { return itsChunkSize; }
-      
+
       bool useSolver() const
       { return itsUseSolver; }
 
@@ -92,29 +95,31 @@ namespace LOFAR
 //      { return itsRoot; }
 
       // Name of the input column.
-      string                 itsInputColumn;
+      string                            itsInputColumn;
 
-      // Names of the stations to use. Names may contains wildcards, like \c *
-      // and \c ?.
-      vector<string>         itsStations;
+      Selection                         itsSelection;
 
-      // Correlation product selection.
-      Correlation            itsCorrelation;
+//      // Names of the stations to use. Names may contains wildcards, like \c *
+//      // and \c ?.
+//      vector<string>                    itsStations;
+
+//      // Correlation product selection.
+//      CorrelationFilter                 itsCorrelationFilter;
 
       // Time window.
-      vector<string>         itsTimeWindow;
+      vector<string>                    itsTimeWindow;
 
       // Size in timeslots of the block of data that will be processed as a
       // single chunk.
-      size_t                 itsChunkSize;
+      size_t                            itsChunkSize;
 
       // Connect to the global solver?
-      bool                   itsUseSolver;
+      bool                              itsUseSolver;
 
       // Root step of the strategy tree.
 //      shared_ptr<Step>  itsRoot;
       vector<shared_ptr<const Step> >   itsSteps;
-      
+
       friend class StrategyIterator;
     };
 
@@ -129,24 +134,24 @@ namespace LOFAR
       // empty Strategy. Allows easy incorporation of a StrategyIterator as a
       // class member.
       StrategyIterator() {}
-      
+
       // Create an StrategyIterator for the given Strategy.
       StrategyIterator(const Strategy &strategy);
-      
+
       // Is the iterator pointing at the end of the Strategy?
       bool atEnd() const;
-      
+
       // Return the current Step.
       shared_ptr<const Step> operator*() const;
-      
+
       // Advance the iterator (prefix).
       void operator++();
-      
+
     private:
       shared_ptr<const Step>          itsCurrent;
       stack<shared_ptr<const Step> >  itsStack;
     };
-   
+
     // @}
 
   } // namespace BBS

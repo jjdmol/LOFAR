@@ -1,4 +1,5 @@
-//# VisData.cc: 
+//# VisData.cc: A buffer of visibility data and associated information (e.g.
+//# flags, UVW coordinates).
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -29,48 +30,53 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
+
+VisData::VisData()
+{
+}
 
 VisData::VisData(const VisDimensions &dims)
-    :   uvw(boost::extents[dims.getBaselineCount()][dims.getTimeslotCount()][3]),
-        tslot_flag(boost::extents[dims.getBaselineCount()]
-            [dims.getTimeslotCount()]),
-        vis_flag(boost::extents[dims.getBaselineCount()][dims.getTimeslotCount()]
-            [dims.getChannelCount()][dims.getPolarizationCount()]),
-        vis_data(boost::extents[dims.getBaselineCount()][dims.getTimeslotCount()]
-            [dims.getChannelCount()][dims.getPolarizationCount()]),
-        itsDimensions(dims)
+    :   uvw(boost::extents[dims.nBaselines()][dims.nTime()][3]),
+        tslot_flag(boost::extents[dims.nBaselines()][dims.nTime()]),
+        vis_flag(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
+            [dims.nCorrelations()]),
+        vis_data(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
+            [dims.nCorrelations()]),
+        itsDims(dims)
 {
-    const size_t nChannels = dims.getChannelCount();
-    const size_t nTimeslots = dims.getTimeslotCount();
-    const size_t nBaselines = dims.getBaselineCount();
-    const size_t nPolarizations = dims.getPolarizationCount();
+    const size_t nFreq = dims.nFreq();
+    const size_t nTime = dims.nTime();
+    const size_t nBaselines = dims.nBaselines();
+    const size_t nCorrelations = dims.nCorrelations();
 
     LOG_DEBUG_STR("Size: "
-        << (nBaselines * nTimeslots * 3 * sizeof(double)
-            + nBaselines * nTimeslots * sizeof(tslot_flag_t)
-            + nBaselines * nTimeslots * nChannels * nPolarizations
-                * sizeof(flag_t)
-            + nBaselines * nTimeslots * nChannels * nPolarizations
-                * sizeof(sample_t))
+        << (nBaselines * nTime * 3 * sizeof(double)
+            + nBaselines * nTime * sizeof(tslot_flag_t)
+            + nBaselines * nTime * nFreq * nCorrelations * sizeof(flag_t)
+            + nBaselines * nTime * nFreq * nCorrelations * sizeof(sample_t))
             / (1024.0 * 1024.0)
         << " Mb.");
 
     // Initially flag all timeslots as UNAVAILABLE.
     for(size_t i = 0; i < nBaselines; ++i)
     {
-        for(size_t j = 0; j < nTimeslots; ++j)
+        for(size_t j = 0; j < nTime; ++j)
         {
             tslot_flag[i][j] = VisData::UNAVAILABLE;
         }
     }
 }
 
-
-VisData::~VisData()
+void VisData::setPhaseCenter(const casa::MDirection &center)
 {
-    LOG_DEBUG("VisData destructor called.");
+    itsPhaseCenter = center;
+}
+
+void VisData::setReferenceFreq(double freq)
+{
+    itsReferenceFreq = freq;
 }
 
 } //# namespace BBS

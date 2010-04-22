@@ -6,13 +6,18 @@ add_subdirectory(Contrib)
 
 lofar_add_library(bbskernel
   Package__Version.cc
+  BaselineFilter.cc
+  BaselineMask.cc
+  Correlation.cc
+  CorrelationFilter.cc
   ElementBeamExpr.cc
   Equator.cc
   Evaluator.cc
   Instrument.cc
   IonosphereExpr.cc
   MeasurementAIPS.cc
-  Model.cc
+  MeasurementExprLOFAR.cc
+  MeasurementExprVLA.cc
   ModelConfig.cc
   ParmManager.cc
   ParmProxy.cc
@@ -20,7 +25,7 @@ lofar_add_library(bbskernel
   SolverInterfaceTypes.cc
   VisData.cc
   VisDimensions.cc
-  VisExpr.cc
+  VisEquator.cc
   VisSelection.cc
   Expr/ArrayFactor.cc
   Expr/AzEl.cc
@@ -41,6 +46,7 @@ lofar_add_library(bbskernel
   Expr/GaussianCoherence.cc
   Expr/GaussianSource.cc
   Expr/HamakerDipole.cc
+  Expr/LinearToCircularRL.cc
   Expr/Literal.cc
   Expr/LMN.cc
   Expr/Matrix.cc

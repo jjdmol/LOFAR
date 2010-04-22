@@ -1,4 +1,5 @@
-//# VisDimensions.h:
+//# VisDimensions.h: Represents the dimensions of a block of visibility data
+//# along for axes (frequency, time, baseline, correlation).
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -23,13 +24,11 @@
 #ifndef LOFAR_BBSKERNEL_VISDIMENSIONS_H
 #define LOFAR_BBSKERNEL_VISDIMENSIONS_H
 
-#include <ParmDB/Axis.h>
-#include <ParmDB/Grid.h>
+#include <BBSKernel/Correlation.h>
+#include <BBSKernel/IndexedSequence.h>
 #include <BBSKernel/Types.h>
 
-#include <Common/lofar_map.h>
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
+#include <ParmDB/Grid.h>
 
 namespace LOFAR
 {
@@ -39,60 +38,119 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
+typedef IndexedSequence<baseline_t>     BaselineSeq;
+typedef IndexedSequence<Correlation>    CorrelationSeq;
+
 class VisDimensions
 {
 public:
-    VisDimensions()
-    {}
-
+    // Set the sample grid (frequency and time axis).
     void setGrid(const Grid &grid);
-    void setBaselines(const vector<baseline_t> &baselines);
-    void setPolarizations(const vector<string> &polarizations);
 
-    const Grid &getGrid() const
-    { return itsGrid; }
+    // Set the baseline axis.
+    template <typename T_ITER>
+    void setBaselines(T_ITER first, T_ITER last);
 
-    const Axis::ShPtr getFreqAxis() const
-    { return itsGrid[FREQ]; }
-    pair<double, double> getFreqRange() const
-    { return itsGrid[FREQ]->range(); }
-    size_t getChannelCount() const
-    { return itsGrid[FREQ]->size(); }
+    // Set the correlation axis.
+    template <typename T_ITER>
+    void setCorrelations(T_ITER first, T_ITER last);
 
-    const Axis::ShPtr getTimeAxis() const
-    { return itsGrid[TIME]; }
-    pair<double, double> getTimeRange() const
-    { return itsGrid[TIME]->range(); }
-    size_t getTimeslotCount() const
-    { return itsGrid[TIME]->size(); }
+    // No. of sample points along each axis.
+    // @{
+    size_t nFreq() const;
+    size_t nTime() const;
+    size_t nBaselines() const;
+    size_t nCorrelations() const;
+    // @}
 
-    const vector<baseline_t> &getBaselines() const
-    { return itsBaselines; }
-    size_t getBaselineCount() const
-    { return itsBaselines.size(); }
-    bool hasBaseline(baseline_t baseline) const;
-    size_t getBaselineIndex(baseline_t baseline) const;
+    // Bounding box in frequency and time.
+    Box domain() const;
 
-    const vector<string> &getPolarizations() const
-    { return itsPolarizations; }
-    size_t getPolarizationCount() const
-    { return itsPolarizations.size(); }
-    bool hasPolarization(const string &polarization) const;
-    size_t getPolarizationIndex(const string &polarization) const;
+    // Sample grid in frequency and time.
+    const Grid &grid() const;
+
+    // Access to the frequency and time axis the make up the grid. This is just
+    // a convenience function. It delegates directly to the underlying Grid
+    // object.
+    Axis::ShPtr operator[](size_t i) const;
+
+    // Acces to the baseline axis.
+    const BaselineSeq &baselines() const;
+
+    // Acces to the correlation axis.
+    const CorrelationSeq &correlations() const;
 
 private:
-    Grid                    itsGrid;
-    vector<baseline_t>      itsBaselines;
-    vector<string>          itsPolarizations;
-
-    map<baseline_t, size_t> itsBaselineIndex;
-    map<string, size_t>     itsPolarizationIndex;
+    Grid            itsGrid;
+    BaselineSeq     itsBaselineSeq;
+    CorrelationSeq  itsCorrelationSeq;
 };
 
-// iostream I/O
+// Stream a VisDimensions instance in human readable form to an output stream.
 ostream &operator<<(ostream &out, const VisDimensions &obj);
 
 // @}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: VisDimensions                                          - //
+// -------------------------------------------------------------------------- //
+
+template <typename T_ITER>
+void VisDimensions::setBaselines(T_ITER first, T_ITER last)
+{
+    itsBaselineSeq = BaselineSeq(first, last);
+}
+
+template <typename T_ITER>
+void VisDimensions::setCorrelations(T_ITER first, T_ITER last)
+{
+    itsCorrelationSeq = CorrelationSeq(first, last);
+}
+
+inline size_t VisDimensions::nFreq() const
+{
+    return itsGrid[FREQ]->size();
+}
+
+inline size_t VisDimensions::nTime() const
+{
+    return itsGrid[TIME]->size();
+}
+
+inline size_t VisDimensions::nBaselines() const
+{
+    return itsBaselineSeq.size();
+}
+
+inline size_t VisDimensions::nCorrelations() const
+{
+    return itsCorrelationSeq.size();
+}
+
+inline Box VisDimensions::domain() const
+{
+    return itsGrid.getBoundingBox();
+}
+
+inline const Grid &VisDimensions::grid() const
+{
+    return itsGrid;
+}
+
+inline Axis::ShPtr VisDimensions::operator[](size_t i) const
+{
+    return itsGrid[i];
+}
+
+inline const BaselineSeq &VisDimensions::baselines() const
+{
+    return itsBaselineSeq;
+}
+
+inline const CorrelationSeq &VisDimensions::correlations() const
+{
+    return itsCorrelationSeq;
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

@@ -25,6 +25,7 @@
 
 #include <BBSKernel/SolverInterfaceTypes.h>
 #include <Common/LofarTypes.h>
+#include <Common/lofar_smartptr.h>
 
 #include <scimath/Fitting/LSQFit.h>
 
@@ -39,6 +40,9 @@ namespace BBS
 class Solver
 {
 public:
+    typedef shared_ptr<Solver>          Ptr;
+    typedef shared_ptr<const Solver>    ConstPtr;
+
     Solver();
 
     // (Re)set the solver's state. This allows a solver instance to be

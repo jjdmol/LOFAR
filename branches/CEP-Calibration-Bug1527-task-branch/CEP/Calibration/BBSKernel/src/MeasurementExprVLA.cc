@@ -1,4 +1,5 @@
-//# Model.cc: Measurement equation for the LOFAR telescope and its environment.
+//# MeasurementExprVLA.cc: Measurement equation for the VLA telescope and its
+//# environment.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -21,23 +22,22 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/Model.h>
+#include <BBSKernel/MeasurementExprVLA.h>
 
+#include <BBSKernel/Correlation.h>
 #include <BBSKernel/Exceptions.h>
-#include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/Measurement.h>
 
-#include <BBSKernel/Expr/ArrayFactor.h>
 #include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/ConditionNumber.h>
 #include <BBSKernel/Expr/EquatorialCentroid.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/ExprVisData.h>
-#include <BBSKernel/Expr/FaradayRotation.h>
 #include <BBSKernel/Expr/FlagIf.h>
 #include <BBSKernel/Expr/GaussianCoherence.h>
 #include <BBSKernel/Expr/GaussianSource.h>
+#include <BBSKernel/Expr/LinearToCircularRL.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/LMN.h>
 #include <BBSKernel/Expr/MatrixInverse.h>
@@ -46,13 +46,11 @@
 #include <BBSKernel/Expr/MatrixSum.h>
 #include <BBSKernel/Expr/MergeFlags.h>
 #include <BBSKernel/Expr/PhaseShift.h>
-#include <BBSKernel/Expr/PiercePoint.h>
 #include <BBSKernel/Expr/PointCoherence.h>
 #include <BBSKernel/Expr/PointSource.h>
 #include <BBSKernel/Expr/Request.h>
 #include <BBSKernel/Expr/ScalarMatrixMul.h>
 #include <BBSKernel/Expr/SpectralIndex.h>
-#include <BBSKernel/Expr/TileArrayFactor.h>
 #include <BBSKernel/Expr/StationShift.h>
 #include <BBSKernel/Expr/StationUVW.h>
 
@@ -75,7 +73,7 @@
 #include <measures/Measures/MCDirection.h>
 
 #include <functional>
-// For std::advance()...
+// For std::distance().
 #include <iterator>
 
 namespace LOFAR
@@ -83,8 +81,9 @@ namespace LOFAR
 namespace BBS
 {
 
-Model::Model(const Instrument &instrument, const SourceDB &sourceDb,
-    const casa::MDirection &reference, double referenceFreq)
+MeasurementExprVLA::MeasurementExprVLA(const Instrument &instrument,
+    const SourceDB &sourceDb, const casa::MDirection &reference,
+    double referenceFreq)
     :   itsInstrument(instrument),
         itsSourceDb(sourceDb),
         itsPhaseReference(reference),
@@ -93,8 +92,10 @@ Model::Model(const Instrument &instrument, const SourceDB &sourceDb,
 {
 }
 
-void Model::clear()
+void MeasurementExprVLA::clear()
 {
+    itsBaselines.clear();
+    itsCorrelations.clear();
     itsExpr.clear();
     itsScope.clear();
 
@@ -102,15 +103,15 @@ void Model::clear()
     itsCache.clearStats();
 }
 
-void Model::solvableParmsChanged()
+void MeasurementExprVLA::solvablesChanged()
 {
     LOG_DEBUG_STR("" << itsCache);
     itsCache.clear(Cache::VOLATILE);
     itsCache.clearStats();
 }
 
-void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
-    const vector<baseline_t> &baselines)
+void MeasurementExprVLA::makeForwardExpr(const ModelConfig &config,
+    const VisData::Ptr&, const vector<baseline_t> &baselines)
 {
     // Clear previously created expressions and cached results.
     clear();
@@ -140,36 +141,19 @@ void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
 
     LOG_INFO_STR("Number of patches in the model: " << patches.size());
 
+    // Update state.
+    itsBaselines = BaselineSeq(baselines.begin(), baselines.end());
+    itsCorrelations.append(RR);
+    itsCorrelations.append(RL);
+    itsCorrelations.append(LR);
+    itsCorrelations.append(LL);
+
+    Expr<JonesMatrix>::Ptr H = Expr<JonesMatrix>::Ptr(new LinearToCircularRL());
     // Create a UVW expression per station.
     casa::Vector<Expr<Vector<3> >::Ptr> exprUVW = makeUVWExpr(stations);
 
-    ElementBeamExpr::Ptr exprElementBeam;
-    casa::Vector<Expr<Vector<2> >::Ptr> exprRefAzEl;
-    if(config.useBeam())
-    {
-        const BeamConfig &beamConfig = config.getBeamConfig();
-
-        // Read antenna configurations.
-        itsInstrument.readLOFARAntennaConfig(beamConfig.getConfigPath());
-
-        // Create a functor to generate element beam expression nodes.
-        exprElementBeam = ElementBeamExpr::create(beamConfig, itsScope);
-
-        // Create an AZ, EL expression per station for the phase center.
-        exprRefAzEl = makeRefAzElExpr(stations);
-    }
-
-    IonosphereExpr::Ptr exprIonosphere;
-    if(config.useIonosphere())
-    {
-        exprIonosphere = IonosphereExpr::create(config.getIonosphereConfig(),
-            itsScope);
-    }
-
     // Direction dependent effects.
-    const bool haveDependentEffects = config.useFaradayRotation()
-        || config.useDirectionalGain() || config.useBeam()
-        || config.useIonosphere();
+    const bool haveDependentEffects = config.useDirectionalGain();
 
     vector<MatrixSum::Ptr> coherence(baselines.size());
     for(unsigned int i = 0; i < patches.size(); ++i)
@@ -182,37 +166,10 @@ void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
         {
             ddTransform.resize(stations.size());
 
-            if(config.useFaradayRotation())
-            {
-                makeFaradayRotationExpr(config, stations, patches[i],
-                    ddTransform);
-            }
-
             if(config.useDirectionalGain())
             {
                 makeDirectionalGainExpr(config, stations, patches[i],
                     ddTransform);
-            }
-
-            // Create an AZ, EL expression for each station for the centroid
-            // direction of the patch.
-            casa::Vector<Expr<Vector<2> >::Ptr> exprAzEl;
-            if(config.useBeam() || config.useIonosphere())
-            {
-                exprAzEl = makeAzElExpr(stations,
-                    makePatchCentroidExpr(sources));
-            }
-
-            if(config.useBeam())
-            {
-                makeBeamExpr(config.getBeamConfig(), stations, exprRefAzEl,
-                    exprAzEl, exprElementBeam, ddTransform);
-            }
-
-            if(config.useIonosphere())
-            {
-                makeIonosphereExpr(stations, itsInstrument.position(), exprAzEl,
-                    exprIonosphere, ddTransform);
             }
         }
 
@@ -232,6 +189,9 @@ void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
                     exprUVW(idx.second),
                     exprStationShift.column(idx.second));
 
+            // Convert to circular RL.
+            patchCoherence = corrupt(H, patchCoherence, H);
+
             // Apply direction dependent effects.
             if(haveDependentEffects)
             {
@@ -250,19 +210,12 @@ void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
     }
 
     // Direction independent effects.
-    const bool haveIndependentEffects = config.useBandpass()
-        || config.useGain();
+    const bool haveIndependentEffects = config.useGain();
 
     casa::Vector<Expr<JonesMatrix>::Ptr> diTransform;
     if(haveIndependentEffects)
     {
         diTransform.resize(stations.size());
-
-        // Create a bandpass expression per station.
-        if(config.useBandpass())
-        {
-            makeBandpassExpr(stations, diTransform);
-        }
 
         // Create a direction independent gain expression per station.
         if(config.useGain())
@@ -295,7 +248,7 @@ void Model::makeForwardExpr(const ModelConfig &config, const VisData::Ptr&,
     itsCachePolicy->apply(itsExpr.begin(), itsExpr.end());
 }
 
-void Model::makeInverseExpr(const ModelConfig &config,
+void MeasurementExprVLA::makeInverseExpr(const ModelConfig &config,
     const VisData::Ptr &chunk, const vector<baseline_t> &baselines)
 {
     // Clear previously created expressions and cached results.
@@ -309,22 +262,22 @@ void Model::makeInverseExpr(const ModelConfig &config,
         THROW(BBSKernelException, "Baseline selection is empty.");
     }
 
+    // Update state.
+    itsBaselines = BaselineSeq(baselines.begin(), baselines.end());
+    itsCorrelations.append(RR);
+    itsCorrelations.append(RL);
+    itsCorrelations.append(LR);
+    itsCorrelations.append(LL);
+
     // Create a single Jones matrix expression for each station, for the
     // selected direction.
     casa::Vector<Expr<JonesMatrix>::Ptr> transform(stations.size());
 
     // Direction independent effects.
-    const bool haveIndependentEffects = config.useBandpass()
-        || config.useGain();
+    const bool haveIndependentEffects = config.useGain();
 
     if(haveIndependentEffects)
     {
-        // Create a bandpass expression per station.
-        if(config.useBandpass())
-        {
-            makeBandpassExpr(stations, transform);
-        }
-
         // Create a direction independent gain expression per station.
         if(config.useGain())
         {
@@ -333,32 +286,7 @@ void Model::makeInverseExpr(const ModelConfig &config,
     }
 
     // Direction dependent effects.
-    const bool haveDependentEffects = config.useFaradayRotation()
-        || config.useDirectionalGain() || config.useBeam()
-        || config.useIonosphere();
-
-    ElementBeamExpr::Ptr exprElementBeam;
-    casa::Vector<Expr<Vector<2> >::Ptr> exprRefAzEl;
-    if(config.useBeam())
-    {
-        const BeamConfig &beamConfig = config.getBeamConfig();
-
-        // Read antenna configurations.
-        itsInstrument.readLOFARAntennaConfig(beamConfig.getConfigPath());
-
-        // Create a functor to generate element beam expression nodes.
-        exprElementBeam = ElementBeamExpr::create(beamConfig, itsScope);
-
-        // Create an AZ, EL expression per station for the phase center.
-        exprRefAzEl = makeRefAzElExpr(stations);
-    }
-
-    IonosphereExpr::Ptr exprIonosphere;
-    if(config.useIonosphere())
-    {
-        exprIonosphere = IonosphereExpr::create(config.getIonosphereConfig(),
-            itsScope);
-    }
+    const bool haveDependentEffects = config.useDirectionalGain();
 
     if(haveDependentEffects)
     {
@@ -372,37 +300,9 @@ void Model::makeInverseExpr(const ModelConfig &config,
                 " direction on the sky");
         }
 
-        if(config.useFaradayRotation())
-        {
-            makeFaradayRotationExpr(config, stations, patches[0], transform);
-        }
-
         if(config.useDirectionalGain())
         {
             makeDirectionalGainExpr(config, stations, patches[0], transform);
-        }
-
-        // Create an AZ, EL expression for each station for the centroid
-        // direction of the patch.
-        casa::Vector<Expr<Vector<2> >::Ptr> exprAzEl;
-        if(config.useBeam() || config.useIonosphere())
-        {
-            vector<Source::Ptr> sources = makeSourceList(patches[0]);
-            ASSERT(!sources.empty());
-
-            exprAzEl = makeAzElExpr(stations, makePatchCentroidExpr(sources));
-        }
-
-        if(config.useBeam())
-        {
-            makeBeamExpr(config.getBeamConfig(), stations, exprRefAzEl,
-                exprAzEl, exprElementBeam, transform);
-        }
-
-        if(config.useIonosphere())
-        {
-            makeIonosphereExpr(stations, itsInstrument.position(), exprAzEl,
-                exprIonosphere, transform);
         }
     }
 
@@ -432,8 +332,9 @@ void Model::makeInverseExpr(const ModelConfig &config,
     itsExpr.reserve(baselines.size());
     for(size_t i = 0; i < baselines.size(); ++i)
     {
-        Expr<JonesMatrix>::Ptr exprVisData(new ExprVisData(chunk,
-            baselines[i]));
+
+        Expr<JonesMatrix>::Ptr exprVisData(new ExprVisData(chunk, baselines[i],
+            RR, RL, LR, LL));
 
         if(haveIndependentEffects || haveDependentEffects)
         {
@@ -457,84 +358,100 @@ void Model::makeInverseExpr(const ModelConfig &config,
     itsCachePolicy->apply(itsExpr.begin(), itsExpr.end());
 }
 
-unsigned int Model::size() const
+unsigned int MeasurementExprVLA::size() const
 {
     return itsExpr.size();
 }
 
-Box Model::domain() const
+Box MeasurementExprVLA::domain() const
 {
     return ParmManager::instance().domain();
 }
 
-ParmGroup Model::getParms() const
+const BaselineSeq &MeasurementExprVLA::baselines() const
+{
+    return itsBaselines;
+}
+
+const CorrelationSeq &MeasurementExprVLA::correlations() const
+{
+    return itsCorrelations;
+}
+
+ParmGroup MeasurementExprVLA::parms() const
 {
     ParmGroup result;
 
-    Scope::const_iterator parmIt = itsScope.begin();
-    while(parmIt != itsScope.end())
+    for(Scope::const_iterator parm_it = itsScope.begin(),
+        parm_end = itsScope.end(); parm_it != parm_end; ++parm_it)
     {
-        result.insert(parmIt->first);
-        ++parmIt;
+        result.insert(parm_it->first);
     }
 
     return result;
 }
 
-ParmGroup Model::getSolvableParms() const
+ParmGroup MeasurementExprVLA::solvables() const
 {
     ParmGroup result;
 
-    Scope::const_iterator parmIt = itsScope.begin();
-    while(parmIt != itsScope.end())
+    for(Scope::const_iterator parm_it = itsScope.begin(),
+        parm_end = itsScope.end(); parm_it != parm_end; ++parm_it)
     {
-        if(parmIt->second->getPValueFlag())
+        if(parm_it->second->getPValueFlag())
         {
-            result.insert(parmIt->first);
+            result.insert(parm_it->first);
         }
-
-        ++parmIt;
     }
 
     return result;
 }
 
-void Model::setSolvableParms(const ParmGroup &solvables)
+void MeasurementExprVLA::setSolvables(const ParmGroup &solvables)
 {
-    ParmGroup::const_iterator solIt = solvables.begin();
-    while(solIt != solvables.end())
+    // Clear the flag that controls whether or not partial derivatives are
+    // computed for all parameters.
+    for(Scope::const_iterator parm_it = itsScope.begin(),
+        parm_end = itsScope.end(); parm_it != parm_end; ++parm_it)
     {
-        Scope::iterator parmIt = itsScope.find(*solIt);
-        ASSERT(parmIt != itsScope.end());
+        parm_it->second->clearPValueFlag();
+    }
 
-        if(parmIt != itsScope.end())
+    // Make sure a partial derivative is computed for each solvable that is
+    // part of this expression (i.e. that can be found in itsScope).
+    for(ParmGroup::const_iterator sol_it = solvables.begin(),
+        sol_end = solvables.end(); sol_it != sol_end; ++sol_it)
+    {
+        Scope::iterator parm_it = itsScope.find(*sol_it);
+        if(parm_it != itsScope.end())
         {
-            parmIt->second->setPValueFlag();
+            parm_it->second->setPValueFlag();
         }
-
-        ++solIt;
     }
 
+    // Clear any cached results and reinitialize the caching policy.
     itsCache.clear();
     itsCache.clearStats();
     itsCachePolicy->apply(itsExpr.begin(), itsExpr.end());
 }
 
-void Model::clearSolvableParms()
+void MeasurementExprVLA::clearSolvables()
 {
-    Scope::iterator parmIt = itsScope.begin();
-    while(parmIt != itsScope.end())
+    // Clear the flag that controls whether or not partial derivatives are
+    // computed for all parameters.
+    for(Scope::const_iterator parm_it = itsScope.begin(),
+        parm_end = itsScope.end(); parm_it != parm_end; ++parm_it)
     {
-        parmIt->second->clearPValueFlag();
-        ++parmIt;
+        parm_it->second->clearPValueFlag();
     }
 
+    // Clear any cached results and reinitialize the caching policy.
     itsCache.clear();
     itsCache.clearStats();
     itsCachePolicy->apply(itsExpr.begin(), itsExpr.end());
 }
 
-void Model::setEvalGrid(const Grid &grid)
+void MeasurementExprVLA::setEvalGrid(const Grid &grid)
 {
     itsRequest = Request(grid);
 
@@ -544,7 +461,7 @@ void Model::setEvalGrid(const Grid &grid)
     // TODO: Set cache size in number of Matrix instances... ?
 }
 
-const JonesMatrix Model::evaluate(unsigned int i)
+const JonesMatrix MeasurementExprVLA::evaluate(unsigned int i)
 {
     JonesMatrix result;
 
@@ -588,7 +505,7 @@ const JonesMatrix Model::evaluate(unsigned int i)
     return result;
 }
 
-void Model::applyCachePolicy(const ModelConfig &config) const
+void MeasurementExprVLA::applyCachePolicy(const ModelConfig &config) const
 {
     if(config.useExperimentalCaching())
     {
@@ -603,7 +520,8 @@ void Model::applyCachePolicy(const ModelConfig &config) const
 }
 
 vector<unsigned int>
-Model::makeUsedStationList(const vector<baseline_t> &baselines) const
+MeasurementExprVLA::makeUsedStationList(const vector<baseline_t> &baselines)
+    const
 {
     set<unsigned int> used;
     for(vector<baseline_t>::const_iterator it = baselines.begin(),
@@ -618,7 +536,7 @@ Model::makeUsedStationList(const vector<baseline_t> &baselines) const
 }
 
 pair<unsigned int, unsigned int>
-Model::findStationIndices(const vector<unsigned int> &stations,
+MeasurementExprVLA::findStationIndices(const vector<unsigned int> &stations,
     const baseline_t &baseline) const
 {
     // Find left and right hand side station index.
@@ -634,7 +552,8 @@ Model::findStationIndices(const vector<unsigned int> &stations,
     return make_pair(lhs, rhs);
 }
 
-vector<string> Model::makePatchList(const vector<string> &patterns)
+vector<string>
+MeasurementExprVLA::makePatchList(const vector<string> &patterns)
 {
     if(patterns.empty())
     {
@@ -652,7 +571,7 @@ vector<string> Model::makePatchList(const vector<string> &patterns)
     return vector<string>(patches.begin(), patches.end());
 }
 
-vector<Source::Ptr> Model::makeSourceList(const string &patch)
+vector<Source::Ptr> MeasurementExprVLA::makeSourceList(const string &patch)
 {
     vector<SourceInfo> sources(itsSourceDb.getPatchSources(patch));
 
@@ -667,7 +586,8 @@ vector<Source::Ptr> Model::makeSourceList(const string &patch)
 }
 
 Expr<Vector<2> >::ConstPtr
-Model::makePatchCentroidExpr(const vector<Source::Ptr> &sources) const
+MeasurementExprVLA::makePatchCentroidExpr(const vector<Source::Ptr> &sources)
+    const
 {
     if(sources.size() == 1)
     {
@@ -683,7 +603,7 @@ Model::makePatchCentroidExpr(const vector<Source::Ptr> &sources) const
 }
 
 Expr<JonesMatrix>::Ptr
-Model::makePatchCoherenceExpr(const vector<Source::Ptr> &sources,
+MeasurementExprVLA::makePatchCoherenceExpr(const vector<Source::Ptr> &sources,
     const Expr<Vector<3> >::Ptr &uvwLHS,
     const casa::Vector<Expr<Vector<2> >::Ptr> &shiftLHS,
     const Expr<Vector<3> >::Ptr &uvwRHS,
@@ -723,7 +643,7 @@ Model::makePatchCoherenceExpr(const vector<Source::Ptr> &sources,
 }
 
 casa::Vector<Expr<Vector<3> >::Ptr>
-Model::makeUVWExpr(const vector<unsigned int> &stations)
+MeasurementExprVLA::makeUVWExpr(const vector<unsigned int> &stations)
 {
     casa::Vector<Expr<Vector<3> >::Ptr> expr(stations.size());
 
@@ -738,7 +658,7 @@ Model::makeUVWExpr(const vector<unsigned int> &stations)
 }
 
 casa::Vector<Expr<Vector<2> >::Ptr>
-Model::makeAzElExpr(const vector<unsigned int> &stations,
+MeasurementExprVLA::makeAzElExpr(const vector<unsigned int> &stations,
     const Expr<Vector<2> >::ConstPtr &direction) const
 {
     // Create an AzEl expression for each (station, source) combination.
@@ -753,7 +673,8 @@ Model::makeAzElExpr(const vector<unsigned int> &stations,
 }
 
 casa::Vector<Expr<Vector<2> >::Ptr>
-Model::makeRefAzElExpr(const vector<unsigned int> &stations) const
+MeasurementExprVLA::makeRefAzElExpr(const vector<unsigned int> &stations)
+    const
 {
     casa::MDirection refJ2000(casa::MDirection::Convert(itsPhaseReference,
         casa::MDirection::J2000)());
@@ -770,7 +691,7 @@ Model::makeRefAzElExpr(const vector<unsigned int> &stations) const
 }
 
 casa::Matrix<Expr<Vector<2> >::Ptr>
-Model::makeStationShiftExpr(const vector<unsigned int> &stations,
+MeasurementExprVLA::makeStationShiftExpr(const vector<unsigned int> &stations,
     const vector<Source::Ptr> &sources,
     const casa::Vector<Expr<Vector<3> >::Ptr> &exprUVW) const
 {
@@ -794,25 +715,7 @@ Model::makeStationShiftExpr(const vector<unsigned int> &stations,
     return expr;
 }
 
-void Model::makeBandpassExpr(const vector<unsigned int> &stations,
-    casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
-{
-    for(unsigned int i = 0; i < stations.size(); ++i)
-    {
-        const unsigned int station = stations[i];
-        const string &suffix = itsInstrument[station].name();
-
-        Expr<Scalar>::Ptr B00 = itsScope(INSTRUMENT, "Bandpass:0:0:"
-            + suffix);
-        Expr<Scalar>::Ptr B11 = itsScope(INSTRUMENT, "Bandpass:1:1:"
-            + suffix);
-
-        accumulator(i) = compose(accumulator(i),
-            Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(B00, B11)));
-    }
-}
-
-void Model::makeGainExpr(const ModelConfig &config,
+void MeasurementExprVLA::makeGainExpr(const ModelConfig &config,
     const vector<unsigned int> &stations,
     casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
 {
@@ -864,7 +767,7 @@ void Model::makeGainExpr(const ModelConfig &config,
     }
 }
 
-void Model::makeDirectionalGainExpr(const ModelConfig &config,
+void MeasurementExprVLA::makeDirectionalGainExpr(const ModelConfig &config,
     const vector<unsigned int> &stations, const string &patch,
     casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
 {
@@ -917,123 +820,8 @@ void Model::makeDirectionalGainExpr(const ModelConfig &config,
     }
 }
 
-void Model::makeBeamExpr(const BeamConfig &config,
-    const vector<unsigned int> &stations,
-    const casa::Vector<Expr<Vector<2> >::Ptr> &exprRefAzEl,
-    const casa::Vector<Expr<Vector<2> >::Ptr> &exprAzEl,
-    const ElementBeamExpr::ConstPtr &exprElement,
-    casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
-{
-    for(unsigned int i = 0; i < stations.size(); ++i)
-    {
-        const Station &station = itsInstrument[stations[i]];
-
-        // Get element orientation.
-        Expr<Scalar>::Ptr orientation = itsScope(INSTRUMENT,
-            "AntennaOrientation:" + station.name());
-
-        AntennaSelection selection;
-        Expr<JonesMatrix>::Ptr exprBeam(exprElement->construct(exprAzEl(i),
-            orientation));
-
-        // Get LOFAR station name suffix.
-        // NB. THIS IS A TEMPORARY SOLUTION THAT CAN BE REMOVED AS SOON AS THE
-        // DIPOLE INFORMATION IS STORED AS META-DATA INSIDE THE MS.
-        const string suffix = station.name().substr(5);
-        if(suffix == "LBA")
-        {
-            try
-            {
-                selection = station.selection(config.getConfigName());
-            }
-            catch(BBSKernelException &ex)
-            {
-                selection = station.selection("LBA");
-            }
-        }
-        else if(suffix == "HBA0")
-        {
-            selection = station.selection("HBA_0");
-
-            Expr<JonesMatrix>::Ptr exprTileFactor =
-                Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl(i),
-                    exprRefAzEl(i), station.tile(0)));
-
-            exprBeam = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprTileFactor,
-                exprBeam));
-        }
-        else if(suffix == "HBA1")
-        {
-            selection = station.selection("HBA_1");
-
-            Expr<JonesMatrix>::Ptr exprTileFactor =
-                Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl(i),
-                    exprRefAzEl(i), station.tile(1)));
-
-            exprBeam = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprTileFactor,
-                exprBeam));
-        }
-        else if(suffix == "HBA")
-        {
-            selection = station.selection("HBA");
-
-            Expr<JonesMatrix>::Ptr exprTileFactor =
-                Expr<JonesMatrix>::Ptr(new TileArrayFactor(exprAzEl(i),
-                    exprRefAzEl(i), station.tile(0)));
-
-            exprBeam = Expr<JonesMatrix>::Ptr(new MatrixMul2(exprTileFactor,
-                exprBeam));
-        }
-        else
-        {
-            THROW(BBSKernelException, "Illegal LOFAR station name encoutered: "
-                << station.name());
-        }
-
-        // Create ArrayFactor expression.
-        Expr<JonesMatrix>::Ptr exprArrayFactor(new ArrayFactor(exprAzEl(i),
-            exprRefAzEl(i), selection, itsReferenceFreq));
-
-        accumulator(i) = compose(accumulator(i),
-            Expr<JonesMatrix>::Ptr(new MatrixMul2(exprArrayFactor, exprBeam)));
-    }
-}
-
-void Model::makeIonosphereExpr(const vector<unsigned int> &stations,
-    const casa::MPosition &refPosition,
-    const casa::Vector<Expr<Vector<2> >::Ptr> &exprAzEl,
-    const IonosphereExpr::ConstPtr &exprIonosphere,
-    casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
-{
-    for(unsigned int i = 0; i < stations.size(); ++i)
-    {
-        const unsigned int station = stations[i];
-
-        const casa::MPosition &position = itsInstrument[station].position();
-        PiercePoint::Ptr piercePoint(new PiercePoint(position, exprAzEl(i)));
-
-        accumulator(i) = compose(accumulator(i),
-            exprIonosphere->construct(refPosition, piercePoint));
-    }
-}
-
-void Model::makeFaradayRotationExpr(const ModelConfig &config,
-    const vector<unsigned int> &stations, const string &patch,
-    casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
-{
-    for(unsigned int i = 0; i < stations.size(); ++i)
-    {
-        const unsigned int station = stations[i];
-
-        ExprParm::Ptr rm = itsScope(INSTRUMENT, "RotationMeasure:"
-            + itsInstrument[station].name() + ":" + patch);
-
-        accumulator(i) = compose(accumulator(i),
-            Expr<JonesMatrix>::Ptr(new FaradayRotation(rm)));
-    }
-}
-
-Expr<JonesMatrix>::Ptr Model::compose(const Expr<JonesMatrix>::Ptr &accumulator,
+Expr<JonesMatrix>::Ptr
+MeasurementExprVLA::compose(const Expr<JonesMatrix>::Ptr &accumulator,
     const Expr<JonesMatrix>::Ptr &effect) const
 {
     if(accumulator)
@@ -1046,7 +834,8 @@ Expr<JonesMatrix>::Ptr Model::compose(const Expr<JonesMatrix>::Ptr &accumulator,
     }
 }
 
-Expr<JonesMatrix>::Ptr Model::corrupt(const Expr<JonesMatrix>::Ptr &lhs,
+Expr<JonesMatrix>::Ptr
+MeasurementExprVLA::corrupt(const Expr<JonesMatrix>::Ptr &lhs,
     const Expr<JonesMatrix>::Ptr &coherence,
     const Expr<JonesMatrix>::Ptr &rhs) const
 {

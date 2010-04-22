@@ -31,59 +31,70 @@ namespace LOFAR
 namespace BBS
 {
 
-string Evaluator::theirTimerNames[Evaluator::N_Timer] =
+string Evaluator::theirProcTimerNames[Evaluator::N_ProcTimer] =
     {"ALL",
     "EVAL_RHS",
     "APPLY"};
 
-Evaluator::Evaluator(const VisData::Ptr &chunk,
-    const ExprSet<JonesMatrix>::Ptr &expr)
-    :   itsChunk(chunk),
-        itsExprSet(expr)
+Evaluator::Evaluator(const VisData::Ptr &lhs, const MeasurementExpr::Ptr &rhs)
+    :   itsLHS(lhs),
+        itsRHS(rhs)
 {
+    // Construct a sequence of pairs of indices of matching baselines (i.e.
+    // baselines known by both LHS and RHS).
+    initBaselineMap();
+
+    if(itsBlMap.empty())
+    {
+        LOG_WARN_STR("No baselines found for which data is available in both"
+            " the observation and the model.");
+    }
+
+    // Construct a sequence of pairs of indices of matching correlations (i.e.
+    // correlations known by both LHS and RHS).
+    initCorrelationMap();
+
+    if(itsCrMap.empty())
+    {
+        LOG_WARN_STR("No correlations found for which data is available in both"
+            " the observation and the model.");
+    }
+
     // Set default processing mode.
     setMode(EQUATE);
 
-    // Set default visibility selection.
-    const VisDimensions &dims = itsChunk->getDimensions();
-    setSelection(dims.getBaselines(), dims.getPolarizations());
-
     // Set request grid.
-    itsExprSet->setEvalGrid(itsChunk->getDimensions().getGrid());
+    // TODO: More robust checks on expression domain.
+    itsRHS->setEvalGrid(itsLHS->grid());
 }
 
-void Evaluator::setSelection(const vector<baseline_t> &baselines,
-        const vector<string> &products)
+void Evaluator::initBaselineMap()
 {
-    itsBaselines = baselines;
+    const BaselineSeq &blLHS = itsLHS->baselines();
+    const BaselineSeq &blRHS = itsRHS->baselines();
 
-    // Determine product mask.
-    const VisDimensions &dims = itsChunk->getDimensions();
-
-    fill(&(itsProductMask[0]), &(itsProductMask[4]), -1);
-
-    if(dims.hasPolarization("XX")
-        && find(products.begin(), products.end(), "XX") != products.end())
+    for(size_t lhs = 0; lhs < blLHS.size(); ++lhs)
     {
-        itsProductMask[0] = dims.getPolarizationIndex("XX");
+        const size_t rhs = blRHS.index(blLHS[lhs]);
+        if(rhs != blRHS.size())
+        {
+            itsBlMap.push_back(make_pair(lhs, rhs));
+        }
     }
+}
 
-    if(dims.hasPolarization("XY")
-        && find(products.begin(), products.end(), "XY") != products.end())
-    {
-        itsProductMask[1] = dims.getPolarizationIndex("XY");
-    }
+void Evaluator::initCorrelationMap()
+{
+    const CorrelationSeq &crLHS = itsLHS->correlations();
+    const CorrelationSeq &crRHS = itsRHS->correlations();
 
-    if(dims.hasPolarization("YX")
-        && find(products.begin(), products.end(), "YX") != products.end())
+    for(size_t lhs = 0; lhs < crLHS.size(); ++lhs)
     {
-        itsProductMask[2] = dims.getPolarizationIndex("YX");
-    }
-
-    if(dims.hasPolarization("YY")
-        && find(products.begin(), products.end(), "YY") != products.end())
-    {
-        itsProductMask[3] = dims.getPolarizationIndex("YY");
+        const size_t rhs = crRHS.index(crLHS[lhs]);
+        if(rhs != crRHS.size())
+        {
+            itsCrMap.push_back(make_pair(lhs, rhs));
+        }
     }
 }
 
@@ -104,62 +115,62 @@ void Evaluator::setMode(Mode mode)
         itsExprProcessor[1] = &Evaluator::procExpr<OpAdd>;
         break;
     default:
-        THROW(BBSKernelException, "Invalid mode specified.");
+        THROW(BBSKernelException, "Invalid processing mode specified.");
     }
 }
 
 void Evaluator::process()
 {
-    // Reset statistics.
-    for(size_t i = 0; i < Evaluator::N_Timer; ++i)
+    itsProcTimers[ALL].start();
+    for(size_t i = 0; i < itsBlMap.size(); ++i)
     {
-        itsTimers[i].reset();
-    }
-
-    itsTimers[ALL].start();
-    for(size_t i = 0; i < itsBaselines.size(); ++i)
-    {
-        const baseline_t &baseline = itsBaselines[i];
-
-//        LOG_DEBUG_STR("Baseline: " << baseline.first << " - "
-//            << baseline.second);
-
         // Evaluate the expression for this baseline.
-        itsTimers[EVAL_RHS].start();
-        const JonesMatrix expr = itsExprSet->evaluate(i);
-        itsTimers[EVAL_RHS].stop();
+        itsProcTimers[EVAL_RHS].start();
+        const JonesMatrix rhs = itsRHS->evaluate(itsBlMap[i].second);
+        itsProcTimers[EVAL_RHS].stop();
 
-        itsTimers[APPLY].start();
+        itsProcTimers[APPLY].start();
         // Process the visibilities according to the current processing mode.
-        if(expr.hasFlags())
+        if(rhs.hasFlags())
         {
-            const FlagArray flags = expr.flags();
+            const FlagArray flags = rhs.flags();
             if(flags.rank() > 0 || flags(0, 0) != 0)
             {
-                (this->*itsExprProcessor[0])(baseline, expr);
+                (this->*itsExprProcessor[0])(itsBlMap[i].first, rhs);
             }
             else
             {
                 // Optimization: If the flags of the expression are scalar and
                 // equal to zero (false) then they can be ignored.
-                (this->*itsExprProcessor[1])(baseline, expr);
+                (this->*itsExprProcessor[1])(itsBlMap[i].first, rhs);
             }
         }
         else
         {
-            (this->*itsExprProcessor[1])(baseline, expr);
+            (this->*itsExprProcessor[1])(itsBlMap[i].first, rhs);
         }
-        itsTimers[APPLY].stop();
+        itsProcTimers[APPLY].stop();
     }
-    itsTimers[ALL].stop();
+    itsProcTimers[ALL].stop();
+}
 
-    // Print statistics.
-    for(size_t i = 0; i < Evaluator::N_Timer; ++i)
+void Evaluator::clearStats()
+{
+    for(size_t i = 0; i < Evaluator::N_ProcTimer; ++i)
     {
-        const double elapsed = itsTimers[i].getElapsed() * 1e3;
-        const unsigned long long count = itsTimers[i].getCount();
-        LOG_DEBUG_STR("TIMER ms " << Evaluator::theirTimerNames[i] << " total "
-            << elapsed << " count " << count << " avg " << elapsed / count);
+        itsProcTimers[i].reset();
+    }
+}
+
+void Evaluator::dumpStats() const
+{
+    for(size_t i = 0; i < Evaluator::N_ProcTimer; ++i)
+    {
+        const double elapsed = itsProcTimers[i].getElapsed();
+        const unsigned long long count = itsProcTimers[i].getCount();
+        LOG_DEBUG_STR("TIMER s " << Evaluator::theirProcTimerNames[i]
+            << " total " << elapsed << " count " << count << " avg "
+            << elapsed / count);
     }
 }
 

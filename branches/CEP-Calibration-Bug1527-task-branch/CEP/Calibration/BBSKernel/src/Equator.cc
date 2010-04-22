@@ -259,8 +259,8 @@ Equator::makeAxisMapping(const Axis::ShPtr &from, const Axis::ShPtr &to) const
 
 void Equator::makeCoeffMapping(const CoeffIndex &index)
 {
-    ParmGroup solvablesLHS = itsLHS->getSolvableParms();
-    ParmGroup solvablesRHS = itsRHS->getSolvableParms();
+    ParmGroup solvablesLHS = itsLHS->solvables();
+    ParmGroup solvablesRHS = itsRHS->solvables();
 
     ParmGroup solvables;
     std::set_union(solvablesLHS.begin(), solvablesLHS.end(),

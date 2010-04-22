@@ -28,9 +28,8 @@
 // Evaluator.h: Evaluate an expression and assign, subtract, or add the result
 // to / from a buffer of visibility data.
 
-#include <BBSKernel/ExprSet.h>
 #include <BBSKernel/VisData.h>
-#include <BBSKernel/Expr/ExprValue.h>
+#include <BBSKernel/MeasurementExpr.h>
 
 #include <Common/Timer.h>
 
@@ -53,12 +52,15 @@ public:
         N_Mode
     };
 
-    Evaluator(const VisData::Ptr &chunk,
-        const ExprSet<JonesMatrix>::Ptr &expr);
+    Evaluator(const VisData::Ptr &lhs, const MeasurementExpr::Ptr &rhs);
 
-    // Set subset of visibility data to process.
-    void setSelection(const vector<baseline_t> &baselines,
-        const vector<string> &products);
+    // Select baselines in [first, last) for processing.
+    template <typename T_ITER>
+    void setBaselines(T_ITER first, T_ITER last);
+
+    // Select correlations in [first, last) for processing.
+    template <typename T_ITER>
+    void setCorrelations(T_ITER first, T_ITER last);
 
     // Set operation to perform on the data (equate, subtract, or add).
     void setMode(Mode mode);
@@ -66,6 +68,12 @@ public:
     // Evaluate the expressions in the set and process the visibilities
     // according to the current processing mode.
     void process();
+
+    // Reset processing statistics.
+    void clearStats();
+
+    // Dump processing statistics to the logger.
+    void dumpStats() const;
 
 private:
     struct OpEq
@@ -83,34 +91,50 @@ private:
         static void apply(sample_t &lhs, const dcomplex &rhs);
     };
 
-    typedef void (Evaluator::*ExprProcessor)(const baseline_t &baseline,
-        const JonesMatrix &expr);
+    // Create a mapping of baselines known by both LHS and RHS to their
+    // respective indices.
+    void initBaselineMap();
+    template <typename T_ITER>
+    void makeBaselineMap(T_ITER first, T_ITER last);
+
+    // Create a mapping of correlations known by both LHS and RHS to their
+    // respective indices.
+    void initCorrelationMap();
+    template <typename T_ITER>
+    void makeCorrelationMap(T_ITER first, T_ITER last);
+
+    // Signature of sample processor function.
+    typedef void (Evaluator::*ExprProcessor)(size_t &bl,
+        const JonesMatrix &rhs);
 
     template <typename T_OPERATOR>
-    void procExprWithFlags(const baseline_t &baseline,
-        const JonesMatrix &expr);
+    void procExprWithFlags(size_t &bl, const JonesMatrix &rhs);
 
     template <typename T_OPERATOR>
-    void procExpr(const baseline_t &baseline, const JonesMatrix &expr);
+    void procExpr(size_t &bl, const JonesMatrix &rhs);
 
+    // Visibility data buffer.
+    VisData::Ptr                        itsLHS;
+    // Measurement equation.
+    MeasurementExpr::Ptr                itsRHS;
 
-    VisData::Ptr                    itsChunk;
-    ExprSet<JonesMatrix>::Ptr itsExprSet;
+    // Mapping of baselines and correlations to their respective indices in
+    // both observed data and model.
+    vector<pair<size_t, size_t> >       itsBlMap, itsCrMap;
 
-    vector<baseline_t>              itsBaselines;
-    int                             itsProductMask[4];
-    ExprProcessor                   itsExprProcessor[2];
+    ExprProcessor                       itsExprProcessor[2];
 
-    enum Timer
+    // Timers.
+    enum ProcTimer
     {
         ALL,
         EVAL_RHS,
         APPLY,
-        N_Timer
+        N_ProcTimer
     };
 
-    NSTimer             itsTimers[N_Timer];
-    static string       theirTimerNames[N_Timer];
+    NSTimer                             itsProcTimers[N_ProcTimer];
+    static string                       theirProcTimerNames[N_ProcTimer];
 };
 
 // @}
@@ -134,114 +158,153 @@ inline void Evaluator::OpAdd::apply(sample_t &lhs, const dcomplex &rhs)
     lhs += rhs;
 }
 
-template <typename T_OPERATOR>
-void Evaluator::procExprWithFlags(const baseline_t &baseline,
-    const JonesMatrix &expr)
+template <typename T_ITER>
+void Evaluator::setBaselines(T_ITER first, T_ITER last)
 {
-    const VisDimensions &dims = itsChunk->getDimensions();
-    const size_t bl = dims.getBaselineIndex(baseline);
-    const size_t nFreq = dims.getChannelCount();
-    const size_t nTime = dims.getTimeslotCount();
-
-    // Process visibilities for this baseline.
-    for(unsigned int el = 0; el < 4; ++el)
+    if(first != last)
     {
-        // Check if the chunk contains the current correlation product.
-        const int extProd = itsProductMask[el];
-        if(extProd == -1)
+        itsBlMap.clear();
+        makeBaselineMap(first, last);
+    }
+}
+
+template <typename T_ITER>
+void Evaluator::setCorrelations(T_ITER first, T_ITER last)
+{
+    if(first != last)
+    {
+        itsCrMap.clear();
+        makeCorrelationMap(first, last);
+    }
+}
+
+template <typename T_ITER>
+void Evaluator::makeBaselineMap(T_ITER first, T_ITER last)
+{
+    const BaselineSeq &blLHS = itsLHS->baselines();
+    const BaselineSeq &blRHS = itsRHS->baselines();
+
+    for(; first != last; ++first)
+    {
+        const size_t lhs = blLHS.index(*first);
+        const size_t rhs = blRHS.index(*first);
+        if(lhs != blLHS.size() && rhs != blRHS.size())
         {
-            continue;
+            itsBlMap.push_back(make_pair(lhs, rhs));
         }
+    }
+}
 
-        // Get pointers to the computed visibilities.
-        const ValueSet exprValue = expr.getValueSet(el);
-        const Matrix value = exprValue.value();
-        const double *re = 0, *im = 0;
-        value.dcomplexStorage(re, im);
+template <typename T_ITER>
+void Evaluator::makeCorrelationMap(T_ITER first, T_ITER last)
+{
+    const CorrelationSeq &crLHS = itsLHS->correlations();
+    const CorrelationSeq &crRHS = itsRHS->correlations();
 
-        // Determine pointer increments (0 for scalar).
-        const size_t step = value.isArray() ? 1 : 0;
-        DBGASSERT(!value.isArray()
-            || static_cast<size_t>(value.nelements()) == nFreq * nTime);
+    for(; first != last; ++first)
+    {
+        const size_t lhs = crLHS.index(*first);
+        const size_t rhs = crRHS.index(*first);
+        if(lhs != crLHS.size() && rhs != crRHS.size())
+        {
+            itsCrMap.push_back(make_pair(lhs, rhs));
+        }
+    }
+}
+
+template <typename T_OPERATOR>
+void Evaluator::procExprWithFlags(size_t &bl, const JonesMatrix &rhs)
+{
+    // Determine no. of samples along frequency and time axis.
+    const size_t nFreq = itsLHS->grid()[FREQ]->size();
+    const size_t nTime = itsLHS->grid()[TIME]->size();
+
+    // Determine flag iterator increments (0 for scalar flags).
+    const FlagArray flagsRHS = rhs.flags();
+    const size_t flagStep = flagsRHS.rank() == 0 ? 0 : 1;
+    DBGASSERT(flagsRHS.rank() == 0 || flagsRHS.size() == nFreq * nTime);
+
+    for(size_t cr = 0; cr < itsCrMap.size(); ++cr)
+    {
+        const size_t crLHS = itsCrMap[cr].first;
+        const size_t crRHS = itsCrMap[cr].second;
 
         // Get random access iterator for the flags.
-        const FlagArray &flags = expr.flags();
-        FlagArray::const_iterator flagIt = flags.begin();
+        FlagArray::const_iterator flagIt = flagsRHS.begin();
 
-        // Determine pointer increments (0 for scalar flags).
-        const size_t flagStep = flags.rank() == 0 ? 0 : 1;
-        DBGASSERT(flags.rank() == 0 || flags.size() == nFreq * nTime);
+        // Get pointers to the computed visibilities.
+        const Matrix samplesRHS = rhs.getValueSet(crRHS).value();
+        const double *reIt = 0, *imIt = 0;
+        samplesRHS.dcomplexStorage(reIt, imIt);
 
-        // Get a view on the relevant slice of the chunk.
-        typedef boost::multi_array<sample_t, 4>::index_range DRange;
-        typedef boost::multi_array<sample_t, 4>::array_view<2>::type DView;
-        DView chunkVis(itsChunk->vis_data[boost::indices[bl][DRange()]
-            [DRange()][extProd]]);
+        // Determine pointer increments (0 for scalar).
+        const size_t sampleStep = samplesRHS.isArray() ? 1 : 0;
+        DBGASSERT(!samplesRHS.isArray()
+            || static_cast<size_t>(samplesRHS.nelements()) == nFreq * nTime);
 
+        // Get a view on the relevant slice of the data buffer.
         typedef boost::multi_array<flag_t, 4>::index_range FRange;
-        typedef boost::multi_array<flag_t, 4>::array_view<2>::type FView;
-        FView chunkFlags(itsChunk->vis_flag[boost::indices[bl][FRange()]
-            [FRange()][extProd]]);
+        typedef boost::multi_array<flag_t, 4>::array_view<2>::type FSlice;
+        FSlice flagsLHS(itsLHS->vis_flag[boost::indices[bl][FRange()][FRange()]
+            [crLHS]]);
+
+        typedef boost::multi_array<sample_t, 4>::index_range SRange;
+        typedef boost::multi_array<sample_t, 4>::array_view<2>::type SSlice;
+        SSlice samplesLHS(itsLHS->vis_data[boost::indices[bl][SRange()]
+            [SRange()][crLHS]]);
 
         // Process visibilities and flags.
-        for(size_t ts = 0; ts < nTime; ++ts)
+        for(size_t t = 0; t < nTime; ++t)
         {
-            for(size_t ch = 0; ch < nFreq; ++ch)
+            for(size_t f = 0; f < nFreq; ++f)
             {
-                chunkFlags[ts][ch] |= *flagIt;
-                flagIt += flagStep;
+                flagsLHS[t][f] |= *flagIt;
+                T_OPERATOR::apply(samplesLHS[t][f], makedcomplex(*reIt, *imIt));
 
-                T_OPERATOR::apply(chunkVis[ts][ch], makedcomplex(*re, *im));
-                re += step;
-                im += step;
+                flagIt += flagStep;
+                reIt += sampleStep;
+                imIt += sampleStep;
             }
         }
     }
 }
 
 template <typename T_OPERATOR>
-void Evaluator::procExpr(const baseline_t &baseline, const JonesMatrix &expr)
+void Evaluator::procExpr(size_t &bl, const JonesMatrix &rhs)
 {
-    const VisDimensions &dims = itsChunk->getDimensions();
-    const size_t bl = dims.getBaselineIndex(baseline);
-    const size_t nFreq = dims.getChannelCount();
-    const size_t nTime = dims.getTimeslotCount();
+    // Determine no. of samples along frequency and time axis.
+    const size_t nFreq = itsLHS->grid()[FREQ]->size();
+    const size_t nTime = itsLHS->grid()[TIME]->size();
 
-    // Process visibilities for this baseline.
-    for(unsigned int el = 0; el < 4; ++el)
+    for(size_t cr = 0; cr < itsCrMap.size(); ++cr)
     {
-        // Check if the chunk contains the current correlation product.
-        const int extProd = itsProductMask[el];
-        if(extProd == -1)
-        {
-            continue;
-        }
+        const size_t crLHS = itsCrMap[cr].first;
+        const size_t crRHS = itsCrMap[cr].second;
 
         // Get pointers to the computed visibilities.
-        const ValueSet exprValue = expr.getValueSet(el);
-        const Matrix value = exprValue.value();
-        const double *re = 0, *im = 0;
-        value.dcomplexStorage(re, im);
+        const Matrix samplesRHS = rhs.getValueSet(crRHS).value();
+        const double *reIt = 0, *imIt = 0;
+        samplesRHS.dcomplexStorage(reIt, imIt);
 
         // Determine pointer increments (0 for scalar).
-        const size_t step = value.isArray() ? 1 : 0;
-        DBGASSERT(!value.isArray()
-            || static_cast<size_t>(value.nelements()) == nFreq * nTime);
+        const size_t sampleStep = samplesRHS.isArray() ? 1 : 0;
+        DBGASSERT(!samplesRHS.isArray()
+            || static_cast<size_t>(samplesRHS.nelements()) == nFreq * nTime);
 
-        // Get a view on the relevant slice of the chunk.
-        typedef boost::multi_array<sample_t, 4>::index_range DRange;
-        typedef boost::multi_array<sample_t, 4>::array_view<2>::type DView;
-        DView chunkVis(itsChunk->vis_data[boost::indices[bl][DRange()]
-            [DRange()][extProd]]);
+        // Get a view on the relevant slice of the data buffer.
+        typedef boost::multi_array<sample_t, 4>::index_range SRange;
+        typedef boost::multi_array<sample_t, 4>::array_view<2>::type SSlice;
+        SSlice samplesLHS(itsLHS->vis_data[boost::indices[bl][SRange()]
+            [SRange()][crLHS]]);
 
-        // Process visibilities and flags.
-        for(size_t ts = 0; ts < nTime; ++ts)
+        // Process visibilities.
+        for(size_t t = 0; t < nTime; ++t)
         {
-            for(size_t ch = 0; ch < nFreq; ++ch)
+            for(size_t f = 0; f < nFreq; ++f)
             {
-                T_OPERATOR::apply(chunkVis[ts][ch], makedcomplex(*re, *im));
-                re += step;
-                im += step;
+                T_OPERATOR::apply(samplesLHS[t][f], makedcomplex(*reIt, *imIt));
+                reIt += sampleStep;
+                imIt += sampleStep;
             }
         }
     }

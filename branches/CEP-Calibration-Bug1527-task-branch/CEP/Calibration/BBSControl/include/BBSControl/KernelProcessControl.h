@@ -34,7 +34,6 @@
 #include <BBSControl/Types.h>
 
 #include <BBSKernel/Measurement.h>
-#include <BBSKernel/Model.h>
 #include <BBSKernel/VisSelection.h>
 #include <BBSKernel/VisData.h>
 
@@ -117,11 +116,14 @@ private:
 
     Axis::ShPtr getCalGroupFreqAxis(const vector<uint32> &groups) const;
 
-    bool parseProductSelection(vector<string> &result, const Step &command)
-        const;
+    BaselineFilter createBaselineFilter(const Selection &selection) const;
+    CorrelationFilter createCorrelationFilter(const Selection &selection) const;
 
-    bool parseBaselineSelection(vector<baseline_t> &result,
-        const Step &command) const;
+//    bool parseProductSelection(vector<string> &result, const Step &command)
+//        const;
+
+//    bool parseBaselineSelection(vector<baseline_t> &result,
+//        const Step &command) const;
 
     State                                   itsState;
 

@@ -1,6 +1,7 @@
-//# Types.h: Types used in the kernel.
+//# MeasurementExpr.h: A measurement equation (expression) for a set of
+//# interferometers (baselines).
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2010
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,65 +21,37 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_TYPES_H
-#define LOFAR_BBSKERNEL_TYPES_H
+#ifndef LOFAR_BBSKERNEL_MEASUREMENTEXPR_H
+#define LOFAR_BBSKERNEL_MEASUREMENTEXPR_H
 
-#include <Common/lofar_iosfwd.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
-#include <Common/LofarTypes.h>
+// \file
+// A measurement equation (expression) for a set of interferometers (baselines).
 
-#include <utility>
+#include <BBSKernel/ExprSet.h>
+#include <BBSKernel/VisDimensions.h>
+#include <BBSKernel/Expr/ExprValue.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
-using std::pair;
 
 // \addtogroup BBSKernel
 // @{
 
-typedef fcomplex                sample_t;
-typedef uint8                   flag_t;
-typedef uint8                   tslot_flag_t;
-typedef pair<uint32, uint32>    baseline_t;
-
-enum AxisName
-{
-    FREQ,
-    TIME,
-    N_AxisName
-};
-
-enum ParmCategory
-{
-    INSTRUMENT,
-    SKY,
-    N_ParmCategory
-};
-
-template <typename T_VALUE>
-class Interval
+class MeasurementExpr: public ExprSet<JonesMatrix>
 {
 public:
-    Interval()
-    {
-    }
+    typedef shared_ptr<MeasurementExpr>         Ptr;
+    typedef shared_ptr<const MeasurementExpr>   ConstPtr;
 
-    Interval(T_VALUE start, T_VALUE end)
-        :   start(start),
-            end(end)
-    {
-    }
-
-    T_VALUE start;
-    T_VALUE end;
+    virtual const BaselineSeq &baselines() const = 0;
+    virtual const CorrelationSeq &correlations() const = 0;
 };
 
 // @}
 
-} // namespace BBS
-} // namespace LOFAR
+} //# namespace BBS
+} //# namespace LOFAR
 
 #endif

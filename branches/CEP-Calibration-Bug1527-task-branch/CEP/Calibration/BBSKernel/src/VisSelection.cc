@@ -1,4 +1,6 @@
-//# VisSelection.cc: 
+//# VisSelection.cc: Selection of visibility data that can exist independent of
+//# a specific measurement (e.g. baselines are specified by name and not by a
+//# pair of indices).
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -30,80 +32,83 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 using casa::Quantum;
 using casa::MVTime;
 using casa::Double;
 
-
 VisSelection::VisSelection()
 {
-    itsFieldFlags.resize(N_FieldEnum, false);
+    fill(itsFlags, itsFlags + N_Field, false);
 }
 
+void VisSelection::clear(Field field)
+{
+    itsFlags[field] = false;
+}
+
+bool VisSelection::isSet(Field field) const
+{
+    return itsFlags[field];
+}
 
 bool VisSelection::empty() const
 {
-    return count(itsFieldFlags.begin(), itsFieldFlags.end(), true) == 0;
+    return count(itsFlags, itsFlags + N_Field, true) == 0;
 }
 
+pair<size_t, size_t> VisSelection::getChannelRange() const
+{
+    return itsChannelRange;
+}
+
+pair<double, double> VisSelection::getTimeRange() const
+{
+    return itsTimeRange;
+}
 
 void VisSelection::setStartChannel(size_t start)
 {
-    if(!isSet(CHANNEL_START)
-        && (!isSet(CHANNEL_END) || start <= itsChannelRange.second))
+    if(!isSet(CHANNEL_END) || start <= itsChannelRange.second)
     {
-        itsFieldFlags[CHANNEL_START] = true;
+        itsFlags[CHANNEL_START] = true;
         itsChannelRange.first = start;
     }
-    else if(start < itsChannelRange.first)
-        itsChannelRange.first = start;
 }
-
 
 void VisSelection::setEndChannel(size_t end)
 {
-    if(!isSet(CHANNEL_END)
-        && (!isSet(CHANNEL_START) || end >= itsChannelRange.first))
+    if(!isSet(CHANNEL_START) || end >= itsChannelRange.first)
     {
-        itsFieldFlags[CHANNEL_END] = true;
+        itsFlags[CHANNEL_END] = true;
         itsChannelRange.second = end;
     }
-    else if(end > itsChannelRange.second)
-        itsChannelRange.second = end;
 }
 
+void VisSelection::setChannelRange(size_t start, size_t end)
+{
+    setStartChannel(start);
+    setEndChannel(end);
+}
 
 void VisSelection::setStartTime(double start)
 {
-    if(!isSet(TIME_START)
-        && (!isSet(TIME_END) || start <= itsTimeRange.second))
+    if(!isSet(TIME_END) || start <= itsTimeRange.second)
     {
-        itsFieldFlags[TIME_START] = true;
-        itsTimeRange.first = start;
-    }
-    else if(start < itsTimeRange.first)
-    {
+        itsFlags[TIME_START] = true;
         itsTimeRange.first = start;
     }
 }
-
 
 void VisSelection::setEndTime(double end)
 {
-        if(!isSet(TIME_END)
-            && (!isSet(TIME_START) || end >= itsTimeRange.first))
-        {
-            itsFieldFlags[TIME_END] = true;
-            itsTimeRange.second = end;
-        }
-        else if(end > itsTimeRange.second)
-        {
-            itsTimeRange.second = end;
-        }
+    if(!isSet(TIME_START) || end >= itsTimeRange.first)
+    {
+        itsFlags[TIME_END] = true;
+        itsTimeRange.second = end;
+    }
 }
-
 
 void VisSelection::setStartTime(const string &start)
 {
@@ -114,7 +119,6 @@ void VisSelection::setStartTime(const string &start)
     }
 }
 
-
 void VisSelection::setEndTime(const string &end)
 {
     double time;
@@ -124,63 +128,49 @@ void VisSelection::setEndTime(const string &end)
     }
 }
 
-
-void VisSelection::setPolarizations(vector<string> polarizations)
+void VisSelection::setTimeRange(double start, double end)
 {
-    set<string> selection(polarizations.begin(), polarizations.end());
+    setStartTime(start);
+    setEndTime(end);
+}
 
-    if(!isSet(POLARIZATIONS))
+void VisSelection::setTimeRange(const string &start, const string &end)
+{
+    setStartTime(start);
+    setEndTime(end);
+}
+
+void VisSelection::setBaselineFilter(const BaselineFilter &filter)
+{
+    if(!filter.empty())
     {
-        itsPolarizations = selection;
-        itsFieldFlags[POLARIZATIONS] = true;
-    }
-    else
-    {
-        set<string>::const_iterator it = itsPolarizations.begin();
-        while(it != itsPolarizations.end())
-        {
-            if(selection.count(*it))
-                ++it;
-            else
-                itsPolarizations.erase(it++);
-        }
+        itsFlags[BASELINE_FILTER] = true;
+        itsBaselineFilter = filter;
     }
 }
 
-
-void VisSelection::setStations(vector<string> stations)
+void VisSelection::setCorrelationFilter(const CorrelationFilter &filter)
 {
-    set<string> selection(stations.begin(), stations.end());
-
-    if(!isSet(STATIONS))
+    if(!filter.empty())
     {
-        itsStations = selection;
-        itsFieldFlags[STATIONS] = true;
-    }
-    else
-    {
-        set<string>::const_iterator it = itsStations.begin();
-        while(it != itsStations.end())
-        {
-            if(selection.count(*it))
-                ++it;
-            else
-                itsStations.erase(it++);
-        }
+        itsFlags[CORRELATION_FILTER] = true;
+        itsCorrelationFilter = filter;
     }
 }
 
-
-void VisSelection::setBaselineFilter(BaselineFilter filter)
+const BaselineFilter &VisSelection::getBaselineFilter() const
 {
-    itsFieldFlags[BASELINE_FILTER] = true;
-    itsBaselineFilter = filter;
+    return itsBaselineFilter;
 }
 
+const CorrelationFilter &VisSelection::getCorrelationFilter() const
+{
+    return itsCorrelationFilter;
+}
 
 bool VisSelection::convertTime(const string &in, double &out) const
 {
-    //# TODO: Convert from default epoch to MS epoch (as it may differ from 
+    //# TODO: Convert from default epoch to MS epoch (as it may differ from
     //# the default!)
     casa::Quantity time;
 

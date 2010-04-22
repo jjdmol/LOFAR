@@ -1,4 +1,4 @@
-//# InitializeCommand.cc: 
+//# InitializeCommand.cc:
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -34,7 +34,7 @@
 
 namespace LOFAR
 {
-  namespace BBS 
+  namespace BBS
   {
     using LOFAR::operator<<;
 
@@ -57,12 +57,13 @@ namespace LOFAR
 
     InitializeCommand::InitializeCommand(const Strategy& strategy)
     {
-      itsInputColumn = strategy.getInputColumn();
-      itsStations = strategy.getStations();
-      itsCorrelation = strategy.getCorrelation();
+      itsInputColumn = strategy.inputColumn();
+      itsSelection = strategy.selection();
+//      itsStations = strategy.getStations();
+//      itsCorrelationFilter = strategy.getCorrelationFilter();
       itsUseSolver = strategy.useSolver();
     }
-    
+
     CommandResult InitializeCommand::accept(CommandVisitor &visitor) const
     {
       return visitor.visit(*this);
@@ -81,12 +82,16 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       Command::print(os);
-      os << endl << indent << "Stations: " << itsStations
-        << endl << indent << "Input column: " << itsInputColumn
-        << endl << indent << itsCorrelation
-        << boolalpha
+      os << endl << indent << "Input column: " << itsInputColumn
+        << endl << indent << itsSelection
         << endl << indent << "UseSolver: " << boolalpha << itsUseSolver
         << noboolalpha;
+//      os << endl << indent << "Stations: " << itsStations
+//        << endl << indent << "Input column: " << itsInputColumn
+//        << endl << indent << itsCorrelationFilter
+//        << boolalpha
+//        << endl << indent << "UseSolver: " << boolalpha << itsUseSolver
+//        << noboolalpha;
     }
 
 
@@ -96,10 +101,13 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      ps.add("Stations", toString(itsStations));
+//      ps.add("Stations", toString(itsStations));
       ps.add("InputColumn", itsInputColumn);
-      ps.add("Correlation.Selection", itsCorrelation.selection);
-      ps.add("Correlation.Type", toString(itsCorrelation.type));
+      ps.add("Selection.BaselineType", itsSelection.type);
+      ps.add("Selection.Baselines", toString(itsSelection.baselines));
+      ps.add("Selection.Correlations", toString(itsSelection.correlations));
+//      ps.add("Correlation.Selection", itsCorrelationFilter.selection);
+//      ps.add("Correlation.Type", toString(itsCorrelationFilter.type));
       ps.add("UseSolver", toString(itsUseSolver));
     }
 
@@ -107,11 +115,13 @@ namespace LOFAR
     void InitializeCommand::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      itsStations = ps.getStringVector("Stations", vector<string>());
+//      itsStations = ps.getStringVector("Stations", vector<string>());
       itsInputColumn = ps.getString("InputColumn", "DATA");
-      itsCorrelation.selection = ps.getString("Correlation.Selection", "CROSS");
-      itsCorrelation.type = ps.getStringVector("Correlation.Type",
-        vector<string>());
+      fromParameterSet(ps, itsSelection);
+//      itsCorrelationFilter.selection = ps.getString("Correlation.Selection",
+//        "CROSS");
+//      itsCorrelationFilter.type = ps.getStringVector("Correlation.Type",
+//        vector<string>());
       itsUseSolver = ps.getBool("UseSolver", false);
     }
 

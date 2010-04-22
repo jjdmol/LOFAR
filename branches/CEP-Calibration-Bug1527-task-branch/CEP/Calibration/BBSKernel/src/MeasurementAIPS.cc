@@ -99,24 +99,26 @@ MeasurementAIPS::MeasurementAIPS(const string &filename,
         && itsMS.col("FIELD_ID") == static_cast<Int>(idField)
         && itsMS.col("DATA_DESC_ID") == static_cast<Int>(idDataDescription));
 
-    // Get the dimensions (time, frequency, baselines, polarization products)
-    // of the measurement.
+    // Get the dimensions (time, frequency, baselines, correlations) of the
+    // measurement.
     initDimensions();
 
     LOG_DEBUG_STR("Measurement " << idObservation << " contains "
         << itsMainTableView.nrow() << " row(s).");
-    LOG_DEBUG_STR("Measurement dimensions: " << endl << itsDimensions);
+    LOG_DEBUG_STR("Measurement dimensions: " << endl
+        << ((Measurement*) this)->dimensions());
 }
 
-VisDimensions MeasurementAIPS::getDimensions(const VisSelection &selection)
+VisDimensions MeasurementAIPS::dimensions(const VisSelection &selection)
     const
 {
     Slicer slicer = getCellSlicer(selection);
-    Table tab_selection = getTableSelection(itsMainTableView, selection);
+    BaselineMask mask = selection.getBaselineFilter().createMask(itsInstrument);
+    Table tab_selection = getTableSelection(itsMainTableView, selection, mask);
     ASSERTSTR(tab_selection.nrow() > 0, "Data selection did not match any"
         " rows.");
 
-    return getDimensionsImpl(tab_selection, slicer);
+    return getDimensionsImpl(tab_selection, mask, slicer);
 }
 
 VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
@@ -125,29 +127,27 @@ VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
     NSTimer readTimer, copyTimer;
 
     Slicer slicer = getCellSlicer(selection);
-    Table tab_selection = getTableSelection(itsMainTableView, selection);
+    BaselineMask mask = selection.getBaselineFilter().createMask(itsInstrument);
+    Table tab_selection = getTableSelection(itsMainTableView, selection, mask);
     ASSERTSTR(tab_selection.nrow() > 0, "Data selection did not match any"
         " rows.");
 
-    VisDimensions visDims(getDimensionsImpl(tab_selection, slicer));
-    VisData::Ptr buffer(new VisData(visDims));
+    VisDimensions dims(getDimensionsImpl(tab_selection, mask, slicer));
+    VisData::Ptr buffer(new VisData(dims));
 
-    const VisDimensions &dims = buffer->getDimensions();
-    const size_t nChannels = dims.getChannelCount();
-    const size_t nPolarizations = dims.getPolarizationCount();
+    const size_t nFreq = dims.nFreq();
+    const size_t nCorrelations = dims.nCorrelations();
 
     Table tab_tslot;
     size_t tslot = 0;
     TableIterator tslotIterator(tab_selection, "TIME");
     while(!tslotIterator.pastEnd())
     {
-        ASSERTSTR(tslot < dims.getTimeslotCount(), "Timeslot out of range.");
+        ASSERTSTR(tslot < dims.nTime(), "Timeslot out of range.");
 
         // Get next timeslot.
         tab_tslot = tslotIterator.table();
         size_t nRows = tab_tslot.nrow();
-        ASSERTSTR(nRows <= dims.getBaselineCount(), "Measurement contains"
-            " multiple samples with the same timestamp for a single baseline.");
 
         // Declare all the columns we want to read.
         ROScalarColumn<Int> c_antenna1(tab_tslot, "ANTENNA1");
@@ -176,7 +176,7 @@ VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
         ASSERT(aips_antenna2.shape().isEqual(IPosition(1, nRows)));
         ASSERT(aips_flag_row.shape().isEqual(IPosition(1, nRows)));
         ASSERT(!readUVW || aips_uvw.shape().isEqual(IPosition(2, 3, nRows)));
-        IPosition shape = IPosition(3, nPolarizations, nChannels, nRows);
+        IPosition shape = IPosition(3, nCorrelations, nFreq, nRows);
         ASSERT(aips_data.shape().isEqual(shape));
         ASSERT(aips_flag.shape().isEqual(shape));
         ASSERT(aips_uvw.contiguousStorage());
@@ -188,7 +188,7 @@ VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
         // as we never write to the array.
         Double *ptr_uvw = const_cast<Double*>(aips_uvw.data());
         boost::multi_array_ref<double, 2> uvw(ptr_uvw,
-                boost::extents[nRows][3]);
+            boost::extents[nRows][3]);
 
         // Use multi_array_ref to ease transposing the data to per baseline
         // timeseries. This also accounts for reversed channels if necessary.
@@ -197,29 +197,37 @@ VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
         Complex *ptr_data = const_cast<Complex*>(aips_data.data());
         boost::multi_array_ref<sample_t, 3>
             data(reinterpret_cast<sample_t*>(ptr_data),
-                boost::extents[nRows][nChannels][nPolarizations],
+                boost::extents[nRows][nFreq][nCorrelations],
                 boost::general_storage_order<3>(order_data, ascending));
 
         boost::multi_array_ref<flag_t, 3>::size_type order_flag[] = {2, 1, 0};
-//        Bool *ptr_flag = const_cast<Bool*>(aips_flag.data());
         Bool *ptr_flag = const_cast<Bool*>(aips_flag.data());
-//        boost::multi_array_ref<flag_t, 3> flag(ptr_flag,
-//                boost::extents[nRows][nChannels][nPolarizations],
-//                boost::general_storage_order<3>(order_flag, ascending));
         boost::multi_array_ref<flag_t, 3>
             flag(reinterpret_cast<flag_t*>(ptr_flag),
-                boost::extents[nRows][nChannels][nPolarizations],
+                boost::extents[nRows][nFreq][nCorrelations],
                 boost::general_storage_order<3>(order_flag, ascending));
 
         copyTimer.start();
         for(uInt i = 0; i < nRows; ++i)
         {
             // Get time sequence for this baseline.
-            size_t basel = dims.getBaselineIndex(baseline_t(aips_antenna1[i],
-                aips_antenna2[i]));
+            baseline_t baseline(aips_antenna1[i], aips_antenna2[i]);
+
+            // If this baseline is not selected, continue.
+            if(!mask(baseline))
+            {
+                continue;
+            }
+
+            // Look up baseline index.
+            size_t basel = dims.baselines().index(baseline);
+            ASSERT(basel < dims.nBaselines());
 
             // Flag timeslot as available.
-            buffer->tslot_flag[basel][tslot] = 0;
+            ASSERTSTR(buffer->tslot_flag[basel][tslot] == VisData::UNAVAILABLE,
+                "Measurement contains multiple samples with the same timestamp"
+                " for a single baseline.");
+            buffer->tslot_flag[basel][tslot] = VisData::AVAILABLE;
 
             // Copy row (timeslot) flag.
             if(aips_flag_row(i))
@@ -236,6 +244,7 @@ VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
 
             // Copy visibilities.
             buffer->vis_data[basel][tslot] = data[i];
+
             // Copy flags.
             buffer->vis_flag[basel][tslot] = flag[i];
         }
@@ -269,16 +278,14 @@ void MeasurementAIPS::write(const VisSelection &selection,
         // Added column should get the same shape as the other data columns in
         // the MS.
         ArrayColumnDesc<Complex> columnDescriptor(column,
-            IPosition(2, itsDimensions.getPolarizationCount(),
-                itsDimensions.getChannelCount()),
-            ColumnDesc::FixedShape);
+            IPosition(2, correlations().size(), grid()[FREQ]->size(),
+                ColumnDesc::FixedShape));
 
         // Create storage manager. Tile size specification taken from the
         // MSCreate class in the CEP/MS package.
         TiledColumnStMan storageManager("Tiled_" + column, IPosition(3,
-            itsDimensions.getPolarizationCount(),
-            itsDimensions.getChannelCount(),
-            std::max(size_t(1), 4096 / itsDimensions.getChannelCount())));
+            correlations().size(), grid()[FREQ]->size(),
+            std::max(size_t(1), 4096 / grid()[FREQ]->size())));
 
         itsMS.addColumn(columnDescriptor, storageManager);
         itsMS.flush();
@@ -300,14 +307,14 @@ void MeasurementAIPS::write(const VisSelection &selection,
     LOG_DEBUG_STR("Writing to column: " << column);
 
     Slicer slicer = getCellSlicer(selection);
-    Table tab_selection = getTableSelection(itsMainTableView, selection);
+    BaselineMask mask = selection.getBaselineFilter().createMask(itsInstrument);
+    Table tab_selection = getTableSelection(itsMainTableView, selection, mask);
     ASSERTSTR(tab_selection.nrow() > 0, "Data selection did not match any"
         " rows.");
 
-    const VisDimensions &dims = buffer->getDimensions();
-    const size_t nChannels = dims.getChannelCount();
-    const size_t nPolarizations = dims.getPolarizationCount();
-    const Grid &grid = dims.getGrid();
+    const VisDimensions &dims = buffer->dimensions();
+    const size_t nFreq = dims.nFreq();
+    const size_t nCorrelations = dims.nCorrelations();
 
     // Allocate temporary buffers to be able to reverse frequency channels.
     // TODO: Some performance can be gained by creating a specialized
@@ -316,12 +323,12 @@ void MeasurementAIPS::write(const VisSelection &selection,
     bool ascending[] = {!itsFreqAxisReversed, true};
     boost::multi_array<sample_t, 2>::size_type order_data[] = {1, 0};
     boost::multi_array<sample_t, 2>
-        visBuffer(boost::extents[nChannels][nPolarizations],
+        visBuffer(boost::extents[nFreq][nCorrelations],
             boost::general_storage_order<2>(order_data, ascending));
 
     boost::multi_array<flag_t, 2>::size_type order_flag[] = {1, 0};
     boost::multi_array<flag_t, 2>
-        flagBuffer(boost::extents[nChannels][nPolarizations],
+        flagBuffer(boost::extents[nFreq][nCorrelations],
             boost::general_storage_order<2>(order_flag, ascending));
 
     Table tab_tslot;
@@ -330,13 +337,11 @@ void MeasurementAIPS::write(const VisSelection &selection,
     TableIterator tslotIterator(tab_selection, "TIME");
     while(!tslotIterator.pastEnd())
     {
-        ASSERTSTR(tslot < dims.getTimeslotCount(), "Timeslot out of range.");
+        ASSERTSTR(tslot < dims.nTime(), "Timeslot out of range.");
 
         // Extract next timeslot.
         tab_tslot = tslotIterator.table();
         size_t nRows = tab_tslot.nrow();
-        ASSERTSTR(nRows <= dims.getBaselineCount(), "Measurement contains"
-            " multiple samples with the same timestamp for a single baseline.");
 
         // TODO: Should use TIME_CENTROID here (centroid of exposure)? NB. The
         // TIME_CENTROID may be different for each baseline!
@@ -363,14 +368,23 @@ void MeasurementAIPS::write(const VisSelection &selection,
         // Open data column for writing.
         ArrayColumn<Complex> c_data(tab_tslot, column);
 
-        mismatch = mismatch && (grid[TIME]->center(tslot) == aips_time(0));
+        mismatch = mismatch && (dims[TIME]->center(tslot) == aips_time(0));
 
         writeTimer.start();
         for(uInt i = 0; i < nRows; ++i)
         {
             // Get time sequence for this baseline.
-            size_t basel = dims.getBaselineIndex(baseline_t(aips_antenna1[i],
-                    aips_antenna2[i]));
+            baseline_t baseline(aips_antenna1[i], aips_antenna2[i]);
+
+            // If this baseline is not selected, continue.
+            if(!mask(baseline))
+            {
+                continue;
+            }
+
+            // Get time sequence for this baseline.
+            size_t basel = dims.baselines().index(baseline);
+            ASSERT(basel < dims.nBaselines());
 
             if(writeFlags)
             {
@@ -381,7 +395,7 @@ void MeasurementAIPS::write(const VisSelection &selection,
                 flagBuffer = buffer->vis_flag[basel][tslot];
 
                 // Write visibility flags.
-                Array<Bool> vis_flag(IPosition(2, nPolarizations, nChannels),
+                Array<Bool> vis_flag(IPosition(2, nCorrelations, nFreq),
                     reinterpret_cast<Bool*>(flagBuffer.data()), SHARE);
                 c_flag.putSlice(i, slicer, vis_flag);
             }
@@ -390,7 +404,7 @@ void MeasurementAIPS::write(const VisSelection &selection,
             visBuffer = buffer->vis_data[basel][tslot];
 
             // Write visibilities.
-            Array<Complex> vis_data(IPosition(2, nPolarizations, nChannels),
+            Array<Complex> vis_data(IPosition(2, nCorrelations, nFreq),
                 reinterpret_cast<Complex*>(visBuffer.data()), SHARE);
             c_data.putSlice(i, slicer, vis_data);
         }
@@ -491,12 +505,12 @@ void MeasurementAIPS::initDimensions()
 
     itsReferenceFreq = window.refFrequency()(idWindow);
 
-    const unsigned int nChannels = window.numChan()(idWindow);
+    const unsigned int nFreq = window.numChan()(idWindow);
     Vector<Double> frequency = window.chanFreq()(idWindow);
     Vector<Double> width = window.chanWidth()(idWindow);
 
-    ASSERT(frequency.nelements() == nChannels);
-    ASSERT(width.nelements() == nChannels);
+    ASSERT(frequency.nelements() == nFreq);
+    ASSERT(width.nelements() == nFreq);
     // TODO: Technically, checking for equal channel widths is not enough,
     // because there could still be gaps between channels even though the
     // widths are all equal (this is not prevented by the MS 2.0 standard).
@@ -505,20 +519,20 @@ void MeasurementAIPS::initDimensions()
         " yet.");
 
     double lower = frequency(0) - 0.5 * width(0);
-    double upper = frequency(nChannels - 1) + 0.5 * width(nChannels - 1);
-    if(frequency(0) > frequency(nChannels - 1))
+    double upper = frequency(nFreq - 1) + 0.5 * width(nFreq - 1);
+    if(frequency(0) > frequency(nFreq - 1))
     {
         LOG_INFO_STR("Channels are in reverse order.");
 
         // Correct upper and lower boundary.
-        lower = frequency(nChannels - 1) - 0.5 * width(nChannels - 1);
+        lower = frequency(nFreq - 1) - 0.5 * width(nFreq - 1);
         upper = frequency(0) + 0.5 * width(0);
         itsFreqAxisReversed = true;
     }
 
     // Construct frequency axis.
-    Axis::ShPtr freqAxis(new RegularAxis(lower, (upper - lower) / nChannels,
-        nChannels));
+    Axis::ShPtr freqAxis(new RegularAxis(lower, (upper - lower) / nFreq,
+        nFreq));
 
     // Extract time axis based on TIME column (mid-point of integration
     // interval).
@@ -544,7 +558,7 @@ void MeasurementAIPS::initDimensions()
 
     // Construct time axis.
     Axis::ShPtr timeAxis(new OrderedAxis(timeCopy, intervalCopy));
-    itsDimensions.setGrid(Grid(freqAxis, timeAxis));
+    itsDims.setGrid(Grid(freqAxis, timeAxis));
 
     // Find all unique baselines.
     Block<String> sortColumns(2);
@@ -566,28 +580,30 @@ void MeasurementAIPS::initDimensions()
     {
         baselines.push_back(baseline_t(antenna1[i], antenna2[i]));
     }
-    itsDimensions.setBaselines(baselines);
+    itsDims.setBaselines(baselines.begin(), baselines.end());
 
-    // Initialize polarization product axis.
+    // Initialize correlation axis.
     ROMSPolarizationColumns polarization(itsMS.polarization());
     ASSERT(polarization.nrow() > idPolarization);
     ASSERT(!polarization.flagRow()(idPolarization));
 
-    Vector<Int> products = polarization.corrType()(idPolarization);
+    Vector<Int> corrType = polarization.corrType()(idPolarization);
+    const unsigned int nCorrelations = corrType.nelements();
 
-    vector<string> names;
-    names.reserve(products.nelements());
-    for(unsigned int i = 0; i < products.nelements(); ++i)
+    vector<Correlation> correlations;
+    correlations.reserve(nCorrelations);
+    for(unsigned int i = 0; i < nCorrelations; ++i)
     {
-        names.push_back(Stokes::name(Stokes::type(products(i))));
+        Correlation cr = asCorrelation(Stokes::name(Stokes::type(corrType(i))));
+        correlations.push_back(cr);
     }
-    itsDimensions.setPolarizations(names);
+    itsDims.setCorrelations(correlations.begin(), correlations.end());
 }
 
 // NOTE: OPTIMIZATION OPPORTUNITY: Cache implementation specific selection
 // within a specialization of VisSelection or VisData.
 Table MeasurementAIPS::getTableSelection(const Table &table,
-    const VisSelection &selection) const
+    const VisSelection &selection, const BaselineMask &mask) const
 {
     // If no selection criteria are specified, return immediately.
     if(selection.empty())
@@ -608,74 +624,38 @@ Table MeasurementAIPS::getTableSelection(const Table &table,
         filter = filter && table.col("TIME") <= timeRange.second;
     }
 
-    if(selection.isSet(VisSelection::STATIONS))
+    if(selection.isSet(VisSelection::BASELINE_FILTER))
     {
-        const set<string> &regexSet = selection.getStations();
-        set<size_t> stationSelection;
-
-        try
+        TableExprNodeSet selectionExpr;
+        for(size_t i = 0; i < itsInstrument.size(); ++i)
         {
-            for(set<string>::const_iterator it = regexSet.begin();
-                it != regexSet.end();
-                ++it)
+            if(mask(i))
             {
-                Regex regex(Regex::fromPattern(*it));
-
-                // If the name of a station matches the pattern, add it to the
-                // selection.
-                for(size_t i = 0; i < itsInstrument.size(); ++i)
-                {
-                    String name(itsInstrument[i].name());
-
-                    if(name.matches(regex))
-                    {
-                        stationSelection.insert(i);
-                    }
-                }
+                selectionExpr.add(TableExprNodeSetElem(static_cast<Int>(i)));
             }
         }
-        catch(std::exception &ex)
-        {
-            THROW(BBSKernelException, "Encountered an invalid station"
-               " selection criterium.");
-        }
 
-        if(stationSelection.empty())
+        if(selectionExpr.nelements() > 0)
         {
-            LOG_WARN_STR("Station selection criteria did not match any"
-                " station in the MS; criteria will be ignored.");
-        }
-        else
-        {
-            TableExprNodeSet selectionExpr;
-            for(set<size_t>::const_iterator it = stationSelection.begin();
-                it != stationSelection.end();
-                ++it)
-            {
-                selectionExpr.add(TableExprNodeSetElem(static_cast<Int>(*it)));
-            }
-
             filter = filter && table.col("ANTENNA1").in(selectionExpr)
                 && table.col("ANTENNA2").in(selectionExpr);
         }
-    }
 
-    if(selection.isSet(VisSelection::BASELINE_FILTER))
-    {
-        if(selection.getBaselineFilter() == VisSelection::AUTO)
+        if(selection.getBaselineFilter().baselineType() == BaselineFilter::AUTO)
         {
             filter = filter && (table.col("ANTENNA1") == table.col("ANTENNA2"));
         }
-        else if(selection.getBaselineFilter() == VisSelection::CROSS)
+        else if(selection.getBaselineFilter().baselineType()
+            == BaselineFilter::CROSS)
         {
             filter = filter && (table.col("ANTENNA1") != table.col("ANTENNA2"));
         }
     }
 
-    if(selection.isSet(VisSelection::POLARIZATIONS))
+    if(selection.isSet(VisSelection::CORRELATION_FILTER))
     {
-        LOG_WARN_STR("Polarization selection not yet implemented; all available"
-            " polarizations will be used.");
+        LOG_WARN_STR("Correlation selection not yet implemented; all available"
+            " correlations will be used.");
     }
 
     return table(filter);
@@ -689,7 +669,7 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
     pair<size_t, size_t> range = selection.getChannelRange();
 
     size_t startChannel = 0;
-    size_t endChannel = itsDimensions.getChannelCount() - 1;
+    size_t endChannel = grid()[FREQ]->size() - 1;
 
     if(selection.isSet(VisSelection::CHANNEL_START))
     {
@@ -710,48 +690,46 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
     }
 
     IPosition start(2, 0, startChannel);
-    IPosition end(2, itsDimensions.getPolarizationCount() - 1, endChannel);
+    IPosition end(2, correlations().size() - 1, endChannel);
 
     if(itsFreqAxisReversed)
     {
         // Adjust range if channels are in reverse order.
-        size_t lastChannelIndex = itsDimensions.getChannelCount() - 1;
+        size_t lastChannelIndex = grid()[FREQ]->size() - 1;
         start = IPosition(2, 0, lastChannelIndex - endChannel);
-        end = IPosition(2, itsDimensions.getPolarizationCount() - 1,
-            lastChannelIndex - startChannel);
+        end = IPosition(2, correlations().size() - 1, lastChannelIndex
+            - startChannel);
     }
 
     return Slicer(start, end, Slicer::endIsLast);
 }
 
 VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
-    const Slicer slicer) const
+    const BaselineMask &mask, const Slicer slicer) const
 {
     VisDimensions dims;
-
-    const Grid &grid = itsDimensions.getGrid();
 
     // Initialize frequency axis.
     double lower, upper;
     if(itsFreqAxisReversed)
     {
         // Correct range if channels are in reverse order.
-        const size_t lastChannelIndex = itsDimensions.getChannelCount() - 1;
-        lower = grid[FREQ]->lower(lastChannelIndex - slicer.end()[1]);
-        upper = grid[FREQ]->upper(lastChannelIndex - slicer.start()[1]);
+        const size_t lastChannelIndex = grid()[FREQ]->size() - 1;
+        lower = grid()[FREQ]->lower(lastChannelIndex - slicer.end()[1]);
+        upper = grid()[FREQ]->upper(lastChannelIndex - slicer.start()[1]);
     }
     else
     {
-        lower = grid[FREQ]->lower(slicer.start()[1]);
-        upper = grid[FREQ]->upper(slicer.end()[1]);
+        lower = grid()[FREQ]->lower(slicer.start()[1]);
+        upper = grid()[FREQ]->upper(slicer.end()[1]);
     }
 
     // Get number of channels in the selection.
-    const unsigned int nChannels = slicer.length()[1];
+    const unsigned int nFreq = slicer.length()[1];
 
     // Construct frequency axis.
-    Axis::ShPtr freqAxis(new RegularAxis(lower, (upper - lower) / nChannels,
-        nChannels));
+    Axis::ShPtr freqAxis(new RegularAxis(lower, (upper - lower) / nFreq,
+        nFreq));
 
     // Initialize time axis.
 
@@ -783,11 +761,6 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
         Sort::Ascending, Sort::QuickSort + Sort::NoDuplicates);
     const unsigned int nBaselines = tab_baselines.nrow();
 
-    LOG_DEBUG_STR("Selection contains " << nBaselines << " baseline(s), "
-        << timeAxis->size() << " timeslot(s), " << freqAxis->size()
-        << " channel(s), and " << itsDimensions.getPolarizationCount()
-        << " polarization(s).");
-
     // Initialize baseline axis.
     ROScalarColumn<Int> c_antenna1(tab_baselines, "ANTENNA1");
     ROScalarColumn<Int> c_antenna2(tab_baselines, "ANTENNA2");
@@ -795,15 +768,21 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     Vector<Int> antenna2 = c_antenna2.getColumn();
 
     vector<baseline_t> baselines;
-    baselines.reserve(nBaselines);
     for(unsigned int i = 0; i < nBaselines; ++i)
     {
-        baselines.push_back(baseline_t(antenna1[i], antenna2[i]));
+        if(mask(antenna1[i], antenna2[i]))
+        {
+            baselines.push_back(baseline_t(antenna1[i], antenna2[i]));
+        }
     }
-    dims.setBaselines(baselines);
+    dims.setBaselines(baselines.begin(), baselines.end());
 
-    // Initialize polarization axis.
-    dims.setPolarizations(itsDimensions.getPolarizations());
+    // Initialize correlation axis.
+    dims.setCorrelations(correlations().begin(), correlations().end());
+
+    LOG_DEBUG_STR("Selection contains " << dims.nBaselines() << " baseline(s), "
+        << dims.nTime() << " timeslot(s), " << dims.nFreq() << " channel(s),"
+        << " and " << dims.nCorrelations() << " correlation(s).");
 
     return dims;
 }

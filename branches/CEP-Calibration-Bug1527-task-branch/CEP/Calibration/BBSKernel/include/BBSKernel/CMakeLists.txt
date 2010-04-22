@@ -7,16 +7,23 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 
 # Install header files.
 install(FILES
+  BaselineFilter.h
+  BaselineMask.h
+  Correlation.h
+  CorrelationFilter.h
   ElementBeamExpr.h
   Equator.h
   Evaluator.h
   Exceptions.h
   ExprSet.h
+  IndexedSequence.h
   Instrument.h
   IonosphereExpr.h
   Measurement.h
   MeasurementAIPS.h
-  Model.h
+  MeasurementExpr.h
+  MeasurementExprLOFAR.h
+  MeasurementExprVLA.h
   ModelConfig.h
   ParmManager.h
   ParmProxy.h
@@ -25,6 +32,7 @@ install(FILES
   Types.h
   VisData.h
   VisDimensions.h
+  VisEquator.h
   VisExpr.h
   VisSelection.h
   DESTINATION include/${PACKAGE_NAME})
@@ -51,6 +59,7 @@ install(FILES
   Expr/GaussianCoherence.h
   Expr/GaussianSource.h
   Expr/HamakerDipole.h
+  Expr/LinearToCircularRL.h
   Expr/Literal.h
   Expr/LMN.h
   Expr/Matrix.h

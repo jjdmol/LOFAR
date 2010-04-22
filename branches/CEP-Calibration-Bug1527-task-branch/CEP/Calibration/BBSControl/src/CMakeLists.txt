@@ -13,7 +13,6 @@ lofar_add_library(bbscontrol
   CorrectStep.cc
   FinalizeCommand.cc
   GlobalProcessControl.cc
-  GlobalSolveController.cc
   InitializeCommand.cc
   KernelConnection.cc
   KernelProcessControl.cc

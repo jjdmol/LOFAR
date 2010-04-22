@@ -24,6 +24,7 @@
 
 #include <BBSControl/Types.h>
 #include <BBSControl/StreamUtil.h>
+#include <Common/LofarLogger.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_iomanip.h>
 
@@ -35,22 +36,62 @@ namespace LOFAR
 
     //# -------  ostream operators  ------- #//
 
-    ostream& operator<<(ostream& os, const Correlation& obj)
+//    ostream& operator<<(ostream& os, const CorrelationFilter& obj)
+//    {
+//      os << "Correlation:";
+//      Indent id;
+//      os << endl << indent << "Selection: " << obj.selection
+//         << endl << indent << "Type: "      << obj.type;
+//      return os;
+//    }
+
+
+//    ostream& operator<<(ostream& os, const Baselines& obj)
+//    {
+//      os << "Baselines:";
+//      Indent id;
+//      os << endl << indent << "Station1: " << obj.station1
+//         << endl << indent << "Station2: " << obj.station2;
+//      return os;
+//    }
+
+    void fromParameterSet(const ParameterSet &ps, Selection &selection)
     {
-      os << "Correlation:";
-      Indent id;
-      os << endl << indent << "Selection: " << obj.selection
-         << endl << indent << "Type: "      << obj.type;
-      return os;
+      selection.type = ps.getString("Selection.BaselineType", selection.type);
+
+      // Get the baseline selection for this step.
+      if(ps.isDefined("Selection.Baselines")) {
+        selection.baselines.clear();
+
+        const ParameterValue &value = ps.get("Selection.Baselines");
+        ASSERTSTR(value.isVector(), "Invalid baseline selection: " << value);
+
+        vector<ParameterValue> patterns(value.getVector());
+        for(vector<ParameterValue>::const_iterator pattern = patterns.begin(),
+          pattern_end = patterns.end(); pattern != pattern_end; ++pattern) {
+
+          ASSERTSTR(pattern->isVector(), "Invalid baseline selection: "
+            << (*pattern));
+
+          vector<string> criterion(pattern->getStringVector());
+          ASSERTSTR(criterion.size() > 0 && criterion.size() < 3, "Invalid"
+            " baseline selection criterion: " << criterion);
+
+          selection.baselines.push_back(criterion);
+        }
+      }
+
+      selection.correlations = ps.getStringVector("Selection.Correlations",
+        selection.correlations);
     }
 
-
-    ostream& operator<<(ostream& os, const Baselines& obj)
+    ostream& operator<<(ostream& os, const Selection &obj)
     {
-      os << "Baselines:";
+      os << "Selection:";
       Indent id;
-      os << endl << indent << "Station1: " << obj.station1
-         << endl << indent << "Station2: " << obj.station2;
+      os << endl << indent << "Baseline Type: " << obj.type
+         << endl << indent << "Baselines: " << obj.baselines
+         << endl << indent << "Correlations: " << obj.correlations;
       return os;
     }
 
@@ -58,8 +99,8 @@ namespace LOFAR
     {
       os << "Cell size:";
       Indent id;
-      os << endl << indent << "Frequency (channels): " << obj.freq << endl
-         << indent << "Time (timestamps): " << obj.time;
+      os << endl << indent << "Frequency (channels): " << obj.freq
+         << endl << indent << "Time (timestamps): " << obj.time;
       return os;
     }
 

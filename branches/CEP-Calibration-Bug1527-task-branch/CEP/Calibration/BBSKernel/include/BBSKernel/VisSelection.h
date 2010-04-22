@@ -1,4 +1,6 @@
-//# VisSelection.h:
+//# VisSelection.h: Selection of visibility data that can exist independent of
+//# a specific measurement (e.g. baselines are specified by name and not by a
+//# pair of indices).
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -23,12 +25,9 @@
 #ifndef LOFAR_BBSKERNEL_VISSELECTION_H
 #define LOFAR_BBSKERNEL_VISSELECTION_H
 
-#include <Common/LofarTypes.h>
-#include <Common/LofarLogger.h>
-#include <Common/lofar_set.h>
-#include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
-
+#include <BBSKernel/BaselineFilter.h>
+#include <BBSKernel/CorrelationFilter.h>
 #include <utility>
 
 namespace LOFAR
@@ -43,87 +42,52 @@ using std::pair;
 class VisSelection
 {
 public:
-    enum FieldEnum
+    enum Field
     {
-        CHANNEL_START = 0,
+        CHANNEL_START,
         CHANNEL_END,
         TIME_START,
         TIME_END,
-        STATIONS,
-        POLARIZATIONS,
         BASELINE_FILTER,
-        N_FieldEnum
-    };
-
-    enum BaselineFilter
-    {
-        AUTO = 0,
-        CROSS,
-        N_BaselineFilter
+        CORRELATION_FILTER,
+        N_Field
     };
 
     VisSelection();
 
-    void clear(FieldEnum field)
-    { itsFieldFlags[field] = false; }
-
-    bool isSet(FieldEnum field) const
-    { return itsFieldFlags[field]; }
-
+    void clear(Field field);
+    bool isSet(Field field) const;
     bool empty() const;
 
     void setStartChannel(size_t start);
     void setEndChannel(size_t end);
-    void setChannelRange(size_t start, size_t end)
-    {
-        setStartChannel(start);
-        setEndChannel(end);
-    }
+    void setChannelRange(size_t start, size_t end);
 
     void setStartTime(double start);
     void setEndTime(double end);
-    void setTimeRange(double start, double end)
-    {
-        setStartTime(start);
-        setEndTime(end);
-    }
+    void setTimeRange(double start, double end);
 
     void setStartTime(const string &start);
     void setEndTime(const string &end);
-    void setTimeRange(const string &start, const string &end)
-    {
-        setStartTime(start);
-        setEndTime(end);
-    }
+    void setTimeRange(const string &start, const string &end);
 
-    void setPolarizations(vector<string> polarizations);
-    void setStations(vector<string> stations);
-    void setBaselineFilter(BaselineFilter filter);
+    void setBaselineFilter(const BaselineFilter &filter);
 
-    pair<size_t, size_t> getChannelRange() const
-    { return itsChannelRange; }
+    void setCorrelationFilter(const CorrelationFilter &filter);
 
-    pair<double, double> getTimeRange() const
-    { return itsTimeRange; }
-
-    set<string> getPolarizations() const
-    { return itsPolarizations; }
-
-    set<string> getStations() const
-    { return itsStations; }
-
-    BaselineFilter getBaselineFilter() const
-    { return itsBaselineFilter; }
+    pair<size_t, size_t> getChannelRange() const;
+    pair<double, double> getTimeRange() const;
+    const BaselineFilter &getBaselineFilter() const;
+    const CorrelationFilter &getCorrelationFilter() const;
 
 private:
     bool convertTime(const string &in, double &out) const;
 
-    vector<bool>            itsFieldFlags;
+    bool                    itsFlags[N_Field];
     pair<size_t, size_t>    itsChannelRange;
     pair<double, double>    itsTimeRange;
-    set<string>             itsPolarizations;
-    set<string>             itsStations;
     BaselineFilter          itsBaselineFilter;
+    CorrelationFilter       itsCorrelationFilter;
 };
 
 // @}

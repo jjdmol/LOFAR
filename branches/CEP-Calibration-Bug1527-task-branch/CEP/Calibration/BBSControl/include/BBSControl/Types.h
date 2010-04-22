@@ -33,6 +33,7 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR
 {
@@ -49,11 +50,13 @@ namespace LOFAR
 
     // Information about which correlation products (auto, cross, or both),
     // and which polarizations should be used.
-    struct Correlation
+    struct Selection
     {
-      Correlation() : selection("NONE") {}
-      string selection;     ///< Valid values: "NONE", "AUTO", "CROSS", "ALL"
-      vector<string> type;  ///< E.g., ["XX", "XY", "YX", "YY"]
+      Selection() : type("ANY") {}
+
+      string                    type; // One of "ANY", "AUTO", "CROSS".
+      vector<vector<string> >   baselines;
+      vector<string>            correlations;
     };
 
     // Two vectors of stations names, which, when paired element-wise, define
@@ -77,11 +80,11 @@ namespace LOFAR
     // %LOFAR stations, but only with those that took part in a particular
     // observation; i.e., only those stations that are mentioned in the \c
     // ANTENNA table in the Measurement Set.
-    struct Baselines
-    {
-      vector<string> station1;
-      vector<string> station2;
-    };
+//    struct Baselines
+//    {
+//      vector<string> station1;
+//      vector<string> station2;
+//    };
 
     // Cell size is defined along the frequency and the time axis, in number
     // of channels and number of timeslots respectively.
@@ -108,10 +111,13 @@ namespace LOFAR
       bool   useSVD;         ///< Use singular value decomposition.
     };
 
+    void fromParameterSet(const ParameterSet &ps, Selection &selection);
+
     // Write the contents of these types in human readable form.
     // @{
-    ostream& operator<<(ostream&, const Correlation&);
-    ostream& operator<<(ostream&, const Baselines&);
+//    ostream& operator<<(ostream&, const CorrelationFilter&);
+//    ostream& operator<<(ostream&, const Baselines&);
+    ostream& operator<<(ostream&, const Selection&);
     ostream& operator<<(ostream&, const CellSize&);
     ostream& operator<<(ostream&, const SolverOptions&);
     // @}

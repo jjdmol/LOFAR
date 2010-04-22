@@ -1,12 +1,12 @@
 # $Id$
 
 # Create symbolic link to include directory.
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
 
 # Install header files.
-install(FILES 
+install(FILES
   AddStep.h
   BlobStreamableConnection.h
   CalSession.h
@@ -18,7 +18,6 @@ install(FILES
   Exceptions.h
   FinalizeCommand.h
   GlobalProcessControl.h
-  GlobalSolveController.h
   InitializeCommand.h
   KernelProcessControl.h
   LocalSolveController.h
