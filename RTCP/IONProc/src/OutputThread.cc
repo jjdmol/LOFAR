@@ -24,12 +24,11 @@
 #include <lofar_config.h>
 
 #include <Common/Semaphore.h>
+#include <Common/SystemCallException.h>
 #include <Interface/Mutex.h>
 #include <IONProc/OutputThread.h>
 #include <IONProc/ION_Allocator.h>
-#include <Stream/SystemCallException.h>
 #include <Scheduling.h>
-
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>

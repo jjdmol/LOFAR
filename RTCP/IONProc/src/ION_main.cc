@@ -22,6 +22,7 @@
 
 #include <CommandServer.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemCallException.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Mapping.h>
 #include <Interface/Exceptions.h>
@@ -31,7 +32,6 @@
 #include <JobQueue.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
-#include <Stream/SystemCallException.h>
 #include <StreamMultiplexer.h>
 #include <IONProc/Package__Version.h>
 

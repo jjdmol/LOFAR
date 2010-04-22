@@ -67,6 +67,7 @@ install(FILES
   Stopwatch.h
   StreamUtil.h
   StringUtil.h
+  SystemCallException.h
   SystemUtil.h
   Timer.h
   TypeNames.h

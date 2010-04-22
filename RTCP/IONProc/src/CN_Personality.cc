@@ -24,7 +24,7 @@
 #if defined HAVE_BGLPERSONALITY
 
 #include <CN_Personality.h>
-#include <Stream/SystemCallException.h>
+#include <Common/SystemCallException.h>
 #include <Interface/Mutex.h>
 
 #include <cstdio>

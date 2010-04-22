@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
+#include <Common/SystemCallException.h>
 #include <Stream/SocketStream.h>
-#include <Stream/SystemCallException.h>
 
 #include <cstring>
 #include <cstdio>

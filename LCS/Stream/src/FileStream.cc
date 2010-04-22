@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
+#include <Common/SystemCallException.h>
 #include <Stream/FileStream.h>
-#include <Stream/SystemCallException.h>
 
 #include <fcntl.h>
 #include <sys/types.h>

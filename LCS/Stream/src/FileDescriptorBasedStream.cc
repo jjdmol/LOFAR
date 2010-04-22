@@ -22,9 +22,9 @@
 
 #include <lofar_config.h>
 
-#include <Stream/FileDescriptorBasedStream.h>
-#include <Stream/SystemCallException.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemCallException.h>
+#include <Stream/FileDescriptorBasedStream.h>
 
 #include <unistd.h>
 
