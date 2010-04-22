@@ -59,13 +59,13 @@ public:
 	Parset(const char *name);
 	~Parset();
 	 
+	std::string    name() const;
 	void           check() const;
 	void	       maintainBackwardCompatibility();
 
 	uint32         observationID() const;
 	double         startTime() const;
 	double         stopTime() const;
-	bool	       precedes(const Parset *) const;
 	uint32	       nrStations() const;
 	uint32	       nrTabStations() const;
 	uint32	       nrBaselines() const;
@@ -98,6 +98,7 @@ public:
 	bool	       delayCompensation() const;
 	uint32	       nrCalcDelays() const;
 	bool	       correctBandPass() const;
+	bool	       hasStorage() const;
 	unsigned short getStoragePort(const string &aKey, unsigned subband, unsigned output) const;
 	string         stationName(int index) const;
 	string         storageHostName(const string& aKey, int index) const;
@@ -109,7 +110,8 @@ public:
 	vector<uint32> phaseTwoPsets() const;
 	vector<uint32> phaseThreePsets() const;
 	vector<uint32> usedPsets() const; // union of phasePsets
-	bool	       overlappingResources(const Parset *) const;
+	bool	       overlappingResources(const Parset &) const;
+	bool	       compatibleInputSection(const Parset &) const;
 	vector<uint32> tabList() const;
 	int	       phaseOnePsetIndex(uint32 pset) const;
 	int	       phaseTwoPsetIndex(uint32 pset) const;
@@ -123,6 +125,7 @@ public:
         bool           outputBeamFormedData() const;
         bool           outputCoherentStokes() const;
         bool           outputIncoherentStokes() const;
+	unsigned       nrOutputsPerSubband() const;
 
 	bool           stokesIntegrateChannels() const;
         unsigned       nrStokes() const;
@@ -162,6 +165,7 @@ public:
 
 	string         getInputStreamName(const string &stationName, unsigned rspBoardNumber) const;
 	static Stream  *createStream(const string &description, bool asReader);
+	string	       getStreamDescriptorBetweenIONandStorage(unsigned subband, unsigned output) const;
 
 	string         observerName() const;
 	string         projectName() const;
@@ -170,6 +174,8 @@ public:
 	vector<double> itsStPositions;
 	
 private:
+	const std::string itsName;
+
 	uint32         nrManualPencilBeams() const;
 	vector<double> getManualPencilBeam(unsigned pencil) const;
 	uint32	       nrPencilRings() const;
@@ -184,6 +190,12 @@ private:
 };
 
 // @}
+
+inline std::string Parset::name() const
+{
+  return itsName;
+}
+
 
 inline uint32 Parset::observationID() const
 {
@@ -205,11 +217,6 @@ inline double Parset::stopTime() const
   return getTime("Observation.stopTime");
 }
 
-inline bool Parset::precedes(const Parset *other) const
-{
-    return startTime() < other->startTime() || (startTime() == other->startTime() && observationID() < other->observationID());
-}
-
 inline string Parset::stationName(int index) const
 {
   return getStringVector("OLAP.storageStationNames",true)[index];
@@ -218,6 +225,11 @@ inline string Parset::stationName(int index) const
 inline string Parset::storageHostName(const string& aKey, int index) const
 {
   return getStringVector(aKey)[getUint32Vector("OLAP.storageNodeList",true)[index]];
+}
+
+inline bool Parset::hasStorage() const
+{
+  return getString("OLAP.OLAP_Conn.IONProc_Storage_Transport") != "NULL";
 }
 
 inline vector<unsigned> Parset::subbandStorageList() const
@@ -321,6 +333,15 @@ inline bool Parset::outputIncoherentStokes() const
 {
   return getBool("OLAP.outputIncoherentStokesI",false)
       || getBool("OLAP.outputIncoherentStokes",false);
+}
+
+inline unsigned Parset::nrOutputsPerSubband() const
+{
+  return (outputFilteredData()	   ? 1 : 0) +
+	 (outputCorrelatedData()   ? 1 : 0) +
+	 (outputBeamFormedData()   ? 1 : 0) +
+	 (outputCoherentStokes()   ? 1 : 0) +
+	 (outputIncoherentStokes() ? 1 : 0);
 }
 
 inline unsigned Parset::nrStokes() const

@@ -28,7 +28,6 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
-//#include <APL/APLCommon/APLUtilities.h>
 #include <Interface/Parset.h>
 #include <Interface/Exceptions.h>
 #include <Interface/PrintVector.h>
@@ -53,7 +52,8 @@ namespace RTCP {
 
 Parset::Parset(const char *name)
 :
-  ParameterSet(name)
+  ParameterSet(name),
+  itsName(name)
 {
   maintainBackwardCompatibility();
   check();
@@ -97,9 +97,6 @@ void Parset::check() const
 	  THROW(InterfaceException, "Observation.rspBoardList contains rsp board numbers that do not exist");
     }
   }
-
-  if (nrStations() == 0 && nrTabStations() == 0)
-    THROW(InterfaceException, "OLAP.storageStationNames and OLAP.tiedArrayStationNames empty, no stations selected");
 }
 
 
@@ -148,24 +145,46 @@ string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNu
 }
 
 
-Stream *Parset::createStream(const string &description, bool asReader)
+Stream *Parset::createStream(const string &description, bool asServer)
 {
   vector<string> split = StringUtil::split(description, ':');
 
   if (description == "null:")
     return new NullStream;
   else if (split.size() == 3 && split[0] == "udp")
-    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::UDP, asReader ? SocketStream::Server : SocketStream::Client);
+    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 10);
   else if (split.size() == 3 && split[0] == "tcp")
-    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::TCP, asReader ? SocketStream::Server : SocketStream::Client);
+    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 10);
   else if (split.size() == 2 && split[0] == "file")
-    return asReader ? new FileStream(split[1].c_str()) : new FileStream(split[1].c_str(), 0666);
+    return asServer ? new FileStream(split[1].c_str()) : new FileStream(split[1].c_str(), 0666);
   else if (split.size() == 2)
-    return new SocketStream(split[0].c_str(), boost::lexical_cast<short>(split[1]), SocketStream::UDP, asReader ? SocketStream::Server : SocketStream::Client);
+    return new SocketStream(split[0].c_str(), boost::lexical_cast<short>(split[1]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 10);
   else if (split.size() == 1)
-    return asReader ? new FileStream(split[0].c_str()) : new FileStream(split[0].c_str(), 0666);
+    return asServer ? new FileStream(split[0].c_str()) : new FileStream(split[0].c_str(), 0666);
   else
     THROW(InterfaceException, string("unrecognized connector format: \"" + description + '"'));
+}
+
+
+std::string Parset::getStreamDescriptorBetweenIONandStorage(unsigned subband, unsigned output) const
+{
+  std::string prefix	     = "OLAP.OLAP_Conn.IONProc_Storage";
+  std::string connectionType = getString(prefix + "_Transport");
+
+  if (connectionType == "NULL") {
+    return "null:";
+  } else if (connectionType == "TCP") {
+    std::string    server = storageHostName(prefix + "_ServerHosts", subband);
+    unsigned short port   = getStoragePort(prefix, subband, output);
+
+    return std::string("tcp:") + server + ':' + boost::lexical_cast<std::string>(port);
+  } else if (connectionType == "FILE") {
+    std::string filename = getString(prefix + "_BaseFileName") + '.' + boost::lexical_cast<std::string>(subband);
+
+    return std::string("file:") + filename;
+  } else {
+    THROW(InterfaceException, "unsupported ION->Storage stream type: " << connectionType);
+  }
 }
 
 
@@ -251,7 +270,7 @@ vector<double> Parset::positions() const
     stNames = getStringVector("OLAP.storageStationNames",true);
     nStations = nrStations();
   }
-
+  
   for (uint i = 0; i < nStations; i++)
   {
     if (stNames[i].find("+") != string::npos)
@@ -393,12 +412,12 @@ vector<uint32> Parset::usedPsets() const
 }
 
 
-bool Parset::overlappingResources(const Parset *otherParset) const
+bool Parset::overlappingResources(const Parset &otherParset) const
 {
   // return true if jobs (partially) use same cores within psets
 
   std::vector<uint32> myPsets    = usedPsets();
-  std::vector<uint32> otherPsets = otherParset->usedPsets();
+  std::vector<uint32> otherPsets = otherParset.usedPsets();
   std::vector<uint32> psets(myPsets.size() + otherPsets.size());
 
   bool overlappingPsets = set_intersection(myPsets.begin(), myPsets.end(), otherPsets.begin(), otherPsets.end(), psets.begin()) != psets.begin();
@@ -407,7 +426,7 @@ bool Parset::overlappingResources(const Parset *otherParset) const
     return false;
 
   std::vector<uint32> myCores    = usedCoresInPset();
-  std::vector<uint32> otherCores = otherParset->usedCoresInPset();
+  std::vector<uint32> otherCores = otherParset.usedCoresInPset();
   std::vector<uint32> cores(myCores.size() + otherCores.size());
 
   sort(myCores.begin(),    myCores.end());
@@ -416,6 +435,30 @@ bool Parset::overlappingResources(const Parset *otherParset) const
   bool overlappingCores = set_intersection(myCores.begin(), myCores.end(), otherCores.begin(), otherCores.end(), cores.begin()) != cores.begin();
 
   return overlappingCores;
+}
+
+
+bool Parset::compatibleInputSection(const Parset &otherParset) const
+{
+  std::vector<uint32> myStations    = phaseOnePsets();
+  std::vector<uint32> otherStations = otherParset.phaseOnePsets();
+  std::vector<uint32> psets(myStations.size() + otherStations.size());
+
+  bool overlappingStations = set_intersection(myStations.begin(), myStations.end(), otherStations.begin(), otherStations.end(), psets.begin()) != psets.begin();
+
+  if (!overlappingStations)
+    return true;
+
+  if (nrBitsPerSample() != otherParset.nrBitsPerSample())
+    return false;
+
+  if (clockSpeed() != otherParset.clockSpeed())
+    return false;
+
+  if (nrSlotsInFrame() != otherParset.nrSlotsInFrame())
+    return false;
+
+  return true;
 }
 
 

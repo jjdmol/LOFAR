@@ -23,7 +23,8 @@
 #ifndef LOFAR_INTERFACE_QUEUE_H
 #define LOFAR_INTERFACE_QUEUE_H
 
-#include <pthread.h>
+#include <Interface/Mutex.h>
+
 #include <list>
 
 
@@ -33,9 +34,6 @@ namespace RTCP {
 template <typename T> class Queue
 {
   public:
-	     Queue();
-	     ~Queue();
-
     void     append(T);
     T	     remove();
 
@@ -43,45 +41,30 @@ template <typename T> class Queue
     bool     empty() const;
 
   private:
-    mutable pthread_mutex_t mutex;
-    pthread_cond_t	    newElementAppended;
-    std::list<T>	    queue;
+    mutable Mutex  itsMutex;
+    Condition	   itsNewElementAppended;
+    std::list<T>   itsQueue;
 };
-
-
-template <typename T> inline Queue<T>::Queue()
-{
-  pthread_mutex_init(&mutex, 0);
-  pthread_cond_init(&newElementAppended, 0);
-}
-
-
-template <typename T> inline Queue<T>::~Queue()
-{
-  pthread_mutex_destroy(&mutex);
-  pthread_cond_destroy(&newElementAppended);
-}
 
 
 template <typename T> inline void Queue<T>::append(T element)
 {
-  pthread_mutex_lock(&mutex);
-  queue.push_back(element);
-  pthread_cond_signal(&newElementAppended);
-  pthread_mutex_unlock(&mutex);
+  ScopedLock scopedLock(itsMutex);
+
+  itsQueue.push_back(element);
+  itsNewElementAppended.signal();
 }
 
 
 template <typename T> inline T Queue<T>::remove()
 {
-  pthread_mutex_lock(&mutex);
+  ScopedLock scopedLock(itsMutex);
 
-  while (queue.empty())
-    pthread_cond_wait(&newElementAppended, &mutex);
+  while (itsQueue.empty())
+    itsNewElementAppended.wait(itsMutex);
 
-  T element = queue.front();
-  queue.pop_front();
-  pthread_mutex_unlock(&mutex);
+  T element = itsQueue.front();
+  itsQueue.pop_front();
 
   return element;
 }
@@ -89,13 +72,9 @@ template <typename T> inline T Queue<T>::remove()
 
 template <typename T> inline unsigned Queue<T>::size() const
 {
-  unsigned size;
+  ScopedLock scopedLock(itsMutex);
 
-  pthread_mutex_lock(&mutex);
-  size = queue.size();
-  pthread_mutex_unlock(&mutex);
-
-  return size;
+  return itsQueue.size();
 }
 
 
