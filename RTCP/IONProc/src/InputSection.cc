@@ -32,20 +32,20 @@ namespace LOFAR {
 namespace RTCP {
 
 
-template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const Parset *ps, unsigned psetNumber)
+template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const Parset &parset, unsigned psetNumber)
 :
   itsLogThread(0)
 {
-  std::vector<Parset::StationRSPpair> inputs = ps->getStationNamesAndRSPboardNumbers(psetNumber);
+  std::vector<Parset::StationRSPpair> inputs = parset.getStationNamesAndRSPboardNumbers(psetNumber);
   itsNrRSPboards = inputs.size();
 
   itsBeamletBuffers.resize(itsNrRSPboards);
 
   for (unsigned rsp = 0; rsp < itsNrRSPboards; rsp ++)
-    itsBeamletBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(ps, rsp);
+    itsBeamletBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(&parset, rsp);
 
-  createInputStreams(ps, inputs);
-  createInputThreads(ps);
+  createInputStreams(parset, inputs);
+  createInputThreads(parset);
 }
 
 
@@ -66,7 +66,7 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::~InputSection()
 }
 
 
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputStreams(const Parset *ps, const std::vector<Parset::StationRSPpair> &inputs)
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputStreams(const Parset &parset, const std::vector<Parset::StationRSPpair> &inputs)
 {
   itsInputStreams.resize(itsNrRSPboards);
 
@@ -75,7 +75,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputStream
   for (unsigned i = 0; i < itsNrRSPboards; i ++) {
     const string &station   = inputs[i].station;
     unsigned	 rsp	    = inputs[i].rsp;
-    std::string	 streamName = ps->getInputStreamName(station, rsp);
+    std::string	 streamName = parset.getInputStreamName(station, rsp);
 
     LOG_DEBUG_STR("  " << i << ": station \"" << station << "\", RSP board " << rsp << ", reads from \"" << streamName << '"');
 
@@ -92,7 +92,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputStream
 }
 
 
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputThreads(const Parset *ps)
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputThreads(const Parset &parset)
 {
   itsLogThread = new LogThread(itsNrRSPboards);
 
@@ -101,10 +101,10 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputThread
 
   typename InputThread<SAMPLE_TYPE>::ThreadArgs args;
 
-  args.nrTimesPerPacket    = ps->getInt32("OLAP.nrTimesInFrame");
-  args.nrSlotsPerPacket    = ps->nrSlotsInFrame();
-  args.isRealTime	   = ps->realTime();
-  args.startTime	   = TimeStamp(static_cast<int64>(ps->startTime() * ps->sampleRate()), ps->clockSpeed());
+  args.nrTimesPerPacket    = parset.getInt32("OLAP.nrTimesInFrame");
+  args.nrSlotsPerPacket    = parset.nrSlotsInFrame();
+  args.isRealTime	   = parset.realTime();
+  args.startTime	   = TimeStamp(static_cast<int64>(parset.startTime() * parset.sampleRate()), parset.clockSpeed());
 
   itsInputThreads.resize(itsNrRSPboards);
 

@@ -28,10 +28,6 @@
 
 #include <Blob/KeyValueMap.h>
 #include <Interface/Config.h>
-#ifdef USE_MAC_PI
-# include <GCF/PALlight/CEPPropertySet.h>
-# include <GCF/GCF_PVDynArr.h>
-#endif
 #include <Common/Timer.h>
 #include <Common/lofar_vector.h>
 #include <Interface/Parset.h>
@@ -44,27 +40,22 @@
 namespace LOFAR {
 namespace RTCP {
 
+
 class SubbandWriter
 {
   public:
-			    SubbandWriter(const Parset *, unsigned rank, unsigned size);
-			    ~SubbandWriter();
+    SubbandWriter(const Parset &parset, unsigned subband, unsigned outputType);
+    ~SubbandWriter();
 
   private:
-    const Parset	    *itsPS;
-    unsigned		    itsRank;
-    unsigned		    itsSize;
-    unsigned		    itsObservationID;
+    static const unsigned   maxReceiveQueueSize = 3;
 
-    std::vector<InputThread *> itsInputThreads;
-    std::vector<OutputThread *> itsOutputThreads;
+    Queue<StreamableData *> itsReceiveQueue, itsFreeQueue;
 
-#ifdef USE_MAC_PI
-    bool itsWriteToMAC;
-    GCF::CEPPMLlight::CEPPropertySet* itsPropertySet;
-    GCF::Common::GCFPValueArray itsVArray; 
-#endif
+    InputThread		    *itsInputThread;
+    OutputThread	    *itsOutputThread;
 };
+
 
 } // namespace RTCP
 } // namespace LOFAR

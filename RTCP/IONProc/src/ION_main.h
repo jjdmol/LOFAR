@@ -1,7 +1,5 @@
-//#  InputThread.h
+//#  ION_main.h
 //#
-//#  Copyright (C) 2008
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
@@ -18,42 +16,30 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: ION_main.cc 15296 2010-03-24 10:19:41Z romein $
 
-#ifndef LOFAR_RTCP_STORAGE_INPUT_THREAD_H
-#define LOFAR_RTCP_STORAGE_INPUT_THREAD_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <Interface/StreamableData.h>
-#include <Interface/MultiDimArray.h>
-#include <Interface/Queue.h>
-#include <Interface/Thread.h>
-#include <Stream/Stream.h>
+#if !defined LOFAR_RTCP_ION_MAIN_H
+#define LOFAR_RTCP_ION_MAIN_H
+
+#include <StreamMultiplexer.h>
+
+#include <vector>
 
 
 namespace LOFAR {
 namespace RTCP {
 
-class InputThread
-{
-  public:
-			    InputThread(const Parset &, unsigned subbandNumber, unsigned outputNumber, /*const std::string &inputDescription,*/ Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue);
-			    ~InputThread();
+extern std::vector<Stream *>            allCNstreams;
+extern std::vector<StreamMultiplexer *> allIONstreamMultiplexers;
+extern unsigned                         myPsetNumber, nrPsets, nrCNcoresInPset;
 
-  private:
-    void		    mainLoop();
+extern Stream				*createCNstream(unsigned core, unsigned channel);
 
-    const Parset	    &itsParset;
-    const unsigned          itsSubbandNumber;
-    const unsigned          itsOutputNumber;
-    const std::string	    itsInputDescription;
-    const unsigned          itsObservationID;
 
-    Queue<StreamableData *> &itsFreeQueue, &itsReceiveQueue;
-
-    InterruptibleThread	    itsThread;
-};
+extern int main(int argc, char **argv);
 
 } // namespace RTCP
 } // namespace LOFAR

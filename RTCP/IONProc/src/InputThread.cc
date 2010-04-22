@@ -97,11 +97,13 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
   LOG_DEBUG_STR("input thread " << itsArgs.threadID << " entering loop");
 
   while (!itsShouldStop) {
+    size_t size;
+
     try {
       // interruptible read, to allow stopping this thread even if the station
       // does not send data
 
-      itsArgs.stream->read(currentPacketPtr, packetSize);
+      size = itsArgs.stream->tryRead(currentPacketPtr, packetSize);
     } catch (SystemCallException &ex) {
       if (ex.error == EINTR)
 	break;
@@ -109,25 +111,22 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 	throw;
     }
 
-    ++ itsArgs.packetCounters->nrPacketsReceived;
+    ++ itsArgs.packetCounters->received;
+
+    if (size != packetSize) {
+      ++ itsArgs.packetCounters->badSize;
+      continue;
+    }
 
     if (dataShouldContainValidStamp) {
-      RSP::Header &header = reinterpret_cast<RSP *>(currentPacketPtr)->header;
-
-      // check if there was a CRC error on the Serdes ring
-      if (header.sourceInfo & (1 << 6)) {
-	++ itsArgs.packetCounters->nrCRCerrors;
-	continue;
-      }
-
 #if defined __PPC__
       unsigned seqid, blockid;
 
       asm volatile ("lwbrx %0,%1,%2" : "=r" (seqid)   : "b" (currentPacketPtr), "r" (offsetof(RSP, header.timestamp)));
       asm volatile ("lwbrx %0,%1,%2" : "=r" (blockid) : "b" (currentPacketPtr), "r" (offsetof(RSP, header.blockSequenceNumber)));
 #else
-      unsigned seqid   = header.timestamp;
-      unsigned blockid = header.blockSequenceNumber;
+      unsigned seqid   = reinterpret_cast<RSP *>(currentPacketPtr)->header.timestamp;
+      unsigned blockid = reinterpret_cast<RSP *>(currentPacketPtr)->header.blockSequenceNumber;
 
 #if defined WORDS_BIGENDIAN
       seqid   = byteSwap(seqid);
@@ -135,9 +134,9 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 #endif
 #endif
 
-      // if the seconds counter is 0xFFFFFFFF, the data cannot be trusted.
+      //if the seconds counter is 0xFFFFFFFF, the data cannot be trusted.
       if (seqid == ~0U) {
-	++ itsArgs.packetCounters->nrTimeStampErrors;
+	++ itsArgs.packetCounters->badTimeStamp;
 	continue;
       }
 
@@ -148,7 +147,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
       // reliable.
       if (seqid >= previousSeqid + 10 && previousSeqidIsAccepted) {
 	previousSeqidIsAccepted = false;
-	++ itsArgs.packetCounters->nrTimeStampErrors;
+	++ itsArgs.packetCounters->badTimeStamp;
 	continue;
       }
 

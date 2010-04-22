@@ -25,11 +25,15 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <Interface/StreamableData.h>
+#include <Interface/Mutex.h>
 #include <Interface/Queue.h>
 #include <Interface/Parset.h>
+#include <Interface/StreamableData.h>
 #include <Interface/Thread.h>
 #include <Stream/Stream.h>
+
+#include <stack>
+#include <vector>
 
 
 namespace LOFAR {
@@ -48,11 +52,9 @@ class OutputThread
   private:
     void		    mainLoop();
 
-    volatile bool           itsConnecting;
-
     const Parset            &itsParset;
-    const unsigned          itsSubband;
-    const unsigned          itsOutput;
+    const unsigned          itsSubband, itsOutput;
+    const std::string	    itsDescription;
     InterruptibleThread	    *itsThread;
 };
 

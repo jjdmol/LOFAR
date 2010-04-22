@@ -36,78 +36,40 @@ using boost::format;
 namespace LOFAR {
 namespace RTCP {
 
-InputThread::InputThread(const Parset *ps, unsigned subbandNumber, unsigned outputNumber, StreamableData *dataTemplate)
+InputThread::InputThread(const Parset &parset, unsigned subbandNumber, unsigned outputNumber, /*const std::string &inputDescription,*/ Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue)
 :
-  itsPS(ps),
+  itsParset(parset),
   itsSubbandNumber(subbandNumber),
   itsOutputNumber(outputNumber),
-  itsObservationID(ps->observationID()),
-  itsConnecting(true)
+  //itsInputDescription(inputDescription),
+  itsObservationID(parset.observationID()),
+  itsFreeQueue(freeQueue),
+  itsReceiveQueue(receiveQueue),
+  itsThread(this, &InputThread::mainLoop)
 {
-  for (unsigned i = 0; i < maxReceiveQueueSize; i ++) {
-    StreamableData *data = dataTemplate->clone();
-    data->allocate();
-    itsFreeQueue.append(data);
-  }
-
-  //thread = new Thread(this, &InputThread::mainLoop, str(format("InputThread (obs %d sb %d output %d)") % ps->observationID() % subbandNumber % outputNumber));
-  itsThread = new InterruptibleThread(this, &InputThread::mainLoop);
 }
 
 
 InputThread::~InputThread()
 {
-#if 0 // this does not work yet
-  if (itsConnecting)
-    itsThread->abort();
-#endif
-
-  delete itsThread;
-  itsOutputThreadFinished.down();
-
-  while (!itsReceiveQueue.empty())
-    delete itsReceiveQueue.remove();
-
-  while (!itsFreeQueue.empty())
-    delete itsFreeQueue.remove();
+  LOG_DEBUG("InputThread::~InputThread()");
 }
 
 
 void InputThread::mainLoop()
 {
-  std::auto_ptr<Stream> streamFromION;
-  string		prefix         = "OLAP.OLAP_Conn.IONProc_Storage";
-  string		connectionType = itsPS->getString(prefix + "_Transport");
-  bool			nullInput      = false;
-
   try {
-    if (connectionType == "NULL") {
-      LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from null stream");
-      streamFromION.reset(new NullStream);
-      nullInput = true;
-    } else if (connectionType == "TCP") {
-      std::string    server = itsPS->storageHostName(prefix + "_ServerHosts", itsSubbandNumber);
-      unsigned short port = itsPS->getStoragePort(prefix, itsSubbandNumber, itsOutputNumber);
-      
-      LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from tcp:" << server << ':' << port);
-      streamFromION.reset(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Server));
-    } else if (connectionType == "FILE") {
-      std::string filename = itsPS->getString(prefix + "_BaseFileName") + '.' +
-	boost::lexical_cast<std::string>(itsSubbandNumber);
-      
-      LOG_DEBUG_STR("subband " << itsSubbandNumber << " read from file:" << filename);
-      streamFromION.reset(new FileStream(filename.c_str()));
-    } else {
-      itsReceiveQueue.append(0); // no more data
-      THROW(StorageException, "unsupported ION->Storage stream type: " << connectionType);
-    }
+    std::string inputDescriptor = itsParset.getStreamDescriptorBetweenIONandStorage(itsSubbandNumber, itsOutputNumber);
 
-    itsConnecting = false; // FIXME: race condition
+    LOG_INFO_STR("Creating connection from " << inputDescriptor);
+    std::auto_ptr<Stream> streamFromION(Parset::createStream(inputDescriptor, true));
+    LOG_INFO_STR("Created connection from " << inputDescriptor);
 
     // limit reads from NullStream to 10 blocks; otherwise unlimited
-    unsigned			  increment = nullInput ? 1 : 0;
+    bool     nullInput = dynamic_cast<NullStream *>(streamFromION.get()) != 0;
+    unsigned maxCount  = nullInput ? 10 : ~0;
 
-    for (unsigned count = 0; count < 10; count += increment) {
+    for (unsigned count = 0; count < maxCount; count ++) {
       NSTimer			    readTimer("read data", false, false);
       std::auto_ptr<StreamableData> data(itsFreeQueue.remove());
 
@@ -118,12 +80,12 @@ void InputThread::mainLoop()
       LOG_INFO_STR("InputThread: ObsID = " << itsObservationID << ", sb = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": " << readTimer);
 
       if (nullInput)
-	data->sequenceNumber = count;
+	data.get()->sequenceNumber = count;
 
       itsReceiveQueue.append(data.release());
     }
   } catch (Stream::EndOfStreamException &) {
-    LOG_INFO("caught Stream::EndOfStreamException (this is normal, and indicates the end of the observation)");
+    LOG_INFO("no more input data");
   } catch (SystemCallException &ex) {
     if (ex.error != EINTR) {
       itsReceiveQueue.append(0); // no more data

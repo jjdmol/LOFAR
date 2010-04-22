@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 
 #include <Common/Semaphore.h>
+#include <Interface/Mutex.h>
 #include <IONProc/OutputThread.h>
 #include <IONProc/ION_Allocator.h>
 #include <Stream/SystemCallException.h>
@@ -35,42 +36,46 @@
 
 #include <memory>
 
+#include <pwd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+#include <boost/format.hpp>
+
 
 namespace LOFAR {
 namespace RTCP {
 
 
-OutputThread::OutputThread(const Parset &ps, const unsigned subband, const unsigned output, StreamableData *dataTemplate)
+OutputThread::OutputThread(const Parset &parset, const unsigned subband, const unsigned output, StreamableData *dataTemplate)
 :
-  itsConnecting(true), // avoid race condition when checking this at thread start
-  itsParset(ps),
+  itsParset(parset),
   itsSubband(subband),
-  itsOutput(output)
+  itsOutput(output),
+  itsDescription(boost::str(boost::format("OutputThread: ObsID = %u, subband = %u, output = %u") % parset.observationID() % subband % output))
 {
+  LOG_DEBUG_STR(itsDescription << ": OutputThread::OutputThread()");
+
   // transpose the data holders: create queues streams for the output streams
   // itsPlans is the owner of the pointers to sample data structures
   for (unsigned i = 0; i < maxSendQueueSize; i ++) {
     StreamableData *clone = dataTemplate->clone();
 
     clone->allocate();
-
-    itsFreeQueue.append( clone );
+    itsFreeQueue.append(clone);
   }
 
-  //thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps.observationID() % subband % output), 65536);
   itsThread = new InterruptibleThread(this, &OutputThread::mainLoop, 65536);
 }
 
 
 OutputThread::~OutputThread()
 {
-  // STOP our thread
-  itsSendQueue.append(0); // 0 indicates that no more messages will be sent
-
-  if (itsConnecting)
-    itsThread->abort();
-
   delete itsThread;
+
+  if (itsSendQueue.size() > 0) // the final null pointer does not count
+    LOG_WARN_STR(itsDescription << ": dropped " << itsSendQueue.size() - 1 << " blocks");
 
   while (!itsSendQueue.empty())
     delete itsSendQueue.remove();
@@ -80,51 +85,38 @@ OutputThread::~OutputThread()
 }
 
 
+// set the maximum number of concurrent writers
 static Semaphore semaphore(2);
-
 
 void OutputThread::mainLoop()
 {
+  LOG_DEBUG_STR(itsDescription << ": OutputThread::mainLoop()");
+
 #if defined HAVE_BGP_ION
   doNotRunOnCore0();
-  //nice(19);
+  nice(19);
 #endif
 
   std::auto_ptr<Stream> streamToStorage;
+  std::string		outputDescriptor = itsParset.getStreamDescriptorBetweenIONandStorage(itsSubband, itsOutput);
 
-  // connect to storage
-  const string prefix         = "OLAP.OLAP_Conn.IONProc_Storage";
-  const string connectionType = itsParset.getString(prefix + "_Transport");
+  LOG_INFO_STR(itsDescription << ": creating connection to " << outputDescriptor);
 
-  if (connectionType == "NULL") {
-    LOG_DEBUG_STR("subband " << itsSubband << " written to null:");
-    streamToStorage.reset( new NullStream );
-  } else if (connectionType == "TCP") {
-    const std::string    server = itsParset.storageHostName(prefix + "_ServerHosts", itsSubband);
-    const unsigned short port = itsParset.getStoragePort(prefix, itsSubband, itsOutput);
-  
-    LOG_DEBUG_STR("subband " << itsSubband << " written to tcp:" << server << ':' << port << " connecting..");
-    streamToStorage.reset( new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Client) );
-    LOG_DEBUG_STR("subband " << itsSubband << " written to tcp:" << server << ':' << port << " connect DONE");
-  } else if (connectionType == "FILE") {
-    std::string filename = itsParset.getString(prefix + "_BaseFileName") + '.' +
-      boost::lexical_cast<std::string>(itsSubband);
-    //boost::lexical_cast<std::string>(storagePortIndex);
-  
-    LOG_DEBUG_STR("subband " << itsSubband << " written to file:" << filename);
-    streamToStorage.reset( new FileStream(filename.c_str(), 0666) );
-  } else {
-    THROW(IONProcException, "unsupported ION->Storage stream type: " << connectionType);
+  try {
+    streamToStorage.reset(Parset::createStream(outputDescriptor, false));
+    LOG_INFO_STR(itsDescription << ": created connection to " << outputDescriptor);
+  } catch (SystemCallException &ex) {
+    if (ex.error == EINTR) {
+      LOG_WARN_STR(itsDescription << ": connection to " << outputDescriptor << " failed");
+      return;
+    } else {
+      throw;
+    }
   }
 
-  itsConnecting = false;
+  // TODO: if a storage node blocks, ionproc can't write anymore in any thread
 
-  // set the maximum number of concurrent writers
-  // TODO: if a storage node blocks, ionproc can't write anymore
-  //       in any thread
-  StreamableData   *data;
-
-  while ((data = itsSendQueue.remove()) != 0) {
+  for (StreamableData *data; (data = itsSendQueue.remove()) != 0;) {
     // prevent too many concurrent writers by locking this scope
     semaphore.down();
 
@@ -133,15 +125,15 @@ void OutputThread::mainLoop()
       data->write(streamToStorage.get(), true);
     } catch (...) {
       semaphore.up();
-      itsFreeQueue.append(data); // make sure data will be freed
+      itsFreeQueue.append(data);
       throw;
     }
 
     semaphore.up();
-
-    // data can now be reused
-    itsFreeQueue.append( data );
+    itsFreeQueue.append(data);
   }
+
+  delete streamToStorage.release(); // close socket
 }
 
 } // namespace RTCP

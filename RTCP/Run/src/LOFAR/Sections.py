@@ -215,6 +215,7 @@ class IONProcSection(Section):
 
 class StorageSection(Section):
   def run(self):
+    return
     logfiles = ["%s/run.Storage.%s.log" % (Locations.files["logdir"],self.partition)] + self.logoutputs
 
     # create the target directories
@@ -223,7 +224,8 @@ class StorageSection(Section):
         self.commands.append( SyncCommand( SSH+"-t %s mkdir -p %s" % (Hosts.resolve(n,"back"),os.path.dirname(p.parseMask()),), logfiles ) )
 
     if VALGRIND_STORAGE:
-      valgrind = "/globalhome/mol/root-ppc/bin/valgrind --suppressions=%s --leak-check=full --show-reachable=yes" % (Locations.files["storagesuppfile"],)
+      #valgrind = "valgrind --suppressions=%s --leak-check=full --show-reachable=yes" % (Locations.files["storagesuppfile"],)
+      valgrind = "valgrind"
     else:
       valgrind = ""
 

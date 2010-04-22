@@ -137,11 +137,10 @@ namespace LOFAR
         ASSERTSTR(request.epoch.size() == itsNrCalcDelays,
 	  	  request.epoch.size() << " == " << itsNrCalcDelays);
 
-        casacoreMutex.lock();
-        // TODO: hangs if exception is thrown here -- should abort everything instead, since
-        // we can't restore casacore.
-        converter->j2000ToItrf(result, request); // expensive
-        casacoreMutex.unlock();
+        {
+	  ScopedLock lock(casacoreMutex);
+	  converter->j2000ToItrf(result, request); // expensive
+	}
 
         ASSERTSTR(result.direction.size() == itsNrCalcDelays * itsNrBeams * itsNrPencilBeams,
 	  	  result.direction.size() << " == " << itsNrCalcDelays * itsNrBeams * itsNrPencilBeams );
