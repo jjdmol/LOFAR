@@ -41,7 +41,7 @@ class LogThread
     ~LogThread();
 
     struct Counters {
-      unsigned nrPacketsReceived, nrTimeStampErrors, nrCRCerrors;
+      unsigned received, badTimeStamp, badSize;
       unsigned pad[5]; // pad to cache line size to avoid false sharing 
     };
 

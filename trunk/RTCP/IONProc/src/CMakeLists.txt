@@ -16,10 +16,13 @@ lofar_add_library(ionproc
   BeamletBuffer.cc
   BeamletBufferToComputeNode.cc
   CN_Personality.cc
+  CommandServer.cc
   InputSection.cc
   InputThread.cc
   InputThreadAsm.S
   ION_Allocator.cc
+  Job.cc
+  JobQueue.cc
   LogThread.cc
   OutputThread.cc
   OutputSection.cc

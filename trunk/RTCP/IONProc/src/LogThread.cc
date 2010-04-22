@@ -129,42 +129,36 @@ void LogThread::mainLoop()
 
   while (!itsShouldStop) {
     std::stringstream	  logStr;
+    std::vector<unsigned> counts(itsCounters.size());
 
-    unsigned		  nrRSPboards = itsCounters.size();
-    std::vector<unsigned> received(nrRSPboards);
-    std::vector<unsigned> timeStampErrors(nrRSPboards);
-    std::vector<unsigned> crcErrors(nrRSPboards);
-
-    unsigned totalTimeStampErrors = 0, totalCRCerrors = 0;
-
-    for (unsigned rsp = 0; rsp < nrRSPboards; rsp ++) {
-      Counters &counters    = itsCounters[rsp];
-
-      received[rsp]	    = counters.nrPacketsReceived;
-      timeStampErrors[rsp]  = counters.nrTimeStampErrors;
-      crcErrors[rsp]	    = counters.nrCRCerrors;
-
-      totalTimeStampErrors += counters.nrTimeStampErrors;
-      totalCRCerrors	   += counters.nrCRCerrors;
-
-      counters.nrPacketsReceived = 0;
-      counters.nrTimeStampErrors = 0;
-      counters.nrCRCerrors	 = 0;
+    for (unsigned rsp = 0; rsp < itsCounters.size(); rsp ++) {
+      counts[rsp]		= itsCounters[rsp].received;
+      itsCounters[rsp].received = 0;
     }
 
-    logStr << "received " << received << " packets";
+    logStr << "received packets = " << counts;
 
-    if (totalTimeStampErrors > 0)
-      logStr << ", timestamp errors = " << timeStampErrors;
+    for (unsigned rsp = 0; rsp < itsCounters.size(); rsp ++) {
+      counts[rsp]	       = itsCounters[rsp].badSize;
+      itsCounters[rsp].badSize = 0;
+    }
 
-    if (totalCRCerrors > 0)
-      logStr << ", CRC errors = " << crcErrors;
+    if (static_cast<unsigned>(std::count(counts.begin(), counts.end(), 0U)) != counts.size())
+      logStr << ", bad size = " << counts;
+
+    for (unsigned rsp = 0; rsp < itsCounters.size(); rsp ++) {
+      counts[rsp]		    = itsCounters[rsp].badTimeStamp;
+      itsCounters[rsp].badTimeStamp = 0;
+    }
+
+    if (static_cast<unsigned>(std::count(counts.begin(), counts.end(), 0U)) != counts.size())
+      logStr << ", bad timestamps = " << counts;
 
 #if defined HAVE_BGP_ION
     writeCPUstats(logStr);
 #endif
 
-    LOG_INFO_STR(logStr.str());
+    LOG_INFO(logStr.str());
     sleep(1);
   }
 }

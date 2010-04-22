@@ -24,8 +24,8 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Interface/RSPTimeStamp.h>
+#include <Interface/Mutex.h>
 
-#include <pthread.h>
 #include <errno.h>
 #include <time.h>
 
@@ -37,48 +37,61 @@ namespace RTCP {
 class WallClockTime
 {
   public:
-	 WallClockTime();
-	 ~WallClockTime();
+	      WallClockTime();
 
-    void waitUntil(time_t);
-    void waitUntil(const TimeStamp &);
+    bool      waitUntil(const struct timespec &);
+    bool      waitUntil(time_t);
+    bool      waitUntil(const TimeStamp &);
+
+    void      cancelWait();
 
   private:
-    pthread_mutex_t itsMutex;
-    pthread_cond_t  itsCondition;
+    Mutex     itsMutex;
+    Condition itsCondition;
+    bool      itsCancelled;
 };
 
 
 inline WallClockTime::WallClockTime()
+:
+  itsCancelled(false)
 {
-  pthread_mutex_init(&itsMutex, 0);
-  pthread_mutex_lock(&itsMutex); // always locked (except during pthread_cond_timedwait)
-  pthread_cond_init(&itsCondition, 0);
 }
 
 
-inline WallClockTime::~WallClockTime()
+inline bool WallClockTime::waitUntil(const struct timespec &timespec)
 {
-  pthread_mutex_unlock(&itsMutex);
-  pthread_mutex_destroy(&itsMutex);
-  pthread_cond_destroy(&itsCondition);
+  ScopedLock scopedLock(itsMutex);
+
+  while (!itsCancelled && itsCondition.wait(itsMutex, timespec))
+    ;
+
+  return !itsCancelled;
 }
 
-inline void WallClockTime::waitUntil(time_t timestamp)
+
+inline bool WallClockTime::waitUntil(time_t timestamp)
 {
   struct timespec timespec = { timestamp, 0 };
-  
-  while (pthread_cond_timedwait(&itsCondition, &itsMutex, &timespec) != ETIMEDOUT)
-    ;
+
+  return waitUntil(timespec);
 }
 
-inline void WallClockTime::waitUntil(const TimeStamp &timestamp)
+
+inline bool WallClockTime::waitUntil(const TimeStamp &timestamp)
 {
-  struct timespec timespec = timestamp;
-  
-  while (pthread_cond_timedwait(&itsCondition, &itsMutex, &timespec) != ETIMEDOUT)
-    ;
+  return waitUntil(static_cast<struct timespec>(timestamp));
 }
+
+
+inline void WallClockTime::cancelWait()
+{
+  ScopedLock scopedLock(itsMutex);
+
+  itsCancelled = true;
+  itsCondition.signal();
+}
+
 
 } // namespace RTCP
 } // namespace LOFAR

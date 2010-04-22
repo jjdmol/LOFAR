@@ -8,8 +8,9 @@ import datetime
 import time
 import socket
 import util.Parset
+import getpass
 from Partitions import PartitionPsets
-from Locations import Hosts
+from Locations import Hosts,Locations
 from Stations import Stations
 from util.dateutil import parse,format,parseDuration,timestamp
 from Logger import error
@@ -185,6 +186,10 @@ class Parset(util.Parset.Parset):
 	  self["Observation.rspBoardList"] = [s["rspboard"] for s in sortedSubbands]
 	  self["Observation.rspSlotList"]  = [s["rspslot"] for s in sortedSubbands]
 
+    def addStorageKeys(self):
+	self["OLAP.Storage.userName"] = getpass.getuser()
+	self["OLAP.Storage.msWriter"] = Locations.files["storage"]
+
     def preWrite(self):
         """ Derive some final keys and finalise any parameters necessary
 	    before writing the parset to disk. """
@@ -192,6 +197,7 @@ class Parset(util.Parset.Parset):
         self.convertSASkeys();
         self.convertDepricatedKeys();
         self.addMissingKeys();
+	self.addStorageKeys();
 
 	# TODO: we use self.setdefault, but this can create inconsistencies if we
 	# set one value but not the other in a pair of interdependent parameters.
@@ -360,7 +366,7 @@ class Parset(util.Parset.Parset):
         self["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"] = self.storagenodes
 
     def setObsID(self,obsid):
-        self["Observation.ObsID"] = obsid	
+        self.setdefault("Observation.ObsID", obsid)
 
     def getObsID(self):
         if "Observation.ObsID" not in self:
