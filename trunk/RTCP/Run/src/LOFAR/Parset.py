@@ -188,7 +188,7 @@ class Parset(util.Parset.Parset):
 
     def addStorageKeys(self):
 	self["OLAP.Storage.userName"] = getpass.getuser()
-	self["OLAP.Storage.msWriter"] = Locations.files["storage"]
+	self["OLAP.Storage.msWriter"] = Locations.resolvePath( Locations.files["storage"], self )
 
     def preWrite(self):
         """ Derive some final keys and finalise any parameters necessary
