@@ -225,6 +225,9 @@ if __name__ == "__main__":
   # set log server
   Locations.nodes["logserver"] = options.logserver
 
+  for opt in dirgroup.option_list:
+    Locations.setFilename( opt.dest, getattr( options, opt.dest ) )
+
   # ========== Observations
   parsets = convertParset.convertParsets( args, options.olapparset, options.partition )
 
@@ -245,9 +248,6 @@ if __name__ == "__main__":
       parset.disableStorage()
 
   # resolve all paths now that parsets are set up and the observation ID is known
-  for opt in dirgroup.option_list:
-    Locations.setFilename( opt.dest, getattr( options, opt.dest ) )
-
   Locations.resolveAllPaths( parsets[0] ) 
 
   # create log and directory if it does not exist
