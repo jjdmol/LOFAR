@@ -511,7 +511,7 @@ public class MainFrame extends javax.swing.JFrame {
                                 throw new NoAccessException("Couldn't get a servicename from server. Name/Pwd/DBname wrong?");
                             }
                        } catch (RemoteException ex){
-                            logger.debug("Failed to login on RemoteAccess");
+                            throw new NoAccessException("Failed to login on RemoteAccess: "+ ex.getMessage());
                        }
                     }
 
@@ -524,7 +524,7 @@ public class MainFrame extends javax.swing.JFrame {
                     registerUserPlugins();
                 } catch(NoAccessException e) {
                     logger.fatal("Access Violation: " + e.getMessage());
-                    JOptionPane.showMessageDialog(this,"The supplied username/password/database combination is unknown","Unknown username/password/database",JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this,e.getMessage(),e.getMessage(),JOptionPane.ERROR_MESSAGE);
                     accessAllowed = false;
                 } catch(ConnectionFailedException e) {
                     JOptionPane.showMessageDialog(this,e.getMessage(),e.getMessage(),JOptionPane.ERROR_MESSAGE);
