@@ -25,17 +25,17 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <Interface/StreamableData.h>
-#include <Interface/MultiDimArray.h>
+#include <Common/Timer.h>
 #include <Interface/CN_ProcessingPlan.h>
-#include <Interface/Queue.h>
-#include <Interface/Thread.h>
-#include <Interface/Mutex.h>
+#include <Interface/MultiDimArray.h>
+#include <Interface/StreamableData.h>
 #include <Stream/FileStream.h>
 #include <Stream/Stream.h>
 #include <Storage/MSWriter.h>
-#include <Common/Semaphore.h>
-#include <Common/Timer.h>
+#include <Thread/Mutex.h>
+#include <Thread/Queue.h>
+#include <Thread/Semaphore.h>
+#include <Thread/Thread.h>
 
 #include <queue>
 #include <vector>

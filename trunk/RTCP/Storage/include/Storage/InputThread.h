@@ -27,9 +27,9 @@
 
 #include <Interface/StreamableData.h>
 #include <Interface/MultiDimArray.h>
-#include <Interface/Queue.h>
-#include <Interface/Thread.h>
 #include <Stream/Stream.h>
+#include <Thread/Queue.h>
+#include <Thread/Thread.h>
 
 
 namespace LOFAR {

@@ -15,9 +15,9 @@
 #include <Common/LofarLocators.h>
 #include <Interface/Exceptions.h>
 #include <Interface/Parset.h>
-#include <Interface/Thread.h>
 #include <Storage/SubbandWriter.h>
 #include <Storage/Package__Version.h>
+
 #if defined HAVE_MPI
 #include <mpi.h>
 #endif
