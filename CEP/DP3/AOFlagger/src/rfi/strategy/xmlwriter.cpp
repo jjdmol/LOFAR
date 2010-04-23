@@ -19,7 +19,6 @@
  ***************************************************************************/
 #include <AOFlagger/rfi/strategy/xmlwriter.h>
 
-#include <AOFlagger/rfi/strategy/action.h>
 #include <AOFlagger/rfi/strategy/adapter.h>
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
@@ -47,7 +46,7 @@
 
 namespace rfiStrategy {
 
-	XmlWriter::XmlWriter()
+	XmlWriter::XmlWriter() : _writeDescriptions(true)
 	{
 		LIBXML_TEST_VERSION ;
 	
@@ -60,6 +59,8 @@ namespace rfiStrategy {
 	
 	void XmlWriter::WriteStrategy(const Strategy &strategy, const std::string &filename)
 	{
+		_describedActions.clear();
+
 		int rc;
 	
 		_writer = xmlNewTextWriterFilename(filename.c_str(), 0);
@@ -70,11 +71,14 @@ namespace rfiStrategy {
 		if (rc < 0)
 			throw XmlWriteError("WriteStrategy: Error at xmlTextWriterStartDocument");
 
-		rc = xmlTextWriterWriteComment(_writer, BAD_CAST
+		std::string comment = 
 			"This is a Strategy configuration file for the\n"
-			"rfi detector by André Offringa (offringa@astro.rug.nl).\n");
-		if (rc < 0)
-			throw XmlWriteError("WriteStrategy: Error at xmlTextWriterWriteFormatComment");
+			"rfi detector by André Offringa (offringa@astro.rug.nl).\n";
+		if(_writeDescriptions)
+			comment += "\nIf you like to take a look at the structure of this file,\n"
+				"try opening it in e.g. Firefox.\n";
+
+		Comment(comment.c_str());
 
 		Start("rfi-strategy");
 		writeAction(strategy);
@@ -89,6 +93,17 @@ namespace rfiStrategy {
 	
 	void XmlWriter::writeAction(const Action &action)
 	{
+		if(_writeDescriptions)
+		{
+			if(_describedActions.count(action.Type()) == 0)
+			{
+				const char *description = ActionFactory::GetDescription(action.Type());
+				if(description != 0)
+					Comment(wrap(description, 70).c_str());
+				_describedActions.insert(action.Type());
+			}
+		}
+
 		Start("action");
 		switch(action.Type())
 		{
@@ -333,5 +348,38 @@ namespace rfiStrategy {
 	void XmlWriter::writeWriteFlagsAction(const WriteFlagsAction &)
 	{
 		Attribute("type", "WriteFlagsAction");
+	}
+	std::string XmlWriter::wrap(const std::string &input, size_t max) const
+	{
+		int start = 0;
+		bool first = true;
+		std::stringstream s;
+		int length = input.size();
+		while(start < length)
+		{
+			int end = start + max;
+			if(end > length)
+				end = length;
+			else {
+				do {
+					--end;
+				} while(end > start && input[end] != ' ');
+				if(end <= start)
+					end = start + max;
+				else
+					++end;
+			}
+			int nextStart = end;
+			while(end > start && input[end-1] == ' ') --end;
+
+			if(!first)
+				s << "\n";
+			for(int i=start;i<end;++i)
+				s << input[i];
+				
+			first = false;
+			start = nextStart;
+		}
+		return s.str();
 	}
 }

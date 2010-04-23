@@ -20,11 +20,14 @@
 #ifndef RFISTRATEGYXMLWRITER_H
 #define RFISTRATEGYXMLWRITER_H
 
+#include <set>
 #include <sstream>
 #include <string>
 #include <stdexcept>
 
 #include <libxml/xmlwriter.h>
+
+#include <AOFlagger/rfi/strategy/action.h>
 
 namespace rfiStrategy {
 
@@ -43,6 +46,11 @@ namespace rfiStrategy {
 			~XmlWriter();
 
 			void WriteStrategy(const class Strategy &strategy, const std::string &filename);
+
+			void SetWriteComments(bool writeDescriptions)
+			{
+				_writeDescriptions = writeDescriptions;
+			}
 		private:
 			xmlTextWriterPtr _writer;
 
@@ -72,6 +80,12 @@ namespace rfiStrategy {
 			void writeTimeSelectionAction(const class TimeSelectionAction &action);
 			void writeWriteFlagsAction(const class WriteFlagsAction &action);
 
+			inline void Comment(const char *comment) const
+			{
+				int rc = xmlTextWriterWriteComment(_writer, BAD_CAST comment);
+				if (rc < 0)
+					throw XmlWriteError("WriteStrategy: Error at xmlTextWriterWriteFormatComment");
+			}
 			inline void Start(const char *element) const
 			{
 				if(xmlTextWriterStartElement(_writer, BAD_CAST element) < 0)
@@ -99,6 +113,10 @@ namespace rfiStrategy {
 				s << value;
 				Write(element, s.str().c_str());
 			}
+			std::string wrap(const std::string &input, size_t max) const;
+
+			bool _writeDescriptions;
+			std::set<enum ActionType> _describedActions;
 	};
 
 }

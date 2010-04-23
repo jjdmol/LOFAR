@@ -23,6 +23,8 @@
 #include <string>
 #include <vector>
 
+#include <AOFlagger/rfi/strategy/action.h>
+
 namespace rfiStrategy {
 
 	/**
@@ -32,6 +34,7 @@ namespace rfiStrategy {
 		public:
 			static const std::vector<std::string> GetActionList();
 			static class Action *CreateAction(const std::string &action);
+			static const char *GetDescription(ActionType actionType);
 		private:
 			ActionFactory();
 			~ActionFactory();
