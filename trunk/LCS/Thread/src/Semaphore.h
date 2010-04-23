@@ -23,7 +23,8 @@
 #ifndef  LOFAR_LCS_THREAD_SEMAPHORE_H
 #define  LOFAR_LCS_THREAD_SEMAPHORE_H
 
-#include <pthread.h>
+#include <Thread/Condition.h>
+#include <Thread/Mutex.h>
 
  
 namespace LOFAR {
@@ -33,7 +34,6 @@ class Semaphore
 {
   public:
     Semaphore(unsigned level = 0);
-    ~Semaphore();
 
     void up(unsigned count = 1);
     bool down(unsigned count = 1);
@@ -41,10 +41,10 @@ class Semaphore
     void noMore();
     
   private:
-    pthread_mutex_t mutex;
-    pthread_cond_t  condition;
-    unsigned	    level;
-    bool	    itsNoMore;
+    Mutex     mutex;
+    Condition condition;
+    unsigned  level;
+    bool      itsNoMore;
 };
 
 
@@ -53,40 +53,28 @@ inline Semaphore::Semaphore(unsigned level)
   level(level),
   itsNoMore(false)
 {
-  pthread_mutex_init(&mutex, 0);
-  pthread_cond_init(&condition, 0);
-}
-
-
-inline Semaphore::~Semaphore()
-{
-  pthread_cond_destroy(&condition);
-  pthread_mutex_destroy(&mutex);
 }
 
 
 inline void Semaphore::up(unsigned count)
 {
-  pthread_mutex_lock(&mutex);
+  ScopedLock lock(mutex);
   level += count;
-  pthread_cond_broadcast(&condition); // pthread_cond_signal() is incorrect
-  pthread_mutex_unlock(&mutex);
+  condition.broadcast();
 }
 
 
 inline bool Semaphore::down(unsigned count)
 {
-  pthread_mutex_lock(&mutex);
+  ScopedLock lock(mutex);
 
   while (!itsNoMore && level < count)
-    pthread_cond_wait(&condition, &mutex);
+    condition.wait(mutex);
 
   if (level >= count) {
     level -= count;
-    pthread_mutex_unlock(&mutex);
     return true;
   } else {
-    pthread_mutex_unlock(&mutex);
     return false;
   }
 }
@@ -94,10 +82,9 @@ inline bool Semaphore::down(unsigned count)
 
 inline void Semaphore::noMore()
 {
-  pthread_mutex_lock(&mutex);
+  ScopedLock lock(mutex);
   itsNoMore = true;
-  pthread_cond_broadcast(&condition);
-  pthread_mutex_unlock(&mutex);
+  condition.broadcast();
 }
 
 } // namespace LOFAR
