@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 	}
 	if((int) parameterIndex > argc-2)
 	{
-		std::cerr << "Usage: " << argv[0] << " <profile> <filename>\n\n"
+		std::cerr << "Usage: " << argv[0] << " [options] <profile> <filename>\n\n"
 			<< "Profiles:\n"
 			<< "  fast     Fastest strategy that provides a moderate\n"
 			<< "           result in quality. Will flag the measurement set using\n"
