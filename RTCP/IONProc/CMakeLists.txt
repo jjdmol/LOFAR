@@ -1,7 +1,7 @@
 # $Id$
 
 lofar_package(IONProc 1.0
-  DEPENDS Common Stream AMCBase AMCImpl PLC Interface FCNP)
+  DEPENDS Common Stream AMCBase AMCImpl PLC Interface FCNP Thread)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)

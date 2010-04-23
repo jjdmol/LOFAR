@@ -37,13 +37,13 @@
 #include <Common/PrettyUnits.h>
 #include <Interface/Exceptions.h>
 #include <Interface/PencilCoordinates.h>
-#include <Interface/Mutex.h>
+#include <Thread/Mutex.h>
 
 #include <pthread.h>
 #include <memory>
 
 // casacore is not thread safe
-static LOFAR::RTCP::Mutex casacoreMutex;
+static LOFAR::Mutex casacoreMutex;
 
 namespace LOFAR 
 {

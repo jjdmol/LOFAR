@@ -20,14 +20,15 @@
 //#
 //# $Id$ 
 
-#ifndef  LOFAR_LCS_COMMON_SEMAPHORE_H
-#define  LOFAR_LCS_COMMON_SEMAPHORE_H
-
-#if 1 || defined HAVE_THREADS // broken in build environment
+#ifndef  LOFAR_LCS_THREAD_SEMAPHORE_H
+#define  LOFAR_LCS_THREAD_SEMAPHORE_H
 
 #include <pthread.h>
 
  
+namespace LOFAR {
+
+
 class Semaphore
 {
   public:
@@ -99,5 +100,6 @@ inline void Semaphore::noMore()
   pthread_mutex_unlock(&mutex);
 }
 
-#endif
+} // namespace LOFAR
+
 #endif

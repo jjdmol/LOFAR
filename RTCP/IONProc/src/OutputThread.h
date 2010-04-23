@@ -25,12 +25,12 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <Interface/Mutex.h>
-#include <Interface/Queue.h>
 #include <Interface/Parset.h>
 #include <Interface/StreamableData.h>
-#include <Interface/Thread.h>
 #include <Stream/Stream.h>
+#include <Thread/Mutex.h>
+#include <Thread/Queue.h>
+#include <Thread/Thread.h>
 
 #include <stack>
 #include <vector>

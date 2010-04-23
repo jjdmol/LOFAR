@@ -25,12 +25,12 @@
 #define LOFAR_RTCP_JOB_H
 
 #include <InputSection.h>
-#include <Interface/Mutex.h>
 #include <Interface/Parset.h>
-#include <Interface/Thread.h>
 #include <JobQueue.h>
 #include <Stream/Stream.h>
 #include <WallClockTime.h>
+#include <Thread/Mutex.h>
+#include <Thread/Thread.h>
 
 #include <sys/time.h>
 

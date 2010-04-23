@@ -24,7 +24,8 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Interface/RSPTimeStamp.h>
-#include <Interface/Mutex.h>
+#include <Thread/Condition.h>
+#include <Thread/Mutex.h>
 
 #include <errno.h>
 #include <time.h>
