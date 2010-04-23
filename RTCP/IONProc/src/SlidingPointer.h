@@ -23,7 +23,8 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <pthread.h>
+#include <Thread/Condition.h>
+#include <Thread/Mutex.h>
 
 
 namespace LOFAR {
@@ -35,16 +36,15 @@ template <typename T> class SlidingPointer
   public:
 	 SlidingPointer();
 	 SlidingPointer(const T &);
-	 ~SlidingPointer();
 
     void advanceTo(const T &);
     void waitFor(const T &);
 
   private:
-    T		    itsValue, itsWaitingForValue;
-    pthread_mutex_t itsMutex;
-    pthread_cond_t  itsAwaitedValueReached;
-    bool	    itsIsWaiting;
+    T	      itsValue, itsWaitingForValue;
+    Mutex     itsMutex;
+    Condition itsAwaitedValueReached;
+    bool      itsIsWaiting;
 };
 
 
@@ -52,8 +52,6 @@ template <typename T> inline SlidingPointer<T>::SlidingPointer()
 :
   itsIsWaiting(false)
 {
-  pthread_mutex_init(&itsMutex, 0);
-  pthread_cond_init(&itsAwaitedValueReached, 0);
 }
 
 
@@ -62,45 +60,32 @@ template <typename T> inline SlidingPointer<T>::SlidingPointer(const T &value)
   itsValue(value),
   itsIsWaiting(false)
 {
-  pthread_mutex_init(&itsMutex, 0);
-  pthread_cond_init(&itsAwaitedValueReached, 0);
-}
-
-
-template <typename T> inline SlidingPointer<T>::~SlidingPointer()
-{
-  pthread_mutex_destroy(&itsMutex);
-  pthread_cond_destroy(&itsAwaitedValueReached);
 }
 
 
 template <typename T> inline void SlidingPointer<T>::advanceTo(const T &value)
 {
-  pthread_mutex_lock(&itsMutex);
+  ScopedLock lock(itsMutex);
 
   if (value > itsValue) {
     itsValue = value;
 
     if (itsIsWaiting && value >= itsWaitingForValue)
-      pthread_cond_signal(&itsAwaitedValueReached);
+      itsAwaitedValueReached.signal();
   }
-
-  pthread_mutex_unlock(&itsMutex);
 }
 
 
 template <typename T> inline void SlidingPointer<T>::waitFor(const T &value)
 {
-  pthread_mutex_lock(&itsMutex);
+  ScopedLock lock(itsMutex);
 
   while (itsValue < value) {
     itsIsWaiting       = true;
     itsWaitingForValue = value;
-    pthread_cond_wait(&itsAwaitedValueReached, &itsMutex);
+    itsAwaitedValueReached.wait(itsMutex);
     itsIsWaiting       = false;
   }
-
-  pthread_mutex_unlock(&itsMutex);
 }
 
 } // namespace RTCP
