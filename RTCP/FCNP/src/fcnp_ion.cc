@@ -2,7 +2,7 @@
 
 #if defined HAVE_BGP_ION
 
-#include <Common/Semaphore.h>
+#include <Thread/Semaphore.h>
 
 #include <fcntl.h>
 #include <sys/file.h>
@@ -32,6 +32,8 @@
 
 
 namespace FCNP_ION {
+
+using LOFAR::Semaphore;
 
 
 class Handshake {
