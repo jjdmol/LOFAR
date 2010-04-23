@@ -11,7 +11,7 @@
 
 #define ENDIANNESS      0      // data is bigendian
 
-#include <Interface/Mutex.h>
+#include <Thread/Mutex.h>
 #include <Interface/Parset.h>
 #include <casa/aips.h>
 #include <tables/Tables/Table.h>

@@ -22,15 +22,15 @@
 
 #include <lofar_config.h>
 
-#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
-#include <Storage/SubbandWriter.h>
-#include <Storage/MeasurementSetFormat.h>
-#include <Stream/SystemCallException.h>
+#include <Common/ParameterSet.h>
+#include <Common/SystemCallException.h>
 #include <Interface/Exceptions.h>
 #include <Interface/CN_Configuration.h>
 #include <Interface/CN_ProcessingPlan.h>
+#include <Storage/SubbandWriter.h>
+#include <Storage/MeasurementSetFormat.h>
 
 #include <boost/lexical_cast.hpp>
 
