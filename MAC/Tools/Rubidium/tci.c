@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 
   /* read characters into our string buffer until we get a CR or NL */
   bufptr = buffer;
-  long int count;
+  long int count = 0;
   int  nbytes;       /* Number of bytes read */
   while (count < 1000000)
     {
