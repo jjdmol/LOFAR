@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <Stream/SystemCallException.h>
+#include <Common/SystemCallException.h>
 
 #include <cstring>
 
