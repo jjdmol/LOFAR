@@ -25,7 +25,7 @@
 
 #include <BGL_Personality.h>
 #include <Common/SystemCallException.h>
-#include <Interface/Mutex.h>
+#include <Thread/Mutex.h>
 
 #include <cstdio>
 #include <cstdlib>

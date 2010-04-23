@@ -10,11 +10,9 @@ set(inst_HEADERS
   Config.h
   FilteredData.h
   MultiDimArray.h
-  Mutex.h
   Parset.h
   SubbandMetaData.h
   PrintVector.h
-  Queue.h
   RSPTimeStamp.h
   SparseSet.h
   Exceptions.h
@@ -25,7 +23,6 @@ set(inst_HEADERS
   ProcessingPlan.h
   CN_ProcessingPlan.h
   BFRawFormat.h
-  Thread.h
   TransposedData.h
   TransposedBeamFormedData.h
   InverseFilteredData.h

@@ -23,15 +23,14 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/Semaphore.h>
 #include <Common/SystemCallException.h>
-#include <Interface/Mutex.h>
-#include <IONProc/OutputThread.h>
 #include <IONProc/ION_Allocator.h>
-#include <Scheduling.h>
+#include <IONProc/OutputThread.h>
+#include <IONProc/Scheduling.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
+#include <Thread/Semaphore.h>
 
 #include <memory>
 

@@ -62,7 +62,6 @@ install(FILES
   Process.h
   ReadLine.h
   RunOnNode.h
-  Semaphore.h
   Singleton.h
   Stopwatch.h
   StreamUtil.h

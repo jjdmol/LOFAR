@@ -16,18 +16,17 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: Mutex.h 15519 2010-04-22 10:00:35Z romein $
 
-#ifndef LOFAR_INTERFACE_MUTEX_H
-#define LOFAR_INTERFACE_MUTEX_H
+#ifndef LOFAR_LCS_THREAD_MUTEX_H
+#define LOFAR_LCS_THREAD_MUTEX_H
 
 #include <pthread.h>
 
-#include <Stream/SystemCallException.h>
+#include <Common/SystemCallException.h>
 
 
 namespace LOFAR {
-namespace RTCP {
 
 class Mutex
 {
@@ -52,21 +51,6 @@ class ScopedLock
   private:
     Mutex &itsMutex;
 };
-
-
-class Condition
-{
-  public:
-    Condition(), ~Condition();
-
-    void signal(), broadcast();
-    void wait(Mutex &);
-    bool wait(Mutex &, const struct timespec &);
-
-  private:
-    pthread_cond_t condition;
-};
-
 
 
 inline Mutex::Mutex()
@@ -133,66 +117,6 @@ inline ScopedLock::~ScopedLock()
 }
 
 
-inline Condition::Condition()
-{
-  int error = pthread_cond_init(&condition, 0);
-
-  if (error != 0)
-    throw SystemCallException("pthread_cond_init", error, THROW_ARGS);
-}
-
-
-inline Condition::~Condition()
-{
-  int error = pthread_cond_destroy(&condition);
-
-  if (error != 0)
-    throw SystemCallException("pthread_cond_destroy", error, THROW_ARGS);
-}
-
-
-inline void Condition::signal()
-{
-  int error = pthread_cond_signal(&condition);
-
-  if (error != 0)
-    throw SystemCallException("pthread_cond_signal", error, THROW_ARGS);
-}
-
-
-inline void Condition::broadcast()
-{
-  int error = pthread_cond_broadcast(&condition);
-
-  if (error != 0)
-    throw SystemCallException("pthread_cond_broadcast", error, THROW_ARGS);
-}
-
-
-inline void Condition::wait(Mutex &mutex)
-{
-  int error = pthread_cond_wait(&condition, &mutex.mutex);
-
-  if (error != 0)
-    throw SystemCallException("pthread_cond_wait", error, THROW_ARGS);
-}
-
-
-inline bool Condition::wait(Mutex &mutex, const struct timespec &timespec)
-{
-  int error = pthread_cond_timedwait(&condition, &mutex.mutex, &timespec);
-
-  switch (error) {
-    case 0	   : return true;
-
-    case ETIMEDOUT : return false;
-
-    default	   : throw SystemCallException("pthread_cond_timedwait", error, THROW_ARGS);
-  }
-}
-
-
-} // namespace RTCP
 } // namespace LOFAR
 
 #endif

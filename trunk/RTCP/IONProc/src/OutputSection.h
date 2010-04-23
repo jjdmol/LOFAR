@@ -21,13 +21,12 @@
 #ifndef LOFAR_IONPROC_OUTPUT_SECTION_H
 #define LOFAR_IONPROC_OUTPUT_SECTION_H
 
-#include <Common/Semaphore.h>
 #include <Interface/Parset.h>
 #include <Interface/CN_ProcessingPlan.h>
-#include <Stream/Stream.h>
 #include <IONProc/OutputThread.h>
-#include <Interface/Thread.h>
-#include <Interface/Mutex.h>
+#include <Stream/Stream.h>
+#include <Thread/Semaphore.h>
+#include <Thread/Thread.h>
 
 #include <vector>
 

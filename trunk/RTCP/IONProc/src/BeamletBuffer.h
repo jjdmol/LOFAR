@@ -34,13 +34,13 @@
 #include <Common/Timer.h>
 #include <Interface/Config.h>
 #include <Interface/MultiDimArray.h>
-#include <Interface/Mutex.h>
 #include <Interface/Parset.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SparseSet.h>
 #include <LockedRanges.h>
 #include <ReaderWriterSynchronization.h>
 #include <Stream/Stream.h>
+#include <Thread/Mutex.h>
 
 
 namespace LOFAR {

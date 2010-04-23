@@ -20,16 +20,16 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_INTERFACE_QUEUE_H
-#define LOFAR_INTERFACE_QUEUE_H
+#ifndef LOFAR_LCS_THREAD_QUEUE_H
+#define LOFAR_LCS_THREAD_QUEUE_H
 
-#include <Interface/Mutex.h>
+#include <Thread/Condition.h>
+#include <Thread/Mutex.h>
 
 #include <list>
 
 
 namespace LOFAR {
-namespace RTCP {
 
 template <typename T> class Queue
 {
@@ -83,7 +83,6 @@ template <typename T> inline bool Queue<T>::empty() const
   return size() == 0;
 }
 
-} // namespace RTCP
 } // namespace LOFAR
 
 #endif 

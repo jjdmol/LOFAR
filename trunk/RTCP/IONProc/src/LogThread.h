@@ -27,7 +27,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 
-#include <Interface/Thread.h>
+#include <Thread/Thread.h>
 
 #include <vector>
 

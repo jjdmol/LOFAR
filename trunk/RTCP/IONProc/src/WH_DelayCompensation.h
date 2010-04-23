@@ -29,15 +29,15 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <Interface/Parset.h>
 #include <AMCBase/Epoch.h>
 #include <AMCBase/Position.h>
-#include <Common/Timer.h>
-#include <Common/Semaphore.h>
 #include <AMCBase/ResultData.h>
-#include <Interface/RSPTimeStamp.h>
+#include <Common/Timer.h>
 #include <Interface/MultiDimArray.h>
-#include <Interface/Thread.h>
+#include <Interface/Parset.h>
+#include <Interface/RSPTimeStamp.h>
+#include <Thread/Semaphore.h>
+#include <Thread/Thread.h>
 
 #include <boost/noncopyable.hpp>
 

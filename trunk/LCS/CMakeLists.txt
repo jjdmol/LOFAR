@@ -8,5 +8,6 @@ lofar_add_package(Common)         # Common stuff
 lofar_add_package(pyparameterset) # Python ParameterSet bindings
 lofar_add_package(pytools)        # Python tools
 lofar_add_package(Stream)         # Low-level support for streaming data
+lofar_add_package(Thread)	  # Threads, synchronization primitives, and data structures
 lofar_add_package(Tools)          # Useful tools
 lofar_add_package(Transport)      # Low-level transport library

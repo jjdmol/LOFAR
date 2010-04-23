@@ -24,9 +24,10 @@
 #define LOFAR_LCS_STREAM_STREAM_MULTIPLEXER_H
 
 #include <Stream/Stream.h>
-#include <Interface/Mutex.h>
-#include <Common/Semaphore.h>
-#include <Interface/Thread.h>
+#include <Thread/Condition.h>
+#include <Thread/Mutex.h>
+#include <Thread/Semaphore.h>
+#include <Thread/Thread.h>
 
 #include <map>
 

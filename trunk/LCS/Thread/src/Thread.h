@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_RTCP_INTERFACE_THREAD_H
-#define LOFAR_RTCP_INTERFACE_THREAD_H
+#ifndef LOFAR_LCS_THREAD_THREAD_H
+#define LOFAR_LCS_THREAD_THREAD_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -29,12 +29,11 @@
 #include <signal.h>
 
 #include <Common/LofarLogger.h>
-#include <Common/Semaphore.h>
-#include <Stream/SystemCallException.h>
+#include <Common/SystemCallException.h>
+#include <Thread/Semaphore.h>
 
 
 namespace LOFAR {
-namespace RTCP {
 
 
 class Thread
@@ -246,7 +245,6 @@ inline void InterruptibleThread::abort()
 }
 
 
-} // namespace RTCP
 } // namespace LOFAR
 
 #endif
