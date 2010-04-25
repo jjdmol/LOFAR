@@ -34,70 +34,57 @@ using namespace LOFAR::RTCP;
 
 void doTest()
 {
-  const unsigned psetNumber = 0;
+  unsigned psetNumber = 0;
 
-  ParameterSet pset("tDelayCompensation.parset");
-  Parset       ps(&pset);
+  Parset parset("tDelayCompensation.parset");
 
-  TimeStamp::setStationClockSpeed(ps.clockSpeed());
+  std::vector<Parset::StationRSPpair> inputs = parset.getStationNamesAndRSPboardNumbers(psetNumber);
 
-  std::vector<Parset::StationRSPpair> inputs = ps.getStationNamesAndRSPboardNumbers(psetNumber);
-  const unsigned  nrBeams = ps.nrBeams();
-  const double startTime = ps.startTime();
-  const double sampleFreq = ps.sampleRate();
-  const unsigned seconds    = static_cast<unsigned>(floor(startTime));
-  const unsigned samples    = static_cast<unsigned>((startTime - floor(startTime)) * sampleFreq);
+  unsigned nrBeams    = parset.nrBeams();
+  double   startTime  = parset.startTime();
+  double   sampleFreq = parset.sampleRate();
+  unsigned seconds    = static_cast<unsigned>(floor(startTime));
+  unsigned samples    = static_cast<unsigned>((startTime - floor(startTime)) * sampleFreq);
 
-  TimeStamp ts = TimeStamp(seconds, samples);
-  WH_DelayCompensation w( &ps, inputs[0].station, ts );
+  TimeStamp ts = TimeStamp(seconds, samples, parset.clockSpeed());
 
-  std::vector<double> delays(nrBeams);
-  std::vector<AMC::Direction> prev_directions(nrBeams),directions(nrBeams);
+  WH_DelayCompensation w(&parset, inputs[0].station, ts);
+
+  unsigned nrPencilBeams = 1;
+  Matrix<double> delays(nrBeams, nrPencilBeams);
+  Matrix<AMC::Direction> prev_directions(nrBeams, nrPencilBeams), directions(nrBeams, nrPencilBeams);
  
-  for( unsigned i = 0; i < 256; i++ ) {
+  for (unsigned i = 0; i < 256; i ++) {
     prev_directions = directions;
 
-    w.getNextDelays( directions, delays );
-    cout << "Directions & Delay: " << directions[0] << ", " << delays[0] << endl;
+    w.getNextDelays(directions, delays);
+    cout << "Directions & Delay: " << directions[0][0] << ", " << delays[0][0] << endl;
 
-    assert( !isnan( delays[0] ) );
+    assert(!isnan(delays[0][0]));
 
     // source (NCP) should traverse with decreasing longitude and latitude
-    if( i > 0 ) {
-      assert( directions[0].longitude() < prev_directions[0].longitude() );
-      assert( directions[0].latitude() < prev_directions[0].latitude() );
+    if (i > 0) {
+      assert(directions[0][0].longitude() < prev_directions[0][0].longitude());
+      assert(directions[0][0].latitude() < prev_directions[0][0].latitude());
     }
   }
 }
 
-int main (int argc, char **argv)
+
+int main()
 {
-  int retval = 0;
-
-#if defined HAVE_MPI
-  MPI_Init(&argc, &argv);
-#else
-  argc = argc; argv = argv;    // Keep compiler happy ;-)
-#endif
-
   try {
     doTest();
-  } catch (Exception& e) {
-    std::cerr << "Caught Exception: " << e.what() << std::endl;
-    retval = 1;
-/*
-  } catch (std::exception& e) {
-    std::cerr << "Caught std::exception: " << e.what() << std::endl;
-    retval = 1;
+  } catch (Exception &ex) {
+    std::cerr << "Caught Exception: " << ex.what() << std::endl;
+    return 1;
+  } catch (std::exception &ex) {
+    std::cerr << "Caught std::exception: " << ex.what() << std::endl;
+    return 1;
   } catch (...) {
-    std::cerr << "Caught unknown exception " << std::endl;
-    retval = 1;
-*/
+    std::cerr << "Caught unknown exception" << std::endl;
+    return 1;
   }
 
-#if defined HAVE_MPI
-  MPI_Finalize();
-#endif
-
-  return retval;
+  return 0;
 }
