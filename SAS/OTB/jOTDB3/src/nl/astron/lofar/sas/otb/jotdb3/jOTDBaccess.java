@@ -21,10 +21,14 @@
 
 package nl.astron.lofar.sas.otb.jotdb3;
 
+import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
 import nl.astron.lofar.lofarutils.remoteFile;
 import nl.astron.lofar.lofarutils.remoteFileInterface;
 import org.apache.log4j.Logger;
@@ -46,12 +50,12 @@ public class jOTDBaccess implements jOTDBaccessInterface
 
     // these vars need to be static otherwise the server will destroy them via garbage collection
     // no idea however if by doing that here it will overwrite them for every new user....
-    private static jOTDBconnection connection;
-    private static jTreeMaintenanceInterface treeMaintenance;
-    private static jCampaignInterface campaign;
-    private static jTreeValueInterface treeValue;
-    private static jConverterInterface converter;
-    private static remoteFileInterface aRemoteFile;
+    private static Map<String,jOTDBconnection> connection = new HashMap<String,jOTDBconnection>();
+    private static Map<String,jTreeMaintenanceInterface> treeMaintenance= new HashMap<String,jTreeMaintenanceInterface>();
+    private static Map<String,jCampaignInterface> campaign= new HashMap<String,jCampaignInterface>();
+    private static Map<String,jTreeValueInterface> treeValue= new HashMap<String,jTreeValueInterface>();
+    private static Map<String,jConverterInterface> converter= new HashMap<String,jConverterInterface>();
+    private static Map<String,remoteFileInterface> aRemoteFile= new HashMap<String,remoteFileInterface>();
 
     static
     {
@@ -129,18 +133,61 @@ public class jOTDBaccess implements jOTDBaccessInterface
         return nameExtention;
 
     }
+
+
+    public void logout(String name) throws RemoteException {
+        logger.info("jOTDBaccess: login");
+
+        if (!unExportConnection(name)) {
+            logger.fatal("Error closing jOTDBconnection");
+        } else {
+            logger.debug("jOTDBconnection "+ name+" closed");
+        }
+/*
+        if (!unExportTreeMaintenance(name)) {
+            logger.fatal("Error closing jTreeMaintenance");
+        } else {
+            logger.debug("jTreeMaintenance "+ name+" closed");
+        }
+
+        if (!unExportCampaign(name)) {
+            logger.fatal("Error closing jCampaign");
+        } else {
+            logger.debug("jCampaign "+ name+" closed");
+        }
+
+        if (!unExportTreeValue(name)) {
+            logger.fatal("Error closing jTreeValue");
+        } else {
+            logger.debug("jTreeValue "+ name+" closed");
+        }
+
+        if (!unExportConverter(name)) {
+            logger.fatal("Error closing jConverter");
+        } else {
+            logger.debug("jConverter "+ name+" closed");
+        }
+
+        if (!unExportRemoteFile(name)) {
+            logger.fatal("Error closing remoteFile");
+        } else {
+            logger.debug("remoteFile "+ name+" closed");
+        }
+
+     */
+    }
     
     private boolean exportConnection(String ext,String name, String pwd, String dbName) {
         String serviceName=jOTDBinterface.SERVICENAME+"_"+ext;
 
         try {
             // Export jOTDBconnection
-//            connection = new jOTDBconnection(name, pwd, dbName,itsDBhost);
-            connection = new jOTDBconnection("paulus", "boskabouter", dbName,itsDBhost,ext);
+            jOTDBconnection aC = new jOTDBconnection("paulus", "boskabouter", dbName,itsDBhost,ext);
+            connection.put(serviceName,aC);
 
             //A custom port was specified, export the object using the port specified
             jOTDBinterface stub =
-                    (jOTDBinterface) UnicastRemoteObject.exportObject((jOTDBinterface)connection, itsRMIobjectPort);
+                    (jOTDBinterface) UnicastRemoteObject.exportObject((jOTDBinterface)connection.get(serviceName), itsRMIobjectPort);
             if (stub != null) {
                 logger.info("set up new jOTDBconnection: " + stub);
                 logger.info("jOTDBserver publishing service " + serviceName + " in local registry...");
@@ -157,16 +204,37 @@ public class jOTDBaccess implements jOTDBaccessInterface
         }
     }
 
+    private boolean unExportConnection(String ext) {
+        try {
+            String serviceName = jOTDBinterface.SERVICENAME + "_" + ext;
+            // get connection from mapping
+            jOTDBinterface aC = connection.get(serviceName);
+            //A custom port was specified, export the object using the port specified
+            if (UnicastRemoteObject.unexportObject(aC, true)) {
+                logger.info("jOTDBserver removed " + serviceName + " from local registry...");
+                connection.remove(serviceName);
+                return true;
+            } else {
+                logger.info("removing " + serviceName + " from local registry FAILED");
+                return false;
+            }
+        } catch (NoSuchObjectException ex) {
+            logger.error(ex);
+            return false;
+        }
+    }
+ 
+
     private boolean exportTreeMaintenance(String ext) {
         String serviceName=jTreeMaintenanceInterface.SERVICENAME+"_"+ext;
 
         try {
             // Export jTreeMaintenance
-            treeMaintenance = new jTreeMaintenance(ext);
+            treeMaintenance.put(serviceName,new jTreeMaintenance(ext));
 
             //A custom port was specified, export the object using the port specified
             jTreeMaintenanceInterface stub =
-                    (jTreeMaintenanceInterface) UnicastRemoteObject.exportObject(treeMaintenance, itsRMIobjectPort);
+                    (jTreeMaintenanceInterface) UnicastRemoteObject.exportObject(treeMaintenance.get(serviceName), itsRMIobjectPort);
             if (stub != null) {
                 logger.info("set up new jTreeMaintenance: " + stub);
                 logger.info("jOTDBserver publishing service " + serviceName + " in local registry...");
@@ -188,11 +256,11 @@ public class jOTDBaccess implements jOTDBaccessInterface
 
         try {
             // Export jCampaign
-            campaign = new jCampaign(ext);
+            campaign.put(serviceName, new jCampaign(ext));
 
             //A custom port was specified, export the object using the port specified
             jCampaignInterface stub =
-                    (jCampaignInterface) UnicastRemoteObject.exportObject(campaign, itsRMIobjectPort);
+                    (jCampaignInterface) UnicastRemoteObject.exportObject(campaign.get(serviceName), itsRMIobjectPort);
             if (stub != null) {
                 logger.info("set up new jCampaign: " + stub);
                 logger.info("jOTDBserver publishing service " + serviceName + " in local registry...");
@@ -214,11 +282,11 @@ public class jOTDBaccess implements jOTDBaccessInterface
 
         try {
             // Export jTreeValue
-            treeValue = new jTreeValue(ext);
+            treeValue.put(serviceName,new jTreeValue(ext));
 
             //A custom port was specified, export the object using the port specified
             jTreeValueInterface stub =
-                    (jTreeValueInterface) UnicastRemoteObject.exportObject(treeValue, itsRMIobjectPort);
+                    (jTreeValueInterface) UnicastRemoteObject.exportObject(treeValue.get(serviceName), itsRMIobjectPort);
             if (stub != null) {
                 logger.info("set up new jTreeValue: " + stub);
                 logger.info("jOTDBserver publishing service " + serviceName + " in local registry...");
@@ -240,11 +308,11 @@ public class jOTDBaccess implements jOTDBaccessInterface
 
         try {
             // Export jConverter
-            converter = new jConverter(ext);
+            converter.put(serviceName, new jConverter(ext));
 
             //A custom port was specified, export the object using the port specified
             jConverterInterface stub =
-                    (jConverterInterface) UnicastRemoteObject.exportObject(converter, itsRMIobjectPort);
+                    (jConverterInterface) UnicastRemoteObject.exportObject(converter.get(serviceName), itsRMIobjectPort);
             if (stub != null) {
                 logger.info("set up new jConverter: " + stub);
                 logger.info("jOTDBserver publishing service " + serviceName + " in local registry...");
@@ -266,11 +334,11 @@ public class jOTDBaccess implements jOTDBaccessInterface
 
         try {
             // Export remoteFile
-            aRemoteFile = new remoteFile(ext);
+            aRemoteFile.put(serviceName, new remoteFile(ext));
 
             //A custom port was specified, export the object using the port specified
             remoteFileInterface stub =
-                    (remoteFileInterface) UnicastRemoteObject.exportObject(aRemoteFile, itsRMIobjectPort);
+                    (remoteFileInterface) UnicastRemoteObject.exportObject(aRemoteFile.get(serviceName), itsRMIobjectPort);
             if (stub != null) {
                 logger.info("set up new remoteFile: " + stub);
                 logger.info("jOTDBserver publishing service " + serviceName + " in local registry...");
