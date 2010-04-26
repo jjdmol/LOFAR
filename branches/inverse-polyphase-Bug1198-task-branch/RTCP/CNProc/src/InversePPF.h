@@ -6,56 +6,54 @@
 #endif
 
 /*
-The subbandList is specified in the Parset file (and class), exactly in the format we need:
-#subbands x the index van de FFT bin. So, 248 x [0..511]
+  The subbandList is specified in the Parset file (and class), exactly in the format we need:
+  #subbands x the index van de FFT bin. So, 248 x [0..511]
 
-The station PPF first does the FIR filtering, next an FFT.
-The station FFT goes from real to complex: 1024 reals to 1024 complex.
-Of those 1024 results, the lower half is discarded, since they are the complex conjungates of the upper half. 
-From the FFTW manual: In many practical applications, the input data in[i] are purely real numbers, 
-in which case the DFT output satisfies the Hermitian redundancy: out[i] is the conjugate of out[n-i].
-Next, from the 512 upper values, 248 subbands are selected. I.e. more than half of the frequencies are thrown away.
+  The station PPF first does the FIR filtering, next an FFT.
+  The station FFT goes from real to complex: 1024 reals to 1024 complex.
+  Of those 1024 results, the lower half is discarded, since they are the complex conjungates of the upper half.
+  From the FFTW manual: In many practical applications, the input data in[i] are purely real numbers,
+  in which case the DFT output satisfies the Hermitian redundancy: out[i] is the conjugate of out[n-i].
+  Next, from the 512 upper values, 248 subbands are selected. I.e. more than half of the frequencies are thrown away.
 
+  For the inverse PPF, we first do an inverse FFT, and next the FIR filter with the inverted constants.
+  In memory, we have to keep 1 beam, 248 subbands. The CEP PPF was bypassed, so there are no channels.
+  Also, we can assume that each core processes only 1 polarization.
+  In total, there can be as many as 50 beams and 2 polarizations, so we need 100 cores for the processing.
 
-For the inverse PPF, we first do an inverse FFT, and next the FIR filter with the inverted constants.
-In memory, we have to keep 1 beam, 248 subbands. The CEP PPF was bypassed, so there are no channels.
-Also, we can assume that each core processes only 1 polarization.
-In total, there can be as many as 50 beams and 2 polarizations, so we need 100 cores for the processing.
-
-
-  Er zijn 3 opties:
+  There are 3 options:
 
   - complex to complex FFT
 
-  - complex to real FFT *** deze gebruik ik nu ***
-  * sloopt input data, dus die moet je elke keer opnieuw maken
-  * input moet in "half complex" formaat zijn
+  - complex to real FFT *** This is what this code currently uses. ***
+  * Destroys the input data.
+  * Input must be in "half complex" format.
 
-  This consists of the non-redundant half of the complex output for a 1d real-input DFT of size n, 
-  stored as a sequence of n  real numbers (double) in the format:
+    This consists of the non-redundant half of the complex output for a 1d real-input DFT of size n,
+    stored as a sequence of n  real numbers (double) in the format:
 
-  r0, r1, r2, ..., rn/2, i(n+1)/2-1, ..., i2, i1
+    r0, r1, r2, ..., rn/2, i(n+1)/2-1, ..., i2, i1
 
-  Here, rk is the real part of the kth output, and ik is the imaginary
-  part. (Division by 2 is rounded down.) For a halfcomplex array hc[n],
-  the kth component thus has its real part in hc[k] and its imaginary
-  part in hc[n-k], with the exception of k == 0 or n/2 (the latter only
-  if n is even)—in these two cases, the imaginary part is zero due to
-  symmetries of the real-input DFT, and is not stored. Thus, the r2hc
-  transform of n real values is a halfcomplex array of length n, and
-  vice versa for hc2r. Aside from the differing format, the output of
-  FFTW_R2HC/FFTW_HC2R is otherwise exactly the same as for the
-  corresponding 1d r2c/c2r transform (i.e. FFTW_FORWARD/FFTW_BACKWARD
-  transforms, respectively). Recall that these transforms are
-  unnormalized, so r2hc followed by hc2r will result in the original
-  data multiplied by n. Furthermore, like the c2r transform, an
-  out-of-place hc2r transform will destroy its input array.
+    Here, rk is the real part of the kth output, and ik is the imaginary
+    part. (Division by 2 is rounded down.) For a halfcomplex array hc[n],
+    the kth component thus has its real part in hc[k] and its imaginary
+    part in hc[n-k], with the exception of k == 0 or n/2 (the latter only
+    if n is even)—in these two cases, the imaginary part is zero due to
+    symmetries of the real-input DFT, and is not stored. Thus, the r2hc
+    transform of n real values is a halfcomplex array of length n, and
+    vice versa for hc2r. Aside from the differing format, the output of
+    FFTW_R2HC/FFTW_HC2R is otherwise exactly the same as for the
+    corresponding 1d r2c/c2r transform (i.e. FFTW_FORWARD/FFTW_BACKWARD
+    transforms, respectively). Recall that these transforms are
+    unnormalized, so r2hc followed by hc2r will result in the original
+    data multiplied by n. Furthermore, like the c2r transform, an
+    out-of-place hc2r transform will destroy its input array.
   
-  - complex to real FFT, multidimensionale versie met N=1
-  * sloopt input data ook
-  * normaal input formaat
+  - complex to real FFT, multidimensional version with N=1
+  * Also destroys input data
+  * normal input format
 
-  TODO: welke heeft de beste performance?
+  TODO: Which option gives the best performance?
 
   A BG/P compute node has 2 GB of memory, which is shared between 4 cores. 
   So, we have only 512 MB per core.

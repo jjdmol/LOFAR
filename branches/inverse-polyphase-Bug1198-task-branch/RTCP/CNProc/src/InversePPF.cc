@@ -13,13 +13,6 @@ using namespace LOFAR::TYPES;
 
 #include <FIR_InvertedStationPPFWeights.h> // defines invertedStationPPFWeights array
 
-unsigned nrSubbands = 248;
-unsigned nrChannels = 1; // for the NuMoon pipeline, there are no separate channels.
-unsigned nrTaps = 16;
-unsigned nrSamplesPerIntegration = 768 * 256 / 4; // one quarter of a second
-unsigned onStationFilterSize = 1024;
-
-
 static NSTimer firTimer("FIR", true);
 static NSTimer fftTimer("FFT", true);
 static NSTimer fftInTimer("create FFT input", true);
@@ -35,9 +28,9 @@ InversePPF::InversePPF(vector<unsigned>& subbandList, unsigned nrSamplesPerInteg
 	itsOnStationFilterSize(onStationFilterSize),
 	itsVerbose(verbose)
 {
-	double origInputSize = (nrSubbands * nrSamplesPerIntegration * sizeof(fcomplex)) / (1024.0*1024.0);
-	double fftBufSize =    (onStationFilterSize * sizeof(float)) / (1024.0);
-	double outputSize = (onStationFilterSize * nrSamplesPerIntegration * sizeof(float)) / (1024.0*1024.0);
+	double origInputSize = (itsNrSubbands * itsNrSamplesPerIntegration * sizeof(fcomplex)) / (1024.0*1024.0);
+	double fftBufSize =    (itsOnStationFilterSize * sizeof(float)) / (1024.0);
+	double outputSize = (itsOnStationFilterSize * itsNrSamplesPerIntegration * sizeof(float)) / (1024.0*1024.0);
 
 	if(itsVerbose) {
 		cerr << "size of original input data: " << origInputSize << " MB" << endl;
@@ -98,7 +91,7 @@ void InversePPF::performFilter(InverseFilteredData& invertedFilteredData, unsign
 	unsigned filterIndex = minorTime % itsOnStationFilterSize;
 	float sample = itsFftOutData[minorTime];
 	float result = itsFIRs[filterIndex].processNextSample(sample);
-	invertedFilteredData.samples[time * onStationFilterSize + minorTime] = result;
+	invertedFilteredData.samples[time * itsOnStationFilterSize + minorTime] = result;
 }
 
 
@@ -116,8 +109,8 @@ void InversePPF::createFFTInput(const TransposedBeamFormedData& transposedBeamFo
 		unsigned sb = itsSubbandList[i];
 		fcomplex sample = transposedBeamFormedData.samples[sb][0 /* channel */][time];
 
-		itsFftInData[sb]                       = real(sample);
-		itsFftInData[onStationFilterSize - sb] = imag(sample);
+		itsFftInData[sb]                          = real(sample);
+		itsFftInData[itsOnStationFilterSize - sb] = imag(sample);
 	}
 
 	fftInTimer.stop();
@@ -170,7 +163,7 @@ void InversePPF::performInversePolyPhase(const TransposedBeamFormedData& transpo
 
 void InversePPF::filter(const TransposedBeamFormedData& transposedBeamFormedData, InverseFilteredData& invertedFilteredData)
 {
-	for(unsigned time=0; time < nrSamplesPerIntegration; time++) {
+	for(unsigned time=0; time < itsNrSamplesPerIntegration; time++) {
 		performInversePolyPhase(transposedBeamFormedData, invertedFilteredData, time);
 	}
 
