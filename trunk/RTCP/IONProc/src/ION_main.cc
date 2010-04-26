@@ -36,6 +36,7 @@
 #include <IONProc/Package__Version.h>
 
 #include <boost/multi_array.hpp>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <execinfo.h>
