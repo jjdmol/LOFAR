@@ -14,4 +14,4 @@ endif(USE_VALGRIND)
 enable_language(ASM-BGP)
 
 add_subdirectory(src)
-#add_subdirectory(test)    # Tests currently do NOT compile!
+add_subdirectory(test)
