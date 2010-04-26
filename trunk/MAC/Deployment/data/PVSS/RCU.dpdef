@@ -43,12 +43,17 @@ Trigger.baselevel		int
 Trigger.stoplevel		int
 Trigger.filter			int
 Trigger.window			int
-Trigger.operatingMode		int
+Trigger.operatingMode	int
 Trigger.triggerMode		int
-Trigger.coeff0			int
-Trigger.coeff1			int
-Trigger.coeff2			int
-Trigger.coeff3			int
+Trigger.filter0.coeff0	int
+Trigger.filter0.coeff1	int
+Trigger.filter0.coeff2	int
+Trigger.filter0.coeff3	int
+Trigger.filter1.coeff0	int
+Trigger.filter1.coeff1	int
+Trigger.filter1.coeff2	int
+Trigger.filter1.coeff3	int
+
 
 #
 # Obsolete: Replaced with xBAFilterSel
