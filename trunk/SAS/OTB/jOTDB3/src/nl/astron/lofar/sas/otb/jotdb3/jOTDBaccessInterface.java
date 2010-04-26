@@ -18,4 +18,6 @@ public interface jOTDBaccessInterface extends Remote {
 
     public String login(String name, String pwd,String dbName) throws RemoteException;
 
+    public void logout(String name) throws RemoteException;
+
 }
