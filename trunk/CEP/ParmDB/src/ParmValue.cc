@@ -284,9 +284,7 @@ namespace BBS {
     int ny = yaxis->size();
     vector<ParmValue::ShPtr> newValues(nx*ny);
     // Copy the old values.
-    int oldnx = ex1-sx1;
-    int oldny = ey1-sy1;
-    DBGASSERT (oldnx*oldny == int(itsValues.size()));
+    DBGASSERT ((ex1-sx1)*(ey1-sy1) == int(itsValues.size()));
     const ParmValue::ShPtr* oldValues = &(itsValues[0]);
     for (int iy=0; iy<ey1-sy1; ++iy) {
       for (int ix=0; ix<ex1-sx1; ++ix) {

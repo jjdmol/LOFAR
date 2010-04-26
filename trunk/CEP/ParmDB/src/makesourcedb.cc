@@ -145,6 +145,16 @@ enum FieldNr {
   NrFields
 };
 
+// Read a line and remove a possible carriage-return at the end.
+void getInLine (istream& infile, string& line)
+{
+  getline (infile, line);
+  int sz = line.size();
+  if (sz > 0  &&  line[sz-1] == '\r') {
+    line = line.substr(0,sz-1);
+  }
+}
+
 vector<string> fillKnown()
 {
   // The order in which the names are pushed must match exactly with the
@@ -689,7 +699,7 @@ void make (const string& in, const string& out,
     casa::Regex regexf("^[ \t]*[fF][oO][rR][mM][aA][tT][ \t]*=.*");
     string line;
     // Read first line.
-    getline (infile, line);
+    getInLine (infile, line);
     while (infile) {
       // Remove comment lines, empty lines, and possible format line.
       bool skip = true;
@@ -714,7 +724,7 @@ void make (const string& in, const string& out,
                  nrpatchfnd, nrsourcefnd, searchInfo);
       }
       // Read next line
-      getline (infile, line);
+      getInLine (infile, line);
     }
   }
   cout << "Wrote " << nrpatchfnd << " patches (out of " << nrpatch << ") and "
@@ -743,7 +753,7 @@ string readFormat (string file, const string& catFile)
   ASSERTSTR (infile, "File " << file
              << " containing format string could not be opened");
   string line;
-  getline (infile, line);
+  getInLine (infile, line);
   casa::Regex regex("^[ \t]*#[ \t]*\\([ \t]*.*\\)[ \t]*=[ \t]*[fF][oO][rR][mM][aA][tT][ \t]*$");
   casa::Regex regexs1("^[ \t]*#[ \t]*\\([ \t]*");
   casa::Regex regexs2("\\)[ \t]*=[ \t]*[fF][oO][rR][mM][aA][tT][ \t]*$");
@@ -761,7 +771,7 @@ string readFormat (string file, const string& catFile)
         return sline;
       }
     }
-    getline (infile, line);
+    getInLine (infile, line);
   }
   // See if a format line is given as "format=".
   casa::Regex regexf("^[ \t]*[fF][oO][rR][mM][aA][tT][ \t]*=.*$");
