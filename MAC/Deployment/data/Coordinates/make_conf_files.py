@@ -79,7 +79,7 @@ def writeNormalVector(station, anttype):
         fileName = 'ANTENNA_FILES/'+ station + '-AntennaField.conf'
         file = open(fileName, 'a')
         if len(anttype) > 0:
-            dataStr += '\nNORMAL-VECTOR '+str(anttype)+'\n'
+            dataStr += '\nNORMAL_VECTOR '+str(anttype)+'\n'
 
         Shape = np.shape(vector)
         Dims = len(Shape)
@@ -108,7 +108,7 @@ def writeRotationMatrix(station, anttype):
         fileName = 'ANTENNA_FILES/'+ station + '-AntennaField.conf'
         file = open(fileName, 'a')
         if len(anttype) > 0:
-            dataStr += '\nROTATION-MATRIX '+str(anttype)+'\n'
+            dataStr += '\nROTATION_MATRIX '+str(anttype)+'\n'
 
         Shape = np.shape(matrix)
         Dims = len(Shape)
