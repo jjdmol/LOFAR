@@ -38,10 +38,11 @@ node  AnaBeam	      2.0.0  development  'node constraint'  "AnaBeam specificatio
 #--------------------------------------------------------------------------------------------------------
 #    name                dir. type   unit   prun. vm   value                   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
+par  target              I    text   -      10    0    ''			            - 	'Field of view, can be a sourcename or eg. "Sky area 1"'
 par  angle1				 I	  dbl	 -		10    0	   0   						-	'RightAscention or Azimuth in rad.'
 par  angle2			     I	  dbl	 -		10    0	   0   						-	'Declination or Elevation in rad.'
 par  directionType	     I	  ptext	 -		10    0	   'J2000|AZEL|LMN;J2000'   -   'Coord.system used'
-par  duration		     I	  uint	 -		10    0	   0   						-	'Time in seconds'
 par  startTime		     I	  text   -		10    0	   0   						-	'startTime'
+par  duration		     I	  uint	 -		10    0	   0   						-	'Time in seconds'
 par  rank                I    pint   -      10    0    '1|2|3|4|5;1'            -   'Rank of importance'
 
