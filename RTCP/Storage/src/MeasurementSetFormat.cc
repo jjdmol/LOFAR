@@ -11,6 +11,7 @@
 #include <lofar_config.h>
 
 #include <Storage/MeasurementSetFormat.h>
+#include <Storage/Package__Version.h>
 
 #include <AMCBase/Epoch.h>
 
@@ -50,7 +51,6 @@
 #include <Interface/Exceptions.h>
 
 #include <boost/thread/mutex.hpp>
-
 
 
 using namespace casa;
@@ -150,6 +150,7 @@ void MeasurementSetFormat::createMSTables(unsigned subband)
     fillDataDesc();
     fillSpecWindow(subband);
     fillObs();
+    fillHistory();
 
   } catch (AipsError x) {
     THROW(StorageException,"AIPS/CASA error: " << x.getMesg());
@@ -355,6 +356,38 @@ void MeasurementSetFormat::fillSpecWindow(unsigned subband) {
   msspwCol.flagRow().put (0, False);
 
   msspw.flush();
+}
+
+void MeasurementSetFormat::fillHistory() {
+  Table histtab(itsMS->keywordSet().asTable("HISTORY")); 
+  histtab.reopenRW(); 
+  ScalarColumn<double> time        (histtab, "TIME"); 
+  ScalarColumn<int>    obsId       (histtab, "OBSERVATION_ID"); 
+  ScalarColumn<String> message     (histtab, "MESSAGE"); 
+  ScalarColumn<String> application (histtab, "APPLICATION"); 
+  ScalarColumn<String> priority    (histtab, "PRIORITY"); 
+  ScalarColumn<String> origin      (histtab, "ORIGIN"); 
+  ArrayColumn<String>  parms       (histtab, "APP_PARAMS"); 
+  ArrayColumn<String>  cli         (histtab, "CLI_COMMAND"); 
+
+  // Put all parset entries in a Vector<String>. 
+  casa::Vector<String> appvec; 
+  casa::Vector<String> clivec; 
+  appvec.resize (itsPS->size()); 
+  casa::Array<String>::contiter viter = appvec.cbegin(); 
+  for (ParameterSet::const_iterator iter = itsPS->begin(); iter != itsPS->end(); ++iter, ++viter) { 
+    *viter = iter->first + '=' + iter->second.get(); 
+  } 
+  uint rownr = histtab.nrow(); 
+  histtab.addRow(); 
+  time.put        (rownr, Time().modifiedJulianDay()*24.*3600.); 
+  obsId.put       (rownr, 0); 
+  message.put     (rownr, "parameters");
+  application.put (rownr, "OLAP"); 
+  priority.put    (rownr, "NORMAL"); 
+  origin.put      (rownr, Version::getInfo<StorageVersion>("Storage", "full")); 
+  parms.put       (rownr, appvec); 
+  cli.put         (rownr, clivec); 
 }
 
 void MeasurementSetFormat::createMSMetaFile(unsigned subband)
