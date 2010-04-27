@@ -72,6 +72,7 @@ class OutputThread
 
     std::vector<unsigned>   itsSequenceNumbers;
     FileStream              *itsSequenceNumbersFile;
+    bool                    itsHaveCaughtException;
 };
 
 } // namespace RTCP
