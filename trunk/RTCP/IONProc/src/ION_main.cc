@@ -124,14 +124,10 @@ std::vector<StreamMultiplexer *>   allIONstreamMultiplexers;
 
 unsigned			   nrCNcoresInPset = 64; // TODO: how to figure out the number of CN cores?
 
-#if defined USE_VALGRIND || !defined HAVE_FCNP // FIXME
-static const std::string     streamType = "TCP";
-#else
-static const std::string     streamType = "FCNP";
-#endif
+static const char		   *cnStreamType;
 
 #if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
-static bool	   fcnp_inited;
+static bool			   fcnp_inited;
 #endif
 
 Stream *createCNstream(unsigned core, unsigned channel)
@@ -139,28 +135,40 @@ Stream *createCNstream(unsigned core, unsigned channel)
   // translate logical to physical core number
   core = CN_Mapping::mapCoreOnPset(core, myPsetNumber);
 
-#if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
-  if (streamType == "FCNP")
-    return new FCNP_ServerStream(core, channel);
-  else
-#endif
-  if (streamType == "NULL")
+  if (strcmp(cnStreamType, "NULL") == 0) {
     return new NullStream;
-  else if (streamType == "TCP") {
+  } else if (strcmp(cnStreamType, "TCP") == 0) {
     LOG_DEBUG_STR("new SocketStream(\"127.0.0.1\", 5000 + " << core << " + 1000 * " << channel << ", ::TCP, ::Server");
     Stream *str = new SocketStream("127.0.0.1", 5000 + core + 1000 * channel, SocketStream::TCP, SocketStream::Server);
     LOG_DEBUG_STR("new SocketStream() done");
     return str;
-  }
-  else
+#if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
+  } else if (strcmp(cnStreamType, "FCNP") == 0) {
+    return new FCNP_ServerStream(core, channel);
+#endif
+  } else {
     throw IONProcException("unknown Stream type between ION and CN", THROW_ARGS);
+  }
 }
 
 
 static void createAllCNstreams()
 {
+  const char *streamType = getenv("CN_STREAM_TYPE");
+
+  if (streamType != 0)
+    cnStreamType = streamType;
+  else
+#if !defined HAVE_BGP_ION
+    cnStreamType = "NULL";
+#elif defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
+    cnStreamType = "FCNP";
+#else
+    cnStreamType = "TCP";
+#endif
+
 #if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
-  if (streamType == "FCNP" && !fcnp_inited) {
+  if (cnStreamType == "FCNP" && !fcnp_inited) {
     FCNP_ION::init(true);
     fcnp_inited = true;
   }
@@ -248,8 +256,10 @@ static void enableCoreDumps()
   if (setrlimit(RLIMIT_CORE, &rlimit) < 0)
     perror("warning: setrlimit on unlimited core size failed");
 
+#if defined HAVE_BGP
   if (system("echo /tmp/%e.core >/proc/sys/kernel/core_pattern") < 0)
     LOG_WARN("could not change /proc/sys/kernel/core_pattern");
+#endif
 
   LOG_DEBUG("coredumps enabled");
 }
@@ -321,7 +331,8 @@ static void master_thread(int argc, char **argv)
     mmapFlatMemory();
 #endif
 
-    setenv("AIPSPATH", "/globalhome/lofarsystem/packages/root/bgp_ion/", 0);
+    if (getenv("AIPSPATH") == 0)
+      setenv("AIPSPATH", "/globalhome/lofarsystem/packages/root/bgp_ion/", 0);
 
     if (argc < 2) {
       LOG_ERROR("unexpected number of arguments");
@@ -427,6 +438,14 @@ int main(int argc, char **argv)
  
 #if defined HAVE_BGP
   INIT_BGP_LOGGER(sysInfo.str());
+#elif defined HAVE_LOG4CPLUS
+  lofarLoggerInitNode();
+#elif defined HAVE_LOG4CXX
+  Context::initialize();
+  setLevel("Global",8);
+#else
+  getLFDebugContext().initialize();
+  ::LOFAR::LFDebug::setLevel("Global",8);
 #endif
 
   master_thread(argc, argv);
