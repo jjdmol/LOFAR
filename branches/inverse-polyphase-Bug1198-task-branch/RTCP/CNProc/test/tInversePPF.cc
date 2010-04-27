@@ -45,23 +45,48 @@ fftw_plan  plan;
 
 #include <FIR_InvertedStationPPFWeights.h> // defines invertedStationPPFWeights array
 
-float* fftInData;
-float* fftOutData;
+static unsigned nrSubbands = 248;
+static unsigned nrChannels = 1; // for the NuMoon pipeline, there are no separate channels.
+static unsigned nrTaps = 16;
+static unsigned nrSamplesPerIntegration = 768 * 256 / 4; // one quarter of a second
+static unsigned onStationFilterSize = 1024;
+static double     sampleRate = 195312.5;
+static double     centerFrequency	= 384 * sampleRate;
+static double     baseFrequency	= centerFrequency - .5 * sampleRate;
+static unsigned   testSignalChannel = 5;
+static double     signalFrequency	= baseFrequency + testSignalChannel * sampleRate / nrChannels;
 
-unsigned nrSubbands = 248;
-unsigned nrChannels = 1; // for the NuMoon pipeline, there are no separate channels.
-unsigned nrTaps = 16;
-unsigned nrSamplesPerIntegration = 768 * 256 / 4; // one quarter of a second
-unsigned onStationFilterSize = 1024;
+static NSTimer firTimer("FIR", true);
+static NSTimer fftTimer("FFT", true);
+static NSTimer fftInTimer("create FFT input", true);
 
-NSTimer firTimer("FIR", true);
-NSTimer fftTimer("FFT", true);
-NSTimer fftInTimer("create FFT input", true);
+fcomplex toComplex(double phi)
+{
+    double s, c;
+    sincos(phi, &s, &c);
+    fcomplex result = makefcomplex(c, s);
+    return result;
+}
+
+
+void generateInputSignal(TransposedBeamFormedData& transposedBeamFormedData) {
+	  for (unsigned sb = 0; sb < nrSubbands; sb++) {
+		for (unsigned ch = 0; ch < nrChannels; ch++) {
+			for (unsigned time = 0; time < nrSamplesPerIntegration; time++) {
+				double phi = 2 * M_PI * signalFrequency * time / sampleRate;
+				fcomplex sample;
+				transposedBeamFormedData.samples[sb][ch][time] = toComplex(phi);
+			}
+		}
+	}
+}
+
 
 int main() {
-	// [nrSubbands][nrChannels][nrSamplesPerIntegration | 2]
 	TransposedBeamFormedData transposedBeamFormedData(nrSubbands, nrChannels, nrSamplesPerIntegration);
 	transposedBeamFormedData.allocate();
+
+	generateInputSignal(transposedBeamFormedData);
 
 	double origInputSize = (nrSubbands * nrSamplesPerIntegration * sizeof(fcomplex)) / (1024.0*1024.0);
 	double fftBufSize =    (onStationFilterSize * sizeof(float)) / (1024.0);
@@ -85,9 +110,7 @@ int main() {
 
     InversePPF inversePPF(subbandList, nrSamplesPerIntegration, nrTaps, onStationFilterSize, true);
 
-
 	cerr << "starting test" << endl;
-
 	inversePPF.filter(transposedBeamFormedData, invertedFilteredData);
 
 	return 0;
