@@ -49,7 +49,8 @@ OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, unsigne
   itsNextSequenceNumber(0),
   itsFreeQueue(freeQueue),
   itsReceiveQueue(receiveQueue),
-  itsSequenceNumbersFile(0)
+  itsSequenceNumbersFile(0), 
+  itsHaveCaughtException(false)
 {
   std::string filename, seqfilename;
 
@@ -99,6 +100,10 @@ OutputThread::~OutputThread()
 
   flushSequenceNumbers();
   delete itsSequenceNumbersFile;
+
+  if (itsHaveCaughtException)
+    LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber <<" caught non-fatal exception(s).") ;
+
 }
 
 
@@ -158,7 +163,14 @@ void OutputThread::mainLoop()
     checkForDroppedData(data.get());
 
     //writeTimer.start();
-    itsWriter->write(data.get());
+    try {
+
+      itsWriter->write(data.get());
+
+    } catch (SystemCallException &ex) {
+      itsHaveCaughtException = true;
+      LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber <<" caught non-fatal exception:  " << ex.what()) ;
+    }
     //writeTimer.stop();
 
     writeLogMessage(data.get()->sequenceNumber);
@@ -167,6 +179,7 @@ void OutputThread::mainLoop()
     itsFreeQueue.append(data.release());
   }
 
+  // CB -- non reachable? 
   flushSequenceNumbers();
 }
 
