@@ -71,6 +71,7 @@ class MeasurementSetFormat : public Format
   void fillDataDesc();
   void fillSpecWindow(unsigned subband);
   void fillObs();
+  void fillHistory();
 };
   
 } //RTCP
