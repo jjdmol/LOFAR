@@ -21,7 +21,8 @@ set(inst_HEADERS
   TreeMaintenance.h
   TreeValue.h
   CampaignInfo.h
-  Campaign.h)
+  Campaign.h
+  DefaultTemplate.h)
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
   ${CMAKE_CURRENT_SOURCE_DIR}

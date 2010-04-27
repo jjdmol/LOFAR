@@ -18,6 +18,7 @@ lofar_add_library(otdb
   TreeValue.cc
   loadCompFile.cc
   CampaignInfo.cc
-  Campaign.cc)
+  Campaign.cc
+  DefaultTemplate.cc)
 
 lofar_add_bin_program(versionotdb versionotdb.cc)

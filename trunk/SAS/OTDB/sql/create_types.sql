@@ -123,4 +123,8 @@ CREATE TYPE campaignInfo AS (
     contact     VARCHAR(120)
 );
 
+CREATE TYPE templateInfo AS (
+	treeID			INT4,
+	name			VARCHAR(32)
+);
 
