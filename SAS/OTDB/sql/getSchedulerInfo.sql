@@ -37,7 +37,6 @@ CREATE TYPE schedulerInfo AS (
 	fixedTime              BOOLEAN,
 	lastPossibleDay        INT4,
 	late                   BOOLEAN,
-	mayNotUnschedule       BOOLEAN,
 	nightTimeWeightFactor  INT4,
 	nrOfSubbands           INT4,
 	offlineProcessingUnits INT4,
