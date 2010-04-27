@@ -136,30 +136,15 @@ public class jOTDBaccess implements jOTDBaccessInterface
 
 
     public void logout(String name) throws RemoteException {
-        logger.info("jOTDBaccess: login");
+        logger.info("jOTDBaccess: logout");
 
-        if (!unExportConnection(name)) {
-            logger.fatal("Error closing jOTDBconnection");
-        } else {
-            logger.debug("jOTDBconnection "+ name+" closed");
-        }
-/*
-        if (!unExportTreeMaintenance(name)) {
-            logger.fatal("Error closing jTreeMaintenance");
-        } else {
-            logger.debug("jTreeMaintenance "+ name+" closed");
-        }
 
-        if (!unExportCampaign(name)) {
-            logger.fatal("Error closing jCampaign");
-        } else {
-            logger.debug("jCampaign "+ name+" closed");
-        }
+        // Remove in backward order
 
-        if (!unExportTreeValue(name)) {
-            logger.fatal("Error closing jTreeValue");
+        if (!unExportRemoteFile(name)) {
+            logger.fatal("Error closing remoteFile");
         } else {
-            logger.debug("jTreeValue "+ name+" closed");
+            logger.debug("remoteFile "+ name+" closed");
         }
 
         if (!unExportConverter(name)) {
@@ -168,13 +153,29 @@ public class jOTDBaccess implements jOTDBaccessInterface
             logger.debug("jConverter "+ name+" closed");
         }
 
-        if (!unExportRemoteFile(name)) {
-            logger.fatal("Error closing remoteFile");
+        if (!unExportTreeValue(name)) {
+            logger.fatal("Error closing jTreeValue");
         } else {
-            logger.debug("remoteFile "+ name+" closed");
+            logger.debug("jTreeValue "+ name+" closed");
         }
 
-     */
+        if (!unExportCampaign(name)) {
+            logger.fatal("Error closing jCampaign");
+        } else {
+            logger.debug("jCampaign "+ name+" closed");
+        }
+
+        if (!unExportTreeMaintenance(name)) {
+            logger.fatal("Error closing jTreeMaintenance");
+        } else {
+            logger.debug("jTreeMaintenance "+ name+" closed");
+        }
+
+        if (!unExportConnection(name)) {
+            logger.fatal("Error closing jOTDBconnection");
+        } else {
+            logger.debug("jOTDBconnection "+ name+" closed");
+        }
     }
     
     private boolean exportConnection(String ext,String name, String pwd, String dbName) {
@@ -209,7 +210,7 @@ public class jOTDBaccess implements jOTDBaccessInterface
             String serviceName = jOTDBinterface.SERVICENAME + "_" + ext;
             // get connection from mapping
             jOTDBinterface aC = connection.get(serviceName);
-            //A custom port was specified, export the object using the port specified
+
             if (UnicastRemoteObject.unexportObject(aC, true)) {
                 logger.info("jOTDBserver removed " + serviceName + " from local registry...");
                 connection.remove(serviceName);
@@ -251,6 +252,26 @@ public class jOTDBaccess implements jOTDBaccessInterface
         }
     }
 
+    private boolean unExportTreeMaintenance(String ext) {
+        try {
+            String serviceName = jTreeMaintenanceInterface.SERVICENAME + "_" + ext;
+            // get TreeMaintenance from mapping
+            jTreeMaintenanceInterface aTM = treeMaintenance.get(serviceName);
+
+            if (UnicastRemoteObject.unexportObject(aTM, true)) {
+                logger.info("jOTDBserver removed " + serviceName + " from local registry...");
+                treeMaintenance.remove(serviceName);
+                return true;
+            } else {
+                logger.info("removing " + serviceName + " from local registry FAILED");
+                return false;
+            }
+        } catch (NoSuchObjectException ex) {
+            logger.error(ex);
+            return false;
+        }
+    }
+
     private boolean exportCampaign(String ext) {
         String serviceName=jCampaignInterface.SERVICENAME+"_"+ext;
 
@@ -273,6 +294,26 @@ public class jOTDBaccess implements jOTDBaccessInterface
             }
         } catch (RemoteException ex) {
             logger.fatal("RMI login failed " + ex);
+            return false;
+        }
+    }
+
+    private boolean unExportCampaign(String ext) {
+        try {
+            String serviceName = jCampaignInterface.SERVICENAME + "_" + ext;
+            // get Campaign from mapping
+            jCampaignInterface aC = campaign.get(serviceName);
+
+            if (UnicastRemoteObject.unexportObject(aC, true)) {
+                logger.info("jOTDBserver removed " + serviceName + " from local registry...");
+                campaign.remove(serviceName);
+                return true;
+            } else {
+                logger.info("removing " + serviceName + " from local registry FAILED");
+                return false;
+            }
+        } catch (NoSuchObjectException ex) {
+            logger.error(ex);
             return false;
         }
     }
@@ -303,6 +344,26 @@ public class jOTDBaccess implements jOTDBaccessInterface
         }
     }
 
+    private boolean unExportTreeValue(String ext) {
+        try {
+            String serviceName = jTreeValueInterface.SERVICENAME + "_" + ext;
+            // get TreeValue from mapping
+            jTreeValueInterface aTV = treeValue.get(serviceName);
+
+            if (UnicastRemoteObject.unexportObject(aTV, true)) {
+                logger.info("jOTDBserver removed " + serviceName + " from local registry...");
+                treeValue.remove(serviceName);
+                return true;
+            } else {
+                logger.info("removing " + serviceName + " from local registry FAILED");
+                return false;
+            }
+        } catch (NoSuchObjectException ex) {
+            logger.error(ex);
+            return false;
+        }
+    }
+
     private boolean exportConverter(String ext) {
         String serviceName=jConverterInterface.SERVICENAME+"_"+ext;
 
@@ -329,6 +390,26 @@ public class jOTDBaccess implements jOTDBaccessInterface
         }
     }
 
+    private boolean unExportConverter(String ext) {
+        try {
+            String serviceName = jConverterInterface.SERVICENAME + "_" + ext;
+            // get Converter from mapping
+            jConverterInterface aC = converter.get(serviceName);
+
+            if (UnicastRemoteObject.unexportObject(aC, true)) {
+                logger.info("jOTDBserver removed " + serviceName + " from local registry...");
+                converter.remove(serviceName);
+                return true;
+            } else {
+                logger.info("removing " + serviceName + " from local registry FAILED");
+                return false;
+            }
+        } catch (NoSuchObjectException ex) {
+            logger.error(ex);
+            return false;
+        }
+    }
+
     private boolean exportRemoteFile(String ext) {
         String serviceName=remoteFileInterface.SERVICENAME+"_"+ext;
 
@@ -351,6 +432,26 @@ public class jOTDBaccess implements jOTDBaccessInterface
             }
         } catch (RemoteException ex) {
             logger.fatal("RMI login failed " + ex);
+            return false;
+        }
+    }
+
+    private boolean unExportRemoteFile(String ext) {
+        try {
+            String serviceName = remoteFileInterface.SERVICENAME + "_" + ext;
+            // get TreeMaintenance from mapping
+            remoteFileInterface aRF = aRemoteFile.get(serviceName);
+
+            if (UnicastRemoteObject.unexportObject(aRF, true)) {
+                logger.info("jOTDBserver removed " + serviceName + " from local registry...");
+                aRemoteFile.remove(serviceName);
+                return true;
+            } else {
+                logger.info("removing " + serviceName + " from local registry FAILED");
+                return false;
+            }
+        } catch (NoSuchObjectException ex) {
+            logger.error(ex);
             return false;
         }
     }
