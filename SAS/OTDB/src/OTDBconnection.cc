@@ -63,6 +63,18 @@ OTDBconnection::~OTDBconnection ()
 }
 
 //
+// disconnect()
+//
+// Explicitly close the connection
+void OTDBconnection::disconnect()
+{
+	if (itsConnection) {
+		itsConnection->disconnect();
+	}
+	itsIsConnected = false;
+}
+
+//
 // connect()
 //
 // To reconnect in case the connection was lost
@@ -259,6 +271,48 @@ vector<TreeState> OTDBconnection::getStateList(
 
 	vector<TreeState> 	empty;
 	return (empty);
+}
+
+//
+// getDefaultTemplates
+//
+// Get a list of all default templates
+//
+vector<DefaultTemplate>	OTDBconnection::getDefaultTemplates()
+{
+	if (!itsIsConnected && !connect()) {
+		vector<DefaultTemplate> 	empty;
+		return (empty); 
+	}
+
+	LOG_TRACE_FLOW("OTDB:getDefaultTemplates()");
+	
+	try {
+		// construct a query that calls a stored procedure.
+		work	xAction(*itsConnection, "getDefaultTemplates");
+		string	query("SELECT * from getDefaultTemplates()");
+
+		// execute query
+		result	res = xAction.exec(query);
+
+		// show how many records found
+		result::size_type	nrRecords = res.size();
+		LOG_DEBUG_STR (nrRecords << " default templates found");
+
+		vector<DefaultTemplate>	resultVec;
+		for (result::size_type i = 0; i < nrRecords; ++i) {
+			resultVec.push_back(DefaultTemplate(res[i]));
+		}
+
+		return (resultVec);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during retrieval of default templates:")
+					 + ex.what();
+	}
+
+	vector<DefaultTemplate>	empty;
+	return (empty); 
 }
 
 //

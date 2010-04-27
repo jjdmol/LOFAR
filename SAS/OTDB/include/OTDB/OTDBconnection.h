@@ -30,6 +30,7 @@
 //# Includes
 #include <OTDB/OTDBtree.h>
 #include <OTDB/TreeState.h>
+#include <OTDB/DefaultTemplate.h>
 #include <Common/lofar_vector.h>
 
 using namespace pqxx;
@@ -63,7 +64,7 @@ public:
 
 	// To connect or reconnect in case the connection was lost
 	bool connect();
-
+	void disconnect();
 
 	// get OTDBtree of one specific tree
 	OTDBtree	getTreeInfo (treeIDType		atreeID,
@@ -80,6 +81,9 @@ public:
 								   const bool   isMomID = false,
 							       const ptime& beginDate=ptime(min_date_time),
 							       const ptime& endDate=ptime(max_date_time));
+
+	// Get a list of all default templates.
+	vector<DefaultTemplate> getDefaultTemplates();
 
 	// To get a list of all executable OTDB trees available in the database.
 	vector<OTDBtree> getExecutableTrees(classifType aClassification=TCoperational);

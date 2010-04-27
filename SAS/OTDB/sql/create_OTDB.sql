@@ -81,3 +81,6 @@
 \i getSchedulerInfo.sql
 \i saveSchedulerInfo_func.sql
 \i getAllTaskID_func.sql
+
+-- default templates
+\i getDefaultTemplates_func.sql

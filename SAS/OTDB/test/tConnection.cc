@@ -95,7 +95,7 @@ int main (int	argc, char*	argv[]) {
 
 	// try to resolve the database name
 	string 		dbName("otdbtest");
-	string		hostName("dop50.astron.nl");
+	string		hostName("rs005");
 	char		line[64];
 	int32		sleeptime = 1;
 	ifstream	inFile;
@@ -221,6 +221,25 @@ int main (int	argc, char*	argv[]) {
 		}
 		else {
 			showTreeList(treeList);
+		}
+
+		LOG_INFO("=== Testing DefaultTemplates ===");
+	 	LOG_INFO("getDefaultTemplates()");
+		vector<DefaultTemplate>	DTlist = conn.getDefaultTemplates();
+		if (DTlist.size() == 0) {
+			LOG_INFO_STR("Error:" << conn.errorMsg());
+		}
+		else {
+			cout << "treeID|name                    " << endl;
+			cout << "------+------------------------" << endl;
+			for (uint32	i = 0; i < DTlist.size(); ++i) {
+				string row(formatString("%6d|%s",
+					DTlist[i].treeID(),
+					DTlist[i].name.c_str()));
+				cout << row << endl;
+			}
+
+			cout << DTlist.size() << " records" << endl << endl;
 		}
 	}
 	catch (std::exception&	ex) {

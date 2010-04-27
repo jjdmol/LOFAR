@@ -233,6 +233,7 @@ CREATE TABLE treestate (
 	CONSTRAINT statename_uniq	UNIQUE(name)
 )WITHOUT OIDS;
 INSERT INTO treestate VALUES (  0, 'idle');
+INSERT INTO treestate VALUES ( 10, 'default_template');
 INSERT INTO treestate VALUES (100, 'described');
 INSERT INTO treestate VALUES (200, 'prepared');
 INSERT INTO treestate VALUES (300, 'approved');
