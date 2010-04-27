@@ -48,9 +48,6 @@ CREATE TYPE schedulerInfo AS (
 	referenceFrame         INT4,
 	scheduledEnd           VARCHAR(20),
 	scheduledStart         VARCHAR(20),
-	sourceDeclination      FLOAT,
-	sourceNames            TEXT,
-	sourceRightAscension   VARCHAR(20),
 	stationID              TEXT,
 	storageUnits           INT4,
 	taskDuration           VARCHAR(10),
@@ -83,7 +80,6 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 	FETCH fieldList INTO vRecord.fixedTime;
 	FETCH fieldList INTO vRecord.lastPossibleDay;
 	FETCH fieldList INTO vRecord.late;
-	FETCH fieldList INTO vRecord.mayNotUnschedule;
 	FETCH fieldList INTO vRecord.nightTimeWeightFactor;
 	FETCH fieldList INTO vRecord.nrOfSubbands;
 	FETCH fieldList INTO vRecord.offlineProcessingUnits;
@@ -95,9 +91,6 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 	FETCH fieldList INTO vRecord.referenceFrame;
 	FETCH fieldList INTO vRecord.scheduledEnd;
 	FETCH fieldList INTO vRecord.scheduledStart;
-	FETCH fieldList INTO vRecord.sourceDeclination;
-	FETCH fieldList INTO vRecord.sourceNames;
-	FETCH fieldList INTO vRecord.sourceRightAscension;
 	FETCH fieldList INTO vRecord.stationID;
 	FETCH fieldList INTO vRecord.storageUnits;
 	FETCH fieldList INTO vRecord.taskDuration;
