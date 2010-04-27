@@ -58,9 +58,9 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
   itsSBBuffers(boost::extents[itsNrSubbands][itsSize][NR_POLARIZATIONS], 128, hugeMemoryAllocator),
   itsOffset(0),
 #if defined HAVE_BGP && !defined USE_VALGRIND
-  itsStride(reinterpret_cast<char *>(itsSBBuffers[1].origin()) - reinterpret_cast<char *>(itsSBBuffers[0].origin())),
+  itsStride(itsSBBuffers[0].num_elements() * sizeof(SAMPLE_TYPE)),
 #else
-  itsStride(reinterpret_cast<SAMPLE_TYPE *>(itsSBBuffers[1].origin()) - reinterpret_cast<SAMPLE_TYPE *>(itsSBBuffers[0].origin())),
+  itsStride(itsSBBuffers[0].num_elements()),
 #endif
   itsReadTimer("buffer read", true, true),
   itsWriteTimer("buffer write", true, true)
