@@ -30,6 +30,8 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.util.Iterator;
 import java.util.Map;
+import nl.astron.lofar.sas.otb.exceptions.NoServerConnectionException;
+import nl.astron.lofar.sas.otb.exceptions.NotLoggedInException;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -97,12 +99,20 @@ public class Main {
             PropertyConfigurator.configure(logConfig);
             logger.info("OTB started");
 
-            MainFrame aMainFrame = new MainFrame(server,port);
+            try {
+               MainFrame aMainFrame = new MainFrame(server,port);
 
-            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            Rectangle screenRect = ge.getMaximumWindowBounds();
-            aMainFrame.setSize(screenRect.getSize());
-            aMainFrame.setVisible(true);
+               GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+               Rectangle screenRect = ge.getMaximumWindowBounds();
+               aMainFrame.setSize(screenRect.getSize());
+               aMainFrame.setVisible(true);
+            }
+            catch(NoServerConnectionException ex ) {
+            logger.error(ex);
+            }
+            catch (NotLoggedInException ex ) {
+            logger.error(ex);
+            }
         }
         catch(Exception e) {
             // catch all exceptions and create a fatal error message, including 

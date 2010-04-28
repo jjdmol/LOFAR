@@ -101,36 +101,48 @@ public class MainFrame extends javax.swing.JFrame {
     }
     
     /** Creates new form MainFrame */
-    public MainFrame(String server, String port) {
+    public MainFrame(String server, String port) throws NoServerConnectionException,NotLoggedInException {
         itsServer=server;
         itsPort=port;
         itsPlugins = new HashMap<String,PluginPanelInfo>();
+
         itsSharedVars = new SharedVars(this);
         itsStorageLocation = new StorageLocation(SharedVars.getOTDBrmi());
         itsMACInteraction = new MACNavigatorInteraction(itsStorageLocation);
 
         initComponents();
 
-        login();
-        
-
-        // Since the default disabledForegroundColor might be a bit unreadable
-        // we set it to black for all object in this look and feel.
-        
-        UIManager.put("TextArea.inactiveForeground",Color.gray);
-        UIManager.put("TextField.inactiveForeground",Color.gray);
-        UIManager.put("FormattedTextField.inactiveForeground",Color.gray);
-        UIManager.put("ComboBox.disabledForeground",Color.gray);
-        UIManager.put("CheckBoxMenuItem.disabledForeground",Color.gray);
-        UIManager.put("RadioButtonMenuItem.disabledForeground",Color.gray);
-        UIManager.put("Menu.disabledForeground",Color.gray);
-        UIManager.put("MenuItem.disabledForeground",Color.gray);
-        
+        try {
+            login();
 
         
+
+            // Since the default disabledForegroundColor might be a bit unreadable
+            // we set it to black for all object in this look and feel.
+        
+            UIManager.put("TextArea.inactiveForeground",Color.gray);
+            UIManager.put("TextField.inactiveForeground",Color.gray);
+            UIManager.put("FormattedTextField.inactiveForeground",Color.gray);
+            UIManager.put("ComboBox.disabledForeground",Color.gray);
+            UIManager.put("CheckBoxMenuItem.disabledForeground",Color.gray);
+            UIManager.put("RadioButtonMenuItem.disabledForeground",Color.gray);
+            UIManager.put("Menu.disabledForeground",Color.gray);
+            UIManager.put("MenuItem.disabledForeground",Color.gray);
+        
+
         
         
-        showPanel(MainPanel.getFriendlyNameStatic());
+        
+            showPanel(MainPanel.getFriendlyNameStatic());
+        } catch(NoServerConnectionException ex ) {
+            logger.error(ex);
+            exit();
+            throw ex;
+        } catch (NotLoggedInException ex ) {
+            logger.error(ex);
+            exit();
+            throw ex;
+        }
     }
     
     /** sets the serverName */
@@ -426,9 +438,15 @@ public class MainFrame extends javax.swing.JFrame {
         logger.info("Logout requested");
         logout();
         setVisible(false);
-        login();
-        setVisible(true);
-        showPanel(MainPanel.getFriendlyNameStatic());        
+        try {
+            login();
+            setVisible(true);
+            showPanel(MainPanel.getFriendlyNameStatic());
+        } catch (NoServerConnectionException e) {
+            logger.debug(e);
+        } catch (NotLoggedInException e) {
+            logger.debug(e);   
+        }
     }//GEN-LAST:event_jMenuItemLogoutActionPerformed
 
     private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
@@ -439,7 +457,15 @@ public class MainFrame extends javax.swing.JFrame {
         logger.info("Exit requested");
         logout();
         setVisible(false);
-        dispose();        
+        // remove used rmi connections from server
+        try {
+            if ( OtdbRmi.getRemoteOTDBaccess() != null) {
+                OtdbRmi.getRemoteOTDBaccess().logout(OtdbRmi.getRMIRegistryName());
+            }
+        } catch (RemoteException ex) {
+            logger.error(ex);
+        }
+        this.dispose();
     }
     
     /** Event handler called when a button in the button panel is called
@@ -456,7 +482,7 @@ public class MainFrame extends javax.swing.JFrame {
      *  plugin panels are registered and the mainframe and the initial panel 
      *  are shown.
      */
-    private void login() {
+    private void login() throws NoServerConnectionException, NotLoggedInException {
         boolean accessAllowed = false;
         while(!accessAllowed) {
             // show login dialog
@@ -491,8 +517,8 @@ public class MainFrame extends javax.swing.JFrame {
 
                     if (itsSharedVars == null || SharedVars.getOTDBrmi() == null ||
                             OtdbRmi.getRemoteOTDBaccess()==null) {
-                        logger.info("Can't connect to Server. Session cancelled");
-                        System.exit(0);
+
+                        throw new NoServerConnectionException("Can't connect to Server. Session cancelled");
                    } else {
 
                         // we now have the OTDBaccess object and we can login, and obtain the OTDBconnection servicename.
@@ -504,8 +530,7 @@ public class MainFrame extends javax.swing.JFrame {
 
                                 // now we have the registry name available we can open the remaining connections
                                 if (!OtdbRmi.openConnections()) {
-                                    logger.info("Couldn't open remaining connections. Session cancelled");
-                                    System.exit(0);
+                                    throw new NotLoggedInException("Couldn't open remaining connections. Session cancelled");
                                 }
                             } else {
                                 throw new NoAccessException("Couldn't get a servicename from server. Name/Pwd/DBname wrong?");
@@ -532,8 +557,7 @@ public class MainFrame extends javax.swing.JFrame {
                 }
             }
             else {
-                logger.info("Login cancelled");
-                System.exit(0);
+                throw new NotLoggedInException("Login cancelled");
             }
         }        
     }
@@ -578,13 +602,21 @@ public class MainFrame extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
+     
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new MainFrame("","").setVisible(true);
+                try {
+                    new MainFrame("","").setVisible(true);
+                } catch (Exception e) {
+                    System.out.println(e);
+                } finally {
+                    System.out.println("We really need to go");
+                }
             }
         });
     }
+
     
     Cursor normalCursor = new Cursor(Cursor.DEFAULT_CURSOR);
     Cursor hourglassCursor = new Cursor(Cursor.WAIT_CURSOR);
