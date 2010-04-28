@@ -22,44 +22,64 @@
 
 include(LofarMacros)
 
-if(BUILD_DOCUMENTATION)
-  # Locate the doxygen programs.
-  find_package(Doxygen REQUIRED)
+# Only process this file when we're ate the top-level source directory.
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
 
-  # Document all source code, unless BUILD_PACKAGES is defined.
-  if(NOT DEFINED BUILD_PACKAGES)
-    set(DOXYGEN_INPUT ${CMAKE_SOURCE_DIR})
-  else(NOT DEFINED BUILD_PACKAGES)
-    # We need the list of package source directories.
-    include(LofarPackageList)
-    set(DOXYGEN_INPUT)
-    foreach(_pkg ${BUILD_PACKAGES})
-      list(APPEND DOXYGEN_INPUT ${${_pkg}_SOURCE_DIR})
-    endforeach(_pkg ${BUILD_PACKAGES})
-    lofar_join_arguments(DOXYGEN_INPUT)
-  endif(NOT DEFINED BUILD_PACKAGES)
+  if(BUILD_DOCUMENTATION)
+    # Locate the doxygen programs.
+    find_package(Doxygen REQUIRED)
 
-  # Full path to the generated Doxygen configuration file.
-  set(DOXYGEN_CONFIG_FILE "${CMAKE_BINARY_DIR}/doxygen.cfg")
+    # Document all source code, unless BUILD_PACKAGES is defined.
+    if(NOT DEFINED BUILD_PACKAGES)
+      set(DOXYGEN_INPUT ${CMAKE_SOURCE_DIR})
+    else(NOT DEFINED BUILD_PACKAGES)
+      # We need the list of package source directories.
+      include(LofarPackageList)
+      set(DOXYGEN_INPUT)
+      foreach(_pkg ${BUILD_PACKAGES})
+        list(APPEND DOXYGEN_INPUT ${${_pkg}_SOURCE_DIR})
+      endforeach(_pkg ${BUILD_PACKAGES})
+      lofar_join_arguments(DOXYGEN_INPUT)
+    endif(NOT DEFINED BUILD_PACKAGES)
 
-  # Define custom target 'doc'. The reason for using an external script
-  # MakeDoxyDoc.cmake, instead of defining the custom target directly, is that
-  # we want to be able to redirect stdout and stderr, which can only be done
-  # using execute_process().
-  add_custom_target(doc
-      COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_BINARY_DIR}/MakeDoxyDoc.cmake"
+    # Set Doxygen HTML output directory, if not yet defined; and create it.
+    if(NOT DOXYGEN_HTML_OUTPUT)
+      set(DOXYGEN_HTML_OUTPUT "${CMAKE_BINARY_DIR}/doc/html" CACHE PATH
+        "Directory where Doxygen will write the generated documentation")
+    endif(NOT DOXYGEN_HTML_OUTPUT)
+    file(MAKE_DIRECTORY "${DOXYGEN_HTML_OUTPUT}")
+
+    # Generate the Doxygen configuration file, used by Doxygen.
+    configure_file(
+      "${CMAKE_SOURCE_DIR}/CMake/docscripts/doxygen.cfg.in"
+      "${CMAKE_BINARY_DIR}/doxygen.cfg" @ONLY)
+
+    # Generate the CMake script that will be invoked by 'make doc'.
+    configure_file(
+      "${CMAKE_SOURCE_DIR}/CMake/docscripts/MakeDoxyDoc.cmake.in"
+      "${CMAKE_BINARY_DIR}/MakeDoxyDoc.cmake" @ONLY)
+
+    # Define custom target 'doc'. The reason for using an external script
+    # MakeDoxyDoc.cmake, instead of defining the custom target directly, is
+    # that we want to be able to redirect stdout and stderr, which can only be
+    # done using execute_process().
+    add_custom_target(doc
+      COMMAND "${CMAKE_COMMAND}" 
+      -D DOXYGEN_CONFIG_FILE="${CMAKE_BINARY_DIR}/doxygen.cfg"
+      -D DOXYGEN_OUTPUT_LOG_FILE="${CMAKE_BINARY_DIR}/doxygen.log"
+      -P "${CMAKE_BINARY_DIR}/MakeDoxyDoc.cmake"
       COMMENT "Generating code documentation. Please be patient ...")
 
-  # Generate the CMake script that will be invoked by 'make doc'.
-  # The reason for using an external script, instead of defining the custom
-  # target directly, is that we want to be able to redirect stdout and stderr.
-  configure_file(
-    "${CMAKE_SOURCE_DIR}/CMake/docscripts/MakeDoxyDoc.cmake.in"
-    "${CMAKE_BINARY_DIR}/MakeDoxyDoc.cmake" @ONLY)
+    # Add the Doxygen Quick Guide, if present.
+    if(IS_DIRECTORY "${CMAKE_SOURCE_DIR}/doc/doxygen")
+      add_subdirectory("${CMAKE_SOURCE_DIR}/doc/doxygen")
+      add_dependencies(doc doxygen_quick_guide)
+    endif(IS_DIRECTORY "${CMAKE_SOURCE_DIR}/doc/doxygen")
 
-  # Generate the Doxygen configuration file, used by Doxygen.
-  configure_file(
-    "${CMAKE_SOURCE_DIR}/CMake/docscripts/doxygen.cfg.in"
-    "${DOXYGEN_CONFIG_FILE}" @ONLY)
+    # Install the generated code documentation
+    install(DIRECTORY "${DOXYGEN_HTML_OUTPUT}"
+      DESTINATION share/doc/html)
 
-endif(BUILD_DOCUMENTATION)
+  endif(BUILD_DOCUMENTATION)
+
+endif("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
