@@ -276,6 +276,23 @@ jobject convertCampaignInfo (JNIEnv *env, CampaignInfo aCampaignInfo)
   return jCampaignInfo;
 }
 
+jobject convertDefaultTemplate (JNIEnv *env, DefaultTemplate aDefaultTemplate)
+{
+  jobject jDefaultTemplate;
+  jclass class_jDefaultTemplate = env->FindClass("nl/astron/lofar/sas/otb/jotdb3/jDefaultTemplate");
+
+  jmethodID mid_jDefaultTemplate_cons = env->GetMethodID (class_jDefaultTemplate, "<init>", "(I)V");
+
+  jDefaultTemplate = env->NewObject (class_jDefaultTemplate, mid_jDefaultTemplate_cons,aDefaultTemplate.treeID ());
+
+
+  jfieldID fid_jDefaultTemplate_name = env->GetFieldID (class_jDefaultTemplate, "name", "Ljava/lang/String;");
+
+  env->SetObjectField (jDefaultTemplate, fid_jDefaultTemplate_name, env->NewStringUTF (aDefaultTemplate.name.c_str ()));
+
+  return jDefaultTemplate;
+}
+
 //
 // java classes ----> c++ classes
 //

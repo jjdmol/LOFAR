@@ -22,13 +22,13 @@
 package nl.astron.lofar.sas.otb.jotdb3;
 
 import java.rmi.NoSuchObjectException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import nl.astron.lofar.lofarutils.remoteFile;
 import nl.astron.lofar.lofarutils.remoteFileInterface;
 import org.apache.log4j.Logger;
@@ -211,7 +211,8 @@ public class jOTDBaccess implements jOTDBaccessInterface
             // get connection from mapping
             jOTDBinterface aC = connection.get(serviceName);
 
-            if (UnicastRemoteObject.unexportObject(aC, true)) {
+            itsLocalRegistry.unbind(serviceName);
+            if (UnicastRemoteObject.unexportObject(aC, false)) {
                 logger.info("jOTDBserver removed " + serviceName + " from local registry...");
                 connection.remove(serviceName);
                 return true;
@@ -222,6 +223,12 @@ public class jOTDBaccess implements jOTDBaccessInterface
         } catch (NoSuchObjectException ex) {
             logger.error(ex);
             return false;
+        } catch (RemoteException ex) {
+            logger.error(ex);
+            return false;
+        } catch (NotBoundException ex) {
+            logger.error(ex);
+            return true;
         }
     }
  
@@ -258,7 +265,8 @@ public class jOTDBaccess implements jOTDBaccessInterface
             // get TreeMaintenance from mapping
             jTreeMaintenanceInterface aTM = treeMaintenance.get(serviceName);
 
-            if (UnicastRemoteObject.unexportObject(aTM, true)) {
+            itsLocalRegistry.unbind(serviceName);
+            if (UnicastRemoteObject.unexportObject(aTM, false)) {
                 logger.info("jOTDBserver removed " + serviceName + " from local registry...");
                 treeMaintenance.remove(serviceName);
                 return true;
@@ -269,6 +277,12 @@ public class jOTDBaccess implements jOTDBaccessInterface
         } catch (NoSuchObjectException ex) {
             logger.error(ex);
             return false;
+        } catch (RemoteException ex) {
+            logger.error(ex);
+            return false;
+        } catch (NotBoundException ex) {
+            logger.error(ex);
+            return true;
         }
     }
 
@@ -304,7 +318,8 @@ public class jOTDBaccess implements jOTDBaccessInterface
             // get Campaign from mapping
             jCampaignInterface aC = campaign.get(serviceName);
 
-            if (UnicastRemoteObject.unexportObject(aC, true)) {
+            itsLocalRegistry.unbind(serviceName);
+            if (UnicastRemoteObject.unexportObject(aC, false)) {
                 logger.info("jOTDBserver removed " + serviceName + " from local registry...");
                 campaign.remove(serviceName);
                 return true;
@@ -315,6 +330,12 @@ public class jOTDBaccess implements jOTDBaccessInterface
         } catch (NoSuchObjectException ex) {
             logger.error(ex);
             return false;
+        } catch (RemoteException ex) {
+            logger.error(ex);
+            return false;
+        } catch (NotBoundException ex) {
+            logger.error(ex);
+            return true;
         }
     }
 
@@ -350,7 +371,8 @@ public class jOTDBaccess implements jOTDBaccessInterface
             // get TreeValue from mapping
             jTreeValueInterface aTV = treeValue.get(serviceName);
 
-            if (UnicastRemoteObject.unexportObject(aTV, true)) {
+            itsLocalRegistry.unbind(serviceName);
+            if (UnicastRemoteObject.unexportObject(aTV, false)) {
                 logger.info("jOTDBserver removed " + serviceName + " from local registry...");
                 treeValue.remove(serviceName);
                 return true;
@@ -361,6 +383,12 @@ public class jOTDBaccess implements jOTDBaccessInterface
         } catch (NoSuchObjectException ex) {
             logger.error(ex);
             return false;
+        } catch (RemoteException ex) {
+            logger.error(ex);
+            return false;
+        } catch (NotBoundException ex) {
+            logger.error(ex);
+            return true;
         }
     }
 
@@ -396,7 +424,8 @@ public class jOTDBaccess implements jOTDBaccessInterface
             // get Converter from mapping
             jConverterInterface aC = converter.get(serviceName);
 
-            if (UnicastRemoteObject.unexportObject(aC, true)) {
+            itsLocalRegistry.unbind(serviceName);
+            if (UnicastRemoteObject.unexportObject(aC, false)) {
                 logger.info("jOTDBserver removed " + serviceName + " from local registry...");
                 converter.remove(serviceName);
                 return true;
@@ -407,6 +436,12 @@ public class jOTDBaccess implements jOTDBaccessInterface
         } catch (NoSuchObjectException ex) {
             logger.error(ex);
             return false;
+        } catch (RemoteException ex) {
+            logger.error(ex);
+            return false;
+        } catch (NotBoundException ex) {
+            logger.error(ex);
+            return true;
         }
     }
 
@@ -442,7 +477,8 @@ public class jOTDBaccess implements jOTDBaccessInterface
             // get TreeMaintenance from mapping
             remoteFileInterface aRF = aRemoteFile.get(serviceName);
 
-            if (UnicastRemoteObject.unexportObject(aRF, true)) {
+            itsLocalRegistry.unbind(serviceName);
+            if (UnicastRemoteObject.unexportObject(aRF, false)) {
                 logger.info("jOTDBserver removed " + serviceName + " from local registry...");
                 aRemoteFile.remove(serviceName);
                 return true;
@@ -453,6 +489,12 @@ public class jOTDBaccess implements jOTDBaccessInterface
         } catch (NoSuchObjectException ex) {
             logger.error(ex);
             return false;
+        } catch (RemoteException ex) {
+            logger.error(ex);
+            return false;
+        } catch (NotBoundException ex) {
+            logger.error(ex);
+            return true;
         }
     }
 
