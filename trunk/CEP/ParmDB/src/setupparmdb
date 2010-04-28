@@ -147,7 +147,7 @@ if test "$pdbfile" = ""; then
   echo "Creating template parmdb $vdsname.template"
   madetmpl=1
   pdbfile=$vdsname.template
-  parmdb_main <<EOF
+  parmdbm <<EOF
 create tablename="$pdbfile"
 adddef Gain:0:0:Ampl  values=0.0001
 adddef Gain:1:1:Ampl  values=0.0001

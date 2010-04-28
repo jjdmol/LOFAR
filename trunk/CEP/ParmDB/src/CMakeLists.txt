@@ -36,7 +36,6 @@ lofar_add_library(parmdb ${parmdb_LIB_SRCS})
 foreach(prog ${parmdb_PROGRAMS})
   lofar_add_bin_program(${prog} ${prog}.cc)
 endforeach(prog ${parmdb_PROGRAMS})
-lofar_add_bin_program(parmdb_main parmdbm.cc)
 
 install(PROGRAMS
   setupparmdb
