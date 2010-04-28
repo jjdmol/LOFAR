@@ -286,7 +286,6 @@ public class OtdbRmi {
             logger.debug("openRemoteAccess for "+RMIRegHostName);
 
             // create a remote object
-//            Registry registry = LocateRegistry.getRegistry(RMIServerName,Integer.parseInt(RMIServerPort));
             remoteOTDBaccess = (jOTDBaccessInterface) Naming.lookup (RMIRegHostName);
             logger.debug(remoteOTDBaccess);
 
