@@ -40,78 +40,157 @@ using namespace LOFAR::TYPES;
 #if defined HAVE_FFTW3
 fftwf_plan plan;
 #elif defined HAVE_FFTW2
-fftw_plan  plan;
+fftw_plan plan;
 #endif
 
-#include <FIR_InvertedStationPPFWeights.h> // defines invertedStationPPFWeights array
+#include <FIR_OriginalStationPPFWeights.h> // defines originalStationPPFWeights array
+
+static unsigned onStationFilterSize = 1024;
+static unsigned nrTaps = 16;
 
 static unsigned nrSubbands = 248;
 static unsigned nrChannels = 1; // for the NuMoon pipeline, there are no separate channels.
-static unsigned nrTaps = 16;
 static unsigned nrSamplesPerIntegration = 768 * 256 / 4; // one quarter of a second
-static unsigned onStationFilterSize = 1024;
-static double     sampleRate = 195312.5;
-static double     centerFrequency	= 384 * sampleRate;
-static double     baseFrequency	= centerFrequency - .5 * sampleRate;
-static unsigned   testSignalChannel = 5;
-static double     signalFrequency	= baseFrequency + testSignalChannel * sampleRate / nrChannels;
+static double sampleRate = 195312.5;
+static double centerFrequency = 384 * sampleRate;
+static double signalFrequency = centerFrequency - .5 * sampleRate;
 
 static NSTimer firTimer("FIR", true);
 static NSTimer fftTimer("FFT", true);
 static NSTimer fftInTimer("create FFT input", true);
 
-fcomplex toComplex(double phi)
-{
-    double s, c;
-    sincos(phi, &s, &c);
-    fcomplex result = makefcomplex(c, s);
-    return result;
+float originalStationPPFWeightsFloat[1024][16];
+float* fftInData;
+float* fftOutData;
+
+
+void initFFT() {
+#if defined HAVE_FFTW3
+  fftInData = (float*) fftwf_malloc(onStationFilterSize * sizeof(float));
+  fftOutData = (float*) fftwf_malloc(onStationFilterSize * sizeof(float));
+#elif defined HAVE_FFTW2
+  fftInData = (float*) malloc(onStationFilterSize * sizeof(float));
+  fftOutData = (float*) malloc(onStationFilterSize * sizeof(float));
+
+  plan = rfftw_create_plan(onStationFilterSize, FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);
+#endif
+
+  if (fftInData == NULL || fftOutData == NULL) {
+    cerr << "Out of memory" << endl;
+    exit(1);
+  }
+}
+
+void destroyFFT() {
+#if defined HAVE_FFTW3
+  fftwf_free(fftInData);
+  fftwf_free(fftOutData);
+#elif defined HAVE_FFTW2
+  rfftw_destroy_plan(plan);
+#endif
 }
 
 
-void generateInputSignal(TransposedBeamFormedData& transposedBeamFormedData) {
-	  for (unsigned sb = 0; sb < nrSubbands; sb++) {
-		for (unsigned ch = 0; ch < nrChannels; ch++) {
-			for (unsigned time = 0; time < nrSamplesPerIntegration; time++) {
-				double phi = 2 * M_PI * signalFrequency * time / sampleRate;
-				fcomplex sample;
-				transposedBeamFormedData.samples[sb][ch][time] = toComplex(phi);
-			}
-		}
-	}
+fcomplex toComplex(double phi) {
+  double s, c;
+  sincos(phi, &s, &c);
+  return makefcomplex(c, s);
 }
 
+void generateInputSignal(InverseFilteredData& originalData) {
+  for (unsigned time = 0; time < nrSamplesPerIntegration*onStationFilterSize; time++) {
+    double val = sin(signalFrequency * time / sampleRate);
+    originalData.samples[time] = val;
+//    double phi = 2 * M_PI * signalFrequency * time / sampleRate;
+//    originalData.samples[time] = toComplex(phi);
+  }
+}
+
+void performStationFFT() {
+#if defined HAVE_FFTW3
+  fftwf_plan plan = fftwf_plan_r2c_1d(itsOnStationFilterSize, itsFftInData, itsFftOutData, FFTW_HR2C, FFTW_ESTIMATE);
+  fftwf_execute(plan);
+  fftwf_destroy_plan(plan);
+
+#elif defined HAVE_FFTW2
+  // Do the inverse FFT. NB: this call destoys the input data.
+  rfftw_one(itsPlan, (fftw_real*) itsFftInData, (fftw_real*) itsFftOutData);
+#endif
+
+}
 
 int main() {
-	TransposedBeamFormedData transposedBeamFormedData(nrSubbands, nrChannels, nrSamplesPerIntegration);
-	transposedBeamFormedData.allocate();
+  double origInputSize = (nrSubbands * nrSamplesPerIntegration * sizeof(fcomplex)) / (1024.0 * 1024.0);
+  double fftBufSize = (onStationFilterSize * sizeof(float)) / (1024.0);
+  double outputSize = (onStationFilterSize * nrSamplesPerIntegration * sizeof(float)) / (1024.0 * 1024.0);
 
-	generateInputSignal(transposedBeamFormedData);
+  cerr << "size of original input data: " << origInputSize << " MB" << endl;
+  cerr << "size of FFT buffers: " << fftBufSize << " KB" << endl;
+  cerr << "size of output: " << outputSize << " MB" << endl;
+  cerr << "total memory usage: " << (origInputSize + outputSize) << " MB" << endl;
 
-	double origInputSize = (nrSubbands * nrSamplesPerIntegration * sizeof(fcomplex)) / (1024.0*1024.0);
-	double fftBufSize =    (onStationFilterSize * sizeof(float)) / (1024.0);
-	double outputSize = (onStationFilterSize * nrSamplesPerIntegration * sizeof(float)) / (1024.0*1024.0);
+  // copy the integer filter constants into a float array.
+  for(unsigned filter=0; filter<onStationFilterSize; filter++) {
+    for(unsigned tap=0; tap<nrTaps; tap++) {
+      originalStationPPFWeightsFloat[filter][tap] = originalStationPPFWeights[filter][tap];
+    }
+  }
 
-	cerr << "size of original input data: " << origInputSize << " MB" << endl;
-	cerr << "size of FFT buffers: " << fftBufSize << " KB" << endl;
-	cerr << "size of output: " << outputSize << " MB" << endl;
-	cerr << "total memory usage: " << (origInputSize + outputSize) << " MB" << endl;
+  FilterBank originalStationFilterBank(true, nrTaps, onStationFilterSize, (float*) originalStationPPFWeightsFloat);
+  vector<FIR<float> > FIRs;
+  FIRs.resize(onStationFilterSize); // Init the FIR filters themselves with the weights of the filterbank.
+  for (unsigned chan = 0; chan < onStationFilterSize; chan++) {
+    FIRs[chan].initFilter(&originalStationFilterBank, chan);
+  }
 
-	InverseFilteredData invertedFilteredData(nrSamplesPerIntegration, onStationFilterSize);
-	invertedFilteredData.allocate();
+  // Inverse filtered data is the same data format as the original data, so reuse it here for this test
+  InverseFilteredData originalData(nrSamplesPerIntegration, onStationFilterSize);
+  originalData.allocate();
 
-	vector<unsigned> subbandList;
-	subbandList.resize(nrSubbands);
+  // Inverse filtered data is the same data format as the original data, so reuse it here for this test
+  InverseFilteredData originalFilteredData(nrSamplesPerIntegration, onStationFilterSize);
+  originalFilteredData.allocate();
 
-	// for now, we just select the first 248 subbands.
-	for(unsigned sb=0; sb<nrSubbands; sb++) {
-		subbandList[sb] = sb;
-	}  
+  TransposedBeamFormedData transposedBeamFormedData(nrSubbands, nrChannels, nrSamplesPerIntegration);
+  transposedBeamFormedData.allocate();
 
-    InversePPF inversePPF(subbandList, nrSamplesPerIntegration, nrTaps, onStationFilterSize, true);
+  InverseFilteredData invertedFilteredData(nrSamplesPerIntegration, onStationFilterSize);
+  invertedFilteredData.allocate();
 
-	cerr << "starting test" << endl;
-	inversePPF.filter(transposedBeamFormedData, invertedFilteredData);
+  vector<unsigned> subbandList;
+  subbandList.resize(nrSubbands);
 
-	return 0;
+  // for now, we just select the first 248 subbands.
+  for (unsigned sb = 0; sb < nrSubbands; sb++) {
+    subbandList[sb] = sb;
+  }
+
+  InversePPF inversePPF(subbandList, nrSamplesPerIntegration, nrTaps, onStationFilterSize, true);
+  initFFT();
+
+  cerr << "generating input signal" << endl;
+
+  generateInputSignal(originalData);
+
+  cerr << "filtering input signal" << endl;
+
+  for (unsigned time = 0; time < nrSamplesPerIntegration; time++) {
+    for (unsigned minorTime = 0; minorTime < onStationFilterSize; minorTime++) {
+      unsigned filterIndex = minorTime % onStationFilterSize;
+      float sample = originalData.samples[time * onStationFilterSize + minorTime];
+      float result = FIRs[filterIndex].processNextSample(sample);
+      originalFilteredData.samples[time * onStationFilterSize + minorTime] = result;
+    }
+  }
+
+  cerr << "performing FFT of input signal" << endl;
+
+
+
+
+
+  inversePPF.filter(transposedBeamFormedData, invertedFilteredData);
+
+  destroyFFT();
+  return 0;
 }

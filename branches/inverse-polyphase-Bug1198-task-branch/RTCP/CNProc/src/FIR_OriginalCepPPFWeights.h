@@ -1,9 +1,9 @@
-#ifndef LOFAR_CNPROC_FIR_ORIGINAL_WEIGHTS_H
-#define LOFAR_CNPROC_FIR_ORIGINAL_WEIGHTS_H
+#ifndef LOFAR_CNPROC_FIR_ORIGINAL_CEP_PPF_WEIGHTS_H
+#define LOFAR_CNPROC_FIR_ORIGINAL_CEP_PPF_WEIGHTS_H
 
 #include <FilterBank.h>
 
-const float FilterBank::origWeights[256][16] __attribute__ ((aligned(32))) = {
+const float FilterBank::originalCepPPFWeights[256][16] __attribute__ ((aligned(32))) = {
   {  0.011659500, -0.011535200,  0.005131880,  0.001219900,
     -0.006891530,  0.011598600, -0.015420900,  1.000000000,
     -0.011661800,  0.009847130, -0.005852040,  0.000558600,
@@ -1027,7 +1027,7 @@ const float FilterBank::origWeights[256][16] __attribute__ ((aligned(32))) = {
   { -0.000414833, -0.011716500,  0.011758700, -0.005549120,
     -0.000558600,  0.005852040, -0.009847130,  0.011661800,
     -1.000000000,  0.015420900, -0.011598600,  0.006891530,
-    -0.001219900, -0.005131880,  0.011535200, -0.011659500 },
+    -0.001219900, -0.005131880,  0.011535200, -0.011659500 }
 };
 
 #endif

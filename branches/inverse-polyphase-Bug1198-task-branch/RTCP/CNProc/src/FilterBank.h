@@ -25,7 +25,7 @@ enum WindowType { HAMMING, BLACKMAN, GAUSSIAN, KAISER, PREDEFINED_FILTER };
 // This is efficiently achieved by negating the FIR filter constants of all
 // uneven FIR filters.
 // Also, the filter tap constants for a channel are in reverse order. This makes the 
-// implentation more efficient.
+// implementation more efficient.
 
 class FilterBank {
   public:
@@ -74,7 +74,7 @@ private:
 
 
 #if USE_ORIGINAL_FILTER
-  static const float origWeights[256][16];
+  static const float originalCepPPFWeights[256][16];
 #endif
 
 };

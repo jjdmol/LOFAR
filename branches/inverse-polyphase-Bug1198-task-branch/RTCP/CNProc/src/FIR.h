@@ -20,7 +20,7 @@ namespace RTCP {
 template <typename FIR_SAMPLE_TYPE> class FIR {
   public:
 
-  // We need a default constructor, since we create boost multiarrays of FIR filters.
+  // We need a default constructor, since we create boost multi-arrays of FIR filters.
   FIR();
 
   void initFilter(FilterBank* filterBank, const unsigned channel);
