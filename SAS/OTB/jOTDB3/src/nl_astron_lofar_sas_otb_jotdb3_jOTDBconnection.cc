@@ -119,6 +119,34 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_c
   return connected;
 }
 
+JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disconnect(JNIEnv *env, jobject jOTDBconnection) {
+
+  try {
+    ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->disconnect();
+
+    jclass class_jOTDBconn = env->GetObjectClass (jOTDBconnection);
+    jfieldID fid_jOTDBconn_name = env->GetFieldID (class_jOTDBconn, "itsName", "Ljava/lang/String;");
+    
+    // itsName
+    jstring str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
+    jboolean isCopy;
+    const char* n = env->GetStringUTFChars (str, &isCopy);
+    const string name (n);
+
+    std::map<std::string,void *>::iterator iter = theirC_ObjectMap.find(name+"_OTDBconnection");
+    if( iter != theirC_ObjectMap.end() ) 
+       theirC_ObjectMap.erase(iter);
+    else
+       cout << "Key is not in myMap" << '\n';
+
+  } catch (exception &ex) {
+    cout << "Exception during OTDBconnection::disconnect "<< ex.what() << endl;
+    
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
+}
+
 
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreeInfo(JNIEnv *env, jobject jOTDBconnection, jint treeID, jboolean isMomID) {
   OTDBtree aTree;
@@ -197,6 +225,124 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 
   return(itemVector);
 }
+
+
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getDefaultTemplates(JNIEnv *env, jobject jOTDBconnection){
+  jobject itemVector;
+  try {
+    vector<DefaultTemplate> templates = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getDefaultTemplates();
+    vector<DefaultTemplate>::iterator templateIterator;
+
+    // Construct java Vector
+    jclass class_Vector = env->FindClass("java/util/Vector");
+    jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
+
+    itemVector = env->NewObject(class_Vector, mid_Vector_cons);
+    jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
+
+
+    for (templateIterator = templates.begin(); templateIterator != templates.end(); templateIterator++) {
+      env->CallObjectMethod(itemVector, mid_Vector_add, convertDefaultTemplate(env, *templateIterator));
+    }
+  } catch (exception &ex) {
+    cout << "Exception during OTDBconnection::getDefaultTamplates() " << ex.what() << endl;
+    
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+
+  }
+
+  return(itemVector);
+}
+
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getExecutableTrees(JNIEnv *env, jobject jOTDBconnection, jshort classifType) {
+  jobject itemVector;
+  try {
+    vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getExecutableTrees(classifType);
+    vector<OTDBtree>::iterator treeIterator;
+
+    // Construct java Vector
+    jclass class_Vector = env->FindClass("java/util/Vector");
+    jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
+
+    itemVector = env->NewObject(class_Vector, mid_Vector_cons);
+    jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
+
+
+    for (treeIterator = trees.begin(); treeIterator != trees.end(); treeIterator++) {
+      env->CallObjectMethod(itemVector, mid_Vector_add, convertOTDBtree(env, *treeIterator));
+    }
+  } catch (exception &ex) {
+    cout << "Exception during OTDBconnection::getExecutableTrees(" << classifType << ") " << ex.what() << endl;
+    
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+
+  }
+
+  return(itemVector);
+}
+
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreeGroup(JNIEnv *env, jobject jOTDBconnection, jint groupType, jint periodInMinutes) {
+  jobject itemVector;
+  try {
+    vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->getTreeGroup(groupType,periodInMinutes);
+    vector<OTDBtree>::iterator treeIterator;
+
+    // Construct java Vector
+    jclass class_Vector = env->FindClass("java/util/Vector");
+    jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
+
+    itemVector = env->NewObject(class_Vector, mid_Vector_cons);
+    jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
+
+
+    for (treeIterator = trees.begin(); treeIterator != trees.end(); treeIterator++) {
+      env->CallObjectMethod(itemVector, mid_Vector_add, convertOTDBtree(env, *treeIterator));
+    }
+  } catch (exception &ex) {
+    cout << "Exception during OTDBconnection::getTreeGroup(" << groupType << ","<< periodInMinutes <<") " << ex.what() << endl;
+    
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+
+  }
+
+  return(itemVector);
+}
+
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getTreesInPeriod(JNIEnv *env, jobject jOTDBconnection, jshort treeType , jstring beginDate, jstring endDate){
+  const char* bd = env->GetStringUTFChars (beginDate, 0);
+  const char* ed = env->GetStringUTFChars (endDate, 0);
+
+  jobject treeVector;
+  try {
+
+    vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))
+                       ->getTreesInPeriod(treeType,time_from_string(bd), time_from_string(ed));
+    vector<OTDBtree>::iterator treeIterator;
+    
+
+    // Construct java Vector
+    jclass class_Vector = env->FindClass("java/util/Vector");
+    jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
+    treeVector = env->NewObject(class_Vector, mid_Vector_cons);
+    jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
+
+    for (treeIterator = trees.begin(); treeIterator != trees.end(); treeIterator++) {
+      env->CallObjectMethod(treeVector, mid_Vector_add,convertOTDBtree(env, *treeIterator ));
+    }
+
+    env->ReleaseStringUTFChars(beginDate, bd);
+    env->ReleaseStringUTFChars(endDate, ed);  
+  } catch (exception &ex) {
+    cout << "Exception during OTDBconnection::getStateListTreesInPeriod(" << treeType << "," <<
+    time_from_string(bd) << "," << time_from_string(ed) << ") "<< ex.what() << endl;
+    
+    env->ReleaseStringUTFChars(beginDate, bd);
+    env->ReleaseStringUTFChars(endDate, ed);
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+  return(treeVector);
+}
+
 
 
 JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_errorMsg(JNIEnv *env, jobject jOTDBconnection) {
