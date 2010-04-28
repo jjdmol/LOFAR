@@ -37,6 +37,9 @@ public interface jOTDBinterface extends Remote
    // To connect or reconnect in case the connection was lost
    public boolean connect () throws RemoteException;
    
+   // To disconnect the connection
+   public void disconnect () throws RemoteException;
+
    // get OTDBtree of one specific tree
    public jOTDBtree getTreeInfo (int atreeID,boolean isMomID) throws RemoteException;
    
@@ -46,6 +49,18 @@ public interface jOTDBinterface extends Remote
    // To get a list of all OTDB trees available in the database.
    public Vector<jTreeState> getStateList (int treeID, boolean isMomID, String beginDate, String endDate) throws RemoteException;
    
+   // To get a list of all DefaultTemplates available in the database.
+   public Vector<jDefaultTemplate> getDefaultTemplates () throws RemoteException;
+
+   // To get a list of all executable OTDB trees available in the database.
+   public Vector<jOTDBtree> getExecutableTrees (short classifiType) throws RemoteException;
+
+   // To get a list of the treeGroups fitting the bounds
+   public Vector<jOTDBtree> getTreeGroup (short groupType,short periodInMinutes) throws RemoteException;
+
+   // To get a list of the trees fitting the bounds
+   public Vector<jOTDBtree> getTreesInPeriod (short treeType, String beginDate, String endDate) throws RemoteException;
+
    public String errorMsg () throws RemoteException;
    
    public  int getAuthToken () throws RemoteException;

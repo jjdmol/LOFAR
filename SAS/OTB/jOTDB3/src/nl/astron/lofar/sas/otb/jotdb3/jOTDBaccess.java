@@ -210,7 +210,7 @@ public class jOTDBaccess implements jOTDBaccessInterface
             String serviceName = jOTDBinterface.SERVICENAME + "_" + ext;
             // get connection from mapping
             jOTDBinterface aC = connection.get(serviceName);
-
+            aC.disconnect();
             itsLocalRegistry.unbind(serviceName);
             if (UnicastRemoteObject.unexportObject(aC, false)) {
                 logger.info("jOTDBserver removed " + serviceName + " from local registry...");
