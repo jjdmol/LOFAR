@@ -24,7 +24,7 @@ import subprocess
 def store_parms( pdbname, parms, create_new = False) : 
 
    FNULL = open( '/dev/null', 'w' )
-   process = subprocess.Popen( ['parmdb_main'], shell = False, stdin = subprocess.PIPE, stdout = FNULL, stderr = FNULL )
+   process = subprocess.Popen( ['parmdbm'], shell = False, stdin = subprocess.PIPE, stdout = FNULL, stderr = FNULL )
    if create_new :
       process.stdin.write( "create tablename='" + pdbname + "'\n" )
    else : 
