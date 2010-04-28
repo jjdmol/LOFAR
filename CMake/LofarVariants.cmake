@@ -29,7 +29,7 @@ if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
   ## --------------------------------------------------------------------------
   ## First, include host-specific variants file, if present
   ## --------------------------------------------------------------------------
-  execute_process(COMMAND hostname -s
+  execute_process(COMMAND uname -n
     OUTPUT_VARIABLE _hostname
     OUTPUT_STRIP_TRAILING_WHITESPACE)
   set(variants_file ${CMAKE_MODULE_PATH}/variants/variants.${_hostname})
