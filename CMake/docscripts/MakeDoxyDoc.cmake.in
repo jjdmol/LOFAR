@@ -24,10 +24,18 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+if(DOXYGEN_OUTPUT_LOG_FILE)
+  list(APPEND _cmd_options OUTPUT_FILE "${DOXYGEN_OUTPUT_LOG_FILE}")
+endif(DOXYGEN_OUTPUT_LOG_FILE)
+
+if(DOXYGEN_ERROR_LOG_FILE)
+  list(APPEND _cmd_options ERROR_FILE "${DOXYGEN_ERROR_LOG_FILE}")
+endif(DOXYGEN_ERROR_LOG_FILE)
+
 execute_process(
-  COMMAND "@DOXYGEN_EXECUTABLE@" "@DOXYGEN_CONFIG_FILE@"
-  RESULT_VARIABLE _result
-  OUTPUT_FILE "@CMAKE_BINARY_DIR@/doxygen.log")
+  COMMAND "@DOXYGEN_EXECUTABLE@" "${DOXYGEN_CONFIG_FILE}"
+  ${_cmd_options}
+  RESULT_VARIABLE _result)
 
 if(NOT _result EQUAL 0)
   message(SEND_ERROR "Doxygen returned with error status ${_result}")
