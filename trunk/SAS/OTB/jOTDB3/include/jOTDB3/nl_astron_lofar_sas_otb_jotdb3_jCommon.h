@@ -50,13 +50,14 @@ void* getCObjectPtr(JNIEnv *env,jobject anObject,std::string aClassName);
 LOFAR::OTDB::OTDBconnection* getConnection(std::string aName);
 std::string getOwnerExt(JNIEnv *env,jobject anObject);
 
-jobject convertOTDBnode      (JNIEnv *env, LOFAR::OTDB::OTDBnode aNode);
-jobject convertOTDBvalue     (JNIEnv *env, LOFAR::OTDB::OTDBvalue aValue);
-jobject convertOTDBtree      (JNIEnv *env, LOFAR::OTDB::OTDBtree aTree);
-jobject convertTreeState     (JNIEnv *env, LOFAR::OTDB::TreeState aTreeState);
-jobject convertVICnodeDef    (JNIEnv *env, LOFAR::OTDB::VICnodeDef aNodeDef);
-jobject convertOTDBparam     (JNIEnv *env, LOFAR::OTDB::OTDBparam aParam);
-jobject convertCampaignInfo  (JNIEnv *env, LOFAR::OTDB::CampaignInfo aCampaignInfo);
+jobject convertOTDBnode        (JNIEnv *env, LOFAR::OTDB::OTDBnode aNode);
+jobject convertOTDBvalue       (JNIEnv *env, LOFAR::OTDB::OTDBvalue aValue);
+jobject convertOTDBtree        (JNIEnv *env, LOFAR::OTDB::OTDBtree aTree);
+jobject convertTreeState       (JNIEnv *env, LOFAR::OTDB::TreeState aTreeState);
+jobject convertVICnodeDef      (JNIEnv *env, LOFAR::OTDB::VICnodeDef aNodeDef);
+jobject convertOTDBparam       (JNIEnv *env, LOFAR::OTDB::OTDBparam aParam);
+jobject convertCampaignInfo    (JNIEnv *env, LOFAR::OTDB::CampaignInfo aCampaignInfo);
+jobject convertDefaultTemplate (JNIEnv *env, LOFAR::OTDB::DefaultTemplate aDefaultTemplate);
 
 LOFAR::OTDB::OTDBnode     convertjOTDBnode     (JNIEnv *env, jobject jNode, jobject jTreeMaintenance);
 LOFAR::OTDB::VICnodeDef   convertjVICnodeDef   (JNIEnv *env, jobject jNode, jobject jTreeMaintenance);
