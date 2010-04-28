@@ -3,10 +3,10 @@ GENERATE_LATEX       = NO
 GENERATE_MAN         = NO
 GENERATE_RTF         = NO
 CASE_SENSE_NAMES     = NO
-INPUT                = group.h
+INPUT                = "@CMAKE_CURRENT_SOURCE_DIR@/group.h"
+HTML_OUTPUT          = "@CMAKE_BINARY_DIR@/doc/html/doxygen/examples/group"
 QUIET                = YES
 DISTRIBUTE_GROUP_DOC = YES
 JAVADOC_AUTOBRIEF    = YES
-INPUT_FILTER         = $(LOFAR)/autoconf_share/slash2spanning.pl
+INPUT_FILTER         = "@CMAKE_SOURCE_DIR@/CMake/docscripts/slash2spanning.pl"
 FILTER_SOURCE_FILES  = YES
-
