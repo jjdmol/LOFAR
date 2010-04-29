@@ -6,6 +6,7 @@ __all__ = ["Locations","Hosts","isProduction","isDevelopment","homeDir"]
 AUTOTOOLS = False
 
 import os
+import time
 from socket import gethostbyname
 
 def isProduction():
@@ -97,14 +98,17 @@ class Locations:
 	"parset":  "${RUNDIR}/RTCP-${MSNUMBER}.parset", 
 
         # where to store logs
-	"logdir":  "${BASEDIR}/D${YEAR}_${MSNUMBER}",
+	"logdir":  "${BASEDIR}/D${TIMESTAMP}",
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
-	"rundir":  "${BASEDIR}/D${YEAR}_${MSNUMBER}",
+	"rundir":  "${BASEDIR}/D${TIMESTAMP}",
 
         # symlink to create to latest log dir
         "logsymlink": "${BASEDIR}/log",
+
+        # parset name mas
+        "parset": "${LOGSYMLINK}/RTCP-${MSNUMBER}.parset",
 
         # location of the observation id counter
 	"nextmsnumber": "/globalhome/lofarsystem/log/nextMSNumber",
@@ -130,10 +134,10 @@ class Locations:
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
-	"rundir":  "${HOME}/log/L${YEAR}_${MSNUMBER}",
+	"rundir":  "${HOME}/log/L${TIMESTAMP}",
 
         # where to store logs
-	"logdir":  "${HOME}/log/L${YEAR}_${MSNUMBER}",
+	"logdir":  "${HOME}/log/L${TIMESTAMP}",
 
         "logsymlink": "${HOME}/log/latest",
 
@@ -174,7 +178,9 @@ class Locations:
         the masks allowed by parset.parseMask, such as ${OBSID}. """
 
     allNames = [("${%s}" % (name.upper(),),value) for name,value in self.files.iteritems()]
-
+    allNames.extend( [
+      ("${TIMESTAMP}", time.strftime("%Y-%m-%d_%H%M%S")),
+      ] )
 
     # resolve until nothing changes
     changed = True

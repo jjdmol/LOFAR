@@ -1,31 +1,25 @@
 #!/usr/bin/env python
 
 from LOFAR import Logger
-from LOFAR.ObservationID import ObservationID
 from LOFAR.Logger import debug,info,warning,error,fatal
 from LOFAR import Sections
-from LOFAR.Parset import Parset
 from util import Commands
-from util.dateutil import format
-from LOFAR.Locations import Locations,isDevelopment
+from LOFAR.Locations import Locations
 from util.Hosts import ropen,rmkdir,rexists,runlink,rsymlink
-import convertParset
 import sys
 
 DRYRUN = False
 
-def runObservations( parsets, partition, start_cnproc = True, start_ionproc = True, start_storage = True ):
+def runCorrelator( partition, start_cnproc = True, start_ionproc = True ):
   """ Run an observation using the provided parsets. """
 
   # ----- Select the sections to start
   sections = Sections.SectionSet()
 
   if start_ionproc:
-    sections += [Sections.IONProcSection( parsets, partition )]
+    sections += [Sections.IONProcSection( partition )]
   if start_cnproc:
-    sections += [Sections.CNProcSection( parsets, partition )]
-  if start_storage:
-    sections += [Sections.StorageSection( parsets, partition )]
+    sections += [Sections.CNProcSection( partition )]
 
   # sanity check on sections
   if not DRYRUN:
@@ -51,30 +45,7 @@ if __name__ == "__main__":
   import time
 
   # parse the command line
-  parser = OptionParser( usage = """usage: %prog [options] observation [observation] ...
-
-    'observation' is a comma-separated list of the following options:
-
-    parset=name       (mandatory) the filename of the parset to use
-    converted         parset has already been parsed and adjusted for use in OLAP
-    stations=xxx+yyy  use stations xxx and yyy
-    tcp               station input arrives over TCP
-    null              station input is generated from null:
-
-    start=xxx         start/stop time. allowed syntax:
-    stop=xxx            [YYYY-MM-DD] HH:MM[:SS]
-                        timestamp
-                        +seconds
-                        +HH:MM[:SS]
-    run=xxx           run time. allowed syntax:
-                        HH:MM[:SS]
-                        seconds
-
-    clock=xxx         use a station clock of xxx MHz
-    integration=xxx   use xxx seconds of integration time on the IO node
-
-    foo.bar=value     override parset key 'foo.bar' with 'value'.
-    """ )
+  parser = OptionParser( usage = """usage: %prog -P partition [options]""" )
   parser.add_option( "-d", "--dry-run",
   			dest = "dryrun",
 			action = "store_true",
@@ -85,16 +56,6 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
   			help = "run IONProc under valgrind [%default]" )
-  parser.add_option( "--valgrind-storage",
-  			dest = "valgrind_storage",
-			action = "store_true",
-			default = False,
-  			help = "run Storage under valgrind [%default]" )
-  parser.add_option( "--autotools",
-  			dest = "autotools",
-			action = "store_true",
-			default = False,
-			help = "used the autotools environment (instead of cmake)" )
 
   opgroup = OptionGroup(parser, "Output" )
   opgroup.add_option( "-v", "--verbose",
@@ -124,11 +85,6 @@ if __name__ == "__main__":
   			dest = "partition",
 			type = "string",
   			help = "name of the BlueGene partition [%default]" )
-  hwgroup.add_option( "-M", "--storage-master",
-  			dest = "storagemaster",
-			type = "string",
-			default = Locations.nodes["storagemaster"],
-  			help = "Front-end for storage nodes [%default]" )
   parser.add_option_group( hwgroup )
 
   secgroup = OptionGroup(parser, "Sections" )
@@ -170,57 +126,36 @@ if __name__ == "__main__":
   			dest = "ionproc",
 			default = Locations.files["ionproc"],
 			help = "IONProc executable [%default]" )
-  dirgroup.add_option( "--storage",
-  			dest = "storage",
-			default = Locations.files["storage"],
-			help = "Storage executable [%default]" )
   dirgroup.add_option( "--valgrind-ion-suppressions",
   			dest = "ionsuppfile",
 			default = Locations.files["ionsuppfile"],
   			help = "Valgrind suppressions file for IONProc [%default]" )
-  dirgroup.add_option( "--valgrind-storage-suppressions",
-  			dest = "storagesuppfile",
-			default = Locations.files["storagesuppfile"],
-  			help = "Valgrind suppressions file for Storage [%default]" )
   parser.add_option_group( dirgroup )
 
   # parse arguments
   (options, args) = parser.parse_args()
 
-  # ========== Global options
-
-  if not args:
+  if not options.partition:
     parser.print_help()
     sys.exit(1)
+
+  # ========== Global options
 
   if options.verbose:
     Commands.debug = debug
     Logger.DEBUG = True
     Sections.DEBUG = True
 
-  if options.autotools:
-    Locations.AUTOTOOLS = True
-
   if options.valgrind_ion:
     Sections.VALGRIND_ION = True
 
-  if options.valgrind_storage:
-    Sections.VALGRIND_STORAGE = True
-
   if not options.quiet:
     DEBUG = True
-    convertParset.DEBUG = True
-    Sections.DEBUG = True
     Logger.VERBOSE = True
 
   if options.dryrun:
     DRYRUN = True
-    convertParset.DRYRUN = True
     Commands.DRYRUN = True
-    ObservationID.DRYRUN = True
-    Sections.DRYRUN = True
-
-  Locations.nodes["storagemaster"] = options.storagemaster
 
   # set log server
   Locations.nodes["logserver"] = options.logserver
@@ -228,27 +163,7 @@ if __name__ == "__main__":
   for opt in dirgroup.option_list:
     Locations.setFilename( opt.dest, getattr( options, opt.dest ) )
 
-  # ========== Observations
-  parsets = convertParset.convertParsets( args, options.olapparset, options.partition )
-
-  for parset in parsets:
-    if options.valgrind_ion:
-      # force settings required to run under valgrind
-      parset["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "TCP" # FCNP uses BG/P instructions
-      parset["OLAP.nrSecondsOfBuffer"] = 1.5                    # reduce memory footprint
-      parset["Observation.nrSlotsInFrame"] = 1                  # reduce memory footprint
-
-    # parse specific parset values from the command line (all options containing ".")
-    # disable sections we won't start
-    if options.nocnproc:
-      parset.disableCNProc() 
-    if options.noionproc:
-      parset.disableIONProc()
-    if options.nostorage:
-      parset.disableStorage()
-
-  # resolve all paths now that parsets are set up and the observation ID is known
-  Locations.resolveAllPaths( parsets[0] ) 
+  Locations.resolveAllPaths()
 
   # create log and directory if it does not exist
   for d in ["logdir","rundir"]:
@@ -273,32 +188,10 @@ if __name__ == "__main__":
     except OSError,e:
       warning( "Could not create symlink %s pointing to %s" % (log_symlink["source"],log_symlink["dest"]) )
 
-  # finalise and save parsets
-  usedStoragePorts = []
-
-  for obsIndex,parset in enumerate(parsets):
-    # sanity check on parset
-    parset.check()
-
-    # write parset to disk (both rundir and logdir)
-    parset.setFilename( "%s.%s" % (Locations.files["parset"], obsIndex) )
-
-    if not DRYRUN:
-      parset.save()
-      parset.writeFile( "%s/RTCP.parset.%s" % (Locations.files["logdir"],obsIndex) )
-
   # ========== Run
   info( "========== Run ==========" )
 
-  runObservations( parsets, parsets[0].partition, not options.nocnproc, not options.noionproc, not options.nostorage )
-
-  # ========== Clean up
-  if not DRYRUN:
-    for parset in parsets:
-      try:
-        runlink( parset.getFilename() )
-      except OSError,e:
-        warning( "Could not delete %s: %s" % (parset.getFilename(),e) )
+  runCorrelator( options.partition, not options.nocnproc, not options.noionproc )
 
   info( "========== Done ==========" )
 
