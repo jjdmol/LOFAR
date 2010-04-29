@@ -1,8 +1,8 @@
 [license]
-code        = "CS032C 30464888506"
+code        = "CS032C 30143537309"
 version     = 30800002
-sn          = "471_3031_2_Astron_Gen_II_1_38/29"
-date        = 2010.03.03;13:41:06,000 
+sn          = "471_3031_2_Astron_Gen_II_1_38/31"
+date        = 2010.04.29;16:25:00,000 
 comment     = "Core Station CS032"
 expire      = 0000.00.00;00:00:00,000 
 redundancy  = 0
