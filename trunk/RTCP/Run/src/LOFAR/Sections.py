@@ -19,8 +19,7 @@ SSH="ssh -o StrictHostKeyChecking=no -q "
 class Section:
   """ A 'section' is a set of commands which together perform a certain function. """
 
-  def __init__(self, parsets, partition):
-    self.parsets = parsets
+  def __init__(self, partition):
     self.commands = []
 
 
@@ -171,7 +170,6 @@ class IONProcSection(Section):
       "%s" % (Locations.files["ionproc"],),
 
       # arguments
-      "%s" % (" ".join([p.getFilename() for p in self.parsets]), ),
     ]
 
 
@@ -212,44 +210,3 @@ class IONProcSection(Section):
         assert successStr in c.output(), "Cannot allocate flat memory on I/O node %s" % (node,)
 
     assert runFunc( waitForSuccess, 20 ), "Failed to reach one or more I/O nodes [ssh]"
-
-class StorageSection(Section):
-  def check( self ):
-    storagenodes = [Hosts.resolve(s,"back") for s in self.parsets[0].storagenodes]
-
-    # Storage nodes need to be reachable -- check in parallel
-
-    # ping
-
-    pingcmds = [
-      (node,AsyncCommand( "ping %s -c 1 -w 2 -q" % (node,), ["/dev/null"] ))
-      for node in storagenodes
-    ]
-
-    for (node,c) in pingcmds:
-      assert c.isSuccess(), "Cannot reach Storage node %s [ping]" % (node,)
-
-    # ssh
-
-    sshcmds = [
-      (node,AsyncCommand( SSH+"%s /bin/true" % (node,),PIPE) )
-      for node in storagenodes
-    ]
-
-    def waitForSuccess():
-      for (node,c) in sshcmds:
-        c.wait()
-
-    assert runFunc( waitForSuccess, 20 ), "Failed to reach one or more Storage nodes [ssh]"
-
-    # ports need to be open
-
-    storagePorts = self.parsets[0].getStoragePorts()
-
-    for node,neededPorts in storagePorts.iteritems():
-      usedPorts = [int(p) for p in backquote( SSH+""" %s netstat -nta | awk 'NR>2 { n=split($4,f,":"); print f[n]; }'""" % (Hosts.resolve(node,"back"),) ).split() if p.isdigit()]
-
-      cannotOpen = [p for p in neededPorts if p in usedPorts]
-
-      assert cannotOpen == [], "Storage: Cannot open ports %s on node %s." % (",".join(sorted(map(str,cannotOpen))), node)
-

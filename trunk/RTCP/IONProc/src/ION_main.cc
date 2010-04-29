@@ -334,26 +334,10 @@ static void master_thread(int argc, char **argv)
     if (getenv("AIPSPATH") == 0)
       setenv("AIPSPATH", "/globalhome/lofarsystem/packages/root/bgp_ion/", 0);
 
-    if (argc < 2) {
-      LOG_ERROR("unexpected number of arguments");
-      exit(1);
-    }
-
     createAllCNstreams();
     createAllIONstreams();
 
-#if 0
-    if (myPsetNumber == 0)
-      for (int arg = 1; arg < argc; arg ++)
-	LOG_DEBUG_STR("manually insert " << argv[arg]);
-
     commandServer();
-#else
-    for (int arg = 1; arg < argc; arg ++) {
-      LOG_DEBUG_STR("creating new Job for ParameterSet " << argv[arg]);
-      jobQueue.insert(new Job(argv[arg]));
-    }
-#endif
 
     jobQueue.waitUntilAllJobsAreFinished();
     stopCNs();

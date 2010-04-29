@@ -6,8 +6,10 @@ from LOFAR.Logger import debug,info,warning,error,fatal
 from LOFAR.Parset import Parset
 from LOFAR.Stations import Stations
 from LOFAR.Locations import Locations
+from LOFAR.CommandClient import sendCommand
 from util.dateutil import format
 import sys
+import socket
 
 DRYRUN = False
 
@@ -33,7 +35,7 @@ def convertParsets( args, olapparset, partition = None ):
   defaultObsParams = {
     "parset": "RTCP.parset",
     "start": "+15",
-    "output": "-",
+    "output": Locations.files["parset"],
   }
   defaultRunTime = "00:01:00"
 
@@ -108,6 +110,8 @@ def convertParsets( args, olapparset, partition = None ):
     # override parset with command-line values
     if partition:
       parset.setPartition( partition )
+    else:
+      parset.setPartition( parset.distillPartition() )
 
     # set stations
     if "stations" in obsparams:
@@ -185,9 +189,7 @@ def convertParsets( args, olapparset, partition = None ):
     # sanity check on parset
     parset.check()
 
-    parset.setFilename( obsparams["output"] )
-
-  info( "========== Done ==========" )
+    parset.setFilename( Locations.resolvePath( obsparams["output"], parset ) )
 
   return parsets
 
@@ -202,7 +204,7 @@ if __name__ == "__main__":
     'observation' is a comma-separated list of the following options:
 
     parset=name       (mandatory) the filename of the parset to read
-    output=name       the filename of the parset to write (default: stdout)
+    output=name       the filename of the parset to write (default: RCTP-(obsid).parset in latest logdir)
     stations=xxx+yyy  use stations xxx and yyy
     tcp               station input arrives over TCP
     null              station input is generated from null:
@@ -235,7 +237,7 @@ if __name__ == "__main__":
   			help = "be quiet [%default]" )
   parser.add_option_group( opgroup )
 
-  hwgroup = OptionGroup(parser, "Hardware" )
+  hwgroup = OptionGroup(parser, "Settings" )
   hwgroup.add_option( "-O", "--olap-parset",
   			dest = "olapparset",
 			type = "string",
@@ -245,6 +247,11 @@ if __name__ == "__main__":
   			dest = "partition",
 			type = "string",
   			help = "name of the BlueGene partition [%default]" )
+  hwgroup.add_option( "-n", "--norun",
+  			dest = "norun",
+			action = "store_true",
+			default = False,
+  			help = "do not send the parset to the correlator" )
   parser.add_option_group( hwgroup )
 
   # parse arguments
@@ -267,6 +274,16 @@ if __name__ == "__main__":
   parsets = convertParsets( args, options.olapparset, options.partition )  
 
   # output them to stdout or file
+  info( "========== Saving parsets ==========" )
   for parset in parsets:
+    info( "Saving parset to %s" % (parset.filename,) )
     parset.save()
 
+    if not options.norun:
+      info( "Sending parset %s to the correlator on partition %s" % (parset.filename,parset.partition) )
+      try:
+        sendCommand( options.partition, "parset %s" % (parset.filename,) )
+      except socket.error,msg:
+        error( "Failed to connect to correlator on partition %s: %s" % (parset.partition,msg) )
+
+  info( "========== Done ==========" )
