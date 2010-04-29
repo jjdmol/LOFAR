@@ -1,5 +1,5 @@
 [license]
-code          = "CS032C 92655900141"
+code          = "CS032C 71518917137"
 version       = 30800002
 comment       = "Core Station CS032"
 sn            = "471_3031_2_Astron_Gen_II_1_38"
