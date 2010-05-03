@@ -32,10 +32,16 @@ int main(int argc, char *argv[])
 			"Author: André Offringa (offringa@astro.rug.nl)\n"
 			<< std::endl;
 
+	bool threadCountSet = false;
+	size_t threadCount = 3;
+
 	size_t parameterIndex = 1;
 	while(parameterIndex < (size_t) argc && argv[parameterIndex][0]=='-')
 	{
 		std::string flag(argv[parameterIndex]+1);
+
+		if(flag == "j") { ++parameterIndex; threadCountSet = true; threadCount = atoi(argv[parameterIndex]); }
+		else
 		{
 			std::cerr << "Incorrect usage; parameter \"" << argv[parameterIndex] << "\" not understood." << std::endl;
 			return 1;
@@ -86,6 +92,10 @@ int main(int argc, char *argv[])
 		std::cerr << "Unknown profile: " << profile << std::endl;
 		return 1;
 	}
+
+	if(threadCountSet)
+		rfiStrategy::Strategy::SetThreadCount(*strategy, threadCount);
+
 	rfiStrategy::XmlWriter writer;
 	std::cout << "Writing strategy..." << std::endl;
 	writer.WriteStrategy(*strategy, filename);

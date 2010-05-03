@@ -163,6 +163,12 @@ void ImagePlaneWindow::AddData(const TimeFrequencyData &data, TimeFrequencyMetaD
 	Update();
 }
 
+void ImagePlaneWindow::AddData(const TimeFrequencyData &data, class SpatialMatrixMetaData *spatialMetaData)
+{
+	_imager.Image(data, spatialMetaData);
+	Update();
+}
+
 void ImagePlaneWindow::onClearClicked()
 {
 	_imager.Empty();
@@ -326,3 +332,4 @@ bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 	}
 	return true;
 }
+

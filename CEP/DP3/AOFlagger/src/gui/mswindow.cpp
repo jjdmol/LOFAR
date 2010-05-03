@@ -1199,7 +1199,12 @@ void MSWindow::onShowImagePlane()
 void MSWindow::onAddToImagePlane()
 {
 	try {
-		_imagePlaneWindow->AddData(GetActiveData(), _metaData);
+		if(_metaData != 0)
+			_imagePlaneWindow->AddData(GetActiveData(), _metaData);
+		else if(_spatialMetaData != 0)
+			_imagePlaneWindow->AddData(GetActiveData(), _spatialMetaData);
+		else
+			showError("No meta data found.");
 	}  catch(std::exception &e)
 	{
 		showError(e.what());

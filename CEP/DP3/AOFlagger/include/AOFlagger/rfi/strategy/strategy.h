@@ -26,6 +26,10 @@
 
 #include <boost/thread.hpp>
 
+#include <AOFlagger/msio/timefrequencyimager.h>
+#include <AOFlagger/msio/timefrequencydata.h>
+#include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
+
 #include "action.h"
 #include "actionblock.h"
 #include "actionfactory.h"
@@ -41,7 +45,15 @@ namespace rfiStrategy {
 			virtual std::string Description() { return "Strategy"; }
 
 			static Strategy *CreateDefaultSingleStrategy();
-			static void SetThreadCount(Strategy &strategy, size_t threadCount) { setThreadCount(strategy, threadCount); }
+
+			static void SetThreadCount(Strategy &strategy, size_t threadCount);
+			static void SetDataKind(Strategy &strategy, enum TimeFrequencyImager::ImageKind kind);
+			static void SetPolarisations(Strategy &strategy, enum TimeFrequencyData::PolarisationType type);
+			static void SetBaselines(Strategy &strategy, enum ForEachBaselineAction::BaselineSelection baselineSelection);
+			static void SetTransientCompatibility(Strategy &strategy);
+			static void SetMultiplySensitivity(Strategy &strategy, num_t factor);
+			static void SetFittingWindowSize(Strategy &strategy, size_t windowWidth, size_t windowHeight);
+			static void SetFittingKernelSize(Strategy &strategy, num_t kernelWidth, num_t kernelHeight);
 
 			void StartPerformThread(const class ArtifactSet &artifacts, class ProgressListener &progress);
 			ArtifactSet *JoinThread();
@@ -69,7 +81,6 @@ namespace rfiStrategy {
 			virtual ActionType Type() const { return StrategyType; }
 		protected:
 		private:
-			static void setThreadCount(ActionBlock &actionBlock, size_t threadCount);
 			struct PerformFunc {
 				PerformFunc(class Strategy *strategy, class ArtifactSet *artifacts, class ProgressListener *progress)
 				: _strategy(strategy), _artifacts(artifacts), _progress(progress)
