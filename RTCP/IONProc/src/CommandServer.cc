@@ -74,7 +74,7 @@ static void commandMaster()
   for (unsigned ion = 1; ion < nrPsets; ion ++)
     ionStreams[ion] = new MultiplexedStream(*allIONstreamMultiplexers[ion], 0);
 
-  SocketStream sk("0.0.0.0", 400, SocketStream::TCP, SocketStream::Server);
+  SocketStream sk("0.0.0.0", 4000, SocketStream::TCP, SocketStream::Server);
 
   while (!quit) {
     std::string command;
