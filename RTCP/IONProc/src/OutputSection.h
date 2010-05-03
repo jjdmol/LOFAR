@@ -36,8 +36,11 @@ namespace RTCP {
 class OutputSection
 {
   public:
-    OutputSection(const Parset &, Semaphore &nrIterationsToDo, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream * (*createStream)(unsigned, unsigned));
+    OutputSection(const Parset &, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream * (*createStream)(unsigned, unsigned));
     ~OutputSection();
+
+    void                        addIterations(unsigned count);
+    void                        noMoreIterations();
 
   private:
     void			mainLoop();
@@ -56,7 +59,7 @@ class OutputSection
 
     unsigned itsSequenceNumber;
 
-    Semaphore			&itsNrIterationsToDo;
+    Semaphore			itsNrIterationsToDo;
     std::vector<unsigned>       itsItemList; // list of either subbands or beams
     const unsigned              itsOutputType;
     const unsigned		itsNrComputeCores;
