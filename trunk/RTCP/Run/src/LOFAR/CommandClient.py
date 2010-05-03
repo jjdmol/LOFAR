@@ -3,7 +3,7 @@ import socket
 import os
 
 class CommandClient:
-    def __init__( self, partition, port = 400 ):
+    def __init__( self, partition, port = 4000 ):
         self.partition = partition
         self.server = PartitionPsets[partition][0]
         self.port = port
