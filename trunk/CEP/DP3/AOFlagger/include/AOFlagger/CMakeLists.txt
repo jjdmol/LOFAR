@@ -143,6 +143,7 @@ install(FILES
   rfi/strategy/slidingwindowfitparameters.h
   rfi/strategy/statisticalflagaction.h
   rfi/strategy/strategy.h
+  rfi/strategy/strategyiterator.h
   rfi/strategy/svdaction.h
   rfi/strategy/thresholdaction.h
   rfi/strategy/timeselectionaction.h

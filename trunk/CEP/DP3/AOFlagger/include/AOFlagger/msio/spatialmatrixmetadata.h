@@ -8,20 +8,20 @@ class SpatialMatrixMetaData
 	public:
 		SpatialMatrixMetaData(size_t antennaCount)
 			: _antennaCount(antennaCount), _antennae(new AntennaInfo[antennaCount]),
-				_uvw(new UVW*[antennaCount]), _frequency(0.0)
+				_uvw(new struct UVW*[antennaCount]), _frequency(0.0)
 		{
 			for(size_t i=0;i<_antennaCount;++i)
-				_uvw[i] = new UVW[_antennaCount];
+				_uvw[i] = new struct UVW[_antennaCount];
 		}
 		SpatialMatrixMetaData(const SpatialMatrixMetaData &source)
 			: _antennaCount(source._antennaCount),
 			_antennae(new AntennaInfo[_antennaCount]),
-			_uvw(new UVW*[_antennaCount]),
+			_uvw(new struct UVW*[_antennaCount]),
 			_frequency(source._frequency)
 		{
 			for(size_t i=0;i<_antennaCount;++i)
 			{
-				_uvw[i] = new UVW[_antennaCount];
+				_uvw[i] = new struct UVW[_antennaCount];
 				_antennae[i] = source._antennae[i];
 				for(size_t j=0;j<_antennaCount;++j)
 					_uvw[i][j] = source._uvw[i][j];
@@ -42,11 +42,11 @@ class SpatialMatrixMetaData
 		{
 			return _antennae[index];
 		}
-		void SetUVW(unsigned a1, unsigned a2, const UVW &uvw)
+		void SetUVW(unsigned a1, unsigned a2, const struct UVW &uvw)
 		{
 			_uvw[a2][a1] = uvw;
 		}
-		const UVW &uvw(unsigned a1, unsigned a2) const
+		const struct UVW &UVW(unsigned a1, unsigned a2) const
 		{
 			return _uvw[a2][a1];
 		}
@@ -65,7 +65,7 @@ class SpatialMatrixMetaData
 	private:
 		size_t _antennaCount;
 		AntennaInfo *_antennae;
-		UVW **_uvw;
+		struct UVW **_uvw;
 		num_t _frequency;
 };
 

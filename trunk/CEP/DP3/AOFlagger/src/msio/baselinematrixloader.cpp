@@ -91,11 +91,11 @@ TimeFrequencyData BaselineMatrixLoader::Load(size_t timeIndex)
 
 	antenna1Iter = ScalarColumnIterator<int>::First(antenna1Column);
 	antenna2Iter = ScalarColumnIterator<int>::First(antenna2Column);
-	ROArrayColumnIterator<casa::Complex> dataIter = 
+	ROArrayColumnIterator<casa::Complex> dataIter =
 		ROArrayColumnIterator<casa::Complex>::First(dataColumn);
-	ROArrayColumnIterator<bool> flagIter = 
+	ROArrayColumnIterator<bool> flagIter =
 		ROArrayColumnIterator<bool>::First(flagColumn);
-	ROArrayColumnIterator<double> uvwIter = 
+	ROArrayColumnIterator<double> uvwIter =
 		ROArrayColumnIterator<double>::First(uvwColumn);
 
 	Image2DPtr
@@ -122,8 +122,11 @@ TimeFrequencyData BaselineMatrixLoader::Load(size_t timeIndex)
 			a2 = *antenna2Iter;
 		casa::Array<casa::Complex> data =
 			*dataIter;
+		casa::Array<bool> flags =
+			*flagIter;
 
 		casa::Array<casa::Complex>::const_iterator i = data.begin();
+		casa::Array<bool>::const_iterator fI = flags.begin();
 		num_t
 			xxr = 0.0, xxi = 0.0, xyr = 0.0, xyi = 0.0, yxr = 0.0, yxi = 0.0, yyr = 0.0, yyi = 0.0;
 		size_t
@@ -137,25 +140,33 @@ TimeFrequencyData BaselineMatrixLoader::Load(size_t timeIndex)
 			++i;
 			const casa::Complex &yy = *i;
 			++i;
-			if(std::isfinite(xxr) && std::isfinite(xxi))
+			bool xxF = *fI;
+			++fI;
+			bool xyF = *fI;
+			++fI;
+			bool yxF = *fI;
+			++fI;
+			bool yyF = *fI;
+			++fI;
+			if(std::isfinite(xxr) && std::isfinite(xxi) && !xxF)
 			{
 				xxr += xx.real();
 				xxi += xx.imag();
 				++xxc;
 			}
-			if(std::isfinite(xyr) && std::isfinite(xyi))
+			if(std::isfinite(xyr) && std::isfinite(xyi) && !xyF)
 			{
 				xyr += xy.real();
 				xyi += xy.imag();
 				++xyc;
 			}
-			if(std::isfinite(yxr) && std::isfinite(yxi))
+			if(std::isfinite(yxr) && std::isfinite(yxi) && !yxF)
 			{
 				yxr += yx.real();
 				yxi += yx.imag();
 				++yxc;
 			}
-			if(std::isfinite(yyr) && std::isfinite(yyi))
+			if(std::isfinite(yyr) && std::isfinite(yyi) && !yyF)
 			{
 				yyr += yy.real();
 				yyi += yy.imag();
@@ -213,6 +224,7 @@ TimeFrequencyData BaselineMatrixLoader::Load(size_t timeIndex)
 		++antenna2Iter;
 		++dataIter;
 		++uvwIter;
+		++flagIter;
 	}
 	casa::ROScalarColumn<int> bandColumn(table, "DATA_DESC_ID");
 	BandInfo band = _measurementSet.GetBandInfo(bandColumn(0));

@@ -22,6 +22,7 @@
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/msio/mask2d.h>
 #include <AOFlagger/msio/timefrequencydata.h>
+#include <AOFlagger/msio/spatialmatrixmetadata.h>
 
 #include <AOFlagger/util/integerdomain.h>
 #include <AOFlagger/util/stopwatch.h>
@@ -251,12 +252,36 @@ void UVImager::Image(unsigned frequencyIndex, AntennaInfo &antenna1, AntennaInfo
 	}
 }
 
+void UVImager::Image(const class TimeFrequencyData &data, class SpatialMatrixMetaData *metaData)
+{
+	if(_uvReal == 0)
+		Empty();
+	Image2DCPtr
+		real = data.GetRealPart(),
+		imaginary = data.GetImaginaryPart();
+	Mask2DCPtr
+		flags = data.GetSingleMask();
+
+	for(unsigned a2=0;a2<data.ImageHeight();++a2) {
+		for(unsigned a1=a2+1;a1<data.ImageWidth();++a1) {
+			num_t
+				vr = real->Value(a1, a2),
+				vi = imaginary->Value(a1, a2);
+			if(std::isfinite(vr) && std::isfinite(vi))
+			{
+				UVW uvw = metaData->UVW(a1, a2);
+				SetUVValue(uvw.u, uvw.v, vr, vi, 1.0);
+				SetUVValue(-uvw.u, -uvw.v, vr, -vi, 1.0);
+			}
+		}
+	}	
+}
+
+
 void UVImager::Image(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, unsigned frequencyIndex)
 {
 	if(_uvReal == 0)
-	{
 		Empty();
-	}
 
 	//long double frequency = metaData->Band().channels[frequencyIndex].frequencyHz;
 	//long double speedOfLight = 299792458.0L;
@@ -278,12 +303,12 @@ void UVImager::Image(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr me
 		switch(_imageKind) {
 			case Homogeneous:
 			if(flags->Value(i, frequencyIndex)==0.0L) {
-				long double
+				num_t
 					vr = real->Value(i, frequencyIndex),
 					vi = imaginary->Value(i, frequencyIndex);
 				if(std::isfinite(vr) && std::isfinite(vi))
 				{
-					long double u,v;
+					num_t u,v;
 					GetUVPosition(u, v, i, frequencyIndex, metaData);
 					SetUVValue(u, v, vr, vi, 1.0);
 					SetUVValue(-u, -v, vr, -vi, 1.0);
@@ -294,7 +319,7 @@ void UVImager::Image(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr me
 			case Flagging:
 			if((flags->Value(i, frequencyIndex)!=0.0L && !_invertFlagging) ||
 					(flags->Value(i, frequencyIndex)==0.0L && _invertFlagging)) {
-				long double u,v;
+				num_t u,v;
 				GetUVPosition(u, v, i, frequencyIndex, metaData);
 				SetUVValue(u, v, 1, 0, 1.0);
 				SetUVValue(-u, -v, 1, 0, 1.0);
@@ -387,7 +412,7 @@ void UVImager::PerformFFT()
 	FFTTools::CreateFFTImage(*_uvReal, *_uvImaginary, *_uvFTReal, *_uvFTImaginary);
 }
 
-void UVImager::GetUVPosition(long double &u, long double &v, size_t timeIndex, size_t frequencyIndex, TimeFrequencyMetaDataCPtr metaData)
+void UVImager::GetUVPosition(num_t &u, num_t &v, size_t timeIndex, size_t frequencyIndex, TimeFrequencyMetaDataCPtr metaData)
 {
 	long double frequency = metaData->Band().channels[frequencyIndex].frequencyHz;
 	u = metaData->UVW()[timeIndex].u * frequency / 299792458.0L;

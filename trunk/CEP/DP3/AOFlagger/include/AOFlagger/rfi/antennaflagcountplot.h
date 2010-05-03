@@ -36,6 +36,7 @@ class AntennaFlagCountPlot{
 		void Add(class TimeFrequencyData &data, TimeFrequencyMetaDataCPtr meta);
 		void MakePlot();
 		bool HasData() { return !_counts.empty(); }
+		void Report();
 	private:
 		struct MapItem {
 			MapItem() : name(), autoCount(0), autoTotal(0), crossCount(0), crossTotal(0)

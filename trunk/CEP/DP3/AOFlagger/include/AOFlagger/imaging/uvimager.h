@@ -43,6 +43,7 @@ class UVImager {
 		void Image(class MeasurementSet &measurementSet, unsigned band);
 		void Image(class MeasurementSet &measurementSet, unsigned band, const class IntegerDomain &frequencies);
 		void Image(const class TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, unsigned frequencyIndex);
+		void Image(const class TimeFrequencyData &data, class SpatialMatrixMetaData *metaData);
 		void InverseImage(class MeasurementSet &prototype, unsigned band, const class Image2D &uvReal, const class Image2D &uvImaginary, unsigned antenna1, unsigned antenna2);
 		const class Image2D &WeightImage() const throw() { return *_uvWeights; }
 		const class Image2D &RealUVImage() const throw() { return *_uvReal; }
@@ -57,7 +58,7 @@ class UVImager {
 		 * @param baseline information about the baseline
 		 * @param time the time to calculate the u,v position for
 		 */
-		static void GetUVPosition(long double &u, long double &v, size_t timeIndex, size_t frequencyIndex, TimeFrequencyMetaDataCPtr metaData);
+		static void GetUVPosition(num_t &u, num_t &v, size_t timeIndex, size_t frequencyIndex, TimeFrequencyMetaDataCPtr metaData);
 
 		static double GetFringeStopFrequency(long double time, const Baseline &baseline, long double delayDirectionRA, long double delayDirectionDec, long double frequency);
 		//static double GetFringeCount(long double timeStart, long double timeEnd, const Baseline &baseline, long double delayDirectionRA, long double delayDirectionDec, long double frequency);

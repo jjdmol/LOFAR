@@ -25,6 +25,8 @@
 #include <AOFlagger/rfi/strategy/strategy.h>
 #include <AOFlagger/rfi/strategy/xmlreader.h>
 
+#include <AOFlagger/rfi/antennaflagcountplot.h>
+
 #include <AOFlagger/util/progresslistener.h>
 #include <AOFlagger/util/stopwatch.h>
 
@@ -144,11 +146,15 @@ int main(int argc, char **argv)
 		overallStrategy.Add(fomAction);
 	
 		rfiStrategy::ArtifactSet artifacts(&ioMutex);
+		artifacts.SetAntennaFlagCountPlot(new AntennaFlagCountPlot());
 		
 		ConsoleProgressHandler progress;
 		
 		overallStrategy.StartPerformThread(artifacts, progress);
 		rfiStrategy::ArtifactSet *set = overallStrategy.JoinThread();
+
+		set->AntennaFlagCountPlot()->Report();
+
 		delete set;
 
 		std::cout << "Time: " << watch.ToString() << std::endl;

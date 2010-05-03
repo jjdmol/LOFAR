@@ -27,10 +27,12 @@
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
 #include <AOFlagger/rfi/strategy/iterationblock.h>
 #include <AOFlagger/rfi/strategy/loadimageaction.h>
+#include <AOFlagger/rfi/strategy/plotaction.h>
 #include <AOFlagger/rfi/strategy/setflaggingaction.h>
 #include <AOFlagger/rfi/strategy/setimageaction.h>
 #include <AOFlagger/rfi/strategy/slidingwindowfitaction.h>
 #include <AOFlagger/rfi/strategy/statisticalflagaction.h>
+#include <AOFlagger/rfi/strategy/strategyiterator.h>
 #include <AOFlagger/rfi/strategy/thresholdaction.h>
 #include <AOFlagger/rfi/strategy/timeselectionaction.h>
 #include <AOFlagger/rfi/strategy/writeflagsaction.h>
@@ -206,6 +208,10 @@ namespace rfiStrategy {
 		LoadDefaultSingleStrategy(*feBaseBlock, pedantic, pulsar);
 
 		feBaseBlock->Add(new WriteFlagsAction());
+
+		PlotAction *plotAction = new PlotAction();
+		plotAction->SetPlotKind(PlotAction::AntennaFlagCountPlot);
+		feBaseBlock->Add(plotAction);
 	}
 
 	void Strategy::LoadBestStrategy(bool pedantic, bool pulsar)
@@ -251,22 +257,82 @@ namespace rfiStrategy {
 		_strategy->Perform(*_artifacts, *_progress);
 	}
 
-	void Strategy::setThreadCount(ActionBlock &actionBlock, size_t threadCount)
+	void Strategy::SetThreadCount(Strategy &strategy, size_t threadCount)
 	{
-		for(size_t i=0;i<actionBlock.GetChildCount();++i)
+		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
+		while(!i.PastEnd())
 		{
-			Action &action = actionBlock.GetChild(i);
-			ActionBlock *innerActionBlock = dynamic_cast<ActionBlock*>(&action);
-			if(innerActionBlock != 0)
+			if(i->Type() == ForEachBaselineActionType)
 			{
-				setThreadCount(*innerActionBlock, threadCount);
+				ForEachBaselineAction &fobAction = static_cast<ForEachBaselineAction&>(*i);
+				fobAction.SetThreadCount(threadCount);
 			}
-			ForEachBaselineAction *fobAction = dynamic_cast<ForEachBaselineAction*>(&action);
-			if(fobAction != 0)
-			{
-				fobAction->SetThreadCount(threadCount);
-			}
+			++i;
 		}
 	}
+
+	void Strategy::SetDataKind(Strategy &strategy, enum TimeFrequencyImager::ImageKind kind)
+	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
+		while(!i.PastEnd())
+		{
+			if(i->Type() == LoadImageActionType)
+			{
+				LoadImageAction &action = static_cast<LoadImageAction&>(*i);
+				action.SetImageKind(kind);
+			}
+			++i;
+		}
+	}
+
+	void Strategy::SetPolarisations(Strategy &strategy, enum TimeFrequencyData::PolarisationType type)
+	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
+		while(!i.PastEnd())
+		{
+			if(i->Type() == LoadImageActionType)
+			{
+				LoadImageAction &action = static_cast<LoadImageAction&>(*i);
+				switch(type)
+				{
+					case TimeFrequencyData::AutoDipolePolarisation: action.SetReadDipoleAutoPolarisations(); break;
+					case TimeFrequencyData::DipolePolarisation: action.SetReadAllPolarisations(); break;
+					case TimeFrequencyData::StokesI: action.SetReadStokesI(); break;
+				}
+			}
+			++i;
+		}
+	}
+
+	void Strategy::SetBaselines(Strategy &strategy, enum ForEachBaselineAction::BaselineSelection baselineSelection)
+	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
+		while(!i.PastEnd())
+		{
+			if(i->Type() == ForEachBaselineActionType)
+			{
+				ForEachBaselineAction &fobAction = static_cast<ForEachBaselineAction&>(*i);
+				fobAction.SetSelection(baselineSelection);
+			}
+			++i;
+		}
+	}
+
+	void Strategy::SetTransientCompatibility(Strategy &strategy)
+	{
+	}
+
+	void Strategy::SetMultiplySensitivity(Strategy &strategy, num_t factor)
+	{
+	}
+
+	void Strategy::SetFittingWindowSize(Strategy &strategy, size_t windowWidth, size_t windowHeight)
+	{
+	}
+
+	void Strategy::SetFittingKernelSize(Strategy &strategy, num_t kernelWidth, num_t kernelHeight)
+	{
+	}
+
 
 }
