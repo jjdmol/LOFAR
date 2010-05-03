@@ -49,8 +49,12 @@ static void handleCommand(const std::string &command)
   LOG_DEBUG_STR("command \"" << command << "\" received");
 
   if (command.compare(0, 7, "cancel ") == 0) {
-    if (myPsetNumber == 0)
-      jobQueue.cancel(boost::lexical_cast<unsigned>(command.substr(7)));
+    if (myPsetNumber == 0) {
+      if (command.compare(0, 10, "cancel all") == 0)
+	jobQueue.cancelAll();
+      else
+	jobQueue.cancel(boost::lexical_cast<unsigned>(command.substr(7)));
+    }
   } else if (command == "list_jobs") {
     if (myPsetNumber == 0)
       jobQueue.listJobs();

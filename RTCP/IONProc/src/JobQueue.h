@@ -42,6 +42,8 @@ class JobQueue
     void		insert(Job *), remove(Job *);
 
     void		cancel(unsigned observationID);
+    void		cancelAll();
+
     void		listJobs() const;
 
     void		waitUntilAllJobsAreFinished();

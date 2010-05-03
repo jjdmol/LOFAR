@@ -63,6 +63,15 @@ void JobQueue::cancel(unsigned observationID)
 }
 
 
+void JobQueue::cancelAll()
+{
+  ScopedLock scopedLock(itsMutex);
+
+  for (std::vector<Job *>::iterator job = itsJobs.begin(); job != itsJobs.end(); job ++)
+    (*job)->cancel();
+}
+
+
 void JobQueue::listJobs() const
 {
   ScopedLock scopedLock(itsMutex);
