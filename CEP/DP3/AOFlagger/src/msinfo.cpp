@@ -22,6 +22,8 @@
 #include <sstream>
 #include <vector>
 
+#include <LofarStMan/Register.h>
+
 #include <AOFlagger/msio/measurementset.h>
 #include <AOFlagger/msio/antennainfo.h>
 #include <AOFlagger/msio/timefrequencyimager.h>
@@ -40,6 +42,8 @@ int main(int argc, char *argv[])
 		     << endl;
 		exit(-1);
 	}
+
+	register_lofarstman();
 
 	bool saveFlagLength = false;
 	string flagLengthFile;
@@ -126,14 +130,18 @@ int main(int argc, char *argv[])
 		int *lengthCounts = new int[lengthsSize];
 		for(int i=0;i<lengthsSize;++i)
 			lengthCounts[i] = 0;
-		for(unsigned a2=0;a2<set.AntennaCount();++a2) {
-			for(unsigned a1=0;a1<set.AntennaCount();++a1) {
+		MeasurementSet set(measurementFile);
+		TimeFrequencyImager imager(set);
+		for(unsigned a1=0;a1<set.AntennaCount();++a1) {
+			for(unsigned a2=a1;a2<set.AntennaCount();++a2) {
 				//std::cout << "A" << a1 << " vs A" << a2 << endl;
-				MeasurementSet set(measurementFile);
-				TimeFrequencyImager imager(set);
 				imager.SetReadData(false);
 				imager.SetReadFlags(true);
-				imager.Image(a1, a2, b);
+				try {
+					imager.Image(a1, a2, b);
+				} catch(std::exception &e) {
+					std::cerr << "Error reading baseline " << a1 << " x " << a2 << ": " << e.what() << std::endl;
+				}
 				if(imager.HasFlags()) {
 					long unsigned thisCount;
 					long unsigned thisSamples;
@@ -153,14 +161,19 @@ int main(int argc, char *argv[])
 				if(thisCount == 0 || round(1000.0L * (long double) thisCount / thisSamples)*0.1L == 100.0L) {
 						//cout << " (ignored)";
 					} else {
-						cout << "Calculated flagging for antenna " << a1 << " vs " << a2 << ": ";
-						cout << 0.1L * round(1000.0L * (long double) thisCount / thisSamples) << "%" << endl;
+						
+						cout << "Flagging for antenna " << set.GetAntennaInfo(a1).name
+							<< " x " << set.GetAntennaInfo(a2).name << ": "
+							<< 0.1L * round(1000.0L * (long double) thisCount / thisSamples) << "%" << endl;
 						flaggedCount += thisCount;
 						sampleCount += thisSamples;
-						AddLengths(imager.FlagXX(), lengthCounts, lengthsSize);
-						AddLengths(imager.FlagXX(), lengthCounts, lengthsSize);
-						AddLengths(imager.FlagXX(), lengthCounts, lengthsSize);
-						AddLengths(imager.FlagXX(), lengthCounts, lengthsSize);
+						if(saveFlagLength)
+						{
+							AddLengths(imager.FlagXX(), lengthCounts, lengthsSize);
+							AddLengths(imager.FlagXY(), lengthCounts, lengthsSize);
+							AddLengths(imager.FlagYX(), lengthCounts, lengthsSize);
+							AddLengths(imager.FlagYY(), lengthCounts, lengthsSize);
+						}
 					}
 				}
 			}
