@@ -48,9 +48,8 @@
 namespace LOFAR {
 namespace RTCP {
 
-OutputSection::OutputSection(const Parset &parset, Semaphore &nrIterationsToDo, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream *(*createStream)(unsigned,unsigned))
+OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream *(*createStream)(unsigned,unsigned))
 :
-  itsNrIterationsToDo(nrIterationsToDo),
   itsItemList(itemList),
   itsOutputType(outputType),
   itsNrComputeCores(parset.nrCoresPerPset()),
@@ -142,6 +141,15 @@ OutputSection::~OutputSection()
   itsStreamsFromCNs.clear();
 }
 
+void OutputSection::addIterations( unsigned count )
+{
+  itsNrIterationsToDo.up( count );
+}
+
+void OutputSection::noMoreIterations()
+{
+  itsNrIterationsToDo.noMore();
+}
 
 void OutputSection::droppingData(unsigned subband)
 {

@@ -462,7 +462,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
         continue;
     }
 
-    outputSections[output] = new OutputSection(itsParset, outputSectionRunToken, list, maxlistsize, output, &createCNstream);
+    outputSections[output] = new OutputSection(itsParset, list, maxlistsize, output, &createCNstream);
   }
 
   LOG_DEBUG("doObservation processing input");
@@ -474,11 +474,17 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   beamletBufferToComputeNode.preprocess(&itsParset);
         
   for (run = 0; run < itsNrRuns && !isCancelled(); run ++) {
-    outputSectionRunToken.up(nrOutputTypes);
+    for (unsigned output = 0; output < nrOutputTypes; output ++) {
+      outputSections[output]->addIterations( 1 );
+    }
+
     beamletBufferToComputeNode.process();
   }
 
-  outputSectionRunToken.noMore();
+  for (unsigned output = 0; output < nrOutputTypes; output ++) {
+    outputSections[output]->noMoreIterations();
+  }
+
   beamletBufferToComputeNode.postprocess();
 
   unconfigureCNs();
