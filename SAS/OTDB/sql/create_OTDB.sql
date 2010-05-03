@@ -1,5 +1,5 @@
 -- execute this file with:
--- psql -f create_OTDB.sql -h dop50 -U postgres otdbtest
+-- psql -f create_OTDB.sql -h rs005 -U postgres otdbtest
 --
 \i create_base_tables.sql
 \i create_security.sql
