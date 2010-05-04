@@ -9,6 +9,7 @@ import ObservationID
 import time
 from Logger import debug,info,warning
 from threading import Thread,Lock
+import thread
 
 DEBUG=False
 DRYRUN=False
@@ -78,7 +79,11 @@ class Section:
           for c in commands:
             c.wait()
         finally:
-          lock.release()  
+          try:
+            lock.release()  
+          except thread.error:
+            # lock already released
+            pass
 
     WaitThread().start() 
 
