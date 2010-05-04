@@ -94,6 +94,7 @@ int main(int argc, char **argv)
 	{
 		register_lofarstman();
 
+		bool threadCountSet = false;
 		size_t threadCount = 3;
 		std::string strategyFile;
 		size_t parameterIndex = 1;
@@ -103,6 +104,7 @@ int main(int argc, char **argv)
 			if(flag=="j" && parameterIndex < (size_t) (argc-1))
 			{
 				threadCount = atoi(argv[parameterIndex+1]);
+				threadCountSet = true;
 				parameterIndex+=2;
 			}
 			else if(flag=="strategy")
@@ -116,7 +118,8 @@ int main(int argc, char **argv)
 				return 1;
 			}
 		}
-		std::cout << "Number of threads: " << threadCount << std::endl;
+		if(threadCountSet)
+			std::cout << "Number of threads: " << threadCount << std::endl;
 
 		Stopwatch watch(true);
 
@@ -132,7 +135,8 @@ int main(int argc, char **argv)
 			subStrategy = reader.CreateStrategyFromFile(strategyFile);
 			std::cout << "Strategy \"" << strategyFile << "\" loaded." << std::endl;
 		}
-		rfiStrategy::Strategy::SetThreadCount(*subStrategy, threadCount);
+		if(threadCountSet)
+			rfiStrategy::Strategy::SetThreadCount(*subStrategy, threadCount);
 			
 		rfiStrategy::ForEachMSAction *fomAction = new rfiStrategy::ForEachMSAction();
 		for(int i=parameterIndex;i<argc;++i)
