@@ -6,6 +6,7 @@ from Locations import Locations,Hosts
 import os
 import Partitions
 import ObservationID
+import time
 from Logger import debug,info,warning
 from threading import Thread,Lock
 
@@ -65,23 +66,27 @@ class Section:
     for c in self.commands:
       self.killCommand(c,timeout)
 
-  def wait(self):
-    lock = Lock()
+  def wait(self, lock = Lock()):
+    """ Wait until section finishes, or until the lock is released. Releases lock when section finishes. """
+
     commands = self.commands
 
     # wait in a separate thread to allow python to capture KeyboardInterrupts in the main thread
     class WaitThread(Thread):
       def run(self):
-        for c in commands:
-          c.wait()
+        try:
+          for c in commands:
+            c.wait()
+        finally:
+          lock.release()  
 
-        lock.release()  
+    WaitThread().start() 
 
-    lock.acquire()
-    WaitThread().start()      
-
-    # wait for lock to be released by waiting thread
-    lock.acquire()
+    # wait for lock to be released by waiting thread or from an external source
+    # !! DO NOT use lock.acquire() since that will delay signals (SIGQUIT/SIGTERM/etc) from arriving until
+    # the lock is acquired.
+    while lock.locked():
+      time.sleep(1)
 
   def check(self):
     pass
@@ -103,10 +108,10 @@ class SectionSet(list):
       info( "Killing %s." % (s,) )
       s.abort(timeout)
 
-  def wait(self):
+  def wait(self, lock=Lock()):
     for s in self:
       info( "Waiting for %s." % (s,) )
-      s.wait()
+      s.wait(lock)
 
   def check(self):
     for s in self:
