@@ -108,7 +108,7 @@ void generateInputSignal(InverseFilteredData& originalData) {
 
 void performStationFFT() {
 #if defined HAVE_FFTW3
-  fftwf_plan plan = fftwf_plan_r2c_1d(itsOnStationFilterSize, itsFftInData, itsFftOutData, FFTW_HR2C, FFTW_ESTIMATE);
+  fftwf_plan plan = fftwf_plan_r2r_1d(onStationFilterSize, fftInData, fftOutData, FFTW_R2HC, FFTW_ESTIMATE);
   fftwf_execute(plan);
   fftwf_destroy_plan(plan);
 
