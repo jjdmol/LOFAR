@@ -4,6 +4,7 @@ add_executable(packetanalysis packetanalysis.c)
 
 install(PROGRAMS 
   killOLAP
+  swlevel
   BlueGeneControl.sh
   packetanalysis
   startOLAP.py
