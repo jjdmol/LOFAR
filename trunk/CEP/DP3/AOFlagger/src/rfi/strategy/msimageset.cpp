@@ -26,7 +26,7 @@
 namespace rfiStrategy {
 
 	MSImageSet::MSImageSet(std::string location) : _set(location), _imager(0),
-		_imageKind(TimeFrequencyImager::Corrected),
+		_dataKind(CorrectedData),
 		_readDipoleAutoPolarisations(true),
 		_readDipoleCrossPolarisations(true),
 		_readStokesI(false),
@@ -111,7 +111,7 @@ namespace rfiStrategy {
 	{
 		if(_imager == 0 )
 			_imager = new TimeFrequencyImager(_set);
-		_imager->SetImageKind(_imageKind);
+		_imager->SetDataKind(_dataKind);
 		_imager->SetReadFlags(_readFlags);
 		_imager->SetReadData(true);
 		_imager->SetReadXX(_readDipoleAutoPolarisations);
@@ -185,9 +185,9 @@ namespace rfiStrategy {
 			_imager->SetReadData(false);
 			_imager->SetReadFlags(true);
 			_imager->Image(a1, a2, msIndex._band, startIndex, endIndex);
-			switch(destination.PolarisationType())
+			switch(destination.Polarisation())
 			{
-				case TimeFrequencyData::DipolePolarisation:
+				case DipolePolarisation:
 					if(_readStokesI)
 						destination.SetGlobalMask(_imager->FlagStokesI());
 					else if(_readDipoleAutoPolarisations && _readDipoleCrossPolarisations)
@@ -195,19 +195,19 @@ namespace rfiStrategy {
 					else
 						throw BadUsageException("Loading flagging for a time frequency data with uncommon polarisation... Not yet implemented...");
 					break;
-				case TimeFrequencyData::StokesI:
+				case StokesIPolarisation:
 					if(_readStokesI)
 						destination.SetGlobalMask(_imager->FlagStokesI());
 					else
 						throw BadUsageException("Incorrect settings for flag reading");
 					break;
-				case TimeFrequencyData::AutoDipolePolarisation:
-				case TimeFrequencyData::CrossDipolePolarisation:
-				case TimeFrequencyData::SinglePolarisation:
-				case TimeFrequencyData::XX:
-				case TimeFrequencyData::XY:
-				case TimeFrequencyData::YX:
-				case TimeFrequencyData::YY:
+				case AutoDipolePolarisation:
+				case CrossDipolePolarisation:
+				case SinglePolarisation:
+				case XXPolarisation:
+				case XYPolarisation:
+				case YXPolarisation:
+				case YYPolarisation:
 					throw BadUsageException("Loading flagging for a time frequency data with uncommon polarisation... Not yet implemented...");
 					break;
 			}
@@ -279,10 +279,10 @@ namespace rfiStrategy {
 
 			Mask2DCPtr xx, xy, yx, yy;
 
-			xx = data.GetMask(TimeFrequencyData::XX);
-			yy = data.GetMask(TimeFrequencyData::YY);
+			xx = data.GetMask(XXPolarisation);
+			yy = data.GetMask(YYPolarisation);
 
-			if(data.PolarisationType() == TimeFrequencyData::AutoDipolePolarisation)
+			if(data.Polarisation() == AutoDipolePolarisation)
 			{
 				Mask2DPtr joined = Mask2D::CreateCopy(xx);
 				joined->Join(yy);
@@ -290,8 +290,8 @@ namespace rfiStrategy {
 				yx = joined;
 			} else
 			{
-				xy = data.GetMask(TimeFrequencyData::XY);
-				yx = data.GetMask(TimeFrequencyData::YX);
+				xy = data.GetMask(XYPolarisation);
+				yx = data.GetMask(YXPolarisation);
 			}
 
 			std::cout << "Writing flags: "

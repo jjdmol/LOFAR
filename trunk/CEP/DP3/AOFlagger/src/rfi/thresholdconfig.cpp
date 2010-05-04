@@ -297,9 +297,9 @@ long double ThresholdConfig::CalculateFalseAlarmRate(size_t resolution, enum Dis
 	{
 		TimeFrequencyData *data;
 		if(_fitMethod->PhaseRepresentation() == TimeFrequencyData::ComplexRepresentation) { 
-			data = new TimeFrequencyData(TimeFrequencyData::SinglePolarisation, image, image);
+			data = new TimeFrequencyData(SinglePolarisation, image, image);
 		} else
-			data = new TimeFrequencyData(TimeFrequencyData::AmplitudePart, TimeFrequencyData::SinglePolarisation, image);
+			data = new TimeFrequencyData(TimeFrequencyData::AmplitudePart, SinglePolarisation, image);
 		data->SetGlobalMask(mask);
 		_fitMethod->Initialize(*data);
 		for(unsigned i=0;i<_fitMethod->TaskCount();++i)

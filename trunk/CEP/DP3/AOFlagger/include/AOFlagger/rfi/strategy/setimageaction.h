@@ -86,7 +86,7 @@ namespace rfiStrategy {
 						TimeFrequencyData *phaseData =
 							artifacts.OriginalData().CreateTFData(artifacts.ContaminatedData().PhaseRepresentation());
 						TimeFrequencyData *phaseAndPolData =
-							phaseData->CreateTFData(artifacts.ContaminatedData().PolarisationType());
+							phaseData->CreateTFData(artifacts.ContaminatedData().Polarisation());
 						delete phaseData;
 						phaseAndPolData->SetMaskFrom(artifacts.ContaminatedData());
 						artifacts.SetContaminatedData(*phaseAndPolData);
@@ -97,7 +97,7 @@ namespace rfiStrategy {
 					{
 						Image2DPtr zero =
 							Image2D::CreateEmptyImagePtr(artifacts.ContaminatedData().ImageWidth(), artifacts.ContaminatedData().ImageHeight());
-						TimeFrequencyData data(artifacts.ContaminatedData().PhaseRepresentation(), artifacts.ContaminatedData().PolarisationType(), zero);
+						TimeFrequencyData data(artifacts.ContaminatedData().PhaseRepresentation(), artifacts.ContaminatedData().Polarisation(), zero);
 						data.SetMaskFrom(artifacts.ContaminatedData());
 						artifacts.SetContaminatedData(data);
 						break;
@@ -114,7 +114,7 @@ namespace rfiStrategy {
 						TimeFrequencyData *phaseData =
 							artifacts.OriginalData().CreateTFData(artifacts.RevisedData().PhaseRepresentation());
 						TimeFrequencyData *phaseAndPolData =
-							phaseData->CreateTFData(artifacts.RevisedData().PolarisationType());
+							phaseData->CreateTFData(artifacts.RevisedData().Polarisation());
 						delete phaseData;
 						TimeFrequencyData *summedData =
 							TimeFrequencyData::CreateTFDataFromSum(*phaseAndPolData, artifacts.RevisedData());

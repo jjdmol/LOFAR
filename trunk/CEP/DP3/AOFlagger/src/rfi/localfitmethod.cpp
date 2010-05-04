@@ -47,7 +47,7 @@ void LocalFitMethod::Initialize(const TimeFrequencyData &input)
 	_background2D = Image2D::CreateEmptyImagePtr(_original->Width(), _original->Height());
 	if(_background!=0)
 		delete _background;
-	_background = new TimeFrequencyData(input.PhaseRepresentation(), input.PolarisationType(), _background2D);
+	_background = new TimeFrequencyData(input.PhaseRepresentation(), input.Polarisation(), _background2D);
 	_mask = input.GetSingleMask();
 	if(_hSquareSize * 2 > _original->Width())
 		_hSquareSize = _original->Width()/2;

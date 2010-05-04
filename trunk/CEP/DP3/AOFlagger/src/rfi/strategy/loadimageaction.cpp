@@ -58,7 +58,7 @@ namespace rfiStrategy {
 					msImageSet->SetReadStokesI();
 					break;
 			}
-			msImageSet->SetImageKind(_imageKind);
+			msImageSet->SetDataKind(_dataKind);
 			msImageSet->SetReadFlags(false);
 		}
 

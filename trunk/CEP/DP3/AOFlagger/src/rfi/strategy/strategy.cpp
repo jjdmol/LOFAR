@@ -271,7 +271,7 @@ namespace rfiStrategy {
 		}
 	}
 
-	void Strategy::SetDataKind(Strategy &strategy, enum TimeFrequencyImager::ImageKind kind)
+	void Strategy::SetDataKind(Strategy &strategy, enum DataKind kind)
 	{
 		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
 		while(!i.PastEnd())
@@ -279,13 +279,13 @@ namespace rfiStrategy {
 			if(i->Type() == LoadImageActionType)
 			{
 				LoadImageAction &action = static_cast<LoadImageAction&>(*i);
-				action.SetImageKind(kind);
+				action.SetDataKind(kind);
 			}
 			++i;
 		}
 	}
 
-	void Strategy::SetPolarisations(Strategy &strategy, enum TimeFrequencyData::PolarisationType type)
+	void Strategy::SetPolarisations(Strategy &strategy, enum PolarisationType type)
 	{
 		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
 		while(!i.PastEnd())
@@ -295,16 +295,16 @@ namespace rfiStrategy {
 				LoadImageAction &action = static_cast<LoadImageAction&>(*i);
 				switch(type)
 				{
-					case TimeFrequencyData::AutoDipolePolarisation: action.SetReadDipoleAutoPolarisations(); break;
-					case TimeFrequencyData::DipolePolarisation: action.SetReadAllPolarisations(); break;
-					case TimeFrequencyData::StokesI: action.SetReadStokesI(); break;
+					case AutoDipolePolarisation: action.SetReadDipoleAutoPolarisations(); break;
+					case DipolePolarisation: action.SetReadAllPolarisations(); break;
+					case StokesIPolarisation: action.SetReadStokesI(); break;
 				}
 			}
 			++i;
 		}
 	}
 
-	void Strategy::SetBaselines(Strategy &strategy, enum ForEachBaselineAction::BaselineSelection baselineSelection)
+	void Strategy::SetBaselines(Strategy &strategy, enum BaselineSelection baselineSelection)
 	{
 		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
 		while(!i.PastEnd())

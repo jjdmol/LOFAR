@@ -157,7 +157,7 @@ void SVDMitigater::Compose()
 	}
 	if(_background != 0)
 		delete _background;
-	_background = new TimeFrequencyData(TimeFrequencyData::SinglePolarisation, real, imaginary);
+	_background = new TimeFrequencyData(SinglePolarisation, real, imaginary);
 	if(_verbose)
 		std::cout << watch.ToString() << std::endl;
 }

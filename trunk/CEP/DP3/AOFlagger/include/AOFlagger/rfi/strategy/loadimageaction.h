@@ -30,7 +30,7 @@ namespace rfiStrategy {
 	class LoadImageAction : public Action
 	{
 		public:
-			LoadImageAction() : _imageKind(TimeFrequencyImager::Observed), _polarisations(ReadAllPol) 
+			LoadImageAction() : _dataKind(ObservedData), _polarisations(ReadAllPol) 
 			{
 			}
 			virtual std::string Description()
@@ -56,10 +56,10 @@ namespace rfiStrategy {
 			bool ReadDipoleAutoPolarisations() const { return _polarisations == ReadAutoPol; }
 			bool ReadStokesI() const { return _polarisations == ReadSI; }
 
-			TimeFrequencyImager::ImageKind ImageKind() const { return _imageKind; }
-			void SetImageKind(TimeFrequencyImager::ImageKind imageKind) { _imageKind = imageKind; }
+			enum DataKind DataKind() const { return _dataKind; }
+			void SetDataKind(enum DataKind dataKind) { _dataKind = dataKind; }
 		private:
-			TimeFrequencyImager::ImageKind _imageKind;
+			enum DataKind _dataKind;
 			enum Polarisations { ReadAllPol, ReadAutoPol, ReadSI }
 				_polarisations;
 	};

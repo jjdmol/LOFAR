@@ -18,6 +18,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#ifndef MSIO_TYPES
+#define MSIO_TYPES
+
 class AntennaInfo;
 class BandInfo;
 class FieldInfo;
@@ -27,9 +30,16 @@ class FitsFile;
 
 typedef double num_t;
 
+enum DataKind { ObservedData, CorrectedData, ResidualData, ModelData, WeightData };
+
+enum PolarisationType { SinglePolarisation, DipolePolarisation, AutoDipolePolarisation, CrossDipolePolarisation, StokesIPolarisation, XXPolarisation, XYPolarisation, YXPolarisation, YYPolarisation };
+
+
 #define sqrtn(X) sqrt(X)
 #define expn(X) exp(X)
 #define logn(X) log(X)
 #define sinn(X) sin(X)
 #define cosn(X) cos(X)
 #define tann(X) tan(X)
+
+#endif // MSIO_TYPES

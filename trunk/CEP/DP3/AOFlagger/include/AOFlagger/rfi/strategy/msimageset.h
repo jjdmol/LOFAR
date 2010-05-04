@@ -72,7 +72,7 @@ namespace rfiStrategy {
 			{
 				MSImageSet *newSet = new MSImageSet(_set.Location());
 				newSet->_imager = 0;
-				newSet->_imageKind = _imageKind;
+				newSet->_dataKind = _dataKind;
 				newSet->_readDipoleAutoPolarisations = _readDipoleAutoPolarisations;
 				newSet->_readDipoleCrossPolarisations = _readDipoleCrossPolarisations;
 				newSet->_readStokesI = _readStokesI;
@@ -115,7 +115,7 @@ namespace rfiStrategy {
 				return index;
 			}
 			
-			void SetImageKind(TimeFrequencyImager::ImageKind imageKind) { _imageKind = imageKind; }
+			void SetDataKind(DataKind dataKind) { _dataKind = dataKind; }
 			void SetReadAllPolarisations() throw()
 			{
 				_readDipoleAutoPolarisations = true;
@@ -167,7 +167,7 @@ namespace rfiStrategy {
 
 			MeasurementSet _set;
 			TimeFrequencyImager *_imager;
-			TimeFrequencyImager::ImageKind _imageKind;
+			DataKind _dataKind;
 			bool _readDipoleAutoPolarisations, _readDipoleCrossPolarisations, _readStokesI;
 			std::vector<std::pair<size_t,size_t> > _baselines;
 			size_t _bandCount;

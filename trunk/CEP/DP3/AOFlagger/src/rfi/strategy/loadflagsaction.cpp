@@ -42,18 +42,18 @@ namespace rfiStrategy {
 		if(msImageSet != 0)
 		{
 			msImageSet->SetReadFlags(true);
-			switch(artifacts.RevisedData().PolarisationType())
+			switch(artifacts.RevisedData().Polarisation())
 			{
-				case TimeFrequencyData::DipolePolarisation:
+				case DipolePolarisation:
 					msImageSet->SetReadAllPolarisations();
 					break;
-				case TimeFrequencyData::StokesI:
+				case StokesIPolarisation:
 					msImageSet->SetReadStokesI();
 					break;
-				case TimeFrequencyData::AutoDipolePolarisation:
+				case AutoDipolePolarisation:
 					msImageSet->SetReadDipoleAutoPolarisations();
 					break;
-				case TimeFrequencyData::CrossDipolePolarisation:
+				case CrossDipolePolarisation:
 				default:
 					throw BadUsageException("Unimplemented polarisation type for reading flags");
 					break;
