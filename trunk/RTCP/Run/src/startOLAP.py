@@ -1,14 +1,33 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 from LOFAR import Logger
 from LOFAR.Logger import debug,info,warning,error,fatal
 from LOFAR import Sections
 from util import Commands
 from LOFAR.Locations import Locations
+from LOFAR.CommandClient import sendCommand
 from util.Hosts import ropen,rmkdir,rexists,runlink,rsymlink
 import sys
+import signal
+from threading import Lock
 
 DRYRUN = False
+
+aborted = False
+lock = Lock()
+lock.acquire()
+
+# translate signals to KeyboardInterrupts to catch them in a try block
+def sigHandler( sig, frame ):
+  global aborted
+
+  fatal( "Caught signal %s -- aborting" % (sig,) )
+  aborted = True
+  lock.release()
+
+signal.signal( signal.SIGTERM, sigHandler )
+signal.signal( signal.SIGQUIT, sigHandler )
+signal.signal( signal.SIGINT, sigHandler )
 
 def runCorrelator( partition, start_cnproc = True, start_ionproc = True ):
   """ Run an observation using the provided parsets. """
@@ -31,10 +50,18 @@ def runCorrelator( partition, start_cnproc = True, start_ionproc = True ):
     sections.run()
 
     # wait for all sections to complete
-    sections.wait()
-  except KeyboardInterrupt:
-    # abort all sections
-    sections.abort()
+    sections.wait( lock )
+
+    if aborted:
+      raise "aborted"
+
+  except:
+    try:
+      # soft abort -- wait for all observations to stop
+      sendCommand( partition, "quit" )
+    except: 
+      # hard abort -- kill all sections
+      sections.abort()
 
   # let the sections clean up 
   sections.postProcess()
