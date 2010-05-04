@@ -10,12 +10,13 @@ from util.Hosts import ropen,rmkdir,rexists,runlink,rsymlink
 import sys
 import signal
 from threading import Lock
+import thread
 
 DRYRUN = False
 
 aborted = False
 lock = Lock()
-lock.acquire()
+lock.acquire() # lock can be released by anyone to signal the end of the run
 
 # translate signals to KeyboardInterrupts to catch them in a try block
 def sigHandler( sig, frame ):
@@ -23,7 +24,11 @@ def sigHandler( sig, frame ):
 
   fatal( "Caught signal %s -- aborting" % (sig,) )
   aborted = True
-  lock.release()
+
+  try:
+    lock.release()
+  except thread.error:
+    pass
 
 signal.signal( signal.SIGTERM, sigHandler )
 signal.signal( signal.SIGQUIT, sigHandler )
@@ -221,5 +226,3 @@ if __name__ == "__main__":
   runCorrelator( options.partition, not options.nocnproc, not options.noionproc )
 
   info( "========== Done ==========" )
-
-
