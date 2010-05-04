@@ -756,7 +756,7 @@ bool	TreeMaintenance::saveNode    (OTDBnode&			aNode)
 		}
 		// execute the insert action
 		result res = xAction.exec(
-			 formatString("SELECT updateVTnode(%d,%d,%d,%d::int2,'%s'::text)",
+			 formatlString("SELECT updateVTnode(%d,%d,%d,%d::int2,'%s'::text)",
 							itsConn->getAuthToken(),
 							aNode.treeID(),
 							aNode.nodeID(),

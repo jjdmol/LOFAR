@@ -71,13 +71,30 @@ vector<string> StringUtil::split(const string& s, char c)
   }
 
 //
-// formatString(format, ...) --> string
+// formatString(format, ...) --> string up to 10Kb
 //
 // Define a global function the accepts printf like arguments and returns 
 // a string.
 //
 const string formatString(const	char* format, ...) {
 	char		tmp_cstring[10240];
+	va_list		ap;
+
+	va_start (ap, format);
+	vsnprintf(tmp_cstring, sizeof(tmp_cstring), format, ap);
+	va_end   (ap);
+
+	return   string(tmp_cstring);
+}
+
+//
+// formatlString(format, ...) --> string up to 100Kb
+//
+// Define a global function the accepts printf like arguments and returns 
+// a string.
+//
+const string formatlString(const	char* format, ...) {
+	char		tmp_cstring[102400];
 	va_list		ap;
 
 	va_start (ap, format);

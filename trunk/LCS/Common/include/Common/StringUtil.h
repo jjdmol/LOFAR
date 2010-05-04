@@ -96,13 +96,15 @@ namespace LOFAR
   } // namespace StringUtil
 
 //
-// formatString(format, ...) --> string
+// formatString(format, ...) --> string up to 10Kb
+// formatlString(format, ...) --> string up to 100Kb
 //
 // The function formatString accepts printf-like arguments and returns a
 // formatted string. It can be used e.g. in cout constructions:
 // cout << formatString("Opening connection with host %%s", hostName);
 //# In real life this must be %s ofcourse but doxygen need a double %%.
 const string formatString(const char* format, ...);
+const string formatlString(const char* format, ...);
 
 //
 // timeString(aTime [, gmt, format]) --> string
