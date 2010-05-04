@@ -113,9 +113,11 @@ void performStationFFT() {
   fftwf_destroy_plan(plan);
 
 #elif defined HAVE_FFTW2
-  // Do the inverse FFT. NB: this call destoys the input data.
+/// @@@ NOT CORRECT YET
   rfftw_one(itsPlan, (fftw_real*) itsFftInData, (fftw_real*) itsFftOutData);
 #endif
+
+  // TODO, put data in the right order, go from half complex to normal format
 
 }
 
