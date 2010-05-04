@@ -1,0 +1,8 @@
+# This is test input for tmakesourcedb
+ #
+
+#name,   type,    Ra,   Dec, I, Q, U, V, Spectralindex, Major, Minor, Phi
+ FORMAT = , 
+
+sun,      sun,      ,      ,10, '0', '0', '0.'
+cygnus, point, 23deg, 45deg, 2, '0', '0', '0'
