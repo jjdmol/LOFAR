@@ -129,14 +129,14 @@ class MSWindow : public Gtk::Window {
 		void onShowRealPressed() { showPhasePart(TimeFrequencyData::RealPart); }
 		void onShowImaginaryPressed() { showPhasePart(TimeFrequencyData::ImaginaryPart); }
 		void onShowPhasePressed() { showPhasePart(TimeFrequencyData::PhasePart); }
-		void showPolarisation(enum TimeFrequencyData::PolarisationType polarisation);
-		void onShowStokesIPressed() { showPolarisation(TimeFrequencyData::StokesI); }
-		void onShowAutoDipolePressed() { showPolarisation(TimeFrequencyData::AutoDipolePolarisation); }
-		void onShowCrossDipolePressed() { showPolarisation(TimeFrequencyData::CrossDipolePolarisation); }
-		void onShowXXPressed() { showPolarisation(TimeFrequencyData::XX); }
-		void onShowXYPressed() { showPolarisation(TimeFrequencyData::XY); }
-		void onShowYXPressed() { showPolarisation(TimeFrequencyData::YX); }
-		void onShowYYPressed() { showPolarisation(TimeFrequencyData::YY); }
+		void showPolarisation(enum PolarisationType polarisation);
+		void onShowStokesIPressed() { showPolarisation(StokesIPolarisation); }
+		void onShowAutoDipolePressed() { showPolarisation(AutoDipolePolarisation); }
+		void onShowCrossDipolePressed() { showPolarisation(CrossDipolePolarisation); }
+		void onShowXXPressed() { showPolarisation(XXPolarisation); }
+		void onShowXYPressed() { showPolarisation(XYPolarisation); }
+		void onShowYXPressed() { showPolarisation(YXPolarisation); }
+		void onShowYYPressed() { showPolarisation(YYPolarisation); }
 		void onZoomPressed();
 		void onOpenTestSetNoise() { openTestSet(2); }
 		void onOpenTestSetA() { openTestSet(3); }

@@ -52,14 +52,14 @@ namespace rfiStrategy {
 					oldRevisedData = artifacts.RevisedData(),
 					oldOriginalData = artifacts.OriginalData();
 
-				switch(artifacts.ContaminatedData().PolarisationType())
+				switch(artifacts.ContaminatedData().Polarisation())
 				{
-					case TimeFrequencyData::SinglePolarisation:
-					case TimeFrequencyData::XX:
-					case TimeFrequencyData::XY:
-					case TimeFrequencyData::YX:
-					case TimeFrequencyData::YY:
-					case TimeFrequencyData::StokesI:
+					case SinglePolarisation:
+					case XXPolarisation:
+					case XYPolarisation:
+					case YXPolarisation:
+					case YYPolarisation:
+					case StokesIPolarisation:
 					{
 						// There is only one polarisation in the contaminated data; just run all childs
 						progress.OnStartTask(0, 1, "For each polarisation (single polarisation)");
@@ -67,12 +67,12 @@ namespace rfiStrategy {
 						progress.OnEndTask();
 					}
 					break;
-					case TimeFrequencyData::AutoDipolePolarisation:
+					case AutoDipolePolarisation:
 					{
-						bool changeBoth = (artifacts.RevisedData().PolarisationType() == artifacts.ContaminatedData().PolarisationType());
+						bool changeBoth = (artifacts.RevisedData().Polarisation() == artifacts.ContaminatedData().Polarisation());
 
 						progress.OnStartTask(0, 2, "XX polarisation");
-						performPolarisation(artifacts, progress, TimeFrequencyData::XX, changeBoth);
+						performPolarisation(artifacts, progress, XXPolarisation, changeBoth);
 						TimeFrequencyData
 							contaminatedXX = artifacts.ContaminatedData(),
 							revisedXX = artifacts.RevisedData(),
@@ -83,7 +83,7 @@ namespace rfiStrategy {
 						progress.OnEndTask();
 
 						progress.OnStartTask(1, 2, "YY polarisation");
-						performPolarisation(artifacts, progress, TimeFrequencyData::YY, changeBoth);
+						performPolarisation(artifacts, progress, YYPolarisation, changeBoth);
 						TimeFrequencyData
 							contaminatedYY = artifacts.ContaminatedData(),
 							revisedYY = artifacts.RevisedData(),
@@ -112,12 +112,12 @@ namespace rfiStrategy {
 						delete newTF;
 					}
 					break;
-					case TimeFrequencyData::CrossDipolePolarisation:
+					case CrossDipolePolarisation:
 					{
-						bool changeBoth = (artifacts.RevisedData().PolarisationType() == artifacts.ContaminatedData().PolarisationType());
+						bool changeBoth = (artifacts.RevisedData().Polarisation() == artifacts.ContaminatedData().Polarisation());
 
 						progress.OnStartTask(0, 2, "XY polarisation");
-						performPolarisation(artifacts, progress, TimeFrequencyData::XY, changeBoth);
+						performPolarisation(artifacts, progress, XYPolarisation, changeBoth);
 						TimeFrequencyData
 							contaminatedXY = artifacts.ContaminatedData(),
 							revisedXY = artifacts.RevisedData(),
@@ -128,7 +128,7 @@ namespace rfiStrategy {
 						progress.OnEndTask();
 
 						progress.OnStartTask(1, 2, "YX polarisation");
-						performPolarisation(artifacts, progress, TimeFrequencyData::YX, changeBoth);
+						performPolarisation(artifacts, progress, YXPolarisation, changeBoth);
 						TimeFrequencyData
 							contaminatedYX = artifacts.ContaminatedData(),
 							revisedYX = artifacts.RevisedData(),
@@ -157,12 +157,12 @@ namespace rfiStrategy {
 						delete newTF;
 					}
 					break;
-					case TimeFrequencyData::DipolePolarisation:
+					case DipolePolarisation:
 					{
-						bool changeBoth = (artifacts.RevisedData().PolarisationType() == artifacts.ContaminatedData().PolarisationType());
+						bool changeBoth = (artifacts.RevisedData().Polarisation() == artifacts.ContaminatedData().Polarisation());
 
 						progress.OnStartTask(0, 4, "XX polarisation");
-						performPolarisation(artifacts, progress, TimeFrequencyData::XX, changeBoth);
+						performPolarisation(artifacts, progress, XXPolarisation, changeBoth);
 						TimeFrequencyData
 							contaminatedXX = artifacts.ContaminatedData(),
 							revisedXX = artifacts.RevisedData(),
@@ -173,7 +173,7 @@ namespace rfiStrategy {
 						progress.OnEndTask();
 
 						progress.OnStartTask(1, 4, "XY polarisation");
-						performPolarisation(artifacts, progress, TimeFrequencyData::XY, changeBoth);
+						performPolarisation(artifacts, progress, XYPolarisation, changeBoth);
 						TimeFrequencyData
 							contaminatedXY = artifacts.ContaminatedData(),
 							revisedXY = artifacts.RevisedData(),
@@ -184,7 +184,7 @@ namespace rfiStrategy {
 						progress.OnEndTask();
 
 						progress.OnStartTask(2, 4, "YX polarisation");
-						performPolarisation(artifacts, progress, TimeFrequencyData::YX, changeBoth);
+						performPolarisation(artifacts, progress, YXPolarisation, changeBoth);
 						TimeFrequencyData
 							contaminatedYX = artifacts.ContaminatedData(),
 							revisedYX = artifacts.RevisedData(),
@@ -195,7 +195,7 @@ namespace rfiStrategy {
 						progress.OnEndTask();
 
 						progress.OnStartTask(3, 4, "YY polarisation");
-						performPolarisation(artifacts, progress, TimeFrequencyData::YY, changeBoth);
+						performPolarisation(artifacts, progress, YYPolarisation, changeBoth);
 						TimeFrequencyData
 							contaminatedYY = artifacts.ContaminatedData(),
 							revisedYY = artifacts.RevisedData(),
@@ -227,7 +227,7 @@ namespace rfiStrategy {
 				}
 			}
 		private:
-			void performPolarisation(ArtifactSet &artifacts, ProgressListener &progress, enum TimeFrequencyData::PolarisationType polarisation, bool changeBoth)
+			void performPolarisation(ArtifactSet &artifacts, ProgressListener &progress, enum PolarisationType polarisation, bool changeBoth)
 			{
 				TimeFrequencyData *newContaminatedData =
 					artifacts.ContaminatedData().CreateTFData(polarisation);

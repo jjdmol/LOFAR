@@ -71,17 +71,17 @@ class LoadImageFrame : public Gtk::Frame {
 			_box.pack_start(_dataKindFrame);
 			_dataKindFrame.show();
 
-			switch(_action.ImageKind())
+			switch(_action.DataKind())
 			{
-				case TimeFrequencyImager::Observed:
+				case ObservedData:
 					_observedDataButton.set_active(true); break;
-				case TimeFrequencyImager::Corrected:
+				case CorrectedData:
 					_correctedDataButton.set_active(true); break;
-				case TimeFrequencyImager::Model:
+				case ModelData:
 					_modelDataButton.set_active(true); break;
-				case TimeFrequencyImager::Residual:
+				case ResidualData:
 					_residualDataButton.set_active(true); break;
-				case TimeFrequencyImager::Weight:
+				case WeightData:
 					_weightsButton.set_active(true); break;
 			}
 
@@ -147,15 +147,15 @@ class LoadImageFrame : public Gtk::Frame {
 				_action.SetReadStokesI();
 
 			if(_observedDataButton.get_active())
-				_action.SetImageKind(TimeFrequencyImager::Observed);
+				_action.SetDataKind(ObservedData);
 			else if(_correctedDataButton.get_active())
-				_action.SetImageKind(TimeFrequencyImager::Corrected);
+				_action.SetDataKind(CorrectedData);
 			else if(_modelDataButton.get_active())
-				_action.SetImageKind(TimeFrequencyImager::Model);
+				_action.SetDataKind(ModelData);
 			else if(_residualDataButton.get_active())
-				_action.SetImageKind(TimeFrequencyImager::Residual);
+				_action.SetDataKind(ResidualData);
 			else if(_weightsButton.get_active())
-				_action.SetImageKind(TimeFrequencyImager::Weight);
+				_action.SetDataKind(WeightData);
 
 			_editStrategyWindow.UpdateAction(&_action);
 		}

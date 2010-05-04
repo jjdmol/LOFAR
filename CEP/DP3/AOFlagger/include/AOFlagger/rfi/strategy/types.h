@@ -35,6 +35,11 @@ namespace rfiStrategy
 	class IterationBlock;
 	class MSImageSet;
 	class Strategy;
+
+	enum BaselineSelection
+	{
+		All, CrossCorrelations, AutoCorrelations, EqualToCurrent, AutoCorrelationsOfCurrentAntennae, Current
+	};
 }
 
 #endif // RFI_STRATEGY_TYPES

@@ -55,7 +55,7 @@ class PlotFrame : public Gtk::HBox {
 		size_t _selectedXEnd, _selectedYEnd;
 
 		void plot();
-		void plotTimeGraph(const TimeFrequencyData &data, const std::string &label, enum TimeFrequencyData::PolarisationType polarisation);
+		void plotTimeGraph(const TimeFrequencyData &data, const std::string &label, enum PolarisationType polarisation);
 		void plotTimeGraph(const TimeFrequencyData &data, const std::string &label);
 };
 

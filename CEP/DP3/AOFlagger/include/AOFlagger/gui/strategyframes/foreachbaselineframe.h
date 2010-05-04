@@ -73,22 +73,22 @@ class ForEachBaselineFrame : public Gtk::Frame {
 
 			switch(_action.Selection())
 			{
-				case rfiStrategy::ForEachBaselineAction::All:
+				case rfiStrategy::All:
 				_allBaselinesButton.set_active(true);
 					break;
-				case rfiStrategy::ForEachBaselineAction::CrossCorrelations:
+				case rfiStrategy::CrossCorrelations:
 				_crossBaselinesButton.set_active(true);
 					break;
-				case rfiStrategy::ForEachBaselineAction::AutoCorrelations:
+				case rfiStrategy::AutoCorrelations:
 				_autoBaselinesButton.set_active(true);
 					break;
-				case rfiStrategy::ForEachBaselineAction::EqualToCurrent:
+				case rfiStrategy::EqualToCurrent:
 				_equalToCurrentBaselinesButton.set_active(true);
 					break;
-				case rfiStrategy::ForEachBaselineAction::AutoCorrelationsOfCurrentAntennae:
+				case rfiStrategy::AutoCorrelationsOfCurrentAntennae:
 				_autoOfCurrentBaselinesButton.set_active(true);
 					break;
-				case rfiStrategy::ForEachBaselineAction::Current:
+				case rfiStrategy::Current:
 				_currentBaselineButton.set_active(true);
 					break;
 			}
@@ -133,17 +133,17 @@ class ForEachBaselineFrame : public Gtk::Frame {
 		void onApplyClicked()
 		{
 			if(_allBaselinesButton.get_active())
-				_action.SetSelection(rfiStrategy::ForEachBaselineAction::All);
+				_action.SetSelection(rfiStrategy::All);
 			else if(_crossBaselinesButton.get_active())
-				_action.SetSelection(rfiStrategy::ForEachBaselineAction::CrossCorrelations);
+				_action.SetSelection(rfiStrategy::CrossCorrelations);
 			else if(_autoBaselinesButton.get_active())
-				_action.SetSelection(rfiStrategy::ForEachBaselineAction::AutoCorrelations);
+				_action.SetSelection(rfiStrategy::AutoCorrelations);
 			else if(_equalToCurrentBaselinesButton.get_active())
-				_action.SetSelection(rfiStrategy::ForEachBaselineAction::EqualToCurrent);
+				_action.SetSelection(rfiStrategy::EqualToCurrent);
 			else if(_autoOfCurrentBaselinesButton.get_active())
-				_action.SetSelection(rfiStrategy::ForEachBaselineAction::AutoCorrelationsOfCurrentAntennae);
+				_action.SetSelection(rfiStrategy::AutoCorrelationsOfCurrentAntennae);
 			else if(_currentBaselineButton.get_active())
-				_action.SetSelection(rfiStrategy::ForEachBaselineAction::Current);
+				_action.SetSelection(rfiStrategy::Current);
 			_action.SetThreadCount((int) _threadCountScale.get_value());
 			_editStrategyWindow.UpdateAction(&_action);
 		}

@@ -47,9 +47,9 @@ namespace rfiStrategy {
 			static Strategy *CreateDefaultSingleStrategy();
 
 			static void SetThreadCount(Strategy &strategy, size_t threadCount);
-			static void SetDataKind(Strategy &strategy, enum TimeFrequencyImager::ImageKind kind);
-			static void SetPolarisations(Strategy &strategy, enum TimeFrequencyData::PolarisationType type);
-			static void SetBaselines(Strategy &strategy, enum ForEachBaselineAction::BaselineSelection baselineSelection);
+			static void SetDataKind(Strategy &strategy, enum DataKind kind);
+			static void SetPolarisations(Strategy &strategy, enum PolarisationType type);
+			static void SetBaselines(Strategy &strategy, enum BaselineSelection baselineSelection);
 			static void SetTransientCompatibility(Strategy &strategy);
 			static void SetMultiplySensitivity(Strategy &strategy, num_t factor);
 			static void SetFittingWindowSize(Strategy &strategy, size_t windowWidth, size_t windowHeight);

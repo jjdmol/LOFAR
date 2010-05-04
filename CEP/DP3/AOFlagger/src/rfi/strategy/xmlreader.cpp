@@ -237,7 +237,7 @@ Action *XmlReader::parseCombineFlagResults(xmlNode *node)
 Action *XmlReader::parseForEachBaselineAction(xmlNode *node)
 {
 	ForEachBaselineAction *newAction = new ForEachBaselineAction();
-	newAction->SetSelection((ForEachBaselineAction::BaselineSelection) getInt(node, "selection"));
+	newAction->SetSelection((BaselineSelection) getInt(node, "selection"));
 	newAction->SetThreadCount(getInt(node, "thread-count"));
 	parseChildren(node, newAction);
 	return newAction;
@@ -318,7 +318,7 @@ class Action *XmlReader::parseLoadFlagsAction(xmlNode *node)
 class Action *XmlReader::parseLoadImageAction(xmlNode *node)
 {
 	LoadImageAction *newAction = new LoadImageAction();
-	newAction->SetImageKind((enum TimeFrequencyImager::ImageKind) getInt(node, "image-kind"));
+	newAction->SetDataKind((enum DataKind) getInt(node, "image-kind"));
 	if(getBool(node, "read-all-polarisations"))
 		newAction->SetReadAllPolarisations();
 	if(getBool(node, "read-dipole-auto-polarisations"))

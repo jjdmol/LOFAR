@@ -150,7 +150,7 @@ TimeFrequencyData TiledImage::Background()
 			}
 		}
 	}
-	return TimeFrequencyData(_data.PhaseRepresentation(), _data.PolarisationType(), _background);
+	return TimeFrequencyData(_data.PhaseRepresentation(), _data.Polarisation(), _background);
 }
 
 Mask2DPtr TiledImage::CreateFlagImage()

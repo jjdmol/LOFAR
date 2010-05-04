@@ -471,7 +471,7 @@ void MitigationTester::AddVarBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi)
 
 void MitigationTester::AddModelData(Image2DPtr image, unsigned sources)
 {
-	Model model;
+	class Model model;
 	if(sources>=5) {
 		model.AddSource(0.1,0.1,0.5);
 		model.AddSource(0.1,0.0,0.35);
@@ -498,7 +498,7 @@ void MitigationTester::SubtractBackground(Image2DPtr image)
 	Mask2DPtr zero = Mask2D::CreateSetMaskPtr<false>(image->Width(), image->Height());
 	LocalFitMethod fittedImage;
 	fittedImage.SetToWeightedAverage(20, 40, 7.5, 15.0);
-	TimeFrequencyData data(TimeFrequencyData::AmplitudePart, TimeFrequencyData::SinglePolarisation, image);
+	TimeFrequencyData data(TimeFrequencyData::AmplitudePart, SinglePolarisation, image);
 	data.SetGlobalMask(zero);
 	fittedImage.Initialize(data);
 	for(unsigned i=0;i<fittedImage.TaskCount();++i)

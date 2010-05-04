@@ -32,10 +32,6 @@ namespace rfiStrategy {
 	*/
 	class ForEachBaselineAction : public ActionBlock {
 		public:
-			enum BaselineSelection {
-				All, CrossCorrelations, AutoCorrelations, EqualToCurrent, AutoCorrelationsOfCurrentAntennae, Current
-			};
-
 			ForEachBaselineAction() : _threadCount(3), _selection(All), _hasInitAntennae(false), _resultSet(0), _exceptionOccured(false)
 			{
 			}

@@ -272,7 +272,7 @@ namespace rfiStrategy {
 	void XmlWriter::writeLoadImageAction(const LoadImageAction &action)
 	{
 		Attribute("type", "LoadImageAction");
-		Write<int>("image-kind", action.ImageKind());
+		Write<int>("image-kind", action.DataKind());
 		Write<bool>("read-all-polarisations", action.ReadAllPolarisations());
 		Write<bool>("read-dipole-auto-polarisations", action.ReadDipoleAutoPolarisations());
 		Write<bool>("read-stokes-i", action.ReadStokesI());

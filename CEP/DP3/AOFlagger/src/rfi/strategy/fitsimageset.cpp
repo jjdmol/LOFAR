@@ -205,7 +205,7 @@ namespace rfiStrategy {
 				imaginary->SetValue(i, f, valuesI[f][i]);
 			}
 		}
-		_data = new TimeFrequencyData(TimeFrequencyData::StokesI, real, imaginary);
+		_data = new TimeFrequencyData(StokesIPolarisation, real, imaginary);
 	}
 
 	void FitsImageSet::ReadTable()

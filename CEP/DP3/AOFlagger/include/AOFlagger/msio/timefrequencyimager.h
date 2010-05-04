@@ -32,7 +32,6 @@
 */
 class TimeFrequencyImager {
 	public:
-		enum ImageKind { Observed, Corrected, Residual, Model, Weight };
 		explicit TimeFrequencyImager(MeasurementSet &measurementSet);
 		~TimeFrequencyImager();
 		void Image(size_t antenna1Select, size_t antenna2Select, size_t spectralWindowSelect);
@@ -73,7 +72,7 @@ class TimeFrequencyImager {
 		void WriteNewFlags(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY);
 		void WriteNewFlags(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY, int antenna1, int antenna2, int spectralWindow);
 		void WriteNewFlagsPart(Mask2DCPtr newXX, Mask2DCPtr newXY, Mask2DCPtr newYX, Mask2DCPtr newYY, int antenna1, int antenna2, int spectralWindow, size_t timeOffset, size_t timeEnd, size_t leftBorder=0, size_t rightBorder=0);
-		void SetImageKind(enum ImageKind kind) { _imageKind = kind; }
+		void SetDataKind(enum DataKind kind) { _dataKind = kind; }
 
 		const class BandInfo &BandInfo() const { return _bandInfo; }
 
@@ -93,7 +92,7 @@ class TimeFrequencyImager {
 		static void setObservationTimes(MeasurementSet &set, std::map<double,size_t> &observationTimes);
 		void readUVWData();
 
-		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(ImageKind kind, class casa::Table &table);
+		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(DataKind kind, class casa::Table &table);
 		void ReadTimeData(size_t xOffset, int frequencyCount, const casa::Array<casa::Complex> data, const casa::Array<casa::Complex> *model);
 		void ReadTimeFlags(size_t xOffset, int frequencyCount, const casa::Array<bool> flag);
 		void ReadWeights(size_t xOffset, int frequencyCount, const casa::Array<float> weight);
@@ -120,7 +119,7 @@ class TimeFrequencyImager {
 		size_t _antenna1Select;
 		size_t _antenna2Select;
 		size_t _spectralWindowSelect;
-		enum ImageKind _imageKind;
+		enum DataKind _dataKind;
 		class BandInfo _bandInfo;
 		std::map<double,size_t> _observationTimes;
 		std::vector<class UVW> _uvw;
