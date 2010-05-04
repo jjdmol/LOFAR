@@ -3,11 +3,16 @@
 add_executable(packetanalysis packetanalysis.c)
 
 install(PROGRAMS 
+  killOLAP
   BlueGeneControl.sh
   packetanalysis
   startOLAP.py
   commandOLAP.py
   runParset.py
+  DESTINATION bin)
+
+install(FILES
+  OLAP.parset
   DESTINATION bin)
 
 add_subdirectory(LOFAR)
