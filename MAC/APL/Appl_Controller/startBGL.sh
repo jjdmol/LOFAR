@@ -19,7 +19,7 @@ sed -i 's/.*OLAP.CNProc.integrationSteps.*//' $PARSET
 sed -i 's/.*OLAP.IONProc.integrationSteps.*//' $PARSET
 
 # TODO: /opt/lofar/share is hardcoded in ApplController/lofarDirs.h
-Run/runOLAP.py parset=/opt/lofar/share/CNProc.parset >/globalhome/lofarsystem/log/run.runOLAP.py.log 2>&1 &
+Run/runParset.py parset=/opt/lofar/share/CNProc.parset >>/globalhome/lofarsystem/log/run.runParset.py.log 2>&1 &
 
 #echo "executing /usr/local/bin/submitjob $2 $3 $4 virtual_node_mode BGLMPI_SIZE=$6 ACC $5" > startBGL.output
 #/usr/local/bin/submitjob $2 $3 $4 virtual_node_mode BGLMPI_SIZE=$6 ACC $5 2>&1 | awk '{split($1, a, "="); print a[2];}' > $1.jobID
