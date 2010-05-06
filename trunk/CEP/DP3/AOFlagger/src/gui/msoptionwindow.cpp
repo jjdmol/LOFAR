@@ -158,15 +158,15 @@ void MSOptionWindow::onOpen()
 		{
 			rfiStrategy::MSImageSet *msImageSet = static_cast<rfiStrategy::MSImageSet*>(imageSet);
 			if(_observedDataButton.get_active())
-				msImageSet->SetImageKind(TimeFrequencyImager::Observed);
+				msImageSet->SetDataKind(ObservedData);
 			else if(_correctedDataButton.get_active())
-				msImageSet->SetImageKind(TimeFrequencyImager::Corrected);
+				msImageSet->SetDataKind(CorrectedData);
 			else if(_modelDataButton.get_active())
-				msImageSet->SetImageKind(TimeFrequencyImager::Model);
+				msImageSet->SetDataKind(ModelData);
 			else if(_residualDataButton.get_active())
-				msImageSet->SetImageKind(TimeFrequencyImager::Residual);
+				msImageSet->SetDataKind(ResidualData);
 			else if(_weightsButton.get_active())
-				msImageSet->SetImageKind(TimeFrequencyImager::Weight);
+				msImageSet->SetDataKind(WeightData);
 	
 			if(_allDipolePolarisationButton.get_active())
 				msImageSet->SetReadAllPolarisations();

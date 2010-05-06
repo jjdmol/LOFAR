@@ -892,14 +892,14 @@ class TimeFrequencyData
 		{
 			if(_flagCoverage == NoFlagCoverage)
 				data->SetNoMask();
-			else if(_flagCoverage == GlobalFlagCoverage)
+			else if(_flagCoverage == GlobalFlagCoverage || PolarisationCount()==1)
 				data->SetGlobalMask(_flagging[0]);
 			else if(_flagCoverage == IndividualPolarisationFlagCoverage)
 			{
-				if(PolarisationType() == DipolePolarisation && data->Polarisation() == DipolePolarisation)
+				if(Polarisation() == DipolePolarisation && data->Polarisation() == DipolePolarisation)
 					data->SetIndividualPolarisationMasks(_flagging[0], _flagging[1], _flagging[2], _flagging[3]);
-				else if((PolarisationType()==AutoDipolePolarisation && data->Polarisation() == AutoDipolePolarisation)
-					|| (PolarisationType()==CrossDipolePolarisation && data->Polarisation() == CrossDipolePolarisation))
+				else if((Polarisation()==AutoDipolePolarisation && data->Polarisation() == AutoDipolePolarisation)
+					|| (Polarisation()==CrossDipolePolarisation && data->Polarisation() == CrossDipolePolarisation))
 					data->SetIndividualPolarisationMasks(_flagging[0], _flagging[1]);
 				else
 					throw BadUsageException("Trying to copy flagging from dipole time frequency data to single polarisation time frequency data");

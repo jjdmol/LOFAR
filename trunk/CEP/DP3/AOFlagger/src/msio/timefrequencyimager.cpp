@@ -32,7 +32,7 @@
 TimeFrequencyImager::TimeFrequencyImager(MeasurementSet &measurementSet)
 	: _readData(true), _readFlags(false),
 		_readXX(true), _readXY(true), _readYX(true), _readYY(true), _readStokesI(false), _readStokesIDirectly(false),
-		_measurementSet(&measurementSet), _imageKind(Corrected), _sortedTable(0)
+		_measurementSet(&measurementSet), _dataKind(CorrectedData), _sortedTable(0)
 {
 }
 
@@ -227,10 +227,10 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 
 	casa::ROArrayColumn<casa::Complex> *dataColumn = 0;
 	if(_readData)
-		dataColumn = CreateDataColumn(_imageKind, table);
+		dataColumn = CreateDataColumn(_dataKind, table);
 
 	ROArrayColumnIterator<casa::Complex> *modelIter;
-	if(_imageKind == Residual) {
+	if(_dataKind == ResidualData) {
 		casa::ROArrayColumn<casa::Complex> *modelColumn;
 		modelColumn = new casa::ROArrayColumn<casa::Complex>(table, "MODEL_DATA");
 		modelIter = new ROArrayColumnIterator<casa::Complex>(ROArrayColumnIterator<casa::Complex>::First(*modelColumn));
@@ -255,7 +255,7 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 		size_t timeIndex = _observationTimes.find(time)->second;
 		bool timeIsSelected = timeIndex>=startIndex && timeIndex<endIndex;
 		if(_readData && timeIsSelected) {
-			if(_imageKind == Weight)
+			if(_dataKind == WeightData)
 				ReadWeights(timeIndex-startIndex, frequencyCount, *weightIter);
 			else if(modelIter == 0)
 				ReadTimeData(timeIndex-startIndex, frequencyCount, *dataIter, 0);
@@ -300,16 +300,16 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 		delete dataColumn;
 }
 
-casa::ROArrayColumn<casa::Complex> *TimeFrequencyImager::CreateDataColumn(ImageKind kind, casa::Table &table)
+casa::ROArrayColumn<casa::Complex> *TimeFrequencyImager::CreateDataColumn(DataKind kind, casa::Table &table)
 {
 	switch(kind) {
-		case Observed:
+		case ObservedData:
 		default:
 		return new casa::ROArrayColumn<casa::Complex>(table, "DATA");
-		case Corrected:
-		case Residual:
+		case CorrectedData:
+		case ResidualData:
 		return new casa::ROArrayColumn<casa::Complex>(table, "CORRECTED_DATA");
-		case Model:
+		case ModelData:
 		return new casa::ROArrayColumn<casa::Complex>(table, "MODEL_DATA");
 	}
 }
@@ -415,13 +415,13 @@ void TimeFrequencyImager::ReadTimeData(size_t xOffset, int frequencyCount, const
 {
 	casa::Array<casa::Complex>::const_iterator i = data.begin();
 	casa::Array<casa::Complex>::const_iterator m;
-	if(_imageKind == Residual)
+	if(_dataKind == ResidualData)
 		m = model->begin();
 
 	for(size_t f=0;f<(size_t) frequencyCount;++f) {
 		double xxr, xxi, xyr, xyi, yxr, yxi, yyr, yyi, ir, ii;
 
-		if(_imageKind == Residual) {
+		if(_dataKind == ResidualData) {
 			const casa::Complex &iData = *i;
 			const casa::Complex &iModel = *m;
 			if(_stokesIIndex >= 0) { ++i; ++m; }
@@ -603,16 +603,16 @@ TimeFrequencyData TimeFrequencyImager::GetData() const
 		_realXX != 0 && _imaginaryXX != 0 &&
 		_realYY != 0 && _imaginaryYY != 0)
 	{
-		data = TimeFrequencyData(TimeFrequencyData::AutoDipolePolarisation, _realXX, _imaginaryXX, _realYY, _imaginaryYY);
+		data = TimeFrequencyData(AutoDipolePolarisation, _realXX, _imaginaryXX, _realYY, _imaginaryYY);
 	} else if(_realStokesI != 0 && _imaginaryStokesI != 0)
 	{
-		data = TimeFrequencyData(TimeFrequencyData::StokesI, _realStokesI, _imaginaryStokesI);
+		data = TimeFrequencyData(StokesIPolarisation, _realStokesI, _imaginaryStokesI);
 	}
 
-	if(_flagXX != 0 && _flagXY != 0 && _flagYX != 0 && _flagYY != 0 && data.PolarisationType() == TimeFrequencyData::DipolePolarisation)
+	if(_flagXX != 0 && _flagXY != 0 && _flagYX != 0 && _flagYY != 0 && data.Polarisation() == DipolePolarisation)
 	{
 		data.SetIndividualPolarisationMasks(_flagXX, _flagXY, _flagYX, _flagYY);
-	} else if(_flagXX != 0 && _flagYY != 0 && data.PolarisationType() == TimeFrequencyData::AutoDipolePolarisation)
+	} else if(_flagXX != 0 && _flagYY != 0 && data.Polarisation() == AutoDipolePolarisation)
 	{
 		data.SetIndividualPolarisationMasks(_flagXX, _flagYY);
 	} else if(_flagCombined != 0)
