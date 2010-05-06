@@ -210,7 +210,7 @@ void Job::startStorageProcesses()
   itsStorageHostNames = itsParset.getStringVector("OLAP.OLAP_Conn.IONProc_Storage_ServerHosts");
 
   std::string userName   = itsParset.getString("OLAP.Storage.userName");
-  std::string sshKey     = std::string("/globalhome/") + userName + "/.ssh/id_rsa";
+  std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
   std::string executable = itsParset.getString("OLAP.Storage.msWriter");
   std::string parset     = itsParset.name();
 

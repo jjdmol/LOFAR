@@ -7,4 +7,4 @@
 #echo -n "Killing job " $2
 #killjob $1 `cat $2.jobID`
 #rm -f $2.pid $2.ps
-/opt/lofar/bin/Run/commandOLAP.py -P R00 cancel $2
+/opt/lofar/bin/commandOLAP.py -P R00 cancel $2
