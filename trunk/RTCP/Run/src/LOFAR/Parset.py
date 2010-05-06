@@ -9,6 +9,7 @@ import time
 import socket
 import util.Parset
 import getpass
+import os
 from Partitions import PartitionPsets
 from Locations import Hosts,Locations
 from Stations import Stations
@@ -190,6 +191,7 @@ class Parset(util.Parset.Parset):
 
     def addStorageKeys(self):
 	self["OLAP.Storage.userName"] = getpass.getuser()
+	self["OLAP.Storage.sshIdentityFile"]  = "%s/.ssh/id_rsa"% (os.environ["HOME"],)
 	self["OLAP.Storage.msWriter"] = Locations.resolvePath( Locations.files["storage"], self )
 
     def preWrite(self):
