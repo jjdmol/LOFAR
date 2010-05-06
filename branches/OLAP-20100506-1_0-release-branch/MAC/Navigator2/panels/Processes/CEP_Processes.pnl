@@ -1,0 +1,373 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 1016 739 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+
+  baseDP = g_currentDatapoint;
+  syst   = dpSubStr(baseDP,DPSUB_SYS);
+    
+  reload();
+  
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"CEP_Processes.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"CEP_Processes.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the observation selectable items
+  CEP_Processes_initList();
+
+  // set panel to ready
+  g_objectReady=true;
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"CEP_Processes.pnl\",\"Update\");
+}
+
+" 0
+ E E E E 1 -1 -1 0  10 10
+""0  1
+E "#uses \"navPanel.ctl\"
+#uses \"CEP_Processes.ctl\"
+
+string baseDP = \"\";
+string syst   = \"\";
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+2 16
+"PRIMITIVE_TEXT1"
+""
+1 370 2 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 370 2 446 23
+0 2 2 "0s" 0 0 0 192 0 0  370 2 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 7 Daemons
+1 159 13 "" 4
+0
+1 160 13 "" 3
+0
+1 161 13 "0" 1
+0
+1 162 13 "" 2
+0
+1 163 13 "" 6
+0
+2 109
+"PRIMITIVE_TEXT7"
+""
+1 199 22 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 199 22 206 36
+0 2 2 "0s" 0 0 0 192 0 0  199 22 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 1 A
+2 112
+"PRIMITIVE_TEXT10"
+""
+1 220 21 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 220 21 254 35
+0 2 2 "0s" 0 0 0 192 0 0  220 21 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 6 logMsg
+1 164 14 "" 4
+0
+1 165 14 "" 3
+0
+1 166 14 "0" 1
+0
+1 167 14 "" 2
+0
+1 168 14 "" 6
+0
+1 169 15 "" 4
+0
+1 170 15 "" 3
+0
+1 171 15 "0" 1
+0
+1 172 15 "" 2
+0
+1 173 15 "" 6
+0
+1 174 16 "" 4
+0
+1 175 16 "" 3
+0
+1 176 16 "0" 1
+0
+1 177 16 "" 2
+0
+1 178 16 "" 6
+0
+1 179 39 "" 1
+0
+1 180 39 "" 5
+0
+1 181 39 "" 46
+0
+1 182 39 "" 47
+0
+1 183 39 "" 48
+0
+1 184 39 "15" 4
+0
+1 185 39 "15" 3
+0
+1 186 39 "15.0" 1
+0
+1 187 39 "15" 2
+0
+1 188 39 "15" 6
+0
+1 189 39 "16" 4
+0
+1 190 39 "16" 3
+0
+1 191 39 "16.0" 1
+0
+1 192 39 "16" 2
+0
+1 193 39 "16" 6
+0
+1 194 39 "" 113
+0
+1 195 39 "" 144
+0
+1 196 40 "" 4
+0
+1 197 40 "" 3
+0
+1 198 40 "0" 1
+0
+1 199 40 "" 2
+0
+1 200 40 "" 6
+0
+2 155
+"PRIMITIVE_TEXT2"
+""
+1 370 179193 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+48 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 370 182 439 203
+0 2 2 "0s" 0 0 0 192 0 0  370 182 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 6 PermSW
+2 156
+"PRIMITIVE_TEXT12"
+""
+1 164 201 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+50 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 164 201 185 215
+0 2 2 "0s" 0 0 0 192 0 0  164 201 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 5 error
+2 157
+"PRIMITIVE_TEXT13"
+""
+1 288 201 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+52 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 288 201 351 215
+0 2 2 "0s" 0 0 0 192 0 0  288 201 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 13 currentAction
+2 158
+"PRIMITIVE_TEXT14"
+""
+1 417 201 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+54 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 417 201 451 215
+0 2 2 "0s" 0 0 0 192 0 0  417 201 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 6 logMsg
+1 201 41 "" 4
+0
+1 202 41 "" 3
+0
+1 203 41 "0" 1
+0
+1 204 41 "" 2
+0
+1 205 41 "" 6
+0
+1 206 42 "" 4
+0
+1 207 42 "" 3
+0
+1 208 42 "" 2
+0
+1 209 42 "" 6
+0
+1 210 42 "0" 1
+0
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 13 "PANEL_REF14"
+"objects\\Processes\\daemon_small.pnl" 0 40 T 16 1 0 1 0 -5
+1
+"$name""LogProcessor"
+3 14 "PANEL_REF15"
+"objects\\Processes\\daemon_small.pnl" 0 80 T 24 1 0 1 0 -13
+1
+"$name""ServiceBroker"
+3 15 "PANEL_REF16"
+"objects\\Processes\\daemon_small.pnl" 0 110 T 25 1 0 1 0 -11
+1
+"$name""CTStartDaemon"
+3 16 "PANEL_REF17"
+"objects\\Processes\\daemon_small.pnl" 0 140 T 26 1 0 1 0 -10
+1
+"$name""SASGateway"
+3 39 "PANEL_REF40"
+"objects\\Processes\\ObsSW_CEP.pnl" 10 382 T 45 1 0 1 -5 0
+0
+3 40 "PANEL_REF21"
+"objects\\Processes\\controller_small.pnl" 0 280 T 46 1 0 1 0 -64
+1
+"$name""HardwareMonitor"
+3 41 "PANEL_REF42"
+"objects\\Processes\\controller_small.pnl" 0 280 T 55 1 0 1 0 -35
+1
+"$name""SoftwareMonitor"
+3 42 "PANEL_REF43"
+"objects\\Processes\\controller_small.pnl" 0 280 T 55 1 0 1 0 -6
+1
+"$name""InputBufferControl"
+0
