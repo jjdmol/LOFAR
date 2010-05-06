@@ -32,6 +32,8 @@ if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
   execute_process(COMMAND uname -n
     OUTPUT_VARIABLE _hostname
     OUTPUT_STRIP_TRAILING_WHITESPACE)
+  # Strip everything after the first dot.
+  string(REGEX REPLACE "\\..*" "" _hostname "${_hostname}")
   set(variants_file ${CMAKE_MODULE_PATH}/variants/variants.${_hostname})
   
   if (EXISTS ${variants_file})
