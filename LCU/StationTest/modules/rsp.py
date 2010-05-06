@@ -35,6 +35,7 @@
 
   def write_cdo_ctrl(tc, msg, ctrl, rspId=['rsp0'], applev=21)
   def read_cdo_ctrl(tc, msg, rspId=['rsp0'], applev=21)
+  def read_cdo_transport(tc, msg, rspId=['rsp0'], applev=21)
     
   def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0'])
   def read_ss(tc, msg, nof, blpId=['blp0'], rspId=['rsp0'])
@@ -156,6 +157,7 @@ c_ei_mep_err_timeout         = 8
 
 c_cdo_settings_size          = 30   # nof bytes in CDO settings register
 c_cdo_settings_ctrl_offset   = 6    # byte index of the first byte of the ctrl field in CDO settings register
+c_cdo_transport_size         = 28   # nof bytes in CDO transport header register (IPv4 + UDP = 20 + 8 = 28)
 
 ################################################################################
 # Derived constants (from constants.tcl)
@@ -1317,7 +1319,94 @@ def read_cdo_ctrl(tc, msg, rspId=['rsp0'], applev=21):
   tc.appendLog(applev, '      bit(4)    : ARP enable            = %d' % ((ctrl & ( 1       <<4)) >> 4))
   tc.appendLog(applev, '      bit(15:5) : Not used              = %d' % ((ctrl & ((2**11-1)<<5)) >> 5))
     
-        
+  
+def read_cdo_transport(tc, msg, rspId=['rsp0'], applev=21):
+  """Read the UDP/IP fields in CDO transport header register
+  
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - rspId  = List of one 'rsp#'
+  - applev = Append logging level
+  Return: void
+  """
+  # Define empty class to be used as record
+  class ip:
+    pass
+  class udp:
+    pass
+  # Read entire CDO settings register
+  read_mem(tc, msg, 'cdo', 'iphdr', c_cdo_transport_size, ['rsp'], rspId, 'h', 1, 0)
+  # Get and report transport header
+  msg.setOffset(0)
+  # IPv4 header
+  #
+  #  0       3 4     7 8            15 16   18 19                        31 
+  # |----------------------------------------------------------------------|
+  # | Version |  HLEN |    Services    |      Total Length                 |
+  # |----------------------------------------------------------------------|
+  # |       Identification             | Flags |    Fragment Offset        |
+  # |----------------------------------------------------------------------|
+  # |     TTL         |    Protocol    |      Header Checksum              |
+  # |----------------------------------------------------------------------|
+  # |              Source IP Address                                       |
+  # |----------------------------------------------------------------------|
+  # |              Destination IP Address                                  |
+  # |----------------------------------------------------------------------|
+  # |                                                                      |
+  # |              IP Payload                                              |
+  # |                                                                      |
+  # |------------------------------------------------------------ // ------|
+  version_hlen       = msg.readUnsigned(1)
+  ip.version         =  version_hlen       & 0xF
+  ip.header_length   = (version_hlen >> 4) & 0xF
+  ip.services        = msg.readUnsigned(1)
+  ip.total_length    = msg.readUnsigned(2)
+  ip.identification  = msg.readUnsigned(2)
+  flags_fragment     = msg.readUnsigned(2)
+  ip.flags           = (flags_fragment >> 13) & 0x7
+  ip.fragment_offset =  flags_fragment        & 0x1FFF
+  ip.time_to_live    = msg.readUnsigned(1)
+  ip.protocol        = msg.readUnsigned(1)
+  ip.header_checksum = msg.readUnsigned(2)
+  ip.src_ip_addr     = msg.readUnsigned(4)
+  ip.dst_ip_addr     = msg.readUnsigned(4)
+  # UDP header
+  #
+  #  0                               15 16                               31 
+  # |----------------------------------------------------------------------|
+  # |      Source Port                 |      Destination Port             |
+  # |----------------------------------------------------------------------|
+  # |      Total Length                |      Checksum                     |
+  # |----------------------------------------------------------------------|
+  # |                                                                      |
+  # |                      UDP Payload                                     |
+  # |                                                                      |
+  # |----------------------------------------------------------- // -------|
+  udp.src_port     = msg.readUnsigned(2)
+  udp.dst_port     = msg.readUnsigned(2)
+  udp.total_length = msg.readUnsigned(2)
+  udp.checksum     = msg.readUnsigned(2)
+  
+  tc.appendLog(applev, '>>> RSP-%s, read the UDP/IP fields in CDO transport header register:' % rspId)
+  tc.appendLog(applev, '      IPv4 : version         = %d'   % ip.version)
+  tc.appendLog(applev, '      IPv4 : header_length   = %d'   % ip.header_length)
+  tc.appendLog(applev, '      IPv4 : services        = 0x%X' % ip.services)
+  tc.appendLog(applev, '      IPv4 : total_length    = %d'   % ip.total_length)
+  tc.appendLog(applev, '      IPv4 : identification  = 0x%X' % ip.identification)
+  tc.appendLog(applev, '      IPv4 : flags           = 0x%X' % ip.flags)
+  tc.appendLog(applev, '      IPv4 : fragment_offset = %d'   % ip.fragment_offset)
+  tc.appendLog(applev, '      IPv4 : time_to_live    = %d'   % ip.time_to_live)
+  tc.appendLog(applev, '      IPv4 : protocol        = 0x%X' % ip.protocol)
+  tc.appendLog(applev, '      IPv4 : header_checksum = 0x%X' % ip.header_checksum)
+  tc.appendLog(applev, '      IPv4 : src_ip_addr     = 0x%X' % ip.src_ip_addr)
+  tc.appendLog(applev, '      IPv4 : dst_ip_addr     = 0x%X' % ip.dst_ip_addr)
+  tc.appendLog(applev, '      UDP  : src_port        = %d'   % udp.src_port)
+  tc.appendLog(applev, '      UDP  : dst_port        = %d'   % udp.dst_port)
+  tc.appendLog(applev, '      UDP  : total_length    = %d'   % udp.total_length)
+  tc.appendLog(applev, '      UDP  : checksum        = 0x%X' % udp.checksum)
+
+          
 def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0']):
   """Write subband to beamlet mapping to SS register
   
