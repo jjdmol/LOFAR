@@ -66,13 +66,13 @@ void TrigSetupCmd::saveTbbEvent(GCFEvent& event)
 		TS->convertRcu2Ch(rcunr,&board,&board_channel);	
 		channel = (board * TS->nrChannelsOnBoard()) + board_channel;
 		
-		TS->setChTriggerLevel(channel, tbb_event.setup[rcunr].level);
-		TS->setChTriggerStartMode(channel, (tbb_event.setup[rcunr].start_mode));
-		TS->setChTriggerStopMode(channel, (tbb_event.setup[rcunr].stop_mode));
-		TS->setChFilterSelect(channel, tbb_event.setup[rcunr].filter_select);
-		TS->setChDetectWindow(channel, tbb_event.setup[rcunr].window);
-		TS->setChTriggerMode(channel, tbb_event.setup[rcunr].trigger_mode);
-		TS->setChOperatingMode(channel, tbb_event.setup[rcunr].operating_mode);
+		TS->setChTriggerLevel(channel, tbb_event.rcu[rcunr].level);
+		TS->setChTriggerStartMode(channel, (tbb_event.rcu[rcunr].start_mode));
+		TS->setChTriggerStopMode(channel, (tbb_event.rcu[rcunr].stop_mode));
+		TS->setChFilterSelect(channel, tbb_event.rcu[rcunr].filter_select);
+		TS->setChDetectWindow(channel, tbb_event.rcu[rcunr].window);
+		TS->setChTriggerMode(channel, tbb_event.rcu[rcunr].trigger_mode);
+		TS->setChOperatingMode(channel, tbb_event.rcu[rcunr].operating_mode);
 	}
 	
 	bitset<MAX_N_RCUS> channels;

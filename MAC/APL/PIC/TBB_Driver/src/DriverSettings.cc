@@ -212,8 +212,10 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsChannelInfo[ch].DetectWindow = 0;
 		itsChannelInfo[ch].TriggerMode = 0;
 		itsChannelInfo[ch].OperatingMode = 0;
-		for (int i = 0; i < 4; i++) {
-			itsChannelInfo[ch].Coefficient[i] = 0;
+                for (int f = 0; f < 2; f++) {
+                    for (int c = 0; c < 4; c++) {
+			itsChannelInfo[ch].Filter[f][c] = 0;
+                    }
 		}
 	}
 	
@@ -226,6 +228,7 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsBoardInfo[nr].boardState = noBoard;
 		itsBoardInfo[nr].setupWaitTime = 0;
 		itsBoardInfo[nr].setupRetries = 0;
+		itsBoardInfo[nr].setupCmdDone = true;
 		itsBoardInfo[nr].memorySize = 0;
 		itsBoardInfo[nr].imageNr = 0;
 		itsBoardInfo[nr].freeToReset = true;
@@ -334,9 +337,11 @@ void TbbSettings::clearRcuSettings(int32 boardnr)
 		itsChannelInfo[(boardnr * 16) + cn].DetectWindow = 0;
 		itsChannelInfo[(boardnr * 16) + cn].TriggerMode = 0;
 		itsChannelInfo[(boardnr * 16) + cn].OperatingMode = 0;
-		for (int i = 0; i < 4; i++) {
-			itsChannelInfo[(boardnr * 16) + cn].Coefficient[i] = 0;
-		}
+                for (int f = 0; f < 2; f++) {
+                    for (int c = 0; c < 4; c++) {
+                        itsChannelInfo[cn].Filter[f][c] = 0;
+                    }
+                }
 	}
 }
 

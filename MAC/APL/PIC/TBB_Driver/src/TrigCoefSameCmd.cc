@@ -65,10 +65,10 @@ void TrigCoefSameCmd::saveTbbEvent(GCFEvent& event)
 		if (tbb_event.rcu_mask.test(rcunr) == true) {
 			TS->convertRcu2Ch(rcunr,&board,&board_channel);	
 			channel = (board * TS->nrChannelsOnBoard()) + board_channel;
-			TS->setChFilterCoefficient(channel, 0, tbb_event.coefficients.c0);
-			TS->setChFilterCoefficient(channel, 1, tbb_event.coefficients.c1);
-			TS->setChFilterCoefficient(channel, 2, tbb_event.coefficients.c2);
-			TS->setChFilterCoefficient(channel, 3, tbb_event.coefficients.c3);
+                        for (int c = 0; c < 4; c++) {
+                            TS->setChFilterCoefficient(channel, 0, c, tbb_event.coefficients.filter0[c]);
+                            TS->setChFilterCoefficient(channel, 1, c, tbb_event.coefficients.filter1[c]);
+                        }
 		}
 	}
 	
@@ -88,13 +88,12 @@ void TrigCoefSameCmd::sendTpEvent()
 	
 	tp_event.mp = TS->getChMpNr(getChannelNr());
 	int start_channel = TS->getFirstChannelNr(getBoardNr(), TS->getChMpNr(getChannelNr()));
-	for (int i = 0; i < 4; i++) {
-		tp_event.channel[i].c0 = TS->getChFilterCoefficient((start_channel + i), 0);
-		tp_event.channel[i].c1 = TS->getChFilterCoefficient((start_channel + i), 1);
-		tp_event.channel[i].c2 = TS->getChFilterCoefficient((start_channel + i), 2);
-		tp_event.channel[i].c3 = TS->getChFilterCoefficient((start_channel + i), 3);
-	}
-
+        for (int i = 0; i < 4; i++) {
+            tp_event.coeffients_even.filter_0[i] = TS->getChFilterCoefficient(getChannelNr(), 0, i);
+            tp_event.coeffients_even.filter_1[i] = TS->getChFilterCoefficient(getChannelNr(), 1, i);
+            tp_event.coeffients_odd.filter_0[i]  = TS->getChFilterCoefficient((getChannelNr() + 2), 0, i);
+            tp_event.coeffients_odd.filter_1[i]  = TS->getChFilterCoefficient((getChannelNr() + 2), 1, i);
+        }
 	LOG_DEBUG_STR(formatString("Sending TrigCoef to boardnr[%d]",getBoardNr()));
 	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());	
@@ -113,12 +112,13 @@ void TrigCoefSameCmd::saveTpAckEvent(GCFEvent& event)
 		if (tp_ack.status != 0) {
 			setStatus(getBoardNr(), (tp_ack.status << 24));
 			int start_channel = TS->getFirstChannelNr(getBoardNr(), TS->getChMpNr(getChannelNr()));
-			for (int i = 0; i < 4; i++) {
-				TS->setChFilterCoefficient((start_channel + i), 0, 0);
-				TS->setChFilterCoefficient((start_channel + i), 1, 0);
-				TS->setChFilterCoefficient((start_channel + i), 2, 0);
-				TS->setChFilterCoefficient((start_channel + i), 3, 0);
-			}
+                        for (int ch = 0; ch < 4; ch++) {
+                            for (int f = 0; f < 2; f++) {
+                                for (int c = 0; c < 4; c++) {
+                                        TS->setChFilterCoefficient((start_channel + ch), f, c, 0);
+                                }
+                            }
+                        }
 		}
 	}
 	// one mp done, go to next mp

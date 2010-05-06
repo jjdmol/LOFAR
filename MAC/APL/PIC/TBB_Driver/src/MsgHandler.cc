@@ -34,22 +34,6 @@ namespace LOFAR {
 MsgHandler::MsgHandler()
 {
 	TS = TbbSettings::instance();
-		
-	/*
-	if (TS->saveTriggersToFile()) {
-		time_t timenow;
-		timenow = time(NULL);
-		
-		strftime(itsTimeString, 255, "%Y-%m-%d", gmtime(&timenow));
-		snprintf(itsFileName, PATH_MAX, "/opt/lofar/log/%s_TRIGGER.dat", itsTimeString);
-		itsFile = fopen(itsFileName,"a");
-	}
-	else {
-		memset(itsFileName, 12, '\0');
-		memset(itsTimeString, 12, '\0');
-		itsFile = 0;
-	}
-	*/
 	memset(itsFileName, 12, '\0');
 	memset(itsTimeString, 12, '\0');
 	itsFile = 0;
@@ -154,7 +138,7 @@ void MsgHandler::openTriggerFile()
 		char timestring[12];
 		strftime(timestring, 255, "%Y-%m-%d", gmtime(&timenow));
 		strcpy(itsTimeString, timestring);
-		snprintf(itsFileName, PATH_MAX, "/opt/lofar/log/%s_TRIGGER.dat", itsTimeString);
+		snprintf(itsFileName, PATH_MAX, "/localhome/data/%s_TRIGGER.dat", itsTimeString);
 		itsFile = fopen(itsFileName,"a");
 	}
 }

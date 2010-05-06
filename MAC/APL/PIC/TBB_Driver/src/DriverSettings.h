@@ -35,7 +35,7 @@ namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	namespace TBB {
 
-static const int DRIVER_VERSION = 225;
+static const int DRIVER_VERSION = 226;
 
 enum BoardStateT {noBoard,
 				  setImage1, image1Set,
@@ -68,7 +68,7 @@ struct ChannelInfo
 	uint8  DetectWindow;
 	uint8  TriggerMode;
 	uint8  OperatingMode;
-	uint16 Coefficient[4];
+	uint16 Filter[2][4];
 };
 
 struct BoardInfo
@@ -115,6 +115,7 @@ public:
 	uint32 activeBoardsMask();
 	int32 maxRetries();
 	double timeout();
+	
 	GCFPortInterface& boardPort(int32 boardnr);
 	int32 port2Board(GCFPortInterface* port);
 		
@@ -136,7 +137,7 @@ public:
 	uint8 getChDetectWindow(int32 channelnr);
 	uint8 getChTriggerMode(int32 channelnr);
 	uint8 getChOperatingMode(int32 channelnr);
-	uint16 getChFilterCoefficient(int32 channelnr, int32 coef_nr);
+        uint16 getChFilterCoefficient(int32 channelnr, int32 filter, int32 coef_nr);
 	
 	string getIfName();
 	string getDstMac(int32 boardnr);
@@ -181,7 +182,12 @@ public:
 	void setChDetectWindow(int32 channelnr, uint8 detect_window);
 	void setChTriggerMode(int32 channelnr, uint8 trigger_mode);
 	void setChOperatingMode(int32 channelnr, uint8 operating_mode);
-	void setChFilterCoefficient(int32 channelnr, int32 coef_nr, uint16 coef);
+        void setChFilterCoefficient(int32 channelnr, int32 filter, int32 coef_nr, uint16 coef);
+	
+	void setSrcIpCep(int32 boardnr, string ip);
+	void setDstIpCep(int32 boardnr, string ip);
+	void setSrcMacCep(int32 boardnr, string mac);
+	void setDstMacCep(int32 boardnr, string mac);
 	
 	void clearRcuSettings(int32 boardnr);
 	
@@ -265,16 +271,28 @@ inline  bool TbbSettings::boardSetupNeeded() { return (itsBoardSetup); }
 inline  void TbbSettings::clearBoardSetup() { itsBoardSetup = false; }
 
 inline  int32 TbbSettings::getSetupWaitTime(int32 boardnr) { 
-			if (time(NULL) >= itsBoardInfo[boardnr].setupWaitTime) return(0);
+			if (time(NULL) >= itsBoardInfo[boardnr].setupWaitTime) { return(0); }
 			return(static_cast<int32>(itsBoardInfo[boardnr].setupWaitTime - time(NULL)));
 		}
-inline  void TbbSettings::setSetupWaitTime(int32 boardnr, int32 waittime) { itsBoardInfo[boardnr].setupWaitTime = time(NULL) + waittime; }
+inline  void TbbSettings::setSetupWaitTime(int32 boardnr, int32 waittime) { 
+            itsBoardInfo[boardnr].setupWaitTime = time(NULL) + waittime;
+        }
 	
 inline  int32 TbbSettings::getSetupRetries(int32 boardnr) { return(itsBoardInfo[boardnr].setupRetries); }
 inline  void TbbSettings::resetSetupRetries(int32 boardnr) { itsBoardInfo[boardnr].setupRetries = 0; }
 inline  void TbbSettings::incSetupRetries(int32 boardnr) { ++itsBoardInfo[boardnr].setupRetries; }
 
-inline  bool TbbSettings::isSetupCmdDone(int32 boardnr) { return(itsBoardInfo[boardnr].setupCmdDone); }
+inline  bool TbbSettings::isSetupCmdDone(int32 boardnr) { 
+            if (boardnr == -1) {
+                for (int bnr = 0; bnr < itsMaxBoards; bnr++) {
+                    if ( itsBoardInfo[bnr].setupCmdDone == false ) { return(false); }
+                }
+                return(true);
+            }
+            else {
+                return(itsBoardInfo[boardnr].setupCmdDone);
+            }
+        }
 inline  void TbbSettings::setSetupCmdDone(int32 boardnr, bool state) { itsBoardInfo[boardnr].setupCmdDone = state; }
 
 //---- inline functions for channel information ------------
@@ -295,7 +313,7 @@ inline	uint8 TbbSettings::getChFilterSelect(int32 channelnr) { return (itsChanne
 inline	uint8 TbbSettings::getChDetectWindow(int32 channelnr) { return (itsChannelInfo[channelnr].DetectWindow); }
 inline	uint8 TbbSettings::getChTriggerMode(int32 channelnr) { return (itsChannelInfo[channelnr].TriggerMode); }
 inline	uint8 TbbSettings::getChOperatingMode(int32 channelnr) { return (itsChannelInfo[channelnr].OperatingMode); }
-inline	uint16 TbbSettings::getChFilterCoefficient(int32 channelnr, int32 coef_nr) { return (itsChannelInfo[channelnr].Coefficient[coef_nr]); }
+inline	uint16 TbbSettings::getChFilterCoefficient(int32 channelnr, int32 filter, int32 coef_nr) { return (itsChannelInfo[channelnr].Filter[filter][coef_nr]); }
 inline	string TbbSettings::getIfName() { return(itsIfName); }
 inline	string TbbSettings::getDstMac(int32 boardnr) { return(itsBoardInfo[boardnr].dstMac); }
 inline	string TbbSettings::getSrcIpCep(int32 boardnr) { return(itsBoardInfo[boardnr].srcIpCep); }
@@ -323,7 +341,12 @@ inline	void TbbSettings::setChFilterSelect(int32 channelnr, uint8 select){ itsCh
 inline	void TbbSettings::setChDetectWindow(int32 channelnr, uint8 window){ itsChannelInfo[channelnr].DetectWindow = window; }
 inline	void TbbSettings::setChTriggerMode(int32 channelnr, uint8 trigger_mode){ itsChannelInfo[channelnr].TriggerMode = trigger_mode; }
 inline	void TbbSettings::setChOperatingMode(int32 channelnr, uint8 operating_mode){ itsChannelInfo[channelnr].OperatingMode = operating_mode; }
-inline	void TbbSettings::setChFilterCoefficient(int32 channelnr, int32 coef_nr, uint16 coef){ itsChannelInfo[channelnr].Coefficient[coef_nr] = coef; }
+inline	void TbbSettings::setChFilterCoefficient(int32 channelnr, int32 filter, int32 coef_nr, uint16 coef){ itsChannelInfo[channelnr].Filter[filter][coef_nr] = coef; }
+
+inline	void TbbSettings::setSrcIpCep(int32 boardnr, string ip) { itsBoardInfo[boardnr].srcIpCep = ip; }
+inline	void TbbSettings::setDstIpCep(int32 boardnr, string ip) { itsBoardInfo[boardnr].dstIpCep = ip; }
+inline	void TbbSettings::setSrcMacCep(int32 boardnr, string mac) { itsBoardInfo[boardnr].srcMacCep = mac; }
+inline	void TbbSettings::setDstMacCep(int32 boardnr, string mac) { itsBoardInfo[boardnr].dstMacCep = mac; }
 //---- inline functions for board information ------------
 inline	uint32 TbbSettings::getMemorySize(int32 boardnr) { return (itsBoardInfo[boardnr].memorySize); }
 inline	void TbbSettings::setMemorySize(int32 boardnr,uint32 pages) { itsBoardInfo[boardnr].memorySize = pages; }

@@ -45,7 +45,7 @@ namespace LOFAR {
 
 GCFTimerPort* itsCmdTimer;
 
-static const int TBBCTL_VERSION = 225;
+static const int TBBCTL_VERSION = 226;
 
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 
@@ -158,6 +158,7 @@ public:
 			case TBB_PID_SELECT_ERROR    : str = "pid not in range"; break;
 			case TBB_REGID_SELECT_ERROR  : str = "regid not in range"; break;
 			case TBB_ADDR_SEL_ERROR      : str = "addr not in range"; break;
+			case TBB_STORAGE_SELECT_ERROR: str = "cep node not in file"; break;
 			default: break;
 		}
 		switch (status & TBB_BOARD_STATUS_MASK) {
@@ -474,15 +475,11 @@ public:
 	virtual ~TrigCoefficientCmd() { }
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
-	void setC0(uint16 c0) { itsC0 = c0; }
-	void setC1(uint16 c1) { itsC1 = c1; }
-	void setC2(uint16 c2) { itsC2 = c2; }
-	void setC3(uint16 c3) { itsC3 = c3; }
+	void setFilter0(uint16 *coef) { memcpy(itsFilter0, coef, 4*sizeof(uint16)); }
+	void setFilter1(uint16 *coef) { memcpy(itsFilter1, coef, 4*sizeof(uint16)); }
 private:
-	uint16 itsC0;
-	uint16 itsC1;
-	uint16 itsC2;
-	uint16 itsC3;
+    uint16 itsFilter0[4];
+    uint16 itsFilter1[4];
 };
 
 //-----------------------------------------------------------------------------
@@ -651,6 +648,20 @@ public:
 private:
 	uint32 itsMode;
 };
+
+//-----------------------------------------------------------------------------
+class CepStorageCmd : public Command
+{
+    public:
+        CepStorageCmd(GCFPortInterface& port);
+        virtual ~CepStorageCmd() { }
+        virtual void send();
+        virtual GCFEvent::TResult ack(GCFEvent& e);
+        void setStorageNode(char *storagenode) { strcpy(itsStorageNode,storagenode); }
+    private:
+        char itsStorageNode[10];
+};
+
 
 //-----------------------------------------------------------------------------
 class StopCepCmd : public Command
