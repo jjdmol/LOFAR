@@ -52,22 +52,45 @@ int main(int argc, char* argv[])
 	INIT_LOGGER (logFile.c_str());
 	//cout << logFile.c_str() << endl;
 	ifstream	triggerFile;
-	triggerFile.open(argv[1], ifstream::in);
+	//if (argv[1] == "stdin")
+//        {
+//          triggerFile = cin;
+//        }
+        //else
+        {
+          triggerFile.open(argv[1], ifstream::in);
+        }
 	if (!triggerFile) {
 		LOG_FATAL_STR("Cannot open triggerfile " << argv[1]);
 	  cout << "Cannot open trigger file!" << endl;
 		return (1);
 	}
-        cout << "Start reading trigger file" << endl;
 	char			triggerLine [4096];
 	TBBTrigger		theTrigger;
 	VHECRTask		theTask;
+        theTask.itsDoDirectionFit = 1;
+        theTask.itsAntennaPositionsFile = "/Users/acorstanje/usg/data/calibration/AntennaPos/RS205-AntennaArrays.conf";
+        theTask.itsAntennaSelection = "LBA_OUTER";
+        theTask.itsNoCoincidenceChannels = 90;
+        theTask.readAntennaPositions(theTask.itsAntennaPositionsFile, theTask.itsAntennaSelection);
+        bool followFile = false;
         //theTask.itsOutputFilename = outputFilename;
 	theTrigger.itsFlags = 0;
 	// process file
         uint32 n = 0;
+        uint32 badtimes = 0;
 	double ddate, lastCoinCall=0.;
-  	while (triggerFile.getline (triggerLine, 4096)) {
+        cout << "Start reading trigger file" << endl;
+        while (true) {
+          if (!triggerFile.getline (triggerLine, 4096)) 
+          {
+            if (followFile == false)
+            {
+              break;
+            }
+            usleep(1000000);
+            cout << "Waiting for more input..." << endl;
+          }else{
 	  LOG_DEBUG_STR("input: " << triggerLine);
 	  if (sscanf(triggerLine, "%d %u %u %u %u %u %u",
 		     &theTrigger.itsRcuNr,
@@ -80,23 +103,33 @@ int main(int argc, char* argv[])
 	    // call the VHECR task
 	    theTrigger.itsNo = n;
 	    n++;
+            
 	    theTask.addTrigger(theTrigger);
 	    // call the coincidence-check if the last call was more than 100 ms ago
-	    ddate = theTrigger.itsTime + theTrigger.itsSampleNr/200e6;
-	    if ((ddate-lastCoinCall) > 0.1) { 
-	      std::vector<TBBReadCmd> readCmds;
-	      LOG_DEBUG_STR("Calling getReadCmd() at time:" << ddate);
-	      theTask.getReadCmd(readCmds);
-	      lastCoinCall=ddate;
-	    };
-	    
+            if (theTrigger.itsTime < 2.1e9)
+            {
+              ddate = theTrigger.itsTime + theTrigger.itsSampleNr/200.0e6;
+              if ((ddate-lastCoinCall) > 0.000001) { 
+                std::vector<TBBReadCmd> readCmds;
+                LOG_DEBUG_STR("Calling getReadCmd() at time:" << ddate);
+                theTask.getReadCmd(readCmds);
+                lastCoinCall=ddate;
+              };
+              // cout << "Discarded trigger! " << trigger.itsTime << endl;
+            } else
+            {
+              cout << "Bad time" << endl;
+              badtimes++;
+            }
 	  }
 	  else {	// could not read 7 argments
 	    LOG_ERROR_STR("Can not interpret line: " << triggerLine);
 	  }
+          }
 	}
-	
+
 	triggerFile.close();
         cout << "Total coincidences: " << theTask.totalCoincidences << "; bad fits: " << theTask.badFits << endl;
+        cout << "Single triggers: " << n << " of which bad timestamps: " << badtimes << endl;
 	return (0);
 }

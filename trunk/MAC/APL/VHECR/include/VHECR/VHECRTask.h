@@ -45,25 +45,48 @@ namespace LOFAR {
       ~VHECRTask();
       
       // define responsefunctionType
-	  int getReadCmd(std::vector<TBBReadCmd> &readCmd);
-	  	
+      int getReadCmd(std::vector<TBBReadCmd> &readCmd);
+      
       void readTBBdata(std::vector<TBBReadCmd>	cmdVector);
       void addTrigger(const TBBTrigger&	trigger);
+      void readAntennaPositions(string fileName, string antennaSelection);
+      
+      /*!
+	\brief Put the parameters from the parset file into the VHECRTast object
+	
+	\param AntennaSet - E.g. "LBA_INNER"
+	\param AntennaPositionsFile - Absolute path to the file with the antenna positions.
+	\param Clock - Sampling clock speed in MHz (i.e.160 or 200) 
+	\param NoCoincChann - The number of channels needed to detect a coincidence.
+	\param CoincidenceTime - The time-range in seconds during which triggers are considered part of a coincidence.
+	\param DoDirectionFit - Do a direction fit: none [0], simple [1], more fancy [2] 
+	\param MinElevation - Minimum elevation to accept a trigger in degrees.
+	\param MaxFitVariance - Maximum variance (``badness of fit'') of the direction fit to still accept a trigger. 
+	\param ParamExtension - String with "keyword=value;" pairs for additional parameters during development.
+      */
+      void setParameters(string AntennaSet, string AntennaPositionsFile, int Clock,
+			 int NoCoincChann=48, float CoincidenceTime=1e-6, int DoDirectionFit=0, 
+			 float MinElevation=30., float MaxFitVariance=100., string ParamExtension="");
+
       struct position {
         double x, y, z;
       };
       string itsOutputFilename;
       string itsConfigurationFile;
-      string antennaPositionsFile;
-      string antennaSelection;
-      uint32 doDirectionFit;
+      string itsAntennaPositionsFile;
+      string itsAntennaSelection;
+      uint32 itsDoDirectionFit;
+      double forcedDeadTime;
       uint32 totalCoincidences, badFits;
+      int itsNoCoincidenceChannels;
+      double itsMinElevation;
+      double itsMaxFitVariance;
+      string itsParamExtension;
 
     private:
 
 #define VHECR_TASK_BUFFER_LENGTH (2*96)
-
-      int itsNoCoincidenceChannels;
+#define NOFANTENNAS (96)
       double itsCoincidenceTime;
       FILE * itsLogfile;
       // avoid defaultconstruction and copying
@@ -72,7 +95,7 @@ namespace LOFAR {
       
       // remote function to call for saving triggers
       uint32 itsNrTriggers;	// just for statistics
-      uint32 itsSamplingRate;
+      uint32 itsSamplingRate;   // in Hz!!!
 
       bool   itsInitialized;
       std::vector<TBBReadCmd> itsCommandVector;    // used as temporarely buffer
@@ -114,7 +137,7 @@ namespace LOFAR {
 
       int coincidenceCheck(uint32 latestindex, uint32 nChannles, double timeWindow);
       void fitDirectionToCoincidence(int coincidenceIndex, int nofChannels);
-      void readAntennaPositions(string fileName, string antennaSelection);
+      void fitDirectionAndDistanceToCoincidence(int coincidenceIndex, int nofChannels);
 
     };
     
