@@ -57,32 +57,33 @@ public:
 	typedef bitset<192> RCUset_t;
 	
 	typedef struct {
-		uint16 c0;
-		uint16 c1;
-		uint16 c2;
-		uint16 c3;
+		uint16 filter0[4];
+		uint16 filter1[4];
 		uint16 triggerLevel;
-		uint16  filter;
-		uint16  startLevel;
-		uint16  stopLevel;
-		uint16  detectWindow;
-		RCUset_t  RCUset;			// set with participating receivers for this settings
-   } sTBBsetting;
+		uint16 filter;
+		uint16 startLevel;
+		uint16 stopLevel;
+		uint16 detectWindow;
+		uint16 triggerMode;
+		uint32 operatingMode;         // transient or subbands
+   } sTBBsettings;
 	
 	//# Datamembers
-	vector<sTBBsetting>	TBBsetting;
-	RCUset_t	allRCUset;			// set with all participating receivers
-	uint32  operatingMode;
-	vector<int32>	subbandList;
+	sTBBsettings  TbbSettings;
+	RCUset_t      RCUset;
+	vector<int32> SubbandList;
 	
+	bool isLoaded();
 	//# print function for operator<<
 	ostream&	print(ostream&	os) const;
 
 private:
-   uint16 _windowNr(const string&		wdwName);
+	bool itsSettingsLoaded;
+	uint16 _windowNr(const string&		wdwName);
 
 };
 
+inline bool TBBObservation::isLoaded() { return(itsSettingsLoaded); }
 //#
 //# operator<<
 //#
