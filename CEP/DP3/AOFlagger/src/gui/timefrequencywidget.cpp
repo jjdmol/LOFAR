@@ -95,7 +95,7 @@ void TimeFrequencyWidget::SetNewData(const TimeFrequencyData &data, TimeFrequenc
 const TimeFrequencyData TimeFrequencyWidget::getDifference() const
 {
 	Image2DPtr image = Image2D::CreateFromDiff(_original.GetSingleImage(), _revised.GetSingleImage());
-	return TimeFrequencyData(TimeFrequencyData::AmplitudePart, TimeFrequencyData::SinglePolarisation, image);
+	return TimeFrequencyData(TimeFrequencyData::AmplitudePart, SinglePolarisation, image);
 }
 
 void TimeFrequencyWidget::Update() throw()

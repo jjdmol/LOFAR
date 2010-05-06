@@ -19,15 +19,18 @@
  ***************************************************************************/
 
 #include <iostream>
+#include <stdexcept>
 
 #include <AOFlagger/rfi/strategy/strategy.h>
 #include <AOFlagger/rfi/strategy/xmlwriter.h>
 
+using namespace rfiStrategy;
+
 template<typename T>
 class Parameter {
 	public:
-		Parameter() : _isSet(false) { }
-		Parameter(const T &val) : _isSet(true), _value(val) { }
+		Parameter() : _isSet(false), _value() { }
+		Parameter(const T val) : _isSet(true), _value(val) { }
 		Parameter(const Parameter<T> &source)
 			: _isSet(source._isSet), _value(source._value) { }
 		Parameter &operator=(const Parameter<T> &source)
@@ -35,14 +38,24 @@ class Parameter {
 			_isSet = source._isSet;
 			_value = source._value;
 		}
-		Parameter &operator=(const T &val)
+		Parameter &operator=(T val)
 		{
 			_isSet = true;
 			_value = val;
 			return *this;
 		}
 		bool IsSet() const { return _isSet; }
-		operator T() const { return _value; }
+		operator T() const
+		{
+			return Value();
+		}
+		T Value() const
+		{
+			if(_isSet)
+				return _value;
+			else
+				throw std::runtime_error("Trying to access unset parameter");
+		}
 	private:
 		bool _isSet;
 		T _value;
@@ -57,8 +70,14 @@ int main(int argc, char *argv[])
 			"Author: André Offringa (offringa@astro.rug.nl)\n"
 			<< std::endl;
 
-	bool threadCountSet = false;
-	size_t threadCount = 3;
+	Parameter<enum BaselineSelection> baselineSelection;
+	Parameter<enum DataKind> dataKind;
+	Parameter<bool> frequencyBasedFlagging;
+	Parameter<size_t> threadCount;
+	Parameter<std::pair<double, double> > kernelSize;
+	Parameter<enum PolarisationType> polarisation;
+	Parameter<num_t> sensitivity;
+	Parameter<std::pair<size_t, size_t> > windowSize;
 
 	size_t parameterIndex = 1;
 	while(parameterIndex < (size_t) argc && argv[parameterIndex][0]=='-')
@@ -68,7 +87,7 @@ int main(int argc, char *argv[])
 		if(flag == "b")
 		{
 		}
-		else if(flag == "j") { ++parameterIndex; threadCountSet = true; threadCount = atoi(argv[parameterIndex]); }
+		else if(flag == "j") { ++parameterIndex; threadCount = atoi(argv[parameterIndex]); }
 		else
 		{
 			std::cerr << "Incorrect usage; parameter \"" << argv[parameterIndex] << "\" not understood.\nType rfistrategy without parameters for a list of commands." << std::endl;
@@ -118,6 +137,9 @@ int main(int argc, char *argv[])
 			"  Set number of threads to use. Each thread will independently process\n"
 			"  whole baselines, thus this has implications on both memory usage and\n"
 			"  CPU usage. Defaults to 3, also overridable in rficonsole.\n"
+			"-ks or -kernel-size <width> <height>\n"
+			"  Gaussian kernel size used for smoothing. Floats. \n"
+			"  Default: 15.0 channels x 7.5 time steps.\n"
 			"-p or -pol <all/auto/stokesi>\n"
 			"  Specify how to process the polarizations. Independent of this setting,\n"
 			"  the flags of all polarizations will be or-ed together and all polarizations\n"
@@ -125,14 +147,11 @@ int main(int argc, char *argv[])
 			"-s or -sensitivity <threshold factor>\n"
 			"  Set a factor that is applied to each (sum)threshold operation. Higher\n"
 			"  values mean higher thresholds, thus less flagged samples. Default: 1.\n"
+//			"-t  or -time <time start index>-<time end index>\n"
 			"-ws or -window-size <width> <height>\n"
 			"  Window size used in smoothing. Integers. \n"
 			"  Default: 40 channels x 30 time steps (pulsar strategy: 40 x 1)\n"
-			"-ks or -kernel-size <width> <height>\n"
-			"  Gaussian kernel size used for smoothing. Floats. \n"
-			"  Default: 15.0 channels x 7.5 time steps.\n"
 			"\nScripts are recommended to use the long option names.\n";
-//			"-t  or -time <time start index>-<time end index>\n"
 		return 1;
 	}
 
@@ -154,8 +173,20 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if(threadCountSet)
-		rfiStrategy::Strategy::SetThreadCount(*strategy, threadCount);
+	if(baselineSelection.IsSet())
+		Strategy::SetBaselines(*strategy, baselineSelection);
+	if(dataKind.IsSet())
+		Strategy::SetDataKind(*strategy, dataKind);
+	if(threadCount.IsSet())
+		Strategy::SetThreadCount(*strategy, threadCount);
+	if(kernelSize.IsSet())
+		Strategy::SetFittingKernelSize(*strategy, kernelSize.Value().first, kernelSize.Value().second);
+	if(polarisation.IsSet())
+		Strategy::SetPolarisations(*strategy, polarisation);
+	if(sensitivity.IsSet())
+		Strategy::SetMultiplySensitivity(*strategy, polarisation);
+	if(windowSize.IsSet())
+		Strategy::SetFittingWindowSize(*strategy, windowSize.Value().first, windowSize.Value().second);
 
 	rfiStrategy::XmlWriter writer;
 	std::cout << "Writing strategy..." << std::endl;

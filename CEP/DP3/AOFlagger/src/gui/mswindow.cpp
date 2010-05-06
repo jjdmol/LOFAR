@@ -383,7 +383,7 @@ void MSWindow::openTestSet(unsigned index)
 	Mask2DPtr rfi = Mask2D::CreateSetMaskPtr<false>(width, height);
 	Image2DPtr testSetReal(MitigationTester::CreateTestSet(index, rfi, width, height, _gaussianTestSets));
 	Image2DPtr testSetImaginary(MitigationTester::CreateTestSet(index, rfi, width, height, _gaussianTestSets));
-	TimeFrequencyData data(TimeFrequencyData::SinglePolarisation, testSetReal, testSetImaginary);
+	TimeFrequencyData data(SinglePolarisation, testSetReal, testSetImaginary);
 	data.SetGlobalMask(rfi);
 	
 	_timeFrequencyWidget.SetNewData(data, _metaData);
@@ -1028,7 +1028,7 @@ void MSWindow::onPlotSNRToFitVariance()
 			Mask2DPtr rfi = Mask2D::CreateSetMaskPtr<false>(width, height);
 			Image2DPtr testSetReal(MitigationTester::CreateTestSet(2, rfi, width, height, _gaussianTestSets));
 			Image2DPtr testSetImaginary(MitigationTester::CreateTestSet(2, rfi, width, height, _gaussianTestSets));
-			TimeFrequencyData *data = new TimeFrequencyData(TimeFrequencyData::SinglePolarisation, testSetReal, testSetImaginary);
+			TimeFrequencyData *data = new TimeFrequencyData(SinglePolarisation, testSetReal, testSetImaginary);
 	
 			TimeFrequencyMetaDataCPtr metaData = TimeFrequencyMetaData();
 			FringeTestCreater::AddStaticFringe(*data, metaData, snr);
@@ -1146,7 +1146,7 @@ void MSWindow::showPhasePart(enum TimeFrequencyData::PhaseRepresentation phaseRe
 	}
 }
 
-void MSWindow::showPolarisation(enum TimeFrequencyData::PolarisationType polarisation)
+void MSWindow::showPolarisation(enum PolarisationType polarisation)
 {
 	if(HasImage())
 	{

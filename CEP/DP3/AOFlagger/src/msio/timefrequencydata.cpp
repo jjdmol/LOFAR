@@ -92,35 +92,35 @@ TimeFrequencyData *TimeFrequencyData::CreateTFDataFromDipoleComplex(enum PhaseRe
 	{
 		case RealPart:
 			data = new TimeFrequencyData(RealPart,
-				GetRealPartFromDipole(XX),
-				GetRealPartFromDipole(XY),
-				GetRealPartFromDipole(YX),
-				GetRealPartFromDipole(YY));
+				GetRealPartFromDipole(XXPolarisation),
+				GetRealPartFromDipole(XYPolarisation),
+				GetRealPartFromDipole(YXPolarisation),
+				GetRealPartFromDipole(YYPolarisation));
 			break;
 		case ImaginaryPart:
 			data = new TimeFrequencyData(ImaginaryPart,
-				GetImaginaryPartFromDipole(XX),
-				GetImaginaryPartFromDipole(XY),
-				GetImaginaryPartFromDipole(YX),
-				GetImaginaryPartFromDipole(YY));
+				GetImaginaryPartFromDipole(XXPolarisation),
+				GetImaginaryPartFromDipole(XYPolarisation),
+				GetImaginaryPartFromDipole(YXPolarisation),
+				GetImaginaryPartFromDipole(YYPolarisation));
 			break;
 		case AmplitudePart:
 			{
 				Image2DCPtr
-					xx = GetAmplitudePartFromDipole(XX),
-					xy = GetAmplitudePartFromDipole(XY),
-					yx = GetAmplitudePartFromDipole(YX),
-					yy = GetAmplitudePartFromDipole(YY);
+					xx = GetAmplitudePartFromDipole(XXPolarisation),
+					xy = GetAmplitudePartFromDipole(XYPolarisation),
+					yx = GetAmplitudePartFromDipole(YXPolarisation),
+					yy = GetAmplitudePartFromDipole(YYPolarisation);
 				data = new TimeFrequencyData(AmplitudePart, xx, xy, yx, yy);
 			}
 			break;
 		case PhasePart:
 			{
 				Image2DCPtr
-					xx = GetPhasePartFromDipole(XX),
-					xy = GetPhasePartFromDipole(XY),
-					yx = GetPhasePartFromDipole(YX),
-					yy = GetPhasePartFromDipole(YY);
+					xx = GetPhasePartFromDipole(XXPolarisation),
+					xy = GetPhasePartFromDipole(XYPolarisation),
+					yx = GetPhasePartFromDipole(YXPolarisation),
+					yy = GetPhasePartFromDipole(YYPolarisation);
 				data = new TimeFrequencyData(PhasePart, xx, xy, yx, yy);
 			}
 			break;
@@ -138,27 +138,27 @@ TimeFrequencyData *TimeFrequencyData::CreateTFDataFromAutoDipoleComplex(enum Pha
 	{
 		case RealPart:
 			data = new TimeFrequencyData(RealPart, AutoDipolePolarisation,
-				GetRealPartFromAutoDipole(XX),
-				GetRealPartFromAutoDipole(YY));
+				GetRealPartFromAutoDipole(XXPolarisation),
+				GetRealPartFromAutoDipole(YYPolarisation));
 			break;
 		case ImaginaryPart:
 			data = new TimeFrequencyData(ImaginaryPart, AutoDipolePolarisation,
-				GetImaginaryPartFromAutoDipole(XX),
-				GetImaginaryPartFromAutoDipole(YY));
+				GetImaginaryPartFromAutoDipole(XXPolarisation),
+				GetImaginaryPartFromAutoDipole(YYPolarisation));
 			break;
 		case AmplitudePart:
 			{
 				Image2DCPtr
-					xx = GetAmplitudePartFromAutoDipole(XX),
-					yy = GetAmplitudePartFromAutoDipole(YY);
+					xx = GetAmplitudePartFromAutoDipole(XXPolarisation),
+					yy = GetAmplitudePartFromAutoDipole(YYPolarisation);
 				data = new TimeFrequencyData(AmplitudePart, AutoDipolePolarisation, xx, yy);
 			}
 			break;
 		case PhasePart:
 			{
 				Image2DCPtr
-					xx = GetPhasePartFromAutoDipole(XX),
-					yy = GetPhasePartFromAutoDipole(YY);
+					xx = GetPhasePartFromAutoDipole(XXPolarisation),
+					yy = GetPhasePartFromAutoDipole(YYPolarisation);
 				data = new TimeFrequencyData(PhasePart, AutoDipolePolarisation, xx, yy);
 			}
 			break;
@@ -173,17 +173,17 @@ TimeFrequencyData *TimeFrequencyData::CreateTFDataFromComplexCombination(const T
 {
 	if(real.PhaseRepresentation() == ComplexRepresentation || imaginary.PhaseRepresentation() == ComplexRepresentation)
 		throw BadUsageException("Trying to create complex from real/imaginary time frequency that is are already complex");
-	if(real.PolarisationType() != imaginary.PolarisationType())
+	if(real.Polarisation() != imaginary.Polarisation())
 		throw BadUsageException("Combining real/imaginary time frequency data from different polarisations"); 
-	switch(real.PolarisationType())
+	switch(real.Polarisation())
 	{
-		case XX:
-		case XY:
-		case YX:
-		case YY:
+		case XXPolarisation:
+		case XYPolarisation:
+		case YXPolarisation:
+		case YYPolarisation:
 		case SinglePolarisation:
-		case StokesI:
-			return new TimeFrequencyData(real.PolarisationType(), real._images[0], imaginary._images[0]);
+		case StokesIPolarisation:
+			return new TimeFrequencyData(real.Polarisation(), real._images[0], imaginary._images[0]);
 		case DipolePolarisation:
 			return new TimeFrequencyData(
 				real._images[0], imaginary._images[0],
