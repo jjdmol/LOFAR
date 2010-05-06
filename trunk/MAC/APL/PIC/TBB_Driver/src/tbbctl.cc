@@ -359,21 +359,23 @@ GCFEvent::TResult TriggerSettingsCmd::ack(GCFEvent& e)
 		if (isSelected(rcu) ) {
 			if (bnr != oldbnr) {
 				if (ack.status_mask & (1 << bnr)) {
-					cout << "Rcu  Board  level  start  stop   filter  window  mode                 c0     c1     c2     c3" << endl;
-					cout << "---  -----  -----  -----  -----  ------  ------  -------------------  -----  -----  -----  -----" << endl;
+					cout << "Rcu  Board  level  start  stop   filter  window  mode                 f0-c0  f0-c1  f0-c2  f0-c3  f1-c0  f1-c1  f1-c2  f1-c3" << endl;
+					cout << "---  -----  -----  -----  -----  ------  ------  -------------------  -----  -----  -----  -----  -----  -----  -----  -----" << endl;
 				}
 				else {
 					cout << formatString("board-%d not active",bnr) << endl;
 				}
 			}
 			if (ack.status_mask & (1 << bnr)) {
-				cout << formatString("%3d  %5d  %5d  %5d  %5d  %6d  %6d  %8s, %9s  %5d  %5d  %5d  %5d",
-						rcu, bnr, ack.setup[rcu].level, ack.setup[rcu].start_mode, ack.setup[rcu].stop_mode,
-						ack.setup[rcu].filter_select, ack.setup[rcu].window,
-						trig_mode[ack.setup[rcu].trigger_mode],
-						oper_mode[ack.setup[rcu].operating_mode],
-						ack.coefficients[rcu].c0, ack.coefficients[rcu].c1,
-						ack.coefficients[rcu].c2, ack.coefficients[rcu].c3) << endl;
+				cout << formatString("%3d  %5d  %5d  %5d  %5d  %6d  %6d  %8s, %9s  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d",
+						rcu, bnr, ack.rcu[rcu].setup.level, ack.rcu[rcu].setup.start_mode, ack.rcu[rcu].setup.stop_mode,
+						ack.rcu[rcu].setup.filter_select, ack.rcu[rcu].setup.window,
+						trig_mode[ack.rcu[rcu].setup.trigger_mode],
+						oper_mode[ack.rcu[rcu].setup.operating_mode],
+						ack.rcu[rcu].coef.filter0[0], ack.rcu[rcu].coef.filter0[1],
+						ack.rcu[rcu].coef.filter0[2], ack.rcu[rcu].coef.filter0[3],
+						ack.rcu[rcu].coef.filter1[0], ack.rcu[rcu].coef.filter1[1],
+						ack.rcu[rcu].coef.filter1[2], ack.rcu[rcu].coef.filter1[3]) << endl;
 			}
 		}
 		oldbnr = bnr;
@@ -543,8 +545,7 @@ GCFEvent::TResult TrigSetupCmd::ack(GCFEvent& e)
 }
 
 //---- TRIGCOEFFICIENTS -------------------------------------------------------
-TrigCoefficientCmd::TrigCoefficientCmd(GCFPortInterface& port) : Command(port),
-	itsC0(0), itsC1(0), itsC2(0), itsC3(0)
+TrigCoefficientCmd::TrigCoefficientCmd(GCFPortInterface& port) : Command(port)
 {
 	cout << endl;
 	cout << "== TBB ============================ setup trigger coeffients for selected rcu's ====" << endl;
@@ -557,10 +558,8 @@ void TrigCoefficientCmd::send()
 	TBBTrigCoefSameEvent event;
 	if (isSelectionDone()) {
 		event.rcu_mask = getRcuMask(); // if select cmd is used
-		event.coefficients.c0 = itsC0;
-		event.coefficients.c1 = itsC1;
-		event.coefficients.c2 = itsC2;
-		event.coefficients.c3 = itsC3;
+		memcpy(event.coefficients.filter0, itsFilter0, 4 * sizeof(uint16));
+		memcpy(event.coefficients.filter1, itsFilter1, 4 * sizeof(uint16));
 	}
 	itsPort.send(event);
 	itsPort.setTimer(DELAY);
@@ -1343,6 +1342,45 @@ GCFEvent::TResult ArpModeCmd::ack(GCFEvent& e)
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
+}
+
+//---- CEPSETTINGS -------------------------------------------------------------------
+CepStorageCmd::CepStorageCmd(GCFPortInterface& port) : Command(port)
+{
+    cout << endl;
+    cout << "== TBB ========================================= CEP storage node ====" << endl;
+    cout << endl;
+}
+
+//-----------------------------------------------------------------------------
+void CepStorageCmd::send()
+{
+    TBBCepStorageEvent event;
+    event.boardmask = getBoardMask();
+    memcpy(event.destination, itsStorageNode, sizeof(itsStorageNode));
+    itsPort.send(event);
+    itsPort.setTimer(DELAY);
+}
+
+//-----------------------------------------------------------------------------
+GCFEvent::TResult CepStorageCmd::ack(GCFEvent& e)
+{
+    TBBCepStorageAckEvent ack(e);
+    cout << "TBB  Info" << endl;
+    cout << "---  -------------------------------------------------------" << endl;
+    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
+        if (isSelected(bnr) ) {
+            if (ack.status_mask[bnr] == TBB_SUCCESS) {
+                cout << formatString(" %2d  storage node set to %s",bnr, itsStorageNode ) << endl;
+            } else {
+                cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
+            }
+        }
+    }
+
+    setCmdDone(true);
+
+    return(GCFEvent::HANDLED);
 }
 
 //---- STOPCEP -------------------------------------------------------------------
@@ -2557,10 +2595,11 @@ void TBBCtl::commandHelp(int level)
 	cout << " tbbctl --stop [--select=<set>]                                     # stop recording on selected rcu's" << endl;
 	cout << endl;
 	cout << "______| CEP |_____________________________________________________________________________________________________________" << endl;
-	cout << " tbbctl --mode=[transient | subbands]                               # set mode to configure UDP/IP header for CEP tranport" << endl;
-	cout << "      # before using: --read, readall, --arp or --arpmode," << endl;
-	cout << "      # first use --mode to setup UDP/IP header" << endl;
-	cout << " tbbctl --read=rcunr,secondstime,sampletime,prepages,postpages      # transfer recorded data from rcunr to CEP, " << endl;
+	cout << " tbbctl --mode=[transient | subbands]                               # set receive mode to configure UDP/IP header for CEP tranport" << endl;
+        cout << "      # before using: --read, readall, --arp or --arpmode,          " << endl;
+	cout << "      # first use --mode or --cepsettings to setup UDP/IP header    " << endl;
+        cout << " tbbctl --storage=node [--select=<set>]                             # set storage node to configure UDP/IP header for CEP tranport" << endl;
+        cout << " tbbctl --read=rcunr,secondstime,sampletime,prepages,postpages      # transfer recorded data from rcunr to CEP, " << endl;
 	cout << " tbbctl --readall=pages [--select=<set>]                            # transfer number of pages from all selected rcunr to CEP, " << endl;
 	cout << " tbbctl --stopcep [--select=<set>]                                  # stop sending data to CEP" << endl;
 	cout << " tbbctl --cepdelay=delay [--select=<set>]                           # set delay between CEP frames, 1 delay unit = 5 uS" << endl;
@@ -2572,7 +2611,7 @@ void TBBCtl::commandHelp(int level)
 	cout << " tbbctl --release [--select=<set>]                                  # release trigger system for selected rcu's" << endl;
 	cout << " tbbctl --generate [--select=<set>]                                 # generate a trigger for selected rcu's" << endl;
 	cout << " tbbctl --setup=level,start,stop,filter,window,mode [--select=<set>]# setup trigger system for selected rcu's, mode = 0/1" << endl;
-	cout << " tbbctl --coef=c0,c1,c2,c3 [--select=<set>]                         # set trigger coeffients for selected rcu's" << endl;
+	cout << " tbbctl --coef=f00,f01,f02,f03,f10,f11,f12,f13 [--select=<set>]     # set trigger coeffients for selected rcu's" << endl;
 	cout << " tbbctl --triginfo=rcu                                              # get trigger info for selected rcu" << endl;
 	cout << " tbbctl --listen=[one_shot | continues]                             # listen for triggers, in continues mode the system" << endl;
 	cout << "                                                                    # is released after a trigger, in one_shot mode" << endl;
@@ -2803,7 +2842,8 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 		case TBB_CEP_STATUS_ACK:
 		case TBB_STOP_CEP_ACK:
 		case TBB_CEP_DELAY_ACK:
-		case TBB_TEMP_LIMIT_ACK: {
+		case TBB_TEMP_LIMIT_ACK:
+        case TBB_CEP_STORAGE_ACK: {
 			itsServerPort.cancelAllTimers();
 			status = itsCommand->ack(e); // handle the acknowledgement
 			if (!itsCommand->isCmdDone() && itsCommand->isCmdSendNext()) {
@@ -2881,12 +2921,13 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 			{ "writereg",   required_argument, 0, 'K' },
 			{ "help",       no_argument,       0, 'L' },
 			{ "expert",     no_argument,       0, 'M' },
+			{ "storage",    required_argument, 0, 'N' },
 			{ 0,            0,                 0,  0 },
 		};
 
 		int option_index = 0;
 		int c = getopt_long(argc, argv,
-								"a:bcdefghij:k:l:m::n:o:p:qrst:uv:wx:y:zAB:C:D:E:F:G:H:I:J:K:LM",
+                                    "a:bcdefghij:k:l:m::n:o:p:qrst:uv:wx:y:zAB:C:D:E:F:G:H:I:J:K:LMN:",
 								long_options, &option_index);
 
 		if (c == -1) {
@@ -3004,7 +3045,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int numitems = sscanf(optarg, "%u,%u,%u,%u,%u,%u",&level, &start, &stop, &filter, &window, &triggermode);
 					// check if valid arguments
 					if ( numitems < 6 || numitems == EOF
-							|| level < 1 || level > 2047
+							|| level < 4 || level > 127
 							|| start < 1 || start > 15
 							|| stop < 1 || stop > 15
 							|| window > 8
@@ -3012,7 +3053,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					{
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
 						cout << "       '--trigsetup=level, start, stop, filter, window, mode' (use decimal values)" << endl;
-						cout << "       level=1..2047,  start=1..15,  stop=1..15,  filter=0(in) or 1(bypassed)" << endl;
+						cout << "       level=4..127,  start=1..15,  stop=1..15,  filter=0(in) or 1(bypassed)" << endl;
 						cout << "       window=0..8, mode=0..3 (b0=0 single shot),(b0=1 continues)" << endl;
 						cout << "                              (b1=0 RSP input),(b1=1 external input)" << endl;
 						exit(EXIT_FAILURE);
@@ -3039,21 +3080,18 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				TrigCoefficientCmd* trigcoefficientcmd = new TrigCoefficientCmd(itsServerPort);
 				command = trigcoefficientcmd;
 				if (optarg) {
-					uint32 c0 = 0;
-					uint32 c1 = 0;
-					uint32 c2 = 0;
-					uint32 c3 = 0;
-					int numitems = sscanf(optarg, "%u,%u,%u,%u",&c0, &c1, &c2, &c3);
-					if (numitems < 4 || numitems == EOF) {
+					uint16 f0[4];
+					uint16 f1[4];
+					
+					int numitems = sscanf(optarg, "%u,%u,%u,%u,%u,%u,%u,%u",
+					               &f0[0], &f0[1], &f0[2], &f0[3], &f1[0], &f1[1], &f1[2], &f1[3]);
+					if (numitems < 8 || numitems == EOF) {
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
-						cout << "       '--trigcoef=c0, c1, c2, c3'   (use decimal values)" << endl;
-						cout << "       co, c1, c2, c3=16bit value"<< endl;
+						cout << "       '--trigcoef=f0c0, f0c1, f0c2, f0c3, f1c0, f1c1, f1c2, f1c3'   (use 16bit decimal values)" << endl;
 						exit(EXIT_FAILURE);
 					}
-					trigcoefficientcmd->setC0(static_cast<uint16>(c0));
-					trigcoefficientcmd->setC1(static_cast<uint16>(c1));
-					trigcoefficientcmd->setC2(static_cast<uint16>(c2));
-					trigcoefficientcmd->setC3(static_cast<uint16>(c3));
+					trigcoefficientcmd->setFilter0(f0);
+					trigcoefficientcmd->setFilter1(f1);
 				}
 				command->setCmdType(RCUCMD);
 			} break;
@@ -3173,7 +3211,26 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					}
 					command->setCmdType(BOARDCMD);
 				} break;
-	
+                               
+			case 'N': {    // --storage
+				if (command) delete command;
+				CepStorageCmd* storagecmd = new CepStorageCmd(itsServerPort);
+				command = storagecmd;
+				if (optarg) {
+					char node[12];
+					int numitems = sscanf(optarg, "%s",	node);
+					if (numitems < 1 || numitems == EOF) {
+						cout << "Error: invalid number of arguments. Should be of the format " << endl;
+						cout << "       '--storage=lse001'" << endl;
+						cout << "       'see /opt/lofar/etc/StaticMetaData/Storage+MAC.dat for nodes'" << endl;
+						exit(EXIT_FAILURE);
+					}
+
+					storagecmd->setStorageNode(node);
+				}
+				command->setCmdType(BOARDCMD);
+			} break;
+					
 			case 'q': {    // --version
 				if (command) delete command;
 				VersionCmd* versioncmd = new VersionCmd(itsServerPort);

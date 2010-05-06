@@ -61,6 +61,7 @@ public:
 private:
 	TbbSettings *TS;
 	uint32	itsMode; // Transient or subbands
+    uint32  itsSignal;
 };
 
 	} // end TBB namespace

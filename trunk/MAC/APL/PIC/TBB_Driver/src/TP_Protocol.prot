@@ -109,12 +109,10 @@ prelude = << PRELUDE_END
 		uint32 trigger_mode;
 	};
 		 
-	typedef struct TpFilterCoeffients // filter coeffients for 1 channel
+	typedef struct TpFilterCoeffients // filter coeffients for 1 pair of channels
 	{
-		uint32 c0;
-		uint32 c1;
-		uint32 c2;
-		uint32 c3;
+		uint32 filter_0[4];
+		uint32 filter_1[4];
 	};
 	
 PRELUDE_END;
@@ -412,10 +410,13 @@ event = {
 		type = "uint32";
 	};
 	param = {
-		name = "channel";
-		type = "struct TpFilterCoeffients[4]";
+		name = "coeffients_even";
+		type = "struct TpFilterCoeffients";
 	};
-	
+	param = {
+		name = "coeffients_odd";
+		type = "struct TpFilterCoeffients";
+        };
 };
 
 event = {

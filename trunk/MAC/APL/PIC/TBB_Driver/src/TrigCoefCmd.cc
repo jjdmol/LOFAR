@@ -62,13 +62,28 @@ void TrigCoefCmd::saveTbbEvent(GCFEvent& event)
 	int32 board_channel; // board_channel 0 .. 15	
 	int32 channel;       // channel 0 .. 191 (= maxboard * max_channels_on_board)
 	
-	for(int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
-		TS->convertRcu2Ch(rcunr,&board,&board_channel);	
-		channel = (board * TS->nrChannelsOnBoard()) + board_channel;
-		TS->setChFilterCoefficient(channel, 0, tbb_event.coefficients[rcunr].c0);
-		TS->setChFilterCoefficient(channel, 1, tbb_event.coefficients[rcunr].c1);
-		TS->setChFilterCoefficient(channel, 2, tbb_event.coefficients[rcunr].c2);
-		TS->setChFilterCoefficient(channel, 3, tbb_event.coefficients[rcunr].c3);
+	// if filter coefficients for each RCU are send change next loops
+	// now rcu-0 and rcu-8 have the same settings
+	//     rcu-1 and rcu-9 have the same settings
+	//     etc
+	
+	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+	    int startRCU = boardnr * TS->nrChannelsOnBoard();
+	    for(int rcunr = startRCU; rcunr < startRCU + (TS->nrChannelsOnBoard() / 2); rcunr++) {
+    		TS->convertRcu2Ch(rcunr,&board,&board_channel);	
+    		channel = (board * TS->nrChannelsOnBoard()) + board_channel;
+            for (int c = 0; c < 4; c++) {
+                TS->setChFilterCoefficient(channel, 0, c, tbb_event.rcu[rcunr].filter0[c]);
+                TS->setChFilterCoefficient(channel, 1, c, tbb_event.rcu[rcunr].filter1[c]);
+            }
+            // set settings for upper 8 channels of each board
+            TS->convertRcu2Ch(rcunr+8,&board,&board_channel);	
+            channel = (board * TS->nrChannelsOnBoard()) + board_channel;
+            for (int c = 0; c < 4; c++) {
+                TS->setChFilterCoefficient(channel, 0, c, tbb_event.rcu[rcunr].filter0[c]);
+                TS->setChFilterCoefficient(channel, 1, c, tbb_event.rcu[rcunr].filter1[c]);
+            }
+            }
 	}
 	
 	bitset<MAX_N_RCUS> channels;
@@ -89,10 +104,10 @@ void TrigCoefCmd::sendTpEvent()
 	
 	tp_event.mp = TS->getChMpNr(getChannelNr());
 	for (int i = 0; i < 4; i++) {
-		tp_event.channel[i].c0 = TS->getChFilterCoefficient((getChannelNr() + i), 0);
-		tp_event.channel[i].c1 = TS->getChFilterCoefficient((getChannelNr() + i), 1);
-		tp_event.channel[i].c2 = TS->getChFilterCoefficient((getChannelNr() + i), 2);
-		tp_event.channel[i].c3 = TS->getChFilterCoefficient((getChannelNr() + i), 3);
+            tp_event.coeffients_even.filter_0[i] = TS->getChFilterCoefficient(getChannelNr(), 0, i);
+            tp_event.coeffients_even.filter_1[i] = TS->getChFilterCoefficient(getChannelNr(), 1, i);
+            tp_event.coeffients_odd.filter_0[i]  = TS->getChFilterCoefficient((getChannelNr() + 2), 0, i);
+            tp_event.coeffients_odd.filter_1[i]  = TS->getChFilterCoefficient((getChannelNr() + 2), 1, i);
 	}
 
 	LOG_DEBUG_STR(formatString("Sending TrigCoef to boardnr[%d]",getBoardNr()));
