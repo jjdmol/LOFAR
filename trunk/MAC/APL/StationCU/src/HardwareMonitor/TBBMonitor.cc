@@ -840,18 +840,24 @@ GCFEvent::TResult TBBMonitor::askRCUSettings(GCFEvent& event, GCFPortInterface& 
 		for (uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
 			LOG_TRACE_FLOW_STR("Updating rcu " << rcu);
 			// update all RCU variables
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_STARTLEVEL, GCFPVInteger(ack.setup[rcu].start_mode), 0.0, false),
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_BASELEVEL,  GCFPVInteger(ack.setup[rcu].level), 0.0, false),
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_STOPLEVEL,  GCFPVInteger(ack.setup[rcu].stop_mode), 0.0, false),
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER,     GCFPVInteger(ack.setup[rcu].filter_select), 0.0, false),
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_WINDOW,     GCFPVInteger(ack.setup[rcu].window), 0.0, false),
-			//itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_MODE,       GCFPVInteger(ack.setup[rcu].trigger_mode), 0.0, false),
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_OPERATING_MODE, 
-													GCFPVInteger(ack.setup[rcu].operating_mode), 0.0, false);
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF0, 	  GCFPVInteger(ack.coefficients[rcu].c0), 0.0, false);
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF1, 	  GCFPVInteger(ack.coefficients[rcu].c1), 0.0, false);
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF2, 	  GCFPVInteger(ack.coefficients[rcu].c2), 0.0, false);
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF3, 	  GCFPVInteger(ack.coefficients[rcu].c3), 0.0, false);
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_STARTLEVEL,     GCFPVInteger(ack.rcu[rcu].setup.start_mode), 0.0, false),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_BASELEVEL,      GCFPVInteger(ack.rcu[rcu].setup.level), 0.0, false),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_STOPLEVEL,      GCFPVInteger(ack.rcu[rcu].setup.stop_mode), 0.0, false),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER,         GCFPVInteger(ack.rcu[rcu].setup.filter_select), 0.0, false),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_WINDOW,         GCFPVInteger(ack.rcu[rcu].setup.window), 0.0, false),
+			//itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_MODE,           GCFPVInteger(ack.rcu[rcu].setup.trigger_mode), 0.0, false),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_OPERATING_MODE, GCFPVInteger(ack.rcu[rcu].setup.operating_mode), 0.0, false);
+
+			// new filter settings
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER0_COEFF0, GCFPVInteger(ack.rcu[rcu].coef.filter0[0]), 0.0, false);
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER0_COEFF1, GCFPVInteger(ack.rcu[rcu].coef.filter0[1]), 0.0, false);
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER0_COEFF2, GCFPVInteger(ack.rcu[rcu].coef.filter0[2]), 0.0, false);
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER0_COEFF3, GCFPVInteger(ack.rcu[rcu].coef.filter0[3]), 0.0, false);
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER1_COEFF0, GCFPVInteger(ack.rcu[rcu].coef.filter1[0]), 0.0, false);
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER1_COEFF1, GCFPVInteger(ack.rcu[rcu].coef.filter1[1]), 0.0, false);
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER1_COEFF2, GCFPVInteger(ack.rcu[rcu].coef.filter1[2]), 0.0, false);
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER1_COEFF3, GCFPVInteger(ack.rcu[rcu].coef.filter1[3]), 0.0, false);
+
 			itsRCUs[rcu]->flush();
 		} // for all boards
 
