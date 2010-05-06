@@ -30,7 +30,7 @@ namespace rfiStrategy
 					_indices.pop();
 					++index;
 
-					while(index > parent->GetChildCount() && parent != 0)
+					while(parent != 0 && index >= parent->GetChildCount())
 					{
 						index = _indices.top();
 						_indices.pop();

@@ -25,6 +25,7 @@
 #include <AOFlagger/rfi/strategy/xmlwriter.h>
 
 using namespace rfiStrategy;
+using namespace std;
 
 template<typename T>
 class Parameter {
@@ -54,7 +55,7 @@ class Parameter {
 			if(_isSet)
 				return _value;
 			else
-				throw std::runtime_error("Trying to access unset parameter");
+				throw runtime_error("Trying to access unset parameter");
 		}
 	private:
 		bool _isSet;
@@ -63,40 +64,79 @@ class Parameter {
 
 int main(int argc, char *argv[])
 {
-	std::cout << 
+	cout << 
 			"RFI strategy file writer\n"
 			"This program will write an RFI strategy to a file, to run it with the\n"
 			"rficonsole or the rfigui.\n\n"
 			"Author: André Offringa (offringa@astro.rug.nl)\n"
-			<< std::endl;
+			<< endl;
 
 	Parameter<enum BaselineSelection> baselineSelection;
 	Parameter<enum DataKind> dataKind;
 	Parameter<bool> frequencyBasedFlagging;
 	Parameter<size_t> threadCount;
-	Parameter<std::pair<double, double> > kernelSize;
+	Parameter<pair<double, double> > kernelSize;
 	Parameter<enum PolarisationType> polarisation;
 	Parameter<num_t> sensitivity;
-	Parameter<std::pair<size_t, size_t> > windowSize;
+	Parameter<pair<size_t, size_t> > windowSize;
 
 	size_t parameterIndex = 1;
 	while(parameterIndex < (size_t) argc && argv[parameterIndex][0]=='-')
 	{
-		std::string flag(argv[parameterIndex]+1);
+		string flag(argv[parameterIndex]+1);
 
-		if(flag == "b")
+		if(flag == "b" || flag == "baseline")
 		{
+			++parameterIndex;
+			string baselineStr(argv[parameterIndex]); 
+			if(baselineStr == "all") baselineSelection = All;
+			else if(baselineStr == "auto") baselineSelection = AutoCorrelations;
+			else if(baselineStr == "cross") baselineSelection = CrossCorrelations;
+			else throw runtime_error("Unknown baseline selection for -b");
 		}
-		else if(flag == "j") { ++parameterIndex; threadCount = atoi(argv[parameterIndex]); }
+		else if(flag == "c" || flag == "column")
+		{
+			++parameterIndex;
+			string columnStr(argv[parameterIndex]); 
+			if(columnStr == "DATA") dataKind = ObservedData;
+			else if(columnStr == "CORRECTED_DATA") dataKind = CorrectedData;
+			else if(columnStr == "residuals") dataKind = ResidualData;
+			else throw runtime_error("Column parameter -c can only be followed by DATA, CORRECTED_DATA or residuals");
+		}
+		else if(flag == "ff" || flag == "freq-based-flagging")	{ frequencyBasedFlagging = true;	}
+		else if(flag == "j" || flag == "threads") { ++parameterIndex; threadCount = atoi(argv[parameterIndex]); }
+		else if(flag == "ks" || flag == "kernel-size")
+		{
+			++parameterIndex;
+			kernelSize = pair<double, double>( atof(argv[parameterIndex]), atof(argv[parameterIndex+1]));
+			++parameterIndex;
+		}
+		else if(flag == "p" || flag == "polarizations")
+		{
+			++parameterIndex;
+			string polStr(argv[parameterIndex]);
+			if(polStr == "all") polarisation = DipolePolarisation;
+			else if(polStr == "auto") polarisation = AutoDipolePolarisation;
+			else if(polStr == "stokesi") polarisation = StokesIPolarisation;
+			else throw runtime_error("Unknown polarisation type for -p");
+		}
+		else if(flag == "s" || flag == "sensitivity") { ++parameterIndex; sensitivity = atof(argv[parameterIndex]); }
+		else if(flag == "ws" || flag == "window-size")
+		{
+			++parameterIndex;
+			windowSize = pair<size_t, size_t>( atoi(argv[parameterIndex]), atoi(argv[parameterIndex+1]));
+			++parameterIndex;
+		}
 		else
 		{
-			std::cerr << "Incorrect usage; parameter \"" << argv[parameterIndex] << "\" not understood.\nType rfistrategy without parameters for a list of commands." << std::endl;
+			cerr << "Incorrect usage; parameter \"" << argv[parameterIndex] << "\" not understood.\nType rfistrategy without parameters for a list of commands." << endl;
 			return 1;
 		}
+		++parameterIndex;
 	}
 	if((int) parameterIndex > argc-2)
 	{
-		std::cerr << "Usage: " << argv[0] << " [options] <profile> <filename>\n\n"
+		cerr << "Usage: " << argv[0] << " [options] <profile> <filename>\n\n"
 			"Profiles:\n"
 			"  fast     Fastest strategy that provides a moderate\n"
 			"           result in quality. Will flag the measurement set using\n"
@@ -140,7 +180,7 @@ int main(int argc, char *argv[])
 			"-ks or -kernel-size <width> <height>\n"
 			"  Gaussian kernel size used for smoothing. Floats. \n"
 			"  Default: 15.0 channels x 7.5 time steps.\n"
-			"-p or -pol <all/auto/stokesi>\n"
+			"-p or -polarizations <all/auto/stokesi>\n"
 			"  Specify how to process the polarizations. Independent of this setting,\n"
 			"  the flags of all polarizations will be or-ed together and all polarizations\n"
 			"  will be set to that value.\n"
@@ -155,7 +195,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	std::string profile(argv[parameterIndex]), filename(argv[parameterIndex+1]);
+	string profile(argv[parameterIndex]), filename(argv[parameterIndex+1]);
 
 	rfiStrategy::Strategy *strategy = new rfiStrategy::Strategy();
 	if(profile == "fast")
@@ -169,7 +209,7 @@ int main(int argc, char *argv[])
 	else if(profile == "pulsar")
 		strategy->LoadBestStrategy(true, true);
 	else {
-		std::cerr << "Unknown profile: " << profile << std::endl;
+		cerr << "Unknown profile: " << profile << endl;
 		return 1;
 	}
 
@@ -177,6 +217,8 @@ int main(int argc, char *argv[])
 		Strategy::SetBaselines(*strategy, baselineSelection);
 	if(dataKind.IsSet())
 		Strategy::SetDataKind(*strategy, dataKind);
+	if(frequencyBasedFlagging.IsSet() && frequencyBasedFlagging.Value())
+		Strategy::SetTransientCompatibility(*strategy);
 	if(threadCount.IsSet())
 		Strategy::SetThreadCount(*strategy, threadCount);
 	if(kernelSize.IsSet())
@@ -184,12 +226,12 @@ int main(int argc, char *argv[])
 	if(polarisation.IsSet())
 		Strategy::SetPolarisations(*strategy, polarisation);
 	if(sensitivity.IsSet())
-		Strategy::SetMultiplySensitivity(*strategy, polarisation);
+		Strategy::SetMultiplySensitivity(*strategy, sensitivity);
 	if(windowSize.IsSet())
 		Strategy::SetFittingWindowSize(*strategy, windowSize.Value().first, windowSize.Value().second);
 
 	rfiStrategy::XmlWriter writer;
-	std::cout << "Writing strategy..." << std::endl;
+	cout << "Writing strategy..." << endl;
 	writer.WriteStrategy(*strategy, filename);
 	delete strategy;
 }

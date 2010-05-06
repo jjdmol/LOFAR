@@ -298,6 +298,7 @@ namespace rfiStrategy {
 					case AutoDipolePolarisation: action.SetReadDipoleAutoPolarisations(); break;
 					case DipolePolarisation: action.SetReadAllPolarisations(); break;
 					case StokesIPolarisation: action.SetReadStokesI(); break;
+					default: throw std::runtime_error("Polarisation not supported");
 				}
 			}
 			++i;
@@ -320,19 +321,63 @@ namespace rfiStrategy {
 
 	void Strategy::SetTransientCompatibility(Strategy &strategy)
 	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
+		while(!i.PastEnd())
+		{
+			if(i->Type() == ThresholdActionType)
+			{
+				ThresholdAction &action = static_cast<ThresholdAction&>(*i);
+				action.SetFrequencyDirectionFlagging(false);
+			} else if(i->Type() == SlidingWindowFitActionType)
+			{
+				SlidingWindowFitAction &action = static_cast<SlidingWindowFitAction&>(*i);
+				action.Parameters().timeDirectionWindowSize = 1;
+			}
+			++i;
+		}
 	}
 
 	void Strategy::SetMultiplySensitivity(Strategy &strategy, num_t factor)
 	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
+		while(!i.PastEnd())
+		{
+			if(i->Type() == ThresholdActionType)
+			{
+				ThresholdAction &action = static_cast<ThresholdAction&>(*i);
+				action.SetBaseSensitivity(action.BaseSensitivity() * factor);
+			}
+			++i;
+		}
 	}
 
 	void Strategy::SetFittingWindowSize(Strategy &strategy, size_t windowWidth, size_t windowHeight)
 	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
+		while(!i.PastEnd())
+		{
+			if(i->Type() == SlidingWindowFitActionType)
+			{
+				SlidingWindowFitAction &action = static_cast<SlidingWindowFitAction&>(*i);
+				action.Parameters().timeDirectionWindowSize = windowWidth;
+				action.Parameters().frequencyDirectionWindowSize = windowHeight;
+			}
+			++i;
+		}
 	}
 
 	void Strategy::SetFittingKernelSize(Strategy &strategy, num_t kernelWidth, num_t kernelHeight)
 	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
+		while(!i.PastEnd())
+		{
+			if(i->Type() == SlidingWindowFitActionType)
+			{
+				SlidingWindowFitAction &action = static_cast<SlidingWindowFitAction&>(*i);
+				action.Parameters().timeDirectionKernelSize = kernelWidth;
+				action.Parameters().frequencyDirectionKernelSize = kernelHeight;
+			}
+			++i;
+		}
 	}
-
-
 }
