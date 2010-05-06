@@ -41,17 +41,26 @@ namespace LOFAR {
     {
       // set default parameters for coincidence
       itsLogfile = NULL;
-      antennaPositionsFile = "";
+      itsAntennaSelection = "";
+      itsAntennaPositionsFile = "";
       itsNoCoincidenceChannels = 32;
       itsCoincidenceTime = 1.0e-6;
-      doDirectionFit = 0;
+      forcedDeadTime = 10.0;
+      itsDoDirectionFit = 0;
       totalCoincidences = 0;
       badFits = 0;
       itsConfigurationFile = "/opt/lofar/etc/VHECRtask.conf"; // /opt/lofar/etc/
       readConfigFile(itsConfigurationFile.c_str());
-      if (itsLogfile == NULL) {
-	cout << "VHECRtask: logfile not set, writing log-output to stdout." << endl;
+      if ((itsAntennaSelection != "")&&(itsAntennaPositionsFile != "")) {
+	//            cout << itsAntennaSelection << " reading in positions." << endl;
+	readAntennaPositions(itsAntennaPositionsFile, itsAntennaSelection);
+      } else {
+	itsDoDirectionFit = 0;
+      };
+      if (itsLogfile == NULL) { // move this to somewhere else, like readConfigFile...
+	//cout << "VHECRtask: logfile not set, writing log-output to stdout." << endl;
 	itsLogfile = stdout;
+        fprintf(itsLogfile, "VHECRTask logfile\n"); // first line in file has to contain 'VHECR' for Python script to understand it.
       };
 //      itsOutputFilename = "/opt/lofar/etc/VHECRtaskLogfile.dat";
 //      itsLogfile = fopen(itsOutputFilename.c_str(), "w"); // overwrites existing file...
@@ -70,8 +79,8 @@ namespace LOFAR {
       trigBuffer[first].prev = VHECR_TASK_BUFFER_LENGTH; //This means "not there"
 
     //  string infile = "/Users/acorstanje/usg/data/calibration/AntennaPos/CS021-AntennaArrays.conf";
-    //  string antennaSelection = "LBA_INNER";
-    //  readAntennaPositions(infile, antennaSelection);
+    //  string itsAntennaSelection = "LBA_INNER";
+    //  readAntennaPositions(infile, itsAntennaSelection);
       LOG_DEBUG ("VHECR construction complete");
     }
     
@@ -106,6 +115,7 @@ namespace LOFAR {
         {
           configFile >> itsOutputFilename;
           itsLogfile = fopen(itsOutputFilename.c_str(), "w"); // overwrites existing file...
+          fprintf(itsLogfile, "VHECRTask logfile\n"); // first line in file has to contain 'VHECR' for Python script to understand it.
           fprintf(itsLogfile, "Successfully opened log file!\n");
           fflush(itsLogfile);
 //          cout << "Filename set to: " << itsOutputFilename << endl;
@@ -115,33 +125,44 @@ namespace LOFAR {
 //          cout << "No channels set to: " << itsNoCoincidenceChannels << endl;
         } else if (temp == "antennaPositionsFile:")
         {        
-          configFile >> antennaPositionsFile;
+          configFile >> itsAntennaPositionsFile;
         } else if (temp == "antennaSelection:")
         {
-          configFile >> antennaSelection;
+          configFile >> itsAntennaSelection;
         } else if (temp == "coincidenceTime:")
         {
           configFile >> itsCoincidenceTime;
         } else if (temp == "doDirectionFit:")
         {
-          configFile >> doDirectionFit;
+          configFile >> itsDoDirectionFit;
         } else
         {
           LOG_DEBUG("Error reading config file!");
         }
       }
-      if ((antennaSelection != "")&&(antennaPositionsFile != "")) {
-	//            cout << antennaSelection << " reading in positions." << endl;
-	readAntennaPositions(antennaPositionsFile, antennaSelection);
-      } else {
-	doDirectionFit = 0;
-      };
-      if (itsLogfile != NULL) {
+        if (itsLogfile != NULL) {
 	fprintf(itsLogfile, "Output file: %s\nCoincidence channels required: %d\nAntenna positions file: %s\nAntenna selection: %s\nCoincidence time window: %3.6f\ndo Direction fit: %d\n", 
-		itsOutputFilename.c_str(), itsNoCoincidenceChannels, antennaPositionsFile.c_str(), antennaSelection.c_str(), itsCoincidenceTime, doDirectionFit);
+		itsOutputFilename.c_str(), itsNoCoincidenceChannels, itsAntennaPositionsFile.c_str(), itsAntennaSelection.c_str(), itsCoincidenceTime, itsDoDirectionFit);
       };
     }
       
+     void VHECRTask::setParameters(string AntennaSet, string AntennaPositionsFile, int Clock,
+			 int NoCoincChann, float CoincidenceTime, int DoDirectionFit, 
+			 float MinElevation, float MaxFitVariance, string ParamExtension)
+     {
+       itsNoCoincidenceChannels = NoCoincChann;
+       itsCoincidenceTime = CoincidenceTime;
+       itsDoDirectionFit = DoDirectionFit;
+       itsMinElevation = MinElevation;
+       itsMaxFitVariance = MaxFitVariance;
+       itsParamExtension = ParamExtension;
+       itsAntennaSelection = AntennaSet;
+       itsAntennaPositionsFile = AntennaPositionsFile;
+       itsSamplingRate = Clock*1000000;
+     };
+
+
+
     //
     // readTBBdata(vector<TBBReadCmd>	cmdVector)
     //
@@ -194,11 +215,17 @@ namespace LOFAR {
     // addTrigger(): 
     //  - called whenever a trigger message arrives
     //  - adds the trigger message to the buffer
+    //  - first check if its timestamp is valid!
     void VHECRTask::addTrigger(const TBBTrigger& trigger) {
       int newindex;
       //      cout << "Received trigger: " << trigger.itsRcuNr << ", " << trigger.itsTime <<endl;
-      
-      newindex = add2buffer(trigger);
+      if (trigger.itsTime < 2.1e9)
+      {
+        newindex = add2buffer(trigger);
+      } else
+      {
+       // cout << "Discarded trigger! " << trigger.itsTime << endl;
+      }
     };
 
 
@@ -221,6 +248,7 @@ namespace LOFAR {
 
       static uint64 latestCoincidenceTime = 0; // we'll ensure that all coincidences we find are at least 1 time window apart.
                                                // That way we won't see every coincidence (n-8) times (n = # single triggers in one pulse)
+      static uint64 latestDumpCommand = 0;
       static uint32 coincidenceCount = 0;
       // ***warning:*** static vars are class vars, not instance vars! Should be done differently if more than one VHECRtask...
       if ( (coincidenceIndex >= 0) && (trigBuffer[coincidenceIndex].date >= latestCoincidenceTime + timeWindow) )
@@ -240,36 +268,46 @@ namespace LOFAR {
         //  printCoincidence(coincidenceIndex);
 //         for(uint32 k=0; k<1000; k++)
 //          {
-          if (doDirectionFit)
+          if (itsDoDirectionFit == 1)
           {
             fitDirectionToCoincidence(coincidenceIndex, itsNoCoincidenceChannels);
+          }
+          if (itsDoDirectionFit >= 2)
+          {
+            fitDirectionAndDistanceToCoincidence(coincidenceIndex, itsNoCoincidenceChannels);
           }
          // }
 //          cout << "Done! "<<endl;
 //          cout.flush();
         }
         // log to file
-        fprintf(itsLogfile, "%s %d %s %d\n", readableTime(pcTimeInSamples).c_str(), 
+        fprintf(itsLogfile, "TimingLog: %s %d %s %d\n", readableTime(pcTimeInSamples).c_str(), 
                                              trigBuffer[coincidenceIndex].no, 
                                              readableTime(trigBuffer[coincidenceIndex].date).c_str(), 
                                              trigBuffer[coincidenceIndex].RcuNr);
 	fflush(itsLogfile);   
 
         latestCoincidenceTime = trigBuffer[coincidenceIndex].date;
-	// This adds the trigger to the command queue.
-	//uint32 RcuNr      = trigBuffer[coincidenceIndex].RcuNr;
-	uint32 RcuNr;
-	uint32 Time       = trigBuffer[coincidenceIndex].Time;
-	uint32 sampleTime = trigBuffer[coincidenceIndex].SampleNr;
-	uint32 prePages   = 64;
-	uint32 postPages  = 64;	
-	//itsCommandVector.push_back(TBBReadCmd(RcuNr, Time, sampleTime, prePages, postPages));	
-	//Add all rcus to the command vector.
-	for (RcuNr =0 ; RcuNr<96 ; RcuNr++) {
-	  noOfRCUs++;
-	  readCmd.push_back(TBBReadCmd(RcuNr, Time, sampleTime, prePages, postPages));	
-	};
-	itsNrTriggers++;
+	
+        if (latestCoincidenceTime - latestDumpCommand > uint64(forcedDeadTime * 200.0e6))
+        { // then do the actual dump command. Ensure at least 'forcedDeadTime' seconds apart.
+          latestDumpCommand = latestCoincidenceTime;
+          
+          // This adds the trigger to the command queue.
+          //uint32 RcuNr      = trigBuffer[coincidenceIndex].RcuNr;
+          uint32 RcuNr;
+          uint32 Time       = trigBuffer[coincidenceIndex].Time;
+          uint32 sampleTime = trigBuffer[coincidenceIndex].SampleNr;
+          uint32 prePages   = 64;
+          uint32 postPages  = 64;	
+          //itsCommandVector.push_back(TBBReadCmd(RcuNr, Time, sampleTime, prePages, postPages));	
+          //Add all rcus to the command vector.
+          for (RcuNr =0 ; RcuNr<96 ; RcuNr++) {
+            noOfRCUs++;
+            readCmd.push_back(TBBReadCmd(RcuNr, Time, sampleTime, prePages, postPages));	
+          };
+          itsNrTriggers++;
+        }
       }; // end: if ( (coincidenceIndex >= 0) ...
       
       // All code for this event is [TEST] code
@@ -315,8 +353,6 @@ namespace LOFAR {
     uint32 VHECRTask::add2buffer(const TBBTrigger& trigger){
       uint64 date;
       uint32 newindex,runindex;
-
-      date = (uint64) trigger.itsTime * itsSamplingRate + trigger.itsSampleNr;
       
       newindex = last;
       last = trigBuffer[last].prev;
@@ -329,9 +365,15 @@ namespace LOFAR {
       trigBuffer[newindex].SampleNr  = trigger.itsSampleNr;
       trigBuffer[newindex].Sum       = trigger.itsSum;
       trigBuffer[newindex].NrSamples = trigger.itsNrSamples;
-      trigBuffer[newindex].PeakValue = trigger.itsPeakValue;
+      trigBuffer[newindex].PeakValue = trigger.itsPeakValue;     
+      if (itsSamplingRate == 200000000) {
+	if ((trigBuffer[newindex].Time)!=1) {
+	  trigBuffer[newindex].SampleNr += 512;
+	};
+      }
+      date = (uint64) trigBuffer[newindex].Time * itsSamplingRate + trigBuffer[newindex].SampleNr;
       trigBuffer[newindex].date      = date;
-      
+
       runindex = first;
       while (runindex < VHECR_TASK_BUFFER_LENGTH){
 	if (trigBuffer[runindex].date <= date) { 
@@ -359,7 +401,7 @@ namespace LOFAR {
     };
    
     void VHECRTask::fitDirectionToCoincidence(int coincidenceIndex, int nofChannels)
-    { // number of channels known from requirement
+    {
       double theta, phi;
       double twopi = 2.0 * 3.1415926536;
       double c = 2.9979e8;
@@ -367,16 +409,21 @@ namespace LOFAR {
       const uint32 thetaSteps = 30;
       const uint32 phiSteps = 120; // move to somewhere else! Parameters...
       
-      double timeDelays[96]; // get rid of that constant
+      double timeDelays[NOFANTENNAS]; 
       
       double fitResult[thetaSteps][phiSteps];
-
+      //     position myAntennaPositions[NOFANTENNAS];
+      //      for(uint32 k=0;k<NOFANTENNAS;k++)
+      //      {
+      //        myAntennaPositions[k] = antennaPositions[k];
+      //      }
+      
       double minTh = 1.0e9;
       double minPh = 1.0e9;
       double minSig2 = 1.0e9;
-      double debugTimeOffsets[96], minDebugTimeOffsets[96];
+      double debugTimeOffsets[NOFANTENNAS], minDebugTimeOffsets[NOFANTENNAS];
       int64 refdate = trigBuffer[coincidenceIndex].date; // coincidence reference timestamp to subtract from all other timestamps.
-
+      
       position a;
       for (uint32 i=0; i<thetaSteps; i++)
       {
@@ -385,12 +432,12 @@ namespace LOFAR {
           theta = twopi / 4 - twopi/4 * (double)i / thetaSteps;
           phi = twopi * (double)j / phiSteps;
           
-         
-          a.x = sin(theta) * cos(phi);
-          a.y = sin(theta) * sin(phi);
-          a.z = cos(theta);
+          a.x = - sin(theta) * cos(phi); // + sign when relating to a point in the sky! - sign when doing spherical vector
+          a.y = - sin(theta) * sin(phi); // FIXED by removing unwanted 'fix' for 90 degree angle.
+          a.z = - cos(theta);
+          
           // do inner product with antenna pos vector
-          for (uint32 rcu=0; rcu<96; rcu++)
+          for (uint32 rcu=0; rcu<NOFANTENNAS; rcu++)
           {
             double prod = a.x * antennaPositions[rcu].x + a.y * antennaPositions[rcu].y + a.z * antennaPositions[rcu].z;
             timeDelays[rcu] = prod * (double)itsSamplingRate / c; // in samples
@@ -399,64 +446,240 @@ namespace LOFAR {
           double mu=0.0;
           double sig2 = 0.0;
           uint32 runningIndex = coincidenceIndex; // trigBuffer[coincidenceIndex].next;
-            runningIndex = coincidenceIndex;
+          runningIndex = coincidenceIndex;
           //runningIndex = trigBuffer[coincidenceIndex].next;
           //runningIndex = trigBuffer[runningIndex].next;
           mu = 0; //average = 0; sig2 = 0; sigma = 0;
           sig2=0;
           
-          for (int k=0; k<nofChannels; k++)
+          for (uint32 k=0; k<nofChannels; k++)
           { // loop through all RCUs that are there in this coincidence
-//            if (runningIndex != outlierIndex)
-//            {
-              uint32 rcu = trigBuffer[runningIndex].RcuNr;
-              int64 thisRelativeTime = (int64)trigBuffer[runningIndex].date - refdate; // in samples
-              
-              double thisTimeOffset = (double)thisRelativeTime - timeDelays[rcu];
-              debugTimeOffsets[k] = thisTimeOffset;
-
-              mu += thisTimeOffset; // we'll subtract this later as the overall offset.
-              sig2 += thisTimeOffset * thisTimeOffset;
-              // proceed to the next RCU
-//            }
+            //            if (runningIndex != outlierIndex)
+            //            {
+            uint32 rcu = trigBuffer[runningIndex].RcuNr;
+            int64 thisRelativeTime = (int64)trigBuffer[runningIndex].date - refdate; // in samples
+            
+            double thisTimeOffset = (double)thisRelativeTime - timeDelays[rcu];
+            //debugTimeOffsets[k] = thisTimeOffset;
+            
+            mu += thisTimeOffset; // we'll subtract this later as the overall offset.
+            sig2 += thisTimeOffset * thisTimeOffset;
+            // proceed to the next RCU
+            //            }
             runningIndex = trigBuffer[runningIndex].next; // next is previous in terms of timestamp           
           }
-//          {
-            fitResult[i][j] = (sig2 - mu*mu / (nofChannels)) / (nofChannels); // sum (x_i - mu)^2 = sum (x_i^2) - N mu^2
-   //       }
+          fitResult[i][j] = (sig2 - mu*mu / (nofChannels)) / (nofChannels); // sum (x_i - mu)^2 = sum (x_i^2) - N mu^2
           if (fitResult[i][j] < minSig2)
           {
             minSig2 = fitResult[i][j];
             minTh = twopi/4 - theta;
             minPh = phi;
-            for(int k=0; k<nofChannels; k++)
-            {
-              minDebugTimeOffsets[k] = debugTimeOffsets[k] - mu/nofChannels;
-            }
-          }
-          
-         // cout << "theta = " << 360.0/twopi * (twopi/4 - theta) << ", phi = " << (double)j / phiSteps * 360 << ": fitResult = " << fitResult[i][j] << endl;
-          
+//            for(uint32 k=0; k<nofChannels; k++)
+//            {
+//              minDebugTimeOffsets[k] = debugTimeOffsets[k] - mu/nofChannels;
+//            }
+          }        
         }
       }
       totalCoincidences++;
-//     cout << "Fit result: theta = " << minTh * (360.0 / twopi) << "; phi = " << minPh * (360.0/twopi) << "; variance = " << minSig2 << endl;
+//      cout << "Fit result: theta = " << minTh * (360.0 / twopi) << "; phi = " << minPh * (360.0/twopi) << "; variance = " << minSig2 << endl;
       if (minSig2 < 50.0) 
       {
-//        fprintf(itsLogfile, "%lld %f %f %f\n", refdate, minTh * (360.0 / twopi), minPh * (360.0 / twopi), minSig2);
- //       for (uint32 k=0; k<nofChannels; k++)
-//        {
-//          cout << k << ": " << minDebugTimeOffsets[k] << endl;
-//        }
+        fprintf(itsLogfile, "FitResult: %lld %f %f %f\n", refdate, minTh * (360.0 / twopi), minPh * (360.0 / twopi), minSig2);
+        // debug
+        //       uint32 runningIndex = coincidenceIndex;
+        //        for (uint32 k=0; k<nofChannels; k++)
+        //        { // the RCUs in each channel are still the same, so can cycle through the buffer again to get them
+        //          uint32 thisRCU = trigBuffer[runningIndex].RcuNr;
+        //          cout << k << ": RCU = " << thisRCU << ", time offset = " << minDebugTimeOffsets[k] << endl;
+        //          runningIndex = trigBuffer[runningIndex].next;
+        //        } // end debug
       } else
       {
         badFits++;
-//        cout << "Bad fit!" << endl;
-//        for (uint32 k=0; k<nofChannels; k++)
-//        {
-//          cout << k << ": " << minDebugTimeOffsets[k] << endl;
-//        }
+        cout << "Bad fit!" << endl;
+        // debug
+        
+        //        uint32 runningIndex = coincidenceIndex;
+        //        for (uint32 k=0; k<nofChannels; k++)
+        //        {
+        //          uint32 thisRCU = trigBuffer[runningIndex].RcuNr;
+        //          cout << k << ": RCU = " << thisRCU << ", time offset = " << minDebugTimeOffsets[k] << endl;
+        //          runningIndex = trigBuffer[runningIndex].next;
+        //        } // end debug
       }
+    }
+    
+    void VHECRTask::fitDirectionAndDistanceToCoincidence(int coincidenceIndex, int nofChannels)
+    { // number of channels known from requirement
+      //     cout << "Do smart stuff... (well, we hope)" << endl;
+      double theta, phi, R;
+      double twopi = 2.0 * 3.1415926536;
+      double c = 2.9979e8;
+      
+      const uint32 thetaSteps = 30;
+      const uint32 phiSteps = 120; // move to somewhere else! Parameters...
+      const uint32 Rsteps = 40;
+      
+      double timeDelays[NOFANTENNAS]; // get rid of that constant
+      
+      double fitResult[thetaSteps][phiSteps];
+      //     position myAntennaPositions[NOFANTENNAS];
+      //      for(uint32 k=0;k<NOFANTENNAS;k++)
+      //      {
+      //        myAntennaPositions[k] = antennaPositions[k];
+      //      }
+      R = 5.0;
+      double minR = 1.0e12;
+      double overallMinSig2 = 1.0e12;
+      for(uint32 stepR=0; stepR < Rsteps; stepR++)
+      {
+        R *= 1.2;
+        
+        double minTh = 1.0e9;
+        double minPh = 1.0e9;
+        double minSig2 = 1.0e9;
+        double debugTimeOffsets[NOFANTENNAS], minDebugTimeOffsets[NOFANTENNAS];
+        int64 refdate = trigBuffer[coincidenceIndex].date; // coincidence reference timestamp to subtract from all other timestamps.
+        
+        position a;
+        for (uint32 i=0; i<thetaSteps; i++)
+        {
+          for (uint32 j=0; j<phiSteps; j++)
+          {
+            theta = twopi / 4 - twopi/4 * (double)i / thetaSteps;
+            phi = twopi * (double)j / phiSteps;
+            
+            a.x = R * sin(theta) * cos(phi); // + sign when relating to a point in the sky!
+            a.y = R * sin(theta) * sin(phi); // minus 90 degrees to relate to antenna coord system, phi=0: east, phi=90: north...
+            a.z = R * cos(theta);
+            
+            for (uint32 rcu=0; rcu < NOFANTENNAS; rcu++)
+            {
+              double distX = a.x - antennaPositions[rcu].x;
+              double distY = a.y - antennaPositions[rcu].y;
+              double distZ = a.z - antennaPositions[rcu].z;
+              double dist = sqrt(distX * distX + distY * distY + distZ * distZ);
+              timeDelays[rcu] = (double)itsSamplingRate * (dist - R) / c;
+            }
+            
+            //            // do inner product with antenna pos vector
+            //            for (uint32 rcu=0; rcu<NOFANTENNAS; rcu++)
+            //            {
+            //              double prod = a.x * antennaPositions[rcu].x + a.y * antennaPositions[rcu].y + a.z * antennaPositions[rcu].z;
+            //              timeDelays[rcu] = prod * (double)itsSamplingRate / c; // in samples
+            //            }
+            // calculate fit result, which is standard deviation of timing residues
+            double mu=0.0;
+            double sig2 = 0.0;
+            uint32 runningIndex = coincidenceIndex; // trigBuffer[coincidenceIndex].next;
+            //       runningIndex = trigBuffer[runningIndex].next;
+            
+            //          uint32 outlierIndex = 1e9;
+            //          // find a possible outlier in the measured arrival timestamps
+            //          double average = 0;
+            //          double sigma = 0;
+            //          for(uint32 k=0; k<nofChannels; k++)
+            //          {
+            //            int64 thisRelativeTime = (int64)trigBuffer[runningIndex].date - refdate; // in samples
+            //            average += thisRelativeTime;
+            //            sig2 += thisRelativeTime * thisRelativeTime;
+            //            runningIndex = trigBuffer[runningIndex].next;
+            //          }
+            //          sig2 -= average*average / nofChannels;
+            //          sigma = sqrt(sig2 / nofChannels);
+            //          average /= nofChannels;
+            //          if ((i==0) && (j==0)) {
+            //            cout << "Average = " << average << "; sigma = " << sigma << endl;
+            //          }
+            //          runningIndex = coincidenceIndex;
+            //          for(uint32 k=0; k < nofChannels; k++)
+            //          {
+            //            int64 thisRelativeTime = (int64)trigBuffer[runningIndex].date - refdate; // in samples
+            //            double deviation = thisRelativeTime - average;
+            //            if (deviation > 3.0 * sigma)
+            //            {
+            //              if ((i ==0) && (j ==0)) 
+            //              {
+            //                cout << "Outlier found: deviation = " << deviation << " while sigma = " << sigma << endl;
+            //              }
+            //              outlierIndex = runningIndex;
+            //              break;
+            //            }
+            //            runningIndex = trigBuffer[runningIndex].next;
+            //          }
+            runningIndex = coincidenceIndex;
+            //runningIndex = trigBuffer[coincidenceIndex].next;
+            //runningIndex = trigBuffer[runningIndex].next;
+            mu = 0; //average = 0; sig2 = 0; sigma = 0;
+            sig2=0;
+            
+            for (uint32 k=0; k<nofChannels; k++)
+            { // loop through all RCUs that are there in this coincidence
+              //            if (runningIndex != outlierIndex)
+              //            {
+              uint32 rcu = trigBuffer[runningIndex].RcuNr;
+              int64 thisRelativeTime = (int64)trigBuffer[runningIndex].date - refdate; // in samples
+              
+              double thisTimeOffset = (double)thisRelativeTime - timeDelays[rcu];
+              debugTimeOffsets[k] = thisTimeOffset;
+              
+              mu += thisTimeOffset; // we'll subtract this later as the overall offset.
+              sig2 += thisTimeOffset * thisTimeOffset;
+              // proceed to the next RCU
+              //            }
+              runningIndex = trigBuffer[runningIndex].next; // next is previous in terms of timestamp           
+            }
+            //       if (outlierIndex > 1000)
+            //          {
+            //            fitResult[i][j] = (sig2 - mu*mu / nofChannels) / (nofChannels); // sum (x_i - mu)^2 = sum (x_i^2) - N mu^2
+            //          } else 
+            //          {
+            fitResult[i][j] = (sig2 - mu*mu / (nofChannels)) / (nofChannels); // sum (x_i - mu)^2 = sum (x_i^2) - N mu^2
+            //       }
+            if (fitResult[i][j] < minSig2)
+            {
+              minSig2 = fitResult[i][j];
+              minTh = twopi/4 - theta;
+              minPh = phi;
+              if (minSig2 < overallMinSig2)
+              {
+                overallMinSig2 = minSig2;
+                minR = R;
+              }
+              for(uint32 k=0; k<nofChannels; k++)
+              {
+                minDebugTimeOffsets[k] = debugTimeOffsets[k] - mu/nofChannels;
+              }
+            }
+            
+            // cout << "theta = " << 360.0/twopi * (twopi/4 - theta) << ", phi = " << (double)j / phiSteps * 360 << ": fitResult = " << fitResult[i][j] << endl;
+            
+          }
+        }
+        cout << "Fit result: theta = " << minTh * (360.0 / twopi) << "; phi = " << minPh * (360.0/twopi) << "; R = " << R << "; height = " << R * sin(minTh) << "; variance = " << minSig2 << endl;
+        
+        //      } // for stepR
+        totalCoincidences++;
+        //     cout << "Best fit result: theta = " << minTh * (360.0 / twopi) << "; phi = " << minPh * (360.0/twopi) << "; R = " << minR << "; height = " << R * sin(minTh) << "; variance = " << minSig2 << endl;
+        if ((minSig2 < 50.0) && (stepR == Rsteps - 1))  // hack to ensure we only call this at the end of the loop...
+        {
+          cout << "WRITING FILE" << endl;
+          fprintf(itsLogfile, "FitResult: %lld %f %f %f %F\n", refdate, minTh * (360.0 / twopi), minPh * (360.0 / twopi), minSig2, minR);
+          //       for (uint32 k=0; k<nofChannels; k++)
+          //        {
+          //          cout << k << ": " << minDebugTimeOffsets[k] << endl;
+          //        }
+        } else
+        {
+          badFits++;
+          //   cout << "Bad fit!" << endl;
+          //        for (uint32 k=0; k<nofChannels; k++)
+          //        {
+          //          cout << k << ": " << minDebugTimeOffsets[k] << endl;
+          //        }
+        }
+      } // {for stepR}
     }
     
     void VHECRTask::readAntennaPositions(string fileName, string antennaSelection)
@@ -468,7 +691,7 @@ namespace LOFAR {
       {
 	LOG_FATAL("Failed to open Antenna Positions file!");
 	//cerr << "VHECRTask: Failed to open Antenna Positions file!" << endl;
-	doDirectionFit=0;
+	itsDoDirectionFit=0;
 	return;
       };
       string temp;
