@@ -58,7 +58,7 @@ template <typename K, typename V> V StreamMultiplexer::Map<K, V>::remove(K key)
 StreamMultiplexer::StreamMultiplexer(Stream &stream)
 :
   itsStream(stream),
-  itsReceiveThread(this, &StreamMultiplexer::receiveThread)
+  itsReceiveThread(this, &StreamMultiplexer::receiveThread, 16384)
 {
 }
 
