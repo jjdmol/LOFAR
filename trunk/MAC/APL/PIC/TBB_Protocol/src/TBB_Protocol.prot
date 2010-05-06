@@ -60,6 +60,7 @@ static const uint32 TBB_IMAGE_SELECT_ERROR   = 0x00004000;
 static const uint32 TBB_PID_SELECT_ERROR     = 0x00005000;
 static const uint32 TBB_REGID_SELECT_ERROR   = 0x00006000;
 static const uint32 TBB_ADDR_SEL_ERROR       = 0x00007000;
+static const uint32 TBB_STORAGE_SELECT_ERROR = 0x00008000;
 
 // status from board
 static const uint32 TBB_BOARD_STATUS_MASK    = 0xFF000000;
@@ -96,11 +97,16 @@ typedef struct TbbTriggerSetup // setup variables for 1 channel
 
 typedef struct TbbTriggerCoef // setup variables for 1 channel
 {
-	uint16 c0;
-	uint16 c1;
-	uint16 c2;
-	uint16 c3;
+	uint16 filter0[4];
+	uint16 filter1[4];
 };
+
+typedef struct TbbTriggerSettings // setup variables for 1 channel
+{
+    struct TbbTriggerSetup setup;
+    struct TbbTriggerCoef coef;
+};
+
 PRELUDE_END;
 
 
@@ -406,7 +412,7 @@ event = {
 	signal = TRIG_SETUP;
 	dir = IN;
 	param = {
-		name = "setup";
+		name = "rcu";
 		type = "struct TbbTriggerSetup[MAX_N_RCUS]";
 	};
 };
@@ -446,7 +452,7 @@ event = {
 	signal = TRIG_COEF;
 	dir = IN;
 	param = {
-		name = "coefficients";
+		name = "rcu";
 		type = "struct TbbTriggerCoef[MAX_N_RCUS]";
 	};
 };
@@ -495,12 +501,8 @@ event = {
 		type = "uint32";
 	};
 	param = {
-		name = "setup";
-		type = "struct TbbTriggerSetup[MAX_N_RCUS]";
-	};
-	param = {
-		name = "coefficients";
-		type = "struct TbbTriggerCoef[MAX_N_RCUS]";
+		name = "rcu";
+		type = "struct TbbTriggerSettings[MAX_N_RCUS]";
 	};
 };
 
@@ -726,6 +728,28 @@ event = {
 
 event = {
 	signal = CEP_DELAY_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = CEP_STORAGE;
+	dir = IN;
+	param = {
+		name = "boardmask";
+		type = "uint32";
+};
+	param = {
+		name = "destination";
+		type = "char[20]";
+	};
+};
+
+event = {
+	signal = CEP_STORAGE_ACK;
 	dir = OUT;
 	param = {
 		name = "status_mask";
