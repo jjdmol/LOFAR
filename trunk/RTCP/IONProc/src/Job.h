@@ -74,7 +74,7 @@ class Job
 
     static void				 execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset);
     static void				 forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, int &storagePID);
-    static void				 joinSSH(int childPID, const std::string &hostName);
+    static void				 joinSSH(int childPID, const std::string &hostName, unsigned &timeout);
 
     void				 startStorageProcesses();
     void				 stopStorageProcesses();

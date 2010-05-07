@@ -48,6 +48,7 @@ namespace RTCP {
 
 OutputThread::OutputThread(const Parset &parset, const unsigned subband, const unsigned output, StreamableData *dataTemplate)
 :
+  itsDone(false),
   itsParset(parset),
   itsSubband(subband),
   itsOutput(output),
@@ -83,11 +84,55 @@ OutputThread::~OutputThread()
 }
 
 
+bool OutputThread::waitForDone( const struct timespec &timespec )
+{
+  ScopedLock lock( itsDoneMutex );
+
+  while( !itsDone ) {
+    if (!itsDoneCondition.wait( itsDoneMutex, timespec )) {
+      // timeout
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
+void OutputThread::abort()
+{
+  LOG_WARN_STR(itsDescription << ": aborting" );
+
+  itsThread->abort();
+
+  LOG_WARN_STR(itsDescription << ": aborted" );
+}
+
+
 // set the maximum number of concurrent writers
 static Semaphore semaphore(2);
 
+// class to guarantee a done signal will be send
+class DoneSignal {
+  public:
+    DoneSignal( Mutex &mutex, Condition &cond, bool &expr ): mutex(mutex), cond(cond), expr(expr) {}
+    ~DoneSignal() {
+       mutex.lock();
+       expr = true;
+       cond.signal();
+       mutex.unlock();
+    }
+  private:
+    Mutex &mutex;
+    Condition &cond;
+    bool &expr;
+};
+
 void OutputThread::mainLoop()
 {
+  // signal done when the thread exists in any way
+  DoneSignal doneSignal( itsDoneMutex, itsDoneCondition, itsDone );
+
   LOG_DEBUG_STR(itsDescription << ": OutputThread::mainLoop()");
 
 #if defined HAVE_BGP_ION
