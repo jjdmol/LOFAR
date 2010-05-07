@@ -23,10 +23,10 @@
 #  $Id: runctest.sh 13275 2009-05-15 15:42:36Z loose $
 
 # runtest.sh uses this variable to find test input files and the like.
-srcdir=@srcdir@; export srcdir
+srcdir="@srcdir@"; export srcdir
 
 # Add the Python build directory to PYTHONPATH.
-PYTHONPATH=@PYTHON_BUILD_DIR@; export PYTHONPATH
+PYTHONPATH="@PYTHON_BUILD_DIR@"; export PYTHONPATH
 
 # Start CMake/testscripts/runtest.sh
 "@LOFAR_ROOT@/CMake/testscripts/runtest.sh" "$@"
