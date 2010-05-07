@@ -5,6 +5,8 @@
   
   def i2bb(s)
   def i2bbbb(s)
+  def swap2(s)
+  def swap4(s)
   def calculate_next_sequence_value(in_word, seq='PRSG', width=12)
   def reorder(data, index)
   
@@ -35,6 +37,7 @@
 
   def write_cdo_ctrl(tc, msg, ctrl, rspId=['rsp0'], applev=21)
   def read_cdo_ctrl(tc, msg, rspId=['rsp0'], applev=21)
+  def read_cdo_settings(tc, msg, rspId=['rsp0'], applev=21)
   def read_cdo_transport(tc, msg, rspId=['rsp0'], applev=21)
     
   def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0'])
@@ -357,7 +360,27 @@ def i2bbbb(s):
     ret.extend([i%256, (i/256)%256, (i/(256*256))%256, (i/(256*256*256))%256])
   return ret
   
+
+def swap2(i):
+  """ Convert halfword size integer into byte-swapped integer
+  Input:
+  - i   = halfword size integer
+  Return:
+  - ret = byte-swapped integer
+  """
+  return ( (i%256)*256 + (i/256)%256 )
+
+
+def swap4(i):
+  """ Convert word size integer into byte-swapped integer
+  Input:
+  - i   = word size integer
+  Return:
+  - ret = byte-swapped integer
+  """
+  return ( (i%256)*256*256*256 + ((i/256)%256)*256*256 + ((i/256/256)%256)*256 + (i/256/256/256)%256 )
   
+      
 def calculate_next_sequence_value(in_word, seq='PRSG', width=12):
   """ Calculate next sequence value for PRSG or COUNTER
   
@@ -1319,7 +1342,82 @@ def read_cdo_ctrl(tc, msg, rspId=['rsp0'], applev=21):
   tc.appendLog(applev, '      bit(4)    : ARP enable            = %d' % ((ctrl & ( 1       <<4)) >> 4))
   tc.appendLog(applev, '      bit(15:5) : Not used              = %d' % ((ctrl & ((2**11-1)<<5)) >> 5))
     
+
+def read_cdo_settings(tc, msg, rspId=['rsp0'], applev=21):
+  """Read CDO settings register
   
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - rspId  = List of one 'rsp#'
+  - applev = Append logging level
+  Return: void
+  """
+  # Read entire CDO settings register
+  read_mem(tc, msg, 'cdo', 'settings', c_cdo_settings_size, ['rsp'], rspId, 'h', 1, 0)
+  msg.setOffset(0)
+  reg_station_id       = msg.readUnsigned(2)
+  reg_configuration_id = msg.readUnsigned(2)
+  reg_ffi              = msg.readUnsigned(2)
+  reg_ctrl             = msg.readUnsigned(2)
+  reg_nof_blocks       = msg.readUnsigned(1)
+  reg_nof_beamlets     = msg.readUnsigned(1)
+  reg_dst_mac_lo       = msg.readUnsigned(4)
+  reg_dst_mac_hi       = msg.readUnsigned(2)
+  reg_dst_mac = []
+  x = i2bb([reg_dst_mac_hi])
+  reg_dst_mac.append(x[1])      # swap to compensate for i2bb
+  reg_dst_mac.append(x[0])
+  x = i2bbbb([reg_dst_mac_lo])
+  reg_dst_mac.append(x[3])      # swap to compensate for i2bbbb
+  reg_dst_mac.append(x[2])
+  reg_dst_mac.append(x[1])
+  reg_dst_mac.append(x[0])
+  dmac = reg_dst_mac
+  reg_src_mac_lo       = msg.readUnsigned(4)
+  reg_src_mac_hi       = msg.readUnsigned(2)
+  reg_src_mac = []
+  x = i2bb([reg_src_mac_hi])
+  reg_src_mac.append(x[1])      # swap to compensate for i2bb
+  reg_src_mac.append(x[0])
+  x = i2bbbb([reg_src_mac_lo])
+  reg_src_mac.append(x[3])      # swap to compensate for i2bbbb
+  reg_src_mac.append(x[2])
+  reg_src_mac.append(x[1])
+  reg_src_mac.append(x[0])
+  smac = reg_src_mac
+  reg_dst_ip_addr      = msg.readUnsigned(4)
+  x = i2bbbb([reg_dst_ip_addr])
+  dip = []
+  dip.append(x[3])      # swap to compensate for i2bbbb
+  dip.append(x[2])
+  dip.append(x[1])
+  dip.append(x[0])
+  reg_src_ip_addr      = msg.readUnsigned(4)
+  x = i2bbbb([reg_src_ip_addr])
+  sip = []
+  sip.append(x[3])      # swap to compensate for i2bbbb
+  sip.append(x[2])
+  sip.append(x[1])
+  sip.append(x[0])
+  tc.appendLog(applev, '>>> RSP-%s, CDO settings:' % rspId)
+  tc.appendLog(applev, '    Station ID                         = %d' % reg_station_id)
+  tc.appendLog(applev, '    Configuration ID                   = 0x%X' % reg_configuration_id)
+  tc.appendLog(applev, '    FFI                                = 0x%X' % reg_ffi)
+  tc.appendLog(applev, '    CTRL                               = 0x%X' % reg_ctrl)
+  tc.appendLog(applev, '    CTRL[0]    : CDO enable            = %d' % ((reg_ctrl &   1           ) >> 0))
+  tc.appendLog(applev, '    CTRL[2:1]  : Lane select           = %d' % ((reg_ctrl & ((2**2 -1)<<1)) >> 1))
+  tc.appendLog(applev, '    CTRL[3]    : Fiber balance enable  = %d' % ((reg_ctrl & ( 1       <<3)) >> 3))
+  tc.appendLog(applev, '    CTRL[4]    : ARP enable            = %d' % ((reg_ctrl & ( 1       <<4)) >> 4))
+  tc.appendLog(applev, '    CTRL[15:5] : Not used              = %d' % ((reg_ctrl & ((2**11-1)<<5)) >> 5))
+  tc.appendLog(applev, '    Nof blocks                         = %d' % reg_nof_blocks)
+  tc.appendLog(applev, '    Nof beamlets                       = %d' % reg_nof_beamlets)
+  tc.appendLog(applev, '    Destination MAC                    = %X:%X:%X:%X:%X:%X' % (dmac[0], dmac[1], dmac[2], dmac[3], dmac[4], dmac[5]))
+  tc.appendLog(applev, '    Source MAC                         = %X:%X:%X:%X:%X:%X' % (smac[0], smac[1], smac[2], smac[3], smac[4], smac[5]))
+  tc.appendLog(applev, '    Destination IP address             = %d:%d:%d:%d' % (dip[0], dip[1], dip[2], dip[3]))
+  tc.appendLog(applev, '    Source IP address                  = %d:%d:%d:%d' % (sip[0], sip[1], sip[2], sip[3]))
+
+    
 def read_cdo_transport(tc, msg, rspId=['rsp0'], applev=21):
   """Read the UDP/IP fields in CDO transport header register
   
@@ -1357,20 +1455,32 @@ def read_cdo_transport(tc, msg, rspId=['rsp0'], applev=21):
   # |              IP Payload                                              |
   # |                                                                      |
   # |------------------------------------------------------------ // ------|
-  version_hlen       = msg.readUnsigned(1)
-  ip.version         =  version_hlen       & 0xF
-  ip.header_length   = (version_hlen >> 4) & 0xF
-  ip.services        = msg.readUnsigned(1)
-  ip.total_length    = msg.readUnsigned(2)
-  ip.identification  = msg.readUnsigned(2)
-  flags_fragment     = msg.readUnsigned(2)
+  version_hlen       =       msg.readUnsigned(1)
+  ip.version         = (version_hlen >> 4) & 0xF
+  ip.header_length   =  version_hlen       & 0xF
+  ip.services        =       msg.readUnsigned(1)
+  ip.total_length    = swap2(msg.readUnsigned(2))        # swap for network big endian to little endian
+  ip.identification  = swap2(msg.readUnsigned(2))
+  flags_fragment     = swap2(msg.readUnsigned(2))
   ip.flags           = (flags_fragment >> 13) & 0x7
   ip.fragment_offset =  flags_fragment        & 0x1FFF
-  ip.time_to_live    = msg.readUnsigned(1)
-  ip.protocol        = msg.readUnsigned(1)
-  ip.header_checksum = msg.readUnsigned(2)
-  ip.src_ip_addr     = msg.readUnsigned(4)
-  ip.dst_ip_addr     = msg.readUnsigned(4)
+  ip.time_to_live    =       msg.readUnsigned(1)
+  ip.protocol        =       msg.readUnsigned(1)
+  ip.header_checksum = swap2(msg.readUnsigned(2))
+  ip.src_ip_addr     = swap4(msg.readUnsigned(4))
+  x = i2bbbb([ip.src_ip_addr])
+  dip = []
+  dip.append(x[3])      # swap to compensate for i2bbbb
+  dip.append(x[2])
+  dip.append(x[1])
+  dip.append(x[0])
+  ip.dst_ip_addr     = swap4(msg.readUnsigned(4))
+  x = i2bbbb([ip.dst_ip_addr])
+  sip = []
+  sip.append(x[3])      # swap to compensate for i2bbbb
+  sip.append(x[2])
+  sip.append(x[1])
+  sip.append(x[0])
   # UDP header
   #
   #  0                               15 16                               31 
@@ -1383,10 +1493,10 @@ def read_cdo_transport(tc, msg, rspId=['rsp0'], applev=21):
   # |                      UDP Payload                                     |
   # |                                                                      |
   # |----------------------------------------------------------- // -------|
-  udp.src_port     = msg.readUnsigned(2)
-  udp.dst_port     = msg.readUnsigned(2)
-  udp.total_length = msg.readUnsigned(2)
-  udp.checksum     = msg.readUnsigned(2)
+  udp.src_port     = swap2(msg.readUnsigned(2))        # swap for network big endian to little endian
+  udp.dst_port     = swap2(msg.readUnsigned(2))
+  udp.total_length = swap2(msg.readUnsigned(2))
+  udp.checksum     = swap2(msg.readUnsigned(2))
   
   tc.appendLog(applev, '>>> RSP-%s, read the UDP/IP fields in CDO transport header register:' % rspId)
   tc.appendLog(applev, '      IPv4 : version         = %d'   % ip.version)
@@ -1399,10 +1509,10 @@ def read_cdo_transport(tc, msg, rspId=['rsp0'], applev=21):
   tc.appendLog(applev, '      IPv4 : time_to_live    = %d'   % ip.time_to_live)
   tc.appendLog(applev, '      IPv4 : protocol        = 0x%X' % ip.protocol)
   tc.appendLog(applev, '      IPv4 : header_checksum = 0x%X' % ip.header_checksum)
-  tc.appendLog(applev, '      IPv4 : src_ip_addr     = 0x%X' % ip.src_ip_addr)
-  tc.appendLog(applev, '      IPv4 : dst_ip_addr     = 0x%X' % ip.dst_ip_addr)
-  tc.appendLog(applev, '      UDP  : src_port        = %d'   % udp.src_port)
-  tc.appendLog(applev, '      UDP  : dst_port        = %d'   % udp.dst_port)
+  tc.appendLog(applev, '      IPv4 : src_ip_addr     = %d:%d:%d:%d' % (dip[0], dip[1], dip[2], dip[3]))
+  tc.appendLog(applev, '      IPv4 : dst_ip_addr     = %d:%d:%d:%d' % (sip[0], sip[1], sip[2], sip[3]))
+  tc.appendLog(applev, '      UDP  : src_port        = 0x%X' % udp.src_port)
+  tc.appendLog(applev, '      UDP  : dst_port        = 0x%X' % udp.dst_port)
   tc.appendLog(applev, '      UDP  : total_length    = %d'   % udp.total_length)
   tc.appendLog(applev, '      UDP  : checksum        = 0x%X' % udp.checksum)
 
