@@ -144,17 +144,17 @@
 
 # Use LimitExec if possible and available.
   LOFAR_LIMITEXEC=
-  if [ -x $LOFARROOT/bin/LimitExec ]
+  if [ -x "$LOFARROOT/bin/LimitExec" ]
   then
     LOFAR_LIMITEXEC="$LOFARROOT/bin/LimitExec"
-  elif [ -x $lfr_script_dir/limitexec.sh ]
+  elif [ -x "$lfr_script_dir/limitexec.sh" ]
   then
     LOFAR_LIMITEXEC="$lfr_script_dir/limitexec.sh"
   fi
   export LOFAR_LIMITEXEC
   if [ "$LOFAR_LIMITEXEC" != "" ]
   then
-    CMDPREFIX="$LOFAR_LIMITEXEC $MAXTIME"
+    CMDPREFIX="\"$LOFAR_LIMITEXEC\" $MAXTIME"
   fi
 
 # Initialize the command to be executed.
@@ -270,7 +270,7 @@
 
 # Okay, the non-numbers are equal.
 # Now check if all numbers are approximately equal.
-  $lfr_script_dir/checkfloat ${PROG}_tmp.out ${PROG}_tmp_orig.out $PREC
+  "$lfr_script_dir/checkfloat" ${PROG}_tmp.out ${PROG}_tmp_orig.out $PREC
   if [ $? != 0 ]
   then
      echo "FAIL (floating point discrepancies > $PREC): $PROG"

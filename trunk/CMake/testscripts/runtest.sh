@@ -63,8 +63,8 @@ else
 fi
 
 # Get directory of this script.
-lfr_script_dir=`dirname $0`
-lfr_script_dir=`cd $lfr_script_dir && pwd`
+lfr_script_dir=`dirname "$0"`
+lfr_script_dir=`cd "$lfr_script_dir" && pwd`
 
 # Export lfr_script_dir, so that it can be used by assay
 export lfr_script_dir
@@ -81,41 +81,41 @@ export PATH
 #
 if test -f "$srcdir/$1.in"; then
   \rm -f $1.in
-  \cp $srcdir/$1.in  .
+  \cp "$srcdir/$1.in"  .
 fi
 \rm -rf $1.in_*
-\cp -r $srcdir/$1.in_* . > /dev/null 2>&1
+\cp -r "$srcdir/$1.in_"* . > /dev/null 2>&1
 chmod -R +w $1.in_* > /dev/null 2>&1    # Make writable (for make distcheck).
 if test -f "$srcdir/$1.stdout"; then
   \rm -f $1.stdout
-  \cp $srcdir/$1.stdout .
+  \cp "$srcdir/$1.stdout" .
 elif test -f "$srcdir/$1.out"; then
   \rm -f $1.stdout
-  \cp $srcdir/$1.out $1.stdout
+  \cp "$srcdir/$1.out" $1.stdout
 fi
 if test -f "$srcdir/$1.run"; then
   \rm -f $1.run
-  \cp $srcdir/$1.run .
+  \cp "$srcdir/$1.run" .
 fi
 if test -f "$srcdir/$1.py"; then
   \rm -f $1.py
-  \cp $srcdir/$1.py .
+  \cp "$srcdir/$1.py" .
 fi
 if test -f "$srcdir/$1.parset"; then
   \rm -f $1.parset
-  \cp $srcdir/$1.parset .
+  \cp "$srcdir/$1.parset" .
 fi
 if test -f "$srcdir/$1.log_prop"; then
   \rm -f $1.log_prop
-  \cp $srcdir/$1.log_prop .
+  \cp "$srcdir/$1.log_prop" .
 else
   if test ! -f "$1.log_prop"; then
-    sed -e "s%<LOGFILENAME>%$1_tmp.log%" $lfr_script_dir/default.log_prop > $1.log_prop
+    sed -e "s%<LOGFILENAME>%$1_tmp.log%" "$lfr_script_dir/default.log_prop" > $1.log_prop
   fi
 fi
 
 # Run assay
-$lfr_script_dir/assay $1 $MAXTIME $PREC $NEEDOUTFIL
+"$lfr_script_dir/assay" $1 $MAXTIME $PREC $NEEDOUTFIL
 STS=$?
 
 # Cleanup (mainly for make distcheck).
