@@ -43,6 +43,16 @@ void VisDimensions::setGrid(const Grid &grid)
     itsGrid = grid;
 }
 
+void VisDimensions::setBaselines(const BaselineSeq &axis)
+{
+    itsBaselineAxis = axis;
+}
+
+void VisDimensions::setCorrelations(const CorrelationSeq &axis)
+{
+    itsCorrelationAxis = axis;
+}
+
 ostream &operator<<(ostream &out, const VisDimensions &obj)
 {
     pair<double, double> freqRange = obj[FREQ]->range();

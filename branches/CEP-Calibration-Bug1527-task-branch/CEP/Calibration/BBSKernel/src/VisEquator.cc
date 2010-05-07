@@ -206,8 +206,9 @@ void VisEquator::dumpStats(ostream &out) const
     const NSTimer &timer = itsProcTimer;
     const ProcContext &context = itsProcContext;
 
-    out << "Processing speed: " << context.count / timer.getElapsed()
-        << " samples/s" << endl;
+    out << "Processing statistics: " << endl;
+    out << "Speed: " << context.count / timer.getElapsed() << " samples/s"
+        << endl;
     out << "No. of processed samples (unflagged): " << fixed << context.count
         << endl;
     out << "TIMER s ALL total " << timer.getElapsed() << " count "

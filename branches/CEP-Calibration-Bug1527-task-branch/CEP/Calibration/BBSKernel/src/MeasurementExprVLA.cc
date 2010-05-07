@@ -87,12 +87,15 @@ MeasurementExprVLA::MeasurementExprVLA(const Instrument &instrument,
         itsSourceDB(sourceDB),
         itsCachePolicy(new DefaultCachePolicy())
 {
+    itsCorrelations.append(Correlation::RR);
+    itsCorrelations.append(Correlation::RL);
+    itsCorrelations.append(Correlation::LR);
+    itsCorrelations.append(Correlation::LL);
 }
 
 void MeasurementExprVLA::clear()
 {
     itsBaselines.clear();
-    itsCorrelations.clear();
     itsExpr.clear();
     itsScope.clear();
 
@@ -108,11 +111,15 @@ void MeasurementExprVLA::solvablesChanged()
 }
 
 void MeasurementExprVLA::makeForwardExpr(const ModelConfig &config,
-    const BaselineSeq &baselineax, const casa::MDirection &refDir,
+    const BaselineSeq &baselines, const casa::MDirection &refDir,
     double refFreq)
 {
     // Clear previously created expressions and cached results.
     clear();
+
+    itsBaselines = baselines;
+    itsReferenceDir = refDir;
+    itsReferenceFreq = refFreq;
 
     if(config.useFlagger())
     {
@@ -120,16 +127,9 @@ void MeasurementExprVLA::makeForwardExpr(const ModelConfig &config,
             " model.");
     }
 
-    itsBaselines = baselineax;
-    vector<baseline_t> baselines;
-    for(size_t i = 0; i < itsBaselines.size(); ++i)
-    {
-        baselines.push_back(itsBaselines[i]);
-    }
-
     // Make a list of all the stations that are used in the given baseline
     // selection.
-    vector<unsigned int> stations = makeUsedStationList(baselines);
+    vector<unsigned int> stations = makeUsedStationList();
     if(stations.empty())
     {
         THROW(BBSKernelException, "Baseline selection is empty.");
@@ -143,18 +143,6 @@ void MeasurementExprVLA::makeForwardExpr(const ModelConfig &config,
         THROW(BBSKernelException, "No patches matching selection found in"
             " source database.");
     }
-
-    LOG_INFO_STR("Number of patches in the model: " << patches.size());
-
-    // TODO: Should these be kept or are they just needed while generating the
-    // expressions?
-    itsCorrelations.append(Correlation::RR);
-    itsCorrelations.append(Correlation::RL);
-    itsCorrelations.append(Correlation::LR);
-    itsCorrelations.append(Correlation::LL);
-
-    itsReferenceDir = refDir;
-    itsReferenceFreq = refFreq;
 
     Expr<JonesMatrix>::Ptr H = Expr<JonesMatrix>::Ptr(new LinearToCircularRL());
     // Create a UVW expression per station.
@@ -263,30 +251,18 @@ void MeasurementExprVLA::makeInverseExpr(const ModelConfig &config,
     // Clear previously created expressions and cached results.
     clear();
 
-    // Generate list of baselines.
-    itsBaselines = filter(chunk->baselines(), mask);
-
-    vector<baseline_t> baselines;
-    for(size_t i = 0; i < itsBaselines.size(); ++i)
-    {
-        baselines.push_back(itsBaselines[i]);
-    }
+    BaselineSeq baselines = filter(chunk->baselines(), mask);
+    itsBaselines = baselines;
+    itsReferenceDir = refDir;
+    itsReferenceFreq = refFreq;
 
     // Make a list of all the stations that are used in the given baseline
     // selection.
-    const vector<unsigned int> stations = makeUsedStationList(baselines);
+    vector<unsigned int> stations = makeUsedStationList();
     if(stations.empty())
     {
         THROW(BBSKernelException, "Baseline selection is empty.");
     }
-
-    // Update state.
-    itsCorrelations.append(Correlation::RR);
-    itsCorrelations.append(Correlation::RL);
-    itsCorrelations.append(Correlation::LR);
-    itsCorrelations.append(Correlation::LL);
-    itsReferenceDir = refDir;
-    itsReferenceFreq = refFreq;
 
     // Create a single Jones matrix expression for each station, for the
     // selected direction.
@@ -351,7 +327,6 @@ void MeasurementExprVLA::makeInverseExpr(const ModelConfig &config,
     itsExpr.reserve(baselines.size());
     for(size_t i = 0; i < baselines.size(); ++i)
     {
-
         Expr<JonesMatrix>::Ptr exprVisData(new ExprVisData(chunk, baselines[i],
             Correlation::RR, Correlation::RL, Correlation::LR,
             Correlation::LL));
@@ -539,17 +514,13 @@ void MeasurementExprVLA::applyCachePolicy(const ModelConfig &config) const
     }
 }
 
-vector<unsigned int>
-MeasurementExprVLA::makeUsedStationList(const vector<baseline_t> &baselines)
-    const
+vector<unsigned int> MeasurementExprVLA::makeUsedStationList() const
 {
     set<unsigned int> used;
-    for(vector<baseline_t>::const_iterator it = baselines.begin(),
-        end = baselines.end();
-        it != end; ++it)
+    for(size_t i = 0; i < itsBaselines.size(); ++i)
     {
-        used.insert(it->first);
-        used.insert(it->second);
+        used.insert(itsBaselines[i].first);
+        used.insert(itsBaselines[i].second);
     }
 
     return vector<unsigned int>(used.begin(), used.end());

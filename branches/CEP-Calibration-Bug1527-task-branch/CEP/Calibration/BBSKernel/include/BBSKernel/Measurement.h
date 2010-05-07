@@ -59,7 +59,11 @@ public:
     const casa::MDirection &getPhaseCenter() const;
 
     const Instrument &instrument() const;
+    const VisDimensions &dimensions() const;
 
+    // Convenience functions that delegate to VisDimensions (refer to the
+    // documentation of VisDimensions for their documentation).
+    // @{
     size_t nFreq() const;
     size_t nTime() const;
     size_t nBaselines() const;
@@ -69,8 +73,7 @@ public:
     const Grid &grid() const;
     const BaselineSeq &baselines() const;
     const CorrelationSeq &correlations() const;
-
-    const VisDimensions &dimensions() const;
+    // @}
 
 protected:
     double                  itsReferenceFreq;

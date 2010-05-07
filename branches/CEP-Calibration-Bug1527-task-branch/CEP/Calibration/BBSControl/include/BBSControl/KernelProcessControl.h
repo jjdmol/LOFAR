@@ -128,6 +128,9 @@ private:
 
     State                                   itsState;
 
+    int                                     itsChunkCount;
+    size_t                                  itsStepCount;
+
     // Calibration session information.
     scoped_ptr<CalSession>                  itsCalSession;
 

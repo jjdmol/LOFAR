@@ -75,9 +75,11 @@ public:
     // Restrict processing to the correlations included in the mask.
     void setCorrelationMask(const CorrelationMask &mask);
 
-    // Is the current data selection empty? The data selection is determined by
-    // the intersection between the model, measurement, and solution grid
-    // domains and the selected baselines and correlations.
+    // Is the current visibility selection empty? The visibility selection is
+    // determined by:
+    //     * The intersection between the model, measurement, and solution grid
+    //       domains.
+    //     * The selected baselines and correlations.
     bool isSelectionEmpty() const;
 
     // Get the set of parameters the measurement expression depends on.

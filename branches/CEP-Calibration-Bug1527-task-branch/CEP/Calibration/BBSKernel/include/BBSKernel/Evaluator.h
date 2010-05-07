@@ -63,6 +63,10 @@ public:
     // Restrict processing to the correlations included in the mask.
     void setCorrelationMask(const CorrelationMask &mask);
 
+    // Is the current visibility selection empty? The visibility selection is
+    // determined by the selected baselines and correlations.
+    bool isSelectionEmpty() const;
+
     // Set operation to perform on the data (equate, subtract, or add).
     void setMode(Mode mode);
 

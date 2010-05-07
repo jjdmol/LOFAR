@@ -65,7 +65,7 @@ public:
     void clear();
 
     void makeForwardExpr(const ModelConfig &config,
-        const BaselineSeq &baselineax, const casa::MDirection &refDir,
+        const BaselineSeq &baselines, const casa::MDirection &refDir,
         double refFreq);
 
     void makeInverseExpr(const ModelConfig &config, const VisData::Ptr &chunk,
@@ -96,8 +96,7 @@ public:
 private:
     void applyCachePolicy(const ModelConfig &config) const;
 
-    vector<unsigned int>
-        makeUsedStationList(const vector<baseline_t> &baselines) const;
+    vector<unsigned int> makeUsedStationList() const;
 
     pair<unsigned int, unsigned int>
         findStationIndices(const vector<unsigned int> &stations,

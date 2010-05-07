@@ -102,20 +102,10 @@ void VisDimensions::setBaselines(T_ITER first, T_ITER last)
     itsBaselineAxis = BaselineSeq(first, last);
 }
 
-inline void VisDimensions::setBaselines(const BaselineSeq &axis)
-{
-    itsBaselineAxis = axis;
-}
-
 template <typename T_ITER>
 void VisDimensions::setCorrelations(T_ITER first, T_ITER last)
 {
     itsCorrelationAxis = CorrelationSeq(first, last);
-}
-
-inline void VisDimensions::setCorrelations(const CorrelationSeq &axis)
-{
-    itsCorrelationAxis = axis;
 }
 
 inline size_t VisDimensions::nFreq() const

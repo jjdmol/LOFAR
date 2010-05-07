@@ -25,9 +25,9 @@
 #ifndef LOFAR_BBSKERNEL_VISSELECTION_H
 #define LOFAR_BBSKERNEL_VISSELECTION_H
 
-#include <Common/lofar_string.h>
 #include <BBSKernel/BaselineFilter.h>
 #include <BBSKernel/CorrelationMask.h>
+#include <Common/lofar_string.h>
 #include <utility>
 
 namespace LOFAR

@@ -42,8 +42,6 @@ Evaluator::Evaluator(const VisData::Ptr &lhs, const MeasurementExpr::Ptr &rhs)
 {
     // Construct a sequence of pairs of indices of matching baselines (i.e.
     // baselines known by both LHS and RHS).
-//    initBaselineMap();
-
     makeIndexMap(itsLHS->baselines(), itsRHS->baselines(),
         back_inserter(itsBlMap));
 
@@ -55,8 +53,6 @@ Evaluator::Evaluator(const VisData::Ptr &lhs, const MeasurementExpr::Ptr &rhs)
 
     // Construct a sequence of pairs of indices of matching correlations (i.e.
     // correlations known by both LHS and RHS).
-//    initCorrelationMap();
-
     makeIndexMap(itsLHS->correlations(), itsRHS->correlations(),
         back_inserter(itsCrMap));
 
@@ -88,6 +84,11 @@ void Evaluator::setCorrelationMask(const CorrelationMask &mask)
         back_inserter(itsCrMap));
 }
 
+bool Evaluator::isSelectionEmpty() const
+{
+    return itsBlMap.empty() || itsCrMap.empty();
+}
+
 void Evaluator::setMode(Mode mode)
 {
     switch(mode)
@@ -112,6 +113,13 @@ void Evaluator::setMode(Mode mode)
 void Evaluator::process()
 {
     itsProcTimers[ALL].start();
+
+    if(isSelectionEmpty())
+    {
+        itsProcTimers[ALL].stop();
+        return;
+    }
+
     for(size_t i = 0; i < itsBlMap.size(); ++i)
     {
         // Evaluate the expression for this baseline.
@@ -154,6 +162,7 @@ void Evaluator::clearStats()
 
 void Evaluator::dumpStats(ostream &out) const
 {
+    out << "Processing statistics: " << endl;
     for(size_t i = 0; i < Evaluator::N_ProcTimer; ++i)
     {
         const double elapsed = itsProcTimers[i].getElapsed();
