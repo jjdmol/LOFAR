@@ -70,9 +70,6 @@ namespace LOFAR
         for(vector<ParameterValue>::const_iterator pattern = patterns.begin(),
           pattern_end = patterns.end(); pattern != pattern_end; ++pattern) {
 
-          ASSERTSTR(pattern->isVector(), "Invalid baseline selection: "
-            << (*pattern));
-
           vector<string> criterion(pattern->getStringVector());
           ASSERTSTR(criterion.size() > 0 && criterion.size() < 3, "Invalid"
             " baseline selection criterion: " << criterion);

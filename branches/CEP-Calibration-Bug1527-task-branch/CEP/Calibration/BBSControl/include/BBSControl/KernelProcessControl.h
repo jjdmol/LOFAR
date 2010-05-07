@@ -114,23 +114,24 @@ private:
     // Return the current state as a string.
     const string& showState() const;
 
+    // Determine the frequency range spanned by the calibration group that this
+    // kernel is part of.
     Axis::ShPtr getCalGroupFreqAxis(const vector<uint32> &groups) const;
 
+    // Create BaselineFilter from the baseline selection specified in the
+    // parset.
     BaselineFilter createBaselineFilter(const Selection &selection) const;
-    CorrelationFilter createCorrelationFilter(const Selection &selection) const;
 
-//    bool parseProductSelection(vector<string> &result, const Step &command)
-//        const;
-
-//    bool parseBaselineSelection(vector<baseline_t> &result,
-//        const Step &command) const;
+    // Create CorrelationFilter from the baseline selection specified in the
+    // parset.
+    CorrelationMask createCorrelationMask(const Selection &selection) const;
 
     State                                   itsState;
 
     // Calibration session information.
     scoped_ptr<CalSession>                  itsCalSession;
 
-    // 0-based index of this kernel process.
+    // 0-based index of this kernel.
     KernelIndex                             itsKernelIndex;
 
     // Measurement.
@@ -141,9 +142,6 @@ private:
     Box                                     itsDomain;
     VisSelection                            itsChunkSelection;
     VisData::Ptr                            itsChunk;
-
-//    // Model
-//    Model::Ptr                              itsModel;
 
     // Source Database
     shared_ptr<SourceDB>                    itsSourceDb;
