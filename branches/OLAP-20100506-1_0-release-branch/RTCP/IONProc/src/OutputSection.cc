@@ -39,6 +39,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <time.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -116,11 +117,20 @@ OutputSection::~OutputSection()
   // WAIT for our thread to finish
   delete itsThread;
 
+  struct timespec timeout;
+
+  timeout.tv_sec  = time(0) + 10;
+  timeout.tv_nsec = 0;
+
   for (unsigned i = 0; i < itsItemList.size(); i++ ) {
     notDroppingData(i); // for final warning message
       
 
-    // STOP our output threads  
+    // WAIT for our output threads using a timeout
+    if( !itsOutputThreads[i]->waitForDone( timeout ) ) {
+      // STOP our output threads
+      itsOutputThreads[i]->abort();
+    }
     delete itsOutputThreads[i];
   }
 
@@ -141,15 +151,18 @@ OutputSection::~OutputSection()
   itsStreamsFromCNs.clear();
 }
 
+
 void OutputSection::addIterations( unsigned count )
 {
   itsNrIterationsToDo.up( count );
 }
 
+
 void OutputSection::noMoreIterations()
 {
   itsNrIterationsToDo.noMore();
 }
+
 
 void OutputSection::droppingData(unsigned subband)
 {

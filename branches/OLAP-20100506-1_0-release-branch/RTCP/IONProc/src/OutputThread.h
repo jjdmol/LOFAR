@@ -31,6 +31,7 @@
 #include <Thread/Mutex.h>
 #include <Thread/Queue.h>
 #include <Thread/Thread.h>
+#include <Thread/Condition.h>
 
 #include <stack>
 #include <vector>
@@ -45,12 +46,19 @@ class OutputThread
 			    OutputThread(const Parset &ps, const unsigned subband, const unsigned output, StreamableData *dataTemplate);
 			    ~OutputThread();
 
+    bool                    waitForDone(const struct timespec &timespec);                        
+    void                    abort();
+
     static const unsigned   maxSendQueueSize = 3;
 
     Queue<StreamableData *> itsFreeQueue, itsSendQueue;
 
   private:
     void		    mainLoop();
+
+    bool                    itsDone;
+    Condition               itsDoneCondition;
+    Mutex                   itsDoneMutex;
 
     const Parset            &itsParset;
     const unsigned          itsSubband, itsOutput;

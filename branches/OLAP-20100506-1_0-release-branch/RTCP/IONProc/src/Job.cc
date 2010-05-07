@@ -186,19 +186,51 @@ void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName
 }
 
 
-void Job::joinSSH(int childPID, const std::string &hostName)
+void Job::joinSSH(int childPID, const std::string &hostName, unsigned &timeout)
 {
   if (childPID != 0) {
     int status;
 
-    if (waitpid(childPID, &status, 0) == -1)
+    // always try at least one waitpid(). if child has not exited, optionally
+    // sleep and try again.
+    for (;;) {
+      pid_t ret;
+
+      if ((ret = waitpid(childPID, &status, WNOHANG)) == (pid_t)-1) {
+        // error
+        LOG_WARN_STR("storage writer on " << hostName << " : waitpid() failed");
+        return;
+      } else if (ret == 0) {
+        // child still running
+        if (timeout == 0) {
+          break;
+        }
+
+        timeout--;
+        sleep(1);
+      } else {
+        // child exited
+        if (WIFSIGNALED(status) != 0)
+          LOG_WARN_STR("storage writer on " << hostName << " was killed by signal " << WTERMSIG(status));
+        else if (WEXITSTATUS(status) != 0)
+          LOG_WARN_STR("storage writer on " << hostName << " exited with exit code " << WEXITSTATUS(status));
+        else
+          LOG_INFO_STR("storage writer on " << hostName << " terminated normally");
+
+        return;  
+      }
+    }
+
+    // child did not exit within the given timeout
+
+    LOG_WARN_STR("storage writer on " << hostName << " : sending SIGTERM");
+    kill(childPID, SIGTERM);
+
+    if (waitpid(childPID, &status, 0) == -1) {
       LOG_WARN_STR("storage writer on " << hostName << " : waitpid() failed");
-    else if (WIFSIGNALED(status) != 0)
-      LOG_WARN_STR("storage writer on " << hostName << " was killed by signal " << WTERMSIG(status));
-    else if (WEXITSTATUS(status) != 0)
-      LOG_WARN_STR("storage writer on " << hostName << " exited with exit code " << WEXITSTATUS(status));
-    else
-      LOG_INFO_STR("storage writer on " << hostName << " terminated normally");
+    }
+
+    LOG_WARN_STR("storage writer on " << hostName << " terminated after sending SIGTERM");
   }
 }
 
@@ -229,8 +261,10 @@ void Job::startStorageProcesses()
 
 void Job::stopStorageProcesses()
 {
+  unsigned timeleft = 10;
+
   for (unsigned rank = 0; rank < itsStorageHostNames.size(); rank ++)
-    joinSSH(itsStoragePIDs[rank], itsStorageHostNames[rank]);
+    joinSSH(itsStoragePIDs[rank], itsStorageHostNames[rank], timeleft);
 }
 
 
@@ -322,6 +356,9 @@ void Job::jobThread()
 	  ;
 
       barrier();
+
+      // all InputSections and OutputSections have finished their processing, so
+      // Storage should be done any second now.
 
       if (storageStarted)
 	stopStorageProcesses();
