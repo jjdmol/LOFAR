@@ -27,7 +27,7 @@
 
 #include <Common/lofar_string.h>
 #include <BBSKernel/BaselineFilter.h>
-#include <BBSKernel/CorrelationFilter.h>
+#include <BBSKernel/CorrelationMask.h>
 #include <utility>
 
 namespace LOFAR
@@ -49,7 +49,7 @@ public:
         TIME_START,
         TIME_END,
         BASELINE_FILTER,
-        CORRELATION_FILTER,
+        CORRELATION_MASK,
         N_Field
     };
 
@@ -72,13 +72,12 @@ public:
     void setTimeRange(const string &start, const string &end);
 
     void setBaselineFilter(const BaselineFilter &filter);
-
-    void setCorrelationFilter(const CorrelationFilter &filter);
+    void setCorrelationMask(const CorrelationMask &mask);
 
     pair<size_t, size_t> getChannelRange() const;
     pair<double, double> getTimeRange() const;
     const BaselineFilter &getBaselineFilter() const;
-    const CorrelationFilter &getCorrelationFilter() const;
+    const CorrelationMask &getCorrelationMask() const;
 
 private:
     bool convertTime(const string &in, double &out) const;
@@ -87,7 +86,7 @@ private:
     pair<size_t, size_t>    itsChannelRange;
     pair<double, double>    itsTimeRange;
     BaselineFilter          itsBaselineFilter;
-    CorrelationFilter       itsCorrelationFilter;
+    CorrelationMask         itsCorrelationMask;
 };
 
 // @}

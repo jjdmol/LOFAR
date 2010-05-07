@@ -46,8 +46,10 @@ public:
     typedef shared_ptr<const ExprVisData>  ConstPtr;
 
     ExprVisData(const VisData::Ptr &chunk, const baseline_t &baseline,
-        Correlation element00 = XX, Correlation element01 = XY,
-        Correlation element10 = YX, Correlation element11 = YY);
+        Correlation::Type element00 = Correlation::XX,
+        Correlation::Type element01 = Correlation::XY,
+        Correlation::Type element10 = Correlation::YX,
+        Correlation::Type element11 = Correlation::YY);
 
 //    void setCorrelations(Correlation element00, Correlation element01, Correlation element10,
 //        Correlation element11);
@@ -61,7 +63,7 @@ private:
     void makeAxisMapping(const Axis::ShPtr &from, const Axis::ShPtr &to,
         T_ITER out) const;
 
-    void setCorrelation(size_t element, Correlation correlation);
+    void setCorrelation(size_t element, Correlation::Type correlation);
 
     FlagArray copyFlags(const Grid &grid, size_t element,
         const vector<pair<size_t, size_t> > (&mapping)[2]) const;
@@ -128,8 +130,6 @@ void ExprVisData::makeAxisMapping(const Axis::ShPtr &from,
         }
     }
 }
-
-
 
 } // namespace BBS
 } // namespace LOFAR

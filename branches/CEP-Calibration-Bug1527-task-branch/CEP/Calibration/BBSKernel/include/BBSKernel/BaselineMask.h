@@ -1,5 +1,5 @@
-//# BaselineMask.h: Baseline selection in the form of a boolean baseline mask.
-//# Can decide if a given baseline is selected in O(1) time.
+//# BaselineMask.h: Baseline selection implemented as a boolean mask. Provides
+//# fast access to the mask status of a baseline.
 //#
 //# Copyright (C) 2010
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -25,8 +25,8 @@
 #define LOFAR_BBSKERNEL_BASELINEMASK_H
 
 // \file
-// Baseline selection in the form of a boolean baseline mask. Can decide if a
-// given baseline is selected in O(1) time.
+// Baseline selection implemented as a boolean mask. Provides fast access to the
+// mask status of a baseline.
 
 #include <Common/lofar_vector.h>
 #include <BBSKernel/Types.h>
@@ -42,47 +42,37 @@ namespace BBS
 class BaselineMask
 {
 public:
-    explicit BaselineMask(size_t nStations = 0, bool initial = false);
-
-    template <typename T_ITER>
-    BaselineMask(size_t nStations, T_ITER first, T_ITER last);
-
-    // Mask all baselines including station i.
-    void mask(size_t i);
-    // Mask baseline (i, j).
-    void mask(size_t i, size_t j);
     // Mask baseline.
-    void mask(const baseline_t &baseline);
-
-    // Unmask all baselines including station i.
-    void unmask(size_t i);
-    // Unmask baseline (i, j).
-    void unmask(size_t i, size_t j);
+    void set(const baseline_t &baseline);
     // Unmask baseline.
-    void unmask(const baseline_t &baseline);
+    void clear(const baseline_t &baseline);
 
-    // Number of stations.
-    size_t nStations() const;
+    // Mask baseline (i, j) (convenience function).
+    void set(size_t i, size_t j);
+    // Unmask baseline (i, j) (convenience function).
+    void clear(size_t i, size_t j);
 
-    // Get mask status of station i.
-    bool operator()(size_t i) const;
-    // Get mask status of baseline (i, j).
-    bool operator()(size_t i, size_t j) const;
     // Get mask status of baseline.
-    bool operator()(const baseline_t &bl) const;
+    bool operator()(const baseline_t &baseline) const;
+    // Get mask status of baseline (i, j) (convenience function).
+    bool operator()(size_t i, size_t j) const;
 
-    // Filter a list of station indices or baselines according to the mask.
-    template <typename T_ITER, typename T_OUTPUT_ITER>
-    void filter(T_ITER first, T_ITER last, T_OUTPUT_ITER out) const;
+    // Returns true if nothing is masked. NB. This function is slow because
+    // it needs to iterate over the entire mask. If this turns out to be a
+    // bottleneck, the result could be cached internally.
+    bool empty() const;
+
+    friend const BaselineMask operator!(const BaselineMask &lhs);
+    friend const BaselineMask operator||(const BaselineMask &lhs,
+        const BaselineMask &rhs);
+    friend const BaselineMask operator&&(const BaselineMask &lhs,
+        const BaselineMask &rhs);
 
 private:
-    // Update the station mask (only performed when necessary as it can be an
-    // expensive operation).
-    void updateStationMask() const;
+    // Compute the linear index of baseline (i, j).
+    size_t index(size_t i, size_t j) const;
 
-    mutable bool            itsUpdateStationMask;
-    mutable vector<bool>    itsStationMask;
-    vector<bool>            itsMask;
+    vector<bool>    itsMask;
 };
 
 // @}
@@ -91,53 +81,50 @@ private:
 // - BaselineMask implementation                                            - //
 // -------------------------------------------------------------------------- //
 
-template <typename T_ITER>
-BaselineMask::BaselineMask(size_t nStations, T_ITER first, T_ITER last)
-    :   itsUpdateStationMask(false),
-        itsStationMask(nStations, false),
-        itsMask(nStations * nStations, false)
+inline void BaselineMask::set(const baseline_t &baseline)
 {
-    for(; first != last; ++first)
+    set(baseline.first, baseline.second);
+}
+
+inline void BaselineMask::clear(const baseline_t &baseline)
+{
+    clear(baseline.first, baseline.second);
+}
+
+inline void BaselineMask::set(size_t i, size_t j)
+{
+    const size_t index = this->index(i, j);
+    if(index >= itsMask.size())
     {
-        mask(*first);
+        itsMask.resize(index + 1);
+    }
+
+    itsMask[index] = true;
+}
+
+inline void BaselineMask::clear(size_t i, size_t j)
+{
+    const size_t index = this->index(i, j);
+    if(index < itsMask.size())
+    {
+        itsMask[index] = false;
     }
 }
 
-inline size_t BaselineMask::nStations() const
+inline bool BaselineMask::operator()(const baseline_t &baseline) const
 {
-    return itsStationMask.size();
-}
-
-inline bool BaselineMask::operator()(size_t i) const
-{
-    if(itsUpdateStationMask)
-    {
-        updateStationMask();
-    }
-
-    return itsStationMask[i];
+    return this->operator()(baseline.first, baseline.second);
 }
 
 inline bool BaselineMask::operator()(size_t i, size_t j) const
 {
-    return itsMask[i * nStations() + j];
+    const size_t index = this->index(i, j);
+    return index < itsMask.size() && itsMask[index];
 }
 
-inline bool BaselineMask::operator()(const baseline_t &bl) const
+inline size_t BaselineMask::index(size_t i, size_t j) const
 {
-    return this->operator()(bl.first, bl.second);
-}
-
-template <typename T_ITER, typename T_OUTPUT_ITER>
-void BaselineMask::filter(T_ITER first, T_ITER last, T_OUTPUT_ITER out) const
-{
-    for(; first != last; ++first)
-    {
-        if(this->operator()(*first))
-        {
-            *out++ = *first;
-        }
-    }
+    return ((i + j) * (i + j + 3)) / 2 - i;
 }
 
 } //# namespace BBS

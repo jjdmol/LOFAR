@@ -85,10 +85,10 @@ namespace BBS
 {
 
 MeasurementExprLOFAR::MeasurementExprLOFAR(const Instrument &instrument,
-    const SourceDB &sourceDb, const casa::MDirection &reference,
+    const SourceDB &sourceDB, const casa::MDirection &reference,
     double referenceFreq)
     :   itsInstrument(instrument),
-        itsSourceDb(sourceDb),
+        itsSourceDB(sourceDB),
         itsPhaseReference(reference),
         itsReferenceFreq(referenceFreq),
         itsCachePolicy(new DefaultCachePolicy())
@@ -146,10 +146,10 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
 
     // Update state.
     itsBaselines = BaselineSeq(baselines.begin(), baselines.end());
-    itsCorrelations.append(XX);
-    itsCorrelations.append(XY);
-    itsCorrelations.append(YX);
-    itsCorrelations.append(YY);
+    itsCorrelations.append(Correlation::XX);
+    itsCorrelations.append(Correlation::XY);
+    itsCorrelations.append(Correlation::YX);
+    itsCorrelations.append(Correlation::YY);
 //    itsCorrelations.append(RR);
 //    itsCorrelations.append(RL);
 //    itsCorrelations.append(LR);
@@ -329,10 +329,10 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
 
     // Update state.
     itsBaselines = BaselineSeq(baselines.begin(), baselines.end());
-    itsCorrelations.append(XX);
-    itsCorrelations.append(XY);
-    itsCorrelations.append(YX);
-    itsCorrelations.append(YY);
+    itsCorrelations.append(Correlation::XX);
+    itsCorrelations.append(Correlation::XY);
+    itsCorrelations.append(Correlation::YX);
+    itsCorrelations.append(Correlation::YY);
 
     // Create a single Jones matrix expression for each station, for the
     // selected direction.
@@ -684,14 +684,14 @@ MeasurementExprLOFAR::makePatchList(const vector<string> &patterns)
 {
     if(patterns.empty())
     {
-        return itsSourceDb.getPatches(-1, "*");
+        return itsSourceDB.getPatches(-1, "*");
     }
 
     // Create a list of all unique patches that match the given patterns.
     set<string> patches;
     for(size_t i = 0; i < patterns.size(); ++i)
     {
-        vector<string> match(itsSourceDb.getPatches(-1, patterns[i]));
+        vector<string> match(itsSourceDB.getPatches(-1, patterns[i]));
         patches.insert(match.begin(), match.end());
     }
 
@@ -700,7 +700,7 @@ MeasurementExprLOFAR::makePatchList(const vector<string> &patterns)
 
 vector<Source::Ptr> MeasurementExprLOFAR::makeSourceList(const string &patch)
 {
-    vector<SourceInfo> sources(itsSourceDb.getPatchSources(patch));
+    vector<SourceInfo> sources(itsSourceDB.getPatchSources(patch));
 
     vector<Source::Ptr> result;
     result.reserve(sources.size());

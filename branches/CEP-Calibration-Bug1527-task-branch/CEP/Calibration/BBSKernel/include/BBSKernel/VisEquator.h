@@ -28,13 +28,16 @@
 // Generate condition equations based on a buffer of observed and a buffer of
 // simulated visibilities.
 
+#include <BBSKernel/BaselineMask.h>
+#include <BBSKernel/CorrelationMask.h>
+#include <BBSKernel/MeasurementExpr.h>
 #include <BBSKernel/SolverInterfaceTypes.h>
 #include <BBSKernel/Types.h>
 #include <BBSKernel/VisData.h>
-#include <BBSKernel/MeasurementExpr.h>
 #include <BBSKernel/Expr/ExprValue.h>
 
 #include <Common/Timer.h>
+#include <Common/lofar_iostream.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_vector.h>
@@ -66,13 +69,11 @@ public:
     // visibilities are available.
     size_t nSelectedCells() const;
 
-    // Select baselines in [first, last) for processing.
-    template <typename T_ITER>
-    void setBaselines(T_ITER first, T_ITER last);
+    // Restrict processing to the baselines included in the mask.
+    void setBaselineMask(const BaselineMask &mask);
 
-    // Select correlations in [first, last) for processing.
-    template <typename T_ITER>
-    void setCorrelations(T_ITER first, T_ITER last);
+    // Restrict processing to the correlations included in the mask.
+    void setCorrelationMask(const CorrelationMask &mask);
 
     // Is the current data selection empty? The data selection is determined by
     // the intersection between the model, measurement, and solution grid
@@ -103,8 +104,8 @@ public:
     // Reset processing statistics.
     void clearStats();
 
-    // Dump processing statistics to the logger.
-    void dumpStats() const;
+    // Dump processing statistics to the provided output stream.
+    void dumpStats(ostream &out) const;
 
 private:
     // Nested class that holds the temporary buffers needed while processing
@@ -148,18 +149,6 @@ private:
         static string           timerNames[N_ProcTimer];
         NSTimer                 timers[N_ProcTimer];
     };
-
-    // Create a mapping of baselines known by both LHS and RHS to their
-    // respective indices.
-    void initBaselineMap();
-    template <typename T_ITER>
-    void makeBaselineMap(T_ITER first, T_ITER last);
-
-    // Create a mapping of correlations known by both LHS and RHS to their
-    // respective indices.
-    void initCorrelationMap();
-    template <typename T_ITER>
-    void makeCorrelationMap(T_ITER first, T_ITER last);
 
     // Determine the evaluation grid, i.e. the part of the observation grid
     // that is completely contained in the model domain.
@@ -274,61 +263,6 @@ private:
 // -------------------------------------------------------------------------- //
 
 template <typename T_ITER>
-void VisEquator::setBaselines(T_ITER first, T_ITER last)
-{
-    if(first != last)
-    {
-        itsBlMap.clear();
-        makeBaselineMap(first, last);
-    }
-}
-
-template <typename T_ITER>
-void VisEquator::setCorrelations(T_ITER first, T_ITER last)
-{
-    if(first != last)
-    {
-        itsCrMap.clear();
-        makeCorrelationMap(first, last);
-    }
-}
-
-template <typename T_ITER>
-void VisEquator::makeBaselineMap(T_ITER first, T_ITER last)
-{
-    const BaselineSeq &blLHS = itsLHS->baselines();
-    const BaselineSeq &blRHS = itsRHS->baselines();
-
-    for(; first != last; ++first)
-    {
-        const size_t lhs = blLHS.index(*first);
-        const size_t rhs = blRHS.index(*first);
-        if(lhs != blLHS.size() && rhs != blRHS.size())
-        {
-            itsBlMap.push_back(make_pair(lhs, rhs));
-        }
-    }
-}
-
-template <typename T_ITER>
-void VisEquator::makeCorrelationMap(T_ITER first, T_ITER last)
-{
-    const CorrelationSeq &crLHS = itsLHS->correlations();
-    const CorrelationSeq &crRHS = itsRHS->correlations();
-
-    for(; first != last; ++first)
-    {
-        const size_t lhs = crLHS.index(*first);
-        const size_t rhs = crRHS.index(*first);
-
-        if(lhs != crLHS.size() && rhs != crRHS.size())
-        {
-            itsCrMap.push_back(make_pair(lhs, rhs));
-        }
-    }
-}
-
-template <typename T_ITER>
 Interval<size_t> VisEquator::makeAxisMap(const Axis::ShPtr &from,
     const Axis::ShPtr &to, T_ITER out) const
 {
@@ -430,6 +364,7 @@ T_ITER VisEquator::process(T_ITER first, T_ITER last)
     {
         procExpr(itsProcContext, tflag, flag, sample, itsBlMap[i], first);
     }
+
     itsProcTimer.stop();
 
     return first + nSelectedCells();

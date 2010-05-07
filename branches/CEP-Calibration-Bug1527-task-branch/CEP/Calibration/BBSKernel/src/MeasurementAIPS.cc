@@ -574,13 +574,12 @@ void MeasurementAIPS::initDimensions()
     Vector<Int> antenna1 = c_antenna1.getColumn();
     Vector<Int> antenna2 = c_antenna2.getColumn();
 
-    vector<baseline_t> baselines;
-    baselines.reserve(nBaselines);
+    BaselineSeq baselines;
     for(unsigned int i = 0; i < nBaselines; ++i)
     {
-        baselines.push_back(baseline_t(antenna1[i], antenna2[i]));
+        baselines.append(baseline_t(antenna1[i], antenna2[i]));
     }
-    itsDims.setBaselines(baselines.begin(), baselines.end());
+    itsDims.setBaselines(baselines);
 
     // Initialize correlation axis.
     ROMSPolarizationColumns polarization(itsMS.polarization());
@@ -590,14 +589,14 @@ void MeasurementAIPS::initDimensions()
     Vector<Int> corrType = polarization.corrType()(idPolarization);
     const unsigned int nCorrelations = corrType.nelements();
 
-    vector<Correlation> correlations;
-    correlations.reserve(nCorrelations);
+    CorrelationSeq correlations;
     for(unsigned int i = 0; i < nCorrelations; ++i)
     {
-        Correlation cr = asCorrelation(Stokes::name(Stokes::type(corrType(i))));
-        correlations.push_back(cr);
+        Correlation::Type cr =
+            Correlation::asCorrelation(Stokes::name(Stokes::type(corrType(i))));
+        correlations.append(cr);
     }
-    itsDims.setCorrelations(correlations.begin(), correlations.end());
+    itsDims.setCorrelations(correlations);
 }
 
 // NOTE: OPTIMIZATION OPPORTUNITY: Cache implementation specific selection
@@ -626,20 +625,20 @@ Table MeasurementAIPS::getTableSelection(const Table &table,
 
     if(selection.isSet(VisSelection::BASELINE_FILTER))
     {
-        TableExprNodeSet selectionExpr;
-        for(size_t i = 0; i < itsInstrument.size(); ++i)
-        {
-            if(mask(i))
-            {
-                selectionExpr.add(TableExprNodeSetElem(static_cast<Int>(i)));
-            }
-        }
+//        TableExprNodeSet selectionExpr;
+//        for(size_t i = 0; i < itsInstrument.size(); ++i)
+//        {
+//            if(mask(i))
+//            {
+//                selectionExpr.add(TableExprNodeSetElem(static_cast<Int>(i)));
+//            }
+//        }
 
-        if(selectionExpr.nelements() > 0)
-        {
-            filter = filter && table.col("ANTENNA1").in(selectionExpr)
-                && table.col("ANTENNA2").in(selectionExpr);
-        }
+//        if(selectionExpr.nelements() > 0)
+//        {
+//            filter = filter && table.col("ANTENNA1").in(selectionExpr)
+//                && table.col("ANTENNA2").in(selectionExpr);
+//        }
 
         if(selection.getBaselineFilter().baselineType() == BaselineFilter::AUTO)
         {
@@ -652,7 +651,7 @@ Table MeasurementAIPS::getTableSelection(const Table &table,
         }
     }
 
-    if(selection.isSet(VisSelection::CORRELATION_FILTER))
+    if(selection.isSet(VisSelection::CORRELATION_MASK))
     {
         LOG_WARN_STR("Correlation selection not yet implemented; all available"
             " correlations will be used.");
@@ -767,18 +766,15 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     Vector<Int> antenna1 = c_antenna1.getColumn();
     Vector<Int> antenna2 = c_antenna2.getColumn();
 
-    vector<baseline_t> baselines;
+    BaselineSeq baselines;
     for(unsigned int i = 0; i < nBaselines; ++i)
     {
-        if(mask(antenna1[i], antenna2[i]))
-        {
-            baselines.push_back(baseline_t(antenna1[i], antenna2[i]));
-        }
+        baselines.append(baseline_t(antenna1[i], antenna2[i]));
     }
-    dims.setBaselines(baselines.begin(), baselines.end());
+    dims.setBaselines(baselines);
 
     // Initialize correlation axis.
-    dims.setCorrelations(correlations().begin(), correlations().end());
+    dims.setCorrelations(correlations());
 
     LOG_DEBUG_STR("Selection contains " << dims.nBaselines() << " baseline(s), "
         << dims.nTime() << " timeslot(s), " << dims.nFreq() << " channel(s),"

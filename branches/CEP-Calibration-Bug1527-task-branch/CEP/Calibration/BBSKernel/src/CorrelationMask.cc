@@ -1,5 +1,5 @@
-//# BaselineMask.cc: Baseline selection implemented as a boolean mask. Provides
-//# fast access to the mask status of a baseline.
+//# CorrelationMask.cc: Correlation selection implemented as a boolean mask.
+//# Provides fast access to the mask status of a correlation.
 //#
 //# Copyright (C) 2010
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -22,7 +22,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/BaselineMask.h>
+#include <BBSKernel/CorrelationMask.h>
 #include <Common/lofar_algorithm.h>
 
 namespace LOFAR
@@ -30,46 +30,44 @@ namespace LOFAR
 namespace BBS
 {
 
-bool BaselineMask::empty() const
+CorrelationMask::CorrelationMask(bool initial)
 {
-    return count(itsMask.begin(), itsMask.end(), true) == 0;
+    fill(itsMask, itsMask + Correlation::N_Type, initial);
 }
 
-const BaselineMask operator!(const BaselineMask &lhs)
+bool CorrelationMask::empty() const
 {
-    const size_t size = lhs.itsMask.size();
+    return count(itsMask, itsMask + Correlation::N_Type, true) == 0;
+}
 
-    BaselineMask mask;
-    mask.itsMask.reserve(size);
-    for(size_t i = 0; i < size; ++i)
+const CorrelationMask operator!(const CorrelationMask &lhs)
+{
+    CorrelationMask mask;
+    for(size_t i = 0; i < Correlation::N_Type; ++i)
     {
-        mask.itsMask.push_back(!lhs.itsMask[i]);
+        mask.itsMask[i] = !lhs.itsMask[i];
     }
     return mask;
 }
 
-const BaselineMask operator||(const BaselineMask &lhs, const BaselineMask &rhs)
+const CorrelationMask operator||(const CorrelationMask &lhs,
+    const CorrelationMask &rhs)
 {
-    const size_t size = std::max(lhs.itsMask.size(), rhs.itsMask.size());
-
-    BaselineMask mask;
-    mask.itsMask.reserve(size);
-    for(size_t i = 0; i < size; ++i)
+    CorrelationMask mask;
+    for(size_t i = 0; i < Correlation::N_Type; ++i)
     {
-        mask.itsMask.push_back(lhs.itsMask[i] || rhs.itsMask[i]);
+        mask.itsMask[i] = lhs.itsMask[i] || rhs.itsMask[i];
     }
     return mask;
 }
 
-const BaselineMask operator&&(const BaselineMask &lhs, const BaselineMask &rhs)
+const CorrelationMask operator&&(const CorrelationMask &lhs,
+    const CorrelationMask &rhs)
 {
-    size_t size = std::min(lhs.itsMask.size(), rhs.itsMask.size());
-
-    BaselineMask mask;
-    mask.itsMask.reserve(size);
-    for(size_t i = 0; i < size; ++i)
+    CorrelationMask mask;
+    for(size_t i = 0; i < Correlation::N_Type; ++i)
     {
-        mask.itsMask.push_back(lhs.itsMask[i] && rhs.itsMask[i]);
+        mask.itsMask[i] = lhs.itsMask[i] && rhs.itsMask[i];
     }
     return mask;
 }

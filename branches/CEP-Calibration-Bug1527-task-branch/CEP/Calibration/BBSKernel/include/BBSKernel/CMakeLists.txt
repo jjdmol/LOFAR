@@ -10,7 +10,7 @@ install(FILES
   BaselineFilter.h
   BaselineMask.h
   Correlation.h
-  CorrelationFilter.h
+  CorrelationMask.h
   ElementBeamExpr.h
   Equator.h
   Evaluator.h

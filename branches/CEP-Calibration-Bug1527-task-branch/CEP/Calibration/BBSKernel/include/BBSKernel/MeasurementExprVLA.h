@@ -27,6 +27,7 @@
 // \file
 // Measurement equation for the VLA telescope and its environment.
 
+#include <BBSKernel/BaselineMask.h>
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/MeasurementExpr.h>
 #include <BBSKernel/ModelConfig.h>
@@ -60,16 +61,16 @@ public:
     typedef shared_ptr<MeasurementExprVLA>          Ptr;
     typedef shared_ptr<const MeasurementExprVLA>    ConstPtr;
 
-    MeasurementExprVLA(const Instrument &instrument, const SourceDB &sourceDb,
-        const casa::MDirection &reference, double referenceFreq);
-
+    MeasurementExprVLA(const Instrument &instrument, const SourceDB &sourceDb);
     void clear();
 
-    void makeForwardExpr(const ModelConfig &config, const VisData::Ptr &chunk,
-        const vector<baseline_t> &baselines);
+    void makeForwardExpr(const ModelConfig &config,
+        const BaselineSeq &baselineax, const casa::MDirection &refDir,
+        double refFreq);
 
     void makeInverseExpr(const ModelConfig &config, const VisData::Ptr &chunk,
-        const vector<baseline_t> &baselines);
+        const BaselineMask &mask, const casa::MDirection &refDir,
+        double refFreq);
 
     // \name MeasurementExpr interface implementation
     // These methods form an implementation of the MeasurementExpr interface
@@ -147,8 +148,8 @@ private:
         const Expr<JonesMatrix>::Ptr &rhs) const;
 
     Instrument                      itsInstrument;
-    SourceDB                        itsSourceDb;
-    casa::MDirection                itsPhaseReference;
+    SourceDB                        itsSourceDB;
+    casa::MDirection                itsReferenceDir;
     double                          itsReferenceFreq;
 
     BaselineSeq                     itsBaselines;

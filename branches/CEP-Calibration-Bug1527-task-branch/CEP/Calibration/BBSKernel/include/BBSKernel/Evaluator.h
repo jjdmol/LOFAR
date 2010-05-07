@@ -28,9 +28,12 @@
 // Evaluator.h: Evaluate an expression and assign, subtract, or add the result
 // to / from a buffer of visibility data.
 
-#include <BBSKernel/VisData.h>
+#include <BBSKernel/BaselineMask.h>
+#include <BBSKernel/CorrelationMask.h>
 #include <BBSKernel/MeasurementExpr.h>
+#include <BBSKernel/VisData.h>
 
+#include <Common/lofar_iostream.h>
 #include <Common/Timer.h>
 
 namespace LOFAR
@@ -54,13 +57,11 @@ public:
 
     Evaluator(const VisData::Ptr &lhs, const MeasurementExpr::Ptr &rhs);
 
-    // Select baselines in [first, last) for processing.
-    template <typename T_ITER>
-    void setBaselines(T_ITER first, T_ITER last);
+    // Restrict processing to the baselines included in the mask.
+    void setBaselineMask(const BaselineMask &mask);
 
-    // Select correlations in [first, last) for processing.
-    template <typename T_ITER>
-    void setCorrelations(T_ITER first, T_ITER last);
+    // Restrict processing to the correlations included in the mask.
+    void setCorrelationMask(const CorrelationMask &mask);
 
     // Set operation to perform on the data (equate, subtract, or add).
     void setMode(Mode mode);
@@ -72,8 +73,8 @@ public:
     // Reset processing statistics.
     void clearStats();
 
-    // Dump processing statistics to the logger.
-    void dumpStats() const;
+    // Dump processing statistics to the provided output stream.
+    void dumpStats(ostream &out) const;
 
 private:
     struct OpEq
@@ -90,18 +91,6 @@ private:
     {
         static void apply(sample_t &lhs, const dcomplex &rhs);
     };
-
-    // Create a mapping of baselines known by both LHS and RHS to their
-    // respective indices.
-    void initBaselineMap();
-    template <typename T_ITER>
-    void makeBaselineMap(T_ITER first, T_ITER last);
-
-    // Create a mapping of correlations known by both LHS and RHS to their
-    // respective indices.
-    void initCorrelationMap();
-    template <typename T_ITER>
-    void makeCorrelationMap(T_ITER first, T_ITER last);
 
     // Signature of sample processor function.
     typedef void (Evaluator::*ExprProcessor)(size_t &bl,
@@ -156,60 +145,6 @@ inline void Evaluator::OpSub::apply(sample_t &lhs, const dcomplex &rhs)
 inline void Evaluator::OpAdd::apply(sample_t &lhs, const dcomplex &rhs)
 {
     lhs += rhs;
-}
-
-template <typename T_ITER>
-void Evaluator::setBaselines(T_ITER first, T_ITER last)
-{
-    if(first != last)
-    {
-        itsBlMap.clear();
-        makeBaselineMap(first, last);
-    }
-}
-
-template <typename T_ITER>
-void Evaluator::setCorrelations(T_ITER first, T_ITER last)
-{
-    if(first != last)
-    {
-        itsCrMap.clear();
-        makeCorrelationMap(first, last);
-    }
-}
-
-template <typename T_ITER>
-void Evaluator::makeBaselineMap(T_ITER first, T_ITER last)
-{
-    const BaselineSeq &blLHS = itsLHS->baselines();
-    const BaselineSeq &blRHS = itsRHS->baselines();
-
-    for(; first != last; ++first)
-    {
-        const size_t lhs = blLHS.index(*first);
-        const size_t rhs = blRHS.index(*first);
-        if(lhs != blLHS.size() && rhs != blRHS.size())
-        {
-            itsBlMap.push_back(make_pair(lhs, rhs));
-        }
-    }
-}
-
-template <typename T_ITER>
-void Evaluator::makeCorrelationMap(T_ITER first, T_ITER last)
-{
-    const CorrelationSeq &crLHS = itsLHS->correlations();
-    const CorrelationSeq &crRHS = itsRHS->correlations();
-
-    for(; first != last; ++first)
-    {
-        const size_t lhs = crLHS.index(*first);
-        const size_t rhs = crRHS.index(*first);
-        if(lhs != crLHS.size() && rhs != crRHS.size())
-        {
-            itsCrMap.push_back(make_pair(lhs, rhs));
-        }
-    }
 }
 
 template <typename T_OPERATOR>

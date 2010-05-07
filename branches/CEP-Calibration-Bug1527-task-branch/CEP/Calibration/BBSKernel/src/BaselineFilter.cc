@@ -51,8 +51,7 @@ BaselineFilter::BaselineFilter()
 
 bool BaselineFilter::empty() const
 {
-    return itsBaselineType == ANY && itsStationPatterns.empty()
-        && itsPatterns.empty();
+    return itsPatterns.empty();
 }
 
 void BaselineFilter::setBaselineType(const string &type)
@@ -71,19 +70,6 @@ void BaselineFilter::setBaselineType(BaselineFilter::BaselineType type)
 {
     ASSERT(BaselineFilter::isDefined(type));
     itsBaselineType = type;
-}
-
-void BaselineFilter::append(const string &pattern)
-{
-    try
-    {
-        itsStationPatterns.push_back(casa::Regex::fromPattern(pattern));
-    }
-    catch(casa::AipsError &ex)
-    {
-        THROW(BBSKernelException, "Error parsing station pattern: " << pattern
-            << "(exception: " << ex.what() << ")");
-    }
 }
 
 void BaselineFilter::append(const string &patternLHS, const string &patternRHS)
@@ -105,51 +91,23 @@ BaselineMask BaselineFilter::createMask(const Instrument &instrument) const
 {
     // TODO: If this method turns out to be a bottleneck it should not be to
     // difficult to optimize it.
-    BaselineMask mask(instrument.size());
+    BaselineMask mask;
 
-    // Create a vector that contains all available station indices.
-    vector<size_t> all;
-    for(size_t i = 0; i < instrument.size(); ++i)
+    // Process baseline patterns.
+    typedef vector<pair<casa::Regex, casa::Regex> >::const_iterator
+        PatternIter;
+
+    for(PatternIter pattern = itsPatterns.begin(),
+        pattern_end = itsPatterns.end(); pattern != pattern_end; ++pattern)
     {
-        all.push_back(i);
-    }
+        vector<size_t> groupA, groupB;
 
-    // If no patterns are specified, select all baselines (the baseline type is
-    // taken into account if specified).
-    if(itsStationPatterns.empty() && itsPatterns.empty())
-    {
-        update(mask, all.begin(), all.end(), all.begin(), all.end());
-    }
-    else
-    {
-        // Process station patterns.
-        typedef vector<casa::Regex>::const_iterator StatPatternIt;
-        for(StatPatternIt pattern = itsStationPatterns.begin(),
-            pattern_end = itsStationPatterns.end(); pattern != pattern_end;
-            ++pattern)
-        {
-            vector<size_t> group;
-
-            findMatchingStations(instrument, *pattern, back_inserter(group));
-            update(mask, group.begin(), group.end(), all.begin(), all.end());
-        }
-
-        // Process baseline patterns.
-        typedef vector<pair<casa::Regex, casa::Regex> >::const_iterator
-            PatternIt;
-
-        for(PatternIt pattern = itsPatterns.begin(),
-            pattern_end = itsPatterns.end(); pattern != pattern_end; ++pattern)
-        {
-            vector<size_t> groupA, groupB;
-
-            findMatchingStations(instrument, pattern->first,
-                back_inserter(groupA));
-            findMatchingStations(instrument, pattern->second,
-                back_inserter(groupB));
-            update(mask, groupA.begin(), groupA.end(), groupB.begin(),
-                groupB.end());
-        }
+        findMatchingStations(instrument, pattern->first,
+            back_inserter(groupA));
+        findMatchingStations(instrument, pattern->second,
+            back_inserter(groupB));
+        update(mask, groupA.begin(), groupA.end(), groupB.begin(),
+            groupB.end());
     }
 
     return mask;
@@ -207,7 +165,6 @@ ostream &operator<<(ostream &out, const BaselineFilter &obj)
     Indent id;
     out << endl << indent << "Type: "
         << BaselineFilter::asString(obj.baselineType());
-    out << endl << indent << "Station pattern(s): " << obj.itsStationPatterns;
     out << endl << indent << "Baseline pattern(s): " << obj.itsPatterns;
 
     return out;

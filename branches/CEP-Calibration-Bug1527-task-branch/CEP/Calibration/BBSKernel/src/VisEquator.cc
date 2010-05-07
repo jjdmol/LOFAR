@@ -46,33 +46,15 @@ VisEquator::VisEquator(const VisData::Ptr &lhs, const MeasurementExpr::Ptr &rhs)
     // grid to cells in the solution grid.
     makeCellMap();
 
-//    if(itsIntersectionEmpty)
-//    {
-//        LOG_WARN_STR("Intersection of the observation grid, model domain, and"
-//            " solution grid is empty. Solving will proceed without data.");
-//    }
-
     // Construct a sequence of pairs of indices of matching baselines (i.e.
     // baselines known by both LHS and RHS).
-    initBaselineMap();
-
-//    if(itsBlMap.empty())
-//    {
-//        LOG_WARN_STR("No baselines found for which data is available in both"
-//            " the observation and the model. Solving will proceed without"
-//            " data.");
-//    }
+    makeIndexMap(itsLHS->baselines(), itsRHS->baselines(),
+        back_inserter(itsBlMap));
 
     // Construct a sequence of pairs of indices of matching correlations (i.e.
     // correlations known by both LHS and RHS).
-    initCorrelationMap();
-
-//    if(itsCrMap.empty())
-//    {
-//        LOG_WARN_STR("No correlations found for which data is available in both"
-//            " the observation and the model. Solving will proceed without"
-//            " data.");
-//    }
+    makeIndexMap(itsLHS->correlations(), itsRHS->correlations(),
+        back_inserter(itsCrMap));
 
     // By default select all the cells in the solution grid the intersect the
     // evaluation grid for processing.
@@ -219,57 +201,42 @@ void VisEquator::clearStats()
     itsProcContext.clearStats();
 }
 
-void VisEquator::dumpStats() const
+void VisEquator::dumpStats(ostream &out) const
 {
     const NSTimer &timer = itsProcTimer;
     const ProcContext &context = itsProcContext;
 
-    LOG_DEBUG_STR("Processing speed: " << context.count / timer.getElapsed()
-        << " samples/s");
-    LOG_DEBUG_STR("No. of processed samples (unflagged): " << fixed
-        << context.count);
-    LOG_DEBUG_STR("TIMER s ALL total " << timer.getElapsed() << " count "
+    out << "Processing speed: " << context.count / timer.getElapsed()
+        << " samples/s" << endl;
+    out << "No. of processed samples (unflagged): " << fixed << context.count
+        << endl;
+    out << "TIMER s ALL total " << timer.getElapsed() << " count "
         << timer.getCount() << " avg " << timer.getElapsed()
-        / timer.getCount());
+        / timer.getCount() << endl;
 
     for(size_t i = 0; i < VisEquator::ProcContext::N_ProcTimer; ++i)
     {
         const double elapsed = context.timers[i].getElapsed();
         const unsigned long long count = context.timers[i].getCount();
-        LOG_DEBUG_STR("TIMER s " << VisEquator::ProcContext::timerNames[i]
-            << " total " << elapsed << " count " << count << " avg "
-            << elapsed / count);
+
+        out << "TIMER s " << VisEquator::ProcContext::timerNames[i] << " total"
+            << " " << elapsed << " count " << count << " avg " << elapsed
+            / count << endl;
     }
 }
 
-void VisEquator::initBaselineMap()
+void VisEquator::setBaselineMask(const BaselineMask &mask)
 {
-    const BaselineSeq &blLHS = itsLHS->baselines();
-    const BaselineSeq &blRHS = itsRHS->baselines();
-
-    for(size_t lhs = 0; lhs < blLHS.size(); ++lhs)
-    {
-        const size_t rhs = blRHS.index(blLHS[lhs]);
-        if(rhs != blRHS.size())
-        {
-            itsBlMap.push_back(make_pair(lhs, rhs));
-        }
-    }
+    itsBlMap.clear();
+    makeIndexMap(itsLHS->baselines(), itsRHS->baselines(), mask,
+        back_inserter(itsBlMap));
 }
 
-void VisEquator::initCorrelationMap()
+void VisEquator::setCorrelationMask(const CorrelationMask &mask)
 {
-    const CorrelationSeq &crLHS = itsLHS->correlations();
-    const CorrelationSeq &crRHS = itsRHS->correlations();
-
-    for(size_t lhs = 0; lhs < crLHS.size(); ++lhs)
-    {
-        const size_t rhs = crRHS.index(crLHS[lhs]);
-        if(rhs != crRHS.size())
-        {
-            itsCrMap.push_back(make_pair(lhs, rhs));
-        }
-    }
+    itsCrMap.clear();
+    makeIndexMap(itsLHS->correlations(), itsRHS->correlations(), mask,
+        back_inserter(itsCrMap));
 }
 
 Interval<size_t> VisEquator::findContainedCellRange(const Axis::ShPtr &axis,

@@ -42,7 +42,10 @@ Evaluator::Evaluator(const VisData::Ptr &lhs, const MeasurementExpr::Ptr &rhs)
 {
     // Construct a sequence of pairs of indices of matching baselines (i.e.
     // baselines known by both LHS and RHS).
-    initBaselineMap();
+//    initBaselineMap();
+
+    makeIndexMap(itsLHS->baselines(), itsRHS->baselines(),
+        back_inserter(itsBlMap));
 
     if(itsBlMap.empty())
     {
@@ -52,7 +55,10 @@ Evaluator::Evaluator(const VisData::Ptr &lhs, const MeasurementExpr::Ptr &rhs)
 
     // Construct a sequence of pairs of indices of matching correlations (i.e.
     // correlations known by both LHS and RHS).
-    initCorrelationMap();
+//    initCorrelationMap();
+
+    makeIndexMap(itsLHS->correlations(), itsRHS->correlations(),
+        back_inserter(itsCrMap));
 
     if(itsCrMap.empty())
     {
@@ -68,34 +74,18 @@ Evaluator::Evaluator(const VisData::Ptr &lhs, const MeasurementExpr::Ptr &rhs)
     itsRHS->setEvalGrid(itsLHS->grid());
 }
 
-void Evaluator::initBaselineMap()
+void Evaluator::setBaselineMask(const BaselineMask &mask)
 {
-    const BaselineSeq &blLHS = itsLHS->baselines();
-    const BaselineSeq &blRHS = itsRHS->baselines();
-
-    for(size_t lhs = 0; lhs < blLHS.size(); ++lhs)
-    {
-        const size_t rhs = blRHS.index(blLHS[lhs]);
-        if(rhs != blRHS.size())
-        {
-            itsBlMap.push_back(make_pair(lhs, rhs));
-        }
-    }
+    itsBlMap.clear();
+    makeIndexMap(itsLHS->baselines(), itsRHS->baselines(), mask,
+        back_inserter(itsBlMap));
 }
 
-void Evaluator::initCorrelationMap()
+void Evaluator::setCorrelationMask(const CorrelationMask &mask)
 {
-    const CorrelationSeq &crLHS = itsLHS->correlations();
-    const CorrelationSeq &crRHS = itsRHS->correlations();
-
-    for(size_t lhs = 0; lhs < crLHS.size(); ++lhs)
-    {
-        const size_t rhs = crRHS.index(crLHS[lhs]);
-        if(rhs != crRHS.size())
-        {
-            itsCrMap.push_back(make_pair(lhs, rhs));
-        }
-    }
+    itsCrMap.clear();
+    makeIndexMap(itsLHS->correlations(), itsRHS->correlations(), mask,
+        back_inserter(itsCrMap));
 }
 
 void Evaluator::setMode(Mode mode)
@@ -162,15 +152,16 @@ void Evaluator::clearStats()
     }
 }
 
-void Evaluator::dumpStats() const
+void Evaluator::dumpStats(ostream &out) const
 {
     for(size_t i = 0; i < Evaluator::N_ProcTimer; ++i)
     {
         const double elapsed = itsProcTimers[i].getElapsed();
         const unsigned long long count = itsProcTimers[i].getCount();
-        LOG_DEBUG_STR("TIMER s " << Evaluator::theirProcTimerNames[i]
-            << " total " << elapsed << " count " << count << " avg "
-            << elapsed / count);
+
+        out << "TIMER s " << Evaluator::theirProcTimerNames[i] << " total "
+            << elapsed << " count " << count << " avg " << elapsed / count
+            << endl;
     }
 }
 

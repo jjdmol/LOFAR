@@ -9,7 +9,7 @@ lofar_add_library(bbskernel
   BaselineFilter.cc
   BaselineMask.cc
   Correlation.cc
-  CorrelationFilter.cc
+  CorrelationMask.cc
   ElementBeamExpr.cc
   Equator.cc
   Evaluator.cc

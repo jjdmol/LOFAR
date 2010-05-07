@@ -142,20 +142,24 @@ void VisSelection::setTimeRange(const string &start, const string &end)
 
 void VisSelection::setBaselineFilter(const BaselineFilter &filter)
 {
-    if(!filter.empty())
+    if(filter.baselineType() == BaselineFilter::ANY && filter.empty())
     {
-        itsFlags[BASELINE_FILTER] = true;
-        itsBaselineFilter = filter;
+        return;
     }
+
+    itsFlags[BASELINE_FILTER] = true;
+    itsBaselineFilter = filter;
 }
 
-void VisSelection::setCorrelationFilter(const CorrelationFilter &filter)
+void VisSelection::setCorrelationMask(const CorrelationMask &mask)
 {
-    if(!filter.empty())
+    if(mask.empty())
     {
-        itsFlags[CORRELATION_FILTER] = true;
-        itsCorrelationFilter = filter;
+        return;
     }
+
+    itsFlags[CORRELATION_MASK] = true;
+    itsCorrelationMask = mask;
 }
 
 const BaselineFilter &VisSelection::getBaselineFilter() const
@@ -163,9 +167,9 @@ const BaselineFilter &VisSelection::getBaselineFilter() const
     return itsBaselineFilter;
 }
 
-const CorrelationFilter &VisSelection::getCorrelationFilter() const
+const CorrelationMask &VisSelection::getCorrelationMask() const
 {
-    return itsCorrelationFilter;
+    return itsCorrelationMask;
 }
 
 bool VisSelection::convertTime(const string &in, double &out) const

@@ -83,7 +83,7 @@ public:
 
     // Data.
     boost::multi_array<double, 3>       uvw;
-    boost::multi_array<tslot_flag_t, 2>  tslot_flag;
+    boost::multi_array<tslot_flag_t, 2> tslot_flag;
     boost::multi_array<flag_t, 4>       vis_flag;
     boost::multi_array<sample_t, 4>     vis_data;
 

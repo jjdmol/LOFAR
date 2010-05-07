@@ -62,7 +62,17 @@ public:
     typedef shared_ptr<MeasurementExprLOFAR>        Ptr;
     typedef shared_ptr<const MeasurementExprLOFAR>  ConstPtr;
 
-    MeasurementExprLOFAR(const Instrument &instrument, const SourceDB &sourceDb,
+//    MeasurementExprLOFAR(const SourceDB &sourceDB);
+//    void clear();
+
+//    void makeForwardExpr(const ModelConfig &config,
+//        const Instrument &instrument, const BaselineMask &mask,
+//        const casa::MDirection &phaseCenter, double bfReferenceFreq);
+
+//    void makeInverseExpr(const ModelConfig &config, const VisData::Ptr &chunk,
+//        const vector<baseline_t> &baselines);
+
+    MeasurementExprLOFAR(const Instrument &instrument, const SourceDB &sourceDB,
         const casa::MDirection &reference, double referenceFreq);
 
     void clear();
@@ -169,7 +179,7 @@ private:
         const Expr<JonesMatrix>::Ptr &rhs) const;
 
     Instrument                      itsInstrument;
-    SourceDB                        itsSourceDb;
+    SourceDB                        itsSourceDB;
     casa::MDirection                itsPhaseReference;
     double                          itsReferenceFreq;
 

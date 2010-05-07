@@ -37,48 +37,53 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
-enum Correlation
+class Correlation
 {
-    // Linear correlations.
-    XX,
-    XY,
-    YX,
-    YY,
-    // Circular correlations.
-    RR,
-    RL,
-    LR,
-    LL,
-    N_Correlation
+public:
+    enum Type
+    {
+        // Linear correlations.
+        XX,
+        XY,
+        YX,
+        YY,
+        // Circular correlations.
+        RR,
+        RL,
+        LR,
+        LL,
+        N_Type
+    };
+
+    // Check if the correlation is valid (i.e. < N_Type).
+    static bool isDefined(Type in);
+
+    // Check if the correlation is linear (i.e. one of XX, XY, YX, YY).
+    static bool isLinear(Type in);
+
+    // Check if the correlation is circular (i.e. one of RR, RL, LR, LL).
+    static bool isCircular(Type in);
+
+    // Convert the input argument to the corresponding Correlation. If the input is
+    // out of bounds, N_Type is returned.
+    static Type asCorrelation(unsigned int in);
+
+    // Convert the input argument to the corresponding Correlation. If the input
+    // does not match any defined Correlation, N_Type is returned.
+    static Type asCorrelation(const string &in);
+
+    // Convert the input Correlation to its string representation. N_Type
+    // converts to "<UNDEFINED>".
+    static const string &asString(Type in);
 };
 
-// Check if the correlation is valid (i.e. < N_Correlation).
-bool isDefined(Correlation in);
+} //# namespace BBS
 
-// Check if the correlation is linear (i.e. one of XX, XY, YX, YY).
-bool isLinear(Correlation in);
-
-// Check if the correlation is circular (i.e. one of RR, RL, LR, LL).
-bool isCircular(Correlation in);
-
-// Convert the input argument to the corresponding Correlation. If the input is
-// out of bounds, N_Correlation is returned.
-Correlation asCorrelation(unsigned int in);
-
-// Convert the input argument to the corresponding Correlation. If the input
-// does not match any defined Correlation, N_Correlation is returned.
-Correlation asCorrelation(const string &in);
-
-// Convert the input Correlation to its string representation. N_Correlation
-// converts to "<UNDEFINED>".
-const string &asString(Correlation in);
-
-// Write a Correlation value to an output stream in human readable form.
-ostream &operator<<(ostream &out, Correlation obj);
+// Write a correlation Type to an output stream in human readable form.
+ostream &operator<<(ostream &out, BBS::Correlation::Type obj);
 
 // @}
 
-} //# namespace BBS
 } //# namespace LOFAR
 
 #endif

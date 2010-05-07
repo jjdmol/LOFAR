@@ -82,12 +82,9 @@ namespace BBS
 {
 
 MeasurementExprVLA::MeasurementExprVLA(const Instrument &instrument,
-    const SourceDB &sourceDb, const casa::MDirection &reference,
-    double referenceFreq)
+    const SourceDB &sourceDB)
     :   itsInstrument(instrument),
-        itsSourceDb(sourceDb),
-        itsPhaseReference(reference),
-        itsReferenceFreq(referenceFreq),
+        itsSourceDB(sourceDB),
         itsCachePolicy(new DefaultCachePolicy())
 {
 }
@@ -111,7 +108,8 @@ void MeasurementExprVLA::solvablesChanged()
 }
 
 void MeasurementExprVLA::makeForwardExpr(const ModelConfig &config,
-    const VisData::Ptr&, const vector<baseline_t> &baselines)
+    const BaselineSeq &baselineax, const casa::MDirection &refDir,
+    double refFreq)
 {
     // Clear previously created expressions and cached results.
     clear();
@@ -120,6 +118,13 @@ void MeasurementExprVLA::makeForwardExpr(const ModelConfig &config,
     {
         LOG_WARN("Condition number flagging is only implemented for the inverse"
             " model.");
+    }
+
+    itsBaselines = baselineax;
+    vector<baseline_t> baselines;
+    for(size_t i = 0; i < itsBaselines.size(); ++i)
+    {
+        baselines.push_back(itsBaselines[i]);
     }
 
     // Make a list of all the stations that are used in the given baseline
@@ -141,12 +146,15 @@ void MeasurementExprVLA::makeForwardExpr(const ModelConfig &config,
 
     LOG_INFO_STR("Number of patches in the model: " << patches.size());
 
-    // Update state.
-    itsBaselines = BaselineSeq(baselines.begin(), baselines.end());
-    itsCorrelations.append(RR);
-    itsCorrelations.append(RL);
-    itsCorrelations.append(LR);
-    itsCorrelations.append(LL);
+    // TODO: Should these be kept or are they just needed while generating the
+    // expressions?
+    itsCorrelations.append(Correlation::RR);
+    itsCorrelations.append(Correlation::RL);
+    itsCorrelations.append(Correlation::LR);
+    itsCorrelations.append(Correlation::LL);
+
+    itsReferenceDir = refDir;
+    itsReferenceFreq = refFreq;
 
     Expr<JonesMatrix>::Ptr H = Expr<JonesMatrix>::Ptr(new LinearToCircularRL());
     // Create a UVW expression per station.
@@ -249,10 +257,20 @@ void MeasurementExprVLA::makeForwardExpr(const ModelConfig &config,
 }
 
 void MeasurementExprVLA::makeInverseExpr(const ModelConfig &config,
-    const VisData::Ptr &chunk, const vector<baseline_t> &baselines)
+    const VisData::Ptr &chunk, const BaselineMask &mask,
+    const casa::MDirection &refDir, double refFreq)
 {
     // Clear previously created expressions and cached results.
     clear();
+
+    // Generate list of baselines.
+    itsBaselines = filter(chunk->baselines(), mask);
+
+    vector<baseline_t> baselines;
+    for(size_t i = 0; i < itsBaselines.size(); ++i)
+    {
+        baselines.push_back(itsBaselines[i]);
+    }
 
     // Make a list of all the stations that are used in the given baseline
     // selection.
@@ -263,11 +281,12 @@ void MeasurementExprVLA::makeInverseExpr(const ModelConfig &config,
     }
 
     // Update state.
-    itsBaselines = BaselineSeq(baselines.begin(), baselines.end());
-    itsCorrelations.append(RR);
-    itsCorrelations.append(RL);
-    itsCorrelations.append(LR);
-    itsCorrelations.append(LL);
+    itsCorrelations.append(Correlation::RR);
+    itsCorrelations.append(Correlation::RL);
+    itsCorrelations.append(Correlation::LR);
+    itsCorrelations.append(Correlation::LL);
+    itsReferenceDir = refDir;
+    itsReferenceFreq = refFreq;
 
     // Create a single Jones matrix expression for each station, for the
     // selected direction.
@@ -334,7 +353,8 @@ void MeasurementExprVLA::makeInverseExpr(const ModelConfig &config,
     {
 
         Expr<JonesMatrix>::Ptr exprVisData(new ExprVisData(chunk, baselines[i],
-            RR, RL, LR, LL));
+            Correlation::RR, Correlation::RL, Correlation::LR,
+            Correlation::LL));
 
         if(haveIndependentEffects || haveDependentEffects)
         {
@@ -557,14 +577,14 @@ MeasurementExprVLA::makePatchList(const vector<string> &patterns)
 {
     if(patterns.empty())
     {
-        return itsSourceDb.getPatches(-1, "*");
+        return itsSourceDB.getPatches(-1, "*");
     }
 
     // Create a list of all unique patches that match the given patterns.
     set<string> patches;
     for(size_t i = 0; i < patterns.size(); ++i)
     {
-        vector<string> match(itsSourceDb.getPatches(-1, patterns[i]));
+        vector<string> match(itsSourceDB.getPatches(-1, patterns[i]));
         patches.insert(match.begin(), match.end());
     }
 
@@ -573,7 +593,7 @@ MeasurementExprVLA::makePatchList(const vector<string> &patterns)
 
 vector<Source::Ptr> MeasurementExprVLA::makeSourceList(const string &patch)
 {
-    vector<SourceInfo> sources(itsSourceDb.getPatchSources(patch));
+    vector<SourceInfo> sources(itsSourceDB.getPatchSources(patch));
 
     vector<Source::Ptr> result;
     result.reserve(sources.size());
@@ -651,7 +671,7 @@ MeasurementExprVLA::makeUVWExpr(const vector<unsigned int> &stations)
     {
         const Station &station = itsInstrument[stations[i]];
         expr(i) = StationUVW::Ptr(new StationUVW(station.position(),
-            itsInstrument.position(), itsPhaseReference));
+            itsInstrument.position(), itsReferenceDir));
     }
 
     return expr;
@@ -676,7 +696,7 @@ casa::Vector<Expr<Vector<2> >::Ptr>
 MeasurementExprVLA::makeRefAzElExpr(const vector<unsigned int> &stations)
     const
 {
-    casa::MDirection refJ2000(casa::MDirection::Convert(itsPhaseReference,
+    casa::MDirection refJ2000(casa::MDirection::Convert(itsReferenceDir,
         casa::MDirection::J2000)());
     casa::Quantum<casa::Vector<casa::Double> > refAngles = refJ2000.getAngle();
 
@@ -698,7 +718,7 @@ MeasurementExprVLA::makeStationShiftExpr(const vector<unsigned int> &stations,
     casa::Vector<LMN::Ptr> exprLMN(sources.size());
     for(unsigned int i = 0; i < sources.size(); ++i)
     {
-        exprLMN(i) = LMN::Ptr(new LMN(itsPhaseReference,
+        exprLMN(i) = LMN::Ptr(new LMN(itsReferenceDir,
             sources[i]->position()));
     }
 

@@ -25,43 +25,50 @@
 
 namespace LOFAR
 {
+
+ostream &operator<<(ostream &out, BBS::Correlation::Type obj)
+{
+    out << BBS::Correlation::asString(obj);
+    return out;
+}
+
 namespace BBS
 {
 
-bool isDefined(Correlation in)
+bool Correlation::isDefined(Type in)
 {
-    return in != N_Correlation;
+    return in != N_Type;
 }
 
-bool isLinear(Correlation in)
+bool Correlation::isLinear(Type in)
 {
     return in == XX || in == XY || in == YX || in == YY;
 }
 
-bool isCircular(Correlation in)
+bool Correlation::isCircular(Type in)
 {
     return in == RR || in == RL || in == LR || in == LL;
 }
 
-Correlation asCorrelation(unsigned int in)
+Correlation::Type Correlation::asCorrelation(unsigned int in)
 {
-    Correlation out = N_Correlation;
-    if(in < N_Correlation)
+    Type out = N_Type;
+    if(in < N_Type)
     {
-        out = static_cast<Correlation>(in);
+        out = static_cast<Type>(in);
     }
 
     return out;
 }
 
-Correlation asCorrelation(const string &in)
+Correlation::Type Correlation::asCorrelation(const string &in)
 {
-    Correlation out = N_Correlation;
-    for(unsigned int i = 0; i < N_Correlation; ++i)
+    Type out = N_Type;
+    for(unsigned int i = 0; i < N_Type; ++i)
     {
-        if(in == asString(static_cast<Correlation>(i)))
+        if(in == asString(static_cast<Type>(i)))
         {
-            out = static_cast<Correlation>(i);
+            out = static_cast<Type>(i);
             break;
         }
     }
@@ -69,11 +76,11 @@ Correlation asCorrelation(const string &in)
     return out;
 }
 
-const string &asString(Correlation in)
+const string &Correlation::asString(Type in)
 {
     //# Caution: Always keep this array of strings in sync with the enum
-    //# Correlation that is defined in the header.
-    static const string cr[N_Correlation + 1] =
+    //# Type that is defined in the header.
+    static const string cr[N_Type + 1] =
         {"XX",
         "XY",
         "YX",
@@ -86,12 +93,6 @@ const string &asString(Correlation in)
         "<UNDEFINED>"};
 
     return cr[in];
-}
-
-ostream &operator<<(ostream &out, Correlation obj)
-{
-    out << asString(obj);
-    return out;
 }
 
 } //# namespace BBS

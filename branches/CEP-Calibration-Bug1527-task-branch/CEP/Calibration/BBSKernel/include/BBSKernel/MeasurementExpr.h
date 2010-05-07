@@ -49,6 +49,13 @@ public:
     virtual const CorrelationSeq &correlations() const = 0;
 };
 
+//Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &accumulator,
+//    const Expr<JonesMatrix>::Ptr &effect);
+
+//Expr<JonesMatrix>::Ptr corrupt(const Expr<JonesMatrix>::Ptr &lhs,
+//    const Expr<JonesMatrix>::Ptr &coherence,
+//    const Expr<JonesMatrix>::Ptr &rhs);
+
 // @}
 
 } //# namespace BBS

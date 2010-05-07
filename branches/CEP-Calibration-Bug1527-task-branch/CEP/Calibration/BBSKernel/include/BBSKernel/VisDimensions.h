@@ -27,7 +27,6 @@
 #include <BBSKernel/Correlation.h>
 #include <BBSKernel/IndexedSequence.h>
 #include <BBSKernel/Types.h>
-
 #include <ParmDB/Grid.h>
 
 namespace LOFAR
@@ -38,8 +37,8 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
-typedef IndexedSequence<baseline_t>     BaselineSeq;
-typedef IndexedSequence<Correlation>    CorrelationSeq;
+typedef IndexedSequence<baseline_t>         BaselineSeq;
+typedef IndexedSequence<Correlation::Type>  CorrelationSeq;
 
 class VisDimensions
 {
@@ -50,10 +49,12 @@ public:
     // Set the baseline axis.
     template <typename T_ITER>
     void setBaselines(T_ITER first, T_ITER last);
+    void setBaselines(const BaselineSeq &axis);
 
     // Set the correlation axis.
     template <typename T_ITER>
     void setCorrelations(T_ITER first, T_ITER last);
+    void setCorrelations(const CorrelationSeq &axis);
 
     // No. of sample points along each axis.
     // @{
@@ -74,16 +75,16 @@ public:
     // object.
     Axis::ShPtr operator[](size_t i) const;
 
-    // Acces to the baseline axis.
+    // Access to the baseline axis.
     const BaselineSeq &baselines() const;
 
-    // Acces to the correlation axis.
+    // Access to the correlation axis.
     const CorrelationSeq &correlations() const;
 
 private:
     Grid            itsGrid;
-    BaselineSeq     itsBaselineSeq;
-    CorrelationSeq  itsCorrelationSeq;
+    BaselineSeq     itsBaselineAxis;
+    CorrelationSeq  itsCorrelationAxis;
 };
 
 // Stream a VisDimensions instance in human readable form to an output stream.
@@ -98,13 +99,23 @@ ostream &operator<<(ostream &out, const VisDimensions &obj);
 template <typename T_ITER>
 void VisDimensions::setBaselines(T_ITER first, T_ITER last)
 {
-    itsBaselineSeq = BaselineSeq(first, last);
+    itsBaselineAxis = BaselineSeq(first, last);
+}
+
+inline void VisDimensions::setBaselines(const BaselineSeq &axis)
+{
+    itsBaselineAxis = axis;
 }
 
 template <typename T_ITER>
 void VisDimensions::setCorrelations(T_ITER first, T_ITER last)
 {
-    itsCorrelationSeq = CorrelationSeq(first, last);
+    itsCorrelationAxis = CorrelationSeq(first, last);
+}
+
+inline void VisDimensions::setCorrelations(const CorrelationSeq &axis)
+{
+    itsCorrelationAxis = axis;
 }
 
 inline size_t VisDimensions::nFreq() const
@@ -119,12 +130,12 @@ inline size_t VisDimensions::nTime() const
 
 inline size_t VisDimensions::nBaselines() const
 {
-    return itsBaselineSeq.size();
+    return itsBaselineAxis.size();
 }
 
 inline size_t VisDimensions::nCorrelations() const
 {
-    return itsCorrelationSeq.size();
+    return itsCorrelationAxis.size();
 }
 
 inline Box VisDimensions::domain() const
@@ -144,12 +155,12 @@ inline Axis::ShPtr VisDimensions::operator[](size_t i) const
 
 inline const BaselineSeq &VisDimensions::baselines() const
 {
-    return itsBaselineSeq;
+    return itsBaselineAxis;
 }
 
 inline const CorrelationSeq &VisDimensions::correlations() const
 {
-    return itsCorrelationSeq;
+    return itsCorrelationAxis;
 }
 
 } //# namespace BBS

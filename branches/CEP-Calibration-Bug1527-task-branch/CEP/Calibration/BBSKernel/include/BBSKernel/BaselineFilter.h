@@ -65,24 +65,21 @@ public:
 
     BaselineFilter();
 
-    // Check whether or not this filter will actually filter anything.
+    // Returns true if the filter contains no patterns.
     bool empty() const;
 
     // Set the baseline type (one of AUTO, CROSS, ANY).
     void setBaselineType(const string &type);
     void setBaselineType(BaselineType type);
 
-    // Append a station selection pattern to the filter.
-    void append(const string &pattern);
     // Append a baseline selection pattern to the filter.
-    void append(const string &patternLHS, const string &patternRHS);
+    void append(const string &patternLHS, const string &patternRHS = "*");
 
     // Get baseline type selection.
     BaselineType baselineType() const;
 
     // Create a baseline mask given a specific Instrument instance. The
-    // Instrument instance contains the number of stations (and thus determines
-    // the size of the mask) as well as the station names to match against.
+    // Instrument instance contains the station names to match against.
     BaselineMask createMask(const Instrument &instrument) const;
 
     // Check if the BaselineType is valid (i.e. < N_BaselineType).
@@ -105,9 +102,9 @@ private:
     // Match a pattern against all the stations in the provided instrument
     // instance and write the indices of matching stations to the output
     // iterator.
-    template <typename T_ITER>
+    template <typename T_OUTPUT_ITER>
     void findMatchingStations(const Instrument &instrument,
-        const casa::Regex &pattern, T_ITER out) const;
+        const casa::Regex &pattern, T_OUTPUT_ITER out) const;
 
     // Update a BaselineMask given two groups of station indices. All the
     // possible combinations between the two groups are masked.
@@ -118,7 +115,6 @@ private:
     friend ostream &operator<<(ostream &out, const BaselineFilter &obj);
 
     BaselineType                            itsBaselineType;
-    vector<casa::Regex>                     itsStationPatterns;
     vector<pair<casa::Regex, casa::Regex> > itsPatterns;
 };
 
@@ -136,9 +132,9 @@ inline BaselineFilter::BaselineType BaselineFilter::baselineType() const
     return itsBaselineType;
 }
 
-template <typename T_ITER>
+template <typename T_OUTPUT_ITER>
 void BaselineFilter::findMatchingStations(const Instrument &instrument,
-    const casa::Regex &pattern, T_ITER out) const
+    const casa::Regex &pattern, T_OUTPUT_ITER out) const
 {
     for(size_t i = 0; i < instrument.size(); ++i)
     {
@@ -163,8 +159,8 @@ void BaselineFilter::update(BaselineMask &mask, T_ITER groupA,
                 || (itsBaselineType == AUTO && *groupA_it == *groupB_it)
                 || (itsBaselineType == CROSS && *groupA_it != *groupB_it))
             {
-                mask.mask(*groupA_it, *groupB_it);
-                mask.mask(*groupB_it, *groupA_it);
+                mask.set(*groupA_it, *groupB_it);
+                mask.set(*groupB_it, *groupA_it);
             }
         }
     }

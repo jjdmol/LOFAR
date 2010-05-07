@@ -33,9 +33,8 @@ namespace BBS
 {
 
 ExprVisData::ExprVisData(const VisData::Ptr &chunk, const baseline_t &baseline,
-    Correlation element00, Correlation element01, Correlation element10,
-    Correlation element11)
-//ExprVisData::ExprVisData(const VisData::Ptr &chunk, const baseline_t &baseline)
+    Correlation::Type element00, Correlation::Type element01,
+    Correlation::Type element10, Correlation::Type element11)
     :   itsChunk(chunk)
 {
     itsBaseline = chunk->baselines().index(baseline);
@@ -63,17 +62,13 @@ ExprVisData::ExprVisData(const VisData::Ptr &chunk, const baseline_t &baseline,
 //    setCorrelation(3, element11);
 //}
 
-void ExprVisData::setCorrelation(size_t element, Correlation correlation)
+void ExprVisData::setCorrelation(size_t element, Correlation::Type correlation)
 {
-    if(isDefined(correlation))
-    {
-        itsCorr[element] = itsChunk->correlations().index(correlation);
-        itsCorrMask[element] = itsCorr[0] != itsChunk->nCorrelations();
-    }
-    else
-    {
-        itsCorrMask[element] = false;
-    }
+    const size_t index = itsChunk->correlations().index(correlation);
+
+    itsCorr[element] = index;
+    itsCorrMask[element] = Correlation::isDefined(correlation)
+        && index < itsChunk->nCorrelations();
 }
 
 const JonesMatrix ExprVisData::evaluateExpr(const Request &request,
