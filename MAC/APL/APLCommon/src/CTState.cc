@@ -34,7 +34,7 @@ namespace LOFAR {
 typedef struct stateSignal {
 	CTState::CTstateNr	state;
 	uint16				signal;
-	char*				name;
+	const char*				name;
 } stateSignal_t;
 
 stateSignal_t	stateSignalTable[] = {

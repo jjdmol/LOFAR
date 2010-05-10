@@ -167,7 +167,7 @@ ACState StateEngine::nextState()
 
 string StateEngine::stateStr(uint16	stateNr) const
 {
-	static char* const stateNames[] = {
+	static const char* const stateNames[] = {
 		"Idle",
 		"InitController",
 		"CreatePSubset",
