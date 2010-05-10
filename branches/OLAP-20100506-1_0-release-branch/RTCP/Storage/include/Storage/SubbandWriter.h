@@ -48,7 +48,7 @@ class SubbandWriter
     ~SubbandWriter();
 
   private:
-    static const unsigned   maxReceiveQueueSize = 3;
+    static const unsigned   maxReceiveQueueSize = 5;
 
     Queue<StreamableData *> itsReceiveQueue, itsFreeQueue;
 

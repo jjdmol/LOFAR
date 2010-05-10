@@ -107,6 +107,9 @@ class Locations:
         # symlink to create to latest log dir
         "logsymlink": "${BASEDIR}/log",
 
+        # symlink for each observation to relevant log dir
+        "obssymlink": "${BASEDIR}/D${YEAR}_${MSNUMBER}",
+
         # parset name mas
         "parset": "${LOGSYMLINK}/RTCP-${MSNUMBER}.parset",
 
@@ -138,6 +141,9 @@ class Locations:
 
         # where to store logs
 	"logdir":  "${HOME}/log/L${TIMESTAMP}",
+
+        # symlink for each observation to relevant log dir
+        "obssymlink": "${BASEDIR}/L${YEAR}_${MSNUMBER}",
 
         "logsymlink": "${HOME}/log/latest",
 

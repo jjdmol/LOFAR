@@ -4,6 +4,7 @@ from LOFAR import Logger
 from LOFAR.ObservationID import ObservationID
 from LOFAR.Logger import debug,info,warning,error,fatal
 from LOFAR.Parset import Parset
+from util.Hosts import rsymlink
 from LOFAR.Stations import Stations
 from LOFAR.Locations import Locations
 from LOFAR.CommandClient import sendCommand
@@ -280,6 +281,15 @@ if __name__ == "__main__":
     parset.save()
 
     if not options.norun:
+      try:
+        obsDir = os.path.dirname( os.path.realpath( parset.filename ) )
+        symlinkName = Locations.resolvePath( Locations.files["obssymlink"], parset )
+        rsymlink( symlinkName, obsDir )
+
+        info( "Created symlink %s -> %s" % (symlinkName, obsDir) )
+      except IOError,msg:
+        warning( "Failed to create symlink %s -> %s" % (symlinkName,obsDir) )
+
       info( "Sending parset %s to the correlator on partition %s" % (parset.filename,parset.partition) )
       try:
         sendCommand( options.partition, "parset %s" % (parset.filename,) )
