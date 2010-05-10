@@ -28,6 +28,7 @@
 #include <Storage/MSWriterFile.h>
 #include <Storage/MSWriterNull.h>
 #include <Interface/StreamableData.h>
+#include <Thread/Semaphore.h>
 #include <Common/DataConvert.h>
 #include <stdio.h>
 #include <boost/format.hpp>
@@ -150,6 +151,7 @@ void OutputThread::checkForDroppedData(StreamableData *data)
   itsNextSequenceNumber = data->sequenceNumber + 1;
 }
 
+Semaphore writeSemaphore(3);
 
 void OutputThread::mainLoop()
 {
@@ -163,14 +165,17 @@ void OutputThread::mainLoop()
     checkForDroppedData(data.get());
 
     //writeTimer.start();
-    try {
+    writeSemaphore.down();
 
+    try {
       itsWriter->write(data.get());
 
     } catch (SystemCallException &ex) {
       itsHaveCaughtException = true;
       LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber <<" caught non-fatal exception:  " << ex.what()) ;
     }
+
+    writeSemaphore.up();
     //writeTimer.stop();
 
     writeLogMessage(data.get()->sequenceNumber);

@@ -208,8 +208,15 @@ void Job::joinSSH(int childPID, const std::string &hostName, unsigned &timeout)
       pid_t ret;
 
       if ((ret = waitpid(childPID, &status, WNOHANG)) == (pid_t)-1) {
+        int error = errno;
+
+        if (error == EINTR) {
+          LOG_DEBUG_STR("storage writer on " << hostName << " : waitpid() was interrupted -- retrying");
+          continue;
+        }
+
         // error
-        LOG_WARN_STR("storage writer on " << hostName << " : waitpid() failed");
+        LOG_WARN_STR("storage writer on " << hostName << " : waitpid() failed with errno " << error);
         return;
       } else if (ret == 0) {
         // child still running
