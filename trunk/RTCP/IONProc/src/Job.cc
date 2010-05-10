@@ -486,6 +486,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 
     switch (plan.plan[output].distribution) {
       case ProcessingPlan::DIST_SUBBAND:
+      case ProcessingPlan::DIST_BEAM:
         phase = 2;
         psetIndex = itsParset.phaseTwoPsetIndex(myPsetNumber);
         maxlistsize = itsParset.nrSubbandsPerPset();
@@ -498,7 +499,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
         }
 
         break;
-
+#if 0
       case ProcessingPlan::DIST_BEAM:
         phase = 3;
         psetIndex = itsParset.phaseThreePsetIndex(myPsetNumber);
@@ -512,7 +513,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
         }
 
         break;
-
+#endif
       default:
         continue;
     }
