@@ -37,7 +37,7 @@ namespace LOFAR {
 class RegisterState
 {
 public:
-	typedef enum State {
+	enum State {
 		UNDEFINED = 0,
 		IDLE,
 		CHECK,

@@ -27,7 +27,9 @@
 #include <Common/lofar_string.h>
 
 namespace LOFAR {
- class MACIO::GCFEvent;
+  namespace MACIO {
+    class GCFEvent;
+  }
  namespace GCF {
   namespace TM {
 

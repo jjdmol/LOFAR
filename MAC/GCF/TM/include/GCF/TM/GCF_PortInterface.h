@@ -49,14 +49,14 @@ class GCFPortInterface
 {
 public:
     /** port types */
-    typedef enum TPortType {
+    enum TPortType {
         SAP = 1,    /**< Service Access Point              (port connector)*/
         SPP,        /**< Service Provision Point           (port acceptor)*/
         MSPP,       /**< Multi Service Provision Point     (port provider)*/
     };
     
     /** port states */
-    typedef enum TSTATE { 
+    enum TSTATE { 
       S_DISCONNECTED, 
       S_CONNECTING, 
       S_CONNECTED,

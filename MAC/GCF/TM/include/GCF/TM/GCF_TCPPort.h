@@ -28,7 +28,9 @@
 #include <GCF/TM/GCF_TimerPort.h>
 
 namespace LOFAR {
- class MACIO::GCFEvent;
+  namespace MACIO {
+    class GCFEvent;
+  }
  namespace GCF {
   namespace SB {
 	class ServiceBrokerTask;

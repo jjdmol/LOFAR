@@ -84,7 +84,7 @@ static const uint32 TBB_WRONG_COMMAND        = 0xFE000000;
 //
 // Example: if(status_mask != TBB_SUCCESS) then ....
 
-typedef struct TbbTriggerSetup // setup variables for 1 channel
+struct TbbTriggerSetup // setup variables for 1 channel
 {
 	uint16 level;
 	uint8  start_mode;
@@ -95,13 +95,13 @@ typedef struct TbbTriggerSetup // setup variables for 1 channel
 	uint8  operating_mode;
 };
 
-typedef struct TbbTriggerCoef // setup variables for 1 channel
+struct TbbTriggerCoef // setup variables for 1 channel
 {
 	uint16 filter0[4];
 	uint16 filter1[4];
 };
 
-typedef struct TbbTriggerSettings // setup variables for 1 channel
+struct TbbTriggerSettings // setup variables for 1 channel
 {
     struct TbbTriggerSetup setup;
     struct TbbTriggerCoef coef;

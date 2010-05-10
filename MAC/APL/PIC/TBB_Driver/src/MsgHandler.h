@@ -38,7 +38,7 @@
 namespace LOFAR {
 	namespace TBB {
 		
-typedef struct TriggerStruct {
+struct TriggerStruct {
 	int32 rcu;
 	uint32 sequence_nr;
 	uint32 time;

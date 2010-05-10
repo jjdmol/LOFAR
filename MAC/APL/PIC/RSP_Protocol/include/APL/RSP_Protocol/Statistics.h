@@ -31,7 +31,7 @@
 namespace LOFAR {
   namespace RSP_Protocol {
 
-    typedef enum StatsReduction
+    enum StatsReduction
       {
 	SUM = 1,
 	REPLACE,

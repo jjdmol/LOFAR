@@ -40,7 +40,7 @@ namespace LOFAR {
       /**
        * Settings of the Waveform Generator
        */
-      typedef struct WGRegisterType
+      struct WGRegisterType
       {
 	// MODE_OFF, MODE_CALC, MODE_SINGLE, MODE_REPEAT
 	uint8  mode;         // byte  0
