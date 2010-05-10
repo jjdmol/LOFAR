@@ -401,7 +401,7 @@ string	valuePart  (const string& parameterLine);
 // \endcode
 // returns the value 25. When more indexdelimiters are found in the string the
 // last pair is used.
-int32 	indexValue (const string&	label, char	indexMarker[2]);
+int32 	indexValue (const string&	label, const char	indexMarker[2]);
 
 // @} addgroup
 

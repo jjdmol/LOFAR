@@ -38,8 +38,8 @@ using namespace boost;
 
 namespace LOFAR {
 
-static	char*	stationTypeTable[] = { "CS", "RS", "ES" };
-static	char*	ringTypeTable[]    = { "Core", "Remote", "Europe" };
+static	const char*	stationTypeTable[] = { "CS", "RS", "ES" };
+static	const char*	ringTypeTable[]    = { "Core", "Remote", "Europe" };
 
 //
 // stationTypeValue()
