@@ -32,7 +32,9 @@
 
 namespace LOFAR {
   using GCF::TM::GCFPortInterface;
-  class RTC::Subject; // forward declaration
+  namespace RTC {
+    class Subject; // forward declaration
+  }
   namespace CAL {
     class SubArray; // forward declaration
 

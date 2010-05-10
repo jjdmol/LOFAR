@@ -34,7 +34,7 @@ prelude = << PRELUDE_END
 #undef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
-  typedef struct RSPStatus // total size 12 bytes
+  struct RSPStatus // total size 12 bytes
   {
     uint8  voltage_1_2; // measured 1.2V supply voltage
     uint8  voltage_2_5; // measured 2.5V supply voltage
@@ -49,7 +49,7 @@ prelude = << PRELUDE_END
     uint16 ffi0;
   };
 
-  typedef struct ETHStatus // total size 12 bytes
+  struct ETHStatus // total size 12 bytes
   {
     uint32 nof_frames; // number of ETH frame received
     uint32 nof_errors; // number of incorrect ETH frames
@@ -59,14 +59,14 @@ prelude = << PRELUDE_END
     uint8  ffi2;
   };
   
-  typedef struct MEPStatus // total size 4 bytes
+  struct MEPStatus // total size 4 bytes
   {
     uint16 seqnr;  // sequence number of previously received message
     uint8  error;  // error status of previously received message
     uint8  ffi0;
   };
 
-  typedef struct DIAGStatus // total size 24 bytes
+  struct DIAGStatus // total size 24 bytes
   {
     uint8  interface;     // Interface under test
     uint8  mode;          // Test mode
@@ -83,7 +83,7 @@ prelude = << PRELUDE_END
     uint16 ffi0;
   };
   
-  typedef struct BSStatus // total size 16 bytes x 4 = 64 bytes
+  struct BSStatus // total size 16 bytes x 4 = 64 bytes
   {
     uint32 ext_count;     // number of cycles between external and internal sync, reset 
     uint32 sync_count;    // number of internal sync events
@@ -91,7 +91,7 @@ prelude = << PRELUDE_END
     uint32 slice_count;   // number of slices in the previous internal sync interval
   };
 
-  typedef struct RCUStatus // total size 12 bytes x 4 = 48 bytes
+  struct RCUStatus // total size 12 bytes x 4 = 48 bytes
   {
     struct {
       uint8 pllx:1;
@@ -105,7 +105,7 @@ prelude = << PRELUDE_END
     uint32 nof_overflowy;
   };
 
-  typedef struct RSUStatus // total size 4 bytes
+  struct RSUStatus // total size 4 bytes
   {
     uint8 rdy:1;  // 0 = Configuration ongoing, 1 = Configuration done
     uint8 err:1;  // 0 = Configuration was succesful, 1 = Error during configuration
@@ -118,13 +118,13 @@ prelude = << PRELUDE_END
     uint8 ffi:1;  // not used
   };
 
-  typedef struct ADOStatus // total size 8 bytes x 4 = 32 bytes
+  struct ADOStatus // total size 8 bytes x 4 = 32 bytes
   {
     int32 adc_offset_x;
     int32 adc_offset_y;
   };
   
-  typedef struct RADStatus // total 4 bytes x 9 = 36 bytes
+  struct RADStatus // total 4 bytes x 9 = 36 bytes
   {
     uint32 cnt:18;  // number of frames received in the previous sync interval
     uint8  brc:1;   // 0 = all frames ok, 1 = one or more frames with crc error
@@ -134,7 +134,7 @@ prelude = << PRELUDE_END
     uint16 ffi:11;  // not used
   };
   
-  typedef struct TESTStatus // total 16 bytes
+  struct TESTStatus // total 16 bytes
   {
     uint16 testdata_blp0_rcu_x;
     uint16 testdata_blp0_rcu_y;
@@ -147,7 +147,7 @@ prelude = << PRELUDE_END
   };
   
 
-  typedef struct BoardStatus // total size 252 bytes
+  struct BoardStatus // total size 252 bytes
   {
     RSPStatus  rsp;
     ETHStatus  eth;
@@ -178,7 +178,7 @@ prelude = << PRELUDE_END
     TESTStatus rcuh_test; 
   };
 
-  typedef struct RSRVersion
+  struct RSRVersion
   {
     union {
       uint8 rsp_version; // RSP hardware version
@@ -188,14 +188,14 @@ prelude = << PRELUDE_END
     uint8 fpga_maj :4; // FPGA firmware version (major)
   };
 
-  typedef struct RSUReconfig
+  struct RSUReconfig
   {
     uint8 page      :3;       // page selection
     uint8 ffi       :4;
     uint8 fpgaselect:1; // fpga selection (0 == reconfigure AP, 1 == reconfigure BP)
   };
 
-  typedef struct RSUReset
+  struct RSUReset
   {
     uint8 sync :1; // send sync pulse to all FPGA's
     uint8 clear:1; // clear all FPGA's
@@ -203,7 +203,7 @@ prelude = << PRELUDE_END
     uint8 ffi  :5;
   };
 
-  typedef struct DIAGBypass
+  struct DIAGBypass
   {
     uint8 dc_disable :1; // enable DC block (high pass filter processing)
     uint8 pfs_bypass :1; // bypass PFS
@@ -218,7 +218,7 @@ prelude = << PRELUDE_END
 	uint8 ffi		 :7;
   };
 
-  typedef struct DIAGSelftest
+  struct DIAGSelftest
   {
     uint8 interface; // 0=ring, 1=rcux, 2=rcuy, 3=lcu, 4=cep, 5=serdes
     uint8 mode;      // 1=local loopback, 2=remote loopback, 3=transmit, 4=receive, 5=lane, 6=lane single
@@ -226,7 +226,7 @@ prelude = << PRELUDE_END
     uint8 lane;      // Ring LVDS bit lane index, raning from 0 to 13
   };
 
-  typedef struct RCUHandler
+  struct RCUHandler
   {
     uint8 input_delay_x:7; // input delay for X-receiver
     uint8 enable_x     :1; // enable X-receiver data output
@@ -234,7 +234,7 @@ prelude = << PRELUDE_END
     uint8 enable_y     :1; // enable Y-receiver data output
   };
 
-  typedef struct CRControl
+  struct CRControl
   {
     uint8 sync        :1; // generate soft sync pulse for a specific FPGA
     uint8 clear       :1; // soft clear a specific FPGA
@@ -242,13 +242,13 @@ prelude = << PRELUDE_END
     uint8 ffi         :5;
   };
 
-  typedef struct CDOStationId
+  struct CDOStationId
   {
     uint8  lane:5;
     uint16 id  :11;
   };
 
-  typedef struct CDOControl
+  struct CDOControl
   {
     uint8  enable:1; // enable CEP output
     uint8  lane  :2; // select which lane to output (value = 0,1,2,3)
@@ -266,7 +266,7 @@ prelude = << PRELUDE_END
 	// unknown: (0 = value has been read from hardware, 1 = value has not been read)
 	// invalid: (0 = RSP board is controlling a TD board, 1 = RSP board is not controlling a TD board)
 	//
-	typedef struct TDBoardStatus
+	struct TDBoardStatus
 	{
 		uint8	input_10MHz:1;  		// 1 = SMA, 0 = Infiniband
 		uint8	output_clock:1; 		// 1 = 200MHz, 0 = 160MHz
@@ -282,7 +282,7 @@ prelude = << PRELUDE_END
 	};
 
 	// structure for passing the SPU status fields to the user.
-	typedef struct SPUBoardStatus {
+	struct SPUBoardStatus {
 		uint8	v2_5;	// * 2 = 5.0 RCU
 		uint8	v3_3;	// * 3 = 8.0 LBA
 		uint8	v12;	// * 4 =  48 HBA
@@ -291,7 +291,7 @@ prelude = << PRELUDE_END
 	};
 	
 	// structure for lane latency
-	typedef struct RADLatency {
+	struct RADLatency {
 		uint16 beamlet_lane0;
 		uint16 crosslet_lane0;
 		uint16 beamlet_lane1;

@@ -87,7 +87,7 @@ prelude = << PRELUDE_END
 	static const uint32 oc_ARPMODE      = 0x000007F5;  // OUT set Arp mode
 	
 		
-	typedef struct TpTriggerInfo // trigger information
+	struct TpTriggerInfo // trigger information
 	{
 		uint32 channel;
 		uint32 sequence_nr;
@@ -100,7 +100,7 @@ prelude = << PRELUDE_END
 		uint32 missed;
 	};
 
-	typedef struct TpTriggerSetup // setup variables for 1 channel
+	struct TpTriggerSetup // setup variables for 1 channel
 	{
 		uint32 level;
 		uint32 td_mode;
@@ -109,7 +109,7 @@ prelude = << PRELUDE_END
 		uint32 trigger_mode;
 	};
 		 
-	typedef struct TpFilterCoeffients // filter coeffients for 1 pair of channels
+	struct TpFilterCoeffients // filter coeffients for 1 pair of channels
 	{
 		uint32 filter_0[4];
 		uint32 filter_1[4];
