@@ -25,20 +25,16 @@
 DROP TYPE schedulerInfo CASCADE;
 
 CREATE TYPE schedulerInfo AS (
-	antennaMode            INT4,
 	CEPProcessingUnits     INT4,
-	clockFrequency         INT4,
 	contactEmail           VARCHAR(40),
 	contactName            VARCHAR(30),
 	contactPhone           VARCHAR(20),
-	filterType	       INT4,
 	firstPossibleDay       INT4,
 	fixedDay               BOOLEAN,
 	fixedTime              BOOLEAN,
 	lastPossibleDay        INT4,
 	late                   BOOLEAN,
 	nightTimeWeightFactor  INT4,
-	nrOfSubbands           INT4,
 	offlineProcessingUnits INT4,
 	predecessor            INT4,
 	predMaxTimeDif         VARCHAR(10),
@@ -46,9 +42,6 @@ CREATE TYPE schedulerInfo AS (
 	priority               FLOAT,
 	projectName            VARCHAR(40),
 	referenceFrame         INT4,
-	scheduledEnd           VARCHAR(20),
-	scheduledStart         VARCHAR(20),
-	stationID              TEXT,
 	storageUnits           INT4,
 	taskDuration           VARCHAR(10),
 	taskID                 INT4,
@@ -68,20 +61,16 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 
 	BEGIN
       	OPEN fieldList;
-      	FETCH fieldList INTO vRecord.antennaMode;
      	FETCH fieldList INTO vRecord.CEPProcessingUnits;
-	FETCH fieldList INTO vRecord.clockFrequency;
 	FETCH fieldList INTO vRecord.contactEmail;
 	FETCH fieldList INTO vRecord.contactName;
 	FETCH fieldList INTO vRecord.contactPhone;
-	FETCH fieldList INTO vRecord.filterType;
 	FETCH fieldList INTO vRecord.firstPossibleDay;
 	FETCH fieldList INTO vRecord.fixedDay;
 	FETCH fieldList INTO vRecord.fixedTime;
 	FETCH fieldList INTO vRecord.lastPossibleDay;
 	FETCH fieldList INTO vRecord.late;
 	FETCH fieldList INTO vRecord.nightTimeWeightFactor;
-	FETCH fieldList INTO vRecord.nrOfSubbands;
 	FETCH fieldList INTO vRecord.offlineProcessingUnits;
 	FETCH fieldList INTO vRecord.predecessor;
 	FETCH fieldList INTO vRecord.predMaxTimeDif;
@@ -89,9 +78,6 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 	FETCH fieldList INTO vRecord.priority;
 	FETCH fieldList INTO vRecord.projectName;
 	FETCH fieldList INTO vRecord.referenceFrame;
-	FETCH fieldList INTO vRecord.scheduledEnd;
-	FETCH fieldList INTO vRecord.scheduledStart;
-	FETCH fieldList INTO vRecord.stationID;
 	FETCH fieldList INTO vRecord.storageUnits;
 	FETCH fieldList INTO vRecord.taskDuration;
 	FETCH fieldList INTO vRecord.taskID;
