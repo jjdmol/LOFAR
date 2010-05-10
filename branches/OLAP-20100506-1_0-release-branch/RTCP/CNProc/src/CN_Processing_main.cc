@@ -33,6 +33,7 @@
 #include <CNProc/Package__Version.h>
 #include <boost/lexical_cast.hpp>
 #include <execinfo.h>
+#include <signal.h>
 
 #if defined HAVE_MPI
 #define MPICH_IGNORE_CXX_SEEK
@@ -72,6 +73,13 @@ void terminate_with_backtrace()
 
 #endif
 
+// Catch signal 16 (used to signal BG/P RAS events)
+static void sig16handler( int signal )
+{
+  const char msg[] = "WARNING: Caught signal 16.\n";
+  write( 2, msg, sizeof msg );
+}
+
 static Stream *createIONstream( unsigned channel, const LocationInfo &locationInfo )
 {
 #if 1 && defined HAVE_FCNP && defined HAVE_BGP_CN && !defined USE_VALGRIND
@@ -101,6 +109,8 @@ static Stream *createIONstream( unsigned channel, const LocationInfo &locationIn
 int main(int argc, char **argv)
 {
   std::clog.rdbuf(std::cout.rdbuf());
+
+  signal( 16, sig16handler );
   
 #if !defined CATCH_EXCEPTIONS
   std::set_terminate(terminate_with_backtrace);
