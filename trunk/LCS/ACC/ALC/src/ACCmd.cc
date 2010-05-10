@@ -30,7 +30,7 @@ namespace LOFAR {
   namespace ACC {
     namespace ALC {
 
-static	char*	AlcCmdNames[] = {
+static	const char*	AlcCmdNames[] = {
 		"No command",	"Boot",
 		"Quit", 		"Define",
 		"Init", 		"Pause",

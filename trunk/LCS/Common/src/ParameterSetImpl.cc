@@ -599,7 +599,7 @@ string	valuePart   (const string& parameterLine)
 // 0 is returned. The second string contains the opening and closing chars
 // that are used to indicate the index. The index must be a literal value
 // not an expression.
-int32 	indexValue (const string&	label, char	indexMarker[2])
+int32 	indexValue (const string&	label, const char	indexMarker[2])
 {
 	string::size_type	start = label.find_last_of(indexMarker[0]);
 	if (start == string::npos) {
