@@ -15,6 +15,7 @@
 #include <Common/LofarLocators.h>
 #include <Interface/Exceptions.h>
 #include <Interface/Parset.h>
+#include <Thread/Thread.h>
 #include <Storage/SubbandWriter.h>
 #include <Storage/Package__Version.h>
 
@@ -49,7 +50,6 @@ class Job
 
 
 static std::vector<Job *> jobs;
-
 
 Job::Job(const char *parsetName, int rank, int size)
 :
@@ -96,6 +96,46 @@ static void child(int argc, char *argv[], int rank, int size)
 }
 #endif
 
+
+class ExitOnClosedStdin {
+public:
+  ExitOnClosedStdin(): observationDone(false) {}
+
+  bool observationDone;
+
+  void mainLoop();
+};
+
+void ExitOnClosedStdin::mainLoop()
+{
+  // an empty read on stdin means the SSH connection closed, which indicates that we should abort
+
+  while (!observationDone) {
+    fd_set fds;
+
+    FD_ZERO(&fds);
+    FD_SET(0,&fds);
+
+    struct timeval timeval;
+
+    timeval.tv_sec = 1;
+    timeval.tv_usec = 0;
+
+    switch (select(1, &fds, 0, 0, &timeval)) {
+      case -1 : throw SystemCallException("select", errno, THROW_ARGS);
+      case  0 : continue;
+    }
+
+    char buf[1024];
+    ssize_t numbytes;
+    numbytes = ::read(0, buf, sizeof buf);
+
+    if( numbytes == 0 ) {
+      LOG_FATAL("lost stdin -- aborting"); // this most likely won't arrive, since stdout/stderr are probably closed as well
+      exit(1);
+    }
+  }
+}
 
 int main(int argc, char *argv[])
 {
@@ -193,9 +233,13 @@ int main(int argc, char *argv[])
 	for (unsigned output = 0; output < nrOutputsPerSubband; output ++)
 	  subbandWriters.push_back(new SubbandWriter(parset, subband, output));
 
+    ExitOnClosedStdin stdinWatcher;
+    Thread stdinWatcherThread(&stdinWatcher,&ExitOnClosedStdin::mainLoop,65535);
+
     for (unsigned writer = 0; writer < subbandWriters.size(); writer ++)
       delete subbandWriters[writer];
 
+    stdinWatcher.observationDone = true;
   } catch (Exception &ex) {
     LOG_FATAL_STR("caught Exception: " << ex);
     exit(1);
