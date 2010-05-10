@@ -537,7 +537,7 @@ void beamctl::mainloop()
 
 int main(int argc, char** argv)
 {
-	char *array = "unset";              // --array argument goes here
+	const char *array = "unset";        // --array argument goes here
 	list<int> rcus;                     // --rcus argument goes here
 	list<int> subbands;                 // --subbands argument goed here
 	list<int> beamlets;                 // --beamlets argument goes here

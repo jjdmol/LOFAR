@@ -40,8 +40,8 @@ namespace LOFAR {
   namespace APLCommon {
 
 typedef struct cntlrDefinition {
-	char*		cntlrName;
-	char*		parsetName;
+	const char*	cntlrName;
+	const char*	parsetName;
 	bool		shared;
 } cntlrDefinition_t;
 
@@ -65,7 +65,7 @@ static cntlrDefinition_t controllerTable[] = {
 	{	"",						"",						false	}
 };
 
-static char*	modeNameTable[] = {
+static const char*	modeNameTable[] = {
 	"off",
 	"operational",
 	"maintenance",
