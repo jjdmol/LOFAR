@@ -142,6 +142,17 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
   // DO NOT DO ANY CALL THAT GRABS A LOCK, since the lock may be held by a
   // thread that is no longer part of our address space
 
+  // create a blocking stdin pipe
+  // rationale: this forked process inherits stdin from the parent process, which is unusable because IONProc is started in the background
+  // and routed through mpirun as well. Also, it is shared by all forked processes. Nevertheless, we want Storage to be able to determine
+  // when to shut down based on whether stdin is open. So we create a new stdin. Even though the pipe we create below will block since there
+  // will never be anything to read, closing it will propagate to Storage and that's enough.
+  int pipefd[2];
+  pipe(pipefd);
+
+  close(0);
+  dup(pipefd[0]);
+
   execl("/usr/bin/ssh",
     "ssh",
     "-i", sshKey,
