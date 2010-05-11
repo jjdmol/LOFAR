@@ -85,7 +85,7 @@ using namespace blitz;
   
  */
 /*-------------------------------------------------------------------------*/
-char * gnuplot_get_program_path(char * pname)
+char * gnuplot_get_program_path(const char * pname)
 {
     int         i, j, lg;
     char    *   path;
@@ -146,7 +146,7 @@ char * gnuplot_get_program_path(char * pname)
  */
 /*--------------------------------------------------------------------------*/
 
-gnuplot_ctrl * gnuplot_init(char* display_)
+gnuplot_ctrl * gnuplot_init(const char* display_)
 {
     gnuplot_ctrl *  handle ;
 
@@ -239,7 +239,7 @@ void gnuplot_close(gnuplot_ctrl * handle)
  */
 /*--------------------------------------------------------------------------*/
 
-void gnuplot_cmd(gnuplot_ctrl *  handle, char *  cmd, ...)
+void gnuplot_cmd(gnuplot_ctrl *  handle, const char *  cmd, ...)
 {
     va_list ap ;
     char    local_cmd[GP_CMD_SIZE];
@@ -278,7 +278,7 @@ void gnuplot_cmd(gnuplot_ctrl *  handle, char *  cmd, ...)
  */
 /*--------------------------------------------------------------------------*/
 
-void gnuplot_setstyle(gnuplot_ctrl * h, char * plot_style) 
+void gnuplot_setstyle(gnuplot_ctrl * h, const char * plot_style) 
 {
     if (strcmp(plot_style, "lines") &&
         strcmp(plot_style, "points") &&
@@ -309,7 +309,7 @@ void gnuplot_setstyle(gnuplot_ctrl * h, char * plot_style)
  */
 /*--------------------------------------------------------------------------*/
 
-void gnuplot_set_xlabel(gnuplot_ctrl * h, char * label)
+void gnuplot_set_xlabel(gnuplot_ctrl * h, const char * label)
 {
     char    cmd[GP_CMD_SIZE] ;
 
@@ -330,7 +330,7 @@ void gnuplot_set_xlabel(gnuplot_ctrl * h, char * label)
  */
 /*--------------------------------------------------------------------------*/
 
-void gnuplot_set_ylabel(gnuplot_ctrl * h, char * label)
+void gnuplot_set_ylabel(gnuplot_ctrl * h, const char * label)
 {
     char    cmd[GP_CMD_SIZE] ;
 
@@ -401,7 +401,7 @@ void gnuplot_plot_x(
     gnuplot_ctrl    *   handle,
     double          *   d,
     int                 n,
-    char            *   title
+    const char      *   title
 )
 {
     int     i ;
@@ -497,7 +497,7 @@ void gnuplot_plot_xy(
 	double			*	x,
 	double			*	y,
     int                 n,
-    char            *   title
+    const char      *   title
 )
 {
   int     i ;
@@ -557,12 +557,12 @@ void gnuplot_plot_xy(
 /*--------------------------------------------------------------------------*/
 
 void gnuplot_plot_once(
-	char	*	title,
-	char	*	style,
-	char	*	label_x,
-	char	*	label_y,
-	double	*	x,
-	double	*	y,
+	const char	*	title,
+	const char	*	style,
+	const char	*	label_x,
+	const char	*	label_y,
+	double		*	x,
+	double		*	y,
 	int			n
 )
 {
@@ -632,7 +632,7 @@ void gnuplot_plot_slope(
     gnuplot_ctrl    *   handle,
     double              a,
     double              b,
-    char            *   title
+    const char      *   title
 )
 {
     char    stitle[GP_TITLE_SIZE] ;
@@ -684,8 +684,8 @@ void gnuplot_plot_slope(
 
 void gnuplot_plot_equation(
     gnuplot_ctrl    *   h,
-    char            *   equation,
-    char            *   title
+    const char      *   equation,
+    const char      *   title
 )
 {
     char    cmd[GP_CMD_SIZE];
@@ -737,7 +737,7 @@ void gnuplot_write_matrix(gnuplot_ctrl* h,
 void gnuplot_splot(
     gnuplot_ctrl    *   h,
     Array<double, 2>    matrix,
-    char            *   title
+    const char      *   title
 )
 {
     ofstream outfile;
@@ -791,7 +791,7 @@ static int plotcount = 0;
 void gnuplot_contour_plot(
     gnuplot_ctrl    *   h,
     Array<double, 2>    matrix,
-    char            *   title
+    const char      *   title
 )
 {
     ofstream outfile;

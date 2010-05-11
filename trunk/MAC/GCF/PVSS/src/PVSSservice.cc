@@ -54,7 +54,7 @@ namespace LOFAR {
 	namespace GCF {
 		namespace PVSS {
 
-static char*	SALErrors[]  = {
+static const char*	SALErrors[]  = {
 	"No error",						//  SA_NO_ERROR
 	"Propertyname is missing",		//  SA_PROPNAME_MISSING
 	"Datapointtype unknown",		//  SA_DPTYPE_UNKNOWN
