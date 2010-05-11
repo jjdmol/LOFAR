@@ -111,7 +111,7 @@ const TPropertyConfig _name_[] = \
  * 0x80.
  * END_* are only delimeters
  */
-typedef enum TMACValueType 
+enum TMACValueType 
 {
   NO_LPT, LPT_BOOL, LPT_CHAR, LPT_UNSIGNED, LPT_INTEGER, 
   LPT_BIT32, LPT_BLOB, LPT_REF, LPT_DOUBLE, LPT_DATETIME,
@@ -141,7 +141,7 @@ struct TPropertyInfo
 };
 
 // PropertySet category
-typedef enum TPSCategory
+enum TPSCategory
 {
   // corresponding DP does not exists
   // will be created on the first load request
