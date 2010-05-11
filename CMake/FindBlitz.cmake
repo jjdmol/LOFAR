@@ -30,10 +30,12 @@
 
 if(NOT BLITZ_FOUND)
 
-  find_path(BLITZ_INCLUDE_DIR blitz/blitz.h)
-  find_library(BLITZ_LIBRARY blitz)
+  find_path(BLITZ_INCLUDE_DIR blitz/blitz.h
+    HINTS ${BLITZ_ROOT_DIR} PATH_SUFFIXES include)
+  find_library(BLITZ_LIBRARY blitz
+    HINTS ${BLITZ_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(BLITZ_INCLUDE_DIR BLITZ_LIBRARY)
-  
+
   include(FindPackageHandleStandardArgs)
   find_package_handle_standard_args(Blitz DEFAULT_MSG
     BLITZ_LIBRARY BLITZ_INCLUDE_DIR)
