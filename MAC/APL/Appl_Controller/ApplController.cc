@@ -395,6 +395,7 @@ void ApplController::createParSubsets()
 									basePS.getString("OLAP.CNProc.partition"),
 									basePS.getString(procPrefix + "._executable"),
 									basePS.getString(procPrefix + ".workingdir"),
+                                                                        basePS.getString("Observation.ObsID"),
 									fileName, 
 									nrProcs));
 			writeParSubset(basePS, procName, fileName);

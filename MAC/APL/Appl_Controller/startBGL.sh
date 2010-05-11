@@ -4,6 +4,7 @@
 # partition
 # executable      executable file (should be in a place that is readable from BG/L)
 # workingDir      directory for output files (should be readable by BG/L)
+# observationID   observation number
 # parameterfile   jobName.ps
 # noNodes         number of nodes of the partition to use
 #

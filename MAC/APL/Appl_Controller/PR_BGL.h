@@ -45,6 +45,7 @@ namespace LOFAR {
 	     const string& aPartition,
 	     const string& aExecutable,
 	     const string& aWorkingDir,
+             const string& aObservationID,
 	     const string& aParamfile,
 	     const uint numberOfNodes);
 
