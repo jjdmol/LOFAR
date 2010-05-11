@@ -4,7 +4,6 @@ lofar_add_bin_program(packetanalysis packetanalysis.c)
 
 install(PROGRAMS 
   killOLAP
-  swlevel
   BlueGeneControl.sh
   startOLAP.py
   commandOLAP.py
