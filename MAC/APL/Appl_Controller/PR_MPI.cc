@@ -28,6 +28,7 @@
 #include <Common/lofar_fstream.h>
 #include <Common/SystemUtil.h>
 #include "PR_MPI.h"
+#include "forkexec.h"
 
 namespace LOFAR {
   namespace ACC {
@@ -113,7 +114,7 @@ bool PR_MPI::start()
 
 	LOG_TRACE_OBJ_STR ("PR_MPI: " << itsStartCmd);
 
-	if (system (itsStartCmd.c_str()) == 0) {
+	if (forkexec (itsStartCmd.c_str()) == 0) {
 		itsIsStarted = true;
 	}
 
@@ -127,7 +128,7 @@ bool PR_MPI::stop()
 {
 	LOG_TRACE_OBJ_STR ("PR_MPI: " << itsStopCmd);
 
-	if (system (itsStopCmd.c_str()) == 0) {
+	if (forkexec (itsStopCmd.c_str()) == 0) {
 		itsIsStarted = false;
 	}
 

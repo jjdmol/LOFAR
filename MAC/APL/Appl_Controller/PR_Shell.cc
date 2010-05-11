@@ -28,6 +28,7 @@
 #include <Common/SystemUtil.h>
 #include <Common/StringUtil.h>
 #include "PR_Shell.h"
+#include "forkexec.h"
 
 namespace LOFAR {
   namespace ACC {
@@ -75,7 +76,7 @@ bool PR_Shell::start()
 
 	LOG_TRACE_OBJ_STR ("PR_Shell: " << itsStartCmd);
 
-	int32 result = system (itsStartCmd.c_str());
+	int32 result = forkexec (itsStartCmd.c_str());
 
 	if (result == 0) {
 		itsIsStarted = true;
@@ -90,7 +91,7 @@ bool PR_Shell::stop()
 	// some mess the process left behind.
 	LOG_TRACE_OBJ_STR ("PR_Shell: " << itsStopCmd);
 
-	int32 result = system (itsStopCmd.c_str());
+	int32 result = forkexec (itsStopCmd.c_str());
 
 	if (result == 0) {
 		itsIsStarted = false;

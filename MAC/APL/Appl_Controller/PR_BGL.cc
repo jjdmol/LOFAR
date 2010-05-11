@@ -28,6 +28,7 @@
 
 #include <Common/StringUtil.h>
 #include "PR_BGL.h"
+#include "forkexec.h"
 
 namespace LOFAR {
   namespace ACC {
@@ -65,7 +66,7 @@ namespace LOFAR {
 
       LOG_TRACE_OBJ_STR ("PR_BGL: " << itsStartCmd);
 
-      int32 result = system (itsStartCmd.c_str());
+      int32 result = forkexec (itsStartCmd.c_str());
 
       if (result == 0) {
 	itsIsStarted = true;
@@ -80,7 +81,7 @@ namespace LOFAR {
       // some mess the process left behind.
       LOG_TRACE_OBJ_STR ("PR_BGL: " << itsStopCmd);
 
-      int32 result = system (itsStopCmd.c_str());
+      int32 result = forkexec (itsStopCmd.c_str());
 
       if (result == 0) {
 	itsIsStarted = false;
