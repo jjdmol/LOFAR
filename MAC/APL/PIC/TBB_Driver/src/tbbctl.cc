@@ -3083,7 +3083,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					uint16 f0[4];
 					uint16 f1[4];
 					
-					int numitems = sscanf(optarg, "%u,%u,%u,%u,%u,%u,%u,%u",
+					int numitems = sscanf(optarg, "%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu",
 					               &f0[0], &f0[1], &f0[2], &f0[3], &f1[0], &f1[1], &f1[2], &f1[3]);
 					if (numitems < 8 || numitems == EOF) {
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
