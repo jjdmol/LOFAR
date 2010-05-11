@@ -231,7 +231,7 @@ EPAStub::EPAStub(string name)
 		  break;
 
 		case MEPHeader::BST:
-		    if (0 <= regid < MEPHeader::N_SERDES_LANES)
+		    if (0 <= regid && regid < MEPHeader::N_SERDES_LANES)
 		    {
 		      //
 		      // Initialize beamlet statistics register with sensible test pattern
