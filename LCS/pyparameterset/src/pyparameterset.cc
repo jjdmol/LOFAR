@@ -48,9 +48,15 @@ namespace LOFAR {
     PyParameterSet (const string& fileName, bool caseInsensitive)
       : ParameterSet (fileName, caseInsensitive)
     {}
+    PyParameterSet (const ParameterSet& pset)
+      : ParameterSet (pset)
+    {}
     string version (const string& type) const
       { return Version::getInfo<pyparametersetVersion> ("parameterset",
                                                         type); }
+
+    PyParameterSet makeSubset (const string& baseKey, const string& prefix)
+      { return ParameterSet::makeSubset (baseKey, prefix); }
   };
 
   // Define function pointers for overloaded functions to be able to tell
@@ -158,7 +164,7 @@ namespace LOFAR {
             "Get the number of parameters.")
       .def ("__len__", &ParameterSet::size,
             "Get the number of parameters.")
-      .def ("makeSubset", &ParameterSet::makeSubset,
+      .def ("makeSubset", &PyParameterSet::makeSubset,
  	    (boost::python::arg("baseKey"),
              boost::python::arg("prefix")=""),
             "Return a subset as a new parameterset object.\n"
