@@ -98,7 +98,7 @@ private:
 	GCFTimerPort*			itsTimerPort;		// general port for timers
 	GCFTCPPort*				itsCalServer;		// connection with CalServer
 	CTState::CTstateNr		itsState;			// 
-	uint32					itsNrBeams;			// according to the Parset, corrected for HBA_BOTH
+	uint32					itsNrBeams;			// according to the Parset, corrected for HBA_DUAL
 	map<string, bool>		itsBeams;			// beam active or not.
 
 	// ParameterSet variables
