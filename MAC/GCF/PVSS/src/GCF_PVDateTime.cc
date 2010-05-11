@@ -26,6 +26,7 @@
 #include <GCF/PVSS/GCF_PVDateTime.h>
 #include <Common/DataConvert.h>
 #include <Common/StringUtil.h>
+#include <cstdio>
 
 namespace LOFAR {
   namespace GCF {
