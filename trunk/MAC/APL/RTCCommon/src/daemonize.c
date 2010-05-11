@@ -25,6 +25,9 @@
 #if HAVE_SIGNAL_H
 # include <signal.h>
 #endif
+#if HAVE_STDLIB_H
+# include <stdlib.h>
+#endif
 
 /* the umask gets set to this */
 static const mode_t NEWUMASK= S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH 
