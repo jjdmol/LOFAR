@@ -31,6 +31,7 @@
 #include "ACDaemon.h"
 #include "ACDaemonComm.h"
 #include "lofarDirs.h"
+#include "forkexec.h"
 
 namespace LOFAR {
   namespace ACC {
@@ -218,7 +219,7 @@ void ACDaemon::handleACRequest()
 		string	sysCommand = formatString(itsParamSet->getString("ACDaemon.command").c_str(), 
 										  aRequest.itsRequester);
 		LOG_DEBUG_STR("Executing '" << sysCommand << "'");
-		int32 result = system(sysCommand.c_str());
+		int32 result = forkexec (sysCommand.c_str());
 		LOG_DEBUG_STR ("result = " << result << ", errno = " << errno << ":" << strerror(errno));
 	}
 

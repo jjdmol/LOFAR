@@ -9,6 +9,7 @@ lofar_add_bin_program(ApplController
   APAdmin.cc
   APAdminPool.cc
   CmdStack.cc
+  forkexec.cc
   ItemList.cc
   ProcRule.cc
   ProcRuler.cc
@@ -21,7 +22,8 @@ lofar_add_bin_program(ApplController
 lofar_add_bin_program(ACDaemon 
   ACDaemonMain.cc
   ACRequestPool.cc
-  ACDaemon.cc)
+  ACDaemon.cc
+  forkexec.cc)
 
 lofar_add_bin_program(ACcli ACcli.cc)
 
