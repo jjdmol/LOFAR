@@ -228,7 +228,7 @@ uint PVSSinfo::getSysId(const string& name)
 //
 // Strip off the system part when provided.
 //
-const string&  PVSSinfo::getDPbasename(const string& name)
+const string  PVSSinfo::getDPbasename(const string& name)
 {
 	string::size_type index = name.find(':');
 	if (index == string::npos) {
