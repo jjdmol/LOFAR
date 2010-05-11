@@ -27,7 +27,7 @@ namespace LOFAR {
  namespace GCF {
   namespace PVSS {
 
-typedef enum PVSSresult 
+enum PVSSresult 
 {
   SA_NO_ERROR = 0, 				// 0
   SA_SCHEDULED,					// 1
