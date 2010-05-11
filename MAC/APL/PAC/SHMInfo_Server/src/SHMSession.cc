@@ -1069,7 +1069,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 	targetarrayname = "HBA";
       }
       if (N_LBA == N_HBA) {   //confused
-	targetarrayname = "LBA";
+	targetarrayname = "";
       }
 
       // search for AntennaArray with that name;
