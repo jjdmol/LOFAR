@@ -9,7 +9,17 @@ sys.path += [(os.path.dirname(__file__) or ".")+"/.."]
 
 from util.Commands import SyncCommand,backquote
 
-__all__ = ["packetAnalysis","stationInPartition","Stations"]
+__all__ = ["packetAnalysis","stationInPartition","Stations","overrideRack"]
+
+def overrideRack( stations, rack ):
+  """ Set the rack that will be used (0,1,2) for all stations provided. """
+
+  assert rack in [0,1,2]
+
+  for s in stations:
+    for t in stations[s]:
+      octets = t.ionode.split(".")
+      t.ionode = "%s.%s.%s.%s" % (octets[0],octets[1],rack,octets[3])
 
 def packetAnalysis( name, ip, port ):
   # locate packetanalysis binary, since its location differs per usage, mainly because
@@ -199,19 +209,34 @@ def defineStations( s ):
     "RSP_1": ["HBA1"],
   }
 
+  here = os.path.dirname(__file__) or "."
+
+  # parse hostname <-> ip translation, since not all hostnames
+  # are ionodes (foreign stations send to a router)
+  knownhosts = {}
+  for l in file("%s/MAC+IP.dat" % (here,)):
+    l = l.split("#")[0].strip() # strip comments and whitespace
+
+    info = l.split()
+    if len(info) < 3: continue # need HOSTNAME IP MAC
+
+    hostname,ip,mac = info[:3]
+    knownhosts[hostname] = ip
+
   # see MAC/Deployment/data/StaticMetaData/RSPConnections.dat
   # for a mapping of station -> io node
   # and LOFAR/Stations.py -l for a mapping of io node -> ip address 
 
   # parse RSPConnections.dat.
-  for l in file("%s/RSPConnections.dat" % ((os.path.dirname(__file__) or "."),)):
+  for l in file("%s/RSPConnections.dat" % (here,)):
     l = l.split("#")[0].strip() # strip comments and whitespace
 
     info = l.split()
     if len(info) < 3: continue # need at least NAME BOARD IONODE
 
     station,board,ionode = info[:3]
-    ip = PartitionPsets[ionode][0]
+
+    ip = knownhosts[ionode]
     portlist = defaultPorts[board]
     fieldlist = defaultFields[board]
 
@@ -285,6 +310,11 @@ if __name__ == "__main__":
 
   # parse the command line
   parser = OptionParser( "usage: %prog [options] station" )
+  parser.add_option( "-P", "--partition",
+  			dest = "partition",
+                        type = "string",
+			default = "R00",
+  			help = "the partition to use [%default]" )
   parser.add_option( "-i", "--inputs",
   			dest = "inputs",
 			action = "store_true",
@@ -312,6 +342,8 @@ if __name__ == "__main__":
   if not args:
     parser.print_help()
     sys.exit(0)
+
+  overrideRack( Stations, int(options.partition[2]) )
 
   for stationName in args:
     # print the inputs of a single station

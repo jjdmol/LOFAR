@@ -5,7 +5,7 @@ from LOFAR.ObservationID import ObservationID
 from LOFAR.Logger import debug,info,warning,error,fatal
 from LOFAR.Parset import Parset
 from util.Hosts import rsymlink
-from LOFAR.Stations import Stations
+from LOFAR.Stations import Stations,overrideRack
 from LOFAR.Locations import Locations
 from LOFAR.CommandClient import sendCommand
 from util.dateutil import format
@@ -44,6 +44,10 @@ def convertParsets( args, olapparset, partition = None ):
   # otherwise it will always overrule the parset
   assert "stop" not in defaultObsParams
   assert "run" not in defaultObsParams
+
+  # always assume the stations will be sending to the rack we will be using
+  if partition:
+    overrideRack( Stations, int(partition[2]) )
 
   # ========== Observations
   parsets = []
