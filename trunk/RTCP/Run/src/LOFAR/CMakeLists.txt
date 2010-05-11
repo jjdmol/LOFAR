@@ -14,5 +14,6 @@ install(PROGRAMS
   DESTINATION bin/LOFAR)
 
 install(FILES
+  MAC+IP.dat
   RSPConnections.dat
   DESTINATION bin/LOFAR)
