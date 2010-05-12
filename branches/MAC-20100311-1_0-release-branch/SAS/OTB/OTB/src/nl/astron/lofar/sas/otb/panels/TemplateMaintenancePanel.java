@@ -270,9 +270,9 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                         if (aN > 0) {
                             logger.debug("Node duplicated");
                             // defaultNode.instances needs 2b set to highest instance
-                           if (idx > itsSelectedNode.index) {
-                               Short newInst=idx;
-                               itsSelectedNode.instances=newInst;
+                           if (idx+1 > itsSelectedNode.instances) {
+                               Integer newInst=idx+1;
+                               itsSelectedNode.instances=newInst.shortValue();
                                OtdbRmi.getRemoteMaintenance().saveNode(itsSelectedNode);
                                setNewRootNode();
                            }
