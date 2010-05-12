@@ -302,13 +302,12 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
     // try to calculate the duration from the difference between start/stoptime
     private void setDuration() {
-        long dur=0;
         if (itsStartDate != null && itsStopDate!=null && itsStartDate.before(itsStopDate)) {
 
-            dur = itsStopDate.getTime()-itsStartDate.getTime();
+            long dur= itsStopDate.getTime()-itsStartDate.getTime();
             calcDuration(dur);
         } else {
-            calcDuration(0);
+            calcDuration(itsMaxBeamDuration*1000);
         }
    }
 
