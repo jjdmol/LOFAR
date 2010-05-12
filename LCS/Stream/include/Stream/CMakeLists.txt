@@ -2,6 +2,7 @@
 set (inst_HEADERS
   FileDescriptorBasedStream.h
   FileStream.h
+  NamedPipeStream.h
   NullStream.h
   SocketStream.h
   Stream.h)
