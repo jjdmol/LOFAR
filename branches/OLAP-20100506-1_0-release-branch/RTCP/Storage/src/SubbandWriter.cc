@@ -51,7 +51,7 @@ SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, unsigned ou
 #if defined HAVE_AIPSPP
   if (outputType == 0) {
     // create root directory of the observation tree
-    if (mkdir(parset.getMSBaseDir().c_str(), 0770) != 0 && errno != EEXIST) {
+    if (mkdir(parset.getMSBaseDir().c_str(), 0777) != 0 && errno != EEXIST) {
       unsigned savedErrno = errno; // first argument below clears errno
       throw SystemCallException(("mkdir " + parset.getMSBaseDir()).c_str(), savedErrno, THROW_ARGS);
     }
