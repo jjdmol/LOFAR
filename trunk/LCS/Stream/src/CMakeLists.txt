@@ -6,6 +6,7 @@ lofar_add_library(stream
   Package__Version.cc
   FileDescriptorBasedStream.cc
   FileStream.cc
+  NamedPipeStream.cc
   NullStream.cc
   SocketStream.cc
   Stream.cc)
