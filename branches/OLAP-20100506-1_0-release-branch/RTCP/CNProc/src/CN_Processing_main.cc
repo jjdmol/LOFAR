@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 {
   std::clog.rdbuf(std::cout.rdbuf());
 
-  signal( 16, sig16handler );
+  //signal( 16, sig16handler );
   
 #if !defined CATCH_EXCEPTIONS
   std::set_terminate(terminate_with_backtrace);
