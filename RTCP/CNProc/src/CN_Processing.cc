@@ -33,7 +33,6 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
-#include <cassert>
 
 #if defined HAVE_BGP
 #include <common/bgp_personality_inlines.h>
@@ -43,8 +42,8 @@
 
 #if defined HAVE_BGP
 //#define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
-//#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
-#define LOG_CONDITION	1
+#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
+//#define LOG_CONDITION	1
 #else
 #define LOG_CONDITION	1
 #endif
@@ -134,18 +133,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   std::vector<unsigned>::const_iterator phaseThreePsetIndex  = std::find(phaseThreePsets.begin(),  phaseThreePsets.end(),  myPset);
   itsHasPhaseThree             = phaseThreePsetIndex != phaseThreePsets.end();
 
-  // what to do in phase three
-  itsTransposeBeamFormedData     = configuration.outputBeamFormedData();
-  itsTransposeCoherentStokesData = configuration.outputCoherentStokes();
-  itsPhaseThreeExists            = itsTransposeBeamFormedData || itsTransposeCoherentStokesData;
+  LOG_DEBUG_STR( "Node " << itsLocationInfo.rank() << " phase 1: " << itsHasPhaseOne << " phase 2: " << itsHasPhaseTwo << " phase 3: " << itsHasPhaseThree );
 
   itsNrStations	             = configuration.nrStations();
   itsNrBeamFormedStations    = configuration.nrMergedStations();
   itsNrPencilBeams           = configuration.nrPencilBeams();
   itsNrSubbands              = configuration.nrSubbands();
-  itsNrBeams                 = configuration.nrBeams();
   itsNrSubbandsPerPset       = configuration.nrSubbandsPerPset();
-  itsNrBeamsPerPset          = configuration.nrBeamsPerPset();
   itsNrStokes                = configuration.nrStokes();
   itsPhaseTwoPsetSize        = phaseTwoPsets.size();
   itsPhaseThreePsetSize      = phaseThreePsets.size();
@@ -184,31 +178,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   }
 
   if (itsHasPhaseTwo) {
-    /*
-     * The distribution of subbands across compute nodes is as follows.
-     *
-     * We suppose:
-     *          usedCoresInPset = [0..63]
-     *          usedCoresPerPset = 64
-     * 
-     * SubbandsPerPset = CEIL( #subbands / #psets ) is the number of subbands processed by each pset. Any pset that
-     * has to process less subbands (due to the CEIL) does a no-op to stay in sync with the rest of the psets.
-     *
-     * Then, the first pset will process the first SubbandsPerPset subbands using 64 cores, the second pset the subsequent
-     * SubbandsPerPset, etc.  Each pset round robins over its 64 cores, and since SubbandsPerPset may not divide 64, each core
-     * might be handling different subbands of subsequent blocks (seconds). In fact, it may also handle two subbands of the same block
-     * if SubbandsPerPset > 64.
-     *
-     * Each pset handles subbands [first..last) where
-     *          first     = (pset)     * (subbands per pset)
-     *          last      = (pset + 1) * (subbands per pset) - 1
-     * each core within a pset starts at a subsequent subband, possibly from different blocks. The first subband for each core (0..63) is
-     *          current   = first + (core) % (subbands per pset)
-     * and the next subband is determined by the "fit" of the set of subbands per pset over the cores. For example, if there are 63 subbands
-     * per pset and 64 cores, core 0 would start with subband "first" and subsequently get subband "first+1". This results in:
-     *          increment = 64 % (subbands per pset)
-     */
-
     std::vector<unsigned> usedCoresInPset  = configuration.usedCoresInPset();
     unsigned		  usedCoresPerPset = usedCoresInPset.size();
     unsigned		  myCoreIndex	   = std::find(usedCoresInPset.begin(), usedCoresInPset.end(), myCoreInPset) - usedCoresInPset.begin();
@@ -218,32 +187,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     itsLastSubband	 = itsFirstSubband + itsNrSubbandsPerPset;
     itsCurrentSubband	 = itsFirstSubband + logicalNode % usedCoresPerPset % itsNrSubbandsPerPset;
     itsSubbandIncrement	 = usedCoresPerPset % itsNrSubbandsPerPset;
-
-    itsMyCoreIndex       = myCoreIndex;
-    itsMyPset            = phaseTwoPsetIndex - phaseTwoPsets.begin();
-    itsUsedCoresPerPset  = usedCoresPerPset;
-#if 0
-    itsBeamMultiplier    = 
-      itsPlan->calculate( itsPlan->itsBeamFormedData ) ? 2 : /* X/Y polarisations are split */
-      itsPlan->calculate( itsPlan->itsCoherentStokesData ) ? itsNrStokes :
-      0; /* no beams to calculate */
-#endif
-    itsBeamMultiplier = 1;
-
-    /*
-     * After all the subbands of a block have been processed, they are transposed into beams (if required) for phase 3.
-     */
-     
-    /* 
-     * For now, we assume that each core processes at most one subband for each second of data. This is not necessarily the case if too few cores
-     * are available. Under this assumption, a core has always processed its last subband for the block and can immediately start phase 3.
-     */
-    assert( itsNrSubbandsPerPset <= itsUsedCoresPerPset );
-
-    /*
-     * For now, assume at most one beam per core to simplify matters.
-     */
-    assert( itsNrPencilBeams * itsBeamMultiplier <= usedCoresPerPset * phaseTwoPsets.size() );
 
 #if defined HAVE_MPI
     printSubbandList();
@@ -266,7 +209,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   }
 #endif // HAVE_MPI
 
-  LOG_DEBUG_STR( "Node " << itsLocationInfo.rank() << " (pset " << itsMyPset << " core " << itsMyCoreIndex << ") phase 1: " << itsHasPhaseOne << " phase 2: " << itsHasPhaseTwo << " phase 3: " << itsHasPhaseThree );
 }
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput()
@@ -419,7 +361,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( uns
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start writing output " << outputNr << " at " << MPI_Wtime());
+    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start writing at " << MPI_Wtime());
 #endif // HAVE_MPI
 
   static NSTimer writeTimer("send timer", true, true);
@@ -443,8 +385,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingIn
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 {
-  unsigned outputNr = 0; // number of next output to send
-
   totalProcessingTimer.start();
   NSTimer totalTimer("total processing", LOG_CONDITION, true);
   totalTimer.start();
@@ -485,29 +425,33 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
       calculateCoherentStokes();
     }
 
+    if( itsPlan->calculate( itsPlan->itsCoherentStokesDataIntegratedChannels ) ) {
+#if defined HAVE_MPI
+      if (LOG_CONDITION)
+        LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start compressing coherent Stokes at " << MPI_Wtime());
+#endif // HAVE_MPI
+      itsCoherentStokes->compressStokes(itsPlan->itsCoherentStokesData, itsPlan->itsCoherentStokesDataIntegratedChannels, itsFlysEye ? itsNrBeamFormedStations : itsNrPencilBeams);
+    }
+
     if( itsPlan->calculate( itsPlan->itsIncoherentStokesData ) ) {
       calculateIncoherentStokes();
     }
 
-    // send all requested outputs of this phase
-    if( itsPlan->output( itsPlan->itsFilteredData ) ) {
-      sendOutput( outputNr++, itsPlan->itsFilteredData );
+    if( itsPlan->calculate( itsPlan->itsIncoherentStokesDataIntegratedChannels ) ) {
+#if defined HAVE_MPI
+      if (LOG_CONDITION)
+        LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start compressing incoherent Stokes at " << MPI_Wtime());
+#endif // HAVE_MPI
+      itsIncoherentStokes->compressStokes(itsPlan->itsIncoherentStokesData, itsPlan->itsIncoherentStokesDataIntegratedChannels, 1);
     }
 
-    if( itsPlan->output( itsPlan->itsBeamFormedData ) ) {
-      sendOutput( outputNr++, itsPlan->itsBeamFormedData );
-    }
+    // send all requested outputs
+    for( unsigned i = 0, outputNr = 0; i < itsPlan->plan.size(); i++ ) {
+      const ProcessingPlan::planlet &p = itsPlan->plan[i];
 
-    if( itsPlan->output( itsPlan->itsCorrelatedData ) ) {
-      sendOutput( outputNr++, itsPlan->itsCorrelatedData );
-    }
-
-    if( itsPlan->output( itsPlan->itsCoherentStokesData ) ) {
-      sendOutput( outputNr++, itsPlan->itsCoherentStokesData );
-    }
-
-    if( itsPlan->output( itsPlan->itsIncoherentStokesData ) ) {
-      sendOutput( outputNr++, itsPlan->itsIncoherentStokesData );
+      if( p.output ) {
+        sendOutput( outputNr++, p.source );
+      }
     }
   } 
 
@@ -535,63 +479,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
     for (double time = MPI_Wtime() + 4.0; MPI_Wtime() < time;)
       ;
 #endif
-
-  unsigned firstNode = (itsUsedCoresPerPset + itsMyCoreIndex - (itsCurrentSubband - itsFirstSubband)) % itsUsedCoresPerPset;
-  unsigned lastNode  = (firstNode + itsNrSubbandsPerPset - 1) % itsUsedCoresPerPset; // because itsNrSubbandsPerPset < itsUsedCoresPerPset, as asserted in preprocess()
-
-  LOG_DEBUG( "core " << itsLocationInfo.rank() << " local index " << itsMyCoreIndex << " processed subband " << itsCurrentSubband << " which means that cores " << firstNode << " .. " << lastNode << " processed subbands " << itsFirstSubband << " .. " << itsLastSubband );
-
-  unsigned nrBeams = itsNrPencilBeams * itsBeamMultiplier;
-
-  if (itsHasPhaseTwo && itsPhaseThreeExists) {
-    // 2nd transpose -- send
-
-    for (unsigned i = 0; i < itsNrSubbandsPerPset; i ++) {
-      for( unsigned j = 0; j < itsPhaseTwoPsetSize; j++) {
-        unsigned node = (firstNode + i) % itsUsedCoresPerPset;
-        unsigned beam = i * itsPhaseTwoPsetSize + j;
-
-        if (beam >= nrBeams) {
-          break;
-        }
-
-        if( itsTransposeBeamFormedData ) {
-          LOG_DEBUG( "i will send complex voltages for beam " << beam << " (of " << nrBeams << ") to core " << itsLocationInfo.remapOnTree(j,node) );
-        }
-
-        if( itsTransposeCoherentStokesData ) {
-          LOG_DEBUG( "i will send stokes for beam " << beam << " (of " << nrBeams << ") to core " << itsLocationInfo.remapOnTree(j,node) );
-        }
-      }
-    }
-  }
-
-  if (itsHasPhaseThree) {
-    // 2nd transpose -- receive
-
-    unsigned myNodeIndex = itsMyPset + itsPhaseTwoPsetSize * (itsCurrentSubband - itsFirstSubband);
-    if (myNodeIndex < nrBeams) {
-
-      if( itsPlan->calculate( itsPlan->itsTransposedBeamFormedData ) ) {
-        // receive beam formed data
-        LOG_DEBUG( "i will receive complex voltages for beam " << myNodeIndex << " (of " << nrBeams << ")" );
-      }
-
-      if( itsPlan->calculate( itsPlan->itsTransposedCoherentStokesData ) ) {
-        // receive stokes data
-        LOG_DEBUG( "i will receive stokes for beam " << myNodeIndex << " (of " << nrBeams << ")" );
-      }
-
-      // send all requested outputs of this phase
-      if( itsPlan->output( itsPlan->itsTransposedBeamFormedData ) ) {
-        sendOutput( outputNr++, itsPlan->itsTransposedBeamFormedData );
-      }
-
-      if( itsPlan->output( itsPlan->itsTransposedCoherentStokesData ) ) {
-        sendOutput( outputNr++, itsPlan->itsTransposedCoherentStokesData );
-      }
-    }
-  }
 
   if ((itsCurrentSubband += itsSubbandIncrement) >= itsLastSubband) {
     itsCurrentSubband -= itsLastSubband - itsFirstSubband;
