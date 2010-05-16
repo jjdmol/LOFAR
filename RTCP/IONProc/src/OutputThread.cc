@@ -61,7 +61,12 @@ OutputThread::OutputThread(const Parset &parset, const unsigned subband, const u
   for (unsigned i = 0; i < maxSendQueueSize; i ++) {
     StreamableData *clone = dataTemplate->clone();
 
-    clone->allocate();
+    try {
+      clone->allocate();
+    } catch (std::bad_alloc) {
+      LOG_FATAL_STR("OutputThread: Cannot allocate " << (clone->requiredSize()/1024.0) << " Kbytes for output " << output );
+      throw;
+    }
     itsFreeQueue.append(clone);
   }
 

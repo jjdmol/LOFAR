@@ -49,11 +49,13 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   nrStations()              = parset.nrStations();
   nrBitsPerSample()	    = parset.nrBitsPerSample();
   nrSubbands()              = parset.nrSubbands();
+  nrBeams()                 = parset.nrBeams();
   nrChannelsPerSubband()    = parset.nrChannelsPerSubband();
   nrSamplesPerIntegration() = parset.CNintegrationSteps();
   nrSamplesPerStokesIntegration() = parset.stokesIntegrationSteps();
   nrSamplesToCNProc()       = parset.nrSamplesToCNProc();
   nrSubbandsPerPset()       = parset.nrSubbandsPerPset();
+  nrBeamsPerPset()          = parset.nrBeamsPerPset();
   delayCompensation()       = parset.delayCompensation();
   correctBandPass()  	    = parset.correctBandPass();
   sampleRate()              = parset.sampleRate();

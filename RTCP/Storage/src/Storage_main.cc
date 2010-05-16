@@ -15,6 +15,7 @@
 #include <Common/LofarLocators.h>
 #include <Interface/Exceptions.h>
 #include <Interface/Parset.h>
+#include <Interface/CN_ProcessingPlan.h>
 #include <Thread/Thread.h>
 #include <Storage/SubbandWriter.h>
 #include <Storage/Package__Version.h>
@@ -223,15 +224,33 @@ int main(int argc, char *argv[])
 
     unsigned			 myRank = boost::lexical_cast<unsigned>(argv[1]);
     Parset			 parset(argv[2]);
-    unsigned			 nrOutputsPerSubband = parset.nrOutputsPerSubband();
-    std::vector<unsigned>	 storageNodeList = parset.subbandStorageList();
+    std::vector<unsigned>	 storageNodeListSubbands = parset.subbandStorageList();
+    std::vector<unsigned>	 storageNodeListBeams    = parset.beamStorageList();
     std::vector<SubbandWriter *> subbandWriters;
 
+    CN_Configuration             configuration(parset);
+    CN_ProcessingPlan<>          plan(configuration);
+    plan.removeNonOutputs();
+
     // FIXME: implement beamformed data writer
-    for (unsigned subband = 0; subband < storageNodeList.size(); subband ++)
-      if (storageNodeList[subband] == myRank)
-	for (unsigned output = 0; output < nrOutputsPerSubband; output ++)
-	  subbandWriters.push_back(new SubbandWriter(parset, subband, output));
+    for (unsigned output = 0; output < plan.plan.size(); output ++) {
+      switch (plan.plan[output].distribution) {
+        case ProcessingPlan::DIST_SUBBAND:
+          for (unsigned subband = 0; subband < storageNodeListSubbands.size(); subband ++)
+            if (storageNodeListSubbands[subband] == myRank)
+	      subbandWriters.push_back(new SubbandWriter(parset, subband, output));
+          break;
+
+        case ProcessingPlan::DIST_BEAM:  
+          for (unsigned beam = 0; beam < storageNodeListBeams.size(); beam ++)
+            if (storageNodeListBeams[beam] == myRank)
+	      subbandWriters.push_back(new SubbandWriter(parset, beam, output));
+          break;
+
+        default:
+          continue;
+      }    
+    }      
 
     ExitOnClosedStdin stdinWatcher;
     Thread stdinWatcherThread(&stdinWatcher,&ExitOnClosedStdin::mainLoop,65535);

@@ -24,10 +24,14 @@ OLAP.nrTimesInFrame = 16
 #     [ 3*(0;1;2;3)  ] --> [ 0,1,2,3,0,1,2,3,0,1,2,3 ]
 #     [ 3*(300..303) ] --> [ 300,301,302,303,300,301,302,303,300,301,302,303 ]
 #     [ 2*(5*0)      ] --> [ 0,0,0,0,0,0,0,0,0,0 ]       
-Observation.subbandList  = [154..401]
-Observation.beamList     = [248*0]
-Observation.rspBoardList = [62*0,62*1,62*2,62*3]
-Observation.rspSlotList  = [0..61,0..61,0..61,0..61]
+#Observation.subbandList  = [154..401]
+#Observation.beamList     = [248*0]
+#Observation.rspBoardList = [62*0,62*1,62*2,62*3]
+#Observation.rspSlotList  = [0..61,0..61,0..61,0..61]
+Observation.subbandList  = [154..185]
+Observation.beamList     = [32*0]
+Observation.rspBoardList = [32*0]
+Observation.rspSlotList  = [0..31]
 #Observation.subbandList  = [154]
 #Observation.beamList     = [0]
 #Observation.rspBoardList = [0]
@@ -56,7 +60,7 @@ OLAP.OLAP_Conn.rawDataOutputOnly = F
 OLAP.outputFilteredData = F
 OLAP.outputBeamFormedData = F
 OLAP.outputCorrelatedData = T
-OLAP.outputCoherentStokes = F
+OLAP.outputCoherentStokes = T
 OLAP.outputIncoherentStokes = F
 
 Observation.channelsPerSubband = 256
@@ -76,7 +80,7 @@ OLAP.Correlator.integrationTime = 1.0
 
 OLAP.Stokes.which = I              # I or IQUV
 OLAP.Stokes.integrateChannels = F  # channel integration (DM=0)
-OLAP.Stokes.integrationSteps = 1   # time integration
+OLAP.Stokes.integrationSteps = 256  # time integration
 
 # ----- Beam forming
 OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn stations
@@ -84,7 +88,7 @@ OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn statio
 
 OLAP.PencilInfo.nrRings = 0 # 0 = just the central beam
 OLAP.PencilInfo.ringSize = 0.01
-OLAP.nrPencils = 0
+OLAP.nrPencils = 1
 OLAP.Pencil[0].angle1 = 0.01745329251994329576
 OLAP.Pencil[0].angle2 = 0
 
