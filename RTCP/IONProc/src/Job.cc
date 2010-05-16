@@ -137,7 +137,7 @@ template <typename T> void Job::broadcast(T &value)
 }
 
 
-void Job::execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset)
+void Job::execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *isBigEndian)
 {
   // DO NOT DO ANY CALL THAT GRABS A LOCK, since the lock may be held by a
   // thread that is no longer part of our address space
@@ -148,10 +148,10 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
   // when to shut down based on whether stdin is open. So we create a new stdin. Even though the pipe we create below will block since there
   // will never be anything to read, closing it will propagate to Storage and that's enough.
   int pipefd[2];
-  pipe(pipefd);
+  int ignoreResult = pipe(pipefd);
 
-  close(0);
-  dup(pipefd[0]);
+  ignoreResult = close(0);
+  ignoreResult = dup(pipefd[0]);
 
   execl("/usr/bin/ssh",
     "ssh",
@@ -164,15 +164,16 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
     executable,
     rank,
     parset,
+    isBigEndian,
     static_cast<char *>(0)
   );
 
-  write(2, "exec failed\n", 12); // Logger uses mutex, hence write directly
+  ignoreResult = write(2, "exec failed\n", 12); // Logger uses mutex, hence write directly
   exit(1);
 }
 
 
-void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, int &storagePID)
+void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *isBigEndian, int &storagePID)
 {
   LOG_INFO_STR("child will exec("
     "\"/usr/bin/ssh\", "
@@ -186,13 +187,14 @@ void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName
     "\"" << executable << "\", "
     "\"" << rank << "\", "
     "\"" << parset << "\", "
+    "\"" << isBigEndian << "\", "
     "0)"
   );
 
   switch (storagePID = fork()) {
     case -1 : throw SystemCallException("fork", errno, THROW_ARGS);
 
-    case  0 : execSSH(sshKey, userName, hostName, executable, rank, parset);
+    case  0 : execSSH(sshKey, userName, hostName, executable, rank, parset, isBigEndian);
   }
 }
 
@@ -273,6 +275,11 @@ void Job::startStorageProcesses()
 	    executable.c_str(),
 	    boost::lexical_cast<std::string>(rank).c_str(),
 	    parset.c_str(),
+#if defined WORDS_BIGENDIAN
+	    "1",
+#else
+	    "0",
+#endif
 	    itsStoragePIDs[rank]);
 }
 
@@ -495,7 +502,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     unsigned phase, psetIndex;
     std::vector<signed> list; // list of subbands or beams
 
-    const unsigned nrPsets = itsParset.phaseThreePsets().size();
+    //unsigned nrPsets = itsParset.phaseThreePsets().size();
 
     LOG_DEBUG_STR("setting up output " << output );
 

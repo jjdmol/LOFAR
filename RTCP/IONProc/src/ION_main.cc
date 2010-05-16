@@ -30,6 +30,7 @@
 #include <ION_Allocator.h>
 #include <Job.h>
 #include <JobQueue.h>
+#include <Stream/NamedPipeStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <StreamMultiplexer.h>
@@ -115,14 +116,16 @@ void terminate_with_backtrace()
 namespace LOFAR {
 namespace RTCP {
 
-std::string			   myIPaddress;
-
 unsigned			   myPsetNumber, nrPsets;
 static boost::multi_array<char, 2> ipAddresses;
 std::vector<Stream *>		   allCNstreams, allIONstreams;
 std::vector<StreamMultiplexer *>   allIONstreamMultiplexers;
 
+#if defined HAVE_BGP
 unsigned			   nrCNcoresInPset = 64; // TODO: how to figure out the number of CN cores?
+#else
+unsigned			   nrCNcoresInPset = 1;
+#endif
 
 static const char		   *cnStreamType;
 
@@ -138,10 +141,15 @@ Stream *createCNstream(unsigned core, unsigned channel)
   if (strcmp(cnStreamType, "NULL") == 0) {
     return new NullStream;
   } else if (strcmp(cnStreamType, "TCP") == 0) {
-    LOG_DEBUG_STR("new SocketStream(\"127.0.0.1\", 5000 + " << core << " + 1000 * " << channel << ", ::TCP, ::Server");
-    Stream *str = new SocketStream("127.0.0.1", 5000 + core + 1000 * channel, SocketStream::TCP, SocketStream::Server);
+    LOG_DEBUG_STR("new SocketStream(\"127.0.0.1\", 5000 + " << core << " + " << nrCNcoresInPset << " * " << channel << ", ::TCP, ::Server");
+    Stream *str = new SocketStream("127.0.0.1", 5000 + core + nrCNcoresInPset * channel, SocketStream::TCP, SocketStream::Server);
     LOG_DEBUG_STR("new SocketStream() done");
     return str;
+  } else if (strcmp(cnStreamType, "PIPE") == 0) {
+    char pipe[128];
+    sprintf(pipe, "/tmp/ion-cn-%u-%u-%u", myPsetNumber, core, channel);
+    LOG_DEBUG_STR("new NamedPipeStream(\"" << pipe << "\")");
+    return new NamedPipeStream(pipe);
 #if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
   } else if (strcmp(cnStreamType, "FCNP") == 0) {
     return new FCNP_ServerStream(core, channel);
@@ -217,11 +225,11 @@ static void createAllIONstreams()
     allIONstreamMultiplexers.resize(nrPsets);
 
     for (unsigned ion = 1; ion < nrPsets; ion ++) {
-      allIONstreams[ion] = new SocketStream(ipAddresses[ion].origin(), 4001, SocketStream::TCP, SocketStream::Client);
+      allIONstreams[ion] = new SocketStream(ipAddresses[ion].origin(), 4000 + ion, SocketStream::TCP, SocketStream::Client);
       allIONstreamMultiplexers[ion] = new StreamMultiplexer(*allIONstreams[ion]);
     }
   } else {
-    allIONstreams.push_back(new SocketStream(ipAddresses[myPsetNumber].origin(), 4001, SocketStream::TCP, SocketStream::Server));
+    allIONstreams.push_back(new SocketStream(ipAddresses[myPsetNumber].origin(), 4000 + myPsetNumber, SocketStream::TCP, SocketStream::Server));
     allIONstreamMultiplexers.push_back(new StreamMultiplexer(*allIONstreams[0]));
   }
 
@@ -311,11 +319,8 @@ static void unmapFlatMemory()
 #endif
 
 
-static void master_thread(int argc, char **argv)
+static void master_thread()
 {
-  (void)argc;
-  (void)argv;
-
 #if !defined HAVE_PKVERSION
   std::string type = "brief";
   Version::show<IONProcVersion> (std::clog, "IONProc", type);
@@ -399,7 +404,10 @@ int main(int argc, char **argv)
   MPI_Comm_size(MPI_COMM_WORLD, reinterpret_cast<int *>(&nrPsets));
 #endif
 
-#if defined HAVE_MPI && defined HAVE_BGP_ION
+#if defined HAVE_MPI
+  ipAddresses.resize(boost::extents[nrPsets][16]);
+
+#if defined HAVE_BGP_ION
   ParameterSet personality("/proc/personality.sh");
   unsigned realPsetNumber = personality.getUint32("BG_PSETNUM");
 
@@ -408,9 +416,21 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  ipAddresses.resize(boost::extents[nrPsets][16]);
-  myIPaddress = personality.getString("BG_IP");
+  std::string myIPaddress = personality.getString("BG_IP");
   strcpy(ipAddresses[myPsetNumber].origin(), myIPaddress.c_str());
+#else
+  const char *uri = getenv("OMPI_MCA_orte_local_daemon_uri");
+
+  if (uri == 0) {
+    std::cerr << "\"OMPI_MCA_orte_local_daemon_uri\" not in environment" << std::endl;
+    exit(1);
+  }
+
+  if (sscanf(uri, "%*u.%*u;tcp://%[0-9.]:%*u", ipAddresses[myPsetNumber].origin()) != 1) {
+    std::cerr << "could not parse environment variable \"OMPI_MCA_orte_local_daemon_uri\"" << std::endl;
+    exit(1);
+  }
+#endif
 
   for (unsigned root = 0; root < nrPsets; root ++)
     if (MPI_Bcast(ipAddresses[root].origin(), sizeof(char [16]), MPI_CHAR, root, MPI_COMM_WORLD) != MPI_SUCCESS) {
@@ -423,18 +443,17 @@ int main(int argc, char **argv)
   sysInfo << basename(argv[0]) << "@" << myPsetNumber;
  
 #if defined HAVE_BGP
-  INIT_BGP_LOGGER(sysInfo.str());
+  INIT_LOGGER_WITH_SYSINFO(sysInfo.str());
 #elif defined HAVE_LOG4CPLUS
   lofarLoggerInitNode();
 #elif defined HAVE_LOG4CXX
   Context::initialize();
-  setLevel("Global",8);
+  setLevel("Global", 8);
 #else
-  getLFDebugContext().initialize();
-  ::LOFAR::LFDebug::setLevel("Global",8);
+  INIT_LOGGER_WITH_SYSINFO(sysInfo.str());
 #endif
 
-  master_thread(argc, argv);
+  master_thread();
 
 #if defined HAVE_MPI
   MPI_Finalize();

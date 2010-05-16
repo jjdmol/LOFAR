@@ -10,6 +10,7 @@ lofar_add_library(storage
   MSWriter.cc
   MSWriterNull.cc
   MSWriterFile.cc
+  Format.cc
   MeasurementSetFormat.cc)
 
 lofar_add_bin_program(Storage_main Storage_main.cc)

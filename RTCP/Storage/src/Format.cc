@@ -8,14 +8,12 @@
 
 #include <Storage/Format.h>
 
-namespace LOFAR
+namespace LOFAR {
+namespace RTCP {
+
+Format::~Format()
 {
-  namespace RTCP 
-  {
-    Format::Format() {}
-    Format::~Format() {}
-
-    void Format::addSubband(unsigned) {}
-
-  }
 }
+
+} // namespace RTCP
+} // namespace LOFAR
