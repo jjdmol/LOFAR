@@ -28,6 +28,7 @@
 
 #include <Interface/InputData.h>
 #include <Interface/TransposedData.h>
+#include <Interface/TransposedBeamFormedData.h>
 #include <Interface/FilteredData.h>
 #include <Interface/PencilBeamData.h>
 #include <Interface/CorrelatedData.h>
@@ -60,8 +61,9 @@ template <typename SAMPLE_TYPE = i8complex> class CN_ProcessingPlan: public Proc
     BeamFormedData               *itsBeamFormedData;
     StokesData                   *itsCoherentStokesData;
     StokesData                   *itsIncoherentStokesData;
-    StokesDataIntegratedChannels *itsCoherentStokesDataIntegratedChannels;
-    StokesDataIntegratedChannels *itsIncoherentStokesDataIntegratedChannels;
+
+    TransposedBeamFormedData<fcomplex> *itsTransposedBeamFormedData;
+    TransposedBeamFormedData<float>    *itsTransposedCoherentStokesData;
 };
 
 }

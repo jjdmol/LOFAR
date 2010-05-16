@@ -10,20 +10,20 @@
 namespace LOFAR {
 namespace RTCP {
 
-class TransposedBeamFormedData: public SampleData<fcomplex,5>
+template<typename T = fcomplex> class TransposedBeamFormedData: public SampleData<T,3>
 {
   public:
-    typedef SampleData<fcomplex,5> SuperType;
+    typedef SampleData<T,3> SuperType;
 
-    TransposedBeamFormedData(unsigned nrBeams, unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration);
+    TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration);
 
-    virtual TransposedBeamFormedData *clone() const { return new TransposedBeamFormedData(*this); }
+    virtual TransposedBeamFormedData *clone() const { return new TransposedBeamFormedData<T>(*this); }
 };
 
 
-inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrBeams, unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration)
+template<typename T> inline TransposedBeamFormedData<T>::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration)
 :
-  SuperType(false,boost::extents[nrBeams][nrSubbands][nrChannels][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrBeams)
+  SuperType(false,boost::extents[nrSubbands][nrChannels][nrSamplesPerIntegration | 2], 1)
 {
 }
 

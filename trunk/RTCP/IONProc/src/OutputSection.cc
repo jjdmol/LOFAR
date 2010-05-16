@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 
 #include <Interface/CN_Mapping.h>
+#include <Interface/ProcessingPlan.h>
 #include <Interface/Allocator.h>
 #include <Interface/Exceptions.h>
 #include <Interface/StreamableData.h>
@@ -49,13 +50,12 @@
 namespace LOFAR {
 namespace RTCP {
 
-OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream *(*createStream)(unsigned,unsigned))
+OutputSection::OutputSection(const Parset &parset, std::vector<signed> &itemList, unsigned outputType, Stream *(*createStream)(unsigned,unsigned))
 :
   itsItemList(itemList),
   itsOutputType(outputType),
   itsNrComputeCores(parset.nrCoresPerPset()),
   itsCurrentComputeCore(0),
-  itsNrUsedCores(nrUsedCores),
   itsRealTime(parset.realTime()),
   itsPlan(0),
   itsStreamsFromCNs(itsNrComputeCores,0),
@@ -78,7 +78,12 @@ OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemLi
     for (unsigned i = 0; i < itsItemList.size(); i++ ) {
       StreamableData *clone = dataTemplate->clone();
 
-      clone->allocate();
+      try {
+        clone->allocate();
+      } catch (std::bad_alloc) {
+        LOG_FATAL_STR("OutputSection: Cannot allocate " << (clone->requiredSize()/1024.0) << " Kbytes for " << p.name );
+        throw;
+      }
 
       itsSums.push_back( clone );
     }
@@ -89,7 +94,9 @@ OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemLi
 
   // create an output thread for this subband
   for (unsigned i = 0; i < itsItemList.size(); i++ ) {
-    itsOutputThreads.push_back(new OutputThread(parset, itsItemList[i], itsOutputType, dataTemplate));
+    if (itsItemList[i] >= 0) {
+      itsOutputThreads.push_back(new OutputThread(parset, itsItemList[i], itsOutputType, dataTemplate));
+    }
   }
 
   LOG_DEBUG_STR("creating streams between compute nodes and OutputSection");
@@ -124,13 +131,16 @@ OutputSection::~OutputSection()
 
   for (unsigned i = 0; i < itsItemList.size(); i++ ) {
     notDroppingData(i); // for final warning message
+  }  
       
 
+  for (unsigned i = 0; i < itsOutputThreads.size(); i++ ) {
     // WAIT for our output threads using a timeout
     if( !itsOutputThreads[i]->waitForDone( timeout ) ) {
       // STOP our output threads
       itsOutputThreads[i]->abort();
     }
+
     delete itsOutputThreads[i];
   }
 
@@ -190,10 +200,12 @@ void OutputSection::mainLoop()
   while (itsNrIterationsToDo.down()) {
     // process data from current core, even if we don't have a subband for this
     // core (to stay in sync with other psets).
-    for (unsigned i = 0; i < itsNrUsedCores; i ++) {
+    for (unsigned i = 0; i < itsItemList.size(); i ++) {
       // TODO: make sure that there are more free buffers than subbandsPerPset
 
-      if (i < itsItemList.size()) {
+      if (itsItemList[i] >= 0) {
+        LOG_DEBUG_STR( "OutputSection: reading output " << itsOutputType << " from core " << itsCurrentComputeCore );
+
         OutputThread *outputThread = itsOutputThreads[i];
         
         bool firstTime = itsCurrentIntegrationStep == 0;
@@ -231,6 +243,7 @@ void OutputSection::mainLoop()
       itsCurrentIntegrationStep = 0;
       itsSequenceNumber++;
     }
+    LOG_DEBUG_STR( "OutputSection: waiting for next iteration for output " << itsOutputType );
   }  
 
   for (unsigned i = 0; i < itsOutputThreads.size(); i ++)

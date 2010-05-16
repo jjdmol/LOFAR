@@ -59,7 +59,7 @@ Job::Job(const char *parsetName)
 
 
   LOG_DEBUG_STR("Creating new observation, ObsID = " << itsParset.observationID());
-  LOG_DEBUG_STR("ObsID = " << itsParset.observationID() << ", usedCoresInPset = " << itsParset.usedCoresInPset());
+  LOG_DEBUG_STR("ObsID = " << itsParset.observationID() << ", usedCoresInPset = " << itsParset.usedCoresInPset() << ", myPsetNumber = " << myPsetNumber );
 
   itsNrRuns = static_cast<unsigned>(ceil((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime()));
   LOG_DEBUG_STR("itsNrRuns = " << itsNrRuns);
@@ -318,6 +318,8 @@ void Job::cancel()
 
 void Job::claimResources()
 {
+  LOG_INFO_STR("ObsID = " << itsObservationID << ": claiming resources ...");
+
   ScopedLock scopedLock(jobQueue.itsMutex);
 
 retry:
@@ -332,18 +334,25 @@ retry:
     }
 
   itsIsRunning = true;
+
+  LOG_INFO_STR("ObsID = " << itsObservationID << ": claiming resources done");
 }
 
 
 void Job::jobThread()
 {
+  LOG_INFO_STR("ObsID = " << itsObservationID << ": initialising");
+
   if (myPsetNumber == 0 || itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
+    LOG_INFO_STR("ObsID = " << itsObservationID << ": copying CN streams");
     createCNstreams();
+    LOG_INFO_STR("ObsID = " << itsObservationID << ": copying ION streams");
     createIONstreams();
 
     bool storageStarted = false;
 
     if (myPsetNumber == 0) {
+      LOG_INFO_STR("ObsID = " << itsObservationID << ": wait for start and start storage processes");
       if (itsParset.realTime())
 	waitUntilCloseToStartOfObservation(10);
 
@@ -354,6 +363,8 @@ void Job::jobThread()
 	storageStarted = true;
       }
     }
+
+    LOG_INFO_STR("ObsID = " << itsObservationID << ": broadcast that we're running");
 
     broadcast(itsIsRunning);
 
@@ -477,40 +488,50 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   // first: send configuration to compute nodes so they know what to expect
   configureCNs();
 
-  Semaphore outputSectionRunToken;
+  LOG_DEBUG_STR("nrOutputs = " << nrOutputTypes );
 
   // start output process threads
   for (unsigned output = 0; output < nrOutputTypes; output ++) {
-    unsigned phase, psetIndex, maxlistsize;
-    std::vector<unsigned> list; // list of subbands or beams
+    unsigned phase, psetIndex;
+    std::vector<signed> list; // list of subbands or beams
+
+    const unsigned nrPsets = itsParset.phaseThreePsets().size();
+
+    LOG_DEBUG_STR("setting up output " << output );
 
     switch (plan.plan[output].distribution) {
       case ProcessingPlan::DIST_SUBBAND:
       case ProcessingPlan::DIST_BEAM:
         phase = 2;
         psetIndex = itsParset.phaseTwoPsetIndex(myPsetNumber);
-        maxlistsize = itsParset.nrSubbandsPerPset();
 
         for (unsigned sb = 0; sb < itsParset.nrSubbandsPerPset(); sb ++) {
           unsigned subbandNumber = psetIndex * itsParset.nrSubbandsPerPset() + sb;
 
-          if (subbandNumber < itsParset.nrSubbands())
+          if (subbandNumber < itsParset.nrSubbands()) {
             list.push_back(subbandNumber);
+          } else {
+            list.push_back(-1);
+          }
         }
+        LOG_DEBUG_STR("output " << output << " will generate subbands " << list );
 
         break;
 #if 0
       case ProcessingPlan::DIST_BEAM:
         phase = 3;
         psetIndex = itsParset.phaseThreePsetIndex(myPsetNumber);
-        maxlistsize = itsParset.nrBeamsPerPset();
 
-        for (unsigned beam = 0;  beam < itsParset.nrBeamsPerPset(); beam ++) {
-          unsigned beamNumber = psetIndex * itsParset.nrBeamsPerPset() + beam;
+        for (unsigned beam = 0;  beam < itsParset.nrSubbandsPerPset(); beam ++) {
+          unsigned beamNumber = psetIndex + nrPsets * beam;
 
-          if (beamNumber < itsParset.nrBeams())
+          if (beamNumber < itsParset.nrPencilBeams()) {
             list.push_back(beamNumber);
+          } else {
+            list.push_back(-1);
+          }
         }
+        LOG_DEBUG_STR("output " << output << " will generate beams " << list );
 
         break;
 #endif
@@ -518,7 +539,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
         continue;
     }
 
-    outputSections[output] = new OutputSection(itsParset, list, maxlistsize, output, &createCNstream);
+    outputSections[output] = new OutputSection(itsParset, list, output, &createCNstream);
   }
 
   LOG_DEBUG("doObservation processing input");

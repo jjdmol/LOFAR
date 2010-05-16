@@ -96,8 +96,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned            itsNrBeamFormedStations;
     bool                itsFlysEye;
     unsigned            itsNrPencilBeams;
-    unsigned            itsNrSubbands;
-    unsigned            itsNrSubbandsPerPset;
+    unsigned            itsNrSubbands, itsNrBeams;
+    unsigned            itsNrSubbandsPerPset, itsNrBeamsPerPset;
     unsigned            itsComputeGroupRank;
     unsigned            itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
     Stream	        *itsStream;
@@ -105,9 +105,9 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     std::vector<Stream*> itsOutputStreams;
     const LocationInfo	&itsLocationInfo;
     std::vector<double> itsCenterFrequencies;
-    unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
+    unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement, itsUsedCoresPerPset, itsMyCoreIndex, itsMyPset, itsBeamMultiplier;
     bool		itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
-    bool		itsStokesIntegrateChannels;
+    bool                itsPhaseThreeExists, itsTransposeBeamFormedData, itsTransposeCoherentStokesData;
     bool                itsNrStokes;
     
     CN_ProcessingPlan<SAMPLE_TYPE> *itsPlan;
