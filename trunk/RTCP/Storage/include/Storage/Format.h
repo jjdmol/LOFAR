@@ -9,25 +9,19 @@
 #ifndef LOFAR_STORAGE_FORMAT_H
 #define LOFAR_STORAGE_FORMAT_H
 
-namespace LOFAR
+namespace LOFAR {
+namespace RTCP {
+
+class Format
 {
-  namespace RTCP
-  {
-    class Format
-    {
-    public:
-      Format();
-      virtual ~Format();
-      
-      virtual void addSubband(unsigned subband);
+  public:
+    virtual ~Format();
+    
+    virtual void addSubband(unsigned subband, bool isBigEndian) = 0;
 
-    };
+};
 
-    inline Format::Format() {}
-    inline Format::~Format() {}
-    inline void Format::addSubband(unsigned) {}
-
-  }
-}
+} // namespace RTCP
+} // namespace LOFAR
 
 #endif

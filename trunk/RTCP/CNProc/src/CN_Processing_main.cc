@@ -25,8 +25,9 @@
 #include <Interface/CN_Configuration.h>
 #include <Interface/Exceptions.h>
 #include <Stream/FileStream.h>
+#include <Stream/NamedPipeStream.h>
 #include <Stream/NullStream.h>
-#include <Stream/SocketStream.h>
+//#include <Stream/SocketStream.h>
 #include <CNProc/LocationInfo.h>
 #include <CNProc/CN_Processing.h>
 #include <Common/LofarLogger.h>
@@ -43,6 +44,8 @@
 #include <FCNP_ClientStream.h>
 #include <FCNP/fcnp_cn.h>
 #endif
+
+#include <cstdio>
 
 // if exceptions are not caught, an attempt is made to create a backtrace
 // from the place where the exception is thrown.
@@ -78,18 +81,23 @@ static Stream *createIONstream( unsigned channel, const LocationInfo &locationIn
     /* preferred */
     static bool initialized = false;
 
-    LOG_DEBUG( "Initializing FCNP" );
+    LOG_DEBUG("Initializing FCNP");
+
     if (!initialized) {
       initialized = true;
       FCNP_CN::init();
     }
 
     return new FCNP_ClientStream(channel);
-#elif 1
-    /* used by default for !HAVE_FCNP && !HAVE_BGP */ 
+#elif 0
     usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
 
     return new SocketStream("127.0.0.1", 5000 + locationInfo.rankInPset() + 1000 * channel, SocketStream::TCP, SocketStream::Client);
+#elif 1
+    char pipe[128];
+    sprintf(pipe, "/tmp/ion-cn-%u-%u-%u", locationInfo.psetNumber(), locationInfo.rankInPset(), channel);
+    LOG_DEBUG_STR("new NamedPipeStream(\"" << pipe << "\")");
+    return new NamedPipeStream(pipe);
 #elif 0
     /* used for testing */
     return new NullStream;
@@ -122,9 +130,7 @@ int main(int argc, char **argv)
     std::stringstream sysInfo;
     sysInfo << basename(argv[0]) << "@" << locationInfo.rank();
 
-#if defined HAVE_BGP
-    INIT_BGP_LOGGER(sysInfo.str());
-#endif
+    INIT_LOGGER_WITH_SYSINFO(sysInfo.str());
   
     if (locationInfo.rank() == 0) {
       locationInfo.print();
@@ -146,7 +152,9 @@ int main(int argc, char **argv)
     CN_Command		command;
 
     do {
+      LOG_DEBUG("wait for command");
       command.read(ionStream);
+      LOG_DEBUG("received command");
 
       switch (command.value()) {
 	case CN_Command::PREPROCESS :	configuration.read(ionStream);

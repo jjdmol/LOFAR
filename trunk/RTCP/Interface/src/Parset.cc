@@ -152,13 +152,13 @@ Stream *Parset::createStream(const string &description, bool asServer)
   if (description == "null:")
     return new NullStream;
   else if (split.size() == 3 && split[0] == "udp")
-    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 10);
+    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 30);
   else if (split.size() == 3 && split[0] == "tcp")
-    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 10);
+    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 30);
   else if (split.size() == 2 && split[0] == "file")
     return asServer ? new FileStream(split[1].c_str()) : new FileStream(split[1].c_str(), 0666);
   else if (split.size() == 2)
-    return new SocketStream(split[0].c_str(), boost::lexical_cast<short>(split[1]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 10);
+    return new SocketStream(split[0].c_str(), boost::lexical_cast<short>(split[1]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 30);
   else if (split.size() == 1)
     return asServer ? new FileStream(split[0].c_str()) : new FileStream(split[0].c_str(), 0666);
   else

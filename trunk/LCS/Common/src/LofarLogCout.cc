@@ -34,8 +34,8 @@ namespace LOFAR {
 
 namespace LFDebug 
 {
-#if defined HAVE_BGP
-  string gBGPSysinfo;
+#if !defined LOFAR_LOG_COUT_OLD_INTERFACE
+  string sysInfo;
 #endif
 
 #if defined USE_THREADS

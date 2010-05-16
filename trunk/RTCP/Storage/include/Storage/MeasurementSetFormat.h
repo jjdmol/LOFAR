@@ -33,15 +33,10 @@ namespace RTCP {
 class MeasurementSetFormat : public Format
 {
  public:
-  enum Endianness {
-    BigEndian = 0,
-    LittleEndian
-  };
+	  MeasurementSetFormat(const Parset *, uint32 alignment = 1);
+  virtual ~MeasurementSetFormat();
 
-  MeasurementSetFormat(const Parset *, const uint32 alignment = 1);
-  ~MeasurementSetFormat();
-
-  void addSubband(unsigned subband);
+  virtual void addSubband(unsigned subband, bool isBigEndian);
 
  private:
   const Parset *itsPS;
@@ -62,7 +57,7 @@ class MeasurementSetFormat : public Format
   static Mutex sharedMutex;
 
   void createMSTables(unsigned subband);
-  void createMSMetaFile(unsigned subband);
+  void createMSMetaFile(unsigned subband, bool isBigEndian);
 
   void fillFeed();
   void fillAntenna(const casa::Block<casa::MPosition>& antMPos);

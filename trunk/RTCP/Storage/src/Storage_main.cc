@@ -156,6 +156,10 @@ int main(int argc, char *argv[])
 #elif defined HAVE_LOG4CXX
   Context::initialize();
   setLevel("Global",8);
+#else
+  std::stringstream sysInfo;
+  sysInfo << basename(argv[0]) << "@" << (argc > 1 ? argv[1] : "?");
+  INIT_LOGGER_WITH_SYSINFO(sysInfo.str());
 #endif
 
 #if 0
@@ -213,17 +217,18 @@ int main(int argc, char *argv[])
 
 #else
   try {
-    if (argc != 3)
-      throw StorageException(std::string("usage: ") + argv[0] + " rank parset", THROW_ARGS);
+    if (argc != 4)
+      throw StorageException(std::string("usage: ") + argv[0] + " rank parset is_bigendian", THROW_ARGS);
 
     char stdoutbuf[1024], stderrbuf[1024];
     setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
     setvbuf(stderr, stdoutbuf, _IOLBF, sizeof stderrbuf);
 
-    LOG_INFO_STR("started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2]);
+    LOG_INFO_STR("started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3]);
 
     unsigned			 myRank = boost::lexical_cast<unsigned>(argv[1]);
     Parset			 parset(argv[2]);
+    bool			 isBigEndian = boost::lexical_cast<bool>(argv[3]);
     std::vector<unsigned>	 storageNodeListSubbands = parset.subbandStorageList();
     std::vector<unsigned>	 storageNodeListBeams    = parset.beamStorageList();
     std::vector<SubbandWriter *> subbandWriters;
@@ -238,13 +243,13 @@ int main(int argc, char *argv[])
         case ProcessingPlan::DIST_SUBBAND:
           for (unsigned subband = 0; subband < storageNodeListSubbands.size(); subband ++)
             if (storageNodeListSubbands[subband] == myRank)
-	      subbandWriters.push_back(new SubbandWriter(parset, subband, output));
+	      subbandWriters.push_back(new SubbandWriter(parset, subband, output, isBigEndian));
           break;
 
         case ProcessingPlan::DIST_BEAM:  
           for (unsigned beam = 0; beam < storageNodeListBeams.size(); beam ++)
             if (storageNodeListBeams[beam] == myRank)
-	      subbandWriters.push_back(new SubbandWriter(parset, beam, output));
+	      subbandWriters.push_back(new SubbandWriter(parset, beam, output, isBigEndian));
           break;
 
         default:

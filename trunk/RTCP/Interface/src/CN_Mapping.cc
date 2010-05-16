@@ -27,12 +27,16 @@ namespace RTCP {
 
 unsigned CN_Mapping::mapCoreOnPset(unsigned core, unsigned pset)
 {
+#if defined HAVE_BGP
   // TODO: there may be better mappings for partitions larger than one midplane
   static unsigned char mapX[] = { 0, 2, 6, 4 };
   static unsigned char mapY[] = { 0, 1, 5, 4 };
   static unsigned char mapZ[] = { 0, 1, 3, 2 };
 
   return core ^ mapX[(pset >> 0) & 3] ^ mapY[(pset >> 2) & 3] ^ mapZ[(pset >> 4) & 3];
+#else
+  return core;
+#endif
 }
 
 unsigned CN_Mapping::reverseMapCoreOnPset(unsigned core, unsigned pset)

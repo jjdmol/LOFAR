@@ -114,7 +114,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 {
   //checkConsistency(parset);	TODO
 
-#if defined HAVE_BGP
+#if defined HAVE_MPI
   unsigned myPset	    = itsLocationInfo.psetNumber();
   unsigned myCoreInPset	    = CN_Mapping::reverseMapCoreOnPset(itsLocationInfo.rankInPset(), myPset);
 #else

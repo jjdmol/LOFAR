@@ -42,7 +42,7 @@ namespace LOFAR {
 namespace RTCP {
 
 
-SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, unsigned outputType)
+SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, unsigned outputType, bool isBigEndian)
 {
   CN_Configuration configuration(parset);
   CN_ProcessingPlan<> plan(configuration);
@@ -61,7 +61,7 @@ SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, unsigned ou
     MeasurementSetFormat myFormat(&parset, 512);
           
     /// Make MeasurementSet filestructures and required tables
-    myFormat.addSubband(subband);
+    myFormat.addSubband(subband, isBigEndian);
 
     LOG_INFO_STR("MeasurementSet created");
   }

@@ -32,6 +32,9 @@ LocationInfo::LocationInfo()
 
 #if defined HAVE_BGP
   getPersonality();
+#else
+  itsPsetNumber = itsRank;
+  itsRankInPset = 0;
 #endif
 }
 
@@ -83,14 +86,13 @@ unsigned LocationInfo::remapOnTree(unsigned pset, unsigned core) const
 
 void LocationInfo::print() const
 {
-
-  LOG_DEBUG_STR(   "topology = ("
-		<< BGP_Personality_xSize(&itsPersonality) << ','
-		<< BGP_Personality_ySize(&itsPersonality) << ','
-		<< BGP_Personality_zSize(&itsPersonality) << "), torus wraparound = ("
-		<< (BGP_Personality_isTorusX(&itsPersonality) ? 'T' : 'F') << ','
-		<< (BGP_Personality_isTorusY(&itsPersonality) ? 'T' : 'F') << ','
-		<< (BGP_Personality_isTorusZ(&itsPersonality) ? 'T' : 'F') << ')');
+  LOG_DEBUG_STR("topology = ("
+	<< BGP_Personality_xSize(&itsPersonality) << ','
+	<< BGP_Personality_ySize(&itsPersonality) << ','
+	<< BGP_Personality_zSize(&itsPersonality) << "), torus wraparound = ("
+	<< (BGP_Personality_isTorusX(&itsPersonality) ? 'T' : 'F') << ','
+	<< (BGP_Personality_isTorusY(&itsPersonality) ? 'T' : 'F') << ','
+	<< (BGP_Personality_isTorusZ(&itsPersonality) ? 'T' : 'F') << ')');
 
   std::vector<std::vector<unsigned> > cores(BGP_Personality_numIONodes(&itsPersonality));
 
@@ -105,7 +107,8 @@ void LocationInfo::print() const
 
 unsigned LocationInfo::remapOnTree(unsigned pset, unsigned core) const
 {
-  return core; // or pset?
+  assert(core == 0); // TODO: support more than 1 core per pset
+  return pset;
 }
 
 void LocationInfo::print() const

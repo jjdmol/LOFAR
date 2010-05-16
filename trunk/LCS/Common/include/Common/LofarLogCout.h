@@ -26,6 +26,7 @@
 // \file
 // Macro interface to the cout/cerr logging implementation.
 
+
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_iomanip.h>
@@ -67,11 +68,11 @@
 #define INIT_LOGGER_AND_WATCH(filename,interval) \
 	INIT_LOGGER(filename)
 
-#ifdef HAVE_BGP
-#define INIT_BGP_LOGGER(systeemInfo) \
-	INIT_BGP (::LOFAR::string(systeemInfo))
+#define INIT_LOGGER_WITH_SYSINFO(sinfo) \
+        getLFDebugContext().initialize(); \
+	::LOFAR::LFDebug::setLevel("Global",8); \
+	::LOFAR::LFDebug::sysInfo = sinfo;
 
-#endif
 
 //# -------------------- Log Levels for the Operator messages -----------------
 //#
@@ -225,18 +226,7 @@ public: \
 
 //# ---------- implementation details generic part ----------
 
-#if HAVE_BGP
-#define INIT_BGP(sinfo) \
-        getLFDebugContext().initialize(); \
-	::LOFAR::LFDebug::setLevel("Global",8); \
-	::LOFAR::LFDebug::gBGPSysinfo = sinfo;
-#endif
-
 #define LFDebugCheck(level)	getLFDebugContext().check(level)
-
-#define DebugTestAndLog(level) \
-	if (::LOFAR::LFDebug::LFDebugCheck(level) && ::LOFAR::LFDebug::stream_time()) \
-		::LOFAR::LFDebug::getDebugStream()
 
 #define TraceTestAndLog(level) \
 	if (LFDebugCheck(level) && ::LOFAR::LFDebug::stream_time()) \
@@ -246,17 +236,19 @@ public: \
 	std::ostringstream	lfr_log_oss; \
 	lfr_log_oss << stream
 
-#if defined HAVE_BGP
+#if !defined LOFAR_LOG_COUT_OLD_INTERFACE
 #define	thread_unsafe_cLog(level,levelname,message) \
 	do { \
-		DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
-			<< "|" << ::LOFAR::LFDebug::gBGPSysinfo << "|" << message \
+	  if (::LOFAR::LFDebug::LFDebugCheck(level) && ::LOFAR::LFDebug::stream_time()) \
+	      ::LOFAR::LFDebug::getDebugStream() << std::setw(5) << std::left << levelname \
+			<< "|" << ::LOFAR::LFDebug::sysInfo << "|" << message \
 			<< std::endl; \
 	} while (0)
 #else
 #define	thread_unsafe_cLog(level,levelname,message) \
 	do { \
-		DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
+	  if (::LOFAR::LFDebug::LFDebugCheck(level) && ::LOFAR::LFDebug::stream_time()) \
+	      ::LOFAR::LFDebug::getDebugStream() << std::setw(5) << std::left << levelname \
 			<< "|" << LOFARLOGGER_FULLPACKAGE << "|" << message \
 			<< "|" << __FILE__ << ":" << __LINE__ \
 			<< std::endl; \
@@ -294,12 +286,12 @@ public: \
 	} while(0)
 
 
-#if defined HAVE_BGP
+#if !defined LOFAR_LOG_COUT_OLD_INTERFACE
 #define thread_unsafe_cTrace(level,message) \
 	do { \
 		TraceTestAndLog(level) << "TRACE" << LOG4CPLUS_LEVEL(level) \
 			<< " TRC." << getLFDebugContext().name() \
-			<< "|" << ::LOFAR::LFDebug::gBGPSysinfo << "|" << message \
+			<< "|" << ::LOFAR::LFDebug::sysInfo << "|" << message \
 			<< std::endl; \
 	} while(0)
 #else
@@ -338,8 +330,8 @@ namespace LOFAR
 {
   namespace LFDebug
   {
-#if defined HAVE_BGP
-    extern string gBGPSysinfo;
+#if !defined LOFAR_LOG_COUT_OLD_INTERFACE
+    extern string sysInfo;
 #endif
 
 #if defined USE_THREADS

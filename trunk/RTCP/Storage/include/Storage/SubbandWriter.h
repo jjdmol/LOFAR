@@ -44,7 +44,7 @@ namespace RTCP {
 class SubbandWriter
 {
   public:
-    SubbandWriter(const Parset &parset, unsigned subband, unsigned outputType);
+    SubbandWriter(const Parset &parset, unsigned subband, unsigned outputType, bool isBigEndian);
     ~SubbandWriter();
 
   private:

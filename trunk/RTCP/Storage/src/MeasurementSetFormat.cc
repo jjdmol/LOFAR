@@ -62,7 +62,7 @@ namespace RTCP {
 Mutex MeasurementSetFormat::sharedMutex;
 
 
-MeasurementSetFormat::MeasurementSetFormat(const Parset *ps, const unsigned alignment)
+MeasurementSetFormat::MeasurementSetFormat(const Parset *ps, unsigned alignment)
   : itsPS(ps),
     itsMS(0), 
     itsAlignment(alignment)
@@ -101,7 +101,7 @@ MeasurementSetFormat::MeasurementSetFormat(const Parset *ps, const unsigned alig
 MeasurementSetFormat::~MeasurementSetFormat()  
 {}
 
-void MeasurementSetFormat::addSubband(unsigned subband)
+void MeasurementSetFormat::addSubband(unsigned subband, bool isBigEndian)
 {
   ScopedLock scopedLock(sharedMutex);
 
@@ -110,7 +110,7 @@ void MeasurementSetFormat::addSubband(unsigned subband)
   createMSTables(subband);
   /// Next make a metafile which describes the raw datafile we're
   /// going to write
-  createMSMetaFile(subband);
+  createMSMetaFile(subband, isBigEndian);
 }
 
 void MeasurementSetFormat::createMSTables(unsigned subband)
@@ -390,7 +390,7 @@ void MeasurementSetFormat::fillHistory() {
   cli.put         (rownr, clivec); 
 }
 
-void MeasurementSetFormat::createMSMetaFile(unsigned subband)
+void MeasurementSetFormat::createMSMetaFile(unsigned subband, bool isBigEndian)
 { 
   Block<Int> ant1(itsPS->nrBaselines());
   Block<Int> ant2(itsPS->nrBaselines());
@@ -408,10 +408,6 @@ void MeasurementSetFormat::createMSMetaFile(unsigned subband)
     }
   }
 
-  // data is generated on a BigEndian machine and written as is to
-  // disk, regardless of endianness of writing machine.
-  bool isBigEndian = true;
- 
   string filename = itsPS->getMSname(subband) + "/table.f0meta";
   
   AipsIO aio(filename, ByteIO::New);
