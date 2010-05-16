@@ -18,16 +18,6 @@ from Logger import error
 import math
 from sets import Set
 
-
-# all possible output types, in order! keep in sync with Interface/CN_ProcessingPlan
-outputTypes = [
-  { "key": "OLAP.outputFilteredData",    "distribution": "subband" },
-  { "key": "OLAP.outputCorrelatedData",  "distribution": "subband" },
-  { "key": "OLAP.outputIncoherentStokes","distribution": "beam" },
-  { "key": "OLAP.outputBeamFormedData",  "distributuon": "beam" },
-  { "key": "OLAP.outputCoherentStokes",  "distribution": "beam" },
-]
-
 class Parset(util.Parset.Parset):
     def __init__(self):
         util.Parset.Parset.__init__(self)
@@ -282,17 +272,6 @@ class Parset(util.Parset.Parset):
 	else:  
 	  self.setdefault('OLAP.PencilInfo.storageNodeList',[i//int(math.ceil(1.0 * nrBeams/nrStorageNodes)) for i in xrange(0,nrBeams)])
 
-        self.setdefault('OLAP.nrOutputTypes', self.getNrOutputs())
-
-        outputnr = 0
-
-        for o in outputTypes:
-          if o["key"] in self and self.getBool(o["key"]):
-            self.setdefault('OLAP.outputType[%d].key'          % (outputnr,), o["key"])
-            self.setdefault('OLAP.outputType[%d].distribution' % (outputnr,), o["distribution"])
-            self.setdefault('OLAP.outputType[%d].storageNodeList' % (outputnr,), o["distribution"])
-            outputnr += 1
-
 	#print 'nrSubbands = ' + str(nrSubbands) + ', nrStorageNodes = ' + str(nrStorageNodes) + ', subbandsPerPset = ' + str(self.getSubbandsPerPset())
 
 	#print 'storageNodes: ' + str(self['OLAP.storageNodeList'])
@@ -466,6 +445,7 @@ class Parset(util.Parset.Parset):
       return 3 * rings * (rings + 1) + 1 + manual
 
     def phaseThreeExists( self ):  
+      # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
       output_keys = [
         "OLAP.outputBeamFormedData",
         "OLAP.outputCoherentStokes",
@@ -478,10 +458,19 @@ class Parset(util.Parset.Parset):
       return False
 
     def getNrOutputs( self ):
+      # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
+      output_keys = [
+        "OLAP.outputFilteredData",
+        "OLAP.outputCorrelatedData",
+        "OLAP.outputBeamFormedData",
+        "OLAP.outputCoherentStokes",
+        "OLAP.outputIncoherentStokes",
+      ]
+
       outputs = 0
 
-      for k in outputTypes:
-        if k["key"] in self and self.getBool(k["key"]):
+      for k in output_keys:
+        if k in self and self.getBool(k):
           outputs += 1
 
       return outputs

@@ -370,6 +370,7 @@ static void master_thread()
   LOG_DEBUG("master thread finishes");
 }
 
+
 } // namespace RTCP
 } // namespace LOFAR
 
@@ -382,7 +383,7 @@ int main(int argc, char **argv)
 #if !defined CATCH_EXCEPTIONS
   std::set_terminate(terminate_with_backtrace);
 #endif
-
+  
 #if defined HAVE_MPI
 #if 1
   if (MPI_Init(&argc, &argv) != MPI_SUCCESS) {
