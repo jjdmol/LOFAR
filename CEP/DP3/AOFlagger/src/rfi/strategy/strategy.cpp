@@ -149,6 +149,10 @@ namespace rfiStrategy {
 			if(!pulsar)
 				block.Add(new TimeSelectionAction());
 		}
+
+		SetFlaggingAction *orWithOriginals = new SetFlaggingAction();
+		orWithOriginals->SetNewFlagging(SetFlaggingAction::OrOriginal);
+		block.Add(orWithOriginals);
 	}
 
 	void Strategy::LoadOldDefaultSingleStrategy()

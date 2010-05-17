@@ -42,6 +42,7 @@ class SetFlaggingFrame : public Gtk::Frame {
 		_setInvertButton("Invert"),
 		_setPolarisationsEqualButton("Equal polarisations"),
 		_flagZerosButton("Flag zeros"),
+		_orOriginalButton("Or with original"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
 			Gtk::RadioButton::Group group;
@@ -64,6 +65,9 @@ class SetFlaggingFrame : public Gtk::Frame {
 			_box.pack_start(_flagZerosButton);
 			_flagZerosButton.set_group(group);
 
+			_box.pack_start(_orOriginalButton);
+			_orOriginalButton.set_group(group);
+
 			switch(_action.NewFlagging())
 			{
 				case rfiStrategy::SetFlaggingAction::None:
@@ -84,6 +88,9 @@ class SetFlaggingFrame : public Gtk::Frame {
 				case rfiStrategy::SetFlaggingAction::FlagZeros:
 					_flagZerosButton.set_active(true);
 					break;
+				case rfiStrategy::SetFlaggingAction::OrOriginal:
+					_orOriginalButton.set_active(true);
+					break;
 			}
 
 			_setNoneButton.show();
@@ -92,6 +99,7 @@ class SetFlaggingFrame : public Gtk::Frame {
 			_setInvertButton.show();
 			_setPolarisationsEqualButton.show();
 			_flagZerosButton.show();
+			_orOriginalButton.show();
 
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &SetFlaggingFrame::onApplyClicked));
@@ -111,7 +119,7 @@ class SetFlaggingFrame : public Gtk::Frame {
 		Gtk::HButtonBox _buttonBox;
 		Gtk::Label _baselinesLabel;
 		Gtk::RadioButton
-			_setNoneButton, _setAllButton, _setOriginalButton, _setInvertButton, _setPolarisationsEqualButton, _flagZerosButton;
+			_setNoneButton, _setAllButton, _setOriginalButton, _setInvertButton, _setPolarisationsEqualButton, _flagZerosButton, _orOriginalButton;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
@@ -128,6 +136,8 @@ class SetFlaggingFrame : public Gtk::Frame {
 				_action.SetNewFlagging(rfiStrategy::SetFlaggingAction::PolarisationsEqual);
 			else if(_flagZerosButton.get_active())
 				_action.SetNewFlagging(rfiStrategy::SetFlaggingAction::FlagZeros);
+			else if(_orOriginalButton.get_active())
+				_action.SetNewFlagging(rfiStrategy::SetFlaggingAction::OrOriginal);
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };

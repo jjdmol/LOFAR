@@ -31,7 +31,7 @@ namespace rfiStrategy {
 	class SetFlaggingAction : public Action
 	{
 		public:
-			enum NewFlagging { None, Everything, FromOriginal, Invert, PolarisationsEqual, FlagZeros };
+			enum NewFlagging { None, Everything, FromOriginal, Invert, PolarisationsEqual, FlagZeros, OrOriginal };
 
 			SetFlaggingAction() : _newFlagging(None) { }
 
@@ -52,6 +52,8 @@ namespace rfiStrategy {
 						return "Apply flags to all polarisations";
 					case FlagZeros:
 						return "Flag zeros";
+					case OrOriginal:
+						return "Or flags with original";
 				}
 			}
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &)
@@ -88,6 +90,12 @@ namespace rfiStrategy {
 									mask->SetValue(x, y, true);
 							}
 						}
+						artifacts.ContaminatedData().SetGlobalMask(mask);
+						break;
+					}
+					case OrOriginal: {
+						Mask2DPtr mask = Mask2D::CreateCopy(artifacts.ContaminatedData().GetSingleMask());
+						mask->Join(artifacts.OriginalData().GetSingleMask());
 						artifacts.ContaminatedData().SetGlobalMask(mask);
 						break;
 					}
