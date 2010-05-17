@@ -43,7 +43,6 @@ namespace LOFAR
     using LOFAR::operator>>;
 
     // -------------------------------------------------------------------- //
-//    const string KernelIdMsg::theirClassType = "KernelIdMsg";
     const string ProcessIdMsg::theirClassType = "ProcessIdMsg";
     const string CoeffIndexMsg::theirClassType = "CoeffIndexMsg";
     const string MergedCoeffIndexMsg::theirClassType = "MergedCoeffIndexMsg";
@@ -57,8 +56,6 @@ namespace LOFAR
     // private storage area and are only visible inside this compilation unit.
     namespace
     {
-//      bool dummy1 = BlobStreamableFactory::instance().
-//        registerClass<KernelIdMsg>("KernelIdMsg");
       bool dummy1 = BlobStreamableFactory::instance().
         registerClass<ProcessIdMsg>("ProcessIdMsg");
       bool dummy2 = BlobStreamableFactory::instance().
@@ -87,29 +84,6 @@ namespace LOFAR
       bis >> index;
       itsKernelIndex = static_cast<KernelIndex>(index);
     }
-
-    // -------------------------------------------------------------------- //
-/*
-    void KernelIdMsg::passTo(KernelMessageHandler &handler) const
-    {
-      handler.handle(*this);
-    }
-
-    void KernelIdMsg::write(BlobOStream& bos) const
-    {
-      super::write(bos);
-    }
-
-    void KernelIdMsg::read(BlobIStream& bis)
-    {
-      super::read(bis);
-    }
-
-    const string& KernelIdMsg::classType() const
-    {
-      return KernelIdMsg::theirClassType;
-    }
-*/
 
     // -------------------------------------------------------------------- //
     void ProcessIdMsg::passTo(KernelMessageHandler &handler) const
@@ -183,7 +157,7 @@ namespace LOFAR
     {
       handler.handle(*this);
     }
-  
+
     void CoeffMsg::write(BlobOStream& bos) const
     {
       super::write(bos);
@@ -206,7 +180,7 @@ namespace LOFAR
     {
       handler.handle(*this);
     }
-  
+
     void EquationMsg::write(BlobOStream& bos) const
     {
       super::write(bos);
@@ -230,16 +204,14 @@ namespace LOFAR
     {
       handler.handle(*this);
     }
-  
+
     void SolutionMsg::write(BlobOStream& bos) const
     {
-      // super::write(bos);
       bos << itsContents;
     }
 
     void SolutionMsg::read(BlobIStream& bis)
     {
-      // super::read(bis);
       bis >> itsContents;
     }
 
@@ -269,7 +241,7 @@ namespace LOFAR
     {
       return ChunkDoneMsg::theirClassType;
     }
-    
+
   } // namespace BBS
 
 } // namespace LOFAR

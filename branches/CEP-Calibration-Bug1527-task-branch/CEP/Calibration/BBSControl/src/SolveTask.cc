@@ -42,20 +42,12 @@ namespace LOFAR
       itsKernels(kernels),
       itsState(IDLE)
     {
-//       itsKernels.reserve(kernels.size());
-//       for (unsigned int i = 0; i < kernels.size(); ++i) {
-//         itsKernels.push_back(make_pair(kernels[i], NOMESSAGE));
-//       }
-      itsSolver.reset(options.maxIter, options.epsValue, options.epsDerivative,
-        options.colFactor, options.lmFactor, options.balancedEqs,
-        options.useSVD);
+      itsSolver.reset(options);
     }
 
 
     bool SolveTask::run()
     {
-//      while (itsState != DONE) {
-
       if(itsState != DONE) {
         // Receive messages from our kernel(s); for the time being we'll use
         // a round-robin "polling". Every message is handed over to the
@@ -77,11 +69,11 @@ namespace LOFAR
     //##--------  P r i v a t e   m e t h o d s  --------##//
 
     void SolveTask::handle(const ProcessIdMsg &message)
-//    void SolveTask::handle(const KernelIdMsg &message)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       error("Illegal", message);
     }
+
 
     void SolveTask::handle(const CoeffIndexMsg &message)
     {
@@ -123,6 +115,7 @@ namespace LOFAR
       }
     }
 
+
     void SolveTask::handle(const CoeffMsg &message)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
@@ -140,7 +133,9 @@ namespace LOFAR
           error("Duplicate", message);
         }
         // Set initial coefficients in the solver.
-        itsSolver.setCoeff(message.getKernelIndex(), message.getContents());
+        const vector<CellCoeff> &coeff = message.getContents();
+        itsSolver.setCoeff(message.getKernelIndex(), coeff.begin(),
+            coeff.end());
 
         // If all kernels have sent a CoeffMsg, we can start iterating.
         if (itsKernelMessageReceived.size() == itsKernels.size()) {
@@ -150,6 +145,7 @@ namespace LOFAR
         break;
       }
     }
+
 
     void SolveTask::handle(const EquationMsg &message)
     {
@@ -167,7 +163,8 @@ namespace LOFAR
           error("Duplicate", message);
         }
         // Set equations in the solver.
-        itsSolver.setEquations(message.getKernelIndex(), message.getContents());
+        const vector<CellEquation> &eq = message.getContents();
+        itsSolver.setEquations(message.getKernelIndex(), eq.begin(), eq.end());
 
         // If all kernels have sent an EquationMsg, we can let the solver
         // perform one iteration.
@@ -175,7 +172,9 @@ namespace LOFAR
           SolutionMsg msg;
 
           // If stop criterion is reached, change to initializing state.
-          if (itsSolver.iterate(msg.getContents())) setState(INITIALIZING);
+          if (itsSolver.iterate(back_inserter(msg.getContents()))) {
+            setState(INITIALIZING);
+          }
           itsKernelMessageReceived.clear();
 
           // Send the results back to "our" kernels.

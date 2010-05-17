@@ -69,68 +69,17 @@ void LocalSolveController::setPropagateSolutions(bool propagate)
 
 void LocalSolveController::setCellChunkSize(size_t size)
 {
-    itsCellChunkSize = (size > 0 ? size : 1);
+    if(size > 0)
+    {
+        itsCellChunkSize = size;
+    }
 }
-
-//void LocalSolveController::init(const vector<string> &include,
-//    const vector<string> &exclude, const Grid &evalGrid, const Grid &solGrid,
-//    unsigned int cellChunkSize, bool propagate)
-//{
-//    ASSERTSTR(!itsInitFlag, "Controller already initialized");
-//    ASSERT(evalGrid.size() > 0);
-//    ASSERT(solGrid.size() > 0);
-//    ASSERT(cellChunkSize > 0);
-
-//    itsPropagateFlag = propagate;
-//    itsSolGrid = solGrid;
-//    itsCellChunkSize = cellChunkSize;
-
-////    // Find all parameters matching the specified inclusion and exclusion
-////    // criteria.
-////    ParmGroup solvablesLHS = ParmManager::instance().makeSubset(include,
-////        exclude, itsLHS->getParms());
-////    ParmGroup solvablesRHS = ParmManager::instance().makeSubset(include,
-////        exclude, itsRHS->getParms());
-////    // Merge the set of parameters found for the left and right hand side.
-////    std::set_union(solvablesLHS.begin(), solvablesLHS.end(),
-////        solvablesRHS.begin(), solvablesRHS.end(),
-////        std::inserter(itsSolvables, itsSolvables.begin()));
-
-//    itsSolvables = ParmManager::instance().makeSubset(include, exclude,
-//        itsRHS->getParms());
-
-//    if(itsSolvables.empty())
-//    {
-//        THROW(BBSControlException, "No parameters found matching the specified"
-//            " inclusion and exclusion criteria.");
-//    }
-
-//    // Assign solution grid to solvables.
-//    ParmManager::instance().setGrid(itsSolGrid, itsSolvables);
-
-//    // Instruct left and right hand side to generate partial derivatives for
-//    // the solvable parameters.
-////    itsLHS->setSolvableParms(itsSolvables);
-//    itsRHS->setSolvableParms(itsSolvables);
-
-//    // Create coefficient index.
-//    makeCoeffIndex(itsSolvables);
-
-//    // Initialize equator.
-////    itsEquator.reset(new Equator(itsLHS, itsRHS, evalGrid, itsSolGrid,
-////        itsCoeffIndex));
-////    itsEquator->setSelection(baselines, products);
-
-//    itsEquator.reset(new VisEquator(itsLHS, itsRHS, itsSolGrid, itsCoeffIndex));
-
-//    itsInitFlag = true;
-//}
 
 void LocalSolveController::run()
 {
-    if(itsCoeffIndex.getCoeffCount() == 0)
+    if(itsSolvables.empty())
     {
-        LOG_ERROR("No parameters selected for solving.");
+        LOG_WARN_STR("No parameters selected for solving; nothing to be done.");
         return;
     }
 
@@ -152,8 +101,12 @@ void LocalSolveController::run()
         static_cast<size_t>(ceil(static_cast<double>(itsSolGrid[TIME]->size())
             / itsCellChunkSize));
 
+    // Compute the nominal number of solution cells in a cell chunk.
+    const size_t nCellsPerChunk = std::min(itsCellChunkSize,
+        itsSolGrid[TIME]->size()) * itsSolGrid[FREQ]->size();
+
     vector<CellCoeff> coeff;
-    vector<CellEquation> equations;
+    vector<CellEquation> equations(nCellsPerChunk);
     vector<CellSolution> solutions;
 
     Location chunkStart(0, 0);
@@ -169,32 +122,28 @@ void LocalSolveController::run()
         getInitialCoeff(coeff, chunkStart, chunkEnd);
 
         // Set initial coefficients.
-        itsSolver->setCoeff(0, coeff);
+        itsSolver->setCoeff(0, coeff.begin(), coeff.end());
 
         // Set cell selection.
         itsEquator->setCellSelection(chunkStart, chunkEnd);
-
-        // Resize equation buffer.
-        equations.resize(itsEquator->nSelectedCells());
 
         // Iterate.
         bool done = false;
         while(!done)
         {
             // Construct equations and pass to solver.
-            vector<CellEquation>::iterator eq_it =
+            vector<CellEquation>::iterator it =
                 itsEquator->process(equations.begin(), equations.end());
-            equations.resize(distance(equations.begin(), eq_it));
-
-            itsSolver->setEquations(0, equations);
+            itsSolver->setEquations(0, equations.begin(), it);
 
             // Perform a non-linear LSQ iteration.
-            done = itsSolver->iterate(solutions);
+            solutions.clear();
+            done = itsSolver->iterate(back_inserter(solutions));
 
             // Update coefficients.
             setSolution(solutions, chunkStart, chunkEnd);
 
-            // Notify itsEquator of update.
+            // Notify itsEquator of coefficient update.
             itsEquator->solvablesChanged();
         }
 

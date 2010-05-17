@@ -34,45 +34,30 @@ namespace LOFAR
   {
     using LOFAR::operator<<;
 
-    //# -------  ostream operators  ------- #//
-
-//    ostream& operator<<(ostream& os, const CorrelationFilter& obj)
-//    {
-//      os << "Correlation:";
-//      Indent id;
-//      os << endl << indent << "Selection: " << obj.selection
-//         << endl << indent << "Type: "      << obj.type;
-//      return os;
-//    }
-
-
-//    ostream& operator<<(ostream& os, const Baselines& obj)
-//    {
-//      os << "Baselines:";
-//      Indent id;
-//      os << endl << indent << "Station1: " << obj.station1
-//         << endl << indent << "Station2: " << obj.station2;
-//      return os;
-//    }
-
     void fromParameterSet(const ParameterSet &ps, Selection &selection)
     {
+      // Read baseline type.
       selection.type = ps.getString("Selection.BaselineType", selection.type);
 
-      // Get the baseline selection for this step.
-      if(ps.isDefined("Selection.Baselines")) {
-        selection.baselines.clear();
-
-        const ParameterValue &value = ps.get("Selection.Baselines");
-        ASSERTSTR(value.isVector(), "Invalid baseline selection: " << value);
+      // Read baseline selection.
+      selection.baselines.clear();
+      if(ps.isDefined("Selection.Baselines"))
+      {
+        ParameterValue value(ps.get("Selection.Baselines"));
+        ASSERTSTR(value.isVector(), "Error parsing baseline selection: "
+            << value << "; expected a list enclosed in brackets, e.g."
+            " [5*,[CS0??LBA,6*]]");
 
         vector<ParameterValue> patterns(value.getVector());
         for(vector<ParameterValue>::const_iterator pattern = patterns.begin(),
-          pattern_end = patterns.end(); pattern != pattern_end; ++pattern) {
-
+          pattern_end = patterns.end(); pattern != pattern_end; ++pattern)
+        {
           vector<string> criterion(pattern->getStringVector());
-          ASSERTSTR(criterion.size() > 0 && criterion.size() < 3, "Invalid"
-            " baseline selection criterion: " << criterion);
+          ASSERTSTR(criterion.size() == 1 || criterion.size() == 2, "Error"
+            " parsing baseline selection criterion: " << criterion
+            << "; expected a single shell style pattern, or a list enclosed in"
+            " brackets that contains either one or two shell style patterns,"
+            " e.g. 5*, [5*], or [5*,6*]");
 
           selection.baselines.push_back(criterion);
         }
@@ -81,6 +66,8 @@ namespace LOFAR
       selection.correlations = ps.getStringVector("Selection.Correlations",
         selection.correlations);
     }
+
+    //# -------  ostream operators  ------- #//
 
     ostream& operator<<(ostream& os, const Selection &obj)
     {
@@ -98,23 +85,6 @@ namespace LOFAR
       Indent id;
       os << endl << indent << "Frequency (channels): " << obj.freq
          << endl << indent << "Time (timestamps): " << obj.time;
-      return os;
-    }
-
-
-    ostream& operator<<(ostream& os, const SolverOptions& obj)
-    {
-      os << "Solver options:";
-      Indent id;
-      os << endl << indent << "Max nr. of iterations: "  << obj.maxIter
-         << endl << indent << "Epsilon value: "          << obj.epsValue
-         << endl << indent << "Epsilon derivative: "     << obj.epsDerivative
-         << endl << indent << "Colinearity factor: "     << obj.colFactor
-         << endl << indent << "LM factor: "              << obj.lmFactor
-         << boolalpha
-         << endl << indent << "Balanced equations: "     << obj.balancedEqs
-         << endl << indent << "Use SVD: "                << obj.useSVD
-         << noboolalpha;
       return os;
     }
 

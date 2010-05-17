@@ -54,16 +54,8 @@ namespace LOFAR
       // Get the name of the input column
       itsInputColumn = ps.getString("InputColumn", "DATA");
 
+      // Read data selection (see Types.cc).
       fromParameterSet(ps, itsSelection);
-
-//      // Selected stations.
-//      itsStations = ps.getStringVector("Stations", vector<string>());
-
-//      // Get the correlation product selection (ALL, AUTO, or CROSS)
-//      itsCorrelationFilter.selection = ps.getString("Correlation.Selection",
-//        "CROSS");
-//      itsCorrelationFilter.type = ps.getStringVector("Correlation.Type",
-//        vector<string>());
 
       // Get the time window.
       itsTimeWindow = ps.getStringVector("TimeWindow", vector<string>());
@@ -99,8 +91,6 @@ namespace LOFAR
       Indent indent0;
       os << endl << indent << "Input column: " << itsInputColumn
         << endl << indent << itsSelection
-//        << endl << indent << "Stations: " << itsStations
-//        << endl << indent << itsCorrelationFilter
         << endl << indent << "TimeWindow: " << itsTimeWindow
         << endl << indent << "ChunkSize: " << itsChunkSize
         << boolalpha

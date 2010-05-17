@@ -35,7 +35,7 @@
 
 #include <BBSKernel/Measurement.h>
 #include <BBSKernel/VisSelection.h>
-#include <BBSKernel/VisData.h>
+#include <BBSKernel/VisBuffer.h>
 
 #include <PLC/ProcessControl.h>
 
@@ -144,7 +144,7 @@ private:
     // Chunk.
     Box                                     itsDomain;
     VisSelection                            itsChunkSelection;
-    VisData::Ptr                            itsChunk;
+    VisBuffer::Ptr                          itsChunk;
 
     // Source Database
     shared_ptr<SourceDB>                    itsSourceDb;

@@ -172,7 +172,7 @@ namespace LOFAR
       ps.replace(prefix + "Options.LMFactor",
         toString(itsSolverOptions.lmFactor));
       ps.replace(prefix + "Options.BalancedEqs",
-        toString(itsSolverOptions.balancedEqs));
+        toString(itsSolverOptions.balancedEq));
       ps.replace(prefix + "Options.UseSVD", toString(itsSolverOptions.useSVD));
 
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
@@ -212,7 +212,7 @@ namespace LOFAR
       itsSolverOptions.epsDerivative = pss.getDouble("Options.EpsDerivative");
       itsSolverOptions.colFactor = pss.getDouble("Options.ColFactor");
       itsSolverOptions.lmFactor = pss.getDouble("Options.LMFactor");
-      itsSolverOptions.balancedEqs = pss.getBool("Options.BalancedEqs");
+      itsSolverOptions.balancedEq = pss.getBool("Options.BalancedEqs");
       itsSolverOptions.useSVD = pss.getBool("Options.UseSVD");
     }
 

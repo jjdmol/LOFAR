@@ -128,20 +128,12 @@ namespace LOFAR
       LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << itsName);
       const string prefix = "Step." + itsName + ".";
 
+      // Write data selection.
       ps.replace(prefix + "Selection.BaselineType", itsSelection.type);
       ps.replace(prefix + "Selection.Baselines",
         toString(itsSelection.baselines));
       ps.replace(prefix + "Selection.Correlations",
         toString(itsSelection.correlations));
-
-//      ps.replace(prefix + "Baselines.Station1",
-//        toString(itsBaselines.station1));
-//      ps.replace(prefix + "Baselines.Station2",
-//        toString(itsBaselines.station2));
-//      ps.replace(prefix + "Correlation.Selection",
-//        itsCorrelationFilter.selection);
-//      ps.replace(prefix + "Correlation.Type",
-//        toString(itsCorrelationFilter.type));
 
       // Remove all Model keys from the parset. Effectively, key inheritance
       // is handled in read() and here we only output the keys that are relevant
@@ -201,50 +193,10 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
+      // Read data selection (see Types.cc).
       fromParameterSet(ps, itsSelection);
 
-//      itsSelection.type = ps.getString("Selection.BaselineType",
-//        itsSelection.type);
-
-//      // Get the baseline selection for this step.
-//      if(ps.isDefined("Selection.Baselines")) {
-//        const ParameterValue &value = ps.get("Selection.Baselines");
-//        ASSERTSTR(value.isArray(), "Invalid baseline selection: " << value);
-
-//        vector<ParameterValue> patterns(value.getVector());
-//        for(vector<ParameterValue>::const_iterator pattern = patterns.begin(),
-//          pattern_end = patterns.end(); pattern != pattern_end; ++pattern) {
-
-//          ASSERTSTR(pattern->isArray(), "Invalid baseline selection: "
-//            << pattern);
-
-//          vector<string> criterion(pattern->getStringVector());
-//          ASSERTSTR(criterion.size() > 0 && criterion.size() < 3, "Invalid"
-//            " baseline selection criterion: " << criterion);
-
-//          itsSelection.baselines.push_back(criterion);
-//        }
-//      }
-
-//      itsSelection.correlations = ps.getString("Selection.Correlations",
-//        itsSelection.correlations);
-
-//      itsCorrelationFilter.type =
-//        ps.getStringVector("Correlation.Type", itsCorrelationFilter.type);
-
-//      itsBaselines.station1 =
-//        ps.getStringVector("Baselines.Station1", itsBaselines.station1);
-//      itsBaselines.station2 =
-//        ps.getStringVector("Baselines.Station2", itsBaselines.station2);
-
-//      // Get the correlation selection (ALL, AUTO, or CROSS), and type
-//      // (e.g., ["XX", "XY", "YX", "YY"]).
-//      itsCorrelationFilter.selection = ps.getString("Correlation.Selection",
-//          itsCorrelationFilter.selection);
-//      itsCorrelationFilter.type =
-//        ps.getStringVector("Correlation.Type", itsCorrelationFilter.type);
-
-      // Get the model configuration.
+      // Read model configuration.
       itsModelConfig.setPhasors(ps.getBool("Model.Phasors.Enable",
         itsModelConfig.usePhasors()));
 
@@ -352,8 +304,6 @@ namespace LOFAR
       os << endl << indent << "Name: " << itsName
         << endl << indent << "Full name: " << fullName()
         << endl << indent << itsSelection
-//        << endl << indent << itsBaselines
-//        << endl << indent << itsCorrelationFilter
         << endl << indent << itsModelConfig;
     }
 

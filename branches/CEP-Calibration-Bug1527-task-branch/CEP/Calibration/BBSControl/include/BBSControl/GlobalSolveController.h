@@ -29,11 +29,7 @@
 
 #include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/Types.h>
-
-#include <BBSKernel/Equator.h>
-#include <BBSKernel/Solver.h>
-#include <BBSKernel/VisData.h>
-
+#include <BBSKernel/VisEquator.h>
 #include <Common/lofar_smartptr.h>
 
 namespace LOFAR
@@ -48,20 +44,31 @@ class GlobalSolveController
 {
 public:
     GlobalSolveController(const KernelIndex &index,
-        const shared_ptr<BlobStreamableConnection> &solver,
-        const ExprSet<JonesMatrix>::Ptr &lhs,
-        const ExprSet<JonesMatrix>::Ptr &rhs);
-    ~GlobalSolveController();
+        const VisEquator::Ptr &equator,
+        const shared_ptr<BlobStreamableConnection> &solver);
 
-    void init(const vector<string> &include, const vector<string> &exclude,
-        const Grid &evalGrid, const Grid &solGrid, unsigned int cellChunkSize,
-        bool propagate);
+    // Set the solution grid.
+    void setSolutionGrid(const Grid &grid);
 
+    // Set the parameters to solve for (by name).
+    void setSolvables(const vector<string> &include,
+        const vector<string> &exclude);
+
+    // Should the solutions of a solution cell be used as initial values for the
+    // next cell?
+    void setPropagateSolutions(bool propagate);
+
+    // Set the number of solution cells that will be processed simultaneously.
+    // Higher values spred the overhead in evaluating the measurement expression
+    // better, but also require more memory.
+    void setCellChunkSize(size_t size);
+
+    // Compute a solution for all the cells in the solution grid.
     void run();
 
 private:
-    void makeCoeffIndex(const ParmGroup &solvables);
-    void makeCoeffMapping(const ParmGroup &solvables, const CoeffIndex &index);
+    void makeCoeffIndex();
+    void makeCoeffMapping(const CoeffIndex &index);
 
     void getInitialCoeff(vector<CellCoeff> &result, const Location &start,
         const Location &end) const;
@@ -75,17 +82,17 @@ private:
         const vector<unsigned int> &mapping) const;
 
     KernelIndex                             itsKernelIndex;
-    shared_ptr<BlobStreamableConnection>    itsSolver;
-    ExprSet<JonesMatrix>::Ptr               itsLHS;
-    ExprSet<JonesMatrix>::Ptr               itsRHS;
 
-    bool                                    itsInitFlag;
-    bool                                    itsPropagateFlag;
+    VisEquator::Ptr                         itsEquator;
+    shared_ptr<BlobStreamableConnection>    itsSolver;
+
     Grid                                    itsSolGrid;
-    unsigned int                            itsCellChunkSize;
     ParmGroup                               itsSolvables;
+
+    bool                                    itsPropagateFlag;
+    size_t                                  itsCellChunkSize;
+
     CoeffIndex                              itsCoeffIndex;
-    scoped_ptr<Equator>                     itsEquator;
     vector<unsigned int>                    itsSolCoeffMapping;
 };
 

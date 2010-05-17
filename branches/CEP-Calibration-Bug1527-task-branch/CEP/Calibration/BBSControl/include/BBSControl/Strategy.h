@@ -66,12 +66,6 @@ namespace LOFAR
       Selection selection() const
       { return itsSelection; }
 
-//      vector<string> getStations() const
-//      { return itsStations; }
-
-//      CorrelationFilter getCorrelationFilter() const
-//      { return itsCorrelationFilter; }
-
       vector<string> getTimeWindow() const
       { return itsTimeWindow; }
 
@@ -81,30 +75,14 @@ namespace LOFAR
       bool useSolver() const
       { return itsUseSolver; }
 
-      // Write the contents of \c *this into the ParameterSet \a ps.
-//      void write(ParameterSet& ps) const;
-
-      // Read the contents from the ParameterSet \a ps into \c *this.
-//      void read(const ParameterSet& ps);
-
       // Print the contents of \c this into the output stream \a os.
       void print(ostream& os) const;
 
     private:
-//      shared_ptr<const Step> getRoot() const
-//      { return itsRoot; }
-
       // Name of the input column.
       string                            itsInputColumn;
 
       Selection                         itsSelection;
-
-//      // Names of the stations to use. Names may contains wildcards, like \c *
-//      // and \c ?.
-//      vector<string>                    itsStations;
-
-//      // Correlation product selection.
-//      CorrelationFilter                 itsCorrelationFilter;
 
       // Time window.
       vector<string>                    itsTimeWindow;
@@ -117,7 +95,6 @@ namespace LOFAR
       bool                              itsUseSolver;
 
       // Root step of the strategy tree.
-//      shared_ptr<Step>  itsRoot;
       vector<shared_ptr<const Step> >   itsSteps;
 
       friend class StrategyIterator;

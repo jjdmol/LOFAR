@@ -17,6 +17,7 @@ install(FILES
   CorrectStep.h
   Exceptions.h
   FinalizeCommand.h
+  GlobalSolveController.h
   GlobalProcessControl.h
   InitializeCommand.h
   KernelProcessControl.h

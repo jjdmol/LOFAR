@@ -65,10 +65,9 @@
 #include <unistd.h>
 
 #include <BBSControl/LocalSolveController.h>
-//#include <BBSControl/GlobalSolveController.h>
+#include <BBSControl/GlobalSolveController.h>
 #include <BBSKernel/MeasurementAIPS.h>
 #include <BBSKernel/MeasurementExprLOFAR.h>
-#include <BBSKernel/MeasurementExprVLA.h>
 #include <BBSKernel/ParmManager.h>
 #include <BBSKernel/Evaluator.h>
 #include <BBSKernel/VisEquator.h>
@@ -468,20 +467,17 @@ namespace LOFAR
       CorrelationMask crMask = createCorrelationMask(command.selection());
 
       // Construct model expression.
-      MeasurementExprVLA::Ptr model
-        (new MeasurementExprVLA(itsMeasurement->instrument(), *itsSourceDb));
+      MeasurementExprLOFAR::Ptr model;
 
       try
       {
-        model->makeForwardExpr(command.modelConfig(),
-          filter(itsChunk->baselines(), blMask),
-          itsMeasurement->getPhaseCenter(),
-          itsMeasurement->getReferenceFreq());
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsMeasurement, itsChunk, blMask));
       }
       catch(Exception &ex)
       {
         return CommandResult(CommandResult::ERROR, "Unable to construct the"
-          " model expression. [" + ex.message() + "]");
+          " model expression [" + ex.message() + "]");
       }
 
       // Compute simulated visibilities.
@@ -526,15 +522,12 @@ namespace LOFAR
       CorrelationMask crMask = createCorrelationMask(command.selection());
 
       // Construct model expression.
-      MeasurementExprVLA::Ptr model
-        (new MeasurementExprVLA(itsMeasurement->instrument(), *itsSourceDb));
+      MeasurementExprLOFAR::Ptr model;
 
       try
       {
-        model->makeForwardExpr(command.modelConfig(),
-          filter(itsChunk->baselines(), blMask),
-          itsMeasurement->getPhaseCenter(),
-          itsMeasurement->getReferenceFreq());
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsMeasurement, itsChunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -585,15 +578,12 @@ namespace LOFAR
       CorrelationMask crMask = createCorrelationMask(command.selection());
 
       // Construct model expression.
-      MeasurementExprVLA::Ptr model
-        (new MeasurementExprVLA(itsMeasurement->instrument(), *itsSourceDb));
+      MeasurementExprLOFAR::Ptr model;
 
       try
       {
-        model->makeForwardExpr(command.modelConfig(),
-          filter(itsChunk->baselines(), blMask),
-          itsMeasurement->getPhaseCenter(),
-          itsMeasurement->getReferenceFreq());
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsMeasurement, itsChunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -644,14 +634,12 @@ namespace LOFAR
       CorrelationMask crMask = createCorrelationMask(command.selection());
 
       // Construct model expression.
-      MeasurementExprVLA::Ptr model
-        (new MeasurementExprVLA(itsMeasurement->instrument(), *itsSourceDb));
+      MeasurementExprLOFAR::Ptr model;
 
       try
       {
-        model->makeInverseExpr(command.modelConfig(), itsChunk, blMask,
-          itsMeasurement->getPhaseCenter(),
-          itsMeasurement->getReferenceFreq());
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsMeasurement, itsChunk, blMask, false));
       }
       catch(Exception &ex)
       {
@@ -695,21 +683,30 @@ namespace LOFAR
         << " type " << command.type() << " name " << command.fullName());
       ++itsStepCount;
 
+      if(command.resample())
+      {
+        LOG_WARN("Resampling support is unavailable in the current"
+          " implementation; resampling request will be ignored.");
+      }
+
+      if(command.shift())
+      {
+        LOG_WARN("Phase shift support is unavailable in the current"
+          " implementation; phase shift request will be ignored.");
+      }
+
       // Determine selected baselines and correlations.
       BaselineFilter blFilter = createBaselineFilter(command.selection());
       BaselineMask blMask = blFilter.createMask(itsMeasurement->instrument());
       CorrelationMask crMask = createCorrelationMask(command.selection());
 
-      // Initialize measurement expression.
-      MeasurementExprVLA::Ptr model
-        (new MeasurementExprVLA(itsMeasurement->instrument(), *itsSourceDb));
+      // Construct model expression.
+      MeasurementExprLOFAR::Ptr model;
 
       try
       {
-        model->makeForwardExpr(command.modelConfig(),
-          filter(itsChunk->baselines(), blMask),
-          itsMeasurement->getPhaseCenter(),
-          itsMeasurement->getReferenceFreq());
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsMeasurement, itsChunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -717,47 +714,9 @@ namespace LOFAR
           " model expression [" + ex.message() + "]");
       }
 
-//      MeasurementExprLOFAR::Ptr model;
-
-//      try {
-//        lhs.reset(new VisExpr(itsMeasurement->getInstrument(),
-//          itsMeasurement->getPhaseCenter(), itsChunk, baselines,
-//          command.shift(), command.direction(), command.resample(),
-//          command.flagDensityThreshold()));
-
-//        lhs.reset(new Model(itsMeasurement->getInstrument(), *itsSourceDb,
-//          itsMeasurement->getPhaseCenter(),
-//          itsMeasurement->getReferenceFreq()));
-
-//        if(command.shift()) {
-//          rhs.reset(new MeasurementExprLOFAR(itsMeasurement->instrument(),
-//            *itsSourceDb, command.direction(),
-//            itsMeasurement->getReferenceFreq()));
-//        } else {
-//          expr.reset(new MeasurementExprVLA(itsMeasurement->instrument(),
-//            *itsSourceDb));
-//        }
-
-//        lhs->makeForwardExpr(command.modelConfig(), itsChunk, baselines);
-//        expr->makeForwardExpr(command.modelConfig(),
-//          filter(itsChunk->baselines(), blMask),
-//          itsMeasurement->getPhaseCenter(),
-//          itsMeasurement->getReferenceFreq());
-//      } catch(Exception &ex) {
-//        return CommandResult(CommandResult::ERROR, "Unable to initialize"
-//          " measurement equation [" + ex.message() + "]");
-//      }
-
       // Determine evaluation grid.
       Axis::ShPtr freqAxis(itsChunk->grid()[FREQ]);
       Axis::ShPtr timeAxis(itsChunk->grid()[TIME]);
-
-      if(command.resample())
-      {
-        freqAxis = freqAxis->compress(command.resampleCellSize().freq);
-        timeAxis = timeAxis->compress(command.resampleCellSize().time);
-      }
-
       Grid evalGrid(freqAxis, timeAxis);
 
       // Determine solution grid.
@@ -811,22 +770,20 @@ namespace LOFAR
       {
         if(command.globalSolution())
         {
-          return CommandResult(CommandResult::OK, "Ok.");
-//          GlobalSolveController controller(itsKernelIndex, itsSolver, lhs, rhs);
+          // Initialize controller.
+          GlobalSolveController controller(itsKernelIndex, equator, itsSolver);
+          controller.setSolutionGrid(solGrid);
+          controller.setSolvables(command.parms(), command.exclParms());
+          controller.setPropagateSolutions(command.propagate());
+          controller.setCellChunkSize(cellChunkSize);
 
-//          controller.init(command.parms(), command.exclParms(), evalGrid,
-//            solGrid, cellChunkSize, command.propagate());
-
-//          controller.run();
+          // Compute a solution of each cell in the solution grid.
+          controller.run();
         }
         else
         {
           // Initialize local solver.
-          Solver::Ptr solver(new Solver());
-          const SolverOptions options = command.solverOptions();
-          solver->reset(options.maxIter, options.epsValue,
-            options.epsDerivative, options.colFactor, options.lmFactor,
-            options.balancedEqs, options.useSVD);
+          Solver::Ptr solver(new Solver(command.solverOptions()));
 
           // Initialize controller.
           LocalSolveController controller(equator, solver);
@@ -950,14 +907,14 @@ namespace LOFAR
           {
             filter.append((*it)[0]);
           }
-          else if(it->size() > 1)
+          else if(it->size() == 2)
           {
             filter.append((*it)[0], (*it)[1]);
           }
         }
         catch(BBSKernelException &ex)
         {
-          LOG_WARN_STR("Invalid baseline pattern: " << (*it) << "; will"
+          LOG_WARN_STR("Invalid baseline criterion: " << (*it) << "; will"
             " be ignored.");
         }
       }

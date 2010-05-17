@@ -30,11 +30,7 @@
 #include <BBSControl/Types.h>
 #include <BBSControl/Exceptions.h>
 
-//#include <BBSKernel/Equator.h>
-//#include <BBSKernel/Model.h>
 #include <BBSKernel/Solver.h>
-//#include <BBSKernel/VisData.h>
-//#include <BBSKernel/VisExpr.h>
 #include <BBSKernel/VisEquator.h>
 
 #include <Common/lofar_smartptr.h>
@@ -87,17 +83,17 @@ private:
     void setCoeff(const vector<double> &coeff, const Location &cell,
         const vector<unsigned int> &mapping) const;
 
-    VisEquator::Ptr                     itsEquator;
-    Solver::Ptr                         itsSolver;
+    VisEquator::Ptr         itsEquator;
+    Solver::Ptr             itsSolver;
 
-    Grid                                itsSolGrid;
-    ParmGroup                           itsSolvables;
+    Grid                    itsSolGrid;
+    ParmGroup               itsSolvables;
 
-    bool                                itsPropagateFlag;
-    size_t                              itsCellChunkSize;
+    bool                    itsPropagateFlag;
+    size_t                  itsCellChunkSize;
 
-    CoeffIndex                          itsCoeffIndex;
-    vector<unsigned int>                itsSolCoeffMapping;
+    CoeffIndex              itsCoeffIndex;
+    vector<unsigned int>    itsSolCoeffMapping;
 };
 
 // @}
