@@ -24,7 +24,7 @@
 #
 # $Id$
 #
-VERSION="v1.7 20090130"		# loading image 1 before starting RSPdriver
+VERSION="v2.1 20100517"		# loading image 1 before starting RSPdriver
 BINDIR=/opt/lofar/bin
 LOGDIR=${BINDIR}/../log
 ETCDIR=${BINDIR}/../etc
@@ -39,25 +39,28 @@ SyntaxError()
 
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
-	echo "Syntax: $(basename $0) [-s/v] [ 0 | 1 | 2 | 3 | 4 | 5 | 6 ]"
-	echo "-s: Show current level, exit"
-	echo "-v: Show running LOFAR version, exit"
+	echo "Syntax: $(basename $0) [-s/S/v/V] [-i x] [-l][ 0 | 1 | 2 | 3 | 4 | 5 | 6 ]"
+	echo "-s: Show current level, exit (-S: only print number)"
+	echo "-v: Show running LOFAR version, exit (-V: only print version)"
+	echo "-i: Load RSP firmware from image [x] (default image is 1)"
+        echo "-l: Set to level as provided (optional)"
         echo
-	echo "0:  stop all lofar software"
-	echo "1:  Lofar daemons and PVSS"
-	echo "2:  Lowlevel hardware drivers"
-	echo "3:  Calculation services"
-	echo "4:  Hardware and software monitors"
-	echo "5:  System Health Management"
+	echo "Levels:"
+	echo "0:  Stop all lofar software"
+	echo "1:  Run Lofar daemons and PVSS"
+	echo "2:  Run Lowlevel hardware drivers"
+	echo "3:  Run Calculation services"
+	echo "4:  Run Hardware and software monitors"
+	echo "5:  Run System Health Management"
 	echo "6:  MAC is controlling the software"
 	echo ""
 	exit 0
 }
 
 #
-# selectImage1()
+# selectImage(); the image to load has been set in parameter $image in MAIN
 #
-selectImage1()
+selectImage()
 {
 	let nrRSPs=`grep RSPBOARDS ${ETCDIR}/RemoteStation.conf | cut -d'=' -f2 | sed 's/ //g'`
 	let board=0
@@ -69,10 +72,11 @@ selectImage1()
 		if [ ${#rsu} -eq 1 ]; then
   		  let version=$rsu
  		  # if board has reset itself to image 0, load image 1 again
-		  if [ $version -le 4 ]; then
-		     echo "Loading image 1 on RSPboard $board ..."
-		     sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p 1 1>/dev/null 2>&1
-		  fi
+		  #if [ $version -le 4 ]; then
+		  # AS-20100517: Always load new image!
+		     echo "Loading image $image on RSPboard $board ..."
+		     sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p $image 1>/dev/null 2>&1
+		  #fi
                 else
                   echo "No RSP board $board found"
 		fi
@@ -102,7 +106,7 @@ start_prog()
 		return
 	fi
 
-#	ps -ef | grep -v grep | egrep '[0-9][0-9] [a-zA-Z0-9/_.]*/'${prog} 1>/dev/null 2>&1
+	# Check if program is already running
 	/sbin/pidof ${prog} 1>/dev/null 2>&1
 	if [ $? -ne 0 ]; then
 		echo Starting $prog
@@ -114,7 +118,7 @@ start_prog()
 			if [ -n "$asroot" ]; then
 				sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
 				if [ "$prog" = "RSPDriver" ]; then
-					selectImage1
+					selectImage
 					sudo -b $BINDIR/$prog 1>/dev/null 2>&1
 				else
 					sudo -b $BINDIR/$prog 1>/dev/null 2>&1
@@ -153,7 +157,6 @@ stop_prog()
 	fi
 
 	# get processlist
-#	ps -ef | grep -v grep | egrep '[0-9][0-9] [a-zA-Z0-9/_.]*/'${prog} 2>&1 >/dev/null
 	/sbin/pidof ${prog} 1>/dev/null 2>&1
 	if [ $? -ne 0 ]; then
 		return
@@ -173,7 +176,6 @@ stop_prog()
 	fi
 
 	# first try normal kill
-#	ps -ef | grep -v grep | egrep '[0-9][0-9] [a-zA-Z0-9/_.]*/'${prog} | awk '{ print $2 }' | while read pid
 	for pid in `/sbin/pidof ${prog}`
 	do 
 		echo "Softly killing ${prog}(${pid})"
@@ -182,7 +184,6 @@ stop_prog()
 	done
 
 	# when normal kill did not work, kill is with -9
-#	ps -ef | grep -v grep | egrep '[0-9][0-9] [a-zA-Z0-9/_.]*/'${prog} | awk '{ print $2 }' | while read pid
 	for pid in `/sbin/pidof ${prog}`
 	do 
 		sleep 2
@@ -223,7 +224,6 @@ status_prog()
 			continue
 		fi
 
-#		ps -ef | grep -v grep | egrep '[0-9][0-9] [a-zA-Z0-9/_.]*/'${prog} 2>&1 >/dev/null
 		/sbin/pidof ${prog} 1>/dev/null 2>&1
 		if [ $? -eq 0 ]; then
 			pid=( `/sbin/pidof ${prog}` )
@@ -325,6 +325,99 @@ goto_level()
 	done
 }
 
+show_level()
+{
+        if [ -e /tmp/level.admin ]; then
+          level=`cat /tmp/level.admin`
+	  if [ "$1" != "S" ]; then
+	     echo -n "Currently set level is "
+	  fi
+	  echo $level
+        else
+          level=-1
+          if [ "$1" != "S" ]; then
+             echo "Currently set level unknown"
+          fi
+        fi
+        # argument -s/-S only returns level, no list
+        if [ -z "$1" ]; then
+            status_prog
+        fi
+        if [ $level -ne -1 ]; then 
+          exit 0
+        else
+          exit $level
+        fi
+}
+
+show_lofar_version()
+{
+        if [ -e /opt/lofar/Version.txt ]; then
+          version=`cat /opt/lofar/Version.txt`
+	  if [ "$1" = "v" ]; then  
+            echo -n "Current LOFAR version is "
+	  fi
+          echo $version
+        else
+          version="-1"
+          if [ "$1" = "v" ]; then
+            echo "Current LOFAR version unknown"
+          fi
+        fi
+	if [ "$version" != "-1" ]; then 
+  	  exit
+        else
+          exit $version
+        fi
+}
+
+handle_args()
+{
+
+  # Handle arguments
+  while getopts  "hSsVvi:l:" flag
+  do
+    case "$flag" in
+    [sS])
+    show_level $flag
+    ;;
+    [vV])
+    show_lofar_version $flag
+    ;;
+    i)
+    image=$OPTARG
+    # This is needed to be able to retrieve the requested swlevel
+    # when it is not provided with option -l
+    shift $((OPTIND-1)); OPTIND=1
+    ;;
+    l)
+    level=$OPTARG
+    ;;
+    h)
+    SyntaxError
+    ;;
+    *) 
+    exit 
+    ;;
+    esac
+  done
+  if [ -z $level ]; then
+   if [ "$1" != "" ]; then
+     level=$1
+   else
+     level=-1
+   fi
+  fi
+
+  # default image is 1
+  if [ -z $image ]; then  
+   image=1
+  fi
+
+  return
+}
+
+
 #
 # MAIN
 #
@@ -339,66 +432,28 @@ if [ -f ${BINDIR}/PVSS00pmon ]; then
 	logProgToSkip=LoggingClient
 fi
 
-# when no argument, or -s/-S is given show current level and exit 
-if [ -z "$1" -o "$1" = "-s" -o "$1" = "-S" ]; then
-        if [ -e /tmp/level.admin ]; then
-          level=`cat /tmp/level.admin`
-	  if [ "$1" != "-S" ]; then
-	     echo -n "Currently set level is "
-	  fi
-	  echo $level
-        else
-          level=-1
-          if [ "$1" != "-S" ]; then
-             echo "Currently set level unknown"
-          fi
-        fi
-        # argument -s/-S only returns level, no list
-        if [ -z "$1" ]; then
-            status_prog
-        fi
-        if [ $level -ne -1 ]; then 
-          exit 0
-        else
-          exit $level
-        fi
+
+# All users can ask for current level
+if [ -z $1 ]; then 
+  show_level 
 fi
 
-if [ "$1" = "-v" -o "$1" = "-V" ]; then
-        if [ -e /opt/lofar/Version.txt ]; then
-          version=`cat /opt/lofar/Version.txt`
-	  if [ "$1" = "-v" ]; then  
-            echo -n "Current LOFAR version is "
-	  fi
-          echo $version
-        else
-          version="-1"
-          if [ "$1" = "-v" ]; then
-            echo "Current LOFAR version unknown"
-          fi
-        fi
-	if [ "$version" != "-1" ]; then 
-  	  exit
-        else
-          exit $version
-        fi
+handle_args $*
 
-fi
-
-# don't allow root to run swlevel because all logfile get root access.
 user=`id | cut -d'(' -f2 | cut -d')' -f1`
 group=`groups | awk '{print $1}'`
-#echo $user
-if [ $user != "lofarsys" ]; then
-    if [ $group != "local" ]; then 
+# All other options that act on the station status are for lofarsys only
+# Don't allow root to run swlevel because all logfile get root access.
+if [ "$user" != "lofarsys" ]; then
+    if [ "$group" != "local" ]; then 
 	echo "swlevel must be run by user lofarsys or group local members!"
 	exit
     fi
 fi
 
 # first power down to this level
-case $1 in
-	0|1|2|3|4|5|6)	let level=$1
+case $level in
+	0|1|2|3|4|5|6)  
 			;;
 	*) SyntaxError
 esac
