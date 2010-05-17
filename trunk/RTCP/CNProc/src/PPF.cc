@@ -29,14 +29,15 @@ static NSTimer FFTtimer("PPF::FFT", true, true);
 static NSTimer PPFtimer("PPF::filter()", true, true);
 
 
-template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation, bool verbose)
+template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation, bool correctBandPass, bool verbose)
 :
   itsNrStations(nrStations),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsNrChannels(nrChannels),
   itsChannelBandwidth(channelBandwidth),
   itsDelayCompensation(delayCompensation),
-  itsBandPass(true, nrChannels), // FIXME
+  itsCorrectBandPass(correctBandPass),
+  itsBandPass(correctBandPass, nrChannels),
 
 #if defined PPF_C_IMPLEMENTATION
   itsFIRs(boost::extents[nrStations][NR_POLARIZATIONS][nrChannels]),
@@ -258,6 +259,9 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 	for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
 	  if (itsDelayCompensation)
 	    fftOutData[chan] *= phaseShift(time, chan, baseFrequency, metaData->beams(stat)[0].delayAtBegin, metaData->beams(stat)[0].delayAfterEnd);
+
+	  if (itsCorrectBandPass)
+	    fftOutData[chan] *= itsBandPass.correctionFactors()[chan];
 
 	  filteredData->samples[chan][stat][time][pol] = fftOutData[chan];
 	}
