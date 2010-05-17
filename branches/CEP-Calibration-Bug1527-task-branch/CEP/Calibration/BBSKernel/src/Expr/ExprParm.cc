@@ -64,7 +64,7 @@ const Scalar ExprParm::evaluateExpr(const Request &request, Cache &cache,
     ASSERT(buffers.size() > 0);
 
     // Transform into an ExprResult.
-    ValueSet result;
+    Element result;
 
     bool deleteStorage = false;
     const double *storage = 0;
@@ -113,7 +113,7 @@ const Scalar ExprParm::evaluateExpr(const Request &request, Cache &cache,
     }
 
     Scalar scalar;
-    scalar.setValueSet(result);
+    scalar.setElement(result);
     return scalar;
 }
 

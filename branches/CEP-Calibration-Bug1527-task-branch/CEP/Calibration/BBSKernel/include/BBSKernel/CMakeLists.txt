@@ -12,7 +12,6 @@ install(FILES
   Correlation.h
   CorrelationMask.h
   ElementBeamExpr.h
-  Equator.h
   Evaluator.h
   Exceptions.h
   ExprSet.h
@@ -23,17 +22,15 @@ install(FILES
   MeasurementAIPS.h
   MeasurementExpr.h
   MeasurementExprLOFAR.h
-  MeasurementExprVLA.h
   ModelConfig.h
   ParmManager.h
   ParmProxy.h
   Solver.h
   SolverInterfaceTypes.h
   Types.h
-  VisData.h
+  VisBuffer.h
   VisDimensions.h
   VisEquator.h
-  VisExpr.h
   VisSelection.h
   DESTINATION include/${PACKAGE_NAME})
 install(FILES
@@ -43,6 +40,7 @@ install(FILES
   Expr/Cache.h
   Expr/CachePolicy.h
   Expr/ConditionNumber.h
+  Expr/Element.h
   Expr/EquatorialCentroid.h
   Expr/Expr.h
   Expr/ExprId.h
@@ -89,6 +87,5 @@ install(FILES
   Expr/StationShift.h
   Expr/StationUVW.h
   Expr/TileArrayFactor.h
-  Expr/ValueSet.h
   Expr/YatawattaDipole.h
   DESTINATION include/${PACKAGE_NAME}/Expr)

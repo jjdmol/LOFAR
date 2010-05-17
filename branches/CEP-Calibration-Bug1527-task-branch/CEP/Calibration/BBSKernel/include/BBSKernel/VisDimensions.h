@@ -1,5 +1,5 @@
 //# VisDimensions.h: Represents the dimensions of a block of visibility data
-//# along for axes (frequency, time, baseline, correlation).
+//# along four axes (frequency, time, baseline, correlation).
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -23,6 +23,10 @@
 
 #ifndef LOFAR_BBSKERNEL_VISDIMENSIONS_H
 #define LOFAR_BBSKERNEL_VISDIMENSIONS_H
+
+// \file
+// Represents the dimensions of a block of visibility data along four axes
+// (frequency, time, baseline, correlation).
 
 #include <BBSKernel/Correlation.h>
 #include <BBSKernel/IndexedSequence.h>
@@ -63,6 +67,9 @@ public:
     size_t nBaselines() const;
     size_t nCorrelations() const;
     // @}
+
+    // Check for empty dimensions.
+    bool empty() const;
 
     // Bounding box in frequency and time.
     Box domain() const;
@@ -126,6 +133,12 @@ inline size_t VisDimensions::nBaselines() const
 inline size_t VisDimensions::nCorrelations() const
 {
     return itsCorrelationAxis.size();
+}
+
+inline bool VisDimensions::empty() const
+{
+    return nFreq() == 0 || nTime() == 0 || nBaselines() == 0
+        || nCorrelations() == 0;
 }
 
 inline Box VisDimensions::domain() const

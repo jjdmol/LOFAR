@@ -11,19 +11,17 @@ lofar_add_library(bbskernel
   Correlation.cc
   CorrelationMask.cc
   ElementBeamExpr.cc
-  Equator.cc
   Evaluator.cc
   Instrument.cc
   IonosphereExpr.cc
   MeasurementAIPS.cc
   MeasurementExprLOFAR.cc
-  MeasurementExprVLA.cc
   ModelConfig.cc
   ParmManager.cc
   ParmProxy.cc
   Solver.cc
   SolverInterfaceTypes.cc
-  VisData.cc
+  VisBuffer.cc
   VisDimensions.cc
   VisEquator.cc
   VisSelection.cc
@@ -32,6 +30,7 @@ lofar_add_library(bbskernel
   Expr/CachePolicy.cc
   Expr/Cache.cc
   Expr/ConditionNumber.cc
+  Expr/Element.cc
   Expr/EquatorialCentroid.cc
   Expr/Expr.cc
   Expr/ExprAdaptors.cc
@@ -74,7 +73,6 @@ lofar_add_library(bbskernel
   Expr/StationShift.cc
   Expr/StationUVW.cc
   Expr/TileArrayFactor.cc
-  Expr/ValueSet.cc
   Expr/YatawattaDipole.cc)
 
 # Because we're using dlopen()

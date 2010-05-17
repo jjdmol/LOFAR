@@ -31,7 +31,7 @@
 #include <BBSKernel/BaselineMask.h>
 #include <BBSKernel/CorrelationMask.h>
 #include <BBSKernel/MeasurementExpr.h>
-#include <BBSKernel/VisData.h>
+#include <BBSKernel/VisBuffer.h>
 
 #include <Common/lofar_iostream.h>
 #include <Common/Timer.h>
@@ -55,7 +55,7 @@ public:
         N_Mode
     };
 
-    Evaluator(const VisData::Ptr &lhs, const MeasurementExpr::Ptr &rhs);
+    Evaluator(const VisBuffer::Ptr &lhs, const MeasurementExpr::Ptr &rhs);
 
     // Restrict processing to the baselines included in the mask.
     void setBaselineMask(const BaselineMask &mask);
@@ -107,15 +107,15 @@ private:
     void procExpr(size_t &bl, const JonesMatrix &rhs);
 
     // Visibility data buffer.
-    VisData::Ptr                        itsLHS;
+    VisBuffer::Ptr                  itsLHS;
     // Measurement equation.
-    MeasurementExpr::Ptr                itsRHS;
+    MeasurementExpr::Ptr            itsRHS;
 
     // Mapping of baselines and correlations to their respective indices in
     // both observed data and model.
-    vector<pair<size_t, size_t> >       itsBlMap, itsCrMap;
+    vector<pair<size_t, size_t> >   itsBlMap, itsCrMap;
 
-    ExprProcessor                       itsExprProcessor[2];
+    ExprProcessor                   itsExprProcessor[2];
 
     // Timers.
     enum ProcTimer
@@ -126,8 +126,8 @@ private:
         N_ProcTimer
     };
 
-    NSTimer                             itsProcTimers[N_ProcTimer];
-    static string                       theirProcTimerNames[N_ProcTimer];
+    NSTimer                         itsProcTimers[N_ProcTimer];
+    static string                   theirProcTimerNames[N_ProcTimer];
 };
 
 // @}
@@ -172,7 +172,7 @@ void Evaluator::procExprWithFlags(size_t &bl, const JonesMatrix &rhs)
         FlagArray::const_iterator flagIt = flagsRHS.begin();
 
         // Get pointers to the computed visibilities.
-        const Matrix samplesRHS = rhs.getValueSet(crRHS).value();
+        const Matrix samplesRHS = rhs.getElement(crRHS).value();
         const double *reIt = 0, *imIt = 0;
         samplesRHS.dcomplexStorage(reIt, imIt);
 
@@ -221,7 +221,7 @@ void Evaluator::procExpr(size_t &bl, const JonesMatrix &rhs)
         const size_t crRHS = itsCrMap[cr].second;
 
         // Get pointers to the computed visibilities.
-        const Matrix samplesRHS = rhs.getValueSet(crRHS).value();
+        const Matrix samplesRHS = rhs.getElement(crRHS).value();
         const double *reIt = 0, *imIt = 0;
         samplesRHS.dcomplexStorage(reIt, imIt);
 

@@ -24,9 +24,6 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/VisDimensions.h>
-
-#include <Common/LofarLogger.h>
-#include <Common/StreamUtil.h>
 #include <Common/lofar_iomanip.h>
 
 #include <casa/Quanta/Quantum.h>

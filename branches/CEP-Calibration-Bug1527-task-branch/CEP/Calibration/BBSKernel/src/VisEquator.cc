@@ -35,7 +35,7 @@ namespace BBS
 {
 using LOFAR::operator<<;
 
-VisEquator::VisEquator(const VisData::Ptr &lhs, const MeasurementExpr::Ptr &rhs)
+VisEquator::VisEquator(const VisBuffer::Ptr &lhs, const MeasurementExpr::Ptr &rhs)
     :   itsLHS(lhs),
         itsRHS(rhs),
         itsIntersectionEmpty(true),
@@ -388,11 +388,11 @@ void VisEquator::makeCoeffMap()
     }
 }
 
-void VisEquator::makeElementCoeffMap(const ValueSet &element,
+void VisEquator::makeElementCoeffMap(const Element &element,
     ProcContext &context)
 {
     size_t nCoeff = 0;
-    for(ValueSet::const_iterator it = element.begin(), end = element.end();
+    for(Element::const_iterator it = element.begin(), end = element.end();
         it != end; ++it)
     {
         // Look-up coefficient index for this coefficient.

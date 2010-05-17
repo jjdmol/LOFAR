@@ -24,7 +24,7 @@
 #define LOFAR_BBSKERNEL_MEASUREMENT_H
 
 #include <BBSKernel/Instrument.h>
-#include <BBSKernel/VisData.h>
+#include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/VisDimensions.h>
 #include <BBSKernel/VisSelection.h>
 
@@ -48,15 +48,15 @@ public:
 
     virtual VisDimensions dimensions(const VisSelection &selection) const = 0;
 
-    virtual VisData::Ptr read(const VisSelection &selection,
+    virtual VisBuffer::Ptr read(const VisSelection &selection,
         const string &column = "DATA", bool readUVW = true) const = 0;
 
     virtual void write(const VisSelection &selection,
-        VisData::Ptr buffer, const string &column = "CORRECTED_DATA",
+        VisBuffer::Ptr buffer, const string &column = "CORRECTED_DATA",
         bool writeFlags = true) = 0;
 
     double getReferenceFreq() const;
-    const casa::MDirection &getPhaseCenter() const;
+    const casa::MDirection &getPhaseReference() const;
 
     const Instrument &instrument() const;
     const VisDimensions &dimensions() const;
@@ -77,7 +77,7 @@ public:
 
 protected:
     double                  itsReferenceFreq;
-    casa::MDirection        itsPhaseCenter;
+    casa::MDirection        itsPhaseReference;
     Instrument              itsInstrument;
     VisDimensions           itsDims;
 };
@@ -97,9 +97,9 @@ inline const Instrument &Measurement::instrument() const
     return itsInstrument;
 }
 
-inline const casa::MDirection &Measurement::getPhaseCenter() const
+inline const casa::MDirection &Measurement::getPhaseReference() const
 {
-    return itsPhaseCenter;
+    return itsPhaseReference;
 }
 
 inline double Measurement::getReferenceFreq() const

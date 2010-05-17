@@ -33,7 +33,7 @@
 #include <BBSKernel/MeasurementExpr.h>
 #include <BBSKernel/SolverInterfaceTypes.h>
 #include <BBSKernel/Types.h>
-#include <BBSKernel/VisData.h>
+#include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Expr/ExprValue.h>
 
 #include <Common/Timer.h>
@@ -56,7 +56,7 @@ public:
     typedef shared_ptr<VisEquator>          Ptr;
     typedef shared_ptr<const VisEquator>    ConstPtr;
 
-    VisEquator(const VisData::Ptr &lhs, const MeasurementExpr::Ptr &rhs);
+    VisEquator(const VisBuffer::Ptr &lhs, const MeasurementExpr::Ptr &rhs);
     ~VisEquator();
 
     // Set the solution grid.
@@ -167,7 +167,7 @@ private:
     // Generate a look-up table mapping the coefficients of the parameters that
     // the given element depends on to the respective index in the normal
     // equations.
-    void makeElementCoeffMap(const ValueSet &element, ProcContext &context);
+    void makeElementCoeffMap(const Element &element, ProcContext &context);
 
     // Insanely complicated boost::multi_array types...
     typedef boost::multi_array<flag_t, 2>::index_range TFRange;
@@ -196,7 +196,7 @@ private:
         const Interval<double> &interval) const;
 
     // Observed data.
-    VisData::Ptr                        itsLHS;
+    VisBuffer::Ptr                        itsLHS;
 
     // Model expressions.
     MeasurementExpr::Ptr                itsRHS;
@@ -328,7 +328,7 @@ Interval<size_t> VisEquator::makeAxisMap(const Axis::ShPtr &from,
 template <typename T_ITER>
 T_ITER VisEquator::process(T_ITER first, T_ITER last)
 {
-    DBGASSERT(static_cast<size_t>(distance(first, last)) >= nSelectedCells());
+    ASSERT(static_cast<size_t>(distance(first, last)) >= nSelectedCells());
 
     itsProcTimer.start();
 
@@ -398,24 +398,6 @@ void VisEquator::procExpr(ProcContext &context,
         return;
     }
 
-//    // Construct equations.
-//    //
-//    // Both LHS and RHS may depend on parameters and any parameter may appear
-//    // in both LHS and RHS. Therefore, essentially the model is LHS - RHS (or
-//    // alternatively RHS - LHS) and the observables are all zero.
-//    //
-//    // In the condition equations, the partial derivatives of the model with
-//    // respect to the parameters appear with a positive sign. The partial
-//    // derivative of LHS - RHS with respect to a parameter p equals:
-//    //
-//    // (1) d(LHS - RHS)/d(p) = d(LHS)/d(p) - d(RHS)/d(p)
-//    //
-//    // However, it is often the case that LHS has no associated parameters
-//    // (because it represents observed visibility data), while RHS does.
-//    // Following equation (1) then requires negation of all the partial
-//    // derivatives of RHS. This is avoided by using RHS - LHS as the model
-//    // instead of LHS - RHS.
-
     context.timers[ProcContext::EQUATE].start();
 
     const size_t nTime = valueLHS.shape()[1];
@@ -426,30 +408,22 @@ void VisEquator::procExpr(ProcContext &context,
         const size_t crLHS = itsCrMap[cr].first;
         const size_t crRHS = itsCrMap[cr].second;
 
-        const ValueSet valueSetRHS = RHS.getValueSet(crRHS);
+        const Element elementRHS = RHS.getElement(crRHS);
 
         // If there are no coefficients to fit, continue to the next
-        // polarization product.
-        if(valueSetRHS.size() == 1)
+        // correlation.
+        if(elementRHS.size() == 1)
         {
             continue;
         }
 
-        // Compute the right hand side of the condition equations:
-        //
-        // 0 - (RHS - LHS) = LHS - RHS
-        //
-//        Matrix delta = valueSetLHS.value() - valueSetRHS.value();
-        Matrix valueRHS = valueSetRHS.value();
-//        const double *re, *im;
-//        valueSetRHS.value().dcomplexStorage(re, im);
-
-        // Compute the partial derivatives of RHS - LHS with respect to the
-        // solvable coefficients and determine a mapping from sequential
-        // coefficient number to coefficient index in the condition equations.
+        // Determine a mapping from sequential coefficient number to coefficient
+        // index in the condition equations.
         context.timers[ProcContext::MAKE_COEFF_MAP].start();
-        makeElementCoeffMap(valueSetRHS, context);
+        makeElementCoeffMap(elementRHS, context);
         context.timers[ProcContext::MAKE_COEFF_MAP].stop();
+
+        Matrix valueRHS = elementRHS.value();
 
         for(size_t t = 0; t < nTime; ++t)
         {
@@ -477,11 +451,9 @@ void VisEquator::procExpr(ProcContext &context,
                 ++context.count;
 
                 // Compute right hand side of the equation pair.
-                const dcomplex tmp0 = valueLHS[idx.first][t][f][crLHS];
-//                const double dre = real(tmp0) - *re++;
-//                const double dim = imag(tmp0) - *im++;
-                const dcomplex tmp1 = valueRHS.getDComplex(f, t);
-                const dcomplex delta = tmp0 - tmp1;
+                const dcomplex delta =
+                    static_cast<dcomplex>(valueLHS[idx.first][t][f][crLHS])
+                        - valueRHS.getDComplex(f, t);
 
                 // Tranpose the partial derivatives.
                 context.timers[ProcContext::TRANSPOSE].start();
@@ -501,14 +473,12 @@ void VisEquator::procExpr(ProcContext &context,
                     &(context.index[0]),
                     &(context.partialRe[0]),
                     1.0,
-//                    dre);
                     real(delta));
 
                 equation.makeNorm(context.nCoeff,
                     &(context.index[0]),
                     &(context.partialIm[0]),
                     1.0,
-//                    dim);
                     imag(delta));
                 context.timers[ProcContext::MAKE_NORM].stop();
             }

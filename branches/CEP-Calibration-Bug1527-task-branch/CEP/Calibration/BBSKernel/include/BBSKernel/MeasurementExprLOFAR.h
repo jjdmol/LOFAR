@@ -30,10 +30,11 @@
 #include <BBSKernel/ElementBeamExpr.h>
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/IonosphereExpr.h>
+#include <BBSKernel/Measurement.h>
 #include <BBSKernel/MeasurementExpr.h>
 #include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/ParmManager.h>
-#include <BBSKernel/VisData.h>
+#include <BBSKernel/VisBuffer.h>
 
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
@@ -62,26 +63,14 @@ public:
     typedef shared_ptr<MeasurementExprLOFAR>        Ptr;
     typedef shared_ptr<const MeasurementExprLOFAR>  ConstPtr;
 
-//    MeasurementExprLOFAR(const SourceDB &sourceDB);
-//    void clear();
+    MeasurementExprLOFAR(const ModelConfig &config, const SourceDB &sourceDB,
+        const Instrument &instrument, const BaselineSeq &baselines,
+        const casa::MDirection &phaseRef, double refFreq,
+        bool circular = false);
 
-//    void makeForwardExpr(const ModelConfig &config,
-//        const Instrument &instrument, const BaselineMask &mask,
-//        const casa::MDirection &phaseCenter, double bfReferenceFreq);
-
-//    void makeInverseExpr(const ModelConfig &config, const VisData::Ptr &chunk,
-//        const vector<baseline_t> &baselines);
-
-    MeasurementExprLOFAR(const Instrument &instrument, const SourceDB &sourceDB,
-        const casa::MDirection &reference, double referenceFreq);
-
-    void clear();
-
-    void makeForwardExpr(const ModelConfig &config, const VisData::Ptr &chunk,
-        const vector<baseline_t> &baselines);
-
-    void makeInverseExpr(const ModelConfig &config, const VisData::Ptr &chunk,
-        const vector<baseline_t> &baselines);
+    MeasurementExprLOFAR(const ModelConfig &config, const SourceDB &sourceDB,
+        const Measurement::Ptr &measurement, const VisBuffer::Ptr &chunk,
+        const BaselineMask &mask, bool forward = true);
 
     // \name MeasurementExpr interface implementation
     // These methods form an implementation of the MeasurementExpr interface
@@ -105,10 +94,19 @@ public:
     // @}
 
 private:
+    void makeForwardExpr(const ModelConfig &config,
+        const casa::MDirection &phaseRef, double refFreq, bool circular);
+
+    void makeInverseExpr(const ModelConfig &config, const VisBuffer::Ptr &chunk,
+        const casa::MDirection &phaseRef, double refFreq, bool circular);
+
+    void setCorrelations(bool circular);
+    bool isLinear(const VisBuffer::Ptr &chunk) const;
+    bool isCircular(const VisBuffer::Ptr &chunk) const;
+
     void applyCachePolicy(const ModelConfig &config) const;
 
-    vector<unsigned int>
-        makeUsedStationList(const vector<baseline_t> &baselines) const;
+    vector<unsigned int> makeUsedStationList() const;
 
     pair<unsigned int, unsigned int>
         findStationIndices(const vector<unsigned int> &stations,
@@ -129,17 +127,20 @@ private:
             const casa::Vector<Expr<Vector<2> >::Ptr> &shiftRHS) const;
 
     casa::Vector<Expr<Vector<3> >::Ptr>
-        makeUVWExpr(const vector<unsigned int> &stations);
+        makeUVWExpr(const casa::MDirection &phaseRef,
+            const vector<unsigned int> &stations);
 
     casa::Vector<Expr<Vector<2> >::Ptr>
         makeAzElExpr(const vector<unsigned int> &stations,
             const Expr<Vector<2> >::ConstPtr &direction) const;
 
     casa::Vector<Expr<Vector<2> >::Ptr>
-        makeRefAzElExpr(const vector<unsigned int> &stations) const;
+        makeRefAzElExpr(const casa::MDirection &phaseRef,
+            const vector<unsigned int> &stations) const;
 
     casa::Matrix<Expr<Vector<2> >::Ptr>
-        makeStationShiftExpr(const vector<unsigned int> &stations,
+        makeStationShiftExpr(const casa::MDirection &phaseRef,
+            const vector<unsigned int> &stations,
             const vector<Source::Ptr> &sources,
             const casa::Vector<Expr<Vector<3> >::Ptr> &exprUVW) const;
 
@@ -147,25 +148,25 @@ private:
         casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
 
     void makeGainExpr(const ModelConfig &config,
-            const vector<unsigned int> &stations,
-            casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
+        const vector<unsigned int> &stations,
+        casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
 
     void makeDirectionalGainExpr(const ModelConfig &config,
         const vector<unsigned int> &stations, const string &patch,
         casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
 
     void makeBeamExpr(const BeamConfig &config,
-            const vector<unsigned int> &stations,
-            const casa::Vector<Expr<Vector<2> >::Ptr> &exprRefAzEl,
-            const casa::Vector<Expr<Vector<2> >::Ptr> &exprAzEl,
-            const ElementBeamExpr::ConstPtr &exprElement,
-            casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
+        double refFreq, const vector<unsigned int> &stations,
+        const casa::Vector<Expr<Vector<2> >::Ptr> &exprRefAzEl,
+        const casa::Vector<Expr<Vector<2> >::Ptr> &exprAzEl,
+        const ElementBeamExpr::ConstPtr &exprElement,
+        casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
 
     void makeIonosphereExpr(const vector<unsigned int> &stations,
-            const casa::MPosition &refPosition,
-            const casa::Vector<Expr<Vector<2> >::Ptr> &exprAzEl,
-            const IonosphereExpr::ConstPtr &exprIonosphere,
-            casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
+        const casa::MPosition &refPosition,
+        const casa::Vector<Expr<Vector<2> >::Ptr> &exprAzEl,
+        const IonosphereExpr::ConstPtr &exprIonosphere,
+        casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
 
     void makeFaradayRotationExpr(const ModelConfig &config,
         const vector<unsigned int> &stations, const string &patch,
@@ -180,8 +181,6 @@ private:
 
     Instrument                      itsInstrument;
     SourceDB                        itsSourceDB;
-    casa::MDirection                itsPhaseReference;
-    double                          itsReferenceFreq;
 
     BaselineSeq                     itsBaselines;
     CorrelationSeq                  itsCorrelations;

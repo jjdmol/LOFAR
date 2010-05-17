@@ -53,7 +53,7 @@ protected:
         unsigned int grid) const;
 
 private:
-    void merge(const ValueSet &in, ValueSet &out) const;
+    void merge(const Element &in, Element &out) const;
 
     vector<Expr<JonesMatrix>::ConstPtr> itsExpr;
 };

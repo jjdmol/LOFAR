@@ -62,6 +62,7 @@ public:
     // bottleneck, the result could be cached internally.
     bool empty() const;
 
+    // Mask arithmetic.
     friend const BaselineMask operator!(const BaselineMask &lhs);
     friend const BaselineMask operator||(const BaselineMask &lhs,
         const BaselineMask &rhs);
@@ -124,7 +125,12 @@ inline bool BaselineMask::operator()(size_t i, size_t j) const
 
 inline size_t BaselineMask::index(size_t i, size_t j) const
 {
-    return ((i + j) * (i + j + 3)) / 2 - i;
+    //# Compute the diagonal that contains (i, j).
+    const size_t d = i + j;
+    //# NB. Rounding down because of integer division (intended).
+    const size_t d_2 = d / 2;
+
+    return d_2 * d_2 + d_2 + (d % 2) * d_2 + (d % 2) + std::min(i, j);
 }
 
 } //# namespace BBS

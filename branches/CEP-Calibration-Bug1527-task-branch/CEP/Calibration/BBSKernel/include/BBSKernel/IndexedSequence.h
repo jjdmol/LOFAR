@@ -58,6 +58,9 @@ public:
     // Assignment operator.
     IndexedSequence &operator=(const IndexedSequence &rhs);
 
+    // Check for empty sequence.
+    bool empty() const;
+
     // Return the size of the sequence.
     size_t size() const;
 
@@ -93,16 +96,28 @@ private:
 
 // Write an IndexedSequence to an output stream in human readable form.
 template <typename T>
-ostream &operator<<(ostream &out, const IndexedSequence<T> &obj)
-{
-    out << "[";
-    for(size_t i = 0; i < obj.size(); ++i)
-    {
-        out << " " << obj[i];
-    }
-    out << " ]";
-    return out;
-}
+ostream &operator<<(ostream &out, const IndexedSequence<T> &obj);
+
+// Compute a mapping that maps the index of an element in lhs to the index of
+// that same element in rhs. For each element that is contained in both
+// sequences a pair<size_t, size_t> with the corresponding indices is written to
+// the output iterator.
+template <typename T, typename T_OUTPUT_ITER>
+void makeIndexMap(const IndexedSequence<T> &lhs, const IndexedSequence<T> &rhs,
+    T_OUTPUT_ITER out);
+
+// Compute a mapping that maps the index of an element in lhs to the index of
+// that same element in rhs. For each element that is contained in both
+// sequences _and_ for which the predicate evaluates to true, a pair<size_t,
+// size_t> with the corresponding indices is written to the output iterator.
+template <typename T, typename T_PREDICATE, typename T_OUTPUT_ITER>
+void makeIndexMap(const IndexedSequence<T> &lhs, const IndexedSequence<T> &rhs,
+    T_PREDICATE predicate, T_OUTPUT_ITER out);
+
+// Output a sequence that contains a copy of each element in the input sequence
+// for which the predicate evaluates to true.
+template <typename T, typename T_PREDICATE>
+IndexedSequence<T> filter(const IndexedSequence<T> &in, T_PREDICATE predicate);
 
 // @}
 
@@ -157,6 +172,12 @@ inline const T &IndexedSequence<T>::operator[](size_t i) const
 }
 
 template <typename T>
+inline bool IndexedSequence<T>::empty() const
+{
+    return itsSequence.empty();
+}
+
+template <typename T>
 inline size_t IndexedSequence<T>::size() const
 {
     return itsSequence.size();
@@ -192,6 +213,18 @@ template <typename T>
 bool IndexedSequence<T>::contains(const T &element) const
 {
     return (itsIndex.find(element) != itsIndex.end());
+}
+
+template <typename T>
+ostream &operator<<(ostream &out, const IndexedSequence<T> &obj)
+{
+    out << "[";
+    for(size_t i = 0; i < obj.size(); ++i)
+    {
+        out << " " << obj[i];
+    }
+    out << " ]";
+    return out;
 }
 
 template <typename T, typename T_OUTPUT_ITER>

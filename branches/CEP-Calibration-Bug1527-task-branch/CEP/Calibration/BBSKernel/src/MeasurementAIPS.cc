@@ -88,7 +88,7 @@ MeasurementAIPS::MeasurementAIPS(const string &filename,
     initInstrument();
 
     // Get the phase center of the selected field.
-    initPhaseCenter();
+    initPhaseReference();
 
     // Select a single measurement from the measurement set.
     // TODO: At the moment we use (OBSERVATION_ID, FIELD_ID, DATA_DESC_ID) as
@@ -115,13 +115,10 @@ VisDimensions MeasurementAIPS::dimensions(const VisSelection &selection)
     Slicer slicer = getCellSlicer(selection);
     BaselineMask mask = selection.getBaselineFilter().createMask(itsInstrument);
     Table tab_selection = getTableSelection(itsMainTableView, selection, mask);
-    ASSERTSTR(tab_selection.nrow() > 0, "Data selection did not match any"
-        " rows.");
-
     return getDimensionsImpl(tab_selection, mask, slicer);
 }
 
-VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
+VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
     const string &column, bool readUVW) const
 {
     NSTimer readTimer, copyTimer;
@@ -129,14 +126,15 @@ VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
     Slicer slicer = getCellSlicer(selection);
     BaselineMask mask = selection.getBaselineFilter().createMask(itsInstrument);
     Table tab_selection = getTableSelection(itsMainTableView, selection, mask);
-    ASSERTSTR(tab_selection.nrow() > 0, "Data selection did not match any"
-        " rows.");
 
     VisDimensions dims(getDimensionsImpl(tab_selection, mask, slicer));
-    VisData::Ptr buffer(new VisData(dims));
-
+    ASSERTSTR(!dims.empty(), "No data found that matches the active data"
+        " selection criteria.");
     const size_t nFreq = dims.nFreq();
     const size_t nCorrelations = dims.nCorrelations();
+
+    // Allocate buffer for visibility data.
+    VisBuffer::Ptr buffer(new VisBuffer(dims));
 
     Table tab_tslot;
     size_t tslot = 0;
@@ -224,16 +222,16 @@ VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
             ASSERT(basel < dims.nBaselines());
 
             // Flag timeslot as available.
-            ASSERTSTR(buffer->tslot_flag[basel][tslot] == VisData::UNAVAILABLE,
+            ASSERTSTR(buffer->tslot_flag[basel][tslot] == VisBuffer::UNAVAILABLE,
                 "Measurement contains multiple samples with the same timestamp"
                 " for a single baseline.");
-            buffer->tslot_flag[basel][tslot] = VisData::AVAILABLE;
+            buffer->tslot_flag[basel][tslot] = VisBuffer::AVAILABLE;
 
             // Copy row (timeslot) flag.
             if(aips_flag_row(i))
             {
                 buffer->tslot_flag[basel][tslot] |=
-                    VisData::FLAGGED_IN_INPUT;
+                    VisBuffer::FLAGGED_IN_INPUT;
             }
 
             // Copy UVW.
@@ -262,7 +260,7 @@ VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
 }
 
 void MeasurementAIPS::write(const VisSelection &selection,
-    VisData::Ptr buffer, const string &column, bool writeFlags)
+    VisBuffer::Ptr buffer, const string &column, bool writeFlags)
 {
     NSTimer readTimer, writeTimer;
 
@@ -309,12 +307,6 @@ void MeasurementAIPS::write(const VisSelection &selection,
     Slicer slicer = getCellSlicer(selection);
     BaselineMask mask = selection.getBaselineFilter().createMask(itsInstrument);
     Table tab_selection = getTableSelection(itsMainTableView, selection, mask);
-    ASSERTSTR(tab_selection.nrow() > 0, "Data selection did not match any"
-        " rows.");
-
-    const VisDimensions &dims = buffer->dimensions();
-    const size_t nFreq = dims.nFreq();
-    const size_t nCorrelations = dims.nCorrelations();
 
     // Allocate temporary buffers to be able to reverse frequency channels.
     // TODO: Some performance can be gained by creating a specialized
@@ -323,12 +315,12 @@ void MeasurementAIPS::write(const VisSelection &selection,
     bool ascending[] = {!itsFreqAxisReversed, true};
     boost::multi_array<sample_t, 2>::size_type order_data[] = {1, 0};
     boost::multi_array<sample_t, 2>
-        visBuffer(boost::extents[nFreq][nCorrelations],
+        visBuffer(boost::extents[buffer->nFreq()][buffer->nCorrelations()],
             boost::general_storage_order<2>(order_data, ascending));
 
     boost::multi_array<flag_t, 2>::size_type order_flag[] = {1, 0};
     boost::multi_array<flag_t, 2>
-        flagBuffer(boost::extents[nFreq][nCorrelations],
+        flagBuffer(boost::extents[buffer->nFreq()][buffer->nCorrelations()],
             boost::general_storage_order<2>(order_flag, ascending));
 
     Table tab_tslot;
@@ -337,7 +329,7 @@ void MeasurementAIPS::write(const VisSelection &selection,
     TableIterator tslotIterator(tab_selection, "TIME");
     while(!tslotIterator.pastEnd())
     {
-        ASSERTSTR(tslot < dims.nTime(), "Timeslot out of range.");
+        ASSERTSTR(tslot < buffer->nTime(), "Timeslot out of range.");
 
         // Extract next timeslot.
         tab_tslot = tslotIterator.table();
@@ -368,7 +360,8 @@ void MeasurementAIPS::write(const VisSelection &selection,
         // Open data column for writing.
         ArrayColumn<Complex> c_data(tab_tslot, column);
 
-        mismatch = mismatch && (dims[TIME]->center(tslot) == aips_time(0));
+        mismatch = mismatch
+            && (buffer->grid()[TIME]->center(tslot) == aips_time(0));
 
         writeTimer.start();
         for(uInt i = 0; i < nRows; ++i)
@@ -383,8 +376,8 @@ void MeasurementAIPS::write(const VisSelection &selection,
             }
 
             // Get time sequence for this baseline.
-            size_t basel = dims.baselines().index(baseline);
-            ASSERT(basel < dims.nBaselines());
+            size_t basel = buffer->baselines().index(baseline);
+            ASSERT(basel < buffer->nBaselines());
 
             if(writeFlags)
             {
@@ -395,7 +388,8 @@ void MeasurementAIPS::write(const VisSelection &selection,
                 flagBuffer = buffer->vis_flag[basel][tslot];
 
                 // Write visibility flags.
-                Array<Bool> vis_flag(IPosition(2, nCorrelations, nFreq),
+                Array<Bool> vis_flag(IPosition(2, buffer->nCorrelations(),
+                    buffer->nFreq()),
                     reinterpret_cast<Bool*>(flagBuffer.data()), SHARE);
                 c_flag.putSlice(i, slicer, vis_flag);
             }
@@ -404,7 +398,8 @@ void MeasurementAIPS::write(const VisSelection &selection,
             visBuffer = buffer->vis_data[basel][tslot];
 
             // Write visibilities.
-            Array<Complex> vis_data(IPosition(2, nCorrelations, nFreq),
+            Array<Complex> vis_data(IPosition(2, buffer->nCorrelations(),
+                buffer->nFreq()),
                 reinterpret_cast<Complex*>(visBuffer.data()), SHARE);
             c_data.putSlice(i, slicer, vis_data);
         }
@@ -476,14 +471,14 @@ void MeasurementAIPS::initInstrument()
     itsInstrument = Instrument(name, position, stations);
 }
 
-void MeasurementAIPS::initPhaseCenter()
+void MeasurementAIPS::initPhaseReference()
 {
     // Get phase center as RA and DEC (J2000).
     ROMSFieldColumns field(itsMS.field());
     ASSERT(field.nrow() > itsIdField);
     ASSERT(!field.flagRow()(itsIdField));
 
-    itsPhaseCenter = MDirection::Convert(field.phaseDirMeas(itsIdField),
+    itsPhaseReference = MDirection::Convert(field.phaseDirMeas(itsIdField),
         MDirection::J2000)();
 }
 
@@ -600,7 +595,7 @@ void MeasurementAIPS::initDimensions()
 }
 
 // NOTE: OPTIMIZATION OPPORTUNITY: Cache implementation specific selection
-// within a specialization of VisSelection or VisData.
+// within a specialization of VisSelection or VisBuffer.
 Table MeasurementAIPS::getTableSelection(const Table &table,
     const VisSelection &selection, const BaselineMask &mask) const
 {
@@ -625,20 +620,13 @@ Table MeasurementAIPS::getTableSelection(const Table &table,
 
     if(selection.isSet(VisSelection::BASELINE_FILTER))
     {
-//        TableExprNodeSet selectionExpr;
-//        for(size_t i = 0; i < itsInstrument.size(); ++i)
-//        {
-//            if(mask(i))
-//            {
-//                selectionExpr.add(TableExprNodeSetElem(static_cast<Int>(i)));
-//            }
-//        }
-
-//        if(selectionExpr.nelements() > 0)
-//        {
-//            filter = filter && table.col("ANTENNA1").in(selectionExpr)
-//                && table.col("ANTENNA2").in(selectionExpr);
-//        }
+        TableExprNodeSet stationSetExpr = getStationSetExpr(mask);
+        LOG_DEBUG_STR("Selected " << stationSetExpr.nelements() << " stations.");
+        if(stationSetExpr.nelements() > 0)
+        {
+            filter = filter && table.col("ANTENNA1").in(stationSetExpr)
+                && table.col("ANTENNA2").in(stationSetExpr);
+        }
 
         if(selection.getBaselineFilter().baselineType() == BaselineFilter::AUTO)
         {
@@ -658,6 +646,36 @@ Table MeasurementAIPS::getTableSelection(const Table &table,
     }
 
     return table(filter);
+}
+
+TableExprNodeSet MeasurementAIPS::getStationSetExpr(const BaselineMask &mask)
+    const
+{
+    vector<bool> usedStations(itsInstrument.size(), false);
+
+    // Find all stations used by looping over all baselines and marking the
+    // corresponding stations.
+    const BaselineSeq &baselines = this->baselines();
+    for(size_t i = 0; i < baselines.size(); ++i)
+    {
+        if(mask(baselines[i]))
+        {
+            usedStations[baselines[i].first] = true;
+            usedStations[baselines[i].second] = true;
+        }
+    }
+
+    // Create a TAQL set expression from the stations found.
+    TableExprNodeSet selectionExpr;
+    for(size_t i = 0; i < usedStations.size(); ++i)
+    {
+        if(usedStations[i])
+        {
+            selectionExpr.add(TableExprNodeSetElem(static_cast<Int>(i)));
+        }
+    }
+
+    return selectionExpr;
 }
 
 // NOTE: OPTIMIZATION OPPORTUNITY: when reading all channels, do not use a
@@ -706,6 +724,9 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
 VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     const BaselineMask &mask, const Slicer slicer) const
 {
+    ASSERTSTR(tab_selection.nrow() > 0, "Cannot determine dimensions of empty"
+        " data selection.");
+
     VisDimensions dims;
 
     // Initialize frequency axis.
@@ -724,7 +745,7 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     }
 
     // Get number of channels in the selection.
-    const unsigned int nFreq = slicer.length()[1];
+    const size_t nFreq = slicer.length()[1];
 
     // Construct frequency axis.
     Axis::ShPtr freqAxis(new RegularAxis(lower, (upper - lower) / nFreq,
@@ -758,7 +779,7 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     sortBaselineColumns[1] = "ANTENNA2";
     Table tab_baselines = tab_selection.sort(sortBaselineColumns,
         Sort::Ascending, Sort::QuickSort + Sort::NoDuplicates);
-    const unsigned int nBaselines = tab_baselines.nrow();
+    const size_t nBaselines = tab_baselines.nrow();
 
     // Initialize baseline axis.
     ROScalarColumn<Int> c_antenna1(tab_baselines, "ANTENNA1");
@@ -767,11 +788,12 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     Vector<Int> antenna2 = c_antenna2.getColumn();
 
     BaselineSeq baselines;
-    for(unsigned int i = 0; i < nBaselines; ++i)
+    for(size_t i = 0; i < nBaselines; ++i)
     {
         baselines.append(baseline_t(antenna1[i], antenna2[i]));
     }
-    dims.setBaselines(baselines);
+    // Filter baselines according to the given baseline mask.
+    dims.setBaselines(filter(baselines, mask));
 
     // Initialize correlation axis.
     dims.setCorrelations(correlations());

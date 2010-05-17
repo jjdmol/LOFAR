@@ -1,4 +1,4 @@
-//# VisData.cc: A buffer of visibility data and associated information (e.g.
+//# VisBuffer.cc: A buffer of visibility data and associated information (e.g.
 //# flags, UVW coordinates).
 //#
 //# Copyright (C) 2007
@@ -22,7 +22,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/VisData.h>
+#include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Exceptions.h>
 
 #include <Common/lofar_algorithm.h>
@@ -33,11 +33,11 @@ namespace LOFAR
 namespace BBS
 {
 
-VisData::VisData()
+VisBuffer::VisBuffer()
 {
 }
 
-VisData::VisData(const VisDimensions &dims)
+VisBuffer::VisBuffer(const VisDimensions &dims)
     :   uvw(boost::extents[dims.nBaselines()][dims.nTime()][3]),
         tslot_flag(boost::extents[dims.nBaselines()][dims.nTime()]),
         vis_flag(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
@@ -64,19 +64,9 @@ VisData::VisData(const VisDimensions &dims)
     {
         for(size_t j = 0; j < nTime; ++j)
         {
-            tslot_flag[i][j] = VisData::UNAVAILABLE;
+            tslot_flag[i][j] = VisBuffer::UNAVAILABLE;
         }
     }
-}
-
-void VisData::setPhaseCenter(const casa::MDirection &center)
-{
-    itsPhaseCenter = center;
-}
-
-void VisData::setReferenceFreq(double freq)
-{
-    itsReferenceFreq = freq;
 }
 
 } //# namespace BBS

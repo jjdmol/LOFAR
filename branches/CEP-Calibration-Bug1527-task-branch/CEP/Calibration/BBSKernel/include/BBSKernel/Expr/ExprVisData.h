@@ -25,7 +25,7 @@
 #define LOFAR_BBSKERNEL_EXPR_EXPRVISDATA_H
 
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/VisData.h>
+#include <BBSKernel/VisBuffer.h>
 
 // \file
 // Make visibility data from an observation available for use in an expression
@@ -45,14 +45,11 @@ public:
     typedef shared_ptr<ExprVisData>        Ptr;
     typedef shared_ptr<const ExprVisData>  ConstPtr;
 
-    ExprVisData(const VisData::Ptr &chunk, const baseline_t &baseline,
+    ExprVisData(const VisBuffer::Ptr &chunk, const baseline_t &baseline,
         Correlation::Type element00 = Correlation::XX,
         Correlation::Type element01 = Correlation::XY,
         Correlation::Type element10 = Correlation::YX,
         Correlation::Type element11 = Correlation::YY);
-
-//    void setCorrelations(Correlation element00, Correlation element01, Correlation element10,
-//        Correlation element11);
 
 protected:
     virtual const JonesMatrix evaluateExpr(const Request &request, Cache&,
@@ -71,7 +68,7 @@ private:
     Matrix copyData(const Grid &grid, size_t element,
         const vector<pair<size_t, size_t> > (&mapping)[2]) const;
 
-    VisData::Ptr    itsChunk;
+    VisBuffer::Ptr  itsChunk;
     size_t          itsBaseline;
     bool            itsCorrMask[4];
     size_t          itsCorr[4];

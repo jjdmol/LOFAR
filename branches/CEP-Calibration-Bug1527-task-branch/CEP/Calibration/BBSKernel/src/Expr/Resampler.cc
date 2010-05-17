@@ -75,35 +75,35 @@ const JonesMatrix Resampler::evaluateExpr(const Request &request, Cache &cache,
 
         for(unsigned int i = 0; i < arg.size(); ++i)
         {
-            const ValueSet in(arg.getValueSet(i));
+            const Element in(arg.getElement(i));
 
-            ValueSet out;
+            Element out;
             out.assign(resampleWithFlags(in.value(), flags, axisMap));
-            for(ValueSet::const_iterator it = in.begin(), end = in.end();
+            for(Element::const_iterator it = in.begin(), end = in.end();
                 it != end; ++it)
             {
                 out.assign(it->first, resampleWithFlags(it->second, flags,
                     axisMap));
             }
 
-            result.setValueSet(i, out);
+            result.setElement(i, out);
         }
     }
     else
     {
         for(unsigned int i = 0; i < arg.size(); ++i)
         {
-            const ValueSet in(arg.getValueSet(i));
+            const Element in(arg.getElement(i));
 
-            ValueSet out;
+            Element out;
             out.assign(resample(in.value(), axisMap));
-            for(ValueSet::const_iterator it = in.begin(), end = in.end();
+            for(Element::const_iterator it = in.begin(), end = in.end();
                 it != end; ++it)
             {
                 out.assign(it->first, resample(it->second, axisMap));
             }
 
-            result.setValueSet(i, out);
+            result.setElement(i, out);
         }
     }
 

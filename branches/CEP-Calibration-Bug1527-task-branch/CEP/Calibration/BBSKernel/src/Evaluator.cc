@@ -36,7 +36,7 @@ string Evaluator::theirProcTimerNames[Evaluator::N_ProcTimer] =
     "EVAL_RHS",
     "APPLY"};
 
-Evaluator::Evaluator(const VisData::Ptr &lhs, const MeasurementExpr::Ptr &rhs)
+Evaluator::Evaluator(const VisBuffer::Ptr &lhs, const MeasurementExpr::Ptr &rhs)
     :   itsLHS(lhs),
         itsRHS(rhs)
 {
@@ -45,22 +45,10 @@ Evaluator::Evaluator(const VisData::Ptr &lhs, const MeasurementExpr::Ptr &rhs)
     makeIndexMap(itsLHS->baselines(), itsRHS->baselines(),
         back_inserter(itsBlMap));
 
-    if(itsBlMap.empty())
-    {
-        LOG_WARN_STR("No baselines found for which data is available in both"
-            " the observation and the model.");
-    }
-
     // Construct a sequence of pairs of indices of matching correlations (i.e.
     // correlations known by both LHS and RHS).
     makeIndexMap(itsLHS->correlations(), itsRHS->correlations(),
         back_inserter(itsCrMap));
-
-    if(itsCrMap.empty())
-    {
-        LOG_WARN_STR("No correlations found for which data is available in both"
-            " the observation and the model.");
-    }
 
     // Set default processing mode.
     setMode(EQUATE);

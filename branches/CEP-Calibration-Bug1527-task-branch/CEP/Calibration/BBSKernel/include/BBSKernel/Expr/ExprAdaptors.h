@@ -209,7 +209,7 @@ const Vector<LENGTH> AsExpr<Vector<LENGTH> >::evaluateExpr
     for(unsigned int i = 0; i < LENGTH; ++i)
     {
         args[i] = itsArg[i]->evaluate(request, cache, grid);
-        result.setValueSet(i, args[i].getValueSet());
+        result.setElement(i, args[i].getElement());
     }
 
     // Evaluate flags.

@@ -64,8 +64,8 @@ public:
     void assign(const Matrix &value, bool bound = true);
 
 private:
-    Matrix          itsValue;
-    bool            itsBindMask;
+    Matrix  itsValue;
+    bool    itsBindMask;
 };
 
 template <>
@@ -82,8 +82,8 @@ public:
     void assign(unsigned int i0, const Matrix &value, bool bound = true);
 
 private:
-    Matrix          itsValue[LENGTH];
-    bool            itsBindMask[LENGTH];
+    Matrix  itsValue[LENGTH];
+    bool    itsBindMask[LENGTH];
 };
 
 template <>
@@ -100,8 +100,8 @@ public:
         bool bound = true);
 
 private:
-    Matrix          itsValue[4];
-    bool            itsBindMask[4];
+    Matrix  itsValue[4];
+    bool    itsBindMask[4];
 };
 
 // @}

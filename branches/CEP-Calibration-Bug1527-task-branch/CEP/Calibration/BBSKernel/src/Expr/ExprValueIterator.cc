@@ -31,10 +31,10 @@ namespace BBS
 
 ExprValueIterator<Scalar>::ExprValueIterator(const Scalar &value)
 {
-    itsValueSet = value.getValueSet(0);
-    itsIterator = itsValueSet.begin();
+    itsElement = value.getElement(0);
+    itsIterator = itsElement.begin();
     itsKey =
-        itsIterator == itsValueSet.end() ? PValueKey() : itsIterator->first;
+        itsIterator == itsElement.end() ? PValueKey() : itsIterator->first;
 }
 
 const ExprValueView<Scalar>
@@ -42,9 +42,9 @@ ExprValueIterator<Scalar>::value(const PValueKey &key) const
 {
     ExprValueView<Scalar> view;
 
-    bool bound = itsIterator != itsValueSet.end()
+    bool bound = itsIterator != itsElement.end()
         && key == itsIterator->first;
-    view.assign(bound ? itsIterator->second : itsValueSet.value(), bound);
+    view.assign(bound ? itsIterator->second : itsElement.value(), bound);
 
     return view;
 }
@@ -55,7 +55,7 @@ void ExprValueIterator<Scalar>::advance(const PValueKey &key)
     {
         ++itsIterator;
         itsKey =
-            itsIterator == itsValueSet.end() ? PValueKey() : itsIterator->first;
+            itsIterator == itsElement.end() ? PValueKey() : itsIterator->first;
         DBGASSERT(atEnd() != this->key().valid());
     }
 }
@@ -65,10 +65,10 @@ ExprValueIterator<JonesMatrix>::ExprValueIterator(const JonesMatrix &value)
     itsAtEnd = true;
     for(unsigned int i = 0; i < 4; ++i)
     {
-        itsValueSet[i] = value.getValueSet(i);
-        itsIterator[i] = itsValueSet[i].begin();
+        itsElement[i] = value.getElement(i);
+        itsIterator[i] = itsElement[i].begin();
 
-        if(itsIterator[i] != itsValueSet[i].end())
+        if(itsIterator[i] != itsElement[i].end())
         {
             itsAtEnd = false;
             itsKey = std::min(itsKey, itsIterator[i]->first);
@@ -81,22 +81,22 @@ ExprValueIterator<JonesMatrix>::value(const PValueKey &key) const
 {
     ExprValueView<JonesMatrix> view;
 
-    bool bound = itsIterator[0] != itsValueSet[0].end()
+    bool bound = itsIterator[0] != itsElement[0].end()
         && key == itsIterator[0]->first;
     view.assign(0, 0,
-        bound ? itsIterator[0]->second : itsValueSet[0].value(), bound);
-    bound = itsIterator[1] != itsValueSet[1].end()
+        bound ? itsIterator[0]->second : itsElement[0].value(), bound);
+    bound = itsIterator[1] != itsElement[1].end()
         && key == itsIterator[1]->first;
     view.assign(0, 1,
-        bound ? itsIterator[1]->second : itsValueSet[1].value(), bound);
-    bound = itsIterator[2] != itsValueSet[2].end()
+        bound ? itsIterator[1]->second : itsElement[1].value(), bound);
+    bound = itsIterator[2] != itsElement[2].end()
         && key == itsIterator[2]->first;
     view.assign(1, 0,
-        bound ? itsIterator[2]->second : itsValueSet[2].value(), bound);
-    bound = itsIterator[3] != itsValueSet[3].end()
+        bound ? itsIterator[2]->second : itsElement[2].value(), bound);
+    bound = itsIterator[3] != itsElement[3].end()
         && key == itsIterator[3]->first;
     view.assign(1, 1,
-        bound ? itsIterator[3]->second : itsValueSet[3].value(), bound);
+        bound ? itsIterator[3]->second : itsElement[3].value(), bound);
 
     return view;
 }
@@ -109,13 +109,13 @@ void ExprValueIterator<JonesMatrix>::advance(const PValueKey &key)
         itsKey = PValueKey();
         for(unsigned int i = 0; i < 4; ++i)
         {
-            if(itsIterator[i] != itsValueSet[i].end()
+            if(itsIterator[i] != itsElement[i].end()
                 && key == itsIterator[i]->first)
             {
                 ++itsIterator[i];
             }
 
-            if(itsIterator[i] != itsValueSet[i].end())
+            if(itsIterator[i] != itsElement[i].end())
             {
                 itsAtEnd = false;
                 itsKey = std::min(itsKey, itsIterator[i]->first);

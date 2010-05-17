@@ -1,4 +1,4 @@
-//# ValueSet.cc: A scalar field that transparantly handles 0-D (constant) and
+//# Element.cc: A scalar field that transparantly handles 0-D (constant) and
 //# 2-D fields.
 //#
 //# Copyright (C) 2009
@@ -22,15 +22,15 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/Expr/ValueSet.h>
+#include <BBSKernel/Expr/Element.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-ValueSet::ValueSet()
-    :   RefCounted<ValueSetImpl>(new ValueSetImpl())
+Element::Element()
+    :   RefCounted<ElementImpl>(new ElementImpl())
 {
 }
 

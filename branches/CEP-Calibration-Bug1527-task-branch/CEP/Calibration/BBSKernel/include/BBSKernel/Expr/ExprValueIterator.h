@@ -26,7 +26,7 @@
 // \file
 // Iterate the bound values of an ExprValue instance.
 
-#include <BBSKernel/Expr/ValueSet.h>
+#include <BBSKernel/Expr/Element.h>
 #include <BBSKernel/Expr/ExprValueView.h>
 
 namespace LOFAR
@@ -57,9 +57,9 @@ public:
     void advance(const PValueKey &key);
 
 private:
-    PValueKey                   itsKey;
-    ValueSet                    itsValueSet;
-    ValueSet::const_iterator    itsIterator;
+    PValueKey               itsKey;
+    Element                 itsElement;
+    Element::const_iterator itsIterator;
 };
 
 template <>
@@ -80,10 +80,10 @@ public:
     void advance(const PValueKey &key);
 
 private:
-    bool                        itsAtEnd;
-    PValueKey                   itsKey;
-    ValueSet                    itsValueSet[LENGTH];
-    ValueSet::const_iterator    itsIterator[LENGTH];
+    bool                    itsAtEnd;
+    PValueKey               itsKey;
+    Element                 itsElement[LENGTH];
+    Element::const_iterator itsIterator[LENGTH];
 };
 
 template <>
@@ -103,10 +103,10 @@ public:
     void advance(const PValueKey &key);
 
 private:
-    bool                        itsAtEnd;
-    PValueKey                   itsKey;
-    ValueSet                    itsValueSet[4];
-    ValueSet::const_iterator    itsIterator[4];
+    bool                    itsAtEnd;
+    PValueKey               itsKey;
+    Element                 itsElement[4];
+    Element::const_iterator itsIterator[4];
 };
 
 // @}
@@ -117,7 +117,7 @@ private:
 
 inline bool ExprValueIterator<Scalar>::atEnd() const
 {
-    return itsIterator == itsValueSet.end();
+    return itsIterator == itsElement.end();
 }
 
 inline const PValueKey &ExprValueIterator<Scalar>::key() const
@@ -146,10 +146,10 @@ ExprValueIterator<Vector<LENGTH> >::ExprValueIterator
     itsAtEnd = true;
     for(unsigned int i = 0; i < LENGTH; ++i)
     {
-        itsValueSet[i] = value.getValueSet(i);
-        itsIterator[i] = itsValueSet[i].begin();
+        itsElement[i] = value.getElement(i);
+        itsIterator[i] = itsElement[i].begin();
 
-        if(itsIterator[i] != itsValueSet[i].end())
+        if(itsIterator[i] != itsElement[i].end())
         {
             itsAtEnd = false;
             itsKey = std::min(itsKey, itsIterator[i]->first);
@@ -177,10 +177,10 @@ ExprValueIterator<Vector<LENGTH> >::value(const PValueKey &key) const
 
     for(unsigned int i = 0; i < LENGTH; ++i)
     {
-        bool bound = itsIterator[i] != itsValueSet[i].end()
+        bool bound = itsIterator[i] != itsElement[i].end()
             && key == itsIterator[i]->first;
         view.assign(i,
-            bound ? itsIterator[i]->second : itsValueSet[i].value(), bound);
+            bound ? itsIterator[i]->second : itsElement[i].value(), bound);
     }
 
     return view;
@@ -202,13 +202,13 @@ void ExprValueIterator<Vector<LENGTH> >::advance(const PValueKey &key)
         itsKey = PValueKey();
         for(unsigned int i = 0; i < LENGTH; ++i)
         {
-            if(itsIterator[i] != itsValueSet[i].end()
+            if(itsIterator[i] != itsElement[i].end()
                 && key == itsIterator[i]->first)
             {
                 ++itsIterator[i];
             }
 
-            if(itsIterator[i] != itsValueSet[i].end())
+            if(itsIterator[i] != itsElement[i].end())
             {
                 itsAtEnd = false;
                 itsKey = std::min(itsKey, itsIterator[i]->first);

@@ -88,7 +88,7 @@ const T_ARG0 MergeFlags<T_ARG0, T_ARG1>::evaluateExpr
         // Pass through value.
         for(unsigned int i = 0; i < arg0.size(); ++i)
         {
-            result.setValueSet(i, arg0.getValueSet(i));
+            result.setElement(i, arg0.getElement(i));
         }
 
         // Merge flags.

@@ -1,4 +1,4 @@
-//# VisData.h: A buffer of visibility data and associated information (e.g.
+//# VisBuffer.h: A buffer of visibility data and associated information (e.g.
 //# flags, UVW coordinates).
 //#
 //# Copyright (C) 2007
@@ -21,16 +21,17 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_VISDATA_H
-#define LOFAR_BBSKERNEL_VISDATA_H
+#ifndef LOFAR_BBSKERNEL_VISBUFFER_H
+#define LOFAR_BBSKERNEL_VISBUFFER_H
+
+// \file
+// A buffer of visibility data and associated information (e.g. flags, UVW
+// coordinates).
 
 #include <Common/lofar_smartptr.h>
-
 #include <BBSKernel/Types.h>
 #include <BBSKernel/VisDimensions.h>
-
 #include <measures/Measures/MDirection.h>
-
 #include <boost/multi_array.hpp>
 
 namespace LOFAR
@@ -41,11 +42,11 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
-class VisData
+class VisBuffer
 {
 public:
-    typedef shared_ptr<VisData>         Ptr;
-    typedef shared_ptr<const VisData>   ConstPtr;
+    typedef shared_ptr<VisBuffer>       Ptr;
+    typedef shared_ptr<const VisBuffer> ConstPtr;
 
     enum TimeFlag
     {
@@ -55,17 +56,11 @@ public:
         N_TimeFlag
     };
 
-    VisData();
-    VisData(const VisDimensions &dims);
+    VisBuffer();
+    VisBuffer(const VisDimensions &dims);
 
     // Access to the dimensions of this buffer.
     const VisDimensions &dimensions() const;
-
-    void setPhaseCenter(const casa::MDirection &center);
-    casa::MDirection getPhaseCenter() const;
-
-    void setReferenceFreq(double freq);
-    double getReferenceFreq() const;
 
     // Convenience functions that delegate to VisDimensions (refer to the
     // documentation of VisDimensions for their documentation).
@@ -88,9 +83,6 @@ public:
     boost::multi_array<sample_t, 4>     vis_data;
 
 private:
-    casa::MDirection    itsPhaseCenter;
-    double              itsReferenceFreq;
-
     // Shape of the buffer along all four dimensions (frequency, time, baseline,
     // correlation).
     VisDimensions       itsDims;
@@ -99,60 +91,50 @@ private:
 // @}
 
 // -------------------------------------------------------------------------- //
-// - Implementation: VisData                                                - //
+// - Implementation: VisBuffer                                              - //
 // -------------------------------------------------------------------------- //
 
-inline casa::MDirection VisData::getPhaseCenter() const
-{
-    return itsPhaseCenter;
-}
-
-inline double VisData::getReferenceFreq() const
-{
-    return itsReferenceFreq;
-}
-
-inline size_t VisData::nFreq() const
+inline size_t VisBuffer::nFreq() const
 {
     return itsDims[FREQ]->size();
 }
 
-inline size_t VisData::nTime() const
+inline size_t VisBuffer::nTime() const
 {
     return itsDims[TIME]->size();
 }
 
-inline size_t VisData::nBaselines() const
+inline size_t VisBuffer::nBaselines() const
 {
     return itsDims.nBaselines();
 }
 
-inline size_t VisData::nCorrelations() const
+inline size_t VisBuffer::nCorrelations() const
 {
     return itsDims.nCorrelations();
 }
 
-inline Box VisData::domain() const
+inline Box VisBuffer::domain() const
 {
     return itsDims.grid().getBoundingBox();
 }
 
-inline const Grid &VisData::grid() const
+inline const Grid &VisBuffer::grid() const
 {
     return itsDims.grid();
 }
 
-inline const BaselineSeq &VisData::baselines() const
+inline const BaselineSeq &VisBuffer::baselines() const
 {
     return itsDims.baselines();
 }
 
-inline const CorrelationSeq &VisData::correlations() const
+inline const CorrelationSeq &VisBuffer::correlations() const
 {
     return itsDims.correlations();
 }
 
-inline const VisDimensions &VisData::dimensions() const
+inline const VisDimensions &VisBuffer::dimensions() const
 {
     return itsDims;
 }

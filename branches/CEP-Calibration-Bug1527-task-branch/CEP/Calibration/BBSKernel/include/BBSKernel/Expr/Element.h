@@ -1,4 +1,4 @@
-//# ValueSet.h: A scalar field that transparantly handles 0-D (constant) and 2-D
+//# Element.h: A scalar field that transparantly handles 0-D (constant) and 2-D
 //# fields.
 //#
 //# Copyright (C) 2009
@@ -69,7 +69,7 @@ public:
 // coefficient) pair.
 // TODO: Use hashed container instead of map<> to optimize key look-up. However,
 // need iteration in sorted order (?).
-class ValueSetImpl: public RefCountable
+class ElementImpl: public RefCountable
 {
 public:
     typedef map<PValueKey, Matrix>::iterator        iterator;
@@ -95,15 +95,15 @@ private:
     map<PValueKey, Matrix>  itsDepData;
 };
 
-// Reference counting proxy class that manages a ValueSetImpl.
+// Reference counting proxy class that manages a ElementImpl.
 // TODO: return Matrix& or Matrix in value(*)?
-class ValueSet: public RefCounted<ValueSetImpl>
+class Element: public RefCounted<ElementImpl>
 {
 public:
-    typedef ValueSetImpl::iterator          iterator;
-    typedef ValueSetImpl::const_iterator    const_iterator;
+    typedef ElementImpl::iterator          iterator;
+    typedef ElementImpl::const_iterator    const_iterator;
 
-    ValueSet();
+    Element();
 
     // Return the number of scalar fields in the set. This number is at least
     // one, because there is always the unbound scalar field. Note that this
@@ -169,40 +169,40 @@ inline bool PValueKey::operator==(const PValueKey &other) const
 }
 
 // -------------------------------------------------------------------------- //
-// - Implementation: ValueSetImpl                                           - //
+// - Implementation: ElementImpl                                           - //
 // -------------------------------------------------------------------------- //
 
-inline size_t ValueSetImpl::size() const
+inline size_t ElementImpl::size() const
 {
     return 1 + itsDepData.size();
 }
 
-inline ValueSetImpl::const_iterator ValueSetImpl::begin() const
+inline ElementImpl::const_iterator ElementImpl::begin() const
 {
     return itsDepData.begin();
 }
 
-inline ValueSetImpl::const_iterator ValueSetImpl::end() const
+inline ElementImpl::const_iterator ElementImpl::end() const
 {
     return itsDepData.end();
 }
 
-inline ValueSetImpl::iterator ValueSetImpl::begin()
+inline ElementImpl::iterator ElementImpl::begin()
 {
     return itsDepData.begin();
 }
 
-inline ValueSetImpl::iterator ValueSetImpl::end()
+inline ElementImpl::iterator ElementImpl::end()
 {
     return itsDepData.end();
 }
 
-inline const Matrix ValueSetImpl::value() const
+inline const Matrix ElementImpl::value() const
 {
     return itsData;
 }
 
-inline const Matrix ValueSetImpl::value(const PValueKey &key, bool &found)
+inline const Matrix ElementImpl::value(const PValueKey &key, bool &found)
     const
 {
     map<PValueKey, Matrix>::const_iterator it = itsDepData.find(key);
@@ -210,88 +210,88 @@ inline const Matrix ValueSetImpl::value(const PValueKey &key, bool &found)
     return (found ? it->second : itsData);
 }
 
-inline Matrix ValueSetImpl::value()
+inline Matrix ElementImpl::value()
 {
     return itsData;
 }
 
-inline Matrix ValueSetImpl::value(const PValueKey &key)
+inline Matrix ElementImpl::value(const PValueKey &key)
 {
     return itsDepData[key];
 }
 
-inline void ValueSetImpl::assign(const Matrix &value)
+inline void ElementImpl::assign(const Matrix &value)
 {
     itsData = value;
 }
 
-inline void ValueSetImpl::assign(const PValueKey &key, const Matrix &value)
+inline void ElementImpl::assign(const PValueKey &key, const Matrix &value)
 {
     itsDepData[key] = value;
 }
 
 
 // -------------------------------------------------------------------------- //
-// - Implementation: ValueSet                                               - //
+// - Implementation: Element                                               - //
 // -------------------------------------------------------------------------- //
 
-inline size_t ValueSet::size() const
+inline size_t Element::size() const
 {
     return instance().size();
 }
 
-inline ValueSet::iterator ValueSet::begin()
+inline Element::iterator Element::begin()
 {
     return instance().begin();
 }
 
-inline ValueSet::iterator ValueSet::end()
+inline Element::iterator Element::end()
 {
     return instance().end();
 }
 
-inline ValueSet::const_iterator ValueSet::begin() const
+inline Element::const_iterator Element::begin() const
 {
     return instance().begin();
 }
 
-inline ValueSet::const_iterator ValueSet::end() const
+inline Element::const_iterator Element::end() const
 {
     return instance().end();
 }
 
-inline const Matrix ValueSet::value() const
+inline const Matrix Element::value() const
 {
     return instance().value();
 }
 
-inline const Matrix ValueSet::value(const PValueKey &key) const
+inline const Matrix Element::value(const PValueKey &key) const
 {
     bool tmp;
     return instance().value(key, tmp);
 }
 
-inline const Matrix ValueSet::value(const PValueKey &key, bool &found) const
+inline const Matrix Element::value(const PValueKey &key, bool &found) const
 {
     return instance().value(key, found);
 }
 
-inline Matrix ValueSet::value()
+inline Matrix Element::value()
 {
     return instance().value();
 }
 
-inline Matrix ValueSet::value(const PValueKey &key)
+inline Matrix Element::value(const PValueKey &key)
 {
     return instance().value(key);
 }
 
-inline void ValueSet::assign(const Matrix &value)
+inline void Element::assign(const Matrix &value)
 {
     instance().assign(value);
 }
 
-inline void ValueSet::assign(const PValueKey &key, const Matrix &value)
+inline void Element::assign(const PValueKey &key, const Matrix &value)
 {
     return instance().assign(key, value);
 }

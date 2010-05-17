@@ -29,15 +29,7 @@
 
 #include <casa/Arrays/Slicer.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-
-namespace casa
-{
-    class ROMSObservationColumns;
-    class ROMSAntennaColumns;
-    class ROMSSpWindowColumns;
-    class ROMSPolarizationColumns;
-    class ROMSFieldColumns;
-};
+#include <tables/Tables/ExprNodeSet.h>
 
 namespace LOFAR
 {
@@ -58,19 +50,20 @@ public:
 
     virtual VisDimensions dimensions(const VisSelection &selection) const;
 
-    virtual VisData::Ptr read(const VisSelection &selection,
+    virtual VisBuffer::Ptr read(const VisSelection &selection,
         const string &column = "DATA", bool readUVW = true) const;
 
-    virtual void write(const VisSelection &selection, VisData::Ptr buffer,
+    virtual void write(const VisSelection &selection, VisBuffer::Ptr buffer,
         const string &column = "CORRECTED_DATA", bool writeFlags = true);
 
 private:
     void initInstrument();
-    void initPhaseCenter();
+    void initPhaseReference();
     void initDimensions();
 
     casa::Table getTableSelection(const casa::Table &table,
         const VisSelection &selection, const BaselineMask &mask) const;
+    casa::TableExprNodeSet getStationSetExpr(const BaselineMask &mask) const;
     casa::Slicer getCellSlicer(const VisSelection &selection) const;
     VisDimensions getDimensionsImpl(const casa::Table tab_selection,
         const BaselineMask &mask, const casa::Slicer slicer) const;
