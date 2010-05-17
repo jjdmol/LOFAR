@@ -26,16 +26,6 @@
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/Messages.h>
 
-#if 0
-#define NONREADY        casa::LSQFit::NONREADY
-#define SOLINCREMENT    casa::LSQFit::SOLINCREMENT
-#define DERIVLEVEL      casa::LSQFit::DERIVLEVEL
-#else
-#define NONREADY        0
-#define SOLINCREMENT    1
-#define DERIVLEVEL      2
-#endif
-
 namespace LOFAR
 {
 namespace BBS
@@ -173,7 +163,7 @@ void GlobalSolveController::run()
             done = true;
             for(size_t i = 0; i < solutions.size(); ++i)
             {
-                if(solutions[i].result == NONREADY)
+                if(!solutions[i].ready)
                 {
                     done = false;
                     break;
