@@ -239,8 +239,8 @@ template <typename SAMPLE_TYPE> void doWork()
 
     std::clog << transposedData.requiredSize() << " " << filteredData.requiredSize() << " " << correlatedData.requiredSize() << std::endl;
 
-    PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true, true);
-    Correlator     correlator(beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration, true /* use bandpass correction */);
+    PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true, true /* use bandpass correction */, true);
+    Correlator	     correlator(beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration);
 
     setSubbandTestPattern(&metaData, &transposedData, nrStations, signalFrequency, sampleRate);
 

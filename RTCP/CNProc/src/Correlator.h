@@ -6,7 +6,6 @@
 #endif
 
 
-#include <BandPass.h>
 #include <Interface/CorrelatedData.h>
 #include <Interface/StreamableData.h>
 
@@ -22,7 +21,7 @@ namespace RTCP {
 class Correlator
 {
   public:
-    Correlator(const std::vector<unsigned> &stationMapping, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const bool correctBandPass);
+    Correlator(const std::vector<unsigned> &stationMapping, const unsigned nrChannels, const unsigned nrSamplesPerIntegration);
 
     // We can correlate arrays of size
     // samples[nrChannels][nrStations][nrSamplesPerIntegration][nrPolarizations]
@@ -34,7 +33,6 @@ class Correlator
   private:
     const unsigned  itsNrStations, itsNrBaselines, itsNrChannels, itsNrSamplesPerIntegration;
     std::vector<float> itsCorrelationWeights; //[itsNrSamplesPerIntegration + 1]
-    const BandPass  itsBandPass;
 
     // A list indexed by station number, result is the station position in the input data.
     // This is needed in case of tied array beam forming.

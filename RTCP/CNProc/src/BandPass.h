@@ -1,6 +1,8 @@
 #ifndef LOFAR_CNPROC_BANDPASS_H
 #define LOFAR_CNPROC_BANDPASS_H
 
+#include <vector>
+
 
 namespace LOFAR {
 namespace RTCP {
@@ -11,29 +13,21 @@ namespace RTCP {
 class BandPass {
   public:
 			BandPass(bool correct, unsigned nrChannels);
-			~BandPass();
 
     const float		*correctionFactors() const;
-    const float		*squaredCorrectionFactors() const;
 
   private:
     void		computeCorrectionFactors(unsigned nrChannels);
 
     static const float	stationFilterConstants[];
     
-    float		*factors, *squaredFactors;
+    std::vector<float>	factors;
 };
 
 
 inline const float *BandPass::correctionFactors() const
 {
-  return factors;
-}
-
-
-inline const float *BandPass::squaredCorrectionFactors() const
-{
-  return squaredFactors;
+  return &factors[0];
 }
 
 } // namespace RTCP

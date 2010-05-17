@@ -2080,21 +2080,19 @@ const float BandPass::stationFilterConstants[] =
 
 BandPass::BandPass(bool correct, unsigned nrChannels)
 :
-  factors(new float[nrChannels]),
-  squaredFactors(new float[nrChannels])
+  factors(nrChannels)
 {
   if (correct)
     computeCorrectionFactors(nrChannels);
   else
     for (unsigned i = 0; i < nrChannels; i ++)
-      factors[i] = squaredFactors[i] = 1.0;
+      factors[i] = 1.0;
 }
 
 
 void BandPass::computeCorrectionFactors(unsigned nrChannels)
 {
-  // This is the square of the bandpass, since the correlator multiplies two
-  // bandpasses.  The following matlab functions are used:
+  // The following matlab functions are used:
 
   // f=fftshift(fft(Coeffs16384Kaiser_quant,262144))
   // m=f(131073-128:131073+127)
@@ -2130,16 +2128,8 @@ void BandPass::computeCorrectionFactors(unsigned nrChannels)
     const fcomplex l = out[(i - 3 * nrChannels / 2) % fftSize];
     const fcomplex r = out[i + nrChannels / 2];
 
-    squaredFactors[i] = pow(2, 50) / abs(m * m + l * l + r * r);
-    factors[i] = sqrt(squaredFactors[i]);
+    factors[i] = pow(2, 25) / sqrt(abs(m * m + l * l + r * r));
   }
-}
-
-
-BandPass::~BandPass()
-{
-  delete [] factors;
-  delete [] squaredFactors;
 }
 
 } // namespace RTCP

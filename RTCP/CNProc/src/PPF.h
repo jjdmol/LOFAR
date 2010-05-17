@@ -31,7 +31,7 @@ namespace RTCP {
 template <typename SAMPLE_TYPE> class PPF: boost::noncopyable
 {
   public:
-    PPF(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation, bool verbose);
+    PPF(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation, bool correctBandPass, bool verbose);
     ~PPF();
 
     void computeFlags(unsigned stat, const SubbandMetaData *metaData, FilteredData *);
@@ -54,8 +54,8 @@ template <typename SAMPLE_TYPE> class PPF: boost::noncopyable
     const unsigned itsNrChannels;
     unsigned       itsLogNrChannels;
     const double   itsChannelBandwidth;
-    const bool     itsDelayCompensation;
-    BandPass itsBandPass;
+    const bool     itsDelayCompensation, itsCorrectBandPass;
+    const BandPass itsBandPass;
 
 #if defined PPF_C_IMPLEMENTATION
     boost::multi_array<FIR, 3> itsFIRs; //[itsNrStations][NR_POLARIZATIONS][itsNrChannels]

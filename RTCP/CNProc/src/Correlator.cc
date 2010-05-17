@@ -19,14 +19,13 @@ static NSTimer weightTimer("Correlator::weight()", true, true);
 
 // nrStations is the number of superstations in case we use TAB.
 // Stations that are not beam formed count as a station.
-Correlator::Correlator(const std::vector<unsigned> &stationMapping, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const bool correctBandPass)
+Correlator::Correlator(const std::vector<unsigned> &stationMapping, const unsigned nrChannels, const unsigned nrSamplesPerIntegration)
 :
   itsNrStations(stationMapping.size()),
   itsNrBaselines(itsNrStations * (itsNrStations + 1) / 2),
   itsNrChannels(nrChannels),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsCorrelationWeights(nrSamplesPerIntegration + 1),
-  itsBandPass(correctBandPass, nrChannels),
   itsStationMapping(stationMapping)
 {
   itsCorrelationWeights[0] = 0.0;
@@ -140,7 +139,7 @@ void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *corre
 		sum += sampleData->samples[ch][itsStationMapping[stat1]][time][pol1] 
 		  * conj(sampleData->samples[ch][itsStationMapping[stat2]][time][pol2]);
 	      }
-	      sum *= itsCorrelationWeights[nrValid] * itsBandPass.squaredCorrectionFactors()[ch];
+	      sum *= itsCorrelationWeights[nrValid];
 	      correlatedData->visibilities[bl][ch][pol1][pol2] = sum;
 	    }
 	  }
@@ -283,7 +282,7 @@ void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *corre
     }
   }
 #else
-  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), &itsCorrelationWeights[0], itsBandPass.squaredCorrectionFactors(), itsNrBaselines, itsNrChannels); // FIXME
+  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), &itsCorrelationWeights[0], 0 /*itsBandPass.squaredCorrectionFactors()*/, itsNrBaselines, itsNrChannels); // FIXME
 #endif
   weightTimer.stop();
 #endif  
