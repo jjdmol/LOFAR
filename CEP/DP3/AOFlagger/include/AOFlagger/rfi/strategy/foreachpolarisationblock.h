@@ -122,11 +122,21 @@ namespace rfiStrategy {
 
 				bool changeRevised = (oldRevisedData.Polarisation() == oldContaminatedData.Polarisation());
 
+				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(oldContaminatedData.ImageWidth(), oldContaminatedData.ImageHeight());
+
 				performPolarisation(artifacts, progress, StokesIPolarisation, oldContaminatedData, oldOriginalData, oldRevisedData, changeRevised, 0, 4);
+				mask->Join(artifacts.ContaminatedData().GetSingleMask());
+
 				performPolarisation(artifacts, progress, StokesQPolarisation, oldContaminatedData, oldOriginalData, oldRevisedData, changeRevised, 1, 4);
+				mask->Join(artifacts.ContaminatedData().GetSingleMask());
+
 				performPolarisation(artifacts, progress, StokesUPolarisation, oldContaminatedData, oldOriginalData, oldRevisedData, changeRevised, 2, 4);
+				mask->Join(artifacts.ContaminatedData().GetSingleMask());
+
 				performPolarisation(artifacts, progress, StokesVPolarisation, oldContaminatedData, oldOriginalData, oldRevisedData, changeRevised, 3, 4);
+				mask->Join(artifacts.ContaminatedData().GetSingleMask());
 				
+				oldContaminatedData.SetGlobalMask(mask);
 				artifacts.SetContaminatedData(oldContaminatedData);
 				artifacts.SetRevisedData(oldRevisedData);
 				artifacts.SetOriginalData(oldOriginalData);

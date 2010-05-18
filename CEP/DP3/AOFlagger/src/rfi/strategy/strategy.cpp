@@ -323,6 +323,20 @@ namespace rfiStrategy {
 		}
 	}
 
+	void Strategy::SetFlagStokes(Strategy &strategy, bool newValue)
+	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
+		while(!i.PastEnd())
+		{
+			if(i->Type() == ForEachPolarisationBlockType)
+			{
+				ForEachPolarisationBlock &fopAction = static_cast<ForEachPolarisationBlock&>(*i);
+				fopAction.SetIterateStokesValues(newValue);
+			}
+			++i;
+		}
+	}
+
 	void Strategy::SetTransientCompatibility(Strategy &strategy)
 	{
 		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);

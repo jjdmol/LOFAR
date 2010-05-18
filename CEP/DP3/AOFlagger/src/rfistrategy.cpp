@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
 	Parameter<enum BaselineSelection> baselineSelection;
 	Parameter<enum DataKind> dataKind;
 	Parameter<bool> frequencyBasedFlagging;
+	Parameter<bool> flagStokes;
 	Parameter<size_t> threadCount;
 	Parameter<pair<double, double> > kernelSize;
 	Parameter<enum PolarisationType> polarisation;
@@ -104,6 +105,7 @@ int main(int argc, char *argv[])
 			else throw runtime_error("Column parameter -c can only be followed by DATA, CORRECTED_DATA or residuals");
 		}
 		else if(flag == "ff" || flag == "freq-based-flagging")	{ frequencyBasedFlagging = true;	}
+		else if(flag == "fs" || flag == "flag-stokes")	{ flagStokes = true;	}
 		else if(flag == "j" || flag == "threads") { ++parameterIndex; threadCount = atoi(argv[parameterIndex]); }
 		else if(flag == "ks" || flag == "kernel-size")
 		{
@@ -173,6 +175,11 @@ int main(int argc, char *argv[])
 			"  does not assume time smoothness. Useful e.g. if strong time-dependent\n"
 			"  sources are expected (e.g. pulsars). Default: not enabled, except in\n"
 			"  \'pulsar\' strategy.\n"
+			"-fs or -flag-stokes\n"
+			"  Will calculate the stokes I, Q, U and V components from the orthogonal\n"
+			"  components (calculated with I=XX + YY, Q=XX - YY, U=XY + YX, V=i*XY - YX),\n"
+			"  and use these values for flagging. All polarisations nead to be read for this,\n"
+			"  thus this option is only useful together with '-polarizations all'.\n"
 			"-j or -threads <threadcount>\n"
 			"  Set number of threads to use. Each thread will independently process\n"
 			"  whole baselines, thus this has implications on both memory usage and\n"
@@ -181,7 +188,7 @@ int main(int argc, char *argv[])
 			"  Gaussian kernel size used for smoothing. Floats. \n"
 			"  Default: 15.0 channels x 7.5 time steps.\n"
 			"-p or -polarizations <all/auto/stokesi>\n"
-			"  Specify how to process the polarizations. Independent of this setting,\n"
+			"  Specify what polarizations to read and process. Independent of this setting,\n"
 			"  the flags of all polarizations will be or-ed together and all polarizations\n"
 			"  will be set to that value.\n"
 			"-s or -sensitivity <threshold factor>\n"
@@ -217,6 +224,8 @@ int main(int argc, char *argv[])
 		Strategy::SetBaselines(*strategy, baselineSelection);
 	if(dataKind.IsSet())
 		Strategy::SetDataKind(*strategy, dataKind);
+	if(flagStokes.IsSet())
+		Strategy::SetFlagStokes(*strategy, flagStokes.Value());
 	if(frequencyBasedFlagging.IsSet() && frequencyBasedFlagging.Value())
 		Strategy::SetTransientCompatibility(*strategy);
 	if(threadCount.IsSet())
