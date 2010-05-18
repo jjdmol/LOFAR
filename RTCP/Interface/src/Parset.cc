@@ -139,6 +139,17 @@ vector<Parset::StationRSPpair> Parset::getStationNamesAndRSPboardNumbers(unsigne
 }
 
 
+bool Parset::correctClocks() const
+{
+  if (!isDefined("OLAP.correctClocks")) {
+    LOG_WARN("\"OLAP.correctClocks\" should really be defined in the parset --- assuming FALSE");
+    return false;
+  } else {
+    return getBool("OLAP.correctClocks");
+  }
+}
+
+
 string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNumber) const
 {
   return getStringVector(string("PIC.Core.Station.") + stationName + ".RSP.ports",true)[rspBoardNumber];

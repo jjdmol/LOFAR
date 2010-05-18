@@ -72,6 +72,26 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::~Beamlet
 }
 
 
+template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::computeNextDelays()
+{
+  // track source
+
+  if (itsDelayComp != 0)
+    itsDelayComp->getNextDelays(itsBeamDirectionsAfterEnd, itsDelaysAfterEnd);
+  else
+    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
+      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++)
+	itsDelaysAfterEnd[beam][pencil] = 0;
+   
+  // apply clock correction due to cable differences
+
+  if (itsCorrectClocks)
+    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
+      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++)
+	itsDelaysAfterEnd[beam][pencil] += itsClockCorrectionTime;
+}
+
+
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::preprocess(const Parset *ps)
 {
   itsPS			      = ps;
@@ -86,7 +106,8 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   itsNrCoresPerPset	      = ps->nrCoresPerPset();
   itsSampleDuration	      = ps->sampleDuration();
   itsDelayCompensation	      = ps->delayCompensation();
-  itsNeedDelays               = (itsDelayCompensation || itsNrPencilBeams > 1) && itsNrInputs > 0;
+  itsCorrectClocks	      = ps->correctClocks();
+  itsNeedDelays               = (itsDelayCompensation || itsNrPencilBeams > 1 || itsCorrectClocks) && itsNrInputs > 0;
   itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
   itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping();
   itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping();
@@ -108,13 +129,16 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
     itsDelaysAfterEnd.resize(itsNrBeams, itsNrPencilBeams);
     itsBeamDirectionsAtBegin.resize(itsNrBeams, itsNrPencilBeams);
     itsBeamDirectionsAfterEnd.resize(itsNrBeams, itsNrPencilBeams);
-    
-    itsDelayComp = new WH_DelayCompensation(ps, ps->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station, itsCurrentTimeStamp); // TODO: support more than one station
 
-    itsDelayComp->getNextDelays(itsBeamDirectionsAfterEnd, itsDelaysAfterEnd);
+    std::string stationName = ps->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station; // TODO: support more than one station
 
-    itsDelaysAtBegin	     = itsDelaysAfterEnd;
-    itsBeamDirectionsAtBegin = itsBeamDirectionsAfterEnd;
+    if (itsDelayCompensation || itsNrPencilBeams > 1)
+      itsDelayComp = new WH_DelayCompensation(ps, stationName, itsCurrentTimeStamp);
+
+    if (itsCorrectClocks)
+      itsClockCorrectionTime = ps->clockCorrectionTime(stationName);
+
+    computeNextDelays(); // initialize itsDelaysAfterEnd before we really start
   }
    
   itsDelayedStamps.resize(itsNrBeams);
@@ -155,46 +179,36 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::lim
 
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::computeDelays()
 {
-  if (itsNeedDelays) {
-    itsDelayTimer.start();
+  itsDelayTimer.start();
 
-    itsDelaysAtBegin = itsDelaysAfterEnd; // from previous integration
-    itsBeamDirectionsAtBegin = itsBeamDirectionsAfterEnd; // from previous integration
+  // begin of this integration is end of previous integration
+  itsDelaysAtBegin	   = itsDelaysAfterEnd;
+  itsBeamDirectionsAtBegin = itsBeamDirectionsAfterEnd;
     
-    itsDelayComp->getNextDelays(itsBeamDirectionsAfterEnd, itsDelaysAfterEnd);
-   
-    for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-      // The coarse delay is determined for the center of the current
-      // time interval and is expressed in an entire amount of samples.
-      //
-      // We use the central pencil beam (#0) for the coarse delay compensation.
-      const signed int coarseDelay = static_cast<signed int>(floor(0.5 * (itsDelaysAtBegin[beam][0] + itsDelaysAfterEnd[beam][0]) * itsSampleRate + 0.5));
+  computeNextDelays();
 
-      // The fine delay is determined for the boundaries of the current
-      // time interval and is expressed in seconds.
-      const double d = coarseDelay * itsSampleDuration;
+  for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
+    // The coarse delay is determined for the center of the current
+    // time interval and is expressed in an entire amount of samples.
+    //
+    // We use the central pencil beam (#0) for the coarse delay compensation.
+    signed int coarseDelay = static_cast<signed int>(floor(0.5 * (itsDelaysAtBegin[beam][0] + itsDelaysAfterEnd[beam][0]) * itsSampleRate + 0.5));
 
-      itsDelayedStamps[beam]      -= coarseDelay;
-      itsSamplesDelay[beam]       = -coarseDelay;
+    // The fine delay is determined for the boundaries of the current
+    // time interval and is expressed in seconds.
+    double d = coarseDelay * itsSampleDuration;
 
-      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++) {
-        // we don't do coarse delay compensation for the individual pencil beams to avoid complexity and overhead
-        itsFineDelaysAtBegin[beam][pencil]  = static_cast<float>(itsDelaysAtBegin[beam][pencil] - d);
-        itsFineDelaysAfterEnd[beam][pencil] = static_cast<float>(itsDelaysAfterEnd[beam][pencil] - d);
-      }
+    itsDelayedStamps[beam] -= coarseDelay;
+    itsSamplesDelay[beam]  = -coarseDelay;
+
+    for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++) {
+      // we don't do coarse delay compensation for the individual pencil beams to avoid complexity and overhead
+      itsFineDelaysAtBegin[beam][pencil]  = static_cast<float>(itsDelaysAtBegin[beam][pencil] - d);
+      itsFineDelaysAfterEnd[beam][pencil] = static_cast<float>(itsDelaysAfterEnd[beam][pencil] - d);
     }
-
-    itsDelayTimer.stop();
-  } else {
-    for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-      itsSamplesDelay[beam] = 0;
-
-      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++) {
-        itsFineDelaysAtBegin[beam][pencil]  = 0;
-        itsFineDelaysAfterEnd[beam][pencil] = 0;
-      }
-    }  
   }
+
+  itsDelayTimer.stop();
 }
 
 
@@ -228,7 +242,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::wri
     logStr << ", late: " << PrettyTime(currentTime - expectedTime);
   }
 
-  if (itsDelayCompensation) {
+  if (itsNeedDelays) {
     for (unsigned beam = 0; beam < itsNrBeams; beam ++)
       logStr << (beam == 0 ? ", delays: [" : ", ") << PrettyTime(itsDelaysAtBegin[beam][0], 7);
       //logStr << (beam == 0 ? ", delays: [" : ", ") << PrettyTime(itsDelaysAtBegin[beam], 7) << " = " << itsSamplesDelay[beam] << " samples + " << PrettyTime(itsFineDelaysAtBegin[beam], 7);
@@ -380,12 +394,12 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
 {
   // stay in sync with other psets even if there are no inputs to allow a synchronised early abort
 
-  if (itsNrInputs > 0) {
+  if (itsNrInputs > 0)
     for (unsigned beam = 0; beam < itsNrBeams; beam ++)
       itsDelayedStamps[beam] = itsCurrentTimeStamp - itsNrHistorySamples;
 
+  if (itsNeedDelays)
     computeDelays();
-  }
 
   if (itsIsRealTime) {
     itsCorrelationStartTime = itsCurrentTimeStamp + itsNrSamplesPerSubband + itsMaxNetworkDelay + itsMaximumDelay;

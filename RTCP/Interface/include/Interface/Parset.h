@@ -97,6 +97,8 @@ public:
 	double         channelWidth() const;
 	bool	       delayCompensation() const;
 	uint32	       nrCalcDelays() const;
+	bool           correctClocks() const;
+	double	       clockCorrectionTime(const std::string &station) const;
 	bool	       correctBandPass() const;
 	bool	       hasStorage() const;
 	unsigned short getStoragePort(const string &aKey, unsigned subband, unsigned output) const;
@@ -459,6 +461,11 @@ inline uint32 Parset::nrCalcDelays() const
 inline string Parset::positionType() const
 {
   return getString("OLAP.DelayComp.positionType");
+}
+
+inline double Parset::clockCorrectionTime(const std::string &station) const
+{
+  return getDouble(std::string("PIC.Core.") + station + ".clockCorrectionTime");
 }
 
 inline bool Parset::correctBandPass() const

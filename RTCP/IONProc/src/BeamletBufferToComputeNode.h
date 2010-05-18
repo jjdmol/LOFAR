@@ -55,7 +55,8 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
   private:
     static void			 limitFlagsLength(SparseSet<unsigned> &flags);
 
-    void			 computeDelays();
+    void			 computeDelays(), computeNextDelays();
+
     void			 startTransaction();
     void			 writeLogMessage() const;
     void			 toComputeNodes();
@@ -66,6 +67,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     bool			 itsFileHeaderWritten;
 
     bool			 itsDelayCompensation;
+    bool			 itsCorrectClocks;
     bool			 itsNeedDelays;
     bool			 itsIsRealTime;
     bool			 itsDumpRawData;
@@ -101,6 +103,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &itsBeamletBuffers;
     WH_DelayCompensation	 *itsDelayComp;
     double			 itsSampleRate, itsSampleDuration;
+    double			 itsClockCorrectionTime;
 
     std::vector<TimeStamp>	 itsDelayedStamps;
     std::vector<signed int>	 itsSamplesDelay;
