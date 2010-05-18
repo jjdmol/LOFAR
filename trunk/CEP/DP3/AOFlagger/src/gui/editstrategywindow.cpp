@@ -33,6 +33,7 @@
 #include <AOFlagger/gui/strategyframes/changeresolutionframe.h>
 #include <AOFlagger/gui/strategyframes/foreachbaselineframe.h>
 #include <AOFlagger/gui/strategyframes/foreachmsframe.h>
+#include <AOFlagger/gui/strategyframes/foreachpolarisationframe.h>
 #include <AOFlagger/gui/strategyframes/fringestoppingframe.h>
 #include <AOFlagger/gui/strategyframes/iterationframe.h>
 #include <AOFlagger/gui/strategyframes/loadflaggingframe.h>
@@ -268,6 +269,9 @@ void EditStrategyWindow::onSelectionChanged()
 				break;
 			case ForEachMSActionType:
 				showRight(new ForEachMSFrame(*static_cast<rfiStrategy::ForEachMSAction*>(selectedAction), *this));
+				break;
+			case ForEachPolarisationBlockType:
+				showRight(new ForEachPolarisationFrame(*static_cast<rfiStrategy::ForEachPolarisationBlock*>(selectedAction), *this));
 				break;
 			case PlotActionType:
 				showRight(new StrategyPlotFrame(*static_cast<rfiStrategy::PlotAction*>(selectedAction), *this));

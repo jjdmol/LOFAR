@@ -272,6 +272,7 @@ Action *XmlReader::parseForEachMSAction(xmlNode *node)
 Action *XmlReader::parseForEachPolarisationBlock(xmlNode *node)
 {
 	ForEachPolarisationBlock *newAction = new ForEachPolarisationBlock();
+	newAction->SetIterateStokesValues(getBool(node, "iterate-stokes-values"));
 	parseChildren(node, newAction);
 	return newAction;
 }

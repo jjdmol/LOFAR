@@ -232,6 +232,7 @@ namespace rfiStrategy {
 	void XmlWriter::writeForEachPolarisationBlock(const ForEachPolarisationBlock &action)
 	{
 		Attribute("type", "ForEachPolarisationBlock");
+		Write<bool>("iterate-stokes-values", action.IterateStokesValues());
 		writeContainerItems(action);
 	}
 

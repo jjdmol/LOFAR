@@ -54,6 +54,7 @@ namespace rfiStrategy {
 			static void SetMultiplySensitivity(Strategy &strategy, num_t factor);
 			static void SetFittingWindowSize(Strategy &strategy, size_t windowWidth, size_t windowHeight);
 			static void SetFittingKernelSize(Strategy &strategy, num_t kernelWidth, num_t kernelHeight);
+			static void SetFlagStokes(Strategy &strategy, bool newValue);
 
 			void StartPerformThread(const class ArtifactSet &artifacts, class ProgressListener &progress);
 			ArtifactSet *JoinThread();
