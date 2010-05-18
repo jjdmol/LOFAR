@@ -46,7 +46,7 @@ install(FILES
   gui/strategyframes/changeresolutionframe.h
   gui/strategyframes/foreachbaselineframe.h
   gui/strategyframes/foreachmsframe.h
-  gui/strategyframes/foteachpolarisationframe.h
+  gui/strategyframes/foreachpolarisationframe.h
   gui/strategyframes/fringestoppingframe.h
   gui/strategyframes/iterationframe.h
   gui/strategyframes/loadflaggingframe.h
