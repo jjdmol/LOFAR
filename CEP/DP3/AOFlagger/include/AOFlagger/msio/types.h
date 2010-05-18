@@ -32,7 +32,7 @@ typedef double num_t;
 
 enum DataKind { ObservedData, CorrectedData, ResidualData, ModelData, WeightData };
 
-enum PolarisationType { SinglePolarisation, DipolePolarisation, AutoDipolePolarisation, CrossDipolePolarisation, StokesIPolarisation, XXPolarisation, XYPolarisation, YXPolarisation, YYPolarisation };
+enum PolarisationType { SinglePolarisation, DipolePolarisation, AutoDipolePolarisation, CrossDipolePolarisation, StokesIPolarisation, StokesQPolarisation, StokesUPolarisation, StokesVPolarisation, XXPolarisation, XYPolarisation, YXPolarisation, YYPolarisation };
 
 
 #define sqrtn(X) sqrt(X)

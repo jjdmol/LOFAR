@@ -27,14 +27,24 @@ Image2DCPtr TimeFrequencyData::GetAbsoluteFromComplex(Image2DCPtr real, Image2DC
 	return Image2DPtr(FFTTools::CreateAbsoluteImage(*real, *imag));
 }
 			
-Image2DCPtr TimeFrequencyData::GetStokesIFromDipole(size_t xx, size_t yy) const
+Image2DCPtr TimeFrequencyData::GetSum(size_t left, size_t right) const
 {
-	return Image2DPtr(StokesImager::CreateStokesI(*_images[xx], *_images[yy]));
+	return StokesImager::CreateSum(_images[left], _images[right]);
+}
+
+Image2DCPtr TimeFrequencyData::GetNegatedSum(size_t left, size_t right) const
+{
+	return StokesImager::CreateNegatedSum(_images[left], _images[right]);
+}
+
+Image2DCPtr TimeFrequencyData::GetDifference(size_t left, size_t right) const
+{
+	return StokesImager::CreateDifference(_images[left], _images[right]);
 }
 
 Image2DCPtr TimeFrequencyData::GetSinglePhaseFromDipolePhase(size_t xx, size_t yy) const
 {
-	return Image2DPtr(StokesImager::CreateAvgPhase(*_images[xx], *_images[yy]));
+	return StokesImager::CreateAvgPhase(_images[xx], _images[yy]);
 }
 
 Image2DCPtr TimeFrequencyData::GetZeroImage() const
@@ -183,6 +193,9 @@ TimeFrequencyData *TimeFrequencyData::CreateTFDataFromComplexCombination(const T
 		case YYPolarisation:
 		case SinglePolarisation:
 		case StokesIPolarisation:
+		case StokesQPolarisation:
+		case StokesUPolarisation:
+		case StokesVPolarisation:
 			return new TimeFrequencyData(real.Polarisation(), real._images[0], imaginary._images[0]);
 		case DipolePolarisation:
 			return new TimeFrequencyData(

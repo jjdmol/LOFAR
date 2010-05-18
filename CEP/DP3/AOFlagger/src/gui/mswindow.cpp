@@ -553,6 +553,12 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onShowPhasePressed) );
 	_actionGroup->add( Gtk::Action::create("ShowStokesI", "Keep _stokesI part"),
   sigc::mem_fun(*this, &MSWindow::onShowStokesIPressed) );
+	_actionGroup->add( Gtk::Action::create("ShowStokesQ", "Keep stokes_Q part"),
+  sigc::mem_fun(*this, &MSWindow::onShowStokesQPressed) );
+	_actionGroup->add( Gtk::Action::create("ShowStokesU", "Keep stokes_U part"),
+  sigc::mem_fun(*this, &MSWindow::onShowStokesUPressed) );
+	_actionGroup->add( Gtk::Action::create("ShowStokesV", "Keep stokes_V part"),
+  sigc::mem_fun(*this, &MSWindow::onShowStokesVPressed) );
 	_actionGroup->add( Gtk::Action::create("ShowAutoPol", "Keep xx+yy part"),
   sigc::mem_fun(*this, &MSWindow::onShowAutoDipolePressed) );
 	_actionGroup->add( Gtk::Action::create("ShowCrossPol", "Keep xy+yx part"),
@@ -657,6 +663,10 @@ void MSWindow::createToolbar()
     "      <menuitem action='ShowPhase'/>"
     "      <separator/>"
     "      <menuitem action='ShowStokesI'/>"
+    "      <menuitem action='ShowStokesQ'/>"
+    "      <menuitem action='ShowStokesU'/>"
+    "      <menuitem action='ShowStokesV'/>"
+    "      <separator/>"
     "      <menuitem action='ShowXX'/>"
     "      <menuitem action='ShowXY'/>"
     "      <menuitem action='ShowYX'/>"

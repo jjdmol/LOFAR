@@ -131,6 +131,9 @@ class MSWindow : public Gtk::Window {
 		void onShowPhasePressed() { showPhasePart(TimeFrequencyData::PhasePart); }
 		void showPolarisation(enum PolarisationType polarisation);
 		void onShowStokesIPressed() { showPolarisation(StokesIPolarisation); }
+		void onShowStokesQPressed() { showPolarisation(StokesQPolarisation); }
+		void onShowStokesUPressed() { showPolarisation(StokesUPolarisation); }
+		void onShowStokesVPressed() { showPolarisation(StokesVPolarisation); }
 		void onShowAutoDipolePressed() { showPolarisation(AutoDipolePolarisation); }
 		void onShowCrossDipolePressed() { showPolarisation(CrossDipolePolarisation); }
 		void onShowXXPressed() { showPolarisation(XXPolarisation); }

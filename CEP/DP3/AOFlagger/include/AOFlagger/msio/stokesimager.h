@@ -41,10 +41,15 @@ class StokesImager{
 
 		void Image(const Image2D &realXX, const Image2D &imaginaryXX, const Image2D &realXY, const Image2D &imaginaryXY, const Image2D &realYY, const Image2D &imaginaryYY); 
 		
-		static Image2D *CreateStokesI(const Image2D &realXX, const Image2D &imaginaryXX, const Image2D &realYY, const Image2D &imaginaryYY);
-	
-		static Image2D *CreateStokesI(const Image2D &xx, const Image2D &yy);
-		static Image2D *CreateAvgPhase(const Image2D &xx, const Image2D &yy);
+		static Image2DPtr CreateSum(Image2DCPtr left, Image2DCPtr right);
+		static Image2DPtr CreateDifference(Image2DCPtr left, Image2DCPtr right);
+		static Image2DPtr CreateNegatedSum(Image2DCPtr left, Image2DCPtr right);
+
+		static Image2DPtr CreateStokesIAmplitude(Image2DCPtr realXX, Image2DCPtr imaginaryXX, Image2DCPtr realYY, Image2DCPtr imaginaryYY);
+		static Image2DPtr CreateStokesI(Image2DCPtr xx, Image2DCPtr yy) { return CreateSum(xx, yy); }
+		static Image2DPtr CreateStokesQ(Image2DCPtr xx, Image2DCPtr yy) { return CreateDifference(xx, yy); }
+
+		static Image2DPtr CreateAvgPhase(Image2DCPtr xx, Image2DCPtr yy);
 	private:
 
 		Image2D *_stokesI, *_stokesQ, *_stokesU, *_stokesV;
