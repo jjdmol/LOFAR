@@ -208,6 +208,9 @@ namespace rfiStrategy {
 				case XYPolarisation:
 				case YXPolarisation:
 				case YYPolarisation:
+				case StokesQPolarisation:
+				case StokesUPolarisation:
+				case StokesVPolarisation:
 					throw BadUsageException("Loading flagging for a time frequency data with uncommon polarisation... Not yet implemented...");
 					break;
 			}

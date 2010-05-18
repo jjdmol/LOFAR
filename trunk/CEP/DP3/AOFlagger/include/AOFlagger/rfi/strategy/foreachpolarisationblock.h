@@ -31,7 +31,7 @@ namespace rfiStrategy {
 	class ForEachPolarisationBlock : public ActionBlock
 	{
 		public:
-			ForEachPolarisationBlock()
+			ForEachPolarisationBlock() : _iterateStokesValues(false)
 			{
 			}
 			virtual ~ForEachPolarisationBlock()
@@ -52,201 +52,110 @@ namespace rfiStrategy {
 					oldRevisedData = artifacts.RevisedData(),
 					oldOriginalData = artifacts.OriginalData();
 
-				switch(artifacts.ContaminatedData().Polarisation())
-				{
-					case SinglePolarisation:
-					case XXPolarisation:
-					case XYPolarisation:
-					case YXPolarisation:
-					case YYPolarisation:
-					case StokesIPolarisation:
+				if(oldContaminatedData.Polarisation() != oldOriginalData.Polarisation())
+					throw BadUsageException("Contaminated and original do not have equal polarisation, in for each polarisation block");
+
+				if(oldContaminatedData.Polarisation() == DipolePolarisation && _iterateStokesValues)
+					performStokesIteration(artifacts, progress);
+				else if(oldContaminatedData.PolarisationCount() == 1) {
+					// There is only one polarisation in the contaminated data; just run all childs
+					ActionBlock::Perform(artifacts, progress);
+				} else {
+					bool changeRevised = (oldRevisedData.Polarisation() == oldContaminatedData.Polarisation());
+					unsigned count = oldContaminatedData.PolarisationCount();
+
+					for(unsigned polarizationIndex = 0; polarizationIndex < count; ++polarizationIndex)
 					{
-						// There is only one polarisation in the contaminated data; just run all childs
-						progress.OnStartTask(0, 1, "For each polarisation (single polarisation)");
+						TimeFrequencyData *newContaminatedData =
+							oldContaminatedData.CreateTFDataFromPolarisationIndex(polarizationIndex);
+						TimeFrequencyData *newOriginalData =
+							oldOriginalData.CreateTFDataFromPolarisationIndex(polarizationIndex);
+
+						artifacts.SetContaminatedData(*newContaminatedData);
+						artifacts.SetOriginalData(*newOriginalData);
+		
+						progress.OnStartTask(polarizationIndex, count, newContaminatedData->Description());
+		
+						delete newContaminatedData;
+						delete newOriginalData;
+						
+						if(changeRevised)
+						{
+							TimeFrequencyData *newRevised = oldRevisedData.CreateTFDataFromPolarisationIndex(polarizationIndex);
+							artifacts.SetRevisedData(*newRevised);
+							delete newRevised;
+						}
+		
 						ActionBlock::Perform(artifacts, progress);
+
+						oldContaminatedData.SetPolarizationData(polarizationIndex, artifacts.ContaminatedData());
+						oldOriginalData.SetPolarizationData(polarizationIndex, artifacts.OriginalData());
+						if(changeRevised)
+							oldRevisedData.SetPolarizationData(polarizationIndex, artifacts.RevisedData());
+
 						progress.OnEndTask();
 					}
-					break;
-					case AutoDipolePolarisation:
-					{
-						bool changeBoth = (artifacts.RevisedData().Polarisation() == artifacts.ContaminatedData().Polarisation());
 
-						progress.OnStartTask(0, 2, "XX polarisation");
-						performPolarisation(artifacts, progress, XXPolarisation, changeBoth);
-						TimeFrequencyData
-							contaminatedXX = artifacts.ContaminatedData(),
-							revisedXX = artifacts.RevisedData(),
-							originalXX = artifacts.OriginalData();
-						artifacts.SetContaminatedData(oldContaminatedData);
-						artifacts.SetRevisedData(oldRevisedData);
-						artifacts.SetOriginalData(oldOriginalData);
-						progress.OnEndTask();
-
-						progress.OnStartTask(1, 2, "YY polarisation");
-						performPolarisation(artifacts, progress, YYPolarisation, changeBoth);
-						TimeFrequencyData
-							contaminatedYY = artifacts.ContaminatedData(),
-							revisedYY = artifacts.RevisedData(),
-							originalYY = artifacts.RevisedData();
-						artifacts.SetContaminatedData(oldContaminatedData);
-						artifacts.SetRevisedData(oldRevisedData);
-						artifacts.SetOriginalData(oldOriginalData);
-						progress.OnEndTask();
-
-						TimeFrequencyData *newTF =
-							TimeFrequencyData::CreateTFDataFromAutoDipoleCombination(
-								contaminatedXX, contaminatedYY);
-						artifacts.SetContaminatedData(*newTF);
-						delete newTF;
-
-						newTF = 
-							TimeFrequencyData::CreateTFDataFromAutoDipoleCombination(
-								revisedXX, revisedYY);
-						artifacts.SetRevisedData(*newTF);
-						delete newTF;
-
-						newTF = 
-							TimeFrequencyData::CreateTFDataFromAutoDipoleCombination(
-								originalXX, originalYY);
-						artifacts.SetOriginalData(*newTF);
-						delete newTF;
-					}
-					break;
-					case CrossDipolePolarisation:
-					{
-						bool changeBoth = (artifacts.RevisedData().Polarisation() == artifacts.ContaminatedData().Polarisation());
-
-						progress.OnStartTask(0, 2, "XY polarisation");
-						performPolarisation(artifacts, progress, XYPolarisation, changeBoth);
-						TimeFrequencyData
-							contaminatedXY = artifacts.ContaminatedData(),
-							revisedXY = artifacts.RevisedData(),
-							originalXY = artifacts.OriginalData();
-						artifacts.SetContaminatedData(oldContaminatedData);
-						artifacts.SetRevisedData(oldRevisedData);
-						artifacts.SetOriginalData(oldOriginalData);
-						progress.OnEndTask();
-
-						progress.OnStartTask(1, 2, "YX polarisation");
-						performPolarisation(artifacts, progress, YXPolarisation, changeBoth);
-						TimeFrequencyData
-							contaminatedYX = artifacts.ContaminatedData(),
-							revisedYX = artifacts.RevisedData(),
-							originalYX = artifacts.OriginalData();
-						artifacts.SetContaminatedData(oldContaminatedData);
-						artifacts.SetRevisedData(oldRevisedData);
-						artifacts.SetOriginalData(oldOriginalData);
-						progress.OnEndTask();
-
-						TimeFrequencyData *newTF =
-							TimeFrequencyData::CreateTFDataFromCrossDipoleCombination(
-								contaminatedXY, contaminatedYX);
-						artifacts.SetContaminatedData(*newTF);
-						delete newTF;
-
-						newTF = 
-							TimeFrequencyData::CreateTFDataFromCrossDipoleCombination(
-								revisedXY, revisedYX);
-						artifacts.SetRevisedData(*newTF);
-						delete newTF;
-
-						newTF = 
-							TimeFrequencyData::CreateTFDataFromCrossDipoleCombination(
-								originalXY, originalYX);
-						artifacts.SetOriginalData(*newTF);
-						delete newTF;
-					}
-					break;
-					case DipolePolarisation:
-					{
-						bool changeBoth = (artifacts.RevisedData().Polarisation() == artifacts.ContaminatedData().Polarisation());
-
-						progress.OnStartTask(0, 4, "XX polarisation");
-						performPolarisation(artifacts, progress, XXPolarisation, changeBoth);
-						TimeFrequencyData
-							contaminatedXX = artifacts.ContaminatedData(),
-							revisedXX = artifacts.RevisedData(),
-							originalXX = artifacts.OriginalData();
-						artifacts.SetContaminatedData(oldContaminatedData);
-						artifacts.SetRevisedData(oldRevisedData);
-						artifacts.SetOriginalData(oldOriginalData);
-						progress.OnEndTask();
-
-						progress.OnStartTask(1, 4, "XY polarisation");
-						performPolarisation(artifacts, progress, XYPolarisation, changeBoth);
-						TimeFrequencyData
-							contaminatedXY = artifacts.ContaminatedData(),
-							revisedXY = artifacts.RevisedData(),
-							originalXY = artifacts.OriginalData();
-						artifacts.SetContaminatedData(oldContaminatedData);
-						artifacts.SetRevisedData(oldRevisedData);
-						artifacts.SetOriginalData(oldOriginalData);
-						progress.OnEndTask();
-
-						progress.OnStartTask(2, 4, "YX polarisation");
-						performPolarisation(artifacts, progress, YXPolarisation, changeBoth);
-						TimeFrequencyData
-							contaminatedYX = artifacts.ContaminatedData(),
-							revisedYX = artifacts.RevisedData(),
-							originalYX = artifacts.OriginalData();
-						artifacts.SetContaminatedData(oldContaminatedData);
-						artifacts.SetRevisedData(oldRevisedData);
-						artifacts.SetOriginalData(oldOriginalData);
-						progress.OnEndTask();
-
-						progress.OnStartTask(3, 4, "YY polarisation");
-						performPolarisation(artifacts, progress, YYPolarisation, changeBoth);
-						TimeFrequencyData
-							contaminatedYY = artifacts.ContaminatedData(),
-							revisedYY = artifacts.RevisedData(),
-							originalYY = artifacts.OriginalData();
-						artifacts.SetContaminatedData(oldContaminatedData);
-						artifacts.SetRevisedData(oldRevisedData);
-						artifacts.SetOriginalData(oldOriginalData);
-						progress.OnEndTask();
-
-						TimeFrequencyData *newTF =
-							TimeFrequencyData::CreateTFDataFromDipoleCombination(
-								contaminatedXX, contaminatedXY, contaminatedYX, contaminatedYY);
-						artifacts.SetContaminatedData(*newTF);
-						delete newTF;
-
-						newTF = 
-							TimeFrequencyData::CreateTFDataFromDipoleCombination(
-								revisedXX, revisedXY, revisedYX, revisedYY);
-						artifacts.SetRevisedData(*newTF);
-						delete newTF;
-
-						newTF = 
-							TimeFrequencyData::CreateTFDataFromDipoleCombination(
-								originalXX, originalXY, originalYX, originalYY);
-						artifacts.SetOriginalData(*newTF);
-						delete newTF;
-					}
-					break;
+					artifacts.SetContaminatedData(oldContaminatedData);
+					artifacts.SetRevisedData(oldRevisedData);
+					artifacts.SetOriginalData(oldOriginalData);
 				}
 			}
+
+			void SetIterateStokesValues(bool iterateStokesValues)
+			{
+				_iterateStokesValues = iterateStokesValues;
+			}
+			bool IterateStokesValues() const
+			{
+				return _iterateStokesValues;
+			}
 		private:
-			void performPolarisation(ArtifactSet &artifacts, ProgressListener &progress, enum PolarisationType polarisation, bool changeBoth)
+			bool _iterateStokesValues;
+
+			void performStokesIteration(ArtifactSet &artifacts, ProgressListener &progress)
+			{
+				TimeFrequencyData
+					oldContaminatedData = artifacts.ContaminatedData(),
+					oldRevisedData = artifacts.RevisedData(),
+					oldOriginalData = artifacts.OriginalData();
+
+				bool changeRevised = (oldRevisedData.Polarisation() == oldContaminatedData.Polarisation());
+
+				performPolarisation(artifacts, progress, StokesIPolarisation, oldContaminatedData, oldOriginalData, oldRevisedData, changeRevised, 0, 4);
+				performPolarisation(artifacts, progress, StokesQPolarisation, oldContaminatedData, oldOriginalData, oldRevisedData, changeRevised, 1, 4);
+				performPolarisation(artifacts, progress, StokesUPolarisation, oldContaminatedData, oldOriginalData, oldRevisedData, changeRevised, 2, 4);
+				performPolarisation(artifacts, progress, StokesVPolarisation, oldContaminatedData, oldOriginalData, oldRevisedData, changeRevised, 3, 4);
+				
+				artifacts.SetContaminatedData(oldContaminatedData);
+				artifacts.SetRevisedData(oldRevisedData);
+				artifacts.SetOriginalData(oldOriginalData);
+			}
+
+			void performPolarisation(ArtifactSet &artifacts, ProgressListener &progress, enum PolarisationType polarisation, const TimeFrequencyData &oldContaminatedData, const TimeFrequencyData &oldOriginalData, const TimeFrequencyData &oldRevisedData, bool changeRevised, size_t taskNr, size_t taskCount)
 			{
 				TimeFrequencyData *newContaminatedData =
-					artifacts.ContaminatedData().CreateTFData(polarisation);
-				TimeFrequencyData *newOriginalData =
-					artifacts.OriginalData().CreateTFData(polarisation);
+					oldContaminatedData.CreateTFData(polarisation);
 				artifacts.SetContaminatedData(*newContaminatedData);
-				artifacts.SetOriginalData(*newOriginalData);
+				progress.OnStartTask(taskNr, taskCount, newContaminatedData->Description());
 				delete newContaminatedData;
+
+				TimeFrequencyData *newOriginalData =
+					oldOriginalData.CreateTFData(polarisation);
+				artifacts.SetOriginalData(*newOriginalData);
 				delete newOriginalData;
 
-				TimeFrequencyData *newRevised;
-				if(changeBoth)
+
+				if(changeRevised)
 				{
-					newRevised = artifacts.RevisedData().CreateTFData(polarisation);
+					TimeFrequencyData *newRevised = oldRevisedData.CreateTFData(polarisation);
 					artifacts.SetRevisedData(*newRevised);
 					delete newRevised;
 				}
 
 				ActionBlock::Perform(artifacts, progress);
+
+				progress.OnEndTask();
 			}
 	};
 

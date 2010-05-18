@@ -330,6 +330,9 @@ void RFIPlots::MakeScatterPlot(class MultiPlot &plot, const TimeFrequencyData &d
 		}
 		case SinglePolarisation:
 		case StokesIPolarisation:
+		case StokesQPolarisation:
+		case StokesUPolarisation:
+		case StokesVPolarisation:
 		case XXPolarisation:
 		case XYPolarisation:
 		case YXPolarisation:
