@@ -163,6 +163,18 @@ namespace LOFAR
             << instrumentDb);
           return false;
         }
+		  
+		  try {
+          // Open parmDBLog table
+			 string solverTableName=path+"/solver";
+          LOG_INFO_STR("ParmDBLog table: " << solverTableName);
+			 itsParmLogger.reset(new ParmDBLog(solverTableName));
+        }
+        catch(Exception &e) {
+          LOG_ERROR_STR("Failed to open instrument model parameter database: "
+            << instrumentDb);
+          return false;
+        }
 
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
@@ -705,7 +717,7 @@ namespace LOFAR
           controller.init(command.parms(), command.exclParms(), evalGrid,
             solGrid, cellChunkSize, command.propagate());
 
-          controller.run();
+          controller.run(*itsParmLogger);		// run with logging into ParmDB
         }
       } catch(Exception &ex) {
         return CommandResult(CommandResult::ERROR, "Unable to initialize or run"
