@@ -23,7 +23,6 @@ open_port(void)
       /*
        * Could not open the port.
        */
-
       perror("open_port: Unable to open /dev/ttyS0 - ");
     }
   else{
@@ -40,7 +39,7 @@ int main(int argc, char *argv[])
   char *bufptr;      /* Current char in buffer */
   char sendBuf[255]; /* Output buffer*/
   int bufLen;        /* Output buffer content size*/
-  int totalChars;    /* Total number of chars read from tty*/
+  int totalChars = 0;    /* Total number of chars read from tty*/
 
 
   if (argc == 2)
@@ -62,7 +61,7 @@ int main(int argc, char *argv[])
 
   /* read characters into our string buffer until we get a CR or NL */
   bufptr = buffer;
-  long int count = 0;
+  long int count=0;
   int  nbytes;       /* Number of bytes read */
   while (count < 1000000)
     {
@@ -84,5 +83,7 @@ int main(int argc, char *argv[])
   printf("%s", buffer);
 
   close(ttyFd);
+  if (totalChars==0)
+    return -1;
   return totalChars;
 }
