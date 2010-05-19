@@ -23,6 +23,9 @@
 #include <lofar_config.h>
 #include <BBSKernel/Solver.h>
 
+#include <iostream>
+#include <fstream>
+
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
@@ -183,49 +186,57 @@ bool Solver::iterate(vector<CellSolution> &global)
     map<uint32, Cell>::iterator it = itsCells.begin();
     while(it != itsCells.end())
     {
-        const uint32 cellId = it->first;
-        Cell &cell = it->second;
+	const uint32 cellId = it->first;
+	Cell &cell = it->second;
 
-        ASSERT(cell.solver.nUnknowns() > 0);
-
-        // Get some statistics from the solver. Note that the chi squared is
-        // valid for the _previous_ iteration. The solver cannot compute the
-        // chi squared directly after an iteration, because it needs the new
-        // condition equations for that and these are computed by the kernel.
-        casa::uInt rank, nun, np, ncon, ner, *piv;
-        casa::Double *nEq, *known, *constr, *er, *sEq, *sol, prec, nonlin;
-        cell.solver.debugIt(nun, np, ncon, ner, rank, nEq, known, constr, er,
-            piv, sEq, sol, prec, nonlin);
-        ASSERT(er && ner > SUMLL);
-
-        double lmFactor = nonlin;
-        double chiSqr = er[SUMLL] / std::max(er[NC] + nun, 1.0);
-
-        // Perform an iteration.
-        cell.solver.solveLoop(rank, &(cell.coeff[0]), itsUseSvd);
-
-        // Record solution and statistics.
-        CellSolution solution(cellId);
-        solution.coeff = cell.coeff;
-        solution.result = cell.solver.isReady();
-        solution.resultText = cell.solver.readyText();
-        solution.rank = rank;
-        solution.chiSqr = chiSqr;
-        solution.lmFactor = lmFactor;
-
-        global.push_back(solution);
-
-        if(cell.solver.isReady() == NONREADY)
+        if(cell.solver.isReady() == NONREADY)		// only do solving iteration if cell is NONREADY
         {
-            done = false;
-            ++it;
-        }
-        else
-        {
-            // If a cell is done, remove it for the map. Any subsequent calls
-            // to setEquations() for this cell will be silently ignored.
-            itsCells.erase(it++);
-        }
+	  ASSERT(cell.solver.nUnknowns() > 0);
+
+	  // Get some statistics from the solver. Note that the chi squared is
+	  // valid for the _previous_ iteration. The solver cannot compute the
+	  // chi squared directly after an iteration, because it needs the new
+	  // condition equations for that and these are computed by the kernel.
+	  casa::uInt rank, nun, np, ncon, ner, *piv;
+	  casa::Double *nEq, *known, *constr, *er, *sEq, *sol, prec, nonlin;
+	  cell.solver.debugIt(nun, np, ncon, ner, rank, nEq, known, constr, er,
+	      piv, sEq, sol, prec, nonlin);
+	  ASSERT(er && ner > SUMLL);
+
+	  double lmFactor = nonlin;
+	  double chiSqr = er[SUMLL] / std::max(er[NC] + nun, 1.0);
+
+	  // Perform an iteration.
+	  cell.solver.solveLoop(rank, &(cell.coeff[0]), itsUseSvd);
+
+	  // Record solution and statistics.
+	  CellSolution solution(cellId);
+	  solution.coeff = cell.coeff;
+	  solution.result = cell.solver.isReady();
+	  solution.resultText = cell.solver.readyText();
+	  solution.rank = rank;
+	  solution.rankDeficiency = cell.solver.getDeficiency();
+	  solution.niter = cell.solver.nIterations();
+	  solution.chiSqr = chiSqr;
+	  solution.lmFactor = lmFactor;
+
+	  global.push_back(solution);
+
+	  // Check if this cell is still NONREADY, i.e. not solved or converged
+	  if(cell.solver.isReady() == NONREADY)
+	  {
+	      done = false;
+	      ++it;
+	  }
+	  /*
+	  else
+	  {
+	      // If a cell is done, remove it for the map. Any subsequent calls
+	      // to setEquations() for this cell will be silently ignored.
+	      itsCells.erase(it++);
+	  }
+	  */
+	}
     }
 
     return done;

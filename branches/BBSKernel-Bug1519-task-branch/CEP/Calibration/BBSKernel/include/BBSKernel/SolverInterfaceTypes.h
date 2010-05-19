@@ -178,7 +178,11 @@ public:
     vector<double>  coeff;
     uint32          result;
     string          resultText;
+    uint32	        rankDeficiency;
     uint32          rank;
+    uint32	    	  niter;
+	 uint32			  maxIter;
+    bool	    		  maxIterReached;
     double          chiSqr;
     double          lmFactor;
 };

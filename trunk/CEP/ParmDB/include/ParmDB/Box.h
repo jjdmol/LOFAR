@@ -171,6 +171,13 @@ namespace BBS {
                itsStart.first > that.itsStart.first); }
     // </group>
 
+	 // Output the start and end point coordinates of the Box
+	 void print()
+	 {
+		cout << itsStart.first << "\t" << itsStart.second << "\t" 
+		<< itsEnd.first << "\t" << itsEnd.second << endl;
+	 }
+
   private:
     Point itsStart;
     Point itsEnd;
