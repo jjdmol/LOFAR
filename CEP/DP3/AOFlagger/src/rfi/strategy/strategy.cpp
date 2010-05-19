@@ -199,6 +199,10 @@ namespace rfiStrategy {
 		LoadDefaultSingleStrategy(*feBaseBlock, pedantic, pulsar);
 
 		feBaseBlock->Add(new WriteFlagsAction());
+
+		PlotAction *plotAction = new PlotAction();
+		plotAction->SetPlotKind(PlotAction::AntennaFlagCountPlot);
+		feBaseBlock->Add(plotAction);
 	}
 
 	void Strategy::LoadAverageStrategy(bool pedantic, bool pulsar)
@@ -235,6 +239,10 @@ namespace rfiStrategy {
 		LoadDefaultSingleStrategy(*feBaseBlock, pedantic, pulsar);
 
 		feBaseBlock->Add(new WriteFlagsAction());
+
+		PlotAction *plotAction = new PlotAction();
+		plotAction->SetPlotKind(PlotAction::AntennaFlagCountPlot);
+		feBaseBlock->Add(plotAction);
 	}
 	
 	ArtifactSet *Strategy::JoinThread()
