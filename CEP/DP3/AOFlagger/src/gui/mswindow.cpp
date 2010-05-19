@@ -49,6 +49,7 @@
 #include <AOFlagger/rfi/svdmitigater.h>
 #include <AOFlagger/rfi/thresholdtools.h>
 #include <AOFlagger/rfi/timeflagcountplot.h>
+#include <AOFlagger/rfi/timefrequencystatistics.h>
 
 #include <AOFlagger/util/plot.h>
 #include <AOFlagger/util/multiplot.h>
@@ -501,8 +502,8 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onEditStrategyPressed) );
 	_actionGroup->add( Gtk::Action::create("ExecuteStrategy", "E_xecute strategy"),
   sigc::mem_fun(*this, &MSWindow::onExecuteStrategyPressed) );
-	_actionGroup->add( Gtk::Action::create("AddToStats", "Add to _stats"),
-  sigc::mem_fun(*this, &MSWindow::onAddToStats) );
+	_actionGroup->add( Gtk::Action::create("ShowStats", "Show _stats"),
+  sigc::mem_fun(*this, &MSWindow::onShowStats) );
 	_actionGroup->add( Gtk::Action::create("Previous", Gtk::Stock::GO_BACK),
   sigc::mem_fun(*this, &MSWindow::onLoadPrevious) );
 	_actionGroup->add( Gtk::Action::create("Next", Gtk::Stock::GO_FORWARD),
@@ -681,7 +682,7 @@ void MSWindow::createToolbar()
     "    <toolitem action='OpenDirectory'/>"
     "    <separator/>"
     "    <toolitem action='ClearAltFlags'/>"
-    "    <toolitem action='AddToStats'/>"
+    "    <toolitem action='ShowStats'/>"
     "    <separator/>"
     "    <toolitem action='Previous'/>"
     "    <toolitem action='Next'/>"
@@ -778,24 +779,18 @@ void MSWindow::onAdd1SigmaFringe()
 	}
 }
 
-void MSWindow::onAddToStats()
+void MSWindow::onShowStats()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
 		TimeFrequencyData activeData = GetActiveData();
-		_statistics->Add(activeData.GetSingleImage(), activeData.GetSingleMask());
-		std::cout
-			<< "Average connected size: " << _statistics->GetAverageConnectedRFISize() << "\n"
-			<< "Average connected RFI flux: " << _statistics->GetAverageConnectedRFIFlux() << "\n"
-			<< "Average connected duration: " << _statistics->GetAverageConnectedRFIDuration() << "\n"
-			<< "Average connected frequency coverage: " << _statistics->GetAverageConnectedRFIFrequencyCoverage() << "\n\n"
-			<< "Average peeled size: " << _statistics->GetAveragePeeledRFISize() << "\n"
-			<< "Average peeled RFI flux: " << _statistics->GetAveragePeeledRFIFlux() << "\n"
-			<< "Average peeled duration: " << _statistics->GetAveragePeeledRFIDuration() << "\n"
-			<< "Average peeled frequency coverage: " << _statistics->GetAveragePeeledRFIFrequencyCoverage() << "\n\n"
-			<< "Average non-RFI flux: " << _statistics->GetAverageNonRFIFlux() << "\n"
-			<< "Invalid value count: " << _statistics->GetInvalidValuesCount() << std::endl;
-		_statistics->MakePlot();
+		TimeFrequencyStatistics statistics(activeData);
+		std::stringstream s;
+		s
+			<< "Percentage flagged: " << TimeFrequencyStatistics::FormatRatio(statistics.GetFlaggedRatio()) << "\n";
+
+		Gtk::MessageDialog dialog(*this, s.str(), false, Gtk::MESSAGE_INFO);
+		dialog.run();
 	}
 }
 

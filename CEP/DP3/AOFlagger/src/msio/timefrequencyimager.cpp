@@ -609,11 +609,15 @@ TimeFrequencyData TimeFrequencyImager::GetData() const
 		data = TimeFrequencyData(StokesIPolarisation, _realStokesI, _imaginaryStokesI);
 	}
 
-	if(_flagXX != 0 && _flagXY != 0 && _flagYX != 0 && _flagYY != 0 && data.Polarisation() == DipolePolarisation)
+	if(_flagXX != 0 && _flagXY != 0 && _flagYX != 0 && _flagYY != 0)
 	{
+		if(data.Polarisation() != DipolePolarisation)
+			throw BadUsageException("Trying to read dipole polarisation masks, but TF data does not have the dipole polarisations"); 
 		data.SetIndividualPolarisationMasks(_flagXX, _flagXY, _flagYX, _flagYY);
-	} else if(_flagXX != 0 && _flagYY != 0 && data.Polarisation() == AutoDipolePolarisation)
+	} else if(_flagXX != 0 && _flagYY != 0)
 	{
+		if(data.Polarisation() != AutoDipolePolarisation)
+			throw BadUsageException("Trying to read auto dipole polarisation masks, but TF data does not have the auto dipole polarisations"); 
 		data.SetIndividualPolarisationMasks(_flagXX, _flagYY);
 	} else if(_flagCombined != 0)
 	{

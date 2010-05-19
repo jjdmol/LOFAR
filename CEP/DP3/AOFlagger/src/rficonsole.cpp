@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 					"ERROR: Reading strategy file \"" << strategyFile << "\" failed! This\n"
 					"might be caused by a change in the file format of the strategy file after you\n"
 					"created the strategy file, as it is still rapidly changing.\n"
-					"Trying recreating the file with rfistrategy.\n"
+					"Try recreating the file with rfistrategy.\n"
 					"\nThe thrown exception was:\n" << e.what() << std::endl;
 				exit(1);
 			}

@@ -208,7 +208,11 @@ Action *XmlReader::parseAction(xmlNode *node)
 		newAction = parseWriteFlagsAction(node);
 	xmlFree(typeCh);
 	if(newAction == 0)
-		throw XmlReadError("Unknown action in xml file");
+	{
+		std::stringstream s;
+		s << "Unknown action type '" << typeStr << "' in xml file";
+		throw XmlReadError(s.str());
+	}
 	return newAction;
 }
 

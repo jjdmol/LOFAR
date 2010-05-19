@@ -266,7 +266,7 @@ namespace rfiStrategy {
 
 	void XmlWriter::writeLoadFlagsAction(const LoadFlagsAction &action)
 	{
-		Attribute("type", "LoadFlagsActionType");
+		Attribute("type", "LoadFlagsAction");
 		Write<bool>("join-flags", action.JoinFlags());
 	}
 
