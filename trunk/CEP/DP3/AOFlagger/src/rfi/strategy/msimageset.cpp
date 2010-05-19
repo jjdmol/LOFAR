@@ -21,6 +21,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <AOFlagger/rfi/timefrequencystatistics.h>
+
 #include <AOFlagger/rfi/strategy/msimageset.h>
 
 namespace rfiStrategy {
@@ -164,7 +166,7 @@ namespace rfiStrategy {
 				endIndex = EndIndex(msIndex);
 			std::cout << "Loading baseline " << a1 << "x" << a2 << ", t=" << startIndex << "-" << endIndex << std::endl;
 			_imager->Image(a1, a2, msIndex._band, startIndex, endIndex);
-			std::cout << "Done loading baseline " << a1 << "x" << a2 << ", t=" << startIndex << "-" << endIndex << std::endl;
+			//std::cout << "Done loading baseline " << a1 << "x" << a2 << ", t=" << startIndex << "-" << endIndex << std::endl;
 			class TimeFrequencyData *data = new ::TimeFrequencyData(_imager->GetData());
 			return data;
 		} else {
@@ -193,7 +195,7 @@ namespace rfiStrategy {
 					else if(_readDipoleAutoPolarisations && _readDipoleCrossPolarisations)
 						destination.SetIndividualPolarisationMasks(_imager->FlagXX(), _imager->FlagXY(), _imager->FlagYX(), _imager->FlagYY());
 					else
-						throw BadUsageException("Loading flagging for a time frequency data with uncommon polarisation... Not yet implemented...");
+						throw BadUsageException("Incorrect settings for flag reading");
 					break;
 				case StokesIPolarisation:
 					if(_readStokesI)
@@ -202,6 +204,13 @@ namespace rfiStrategy {
 						throw BadUsageException("Incorrect settings for flag reading");
 					break;
 				case AutoDipolePolarisation:
+					if(_readStokesI)
+						destination.SetGlobalMask(_imager->FlagStokesI());
+					else if(_readDipoleAutoPolarisations)
+						destination.SetIndividualPolarisationMasks(_imager->FlagXX(), _imager->FlagYY());
+					else
+						throw BadUsageException("Incorrect settings for flag reading");
+					break;
 				case CrossDipolePolarisation:
 				case SinglePolarisation:
 				case XXPolarisation:
@@ -211,9 +220,11 @@ namespace rfiStrategy {
 				case StokesQPolarisation:
 				case StokesUPolarisation:
 				case StokesVPolarisation:
-					throw BadUsageException("Loading flagging for a time frequency data with uncommon polarisation... Not yet implemented...");
+					throw BadUsageException("Loading flags for a time frequency data with uncommon polarisation... Not yet implemented...");
 					break;
 			}
+			//TimeFrequencyStatistics stats(destination);
+			//std::cout << "Flags read: " << TimeFrequencyStatistics::FormatRatio(stats.GetFlaggedRatio()) << std::endl;
 		}
 	}
 
@@ -297,14 +308,16 @@ namespace rfiStrategy {
 				yx = data.GetMask(YXPolarisation);
 			}
 
+			TimeFrequencyStatistics stats(data);
 			std::cout << "Writing flags: "
-				<< xx->GetCount<true>() << " / "
+				<< TimeFrequencyStatistics::FormatRatio(stats.GetFlaggedRatio())
+				<< " (" << xx->GetCount<true>() << " / "
 				<< xy->GetCount<true>() << " / "
 				<< yx->GetCount<true>() << " / "
-				<< yy->GetCount<true>()
+				<< yy->GetCount<true>() << ")"
 				<< " for baseline index " << a1 << "x" << a2 << " (sb " << b << "),t=" << startIndex << "-" << endIndex << std::endl;
 			_imager->WriteNewFlagsPart(xx, xy, yx, yy, a1, a2, b, startIndex, endIndex, LeftBorder(msIndex), RightBorder(msIndex));
-			std::cout << "Finished writing flags." << std::endl;
+			//std::cout << "Finished writing flags." << std::endl;
 		} else {
 			throw IOException("Could not initialize imager");
 		}

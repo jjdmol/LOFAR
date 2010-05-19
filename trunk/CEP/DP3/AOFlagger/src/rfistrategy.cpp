@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
 			"-fs or -flag-stokes\n"
 			"  Will calculate the stokes I, Q, U and V components from the orthogonal\n"
 			"  components (calculated with I=XX + YY, Q=XX - YY, U=XY + YX, V=i*XY - YX),\n"
-			"  and use these values for flagging. All polarisations nead to be read for this,\n"
+			"  and use these values for flagging. All polarisations need to be read for this,\n"
 			"  thus this option is only useful together with '-polarizations all'.\n"
 			"-j or -threads <threadcount>\n"
 			"  Set number of threads to use. Each thread will independently process\n"

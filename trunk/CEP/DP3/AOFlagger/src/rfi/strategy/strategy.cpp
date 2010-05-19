@@ -26,6 +26,7 @@
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
 #include <AOFlagger/rfi/strategy/iterationblock.h>
+#include <AOFlagger/rfi/strategy/loadflagsaction.h>
 #include <AOFlagger/rfi/strategy/loadimageaction.h>
 #include <AOFlagger/rfi/strategy/plotaction.h>
 #include <AOFlagger/rfi/strategy/setflaggingaction.h>
@@ -191,8 +192,9 @@ namespace rfiStrategy {
 
 		LoadImageAction *loadImageAction = new LoadImageAction();
 		loadImageAction->SetReadStokesI();
-
 		feBaseBlock->Add(loadImageAction);
+
+		feBaseBlock->Add(new LoadFlagsAction());
 		
 		LoadDefaultSingleStrategy(*feBaseBlock, pedantic, pulsar);
 
@@ -206,8 +208,9 @@ namespace rfiStrategy {
 
 		LoadImageAction *loadImageAction = new LoadImageAction();
 		loadImageAction->SetReadDipoleAutoPolarisations();
-
 		feBaseBlock->Add(loadImageAction);
+
+		feBaseBlock->Add(new LoadFlagsAction());
 		
 		LoadDefaultSingleStrategy(*feBaseBlock, pedantic, pulsar);
 
@@ -225,14 +228,14 @@ namespace rfiStrategy {
 
 		LoadImageAction *loadImageAction = new LoadImageAction();
 		loadImageAction->SetReadAllPolarisations();
-
 		feBaseBlock->Add(loadImageAction);
+
+		feBaseBlock->Add(new LoadFlagsAction());
 		
 		LoadDefaultSingleStrategy(*feBaseBlock, pedantic, pulsar);
 
 		feBaseBlock->Add(new WriteFlagsAction());
 	}
-
 	
 	ArtifactSet *Strategy::JoinThread()
 	{

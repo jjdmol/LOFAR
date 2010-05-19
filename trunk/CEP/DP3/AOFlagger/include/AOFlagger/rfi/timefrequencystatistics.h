@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008 by A.R. Offringa   *
+ *   Copyright (C) 2008-2010 by A.R. Offringa   *
  *   offringa@astro.rug.nl   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -17,13 +17,24 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef TIMEFREQUENCYSTATISTICS_H
+#define TIMEFREQUENCYSTATISTICS_H
 
-#ifndef RFI_TYPES_H
-#define RFI_TYPES_H
+#include <string>
 
-class AntennaFlagCountPlot;
-class FrequencyFlagCountPlot;
-class FrequencyPowerPlot;
-class TimeFlagCountPlot;
+#include <AOFlagger/msio/timefrequencydata.h>
 
-#endif // RFI_TYPES_H
+class TimeFrequencyStatistics
+{
+	public:
+		TimeFrequencyStatistics(const TimeFrequencyData &data);
+
+		num_t GetFlaggedRatio();
+
+		static std::string FormatRatio(num_t ratio);
+
+	private:
+		TimeFrequencyData _data;
+};
+
+#endif // TIMEFREQUENCYSTATISTICS_H

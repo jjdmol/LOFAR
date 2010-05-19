@@ -80,6 +80,7 @@ set(RFI_FILES
   rfi/thresholdtools.cpp
   rfi/tiledimage.cpp
   rfi/timeflagcountplot.cpp
+  rfi/timefrequencystatistics.cpp
   ${RFI_STRATEGY_FILES})
 
 set(IMAGING_FILES

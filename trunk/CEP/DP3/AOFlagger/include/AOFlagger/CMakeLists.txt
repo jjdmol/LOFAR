@@ -113,6 +113,7 @@ install(FILES
   rfi/thresholdtools.h
   rfi/tiledimage.h
   rfi/timeflagcountplot.h
+  rfi/timefrequencystatistics.h
   rfi/types.h
   DESTINATION include/${PACKAGE_NAME}/rfi)
 

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008 by A.R. Offringa   *
+ *   Copyright (C) 2008-2010 by A.R. Offringa   *
  *   offringa@astro.rug.nl   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -17,13 +17,33 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#include <AOFlagger/rfi/timefrequencystatistics.h>
 
-#ifndef RFI_TYPES_H
-#define RFI_TYPES_H
+#include <cmath>
+#include <string>
+#include <sstream>
 
-class AntennaFlagCountPlot;
-class FrequencyFlagCountPlot;
-class FrequencyPowerPlot;
-class TimeFlagCountPlot;
+TimeFrequencyStatistics::TimeFrequencyStatistics(const TimeFrequencyData &data)
+  : _data(data)
+{
+}
 
-#endif // RFI_TYPES_H
+num_t TimeFrequencyStatistics::GetFlaggedRatio()
+{
+	size_t total = 0, flagged = 0;
+
+	for(size_t i=0;i<_data.MaskCount();++i)
+	{
+		Mask2DCPtr mask = _data.GetMask(i);
+		flagged += mask->GetCount<true>();
+		total += mask->Width() * mask->Height();
+	}
+	return (num_t) flagged / (num_t) total;
+}
+
+std::string TimeFrequencyStatistics::FormatRatio(num_t ratio)
+{
+	std::stringstream s;
+	s << (round(ratio*1000.0)/10.0) << "%";
+	return s.str();
+}

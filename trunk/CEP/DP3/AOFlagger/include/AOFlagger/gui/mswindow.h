@@ -158,7 +158,7 @@ class MSWindow : public Gtk::Window {
 		void onRayleighTestSets() { _gaussianTestSets = false; }
 		void onAddStaticFringe();
 		void onAdd1SigmaFringe();
-		void onAddToStats();
+		void onShowStats();
 		void onPlotDistPressed();
 		void onPlotComplexPlanePressed();
 		void onPlotPowerSpectrumPressed();
