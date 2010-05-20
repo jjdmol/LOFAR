@@ -186,10 +186,14 @@ def statusHandler(cmd, response):
         
     if cmd.find("TT?") != -1:
         if response != "Fail":
-            conVal = int(response.strip())
+            conVal = 0
+            try:
+                conVal = int(response.strip())
+            except:
+                conVal = -127
             ttHistList.append(abs(conVal))
         else:
-            ttHistList.append(-1)
+            ttHistList.append(-127)
         if len(ttHistList) > ttLogLength:
             ttHistList.pop(0)
     elif cmd.find("LO?") != -1:
@@ -212,7 +216,7 @@ def statusHandler(cmd, response):
         sum = 0
         count = 0
         for val in subSet:
-            if val != -1:
+            if val != -127:
                 sum += val
                 count += 1
         try:
@@ -329,10 +333,14 @@ def main():
             if cmd.find("TT?")!= -1:
                 # Modify clock response if it returns a high value
                 if line != "Fail":
-                    conVal = int(line.strip())
+                    conVal = -127
+                    try:
+                        conVal = int(line.strip())
+                    except:
+                        conVal = -127
                     if conVal > 500000000 :
                         conVal = conVal - 1000000000
-                        line = str(conVal)
+                    line = str(conVal)
                 statusHandler(cmd,line)
             logStr += cmd.strip('?') + ' ' + line.strip() + "; "
         if count >= interval or cmdIndex != 0:
