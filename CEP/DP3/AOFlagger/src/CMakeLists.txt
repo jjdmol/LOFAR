@@ -3,6 +3,7 @@
 include(LofarPackageVersion)
 
 set(GUI_PLOT_FILES
+  gui/plot/horizontalplotscale.cpp
   gui/plot/plot2d.cpp
   gui/plot/plotwidget.cpp
   gui/plot/verticalplotscale.cpp)
