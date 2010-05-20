@@ -28,6 +28,8 @@
 
 #include <scimath/Fitting/LSQFit.h>
 
+// #include <BBSControl/LocalSolveController.h>
+
 namespace LOFAR
 {
 namespace BBS
@@ -38,6 +40,8 @@ namespace BBS
 
 class Solver
 {
+  friend class LocalSolveController;
+  
 public:
     Solver();
 
@@ -63,6 +67,9 @@ public:
     // Perform an iteration for all available cells.
     bool iterate(vector<CellSolution> &global);
 
+	 // Get maxIter from the Solver object
+//	 inline size_t getMaxIter() { return itsMaxIter; };
+	 
 private:
     struct Cell
     {
