@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
   bufptr = buffer;
   long int count=0;
   int  nbytes;       /* Number of bytes read */
-  while (count < 1000000)
+  while (count < 1000)
     {
       nbytes = read(ttyFd, bufptr, buffer + sizeof(buffer) - bufptr - 1);
       if (nbytes != -1)
@@ -74,7 +74,10 @@ int main(int argc, char *argv[])
 	    count = 10000000;
 	}
       else
+	{
 	count += 1;
+	usleep(1000);
+	}
 
     }
   
