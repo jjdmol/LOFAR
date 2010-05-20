@@ -33,6 +33,9 @@ install(FILES
 
 install(FILES
   gui/plot/dimension.h
+  gui/plot/horizontalnumericscale.h
+  gui/plot/horizontalplotscale.h
+  gui/plot/horizontaltimescale.h
   gui/plot/plot2d.h
   gui/plot/plot2dpointset.h
   gui/plot/plotable.h

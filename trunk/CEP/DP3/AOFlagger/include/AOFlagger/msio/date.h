@@ -92,12 +92,42 @@ class Date {
 			s << dayOfMonth;
 			return s.str();
 		}
+		static std::string ToString(double time)
+		{
+			std::stringstream s;
+			int mins = int(time*60)%60;
+			int secs = int(time*3600)%60;
+			int msec = int(time*3600000)%1000;
+			s << floor(time) << ":" << (mins/10) << (mins%10) << ":" << (secs/10) << (secs%10) << "." << msec/100 << (msec/10)%10 << (msec)%10;
+			return s.str();
+		}
+		static std::string ToString(int dayOfMonth, int month, int year)
+		{
+			std::stringstream s;
+			s << year << "-";
+			if(month < 10) s << "0";
+			s << month << "-";
+			if(dayOfMonth < 10) s << "0";
+			s << dayOfMonth;
+			return s.str();
+		}
 		static std::string AipsMJDToString(double aipsMjd) {
 			double jd = AipsMJDToJD(aipsMjd);
 			double time = JDToHourOfDay(jd);
 			int year, month, day;
 			JDToDate(jd, day, month, year);
 			return ToString(time, day, month, year);
+		}
+		static std::string AipsMJDToDateString(double aipsMjd) {
+			double jd = AipsMJDToJD(aipsMjd);
+			int year, month, day;
+			JDToDate(jd, day, month, year);
+			return ToString(day, month, year);
+		}
+		static std::string AipsMJDToTimeString(double aipsMjd) {
+			double jd = AipsMJDToJD(aipsMjd);
+			double time = JDToHourOfDay(jd);
+			return ToString(time);
 		}
 		static std::string JDToString(double jd)
 		{

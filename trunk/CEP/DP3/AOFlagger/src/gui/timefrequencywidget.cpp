@@ -28,6 +28,7 @@
 
 #include <iostream>
 
+#include <AOFlagger/gui/plot/horizontaltimescale.h>
 #include <AOFlagger/gui/plot/verticalnumericscale.h>
 
 TimeFrequencyWidget::TimeFrequencyWidget() :
@@ -36,6 +37,7 @@ TimeFrequencyWidget::TimeFrequencyWidget() :
 	_highlighting(false),
 	_hasImage(false),
 	_segmentedImage(),
+	_horiScale(0),
 	_vertScale(0)
 {
 	_highlightConfig = new ThresholdConfig();
@@ -59,9 +61,14 @@ void TimeFrequencyWidget::Clear()
 		_hasImage = false;
 		_segmentedImage.reset();
 	}
-	if(_vertScale != 0)
+	if(_horiScale != 0) {
+		delete _horiScale;
+		_horiScale = 0;
+	}
+	if(_vertScale != 0) {
 		delete _vertScale;
-	_vertScale = 0;
+		_vertScale = 0;
+	}
 }
 
 void TimeFrequencyWidget::Init()
