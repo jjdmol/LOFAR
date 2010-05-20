@@ -262,6 +262,8 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 		  // Loop over solutions
 		  for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
 		  {
+			 it->maxIter=itsSolver.itsMaxIter;
+			 
 			 // Debug code: output solver parameters
 			 try
 			 {
@@ -276,6 +278,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 				solverfile << "solution.result = " << it->result << endl;
 				solverfile << "solution.resultText = " << it->resultText << endl;
 				solverfile << "solution.niter = " << it->niter << endl;
+				solverfile << "solution.maxIter = " << it->maxIter << endl;
 				solverfile << "solution.rank = " << it->rank << endl;	
 				solverfile << "solution.rankDeficiency = " << it->rankDeficiency << endl;		  
 				solverfile << "solution.chiSqr = " << it->chiSqr << endl;
@@ -301,8 +304,9 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 			 
 			 // TODO: get freqStart, freqEnd and timeStart, timeEnd
 			 // Write solver parameters into parmDB
-			 parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, solutionBox.upper().second, it->niter, it->maxIter, it->rank,
-								 it->rankDeficiency, it->chiSqr, it->lmFactor, it->coeff, it->resultText);
+			 parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
+								 solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
+								 it->chiSqr, it->lmFactor, it->coeff, it->resultText);
 
 		  }
 
