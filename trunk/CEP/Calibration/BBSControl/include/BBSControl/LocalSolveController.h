@@ -37,8 +37,6 @@
 
 #include <Common/lofar_smartptr.h>
 
-#include <ParmDB/ParmDBLog.h>
-
 namespace LOFAR
 {
 namespace BBS
@@ -53,14 +51,13 @@ public:
     LocalSolveController(const ExprSet<JonesMatrix>::Ptr &lhs,
         const ExprSet<JonesMatrix>::Ptr &rhs,
         const SolverOptions &options);
-	 ~LocalSolveController();
+    ~LocalSolveController();
 
     void init(const vector<string> &include, const vector<string> &exclude,
         const Grid &evalGrid, const Grid &solGrid, unsigned int cellChunkSize,
         bool propagate);
 
     void run();
-	 void run(ParmDBLog &parmLogger);
 
 private:
     void makeCoeffIndex(const ParmGroup &solvables);

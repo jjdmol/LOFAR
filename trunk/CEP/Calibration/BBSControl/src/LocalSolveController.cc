@@ -24,8 +24,6 @@
 #include <lofar_config.h>
 #include <BBSControl/LocalSolveController.h>
 #include <Common/StreamUtil.h>
-//#include <ParmDB/ParmDBLog.h>
-//#include <BBSControl/MeasurementAIPS.h>
 
 namespace LOFAR
 {
@@ -47,7 +45,6 @@ LocalSolveController::LocalSolveController
         options.colFactor, options.lmFactor, options.balancedEqs,
         options.useSVD);
 }
-
 
 LocalSolveController::~LocalSolveController()
 {
@@ -104,8 +101,6 @@ void LocalSolveController::init(const vector<string> &include,
     itsInitFlag = true;
 }
 
-
-// cal run() without reference to parmDBLog object -> no logging into ParmDB
 void LocalSolveController::run()
 {
     ASSERTSTR(itsInitFlag, "Controller not initialized.");
@@ -161,154 +156,7 @@ void LocalSolveController::run()
             // Notify LHS and RHS expressions of coefficient update.
             itsLHS->solvableParmsChanged();
             itsRHS->solvableParmsChanged();
- 		  }
-		  
-        // Propagate coefficient values to the next cell chunk.
-        // TODO: Find a better solution for this.
-        if(itsPropagateFlag && cellChunk < nCellChunks - 1)
-        {
-            // Determine start and end time index of the next cell chunk.
-            const size_t tStart = chunkStart.second + itsCellChunkSize;
-            const size_t tEnd = std::min(tStart + itsCellChunkSize - 1,
-                itsSolGrid[TIME]->size() - 1);
-
-            Location cell;
-            vector<double> values;
-            for(cell.first = chunkStart.first; cell.first <= chunkEnd.first;
-                ++cell.first)
-            {
-                // Get coefficient values for the upper border of the current
-                // cell chunk.
-                cell.second = chunkEnd.second;
-                getCoeff(values, cell);
-
-                // Assign coefficient values to the strip of cells in the next
-                // cell chunk at the same frequency index.
-                for(cell.second = tStart; cell.second <= tEnd; ++cell.second)
-                {
-                    setCoeff(values, cell);
-                }
-            }
         }
-
-        // Move to the next cell chunk.
-        chunkStart.second += itsCellChunkSize;
-    }
-}
-
-
-// Call run() with parmLogger object -> do logging into ParmDB
-void LocalSolveController::run(ParmDBLog &parmLogger)
-{
-    ASSERTSTR(itsInitFlag, "Controller not initialized.");
-
-	 Location solutionLocation;		// location of the solution cell
-	 Box solutionBox;						// Box of solution cell
-	 
-	// Exchange coefficient index with solver.
-    itsSolver.setCoeffIndex(0, itsCoeffIndex);
-
-    // Construct look-up table from Solver's coefficient index.
-    makeCoeffMapping(itsSolvables, itsSolver.getCoeffIndex());
-
-    // Compute the number of cell chunks to process.
-    const unsigned int nCellChunks =
-        static_cast<unsigned int>(ceil(static_cast<double>(itsSolGrid[TIME]->size())
-            / itsCellChunkSize));
-
-    vector<CellCoeff> coeff;
-    vector<CellEquation> equations;
-    vector<CellSolution> solutions;
-
-    Location chunkStart(0, 0);
-    Location chunkEnd(itsSolGrid[FREQ]->size() - 1,
-        itsSolGrid[TIME]->size() - 1);
-    for(unsigned int cellChunk = 0; cellChunk < nCellChunks; ++cellChunk)
-    {
-        // Compute end cell of current cell chunk.
-        chunkEnd.second = std::min(chunkStart.second + itsCellChunkSize - 1,
-            itsSolGrid[TIME]->size() - 1);
-
-        // Get initial coefficients.
-        getInitialCoeff(coeff, chunkStart, chunkEnd);
-
-        // Set initial coefficients.
-        itsSolver.setCoeff(0, coeff);
-
-        // Set cell selection.
-        itsEquator->setCellSelection(chunkStart, chunkEnd);
-
-        // Iterate.
-        bool done = false;
-        while(!done)
-        {
-            // Construct equations and pass to solver.
-            itsEquator->process(equations);
-
-            itsSolver.setEquations(0, equations);
-
-            // Perform a non-linear LSQ iteration.
-            done = itsSolver.iterate(solutions);
-
-            // Update coefficients.
-            setSolution(solutions, chunkStart, chunkEnd);
-
-            // Notify LHS and RHS expressions of coefficient update.
-            itsLHS->solvableParmsChanged();
-            itsRHS->solvableParmsChanged();
- 		  }
-		  
-		  
-		  // Loop over solutions
-		  for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
-		  {
-			 it->maxIter=itsSolver.itsMaxIter;
-			 
-			 // Debug code: output solver parameters
-			 try
-			 {
-				ofstream solverfile;
-				solverfile.open("/home/duscha/solverparams.txt", ios::app);
-
-				if(solverfile.fail())
-				  cerr << "Solver::iterate opening of solverparams.txt failed" << endl;
-				
-				solverfile << "solution.id = " << it->id << endl;
-				solverfile << "solution.coeff = " << it->coeff << endl;
-				solverfile << "solution.result = " << it->result << endl;
-				solverfile << "solution.resultText = " << it->resultText << endl;
-				solverfile << "solution.niter = " << it->niter << endl;
-				solverfile << "solution.maxIter = " << it->maxIter << endl;
-				solverfile << "solution.rank = " << it->rank << endl;	
-				solverfile << "solution.rankDeficiency = " << it->rankDeficiency << endl;		  
-				solverfile << "solution.chiSqr = " << it->chiSqr << endl;
-				solverfile << "solution.lmFactor = " << it->lmFactor << endl;
-			 
-
-				if(solutions[0].result==3)		// MAXITER is entry 3 in enum
-				{
-				  solutions[0].maxIterReached=true;
-				  solverfile << "Maximum iterations reached" << endl;
-				  solverfile.close();
-				}  
-			 }
-
-			 catch(string s)
-			 {
-				cerr << "Exception occured: " << s << endl;
-			 }
-
-			 solutionLocation=itsSolGrid.getCellLocation(it->id);				// translate cell id into location on the Grid
-			 solutionBox=itsSolGrid.getCell(solutionLocation);		// get the bounding box of the location of solutioncell
-			 solutionBox.print();											// DEBUG: output the boundaries of the solutionBox
-			 
-			 // TODO: get freqStart, freqEnd and timeStart, timeEnd
-			 // Write solver parameters into parmDB
-			 parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
-								 solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
-								 it->chiSqr, it->lmFactor, it->coeff, it->resultText);
-
-		  }
 
         // Propagate coefficient values to the next cell chunk.
         // TODO: Find a better solution for this.
