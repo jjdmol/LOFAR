@@ -13,7 +13,9 @@ set(ms_PROGRAMS
   makevds
   combinevds
   makems
-  msplay)
+  msplay
+  msselect
+)
 
 lofar_add_library(ms ${ms_LIB_SRCS})
 
