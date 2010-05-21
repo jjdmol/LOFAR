@@ -103,10 +103,11 @@ ExprValueIterator<JonesMatrix>::value(const PValueKey &key) const
 
 void ExprValueIterator<JonesMatrix>::advance(const PValueKey &key)
 {
-    if(!atEnd() && key == itsKey)
+    if(!itsAtEnd && key == itsKey)
     {
-        itsAtEnd = true;
-        itsKey = PValueKey();
+        PValueKey nextKey;
+        bool nextAtEnd = true;
+
         for(unsigned int i = 0; i < 4; ++i)
         {
             if(itsIterator[i] != itsElement[i].end()
@@ -117,11 +118,16 @@ void ExprValueIterator<JonesMatrix>::advance(const PValueKey &key)
 
             if(itsIterator[i] != itsElement[i].end())
             {
-                itsAtEnd = false;
-                itsKey = std::min(itsKey, itsIterator[i]->first);
+                nextAtEnd = false;
+                nextKey = std::min(nextKey, itsIterator[i]->first);
             }
         }
 
+        // Update iterator state. This is placed here such that this method
+        // works correctly even when key is a reference to itsKey (as in
+        // advance(key()).
+        itsKey = nextKey;
+        itsAtEnd = nextAtEnd;
         DBGASSERT(itsAtEnd != itsKey.valid());
     }
 }

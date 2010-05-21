@@ -21,8 +21,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_VALUESET_H
-#define LOFAR_BBSKERNEL_EXPR_VALUESET_H
+#ifndef LOFAR_BBSKERNEL_EXPR_ELEMENT_H
+#define LOFAR_BBSKERNEL_EXPR_ELEMENT_H
 
 // \file
 // A scalar field that transparantly handles 0-D (constant) and 2-D fields.
