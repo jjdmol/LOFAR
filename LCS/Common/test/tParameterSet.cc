@@ -48,15 +48,15 @@ int doIt(KeyCompare::Mode mode)
   {
     cout << "\n>>>";
     cout << "\nReading in parameterfile '" << paramFile << "'\n";
-    ParameterSet		myPS(paramFile, mode);
+    ParameterSet myPS(paramFile, mode);
     cout << "This ParameterSet does " << toUpper(cmpMode) 
 	 << " key comparison.\n";
     cout << "<<<\n";
 
-    ParameterSet		myPS2(mode);
+    ParameterSet myPS2(mode);
 
     // Try a self-adopt. Should return the same set.
-    myPS.adoptCollection(myPS, "Aap.Noot.");
+    myPS.adoptCollection(myPS, "");
 
     // Adopt collection myPS in myPS2 using a prefix.
     myPS2.adoptCollection(myPS, "Foo.Bar.");
@@ -231,6 +231,12 @@ int doIt(KeyCompare::Mode mode)
 	 iter++) {
       cout << iter->first << endl;
     }
+
+    // Adopt itself with a prefix should work.
+    int nrKeys = myPS.size();
+    myPS.adoptCollection (myPS, "Foo.Bar.");
+    ASSERT(myPS.getInt32("a.b.c") == myPS.getInt32("Foo.Bar.a.b.c"));
+    ASSERT(myPS.size() == 2*nrKeys);
 
   }
   catch (std::exception& ex) {
