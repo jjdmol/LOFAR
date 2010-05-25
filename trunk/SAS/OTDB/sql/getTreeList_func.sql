@@ -78,7 +78,7 @@ CREATE OR REPLACE FUNCTION getTreeList(INT2, INT2)
 		FROM   OTDBtree t 
 			   INNER JOIN OTDBuser u ON t.creator = u.userid
 			   INNER JOIN campaign c ON c.ID = t.campaign
-		\' || vQuery || \'
+		\' || vQuery || \' AND t.name IS NULL
 		ORDER BY t.treeID DESC\'
 	  LOOP
 		RETURN NEXT vRecord;
