@@ -39,14 +39,13 @@ CREATE OR REPLACE FUNCTION getDefaultTemplates()
   RETURNS SETOF templateInfo AS '
 	DECLARE
 		vRecord					RECORD;
-		TSTemplate CONSTANT		INT2 := 10;
 
 	BEGIN
 	  -- do selection
 	  FOR vRecord IN  
 		SELECT treeID, 
 			   name
-		FROM   OTDBtree where state=TSTemplate AND name IS NOT NULL
+		FROM   OTDBtree where name IS NOT NULL
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
