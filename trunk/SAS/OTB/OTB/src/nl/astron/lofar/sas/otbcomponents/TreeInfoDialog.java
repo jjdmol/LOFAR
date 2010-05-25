@@ -297,11 +297,12 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
     // try to calculate the duration from the difference between start/stoptime
     private void setDuration() {
-        long dur=0;
         if (itsStartDate != null && itsStopDate!=null && itsStartDate.before(itsStopDate)) {
-
+            long dur=0;
             dur = itsStopDate.getTime()-itsStartDate.getTime();
             calcDuration(dur);
+        } else {
+            calcDuration(itsMaxBeamDuration*1000);
         }
    }
 
@@ -468,7 +469,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         
         // make sure that if a VICtree is selected we check the start-end time first. If they are not correct, pop up a dialog.
         
-        if (itsTreeType.equals("VHtree") && itsTreeState.equalsIgnoreCase("Scheduled") || itsTreeState.equalsIgnoreCase("approved")) {
+        if (itsTreeType.equals("VHtree") && stateInput.getSelectedItem().toString().equalsIgnoreCase("Scheduled") ) {
             if ( ! checkTimes()) {
                 return false;
             }
