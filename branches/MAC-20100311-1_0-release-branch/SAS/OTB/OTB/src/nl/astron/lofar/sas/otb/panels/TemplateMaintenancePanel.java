@@ -25,6 +25,8 @@ import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
+import java.util.Vector;
+import java.util.logging.Level;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -34,7 +36,7 @@ import javax.swing.tree.TreePath;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.ConfigPanelHelper;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
@@ -226,6 +228,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         logger.debug("actionPerformed: " + evt);
         logger.debug("Trigger: " + evt.getActionCommand());
         if (evt.getActionCommand().equals("Delete")) {
+
             //Check  if the selected node isn't a leaf
             if (itsSelectedNode != null && !itsSelectedNode.leaf && itsSelectedNode.instances <= 1 ) {
                 if (JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this node ?", "Delete Tree", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) {
@@ -233,19 +236,24 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                         if (OtdbRmi.getRemoteMaintenance().deleteNode(itsSelectedNode)) {
                             logger.debug("Node + children deleted");
 
-//                            check diff between node duplication like beam en like duplicates
-                            itsMainFrame.ToDo();
+                          
                             // We have to find the defaultNode for this deleted node and decrease the number of instances
                             Vector<jOTDBnode> aList = OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, itsSelectedNode.name);
                             Iterator<jOTDBnode> it = aList.iterator ();
+                            jOTDBnode aDefaultNode=null;
+                            short maxIdx=0;
                             while (it.hasNext ()) {
                                 jOTDBnode aN = it.next ();
+                                if (aN.index > maxIdx) maxIdx=aN.index;
                                 if (aN.index == -1) {
-                                    // found defaultNode
-                                    Integer k = aN.instances-1;
-                                    aN.instances=k.shortValue();
-                                    OtdbRmi.getRemoteMaintenance().saveNode(aN);
+                                   aDefaultNode=aN;
                                 }
+                            }
+                            if (aDefaultNode != null) {
+                                maxIdx+=1;
+                                // Grootste index of totaal aantal
+                                aDefaultNode.instances=maxIdx;
+                                OtdbRmi.getRemoteMaintenance().saveNode(aDefaultNode);
                             }
                             setNewRootNode();
                         }
@@ -256,7 +264,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
             }
         } else if (evt.getActionCommand().equals("Duplicate")) {
 
-            //Check  if the selected node isn't a leaf and it is a deafult node (index = -1)
+            //Check  if the selected node isn't a leaf and it is a default node (index = -1)
             if (itsSelectedNode != null && !itsSelectedNode.leaf && itsSelectedNode.index==-1) {
                 String answer = JOptionPane.showInputDialog(this, "What is the index for the new subtree?", "Enter indexNumber", JOptionPane.QUESTION_MESSAGE);
                 if (answer != null || !answer.equals("")) {
@@ -426,13 +434,23 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 } else {
                     buttonPanel1.setButtonEnabled("Duplicate",false);
                 }
-                // only deletion possible when no instances left make install
+                try {
+                    // only deletion possible when no instances left
+                    Vector<jOTDBnode> aList = OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, itsSelectedNode.name);
 
-//                if (aNode.index == -1 && aNode.instances == 1 ) {
-//                    buttonPanel1.setButtonEnabled("Delete", true);
-//                } else {
-//                    buttonPanel1.setButtonEnabled("Delete", false);
-//                }
+                    if (aNode.index == -1 && aList != null && aList.size() <= 1 ) {
+                        buttonPanel1.setButtonEnabled("Delete", true);
+                    } else if (aNode.index != -1 && aNode.instances == 1) {
+                        buttonPanel1.setButtonEnabled("Delete", true);
+                    } else {
+                        buttonPanel1.setButtonEnabled("Delete", false);
+                    }
+               } catch (RemoteException ex) {
+                    logger.error("Error: Couldn't get ItemList" , ex);
+                    buttonPanel1.setButtonEnabled("Delete", true);
+                    return;
+                }
+
             }
         }
         if (savedSelection > -1 && savedSelection < jTabbedPane1.getComponentCount()) {
@@ -452,7 +470,6 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
 
         } else {
             buttonPanel1.addButton("Delete");
-            buttonPanel1.setButtonEnabled("Delete", false);
             buttonPanel1.addButton("Duplicate");
             buttonPanel1.addButton("Exit");
         }

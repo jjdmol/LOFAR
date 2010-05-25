@@ -758,6 +758,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     
     private boolean saveInput() {
         // Digital Beam
+        // keep default Beams
+        jOTDBnode aDefaultBNode= itsBeams.elementAt(0);
         if (itsBeamConfigurationTableModel.changed()) {
            int i=0;
 
@@ -778,8 +780,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             // now that all Nodes are deleted we should collect the tables input and create new Beams to save to the database.
             itsBeamConfigurationTableModel.getTable(itsBeamDirectionTypes,itsBeamAngles1,itsBeamAngles2,itsBeamDurations,
                     itsBeamStartTimes,itsBeamSubbandList,itsBeamBeamletList,itsBeamMomIDs);
-           // keep default Beams
-           jOTDBnode aDefaultNode= itsBeams.elementAt(0);
             try {
                // for all elements
                 for (i=1; i < itsBeamDirectionTypes.size();i++) {
@@ -788,7 +788,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     // with the values from the set fields and save the elements again
                    //
                     // Duplicates the given node (and its parameters and children)
-                    int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultNode.nodeID(),(short)(i-1));
+                    int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultBNode.nodeID(),(short)(i-1));
                     if (aN <= 0) {
                         logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
                     } else {
@@ -825,9 +825,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     }
                 }
 
-                // store new number of instances in baseSetting
-                aDefaultNode.instances=(short)(itsBeamDirectionTypes.size()-1); // - default at -1
-                saveNode(aDefaultNode);
 
             } catch (RemoteException ex) {
                 logger.error("Error during duplication and save : " + ex);
@@ -835,7 +832,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
 
         }
+        // store new number of instances in baseSetting
+        short beams= (short)(itsBeamDirectionTypes.size()-1);
+        aDefaultBNode.instances = beams; //
+        saveNode(aDefaultBNode);
 
+        // keep default AnaBeams
+        jOTDBnode aDefaultABNode= itsAnaBeams.elementAt(0);
         if (itsAnaBeamConfigurationTableModel.changed()) {
             // same for Analog Beams
             // delete all Analog Beams from the table (excluding the Default one);
@@ -853,8 +856,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             // now that all Nodes are deleted we should collect the tables input and create new AnaBeams to save to the database.
             itsAnaBeamConfigurationTableModel.getTable(itsAnaBeamDirectionTypes,itsAnaBeamAngles1,itsAnaBeamAngles2,
                     itsAnaBeamDurations,itsAnaBeamStartTimes,itsAnaBeamRanks);
-            // keep default Beams
-            jOTDBnode aDefaultNode= itsAnaBeams.elementAt(0);
             try {
                 // for all elements
                 for (i=1; i < itsAnaBeamDirectionTypes.size();i++) {
@@ -863,7 +864,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     // with the values from the set fields and save the elements again
                     //
                     // Duplicates the given node (and its parameters and children)
-                    int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultNode.nodeID(),(short)(i-1));
+                    int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultABNode.nodeID(),(short)(i-1));
                     if (aN <= 0) {
                         logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
                     } else {
@@ -896,18 +897,20 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     }
                 }
 
-                // store new number of instances in baseSetting
-                aDefaultNode.instances=(short)(itsAnaBeamDirectionTypes.size()-1); // - default at -1
-                saveNode(aDefaultNode);
-
             } catch (RemoteException ex) {
                 logger.error("Error during duplication and save : " + ex);
                 return false;
             }
         }
+        // store new number of instances in baseSetting
+        short abeams= (short)(itsAnaBeamDirectionTypes.size()-1);
+        aDefaultABNode.instances = abeams; //
+        saveNode(aDefaultABNode);
 
 
 
+        jOTDBnode aDefaultBFNode= itsBeamformers.elementAt(0);
+        // validate table
         // same for beamformer
         if (itsBeamformerConfigurationTableModel.changed()) {
             int i=0;
@@ -923,10 +926,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 return false;
             }
 
+
             itsBeamformerConfigurationTableModel.getTable(itsStations);
             // keep default save
-            jOTDBnode aDefaultBFNode= itsBeamformers.elementAt(0);
-            // validate table
             for (int j=0; j< itsStations.size(); j++) {
                 if (itsStations.get(j).equals("")) {
                     itsStations.remove(j);
@@ -963,15 +965,16 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     }
                 }
             
-                // store new number of instances in baseSetting
-                aDefaultBFNode.instances=(short)(itsStations.size()-1); // - default at -1
-                saveNode(aDefaultBFNode);
 
             } catch (RemoteException ex) {
                 logger.error("Error during duplication and save : " + ex);
                 return false;
             }
         }
+        // store new number of instances in baseSetting
+        short bforms= (short)(itsStations.size()-1);
+        aDefaultBFNode.instances=bforms;
+        saveNode(aDefaultBFNode);
 
         // Virtual Instrument storageNodes
         if (this.itsStorageNodeList != null && !getUsedStorageNodes().equals(itsStorageNodeList.limits)) {
@@ -1018,10 +1021,11 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 logger.debug("Error: saveNode failed : " + ex);
             } 
             itsOldTreeDescription = inputTreeDescription.getText();
-            itsMainFrame.setChanged("Home",true);
-            itsMainFrame.setChanged("Template_Maintenance("+itsNode.treeID()+")" ,true);
-            itsMainFrame.checkChanged("Template_Maintenance("+itsNode.treeID()+")");
         }
+        itsMainFrame.setChanged("Home",true);
+        itsMainFrame.setChanged("Template_Maintenance("+itsNode.treeID()+")" ,true);
+        itsMainFrame.checkChanged("Template_Maintenance("+itsNode.treeID()+")");
+
 
         return true;   
     }
