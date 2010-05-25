@@ -192,7 +192,7 @@ namespace LOFAR {
     int64 off = itsNormalSize;
     const void* extra = inbuf.getBuffer() + off;
     off += sizeof(BlobHeader::eobMagicValue());
-    DBGASSERT (inbuf.size() >= off);
+    DBGASSERT (inbuf.size() >= uint64(off));
     uint64 size = inbuf.size() - off;
     BlobIBufChar buf(extra, size);
     if (size > 0) {
