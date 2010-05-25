@@ -330,7 +330,6 @@ void VdsMaker::combine (const string& gdsName,
     vpd->setFileName (vpd->getName());
     vpd->setName (path.absoluteName(), vpd->getFileSys());
     vpds.push_back (vpd);
-    vpd->clearParms();
     const vector<int>& chans = vpd->getNChan();
     const vector<double>& sf = vpd->getStartFreqs();
     const vector<double>& ef = vpd->getEndFreqs();
@@ -377,6 +376,7 @@ void VdsMaker::combine (const string& gdsName,
   // Print a warning if times differ.
   // Also cleanup the objects.
   for (uint i=0; i<vpds.size(); ++i) {
+    vpds[i]->clearParms();
     gdesc.addPart (*vpds[i]);
     if (vpds[i]->getStartTime() != globalvpd.getStartTime()  ||
         vpds[i]->getEndTime()   != globalvpd.getEndTime()    ||
