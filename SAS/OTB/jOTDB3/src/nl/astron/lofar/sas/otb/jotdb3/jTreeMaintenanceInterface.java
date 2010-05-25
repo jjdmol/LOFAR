@@ -76,10 +76,14 @@ public interface jTreeMaintenanceInterface extends Remote
     // and return its treeID.
     public int newTemplateTree() throws RemoteException;
 
+
     // Make a copy of an existing template tree.
     // Returns 0 on failure, otherwise the ID of the new tree is returned.
     public int copyTemplateTree (int aTreeID) throws RemoteException;
 
+    // Assign a name to a template tree making it a default-template
+    // when an empty name is assigned the default-template becomes a normal template again
+    public boolean assignTemplate(int aTreeID, String aName);
 
     // Get a single node from the VIC template tree
     public jOTDBnode getNode (int aTreeID, int aNodeID) throws RemoteException;

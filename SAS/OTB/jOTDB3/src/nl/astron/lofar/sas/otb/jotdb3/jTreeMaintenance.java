@@ -90,6 +90,10 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     // Returns 0 on failure, otherwise the ID of the new tree is returned.
     public native int copyTemplateTree (int aTreeID) throws RemoteException;
 
+    // Assign a name to a template tree making it a default-template
+    // when an empty name is assigned the default-template becomes a normal template again
+    public native boolean assignTemplate(int aTreeID, String aName);
+
     // Get a single node from the VIC template tree
     public native jOTDBnode getNode (int aTreeID, int aNodeID) throws RemoteException;
 
