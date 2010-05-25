@@ -46,11 +46,68 @@ CREATE OR REPLACE FUNCTION getDefaultTemplates()
 	  FOR vRecord IN  
 		SELECT treeID, 
 			   name
-		FROM   OTDBtree where state=TSTemplate
+		FROM   OTDBtree where state=TSTemplate AND name IS NOT NULL
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END
+' LANGUAGE plpgsql;
+
+--
+-- assignTemplateName (auth, treeID, name)
+-- 
+-- Connect the given name to the given templateID
+--
+-- Authorisation: none
+--
+-- Tables: 	otdbtree	write
+--			otdbuser	read
+--
+-- Types:	none
+--
+CREATE OR REPLACE FUNCTION assignTemplateName(INT4, INT4, VARCHAR(32))
+  RETURNS BOOLEAN AS '
+	DECLARE
+		TTtemplate  CONSTANT	INT2 := 20;
+		TThierarchy CONSTANT	INT2 := 30;
+		vFunction   CONSTANT	INT2 := 1;
+		vTreeType		OTDBtree.treetype%TYPE;
+		vIsAuth			BOOLEAN;
+		vAuthToken		ALIAS FOR $1;
+
+	BEGIN
+		-- check authorisation(authToken, tree, func, parameter)
+		vIsAuth := FALSE;
+		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
+		INTO   vIsAuth;
+		IF NOT vIsAuth THEN
+			RAISE EXCEPTION \'Not authorized\';
+			RETURN FALSE;
+		END IF;
+
+		-- get treetype
+		SELECT	treetype
+		INTO	vTreeType
+		FROM	OTDBtree
+		WHERE	treeID = $2;
+		IF NOT FOUND THEN
+		  RAISE EXCEPTION \'Tree % does not exist\', $2;
+		END IF;
+
+		IF vTreeType = TTtemplate THEN
+			UPDATE	OTDBtree
+			SET		name = $3
+			WHERE	treeID = $2;
+			IF NOT FOUND THEN
+			  RAISE EXCEPTION \'Name % can not be assigned to templateID %\', $3, $2;
+			  RETURN FALSE;
+			END IF;
+		ELSE
+			RAISE EXCEPTION \'Tree % is not a template tree\', $2;
+		END IF;
+
+		RETURN TRUE;
+	END;
 ' LANGUAGE plpgsql;
 
