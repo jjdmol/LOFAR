@@ -137,7 +137,7 @@ namespace LOFAR {
     if (getOffset() < 0) {
       return 0;
     }
-    DBGASSERT (getOffset() + getNelem()*sizeof(T) <= buf.size());
+    DBGASSERT (uint64(getOffset() + getNelem()*sizeof(T)) <= buf.size());
     T* data = (T*)(buf.getBuffer() + getOffset());
     return data;
   }
@@ -148,7 +148,7 @@ namespace LOFAR {
     if (getOffset() < 0) {
       return 0;
     }
-    DBGASSERT (getOffset() + getNelem()*sizeof(T) <= buf.size());
+    DBGASSERT (uint64(getOffset() + getNelem()*sizeof(T)) <= buf.size());
     T* data = (T*)(buf.getBuffer() + getOffset());
     return data;
   }
@@ -183,7 +183,7 @@ namespace LOFAR {
 				  LOFAR::DataFormat fmt) const
   {
     if (getOffset() >= 0) {
-      DBGASSERT (getOffset() + getNelem()*sizeof(T) <= buf.size());
+      DBGASSERT (uint64(getOffset() + getNelem()*sizeof(T)) <= buf.size());
       T* data = (T*)(buf.getBuffer() + getOffset());
       LOFAR::dataConvert (fmt, data, getNelem());
       if (! isScalar()) {
