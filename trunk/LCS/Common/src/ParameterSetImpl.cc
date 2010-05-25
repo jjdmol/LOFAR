@@ -172,15 +172,21 @@ void ParameterSetImpl::adoptBuffer(const string&	theBuffer,
 void ParameterSetImpl::adoptCollection(const ParameterSetImpl& theCollection,
 				       const string&	thePrefix)
 {
-    // Cannot adopt itself.
-    if (&theCollection != this) {
-	const_iterator		newItem = theCollection.begin();
-
-	while (newItem != theCollection.end()) {
-		replace(thePrefix+newItem->first, newItem->second);
-		++newItem;
-	}
+  // Cannot adopt itself.
+  if (&theCollection != this) {
+    for (const_iterator iter = theCollection.begin();
+         iter != theCollection.end(); ++iter) {
+      replace(thePrefix+iter->first, iter->second);
     }
+  } else if (! thePrefix.empty()) {
+    // However, adopt itself if a prefix is given.
+    // Iterate on a copy, otherwise an endless loop occurs.
+    KVMap tmp(theCollection);
+    for (const_iterator iter = tmp.begin();
+         iter != tmp.end(); ++iter) {
+      replace(thePrefix+iter->first, iter->second);
+    }
+  }
 }
 
 //
