@@ -1309,6 +1309,57 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 	return (true);
 }
 
+//
+// Assign the given name to a template tree, making it a default template
+//
+bool	TreeMaintenance::assignTemplateName (treeIDType		treeID,
+										     const string&	name)
+{
+	// Check Connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (0);
+	}
+
+	LOG_TRACE_FLOW_STR("TM:assignTemplateName(" << treeID << "," << name << ")");
+
+	work	xAction(*(itsConn->getConn()), "assignTemplateName");
+	try {
+		// execute the insert action
+		result res;
+		if (name.empty()) {
+			res = xAction.exec(formatString("SELECT assignTemplateName(%d,%d,NULL)",
+						itsConn->getAuthToken(),
+						treeID));
+		}
+		else {
+			res = xAction.exec(formatString("SELECT assignTemplateName(%d,%d,'%s')",
+						itsConn->getAuthToken(),
+						treeID,
+					    name.c_str()));
+		}
+
+		// Analyse result
+		bool		dbResult;
+		res[0]["assignTemplateName"].to(dbResult);
+		if (!dbResult) {
+			itsError = "Unable to assign a name to a (default) template tree";
+			return (0);
+		}
+
+		xAction.commit();
+		return (dbResult);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during assignment of a defaultTemplate name:") +
+				 + ex.what();
+		LOG_FATAL(itsError);
+		return (false);
+	}
+
+	return (false);
+}
+
 
   } // namespace OTDB
 } // namespace LOFAR

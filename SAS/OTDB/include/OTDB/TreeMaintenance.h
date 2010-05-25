@@ -109,6 +109,11 @@ public:
 	// Returns 0 on failure, otherwise the ID of the new tree is returned.
 	treeIDType	copyTemplateTree(treeIDType		aTreeID);
 
+	// Assign a name to a template tree making it a default-template.
+	// When an empty name is assigned the default-template becomes a normal template again.
+	bool	assignTemplateName (treeIDType		treeID,
+							    const string&	name);
+
 	// Get a single node from any tree
 	OTDBnode getNode (treeIDType	aTreeID,
 					  nodeIDType	aNodeID);
