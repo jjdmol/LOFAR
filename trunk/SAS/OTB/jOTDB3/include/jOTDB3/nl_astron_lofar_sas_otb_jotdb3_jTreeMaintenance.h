@@ -113,6 +113,14 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_copy
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    assigTemplateName
+ * Signature: (ILjava/lang/String)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_assignTemplateName
+  (JNIEnv *, jobject, jint, jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
  * Method:    getNode
  * Signature: (II)Lnl/astron/lofar/sas/otb/jotdb3/jOTDBnode;
  */
