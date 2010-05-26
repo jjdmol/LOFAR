@@ -114,15 +114,18 @@ void TimeFrequencyWidget::Update() throw()
 
 		if(_vertScale != 0)
 			delete _vertScale;
-		if(_metaData != 0)
-			_vertScale = new VerticalNumericScale(get_window(), round(_metaData->Band().channels[_startFrequency].frequencyHz / 1e5) / 10.0, round(_metaData->Band().channels[_endFrequency-1].frequencyHz / 1e5) / 10.0);
-		else
+		if(_metaData != 0) {
+			_vertScale = new VerticalNumericScale(get_window(), _metaData->Band().channels[_startFrequency].frequencyHz / 1e5, _metaData->Band().channels[_endFrequency-1].frequencyHz / 1e5);
+			_horiScale = new HorizontalTimeScale(get_window(), _metaData->ObservationTimes()[_startTime], _metaData->ObservationTimes()[_endTime-1]);
+		} else {
 			_vertScale = new VerticalNumericScale(get_window(), _startFrequency, _endFrequency-1);
+			_horiScale = new HorizontalTimeScale(get_window(), _startTime, _endTime-1);
+		}
 
 		_leftBorderSize = _vertScale->GetWidth();
-		_rightBorderSize = 10;
+		_rightBorderSize = _horiScale->GetRightMargin();
 		_topBorderSize = 10;
-		_bottomBorderSize = 10;
+		_bottomBorderSize = _horiScale->GetHeight();
 
 		ColorMap *colorMap = createColorMap();
 		
@@ -268,7 +271,10 @@ void TimeFrequencyWidget::redraw()
 		0, 0, (int) round(_leftBorderSize), (int) round(_topBorderSize), -1, -1, Gdk::RGB_DITHER_NONE, 0, 0);
 
 		_vertScale->SetPlotDimensions(get_width() - _rightBorderSize, get_height() - _topBorderSize - _bottomBorderSize, _topBorderSize);
+		_horiScale->SetPlotDimensions(get_width() - _rightBorderSize, get_height()-_topBorderSize - _bottomBorderSize, _topBorderSize, _vertScale->GetWidth());
+		
 		_vertScale->Draw(cairo);
+		_horiScale->Draw(cairo);
 	}
 }
 

@@ -32,18 +32,19 @@ class HorizontalTimeScale : private HorizontalPlotScale
 		HorizontalTimeScale(Glib::RefPtr<Gdk::Drawable> drawable, double minAipsTime, double maxAipsTime)
 			: HorizontalPlotScale(drawable)
 		{
-			for(size_t i=0;i<=100;++i)
+			for(size_t i=0;i<=10;++i)
 			{
-				double val = ((maxAipsTime - minAipsTime) * i / 100.0 + minAipsTime);
-				std::string s = Date::AipsMJDToTimeString(val) + "\n" + Date::AipsMJDToDateString(val);
-				if(i % 10 == 0)
-					HorizontalTimeScale::AddLargeTick(i / 100.0, s);
+				double val = ((maxAipsTime - minAipsTime) * i / 10.0 + minAipsTime);
+				std::string s = Date::AipsMJDToTimeString(val);// + "\n" + Date::AipsMJDToDateString(val);
+				if(i % 2 == 0)
+					HorizontalTimeScale::AddLargeTick(i / 10.0, s);
 				else
-					HorizontalTimeScale::AddSmallTick(i / 100.0, s);
+					HorizontalTimeScale::AddSmallTick(i / 10.0, s);
 			}
 		}
 		void Draw(Cairo::RefPtr<Cairo::Context> cairo) { HorizontalPlotScale::Draw(cairo); }
 		double GetHeight() { return HorizontalPlotScale::GetHeight(); }
+		double GetRightMargin() { return HorizontalPlotScale::GetRightMargin(); }
 		void SetPlotDimensions(double plotWidth, double plotHeight, double topMargin, double verticalScaleWidth)
 		{
 			HorizontalPlotScale::SetPlotDimensions(plotWidth, plotHeight, topMargin, verticalScaleWidth);

@@ -97,8 +97,10 @@ class Date {
 			std::stringstream s;
 			int mins = int(time*60)%60;
 			int secs = int(time*3600)%60;
-			int msec = int(time*3600000)%1000;
-			s << floor(time) << ":" << (mins/10) << (mins%10) << ":" << (secs/10) << (secs%10) << "." << msec/100 << (msec/10)%10 << (msec)%10;
+			int msec = int(round(time*3600000))%1000;
+			s << floor(time) << ":" << (mins/10) << (mins%10) << ":" << (secs/10) << (secs%10);
+			if(msec != 0)
+				s << "." << msec/100 << (msec/10)%10 << (msec)%10;
 			return s.str();
 		}
 		static std::string ToString(int dayOfMonth, int month, int year)
