@@ -51,6 +51,7 @@ class HorizontalPlotScale {
 			_metricsAreInitialized = false;
 		}
 		double GetHeight();
+		double GetRightMargin();
 		void Draw(Cairo::RefPtr<Cairo::Context> cairo);
 	private:
 		struct Tick {
@@ -76,7 +77,7 @@ class HorizontalPlotScale {
 		std::vector<Tick> _largeTicks, _smallTicks;
 		std::vector<Tick> _visibleLargeTicks;
 		bool _metricsAreInitialized;
-		double _width;
+		double _height, _rightMargin;
 		Glib::RefPtr<Gdk::Drawable> _drawable;
 		Cairo::RefPtr<Cairo::Context> _cairo;
 };
