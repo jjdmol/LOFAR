@@ -46,7 +46,6 @@ CREATE TYPE schedulerInfo AS (
 	taskDuration           VARCHAR(10),
 	taskID                 INT4,
 	taskName               VARCHAR(40),
-	taskStatus             INT4,
 	taskType               INT4,
 	unscheduledReason      INT4,
 	windowMaximumTime      VARCHAR(8),
@@ -82,7 +81,6 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 	FETCH fieldList INTO vRecord.taskDuration;
 	FETCH fieldList INTO vRecord.taskID;
 	FETCH fieldList INTO vRecord.taskName;
-	FETCH fieldList INTO vRecord.taskStatus;
 	FETCH fieldList INTO vRecord.taskType;
 	FETCH fieldList INTO vRecord.unscheduledReason;
 	FETCH fieldList INTO vRecord.windowMaximumTime;
