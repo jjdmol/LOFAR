@@ -57,11 +57,28 @@ if test "$msdRa" != "" -a "$msdDec" != "" -a "$msdType" != ""; then
   echo "msDirDec = $msdDec" >> $psnbase.part$seqnr
   echo "msDirType = $msdType" >> $psnbase.part$seqnr
 fi
+
+# Put the MS name into the parset file.
 sed -e "s%^ *dataset *=.*%dataset = $msn%" $psnbase.part$seqnr > $psnbase.part$seqnr-tmp  ||  exit 1
 mv $psnbase.part$seqnr-tmp $psnbase.part$seqnr  ||  exit 1
 
 # Convert parset file from SAS format to cimager format.
 convertimagerparset $psnbase.part$seqnr $psnbase.part$seqnr.cvt  ||  exit 1
+
+# Get a possible baseline selection string.
+# If given, the selection has to be done before cimager, hence its input MS
+# gets a different name.
+selstr=`getparsetvalue $psnbase.part$seqnr baseline 2>/dev/null` || selstr=
+if test "$selstr" != ""; then
+  msnsel=${msn}_sel
+  sed -e "s%^ *Cimager.dataset *=.*%Cimager.dataset=$msnsel%" -e "s%^ *Cimager.baseline *=%baseline=%" $psnbase.part$seqnr.cvt > $psnbase.part$seqnr-tmp  ||  exit 1
+  mv $psnbase.part$seqnr-tmp $psnbase.part$seqnr.cvt  ||  exit 1
+  echo "msselect in=$msn 'baseline=$selstr' out=$msnsel"
+  if test "$dry" != dry; then
+    msselect "in=$msn" "baseline=$selstr" "out=$msnsel"
+  fi
+fi
+
 
 if test "$dry" = dry; then
   cat $psnbase.part$seqnr.cvt

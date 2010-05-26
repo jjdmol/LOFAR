@@ -58,6 +58,7 @@ def main(argv=None):
         nch = vdsps.getIntVector('NChan')
         echan += nch[0]
     nchan = echan - schan + 1
+    baseline = ps.getString ('baseline', '')
     imgext   = ps.getString ('Images.name', '')
     imgnchan = ps.getInt ('Images.nchan', 1)
     imsize = ps.getIntVector ('Images.shape')
@@ -144,6 +145,17 @@ def main(argv=None):
         print "If needed, adding MS columns used by CASA's imager ..."
         pytab.addImagingColumns (msname)
 
+    # Get a possible baseline selection string.
+    # If given, the selection has to be done before lwimager, hence its input MS
+    # gets a different name.
+    if len(baseline) > 0:
+        msnsel = msname + '_sel'
+        print 'msselect "in=' + msname +  '" "baseline=' + baseline + '" "out=' + msnsel + '"'
+        if dry != 'dry':
+            os.system ('msselect "in=' + msname +  '" "baseline=' + baseline + '" "out=' + msnsel + '"')
+        msname = msnsel
+
+    # Form the command.
     command = 'lwimager "ms=%s" "image=%s" "data=%s" "mode=channel" "npix=%d" "cellsize=%s" "stokes=%s" "nchan=%d" "chanstart=%d" "img_nchan=%d" "wprojplanes=%d" "nfacets=%d" "padding=%s" "cachesize=%s"' % (msname,imgname,datacol,imsize,cellsz,stokestr,nchan,schan,imgnchan,nwplanes,nfacets,padding,cachesize)
     if len(selectstr) > 0:
         command += ("select=%s" % selectstr)
