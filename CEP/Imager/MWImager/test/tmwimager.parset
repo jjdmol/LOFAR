@@ -6,7 +6,7 @@ Images.ra = 230.35
 Images.dec = -10.345
 Images.directionType = J2000
 
-Solver.type = dirty
+Solver.type = Dirty
 Solver.algorithm = MultiScale
 Solver.niter = 10
 Solver.gain = 1.0
@@ -22,6 +22,7 @@ Gridder.cutoff = 0.001
 
 dataset = tmwimager.in_vd
 datacolumn = CORRECTED_DATA
+baseline = CS* & RS*
 minUV = 1.0
 ncycles = 0
 restore = False

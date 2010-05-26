@@ -129,11 +129,17 @@ namespace LOFAR {
       ParameterSet soin = in.makeSubset ("Solver.");
       in.subtractSubset ("Solver.");
       // Get the solver type (dirty, clean).
-      string type = soin.getString ("type", "dirty");
+      string type = soin.getString ("type", "Dirty");
       soin.remove ("type");
       out.add ("Cimager.solver", type);
       imgname += '_' + type;
-      convert (out, soin, emptyMap, emptyMap, "Cimager.solver.Clean.");
+      convert (out, soin, emptyMap, emptyMap, "Cimager.solver." + type + ".");
+    }
+    // Convert the preconditioner keywords.
+    {
+      ParameterSet imin = in.makeSubset ("preconditioner.");
+      in.subtractSubset ("preconditioner.");
+      // 
     }
     // Convert the images keywords.
     {
