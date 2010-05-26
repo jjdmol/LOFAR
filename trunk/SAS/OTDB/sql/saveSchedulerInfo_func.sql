@@ -37,7 +37,7 @@
 CREATE OR REPLACE FUNCTION saveSchedulerInfo(INT4, INT4, 
 					TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT,
 		TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, 
-		TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
+		TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
   RETURNS BOOLEAN AS $$ 
 	DECLARE
 		TThierarchy CONSTANT	INT2 := 30;
@@ -128,8 +128,6 @@ CREATE OR REPLACE FUNCTION saveSchedulerInfo(INT4, INT4,
 		UPDATE VIChierarchy SET value=$26 WHERE treeID=$2 AND nodeID=vRecord.nodeID;
 		FETCH fieldList INTO vRecord;
 		UPDATE VIChierarchy SET value=$27 WHERE treeID=$2 AND nodeID=vRecord.nodeID;
-		FETCH fieldList INTO vRecord;
-		UPDATE VIChierarchy SET value=$28 WHERE treeID=$2 AND nodeID=vRecord.nodeID;
 	    RETURN TRUE;
 	END;
 $$ LANGUAGE plpgsql;
