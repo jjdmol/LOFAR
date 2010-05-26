@@ -73,9 +73,10 @@ int main (int argc, char* argv[])
     // Create a table expression over a MS representing the selection
     TableExprNode node = select.toTableExprNode (&ms);
     // Make the selection and write the resulting RefTable.
+    // If no selection was made, create it explicitly from all rows.
     Table mssel = ms(node);
     if (mssel.nrow() == ms.nrow()) {
-      throw AipsError(" no selection has been made");
+      mssel = ms(ms.rowNumbers());
     }
     if (deep == 0) {
       mssel.rename (out, Table::New);
