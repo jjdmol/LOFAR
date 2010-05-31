@@ -92,7 +92,7 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
 
     // Assign a name to a template tree making it a default-template
     // when an empty name is assigned the default-template becomes a normal template again
-    public native boolean assignTemplate(int aTreeID, String aName);
+    public native boolean assignTemplate(int aTreeID, String aName) throws RemoteException;
 
     // Get a single node from the VIC template tree
     public native jOTDBnode getNode (int aTreeID, int aNodeID) throws RemoteException;
