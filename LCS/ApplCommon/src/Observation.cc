@@ -359,8 +359,8 @@ string Observation::getAntennaArrayName(bool hasSplitters) const
 		if (result.find("HBA") == 0) return ("HBA");
 	}
 	else {						// has splitter, translate SAS names to AntennaArray.conf names
-		if (result == "HBA_ONE") 	return ("HBA0");
-		if (result == "HBA_TWO") 	return ("HBA1");
+		if (result == "HBA_ZERO") 	return ("HBA0");
+		if (result == "HBA_ONE") 	return ("HBA1");
 		if (result == "HBA_JOINED")	return ("HBA");
 		return ("HBA");
 	}
