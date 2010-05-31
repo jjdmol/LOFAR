@@ -320,6 +320,9 @@ class Image2D {
 		unsigned long _width, _height;
 		num_t *_data;
 		bool *_isSet;
+
+		static long _imageCount;
+		long _thisImage;
 };
 
 #endif

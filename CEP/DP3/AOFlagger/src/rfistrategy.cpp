@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
 			else throw runtime_error("Column parameter -c can only be followed by DATA, CORRECTED_DATA or residuals");
 		}
 		else if(flag == "ff" || flag == "freq-based-flagging")	{ frequencyBasedFlagging = true;	}
-		else if(flag == "fs" || flag == "flag-stokes")	{ flagStokes = true;	}
+		else if(flag == "fs" || flag == "flag-stokes")	{ flagStokes = true; }
 		else if(flag == "j" || flag == "threads") { ++parameterIndex; threadCount = atoi(argv[parameterIndex]); }
 		else if(flag == "ks" || flag == "kernel-size")
 		{
@@ -206,13 +206,13 @@ int main(int argc, char *argv[])
 
 	rfiStrategy::Strategy *strategy = new rfiStrategy::Strategy();
 	if(profile == "fast")
-		strategy->LoadFastStrategy();
+		strategy->LoadFastStrategy(false, false);
 	else if(profile == "average" || profile == "default")
-		strategy->LoadAverageStrategy();
+		strategy->LoadAverageStrategy(false, false);
 	else if(profile == "best")
-		strategy->LoadBestStrategy();
+		strategy->LoadBestStrategy(false, false);
 	else if(profile == "pedantic")
-		strategy->LoadBestStrategy(true);
+		strategy->LoadBestStrategy(true, false);
 	else if(profile == "pulsar")
 		strategy->LoadBestStrategy(true, true);
 	else {

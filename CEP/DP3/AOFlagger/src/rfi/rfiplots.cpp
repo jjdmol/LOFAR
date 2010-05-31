@@ -26,6 +26,7 @@
 #include <AOFlagger/util/multiplot.h>
 
 #include <AOFlagger/msio/timefrequencydata.h>
+#include <AOFlagger/msio/timefrequencymetadata.h>
 
 #include <AOFlagger/rfi/sinusfitter.h>
 #include <AOFlagger/rfi/thresholdtools.h>
@@ -63,7 +64,7 @@ void RFIPlots::MakeDistPlot(Plot &plot, Image2DCPtr image, Mask2DCPtr mask)
 {
 	std::vector<size_t> valuesOutput;
 	std::vector<long double> binsOutput;
-	plot.SetXAxisText("Flux (Jy)");
+	plot.SetXAxisText("Visibility");
 	plot.SetYAxisText("Occurences");
 
 	long double mean, stddev;
@@ -80,12 +81,12 @@ void RFIPlots::MakeDistPlot(Plot &plot, Image2DCPtr image, Mask2DCPtr mask)
 		plot.PushDataPoint(binsOutput[i], valuesOutput[i]);
 }
 
-void RFIPlots::MakePowerSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask)
+void RFIPlots::MakePowerSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask, const TimeFrequencyMetaData &metaData)
 {
-	plot.SetXAxisText("Channel");
-	plot.SetYAxisText("Flux density (Jy)");
+	plot.SetXAxisText("Frequency (MHz)");
+	plot.SetYAxisText("Visibility");
 	plot.SetLogScale(false, true, false);
-	plot.SetXRange(0.0, image->Height()-1);
+	plot.SetXRange(metaData.Band().channels[0].frequencyHz/1000000.0, metaData.Band().channels[image->Height()-1].frequencyHz/1000000.0);
 
 	long double min = 1e100, max = 0.0;
 
@@ -103,7 +104,7 @@ void RFIPlots::MakePowerSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2D
 			long double v = sum/count;
 			if(v < min) min = v;
 			if(v > max) max = v;
-			plot.PushDataPoint(y, v);
+			plot.PushDataPoint(metaData.Band().channels[y].frequencyHz/1000000.0, v);
 		}
 	}
 	plot.SetYRange(min * 0.9, max / 0.9);
@@ -112,7 +113,7 @@ void RFIPlots::MakePowerSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2D
 void RFIPlots::MakePowerTimePlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask)
 {
 	plot.SetXAxisText("Time");
-	plot.SetYAxisText("Flux density (Jy)");
+	plot.SetYAxisText("Visibility");
 	plot.SetLogScale(false, true, false);
 	plot.SetXRange(0.0, image->Width()-1);
 
@@ -178,7 +179,7 @@ void RFIPlots::MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &
 	} else {
 		plot.SetXRange(xStart, xStart+length-1);
 		plot.SetXAxisText("time");
-		plot.SetYAxisText("real/imaginary flux density");
+		plot.SetYAxisText("real/imaginary visibility");
 	}
 	Image2DCPtr real = data.GetRealPart();
 	Image2DCPtr imaginary = data.GetImaginaryPart();
@@ -249,7 +250,7 @@ void RFIPlots::MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &
 void RFIPlots::MakeScatterPlot(class MultiPlot &plot, size_t plotIndex, Image2DCPtr image, Mask2DCPtr mask)
 {
 	plot.SetXAxisText("Time");
-	plot.SetYAxisText("Flux density (Jy)");
+	plot.SetYAxisText("Visibility");
 	plot.SetLogScale(false, false, false);
 	plot.SetXRange(0.0, image->Width()-1);
 
@@ -362,7 +363,7 @@ void RFIPlots::MakeQualityPlot(class Plot &plot, const TimeFrequencyData &origin
 void RFIPlots::MakeRMSSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask)
 {
 	plot.SetXAxisText("Channel");
-	plot.SetYAxisText("RMS in flux density (Jy)");
+	plot.SetYAxisText("Visibility RMS");
 	plot.SetLogScale(false, true, false);
 	plot.SetXRange(0.0, image->Height()-1);
 
@@ -392,7 +393,7 @@ void RFIPlots::MakeRMSSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCP
 void RFIPlots::MakeSNRSpectrumPlot(class Plot &plot, Image2DCPtr image, Image2DCPtr model, Mask2DCPtr mask)
 {
 	plot.SetXAxisText("Channel");
-	plot.SetYAxisText("RMS in flux density (Jy)");
+	plot.SetYAxisText("Visibility RMS");
 	plot.SetLogScale(false, true, false);
 	plot.SetXRange(0.0, image->Height()-1);
 

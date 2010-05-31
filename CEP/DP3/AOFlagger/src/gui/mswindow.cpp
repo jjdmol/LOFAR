@@ -837,18 +837,18 @@ void MSWindow::onPlotPowerSpectrumPressed()
 
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(_timeFrequencyWidget.Image()->Width(), _timeFrequencyWidget.Image()->Height());
-		plot.StartLine("Total");		
-		RFIPlots::MakePowerSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
+		plot.StartLine("Before");		
+		RFIPlots::MakePowerSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask, *_metaData);
 
 		mask = Mask2D::CreateCopy(_timeFrequencyWidget.GetActiveData().GetSingleMask());
 		if(!mask->AllFalse())
 		{
-			plot.StartLine("Uncontaminated");
-			RFIPlots::MakePowerSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
+			plot.StartLine("After");
+			RFIPlots::MakePowerSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask, *_metaData);
 	
-			mask->Invert();
-			plot.StartLine("RFI");
-			RFIPlots::MakePowerSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
+			//mask->Invert();
+			//plot.StartLine("RFI");
+			//RFIPlots::MakePowerSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
 		}
 
 		plot.Close();
@@ -864,18 +864,18 @@ void MSWindow::onPlotPowerRMSPressed()
 
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(_timeFrequencyWidget.Image()->Width(), _timeFrequencyWidget.Image()->Height());
-		plot.StartLine("Total");		
+		plot.StartLine("Before");		
 		RFIPlots::MakeRMSSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
 
 		mask = Mask2D::CreateCopy(_timeFrequencyWidget.GetActiveData().GetSingleMask());
 		if(!mask->AllFalse())
 		{
-			plot.StartLine("Uncontaminated");
+			plot.StartLine("After");
 			RFIPlots::MakeRMSSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
 	
-			mask->Invert();
-			plot.StartLine("RFI");
-			RFIPlots::MakeRMSSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
+			//mask->Invert();
+			//plot.StartLine("RFI");
+			//RFIPlots::MakeRMSSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
 		}
 
 		plot.Close();

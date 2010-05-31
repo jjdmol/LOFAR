@@ -54,27 +54,32 @@ namespace rfiStrategy {
 
 	void Strategy::LoadDefaultSingleStrategy(ActionBlock &block, bool pedantic, bool pulsar)
 	{
+		ActionBlock *current;
+
 		block.Add(new SetFlaggingAction());
+
 		ForEachPolarisationBlock *fepBlock = new ForEachPolarisationBlock();
 		block.Add(fepBlock);
+		current = fepBlock;
 
 		Adapter *adapter = new Adapter();
-		fepBlock->Add(adapter);
-	
+		current->Add(adapter);
+		current = adapter;
+
 		ThresholdAction *t1 = new ThresholdAction();
 		t1->SetBaseSensitivity(4.0);
 		if(pulsar)
 			t1->SetFrequencyDirectionFlagging(false);
-		adapter->Add(t1);
+		current->Add(t1);
 
 		CombineFlagResults *cfr1 = new CombineFlagResults();
-		adapter->Add(cfr1);
+		current->Add(cfr1);
 
 		cfr1->Add(new FrequencySelectionAction());
 		if(!pulsar)
 			cfr1->Add(new TimeSelectionAction());
 	
-		adapter->Add(new SetImageAction());
+		current->Add(new SetImageAction());
 
 		ChangeResolutionAction *changeResAction1 = new ChangeResolutionAction();
 		if(pulsar)
@@ -92,23 +97,23 @@ namespace rfiStrategy {
 		}
 		changeResAction1->Add(swfAction1);
 
-		adapter->Add(changeResAction1);
-		adapter->Add(new SetFlaggingAction());
+		current->Add(changeResAction1);
+		current->Add(new SetFlaggingAction());
 
 		ThresholdAction *t2 = new ThresholdAction();
 		t2->SetBaseSensitivity(2.0);
 		if(pulsar)
 			t2->SetFrequencyDirectionFlagging(false);
-		adapter->Add(t2);
+		current->Add(t2);
 
 		CombineFlagResults *cfr2 = new CombineFlagResults();
-		adapter->Add(cfr2);
+		current->Add(cfr2);
 
 		cfr2->Add(new FrequencySelectionAction());
 		if(!pulsar)
 			cfr2->Add(new TimeSelectionAction());
 	
-		adapter->Add(new SetImageAction());
+		current->Add(new SetImageAction());
 		ChangeResolutionAction *changeResAction2 = new ChangeResolutionAction();
 		if(pulsar)
 			changeResAction2->SetDecreaseFactor(1);
@@ -125,13 +130,13 @@ namespace rfiStrategy {
 		}
 		changeResAction2->Add(swfAction2);
 
-		adapter->Add(changeResAction2);
-		adapter->Add(new SetFlaggingAction());
+		current->Add(changeResAction2);
+		current->Add(new SetFlaggingAction());
 
 		ThresholdAction *t3 = new ThresholdAction();
 		if(pulsar)
 			t3->SetFrequencyDirectionFlagging(false);
-		adapter->Add(t3);
+		current->Add(t3);
 		
 		SetFlaggingAction *setFlagsInAllPolarizations = new SetFlaggingAction();
 		setFlagsInAllPolarizations->SetNewFlagging(SetFlaggingAction::PolarisationsEqual);
@@ -337,12 +342,20 @@ namespace rfiStrategy {
 	void Strategy::SetFlagStokes(Strategy &strategy, bool newValue)
 	{
 		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
+		bool hasBeenAdapted = false;
 		while(!i.PastEnd())
 		{
 			if(i->Type() == ForEachPolarisationBlockType)
 			{
+				if(hasBeenAdapted && newValue)
+					throw std::runtime_error("Flagging on Stokes components was requested, but the separate real/imaginary values have already been converted to amplitude values before the polarization iteration.");
+
 				ForEachPolarisationBlock &fopAction = static_cast<ForEachPolarisationBlock&>(*i);
 				fopAction.SetIterateStokesValues(newValue);
+			}
+			else if(i->Type() == AdapterType)
+			{
+				hasBeenAdapted = true;
 			}
 			++i;
 		}

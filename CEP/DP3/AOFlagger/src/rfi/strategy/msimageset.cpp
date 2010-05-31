@@ -168,6 +168,7 @@ namespace rfiStrategy {
 			_imager->Image(a1, a2, msIndex._band, startIndex, endIndex);
 			//std::cout << "Done loading baseline " << a1 << "x" << a2 << ", t=" << startIndex << "-" << endIndex << std::endl;
 			class TimeFrequencyData *data = new ::TimeFrequencyData(_imager->GetData());
+			_imager->ClearImages();
 			return data;
 		} else {
 			return 0;
@@ -223,6 +224,7 @@ namespace rfiStrategy {
 					throw BadUsageException("Loading flags for a time frequency data with uncommon polarisation... Not yet implemented...");
 					break;
 			}
+			_imager->ClearImages();
 			//TimeFrequencyStatistics stats(destination);
 			//std::cout << "Flags read: " << TimeFrequencyStatistics::FormatRatio(stats.GetFlaggedRatio()) << std::endl;
 		}
