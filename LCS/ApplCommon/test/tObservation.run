@@ -1,4 +1,0 @@
-#! /bin/sh
-
-# Remove start/stop time because they can differ an hour.
-./tObservation | egrep -v "^(stop|start)time"
