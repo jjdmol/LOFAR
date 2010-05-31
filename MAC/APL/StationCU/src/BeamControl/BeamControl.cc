@@ -674,9 +674,9 @@ bool BeamControl::doPrepare()
 		os.clear();
 		writeVector(os, theObs.beams[i].beamlets);
 		beamletArr.push_back   (new GCFPVString  (os.str()));
-		angle1Arr.push_back	   (new GCFPVDouble  (theObs.beams[i].angle1));
-		angle2Arr.push_back	   (new GCFPVDouble  (theObs.beams[i].angle2));
-		dirTypesArr.push_back  (new GCFPVString  (theObs.beams[i].directionType));
+		angle1Arr.push_back	   (new GCFPVDouble  (theObs.beams[i].pointings[0].angle1));
+		angle2Arr.push_back	   (new GCFPVDouble  (theObs.beams[i].pointings[0].angle2));
+		dirTypesArr.push_back  (new GCFPVString  (theObs.beams[i].pointings[0].directionType));
 //		angleTimesArr.push_back(new GCFPVUnsigned(theObs.beams[i].angleTimes));
 		beamIDArr.push_back	   (new GCFPVString  (""));
 	}
@@ -725,10 +725,10 @@ uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 	// NOTE: for the time being we don't support multiple pointings for a beam: no other sw supports it.
 	BSBeampointtoEvent beamPointToEvent;
 	beamPointToEvent.handle = ackEvent.handle;
-	beamPointToEvent.pointing.setType(static_cast<Pointing::Type> (convertDirection(theBeam->directionType)));
+	beamPointToEvent.pointing.setType(static_cast<Pointing::Type> (convertDirection(theBeam->pointings[0].directionType)));
 
 	beamPointToEvent.pointing.setTime(RTC::Timestamp()); // asap
-	beamPointToEvent.pointing.setDirection(theBeam->angle1,theBeam->angle2);
+	beamPointToEvent.pointing.setDirection(theBeam->pointings[0].angle1,theBeam->pointings[0].angle2);
 	itsBeamServer->send(beamPointToEvent);
 	return (CT_RESULT_NO_ERROR);
 }
