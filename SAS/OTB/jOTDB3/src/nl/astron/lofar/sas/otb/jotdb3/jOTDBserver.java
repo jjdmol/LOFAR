@@ -42,7 +42,7 @@ public class jOTDBserver {
             String logConfig = "jOTDB3.log_prop";
             
             PropertyConfigurator.configure(logConfig);
-//            jInitCPPLogger aCPPLogger=new jInitCPPLogger(logConfig);
+            jInitCPPLogger aCPPLogger=new jInitCPPLogger(logConfig);
             logger.info("jOTDBServer started. LogPropFile: "+ logConfig);
             logger.info("java.library.path:"+ System.getProperty("java.library.path"));
 
