@@ -155,7 +155,12 @@ void ObservationControl::sigintHandler(int signum)
 
 	// Note we can't call TRAN here because the siginthandler does not know our object.
 	if (thisObservationControl) {
-		thisObservationControl->finish();
+		if (signum == SIGABRT) {
+			thisObservationControl->abortObservation();
+		}
+		else {
+			thisObservationControl->finish();
+		}
 	}
 }
 
@@ -165,6 +170,20 @@ void ObservationControl::sigintHandler(int signum)
 void ObservationControl::finish()
 {
 	TRAN(ObservationControl::finishing_state);
+}
+
+//
+// abortObservation
+//
+void ObservationControl::abortObservation()
+{
+	LOG_WARN("Received manual interrupt to ABORT the observation");
+	if (itsState < CTState::RESUME) {
+		itsQuitReason = CT_RESULT_MANUAL_ABORT;
+	}
+	itsTimerPort->cancelTimer(itsStopTimer);	// cancel old timer
+	itsStopTimer = itsTimerPort->setTimer(0.0);	// expire immediately
+	// will result in F_TIMER in ::active_state
 }
 
 //
@@ -233,6 +252,7 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		thisObservationControl = this;
 		signal (SIGINT,  ObservationControl::sigintHandler);	// ctrl-c
 		signal (SIGTERM, ObservationControl::sigintHandler);	// kill
+		signal (SIGABRT, ObservationControl::sigintHandler);	// kill -6
 
 		// register what we are doing
 		setState(CTState::CONNECT);
