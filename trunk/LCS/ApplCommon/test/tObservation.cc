@@ -34,6 +34,10 @@ int main (int, char* argv[])
 {
 	INIT_LOGGER(argv[0]);
 	try {
+		ParameterSet parSet2("tObservation.in_parset2");
+		Observation  dualObs(&parSet2);
+		cout << dualObs << endl;
+
 		ParameterSet parSet1("tObservation.in_parset1");
 		Observation  obs1(&parSet1);
 		cout << obs1 << endl;

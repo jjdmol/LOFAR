@@ -59,6 +59,7 @@ public:
 
 	// get name of a beam (idx starts at 0)
 	string getBeamName(uint	beamIdx) const;
+	string getAnaBeamName() const;
 
 	// check if the given Observation conflicts with this one
 	bool	conflicts(const	Observation&	other) const;
@@ -74,19 +75,61 @@ public:
 	// data types
 	typedef bitset<MAX_RCUS> 	  RCUset_t;
 
+	class Pointing {
+	public:
+		Pointing() {};
+		~Pointing() {};
+		double			angle1;
+		double			angle2;
+		string			directionType;
+		time_t			startTime;
+		int				duration;
+	};
+		
 	class Beam {
 	public:
 		Beam() {};
 		~Beam() {};
+		Beam& operator=(const Beam& that) {
+			if (this != &that) {
+				this->name 		 = that.name;
+				this->antennaSet = that.antennaSet;
+				this->pointings  = that.pointings;
+				this->momID 	 = that.momID;
+				this->subbands 	 = that.subbands;
+				this->beamlets 	 = that.beamlets;
+			}
+			return (*this);
+		}
 
-		// NOTE: since not other sw in the signal chain supports switching the beam to another direction
-		//		 we only support 1 direction per beam for now.
-		double			angle1;
-		double			angle2;
-		string			directionType;
-//		string			angleTimes;
-		vector<int>		subbands;
-		vector<int>		beamlets;
+		string				name;
+		string				antennaSet;
+		vector<Pointing>	pointings;
+
+		int					momID;
+		vector<int>			subbands;
+		vector<int>			beamlets;
+	};
+
+	class AnaBeam {
+	public:
+		AnaBeam() {};
+		~AnaBeam() {};
+		AnaBeam& operator=(const AnaBeam& that) {
+			if (this != &that) {
+				this->name 		 = that.name;
+				this->antennaSet = that.antennaSet;
+				this->pointings  = that.pointings;
+				this->rank 		 = that.rank;
+			}
+			return (*this);
+		};
+
+		string				name;
+		string				antennaSet;
+		vector<Pointing>	pointings;
+
+		int					rank;
 	};
 
 	//# Datamembers
@@ -112,8 +155,10 @@ public:
 	string			antennaSet;			// like LBA_INNER, LBA_OUTER, etc.
 	bool			useLongBaselines;
 	bool			splitterOn;			// On or Off
+	bool			dualMode;			// HBA_DUAL selected
 
 	vector<Beam>	beams;
+	vector<AnaBeam>	anaBeams;
 	vector<int>		beamlet2beams;		// to which beam each beamlet belongs
 	vector<int>		beamlet2subbands;	// which subband is mapped to each beamlet.
 

@@ -100,7 +100,8 @@ Observation::Observation(ParameterSet*		aParSet) :
 	if (!antennaSet.empty()) {
 		antennaArray = antennaSet.substr(0,3);
 	}
-	splitterOn = (antennaArray == "HBA");
+	splitterOn = ((antennaSet == "HBA_ZERO") || (antennaSet == "HBA_ONE") || (antennaSet == "HBA_DUAL"));
+	dualMode   = (antennaSet == "HBA_DUAL");
 
 	RCUset.reset();							// clear RCUset by default.
 	if (aParSet->isDefined(prefix+"receiverList")) {
@@ -114,52 +115,123 @@ Observation::Observation(ParameterSet*		aParSet) :
 	BGLNodeList     = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.BGLNodeList","[]"));
 	storageNodeList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.storageNodeList","[]"));
 
-	// get the beams info
-	int32	nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);
-
 	// allocate beamlet 2 beam mapping and reset to 0
 	nrSlotsInFrame = aParSet->getInt(prefix+"nrSlotsInFrame");
 	beamlet2beams.resize   (4*nrSlotsInFrame, -1);
 	beamlet2subbands.resize(4*nrSlotsInFrame, -1);
 	
 	set<uint32> subbands;		
+		
+	//
+	// NOTE: THE DATAMODEL USED IN SAS IS NOT RIGHT. IT SUPPORTS ONLY 1 POINTING PER BEAM.
+	//		 THIS IS NO PROBLEM BECAUSE THAT IS WHAT WE AGREED.
+	//		 WITHIN OBSERVATION HOWEVER WE USE THE RIGHT DATAMODEL THAT IS ALMOST THE SAME AS
+	//		 THE BEAMSERVER USES.
+	//
 
-	// loop over al beams
-	for (int32 beam(0) ; beam < nrBeams; beam++) {
+	// NOTE: One of the nasty problems we solve in this class is the duplication of a beam when it
+	//		 is allocated on the HBA_DUAL antennaSet. For the user its one setting but for all software
+	//		 it are two beams, each on a different antennaField. When HBA_DUAL is used in this observation
+	//		 the corresponding beam(s) are added twice to the beam vectors, once on the HBA_ZERO antennaSet
+	//		 once in the HBA_ONE antennaSet.
+
+	// loop over all digital beams
+	int32	nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);
+	for (int32 beamIdx(0) ; beamIdx < nrBeams; beamIdx++) {
 		Beam	newBeam;
-		string	beamPrefix(prefix+formatString("Beam[%d].", beam));
-		// get all fields
-		newBeam.angle1 		  = aParSet->getDouble(beamPrefix+"angle1", 0.0);
-		newBeam.angle2 		  = aParSet->getDouble(beamPrefix+"angle2", 0.0);
-		// support both flavor of directiontype(s)
-		if (aParSet->isDefined(beamPrefix+"directionType")) {
-			newBeam.directionType = aParSet->getString(beamPrefix+"directionType", "");
-		}
-		else {
-			newBeam.directionType = aParSet->getString(beamPrefix+"directionTypes", "");
-		}
-//		newBeam.angleTimes 	  = aParSet->get(beamPrefix+"angleTimes", "[]");
-		// subbandList
+		string	beamPrefix(prefix+formatString("Beam[%d].", beamIdx));
+		newBeam.momID	 = aParSet->getInt(beamPrefix+"momID", 0);
 		newBeam.subbands = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);	// true:expandable
-		// beamletList
 		newBeam.beamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);	// true:expandable
 		if (newBeam.subbands.size() != newBeam.beamlets.size()) {
 			THROW (Exception, "Number of subbands(" << newBeam.subbands.size() << 
 							  ") != number of beamlets(" << newBeam.beamlets.size() << 
-							  ") in beam " << beam);
+							  ") in beam " << beamIdx);
 		}
-	
-		// add beam to vector
+		newBeam.name = getBeamName(beamIdx);
+		newBeam.antennaSet = antennaSet;
+		if (dualMode) {
+			newBeam.name += "_0";
+			newBeam.antennaSet = "HBA_ZERO";
+		}
+
+		// ONLY one pointing per beam.
+		Pointing		newPt;
+		newPt.angle1 		= aParSet->getDouble(beamPrefix+"angle1", 0.0);
+		newPt.angle2 		= aParSet->getDouble(beamPrefix+"angle2", 0.0);
+		newPt.directionType = aParSet->getString(beamPrefix+"directionType", "");
+		newPt.duration	    = aParSet->getInt(beamPrefix+"duration", 0);
+		newPt.startTime 	= startTime;	// assume time of observation itself
+#if !defined HAVE_BGL
+		try {
+			string	timeStr = aParSet->getString(beamPrefix+"startTime","");
+			if (!timeStr.empty() && timeStr != "0") {
+				newPt.startTime = to_time_t(time_from_string(timeStr));
+			}
+		} catch (boost::bad_lexical_cast) {
+			LOG_ERROR_STR("Starttime of pointing of beam " << beamIdx << " not valid, using starttime of observation");
+		}
+#endif
+		newBeam.pointings.push_back(newPt);
+
+		// Finally add the beam to the vector
 		beams.push_back(newBeam);
+		
+		// Duplicate beam on second HBA subfield when in HBA_DUAL mode.
+		if (dualMode) {
+			newBeam.name	   = getBeamName(beamIdx) + "_1";
+			newBeam.antennaSet = "HBA_ONE";
+			beams.push_back(newBeam);
+		}
 
 		// finally update beamlet 2 beam mapping.
 		for (int32  i = newBeam.beamlets.size()-1 ; i > -1; i--) {
 			if (beamlet2beams[newBeam.beamlets[i]] != -1) {
-				THROW (Exception, "beamlet " << i << " of beam " << beam << " clashes with beamlet of other beam"); 
+				THROW (Exception, "beamlet " << i << " of beam " << beamIdx << " clashes with beamlet of other beam"); 
 			}
-			beamlet2beams   [newBeam.beamlets[i]] = beam;
+			beamlet2beams   [newBeam.beamlets[i]] = beamIdx;
 			beamlet2subbands[newBeam.beamlets[i]] = newBeam.subbands[i];
 			subbands.insert(newBeam.subbands[i]);
+		}
+	} // for
+
+	// loop over al analogue beams
+	int32	nrAnaBeams = aParSet->getInt32(prefix+"nrAnaBeams", 0);
+	for (int32 beamIdx(0) ; beamIdx < nrAnaBeams; beamIdx++) {
+		AnaBeam	newBeam;
+		string	beamPrefix(prefix+formatString("AnaBeam[%d].", beamIdx));
+		newBeam.rank	   = aParSet->getInt   (beamPrefix+"rank", 5);
+		newBeam.name 	   = getAnaBeamName();
+		newBeam.antennaSet = antennaSet;
+		if (dualMode) {
+			newBeam.name += "_0";
+			newBeam.antennaSet = "HBA_ZERO";
+		}
+
+		// ONLY one pointing per beam.
+		Pointing		newPt;
+		newPt.angle1 	    = aParSet->getDouble(beamPrefix+"angle1", 0.0);
+		newPt.angle2 		= aParSet->getDouble(beamPrefix+"angle2", 0.0);
+		newPt.directionType = aParSet->getString(beamPrefix+"directionType", "");
+		newPt.duration	    = aParSet->getInt   (beamPrefix+"duration", 0);
+		try {
+			string	timeStr = aParSet->getString(beamPrefix+"startTime","");
+			if (!timeStr.empty() && timeStr != "0") {
+				newPt.startTime = to_time_t(time_from_string(timeStr));
+			}
+		} catch (boost::bad_lexical_cast) {
+			THROW (Exception, prefix << "startTime is not a valid time string. Please use YYYY-MM-DD HH:MM:SS[.hhh].");
+		}
+		newBeam.pointings.push_back(newPt);
+		
+		// add beam to the beam vector
+		anaBeams.push_back(newBeam);
+
+		// Duplicate beam on second HBA subfield when in HBA_DUAL mode.
+		if (dualMode) {
+			newBeam.name	   = getBeamName(beamIdx) + "_1";
+			newBeam.antennaSet = "HBA_ONE";
+			anaBeams.push_back(newBeam);
 		}
 	}
 }
@@ -287,8 +359,9 @@ string Observation::getAntennaArrayName(bool hasSplitters) const
 		if (result.find("HBA") == 0) return ("HBA");
 	}
 	else {						// has splitter, translate SAS names to AntennaArray.conf names
-		if (result == "HBA_ZERO") 	return ("HBA_0");
-		if (result == "HBA_ONE") 	return ("HBA_1");
+		if (result == "HBA_ONE") 	return ("HBA0");
+		if (result == "HBA_TWO") 	return ("HBA1");
+		if (result == "HBA_JOINED")	return ("HBA");
 		return ("HBA");
 	}
 
@@ -301,6 +374,11 @@ string Observation::getAntennaArrayName(bool hasSplitters) const
 string Observation::getBeamName(uint32	beamIdx) const
 {
 	return (formatString("observation[%d]beam[%d]", obsID, beamIdx));
+}
+// there can only be one analogue beam
+string Observation::getAnaBeamName() const
+{
+	return (formatString("observation[%d]anabeam", obsID));
 }
 
 //
@@ -361,14 +439,37 @@ ostream& Observation::print (ostream&	os) const
 	os << "Storage nodes: " << storageNodeList << endl << endl;
 
     os << "nrBeams      : " << beams.size() << endl;
-	for (size_t	i(0) ; i < beams.size(); i++) {
-		os << "Beam[" << i << "] name       : " << getBeamName(i) << endl;
-		os << formatString("Beam[%d].pointing   : %f, %f, %s\n", i, beams[i].angle1, beams[i].angle2, beams[i].directionType.c_str());
-		os << "Beam[" << i << "].subbandList: "; writeVector(os, beams[i].subbands, ",", "[", "]"); os << endl;
-		os << "Beam[" << i << "].beamletList: "; writeVector(os, beams[i].beamlets, ",", "[", "]"); os << endl;
+	for (size_t	b(0) ; b < beams.size(); b++) {
+		os << "Beam[" << b << "].name       : " << beams[b].name << endl;
+		os << "Beam[" << b << "].antennaSet : " << beams[b].antennaSet << endl;
+		os << "Beam[" << b << "].momID      : " << beams[b].momID << endl;
+		os << "Beam[" << b << "].subbandList: "; writeVector(os, beams[b].subbands, ",", "[", "]"); os << endl;
+		os << "Beam[" << b << "].beamletList: "; writeVector(os, beams[b].beamlets, ",", "[", "]"); os << endl;
+		os << "nrPointings : " << beams[b].pointings.size() << endl;
+		for (size_t p = 0; p < beams[b].pointings.size(); ++p) {
+			const Pointing*		pt = &(beams[b].pointings[p]);
+#if defined HAVE_BGL
+			os << formatString("Beam[%d].pointing[%d]: %f, %f, %s\n", b, p, pt->angle1, pt->angle2, pt->directionType.c_str());
+#else
+			os << formatString("Beam[%d].pointing[%d]: %f, %f, %s, %s\n", b, p, pt->angle1, pt->angle2, 
+				pt->directionType.c_str(), to_simple_string(from_time_t(pt->startTime)).c_str());
+#endif
+		}
 	}
 	os << "beamlet2beams   : "; writeVector(os, beamlet2beams,    ",", "[", "]"); os << endl;
 	os << "beamlet2subbands: "; writeVector(os, beamlet2subbands, ",", "[", "]"); os << endl << endl;
+
+    os << "nrAnaBeams   : " << anaBeams.size() << endl;
+	for (size_t	b(0) ; b < anaBeams.size(); b++) {
+		os << "AnaBeam[" << b << "].name      : " << anaBeams[b].name << endl;
+		os << "AnaBeam[" << b << "].antennaSet: " << anaBeams[b].antennaSet << endl;
+		os << "AnaBeam[" << b << "].rank      : " << anaBeams[b].rank << endl;
+		os << "nrPointings : " << anaBeams[b].pointings.size() << endl;
+		for (uint p = 0; p < beams[b].pointings.size(); ++p) {
+			const Pointing*		pt = &(anaBeams[b].pointings[p]);
+			os << formatString("anaBeam[%d].pointing[%d]: %f, %f, %s\n", b, p, pt->angle1, pt->angle2, pt->directionType.c_str());
+		}
+	}
 
 	return (os);
 }
