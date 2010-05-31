@@ -321,8 +321,8 @@ class Image2D {
 		num_t *_data;
 		bool *_isSet;
 
-		static long _imageCount;
-		long _thisImage;
+		//static long _imageCount;
+		//long _thisImage;
 };
 
 #endif

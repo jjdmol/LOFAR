@@ -26,13 +26,13 @@
 
 #include <iostream>
 
-long Image2D::_imageCount = 0;
+//long Image2D::_imageCount = 0;
 
 Image2D::Image2D(long width, long height) : _width(width), _height(height)
 {
-	++_imageCount;
-	_thisImage = _imageCount;
-	std::cout << "Requesting " << _imageCount << ": " << (sizeof(num_t[width*height]) + sizeof(bool[width*height])) << " bytes of memory for a " << width << " x " << height << " image." << std::endl;
+	//++_imageCount;
+	//_thisImage = _imageCount;
+	//std::cout << "Requesting " << _imageCount << ": " << (sizeof(num_t[width*height]) + sizeof(bool[width*height])) << " bytes of memory for a " << width << " x " << height << " image." << std::endl;
 
 	_data = new num_t[width * height];
 	_isSet = new bool[width * height];
@@ -43,8 +43,8 @@ Image2D::~Image2D()
 	delete[] _data;
 	delete[] _isSet;
 
-	std::cout << "Freed " << _thisImage << ": "  << (sizeof(num_t[_width*_height]) + sizeof(bool[_width*_height])) << " bytes of memory for a " << _width << " x " << _height << " image." << std::endl;
-	--_imageCount;
+	//std::cout << "Freed " << _thisImage << ": "  << (sizeof(num_t[_width*_height]) + sizeof(bool[_width*_height])) << " bytes of memory for a " << _width << " x " << _height << " image." << std::endl;
+	//--_imageCount;
 }
 
 Image2D *Image2D::CreateEmptyImage(long width, long height) 
