@@ -38,43 +38,28 @@ TimeFrequencyImager::TimeFrequencyImager(MeasurementSet &measurementSet)
 
 TimeFrequencyImager::~TimeFrequencyImager()
 {
-	Clear();
+	ClearImages();
 	if(_sortedTable != 0)
 		delete _sortedTable;
 }
 
-void TimeFrequencyImager::Clear()
+void TimeFrequencyImager::ClearImages()
 {
-	if(_realXX != 0) {
-		_realXX.reset();
-		_imaginaryXX.reset();
-	}
-	if(_realXY != 0) {
-		_realXY.reset();
-		_imaginaryXY.reset();
-	}
-	if(_realYX != 0) {
-		_realYX.reset();
-		_imaginaryYX.reset();
-	}
-	if(_realYY != 0) {
-		_realYY.reset();
-		_imaginaryYY.reset();
-	}
-	if(_realStokesI != 0) {
-		_realStokesI.reset();
-		_imaginaryStokesI.reset();
-	}
-	if(_flagXX != 0)
-		_flagXX.reset();
-	if(_flagXY != 0)
-		_flagXY.reset();
-	if(_flagYX != 0)
-		_flagYX.reset();
-	if(_flagYY != 0)
-		_flagYY.reset();
-	if(_flagCombined != 0)
-		_flagCombined.reset();
+	_realXX.reset();
+	_imaginaryXX.reset();
+	_realXY.reset();
+	_imaginaryXY.reset();
+	_realYX.reset();
+	_imaginaryYX.reset();
+	_realYY.reset();
+	_imaginaryYY.reset();
+	_realStokesI.reset();
+	_imaginaryStokesI.reset();
+	_flagXX.reset();
+	_flagXY.reset();
+	_flagYX.reset();
+	_flagYY.reset();
+	_flagCombined.reset();
 }
 
 void TimeFrequencyImager::setObservationTimes(MeasurementSet &set, std::map<double,size_t> &observationTimes)
@@ -172,7 +157,7 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 	if(width == 0 || frequencyCount == 0)
 		return;
 
-	Clear();
+	ClearImages();
 
 	if(_readData) {
 		if(_realXX==0 && _readXX)

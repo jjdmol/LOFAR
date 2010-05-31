@@ -32,7 +32,7 @@
 class RFIPlots{
 	public:
 		static void MakeDistPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask);
-		static void MakePowerSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask);
+		static void MakePowerSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask, const class TimeFrequencyMetaData &metaData);
 		static void MakeRMSSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask);
 		static void MakeSNRSpectrumPlot(class Plot &plot, Image2DCPtr image, Image2DCPtr model, Mask2DCPtr mask);
 		static void MakePowerTimePlot(class Plot &plot, Image2DCPtr image, Mask2DCPtr mask);

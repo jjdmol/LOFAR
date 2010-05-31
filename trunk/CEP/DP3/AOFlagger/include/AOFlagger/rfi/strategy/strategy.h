@@ -59,7 +59,8 @@ namespace rfiStrategy {
 			void StartPerformThread(const class ArtifactSet &artifacts, class ProgressListener &progress);
 			ArtifactSet *JoinThread();
 
-			static void LoadDefaultSingleStrategy(ActionBlock &block, bool pedantic = false, bool pulsar = false);
+			static void LoadDefaultSingleStrategy(ActionBlock &block, bool pedantic, bool pulsar);
+
 			void LoadDefaultSingleStrategy(bool pedantic = false, bool pulsar = false);
 			void LoadOldDefaultSingleStrategy();
 			void LoadDefaultStrategy();

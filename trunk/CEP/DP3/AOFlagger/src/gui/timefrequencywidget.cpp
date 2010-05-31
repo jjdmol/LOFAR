@@ -115,7 +115,7 @@ void TimeFrequencyWidget::Update() throw()
 		if(_vertScale != 0)
 			delete _vertScale;
 		if(_metaData != 0) {
-			_vertScale = new VerticalNumericScale(get_window(), _metaData->Band().channels[_startFrequency].frequencyHz / 1e5, _metaData->Band().channels[_endFrequency-1].frequencyHz / 1e5);
+			_vertScale = new VerticalNumericScale(get_window(), _metaData->Band().channels[_startFrequency].frequencyHz / 1e6, _metaData->Band().channels[_endFrequency-1].frequencyHz / 1e6);
 			_horiScale = new HorizontalTimeScale(get_window(), _metaData->ObservationTimes()[_startTime], _metaData->ObservationTimes()[_endTime-1]);
 		} else {
 			_vertScale = new VerticalNumericScale(get_window(), _startFrequency, _endFrequency-1);

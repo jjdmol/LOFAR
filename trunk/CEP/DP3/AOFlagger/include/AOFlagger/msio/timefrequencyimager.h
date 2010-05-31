@@ -83,8 +83,8 @@ class TimeFrequencyImager {
 		class TimeFrequencyData GetData() const;
 		static void PartInfo(const std::string &msFile, size_t maxTimeScans, size_t &timeScanCount, size_t &partCount);
 		const std::vector<class UVW> &UVW() const { return _uvw; }
+		void ClearImages();
 	private:
-		void Clear();
 		void initializePolarizations();
 		void checkPolarizations();
 		void image(size_t antenna1Select, size_t antenna2Select, size_t spectralWindowSelect, size_t startIndex, size_t endIndex);

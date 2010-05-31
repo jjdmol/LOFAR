@@ -27,36 +27,50 @@ namespace rfiStrategy {
 
 	class Adapter : public ActionBlock
 	{
-			public:
-				virtual std::string Description()
+		public:
+			Adapter() : ActionBlock(), _restoreOriginals(false)
+			{
+			}
+			virtual std::string Description()
+			{
+				return "On amplitude";
+			}
+			virtual ActionType Type() const { return AdapterType; }
+			virtual void Perform(ArtifactSet &artifacts, class ProgressListener &listener)
+			{
+				enum TimeFrequencyData::PhaseRepresentation contaminatedPhase = 
+					artifacts.ContaminatedData().PhaseRepresentation();
+				enum TimeFrequencyData::PhaseRepresentation revisedPhase = 
+					artifacts.RevisedData().PhaseRepresentation();
+				enum TimeFrequencyData::PhaseRepresentation originalPhase = 
+					artifacts.OriginalData().PhaseRepresentation();
+
+				if(contaminatedPhase == TimeFrequencyData::ComplexRepresentation)
 				{
-					return "On amplitude";
+					TimeFrequencyData *newContaminatedData =
+						artifacts.ContaminatedData().CreateTFData(TimeFrequencyData::AmplitudePart);
+					artifacts.SetContaminatedData(*newContaminatedData);
+					delete newContaminatedData;
 				}
-				virtual ActionType Type() const { return AdapterType; }
-				virtual void Perform(ArtifactSet &artifacts, class ProgressListener &listener)
+				if(revisedPhase == TimeFrequencyData::ComplexRepresentation)
 				{
-					enum TimeFrequencyData::PhaseRepresentation contaminatedPhase = 
-						artifacts.ContaminatedData().PhaseRepresentation();
-					enum TimeFrequencyData::PhaseRepresentation revisedPhase = 
-						artifacts.RevisedData().PhaseRepresentation();
+					TimeFrequencyData *newRevisedData =
+						artifacts.RevisedData().CreateTFData(TimeFrequencyData::AmplitudePart);
+					artifacts.SetRevisedData(*newRevisedData);
+					delete newRevisedData;
+				}
+				if(originalPhase == TimeFrequencyData::ComplexRepresentation)
+				{
+					TimeFrequencyData *newOriginalData =
+						artifacts.OriginalData().CreateTFData(TimeFrequencyData::AmplitudePart);
+					artifacts.SetOriginalData(*newOriginalData);
+					delete newOriginalData;
+				}
 
-					if(contaminatedPhase == TimeFrequencyData::ComplexRepresentation)
-					{
-						TimeFrequencyData *newContaminatedData =
-							artifacts.ContaminatedData().CreateTFData(TimeFrequencyData::AmplitudePart);
-						artifacts.SetContaminatedData(*newContaminatedData);
-						delete newContaminatedData;
-					}
-					if(revisedPhase == TimeFrequencyData::ComplexRepresentation)
-					{
-						TimeFrequencyData *newRevisedData =
-							artifacts.RevisedData().CreateTFData(TimeFrequencyData::AmplitudePart);
-						artifacts.SetRevisedData(*newRevisedData);
-						delete newRevisedData;
-					}
+				ActionBlock::Perform(artifacts, listener);
 
-					ActionBlock::Perform(artifacts, listener);
-
+				if(_restoreOriginals)
+				{
 					if(contaminatedPhase == TimeFrequencyData::ComplexRepresentation)
 					{
 						TimeFrequencyData *newContaminatedData =
@@ -75,7 +89,19 @@ namespace rfiStrategy {
 						artifacts.SetRevisedData(*newRevisedData);
 						delete newRevisedData;
 					}
+					if(originalPhase == TimeFrequencyData::ComplexRepresentation)
+					{
+						TimeFrequencyData *newOriginalData =
+							TimeFrequencyData::CreateTFDataFromComplexCombination(artifacts.OriginalData(), artifacts.OriginalData());
+						newOriginalData->MultiplyImages(1.0L/M_SQRT2);
+						newOriginalData->SetMaskFrom(artifacts.OriginalData());
+						artifacts.SetOriginalData(*newOriginalData);
+						delete newOriginalData;
+					}
 				}
+			}
+		private:
+			bool _restoreOriginals;
 	};
 
 } // namespace
