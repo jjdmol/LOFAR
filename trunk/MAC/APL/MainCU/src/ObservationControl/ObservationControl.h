@@ -82,6 +82,7 @@ public:
 	// Interrupt handler for switching to finishing_state when exiting program.
 	static void sigintHandler (int signum);
 	void finish ();
+	void abortObservation ();
 
 private:
 	// avoid defaultconstruction and copying
