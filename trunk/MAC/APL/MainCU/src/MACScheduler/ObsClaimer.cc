@@ -268,9 +268,9 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				os.clear();
 				writeVector(os, theObs.beams[i].beamlets);
 				beamletArr.push_back  (new GCFPVString(os.str()));
-				angle1Arr.push_back	  (new GCFPVDouble(theObs.beams[i].angle1));
-				angle2Arr.push_back	  (new GCFPVDouble(theObs.beams[i].angle2));
-				dirTypesArr.push_back (new GCFPVString(theObs.beams[i].directionType));
+				angle1Arr.push_back	  (new GCFPVDouble(theObs.beams[i].pointings[0].angle1));
+				angle2Arr.push_back	  (new GCFPVDouble(theObs.beams[i].pointings[0].angle2));
+				dirTypesArr.push_back (new GCFPVString(theObs.beams[i].pointings[0].directionType));
 			}
 
 			// Finally we can write those value to PVSS as well.
