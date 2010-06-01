@@ -1,6 +1,6 @@
 /*
  For comments on how this class works, see InversePPF.h.
- */
+*/
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -20,6 +20,7 @@ static NSTimer fftInTimer("create FFT input", true);
 InversePPF::InversePPF(vector<unsigned>& subbandList, unsigned nrSamplesPerIntegration, unsigned nrTaps, unsigned onStationFilterSize, bool verbose) :
   itsFilterBank(false, nrTaps, onStationFilterSize, (float*) invertedStationPPFWeights), itsSubbandList(subbandList), itsNrSubbands(itsSubbandList.size()),
       itsNrTaps(nrTaps), itsNrSamplesPerIntegration(nrSamplesPerIntegration), itsOnStationFilterSize(onStationFilterSize), itsVerbose(verbose) {
+
   double origInputSize = (itsNrSubbands * itsNrSamplesPerIntegration * sizeof(fcomplex)) / (1024.0 * 1024.0);
   double fftBufSize = (itsOnStationFilterSize * sizeof(float)) / (1024.0);
   double outputSize = (itsOnStationFilterSize * itsNrSamplesPerIntegration * sizeof(float)) / (1024.0 * 1024.0);
@@ -48,6 +49,8 @@ void InversePPF::initFFT() {
 #if defined HAVE_FFTW3
   itsFftInData = (float*) fftwf_malloc(itsOnStationFilterSize * sizeof(float));
   itsFftOutData = (float*) fftwf_malloc(itsOnStationFilterSize * sizeof(float));
+
+  itsPlan = fftwf_plan_r2r_1d(itsOnStationFilterSize, itsFftInData, itsFftOutData, FFTW_HC2R, FFTW_ESTIMATE);
 #elif defined HAVE_FFTW2
   itsFftInData = (float*) malloc(itsOnStationFilterSize * sizeof(float));
   itsFftOutData = (float*) malloc(itsOnStationFilterSize * sizeof(float));
@@ -59,15 +62,17 @@ void InversePPF::initFFT() {
     cerr << "Out of memory" << endl;
     exit(1);
   }
-
 }
 
 void InversePPF::destroyFFT() {
 #if defined HAVE_FFTW3
+  fftwf_destroy_plan(itsPlan);
   fftwf_free(itsFftInData);
   fftwf_free(itsFftOutData);
 #elif defined HAVE_FFTW2
   rfftw_destroy_plan(itsPlan);
+  free(itsFftInData);
+  free(itsFftOutData);
 #endif
 }
 
@@ -103,20 +108,11 @@ void InversePPF::performInverseFFT() {
 
 #if defined HAVE_FFTW3
   // in and out are not the same buffer, and the input is destroyed by the fftw call.
-  // We have to recreate the plan each time, to write directly to the right output location.
-  // Fftw caches the plan info, so this should not be a problem. Alternatively, we could use the guru interface,
-  // as is already done in the PPF at CEP.
-
-  fftwf_plan plan = fftwf_plan_r2r_1d(itsOnStationFilterSize, itsFftInData, itsFftOutData, FFTW_HC2R, FFTW_ESTIMATE);
-  fftwf_execute(plan);
-  fftwf_destroy_plan(plan);
-
+  fftwf_execute(itsPlan);
 #elif defined HAVE_FFTW2
   // Do the inverse FFT. NB: this call destoys the input data.
   rfftw_one(itsPlan, (fftw_real*) itsFftInData, (fftw_real*) itsFftOutData);
 #endif
-
-  // TODO copy to the right place in the output array!
 
   fftTimer.stop();
 }
@@ -131,14 +127,14 @@ void InversePPF::performFiltering(InverseFilteredData& invertedFilteredData, uns
   firTimer.stop();
 }
 
-void InversePPF::performInversePolyPhase(const TransposedBeamFormedData& transposedBeamFormedData, InverseFilteredData& invertedFilteredData, unsigned time) {
+void InversePPF::performInversePPFTimeStep(const TransposedBeamFormedData& transposedBeamFormedData, InverseFilteredData& invertedFilteredData, unsigned time) {
   createFFTInput(transposedBeamFormedData, time);
   performInverseFFT();
   performFiltering(invertedFilteredData, time);
 }
 
-void InversePPF::filter(const TransposedBeamFormedData& transposedBeamFormedData, InverseFilteredData& invertedFilteredData) {
+void InversePPF::performInversePPF(const TransposedBeamFormedData& transposedBeamFormedData, InverseFilteredData& invertedFilteredData) {
   for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
-    performInversePolyPhase(transposedBeamFormedData, invertedFilteredData, time);
+    performInversePPFTimeStep(transposedBeamFormedData, invertedFilteredData, time);
   }
 }

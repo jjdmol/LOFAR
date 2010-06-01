@@ -10,7 +10,7 @@
 namespace LOFAR {
 namespace RTCP {
 
-// Polarizations are seperated, otherwise the buffers do not fit in memory.
+// Polarizations are separated, otherwise the buffers do not fit in memory.
 
 class TransposedBeamFormedData: public SampleData<fcomplex,3>
 {

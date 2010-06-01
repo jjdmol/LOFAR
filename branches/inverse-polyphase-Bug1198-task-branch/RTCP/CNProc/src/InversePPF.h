@@ -99,7 +99,7 @@ public:
   InversePPF(vector<unsigned>& subbandList, unsigned nrSamplesPerIntegration, unsigned nrTaps, unsigned onStationFilterSize, bool verbose);
   ~InversePPF();
 
-  void filter(const TransposedBeamFormedData& transposedBeamFormedData, InverseFilteredData& inverseFilteredData);
+  void performInversePPF(const TransposedBeamFormedData& transposedBeamFormedData, InverseFilteredData& inverseFilteredData);
 
 private:
 
@@ -109,14 +109,14 @@ private:
   void createFFTInput(const TransposedBeamFormedData& transposedBeamFormedData, unsigned time);
   void performInverseFFT();
   void performFiltering(InverseFilteredData& invertedFilteredData, unsigned time);
-  void performInversePolyPhase(const TransposedBeamFormedData& transposedBeamFormedData, InverseFilteredData& invertedFilteredData, unsigned time);
+  void performInversePPFTimeStep(const TransposedBeamFormedData& transposedBeamFormedData, InverseFilteredData& invertedFilteredData, unsigned time);
 
   FilterBank itsFilterBank;
   vector<FIR<float> > itsFIRs;
 
-  // For fftw3, we create a plan each time, since we have different destination buffers. This plan is cached by fftw.
-  // For fftw2, the destination buffer is not a part of the plan, so we create it only once.
-#if defined HAVE_FFTW2
+#if defined HAVE_FFTW3
+  fftwf_plan itsPlan;
+#elif defined HAVE_FFTW2
   fftw_plan itsPlan;
 #endif
 
