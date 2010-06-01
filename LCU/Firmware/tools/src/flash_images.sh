@@ -1,5 +1,5 @@
 #!/bin/bash
-# version 2.2, date 05-11-2008,  M.J.Norden
+# version 2.3, date 01-06-2010,  M.J.Norden & A.Schoenmaker
 
 SyntaxError()
 {
@@ -7,21 +7,23 @@ SyntaxError()
 
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
-	echo "Syntax: $(basename $0) -p [pagenr] -a [aphexfile] -b [bphexfile]"
+	echo "Syntax: $(basename $0) -c [yY] -p [pagenr] -a [aphexfile] -b [bphexfile]"
 	exit 1
 }
 
+answer='n'
 page=-1
 bphexfile=""
 aphexfile=""
-eval set argv=`getopt "p:a:b:h" $*`
+eval set argv=`getopt "c:p:a:b:h" $*`
 shift
-
-if [ "$1" == "--" ]; then SyntaxError; fi
 
 while [ "$1" != "--" ]
 do
 	case "$1" in
+		-c)	answer=$2
+			shift 2
+			;;
 		-p)	page=$2
 			shift 2
 			;;
@@ -31,14 +33,11 @@ do
 		-b)	bphexfile=$2
 			shift 2
 			;;
-
-		-h) SyntaxError
+		*) SyntaxError
 			;;
-
 	esac
 done
-shift
-
+shift 
 
 station=`hostname -s`
 
@@ -54,19 +53,21 @@ echo "The number of rspboards is "$rspboards
 echo "The selected image page is "$page
 echo "The bp hex file is "$bphexfile
 echo "The ap hex file is "$aphexfile
-read -p "Is this ok [y/n]" answer
+if [ ! "$answer" =~ "([yY])" ]; then 
+   read -p "Is this ok [y/n]" answer
+fi
 
 if [[ "$answer" =~ "([yY])" ]]; then   
    eval "swlevel 1"
    if [ -e $aphexfile -a -e $bphexfile ]; then
       for ((ind=0; ind < $rspboards; ind++)) do
 	MACadr=$(printf "10:FA:00:00:%02x:00" $ind)
-	sudo rsuctl3 -w -q -p $page -b $bphexfile -a $aphexfile -m $MACadr -F
+	sudo rsuctl3 -w -q -p $page -b $bphexfile -a $aphexfile -m $MACadr -F 2>&1
       done
       if [ $page != 0 ] ; then
 	for ((ind=0; ind < $rspboards; ind++)) do
   		MACadr=$(printf "10:FA:00:00:%02x:00" $ind)
-  		sudo rsuctl3_reset -m $MACadr -p $page -x -q;
+  		sudo rsuctl3_reset -m $MACadr -p $page -x -q 2>&1
         done
       else 
         echo "When the RSP flash action was sucessful please"
@@ -77,3 +78,5 @@ if [[ "$answer" =~ "([yY])" ]]; then
      echo "Could not find one of the ap/bp hex files"
    fi
 fi
+
+exit 0
