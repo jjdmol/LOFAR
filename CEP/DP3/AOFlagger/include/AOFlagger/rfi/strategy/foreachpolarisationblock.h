@@ -88,10 +88,10 @@ namespace rfiStrategy {
 		
 						ActionBlock::Perform(artifacts, progress);
 
-						oldContaminatedData.SetPolarizationData(polarizationIndex, artifacts.ContaminatedData());
-						oldOriginalData.SetPolarizationData(polarizationIndex, artifacts.OriginalData());
+						setPolarizationData(polarizationIndex, oldContaminatedData, artifacts.ContaminatedData());
+						setPolarizationData(polarizationIndex, oldOriginalData, artifacts.OriginalData());
 						if(changeRevised)
-							oldRevisedData.SetPolarizationData(polarizationIndex, artifacts.RevisedData());
+							setPolarizationData(polarizationIndex, oldRevisedData, artifacts.RevisedData());
 
 						progress.OnEndTask();
 					}
@@ -112,6 +112,19 @@ namespace rfiStrategy {
 			}
 		private:
 			bool _iterateStokesValues;
+
+			void setPolarizationData(size_t polarizationIndex, TimeFrequencyData &oldData, TimeFrequencyData &newData)
+			{
+				try {
+					oldData.SetPolarizationData(polarizationIndex, newData);
+				} catch(std::exception &e)
+				{
+					TimeFrequencyData *data = oldData.CreateTFDataFromPolarisationIndex(polarizationIndex);
+					data->SetGlobalMask(newData.GetSingleMask());
+					oldData.SetPolarizationData(polarizationIndex, *data);
+					delete data;
+				}
+			}
 
 			void performStokesIteration(ArtifactSet &artifacts, ProgressListener &progress)
 			{

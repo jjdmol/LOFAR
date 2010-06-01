@@ -35,15 +35,13 @@ Image2D::Image2D(long width, long height) : _width(width), _height(height)
 	//std::cout << "Requesting " << _imageCount << ": " << (sizeof(num_t[width*height]) + sizeof(bool[width*height])) << " bytes of memory for a " << width << " x " << height << " image." << std::endl;
 
 	_data = new num_t[width * height];
-	_isSet = new bool[width * height];
 }
 
 Image2D::~Image2D()
 {
 	delete[] _data;
-	delete[] _isSet;
 
-	//std::cout << "Freed " << _thisImage << ": "  << (sizeof(num_t[_width*_height]) + sizeof(bool[_width*_height])) << " bytes of memory for a " << _width << " x " << _height << " image." << std::endl;
+	//std::cout << "Freed " << _thisImage << ": "  << (sizeof(num_t[_width*_height]) << " bytes of memory for a " << _width << " x " << _height << " image." << std::endl;
 	//--_imageCount;
 }
 
@@ -65,7 +63,6 @@ void Image2D::SetZero()
 {
 	for(long unsigned y=0;y<_height;y++) {
 		for(long unsigned x=0;x<_width;x++) {
-			_isSet[y*_width+x] = true;
 			_data[y*_width+x] = 0.0;
 		}
 	}
@@ -79,7 +76,6 @@ Image2D *Image2D::CreateFromSum(const Image2D &imageA, const Image2D &imageB)
 	Image2D *image = new Image2D(width, height);
 	for(long y=0;y<height;y++) {
 		for(long x=0;x<width;x++) {
-			image->_isSet[y*width+x] = imageA._isSet[y*width+x] && imageB._isSet[y*width+x];
 			image->_data[y*width+x] = imageA._data[y*width+x] + imageB._data[y*width+x];
 		}
 	}
@@ -94,7 +90,6 @@ Image2D *Image2D::CreateFromDiff(const Image2D &imageA, const Image2D &imageB)
 	Image2D *image = new Image2D(width, height);
 	for(long y=0;y<height;y++) {
 		for(long x=0;x<width;x++) {
-			image->_isSet[y*width+x] = imageA._isSet[y*width+x] && imageB._isSet[y*width+x];
 			image->_data[y*width+x] = imageA._data[y*width+x] - imageB._data[y*width+x];
 		}
 	}
@@ -106,7 +101,6 @@ Image2D *Image2D::CreateCopy(const Image2D &image)
 	long width = image.Width(), height = image.Height();
 	Image2D *newImage = new Image2D(width, height);
 	for(long i=0;i<width*height;i++) {
-		newImage->_isSet[i] = image._isSet[i];
 		newImage->_data[i] = image._data[i];
 	}
 	return newImage;
@@ -115,7 +109,6 @@ Image2D *Image2D::CreateCopy(const Image2D &image)
 void Image2D::SetValues(const Image2D &source)
 {
 	for(unsigned i=0;i<_width*_height;i++) {
-		_isSet[i] = source._isSet[i];
 		_data[i] = source._data[i];
 	}
 }
@@ -124,7 +117,6 @@ void Image2D::Clear()
 {
 	for(unsigned y=0;y<_height;y++) {
 		for(unsigned x=0;x<_width;x++) {
-			_isSet[y*_width+x] = false;
 			_data[y*_width+x] = 0.0;
 		}
 	}
@@ -134,10 +126,8 @@ num_t Image2D::GetAverage() const {
 	long count = 0;
 	num_t total = 0.0;
 	for(unsigned long i=0;i<_width * _height;i++) {
-		if(_isSet[i]) {
-			total += _data[i];
-			count++;
-		}
+		total += _data[i];
+		count++;
 	}
 	return total/(num_t) count;
 }
@@ -145,7 +135,7 @@ num_t Image2D::GetAverage() const {
 num_t Image2D::GetMaximum() const {
 	num_t max = -1e100;
 	for(unsigned long i=0;i<_width * _height;++i) {
-		if(_isSet[i] && _data[i] > max) {
+		if(_data[i] > max) {
 			max = _data[i];
 		}
 	}
@@ -155,7 +145,7 @@ num_t Image2D::GetMaximum() const {
 num_t Image2D::GetMinimum() const {
 	num_t min = 1e100;
 	for(unsigned long i=0;i<_width * _height;++i) {
-		if(_isSet[i] && _data[i] < min) {
+		if(_data[i] < min) {
 			min = _data[i];
 		}
 	}
@@ -165,7 +155,7 @@ num_t Image2D::GetMinimum() const {
 num_t Image2D::GetMaximumFinite() const {
 	num_t max = -1e100;
 	for(unsigned long i=0;i<_width * _height;++i) {
-		if(_isSet[i] && isfinite(_data[i]) && _data[i] > max) {
+		if(isfinite(_data[i]) && _data[i] > max) {
 			max = _data[i];
 		}
 	}
@@ -175,27 +165,18 @@ num_t Image2D::GetMaximumFinite() const {
 num_t Image2D::GetMinimumFinite() const {
 	num_t min = 1e100;
 	for(unsigned long i=0;i<_width * _height;++i) {
-		if(_isSet[i] && isfinite(_data[i]) && _data[i] < min) {
+		if(isfinite(_data[i]) && _data[i] < min) {
 			min = _data[i];
 		}
 	}
 	return min;
 }
 
-unsigned long Image2D::GetUnsetValueCount() const {
-	unsigned long count = 0;
-	for(unsigned long i=0;i<_width * _height;i++) {
-		if(!_isSet[i])
-			count++;
-	}
-	return count;
-}
-
 bool Image2D::ContainsOnlyZeros() const 
 {
 	for(unsigned long i=0;i<_width * _height;++i)
 	{
-		if(_isSet[i] && _data[i] != 0.0)
+		if(_data[i] != 0.0)
 			return false;
 	}
 	return true;
@@ -215,10 +196,8 @@ num_t Image2D::GetStdDev() const
 	num_t total = 0.0;
 	for(unsigned long i=0;i<_width * _height;++i)
 	{
-		if(_isSet[i]) {
-			total += (_data[i]-mean)*(_data[i]-mean);
-			count++;
-		}
+		total += (_data[i]-mean)*(_data[i]-mean);
+		count++;
 	}
 	return sqrt(total / (num_t) count);
 }
@@ -230,11 +209,9 @@ num_t Image2D::GetRMS(unsigned xOffset, unsigned yOffset, unsigned width, unsign
 	for(unsigned long y=yOffset;y<height+yOffset;++y) {
 		for(unsigned long x=xOffset;x<width+xOffset;++x)
 		{
-			if(IsSet(x,y)) {
-				num_t v = Value(x, y);
-				total += v * v;
-				count++;
-			}
+			num_t v = Value(x, y);
+			total += v * v;
+			count++;
 		}
 	}
 	return sqrt(total / (num_t) count);
@@ -249,32 +226,27 @@ void Image2D::NormalizeVariance()
 
 Image2D *Image2D::CreateFromFits(FitsFile &file, int imageNumber)
 {
-      int dimensions = file.GetCurrentImageDimensionCount();
-      if(dimensions >= 2) {
-              Image2D *image = new Image2D(file.GetCurrentImageSize(1), file.GetCurrentImageSize(2));
-              long bufferSize = image->_width * image->_height;
-              file.ReadCurrentImageData(bufferSize*imageNumber, image->_data, bufferSize, -1e100);
-              for(int i=0;i<bufferSize;i++) {
-                      image->_isSet[i] = (image->_data[i] != -1e100);
-											if(!image->_isSet[i])
-												image->_data[i]=0.0;
-							}
-              return image;
-      } else {
-              throw FitsIOException("No 2D images in HUD");
-      }
+	int dimensions = file.GetCurrentImageDimensionCount();
+	if(dimensions >= 2) {
+		Image2D *image = new Image2D(file.GetCurrentImageSize(1), file.GetCurrentImageSize(2));
+		long bufferSize = image->_width * image->_height;
+		file.ReadCurrentImageData(bufferSize*imageNumber, image->_data, bufferSize, 0.0);
+		return image;
+	} else {
+		throw FitsIOException("No 2D images in HUD");
+	}
 }
 
 long Image2D::GetImageCountInHUD(FitsFile &file) {
-      int dimensions = file.GetCurrentImageDimensionCount();
-      long total2DImageCount = 0;
-      if(dimensions>=2) {
-              total2DImageCount = 1;
-              for(int j=3;j<=dimensions;j++) {
-                      total2DImageCount *= file.GetCurrentImageSize(j);
-              }
-      }
-      return total2DImageCount;
+	int dimensions = file.GetCurrentImageDimensionCount();
+	long total2DImageCount = 0;
+	if(dimensions>=2) {
+		total2DImageCount = 1;
+		for(int j=3;j<=dimensions;j++) {
+			total2DImageCount *= file.GetCurrentImageSize(j);
+		}
+	}
+	return total2DImageCount;
 }
 
 void Image2D::SaveToFitsFile(const std::string &filename) const
@@ -285,10 +257,7 @@ void Image2D::SaveToFitsFile(const std::string &filename) const
       long bufferSize = _width * _height;
       double *buffer = new double[bufferSize];
       for(long i=0;i<bufferSize;i++) {
-              if(_isSet[i])
-                      buffer[i] = _data[i];
-              else
-                      buffer[i] = -1e100;
+              buffer[i] = _data[i];
       }
       try {
               file.WriteImage(0, buffer, bufferSize, -1e100);
@@ -386,7 +355,6 @@ Image2DPtr Image2D::Trim(unsigned long startX, unsigned long startY, unsigned lo
 		for(unsigned x=startX;x<endX;++x)
 		{
 			image->_data[newPtr] = _data[oldPtr];
-			image->_isSet[newPtr] = _isSet[oldPtr];
 			++newPtr;
 			++oldPtr;
 		}
@@ -400,7 +368,6 @@ void Image2D::SetTrim(unsigned long startX, unsigned long startY, unsigned long 
 		newWidth = endX - startX,
 		newHeight = endY - startY;
 	num_t *newData = new num_t[newWidth * newHeight];
-	bool *newIsSet = new bool[newWidth * newHeight];
 	unsigned long newPtr = 0;
 	for(unsigned y=startY;y<endY;++y)
 	{
@@ -408,15 +375,12 @@ void Image2D::SetTrim(unsigned long startX, unsigned long startY, unsigned long 
 		for(unsigned x=startX;x<endX;++x)
 		{
 			newData[newPtr] = _data[oldPtr];
-			newIsSet[newPtr] = _isSet[oldPtr];
 			++newPtr;
 			++oldPtr;
 		}
 	}
 	delete[] _data;
-	delete[] _isSet;
 	_data = newData;
-	_isSet = newIsSet;
 	_width = newWidth;
 	_height = newHeight;
 }
@@ -432,13 +396,10 @@ num_t Image2D::GetMaximum(unsigned xOffset, unsigned yOffset, unsigned width, un
 	for(unsigned long y=yOffset;y<height+yOffset;++y) {
 		for(unsigned long x=xOffset;x<width+xOffset;++x)
 		{
-			if(IsSet(x,y))
+			if(Value(x,y) > max || count==0)
 			{
-				if(Value(x,y) > max || count==0)
-				{
-					max = Value(x, y);
-					++count;
-				}
+				max = Value(x, y);
+				++count;
 			}
 		}
 	}
@@ -458,13 +419,10 @@ num_t Image2D::GetMinimum(unsigned xOffset, unsigned yOffset, unsigned width, un
 	for(unsigned long y=yOffset;y<height+yOffset;++y) {
 		for(unsigned long x=xOffset;x<width+xOffset;++x)
 		{
-			if(IsSet(x,y))
+			if(Value(x,y) < min || count==0)
 			{
-				if(Value(x,y) < min || count==0)
-				{
-					min = Value(x, y);
-					++count;
-				}
+				min = Value(x, y);
+				++count;
 			}
 		}
 	}
