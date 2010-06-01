@@ -119,6 +119,10 @@ PIC.Core.CS501HBA0.clockCorrectionTime = 0
 PIC.Core.CS501HBA1.clockCorrectionTime = 0
 PIC.Core.CS501HBA.clockCorrectionTime  = 0
 
+PIC.Core.CS026LBA.clockCorrectionTime  = 0
+PIC.Core.CS026HBA0.clockCorrectionTime = 0
+PIC.Core.CS026HBA1.clockCorrectionTime = 0
+PIC.Core.CS026HBA.clockCorrectionTime  = 0
 
 #
 # Phase centers
@@ -232,6 +236,10 @@ PIC.Core.CS501HBA0.phaseCenter = [3825568.863, 460647.572, 5065682.999]
 PIC.Core.CS501HBA1.phaseCenter = [3825663.551, 460692.610, 5065607.854]
 PIC.Core.CS501HBA.phaseCenter  = [3825616.208, 460670.091, 5065645.428]
 
+PIC.Core.CS026LBA.phaseCenter  = [3826390.959, 461869.804, 5064955.884]
+PIC.Core.CS026HBA0.phaseCenter = [3826418.270, 461805.789, 5064941.170]
+PIC.Core.CS026HBA1.phaseCenter = [3826335.122, 461887.648, 5064996.185]
+PIC.Core.CS026HBA.phaseCenter  = [3826376.697, 461846.719, 5064968.678]
 #
 # Experimental part:
 #
