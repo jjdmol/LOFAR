@@ -23,7 +23,7 @@
 
 #include <AOFlagger/rfi/thresholdtools.h>
 
-void ThresholdTools::MeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, long double &mean, long double &stddev)
+void ThresholdTools::MeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &mean, num_t &stddev)
 {
 	// Calculate mean
 	mean = 0.0;
@@ -53,7 +53,7 @@ void ThresholdTools::MeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, long doub
 	stddev = sqrt(stddev / (num_t) count);
 }
 
-void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, long double &mean, long double &stddev)
+void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, num_t &mean, num_t &stddev)
 {
 	size_t size = image->Width() * image->Height();
 	num_t *data = new num_t[size];
@@ -108,7 +108,7 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, long double &mea
 }
 
 /** TODO : not completely done in the right way! */
-void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, long double &mean, long double &stddev)
+void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &mean, num_t &stddev)
 {
 	size_t size = image->Width() * image->Height();
 	num_t *data = new num_t[size];
@@ -162,9 +162,9 @@ void ThresholdTools::WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask,
 		stddev = 0.0;
 }
 
-long double ThresholdTools::MinValue(Image2DCPtr image, Mask2DCPtr mask)
+num_t ThresholdTools::MinValue(Image2DCPtr image, Mask2DCPtr mask)
 {
-	long double minValue = 1e100;
+	num_t minValue = 1e100;
 	for(size_t y=0;y<image->Height();++y) {
 		for(size_t x=0;x<image->Width();++x) {
 			if(!mask->Value(x, y) && isfinite(image->Value(x, y)) && image->Value(x, y) < minValue)
@@ -174,9 +174,9 @@ long double ThresholdTools::MinValue(Image2DCPtr image, Mask2DCPtr mask)
 	return minValue;
 }
 
-long double ThresholdTools::MaxValue(Image2DCPtr image, Mask2DCPtr mask)
+num_t ThresholdTools::MaxValue(Image2DCPtr image, Mask2DCPtr mask)
 {
-	long double maxValue = -1e100;
+	num_t maxValue = -1e100;
 	for(size_t y=0;y<image->Height();++y) {
 		for(size_t x=0;x<image->Width();++x) {
 			if(!mask->Value(x, y) && isfinite(image->Value(x, y)) && image->Value(x, y) > maxValue)
@@ -293,9 +293,9 @@ void ThresholdTools::CountMaskLengths(Mask2DCPtr mask, int *lengths, size_t leng
 	delete[] horizontal;
 }
 
-void ThresholdTools::OneDimensionalConvolution(long double *data, unsigned dataSize, const long double *kernel, unsigned kernelSize)
+void ThresholdTools::OneDimensionalConvolution(num_t *data, unsigned dataSize, const num_t *kernel, unsigned kernelSize)
 {
-	long double *tmp = new long double[dataSize]; 
+	num_t *tmp = new num_t[dataSize]; 
 	for(unsigned i=0;i<dataSize;++i)
 	{
 		unsigned kStart = 0;
@@ -304,8 +304,8 @@ void ThresholdTools::OneDimensionalConvolution(long double *data, unsigned dataS
 		unsigned kEnd = kernelSize;
 		if(i + kernelSize/2 > dataSize)
 			kEnd = dataSize - i + kernelSize/2;
-		long double sum = 0.0;
-		long double weight = 0.0;
+		num_t sum = 0.0;
+		num_t weight = 0.0;
 		for(unsigned k=kStart;k<kEnd;++k)
 		{
 			sum += data[i+k-kernelSize/2]*kernel[k];
@@ -318,44 +318,44 @@ void ThresholdTools::OneDimensionalConvolution(long double *data, unsigned dataS
 	delete[] tmp;
 }
 
-void ThresholdTools::OneDimensionalGausConvolution(long double *data, unsigned dataSize, long double variance)
+void ThresholdTools::OneDimensionalGausConvolution(num_t *data, unsigned dataSize, num_t variance)
 {
 	unsigned kernelSize = (unsigned) round(variance*3.0L);
 	if(kernelSize > dataSize) kernelSize = dataSize;
-	long double *kernel = new long double[kernelSize];
+	num_t *kernel = new num_t[kernelSize];
 	for(unsigned i=0;i<kernelSize;++i)
 	{
-		long double x = ((long double) i-(long double) kernelSize/2.0L);
+		num_t x = ((num_t) i-(num_t) kernelSize/2.0L);
 		kernel[i] = RNG::EvaluateGaussian(x, variance);
 	}
 	OneDimensionalConvolution(data, dataSize, kernel, kernelSize);
 	delete[] kernel;
 }
 
-long double ThresholdTools::Mode(Image2DCPtr image, Mask2DCPtr mask)
+num_t ThresholdTools::Mode(Image2DCPtr image, Mask2DCPtr mask)
 {
-	long double mode = 0.0;
+	num_t mode = 0.0;
 	unsigned count = 0;
 	for(unsigned y = 0;y<image->Height();++y) {
 		for(unsigned x=0;x<image->Width(); ++x) {
-			long double value = image->Value(x, y);
+			num_t value = image->Value(x, y);
 			if(!mask->Value(x, y) && isfinite(value)) {
 				mode += value*value;
 				count++; 
 			}
 		}
 	}
-	return sqrtl(mode / (2.0L * (long double) count));
+	return sqrtl(mode / (2.0L * (num_t) count));
 }
 
-long double ThresholdTools::WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask)
+num_t ThresholdTools::WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask)
 {
 	size_t size = image->Width() * image->Height();
 	num_t *data = new num_t[size];
 	image->CopyData(data);
 	std::sort(data, data + size);
 	size_t highIndex = (size_t) ceil(0.9 * size)-1;
-	long double highValue = data[highIndex];
+	num_t highValue = data[highIndex];
 	delete[] data;
 
 	num_t mode = 0.0;
@@ -382,7 +382,7 @@ long double ThresholdTools::WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask)
 		return 0.0;
 }
 
-long double ThresholdTools::WinsorizedMode(Image2DCPtr image)
+num_t ThresholdTools::WinsorizedMode(Image2DCPtr image)
 {
 	size_t size = image->Width() * image->Height();
 	num_t *data = new num_t[size];

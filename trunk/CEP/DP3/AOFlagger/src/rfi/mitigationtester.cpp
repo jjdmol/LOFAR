@@ -350,7 +350,7 @@ Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned w
 		delete copy;
 		for(unsigned y=0;y<rfi->Height();++y) {
 			for(unsigned x=0;x<rfi->Width();++x) {
-				image->SetValue(x, y, image->Value(x, y) / sqrtl(image->Width()));
+				image->SetValue(x, y, image->Value(x, y) / sqrtn(image->Width()));
 			}
 		}
 		} break;
@@ -369,7 +369,7 @@ Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned w
 		delete copy;
 		for(unsigned y=0;y<rfi->Height();++y) {
 			for(unsigned x=0;x<rfi->Width();++x) {
-				image->SetValue(x, y, image->Value(x, y) / sqrtl(width)); 
+				image->SetValue(x, y, image->Value(x, y) / sqrtn(width)); 
 			}
 		}
 		} break;
@@ -377,8 +377,8 @@ Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned w
 		image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
 		for(unsigned y=0;y<image->Height();++y) {
 			for(unsigned x=0;x<image->Width();++x) {
-				image->AddValue(x, y, sinl((long double) (x+y*0.1)*M_PI*5.0L / image->Width() + 0.1));
-				image->AddValue(x, y, sinl((long double) (x+powl(y, 1.1))*M_PI*50.0L / image->Width() + 0.1));
+				image->AddValue(x, y, sinn((num_t) (x+y*0.1)*M_PIn*5.0 / image->Width() + 0.1));
+				image->AddValue(x, y, sinn((num_t) (x+powl(y, 1.1))*M_PIn*50.0 / image->Width() + 0.1));
 			}
 		}
 		AddBroadbandToTestSet(image, rfi, 1.0);

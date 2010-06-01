@@ -91,8 +91,8 @@ void Model::SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num
 		num_t fieldStrength = source.sqrtFluxIntensity + RNG::Guassian() * _sourceSigma;
 		num_t noiser, noisei;
 		RNG::ComplexGaussianAmplitude(noiser, noisei);
-		r += fieldStrength * cos((w - delayW) * M_PI * 2.0) + noiser * _noiseSigma;
-		i += fieldStrength * sin((w - delayW) * M_PI * 2.0) + noisei * _noiseSigma;
+		r += fieldStrength * cosn((w - delayW) * M_PI * 2.0) + noiser * _noiseSigma;
+		i += fieldStrength * sinn((w - delayW) * M_PI * 2.0) + noisei * _noiseSigma;
 	}
 }
 
@@ -111,8 +111,8 @@ void Model::SimulateUncoherentAntenna(num_t delayDirectionDEC, num_t delayDirect
 		PointSource &source = *_sources[index%_sources.size()];
 		num_t w = GetWPosition(source.dec, source.ra, frequency, earthLattitude, dx, dy);
 		num_t fieldStrength = source.sqrtFluxIntensity + RNG::Guassian() * _sourceSigma;
-		r = fieldStrength * cos((w - delayW) * M_PI * 2.0) + noiser;
-		i = fieldStrength * sin((w - delayW) * M_PI * 2.0) + noisei;
+		r = fieldStrength * cosn((w - delayW) * M_PI * 2.0) + noiser;
+		i = fieldStrength * sinn((w - delayW) * M_PI * 2.0) + noisei;
 	//}
 }
 
@@ -144,19 +144,19 @@ void Model::GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t d
 
 	// Rotate baseline plane towards phase center, first rotate around z axis, then around x axis
 	long double raRotation = earthLattitudeAngle - pointingLattitude + M_PI*0.5L;
-	long double tmpCos = cosl(raRotation);
-	long double tmpSin = sinl(raRotation);
+	long double tmpCos = cosn(raRotation);
+	long double tmpSin = sinn(raRotation);
 
 	long double dxProjected = tmpCos*dx - tmpSin*dy;
 	long double tmpdy = tmpSin*dx + tmpCos*dy;
 
-	tmpCos = cosl(-delayDirectionDEC);
-	tmpSin = sinl(-delayDirectionDEC);
+	tmpCos = cosn(-delayDirectionDEC);
+	tmpSin = sinn(-delayDirectionDEC);
 	long double dyProjected = tmpCos*tmpdy - tmpSin*dz;
 
 	// Now, the newly projected positive z axis of the baseline points to the phase center
 
-	long double baselineLength = sqrtl(dxProjected*dxProjected + dyProjected*dyProjected);
+	long double baselineLength = sqrtn(dxProjected*dxProjected + dyProjected*dyProjected);
 	
 	long double baselineAngle;
 	if(baselineLength == 0.0)
@@ -164,21 +164,21 @@ void Model::GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t d
 	else {
 		baselineLength /= 299792458.0L * wavelength;
 		if(dxProjected > 0.0L)
-			baselineAngle = atanl(dyProjected/dxProjected);
+			baselineAngle = atann(dyProjected/dxProjected);
 		else
-			baselineAngle = M_PI - atanl(dyProjected/-dxProjected);
+			baselineAngle = M_PI - atann(dyProjected/-dxProjected);
 	}
 		
-	u = cosl(baselineAngle)*baselineLength;
-	v = -sinl(baselineAngle)*baselineLength;
+	u = cosn(baselineAngle)*baselineLength;
+	v = -sinn(baselineAngle)*baselineLength;
 }
 
 num_t Model::GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngle, num_t dx, num_t dy)
 {
 	num_t wavelength = 299792458.0L / frequency;
-	num_t raSinEnd = sinl(-delayDirectionRA - earthLattitudeAngle);
-	num_t raCosEnd = cosl(-delayDirectionRA - earthLattitudeAngle);
-	num_t decCos = cosl(delayDirectionDec);
+	num_t raSinEnd = sinn(-delayDirectionRA - earthLattitudeAngle);
+	num_t raCosEnd = cosn(-delayDirectionRA - earthLattitudeAngle);
+	num_t decCos = cosn(delayDirectionDec);
 	// term "+ dz * decCos" is eliminated because of subtraction
 	num_t wPosition =
 		(dx*raCosEnd - dy*raSinEnd) * (-decCos) / wavelength;
@@ -200,8 +200,8 @@ void Model::AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const PointSourc
 {
 	// Calculate F(X) = f(x) e ^ {i 2 pi (x1 u + x2 v) } 
 	long double fftRotation = (u * source->dec/180.0L + v * source->ra/180.0L) * -2.0L * M_PI;
-	r += cosl(fftRotation) * source->fluxIntensity;
-	i += sinl(fftRotation) * source->fluxIntensity;
+	r += cosn(fftRotation) * source->fluxIntensity;
+	i += sinn(fftRotation) * source->fluxIntensity;
 }
 
 void Model::loadUrsaMajor()

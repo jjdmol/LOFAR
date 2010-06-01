@@ -29,53 +29,53 @@ SinusFitter::~SinusFitter()
 {
 }
 
-void SinusFitter::FindPhaseAndAmplitude(long double &phase, long double &amplitude, const long double *dataX, const long double *dataT, const size_t dataSize, const long double frequency) const throw()
+void SinusFitter::FindPhaseAndAmplitude(num_t &phase, num_t &amplitude, const num_t *dataX, const num_t *dataT, const size_t dataSize, const num_t frequency) const throw()
 {
 	// calculate 1/N * \sum_t x(t) e^{-i * frequency * t}
-	long double sumR = 0.0L, sumI = 0.0L;
+	num_t sumR = 0.0L, sumI = 0.0L;
 	for(unsigned i=0;i<dataSize;++i)
 	{
-		const long double t = dataT[i];
-		const long double x = dataX[i];
+		const num_t t = dataT[i];
+		const num_t x = dataX[i];
 		
-		sumR += x * cosl(-t * frequency);
-		sumI += x * sinl(-t * frequency);
+		sumR += x * cosn(-t * frequency);
+		sumI += x * sinn(-t * frequency);
 	}
 
-	sumR /= (long double) dataSize;
-	sumI /= (long double) dataSize;
+	sumR /= (num_t) dataSize;
+	sumI /= (num_t) dataSize;
 
 	phase = Phase(sumR, sumI);
-	amplitude = 2.0L * sqrtl(sumR*sumR + sumI*sumI);
+	amplitude = 2.0L * sqrtn(sumR*sumR + sumI*sumI);
 }
 
-void SinusFitter::FindPhaseAndAmplitudeComplex(long double &phase, long double &amplitude, const long double *dataR, const long double *dataI, const long double *dataT, const size_t dataSize, const long double frequency) const throw()
+void SinusFitter::FindPhaseAndAmplitudeComplex(num_t &phase, num_t &amplitude, const num_t *dataR, const num_t *dataI, const num_t *dataT, const size_t dataSize, const num_t frequency) const throw()
 {
 	// calculate 1/N * \sum_t x(t) e^{-i * frequency * t}
-	long double sumR = 0.0L, sumI = 0.0L;
+	num_t sumR = 0.0L, sumI = 0.0L;
 	for(unsigned i=0;i<dataSize;++i)
 	{
-		const long double t = dataT[i];
-		const long double xR = dataR[i];
-		const long double xI = dataI[i];
+		const num_t t = dataT[i];
+		const num_t xR = dataR[i];
+		const num_t xI = dataI[i];
 		
-		sumR += xR * cosl(-t * frequency);
-		sumR += xI * sinl(-t * frequency);
+		sumR += xR * cosn(-t * frequency);
+		sumR += xI * sinn(-t * frequency);
 
-		sumI += xR * sinl(-t * frequency);
-		sumI -= xI * cosl(-t * frequency);
+		sumI += xR * sinn(-t * frequency);
+		sumI -= xI * cosn(-t * frequency);
 	}
 
-	sumR /= (long double) dataSize;
-	sumI /= (long double) dataSize;
+	sumR /= (num_t) dataSize;
+	sumI /= (num_t) dataSize;
 
 	phase = Phase(sumR, sumI);
-	amplitude = sqrtl(sumR*sumR + sumI*sumI);
+	amplitude = sqrtn(sumR*sumR + sumI*sumI);
 }
 
-long double SinusFitter::FindMean(const long double phase, const long double amplitude, const long double *dataX, const long double *dataT, const size_t dataSize, const long double frequency)
+num_t SinusFitter::FindMean(const num_t phase, const num_t amplitude, const num_t *dataX, const num_t *dataT, const size_t dataSize, const num_t frequency)
 {
-	long double sum = 0.0L;
+	num_t sum = 0.0L;
 	for(unsigned i=0;i<dataSize;++i)
 	{
 		sum += dataX[i] - Value(phase, amplitude, dataT[i], frequency, 0.0L);

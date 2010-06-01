@@ -140,7 +140,7 @@ TimeFrequencyData TiledImage::Background()
 		}
 	} else {
 		Mask2DPtr mask = CreateFlagImage();
-		long double mean, stddev;
+		num_t mean, stddev;
 		ThresholdTools::WinsorizedMeanAndStdDev(_original, mask, mean, stddev);
 		mask.reset();
 

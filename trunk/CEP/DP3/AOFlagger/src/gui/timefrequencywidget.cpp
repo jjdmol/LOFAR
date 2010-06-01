@@ -144,7 +144,7 @@ void TimeFrequencyWidget::Update() throw()
 				break;
 		}
 	
-		long double min, max;
+		num_t min, max;
 		Mask2DCPtr mask = GetActiveMask();
 		findMinMax(_image, _mask, min, max);
 		guint8* data = _pixbuf->get_pixels();
@@ -236,10 +236,10 @@ ColorMap *TimeFrequencyWidget::createColorMap()
 	}
 }
 
-void TimeFrequencyWidget::findMinMax(Image2DCPtr image, Mask2DCPtr mask, long double &min, long double &max)
+void TimeFrequencyWidget::findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max)
 {
 	if(_winsorizedStretch) {
-		long double mean, stddev, genMax, genMin;
+		num_t mean, stddev, genMax, genMin;
 		ThresholdTools::WinsorizedMeanAndStdDev(image, mask, mean, stddev);
 		genMax = ThresholdTools::MaxValue(image, mask);
 		genMin = ThresholdTools::MinValue(image, mask);

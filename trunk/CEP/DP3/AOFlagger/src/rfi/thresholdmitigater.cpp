@@ -216,7 +216,7 @@ void ThresholdMitigater::VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr 
 	}	
 }
 
-void ThresholdMitigater::HorizontalVarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, double threshold) throw()
+void ThresholdMitigater::HorizontalVarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw()
 {
 	unsigned width = input->Width()-length+1;
 	for(size_t y=0;y<input->Height();++y) {
@@ -236,7 +236,7 @@ void ThresholdMitigater::HorizontalVarThreshold(Image2DCPtr input, Mask2DPtr mas
 	}
 }
 
-void ThresholdMitigater::VerticalVarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, double threshold) throw()
+void ThresholdMitigater::VerticalVarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold) throw()
 {
 	unsigned height = input->Height()-length+1; 
 	for(size_t y=0;y<height;++y) {
@@ -263,7 +263,7 @@ void ThresholdMitigater::VarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t 
 }
 
 void ThresholdMitigater::OptimalThreshold(Image2DCPtr input, Mask2DPtr mask, bool additive, num_t sensitivity) {
-	long double mean, stddev;
+	num_t mean, stddev;
 	ThresholdTools::WinsorizedMeanAndStdDev(input, mask, mean, stddev);
 	if(!additive)
 		mask->SetAll<false>();

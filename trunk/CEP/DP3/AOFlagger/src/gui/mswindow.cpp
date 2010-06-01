@@ -766,7 +766,7 @@ void MSWindow::onAdd1SigmaFringe()
 		if(HasImage())
 		{
 			TimeFrequencyMetaDataCPtr metaData = TimeFrequencyMetaData();
-			long double mean, stddev;
+			num_t mean, stddev;
 			TimeFrequencyData data(GetActiveData());
 			ThresholdTools::MeanAndStdDev(data.GetRealPart(), data.GetSingleMask(), mean, stddev);
 			FringeTestCreater::AddStaticFringe(data, metaData, stddev);

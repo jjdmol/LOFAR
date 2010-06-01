@@ -92,11 +92,11 @@ void ThresholdConfig::InitializeLengthsSingleSample()
 	_verticalOperations.push_back(operation);
 }
 
-void ThresholdConfig::InitializeThresholdsFromFirstThreshold(long double firstThreshold, enum Distribution noiseDistribution)
+void ThresholdConfig::InitializeThresholdsFromFirstThreshold(num_t firstThreshold, enum Distribution noiseDistribution)
 {
 	// Previously:
 		//_operations[i].threshold = firstThreshold * powl(sqrtl(sqrtl(2.0))*sqrtl(2.0), logl(_operations[i].length)/logl(2.0)) / (long double) _operations[i].length;
-	long double expFactor = _expFactor;
+	num_t expFactor = _expFactor;
 	if(expFactor == 0.0L) {
 		switch(_method) {
 		default:
@@ -110,16 +110,16 @@ void ThresholdConfig::InitializeThresholdsFromFirstThreshold(long double firstTh
 	}
 	for(unsigned i=0;i<_horizontalOperations.size();++i)
 	{
-		_horizontalOperations[i].threshold = firstThreshold * pow(expFactor, log(_horizontalOperations[i].length)/log(2.0)) / (num_t) _horizontalOperations[i].length;
+		_horizontalOperations[i].threshold = firstThreshold * pow(expFactor, logn(_horizontalOperations[i].length)/logn(2.0)) / (num_t) _horizontalOperations[i].length;
 	}
 	for(unsigned i=0;i<_verticalOperations.size();++i)
 	{
-		_verticalOperations[i].threshold = firstThreshold * pow(expFactor, log(_verticalOperations[i].length)/log(2.0)) / (num_t) _verticalOperations[i].length;
+		_verticalOperations[i].threshold = firstThreshold * pown(expFactor, logn(_verticalOperations[i].length)/logn(2.0)) / (num_t) _verticalOperations[i].length;
 	}
 	_distribution = noiseDistribution;
 }
 
-void ThresholdConfig::InitializeThresholdsWithFalseRate(size_t resolution, long double falseAlarmRate, enum Distribution noiseDistribution)
+void ThresholdConfig::InitializeThresholdsWithFalseRate(size_t resolution, num_t falseAlarmRate, enum Distribution noiseDistribution)
 {
 	InitializeThresholdsFromFirstThreshold(1.0, noiseDistribution);
 	BinarySearch(falseAlarmRate, falseAlarmRate / 25.0, resolution);
@@ -128,15 +128,15 @@ void ThresholdConfig::InitializeThresholdsWithFalseRate(size_t resolution, long 
 	std::cout << std::endl;
 }
 
-void ThresholdConfig::BinarySearch(long double probability, long double accuracy, size_t resolution)
+void ThresholdConfig::BinarySearch(num_t probability, num_t accuracy, size_t resolution)
 {
-	long double leftLimit = 0.0;
-	long double rightLimit = 1.0;
+	num_t leftLimit = 0.0;
+	num_t rightLimit = 1.0;
 	for(unsigned i=0;i<_horizontalOperations.size();++i)
 		_horizontalOperations[i].threshold *= rightLimit;
 	for(unsigned i=0;i<_verticalOperations.size();++i)
 		_verticalOperations[i].threshold *= rightLimit;
-	long double p = CalculateFalseAlarmRate(resolution, _distribution);
+	num_t p = CalculateFalseAlarmRate(resolution, _distribution);
 	for(unsigned i=0;i<_horizontalOperations.size();++i)
 		_horizontalOperations[i].threshold /= rightLimit;
 	for(unsigned i=0;i<_verticalOperations.size();++i)
@@ -158,7 +158,7 @@ void ThresholdConfig::BinarySearch(long double probability, long double accuracy
 			_verticalOperations[i].threshold /= rightLimit;
 		//cout << "P(" << rightLimit << "," << samples << ")=" << p << endl;
 	}
-	long double m = (rightLimit - leftLimit) / 2.0;
+	num_t m = (rightLimit - leftLimit) / 2.0;
 
 	for(unsigned i=0;i<_horizontalOperations.size();++i)
 		_horizontalOperations[i].threshold *= m;
@@ -203,16 +203,16 @@ void ThresholdConfig::BinarySearch(long double probability, long double accuracy
 		_verticalOperations[i].threshold *= m;
 }
 
-void ThresholdConfig::Execute(Image2DCPtr image, Mask2DPtr mask, bool additive, long double sensitivity) const
+void ThresholdConfig::Execute(Image2DCPtr image, Mask2DPtr mask, bool additive, num_t sensitivity) const
 {
 	if(!additive)
 		mask->SetAll<false>();
 
-	long double factor;
+	num_t factor;
 	
 	switch(_distribution) {
 		case Gaussian: {
-		long double mean, stddev;
+		num_t mean, stddev;
 		ThresholdTools::WinsorizedMeanAndStdDev(image, mask, mean, stddev);
 		if(stddev == 0.0L)
 			factor = sensitivity;
@@ -222,13 +222,13 @@ void ThresholdConfig::Execute(Image2DCPtr image, Mask2DPtr mask, bool additive, 
 			std::cout << "Stddev=" << stddev << " first threshold=" << _horizontalOperations[0].threshold << std::endl; 
 		} break;
 		case Rayleigh: {
-		long double mode = ThresholdTools::WinsorizedMode(image, mask);
+		num_t mode = ThresholdTools::WinsorizedMode(image, mask);
 		if(mode == 0.0L)
 			factor = sensitivity;
 		else
 			factor = sensitivity * mode;
 		if(_verbose) {
-			long double mean, stddev;
+			num_t mean, stddev;
 			ThresholdTools::WinsorizedMeanAndStdDev(image, mask, mean, stddev);
 			std::cout << "Mode=" << mode << " first threshold=" << _horizontalOperations[0].threshold*factor << std::endl;
 			std::cout << "Stddev=" << stddev << std::endl; 
@@ -274,7 +274,7 @@ void ThresholdConfig::Execute(Image2DCPtr image, Mask2DPtr mask, bool additive, 
 		ThresholdTools::FilterConnectedSamples(mask, _minConnectedSamples);
 } 
 
-long double ThresholdConfig::CalculateFalseAlarmRate(size_t resolution, enum Distribution noiseDistribution)
+num_t ThresholdConfig::CalculateFalseAlarmRate(size_t resolution, enum Distribution noiseDistribution)
 {
 	Image2DPtr image = Image2D::CreateZeroImagePtr(resolution, resolution);
 	Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(resolution, resolution);
@@ -309,20 +309,20 @@ long double ThresholdConfig::CalculateFalseAlarmRate(size_t resolution, enum Dis
 		delete diff;
 	}
 	Execute(image, mask, true, 1.0L);
-	long double prob = (long double) mask->GetCount<true>() / (resolution*resolution);
+	num_t prob = (num_t) mask->GetCount<true>() / (resolution*resolution);
 	int lengths[32];
 	ThresholdTools::CountMaskLengths(mask, lengths, 32);
 	for(unsigned j=1;j<33;++j) {
 		if(_verbose)
-			std::cout << "," << (long double)  lengths[j-1]*j / (resolution*resolution);
+			std::cout << "," << (num_t)  lengths[j-1]*j / (resolution*resolution);
 		for(unsigned i=0;i<_horizontalOperations.size();++i) {
 			if(j == _horizontalOperations[i].length) {
-				_horizontalOperations[i].rate = (long double) lengths[j-1]*j / (resolution*resolution*j);
+				_horizontalOperations[i].rate = (num_t) lengths[j-1]*j / (resolution*resolution*j);
 			}
 		}
 		for(unsigned i=0;i<_verticalOperations.size();++i) {
 			if(j == _verticalOperations[i].length) {
-				_verticalOperations[i].rate = (long double) lengths[j-1]*j / (resolution*resolution*j);
+				_verticalOperations[i].rate = (num_t) lengths[j-1]*j / (resolution*resolution*j);
 			}
 		}
 	}

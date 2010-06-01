@@ -116,7 +116,7 @@ void ImageWidget::Update()
 void ImageWidget::findMinMax(Image2DCPtr image, num_t &min, num_t &max)
 {
 	if(_winsorizedStretch) {
-		long double mean, stddev, genMax, genMin;
+		num_t mean, stddev, genMax, genMin;
 		ThresholdTools::WinsorizedMeanAndStdDev(image, mean, stddev);
 		genMax = image->GetMaximumFinite();
 		genMin = image->GetMinimumFinite();

@@ -67,9 +67,9 @@ void RFIPlots::MakeDistPlot(Plot &plot, Image2DCPtr image, Mask2DCPtr mask)
 	plot.SetXAxisText("Visibility");
 	plot.SetYAxisText("Occurences");
 
-	long double mean, stddev;
-	long double min = image->GetMinimum();
-	long double max = image->GetMaximum();
+	num_t mean, stddev;
+	num_t min = image->GetMinimum();
+	num_t max = image->GetMaximum();
 	ThresholdTools::WinsorizedMeanAndStdDev(image, mean, stddev);
 	if(min < mean-3.0L*stddev)
 		min = mean-3.0L*stddev;
@@ -170,7 +170,7 @@ void RFIPlots::MakeComplexPlanePlot(class Plot &plot, const TimeFrequencyData &d
 	}
 }
 
-void RFIPlots::MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, long double frequency, bool realVersusImaginary, bool drawImaginary)
+void RFIPlots::MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, num_t frequency, bool realVersusImaginary, bool drawImaginary)
 {
 	if(realVersusImaginary)
 	{
@@ -184,14 +184,14 @@ void RFIPlots::MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &
 	Image2DCPtr real = data.GetRealPart();
 	Image2DCPtr imaginary = data.GetImaginaryPart();
 
-	long double *xReal = new long double[length];
-	long double *xImag = new long double[length];
-	long double *t = new long double[length];
+	num_t *xReal = new num_t[length];
+	num_t *xImag = new num_t[length];
+	num_t *t = new num_t[length];
 	size_t dataIndex = 0;
 
 	for(size_t x=xStart;x<xStart + length;++x)
 	{
-		long double r = 0.0L, i = 0.0L;
+		num_t r = 0.0L, i = 0.0L;
 		size_t count = 0;
 		for(size_t yi=y;yi<yAvgSize+y;++yi)
 		{
@@ -213,10 +213,10 @@ void RFIPlots::MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &
 	if(dataIndex != length)
 		std::cout << "Warning: " << (length-dataIndex) << " time points were removed." << std::endl; 
 	SinusFitter fitter;
-	long double
+	num_t
 		realPhase, realAmplitude, realMean,
 		imagPhase, imagAmplitude, imagMean;
-	const long double twopi = 2.0L*M_PI;
+	const num_t twopi = 2.0*M_PIn;
 
 	//fitter.FindPhaseAndAmplitude(realPhase, realAmplitude, xReal, t, dataIndex, frequency*twopi);
 	//fitter.FindPhaseAndAmplitude(imagPhase, imagAmplitude, xImag, t, dataIndex, frequency*twopi);
@@ -232,14 +232,14 @@ void RFIPlots::MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &
 	{
 		if(realVersusImaginary)
 			plot.PushDataPoint(
-				cosl(frequency*2.0L*M_PIl*(long double) x + realPhase) * realAmplitude + realMean,
-				cosl(frequency*2.0L*M_PIl*(long double) x + imagPhase) * imagAmplitude + imagMean);
+				cosn(frequency*2.0L*M_PIl*(long double) x + realPhase) * realAmplitude + realMean,
+				cosn(frequency*2.0L*M_PIl*(long double) x + imagPhase) * imagAmplitude + imagMean);
 		else if(drawImaginary)
 			plot.PushDataPoint(x,
-				cosl(frequency*2.0L*M_PIl*(long double) x + imagPhase) * imagAmplitude + imagMean);
+				cosn(frequency*2.0L*M_PIl*(long double) x + imagPhase) * imagAmplitude + imagMean);
 		else
 			plot.PushDataPoint(x,
-				cosl(frequency*2.0L*M_PIl*(long double) x + realPhase) * realAmplitude + realMean);
+				cosn(frequency*2.0L*M_PIl*(long double) x + realPhase) * realAmplitude + realMean);
 	}
 
 	delete t;
@@ -380,7 +380,7 @@ void RFIPlots::MakeRMSSpectrumPlot(class Plot &plot, Image2DCPtr image, Mask2DCP
 		}
 		if(count > 0)
 		{
-			long double v = sqrtl(sum/count);
+			num_t v = sqrtn(sum/count);
 
 			if(v < min) min = v;
 			if(v > max) max = v;

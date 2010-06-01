@@ -389,12 +389,12 @@ num_t RFIStatistics::DataQuality(Image2DCPtr image, Image2DCPtr model, Mask2DCPt
 		{
 			if(!mask->Value(x, y) && std::isfinite(image->Value(x, y)) && std::isfinite(model->Value(x,y)))
 			{
-				num_t noise = fabsl(image->Value(x, y) - model->Value(x, y));
-				num_t signal = fabsl(model->Value(x, y));
+				num_t noise = fabsn(image->Value(x, y) - model->Value(x, y));
+				num_t signal = fabsn(model->Value(x, y));
 				if(signal != 0.0)
 				{
 					if(noise <= 1e-50) noise = 1e-50;
-					num_t snr = logl(signal / noise);
+					num_t snr = logn(signal / noise);
 					sum += snr;
 
 					++count;
@@ -405,7 +405,7 @@ num_t RFIStatistics::DataQuality(Image2DCPtr image, Image2DCPtr model, Mask2DCPt
 	if(count == 0)
 		return 0;
 	else
-		return sum / (sqrtl(count) * sqrtl((endX-startX) * image->Height()));
+		return sum / (sqrtn(count) * sqrtn((endX-startX) * image->Height()));
 }
 
 void RFIStatistics::countTimeLine(Image2DCPtr image, size_t xStart, size_t xLength, size_t y)
@@ -417,7 +417,7 @@ void RFIStatistics::countTimeLine(Image2DCPtr image, size_t xStart, size_t xLeng
 	}
 	
 	RFISampleProperties properties;
-	properties.flux = flux / (double) xLength;
+	properties.flux = flux / (num_t) xLength;
 	properties.duration = xLength;
 	properties.frequencyCoverage = 1;
 	properties.size = xLength;
@@ -433,7 +433,7 @@ void RFIStatistics::countFrequencyLine(Image2DCPtr image, size_t yStart, size_t 
 	}
 	
 	RFISampleProperties properties;
-	properties.flux = flux / (double) yLength;
+	properties.flux = flux / (num_t) yLength;
 	properties.duration = 1;
 	properties.frequencyCoverage = yLength;
 	properties.size = yLength;
@@ -502,17 +502,17 @@ num_t RFIStatistics::FrequencySNR(Image2DCPtr image, Image2DCPtr model, Mask2DCP
 	{
 		if(!mask->Value(x, channel))
 		{
-			num_t noise = fabsl(image->Value(x, channel) - model->Value(x, channel));
-			num_t signal = fabsl(model->Value(x, channel));
+			num_t noise = fabsn(image->Value(x, channel) - model->Value(x, channel));
+			num_t signal = fabsn(model->Value(x, channel));
 			if(std::isfinite(signal) && std::isfinite(noise))
 			{
 				if(noise <= 1e-50) noise = 1e-50;
-				num_t snr = logl(signal / noise);
+				num_t snr = logn(signal / noise);
 				sum += snr;
 	
 				++count;
 			}
 		}
 	}
-	return expl(sum / count);
+	return expn(sum / count);
 }

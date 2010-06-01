@@ -109,7 +109,7 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		void SetSegmentedImage(SegmentedImageCPtr segmentedImage) { _segmentedImage = segmentedImage; }
 	private:
 		void Clear();
-		void findMinMax(Image2DCPtr image, Mask2DCPtr mask, long double &min, long double &max);
+		void findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max);
 		void redraw();
 		void ShrinkPixBufHorizontally();
 		bool onExposeEvent(GdkEventExpose* ev);

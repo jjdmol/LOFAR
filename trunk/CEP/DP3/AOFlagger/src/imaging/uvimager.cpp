@@ -207,8 +207,8 @@ void UVImager::Image(const IntegerDomain &frequencies, const IntegerDomain &ante
 
 void UVImager::Image(unsigned frequencyIndex, AntennaInfo &antenna1, AntennaInfo &antenna2, SingleFrequencySingleBaselineData *data)
 {
-	long double frequency = _band.channels[frequencyIndex].frequencyHz;
-	long double speedOfLight = 299792458.0L;
+	num_t frequency = _band.channels[frequencyIndex].frequencyHz;
+	num_t speedOfLight = 299792458.0L;
 	AntennaCache cache;
 	cache.wavelength = speedOfLight / frequency;
 
@@ -231,7 +231,7 @@ void UVImager::Image(unsigned frequencyIndex, AntennaInfo &antenna1, AntennaInfo
 				switch(_imageKind) {
 				case Homogeneous:
 				if(!data[i].flag) {
-					long double u,v;
+					num_t u,v;
 					GetUVPosition(u, v, data[i], cache);
 					SetUVValue(u, v, data[i].data.real(), data[i].data.imag(), 1.0);
 					SetUVValue(-u, -v, data[i].data.real(), -data[i].data.imag(), 1.0);
@@ -241,7 +241,7 @@ void UVImager::Image(unsigned frequencyIndex, AntennaInfo &antenna1, AntennaInfo
 				case Flagging:
 				if((data[i].flag && !_invertFlagging) ||
 						(!data[i].flag && _invertFlagging)) {
-					long double u,v;
+					num_t u,v;
 					GetUVPosition(u, v, data[i], cache);
 					SetUVValue(u, v, 1, 0, 1.0);
 					SetUVValue(-u, -v, 1, 0, 1.0);
@@ -350,11 +350,11 @@ void UVImager::ApplyWeightsToUV()
 	}
 }
 
-void UVImager::SetUVValue(long double u, long double v, long double r, long double i, long double weight)
+void UVImager::SetUVValue(num_t u, num_t v, num_t r, num_t i, num_t weight)
 {
 	 // Nearest neighbour interpolation
-	long uPos = (long) floorl(u*_uvScaling*_xRes+0.5L) + (_xRes/2);
-	long vPos = (long) floorl(v*_uvScaling*_yRes+0.5L) + (_yRes/2);
+	long uPos = (long) floorn(u*_uvScaling*_xRes+0.5) + (_xRes/2);
+	long vPos = (long) floorn(v*_uvScaling*_yRes+0.5) + (_yRes/2);
 	if(uPos>=0 && uPos<(long) _xRes && vPos>=0 && vPos<(long) _yRes) {
 		_uvReal->AddValue(uPos, vPos, r);
 		_uvImaginary->AddValue(uPos, vPos, i);
@@ -384,17 +384,17 @@ void UVImager::SetUVValue(long double u, long double v, long double r, long doub
 	}*/
 }
 
-void UVImager::SetUVFTValue(long double u, long double v, long double r, long double i, long double weight)
+void UVImager::SetUVFTValue(num_t u, num_t v, num_t r, num_t i, num_t weight)
 {
 	for(size_t iy=0;iy<_yResFT;++iy)
 	{
 		for(size_t ix=0;ix<_xResFT;++ix)
 		{
-			long double x = ((long double) ix - (_xResFT/2)) / _uvScaling * _uvFTReal->Width();
-			long double y = ((long double) iy - (_yResFT/2)) / _uvScaling * _uvFTReal->Height();
+			num_t x = ((num_t) ix - (_xResFT/2)) / _uvScaling * _uvFTReal->Width();
+			num_t y = ((num_t) iy - (_yResFT/2)) / _uvScaling * _uvFTReal->Height();
 			// Calculate F(x,y) += f(u, v) e ^ {i 2 pi (x u + y v) } 
-			long double fftRotation = (u * x + v * y) * -2.0L * M_PIl;
-			long double fftCos = cosl(fftRotation), fftSin = sinl(fftRotation);
+			num_t fftRotation = (u * x + v * y) * -2.0L * M_PIl;
+			num_t fftCos = cosl(fftRotation), fftSin = sinl(fftRotation);
 			_uvFTReal->AddValue(ix, iy, (fftCos * r - fftSin * i) * weight);
 			_uvFTImaginary->AddValue(ix, iy, (fftSin * r + fftCos * i) * weight);
 		}
@@ -414,46 +414,46 @@ void UVImager::PerformFFT()
 
 void UVImager::GetUVPosition(num_t &u, num_t &v, size_t timeIndex, size_t frequencyIndex, TimeFrequencyMetaDataCPtr metaData)
 {
-	long double frequency = metaData->Band().channels[frequencyIndex].frequencyHz;
+	num_t frequency = metaData->Band().channels[frequencyIndex].frequencyHz;
 	u = metaData->UVW()[timeIndex].u * frequency / 299792458.0L;
 	v = metaData->UVW()[timeIndex].v * frequency / 299792458.0L;
 	return;
 	const Baseline &baseline = metaData->Baseline();
-	long double delayDirectionRA = metaData->Field().delayDirectionRA;
-	long double delayDirectionDec = metaData->Field().delayDirectionDec;
+	num_t delayDirectionRA = metaData->Field().delayDirectionRA;
+	num_t delayDirectionDec = metaData->Field().delayDirectionDec;
 	double time = metaData->ObservationTimes()[timeIndex];
 
-	long double pointingLattitude = delayDirectionRA;
-	long double earthLattitudeAngle = Date::JDToHourOfDay(Date::AipsMJDToJD(time))*M_PIl/12.0L;
+	num_t pointingLattitude = delayDirectionRA;
+	num_t earthLattitudeAngle = Date::JDToHourOfDay(Date::AipsMJDToJD(time))*M_PIl/12.0L;
 
 	// Rotate baseline plane towards source, first rotate around x axis, then around z axis
-	long double raRotation = earthLattitudeAngle - pointingLattitude + M_PIl*0.5L;
-	long double raCos = cosl(-raRotation);
-	long double raSin = sinl(-raRotation);
+	num_t raRotation = earthLattitudeAngle - pointingLattitude + M_PIl*0.5L;
+	num_t raCos = cosn(-raRotation);
+	num_t raSin = sinn(-raRotation);
 
-	long double dx = baseline.antenna1.x - baseline.antenna2.x;
-	long double dy = baseline.antenna1.y - baseline.antenna2.y;
-	long double dz = baseline.antenna1.z - baseline.antenna2.z;
+	num_t dx = baseline.antenna1.x - baseline.antenna2.x;
+	num_t dy = baseline.antenna1.y - baseline.antenna2.y;
+	num_t dz = baseline.antenna1.z - baseline.antenna2.z;
 
-	long double decCos = cosl(delayDirectionDec);
-	long double decSin = sinl(delayDirectionDec);
+	num_t decCos = cosn(delayDirectionDec);
+	num_t decSin = sinn(delayDirectionDec);
 
-	long double
+	num_t
 		du = -dx * raCos * decSin - dy * raSin - dz * raCos * decCos,
 		dv = -dx * raSin * decSin + dy * raCos - dz * raSin * decCos;
 
   /*
-	long double dxProjected = tmpCos*dx - tmpSin*dy;
-	long double tmpdy = tmpSin*dx + tmpCos*dy;
+	num_t dxProjected = tmpCos*dx - tmpSin*dy;
+	num_t tmpdy = tmpSin*dx + tmpCos*dy;
 
-	long double dyProjected = tmpCos*tmpdy - tmpSin*dz;*/
+	num_t dyProjected = tmpCos*tmpdy - tmpSin*dz;*/
 
 	// du = dx*cos(ra) - dy*sin(ra)
 	// dv = ( dx*sin(ra) + dy*cos(ra) ) * cos(-dec) - dz * sin(-dec)
 	// Now, the newly projected positive z axis of the baseline points to the field
-	long double baselineLength = sqrtl(du*du + dv*dv);
+	num_t baselineLength = sqrtl(du*du + dv*dv);
 
-	long double baselineAngle;
+	num_t baselineAngle;
 	if(baselineLength == 0.0)
 		baselineAngle = 0.0;
 	else {
@@ -463,41 +463,41 @@ void UVImager::GetUVPosition(num_t &u, num_t &v, size_t timeIndex, size_t freque
 		else
 			baselineAngle = M_PIl - atanl(du/-dv);
 	}
-	u = cosl(baselineAngle)*baselineLength;
-	v = -sinl(baselineAngle)*baselineLength;
+	u = cosn(baselineAngle)*baselineLength;
+	v = -sinn(baselineAngle)*baselineLength;
 
 	std::cout << "Calced: " << u << "," << v
 		<< ", ori: " << metaData->UVW()[timeIndex].u << "," << metaData->UVW()[timeIndex].v << "(," << metaData->UVW()[timeIndex].w << ")\n";
 }
 
-void UVImager::GetUVPosition(long double &u, long double &v, const SingleFrequencySingleBaselineData &data, const AntennaCache &cache)
+void UVImager::GetUVPosition(num_t &u, num_t &v, const SingleFrequencySingleBaselineData &data, const AntennaCache &cache)
 {
 	unsigned field = data.field;
-	long double pointingLattitude = _fields[field].delayDirectionRA;
+	num_t pointingLattitude = _fields[field].delayDirectionRA;
 
 	//calcTimer.Start();
-	long double earthLattitudeAngle = Date::JDToHourOfDay(Date::AipsMJDToJD(data.time))*M_PIl/12.0L;
+	num_t earthLattitudeAngle = Date::JDToHourOfDay(Date::AipsMJDToJD(data.time))*M_PIl/12.0L;
 
 	//long double pointingLongitude = _fields[field].delayDirectionDec; //not used
 
 	// Rotate baseline plane towards source, first rotate around z axis, then around x axis
-	long double raRotation = earthLattitudeAngle - pointingLattitude + M_PIl*0.5L;
-	long double tmpCos = cosl(raRotation);
-	long double tmpSin = sinl(raRotation);
+	num_t raRotation = earthLattitudeAngle - pointingLattitude + M_PIl*0.5L;
+	num_t tmpCos = cosn(raRotation);
+	num_t tmpSin = sinn(raRotation);
 
-	long double dxProjected = tmpCos*cache.dx - tmpSin*cache.dy;
-	long double tmpdy = tmpSin*cache.dx + tmpCos*cache.dy;
+	num_t dxProjected = tmpCos*cache.dx - tmpSin*cache.dy;
+	num_t tmpdy = tmpSin*cache.dx + tmpCos*cache.dy;
 
 	tmpCos = _fields[field].delayDirectionDecNegCos; // cosl(-pointingLongitude);
 	tmpSin = _fields[field].delayDirectionDecNegSin; //sinl(-pointingLongitude);
-	long double dyProjected = tmpCos*tmpdy - tmpSin*cache.dz;
+	num_t dyProjected = tmpCos*tmpdy - tmpSin*cache.dz;
 	// long double dzProjected = tmpSin*tmpdy + tmpCos*dzAnt; // we don't need it
 
 	// Now, the newly projected positive z axis of the baseline points to the field
 
-	long double baselineLength = sqrtl(dxProjected*dxProjected + dyProjected*dyProjected);
+	num_t baselineLength = sqrtl(dxProjected*dxProjected + dyProjected*dyProjected);
 	
-	long double baselineAngle;
+	num_t baselineAngle;
 	if(baselineLength == 0.0L)
 		baselineAngle = 0.0L;
 	else {
@@ -509,59 +509,59 @@ void UVImager::GetUVPosition(long double &u, long double &v, const SingleFrequen
 	}
 		
 
-	u = cosl(baselineAngle)*baselineLength;
-	v = -sinl(baselineAngle)*baselineLength;
+	u = cosn(baselineAngle)*baselineLength;
+	v = -sinn(baselineAngle)*baselineLength;
 }
 
-double UVImager::GetFringeStopFrequency(long double time, const Baseline &baseline, long double delayDirectionRA, long double delayDirectionDec, long double frequency)
+num_t UVImager::GetFringeStopFrequency(num_t time, const Baseline &baseline, num_t delayDirectionRA, num_t delayDirectionDec, num_t frequency)
 {
 	// earthspeed = rad / sec
-	const long double earthSpeed = 2.0L * M_PI / (24.0L * 60.0L * 60.0L);
-	long double earthLattitudeAngle =
+	const num_t earthSpeed = 2.0L * M_PIn / (24.0L * 60.0L * 60.0L);
+	num_t earthLattitudeAngle =
 		Date::JDToHourOfDay(Date::AipsMJDToJD(time))*M_PI/12.0L;
 	//long double u, v;
 	//GetUVPosition(u, v, baseline, time, delayDirectionRA, delayDirectionDec, frequency);
 	//return
-	//	earthSpeed * (u * sinl(delayDirectionRA-earthLattitudeAngle) + v * cosl(delayDirectionRA-earthLattitudeAngle)) * cosl(delayDirectionDec);
-	long double raSin = sinl(-delayDirectionRA - earthLattitudeAngle);
-	long double raCos = cosl(-delayDirectionRA - earthLattitudeAngle);
-	long double dx = baseline.antenna2.x - baseline.antenna1.x;
-	long double dy = baseline.antenna2.y - baseline.antenna1.y;
-	//long double dz = baseline.antenna2.z - baseline.antenna1.z;
-	long double wavelength = 299792458.0L / frequency;
+	//	earthSpeed * (u * sinn(delayDirectionRA-earthLattitudeAngle) + v * cosn(delayDirectionRA-earthLattitudeAngle)) * cosn(delayDirectionDec);
+	num_t raSin = sinn(-delayDirectionRA - earthLattitudeAngle);
+	num_t raCos = cosn(-delayDirectionRA - earthLattitudeAngle);
+	num_t dx = baseline.antenna2.x - baseline.antenna1.x;
+	num_t dy = baseline.antenna2.y - baseline.antenna1.y;
+	//num_t dz = baseline.antenna2.z - baseline.antenna1.z;
+	num_t wavelength = 299792458.0L / frequency;
 	/*std::cout << "Angle=" <<
-		180.0L / M_PI * acosl(((dx * raCos - dy * raSin) * cosl(delayDirectionDec) + dz*sinl(delayDirectionDec)) / sqrtl(dx*dx + dy*dy + dz*dz))
+		180.0L / M_PI * acosn(((dx * raCos - dy * raSin) * cosn(delayDirectionDec) + dz*sinn(delayDirectionDec)) / sqrtn(dx*dx + dy*dy + dz*dz))
 		<< std::endl; 
 	std::cout << "delay=" <<
-		((dx * raCos - dy * raSin) * cosl(delayDirectionDec) + dz*sinl(delayDirectionDec)) << "m"
+		((dx * raCos - dy * raSin) * cosn(delayDirectionDec) + dz*sinn(delayDirectionDec)) << "m"
 		<< std::endl;
 	std::cout << "ddelay/dt=" <<
-		(earthSpeed * (dx*raSin + dy*raCos) * cosl(delayDirectionDec))
+		(earthSpeed * (dx*raSin + dy*raCos) * cosn(delayDirectionDec))
 		<< "m/s" << std::endl;*/
-	return (earthSpeed * (dx*raSin + dy*raCos) * cosl(delayDirectionDec)) / wavelength; 
+	return (earthSpeed * (dx*raSin + dy*raCos) * cosn(delayDirectionDec)) / wavelength; 
 }
 
-double UVImager::GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsigned channelIndex, const TimeFrequencyMetaDataCPtr metaData)
+num_t UVImager::GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsigned channelIndex, const TimeFrequencyMetaDataCPtr metaData)
 {
 	return metaData->UVW()[timeIndexEnd].w - metaData->UVW()[timeIndexStart].w * metaData->Band().channels[channelIndex].frequencyHz / 299792458.0L;
 	double
 		timeStart = metaData->ObservationTimes()[timeIndexStart],
 		timeEnd = metaData->ObservationTimes()[timeIndexEnd];
-	long double earthLattitudeAngleStart =
+	num_t	 earthLattitudeAngleStart =
 		Date::JDToHourOfDay(Date::AipsMJDToJD(timeStart))*M_PI/12.0L;
-	long double earthLattitudeAngleEnd =
+	num_t earthLattitudeAngleEnd =
 		Date::JDToHourOfDay(Date::AipsMJDToJD(timeEnd))*M_PI/12.0L;
-	long double wavelength = 299792458.0L / metaData->Band().channels[channelIndex].frequencyHz;
-	long double dx = metaData->Antenna2().position.x - metaData->Antenna1().position.x;
-	long double dy = metaData->Antenna2().position.y - metaData->Antenna1().position.y;
-	long double delayDirectionRA = metaData->Field().delayDirectionRA;
-	long double raSinStart = sinl(-delayDirectionRA - earthLattitudeAngleStart);
-	long double raCosStart = cosl(-delayDirectionRA - earthLattitudeAngleStart);
-	long double raSinEnd = sinl(-delayDirectionRA - earthLattitudeAngleEnd);
-	long double raCosEnd = cosl(-delayDirectionRA - earthLattitudeAngleEnd);
-	long double decCos = cosl(metaData->Field().delayDirectionDec);
+	num_t wavelength = 299792458.0L / metaData->Band().channels[channelIndex].frequencyHz;
+	num_t dx = metaData->Antenna2().position.x - metaData->Antenna1().position.x;
+	num_t dy = metaData->Antenna2().position.y - metaData->Antenna1().position.y;
+	num_t delayDirectionRA = metaData->Field().delayDirectionRA;
+	num_t	 raSinStart = sinn(-delayDirectionRA - earthLattitudeAngleStart);
+	num_t raCosStart = cosn(-delayDirectionRA - earthLattitudeAngleStart);
+	num_t raSinEnd = sinn(-delayDirectionRA - earthLattitudeAngleEnd);
+	num_t raCosEnd = cosn(-delayDirectionRA - earthLattitudeAngleEnd);
+	num_t decCos = cosn(metaData->Field().delayDirectionDec);
 	// term "+ dz * decCos" is eliminated because of subtraction
-	long double fringeCount =
+	num_t fringeCount =
 		( (dx*raCosStart - dy*raSinStart)
 		-
 		(dx*raCosEnd - dy*raSinEnd) ) * (-decCos) / wavelength;
@@ -569,14 +569,14 @@ double UVImager::GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsi
 	return fringeCount;
 }
 
-double UVImager::GetIntegratedFringeStopFrequency(long double timeStart, long double timeEnd, const Baseline &baseline, long double delayDirectionRA, long double delayDirectionDec, long double frequency, size_t steps)
+num_t UVImager::GetIntegratedFringeStopFrequency(num_t timeStart, num_t timeEnd, const Baseline &baseline, num_t delayDirectionRA, num_t delayDirectionDec, num_t frequency, size_t steps)
 {
-	long double fringeCount = 0.0L;
-	long double step = (timeEnd-timeStart)/(long double) steps;
+	num_t fringeCount = 0.0L;
+	num_t step = (timeEnd-timeStart)/(num_t) steps;
 	timeEnd += step*0.5;
-	for(long double time=timeStart;time<timeEnd;time += step)
+	for(num_t time=timeStart;time<timeEnd;time += step)
 	{
-		long double fringeFrequency = GetFringeStopFrequency(time, baseline, delayDirectionRA, delayDirectionDec, frequency);
+		num_t fringeFrequency = GetFringeStopFrequency(time, baseline, delayDirectionRA, delayDirectionDec, frequency);
 		fringeCount += step*fabsl(fringeFrequency);
 	}
 

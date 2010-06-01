@@ -28,18 +28,48 @@ class TimeFrequencyData;
 class TimeFrequencyImager;
 class FitsFile;
 
+#define NUM_T_IS_FLOAT
+
+#ifdef NUM_T_IS_FLOAT
+typedef float num_t;
+
+#define sqrtn(X) sqrtf(X)
+#define expn(X) expf(X)
+#define logn(X) logf(X)
+#define sinn(X) sinf(X)
+#define asinn(X) asinf(X)
+#define cosn(X) cosf(X)
+#define acosn(X) acosf(X)
+#define tann(X) tanf(X)
+#define atann(X) atanf(X)
+#define fabsn(X) fabsf(X)
+#define floorn(X) floorf(X)
+#define pown(X, Y) powf(X, Y)
+#define M_PIn M_PI
+
+#else // NOT NUM_T_IS_FLOAT
+
 typedef double num_t;
-
-enum DataKind { ObservedData, CorrectedData, ResidualData, ModelData, WeightData };
-
-enum PolarisationType { SinglePolarisation, DipolePolarisation, AutoDipolePolarisation, CrossDipolePolarisation, StokesIPolarisation, StokesQPolarisation, StokesUPolarisation, StokesVPolarisation, XXPolarisation, XYPolarisation, YXPolarisation, YYPolarisation };
-
 
 #define sqrtn(X) sqrt(X)
 #define expn(X) exp(X)
 #define logn(X) log(X)
 #define sinn(X) sin(X)
+#define asinn(X) asin(X)
 #define cosn(X) cos(X)
+#define acosn(X) acos(X)
 #define tann(X) tan(X)
+#define atann(X) atan(X)
+#define fabsn(X) fabs(X)
+#define floorn(X) floor(X)
+#define pown(X, Y) pow(X, Y)
+#define M_PIn M_PI
+
+#endif
+
+enum DataKind { ObservedData, CorrectedData, ResidualData, ModelData, WeightData };
+
+enum PolarisationType { SinglePolarisation, DipolePolarisation, AutoDipolePolarisation, CrossDipolePolarisation, StokesIPolarisation, StokesQPolarisation, StokesUPolarisation, StokesVPolarisation, XXPolarisation, XYPolarisation, YXPolarisation, YYPolarisation };
+
 
 #endif // MSIO_TYPES
