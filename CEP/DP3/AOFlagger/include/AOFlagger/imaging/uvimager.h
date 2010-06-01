@@ -60,40 +60,40 @@ class UVImager {
 		 */
 		static void GetUVPosition(num_t &u, num_t &v, size_t timeIndex, size_t frequencyIndex, TimeFrequencyMetaDataCPtr metaData);
 
-		static double GetFringeStopFrequency(long double time, const Baseline &baseline, long double delayDirectionRA, long double delayDirectionDec, long double frequency);
+		static num_t GetFringeStopFrequency(num_t time, const Baseline &baseline, num_t delayDirectionRA, num_t delayDirectionDec, num_t frequency);
 		//static double GetFringeCount(long double timeStart, long double timeEnd, const Baseline &baseline, long double delayDirectionRA, long double delayDirectionDec, long double frequency);
-		static double GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsigned channelIndex, TimeFrequencyMetaDataCPtr metaData);
-		static double GetIntegratedFringeStopFrequency(long double timeStart, long double timeEnd, const Baseline &baseline, long double delayDirectionRA, long double delayDirectionDec, long double frequency, size_t steps);
+		static num_t GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsigned channelIndex, TimeFrequencyMetaDataCPtr metaData);
+		static num_t GetIntegratedFringeStopFrequency(num_t timeStart, num_t timeEnd, const Baseline &baseline, num_t delayDirectionRA, num_t delayDirectionDec, num_t frequency, size_t steps);
 		void Empty();
 		void PerformFFT();
 		bool HasUV() const throw() { return _uvReal != 0; }
 		bool HasFFT() const throw() { return _uvFTReal != 0; }
 		const class Image2D &FTReal() const throw() { return *_uvFTReal; }
 		const class Image2D &FTImaginary() const throw() { return *_uvFTImaginary; }
-		void SetUVScaling(long double newScale) throw()
+		void SetUVScaling(num_t newScale) throw()
 		{
 			_uvScaling = newScale;
 		}
 		void ApplyWeightsToUV();
-		void SetUVValue(long double u, long double v, long double r, long double i, long double weight);
+		void SetUVValue(num_t u, num_t v, num_t r, num_t i, num_t weight);
 	private:
 		void Clear();
 		struct AntennaCache {
-			long double wavelength;
-			long double dx, dy, dz;
+			num_t wavelength;
+			num_t dx, dy, dz;
 		};
 		void Image(const class IntegerDomain &frequencies);
 		void Image(const IntegerDomain &frequencies, const IntegerDomain &antenna1Domain, const IntegerDomain &antenna2Domain);
 		void Image(unsigned frequencyIndex, class AntennaInfo &antenna1, class AntennaInfo &antenna2, SingleFrequencySingleBaselineData *data);
 
 		// This is the fast variant.
-		void GetUVPosition(long double &u, long double &v, const SingleFrequencySingleBaselineData &data, const AntennaCache &cache);
-		void SetUVFTValue(long double u, long double v, long double r, long double i, long double weight);
+		void GetUVPosition(num_t &u, num_t &v, const SingleFrequencySingleBaselineData &data, const AntennaCache &cache);
+		void SetUVFTValue(num_t u, num_t v, num_t r, num_t i, num_t weight);
 
 
 		unsigned long _xRes, _yRes;
 		unsigned long _xResFT, _yResFT;
-		long double _uvScaling;
+		num_t _uvScaling;
 		class Image2D *_uvReal, *_uvImaginary, *_uvWeights;
 		class Image2D *_uvFTReal, *_uvFTImaginary;
 		class Image2D *_timeFreq;

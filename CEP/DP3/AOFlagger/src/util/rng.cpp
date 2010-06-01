@@ -123,7 +123,7 @@ void RNG::ComplexGaussianAmplitude(long double &r, long double &i)
 void RNG::ComplexGaussianAmplitude(num_t &r, num_t &i)
 {
 	num_t amplitude = Guassian();
-	num_t phase = Uniform() * 2.0 * M_PI;
-	r = amplitude * cos(phase);
-	i = amplitude * sin(phase);
+	num_t phase = Uniform() * 2.0 * M_PIn;
+	r = amplitude * cosn(phase);
+	i = amplitude * sinn(phase);
 }

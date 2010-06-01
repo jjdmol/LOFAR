@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
 		     << "(" << flaggedCount << " / " << sampleCount << ")" << endl;
 		
 		if(saveFlagLength) {
-			long double *data = new long double[lengthsSize];
+			num_t *data = new num_t[lengthsSize];
 			for(int i=0;i<lengthsSize;++i)
 				data[i] = lengthCounts[i];
 			if(set.FrequencyCount() < (set.MaxScanIndex()+1) && set.FrequencyCount()>2 && data[set.FrequencyCount()-1] > data[set.FrequencyCount()-2])

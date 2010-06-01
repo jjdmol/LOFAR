@@ -20,6 +20,8 @@
 #ifndef SINUSFITTER_H
 #define SINUSFITTER_H
 
+#include <AOFlagger/msio/types.h>
+
 #include <cstring>
 #include "math.h"
 
@@ -30,15 +32,15 @@ class SinusFitter {
 	public:
 		SinusFitter();
 		~SinusFitter();
-		void FindPhaseAndAmplitude(long double &phase, long double &amplitude, const long double *dataX, const long double *dataT, const size_t dataSize, const long double frequency) const throw();
-		void FindPhaseAndAmplitudeComplex(long double &phase, long double &amplitude, const long double *dataR, const long double *dataI, const long double *dataT, const size_t dataSize, const long double frequency) const throw();
+		void FindPhaseAndAmplitude(num_t &phase, num_t &amplitude, const num_t *dataX, const num_t *dataT, const size_t dataSize, const num_t frequency) const throw();
+		void FindPhaseAndAmplitudeComplex(num_t &phase, num_t &amplitude, const num_t *dataR, const num_t *dataI, const num_t *dataT, const size_t dataSize, const num_t frequency) const throw();
 
 
-		long double FindMean(const long double phase, const long double amplitude, const long double *dataX, const long double *dataT, const size_t dataSize, const long double frequency);
+		num_t FindMean(const num_t phase, const num_t amplitude, const num_t *dataX, const num_t *dataT, const size_t dataSize, const num_t frequency);
 
-		static long double Value(const long double phase, const long double amplitude, const long double t, const long double frequency, long double mean)
+		static num_t Value(const num_t phase, const num_t amplitude, const num_t t, const num_t frequency, num_t mean)
 		{
-			return cosl(phase + t * frequency) * amplitude + mean;
+			return cosn(phase + t * frequency) * amplitude + mean;
 		}
 
 		template<typename T> static T Phase(T real, T imaginary)

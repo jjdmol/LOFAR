@@ -94,22 +94,22 @@ class FringeStoppingFitter : public SurfaceFitMethod {
 		void PerformRFIFitOnOneChannel(unsigned y, unsigned windowSize);
 		void PerformRFIFit(unsigned yStart, unsigned yEnd);
 		void PerformRFIFit(unsigned yStart, unsigned yEnd, unsigned windowSize);
-		long double GetAmplitude(unsigned yStart, unsigned yEnd);
+		num_t GetAmplitude(unsigned yStart, unsigned yEnd);
 	private:
-		long double CalculateFitValue(const Image2D &image, size_t y);
-		inline long double CalculateMaskedAverage(const Image2D &image, size_t x, size_t yFrom, size_t yLength);
-		inline long double CalculateUnmaskedAverage(const Image2D &image, size_t x, size_t yFrom, size_t yLength);
-		void CalculateFitValue(const Image2D &real, const Image2D &imaginary, size_t x, size_t yFrom, size_t yLength, long double &rValue, long double &iValue);
-		long double GetIntFringeFrequency(size_t x, size_t y);
-		long double GetIntFringeFrequency(size_t xStart, size_t xEnd, size_t y);
-		long double GetFringeFrequency(size_t x, size_t y);
+		num_t CalculateFitValue(const Image2D &image, size_t y);
+		inline num_t CalculateMaskedAverage(const Image2D &image, size_t x, size_t yFrom, size_t yLength);
+		inline num_t CalculateUnmaskedAverage(const Image2D &image, size_t x, size_t yFrom, size_t yLength);
+		void CalculateFitValue(const Image2D &real, const Image2D &imaginary, size_t x, size_t yFrom, size_t yLength,num_t  &rValue, num_t &iValue);
+		num_t GetIntFringeFrequency(size_t x, size_t y);
+		num_t GetIntFringeFrequency(size_t xStart, size_t xEnd, size_t y);
+		num_t GetFringeFrequency(size_t x, size_t y);
 
-		void GetRFIValue(long double &r, long double &i, int x, int y, const class Baseline &baseline, long double rfiPhase, long double rfiStrength);
-		long double GetRFIFitError(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd, int y, long double rfiPhase, long double rfiStrength);
-		long double GetRowVariance(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd);
+		void GetRFIValue(num_t &r, num_t &i, int x, int y, const class Baseline &baseline, num_t rfiPhase, num_t rfiStrength);
+		num_t GetRFIFitError(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd, int y, num_t rfiPhase, num_t rfiStrength);
+		num_t GetRowVariance(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd);
 //		long double MinimizeRFIPhase(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd, int y);
 //		long double MinimizeRFIStrength(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd, int y, long double phase);
-		void MinimizeRFIFitError(long double &phase, long double &amplitude, SampleRowCPtr real, SampleRowCPtr imaginary, unsigned xStart, unsigned xEnd, unsigned y) const throw();
+		void MinimizeRFIFitError(num_t &phase, num_t &amplitude, SampleRowCPtr real, SampleRowCPtr imaginary, unsigned xStart, unsigned xEnd, unsigned y) const throw();
 		
 		void PerformRFIFitOnOneRow(SampleRowCPtr real, SampleRowCPtr imaginary, unsigned y);
 		void PerformRFIFitOnOneRow(SampleRowCPtr real, SampleRowCPtr imaginary, unsigned y, unsigned windowSize);
@@ -124,7 +124,7 @@ class FringeStoppingFitter : public SurfaceFitMethod {
 		const class BandInfo *_bandInfo;
 		const class AntennaInfo *_antenna1Info, *_antenna2Info;
 		const std::vector<double> *_observationTimes;
-		long double _fringesToConsider;
+		num_t _fringesToConsider;
 		size_t _minWindowSize, _maxWindowSize;
 		bool _fitChannelsIndividually;
 		bool _returnFittedValue, _returnMeanValue;

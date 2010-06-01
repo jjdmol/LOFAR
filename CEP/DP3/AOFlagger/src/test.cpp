@@ -123,17 +123,17 @@ int main(int argc, char *argv[])
 	cout << "All tests were executed." << endl;
 
 	const size_t size = 25000;
-	long double dataR[size], dataI[size], datat[size];
-	long double frequency = -1.1L*M_PI;
+	num_t dataR[size], dataI[size], datat[size];
+	num_t frequency = -1.1L*M_PI;
 	
-	for(long double shift=0.0L;shift<6.4;shift+=0.5) {
+	for(num_t shift=0.0L;shift<6.4;shift+=0.5) {
 		for(unsigned i=0;i<size;++i) {
 			datat[i]=(i-size/2)/10.0L;
-			dataR[i]=cosl(datat[i] * frequency + shift)*20.0L + 5.0L;
-			dataI[i]=-sinl(datat[i] * frequency + shift)*20.0L + 5.0L;
+			dataR[i]=cosn(datat[i] * frequency + shift)*20.0L + 5.0L;
+			dataI[i]=-sinn(datat[i] * frequency + shift)*20.0L + 5.0L;
 		}
 		SinusFitter fitter;
-		long double phase=0.0L, amplitude=0.0L;
+		num_t phase=0.0L, amplitude=0.0L;
 		fitter.FindPhaseAndAmplitude(phase, amplitude, dataR, datat, size, frequency);
 		long double mean = fitter.FindMean(phase, amplitude, dataR, datat, size, frequency);
 		cout << "Single amplitude: " << amplitude << ", phase: " << phase << ", mean = " << mean << std::endl;

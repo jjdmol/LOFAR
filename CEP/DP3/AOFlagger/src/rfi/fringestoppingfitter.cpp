@@ -47,7 +47,7 @@ void FringeStoppingFitter::PerformFit(unsigned taskNumber)
 		{
 			for(size_t y=0;y<_originalData->ImageHeight();++y)
 			{
-				long double r, i;
+				num_t r, i;
 				CalculateFitValue(*_originalData->GetRealPart(), *_originalData->GetImaginaryPart(), x, y, 1, r, i);
 	
 				_realBackground->SetValue(x, y, r);
@@ -56,7 +56,7 @@ void FringeStoppingFitter::PerformFit(unsigned taskNumber)
 		}
 		else
 		{
-			long double r, i;
+			num_t r, i;
 			CalculateFitValue(*_originalData->GetRealPart(), *_originalData->GetImaginaryPart(), x, 0, _originalData->ImageHeight(), r, i);
 		
 			for(size_t y=0;y<_originalData->ImageHeight();++y)
@@ -74,7 +74,7 @@ void FringeStoppingFitter::PerformFitOnOneChannel(unsigned y)
 	{
 		for(size_t x=0;x<_originalData->ImageWidth();++x)
 		{
-			long double r, i;
+			num_t r, i;
 			CalculateFitValue(*_originalData->GetRealPart(), *_originalData->GetImaginaryPart(), x, y, 1, r, i);
 
 			_realBackground->SetValue(x, y, r);
@@ -85,7 +85,7 @@ void FringeStoppingFitter::PerformFitOnOneChannel(unsigned y)
 	{
 		for(size_t x=0;x<_originalData->ImageWidth();++x)
 		{
-		long double r, i;
+		num_t r, i;
 		CalculateFitValue(*_originalData->GetRealPart(), *_originalData->GetImaginaryPart(), x, 0, _originalData->ImageHeight(), r, i);
 		
 			_realBackground->SetValue(x, y, r);
@@ -107,25 +107,25 @@ void FringeStoppingFitter::PerformFringeStop()
 		deltaTime = 1.0;
 	Baseline baseline(*_antenna1Info, *_antenna2Info);
 
-	long double *rotations = new long double[real->Height()];
+	num_t *rotations = new num_t[real->Height()];
 	for(size_t y=0;y<real->Height();++y)
 		rotations[y] = 0.0L;
 	for(size_t x=0;x<real->Width();++x)
 	{
 		for(size_t y=0;y<real->Height();++y)
 		{
-			long double r = real->Value(x, y);
-			long double i = imaginary->Value(x, y);
-			long double freq = -rotations[y];
+			num_t r = real->Value(x, y);
+			num_t i = imaginary->Value(x, y);
+			num_t freq = -rotations[y];
 			rotations[y] +=
 				GetFringeFrequency(x, y) * 2.0L * M_PIl;
-			long double intRotations =  
+			num_t intRotations =  
 				deltaTime * UVImager::GetFringeCount(0, x, y, _metaData);
 			freq -= intRotations;
 
-			long double cosfreq = cosl(freq*2.0L*M_PIl), sinfreq = sinl(freq*2.0L*M_PIl);
+			num_t cosfreq = cosn(freq*2.0L*M_PIl), sinfreq = sinn(freq*2.0L*M_PIl);
 			
-			long double newR = r * cosfreq - i * sinfreq;
+			num_t newR = r * cosfreq - i * sinfreq;
 			i = r * sinfreq + i * cosfreq;
 			
 			_realBackground->SetValue(x, y, newR);
@@ -135,9 +135,9 @@ void FringeStoppingFitter::PerformFringeStop()
 	delete[] rotations;
 }
 
-long double FringeStoppingFitter::CalculateMaskedAverage(const Image2D &image, size_t x, size_t yFrom, size_t yLength)
+num_t FringeStoppingFitter::CalculateMaskedAverage(const Image2D &image, size_t x, size_t yFrom, size_t yLength)
 {
-	long double average = 0.0L;
+	num_t average = 0.0L;
 	size_t count = 0;
 	for(size_t i = yFrom; i < yFrom+yLength; ++i)
 	{
@@ -150,9 +150,9 @@ long double FringeStoppingFitter::CalculateMaskedAverage(const Image2D &image, s
 	return average / (long double) count;
 }
 
-long double FringeStoppingFitter::CalculateUnmaskedAverage(const Image2D &image, size_t x, size_t yFrom, size_t yLength)
+num_t FringeStoppingFitter::CalculateUnmaskedAverage(const Image2D &image, size_t x, size_t yFrom, size_t yLength)
 {
-	long double average = 0.0L;
+	num_t average = 0.0L;
 	size_t count = 0;
 	for(size_t i = yFrom; i < yFrom+yLength; ++i)
 	{
@@ -162,14 +162,14 @@ long double FringeStoppingFitter::CalculateUnmaskedAverage(const Image2D &image,
 			++count;
 		}
 	}
-	return average / (long double) count;
+	return average / (num_t) count;
 }
 
-void FringeStoppingFitter::CalculateFitValue(const Image2D &real, const Image2D &imaginary, size_t x, size_t yFrom, size_t yLength, long double &rValue, long double &iValue)
+void FringeStoppingFitter::CalculateFitValue(const Image2D &real, const Image2D &imaginary, size_t x, size_t yFrom, size_t yLength, num_t &rValue, num_t &iValue)
 {
 	size_t windowWidth;
 	size_t yMid = yFrom + yLength/2;
-	long double estimatedFrequency = GetIntFringeFrequency(x, yMid);
+	num_t estimatedFrequency = GetIntFringeFrequency(x, yMid);
 	windowWidth = (size_t) ceil(_fringesToConsider/estimatedFrequency);
 	if(windowWidth > _maxWindowSize)
 		windowWidth = _maxWindowSize;
@@ -193,10 +193,10 @@ void FringeStoppingFitter::CalculateFitValue(const Image2D &real, const Image2D 
 		xRight = real.Width();
 	}
 
-	long double fringeFrequency =  GetFringeFrequency(x, yMid) * 2.0L * M_PIl;
-	long double *dataT = new long double[xRight - xLeft];
-	long double *dataR = new long double[xRight - xLeft];
-	long double *dataI = new long double[xRight - xLeft];
+	num_t fringeFrequency =  GetFringeFrequency(x, yMid) * 2.0 * M_PIn;
+	num_t *dataT = new num_t[xRight - xLeft];
+	num_t *dataR = new num_t[xRight - xLeft];
+	num_t *dataI = new num_t[xRight - xLeft];
 	
 	size_t index = 0;
 	for(size_t i=xLeft;i<xRight;++i)
@@ -224,20 +224,20 @@ void FringeStoppingFitter::CalculateFitValue(const Image2D &real, const Image2D 
 	}
 
 	SinusFitter fitter;
-	long double
+	num_t
 		phaseR, phaseI, amplitude, meanR, meanI;
 
 	fitter.FindPhaseAndAmplitudeComplex(phaseR, amplitude, dataR, dataI, dataT, index, fringeFrequency);
 	phaseI = fmodl(phaseR+M_PIl*0.5L, 2.0L*M_PIl);
 	meanR = fitter.FindMean(phaseR, amplitude, dataR, dataT, index, fringeFrequency);
 	meanI = fitter.FindMean(phaseI, amplitude, dataI, dataT, index, fringeFrequency);
-	long double fitValueR =
+	num_t fitValueR =
 		SinusFitter::Value(phaseR, amplitude, x, fringeFrequency, meanR);
-	long double fitValueI =
+	num_t fitValueI =
 		SinusFitter::Value(phaseI, amplitude, x, fringeFrequency, meanI);
-	long double actualValueR =
+	num_t actualValueR =
 		CalculateMaskedAverage(real, x, yFrom, yLength);
-	long double actualValueI =
+	num_t actualValueI =
 		CalculateMaskedAverage(imaginary, x, yFrom, yLength);
 	delete[] dataR;
 	delete[] dataI;
@@ -260,115 +260,115 @@ void FringeStoppingFitter::CalculateFitValue(const Image2D &real, const Image2D 
 	}
 }
 
-long double FringeStoppingFitter::GetIntFringeFrequency(size_t x, size_t y)
+num_t FringeStoppingFitter::GetIntFringeFrequency(size_t x, size_t y)
 {
 	return GetIntFringeFrequency(x, x+1, y);
 
 }
 
-long double FringeStoppingFitter::GetIntFringeFrequency(size_t xStart, size_t xEnd, size_t y)
+num_t FringeStoppingFitter::GetIntFringeFrequency(size_t xStart, size_t xEnd, size_t y)
 {
 	double deltaTime;
 	if(_observationTimes->size()>1)
 		deltaTime = (*_observationTimes)[1] - (*_observationTimes)[0];
 	else
 		deltaTime = 1.0;
-	long double observeFreq = _bandInfo->channels[y].frequencyHz;
+	num_t observeFreq = _bandInfo->channels[y].frequencyHz;
 	Baseline baseline(*_antenna1Info, *_antenna2Info);
-	long double delayRA = _fieldInfo->delayDirectionRA;
-	long double delayDec = _fieldInfo->delayDirectionDec;
+	num_t delayRA = _fieldInfo->delayDirectionRA;
+	num_t delayDec = _fieldInfo->delayDirectionDec;
 	return deltaTime *
 		UVImager::GetIntegratedFringeStopFrequency((*_observationTimes)[xStart], (*_observationTimes)[xEnd-1]+deltaTime, baseline, delayRA, delayDec, observeFreq, xEnd-xStart);
 }
 
 
-long double FringeStoppingFitter::GetFringeFrequency(size_t x, size_t y)
+num_t FringeStoppingFitter::GetFringeFrequency(size_t x, size_t y)
 {
 	double deltaTime;
 	if(_observationTimes->size()>1)
 		deltaTime = (*_observationTimes)[1] - (*_observationTimes)[0];
 	else
 		deltaTime = 1.0;
-	long double observeFreq = _bandInfo->channels[y].frequencyHz;
+	num_t observeFreq = _bandInfo->channels[y].frequencyHz;
 	Baseline baseline(*_antenna1Info, *_antenna2Info);
-	long double delayRA = _fieldInfo->delayDirectionRA;
-	long double delayDec = _fieldInfo->delayDirectionDec;
+	num_t delayRA = _fieldInfo->delayDirectionRA;
+	num_t delayDec = _fieldInfo->delayDirectionDec;
 	return deltaTime *
 		UVImager::GetFringeStopFrequency((*_observationTimes)[x], baseline, delayRA, delayDec, observeFreq);
 }
 
-void FringeStoppingFitter::GetRFIValue(long double &r, long double &i, int x, int y, const Baseline &, long double rfiPhase, long double rfiStrength)
+void FringeStoppingFitter::GetRFIValue(num_t &r, num_t &i, int x, int y, const Baseline &, num_t rfiPhase, num_t rfiStrength)
 {
-	long double rotations =  
+	num_t rotations =  
 		UVImager::GetFringeCount(0, x, y, _metaData);
-	r = cosl(rotations * 2.0L * M_PIl + rfiPhase) * rfiStrength;
-	i = sinl(rotations * 2.0L * M_PIl + rfiPhase) * rfiStrength;
+	r = cosn(rotations * 2.0L * M_PIl + rfiPhase) * rfiStrength;
+	i = sinn(rotations * 2.0L * M_PIl + rfiPhase) * rfiStrength;
 }
 
-long double FringeStoppingFitter::GetRFIFitError(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd, int y, long double rfiPhase, long double rfiStrength)
+num_t FringeStoppingFitter::GetRFIFitError(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd, int y, num_t rfiPhase, num_t rfiStrength)
 {
 	Baseline baseline(*_antenna1Info, *_antenna2Info);
-	long double error = 0.0L;
+	num_t error = 0.0L;
 
 	for(int x=xStart;x<xEnd;++x)
 	{
-		long double r,i;
+		num_t r,i;
 		GetRFIValue(r,i,x,y,baseline,rfiPhase,rfiStrength);
-		long double er = real->Value(x) - r;
-		long double ei = imaginary->Value(x) - i;
+		num_t er = real->Value(x) - r;
+		num_t ei = imaginary->Value(x) - i;
 		error += sqrtl(er*er + ei*ei);
 	}
 
 	return error;
 }
 
-void FringeStoppingFitter::MinimizeRFIFitError(long double &phase, long double &amplitude, SampleRowCPtr real, SampleRowCPtr imaginary, unsigned xStart, unsigned xEnd, unsigned y) const throw()
+void FringeStoppingFitter::MinimizeRFIFitError(num_t &phase, num_t &amplitude, SampleRowCPtr real, SampleRowCPtr imaginary, unsigned xStart, unsigned xEnd, unsigned y) const throw()
 {
 	// calculate 1/N * \sum_x v(t) e^{2 i \pi \tau_g(t)}, where \tau_g(t) is the number of phase rotations
 	// because of the geometric delay as function of time x.
 
 	const Baseline baseline(*_antenna1Info, *_antenna2Info);
 
-	long double sumR = 0.0L, sumI = 0.0L;
+	num_t sumR = 0.0L, sumI = 0.0L;
 	size_t n = 0;
 	for(unsigned t=xStart;t<xEnd;++t)
 	{
-		const long double vR = real->Value(t);
-		const long double vI = imaginary->Value(t);
+		const num_t vR = real->Value(t);
+		const num_t vI = imaginary->Value(t);
 		
 		if(std::isfinite(vR) && std::isfinite(vI))
 		{
-			const long double tauge = UVImager::GetFringeCount(0, t, y, _metaData);
+			const num_t tauge = UVImager::GetFringeCount(0, t, y, _metaData);
 	
-			sumR += vR * cosl(2.0L * M_PIl * tauge);
-			sumR += vI * sinl(2.0L * M_PIl * tauge);
+			sumR += vR * cosn(2.0L * M_PIl * tauge);
+			sumR += vI * sinn(2.0L * M_PIl * tauge);
 	
-			sumI += vR * sinl(2.0L * M_PIl * tauge);
-			sumI -= vI * cosl(2.0L * M_PIl * tauge);
+			sumI += vR * sinn(2.0L * M_PIl * tauge);
+			sumI -= vI * cosn(2.0L * M_PIl * tauge);
 			++n;
 		}
 	}
 
-	sumR /= (long double) n;
-	sumI /= (long double) n;
+	sumR /= (num_t) n;
+	sumI /= (num_t) n;
 
 	phase = SinusFitter::Phase(sumR, sumI);
 	amplitude = sqrtl(sumR*sumR + sumI*sumI);
 }
 
-long double FringeStoppingFitter::GetRowVariance(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd)
+num_t FringeStoppingFitter::GetRowVariance(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd)
 {
-	long double avgSum = 0.0L, varSum = 0.0L;
+	num_t avgSum = 0.0L, varSum = 0.0L;
 	for(int x=xStart;x<xEnd;++x)
 	{
-		long double r = real->Value(x), i = imaginary->Value(x);
+		num_t r = real->Value(x), i = imaginary->Value(x);
 		avgSum += sqrtl(r*r + i*i);
 	}
 	avgSum /= (xEnd - xStart);
 	for(int x=xStart;x<xEnd;++x)
 	{
-		long double r = real->Value(x), i = imaginary->Value(x);
-		long double a = sqrtl(r*r + i*i);
+		num_t r = real->Value(x), i = imaginary->Value(x);
+		num_t a = sqrtl(r*r + i*i);
 		varSum += (a - avgSum) * (a - avgSum);
 	}
 	return sqrtl(varSum / (xEnd - xStart));
@@ -384,12 +384,12 @@ void FringeStoppingFitter::PerformRFIFitOnOneChannel(unsigned y)
 
 void FringeStoppingFitter::PerformRFIFitOnOneRow(SampleRowCPtr real, SampleRowCPtr imaginary, unsigned y)
 {
-	long double phase, strength;
+	num_t phase, strength;
 	MinimizeRFIFitError(phase, strength, real, imaginary, 0, _originalData->ImageWidth(), y);
 	for(size_t x=0;x<_originalData->ImageWidth();++x)
 	{
 		Baseline baseline(*_antenna1Info, *_antenna2Info);
-		long double rfiR, rfiI;
+		num_t rfiR, rfiI;
 		GetRFIValue(rfiR, rfiI, x, y, baseline, phase, strength);
 		_realBackground->SetValue(x, y, rfiR);
 		_imaginaryBackground->SetValue(x, y, rfiI);
@@ -420,11 +420,11 @@ void FringeStoppingFitter::PerformRFIFitOnOneRow(SampleRowCPtr real, SampleRowCP
 			windowEnd = x + halfWindowSize;
 		else
 			windowEnd =  real->Size();
-		long double windowPhase, windowStrength;
+		num_t windowPhase, windowStrength;
 		 MinimizeRFIFitError(windowPhase, windowStrength, real, imaginary, windowStart, windowEnd, y);
 
 		Baseline baseline(*_antenna1Info, *_antenna2Info);
-		long double rfiR, rfiI;
+		num_t rfiR, rfiI;
 		GetRFIValue(rfiR, rfiI, x, y, baseline, windowPhase, windowStrength);
 		_realBackground->SetValue(x, y, rfiR);
 		_imaginaryBackground->SetValue(x, y, rfiI);
@@ -455,13 +455,13 @@ void FringeStoppingFitter::PerformRFIFit(unsigned yStart, unsigned yEnd)
 	PerformRFIFitOnOneRow(real, imaginary, (yStart + yEnd) / 2);
 }
 
-long double FringeStoppingFitter::GetAmplitude(unsigned yStart, unsigned yEnd)
+num_t FringeStoppingFitter::GetAmplitude(unsigned yStart, unsigned yEnd)
 {
 	unsigned y = (yStart + yEnd) / 2;
 	SampleRowPtr
 		real = SampleRow::CreateFromRowSum(_originalData->GetRealPart(), yStart, yEnd),
 		imaginary = SampleRow::CreateFromRowSum(_originalData->GetImaginaryPart(), yStart, yEnd);
-	long double phase, amplitude;
+	num_t phase, amplitude;
 	MinimizeRFIFitError(phase, amplitude, real, imaginary, 0, _originalData->ImageWidth(), y);
 	return amplitude;
 }

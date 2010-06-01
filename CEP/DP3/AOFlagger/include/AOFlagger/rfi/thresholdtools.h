@@ -28,18 +28,18 @@
 */
 class ThresholdTools{
 	public:
-		static void MeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, long double &mean, long double &stddev);
-		static long double Mode(Image2DCPtr input, Mask2DCPtr mask);
-		static long double WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask);
-		static long double WinsorizedMode(Image2DCPtr image);
-		static void WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, long double &mean, long double &variance);
-		static void WinsorizedMeanAndStdDev(Image2DCPtr image, long double &mean, long double &variance);
-		static long double MinValue(Image2DCPtr image, Mask2DCPtr mask);
-		static long double MaxValue(Image2DCPtr image, Mask2DCPtr mask);
+		static void MeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &mean, num_t &stddev);
+		static num_t Mode(Image2DCPtr input, Mask2DCPtr mask);
+		static num_t WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask);
+		static num_t WinsorizedMode(Image2DCPtr image);
+		static void WinsorizedMeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &mean, num_t &variance);
+		static void WinsorizedMeanAndStdDev(Image2DCPtr image, num_t &mean, num_t &variance);
+		static num_t MinValue(Image2DCPtr image, Mask2DCPtr mask);
+		static num_t MaxValue(Image2DCPtr image, Mask2DCPtr mask);
 		static void SetFlaggedValuesToZero(Image2DPtr dest, Mask2DCPtr mask);
 		static void CountMaskLengths(Mask2DCPtr mask, int *lengths, size_t lengthsSize);
-		static void OneDimensionalConvolution(long double *data, unsigned dataSize, const long double *kernel, unsigned kernelSize);
-		static void OneDimensionalGausConvolution(long double *data, unsigned dataSize, long double variance);
+		static void OneDimensionalConvolution(num_t *data, unsigned dataSize, const num_t *kernel, unsigned kernelSize);
+		static void OneDimensionalGausConvolution(num_t *data, unsigned dataSize, num_t variance);
 		static void FilterConnectedSamples(Mask2DPtr mask, size_t minConnectedSampleArea, bool eightConnected=true);
 		static void FilterConnectedSample(Mask2DPtr mask, unsigned x, unsigned y, size_t minConnectedSampleArea, bool eightConnected=true);
 		static void UnrollPhase(Image2DPtr image);

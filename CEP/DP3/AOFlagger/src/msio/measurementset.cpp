@@ -233,8 +233,8 @@ struct FieldInfo MeasurementSet::GetFieldInfo(unsigned fieldIndex)
 	field.delayDirectionRA = *delayDirectionIterator;
 	++delayDirectionIterator;
 	field.delayDirectionDec = *delayDirectionIterator;
-	field.delayDirectionDecNegCos = cosl(-field.delayDirectionDec);
-	field.delayDirectionDecNegSin = sinl(-field.delayDirectionDec);
+	field.delayDirectionDecNegCos = cosn(-field.delayDirectionDec);
+	field.delayDirectionDecNegSin = sinn(-field.delayDirectionDec);
 
 	return field;
 }

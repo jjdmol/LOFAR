@@ -105,13 +105,13 @@ struct Baseline {
 	Baseline(EarthPosition _antenna1, EarthPosition _antenna2)
 		: antenna1(_antenna1), antenna2(_antenna2) { }
 
-	long double Distance() {
+	num_t Distance() {
 		num_t dx = antenna1.x-antenna2.x;
 		num_t dy = antenna1.y-antenna2.y;
 		num_t dz = antenna1.z-antenna2.z;
-		return sqrtl(dx*dx+dy*dy+dz*dz);
+		return sqrtn(dx*dx+dy*dy+dz*dz);
 	}
-	long double Angle() {
+	num_t Angle() {
 		num_t dz = antenna1.z-antenna2.z;
  		// baseline is either orthogonal to the earths axis, or
 		// the length of the baseline is zero. 
@@ -119,8 +119,8 @@ struct Baseline {
 		num_t transf = 1.0/(antenna1.z-antenna2.z);
 		num_t dx = (antenna1.x-antenna2.x)*transf;
 		num_t dy = (antenna1.y-antenna2.y)*transf;
-		num_t length = sqrtl(dx*dx + dy*dy + 1.0);
-		return acosl(1.0/length);
+		num_t length = sqrtn(dx*dx + dy*dy + 1.0);
+		return acosn(1.0/length);
 	}
 };
 

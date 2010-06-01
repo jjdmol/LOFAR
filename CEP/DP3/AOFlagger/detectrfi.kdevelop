@@ -19,7 +19,7 @@
   <kdevcustomproject>
     <filelistdirectory>/</filelistdirectory>
     <run>
-      <mainprogram>CEP/DP3/AOFlagger/src/rficonsole</mainprogram>
+      <mainprogram>CEP/DP3/AOFlagger/src/rfigui</mainprogram>
       <directoryradio>executable</directoryradio>
       <customdirectory>/</customdirectory>
       <programargs>-j 1 -strategy /Users/users/offringa/Desktop/best.rfis /data/users/offringa/LOFAR-data/L2010_06759/SB10.MS/</programargs>

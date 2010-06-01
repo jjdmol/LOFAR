@@ -245,7 +245,7 @@ void MethodIterator::OutputMethodDetails(const SurfaceFitMethod &, const Stopwat
 
 void MethodIterator::OutputStatistics(Image2DCPtr image, Mask2DCPtr mask)
 {
-	long double mean, stdDev, wMean, wStdDev;
+	num_t mean, stdDev, wMean, wStdDev;
 	ThresholdTools::MeanAndStdDev(image, mask, mean, stdDev);
 	ThresholdTools::WinsorizedMeanAndStdDev(image, mask, wMean, wStdDev);
 	unsigned long flagCount = mask->GetCount<true>();
@@ -257,9 +257,9 @@ void MethodIterator::OutputStatistics(Image2DCPtr image, Mask2DCPtr mask)
 	_statWriter->SetValueInc(wStdDev);
 	_statWriter->SetValueInc(ThresholdTools::MinValue(image, mask));
 	_statWriter->SetValueInc(ThresholdTools::MaxValue(image, mask));
-	_statWriter->SetValueInc((double) flagCount * 100.0 / (mask->Width()*mask->Height()), 2);
-	_statWriter->SetValueInc((double) GetMaskOverlap(mask, _originalFlagging) * 100.0 / (mask->Width()*mask->Height()), 2);
-	_statWriter->SetValueInc((double) orFlagCount * 100.0 / (mask->Width()*mask->Height()), 2);
+	_statWriter->SetValueInc((num_t) flagCount * 100.0 / (mask->Width()*mask->Height()), 2);
+	_statWriter->SetValueInc((num_t) GetMaskOverlap(mask, _originalFlagging) * 100.0 / (mask->Width()*mask->Height()), 2);
+	_statWriter->SetValueInc((num_t) orFlagCount * 100.0 / (mask->Width()*mask->Height()), 2);
 }
 
 void MethodIterator::SaveFlaggingToPng(Image2DCPtr image, Mask2DCPtr mask, const std::string &filename, const BandInfo *bandInfo, bool showFlagging)
@@ -273,11 +273,11 @@ void MethodIterator::SaveFlaggingToPng(Image2DCPtr image, Mask2DCPtr mask, const
 	file.BeginWrite();
 	file.Clear(0, 0, 0, 255);
 
-	long double max, min;
+	num_t max, min;
 	ColorMap *map1;
 
 	if(winsorizedStretch) {
-		long double mean, stddev, genMax, genMin;
+		num_t mean, stddev, genMax, genMin;
 		if(showFlagging) {
 			ThresholdTools::WinsorizedMeanAndStdDev(image, mask, mean, stddev);
 			genMax = ThresholdTools::MaxValue(image, mask);
@@ -317,7 +317,7 @@ void MethodIterator::SaveFlaggingToPng(Image2DCPtr image, Mask2DCPtr mask, const
 	}
 	plot.StartGrid("");
 	for(unsigned y=0;y < image->Height(); ++y) {
-		long double freq;
+		num_t freq;
 		if(bandInfo != 0) {
 			freq = bandInfo->channels[y].frequencyHz / 1000000.0L;
 		} else {
@@ -325,7 +325,7 @@ void MethodIterator::SaveFlaggingToPng(Image2DCPtr image, Mask2DCPtr mask, const
 		}
 		for(unsigned x=0;x < image->Width(); ++x) {
 			if(mask->Value(x, y) == 0.0 || !showFlagging) {
-				long double val = image->Value(x, y);
+				num_t val = image->Value(x, y);
 				if(val > max) val = max;
 				else if(val < min) val = min;
 				plot.PushDataPoint(x, freq, val);
@@ -344,7 +344,7 @@ void MethodIterator::SaveFlaggingToPng(Image2DCPtr image, Mask2DCPtr mask, const
 
 	if(showFlagging) {
 		for(unsigned y=0;y < image->Height(); ++y) {
-			long double freq, freqdist;
+			num_t freq, freqdist;
 			if(bandInfo != 0) {
 				freq = bandInfo->channels[y].frequencyHz / 1000000.0L;
 				freqdist = (bandInfo->channels[1].frequencyHz - bandInfo->channels[0].frequencyHz) / 1000000.0L;
