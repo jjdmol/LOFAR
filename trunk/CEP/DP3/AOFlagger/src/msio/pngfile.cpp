@@ -123,19 +123,11 @@ void PngFile::SetFromImage(const class Image2D &image, const class ColorMap &col
 	for(unsigned long y=0;y<image.Height();y++) {
 		for(unsigned long x=0;x<image.Width();x++) {
 			int xa = x * PixelSize();
-			if(!image.IsSet(dataptr)) {
-				// Not set; output purely transparent pixel
-				row_pointers[y][xa]=0;
-				row_pointers[y][xa+1]=0;
-				row_pointers[y][xa+2]=0;
-				row_pointers[y][xa+3]=0;
-			} else {
-				row_pointers[y][xa]=colorMap.ValueToColorR(image.Value(dataptr) * normalizeFactor);
-				row_pointers[y][xa+1]=colorMap.ValueToColorG(image.Value(dataptr) * normalizeFactor);
-				row_pointers[y][xa+2]=colorMap.ValueToColorB(image.Value(dataptr) * normalizeFactor);
-				row_pointers[y][xa+3]=colorMap.ValueToColorA(image.Value(dataptr) * normalizeFactor);
-			}
-			dataptr++;
+			row_pointers[y][xa]=colorMap.ValueToColorR(image.Value(dataptr) * normalizeFactor);
+			row_pointers[y][xa+1]=colorMap.ValueToColorG(image.Value(dataptr) * normalizeFactor);
+			row_pointers[y][xa+2]=colorMap.ValueToColorB(image.Value(dataptr) * normalizeFactor);
+			row_pointers[y][xa+3]=colorMap.ValueToColorA(image.Value(dataptr) * normalizeFactor);
+			++dataptr;
 		}
 	}
 }
@@ -167,22 +159,14 @@ void PngFile::Save(const Image2D &image, const ColorMap &colorMap) throw(IOExcep
 	png_bytep *row_pointers = RowPointers();
 	
 	unsigned long dataptr = 0;
-	for(unsigned long y=0;y<image.Height();y++) {
-		for(unsigned long x=0;x<image.Width();x++) {
+	for(unsigned long y=0;y<image.Height();++y) {
+		for(unsigned long x=0;x<image.Width();++x) {
 			int xa = x * PixelSize();
-			if(!image.IsSet(dataptr)) {
-				// Not set; output purely transparent pixel
-				row_pointers[y][xa]=0;
-				row_pointers[y][xa+1]=0;
-				row_pointers[y][xa+2]=0;
-				row_pointers[y][xa+3]=0;
-			} else {
-				row_pointers[y][xa]=colorMap.ValueToColorR(image.Value(dataptr) * normalizeFactor);
-				row_pointers[y][xa+1]=colorMap.ValueToColorG(image.Value(dataptr) * normalizeFactor);
-				row_pointers[y][xa+2]=colorMap.ValueToColorB(image.Value(dataptr) * normalizeFactor);
-				row_pointers[y][xa+3]=colorMap.ValueToColorA(image.Value(dataptr) * normalizeFactor);
-			}
-			dataptr++;
+			row_pointers[y][xa]=colorMap.ValueToColorR(image.Value(dataptr) * normalizeFactor);
+			row_pointers[y][xa+1]=colorMap.ValueToColorG(image.Value(dataptr) * normalizeFactor);
+			row_pointers[y][xa+2]=colorMap.ValueToColorB(image.Value(dataptr) * normalizeFactor);
+			row_pointers[y][xa+3]=colorMap.ValueToColorA(image.Value(dataptr) * normalizeFactor);
+			++dataptr;
 		}
 	}
 }

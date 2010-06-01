@@ -173,21 +173,6 @@ class Image2D {
 		inline num_t Value(long ptr) const { return _data[ptr]; }
 		
 		/**
-		 * Tests whether the value has been set.
-		 * @param x x-coordinate
-		 * @param y y-coordinate
-		 * @return @c true if value has been set.
-		 */
-		inline bool IsSet(long x, long y) const { return _isSet[y*_width+x]; }
-		
-		/**
-		 * Tests whether the value has been set.
-		 * @param ptr The pointer to the position.
-		 * @return @c true if value has been set.
-		 */
-		inline bool IsSet(long ptr) const { return _isSet[ptr]; }
-		
-		/**
 		 * Retrieve the width of the image.
 		 * @return Width of the image.
 		 */
@@ -208,7 +193,6 @@ class Image2D {
 		inline void SetValue(long x, long y, num_t newValue)
 		{
 			long i = y*_width+x;
-			_isSet[i] = true;
 			_data[i] = newValue;
 		}
 
@@ -219,11 +203,7 @@ class Image2D {
 		inline void AddValue(long x, long y, num_t addValue)
 		{
 			long i = y*_width+x;
-			if(_isSet[i])
-				_data[i] += addValue;
-			else
-				_data[i] = addValue;
-			_isSet[i] = true;
+			_data[i] += addValue;
 		}
 		
 		/**
@@ -319,7 +299,6 @@ class Image2D {
 		Image2D(long width, long height);
 		unsigned long _width, _height;
 		num_t *_data;
-		bool *_isSet;
 
 		//static long _imageCount;
 		//long _thisImage;

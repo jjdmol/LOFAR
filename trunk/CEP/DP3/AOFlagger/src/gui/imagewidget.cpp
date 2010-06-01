@@ -76,7 +76,7 @@ void ImageWidget::Update()
 					int xa = x * 4;
 					char r,g,b,a;
 					bool altMap = false;
-					if(!_image->IsSet(x, y) || !std::isfinite(_image->Value(x, y))) {
+					if(!std::isfinite(_image->Value(x, y))) {
 						// Not set; output purely transparent pixel
 						r = 0; g = 0; b = 0; a = 255;
 					} else {

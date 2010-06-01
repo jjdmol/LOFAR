@@ -163,32 +163,27 @@ void TimeFrequencyWidget::Update() throw()
 			for(unsigned long x=_startTime;x<_endTime;++x) {
 				int xa = (x-_startTime) * 4;
 				char r,g,b,a;
-				if(!_image->IsSet(x, y)) {
-					// Not set; output purely transparent pixel
-					r = 0; g = 0; b = 0; a = 255;
+				bool highlighted = _highlighting && highlightMask->Value(x, y) != 0;
+				bool originallyFlagged = _mask->Value(x, y);
+				bool altFlagged = altMask->Value(x, y);
+				if(highlighted) {
+					r = 255; g = 0; b = 0; a = 255;
+				} else if(_showOriginalFlagging && originallyFlagged) {
+					r = 255; g = 0; b = 255; a = 255;
+				} else if(_showAlternativeFlagging && altFlagged) {
+					r = 255; g = 255; b = 0; a = 255;
 				} else {
-					bool highlighted = _highlighting && highlightMask->Value(x, y) != 0;
-					bool originallyFlagged = _mask->Value(x, y);
-					bool altFlagged = altMask->Value(x, y);
-					if(highlighted) {
-						r = 255; g = 0; b = 0; a = 255;
-					} else if(_showOriginalFlagging && originallyFlagged) {
-						r = 255; g = 0; b = 255; a = 255;
-					} else if(_showAlternativeFlagging && altFlagged) {
-						r = 255; g = 255; b = 0; a = 255;
-					} else {
-						long double val = _image->Value(x, y);
-						if(val > max) val = max;
-						else if(val < min) val = min;
-		
-						val = (_image->Value(x, y) - min) * 2.0 / (max - min) - 1.0;
-						if(val < -1.0) val = -1.0;
-						else if(val > 1.0) val = 1.0;
-						r = colorMap->ValueToColorR(val);
-						g = colorMap->ValueToColorG(val);
-						b = colorMap->ValueToColorB(val);
-						a = colorMap->ValueToColorA(val);
-					}
+					num_t val = _image->Value(x, y);
+					if(val > max) val = max;
+					else if(val < min) val = min;
+	
+					val = (_image->Value(x, y) - min) * 2.0 / (max - min) - 1.0;
+					if(val < -1.0) val = -1.0;
+					else if(val > 1.0) val = 1.0;
+					r = colorMap->ValueToColorR(val);
+					g = colorMap->ValueToColorG(val);
+					b = colorMap->ValueToColorB(val);
+					a = colorMap->ValueToColorA(val);
 				}
 				rowpointer[xa]=r;
 				rowpointer[xa+1]=g;

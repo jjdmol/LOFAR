@@ -533,10 +533,6 @@ void ImageTile::SaveBackgroundToPng(const std::string &filename) {
 	file.Close();
 }
 
-long double ImageTile::IsValueSet(unsigned frequencyIndex, unsigned scanIndex) const {
-	return _image->IsSet(_scanOffset + scanIndex, _channelOffset + frequencyIndex);
-}
-
 long double ImageTile::GetValueAt(unsigned frequencyIndex, unsigned scanIndex) const {
 	return _image->Value(_scanOffset + scanIndex, _channelOffset + frequencyIndex);
 }

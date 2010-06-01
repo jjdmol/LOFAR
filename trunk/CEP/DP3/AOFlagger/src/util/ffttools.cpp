@@ -39,13 +39,10 @@ Image2D *FFTTools::CreateFFTImage(const Image2D &original, FFTOutputMethod metho
 	// According to the specification of fftw, the execute function might
 	// destroy the input array ("in"), wherefore we need to copy it.
 	unsigned long ptr = 0;
-	for(unsigned long y=0;y<original.Height();y++) {
-		for(unsigned long x=0;x<original.Width();x++) {
-			if(original.IsSet(x, y))
-				in[ptr] = original.Value(x, y);
-			else
-				in[ptr] = 0.0;
-			ptr++;
+	for(unsigned long y=0;y<original.Height();++y) {
+		for(unsigned long x=0;x<original.Width();++x) {
+			in[ptr] = original.Value(x, y);
+			++ptr;
 		}
 	}
 	
@@ -58,8 +55,8 @@ Image2D *FFTTools::CreateFFTImage(const Image2D &original, FFTOutputMethod metho
 	if(method != Both) {
 		ptr = 0;
 		unsigned long halfwidth = original.Width()/2+1;
-		for(unsigned long y=0;y<image->Height();y++) {
-			for(unsigned long x=0;x<halfwidth;x++) {
+		for(unsigned long y=0;y<image->Height();++y) {
+			for(unsigned long x=0;x<halfwidth;++x) {
 				switch(method) {
 					case Real: image->SetValue(x, y, out[ptr][0]); break;
 					case Imaginary: image->SetValue(x ,y, out[ptr][1]); break;
@@ -74,15 +71,15 @@ Image2D *FFTTools::CreateFFTImage(const Image2D &original, FFTOutputMethod metho
 	} else {
 		unsigned out_ptr = 0;
 		unsigned long halfwidth = original.Width()/2+1;
-		for(unsigned long y=0;y<image->Height();y++) {
-			for(unsigned long x=0;x<halfwidth;x++) {
+		for(unsigned long y=0;y<image->Height();++y) {
+			for(unsigned long x=0;x<halfwidth;++x) {
 				image->SetValue(x ,y, out[out_ptr][0]);
-				out_ptr++;
+				++out_ptr;
 			}
 			out_ptr -= halfwidth;
-			for(unsigned long x=0;x<halfwidth;x++) {
+			for(unsigned long x=0;x<halfwidth;++x) {
 				image->SetValue(x, y, out[out_ptr][1]);
-				out_ptr++;
+				++out_ptr;
 			}
 		}
 	}
