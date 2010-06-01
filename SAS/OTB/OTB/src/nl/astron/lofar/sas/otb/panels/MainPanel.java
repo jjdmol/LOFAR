@@ -28,14 +28,19 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.Iterator;
+import java.util.Vector;
+import java.util.logging.Level;
 
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import nl.astron.lofar.sas.otb.*;
+import nl.astron.lofar.sas.otb.jotdb3.jDefaultTemplate;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBtree;
 import nl.astron.lofar.sas.otb.jotdb3.jVICnodeDef;
 import nl.astron.lofar.sas.otb.util.*;
 import nl.astron.lofar.sas.otb.util.tablemodels.ComponentTableModel;
+import nl.astron.lofar.sas.otb.util.tablemodels.DefaultTemplatetableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.PICtableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.TemplatetableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.VICtableModel;
@@ -102,7 +107,17 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.setButtonEnabled("Build VIC tree",false);
             buttonPanel1.addButton("Change Status");
-            buttonPanel1.setButtonEnabled("Change Status",false);            
+            buttonPanel1.setButtonEnabled("Change Status",false); 
+            buttonPanel1.addButton("Set to Default");
+            buttonPanel1.setButtonEnabled("Set to Default",false);
+        } else if (itsTabFocus.equals("DefaultTemplates")) {
+            buttonPanel1.addButton("Duplicate");
+            buttonPanel1.setButtonEnabled("Duplicate",false);
+            buttonPanel1.addButton("Modify");
+            buttonPanel1.addButton("Refresh");
+            buttonPanel1.setButtonEnabled("Modify",false);
+            buttonPanel1.addButton("Change Status");
+            buttonPanel1.setButtonEnabled("Change Status",false);
         } else if (itsTabFocus.equals("Components")) {
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.addButton("New");
@@ -164,8 +179,8 @@ public class MainPanel extends javax.swing.JPanel
         VICtableModel VICmodel = new VICtableModel(SharedVars.getOTDBrmi());
         VICPanel.setTableModel(VICmodel);
         VICPanel.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        VICPanel.setColumnSize("ID",35);
-        VICPanel.setColumnSize("OriginalTree",75);
+        VICPanel.setColumnSize("ID",50);
+        VICPanel.setColumnSize("OriginalTree",50);
         VICPanel.setColumnSize("MoMID",50);
         VICPanel.setColumnSize("StartTime",175);
         VICPanel.setColumnSize("StopTime",175);
@@ -175,17 +190,27 @@ public class MainPanel extends javax.swing.JPanel
         TemplatetableModel Templatemodel = new TemplatetableModel(SharedVars.getOTDBrmi());
         TemplatesPanel.setTableModel(Templatemodel);
         TemplatesPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        TemplatesPanel.setColumnSize("ID",35);
-        TemplatesPanel.setColumnSize("OriginalTree",75);
+        TemplatesPanel.setColumnSize("ID",50);
+        TemplatesPanel.setColumnSize("OriginalTree",50);
         TemplatesPanel.setColumnSize("MoMID",50);
         TemplatesPanel.setColumnSize("Description",700);
         TemplatesPanel.setAutoCreateRowSorter(true);
         
+        DefaultTemplatetableModel DefaultTemplatemodel = new DefaultTemplatetableModel(SharedVars.getOTDBrmi());
+        DefaultTemplatesPanel.setTableModel(DefaultTemplatemodel);
+        DefaultTemplatesPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        DefaultTemplatesPanel.setColumnSize("ID",50);
+        DefaultTemplatesPanel.setColumnSize("Name",200);
+        DefaultTemplatesPanel.setColumnSize("OriginalTree",50);
+        DefaultTemplatesPanel.setColumnSize("MoMID",50);
+        DefaultTemplatesPanel.setColumnSize("Description",500);
+        DefaultTemplatesPanel.setAutoCreateRowSorter(true);
+
         ComponentTableModel Componentmodel = new ComponentTableModel(SharedVars.getOTDBrmi());
         ComponentsPanel.setTableModel(Componentmodel);
         ComponentsPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        ComponentsPanel.setColumnSize("ID",35);
-        ComponentsPanel.setColumnSize("Description",700);
+        ComponentsPanel.setColumnSize("ID",50);
+        ComponentsPanel.setColumnSize("Description",685);
         ComponentsPanel.setAutoCreateRowSorter(true);
         
         //TODO: do the same for the other tabs
@@ -230,6 +255,14 @@ public class MainPanel extends javax.swing.JPanel
                 if (!((VICtableModel)VICPanel.getTableModel()).fillTable()) {
                     logger.debug("error filling VICTable");
                 }
+            } else if (itsTabFocus.equals("DefaultTemplates")) {
+                if (!((DefaultTemplatetableModel)DefaultTemplatesPanel.getTableModel()).fillTable()) {
+                    logger.debug("error filling Default templateTable");
+                }
+                // VICTree could have been changed also
+                if (!((VICtableModel)VICPanel.getTableModel()).fillTable()) {
+                    logger.debug("error filling VICTable");
+                }
             } else if (itsTabFocus.equals("Components")) {
                 if (!((ComponentTableModel)ComponentsPanel.getTableModel()).fillTable()) {
                     logger.debug("error filling ComponentsTable");
@@ -264,27 +297,29 @@ public class MainPanel extends javax.swing.JPanel
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
      */
-    // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+
         jTabbedPane1 = new javax.swing.JTabbedPane();
         PICPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         VICPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         TemplatesPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        DefaultTemplatesPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         ComponentsPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         QueryResultsPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
-        jPanel1 = new javax.swing.JPanel();
+        AdminPanel = new javax.swing.JPanel();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setLayout(new java.awt.BorderLayout());
 
-        jTabbedPane1.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
-            public void propertyChange(java.beans.PropertyChangeEvent evt) {
-                jTabbedPane1PropertyChange(evt);
-            }
-        });
         jTabbedPane1.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 jTabbedPane1StateChanged(evt);
+            }
+        });
+        jTabbedPane1.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                jTabbedPane1PropertyChange(evt);
             }
         });
 
@@ -293,7 +328,6 @@ public class MainPanel extends javax.swing.JPanel
                 PICPanelMouseClicked(evt);
             }
         });
-
         jTabbedPane1.addTab("PIC", PICPanel);
 
         VICPanel.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -301,7 +335,6 @@ public class MainPanel extends javax.swing.JPanel
                 VICPanelMouseClicked(evt);
             }
         });
-
         jTabbedPane1.addTab("VIC", VICPanel);
 
         TemplatesPanel.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -309,15 +342,20 @@ public class MainPanel extends javax.swing.JPanel
                 TemplatesPanelMouseClicked(evt);
             }
         });
-
         jTabbedPane1.addTab("Templates", TemplatesPanel);
+
+        DefaultTemplatesPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                DefaultTemplatesPanelMouseClicked(evt);
+            }
+        });
+        jTabbedPane1.addTab("Default Templates", DefaultTemplatesPanel);
 
         ComponentsPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 ComponentsPanelMouseClicked(evt);
             }
         });
-
         jTabbedPane1.addTab("Components", ComponentsPanel);
 
         QueryResultsPanel.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -325,10 +363,8 @@ public class MainPanel extends javax.swing.JPanel
                 QueryResultsPanelMouseClicked(evt);
             }
         });
-
         jTabbedPane1.addTab("Query Results", QueryResultsPanel);
-
-        jTabbedPane1.addTab("Admin", jPanel1);
+        jTabbedPane1.addTab("Admin", AdminPanel);
 
         add(jTabbedPane1, java.awt.BorderLayout.CENTER);
 
@@ -337,9 +373,7 @@ public class MainPanel extends javax.swing.JPanel
                 buttonPanel1ActionPerformed(evt);
             }
         });
-
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
-
     }// </editor-fold>//GEN-END:initComponents
 
     private void jTabbedPane1PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jTabbedPane1PropertyChange
@@ -380,6 +414,10 @@ public class MainPanel extends javax.swing.JPanel
         logger.debug("actionPerformed: " + evt.getActionCommand());
         buttonPanelAction(evt.getActionCommand());
     }//GEN-LAST:event_buttonPanel1ActionPerformed
+
+    private void DefaultTemplatesPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_DefaultTemplatesPanelMouseClicked
+        validateButtons();
+    }//GEN-LAST:event_DefaultTemplatesPanelMouseClicked
     
     /** Returns the selected row in the present tree */
     private int getSelectedRow() {
@@ -390,6 +428,8 @@ public class MainPanel extends javax.swing.JPanel
             aRow = VICPanel.getSelectedRow();
         } else if (itsTabFocus.equals("Templates")) {
             aRow = TemplatesPanel.getSelectedRow();
+        } else if (itsTabFocus.equals("DefaultTemplates")) {
+            aRow = DefaultTemplatesPanel.getSelectedRow();
         } else if (itsTabFocus.equals("Components")) {
             aRow = ComponentsPanel.getSelectedRow();
         }
@@ -405,6 +445,8 @@ public class MainPanel extends javax.swing.JPanel
             rows = VICPanel.getSelectedRows();
         } else if (itsTabFocus.equals("Templates")) {
             rows = TemplatesPanel.getSelectedRows();
+        } else if (itsTabFocus.equals("DefaultTemplates")) {
+            rows = DefaultTemplatesPanel.getSelectedRows();
         } else if (itsTabFocus.equals("Components")) {
             rows = ComponentsPanel.getSelectedRows();
         }
@@ -420,6 +462,8 @@ public class MainPanel extends javax.swing.JPanel
                 VICPanel.setSelectedID(aTreeID);
             } else if (itsTabFocus.equals("Templates")) {
                 TemplatesPanel.setSelectedID(aTreeID);
+            } else if (itsTabFocus.equals("DefaultTemplates")) {
+                DefaultTemplatesPanel.setSelectedID(aTreeID);
             } else if (itsTabFocus.equals("Components")) {
                 ComponentsPanel.setSelectedID(aTreeID);
             }
@@ -441,6 +485,10 @@ public class MainPanel extends javax.swing.JPanel
         } else if (itsTabFocus.equals("Templates")) {
             for (int i=0; i < rows.length; i++) {
                 treeIDs[i] = ((Integer)TemplatesPanel.getTableModel().getValueAt(rows[i], 0)).intValue();
+            }
+        } else if (itsTabFocus.equals("DefaultTemplates")) {
+            for (int i=0; i < rows.length; i++) {
+                treeIDs[i] = ((Integer)DefaultTemplatesPanel.getTableModel().getValueAt(rows[i], 0)).intValue();
             }
         } else if (itsTabFocus.equals("Components")) {
             for (int i=0; i < rows.length; i++) {
@@ -481,6 +529,15 @@ public class MainPanel extends javax.swing.JPanel
                     itsMainFrame.getSharedVars().setTreeID(treeID);
                 } else {
                     logger.debug("Tree not found");
+                }
+            }
+        } else if (itsTabFocus.equals("DefaultTemplates")) {
+            if ( aRow > -1) {
+                treeID = ((Integer)DefaultTemplatesPanel.getTableModel().getValueAt(aRow, 0)).intValue();
+                if (treeID > 0) {
+                    itsMainFrame.getSharedVars().setTreeID(treeID);
+                } else {
+                    logger.debug("DefaultTree not found");
                 }
             }
         } else if (itsTabFocus.equals("Components")) {
@@ -774,6 +831,112 @@ public class MainPanel extends javax.swing.JPanel
                           checkChanged();
                     }
                 }
+            } else if (aButton.equals("Set to Default")) {
+                if (itsMainFrame.getSharedVars().getTreeID() > 0) {
+                    String aName=JOptionPane.showInputDialog(null, "Give Name for DefaultTree","DefaultTree Name", JOptionPane.QUESTION_MESSAGE);
+                    if (aName != null) {
+                        boolean found=false;
+                        try {
+                            Vector<jDefaultTemplate> aDFList = OtdbRmi.getRemoteOTDB().getDefaultTemplates();
+                            Iterator<jDefaultTemplate> it=aDFList.iterator();
+                            while (it.hasNext()) {
+                                if (it.next().name.equals(aName)) {
+                                    found=true;
+                                }
+                            }
+                            if (found) {
+                                JOptionPane.showMessageDialog(null,"This name has been used allready.", "Duplicate name error", JOptionPane.ERROR_MESSAGE);
+                            } else {
+                                OtdbRmi.getRemoteMaintenance().assignTemplateName(treeID, aName);
+                                // set changed flag to reload mainpanel
+                                itsMainFrame.setChanged(this.getFriendlyName(),true);
+                                checkChanged();
+                            }
+                        } catch (RemoteException ex) {
+                            try {
+                                logger.error("Error while setting template to default template: " + OtdbRmi.getRemoteMaintenance().errorMsg());
+                            } catch (RemoteException ex1) {
+                                logger.error("Error getting the remote errorMessage");
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (itsTabFocus.equals("DefaultTemplates")) {
+            jOTDBtree aTree=null;
+            String aTreeState="";
+
+            if (treeID > 0) {
+                itsMainFrame.getSharedVars().setTreeID(treeID);
+                try {
+                    aTree =    OtdbRmi.getRemoteOTDB().getTreeInfo(treeID,false);
+                    aTreeState=OtdbRmi.getRemoteTypes().getTreeState(aTree.state);
+                } catch (RemoteException ex) {
+                    logger.debug("Error during Remote treeMaintenance");
+                }
+            } else {
+                JOptionPane.showMessageDialog(null,"You didn't select a tree",
+                        "Tree selection warning",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (aButton.equals("Query Panel")) {
+                itsMainFrame.ToDo();
+            } else if (aButton.equals("Duplicate")) {
+                if (treeID < 1) {
+                    JOptionPane.showMessageDialog(null,"Select a tree to duplicate first",
+                        "No Tree Selected",
+                        JOptionPane.WARNING_MESSAGE);
+                } else {
+                    try {
+                        int newTreeID=OtdbRmi.getRemoteMaintenance().copyTemplateTree(treeID);
+                        if (newTreeID > 0) {
+                            JOptionPane.showMessageDialog(null,"New Tree (Not Default!!!) created with ID: "+newTreeID,
+                                "New Tree Message",
+                                JOptionPane.INFORMATION_MESSAGE);
+                            // set back treestate to described
+                            jOTDBtree aT=OtdbRmi.getRemoteOTDB().getTreeInfo(newTreeID, false);
+                            if (aT.state != OtdbRmi.getRemoteTypes().getTreeState("described") ) {
+                                aT.state=OtdbRmi.getRemoteTypes().getTreeState("described");
+                                if (!OtdbRmi.getRemoteMaintenance().setTreeState(aT.treeID(), aT.state)) {
+                                    logger.debug("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                }
+                            }
+                            // check momID, if not zero set to zero
+                            if (aT.momID() != 0) {
+                                if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aT.treeID(),0, aT.campaign)) {
+                                    logger.debug("Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                }
+
+                            }
+                            itsMainFrame.getSharedVars().setTreeID(newTreeID);
+                            // set changed flag to reload mainpanel
+                            itsMainFrame.setChanged(this.getFriendlyName(),true);
+                            checkChanged();
+                        } else {
+                            logger.debug("No Template Tree created!!!");
+                        }
+
+                    } catch (RemoteException ex) {
+                        logger.debug("Remote error during Build TemplateTree: "+ ex);
+                    }
+                }
+ 
+            } else if (aButton.equals("Modify")) {
+                TemplateMaintenancePanel aP =(TemplateMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateMaintenancePanel", true, true);
+                if (aP != null) {
+                    itsMainFrame.showPanel(aP.getFriendlyName());
+                }
+            } else if (aButton.equals("Change Status")) {
+                if (itsMainFrame.getSharedVars().getTreeID() > 0) {
+                    int [] id = new int[1];
+                    id[0]=itsMainFrame.getSharedVars().getTreeID();
+                    if (viewInfo(id)) {
+                        logger.debug("Tree has been changed, reloading table line");
+                          itsMainFrame.setChanged(this.getFriendlyName(),true);
+                          checkChanged();
+                    }
+                }
             }
         } else if (itsTabFocus.equals("Components")) {
             if (aButton.equals("Query Panel")) {
@@ -1021,6 +1184,7 @@ public class MainPanel extends javax.swing.JPanel
                         aTreeState.equals("approved")) {
                     buttonPanel1.setButtonEnabled("Duplicate",true);
                     buttonPanel1.setButtonEnabled("Modify",true);
+                    buttonPanel1.setButtonEnabled("Set to Default",true);
                     if (aTreeState.equals("approved")) {
                         buttonPanel1.setButtonEnabled("Build VIC tree",true);
                     } else {
@@ -1029,16 +1193,35 @@ public class MainPanel extends javax.swing.JPanel
                 } else {
                     buttonPanel1.setButtonEnabled("Duplicate",false);
                     buttonPanel1.setButtonEnabled("Modify",false);                                        
-                }
-                buttonPanel1.setButtonEnabled("Change Status",true);
-                buttonPanel1.setButtonEnabled("Delete",true);                
+                    buttonPanel1.setButtonEnabled("Set to Default",false);                }
+                    buttonPanel1.setButtonEnabled("Change Status",true);
+                    buttonPanel1.setButtonEnabled("Delete",true);
             } else {
                 buttonPanel1.setButtonEnabled("Duplicate",false);
                 buttonPanel1.setButtonEnabled("Modify",false);
                 buttonPanel1.setButtonEnabled("Delete",false);                
                 buttonPanel1.setButtonEnabled("Change Status",false);  
                 buttonPanel1.setButtonEnabled("Build VIC tree",false);
+                buttonPanel1.setButtonEnabled("Set to Default",false);
             }
+        } else if (itsTabFocus.equals("DefaultTemplates")) {
+            if (treeID > 0) {
+                if (aTreeState.equals("idle") ||
+                        aTreeState.equals("described") ||
+                        aTreeState.equals("prepared") ||
+                        aTreeState.equals("approved")) {
+                    buttonPanel1.setButtonEnabled("Duplicate",true);
+                    buttonPanel1.setButtonEnabled("Modify",true);
+                } else {
+                    buttonPanel1.setButtonEnabled("Duplicate",false);
+                    buttonPanel1.setButtonEnabled("Modify",false);
+                }
+                buttonPanel1.setButtonEnabled("Change Status",true);
+            } else {
+                buttonPanel1.setButtonEnabled("Duplicate",false);
+                buttonPanel1.setButtonEnabled("Modify",false);
+                buttonPanel1.setButtonEnabled("Change Status",false);
+           }
         } else if (itsTabFocus.equals("Components")) {
             if (componentID > 0 ) {
                 buttonPanel1.setButtonEnabled("Modify",true);
@@ -1054,7 +1237,6 @@ public class MainPanel extends javax.swing.JPanel
                 }
             } else {
                 buttonPanel1.setButtonEnabled("Modify",false);                
-                buttonPanel1.setButtonEnabled("Delete",false);
             }
         } else if (itsTabFocus.equals("Query Results")) {
         }
@@ -1074,13 +1256,14 @@ public class MainPanel extends javax.swing.JPanel
             
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel AdminPanel;
     private nl.astron.lofar.sas.otbcomponents.TablePanel ComponentsPanel;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel DefaultTemplatesPanel;
     private nl.astron.lofar.sas.otbcomponents.TablePanel PICPanel;
     private nl.astron.lofar.sas.otbcomponents.TablePanel QueryResultsPanel;
     private nl.astron.lofar.sas.otbcomponents.TablePanel TemplatesPanel;
     private nl.astron.lofar.sas.otbcomponents.TablePanel VICPanel;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
-    private javax.swing.JPanel jPanel1;
     private javax.swing.JTabbedPane jTabbedPane1;
     // End of variables declaration//GEN-END:variables
     

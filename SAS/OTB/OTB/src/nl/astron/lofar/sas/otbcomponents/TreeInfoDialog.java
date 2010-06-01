@@ -35,6 +35,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 import nl.astron.lofar.lofarutils.DateTimeChooser;
 import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otb.jotdb3.jDefaultTemplate;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
@@ -96,6 +97,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private void init() {
 
         timeWarningLabel.setVisible(false);
+        nameLabel.setVisible(false);
+        nameInput.setVisible(false);
 
         isInitialized=false;
         SimpleDateFormat id = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss",itsLocale);
@@ -117,59 +120,60 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             itsTreeState=OtdbRmi.getTreeState().get(itsTree.state);
             itsClassification = OtdbRmi.getClassif().get(itsTree.classification);
             itsCampaign = itsTree.campaign;
-            itsStarttime = itsTree.starttime;
-            try {
-                // Get all Beams (if any) from this observation and try to determine the longest duration
-                // try to set the dates
-                itsMaxBeamDuration=0;
-                Vector<jOTDBnode> beams = OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "%.Beam[%.duration");
-                Iterator<jOTDBnode> itr = beams.iterator();
-                while (itr.hasNext()){
-                    jOTDBnode aNode=itr.next();
-                    try {
-                        if (Integer.parseInt(aNode.limits) > itsMaxBeamDuration) {
-                            itsMaxBeamDuration=Integer.parseInt(aNode.limits);
-                        }
-                    } catch (NumberFormatException ex) {
-                        logger.debug("Integer Conversion error on duration " + aNode.limits + " - " + ex);
-                    }
-                }
-                if (itsMaxBeamDuration > 0 ) {
-                    //calcDuration takes miliseconds, and beamdurations are in secs.
-                    calcDuration(itsMaxBeamDuration*1000);
-                }
-            } catch (RemoteException e) {
-                logger.debug("Error getting the Beams " + e);
-            }
-            if (itsStarttime.length() > 0 && !itsStarttime.equals("not-a-date-time")) {
+            if(itsTreeType.equals("VHtree")) {
+                itsStarttime = itsTree.starttime;
                 try {
-                    itsStartDate = id.parse(itsStarttime);
-                } catch (ParseException ex) {
-                    logger.debug("Error converting starttime "+itsStarttime);
-                    itsStarttime="";
+                    // Get all Beams (if any) from this observation and try to determine the longest duration
+                    // try to set the dates
+                    itsMaxBeamDuration=0;
+                    Vector<jOTDBnode> beams = OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "%.Beam[%.duration");
+                    Iterator<jOTDBnode> itr = beams.iterator();
+                    while (itr.hasNext()){
+                        jOTDBnode aNode=itr.next();
+                        try {
+                            if (Integer.parseInt(aNode.limits) > itsMaxBeamDuration) {
+                                itsMaxBeamDuration=Integer.parseInt(aNode.limits);
+                            }
+                        } catch (NumberFormatException ex) {
+                            logger.debug("Integer Conversion error on duration " + aNode.limits + " - " + ex);
+                        }
+                    }
+                    if (itsMaxBeamDuration > 0 ) {
+                        //calcDuration takes miliseconds, and beamdurations are in secs.
+                        calcDuration(itsMaxBeamDuration*1000);
+                    }
+                } catch (RemoteException e) {
+                    logger.debug("Error getting the Beams " + e);
+                }
+                if (itsStarttime.length() > 0 && !itsStarttime.equals("not-a-date-time")) {
+                    try {
+                        itsStartDate = id.parse(itsStarttime);
+                    } catch (ParseException ex) {
+                        logger.debug("Error converting starttime "+itsStarttime);
+                        itsStarttime="";
+                        itsStartDate=null;
+                    }
+                } else {
                     itsStartDate=null;
                 }
-            } else {
-                itsStartDate=null;
-            }
-            itsStoptime = itsTree.stoptime;
-            if (itsStoptime.length() > 0 && !itsStoptime.equals("not-a-date-time")) {
-                try {
-                    itsStopDate = id.parse(itsStoptime);
+                itsStoptime = itsTree.stoptime;
+                if (itsStoptime.length() > 0 && !itsStoptime.equals("not-a-date-time")) {
+                    try {
+                        itsStopDate = id.parse(itsStoptime);
 
-                } catch (ParseException ex) {
-                    logger.debug("Error converting stoptime " + itsStoptime);
-                    itsStoptime="";
+                    } catch (ParseException ex) {
+                        logger.debug("Error converting stoptime " + itsStoptime);
+                        itsStoptime="";
+                        itsStopDate=null;
+                    }
+                } else {
                     itsStopDate=null;
                 }
-            } else {
-                itsStopDate=null;
             }
-            
             itsDescription = itsTree.description;     
             initComboLists();
-            initView();
             initFocus();
+            initView();
             setDuration();
 
             isInitialized=true;
@@ -354,6 +358,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         if (itsTreeType.equals("hardware")) {
             momIDLabel.setVisible(false);
             momIDInput.setVisible(false);
+            nameLabel.setVisible(false);
+            nameInput.setVisible(false);
             originalTreeIDLabel.setVisible(false);
             originalTreeIDInput.setVisible(false);
             campaignLabel.setVisible(false);
@@ -401,6 +407,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             
         // VIC
         } else if (itsTreeType.equals("VHtree")) {
+            nameLabel.setVisible(false);
+            nameInput.setVisible(false);
             campaignLabel.setVisible(true);
             campaignInput.setVisible(true);
             showCampaignButton.setVisible(true);
@@ -451,6 +459,29 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     
     /* Fill the view */
     private void initView() {
+        // check if the found tree is a defaulttree
+        if (itsTreeType.equals("VItemplate")) {
+            try {
+                itsDefaultTemplateList = OtdbRmi.getRemoteOTDB().getDefaultTemplates();
+                Iterator<jDefaultTemplate> anI = itsDefaultTemplateList.iterator();
+                while (anI.hasNext()) {
+                    // found DefaultTemplate
+                    jDefaultTemplate aT = anI.next();
+                    if (aT.treeID() == itsTree.treeID()) {
+                        isDefaultTemplate=true;
+                        itsName=aT.name;
+                        nameInput.setText(aT.name);
+                        nameLabel.setVisible(true);
+                        nameInput.setVisible(true);
+                    }
+                }
+            }  catch (RemoteException ex) {
+                logger.error("Error retrieving defaultTemplates");
+            }
+        } else {
+            nameLabel.setVisible(false);
+            nameInput.setVisible(false);
+        }
         treeIDInput.setText(String.valueOf(itsTree.treeID()));
         momIDInput.setText(String.valueOf(itsTree.momID()));
         classificationInput.setSelectedItem(itsClassification);
@@ -544,9 +575,22 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                            itsTree.starttime = startTimeInput.getText();
                            itsTree.stoptime = stopTimeInput.getText();
                            if (OtdbRmi.getRemoteMaintenance().setSchedule(itsTree.treeID(),itsTree.starttime,itsTree.stoptime)) {
-                               logger.debug("Error during setSchedule: "+OtdbRmi.getRemoteMaintenance().errorMsg());                        
+                               logger.error("Error during setSchedule: "+OtdbRmi.getRemoteMaintenance().errorMsg());
                            }
                         }
+                    }
+                }
+                // Next for template only
+                if (itsTreeType.equals("VItemplate")) {
+                    if (!itsName.equals(nameInput.getText())) {
+                        itsName=nameInput.getText();
+                        if (itsName == null || itsName.equals("")) {
+                            isDefaultTemplate=false;
+                        }
+                        if (OtdbRmi.getRemoteMaintenance().assignTemplateName(itsTree.treeID(),itsName)) {
+                               logger.error("Error during assignTemplate: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                        }
+
                     }
                 }
             }
@@ -572,7 +616,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         cancelButton = new javax.swing.JButton();
         saveButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
-        treeIDInput = new javax.swing.JTextField();
+        nameInput = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
         classificationInput = new javax.swing.JComboBox();
         jLabel6 = new javax.swing.JLabel();
@@ -610,7 +654,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         durationHourLabel = new javax.swing.JLabel();
         durationMinuteLabel = new javax.swing.JLabel();
         timeWarningLabel = new javax.swing.JLabel();
+        timeWarningLabel.setVisible(false);
         showCampaignButton = new javax.swing.JButton();
+        nameLabel = new javax.swing.JLabel();
+        treeIDInput = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("LOFAR View TreeInfo");
@@ -655,9 +702,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         jLabel1.setText("ID:");
         getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, 20));
 
-        treeIDInput.setToolTipText("Tree ID in database");
-        treeIDInput.setEnabled(false);
-        getContentPane().add(treeIDInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 50, 90, 20));
+        nameInput.setToolTipText("Name of DefaultTemplate");
+        nameInput.setEnabled(false);
+        getContentPane().add(nameInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 50, 190, 20));
 
         jLabel4.setText("Classification:");
         getContentPane().add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, -1, 20));
@@ -813,6 +860,13 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             }
         });
         getContentPane().add(showCampaignButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(380, 290, 70, -1));
+
+        nameLabel.setText("Name:");
+        getContentPane().add(nameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 53, -1, -1));
+
+        treeIDInput.setToolTipText("Tree ID in database");
+        treeIDInput.setEnabled(false);
+        getContentPane().add(treeIDInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 50, 90, 20));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -991,8 +1045,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private MainFrame itsMainFrame = null;
     private jOTDBtree itsTree = null;
     private int []    itsTreeIDs=null;
+    private String    itsName=null;
     private boolean   isAdministrator;
     private boolean   hasChanged=false;
+    private boolean   isDefaultTemplate=false;
     private boolean   itsMultiple=false;
     private String    itsClassification = "";
     private String    itsTreeState = "";
@@ -1007,6 +1063,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private boolean   isInitialized=false;
     private CampaignInfoDialog campaignInfoDialog=null;
     private int       itsMaxBeamDuration=0;
+    private Vector<jDefaultTemplate> itsDefaultTemplateList=null;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField campaignInput;
@@ -1035,6 +1092,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextField momIDInput;
     private javax.swing.JLabel momIDLabel;
+    private javax.swing.JTextField nameInput;
+    private javax.swing.JLabel nameLabel;
     private javax.swing.JTextField originalTreeIDInput;
     private javax.swing.JLabel originalTreeIDLabel;
     private javax.swing.JButton saveButton;
