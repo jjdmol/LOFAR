@@ -1,7 +1,7 @@
 #
 # Hardcoded (temporary) keys
 #
-# OLAP.correctClocks = T
+OLAP.correctClocks = T
 
 #
 # Fibre length corrections for superterp stations using
@@ -104,6 +104,22 @@ PIC.Core.CS401HBA0.clockCorrectionTime = 0
 PIC.Core.CS401HBA1.clockCorrectionTime = 0
 PIC.Core.CS401HBA.clockCorrectionTime = 0
 
+PIC.Core.CS101LBA.clockCorrectionTime  = 0
+PIC.Core.CS101HBA0.clockCorrectionTime = 0
+PIC.Core.CS101HBA1.clockCorrectionTime = 0 
+PIC.Core.CS101HBA.clockCorrectionTime  = 0 
+
+PIC.Core.CS201LBA.clockCorrectionTime  = 0
+PIC.Core.CS201HBA0.clockCorrectionTime = 0
+PIC.Core.CS201HBA1.clockCorrectionTime = 0
+PIC.Core.CS201HBA.clockCorrectionTime  = 0
+
+PIC.Core.CS501LBA.clockCorrectionTime  = 0
+PIC.Core.CS501HBA0.clockCorrectionTime = 0
+PIC.Core.CS501HBA1.clockCorrectionTime = 0
+PIC.Core.CS501HBA.clockCorrectionTime  = 0
+
+
 #
 # Phase centers
 #
@@ -201,10 +217,20 @@ PIC.Core.CS401HBA0.phaseCenter  = [3826795.796, 460158.846, 5064808.901]
 PIC.Core.CS401HBA1.phaseCenter  = [3826784.254, 460031.945, 5064829.033]
 PIC.Core.CS401HBA.phaseCenter   = [3826790.025, 460095.396, 5064818.967]
 
-PIC.Core.CS101LBA.phaseCenter        = [3825848.387, 461689.490, 5065378.757]
-PIC.Core.CS101HBA0.phaseCenter       = [3825905.345, 461683.980, 5065336.500]
-PIC.Core.CS101HBA1.phaseCenter       = [3825810.656, 461638.943, 5065411.645]
-PIC.Core.CS101HBA_JOINED.phaseCenter = [3825858.001, 461661.462, 5065374.073]
+PIC.Core.CS101LBA.phaseCenter  = [3825848.387, 461689.490, 5065378.757]
+PIC.Core.CS101HBA0.phaseCenter = [3825905.345, 461683.980, 5065336.500]
+PIC.Core.CS101HBA1.phaseCenter = [3825810.656, 461638.943, 5065411.645]
+PIC.Core.CS101HBA.phaseCenter  = [3825858.001, 461661.462, 5065374.073]
+
+PIC.Core.CS201LBA.phaseCenter  = [3826708.972, 461913.699, 5064713.810]
+PIC.Core.CS201HBA0.phaseCenter = [3826679.324, 461855.195, 5064741.351]
+PIC.Core.CS201HBA1.phaseCenter = [3826690.865, 461982.091, 5064721.221]
+PIC.Core.CS201HBA.phaseCenter  = [3826685.094, 461918.643, 5064731.286]
+
+PIC.Core.CS501LBA.phaseCenter  = [3825625.822, 460642.062, 5065640.743]
+PIC.Core.CS501HBA0.phaseCenter = [3825568.863, 460647.572, 5065682.999]
+PIC.Core.CS501HBA1.phaseCenter = [3825663.551, 460692.610, 5065607.854]
+PIC.Core.CS501HBA.phaseCenter  = [3825616.208, 460670.091, 5065645.428]
 
 #
 # Experimental part:
