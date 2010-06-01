@@ -216,8 +216,8 @@
                               </Group>
                               <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="inputMSNameMask" pref="870" max="32767" attributes="1"/>
-                                  <Component id="inputNrSlotsInFrame" alignment="0" pref="870" max="32767" attributes="1"/>
+                                  <Component id="inputMSNameMask" pref="886" max="32767" attributes="1"/>
+                                  <Component id="inputNrSlotsInFrame" alignment="0" pref="886" max="32767" attributes="1"/>
                                   <Component id="inputNrChannelsPerSubband" alignment="0" min="-2" pref="102" max="-2" attributes="1"/>
                               </Group>
                               <EmptySpace min="-2" pref="24" max="-2" attributes="0"/>
@@ -304,7 +304,7 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="beamConfigurationPanel" alignment="0" pref="1259" max="32767" attributes="0"/>
+                                  <Component id="beamConfigurationPanel" alignment="0" pref="1263" max="32767" attributes="0"/>
                                   <Group type="102" alignment="0" attributes="0">
                                       <Component id="addBeamButton" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>

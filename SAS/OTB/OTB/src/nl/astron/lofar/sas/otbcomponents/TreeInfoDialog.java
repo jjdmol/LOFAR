@@ -141,10 +141,13 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     if (itsMaxBeamDuration > 0 ) {
                         //calcDuration takes miliseconds, and beamdurations are in secs.
                         calcDuration(itsMaxBeamDuration*1000);
+                    } else {
+                        calcDuration(0);
                     }
                 } catch (RemoteException e) {
                     logger.debug("Error getting the Beams " + e);
                 }
+
                 if (itsStarttime.length() > 0 && !itsStarttime.equals("not-a-date-time")) {
                     try {
                         itsStartDate = id.parse(itsStarttime);
@@ -241,7 +244,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     // Calculate days/hours/minutes/secs from milisecs
     // @param secs = time in miliseconds
     private void calcDuration(long msecs) {
-        timeWarningLabel.setVisible(false);
         if (msecs > 0) {
             long days=msecs/86400000;
             msecs-=days*86400000;
@@ -270,6 +272,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }
 
     private void setStartTime() {
+        if (itsStopDate == null) {
+            return;
+        }
         // create new startdate based on stopdate - duration
         Calendar cal = Calendar.getInstance();
         cal.setTime(itsStopDate);
@@ -286,6 +291,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
     private void setStopTime() {
         // create new stopdate based on startdate + duration
+        if (itsStartDate == null) {
+            return;
+        }
         Calendar cal = Calendar.getInstance();
         cal.setTime(itsStartDate);
         cal.set(Calendar.DAY_OF_YEAR,cal.get(Calendar.DAY_OF_YEAR)+Integer.valueOf(inputDurationDays.getValue()));
@@ -302,8 +310,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     // try to calculate the duration from the difference between start/stoptime
     private void setDuration() {
         if (itsStartDate != null && itsStopDate!=null && itsStartDate.before(itsStopDate)) {
-            long dur=0;
-            dur = itsStopDate.getTime()-itsStartDate.getTime();
+            long dur= itsStopDate.getTime()-itsStartDate.getTime();
             calcDuration(dur);
         } else {
             calcDuration(itsMaxBeamDuration*1000);
@@ -500,7 +507,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         
         // make sure that if a VICtree is selected we check the start-end time first. If they are not correct, pop up a dialog.
         
-        if (itsTreeType.equals("VHtree") && stateInput.getSelectedItem().toString().equalsIgnoreCase("Scheduled") ) {
+        if (itsTreeType.equals("VHtree") && stateInput.getSelectedItem().toString().equalsIgnoreCase("Scheduled")) {
             if ( ! checkTimes()) {
                 return false;
             }
@@ -906,7 +913,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         } else {
            setDuration();
         }
-
     }//GEN-LAST:event_setStopDateButtonActionPerformed
 
     private void setStartDateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setStartDateButtonActionPerformed
@@ -924,6 +930,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         DateTimeChooser chooser = new DateTimeChooser(initialDate);
         itsStartDate = DateTimeChooser.showDialog(this,"StartTime",chooser);
         composeTimeString("start");
+        setDuration();
         setStopTime();
     }//GEN-LAST:event_setStartDateButtonActionPerformed
 
