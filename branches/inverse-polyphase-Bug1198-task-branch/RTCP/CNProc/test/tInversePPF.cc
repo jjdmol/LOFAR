@@ -44,13 +44,14 @@ fftw_plan plan;
 #endif
 
 #include <FIR_OriginalStationPPFWeights.h> // defines originalStationPPFWeights array
-
 static unsigned onStationFilterSize = 1024;
 static unsigned nrTaps = 16;
 
-static unsigned nrSubbands = 248;
+//static unsigned nrSubbands = 248;
+static unsigned nrSubbands = 4;
 static unsigned nrChannels = 1; // for the NuMoon pipeline, there are no separate channels.
-static unsigned nrSamplesPerIntegration = 768 * 256 / 4; // one quarter of a second
+//static unsigned nrSamplesPerIntegration = 768 * 256 / 4; // one quarter of a second
+static unsigned nrSamplesPerIntegration = 2048; // one quarter of a second
 static double sampleRate = 195312.5;
 static double centerFrequency = 384 * sampleRate;
 static double signalFrequency = centerFrequency - .5 * sampleRate;
@@ -58,7 +59,6 @@ static double signalFrequency = centerFrequency - .5 * sampleRate;
 float originalStationPPFWeightsFloat[1024][16];
 float* fftInData;
 float* fftOutData;
-
 
 static void initFFT() {
 #if defined HAVE_FFTW3
@@ -92,19 +92,19 @@ static void destroyFFT() {
 }
 
 /*
-static fcomplex toComplex(double phi) {
-  double s, c;
-  sincos(phi, &s, &c);
-  return makefcomplex(c, s);
-}
-*/
+ static fcomplex toComplex(double phi) {
+ double s, c;
+ sincos(phi, &s, &c);
+ return makefcomplex(c, s);
+ }
+ */
 
 static void generateInputSignal(InverseFilteredData& originalData) {
-  for (unsigned time = 0; time < nrSamplesPerIntegration*onStationFilterSize; time++) {
+  for (unsigned time = 0; time < nrSamplesPerIntegration * onStationFilterSize; time++) {
     double val = sin(signalFrequency * time / sampleRate);
     originalData.samples[time] = val;
-//    double phi = 2 * M_PI * signalFrequency * time / sampleRate;
-//    originalData.samples[time] = toComplex(phi);
+    //    double phi = 2 * M_PI * signalFrequency * time / sampleRate;
+    //    originalData.samples[time] = toComplex(phi);
   }
 }
 
@@ -116,9 +116,9 @@ static void performStationFFT(TransposedBeamFormedData& transposedBeamFormedData
 #endif
 
   // Put data in the right order, go from half complex to normal format
-  for(unsigned subbandIndex=0; subbandIndex < subbandList.size(); subbandIndex++) {
+  for (unsigned subbandIndex = 0; subbandIndex < subbandList.size(); subbandIndex++) {
     unsigned subband = subbandList[subbandIndex];
-    fcomplex sample = makefcomplex(fftOutData[subband], fftOutData[onStationFilterSize + subband]);
+    fcomplex sample = makefcomplex(fftOutData[subband], fftOutData[onStationFilterSize - subband]);
     transposedBeamFormedData.samples[subband][0][time] = sample;
   }
 }
@@ -129,13 +129,21 @@ static void performStationFilter(InverseFilteredData& originalData, vector<FIR<f
     float sample = originalData.samples[time * onStationFilterSize + minorTime];
     float result = FIRs[filterIndex].processNextSample(sample);
     fftInData[minorTime] = result;
+//    fftInData[minorTime] = sample;
+  }
+}
+
+static void printData(InverseFilteredData& data) {
+  for (unsigned time=0; time < nrSamplesPerIntegration*onStationFilterSize; time++) {
+    float sample = data.samples[time];
+    fprintf(stdout, "%20.10lf\n", sample);
   }
 }
 
 int main() {
   // copy the integer filter constants into a float array.
-  for(unsigned filter=0; filter<onStationFilterSize; filter++) {
-    for(unsigned tap=0; tap<nrTaps; tap++) {
+  for (unsigned filter = 0; filter < onStationFilterSize; filter++) {
+    for (unsigned tap = 0; tap < nrTaps; tap++) {
       originalStationPPFWeightsFloat[filter][tap] = originalStationPPFWeights[filter][tap];
     }
   }
@@ -160,7 +168,7 @@ int main() {
   vector<unsigned> subbandList;
   subbandList.resize(nrSubbands);
 
-  // for now, we just select the first 248 subbands.
+  // for now, we just select the first n subbands.
   for (unsigned sb = 0; sb < nrSubbands; sb++) {
     subbandList[sb] = sb;
   }
@@ -172,6 +180,8 @@ int main() {
 
   generateInputSignal(originalData);
 
+//  printData(originalData);
+
   cerr << "simulating station filter" << endl;
 
   for (unsigned time = 0; time < nrSamplesPerIntegration; time++) {
@@ -179,12 +189,22 @@ int main() {
     performStationFFT(transposedBeamFormedData, subbandList, time);
   }
 
+//  for (unsigned sb = 0; sb < nrSubbands; sb++) {
+    for (unsigned time = 0; time < nrSamplesPerIntegration; time++) {
+      fcomplex sample = transposedBeamFormedData.samples[1][0][time];
+//      fprintf(stdout, "%20.10lf\n", real(sample));
+    }
+//  }
 
   cerr << "performing inversePPF" << endl;
 
   inversePPF.performInversePPF(transposedBeamFormedData, invertedFilteredData);
 
   cerr << "inversePPF done" << endl;
+
+//  cout << "result:" << endl;
+
+  printData(invertedFilteredData);
 
   destroyFFT();
   return 0;
