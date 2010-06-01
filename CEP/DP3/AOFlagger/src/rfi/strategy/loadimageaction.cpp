@@ -41,7 +41,7 @@ namespace rfiStrategy {
 
 		boost::mutex::scoped_lock lock(artifacts.IOMutex());
 
-		// Note that setting the image set needs to be done ATOMICLY with reading the data, as another
+		// Note that setting the image set needs to be done atomically with reading the data, as another
 		// thread might change the settings otherwise...
 		MSImageSet *msImageSet = dynamic_cast<MSImageSet*>(imageSet);
 		if(msImageSet != 0)

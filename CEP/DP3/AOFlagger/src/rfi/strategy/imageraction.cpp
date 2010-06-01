@@ -26,7 +26,7 @@
 namespace rfiStrategy {
 	void ImagerAction::Perform(ArtifactSet &artifacts, ProgressListener &progress)
 	{
-		boost::mutex::scoped_lock lock(artifacts.IOMutex());
+		boost::mutex::scoped_lock lock(_imagerMutex);
 		UVImager *imager = artifacts.Imager();
 		if(imager == 0)
 			throw BadUsageException("No imager available to create image.");
