@@ -474,7 +474,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         
         // make sure that if a VICtree is selected we check the start-end time first. If they are not correct, pop up a dialog.
         
-        if (itsTreeType.equals("VHtree") && itsTreeState.equalsIgnoreCase("Scheduled")) {
+        if (itsTreeType.equals("VHtree") && stateInput.getSelectedItem().toString().equalsIgnoreCase("Scheduled")) {
             if ( ! checkTimes()) {
                 return false;
             }
