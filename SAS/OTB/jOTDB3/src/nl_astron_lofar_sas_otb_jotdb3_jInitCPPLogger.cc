@@ -29,6 +29,8 @@
 //#include <jOTDB3/nl_astron_lofar_sas_otb_jotdb3_jCommon.h>
 #include <jOTDB3/nl_astron_lofar_sas_otb_jotdb3_jInitCPPLogger.h>
 
+using namespace std;
+
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jInitCPPLogger
@@ -38,6 +40,7 @@
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jInitCPPLogger_initLogger(JNIEnv * env, jobject, jstring aLogName) {
   jboolean isCopy;
   const char* logname = env->GetStringUTFChars(aLogName, &isCopy);
+  cout << "Opening c++ logfile: " << logname << endl;
   INIT_LOGGER(logname);
   env->ReleaseStringUTFChars (aLogName,logname);
 }
