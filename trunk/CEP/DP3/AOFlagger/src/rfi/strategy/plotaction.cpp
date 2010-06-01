@@ -31,7 +31,7 @@ namespace rfiStrategy {
 	
 	void PlotAction::Perform(ArtifactSet &artifacts, ProgressListener &)
 	{
-		boost::mutex::scoped_lock lock(artifacts.IOMutex());
+		boost::mutex::scoped_lock lock(_plotMutex);
 		switch(_plotKind)
 		{
 			case AntennaFlagCountPlot:
