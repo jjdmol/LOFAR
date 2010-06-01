@@ -57,10 +57,7 @@ public class jOTDBaccess implements jOTDBaccessInterface
     private static Map<String,jConverterInterface> converter= new HashMap<String,jConverterInterface>();
     private static Map<String,remoteFileInterface> aRemoteFile= new HashMap<String,remoteFileInterface>();
 
-    static
-    {
-        System.loadLibrary("jotdb3");
-    }
+    
 
    public jOTDBaccess( String aDBhost, String anRMIhost,int anRMIport, int anRMIobjectPort,Registry aLocalRegistry) throws RemoteException
    {

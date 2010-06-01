@@ -29,9 +29,13 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 
-
 public class jOTDBserver {
-    
+
+    static
+    {
+        System.loadLibrary("jotdb3");
+    }
+
     static Logger logger = Logger.getLogger(jOTDBserver.class);
 
     // Keep a static reference to the access object to prevent the server from exitting.
@@ -42,7 +46,12 @@ public class jOTDBserver {
             String logConfig = "jOTDB3.log_prop";
             
             PropertyConfigurator.configure(logConfig);
-            jInitCPPLogger aCPPLogger=new jInitCPPLogger(logConfig);
+            try {
+                jInitCPPLogger aCPPLogger= new jInitCPPLogger(logConfig);
+            } catch (Exception ex) {
+                System.out.println("Error: "+ ex);
+                ex.printStackTrace();
+            }
             logger.info("jOTDBServer started. LogPropFile: "+ logConfig);
             logger.info("java.library.path:"+ System.getProperty("java.library.path"));
 
