@@ -374,9 +374,7 @@ void ImageTile::FirstWindowGuess(long double mean, long double variance)
 
 	for(unsigned channel = 0;channel<_channelCount;++channel) {
 		for(unsigned scan = 0;scan<_scanCount;++scan) {
-			if(!IsValueSet(channel, scan)) {
-				_isWindowed[channel][scan] = true;
-			}
+			_isWindowed[channel][scan] = true;
 		}
 	}
 }
