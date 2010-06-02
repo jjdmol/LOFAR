@@ -29,6 +29,7 @@ par  nrAnaBeams              I    int    -      10    100    1                  
 par  nrBeamformers           I    int    -      10    100    0                                         - 'Number of beamformers in this observation'
 par  nrPolarisations         I    pint   -      10    100    '1|2;2'                                   - 'Number of polarisations to use in this observation'
 par  nrSlotsInFrame	     I    int    -      10    100    62                                        - '???'
+par  referencePhaseCenter    I    vdbl   -      10    100    '[3826577.110, 461022.900, 5064892.758]'  - 'Constant value: phase center of LOFAR'
 
 # new way of selection the receivers and the antennaArray at once
 par  antennaSet		         I    ptext  -      10    0      'LBA_INNER|LBA_OUTER|LBA_SPARSE_EVEN|LBA_SPARSE_ODD|LBA_X|LBA_Y|HBA_ZERO|HBA_ONE|HBA_DUAL|HBA_JOINED;-'    - 'Which part of the antennas should be used'
