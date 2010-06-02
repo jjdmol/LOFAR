@@ -41,6 +41,12 @@ int main(int argc, char *argv[])
   int bufLen;        /* Output buffer content size*/
   int totalChars = 0;    /* Total number of chars read from tty*/
 
+  long int count = 0;
+  int  nbytes;       /* Number of bytes read */
+  int ttyFd;
+  int n;
+
+  bufptr = buffer;
 
   if (argc == 2)
     {
@@ -48,21 +54,23 @@ int main(int argc, char *argv[])
     }
 
   bufLen = strlen(sendBuf);
-  int ttyFd;
+
   ttyFd = open_port();
   if (ttyFd == -1)
     return -1;
 
-  int n;
+  nbytes = 1;
+  while (nbytes != -1)
+    {
+      nbytes = read(ttyFd, bufptr, buffer + sizeof(buffer) - bufptr - 1);
+    }
+
   n = write(ttyFd, sendBuf, bufLen);
   if (n < 0)
     fputs("write() of 4 bytes failed!\n", stderr);
 
 
   /* read characters into our string buffer until we get a CR or NL */
-  bufptr = buffer;
-  long int count=0;
-  int  nbytes;       /* Number of bytes read */
   while (count < 1000)
     {
       nbytes = read(ttyFd, bufptr, buffer + sizeof(buffer) - bufptr - 1);
