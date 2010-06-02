@@ -30,8 +30,6 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.Vector;
-import java.util.logging.Level;
-
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import nl.astron.lofar.sas.otb.*;
@@ -110,7 +108,7 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.setButtonEnabled("Change Status",false); 
             buttonPanel1.addButton("Set to Default");
             buttonPanel1.setButtonEnabled("Set to Default",false);
-        } else if (itsTabFocus.equals("DefaultTemplates")) {
+        } else if (itsTabFocus.equals("Default Templates")) {
             buttonPanel1.addButton("Duplicate");
             buttonPanel1.setButtonEnabled("Duplicate",false);
             buttonPanel1.addButton("Modify");
@@ -255,13 +253,22 @@ public class MainPanel extends javax.swing.JPanel
                 if (!((VICtableModel)VICPanel.getTableModel()).fillTable()) {
                     logger.debug("error filling VICTable");
                 }
-            } else if (itsTabFocus.equals("DefaultTemplates")) {
+                // Default Templates could have been changed also
+                if (!((DefaultTemplatetableModel)DefaultTemplatesPanel.getTableModel()).fillTable()) {
+                    logger.debug("error filling default template table");
+                }
+
+            } else if (itsTabFocus.equals("Default Templates")) {
                 if (!((DefaultTemplatetableModel)DefaultTemplatesPanel.getTableModel()).fillTable()) {
                     logger.debug("error filling Default templateTable");
                 }
                 // VICTree could have been changed also
                 if (!((VICtableModel)VICPanel.getTableModel()).fillTable()) {
                     logger.debug("error filling VICTable");
+                }
+                // Template could have been changed also
+                if (!((TemplatetableModel)TemplatesPanel.getTableModel()).fillTable()) {
+                    logger.debug("error filling TemplateTable");
                 }
             } else if (itsTabFocus.equals("Components")) {
                 if (!((ComponentTableModel)ComponentsPanel.getTableModel()).fillTable()) {
@@ -428,7 +435,7 @@ public class MainPanel extends javax.swing.JPanel
             aRow = VICPanel.getSelectedRow();
         } else if (itsTabFocus.equals("Templates")) {
             aRow = TemplatesPanel.getSelectedRow();
-        } else if (itsTabFocus.equals("DefaultTemplates")) {
+        } else if (itsTabFocus.equals("Default Templates")) {
             aRow = DefaultTemplatesPanel.getSelectedRow();
         } else if (itsTabFocus.equals("Components")) {
             aRow = ComponentsPanel.getSelectedRow();
@@ -445,7 +452,7 @@ public class MainPanel extends javax.swing.JPanel
             rows = VICPanel.getSelectedRows();
         } else if (itsTabFocus.equals("Templates")) {
             rows = TemplatesPanel.getSelectedRows();
-        } else if (itsTabFocus.equals("DefaultTemplates")) {
+        } else if (itsTabFocus.equals("Default Templates")) {
             rows = DefaultTemplatesPanel.getSelectedRows();
         } else if (itsTabFocus.equals("Components")) {
             rows = ComponentsPanel.getSelectedRows();
@@ -462,7 +469,7 @@ public class MainPanel extends javax.swing.JPanel
                 VICPanel.setSelectedID(aTreeID);
             } else if (itsTabFocus.equals("Templates")) {
                 TemplatesPanel.setSelectedID(aTreeID);
-            } else if (itsTabFocus.equals("DefaultTemplates")) {
+            } else if (itsTabFocus.equals("Default Templates")) {
                 DefaultTemplatesPanel.setSelectedID(aTreeID);
             } else if (itsTabFocus.equals("Components")) {
                 ComponentsPanel.setSelectedID(aTreeID);
@@ -486,7 +493,7 @@ public class MainPanel extends javax.swing.JPanel
             for (int i=0; i < rows.length; i++) {
                 treeIDs[i] = ((Integer)TemplatesPanel.getTableModel().getValueAt(rows[i], 0)).intValue();
             }
-        } else if (itsTabFocus.equals("DefaultTemplates")) {
+        } else if (itsTabFocus.equals("Default Templates")) {
             for (int i=0; i < rows.length; i++) {
                 treeIDs[i] = ((Integer)DefaultTemplatesPanel.getTableModel().getValueAt(rows[i], 0)).intValue();
             }
@@ -531,7 +538,7 @@ public class MainPanel extends javax.swing.JPanel
                     logger.debug("Tree not found");
                 }
             }
-        } else if (itsTabFocus.equals("DefaultTemplates")) {
+        } else if (itsTabFocus.equals("Default Templates")) {
             if ( aRow > -1) {
                 treeID = ((Integer)DefaultTemplatesPanel.getTableModel().getValueAt(aRow, 0)).intValue();
                 if (treeID > 0) {
@@ -833,7 +840,7 @@ public class MainPanel extends javax.swing.JPanel
                 }
             } else if (aButton.equals("Set to Default")) {
                 if (itsMainFrame.getSharedVars().getTreeID() > 0) {
-                    String aName=JOptionPane.showInputDialog(null, "Give Name for DefaultTree","DefaultTree Name", JOptionPane.QUESTION_MESSAGE);
+                    String aName=JOptionPane.showInputDialog(null, "Give Name for DefaultTree.\n\n !!!!!! Keep in mind that only Default templates who's names are known to MoM can be used by MoM !!!!!!! \n\n","DefaultTree Name", JOptionPane.QUESTION_MESSAGE);
                     if (aName != null) {
                         boolean found=false;
                         try {
@@ -848,6 +855,13 @@ public class MainPanel extends javax.swing.JPanel
                                 JOptionPane.showMessageDialog(null,"This name has been used allready.", "Duplicate name error", JOptionPane.ERROR_MESSAGE);
                             } else {
                                 OtdbRmi.getRemoteMaintenance().assignTemplateName(treeID, aName);
+                                // check momID, if not zero set to zero
+                                if (aTree.momID() != 0) {
+                                    if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aTree.treeID(),0,aTree.campaign)) {
+                                        logger.debug("Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                    }
+                                }
+
                                 // set changed flag to reload mainpanel
                                 itsMainFrame.setChanged(this.getFriendlyName(),true);
                                 checkChanged();
@@ -862,7 +876,7 @@ public class MainPanel extends javax.swing.JPanel
                     }
                 }
             }
-        } else if (itsTabFocus.equals("DefaultTemplates")) {
+        } else if (itsTabFocus.equals("Default Templates")) {
             jOTDBtree aTree=null;
             String aTreeState="";
 
@@ -1204,7 +1218,7 @@ public class MainPanel extends javax.swing.JPanel
                 buttonPanel1.setButtonEnabled("Build VIC tree",false);
                 buttonPanel1.setButtonEnabled("Set to Default",false);
             }
-        } else if (itsTabFocus.equals("DefaultTemplates")) {
+        } else if (itsTabFocus.equals("Default Templates")) {
             if (treeID > 0) {
                 if (aTreeState.equals("idle") ||
                         aTreeState.equals("described") ||
