@@ -29,6 +29,8 @@ ttHistList = []
 ttMeanList = []
 loHistList = []
 lastOKay = False
+noPPS = False
+st5 = -1
 
 workingSettings = [1280, 5, 3261, 35387, 13, 13, ['\x03', '\x1c', '\x7f', '\x15', '\x04', '\x00', '\x01', '\x00', '\x11', '\x13', '\x1a', '\x00', '\x12', '\x0f', '\x17', '\x16', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00']]
 
@@ -177,7 +179,7 @@ def daemonize(logfile):
 
 
 def statusHandler(cmd, response):
-    global ttHistList, loHistList
+    global ttHistList, loHistList, noPPS, st5
     statusLine = "Rubidium_Status at "
     logLine = ""
     curLo = 0
@@ -189,6 +191,12 @@ def statusHandler(cmd, response):
             conVal = 0
             try:
                 conVal = int(response.strip())
+                if conVal == -1:
+                    noPPS = True
+                else:
+                    noPPS = False
+                if conVal > 500000000 :
+                    conVal = conVal - 1000000000
             except:
                 conVal = -127
             ttHistList.append(abs(conVal))
@@ -196,6 +204,16 @@ def statusHandler(cmd, response):
             ttHistList.append(-127)
         if len(ttHistList) > ttLogLength:
             ttHistList.pop(0)
+    elif cmd.find("ST?") != -1:
+        if response != "Fail":
+            parts = response.split(',')
+            try:
+                if len(parts)==6:
+                    st5 = int(parts[4])
+            except:
+                st5 = -1
+        else:
+            st5 = -1
     elif cmd.find("LO?") != -1:
         resStr = response.strip()
         if resStr.find('1') != -1:
@@ -233,17 +251,22 @@ def statusHandler(cmd, response):
                 outOfSpecCount += 1
 
         outOfLocCount = loHistList.count(0)
-        comErrorCount = ttHistList.count(-1)
+        comErrorCount = ttHistList.count(-127)
 
-        if response == "Fail" or outSpec or curLo == 0:
+        if response == "Fail" or outSpec or curLo == 0 or st5 != 4 and st5 != 20 or noPPS:
             logLine += ": fail"
         else:
             logLine += ": okay"
 
-        if curLo == 1:
+        if curLo == 1 and not noPPS and (st5 == 4 or st5 == 20):
             logLine += ", rubidium lock=okay"
         else:
             logLine += ", rubidium lock=fail"
+
+        if noPPS:
+            logLine += ", no pps input"
+        if st5 != 4 and st5 != 20:
+            logLine += ", pps input status: " + str(st5)
             
         logLine += ", communication error=" + str(comErrorCount) + " sec"
         logLine += ", outside spec +- 100 ns=" + str(outOfSpecCount) + " sec"
@@ -330,6 +353,7 @@ def main():
         logStr = ''
         for cmd in cmdList:
             line = callCommand(cmd)
+            statusHandler(cmd,line)
             if cmd.find("TT?")!= -1:
                 # Modify clock response if it returns a high value
                 if line != "Fail":
@@ -341,7 +365,6 @@ def main():
                     if conVal > 500000000 :
                         conVal = conVal - 1000000000
                     line = str(conVal)
-                statusHandler(cmd,line)
             logStr += cmd.strip('?') + ' ' + line.strip() + "; "
         if count >= interval or cmdIndex != 0:
             # Every 60 seconds, call all advanced commands, in groups of 4 / second
