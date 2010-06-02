@@ -66,7 +66,6 @@ private:
 
 	bool TriggeredRaise(unsigned channelA, unsigned scanA, unsigned channelB, unsigned scanB, long double variance) const;
 
-	long double IsValueSet(unsigned frequencyIndex, unsigned scanIndex) const;
 	long double GetValueAt(unsigned frequencyIndex, unsigned scanIndex) const;
 	void SetValueAt(Image2D &dest, unsigned frequencyIndex, unsigned scanIndex, long double newValue);
 	void ConvolveWindows();
