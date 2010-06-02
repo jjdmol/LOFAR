@@ -22,6 +22,7 @@
 
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
+import java.rmi.RemoteException;
 import java.util.Vector;
 import nl.astron.lofar.sas.otb.jotdb3.jVICnodeDef;
 import nl.astron.lofar.sas.otb.util.*;
@@ -106,6 +107,7 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
                 if (tInfo == null) {
                     logger.debug("No such component found!");
                 } else {
+
                     logger.debug("Gathered info for ID: "+tInfo.nodeID());
                     data[k][0]=new Integer(tInfo.nodeID());	   
 	            data[k][1]=new String(tInfo.name);
@@ -113,6 +115,14 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
                     data[k][3]=new String(OtdbRmi.getClassif().get(tInfo.classif));
 	            data[k][4]=new String(tInfo.constraints);
 	            data[k][5]=new String(tInfo.description);
+
+                    /// ToDo Check if topcomponents can be marked or something
+//                    try {
+//                        if (OtdbRmi.getRemoteMaintenance().isTopComponent(tInfo.nodeID())) {
+//                        }
+//                    } catch (RemoteException ex) {
+//                        logger.debug("Error checking isTopComponent");
+//                    }
                 }
             }
             fireTableDataChanged();
