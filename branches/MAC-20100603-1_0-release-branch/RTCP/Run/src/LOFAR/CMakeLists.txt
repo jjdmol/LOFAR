@@ -1,0 +1,19 @@
+# $Id: CMakeLists.txt 14273 2009-10-16 10:08:29Z loose $
+
+install(PROGRAMS 
+  __init__.py
+  BGcontrol.py
+  CommandClient.py
+  Locations.py
+  Logger.py
+  ObservationID.py
+  Parset.py
+  Partitions.py
+  Sections.py
+  Stations.py
+  DESTINATION bin/LOFAR)
+
+install(FILES
+  MAC+IP.dat
+  RSPConnections.dat
+  DESTINATION bin/LOFAR)
