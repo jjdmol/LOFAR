@@ -26,8 +26,6 @@
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/TableIter.h>
 
-#include <AOFlagger/util/stopwatch.h>
-
 #include <AOFlagger/msio/arraycolumniterator.h>
 #include <AOFlagger/msio/scalarcolumniterator.h>
 
@@ -108,11 +106,8 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 	initializePolarizations();
 	checkPolarizations();
 
-	// First, make sure we have a sorted version of the entire measurement set, sorted
-	// lexicographically on band,antenna1,antenna2,time.
-	/*if(_sortedTable == 0)
+	if(_sortedTable == 0)
 	{
-		Stopwatch sortWatch(true);
 		casa::Table *rawTable = _measurementSet->OpenTable(MeasurementSet::MainTable);
 		casa::Block<casa::String> names(4);
 		names[0] = "DATA_DESC_ID";
@@ -121,18 +116,13 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 		names[3] = "TIME";
 		_sortedTable = new casa::Table(rawTable->sort(names));
 		delete rawTable;
-		std::cout << "Sorting time: " << sortWatch.ToString() << std::endl;
-	}*/
+	}
 
-	// In the sorted table, iterate over rows that have the same band,antenna1,antenna2 until we
-	// reach the block of the requested baseline.
-	/*Stopwatch seekWatch(true);
 	casa::Block<casa::String> selectionNames(3);
 	selectionNames[0] = "DATA_DESC_ID";
 	selectionNames[1] = "ANTENNA1";
 	selectionNames[2] = "ANTENNA2";
 	casa::TableIterator iter(*_sortedTable, selectionNames, casa::TableIterator::Ascending, casa::TableIterator::NoSort);
-	size_t seekIterations = 0;
 	while(!iter.pastEnd())
 	{
 		casa::Table table = iter.table();
@@ -143,21 +133,15 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 		{
 			break;
 		} else {
-			++seekIterations;
 			iter.next();
 		}
 	}
-	std::cout << "Seeking time: " << seekWatch.ToString() << " in " << seekIterations << " steps." << std::endl;
-
 	if(iter.pastEnd())
 	{
 		throw std::runtime_error("Baseline not found");
-	}*/
+	}
 
-	//casa::Table table = iter.table();
-	casa::Table *rawTable = _measurementSet->OpenTable(MeasurementSet::MainTable);
-	casa::Table table = *rawTable;
-	delete rawTable;
+	casa::Table table = iter.table();
 
 	if(startIndex > timeCount)
 	{
@@ -252,36 +236,33 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 		ROArrayColumnIterator<bool>::First(flagColumn);
 
 	for(size_t i=0;i<table.nrow();++i) {
-		if(*windowIter == (int) spectralWindowSelect && *antenna1Iter == (int) antenna1Select && *antenna2Iter == (int) antenna2Select)
-		{
-			double time = *timeIter;
-			size_t timeIndex = _observationTimes.find(time)->second;
-			bool timeIsSelected = timeIndex>=startIndex && timeIndex<endIndex;
-			if(_readData && timeIsSelected) {
-				if(_dataKind == WeightData)
-					ReadWeights(timeIndex-startIndex, frequencyCount, *weightIter);
-				else if(modelIter == 0)
-					ReadTimeData(timeIndex-startIndex, frequencyCount, *dataIter, 0);
-				else {
-					const casa::Array<casa::Complex> model = **modelIter; 
-					ReadTimeData(timeIndex-startIndex, frequencyCount, *dataIter, &model);
-				}
+		double time = *timeIter;
+		size_t timeIndex = _observationTimes.find(time)->second;
+		bool timeIsSelected = timeIndex>=startIndex && timeIndex<endIndex;
+		if(_readData && timeIsSelected) {
+			if(_dataKind == WeightData)
+				ReadWeights(timeIndex-startIndex, frequencyCount, *weightIter);
+			else if(modelIter == 0)
+				ReadTimeData(timeIndex-startIndex, frequencyCount, *dataIter, 0);
+			else {
+				const casa::Array<casa::Complex> model = **modelIter; 
+				ReadTimeData(timeIndex-startIndex, frequencyCount, *dataIter, &model);
 			}
-			if(_readFlags && timeIsSelected) {
-				const casa::Array<bool> flag = *flagIter;
-				ReadTimeFlags(timeIndex-startIndex, frequencyCount, flag);
-			}
-			if(timeIsSelected) {
-				casa::Array<double> arr = *uvwIter;
-				casa::Array<double>::const_iterator i = arr.begin();
-				_uvw[timeIndex-startIndex].u = *i;
-				++i;
-				_uvw[timeIndex-startIndex].v = *i;
-				++i;
-				_uvw[timeIndex-startIndex].w = *i;
-			}
-	
 		}
+		if(_readFlags && timeIsSelected) {
+			const casa::Array<bool> flag = *flagIter;
+			ReadTimeFlags(timeIndex-startIndex, frequencyCount, flag);
+		}
+		if(timeIsSelected) {
+			casa::Array<double> arr = *uvwIter;
+			casa::Array<double>::const_iterator i = arr.begin();
+			_uvw[timeIndex-startIndex].u = *i;
+			++i;
+			_uvw[timeIndex-startIndex].v = *i;
+			++i;
+			_uvw[timeIndex-startIndex].w = *i;
+		}
+
 		if(_readData)
 		{
 			++dataIter;
