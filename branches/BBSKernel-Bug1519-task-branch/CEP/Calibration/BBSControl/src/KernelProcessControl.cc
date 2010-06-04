@@ -129,7 +129,7 @@ namespace LOFAR
         string path = ps->getString("ObservationPart.Path");
         string skyDb = ps->getString("ParmDB.Sky");
         string instrumentDb = ps->getString("ParmDB.Instrument");
-
+		  
         try {
           // Open observation part.
           LOG_INFO_STR("Observation part: " << filesys << " : " << path);
@@ -163,6 +163,24 @@ namespace LOFAR
             << instrumentDb);
           return false;
         }
+		  
+		  try {
+          // Open parmDBLog table
+			 string solverTableName=path+"/solver";
+          LOG_INFO_STR("ParmDBLog table: " << solverTableName);
+			 itsParmLogger.reset(new ParmDBLog(solverTableName));
+        }
+        catch(Exception &e) {
+          LOG_ERROR_STR("Failed to open instrument model parameter database: "
+            << instrumentDb);
+          return false;
+        }
+
+		  // Don't need this: Solver object knows about maxIter
+// 		  string maxIterString = ps->getString("MaxIter");  
+// 		  uint32 maxIter=atoi(maxIterString.c_str());		// convert string to integer
+// 		  cout << "maxIter = " << maxIter << endl;			// DEBUG
+
 
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
@@ -705,7 +723,8 @@ namespace LOFAR
           controller.init(command.parms(), command.exclParms(), evalGrid,
             solGrid, cellChunkSize, command.propagate());
 
-          controller.run();
+			 cout << "Calling KernelProcessControl.run(*itsParmLogger)";
+          controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
         }
       } catch(Exception &ex) {
         return CommandResult(CommandResult::ERROR, "Unable to initialize or run"

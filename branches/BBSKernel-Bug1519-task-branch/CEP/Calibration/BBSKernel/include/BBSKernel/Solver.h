@@ -28,8 +28,6 @@
 
 #include <scimath/Fitting/LSQFit.h>
 
-// #include <BBSControl/LocalSolveController.h>
-
 namespace LOFAR
 {
 namespace BBS
