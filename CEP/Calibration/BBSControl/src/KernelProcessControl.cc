@@ -765,9 +765,14 @@ namespace LOFAR
       ASSERT(itsKernelIndex >= 0);
       unsigned int kernel = static_cast<unsigned int>(itsKernelIndex);
 
+      // Determine the calibration group to which this kernel process belongs,
+      // and find the index of the first and last kernel process in that
+      // calibration group.
       unsigned int idx = 0, count = groups[0];
-      while(idx < groups.size() && kernel >= count) {
-        count += groups[idx++];
+      while(kernel >= count) {
+        ++idx;
+        ASSERT(idx < groups.size());
+        count += groups[idx];
       }
       ASSERT(kernel < count);
       LOG_DEBUG_STR("Calibration group index: " << idx);
