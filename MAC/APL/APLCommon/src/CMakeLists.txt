@@ -12,6 +12,7 @@ lofar_add_library(aplcommon
   StartDaemon_Protocol.cc
   Controller_Protocol.cc
   AntennaPos.cc
+  AntennaField.cc
   AntennaSets.cc
   APLUtilities.cc
   ControllerDefines.cc

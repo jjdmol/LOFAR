@@ -256,7 +256,7 @@ bool ChildControl::startChild (uint16				aCntlrType,
 	itsActionList.push_back(ci);
 
 	// Trigger statemachine.
-	if (itsListener) {
+	if (itsListener && !itsActionTimer) {
 		itsActionTimer = itsListener->setTimer(0.0);
 		LOG_DEBUG_STR("ACTIONTIMER=" << itsActionTimer);
 	}
@@ -752,7 +752,7 @@ void ChildControl::_processActionList()
 
 	if (itsActionList.size()) {							// when unhandled actions in list
 		itsTimerPort.cancelTimer(itsActionTimer);
-		itsActionTimer = itsTimerPort.setTimer(1.0);	// restart timer
+		itsActionTimer = itsTimerPort.setTimer(0.2);	// restart timer
 		LOG_DEBUG_STR("ACTIONTIMER=" << itsActionTimer);
 	}
 
