@@ -117,7 +117,7 @@ void BaselineReader::addRequestRows(Request request, size_t requestIndex, std::v
 
 void BaselineReader::ReadRequests()
 {
-	Stopwatch stopwatch;
+  Stopwatch stopwatch(true);
 	
 	initObservationTimes(*_measurementSet);
 	initBaselineCache();

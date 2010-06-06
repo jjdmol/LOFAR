@@ -29,7 +29,7 @@
 namespace rfiStrategy {
 
 	MSImageSet::MSImageSet(std::string location) : _set(location), _reader(0),
-		_dataKind(CorrectedData),
+		_dataKind(ObservedData),
 		_readDipoleAutoPolarisations(true),
 		_readDipoleCrossPolarisations(true),
 		_readStokesI(false),
