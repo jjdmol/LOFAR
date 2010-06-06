@@ -109,13 +109,19 @@ namespace rfiStrategy {
 			{
 				return _loader.TimeIndexCount();
 			}
-			virtual void Request(ImageSetIndex &index)
+			virtual void AddReadRequest(ImageSetIndex &index)
 			{
 			}
-			virtual void LoadRequests()
+			virtual void PerformReadRequests()
 			{
 			}
 			virtual BaselineData *GetNextRequested()
+			{
+			}
+			virtual void AddWriteFlagsTask(ImageSetIndex &index, TimeFrequencyData &data)
+			{
+			}
+			virtual void PerformWriteFlagsTask()
 			{
 			}
 		private:

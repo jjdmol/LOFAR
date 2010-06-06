@@ -115,34 +115,46 @@ void BaselineReader::addRequestRows(ReadRequest request, size_t requestIndex, st
 	}
 }
 
-void BaselineReader::ReadRequests()
+void BaselineReader::addRequestRows(WriteRequest request, size_t requestIndex, std::vector<std::pair<size_t, size_t> > &rows)
+{
+	for(std::vector<BaselineCacheItem>::const_iterator i=_baselineCache.begin();i!=_baselineCache.end();++i)
+	{
+		if(i->antenna1 == request.antenna1 && i->antenna2 == request.antenna2 && i->spectralWindow == request.spectralWindow)
+		{
+			for(std::vector<size_t>::const_iterator j=i->rows.begin();j!=i->rows.end();++j)
+				rows.push_back(std::pair<size_t, size_t>(*j, requestIndex));
+			break;
+		}
+	}
+}
+
+void BaselineReader::PerformReadRequests()
 {
   Stopwatch stopwatch(true);
 	
 	initObservationTimes(*_measurementSet);
 	initBaselineCache();
+	initializePolarizations();
 
 	// Each element contains (row number, corresponding request index)
 	std::vector<std::pair<size_t, size_t> > rows;
 	
-	for(size_t i=0;i!=_requests.size();++i)
-		addRequestRows(_requests[i], i, rows);
+	for(size_t i=0;i!=_readRequests.size();++i)
+		addRequestRows(_readRequests[i], i, rows);
 	std::sort(rows.begin(), rows.end());
 	
 	size_t timeCount = _observationTimes.size();
 	int frequencyCount = _measurementSet->FrequencyCount();
 
-	initializePolarizations();
-
-	std::cout << "Reading " << _requests.size() << " requests with " << rows.size() << " rows total, flags=" << _readFlags << ", " << _polarizationCount << " polarizations." << std::endl;
+	std::cout << "Reading " << _readRequests.size() << " requests with " << rows.size() << " rows total, flags=" << _readFlags << ", " << _polarizationCount << " polarizations." << std::endl;
 	
 	_results.clear();
-	for(size_t i=0;i<_requests.size();++i)
+	for(size_t i=0;i<_readRequests.size();++i)
 	{
 		_results.push_back(Result());
 		size_t
-			startIndex = _requests[i].startIndex,
-			endIndex = _requests[i].endIndex;
+			startIndex = _readRequests[i].startIndex,
+			endIndex = _readRequests[i].endIndex;
 			
 		if(startIndex > timeCount)
 		{
@@ -196,8 +208,8 @@ void BaselineReader::ReadRequests()
 		double time = timeColumn(rowIndex);
 		size_t
 			timeIndex = _observationTimes.find(time)->second,
-			startIndex = _requests[requestIndex].startIndex,
-			endIndex = _requests[requestIndex].endIndex;
+			startIndex = _readRequests[requestIndex].startIndex,
+			endIndex = _readRequests[requestIndex].endIndex;
 		bool timeIsSelected = timeIndex>=startIndex && timeIndex<endIndex;
 		if(_readData && timeIsSelected) {
 			if(_dataKind == WeightData)
@@ -228,7 +240,7 @@ void BaselineReader::ReadRequests()
 	
 	std::cout << "Time of ReadRequests(): " << stopwatch.ToString() << std::endl;
 
-	_requests.clear();
+	_readRequests.clear();
 }
 
 casa::ROArrayColumn<casa::Complex> *BaselineReader::CreateDataColumn(DataKind kind, casa::Table &table)
@@ -245,71 +257,67 @@ casa::ROArrayColumn<casa::Complex> *BaselineReader::CreateDataColumn(DataKind ki
 	}
 }
 
-void BaselineReader::WriteNewFlagsPart(std::vector<Mask2DCPtr> newValues, int antenna1, int antenna2, int spectralWindow, size_t timeOffset, size_t timeEnd, size_t leftBorder, size_t rightBorder)
+void BaselineReader::PerformWriteRequests()
 {
 	Stopwatch stopwatch(true);
 
+	initObservationTimes(*_measurementSet);
+	initBaselineCache();
 	initializePolarizations();
+
+	// Each element contains (row number, corresponding request index)
+	std::vector<std::pair<size_t, size_t> > rows;
+	
+	for(size_t i=0;i!=_writeRequests.size();++i)
+		addRequestRows(_writeRequests[i], i, rows);
+	std::sort(rows.begin(), rows.end());
 
 	size_t frequencyCount = _measurementSet->FrequencyCount();
 
-	initObservationTimes(*_measurementSet);
-
 	casa::Table *table = _measurementSet->OpenTable(MeasurementSet::MainTable, true);
-	casa::ROScalarColumn<int> antenna1Column(*table, "ANTENNA1"); 
-	casa::ROScalarColumn<int> antenna2Column(*table, "ANTENNA2");
-	casa::ROScalarColumn<int> windowColumn(*table, "DATA_DESC_ID");
 	casa::ROScalarColumn<double> timeColumn(*table, "TIME");
 	casa::ArrayColumn<bool> flagColumn(*table, "FLAG");
 
-	ScalarColumnIterator<int> antenna1Iter = ScalarColumnIterator<int>::First(antenna1Column);
-	ScalarColumnIterator<int> antenna2Iter = ScalarColumnIterator<int>::First(antenna2Column);
-	ScalarColumnIterator<int> windowIter = ScalarColumnIterator<int>::First(windowColumn);
-	ScalarColumnIterator<double> timeIter = ScalarColumnIterator<double>::First(timeColumn);
-	ArrayColumnIterator<bool> flagIter = ArrayColumnIterator<bool>::First(flagColumn);
-
-	if(frequencyCount != newValues[0]->Height())
+	for(std::vector<WriteRequest>::iterator i=_writeRequests.begin();i!=_writeRequests.end();++i)
 	{
-		std::cerr << "The frequency count in the measurement set (" << frequencyCount << ") does not match the image!" << std::endl;
-	}
-	if(timeEnd - timeOffset != newValues[0]->Width())
-	{
-		std::cerr << "The number of time scans to write in the measurement set (" << (timeEnd - timeOffset) << ") does not match the image (" << newValues[0]->Width() << ") !" << std::endl;
+		if(frequencyCount != i->flags[0]->Height())
+		{
+			std::cerr << "The frequency count in the measurement set (" << frequencyCount << ") does not match the image!" << std::endl;
+		}
+		if(i->endIndex - i->startIndex != i->flags[0]->Width())
+		{
+			std::cerr << "The number of time scans to write in the measurement set (" << (i->endIndex - i->startIndex) << ") does not match the image (" << i->flags[0]->Width() << ") !" << std::endl;
+		}
 	}
 
 	size_t rowsWritten = 0;
-	for(size_t i=0;i<table->nrow();++i) {
-		if((*antenna1Iter) == (int) antenna1 &&
-		   (*antenna2Iter) == (int) antenna2 &&
-		   (*windowIter) == (int) spectralWindow)
+
+	for(std::vector<std::pair<size_t, size_t> >::const_iterator i=rows.begin();i!=rows.end();++i)
+	{
+		size_t rowIndex = i->first;
+		WriteRequest &request = _writeRequests[i->second];
+		double time = timeColumn(rowIndex);
+		size_t timeIndex = _observationTimes.find(time)->second;
+		if(timeIndex >= request.startIndex + request.leftBorder && timeIndex < request.endIndex - request.rightBorder)
 		{
-			double time = *timeIter;
-			size_t timeIndex = _observationTimes.find(time)->second;
-			if(timeIndex >= timeOffset + leftBorder && timeIndex < timeEnd - rightBorder)
-			{
-				casa::Array<bool> flag = *flagIter;
-				casa::Array<bool>::iterator j = flag.begin();
-				for(size_t f=0;f<(size_t) frequencyCount;++f) {
-					for(size_t p=0;p<_polarizationCount;++p)
-					{
-						*j = newValues[0]->Value(timeIndex - timeOffset, f);
-						++j;
-					}
+			casa::Array<bool> flag = flagColumn(rowIndex);
+			casa::Array<bool>::iterator j = flag.begin();
+			for(size_t f=0;f<(size_t) frequencyCount;++f) {
+				for(size_t p=0;p<_polarizationCount;++p)
+				{
+					*j = request.flags[0]->Value(timeIndex - request.startIndex, f);
+					++j;
 				}
-				flagIter.Set(flag);
-				++rowsWritten;
 			}
+			flagColumn.basePut(rowIndex, flag);
+			++rowsWritten;
 		}
-
-		++antenna1Iter;
-		++antenna2Iter;
-		++timeIter;
-		++windowIter;
-		++flagIter;
 	}
-	std::cout << rowsWritten << " rows written in " << stopwatch.ToString() << std::endl;
-
+	_writeRequests.clear();
+	
 	delete table;
+
+	std::cout << rowsWritten << "/" << rows.size() << " rows written in " << stopwatch.ToString() << std::endl;
 }
 
 void BaselineReader::readTimeData(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<casa::Complex> data, const casa::Array<casa::Complex> *model)
