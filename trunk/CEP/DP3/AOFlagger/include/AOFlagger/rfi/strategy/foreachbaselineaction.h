@@ -27,7 +27,7 @@
 #include <stack>
 
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/condition.hpp>
 
 namespace rfiStrategy {
 
@@ -126,7 +126,7 @@ namespace rfiStrategy {
 			ArtifactSet *_artifacts, *_resultSet;
 			
 			boost::mutex _mutex;
-			boost::condition_variable _dataAvailable, _dataProcessed;
+			boost::condition _dataAvailable, _dataProcessed;
 			std::stack<BaselineData*> _baselineBuffer;
 			bool _finishedBaselines;
 
