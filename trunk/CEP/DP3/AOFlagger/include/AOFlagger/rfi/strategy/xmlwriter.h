@@ -80,38 +80,45 @@ namespace rfiStrategy {
 			void writeTimeSelectionAction(const class TimeSelectionAction &action);
 			void writeWriteFlagsAction(const class WriteFlagsAction &action);
 
-			inline void Comment(const char *comment) const
+			void comment(const char *comment) const
 			{
 				int rc = xmlTextWriterWriteComment(_writer, BAD_CAST comment);
 				if (rc < 0)
 					throw XmlWriteError("WriteStrategy: Error at xmlTextWriterWriteFormatComment");
 			}
-			inline void Start(const char *element) const
+			void start(const char *element) const
 			{
 				if(xmlTextWriterStartElement(_writer, BAD_CAST element) < 0)
 					throw XmlWriteError("Start(element): Error at xmlTextWriterStartElement");
 			}
-			inline void End() const
+			void end() const
 			{
 				if (xmlTextWriterEndElement(_writer) < 0)
 					throw XmlWriteError("End(): Error at xmlTextWriterEndElement");
 			}
-			inline void Attribute(const char *attribute, const char *value) const
+			void attribute(const char *attributeName, const char *value) const
 			{ 
-				if(xmlTextWriterWriteAttribute(_writer, BAD_CAST attribute, BAD_CAST value) < 0)
+				if(xmlTextWriterWriteAttribute(_writer, BAD_CAST attributeName, BAD_CAST value) < 0)
 					throw XmlWriteError("Attribute(..): Error at xmlTextWriterWriteAttribute");
 			}
-			inline void Write(const char *element, const char *value) const
+			template<typename ValueType>
+			void attribute(const char *attributeName, ValueType value) const
+			{ 
+				std::stringstream s;
+				s << value;
+				attribute(attributeName, s.str().c_str());
+			}
+			void write(const char *element, const char *value) const
 			{
 				if(xmlTextWriterWriteElement(_writer, BAD_CAST element, BAD_CAST value) < 0)
-					throw XmlWriteError("Write(..): Error at xmlTextWriterWriteElement");
+					throw XmlWriteError("write(..): Error at xmlTextWriterWriteElement");
 			}
 			template<typename ValueType>
-			inline void Write(const char *element, ValueType value) const
+			void write(const char *element, ValueType value) const
 			{
 				std::stringstream s;
 				s << value;
-				Write(element, s.str().c_str());
+				write(element, s.str().c_str());
 			}
 			std::string wrap(const std::string &input, size_t max) const;
 
