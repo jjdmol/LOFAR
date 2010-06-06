@@ -102,6 +102,8 @@ MSWindow::~MSWindow()
 	{
 		delete *i;
 	}
+	delete _imagePlaneWindow;
+	
 	delete _statistics;
 	delete _strategy;
 	if(HasImageSet())

@@ -106,10 +106,10 @@ void ImageWidget::Update()
 					rowpointer[xa+3]=a;
 				}
 			}
-			delete colorMap;
 			_isInitialized = true;
 			redraw();
 		}
+		delete colorMap;
 	}
 } 
 

@@ -43,9 +43,9 @@ BaselineReader::~BaselineReader()
 
 void BaselineReader::initObservationTimes(MeasurementSet &set)
 {
-	std::cout << "Initializing observation times..." << std::endl;
 	if(_observationTimes.size() == 0)
 	{
+		std::cout << "Initializing observation times..." << std::endl;
 		const std::set<double> &times = set.GetObservationTimesSet();
 		unsigned index = 0;
 		for(std::set<double>::const_iterator i=times.begin();i!=times.end();++i)
@@ -155,7 +155,6 @@ void BaselineReader::ReadRequests()
 		}
 
 		size_t width = endIndex-startIndex;
-		std::cout << "Request " << i << ", start=" << startIndex << ", end=" << endIndex << std::endl;
 		for(size_t p=0;p<_polarizationCount;++p)
 		{
 			if(_readData) {
@@ -225,6 +224,7 @@ void BaselineReader::ReadRequests()
 	}
 	if(dataColumn != 0)
 		delete dataColumn;
+	delete table;
 	
 	std::cout << "Time of ReadRequests(): " << stopwatch.ToString() << std::endl;
 
