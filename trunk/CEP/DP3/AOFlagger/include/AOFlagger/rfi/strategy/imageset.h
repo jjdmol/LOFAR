@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "../../msio/types.h"
+#include "../../msio/timefrequencydata.h"
 #include "../../msio/timefrequencymetadata.h"
 
 namespace rfiStrategy {
@@ -50,6 +51,47 @@ namespace rfiStrategy {
 			class ImageSet *_set;
 	};
 	
+	class BaselineData {
+		public:
+			BaselineData(TimeFrequencyData data, TimeFrequencyMetaDataCPtr metaData, ImageSetIndex &index)
+			: _data(data), _metaData(metaData), _index(index.Copy())
+			{
+			}
+			BaselineData(ImageSetIndex &index)
+			: _data(), _metaData(), _index(index.Copy())
+			{
+			}
+			BaselineData(const BaselineData &source)
+			: _data(source._data), _metaData(source._metaData), _index(source._index->Copy())
+			{
+			}
+			~BaselineData()
+			{
+				delete _index;
+			}
+			void operator=(const BaselineData &source)
+			{
+				delete _index;
+				_data = source._data;
+				_metaData = source._metaData;
+				_index = source._index->Copy();
+			}
+			const TimeFrequencyData &Data() const { return _data; }
+			void SetData(const TimeFrequencyData &data) { _data = data; }
+			
+			TimeFrequencyMetaDataCPtr MetaData() { return _metaData; }
+			void SetMetaData(TimeFrequencyMetaDataCPtr metaData) { _metaData = metaData; }
+
+			const ImageSetIndex &Index() const { return *_index; }
+			ImageSetIndex &Index() { return *_index; }
+			void SetIndex(const ImageSetIndex &newIndex) { delete _index; _index = newIndex.Copy(); }
+		
+		private:
+			TimeFrequencyData _data;
+			TimeFrequencyMetaDataCPtr _metaData;
+			ImageSetIndex *_index;
+	};
+	
 	class ImageSet {
 		public:
 			virtual ~ImageSet() { };
@@ -66,12 +108,15 @@ namespace rfiStrategy {
 			virtual std::string Name() = 0;
 			virtual TimeFrequencyData *LoadData(ImageSetIndex &index) = 0;
 			virtual void LoadFlags(ImageSetIndex &index, TimeFrequencyData &destination) = 0;
-			virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index) = 0;
+			//virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index) = 0;
 			virtual void WriteFlags(ImageSetIndex &index, TimeFrequencyData &data) = 0;
 			static class ImageSet *Create(const std::string &file);
 			virtual size_t GetPart(ImageSetIndex &index) = 0;
 			virtual size_t GetAntenna1(ImageSetIndex &index) = 0;
 			virtual size_t GetAntenna2(ImageSetIndex &index) = 0;
+			virtual void Request(ImageSetIndex &index) = 0;
+			virtual void LoadRequests() = 0;
+			virtual BaselineData *GetNextRequested() = 0;
 	};
 
 }

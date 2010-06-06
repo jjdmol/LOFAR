@@ -28,7 +28,7 @@
 #include "../../msio/antennainfo.h"
 #include "../../msio/timefrequencydata.h"
 #include "../../msio/timefrequencymetadata.h"
-#include "../../msio/timefrequencyimager.h"
+#include "../../msio/baselinereader.h"
 #include "../../msio/measurementset.h"
 
 /**
@@ -71,11 +71,12 @@ namespace rfiStrategy {
 			virtual MSImageSet *Copy()
 			{
 				MSImageSet *newSet = new MSImageSet(_set.Location());
-				newSet->_imager = 0;
+				newSet->_reader = 0;
 				newSet->_dataKind = _dataKind;
 				newSet->_readDipoleAutoPolarisations = _readDipoleAutoPolarisations;
 				newSet->_readDipoleCrossPolarisations = _readDipoleCrossPolarisations;
 				newSet->_readStokesI = _readStokesI;
+				newSet->_readFlags = _readFlags;
 				newSet->_baselines = _baselines;
 				newSet->_bandCount = _bandCount;
 				newSet->_maxScanCounts = _maxScanCounts;
@@ -87,12 +88,13 @@ namespace rfiStrategy {
 	
 			virtual std::string Name() { return _set.Location(); }
 			virtual TimeFrequencyData *LoadData(ImageSetIndex &index);
-			//virtual BandInfo LoadBandInfo(ImageSetIndex &index);
-			//virtual AntennaInfo LoadAntenna1Info(ImageSetIndex &index);
-			//virtual AntennaInfo LoadAntenna2Info(ImageSetIndex &index);
-			//virtual FieldInfo LoadFieldInfo(ImageSetIndex &index);
+			
+			void Request(ImageSetIndex &index);
+			void LoadRequests();
+			BaselineData *GetNextRequested();
+			
 			virtual void Initialize();
-			virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index);
+			//virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index);
 	
 			virtual size_t GetAntenna1(ImageSetIndex &index) {
 				return _baselines[static_cast<MSImageSetIndex&>(index)._baselineIndex].first;
@@ -149,24 +151,18 @@ namespace rfiStrategy {
 			virtual void WriteFlags(ImageSetIndex &index, TimeFrequencyData &data);
 			size_t PartCount() const { return _partCount; }
 			void SetReadFlags(bool readFlags) { _readFlags = readFlags; }
-			void SetReadFlagsOnly() throw()
-			{
-				_readStokesI = false;
-				_readDipoleAutoPolarisations = false;
-				_readDipoleCrossPolarisations = false;
-				_readFlags = true;
-			}
 			virtual void LoadFlags(ImageSetIndex &index, TimeFrequencyData &destination);
 		private:
 			size_t StartIndex(MSImageSetIndex &index);
 			size_t EndIndex(MSImageSetIndex &index);
 			size_t LeftBorder(MSImageSetIndex &index);
 			size_t RightBorder(MSImageSetIndex &index);
-			bool InitImager(MSImageSetIndex &index);
+			void initReader();
 			size_t FindBaselineIndex(size_t a1, size_t a2);
+			TimeFrequencyMetaDataCPtr createMetaData(ImageSetIndex &index, std::vector<UVW> &uvw);
 
 			MeasurementSet _set;
-			TimeFrequencyImager *_imager;
+			BaselineReader *_reader;
 			DataKind _dataKind;
 			bool _readDipoleAutoPolarisations, _readDipoleCrossPolarisations, _readStokesI;
 			std::vector<std::pair<size_t,size_t> > _baselines;
@@ -175,6 +171,7 @@ namespace rfiStrategy {
 			size_t _partCount, _timeScanCount;
 			size_t _scanCountPartOverlap;
 			bool _readFlags;
+			std::vector<BaselineData> _baselineData;
 	};
 
 }

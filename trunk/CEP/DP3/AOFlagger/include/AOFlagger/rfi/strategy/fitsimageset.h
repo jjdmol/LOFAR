@@ -99,6 +99,15 @@ namespace rfiStrategy {
 			virtual size_t GetAntenna2(ImageSetIndex &index) {
 				return _baselines[static_cast<FitsImageSetIndex&>(index)._baselineIndex].second;
 			}
+			virtual void Request(ImageSetIndex &index)
+			{
+			}
+			virtual void LoadRequests()
+			{
+			}
+			virtual BaselineData *GetNextRequested()
+			{
+			}
 		private:
 			void ReadTable();
 			void ReadAntennaTable();

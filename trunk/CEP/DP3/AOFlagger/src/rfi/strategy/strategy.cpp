@@ -195,12 +195,6 @@ namespace rfiStrategy {
 		ForEachBaselineAction *feBaseBlock = new ForEachBaselineAction();
 		Add(feBaseBlock);
 
-		LoadImageAction *loadImageAction = new LoadImageAction();
-		loadImageAction->SetReadStokesI();
-		feBaseBlock->Add(loadImageAction);
-
-		feBaseBlock->Add(new LoadFlagsAction());
-		
 		LoadDefaultSingleStrategy(*feBaseBlock, pedantic, pulsar);
 
 		feBaseBlock->Add(new WriteFlagsAction());
@@ -215,12 +209,6 @@ namespace rfiStrategy {
 		ForEachBaselineAction *feBaseBlock = new ForEachBaselineAction();
 		Add(feBaseBlock);
 
-		LoadImageAction *loadImageAction = new LoadImageAction();
-		loadImageAction->SetReadDipoleAutoPolarisations();
-		feBaseBlock->Add(loadImageAction);
-
-		feBaseBlock->Add(new LoadFlagsAction());
-		
 		LoadDefaultSingleStrategy(*feBaseBlock, pedantic, pulsar);
 
 		feBaseBlock->Add(new WriteFlagsAction());
@@ -234,12 +222,6 @@ namespace rfiStrategy {
 	{
 		ForEachBaselineAction *feBaseBlock = new ForEachBaselineAction();
 		Add(feBaseBlock);
-
-		LoadImageAction *loadImageAction = new LoadImageAction();
-		loadImageAction->SetReadAllPolarisations();
-		feBaseBlock->Add(loadImageAction);
-
-		feBaseBlock->Add(new LoadFlagsAction());
 		
 		LoadDefaultSingleStrategy(*feBaseBlock, pedantic, pulsar);
 

@@ -25,6 +25,7 @@ set(GUI_FILES
 
 set(MSIO_FILES
   msio/baselinematrixloader.cpp
+  msio/baselinereader.cpp
   msio/colormap.cpp
   msio/fitsfile.cpp
   msio/image2d.cpp

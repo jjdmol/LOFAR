@@ -291,12 +291,15 @@ TimeFrequencyData *TimeFrequencyData::CreateTFDataFromCrossDipoleCombination(con
 
 void TimeFrequencyData::SetImagesToZero()
 {
-	Image2DPtr zeroImage = Image2D::CreateZeroImagePtr(ImageWidth(), ImageHeight());
-	Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(ImageWidth(), ImageHeight());
-	for(std::vector<Image2DCPtr>::iterator i=_images.begin();i!=_images.end();++i)
-		(*i) = zeroImage;
-	for(std::vector<Mask2DCPtr>::iterator i=_flagging.begin();i!=_flagging.end();++i)
-		(*i) = mask;
+	if(!IsEmpty())
+	{
+		Image2DPtr zeroImage = Image2D::CreateZeroImagePtr(ImageWidth(), ImageHeight());
+		Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(ImageWidth(), ImageHeight());
+		for(std::vector<Image2DCPtr>::iterator i=_images.begin();i!=_images.end();++i)
+			(*i) = zeroImage;
+		for(std::vector<Mask2DCPtr>::iterator i=_flagging.begin();i!=_flagging.end();++i)
+			(*i) = mask;
+	}
 }
 
 void TimeFrequencyData::MultiplyImages(long double factor)

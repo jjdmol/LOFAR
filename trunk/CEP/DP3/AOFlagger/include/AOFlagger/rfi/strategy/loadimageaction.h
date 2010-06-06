@@ -30,7 +30,7 @@ namespace rfiStrategy {
 	class LoadImageAction : public Action
 	{
 		public:
-			LoadImageAction() : _dataKind(ObservedData), _polarisations(ReadAllPol) 
+			LoadImageAction() : _dataKind(ObservedData), _polarisations(ReadAllPol), _readFlags(true)
 			{
 			}
 			virtual std::string Description()
@@ -58,10 +58,12 @@ namespace rfiStrategy {
 
 			enum DataKind DataKind() const { return _dataKind; }
 			void SetDataKind(enum DataKind dataKind) { _dataKind = dataKind; }
+			void SetReadFlags(bool readFlags) { _readFlags = readFlags; }
 		private:
 			enum DataKind _dataKind;
 			enum Polarisations { ReadAllPol, ReadAutoPol, ReadSI }
 				_polarisations;
+			bool _readFlags;
 	};
 
 }
