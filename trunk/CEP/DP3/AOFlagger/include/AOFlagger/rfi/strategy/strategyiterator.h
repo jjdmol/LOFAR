@@ -19,7 +19,7 @@ namespace rfiStrategy
 			StrategyIterator &operator++()
 			{
 				ActionContainer *container = dynamic_cast<ActionContainer*>(_currentAction);
-				if(container != 0)
+				if(container != 0 && container->GetChildCount()!=0)
 				{
 					_currentAction = &container->GetFirstChild();
 					_indices.push(0);

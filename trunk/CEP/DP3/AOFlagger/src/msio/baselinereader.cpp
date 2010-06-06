@@ -29,6 +29,7 @@
 
 #include <AOFlagger/msio/arraycolumniterator.h>
 #include <AOFlagger/msio/scalarcolumniterator.h>
+#include <AOFlagger/util/stopwatch.h>
 
 BaselineReader::BaselineReader(MeasurementSet &measurementSet)
 	: _measurementSet(&measurementSet), _dataKind(ObservedData), _readData(true), _readFlags(true),
@@ -116,6 +117,8 @@ void BaselineReader::addRequestRows(Request request, size_t requestIndex, std::v
 
 void BaselineReader::ReadRequests()
 {
+	Stopwatch stopwatch;
+	
 	initObservationTimes(*_measurementSet);
 	initBaselineCache();
 
@@ -223,7 +226,7 @@ void BaselineReader::ReadRequests()
 	if(dataColumn != 0)
 		delete dataColumn;
 	
-	std::cout << "Orinal flags: " << _results[0]._flags[0]->GetCount<true>() << std::endl;
+	std::cout << "Time of ReadRequests(): " << stopwatch.ToString() << std::endl;
 
 	_requests.clear();
 }
