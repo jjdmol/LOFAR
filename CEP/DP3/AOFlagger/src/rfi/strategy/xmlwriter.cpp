@@ -81,6 +81,8 @@ namespace rfiStrategy {
 		Comment(comment.c_str());
 
 		Start("rfi-strategy");
+		Write<double>("format-version", STRATEGY_FILE_FORMAT_VERSION);
+		Write<double>("reader-version-required", STRATEGY_FILE_READER_VERSION_REQUIRED);
 		writeAction(strategy);
 		End();
 
