@@ -195,8 +195,8 @@ void MSWindow::loadCurrentTFData()
 {
 	if(_imageSet != 0) {
 		try {
-			_imageSet->Request(*_imageSetIndex);
-			_imageSet->LoadRequests();
+			_imageSet->AddReadRequest(*_imageSetIndex);
+			_imageSet->PerformReadRequests();
 			rfiStrategy::BaselineData *baseline = _imageSet->GetNextRequested();
 			_timeFrequencyWidget.SetNewData(baseline->Data(), baseline->MetaData());
 			delete baseline;

@@ -161,7 +161,7 @@ namespace rfiStrategy {
 			endIndex = EndIndex(msIndex);
 		std::cout << "Loading baseline " << a1 << "x" << a2 << ", t=" << startIndex << "-" << endIndex << std::endl;
 		_reader->AddReadRequest(a1, a2, msIndex._band, startIndex, endIndex);
-		_reader->ReadRequests();
+		_reader->PerformReadRequests();
 		std::vector<UVW> uvw;
 		TimeFrequencyData data = _reader->GetNextResult(uvw);
 		return new TimeFrequencyData(data);
@@ -276,6 +276,49 @@ namespace rfiStrategy {
 
 	void MSImageSet::WriteFlags(ImageSetIndex &index, TimeFrequencyData &data)
 	{
+		AddWriteFlagsTask(index, data);
+		_reader->PerformWriteRequests();
+	}
+
+	void MSImageSet::AddReadRequest(ImageSetIndex &index)
+	{
+		BaselineData newRequest(index);
+		_baselineData.push_back(newRequest);
+	}
+	
+	void MSImageSet::PerformReadRequests()
+	{
+		for(std::vector<BaselineData>::iterator i=_baselineData.begin();i!=_baselineData.end();++i)
+		{
+			MSImageSetIndex &index = static_cast<MSImageSetIndex&>(i->Index());
+			_reader->AddReadRequest(GetAntenna1(index), GetAntenna2(index), index._band, StartIndex(index), EndIndex(index));
+		}
+		
+		_reader->PerformReadRequests();
+		
+		for(std::vector<BaselineData>::iterator i=_baselineData.begin();i!=_baselineData.end();++i)
+		{
+			if(!i->Data().IsEmpty())
+				throw std::runtime_error("ReadRequest() called, but a previous read request was not completely processed by calling GetNextRequested().");
+			std::vector<UVW> uvw;
+			TimeFrequencyData data = _reader->GetNextResult(uvw);
+			i->SetData(data);
+			TimeFrequencyMetaDataCPtr metaData = createMetaData(i->Index(), uvw);
+			i->SetMetaData(metaData);
+		}
+	}
+	
+	BaselineData *MSImageSet::GetNextRequested()
+	{
+		BaselineData top = _baselineData.front();
+		_baselineData.erase(_baselineData.begin());
+		if(top.Data().IsEmpty())
+			throw std::runtime_error("Calling GetNextRequested(), but requests were not read with LoadRequests.");
+		return new BaselineData(top);
+	}
+	
+	void MSImageSet::AddWriteFlagsTask(ImageSetIndex &index, TimeFrequencyData &data)
+	{
 		MSImageSetIndex &msIndex = static_cast<MSImageSetIndex&>(index);
 		initReader();
 		size_t a1 = _baselines[msIndex._baselineIndex].first;
@@ -303,7 +346,7 @@ namespace rfiStrategy {
 		}
 
 		TimeFrequencyStatistics stats(data);
-		std::cout << "Writing flags: "
+		std::cout << "Adding write flags task, flags: "
 			<< TimeFrequencyStatistics::FormatRatio(stats.GetFlaggedRatio())
 			<< " (" << xx->GetCount<true>() << " / "
 			<< xy->GetCount<true>() << " / "
@@ -315,44 +358,12 @@ namespace rfiStrategy {
 			dataVector.push_back(xy);
 			dataVector.push_back(yx);
 			dataVector.push_back(yy);
-		_reader->WriteNewFlagsPart(dataVector, a1, a2, b, startIndex, endIndex, LeftBorder(msIndex), RightBorder(msIndex));
-		std::cout << "Finished writing flags." << std::endl;
+		_reader->AddWriteTask(dataVector, a1, a2, b, startIndex, endIndex, LeftBorder(msIndex), RightBorder(msIndex));
+	}
+	
+	void MSImageSet::PerformWriteFlagsTask()
+	{
+		_reader->PerformWriteRequests();
 	}
 
-	void MSImageSet::Request(ImageSetIndex &index)
-	{
-		BaselineData newRequest(index);
-		_baselineData.push_back(newRequest);
-	}
-	
-	void MSImageSet::LoadRequests()
-	{
-		for(std::vector<BaselineData>::iterator i=_baselineData.begin();i!=_baselineData.end();++i)
-		{
-			MSImageSetIndex &index = static_cast<MSImageSetIndex&>(i->Index());
-			_reader->AddReadRequest(GetAntenna1(index), GetAntenna2(index), index._band, StartIndex(index), EndIndex(index));
-		}
-		
-		_reader->ReadRequests();
-		
-		for(std::vector<BaselineData>::iterator i=_baselineData.begin();i!=_baselineData.end();++i)
-		{
-			if(!i->Data().IsEmpty())
-				throw std::runtime_error("ReadRequest() called, but a previous read request was not completely processed by calling GetNextRequested().");
-			std::vector<UVW> uvw;
-			TimeFrequencyData data = _reader->GetNextResult(uvw);
-			i->SetData(data);
-			TimeFrequencyMetaDataCPtr metaData = createMetaData(i->Index(), uvw);
-			i->SetMetaData(metaData);
-		}
-	}
-	
-	BaselineData *MSImageSet::GetNextRequested()
-	{
-		BaselineData top = _baselineData.front();
-		_baselineData.erase(_baselineData.begin());
-		if(top.Data().IsEmpty())
-			throw std::runtime_error("Calling GetNextRequested(), but requests were not read with LoadRequests.");
-		return new BaselineData(top);
-	}
 }

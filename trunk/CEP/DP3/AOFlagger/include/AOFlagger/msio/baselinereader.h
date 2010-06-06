@@ -35,21 +35,37 @@ class BaselineReader {
 	public:
 		explicit BaselineReader(MeasurementSet &measurementSet);
 		~BaselineReader();
+
+		void SetReadFlags(bool readFlags) { _readFlags = readFlags; }
+		void SetReadData(bool readData) { _readData = readData; }
+
 		void AddReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow);
 		void AddReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow, size_t startIndex, size_t endIndex)
 		{
 			addReadRequest(antenna1, antenna2, spectralWindow, startIndex, endIndex);
 		}
-		void ReadRequests();
-
-		void SetReadFlags(bool readFlags) { _readFlags = readFlags; }
-		void SetReadData(bool readData) { _readData = readData; }
-
-		void WriteNewFlags(std::vector<Mask2DCPtr> newValues, int antenna1, int antenna2, int spectralWindow)
+		void PerformReadRequests();
+		
+		void AddWriteTask(std::vector<Mask2DCPtr> flags, int antenna1, int antenna2, int spectralWindow)
 		{
-			WriteNewFlagsPart(newValues, antenna1, antenna2, spectralWindow, 0, newValues[0]->Width());
+			if(!flags.empty())
+				AddWriteTask(flags, antenna1, antenna2, spectralWindow, 0, flags[0]->Width());
 		}
-		void WriteNewFlagsPart(std::vector<Mask2DCPtr> newValues, int antenna1, int antenna2, int spectralWindow, size_t timeOffset, size_t timeEnd, size_t leftBorder=0, size_t rightBorder=0);
+		void AddWriteTask(std::vector<Mask2DCPtr> flags, int antenna1, int antenna2, int spectralWindow, size_t timeOffset, size_t timeEnd, size_t leftBorder=0, size_t rightBorder=0)
+		{
+			WriteRequest task;
+			task.flags = flags;
+			task.antenna1 = antenna1;
+			task.antenna2 = antenna2;
+			task.spectralWindow = spectralWindow;
+			task.startIndex = timeOffset;
+			task.endIndex = timeEnd;
+			task.leftBorder = leftBorder;
+			task.rightBorder = rightBorder;
+			_writeRequests.push_back(task);
+		}
+		void PerformWriteRequests();
+		
 		void SetDataKind(enum DataKind kind) { _dataKind = kind; }
 
 		class TimeFrequencyData GetNextResult(std::vector<class UVW> &uvw);
@@ -61,6 +77,33 @@ class BaselineReader {
 			int spectralWindow;
 			size_t startIndex;
 			size_t endIndex;
+		};
+		struct WriteRequest {
+			WriteRequest() { }
+			WriteRequest(const WriteRequest &source)
+			: flags(source.flags), antenna1(source.antenna1), antenna2(source.antenna2), spectralWindow(source.spectralWindow), startIndex(source.startIndex), endIndex(source.endIndex),
+			leftBorder(source.leftBorder), rightBorder(source.rightBorder)
+			{
+			}
+			void operator=(const WriteRequest &source)
+			{
+				flags = source.flags;
+				antenna1 = source.antenna1;
+				antenna2 = source.antenna2;
+				spectralWindow = source.spectralWindow;
+				startIndex = source.startIndex;
+				endIndex = source.endIndex;
+				leftBorder = source.leftBorder;
+				rightBorder = source.rightBorder;
+			}
+			std::vector<Mask2DCPtr> flags;
+			int antenna1;
+			int antenna2;
+			int spectralWindow;
+			size_t startIndex;
+			size_t endIndex;
+			size_t leftBorder;
+			size_t rightBorder;
 		};
 		
 		struct BaselineCacheItem
@@ -97,6 +140,7 @@ class BaselineReader {
 		void addRowToBaselineCache(int antenna1, int antenna2, int spectralWindow, size_t row);
 		void readUVWData();
 		void addRequestRows(ReadRequest request, size_t requestIndex, std::vector<std::pair<size_t, size_t> > &rows);
+		void addRequestRows(WriteRequest request, size_t requestIndex, std::vector<std::pair<size_t, size_t> > &rows);
 
 		void addReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow, size_t startIndex, size_t endIndex)
 		{
@@ -106,7 +150,7 @@ class BaselineReader {
 			request.spectralWindow = spectralWindow;
 			request.startIndex = startIndex;
 			request.endIndex = endIndex;
-			_requests.push_back(request);
+			_readRequests.push_back(request);
 		}
 
 		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(DataKind kind, class casa::Table &table);
@@ -118,7 +162,8 @@ class BaselineReader {
 		enum DataKind _dataKind;
 		bool _readData, _readFlags;
 		
-		std::vector<ReadRequest> _requests;
+		std::vector<ReadRequest> _readRequests;
+		std::vector<WriteRequest> _writeRequests;
 		std::vector<BaselineCacheItem> _baselineCache;
 		std::vector<Result> _results;
 		

@@ -257,7 +257,7 @@ namespace rfiStrategy {
 				ImageSetIndex *index = _action.GetNextIndex();
 				if(index != 0)
 				{
-					_action._artifacts->ImageSet()->Request(*index);
+					_action._artifacts->ImageSet()->AddReadRequest(*index);
 					++requestedCount;
 					delete index;
 				} else {
@@ -270,7 +270,7 @@ namespace rfiStrategy {
 			
 			if(requestedCount > 0)
 			{
-				_action._artifacts->ImageSet()->LoadRequests();
+				_action._artifacts->ImageSet()->PerformReadRequests();
 				
 				for(size_t i=0;i<requestedCount;++i)
 				{

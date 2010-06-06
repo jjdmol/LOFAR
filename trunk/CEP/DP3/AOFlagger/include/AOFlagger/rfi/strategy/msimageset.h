@@ -89,10 +89,13 @@ namespace rfiStrategy {
 			virtual std::string Name() { return _set.Location(); }
 			virtual TimeFrequencyData *LoadData(ImageSetIndex &index);
 			
-			void Request(ImageSetIndex &index);
-			void LoadRequests();
-			BaselineData *GetNextRequested();
-			
+			virtual void AddReadRequest(ImageSetIndex &index);
+			virtual void PerformReadRequests();
+			virtual BaselineData *GetNextRequested();
+
+			virtual void AddWriteFlagsTask(ImageSetIndex &index, TimeFrequencyData &data);
+			virtual void PerformWriteFlagsTask();
+
 			virtual void Initialize();
 			//virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index);
 	

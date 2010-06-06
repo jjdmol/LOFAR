@@ -114,9 +114,13 @@ namespace rfiStrategy {
 			virtual size_t GetPart(ImageSetIndex &index) = 0;
 			virtual size_t GetAntenna1(ImageSetIndex &index) = 0;
 			virtual size_t GetAntenna2(ImageSetIndex &index) = 0;
-			virtual void Request(ImageSetIndex &index) = 0;
-			virtual void LoadRequests() = 0;
+			
+			virtual void AddReadRequest(ImageSetIndex &index) = 0;
+			virtual void PerformReadRequests() = 0;
 			virtual BaselineData *GetNextRequested() = 0;
+			
+			virtual void AddWriteFlagsTask(ImageSetIndex &index, TimeFrequencyData &data) = 0;
+			virtual void PerformWriteFlagsTask() = 0;
 	};
 
 }
