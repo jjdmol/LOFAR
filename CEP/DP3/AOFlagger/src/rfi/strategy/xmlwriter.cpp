@@ -46,7 +46,7 @@
 
 namespace rfiStrategy {
 
-	XmlWriter::XmlWriter() : _writeDescriptions(true)
+	XmlWriter::XmlWriter() : _writeDescriptions(false)
 	{
 		LIBXML_TEST_VERSION ;
 	
@@ -71,20 +71,20 @@ namespace rfiStrategy {
 		if (rc < 0)
 			throw XmlWriteError("WriteStrategy: Error at xmlTextWriterStartDocument");
 
-		std::string comment = 
+		std::string commentStr = 
 			"This is a Strategy configuration file for the\n"
 			"rfi detector by André Offringa (offringa@astro.rug.nl).\n";
 		if(_writeDescriptions)
-			comment += "\nIf you like to take a look at the structure of this file,\n"
+			commentStr += "\nIf you like to take a look at the structure of this file,\n"
 				"try opening it in e.g. Firefox.\n";
 
-		Comment(comment.c_str());
+		comment(commentStr.c_str());
 
-		Start("rfi-strategy");
-		Write<double>("format-version", STRATEGY_FILE_FORMAT_VERSION);
-		Write<double>("reader-version-required", STRATEGY_FILE_READER_VERSION_REQUIRED);
+		start("rfi-strategy");
+		attribute("format-version", STRATEGY_FILE_FORMAT_VERSION);
+		attribute("reader-version-required", STRATEGY_FILE_READER_VERSION_REQUIRED);
 		writeAction(strategy);
-		End();
+		end();
 
 		rc = xmlTextWriterEndDocument(_writer);
 		if (rc < 0)
@@ -101,12 +101,12 @@ namespace rfiStrategy {
 			{
 				const char *description = ActionFactory::GetDescription(action.Type());
 				if(description != 0)
-					Comment(wrap(description, 70).c_str());
+					comment(wrap(description, 70).c_str());
 				_describedActions.insert(action.Type());
 			}
 		}
 
-		Start("action");
+		start("action");
 		switch(action.Type())
 		{
 			case ActionBlockType:
@@ -178,179 +178,179 @@ namespace rfiStrategy {
 				writeWriteFlagsAction(static_cast<const WriteFlagsAction&>(action));
 				break;
 		}
-		End();
+		end();
 	}
 	
 	void XmlWriter::writeContainerItems(const ActionContainer &actionContainer)
 	{
-		Start("children");
+		start("children");
 		for(size_t i=0;i<actionContainer.GetChildCount();++i)
 		{
 			writeAction(actionContainer.GetChild(i));
 		}
-		End();
+		end();
 	}
 	
 	void XmlWriter::writeAdapter(const Adapter &action)
 	{
-		Attribute("type", "Adapter");
+		attribute("type", "Adapter");
 		writeContainerItems(action);
 	}
 
 	void XmlWriter::writeChangeResolutionAction(const ChangeResolutionAction &action)
 	{
-		Attribute("type", "ChangeResolutionAction");
-		Write<int>("decrease-factor", action.DecreaseFactor());
+		attribute("type", "ChangeResolutionAction");
+		write<int>("decrease-factor", action.DecreaseFactor());
 		writeContainerItems(action);
 	}
 
 	void XmlWriter::writeCombineFlagResults(const CombineFlagResults &action)
 	{
-		Attribute("type", "CombineFlagResults");
+		attribute("type", "CombineFlagResults");
 		writeContainerItems(action);
 	}
 
 	void XmlWriter::writeForEachBaselineAction(const ForEachBaselineAction &action)
 	{
-		Attribute("type", "ForEachBaselineAction");
-		Write<int>("selection", action.Selection());
-		Write<int>("thread-count", action.ThreadCount());
+		attribute("type", "ForEachBaselineAction");
+		write<int>("selection", action.Selection());
+		write<int>("thread-count", action.ThreadCount());
 		writeContainerItems(action);
 	}
 
 	void XmlWriter::writeForEachMSAction(const ForEachMSAction &action)
 	{
-		Attribute("type", "ForEachMSAction");
-		Start("filenames");
+		attribute("type", "ForEachMSAction");
+		start("filenames");
 		const std::vector<std::string> &filenames = action.Filenames();
 		for(std::vector<std::string>::const_iterator i=filenames.begin();i!=filenames.end();++i)
 		{
-			Write("filename", i->c_str());
+			write("filename", i->c_str());
 		}
-		End();
+		end();
 		writeContainerItems(action);
 	}
 
 	void XmlWriter::writeForEachPolarisationBlock(const ForEachPolarisationBlock &action)
 	{
-		Attribute("type", "ForEachPolarisationBlock");
-		Write<bool>("iterate-stokes-values", action.IterateStokesValues());
+		attribute("type", "ForEachPolarisationBlock");
+		write<bool>("iterate-stokes-values", action.IterateStokesValues());
 		writeContainerItems(action);
 	}
 
 	void XmlWriter::writeFrequencySelectionAction(const FrequencySelectionAction &action)
 	{
-		Attribute("type", "FrequencySelectionAction");
-		Write<double>("threshold", action.Threshold());
+		attribute("type", "FrequencySelectionAction");
+		write<double>("threshold", action.Threshold());
 	}
 
 	void XmlWriter::writeFringeStopAction(const FringeStopAction &action)
 	{
-		Attribute("type", "FringeStopAction");
-		Write<bool>("fit-channels-individually", action.FitChannelsIndividually());
-		Write<num_t>("fringes-to-consider", action.FringesToConsider());
-		Write<bool>("only-fringe-stop", action.OnlyFringeStop());
-		Write<int>("window-size", action.WindowSize());
+		attribute("type", "FringeStopAction");
+		write<bool>("fit-channels-individually", action.FitChannelsIndividually());
+		write<num_t>("fringes-to-consider", action.FringesToConsider());
+		write<bool>("only-fringe-stop", action.OnlyFringeStop());
+		write<int>("window-size", action.WindowSize());
 	}
 
 	void XmlWriter::writeImagerAction(const ImagerAction &)
 	{
-		Attribute("type", "ImagerAction");
+		attribute("type", "ImagerAction");
 	}
 
 	void XmlWriter::writeIterationBlock(const IterationBlock &action)
 	{
-		Attribute("type", "IterationBlock");
-		Write<int>("iteration-count", action.IterationCount());
-		Write<double>("sensitivity-start", action.SensitivityStart());
+		attribute("type", "IterationBlock");
+		write<int>("iteration-count", action.IterationCount());
+		write<double>("sensitivity-start", action.SensitivityStart());
 		writeContainerItems(action);
 	}
 
 	void XmlWriter::writeLoadFlagsAction(const LoadFlagsAction &action)
 	{
-		Attribute("type", "LoadFlagsAction");
-		Write<bool>("join-flags", action.JoinFlags());
+		attribute("type", "LoadFlagsAction");
+		write<bool>("join-flags", action.JoinFlags());
 	}
 
 	void XmlWriter::writeLoadImageAction(const LoadImageAction &action)
 	{
-		Attribute("type", "LoadImageAction");
-		Write<int>("image-kind", action.DataKind());
-		Write<bool>("read-all-polarisations", action.ReadAllPolarisations());
-		Write<bool>("read-dipole-auto-polarisations", action.ReadDipoleAutoPolarisations());
-		Write<bool>("read-stokes-i", action.ReadStokesI());
+		attribute("type", "LoadImageAction");
+		write<int>("image-kind", action.DataKind());
+		write<bool>("read-all-polarisations", action.ReadAllPolarisations());
+		write<bool>("read-dipole-auto-polarisations", action.ReadDipoleAutoPolarisations());
+		write<bool>("read-stokes-i", action.ReadStokesI());
 	}
 
 	void XmlWriter::writePlotAction(const class PlotAction &action)
 	{
-		Attribute("type", "PlotAction");
-		Write<int>("plot-kind", action.PlotKind());
-		Write<bool>("logarithmic-y-axis", action.LogarithmicYAxis());
+		attribute("type", "PlotAction");
+		write<int>("plot-kind", action.PlotKind());
+		write<bool>("logarithmic-y-axis", action.LogarithmicYAxis());
 	}
 
 	void XmlWriter::writeSetFlaggingAction(const SetFlaggingAction &action)
 	{
-		Attribute("type", "SetFlaggingAction");
-		Write<int>("new-flagging", action.NewFlagging());
+		attribute("type", "SetFlaggingAction");
+		write<int>("new-flagging", action.NewFlagging());
 	}
 
 	void XmlWriter::writeSetImageAction(const SetImageAction &action)
 	{
-		Attribute("type", "SetImageAction");
-		Write<int>("new-image", action.NewImage());
+		attribute("type", "SetImageAction");
+		write<int>("new-image", action.NewImage());
 	}
 
 	void XmlWriter::writeSlidingWindowFitAction(const SlidingWindowFitAction &action)
 	{
-		Attribute("type", "SlidingWindowFitAction");
-		Write<num_t>("fit-precision", action.Parameters().fitPrecision);
-		Write<num_t>("frequency-direction-kernel-size", action.Parameters().frequencyDirectionKernelSize);
-		Write<int>("frequency-direction-window-size", action.Parameters().frequencyDirectionWindowSize);
-		Write<int>("method", action.Parameters().method);
-		Write<num_t>("time-direction-kernel-size", action.Parameters().timeDirectionKernelSize);
-		Write<int>("time-direction-window-size", action.Parameters().timeDirectionWindowSize);
+		attribute("type", "SlidingWindowFitAction");
+		write<num_t>("fit-precision", action.Parameters().fitPrecision);
+		write<num_t>("frequency-direction-kernel-size", action.Parameters().frequencyDirectionKernelSize);
+		write<int>("frequency-direction-window-size", action.Parameters().frequencyDirectionWindowSize);
+		write<int>("method", action.Parameters().method);
+		write<num_t>("time-direction-kernel-size", action.Parameters().timeDirectionKernelSize);
+		write<int>("time-direction-window-size", action.Parameters().timeDirectionWindowSize);
 	}
 
 	void XmlWriter::writeStatisticalFlagAction(const StatisticalFlagAction &action)
 	{
-		Attribute("type", "StatisticalFlagAction");
-		Write<size_t>("enlarge-frequency-size", action.EnlargeFrequencySize());
-		Write<size_t>("enlarge-time-size", action.EnlargeTimeSize());
-		Write<num_t>("max-contaminated-frequencies-ratio", action.MaxContaminatedFrequenciesRatio());
-		Write<num_t>("max-contaminated-times-ratio", action.MaxContaminatedTimesRatio());
-		Write<num_t>("minimum-good-frequency-ratio", action.MinimumGoodFrequencyRatio());
-		Write<num_t>("minimum-good-time-ratio", action.MinimumGoodTimeRatio());
+		attribute("type", "StatisticalFlagAction");
+		write<size_t>("enlarge-frequency-size", action.EnlargeFrequencySize());
+		write<size_t>("enlarge-time-size", action.EnlargeTimeSize());
+		write<num_t>("max-contaminated-frequencies-ratio", action.MaxContaminatedFrequenciesRatio());
+		write<num_t>("max-contaminated-times-ratio", action.MaxContaminatedTimesRatio());
+		write<num_t>("minimum-good-frequency-ratio", action.MinimumGoodFrequencyRatio());
+		write<num_t>("minimum-good-time-ratio", action.MinimumGoodTimeRatio());
 	}
 
 	void XmlWriter::writeStrategy(const class Strategy &action)
 	{
-		Attribute("type", "Strategy");
+		attribute("type", "Strategy");
 		writeContainerItems(action);
 	}
 
 	void XmlWriter::writeSVDAction(const SVDAction &action)
 	{
-		Attribute("type", "SVDAction");
-		Write<int>("singular-value-count", action.SingularValueCount());
+		attribute("type", "SVDAction");
+		write<int>("singular-value-count", action.SingularValueCount());
 	}
 
 	void XmlWriter::writeThresholdAction(const ThresholdAction &action)
 	{
-		Attribute("type", "ThresholdAction");
-		Write<num_t>("base-sensitivity", action.BaseSensitivity());
-		Write<bool>("time-direction-flagging", action.TimeDirectionFlagging());
-		Write<bool>("frequency-direction-flagging", action.FrequencyDirectionFlagging());
+		attribute("type", "ThresholdAction");
+		write<num_t>("base-sensitivity", action.BaseSensitivity());
+		write<bool>("time-direction-flagging", action.TimeDirectionFlagging());
+		write<bool>("frequency-direction-flagging", action.FrequencyDirectionFlagging());
 	}
 
 	void XmlWriter::writeTimeSelectionAction(const TimeSelectionAction &action)
 	{
-		Attribute("type", "TimeSelectionAction");
-		Write<double>("threshold", action.Threshold());
+		attribute("type", "TimeSelectionAction");
+		write<double>("threshold", action.Threshold());
 	}
 
 	void XmlWriter::writeWriteFlagsAction(const WriteFlagsAction &)
 	{
-		Attribute("type", "WriteFlagsAction");
+		attribute("type", "WriteFlagsAction");
 	}
 	std::string XmlWriter::wrap(const std::string &input, size_t max) const
 	{

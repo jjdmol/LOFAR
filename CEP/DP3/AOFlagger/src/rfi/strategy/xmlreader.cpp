@@ -76,9 +76,20 @@ Strategy *XmlReader::CreateStrategyFromFile(const std::string &filename)
 				throw XmlReadError("Multiple root elements found.");
 			if(std::string((const char *) curNode->name) != "rfi-strategy")
 				throw XmlReadError("Invalid structure in xml file: no rfi-strategy root node found. Maybe this is not an rfi strategy?");
-			double formatVersion = getDouble(curNode, "format-version");
-			double formatVersionRequired = getDouble(curNode, "format-version-required");
-			if(formatVersionRequired > STRATEGY_FILE_FORMAT_VERSION)
+			
+			xmlChar *formatVersionCh = xmlGetProp(curNode, BAD_CAST "format-version");
+			if(formatVersionCh == 0)
+				throw XmlReadError("Missing attribute 'format-version'");
+			double formatVersion = atof((const char*) formatVersionCh);
+			xmlFree(formatVersionCh);
+
+			xmlChar *readerVersionRequiredCh = xmlGetProp(curNode, BAD_CAST "reader-version-required");
+			if(readerVersionRequiredCh == 0)
+				throw XmlReadError("Missing attribute 'reader-version-required'");
+			double readerVersionRequired = atof((const char*) readerVersionRequiredCh);
+			xmlFree(readerVersionRequiredCh);
+			
+			if(readerVersionRequired > STRATEGY_FILE_FORMAT_VERSION)
 				throw XmlReadError("This file requires a newer software version");
 			if(formatVersion < STRATEGY_FILE_FORMAT_VERSION_REQUIRED)
 				throw XmlReadError("This file is too old for the software, please recreate the strategy");
