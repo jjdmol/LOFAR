@@ -112,6 +112,8 @@ void TimeFrequencyWidget::Update() throw()
 		size_t width = _endTime - _startTime;
 		size_t height = _endFrequency - _startFrequency;
 
+		if(_horiScale != 0)
+			delete _horiScale;
 		if(_vertScale != 0)
 			delete _vertScale;
 		if(_metaData != 0) {
