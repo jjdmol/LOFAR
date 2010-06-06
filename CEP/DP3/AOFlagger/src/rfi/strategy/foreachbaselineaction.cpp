@@ -250,8 +250,10 @@ namespace rfiStrategy {
 			
 			boost::mutex::scoped_lock lock(_action._artifacts->IOMutex());
 			
+			size_t wantedCount = threadCount*2 - _action._baselineBuffer.size();
 			size_t requestedCount = 0;
-			for(size_t i=0;i<threadCount;++i)
+			
+			for(size_t i=0;i<wantedCount;++i)
 			{
 				ImageSetIndex *index = _action.GetNextIndex();
 				if(index != 0)
@@ -274,7 +276,10 @@ namespace rfiStrategy {
 				for(size_t i=0;i<requestedCount;++i)
 				{
 					BaselineData *baseline = _action._artifacts->ImageSet()->GetNextRequested();
+					
+					boost::mutex::scoped_lock bufferLock(_action._mutex);
 					_action._baselineBuffer.push(baseline);
+					bufferLock.unlock();
 				}
 				std::cout << "Pushed " << requestedCount << " baselines in buffer, size=" << _action._baselineBuffer.size() << std::endl;
 			}
