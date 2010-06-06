@@ -27,6 +27,7 @@
 #include <boost/thread.hpp>
 
 #include <AOFlagger/rfi/strategy/imageset.h>
+#include <AOFlagger/rfi/strategy/msimageset.h>
 
 namespace rfiStrategy {
 	
@@ -42,6 +43,11 @@ namespace rfiStrategy {
 		} else
 		{
 			ImageSet *imageSet = artifacts.ImageSet();
+			MSImageSet *msImageSet = dynamic_cast<MSImageSet*>(imageSet);
+			if(msImageSet != 0)
+			{
+				msImageSet->SetDataKind(_dataKind);
+			}
 
 			if(artifacts.MetaData() != 0)
 			{

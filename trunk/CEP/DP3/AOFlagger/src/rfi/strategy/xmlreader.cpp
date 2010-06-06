@@ -260,6 +260,7 @@ Action *XmlReader::parseForEachBaselineAction(xmlNode *node)
 	ForEachBaselineAction *newAction = new ForEachBaselineAction();
 	newAction->SetSelection((BaselineSelection) getInt(node, "selection"));
 	newAction->SetThreadCount(getInt(node, "thread-count"));
+	newAction->SetDataKind((DataKind) getInt(node, "data-kind"));
 	parseChildren(node, newAction);
 	return newAction;
 }
