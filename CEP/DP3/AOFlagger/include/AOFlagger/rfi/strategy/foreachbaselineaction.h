@@ -53,8 +53,13 @@ namespace rfiStrategy {
 
 			enum BaselineSelection Selection() const throw() { return _selection; }
 			void SetSelection(enum BaselineSelection selection) throw() { _selection = selection; }
+			
 			size_t ThreadCount() const throw() { return _threadCount; }
 			void SetThreadCount(size_t threadCount) throw() { _threadCount = threadCount; }
+			
+			enum DataKind DataKind() const { return _dataKind; }
+			void SetDataKind(enum DataKind dataKind) { _dataKind = dataKind; }
+
 			virtual ActionType Type() const { return ForEachBaselineActionType; }
 		private:
 			bool IsBaselineSelected(ImageSetIndex &index);
@@ -121,6 +126,7 @@ namespace rfiStrategy {
 			size_t _baselineCount, _nextIndex;
 			size_t _threadCount;
 			BaselineSelection _selection;
+			enum DataKind _dataKind;
 
 			ImageSetIndex *_loopIndex;
 			ArtifactSet *_artifacts, *_resultSet;
