@@ -20,6 +20,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 #include <AOFlagger/rfi/timefrequencystatistics.h>
 
@@ -27,7 +28,7 @@
 
 namespace rfiStrategy {
 
-	MSImageSet::MSImageSet(std::string location) : _set(location), _imager(0),
+	MSImageSet::MSImageSet(std::string location) : _set(location), _reader(0),
 		_dataKind(CorrectedData),
 		_readDipoleAutoPolarisations(true),
 		_readDipoleCrossPolarisations(true),
@@ -40,8 +41,8 @@ namespace rfiStrategy {
 	
 	MSImageSet::~MSImageSet()
 	{
-		if(_imager != 0)
-			delete _imager;
+		if(_reader != 0)
+			delete _reader;
 	}
 
 	void MSImageSet::Initialize()
@@ -50,7 +51,8 @@ namespace rfiStrategy {
 		std::cout << "Antenna's: " << _set.AntennaCount() << std::endl;
 		_set.GetBaselines(_baselines);
 		std::cout << "Unique baselines: " << _baselines.size() << std::endl;
-		TimeFrequencyImager::PartInfo(_set.Location(), _maxScanCounts-_scanCountPartOverlap, _timeScanCount, _partCount);
+		initReader();
+		_reader->PartInfo(_maxScanCounts-_scanCountPartOverlap, _timeScanCount, _partCount);
 		std::cout << "Unique time stamps: " << _timeScanCount << std::endl;
 		_bandCount = _set.MaxSpectralBandIndex()+1;
 		std::cout << "Bands: " << _bandCount << std::endl;
@@ -109,19 +111,13 @@ namespace rfiStrategy {
 		}
 	}
 
-	bool MSImageSet::InitImager(MSImageSetIndex &)
+	void MSImageSet::initReader()
 	{
-		if(_imager == 0 )
-			_imager = new TimeFrequencyImager(_set);
-		_imager->SetDataKind(_dataKind);
-		_imager->SetReadFlags(_readFlags);
-		_imager->SetReadData(true);
-		_imager->SetReadXX(_readDipoleAutoPolarisations);
-		_imager->SetReadYY(_readDipoleAutoPolarisations);
-		_imager->SetReadXY(_readDipoleCrossPolarisations);
-		_imager->SetReadYX(_readDipoleCrossPolarisations);
-		_imager->SetReadStokesI(_readStokesI);
-		return true;
+		if(_reader == 0 )
+			_reader = new BaselineReader(_set);
+		_reader->SetDataKind(_dataKind);
+		_reader->SetReadFlags(_readFlags);
+		_reader->SetReadData(true);
 	}
 
 	size_t MSImageSet::StartIndex(MSImageSetIndex &index)
@@ -157,26 +153,23 @@ namespace rfiStrategy {
 	class TimeFrequencyData *MSImageSet::LoadData(ImageSetIndex &index)
 	{
 		MSImageSetIndex &msIndex = static_cast<MSImageSetIndex&>(index);
-		if(InitImager(msIndex))
-		{
-			size_t a1 = _baselines[msIndex._baselineIndex].first;
-			size_t a2 = _baselines[msIndex._baselineIndex].second;
-			size_t
-				startIndex = StartIndex(msIndex),
-				endIndex = EndIndex(msIndex);
-			std::cout << "Loading baseline " << a1 << "x" << a2 << ", t=" << startIndex << "-" << endIndex << std::endl;
-			_imager->Image(a1, a2, msIndex._band, startIndex, endIndex);
-			//std::cout << "Done loading baseline " << a1 << "x" << a2 << ", t=" << startIndex << "-" << endIndex << std::endl;
-			class TimeFrequencyData *data = new ::TimeFrequencyData(_imager->GetData());
-			_imager->ClearImages();
-			return data;
-		} else {
-			return 0;
-		}
+		initReader();
+		size_t a1 = _baselines[msIndex._baselineIndex].first;
+		size_t a2 = _baselines[msIndex._baselineIndex].second;
+		size_t
+			startIndex = StartIndex(msIndex),
+			endIndex = EndIndex(msIndex);
+		std::cout << "Loading baseline " << a1 << "x" << a2 << ", t=" << startIndex << "-" << endIndex << std::endl;
+		_reader->AddRequest(a1, a2, msIndex._band, startIndex, endIndex);
+		_reader->ReadRequests();
+		std::vector<UVW> uvw;
+		TimeFrequencyData data = _reader->GetNextResult(uvw);
+		return new TimeFrequencyData(data);
 	}
 
 	void MSImageSet::LoadFlags(ImageSetIndex &index, TimeFrequencyData &destination)
 	{
+		/*
 		MSImageSetIndex &msIndex = static_cast<MSImageSetIndex&>(index);
 		if(InitImager(msIndex))
 		{
@@ -227,10 +220,10 @@ namespace rfiStrategy {
 			_imager->ClearImages();
 			//TimeFrequencyStatistics stats(destination);
 			//std::cout << "Flags read: " << TimeFrequencyStatistics::FormatRatio(stats.GetFlaggedRatio()) << std::endl;
-		}
+		}*/
 	}
 
-	TimeFrequencyMetaDataCPtr MSImageSet::LoadMetaData(ImageSetIndex &index)
+	TimeFrequencyMetaDataCPtr MSImageSet::createMetaData(ImageSetIndex &index, std::vector<UVW> &uvw)
 	{
 		MSImageSetIndex &msIndex = static_cast<MSImageSetIndex&>(index);
 		TimeFrequencyMetaData *metaData = new TimeFrequencyMetaData();
@@ -241,9 +234,9 @@ namespace rfiStrategy {
 		std::vector<double> *times = _set.CreateObservationTimesVector();
 		metaData->SetObservationTimes(*times);
 		delete times;
-		if(_imager != 0)
+		if(_reader != 0)
 		{
-			metaData->SetUVW(_imager->UVW());
+			metaData->SetUVW(uvw);
 		}
 		return TimeFrequencyMetaDataCPtr(metaData);
 	}
@@ -284,44 +277,84 @@ namespace rfiStrategy {
 	void MSImageSet::WriteFlags(ImageSetIndex &index, TimeFrequencyData &data)
 	{
 		MSImageSetIndex &msIndex = static_cast<MSImageSetIndex&>(index);
-		if(InitImager(msIndex))
+		initReader();
+		size_t a1 = _baselines[msIndex._baselineIndex].first;
+		size_t a2 = _baselines[msIndex._baselineIndex].second;
+		size_t b = msIndex._band;
+		size_t
+			startIndex = StartIndex(msIndex),
+			endIndex = EndIndex(msIndex);
+
+		Mask2DCPtr xx, xy, yx, yy;
+
+		xx = data.GetMask(XXPolarisation);
+		yy = data.GetMask(YYPolarisation);
+
+		if(data.Polarisation() == AutoDipolePolarisation)
 		{
-			size_t a1 = _baselines[msIndex._baselineIndex].first;
-			size_t a2 = _baselines[msIndex._baselineIndex].second;
-			size_t b = msIndex._band;
-			size_t
-				startIndex = StartIndex(msIndex),
-				endIndex = EndIndex(msIndex);
-
-			Mask2DCPtr xx, xy, yx, yy;
-
-			xx = data.GetMask(XXPolarisation);
-			yy = data.GetMask(YYPolarisation);
-
-			if(data.Polarisation() == AutoDipolePolarisation)
-			{
-				Mask2DPtr joined = Mask2D::CreateCopy(xx);
-				joined->Join(yy);
-				xy = joined;
-				yx = joined;
-			} else
-			{
-				xy = data.GetMask(XYPolarisation);
-				yx = data.GetMask(YXPolarisation);
-			}
-
-			TimeFrequencyStatistics stats(data);
-			std::cout << "Writing flags: "
-				<< TimeFrequencyStatistics::FormatRatio(stats.GetFlaggedRatio())
-				<< " (" << xx->GetCount<true>() << " / "
-				<< xy->GetCount<true>() << " / "
-				<< yx->GetCount<true>() << " / "
-				<< yy->GetCount<true>() << ")"
-				<< " for baseline index " << a1 << "x" << a2 << " (sb " << b << "),t=" << startIndex << "-" << endIndex << std::endl;
-			_imager->WriteNewFlagsPart(xx, xy, yx, yy, a1, a2, b, startIndex, endIndex, LeftBorder(msIndex), RightBorder(msIndex));
-			//std::cout << "Finished writing flags." << std::endl;
-		} else {
-			throw IOException("Could not initialize imager");
+			Mask2DPtr joined = Mask2D::CreateCopy(xx);
+			joined->Join(yy);
+			xy = joined;
+			yx = joined;
+		} else
+		{
+			xy = data.GetMask(XYPolarisation);
+			yx = data.GetMask(YXPolarisation);
 		}
+
+		TimeFrequencyStatistics stats(data);
+		std::cout << "Writing flags: "
+			<< TimeFrequencyStatistics::FormatRatio(stats.GetFlaggedRatio())
+			<< " (" << xx->GetCount<true>() << " / "
+			<< xy->GetCount<true>() << " / "
+			<< yx->GetCount<true>() << " / "
+			<< yy->GetCount<true>() << ")"
+			<< " for baseline index " << a1 << "x" << a2 << " (sb " << b << "),t=" << startIndex << "-" << endIndex << std::endl;
+			std::vector<Mask2DCPtr> dataVector;
+			dataVector.push_back(xx);
+			dataVector.push_back(xy);
+			dataVector.push_back(yx);
+			dataVector.push_back(yy);
+		_reader->WriteNewFlagsPart(dataVector, a1, a2, b, startIndex, endIndex, LeftBorder(msIndex), RightBorder(msIndex));
+		std::cout << "Finished writing flags." << std::endl;
+	}
+
+	void MSImageSet::Request(ImageSetIndex &index)
+	{
+		BaselineData newRequest(index);
+		_baselineData.push_back(newRequest);
+	}
+	
+	void MSImageSet::LoadRequests()
+	{
+		for(std::vector<BaselineData>::iterator i=_baselineData.begin();i!=_baselineData.end();++i)
+		{
+			MSImageSetIndex &index = static_cast<MSImageSetIndex&>(i->Index());
+			std::cout << "Adding request " << StartIndex(index) << "-" << EndIndex(index) << std::endl;
+			_reader->AddRequest(GetAntenna1(index), GetAntenna2(index), index._band, StartIndex(index), EndIndex(index));
+		}
+		
+		_reader->ReadRequests();
+		
+		for(std::vector<BaselineData>::iterator i=_baselineData.begin();i!=_baselineData.end();++i)
+		{
+			if(!i->Data().IsEmpty())
+				throw std::runtime_error("ReadRequest() called, but a previous read request was not completely processed by calling GetNextRequested().");
+			std::vector<UVW> uvw;
+			TimeFrequencyData data = _reader->GetNextResult(uvw);
+			i->SetData(data);
+			TimeFrequencyMetaDataCPtr metaData = createMetaData(i->Index(), uvw);
+			i->SetMetaData(metaData);
+		}
+	}
+	
+	BaselineData *MSImageSet::GetNextRequested()
+	{
+		BaselineData top = _baselineData.front();
+		_baselineData.erase(_baselineData.begin());
+		if(top.Data().IsEmpty())
+			throw std::runtime_error("Calling GetNextRequested(), but requests were not read with LoadRequests.");
+		std::cout << "Orinal flags: " << top.Data().GetSingleMask()->GetCount<true>() << std::endl;
+		return new BaselineData(top);
 	}
 }

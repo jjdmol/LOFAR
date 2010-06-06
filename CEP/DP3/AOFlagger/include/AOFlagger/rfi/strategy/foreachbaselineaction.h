@@ -22,8 +22,12 @@
 
 #include "actionblock.h"
 #include "artifactset.h"
+#include "imageset.h"
+
+#include <stack>
 
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
 
 namespace rfiStrategy {
 
@@ -32,7 +36,7 @@ namespace rfiStrategy {
 	*/
 	class ForEachBaselineAction : public ActionBlock {
 		public:
-			ForEachBaselineAction() : _threadCount(3), _selection(All), _hasInitAntennae(false), _resultSet(0), _exceptionOccured(false)
+			ForEachBaselineAction() : _threadCount(3), _selection(All), _resultSet(0), _exceptionOccured(false),  _hasInitAntennae(false)
 			{
 			}
 			virtual ~ForEachBaselineAction()
@@ -54,50 +58,85 @@ namespace rfiStrategy {
 			virtual ActionType Type() const { return ForEachBaselineActionType; }
 		private:
 			bool IsBaselineSelected(ImageSetIndex &index);
-			class ImageSetIndex *GetNextIndex(size_t &index);
+			class ImageSetIndex *GetNextIndex();
+			
 			void SetExceptionOccured();
+			void SetFinishedBaselines();
 			void SetProgress(ProgressListener &progress, int no, int count, std::string taskName, int threadId);
+			
+			void WaitForBufferAvailable(size_t maxSize)
+			{
+				boost::unique_lock<boost::mutex> lock(_mutex);
+				while(_baselineBuffer.size() > maxSize && !_exceptionOccured)
+					_dataProcessed.wait(lock);
+			}
+			
+			class BaselineData *GetNextBaseline()
+			{
+				boost::unique_lock<boost::mutex> lock(_mutex);
+				while(_baselineBuffer.size() == 0 && !_exceptionOccured && !_finishedBaselines)
+					_dataAvailable.wait(lock);
+				if(_finishedBaselines || _exceptionOccured)
+					return 0;
+				else
+				{
+					BaselineData *next = _baselineBuffer.top();
+					_baselineBuffer.pop();
+					_dataProcessed.notify_one();
+					return next;
+				}
+			}
+			
 			struct PerformFunction : public ProgressListener
 			{
 				PerformFunction(ForEachBaselineAction &action, ProgressListener &progress, size_t threadIndex)
-				  : _action(action), _progress(progress), _lock(0), _threadIndex(threadIndex)
+				  : _action(action), _progress(progress), _threadIndex(threadIndex)
 				{
 				}
 				PerformFunction(const PerformFunction &source)
-					: ProgressListener(source), _action(source._action), _progress(source._progress), _lock(source._lock), _threadIndex(source._threadIndex)
+					: ProgressListener(source), _action(source._action), _progress(source._progress), _threadIndex(source._threadIndex)
 				{
-					if(source._lock != 0)
-						throw std::runtime_error("Trying to copy PerformFunction with active lock.");
-				}
-			  ~PerformFunction()
-				{
-					if(_lock != 0)
-						delete _lock;
 				}
 				ForEachBaselineAction &_action;
 				ProgressListener &_progress;
-				boost::mutex::scoped_lock *_lock;
 				size_t _threadIndex;
 				void operator()();
-				void IOLock();
-				void IOUnlock();
 				virtual void OnStartTask(size_t taskNo, size_t taskCount, const std::string &description);
 				virtual void OnEndTask();
 				virtual void OnProgress(size_t progres, size_t maxProgress);
 				virtual void OnException(std::exception &thrownException);
 			};
+			
+			struct ReaderFunction
+			{
+				ReaderFunction(ForEachBaselineAction &action)
+				  : _action(action)
+				{
+				}
+				void operator()();
 
+				ForEachBaselineAction &_action;
+			};
+			
 			size_t _baselineCount, _nextIndex;
 			size_t _threadCount;
 			BaselineSelection _selection;
+
+			ImageSetIndex *_loopIndex;
+			ArtifactSet *_artifacts, *_resultSet;
+			
+			boost::mutex _mutex;
+			boost::condition_variable _dataAvailable, _dataProcessed;
+			std::stack<BaselineData*> _baselineBuffer;
+			bool _finishedBaselines;
+
+			int *_progressTaskNo, *_progressTaskCount;
+			bool _exceptionOccured;
+			
+			// Initial data
 			AntennaInfo _initAntenna1, _initAntenna2;
 			bool _hasInitAntennae;
 			size_t _initPartIndex;
-			ImageSetIndex *_loopIndex;
-			ArtifactSet *_artifacts, *_resultSet;
-			boost::mutex _mutex;
-			int *_progressTaskNo, *_progressTaskCount;
-			bool _exceptionOccured;
 	};
 }
 

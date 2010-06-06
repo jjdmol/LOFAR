@@ -109,6 +109,15 @@ namespace rfiStrategy {
 			{
 				return _loader.TimeIndexCount();
 			}
+			virtual void Request(ImageSetIndex &index)
+			{
+			}
+			virtual void LoadRequests()
+			{
+			}
+			virtual BaselineData *GetNextRequested()
+			{
+			}
 		private:
 			MeasurementSet _set;
 			BaselineMatrixLoader _loader;

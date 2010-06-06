@@ -42,7 +42,6 @@ namespace rfiStrategy {
 		} else
 		{
 			ImageSet *imageSet = artifacts.ImageSet();
-			ImageSetIndex *iteratorIndex = imageSet->StartIndex();
 
 			if(artifacts.MetaData() != 0)
 			{
@@ -53,8 +52,12 @@ namespace rfiStrategy {
 			_artifacts = &artifacts;
 			_initPartIndex = imageSet->GetPart(*artifacts.ImageSetIndex());
 
+			_finishedBaselines = false;
 			_baselineCount = 0;
 			_nextIndex = 0;
+			
+			// Count the baselines that are to be processed
+			ImageSetIndex *iteratorIndex = imageSet->StartIndex();
 			while(iteratorIndex->IsValid())
 			{
 				if(IsBaselineSelected(*iteratorIndex))
@@ -63,12 +66,16 @@ namespace rfiStrategy {
 			}
 			delete iteratorIndex;
 			
+			// Initialize thread data and threads
 			_loopIndex = imageSet->StartIndex();
 			_progressTaskNo = new int[_threadCount];
 			_progressTaskCount = new int[_threadCount];
 			progress.OnStartTask(0, 1, "Initializing");
 
 			boost::thread_group threadGroup;
+			ReaderFunction reader(*this);
+			threadGroup.create_thread(reader);
+			
 			for(unsigned i=0;i<_threadCount;++i)
 			{
 				PerformFunction function(*this, progress, i);
@@ -115,14 +122,15 @@ namespace rfiStrategy {
 			case EqualToCurrent: {
 				if(!_hasInitAntennae)
 					throw BadUsageException("For each baseline over 'EqualToCurrent' with no current baseline");
-				TimeFrequencyMetaDataCPtr metaData = imageSet->LoadMetaData(index);
+				throw BadUsageException("Not implemented");
+				/*TimeFrequencyMetaDataCPtr metaData = imageSet->LoadMetaData(index);
 				const AntennaInfo
 					&a1 = metaData->Antenna1(),
 					&a2 = metaData->Antenna2();
 				Baseline b(a1, a2);
 				Baseline initB(_initAntenna1, _initAntenna2);
 				return (roundl(b.Distance()) == roundl(initB.Distance()) &&
-					roundl(b.Angle()/5) == roundl(initB.Angle()/5));
+					roundl(b.Angle()/5) == roundl(initB.Angle()/5));*/
 			}
 			case AutoCorrelationsOfCurrentAntennae:
 				if(!_hasInitAntennae)
@@ -133,16 +141,13 @@ namespace rfiStrategy {
 		}
 	}
 
-	class ImageSetIndex *ForEachBaselineAction::GetNextIndex(size_t &index)
+	class ImageSetIndex *ForEachBaselineAction::GetNextIndex()
 	{
 		boost::mutex::scoped_lock lock(_mutex);
 		while(_loopIndex->IsValid())
 		{
 			if(IsBaselineSelected(*_loopIndex))
 			{
-				index = _nextIndex;
-
-				++_nextIndex;
 				ImageSetIndex *newIndex = _loopIndex->Copy();
 				_loopIndex->Next();
 
@@ -158,42 +163,51 @@ namespace rfiStrategy {
 		boost::mutex::scoped_lock lock(_mutex);
 		_exceptionOccured = true;
 	}
-
+	
+	void ForEachBaselineAction::SetFinishedBaselines()
+	{
+		boost::mutex::scoped_lock lock(_mutex);
+		_finishedBaselines = true;
+	}
+	
 	void ForEachBaselineAction::PerformFunction::operator()()
 	{
+		std::cout << "Starting thread " << _threadIndex << std::endl;
 		ImageSet *privateImageSet = _action._artifacts->ImageSet()->Copy();
 
 		size_t taskIndex;
 
 		try {
 
-			IOLock();
+			boost::mutex::scoped_lock lock(_action._mutex);
 			ArtifactSet newArtifacts(*_action._artifacts);
-			ImageSetIndex *index = _action.GetNextIndex(taskIndex);
+			lock.unlock();
 			
-			while(index != 0) {
-				index->Reattach(*privateImageSet);
+			BaselineData *baseline = _action.GetNextBaseline();
+			std::cout << "Thread " << _threadIndex << " received a baseline." << std::endl;
+			
+			while(baseline != 0) {
+				baseline->Index().Reattach(*privateImageSet);
 				
-				TimeFrequencyMetaDataCPtr metaData = privateImageSet->LoadMetaData(*index);
-		
-				IOUnlock();
-	
 				_action.SetProgress(_progress, taskIndex, _action._baselineCount, "Processing baseline", _threadIndex);
 	
-				newArtifacts.SetImageSetIndex(index);
-				newArtifacts.SetMetaData(metaData);
+				newArtifacts.SetOriginalData(baseline->Data());
+				newArtifacts.SetContaminatedData(baseline->Data());
+				TimeFrequencyData *zero = new TimeFrequencyData(baseline->Data());
+				zero->SetImagesToZero();
+				newArtifacts.SetRevisedData(*zero);
+				delete zero;
+				newArtifacts.SetImageSetIndex(&baseline->Index());
+				newArtifacts.SetMetaData(baseline->MetaData());
 
 				_action.ActionBlock::Perform(newArtifacts, *this);
-				delete index;
+				delete baseline;
 	
-				IOLock();
-				index = _action.GetNextIndex(taskIndex);
+				baseline = _action.GetNextBaseline();
 			}
 	
 			if(_threadIndex == 0)
 				_action._resultSet = new ArtifactSet(newArtifacts);
-
-			IOUnlock();
 
 		} catch(std::exception &e)
 		{
@@ -202,26 +216,6 @@ namespace rfiStrategy {
 		}
 
 		delete privateImageSet;
-	}
-
-	void ForEachBaselineAction::PerformFunction::IOLock()
-	{
-	  if(_lock != 0)
-	    delete _lock;
-	  //_lock = new boost::mutex::scoped_lock(_action._artifacts->IOMutex(), boost::try_to_lock);
-		// TODO
-	  _lock = new boost::mutex::scoped_lock(_action._artifacts->IOMutex());
-	  //	if(!_lock->owns_lock())
-	  //	{
-	  //		std::cout << "Thread " << _threadIndex << " is waiting for IO lock." << std::endl;
-	  //		delete _lock;
-	  //		_lock = new boost::mutex::scoped_lock(_action._artifacts->IOMutex());
-	  //		std::cout << "Thread " << _threadIndex << " received IO lock." << std::endl;
-	  //	}
-	}
-	void ForEachBaselineAction::PerformFunction::IOUnlock()
-	{
-	  _lock->unlock();
 	}
 
 	void ForEachBaselineAction::PerformFunction::OnStartTask(size_t /*taskNo*/, size_t /*taskCount*/, const std::string &/*description*/)
@@ -239,6 +233,50 @@ namespace rfiStrategy {
 	void ForEachBaselineAction::PerformFunction::OnException(std::exception &thrownException)
 	{
 		_progress.OnException(thrownException);
+	}
+	
+	void ForEachBaselineAction::ReaderFunction::operator()()
+	{
+		bool finished = false;
+		size_t threadCount = _action._threadCount;
+		do {
+			_action.WaitForBufferAvailable(threadCount);
+			
+			boost::mutex::scoped_lock lock(_action._artifacts->IOMutex());
+			
+			size_t requestedCount = 0;
+			for(size_t i=0;i<threadCount;++i)
+			{
+				ImageSetIndex *index = _action.GetNextIndex();
+				if(index != 0)
+				{
+					_action._artifacts->ImageSet()->Request(*index);
+					++requestedCount;
+					delete index;
+				} else {
+					_action.SetFinishedBaselines();
+					finished = true;
+					break;
+				}
+			}
+			std::cout << "Requested " << requestedCount << " baselines" << std::endl;
+			
+			if(requestedCount > 0)
+			{
+				_action._artifacts->ImageSet()->LoadRequests();
+				
+				for(size_t i=0;i<requestedCount;++i)
+				{
+					BaselineData *baseline = _action._artifacts->ImageSet()->GetNextRequested();
+					_action._baselineBuffer.push(baseline);
+				}
+				std::cout << "Pushed " << requestedCount << " baselines in buffer, size=" << _action._baselineBuffer.size() << std::endl;
+			}
+			
+			lock.unlock();
+			
+			_action._dataAvailable.notify_all();
+		} while(!finished);
 	}
 
 	void ForEachBaselineAction::SetProgress(ProgressListener &progress, int no, int count, std::string taskName, int threadId)

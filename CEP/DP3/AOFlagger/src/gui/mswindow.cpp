@@ -193,10 +193,11 @@ void MSWindow::loadCurrentTFData()
 {
 	if(_imageSet != 0) {
 		try {
-			_metaData = _imageSet->LoadMetaData(*_imageSetIndex);
-			TimeFrequencyData *data = _imageSet->LoadData(*_imageSetIndex);
-			_timeFrequencyWidget.SetNewData(*data, _metaData);
-			delete data;
+			_imageSet->Request(*_imageSetIndex);
+			_imageSet->LoadRequests();
+			rfiStrategy::BaselineData *baseline = _imageSet->GetNextRequested();
+			_timeFrequencyWidget.SetNewData(baseline->Data(), baseline->MetaData());
+			delete baseline;
 			if(_spatialMetaData != 0)
 			{
 				delete _spatialMetaData;

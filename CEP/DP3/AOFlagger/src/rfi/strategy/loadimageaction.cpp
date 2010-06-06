@@ -59,11 +59,10 @@ namespace rfiStrategy {
 					break;
 			}
 			msImageSet->SetDataKind(_dataKind);
-			msImageSet->SetReadFlags(false);
+			msImageSet->SetReadFlags(true);
 		}
 
 		TimeFrequencyData *newData = imageSet->LoadData(*index);
-		TimeFrequencyMetaDataCPtr newMetaData = imageSet->LoadMetaData(*index);
 
 		lock.unlock();
 		
@@ -73,7 +72,6 @@ namespace rfiStrategy {
 		zero->SetImagesToZero();
 		artifacts.SetRevisedData(*zero);
 		delete zero;
-		artifacts.SetMetaData(newMetaData);
 		delete newData;
 
 		std::cout << "Image load time: " << watch.ToString() << std::endl;
