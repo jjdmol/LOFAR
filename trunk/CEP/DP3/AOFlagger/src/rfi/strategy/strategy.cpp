@@ -283,6 +283,11 @@ namespace rfiStrategy {
 				LoadImageAction &action = static_cast<LoadImageAction&>(*i);
 				action.SetDataKind(kind);
 			}
+			else if(i->Type() == ForEachBaselineActionType)
+			{
+				ForEachBaselineAction &action = static_cast<ForEachBaselineAction&>(*i);
+				action.SetDataKind(kind);
+			}
 			++i;
 		}
 	}
