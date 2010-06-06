@@ -35,10 +35,10 @@ class BaselineReader {
 	public:
 		explicit BaselineReader(MeasurementSet &measurementSet);
 		~BaselineReader();
-		void AddRequest(size_t antenna1, size_t antenna2, size_t spectralWindow);
-		void AddRequest(size_t antenna1, size_t antenna2, size_t spectralWindow, size_t startIndex, size_t endIndex)
+		void AddReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow);
+		void AddReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow, size_t startIndex, size_t endIndex)
 		{
-			addRequest(antenna1, antenna2, spectralWindow, startIndex, endIndex);
+			addReadRequest(antenna1, antenna2, spectralWindow, startIndex, endIndex);
 		}
 		void ReadRequests();
 
@@ -55,7 +55,7 @@ class BaselineReader {
 		class TimeFrequencyData GetNextResult(std::vector<class UVW> &uvw);
 		void PartInfo(size_t maxTimeScans, size_t &timeScanCount, size_t &partCount);
 	private:
-		struct Request {
+		struct ReadRequest {
 			int antenna1;
 			int antenna2;
 			int spectralWindow;
@@ -96,11 +96,11 @@ class BaselineReader {
 		void initBaselineCache();
 		void addRowToBaselineCache(int antenna1, int antenna2, int spectralWindow, size_t row);
 		void readUVWData();
-		void addRequestRows(Request request, size_t requestIndex, std::vector<std::pair<size_t, size_t> > &rows);
+		void addRequestRows(ReadRequest request, size_t requestIndex, std::vector<std::pair<size_t, size_t> > &rows);
 
-		void addRequest(size_t antenna1, size_t antenna2, size_t spectralWindow, size_t startIndex, size_t endIndex)
+		void addReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow, size_t startIndex, size_t endIndex)
 		{
-			Request request;
+			ReadRequest request;
 			request.antenna1 = antenna1;
 			request.antenna2 = antenna2;
 			request.spectralWindow = spectralWindow;
@@ -118,7 +118,7 @@ class BaselineReader {
 		enum DataKind _dataKind;
 		bool _readData, _readFlags;
 		
-		std::vector<Request> _requests;
+		std::vector<ReadRequest> _requests;
 		std::vector<BaselineCacheItem> _baselineCache;
 		std::vector<Result> _results;
 		

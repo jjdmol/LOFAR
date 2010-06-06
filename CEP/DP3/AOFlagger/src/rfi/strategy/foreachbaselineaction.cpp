@@ -178,7 +178,6 @@ namespace rfiStrategy {
 	
 	void ForEachBaselineAction::PerformFunction::operator()()
 	{
-		std::cout << "Starting thread " << _threadIndex << std::endl;
 		ImageSet *privateImageSet = _action._artifacts->ImageSet()->Copy();
 
 		size_t taskIndex;

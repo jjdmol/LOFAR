@@ -95,14 +95,14 @@ void BaselineReader::addRowToBaselineCache(int antenna1, int antenna2, int spect
 	_baselineCache.push_back(newItem);
 }
 
-void BaselineReader::AddRequest(size_t antenna1, size_t antenna2, size_t spectralWindow)
+void BaselineReader::AddReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow)
 {
 	initObservationTimes(*_measurementSet);
 	
-	addRequest(antenna1, antenna2, spectralWindow, 0, _observationTimes.size());
+	addReadRequest(antenna1, antenna2, spectralWindow, 0, _observationTimes.size());
 }
 
-void BaselineReader::addRequestRows(Request request, size_t requestIndex, std::vector<std::pair<size_t, size_t> > &rows)
+void BaselineReader::addRequestRows(ReadRequest request, size_t requestIndex, std::vector<std::pair<size_t, size_t> > &rows)
 {
 	for(std::vector<BaselineCacheItem>::const_iterator i=_baselineCache.begin();i!=_baselineCache.end();++i)
 	{
@@ -247,6 +247,8 @@ casa::ROArrayColumn<casa::Complex> *BaselineReader::CreateDataColumn(DataKind ki
 
 void BaselineReader::WriteNewFlagsPart(std::vector<Mask2DCPtr> newValues, int antenna1, int antenna2, int spectralWindow, size_t timeOffset, size_t timeEnd, size_t leftBorder, size_t rightBorder)
 {
+	Stopwatch stopwatch(true);
+
 	initializePolarizations();
 
 	size_t frequencyCount = _measurementSet->FrequencyCount();
@@ -305,7 +307,7 @@ void BaselineReader::WriteNewFlagsPart(std::vector<Mask2DCPtr> newValues, int an
 		++windowIter;
 		++flagIter;
 	}
-	std::cout << "Rows written: " << rowsWritten << std::endl;
+	std::cout << rowsWritten << " rows written in " << stopwatch.ToString() << std::endl;
 
 	delete table;
 }
