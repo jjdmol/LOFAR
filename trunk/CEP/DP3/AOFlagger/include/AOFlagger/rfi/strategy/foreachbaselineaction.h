@@ -66,14 +66,14 @@ namespace rfiStrategy {
 			
 			void WaitForBufferAvailable(size_t maxSize)
 			{
-				boost::unique_lock<boost::mutex> lock(_mutex);
+				boost::mutex::scoped_lock lock(_mutex);
 				while(_baselineBuffer.size() > maxSize && !_exceptionOccured)
 					_dataProcessed.wait(lock);
 			}
 			
 			class BaselineData *GetNextBaseline()
 			{
-				boost::unique_lock<boost::mutex> lock(_mutex);
+				boost::mutex::scoped_lock lock(_mutex);
 				while(_baselineBuffer.size() == 0 && !_exceptionOccured && !_finishedBaselines)
 					_dataAvailable.wait(lock);
 				if(_finishedBaselines || _exceptionOccured)
