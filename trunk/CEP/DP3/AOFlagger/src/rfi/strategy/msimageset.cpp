@@ -160,7 +160,7 @@ namespace rfiStrategy {
 			startIndex = StartIndex(msIndex),
 			endIndex = EndIndex(msIndex);
 		std::cout << "Loading baseline " << a1 << "x" << a2 << ", t=" << startIndex << "-" << endIndex << std::endl;
-		_reader->AddRequest(a1, a2, msIndex._band, startIndex, endIndex);
+		_reader->AddReadRequest(a1, a2, msIndex._band, startIndex, endIndex);
 		_reader->ReadRequests();
 		std::vector<UVW> uvw;
 		TimeFrequencyData data = _reader->GetNextResult(uvw);
@@ -330,8 +330,7 @@ namespace rfiStrategy {
 		for(std::vector<BaselineData>::iterator i=_baselineData.begin();i!=_baselineData.end();++i)
 		{
 			MSImageSetIndex &index = static_cast<MSImageSetIndex&>(i->Index());
-			std::cout << "Adding request " << StartIndex(index) << "-" << EndIndex(index) << std::endl;
-			_reader->AddRequest(GetAntenna1(index), GetAntenna2(index), index._band, StartIndex(index), EndIndex(index));
+			_reader->AddReadRequest(GetAntenna1(index), GetAntenna2(index), index._band, StartIndex(index), EndIndex(index));
 		}
 		
 		_reader->ReadRequests();
@@ -354,7 +353,6 @@ namespace rfiStrategy {
 		_baselineData.erase(_baselineData.begin());
 		if(top.Data().IsEmpty())
 			throw std::runtime_error("Calling GetNextRequested(), but requests were not read with LoadRequests.");
-		std::cout << "Orinal flags: " << top.Data().GetSingleMask()->GetCount<true>() << std::endl;
 		return new BaselineData(top);
 	}
 }
