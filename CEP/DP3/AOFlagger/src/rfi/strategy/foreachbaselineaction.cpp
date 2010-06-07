@@ -60,6 +60,7 @@ namespace rfiStrategy {
 
 			_finishedBaselines = false;
 			_baselineCount = 0;
+			_baselineProgress = 0;
 			_nextIndex = 0;
 			
 			// Count the baselines that are to be processed
@@ -180,8 +181,6 @@ namespace rfiStrategy {
 	{
 		ImageSet *privateImageSet = _action._artifacts->ImageSet()->Copy();
 
-		size_t taskIndex;
-
 		try {
 
 			boost::mutex::scoped_lock lock(_action._mutex);
@@ -194,7 +193,7 @@ namespace rfiStrategy {
 			while(baseline != 0) {
 				baseline->Index().Reattach(*privateImageSet);
 				
-				_action.SetProgress(_progress, taskIndex, _action._baselineCount, "Processing baseline", _threadIndex);
+				_action.SetProgress(_progress, _action.BaselineProgress(), _action._baselineCount, "Processing baseline", _threadIndex);
 	
 				newArtifacts.SetOriginalData(baseline->Data());
 				newArtifacts.SetContaminatedData(baseline->Data());
@@ -209,6 +208,7 @@ namespace rfiStrategy {
 				delete baseline;
 	
 				baseline = _action.GetNextBaseline();
+				_action.IncBaselineProgress();
 			}
 	
 			if(_threadIndex == 0)

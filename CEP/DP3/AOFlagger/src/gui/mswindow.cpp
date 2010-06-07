@@ -34,6 +34,7 @@
 
 #include <AOFlagger/rfi/strategy/artifactset.h>
 #include <AOFlagger/rfi/strategy/msimageset.h>
+#include <AOFlagger/rfi/strategy/bandcombinedset.h>
 #include <AOFlagger/rfi/strategy/spatialmsimageset.h>
 #include <AOFlagger/rfi/strategy/strategy.h>
 
@@ -150,6 +151,30 @@ void MSWindow::onActionDirectoryOpenForSpatial()
   if(result == Gtk::RESPONSE_OK)
 	{
 		SetImageSet(new rfiStrategy::SpatialMSImageSet(dialog.get_filename()));
+	}
+}
+
+void MSWindow::onOpenBandCombined()
+{
+	std::vector<std::string> names;
+	int result;
+	do
+	{
+		Gtk::FileChooserDialog dialog("Select a measurement set",
+						Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+		dialog.set_transient_for(*this);
+	
+		//Add response buttons the the dialog:
+		dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+		dialog.add_button("Open", Gtk::RESPONSE_OK);
+	
+		result = dialog.run();
+		names.push_back(dialog.get_filename());
+	}
+  while(result == Gtk::RESPONSE_OK);
+	if(names.size() > 0)
+	{
+		SetImageSet(new rfiStrategy::BandCombinedSet(names));
 	}
 }
 
@@ -408,6 +433,8 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onActionDirectoryOpen) );
 	_actionGroup->add( Gtk::Action::create("OpenDirectorySpatial", Gtk::Stock::OPEN, "Open _directory as spatial"),
   sigc::mem_fun(*this, &MSWindow::onActionDirectoryOpenForSpatial) );
+	_actionGroup->add( Gtk::Action::create("OpenBandCombined", Gtk::Stock::OPEN, "Open/combine bands"),
+  sigc::mem_fun(*this, &MSWindow::onOpenBandCombined) );
 	_actionGroup->add( Gtk::Action::create("OpenTestSet", "Open _testset") );
 
 	Gtk::RadioButtonGroup testSetGroup;
@@ -590,6 +617,7 @@ void MSWindow::createToolbar()
     "      <menuitem action='OpenFile'/>"
     "      <menuitem action='OpenDirectory'/>"
     "      <menuitem action='OpenDirectorySpatial'/>"
+    "      <menuitem action='OpenBandCombined'/>"
     "      <menu action='OpenTestSet'>"
 		"        <menuitem action='GaussianTestSets'/>"
 		"        <menuitem action='RayleighTestSets'/>"

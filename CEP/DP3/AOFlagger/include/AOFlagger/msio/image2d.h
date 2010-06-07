@@ -295,6 +295,20 @@ class Image2D {
 
 		Image2DPtr Trim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY) const;
 		void SetTrim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY);
+
+		void CopyFrom(Image2DCPtr source, size_t destX, size_t destY)
+		{
+			size_t
+				x2 = source->_width + destX,
+				y2 = source->_height + destY;
+			if(x2 > _width) x2 = _width;
+			if(y2 > _height) y2 = _height;
+			for(size_t y=destY;y<y2;++y)
+			{
+				for(size_t x=destX;x<x2;++x)
+					SetValue(x, y, source->Value(x-destX, y-destY));
+			}
+		}
 	private:
 		Image2D(long width, long height);
 		unsigned long _width, _height;
