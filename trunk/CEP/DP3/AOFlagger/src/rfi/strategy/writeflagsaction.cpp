@@ -21,8 +21,6 @@
 
 #include <iostream>
 
-#include <AOFlagger/util/stopwatch.h>
-
 #include <AOFlagger/rfi/strategy/artifactset.h>
 #include <AOFlagger/rfi/strategy/imageset.h>
 
@@ -30,24 +28,89 @@
 
 namespace rfiStrategy {
 
-	WriteFlagsAction::WriteFlagsAction()
+	WriteFlagsAction::WriteFlagsAction() : _flusher(0), _isFinishing(false), _maxBufferItems(15), _minBufferItemsForWriting(12), _imageSet(0)
 	{
 	}
 	
 	
 	WriteFlagsAction::~WriteFlagsAction()
 	{
+		Finish();
 	}
 	
 	void WriteFlagsAction::Perform(class ArtifactSet &artifacts, ProgressListener &)
 	{
 		if(!artifacts.HasImageSet())
 			throw BadUsageException("No image set active: can not write flags");
-		ImageSet *imageSet = artifacts.ImageSet();
-		boost::mutex::scoped_lock lock(artifacts.IOMutex());
-		Stopwatch watch(true);
-		imageSet->WriteFlags(*artifacts.ImageSetIndex(), artifacts.ContaminatedData());
-		std::cout << "Writing flags toke: " << watch.ToString() << std::endl;
+
+		if(_flusher == 0)
+		{
+			_imageSet = artifacts.ImageSet()->Copy();
+			_ioMutex = &artifacts.IOMutex();
+			_isFinishing = false;
+			FlushFunction flushFunction;
+			flushFunction._parent = this;
+			_flusher = new boost::thread(flushFunction);
+		}
+
+		std::vector<Mask2DCPtr> masks;
+		for(size_t i=0;i<artifacts.ContaminatedData().MaskCount();++i)
+		{
+			Mask2DCPtr mask = artifacts.ContaminatedData().GetMask(i);
+			masks.push_back(mask);
+		}
+		BufferItem newItem(masks, *artifacts.ImageSetIndex());
+		pushInBuffer(newItem);
+	}
+
+	void WriteFlagsAction::FlushFunction::operator()()
+	{
+		boost::mutex::scoped_lock lock(_parent->_mutex);
+		do {
+			while(_parent->_buffer.size() < _parent->_minBufferItemsForWriting && !_parent->_isFinishing)
+				_parent->_bufferChange.wait(lock);
+
+			std::stack<BufferItem> bufferCopy;
+			while(!_parent->_buffer.empty())
+			{
+				BufferItem item = _parent->_buffer.top();
+				_parent->_buffer.pop();
+				item._index->Reattach(*_parent->_imageSet);
+				bufferCopy.push(item);
+			}
+			_parent->_bufferChange.notify_all();
+			if(_parent->_buffer.size() >= _parent->_minBufferItemsForWriting)
+				std::cout << "Flag buffer has reached minimal writing size, flushing flags..." << std::endl;
+			else
+				std::cout << "Flushing flags..." << std::endl;
+			lock.unlock();
+
+			boost::mutex::scoped_lock ioLock(*_parent->_ioMutex);
+			while(!bufferCopy.empty())
+			{
+				BufferItem item = bufferCopy.top();
+				bufferCopy.pop();
+				_parent->_imageSet->AddWriteFlagsTask(*item._index, item._masks);
+			}
+			_parent->_imageSet->PerformWriteFlagsTask();
+			ioLock.unlock();
+
+			lock.lock();
+		} while(!_parent->_isFinishing || !_parent->_buffer.empty());
+	}
+
+	void WriteFlagsAction::Finish()
+	{
+		std::cout << "Finishing the flusher thread..." << std::endl;
+		boost::mutex::scoped_lock lock(_mutex);
+		_isFinishing = true;
+		_bufferChange.notify_all();
 		lock.unlock();
+		if(_flusher != 0)
+		{
+			_flusher->join();
+			delete _flusher;
+			delete _imageSet;
+		}
 	}
 }

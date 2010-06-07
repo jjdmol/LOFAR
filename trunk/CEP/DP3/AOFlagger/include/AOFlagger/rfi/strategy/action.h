@@ -61,6 +61,7 @@ namespace rfiStrategy {
 			virtual ~Action() { }
 			virtual std::string Description() = 0;
 			virtual void Initialize() { }
+			virtual void Finish() { }
 			virtual void Perform(class ArtifactSet &artifacts, ProgressListener &progress) = 0;
 			class ActionContainer *Parent() const { return _parent; }
 			virtual ActionType Type() const = 0;

@@ -276,7 +276,7 @@ namespace rfiStrategy {
 
 	void MSImageSet::WriteFlags(ImageSetIndex &index, TimeFrequencyData &data)
 	{
-		AddWriteFlagsTask(index, data);
+		ImageSet::AddWriteFlagsTask(index, data);
 		_reader->PerformWriteRequests();
 	}
 
@@ -317,7 +317,7 @@ namespace rfiStrategy {
 		return new BaselineData(top);
 	}
 	
-	void MSImageSet::AddWriteFlagsTask(ImageSetIndex &index, TimeFrequencyData &data)
+	void MSImageSet::AddWriteFlagsTask(ImageSetIndex &index, std::vector<Mask2DCPtr> &flags)
 	{
 		MSImageSetIndex &msIndex = static_cast<MSImageSetIndex&>(index);
 		initReader();
@@ -328,37 +328,15 @@ namespace rfiStrategy {
 			startIndex = StartIndex(msIndex),
 			endIndex = EndIndex(msIndex);
 
-		Mask2DCPtr xx, xy, yx, yy;
-
-		xx = data.GetMask(XXPolarisation);
-		yy = data.GetMask(YYPolarisation);
-
-		if(data.Polarisation() == AutoDipolePolarisation)
+		double ratio = 0.0;
+		for(std::vector<Mask2DCPtr>::const_iterator i=flags.begin();i!=flags.end();++i)
 		{
-			Mask2DPtr joined = Mask2D::CreateCopy(xx);
-			joined->Join(yy);
-			xy = joined;
-			yx = joined;
-		} else
-		{
-			xy = data.GetMask(XYPolarisation);
-			yx = data.GetMask(YXPolarisation);
+			ratio += ((double) (*i)->GetCount<true>() / ((*i)->Width() * (*i)->Height() * flags.size()));
 		}
-
-		TimeFrequencyStatistics stats(data);
 		std::cout << "Adding write flags task, flags: "
-			<< TimeFrequencyStatistics::FormatRatio(stats.GetFlaggedRatio())
-			<< " (" << xx->GetCount<true>() << " / "
-			<< xy->GetCount<true>() << " / "
-			<< yx->GetCount<true>() << " / "
-			<< yy->GetCount<true>() << ")"
+			<< TimeFrequencyStatistics::FormatRatio(ratio)
 			<< " for baseline index " << a1 << "x" << a2 << " (sb " << b << "),t=" << startIndex << "-" << endIndex << std::endl;
-			std::vector<Mask2DCPtr> dataVector;
-			dataVector.push_back(xx);
-			dataVector.push_back(xy);
-			dataVector.push_back(yx);
-			dataVector.push_back(yy);
-		_reader->AddWriteTask(dataVector, a1, a2, b, startIndex, endIndex, LeftBorder(msIndex), RightBorder(msIndex));
+		_reader->AddWriteTask(flags, a1, a2, b, startIndex, endIndex, LeftBorder(msIndex), RightBorder(msIndex));
 	}
 	
 	void MSImageSet::PerformWriteFlagsTask()
