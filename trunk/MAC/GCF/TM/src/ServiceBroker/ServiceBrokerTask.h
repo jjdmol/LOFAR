@@ -96,7 +96,8 @@ private:
 		service_t(string s, uint16 p) : servicename(s), portNr(p) {};
 		service_t() 				  : servicename(),  portNr(0) {};
 	} KnownService;
-    typedef list<Action>								actionList_t;
+	// NOTE: we use a VECTOR iso a LIST because calling erase on a LIST may/will change the order of the elements in the List!!!
+    typedef list<Action>								actionList_t;	
 	typedef	map<string /*hostname*/, GTMSBTCPPort*>		brokerMap_t;
 	typedef	map<GCFTCPPort*,         KnownService>		serviceMap_t;
 	typedef actionList_t::iterator			ALiter;

@@ -312,6 +312,11 @@ void GCFScheduler::queueEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface*  
 
 	// Framework events are always queued,
 	if (F_EVT_PROTOCOL(event) == F_FSM_PROTOCOL || F_EVT_PROTOCOL(event) == F_PORT_PROTOCOL) {
+		// prevent double entries of DATAIN and DISCONNECTED event of the same port.
+		// (since the eventqueue is handled in pieces, the workProcs might be called > once before an event is processed).
+		if ((event.signal == F_DATAIN || event.signal == F_DISCONNECTED) && _isInEventQueue(&event, port)) {
+			return;
+		}
 		_addEvent(task, event, port);
 		return;
 	}
@@ -481,6 +486,24 @@ void GCFScheduler::printEventQueue()
 		nr++;
 		++iter;
 	}
+}
+
+//
+// _isInEventQueue(GCFEvent*)
+//
+bool GCFScheduler::_isInEventQueue(GCFEvent*	someEvent, GCFPortInterface*	somePort)
+{
+	list<waitingEvent_t*>::iterator		iter = theEventQueue.begin();
+	list<waitingEvent_t*>::iterator		end  = theEventQueue.end();
+	while (iter != end) {
+		if ((*iter)->event->signal == someEvent->signal && (*iter)->port == somePort) {
+			LOG_DEBUG_STR("Event " << eventName(*((*iter)->event)) << "@" << (*iter)->port->getName() 
+						<< " already in the queue!");
+			return (true);
+		}
+		++iter;
+	}
+	return (false);
 }
 
 //
