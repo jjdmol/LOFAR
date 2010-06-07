@@ -120,6 +120,7 @@ void ServiceBrokerTask::registerService(GCFTCPPort& servicePort)
 
 	BMiter	serviceBroker = _getBroker(action.hostname);
 	if (serviceBroker->second->isConnected()) {
+		LOG_DEBUG_STR("Sending REGISTER(" << request.servicename << "@" << action.hostname << "(" << request.seqnr << "))");
 		serviceBroker->second->send(request);	// will result in SB_SERVICE_REGISTERED
 	}
 }
@@ -144,6 +145,7 @@ void ServiceBrokerTask::unregisterService(GCFTCPPort& servicePort)
 
 	BMiter	serviceBroker = _getBroker(servicePort.getHostName());
 	if (serviceBroker->second->isConnected()) {
+		LOG_DEBUG_STR("Sending UNREGISTER(" << request.servicename << "@" << servicePort.getHostName() << "(" << request.seqnr << "))");
 		serviceBroker->second->send(request);	// will result in SB_SERVICE_UNREGISTERED
 	}
 }
@@ -170,6 +172,7 @@ void ServiceBrokerTask::getServiceinfo(GCFTCPPort& 	clientPort,
 
 	BMiter	serviceBroker = _getBroker(action.hostname);
 	if (serviceBroker->second->isConnected()) {
+		LOG_DEBUG_STR("Sending SERVICEINFO(" << request.servicename << "@" << request.hostname << "(" << request.seqnr << "))");
 		serviceBroker->second->send(request);	// will result in SB_SERVICE_INFO
 	}
 }
@@ -180,18 +183,17 @@ void ServiceBrokerTask::getServiceinfo(GCFTCPPort& 	clientPort,
 void ServiceBrokerTask::deletePort(GCFTCPPort& aPort)
 {
 	// clean up all action that refer to this port
-	ALiter		end  = itsActionList.end();
-	ALiter		iter = itsActionList.begin();
+    actionList_t 		tmpActionList;    	// NOTE: 'erase' reorders the elements of a list!!!
+	tmpActionList.swap(itsActionList);
+	ALiter		end  = tmpActionList.end();
+	ALiter		iter = tmpActionList.begin();
 	while (iter != end) {
-		if (iter->pPort == &aPort) {
-			ALiter	itercopy = iter;
-			iter++;
-			itsActionList.erase(itercopy);
-			continue;
+		if (iter->pPort != &aPort) {			// copy others only
+			itsActionList.push_back(*iter);
 		}
-
 		iter++;
 	}
+	tmpActionList.clear();
 
 	// unregister service of this port if any
 	_deleteService(aPort);
@@ -335,14 +337,16 @@ void ServiceBrokerTask::_doActionList(const string&	hostname)
 	_printActionList();
 
 	// Note: while processing the list, the list grows. Therefore we use actionsLeft.
-	ALiter		end  = itsActionList.end();
-	ALiter		iter = itsActionList.begin();
-	uint32		actionsLeft = itsActionList.size();
-	while (actionsLeft && iter != end) {
-		actionsLeft--;
+    actionList_t 		tmpActionList;    	// NOTE: 'erase' reorders the elements of a list!!!
+	tmpActionList.swap(itsActionList);
+	ALiter		end  = tmpActionList.end();
+	ALiter		iter = tmpActionList.begin();
+	while (iter != end) {
 		// only process the actions for this host
 		if (iter->hostname != hostname) {
+			itsActionList.push_back(*iter);		// restore in original list.
 			iter++;
+			continue;
 		}
 
 		// its an action for this host, process it. action is added to the list again
@@ -360,9 +364,9 @@ void ServiceBrokerTask::_doActionList(const string&	hostname)
 			ASSERTSTR(false, "Unknown action in actionlist: " << iter->type
 						<< ":" << iter->servicename << "@" << iter->hostname);
 		}
-		
-		iter = itsActionList.erase(iter);	// remove original action
+		iter++;
 	}
+	tmpActionList.clear();
 }
 
 //
@@ -385,7 +389,7 @@ ServiceBrokerTask::BMiter	ServiceBrokerTask::_getBroker(const string&	hostname)
 	// Add broker to collection and open connection
 	aBrokerPort->setHostName(hostname);
 	itsBrokerMap[hostname] = aBrokerPort;
-	itsBrokerMap[hostname]->open();
+	itsBrokerMap[hostname]->open();		// Results in F_CONN or F_DISCO
 
 	return (itsBrokerMap.find(hostname));
 }
@@ -453,7 +457,7 @@ void ServiceBrokerTask::_printActionList()
 		}
 
 		LOG_DEBUG_STR(typeName << " " << iter->servicename << "@" << iter->hostname << 
-						"(" << iter->timestamp << ")");
+						"(" << iter->timestamp << "(" << iter->seqnr << "))");
 		++iter;
 	}
 }
@@ -466,8 +470,10 @@ void ServiceBrokerTask::_checkActionList(const string&	hostname)
 	LOG_TRACE_FLOW_STR("_checkActionList(" << hostname <<")");
 	_printActionList();
 
-	ALiter	end  = itsActionList.end();
-	ALiter	iter = itsActionList.begin();
+    actionList_t 		tmpActionList;    	// NOTE: 'erase' reorders the elements of a list!!!
+	tmpActionList.swap(itsActionList);
+	ALiter		end  = tmpActionList.end();
+	ALiter		iter = tmpActionList.begin();
 	time_t	currentTime = time(0);
 	// check for which actions we are late.
 	while (iter != end) {
@@ -479,22 +485,22 @@ void ServiceBrokerTask::_checkActionList(const string&	hostname)
 			case SB_REGISTER_SERVICE: 
 				// pass response to waiting client
 				iter->pPort->serviceRegistered(SB_NO_CONNECTION, 0);
-				iter = itsActionList.erase(iter);
-				continue;
+				break;
 			case SB_UNREGISTER_SERVICE: 
-				iter = itsActionList.erase(iter);
-				continue;
+				break;
 			case SB_GET_SERVICEINFO: 
 				iter->pPort->serviceInfo(SB_NO_CONNECTION, 0, "");
-				iter = itsActionList.erase(iter);
-				continue;
 				break;
 			default: 
 				ASSERTSTR(false, "Unknown action in actionlist: " << iter->type);
 			}
 		}
+		else {
+			itsActionList.push_back(*iter);	// keep non-expired action
+		}
 		iter++;
 	}
+	tmpActionList.clear();
 }
 
 //

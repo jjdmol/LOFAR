@@ -175,6 +175,7 @@ private:
 	void				_addEvent   (GCFFsm* task, GCFEvent& event, GCFPortInterface* port);
 	void 				_injectEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface* port, bool deepCopy=true);
 	GCFEvent::TResult	_sendEvent  (GCFFsm* task, GCFEvent& event, GCFPortInterface* port);
+	bool 				_isInEventQueue(GCFEvent*	someEvent, GCFPortInterface*    somePort);
 
     // Singleton
     GCFScheduler();
