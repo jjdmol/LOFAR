@@ -834,6 +834,26 @@ class TimeFrequencyData
 				}
 			}
 		}
+
+		void SetImageSize(size_t width, size_t height)
+		{
+			for(size_t i=0;i<_images.size();++i)
+			{
+				_images[i] = Image2D::CreateEmptyImagePtr(width, height);
+			}
+		}
+
+		void CopyImagesFrom(const TimeFrequencyData &source, size_t destX, size_t destY)
+		{
+			if(source._images.size() != _images.size())
+				throw BadUsageException("CopyImagesFrom: tf data's do not match");
+			for(size_t i=0;i<_images.size();++i)
+			{
+				Image2DPtr image = Image2D::CreateCopy(_images[i]);
+				image->CopyFrom(source._images[i], destX, destY);
+				_images[i] = image;
+			}
+		}
 	private:
 		Image2DCPtr GetSingleAbsoluteFromComplex() const
 		{

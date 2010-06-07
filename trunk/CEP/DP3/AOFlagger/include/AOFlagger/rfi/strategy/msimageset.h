@@ -38,26 +38,27 @@
 namespace rfiStrategy {
 
 	class MSImageSetIndex : public ImageSetIndex {
-		friend class MSImageSet;
-		
-		MSImageSetIndex(class rfiStrategy::ImageSet &set) : ImageSetIndex(set), _baselineIndex(0), _band(0), _field(0), _partIndex(0), _isValid(true) { }
-		
-		virtual void Previous();
-		virtual void Next();
-		virtual void LargeStepPrevious();
-		virtual void LargeStepNext();
-		virtual std::string Description() const;
-		virtual bool IsValid() const { return _isValid; }
-		virtual MSImageSetIndex *Copy() const
-		{
-			MSImageSetIndex *index = new MSImageSetIndex(imageSet());
-			index->_baselineIndex = _baselineIndex;
-			index->_band = _band;
-			index->_field = _field;
-			index->_partIndex = _partIndex;
-			index->_isValid = _isValid;
-			return index;
-		}
+		public:
+			friend class MSImageSet;
+			
+			MSImageSetIndex(class rfiStrategy::ImageSet &set) : ImageSetIndex(set), _baselineIndex(0), _band(0), _field(0), _partIndex(0), _isValid(true) { }
+			
+			virtual void Previous();
+			virtual void Next();
+			virtual void LargeStepPrevious();
+			virtual void LargeStepNext();
+			virtual std::string Description() const;
+			virtual bool IsValid() const { return _isValid; }
+			virtual MSImageSetIndex *Copy() const
+			{
+				MSImageSetIndex *index = new MSImageSetIndex(imageSet());
+				index->_baselineIndex = _baselineIndex;
+				index->_band = _band;
+				index->_field = _field;
+				index->_partIndex = _partIndex;
+				index->_isValid = _isValid;
+				return index;
+			}
 		private:
 			size_t _baselineIndex, _band, _field, _partIndex;
 			bool _isValid;

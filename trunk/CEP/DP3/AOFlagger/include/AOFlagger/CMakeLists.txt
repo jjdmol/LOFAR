@@ -127,6 +127,7 @@ install(FILES
   rfi/strategy/action.h
   rfi/strategy/adapter.h
   rfi/strategy/artifactset.h
+  rfi/strategy/bandcombinedset.h
   rfi/strategy/changeresolutionaction.h
   rfi/strategy/combineflagresults.h
   rfi/strategy/fitsimageset.h

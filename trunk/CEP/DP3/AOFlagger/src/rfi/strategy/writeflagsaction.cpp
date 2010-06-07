@@ -19,6 +19,10 @@
  ***************************************************************************/
 #include <AOFlagger/rfi/strategy/writeflagsaction.h>
 
+#include <iostream>
+
+#include <AOFlagger/util/stopwatch.h>
+
 #include <AOFlagger/rfi/strategy/artifactset.h>
 #include <AOFlagger/rfi/strategy/imageset.h>
 
@@ -41,7 +45,9 @@ namespace rfiStrategy {
 			throw BadUsageException("No image set active: can not write flags");
 		ImageSet *imageSet = artifacts.ImageSet();
 		boost::mutex::scoped_lock lock(artifacts.IOMutex());
+		Stopwatch watch(true);
 		imageSet->WriteFlags(*artifacts.ImageSetIndex(), artifacts.ContaminatedData());
+		std::cout << "Writing flags toke: " << watch.ToString() << std::endl;
 		lock.unlock();
 	}
 }

@@ -68,6 +68,17 @@ namespace rfiStrategy {
 			void SetExceptionOccured();
 			void SetFinishedBaselines();
 			void SetProgress(ProgressListener &progress, int no, int count, std::string taskName, int threadId);
+
+			size_t BaselineProgress()
+			{
+				boost::mutex::scoped_lock lock(_mutex);
+				return _baselineProgress;
+			}
+			void IncBaselineProgress()
+			{
+				boost::mutex::scoped_lock lock(_mutex);
+				++_baselineProgress;
+			}
 			
 			void WaitForBufferAvailable(size_t maxSize)
 			{
@@ -138,6 +149,7 @@ namespace rfiStrategy {
 
 			int *_progressTaskNo, *_progressTaskCount;
 			bool _exceptionOccured;
+			size_t _baselineProgress;
 			
 			// Initial data
 			AntennaInfo _initAntenna1, _initAntenna2;
