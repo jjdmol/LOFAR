@@ -27,6 +27,7 @@
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
+#include <boost/thread/thread.hpp>
 
 #include <AOFlagger/msio/mask2d.h>
 
