@@ -48,6 +48,9 @@ namespace rfiStrategy {
 			virtual void Perform(class ArtifactSet &artifacts, ProgressListener &progress);
 			virtual ActionType Type() const { return WriteFlagsActionType; }
 			virtual void Finish();
+
+			void SetMaxBufferItems(size_t maxBufferItems) { _maxBufferItems = maxBufferItems; }
+			void SetMinBufferItemsForWriting(size_t minBufferItemsForWriting) { _minBufferItemsForWriting = minBufferItemsForWriting; }
 		private:
 			struct BufferItem {
 				BufferItem(const std::vector<Mask2DCPtr> &masks, const ImageSetIndex &index)
