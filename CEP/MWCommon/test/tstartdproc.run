@@ -78,5 +78,7 @@ sed -e "s%$curdir%%g" -e 's/pid=[0-9]*/pid=nn/' -e 's/kill -9 .*/kill -9 /' tsta
 for i in 0 1 2
 do
   sed -e "s%$curdir%%g" tstartdproc_tmp.log3b-$i | grep -v "^Debug: registered context"
-  sed -e 's/pid=[0-9]*/pid=nn/' tstartdproc_tmp.out3.envfile.pid-$i | grep -v " Killed "
+  if [ -f tstartdproc_tmp.out3.envfile.pid-$i ]; then
+    sed -e 's/pid=[0-9]*/pid=nn/' tstartdproc_tmp.out3.envfile.pid-$i | grep -v " Killed "
+  fi
 done
