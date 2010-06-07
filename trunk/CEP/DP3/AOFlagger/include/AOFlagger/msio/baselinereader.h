@@ -23,10 +23,15 @@
 #include <map>
 #include <vector>
 
+#include <boost/shared_ptr.hpp>
+
 #include "image2d.h"
 #include "mask2d.h"
 #include "measurementset.h"
 #include "antennainfo.h"
+
+typedef boost::shared_ptr<class BaselineReader> BaselineReaderPtr;
+typedef boost::shared_ptr<const class BaselineReader> BaselineReaderCPtr;
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>

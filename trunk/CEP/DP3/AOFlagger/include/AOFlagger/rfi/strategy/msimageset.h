@@ -66,13 +66,13 @@ namespace rfiStrategy {
 	
 	class MSImageSet : public ImageSet {
 		public:
-			MSImageSet(std::string location);
+			MSImageSet(const std::string &location);
 			~MSImageSet();
 
 			virtual MSImageSet *Copy()
 			{
 				MSImageSet *newSet = new MSImageSet(_set.Location());
-				newSet->_reader = 0;
+				newSet->_reader = _reader;
 				newSet->_dataKind = _dataKind;
 				newSet->_readDipoleAutoPolarisations = _readDipoleAutoPolarisations;
 				newSet->_readDipoleCrossPolarisations = _readDipoleCrossPolarisations;
@@ -157,6 +157,16 @@ namespace rfiStrategy {
 			void SetReadFlags(bool readFlags) { _readFlags = readFlags; }
 			virtual void LoadFlags(ImageSetIndex &index, TimeFrequencyData &destination);
 		private:
+			MSImageSet(const std::string &location, BaselineReaderPtr reader) :
+				_set(location), _reader(reader),
+				_dataKind(ObservedData),
+				_readDipoleAutoPolarisations(true),
+				_readDipoleCrossPolarisations(true),
+				_readStokesI(false),
+				_maxScanCounts(0),
+				_scanCountPartOverlap(100),
+				_readFlags(true)
+			{ }
 			size_t StartIndex(MSImageSetIndex &index);
 			size_t EndIndex(MSImageSetIndex &index);
 			size_t LeftBorder(MSImageSetIndex &index);
@@ -166,7 +176,7 @@ namespace rfiStrategy {
 			TimeFrequencyMetaDataCPtr createMetaData(ImageSetIndex &index, std::vector<UVW> &uvw);
 
 			MeasurementSet _set;
-			BaselineReader *_reader;
+			BaselineReaderPtr _reader;
 			DataKind _dataKind;
 			bool _readDipoleAutoPolarisations, _readDipoleCrossPolarisations, _readStokesI;
 			std::vector<std::pair<size_t,size_t> > _baselines;
