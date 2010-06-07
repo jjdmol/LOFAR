@@ -94,7 +94,7 @@ namespace rfiStrategy {
 			virtual void PerformReadRequests();
 			virtual BaselineData *GetNextRequested();
 
-			virtual void AddWriteFlagsTask(ImageSetIndex &index, TimeFrequencyData &data);
+			virtual void AddWriteFlagsTask(ImageSetIndex &index, std::vector<Mask2DCPtr> &flags);
 			virtual void PerformWriteFlagsTask();
 
 			virtual void Initialize();
