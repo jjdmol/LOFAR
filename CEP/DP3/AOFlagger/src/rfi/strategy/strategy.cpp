@@ -269,6 +269,12 @@ namespace rfiStrategy {
 				ForEachBaselineAction &fobAction = static_cast<ForEachBaselineAction&>(*i);
 				fobAction.SetThreadCount(threadCount);
 			}
+			if(i->Type() == WriteFlagsActionType)
+			{
+				WriteFlagsAction &writeAction = static_cast<WriteFlagsAction&>(*i);
+				writeAction.SetMaxBufferItems(threadCount*5);
+				writeAction.SetMinBufferItemsForWriting(threadCount*4);
+			}
 			++i;
 		}
 	}

@@ -101,13 +101,13 @@ namespace rfiStrategy {
 
 	void WriteFlagsAction::Finish()
 	{
-		std::cout << "Finishing the flusher thread..." << std::endl;
 		boost::mutex::scoped_lock lock(_mutex);
 		_isFinishing = true;
 		_bufferChange.notify_all();
 		lock.unlock();
 		if(_flusher != 0)
 		{
+			std::cout << "Finishing the flusher thread..." << std::endl;
 			_flusher->join();
 			delete _flusher;
 			delete _imageSet;
