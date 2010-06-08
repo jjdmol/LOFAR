@@ -345,7 +345,7 @@ namespace rfiStrategy {
 		}
 		else allFlags = flags;
 		
-		std::cout << "Adding write flags task, flags: "
+		std::cout << "Writing flags: "
 			<< TimeFrequencyStatistics::FormatRatio(ratio)
 			<< " for baseline index " << a1 << "x" << a2 << " (sb " << b << "),t=" << startIndex << "-" << endIndex << ", inp#=" << flags.size() << ",write=" << _reader->PolarizationCount() << std::endl;
 	

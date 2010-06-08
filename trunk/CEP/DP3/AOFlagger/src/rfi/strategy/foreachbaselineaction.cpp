@@ -188,7 +188,6 @@ namespace rfiStrategy {
 			lock.unlock();
 			
 			BaselineData *baseline = _action.GetNextBaseline();
-			std::cout << "Thread " << _threadIndex << " received a baseline." << std::endl;
 			
 			while(baseline != 0) {
 				baseline->Index().Reattach(*privateImageSet);
@@ -266,7 +265,6 @@ namespace rfiStrategy {
 					break;
 				}
 			}
-			std::cout << "Requested " << requestedCount << " baselines" << std::endl;
 			
 			if(requestedCount > 0)
 			{
@@ -280,7 +278,6 @@ namespace rfiStrategy {
 					_action._baselineBuffer.push(baseline);
 					bufferLock.unlock();
 				}
-				std::cout << "Pushed " << requestedCount << " baselines in buffer, size=" << _action._baselineBuffer.size() << std::endl;
 			}
 			
 			lock.unlock();
