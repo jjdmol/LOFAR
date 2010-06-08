@@ -269,6 +269,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 		} break;
 
 		case F_EXIT: {
+			return(status);
 		} break;
 
 		case F_ENTRY: {
