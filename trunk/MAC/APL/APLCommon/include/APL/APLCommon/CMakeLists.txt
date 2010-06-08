@@ -4,6 +4,7 @@
 set(inst_HEADERS
   AntennaMapper.h
   AntennaPos.h
+  AntennaField.h
   AntennaSets.h
   APLCommonExceptions.h
   APL_Defines.h
