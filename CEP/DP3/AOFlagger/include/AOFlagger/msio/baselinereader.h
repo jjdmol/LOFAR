@@ -82,6 +82,11 @@ class BaselineReader {
 
 		class TimeFrequencyData GetNextResult(std::vector<class UVW> &uvw);
 		void PartInfo(size_t maxTimeScans, size_t &timeScanCount, size_t &partCount);
+		size_t PolarizationCount()
+		{
+			initializePolarizations();
+			return _polarizationCount;
+		}
 	private:
 		struct ReadRequest {
 			int antenna1;
