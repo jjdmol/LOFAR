@@ -5,6 +5,7 @@ include(LofarPackageVersion)
 set(ms_LIB_SRCS
   Package__Version.cc
   MSCreate.cc
+  BaselineSelect.cc
   VdsMaker.cc)
 
 set(ms_PROGRAMS
