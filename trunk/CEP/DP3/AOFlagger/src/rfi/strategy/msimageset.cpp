@@ -331,10 +331,25 @@ namespace rfiStrategy {
 		{
 			ratio += ((double) (*i)->GetCount<true>() / ((*i)->Width() * (*i)->Height() * flags.size()));
 		}
+			
+		std::vector<Mask2DCPtr> allFlags;
+		if(flags.size() > _reader->PolarizationCount())
+			throw std::runtime_error("Trying to write more polarizations to image set than available");
+		else if(flags.size() < _reader->PolarizationCount())
+		{
+			if(flags.size() == 1)
+				for(size_t i=0;i<_reader->PolarizationCount();++i)
+					allFlags.push_back(flags[0]);
+			else
+				throw std::runtime_error("Incorrect number of polarizations in write action");
+		}
+		else allFlags = flags;
+		
 		std::cout << "Adding write flags task, flags: "
 			<< TimeFrequencyStatistics::FormatRatio(ratio)
-			<< " for baseline index " << a1 << "x" << a2 << " (sb " << b << "),t=" << startIndex << "-" << endIndex << std::endl;
-		_reader->AddWriteTask(flags, a1, a2, b, startIndex, endIndex, LeftBorder(msIndex), RightBorder(msIndex));
+			<< " for baseline index " << a1 << "x" << a2 << " (sb " << b << "),t=" << startIndex << "-" << endIndex << ", inp#=" << flags.size() << ",write=" << _reader->PolarizationCount() << std::endl;
+	
+		_reader->AddWriteTask(allFlags, a1, a2, b, startIndex, endIndex, LeftBorder(msIndex), RightBorder(msIndex));
 	}
 	
 	void MSImageSet::PerformWriteFlagsTask()
