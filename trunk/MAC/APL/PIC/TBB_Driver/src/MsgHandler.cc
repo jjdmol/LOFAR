@@ -37,6 +37,8 @@ MsgHandler::MsgHandler()
 	memset(itsFileName, 12, '\0');
 	memset(itsTimeString, 12, '\0');
 	itsFile = 0;
+	itsFileNr = 1;
+	itsStartFilePos = 0;
 }
 
 MsgHandler::~MsgHandler()
@@ -101,16 +103,27 @@ void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
 	if (TS->saveTriggersToFile()) {
 		int err;
 		if (itsFile != 0) {
+			if ((ftell(itsFile) - itsStartFilePos) > 2000000000) {
+				fclose(itsFile);
+				char itsNewFileName[256];
+				snprintf(itsNewFileName, PATH_MAX, "/localhome/data/%s_TRIGGER_%d.dat", itsTimeString, itsFileNr);
+				itsFileNr++;
+				rename(itsFileName, itsNewFileName);
+				itsFile = fopen(itsFileName,"a");
+			}
+			
 			time_t timenow;
 			timenow = time(NULL);
 			char timestring[12];
 			strftime(timestring, 255, "%Y-%m-%d", gmtime(&timenow));
 			
 			if (strcmp(timestring, itsTimeString) != 0) {
+				itsFileNr = 1;
 				strcpy(itsTimeString, timestring);
 				fclose(itsFile);
 				snprintf(itsFileName, PATH_MAX, "/localhome/data/%s_TRIGGER.dat", itsTimeString);
 				itsFile = fopen(itsFileName,"a");
+				itsStartFilePos = ftell(itsFile);
 			}
 		
 			err = fprintf(itsFile,"%d %u %u %u %u %u %u %u %u %u\n",
@@ -140,6 +153,7 @@ void MsgHandler::openTriggerFile()
 		strcpy(itsTimeString, timestring);
 		snprintf(itsFileName, PATH_MAX, "/localhome/data/%s_TRIGGER.dat", itsTimeString);
 		itsFile = fopen(itsFileName,"a");
+		itsStartFilePos = ftell(itsFile);
 	}
 }
 
