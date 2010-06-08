@@ -22,6 +22,7 @@
 
 #include <map>
 #include <vector>
+#include <stdexcept>
 
 #include <boost/shared_ptr.hpp>
 
@@ -58,6 +59,12 @@ class BaselineReader {
 		}
 		void AddWriteTask(std::vector<Mask2DCPtr> flags, int antenna1, int antenna2, int spectralWindow, size_t timeOffset, size_t timeEnd, size_t leftBorder=0, size_t rightBorder=0)
 		{
+			if(flags.size() != _polarizationCount)
+			{
+				std::stringstream s;
+				s << "Trying to write image with " << flags.size() << " polarizations to a measurement set with " << _polarizationCount;
+				throw std::runtime_error(s.str());
+			}
 			WriteRequest task;
 			task.flags = flags;
 			task.antenna1 = antenna1;
