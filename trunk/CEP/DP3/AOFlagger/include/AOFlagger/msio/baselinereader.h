@@ -39,7 +39,7 @@ typedef boost::shared_ptr<const class BaselineReader> BaselineReaderCPtr;
 */
 class BaselineReader {
 	public:
-		explicit BaselineReader(MeasurementSet &measurementSet);
+		explicit BaselineReader(const std::string &msFile);
 		~BaselineReader();
 
 		void SetReadFlags(bool readFlags) { _readFlags = readFlags; }
@@ -151,9 +151,9 @@ class BaselineReader {
 		};
 		
 		void initializePolarizations();
-
-		void initObservationTimes(MeasurementSet &set);
+		void initObservationTimes();
 		void initBaselineCache();
+		
 		void addRowToBaselineCache(int antenna1, int antenna2, int spectralWindow, size_t row);
 		void readUVWData();
 		void addRequestRows(ReadRequest request, size_t requestIndex, std::vector<std::pair<size_t, size_t> > &rows);
@@ -175,7 +175,7 @@ class BaselineReader {
 		void readTimeFlags(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<bool> flag);
 		void readWeights(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<float> weight);
 
-		class MeasurementSet *_measurementSet;
+		MeasurementSet _measurementSet;
 		enum DataKind _dataKind;
 		bool _readData, _readFlags;
 		

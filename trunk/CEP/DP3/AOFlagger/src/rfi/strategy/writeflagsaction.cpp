@@ -79,7 +79,7 @@ namespace rfiStrategy {
 				bufferCopy.push(item);
 			}
 			_parent->_bufferChange.notify_all();
-			if(_parent->_buffer.size() >= _parent->_minBufferItemsForWriting)
+			if(bufferCopy.size() >= _parent->_minBufferItemsForWriting)
 				std::cout << "Flag buffer has reached minimal writing size, flushing flags..." << std::endl;
 			else
 				std::cout << "Flushing flags..." << std::endl;
@@ -111,6 +111,7 @@ namespace rfiStrategy {
 			_flusher->join();
 			delete _flusher;
 			delete _imageSet;
+			_flusher = 0;
 		}
 	}
 }

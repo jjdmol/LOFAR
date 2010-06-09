@@ -165,8 +165,10 @@ int main(int argc, char **argv)
 		
 		ConsoleProgressHandler progress;
 		
+		overallStrategy.InitializeAll();
 		overallStrategy.StartPerformThread(artifacts, progress);
 		rfiStrategy::ArtifactSet *set = overallStrategy.JoinThread();
+		overallStrategy.FinishAll();
 
 		set->AntennaFlagCountPlot()->Report();
 
