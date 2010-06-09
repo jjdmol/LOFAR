@@ -28,7 +28,10 @@
 
 namespace rfiStrategy {
 
-	MSImageSet::MSImageSet(const std::string &location) : _set(location), _reader(),
+	MSImageSet::MSImageSet(const std::string &location) :
+		_msFile(location),
+		_set(location),
+		_reader(),
 		_dataKind(ObservedData),
 		_readDipoleAutoPolarisations(true),
 		_readDipoleCrossPolarisations(true),
@@ -112,7 +115,7 @@ namespace rfiStrategy {
 	void MSImageSet::initReader()
 	{
 		if(_reader == 0 )
-			_reader = BaselineReaderPtr(new BaselineReader(_set));
+			_reader = BaselineReaderPtr(new BaselineReader(_msFile));
 		_reader->SetDataKind(_dataKind);
 		_reader->SetReadFlags(_readFlags);
 		_reader->SetReadData(true);

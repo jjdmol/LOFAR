@@ -415,4 +415,25 @@ namespace rfiStrategy {
 			++i;
 		}
 	}
+	
+	void Strategy::InitializeAll()
+	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(*this);
+		while(!i.PastEnd())
+		{
+			i->Initialize();
+			++i;
+		}
+	}
+	
+	void Strategy::FinishAll()
+	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(*this);
+		while(!i.PastEnd())
+		{
+			i->Finish();
+			++i;
+		}
+	}
+
 }

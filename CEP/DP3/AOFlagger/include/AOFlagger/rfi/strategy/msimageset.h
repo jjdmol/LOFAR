@@ -147,9 +147,18 @@ namespace rfiStrategy {
 
 			size_t AntennaCount() { return _set.AntennaCount(); }
 			class ::AntennaInfo GetAntennaInfo(unsigned antennaIndex) { return _set.GetAntennaInfo(antennaIndex); }
-			class ::BandInfo GetBandInfo(unsigned bandIndex) { return _set.GetBandInfo(bandIndex); }
-			const std::set<double> &GetObservationTimesSet() { return _set.GetObservationTimesSet(); }
-			std::vector<double> *CreateObservationTimesVector() { return _set.CreateObservationTimesVector(); }
+			class ::BandInfo GetBandInfo(unsigned bandIndex)
+			{
+				return _set.GetBandInfo(bandIndex);
+			}
+			const std::set<double> &GetObservationTimesSet()
+			{
+				return _set.GetObservationTimesSet();
+			}
+			std::vector<double> *CreateObservationTimesVector()
+			{
+				return _set.CreateObservationTimesVector();
+			}
 			const std::vector<std::pair<size_t,size_t> > &Baselines() const { return _baselines; }
 			size_t BandCount() const { return _bandCount; }
 			virtual void WriteFlags(ImageSetIndex &index, TimeFrequencyData &data);
@@ -158,7 +167,7 @@ namespace rfiStrategy {
 			virtual void LoadFlags(ImageSetIndex &index, TimeFrequencyData &destination);
 		private:
 			MSImageSet(const std::string &location, BaselineReaderPtr reader) :
-				_set(location), _reader(reader),
+				_msFile(location), _set(location), _reader(reader),
 				_dataKind(ObservedData),
 				_readDipoleAutoPolarisations(true),
 				_readDipoleCrossPolarisations(true),
@@ -175,6 +184,7 @@ namespace rfiStrategy {
 			size_t FindBaselineIndex(size_t a1, size_t a2);
 			TimeFrequencyMetaDataCPtr createMetaData(ImageSetIndex &index, std::vector<UVW> &uvw);
 
+			const std::string _msFile;
 			MeasurementSet _set;
 			BaselineReaderPtr _reader;
 			DataKind _dataKind;

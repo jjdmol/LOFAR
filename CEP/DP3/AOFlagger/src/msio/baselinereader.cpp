@@ -31,8 +31,8 @@
 #include <AOFlagger/msio/scalarcolumniterator.h>
 #include <AOFlagger/util/stopwatch.h>
 
-BaselineReader::BaselineReader(MeasurementSet &measurementSet)
-	: _measurementSet(&measurementSet), _dataKind(ObservedData), _readData(true), _readFlags(true),
+BaselineReader::BaselineReader(const std::string &msFile)
+	: _measurementSet(msFile), _dataKind(ObservedData), _readData(true), _readFlags(true),
 	_polarizationCount(0)
 {
 }
@@ -41,12 +41,12 @@ BaselineReader::~BaselineReader()
 {
 }
 
-void BaselineReader::initObservationTimes(MeasurementSet &set)
+void BaselineReader::initObservationTimes()
 {
 	if(_observationTimes.size() == 0)
 	{
 		std::cout << "Initializing observation times..." << std::endl;
-		const std::set<double> &times = set.GetObservationTimesSet();
+		const std::set<double> &times = _measurementSet.GetObservationTimesSet();
 		unsigned index = 0;
 		for(std::set<double>::const_iterator i=times.begin();i!=times.end();++i)
 		{
@@ -62,7 +62,7 @@ void BaselineReader::initBaselineCache()
 	// the baselines.
 	if(_baselineCache.empty())
 	{
-		casa::Table *table = _measurementSet->OpenTable(MeasurementSet::MainTable);
+		casa::Table *table = _measurementSet.OpenTable(MeasurementSet::MainTable);
 		casa::ROScalarColumn<int> antenna1Column(*table, "ANTENNA1"); 
 		casa::ROScalarColumn<int> antenna2Column(*table, "ANTENNA2");
 		casa::ROScalarColumn<int> windowColumn(*table, "DATA_DESC_ID");
@@ -97,7 +97,7 @@ void BaselineReader::addRowToBaselineCache(int antenna1, int antenna2, int spect
 
 void BaselineReader::AddReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow)
 {
-	initObservationTimes(*_measurementSet);
+	initObservationTimes();
 	
 	addReadRequest(antenna1, antenna2, spectralWindow, 0, _observationTimes.size());
 }
@@ -132,7 +132,7 @@ void BaselineReader::PerformReadRequests()
 {
   Stopwatch stopwatch(true);
 	
-	initObservationTimes(*_measurementSet);
+	initObservationTimes();
 	initBaselineCache();
 	initializePolarizations();
 
@@ -144,7 +144,7 @@ void BaselineReader::PerformReadRequests()
 	std::sort(rows.begin(), rows.end());
 	
 	size_t timeCount = _observationTimes.size();
-	int frequencyCount = _measurementSet->FrequencyCount();
+	int frequencyCount = _measurementSet.FrequencyCount();
 
 	std::cout << "Reading " << _readRequests.size() << " requests with " << rows.size() << " rows total, flags=" << _readFlags << ", " << _polarizationCount << " polarizations." << std::endl;
 	
@@ -183,7 +183,7 @@ void BaselineReader::PerformReadRequests()
 		_results[i]._uvw.resize(width);
 	}
 
-	casa::Table *table = _measurementSet->OpenTable(MeasurementSet::MainTable, true);
+	casa::Table *table = _measurementSet.OpenTable(MeasurementSet::MainTable, true);
 
 	casa::ROScalarColumn<double> timeColumn(*table, "TIME");
 	casa::ROArrayColumn<float> weightColumn(*table, "WEIGHT");
@@ -261,7 +261,7 @@ void BaselineReader::PerformWriteRequests()
 {
 	Stopwatch stopwatch(true);
 
-	initObservationTimes(*_measurementSet);
+	initObservationTimes();
 	initBaselineCache();
 	initializePolarizations();
 
@@ -272,9 +272,9 @@ void BaselineReader::PerformWriteRequests()
 		addRequestRows(_writeRequests[i], i, rows);
 	std::sort(rows.begin(), rows.end());
 
-	size_t frequencyCount = _measurementSet->FrequencyCount();
+	size_t frequencyCount = _measurementSet.FrequencyCount();
 
-	casa::Table *table = _measurementSet->OpenTable(MeasurementSet::MainTable, true);
+	casa::Table *table = _measurementSet.OpenTable(MeasurementSet::MainTable, true);
 	casa::ROScalarColumn<double> timeColumn(*table, "TIME");
 	casa::ArrayColumn<bool> flagColumn(*table, "FLAG");
 
@@ -423,7 +423,7 @@ TimeFrequencyData BaselineReader::GetNextResult(std::vector<class UVW> &uvw)
 
 void BaselineReader::PartInfo(size_t maxTimeScans, size_t &timeScanCount, size_t &partCount)
 {
-	initObservationTimes(*_measurementSet);
+	initObservationTimes();
 
 	timeScanCount = _observationTimes.size();
 	if(maxTimeScans == 0)
@@ -440,7 +440,7 @@ void BaselineReader::initializePolarizations()
 {
 	if(_polarizationCount == 0)
 	{
-		casa::Table *table = _measurementSet->OpenTable(MeasurementSet::PolarizationTable, false);
+		casa::Table *table = _measurementSet.OpenTable(MeasurementSet::PolarizationTable, false);
 		casa::ROArrayColumn<int> corTypeColumn(*table, "CORR_TYPE"); 
 		casa::Array<int> corType = corTypeColumn(0);
 		casa::Array<int>::iterator iterend(corType.end());
