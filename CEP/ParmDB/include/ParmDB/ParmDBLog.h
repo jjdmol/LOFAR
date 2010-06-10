@@ -46,16 +46,13 @@ namespace BBS {
   {
   public:
 	// Setting which logging level is used
-	enum LoggingLevel {
+ 	enum LoggingLevel {
 			NONE, 
 			PERSOLUTION, 
 			PERITERATION,
 			PERSOLUTION_CORRMATRIX, 
 			PERITERATION_CORRMATRIX	
-			};
-
-	LoggingLevel itsLoggingLevel;
-
+			}; 
 
     // Create the object.
     // The table is created if <src>forceNew=true</src> or if the table does

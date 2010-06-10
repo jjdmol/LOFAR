@@ -85,7 +85,7 @@ namespace BBS {
   	return itsLoggingLevel;
   }
   
-  void ParmDBLog::setLoggingLevel(enum LoggingLevel level)
+  void ParmDBLog::setLoggingLevel(enum ParmDBLog::LoggingLevel level)
   {
   	if(level != NONE && level != PERSOLUTION && level != PERITERATION
   		&& level != PERSOLUTION_CORRMATRIX && level != PERITERATION_CORRMATRIX)
