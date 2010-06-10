@@ -27,6 +27,7 @@
 #ifndef LOFAR_PARMDB_PARMDBLOG_H
 #define LOFAR_PARMDB_PARMDBLOG_H
 
+
 //# Includes
 #include <casa/Arrays/Array.h>
 #include <tables/Tables/Table.h>
@@ -44,13 +45,25 @@ namespace BBS {
   class ParmDBLog
   {
   public:
+	// Setting which logging level is used
+	enum LoggingLevel {
+			NONE, 
+			PERSOLUTION, 
+			PERITERATION,
+			PERSOLUTION_CORRMATRIX, 
+			PERITERATION_CORRMATRIX	
+			};
+
+	LoggingLevel itsLoggingLevel;
+
+
     // Create the object.
     // The table is created if <src>forceNew=true</src> or if the table does
     // not exist yet.
     // If <src>lock=true</src> a write lock is acquired. In this way no
     // implcit locks have to be acquired on each access.
     explicit ParmDBLog (const std::string& tableName, bool forceNew=false,
-                        bool lock=true);
+                        bool lock=false);
 
     ~ParmDBLog();
 
@@ -79,7 +92,15 @@ namespace BBS {
               const vector<double>& solution, const string& message,
               const casa::Array<double>& correlationMatrix);
 
+	// Get or set the logging level of solver parameters
+	// <group>
+	int getLoggingLevel();
+	void setLoggingLevel(enum LoggingLevel);
+	// </group>
+
   private:
+	LoggingLevel itsLoggingLevel;
+
     // Create the tables.
     void createTables (const string& tableName);
 

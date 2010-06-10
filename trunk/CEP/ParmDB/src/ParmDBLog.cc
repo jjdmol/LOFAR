@@ -38,7 +38,10 @@ namespace BBS {
 
   ParmDBLog::ParmDBLog (const string& tableName, bool forceNew, bool wlock)
   {
-    // Create the table if needed or if it does not exist yet.
+  	// Set default logging level to PERSOLUTION
+  	itsLoggingLevel = PERSOLUTION;
+  	
+  	// Create the table if needed or if it does not exist yet.
     if (forceNew  ||  !Table::isReadable (tableName)) {
       createTables (tableName);
     }
@@ -75,6 +78,24 @@ namespace BBS {
   void ParmDBLog::unlock()
   {
     itsTable.unlock();
+  }
+  
+  int ParmDBLog::getLoggingLevel()
+  {
+  	return itsLoggingLevel;
+  }
+  
+  void ParmDBLog::setLoggingLevel(enum LoggingLevel level)
+  {
+  	if(level != NONE && level != PERSOLUTION && level != PERITERATION
+  		&& level != PERSOLUTION_CORRMATRIX && level != PERITERATION_CORRMATRIX)
+  	{
+  		// unsupported logging level... throw which kind of exception?
+  	}
+  	else
+  	{
+  		itsLoggingLevel=level;
+  	}
   }
 
   void ParmDBLog::createTables (const string& tableName)
