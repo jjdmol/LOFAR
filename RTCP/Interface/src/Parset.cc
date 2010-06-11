@@ -298,11 +298,7 @@ vector<double> Parset::positions() const
 vector<double> Parset::getRefPhaseCentres() const
 {
   vector<double> list;
-  vector<string> stNames = getStringVector("OLAP.storageStationNames",true);
-  int index;
-  
-  index = stNames[0].find("_");
-  list = getDoubleVector(locateModule(stNames[0].substr(0,index)) + stNames[0].substr(0,index)  + ".phaseCenter");
+  list = getDoubleVector("Observation.referencePhaseCenter");
  
   return list; 
 }
