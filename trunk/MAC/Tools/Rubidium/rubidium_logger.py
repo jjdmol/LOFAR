@@ -263,10 +263,12 @@ def statusHandler(cmd, response):
         else:
             logLine += ", rubidium lock=fail"
 
+        logLine += ", pps input="
         if noPPS:
-            logLine += ", no pps input"
-        if st5 != 4 and st5 != 20:
-            logLine += ", pps input status: " + str(st5)
+            logLine += "fail"
+        else:
+            logLine += "okay"
+        logLine += ", status=" + str(st5)            
             
         logLine += ", communication error=" + str(comErrorCount) + " sec"
         logLine += ", outside spec +- 100 ns=" + str(outOfSpecCount) + " sec"
