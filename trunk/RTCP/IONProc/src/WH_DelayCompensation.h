@@ -127,13 +127,13 @@ namespace LOFAR
       // AZEL.
       void setBeamDirections(const Parset *);
 
-      // Set the station to reference station position differences for all
-      // stations. The choice of reference station is arbitrary (so we choose
-      // station 0). The position differences are stored in \c
-      // itsPositionDiffs. In other words: we store \f$\mathbf{p}_j -
-      // \mathbf{p}_0\f$, where \f$\mathbf{p}_0\f$ is the position of the
-      // reference station and \f$\mathbf{p}_j\f$ is the position of station
-      // \f$j\f$.
+      // Set the station to reference station position differences for
+      // all stations. CS002LBA is the reference station, even if it
+      // does not take part in the observation. The position
+      // differences are stored in \c itsPositionDiffs. In other
+      // words: we store \f$\mathbf{p}_j - \mathbf{p}_0\f$, where
+      // \f$\mathbf{p}_0\f$ is the position of the reference station
+      // and \f$\mathbf{p}_j\f$ is the position of station \f$j\f$.
       void setPositionDiffs(const Parset *);
 
       // Beam info.
