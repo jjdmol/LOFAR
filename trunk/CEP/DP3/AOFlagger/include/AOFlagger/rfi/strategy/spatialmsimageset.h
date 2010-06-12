@@ -77,7 +77,8 @@ namespace rfiStrategy {
 			virtual TimeFrequencyData *LoadData(ImageSetIndex &index)
 			{
 				SpatialMSImageSetIndex &sIndex = static_cast<SpatialMSImageSetIndex&>(index);
-				return new TimeFrequencyData(_loader.Load(sIndex._timeIndex));
+				TimeFrequencyData *result = new TimeFrequencyData(_loader.Load(sIndex._timeIndex));
+				return result;
 			}
 			virtual void LoadFlags(ImageSetIndex &/*index*/, TimeFrequencyData &/*destination*/)
 			{
@@ -111,12 +112,20 @@ namespace rfiStrategy {
 			}
 			virtual void AddReadRequest(ImageSetIndex &index)
 			{
+				_baseline.push(BaselineData(index));
 			}
 			virtual void PerformReadRequests()
 			{
+				TimeFrequencyData *data = LoadData(_baseline.top().Index());
+				_baseline.top().SetData(*data);
+				_baseline.top().SetMetaData(TimeFrequencyMetaDataPtr());
+				delete data;
 			}
 			virtual BaselineData *GetNextRequested()
 			{
+				BaselineData data = _baseline.top();
+				_baseline.pop();
+				return new BaselineData(data);
 			}
 			virtual void AddWriteFlagsTask(ImageSetIndex &index, std::vector<Mask2DCPtr> &flags)
 			{
@@ -127,6 +136,7 @@ namespace rfiStrategy {
 		private:
 			MeasurementSet _set;
 			BaselineMatrixLoader _loader;
+			std::stack<BaselineData> _baseline;
 	};
 
 	void SpatialMSImageSetIndex::Previous()
