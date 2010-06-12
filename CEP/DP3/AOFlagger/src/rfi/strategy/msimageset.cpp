@@ -28,24 +28,6 @@
 
 namespace rfiStrategy {
 
-	MSImageSet::MSImageSet(const std::string &location) :
-		_msFile(location),
-		_set(location),
-		_reader(),
-		_dataKind(ObservedData),
-		_readDipoleAutoPolarisations(true),
-		_readDipoleCrossPolarisations(true),
-		_readStokesI(false),
-		_maxScanCounts(0),
-		_scanCountPartOverlap(100),
-		_readFlags(true)
-	{
-	}
-	
-	MSImageSet::~MSImageSet()
-	{
-	}
-
 	void MSImageSet::Initialize()
 	{
 		std::cout << "Initializing image set..." << std::endl;

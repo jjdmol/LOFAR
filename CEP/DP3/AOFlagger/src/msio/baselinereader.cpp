@@ -26,6 +26,7 @@
 
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/TableIter.h>
+#include <tables/Tables/TiledStManAccessor.h>
 
 #include <AOFlagger/msio/arraycolumniterator.h>
 #include <AOFlagger/msio/scalarcolumniterator.h>
@@ -35,10 +36,15 @@ BaselineReader::BaselineReader(const std::string &msFile)
 	: _measurementSet(msFile), _dataKind(ObservedData), _readData(true), _readFlags(true),
 	_polarizationCount(0)
 {
+	std::cout << "Baselinereader constructed." << std::endl;
+	_frequencyCount = _measurementSet.FrequencyCount();
+	_table = _measurementSet.OpenTable(MeasurementSet::MainTable, true);
 }
-
+// 
 BaselineReader::~BaselineReader()
 {
+	ShowStatistics();
+	delete _table;
 }
 
 void BaselineReader::initObservationTimes()
@@ -62,18 +68,16 @@ void BaselineReader::initBaselineCache()
 	// the baselines.
 	if(_baselineCache.empty())
 	{
-		casa::Table *table = _measurementSet.OpenTable(MeasurementSet::MainTable);
-		casa::ROScalarColumn<int> antenna1Column(*table, "ANTENNA1"); 
-		casa::ROScalarColumn<int> antenna2Column(*table, "ANTENNA2");
-		casa::ROScalarColumn<int> windowColumn(*table, "DATA_DESC_ID");
-		for(size_t i=0;i<table->nrow();++i) {
+		casa::ROScalarColumn<int> antenna1Column(*_table, "ANTENNA1"); 
+		casa::ROScalarColumn<int> antenna2Column(*_table, "ANTENNA2");
+		casa::ROScalarColumn<int> windowColumn(*_table, "DATA_DESC_ID");
+		for(size_t i=0;i<_table->nrow();++i) {
 			int
 				antenna1 = antenna1Column(i),
 				antenna2 = antenna2Column(i),
 				window = windowColumn(i);
 			addRowToBaselineCache(antenna1, antenna2, window, i);
 		}
-		delete table;
 	}
 }
 
@@ -144,7 +148,6 @@ void BaselineReader::PerformReadRequests()
 	std::sort(rows.begin(), rows.end());
 	
 	size_t timeCount = _observationTimes.size();
-	int frequencyCount = _measurementSet.FrequencyCount();
 
 	std::cout << "Reading " << _readRequests.size() << " requests with " << rows.size() << " rows total, flags=" << _readFlags << ", " << _polarizationCount << " polarizations." << std::endl;
 	
@@ -170,33 +173,31 @@ void BaselineReader::PerformReadRequests()
 		for(size_t p=0;p<_polarizationCount;++p)
 		{
 			if(_readData) {
-				_results[i]._realImages.push_back(Image2D::CreateEmptyImagePtr(width, frequencyCount));
-				_results[i]._imaginaryImages.push_back(Image2D::CreateEmptyImagePtr(width, frequencyCount));
+				_results[i]._realImages.push_back(Image2D::CreateEmptyImagePtr(width, _frequencyCount));
+				_results[i]._imaginaryImages.push_back(Image2D::CreateEmptyImagePtr(width, _frequencyCount));
 			}
 			if(_readFlags) {
 				// The flags should be initialized to true, as a baseline might
 				// miss some time scans that other baselines do have, and these
 				// should be flagged.
-				_results[i]._flags.push_back(Mask2D::CreateSetMaskPtr<true>(width, frequencyCount));
+				_results[i]._flags.push_back(Mask2D::CreateSetMaskPtr<true>(width, _frequencyCount));
 			}
 		}
 		_results[i]._uvw.resize(width);
 	}
 
-	casa::Table *table = _measurementSet.OpenTable(MeasurementSet::MainTable, true);
-
-	casa::ROScalarColumn<double> timeColumn(*table, "TIME");
-	casa::ROArrayColumn<float> weightColumn(*table, "WEIGHT");
-	casa::ROArrayColumn<double> uvwColumn(*table, "UVW");
-	casa::ROArrayColumn<bool> flagColumn(*table, "FLAG");
+	casa::ROScalarColumn<double> timeColumn(*_table, "TIME");
+	casa::ROArrayColumn<float> weightColumn(*_table, "WEIGHT");
+	casa::ROArrayColumn<double> uvwColumn(*_table, "UVW");
+	casa::ROArrayColumn<bool> flagColumn(*_table, "FLAG");
 	casa::ROArrayColumn<casa::Complex> *modelColumn;
 
 	casa::ROArrayColumn<casa::Complex> *dataColumn = 0;
 	if(_readData)
-		dataColumn = CreateDataColumn(_dataKind, *table);
+		dataColumn = CreateDataColumn(_dataKind, *_table);
 
 	if(_dataKind == ResidualData) {
-		modelColumn = new casa::ROArrayColumn<casa::Complex>(*table, "MODEL_DATA");
+		modelColumn = new casa::ROArrayColumn<casa::Complex>(*_table, "MODEL_DATA");
 	} else {
 		modelColumn = 0;
 	}
@@ -213,16 +214,16 @@ void BaselineReader::PerformReadRequests()
 		bool timeIsSelected = timeIndex>=startIndex && timeIndex<endIndex;
 		if(_readData && timeIsSelected) {
 			if(_dataKind == WeightData)
-				readWeights(requestIndex, timeIndex-startIndex, frequencyCount, weightColumn(rowIndex));
+				readWeights(requestIndex, timeIndex-startIndex, _frequencyCount, weightColumn(rowIndex));
 			else if(modelColumn == 0)
-				readTimeData(requestIndex, timeIndex-startIndex, frequencyCount, (*dataColumn)(rowIndex), 0);
+				readTimeData(requestIndex, timeIndex-startIndex, _frequencyCount, (*dataColumn)(rowIndex), 0);
 			else {
 				const casa::Array<casa::Complex> model = (*modelColumn)(rowIndex); 
-				readTimeData(requestIndex, timeIndex-startIndex, frequencyCount, (*dataColumn)(rowIndex), &model);
+				readTimeData(requestIndex, timeIndex-startIndex, _frequencyCount, (*dataColumn)(rowIndex), &model);
 			}
 		}
 		if(_readFlags && timeIsSelected) {
-			readTimeFlags(requestIndex, timeIndex-startIndex, frequencyCount, flagColumn(rowIndex));
+			readTimeFlags(requestIndex, timeIndex-startIndex, _frequencyCount, flagColumn(rowIndex));
 		}
 		if(timeIsSelected) {
 			casa::Array<double> arr = uvwColumn(rowIndex);
@@ -236,7 +237,6 @@ void BaselineReader::PerformReadRequests()
 	}
 	if(dataColumn != 0)
 		delete dataColumn;
-	delete table;
 	
 	std::cout << "Time of ReadRequests(): " << stopwatch.ToString() << std::endl;
 
@@ -272,17 +272,14 @@ void BaselineReader::PerformWriteRequests()
 		addRequestRows(_writeRequests[i], i, rows);
 	std::sort(rows.begin(), rows.end());
 
-	size_t frequencyCount = _measurementSet.FrequencyCount();
-
-	casa::Table *table = _measurementSet.OpenTable(MeasurementSet::MainTable, true);
-	casa::ROScalarColumn<double> timeColumn(*table, "TIME");
-	casa::ArrayColumn<bool> flagColumn(*table, "FLAG");
+	casa::ROScalarColumn<double> timeColumn(*_table, "TIME");
+	casa::ArrayColumn<bool> flagColumn(*_table, "FLAG");
 
 	for(std::vector<WriteRequest>::iterator i=_writeRequests.begin();i!=_writeRequests.end();++i)
 	{
-		if(frequencyCount != i->flags[0]->Height())
+		if(_frequencyCount != i->flags[0]->Height())
 		{
-			std::cerr << "The frequency count in the measurement set (" << frequencyCount << ") does not match the image!" << std::endl;
+			std::cerr << "The frequency count in the measurement set (" << _frequencyCount << ") does not match the image!" << std::endl;
 		}
 		if(i->endIndex - i->startIndex != i->flags[0]->Width())
 		{
@@ -302,7 +299,7 @@ void BaselineReader::PerformWriteRequests()
 		{
 			casa::Array<bool> flag = flagColumn(rowIndex);
 			casa::Array<bool>::iterator j = flag.begin();
-			for(size_t f=0;f<(size_t) frequencyCount;++f) {
+			for(size_t f=0;f<(size_t) _frequencyCount;++f) {
 				for(size_t p=0;p<_polarizationCount;++p)
 				{
 					*j = request.flags[0]->Value(timeIndex - request.startIndex, f);
@@ -315,8 +312,6 @@ void BaselineReader::PerformWriteRequests()
 	}
 	_writeRequests.clear();
 	
-	delete table;
-
 	std::cout << rowsWritten << "/" << rows.size() << " rows written in " << stopwatch.ToString() << std::endl;
 }
 
@@ -440,8 +435,8 @@ void BaselineReader::initializePolarizations()
 {
 	if(_polarizationCount == 0)
 	{
-		casa::Table *table = _measurementSet.OpenTable(MeasurementSet::PolarizationTable, false);
-		casa::ROArrayColumn<int> corTypeColumn(*table, "CORR_TYPE"); 
+		casa::Table *polTable = _measurementSet.OpenTable(MeasurementSet::PolarizationTable, false);
+		casa::ROArrayColumn<int> corTypeColumn(*polTable, "CORR_TYPE"); 
 		casa::Array<int> corType = corTypeColumn(0);
 		casa::Array<int>::iterator iterend(corType.end());
 		int polarizationCount = 0;
@@ -468,6 +463,16 @@ void BaselineReader::initializePolarizations()
 			++polarizationCount;
 		}
 		_polarizationCount = polarizationCount;
-		delete table;
+		delete polTable;
+	}
+}
+
+void BaselineReader::ShowStatistics()
+{
+	try {
+		casa::ROTiledStManAccessor accessor(*_table, "LofarStMan");
+		accessor.showCacheStatistics(std::cout);
+	} catch(std::exception &e)
+	{
 	}
 }

@@ -66,8 +66,22 @@ namespace rfiStrategy {
 	
 	class MSImageSet : public ImageSet {
 		public:
-			MSImageSet(const std::string &location);
-			~MSImageSet();
+			MSImageSet(const std::string &location) :
+				_msFile(location),
+				_set(location),
+				_reader(),
+				_dataKind(ObservedData),
+				_readDipoleAutoPolarisations(true),
+				_readDipoleCrossPolarisations(true),
+				_readStokesI(false),
+				_maxScanCounts(0),
+				_scanCountPartOverlap(100),
+				_readFlags(true)
+			{
+			}
+			~MSImageSet()
+			{
+			}
 
 			virtual MSImageSet *Copy()
 			{

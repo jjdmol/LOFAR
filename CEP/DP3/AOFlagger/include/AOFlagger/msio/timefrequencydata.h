@@ -223,7 +223,7 @@ class TimeFrequencyData
 				case IndividualPolarisationFlagCoverage:
 					return GetCombinedMask();
 			}
-			throw BadUsageException("Incorrect flag coverage");
+			throw BadUsageException("Incorrect flag coverage in GetSingleMask()");
 		}
 
 		std::pair<Image2DCPtr,Image2DCPtr> GetSingleComplexImage() const
@@ -854,6 +854,10 @@ class TimeFrequencyData
 				_images[i] = image;
 			}
 		}
+		enum FlagCoverage FlagCoverage() const
+		{
+			return _flagCoverage;
+		}
 	private:
 		Image2DCPtr GetSingleAbsoluteFromComplex() const
 		{
@@ -1022,7 +1026,7 @@ class TimeFrequencyData
 					throw BadUsageException("Trying to copy flagging from dipole time frequency data to single polarisation time frequency data");
 			}
 			else
-				throw BadUsageException("Invalid flag coverage");
+				throw BadUsageException("Invalid flag coverage in CopyFlaggingTo()");
 		}
 		
 		Image2DCPtr GetSingleAbsoluteFromComplexDipole() const
@@ -1079,6 +1083,8 @@ class TimeFrequencyData
 		template<bool InitValue>
 		Mask2DCPtr GetSetMask() const
 		{
+			if(_images.size() == 0)
+				throw BadUsageException("Cant make a mask without an image");
 			return Mask2D::CreateSetMaskPtr<InitValue>(_images[0]->Width(), _images[0]->Height());
 		}
 		Mask2DCPtr GetCombinedMask() const;
@@ -1091,7 +1097,7 @@ class TimeFrequencyData
 		
 		enum PhaseRepresentation _phaseRepresentation;
 		enum PolarisationType _polarisationType;
-		FlagCoverage _flagCoverage;
+		enum FlagCoverage _flagCoverage;
 
 		// The images that are referenced from this object
 		// From least significant to most significant index contribution:

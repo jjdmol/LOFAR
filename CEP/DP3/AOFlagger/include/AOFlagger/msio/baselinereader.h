@@ -87,6 +87,7 @@ class BaselineReader {
 			initializePolarizations();
 			return _polarizationCount;
 		}
+		void ShowStatistics();
 	private:
 		struct ReadRequest {
 			int antenna1;
@@ -176,6 +177,8 @@ class BaselineReader {
 		void readWeights(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<float> weight);
 
 		MeasurementSet _measurementSet;
+		class casa::Table *_table;
+		
 		enum DataKind _dataKind;
 		bool _readData, _readFlags;
 		
@@ -186,6 +189,7 @@ class BaselineReader {
 		
 		std::map<double,size_t> _observationTimes;
 		size_t _polarizationCount;
+		size_t _frequencyCount;
 };
 
 #endif // BASELINEREADER_H
