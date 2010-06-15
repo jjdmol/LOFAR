@@ -9,6 +9,7 @@ install(FILES
   baseexception.h
   blaswrap.h
   cleaner.h
+  configuration.h
   f2c.h
   types.h
   vectortypes.h
