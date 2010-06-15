@@ -28,10 +28,12 @@
 
 void FrequencyFlagCountPlot::Add(class TimeFrequencyData &data, TimeFrequencyMetaDataCPtr meta)
 {
+	size_t yStart = _ignoreFirstChannel ? 1 : 0;
+
 	for(size_t maskIndex=0;maskIndex<data.MaskCount();++maskIndex)
 	{
 		Mask2DCPtr mask = data.GetMask(maskIndex);
-		for(size_t y=0;y<mask->Height();++y)
+		for(size_t y=yStart;y<mask->Height();++y)
 		{
 			double frequency = meta->Band().channels[y].frequencyHz;
 			size_t count = 0;
@@ -55,7 +57,7 @@ void FrequencyFlagCountPlot::WriteCounts()
 	std::ofstream file("frequency-vs-counts.txt");
 	for(std::map<double, struct MapItem>::const_iterator i=_counts.begin();i!=_counts.end();++i)
 	{
-		file << i->first << "\t" << i->second.total << "\t" << i->second.count << "\n";
+		file << i->first << "\t" << i->second.total << "\t" << i->second.count << "\t" << (100.0L * (long double) i->second.count / (long double) i->second.total) << "\n";
 	}
 	file.close();
 }
