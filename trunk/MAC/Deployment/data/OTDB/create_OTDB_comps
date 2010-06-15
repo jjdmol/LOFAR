@@ -208,6 +208,10 @@ shift								# remove --
 
 rm -f ${DESTDIR}/*.gcomp
 
+# generate stationlist file
+echo "# Generated file !!!" >Stations.list
+cat -s ../StaticMetaData/StationInfo.dat | grep -v -e '.*0\.0.*' -e '#' -e'^$' | cut -c1-5 >>Stations.list
+
 for file in `ls -1 *.base | grep -v Node`
 do
 	rawname=`echo $file | cut -d'.' -f1`
@@ -259,6 +263,12 @@ do
 	if [ $? -eq 0 ]; then
 		cleanlist $file | \
 		expand_connection "Storage-Imaging" "@Storage-Imaging@" >>${outputname}
+	fi
+
+	grep @stationName@ $file >/dev/null 2>&1
+	if [ $? -eq 0 ]; then
+		cleanlist $file | \
+		substitute_marker "Stations" "@stationName@" | substitute_marker "AntennaFieldNames" "@antennaFieldName@ " >${outputname}
 	fi
 
 done
