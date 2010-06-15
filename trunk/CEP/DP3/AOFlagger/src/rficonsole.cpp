@@ -31,7 +31,11 @@
 #include <AOFlagger/util/progresslistener.h>
 #include <AOFlagger/util/stopwatch.h>
 
+#include <AOFlagger/configuration.h>
+
+#ifdef HAS_LOFARSTMAN
 #include <LofarStMan/Register.h>
+#endif // HAS_LOFARSTMAN
 
 class ConsoleProgressHandler : public ProgressListener {
 	private:
@@ -93,7 +97,9 @@ int main(int argc, char **argv)
 	}
 	else
 	{
+#ifdef HAS_LOFARSTMAN
 		register_lofarstman();
+#endif // HAS_LOFARSTMAN
 
 		bool threadCountSet = false;
 		size_t threadCount = 3;

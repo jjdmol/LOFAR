@@ -15,14 +15,15 @@
     <projectname>detectrfi</projectname>
     <description/>
     <defaultencoding/>
+    <versioncontrol/>
   </general>
   <kdevcustomproject>
     <filelistdirectory>/</filelistdirectory>
     <run>
-      <mainprogram>CEP/DP3/AOFlagger/src/rfigui</mainprogram>
+      <mainprogram>/home/anoko/projects/LOFAR/build/gnu_opt/CEP/DP3/AOFlagger/src/rfigui</mainprogram>
       <directoryradio>executable</directoryradio>
       <customdirectory>/</customdirectory>
-      <programargs>-j 1 -strategy /Users/users/offringa/Desktop/best.rfis /data/users/offringa/LOFAR-data/L2010_06759/SB10.MS/</programargs>
+      <programargs/>
       <terminal>true</terminal>
       <autocompile>true</autocompile>
       <envvars/>
@@ -34,7 +35,7 @@
     </run>
     <build>
       <buildtool>make</buildtool>
-      <builddir>/data/users/offringa/LOFAR/build/gnu_opt</builddir>
+      <builddir>/home/anoko/projects/LOFAR/build/gnu_opt</builddir>
     </build>
     <make>
       <abortonerror>false</abortonerror>
@@ -51,7 +52,6 @@
     </make>
     <blacklist/>
     <filetypes>
-      <filetype>*.java</filetype>
       <filetype>*.h</filetype>
       <filetype>*.H</filetype>
       <filetype>*.hh</filetype>
@@ -138,7 +138,7 @@
       <root>/usr/share/qt3</root>
       <designerintegration>EmbeddedKDevDesigner</designerintegration>
       <qmake>/usr/bin/qmake-qt3</qmake>
-      <designer/>
+      <designer></designer>
       <designerpluginpaths/>
     </qt>
     <creategettersetter>
@@ -194,7 +194,7 @@
       <separatetty>false</separatetty>
       <floatingtoolbar>false</floatingtoolbar>
       <raiseGDBOnStart>false</raiseGDBOnStart>
-      <programargs>-j 1 -strategy /Users/users/offringa/Desktop/best.rfis /data/users/offringa/LOFAR-data/L2010_06759/SB10.MS/</programargs>
+      <programargs/>
     </general>
     <display>
       <staticmembers>false</staticmembers>

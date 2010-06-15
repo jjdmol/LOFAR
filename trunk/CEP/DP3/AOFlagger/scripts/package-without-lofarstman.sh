@@ -5,23 +5,23 @@ else
     cd /tmp
     rm -rf aoexport
     mkdir -p aoexport/LOFAR/CEP/DP3
-    mkdir -p aoexport/LOFAR/LCS
     cd aoexport
     svn export https://svn.astron.nl/LOFAR/trunk/CEP/DP3/AOFlagger/ LOFAR/CEP/DP3/AOFlagger
-    svn export https://svn.astron.nl/LOFAR/trunk/LCS/Common LOFAR/LCS/Common
     svn export https://svn.astron.nl/LOFAR/trunk/CMake LOFAR/CMake
-    svn export https://svn.astron.nl/LOFAR/trunk/RTCP/LofarStMan LOFAR/RTCP/LofarStMan
     svn export https://svn.astron.nl/LOFAR/trunk/lofar_config.h.cmake LOFAR/lofar_config.h.cmake
     svn export https://svn.astron.nl/LOFAR/trunk/lofarinit.sh.in LOFAR/lofarinit.sh.in
     svn export https://svn.astron.nl/LOFAR/trunk/lofarinit.csh.in LOFAR/lofarinit.csh.in
-    cp LOFAR/CEP/DP3/AOFlagger/scripts/CMakeLists-root.txt LOFAR/CMakeLists.txt
+    cp LOFAR/CEP/DP3/AOFlagger/scripts/CMakeLists-root-without-lofarstman.txt LOFAR/CMakeLists.txt
     cp LOFAR/CEP/DP3/AOFlagger/scripts/CMakeLists-CEP.txt LOFAR/CEP/CMakeLists.txt
     cp LOFAR/CEP/DP3/AOFlagger/scripts/CMakeLists-DP3.txt LOFAR/CEP/DP3/CMakeLists.txt
-    cp LOFAR/CEP/DP3/AOFlagger/scripts/CMakeLists-LCS.txt LOFAR/LCS/CMakeLists.txt
-    cp LOFAR/CEP/DP3/AOFlagger/scripts/CMakeLists-RTCP.txt LOFAR/RTCP/CMakeLists.txt
-    cp LOFAR/CEP/DP3/AOFlagger/ LOFAR/README
-    rm -f AOFlagger-$1.tar.bz2
-    tar -cjvf AOFlagger-$1.tar.bz2 LOFAR/
+    cp LOFAR/CEP/DP3/AOFlagger/README LOFAR/README
+    CONF_FILE="LOFAR/CEP/DP3/AOFlagger/include/AOFlagger/configuration.h"
+    echo \#ifndef CONFIGURATION_H > ${CONF_FILE}
+    echo \#define CONFIGURATION_H >> ${CONF_FILE}
+    echo \#define NO_LOFARSTMAN >> ${CONF_FILE}
+    echo \#endif >> ${CONF_FILE}
+    rm -f AOFlagger-without-lofarstman-$1.tar.bz2
+    tar -cjvf AOFlagger-without-lofarstman-$1.tar.bz2 LOFAR/
     rm -rf LOFAR/
-    ls -alh AOFlagger-$1.tar.bz2
+    ls -alh AOFlagger-without-lofarstman-$1.tar.bz2
 fi

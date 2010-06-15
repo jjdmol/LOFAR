@@ -21,7 +21,11 @@
 
 #include <gtkmm.h>
 
+#include <AOFlagger/configuration.h>
+
+#ifdef HAS_LOFARSTMAN
 #include <LofarStMan/Register.h>
+#endif // HAS_LOFARSTMAN
 
 #include <AOFlagger/gui/mswindow.h>
 
@@ -35,7 +39,9 @@ Application::~Application()
 
 void Application::Run(int argc, char *argv[])
 {
-	register_lofarstman();
+#ifdef HAS_LOFARSTMAN
+  register_lofarstman();
+#endif // HAS_LOFARSTMAN
 
 	Gtk::Main kit(argc, argv);
 	MSWindow window;
