@@ -30,6 +30,8 @@ par  nrBeamformers           I    int    -      10    100    0                  
 par  nrPolarisations         I    pint   -      10    100    '1|2;2'                                   - 'Number of polarisations to use in this observation'
 par  nrSlotsInFrame	     I    int    -      10    100    62                                        - '???'
 par  referencePhaseCenter    I    vdbl   -      10    100    '[3826577.110, 461022.900, 5064892.758]'  - 'Constant value: phase center of LOFAR'
+par  existingStations        I    vdbl   -      10    100    '[CS001..CS007,CS021,CS024,CS030,CS031,CS101,CS103,CS201,CS301,CS302,CS401,CS501,RS106,RS205,RS208,RS306,RS307,RS503,DE601..DE603]'  - 'Constant value: stations that can be used'
+par  existingAntennaFields   I    vdbl   -      10    100    '[LBA,HBA,HBA0,HBA1]'  - 'Constant value: names of all antennafields'
 
 # new way of selection the receivers and the antennaArray at once
 par  antennaSet		         I    ptext  -      10    0      'LBA_INNER|LBA_OUTER|LBA_SPARSE_EVEN|LBA_SPARSE_ODD|LBA_X|LBA_Y|HBA_ZERO|HBA_ONE|HBA_DUAL|HBA_JOINED;-'    - 'Which part of the antennas should be used'
@@ -49,6 +51,7 @@ uses  Beam		 2.0.1  development '1'		       "Beam specification"
 uses  AnaBeam    2.0.0  development '1'            "Analogue beam specification"
 uses  Beamformer	 1.0.0  development '1'		       "Beamformet specifications"	
 uses  TBB		 1.0.1  development '1' 	       "TBB settings"
+uses  Dataslots  1.0.0  development '1'		       "Dataslot (beamlet) allocation"
 uses  DataProducts	 1.0.0  development '1' 	       "Data products produced by pipeline"
 uses  ObservationControl	         1.1.0  development '1'		       "Observation Control"
 uses  Scheduler	1.0.0	development	'1'	"Scheduler"
