@@ -38,7 +38,13 @@ BaselineReader::BaselineReader(const std::string &msFile)
 {
 	std::cout << "Baselinereader constructed." << std::endl;
 	_frequencyCount = _measurementSet.FrequencyCount();
-	_table = _measurementSet.OpenTable(MeasurementSet::MainTable, true);
+	try {
+		_table = _measurementSet.OpenTable(MeasurementSet::MainTable, true);
+	} catch(std::exception &e)
+	{
+		std::cout << "Read-write opening of file " << msFile << " failed, trying read-only..." << std::endl;
+		_table = _measurementSet.OpenTable(MeasurementSet::MainTable, false);
+	}
 }
 // 
 BaselineReader::~BaselineReader()
