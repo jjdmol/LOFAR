@@ -162,6 +162,7 @@ int main(int argc, char **argv)
 	
 		rfiStrategy::ArtifactSet artifacts(&ioMutex);
 		artifacts.SetAntennaFlagCountPlot(new AntennaFlagCountPlot());
+		artifacts.SetFrequencyFlagCountPlot(new FrequencyFlagCountPlot());
 		
 		ConsoleProgressHandler progress;
 		
@@ -171,6 +172,8 @@ int main(int argc, char **argv)
 		overallStrategy.FinishAll();
 
 		set->AntennaFlagCountPlot()->Report();
+		delete set->AntennaFlagCountPlot();
+		delete set->FrequencyFlagCountPlot();
 
 		delete set;
 
