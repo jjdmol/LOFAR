@@ -14,6 +14,7 @@ else
     cp LOFAR/CEP/DP3/AOFlagger/scripts/CMakeLists-root-without-lofarstman.txt LOFAR/CMakeLists.txt
     cp LOFAR/CEP/DP3/AOFlagger/scripts/CMakeLists-CEP.txt LOFAR/CEP/CMakeLists.txt
     cp LOFAR/CEP/DP3/AOFlagger/scripts/CMakeLists-DP3.txt LOFAR/CEP/DP3/CMakeLists.txt
+    cp LOFAR/CEP/DP3/AOFlagger/scripts/CMakeLists-AOFlagger-without-lofarstman LOFAR/CEP/DP3/AOFlagger/CMakeLists.txt
     cp LOFAR/CEP/DP3/AOFlagger/README LOFAR/README
     CONF_FILE="LOFAR/CEP/DP3/AOFlagger/include/AOFlagger/configuration.h"
     echo \#ifndef CONFIGURATION_H > ${CONF_FILE}
