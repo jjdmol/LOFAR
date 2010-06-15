@@ -29,7 +29,7 @@
 */
 class FrequencyFlagCountPlot{
 	public:
-		FrequencyFlagCountPlot() { }
+		FrequencyFlagCountPlot() : _ignoreFirstChannel(true) { }
 		~FrequencyFlagCountPlot() { }
 
 		void Add(class TimeFrequencyData &data, TimeFrequencyMetaDataCPtr meta);
@@ -41,6 +41,9 @@ class FrequencyFlagCountPlot{
 			MapItem() : count(0), total(0) { }
 			long long count, total;
 		};
+		// In lofar, the first channel of every subband is flagged, because it overlaps with
+		// the previous subband. 
+		bool _ignoreFirstChannel;
 
 		std::map<double, struct MapItem> _counts;
 };
