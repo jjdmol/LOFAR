@@ -22,7 +22,11 @@
 #include <sstream>
 #include <vector>
 
+#include <AOFlagger/configuration.h>
+
+#ifdef HAS_LOFARSTMAN
 #include <LofarStMan/Register.h>
+#endif // HAS_LOFARSTMAN                                                       
 
 #include <AOFlagger/msio/measurementset.h>
 #include <AOFlagger/msio/antennainfo.h>
@@ -43,7 +47,9 @@ int main(int argc, char *argv[])
 		exit(-1);
 	}
 
+#ifdef HAS_LOFARSTMAN
 	register_lofarstman();
+#endif // HAS_LOFARSTMAN
 
 	bool saveFlagLength = false;
 	string flagLengthFile;
