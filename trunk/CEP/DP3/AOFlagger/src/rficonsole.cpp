@@ -26,6 +26,7 @@
 #include <AOFlagger/rfi/strategy/xmlreader.h>
 
 #include <AOFlagger/rfi/antennaflagcountplot.h>
+#include <AOFlagger/rfi/frequencyflagcountplot.h>
 
 #include <AOFlagger/util/progresslistener.h>
 #include <AOFlagger/util/stopwatch.h>
