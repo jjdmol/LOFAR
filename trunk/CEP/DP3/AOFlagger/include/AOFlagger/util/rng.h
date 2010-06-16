@@ -38,7 +38,6 @@ class RNG{
 		static double EvaluateGaussian2D(long double x1, long double x2, long double sigmaX1, long double sigmaX2);
 		static double IntegrateGaussian(long double upperLimit);
 		static void DoubleGaussian(long double &a, long double &b);
-		static void ComplexGaussianAmplitude(long double &r, long double &i);
 		static void ComplexGaussianAmplitude(num_t &r, num_t &i);
 	private: 
 		RNG();

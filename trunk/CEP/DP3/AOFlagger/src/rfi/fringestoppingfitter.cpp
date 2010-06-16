@@ -118,12 +118,12 @@ void FringeStoppingFitter::PerformFringeStop()
 			num_t i = imaginary->Value(x, y);
 			num_t freq = -rotations[y];
 			rotations[y] +=
-				GetFringeFrequency(x, y) * 2.0L * M_PIl;
+				GetFringeFrequency(x, y) * 2.0L * M_PIn;
 			num_t intRotations =  
 				deltaTime * UVImager::GetFringeCount(0, x, y, _metaData);
 			freq -= intRotations;
 
-			num_t cosfreq = cosn(freq*2.0L*M_PIl), sinfreq = sinn(freq*2.0L*M_PIl);
+			num_t cosfreq = cosn(freq*2.0L*M_PIn), sinfreq = sinn(freq*2.0L*M_PIn);
 			
 			num_t newR = r * cosfreq - i * sinfreq;
 			i = r * sinfreq + i * cosfreq;
@@ -228,7 +228,7 @@ void FringeStoppingFitter::CalculateFitValue(const Image2D &real, const Image2D 
 		phaseR, phaseI, amplitude, meanR, meanI;
 
 	fitter.FindPhaseAndAmplitudeComplex(phaseR, amplitude, dataR, dataI, dataT, index, fringeFrequency);
-	phaseI = fmodl(phaseR+M_PIl*0.5L, 2.0L*M_PIl);
+	phaseI = fmodn(phaseR+M_PIn*0.5L, 2.0L*M_PIn);
 	meanR = fitter.FindMean(phaseR, amplitude, dataR, dataT, index, fringeFrequency);
 	meanI = fitter.FindMean(phaseI, amplitude, dataI, dataT, index, fringeFrequency);
 	num_t fitValueR =
@@ -301,8 +301,8 @@ void FringeStoppingFitter::GetRFIValue(num_t &r, num_t &i, int x, int y, const B
 {
 	num_t rotations =  
 		UVImager::GetFringeCount(0, x, y, _metaData);
-	r = cosn(rotations * 2.0L * M_PIl + rfiPhase) * rfiStrength;
-	i = sinn(rotations * 2.0L * M_PIl + rfiPhase) * rfiStrength;
+	r = cosn(rotations * 2.0L * M_PIn + rfiPhase) * rfiStrength;
+	i = sinn(rotations * 2.0L * M_PIn + rfiPhase) * rfiStrength;
 }
 
 num_t FringeStoppingFitter::GetRFIFitError(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd, int y, num_t rfiPhase, num_t rfiStrength)
@@ -316,7 +316,7 @@ num_t FringeStoppingFitter::GetRFIFitError(SampleRowCPtr real, SampleRowCPtr ima
 		GetRFIValue(r,i,x,y,baseline,rfiPhase,rfiStrength);
 		num_t er = real->Value(x) - r;
 		num_t ei = imaginary->Value(x) - i;
-		error += sqrtl(er*er + ei*ei);
+		error += sqrtn(er*er + ei*ei);
 	}
 
 	return error;
@@ -340,11 +340,11 @@ void FringeStoppingFitter::MinimizeRFIFitError(num_t &phase, num_t &amplitude, S
 		{
 			const num_t tauge = UVImager::GetFringeCount(0, t, y, _metaData);
 	
-			sumR += vR * cosn(2.0L * M_PIl * tauge);
-			sumR += vI * sinn(2.0L * M_PIl * tauge);
+			sumR += vR * cosn(2.0L * M_PIn * tauge);
+			sumR += vI * sinn(2.0L * M_PIn * tauge);
 	
-			sumI += vR * sinn(2.0L * M_PIl * tauge);
-			sumI -= vI * cosn(2.0L * M_PIl * tauge);
+			sumI += vR * sinn(2.0L * M_PIn * tauge);
+			sumI -= vI * cosn(2.0L * M_PIn * tauge);
 			++n;
 		}
 	}
@@ -353,7 +353,7 @@ void FringeStoppingFitter::MinimizeRFIFitError(num_t &phase, num_t &amplitude, S
 	sumI /= (num_t) n;
 
 	phase = SinusFitter::Phase(sumR, sumI);
-	amplitude = sqrtl(sumR*sumR + sumI*sumI);
+	amplitude = sqrtn(sumR*sumR + sumI*sumI);
 }
 
 num_t FringeStoppingFitter::GetRowVariance(SampleRowCPtr real, SampleRowCPtr imaginary, int xStart, int xEnd)
@@ -362,16 +362,16 @@ num_t FringeStoppingFitter::GetRowVariance(SampleRowCPtr real, SampleRowCPtr ima
 	for(int x=xStart;x<xEnd;++x)
 	{
 		num_t r = real->Value(x), i = imaginary->Value(x);
-		avgSum += sqrtl(r*r + i*i);
+		avgSum += sqrtn(r*r + i*i);
 	}
 	avgSum /= (xEnd - xStart);
 	for(int x=xStart;x<xEnd;++x)
 	{
 		num_t r = real->Value(x), i = imaginary->Value(x);
-		num_t a = sqrtl(r*r + i*i);
+		num_t a = sqrtn(r*r + i*i);
 		varSum += (a - avgSum) * (a - avgSum);
 	}
-	return sqrtl(varSum / (xEnd - xStart));
+	return sqrtn(varSum / (xEnd - xStart));
 }
 
 void FringeStoppingFitter::PerformRFIFitOnOneChannel(unsigned y)

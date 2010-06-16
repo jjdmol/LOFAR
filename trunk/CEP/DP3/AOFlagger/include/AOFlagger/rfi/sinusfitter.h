@@ -50,23 +50,23 @@ class SinusFitter {
 				if(imaginary==0.0L)
 					return 0.0L;
 				else if(imaginary > 0.0L)
-					return M_PIl*0.5L;
+					return M_PIn*0.5;
 				else
-					return -M_PIl*0.5L;
+					return -M_PIn*0.5;
 			}
 			else if(real>0.0L)
 			{
 				if(imaginary>=0.0L) // first 
 					return atanl(imaginary/real);
 				else // fourth
-					return atanl(imaginary/real)+2.0L*M_PIl;
+					return atanl(imaginary/real)+2.0*M_PIn;
 			}
 			else
 			{
 				if(imaginary>=0.0L) // second
-					return atanl(imaginary/real) + 1.0L*M_PIl;
+					return atanl(imaginary/real) + 1.0*M_PIn;
 				else // third
-					return atanl(imaginary/real) + 1.0L*M_PIl;
+					return atanl(imaginary/real) + 1.0*M_PIn;
 			}
 		}
 	private:

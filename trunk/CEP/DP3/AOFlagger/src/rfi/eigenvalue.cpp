@@ -27,7 +27,8 @@ double Eigenvalue::Compute(Image2DCPtr real, Image2DCPtr imaginary)
 	long int n = real->Width();
 	long int lda = n;
 	double vl = 0, vu = 0;
-	long int il = 1, iu = 1; // search for first eigenvalue
+	//long int il = 1, iu = 1; // search for first eigenvalue
+	long int il = n, iu = n; // search for nth eigenvalue
 	double abtol = 0.0;
 	long int nfound = 0;
 	double w[n];

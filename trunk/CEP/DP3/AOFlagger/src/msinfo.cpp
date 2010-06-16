@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 			AntennaInfo info2 = set.GetAntennaInfo(j);
 			Baseline b(info.position, info2.position);
 			long double dist = b.Distance();
-			long double angle = b.Angle() * 180.0 / M_PI;
+			long double angle = b.Angle() * 180.0 / M_PIn;
 			cout << dist << "m/" << angle << "` ";
 			baselines.push_back(dist);
 		}
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 	
 	for(unsigned i=0;i<set.FieldCount();++i) {
 		FieldInfo fieldInfo = set.GetFieldInfo(i);
-		cout << "Field " << i << ":\n\tdelay direction=" << fieldInfo.delayDirectionDec << " dec, " << fieldInfo.delayDirectionRA << "ra.\n\tdelay direction (in degrees)=" << (fieldInfo.delayDirectionDec/M_PI*180.0L) << " dec," << (fieldInfo.delayDirectionRA/M_PI*180.0L) << " ra." << endl;
+		cout << "Field " << i << ":\n\tdelay direction=" << fieldInfo.delayDirectionDec << " dec, " << fieldInfo.delayDirectionRA << "ra.\n\tdelay direction (in degrees)=" << (fieldInfo.delayDirectionDec/M_PIn*180.0L) << " dec," << (fieldInfo.delayDirectionRA/M_PIn*180.0L) << " ra." << endl;
 	}
 
 	long unsigned flaggedCount = 0;

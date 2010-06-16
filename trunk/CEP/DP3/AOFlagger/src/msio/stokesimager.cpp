@@ -133,7 +133,7 @@ Image2DPtr StokesImager::CreateAvgPhase(Image2DCPtr xx, Image2DCPtr yy)
 			double xx_a = xx->Value(x, y);
 			double yy_a = yy->Value(x, y);
 		
-			avgPhase->SetValue(x, y, fmodl(xx_a + yy_a, 2.0L*M_PIl) );
+			avgPhase->SetValue(x, y, fmodn(xx_a + yy_a, 2.0L*M_PIn) );
 		}
 	}
 	return Image2DPtr(avgPhase);
