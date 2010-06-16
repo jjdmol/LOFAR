@@ -127,6 +127,18 @@ def findIPandMAC(nodeName, dataDir):
         raise "\nFatal error: "+nodeName+" is not defined in file 'MAC+IP'"
     return ipAndMac.group(1), ipAndMac.group(2)
 
+def findStorageIPandMAC(nodeName, dataDir):
+    """
+    Translates the given storage nodename to an MAC address and and IP address.
+    """
+    print nodeName
+    pattern=re.compile("^"+nodeName+"[ \t]*([0-9a-fA-F:]*)[ \t]*([0-9\.]*)", re.IGNORECASE | re.MULTILINE)
+    ipAndMac = ()
+    ipAndMac = pattern.search(open(dataDir+"/Storage+MAC.dat").read())
+    if not ipAndMac:
+        raise "\nFatal error: "+nodeName+" is not defined in file 'Storage+MAC.dat'"
+    return ipAndMac.group(2), ipAndMac.group(1)
+
 
 #
 # findRSPIP(node)
@@ -291,7 +303,7 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
     """
     # Find connections of the TBBBoards of the station
     tbbDestNode = findTBBDestNodes(stationName, dataDir)
-    #print stationName,"matches:",tbbDestNode
+    print stationName,"matches:",tbbDestNode
 
     (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
     #print stationName," has ",nrTBB," TBBoards"
@@ -302,14 +314,18 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
     TBBfile.close()
     for tbbNr in range(0,int(nrTBB)):
         if (len(tbbDestNode) == 1):
-            (ip, mac) = findIPandMAC(tbbDestNode["0"], dataDir)
+            (ip, mac) = findStorageIPandMAC(tbbDestNode["0"], dataDir)
+            print ip, mac
             TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac)
             TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_IP@",  ip)
+            TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_NAME@",tbbDestNode["0"]  )
+
         else:
             if str(tbbNr) in tbbDestNode.keys():
-                (ip, mac) = findIPandMAC(tbbDestNode[str(tbbNr)], dataDir)
+                (ip, mac) = findStorageIPandMAC(tbbDestNode[str(tbbNr)], dataDir)
                 TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac)
                 TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_IP@",  ip)
+                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_NAME@",tbbDestNode[str(tbbNr)]  )
         
 
     # substitute StationInfo
