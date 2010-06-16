@@ -223,7 +223,7 @@ void RFIPlots::MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &
 	//realMean = fitter.FindMean(realPhase, realAmplitude, xReal, t, dataIndex, frequency*twopi);
 	//imagMean = fitter.FindMean(imagPhase, imagAmplitude, xImag, t, dataIndex, frequency*twopi);
 	fitter.FindPhaseAndAmplitudeComplex(realPhase, realAmplitude, xReal, xImag, t, dataIndex, frequency*twopi);
-	imagPhase = realPhase + 0.5L*M_PIl;
+	imagPhase = realPhase + 0.5*M_PIn;
 	imagAmplitude = realAmplitude;
 	realMean = fitter.FindMean(realPhase, realAmplitude, xReal, t, dataIndex, frequency*twopi);
 	imagMean = fitter.FindMean(imagPhase, imagAmplitude, xImag, t, dataIndex, frequency*twopi);
@@ -232,14 +232,14 @@ void RFIPlots::MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &
 	{
 		if(realVersusImaginary)
 			plot.PushDataPoint(
-				cosn(frequency*2.0L*M_PIl*(long double) x + realPhase) * realAmplitude + realMean,
-				cosn(frequency*2.0L*M_PIl*(long double) x + imagPhase) * imagAmplitude + imagMean);
+				cosn(frequency*2.0*M_PIn*(long double) x + realPhase) * realAmplitude + realMean,
+				cosn(frequency*2.0*M_PIn*(long double) x + imagPhase) * imagAmplitude + imagMean);
 		else if(drawImaginary)
 			plot.PushDataPoint(x,
-				cosn(frequency*2.0L*M_PIl*(long double) x + imagPhase) * imagAmplitude + imagMean);
+				cosn(frequency*2.0*M_PIn*(long double) x + imagPhase) * imagAmplitude + imagMean);
 		else
 			plot.PushDataPoint(x,
-				cosn(frequency*2.0L*M_PIl*(long double) x + realPhase) * realAmplitude + realMean);
+				cosn(frequency*2.0*M_PIn*(long double) x + realPhase) * realAmplitude + realMean);
 	}
 
 	delete t;

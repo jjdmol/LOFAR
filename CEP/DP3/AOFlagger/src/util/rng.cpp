@@ -52,13 +52,13 @@ double RNG::GuassianPartialProduct()
 	long double a, b;
 	DoubleGaussian(a, b);
 	if(a >= 0.0)
-		a = powl(a, sqrtl(2.0)/2.0);
+		a = pow(a, sqrt(2.0)/2.0);
 	else
-		a = -powl(-a, sqrtl(2.0)/2.0);
+		a = -pow(-a, sqrt(2.0)/2.0);
 	if(b >= 0.0)
-		b = powl(b, sqrtl(2.0)/2.0);
+		b = pow(b, sqrt(2.0)/2.0);
 	else
-		b = -powl(-b, sqrtl(2.0)/2.0);
+		b = -pow(-b, sqrt(2.0)/2.0);
 	return a*b;
 }
 
@@ -82,12 +82,12 @@ void RNG::DoubleGaussian(long double &a, long double &b)
 double RNG::Rayleigh()
 {
 	double x = Guassian(), y = Guassian();
-	return sqrtl(x*x + y*y);
+	return sqrt(x*x + y*y);
 }
 
 double RNG::EvaluateRayleigh(double x, double sigma)
 {
-	return x * expl(-x*x/(2.0l*sigma*sigma)) / (sigma * sigma);
+	return x * exp(-x*x/(2.0*sigma*sigma)) / (sigma * sigma);
 }
 
 double RNG::IntegrateGaussian(long double upperLimit)
@@ -110,14 +110,6 @@ long double RNG::EvaluateGaussian(long double x, long double sigma)
 double RNG::EvaluateGaussian2D(long double x1, long double x2, long double sigmaX1, long double sigmaX2)
 {
 	return 1.0L / (2.0L*M_PI*sigmaX1*sigmaX2) * expl(-0.5L*(x1*(1.0L/sigmaX1)*x1 + x2*(1.0L/sigmaX2)*x2));
-}
-
-void RNG::ComplexGaussianAmplitude(long double &r, long double &i)
-{
-	long double amplitude = Guassian();
-	long double phase = Uniform() * 2.0l * M_PIl;
-	r = amplitude * cosl(phase);
-	i = amplitude * sinl(phase);
 }
 
 void RNG::ComplexGaussianAmplitude(num_t &r, num_t &i)

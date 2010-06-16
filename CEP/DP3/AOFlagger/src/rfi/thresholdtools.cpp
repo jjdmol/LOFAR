@@ -482,8 +482,8 @@ void ThresholdTools::UnrollPhase(Image2DPtr image)
 		for(unsigned x=1;x<image->Width();++x)
 		{
 			num_t val = image->Value(x, y);
-			while(val - prev > M_PIl) val -= 2.0L * M_PIl;
-			while(prev - val > M_PIl) val += 2.0L * M_PIl;
+			while(val - prev > M_PIn) val -= 2.0L * M_PIn;
+			while(prev - val > M_PIn) val += 2.0L * M_PIn;
 			image->SetValue(x, y, val);
 			prev = val;
 		}

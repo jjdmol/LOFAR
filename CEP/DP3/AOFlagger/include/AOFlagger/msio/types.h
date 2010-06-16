@@ -45,6 +45,7 @@ typedef float num_t;
 #define fabsn(X) fabsf(X)
 #define floorn(X) floorf(X)
 #define pown(X, Y) powf(X, Y)
+#define fmodn(X, Y) fmodf(X, Y)
 #define M_PIn M_PI
 
 #else // NOT NUM_T_IS_FLOAT
@@ -63,6 +64,7 @@ typedef double num_t;
 #define fabsn(X) fabs(X)
 #define floorn(X) floor(X)
 #define pown(X, Y) pow(X, Y)
+#define fmodn(X, Y) fmod(X, Y)
 #define M_PIn M_PI
 
 #endif

@@ -37,8 +37,8 @@ void FringeTestCreater::AddStaticFringe(class TimeFrequencyData &ftData, TimeFre
 	{
 		for(size_t t = 0; t < ftData.ImageWidth() ; ++t)
 		{
-			long double fringeRotation =
-				2.0L * M_PIl * UVImager::GetFringeCount(0, t, channelIndex, metaData);
+			num_t fringeRotation =
+				2.0 * M_PIn * UVImager::GetFringeCount(0, t, channelIndex, metaData);
 			
 			newReal->SetValue(t, channelIndex, strength * cosn(fringeRotation) + real->Value(t, channelIndex) );
 			newImaginary->SetValue(t, channelIndex, strength * sinn(fringeRotation) + imaginary->Value(t, channelIndex) );

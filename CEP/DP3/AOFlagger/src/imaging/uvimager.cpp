@@ -373,7 +373,7 @@ void UVImager::SetUVValue(num_t u, num_t v, num_t r, num_t i, num_t weight)
 	if(uPos>=0 && uPos<(long) _xRes && vPos>=0 && vPos<(long) _yRes) {
 		long double dx = (long double) uPos - (_xRes/2) - (u*_uvScaling*_xRes+0.5L);
 		long double dy = (long double) vPos - (_yRes/2) - (v*_uvScaling*_yRes+0.5L);
-		long double distance = sqrtl(dx*dx + dy*dy);
+		long double distance = sqrtn(dx*dx + dy*dy);
 		if(distance > 1.0) distance = 1.0;
 		weight *= distance;
 		_uvReal->AddValue(uPos, vPos, r*weight);
@@ -393,8 +393,8 @@ void UVImager::SetUVFTValue(num_t u, num_t v, num_t r, num_t i, num_t weight)
 			num_t x = ((num_t) ix - (_xResFT/2)) / _uvScaling * _uvFTReal->Width();
 			num_t y = ((num_t) iy - (_yResFT/2)) / _uvScaling * _uvFTReal->Height();
 			// Calculate F(x,y) += f(u, v) e ^ {i 2 pi (x u + y v) } 
-			num_t fftRotation = (u * x + v * y) * -2.0L * M_PIl;
-			num_t fftCos = cosl(fftRotation), fftSin = sinl(fftRotation);
+			num_t fftRotation = (u * x + v * y) * -2.0L * M_PIn;
+			num_t fftCos = cosn(fftRotation), fftSin = sinn(fftRotation);
 			_uvFTReal->AddValue(ix, iy, (fftCos * r - fftSin * i) * weight);
 			_uvFTImaginary->AddValue(ix, iy, (fftSin * r + fftCos * i) * weight);
 		}
@@ -424,10 +424,10 @@ void UVImager::GetUVPosition(num_t &u, num_t &v, size_t timeIndex, size_t freque
 	double time = metaData->ObservationTimes()[timeIndex];
 
 	num_t pointingLattitude = delayDirectionRA;
-	num_t earthLattitudeAngle = Date::JDToHourOfDay(Date::AipsMJDToJD(time))*M_PIl/12.0L;
+	num_t earthLattitudeAngle = Date::JDToHourOfDay(Date::AipsMJDToJD(time))*M_PIn/12.0L;
 
 	// Rotate baseline plane towards source, first rotate around x axis, then around z axis
-	num_t raRotation = earthLattitudeAngle - pointingLattitude + M_PIl*0.5L;
+	num_t raRotation = earthLattitudeAngle - pointingLattitude + M_PIn*0.5L;
 	num_t raCos = cosn(-raRotation);
 	num_t raSin = sinn(-raRotation);
 
@@ -448,10 +448,10 @@ void UVImager::GetUVPosition(num_t &u, num_t &v, size_t timeIndex, size_t freque
 
 	num_t dyProjected = tmpCos*tmpdy - tmpSin*dz;*/
 
-	// du = dx*cos(ra) - dy*sin(ra)
-	// dv = ( dx*sin(ra) + dy*cos(ra) ) * cos(-dec) - dz * sin(-dec)
+	// du = dx*cosn(ra) - dy*sinn(ra)
+	// dv = ( dx*sinn(ra) + dy*cosn(ra) ) * cosn(-dec) - dz * sinn(-dec)
 	// Now, the newly projected positive z axis of the baseline points to the field
-	num_t baselineLength = sqrtl(du*du + dv*dv);
+	num_t baselineLength = sqrtn(du*du + dv*dv);
 
 	num_t baselineAngle;
 	if(baselineLength == 0.0)
@@ -459,9 +459,9 @@ void UVImager::GetUVPosition(num_t &u, num_t &v, size_t timeIndex, size_t freque
 	else {
 		baselineLength *= frequency / 299792458.0L;
 		if(du > 0.0L)
-			baselineAngle = atanl(du/dv);
+			baselineAngle = atann(du/dv);
 		else
-			baselineAngle = M_PIl - atanl(du/-dv);
+			baselineAngle = M_PIn - atann(du/-dv);
 	}
 	u = cosn(baselineAngle)*baselineLength;
 	v = -sinn(baselineAngle)*baselineLength;
@@ -476,26 +476,26 @@ void UVImager::GetUVPosition(num_t &u, num_t &v, const SingleFrequencySingleBase
 	num_t pointingLattitude = _fields[field].delayDirectionRA;
 
 	//calcTimer.Start();
-	num_t earthLattitudeAngle = Date::JDToHourOfDay(Date::AipsMJDToJD(data.time))*M_PIl/12.0L;
+	num_t earthLattitudeAngle = Date::JDToHourOfDay(Date::AipsMJDToJD(data.time))*M_PIn/12.0L;
 
 	//long double pointingLongitude = _fields[field].delayDirectionDec; //not used
 
 	// Rotate baseline plane towards source, first rotate around z axis, then around x axis
-	num_t raRotation = earthLattitudeAngle - pointingLattitude + M_PIl*0.5L;
+	num_t raRotation = earthLattitudeAngle - pointingLattitude + M_PIn*0.5L;
 	num_t tmpCos = cosn(raRotation);
 	num_t tmpSin = sinn(raRotation);
 
 	num_t dxProjected = tmpCos*cache.dx - tmpSin*cache.dy;
 	num_t tmpdy = tmpSin*cache.dx + tmpCos*cache.dy;
 
-	tmpCos = _fields[field].delayDirectionDecNegCos; // cosl(-pointingLongitude);
-	tmpSin = _fields[field].delayDirectionDecNegSin; //sinl(-pointingLongitude);
+	tmpCos = _fields[field].delayDirectionDecNegCos; // cosn(-pointingLongitude);
+	tmpSin = _fields[field].delayDirectionDecNegSin; //sinn(-pointingLongitude);
 	num_t dyProjected = tmpCos*tmpdy - tmpSin*cache.dz;
 	// long double dzProjected = tmpSin*tmpdy + tmpCos*dzAnt; // we don't need it
 
 	// Now, the newly projected positive z axis of the baseline points to the field
 
-	num_t baselineLength = sqrtl(dxProjected*dxProjected + dyProjected*dyProjected);
+	num_t baselineLength = sqrtn(dxProjected*dxProjected + dyProjected*dyProjected);
 	
 	num_t baselineAngle;
 	if(baselineLength == 0.0L)
@@ -503,9 +503,9 @@ void UVImager::GetUVPosition(num_t &u, num_t &v, const SingleFrequencySingleBase
 	else {
 		baselineLength /= cache.wavelength;
 		if(dxProjected > 0.0L)
-			baselineAngle = atanl(dyProjected/dxProjected);
+			baselineAngle = atann(dyProjected/dxProjected);
 		else
-			baselineAngle = M_PI - atanl(dyProjected/-dxProjected);
+			baselineAngle = M_PIn - atann(dyProjected/-dxProjected);
 	}
 		
 
@@ -518,7 +518,7 @@ num_t UVImager::GetFringeStopFrequency(num_t time, const Baseline &baseline, num
 	// earthspeed = rad / sec
 	const num_t earthSpeed = 2.0L * M_PIn / (24.0L * 60.0L * 60.0L);
 	num_t earthLattitudeAngle =
-		Date::JDToHourOfDay(Date::AipsMJDToJD(time))*M_PI/12.0L;
+		Date::JDToHourOfDay(Date::AipsMJDToJD(time))*M_PIn/12.0L;
 	//long double u, v;
 	//GetUVPosition(u, v, baseline, time, delayDirectionRA, delayDirectionDec, frequency);
 	//return
@@ -530,7 +530,7 @@ num_t UVImager::GetFringeStopFrequency(num_t time, const Baseline &baseline, num
 	//num_t dz = baseline.antenna2.z - baseline.antenna1.z;
 	num_t wavelength = 299792458.0L / frequency;
 	/*std::cout << "Angle=" <<
-		180.0L / M_PI * acosn(((dx * raCos - dy * raSin) * cosn(delayDirectionDec) + dz*sinn(delayDirectionDec)) / sqrtn(dx*dx + dy*dy + dz*dz))
+		180.0L / M_PIn * acosn(((dx * raCos - dy * raSin) * cosn(delayDirectionDec) + dz*sinn(delayDirectionDec)) / sqrtn(dx*dx + dy*dy + dz*dz))
 		<< std::endl; 
 	std::cout << "delay=" <<
 		((dx * raCos - dy * raSin) * cosn(delayDirectionDec) + dz*sinn(delayDirectionDec)) << "m"
@@ -548,9 +548,9 @@ num_t UVImager::GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsig
 		timeStart = metaData->ObservationTimes()[timeIndexStart],
 		timeEnd = metaData->ObservationTimes()[timeIndexEnd];
 	num_t	 earthLattitudeAngleStart =
-		Date::JDToHourOfDay(Date::AipsMJDToJD(timeStart))*M_PI/12.0L;
+		Date::JDToHourOfDay(Date::AipsMJDToJD(timeStart))*M_PIn/12.0L;
 	num_t earthLattitudeAngleEnd =
-		Date::JDToHourOfDay(Date::AipsMJDToJD(timeEnd))*M_PI/12.0L;
+		Date::JDToHourOfDay(Date::AipsMJDToJD(timeEnd))*M_PIn/12.0L;
 	num_t wavelength = 299792458.0L / metaData->Band().channels[channelIndex].frequencyHz;
 	num_t dx = metaData->Antenna2().position.x - metaData->Antenna1().position.x;
 	num_t dy = metaData->Antenna2().position.y - metaData->Antenna1().position.y;
