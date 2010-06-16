@@ -27,7 +27,7 @@
 #include "image.h"
 
 // Needs to be included LAST
-#include "../f2c.h"
+#include <AOFlagger/f2c.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>

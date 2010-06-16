@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 // Needs to be included LAST
-#include "../f2c.h"
+#include <AOFlagger/f2c.h>
 
 extern "C" {
 	void zheevx_(char *jobz, char *range, char *uplo, integer *n,
