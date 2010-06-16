@@ -11,10 +11,15 @@ SyntaxError()
 	exit 1
 }
 
-answer='n'
+if [ ${#argv} == 0 ]; then 
+  SyntaxError
+fi
+
+answer="n"
 page=-1
 bphexfile=""
 aphexfile=""
+
 eval set argv=`getopt "c:p:a:b:h" $*`
 shift
 
