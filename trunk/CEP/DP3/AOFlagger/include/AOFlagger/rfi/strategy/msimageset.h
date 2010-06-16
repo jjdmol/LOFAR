@@ -102,6 +102,7 @@ namespace rfiStrategy {
 			}
 	
 			virtual std::string Name() { return _set.Location(); }
+			virtual std::string File() { return _set.Location(); }
 			virtual TimeFrequencyData *LoadData(ImageSetIndex &index);
 			
 			virtual void AddReadRequest(ImageSetIndex &index);

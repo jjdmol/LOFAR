@@ -77,6 +77,7 @@ namespace rfiStrategy {
 			{
 				return "Fits file";
 			}
+			virtual std::string File();
 			virtual TimeFrequencyData *LoadData(ImageSetIndex &index);
 			virtual void LoadFlags(ImageSetIndex &, TimeFrequencyData &)
 			{

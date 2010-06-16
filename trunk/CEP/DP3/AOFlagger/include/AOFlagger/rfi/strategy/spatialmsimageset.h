@@ -8,29 +8,27 @@
 
 #include "imageset.h"
 
+#include <AOFlagger/msio/spatialmatrixmetadata.h>
+#include <AOFlagger/msio/measurementset.h>
+#include <AOFlagger/msio/baselinematrixloader.h>
+
 namespace rfiStrategy {
 
 	class SpatialMSImageSetIndex : public ImageSetIndex {
 		public:
 			friend class SpatialMSImageSet;
 
-			SpatialMSImageSetIndex(ImageSet &set) : ImageSetIndex(set), _timeIndex(0), _isValid(true)
+			SpatialMSImageSetIndex(ImageSet &set) : ImageSetIndex(set), _timeIndex(0), _channelIndex(0), _isValid(true)
 			{
 			}
-			virtual void Previous();
-			virtual void Next();
-			virtual void LargeStepPrevious()
-			{
-				Previous();
-			}
-			virtual void LargeStepNext()
-			{
-				Next();
-			}
+			inline virtual void Previous();
+			inline virtual void Next();
+			inline virtual void LargeStepPrevious();
+			inline virtual void LargeStepNext();
 			virtual std::string Description() const
 			{
 				std::stringstream s;
-				s << "Time index " << _timeIndex;
+				s << "Time index " << _timeIndex << ", channel " << _channelIndex;
 				return s.str();
 			}
 			virtual bool IsValid() const
@@ -41,18 +39,20 @@ namespace rfiStrategy {
 			{
 				SpatialMSImageSetIndex *newIndex = new SpatialMSImageSetIndex(imageSet());
 				newIndex->_timeIndex = _timeIndex;
+				newIndex->_channelIndex = _channelIndex;
 				newIndex->_isValid = _isValid;
 				return newIndex;
 			}
 		private:
-			class SpatialMSImageSet &SMSSet() const;
+			inline class SpatialMSImageSet &SMSSet() const;
 			size_t _timeIndex;
+			size_t _channelIndex;
 			bool _isValid;
 	};
 	
 	class SpatialMSImageSet : public ImageSet {
 		public:
-			SpatialMSImageSet(const std::string &location) : _set(location), _loader(_set)
+			SpatialMSImageSet(const std::string &location) : _set(location), _loader(_set), _cachedTimeIndex(GetTimeIndexCount())
 			{
 			}
 			virtual ~SpatialMSImageSet()
@@ -74,10 +74,19 @@ namespace rfiStrategy {
 			{
 				return "Spatial matrix"; 
 			}
+			virtual std::string File()
+			{
+				return _set.Location(); 
+			}
 			virtual TimeFrequencyData *LoadData(ImageSetIndex &index)
 			{
 				SpatialMSImageSetIndex &sIndex = static_cast<SpatialMSImageSetIndex&>(index);
-				TimeFrequencyData *result = new TimeFrequencyData(_loader.Load(sIndex._timeIndex));
+				if(sIndex._timeIndex != _cachedTimeIndex)
+				{
+					_loader.LoadPerChannel(sIndex._timeIndex, _timeIndexMatrices);
+					_cachedTimeIndex = sIndex._timeIndex;
+				}
+				TimeFrequencyData *result = new TimeFrequencyData(_timeIndexMatrices[sIndex._channelIndex]);
 				return result;
 			}
 			virtual void LoadFlags(ImageSetIndex &/*index*/, TimeFrequencyData &/*destination*/)
@@ -87,9 +96,13 @@ namespace rfiStrategy {
 			{
 				return TimeFrequencyMetaDataCPtr();
 			}
-			SpatialMatrixMetaData &SpatialMetaData()
+			SpatialMatrixMetaData SpatialMetaData(ImageSetIndex &index)
 			{
-				return _loader.MetaData();
+				SpatialMSImageSetIndex &sIndex = static_cast<SpatialMSImageSetIndex&>(index);
+				SpatialMatrixMetaData metaData(_loader.MetaData());
+				metaData.SetChannelIndex(sIndex._channelIndex);
+				metaData.SetTimeIndex(sIndex._timeIndex);
+				return metaData;
 			}
 			virtual void WriteFlags(ImageSetIndex &/*index*/, TimeFrequencyData &/*data*/)
 			{
@@ -109,6 +122,10 @@ namespace rfiStrategy {
 			size_t GetTimeIndexCount()
 			{
 				return _loader.TimeIndexCount();
+			}
+			size_t GetFrequencyCount()
+			{
+				return _loader.FrequencyCount();
 			}
 			virtual void AddReadRequest(ImageSetIndex &index)
 			{
@@ -137,9 +154,11 @@ namespace rfiStrategy {
 			MeasurementSet _set;
 			BaselineMatrixLoader _loader;
 			std::stack<BaselineData> _baseline;
+			std::vector<TimeFrequencyData> _timeIndexMatrices;
+			size_t _cachedTimeIndex;
 	};
 
-	void SpatialMSImageSetIndex::Previous()
+	void SpatialMSImageSetIndex::LargeStepPrevious()
 	{
 		if(_timeIndex > 0)
 			--_timeIndex;
@@ -150,13 +169,34 @@ namespace rfiStrategy {
 		}
 	}
 
-	void SpatialMSImageSetIndex::Next()
+	void SpatialMSImageSetIndex::LargeStepNext()
 	{
 		++_timeIndex;
 		if(_timeIndex == SMSSet().GetTimeIndexCount())
 		{
 			_timeIndex = 0;
 			_isValid = false;
+		}
+	}
+
+	void SpatialMSImageSetIndex::Previous()
+	{
+		if(_channelIndex > 0)
+			--_channelIndex;
+		else
+		{
+			_channelIndex = SMSSet().GetFrequencyCount()-1;
+			LargeStepPrevious();
+		}
+	}
+
+	void SpatialMSImageSetIndex::Next()
+	{
+		++_channelIndex;
+		if(_channelIndex == SMSSet().GetFrequencyCount())
+		{
+			_channelIndex = 0;
+			LargeStepNext();
 		}
 	}
 

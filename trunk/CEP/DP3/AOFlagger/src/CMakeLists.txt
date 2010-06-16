@@ -53,6 +53,7 @@ set(RFI_STRATEGY_FILES
   rfi/strategy/msimageset.cpp
   rfi/strategy/plotaction.cpp
   rfi/strategy/slidingwindowfitaction.cpp
+  rfi/strategy/spatialcompositionaction.cpp
   rfi/strategy/statisticalflagaction.cpp
   rfi/strategy/strategy.cpp
   rfi/strategy/svdaction.cpp

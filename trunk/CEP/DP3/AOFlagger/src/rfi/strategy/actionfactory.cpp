@@ -36,6 +36,7 @@
 #include <AOFlagger/rfi/strategy/setflaggingaction.h>
 #include <AOFlagger/rfi/strategy/setimageaction.h>
 #include <AOFlagger/rfi/strategy/slidingwindowfitaction.h>
+#include <AOFlagger/rfi/strategy/spatialcompositionaction.h>
 #include <AOFlagger/rfi/strategy/statisticalflagaction.h>
 #include <AOFlagger/rfi/strategy/svdaction.h>
 #include <AOFlagger/rfi/strategy/thresholdaction.h>
@@ -64,6 +65,7 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Set image");
 	list.push_back("Singular value decomposition");
 	list.push_back("Sliding window fit");
+	list.push_back("Spatial composition");
 	list.push_back("Statistical flagging");
 	list.push_back("Threshold");
 	list.push_back("Time selection");
@@ -107,6 +109,8 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new SVDAction();
 	else if(action == "Sliding window fit")
 		return new SlidingWindowFitAction();
+	else if(action == "Spatial composition")
+		return new SpatialCompositionAction();
 	else if(action == "Statistical flagging")
 		return new StatisticalFlagAction();
 	else if(action == "Threshold")
