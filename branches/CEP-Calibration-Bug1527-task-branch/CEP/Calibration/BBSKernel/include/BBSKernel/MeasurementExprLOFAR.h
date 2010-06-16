@@ -27,10 +27,11 @@
 // \file
 // Measurement equation for the LOFAR telescope and its environment.
 
+
+#include <BBSKernel/BaselineMask.h>
 #include <BBSKernel/ElementBeamExpr.h>
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/IonosphereExpr.h>
-#include <BBSKernel/Measurement.h>
 #include <BBSKernel/MeasurementExpr.h>
 #include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/ParmManager.h>
@@ -69,8 +70,8 @@ public:
         bool circular = false);
 
     MeasurementExprLOFAR(const ModelConfig &config, const SourceDB &sourceDB,
-        const Measurement::Ptr &measurement, const VisBuffer::Ptr &chunk,
-        const BaselineMask &mask, bool forward = true);
+        const VisBuffer::Ptr &chunk, const BaselineMask &mask,
+        bool forward = true);
 
     // \name MeasurementExpr interface implementation
     // These methods form an implementation of the MeasurementExpr interface

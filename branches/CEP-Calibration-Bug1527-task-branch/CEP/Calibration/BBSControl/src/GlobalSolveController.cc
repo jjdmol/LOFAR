@@ -93,13 +93,6 @@ void GlobalSolveController::run()
         (dynamic_pointer_cast<MergedCoeffIndexMsg>(remoteMsg));
     ASSERTSTR(remoteIndexMsg, "Protocol error: expected MergedCoeffIndexMsg.");
 
-    if(itsSolvables.empty())
-    {
-        LOG_WARN_STR("No parameters selected for solving; nothing to be done.");
-        itsSolver->sendObject(ChunkDoneMsg(itsKernelIndex));
-        return;
-    }
-
     // Construct look-up table from Solver's coefficient index.
     makeCoeffMapping(remoteIndexMsg->getContents());
 

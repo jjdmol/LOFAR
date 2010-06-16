@@ -72,7 +72,7 @@ const JonesMatrix MatrixSum::evaluateExpr(const Request &request, Cache &cache,
 
     // Allocate flags.
     bool haveFlags = false;
-    FlagArray flags((FlagType()));
+    FlagArray flags(flag_t(0));
 
     // Iterate over all terms.
     // TODO: First process all nodes that do not depend on solvables and cache

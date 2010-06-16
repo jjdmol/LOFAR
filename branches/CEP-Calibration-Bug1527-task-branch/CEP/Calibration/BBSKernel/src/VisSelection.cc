@@ -142,22 +142,12 @@ void VisSelection::setTimeRange(const string &start, const string &end)
 
 void VisSelection::setBaselineFilter(const BaselineFilter &filter)
 {
-    if(filter.baselineType() == BaselineFilter::ANY && filter.empty())
-    {
-        return;
-    }
-
     itsFlags[BASELINE_FILTER] = true;
     itsBaselineFilter = filter;
 }
 
 void VisSelection::setCorrelationMask(const CorrelationMask &mask)
 {
-    if(mask.empty())
-    {
-        return;
-    }
-
     itsFlags[CORRELATION_MASK] = true;
     itsCorrelationMask = mask;
 }

@@ -73,7 +73,6 @@
 #include <BBSKernel/VisEquator.h>
 #include <BBSKernel/Solver.h>
 #include <BBSKernel/Exceptions.h>
-//#include <BBSKernel/VisExpr.h>
 
 namespace LOFAR
 {
@@ -415,8 +414,7 @@ namespace LOFAR
       LOG_DEBUG("Reading chunk...");
       try
       {
-        itsChunk = itsMeasurement->read(itsChunkSelection, itsInputColumn,
-          true);
+        itsChunk = itsMeasurement->read(itsChunkSelection, itsInputColumn);
       }
       catch(Exception &ex)
       {
@@ -472,7 +470,7 @@ namespace LOFAR
       try
       {
         model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsMeasurement, itsChunk, blMask));
+            *itsSourceDb, itsChunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -500,8 +498,8 @@ namespace LOFAR
       // Optionally write the simulated visibilities.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(itsChunkSelection, itsChunk,
-          command.outputColumn(), command.writeFlags());
+        itsMeasurement->write(itsChunk, itsChunkSelection,
+            command.outputColumn(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -527,7 +525,7 @@ namespace LOFAR
       try
       {
         model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsMeasurement, itsChunk, blMask));
+            *itsSourceDb, itsChunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -556,8 +554,8 @@ namespace LOFAR
       // Optionally write the simulated visibilities.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(itsChunkSelection, itsChunk,
-          command.outputColumn(), command.writeFlags());
+        itsMeasurement->write(itsChunk, itsChunkSelection,
+          command.outputColumn(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -583,7 +581,7 @@ namespace LOFAR
       try
       {
         model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsMeasurement, itsChunk, blMask));
+            *itsSourceDb, itsChunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -612,8 +610,8 @@ namespace LOFAR
       // Optionally write the simulated visibilities.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(itsChunkSelection, itsChunk,
-          command.outputColumn(), command.writeFlags());
+        itsMeasurement->write(itsChunk, itsChunkSelection,
+          command.outputColumn(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -639,7 +637,7 @@ namespace LOFAR
       try
       {
         model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsMeasurement, itsChunk, blMask, false));
+            *itsSourceDb, itsChunk, blMask, false));
       }
       catch(Exception &ex)
       {
@@ -667,8 +665,8 @@ namespace LOFAR
       // Optionally write the simulated visibilities.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(itsChunkSelection, itsChunk,
-          command.outputColumn(), command.writeFlags());
+        itsMeasurement->write(itsChunk, itsChunkSelection,
+          command.outputColumn(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -686,13 +684,13 @@ namespace LOFAR
       if(command.resample())
       {
         LOG_WARN("Resampling support is unavailable in the current"
-          " implementation; resampling request will be ignored.");
+          " implementation; resampling will NOT be performed!");
       }
 
       if(command.shift())
       {
         LOG_WARN("Phase shift support is unavailable in the current"
-          " implementation; phase shift request will be ignored.");
+          " implementation; phase shift will NOT be performed!");
       }
 
       // Determine selected baselines and correlations.
@@ -706,7 +704,7 @@ namespace LOFAR
       try
       {
         model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsMeasurement, itsChunk, blMask));
+            *itsSourceDb, itsChunk, blMask));
       }
       catch(Exception &ex)
       {

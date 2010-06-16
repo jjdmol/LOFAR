@@ -26,6 +26,9 @@
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/Exceptions.h>
 
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MCPosition.h>
+
 namespace LOFAR
 {
 namespace BBS
@@ -99,10 +102,6 @@ istream &operator>>(istream &in, AntennaSelection &obj)
         in.setstate(istream::failbit);
     }
 
-//    LOG_DEBUG_STR("name: " << obj.itsName << " positions: "
-//        << obj.itsPositions);
-//    LOG_DEBUG_STR("STATION 0: " << obj(0, 0) << " " << obj(0, 1) << " "
-//        << obj(0, 2));
     return in;
 }
 
@@ -122,7 +121,8 @@ unsigned int TileLayout::size() const
 
 Station::Station(const string &name, const casa::MPosition &position)
     :   itsName(name),
-        itsPosition(position)
+        itsPosition(casa::MPosition::Convert(position,
+            casa::MPosition::ITRF)())
 {
 }
 
@@ -273,7 +273,8 @@ Instrument::Instrument()
 Instrument::Instrument(const string &name, const casa::MPosition position,
     const vector<Station> &stations)
     :   itsName(name),
-        itsPosition(position),
+        itsPosition(casa::MPosition::Convert(position,
+            casa::MPosition::ITRF)()),
         itsStations(stations)
 {
     for(unsigned int i = 0; i < itsStations.size(); ++i)

@@ -48,12 +48,13 @@ public:
 
     virtual VisDimensions dimensions(const VisSelection &selection) const = 0;
 
-    virtual VisBuffer::Ptr read(const VisSelection &selection,
-        const string &column = "DATA", bool readUVW = true) const = 0;
+    virtual VisBuffer::Ptr read(const VisSelection &selection = VisSelection(),
+        const string &column = "DATA") const = 0;
 
-    virtual void write(const VisSelection &selection,
-        VisBuffer::Ptr buffer, const string &column = "CORRECTED_DATA",
-        bool writeFlags = true) = 0;
+    virtual void write(VisBuffer::Ptr buffer,
+        const VisSelection &selection = VisSelection(),
+        const string &column = "CORRECTED_DATA",
+        bool writeFlags = true, flag_t flagMask = ~flag_t(0)) = 0;
 
     double getReferenceFreq() const;
     const casa::MDirection &getPhaseReference() const;

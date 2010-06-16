@@ -170,18 +170,16 @@ private:
     void makeElementCoeffMap(const Element &element, ProcContext &context);
 
     // Insanely complicated boost::multi_array types...
-    typedef boost::multi_array<flag_t, 2>::index_range TFRange;
-    typedef boost::multi_array<flag_t, 2>::const_array_view<2>::type TFSlice;
     typedef boost::multi_array<flag_t, 4>::index_range FRange;
     typedef boost::multi_array<flag_t, 4>::const_array_view<4>::type FSlice;
-    typedef boost::multi_array<sample_t, 4>::index_range SRange;
-    typedef boost::multi_array<sample_t, 4>::const_array_view<4>::type SSlice;
+    typedef boost::multi_array<dcomplex, 4>::index_range SRange;
+    typedef boost::multi_array<dcomplex, 4>::const_array_view<4>::type SSlice;
 
     // Generate normal equations for a single expression from the set.
     template <typename T_ITER>
-    void procExpr(ProcContext &context, const VisEquator::TFSlice &timeFlag,
-        const VisEquator::FSlice &flagLHS, const VisEquator::SSlice &valueLHS,
-        const pair<size_t, size_t> &idx, T_ITER out);
+    void procExpr(ProcContext &context, const VisEquator::FSlice &flagLHS,
+        const VisEquator::SSlice &valueLHS, const pair<size_t, size_t> &idx,
+        T_ITER out);
 
     // Create a mapping from cells of axis "from" to cell indices on axis "to".
     // Additionally, the interval of cells of axis "from" that intersect axis
@@ -348,23 +346,20 @@ T_ITER VisEquator::process(T_ITER first, T_ITER last)
         it->equation.set(static_cast<unsigned int>(itsCoeffMap.size()));
     }
 
-    TFRange timeTFRange(itsReqStart.second, itsReqEnd.second + 1);
-    TFSlice tflag(itsLHS->tslot_flag[boost::indices[TFRange()][timeTFRange]]);
-
     FRange freqFRange(itsReqStart.first, itsReqEnd.first + 1);
     FRange timeFRange(itsReqStart.second, itsReqEnd.second + 1);
-    FSlice flag(itsLHS->vis_flag[boost::indices[FRange()][timeFRange]
+    FSlice flag(itsLHS->flags[boost::indices[FRange()][timeFRange]
         [freqFRange][FRange()]]);
 
     SRange freqSRange(itsReqStart.first, itsReqEnd.first + 1);
     SRange timeSRange(itsReqStart.second, itsReqEnd.second + 1);
-    SSlice sample(itsLHS->vis_data[boost::indices[SRange()][timeSRange]
+    SSlice sample(itsLHS->samples[boost::indices[SRange()][timeSRange]
         [freqSRange][SRange()]]);
 
     // Construct equations for all baselines.
     for(size_t i = 0; i < itsBlMap.size(); ++i)
     {
-        procExpr(itsProcContext, tflag, flag, sample, itsBlMap[i], first);
+        procExpr(itsProcContext, flag, sample, itsBlMap[i], first);
     }
 
     itsProcTimer.stop();
@@ -374,9 +369,8 @@ T_ITER VisEquator::process(T_ITER first, T_ITER last)
 
 template <typename T_ITER>
 void VisEquator::procExpr(ProcContext &context,
-    const VisEquator::TFSlice &timeFlag, const VisEquator::FSlice &flagLHS,
-    const VisEquator::SSlice &valueLHS, const pair<size_t, size_t> &idx,
-    T_ITER out)
+    const VisEquator::FSlice &flagLHS, const VisEquator::SSlice &valueLHS,
+    const pair<size_t, size_t> &idx, T_ITER out)
 {
     // Evaluate the right hand side.
     context.timers[ProcContext::EVAL_EXPR].start();
@@ -386,7 +380,7 @@ void VisEquator::procExpr(ProcContext &context,
     // If the model contains no flags, assume no samples are flagged.
     // TODO: This incurs a cost for models that do not contain flags because
     // a call to virtual FlagArray::operator() is made for each sample.
-    FlagArray flagRHS(FlagType(0));
+    FlagArray flagRHS(flag_t(0));
     if(RHS.hasFlags())
     {
         flagRHS = RHS.flags();
@@ -427,11 +421,6 @@ void VisEquator::procExpr(ProcContext &context,
 
         for(size_t t = 0; t < nTime; ++t)
         {
-            if(timeFlag[idx.first][t])
-            {
-                continue;
-            }
-
             const size_t eqIdx = (itsTimeMap[itsEvalReqStart.second + t]
                 - itsEvalSelStart.second) * (itsEvalSelEnd.first
                 - itsEvalSelStart.first + 1);
@@ -451,9 +440,8 @@ void VisEquator::procExpr(ProcContext &context,
                 ++context.count;
 
                 // Compute right hand side of the equation pair.
-                const dcomplex delta =
-                    static_cast<dcomplex>(valueLHS[idx.first][t][f][crLHS])
-                        - valueRHS.getDComplex(f, t);
+                const dcomplex delta = valueLHS[idx.first][t][f][crLHS]
+                    - valueRHS.getDComplex(f, t);
 
                 // Tranpose the partial derivatives.
                 context.timers[ProcContext::TRANSPOSE].start();

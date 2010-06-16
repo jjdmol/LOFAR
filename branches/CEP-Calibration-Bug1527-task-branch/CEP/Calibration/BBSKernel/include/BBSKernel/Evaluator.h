@@ -83,17 +83,17 @@ public:
 private:
     struct OpEq
     {
-        static void apply(sample_t &lhs, const dcomplex &rhs);
+        static void apply(dcomplex &lhs, const dcomplex &rhs);
     };
 
     struct OpSub
     {
-        static void apply(sample_t &lhs, const dcomplex &rhs);
+        static void apply(dcomplex &lhs, const dcomplex &rhs);
     };
 
     struct OpAdd
     {
-        static void apply(sample_t &lhs, const dcomplex &rhs);
+        static void apply(dcomplex &lhs, const dcomplex &rhs);
     };
 
     // Signature of sample processor function.
@@ -136,17 +136,17 @@ private:
 // - Evaluator implementation                                               - //
 // -------------------------------------------------------------------------- //
 
-inline void Evaluator::OpEq::apply(sample_t &lhs, const dcomplex &rhs)
+inline void Evaluator::OpEq::apply(dcomplex &lhs, const dcomplex &rhs)
 {
     lhs = rhs;
 }
 
-inline void Evaluator::OpSub::apply(sample_t &lhs, const dcomplex &rhs)
+inline void Evaluator::OpSub::apply(dcomplex &lhs, const dcomplex &rhs)
 {
     lhs -= rhs;
 }
 
-inline void Evaluator::OpAdd::apply(sample_t &lhs, const dcomplex &rhs)
+inline void Evaluator::OpAdd::apply(dcomplex &lhs, const dcomplex &rhs)
 {
     lhs += rhs;
 }
@@ -184,12 +184,12 @@ void Evaluator::procExprWithFlags(size_t &bl, const JonesMatrix &rhs)
         // Get a view on the relevant slice of the data buffer.
         typedef boost::multi_array<flag_t, 4>::index_range FRange;
         typedef boost::multi_array<flag_t, 4>::array_view<2>::type FSlice;
-        FSlice flagsLHS(itsLHS->vis_flag[boost::indices[bl][FRange()][FRange()]
+        FSlice flagsLHS(itsLHS->flags[boost::indices[bl][FRange()][FRange()]
             [crLHS]]);
 
-        typedef boost::multi_array<sample_t, 4>::index_range SRange;
-        typedef boost::multi_array<sample_t, 4>::array_view<2>::type SSlice;
-        SSlice samplesLHS(itsLHS->vis_data[boost::indices[bl][SRange()]
+        typedef boost::multi_array<dcomplex, 4>::index_range SRange;
+        typedef boost::multi_array<dcomplex, 4>::array_view<2>::type SSlice;
+        SSlice samplesLHS(itsLHS->samples[boost::indices[bl][SRange()]
             [SRange()][crLHS]]);
 
         // Process visibilities and flags.
@@ -231,9 +231,9 @@ void Evaluator::procExpr(size_t &bl, const JonesMatrix &rhs)
             || static_cast<size_t>(samplesRHS.nelements()) == nFreq * nTime);
 
         // Get a view on the relevant slice of the data buffer.
-        typedef boost::multi_array<sample_t, 4>::index_range SRange;
-        typedef boost::multi_array<sample_t, 4>::array_view<2>::type SSlice;
-        SSlice samplesLHS(itsLHS->vis_data[boost::indices[bl][SRange()]
+        typedef boost::multi_array<dcomplex, 4>::index_range SRange;
+        typedef boost::multi_array<dcomplex, 4>::array_view<2>::type SSlice;
+        SSlice samplesLHS(itsLHS->samples[boost::indices[bl][SRange()]
             [SRange()][crLHS]]);
 
         // Process visibilities.

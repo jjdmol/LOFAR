@@ -81,12 +81,6 @@ namespace LOFAR
       Selection selection() const
       { return itsSelection; }
 
-//      vector<string> getStations() const
-//      { return itsStations; }
-
-//      CorrelationFilter getCorrelationFilter() const
-//      { return itsCorrelationFilter; }
-
       bool useSolver() const
       { return itsUseSolver; }
 
@@ -94,14 +88,8 @@ namespace LOFAR
       // Name of the input column.
       string            itsInputColumn;
 
+      // Data selection.
       Selection         itsSelection;
-
-//      // Names of the stations to use. Names may contains wildcards, like \c *
-//      // and \c ?.
-//      vector<string>    itsStations;
-
-//      // Correlation product selection.
-//      CorrelationFilter itsCorrelationFilter;
 
       // Connect to the global solver?
       bool              itsUseSolver;

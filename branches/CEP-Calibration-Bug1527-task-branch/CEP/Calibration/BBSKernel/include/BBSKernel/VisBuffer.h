@@ -29,6 +29,7 @@
 // coordinates).
 
 #include <Common/lofar_smartptr.h>
+#include <BBSKernel/Instrument.h>
 #include <BBSKernel/Types.h>
 #include <BBSKernel/VisDimensions.h>
 #include <measures/Measures/MDirection.h>
@@ -48,19 +49,22 @@ public:
     typedef shared_ptr<VisBuffer>       Ptr;
     typedef shared_ptr<const VisBuffer> ConstPtr;
 
-    enum TimeFlag
-    {
-        AVAILABLE           = 0,
-        UNAVAILABLE         = 1<<1,
-        FLAGGED_IN_INPUT    = 1<<2,
-        N_TimeFlag
-    };
-
-    VisBuffer();
     VisBuffer(const VisDimensions &dims);
+    VisBuffer(const VisDimensions &dims, const Instrument &instrument,
+        const casa::MDirection &phaseRef, double refFreq);
 
     // Access to the dimensions of this buffer.
     const VisDimensions &dimensions() const;
+
+    void setInstrument(const Instrument &instrument);
+    const Instrument &instrument() const;
+    size_t nStations() const;
+
+    void setPhaseReference(const casa::MDirection &reference);
+    const casa::MDirection &getPhaseReference() const;
+
+    void setReferenceFreq(double freq);
+    double getReferenceFreq() const;
 
     // Convenience functions that delegate to VisDimensions (refer to the
     // documentation of VisDimensions for their documentation).
@@ -74,15 +78,38 @@ public:
     const Grid &grid() const;
     const BaselineSeq &baselines() const;
     const CorrelationSeq &correlations() const;
-    //@}
+    // @}
 
-    // Data.
-    boost::multi_array<double, 3>       uvw;
-    boost::multi_array<tslot_flag_t, 2> tslot_flag;
-    boost::multi_array<flag_t, 4>       vis_flag;
-    boost::multi_array<sample_t, 4>     vis_data;
+    bool hasUVW() const;
+
+    // Computes station UVW coordinates in meters for the center of each time
+    // interval in the buffer. Requires a valid instrument and phase reference
+    // (see setInstrument() and setPhaseReference()).
+    void computeUVW();
+
+    // \name Common operations on the flags.
+    // @{
+    void flagsAndWithMask(flag_t mask);
+    void flagsOrWithMask(flag_t mask);
+    void flagsSet(flag_t value);
+    void flagsNot();
+    // @}
+
+    // Station UVW coordinates in meters.
+    boost::multi_array<double, 3>   uvw;
+    // Flags per visibility.
+    boost::multi_array<flag_t, 4>   flags;
+    // Visibilities.
+    boost::multi_array<dcomplex, 4> samples;
 
 private:
+    // Information about the instrument (e.g. station positions).
+    Instrument          itsInstrument;
+    // Phase reference direction (J2000).
+    casa::MDirection    itsPhaseReference;
+    // Reference frequency (Hz).
+    double              itsReferenceFreq;
+
     // Shape of the buffer along all four dimensions (frequency, time, baseline,
     // correlation).
     VisDimensions       itsDims;
@@ -93,6 +120,41 @@ private:
 // -------------------------------------------------------------------------- //
 // - Implementation: VisBuffer                                              - //
 // -------------------------------------------------------------------------- //
+
+inline const VisDimensions &VisBuffer::dimensions() const
+{
+    return itsDims;
+}
+
+inline void VisBuffer::setInstrument(const Instrument &instrument)
+{
+    itsInstrument = instrument;
+}
+
+inline const Instrument &VisBuffer::instrument() const
+{
+    return itsInstrument;
+}
+
+inline size_t VisBuffer::nStations() const
+{
+    return itsInstrument.size();
+}
+
+inline const casa::MDirection &VisBuffer::getPhaseReference() const
+{
+    return itsPhaseReference;
+}
+
+inline void VisBuffer::setReferenceFreq(double freq)
+{
+    itsReferenceFreq = freq;
+}
+
+inline double VisBuffer::getReferenceFreq() const
+{
+    return itsReferenceFreq;
+}
 
 inline size_t VisBuffer::nFreq() const
 {
@@ -134,9 +196,9 @@ inline const CorrelationSeq &VisBuffer::correlations() const
     return itsDims.correlations();
 }
 
-inline const VisDimensions &VisBuffer::dimensions() const
+inline bool VisBuffer::hasUVW() const
 {
-    return itsDims;
+    return uvw.size() > 0;
 }
 
 } //# namespace BBS

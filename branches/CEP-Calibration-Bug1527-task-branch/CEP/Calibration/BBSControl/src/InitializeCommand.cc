@@ -59,8 +59,6 @@ namespace LOFAR
     {
       itsInputColumn = strategy.inputColumn();
       itsSelection = strategy.selection();
-//      itsStations = strategy.getStations();
-//      itsCorrelationFilter = strategy.getCorrelationFilter();
       itsUseSolver = strategy.useSolver();
     }
 
@@ -86,12 +84,6 @@ namespace LOFAR
         << endl << indent << itsSelection
         << endl << indent << "UseSolver: " << boolalpha << itsUseSolver
         << noboolalpha;
-//      os << endl << indent << "Stations: " << itsStations
-//        << endl << indent << "Input column: " << itsInputColumn
-//        << endl << indent << itsCorrelationFilter
-//        << boolalpha
-//        << endl << indent << "UseSolver: " << boolalpha << itsUseSolver
-//        << noboolalpha;
     }
 
 
@@ -101,13 +93,10 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-//      ps.add("Stations", toString(itsStations));
       ps.add("InputColumn", itsInputColumn);
       ps.add("Selection.BaselineType", itsSelection.type);
       ps.add("Selection.Baselines", toString(itsSelection.baselines));
       ps.add("Selection.Correlations", toString(itsSelection.correlations));
-//      ps.add("Correlation.Selection", itsCorrelationFilter.selection);
-//      ps.add("Correlation.Type", toString(itsCorrelationFilter.type));
       ps.add("UseSolver", toString(itsUseSolver));
     }
 
@@ -115,13 +104,8 @@ namespace LOFAR
     void InitializeCommand::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-//      itsStations = ps.getStringVector("Stations", vector<string>());
       itsInputColumn = ps.getString("InputColumn", "DATA");
       fromParameterSet(ps, itsSelection);
-//      itsCorrelationFilter.selection = ps.getString("Correlation.Selection",
-//        "CROSS");
-//      itsCorrelationFilter.type = ps.getStringVector("Correlation.Type",
-//        vector<string>());
       itsUseSolver = ps.getBool("UseSolver", false);
     }
 

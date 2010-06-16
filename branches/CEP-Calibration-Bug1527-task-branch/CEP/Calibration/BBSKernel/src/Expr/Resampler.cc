@@ -123,7 +123,7 @@ FlagArray Resampler::resampleFlags(const FlagArray &in,
     const unsigned int nTime = map[TIME].back().dst + 1;
 
     // Allocate the output.
-    FlagArray out(nFreq, nTime, FlagType(0));
+    FlagArray out(nFreq, nTime, flag_t(0));
 
     // Allocate temporary 2-D arrays to store the number of samples per output
     // cell and the number of flagged samples per output cell.
@@ -138,7 +138,7 @@ FlagArray Resampler::resampleFlags(const FlagArray &in,
         {
             ++count(itFreq->dst, itTime->dst);
 
-            const FlagType flag = in(itFreq->src, itTime->src);
+            const flag_t flag = in(itFreq->src, itTime->src);
             ASSERT(flag == 0 || flag == 1);
             if(flag)
             {
@@ -163,7 +163,7 @@ FlagArray Resampler::resampleFlags(const FlagArray &in,
             if((static_cast<double>(flagged(f, t)) / count(f, t))
                 < itsFlagDensityThreshold)
             {
-                out(f, t) = FlagType(0);
+                out(f, t) = flag_t(0);
             }
         }
     }

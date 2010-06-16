@@ -99,9 +99,9 @@ MeasurementExprLOFAR::MeasurementExprLOFAR(const ModelConfig &config,
 }
 
 MeasurementExprLOFAR::MeasurementExprLOFAR(const ModelConfig &config,
-    const SourceDB &sourceDB, const Measurement::Ptr &measurement,
+    const SourceDB &sourceDB,
     const VisBuffer::Ptr &chunk, const BaselineMask &mask, bool forward)
-    :   itsInstrument(measurement->instrument()),
+    :   itsInstrument(chunk->instrument()),
         itsSourceDB(sourceDB),
         itsBaselines(filter(chunk->baselines(), mask)),
         itsCachePolicy(new DefaultCachePolicy())
@@ -113,19 +113,19 @@ MeasurementExprLOFAR::MeasurementExprLOFAR(const ModelConfig &config,
 
     if(forward)
     {
-        makeForwardExpr(config, measurement->getPhaseReference(),
-            measurement->getReferenceFreq(), circular);
+        makeForwardExpr(config, chunk->getPhaseReference(),
+            chunk->getReferenceFreq(), circular);
     }
     else
     {
-        makeInverseExpr(config, chunk, measurement->getPhaseReference(),
-            measurement->getReferenceFreq(), circular);
+        makeInverseExpr(config, chunk, chunk->getPhaseReference(),
+            chunk->getReferenceFreq(), circular);
     }
 }
 
 void MeasurementExprLOFAR::solvablesChanged()
 {
-    LOG_DEBUG_STR("" << itsCache);
+//    LOG_DEBUG_STR("" << itsCache);
     itsCache.clear(Cache::VOLATILE);
     itsCache.clearStats();
 }

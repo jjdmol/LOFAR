@@ -115,10 +115,10 @@ void VisEquator::setCellSelection(const Location &start, const Location &end)
             (itsSelectionEnd.first - itsSelectionStart.first + 1)
                 * (itsSelectionEnd.second - itsSelectionStart.second + 1);
 
-        LOG_DEBUG_STR("Solution cells to process (solution grid coordinates):"
-            " [(" << itsSelectionStart.first << "," << itsSelectionStart.second
-            << "),(" << itsSelectionEnd.first << "," << itsSelectionEnd.second
-            << ")]");
+//        LOG_DEBUG_STR("Solution cells to process (solution grid coordinates):"
+//            " [(" << itsSelectionStart.first << "," << itsSelectionStart.second
+//            << "),(" << itsSelectionEnd.first << "," << itsSelectionEnd.second
+//            << ")]");
 
         // Translate the selection to coordinates relative to the start of the
         // observation grid.
@@ -149,9 +149,9 @@ void VisEquator::setCellSelection(const Location &start, const Location &end)
         itsReqEnd.first = itsEvalOffset.first + itsEvalReqEnd.first;
         itsReqEnd.second = itsEvalOffset.second + itsEvalReqEnd.second;
 
-        LOG_DEBUG_STR("Samples to process (observation grid coordinates): [("
-            << itsReqStart.first << "," << itsReqStart.second << "),("
-            << itsReqEnd.first << "," << itsReqEnd.second << ")]");
+//        LOG_DEBUG_STR("Samples to process (observation grid coordinates): [("
+//            << itsReqStart.first << "," << itsReqStart.second << "),("
+//            << itsReqEnd.first << "," << itsReqEnd.second << ")]");
 
         Grid reqGrid = itsLHS->grid().subset(itsReqStart, itsReqEnd);
         itsRHS->setEvalGrid(reqGrid);
@@ -300,11 +300,6 @@ void VisEquator::makeEvalGrid()
         findContainedCellRange(itsLHS->grid()[TIME],
             Interval<double>(domainRHS.lowerY(), domainRHS.upperY()));
 
-//    LOG_DEBUG_STR("freqCellRange: [" << freqCellRange.start << ","
-//        << freqCellRange.end << "]");
-//    LOG_DEBUG_STR("timeCellRange: [" << timeCellRange.start << ","
-//        << timeCellRange.end << "]");
-
     // Check for empty intersection between observation grid and model domain.
     if(freqCellRange.start > freqCellRange.end
         || timeCellRange.start > timeCellRange.end)
@@ -358,11 +353,6 @@ void VisEquator::makeCellMap()
     // intersect the evaluation grid.
     itsEvalStart = Location(freqDomain.start, timeDomain.start);
     itsEvalEnd = Location(freqDomain.end, timeDomain.end);
-
-//    LOG_DEBUG_STR("Domain: " << freqDomain.start << " " << freqDomain.end);
-//    LOG_DEBUG_STR("Map: " << itsFreqMap);
-//    LOG_DEBUG_STR("Domain: " << timeDomain.start << " " << timeDomain.end);
-//    LOG_DEBUG_STR("Map: " << itsTimeMap);
 }
 
 void VisEquator::makeCoeffMap()

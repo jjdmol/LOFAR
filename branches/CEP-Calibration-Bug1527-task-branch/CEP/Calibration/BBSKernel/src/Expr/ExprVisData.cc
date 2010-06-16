@@ -84,7 +84,7 @@ FlagArray ExprVisData::copyFlags(const Grid &grid, size_t element,
 {
     if(!itsCorrMask[element])
     {
-        return FlagArray(FlagType(0));
+        return FlagArray(flag_t(0));
     }
 
     FlagArray result;
@@ -95,24 +95,23 @@ FlagArray ExprVisData::copyFlags(const Grid &grid, size_t element,
     // Allocate space for the result and initialize to 1.
     const size_t nFreq = grid[FREQ]->size();
     const size_t nTime = grid[TIME]->size();
-    result = FlagArray(nFreq, nTime, FlagType(1));
+    result = FlagArray(nFreq, nTime, flag_t(1));
 
     FlagArray::iterator begin = result.begin();
 
     // Insanely complicated boost::multi_array types...
-    typedef boost::multi_array<FlagType, 4>::index_range FRange;
-    typedef boost::multi_array<FlagType, 4>::const_array_view<2>::type FSlice;
+    typedef boost::multi_array<flag_t, 4>::index_range FRange;
+    typedef boost::multi_array<flag_t, 4>::const_array_view<2>::type FSlice;
 
     // Copy flags.
     FSlice flags =
-        itsChunk->vis_flag[boost::indices[itsBaseline][FRange()][FRange()][cr]];
+        itsChunk->flags[boost::indices[itsBaseline][FRange()][FRange()][cr]];
 
     for(unsigned int t = 0; t < mapping[TIME].size(); ++t)
     {
         const pair<size_t, size_t> &tmap = mapping[TIME][t];
         FlagArray::iterator offset = begin + tmap.first * nFreq;
 
-        // TODO: Check for tslot_flag and skip if true?
         for(unsigned int f = 0; f < mapping[FREQ].size(); ++f)
         {
             const pair<size_t, size_t> &fmap = mapping[FREQ][f];
@@ -146,13 +145,13 @@ Matrix ExprVisData::copyData(const Grid &grid, size_t element,
     result.dcomplexStorage(re, im);
 
     // Insanely complicated boost::multi_array types...
-    typedef boost::multi_array<sample_t, 4>::index_range SRange;
-    typedef boost::multi_array<sample_t, 4>::const_array_view<2>::type
+    typedef boost::multi_array<dcomplex, 4>::index_range SRange;
+    typedef boost::multi_array<dcomplex, 4>::const_array_view<2>::type
         SSlice;
 
     // Copy visibility data.
     SSlice samples =
-        itsChunk->vis_data[boost::indices[itsBaseline][SRange()][SRange()][cr]];
+        itsChunk->samples[boost::indices[itsBaseline][SRange()][SRange()][cr]];
 
     for(unsigned int t = 0; t < mapping[TIME].size(); ++t)
     {
@@ -163,7 +162,7 @@ Matrix ExprVisData::copyData(const Grid &grid, size_t element,
         for(unsigned int f = 0; f < mapping[FREQ].size(); ++f)
         {
             const pair<size_t, size_t> &fmap = mapping[FREQ][f];
-            const sample_t sample = samples[tmap.second][fmap.second];
+            const dcomplex sample = samples[tmap.second][fmap.second];
 
             destRe[fmap.first] = real(sample);
             destIm[fmap.first] = imag(sample);

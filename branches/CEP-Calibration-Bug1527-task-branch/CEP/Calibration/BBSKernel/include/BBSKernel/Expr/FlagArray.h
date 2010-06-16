@@ -31,6 +31,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_algorithm.h>
+#include <BBSKernel/Types.h>
 #include <BBSKernel/Expr/RefCounting.h>
 
 namespace LOFAR
@@ -41,9 +42,9 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-// Typedef that can be used to globally change the numeric type used for flags.
-// TODO: Make a templated version of FlagArray?
-typedef uint8 FlagType;
+//// Typedef that can be used to globally change the numeric type used for flags.
+//// TODO: Make a templated version of FlagArray?
+//typedef uint8 FlagType;
 
 class FlagArray;
 class FlagArrayImplScalar;
@@ -58,8 +59,8 @@ ostream &operator<<(ostream &out, const FlagArray &obj);
 class FlagArrayImpl: public RefCountable
 {
 public:
-    typedef FlagType*       iterator;
-    typedef const FlagType* const_iterator;
+    typedef flag_t*         iterator;
+    typedef const flag_t*   const_iterator;
 
     FlagArrayImpl();
     virtual ~FlagArrayImpl();
@@ -69,8 +70,8 @@ public:
     virtual unsigned int shape(unsigned int n) const = 0;
     virtual unsigned int size() const = 0;
 
-    virtual const FlagType &value(unsigned int i0, unsigned int i1) const = 0;
-    virtual FlagType &value(unsigned int i0, unsigned int i1) = 0;
+    virtual const flag_t &value(unsigned int i0, unsigned int i1) const = 0;
+    virtual flag_t &value(unsigned int i0, unsigned int i1) = 0;
 
     virtual const_iterator begin() const = 0;
     virtual const_iterator end() const = 0;
@@ -103,10 +104,10 @@ public:
 
     // NB. This constructor is not prefixed with the "explicit" keyword, such
     // that it is possible to use literals in an expression (e.g. 3 | a).
-    FlagArrayTemporary(const FlagType &value);
+    FlagArrayTemporary(const flag_t &value);
 
     FlagArrayTemporary(unsigned int l0, unsigned int l1);
-    FlagArrayTemporary(unsigned int l0, unsigned int l1, const FlagType &value);
+    FlagArrayTemporary(unsigned int l0, unsigned int l1, const flag_t &value);
 
 private:
     FlagArrayTemporary(FlagArrayImpl *impl);
@@ -146,12 +147,12 @@ public:
     typedef FlagArrayImpl::const_iterator   const_iterator;
 
     FlagArray();
-    explicit FlagArray(const FlagType &value);
+    explicit FlagArray(const flag_t &value);
 
     // FlagArray uses a column-major memory layout (FORTRAN order) to be
     // consistent with the Matrix class.
     FlagArray(unsigned int l0, unsigned int l1);
-    FlagArray(unsigned int l0, unsigned int l1, const FlagType &value);
+    FlagArray(unsigned int l0, unsigned int l1, const flag_t &value);
 
     // Construct a FlagArray from a temporary (reference semantics).
     FlagArray(const FlagArrayTemporary &other);
@@ -164,8 +165,8 @@ public:
     // FlagArray uses a column-major memory layout (FORTRAN order) to be
     // consistent with the Matrix class. In particular, i0 (the index belonging
     // to first dimension) is the fastest running dimension.
-    const FlagType &operator()(unsigned int i0, unsigned int i1) const;
-    FlagType &operator()(unsigned int i0, unsigned int i1);
+    const flag_t &operator()(unsigned int i0, unsigned int i1) const;
+    flag_t &operator()(unsigned int i0, unsigned int i1);
 
     const_iterator begin() const;
     const_iterator end() const;
@@ -205,7 +206,7 @@ class FlagArrayImplScalar: public FlagArrayImpl
 {
 public:
     FlagArrayImplScalar();
-    explicit FlagArrayImplScalar(const FlagType &value);
+    explicit FlagArrayImplScalar(const flag_t &value);
 
     virtual FlagArrayImpl *clone() const;
 
@@ -213,8 +214,8 @@ public:
     virtual unsigned int shape(unsigned int n) const;
     virtual unsigned int size() const;
 
-    virtual const FlagType &value(unsigned int i0, unsigned int i1) const;
-    virtual FlagType &value(unsigned int i0, unsigned int i1);
+    virtual const flag_t &value(unsigned int i0, unsigned int i1) const;
+    virtual flag_t &value(unsigned int i0, unsigned int i1);
 
     virtual const_iterator begin() const;
     virtual const_iterator end() const;
@@ -235,11 +236,11 @@ public:
     virtual FlagArrayImpl *opBitWiseAnd(const FlagArrayImplMatrix &lhs,
         bool lhsTmp, bool rhsTmp) const;
 
-    const FlagType &value() const;
-    FlagType &value();
+    const flag_t &value() const;
+    flag_t &value();
 
 private:
-    FlagType    itsData;
+    flag_t  itsData;
 };
 
 // Class that holds rank 2 (matrix) flag data.
@@ -248,7 +249,7 @@ class FlagArrayImplMatrix: public FlagArrayImpl
 public:
     FlagArrayImplMatrix(unsigned int l0, unsigned int l1);
     FlagArrayImplMatrix(unsigned int l0, unsigned int l1,
-        const FlagType &value);
+        const flag_t &value);
     virtual ~FlagArrayImplMatrix();
 
     FlagArrayImplMatrix(const FlagArrayImplMatrix &other);
@@ -258,8 +259,8 @@ public:
     virtual unsigned int shape(unsigned int n) const;
     virtual unsigned int size() const;
 
-    virtual const FlagType &value(unsigned int i0, unsigned int i1) const;
-    virtual FlagType &value(unsigned int i0, unsigned int i1);
+    virtual const flag_t &value(unsigned int i0, unsigned int i1) const;
+    virtual flag_t &value(unsigned int i0, unsigned int i1);
 
     virtual const_iterator begin() const;
     virtual const_iterator end() const;
@@ -281,9 +282,9 @@ public:
         bool lhsTmp, bool rhsTmp) const;
 
 private:
-    unsigned int        itsShape[2];
-    unsigned int        itsSize;
-    FlagType            *itsData;
+    unsigned int    itsShape[2];
+    unsigned int    itsSize;
+    flag_t          *itsData;
 };
 
 // @}
@@ -310,7 +311,7 @@ inline FlagArrayTemporary::FlagArrayTemporary()
 {
 }
 
-inline FlagArrayTemporary::FlagArrayTemporary(const FlagType &value)
+inline FlagArrayTemporary::FlagArrayTemporary(const flag_t &value)
     :   RefCounted<FlagArrayImpl>(new FlagArrayImplScalar(value))
 {
 }
@@ -322,7 +323,7 @@ inline FlagArrayTemporary::FlagArrayTemporary(unsigned int l0,
 }
 
 inline FlagArrayTemporary::FlagArrayTemporary(unsigned int l0,
-    unsigned int l1, const FlagType &value)
+    unsigned int l1, const flag_t &value)
     :   RefCounted<FlagArrayImpl>(new FlagArrayImplMatrix(l0, l1, value))
 {
 }
@@ -393,7 +394,7 @@ inline FlagArray::FlagArray()
 {
 }
 
-inline FlagArray::FlagArray(const FlagType &value)
+inline FlagArray::FlagArray(const flag_t &value)
     :   RefCounted<FlagArrayImpl>(new FlagArrayImplScalar(value))
 {
 }
@@ -404,7 +405,7 @@ inline FlagArray::FlagArray(unsigned int l0, unsigned int l1)
 }
 
 inline FlagArray::FlagArray(unsigned int l0, unsigned int l1,
-    const FlagType &value)
+    const flag_t &value)
     :   RefCounted<FlagArrayImpl>(new FlagArrayImplMatrix(l0, l1, value))
 {
 }
@@ -439,13 +440,13 @@ inline unsigned int FlagArray::size() const
     return instance().size();
 }
 
-inline const FlagType &FlagArray::operator()(unsigned int i0, unsigned int i1)
+inline const flag_t &FlagArray::operator()(unsigned int i0, unsigned int i1)
     const
 {
     return instance().value(i0, i1);
 }
 
-inline FlagType &FlagArray::operator()(unsigned int i0, unsigned int i1)
+inline flag_t &FlagArray::operator()(unsigned int i0, unsigned int i1)
 {
     return instance().value(i0, i1);
 }
@@ -499,7 +500,7 @@ inline FlagArrayImplScalar::FlagArrayImplScalar()
 {
 }
 
-inline FlagArrayImplScalar::FlagArrayImplScalar(const FlagType &value)
+inline FlagArrayImplScalar::FlagArrayImplScalar(const flag_t &value)
     :   FlagArrayImpl(),
         itsData(value)
 {
@@ -525,13 +526,13 @@ inline unsigned int FlagArrayImplScalar::size() const
     return 1;
 }
 
-inline const FlagType &FlagArrayImplScalar::value(unsigned int, unsigned int)
+inline const flag_t &FlagArrayImplScalar::value(unsigned int, unsigned int)
     const
 {
     return itsData;
 }
 
-inline FlagType &FlagArrayImplScalar::value(unsigned int, unsigned int)
+inline flag_t &FlagArrayImplScalar::value(unsigned int, unsigned int)
 {
     return itsData;
 }
@@ -569,12 +570,12 @@ FlagArrayImpl *FlagArrayImplScalar::opBitWiseAnd(const FlagArrayImpl &rhs,
     return rhs.opBitWiseAnd(*this, lhsTmp, rhsTmp);
 }
 
-inline const FlagType &FlagArrayImplScalar::value() const
+inline const flag_t &FlagArrayImplScalar::value() const
 {
     return itsData;
 }
 
-inline FlagType &FlagArrayImplScalar::value()
+inline flag_t &FlagArrayImplScalar::value()
 {
     return itsData;
 }
@@ -594,12 +595,12 @@ inline FlagArrayImplMatrix::FlagArrayImplMatrix(unsigned int l0,
 
     if(itsSize > 0)
     {
-        itsData = new FlagType[itsSize];
+        itsData = new flag_t[itsSize];
     }
 }
 
 inline FlagArrayImplMatrix::FlagArrayImplMatrix(unsigned int l0,
-    unsigned int l1, const FlagType &value)
+    unsigned int l1, const flag_t &value)
     :   FlagArrayImpl(),
         itsSize(l0 * l1),
         itsData(0)
@@ -609,7 +610,7 @@ inline FlagArrayImplMatrix::FlagArrayImplMatrix(unsigned int l0,
 
     if(itsSize > 0)
     {
-        itsData = new FlagType[itsSize];
+        itsData = new flag_t[itsSize];
         fill(begin(), end(), value);
     }
 }
@@ -627,7 +628,7 @@ inline FlagArrayImplMatrix::FlagArrayImplMatrix
     copy(other.itsShape, other.itsShape + 2, itsShape);
     if(itsSize > 0)
     {
-        itsData = new FlagType[itsSize];
+        itsData = new flag_t[itsSize];
         copy(other.itsData, other.itsData + other.itsSize, itsData);
     }
 }
@@ -653,14 +654,14 @@ inline unsigned int FlagArrayImplMatrix::size() const
     return itsSize;
 }
 
-inline const FlagType &FlagArrayImplMatrix::value(unsigned int i0,
+inline const flag_t &FlagArrayImplMatrix::value(unsigned int i0,
     unsigned int i1) const
 {
     DBGASSERT(i0 < shape(0) && i1 < shape(1));
     return itsData[i0 + shape(0) * i1];
 }
 
-inline FlagType &FlagArrayImplMatrix::value(unsigned int i0, unsigned int i1)
+inline flag_t &FlagArrayImplMatrix::value(unsigned int i0, unsigned int i1)
 {
     DBGASSERT(i0 < shape(0) && i1 < shape(1));
     return itsData[i0 + shape(0) * i1];

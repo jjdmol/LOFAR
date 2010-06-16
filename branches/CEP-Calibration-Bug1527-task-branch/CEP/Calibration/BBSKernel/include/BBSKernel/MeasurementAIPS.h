@@ -50,20 +50,26 @@ public:
 
     virtual VisDimensions dimensions(const VisSelection &selection) const;
 
-    virtual VisBuffer::Ptr read(const VisSelection &selection,
-        const string &column = "DATA", bool readUVW = true) const;
+    virtual VisBuffer::Ptr read(const VisSelection &selection = VisSelection(),
+        const string &column = "DATA") const;
 
-    virtual void write(const VisSelection &selection, VisBuffer::Ptr buffer,
-        const string &column = "CORRECTED_DATA", bool writeFlags = true);
+    virtual void write(VisBuffer::Ptr buffer,
+        const VisSelection &selection = VisSelection(),
+        const string &column = "CORRECTED_DATA", bool writeFlags = true,
+        flag_t flagMask = ~flag_t(0));
 
 private:
     void initInstrument();
     void initPhaseReference();
     void initDimensions();
 
+    bool hasColumn(const string &column) const;
+    void addDataColumn(const string &column);
+
     casa::Table getTableSelection(const casa::Table &table,
-        const VisSelection &selection, const BaselineMask &mask) const;
+        const VisSelection &selection) const;
     casa::TableExprNodeSet getStationSetExpr(const BaselineMask &mask) const;
+    BaselineMask getBaselineMask(const VisSelection &selection) const;
     casa::Slicer getCellSlicer(const VisSelection &selection) const;
     VisDimensions getDimensionsImpl(const casa::Table tab_selection,
         const BaselineMask &mask, const casa::Slicer slicer) const;

@@ -98,13 +98,6 @@ namespace LOFAR
       // Make \a parent the parent of this step.
       void setParent(const Step* parent) { itsParent = parent; }
 
-//      // Return the selection of baselines for this step.
-//      Baselines baselines() const { return itsBaselines; }
-
-//      // Return which correlation products should be used for this step.
-//      CorrelationFilter correlation() const
-//      { return itsCorrelationFilter; }
-
       // Return the data selection.
       Selection selection() const { return itsSelection; }
 
@@ -142,14 +135,8 @@ namespace LOFAR
       // object with those of its parent.
       const Step*       itsParent;
 
+      // Data selection.
       Selection         itsSelection;
-
-//      // Selection of baselines for this step.
-//      Baselines         itsBaselines;
-
-//      // Parameters describing which correlation products for which
-//      // polarizations should be used for this step.
-//      CorrelationFilter itsCorrelationFilter;
 
       // Model configuration options as specified in the parameter set file.
       ModelConfig       itsModelConfig;

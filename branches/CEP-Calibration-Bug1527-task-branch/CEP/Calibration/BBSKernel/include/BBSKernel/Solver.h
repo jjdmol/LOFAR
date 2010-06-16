@@ -198,8 +198,6 @@ bool Solver::iterate(T_OUTPUT_ITER out)
         const size_t cellId = it->first;
         Cell &cell = it->second;
 
-        ASSERT(cell.solver.nUnknowns() > 0);
-
         // Get some statistics from the solver. Note that the chi squared is
         // valid for the _previous_ iteration. The solver cannot compute the
         // chi squared directly after an iteration, because it needs the new

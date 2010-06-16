@@ -44,10 +44,6 @@ public:
 
     PointSource(const SourceInfo &source, Scope &scope);
 
-//    PointSource(const string &name, const Expr<Vector<2> >::ConstPtr &position,
-//        const Expr<Vector<4> >::ConstPtr &stokes);
-
-//    Expr<Vector<4> >::ConstPtr getStokesVector() const;
     Expr<JonesMatrix>::Ptr coherence(const Expr<Vector<3> >::ConstPtr&,
         const Expr<Vector<3> >::ConstPtr&) const;
 
@@ -57,15 +53,6 @@ private:
 };
 
 // @}
-
-// -------------------------------------------------------------------------- //
-// - PointSource implementation                                             - //
-// -------------------------------------------------------------------------- //
-
-//inline Expr<Vector<4> >::ConstPtr PointSource::getStokesVector() const
-//{
-//    return itsStokesVector;
-//}
 
 } // namespace BBS
 } // namespace LOFAR
