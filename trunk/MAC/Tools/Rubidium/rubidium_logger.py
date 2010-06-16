@@ -151,8 +151,7 @@ def daemonize(logfile):
         # 5. change the working directory
         os.chdir("/")
 
-        print "closing stdout; from this moment on, any errors will be sent to the syslog."
-
+        # 6. closing stdout; from this moment on, any errors will be sent to the syslog.
         # 6a. flush stdout and stderr
         sys.stdout.flush()
         sys.stderr.flush()
