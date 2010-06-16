@@ -99,7 +99,7 @@ class MSWindow : public Gtk::Window {
 		}
 		TimeFrequencyMetaDataCPtr TimeFrequencyMetaData()
 		{
-			return _metaData;
+			return _timeFrequencyWidget.GetMetaData();
 		}
 		rfiStrategy::Strategy &Strategy() const { return *_strategy; }
 		void SetStrategy(rfiStrategy::Strategy *newStrategy) { _strategy = newStrategy; }
@@ -207,7 +207,6 @@ class MSWindow : public Gtk::Window {
 		std::vector<Gtk::Window*> _subWindows;
 		class ImagePlaneWindow *_imagePlaneWindow;
 
-		TimeFrequencyMetaDataCPtr _metaData;
 		class RFIStatistics *_statistics;
 		
 		rfiStrategy::ImageSet *_imageSet;

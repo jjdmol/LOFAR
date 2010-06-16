@@ -22,6 +22,8 @@
 
 #include <AOFlagger/rfi/strategy/spatialmsimageset.h>
 
+#include <AOFlagger/rfi/eigenvalue.h>
+
 namespace rfiStrategy {
 	void SpatialCompositionAction::Perform(ArtifactSet &artifacts, ProgressListener &progress)
 	{
@@ -42,8 +44,14 @@ namespace rfiStrategy {
 			{
 				switch(_operation)
 				{
-					case SumOperation:
-						images[p]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), sum(data->GetImage(p)));
+					case SumCrossCorrelationsOperation:
+						images[p]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), sumCrossCorrelations(data->GetImage(p)));
+						break;
+					case EigenvalueDecompositionOperation:
+						num_t value = eigenvalue(data->GetImage(p), data->GetImage(p+1));
+						images[p]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), value);
+						images[p+1]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), 0.0);
+						++p;
 						break;
 				}
 			}
@@ -71,15 +79,21 @@ namespace rfiStrategy {
 
 	}
 
-	num_t SpatialCompositionAction::sum(Image2DCPtr image) const
+	num_t SpatialCompositionAction::sumCrossCorrelations(Image2DCPtr image) const
 	{
 		num_t sum = 0;
 		for(size_t y=0;y<image->Height();++y)
 		{
-			for(size_t x=0;x<(image->Height() - y - 1);++x)
+			for(size_t x=0;x<y;++x)
 				sum += image->Value(x, y);
 		}
 		return sum;
+	}
+
+	num_t SpatialCompositionAction::eigenvalue(Image2DCPtr real, Image2DCPtr imaginary) const
+	{
+		num_t ev = Eigenvalue::Compute(real, imaginary);
+		return ev;
 	}
 }
 

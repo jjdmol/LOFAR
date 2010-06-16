@@ -105,7 +105,7 @@ const TimeFrequencyData TimeFrequencyWidget::getDifference() const
 	return TimeFrequencyData(TimeFrequencyData::AmplitudePart, SinglePolarisation, image);
 }
 
-void TimeFrequencyWidget::Update() throw()
+void TimeFrequencyWidget::Update()
 {
 	if(_hasImage)
 	{
@@ -275,7 +275,7 @@ void TimeFrequencyWidget::redraw()
 	}
 }
 
-void TimeFrequencyWidget::ClearBackground() throw()
+void TimeFrequencyWidget::ClearBackground()
 {
 	_revised.SetImagesToZero();
 }
