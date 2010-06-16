@@ -64,6 +64,7 @@ set(RFI_STRATEGY_FILES
 
 set(RFI_FILES
   rfi/antennaflagcountplot.cpp
+  rfi/eigenvalue.cpp
   rfi/frequencyflagcountplot.cpp
   rfi/frequencypowerplot.cpp
   rfi/fringestoppingfitter.cpp

@@ -310,7 +310,7 @@ void MSWindow::onExecuteStrategyPressed()
 	{
 		if(dynamic_cast<rfiStrategy::MSImageSet*>(_imageSet) != 0)
 		{
-			artifacts.SetMetaData(_metaData);
+			artifacts.SetMetaData(_timeFrequencyWidget.GetMetaData());
 			artifacts.SetImageSet(_imageSet);
 			artifacts.SetImageSetIndex(_imageSetIndex);
 		}
@@ -415,7 +415,7 @@ void MSWindow::openTestSet(unsigned index)
 	TimeFrequencyData data(SinglePolarisation, testSetReal, testSetImaginary);
 	data.SetGlobalMask(rfi);
 	
-	_timeFrequencyWidget.SetNewData(data, _metaData);
+	_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
 	_timeFrequencyWidget.Update();
 }
 
@@ -745,7 +745,7 @@ void MSWindow::onDifferenceToOriginalPressed()
 	if(HasImage())
 	{
 		TimeFrequencyData data(_timeFrequencyWidget.ContaminatedData());
-		_timeFrequencyWidget.SetNewData(data, _metaData);
+		_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
 	}
 	if(_originalImageButton->get_active())
 		_timeFrequencyWidget.Update();
@@ -759,7 +759,7 @@ void MSWindow::onBackgroundToOriginalPressed()
 	{
 		TimeFrequencyData data(_timeFrequencyWidget.RevisedData());
 		_timeFrequencyWidget.ClearBackground();
-		_timeFrequencyWidget.SetNewData(data, _metaData);
+		_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
 	}
 	if(_originalImageButton->get_active())
 		_timeFrequencyWidget.Update();
@@ -801,7 +801,7 @@ void MSWindow::onAdd1SigmaFringe()
 			TimeFrequencyData data(GetActiveData());
 			ThresholdTools::MeanAndStdDev(data.GetRealPart(), data.GetSingleMask(), mean, stddev);
 			FringeTestCreater::AddStaticFringe(data, metaData, stddev);
-			_timeFrequencyWidget.SetNewData(data, _metaData);
+			_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
 			_timeFrequencyWidget.Update();
 		}
 	} catch(std::exception &e)
@@ -866,16 +866,18 @@ void MSWindow::onPlotPowerSpectrumPressed()
 	{
 		Plot plot("power-spectrum.pdf");
 
+		TimeFrequencyData data = _timeFrequencyWidget.GetActiveData();
+		Image2DCPtr image = data.GetSingleImage();
 		Mask2DPtr mask =
-			Mask2D::CreateSetMaskPtr<false>(_timeFrequencyWidget.Image()->Width(), _timeFrequencyWidget.Image()->Height());
-		plot.StartLine("Before");		
-		RFIPlots::MakePowerSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask, *_metaData);
+			Mask2D::CreateSetMaskPtr<false>(image->Width(), image->Height());
+		plot.StartLine("Before");
+		RFIPlots::MakePowerSpectrumPlot(plot, image, mask, *_timeFrequencyWidget.GetMetaData());
 
-		mask = Mask2D::CreateCopy(_timeFrequencyWidget.GetActiveData().GetSingleMask());
+		mask = Mask2D::CreateCopy(data.GetSingleMask());
 		if(!mask->AllFalse())
 		{
 			plot.StartLine("After");
-			RFIPlots::MakePowerSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask, *_metaData);
+			RFIPlots::MakePowerSpectrumPlot(plot, image, mask, *_timeFrequencyWidget.GetMetaData());
 	
 			//mask->Invert();
 			//plot.StartLine("RFI");
@@ -1021,7 +1023,7 @@ void MSWindow::onPlotSNRToFitVariance()
 	bool relative = false;
 
 	FringeStoppingFitter fitter;
-	fitter.SetMetaData(_metaData);
+	fitter.SetMetaData(_timeFrequencyWidget.GetMetaData());
 	
 	Plot
 		plotA("/tmp/snrplot-a.pdf"),
@@ -1176,7 +1178,7 @@ void MSWindow::showPhasePart(enum TimeFrequencyData::PhaseRepresentation phaseRe
 	if(HasImage())
 	{
 		TimeFrequencyData *newPart =  _timeFrequencyWidget.GetActiveData().CreateTFData(phaseRepresentation);
-		_timeFrequencyWidget.SetNewData(*newPart, _metaData);
+		_timeFrequencyWidget.SetNewData(*newPart, _timeFrequencyWidget.GetMetaData());
 		delete newPart;
 		_timeFrequencyWidget.Update();
 	}
@@ -1188,7 +1190,7 @@ void MSWindow::showPolarisation(enum PolarisationType polarisation)
 	{
 		TimeFrequencyData *newData =
 			_timeFrequencyWidget.GetActiveData().CreateTFData(polarisation);
-		_timeFrequencyWidget.SetNewData(*newData, _metaData);
+		_timeFrequencyWidget.SetNewData(*newData, _timeFrequencyWidget.GetMetaData());
 		delete newData;
 		_timeFrequencyWidget.Update();
 	}
@@ -1206,7 +1208,7 @@ void MSWindow::onGoToPressed()
 
 bool MSWindow::onTFWidgetMotion(GdkEventMotion* event)
 {
-	if(HasImage() && _metaData != 0)
+	if(HasImage() && _timeFrequencyWidget.GetMetaData() != 0)
 	{
 		Image2DCPtr image = _timeFrequencyWidget.Image();
 		size_t posX = (size_t) roundl((long double) event->x * image->Width() / _timeFrequencyWidget.get_width() - 0.5L);
@@ -1217,9 +1219,9 @@ bool MSWindow::onTFWidgetMotion(GdkEventMotion* event)
 		_statusbar.pop();
 		std::stringstream s;
 		s << "x=" << posX << ",y=" << posY << ",value=" << v;
-		const std::vector<double> &times = _metaData->ObservationTimes();
+		const std::vector<double> &times = _timeFrequencyWidget.GetMetaData()->ObservationTimes();
 		s << " (t=" << Date::AipsMJDToString(times[posX]) <<
-		", f=" << Frequency::ToString(_metaData->Band().channels[posY].frequencyHz)
+		", f=" << Frequency::ToString(_timeFrequencyWidget.GetMetaData()->Band().channels[posY].frequencyHz)
 		<< ")";
 		_statusbar.push(s.str(), 0);
 	}
@@ -1235,8 +1237,8 @@ void MSWindow::onShowImagePlane()
 void MSWindow::onAddToImagePlane()
 {
 	try {
-		if(_metaData != 0)
-			_imagePlaneWindow->AddData(GetActiveData(), _metaData);
+		if(_timeFrequencyWidget.GetMetaData() != 0)
+			_imagePlaneWindow->AddData(GetActiveData(), _timeFrequencyWidget.GetMetaData());
 		else if(_spatialMetaData != 0)
 			_imagePlaneWindow->AddData(GetActiveData(), _spatialMetaData);
 		else
@@ -1251,7 +1253,7 @@ void MSWindow::onMultiplyData()
 {
 	TimeFrequencyData data(GetActiveData());
 	data.MultiplyImages(2.0L);
-	_timeFrequencyWidget.SetNewData(data, _metaData);
+	_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
 	_timeFrequencyWidget.Update();
 }
 
@@ -1343,7 +1345,7 @@ void MSWindow::onUnrollPhaseButtonPressed()
 			ThresholdTools::UnrollPhase(image);
 			data->SetImage(i, image);
 		}
-		_timeFrequencyWidget.SetNewData(*data, _metaData);
+		_timeFrequencyWidget.SetNewData(*data, _timeFrequencyWidget.GetMetaData());
 		_timeFrequencyWidget.Update();
 		delete data;
 	}

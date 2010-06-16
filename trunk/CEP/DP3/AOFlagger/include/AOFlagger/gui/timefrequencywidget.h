@@ -40,11 +40,11 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		~TimeFrequencyWidget();
 		void SetNewData(const class TimeFrequencyData &image, TimeFrequencyMetaDataCPtr metaData);
 		void Init();
-		void SetShowOriginalFlagging(bool newValue) throw() { _showOriginalFlagging = newValue; }
-		void SetShowAlternativeFlagging(bool newValue) throw() { _showAlternativeFlagging = newValue; }
-		void SetColorMap(TFMap colorMap) throw() { _colorMap = colorMap; }
-		void Update() throw(); 
-		void AddAlternativeFlagging(Mask2DCPtr mask) throw();
+		void SetShowOriginalFlagging(bool newValue) { _showOriginalFlagging = newValue; }
+		void SetShowAlternativeFlagging(bool newValue) { _showAlternativeFlagging = newValue; }
+		void SetColorMap(TFMap colorMap) { _colorMap = colorMap; }
+		void Update(); 
+		void AddAlternativeFlagging(Mask2DCPtr mask);
 		Image2DCPtr Image() { return _image; }
 
 		TimeFrequencyData GetActiveData() const
@@ -85,13 +85,13 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		{
 			_contaminated = data;
 		} 
-		void SetVisualizedImage(TFImage visualizedImage) throw() { _visualizedImage = visualizedImage; }
-		void ClearBackground() throw();
+		void SetVisualizedImage(TFImage visualizedImage) { _visualizedImage = visualizedImage; }
+		void ClearBackground();
 
-		Mask2DCPtr Mask() const throw() { return _mask; }
-		void SetHighlighting(bool newValue) throw() { _highlighting = newValue; }
-		class ThresholdConfig &HighlightConfig() throw() { return *_highlightConfig; }
-		bool HasImage() const throw() { return _hasImage; }
+		Mask2DCPtr Mask() const { return _mask; }
+		void SetHighlighting(bool newValue) { _highlighting = newValue; }
+		class ThresholdConfig &HighlightConfig() { return *_highlightConfig; }
+		bool HasImage() const { return _hasImage; }
 		void SetTimeDomain(size_t startTime, size_t endTime)
 		{
 			_startTime = startTime;
@@ -102,11 +102,12 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 			_startFrequency = startFrequency;
 			_endFrequency = endFrequency;
 		}
-		size_t StartTime() const throw() { return _startTime; }
-		size_t EndTime() const throw() { return _endTime; }
-		size_t StartFrequency() const throw() { return _startFrequency; }
-		size_t EndFrequency() const throw() { return _endFrequency; }
+		size_t StartTime() const { return _startTime; }
+		size_t EndTime() const { return _endTime; }
+		size_t StartFrequency() const { return _startFrequency; }
+		size_t EndFrequency() const { return _endFrequency; }
 		void SetSegmentedImage(SegmentedImageCPtr segmentedImage) { _segmentedImage = segmentedImage; }
+		TimeFrequencyMetaDataCPtr GetMetaData() { return _metaData; }
 	private:
 		void Clear();
 		void findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max);
