@@ -124,6 +124,7 @@ namespace rfiStrategy {
 			}
 
 			virtual std::string Name() { return "Combined set"; }
+			virtual std::string File() { return ""; }
 
 			virtual TimeFrequencyData *LoadData(ImageSetIndex &index)
 			{

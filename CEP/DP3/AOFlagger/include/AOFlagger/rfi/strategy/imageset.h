@@ -106,6 +106,7 @@ namespace rfiStrategy {
 			 */
 			virtual void Initialize() = 0;
 			virtual std::string Name() = 0;
+			virtual std::string File() = 0;
 			virtual TimeFrequencyData *LoadData(ImageSetIndex &index) = 0;
 			virtual void LoadFlags(ImageSetIndex &index, TimeFrequencyData &destination) = 0;
 			//virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index) = 0;

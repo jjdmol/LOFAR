@@ -232,7 +232,7 @@ void MSWindow::loadCurrentTFData()
 			}
 			if(dynamic_cast<rfiStrategy::SpatialMSImageSet*>(_imageSet) != 0)
 			{
-				_spatialMetaData = new SpatialMatrixMetaData(static_cast<rfiStrategy::SpatialMSImageSet*>(_imageSet)->SpatialMetaData());
+				_spatialMetaData = new SpatialMatrixMetaData(static_cast<rfiStrategy::SpatialMSImageSet*>(_imageSet)->SpatialMetaData(*_imageSetIndex));
 			}
 			_timeFrequencyWidget.Update();
 			_statusbar.pop();

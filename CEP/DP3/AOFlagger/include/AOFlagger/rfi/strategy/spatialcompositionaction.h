@@ -17,10 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef RFISTRATEGYIMAGERACTION_H
-#define RFISTRATEGYIMAGERACTION_H
-
-#include <boost/thread.hpp>
+#ifndef SPATIALCOMPOSITIONACTION_H
+#define SPATIALCOMPOSITIONACTION_H
 
 #include "action.h"
 #include "artifactset.h"
@@ -30,42 +28,30 @@ namespace rfiStrategy {
 	/**
 		@author A.R. Offringa <offringa@astro.rug.nl>
 	*/
-	class ImagerAction : public Action {
+	class SpatialCompositionAction : public Action {
 		public:
-			enum ImagingType {
-				Set, Add, Subtract
-			};
+			enum Operation { SumOperation } ;
 
-			ImagerAction() : _type(Add)
+			SpatialCompositionAction() : _operation(SumOperation)
 			{
 			}
-			virtual ~ImagerAction()
+			virtual ~SpatialCompositionAction()
 			{
 			}
 			virtual std::string Description()
 			{
-				switch(_type)
-				{
-					case Set:
-					return "Image (set)";
-					case Add:
-					default:
-					return "Image (add)";
-					case Subtract:
-					return "Image (subtract)";
-				}
+				return "Spatial composition";
 			}
 			virtual void Perform(ArtifactSet &artifacts, ProgressListener &progress);
 
-			virtual ActionType Type() const { return ImagerActionType; }
-			enum ImagingType ImagingType() const { return _type; }
-			void SetImagingType(enum ImagingType type) throw() { _type = type; }
+			virtual ActionType Type() const { return SpatialCompositionActionType; }
 
 		private:
-			enum ImagingType _type;
-			boost::mutex _imagerMutex;
+			enum Operation _operation;
+
+			num_t sum(Image2DCPtr image) const;
 	};
 
 }
 
-#endif
+#endif // SPATIALCOMPOSITIONACTION_H

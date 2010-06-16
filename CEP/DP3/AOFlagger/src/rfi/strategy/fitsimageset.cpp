@@ -366,4 +366,9 @@ namespace rfiStrategy {
 		std::cout << "Loaded metadata for: " << Date::AipsMJDToString(_observationTimes[0]) << ", band " << fitsIndex._band << " (" << Frequency::ToString(_bandInfos[fitsIndex._band].channels[0].frequencyHz) << " - " << Frequency::ToString(_bandInfos[fitsIndex._band].channels.rbegin()->frequencyHz) << ")" << std::endl;
 		return TimeFrequencyMetaDataCPtr(metaData);
 	}
+
+	std::string FitsImageSet::File()
+	{
+		return _file->Filename();
+	}
 }
