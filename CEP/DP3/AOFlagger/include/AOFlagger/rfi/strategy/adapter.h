@@ -100,6 +100,10 @@ namespace rfiStrategy {
 					}
 				}
 			}
+			void SetRestoreOriginals(bool restoreOriginals)
+			{
+				_restoreOriginals = restoreOriginals;
+			}
 		private:
 			bool _restoreOriginals;
 	};

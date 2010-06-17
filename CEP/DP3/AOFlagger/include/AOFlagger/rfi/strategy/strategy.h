@@ -55,6 +55,7 @@ namespace rfiStrategy {
 			static void SetFittingWindowSize(Strategy &strategy, size_t windowWidth, size_t windowHeight);
 			static void SetFittingKernelSize(Strategy &strategy, num_t kernelWidth, num_t kernelHeight);
 			static void SetFlagStokes(Strategy &strategy, bool newValue);
+			static void DisableOptimizations(Strategy &strategy);
 			
 			void InitializeAll();
 			void FinishAll();
