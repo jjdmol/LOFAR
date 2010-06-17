@@ -30,9 +30,9 @@ namespace rfiStrategy {
 	*/
 	class SpatialCompositionAction : public Action {
 		public:
-			enum Operation { SumCrossCorrelationsOperation, EigenvalueDecompositionOperation } ;
+			enum Operation { SumCrossCorrelationsOperation, SumAutoCorrelationsOperation, EigenvalueDecompositionOperation } ;
 
-			SpatialCompositionAction() : _operation(EigenvalueDecompositionOperation)
+			SpatialCompositionAction() : _operation(EigenvalueDecompositionOperation), _eigenValueIndex(0)
 			{
 			}
 			virtual ~SpatialCompositionAction()
@@ -40,17 +40,28 @@ namespace rfiStrategy {
 			}
 			virtual std::string Description()
 			{
-				return "Spatial composition";
+				switch(_operation)
+				{
+					case SumCrossCorrelationsOperation:
+						return "Spatial composition (cross)";
+					case SumAutoCorrelationsOperation:
+						return "Spatial composition (auto)";
+					case EigenvalueDecompositionOperation:
+						return "Spatial composition (eigenvalue)";
+				}
 			}
 			virtual void Perform(ArtifactSet &artifacts, ProgressListener &progress);
 
 			virtual ActionType Type() const { return SpatialCompositionActionType; }
 
+			enum Operation Operation() const { return _operation; }
+			void SetOperation(enum Operation operation) { _operation = operation; }
 		private:
 			enum Operation _operation;
 			size_t _eigenValueIndex;
 
 			num_t sumCrossCorrelations(Image2DCPtr image) const;
+			num_t sumAutoCorrelations(Image2DCPtr image) const;
 			num_t eigenvalue(Image2DCPtr real, Image2DCPtr imaginary) const;
 	};
 

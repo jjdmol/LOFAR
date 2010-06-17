@@ -42,6 +42,7 @@
 #include <AOFlagger/gui/strategyframes/setflaggingframe.h>
 #include <AOFlagger/gui/strategyframes/setimageframe.h>
 #include <AOFlagger/gui/strategyframes/slidingwindowfitframe.h>
+#include <AOFlagger/gui/strategyframes/spatialcompositionframe.h>
 #include <AOFlagger/gui/strategyframes/statisticalflaggingframe.h>
 #include <AOFlagger/gui/strategyframes/svdframe.h>
 #include <AOFlagger/gui/strategyframes/thresholdframe.h>
@@ -281,6 +282,9 @@ void EditStrategyWindow::onSelectionChanged()
 				break;
 			case SetFlaggingActionType:
 				showRight(new SetFlaggingFrame(*static_cast<rfiStrategy::SetFlaggingAction*>(selectedAction), *this));
+				break;
+			case SpatialCompositionActionType:
+				showRight(new SpatialCompositionFrame(*static_cast<rfiStrategy::SpatialCompositionAction*>(selectedAction), *this));
 				break;
 			case StatisticalFlagActionType:
 				showRight(new StatisticalFlaggingFrame(*static_cast<rfiStrategy::StatisticalFlagAction*>(selectedAction), *this));

@@ -47,6 +47,9 @@ namespace rfiStrategy {
 					case SumCrossCorrelationsOperation:
 						images[p]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), sumCrossCorrelations(data->GetImage(p)));
 						break;
+					case SumAutoCorrelationsOperation:
+						images[p]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), sumAutoCorrelations(data->GetImage(p)));
+						break;
 					case EigenvalueDecompositionOperation:
 						num_t value = eigenvalue(data->GetImage(p), data->GetImage(p+1));
 						images[p]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), value);
@@ -90,10 +93,21 @@ namespace rfiStrategy {
 		return sum;
 	}
 
+	num_t SpatialCompositionAction::sumAutoCorrelations(Image2DCPtr image) const
+	{
+		num_t sum = 0;
+		for(size_t y=0;y<image->Height();++y)
+		{
+			sum += image->Value(y, y);
+		}
+		return sum;
+	}
+	
 	num_t SpatialCompositionAction::eigenvalue(Image2DCPtr real, Image2DCPtr imaginary) const
 	{
 		num_t ev = Eigenvalue::Compute(real, imaginary);
 		return ev;
 	}
+	
 }
 
