@@ -41,6 +41,9 @@ namespace BBS
 // This exception is thrown when an error occurs in the BBS kernel part.
 EXCEPTION_CLASS(BBSKernelException, LOFAR::Exception);
 
+// This exception is thrown when an error occurs in the solver
+EXCEPTION_CLASS(BBSSolverException, LOFAR::Exception);
+	
 // @}
 
 } // namespace BBS

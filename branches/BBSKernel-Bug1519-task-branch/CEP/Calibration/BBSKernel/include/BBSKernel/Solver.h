@@ -25,6 +25,9 @@
 
 #include <BBSKernel/SolverInterfaceTypes.h>
 #include <Common/LofarTypes.h>
+#include <ParmDB/ParmDBLog.h>
+#include <ParmDB/Box.h>
+#include <ParmDB/Grid.h>
 
 #include <scimath/Fitting/LSQFit.h>
 
@@ -64,6 +67,9 @@ public:
 
     // Perform an iteration for all available cells.
     bool iterate(vector<CellSolution> &global);
+    
+	// Perform an iteration for all available cells and allow logging of solver parameters to ParmDBLog
+//    bool iterate(vector<CellSolution> &global, ParmDBLog &logger, Grid &SolGrid);
 
 	 // Get maxIter from the Solver object
 //	 inline size_t getMaxIter() { return itsMaxIter; };

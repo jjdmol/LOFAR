@@ -176,12 +176,6 @@ namespace LOFAR
           return false;
         }
 
-		  // Don't need this: Solver object knows about maxIter
-// 		  string maxIterString = ps->getString("MaxIter");  
-// 		  uint32 maxIter=atoi(maxIterString.c_str());		// convert string to integer
-// 		  cout << "maxIter = " << maxIter << endl;			// DEBUG
-
-
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
           ps->getString("BBDB.Name"),
@@ -723,7 +717,7 @@ namespace LOFAR
           controller.init(command.parms(), command.exclParms(), evalGrid,
             solGrid, cellChunkSize, command.propagate());
 
-			 cout << "Calling KernelProcessControl.run(*itsParmLogger)";
+		  LOG_DEBUG_STR("Calling KernelProcessControl.run(*itsParmLogger)");
           controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
         }
       } catch(Exception &ex) {

@@ -29,6 +29,7 @@
 #include <Common/lofar_string.h>
 
 #include <scimath/Fitting/LSQFit.h>
+#include <casa/Arrays/Array.h>						// casa::Array to store correlation matrix
 
 
 namespace LOFAR
@@ -174,17 +175,18 @@ public:
         : id(id)
     {}
 
-    uint32          id;
-    vector<double>  coeff;
-    uint32          result;
-    string          resultText;
-    uint32	        rankDeficiency;
-    uint32          rank;
-    uint32	    	  niter;
-	 uint32			  maxIter;
-    bool	    		  maxIterReached;
-    double          chiSqr;
-    double          lmFactor;
+    uint32          id;								// Cell id
+    vector<double>  coeff;							// Solution coefficients
+    uint32          result;							// result from solver
+    string          resultText;						// corresponding result text from solver
+    uint32	        rankDeficiency;					// rank deficiency of eqn matrix
+    uint32          rank;							// rank of eqn matrix
+    uint32	     	niter;							// number of iterations performed
+	uint32			maxIter;						// maximum number of iterations
+    bool	    	maxIterReached;					// have maximum No. of iterations reached
+    double          chiSqr;							// chi squared factor
+    double          lmFactor;						// Leuvenberg-Marquardt factor
+    casa::Array<casa::Double> CorrMatrix;			// correlation matrix of solution
 };
 
 // BlobStream I/O

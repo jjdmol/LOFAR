@@ -24,8 +24,7 @@
 #include <lofar_config.h>
 #include <BBSControl/LocalSolveController.h>
 #include <Common/StreamUtil.h>
-//#include <ParmDB/ParmDBLog.h>
-//#include <BBSControl/MeasurementAIPS.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -200,10 +199,12 @@ void LocalSolveController::run()
 // Call run() with parmLogger object -> do logging into ParmDB
 void LocalSolveController::run(ParmDBLog &parmLogger)
 {
+    LOG_DEBUG_STR("LocalSolveController(ParmDBLog)");
+    
     ASSERTSTR(itsInitFlag, "Controller not initialized.");
 
-	 Location solutionLocation;		// location of the solution cell
-	 Box solutionBox;						// Box of solution cell
+	Location solutionLocation;		// location of the solution cell
+	Box solutionBox;						// Box of solution cell
 	 
 	// Exchange coefficient index with solver.
     itsSolver.setCoeffIndex(0, itsCoeffIndex);
@@ -219,6 +220,8 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
     vector<CellCoeff> coeff;
     vector<CellEquation> equations;
     vector<CellSolution> solutions;
+
+	cout << "Location chunkStart(0,0);" << endl;
 
     Location chunkStart(0, 0);
     Location chunkEnd(itsSolGrid[FREQ]->size() - 1,
@@ -247,8 +250,49 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 
             itsSolver.setEquations(0, equations);
 
+/*
             // Perform a non-linear LSQ iteration.
-            done = itsSolver.iterate(solutions);
+            if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION || 
+            	parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX )
+            {
+            	done = itsSolver.iterate(solutions);
+ 			}
+ 			else
+ 			{
+
+*/
+//			solutionLocation=itsSolGrid.getCellLocation(it->id);	// translate cell id into location on the Grid
+//			solutionBox=itsSolGrid.getCell(solutionLocation);		// get the bounding box of the location of solutioncell		 
+ 
+			LOG_DEBUG_STR("done = itsSolver.iterate(solutions);");
+			// Call solver iterate with logging, also needs the solutionBox to know grid coords
+			done = itsSolver.iterate(solutions);
+
+			// If logging per iteration is requested...
+			// Need to loop over chunks to access individual (intermediate) solutions
+			for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
+			{
+				if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION )
+				{
+					LOG_DEBUG_STR("logging PERITERATION");
+					parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
+								solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
+								it->chiSqr, it->lmFactor, it->coeff, it->resultText);			
+				}
+				// or logging per iteration including the correlation matrix
+				else if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX )
+				{
+					LOG_DEBUG_STR("logging PERITERATION_CORRMATRIX");
+					parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
+								solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
+								it->chiSqr, it->lmFactor, it->coeff, it->resultText, it->CorrMatrix);			
+				}
+				// or if an unknown ParmLogger level was requested (shouldn't occur at this stage)
+				else
+				{
+					LOG_DEBUG_STR("Request of unknown ParmLogger level");
+				}
+			}
 
             // Update coefficients.
             setSolution(solutions, chunkStart, chunkEnd);
@@ -262,13 +306,13 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 		  // Loop over solutions
 		  for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
 		  {
-			 it->maxIter=itsSolver.itsMaxIter;
-			 
-			 // Debug code: output solver parameters
+			/*
+			 // Debug code: output solver parameters to a file
 			 try
 			 {
 				ofstream solverfile;
-				solverfile.open("/home/duscha/solverparams.txt", ios::app);
+				// write to /tmp because /Users on OS X and /home on Linux differ
+				solverfile.open("/tmp/solverparams.txt", ios::app);
 
 				if(solverfile.fail())
 				  cerr << "Solver::iterate opening of solverparams.txt failed" << endl;
@@ -297,17 +341,35 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 			 {
 				cerr << "Exception occured: " << s << endl;
 			 }
+			*/
 
-			 solutionLocation=itsSolGrid.getCellLocation(it->id);				// translate cell id into location on the Grid
+
+			 // Determine position on the SolGrid
+			 solutionLocation=itsSolGrid.getCellLocation(it->id);	// translate cell id into location on the Grid
 			 solutionBox=itsSolGrid.getCell(solutionLocation);		// get the bounding box of the location of solutioncell
-			 solutionBox.print();											// DEBUG: output the boundaries of the solutionBox
-			 
-			 // TODO: get freqStart, freqEnd and timeStart, timeEnd
-			 // Write solver parameters into parmDB
-			 parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
-								 solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
-								 it->chiSqr, it->lmFactor, it->coeff, it->resultText);
 
+			 it->maxIter=itsSolver.itsMaxIter;		// for completeness store MaxIter in CellSolution object
+
+			 // Write solver parameters for each solution into parmDB if parm logging level was set
+			 if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION)
+			 {
+				LOG_DEBUG_STR("logging PERSOLUTION");			 
+			 	parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
+							solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
+							it->chiSqr, it->lmFactor, it->coeff, it->resultText);
+			 }
+			 // write solver parameters including correlation matrix to parmDB
+			 else if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION_CORRMATRIX)
+			 {
+				LOG_DEBUG_STR("logging PERSOLUTION_CORRMATRIX");
+			 	parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
+							solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
+							it->chiSqr, it->lmFactor, it->coeff, it->resultText, it->CorrMatrix);			 
+			 }
+			 else
+			 {
+			 	LOG_DEBUG("Request of unknown ParmLogger level");
+			 }
 		  }
 
         // Propagate coefficient values to the next cell chunk.
