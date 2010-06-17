@@ -415,6 +415,20 @@ namespace rfiStrategy {
 			++i;
 		}
 	}
+
+	void Strategy::DisableOptimizations(Strategy &strategy)
+	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
+		while(!i.PastEnd())
+		{
+			if(i->Type() == AdapterType)
+			{
+				Adapter &adapter = static_cast<Adapter&>(*i);
+				adapter.SetRestoreOriginals(true);
+			}
+			++i;
+		}
+	}
 	
 	void Strategy::InitializeAll()
 	{
@@ -435,5 +449,4 @@ namespace rfiStrategy {
 			++i;
 		}
 	}
-
 }

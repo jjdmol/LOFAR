@@ -315,7 +315,7 @@ void MSWindow::onExecuteStrategyPressed()
 			artifacts.SetImageSetIndex(_imageSetIndex);
 		}
 	}
-
+	rfiStrategy::Strategy::DisableOptimizations(*_strategy);
 	try {
 		_strategy->StartPerformThread(artifacts, *progressWindow);
 	}  catch(std::exception &e)
