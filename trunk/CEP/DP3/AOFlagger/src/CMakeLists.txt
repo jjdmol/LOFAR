@@ -106,6 +106,7 @@ lofar_add_library(rfiengine
 
 if(GTKMM_FOUND)
   include_directories(${GTKMM_INCLUDE_DIRS})
+  link_directories(${GTKMM_LIBDIR})
   lofar_add_bin_program(rfigui rfigui.cpp ${GUI_FILES})
   target_link_libraries(rfigui ${GTKMM_LIBRARIES})
 else()
