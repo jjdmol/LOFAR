@@ -50,11 +50,11 @@ namespace rfiStrategy {
 
 				for(size_t i=0;i<_iterationCount;++i)
 				{
-					sensitivity /= sensitivityStep;
 					artifacts.SetSensitivity(sensitivity * oldSensitivity);
 					listener.OnStartTask(i, _iterationCount, "Iteration");
 					ActionBlock::Perform(artifacts, listener);
 					listener.OnEndTask();
+					sensitivity /= sensitivityStep;
 				}
 				artifacts.SetSensitivity(oldSensitivity);
 			}

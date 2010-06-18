@@ -66,42 +66,14 @@ namespace rfiStrategy {
 		current->Add(adapter);
 		current = adapter;
 
-		ThresholdAction *t1 = new ThresholdAction();
-		t1->SetBaseSensitivity(4.0);
-		if(pulsar)
-			t1->SetFrequencyDirectionFlagging(false);
-		current->Add(t1);
-
-		CombineFlagResults *cfr1 = new CombineFlagResults();
-		current->Add(cfr1);
-
-		cfr1->Add(new FrequencySelectionAction());
-		if(!pulsar)
-			cfr1->Add(new TimeSelectionAction());
-	
-		current->Add(new SetImageAction());
-
-		ChangeResolutionAction *changeResAction1 = new ChangeResolutionAction();
-		if(pulsar)
-			changeResAction1->SetDecreaseFactor(1);
-		else
-			changeResAction1->SetDecreaseFactor(3);
-
-		SlidingWindowFitAction *swfAction1 = new SlidingWindowFitAction();
-		if(pulsar)
-		{
-			swfAction1->Parameters().timeDirectionWindowSize = 1;
-		} else {
-			swfAction1->Parameters().timeDirectionKernelSize = 2.5;
-			swfAction1->Parameters().timeDirectionWindowSize = 10;
-		}
-		changeResAction1->Add(swfAction1);
-
-		current->Add(changeResAction1);
-		current->Add(new SetFlaggingAction());
-
+		IterationBlock *iteration = new IterationBlock();
+		iteration->SetIterationCount(2);
+		iteration->SetSensitivityStart(4.0);
+		current->Add(iteration);
+		current = iteration;
+		
 		ThresholdAction *t2 = new ThresholdAction();
-		t2->SetBaseSensitivity(2.0);
+		t2->SetBaseSensitivity(1.0);
 		if(pulsar)
 			t2->SetFrequencyDirectionFlagging(false);
 		current->Add(t2);
@@ -133,6 +105,7 @@ namespace rfiStrategy {
 		current->Add(changeResAction2);
 		current->Add(new SetFlaggingAction());
 
+		current = adapter;
 		ThresholdAction *t3 = new ThresholdAction();
 		if(pulsar)
 			t3->SetFrequencyDirectionFlagging(false);
