@@ -30,7 +30,7 @@ namespace rfiStrategy {
 	*/
 	class SpatialCompositionAction : public Action {
 		public:
-			enum Operation { SumCrossCorrelationsOperation, SumAutoCorrelationsOperation, EigenvalueDecompositionOperation } ;
+			enum Operation { SumCrossCorrelationsOperation, SumAutoCorrelationsOperation, EigenvalueDecompositionOperation, EigenvalueRemovalOperation } ;
 
 			SpatialCompositionAction() : _operation(EigenvalueDecompositionOperation), _eigenValueIndex(0)
 			{
@@ -48,6 +48,8 @@ namespace rfiStrategy {
 						return "Spatial composition (auto)";
 					case EigenvalueDecompositionOperation:
 						return "Spatial composition (eigenvalue)";
+					case EigenvalueRemovalOperation:
+						return "Spatial composition (remove eigenvalue)";
 				}
 			}
 			virtual void Perform(ArtifactSet &artifacts, ProgressListener &progress);
@@ -63,6 +65,7 @@ namespace rfiStrategy {
 			num_t sumCrossCorrelations(Image2DCPtr image) const;
 			num_t sumAutoCorrelations(Image2DCPtr image) const;
 			num_t eigenvalue(Image2DCPtr real, Image2DCPtr imaginary) const;
+			num_t removeEigenvalue(Image2DCPtr real, Image2DCPtr imaginary) const;
 	};
 
 }
