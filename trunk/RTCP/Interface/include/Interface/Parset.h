@@ -146,10 +146,10 @@ public:
 
 	vector<unsigned> subbandToBeamMapping() const;
 	vector<double>	 subbandToFrequencyMapping() const;
-	vector<unsigned> subbandToRSPboardMapping() const;
-	vector<unsigned> subbandToRSPslotMapping() const;
+	vector<unsigned> subbandToRSPboardMapping(const string &stationName) const;
+	vector<unsigned> subbandToRSPslotMapping(const string &stationName) const;
 
-	int32          nrSlotsInFrame() const;
+	unsigned       nrSlotsInFrame() const;
 	string         partitionName() const;
 	bool           realTime() const;
 	
@@ -178,6 +178,9 @@ public:
 private:
 	const std::string itsName;
 
+	void           checkSubbandCount(const char *key) const;
+	void	       checkInputConsistency() const;
+
 	uint32         nrManualPencilBeams() const;
 	vector<double> getManualPencilBeam(unsigned pencil) const;
 	uint32	       nrPencilRings() const;
@@ -186,7 +189,6 @@ private:
 	void           addPosition(string stName);
 	double	       getTime(const char *name) const;
 	static int     findIndex(uint32 pset, const vector<uint32> &psets);
-	void           checkSubbandCount(const char *key) const;
 	
 	vector<double>   centroidPos(const string &stations) const;
 };
@@ -433,16 +435,6 @@ inline vector<unsigned> Parset::subbandToBeamMapping() const
   return getUint32Vector("Observation.beamList",true);
 }
 
-inline vector<unsigned> Parset::subbandToRSPboardMapping() const
-{
-  return getUint32Vector("Observation.rspBoardList",true);
-}
-
-inline vector<unsigned> Parset::subbandToRSPslotMapping() const
-{
-  return getUint32Vector("Observation.rspSlotList",true);
-}
-
 inline double Parset::channelWidth() const
 {
   return sampleRate() / nrChannelsPerSubband();
@@ -518,9 +510,9 @@ inline int Parset::phaseThreePsetIndex(uint32 pset) const
   return findIndex(pset, phaseThreePsets());
 }
 
-inline int32 Parset::nrSlotsInFrame() const
+inline unsigned Parset::nrSlotsInFrame() const
 {
-  return getInt32("Observation.nrSlotsInFrame");
+  return getUint32("Observation.nrSlotsInFrame");
 }
 
 inline string Parset::partitionName() const
