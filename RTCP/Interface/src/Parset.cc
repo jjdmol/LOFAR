@@ -44,6 +44,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <set>
 
 
 namespace LOFAR {
@@ -71,32 +72,58 @@ void Parset::checkSubbandCount(const char *key) const
     THROW(InterfaceException, string(key) << " contains wrong number (" << boost::lexical_cast<string>(getUint32Vector(key,true).size()) << ") of subbands (expected " << boost::lexical_cast<string>(nrSubbands()) << ')');
 }
 
+
+void Parset::checkInputConsistency() const
+{
+  using std::set;
+
+  map<string, set<unsigned> > allRSPboards;
+  vector<unsigned> inputs = phaseOnePsets();
+  
+  for (vector<unsigned>::const_iterator pset = inputs.begin(); pset != inputs.end(); pset ++) {
+    vector<StationRSPpair> stationRSPpairs = getStationNamesAndRSPboardNumbers(*pset);
+
+    for (vector<StationRSPpair>::const_iterator pair = stationRSPpairs.begin(); pair != stationRSPpairs.end(); pair ++) {
+      const string &station = pair->station;
+      unsigned     rsp      = pair->rsp;
+
+      map<string, set<unsigned> >::const_iterator stationRSPs = allRSPboards.find(station);
+
+      if (stationRSPs != allRSPboards.end() && stationRSPs->second.find(rsp) != stationRSPs->second.end())
+	THROW(InterfaceException, station + "/RSP" + boost::lexical_cast<string>(rsp) + " multiple times defined in \"PIC.Core.IONProc.*.inputs\"");
+
+      allRSPboards[station].insert(rsp);
+    }
+  }
+
+  for (map<string, set<unsigned> >::const_iterator stationRSPs = allRSPboards.begin(); stationRSPs != allRSPboards.end(); stationRSPs ++) {
+    const string	  &station = stationRSPs->first;
+    const set<unsigned> &rsps    = stationRSPs->second;
+
+    vector<unsigned> rspsOfStation  = subbandToRSPboardMapping(station);
+    vector<unsigned> slotsOfStation = subbandToRSPslotMapping(station);
+
+    if (rspsOfStation.size() != nrSubbands())
+      THROW(InterfaceException, string("the size of \"Observation.Dataslots.") + station + ".RSPBoardlist\" does not equal the number of subbands");
+
+    if (slotsOfStation.size() != nrSubbands())
+      THROW(InterfaceException, string("the size of \"Observation.Dataslots.") + station + ".Dataslotlist\" does not equal the number of subbands");
+
+    for (int subband = nrSubbands(); -- subband >= 0;) {
+      if (rsps.find(rspsOfStation[subband]) == rsps.end())
+	THROW(InterfaceException, string("\"Observation.Dataslots.") + station + ".RSPBoardlist\" mentions RSP board " + boost::lexical_cast<string>(rspsOfStation[subband]) + ", which does not exist");
+
+      if (slotsOfStation[subband] >= nrSlotsInFrame())
+	THROW(InterfaceException, string("\"Observation.Dataslots.") + station + ".Dataslotlist\" mentions RSP slot " + boost::lexical_cast<string>(slotsOfStation[subband]) + ", which is more than the number of slots in a frame");
+    }
+  }
+}
+
+
 void Parset::check() const
 {
   checkSubbandCount("Observation.beamList");
-  checkSubbandCount("Observation.rspBoardList");
-  checkSubbandCount("Observation.rspSlotList");
-
-  unsigned		slotsPerFrame = nrSlotsInFrame();
-  std::vector<unsigned> boards	      = subbandToRSPboardMapping();
-  std::vector<unsigned> slots	      = subbandToRSPslotMapping();
-  
-  for (unsigned subband = 0; subband < slots.size(); subband ++)
-    if (slots[subband] >= slotsPerFrame)
-      THROW(InterfaceException, "Observation.rspSlotList contains slot numbers >= Observation.nrSlotsInFrame");
-  
-  // check not needed when using Storage
-  if (isDefined("OLAP.CNProc.phaseOnePsets")) {
-    std::vector<unsigned> inputs = phaseOnePsets();
-    
-    for (std::vector<unsigned>::const_iterator pset = inputs.begin(); pset != inputs.end(); pset ++) {
-      unsigned nrRSPboards = getStationNamesAndRSPboardNumbers(*pset).size();
-
-      for (unsigned subband = 0; subband < boards.size(); subband ++)
-        if (boards[subband] >= nrRSPboards)
-	  THROW(InterfaceException, "Observation.rspBoardList contains rsp board numbers that do not exist");
-    }
-  }
+  checkInputConsistency();
 }
 
 
@@ -466,6 +493,32 @@ bool Parset::compatibleInputSection(const Parset &otherParset) const
     return false;
 
   return true;
+}
+
+
+vector<unsigned> Parset::subbandToRSPboardMapping(const string &stationName) const
+{
+  std::string key = std::string("Observation.Dataslots.") + stationName + ".RSPBoardlist";
+
+  if (!isDefined(key)) {
+    LOG_WARN_STR('"' << key << "\" not defined, trying \"Observation.rspBoardList\"");
+    key = "Observation.rspBoardList";
+  }
+
+  return getUint32Vector(key, true);
+}
+
+
+vector<unsigned> Parset::subbandToRSPslotMapping(const string &stationName) const
+{
+  std::string key = std::string("Observation.Dataslots.") + stationName + ".Dataslotlist";
+
+  if (!isDefined(key)) {
+    LOG_WARN_STR('"' << key << "\" not defined, trying \"Observation.rspSlotList\"");
+    key = "Observation.rspSlotList";
+  }
+
+  return getUint32Vector(key, true);
 }
 
 

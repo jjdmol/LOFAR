@@ -94,6 +94,8 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::com
 
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::preprocess(const Parset *ps)
 {
+  std::string stationName = ps->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station; // TODO: support more than one station
+
   itsPS			      = ps;
   itsSampleRate		      = ps->sampleRate();
   itsNrSubbands		      = ps->nrSubbands();
@@ -109,8 +111,8 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   itsCorrectClocks	      = ps->correctClocks();
   itsNeedDelays               = (itsDelayCompensation || itsNrPencilBeams > 1 || itsCorrectClocks) && itsNrInputs > 0;
   itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
-  itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping();
-  itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping();
+  itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping(stationName);
+  itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping(stationName);
   itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps->startTime() * itsSampleRate), ps->clockSpeed());
   itsIsRealTime		      = ps->realTime();
   itsMaxNetworkDelay	      = ps->maxNetworkDelay();
@@ -129,8 +131,6 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
     itsDelaysAfterEnd.resize(itsNrBeams, itsNrPencilBeams);
     itsBeamDirectionsAtBegin.resize(itsNrBeams, itsNrPencilBeams);
     itsBeamDirectionsAfterEnd.resize(itsNrBeams, itsNrPencilBeams);
-
-    std::string stationName = ps->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station; // TODO: support more than one station
 
     if (itsDelayCompensation || itsNrPencilBeams > 1)
       itsDelayComp = new WH_DelayCompensation(ps, stationName, itsCurrentTimeStamp);
@@ -329,9 +329,11 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
 
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::dumpRawData()
 {
+  std::string stationName = itsPS->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station; // TODO: support more than one station
+
   vector<unsigned> subbandToBeamMapping     = itsPS->subbandToBeamMapping();
-  vector<unsigned> subbandToRSPboardMapping = itsPS->subbandToRSPboardMapping();
-  vector<unsigned> subbandToRSPslotMapping  = itsPS->subbandToRSPslotMapping();
+  vector<unsigned> subbandToRSPboardMapping = itsPS->subbandToRSPboardMapping(stationName);
+  vector<unsigned> subbandToRSPslotMapping  = itsPS->subbandToRSPslotMapping(stationName);
   unsigned	   nrSubbands		    = itsPS->nrSubbands();
   BFRawFormat	   bfraw_data;
 
