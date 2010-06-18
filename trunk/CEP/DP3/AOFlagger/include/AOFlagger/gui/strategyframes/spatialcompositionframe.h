@@ -39,6 +39,7 @@ class SpatialCompositionFrame : public Gtk::Frame {
 		_sumCrossButton("Sum cross correlations"),
 		_sumAutoButton("Sum auto correlations"),
 		_eigenvalueButton("First eigenvalues of complete matrix"),
+		_removeEigenvalueButton("Remove first eigenvalues"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
 			Gtk::RadioButton::Group group;
@@ -52,6 +53,9 @@ class SpatialCompositionFrame : public Gtk::Frame {
 			_box.pack_start(_eigenvalueButton);
 			_eigenvalueButton.set_group(group);
 			
+			_box.pack_start(_removeEigenvalueButton);
+			_removeEigenvalueButton.set_group(group);
+			
 			switch(_action.Operation())
 			{
 				case rfiStrategy::SpatialCompositionAction::SumCrossCorrelationsOperation:
@@ -62,6 +66,9 @@ class SpatialCompositionFrame : public Gtk::Frame {
 					break;
 				case rfiStrategy::SpatialCompositionAction::EigenvalueDecompositionOperation:
 				_eigenvalueButton.set_active(true);
+					break;
+				case rfiStrategy::SpatialCompositionAction::EigenvalueRemovalOperation:
+				_removeEigenvalueButton.set_active(true);
 					break;
 			}
 
@@ -87,7 +94,7 @@ class SpatialCompositionFrame : public Gtk::Frame {
 		Gtk::HButtonBox _buttonBox;
 		Gtk::Label _baselinesLabel;
 		Gtk::RadioButton
-			_sumCrossButton, _sumAutoButton, _eigenvalueButton;
+			_sumCrossButton, _sumAutoButton, _eigenvalueButton, _removeEigenvalueButton;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
@@ -98,6 +105,8 @@ class SpatialCompositionFrame : public Gtk::Frame {
 				_action.SetOperation(rfiStrategy::SpatialCompositionAction::SumAutoCorrelationsOperation);
 			else if(_eigenvalueButton.get_active())
 				_action.SetOperation(rfiStrategy::SpatialCompositionAction::EigenvalueDecompositionOperation);
+			else if(_removeEigenvalueButton.get_active())
+				_action.SetOperation(rfiStrategy::SpatialCompositionAction::EigenvalueRemovalOperation);
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };

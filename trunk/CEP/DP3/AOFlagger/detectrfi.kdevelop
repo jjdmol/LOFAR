@@ -1,8 +1,8 @@
 <?xml version = '1.0'?>
 <kdevelop>
   <general>
-    <author/>
-    <email/>
+    <author></author>
+    <email></email>
     <version>$VERSION$</version>
     <projectmanagement>KDevCustomProject</projectmanagement>
     <primarylanguage>C++</primarylanguage>
@@ -13,17 +13,17 @@
       <language>C</language>
     </secondaryLanguages>
     <projectname>detectrfi</projectname>
-    <description/>
+    <description></description>
     <defaultencoding/>
     <versioncontrol/>
   </general>
   <kdevcustomproject>
     <filelistdirectory>/</filelistdirectory>
     <run>
-      <mainprogram>/home/anoko/projects/LOFAR/build/gnu_opt/CEP/DP3/AOFlagger/src/rfigui</mainprogram>
+      <mainprogram>CEP/DP3/AOFlagger/src/rfigui</mainprogram>
       <directoryradio>executable</directoryradio>
       <customdirectory>/</customdirectory>
-      <programargs/>
+      <programargs></programargs>
       <terminal>true</terminal>
       <autocompile>true</autocompile>
       <envvars/>
@@ -35,7 +35,7 @@
     </run>
     <build>
       <buildtool>make</buildtool>
-      <builddir>/home/anoko/projects/LOFAR/build/gnu_opt</builddir>
+      <builddir>/data/users/offringa/LOFAR/build/gnu_opt/</builddir>
     </build>
     <make>
       <abortonerror>false</abortonerror>
@@ -47,7 +47,7 @@
         <default/>
       </environments>
       <prio>0</prio>
-      <defaulttarget/>
+      <defaulttarget></defaulttarget>
       <makeoptions>-s</makeoptions>
     </make>
     <blacklist/>
@@ -138,11 +138,11 @@
       <root>/usr/share/qt3</root>
       <designerintegration>EmbeddedKDevDesigner</designerintegration>
       <qmake>/usr/bin/qmake-qt3</qmake>
-      <designer></designer>
+      <designer/>
       <designerpluginpaths/>
     </qt>
     <creategettersetter>
-      <prefixGet/>
+      <prefixGet></prefixGet>
       <prefixSet>set</prefixSet>
       <prefixVariable>m_,_</prefixVariable>
       <parameterName>theValue</parameterName>
@@ -185,16 +185,16 @@
   </substmap>
   <kdevdebugger>
     <general>
-      <gdbpath/>
-      <dbgshell/>
-      <configGdbScript/>
-      <runShellScript/>
-      <runGdbScript/>
+      <gdbpath></gdbpath>
+      <dbgshell></dbgshell>
+      <configGdbScript></configGdbScript>
+      <runShellScript></runShellScript>
+      <runGdbScript></runGdbScript>
       <breakonloadinglibs>true</breakonloadinglibs>
       <separatetty>false</separatetty>
       <floatingtoolbar>false</floatingtoolbar>
       <raiseGDBOnStart>false</raiseGDBOnStart>
-      <programargs/>
+      <programargs></programargs>
     </general>
     <display>
       <staticmembers>false</staticmembers>

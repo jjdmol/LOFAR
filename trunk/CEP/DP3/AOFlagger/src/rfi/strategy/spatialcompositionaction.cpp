@@ -50,12 +50,18 @@ namespace rfiStrategy {
 					case SumAutoCorrelationsOperation:
 						images[p]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), sumAutoCorrelations(data->GetImage(p)));
 						break;
-					case EigenvalueDecompositionOperation:
+					case EigenvalueDecompositionOperation: {
 						num_t value = eigenvalue(data->GetImage(p), data->GetImage(p+1));
 						images[p]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), value);
 						images[p+1]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), 0.0);
 						++p;
-						break;
+						} break;
+					case EigenvalueRemovalOperation: {
+						num_t value = removeEigenvalue(data->GetImage(p), data->GetImage(p+1));
+						images[p]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), value);
+						images[p+1]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), 0.0);
+						++p;
+						} break;
 				}
 			}
 			delete data;
@@ -105,9 +111,46 @@ namespace rfiStrategy {
 	
 	num_t SpatialCompositionAction::eigenvalue(Image2DCPtr real, Image2DCPtr imaginary) const
 	{
-		num_t ev = Eigenvalue::Compute(real, imaginary);
-		return ev;
+		try {
+			Image2DPtr
+				r = Image2D::CreateCopy(real),
+				i = Image2D::CreateCopy(imaginary);
+			for(size_t y=0;y<r->Height();++y)
+			{
+				for(size_t x=0;x<r->Width();++x)
+				{
+					if(!std::isfinite(r->Value(x,y))) r->SetValue(x, y, 0.0);
+					if(!std::isfinite(i->Value(x,y))) i->SetValue(x, y, 0.0);
+				}
+			}
+			if(r->ContainsOnlyZeros() && i->ContainsOnlyZeros()) return 0.0;
+			return Eigenvalue::Compute(r, i);
+		} catch(std::exception &e)
+		{
+			return std::numeric_limits<num_t>::quiet_NaN();
+		}
 	}
-	
+
+	num_t SpatialCompositionAction::removeEigenvalue(Image2DCPtr real, Image2DCPtr imaginary) const
+	{
+		try {
+			Image2DPtr
+				r = Image2D::CreateCopy(real),
+				i = Image2D::CreateCopy(imaginary);
+			for(size_t y=0;y<r->Height();++y)
+			{
+				for(size_t x=0;x<r->Width();++x)
+				{
+					if(!std::isfinite(r->Value(x,y))) r->SetValue(x, y, 0.0);
+					if(!std::isfinite(i->Value(x,y))) i->SetValue(x, y, 0.0);
+				}
+			}
+			if(r->ContainsOnlyZeros() && i->ContainsOnlyZeros()) return 0.0;
+			return Eigenvalue::Compute(r, i);
+		} catch(std::exception &e)
+		{
+			return std::numeric_limits<num_t>::quiet_NaN();
+		}
+	}
 }
 
