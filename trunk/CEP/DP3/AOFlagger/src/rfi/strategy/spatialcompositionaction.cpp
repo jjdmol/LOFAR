@@ -24,6 +24,8 @@
 
 #include <AOFlagger/rfi/eigenvalue.h>
 
+#include <limits>
+
 namespace rfiStrategy {
 	void SpatialCompositionAction::Perform(ArtifactSet &artifacts, ProgressListener &progress)
 	{
