@@ -45,8 +45,8 @@ double Eigenvalue::Compute(Image2DCPtr real, Image2DCPtr imaginary)
 	doublecomplex *a = new doublecomplex[n * n];
 	for(int y=0;y<n;++y) {
 		for(int x=0;x<n; ++x) {
-			a[y*n + x].r = real->Value(x, y);
-			a[y*n + x].i = imaginary->Value(x, y);
+			a[y + x*n].r = real->Value(x, y);
+			a[y + x*n].i = imaginary->Value(x, y);
 		}
 	}
 	
@@ -97,8 +97,8 @@ void Eigenvalue::Remove(Image2DPtr real, Image2DPtr imaginary)
 	doublecomplex *a = new doublecomplex[n * n];
 	for(int y=0;y<n;++y) {
 		for(int x=0;x<n; ++x) {
-			a[y*n + x].r = real->Value(x, y);
-			a[y*n + x].i = imaginary->Value(x, y);
+			a[y + x*n].r = real->Value(x, y);
+			a[y + x*n].i = imaginary->Value(x, y);
 		}
 	}
 	
@@ -127,11 +127,25 @@ void Eigenvalue::Remove(Image2DPtr real, Image2DPtr imaginary)
 	if(info != 0)
 		throw std::runtime_error("zheev failed");
 		
-	for(size_t y=0;y<n;++y)
+	for(int y=0;y<n;++y)
 	{
-		for(size_t x=0;x<n;++x)
+		for(int x=0;x<n;++x)
 		{
-			
+			double a_xy_r = 0.0;
+			double a_xy_i = 0.0;
+			// A = U S U^T , so:
+			// a_xy = \sum_{i=0}^{n} U_{iy} S_{ii} U_{ix}
+			for(int i=0;i<1;++i) {
+				double u_r = a[y + i*n].r;
+				double u_i = a[y + i*n].i;
+				double s = w[i];
+				double ut_r = a[x + i*n].r;
+				double ut_i = a[x + i*n].i;
+				a_xy_r += s * (u_r * ut_r - u_i * ut_i);
+				a_xy_i += s * (u_r * ut_i + u_i * ut_r);
+			}
+			real->SetValue(x, y, real->Value(x, y) - a_xy_r);
+			imaginary->SetValue(x, y, imaginary->Value(x, y) - a_xy_i);
 		}
 	}
 }

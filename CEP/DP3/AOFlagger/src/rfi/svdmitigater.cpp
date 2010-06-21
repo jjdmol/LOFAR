@@ -69,8 +69,8 @@ void SVDMitigater::Decompose()
 	Clear();
 
 	// Remember that the axes have to be turned; in 'a', time is along the vertical axis.
-	_m = _data.ImageWidth();
-	_n = _data.ImageHeight();
+	_m = _data.ImageHeight();
+	_n = _data.ImageWidth();
 	int minmn = _m<_n ? _m : _n;
 	char rowsOfU = 'A'; // all rows of u
 	char rowsOfVT = 'A'; // all rows of VT
@@ -78,10 +78,10 @@ void SVDMitigater::Decompose()
 	Image2DCPtr
 		real = _data.GetRealPart(),
 		imaginary = _data.GetImaginaryPart();
-	for(int t=0;t<_m;++t) {
-		for(int f=0;f<_n; ++f) {
-			a[f*_m + t].r = real->Value(t, f);
-			a[f*_m + t].i = imaginary->Value(t, f);
+	for(int t=0;t<_n;++t) {
+		for(int f=0;f<_m; ++f) {
+			a[t*_m + f].r = real->Value(t, f);
+			a[t*_m + f].i = imaginary->Value(t, f);
 		}
 	}
 	long int lda = _m;
@@ -120,7 +120,7 @@ void SVDMitigater::Decompose()
 	delete[] a;
 
 	if(_verbose) {
-		for(unsigned i=0;i<256;++i)
+		for(unsigned i=0;i<minmn;++i)
 			std::cout << _singularValues[i] << ",";
 		std::cout << std::endl;
 		std::cout << watch.ToString() << std::endl;
@@ -136,23 +136,24 @@ void SVDMitigater::Compose()
 	Image2DPtr real = Image2D::CreateEmptyImagePtr(_data.ImageWidth(), _data.ImageHeight());
 	Image2DPtr imaginary = Image2D::CreateEmptyImagePtr(_data.ImageWidth(), _data.ImageHeight());
 	int minmn = _m<_n ? _m : _n;
-	for(int t=0;t<_m;++t) {
-		for(int f=0;f<_n; ++f) {
-			double a_ft_r = 0.0;
-			double a_ft_i = 0.0;
-			// A = U S V , so:
-			// a_ft = \sum_{g=0}^{minmn} U_{gt} S_{gg} V_{fg}
+	for(int t=0;t<_n;++t) {
+		for(int f=0;f<_m; ++f) {
+			double a_tf_r = 0.0;
+			double a_tf_i = 0.0;
+			// A = U S V^T , so:
+			// a_tf = \sum_{g=0}^{minmn} U_{gf} S_{gg} V^T_{tg}
+			// Note that _rightSingularVectors=V^T, thus is already stored rowwise
 			for(int g=0;g<minmn;++g) {
-				double u_r = _leftSingularVectors[g*_m + t].r;
-				double u_i = _leftSingularVectors[g*_m + t].i;
+				double u_r = _leftSingularVectors[g*_m + f].r;
+				double u_i = _leftSingularVectors[g*_m + f].i;
 				double s = _singularValues[g];
-				double v_r = _rightSingularVectors[f*_n + g].r;
-				double v_i = _rightSingularVectors[f*_n + g].i;
-				a_ft_r += s * (u_r * v_r - u_i * v_i);
-				a_ft_i += s * (u_r * v_i + u_i * v_r);
+				double v_r = _rightSingularVectors[t*_n + g].r;
+				double v_i = _rightSingularVectors[t*_n + g].i;
+				a_tf_r += s * (u_r * v_r - u_i * v_i);
+				a_tf_i += s * (u_r * v_i + u_i * v_r);
 			}
-			real->SetValue(t, f, a_ft_r);
-			imaginary->SetValue(t, f, a_ft_i);
+			real->SetValue(t, f, a_tf_r);
+			imaginary->SetValue(t, f, a_tf_i);
 		}
 	}
 	if(_background != 0)
