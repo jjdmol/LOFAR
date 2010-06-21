@@ -58,9 +58,11 @@ def runCorrelator( partition, start_cnproc = True, start_ionproc = True ):
     sections.wait( lock )
 
     if aborted:
-      raise "aborted"
+      raise Exception("aborted")
 
-  except:
+  except Exception,e:
+    error( "%s", e )
+
     try:
       # soft abort -- wait for all observations to stop
       sendCommand( partition, "quit" )

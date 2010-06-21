@@ -12,11 +12,12 @@ def setNonBlock( fd ):
 
 
 class Tee(Thread):
-  def __init__(self,inputfd,outputfds):
+  def __init__(self,inputfd,outputfiles,logger=None):
     Thread.__init__(self)
 
     self.inputfd = inputfd
-    self.outputfds = outputfds[:]
+    self.outputfiles = outputfiles[:]
+    self.logger = logger
 
     setNonBlock( self.inputfd )
 
@@ -24,22 +25,34 @@ class Tee(Thread):
     self.start()
 
   def run(self):
-    while True:
-      rlist,_,xlist = select( [self.inputfd], [], [self.inputfd] )
+    fileno = self.inputfd
+    prevline = "" # last incomplete line
 
-      if self.inputfd in xlist:
+    while True:
+      rlist,_,xlist = select( [fileno], [], [fileno] )
+
+      if fileno in xlist:
         # exceptional condition
         break
 
-      if self.inputfd in rlist:
-        data = os.read( self.inputfd, 4096 )
+      if fileno in rlist:
+        lines = os.read( self.inputfd, 4096 ).split("\n")
 
-        if len(data) == 0:
+        if len(lines) == 0:
           # eof
           break
 
-        for f in self.outputfds:
-          try:
-            os.write( f, data )
-          except OSError,e:
-            pass
+        lines[0] = "%s%s" % (lines[0],prevline)
+
+        for line in lines[:-1]: 
+          if self.logger:
+            self.logger.info( "%s", line )
+
+          for f in self.outputfiles:
+            try:
+              f.write( "%s\n" % (line,) )
+            except OSError,e:
+              pass
+
+        prevline = lines[-1]      
+

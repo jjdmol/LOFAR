@@ -3,6 +3,7 @@
 from util.Commands import SyncCommand,AsyncCommand,mpikill,backquote,PIPE
 from util.Aborter import runUntilSuccess,runFunc
 from Locations import Locations,Hosts
+import Logger
 import os
 import Partitions
 import ObservationID
@@ -23,7 +24,6 @@ class Section:
 
   def __init__(self, partition):
     self.commands = []
-
 
     self.logoutputs = []
     if Locations.nodes["logserver"]:
@@ -125,7 +125,8 @@ class SectionSet(list):
 
 class CNProcSection(Section):
   def run(self):
-    logfiles = ["%s/run.CNProc.%s.log" % (Locations.files["logdir"],self.partition)] + self.logoutputs
+    logger = Logger.rotatingLogger( "CNProc", "%s/run.CNProc.log" % (Locations.files["logdir"]) )
+    logfiles = self.logoutputs
 
     # CNProc is started on the Blue Gene, which has BG/P mpirun 1.65
     # NOTE: This mpirun needs either stdin or stdout to be line buffered,
@@ -149,11 +150,12 @@ class CNProcSection(Section):
       # arguments
     ]
 
-    self.commands.append( AsyncCommand( "mpirun %s" % (" ".join(mpiparams),), logfiles, killcmd=mpikill ) )
+    self.commands.append( AsyncCommand( "mpirun %s" % (" ".join(mpiparams),), logfiles, killcmd=mpikill, logger=logger ) )
 
 class IONProcSection(Section):
   def run(self):
-    logfiles = ["%s/run.IONProc.%s.log" % (Locations.files["logdir"],self.partition)] + self.logoutputs
+    logger = Logger.rotatingLogger( "IONProc", "%s/run.IONProc.log" % (Locations.files["logdir"]) )
+    logfiles = self.logoutputs
 
     if VALGRIND_ION:
       valgrind = "/globalhome/mol/root-ppc/bin/valgrind --suppressions=%s --leak-check=full --show-reachable=no" % (Locations.files["ionsuppfile"],)
@@ -188,7 +190,7 @@ class IONProcSection(Section):
         "-v",
       ] + mpiparams
 
-    self.commands.append( AsyncCommand( "/bgsys/LOFAR/openmpi-ion/bin/mpirun %s" % (" ".join(mpiparams),), logfiles ) )
+    self.commands.append( AsyncCommand( "/bgsys/LOFAR/openmpi-ion/bin/mpirun %s" % (" ".join(mpiparams),), logfiles, logger=logger ) )
 
   def check(self):
     # I/O nodes need to be reachable -- check in parallel
