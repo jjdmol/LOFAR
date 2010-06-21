@@ -16,6 +16,8 @@ def initLogger():
                      format = "%(levelname)-5s|%(asctime)s|OLAP|%(message)s",
                    )
 
+  logging.raiseExceptions = False                 
+
   loglevels = {
    "DEBUG":  logging.DEBUG,
    "INFO":   logging.INFO,
@@ -28,8 +30,11 @@ def initLogger():
     logging.addLevelName( level, name )
 
 def rotatingLogger( appname, filename ):
-  handler = logging.handlers.TimedRotatingFileHandler( filename, when = 1, interval = 'D', backupCount = 0, utc = True )
   logger = logging.getLogger( appname )
+
+  handler = logging.handlers.TimedRotatingFileHandler( filename, when = "midnight", interval = 1, backupCount = 0 )
+
+  logger.propagate = False
   logger.addHandler( handler )
 
   return logger

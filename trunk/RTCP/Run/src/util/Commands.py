@@ -44,7 +44,7 @@ class AsyncCommand(object):
     Executes an external command in the background
     """
 
-    def __init__(self, cmd, outfiles=[], infile=None, killcmd=os.kill ):
+    def __init__(self, cmd, outfiles=[], infile=None, killcmd=os.kill, logger=None ):
         """ Run command `cmd', with I/O optionally redirected.
 
             cmd:      command to execute.
@@ -63,27 +63,25 @@ class AsyncCommand(object):
           outstr = ""
         debug("RUN %s: %s %s" % (self.__class__.__name__,cmd,outstr) )
 
-        if DRYRUN or not outfiles:
-          stdout = None
+        if DRYRUN:
+          self.outputs = []
+          stdout = None # no logging
         elif outfiles == PIPE:
-          stdout = PIPE
+          self.outputs = []
+          stdout = PIPE # no logging
         else:
           # open all outputs, remember them to prevent the files
           # from being closed at the end of __init__
           self.outputs = [ropen( o, "w", 1 ) for o in outfiles]
 
-          if len(self.outputs) == 1:
-            # one output, no need to multiplex
-            stdout = self.outputs[0]
-          else:
-            # create a pipe to multiplex everything through
-            r,w = os.pipe()
+          # create a pipe to multiplex everything through
+          r,w = os.pipe()
 
-            # feed all file descriptors to Tee
-            Tee( r, [o.fileno() for o in self.outputs] )
+          # feed all file descriptors to Tee
+          Tee( r, self.outputs, logger )
 
-            # keep the pipe input
-            stdout = w
+          # keep the pipe input
+          stdout = w
 
         if infile:
           # Line buffer stdin to satisfy MPIRUN on the BG/P. It will not provide output without it.
@@ -138,6 +136,9 @@ class AsyncCommand(object):
 
         self.done = True
         self.reaped = True
+
+        for o in self.outputs:
+          o.close()
 
     def abort(self, signal = 2):
         """ Abort the command, if it has not finished yet. """
