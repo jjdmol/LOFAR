@@ -7,7 +7,7 @@ import os
 import Partitions
 import ObservationID
 import time
-from Logger import debug,info,warning
+from logging import debug,info,warning
 from threading import Thread,Lock
 import thread
 

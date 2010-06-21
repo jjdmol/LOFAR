@@ -1,30 +1,35 @@
 import sys
 from math import modf
 from time import time,strftime
-
-APPNAME="OLAP"
+import logging
+import logging.handlers
 
 DEBUG=False
-VERBOSE=False
 
-def log( level, str ):
-  now =  "%s.%06d" % (strftime("%F %T"),(int(modf(time())[0]*1e6)))
-  print >>sys.stderr,"%-5s|%s|%s|%s" % (level,now,APPNAME,str)
-
-def debug( str ):
+def initLogger():
   if DEBUG:
-    log( "DEBUG", str )
+    minloglevel = logging.DEBUG
+  else:
+    minloglevel = logging.INFO
 
-def info( str ):
-  if VERBOSE:
-    log( "INFO", str )
+  logging.basicConfig( level = minloglevel,
+                     format = "%(levelname)-5s|%(asctime)s|OLAP|%(message)s",
+                   )
 
-def warning( str ):
-  log( "WARN", str )
+  loglevels = {
+   "DEBUG":  logging.DEBUG,
+   "INFO":   logging.INFO,
+   "WARN":   logging.WARNING,
+   "ERROR":  logging.ERROR,
+   "FATAL":  logging.CRITICAL
+  }
 
-def error( str ):
-  log( "ERROR", str )
+  for name,level in loglevels.iteritems():
+    logging.addLevelName( level, name )
 
-def fatal( str ):
-  log( "FATAL", str )
-  sys.exit(1)
+def rotatingLogger( appname, filename ):
+  handler = logging.handlers.TimedRotatingFileHandler( filename, when = 1, interval = 'D', backupCount = 0, utc = True )
+  logger = logging.getLogger( appname )
+  logger.addHandler( handler )
+
+  return logger

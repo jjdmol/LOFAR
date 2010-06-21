@@ -14,7 +14,7 @@ from Partitions import PartitionPsets
 from Locations import Hosts,Locations
 from Stations import Stations
 from util.dateutil import parse,format,parseDuration,timestamp
-from Logger import error
+from logging import error
 import math
 from sets import Set
 
