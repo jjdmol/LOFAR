@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from LOFAR import Logger
-from LOFAR.Logger import debug,info,warning,error,fatal
+from logging import debug,info,warning,error,critical
 from LOFAR import Sections
 from util import Commands
 from LOFAR.Locations import Locations
@@ -22,7 +22,7 @@ lock.acquire() # lock can be released by anyone to signal the end of the run
 def sigHandler( sig, frame ):
   global aborted
 
-  fatal( "Caught signal %s -- aborting" % (sig,) )
+  critical( "Caught signal %s -- aborting" % (sig,) )
   aborted = True
 
   try:
@@ -183,11 +183,12 @@ if __name__ == "__main__":
 
   if not options.quiet:
     DEBUG = True
-    Logger.VERBOSE = True
 
   if options.dryrun:
     DRYRUN = True
     Commands.DRYRUN = True
+
+  Logger.initLogger()  
 
   # set log server
   Locations.nodes["logserver"] = options.logserver

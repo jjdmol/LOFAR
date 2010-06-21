@@ -2,7 +2,7 @@
 
 from LOFAR import Logger
 from LOFAR.ObservationID import ObservationID
-from LOFAR.Logger import debug,info,warning,error,fatal
+from logging import debug,info,warning,error,critical
 from LOFAR.Parset import Parset
 from util.Hosts import rsymlink
 from LOFAR.Stations import Stations,overrideRack
@@ -69,10 +69,10 @@ def convertParsets( args, olapparset, partition = None ):
 
     for p in obsparams:
       if not isValidObsParam( p ):
-        fatal("Unknown observation parameter '%s'" % (p,))
+        critical("Unknown observation parameter '%s'" % (p,))
 
     if "parset" not in obsparams:
-      fatal("Observation '%s' does not define a parset file." % (obs,))
+      critical("Observation '%s' does not define a parset file." % (obs,))
 
     parset = Parset()
     parsets.append( parset )
@@ -86,7 +86,7 @@ def convertParsets( args, olapparset, partition = None ):
       addParset( olapparset )
       addParset( obsparams["parset"] )  
     except IOError,e:
-      fatal("ERROR: Cannot read parset file: %s" % (e,))
+      critical("ERROR: Cannot read parset file: %s" % (e,))
 
     # parse specific parset values from the command line (all options containing ".")
     # apply them so that we will parse them instead of the parset values
@@ -273,7 +273,8 @@ if __name__ == "__main__":
 
   if not options.quiet:
     DEBUG = True
-    Logger.VERBOSE = True
+
+  Logger.initLogger()  
 
   # read and convert parsets
   parsets = convertParsets( args, options.olapparset, options.partition )  

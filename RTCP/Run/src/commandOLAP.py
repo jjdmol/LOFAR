@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from LOFAR import Logger
-from LOFAR.Logger import debug,info,warning,error,fatal
+from logging import debug,info,warning,error,critical
 from LOFAR.CommandClient import sendCommand
 import sys
 import socket
@@ -64,10 +64,11 @@ if __name__ == "__main__":
 
   if not options.quiet:
     DEBUG = True
-    Logger.VERBOSE = True
+
+  Logger.initLogger()  
 
   # connect and send command
   try:
     sendCommand( options.partition, " ".join(args) )
   except socket.error, msg:
-    fatal( "Socket error: %s" % (msg,) )
+    critical( "Socket error: %s" % (msg,) )
