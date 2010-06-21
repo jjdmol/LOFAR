@@ -79,6 +79,8 @@ COMPDEFFILE=/tmp/compdef
 FILERELFILE=/tmp/filerel
 RESULTFILE=fileOrder
 
+./create_OTDB_comps
+
 # construct a file with 'node uses file' relations
 grep -e '^node' -e '^uses' *comp | cut -d":" -f2 | awk '
 	BEGIN {
