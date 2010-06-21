@@ -59,9 +59,9 @@ namespace rfiStrategy {
 						++p;
 						} break;
 					case EigenvalueRemovalOperation: {
-						num_t value = removeEigenvalue(data->GetImage(p), data->GetImage(p+1));
-						images[p]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), value);
-						images[p+1]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), 0.0);
+						std::pair<num_t, num_t> value = removeEigenvalue(data->GetImage(p), data->GetImage(p+1));
+						images[p]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), value.first);
+						images[p+1]->SetValue(metaData.TimeIndex(), metaData.ChannelIndex(), value.second);
 						++p;
 						} break;
 				}
@@ -133,7 +133,7 @@ namespace rfiStrategy {
 		}
 	}
 
-	num_t SpatialCompositionAction::removeEigenvalue(Image2DCPtr real, Image2DCPtr imaginary) const
+	std::pair<num_t, num_t> SpatialCompositionAction::removeEigenvalue(Image2DCPtr real, Image2DCPtr imaginary) const
 	{
 		try {
 			Image2DPtr
@@ -147,11 +147,12 @@ namespace rfiStrategy {
 					if(!std::isfinite(i->Value(x,y))) i->SetValue(x, y, 0.0);
 				}
 			}
-			if(r->ContainsOnlyZeros() && i->ContainsOnlyZeros()) return 0.0;
-			return Eigenvalue::Compute(r, i);
+			if(r->ContainsOnlyZeros() && i->ContainsOnlyZeros()) return std::pair<num_t, num_t>(0.0, 0.0);
+			Eigenvalue::Remove(r, i);
+			return std::pair<num_t, num_t>(r->Value(0,1), i->Value(0,1));
 		} catch(std::exception &e)
 		{
-			return std::numeric_limits<num_t>::quiet_NaN();
+			return std::pair<num_t, num_t>(std::numeric_limits<num_t>::quiet_NaN(), std::numeric_limits<num_t>::quiet_NaN());
 		}
 	}
 }

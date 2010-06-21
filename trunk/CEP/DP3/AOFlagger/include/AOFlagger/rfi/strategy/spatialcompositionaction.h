@@ -65,7 +65,7 @@ namespace rfiStrategy {
 			num_t sumCrossCorrelations(Image2DCPtr image) const;
 			num_t sumAutoCorrelations(Image2DCPtr image) const;
 			num_t eigenvalue(Image2DCPtr real, Image2DCPtr imaginary) const;
-			num_t removeEigenvalue(Image2DCPtr real, Image2DCPtr imaginary) const;
+			std::pair<num_t, num_t> removeEigenvalue(Image2DCPtr real, Image2DCPtr imaginary) const;
 	};
 
 }
