@@ -36,12 +36,13 @@ class Tee(Thread):
         break
 
       if fileno in rlist:
-        lines = os.read( self.inputfd, 4096 ).split("\n")
+        data = os.read( self.inputfd, 4096 )
 
-        if len(lines) == 0:
+        if len(data) == 0:
           # eof
           break
 
+        lines = data.split("\n")
         lines[0] = "%s%s" % (lines[0],prevline)
 
         for line in lines[:-1]: 
