@@ -75,6 +75,7 @@ class SpatialCompositionFrame : public Gtk::Frame {
 			_sumCrossButton.show();
 			_sumAutoButton.show();
 			_eigenvalueButton.show();
+			_removeEigenvalueButton.show();
 
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &SpatialCompositionFrame::onApplyClicked));

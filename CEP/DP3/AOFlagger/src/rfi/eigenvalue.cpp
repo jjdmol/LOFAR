@@ -135,7 +135,7 @@ void Eigenvalue::Remove(Image2DPtr real, Image2DPtr imaginary)
 			double a_xy_i = 0.0;
 			// A = U S U^T , so:
 			// a_xy = \sum_{i=0}^{n} U_{iy} S_{ii} U_{ix}
-			for(int i=0;i<1;++i) {
+			for(int i=n-1;i<n;++i) {
 				double u_r = a[y + i*n].r;
 				double u_i = a[y + i*n].i;
 				double s = w[i];
@@ -144,8 +144,8 @@ void Eigenvalue::Remove(Image2DPtr real, Image2DPtr imaginary)
 				a_xy_r += s * (u_r * ut_r - u_i * ut_i);
 				a_xy_i += s * (u_r * ut_i + u_i * ut_r);
 			}
-			real->SetValue(x, y, real->Value(x, y) - a_xy_r);
-			imaginary->SetValue(x, y, imaginary->Value(x, y) - a_xy_i);
+			real->SetValue(x, y, /*real->Value(x, y) - */a_xy_r);
+			imaginary->SetValue(x, y, /*imaginary->Value(x, y) - */a_xy_i);
 		}
 	}
 }
