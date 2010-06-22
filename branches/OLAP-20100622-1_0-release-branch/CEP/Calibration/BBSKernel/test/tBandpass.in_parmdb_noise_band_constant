@@ -1,3 +1,0 @@
-open tablename='tBandpass.instrument_model'
-adddef bandpass nx=1, ny=1, values=1.0
-quit

@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# Get paths to required jars
-. ./jarpath.include
-
-# start BaseSim GUI
-java -classpath $SAXJAR:$KIWIJAR:classes org/astron/basesim/Main
