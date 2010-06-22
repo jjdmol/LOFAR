@@ -1,7 +1,7 @@
 #
 # Hardcoded (temporary) keys
 #
-OLAP.correctClocks = T
+OLAP.correctClocks = F
 
 #
 # Fibre length corrections for superterp stations using
@@ -124,9 +124,16 @@ PIC.Core.CS026HBA0.clockCorrectionTime = 0
 PIC.Core.CS026HBA1.clockCorrectionTime = 0
 PIC.Core.CS026HBA.clockCorrectionTime  = 0
 
+PIC.Core.CS017LBA.clockCorrectionTime  = 0
+PIC.Core.CS017HBA0.clockCorrectionTime = 0
+PIC.Core.CS017HBA1.clockCorrectionTime = 0
+PIC.Core.CS017HBA.clockCorrectionTime  = 0
+
 #
 # Phase centers
 #
+Observation.referencePhaseCenter =   [3826577.110, 461022.900, 5064892.758]
+
 PIC.Core.RS106LBA.phaseCenter   = [3829261.468       , 469162.237        , 5062137.281      ]
 PIC.Core.RS106HBA.phaseCenter   = [3829205.641       , 469142.485        , 5062180.973      ]
 
@@ -240,6 +247,12 @@ PIC.Core.CS026LBA.phaseCenter  = [3826390.959, 461869.804, 5064955.884]
 PIC.Core.CS026HBA0.phaseCenter = [3826418.270, 461805.789, 5064941.170]
 PIC.Core.CS026HBA1.phaseCenter = [3826335.122, 461887.648, 5064996.185]
 PIC.Core.CS026HBA.phaseCenter  = [3826376.697, 461846.719, 5064968.678]
+
+PIC.Core.CS017LBA.phaseCenter  = [3826462.097, 461501.902, 5064935.798]
+PIC.Core.CS017HBA0.phaseCenter = [3826405.139, 461507.412, 5064978.055]
+PIC.Core.CS017HBA1.phaseCenter = [3826499.827, 461552.450, 5064902.910]
+PIC.Core.CS017HBA.phaseCenter  = [3826452.483, 461529.931, 5064940.483]
+
 #
 # Experimental part:
 #
