@@ -104,17 +104,17 @@ void Parset::checkInputConsistency() const
     vector<unsigned> slotsOfStation = subbandToRSPslotMapping(station);
 
     if (rspsOfStation.size() != nrSubbands())
-      THROW(InterfaceException, string("the size of \"Observation.Dataslots.") + station + ".RSPBoardlist\" does not equal the number of subbands");
+      THROW(InterfaceException, string("the size of \"Observation.Dataslots.") + station + ".RSPBoardList\" does not equal the number of subbands");
 
     if (slotsOfStation.size() != nrSubbands())
-      THROW(InterfaceException, string("the size of \"Observation.Dataslots.") + station + ".Dataslotlist\" does not equal the number of subbands");
+      THROW(InterfaceException, string("the size of \"Observation.Dataslots.") + station + ".DataslotList\" does not equal the number of subbands");
 
     for (int subband = nrSubbands(); -- subband >= 0;) {
       if (rsps.find(rspsOfStation[subband]) == rsps.end())
-	THROW(InterfaceException, string("\"Observation.Dataslots.") + station + ".RSPBoardlist\" mentions RSP board " + boost::lexical_cast<string>(rspsOfStation[subband]) + ", which does not exist");
+	THROW(InterfaceException, string("\"Observation.Dataslots.") + station + ".RSPBoardList\" mentions RSP board " + boost::lexical_cast<string>(rspsOfStation[subband]) + ", which does not exist");
 
       if (slotsOfStation[subband] >= nrSlotsInFrame())
-	THROW(InterfaceException, string("\"Observation.Dataslots.") + station + ".Dataslotlist\" mentions RSP slot " + boost::lexical_cast<string>(slotsOfStation[subband]) + ", which is more than the number of slots in a frame");
+	THROW(InterfaceException, string("\"Observation.Dataslots.") + station + ".DataslotList\" mentions RSP slot " + boost::lexical_cast<string>(slotsOfStation[subband]) + ", which is more than the number of slots in a frame");
     }
   }
 }
@@ -498,7 +498,7 @@ bool Parset::compatibleInputSection(const Parset &otherParset) const
 
 vector<unsigned> Parset::subbandToRSPboardMapping(const string &stationName) const
 {
-  std::string key = std::string("Observation.Dataslots.") + stationName + ".RSPBoardlist";
+  std::string key = std::string("Observation.Dataslots.") + stationName + ".RSPBoardList";
 
   if (!isDefined(key)) {
     LOG_WARN_STR('"' << key << "\" not defined, trying \"Observation.rspBoardList\"");
@@ -511,7 +511,7 @@ vector<unsigned> Parset::subbandToRSPboardMapping(const string &stationName) con
 
 vector<unsigned> Parset::subbandToRSPslotMapping(const string &stationName) const
 {
-  std::string key = std::string("Observation.Dataslots.") + stationName + ".Dataslotlist";
+  std::string key = std::string("Observation.Dataslots.") + stationName + ".DataslotList";
 
   if (!isDefined(key)) {
     LOG_WARN_STR('"' << key << "\" not defined, trying \"Observation.rspSlotList\"");
