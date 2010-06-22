@@ -176,8 +176,10 @@ CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4, TEXT)
 CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2, TEXT)
   RETURNS INT4 AS '
 	DECLARE
-		vNode		RECORD;
-		vNewNodeID	VICtemplate.nodeID%TYPE;
+		vNode			RECORD;
+		vNewNodeID		VICtemplate.nodeID%TYPE;
+		vTrimmedName	TEXT;
+		vFullName		TEXT;
 
 	BEGIN
 	  SELECT originID, name
@@ -193,16 +195,27 @@ CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2, TEXT)
 	  IF $4 != -1 THEN
 		vNode.name := vNode.name || \'[\' || $4 || \']\';
 	  END IF;
---RAISE WARNING \'iVHleaf(%,%)\', $5||vNode.name,$4;
+
+	  -- special case: this function was designed for creating VIC trees from template trees,
+	  -- but is now also used by the scheduler forr adding NEW nodes to an existing VIC tree.
+	  -- To make this possible we must NOT add the name of the original component to the given
+	  -- name. For VIC tree creation this name always end in a DOT when the scheduler (ab)uses
+	  -- this function the name does not end in a DOT.
+	  vTrimmedName := rtrim($5, \'.\');
+	  IF vTrimmedName != $5 OR $5 = \'\' THEN
+		vFullName := $5 || vNode.name;
+	  ELSE
+		vFullName := $5;
+	  END IF;
+	  -- RAISE WARNING \'iVHleaf(%,%)\', vFullName,$4;
 
 	  INSERT
 	  INTO	 VIChierarchy(treeID, nodeID, parentID, 
 						  paramrefID, name, index, leaf)
 	  VALUES ($2, vNewNodeID, $3, 
-			  vNode.originID, $5 || vNode.name, $4, FALSE);
+			  vNode.originID, vFullName, $4, FALSE);
 
-	  PERFORM instanciateVHparams($1, $2, vNewNodeID, 
-												$5 || vNode.name || \'.\');
+	  PERFORM instanciateVHparams($1, $2, vNewNodeID, vFullName || \'.\');
 
 	  RETURN vNewNodeID;
 	END;
