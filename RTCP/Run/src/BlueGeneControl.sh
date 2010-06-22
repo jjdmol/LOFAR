@@ -1,7 +1,7 @@
 # >> $LOG 2>&1 >> $LOG 2>&1!/bin/bash
 COMMAND=$1
 
-PARTITION=R00
+PARTITION=R01
 BINPATH=/opt/lofar/bin
 LOG=/opt/lofar/log/BlueGeneControl.log
 PIDFILE=/tmp/BlueGeneControl-$PARTITION.pid
