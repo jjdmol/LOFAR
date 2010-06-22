@@ -1,0 +1,146 @@
+# -- CNProc --
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   CNProc     1.0.4  development 'node constraint'  "Blue Gene Processing"
+
+# name   	        dir.    type    unit    prun.   vm      value    constr. descr.
+#--------------------------------------------------------------------------------------------------------
+par integrationSteps	O	int	-	10	0	768 	 -	"compute node block size (after FFT)"
+par nrPPFTaps		I	int	-	10	0	16	 -	"number of elements in the polyphasefilter"
+par partition		I	text	-	10	0	'R00'	 -	"BlueGene partition"
+
+par coresPerPset        I       int     -       10      0       64        -     "Total nr of Cores used in each pset for this observation"
+par usedCores           I       vint    -       10      0       '[0..63]' -     "Cores used in each pset for this observation"
+par phaseOnePsets       I       vint    -       10      0       '[]'      -     "Psets used for phase one (input from stations)"
+par phaseTwoPsets       I       vint    -       10      0       '[]'      -     "Psets used for phase two (calculations per subband)"
+par phaseThreePsets     I       vint    -       10      0       '[]'      -     "Psets used for phase three (calculations per pencil beam)"
+
+
+# -- OLAP_Conni --
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  OLAP_Conn    1.0.5  development 'node constraint'  "Connection specification of OLAP"
+
+#    name         	     	dir. 	type   unit   	prun. 	vm  	value			constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par IONProc_Storage_Ports	I	vtext	-	10	0	'[8300..9000]'		- 	"portnumbers to use in the Storage connections"
+par IONProc_CNProc_Transport   I	ptext	-	10	0	'FCNP|TCP|NULL;FCNP'	-	"communication protocol between IO and CN nodes"
+par rawDataOutputs		I	text	-	10	0	'[tcp:10.181.0.2:4000]'	-	"where to send raw station data if enabled"
+par rawDataOutputOnly		I	bool	-	10	0	false	                -	"only retransmit raw station data"
+
+
+# -- Correlator --
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  Correlator 1.0.1  development 'node constraint'  "Settings for Correlation (visibilities) calculations"
+
+#    name         	dir.	type	unit	prun.	vm	value	constr.	descr.
+#--------------------------------------------------------------------------------------------------------
+par integrationTime	I       dbl		-		10		0	0		- 		"Integration time"
+
+
+# -- Stokes --
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  Stokes    1.0.1  development 'node constraint'  "Settings for Stokes calculations"
+
+# output configuration
+par  which                   I    ptext  -      10    0      "I|IQUV;I"                                - "Which Stokes values to compute"
+par  integrateChannels       I    bool   -      10    0      false                                     - "Collapse channels for Stokes (DM=0)"
+par  integrationSteps        I    int    -      10    0      1                                         - "Time-wise integration of Stokes data (in samples)"
+
+#########################################################################################################
+# -- Pencil --
+#      name                      vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  Pencil    2.0.0  development  'node constraint'  "Pencil beam specification"
+#    name                dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  angle1              I        vdbl   -              10    0    0                    -       'RightAscention(s) or Azimuth of thesource(s) in rad. (coordinate system is same as used in the Beams)'
+par  angle2              I        vdbl   -              10    0    0                    -       'Declination(s) or Elevation of the source(s) in rad. (coordinate system is the same as used in the Beams)'
+
+
+# -- PencilInfo --
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  PencilInfo    1.0.1  development 'node constraint'  "Settings for pencil beamformer"
+
+par  flysEye                 I    bool   -      10    0      false                                     - "Fly's Eye mode: every station is transformed into its own beam"
+par  nrRings                 I    int    -      10    0      0                                         - "Number of pencil-beam rings to create"
+par  ringSize                I    dbl    -      10    0      0                                         - "Width of each pencil ring in rad."
+
+# -- DelayComp --
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  DelayComp    1.0.3  development 'node constraint'  "Setting of the delaycompensation"
+
+#    name          	dir.    type    unit    prun.   vm      value                   constr. descr.
+#--------------------------------------------------------------------------------------------------------
+par positionType 	I	text	-	10	0	'ITRF'			-	'coordinate system of station positions'
+par nrCalcDelays	I	int	-	10	0	16			-	'number of delays to calculate ahead for delay compensation'
+
+
+# -- IONProc
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  IONProc     1.0.2  development 'node constraint'  "???"
+
+
+#    name         	dir. 	type   	unit   	prun. 	vm  	value	constr. descr.
+#--------------------------------------------------------------------------------------------------------
+par integrationSteps	O	int		-		10  	0	30	-	'number of blocks summed by the IONProc'
+
+
+# -- StorageProc
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  StorageProc     1.0.2  development 'node constraint'  "???"
+
+#    name         	   	dir. 	type   unit   prun. vm  value   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par subbandsPerMS		I	int		-		10	0		1						-		'???'
+
+
+# -- OLAP--
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  OLAP         1.0.7  development 'node constraint'  "OLAP"
+
+#    name          	dir.    type   unit   prun.     vm      value   	constr.  	descr.
+#--------------------------------------------------------------------------------------------------------
+par realTime		I	bool    -	10	0	true		-		"whether data is processed at real-time"
+par delayCompensation	I   	bool    -       10  	0	true		-		"perform delay compensation between stations"
+par storageStationNames	I   	text    -	10	0	'AllStations'	-		'???'
+#par IPHeaderSize	I	int	-	10	0	28		-		'???'
+#par EPAHeaderSize	I	int	-	10	0	16		-		'???'
+par nrTimesInFrame	I	int	-	10	0	16		-		"number of timeslots per station UDP packet"
+par nrSubbandsPerFrame	I	int	-	10	0	>>Observation.nrSlotsInFrame		-		"number of subbands per station UDP packet"
+par nrBitsPerSample	I	int	-	10	0	16		-		"sample size in bits"
+par nrSecondsOfBuffer	dbl	int	-	10	0	2.5		-		'buffer size for raw station data (in seconds)'
+par maxNetworkDelay	I	dbl	-	10	0	0.25		-		'???'
+par correctBandPass	I   	bool    -       10  	0	true		-		'apply the bandpass filter'
+par nrPencils           I       int     -       10      0       0               -               "Number of additional (manual) pencil beams"
+
+# output selection
+par outputCorrelatedData    I    bool   -      10    0      true                                      - "Store correlated visilibities"
+par outputFilteredData      I    bool   -      10    0      false                                     - "Store output of PPF/FFT"
+par outputBeamFormedData    I    bool   -      10    0      false                                     - "Store beam formed complex voltages"
+par outputCoherentStokes    I    bool   -      10    0      false                                     - "Store coherent Stokes"
+par outputIncoherentStokes   I    bool   -      10    0      false                                     - "Store incoherent Stokes"
+
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+uses  CNProc       1.0.4  development 'node constraint'  "Compute-Node Processing: application running on the BlueGene compute nodes"
+uses  OLAP_Conn    1.0.5  development 'node constraint'  "Connection specification of OLAP"
+uses  Stokes       1.0.1  development 'node constraint'  "Settings for Stokes calculations"
+uses  PencilInfo   1.0.1  development 'node constraint'  "Settings for pencil beamformer"
+uses  DelayComp    1.0.3  development 'node constraint'  "Setting of the delaycompensation"
+uses  IONProc      1.0.2  development 'node constraint'  "I/O Node Processing: application running on the BlueGene I/O nodes"
+uses  StorageProc  1.0.2  development 'node constraint'  "Stores output from the correlator in one or more MeasurmentSet files"
+uses  Pencil	   2.0.0  development 'node constraint'  "Pencil beam specification"
+uses  Correlator   1.0.1  development 'node constraint'  "Correlator specification"
