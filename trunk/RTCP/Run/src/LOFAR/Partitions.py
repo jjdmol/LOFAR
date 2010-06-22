@@ -34,7 +34,8 @@ for R in xrange(3):
          ip = "10.170.%d.%d" % (R,(1+M*128+N*4+J))
 
          pset = "%s-J%02d" % (nodecard,J)
-         PartitionPsets[pset] = [ip] # single psets without -16 suffix only work on R00
+         if R == 0: PartitionPsets[pset] = [ip] # single psets without -16 suffix only work on R00
+         PartitionPsets["%s-16" % (pset,)] = [ip]
 
     # groups smaller than a midplane
     for groupsize in (1,2,4,8):
@@ -42,7 +43,7 @@ for R in xrange(3):
         nodecard = "%s-N%02d" % (midplane,N)
 
         PartitionPsets["%s-%d" % (nodecard,32*groupsize)] = sum( [
-          PartitionPsets["%s-N%02d-J00" % (midplane,x)] + PartitionPsets["%s-N%02d-J01" % (midplane,x)]
+          PartitionPsets["%s-N%02d-J00-16" % (midplane,x)] + PartitionPsets["%s-N%02d-J01-16" % (midplane,x)]
          for x in xrange( N, N+groupsize) ], [] )
 
     # a midplane
