@@ -28,6 +28,7 @@
 #include <Common/LofarLocators.h>
 #include <Common/LofarConstants.h>
 #include <Common/lofar_fstream.h>
+#include <Common/StringUtil.h>
 #include <APL/APLCommon/AntennaField.h>
 
 using namespace blitz;
