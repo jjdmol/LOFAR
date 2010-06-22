@@ -1,0 +1,792 @@
+V 10
+1
+LANG:1 12 VT-Demo2-Tab
+PANEL,62 57 687 173 N "_3DFace" 1
+"$VT"
+E E E E E 1 -1 -1 0  20 10
+""0  1
+E E 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+2 0
+"Text8"
+""
+1 41 84 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 26 110 40.99999999999999
+0 2 0 "s" 0 0 0 192 0 0  12 26 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 9 Direction
+2 1
+"Text9"
+""
+1 3 106 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 74 88 193 103
+0 2 0 "s" 0 0 0 192 0 0  74 88 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 7 Angle 1
+14 2
+"TextFieldDirectionAngle1"
+""
+1 126.2422360248447 77.99999999999999 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  125 75.99999999999999 225 103
+3 "s" 0 0 0 0 0 -1  E "main()
+{
+  TextFieldDirectionAngle1.text=\"0.0\";
+}" 0
+ E
+2 3
+"Text10"
+""
+1 3 136 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 74 118 193 133
+0 2 0 "s" 0 0 0 192 0 0  74 118 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 7 Angle 2
+14 4
+"TextFieldDirectionAngle2"
+""
+1 126.2422360248447 108 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  125 106 225 133
+3 "s" 0 0 0 0 0 -1  E "main()
+{
+  TextFieldDirectionAngle2.text=\"-1.0\";
+}" 0
+ E
+2 5
+"Text15"
+""
+1 431 4.000000000000004 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 534 50.99999999999999 688 65.99999999999999
+0 2 0 "s" 0 0 0 192 0 0  534 50.99999999999999 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 4 Type
+2 6
+"Text16"
+""
+1 431 34 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 534 81 709 96
+0 2 0 "s" 0 0 0 192 0 0  534 81 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 7 Angle 1
+2 7
+"Text17"
+""
+1 431 64 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 534 111 709 126
+0 2 0 "s" 0 0 0 192 0 0  534 111 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 7 Angle 2
+14 8
+"TextFieldCurrentDirectionType"
+""
+1 588.1801242236025 47.99999999999999 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 22 1=J2000, 2=AZEL, 3=LMN
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  587 45.99999999999999 682 73
+2 "s" 0 0 0 0 0 -1  E "main()
+{
+dyn_errClass err;
+  string vtname,bfname;
+  vtname = $VT;
+  bfname = \"BF\" + substr(vtname,2,1);
+
+  if( dpSubStr(\"System1:PAC_\"+vtname+\"_\"+bfname+\"_directionType.:_online.._value\", DPSUB_DP_EL ) != \"\" )
+  {
+    dpConnect(\"EP_DirectionTypeChanged\",\"System1:PAC_\"+vtname+\"_\"+bfname+\"_directionType.:_online.._value\");
+  }
+}
+
+EP_DirectionTypeChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldCurrentDirectionType\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+" 0
+ E
+14 9
+"TextFieldCurrentDirectionAngle1"
+""
+1 588.1801242236025 77.99999999999999 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  587 75.99999999999999 682 103
+2 "s" 0 0 0 0 0 -1  E "main()
+{
+dyn_errClass err;
+  string vtname,bfname;
+  vtname = $VT;
+  bfname = \"BF\" + substr(vtname,2,1);
+
+  if( dpSubStr(\"System1:PAC_\"+vtname+\"_\"+bfname+\"_directionAngle1.:_online.._value\", DPSUB_DP_EL ) != \"\" )
+  {
+    dpConnect(\"EP_DirectionAngle1Changed\",\"System1:PAC_\"+vtname+\"_\"+bfname+\"_directionAngle1.:_online.._value\");
+  }
+}
+
+EP_DirectionAngle1Changed(string dp, string sNewValue)
+{
+  setValue(\"TextFieldCurrentDirectionAngle1\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+" 0
+ E
+14 10
+"TextFieldCurrentDirectionAngle2"
+""
+1 588.1801242236025 108 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+ E E
+21 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  587 106 682 133
+2 "s" 0 0 0 0 0 -1  E "main()
+{
+dyn_errClass err;
+  string vtname,bfname;
+  vtname = $VT;
+  bfname = \"BF\" + substr(vtname,2,1);
+
+  if( dpSubStr(\"System1:PAC_\"+vtname+\"_\"+bfname+\"_directionAngle2.:_online.._value\", DPSUB_DP_EL ) != \"\" )
+  {
+    dpConnect(\"EP_DirectionAngle2Changed\",\"System1:PAC_\"+vtname+\"_\"+bfname+\"_directionAngle2.:_online.._value\");
+  }
+}
+
+EP_DirectionAngle2Changed(string dp, string sNewValue)
+{
+  setValue(\"TextFieldCurrentDirectionAngle2\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+" 0
+ E
+22 11
+"ComboBoxDirectionType"
+""
+1 125 16 E E E 1 E 1 E N {0,0,0} E N "_Window" E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  125 16 225 43
+3
+1
+LANG:1 5 J2000
+
+0
+1
+LANG:1 4 AZEL
+
+0
+1
+LANG:1 3 LMN
+
+1
+
+E
+E
+E
+ 0 0
+13 12
+"ButtonAdjustDirection"
+""
+1 127.1276595744682 138 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+25 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  125 136 225 162
+
+T 
+1
+LANG:1 3 Set
+"main()
+{
+dyn_errClass err;
+  string vtname,bfname;
+  vtname = $VT;
+  bfname = \"BF\" + substr(vtname,2,1);
+
+  dpSetWait(\"System1:PAC_\"+vtname+\"_\"+bfname+\"_directionType.:_original.._value\",ComboBoxDirectionType.text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+
+  dpSetWait(\"System1:PAC_\"+vtname+\"_\"+bfname+\"_directionAngle1.:_original.._value\",TextFieldDirectionAngle1.text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+
+  dpSetWait(\"System1:PAC_\"+vtname+\"_\"+bfname+\"_directionAngle2.:_original.._value\",TextFieldDirectionAngle2.text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}
+" 0
+ E E E
+2 13
+"Text15"
+""
+1 431 4.000000000000004 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+27 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 534 28 688 42.99999999999999
+0 2 0 "s" 0 0 0 192 0 0  534 28 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 17 Current direction
+14 14
+"TextFieldDirectionAngle1To"
+""
+1 233.2422360248448 77.99999999999999 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+29 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  232 75.99999999999999 332 103
+3 "s" 0 0 0 0 0 -1  E "main()
+{
+  setValue(\"\",\"text\",\"0.0\");
+}" 0
+ E
+14 15
+"TextFieldDirectionAngle2To"
+""
+1 233.2422360248448 108 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+31 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  232 106 332 133
+3 "s" 0 0 0 0 0 -1  E "main()
+{
+  setValue(\"\",\"text\",\"1.0\");
+}" 0
+ E
+2 16
+"Text9"
+""
+1 59 102 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+33 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 55.99999999999999 301 70.99999999999999
+0 2 0 "s" 0 0 0 192 0 0  182 55.99999999999999 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 6 (From)
+2 17
+"Text9"
+""
+1 11 94 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+35 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 232 55.99999999999999 351 70.99999999999999
+0 2 0 "s" 0 0 0 192 0 0  232 55.99999999999999 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 2 To
+2 18
+"Text15"
+""
+1 421 74 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+37 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 72 26 226 40.99999999999999
+0 2 0 "s" 0 0 0 192 0 0  72 26 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 4 Type
+14 19
+"TextFieldDirectionSweepTime"
+""
+1 323.8819875776398 28 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+39 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  323 26 394 53
+3 "s" 0 0 0 0 0 -1  E "main()
+{
+  setValue(\"\",\"text\",\"60.0\");
+}" 0
+ E
+2 20
+"Text9"
+""
+1 72 54 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+41 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 327 12 446 27
+0 2 0 "s" 0 0 0 192 0 0  327 12 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 14 Sweep time (s)
+19 21
+"RadioBoxSweep"
+""
+1 342 65.99999999999999 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+43 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  342 65.99999999999999 450 170
+4
+T 
+1
+LANG:1 5 Fixed
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 14 Straight sweep
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 10 Sine sweep
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 12 Cosine sweep
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+"main()
+{
+dyn_errClass err;
+  string vtname,bfname;
+  vtname = $VT;
+  bfname = \"BF\" + substr(vtname,2,1);
+
+  while(true)
+  {
+    double angle1From=TextFieldDirectionAngle1.text;
+    double angle2From=TextFieldDirectionAngle2.text;
+    double angle1To=TextFieldDirectionAngle1To.text;
+    double angle2To=TextFieldDirectionAngle2To.text;
+    double sweepTime=TextFieldDirectionSweepTime.text;
+    double updateRate=TextFieldDirectionSweepUpdateRate.text;
+    double currentAngle1=angle1From;
+    double currentAngle2=angle2From;
+    double currentRad1=0.0;
+    double currentRad2=0.0;
+    double sweepDirectionAngle1=1.0;
+    double sweepDirectionAngle2=1.0;
+    double incrementAngle1;
+    double incrementAngle2;
+    bool stopSweep=false;
+    int selectedSweep=RadioBoxSweep.number();
+    double delayCounter=0.0;
+    
+    if(updateRate < 1.0)
+    {
+      updateRate=1.0;
+    }
+    
+    if(selectedSweep==0)
+    {
+      delay(1); // sleep one second
+    }
+    else
+    {
+      if(angle1From>angle1To)
+      {
+        double tempAngle=angle1From;
+        angle1From=angle1To;
+        angle1To=tempAngle;
+      }
+    
+      if(angle2From>angle2To)
+      {
+        double tempAngle=angle2From;
+        angle2From=angle2To;
+        angle2To=tempAngle;
+      }      
+      incrementAngle1=(angle1To-angle1From)  / (sweepTime/updateRate);
+      incrementAngle2=(angle2To-angle2From)  / (sweepTime/updateRate);
+      if(selectedSweep==2 || selectedSweep==3) // sine or cosine
+      {
+        incrementAngle1=4*asin(1)  / (sweepTime/updateRate);
+        incrementAngle2=4*asin(1)  / (sweepTime/updateRate);
+      }
+      
+      dpSetWait(\"System1:PAC_\"+vtname+\"_\"+bfname+\"_directionType.:_original.._value\",ComboBoxDirectionType.text);
+//      dpSetWait(\"System1:PAC_VT1_BF1_directionType.:_original.._value\",ComboBoxDirectionType.text);
+      err = getLastError();
+      if (dynlen(err) > 0)
+      {
+        stopSweep=true;
+        RadioBoxSweep.number(0);
+        errorDialog(err);
+      }
+   
+      while(!stopSweep)
+      {
+        double tempAngle1=calcNewAngle(selectedSweep,currentAngle1,sweepDirectionAngle1,incrementAngle1,angle1From,angle1To,currentRad1);
+        double tempAngle2=calcNewAngle(selectedSweep,currentAngle2,sweepDirectionAngle2,incrementAngle2,angle2From,angle2To,currentRad2);
+        if(tempAngle1>=angle1To || tempAngle1<=angle1From)
+        {
+          sweepDirectionAngle1=sweepDirectionAngle1*(-1.0);
+          tempAngle1=calcNewAngle(selectedSweep,currentAngle1,sweepDirectionAngle1,incrementAngle1,angle1From,angle1To,currentRad1);
+        }
+        if(tempAngle2>=angle2To || tempAngle2<=angle2From)
+        {
+          sweepDirectionAngle2=sweepDirectionAngle2*(-1.0);
+          tempAngle2=calcNewAngle(selectedSweep,currentAngle2,sweepDirectionAngle2,incrementAngle2,angle2From,angle2To,currentRad2);
+        }
+        currentAngle1=tempAngle1;
+        currentAngle2=tempAngle2;
+        currentRad1=currentRad1+sweepDirectionAngle1*incrementAngle1;
+        currentRad2=currentRad2+sweepDirectionAngle2*incrementAngle2;
+      
+        dpSetWait(\"System1:PAC_\"+vtname+\"_\"+bfname+\"_directionAngle1.:_original.._value\",currentAngle1);
+//        dpSetWait(\"System1:PAC_VT1_BF1_directionAngle1.:_original.._value\",currentAngle1);
+        err = getLastError();
+        if (dynlen(err) > 0)
+        {
+          stopSweep=true;
+          RadioBoxSweep.number(0);
+          errorDialog(err);
+        }  
+ 
+        dpSetWait(\"System1:PAC_\"+vtname+\"_\"+bfname+\"_directionAngle2.:_original.._value\",currentAngle2);
+//        dpSetWait(\"System1:PAC_VT1_BF1_directionAngle2.:_original.._value\",currentAngle2);
+        err = getLastError();
+        if (dynlen(err) > 0)
+        { 
+          stopSweep=true;
+          RadioBoxSweep.number(0);
+          errorDialog(err);
+        }
+
+        if(!stopSweep)
+        {
+          delayCounter=0.0;
+          while((delayCounter < updateRate) && !stopSweep)
+          {
+            delay(1);
+            delayCounter = delayCounter + 1.0;
+            stopSweep=(RadioBoxSweep.number() != selectedSweep);
+          }
+        }
+      }
+    }
+  }
+}
+
+double calcNewAngle(int sweep, double currentAngle,double direction,double increment, double angleFrom, double angleTo, double currentRad)
+{
+  double tempAngle=currentAngle;
+  if(sweep==1) // straight
+  {
+    tempAngle=currentAngle+direction*increment;
+  }
+  else if(sweep==2) // sine
+  {
+    tempAngle=((angleTo-angleFrom)/2)*sin(currentRad+direction*increment)+angleFrom+(angleTo-angleFrom)/2;
+  }
+  else if(sweep==3) // cosine
+  {
+    tempAngle=((angleTo-angleFrom)/2)*cos(currentRad+direction*increment)+angleFrom+(angleTo-angleFrom)/2;
+  }
+  return tempAngle;
+}
+" 0
+ E14 22
+"TextFieldDirectionSweepUpdateRate"
+""
+1 423.8944099378882 28 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+45 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  423 26 495 53
+3 "s" 0 0 0 0 0 -1  E "main()
+{
+  setValue(\"\",\"text\",\"1.0\");
+}" 0
+ E
+2 23
+"Text9"
+""
+1 71 45 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+47 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 426 12 545 27
+0 2 0 "s" 0 0 0 192 0 0  426 12 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 12 Update every
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

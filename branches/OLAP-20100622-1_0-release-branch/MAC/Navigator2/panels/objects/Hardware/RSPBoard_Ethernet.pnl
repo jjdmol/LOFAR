@@ -1,0 +1,218 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 560 213 N "_3DFace" 0
+"main()
+{
+  baseDP=g_currentDatapoint+\".Ethernet\";
+  
+  childStateBorder.toolTipText = baseDP;
+
+  if(!dpExists(baseDP + \".packetsReceived:_online.._value\") ||
+     !dpExists(baseDP + \".packetsError:_online.._value\") ||
+     !dpExists(baseDP + \".lastError:_online.._value\")) {
+    setValue(\"output_packetsReceived\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"output_packetsError\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"output_lastError\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"output_packetsReceived\", \"text\", \"error\");
+    setValue(\"output_packetsError\"   , \"text\", \"error\");
+    setValue(\"output_lastError\"      , \"text\", \"error\");
+    return;
+  } else {
+    setValue(\"output_packetsReceived\", \"backCol\", \"white\");
+    setValue(\"output_packetsError\", \"backCol\", \"white\");
+    setValue(\"output_lastError\", \"backCol\", \"white\");
+    dpConnect(\"boardETHDetails\", baseDP + \".packetsReceived:_online.._value\",
+                                 baseDP + \".packetsError:_online.._value\",
+                                 baseDP + \".lastError:_online.._value\");
+  }
+
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
+  // connect for selfUpdates
+  showSelfState(baseDP);
+}
+" 0
+ E E E E 1 -1 -1 0  10 170
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP=\"\";
+
+void boardETHDetails(string dp1, int packetsReceived,
+                string dp2, int packetsError,
+                string dp3, int lastError)
+{
+    setValue(\"output_packetsReceived\", \"text\", packetsReceived);
+    setValue(\"output_packetsError\"   , \"text\", packetsError);
+    setValue(\"output_lastError\"      , \"text\", lastError);
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"childStateBorder"
+""
+1 10 143 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+ E E
+1 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 10 210 143
+2 1
+"label_lastError"
+""
+1 50 90 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 52 92 122 110
+0 2 0 "0s" 0 0 0 66 0 0  52 92 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 11 Last error:
+2 2
+"label_packetsError"
+""
+1 30 67 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 69 122 86
+0 2 0 "0s" 0 0 0 66 0 0  32 69 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 14 Packets error:
+2 3
+"label_packetsReceived"
+""
+1 20 44 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 46 122 60
+0 2 0 "0s" 0 0 0 66 0 0  22 46 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 17 Packets received:
+1 10 0 "" 1
+0
+14 7
+"output_packetsError"
+""
+1 130 66 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 128 64 202 89
+3 "0s" 0 0 0 2 0 -1  E E E
+14 8
+"output_lastError"
+""
+1 130 90 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 128 88 202 113
+3 "0s" 0 0 0 2 0 -1  E E E
+14 9
+"output_packetsReceived"
+""
+1 130 42 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 128 40 202 65
+3 "0s" 0 0 0 2 0 -1  E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "selfState"
+"objects\\lofar_self_state.pnl" 42 91 T 11 1 0 1 -26 31
+0
+0
