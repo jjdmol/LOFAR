@@ -36,6 +36,7 @@ class TimeFlagCountPlot {
 		bool HasData() { return !_counts.empty(); }
 		void MakePlot();
 	private:
+		void WriteCounts();
 		struct MapItem {
 			MapItem() : count(0), total(0) { }
 			long long count, total;

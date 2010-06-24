@@ -38,6 +38,8 @@ class AntennaFlagCountPlot{
 		bool HasData() { return !_counts.empty(); }
 		void Report();
 	private:
+		void WriteCounts();
+
 		struct MapItem {
 			MapItem() : name(), autoCount(0), autoTotal(0), crossCount(0), crossTotal(0)
 			{

@@ -27,6 +27,7 @@
 
 #include <AOFlagger/rfi/antennaflagcountplot.h>
 #include <AOFlagger/rfi/frequencyflagcountplot.h>
+#include <AOFlagger/rfi/timeflagcountplot.h>
 
 #include <AOFlagger/util/progresslistener.h>
 #include <AOFlagger/util/stopwatch.h>
@@ -170,6 +171,7 @@ int main(int argc, char **argv)
 		rfiStrategy::ArtifactSet artifacts(&ioMutex);
 		artifacts.SetAntennaFlagCountPlot(new AntennaFlagCountPlot());
 		artifacts.SetFrequencyFlagCountPlot(new FrequencyFlagCountPlot());
+		artifacts.SetTimeFlagCountPlot(new TimeFlagCountPlot());
 		
 		ConsoleProgressHandler progress;
 		
@@ -181,6 +183,7 @@ int main(int argc, char **argv)
 		set->AntennaFlagCountPlot()->Report();
 		delete set->AntennaFlagCountPlot();
 		delete set->FrequencyFlagCountPlot();
+		delete set->TimeFlagCountPlot();
 
 		delete set;
 

@@ -17,6 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#include <fstream>
+
 #include <AOFlagger/rfi/timeflagcountplot.h>
 
 #include <AOFlagger/util/plot.h>
@@ -50,7 +52,18 @@ void TimeFlagCountPlot::Add(class TimeFrequencyData &data, TimeFrequencyMetaData
 			_counts[time] = item;
 		}
 	}
+	WriteCounts();
 } 
+
+void TimeFlagCountPlot::WriteCounts()
+{
+	std::ofstream file("time-vs-counts.txt");
+	for(std::map<double, struct MapItem>::const_iterator i=_counts.begin();i!=_counts.end();++i)
+	{
+		file << i->first << "\t" << i->second.total << "\t" << i->second.count << "\t" << (100.0L * (long double) i->second.count / (long double) i->second.total) << "\n";
+	}
+	file.close();
+}
 
 void TimeFlagCountPlot::MakePlot()
 {

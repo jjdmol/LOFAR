@@ -71,6 +71,8 @@ void AntennaFlagCountPlot::Add(class TimeFrequencyData &data, TimeFrequencyMetaD
 			_counts[meta->Antenna2().id] = item2;
 		}
 	}
+
+	WriteCounts();
 } 
 
 void AntennaFlagCountPlot::MakePlot()
@@ -92,6 +94,16 @@ void AntennaFlagCountPlot::MakePlot()
 	}
 	plot.Close();
 	plot.Show();
+}
+
+void AntennaFlagCountPlot::WriteCounts()
+{
+	std::ofstream file("antenna-vs-counts.txt");
+	for(std::map<int, MapItem>::const_iterator i=_counts.begin();i!=_counts.end();++i)
+	{
+		file << i->second.name << "\t" << (100.0L * (long double) i->second.autoCount / (long double) i->second.autoTotal) << "\t" << (100.0L * (long double) i->second.crossCount / (long double) i->second.crossTotal) << "\n";
+	}
+	file.close();
 }
 
 void AntennaFlagCountPlot::Report()
