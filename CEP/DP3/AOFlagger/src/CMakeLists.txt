@@ -115,6 +115,7 @@ endif(GTKMM_FOUND)
 
 lofar_add_bin_program(rficonsole rficonsole.cpp)
 lofar_add_bin_program(rfistrategy rfistrategy.cpp)
+lofar_add_bin_program(rfistatcollect rfistatcollect.cpp)
 lofar_add_bin_program(msinfo msinfo.cpp)
 lofar_add_bin_program(colormapper colormapper.cpp)
 lofar_add_bin_program(versionaoflagger versionaoflagger.cc Package__Version.cc)
