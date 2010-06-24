@@ -139,7 +139,7 @@ void ExitOnClosedStdin::mainLoop()
 
 int main(int argc, char *argv[])
 {
-#if defined USE_LOG4CPLUS
+#if defined HAVE_LOG4CPLUS
   using namespace log4cplus;
   using namespace log4cplus::helpers;
 
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
   traceProp.setProperty("log4cplus.appender.STDOUT.layout.ConversionPattern", "%x %D{%d-%m-%y %H:%M:%S} %-5p %n");
   
   PropertyConfigurator(traceProp).configure();
-#elif defined USE_LOG4CXX
+#elif defined HAVE_LOG4CXX
   Context::initialize();
   setLevel("Global",8);
 #else

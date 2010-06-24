@@ -175,7 +175,7 @@ template <typename T> inline void *Thread::stub(void *arg)
 {
   Args<T> *args = static_cast<Args<T> *>(arg);
 
-#if defined USE_LOG4CPLUS
+#if defined HAVE_LOG4CPLUS
   lofarLoggerInitNode();
 #endif
 
