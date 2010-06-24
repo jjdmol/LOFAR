@@ -1,7 +1,7 @@
 #
 # Hardcoded (temporary) keys
 #
-OLAP.correctClocks = F
+OLAP.correctClocks = T
 
 #
 # Fibre length corrections for superterp stations using
