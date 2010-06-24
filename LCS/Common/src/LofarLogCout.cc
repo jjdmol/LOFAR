@@ -34,9 +34,7 @@ namespace LOFAR {
 
 namespace LFDebug 
 {
-#if !defined LOFAR_LOG_COUT_OLD_INTERFACE
   string sysInfo;
-#endif
 
 #if defined USE_THREADS
   pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
