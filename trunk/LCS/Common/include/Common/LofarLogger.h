@@ -28,9 +28,9 @@
 
 //# Include the correct set of macros, depending on the availability of the
 //# log4cplus or log4cxx packages.
-#if defined(HAVE_LOG4CPLUS)
+#if defined(USE_LOG4CPLUS)
 # include <Common/LofarLog4Cplus.h>
-#elif defined(HAVE_LOG4CXX)
+#elif defined(USE_LOG4CXX)
 # include <Common/LofarLog4Cxx.h>
 #else
 # include <Common/LofarLogCout.h>

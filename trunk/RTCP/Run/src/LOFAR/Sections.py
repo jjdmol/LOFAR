@@ -167,7 +167,7 @@ class IONProcSection(Section):
       "-host %s" % (",".join(self.psets),),
       "--pernode",
 
-      "--tag-output",
+      # "--tag-output",
 
       # environment
       # "-x FOO=BAR",

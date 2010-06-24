@@ -33,15 +33,9 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 
-#ifndef __BASE_FILE__
-# include <libgen.h>
-# define __BASE_FILE__ basename(__FILE__)
-#endif
-
-#ifdef ENABLE_LATENCY_STATS
+#include <time.h>
 #include <sys/time.h>
-#include <Common/StringUtil.h>
-#endif
+#include <stdio.h>
 
 //# This might be undefined if used by an external package like ASKAP.
 #ifndef AUTO_FUNCTION_NAME
@@ -81,17 +75,19 @@
 //# LOG_WARN_(STR)  (message|stream)
 //# LOG_INFO_(STR)  (message|stream)
 //#
-#define LOG_FATAL(message)			cLog(1, "FATAL", message)
-#define LOG_FATAL_STR(stream) 		cLogstr(1, "FATAL", stream)
+//# levelnames need to be of the same length and contain a trailing space -- that way it can
+//# be inserted into log lines immediately without formatting
+#define LOG_FATAL(message)			cLog(1, "FATAL ", message)
+#define LOG_FATAL_STR(stream) 		cLogstr(1, "FATAL ", stream)
 
-#define LOG_ERROR(message) 			cLog(2, "ERROR", message)
-#define LOG_ERROR_STR(stream) 		cLogstr(2, "ERROR", stream)
+#define LOG_ERROR(message) 			cLog(2, "ERROR ", message)
+#define LOG_ERROR_STR(stream) 		cLogstr(2, "ERROR ", stream)
 
-#define LOG_WARN(message) 			cLog(3, "WARN", message)
-#define LOG_WARN_STR(stream)		cLogstr(3, "WARN", stream)
+#define LOG_WARN(message) 			cLog(3, "WARN  ", message)
+#define LOG_WARN_STR(stream)		cLogstr(3, "WARN  ", stream)
 
-#define LOG_INFO(message) 			cLog(4, "INFO", message)
-#define LOG_INFO_STR(stream) 		cLogstr(4, "INFO", stream)
+#define LOG_INFO(message) 			cLog(4, "INFO  ", message)
+#define LOG_INFO_STR(stream) 		cLogstr(4, "INFO  ", stream)
 
 //# -------------------- Log Levels for the Integrator -----------------
 //#
@@ -101,8 +97,8 @@
 #define LOG_DEBUG(message)
 #define LOG_DEBUG_STR(stream)
 #else
-#define LOG_DEBUG(message) 			cDebug(5, "DEBUG", message)
-#define LOG_DEBUG_STR(stream) 		cDebugstr(5, "DEBUG", stream)
+#define LOG_DEBUG(message) 			cDebug(5, "DEBUG ", message)
+#define LOG_DEBUG_STR(stream) 		cDebugstr(5, "DEBUG ", stream)
 #endif	// DISABLE_DEBUG_OUTPUT
 
 //# -------------------- Trace Levels for the Programmer -----------------
@@ -162,8 +158,9 @@ public: \
 #define LOG_TRACE_LIFETIME_STR(level, stream) \
 	if( LFDebugCheck(level) ) { \
 		::LOFAR::LFDebug::Tracer objname; \
-		constructStream(stream); \
-		objname.startMsg (LOG4CPLUS_LEVEL(level), __BASE_FILE__, __LINE__, \
+	        std::ostringstream lfr_log_oss; \
+	        lfr_log_oss << stream; \
+		objname.startMsg (LOG4CPLUS_LEVEL(level), __FILE__, __LINE__, \
                         AUTO_FUNCTION_NAME, lfr_log_oss.str().c_str(), 0); \
 	}
 
@@ -219,41 +216,22 @@ public: \
 #undef THROW
 // possible object debug status. 
 #define THROW(exc,msg) do { \
-	constructStream(msg); \
-	cLog(1, "EXCEPTION", lfr_log_oss.str()); \
-	throw(exc(lfr_log_oss.str(), THROW_ARGS)); \
+	  std::ostringstream lfr_log_oss; \
+	  lfr_log_oss << msg; \
+	  cLog(1, "EXCEPTION ", lfr_log_oss.str()); \
+	  throw(exc(lfr_log_oss.str(), THROW_ARGS)); \
 	} while(0)
 
 //# ---------- implementation details generic part ----------
 
 #define LFDebugCheck(level)	getLFDebugContext().check(level)
 
-#define TraceTestAndLog(level) \
-	if (LFDebugCheck(level) && ::LOFAR::LFDebug::stream_time()) \
-		::LOFAR::LFDebug::getDebugStream()
-
-#define	constructStream(stream) \
-	std::ostringstream	lfr_log_oss; \
-	lfr_log_oss << stream
-
-#if !defined LOFAR_LOG_COUT_OLD_INTERFACE
 #define	thread_unsafe_cLog(level,levelname,message) \
 	do { \
-	  if (::LOFAR::LFDebug::LFDebugCheck(level) && ::LOFAR::LFDebug::stream_time()) \
-	      ::LOFAR::LFDebug::getDebugStream() << std::setw(5) << std::left << levelname \
-			<< "|" << ::LOFAR::LFDebug::sysInfo << "|" << message \
-			<< std::endl; \
+	  if (::LOFAR::LFDebug::LFDebugCheck(level)) \
+	      ::LOFAR::LFDebug::getDebugStream() << ::LOFAR::LFDebug::sysInfo << ::LOFAR::LFDebug::spaced_time_string << levelname \
+			<< message << std::endl; \
 	} while (0)
-#else
-#define	thread_unsafe_cLog(level,levelname,message) \
-	do { \
-	  if (::LOFAR::LFDebug::LFDebugCheck(level) && ::LOFAR::LFDebug::stream_time()) \
-	      ::LOFAR::LFDebug::getDebugStream() << std::setw(5) << std::left << levelname \
-			<< "|" << LOFARLOGGER_FULLPACKAGE << "|" << message \
-			<< "|" << __FILE__ << ":" << __LINE__ \
-			<< std::endl; \
-	} while (0)
-#endif
 
 #if defined USE_THREADS
 #define	cLog(level,levelname,message) \
@@ -269,40 +247,19 @@ public: \
 	} while(0)
 #endif
 
-#define cLogstr(level,levelname,stream) \
-	do { \
-		constructStream(stream); \
-		cLog(level,levelname,lfr_log_oss.str()); \
-	} while(0)
+// thread_unsafe_cLog can handle both strings and streams
+#define cLogstr cLog
 
+#define	cDebug cLog
+#define	cDebugstr cDebug
 
-#define	cDebug(level,levelname,message) \
-	cLog(level,levelname,message)
-
-#define cDebugstr(level,levelname,stream) \
-	do { \
-		constructStream(stream); \
-		cDebug(level,levelname,lfr_log_oss.str()); \
-	} while(0)
-
-
-#if !defined LOFAR_LOG_COUT_OLD_INTERFACE
 #define thread_unsafe_cTrace(level,message) \
 	do { \
-		TraceTestAndLog(level) << "TRACE" << LOG4CPLUS_LEVEL(level) \
-			<< " TRC." << getLFDebugContext().name() \
-			<< "|" << ::LOFAR::LFDebug::sysInfo << "|" << message \
-			<< std::endl; \
+	  if (::LOFAR::LFDebug::LFDebugCheck(level)) \
+	      ::LOFAR::LFDebug::getDebugStream() << ::LOFAR::LFDebug::sysInfo << ::LOFAR::LFDebug::spaced_time_string << "TRACE" << LOG4CPLUS_LEVEL(level) \
+			<< " TRC." << getLFDebugContext().name() << " " \
+			<< message << std::endl; \
 	} while(0)
-#else
-#define thread_unsafe_cTrace(level,message) do { \
-	TraceTestAndLog(level) << "TRACE" << LOG4CPLUS_LEVEL(level) \
-		<< " TRC." << getLFDebugContext().name() \
-		<< "|" << LOFARLOGGER_FULLPACKAGE << "|" << message \
-		<< "|" << __FILE__ << ":" << __LINE__ \
-		<< std::endl; \
-	} while(0)
-#endif
 
 #if defined USE_THREADS
 #define cTrace(level,message) \
@@ -318,11 +275,7 @@ public: \
 	} while(0)
 #endif
 
-#define cTracestr(level,stream) \
-	do { \
-		constructStream(stream); \
-		cTrace(level,lfr_log_oss.str()); \
-	} while(0)
+#define cTracestr cTrace
 
 //#-------------------- END OF MACRO DEFINITIONS --------------------#//
 
@@ -330,9 +283,7 @@ namespace LOFAR
 {
   namespace LFDebug
   {
-#if !defined LOFAR_LOG_COUT_OLD_INTERFACE
     extern string sysInfo;
-#endif
 
 #if defined USE_THREADS
     extern pthread_mutex_t mutex;
@@ -430,24 +381,22 @@ namespace LOFAR
     };
 #endif
 
-#ifdef ENABLE_LATENCY_STATS
-    extern struct timeval tv_init;
-    inline int printf_time ()
-    { 
-      struct timeval tv; gettimeofday(&tv,0);
-      printf("%ld.%06ld ",tv.tv_sec-tv_init.tv_sec,tv.tv_usec);
-      return 1;
-    }
-    inline int stream_time ()
+    // append the current time (including milliseconds) to the provided stream
+    inline std::ostream& spaced_time_string (std::ostream &str)
     {
-      struct timeval tv; gettimeofday(&tv,0);
-      getDebugStream() << formatString("%ld.%06ld ",tv.tv_sec-tv_init.tv_sec,tv.tv_usec);
-      return 1;
+      struct timeval tv;
+      struct tm timeinfo;
+      char timestr[40];
+      const unsigned len = 18; // 18 == strlen( " 01-01-10 10:00:00" )
+
+      gettimeofday(&tv,0);
+      localtime_r(&tv.tv_sec,&timeinfo);
+      strftime( timestr, sizeof timestr, " %d-%m-%y %T", &timeinfo );
+      snprintf( timestr + len, sizeof timestr - len, ".%03ld ", tv.tv_usec/1000 );
+
+      str << timestr;
+      return str;
     }
-#else
-    inline int printf_time () { return 1; };
-    inline int stream_time () { return 1; };
-#endif
 
     extern Context DebugContext;
     inline Context & getLFDebugContext ()  { return DebugContext; }
