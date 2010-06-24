@@ -1,4 +1,4 @@
-# >> $LOG 2>&1 >> $LOG 2>&1!/bin/bash
+#!/bin/bash
 COMMAND=$1
 
 PARTITION=R01
@@ -44,7 +44,7 @@ function stop_hard() {
 getpid
 
 case $COMMAND in
-  start) if [ "$PID" != "DOWN" ]
+  start) if [ "$PID" == "DOWN" ]
          then
          (
            start
