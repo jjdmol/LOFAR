@@ -30,7 +30,7 @@
 #include <cstring>
 #include <Common/LofarLogger.h>
 
-#if defined(USE_LOG4CXX)
+#if defined(HAVE_LOG4CXX)
 # include <log4cxx/ndc.h>
 #endif
 
@@ -65,14 +65,14 @@ void lofarLoggerInitNode(void) {
 
 	// construct loggerId and register it.
 	snprintf(loggerId, MAXLEN-1, "%s@%s", basename(applName), hostName);
-#if defined(USE_LOG4CPLUS)
+#if defined(HAVE_LOG4CPLUS)
 	log4cplus::getNDC().push(loggerId);
-#elif defined(USE_LOG4CXX)
+#elif defined(HAVE_LOG4CXX)
         log4cxx::NDC::push(loggerId);
 #endif
 }
 
-#if defined(USE_LOG4CPLUS)
+#if defined(HAVE_LOG4CPLUS)
 using namespace log4cplus;
 
 //# ------------------------ implement the five trace levels ------------------------
@@ -124,7 +124,7 @@ LogLevel string2TraceLevel (const tstring& lname) {
 
 LOFAR::LoggerReference theirTraceLoggerRef("TRC");   // create the tracelogger
 
-#elif defined(USE_LOG4CXX)
+#elif defined(HAVE_LOG4CXX)
 
 log4cxx::LoggerPtr theirTraceLoggerRef(log4cxx::Logger::getLogger("TRC"));
 
@@ -139,7 +139,7 @@ log4cxx::LoggerPtr theirTraceLoggerRef(log4cxx::Logger::getLogger("TRC"));
 // Attached to the trace-logger is one Appender that logs to stderr.
 //
 void initTraceModule (void) {
-#ifdef USE_LOG4CPLUS
+#ifdef HAVE_LOG4CPLUS
 	//# register our own loglevels
 	getLogLevelManager().pushToStringMethod(traceLevel2String);
 	getLogLevelManager().pushFromStringMethod(string2TraceLevel);
@@ -158,7 +158,7 @@ void initTraceModule (void) {
 	PropertyConfigurator(traceProp).configure();
 	Logger::getInstance("TRC").forcedLog(0, "TRACE module activated");
 
-#endif // USE_LOG4CPLUS
+#endif // HAVE_LOG4CPLUS
 }
 
 }	// namespace LOFAR
