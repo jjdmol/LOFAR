@@ -838,20 +838,29 @@ class TimeFrequencyData
 		void SetImageSize(size_t width, size_t height)
 		{
 			for(size_t i=0;i<_images.size();++i)
-			{
 				_images[i] = Image2D::CreateEmptyImagePtr(width, height);
-			}
+
+			for(size_t i=0;i<_flagging.size();++i)
+				_flagging[i] = Mask2D::CreateUnsetMaskPtr(width, height);
 		}
 
-		void CopyImagesFrom(const TimeFrequencyData &source, size_t destX, size_t destY)
+		void CopyFrom(const TimeFrequencyData &source, size_t destX, size_t destY)
 		{
 			if(source._images.size() != _images.size())
-				throw BadUsageException("CopyImagesFrom: tf data's do not match");
+				throw BadUsageException("CopyImagesFrom: tf data do not match");
+			if(source._flagging.size() != _flagging.size())
+				throw BadUsageException("CopyImagesFrom: tf masks do not match");
 			for(size_t i=0;i<_images.size();++i)
 			{
 				Image2DPtr image = Image2D::CreateCopy(_images[i]);
 				image->CopyFrom(source._images[i], destX, destY);
 				_images[i] = image;
+			}
+			for(size_t i=0;i<_flagging.size();++i)
+			{
+				Mask2DPtr mask = Mask2D::CreateCopy(_flagging[i]);
+				mask->CopyFrom(source._flagging[i], destX, destY);
+				_flagging[i] = mask;
 			}
 		}
 		enum FlagCoverage FlagCoverage() const
@@ -1084,7 +1093,7 @@ class TimeFrequencyData
 		Mask2DCPtr GetSetMask() const
 		{
 			if(_images.size() == 0)
-				throw BadUsageException("Cant make a mask without an image");
+				throw BadUsageException("Can't make a mask without an image");
 			return Mask2D::CreateSetMaskPtr<InitValue>(_images[0]->Width(), _images[0]->Height());
 		}
 		Mask2DCPtr GetCombinedMask() const;

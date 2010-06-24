@@ -150,7 +150,9 @@ void MSWindow::onActionDirectoryOpenForSpatial()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		SetImageSet(new rfiStrategy::SpatialMSImageSet(dialog.get_filename()));
+		rfiStrategy::SpatialMSImageSet *imageSet = new rfiStrategy::SpatialMSImageSet(dialog.get_filename());
+		imageSet->Initialize();
+		SetImageSet(imageSet);
 	}
 }
 
@@ -169,12 +171,15 @@ void MSWindow::onOpenBandCombined()
 		dialog.add_button("Open", Gtk::RESPONSE_OK);
 	
 		result = dialog.run();
-		names.push_back(dialog.get_filename());
+		if(result == Gtk::RESPONSE_OK)
+			names.push_back(dialog.get_filename());
 	}
   while(result == Gtk::RESPONSE_OK);
 	if(names.size() > 0)
 	{
-		SetImageSet(new rfiStrategy::BandCombinedSet(names));
+		rfiStrategy::BandCombinedSet *imageSet = new rfiStrategy::BandCombinedSet(names);
+		imageSet->Initialize();
+		SetImageSet(imageSet);
 	}
 }
 
