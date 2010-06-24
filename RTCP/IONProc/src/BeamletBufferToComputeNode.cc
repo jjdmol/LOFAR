@@ -94,7 +94,9 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::com
 
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::preprocess(const Parset *ps)
 {
-  std::string stationName = ps->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station; // TODO: support more than one station
+  bool haveStationInput = itsNrInputs > 0;
+
+  std::string stationName = haveStationInput ? ps->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station : ""; // TODO: support more than one station
 
   itsPS			      = ps;
   itsSampleRate		      = ps->sampleRate();
@@ -111,8 +113,10 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   itsCorrectClocks	      = ps->correctClocks();
   itsNeedDelays               = (itsDelayCompensation || itsNrPencilBeams > 1 || itsCorrectClocks) && itsNrInputs > 0;
   itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
-  itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping(stationName);
-  itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping(stationName);
+  if (haveStationInput) {
+    itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping(stationName);
+    itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping(stationName);
+  }
   itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps->startTime() * itsSampleRate), ps->clockSpeed());
   itsIsRealTime		      = ps->realTime();
   itsMaxNetworkDelay	      = ps->maxNetworkDelay();
@@ -126,7 +130,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   LOG_DEBUG_STR("nrBitsPerSample = " << ps->nrBitsPerSample());
   LOG_DEBUG_STR("maxNetworkDelay = " << itsMaxNetworkDelay << " samples");
 
-  if (itsNeedDelays) {
+  if (haveStationInput && itsNeedDelays) {
     itsDelaysAtBegin.resize(itsNrBeams, itsNrPencilBeams);
     itsDelaysAfterEnd.resize(itsNrBeams, itsNrPencilBeams);
     itsBeamDirectionsAtBegin.resize(itsNrBeams, itsNrPencilBeams);
@@ -329,6 +333,8 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
 
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::dumpRawData()
 {
+  // NOTE: we always have station input at this point
+
   std::string stationName = itsPS->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station; // TODO: support more than one station
 
   vector<unsigned> subbandToBeamMapping     = itsPS->subbandToBeamMapping();
