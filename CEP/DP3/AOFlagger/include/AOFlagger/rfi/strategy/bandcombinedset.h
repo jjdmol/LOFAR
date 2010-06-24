@@ -133,13 +133,13 @@ namespace rfiStrategy {
 				unsigned width = first->ImageWidth(), height = first->ImageHeight();
 				TimeFrequencyData *data = new TimeFrequencyData(*first);
 				data->SetImageSize(width, height*_sets.size());
-				data->CopyImagesFrom(*first, 0, 0);
+				data->CopyFrom(*first, 0, 0);
 				delete first;
 
 				for(size_t i=1;i<_sets.size();++i)
 				{
 					TimeFrequencyData *current = _sets[i]->LoadData(*bcIndex.GetIndex(i));
-					data->CopyImagesFrom(*current, 0, height*i);
+					data->CopyFrom(*current, 0, height*i);
 					delete current;
 				}
 				return data;
@@ -177,12 +177,17 @@ namespace rfiStrategy {
 			MSImageSet &GetSet(size_t i) const { return *_sets[i]; }
 			virtual void AddReadRequest(ImageSetIndex &index)
 			{
+				_data = BaselineData(index);
 			}
 			virtual void PerformReadRequests()
 			{
+				TimeFrequencyData *data = LoadData(_data.Index());
+				_data.SetData(*data);
+				delete data;
 			}
 			virtual BaselineData *GetNextRequested()
 			{
+				return new BaselineData(_data);
 			}
 			virtual void AddWriteFlagsTask(ImageSetIndex &index, std::vector<Mask2DCPtr> &flags)
 			{
@@ -200,6 +205,7 @@ namespace rfiStrategy {
 			}
 
 			std::vector<MSImageSet*> _sets;
+			BaselineData _data;
 	};
 
 	BandCombinedSetIndex::BandCombinedSetIndex(ImageSet &set) : ImageSetIndex(set)

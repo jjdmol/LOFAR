@@ -61,17 +61,23 @@ namespace rfiStrategy {
 			: _data(), _metaData(), _index(index.Copy())
 			{
 			}
+			BaselineData()
+			: _data(), _metaData(), _index(0)
+			{
+			}
 			BaselineData(const BaselineData &source)
 			: _data(source._data), _metaData(source._metaData), _index(source._index->Copy())
 			{
 			}
 			~BaselineData()
 			{
-				delete _index;
+				if(_index != 0)
+					delete _index;
 			}
 			void operator=(const BaselineData &source)
 			{
-				delete _index;
+				if(_index != 0)
+					delete _index;
 				_data = source._data;
 				_metaData = source._metaData;
 				_index = source._index->Copy();
@@ -84,7 +90,12 @@ namespace rfiStrategy {
 
 			const ImageSetIndex &Index() const { return *_index; }
 			ImageSetIndex &Index() { return *_index; }
-			void SetIndex(const ImageSetIndex &newIndex) { delete _index; _index = newIndex.Copy(); }
+			void SetIndex(const ImageSetIndex &newIndex)
+			{
+				if(_index != 0)
+					delete _index;
+				_index = newIndex.Copy();
+			}
 		
 		private:
 			TimeFrequencyData _data;
