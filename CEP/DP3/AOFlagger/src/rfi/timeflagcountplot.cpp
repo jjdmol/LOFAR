@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 #include <fstream>
+#include <iomanip>
 
 #include <AOFlagger/rfi/timeflagcountplot.h>
 
@@ -58,6 +59,7 @@ void TimeFlagCountPlot::Add(class TimeFrequencyData &data, TimeFrequencyMetaData
 void TimeFlagCountPlot::WriteCounts()
 {
 	std::ofstream file("time-vs-counts.txt");
+	file << std::setprecision(14);
 	for(std::map<double, struct MapItem>::const_iterator i=_counts.begin();i!=_counts.end();++i)
 	{
 		file << i->first << "\t" << i->second.total << "\t" << i->second.count << "\t" << (100.0L * (long double) i->second.count / (long double) i->second.total) << "\n";
