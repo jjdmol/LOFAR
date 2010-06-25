@@ -20,6 +20,7 @@
 #include <AOFlagger/rfi/frequencyflagcountplot.h>
 
 #include <fstream>
+#include <iomanip>
 
 #include <AOFlagger/util/plot.h>
 
@@ -55,6 +56,7 @@ void FrequencyFlagCountPlot::Add(class TimeFrequencyData &data, TimeFrequencyMet
 void FrequencyFlagCountPlot::WriteCounts()
 {
 	std::ofstream file("frequency-vs-counts.txt");
+	file << std::setprecision(14);
 	for(std::map<double, struct MapItem>::const_iterator i=_counts.begin();i!=_counts.end();++i)
 	{
 		file << i->first << "\t" << i->second.total << "\t" << i->second.count << "\t" << (100.0L * (long double) i->second.count / (long double) i->second.total) << "\n";
