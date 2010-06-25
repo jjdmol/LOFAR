@@ -29,8 +29,8 @@
 #include <Stream/SocketStream.h>
 #include <Common/DataConvert.h>
 #include <Common/Timer.h>
-#include <boost/format.hpp>
 
+#include <boost/format.hpp>
 using boost::format;
 
 namespace LOFAR {
@@ -38,6 +38,7 @@ namespace RTCP {
 
 InputThread::InputThread(const Parset &parset, unsigned subbandNumber, unsigned outputNumber, /*const std::string &inputDescription,*/ Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue)
 :
+  itsLogPrefix(str(format("[obs %u output %u subband %u] ") % parset.observationID() % outputNumber % subbandNumber)),
   itsParset(parset),
   itsSubbandNumber(subbandNumber),
   itsOutputNumber(outputNumber),
@@ -45,14 +46,14 @@ InputThread::InputThread(const Parset &parset, unsigned subbandNumber, unsigned 
   itsObservationID(parset.observationID()),
   itsFreeQueue(freeQueue),
   itsReceiveQueue(receiveQueue),
-  itsThread(this, &InputThread::mainLoop)
+  itsThread(this, &InputThread::mainLoop, itsLogPrefix + "[InputThread] ")
 {
 }
 
 
 InputThread::~InputThread()
 {
-  LOG_DEBUG("InputThread::~InputThread()");
+  LOG_DEBUG_STR(itsLogPrefix << "InputThread::~InputThread()");
 }
 
 
@@ -61,23 +62,23 @@ void InputThread::mainLoop()
   try {
     std::string inputDescriptor = itsParset.getStreamDescriptorBetweenIONandStorage(itsSubbandNumber, itsOutputNumber);
 
-    LOG_INFO_STR("Creating connection from " << inputDescriptor);
+    LOG_INFO_STR(itsLogPrefix << "Creating connection from " << inputDescriptor);
     std::auto_ptr<Stream> streamFromION(Parset::createStream(inputDescriptor, true));
-    LOG_INFO_STR("Created connection from " << inputDescriptor);
+    LOG_INFO_STR(itsLogPrefix << "Created connection from " << inputDescriptor);
 
     // limit reads from NullStream to 10 blocks; otherwise unlimited
     bool     nullInput = dynamic_cast<NullStream *>(streamFromION.get()) != 0;
     unsigned maxCount  = nullInput ? 10 : ~0;
 
     for (unsigned count = 0; count < maxCount; count ++) {
-      NSTimer			    readTimer("read data", false, false);
+      NSTimer			    readTimer("Read data from IONProc", false, false);
       std::auto_ptr<StreamableData> data(itsFreeQueue.remove());
 
       readTimer.start();
       data->read(streamFromION.get(), true);
       readTimer.stop();
 
-      LOG_INFO_STR("InputThread: ObsID = " << itsObservationID << ", sb = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": " << readTimer);
+      LOG_INFO_STR(itsLogPrefix << readTimer);
 
       if (nullInput)
 	data.get()->sequenceNumber = count;
@@ -85,7 +86,7 @@ void InputThread::mainLoop()
       itsReceiveQueue.append(data.release());
     }
   } catch (Stream::EndOfStreamException &) {
-    LOG_INFO("no more input data");
+    LOG_INFO_STR(itsLogPrefix << "No more input data");
   } catch (SystemCallException &ex) {
     if (ex.error != EINTR) {
       itsReceiveQueue.append(0); // no more data

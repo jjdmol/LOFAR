@@ -39,6 +39,7 @@
 
 #include <queue>
 #include <vector>
+#include <string>
 
 namespace LOFAR {
 namespace RTCP {
@@ -57,6 +58,8 @@ class OutputThread
     void                    flushSequenceNumbers();
     void                    checkForDroppedData(StreamableData *data);
     void		    mainLoop();
+
+    const std::string       itsLogPrefix;
 
     Thread		    *itsThread;
 

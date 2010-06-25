@@ -42,6 +42,9 @@
 #include <Stream/Stream.h>
 #include <Thread/Mutex.h>
 
+#include <vector>
+#include <string>
+
 
 namespace LOFAR {
 namespace RTCP {
@@ -53,7 +56,7 @@ namespace RTCP {
 template<typename SAMPLE_TYPE> class BeamletBuffer
 {
   public:
-	     BeamletBuffer(const Parset *, unsigned rspBoard);
+	     BeamletBuffer(const Parset *, std::string &stationName, unsigned rspBoard);
 	     ~BeamletBuffer();
 
     void     writePacketData(const SAMPLE_TYPE *data, const TimeStamp &begin);
@@ -72,6 +75,8 @@ template<typename SAMPLE_TYPE> class BeamletBuffer
 
   private:
     unsigned mapTime2Index(TimeStamp time) const;
+
+    std::string                           itsLogPrefix;
 
     Mutex				  itsValidDataMutex;
     SparseSet<TimeStamp>		  itsValidData;

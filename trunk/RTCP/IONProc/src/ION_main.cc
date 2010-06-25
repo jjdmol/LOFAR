@@ -48,6 +48,9 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 
+#include <boost/format.hpp>
+using boost::format;
+
 #if defined HAVE_MPI
 #include <mpi.h>
 #endif
@@ -326,7 +329,7 @@ static void master_thread()
   Version::show<IONProcVersion> (std::clog, "IONProc", type);
 #endif  
   
-  LOG_DEBUG("starting master_thread");
+  LOG_DEBUG("Starting master_thread");
 
   enableCoreDumps();
   ignoreSigPipe();
@@ -359,15 +362,15 @@ static void master_thread()
 
 #if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
-    LOG_FATAL_STR("main thread caught Exception: " << ex);
+    LOG_FATAL_STR("Main thread caught Exception: " << ex);
   } catch (std::exception &ex) {
-    LOG_FATAL_STR("main thread caught std::exception: " << ex.what());
+    LOG_FATAL_STR("Main thread caught std::exception: " << ex.what());
   } catch (...) {
-    LOG_FATAL("main thread caught non-std::exception: ");
+    LOG_FATAL("Main thread caught non-std::exception: ");
   }
 #endif
 
-  LOG_DEBUG("master thread finishes");
+  LOG_DEBUG("Master thread finishes");
 }
 
 
@@ -440,18 +443,15 @@ int main(int argc, char **argv)
     }
 #endif
   
-  std::stringstream sysInfo;
-  sysInfo << basename(argv[0]) << "@" << myPsetNumber;
- 
 #if defined HAVE_BGP
-  INIT_LOGGER_WITH_SYSINFO(sysInfo.str());
+  INIT_LOGGER_WITH_SYSINFO(str(format("IONProc@%02d") % myPsetNumber));
 #elif defined HAVE_LOG4CPLUS
   lofarLoggerInitNode();
 #elif defined HAVE_LOG4CXX
   Context::initialize();
   setLevel("Global", 8);
 #else
-  INIT_LOGGER_WITH_SYSINFO(sysInfo.str());
+  INIT_LOGGER_WITH_SYSINFO(str(format("IONProc@%02d") % myPsetNumber));
 #endif
 
   master_thread();

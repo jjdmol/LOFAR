@@ -40,7 +40,7 @@
 #include <unistd.h>
 
 #include <boost/format.hpp>
-
+using boost::format;
 
 namespace LOFAR {
 namespace RTCP {
@@ -51,10 +51,11 @@ OutputThread::OutputThread(const Parset &parset, const unsigned subband, const u
   itsDone(false),
   itsParset(parset),
   itsSubband(subband),
-  itsOutput(output),
-  itsDescription(boost::str(boost::format("OutputThread: ObsID = %u, subband = %u, output = %u") % parset.observationID() % subband % output))
+  itsOutput(output)
 {
-  LOG_DEBUG_STR(itsDescription << ": OutputThread::OutputThread()");
+  itsLogPrefix = str(format("[obs %u output %u subband %u] ") % parset.observationID() % output % subband);
+
+  LOG_DEBUG_STR(itsLogPrefix << "OutputThread::OutputThread()");
 
   // transpose the data holders: create queues streams for the output streams
   // itsPlans is the owner of the pointers to sample data structures
@@ -65,7 +66,7 @@ OutputThread::OutputThread(const Parset &parset, const unsigned subband, const u
     itsFreeQueue.append(clone);
   }
 
-  itsThread = new InterruptibleThread(this, &OutputThread::mainLoop, 65536);
+  itsThread = new InterruptibleThread(this, &OutputThread::mainLoop, itsLogPrefix + "[OutputThread] ", 65536);
 }
 
 
@@ -74,7 +75,7 @@ OutputThread::~OutputThread()
   delete itsThread;
 
   if (itsSendQueue.size() > 0) // the final null pointer does not count
-    LOG_WARN_STR(itsDescription << ": dropped " << itsSendQueue.size() - 1 << " blocks");
+    LOG_WARN_STR(itsLogPrefix << "Dropped " << itsSendQueue.size() - 1 << " blocks");
 
   while (!itsSendQueue.empty())
     delete itsSendQueue.remove();
@@ -101,11 +102,11 @@ bool OutputThread::waitForDone( const struct timespec &timespec )
 
 void OutputThread::abort()
 {
-  LOG_WARN_STR(itsDescription << ": aborting" );
+  LOG_WARN_STR(itsLogPrefix << "OutputThread aborting..." );
 
   itsThread->abort();
 
-  LOG_WARN_STR(itsDescription << ": aborted" );
+  LOG_WARN_STR(itsLogPrefix << "OutputThread aborted" );
 }
 
 
@@ -133,8 +134,6 @@ void OutputThread::mainLoop()
   // signal done when the thread exists in any way
   DoneSignal doneSignal( itsDoneMutex, itsDoneCondition, itsDone );
 
-  LOG_DEBUG_STR(itsDescription << ": OutputThread::mainLoop()");
-
 #if defined HAVE_BGP_ION
   doNotRunOnCore0();
   nice(19);
@@ -143,14 +142,15 @@ void OutputThread::mainLoop()
   std::auto_ptr<Stream> streamToStorage;
   std::string		outputDescriptor = itsParset.getStreamDescriptorBetweenIONandStorage(itsSubband, itsOutput);
 
-  LOG_INFO_STR(itsDescription << ": creating connection to " << outputDescriptor);
+  LOG_INFO_STR(itsLogPrefix << "Creating connection to " << outputDescriptor << "...");
 
   try {
     streamToStorage.reset(Parset::createStream(outputDescriptor, false));
-    LOG_INFO_STR(itsDescription << ": created connection to " << outputDescriptor);
+
+    LOG_INFO_STR(itsLogPrefix << "Creating connection to " << outputDescriptor << ": done");
   } catch (SystemCallException &ex) {
     if (ex.error == EINTR) {
-      LOG_WARN_STR(itsDescription << ": connection to " << outputDescriptor << " failed");
+      LOG_WARN_STR(itsLogPrefix << "Connection to " << outputDescriptor << " failed");
       return;
     } else {
       throw;

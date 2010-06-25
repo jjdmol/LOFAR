@@ -44,6 +44,9 @@
 #include <cstdio>
 #include <stdexcept>
 
+#include <boost/format.hpp>
+using boost::format;
+
 
 namespace LOFAR {
 namespace RTCP {
@@ -52,53 +55,23 @@ namespace RTCP {
 template<typename SAMPLE_TYPE> const unsigned BeamletBufferToComputeNode<SAMPLE_TYPE>::itsMaximumDelay;
 
 
-template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const std::vector<Stream *> &cnStreams, const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &beamletBuffers, unsigned psetNumber)
+template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const Parset *ps, const std::vector<Stream *> &cnStreams, const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &beamletBuffers, unsigned psetNumber)
 :
   itsRawDataStream(0),
   itsFileHeaderWritten(false),
   itsCNstreams(cnStreams),
+  itsPS(ps),
   itsNrInputs(beamletBuffers.size()),
   itsPsetNumber(psetNumber),
   itsBeamletBuffers(beamletBuffers),
   itsDelayComp(0),
   itsDelayTimer("delay consumer", true, true)
 {
-}
-
-
-template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::~BeamletBufferToComputeNode() 
-{
-  LOG_DEBUG("BeamletBufferToComputeNode::~BeamletBufferToComputeNode");
-}
-
-
-template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::computeNextDelays()
-{
-  // track source
-
-  if (itsDelayComp != 0)
-    itsDelayComp->getNextDelays(itsBeamDirectionsAfterEnd, itsDelaysAfterEnd);
-  else
-    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++)
-	itsDelaysAfterEnd[beam][pencil] = 0;
-   
-  // apply clock correction due to cable differences
-
-  if (itsCorrectClocks)
-    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++)
-	itsDelaysAfterEnd[beam][pencil] += itsClockCorrectionTime;
-}
-
-
-template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::preprocess(const Parset *ps)
-{
   bool haveStationInput = itsNrInputs > 0;
+  string stationName = haveStationInput ? ps->getStationNamesAndRSPboardNumbers(psetNumber)[0].station : "none"; // TODO: support more than one station
 
-  std::string stationName = haveStationInput ? ps->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station : ""; // TODO: support more than one station
+  itsLogPrefix = str(format("[obs %u station %s] ") % ps->observationID() % stationName);
 
-  itsPS			      = ps;
   itsSampleRate		      = ps->sampleRate();
   itsNrSubbands		      = ps->nrSubbands();
   itsNrSubbandsPerPset	      = ps->nrSubbandsPerPset();
@@ -124,11 +97,11 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   itsNrHistorySamples	      = itsDumpRawData ? 0 : ps->nrHistorySamples();
   itsObservationID	      = ps->observationID();
 
-  LOG_DEBUG_STR("nrSubbands = " << itsNrSubbands);
-  LOG_DEBUG_STR("nrChannelsPerSubband = " << ps->nrChannelsPerSubband());
-  LOG_DEBUG_STR("nrStations = " << ps->nrStations());
-  LOG_DEBUG_STR("nrBitsPerSample = " << ps->nrBitsPerSample());
-  LOG_DEBUG_STR("maxNetworkDelay = " << itsMaxNetworkDelay << " samples");
+  LOG_DEBUG_STR(itsLogPrefix << "nrSubbands = " << itsNrSubbands);
+  LOG_DEBUG_STR(itsLogPrefix << "nrChannelsPerSubband = " << ps->nrChannelsPerSubband());
+  LOG_DEBUG_STR(itsLogPrefix << "nrStations = " << ps->nrStations());
+  LOG_DEBUG_STR(itsLogPrefix << "nrBitsPerSample = " << ps->nrBitsPerSample());
+  LOG_DEBUG_STR(itsLogPrefix << "maxNetworkDelay = " << itsMaxNetworkDelay << " samples");
 
   if (haveStationInput && itsNeedDelays) {
     itsDelaysAtBegin.resize(itsNrBeams, itsNrPencilBeams);
@@ -152,7 +125,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   itsFlags.resize(boost::extents[itsNrInputs][itsNrBeams]);
 
   if (itsDumpRawData && itsNrInputs > 0) {
-    LOG_DEBUG("Dumping raw beamformed data only, no further processing done");
+    LOG_INFO_STR(itsLogPrefix << "Dumping raw beamformed data only, no further processing done");
 
     vector<string> rawDataOutputs = ps->getStringVector("OLAP.OLAP_Conn.rawDataOutputs",true);
     unsigned	   psetIndex	  = ps->phaseOnePsetIndex(itsPsetNumber);
@@ -161,7 +134,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
       THROW(IONProcException, "there are more input section nodes than entries in OLAP.OLAP_Conn.rawDataOutputs");
 
     string rawDataOutput = rawDataOutputs[psetIndex];
-    LOG_DEBUG_STR("writing raw data to " << rawDataOutput);
+    LOG_INFO_STR(itsLogPrefix << "Writing raw data to " << rawDataOutput);
     itsRawDataStream = Parset::createStream(rawDataOutput, false);
   }
 
@@ -169,6 +142,42 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pre
   doNotRunOnCore0();
   setPriority(3);
 #endif
+}
+
+
+template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::~BeamletBufferToComputeNode() 
+{
+  LOG_DEBUG_STR(itsLogPrefix << "BeamletBufferToComputeNode::~BeamletBufferToComputeNode");
+
+  for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
+    itsBeamletBuffers[rsp]->noMoreReading();
+
+  delete itsDelayComp;	   itsDelayComp	    = 0;
+  delete itsRawDataStream; itsRawDataStream = 0;
+
+  itsSubbandToBeamMapping.resize(0);
+  itsSubbandToRSPboardMapping.resize(0);
+  itsSubbandToRSPslotMapping.resize(0);
+}
+
+
+template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::computeNextDelays()
+{
+  // track source
+
+  if (itsDelayComp != 0)
+    itsDelayComp->getNextDelays(itsBeamDirectionsAfterEnd, itsDelaysAfterEnd);
+  else
+    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
+      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++)
+	itsDelaysAfterEnd[beam][pencil] = 0;
+   
+  // apply clock correction due to cable differences
+
+  if (itsCorrectClocks)
+    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
+      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++)
+	itsDelaysAfterEnd[beam][pencil] += itsClockCorrectionTime;
 }
 
 
@@ -233,7 +242,8 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sta
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::writeLogMessage() const
 {
   std::stringstream logStr;
-  logStr << itsCurrentTimeStamp << ", ObsID: " << itsObservationID;
+
+  logStr << itsLogPrefix << itsCurrentTimeStamp;
 
   if (itsIsRealTime) {
     struct timeval tv;
@@ -436,25 +446,8 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
   itsCurrentTimeStamp += itsNrSamplesPerSubband;
   timer.stop();
 
-  LOG_INFO_STR("ObsID: " << itsObservationID << ", ION->CN: " << PrettyTime(timer.getElapsed()));
+  LOG_DEBUG_STR(itsLogPrefix << " ION->CN: " << PrettyTime(timer.getElapsed()));
 }
-
-
-template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::postprocess()
-{
-  LOG_DEBUG("BeamletBufferToComputeNode::postprocess");
-
-  for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
-    itsBeamletBuffers[rsp]->noMoreReading();
-
-  delete itsDelayComp;	   itsDelayComp	    = 0;
-  delete itsRawDataStream; itsRawDataStream = 0;
-
-  itsSubbandToBeamMapping.resize(0);
-  itsSubbandToRSPboardMapping.resize(0);
-  itsSubbandToRSPslotMapping.resize(0);
-}
-
 
 template class BeamletBufferToComputeNode<i4complex>;
 template class BeamletBufferToComputeNode<i8complex>;

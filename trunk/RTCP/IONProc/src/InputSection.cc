@@ -27,6 +27,8 @@
 #include <InputSection.h>
 #include <Stream/SocketStream.h>
 
+#include <boost/format.hpp>
+using boost::format;
 
 namespace LOFAR {
 namespace RTCP {
@@ -37,21 +39,24 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const Par
   itsLogThread(0)
 {
   std::vector<Parset::StationRSPpair> inputs = parset.getStationNamesAndRSPboardNumbers(psetNumber);
+  string stationName = inputs.size() > 0 ? inputs[0].station : "none"; // TODO: support more than one station
   itsNrRSPboards = inputs.size();
+
+  itsLogPrefix = str(format("[station %s] ") % stationName);
 
   itsBeamletBuffers.resize(itsNrRSPboards);
 
   for (unsigned rsp = 0; rsp < itsNrRSPboards; rsp ++)
-    itsBeamletBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(&parset, rsp);
+    itsBeamletBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(&parset, inputs[rsp].station, inputs[rsp].rsp);
 
   createInputStreams(parset, inputs);
-  createInputThreads(parset);
+  createInputThreads(parset, inputs);
 }
 
 
 template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::~InputSection() 
 {
-  LOG_DEBUG("InputSection::~InputSection()");
+  LOG_DEBUG_STR(itsLogPrefix << "InputSection::~InputSection()");
 
   for (unsigned i = 0; i < itsInputThreads.size(); i ++)
     delete itsInputThreads[i];
@@ -70,14 +75,12 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputStream
 {
   itsInputStreams.resize(itsNrRSPboards);
 
-  LOG_DEBUG("input list:");
-
   for (unsigned i = 0; i < itsNrRSPboards; i ++) {
     const string &station   = inputs[i].station;
     unsigned	 rsp	    = inputs[i].rsp;
     std::string	 streamName = parset.getInputStreamName(station, rsp);
 
-    LOG_DEBUG_STR("  " << i << ": station \"" << station << "\", RSP board " << rsp << ", reads from \"" << streamName << '"');
+    LOG_DEBUG_STR(itsLogPrefix << "input " << i << ": RSP board " << rsp << ", reads from \"" << streamName << '"');
 
     if (station != inputs[0].station)
       THROW(IONProcException, "inputs from multiple stations on one I/O node not supported (yet)");
@@ -92,9 +95,9 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputStream
 }
 
 
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputThreads(const Parset &parset)
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputThreads(const Parset &parset, const std::vector<Parset::StationRSPpair> &inputs)
 {
-  itsLogThread = new LogThread(itsNrRSPboards);
+  itsLogThread = new LogThread(itsNrRSPboards, inputs.size() > 0 ? inputs[0].station : "none");
 
   /* start up thread which writes RSP data from ethernet link
      into cyclic buffers */
@@ -113,6 +116,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputThread
     args.stream		    = itsInputStreams[thread];
     args.BBuffer            = itsBeamletBuffers[thread];
     args.packetCounters     = &itsLogThread->itsCounters[thread];
+    args.logPrefix          = str(format("[station %s board %s] ") % inputs[thread].station % inputs[thread].rsp);
 
     itsInputThreads[thread] = new InputThread<SAMPLE_TYPE>(args);
   }

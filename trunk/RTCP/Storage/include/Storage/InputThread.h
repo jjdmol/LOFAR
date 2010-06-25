@@ -31,6 +31,7 @@
 #include <Thread/Queue.h>
 #include <Thread/Thread.h>
 
+#include <string>
 
 namespace LOFAR {
 namespace RTCP {
@@ -43,6 +44,8 @@ class InputThread
 
   private:
     void		    mainLoop();
+
+    const std::string       itsLogPrefix;
 
     const Parset	    &itsParset;
     const unsigned          itsSubbandNumber;

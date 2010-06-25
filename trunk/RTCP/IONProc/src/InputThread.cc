@@ -52,15 +52,15 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs
 :
   itsShouldStop(false),
   itsArgs(args),
-  itsThread(this, &InputThread<SAMPLE_TYPE>::mainLoop, 65536)
+  itsThread(this, &InputThread<SAMPLE_TYPE>::mainLoop, itsArgs.logPrefix + "[InputThread] ", 65536)
 {
-  LOG_DEBUG("InputThread::InputThread(...)");
+  LOG_DEBUG_STR(itsArgs.logPrefix << "InputThread::InputThread(...)");
 }
 
 
 template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::~InputThread()
 {
-  LOG_DEBUG("InputThread::~InputThread()");
+  LOG_DEBUG_STR(itsArgs.logPrefix << "InputThread::~InputThread()");
 
   itsShouldStop = true;
   itsThread.abort();
@@ -93,7 +93,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
   bool		dataShouldContainValidStamp = dynamic_cast<NullStream *>(itsArgs.stream) == 0;
   WallClockTime wallClockTime;
 
-  LOG_DEBUG_STR("input thread " << itsArgs.threadID << " entering loop");
+  LOG_DEBUG_STR(itsArgs.logPrefix << " input thread " << itsArgs.threadID << " entering loop");
 
   while (!itsShouldStop) {
     size_t size;
@@ -177,7 +177,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
     }
   }
 
-  LOG_DEBUG("InputThread::threadFunction() exiting loop");
+  LOG_DEBUG(itsArgs.logPrefix << "InputThread::threadFunction() exiting loop");
 }
 
 

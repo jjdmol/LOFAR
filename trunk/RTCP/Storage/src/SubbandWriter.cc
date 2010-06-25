@@ -38,6 +38,9 @@
 #include <time.h>
 #include <sys/stat.h>
 
+#include <boost/format.hpp>
+using boost::format;
+
 namespace LOFAR {
 namespace RTCP {
 
@@ -47,6 +50,8 @@ SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, unsigned ou
   CN_Configuration configuration(parset);
   CN_ProcessingPlan<> plan(configuration);
   plan.removeNonOutputs();
+
+  const std::string logPrefix = str(format("[obs %u output %u subband %u] ") % parset.observationID() % outputType % subband);
 
 #if defined HAVE_AIPSPP
   if (outputType == 0) {
@@ -63,7 +68,7 @@ SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, unsigned ou
     /// Make MeasurementSet filestructures and required tables
     myFormat.addSubband(subband, isBigEndian);
 
-    LOG_INFO_STR("MeasurementSet created");
+    LOG_INFO_STR(logPrefix << "MeasurementSet created");
   }
 #endif // defined HAVE_AIPSPP
 

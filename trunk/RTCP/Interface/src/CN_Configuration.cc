@@ -73,6 +73,8 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   nrStokes()                = parset.nrStokes();
   flysEye()                 = parset.flysEye();
 
+  observationID()           = parset.observationID();
+
   stokesIntegrateChannels() = parset.stokesIntegrateChannels();
 
   // Get the phase centres of all station, not just the one we receive input from. The compute nodes

@@ -37,18 +37,19 @@
 #include <boost/multi_array.hpp>
 #include <pthread.h>
 
+#include <string>
+#include <vector>
+
 
 namespace LOFAR {
 namespace RTCP {
 
 template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
   public:
-    BeamletBufferToComputeNode(const std::vector<Stream *> &cnStreams, const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &beamletBuffers, unsigned psetNumber);
+    BeamletBufferToComputeNode(const Parset *ps, const std::vector<Stream *> &cnStreams, const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &beamletBuffers, unsigned psetNumber);
     ~BeamletBufferToComputeNode();
   
-    void			 preprocess(const Parset *ps);
     void			 process();
-    void			 postprocess();
 
     TimeStamp                    getCurrentTimeStamp() const { return itsCurrentTimeStamp; }
     
@@ -65,6 +66,8 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     void			 dumpRawData();
     Stream			 *itsRawDataStream;
     bool			 itsFileHeaderWritten;
+
+    std::string                  itsLogPrefix;
 
     bool			 itsDelayCompensation;
     bool			 itsCorrectClocks;

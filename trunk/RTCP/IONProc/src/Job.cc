@@ -37,6 +37,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <boost/format.hpp>
+using boost::format;
 
 namespace LOFAR {
 namespace RTCP {
@@ -55,14 +57,15 @@ Job::Job(const char *parsetName)
   itsIsRunning(false),
   itsDoCancel(false)
 {
+  itsLogPrefix = str(format("[obs %d] ") % itsParset.observationID());
+
   checkParset();
 
-
-  LOG_DEBUG_STR("Creating new observation, ObsID = " << itsParset.observationID());
-  LOG_DEBUG_STR("ObsID = " << itsParset.observationID() << ", usedCoresInPset = " << itsParset.usedCoresInPset());
+  LOG_INFO_STR(itsLogPrefix << "----- Creating new observation");
+  LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
 
   itsNrRuns = static_cast<unsigned>(ceil((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime()));
-  LOG_DEBUG_STR("itsNrRuns = " << itsNrRuns);
+  LOG_DEBUG_STR(itsLogPrefix << "itsNrRuns = " << itsNrRuns);
 
   // synchronize roughly every 5 seconds to see if the job is cancelled
   itsNrRunTokensPerBroadcast = static_cast<unsigned>(ceil(5.0 / itsParset.CNintegrationTime()));
@@ -72,7 +75,7 @@ Job::Job(const char *parsetName)
   itsHasPhaseTwo   = itsParset.phaseTwoPsetIndex(myPsetNumber) >= 0;
   itsHasPhaseThree = itsParset.phaseThreePsetIndex(myPsetNumber) >= 0;
 
-  itsJobThread = new Thread(this, &Job::jobThread, 65536);
+  itsJobThread = new Thread(this, &Job::jobThread, itsLogPrefix + "[JobThread] ", 65536);
 }
 
 
@@ -81,7 +84,7 @@ Job::~Job()
   delete itsJobThread;
   jobQueue.remove(this);
 
-  LOG_INFO_STR("ObsID = " << itsObservationID << ": " << (itsIsRunning ? "ended" : "cancelled") << " successfully");
+  LOG_INFO_STR(itsLogPrefix << "----- Observation " << (itsIsRunning ? "ended" : "cancelled") << " successfully");
 }
 
 
@@ -213,12 +216,12 @@ void Job::joinSSH(int childPID, const std::string &hostName, unsigned &timeout)
         int error = errno;
 
         if (error == EINTR) {
-          LOG_DEBUG_STR("storage writer on " << hostName << " : waitpid() was interrupted -- retrying");
+          LOG_DEBUG_STR(itsLogPrefix << "Storage writer on " << hostName << " : waitpid() was interrupted -- retrying");
           continue;
         }
 
         // error
-        LOG_WARN_STR("storage writer on " << hostName << " : waitpid() failed with errno " << error);
+        LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " : waitpid() failed with errno " << error);
         return;
       } else if (ret == 0) {
         // child still running
@@ -231,11 +234,11 @@ void Job::joinSSH(int childPID, const std::string &hostName, unsigned &timeout)
       } else {
         // child exited
         if (WIFSIGNALED(status) != 0)
-          LOG_WARN_STR("storage writer on " << hostName << " was killed by signal " << WTERMSIG(status));
+          LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " was killed by signal " << WTERMSIG(status));
         else if (WEXITSTATUS(status) != 0)
-          LOG_WARN_STR("storage writer on " << hostName << " exited with exit code " << WEXITSTATUS(status));
+          LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " exited with exit code " << WEXITSTATUS(status));
         else
-          LOG_INFO_STR("storage writer on " << hostName << " terminated normally");
+          LOG_INFO_STR(itsLogPrefix << "Storage writer on " << hostName << " terminated normally");
 
         return;  
       }
@@ -243,14 +246,14 @@ void Job::joinSSH(int childPID, const std::string &hostName, unsigned &timeout)
 
     // child did not exit within the given timeout
 
-    LOG_WARN_STR("storage writer on " << hostName << " : sending SIGTERM");
+    LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " : sending SIGTERM");
     kill(childPID, SIGTERM);
 
     if (waitpid(childPID, &status, 0) == -1) {
-      LOG_WARN_STR("storage writer on " << hostName << " : waitpid() failed");
+      LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " : waitpid() failed");
     }
 
-    LOG_WARN_STR("storage writer on " << hostName << " terminated after sending SIGTERM");
+    LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " terminated after sending SIGTERM");
   }
 }
 
@@ -301,7 +304,7 @@ void Job::waitUntilCloseToStartOfObservation(time_t secondsPriorToStart)
   ctime_r(&closeToStart, buf);
   buf[24] = '\0';
   
-  LOG_DEBUG_STR("waiting for job " << itsObservationID << " to start: sleeping until " << buf);
+  LOG_DEBUG_STR(itsLogPrefix << "Waiting for job to start: sleeping until " << buf);
 
   itsWallClockTime.waitUntil(closeToStart);
 }
@@ -312,7 +315,7 @@ void Job::cancel()
   // note that JobQueue holds lock, so that this function executes atomically
 
   if (itsDoCancel) {
-    LOG_WARN_STR("ObsID = " << itsObservationID << ": already cancelled");
+    LOG_WARN_STR(itsLogPrefix << "Observation already cancelled");
   } else {
     itsDoCancel = true;
     jobQueue.itsReevaluate.broadcast();
@@ -333,7 +336,7 @@ retry:
 
   for (std::vector<Job *>::iterator job = jobQueue.itsJobs.begin(); job != jobQueue.itsJobs.end(); job ++)
     if ((*job)->itsIsRunning && ((*job)->itsParset.overlappingResources(itsParset) || !(*job)->itsParset.compatibleInputSection(itsParset))) {
-      LOG_WARN_STR("ObsID = " << itsObservationID << ": postponed due to resource conflicts");
+      LOG_WARN_STR(itsLogPrefix << "Postponed due to resource conflicts");
       jobQueue.itsReevaluate.wait(jobQueue.itsMutex);
       goto retry;
     }
@@ -432,14 +435,14 @@ void Job::configureCNs()
   CN_Command	   command(CN_Command::PREPROCESS);
   CN_Configuration configuration(itsParset);
   
-  LOG_DEBUG_STR("configuring cores " << itsParset.usedCoresInPset() << " ...");
+  LOG_DEBUG_STR(itsLogPrefix << "Configuring cores " << itsParset.usedCoresInPset() << " ...");
 
   for (unsigned core = 0; core < itsCNstreams.size(); core ++) {
     command.write(itsCNstreams[core]);
     configuration.write(itsCNstreams[core]);
   }
   
-  LOG_DEBUG_STR("configuring cores " << itsParset.usedCoresInPset() << " done");
+  LOG_DEBUG_STR(itsLogPrefix << "Configuring cores " << itsParset.usedCoresInPset() << " done");
 }
 
 
@@ -447,12 +450,12 @@ void Job::unconfigureCNs()
 {
   CN_Command command(CN_Command::POSTPROCESS);
 
-  LOG_DEBUG_STR("unconfiguring cores " << itsParset.usedCoresInPset() << " ...");
+  LOG_DEBUG_STR(itsLogPrefix << "Unconfiguring cores " << itsParset.usedCoresInPset() << " ...");
 
   for (unsigned core = 0; core < itsCNstreams.size(); core ++)
     command.write(itsCNstreams[core]);
 
-  LOG_DEBUG_STR("unconfiguring cores " << itsParset.usedCoresInPset() << " done");
+  LOG_DEBUG_STR(itsLogPrefix << "Unconfiguring cores " << itsParset.usedCoresInPset() << " done");
 }
 
 
@@ -479,7 +482,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   unsigned nrOutputTypes = plan.nrOutputTypes();
   std::vector<OutputSection *> outputSections(nrOutputTypes, 0);
 
-  LOG_DEBUG("starting doObservation");
+  LOG_INFO_STR(itsLogPrefix << "----- Observation start");
 
   // first: send configuration to compute nodes so they know what to expect
   configureCNs();
@@ -493,7 +496,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 
     //unsigned nrPsets = itsParset.phaseThreePsets().size();
 
-    LOG_DEBUG_STR("setting up output " << output );
+    LOG_DEBUG_STR(itsLogPrefix << "Setting up output " << output );
 
     switch (plan.plan[output].distribution) {
       case ProcessingPlan::DIST_SUBBAND:
@@ -532,31 +535,30 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     outputSections[output] = new OutputSection(itsParset, list, maxlistsize, output, &createCNstream);
   }
 
-  LOG_DEBUG("doObservation processing input");
+  LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input start");
 
-  unsigned				    run;
-  std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
-  BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
+  { // separate scope to ensure that the beamletbuffertocomputenode objects
+    // only exist if the beamletbuffers exist in the inputsection
+    unsigned				    run;
+    std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
+    BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(&itsParset, itsCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
 
-  beamletBufferToComputeNode.preprocess(&itsParset);
-        
-  for (run = 0; run < itsNrRuns && !isCancelled(); run ++) {
-    for (unsigned output = 0; output < nrOutputTypes; output ++) {
-      outputSections[output]->addIterations( 1 );
+    for (run = 0; run < itsNrRuns && !isCancelled(); run ++) {
+      for (unsigned output = 0; output < nrOutputTypes; output ++) {
+        outputSections[output]->addIterations( 1 );
+      }
+
+      beamletBufferToComputeNode.process();
     }
-
-    beamletBufferToComputeNode.process();
   }
 
   for (unsigned output = 0; output < nrOutputTypes; output ++) {
     outputSections[output]->noMoreIterations();
   }
 
-  beamletBufferToComputeNode.postprocess();
-
   unconfigureCNs();
 
-  LOG_DEBUG("doObservation done processing input");
+  LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input done");
 
   for (unsigned output = 0; output < nrOutputTypes; output ++)
     delete outputSections[output];
@@ -564,14 +566,14 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   if (itsHasPhaseOne)
     detachFromInputSection<SAMPLE_TYPE>();
 
-  LOG_DEBUG("doObservation finished");
+  LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
 }
 
 
 void Job::checkParset() const
 {
   if (itsParset.nrCoresPerPset() > nrCNcoresInPset) {
-    LOG_ERROR_STR("nrCoresPerPset (" << itsParset.nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
+    LOG_ERROR_STR(itsLogPrefix << "nrCoresPerPset (" << itsParset.nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
     exit(1);
   }
 }
@@ -579,7 +581,7 @@ void Job::checkParset() const
 
 void Job::printInfo() const
 {
-  LOG_INFO_STR("JobID = " << itsJobID << ", ObsID = " << itsObservationID << ", " << (itsIsRunning ? "running" : "not running"));
+  LOG_INFO_STR(itsLogPrefix << "JobID = " << itsJobID << ", " << (itsIsRunning ? "running" : "not running"));
 }
 
 

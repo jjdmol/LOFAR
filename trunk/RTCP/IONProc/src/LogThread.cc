@@ -41,11 +41,12 @@ namespace RTCP {
 
 // log from separate thread, since printing from a signal handler causes deadlocks
 
-LogThread::LogThread(unsigned nrRspBoards)
+LogThread::LogThread(unsigned nrRspBoards, std::string stationName)
 :
   itsCounters(nrRspBoards),
+  itsStationName(stationName),
   itsShouldStop(false),
-  itsThread(this, &LogThread::mainLoop, 65536)
+  itsThread(this, &LogThread::mainLoop, "[LogThread] ", 65536)
 {
 }
 
@@ -135,6 +136,8 @@ void LogThread::mainLoop()
       counts[rsp]		= itsCounters[rsp].received;
       itsCounters[rsp].received = 0;
     }
+
+    logStr << "[station " << itsStationName << "] ";
 
     logStr << "received packets = " << counts;
 

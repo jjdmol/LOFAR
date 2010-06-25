@@ -45,6 +45,9 @@
 #include <errno.h>
 #include <pthread.h>
 
+#include <boost/format.hpp>
+using boost::format;
+
 
 namespace LOFAR {
 namespace RTCP {
@@ -61,6 +64,8 @@ OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemLi
   itsStreamsFromCNs(itsNrComputeCores,0),
   itsThread(0)
 {
+  itsLogPrefix = str(format("[obs %d output %d") % parset.observationID() % outputType); // no trailing "] " so we can add subband info for some log messages
+
   itsDroppedCount.resize(itsItemList.size());
 
   CN_Configuration configuration(parset);
@@ -92,7 +97,7 @@ OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemLi
     itsOutputThreads.push_back(new OutputThread(parset, itsItemList[i], itsOutputType, dataTemplate));
   }
 
-  LOG_DEBUG_STR("creating streams between compute nodes and OutputSection");
+  LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection...");
 
   for (unsigned i = 0; i < itsNrComputeCores; i++) {
     unsigned core = parset.usedCoresInPset()[i];
@@ -100,7 +105,7 @@ OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemLi
     itsStreamsFromCNs[i] = createStream(core, outputType + 1);
   }
 
-  LOG_DEBUG_STR("created streams between compute nodes and OutputSection");
+  LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection: done");
 
   itsCurrentIntegrationStep = 0;
   itsSequenceNumber  	    = 0;
@@ -109,7 +114,7 @@ OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemLi
   // allocate at the end, since we use it as an unallocated template above
   itsTmpSum->allocate();
 
-  itsThread = new Thread(this, &OutputSection::mainLoop, 65536);
+  itsThread = new Thread(this, &OutputSection::mainLoop, itsLogPrefix + "] [OutputSection] ", 65536);
 }
 
 OutputSection::~OutputSection()
@@ -167,14 +172,14 @@ void OutputSection::noMoreIterations()
 void OutputSection::droppingData(unsigned subband)
 {
   if (itsDroppedCount[subband] ++ == 0)
-    LOG_WARN_STR("dropping data for subband " << itsItemList[subband]);
+    LOG_WARN_STR(itsLogPrefix << " subband " << itsItemList[subband] << "] Dropping data");
 }
 
 
 void OutputSection::notDroppingData(unsigned subband)
 {
   if (itsDroppedCount[subband] > 0) {
-    LOG_WARN_STR("dropped " << itsDroppedCount[subband] << (itsDroppedCount[subband] == 1 ? " integration time for subband " : " integration times for subband ") << itsItemList[subband]);
+    LOG_WARN_STR(itsLogPrefix << " subband " << itsItemList[subband] << "] Dropped " << itsDroppedCount[subband] << " integration time(s)" );
     itsDroppedCount[subband] = 0;
   }
 }

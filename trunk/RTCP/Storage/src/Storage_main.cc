@@ -29,6 +29,10 @@
 
 #include <stdexcept>
 #include <cstdio>
+#include <cstdlib>
+
+#include <boost/format.hpp>
+using boost::format;
 
 
 using namespace LOFAR;
@@ -131,7 +135,7 @@ void ExitOnClosedStdin::mainLoop()
     numbytes = ::read(0, buf, sizeof buf);
 
     if( numbytes == 0 ) {
-      LOG_FATAL("lost stdin -- aborting"); // this most likely won't arrive, since stdout/stderr are probably closed as well
+      LOG_FATAL("Lost stdin -- aborting"); // this most likely won't arrive, since stdout/stderr are probably closed as well
       exit(1);
     }
   }
@@ -156,9 +160,7 @@ int main(int argc, char *argv[])
   Context::initialize();
   setLevel("Global",8);
 #else
-  std::stringstream sysInfo;
-  sysInfo << basename(argv[0]) << "@" << (argc > 1 ? argv[1] : "?");
-  INIT_LOGGER_WITH_SYSINFO(sysInfo.str());
+  INIT_LOGGER_WITH_SYSINFO(str(format("Storage@%02d") % (argc > 1 ? atoi(argv[1]) : -1)));
 #endif
 
 #if 0
@@ -223,7 +225,7 @@ int main(int argc, char *argv[])
     setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
     setvbuf(stderr, stdoutbuf, _IOLBF, sizeof stderrbuf);
 
-    LOG_INFO_STR("started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3]);
+    LOG_INFO_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3]);
 
     unsigned			 myRank = boost::lexical_cast<unsigned>(argv[1]);
     Parset			 parset(argv[2]);
@@ -239,20 +241,20 @@ int main(int argc, char *argv[])
 	  subbandWriters.push_back(new SubbandWriter(parset, subband, output, isBigEndian));
 
     ExitOnClosedStdin stdinWatcher;
-    Thread stdinWatcherThread(&stdinWatcher,&ExitOnClosedStdin::mainLoop,65535);
+    Thread stdinWatcherThread(&stdinWatcher,&ExitOnClosedStdin::mainLoop,"[stdinWatcherThread] ",65535);
 
     for (unsigned writer = 0; writer < subbandWriters.size(); writer ++)
       delete subbandWriters[writer];
 
     stdinWatcher.observationDone = true;
   } catch (Exception &ex) {
-    LOG_FATAL_STR("caught Exception: " << ex);
+    LOG_FATAL_STR("Caught Exception: " << ex);
     exit(1);
   } catch (std::exception &ex) {
-    LOG_FATAL_STR("caught std::exception: " << ex.what());
+    LOG_FATAL_STR("Caught std::exception: " << ex.what());
     exit(1);
   } catch (...) {
-    LOG_FATAL_STR("caught non-std::exception: ");
+    LOG_FATAL_STR("Caught non-std::exception: ");
     exit(1);
   }
 #endif

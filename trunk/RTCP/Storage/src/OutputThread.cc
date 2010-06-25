@@ -44,6 +44,7 @@ namespace RTCP {
 
 OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, unsigned outputNumber, const ProcessingPlan::planlet &outputConfig, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue)
 :
+  itsLogPrefix(str(format("[obs %u output %u subband %u] ") % parset.observationID() % outputNumber % subbandNumber)),
   itsSubbandNumber(subbandNumber),
   itsOutputNumber(outputNumber),
   itsObservationID(parset.observationID()),
@@ -68,7 +69,7 @@ OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, unsigne
       try {
 	itsSequenceNumbersFile = new FileStream(seqfilename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
       } catch (...) {
-	LOG_WARN("Could not open sequence numbers file");
+	LOG_WARN_STR(itsLogPrefix << "Could not open sequence numbers file " << seqfilename);
 	itsSequenceNumbersFile = 0;
       }
     }
@@ -80,17 +81,17 @@ OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, unsigne
     filename = out.str();
   }
 
-  LOG_DEBUG_STR("subband " << subbandNumber << " output " << outputNumber << " written to " << filename);
+  LOG_DEBUG_STR(itsLogPrefix << "Writing to " << filename);
 
   try {
     itsWriter = new MSWriterFile(filename.c_str());
   } catch (SystemCallException &ex) {
-    LOG_ERROR_STR("Cannot open " << filename << ": " << ex);
+    LOG_ERROR_STR(itsLogPrefix << "Cannot open " << filename << ": " << ex);
     itsWriter = new MSWriterNull();
   }
 
   //thread = new Thread(this, &OutputThread::mainLoop, str(format("OutputThread (obs %d sb %d output %d)") % ps->observationID() % subbandNumber % outputNumber));
-  itsThread = new Thread(this, &OutputThread::mainLoop);
+  itsThread = new Thread(this, &OutputThread::mainLoop, itsLogPrefix + "[OutputThread] ");
 }
 
 
@@ -103,30 +104,20 @@ OutputThread::~OutputThread()
   delete itsSequenceNumbersFile;
 
   if (itsHaveCaughtException)
-    LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber <<" caught non-fatal exception(s).") ;
-
+    LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception(s).") ;
 }
 
 
 void OutputThread::writeLogMessage(unsigned sequenceNumber)
 {
-  time_t now = time(0);
-  char	 buf[26];
-
-  ctime_r(&now, buf);
-  buf[24] = '\0';
-
-  LOG_INFO_STR("time = " << buf <<
-	       ", obsID = " << itsObservationID <<
-	       ", sb = " << itsSubbandNumber <<
-	       ", seqno = " << sequenceNumber);
+  LOG_INFO_STR(itsLogPrefix << "seqno = " << sequenceNumber);
 }
 
 
 void OutputThread::flushSequenceNumbers()
 {
   if (itsSequenceNumbersFile != 0) {
-    LOG_INFO_STR("Flushing sequence numbers");
+    LOG_INFO_STR(itsLogPrefix << "Flushing sequence numbers");
     itsSequenceNumbersFile->write(itsSequenceNumbers.data(), itsSequenceNumbers.size()*sizeof(unsigned));
     itsSequenceNumbers.clear();
   }
@@ -139,7 +130,7 @@ void OutputThread::checkForDroppedData(StreamableData *data)
   unsigned droppedBlocks	  = data->sequenceNumber - expectedSequenceNumber;
 
   if (droppedBlocks > 0)
-    LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
+    LOG_WARN_STR(itsLogPrefix << "OutputThread dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
 
   if (itsSequenceNumbersFile != 0) {
     itsSequenceNumbers.push_back(data->sequenceNumber);
@@ -172,14 +163,14 @@ void OutputThread::mainLoop()
 
     } catch (SystemCallException &ex) {
       itsHaveCaughtException = true;
-      LOG_WARN_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber <<" caught non-fatal exception:  " << ex.what()) ;
+      LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception: " << ex.what()) ;
     }
 
     writeSemaphore.up();
     //writeTimer.stop();
 
     writeLogMessage(data.get()->sequenceNumber);
-    //LOG_INFO_STR("OutputThread: ObsID = " << itsObservationID << ", subband = " << itsSubbandNumber << ", output = " << itsOutputNumber << ": " << writeTimer);
+    //LOG_INFO_STR(itsLogPrefix << writeTimer);
 
     itsFreeQueue.append(data.release());
   }

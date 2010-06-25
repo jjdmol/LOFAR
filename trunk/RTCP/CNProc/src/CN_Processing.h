@@ -92,6 +92,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     void		printSubbandList() const;
 #endif
 
+    std::string         itsLogPrefix;
+
     unsigned            itsNrStations;
     unsigned            itsNrBeamFormedStations;
     bool                itsFlysEye;

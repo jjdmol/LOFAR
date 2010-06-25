@@ -39,6 +39,8 @@
 #include <spi/kernel_interface.h>
 #endif
 
+#include <boost/format.hpp>
+using boost::format;
 
 #if defined HAVE_BGP
 //#define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
@@ -63,6 +65,7 @@ CN_Processing_Base::~CN_Processing_Base()
 
 template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream *str, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo)
 :
+  itsLogPrefix(""),
   itsStream(str),
   itsCreateStream(createStream),
   itsLocationInfo(locationInfo),
@@ -90,7 +93,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::printSubbandLis
 {
   std::stringstream logStr;
   
-  logStr << "node " << itsLocationInfo.rank() << " filters and correlates subbands ";
+  logStr << "Filters and correlates subbands ";
 
   unsigned sb = itsCurrentSubband; 
 
@@ -103,7 +106,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::printSubbandLis
   } while (sb != itsCurrentSubband);
   
   logStr << ']';
-  LOG_DEBUG(logStr.str());
+  LOG_DEBUG_STR(logStr.str());
 }
 
 #endif // HAVE_MPI
@@ -133,7 +136,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   std::vector<unsigned>::const_iterator phaseThreePsetIndex  = std::find(phaseThreePsets.begin(),  phaseThreePsets.end(),  myPset);
   itsHasPhaseThree             = phaseThreePsetIndex != phaseThreePsets.end();
 
-  LOG_DEBUG_STR( "Node " << itsLocationInfo.rank() << " phase 1: " << itsHasPhaseOne << " phase 2: " << itsHasPhaseTwo << " phase 3: " << itsHasPhaseThree );
+  itsLogPrefix = str(format("[obs %u phases %d%d%d] ") % configuration.observationID() % (itsHasPhaseOne ? 1 : 0) % (itsHasPhaseTwo ? 1 : 0) % (itsHasPhaseThree ? 1 : 0));
 
   itsNrStations	             = configuration.nrStations();
   itsNrBeamFormedStations    = configuration.nrMergedStations();
@@ -163,7 +166,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     }
 
     if( LOG_CONDITION ) {
-      LOG_DEBUG_STR( "Allocating " << (p.set->requiredSize()/1024) << " Kbyte for " << p.name << " (set #" << i << ") in arena " << p.arena << (itsPlan->output(p.set) ? " (output)" : "") );
+      LOG_DEBUG_STR(itsLogPrefix << "Allocating " << (p.set->requiredSize()/1024) << " Kbyte for " << p.name << " (set #" << i << ") in arena " << p.arena << (itsPlan->output(p.set) ? " (output)" : "") );
     }
 
     itsMapping.addDataset( p.set, p.arena );
@@ -232,7 +235,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
     static NSTimer readTimer("receive timer", true, true);
 
     if (LOG_CONDITION) {
-      LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start reading at " << MPI_Wtime());
+      LOG_DEBUG_STR(itsLogPrefix << "Start reading at " << MPI_Wtime());
     }
     
     NSTimer asyncSendTimer("async send", LOG_CONDITION, true);
@@ -242,14 +245,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
 
       if (subband < itsNrSubbands) {
         //if (LOG_CONDITION) {
-	//  LOG_DEBUG("read subband " << subband << " from IO node");
+	//  LOG_DEBUG_STR("read subband " << subband << " from IO node");
         //}
 	readTimer.start();
 	itsPlan->itsInputData->readOne(itsStream, i); // Synchronously read 1 subband from my IO node.
 	readTimer.stop();
 	asyncSendTimer.start();
         //if (LOG_CONDITION) {
-	//  LOG_DEBUG("transpose: send subband " << subband << " to pset id " << i);
+	//  LOG_DEBUG_STR("transpose: send subband " << subband << " to pset id " << i);
         //}
 
 	itsAsyncTransposeInput->asyncSend(i, itsPlan->itsInputSubbandMetaData, itsPlan->itsInputData); // Asynchronously send one subband to another pset.
@@ -275,7 +278,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start processing at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start processing at " << MPI_Wtime());
 
   NSTimer asyncReceiveTimer("wait for any async receive", LOG_CONDITION, true);
 
@@ -284,7 +287,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
     const unsigned stat = itsAsyncTransposeInput->waitForAnyReceive();
     asyncReceiveTimer.stop();
 
-//    LOG_DEBUG("transpose: received subband " << itsCurrentSubband << " from " << stat);
+//    LOG_DEBUG_STR("transpose: received subband " << itsCurrentSubband << " from " << stat);
 
     computeTimer.start();
     itsPPF->computeFlags(stat, itsPlan->itsSubbandMetaData, itsPlan->itsFilteredData);
@@ -305,7 +308,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::mergeStations()
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start merging stations at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start merging stations at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
   itsBeamFormer->mergeStations(itsPlan->itsFilteredData);
@@ -316,7 +319,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams()
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start beam forming at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start beam forming at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
   itsBeamFormer->formBeams(itsPlan->itsSubbandMetaData,itsPlan->itsFilteredData,itsPlan->itsBeamFormedData, itsCenterFrequencies[itsCurrentSubband]);
@@ -327,7 +330,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncohe
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating incoherent Stokes at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start calculating incoherent Stokes at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
   itsIncoherentStokes->calculateIncoherent(itsPlan->itsFilteredData,itsPlan->itsIncoherentStokesData,itsBeamFormer->getStationMapping());
@@ -338,7 +341,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCohere
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating coherent Stokes at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start calculating coherent Stokes at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
   itsCoherentStokes->calculateCoherent(itsPlan->itsBeamFormedData,itsPlan->itsCoherentStokesData,itsFlysEye ? itsNrBeamFormedStations : itsNrPencilBeams);
@@ -349,7 +352,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::correlate()
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start correlating at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start correlating at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
   itsCorrelator->computeFlagsAndCentroids(itsPlan->itsFilteredData, itsPlan->itsCorrelatedData);
@@ -361,7 +364,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( uns
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start writing at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start writing at " << MPI_Wtime());
 #endif // HAVE_MPI
 
   static NSTimer writeTimer("send timer", true, true);
@@ -374,7 +377,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingIn
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start waiting to finish sending input for transpose at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start waiting to finish sending input for transpose at " << MPI_Wtime());
 
   NSTimer waitAsyncSendTimer("wait for all async sends", LOG_CONDITION, true);
   waitAsyncSendTimer.start();
@@ -393,6 +396,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
    * PHASE ONE: Receive input data, and send it to the nodes participating in phase two.
    */
 
+
   if( itsHasPhaseOne || itsHasPhaseTwo ) {
     // transpose/obtain input data
     transposeInput();
@@ -403,6 +407,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
    */
 
   if (itsHasPhaseTwo && itsCurrentSubband < itsNrSubbands) {
+    if (LOG_CONDITION)
+      LOG_DEBUG_STR(itsLogPrefix << "Phase 2: Processing subband " << itsCurrentSubband);
     // the order and types of sendOutput have to match
     // what the IONProc and Storage expect to receive
     // (defined in Interface/PipelineOutput.h)
@@ -428,7 +434,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
     if( itsPlan->calculate( itsPlan->itsCoherentStokesDataIntegratedChannels ) ) {
 #if defined HAVE_MPI
       if (LOG_CONDITION)
-        LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start compressing coherent Stokes at " << MPI_Wtime());
+        LOG_DEBUG_STR(itsLogPrefix << "Start compressing coherent Stokes at " << MPI_Wtime());
 #endif // HAVE_MPI
       itsCoherentStokes->compressStokes(itsPlan->itsCoherentStokesData, itsPlan->itsCoherentStokesDataIntegratedChannels, itsFlysEye ? itsNrBeamFormedStations : itsNrPencilBeams);
     }
@@ -440,7 +446,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
     if( itsPlan->calculate( itsPlan->itsIncoherentStokesDataIntegratedChannels ) ) {
 #if defined HAVE_MPI
       if (LOG_CONDITION)
-        LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start compressing incoherent Stokes at " << MPI_Wtime());
+        LOG_DEBUG_STR(itsLogPrefix << "Start compressing incoherent Stokes at " << MPI_Wtime());
 #endif // HAVE_MPI
       itsIncoherentStokes->compressStokes(itsPlan->itsIncoherentStokesData, itsPlan->itsIncoherentStokesDataIntegratedChannels, 1);
     }
@@ -468,7 +474,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 #if defined HAVE_MPI
   if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
     if (LOG_CONDITION)
-      LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start idling at " << MPI_Wtime());
+      LOG_DEBUG_STR(itsLogPrefix << "Start idling at " << MPI_Wtime());
   }
 #endif // HAVE_MPI
 
@@ -507,6 +513,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
   itsOutputStreams.clear();
 
   delete itsPlan;               itsPlan = 0;
+
+  itsLogPrefix = "";
 }
 
 
