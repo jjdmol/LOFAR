@@ -129,9 +129,11 @@ int main(int argc, char **argv)
 #endif
 
     LocationInfo locationInfo;
-    
+
+#if defined HAVE_BGP
     INIT_LOGGER_WITH_SYSINFO(str(format("CNProc@%04d") % locationInfo.rank()));
-  
+#endif
+
     if (locationInfo.rank() == 0) {
       locationInfo.print();
 
