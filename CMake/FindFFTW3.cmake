@@ -1,18 +1,20 @@
 # - Try to find FFTW3.
-# Usage: find_package(FFTW3 [COMPONENTS [double|single|long-double] [threads]])
+# Usage: find_package(FFTW3 [COMPONENTS [single double long-double threads]])
 #
 # Variables used by this module:
-#  FFTW3_ROOT_DIR     - FFTW3 root directory
+#  FFTW3_ROOT_DIR             - FFTW3 root directory
 # Variables defined by this module:
-#  FFTW3_FOUND        - system has FFTW3
-#  FFTW3_INCLUDE_DIR  - the FFTW3 include directory (cached)
-#  FFTW3_INCLUDE_DIRS - the FFTW3 include directories
-#                       (identical to FFTW3_INCLUDE_DIR)
-#  FFTW3_LIBRARY      - the FFTW3 library (cached)
-#  FFTW3_LIBRARIES    - the FFTW3 libraries
-#                       (identical to FFTW3_LIBRARY)
+#  FFTW3_FOUND                - system has FFTW3
+#  FFTW3_INCLUDE_DIR          - the FFTW3 include directory (cached)
+#  FFTW3_INCLUDE_DIRS         - the FFTW3 include directories
+#                               (identical to FFTW3_INCLUDE_DIR)
+#  FFTW3[FL]?_LIBRARY         - the FFTW3 library - double, single(F), 
+#                               long-double(L) precision (cached)
+#  FFTW3[FL]?_THREADS_LIBRARY - the threaded FFTW3 library - double, single(F), 
+#                               long-double(L) precision (cached)
+#  FFTW3_LIBRARIES            - list of all FFTW3 libraries found
 
-# Copyright (C) 2009
+# Copyright (C) 2009-2010
 # ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 #
@@ -32,99 +34,44 @@
 #
 # $Id$
 
-set(_usage_msg
-  "Usage: find_package(FFTW3 [COMPONENTS [double|single|long-double]"
-  "[threads]])")
+# Use double precision by default.
+if(FFTW3_FIND_COMPONENTS MATCHES "^$")
+  set(_components double)
+else()
+  set(_components ${FFTW3_FIND_COMPONENTS})
+endif()
 
-# -----------------------------------------------------------------------------
-# Get the optional component _fftw3_${_kind}. Sensible values for _fftw3_${_kind}
-# are (at the moment) precision, or parallelization.
-# The variable _values will contain the list of valid components for
-# _fftw3_${_kind}; the first element of _values is used as default value, in case
-# no matching component could be found.
-# The output will be stored in the variable _fftw3_${_kind}.
-#
-# It is an error if, between multiple calls of FindFFTW3(), the currently
-# specified component value is different from the cached one.
-#
-# Usage: get_fftw3_component(<category> <default-value> [value] ...)
-# -----------------------------------------------------------------------------
-macro(get_fftw3_component _kind _default_value)
-  set(_values ${ARGN})
-  set(_fftw3_${_kind})
-  foreach(_val ${_values})
-    list(FIND FFTW3_FIND_COMPONENTS ${_val} _idx)
-    if(_idx GREATER -1)
-      if(NOT _fftw3_${_kind})
-        set(_fftw3_${_kind} ${_val})
-      else(NOT _fftw3_${_kind})
-        message(FATAL_ERROR
-          "FindFFTW3: more than one `_fftw3_${_kind}' component was specified.\n"
-          "${_usage_msg}")
-      endif(NOT _fftw3_${_kind})
-    endif(_idx GREATER -1)
-  endforeach(_val ${_values})
-  if(NOT _fftw3_${_kind})
-    set(_fftw3_${_kind} "${_default_value}")
-  endif(NOT _fftw3_${_kind})
-  string(TOUPPER "FFTW3_${_kind}" _cached_value)
-  if(DEFINED ${_cached_value})
-    if(NOT "${_fftw3_${_kind}}" STREQUAL "${${_cached_value}}")
-      message(FATAL_ERROR
-        "FindFFTW3: previous call used ${_kind} `${${_cached_value}}', "
-        "which is different from `${_fftw3_${_kind}}'. This is not supported!")
-    endif(NOT "${_fftw3_${_kind}}" STREQUAL "${${_cached_value}}")
-  endif(DEFINED ${_cached_value})
-endmacro(get_fftw3_component _kind)
+# Loop over each component.
+set(_libraries)
+foreach(_comp ${_components})
+  if(_comp STREQUAL "single")
+    list(APPEND _libraries fftw3f)
+  elseif(_comp STREQUAL "double")
+    list(APPEND _libraries fftw3)
+  elseif(_comp STREQUAL "long-double")
+    list(APPEND _libraries fftw3l)
+  elseif(_comp STREQUAL "threads")
+    set(_use_threads ON)
+  else(_comp STREQUAL "single")
+    message(FATAL_ERROR "FindFFTW3: unknown component `${_comp}' specified. "
+      "Valid components are `single', `double', `long-double', and `threads'.")
+  endif(_comp STREQUAL "single")
+endforeach(_comp ${_components})
 
-# -----------------------------------------------------------------------------
-# get_fftw3_precision() 
-#
-# Return the precision `component' (single|double|long-double) in _precision.
-# Set the _precision_tag depending on the specified precision.
-# -----------------------------------------------------------------------------
-macro(get_fftw3_precision)
-  get_fftw3_component(precision double single long-double)
-  if(_fftw3_precision MATCHES single)
-    set(_precision_tag f)
-  elseif(_fftw3_precision MATCHES long-double)
-    set(_precision_tag l)
-  else()
-    set(_precision_tag)
-  endif(_fftw3_precision MATCHES single)
-endmacro(get_fftw3_precision)
-
-# -----------------------------------------------------------------------------
-# get_fftw3_parallelization()
-#
-# Return the parallelization `component' (off|threads) in _parallelization.
-# -----------------------------------------------------------------------------
-macro(get_fftw3_parallelization)
-  get_fftw3_component(parallelization off threads)
-endmacro(get_fftw3_parallelization)
-
-# =============================================================================
-
-# Get the precision `component' (single|double|long-double)
-get_fftw3_precision()
-
-# Get the parallelization `component' (off|threads)
-get_fftw3_parallelization()
-
-# Set the default header and library file names.
-set(_libraries fftw3${_precision_tag})
-set(_headerfile fftw3.h)
-
-# Parallelization using threads also requires fftw3_threads library
-if(_fftw3_parallelization)
-  set(_libraries fftw3${_precision_tag}_${_fftw3_parallelization} ${_libraries})
-endif(_fftw3_parallelization)
+# If using threads, we need to link against threaded libraries as well.
+if(_use_threads)
+  set(_thread_libs)
+  foreach(_lib ${_libraries})
+    list(APPEND _thread_libs ${_lib}_threads)
+  endforeach(_lib ${_libraries})
+  set(_libraries ${_thread_libs} ${_libraries})
+endif(_use_threads)
 
 # Keep a list of variable names that we need to pass on to
 # find_package_handle_standard_args().
 set(_check_list)
 
-# Search for all required libraries.
+# Search for all requested libraries.
 foreach(_lib ${_libraries})
   string(TOUPPER ${_lib} _LIB)
   find_library(${_LIB}_LIBRARY ${_lib}
@@ -144,12 +91,3 @@ list(APPEND _check_list FFTW3_INCLUDE_DIR)
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FFTW3 DEFAULT_MSG ${_check_list})
-
-# If everything was found, put the following variables in the cache. We need
-# them to check if a second call to FindFFTW has conflicting options.
-if(FFTW3_FOUND)
-  set(FFTW3_PRECISION ${_fftw3_precision} CACHE INTERNAL
-    "FFTW precision")
-  set(FFTW3_PARALLELIZATION ${_fftw3_parallelization} CACHE INTERNAL
-    "FFTW parallelization")
-endif(FFTW3_FOUND)
