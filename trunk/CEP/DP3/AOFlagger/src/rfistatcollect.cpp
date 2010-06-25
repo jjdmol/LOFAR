@@ -24,6 +24,8 @@
 #include <map>
 #include <cmath>
 
+#include <AOFlagger/msio/date.h>
+
 using namespace std;
 
 int main(int argc, char **argv)
@@ -42,7 +44,7 @@ int main(int argc, char **argv)
 	else
 	{
 		std::map<double, double> frequencyFlags;
-
+		std::map<double, long unsigned> timeTotalCount, timeFlagsCount;
 
 		for(int i=1;i<argc;++i)
 		{
@@ -64,7 +66,22 @@ int main(int argc, char **argv)
 					double frequency, totalCount, flagCount, percentage;
 					f >> frequency >> totalCount >> flagCount >> percentage;
 					frequencyFlags.insert(pair<double, double>(frequency, percentage));
-					std::cout << frequency << endl;
+				}
+			} else if(timefile)
+			{
+				ifstream f(filename.c_str());
+				while(!f.eof())
+				{
+					double time, percentage;
+					unsigned long totalCount, flagCount;
+					f >> time >> totalCount >> flagCount >> percentage;
+					if(timeTotalCount.count(time)!=0)
+					{
+						totalCount += timeTotalCount[time];
+						flagCount += timeFlagsCount[time];
+					}
+					timeTotalCount[time] = totalCount;
+					timeFlagsCount[time] = flagCount;
 				}
 			}
 		}
@@ -73,6 +90,13 @@ int main(int argc, char **argv)
 		for(std::map<double, double>::const_iterator i=frequencyFlags.begin();i!=frequencyFlags.end();++i)
 			fileFreq << i->first << '\t' << i->second << '\n';
 		fileFreq.close();
+
+		ofstream fileTime("time-totals.txt");
+		for(std::map<double, long unsigned>::const_iterator i=timeFlagsCount.begin(),
+				j=timeTotalCount.begin();
+				i!=timeFlagsCount.end();++i,++j)
+			fileTime << j->first << '\t' << Date::AipsMJDToTimeString(j->first) << '\t' << j->second << '\t' << i->second << '\t' << (100.0 * (double) i->second / (double) j->second) << '\n';
+		fileTime.close();
 
 		ofstream fileBand("subband-totals.txt");
 		size_t index = 0;
