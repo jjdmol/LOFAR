@@ -35,7 +35,7 @@
 
 #include <time.h>
 #include <sys/time.h>
-#include <stdio.h>
+#include <cstdio>
 
 //# This might be undefined if used by an external package like ASKAP.
 #ifndef AUTO_FUNCTION_NAME

@@ -47,6 +47,9 @@
 
 #include <cstdio>
 
+#include <boost/format.hpp>
+using boost::format;
+
 // if exceptions are not caught, an attempt is made to create a backtrace
 // from the place where the exception is thrown.
 #define CATCH_EXCEPTIONS
@@ -127,10 +130,7 @@ int main(int argc, char **argv)
 
     LocationInfo locationInfo;
     
-    std::stringstream sysInfo;
-    sysInfo << basename(argv[0]) << "@" << locationInfo.rank();
-
-    INIT_LOGGER_WITH_SYSINFO(sysInfo.str());
+    INIT_LOGGER_WITH_SYSINFO(str(format("CNProc@%04d") % locationInfo.rank()));
   
     if (locationInfo.rank() == 0) {
       locationInfo.print();
@@ -141,20 +141,22 @@ int main(int argc, char **argv)
 #endif
     }
 
-    LOG_DEBUG("creating connection to ION ...");
+    LOG_INFO_STR("Core " << locationInfo.rank() << " is core " << locationInfo.rankInPset() << " in pset " << locationInfo.psetNumber());
+
+    LOG_DEBUG("Creating connection to ION ...");
     
     Stream *ionStream = createIONstream(0, locationInfo);
 
-    LOG_DEBUG("connection successful");
+    LOG_DEBUG("Creating connection to ION: done");
 
     CN_Configuration	configuration;
     CN_Processing_Base	*proc = 0;
     CN_Command		command;
 
     do {
-      LOG_DEBUG("wait for command");
+      //LOG_DEBUG("Wait for command");
       command.read(ionStream);
-      LOG_DEBUG("received command");
+      //LOG_DEBUG("Received command");
 
       switch (command.value()) {
 	case CN_Command::PREPROCESS :	configuration.read(ionStream);

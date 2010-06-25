@@ -29,6 +29,7 @@
 #include <Thread/Thread.h>
 
 #include <vector>
+#include <string>
 
 namespace LOFAR {
 namespace RTCP {
@@ -47,6 +48,8 @@ class OutputSection
 
     void			droppingData(unsigned subband);
     void			notDroppingData(unsigned subband);
+
+    std::string                 itsLogPrefix;
 
     std::vector<unsigned>	itsDroppedCount; // [subband]
     std::vector<OutputThread *> itsOutputThreads; // [subband]

@@ -52,17 +52,18 @@ class Thread
     // The thread is joined in the destructor of the Thread object (or detached
     // if the thread deletes itself)
       
-    template <typename T> Thread(T *object, void (T::*method)(), size_t stackSize = 0);
+    template <typename T> Thread(T *object, void (T::*method)(), const std::string logPrefix = "", size_t stackSize = 0);
 
     // join/detach a thread
     ~Thread();
 
   protected:
     template <typename T> struct Args {
-      Args(T *object, void (T::*method)()) : object(object), method(method) {}
+      Args(T *object, void (T::*method)(), const std::string logPrefix) : object(object), method(method), logPrefix(logPrefix) {}
 
       T	   *object;
       void (T::*method)();
+      const std::string logPrefix;
     };
 
     template <typename T>	      Thread(void * (*stub)(void *), Args<T> *args, size_t stackSize);
@@ -78,7 +79,7 @@ class Thread
 class InterruptibleThread : public Thread
 {
   public:
-    template <typename T> InterruptibleThread(T *object, void (T::*method)(), size_t stackSize = 0);
+    template <typename T> InterruptibleThread(T *object, void (T::*method)(), const std::string logPrefix = "", size_t stackSize = 0);
 			  ~InterruptibleThread();
 
     void		  abort();
@@ -92,7 +93,7 @@ class InterruptibleThread : public Thread
     };
 
     template <typename T> struct Args : public Thread::Args<T> {
-      Args(T *object, void (T::*method)(), ExitState *exitState) : Thread::Args<T>(object, method), exitState(exitState) {}
+      Args(T *object, void (T::*method)(), const std::string logPrefix, ExitState *exitState) : Thread::Args<T>(object, method, logPrefix), exitState(exitState) {}
 
       ExitState *exitState;
     };
@@ -106,9 +107,9 @@ class InterruptibleThread : public Thread
 };
 
 
-template <typename T> inline Thread::Thread(T *object, void (T::*method)(), size_t stackSize)
+template <typename T> inline Thread::Thread(T *object, void (T::*method)(), const std::string logPrefix, size_t stackSize)
 {
-  create(&Thread::stub<T>, new Args<T>(object, method), stackSize);
+  create(&Thread::stub<T>, new Args<T>(object, method, logPrefix), stackSize);
 }
 
 
@@ -157,9 +158,9 @@ inline Thread::~Thread()
 }
 
 
-template <typename T> inline InterruptibleThread::InterruptibleThread(T *object, void (T::*method)(), size_t stackSize)
+template <typename T> inline InterruptibleThread::InterruptibleThread(T *object, void (T::*method)(), const std::string logPrefix, size_t stackSize)
 :
-  Thread(&InterruptibleThread::stub<T>, (exitState = new ExitState, new Args<T>(object, method, exitState)), stackSize)
+  Thread(&InterruptibleThread::stub<T>, (exitState = new ExitState, new Args<T>(object, method, logPrefix, exitState)), stackSize)
 {
   installSignalHandler();
 }
@@ -182,11 +183,11 @@ template <typename T> inline void *Thread::stub(void *arg)
   try {
     (args->object->*args->method)();
   } catch (Exception &ex) {
-    LOG_FATAL_STR("caught Exception: " << ex);
+    LOG_FATAL_STR(args->logPrefix << "Caught Exception: " << ex);
   } catch (std::exception &ex) {
-    LOG_FATAL_STR("caught std::exception: " << ex.what());
+    LOG_FATAL_STR(args->logPrefix << "Caught std::exception: " << ex.what());
   } catch (...) {
-    LOG_FATAL("caught non-std::exception");
+    LOG_FATAL_STR(args->logPrefix << "Caught non-std::exception");
   }
 
   delete args;

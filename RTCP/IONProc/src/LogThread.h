@@ -30,6 +30,7 @@
 #include <Thread/Thread.h>
 
 #include <vector>
+#include <string>
 
 namespace LOFAR {
 namespace RTCP {
@@ -37,7 +38,7 @@ namespace RTCP {
 class LogThread
 {
   public:
-    LogThread(unsigned nrRspBoards);
+    LogThread(unsigned nrRspBoards, std::string stationName);
     ~LogThread();
 
     struct Counters {
@@ -49,6 +50,8 @@ class LogThread
 
   private:
     void	  mainLoop();
+
+    std::string   itsStationName;
   
     volatile bool itsShouldStop;
     Thread	  itsThread;

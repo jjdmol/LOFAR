@@ -59,7 +59,7 @@ void JobQueue::cancel(unsigned observationID)
       return;
     }
 
-  LOG_WARN_STR("ObsID = " << observationID << ": could not cancel: not found");
+  LOG_WARN_STR("[obs " << observationID << "] Could not cancel: not found");
 }
 
 

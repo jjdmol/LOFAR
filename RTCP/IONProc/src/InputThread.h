@@ -53,6 +53,8 @@ template<typename SAMPLE_TYPE> class InputThread
       LogThread::Counters *packetCounters;
       bool		  isRealTime;
       TimeStamp		  startTime;
+
+      std::string         logPrefix;
     };
 
 			  InputThread(ThreadArgs args);

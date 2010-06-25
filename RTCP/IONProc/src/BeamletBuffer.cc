@@ -34,6 +34,9 @@
 #include <cstring>
 #include <stdexcept>
 
+#include <boost/format.hpp>
+using boost::format;
+
 
 namespace LOFAR {
 namespace RTCP {
@@ -45,7 +48,7 @@ template<typename SAMPLE_TYPE> const unsigned BeamletBuffer<SAMPLE_TYPE>::itsNrT
 // itsOffset to a proper value, we can assure that input packets never
 // wrap around the circular buffer
 
-template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const Parset *ps, unsigned rspBoard)
+template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const Parset *ps, string &stationName, unsigned rspBoard)
 :
   itsRSPboard(rspBoard),
   itsNrSubbands(ps->nrSlotsInFrame()),
@@ -65,6 +68,8 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
   itsReadTimer("buffer read", true, true),
   itsWriteTimer("buffer write", true, true)
 {
+  itsLogPrefix = str(format("[station %s board %d] ") % stationName % rspBoard);
+
   if (ps->getUint32("OLAP.nrTimesInFrame") != itsNrTimesPerPacket)
     THROW(IONProcException, "OLAP.nrTimesInFrame should be " << boost::lexical_cast<std::string>(itsNrTimesPerPacket));
 
@@ -79,7 +84,7 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
   memset(itsSBBuffers.origin(), 0, itsSBBuffers.num_elements() * sizeof(SAMPLE_TYPE));
 #endif
 
-  LOG_DEBUG_STR("Circular buffer for RSP board " << rspBoard << " at " << itsSBBuffers.origin() << "; contains " << itsSize << " samples");
+  LOG_DEBUG_STR(itsLogPrefix << "Circular buffer at " << itsSBBuffers.origin() << "; contains " << itsSize << " samples");
 }
 
 
@@ -199,12 +204,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
 
     itsLockedRanges.unlock(0, itsSize);
 
-    time_t now = time(0);
-    char   buf[26];
-    ctime_r(&now, buf);
-    buf[24] = '\0';
-
-    LOG_DEBUG_STR("[" << buf << "] reset BeamletBuffer of RSP board " << itsRSPboard << " at " << newTimeStamp << "; itsOffset was " << oldOffset << " and becomes " << itsOffset);
+    LOG_INFO_STR(itsLogPrefix << "Reset BeamletBuffer at " << newTimeStamp << "; itsOffset was " << oldOffset << " and becomes " << itsOffset);
   }
 }
 

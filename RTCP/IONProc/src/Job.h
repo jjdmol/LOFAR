@@ -74,12 +74,14 @@ class Job
 
     static void				 execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *isBigEndian);
     static void				 forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *isBigEndian, int &storagePID);
-    static void				 joinSSH(int childPID, const std::string &hostName, unsigned &timeout);
+    void				 joinSSH(int childPID, const std::string &hostName, unsigned &timeout);
 
     void				 startStorageProcesses();
     void				 stopStorageProcesses();
 
     void				 waitUntilCloseToStartOfObservation(time_t secondsPriorToStart);
+
+    std::string                          itsLogPrefix;
 
     std::vector<std::string>		 itsStorageHostNames;
     std::vector<int>			 itsStoragePIDs;

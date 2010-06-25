@@ -52,7 +52,9 @@ template <typename SAMPLE_TYPE> class InputSection
 
   private:
     void				      createInputStreams(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
-    void				      createInputThreads(const Parset &);
+    void				      createInputThreads(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
+
+    std::string                               itsLogPrefix;
 
     std::vector<Stream *>		      itsInputStreams;
     

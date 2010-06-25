@@ -70,6 +70,8 @@ class CN_Configuration
     bool                  &flysEye();
 
     unsigned              &nrPencilBeams();
+
+    unsigned              &observationID();
     
     void		  read(Stream *);
     void		  write(Stream *);
@@ -116,6 +118,7 @@ class CN_Configuration
       unsigned            itsNrStokes;
       bool                itsStokesIntegrateChannels;
       bool                itsFlysEye;
+      unsigned            itsObservationID;
     } itsMarshalledData;
 };
 
@@ -258,6 +261,11 @@ inline bool &CN_Configuration::stokesIntegrateChannels()
 inline bool &CN_Configuration::flysEye()
 {
   return itsMarshalledData.itsFlysEye;
+}
+
+inline unsigned &CN_Configuration::observationID()
+{
+  return itsMarshalledData.itsObservationID;
 }
 
 

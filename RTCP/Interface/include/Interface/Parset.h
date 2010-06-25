@@ -457,7 +457,7 @@ inline string Parset::positionType() const
 
 inline double Parset::clockCorrectionTime(const std::string &station) const
 {
-  return getDouble(std::string("PIC.Core.") + station + ".clockCorrectionTime");
+  return getDouble(std::string("PIC.Core.") + station + ".clockCorrectionTime",0.0);
 }
 
 inline bool Parset::correctBandPass() const

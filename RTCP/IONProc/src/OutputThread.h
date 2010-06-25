@@ -35,6 +35,7 @@
 
 #include <stack>
 #include <vector>
+#include <string>
 
 
 namespace LOFAR {
@@ -56,13 +57,14 @@ class OutputThread
   private:
     void		    mainLoop();
 
+    std::string             itsLogPrefix;
+
     bool                    itsDone;
     Condition               itsDoneCondition;
     Mutex                   itsDoneMutex;
 
     const Parset            &itsParset;
     const unsigned          itsSubband, itsOutput;
-    const std::string	    itsDescription;
     InterruptibleThread	    *itsThread;
 };
 
