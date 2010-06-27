@@ -25,6 +25,7 @@
 #include "imageset.h"
 
 #include <stack>
+#include <set>
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
@@ -61,6 +62,9 @@ namespace rfiStrategy {
 			void SetDataKind(enum DataKind dataKind) { _dataKind = dataKind; }
 
 			virtual ActionType Type() const { return ForEachBaselineActionType; }
+
+			std::set<size_t> &AntennaeToSkip() { return _antennaeToSkip; }
+			const std::set<size_t> &AntennaeToSkip() const { return _antennaeToSkip; }
 		private:
 			bool IsBaselineSelected(ImageSetIndex &index);
 			class ImageSetIndex *GetNextIndex();
@@ -155,6 +159,7 @@ namespace rfiStrategy {
 			AntennaInfo _initAntenna1, _initAntenna2;
 			bool _hasInitAntennae;
 			size_t _initPartIndex;
+			std::set<size_t> _antennaeToSkip;
 	};
 }
 
