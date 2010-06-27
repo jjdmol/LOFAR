@@ -261,6 +261,32 @@ Action *XmlReader::parseForEachBaselineAction(xmlNode *node)
 	newAction->SetSelection((BaselineSelection) getInt(node, "selection"));
 	newAction->SetThreadCount(getInt(node, "thread-count"));
 	newAction->SetDataKind((DataKind) getInt(node, "data-kind"));
+
+	for (xmlNode *curNode=node->children; curNode!=NULL; curNode=curNode->next) {
+		if(curNode->type == XML_ELEMENT_NODE)
+		{
+			std::string nameStr((const char *) curNode->name);
+			if(nameStr == "antennae-to-skip")
+			{
+				for (xmlNode *curNode2=curNode->children; curNode2!=NULL; curNode2=curNode2->next) {
+					if (curNode2->type == XML_ELEMENT_NODE) {
+						std::string innerNameStr((const char *) curNode2->name);
+						std::cout << innerNameStr << std::endl;
+						if(innerNameStr != "antenna")
+							throw XmlReadError("Format of the for each baseline action is incorrect");
+						xmlNode *textNode = curNode2->children;
+						if(textNode->type != XML_TEXT_NODE)
+							throw XmlReadError("Error occured in reading xml file: value node did not contain text");
+						if(textNode->content != NULL)
+						{
+							newAction->AntennaeToSkip().insert(atoi((const char *) textNode->content));
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	parseChildren(node, newAction);
 	return newAction;
 }

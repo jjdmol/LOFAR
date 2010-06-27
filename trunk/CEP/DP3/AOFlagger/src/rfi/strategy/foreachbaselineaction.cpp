@@ -110,11 +110,11 @@ namespace rfiStrategy {
 
 	bool ForEachBaselineAction::IsBaselineSelected(ImageSetIndex &index)
 	{
-		if(_selection == All) return true;
-
 		ImageSet *imageSet = _artifacts->ImageSet();
 		size_t a1id = imageSet->GetAntenna1(index);
 		size_t a2id = imageSet->GetAntenna2(index);
+		if(_antennaeToSkip.count(a1id) != 0 || _antennaeToSkip.count(a2id) != 0)
+			return false;
 
 		switch(_selection)
 		{
