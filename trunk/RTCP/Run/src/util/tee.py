@@ -43,7 +43,7 @@ class Tee(Thread):
           break
 
         lines = data.split("\n")
-        lines[0] = "%s%s" % (lines[0],prevline)
+        lines[0] = "%s%s" % (prevline,lines[0])
 
         for line in lines[:-1]: 
           if self.logger:
