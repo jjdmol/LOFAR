@@ -110,24 +110,37 @@ start_prog()
 	/sbin/pidof ${prog} 1>/dev/null 2>&1
 	if [ $? -ne 0 ]; then
 		echo Starting $prog
-		# PVSS needs special treatment
-		if [ "$prog" = "PVSS00pmon" ]; then
+		# PVSS needs special treatment; only start as lofarsys
+		# This is to prevent foreign stations not under central
+		# control to start their PVSS and thus connect to PVSS
+		if [ "$prog" = "PVSS00pmon" ]; then 
+		    if [ "$user" = "lofarsys" ]; then
 			start_pvss2 1>/dev/null 2>&1 &
-			sleep 5
+			sleep 3
+                    fi
+		elif [ "$prog" = "SASGateway" ]; then  
+		    # Foreign stations not under central control should not
+		    # connect to the SAS database; this prevents SAS main-
+		    # tenance etc.
+		    if [ "$user" = "lofarsys" ]; then
+			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
+			$BINDIR/$prog 1>/dev/null 2>&1 &
+			usleep 250000
+		    fi
 		else
-			if [ -n "$asroot" ]; then
-				sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
-				if [ "$prog" = "RSPDriver" ]; then
-					selectImage
-					sudo -b $BINDIR/$prog 1>/dev/null 2>&1
-				else
-					sudo -b $BINDIR/$prog 1>/dev/null 2>&1
-				fi
-			else
-				rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
-				$BINDIR/$prog 1>/dev/null 2>&1 &
-			fi
-			sleep 1
+		    if [ -n "$asroot" ]; then
+		       sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
+		       if [ "$prog" = "RSPDriver" ]; then
+			   selectImage
+			   sudo -b $BINDIR/$prog 1>/dev/null 2>&1
+		       else
+		           sudo -b $BINDIR/$prog 1>/dev/null 2>&1
+		       fi
+		    else
+			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
+			$BINDIR/$prog 1>/dev/null 2>&1 &
+		    fi
+		    usleep 250000
 		fi
 		ps -ef | grep -v grep | egrep '[0-9][0-9] [a-zA-Z0-9/_.]*/'${prog}
 	fi
@@ -402,11 +415,16 @@ handle_args()
     esac
   done
   if [ -z $level ]; then
-   if [ "$1" != "" ]; then
-     level=$1
-   else
-     level=-1
-   fi
+    if [ "$1" != "" ]; then
+      level=$1
+    else
+      level=-1
+    fi
+  fi
+
+  if [ "$user" != "lofarsys" -a $level > 3 ]; then
+      echo "Will only start up to level 3 as this appears to be local use"
+      $level=3
   fi
 
   # default image is 1
@@ -438,10 +456,11 @@ if [ -z $1 ]; then
   show_level 
 fi
 
-handle_args $*
-
 user=`id | cut -d'(' -f2 | cut -d')' -f1`
 group=`groups | awk '{print $1}'`
+
+handle_args $*
+
 # All other options that act on the station status are for lofarsys only
 # Don't allow root to run swlevel because all logfile get root access.
 if [ "$user" != "lofarsys" ]; then
