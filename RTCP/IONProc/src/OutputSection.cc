@@ -64,7 +64,7 @@ OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemLi
   itsStreamsFromCNs(itsNrComputeCores,0),
   itsThread(0)
 {
-  itsLogPrefix = str(format("[obs %d output %d") % parset.observationID() % outputType); // no trailing "] " so we can add subband info for some log messages
+  itsLogPrefix = str(format("[obs %u output %u") % parset.observationID() % outputType); // no trailing "] " so we can add subband info for some log messages
 
   itsDroppedCount.resize(itsItemList.size());
 

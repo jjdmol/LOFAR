@@ -53,7 +53,7 @@ OutputThread::OutputThread(const Parset &parset, const unsigned subband, const u
   itsSubband(subband),
   itsOutput(output)
 {
-  itsLogPrefix = str(format("[obs %u output %u subband %u] ") % parset.observationID() % output % subband);
+  itsLogPrefix = str(format("[obs %u output %u subband %3u] ") % parset.observationID() % output % subband);
 
   LOG_DEBUG_STR(itsLogPrefix << "OutputThread::OutputThread()");
 

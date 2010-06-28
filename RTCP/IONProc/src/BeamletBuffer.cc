@@ -68,7 +68,7 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
   itsReadTimer("buffer read", true, true),
   itsWriteTimer("buffer write", true, true)
 {
-  itsLogPrefix = str(format("[station %s board %d] ") % stationName % rspBoard);
+  itsLogPrefix = str(format("[station %s board %u] ") % stationName % rspBoard);
 
   if (ps->getUint32("OLAP.nrTimesInFrame") != itsNrTimesPerPacket)
     THROW(IONProcException, "OLAP.nrTimesInFrame should be " << boost::lexical_cast<std::string>(itsNrTimesPerPacket));
