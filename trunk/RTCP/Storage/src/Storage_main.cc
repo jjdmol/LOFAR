@@ -143,6 +143,8 @@ void ExitOnClosedStdin::mainLoop()
 
 int main(int argc, char *argv[])
 {
+  string logPrefix = "[obs unknown] ";
+
 #if defined HAVE_LOG4CPLUS
   using namespace log4cplus;
   using namespace log4cplus::helpers;
@@ -225,7 +227,7 @@ int main(int argc, char *argv[])
     setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
     setvbuf(stderr, stdoutbuf, _IOLBF, sizeof stderrbuf);
 
-    LOG_INFO_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3]);
+    LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3]);
 
     unsigned			 myRank = boost::lexical_cast<unsigned>(argv[1]);
     Parset			 parset(argv[2]);
@@ -234,6 +236,8 @@ int main(int argc, char *argv[])
     std::vector<unsigned>	 storageNodeList = parset.subbandStorageList();
     std::vector<SubbandWriter *> subbandWriters;
 
+    logPrefix = str(format("[obs %u] ") % parset.observationID());
+
     // FIXME: implement beamformed data writer
     for (unsigned subband = 0; subband < storageNodeList.size(); subband ++)
       if (storageNodeList[subband] == myRank)
@@ -241,24 +245,24 @@ int main(int argc, char *argv[])
 	  subbandWriters.push_back(new SubbandWriter(parset, subband, output, isBigEndian));
 
     ExitOnClosedStdin stdinWatcher;
-    Thread stdinWatcherThread(&stdinWatcher,&ExitOnClosedStdin::mainLoop,"[stdinWatcherThread] ",65535);
+    Thread stdinWatcherThread(&stdinWatcher,&ExitOnClosedStdin::mainLoop,logPrefix + "[stdinWatcherThread] ",65535);
 
     for (unsigned writer = 0; writer < subbandWriters.size(); writer ++)
       delete subbandWriters[writer];
 
     stdinWatcher.observationDone = true;
   } catch (Exception &ex) {
-    LOG_FATAL_STR("Caught Exception: " << ex);
+    LOG_FATAL_STR(logPrefix << "Caught Exception: " << ex);
     exit(1);
   } catch (std::exception &ex) {
-    LOG_FATAL_STR("Caught std::exception: " << ex.what());
+    LOG_FATAL_STR(logPrefix << "Caught std::exception: " << ex.what());
     exit(1);
   } catch (...) {
-    LOG_FATAL_STR("Caught non-std::exception: ");
+    LOG_FATAL_STR(logPrefix << "Caught non-std::exception: ");
     exit(1);
   }
 #endif
 
-  LOG_INFO("Program end");
+  LOG_INFO(logPrefix << "Program end");
   return 0;
 }
