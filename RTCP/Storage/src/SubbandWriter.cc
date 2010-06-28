@@ -51,7 +51,7 @@ SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, unsigned ou
   CN_ProcessingPlan<> plan(configuration);
   plan.removeNonOutputs();
 
-  const std::string logPrefix = str(format("[obs %u output %u subband %u] ") % parset.observationID() % outputType % subband);
+  const std::string logPrefix = str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputType % subband);
 
 #if defined HAVE_AIPSPP
   if (outputType == 0) {

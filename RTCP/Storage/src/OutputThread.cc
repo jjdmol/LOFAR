@@ -44,7 +44,7 @@ namespace RTCP {
 
 OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, unsigned outputNumber, const ProcessingPlan::planlet &outputConfig, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue)
 :
-  itsLogPrefix(str(format("[obs %u output %u subband %u] ") % parset.observationID() % outputNumber % subbandNumber)),
+  itsLogPrefix(str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputNumber % subbandNumber)),
   itsSubbandNumber(subbandNumber),
   itsOutputNumber(outputNumber),
   itsObservationID(parset.observationID()),

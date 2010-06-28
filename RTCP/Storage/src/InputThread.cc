@@ -38,7 +38,7 @@ namespace RTCP {
 
 InputThread::InputThread(const Parset &parset, unsigned subbandNumber, unsigned outputNumber, /*const std::string &inputDescription,*/ Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue)
 :
-  itsLogPrefix(str(format("[obs %u output %u subband %u] ") % parset.observationID() % outputNumber % subbandNumber)),
+  itsLogPrefix(str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputNumber % subbandNumber)),
   itsParset(parset),
   itsSubbandNumber(subbandNumber),
   itsOutputNumber(outputNumber),
