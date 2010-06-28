@@ -117,10 +117,45 @@ int main(int argc, char **argv)
 		if(index%255 != 0)
 			cout << "Warning: " << (index%255) << " rows were not part of a sub-band (channels were not dividable by 256)" << endl; 
 
+		ofstream fileTimeph("time-per-hour.txt");
+		double lastTime = timeFlagsCount.begin()->first;
+		double hourTotal = 0.0;
+		const double secondsPerHour = 3600.0;
+		size_t curCount = 0;
+		for(std::map<double, size_t>::const_iterator i=timeFlagsCount.begin(), j=timeTotalCount.begin();i!=timeFlagsCount.end();++i,++j)
+		{
+			if(floor(lastTime/secondsPerHour) != floor(i->first/secondsPerHour))
+			{
+				fileTimeph << floor(lastTime/secondsPerHour) << '\t' << (100.0*hourTotal/curCount) << '\t' << curCount << '\n';
+				hourTotal = 0.0;
+				curCount=0;
+			}
+			++curCount;
+			hourTotal += (double) i->second / (double) j->second;
+			lastTime = i->first;
+		}
+		fileTimeph.close();
+
+		ofstream fileTimePlot("time-for-plot.txt");
+		curCount = 0;
+		double total = 0.0;
+		for(std::map<double, size_t>::const_iterator i=timeFlagsCount.begin(), j=timeTotalCount.begin();i!=timeFlagsCount.end();++i,++j)
+		{
+			if(curCount >= 200)
+			{
+				fileTimePlot << i->first << '\t' << (100.0*total/curCount) << '\t' << curCount << '\n';
+				total = 0.0;
+				curCount=0;
+			}
+			++curCount;
+			total += (double) i->second / (double) j->second;
+		}
+		fileTimePlot.close();
+
 		ofstream fileMhz("mhz-totals.txt");
 		double lastFreq = frequencyFlags.begin()->first;
 		double mhzTotal = 0.0;
-		size_t curCount = 0;
+		curCount = 0;
 		for(std::map<double, double>::const_iterator i=frequencyFlags.begin();i!=frequencyFlags.end();++i)
 		{
 			if(round(lastFreq/1e6) != round(i->first/1e6))
@@ -129,7 +164,6 @@ int main(int argc, char **argv)
 				mhzTotal = 0.0;
 				curCount=0;
 			}
-			++index;
 			++curCount;
 			mhzTotal += i->second;
 			lastFreq = i->first;
