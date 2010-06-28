@@ -13,7 +13,8 @@ def initLogger():
     minloglevel = logging.INFO
 
   logging.basicConfig( level = minloglevel,
-                     format = "%(levelname)-5s|%(asctime)s|OLAP|%(message)s",
+                       format = "OLAP %(asctime)s.%(msecs)03d %(levelname)-5s %(message)s",
+                       datefmt = "%d-%m-%y %H:%M:%S",
                    )
 
   logging.raiseExceptions = False                 
