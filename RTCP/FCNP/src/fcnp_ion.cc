@@ -3,6 +3,7 @@
 #if defined HAVE_BGP_ION
 
 #include <Thread/Semaphore.h>
+#include <Common/LofarLogger.h>
 
 #include <fcntl.h>
 #include <sys/file.h>
@@ -468,7 +469,7 @@ static void *pollThread(void *)
   }
 
   if (useInterrupts) {
-    std::clog << "received " << nrInterrupts << " vc0 interrupts" << std::endl;
+    LOG_INFO_STR( "FCNP: Received " << nrInterrupts << " vc0 interrupts" );
     stopped = true;
   }
 
@@ -599,7 +600,7 @@ static void drainFIFO()
   }
 
   if (quadsToRead > 0)
-    std::clog << "dropped " << quadsToRead << " lingering quadwords from packets of a previous job" << std::endl;
+    LOG_INFO_STR( "FCNP: Dropped " << quadsToRead << " lingering quadwords from packets of a previous job" );
 
   while (-- quadsToRead >= 0)
     _bgp_QuadLoad(vc0 + _BGP_TRx_Sx, 0);
@@ -626,7 +627,7 @@ static void drainFIFO()
     }
 
   if (dropped > 0)
-    std::clog << "dropped " << dropped << " lingering packets from previous job" << std::endl;
+    LOG_INFO_STR( "FCNP: Dropped " << dropped << " lingering packets from previous job" );
 }
 
 
