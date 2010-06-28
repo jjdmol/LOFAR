@@ -106,7 +106,7 @@ int main(int argc, char **argv)
 			bandTotal += i->second;
 			if(index%255 == 0)
 				fileBand << (index/255) << '\t' << i->first << '\t';
-			else if((index+254)%255 == 0)
+			else if(index%255 == 254)
 			{
 				fileBand << i->first << '\t' << (bandTotal/255.0) << '\n';
 				bandTotal = 0.0;
@@ -120,14 +120,17 @@ int main(int argc, char **argv)
 		ofstream fileMhz("mhz-totals.txt");
 		double lastFreq = frequencyFlags.begin()->first;
 		double mhzTotal = 0.0;
+		size_t curCount = 0;
 		for(std::map<double, double>::const_iterator i=frequencyFlags.begin();i!=frequencyFlags.end();++i)
 		{
 			if(round(lastFreq/1e6) != round(i->first/1e6))
 			{
-				fileMhz << round(lastFreq/1e6) << '\t' << (mhzTotal/255.0) << '\n';
+			  fileMhz << round(lastFreq/1e6) << '\t' << (mhzTotal/curCount) << '\t' << curCount << '\n';
 				mhzTotal = 0.0;
+				curCount=0;
 			}
 			++index;
+			++curCount;
 			mhzTotal += i->second;
 			lastFreq = i->first;
 		}
