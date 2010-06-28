@@ -172,14 +172,14 @@ void OutputSection::noMoreIterations()
 void OutputSection::droppingData(unsigned subband)
 {
   if (itsDroppedCount[subband] ++ == 0)
-    LOG_WARN_STR(itsLogPrefix << " subband " << itsItemList[subband] << "] Dropping data");
+    LOG_WARN_STR(itsLogPrefix << " subband " << std::setw(3) << itsItemList[subband] << "] Dropping data");
 }
 
 
 void OutputSection::notDroppingData(unsigned subband)
 {
   if (itsDroppedCount[subband] > 0) {
-    LOG_WARN_STR(itsLogPrefix << " subband " << itsItemList[subband] << "] Dropped " << itsDroppedCount[subband] << " integration time(s)" );
+    LOG_WARN_STR(itsLogPrefix << " subband " << std::setw(3) << itsItemList[subband] << "] Dropped " << itsDroppedCount[subband] << " integration time(s)" );
     itsDroppedCount[subband] = 0;
   }
 }
