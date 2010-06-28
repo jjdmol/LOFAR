@@ -43,7 +43,7 @@ CREATE TYPE schedulerInfo AS (
 	projectName            VARCHAR(40),
 	referenceFrame         INT4,
 	storageUnits           INT4,
-	taskDuration           VARCHAR(10),
+	taskDuration           INT4,
 	taskID                 INT4,
 	taskName               VARCHAR(40),
 	taskType               INT4,
