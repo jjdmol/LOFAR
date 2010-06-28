@@ -32,6 +32,10 @@
 #include <Common/SystemCallException.h>
 #include <Thread/Semaphore.h>
 
+#include <boost/algorithm/string.hpp>
+
+#include <string>
+#include <vector>
 
 namespace LOFAR {
 
@@ -171,7 +175,6 @@ inline InterruptibleThread::~InterruptibleThread()
   exitState->mayExit.up();
 }
 
-
 template <typename T> inline void *Thread::stub(void *arg)
 {
   Args<T> *args = static_cast<Args<T> *>(arg);
@@ -183,7 +186,18 @@ template <typename T> inline void *Thread::stub(void *arg)
   try {
     (args->object->*args->method)();
   } catch (Exception &ex) {
-    LOG_FATAL_STR(args->logPrefix << "Caught Exception: " << ex);
+   // split exception message into lines
+   // to be able to add the logPrefix to each line
+   std::vector<std::string> exlines;
+   std::ostringstream exstrs;
+   exstrs << ex;
+   std::string exstr = exstrs.str();
+
+   boost::split(exlines, exstr, boost::is_any_of("\n"));
+    LOG_FATAL_STR(args->logPrefix << "Caught Exception: " << exlines[0]);
+    for (unsigned i = 1; i < exlines.size(); i++) {
+      LOG_FATAL_STR(args->logPrefix << exlines[i]);
+    }
   } catch (std::exception &ex) {
     LOG_FATAL_STR(args->logPrefix << "Caught std::exception: " << ex.what());
   } catch (...) {
