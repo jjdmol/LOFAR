@@ -87,6 +87,8 @@ namespace LOFAR
 
     void WH_DelayCompensation::mainLoop()
     {
+      LOG_DEBUG( "Delay compensation thread running" );
+
       // We need bufferSize to be a multiple of batchSize to avoid wraparounds in
       // the middle of the batch calculations. This makes life a lot easier and there is no
       // need to support other cases.
@@ -170,7 +172,7 @@ namespace LOFAR
 	bufferUsed.up( itsNrCalcDelays );
       }
       
-      LOG_DEBUG( "delay compensation thread stopped." );
+      LOG_DEBUG( "Delay compensation thread stopped" );
     }
 
     void WH_DelayCompensation::getNextDelays( Matrix<Direction> &directions, Matrix<double> &delays )

@@ -54,7 +54,6 @@ LogThread::LogThread(unsigned nrRspBoards, std::string stationName)
 LogThread::~LogThread()
 {
   itsShouldStop = true;
-  LOG_DEBUG("LogThread stopped");
 }
 
 
@@ -164,6 +163,8 @@ void LogThread::mainLoop()
     LOG_INFO(logStr.str());
     sleep(1);
   }
+
+  LOG_DEBUG("LogThread stopped");
 }
 
 } // namespace RTCP
