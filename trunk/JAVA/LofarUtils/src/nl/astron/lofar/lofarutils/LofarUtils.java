@@ -23,11 +23,13 @@
 package nl.astron.lofar.lofarutils;
 
 
+import java.text.Collator;
 import java.util.BitSet;
 import java.util.regex.Pattern;
 import javax.swing.DefaultListModel;
 import javax.swing.JComboBox;
 import javax.swing.JList;
+import javax.swing.ListModel;
 
 /**
  * This panel contains a TreePanel and some textfields that display information
@@ -483,5 +485,38 @@ public abstract class LofarUtils {
 
         result += "]";
         return result;
+    }
+
+    static public void sortModel(DefaultListModel model)
+    {
+        int numItems = model.getSize();
+        String[] a = new String[numItems];
+        model.copyInto(a);
+        LofarUtils.sortArray(a);
+        model.clear();
+        for (int i=0;i<a.length;i++)
+        {
+            model.addElement(a[i]);
+        }
+    }
+
+    static public void sortArray(String[] strArray)
+    {
+        if (strArray.length == 1)    // no need to sort one item
+            return;
+        Collator collator = Collator.getInstance();
+        String strTemp;
+        for (int i=0;i<strArray.length;i++)
+        {
+            for (int j=i+1;j<strArray.length;j++)
+            {
+                if (collator.compare(strArray[i], strArray[j]) > 0)
+                {
+                    strTemp = strArray[i];
+                    strArray[i] = strArray[j];
+                    strArray[j] = strTemp;
+                }
+            }
+        }
     }
 }
