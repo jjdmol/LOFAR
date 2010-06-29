@@ -55,8 +55,6 @@ OutputThread::OutputThread(const Parset &parset, const unsigned subband, const u
 {
   itsLogPrefix = str(format("[obs %u output %u subband %3u] ") % parset.observationID() % output % subband);
 
-  LOG_DEBUG_STR(itsLogPrefix << "OutputThread::OutputThread()");
-
   // transpose the data holders: create queues streams for the output streams
   // itsPlans is the owner of the pointers to sample data structures
   for (unsigned i = 0; i < maxSendQueueSize; i ++) {
@@ -149,8 +147,8 @@ void OutputThread::mainLoop()
 
     LOG_INFO_STR(itsLogPrefix << "Creating connection to " << outputDescriptor << ": done");
   } catch (SystemCallException &ex) {
+    LOG_ERROR_STR(itsLogPrefix << "Connection to " << outputDescriptor << " failed");
     if (ex.error == EINTR) {
-      LOG_WARN_STR(itsLogPrefix << "Connection to " << outputDescriptor << " failed");
       return;
     } else {
       throw;
@@ -169,6 +167,8 @@ void OutputThread::mainLoop()
     } catch (...) {
       semaphore.up();
       itsFreeQueue.append(data);
+
+      LOG_ERROR_STR(itsLogPrefix << "Connection to " << outputDescriptor << " lost");
       throw;
     }
 
@@ -177,6 +177,8 @@ void OutputThread::mainLoop()
   }
 
   delete streamToStorage.release(); // close socket
+
+  LOG_INFO_STR(itsLogPrefix << "Connection to " << outputDescriptor << " closed");
 }
 
 } // namespace RTCP

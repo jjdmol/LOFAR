@@ -208,20 +208,20 @@ static void deleteAllCNstreams()
 
 static void stopCNs()
 {
-  LOG_DEBUG_STR("stopping " << nrCNcoresInPset << " cores ...");
+  LOG_DEBUG_STR("Stopping " << nrCNcoresInPset << " cores ...");
 
   CN_Command command(CN_Command::STOP);
 
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
     command.write(allCNstreams[core]);
 
-  LOG_DEBUG_STR("stopping " << nrCNcoresInPset << " cores done");
+  LOG_DEBUG_STR("Stopping " << nrCNcoresInPset << " cores: done");
 }
 
 
 static void createAllIONstreams()
 {
-  LOG_DEBUG_STR("create streams between I/O nodes");
+  LOG_DEBUG_STR("Create streams between I/O nodes ...");
 
   if (myPsetNumber == 0) {
     allIONstreams.resize(nrPsets);
@@ -236,7 +236,7 @@ static void createAllIONstreams()
     allIONstreamMultiplexers.push_back(new StreamMultiplexer(*allIONstreams[0]));
   }
 
-  LOG_DEBUG_STR("create streams between I/O nodes done");
+  LOG_DEBUG_STR("Create streams between I/O nodes: done");
 }
 
 
@@ -269,10 +269,10 @@ static void enableCoreDumps()
 
 #if defined HAVE_BGP
   if (system("echo /tmp/%e.core >/proc/sys/kernel/core_pattern") < 0)
-    LOG_WARN("could not change /proc/sys/kernel/core_pattern");
+    LOG_WARN("Could not change /proc/sys/kernel/core_pattern");
 #endif
 
-  LOG_DEBUG("coredumps enabled");
+  LOG_DEBUG("Coredumps enabled");
 }
 
 
@@ -310,7 +310,8 @@ static void mmapFlatMemory()
   } 
 
   close(fd);
-  LOG_DEBUG_STR("mapped " << flatMemorySize << " bytes of fast memory at " << flatMemoryAddress);
+
+  LOG_DEBUG_STR("Mapped " << flatMemorySize << " bytes of fast memory at " << flatMemoryAddress);
 }
 
 static void unmapFlatMemory()
@@ -329,7 +330,7 @@ static void master_thread()
   Version::show<IONProcVersion> (std::clog, "IONProc", type);
 #endif  
   
-  LOG_DEBUG("Starting master_thread");
+  LOG_DEBUG("Master thread running");
 
   enableCoreDumps();
   ignoreSigPipe();
@@ -362,15 +363,15 @@ static void master_thread()
 
 #if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
-    LOG_FATAL_STR("Main thread caught Exception: " << ex);
+    LOG_FATAL_STR("Master thread caught Exception: " << ex);
   } catch (std::exception &ex) {
-    LOG_FATAL_STR("Main thread caught std::exception: " << ex.what());
+    LOG_FATAL_STR("Master thread caught std::exception: " << ex.what());
   } catch (...) {
-    LOG_FATAL("Main thread caught non-std::exception: ");
+    LOG_FATAL("Master thread caught non-std::exception: ");
   }
 #endif
 
-  LOG_DEBUG("Master thread finishes");
+  LOG_DEBUG("Master thread stopped");
 }
 
 

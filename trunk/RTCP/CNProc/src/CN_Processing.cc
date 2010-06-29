@@ -138,6 +138,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
   itsLogPrefix = str(format("[obs %u phases %d%d%d] ") % configuration.observationID() % (itsHasPhaseOne ? 1 : 0) % (itsHasPhaseTwo ? 1 : 0) % (itsHasPhaseThree ? 1 : 0));
 
+  if (LOG_CONDITION)
+    LOG_INFO_STR(itsLogPrefix << "----- Observation start");
+
   itsNrStations	             = configuration.nrStations();
   itsNrBeamFormedStations    = configuration.nrMergedStations();
   itsNrPencilBeams           = configuration.nrPencilBeams();
@@ -513,6 +516,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
   itsOutputStreams.clear();
 
   delete itsPlan;               itsPlan = 0;
+
+  if (LOG_CONDITION)
+    LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
 
   itsLogPrefix = "";
 }
