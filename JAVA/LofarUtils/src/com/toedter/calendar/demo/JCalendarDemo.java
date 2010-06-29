@@ -85,8 +85,8 @@ import com.toedter.components.JTitlePanel;
  * as Java application.
  * 
  * @author Kai Toedter
- * @version $LastChangedRevision: 103 $
- * @version $LastChangedDate: 2006-06-04 14:57:02 +0200 (So, 04 Jun 2006) $
+ * @version $LastChangedRevision$
+ * @version $LastChangedDate$
  */
 public class JCalendarDemo extends JApplet implements PropertyChangeListener {
 	private static final long serialVersionUID = 6739986412544494316L;
@@ -102,6 +102,7 @@ public class JCalendarDemo extends JApplet implements PropertyChangeListener {
 	/**
 	 * Initializes the applet.
 	 */
+    @Override
 	public void init() {
 		// Set the JGoodies Plastic 3D look and feel
 		initializeLookAndFeels();
@@ -368,6 +369,7 @@ public class JCalendarDemo extends JApplet implements PropertyChangeListener {
 	 */
 	public static void main(String[] s) {
 		WindowListener l = new WindowAdapter() {
+            @Override
 			public void windowClosing(WindowEvent e) {
 				System.exit(0);
 			}
@@ -430,7 +432,7 @@ public class JCalendarDemo extends JApplet implements PropertyChangeListener {
 								boolean isSelected = false;
 
 								try {
-									Boolean booleanObj = ((Boolean) readMethod.invoke(bean, null));
+									Boolean booleanObj = ((Boolean) readMethod.invoke(bean, new Object[]{}));
 									isSelected = booleanObj.booleanValue();
 								} catch (Exception e) {
 									e.printStackTrace();
@@ -469,7 +471,7 @@ public class JCalendarDemo extends JApplet implements PropertyChangeListener {
 								});
 
 								try {
-									Integer integerObj = ((Integer) readMethod.invoke(bean, null));
+									Integer integerObj = ((Integer) readMethod.invoke(bean, new Object[]{}));
 									spinField.setValue(integerObj.intValue());
 								} catch (Exception e) {
 									e.printStackTrace();
@@ -481,7 +483,7 @@ public class JCalendarDemo extends JApplet implements PropertyChangeListener {
 								String string = "";
 
 								try {
-									string = ((String) readMethod.invoke(bean, null));
+									string = ((String) readMethod.invoke(bean, new Object[]{}));
 								} catch (Exception e) {
 									e.printStackTrace();
 								}
@@ -511,7 +513,7 @@ public class JCalendarDemo extends JApplet implements PropertyChangeListener {
 								Date date = null;
 
 								try {
-									date = ((Date) readMethod.invoke(bean, null));
+									date = ((Date) readMethod.invoke(bean, new Object[]{}));
 								} catch (Exception e) {
 									e.printStackTrace();
 								}
@@ -536,7 +538,7 @@ public class JCalendarDemo extends JApplet implements PropertyChangeListener {
 								final JButton button = new JButton();
 
 								try {
-									final Color colorObj = ((Color) readMethod.invoke(bean, null));
+									final Color colorObj = ((Color) readMethod.invoke(bean, new Object[]{}));
 									button.setText("...");
 									button.setBackground(colorObj);
 
@@ -613,6 +615,7 @@ public class JCalendarDemo extends JApplet implements PropertyChangeListener {
 		JPanel blankLine = new JPanel() {
 			private static final long serialVersionUID = 4514530330521503732L;
 
+            @Override
 			public Dimension getPreferredSize() {
 				return new Dimension(10, 2);
 			}
