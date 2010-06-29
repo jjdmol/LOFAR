@@ -71,7 +71,7 @@ Parset::~Parset()
 void Parset::checkSubbandCount(const char *key) const
 {
   if (getUint32Vector(key,true).size() != nrSubbands())
-    THROW(InterfaceException, string(key) << " contains wrong number (" << boost::lexical_cast<string>(getUint32Vector(key,true).size()) << ") of subbands (expected " << boost::lexical_cast<string>(nrSubbands()) << ')');
+    THROW(InterfaceException, string(key) << " contains wrong number (" << getUint32Vector(key,true).size() << ") of subbands (expected " << nrSubbands() << ')');
 }
 
 
@@ -92,7 +92,7 @@ void Parset::checkInputConsistency() const
       map<string, set<unsigned> >::const_iterator stationRSPs = allRSPboards.find(station);
 
       if (stationRSPs != allRSPboards.end() && stationRSPs->second.find(rsp) != stationRSPs->second.end())
-	THROW(InterfaceException, station + "/RSP" + boost::lexical_cast<string>(rsp) + " multiple times defined in \"PIC.Core.IONProc.*.inputs\"");
+	THROW(InterfaceException, station << "/RSP" << rsp << " multiple times defined in \"PIC.Core.IONProc.*.inputs\"");
 
       allRSPboards[station].insert(rsp);
     }
@@ -113,10 +113,10 @@ void Parset::checkInputConsistency() const
 
     for (int subband = nrSubbands(); -- subband >= 0;) {
       if (rsps.find(rspsOfStation[subband]) == rsps.end())
-	THROW(InterfaceException, string("\"Observation.Dataslots.") + station + ".RSPBoardList\" mentions RSP board " + boost::lexical_cast<string>(rspsOfStation[subband]) + ", which does not exist");
+	THROW(InterfaceException, "\"Observation.Dataslots." << station << ".RSPBoardList\" mentions RSP board " << rspsOfStation[subband] << ", which does not exist");
 
       if (slotsOfStation[subband] >= nrSlotsInFrame())
-	THROW(InterfaceException, string("\"Observation.Dataslots.") + station + ".DataslotList\" mentions RSP slot " + boost::lexical_cast<string>(slotsOfStation[subband]) + ", which is more than the number of slots in a frame");
+	THROW(InterfaceException, "\"Observation.Dataslots." << station << ".DataslotList\" mentions RSP slot " << slotsOfStation[subband] << ", which is more than the number of slots in a frame");
     }
   }
 }
@@ -151,7 +151,7 @@ void Parset::maintainBackwardCompatibility()
 
 vector<Parset::StationRSPpair> Parset::getStationNamesAndRSPboardNumbers(unsigned psetNumber) const
 {
-  vector<string> inputs = getStringVector(string("PIC.Core.IONProc.") + partitionName() + '[' + boost::lexical_cast<string>(psetNumber) + "].inputs",true);
+  vector<string> inputs = getStringVector(str(format("PIC.Core.IONProc.%s[%u].inputs") % partitionName() % psetNumber),true);
   vector<StationRSPpair> stationsAndRSPs(inputs.size());
 
   for (unsigned i = 0; i < inputs.size(); i ++) {
@@ -222,7 +222,7 @@ std::string Parset::getStreamDescriptorBetweenIONandStorage(unsigned subband, un
 
     return str(format("tcp:%s:%u") % server % port);
   } else if (connectionType == "FILE") {
-    std::string filename = getString(prefix + "_BaseFileName") + '.' + boost::lexical_cast<std::string>(subband);
+    std::string filename = str(format("%s.%u") % getString(prefix + "_BaseFileName") % subband);
 
     return str(format("file:%s") % filename );
   } else {
