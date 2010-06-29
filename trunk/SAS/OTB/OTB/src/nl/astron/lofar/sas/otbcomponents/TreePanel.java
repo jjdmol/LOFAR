@@ -54,6 +54,9 @@ public class TreePanel extends javax.swing.JPanel {
     /** Creates new form BeanForm */
     public TreePanel() {
         initComponents();
+        if (jTree1 != null) {
+            jTree1.setExpandsSelectedPaths(true);
+        }
     }
     
     /**

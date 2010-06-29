@@ -28,6 +28,7 @@ import com.darwinsys.lang.GetOpt;
 import com.darwinsys.lang.GetOptDesc;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
+import java.io.File;
 import java.util.Iterator;
 import java.util.Map;
 import nl.astron.lofar.sas.otb.exceptions.NoServerConnectionException;
@@ -95,8 +96,19 @@ public class Main {
             if (errs) {
                 System.err.println("Usage: OTB.jar [-s server] [-p port] [-l logFile] [-h]");
             }         
-                
-            PropertyConfigurator.configure(logConfig);
+
+            File f = new File(logConfig);
+            if (f.exists()) {
+                PropertyConfigurator.configure(logConfig);
+            } else {
+                logConfig = File.separator+"opt"+File.separator+"sas"+File.separator+logConfig;
+                f = new File(logConfig);
+                if (f.exists()) {
+                    PropertyConfigurator.configure(logConfig);
+                } else {
+                    logger.error("OTB.log_prop not found.");
+                }
+            }
             logger.info("OTB started");
 
             try {

@@ -23,9 +23,11 @@ package nl.astron.lofar.sas.otbcomponents.userpanels;
 
 import java.awt.Component;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.Arrays;
@@ -54,6 +56,7 @@ import nl.astron.lofar.sas.otb.util.tablemodels.BeamConfigurationTableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.BeamformerConfigurationTableModel;
 import nl.astron.lofar.sas.otbcomponents.AnaBeamDialog;
 import nl.astron.lofar.sas.otbcomponents.BeamDialog;
+import nl.astron.lofar.sas.otbcomponents.BeamFileDialog;
 import org.apache.log4j.Logger;
 
 /**
@@ -349,7 +352,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         } else if(parentName.contains("Beam") && !parentName.contains("Beamformer") && !parentName.contains("AnaBeam")){
             // Observation Beam parameters
-            if (aKeyName.equals("angle1")) {        
+            if (aKeyName.equals("target")) {
+                if (isRef && aParam != null) {
+                    itsBeamTargets.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsBeamTargets.add(aNode.limits);
+                }
+            } else if (aKeyName.equals("angle1")) {
                 if (isRef && aParam != null) {
                     itsBeamAngles1.add(aNode.limits + " : " + aParam.limits);
                 } else {
@@ -397,7 +406,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         } else if(parentName.contains("AnaBeam")){
             // Observation Analog Beam parameters
-            if (aKeyName.equals("angle1")) {
+            if (aKeyName.equals("target")) {
+                if (isRef && aParam != null) {
+                    itsAnaBeamTargets.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsAnaBeamTargets.add(aNode.limits);
+                }
+            } else if (aKeyName.equals("angle1")) {
                 if (isRef && aParam != null) {
                     itsAnaBeamAngles1.add(aNode.limits + " : " + aParam.limits);
                 } else {
@@ -551,10 +566,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
          fillBeamletBitset();
       }
       // set tables back to initial values
-      itsBeamConfigurationTableModel.fillTable(itsTreeType,itsBeamDirectionTypes,itsBeamAngles1,itsBeamAngles2,
-              itsBeamDurations,itsBeamStartTimes,itsBeamSubbandList,itsBeamBeamletList,itsBeamMomIDs);
-      itsAnaBeamConfigurationTableModel.fillTable(itsTreeType,itsAnaBeamDirectionTypes,itsAnaBeamAngles1,itsAnaBeamAngles2,
-              itsAnaBeamDurations,itsAnaBeamStartTimes,itsAnaBeamRanks);
+      itsBeamConfigurationTableModel.fillTable(itsTreeType,itsBeamDirectionTypes,itsBeamTargets,itsBeamAngles1,itsBeamAngles2,
+              itsBeamDurations,itsBeamStartTimes,itsBeamSubbandList,itsBeamBeamletList,itsBeamMomIDs,false);
+      itsAnaBeamConfigurationTableModel.fillTable(itsTreeType,itsAnaBeamDirectionTypes,itsAnaBeamTargets,itsAnaBeamAngles1,itsAnaBeamAngles2,
+              itsAnaBeamDurations,itsAnaBeamStartTimes,itsAnaBeamRanks,false);
       
       itsBeamformerConfigurationTableModel.fillTable(itsTreeType, itsStations);
       
@@ -690,7 +705,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         restore();
         
         for (int i=0; i < stationList.getModel().getSize();i++) {
-          if (! itsUsedBeamformStations.contains(stationList.getModel().getElementAt(i)) &&
+          if (! itsUsedBeamformStations.contains(stationList.getModel().getElementAt(i).toString()) &&
                   itsAvailableBeamformStations.indexOf(stationList.getModel().getElementAt(i).toString())< 0) {
               itsAvailableBeamformStations.add(stationList.getModel().getElementAt(i).toString());
           }
@@ -724,6 +739,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      * @param   enabled     true/false enabled/disabled
      */
     public void enableButtons(boolean enabled) {
+        loadBeamsButton.setEnabled(enabled);
+        loadAnaBeamsButton.setEnabled(enabled);
         addBeamButton.setEnabled(enabled);
         editBeamButton.setEnabled(enabled);
         deleteBeamButton.setEnabled(enabled);
@@ -737,6 +754,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      * @param   visible     true/false visible/invisible
      */
     public void setButtonsVisible(boolean visible) {
+        loadBeamsButton.setVisible(visible);
+        loadAnaBeamsButton.setVisible(visible);
         addBeamButton.setVisible(visible);
         editBeamButton.setVisible(visible);
         deleteBeamButton.setVisible(visible);
@@ -778,7 +797,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
            i=0;
 
             // now that all Nodes are deleted we should collect the tables input and create new Beams to save to the database.
-            itsBeamConfigurationTableModel.getTable(itsBeamDirectionTypes,itsBeamAngles1,itsBeamAngles2,itsBeamDurations,
+            itsBeamConfigurationTableModel.getTable(itsBeamDirectionTypes,itsBeamTargets,itsBeamAngles1,itsBeamAngles2,itsBeamDurations,
                     itsBeamStartTimes,itsBeamSubbandList,itsBeamBeamletList,itsBeamMomIDs);
             try {
                // for all elements
@@ -805,6 +824,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                             String aKeyName = LofarUtils.keyName(aHWNode.name);
                             if (aKeyName.equals("directionType")) {
                                 aHWNode.limits=itsBeamDirectionTypes.elementAt(i);
+                            } else if (aKeyName.equals("target")) {
+                                aHWNode.limits=itsBeamTargets.elementAt(i);
                             } else if (aKeyName.equals("angle1")) {
                                 aHWNode.limits=itsBeamAngles1.elementAt(i);
                             } else if (aKeyName.equals("angle2")) {
@@ -854,7 +875,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
 
             // now that all Nodes are deleted we should collect the tables input and create new AnaBeams to save to the database.
-            itsAnaBeamConfigurationTableModel.getTable(itsAnaBeamDirectionTypes,itsAnaBeamAngles1,itsAnaBeamAngles2,
+            itsAnaBeamConfigurationTableModel.getTable(itsAnaBeamDirectionTypes,itsAnaBeamTargets,itsAnaBeamAngles1,itsAnaBeamAngles2,
                     itsAnaBeamDurations,itsAnaBeamStartTimes,itsAnaBeamRanks);
             try {
                 // for all elements
@@ -881,6 +902,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                             String aKeyName = LofarUtils.keyName(aHWNode.name);
                             if (aKeyName.equals("directionType")) {
                                 aHWNode.limits=itsAnaBeamDirectionTypes.elementAt(i);
+                            } else if (aKeyName.equals("target")) {
+                                aHWNode.limits=itsAnaBeamTargets.elementAt(i);
                             } else if (aKeyName.equals("angle1")) {
                                 aHWNode.limits=itsAnaBeamAngles1.elementAt(i);
                             } else if (aKeyName.equals("angle2")) {
@@ -1164,7 +1187,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         BitSet aBS=itsUsedBeamlets;
         itsSelectedRow=-1;
         // set selection to defaults.
-        String [] selection = {itsBeamDirectionTypes.elementAt(0),itsBeamAngles1.elementAt(0),
+        String [] selection = {itsBeamDirectionTypes.elementAt(0),itsBeamTargets.get(0),itsBeamAngles1.elementAt(0),
                                itsBeamAngles2.elementAt(0),itsBeamDurations.elementAt(0),
                                itsBeamStartTimes.elementAt(0), itsBeamSubbandList.elementAt(0),
                                itsBeamBeamletList.elementAt(0),itsBeamMomIDs.elementAt(0)};
@@ -1198,7 +1221,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 // set editting = false
                 editBeam=false;
             } else {            
-                itsBeamConfigurationTableModel.addRow(newRow[0],newRow[1],newRow[2],newRow[3],newRow[4],newRow[5],newRow[6],newRow[7]);
+                itsBeamConfigurationTableModel.addRow(newRow[0],newRow[1],newRow[2],newRow[3],newRow[4],newRow[5],newRow[6],newRow[7],newRow[8]);
             }
         }
         
@@ -1216,7 +1239,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
         itsSelectedRow=-1;
         // set selection to defaults.
-        String [] selection = {itsAnaBeamDirectionTypes.elementAt(0),itsAnaBeamAngles1.elementAt(0),
+        String [] selection = {itsAnaBeamDirectionTypes.elementAt(0),itsAnaBeamTargets.elementAt(0),itsAnaBeamAngles1.elementAt(0),
                                itsAnaBeamAngles2.elementAt(0),itsAnaBeamDurations.elementAt(0),
                                itsAnaBeamStartTimes.elementAt(0),itsAnaBeamRanks.elementAt(0)};
         if (editAnaBeam) {
@@ -1246,7 +1269,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 // set editting = false
                 editAnaBeam=false;
             } else {
-                itsAnaBeamConfigurationTableModel.addRow(newRow[0],newRow[1],newRow[2],newRow[3],newRow[4],newRow[5]);
+                itsAnaBeamConfigurationTableModel.addRow(newRow[0],newRow[1],newRow[2],newRow[3],newRow[4],newRow[5],newRow[6]);
             }
         }
 
@@ -1256,6 +1279,176 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             this.addAnaBeamButton.setEnabled(false);
         } else {
             this.addAnaBeamButton.setEnabled(true);
+        }
+    }
+
+    private void loadBeamFile(String choice) {
+        // Can read files with contents like:
+        // #
+        // beam0.target=test
+        // beam0.angle1=1
+        // beam0.angle2=2
+        // beam0.directionType=AZEL
+        // beam0.duration=300
+        // beam0.subbandList=[1,2,3,4,5]
+        // beam0.beamletList[1,2,3,4,5]
+        // #
+        // beam1.target=test2
+        // beam1.angle1=3
+        // beam1.angle2=4
+        // beam1.directionType=LMN
+        // beam1.duration=360
+        // beam1.subbandList=[6..10]
+        // beam1.beamletList[6..10]
+        //
+        if (choice.equals("AnaBeams") || choice.equals("Beams")) {
+            File aNewFile=null;
+
+            // show login dialog
+            if (beamFileDialog == null ) {
+                beamFileDialog = new BeamFileDialog(itsMainFrame,true,choice);
+            } else {
+                beamFileDialog.setType(choice);
+            }
+            beamFileDialog.setLocationRelativeTo(this);
+            beamFileDialog.setVisible(true);
+            if(beamFileDialog.isOk()) {
+                aNewFile = beamFileDialog.getFile();
+            } else {
+                logger.info("No File chosen");
+                return;
+            }
+            if (aNewFile != null && aNewFile.exists()) {
+                logger.debug("File to load: " + aNewFile.getName());
+
+                // read the file and split input into beam or anabeam components
+                readFile(aNewFile,choice);
+            }
+        } else {
+            logger.error("Error: Wrong filetype chosen: "+ choice);
+            return;
+        }
+
+    }
+
+    private void readFile(File aNewFile,String choice){
+        logger.debug("File to read: "+ aNewFile.getPath());
+        
+        Vector<String> targets          = new Vector<String>();
+        Vector<String> angles1          = new Vector<String>();
+        Vector<String> angles2          = new Vector<String>();
+        Vector<String> directionTypes   = new Vector<String>();
+        Vector<String> durations        = new Vector<String>();
+        Vector<String> startTimes       = new Vector<String>();
+        Vector<String> subbandList      = new Vector<String>();
+        Vector<String> beamletList      = new Vector<String>();
+        Vector<String> ranks            = new Vector<String>();
+        Vector<String> momIDs           = new Vector<String>();
+
+        //line to read filelines into
+        String line = "";
+        BufferedReader in=null;
+        try {
+            FileReader f= new FileReader(aNewFile.getPath());
+            in = new BufferedReader(f);
+            while ((line=in.readLine()) != null ) {
+
+                if (line == null || line.startsWith("#") || line.isEmpty()) {
+                    continue;
+                }
+                    // split into key value
+                 String [] keyVal=line.split("[=]");
+                 if (keyVal == null || keyVal.length < 2|| keyVal[0].isEmpty() || keyVal[1].isEmpty()) {
+                     logger.error("Error in input: " + line);
+                     continue;
+                 }
+
+                 // split in (ana)beam# and key
+                 String [] beamKey = keyVal[0].split("[.]");
+
+                 if (beamKey == null ||beamKey.length < 2 || beamKey[0].isEmpty() || beamKey[1].isEmpty()) {
+                     logger.error("Error in key input: " + keyVal[0]);
+                     continue;
+                 }
+
+                 // check index and if not in list, add new default Vector to all lists
+                 String check="beam";
+                 if (choice.equals("AnaBeams")) {
+                    check="anabeam";
+                 }
+                 int idx = Integer.parseInt(beamKey[0].toLowerCase().replace(check,""));
+                 if (idx < 0 || idx > 7 ) {
+                     logger.error("Error in index, only beam 0-7 allowed : "+idx);
+                     continue;
+                 }
+
+                 while (angles1.size() < idx+2 ) {
+                    if (choice.equals("Beams")) {
+                        targets.add((itsBeamTargets.elementAt(0)));
+                        angles1.add(itsBeamAngles1.elementAt(0));
+                        angles2.add(itsBeamAngles2.elementAt(0));
+                        directionTypes.add(itsBeamDirectionTypes.elementAt(0));
+                        startTimes.add(itsBeamStartTimes.elementAt(0));
+                        durations.add(itsBeamDurations.elementAt(0));
+                        momIDs.add("0");
+                    } else if (choice.equals("AnaBeams")) {
+                         targets.add((itsAnaBeamTargets.elementAt(0)));
+                         angles1.add(itsAnaBeamAngles1.elementAt(0));
+                         angles2.add(itsAnaBeamAngles2.elementAt(0));
+                         directionTypes.add(itsAnaBeamDirectionTypes.elementAt(0));
+                         startTimes.add(itsAnaBeamStartTimes.elementAt(0));
+                         durations.add(itsAnaBeamDurations.elementAt(0));
+                    }
+                    subbandList.add(itsBeamSubbandList.elementAt(0));
+                    beamletList.add(itsBeamBeamletList.elementAt(0));
+                    ranks.add(itsAnaBeamRanks.elementAt(0));
+                 }
+
+
+                 // add new keyval
+                 // beams start with 0
+                 if (beamKey[1].toLowerCase().equals("angle1")) {
+                    angles1.setElementAt(keyVal[1], idx+1);
+                 } else if (beamKey[1].toLowerCase().equals("angle2")) {
+                    angles2.setElementAt(keyVal[1], idx+1);
+                 } else if (beamKey[1].toLowerCase().equals("directiontype") ) {
+                    if ( keyVal[1].equals("J2000") || keyVal[1].equals("AZEL") || keyVal[1].equals("LMN")) {
+                       directionTypes.setElementAt(keyVal[1], idx+1);
+                    } else {
+                       logger.error("Error in directionType value : "+line);
+                    }
+                 } else if (beamKey[1].toLowerCase().equals("starttime")) {
+                    startTimes.setElementAt(keyVal[1], idx+1);
+                 } else if (beamKey[1].toLowerCase().equals("duration")) {
+                    durations.setElementAt(keyVal[1], idx+1);
+                 } else if (beamKey[1].toLowerCase().equals("subbandlist")) {
+                    subbandList.setElementAt(keyVal[1], idx+1);
+                 } else if (beamKey[1].toLowerCase().equals("beamletlist")) {
+                    beamletList.setElementAt(keyVal[1], idx+1);
+                 } else if (beamKey[1].toLowerCase().equals("target")) {
+                    targets.setElementAt(keyVal[1], idx+1);
+                 } else if (beamKey[1].toLowerCase().equals("rank")) {
+                    if (keyVal[1].equals("1") || keyVal[1].equals("2") || keyVal[1].equals("3") || keyVal[1].equals("4") || keyVal[1].equals("5") ) {
+                       ranks.setElementAt(keyVal[1], idx+1);
+                    } else {
+                       logger.error("Error in ranks value : "+line);
+                    }
+                } else {
+                    logger.error("Unknown key : "+line);
+                }
+            }
+            // all input read.  close file
+            f.close();
+        } catch (IOException ex) {
+            logger.error("Error opening or reading file: ", ex);
+            return;
+        }
+
+        // fill table with all entries
+        if (choice.equals("Beams") ) {
+            itsBeamConfigurationTableModel.fillTable(itsTreeType, directionTypes,targets, angles1, angles2, durations, startTimes, subbandList, beamletList,momIDs,true);
+        } else if (choice.equals("AnaBeams")) {
+            itsAnaBeamConfigurationTableModel.fillTable(itsTreeType,directionTypes,targets,angles1,angles2,durations,startTimes,ranks,true);
         }
     }
 
@@ -1316,6 +1509,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         addBeamButton = new javax.swing.JButton();
         editBeamButton = new javax.swing.JButton();
         deleteBeamButton = new javax.swing.JButton();
+        loadBeamsButton = new javax.swing.JButton();
         jPanel5 = new javax.swing.JPanel();
         stationsPanel = new javax.swing.JPanel();
         stationsScrollPane = new javax.swing.JScrollPane();
@@ -1338,6 +1532,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         addAnaBeamButton = new javax.swing.JButton();
         editAnaBeamButton = new javax.swing.JButton();
         deleteAnaBeamButton = new javax.swing.JButton();
+        loadAnaBeamsButton = new javax.swing.JButton();
         campaignInfoPanel = new nl.astron.lofar.sas.otbcomponents.CampaignInfo();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
@@ -1363,21 +1558,21 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
 
-        treeDescriptionScrollPane.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Observation Tree Description", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        treeDescriptionScrollPane.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Observation Tree Description", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
         inputTreeDescription.setColumns(20);
         inputTreeDescription.setRows(5);
         inputTreeDescription.setToolTipText("The description set here will go to the Tree Description");
         treeDescriptionScrollPane.setViewportView(inputTreeDescription);
 
-        descriptionScrollPane.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Field Descriptions.", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        descriptionScrollPane.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Field Descriptions.", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
         inputDescription.setColumns(20);
         inputDescription.setEditable(false);
         inputDescription.setRows(5);
         descriptionScrollPane.setViewportView(inputDescription);
 
-        jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Generic Observation Input", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Generic Observation Input", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
         labelMSNameMask.setText("MSNameMask:");
 
@@ -1415,10 +1610,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     .add(labelNrSlotsInFrame, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .add(18, 18, 18)
                 .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(inputMSNameMask, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 870, Short.MAX_VALUE)
-                    .add(inputNrSlotsInFrame, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 870, Short.MAX_VALUE)
+                    .add(inputMSNameMask, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 886, Short.MAX_VALUE)
+                    .add(inputNrSlotsInFrame, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 886, Short.MAX_VALUE)
                     .add(inputNrChannelsPerSubband, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 102, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(24, 24, 24))
+                .add(273, 273, 273))
         );
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1437,7 +1632,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Digital Beam Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Digital Beam Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
         jPanel3.setPreferredSize(new java.awt.Dimension(200, 125));
         jPanel3.setRequestFocusEnabled(false);
         jPanel3.setVerifyInputWhenFocusTarget(false);
@@ -1471,19 +1666,29 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
+        loadBeamsButton.setText("Load File");
+        loadBeamsButton.setToolTipText("Load beams from a File");
+        loadBeamsButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                loadBeamsButtonActionPerformed(evt);
+            }
+        });
+
         org.jdesktop.layout.GroupLayout jPanel3Layout = new org.jdesktop.layout.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel3Layout.createSequentialGroup()
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(beamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1259, Short.MAX_VALUE)
+                    .add(beamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1106, Short.MAX_VALUE)
                     .add(jPanel3Layout.createSequentialGroup()
                         .add(addBeamButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(editBeamButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(deleteBeamButton)))
+                        .add(deleteBeamButton)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                        .add(loadBeamsButton)))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -1494,14 +1699,15 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                         .add(editBeamButton)
-                        .add(deleteBeamButton))
+                        .add(deleteBeamButton)
+                        .add(loadBeamsButton))
                     .add(addBeamButton))
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Virtual Instrument", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Virtual Instrument", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
-        stationsPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Station Names", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        stationsPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Station Names"));
         stationsPanel.setToolTipText("Identifiers of the participating stations.");
         stationsPanel.setLayout(new java.awt.BorderLayout());
 
@@ -1524,7 +1730,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
         stationsPanel.add(stationsModPanel, java.awt.BorderLayout.SOUTH);
 
-        storageNodeSelectionPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "StorageNode List", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        storageNodeSelectionPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("StorageNode List"));
 
         org.jdesktop.layout.GroupLayout jPanel5Layout = new org.jdesktop.layout.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
@@ -1545,7 +1751,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Beamformer Input", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Beamformer Input", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
         beamformerConfigurationPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -1634,7 +1840,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        anaBeamConfiguration.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Analog Beam Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        anaBeamConfiguration.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Analog Beam Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
         anaBeamConfiguration.setEnabled(false);
 
         anaBeamConfigurationPanel.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -1666,20 +1872,30 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
+        loadAnaBeamsButton.setText("Load File");
+        loadAnaBeamsButton.setToolTipText("load analogue beams from file");
+        loadAnaBeamsButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                loadAnaBeamsButtonActionPerformed(evt);
+            }
+        });
+
         org.jdesktop.layout.GroupLayout anaBeamConfigurationLayout = new org.jdesktop.layout.GroupLayout(anaBeamConfiguration);
         anaBeamConfiguration.setLayout(anaBeamConfigurationLayout);
         anaBeamConfigurationLayout.setHorizontalGroup(
             anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(anaBeamConfigurationLayout.createSequentialGroup()
                 .add(anaBeamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1094, Short.MAX_VALUE)
-                .add(20, 20, 20))
+                .add(22, 22, 22))
             .add(anaBeamConfigurationLayout.createSequentialGroup()
                 .add(addAnaBeamButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(editAnaBeamButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(deleteAnaBeamButton)
-                .addContainerGap())
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .add(loadAnaBeamsButton)
+                .add(770, 770, 770))
         );
         anaBeamConfigurationLayout.setVerticalGroup(
             anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1689,7 +1905,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                         .add(editAnaBeamButton)
-                        .add(deleteAnaBeamButton))
+                        .add(deleteAnaBeamButton)
+                        .add(loadAnaBeamsButton))
                     .add(addAnaBeamButton)))
         );
 
@@ -1698,20 +1915,18 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel2Layout.createSequentialGroup()
-                .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1285, Short.MAX_VALUE)
-                .addContainerGap(855, Short.MAX_VALUE))
-            .add(jPanel2Layout.createSequentialGroup()
-                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, treeDescriptionScrollPane)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, descriptionScrollPane)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel2Layout.createSequentialGroup()
-                        .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 632, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
-            .add(jPanel2Layout.createSequentialGroup()
-                .add(anaBeamConfiguration, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                        .add(org.jdesktop.layout.GroupLayout.LEADING, treeDescriptionScrollPane)
+                        .add(org.jdesktop.layout.GroupLayout.LEADING, descriptionScrollPane)
+                        .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel2Layout.createSequentialGroup()
+                            .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 631, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                            .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                    .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                        .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1128, Short.MAX_VALUE)
+                        .add(org.jdesktop.layout.GroupLayout.LEADING, anaBeamConfiguration, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -1722,8 +1937,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(anaBeamConfiguration, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(11, 11, 11)
                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel5, 0, 210, Short.MAX_VALUE)
-                    .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jPanel5, 0, 210, Short.MAX_VALUE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
@@ -1864,6 +2079,16 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private void inputNrChannelsPerSubbandFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputNrChannelsPerSubbandFocusGained
         changeDescription(itsChannelsPerSubband);
 }//GEN-LAST:event_inputNrChannelsPerSubbandFocusGained
+
+    private void loadBeamsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadBeamsButtonActionPerformed
+        loadBeamFile("Beams");
+    }//GEN-LAST:event_loadBeamsButtonActionPerformed
+
+    private void loadAnaBeamsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadAnaBeamsButtonActionPerformed
+        if (this.anaBeamConfiguration.isVisible()) {
+            loadBeamFile("AnaBeams");
+        }
+    }//GEN-LAST:event_loadAnaBeamsButtonActionPerformed
     
     private jOTDBnode                         itsNode = null;
     private MainFrame                         itsMainFrame;
@@ -1879,6 +2104,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private JFileChooser                      fc = null;
     private BeamDialog                        beamDialog = null;
     private AnaBeamDialog                     anaBeamDialog = null;
+    private BeamFileDialog                    beamFileDialog = null;
     
     // Observation Specific parameters
     private jOTDBnode itsMSNameMask=null;
@@ -1892,6 +2118,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     // Beams
     private Vector<jOTDBnode> itsBeams          = new Vector<jOTDBnode>();
     // Observation Beam parameters
+    private Vector<String>    itsBeamTargets         = new Vector<String>();
     private Vector<String>    itsBeamAngles1         = new Vector<String>();
     private Vector<String>    itsBeamAngles2         = new Vector<String>();
     private Vector<String>    itsBeamDirectionTypes  = new Vector<String>();
@@ -1903,6 +2130,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     // Analog Beams
     private Vector<jOTDBnode> itsAnaBeams          = new Vector<jOTDBnode>();
     // Analog Beam parameters
+    private Vector<String>    itsAnaBeamTargets         = new Vector<String>();
     private Vector<String>    itsAnaBeamAngles1         = new Vector<String>();
     private Vector<String>    itsAnaBeamAngles2         = new Vector<String>();
     private Vector<String>    itsAnaBeamDirectionTypes  = new Vector<String>();
@@ -1976,6 +2204,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JLabel labelMSNameMask;
     private javax.swing.JLabel labelNrChannelsPerSubband;
     private javax.swing.JLabel labelNrSlotsInFrame;
+    private javax.swing.JButton loadAnaBeamsButton;
+    private javax.swing.JButton loadBeamsButton;
     private javax.swing.JList stationList;
     private javax.swing.JPanel stationsButtonPanel;
     private javax.swing.JPanel stationsModPanel;

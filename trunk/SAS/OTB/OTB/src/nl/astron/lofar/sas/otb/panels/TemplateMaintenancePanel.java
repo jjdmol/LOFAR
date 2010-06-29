@@ -122,14 +122,14 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
 
     public void checkChanged() {
         if (this.hasChanged()) {
-            if (userAccount.isObserver()) {
+//            if (userAccount.isObserver()) {
                 if (itsLastSelectedPath != null && itsLastSelectedPath.getPathCount() > 0) {
                     this.setNewRootNode();
                     treePanel.setSelectionPath(itsLastSelectedPath);
                 } else {
                     this.setNewRootNode();
                 }
-            }
+//            }
             this.setChanged(false);
         }
     }

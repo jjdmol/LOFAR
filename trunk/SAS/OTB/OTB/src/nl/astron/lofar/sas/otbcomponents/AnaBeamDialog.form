@@ -38,7 +38,6 @@
                 <EtchetBorder/>
               </Border>
               <Font PropertyName="font" name="Tahoma" size="11" style="1"/>
-              <Color PropertyName="color" blue="0" green="0" red="0" type="rgb"/>
             </TitledBorder>
           </Border>
         </Property>

@@ -23,6 +23,8 @@
 package nl.astron.lofar.sas.otbcomponents;
 
 import java.rmi.RemoteException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.DefaultListModel;
@@ -143,6 +145,7 @@ public class StationSelectionPanel extends javax.swing.JPanel {
      * validate the used and available modesl against the real station list
      */
     private void validateModels() {
+
         for (int i=0; i< getUsedStationList().size();i++) {
             if (!itsStationList.contains(itsUsedStationList.get(i))) {
                 itsUsedModel.removeElement(getUsedStationList().get(i));
@@ -167,6 +170,8 @@ public class StationSelectionPanel extends javax.swing.JPanel {
             itsAvailableStationList.add(avE.nextElement().toString());
         }
 
+        LofarUtils.sortModel(itsAvailableModel);
+        LofarUtils.sortModel(itsUsedModel);
         AvailableStationList.invalidate();
         AvailableStationList.repaint();
         UsedStationList.invalidate();

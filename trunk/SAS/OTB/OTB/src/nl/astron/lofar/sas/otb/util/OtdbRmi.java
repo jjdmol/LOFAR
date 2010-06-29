@@ -23,6 +23,8 @@
 package nl.astron.lofar.sas.otb.util;
 
 import java.rmi.Naming;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.TreeMap;
 import nl.astron.lofar.lofarutils.remoteFileInterface;
 import nl.astron.lofar.sas.otb.MainFrame;
@@ -68,6 +70,8 @@ public class OtdbRmi {
     private static boolean isOpened         = false;
     private static boolean isConnected      = false;
     private MainFrame itsMainFrame;
+
+    private static Registry remoteRegistry  = null;
     
      // RMI interfaces
     private static jOTDBaccessInterface remoteOTDBaccess;
@@ -285,8 +289,12 @@ public class OtdbRmi {
         try {
             logger.debug("openRemoteAccess for "+RMIRegHostName);
 
+            remoteRegistry = LocateRegistry.getRegistry(RMIServerName,Integer.valueOf(RMIServerPort));
+            remoteOTDBaccess=(jOTDBaccessInterface)remoteRegistry.lookup(jOTDBaccessInterface.SERVICENAME);
+
+
             // create a remote object
-            remoteOTDBaccess = (jOTDBaccessInterface) Naming.lookup (RMIRegHostName);
+//            remoteOTDBaccess = (jOTDBaccessInterface) Naming.lookup (RMIRegHostName);
             logger.debug(remoteOTDBaccess);
 
 	    logger.debug("Connection to RemoteAccess succesful!");
@@ -302,10 +310,17 @@ public class OtdbRmi {
     private static boolean openRemoteConnection() {
         try {
             logger.debug("openRemoteConnection for jOTDB_"+RMIRegistryName);
-            String aRegName = "rmi://"+RMIServerName+":"+RMIServerPort+"/"+"jOTDB_"+RMIRegistryName;
+
+            /*
+             String aRegName = "rmi://"+RMIServerName+":"+RMIServerPort+"/"+"jOTDB_"+RMIRegistryName;
         
             // create a remote object
             remoteOTDB = (jOTDBinterface) Naming.lookup (aRegName);
+             */
+
+            String aRegName="jOTDB_"+RMIRegistryName;
+            remoteOTDB=(jOTDBinterface)remoteRegistry.lookup(aRegName);
+
             logger.debug(remoteOTDB);
 					    
 	    // do the test	
@@ -327,11 +342,18 @@ public class OtdbRmi {
     
     private static boolean openRemoteMaintenance() {
         try {
+            /*
             String aRegName = "rmi://"+RMIServerName+":"+RMIServerPort+"/"+ "jTreeMaintenance_" + RMIRegistryName;
             logger.debug("openRemoteMaintenance for "+aRegName);
         
             // create a remote object
             remoteMaintenance = (jTreeMaintenanceInterface) Naming.lookup (aRegName);
+             */
+
+            String aRegName="jTreeMaintenance_"+RMIRegistryName;
+            logger.debug("openRemoteMaintenance for "+aRegName);
+            remoteMaintenance=(jTreeMaintenanceInterface)remoteRegistry.lookup(aRegName);
+
             logger.debug(remoteMaintenance);
 
      	    logger.debug("Connection succesful!");
@@ -346,11 +368,19 @@ public class OtdbRmi {
         
     private static boolean openRemoteCampaign() {
         try {
+            /*
             String aRegName = "rmi://"+RMIServerName+":"+RMIServerPort+"/"+ "jCampaign_" + RMIRegistryName;
             logger.debug("openRemoteCampaign for "+aRegName);
 
             // create a remote object
             remoteCampaign = (jCampaignInterface) Naming.lookup (aRegName);
+             */
+            String aRegName = "jCampaign_" + RMIRegistryName;
+            logger.debug("openRemoteCampaign for "+aRegName);
+
+            // create a remote object
+            remoteCampaign = (jCampaignInterface) remoteRegistry.lookup(aRegName);
+
             logger.debug(remoteCampaign);
 
      	    logger.debug("Connection succesful!");
@@ -365,11 +395,21 @@ public class OtdbRmi {
 
     private static boolean openRemoteValue() {
         try {
+            /*
             String aRegName = "rmi://"+RMIServerName+":"+RMIServerPort+"/"+ "jTreeValue_" + RMIRegistryName;
             logger.debug("OpenRemoteValue for "+aRegName);
         
             // create a remote object
             remoteValue = (jTreeValueInterface) Naming.lookup (aRegName);
+             *
+             */
+            String aRegName = "jTreeValue_" + RMIRegistryName;
+            logger.debug("OpenRemoteValue for "+aRegName);
+
+            // create a remote object
+            remoteValue = (jTreeValueInterface) remoteRegistry.lookup(aRegName);
+
+
             logger.debug(remoteValue);
 					    
      	    logger.debug("Connection succesful!");   
@@ -384,11 +424,19 @@ public class OtdbRmi {
 
     private static boolean openRemoteConverter() {
         try {
+            /*
             String aRegName = "rmi://"+RMIServerName+":"+RMIServerPort+"/"+ "jConverter_" + RMIRegistryName;
             logger.debug("openRemoteConverter for "+aRegName);
         
             // create a remote object
             remoteTypes = (jConverterInterface) Naming.lookup (aRegName);
+             *
+             */
+            String aRegName = "jConverter_" + RMIRegistryName;
+            logger.debug("openRemoteConverter for "+aRegName);
+
+            // create a remote object
+            remoteTypes = (jConverterInterface) remoteRegistry.lookup (aRegName);
             logger.debug(remoteValue);
 					    
      	    logger.debug("Connection succesful!");  
@@ -405,11 +453,20 @@ public class OtdbRmi {
     
     private static boolean openRemoteFile() {
         try {
+            /*
             String aRegName = "rmi://"+RMIServerName+":"+RMIServerPort+"/"+ "remoteFile_" + RMIRegistryName;
             logger.debug("OpenRemoteFile for "+aRegName);
         
             // create a remote object
             remoteFileTrans = (remoteFileInterface) Naming.lookup (aRegName);
+             *
+             */
+
+            String aRegName = "remoteFile_" + RMIRegistryName;
+            logger.debug("OpenRemoteFile for "+aRegName);
+
+            // create a remote object
+            remoteFileTrans = (remoteFileInterface) remoteRegistry.lookup (aRegName);
             logger.debug(remoteFileTrans);
 					    
      	    logger.debug("Connection succesful!");   

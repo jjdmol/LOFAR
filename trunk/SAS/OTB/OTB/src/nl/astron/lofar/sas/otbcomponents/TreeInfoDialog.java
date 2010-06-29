@@ -337,26 +337,23 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             Date now = getGMTTime(new Date());
             Calendar cal = Calendar.getInstance();
             cal.setTime(now);
-            cal.set(Calendar.MINUTE,cal.get(Calendar.MINUTE)+4);
+            cal.set(Calendar.MINUTE,cal.get(Calendar.MINUTE)+1);
             Date minTime = getGMTTime(cal.getTime());
             if (itsStartDate.before(minTime)) {
-                anErrorMsg = "Start time needs to be minimal 4 minutes away from now (GMT)";
-            }
+                anErrorMsg = "Start time needs to be minimal 1 minutes away from now (GMT)";
+                // create an Info popup.
+                JOptionPane.showMessageDialog(this,anErrorMsg,"Warning",JOptionPane.WARNING_MESSAGE);
+                return true;            }
             if (itsStopDate.before(itsStartDate)) {
                 if (anErrorMsg.length() > 0) {
                     anErrorMsg+=", and ";
                 }
                 anErrorMsg = "Stop time BEFORE start time";
-            }
-        }
-        
-        if (anErrorMsg.length() > 0) {
-            // create an Info popup.
-            JOptionPane.showMessageDialog(this,anErrorMsg,"Warning",JOptionPane.WARNING_MESSAGE);
-            return false;
+                // create an Info popup.
+                JOptionPane.showMessageDialog(this,anErrorMsg,"Error",JOptionPane.WARNING_MESSAGE);
+                return false;            }
         }
         return true;
-
     }
     
     private void initFocus() {
@@ -531,7 +528,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         aTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
                         hasChanged=true;
                         if (!OtdbRmi.getRemoteMaintenance().setTreeState(aTree.treeID(), aTree.state)) {
-                            logger.debug("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());                      
+                            logger.debug("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                            return false;
                         }
                     }
 
@@ -541,6 +539,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         aTree.classification=OtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
                         if (!OtdbRmi.getRemoteMaintenance().setClassification(aTree.treeID(), aTree.classification)) {
                             logger.debug("Error during setClassification: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                            return false;
                         }
                     }
                     
@@ -550,7 +549,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         aTree.starttime = startTimeInput.getText();
                         aTree.stoptime = stopTimeInput.getText();
                         if (OtdbRmi.getRemoteMaintenance().setSchedule(aTree.treeID(),aTree.starttime,aTree.stoptime)) {
-                            logger.debug("Error during setSchedule: "+OtdbRmi.getRemoteMaintenance().errorMsg());                        
+                            logger.debug("Error during setSchedule: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                            return false;
                         }
                     }
                 }
@@ -562,20 +562,23 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     itsTree.classification=OtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
                     if (!OtdbRmi.getRemoteMaintenance().setClassification(itsTree.treeID(), itsTree.classification)) {
                         logger.debug("Error during setClassification: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                        return false;
                     }
                 }
                 if (!itsTreeState.equals(stateInput.getSelectedItem().toString())) {
                     hasChanged=true;
                     itsTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
                     if (!OtdbRmi.getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state)) {
-                        logger.debug("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());                      
+                        logger.debug("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                        return false;
                     }
                 }
                 if (!itsDescription.equals(descriptionInput.getText())) {
                     hasChanged=true;
                     itsTree.description = descriptionInput.getText();
                     if (!OtdbRmi.getRemoteMaintenance().setDescription(itsTree.treeID(), itsTree.description)) {
-                        logger.debug("Error during setDescription: "+OtdbRmi.getRemoteMaintenance().errorMsg());                        
+                        logger.debug("Error during setDescription: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                        return false;
                     }
                 }
                 // Next for VIC only
@@ -588,6 +591,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                            itsTree.stoptime = stopTimeInput.getText();
                            if (OtdbRmi.getRemoteMaintenance().setSchedule(itsTree.treeID(),itsTree.starttime,itsTree.stoptime)) {
                                logger.error("Error during setSchedule: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                               return false;
                            }
                         }
                     }
@@ -595,10 +599,11 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 // Next for template only
                 if (itsTreeType.equals("VItemplate")) {
                     try {
-                        if (!itsName.equals(nameInput.getText())) {
+                        if (itsName != null && !itsName.equals(nameInput.getText())) {
                             itsName=nameInput.getText();
                             if (!OtdbRmi.getRemoteMaintenance().assignTemplateName(itsTree.treeID(),itsName)){
                                 logger.debug("Error during assignTemplateName: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                return false;
                             } else {
                                 hasChanged=true;
                             }
@@ -608,14 +613,17 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                             if (itsTree.momID() != 0) {
                                 if (!OtdbRmi.getRemoteMaintenance().setMomInfo(itsTree.treeID(),0,itsTree.campaign)) {
                                     logger.debug("Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                    return false;
                                 }
                             }
                         }
                     } catch (RemoteException ex) {
                         try {
                             logger.error("Error while setting TemplateName " + OtdbRmi.getRemoteMaintenance().errorMsg());
+                            return false;
                         } catch (RemoteException ex1) {
                             logger.error("Error getting the remote errorMessage");
+                            return false;
                         }
                     }
                 }
