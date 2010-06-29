@@ -143,7 +143,7 @@ class Locations:
 	"logdir":  "${HOME}/log/L${TIMESTAMP}",
 
         # symlink for each observation to relevant log dir
-        "obssymlink": "${BASEDIR}/L${YEAR}_${MSNUMBER}",
+        "obssymlink": "${BHOME}/log/L${YEAR}_${MSNUMBER}",
 
         "logsymlink": "${HOME}/log/latest",
 
