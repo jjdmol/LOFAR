@@ -101,9 +101,7 @@ public:
 	double	       clockCorrectionTime(const std::string &station) const;
 	bool	       correctBandPass() const;
 	bool	       hasStorage() const;
-	unsigned short getStoragePort(const string &aKey, unsigned subband, unsigned output) const;
 	string         stationName(int index) const;
-	string         storageHostName(const string& aKey, int index) const;
         vector<unsigned> subbandStorageList() const;
         vector<unsigned> beamStorageList() const;
 	uint32	       nrPsetsPerStorage() const;
@@ -167,7 +165,7 @@ public:
 
 	string         getInputStreamName(const string &stationName, unsigned rspBoardNumber) const;
 	static Stream  *createStream(const string &description, bool asReader);
-	string	       getStreamDescriptorBetweenIONandStorage(unsigned subband, unsigned output) const;
+	string	       getStreamDescriptorBetweenIONandStorage(unsigned subband, unsigned output, bool perSubband = true) const;
 
 	string         observerName() const;
 	string         projectName() const;
@@ -224,11 +222,6 @@ inline double Parset::stopTime() const
 inline string Parset::stationName(int index) const
 {
   return getStringVector("OLAP.storageStationNames",true)[index];
-}
-
-inline string Parset::storageHostName(const string& aKey, int index) const
-{
-  return getStringVector(aKey)[getUint32Vector("OLAP.storageNodeList",true)[index]];
 }
 
 inline bool Parset::hasStorage() const
