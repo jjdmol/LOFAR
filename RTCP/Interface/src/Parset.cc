@@ -42,6 +42,8 @@
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 
+using boost::format;
+
 #include <algorithm>
 #include <cstdio>
 #include <set>
@@ -204,7 +206,7 @@ Stream *Parset::createStream(const string &description, bool asServer)
 }
 
 
-std::string Parset::getStreamDescriptorBetweenIONandStorage(unsigned subband, unsigned output) const
+std::string Parset::getStreamDescriptorBetweenIONandStorage(unsigned subband, unsigned output, bool perSubband) const
 {
   std::string prefix	     = "OLAP.OLAP_Conn.IONProc_Storage";
   std::string connectionType = getString(prefix + "_Transport");
@@ -212,14 +214,17 @@ std::string Parset::getStreamDescriptorBetweenIONandStorage(unsigned subband, un
   if (connectionType == "NULL") {
     return "null:";
   } else if (connectionType == "TCP") {
-    std::string    server = storageHostName(prefix + "_ServerHosts", subband);
-    unsigned short port   = getStoragePort(prefix, subband, output);
+    std::string nodelist = perSubband ? "OLAP.storageNodeList" : "OLAP.PencilInfo.storageNodeList";
+    unsigned    serverIndex = getUint32Vector(nodelist,true)[subband];
+    std::string server = getStringVector(prefix + "_ServerHosts")[serverIndex];
 
-    return std::string("tcp:") + server + ':' + boost::lexical_cast<std::string>(port);
+    unsigned    port   = getUint32Vector(prefix + "_Ports",true)[subband + output * nrSubbands()];
+
+    return str(format("tcp:%s:%u") % server % port);
   } else if (connectionType == "FILE") {
     std::string filename = getString(prefix + "_BaseFileName") + '.' + boost::lexical_cast<std::string>(subband);
 
-    return std::string("file:") + filename;
+    return str(format("file:%s") % filename );
   } else {
     THROW(InterfaceException, "unsupported ION->Storage stream type: " << connectionType);
   }
@@ -380,11 +385,6 @@ string Parset::getMSBaseDir() const
   return basedir;
 }
 
-
-unsigned short Parset::getStoragePort(const string &aKey, unsigned subband, unsigned output) const
-{
-  return static_cast<unsigned short>(getUint32Vector(aKey + "_Ports",true)[subband + output * nrSubbands()]);
-}
 
 vector<double> Parset::getManualPencilBeam(const unsigned pencil) const
 {
