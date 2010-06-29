@@ -57,11 +57,12 @@ public class AnaBeamDialog extends javax.swing.JDialog {
         LofarUtils.setPopupComboChoices(inputDirectionType,directionTypeChoices);
         LofarUtils.setPopupComboChoices(inputRank,rankChoices);
         itsDirectionType=selection[0];
-        itsAngle1=selection[1];
-        itsAngle2=selection[2];
-        itsDuration=selection[3];
-        itsStartTime=selection[4];
-        itsRank=selection[5];
+        itsTarget=selection[1];
+        itsAngle1=selection[2];
+        itsAngle2=selection[3];
+        itsDuration=selection[4];
+        itsStartTime=selection[5];
+        itsRank=selection[6];
         editting=edit;
         initialize();
     }
@@ -228,6 +229,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
     
     public String[] getBeam() {
         String[] newRow = {inputDirectionType.getSelectedItem().toString(),
+        itsTarget,
         inputAngle1.getText(),
         inputAngle2.getText(),
         itsDuration,
@@ -249,6 +251,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
     private boolean isChanged=false;
     
     private String    itsDirectionType  = "";
+    private String    itsTarget         = "";
     private String    itsAngle1         = "";
     private String    itsAngle2         = "";
     private String    itsDuration       = "";

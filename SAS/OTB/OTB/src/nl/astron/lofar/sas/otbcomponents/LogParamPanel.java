@@ -460,7 +460,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     
     private void setStartDateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setStartDateButtonActionPerformed
         try {
-            SimpleDateFormat aD = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm", itsLocale);
+            SimpleDateFormat aD = new SimpleDateFormat("yyyy-MM-dd HH:mm", itsLocale);
             Date initialDate = aD.parse(LogParamStartTimeText.getText());
             DateTimeChooser chooser = new DateTimeChooser(initialDate);
             itsStartTime = DateTimeChooser.showDialog(this, "StartTime", chooser);
@@ -488,7 +488,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     
     private void setStopDateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setStopDateButtonActionPerformed
         try {
-            SimpleDateFormat aD = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm", itsLocale);
+            SimpleDateFormat aD = new SimpleDateFormat("yyyy-MM-dd HH:mm", itsLocale);
             Date initialDate = aD.parse(LogParamEndTimeText.getText());
             DateTimeChooser chooser = new DateTimeChooser(initialDate);
             itsStopTime = DateTimeChooser.showDialog(this, "StopTime", chooser);

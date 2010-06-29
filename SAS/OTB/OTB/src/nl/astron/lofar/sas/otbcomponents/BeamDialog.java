@@ -55,22 +55,23 @@ public class BeamDialog extends javax.swing.JDialog {
         initComponents();
         LofarUtils.setPopupComboChoices(inputDirectionTypes,directionTypeChoices);
         itsDirectionTypes=selection[0];
-        itsAngle1=selection[1];
-        itsAngle2=selection[2];
-        itsDuration=selection[3];
-        itsStartTime=selection[4];
-        itsSubbandList=selection[5];
-        itsBeamletList=selection[6];
-        itsMomID=selection[7];
+        itsTarget=selection[1];
+        itsAngle1=selection[2];
+        itsAngle2=selection[3];
+        itsDuration=selection[4];
+        itsStartTime=selection[5];
+        itsSubbandList=selection[6];
+        itsBeamletList=selection[7];
+        itsMomID=selection[8];
         editting=edit;
-        itsUsedBeamlets=usedBeamlets;
-        itsSavedBeamlets=usedBeamlets;
+        itsSavedBeamlets=(BitSet)usedBeamlets.clone();
+        itsUsedBeamlets=(BitSet)usedBeamlets.clone();
         initialize();
     }
     
     // check if subbands are between 1 and 511
     private boolean checkSubbands(){
-        String s = inputSubbandList.getText();
+        String s = LofarUtils.expandedArrayString(inputSubbandList.getText());
         if (s.length() <=2) {
             return true;
         }
@@ -262,18 +263,22 @@ public class BeamDialog extends javax.swing.JDialog {
         checkChanged();
         if (hasChanged() && !checkBeamlets()) {
             if (JOptionPane.showConfirmDialog(this,"There is an error in the beamletList, some of them are allready in use by other Beams. continueing discards all changes. Continue?","Beamlet Error",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
                 isChanged=false;
                 setVisible(false);
                 dispose();
             } else {
+                itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
                 return;
             }
         } else if (hasChanged() && !checkSubbands()) {
             if (JOptionPane.showConfirmDialog(this,"There is an error in the SubbandsList , Only subbands 1-511 can be used. continueing discards all changes. Continue?","Beamlet Error",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
                 isChanged=false;
                 setVisible(false);
                 dispose();
             } else {
+                itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
                 return;
             }
 
@@ -285,7 +290,7 @@ public class BeamDialog extends javax.swing.JDialog {
 
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
         isChanged=false;
-        itsUsedBeamlets=itsSavedBeamlets;
+        itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
         setVisible(false);
         dispose();
 }//GEN-LAST:event_cancelButtonActionPerformed
@@ -293,23 +298,29 @@ public class BeamDialog extends javax.swing.JDialog {
     private void checkChanged() {
         if (!itsDirectionTypes.equals(inputDirectionTypes.getSelectedItem().toString())) {
             isChanged=true;
+            return;
         }
         if (!itsAngle1.equals(inputAngle1.getText())) {
             isChanged=true;
+            return;
         }
         if (!itsAngle2.equals(inputAngle2.getText())) {
             isChanged=true;
+            return;
         }
         if (!itsSubbandList.equals(inputSubbandList.getText())) {
             isChanged=true;
+            return;
         }
         if (!itsBeamletList.equals(inputBeamletList.getText())) {
             isChanged=true;
+            return;
         }
     }
     
     public String[] getBeam() {
         String[] newRow = {inputDirectionTypes.getSelectedItem().toString(),
+        itsTarget,
         inputAngle1.getText(),
         inputAngle2.getText(),
         itsDuration,
@@ -327,6 +338,7 @@ public class BeamDialog extends javax.swing.JDialog {
     private boolean isChanged=false;
     
     private String    itsDirectionTypes = "";
+    private String    itsTarget         = "";
     private String    itsAngle1         = "";
     private String    itsAngle2         = "";
     private String    itsDuration       = "";
@@ -335,8 +347,8 @@ public class BeamDialog extends javax.swing.JDialog {
     private String    itsBeamletList    = "";
     private String    itsMomID          = "";
     private boolean   editting          = false;
-    private BitSet    itsUsedBeamlets   = new BitSet(216);
-    private BitSet    itsSavedBeamlets  = new BitSet(216);
+    private BitSet    itsUsedBeamlets   = null;
+    private BitSet    itsSavedBeamlets  = null;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
