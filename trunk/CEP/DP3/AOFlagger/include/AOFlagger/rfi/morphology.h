@@ -38,6 +38,7 @@ class Morphology{
 		void SegmentByLengthRatio(Mask2DCPtr mask, SegmentedImagePtr output);
 		void Cluster(SegmentedImagePtr segmentedImage);
 		void RemoveSmallSegments(SegmentedImagePtr segmentedImage, size_t thresholdLevel);
+		void Classify(SegmentedImagePtr segmentedImage);
 	private:
 		struct SegmentInfo
 		{

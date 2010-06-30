@@ -575,6 +575,8 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onSegment) );
 	_actionGroup->add( Gtk::Action::create("Cluster", "Cluster"),
   sigc::mem_fun(*this, &MSWindow::onCluster) );
+	_actionGroup->add( Gtk::Action::create("Classify", "Classify"),
+  sigc::mem_fun(*this, &MSWindow::onClassify) );
 	_actionGroup->add( Gtk::Action::create("RemoveSmallSegments", "Remove small segments"),
   sigc::mem_fun(*this, &MSWindow::onRemoveSmallSegments) );
 
@@ -690,6 +692,7 @@ void MSWindow::createToolbar()
     "      <menuitem action='BackToOriginal'/>"
     "      <menuitem action='Segment'/>"
     "      <menuitem action='Cluster'/>"
+    "      <menuitem action='Classify'/>"
     "      <menuitem action='RemoveSmallSegments'/>"
     "      <separator/>"
     "      <menuitem action='EditStrategy'/>"
@@ -1278,6 +1281,17 @@ void MSWindow::onCluster()
 		Morphology morphology;
 		morphology.Cluster(_segmentedImage);
 	_timeFrequencyWidget.SetSegmentedImage(_segmentedImage);
+		Update();
+	}
+}
+
+void MSWindow::onClassify()
+{
+	if(_segmentedImage != 0)
+	{
+		Morphology morphology;
+		morphology.Classify(_segmentedImage);
+		_timeFrequencyWidget.SetSegmentedImage(_segmentedImage);
 		Update();
 	}
 }
