@@ -33,7 +33,7 @@ using namespace std;
 void fill (bool create)
 {
   // Create a parm data base.
-  ParmDBLog db1("tParmDBLog_tmp.tab", create, create);
+  ParmDBLog db1("tParmDBLog_tmp.tab", ParmDBLog::PERSOLUTION, create, create);
   vector<double> sol(3);
   sol[0] = 1.;
   sol[1] = 2.;

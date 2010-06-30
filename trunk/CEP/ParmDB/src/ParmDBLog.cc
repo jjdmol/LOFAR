@@ -21,6 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>			// needed to write log messages
 #include <ParmDB/ParmDBLog.h>
 
 #include <tables/Tables/TableDesc.h>
@@ -36,12 +37,12 @@ using namespace std;
 namespace LOFAR {
 namespace BBS {
 
-  ParmDBLog::ParmDBLog (const string& tableName, bool forceNew, bool wlock)
+  ParmDBLog::ParmDBLog (const string& tableName, enum LoggingLevel, bool forceNew, bool wlock)
   {
-  	// Set default logging level to PERSOLUTION
-  	itsLoggingLevel = PERSOLUTION;
+  	 // Set default logging level to PERSOLUTION
+  	 itsLoggingLevel = PERSOLUTION;
   	
-  	// Create the table if needed or if it does not exist yet.
+  	 // Create the table if needed or if it does not exist yet.
     if (forceNew  ||  !Table::isReadable (tableName)) {
       createTables (tableName);
     }
@@ -85,12 +86,13 @@ namespace BBS {
   	return itsLoggingLevel;
   }
   
-  void ParmDBLog::setLoggingLevel(enum ParmDBLog::LoggingLevel level)
+  void ParmDBLog::setLoggingLevel(const enum ParmDBLog::LoggingLevel level)
   {
   	if(level != NONE && level != PERSOLUTION && level != PERITERATION
   		&& level != PERSOLUTION_CORRMATRIX && level != PERITERATION_CORRMATRIX)
   	{
   		// unsupported logging level... throw which kind of exception?
+  		LOG_WARN("Unknown ParmLogger logging level"); 
   	}
   	else
   	{
