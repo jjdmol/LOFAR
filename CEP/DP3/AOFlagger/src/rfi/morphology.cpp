@@ -367,6 +367,7 @@ void Morphology::floodFill(Mask2DCPtr mask, SegmentedImagePtr output, Mask2DPtr 
 void Morphology::Cluster(SegmentedImagePtr segmentedImage)
 {
 	std::map<size_t,SegmentInfo> segments = createSegmentMap(segmentedImage);
+	std::cout << "Segments before clustering: " << segments.size();
 
 	for(std::map<size_t,SegmentInfo>::iterator i=segments.begin();i!=segments.end();++i)
 	{
@@ -404,31 +405,23 @@ void Morphology::Cluster(SegmentedImagePtr segmentedImage)
 				bool remove1 = false, remove2 = false;
 				
 				// Cluster large segments with very small segments that are close together (probably noise
-				// from the consistent transmitter)
+				// from the continuous transmitter)
 				bool
-					noiseH1 = maxDist <= 1 && info2.count > (info1.count*20) && info2.width>info1.width*8 && info1.height < 16,
-					noiseH2 =  maxDist <= 1 && info1.count > (info2.count*20) && info1.width>info2.width*8 && info2.height < 16;
+					noiseH1 = maxDist <= 1 && info2.count > (info1.count*20) && info2.width>info1.width*8 && info1.height < 16 && info1.width<segmentedImage->Width()/10,
+					noiseH2 =  maxDist <= 1 && info1.count > (info2.count*20) && info1.width>info2.width*8 && info2.height < 16 && info2.width<segmentedImage->Width()/10;
 				cluster = cluster || noiseH1 || noiseH2;
 				remove1 = remove1 || noiseH1;
 				remove2 = remove2 || noiseH2;
 
 				bool
-					noiseV1 = maxDist <= 1 && info2.count > (info1.count*20) && info2.height>info1.height*8 && info1.height < 16,
-					noiseV2 =  maxDist <= 1 && info1.count > (info2.count*20) && info1.height>info2.height*8 && info2.height < 16;
+					noiseV1 = maxDist <= 1 && info2.count > (info1.count*20) && info2.height>info1.height*8 && info1.height < 16 && info1.width<segmentedImage->Width()/10,
+					noiseV2 =  maxDist <= 1 && info1.count > (info2.count*20) && info1.height>info2.height*8 && info2.height < 16 && info2.width<segmentedImage->Width()/10;
 				cluster = cluster || noiseV1 || noiseV2;
 				remove1 = remove1 || noiseV1;
 				remove2 = remove2 || noiseV2;
 	
 				// Cluster same-shaped segments that are in the same channels
 				cluster = cluster || (vDist == 0 && yMeanDist*8 <= (maxHeight+minHeight) && widthDist <= (maxWidth / 4 + 2) && heightDist <= (maxHeight / 4 + 2) && maxDist < minCount*32);
-	
-				/*if(info1.Contains(10, 200) || info2.Contains(10, 200) )
-					std::cout << "vDist = " << vDist << ", hDist = " << hDist << ", widthDist = " << widthDist << ", heightDist = " << heightDist
-					<< ", mW=" << maxWidth << ", mH=" << maxHeight
-					<< std::endl
-					<< "l1 = " << info1.left << ", r1 = " << info1.right << ", t1 = " << info1.top << ", b1 = " << info1.bottom
-					<< "\nl2 = " << info2.left << ", r2 = " << info2.right << ", t2 = " << info2.top << ", b2 = " << info2.bottom
-					<< std::endl;*/
 
 				if(cluster)
 				{
@@ -502,4 +495,24 @@ void Morphology::RemoveSmallSegments(SegmentedImagePtr segmentedImage, size_t th
 		}
 	}
 	std::cout << "Removed " << removedSegments << " segments of size " << thresholdLevel << " or smaller." << std::endl;
+}
+
+void Morphology::Classify(SegmentedImagePtr segmentedImage)
+{
+	std::map<size_t,SegmentInfo> segments = createSegmentMap(segmentedImage);
+	size_t
+		BROADBAND_SEGMENT = 1,
+		LINE_SEGMENT = 2,
+		BLOB_SEGMENT = 3;
+
+	for(std::map<size_t,SegmentInfo>::iterator i=segments.begin();i!=segments.end();++i)
+	{
+		SegmentInfo &info = i->second;
+		if(info.width > info.height * 10)
+			segmentedImage->MergeSegments(BROADBAND_SEGMENT, info.segment);
+		else if(info.height > info.width * 10)
+			segmentedImage->MergeSegments(LINE_SEGMENT, info.segment);
+		else
+			segmentedImage->MergeSegments(BLOB_SEGMENT, info.segment);
+	}
 }

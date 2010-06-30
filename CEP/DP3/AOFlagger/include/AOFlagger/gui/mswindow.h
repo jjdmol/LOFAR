@@ -179,6 +179,7 @@ class MSWindow : public Gtk::Window {
 		void onMultiplyData();
 		void onSegment();
 		void onCluster();
+		void onClassify();
 		void onRemoveSmallSegments();
 		void onTimeGraphButtonPressed();
 		void onFrequencyGraphButtonPressed();
