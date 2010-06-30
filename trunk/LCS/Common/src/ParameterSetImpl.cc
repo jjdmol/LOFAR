@@ -346,6 +346,7 @@ ParameterSetImpl::findKV(const string& aKey, bool doThrow) const
 	LOG_TRACE_CALC_STR("find(" << aKey << ")");
 
 	const_iterator	iter = find(aKey);
+
 	if (iter == end() && doThrow) {
 		THROW (APSException, formatString("Key %s unknown", aKey.c_str()));
 	}
