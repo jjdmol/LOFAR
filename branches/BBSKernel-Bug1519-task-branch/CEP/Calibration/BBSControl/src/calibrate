@@ -71,6 +71,8 @@ usage()
     echo "  --instrument-db   path to a non-default instrument model parmdb"
     echo "  --instrument-name basename for the instrument model parmdb"
     echo "                    (default: instrument)"
+    echo "	--solverlog-name	basename for the solver log parmdb"
+    echo "							(default: solver)"
     exit 1
 }
 
@@ -133,6 +135,8 @@ skip_instrument_db=0
 replace_instrument_db=0
 instrument_db=
 instrument_basename="instrument"
+solver_basename="solver"				# default table "solver"
+parm_log=F									# default off
 
 # Arguments
 observation=
@@ -230,6 +234,16 @@ do
     fi
     shift
 
+ 
+  elif test "${1}" = "--solver-name"; then				# get basename for solver table
+    if test $# -le 1; then
+        error "${1} needs an additional argument"
+    fi
+    shift
+
+    solver_basename=${1}
+    shift   
+    
     instrument_db=${1}
     shift
   elif test "${1}" = "--instrument-name"; then
@@ -245,7 +259,7 @@ do
         error "${1} needs an additional argument"
     fi
     shift
-
+    
     # Parse low:high string.
     tmp=${1%%:*}
     port_low=${tmp:-$port_low}
@@ -323,6 +337,7 @@ if test ${verbose} -eq 1; then
     echo "    replace instrument db: ${replace_instrument_db}"
     echo "    instrument db: ${instrument_db}"
     echo "    instrument name: ${instrument_basename}"
+    echo "	  solver name: ${solver_basename}"
     echo
 fi
 
@@ -355,10 +370,15 @@ fi
 event "retrieve information from parset"
 #parset_observation=`getparsetvalue ${parset} Observation 2>/dev/null` || error "Key \"Observation\" not found in: ${parset}"
 parset_solver=`getparsetvalue ${parset} Strategy.UseSolver 2>/dev/null | cut -c1` || parset_solver=
+parm_log=`getparsetvalue -d "F" ${parset} Strategy.ParmLog 2>/dev/null | cut -c 1-` || parm_log=
+#if "${parm_log}" -eq ""; then		# if we get an empty parm_log from the parset file...
+#	parm_log="F"						# set it to false
+#fi
 
 echo "information from parset:"
 #echo "    Observation: ${parset_observation}"
-echo "    UseSolver: ${parset_solver}"
+echo "    UseSolver:	${parset_solver}"
+echo "    ParmLog:	${parm_log}"
 echo
 
 # Parse boolean from parset.
@@ -494,6 +514,14 @@ EOF
 fi
 
 
+#if test "${parm_log}" -ne "F"; then
+#	event "We will be doing ParmLogging!"
+#	cat > "${key}_control_$$.parset" << EOF
+#ParmLog = "${parm_log}"
+#EOF	
+#fi
+
+
 #
 # EXECUTE LOCAL PROCESS(ES)
 #
@@ -539,12 +567,12 @@ fi
 #
 
 event "execute remote KernelControl processes"
-if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-    echo "startdistproc -useenv -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${instrument_basename}\" \"${sky_basename}\" nodry"
+if test ${verbose} -eq 1 -o ${dry} -eq 1; then														# \"${solver_basename}\"
+echo "startdistproc -useenv -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${instrument_basename}\" \"${sky_basename}\" \"${solver_basename}\" nodry"
 fi
 
 if test ${dry} -eq 0; then
-    startdistproc -useenv -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${instrument_basename}" "${sky_basename}" nodry
+	startdistproc -useenv -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${instrument_basename}" "${sky_basename}" "${solver_basename}" nodry
 
     if test $? -ne 0; then
         kill_all "${pidlist}"

@@ -198,7 +198,7 @@ namespace LOFAR
       if(itsShiftFlag) {
         parseDirection(pss);
       }
-
+      
       itsResampleCellSize = CellSize(1, 1);
       itsResampleFlag = pss.getBool("Resample.Enable", false);
       if(itsResampleFlag) {
@@ -214,6 +214,9 @@ namespace LOFAR
       itsSolverOptions.lmFactor = pss.getDouble("Options.LMFactor");
       itsSolverOptions.balancedEqs = pss.getBool("Options.BalancedEqs");
       itsSolverOptions.useSVD = pss.getBool("Options.UseSVD");
+      
+      //itsParmLogLevel = pss.getString("ParmLog");		// define LogLevel for Solver parameters
+      LOG_INFO("We got ParmLog from parset file");
     }
 
     void SolveStep::parseResampleCellSize(const ParameterSet& ps)

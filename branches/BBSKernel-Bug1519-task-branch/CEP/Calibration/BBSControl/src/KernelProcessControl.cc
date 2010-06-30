@@ -119,6 +119,10 @@ namespace LOFAR
         ParameterSet *ps = globalParameterSet();
         ASSERT(ps);
 
+		// DEBUG - output parameterset
+//		LOG_DEBUG_STR("Parameterset:" << endl << *ps);
+//		LOG_DEBUG_STR("Logging = " << ps->getString("ParmLog") );
+		
         string filesys = ps->getString("ObservationPart.Filesystem");
         if(filesys == ".")
         {
@@ -129,7 +133,10 @@ namespace LOFAR
         string path = ps->getString("ObservationPart.Path");
         string skyDb = ps->getString("ParmDB.Sky");
         string instrumentDb = ps->getString("ParmDB.Instrument");
-		  
+        string solverDb=ps->getString("ParmLog");
+		//  string solverDb="solver";	// DEBUG 
+        LOG_DEBUG_STR("solverDb = " << solverDb);
+        
         try {
           // Open observation part.
           LOG_INFO_STR("Observation part: " << filesys << " : " << path);
@@ -164,11 +171,10 @@ namespace LOFAR
           return false;
         }
 		  
-		  try {
-          // Open parmDBLog table
-			 string solverTableName=path+"/solver";
-          LOG_INFO_STR("ParmDBLog table: " << solverTableName);
-			 itsParmLogger.reset(new ParmDBLog(solverTableName));
+		try {
+        	// Open ParmDBLog ParmDB for solver logging
+			LOG_INFO_STR("ParmDBLog table: " << solverDb);
+			itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
         }
         catch(Exception &e) {
           LOG_ERROR_STR("Failed to open instrument model parameter database: "
@@ -718,7 +724,9 @@ namespace LOFAR
             solGrid, cellChunkSize, command.propagate());
 
 		  LOG_DEBUG_STR("Calling KernelProcessControl.run(*itsParmLogger)");
+		  LOG_DEBUG_STR("itsParmLogger = " << itsParmLogger << endl);
           controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
+//          controller.run();
         }
       } catch(Exception &ex) {
         return CommandResult(CommandResult::ERROR, "Unable to initialize or run"

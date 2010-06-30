@@ -89,6 +89,7 @@ namespace LOFAR
       bool              shift()             const { return itsShiftFlag; }
       casa::MDirection  direction()         const { return itsDirection; }
       SolverOptions     solverOptions()     const { return itsSolverOptions; }
+      string				parmLogLevel()		  const { return itsParmLogLevel; }
       // @}
 
       // Return the command type of \c *this as a string.
@@ -131,6 +132,8 @@ namespace LOFAR
       bool              itsPropagateFlag;
       // Solver options.
       SolverOptions     itsSolverOptions;
+      // Solver ParmDB logging level
+      string				itsParmLogLevel;
     };
 
     // @}

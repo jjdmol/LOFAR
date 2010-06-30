@@ -199,7 +199,7 @@ void LocalSolveController::run()
 // Call run() with parmLogger object -> do logging into ParmDB
 void LocalSolveController::run(ParmDBLog &parmLogger)
 {
-    LOG_DEBUG_STR("LocalSolveController(ParmDBLog)");
+	LOG_DEBUG_STR("LocalSolveController(ParmDBLog)");
     
     ASSERTSTR(itsInitFlag, "Controller not initialized.");
 
@@ -245,7 +245,9 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
         bool done = false;
         while(!done)
         {
-            // Construct equations and pass to solver.
+        	LOG_INFO_STR("Iterate loop");
+        	
+        	// Construct equations and pass to solver.
             itsEquator->process(equations);
 
             itsSolver.setEquations(0, equations);
@@ -287,12 +289,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 								solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
 								it->chiSqr, it->lmFactor, it->coeff, it->resultText, it->CorrMatrix);			
 				}
-				// or if an unknown ParmLogger level was requested (shouldn't occur at this stage)
-				else
-				{
-					LOG_DEBUG_STR("Request of unknown ParmLogger level");
-				}
-			}
+		    }
 
             // Update coefficients.
             setSolution(solutions, chunkStart, chunkEnd);
@@ -366,11 +363,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 							solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
 							it->chiSqr, it->lmFactor, it->coeff, it->resultText, it->CorrMatrix);			 
 			 }
-			 else
-			 {
-			 	LOG_DEBUG("Request of unknown ParmLogger level");
-			 }
-		  }
+		}
 
         // Propagate coefficient values to the next cell chunk.
         // TODO: Find a better solution for this.

@@ -177,16 +177,16 @@ public:
 
     uint32          id;								// Cell id
     vector<double>  coeff;							// Solution coefficients
-    uint32          result;							// result from solver
-    string          resultText;						// corresponding result text from solver
-    uint32	        rankDeficiency;					// rank deficiency of eqn matrix
+    uint32          result;						// result from solver
+    string          resultText;					// corresponding result text from solver
+    uint32	        rankDeficiency;				// rank deficiency of eqn matrix
     uint32          rank;							// rank of eqn matrix
-    uint32	     	niter;							// number of iterations performed
-	uint32			maxIter;						// maximum number of iterations
-    bool	    	maxIterReached;					// have maximum No. of iterations reached
-    double          chiSqr;							// chi squared factor
+    uint32		     niter;							// number of iterations performed
+	 uint32			  maxIter;						// maximum number of iterations
+    bool	    	     maxIterReached;				// have maximum No. of iterations reached
+    double          chiSqr;						// chi squared factor
     double          lmFactor;						// Leuvenberg-Marquardt factor
-    casa::Array<casa::Double> CorrMatrix;			// correlation matrix of solution
+    casa::Array<casa::Double> CorrMatrix;		// correlation matrix of solution
 };
 
 // BlobStream I/O
