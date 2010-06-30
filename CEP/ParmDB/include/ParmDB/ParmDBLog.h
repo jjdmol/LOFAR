@@ -59,8 +59,8 @@ namespace BBS {
     // not exist yet.
     // If <src>lock=true</src> a write lock is acquired. In this way no
     // implcit locks have to be acquired on each access.
-    explicit ParmDBLog (const std::string& tableName, bool forceNew=false,
-                        bool lock=false);
+    explicit ParmDBLog (const std::string& tableName, enum LoggingLevel=PERSOLUTION, bool forceNew=false,
+                        bool lock=true);
 
     ~ParmDBLog();
 
@@ -91,8 +91,8 @@ namespace BBS {
 
 	// Get or set the logging level of solver parameters
 	// <group>
-	int getLoggingLevel();
-	void setLoggingLevel(enum LoggingLevel);
+	int getLoggingLevel ();
+	void setLoggingLevel (const enum LoggingLevel);
 	// </group>
 
   private:
