@@ -589,7 +589,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                            hasChanged=true;
                            itsTree.starttime = startTimeInput.getText();
                            itsTree.stoptime = stopTimeInput.getText();
-                           if (OtdbRmi.getRemoteMaintenance().setSchedule(itsTree.treeID(),itsTree.starttime,itsTree.stoptime)) {
+                           if (!OtdbRmi.getRemoteMaintenance().setSchedule(itsTree.treeID(),itsTree.starttime,itsTree.stoptime)) {
                                logger.error("Error during setSchedule: "+OtdbRmi.getRemoteMaintenance().errorMsg());
                                return false;
                            }
