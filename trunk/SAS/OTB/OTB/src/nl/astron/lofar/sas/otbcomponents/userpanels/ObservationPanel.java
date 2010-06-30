@@ -515,6 +515,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 }
             }
         }
+        LofarUtils.sortModel(itsModel);
         if(itsAvailableBeamformStations.isEmpty()) {
             addBeamformerButton.setEnabled(false);
         } else {
@@ -1195,7 +1196,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             itsSelectedRow = beamConfigurationPanel.getSelectedRow();
             selection = itsBeamConfigurationTableModel.getSelection(itsSelectedRow);
                        
-            BitSet oldBeamlets = LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(selection[6]));
+            BitSet oldBeamlets = LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(selection[7]));
             aBS.xor(oldBeamlets);
             // if no row is selected, nothing to be done
             if (selection == null || selection[0].equals("")) {
@@ -1390,6 +1391,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         directionTypes.add(itsBeamDirectionTypes.elementAt(0));
                         startTimes.add(itsBeamStartTimes.elementAt(0));
                         durations.add(itsBeamDurations.elementAt(0));
+                        subbandList.add(itsBeamSubbandList.elementAt(0));
+                        beamletList.add(itsBeamBeamletList.elementAt(0));
                         momIDs.add("0");
                     } else if (choice.equals("AnaBeams")) {
                          targets.add((itsAnaBeamTargets.elementAt(0)));
@@ -1398,10 +1401,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                          directionTypes.add(itsAnaBeamDirectionTypes.elementAt(0));
                          startTimes.add(itsAnaBeamStartTimes.elementAt(0));
                          durations.add(itsAnaBeamDurations.elementAt(0));
+                         ranks.add(itsAnaBeamRanks.elementAt(0));
                     }
-                    subbandList.add(itsBeamSubbandList.elementAt(0));
-                    beamletList.add(itsBeamBeamletList.elementAt(0));
-                    ranks.add(itsAnaBeamRanks.elementAt(0));
                  }
 
 

@@ -166,6 +166,8 @@ public class StorageSelectionPanel extends javax.swing.JPanel {
             itsAvailableStorageNodeList.add(avE.nextElement().toString());
         }
 
+        LofarUtils.sortModel(itsAvailableModel);
+        LofarUtils.sortModel(itsUsedModel);
         AvailableStorageNodeList.invalidate();
         AvailableStorageNodeList.repaint();
         UsedStorageNodeList.invalidate();

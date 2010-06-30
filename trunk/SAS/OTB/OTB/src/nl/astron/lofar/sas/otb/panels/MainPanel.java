@@ -1199,7 +1199,7 @@ public class MainPanel extends javax.swing.JPanel
                     buttonPanel1.setButtonEnabled("Duplicate",true);
                     buttonPanel1.setButtonEnabled("Modify",true);
                     buttonPanel1.setButtonEnabled("Set to Default",true);
-                    if (aTreeState.equals("approved")) {
+                    if (aTreeState.equals("approved") || aTreeState.equals("on_hold") || aTreeState.equals("prescheduled")) {
                         buttonPanel1.setButtonEnabled("Build VIC tree",true);
                     } else {
                         buttonPanel1.setButtonEnabled("Build VIC tree",false);
