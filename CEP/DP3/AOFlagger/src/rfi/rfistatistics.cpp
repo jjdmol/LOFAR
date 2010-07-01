@@ -21,11 +21,13 @@
 
 #include <deque>
 #include <iostream>
+#include <fstream>
 #include <cmath>
 
 #include <AOFlagger/msio/timefrequencydata.h>
 
 #include <AOFlagger/util/plot.h>
+#include <AOFlagger/rfi/morphology.h>
 
 RFIStatistics::RFIStatistics()
 {
@@ -35,10 +37,89 @@ RFIStatistics::~RFIStatistics()
 {
 }
 
-void RFIStatistics::Add(Image2DCPtr image, Mask2DCPtr mask)
+void RFIStatistics::Add(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData)
 {
-	size_t rfiCount = 0;
 	Mask2DPtr maskCopy = Mask2D::CreateCopy(mask);
+	SegmentedImagePtr segmentedMask = SegmentedImage::CreatePtr(mask->Width(), mask->Height());
+	
+	Morphology morphology;
+	morphology.SegmentByLengthRatio(mask, segmentedMask);
+	morphology.Classify(segmentedMask);
+	
+	addChannels(image, mask, metaData, segmentedMask);
+	saveChannels();
+}
+
+void RFIStatistics::addChannels(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage)
+{
+	for(size_t y=0;y<image->Height();++y)
+	{
+		long unsigned rfiCount = 0;
+		long double rfiSummedAmplitude = 0.0;
+		long unsigned broadbandRfiCount = 0;
+		long unsigned lineRfiCount = 0;
+		long double broadbandRfiAmplitude = 0.0;
+		long double lineRfiAmplitude = 0.0;
+		
+		for(size_t x=0;x<image->Width();++x)
+		{
+			if(mask->Value(x, y))
+			{
+				++rfiCount;
+				rfiSummedAmplitude += image->Value(x, y);
+				if(segmentedImage->Value(x, y) == Morphology::BROADBAND_SEGMENT)
+				{
+					++broadbandRfiCount;
+					broadbandRfiAmplitude += image->Value(x, y);
+				} else if(segmentedImage->Value(x, y) == Morphology::LINE_SEGMENT)
+				{
+					++lineRfiCount;
+					lineRfiAmplitude += image->Value(x, y);
+				}
+			}
+		}
+		if(_channels.count(metaData->Band().channels[y].frequencyHz) == 0)
+		{
+			ChannelInfo channel(metaData->Band().channels[y].frequencyHz);
+			channel.totalCount = image->Width();
+			channel.rfiCount = rfiCount;
+			channel.rfiSummedAmplitude = rfiSummedAmplitude;
+			channel.broadbandRfiCount = broadbandRfiCount;
+			channel.lineRfiCount = lineRfiCount;
+			channel.broadbandRfiAmplitude = broadbandRfiAmplitude;
+			channel.lineRfiAmplitude = lineRfiAmplitude;
+			_channels.insert(std::pair<double, ChannelInfo>(channel.frequencyHz, channel));
+		} else {
+			ChannelInfo &channel = _channels.find(metaData->Band().channels[y].frequencyHz)->second;
+			channel.totalCount += image->Width();
+			channel.rfiCount += rfiCount;
+			channel.rfiSummedAmplitude += rfiSummedAmplitude;
+			channel.broadbandRfiCount += broadbandRfiCount;
+			channel.lineRfiCount += lineRfiCount;
+			channel.broadbandRfiAmplitude += broadbandRfiAmplitude;
+			channel.lineRfiAmplitude += lineRfiAmplitude;
+		}
+	}
+}
+
+void RFIStatistics::saveChannels()
+{
+	std::ofstream file("counts-channels.txt");
+	file << "frequency\ttotalCount\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n";
+	for(std::map<double, class ChannelInfo>::const_iterator i=_channels.begin();i!=_channels.end();++i)
+	{
+		const ChannelInfo &c = i->second;
+		file
+			<< c.frequencyHz << "\t"
+			<< c.totalCount << "\t"
+			<< c.rfiCount << "\t"
+			<< c.rfiSummedAmplitude << "\t"
+			<< c.broadbandRfiCount << "\t"
+			<< c.lineRfiCount << "\t"
+			<< c.broadbandRfiAmplitude << "\t"
+			<< c.lineRfiAmplitude << "\n";
+	}
+	file.close();
 }
 
 long double RFIStatistics::FitScore(Image2DCPtr image, Image2DCPtr fit, Mask2DCPtr mask)

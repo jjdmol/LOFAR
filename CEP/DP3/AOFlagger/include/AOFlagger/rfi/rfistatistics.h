@@ -21,10 +21,12 @@
 #define RFISTATISTICS_H
 
 #include <cstring>
-#include <vector>
+#include <map>
 
-#include "../msio/image2d.h"
-#include "../msio/mask2d.h"
+#include <AOFlagger/msio/image2d.h>
+#include <AOFlagger/msio/timefrequencymetadata.h>
+#include <AOFlagger/msio/mask2d.h>
+#include <AOFlagger/msio/segmentedimage.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -33,7 +35,7 @@ class RFIStatistics {
 	public:
 		RFIStatistics();
 		~RFIStatistics();
-		void Add(Image2DCPtr image, Mask2DCPtr mask);
+		void Add(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData);
 
 		static long double FitScore(const Image2D &image, const Image2D &fit, Mask2DCPtr mask);
 		static long double FitScore(Image2DCPtr image, Image2DCPtr fit, Mask2DCPtr mask);
@@ -43,6 +45,57 @@ class RFIStatistics {
 		static num_t FrequencySNR(Image2DCPtr image, Image2DCPtr model, Mask2DCPtr mask, unsigned channel);
 
 	private:
+		struct ChannelInfo {
+			ChannelInfo(double _frequencyHz) : frequencyHz(_frequencyHz), totalCount(0), rfiCount(0), rfiSummedAmplitude(0), broadbandRfiCount(0), lineRfiCount(0)
+			{
+			}
+			double frequencyHz;
+			long unsigned totalCount;
+			long unsigned rfiCount;
+			long double rfiSummedAmplitude;
+			long unsigned broadbandRfiCount;
+			long unsigned lineRfiCount;
+			long double broadbandRfiAmplitude;
+			long double lineRfiAmplitude;
+		};
+		struct TimestepInfo {
+			TimestepInfo(double _time) : time(_time), totalCount(0), rfiCount(0), rfiSummedAmplitude(0), broadbandRfiCount(0), lineRfiCount(0), broadbandRfiAmplitude(0), lineRfiAmplitude(0)
+			{
+			}
+			double time;
+			long unsigned totalCount;
+			long unsigned rfiCount;
+			long double rfiSummedAmplitude;
+			long unsigned broadbandRfiCount;
+			long unsigned lineRfiCount;
+			long double broadbandRfiAmplitude;
+			long double lineRfiAmplitude;
+		};
+		struct AmplitudeBin {
+			AmplitudeBin(double centralAmplitude) : centralAmplitude(centralAmplitude), centralLogAmplitude(log10(centralAmplitude)), count(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0)
+			{
+			}
+			double centralAmplitude;
+			double centralLogAmplitude;
+			long unsigned count;
+			long unsigned rfiCount;
+			long unsigned broadbandRfiCount;
+			long unsigned lineRfiCount;
+		};
+		std::map<double, class ChannelInfo> _channels;
+		std::map<double, class TimestepInfo> _timesteps;
+		std::map<double, class AmplitudeBin> _amplitudes;
+		
+		void addChannels(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
+		void addTimesteps(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
+		void addAmplitudes(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
+		void saveChannels();
+		
+		double getCentralAmplitude(double amplitude)
+		{
+			double decimals = pow(10.0, floor(log10(amplitude)));
+			return round(100.0 * amplitude / decimals) / 100.0;
+		}
 };
 
 #endif
