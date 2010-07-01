@@ -94,7 +94,7 @@ OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemLi
 
   // create an output thread for this subband
   for (unsigned i = 0; i < itsItemList.size(); i++ ) {
-    itsOutputThreads.push_back(new OutputThread(parset, itsItemList[i], itsOutputType, dataTemplate));
+    itsOutputThreads.push_back(new OutputThread(parset, itsItemList[i], itsOutputType, p));
   }
 
   LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection...");
