@@ -36,12 +36,13 @@ using boost::format;
 namespace LOFAR {
 namespace RTCP {
 
-InputThread::InputThread(const Parset &parset, unsigned subbandNumber, unsigned outputNumber, /*const std::string &inputDescription,*/ Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue)
+InputThread::InputThread(const Parset &parset, unsigned subbandNumber, unsigned outputNumber, ProcessingPlan::planlet &outputConfig, /*const std::string &inputDescription,*/ Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue)
 :
   itsLogPrefix(str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputNumber % subbandNumber)),
   itsParset(parset),
   itsSubbandNumber(subbandNumber),
   itsOutputNumber(outputNumber),
+  itsDistribution(outputConfig.distribution),
   //itsInputDescription(inputDescription),
   itsObservationID(parset.observationID()),
   itsFreeQueue(freeQueue),
@@ -60,7 +61,7 @@ InputThread::~InputThread()
 void InputThread::mainLoop()
 {
   try {
-    std::string inputDescriptor = itsParset.getStreamDescriptorBetweenIONandStorage(itsSubbandNumber, itsOutputNumber);
+    std::string inputDescriptor = itsParset.getStreamDescriptorBetweenIONandStorage(itsSubbandNumber, itsOutputNumber, itsDistribution == ProcessingPlan::DIST_SUBBAND);
 
     LOG_INFO_STR(itsLogPrefix << "Creating connection from " << inputDescriptor);
     std::auto_ptr<Stream> streamFromION(Parset::createStream(inputDescriptor, true));

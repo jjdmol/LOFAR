@@ -145,6 +145,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     if( configuration.outputCorrelatedData() ) {
       send( itsCorrelatedData,                         "",                   ProcessingPlan::DIST_SUBBAND );
     }
+#ifdef SECOND_TRANSPOSE    
     if( configuration.outputBeamFormedData() ) {
       send( itsBeamFormedData,                         ".beams",             ProcessingPlan::DIST_BEAM );
     }
@@ -154,6 +155,17 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     if( configuration.outputCoherentStokes() && configuration.stokesIntegrateChannels() ) {
       send( itsCoherentStokesDataIntegratedChannels,   ".stokes",            ProcessingPlan::DIST_BEAM );
     }
+#else    
+    if( configuration.outputBeamFormedData() ) {
+      send( itsBeamFormedData,                         ".beams",             ProcessingPlan::DIST_SUBBAND );
+    }
+    if( configuration.outputCoherentStokes() && !configuration.stokesIntegrateChannels() ) {
+      send( itsCoherentStokesData,                     ".stokes",            ProcessingPlan::DIST_SUBBAND );
+    }
+    if( configuration.outputCoherentStokes() && configuration.stokesIntegrateChannels() ) {
+      send( itsCoherentStokesDataIntegratedChannels,   ".stokes",            ProcessingPlan::DIST_SUBBAND );
+    }
+#endif    
     if( configuration.outputIncoherentStokes() && !configuration.stokesIntegrateChannels() ) {
       send( itsIncoherentStokesData,                   ".incoherentstokes",  ProcessingPlan::DIST_SUBBAND );
     }
