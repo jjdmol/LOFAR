@@ -115,10 +115,19 @@ Observation::Observation(ParameterSet*		aParSet) :
 	BGLNodeList     = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.BGLNodeList","[]"));
 	storageNodeList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.storageNodeList","[]"));
 
-	// allocate beamlet 2 beam mapping and reset to 0
+	// allocate beamlet 2 beam mapping and reset to -1
+	beamlet2beams.resize   (MAX_BEAMLETS, -1);
+	beamlet2subbands.resize(MAX_BEAMLETS, -1);
+	// when nrSlotsInFrame differs from MAX_BEAMLETS_PER_RSP mark the gaps at the end of each RSPboard.
 	nrSlotsInFrame = aParSet->getInt(prefix+"nrSlotsInFrame");
-	beamlet2beams.resize   (4*nrSlotsInFrame, -1);
-	beamlet2subbands.resize(4*nrSlotsInFrame, -1);
+	if (nrSlotsInFrame != MAX_BEAMLETS_PER_RSP) {
+		for (int rsp = 0; rsp < 4; rsp++) {
+			for (int bl = nrSlotsInFrame; bl < MAX_BEAMLETS_PER_RSP; bl++) {
+				beamlet2beams   [rsp*MAX_BEAMLETS_PER_RSP + bl] = 999;
+				beamlet2subbands[rsp*MAX_BEAMLETS_PER_RSP + bl] = 999;
+			}
+		}
+	}
 	
 	set<uint32> subbands;		
 		

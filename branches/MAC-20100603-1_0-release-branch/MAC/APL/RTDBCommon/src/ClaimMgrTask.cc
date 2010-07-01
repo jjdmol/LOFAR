@@ -134,7 +134,7 @@ void ClaimMgrTask::claimObject(const string&		objectType,
 //
 GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("ClaimMgrTask:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("ClaimMgrTask:" << eventName(event) << "@" << port.getName() << ", itsResolveState=" << itsResolveState);
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
 	switch (event.signal) {
@@ -143,7 +143,7 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 	break;
 
 	case F_INIT: {
-		LOG_DEBUG("Create propertySet for accessing the ClaimManaher");
+		LOG_DEBUG("Create propertySet for accessing the ClaimManager");
 		itsResolveState = RO_CREATING;	// 1
 		itsClaimMgrPS = new RTDBPropertySet("ClaimManager", "ClaimManager", PSAT_RW, this);
 		itsTimerPort->setTimer(5.0);
@@ -200,6 +200,10 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 // NOTE: we are called here for every field!
 // CS001:ClaimManager.Request.NewObjectName
 // CS001:ClaimManager.Request.TypeName
+		if (itsObjectType.empty() || itsNameInAppl.empty()) {		// Data change must be ours
+			break;
+		}
+
 		DPChangedEvent	dpEvent(event);
 		LOG_DEBUG_STR("DP " << dpEvent.DPname << " changed");
 		if (dpEvent.DPname.find("response.newObjectName") != string::npos) {
