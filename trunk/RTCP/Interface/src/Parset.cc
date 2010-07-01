@@ -366,8 +366,8 @@ string Parset::getMSname(unsigned sb) const
   replace_all(name, "${SUBBAND}", str(format("%u") % sb));
   replace_all(name, "${BEAM}", str(format("%u") % subbandToBeamMapping()[sb]));
 
-  if (isDefined("OLAP.raidList"))
-    replace_all(name, "${RAID}", str(format("%u") % getUint32Vector("OLAP.raidList", true)[sb]));
+  if (isDefined("OLAP.storagRaidList"))
+    replace_all(name, "${RAID}", str(format("%u") % getUint32Vector("OLAP.storageRaidList", true)[sb]));
 
   return name;
 }
