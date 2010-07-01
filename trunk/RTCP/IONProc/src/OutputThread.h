@@ -26,6 +26,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Interface/Parset.h>
+#include <Interface/ProcessingPlan.h>
 #include <Interface/StreamableData.h>
 #include <Stream/Stream.h>
 #include <Thread/Mutex.h>
@@ -44,7 +45,7 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(const Parset &ps, const unsigned subband, const unsigned output, StreamableData *dataTemplate);
+			    OutputThread(const Parset &ps, const unsigned subband, const unsigned output, ProcessingPlan::planlet &outputConfig);
 			    ~OutputThread();
 
     bool                    waitForDone(const struct timespec &timespec);                        
@@ -65,6 +66,7 @@ class OutputThread
 
     const Parset            &itsParset;
     const unsigned          itsSubband, itsOutput;
+    const ProcessingPlan::distribution_t itsDistribution;
     InterruptibleThread	    *itsThread;
 };
 

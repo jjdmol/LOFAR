@@ -498,7 +498,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 
     //unsigned nrPsets = itsParset.phaseThreePsets().size();
 
-    LOG_DEBUG_STR(itsLogPrefix << "Setting up output " << output );
+    LOG_DEBUG_STR(itsLogPrefix << "Setting up output " << output << " = " << plan.plan[output].name );
 
     switch (plan.plan[output].distribution) {
       case ProcessingPlan::DIST_SUBBAND:
