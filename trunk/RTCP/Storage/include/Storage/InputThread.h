@@ -27,6 +27,7 @@
 
 #include <Interface/StreamableData.h>
 #include <Interface/MultiDimArray.h>
+#include <Interface/ProcessingPlan.h>
 #include <Stream/Stream.h>
 #include <Thread/Queue.h>
 #include <Thread/Thread.h>
@@ -39,7 +40,7 @@ namespace RTCP {
 class InputThread
 {
   public:
-			    InputThread(const Parset &, unsigned subbandNumber, unsigned outputNumber, /*const std::string &inputDescription,*/ Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue);
+			    InputThread(const Parset &, unsigned subbandNumber, unsigned outputNumber, ProcessingPlan::planlet &outputConfig, /*const std::string &inputDescription,*/ Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue);
 			    ~InputThread();
 
   private:
@@ -50,6 +51,7 @@ class InputThread
     const Parset	    &itsParset;
     const unsigned          itsSubbandNumber;
     const unsigned          itsOutputNumber;
+    const ProcessingPlan::distribution_t itsDistribution;
     const std::string	    itsInputDescription;
     const unsigned          itsObservationID;
 

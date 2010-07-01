@@ -33,6 +33,8 @@
 #include <Interface/CorrelatedData.h>
 #include <Interface/StokesData.h>
 
+//#define SECOND_TRANSPOSE      1
+
 namespace LOFAR {
 
 namespace RTCP {
