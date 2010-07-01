@@ -18,59 +18,36 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef RFIACTION_H
-#define RFIACTION_H 
+#ifndef RFIADDSTATISTICSACTION_H
+#define RFIADDSTATISTICSACTION_H
 
-#include "../../util/progresslistener.h"
+#include "actioncontainer.h"
+#include "artifactset.h"
+
+#include <AOFlagger/util/progresslistener.h>
+
+#include <AOFlagger/rfi/rfistatistics.h>
 
 namespace rfiStrategy {
 
-	enum ActionType
+	class AddStatisticsAction : public Action
 	{
-		ActionBlockType,
-		AdapterType,
-		AddStatisticsActionType,
-		ChangeResolutionActionType,
-		CombineFlagResultsType,
-		ForEachBaselineActionType,
-		ForEachMSActionType,
-		ForEachPolarisationBlockType,
-		FrequencySelectionActionType,
-		FringeStopActionType,
-		ImagerActionType,
-		IterationBlockType,
-		LoadFlagsActionType,
-		LoadImageActionType,
-		PlotActionType,
-		SetFlaggingActionType,
-		SetImageActionType,
-		SlidingWindowFitActionType,
-		SpatialCompositionActionType,
-		StatisticalFlagActionType,
-		StrategyType,
-		SVDActionType,
-		ThresholdActionType,
-		TimeSelectionActionType,
-		WriteFlagsActionType
-	};
-
-	class Action
-	{
-		friend class ActionContainer;
-
 		public:
-			Action() : _parent(0) { }
-			virtual ~Action() { }
-			virtual std::string Description() = 0;
-			virtual void Initialize() { }
-			virtual void Finish() { }
-			virtual void Perform(class ArtifactSet &artifacts, ProgressListener &progress) = 0;
-			class ActionContainer *Parent() const { return _parent; }
-			virtual ActionType Type() const = 0;
-		private:
-			class ActionContainer *_parent;
-	};
+			AddStatisticsAction() { }
 
+			virtual std::string Description()
+			{
+				return "Add to statistics";
+			}
+			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &)
+			{
+				statistics.Add(artifacts.ContaminatedData().GetSingleImage(), artifacts.ContaminatedData().GetSingleMask(), artifacts.MetaData());
+			}
+			virtual ActionType Type() const { return AddStatisticsActionType; }
+			
+		private:
+			RFIStatistics statistics;
+	};
 }
 
-#endif // RFIACTION_H
+#endif // RFIADDSTATISTICSACTION_H

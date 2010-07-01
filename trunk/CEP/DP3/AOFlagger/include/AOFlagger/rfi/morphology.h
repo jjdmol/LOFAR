@@ -29,7 +29,7 @@
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-class Morphology{
+class Morphology {
 	public:
 		Morphology() : _hLineEnlarging(1), _vLineEnlarging(1), _hDensityEnlargeRatio(0.5), _vDensityEnlargeRatio(0.5) { }
 		~Morphology() { }
@@ -39,6 +39,8 @@ class Morphology{
 		void Cluster(SegmentedImagePtr segmentedImage);
 		void RemoveSmallSegments(SegmentedImagePtr segmentedImage, size_t thresholdLevel);
 		void Classify(SegmentedImagePtr segmentedImage);
+		
+		static size_t BROADBAND_SEGMENT, LINE_SEGMENT, BLOB_SEGMENT;
 	private:
 		struct SegmentInfo
 		{

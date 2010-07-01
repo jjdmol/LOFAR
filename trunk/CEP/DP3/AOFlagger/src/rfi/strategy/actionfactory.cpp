@@ -21,6 +21,7 @@
 
 #include <AOFlagger/rfi/strategy/action.h>
 #include <AOFlagger/rfi/strategy/adapter.h>
+#include <AOFlagger/rfi/strategy/addstatisticsaction.h>
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
@@ -48,6 +49,7 @@ namespace rfiStrategy {
 const std::vector<std::string> ActionFactory::GetActionList()
 {
 	std::vector<std::string> list;
+	list.push_back("Add to statistics");
 	list.push_back("Change resolution");
 	list.push_back("Combine flag results");
 	list.push_back("For each baseline");
@@ -75,7 +77,9 @@ const std::vector<std::string> ActionFactory::GetActionList()
 
 Action *ActionFactory::CreateAction(const std::string &action)
 {
-	if(action == "Change resolution")
+	if(action == "Add to statistics")
+		return new AddStatisticsAction();
+	else if(action == "Change resolution")
 		return new ChangeResolutionAction();
 	else if(action == "Combine flag results")
 		return new CombineFlagResults();

@@ -24,6 +24,11 @@
 
 #include <AOFlagger/rfi/statisticalflagger.h>
 
+	size_t
+		Morphology::BROADBAND_SEGMENT = 1,
+		Morphology::LINE_SEGMENT = 2,
+		Morphology::BLOB_SEGMENT = 3;
+
 void Morphology::SegmentByMaxLength(Mask2DCPtr mask, SegmentedImagePtr output)
 {
 	int **lengthWidthValues = new int*[mask->Height()];
@@ -500,18 +505,14 @@ void Morphology::RemoveSmallSegments(SegmentedImagePtr segmentedImage, size_t th
 void Morphology::Classify(SegmentedImagePtr segmentedImage)
 {
 	std::map<size_t,SegmentInfo> segments = createSegmentMap(segmentedImage);
-	size_t
-		BROADBAND_SEGMENT = 1,
-		LINE_SEGMENT = 2,
-		BLOB_SEGMENT = 3;
 
 	for(std::map<size_t,SegmentInfo>::iterator i=segments.begin();i!=segments.end();++i)
 	{
 		SegmentInfo &info = i->second;
 		if(info.width > info.height * 10)
-			segmentedImage->MergeSegments(BROADBAND_SEGMENT, info.segment);
-		else if(info.height > info.width * 10)
 			segmentedImage->MergeSegments(LINE_SEGMENT, info.segment);
+		else if(info.height > info.width * 10)
+			segmentedImage->MergeSegments(BROADBAND_SEGMENT, info.segment);
 		else
 			segmentedImage->MergeSegments(BLOB_SEGMENT, info.segment);
 	}
