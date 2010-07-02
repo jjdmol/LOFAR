@@ -46,7 +46,7 @@ void RFIStatistics::Add(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDat
 	morphology.SegmentByLengthRatio(mask, segmentedMask);
 	morphology.Classify(segmentedMask);
 	
-	boost::mutex::scoped_lock(_mutex);
+	boost::mutex::scoped_lock lock(_mutex);
 	addChannels(image, mask, metaData, segmentedMask);
 	addTimesteps(image, mask, metaData, segmentedMask);
 	addAmplitudes(image, mask, metaData, segmentedMask);
