@@ -57,7 +57,7 @@ void RFIStatistics::Add(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDat
 
 void RFIStatistics::addChannels(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage)
 {
-	for(size_t y=0;y<image->Height();++y)
+	for(size_t y=1;y<image->Height();++y)
 	{
 		long unsigned rfiCount = 0;
 		long double rfiSummedAmplitude = 0.0;
@@ -68,7 +68,7 @@ void RFIStatistics::addChannels(Image2DCPtr image, Mask2DCPtr mask, TimeFrequenc
 		
 		for(size_t x=0;x<image->Width();++x)
 		{
-			if(mask->Value(x, y))
+			if(mask->Value(x, y) && std::isfinite(image->Value(x, y)))
 			{
 				++rfiCount;
 				rfiSummedAmplitude += image->Value(x, y);
@@ -118,7 +118,7 @@ void RFIStatistics::addTimesteps(Image2DCPtr image, Mask2DCPtr mask, TimeFrequen
 		long double broadbandRfiAmplitude = 0.0;
 		long double lineRfiAmplitude = 0.0;
 		
-		for(size_t y=0;y<image->Height();++y)
+		for(size_t y=1;y<image->Height();++y)
 		{
 			if(mask->Value(x, y))
 			{
@@ -161,39 +161,42 @@ void RFIStatistics::addTimesteps(Image2DCPtr image, Mask2DCPtr mask, TimeFrequen
 
 void RFIStatistics::addAmplitudes(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage)
 {
-	for(size_t y=0;y<image->Height();++y)
+	for(size_t y=1;y<image->Height();++y)
 	{
 		for(size_t x=0;x<image->Width();++x)
 		{
 			double amp = image->Value(x, y);
-			double centralAmp = getCentralAmplitude(amp);
-			std::map<double, class AmplitudeBin>::iterator element =
-				_amplitudes.find(centralAmp);
-			
-			AmplitudeBin bin;
-			if(element == _amplitudes.end())
+			if(std::isfinite(amp))
 			{
-				bin.centralAmplitude = amp;
-				bin.centralLogAmplitude = log10(amp);
-			} else {
-				bin = element->second;
-			}
-			++bin.count;
-			if(mask->Value(x, y))
-			{
-				++bin.rfiCount;
-				if(segmentedImage->Value(x, y) == Morphology::BROADBAND_SEGMENT)
+				double centralAmp = getCentralAmplitude(amp);
+				std::map<double, class AmplitudeBin>::iterator element =
+					_amplitudes.find(centralAmp);
+				
+				AmplitudeBin bin;
+				if(element == _amplitudes.end())
 				{
-					++bin.broadbandRfiCount;
-				} else if(segmentedImage->Value(x, y) == Morphology::LINE_SEGMENT)
-				{
-					++bin.lineRfiCount;
+					bin.centralAmplitude = amp;
+					bin.centralLogAmplitude = log10(amp);
+				} else {
+					bin = element->second;
 				}
+				++bin.count;
+				if(mask->Value(x, y))
+				{
+					++bin.rfiCount;
+					if(segmentedImage->Value(x, y) == Morphology::BROADBAND_SEGMENT)
+					{
+						++bin.broadbandRfiCount;
+					} else if(segmentedImage->Value(x, y) == Morphology::LINE_SEGMENT)
+					{
+						++bin.lineRfiCount;
+					}
+				}
+				if(element == _amplitudes.end())
+					_amplitudes.insert(std::pair<double, AmplitudeBin>(centralAmp, bin));
+				else
+					_amplitudes.find(centralAmp)->second = bin;
 			}
-			if(element == _amplitudes.end())
-				_amplitudes.insert(std::pair<double, AmplitudeBin>(centralAmp, bin));
-			else
-				_amplitudes.find(centralAmp)->second = bin;
 		}
 	}
 }
