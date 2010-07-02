@@ -23,6 +23,8 @@
 #include <cstring>
 #include <map>
 
+#include <boost/thread/mutex.hpp>
+
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/msio/timefrequencymetadata.h>
 #include <AOFlagger/msio/mask2d.h>
@@ -72,7 +74,7 @@ class RFIStatistics {
 			long double lineRfiAmplitude;
 		};
 		struct AmplitudeBin {
-			AmplitudeBin(double centralAmplitude) : centralAmplitude(centralAmplitude), centralLogAmplitude(log10(centralAmplitude)), count(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0)
+			AmplitudeBin() : centralAmplitude(0.0), centralLogAmplitude(0.0), count(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0)
 			{
 			}
 			double centralAmplitude;
@@ -89,13 +91,17 @@ class RFIStatistics {
 		void addChannels(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addTimesteps(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addAmplitudes(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
+
 		void saveChannels();
+		void saveTimesteps();
+		void saveAmplitudes();
 		
 		double getCentralAmplitude(double amplitude)
 		{
 			double decimals = pow(10.0, floor(log10(amplitude)));
 			return round(100.0 * amplitude / decimals) / 100.0;
 		}
+		boost::mutex _mutex;
 };
 
 #endif

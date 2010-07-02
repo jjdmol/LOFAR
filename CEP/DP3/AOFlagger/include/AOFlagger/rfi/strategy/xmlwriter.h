@@ -58,6 +58,7 @@ namespace rfiStrategy {
 			void writeContainerItems(const class ActionContainer &actionContainer);
 
 			void writeAdapter(const class Adapter &action);
+			void writeAddStatisticsAction(const class AddStatisticsAction &action);
 			void writeChangeResolutionAction(const class ChangeResolutionAction &action);
 			void writeCombineFlagResults(const class CombineFlagResults &action);
 			void writeForEachBaselineAction(const class ForEachBaselineAction &action);
