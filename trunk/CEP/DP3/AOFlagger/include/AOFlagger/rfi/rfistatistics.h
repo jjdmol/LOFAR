@@ -84,17 +84,17 @@ class RFIStatistics {
 			long unsigned broadbandRfiCount;
 			long unsigned lineRfiCount;
 		};
-		std::map<double, class ChannelInfo> _channels;
-		std::map<double, class TimestepInfo> _timesteps;
-		std::map<double, class AmplitudeBin> _amplitudes;
+		std::map<double, class ChannelInfo> _autoChannels, _crossChannels;
+		std::map<double, class TimestepInfo> _autoTimesteps, _crossTimesteps;
+		std::map<double, class AmplitudeBin> _autoAmplitudes, _crossAmplitudes;
 		
-		void addChannels(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
-		void addTimesteps(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
-		void addAmplitudes(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
+		void addChannels(std::map<double, class ChannelInfo> &channels, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
+		void addTimesteps(std::map<double, class TimestepInfo> &timesteps, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
+		void addAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 
-		void saveChannels();
-		void saveTimesteps();
-		void saveAmplitudes();
+		void saveChannels(std::map<double, class ChannelInfo> &channels, const char *filename);
+		void saveTimesteps(std::map<double, class TimestepInfo> &timesteps, const char *filename);
+		void saveAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, const char *filename);
 		
 		double getCentralAmplitude(double amplitude)
 		{
