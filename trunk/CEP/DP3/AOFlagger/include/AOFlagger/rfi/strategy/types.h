@@ -42,8 +42,15 @@ namespace rfiStrategy
 	};
 }
 
-#define STRATEGY_FILE_FORMAT_VERSION 1.0
+// The current file format version
+// 1.0 : start
+// 1.1 : add AddStatisticsAction to list
+#define STRATEGY_FILE_FORMAT_VERSION 1.1
+
+// The earliest format version which can be read by this version of the software
 #define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 1.0
+
+// The earliest software version which is required to read the written files
 #define STRATEGY_FILE_READER_VERSION_REQUIRED 1.0
 
 #endif // RFI_STRATEGY_TYPES

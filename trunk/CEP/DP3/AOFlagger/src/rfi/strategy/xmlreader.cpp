@@ -21,6 +21,7 @@
 
 #include <AOFlagger/rfi/strategy/action.h>
 #include <AOFlagger/rfi/strategy/adapter.h>
+#include <AOFlagger/rfi/strategy/addstatisticsaction.h>
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
@@ -181,6 +182,8 @@ Action *XmlReader::parseAction(xmlNode *node)
 	std::string typeStr((const char*) typeCh);
 	if(typeStr == "Adapter")
 		newAction = parseAdapter(node);
+	else if(typeStr == "AddStatisticsAction")
+		newAction = parseAddStatistics(node);
 	else if(typeStr == "ChangeResolutionAction")
 		newAction = parseChangeResolutionAction(node);
 	else if(typeStr == "CombineFlagResults")
@@ -237,6 +240,12 @@ Action *XmlReader::parseAdapter(xmlNode *node)
 {
 	Adapter *newAction = new Adapter();
 	parseChildren(node, newAction);
+	return newAction;
+}
+
+Action *XmlReader::parseAddStatistics(xmlNode *node)
+{
+	AddStatisticsAction *newAction = new AddStatisticsAction();
 	return newAction;
 }
 

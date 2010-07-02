@@ -46,8 +46,13 @@ void RFIStatistics::Add(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDat
 	morphology.SegmentByLengthRatio(mask, segmentedMask);
 	morphology.Classify(segmentedMask);
 	
+	boost::mutex::scoped_lock(_mutex);
 	addChannels(image, mask, metaData, segmentedMask);
+	addTimesteps(image, mask, metaData, segmentedMask);
+	addAmplitudes(image, mask, metaData, segmentedMask);
 	saveChannels();
+	saveTimesteps();
+	saveAmplitudes();
 }
 
 void RFIStatistics::addChannels(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage)
@@ -102,6 +107,97 @@ void RFIStatistics::addChannels(Image2DCPtr image, Mask2DCPtr mask, TimeFrequenc
 	}
 }
 
+void RFIStatistics::addTimesteps(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage)
+{
+	for(size_t x=0;x<image->Width();++x)
+	{
+		long unsigned rfiCount = 0;
+		long double rfiSummedAmplitude = 0.0;
+		long unsigned broadbandRfiCount = 0;
+		long unsigned lineRfiCount = 0;
+		long double broadbandRfiAmplitude = 0.0;
+		long double lineRfiAmplitude = 0.0;
+		
+		for(size_t y=0;y<image->Height();++y)
+		{
+			if(mask->Value(x, y))
+			{
+				++rfiCount;
+				rfiSummedAmplitude += image->Value(x, y);
+				if(segmentedImage->Value(x, y) == Morphology::BROADBAND_SEGMENT)
+				{
+					++broadbandRfiCount;
+					broadbandRfiAmplitude += image->Value(x, y);
+				} else if(segmentedImage->Value(x, y) == Morphology::LINE_SEGMENT)
+				{
+					++lineRfiCount;
+					lineRfiAmplitude += image->Value(x, y);
+				}
+			}
+		}
+		if(_timesteps.count(metaData->ObservationTimes()[x]) == 0)
+		{
+			TimestepInfo timestep(metaData->ObservationTimes()[x]);
+			timestep.totalCount = image->Width();
+			timestep.rfiCount = rfiCount;
+			timestep.rfiSummedAmplitude = rfiSummedAmplitude;
+			timestep.broadbandRfiCount = broadbandRfiCount;
+			timestep.lineRfiCount = lineRfiCount;
+			timestep.broadbandRfiAmplitude = broadbandRfiAmplitude;
+			timestep.lineRfiAmplitude = lineRfiAmplitude;
+			_timesteps.insert(std::pair<double, TimestepInfo>(timestep.time, timestep));
+		} else {
+			TimestepInfo &timestep = _timesteps.find(metaData->ObservationTimes()[x])->second;
+			timestep.totalCount += image->Width();
+			timestep.rfiCount += rfiCount;
+			timestep.rfiSummedAmplitude += rfiSummedAmplitude;
+			timestep.broadbandRfiCount += broadbandRfiCount;
+			timestep.lineRfiCount += lineRfiCount;
+			timestep.broadbandRfiAmplitude += broadbandRfiAmplitude;
+			timestep.lineRfiAmplitude += lineRfiAmplitude;
+		}
+	}
+}
+
+void RFIStatistics::addAmplitudes(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage)
+{
+	for(size_t y=0;y<image->Height();++y)
+	{
+		for(size_t x=0;x<image->Width();++x)
+		{
+			double amp = image->Value(x, y);
+			double centralAmp = getCentralAmplitude(amp);
+			std::map<double, class AmplitudeBin>::iterator element =
+				_amplitudes.find(centralAmp);
+			
+			AmplitudeBin bin;
+			if(element == _amplitudes.end())
+			{
+				bin.centralAmplitude = amp;
+				bin.centralLogAmplitude = log10(amp);
+			} else {
+				bin = element->second;
+			}
+			++bin.count;
+			if(mask->Value(x, y))
+			{
+				++bin.rfiCount;
+				if(segmentedImage->Value(x, y) == Morphology::BROADBAND_SEGMENT)
+				{
+					++bin.broadbandRfiCount;
+				} else if(segmentedImage->Value(x, y) == Morphology::LINE_SEGMENT)
+				{
+					++bin.lineRfiCount;
+				}
+			}
+			if(element == _amplitudes.end())
+				_amplitudes.insert(std::pair<double, AmplitudeBin>(centralAmp, bin));
+			else
+				_amplitudes.find(centralAmp)->second = bin;
+		}
+	}
+}
+
 void RFIStatistics::saveChannels()
 {
 	std::ofstream file("counts-channels.txt");
@@ -118,6 +214,44 @@ void RFIStatistics::saveChannels()
 			<< c.lineRfiCount << "\t"
 			<< c.broadbandRfiAmplitude << "\t"
 			<< c.lineRfiAmplitude << "\n";
+	}
+	file.close();
+}
+
+void RFIStatistics::saveTimesteps()
+{
+	std::ofstream file("counts-timesteps.txt");
+	file << "timestep\ttotalCount\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n";
+	for(std::map<double, class TimestepInfo>::const_iterator i=_timesteps.begin();i!=_timesteps.end();++i)
+	{
+		const TimestepInfo &c = i->second;
+		file
+			<< c.time << "\t"
+			<< c.totalCount << "\t"
+			<< c.rfiCount << "\t"
+			<< c.rfiSummedAmplitude << "\t"
+			<< c.broadbandRfiCount << "\t"
+			<< c.lineRfiCount << "\t"
+			<< c.broadbandRfiAmplitude << "\t"
+			<< c.lineRfiAmplitude << "\n";
+	}
+	file.close();
+}
+
+void RFIStatistics::saveAmplitudes()
+{
+	std::ofstream file("counts-amplitudes.txt");
+	file << "centr-amplitude\tlog-centr-amplitude\tcount\trfiCount\tbroadbandRfiCount\tlineRfiCount\n";
+	for(std::map<double, class AmplitudeBin>::const_iterator i=_amplitudes.begin();i!=_amplitudes.end();++i)
+	{
+		const AmplitudeBin &a = i->second;
+		file
+			<< a.centralAmplitude << "\t"
+			<< a.centralLogAmplitude << "\t"
+			<< a.count << "\t"
+			<< a.rfiCount << "\t"
+			<< a.broadbandRfiCount << "\t"
+			<< a.lineRfiCount << "\n";
 	}
 	file.close();
 }

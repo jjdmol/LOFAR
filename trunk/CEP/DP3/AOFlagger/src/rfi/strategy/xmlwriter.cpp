@@ -20,6 +20,7 @@
 #include <AOFlagger/rfi/strategy/xmlwriter.h>
 
 #include <AOFlagger/rfi/strategy/adapter.h>
+#include <AOFlagger/rfi/strategy/addstatisticsaction.h>
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
@@ -114,6 +115,9 @@ namespace rfiStrategy {
 			case AdapterType:
 				writeAdapter(static_cast<const Adapter&>(action));
 				break;
+			case AddStatisticsActionType:
+				writeAddStatisticsAction(static_cast<const AddStatisticsAction&>(action));
+				break;
 			case ChangeResolutionActionType:
 				writeChangeResolutionAction(static_cast<const ChangeResolutionAction&>(action));
 				break;
@@ -195,6 +199,11 @@ namespace rfiStrategy {
 	{
 		attribute("type", "Adapter");
 		writeContainerItems(action);
+	}
+
+	void XmlWriter::writeAddStatisticsAction(const AddStatisticsAction &action)
+	{
+		attribute("type", "AddStatisticsAction");
 	}
 
 	void XmlWriter::writeChangeResolutionAction(const ChangeResolutionAction &action)

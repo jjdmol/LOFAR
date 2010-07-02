@@ -37,7 +37,7 @@ namespace rfiStrategy {
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-class XmlReader{
+class XmlReader {
 	public:
 		XmlReader();
 		~XmlReader();
@@ -56,6 +56,7 @@ class XmlReader{
 		bool getBool(xmlNode *node, const char *name) const { return getInt(node,name) != 0; }
 
 		class Action *parseAdapter(xmlNode *node);
+		class Action *parseAddStatistics(xmlNode *node);
 		class Action *parseChangeResolutionAction(xmlNode *node);
 		class Action *parseCombineFlagResults(xmlNode *node);
 		class Action *parseForEachBaselineAction(xmlNode *node);
