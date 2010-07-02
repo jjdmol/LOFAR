@@ -175,8 +175,8 @@ void RFIStatistics::addAmplitudes(Image2DCPtr image, Mask2DCPtr mask, TimeFreque
 				AmplitudeBin bin;
 				if(element == _amplitudes.end())
 				{
-					bin.centralAmplitude = amp;
-					bin.centralLogAmplitude = log10(amp);
+					bin.centralAmplitude = centralAmp;
+					bin.centralLogAmplitude = log10(centralAmp);
 				} else {
 					bin = element->second;
 				}

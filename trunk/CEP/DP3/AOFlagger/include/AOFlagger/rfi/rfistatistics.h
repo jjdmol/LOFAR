@@ -99,7 +99,7 @@ class RFIStatistics {
 		double getCentralAmplitude(double amplitude)
 		{
 			double decimals = pow(10.0, floor(log10(amplitude)));
-			return round(100.0 * amplitude / decimals) / 100.0;
+			return round(100.0 * amplitude / decimals) / 100.0 * decimals;
 		}
 		boost::mutex _mutex;
 };
