@@ -61,15 +61,15 @@ class RFIStatistics {
 			long double lineRfiAmplitude;
 		};
 		struct TimestepInfo {
-			TimestepInfo(double _time) : time(_time), totalCount(0), rfiCount(0), rfiSummedAmplitude(0), broadbandRfiCount(0), lineRfiCount(0), broadbandRfiAmplitude(0), lineRfiAmplitude(0)
+			TimestepInfo(double _time) : time(_time), totalCount(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiSummedAmplitude(0), broadbandRfiAmplitude(0), lineRfiAmplitude(0)
 			{
 			}
 			double time;
 			long unsigned totalCount;
 			long unsigned rfiCount;
-			long double rfiSummedAmplitude;
 			long unsigned broadbandRfiCount;
 			long unsigned lineRfiCount;
+			long double rfiSummedAmplitude;
 			long double broadbandRfiAmplitude;
 			long double lineRfiAmplitude;
 		};
@@ -84,17 +84,37 @@ class RFIStatistics {
 			long unsigned broadbandRfiCount;
 			long unsigned lineRfiCount;
 		};
+		struct BaselineInfo {
+			BaselineInfo() : antenna1(0), antenna2(0), antenna1Name(), antenna2Name(), count(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiSummedAmplitude(0), broadbandRfiAmplitude(0), lineRfiAmplitude(0)
+			{
+			}
+
+			int antenna1, antenna2;
+			std::string antenna1Name, antenna2Name;
+			long unsigned count;
+			long unsigned rfiCount;
+			long unsigned broadbandRfiCount;
+			long unsigned lineRfiCount;
+			long double rfiSummedAmplitude;
+			long double broadbandRfiAmplitude;
+			long double lineRfiAmplitude;
+		};
+		typedef std::map<int, std::map<int, BaselineInfo> > BaselineMatrix;
+		
 		std::map<double, class ChannelInfo> _autoChannels, _crossChannels;
 		std::map<double, class TimestepInfo> _autoTimesteps, _crossTimesteps;
 		std::map<double, class AmplitudeBin> _autoAmplitudes, _crossAmplitudes;
+		BaselineMatrix _baselines;
 		
 		void addChannels(std::map<double, class ChannelInfo> &channels, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addTimesteps(std::map<double, class TimestepInfo> &timesteps, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
+		void addBaselines(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 
 		void saveChannels(std::map<double, class ChannelInfo> &channels, const char *filename);
 		void saveTimesteps(std::map<double, class TimestepInfo> &timesteps, const char *filename);
 		void saveAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, const char *filename);
+		void saveBaselines(const char *filename);
 		
 		double getCentralAmplitude(double amplitude)
 		{

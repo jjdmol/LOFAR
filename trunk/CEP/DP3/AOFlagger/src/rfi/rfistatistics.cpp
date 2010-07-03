@@ -63,6 +63,8 @@ void RFIStatistics::Add(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDat
 		saveTimesteps(_crossTimesteps, "counts-timesteps-cross.txt");
 		saveAmplitudes(_crossAmplitudes, "counts-amplitudes-cross.txt");
 	}
+	addBaselines(image, mask, metaData, segmentedMask);
+	saveBaselines("counts-baselines.txt");
 }
 
 void RFIStatistics::addChannels(std::map<double, class ChannelInfo> &channels, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage)
@@ -211,6 +213,67 @@ void RFIStatistics::addAmplitudes(std::map<double, class AmplitudeBin> &amplitud
 	}
 }
 
+void RFIStatistics::addBaselines(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage)
+{
+	long unsigned rfiCount = 0;
+	long double rfiSummedAmplitude = 0.0;
+	long unsigned broadbandRfiCount = 0;
+	long unsigned lineRfiCount = 0;
+	long double broadbandRfiAmplitude = 0.0;
+	long double lineRfiAmplitude = 0.0;
+
+	for(size_t y=1;y<image->Height();++y)
+	{
+		for(size_t x=0;x<image->Width();++x)
+		{
+			if(mask->Value(x, y) && std::isfinite(image->Value(x, y)))
+			{
+				++rfiCount;
+				rfiSummedAmplitude += image->Value(x, y);
+				if(segmentedImage->Value(x, y) == Morphology::BROADBAND_SEGMENT)
+				{
+					++broadbandRfiCount;
+					broadbandRfiAmplitude += image->Value(x, y);
+				} else if(segmentedImage->Value(x, y) == Morphology::LINE_SEGMENT)
+				{
+					++lineRfiCount;
+					lineRfiAmplitude += image->Value(x, y);
+				}
+			}
+		}
+	}
+	int
+		a1 = metaData->Antenna1().id,
+		a2 = metaData->Antenna2().id;
+	if(_baselines.count(a1) == 0)
+		_baselines.insert(BaselineMatrix::value_type(a1, std::map<int, BaselineInfo>() ));
+	BaselineMatrix::mapped_type &row = _baselines.find(a1)->second;
+	
+	if(row.count(a2) == 0)
+	{
+		BaselineInfo baseline;
+		baseline.antenna1 = a1;
+		baseline.antenna2 = a2;
+		baseline.count = image->Width() * image->Height();
+		baseline.rfiCount = rfiCount;
+		baseline.rfiSummedAmplitude = rfiSummedAmplitude;
+		baseline.broadbandRfiCount = broadbandRfiCount;
+		baseline.lineRfiCount = lineRfiCount;
+		baseline.broadbandRfiAmplitude = broadbandRfiAmplitude;
+		baseline.lineRfiAmplitude = lineRfiAmplitude;
+		row.insert(std::pair<int, BaselineInfo>(a2, baseline));
+	} else {
+		BaselineInfo &baseline = row.find(a2)->second;
+		baseline.count += image->Width() * image->Height();
+		baseline.rfiCount += rfiCount;
+		baseline.rfiSummedAmplitude += rfiSummedAmplitude;
+		baseline.broadbandRfiCount += broadbandRfiCount;
+		baseline.lineRfiCount += lineRfiCount;
+		baseline.broadbandRfiAmplitude += broadbandRfiAmplitude;
+		baseline.lineRfiAmplitude += lineRfiAmplitude;
+	}
+}
+
 void RFIStatistics::saveChannels(std::map<double, class ChannelInfo> &channels, const char *filename)
 {
 	std::ofstream file(filename);
@@ -265,6 +328,30 @@ void RFIStatistics::saveAmplitudes(std::map<double, class AmplitudeBin> &amplitu
 			<< a.rfiCount << "\t"
 			<< a.broadbandRfiCount << "\t"
 			<< a.lineRfiCount << "\n";
+	}
+	file.close();
+}
+
+void RFIStatistics::saveBaselines(const char *filename)
+{
+	std::ofstream file(filename);
+	file << "a1\ta2\ta1name\ta2name\tcount\trfiCount\tbroadbandRfiCount\tlineRfiCount\n";
+	for(BaselineMatrix::const_iterator i=_baselines.begin();i!=_baselines.end();++i)
+	{
+		const std::map<int, BaselineInfo> &row = i->second;
+		for(std::map<int, BaselineInfo>::const_iterator j=row.begin();j!=row.end();++j)
+		{
+			const BaselineInfo &b = j->second;
+			file
+				<< b.antenna1 << "\t"
+				<< b.antenna2 << "\t"
+				<< b.antenna1Name << "\t"
+				<< b.antenna2Name << "\t"
+				<< b.count << "\t"
+				<< b.rfiCount << "\t"
+				<< b.broadbandRfiCount << "\t"
+				<< b.lineRfiCount << "\n";
+		}
 	}
 	file.close();
 }
