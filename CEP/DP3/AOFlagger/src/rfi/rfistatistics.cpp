@@ -254,6 +254,8 @@ void RFIStatistics::addBaselines(Image2DCPtr image, Mask2DCPtr mask, TimeFrequen
 		BaselineInfo baseline;
 		baseline.antenna1 = a1;
 		baseline.antenna2 = a2;
+		baseline.antenna1Name = metaData->Antenna1().name;
+		baseline.antenna2Name = metaData->Antenna2().name;
 		baseline.count = image->Width() * image->Height();
 		baseline.rfiCount = rfiCount;
 		baseline.rfiSummedAmplitude = rfiSummedAmplitude;
