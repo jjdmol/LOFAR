@@ -35,18 +35,6 @@
 */
 class RFIStatistics {
 	public:
-		RFIStatistics();
-		~RFIStatistics();
-		void Add(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData);
-
-		static long double FitScore(const Image2D &image, const Image2D &fit, Mask2DCPtr mask);
-		static long double FitScore(Image2DCPtr image, Image2DCPtr fit, Mask2DCPtr mask);
-
-		static num_t DataQuality(Image2DCPtr image, Image2DCPtr model, Mask2DCPtr mask, unsigned startX, unsigned endX);
-
-		static num_t FrequencySNR(Image2DCPtr image, Image2DCPtr model, Mask2DCPtr mask, unsigned channel);
-
-	private:
 		struct ChannelInfo {
 			ChannelInfo(double _frequencyHz) : frequencyHz(_frequencyHz), totalCount(0), rfiCount(0), rfiSummedAmplitude(0), broadbandRfiCount(0), lineRfiCount(0)
 			{
@@ -88,6 +76,23 @@ class RFIStatistics {
 			BaselineInfo() : antenna1(0), antenna2(0), antenna1Name(), antenna2Name(), count(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiSummedAmplitude(0), broadbandRfiAmplitude(0), lineRfiAmplitude(0)
 			{
 			}
+			BaselineInfo(const BaselineInfo &source) : antenna1(source.antenna1), antenna2(source.antenna2), antenna1Name(source.antenna1Name), antenna2Name(source.antenna2Name), count(source.count), rfiCount(source.rfiCount), broadbandRfiCount(source.broadbandRfiCount), lineRfiCount(source.lineRfiCount), rfiSummedAmplitude(source.rfiSummedAmplitude), broadbandRfiAmplitude(source.broadbandRfiAmplitude), lineRfiAmplitude(source.lineRfiAmplitude)
+			{
+			}
+			void operator=(const BaselineInfo &rhs)
+			{
+				antenna1 = rhs.antenna1;
+				antenna2 = rhs.antenna2;
+				antenna1Name = rhs.antenna1Name;
+				antenna2Name = rhs.antenna2Name;
+				count = rhs.count;
+				rfiCount = rhs.rfiCount;
+				broadbandRfiCount = rhs.broadbandRfiCount;
+				lineRfiCount = rhs.lineRfiCount;
+				rfiSummedAmplitude = rhs.rfiSummedAmplitude;
+				broadbandRfiAmplitude = rhs.broadbandRfiAmplitude;
+				lineRfiAmplitude = rhs.lineRfiAmplitude;
+			}
 
 			int antenna1, antenna2;
 			std::string antenna1Name, antenna2Name;
@@ -99,6 +104,24 @@ class RFIStatistics {
 			long double broadbandRfiAmplitude;
 			long double lineRfiAmplitude;
 		};
+
+		RFIStatistics();
+		~RFIStatistics();
+		
+		void Add(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData);
+		void Add(const ChannelInfo &channel, bool autocorrelation);
+		void Add(const TimestepInfo &timestep, bool autocorrelation);
+		void Add(const AmplitudeBin &amplitudeBin, bool autocorrelation);
+		void Add(const BaselineInfo &baseline);
+
+		static long double FitScore(const Image2D &image, const Image2D &fit, Mask2DCPtr mask);
+		static long double FitScore(Image2DCPtr image, Image2DCPtr fit, Mask2DCPtr mask);
+
+		static num_t DataQuality(Image2DCPtr image, Image2DCPtr model, Mask2DCPtr mask, unsigned startX, unsigned endX);
+
+		static num_t FrequencySNR(Image2DCPtr image, Image2DCPtr model, Mask2DCPtr mask, unsigned channel);
+
+	private:
 		typedef std::map<int, std::map<int, BaselineInfo> > BaselineMatrix;
 		
 		std::map<double, class ChannelInfo> _autoChannels, _crossChannels;

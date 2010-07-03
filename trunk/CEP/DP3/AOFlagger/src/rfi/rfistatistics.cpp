@@ -67,6 +67,101 @@ void RFIStatistics::Add(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDat
 	saveBaselines("counts-baselines.txt");
 }
 
+void RFIStatistics::Add(const ChannelInfo &channel, bool autocorrelation)
+{
+	std::map<double, ChannelInfo> *channels;
+	if(autocorrelation)
+		channels = &_autoChannels;
+	else
+		channels = &_crossChannels;
+	
+	std::map<double, ChannelInfo>::iterator element = channels->find(channel.frequencyHz);
+	if(element == channels->end())
+	{
+		channels->insert(std::pair<double, ChannelInfo>(channel.frequencyHz, channel));
+	} else {
+		ChannelInfo &c = element->second;
+		c.totalCount += channel.totalCount;
+		c.rfiCount += channel.rfiCount;
+		c.rfiSummedAmplitude += channel.rfiSummedAmplitude;
+		c.broadbandRfiCount += channel.broadbandRfiCount;
+		c.lineRfiCount += channel.lineRfiCount;
+		c.broadbandRfiAmplitude += channel.broadbandRfiAmplitude;
+		c.lineRfiAmplitude += channel.lineRfiAmplitude;
+	}
+}
+
+void RFIStatistics::Add(const TimestepInfo &timestep, bool autocorrelation)
+{
+	std::map<double, TimestepInfo> *timesteps;
+	if(autocorrelation)
+		timesteps = &_autoTimesteps;
+	else
+		timesteps = &_crossTimesteps;
+	
+	std::map<double, TimestepInfo>::iterator element = timesteps->find(timestep.time);
+	if(element == timesteps->end())
+	{
+		timesteps->insert(std::pair<double, TimestepInfo>(timestep.time, timestep));
+	} else {
+		TimestepInfo &t = element->second;
+		t.totalCount += timestep.totalCount;
+		t.rfiCount += timestep.rfiCount;
+		t.rfiSummedAmplitude += timestep.rfiSummedAmplitude;
+		t.broadbandRfiCount += timestep.broadbandRfiCount;
+		t.lineRfiCount += timestep.lineRfiCount;
+		t.broadbandRfiAmplitude += timestep.broadbandRfiAmplitude;
+		t.lineRfiAmplitude += timestep.lineRfiAmplitude;
+	}
+}
+
+void RFIStatistics::Add(const AmplitudeBin &amplitudeBin, bool autocorrelation)
+{
+	std::map<double, AmplitudeBin> *amplitudes;
+	if(autocorrelation)
+		amplitudes = &_autoAmplitudes;
+	else
+		amplitudes = &_crossAmplitudes;
+	
+	std::map<double, AmplitudeBin>::iterator element = amplitudes->find(amplitudeBin.centralAmplitude);
+	if(element == amplitudes->end())
+	{
+		amplitudes->insert(std::pair<double, AmplitudeBin>(amplitudeBin.centralAmplitude, amplitudeBin));
+	} else {
+		AmplitudeBin &a = element->second;
+		a.count += amplitudeBin.count;
+		a.rfiCount += amplitudeBin.rfiCount;
+		a.broadbandRfiCount += amplitudeBin.broadbandRfiCount;
+		a.lineRfiCount += amplitudeBin.lineRfiCount;
+	}
+}
+
+void RFIStatistics::Add(const BaselineInfo &baseline)
+{
+	BaselineMatrix::iterator rowElement = _baselines.find(baseline.antenna1);
+	if(rowElement == _baselines.end())
+	{
+		_baselines.insert(BaselineMatrix::value_type(baseline.antenna1, std::map<int, BaselineInfo>()));
+		rowElement = _baselines.find(baseline.antenna1);
+	}
+	
+	std::map<int, BaselineInfo> &row = rowElement->second;
+	std::map<int, BaselineInfo>::iterator element = row.find(baseline.antenna2);
+	if(element == row.end())
+	{
+		row.insert(std::pair<int, BaselineInfo>(baseline.antenna2, baseline));
+	} else {
+		BaselineInfo &b = element->second;
+		b.count += baseline.count;
+		b.rfiCount += baseline.rfiCount;
+		b.rfiSummedAmplitude += baseline.rfiSummedAmplitude;
+		b.broadbandRfiCount += baseline.broadbandRfiCount;
+		b.lineRfiCount += baseline.lineRfiCount;
+		b.broadbandRfiAmplitude += baseline.broadbandRfiAmplitude;
+		b.lineRfiAmplitude += baseline.lineRfiAmplitude;
+	}
+}
+
 void RFIStatistics::addChannels(std::map<double, class ChannelInfo> &channels, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage)
 {
 	for(size_t y=1;y<image->Height();++y)
