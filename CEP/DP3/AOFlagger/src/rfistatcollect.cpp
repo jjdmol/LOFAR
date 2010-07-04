@@ -25,6 +25,8 @@
 #include <cmath>
 
 #include <AOFlagger/msio/date.h>
+#include <AOFlagger/rfi/rfistatistics.h>
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -135,6 +137,80 @@ void writeMhzTotals(const std::map<double, double> &frequencyFlags)
 	fileMhz.close();
 }
 
+void readChannels(RFIStatistics &statistics, std::string &filename, bool autocorrelation)
+{
+	ifstream f(filename.c_str());
+	while(!f.eof())
+	{
+		RFIStatistics::ChannelInfo channel;
+		f
+		>> channel.frequencyHz
+		>> channel.totalCount
+		>> channel.rfiCount
+		>> channel.rfiSummedAmplitude
+		>> channel.broadbandRfiCount
+		>> channel.lineRfiCount
+		>> channel.broadbandRfiAmplitude
+		>> channel.lineRfiAmplitude;
+		statistics.Add(channel, autocorrelation);
+	}
+}
+
+void readTimesteps(RFIStatistics &statistics, std::string &filename, bool autocorrelation)
+{
+	ifstream f(filename.c_str());
+	while(!f.eof())
+	{
+		RFIStatistics::TimestepInfo timestep;
+		f
+		>> timestep.time
+		>> timestep.totalCount
+		>> timestep.rfiCount
+		>> timestep.rfiSummedAmplitude
+		>> timestep.broadbandRfiCount
+		>> timestep.lineRfiCount
+		>> timestep.broadbandRfiAmplitude
+		>> timestep.lineRfiAmplitude;
+		statistics.Add(timestep, autocorrelation);
+	}
+}
+
+void readAmplitudes(RFIStatistics &statistics, std::string &filename, bool autocorrelation)
+{
+	ifstream f(filename.c_str());
+	while(!f.eof())
+	{
+		RFIStatistics::AmplitudeBin amplitude;
+		f
+		>> amplitude.centralAmplitude
+		>> amplitude.centralLogAmplitude
+		>> amplitude.count
+		>> amplitude.rfiCount
+		>> amplitude.broadbandRfiCount
+		>> amplitude.lineRfiCount;
+		statistics.Add(amplitude, autocorrelation);
+	}
+}
+
+void readBaselines(RFIStatistics &statistics, std::string &filename)
+{
+	ifstream f(filename.c_str());
+	while(!f.eof())
+	{
+		RFIStatistics::BaselineInfo baseline;
+		f
+		>> baseline.antenna1
+		>> baseline.antenna2
+		>> baseline.antenna1Name
+		>> baseline.antenna2Name
+		>> baseline.count
+		>> baseline.rfiCount
+		>> baseline.broadbandRfiCount
+		>> baseline.lineRfiCount;
+		statistics.Add(baseline);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	cout << 
@@ -152,16 +228,31 @@ int main(int argc, char **argv)
 	{
 		std::map<double, double> frequencyFlags;
 		std::map<double, long unsigned> timeTotalCount, timeFlagsCount;
+		RFIStatistics statistics;
 
 		for(int i=1;i<argc;++i)
 		{
 			string filename = argv[i];
 			cout << "Reading " << filename << "..." << endl;
+			if(filename.find("counts-channels-auto.txt"))
+				readChannels(statistics, filename, true);
+			else if(filename.find("counts-channels-cross.txt"))
+				readChannels(statistics, filename, false);
+			else if(filename.find("counts-timesteps-auto.txt"))
+				readTimesteps(statistics, filename, true);
+			else if(filename.find("counts-timesteps-cross.txt"))
+				readTimesteps(statistics, filename, false);
+			else if(filename.find("counts-amplitudes-auto.txt"))
+				readAmplitudes(statistics, filename, true);
+			else if(filename.find("counts-amplitudes-cross.txt"))
+				readAmplitudes(statistics, filename, false);
+			else if(filename.find("counts-baselines.txt"))
+				readBaselines(statistics, filename);
 			bool
 				antennafile = filename.find("antenn") != string::npos,
 				freqfile = filename.find("freq") != string::npos,
 				timefile = filename.find("time") != string::npos;
-			if(antennafile && freqfile || freqfile && timefile || antennafile && timefile || !(antennafile || freqfile || timefile))
+			if((antennafile && freqfile) || (freqfile && timefile) || (antennafile && timefile) || !(antennafile || freqfile || timefile))
 				throw runtime_error("Could not determine type of file.");
 
 			
@@ -198,5 +289,6 @@ int main(int argc, char **argv)
 		writeFlagsPerHour(timeTotalCount, timeFlagsCount);
 		writeTimeForPlot(timeTotalCount, timeFlagsCount);
 		writeMhzTotals(frequencyFlags);
+		statistics.Save();
 	}
 }
