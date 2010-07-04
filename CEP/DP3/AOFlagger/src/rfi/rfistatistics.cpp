@@ -23,6 +23,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <iomanip>
 
 #include <AOFlagger/msio/timefrequencydata.h>
 
@@ -374,7 +375,7 @@ void RFIStatistics::addBaselines(Image2DCPtr image, Mask2DCPtr mask, TimeFrequen
 void RFIStatistics::saveChannels(std::map<double, class ChannelInfo> &channels, const char *filename)
 {
 	std::ofstream file(filename);
-	file << "frequency\ttotalCount\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n";
+	file << "frequency\ttotalCount\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n" << std::setprecision(14);
 	for(std::map<double, class ChannelInfo>::const_iterator i=channels.begin();i!=channels.end();++i)
 	{
 		const ChannelInfo &c = i->second;
@@ -394,7 +395,7 @@ void RFIStatistics::saveChannels(std::map<double, class ChannelInfo> &channels, 
 void RFIStatistics::saveTimesteps(std::map<double, class TimestepInfo> &timesteps, const char *filename)
 {
 	std::ofstream file(filename);
-	file << "timestep\ttotalCount\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n";
+	file << "timestep\ttotalCount\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n" << std::setprecision(14);
 	for(std::map<double, class TimestepInfo>::const_iterator i=timesteps.begin();i!=timesteps.end();++i)
 	{
 		const TimestepInfo &c = i->second;
@@ -411,10 +412,62 @@ void RFIStatistics::saveTimesteps(std::map<double, class TimestepInfo> &timestep
 	file.close();
 }
 
+void RFIStatistics::saveSubbands(std::map<double, class ChannelInfo> &channels, const char *filename)
+{
+	std::ofstream file(filename);
+	file << "s-frequency\te-frequency\ttotalCount\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n" << std::setprecision(14);
+	size_t index = 0;
+	double 
+		bandTotal = 0.0,
+		bandRFI = 0.0,
+		bandRFIAmp = 0.0,
+		bandBRFI = 0.0,
+		bandLRFI = 0.0,
+		bandBRFIAmp = 0.0,
+		bandLRFIAmp = 0.0;
+	for(std::map<double, class ChannelInfo>::const_iterator i=channels.begin();i!=channels.end();++i)
+	{
+		
+		const ChannelInfo &c = i->second;
+		bandTotal += c.totalCount;
+		bandRFI += c.rfiCount;
+		bandRFIAmp += c.rfiSummedAmplitude;
+		bandBRFI += c.broadbandRfiCount;
+		bandLRFI += c.lineRfiCount;
+		bandBRFIAmp += c.broadbandRfiAmplitude;
+		bandLRFIAmp += c.lineRfiAmplitude;
+		if(index%255 == 0)
+			file << index/255 << '\t' << c.frequencyHz << '\t';
+		else if(index%255 == 254)
+		{
+			file
+			<< c.frequencyHz << "\t"
+			<< bandTotal << "\t"
+			<< bandRFI << "\t"
+			<< bandRFIAmp << "\t"
+			<< bandBRFI << "\t"
+			<< bandLRFI << "\t"
+			<< bandBRFIAmp << "\t"
+			<< bandLRFIAmp << "\n";
+			bandTotal = 0.0;
+			bandRFI = 0.0;
+			bandRFIAmp = 0.0;
+			bandBRFI = 0.0;
+			bandLRFI = 0.0;
+			bandBRFIAmp = 0.0;
+			bandLRFIAmp = 0.0;
+		}
+		++index;
+	}
+	file.close();
+	if(index%255 != 0)
+		std::cout << "Warning: " << (index%255) << " rows were not part of a sub-band (channels were not dividable by 256)" << std::endl;
+}
+
 void RFIStatistics::saveAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, const char *filename)
 {
 	std::ofstream file(filename);
-	file << "centr-amplitude\tlog-centr-amplitude\tcount\trfiCount\tbroadbandRfiCount\tlineRfiCount\n";
+	file << "centr-amplitude\tlog-centr-amplitude\tcount\trfiCount\tbroadbandRfiCount\tlineRfiCount\n" << std::setprecision(14);
 	for(std::map<double, class AmplitudeBin>::const_iterator i=amplitudes.begin();i!=amplitudes.end();++i)
 	{
 		const AmplitudeBin &a = i->second;
@@ -432,7 +485,7 @@ void RFIStatistics::saveAmplitudes(std::map<double, class AmplitudeBin> &amplitu
 void RFIStatistics::saveBaselines(const char *filename)
 {
 	std::ofstream file(filename);
-	file << "a1\ta2\ta1name\ta2name\tcount\trfiCount\tbroadbandRfiCount\tlineRfiCount\n";
+	file << "a1\ta2\ta1name\ta2name\tcount\trfiCount\tbroadbandRfiCount\tlineRfiCount\n" << std::setprecision(14);
 	for(BaselineMatrix::const_iterator i=_baselines.begin();i!=_baselines.end();++i)
 	{
 		const std::map<int, BaselineInfo> &row = i->second;

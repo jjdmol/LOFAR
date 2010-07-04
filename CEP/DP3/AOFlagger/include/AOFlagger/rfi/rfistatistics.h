@@ -136,6 +136,8 @@ class RFIStatistics {
 			saveTimesteps(_crossTimesteps, "counts-timesteps-cross.txt");
 			saveAmplitudes(_crossAmplitudes, "counts-amplitudes-cross.txt");
 			saveBaselines("counts-baselines.txt");
+			saveSubbands(_autoChannels, "counts-subbands-auto.txt");
+			saveSubbands(_crossChannels, "counts-subbands-cross.txt");
 		}
 
 	private:
@@ -155,6 +157,7 @@ class RFIStatistics {
 		void saveTimesteps(std::map<double, class TimestepInfo> &timesteps, const char *filename);
 		void saveAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, const char *filename);
 		void saveBaselines(const char *filename);
+		void saveSubbands(std::map<double, class ChannelInfo> &channels, const char *filename);
 		
 		double getCentralAmplitude(double amplitude)
 		{
