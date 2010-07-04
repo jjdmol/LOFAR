@@ -30,18 +30,18 @@
 
 using namespace std;
 
-void writeFrequencyTotals(const std::map<double, double> &frequencyFlags)
+void writeFrequencyTotals(const map<double, double> &frequencyFlags)
 {
 	ofstream fileFreq("frequency-totals.txt");
-	for(std::map<double, double>::const_iterator i=frequencyFlags.begin();i!=frequencyFlags.end();++i)
+	for(map<double, double>::const_iterator i=frequencyFlags.begin();i!=frequencyFlags.end();++i)
 		fileFreq << i->first << '\t' << i->second << '\n';
 	fileFreq.close();
 }
 
-void writeTimeTotals(const std::map<double, long unsigned> &timeTotalCount, const std::map<double, long unsigned> &timeFlagsCount)
+void writeTimeTotals(const map<double, long unsigned> &timeTotalCount, const map<double, long unsigned> &timeFlagsCount)
 {
 	ofstream fileTime("time-totals.txt");
-	for(std::map<double, long unsigned>::const_iterator i=timeFlagsCount.begin(),
+	for(map<double, long unsigned>::const_iterator i=timeFlagsCount.begin(),
 			j=timeTotalCount.begin();
 			i!=timeFlagsCount.end();++i,++j)
 		fileTime << j->first << '\t' << Date::AipsMJDToTimeString(j->first) << '\t' << j->second << '\t' << i->second << '\t' << (100.0 * (double) i->second / (double) j->second) << '\n';
@@ -137,9 +137,11 @@ void writeMhzTotals(const std::map<double, double> &frequencyFlags)
 	fileMhz.close();
 }
 
-void readChannels(RFIStatistics &statistics, std::string &filename, bool autocorrelation)
+void readChannels(RFIStatistics &statistics, string &filename, bool autocorrelation)
 {
 	ifstream f(filename.c_str());
+	string headers;
+	getline(f, headers);
 	while(!f.eof())
 	{
 		RFIStatistics::ChannelInfo channel;
@@ -156,9 +158,11 @@ void readChannels(RFIStatistics &statistics, std::string &filename, bool autocor
 	}
 }
 
-void readTimesteps(RFIStatistics &statistics, std::string &filename, bool autocorrelation)
+void readTimesteps(RFIStatistics &statistics, string &filename, bool autocorrelation)
 {
 	ifstream f(filename.c_str());
+	string headers;
+	getline(f, headers);
 	while(!f.eof())
 	{
 		RFIStatistics::TimestepInfo timestep;
@@ -175,9 +179,11 @@ void readTimesteps(RFIStatistics &statistics, std::string &filename, bool autoco
 	}
 }
 
-void readAmplitudes(RFIStatistics &statistics, std::string &filename, bool autocorrelation)
+void readAmplitudes(RFIStatistics &statistics, string &filename, bool autocorrelation)
 {
 	ifstream f(filename.c_str());
+	string headers;
+	getline(f, headers);
 	while(!f.eof())
 	{
 		RFIStatistics::AmplitudeBin amplitude;
@@ -192,9 +198,11 @@ void readAmplitudes(RFIStatistics &statistics, std::string &filename, bool autoc
 	}
 }
 
-void readBaselines(RFIStatistics &statistics, std::string &filename)
+void readBaselines(RFIStatistics &statistics, string &filename)
 {
 	ifstream f(filename.c_str());
+	string headers;
+	getline(f, headers);
 	while(!f.eof())
 	{
 		RFIStatistics::BaselineInfo baseline;
@@ -234,21 +242,23 @@ int main(int argc, char **argv)
 		{
 			string filename = argv[i];
 			cout << "Reading " << filename << "..." << endl;
-			if(filename.find("counts-channels-auto.txt"))
+			if(filename.find("counts-channels-auto.txt")!=string::npos)
 				readChannels(statistics, filename, true);
-			else if(filename.find("counts-channels-cross.txt"))
+			else if(filename.find("counts-channels-cross.txt")!=string::npos)
 				readChannels(statistics, filename, false);
-			else if(filename.find("counts-timesteps-auto.txt"))
+			else if(filename.find("counts-timesteps-auto.txt")!=string::npos)
 				readTimesteps(statistics, filename, true);
-			else if(filename.find("counts-timesteps-cross.txt"))
+			else if(filename.find("counts-timesteps-cross.txt")!=string::npos)
 				readTimesteps(statistics, filename, false);
-			else if(filename.find("counts-amplitudes-auto.txt"))
+			else if(filename.find("counts-amplitudes-auto.txt")!=string::npos)
 				readAmplitudes(statistics, filename, true);
-			else if(filename.find("counts-amplitudes-cross.txt"))
+			else if(filename.find("counts-amplitudes-cross.txt")!=string::npos)
 				readAmplitudes(statistics, filename, false);
-			else if(filename.find("counts-baselines.txt"))
+			else if(filename.find("counts-baselines.txt")!=string::npos)
 				readBaselines(statistics, filename);
-			bool
+			else
+				throw runtime_error("Could not determine type of file.");
+			/*bool
 				antennafile = filename.find("antenn") != string::npos,
 				freqfile = filename.find("freq") != string::npos,
 				timefile = filename.find("time") != string::npos;
@@ -281,14 +291,14 @@ int main(int argc, char **argv)
 					timeTotalCount[time] = totalCount;
 					timeFlagsCount[time] = flagCount;
 				}
-			}
+				}*/
 		}
-		writeFrequencyTotals(frequencyFlags);
+		/*writeFrequencyTotals(frequencyFlags);
 		writeTimeTotals(timeTotalCount, timeFlagsCount);
 		writeSubBands(frequencyFlags);
 		writeFlagsPerHour(timeTotalCount, timeFlagsCount);
 		writeTimeForPlot(timeTotalCount, timeFlagsCount);
-		writeMhzTotals(frequencyFlags);
+		writeMhzTotals(frequencyFlags);*/
 		statistics.Save();
 	}
 }
