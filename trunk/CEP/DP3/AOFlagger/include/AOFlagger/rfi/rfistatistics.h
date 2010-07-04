@@ -36,6 +36,9 @@
 class RFIStatistics {
 	public:
 		struct ChannelInfo {
+			ChannelInfo() : frequencyHz(0), totalCount(0), rfiCount(0), rfiSummedAmplitude(0), broadbandRfiCount(0), lineRfiCount(0)
+			{
+			}
 			ChannelInfo(double _frequencyHz) : frequencyHz(_frequencyHz), totalCount(0), rfiCount(0), rfiSummedAmplitude(0), broadbandRfiCount(0), lineRfiCount(0)
 			{
 			}
@@ -49,6 +52,9 @@ class RFIStatistics {
 			long double lineRfiAmplitude;
 		};
 		struct TimestepInfo {
+			TimestepInfo() : time(0), totalCount(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiSummedAmplitude(0), broadbandRfiAmplitude(0), lineRfiAmplitude(0)
+			{
+			}
 			TimestepInfo(double _time) : time(_time), totalCount(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiSummedAmplitude(0), broadbandRfiAmplitude(0), lineRfiAmplitude(0)
 			{
 			}
@@ -120,6 +126,17 @@ class RFIStatistics {
 		static num_t DataQuality(Image2DCPtr image, Image2DCPtr model, Mask2DCPtr mask, unsigned startX, unsigned endX);
 
 		static num_t FrequencySNR(Image2DCPtr image, Image2DCPtr model, Mask2DCPtr mask, unsigned channel);
+		
+		void Save()
+		{
+			saveChannels(_autoChannels, "counts-channels-auto.txt");
+			saveTimesteps(_autoTimesteps, "counts-timesteps-auto.txt");
+			saveAmplitudes(_autoAmplitudes, "counts-amplitudes-auto.txt");
+			saveChannels(_crossChannels, "counts-channels-cross.txt");
+			saveTimesteps(_crossTimesteps, "counts-timesteps-cross.txt");
+			saveAmplitudes(_crossAmplitudes, "counts-amplitudes-cross.txt");
+			saveBaselines("counts-baselines.txt");
+		}
 
 	private:
 		typedef std::map<int, std::map<int, BaselineInfo> > BaselineMatrix;
