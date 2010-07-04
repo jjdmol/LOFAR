@@ -258,47 +258,7 @@ int main(int argc, char **argv)
 				readBaselines(statistics, filename);
 			else
 				throw runtime_error("Could not determine type of file.");
-			/*bool
-				antennafile = filename.find("antenn") != string::npos,
-				freqfile = filename.find("freq") != string::npos,
-				timefile = filename.find("time") != string::npos;
-			if((antennafile && freqfile) || (freqfile && timefile) || (antennafile && timefile) || !(antennafile || freqfile || timefile))
-				throw runtime_error("Could not determine type of file.");
-
-			
-			if(freqfile)
-			{
-				ifstream f(filename.c_str());
-				while(!f.eof())
-				{
-					double frequency, totalCount, flagCount, percentage;
-					f >> frequency >> totalCount >> flagCount >> percentage;
-					frequencyFlags.insert(pair<double, double>(frequency, percentage));
-				}
-			} else if(timefile)
-			{
-				ifstream f(filename.c_str());
-				while(!f.eof())
-				{
-					double time, percentage;
-					unsigned long totalCount, flagCount;
-					f >> time >> totalCount >> flagCount >> percentage;
-					if(timeTotalCount.count(time)!=0)
-					{
-						totalCount += timeTotalCount[time];
-						flagCount += timeFlagsCount[time];
-					}
-					timeTotalCount[time] = totalCount;
-					timeFlagsCount[time] = flagCount;
-				}
-				}*/
 		}
-		/*writeFrequencyTotals(frequencyFlags);
-		writeTimeTotals(timeTotalCount, timeFlagsCount);
-		writeSubBands(frequencyFlags);
-		writeFlagsPerHour(timeTotalCount, timeFlagsCount);
-		writeTimeForPlot(timeTotalCount, timeFlagsCount);
-		writeMhzTotals(frequencyFlags);*/
 		statistics.Save();
 	}
 }
