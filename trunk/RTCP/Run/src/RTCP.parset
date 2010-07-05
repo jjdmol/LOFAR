@@ -75,7 +75,6 @@ OLAP.Correlator.integrationTime = 1.0
 #OLAP.CNProc.integrationSteps  = 768 # (generated, multiple of 128 for pencil beams)
 
 OLAP.Stokes.which = I              # I or IQUV
-OLAP.Stokes.integrateChannels = F  # channel integration (DM=0)
 OLAP.Stokes.integrationSteps = 1   # time integration
 
 # ----- Beam forming

@@ -62,8 +62,6 @@ template <typename SAMPLE_TYPE = i8complex> class CN_ProcessingPlan: public Proc
     BeamFormedData               *itsBeamFormedData;
     StokesData                   *itsCoherentStokesData;
     StokesData                   *itsIncoherentStokesData;
-    StokesDataIntegratedChannels *itsCoherentStokesDataIntegratedChannels;
-    StokesDataIntegratedChannels *itsIncoherentStokesDataIntegratedChannels;
 };
 
 }

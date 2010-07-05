@@ -19,7 +19,6 @@ class Stokes
 
     void calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, const unsigned nrBeams );
     void calculateIncoherent( const SampleData<> *sampleData, StokesData *stokesData, const std::vector<unsigned> &stationMapping );
-    void compressStokes( const StokesData *in, StokesDataIntegratedChannels *out, const unsigned nrBeams );
 
   private:
     const unsigned          itsNrChannels;

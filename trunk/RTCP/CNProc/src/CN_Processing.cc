@@ -434,26 +434,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
       calculateCoherentStokes();
     }
 
-    if( itsPlan->calculate( itsPlan->itsCoherentStokesDataIntegratedChannels ) ) {
-#if defined HAVE_MPI
-      if (LOG_CONDITION)
-        LOG_DEBUG_STR(itsLogPrefix << "Start compressing coherent Stokes at " << MPI_Wtime());
-#endif // HAVE_MPI
-      itsCoherentStokes->compressStokes(itsPlan->itsCoherentStokesData, itsPlan->itsCoherentStokesDataIntegratedChannels, itsFlysEye ? itsNrBeamFormedStations : itsNrPencilBeams);
-    }
-
-    if( itsPlan->calculate( itsPlan->itsIncoherentStokesData ) ) {
-      calculateIncoherentStokes();
-    }
-
-    if( itsPlan->calculate( itsPlan->itsIncoherentStokesDataIntegratedChannels ) ) {
-#if defined HAVE_MPI
-      if (LOG_CONDITION)
-        LOG_DEBUG_STR(itsLogPrefix << "Start compressing incoherent Stokes at " << MPI_Wtime());
-#endif // HAVE_MPI
-      itsIncoherentStokes->compressStokes(itsPlan->itsIncoherentStokesData, itsPlan->itsIncoherentStokesDataIntegratedChannels, 1);
-    }
-
     // send all requested outputs
     for( unsigned i = 0, outputNr = 0; i < itsPlan->plan.size(); i++ ) {
       const ProcessingPlan::planlet &p = itsPlan->plan[i];
