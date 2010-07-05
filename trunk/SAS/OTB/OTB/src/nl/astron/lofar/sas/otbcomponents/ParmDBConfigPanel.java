@@ -104,7 +104,7 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
                 }
             }
         } catch (RemoteException ex) {
-            logger.debug("Error during getComponentParam: "+ ex);
+            logger.error("Error during getComponentParam: "+ ex);
             itsParamList=null;
             return;
         }
@@ -190,7 +190,7 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
             // [TODO]
             // Fill from existing cfg needed ????
         } else {
-            logger.debug("ERROR:  no node given");
+            logger.debug("no node given");
         }
     }
     /* Set's the different fields in the GUI */
@@ -240,7 +240,7 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
         try {
            OtdbRmi.getRemoteMaintenance().saveNode(aNode);
         } catch (RemoteException ex) {
-            logger.debug("Error: saveNode failed : " + ex);
+            logger.error("Error: saveNode failed : " + ex);
         }
     }
     

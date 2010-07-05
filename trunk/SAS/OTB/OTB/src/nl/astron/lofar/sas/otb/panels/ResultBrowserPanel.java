@@ -121,7 +121,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         try {
             itsTreeType = OtdbRmi.getRemoteTypes().getTreeType(OtdbRmi.getRemoteOTDB().getTreeInfo(itsTreeID, false).type);
         } catch (RemoteException ex) {
-            logger.debug("Error getting treetype");
+            logger.error("Error getting treetype");
         }
 
         if (userAccount.isObserver() && !itsTreeType.equalsIgnoreCase("hardware")) {
@@ -174,7 +174,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     
     public boolean initializePlugin(MainFrame mainframe) {
         if (mainframe == null) {
-            logger.debug("ERROR, no mainframe given");
+            logger.debug("no mainframe given");
             return false;
         }
         itsMainFrame=mainframe;
@@ -257,7 +257,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 treePanel.newRootNode(treeManager.getRootNode(itsTreeID));
                 itsMainFrame.setNormalCursor();
             } catch (Exception e) {
-                logger.debug("Exception during setNewRootNode: " + e);
+                logger.error("Exception during setNewRootNode: " + e);
             }
         }
     }
@@ -330,15 +330,15 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 try {
                     p = (JPanel) Class.forName(aPanelName).newInstance();
                 } catch (ClassNotFoundException ex) {
-                    logger.debug("Error during getPanel: "+ ex);
+                    logger.error("Error during getPanel: "+ ex);
                     itsMainFrame.setNormalCursor();
                     return;
                 } catch (InstantiationException ex) {
-                    logger.debug("Error during getPanel: "+ ex);
+                    logger.error("Error during getPanel: "+ ex);
                     itsMainFrame.setNormalCursor();
                     return;
                 } catch (IllegalAccessException ex) {
-                    logger.debug("Error during getPanel: "+ ex);
+                    logger.error("Error during getPanel: "+ ex);
                     itsMainFrame.setNormalCursor();
                     return;
                 }
@@ -395,15 +395,15 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 try {
                     p = (JPanel) Class.forName(aPanelName).newInstance();
                 } catch (ClassNotFoundException ex) {
-                    logger.debug("Error during getPanel: "+ ex);
+                    logger.error("Error during getPanel: "+ ex);
                     itsMainFrame.setNormalCursor();
                     return;
                 } catch (InstantiationException ex) {
-                    logger.debug("Error during getPanel: "+ ex);
+                    logger.error("Error during getPanel: "+ ex);
                     itsMainFrame.setNormalCursor();
                     return;
                 } catch (IllegalAccessException ex) {
-                    logger.debug("Error during getPanel: "+ ex);
+                    logger.error("Error during getPanel: "+ ex);
                     itsMainFrame.setNormalCursor();
                     return;
                 }

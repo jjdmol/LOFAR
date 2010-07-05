@@ -222,7 +222,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     private void getParam(jOTDBnode aNode) {
         itsParam=null;
         if (aNode == null) {
-            logger.debug("ERROR: Empty Node supplied for getParam");
+            logger.debug("Empty Node supplied for getParam");
             return;
         }
         itsNode=aNode;
@@ -233,7 +233,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                 itsParam = OtdbRmi.getRemoteMaintenance().getParam(itsNode.treeID(),itsNode.paramDefID());                
             }
         } catch (RemoteException ex) {
-            logger.debug("Error during getParam: "+ ex);
+            logger.error("Error during getParam: "+ ex);
             itsParam=null;
             return;
         }        
@@ -288,7 +288,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                     // Have to get new param because we need the unresolved limits field.
                     itsParam = OtdbRmi.getRemoteMaintenance().getParam(itsNode.treeID(),itsNode.paramDefID());                
                 } catch (RemoteException ex) {
-                     logger.debug("Error during getParam: "+ ex);
+                     logger.error("Error during getParam: "+ ex);
                 }
                 cl.show(CardPanel,"ComboCard");
             } else {
@@ -315,7 +315,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
             // Check if the fields may be changed in this treestate/valmoment
             setAllEnabled(itsAccessRights.isWritable(itsParam));
         } else {
-            logger.debug("ERROR:  no Param given");
+            logger.debug("no Param given");
         }
     }
     
@@ -353,7 +353,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         try {
             this.ParamTypeText.setSelectedItem(OtdbRmi.getRemoteTypes().getParamType(aS));
         } catch (RemoteException e) {
-            logger.debug("Error: GetParamType failed " + e);
+            logger.error("Error: GetParamType failed " + e);
        }
     }
     
@@ -370,7 +370,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         try {
             this.ParamUnitText.setSelectedItem(OtdbRmi.getRemoteTypes().getUnit(aS));
         } catch (RemoteException e) {
-            logger.debug("ERROR: getUnit failed " + e);
+            logger.error("ERROR: getUnit failed " + e);
         }
     }
     
@@ -573,10 +573,10 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                 } 
                
             } catch (RemoteException ex) {
-                logger.debug("error in Remote connection");
+                logger.error("error in Remote connection");
             }
         } else {
-            logger.debug("ERROR:  no Param given");
+            logger.debug("no Param given");
         }
     }
 

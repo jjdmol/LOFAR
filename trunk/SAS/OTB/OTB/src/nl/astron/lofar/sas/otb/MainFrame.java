@@ -443,9 +443,9 @@ public class MainFrame extends javax.swing.JFrame {
             setVisible(true);
             showPanel(MainPanel.getFriendlyNameStatic());
         } catch (NoServerConnectionException e) {
-            logger.debug(e);
+            logger.error(e);
         } catch (NotLoggedInException e) {
-            logger.debug(e);   
+            logger.error(e);
         }
     }//GEN-LAST:event_jMenuItemLogoutActionPerformed
 
@@ -508,7 +508,7 @@ public class MainFrame extends javax.swing.JFrame {
                   // Start the actual RMI connection
                     if (! SharedVars.getOTDBrmi().isConnected()) {
                         if (! SharedVars.getOTDBrmi().openAccessConnection()) {
-                            logger.debug("Error: failed to open RMI Access Connections");
+                            logger.error("Error: failed to open RMI Access Connections");
                         } else {
                             aC = "DB connection to: "+OtdbRmi.getRMIServerName()+" Port: "+OtdbRmi.getRMIServerPort();
                         }

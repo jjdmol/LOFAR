@@ -118,7 +118,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                 }
             }
         } catch (RemoteException ex) {
-            logger.debug("Error during getComponentParam: "+ ex);
+            logger.error("Error during getComponentParam: "+ ex);
             return;
         }
         
@@ -190,7 +190,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
          if (evt.getActionCommand().equals("Create ParSet File")) {
-            logger.debug("Create ParSet File");
+            logger.trace("Create ParSet File");
             int aTreeID=itsMainFrame.getSharedVars().getTreeID();
             if (fc == null) {
                 fc = new JFileChooser();
@@ -214,13 +214,13 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                     output.write(dldata,0,dldata.length);
                     output.flush();
                     output.close();
-                    logger.debug("File written to: " + aFile.getPath());
+                    logger.trace("File written to: " + aFile.getPath());
                 } catch (RemoteException ex) {
-                    logger.debug("exportTree failed : " + ex);
+                    logger.error("exportTree failed : " + ex);
                 } catch (FileNotFoundException ex) {
-                    logger.debug("Error during newPICTree creation: "+ ex);
+                    logger.error("Error during newPICTree creation: "+ ex);
                 } catch (IOException ex) {
-                    logger.debug("Error during newPICTree creation: "+ ex);
+                    logger.error("Error during newPICTree creation: "+ ex);
                 }
             }
         }       
@@ -248,7 +248,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                 setField(aNode,aParam,aHWNode);
             }
         } catch (RemoteException ex) {
-            logger.debug("Error during retrieveAndDisplayChildDataForNode: "+ ex);
+            logger.error("Error during retrieveAndDisplayChildDataForNode: "+ ex);
             return;
         }
     }
@@ -281,7 +281,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());                
             }
         } catch (RemoteException ex) {
-            logger.debug("Error during getParam: "+ ex);
+            logger.error("Error during getParam: "+ ex);
         }        
 
         // Imager Specific parameters    
@@ -508,10 +508,10 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                 jOTDBtree aTree = OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
                 itsTreeType=OtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
-                logger.debug("ImagerPanel: Error getting treeInfo/treetype" + ex);
+                logger.error("ImagerPanel: Error getting treeInfo/treetype" + ex);
                 itsTreeType="";
             }         } else {
-            logger.debug("ERROR:  no node given");
+            logger.debug("no node given");
         }
     }
         
@@ -524,7 +524,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             OtdbRmi.getRemoteMaintenance().saveNode(aNode); 
         } catch (RemoteException ex) {
-            logger.debug("Error: saveNode failed : " + ex);
+            logger.error("Error: saveNode failed : " + ex);
         } 
     }
     

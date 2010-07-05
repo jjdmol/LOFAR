@@ -187,7 +187,7 @@ public class ComponentPanel extends javax.swing.JPanel implements IViewPanel{
             setLimits(String.valueOf(itsParam.limits));
             setDescription(itsParam.description);
         } else {
-            logger.debug("ERROR:  no Param given");
+            logger.debug("no Param given");
         }
     }
     
@@ -211,7 +211,7 @@ public class ComponentPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             this.ParamTypeText.setSelectedItem(OtdbRmi.getRemoteTypes().getParamType(aS));
         } catch (RemoteException e) {
-            logger.debug("Error: GetParamType failed " + e);
+            logger.error("Error: GetParamType failed " + e);
        }
     }
     
@@ -227,7 +227,7 @@ public class ComponentPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             this.ParamUnitText.setSelectedItem(OtdbRmi.getRemoteTypes().getUnit(aS));
         } catch (RemoteException e) {
-            logger.debug("ERROR: getUnit failed " + e);
+            logger.error("ERROR: getUnit failed " + e);
         }
     }
     
@@ -328,10 +328,10 @@ public class ComponentPanel extends javax.swing.JPanel implements IViewPanel{
                 } 
                
             } catch (RemoteException ex) {
-                logger.debug("error in Remote connection");
+                logger.error("error in Remote connection");
             }
         } else {
-            logger.debug("ERROR:  no Param given");
+            logger.debug("no Param given");
         }
     }
 

@@ -147,7 +147,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 itsLastSelectedPath = aP;
                 itsMainFrame.setNormalCursor();
             } catch (Exception e) {
-                logger.debug("Exception during setNewRootNode: ");
+                logger.error("Exception during setNewRootNode: ");
                 e.printStackTrace();
             }
         }
@@ -255,7 +255,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                             setNewRootNode();
                         }
                     } catch (RemoteException ex) {
-                        logger.debug("Error during deletion of Node: " + ex);
+                        logger.error("Error during deletion of Node: " + ex);
                     }
                 }
             }
@@ -267,7 +267,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 if (answer != null || !answer.equals("")) {
                     short idx = Integer.valueOf(answer).shortValue();
                     if (idx < 0) {
-                        logger.debug("Index value smaller then 1 not allowed");
+                        logger.error("Index value smaller then 1 not allowed");
                         return;
                     }
                     try {
@@ -282,10 +282,10 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                                setNewRootNode();
                            }
                         } else {
-                            logger.debug("Node duplication failed");
+                            logger.error("Node duplication failed");
                         }
                     } catch (RemoteException ex) {
-                        logger.debug("Error during duplication of Node: " + ex);
+                        logger.error("Error during duplication of Node: " + ex);
                     }
                 }
             }
@@ -369,15 +369,15 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 try {
                     p = (JPanel) Class.forName(aPanelName).newInstance();
                 } catch (ClassNotFoundException ex) {
-                    logger.debug("Error during getPanel: " + ex);
+                    logger.error("Error during getPanel: " + ex);
                     itsMainFrame.setNormalCursor();
                     return;
                 } catch (InstantiationException ex) {
-                    logger.debug("Error during getPanel: " + ex);
+                    logger.error("Error during getPanel: " + ex);
                     itsMainFrame.setNormalCursor();
                     return;
                 } catch (IllegalAccessException ex) {
-                    logger.debug("Error during getPanel: " + ex);
+                    logger.error("Error during getPanel: " + ex);
                     itsMainFrame.setNormalCursor();
                     return;
                 }

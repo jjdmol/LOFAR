@@ -132,7 +132,7 @@ public class StorageSelectionPanel extends javax.swing.JPanel {
             }
  
         } catch (RemoteException ex) {
-            logger.debug("Error during init: "+ ex);
+            logger.error("Error during init: "+ ex);
             return;
         }
     

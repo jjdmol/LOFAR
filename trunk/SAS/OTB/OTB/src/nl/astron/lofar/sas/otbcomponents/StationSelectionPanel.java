@@ -23,8 +23,6 @@
 package nl.astron.lofar.sas.otbcomponents;
 
 import java.rmi.RemoteException;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.DefaultListModel;
@@ -135,7 +133,7 @@ public class StationSelectionPanel extends javax.swing.JPanel {
             }
  
         } catch (RemoteException ex) {
-            logger.debug("Error during init: "+ ex);
+            logger.error("Error during init: "+ ex);
             return;
         }
     

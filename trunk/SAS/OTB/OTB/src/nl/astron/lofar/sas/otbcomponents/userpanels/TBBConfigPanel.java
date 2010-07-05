@@ -201,7 +201,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
         if (evt.getActionCommand().equals("Create ParSet File")) {
-            logger.debug("Create ParSet File");
+            logger.trace("Create ParSet File");
             int aTreeID=itsMainFrame.getSharedVars().getTreeID();
             if (fc == null) {
                 fc = new JFileChooser();
@@ -225,7 +225,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                     output.write(dldata,0,dldata.length);
                     output.flush();
                     output.close();
-                    logger.debug("File written to: " + aFile.getPath());
+                    logger.trace("File written to: " + aFile.getPath());
                 } catch (RemoteException ex) {
                     logger.error("exportTree failed : " + ex);
                 } catch (FileNotFoundException ex) {
