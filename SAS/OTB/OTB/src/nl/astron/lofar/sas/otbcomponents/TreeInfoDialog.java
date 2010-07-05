@@ -70,7 +70,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             // set selected Tree to first in the list
             itsTree=OtdbRmi.getRemoteOTDB().getTreeInfo(itsTreeIDs[0], false);
         } catch (RemoteException e) {
-            logger.debug("Error getting the Treeinfo " + e);
+            logger.error("Error getting the Treeinfo " + e);
             itsTree=null;
         }
         if (treeIDs.length > 1) {
@@ -88,7 +88,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             // set selected Tree to first in the list
             itsTree=OtdbRmi.getRemoteOTDB().getTreeInfo(itsTreeIDs[0], false);
         } catch (RemoteException e) {
-            logger.debug("Error getting the Treeinfo " + e);
+            logger.error("Error getting the Treeinfo " + e);
             itsTree=null;
         }
         init();                
@@ -136,7 +136,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                                 itsMaxBeamDuration=Integer.parseInt(aNode.limits);
                             }
                         } catch (NumberFormatException ex) {
-                            logger.debug("Integer Conversion error on duration " + aNode.limits + " - " + ex);
+                            logger.error("Integer Conversion error on duration " + aNode.limits + " - " + ex);
                         }
                     }
                     if (itsMaxBeamDuration > 0 ) {
@@ -146,14 +146,14 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         calcDuration(0);
                     }
                 } catch (RemoteException e) {
-                    logger.debug("Error getting the Beams " + e);
+                    logger.error("Error getting the Beams " + e);
                 }
 
                 if (itsStarttime.length() > 0 && !itsStarttime.equals("not-a-date-time")) {
                     try {
                         itsStartDate = id.parse(itsStarttime);
                     } catch (ParseException ex) {
-                        logger.debug("Error converting starttime "+itsStarttime);
+                        logger.error("Error converting starttime "+itsStarttime);
                         itsStarttime="";
                         itsStartDate=null;
                     }
@@ -166,7 +166,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         itsStopDate = id.parse(itsStoptime);
 
                     } catch (ParseException ex) {
-                        logger.debug("Error converting stoptime " + itsStoptime);
+                        logger.error("Error converting stoptime " + itsStoptime);
                         itsStoptime="";
                         itsStopDate=null;
                     }
@@ -508,7 +508,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private boolean saveNewTree() {
         
         // make sure that if a VICtree is selected we check the start-end time first. If they are not correct, pop up a dialog.
-        
+
+        boolean succes = true;
+
         if (itsTreeType.equals("VHtree") && stateInput.getSelectedItem().toString().equalsIgnoreCase("Scheduled")) {
             if ( ! checkTimes()) {
                 return false;
@@ -528,8 +530,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         aTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
                         hasChanged=true;
                         if (!OtdbRmi.getRemoteMaintenance().setTreeState(aTree.treeID(), aTree.state)) {
-                            logger.debug("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());
-                            return false;
+                            logger.error("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                            succes=false;
                         }
                     }
 
@@ -538,8 +540,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         hasChanged=true;
                         aTree.classification=OtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
                         if (!OtdbRmi.getRemoteMaintenance().setClassification(aTree.treeID(), aTree.classification)) {
-                            logger.debug("Error during setClassification: "+OtdbRmi.getRemoteMaintenance().errorMsg());
-                            return false;
+                            logger.error("Error during setClassification: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                            succes=false;
                         }
                     }
                     
@@ -549,8 +551,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         aTree.starttime = startTimeInput.getText();
                         aTree.stoptime = stopTimeInput.getText();
                         if (OtdbRmi.getRemoteMaintenance().setSchedule(aTree.treeID(),aTree.starttime,aTree.stoptime)) {
-                            logger.debug("Error during setSchedule: "+OtdbRmi.getRemoteMaintenance().errorMsg());
-                            return false;
+                            logger.error("Error during setSchedule: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                            succes=false;
                         }
                     }
                 }
@@ -561,24 +563,24 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     hasChanged=true;
                     itsTree.classification=OtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
                     if (!OtdbRmi.getRemoteMaintenance().setClassification(itsTree.treeID(), itsTree.classification)) {
-                        logger.debug("Error during setClassification: "+OtdbRmi.getRemoteMaintenance().errorMsg());
-                        return false;
+                        logger.error("Error during setClassification: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                        succes=false;
                     }
                 }
                 if (!itsTreeState.equals(stateInput.getSelectedItem().toString())) {
                     hasChanged=true;
                     itsTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
                     if (!OtdbRmi.getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state)) {
-                        logger.debug("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());
-                        return false;
+                        logger.error("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                        succes=false;
                     }
                 }
                 if (!itsDescription.equals(descriptionInput.getText())) {
                     hasChanged=true;
                     itsTree.description = descriptionInput.getText();
                     if (!OtdbRmi.getRemoteMaintenance().setDescription(itsTree.treeID(), itsTree.description)) {
-                        logger.debug("Error during setDescription: "+OtdbRmi.getRemoteMaintenance().errorMsg());
-                        return false;
+                        logger.error("Error during setDescription: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                        succes=false;
                     }
                 }
                 // Next for VIC only
@@ -591,7 +593,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                            itsTree.stoptime = stopTimeInput.getText();
                            if (!OtdbRmi.getRemoteMaintenance().setSchedule(itsTree.treeID(),itsTree.starttime,itsTree.stoptime)) {
                                logger.error("Error during setSchedule: "+OtdbRmi.getRemoteMaintenance().errorMsg());
-                               return false;
+                               succes=false;
                            }
                         }
                     }
@@ -602,8 +604,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         if (itsName != null && !itsName.equals(nameInput.getText())) {
                             itsName=nameInput.getText();
                             if (!OtdbRmi.getRemoteMaintenance().assignTemplateName(itsTree.treeID(),itsName)){
-                                logger.debug("Error during assignTemplateName: "+OtdbRmi.getRemoteMaintenance().errorMsg());
-                                return false;
+                                logger.error("Error during assignTemplateName: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                succes=false;
                             } else {
                                 hasChanged=true;
                             }
@@ -612,25 +614,25 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                             // check momID, if not zero set to zero
                             if (itsTree.momID() != 0) {
                                 if (!OtdbRmi.getRemoteMaintenance().setMomInfo(itsTree.treeID(),0,itsTree.campaign)) {
-                                    logger.debug("Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg());
-                                    return false;
+                                    logger.error("Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                    succes=false;
                                 }
                             }
                         }
                     } catch (RemoteException ex) {
                         try {
                             logger.error("Error while setting TemplateName " + OtdbRmi.getRemoteMaintenance().errorMsg());
-                            return false;
+                            succes=false;
                         } catch (RemoteException ex1) {
                             logger.error("Error getting the remote errorMessage");
-                            return false;
+                            succes=false;
                         }
                     }
                 }
             }
-            return true;
+            return succes;
         } catch (Exception e) {
-          logger.debug("Changing metainfo via RMI and JNI failed"); 
+          logger.error("Changing metainfo via RMI and JNI failed");
           return false;
         }
     }
