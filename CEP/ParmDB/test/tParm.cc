@@ -60,13 +60,13 @@ void testMakeCoeff()
   vector<double> c1 = Parm::copyValues (coeff, Array<Bool>(), false);
   ASSERT (c1.size() == 6);
   for(uint i=0; i<c1.size(); ++i) {
-    ASSERT (c1[i] = i+1);
+    ASSERT (c1[i] == i+1);
   }
   // Make the coefficients with an empty mask without applying the mask.
   vector<double> c2 = Parm::copyValues (coeff, Array<Bool>(), true);
   ASSERT (c2.size() == 6);
   for(uint i=0; i<c2.size(); ++i) {
-    ASSERT (c2[i] = i+1);
+    ASSERT (c2[i] == i+1);
   }
   Matrix<bool> mask(2,3);
   mask = true;
@@ -75,7 +75,7 @@ void testMakeCoeff()
   vector<double> c3 = Parm::copyValues (coeff, mask, false);
   ASSERT (c3.size() == 6);
   for(uint i=0; i<c3.size(); ++i) {
-    ASSERT (c3[i] = i+1);
+    ASSERT (c3[i] == i+1);
   }
   // Make the coefficients with a filled mask with applying the mask.
   vector<double> c4 = Parm::copyValues (coeff, mask, true);
@@ -407,12 +407,12 @@ void testSetGetCoeff1()
     vector<double> coeffdc = parmdc.getCoeff (Location(0,0));
     ASSERT (coeffdc.size() == coeff.size()-1);
     for (uint i=0; i<coeffdc.size(); ++i) {
-      ASSERT (coeffdc[i] == i+10);
+      ASSERT (casa::near(coeffdc[i], i+10.));
     }
     coeffdc = parmdc.getCoeff (Location(0,0), false);
     ASSERT (coeffdc.size() == coeff.size());
     for (uint i=0; i<coeffdc.size(); ++i) {
-      ASSERT (coeffdc[i] == i+10);
+      ASSERT (casa::near(coeffdc[i], i+10.));
     }
   }
   // Set coefficients 
@@ -426,12 +426,12 @@ void testSetGetCoeff1()
   vector<double> coeffdc = parmdc.getCoeff (Location(0,0));
   ASSERT (coeffdc.size() == newCoeff.size());
   for (uint i=0; i<coeffdc.size(); ++i) {
-    ASSERT (coeffdc[i] == (i+1)*0.1);
+    ASSERT (casa::near(coeffdc[i], (i+1)*0.1));
   }
   vector<double> errordc = parmdc.getErrors (Location(0,0));
   ASSERT (errordc.size() == newError.size());
   for (uint i=0; i<errordc.size(); ++i) {
-    ASSERT (errordc[i] == (i+2)*0.001);
+    ASSERT (casa::near(errordc[i], (i+2)*0.001));
   }
   parmCache.flush();
 }
@@ -459,7 +459,7 @@ void testSetGetCoeff2()
     vector<double> coeffdc = parmdc.getCoeff (Location(1,1));
     ASSERT (coeffdc.size() == 5);
     for (uint i=0; i<coeffdc.size(); ++i) {
-      ASSERT (coeffdc[i] == i+10);
+      ASSERT (casa::near(coeffdc[i], i+10.));
     }
     vector<double> errordc = parmdc.getErrors (Location(1,1));
     ASSERT (errordc.size() == 0);
@@ -467,12 +467,12 @@ void testSetGetCoeff2()
     coeffdc = parmdc.getCoeff (Location(0,0));
     ASSERT (coeffdc.size() == 5);
     for (uint i=0; i<coeffdc.size(); ++i) {
-      ASSERT (coeffdc[i] == (i+1)*0.1);
+      ASSERT (casa::near(coeffdc[i], (i+1)*0.1));
     }
     errordc = parmdc.getErrors (Location(0,0));
     ASSERT (errordc.size() == 5);
     for (uint i=0; i<errordc.size(); ++i) {
-      ASSERT (errordc[i] == (i+2)*0.001);
+      ASSERT (casa::near(errordc[i], (i+2)*0.001));
     }
   }
 }

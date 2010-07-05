@@ -59,7 +59,9 @@ namespace BBS {
     // not exist yet.
     // If <src>lock=true</src> a write lock is acquired. In this way no
     // implcit locks have to be acquired on each access.
-    explicit ParmDBLog (const std::string& tableName, enum LoggingLevel=PERSOLUTION, bool forceNew=false,
+    explicit ParmDBLog (const std::string& tableName,
+                        LoggingLevel=PERSOLUTION,
+                        bool forceNew=false,
                         bool lock=true);
 
     ~ParmDBLog();
@@ -89,15 +91,15 @@ namespace BBS {
               const vector<double>& solution, const string& message,
               const casa::Array<double>& correlationMatrix);
 
-	// Get or set the logging level of solver parameters
-	// <group>
-	int getLoggingLevel ();
-	void setLoggingLevel (const enum LoggingLevel);
-	// </group>
+    // Get or set the logging level of solver parameters
+    // <group>
+    LoggingLevel getLoggingLevel() const
+      { return itsLoggingLevel; }
+    void setLoggingLevel (LoggingLevel level)
+      { itsLoggingLevel = level; }
+    // </group>
 
   private:
-	LoggingLevel itsLoggingLevel;
-
     // Create the tables.
     void createTables (const string& tableName);
 
@@ -110,6 +112,7 @@ namespace BBS {
                 const vector<double>& solution, const string& message);
 
     //# Data members
+    LoggingLevel itsLoggingLevel;
     casa::Table itsTable;
     casa::ScalarColumn<casa::Double> itsStartFreq;
     casa::ScalarColumn<casa::Double> itsEndFreq;
