@@ -39,9 +39,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
   itsCorrelatedData(0),
   itsBeamFormedData(0),
   itsCoherentStokesData(0),
-  itsIncoherentStokesData(0),
-  itsCoherentStokesDataIntegratedChannels(0),
-  itsIncoherentStokesDataIntegratedChannels(0)
+  itsIncoherentStokesData(0)
 {
   (void)hasPhaseThree;
 
@@ -103,27 +101,11 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       configuration.nrSamplesPerStokesIntegration()
     );
 
-    itsCoherentStokesDataIntegratedChannels = new StokesDataIntegratedChannels(
-      true,
-      configuration.nrStokes(),
-      nrBeams,
-      configuration.nrSamplesPerIntegration(),
-      configuration.nrSamplesPerStokesIntegration()
-    );
-
     itsIncoherentStokesData = new StokesData(
       false,
       configuration.nrStokes(),
       1,
       configuration.nrChannelsPerSubband(),
-      configuration.nrSamplesPerIntegration(),
-      configuration.nrSamplesPerStokesIntegration()
-    );
-
-    itsIncoherentStokesDataIntegratedChannels = new StokesDataIntegratedChannels(
-      false,
-      configuration.nrStokes(),
-      1,
       configuration.nrSamplesPerIntegration(),
       configuration.nrSamplesPerStokesIntegration()
     );
@@ -135,8 +117,6 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     TRANSFORM( itsFilteredData,         itsCorrelatedData );
     TRANSFORM( itsBeamFormedData,       itsCoherentStokesData );
     TRANSFORM( itsFilteredData,         itsIncoherentStokesData );
-    TRANSFORM( itsCoherentStokesData,   itsCoherentStokesDataIntegratedChannels );
-    TRANSFORM( itsIncoherentStokesData, itsIncoherentStokesDataIntegratedChannels );
 
     // send all requested outputs
     if( configuration.outputFilteredData() ) {
@@ -149,28 +129,19 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     if( configuration.outputBeamFormedData() ) {
       send( itsBeamFormedData,                         ".beams",             ProcessingPlan::DIST_BEAM );
     }
-    if( configuration.outputCoherentStokes() && !configuration.stokesIntegrateChannels() ) {
+    if( configuration.outputCoherentStokes() ) {
       send( itsCoherentStokesData,                     ".stokes",            ProcessingPlan::DIST_BEAM );
-    }
-    if( configuration.outputCoherentStokes() && configuration.stokesIntegrateChannels() ) {
-      send( itsCoherentStokesDataIntegratedChannels,   ".stokes",            ProcessingPlan::DIST_BEAM );
     }
 #else    
     if( configuration.outputBeamFormedData() ) {
       send( itsBeamFormedData,                         ".beams",             ProcessingPlan::DIST_SUBBAND );
     }
-    if( configuration.outputCoherentStokes() && !configuration.stokesIntegrateChannels() ) {
+    if( configuration.outputCoherentStokes() ) {
       send( itsCoherentStokesData,                     ".stokes",            ProcessingPlan::DIST_SUBBAND );
     }
-    if( configuration.outputCoherentStokes() && configuration.stokesIntegrateChannels() ) {
-      send( itsCoherentStokesDataIntegratedChannels,   ".stokes",            ProcessingPlan::DIST_SUBBAND );
-    }
 #endif    
-    if( configuration.outputIncoherentStokes() && !configuration.stokesIntegrateChannels() ) {
+    if( configuration.outputIncoherentStokes() ) {
       send( itsIncoherentStokesData,                   ".incoherentstokes",  ProcessingPlan::DIST_SUBBAND );
-    }
-    if( configuration.outputIncoherentStokes() && configuration.stokesIntegrateChannels() ) {
-      send( itsIncoherentStokesDataIntegratedChannels, ".incoherentstokes",  ProcessingPlan::DIST_SUBBAND );
     }
   }
 
@@ -191,8 +162,6 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::~CN_ProcessingPl
   delete itsBeamFormedData;
   delete itsCoherentStokesData;
   delete itsIncoherentStokesData;
-  delete itsCoherentStokesDataIntegratedChannels;
-  delete itsIncoherentStokesDataIntegratedChannels;
 }
 
 

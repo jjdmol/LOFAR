@@ -127,7 +127,6 @@ public:
         bool           outputIncoherentStokes() const;
 	unsigned       nrOutputsPerSubband() const;
 
-	bool           stokesIntegrateChannels() const;
         unsigned       nrStokes() const;
         bool           flysEye() const;
   string     bandFilter() const;
@@ -556,11 +555,6 @@ inline PencilCoordinates Parset::pencilBeams() const
 inline double Parset::pencilRingSize() const
 {
   return getDouble("OLAP.PencilInfo.ringSize");
-}
-
-inline bool Parset::stokesIntegrateChannels() const
-{
-  return getBool("OLAP.Stokes.integrateChannels");
 }
 
 inline bool Parset::flysEye() const

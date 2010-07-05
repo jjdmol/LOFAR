@@ -75,8 +75,6 @@ CN_Configuration::CN_Configuration(const Parset &parset)
 
   observationID()           = parset.observationID();
 
-  stokesIntegrateChannels() = parset.stokesIntegrateChannels();
-
   // Get the phase centres of all station, not just the one we receive input from. The compute nodes
   // need the phase centres for beam forming, which is after the transpose so all stations are present.
 

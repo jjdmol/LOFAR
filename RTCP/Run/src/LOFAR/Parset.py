@@ -126,7 +126,6 @@ class Parset(util.Parset.Parset):
         self.setdefault("OLAP.outputCoherentStokes",False);
         self.setdefault("OLAP.outputIncoherentStokes",False);
         self.setdefault("OLAP.Stokes.which","I");
-        self.setdefault("OLAP.Stokes.integrateChannels",False);
         self.setdefault("OLAP.Stokes.integrationSteps",1);
         self.setdefault("OLAP.OLAP_Conn.rawDataOutputOnly",False);
         self.setdefault("OLAP.Correlator.integrationTime",1);

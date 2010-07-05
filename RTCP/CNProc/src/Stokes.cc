@@ -170,34 +170,6 @@ void Stokes::calculateIncoherent( const SampleData<> *sampleData, StokesData *st
   stokesTimer.stop();
 }
 
-// Compress Stokes values by summing over all channels
-void Stokes::compressStokes( const StokesData *in, StokesDataIntegratedChannels *out, const unsigned nrBeams )
-{
-  const unsigned timeSteps = itsNrSamplesPerIntegration / itsNrSamplesPerStokesIntegration;
-
-  stokesIntegrationTimer.start();
-
-  // copy flags
-  for(unsigned beam = 0; beam < nrBeams; beam++) {
-    out->flags[beam] = in->flags[beam];
-  }
-
-  for (unsigned beam = 0; beam < nrBeams; beam++ ) {
-    for (unsigned time = 0; time < timeSteps; time++ ) {
-      for (unsigned stokes = 0; stokes < itsNrStokes; stokes++ ) {
-        float channelSum = 0.0f;
-
-        for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
-          channelSum += in->samples[beam][ch][time][stokes];
-        }
-
-	out->samples[beam][time][stokes] = channelSum;
-      }	
-    }
-  }
-
-  stokesIntegrationTimer.stop();
-}
 
 } // namespace RTCP
 } // namespace LOFAR

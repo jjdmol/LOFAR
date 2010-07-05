@@ -66,7 +66,6 @@ class CN_Configuration
     bool                  &outputCoherentStokes();
     bool                  &outputIncoherentStokes();
     unsigned              &nrStokes();
-    bool                  &stokesIntegrateChannels();
     bool                  &flysEye();
 
     unsigned              &nrPencilBeams();
@@ -116,7 +115,6 @@ class CN_Configuration
       bool                itsOutputCoherentStokes;
       bool                itsOutputIncoherentStokes;
       unsigned            itsNrStokes;
-      bool                itsStokesIntegrateChannels;
       bool                itsFlysEye;
       unsigned            itsObservationID;
     } itsMarshalledData;
@@ -251,11 +249,6 @@ inline bool &CN_Configuration::outputIncoherentStokes()
 inline unsigned &CN_Configuration::nrStokes()
 {
   return itsMarshalledData.itsNrStokes;
-}
-
-inline bool &CN_Configuration::stokesIntegrateChannels()
-{
-  return itsMarshalledData.itsStokesIntegrateChannels;
 }
 
 inline bool &CN_Configuration::flysEye()
