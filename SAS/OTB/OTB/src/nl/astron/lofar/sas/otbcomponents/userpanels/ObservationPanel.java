@@ -156,7 +156,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 }
             }
         } catch (RemoteException ex) {
-            logger.debug("Error during getComponentParam: "+ ex);
+            logger.error("Error during getComponentParam: "+ ex);
             return;
         }
         
@@ -227,7 +227,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
          if (evt.getActionCommand().equals("Create ParSet File")) {
-            logger.debug("Create ParSet File");
+            logger.trace("Create ParSet File");
             int aTreeID=itsMainFrame.getSharedVars().getTreeID();
             if (fc == null) {
                 fc = new JFileChooser();
@@ -251,13 +251,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     output.write(dldata,0,dldata.length);
                     output.flush();
                     output.close();
-                    logger.debug("File written to: " + aFile.getPath());
+                    logger.trace("File written to: " + aFile.getPath());
                 } catch (RemoteException ex) {
-                    logger.debug("exportTree failed : " + ex);
+                    logger.error("exportTree failed : " + ex);
                 } catch (FileNotFoundException ex) {
-                    logger.debug("Error during newPICTree creation: "+ ex);
+                    logger.error("Error during newPICTree creation: "+ ex);
                 } catch (IOException ex) {
-                    logger.debug("Error during newPICTree creation: "+ ex);
+                    logger.error("Error during newPICTree creation: "+ ex);
                 }
             }
         }       
@@ -285,7 +285,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 setField(aNode,aParam,aHWNode);
             }
         } catch (RemoteException ex) {
-            logger.debug("Error during retrieveAndDisplayChildDataForNode: "+ ex);
+            logger.error("Error during retrieveAndDisplayChildDataForNode: "+ ex);
             return;
         }
     }
@@ -314,7 +314,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());                
             }
         } catch (RemoteException ex) {
-            logger.debug("Error during getParam: "+ ex);
+            logger.error("Error during getParam: "+ ex);
         }
         
         if(parentName.equals("Observation")){        
@@ -694,10 +694,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 jOTDBtree aTree = OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
                 itsTreeType=OtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
-                logger.debug("ObservationPanel: Error getting treeInfo/treetype" + ex);
+                logger.error("ObservationPanel: Error getting treeInfo/treetype" + ex);
                 itsTreeType="";
             }         } else {
-            logger.debug("ERROR:  no node given");
+            logger.debug("no node given");
         }
         
         // set defaults
@@ -731,7 +731,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             OtdbRmi.getRemoteMaintenance().saveNode(aNode); 
         } catch (RemoteException ex) {
-            logger.debug("Error: saveNode failed : " + ex);
+            logger.error("Error: saveNode failed : " + ex);
         } 
     }
     
@@ -1039,10 +1039,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         if (itsOldTreeDescription != null && !inputTreeDescription.getText().equals(itsOldTreeDescription)) {
             try {
                 if (!OtdbRmi.getRemoteMaintenance().setDescription(itsNode.treeID(), inputTreeDescription.getText())) {
-                    logger.debug("Error during setDescription: "+OtdbRmi.getRemoteMaintenance().errorMsg());                        
+                    logger.error("Error during setDescription: "+OtdbRmi.getRemoteMaintenance().errorMsg());
                 } 
             } catch (RemoteException ex) {
-                logger.debug("Error: saveNode failed : " + ex);
+                logger.error("Error: saveNode failed : " + ex);
             } 
             itsOldTreeDescription = inputTreeDescription.getText();
         }
@@ -1077,7 +1077,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             itsOldDescriptionParam=aParam;
             inputDescription.setText(aParam.description);
         } catch (RemoteException ex) {
-            logger.debug("Error during getParam: "+ ex);
+            logger.error("Error during getParam: "+ ex);
             return;
         }
     }
@@ -1320,7 +1320,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 return;
             }
             if (aNewFile != null && aNewFile.exists()) {
-                logger.debug("File to load: " + aNewFile.getName());
+                logger.trace("File to load: " + aNewFile.getName());
 
                 // read the file and split input into beam or anabeam components
                 readFile(aNewFile,choice);
@@ -1333,7 +1333,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     }
 
     private void readFile(File aNewFile,String choice){
-        logger.debug("File to read: "+ aNewFile.getPath());
+        logger.trace("File to read: "+ aNewFile.getPath());
         
         Vector<String> targets          = new Vector<String>();
         Vector<String> angles1          = new Vector<String>();

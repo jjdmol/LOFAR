@@ -154,7 +154,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
         if (evt.getActionCommand().equals("Create ParSet File")) {
-            logger.debug("Create ParSet File");
+            logger.trace("Create ParSet File");
             saveParSet();
         }
     }
@@ -182,13 +182,13 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
                 output.write(dldata,0,dldata.length);
                 output.flush();
                 output.close();
-                logger.debug("File written to: " + aFile.getPath());
+                logger.trace("File written to: " + aFile.getPath());
             } catch (RemoteException ex) {
-                logger.debug("exportTree failed : " + ex);
+                logger.error("ERROR: exportTree failed : " + ex);
             } catch (FileNotFoundException ex) {
-                logger.debug("Error during newPICTree creation: "+ ex);
+                logger.error("Error during newPICTree creation: "+ ex);
             } catch (IOException ex) {
-                logger.debug("Error during newPICTree creation: "+ ex);
+                logger.error("Error during newPICTree creation: "+ ex);
             }
         }
     }
@@ -214,7 +214,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
                 jOTDBtree aTree = OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
                 itsTreeType=OtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
-                logger.debug("ParSetViewPanel: Error getting treeInfo/treetype" + ex);
+                logger.error("ParSetViewPanel: Error getting treeInfo/treetype" + ex);
                 itsTreeType="";
             }
             
@@ -224,7 +224,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
 
 
         } else {
-            logger.debug("ERROR:  no node given");
+            logger.debug("no node given");
         }
     }
     
@@ -284,9 +284,9 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
             jTable1.setModel(aModel);
             
         } catch (RemoteException ex) {
-            logger.debug("exportTree failed : " + ex);
+            logger.error("exportTree failed : " + ex);
         } catch (IOException ex) {
-            logger.debug("Error during getParSet: "+ ex);
+            logger.error("Error during getParSet: "+ ex);
         }
     }
     

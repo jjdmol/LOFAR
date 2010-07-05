@@ -173,7 +173,7 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPane
             setConstraints(itsNode.constraints);
             setDescription(itsNode.description);
         } else {
-            logger.debug("ERROR:  no node given");
+            logger.debug("no node given");
         }
     }
     
@@ -210,7 +210,7 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPane
         try {
             this.ClassificationText.setSelectedItem(OtdbRmi.getRemoteTypes().getClassif(aS));
         } catch (RemoteException e) {
-            logger.debug("Error: GetParamType failed " + e);
+            logger.error("Error: GetParamType failed " + e);
         }
     }
     
@@ -304,10 +304,10 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPane
                 } 
                
             } catch (RemoteException ex) {
-                logger.debug("error in Remote connection");
+                logger.error("error in Remote connection");
             }
         } else {
-            logger.debug("ERROR:  no Param given");
+            logger.debug("no Param given");
         }
     }
     /** This method is called from within the constructor to

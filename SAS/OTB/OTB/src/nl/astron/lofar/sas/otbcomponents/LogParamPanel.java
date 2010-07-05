@@ -164,7 +164,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
         LogParamTableModel model = new LogParamTableModel();
         tablePanel1.setTableModel(model);
         if (itsNode == null ) {
-            logger.debug("ERROR:  empty node supplied");
+            logger.debug("empty node supplied");
             LogParamNameText.setText("");
         } else {
             LogParamNameText.setText(itsNode.name);
@@ -453,7 +453,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
 
         itsMainFrame.setHourglassCursor();
         if (!((LogParamTableModel)tablePanel1.getTableModel()).fillTable(itsMainFrame,itsNode.nodeID())) {
-            logger.debug("Error filling LogParamTableMode");
+            logger.error("Error filling LogParamTableMode");
         }
         itsMainFrame.setNormalCursor();        
     }

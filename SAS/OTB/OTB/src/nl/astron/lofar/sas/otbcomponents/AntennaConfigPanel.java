@@ -135,7 +135,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 }
            }
         } catch (RemoteException ex) {
-            logger.debug("Error during getComponentParam: "+ ex);
+            logger.error("Error during getComponentParam: "+ ex);
             itsParamList=null;
             return;
         }
@@ -159,7 +159,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         try {
             OtdbRmi.getRemoteMaintenance().saveNode(aNode);
         } catch (RemoteException ex) {
-            logger.debug("Error: saveNode failed : " + ex);
+            logger.error("Error: saveNode failed : " + ex);
         }
     }
 
@@ -436,7 +436,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 setField(aNode,aParam,aHWNode);
             }
         } catch (RemoteException ex) {
-            logger.debug("Error during retrieveAndDisplayChildDataForNode: "+ ex);
+            logger.error("Error during retrieveAndDisplayChildDataForNode: "+ ex);
             return;
         }
     }
@@ -465,7 +465,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());
             }
         } catch (RemoteException ex) {
-            logger.debug("Error during getParam: "+ ex);
+            logger.error("Error during getParam: "+ ex);
         }
 
         if(parentName.equals("Observation")){
@@ -697,11 +697,11 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 jOTDBtree aTree = OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
                 itsTreeType=OtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
-                logger.debug("ObservationPanel: Error getting treeInfo/treetype" + ex);
+                logger.error("ObservationPanel: Error getting treeInfo/treetype" + ex);
                 itsTreeType="";
             }
          } else {
-            logger.debug("ERROR:  no node given");
+            logger.debug("no node given");
         }
 
         // set defaults/initial settings

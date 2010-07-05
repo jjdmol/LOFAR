@@ -239,44 +239,44 @@ public class MainPanel extends javax.swing.JPanel
             itsMainFrame.setHourglassCursor();
             if (itsTabFocus.equals("PIC")) {
                 if (!((PICtableModel)PICPanel.getTableModel()).fillTable()) {
-                    logger.debug("error filling PICtable");
+                    logger.error("error filling PICtable");
                 }
             } else if (itsTabFocus.equals("VIC")) {
                 if (!((VICtableModel)VICPanel.getTableModel()).fillTable()) {
-                    logger.debug("error filling VICtable");
+                    logger.error("error filling VICtable");
                 }            
             } else if (itsTabFocus.equals("Templates")) {
                 if (!((TemplatetableModel)TemplatesPanel.getTableModel()).fillTable()) {
-                    logger.debug("error filling templateTable");
+                    logger.error("error filling templateTable");
                 }
                 // VICTree could have been changed also
                 if (!((VICtableModel)VICPanel.getTableModel()).fillTable()) {
-                    logger.debug("error filling VICTable");
+                    logger.error("error filling VICTable");
                 }
                 // Default Templates could have been changed also
                 if (!((DefaultTemplatetableModel)DefaultTemplatesPanel.getTableModel()).fillTable()) {
-                    logger.debug("error filling default template table");
+                    logger.error("error filling default template table");
                 }
 
             } else if (itsTabFocus.equals("Default Templates")) {
                 if (!((DefaultTemplatetableModel)DefaultTemplatesPanel.getTableModel()).fillTable()) {
-                    logger.debug("error filling Default templateTable");
+                    logger.error("error filling Default templateTable");
                 }
                 // VICTree could have been changed also
                 if (!((VICtableModel)VICPanel.getTableModel()).fillTable()) {
-                    logger.debug("error filling VICTable");
+                    logger.error("error filling VICTable");
                 }
                 // Template could have been changed also
                 if (!((TemplatetableModel)TemplatesPanel.getTableModel()).fillTable()) {
-                    logger.debug("error filling TemplateTable");
+                    logger.error("error filling TemplateTable");
                 }
             } else if (itsTabFocus.equals("Components")) {
                 if (!((ComponentTableModel)ComponentsPanel.getTableModel()).fillTable()) {
-                    logger.debug("error filling ComponentsTable");
+                    logger.error("error filling ComponentsTable");
                 }
                 // templateTree could have been changed also
                 if (!((TemplatetableModel)TemplatesPanel.getTableModel()).fillTable()) {
-                    logger.debug("error filling templateTable");
+                    logger.error("error filling templateTable");
                 }
             }
             if (aSavedID > 0) {
@@ -795,10 +795,10 @@ public class MainPanel extends javax.swing.JPanel
                             itsMainFrame.setChanged(this.getFriendlyName(),true);
                             checkChanged();
                           } else {
-                            logger.debug("Failed to delete tree");
+                            logger.error("Failed to delete tree");
                           }
                       } catch (RemoteException ex) {
-                          logger.debug("Remote error during deleteTree: "+ ex);
+                          logger.error("Remote error during deleteTree: "+ ex);
                       }
                   }
                 }
@@ -820,11 +820,11 @@ public class MainPanel extends javax.swing.JPanel
                             itsMainFrame.setChanged(this.getFriendlyName(),true);
                             checkChanged();
                         } else {
-                            logger.debug("No VIC Tree created!!! : "+ OtdbRmi.getRemoteMaintenance().errorMsg());
+                            logger.error("No VIC Tree created!!! : "+ OtdbRmi.getRemoteMaintenance().errorMsg());
                         }
            
                     } catch (RemoteException ex) {
-                        logger.debug("Remote error during Build VICTree: "+ ex);
+                        logger.error("Remote error during Build VICTree: "+ ex);
                     }
                 }
                 
@@ -858,7 +858,7 @@ public class MainPanel extends javax.swing.JPanel
                                 // check momID, if not zero set to zero
                                 if (aTree.momID() != 0) {
                                     if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aTree.treeID(),0,aTree.campaign)) {
-                                        logger.debug("Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                        logger.error("Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg());
                                     }
                                 }
 
@@ -886,7 +886,7 @@ public class MainPanel extends javax.swing.JPanel
                     aTree =    OtdbRmi.getRemoteOTDB().getTreeInfo(treeID,false);
                     aTreeState=OtdbRmi.getRemoteTypes().getTreeState(aTree.state);
                 } catch (RemoteException ex) {
-                    logger.debug("Error during Remote treeMaintenance");
+                    logger.error("Error during Remote treeMaintenance");
                 }
             } else {
                 JOptionPane.showMessageDialog(this,"You didn't select a tree",
@@ -913,13 +913,13 @@ public class MainPanel extends javax.swing.JPanel
                             if (aT.state != OtdbRmi.getRemoteTypes().getTreeState("described") ) {
                                 aT.state=OtdbRmi.getRemoteTypes().getTreeState("described");
                                 if (!OtdbRmi.getRemoteMaintenance().setTreeState(aT.treeID(), aT.state)) {
-                                    logger.debug("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                    logger.error("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());
                                 }
                             }
                             // check momID, if not zero set to zero
                             if (aT.momID() != 0) {
                                 if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aT.treeID(),0, aT.campaign)) {
-                                    logger.debug("Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                    logger.error("Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg());
                                 }
 
                             }
@@ -928,11 +928,11 @@ public class MainPanel extends javax.swing.JPanel
                             itsMainFrame.setChanged(this.getFriendlyName(),true);
                             checkChanged();
                         } else {
-                            logger.debug("No Template Tree created!!!");
+                            logger.error("No Template Tree created!!!");
                         }
 
                     } catch (RemoteException ex) {
-                        logger.debug("Remote error during Build TemplateTree: "+ ex);
+                        logger.error("Remote error during Build TemplateTree: "+ ex);
                     }
                 }
  
@@ -969,7 +969,7 @@ public class MainPanel extends javax.swing.JPanel
                             // Create a new Tree from the found file.
                             int anID=OtdbRmi.getRemoteMaintenance().loadComponentFile(aFileName,"","");
                             if (anID < 1) {
-                                logger.debug("Error on ComponentfileLoad: " + itsNewFile.getPath());
+                                logger.error("Error on ComponentfileLoad: " + itsNewFile.getPath());
                             } else {
                                 // set the new created fill description stuff if needed
                                 itsMainFrame.getSharedVars().setComponentID(anID);
@@ -977,7 +977,7 @@ public class MainPanel extends javax.swing.JPanel
                                     jVICnodeDef aND=OtdbRmi.getRemoteMaintenance().getComponentNode(anID);
                                     aND.description=itsFileDescription;
                                     if (!OtdbRmi.getRemoteMaintenance().saveComponentNode(aND)) {
-                                        logger.debug("Error during setDescription in Component "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                        logger.error("Error during setDescription in Component "+OtdbRmi.getRemoteMaintenance().errorMsg());
                                     }
                                 }
                                 // set changed flag to reload mainpanel
@@ -989,14 +989,14 @@ public class MainPanel extends javax.swing.JPanel
                                 itsMainFrame.showPanel(aP.getFriendlyName());
                             }
                         } else {
-                            logger.debug("upload failed");
+                            logger.error("upload failed");
                         }
                     } catch (FileNotFoundException ex) {
-                        logger.debug("Error during new Component creation: "+ ex);
+                        logger.error("Error during new Component creation: "+ ex);
                     } catch (RemoteException ex) {
-                        logger.debug("Error during new Component creation: "+ ex);
+                        logger.error("Error during new Component creation: "+ ex);
                     } catch (IOException ex) {
-                        logger.debug("Error during new Component creation: "+ ex);
+                        logger.error("Error during new Component creation: "+ ex);
                     }
                 }
             } else if (aButton.equals("Modify")) {
@@ -1020,11 +1020,11 @@ public class MainPanel extends javax.swing.JPanel
                             itsMainFrame.setChanged(this.getFriendlyName(),true);
                             checkChanged();
                         } else {
-                            logger.debug("No Template Tree created!!!");
+                            logger.error("No Template Tree created!!!");
                         }
                     }
                 } catch (RemoteException ex) {
-                    logger.debug("Remote error during Build TemplateTree: "+ ex);
+                    logger.error("Remote error during Build TemplateTree: "+ ex);
                 }
             } else if (aButton.equals("Delete")) {
                 int nodeID=itsMainFrame.getSharedVars().getComponentID();
@@ -1034,10 +1034,10 @@ public class MainPanel extends javax.swing.JPanel
                        itsMainFrame.setChanged(this.getFriendlyName(),true);
                        checkChanged();
                      } else {
-                        logger.debug("Component not deleted");
+                        logger.error("Component not deleted");
                      }
                 } catch (RemoteException ex) {
-                    logger.debug("Remote error during component deletion: "+ ex);
+                    logger.error("Remote error during component deletion: "+ ex);
                 }
             }
         } else if (itsTabFocus.equals("Query Results")) {
@@ -1114,7 +1114,7 @@ public class MainPanel extends javax.swing.JPanel
             return false;
         }
         if (aNewFile != null && aNewFile.exists()) {
-            logger.debug("File to load: " + aNewFile.getName()); 
+            logger.trace("File to load: " + aNewFile.getName());
             logger.debug("Status: " + aFileStatus);
             logger.debug("Description: "+ aFileDescription);
             itsNewFile = aNewFile;
@@ -1145,7 +1145,7 @@ public class MainPanel extends javax.swing.JPanel
                 aTreeState = OtdbRmi.getRemoteTypes().getTreeState(aTree.state);
                 aClassif   = OtdbRmi.getRemoteTypes().getClassif(aTree.classification);
             } catch (RemoteException ex) {
-                logger.debug("Couldn't get Tree");
+                logger.error("Couldn't get Tree");
                 return;
             }
         }
@@ -1247,7 +1247,7 @@ public class MainPanel extends javax.swing.JPanel
                         buttonPanel1.setButtonEnabled("Build TemplateTree",false);                                        
                     }
                 } catch (RemoteException ex) {
-                    logger.debug("Error checking isTopComponent");
+                    logger.error("Error checking isTopComponent");
                 }
             } else {
                 buttonPanel1.setButtonEnabled("Modify",false);                

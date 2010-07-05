@@ -178,11 +178,11 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
                     output.close();
                     logger.debug("File written to: " + aFile.getPath());
                 } catch (RemoteException ex) {
-                    logger.debug("exportTree failed : " + ex);
+                    logger.error("Error during exportTree failed : " + ex);
                 } catch (FileNotFoundException ex) {
-                    logger.debug("Error during newPICTree creation: "+ ex);
+                    logger.error("Error during newPICTree creation: "+ ex);
                 } catch (IOException ex) {
-                    logger.debug("Error during newPICTree creation: "+ ex);
+                    logger.error("Error during newPICTree creation: "+ ex);
                 }
             }
         }
@@ -215,7 +215,7 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
                 jOTDBtree aTree = OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
                 itsTreeType=OtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
-                logger.debug("NodeViewPanel: Error getting treeInfo/treetype" + ex);
+                logger.error("NodeViewPanel: Error getting treeInfo/treetype" + ex);
                 itsTreeType="";
             }
 
@@ -226,7 +226,7 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
             setLimits(String.valueOf(itsNode.limits));
             setDescription(itsNode.description);
         } else {
-            logger.debug("ERROR:  no node given");
+            logger.debug("no node given");
         }
     }
     
@@ -358,10 +358,10 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
                 } 
                
             } catch (RemoteException ex) {
-                logger.debug("error in Remote connection");
+                logger.error("error in Remote connection");
             }
         } else {
-            logger.debug("ERROR:  no Param given");
+            logger.debug("no Param given");
         }
     }
     /** This method is called from within the constructor to

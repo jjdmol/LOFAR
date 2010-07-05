@@ -180,14 +180,14 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
      * It then triggers the PlotSlotsPanel to act on the information.
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
-        logger.debug("PopUp menu Selection made: "+evt.getActionCommand().toString());
+        logger.trace("PopUp menu Selection made: "+evt.getActionCommand().toString());
         if(evt.getActionCommand().startsWith("Add to slot")){
             int slotSelected = Integer.parseInt(evt.getActionCommand().toString().substring(12));
-            logger.debug("Plot Slot extrapolated: "+slotSelected);
+            logger.trace("Plot Slot extrapolated: "+slotSelected);
             itsSlotsPanel.addPlotToSlot(slotSelected,constructPlotterConstraints(itsParamName,itsParamTableName));
         } else if(evt.getActionCommand().startsWith("Add to plot in slot")){
             int slotSelected = Integer.parseInt(evt.getActionCommand().toString().substring(20));
-            logger.debug("Plot Slot extrapolated: "+slotSelected);
+            logger.trace("Plot Slot extrapolated: "+slotSelected);
             Object parameterConstraints =  constructPlotterConstraints(itsParamName,itsParamTableName);            
             itsSlotsPanel.alterDataInPlot(slotSelected,parameterConstraints,PlotConstants.DATASET_OPERATOR_ADD);
         }
@@ -257,7 +257,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
                 logger.error("Plotter created an exception :"+ex.getMessage(),ex);
             }
         } else {
-            logger.debug("ERROR:  no Param Name given");
+            logger.debug("no Param Name given");
         }
         parameterConstraints.put("PARMDBCONSTRAINTS",passToDataAccess);
         return parameterConstraints;

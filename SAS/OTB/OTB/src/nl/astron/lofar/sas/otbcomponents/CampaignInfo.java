@@ -131,7 +131,7 @@ public class CampaignInfo extends javax.swing.JPanel {
                     this.inputContact.setText("");
                 }
             } catch (RemoteException ex) {
-                logger.debug("ObservationPanel: Error getting treeInfo/campaignInfo" + ex);
+                logger.error("ObservationPanel: Error getting treeInfo/campaignInfo" + ex);
                 this.inputNameTxt.setText("");
                 this.inputTitle.setText("");
                 this.inputPI.setText("");
@@ -139,7 +139,7 @@ public class CampaignInfo extends javax.swing.JPanel {
                 this.inputContact.setText("");
             }
          } else {
-            logger.debug("ERROR:  no MainFrame given");
+            logger.debug("no MainFrame given");
         }
         itsMainFrame.setNormalCursor();
 
@@ -158,7 +158,7 @@ public class CampaignInfo extends javax.swing.JPanel {
             try {
                 OtdbRmi.getRemoteCampaign().saveCampaign(aCampaignInfo);
             } catch (RemoteException ex) {
-                logger.debug("ObservationPanel: Error saving changed campaignInfo" + ex);            }
+                logger.error("ObservationPanel: Error saving changed campaignInfo" + ex);            }
         }
     }
 
