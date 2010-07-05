@@ -331,10 +331,14 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         TBBConfigurationPanel.setColumnSize("stop",8);
         TBBConfigurationPanel.setColumnSize("filter",8);
         TBBConfigurationPanel.setColumnSize("window",12);
-        TBBConfigurationPanel.setColumnSize("C0",10);
-        TBBConfigurationPanel.setColumnSize("C1",10);
-        TBBConfigurationPanel.setColumnSize("C2",10);
-        TBBConfigurationPanel.setColumnSize("C3",10);
+        TBBConfigurationPanel.setColumnSize("F0C0",10);
+        TBBConfigurationPanel.setColumnSize("F0C1",10);
+        TBBConfigurationPanel.setColumnSize("F0C2",10);
+        TBBConfigurationPanel.setColumnSize("F0C3",10);
+        TBBConfigurationPanel.setColumnSize("F1C0",10);
+        TBBConfigurationPanel.setColumnSize("F1C1",10);
+        TBBConfigurationPanel.setColumnSize("F1C2",10);
+        TBBConfigurationPanel.setColumnSize("F1C3",10);
         TBBConfigurationPanel.setColumnSize("RCUs",75);
         TBBConfigurationPanel.setColumnSize("Subbands",75);
         
@@ -852,6 +856,10 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                            inputFilter0Coeff1.getText(),
                            inputFilter0Coeff2.getText(),
                            inputFilter0Coeff3.getText(),
+                           inputFilter1Coeff0.getText(),
+                           inputFilter1Coeff1.getText(),
+                           inputFilter1Coeff2.getText(),
+                           inputFilter1Coeff3.getText(),
                            inputRCUs.getText(),
                            inputSubbandList.getText()
         };
@@ -1075,7 +1083,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private void deleteConfig() {
         int row = TBBConfigurationPanel.getSelectedRow();
         // if removed then the old RCU's should be removed form the checklist also
-        String oldRCUs = itsTBBConfigurationTableModel.getSelection(row)[11];
+        String oldRCUs = itsTBBConfigurationTableModel.getSelection(row)[15];
         BitSet rcuSet = rcuToBitSet(LofarUtils.expandedArrayString(oldRCUs));
         
         if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this configuration ?","Delete Configuration",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {

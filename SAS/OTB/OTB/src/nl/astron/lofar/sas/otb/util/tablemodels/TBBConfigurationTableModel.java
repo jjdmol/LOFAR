@@ -59,14 +59,14 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
         this.addColumn("stop");
         this.addColumn("filter");
         this.addColumn("window");
-        this.addColumn("F0_C0");
-        this.addColumn("F0_C1");
-        this.addColumn("F0_C2");
-        this.addColumn("F0_C3");
-        this.addColumn("F1_C0");
-        this.addColumn("F1_C1");
-        this.addColumn("F1_C2");
-        this.addColumn("F1_C3");
+        this.addColumn("F0C0");
+        this.addColumn("F0C1");
+        this.addColumn("F0C2");
+        this.addColumn("F0C3");
+        this.addColumn("F1C0");
+        this.addColumn("F1C1");
+        this.addColumn("F1C2");
+        this.addColumn("F1C3");
         this.addColumn("RCUs");
         this.addColumn("Subbands");
         
@@ -228,6 +228,10 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
      * @param  aF0C1          String Filter0Coeff1
      * @param  aF0C2          String Filter0Coeff2
      * @param  aF0C3          String Filter0Coeff3
+     * @param  aF1C0          String Filter1Coeff0
+     * @param  aF1C1          String Filter1Coeff1
+     * @param  aF1C2          String Filter1Coeff2
+     * @param  aF1C3          String Filter1Coeff3
      * @param  aRCUs        String RCUs involved
      * @param  aSubbandList String subbands involved
      *
