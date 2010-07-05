@@ -580,7 +580,7 @@ public class MainPanel extends javax.swing.JPanel
             if (treeID > 0) {
                 itsMainFrame.getSharedVars().setTreeID(treeID);
             } else if (!aButton.equals("New")) {
-                JOptionPane.showMessageDialog(null,"You didn't select a tree",
+                JOptionPane.showMessageDialog(this,"You didn't select a tree",
                         "Tree selection warning",
                         JOptionPane.WARNING_MESSAGE);
                 return;
@@ -670,7 +670,7 @@ public class MainPanel extends javax.swing.JPanel
             if (treeID > 0) {
                 itsMainFrame.getSharedVars().setTreeID(treeID);
             } else {
-                JOptionPane.showMessageDialog(null,"You didn't select a tree",
+                JOptionPane.showMessageDialog(this,"You didn't select a tree",
                         "Tree selection warning",
                         JOptionPane.WARNING_MESSAGE);
                 return;
@@ -724,7 +724,7 @@ public class MainPanel extends javax.swing.JPanel
                     logger.debug("Error during Remote treeMaintenance");
                 }
             } else {
-                JOptionPane.showMessageDialog(null,"You didn't select a tree",
+                JOptionPane.showMessageDialog(this,"You didn't select a tree",
                         "Tree selection warning",
                         JOptionPane.WARNING_MESSAGE);
                 return;
@@ -733,14 +733,14 @@ public class MainPanel extends javax.swing.JPanel
                 itsMainFrame.ToDo();
             } else if (aButton.equals("Duplicate")) {
                 if (treeID < 1) {
-                    JOptionPane.showMessageDialog(null,"Select a tree to duplicate first",
+                    JOptionPane.showMessageDialog(this,"Select a tree to duplicate first",
                         "No Tree Selected",
                         JOptionPane.WARNING_MESSAGE);
                 } else {
                     try {
                         int newTreeID=OtdbRmi.getRemoteMaintenance().copyTemplateTree(treeID);
                         if (newTreeID > 0) {
-                            JOptionPane.showMessageDialog(null,"New Tree created with ID: "+newTreeID,
+                            JOptionPane.showMessageDialog(this,"New Tree created with ID: "+newTreeID,
                                 "New Tree Message",
                                 JOptionPane.INFORMATION_MESSAGE);
                             // set back treestate to described
@@ -777,14 +777,14 @@ public class MainPanel extends javax.swing.JPanel
                 }
             } else if (aButton.equals("Delete")) {
                if (treeID < 1) {
-                 JOptionPane.showMessageDialog(null,"Select a tree to delete first",
+                 JOptionPane.showMessageDialog(this,"Select a tree to delete first",
                      "No Tree Selected",
                      JOptionPane.WARNING_MESSAGE);
                 } else {
                  if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree: ?"+treeID,"Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                       try {
                           if (OtdbRmi.getRemoteMaintenance().deleteTree(treeID)) {
-                            JOptionPane.showMessageDialog(null,"Template Tree Deleted",
+                            JOptionPane.showMessageDialog(this,"Template Tree Deleted",
                                 "Delete Tree Message",
                                 JOptionPane.INFORMATION_MESSAGE);
                             itsMainFrame.getSharedVars().setTreeID(-1);                              
@@ -812,7 +812,7 @@ public class MainPanel extends javax.swing.JPanel
                     try {
                         int newTreeID=OtdbRmi.getRemoteMaintenance().instanciateTree(itsMainFrame.getSharedVars().getTreeID());
                         if (newTreeID > 0) {
-                            JOptionPane.showMessageDialog(null,"New VICTree created with ID: "+newTreeID,
+                            JOptionPane.showMessageDialog(this,"New VICTree created with ID: "+newTreeID,
                                 "New Tree Message",
                                 JOptionPane.INFORMATION_MESSAGE);
                             itsMainFrame.getSharedVars().setTreeID(newTreeID);
@@ -852,7 +852,7 @@ public class MainPanel extends javax.swing.JPanel
                                 }
                             }
                             if (found) {
-                                JOptionPane.showMessageDialog(null,"This name has been used allready.", "Duplicate name error", JOptionPane.ERROR_MESSAGE);
+                                JOptionPane.showMessageDialog(this,"This name has been used allready.", "Duplicate name error", JOptionPane.ERROR_MESSAGE);
                             } else {
                                 OtdbRmi.getRemoteMaintenance().assignTemplateName(treeID, aName);
                                 // check momID, if not zero set to zero
@@ -889,7 +889,7 @@ public class MainPanel extends javax.swing.JPanel
                     logger.debug("Error during Remote treeMaintenance");
                 }
             } else {
-                JOptionPane.showMessageDialog(null,"You didn't select a tree",
+                JOptionPane.showMessageDialog(this,"You didn't select a tree",
                         "Tree selection warning",
                         JOptionPane.WARNING_MESSAGE);
                 return;
@@ -898,14 +898,14 @@ public class MainPanel extends javax.swing.JPanel
                 itsMainFrame.ToDo();
             } else if (aButton.equals("Duplicate")) {
                 if (treeID < 1) {
-                    JOptionPane.showMessageDialog(null,"Select a tree to duplicate first",
+                    JOptionPane.showMessageDialog(this,"Select a tree to duplicate first",
                         "No Tree Selected",
                         JOptionPane.WARNING_MESSAGE);
                 } else {
                     try {
                         int newTreeID=OtdbRmi.getRemoteMaintenance().copyTemplateTree(treeID);
                         if (newTreeID > 0) {
-                            JOptionPane.showMessageDialog(null,"New Tree (Not Default!!!) created with ID: "+newTreeID,
+                            JOptionPane.showMessageDialog(this,"New Tree (Not Default!!!) created with ID: "+newTreeID,
                                 "New Tree Message",
                                 JOptionPane.INFORMATION_MESSAGE);
                             // set back treestate to described
@@ -1012,7 +1012,7 @@ public class MainPanel extends javax.swing.JPanel
                     if (OtdbRmi.getRemoteMaintenance().isTopComponent(nodeID)) {
                         int newTreeID=OtdbRmi.getRemoteMaintenance().buildTemplateTree(nodeID,classifID);
                         if (newTreeID > 0) {
-                            JOptionPane.showMessageDialog(null,"New Tree created with ID: "+newTreeID,
+                            JOptionPane.showMessageDialog(this,"New Tree created with ID: "+newTreeID,
                                 "New Tree Message",
                                 JOptionPane.INFORMATION_MESSAGE);
                             itsMainFrame.getSharedVars().setTreeID(newTreeID);

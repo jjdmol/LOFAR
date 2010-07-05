@@ -16,7 +16,7 @@
     <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
-    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,1,-34,0,0,4,-111"/>
+    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,2,-58,0,0,4,-111"/>
   </AuxValues>
 
   <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
@@ -80,85 +80,108 @@
               <Group type="102" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
+                      <Component id="labelBaselevel" alignment="0" pref="84" max="32767" attributes="1"/>
+                      <Component id="labelOperatingMode" alignment="0" pref="84" max="32767" attributes="1"/>
+                      <Component id="labelTriggerMode" alignment="0" pref="84" max="32767" attributes="0"/>
+                      <Component id="labelStartlevel" alignment="0" pref="84" max="32767" attributes="1"/>
+                      <Component id="labelFilter" alignment="0" pref="84" max="32767" attributes="1"/>
+                      <Component id="labelWindow" alignment="0" pref="84" max="32767" attributes="1"/>
+                      <Component id="labelStoplevel" alignment="0" pref="84" max="32767" attributes="1"/>
+                  </Group>
+                  <EmptySpace min="10" pref="10" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Component id="inputStartlevel" alignment="0" pref="133" max="32767" attributes="1"/>
+                      <Component id="inputBaselevel" alignment="0" pref="133" max="32767" attributes="1"/>
+                      <Component id="inputStoplevel" alignment="0" pref="133" max="32767" attributes="1"/>
+                      <Component id="inputFilter" alignment="0" pref="133" max="32767" attributes="1"/>
+                      <Component id="inputWindow" alignment="0" pref="133" max="32767" attributes="1"/>
+                      <Component id="inputTriggerMode" alignment="0" min="-2" pref="133" max="-2" attributes="1"/>
+                      <Component id="inputOperatingMode" min="-2" pref="133" max="-2" attributes="1"/>
+                  </Group>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="1" attributes="0">
+                      <Component id="limitsBaselevel" alignment="0" max="32767" attributes="1"/>
+                      <Component id="limitsStartlevel" alignment="0" pref="56" max="32767" attributes="1"/>
+                      <Component id="limitsStoplevel" alignment="0" pref="56" max="32767" attributes="1"/>
+                      <Component id="limitsFilter" alignment="0" pref="56" max="32767" attributes="1"/>
+                  </Group>
+                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                      <Group type="102" attributes="0">
+                          <EmptySpace min="-2" pref="310" max="-2" attributes="0"/>
+                          <Component id="jLabel2" min="-2" pref="156" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" pref="322" max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="102" alignment="1" attributes="0">
+                          <EmptySpace max="32767" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="TBBConfigurationPanel" alignment="0" min="-2" pref="830" max="-2" attributes="0"/>
+                              <Group type="102" alignment="0" attributes="0">
+                                  <Component id="editConfigButton" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                      <Component id="limitsCoeff1" alignment="0" max="32767" attributes="1"/>
+                                      <Component id="limitsCoeff0" alignment="0" pref="101" max="32767" attributes="1"/>
+                                      <Group type="102" alignment="0" attributes="0">
+                                          <Component id="deleteConfigButton" min="-2" max="-2" attributes="0"/>
+                                          <EmptySpace max="-2" attributes="0"/>
+                                          <Component id="addConfigButton" min="-2" max="-2" attributes="0"/>
+                                          <EmptySpace max="-2" attributes="0"/>
+                                          <Component id="cancelEditButton" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                      <Component id="limitsCoeff2" alignment="0" max="32767" attributes="1"/>
+                                      <Component id="limitsCoeff3" alignment="0" pref="103" max="32767" attributes="1"/>
+                                  </Group>
+                              </Group>
+                          </Group>
+                          <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
+                      </Group>
+                  </Group>
+                  <EmptySpace max="-2" attributes="0"/>
+              </Group>
+              <Group type="102" alignment="0" attributes="0">
+                  <Group type="103" groupAlignment="0" attributes="0">
                       <Component id="labelCoeff2" alignment="0" min="-2" pref="67" max="-2" attributes="1"/>
                       <Group type="102" alignment="0" attributes="0">
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="labelBaselevel" alignment="0" pref="84" max="32767" attributes="1"/>
-                              <Component id="labelOperatingMode" alignment="0" pref="84" max="32767" attributes="1"/>
-                              <Component id="labelTriggerMode" alignment="0" pref="84" max="32767" attributes="0"/>
-                              <Component id="labelStartlevel" alignment="0" pref="84" max="32767" attributes="1"/>
-                              <Component id="labelFilter" alignment="0" pref="84" max="32767" attributes="1"/>
-                              <Component id="labelWindow" alignment="0" pref="84" max="32767" attributes="1"/>
-                              <Component id="labelStoplevel" alignment="0" pref="84" max="32767" attributes="1"/>
-                              <Component id="labelCoeff0" alignment="0" pref="84" max="32767" attributes="1"/>
-                              <Component id="labelCoeff1" alignment="0" pref="84" max="32767" attributes="1"/>
-                              <Component id="labelCoeff3" alignment="0" pref="84" max="32767" attributes="1"/>
-                              <Component id="labelRCUs" alignment="0" pref="84" max="32767" attributes="1"/>
-                              <Component id="labelSubbandList" alignment="0" pref="84" max="32767" attributes="1"/>
+                              <Component id="labelCoeff0" alignment="0" pref="85" max="32767" attributes="1"/>
+                              <Component id="labelCoeff1" alignment="0" pref="85" max="32767" attributes="1"/>
+                              <Component id="labelCoeff3" alignment="0" pref="85" max="32767" attributes="1"/>
+                              <Component id="labelRCUs" alignment="0" pref="85" max="32767" attributes="1"/>
+                              <Component id="labelSubbandList" alignment="0" pref="85" max="32767" attributes="1"/>
                           </Group>
                           <EmptySpace min="10" pref="10" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" alignment="0" attributes="0">
                                   <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="inputStartlevel" alignment="0" pref="146" max="32767" attributes="1"/>
-                                      <Component id="inputBaselevel" alignment="0" pref="146" max="32767" attributes="1"/>
-                                      <Component id="inputStoplevel" alignment="0" pref="146" max="32767" attributes="1"/>
-                                      <Component id="inputFilter" alignment="0" pref="146" max="32767" attributes="1"/>
-                                      <Component id="inputWindow" alignment="0" pref="146" max="32767" attributes="1"/>
-                                      <Component id="inputCoeff0" alignment="0" pref="146" max="32767" attributes="1"/>
-                                      <Component id="inputCoeff1" alignment="0" pref="146" max="32767" attributes="1"/>
-                                      <Component id="inputTriggerMode" alignment="0" min="-2" pref="133" max="-2" attributes="1"/>
-                                      <Component id="inputOperatingMode" min="-2" pref="133" max="-2" attributes="1"/>
-                                      <Component id="inputCoeff2" alignment="1" pref="146" max="32767" attributes="1"/>
-                                      <Component id="inputCoeff3" alignment="0" pref="146" max="32767" attributes="1"/>
+                                      <Component id="inputFilter0Coeff0" alignment="0" pref="134" max="32767" attributes="1"/>
+                                      <Component id="inputFilter0Coeff1" alignment="0" pref="134" max="32767" attributes="1"/>
+                                      <Component id="inputFilter0Coeff2" alignment="1" pref="134" max="32767" attributes="1"/>
+                                      <Component id="inputFilter0Coeff3" alignment="0" pref="134" max="32767" attributes="1"/>
                                   </Group>
-                                  <EmptySpace max="-2" attributes="0"/>
+                                  <EmptySpace min="-2" pref="68" max="-2" attributes="0"/>
                                   <Group type="103" groupAlignment="0" attributes="0">
-                                      <Group type="102" attributes="0">
-                                          <Group type="103" groupAlignment="1" attributes="0">
-                                              <Component id="limitsCoeff2" alignment="0" pref="59" max="32767" attributes="1"/>
-                                              <Component id="limitsCoeff1" alignment="0" pref="59" max="32767" attributes="1"/>
-                                              <Component id="limitsCoeff0" alignment="0" pref="59" max="32767" attributes="1"/>
-                                              <Component id="limitsBaselevel" alignment="0" pref="59" max="32767" attributes="1"/>
-                                              <Component id="limitsStartlevel" alignment="0" pref="59" max="32767" attributes="1"/>
-                                              <Component id="limitsStoplevel" alignment="0" pref="59" max="32767" attributes="1"/>
-                                              <Component id="limitsFilter" alignment="0" pref="59" max="32767" attributes="1"/>
-                                          </Group>
-                                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                              <Group type="102" attributes="0">
-                                                  <EmptySpace min="-2" pref="310" max="-2" attributes="0"/>
-                                                  <Component id="jLabel2" min="-2" pref="156" max="-2" attributes="0"/>
-                                                  <EmptySpace min="-2" pref="322" max="-2" attributes="0"/>
-                                              </Group>
-                                              <Group type="102" alignment="1" attributes="0">
-                                                  <EmptySpace max="32767" attributes="0"/>
-                                                  <Group type="103" groupAlignment="0" attributes="0">
-                                                      <Group type="102" alignment="0" attributes="0">
-                                                          <Component id="editConfigButton" min="-2" max="-2" attributes="0"/>
-                                                          <EmptySpace max="-2" attributes="0"/>
-                                                          <Component id="deleteConfigButton" min="-2" max="-2" attributes="0"/>
-                                                          <EmptySpace max="-2" attributes="0"/>
-                                                          <Component id="addConfigButton" min="-2" max="-2" attributes="0"/>
-                                                          <EmptySpace max="-2" attributes="0"/>
-                                                          <Component id="cancelEditButton" min="-2" max="-2" attributes="0"/>
-                                                      </Group>
-                                                      <Component id="TBBConfigurationPanel" alignment="0" min="-2" pref="830" max="-2" attributes="0"/>
-                                                  </Group>
-                                                  <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
-                                              </Group>
-                                          </Group>
-                                      </Group>
-                                      <Component id="limitsCoeff3" min="-2" max="-2" attributes="1"/>
+                                      <Component id="inputFilter1Coeff0" alignment="0" pref="134" max="32767" attributes="1"/>
+                                      <Component id="inputFilter1Coeff1" alignment="0" pref="134" max="32767" attributes="1"/>
+                                      <Component id="inputFilter1Coeff2" alignment="1" pref="134" max="32767" attributes="1"/>
+                                      <Component id="inputFilter1Coeff3" alignment="0" pref="134" max="32767" attributes="1"/>
                                   </Group>
+                                  <EmptySpace min="-2" pref="705" max="-2" attributes="0"/>
                               </Group>
                               <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
                                   <Component id="inputSubbandList" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="inputRCUs" alignment="0" pref="1040" max="32767" attributes="1"/>
+                                  <Component id="inputRCUs" alignment="0" min="-2" pref="1040" max="-2" attributes="1"/>
                               </Group>
                           </Group>
                       </Group>
                   </Group>
-                  <EmptySpace max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="31" max="-2" attributes="0"/>
+              </Group>
+              <Group type="102" alignment="0" attributes="0">
+                  <EmptySpace min="-2" pref="135" max="-2" attributes="0"/>
+                  <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="155" max="-2" attributes="0"/>
+                  <Component id="jLabel4" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace pref="789" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -211,41 +234,70 @@
                               <Component id="labelWindow" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="inputWindow" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="limitsCoeff0" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="inputCoeff0" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="labelCoeff0" alignment="3" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="labelCoeff1" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="inputCoeff1" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="limitsCoeff1" alignment="3" min="-2" max="-2" attributes="0"/>
-                          </Group>
                       </Group>
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="TBBConfigurationPanel" min="-2" pref="209" max="-2" attributes="0"/>
                       </Group>
                   </Group>
-                  <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="19" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
-                      <Component id="labelCoeff2" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="inputCoeff2" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="limitsCoeff2" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="editConfigButton" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="deleteConfigButton" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="addConfigButton" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="cancelEditButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="17" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
-                      <Component id="labelCoeff3" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="inputCoeff3" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="limitsCoeff3" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="1" attributes="0">
+                      <Group type="102" alignment="1" attributes="0">
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="inputFilter0Coeff0" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="labelCoeff0" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="labelCoeff1" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="inputFilter0Coeff1" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="labelCoeff2" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="inputFilter0Coeff2" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="labelCoeff3" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="inputFilter0Coeff3" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <Group type="102" alignment="1" attributes="0">
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="inputFilter1Coeff0" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="limitsCoeff0" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="inputFilter1Coeff1" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="limitsCoeff1" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="inputFilter1Coeff2" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="limitsCoeff2" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="inputFilter1Coeff3" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="limitsCoeff3" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                  </Group>
+                  <EmptySpace type="separate" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="labelRCUs" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="inputRCUs" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -255,7 +307,7 @@
                       <Component id="labelSubbandList" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="inputSubbandList" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace pref="23" max="32767" attributes="0"/>
+                  <EmptySpace pref="116" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -368,22 +420,22 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JTextField" name="inputCoeff0">
+        <Component class="javax.swing.JTextField" name="inputFilter0Coeff0">
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JTextField" name="inputCoeff1">
+        <Component class="javax.swing.JTextField" name="inputFilter0Coeff1">
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JTextField" name="inputCoeff2">
+        <Component class="javax.swing.JTextField" name="inputFilter0Coeff2">
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JTextField" name="inputCoeff3">
+        <Component class="javax.swing.JTextField" name="inputFilter0Coeff3">
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputActionPerformed"/>
           </Events>
@@ -516,6 +568,36 @@
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputTriggerModeinputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel3">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Filter 0"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel4">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Filter 1"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JTextField" name="inputFilter1Coeff0">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputFilter1Coeff0inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="inputFilter1Coeff1">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputFilter1Coeff1inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="inputFilter1Coeff2">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputFilter1Coeff2inputActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="inputFilter1Coeff3">
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputFilter1Coeff3inputActionPerformed"/>
           </Events>
         </Component>
       </SubComponents>

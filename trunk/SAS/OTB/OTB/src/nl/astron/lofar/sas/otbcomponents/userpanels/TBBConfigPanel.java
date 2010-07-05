@@ -274,10 +274,10 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         inputStoplevel.setEnabled(enabled);
         inputFilter.setEnabled(enabled);
         inputWindow.setEnabled(enabled);
-        inputCoeff0.setEnabled(enabled);
-        inputCoeff1.setEnabled(enabled);
-        inputCoeff2.setEnabled(enabled);
-        inputCoeff3.setEnabled(enabled);
+        inputFilter0Coeff0.setEnabled(enabled);
+        inputFilter0Coeff1.setEnabled(enabled);
+        inputFilter0Coeff2.setEnabled(enabled);
+        inputFilter0Coeff3.setEnabled(enabled);
         inputRCUs.setEnabled(enabled);
         inputSubbandList.setEnabled(enabled);
     }
@@ -473,50 +473,94 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             }
             itsWindows.add(aNode.limits);
 
-        } else if (aKeyName.equals("coeff0")) {
+        } else if (aKeyName.equals("filter0_coeff0")) {
             // Coeff0
             if (!isInitialized) {
-               inputCoeff0.setToolTipText(aParam.description);
+               inputFilter0Coeff0.setToolTipText(aParam.description);
             }
             if (isRef && aParam != null) {
-                itsCoeff0s.add(aNode.limits + " : " + aParam.limits);
+                itsFilter0Coeff0s.add(aNode.limits + " : " + aParam.limits);
             } else {
-                itsCoeff0s.add(aNode.limits);
+                itsFilter0Coeff0s.add(aNode.limits);
             }
             
-        } else if (aKeyName.equals("coeff1")) {
+        } else if (aKeyName.equals("filter0_coeff1")) {
             // Coeff1
             if (!isInitialized) {
-               inputCoeff1.setToolTipText(aParam.description);
+               inputFilter0Coeff1.setToolTipText(aParam.description);
             }
             if (isRef && aParam != null) {
-                itsCoeff1s.add(aNode.limits + " : " + aParam.limits);
+                itsFilter0Coeff1s.add(aNode.limits + " : " + aParam.limits);
             } else {
-                itsCoeff1s.add(aNode.limits);
+                itsFilter0Coeff1s.add(aNode.limits);
             }
             
-        } else if (aKeyName.equals("coeff2")) {
+        } else if (aKeyName.equals("filter0_coeff2")) {
             // Coeff2
             if (!isInitialized) {
-               inputCoeff2.setToolTipText(aParam.description);
+               inputFilter0Coeff2.setToolTipText(aParam.description);
             }
             if (isRef && aParam != null) {
-                itsCoeff2s.add(aNode.limits + " : " + aParam.limits);
+                itsFilter0Coeff2s.add(aNode.limits + " : " + aParam.limits);
             } else {
-                itsCoeff2s.add(aNode.limits);
+                itsFilter0Coeff2s.add(aNode.limits);
             }
             
-        } else if (aKeyName.equals("coeff3")) {
+        } else if (aKeyName.equals("filter0_coeff3")) {
             // Coeff3
             if (!isInitialized) {
-               inputCoeff3.setToolTipText(aParam.description);
+               inputFilter0Coeff3.setToolTipText(aParam.description);
             }
             if (isRef && aParam != null) {
-                itsCoeff3s.add(aNode.limits + " : " + aParam.limits);
+                itsFilter0Coeff3s.add(aNode.limits + " : " + aParam.limits);
             } else {
-                itsCoeff3s.add(aNode.limits);
+                itsFilter0Coeff3s.add(aNode.limits);
             }
-            
+
+         } else if (aKeyName.equals("filter1_coeff0")) {
+            // Coeff0
+            if (!isInitialized) {
+               inputFilter1Coeff0.setToolTipText(aParam.description);
+            }
+            if (isRef && aParam != null) {
+                itsFilter1Coeff0s.add(aNode.limits + " : " + aParam.limits);
+            } else {
+                itsFilter1Coeff0s.add(aNode.limits);
+            }
+
+        } else if (aKeyName.equals("filter1_coeff1")) {
+            // Coeff1
+            if (!isInitialized) {
+               inputFilter1Coeff1.setToolTipText(aParam.description);
+            }
+            if (isRef && aParam != null) {
+                itsFilter1Coeff1s.add(aNode.limits + " : " + aParam.limits);
+            } else {
+                itsFilter1Coeff1s.add(aNode.limits);
+            }
+
+        } else if (aKeyName.equals("filter1_coeff2")) {
+            // Coeff2
+            if (!isInitialized) {
+               inputFilter1Coeff2.setToolTipText(aParam.description);
+            }
+            if (isRef && aParam != null) {
+                itsFilter1Coeff2s.add(aNode.limits + " : " + aParam.limits);
+            } else {
+                itsFilter1Coeff2s.add(aNode.limits);
+            }
+
+        } else if (aKeyName.equals("filter1_coeff3")) {
+            // Coeff3
+            if (!isInitialized) {
+               inputFilter1Coeff3.setToolTipText(aParam.description);
+            }
+            if (isRef && aParam != null) {
+                itsFilter1Coeff3s.add(aNode.limits + " : " + aParam.limits);
+            } else {
+                itsFilter1Coeff3s.add(aNode.limits);
+            }
+           
         } else if (aKeyName.equals("RCUs")) {
             // RCUs
             if (!isInitialized) {
@@ -552,7 +596,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         }
 
         // set table back to initial values
-        itsTBBConfigurationTableModel.fillTable(itsTreeType,itsOperatingModes,itsTriggerModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsCoeff0s,itsCoeff1s,itsCoeff2s,itsCoeff3s,itsRCUs,itsSubbandList);
+        itsTBBConfigurationTableModel.fillTable(itsTreeType,itsOperatingModes,itsTriggerModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsFilter0Coeff0s,itsFilter0Coeff1s,itsFilter0Coeff2s,itsFilter0Coeff3s,itsFilter1Coeff0s,itsFilter1Coeff1s,itsFilter1Coeff2s,itsFilter1Coeff3s,itsRCUs,itsSubbandList);
         
         buttonPanel1.setButtonEnabled("Restore",false);
         buttonPanel1.setButtonEnabled("Apply",false);
@@ -595,17 +639,28 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
          }
             
          // Coeff0
-         inputCoeff0.setText(itsCoeff0s.elementAt(index));
+         inputFilter0Coeff0.setText(itsFilter0Coeff0s.elementAt(index));
 
          // Coeff1
-         inputCoeff1.setText(itsCoeff1s.elementAt(index));
+         inputFilter0Coeff1.setText(itsFilter0Coeff1s.elementAt(index));
 
          // Coeff2
-         inputCoeff2.setText(itsCoeff2s.elementAt(index));
+         inputFilter0Coeff2.setText(itsFilter0Coeff2s.elementAt(index));
 
          // Coeff3
-         inputCoeff3.setText(itsCoeff3s.elementAt(index));
+         inputFilter0Coeff3.setText(itsFilter0Coeff3s.elementAt(index));
 
+         // Coeff0
+         inputFilter1Coeff0.setText(itsFilter1Coeff0s.elementAt(index));
+
+         // Coeff1
+         inputFilter1Coeff1.setText(itsFilter1Coeff1s.elementAt(index));
+
+         // Coeff2
+         inputFilter1Coeff2.setText(itsFilter1Coeff2s.elementAt(index));
+
+         // Coeff3
+         inputFilter1Coeff3.setText(itsFilter1Coeff3s.elementAt(index));
          // RCUs
          inputRCUs.setText(itsRCUs.elementAt(index));
         
@@ -695,25 +750,25 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         }
         
         // Coeff0
-        if (Integer.valueOf(inputCoeff0.getText())<0 || Integer.valueOf(inputCoeff0.getText())>65535) {
+        if (Integer.valueOf(inputFilter0Coeff0.getText())<0 || Integer.valueOf(inputFilter0Coeff0.getText())>65535) {
             error=true;
             errorMsg += "Coeff0 \n";
         }
         
         // Coeff1
-        if (Integer.valueOf(inputCoeff1.getText())<0 || Integer.valueOf(inputCoeff1.getText())>65535) {
+        if (Integer.valueOf(inputFilter0Coeff1.getText())<0 || Integer.valueOf(inputFilter0Coeff1.getText())>65535) {
             error=true;
             errorMsg += "Coeff1 \n";
         }
         
         // Coeff2
-        if (Integer.valueOf(inputCoeff2.getText())<0 || Integer.valueOf(inputCoeff2.getText())>65535) {
+        if (Integer.valueOf(inputFilter0Coeff2.getText())<0 || Integer.valueOf(inputFilter0Coeff2.getText())>65535) {
             error=true;
             errorMsg += "Coeff2 \n";
         }
         
         // Coeff3
-        if (Integer.valueOf(inputCoeff3.getText())<0 || Integer.valueOf(inputCoeff3.getText())>65535) {
+        if (Integer.valueOf(inputFilter0Coeff3.getText())<0 || Integer.valueOf(inputFilter0Coeff3.getText())>65535) {
             error=true;
             errorMsg += "Coeff3 \n";
         }
@@ -793,10 +848,10 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                            inputStoplevel.getText(),
                            inputFilter.getText(),
                            inputWindow.getSelectedItem().toString(),
-                           inputCoeff0.getText(),
-                           inputCoeff1.getText(),
-                           inputCoeff2.getText(),
-                           inputCoeff3.getText(),
+                           inputFilter0Coeff0.getText(),
+                           inputFilter0Coeff1.getText(),
+                           inputFilter0Coeff2.getText(),
+                           inputFilter0Coeff3.getText(),
                            inputRCUs.getText(),
                            inputSubbandList.getText()
         };
@@ -852,12 +907,12 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         
             // now that all Nodes are deleted we should collect the tables input and create new TBBsettings to save to the database.
         
-            itsTBBConfigurationTableModel.getTable(itsOperatingModes,itsTriggerModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsCoeff0s,itsCoeff1s,itsCoeff2s,itsCoeff3s,itsRCUs,itsSubbandList);
+            itsTBBConfigurationTableModel.getTable(itsOperatingModes,itsTriggerModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsFilter0Coeff0s,itsFilter0Coeff1s,itsFilter0Coeff2s,itsFilter0Coeff3s,itsFilter1Coeff0s,itsFilter1Coeff1s,itsFilter1Coeff2s,itsFilter1Coeff3s,itsRCUs,itsSubbandList);
             itsTBBsettings.clear();
         
             try {
                 // for all elements
-                for (i=1; i < itsCoeff0s.size();i++) {
+                for (i=1; i < itsFilter0Coeff0s.size();i++) {
         
                     // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
                     // with the values from the set fields and save the elements again
@@ -892,14 +947,22 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                                 aHWNode.limits=itsFilters.elementAt(i);
                             } else if (aKeyName.equals("window")) {
                                 aHWNode.limits=itsWindows.elementAt(i);
-                            } else if (aKeyName.equals("coeff0")) {
-                                aHWNode.limits=itsCoeff0s.elementAt(i);
-                            } else if (aKeyName.equals("coeff1")) {
-                                aHWNode.limits=itsCoeff1s.elementAt(i);
-                            } else if (aKeyName.equals("coeff2")) {
-                                aHWNode.limits=itsCoeff2s.elementAt(i);
-                            } else if (aKeyName.equals("coeff3")) {
-                                aHWNode.limits=itsCoeff3s.elementAt(i);
+                            } else if (aKeyName.equals("filter0_coeff0")) {
+                                aHWNode.limits=itsFilter0Coeff0s.elementAt(i);
+                            } else if (aKeyName.equals("filter0_coeff1")) {
+                                aHWNode.limits=itsFilter0Coeff1s.elementAt(i);
+                            } else if (aKeyName.equals("filter0_coeff2")) {
+                                aHWNode.limits=itsFilter0Coeff2s.elementAt(i);
+                            } else if (aKeyName.equals("filter0_coeff3")) {
+                                aHWNode.limits=itsFilter0Coeff3s.elementAt(i);
+                            } else if (aKeyName.equals("filter1_coeff0")) {
+                                aHWNode.limits=itsFilter1Coeff0s.elementAt(i);
+                            } else if (aKeyName.equals("filter1_coeff1")) {
+                                aHWNode.limits=itsFilter1Coeff1s.elementAt(i);
+                            } else if (aKeyName.equals("filter1_coeff2")) {
+                                aHWNode.limits=itsFilter1Coeff2s.elementAt(i);
+                            } else if (aKeyName.equals("filter1_coeff3")) {
+                                aHWNode.limits=itsFilter1Coeff3s.elementAt(i);
                             } else if (aKeyName.equals("RCUs")) {
                                 aHWNode.limits=itsRCUs.elementAt(i);
                             } else if (aKeyName.equals("subbandList")) {
@@ -912,7 +975,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
 
             
                 // store new number of instances in baseSetting
-                itsDefaultNode.instances=(short)(itsCoeff0s.size()-1); // - default at 0
+                itsDefaultNode.instances=(short)(itsFilter0Coeff0s.size()-1); // - default at 0
                 saveNode(itsDefaultNode);
 
                 // reset all buttons, flags and tables to initial start position. So the panel now reflects the new, saved situation
@@ -959,16 +1022,16 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
          }
             
          // Coeff0
-         inputCoeff0.setText(selection[7]);
+         inputFilter0Coeff0.setText(selection[7]);
 
          // Coeff1
-         inputCoeff1.setText(selection[8]);
+         inputFilter0Coeff1.setText(selection[8]);
 
          // Coeff2
-         inputCoeff2.setText(selection[9]);
+         inputFilter0Coeff2.setText(selection[9]);
 
          // Coeff3
-         inputCoeff3.setText(selection[10]);
+         inputFilter0Coeff3.setText(selection[10]);
 
          // RCUs
          inputRCUs.setText(selection[11]);
@@ -1066,10 +1129,10 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         inputStoplevel = new javax.swing.JTextField();
         inputFilter = new javax.swing.JTextField();
         inputWindow = new javax.swing.JComboBox();
-        inputCoeff0 = new javax.swing.JTextField();
-        inputCoeff1 = new javax.swing.JTextField();
-        inputCoeff2 = new javax.swing.JTextField();
-        inputCoeff3 = new javax.swing.JTextField();
+        inputFilter0Coeff0 = new javax.swing.JTextField();
+        inputFilter0Coeff1 = new javax.swing.JTextField();
+        inputFilter0Coeff2 = new javax.swing.JTextField();
+        inputFilter0Coeff3 = new javax.swing.JTextField();
         inputRCUs = new javax.swing.JTextField();
         limitsBaselevel = new javax.swing.JLabel();
         limitsStartlevel = new javax.swing.JLabel();
@@ -1090,6 +1153,12 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         inputSubbandList = new javax.swing.JTextField();
         labelTriggerMode = new javax.swing.JLabel();
         inputTriggerMode = new javax.swing.JComboBox();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        inputFilter1Coeff0 = new javax.swing.JTextField();
+        inputFilter1Coeff1 = new javax.swing.JTextField();
+        inputFilter1Coeff2 = new javax.swing.JTextField();
+        inputFilter1Coeff3 = new javax.swing.JTextField();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setMinimumSize(new java.awt.Dimension(800, 400));
@@ -1177,25 +1246,25 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             }
         });
 
-        inputCoeff0.addActionListener(new java.awt.event.ActionListener() {
+        inputFilter0Coeff0.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
 
-        inputCoeff1.addActionListener(new java.awt.event.ActionListener() {
+        inputFilter0Coeff1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
 
-        inputCoeff2.addActionListener(new java.awt.event.ActionListener() {
+        inputFilter0Coeff2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
 
-        inputCoeff3.addActionListener(new java.awt.event.ActionListener() {
+        inputFilter0Coeff3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
@@ -1283,6 +1352,34 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             }
         });
 
+        jLabel3.setText("Filter 0");
+
+        jLabel4.setText("Filter 1");
+
+        inputFilter1Coeff0.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                inputFilter1Coeff0inputActionPerformed(evt);
+            }
+        });
+
+        inputFilter1Coeff1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                inputFilter1Coeff1inputActionPerformed(evt);
+            }
+        });
+
+        inputFilter1Coeff2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                inputFilter1Coeff2inputActionPerformed(evt);
+            }
+        });
+
+        inputFilter1Coeff3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                inputFilter1Coeff3inputActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -1290,70 +1387,88 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(labelBaselevel, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                    .addComponent(labelOperatingMode, javax.swing.GroupLayout.PREFERRED_SIZE, 84, Short.MAX_VALUE)
+                    .addComponent(labelTriggerMode, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                    .addComponent(labelStartlevel, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                    .addComponent(labelFilter, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                    .addComponent(labelWindow, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                    .addComponent(labelStoplevel, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE))
+                .addGap(10, 10, 10)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(inputStartlevel, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
+                    .addComponent(inputBaselevel, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
+                    .addComponent(inputStoplevel, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
+                    .addComponent(inputFilter, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
+                    .addComponent(inputWindow, 0, 133, Short.MAX_VALUE)
+                    .addComponent(inputTriggerMode, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(inputOperatingMode, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(limitsBaselevel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(limitsStartlevel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 56, Short.MAX_VALUE)
+                    .addComponent(limitsStoplevel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 56, Short.MAX_VALUE)
+                    .addComponent(limitsFilter, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 56, Short.MAX_VALUE))
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGap(310, 310, 310)
+                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(322, 322, 322))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(TBBConfigurationPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 830, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addComponent(editConfigButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(limitsCoeff1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(limitsCoeff0, javax.swing.GroupLayout.DEFAULT_SIZE, 101, Short.MAX_VALUE)
+                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                        .addComponent(deleteConfigButton)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(addConfigButton)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(cancelEditButton))
+                                    .addComponent(limitsCoeff2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(limitsCoeff3, javax.swing.GroupLayout.DEFAULT_SIZE, 103, Short.MAX_VALUE))))
+                        .addGap(18, 18, 18)))
+                .addContainerGap())
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(labelCoeff2, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(labelBaselevel, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                            .addComponent(labelOperatingMode, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                            .addComponent(labelTriggerMode, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                            .addComponent(labelStartlevel, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                            .addComponent(labelFilter, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                            .addComponent(labelWindow, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                            .addComponent(labelStoplevel, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                            .addComponent(labelCoeff0, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                            .addComponent(labelCoeff1, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                            .addComponent(labelCoeff3, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                            .addComponent(labelRCUs, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                            .addComponent(labelSubbandList, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE))
+                            .addComponent(labelCoeff0, javax.swing.GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
+                            .addComponent(labelCoeff1, javax.swing.GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
+                            .addComponent(labelCoeff3, javax.swing.GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
+                            .addComponent(labelRCUs, javax.swing.GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
+                            .addComponent(labelSubbandList, javax.swing.GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE))
                         .addGap(10, 10, 10)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel2Layout.createSequentialGroup()
                                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(inputStartlevel, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
-                                    .addComponent(inputBaselevel, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
-                                    .addComponent(inputStoplevel, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
-                                    .addComponent(inputFilter, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
-                                    .addComponent(inputWindow, 0, 146, Short.MAX_VALUE)
-                                    .addComponent(inputCoeff0, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
-                                    .addComponent(inputCoeff1, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
-                                    .addComponent(inputTriggerMode, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(inputOperatingMode, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(inputCoeff2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
-                                    .addComponent(inputCoeff3, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                    .addComponent(inputFilter0Coeff0, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
+                                    .addComponent(inputFilter0Coeff1, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
+                                    .addComponent(inputFilter0Coeff2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
+                                    .addComponent(inputFilter0Coeff3, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE))
+                                .addGap(68, 68, 68)
                                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(jPanel2Layout.createSequentialGroup()
-                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                            .addComponent(limitsCoeff2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
-                                            .addComponent(limitsCoeff1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
-                                            .addComponent(limitsCoeff0, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
-                                            .addComponent(limitsBaselevel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
-                                            .addComponent(limitsStartlevel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
-                                            .addComponent(limitsStoplevel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
-                                            .addComponent(limitsFilter, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE))
-                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                                .addGap(310, 310, 310)
-                                                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addGap(322, 322, 322))
-                                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                    .addGroup(jPanel2Layout.createSequentialGroup()
-                                                        .addComponent(editConfigButton)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                        .addComponent(deleteConfigButton)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                        .addComponent(addConfigButton)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                        .addComponent(cancelEditButton))
-                                                    .addComponent(TBBConfigurationPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 830, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                                .addGap(18, 18, 18))))
-                                    .addComponent(limitsCoeff3)))
+                                    .addComponent(inputFilter1Coeff0, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
+                                    .addComponent(inputFilter1Coeff1, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
+                                    .addComponent(inputFilter1Coeff2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
+                                    .addComponent(inputFilter1Coeff3, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE))
+                                .addGap(705, 705, 705))
                             .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                                 .addComponent(inputSubbandList, javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(inputRCUs, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 1040, Short.MAX_VALUE)))))
-                .addContainerGap())
+                                .addComponent(inputRCUs, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 1040, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                .addGap(31, 31, 31))
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(135, 135, 135)
+                .addComponent(jLabel3)
+                .addGap(155, 155, 155)
+                .addComponent(jLabel4)
+                .addContainerGap(789, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1394,35 +1509,55 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(labelWindow)
-                            .addComponent(inputWindow, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(limitsCoeff0)
-                            .addComponent(inputCoeff0, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(labelCoeff0))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(labelCoeff1)
-                            .addComponent(inputCoeff1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(limitsCoeff1)))
+                            .addComponent(inputWindow, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(TBBConfigurationPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(12, 12, 12)
+                .addGap(19, 19, 19)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(labelCoeff2)
-                    .addComponent(inputCoeff2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(limitsCoeff2)
                     .addComponent(editConfigButton)
                     .addComponent(deleteConfigButton)
                     .addComponent(addConfigButton)
                     .addComponent(cancelEditButton))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(17, 17, 17)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(labelCoeff3)
-                    .addComponent(inputCoeff3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(limitsCoeff3))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(jLabel3)
+                    .addComponent(jLabel4))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(inputFilter0Coeff0, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(labelCoeff0))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(labelCoeff1)
+                            .addComponent(inputFilter0Coeff1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(12, 12, 12)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(labelCoeff2)
+                            .addComponent(inputFilter0Coeff2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(labelCoeff3)
+                            .addComponent(inputFilter0Coeff3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(inputFilter1Coeff0, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(limitsCoeff0))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(inputFilter1Coeff1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(limitsCoeff1))
+                        .addGap(12, 12, 12)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(inputFilter1Coeff2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(limitsCoeff2))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(inputFilter1Coeff3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(limitsCoeff3))))
+                .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelRCUs)
                     .addComponent(inputRCUs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -1430,7 +1565,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelSubbandList)
                     .addComponent(inputSubbandList, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(23, Short.MAX_VALUE))
+                .addContainerGap(116, Short.MAX_VALUE))
         );
 
         labelBaselevel.getAccessibleContext().setAccessibleName("labelBaselevel");
@@ -1498,6 +1633,22 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private void inputTriggerModeinputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputTriggerModeinputActionPerformed
         // TODO add your handling code here:
 }//GEN-LAST:event_inputTriggerModeinputActionPerformed
+
+    private void inputFilter1Coeff0inputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputFilter1Coeff0inputActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_inputFilter1Coeff0inputActionPerformed
+
+    private void inputFilter1Coeff1inputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputFilter1Coeff1inputActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_inputFilter1Coeff1inputActionPerformed
+
+    private void inputFilter1Coeff2inputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputFilter1Coeff2inputActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_inputFilter1Coeff2inputActionPerformed
+
+    private void inputFilter1Coeff3inputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputFilter1Coeff3inputActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_inputFilter1Coeff3inputActionPerformed
     
     private jOTDBnode                  itsNode        = null;
     private jOTDBnode                  itsDefaultNode = null;
@@ -1525,10 +1676,14 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private Vector<String>    itsStoplevels= new Vector<String>();
     private Vector<String>    itsFilters= new Vector<String>();
     private Vector<String>    itsWindows= new Vector<String>();
-    private Vector<String>    itsCoeff0s= new Vector<String>();
-    private Vector<String>    itsCoeff1s= new Vector<String>();
-    private Vector<String>    itsCoeff2s= new Vector<String>();
-    private Vector<String>    itsCoeff3s= new Vector<String>();
+    private Vector<String>    itsFilter0Coeff0s= new Vector<String>();
+    private Vector<String>    itsFilter0Coeff1s= new Vector<String>();
+    private Vector<String>    itsFilter0Coeff2s= new Vector<String>();
+    private Vector<String>    itsFilter0Coeff3s= new Vector<String>();
+    private Vector<String>    itsFilter1Coeff0s= new Vector<String>();
+    private Vector<String>    itsFilter1Coeff1s= new Vector<String>();
+    private Vector<String>    itsFilter1Coeff2s= new Vector<String>();
+    private Vector<String>    itsFilter1Coeff3s= new Vector<String>();
     private Vector<String>    itsRCUs= new Vector<String>();
     private Vector<String>    itsSubbandList= new Vector<String>();
     
@@ -1541,11 +1696,15 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private javax.swing.JButton deleteConfigButton;
     private javax.swing.JButton editConfigButton;
     private javax.swing.JTextField inputBaselevel;
-    private javax.swing.JTextField inputCoeff0;
-    private javax.swing.JTextField inputCoeff1;
-    private javax.swing.JTextField inputCoeff2;
-    private javax.swing.JTextField inputCoeff3;
     private javax.swing.JTextField inputFilter;
+    private javax.swing.JTextField inputFilter0Coeff0;
+    private javax.swing.JTextField inputFilter0Coeff1;
+    private javax.swing.JTextField inputFilter0Coeff2;
+    private javax.swing.JTextField inputFilter0Coeff3;
+    private javax.swing.JTextField inputFilter1Coeff0;
+    private javax.swing.JTextField inputFilter1Coeff1;
+    private javax.swing.JTextField inputFilter1Coeff2;
+    private javax.swing.JTextField inputFilter1Coeff3;
     private javax.swing.JComboBox inputOperatingMode;
     private javax.swing.JTextField inputRCUs;
     private javax.swing.JTextField inputStartlevel;
@@ -1555,6 +1714,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private javax.swing.JComboBox inputWindow;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JLabel labelBaselevel;
