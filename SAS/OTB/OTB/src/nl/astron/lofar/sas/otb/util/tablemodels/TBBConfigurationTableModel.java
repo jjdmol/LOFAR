@@ -59,10 +59,14 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
         this.addColumn("stop");
         this.addColumn("filter");
         this.addColumn("window");
-        this.addColumn("C0");
-        this.addColumn("C1");
-        this.addColumn("C2");
-        this.addColumn("C3");
+        this.addColumn("F0_C0");
+        this.addColumn("F0_C1");
+        this.addColumn("F0_C2");
+        this.addColumn("F0_C3");
+        this.addColumn("F1_C0");
+        this.addColumn("F1_C1");
+        this.addColumn("F1_C2");
+        this.addColumn("F1_C3");
         this.addColumn("RCUs");
         this.addColumn("Subbands");
         
@@ -77,25 +81,30 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
      * @param  aStop          Vector<String> of all Stoplevels
      * @param  aFilter        Vector<String> of all Filters
      * @param  aWindow        Vector<String> of all Windows
-     * @param  aC0            Vector<String> of all Coeff0s
-     * @param  aC1            Vector<String> of all Coeff1s
-     * @param  aC2            Vector<String> of all Coeff2s
-     * @param  aC3            Vector<String> of all Coeff3s
+     * @param  aF0C0            Vector<String> of all Filter0Coeff0s
+     * @param  aF0C1            Vector<String> of all Filter0Coeff1s
+     * @param  aF0C2            Vector<String> of all Filter0Coeff2s
+     * @param  aF0C3            Vector<String> of all Filter0Coeff3s
+     * @param  aF1C0            Vector<String> of all Filter1Coeff0s
+     * @param  aF1C1            Vector<String> of all Filter1Coeff1s
+     * @param  aF1C2            Vector<String> of all Filter1Coeff2s
+     * @param  aF1C3            Vector<String> of all Filter1Coeff3s
      * @param  aRCUs          Vector<String> of all RCUs involved
      * @param  aSubbandList   Vector<String> of all subbands involved
      *
      * @return True if succes else False
      */
      public boolean fillTable(String treeType,Vector<String> aMode,Vector<String> aTrigger,Vector<String> aBase,Vector<String> aStart,
-                             Vector<String> aStop, Vector<String> aFilter, Vector<String> aWindow, Vector<String> aC0, 
-                             Vector<String> aC1, Vector<String> aC2, Vector<String> aC3, Vector<String> aRCUs,
+                             Vector<String> aStop, Vector<String> aFilter, Vector<String> aWindow, Vector<String> aF0C0,
+                             Vector<String> aF0C1, Vector<String> aF0C2, Vector<String> aF0C3, Vector<String> aF1C0,
+                             Vector<String> aF1C1, Vector<String> aF1C2, Vector<String> aF1C3, Vector<String> aRCUs,
                              Vector<String> aSubbandList) {
          
         itsTreeType=treeType;
         // "clear" the table
         setRowCount(0);
-        if (aMode==null||aTrigger==null||aBase==null||aStart==null||aStop==null||aFilter==null||aWindow==null||aC0==null||aC1==null||
-                aC2==null||aC3==null||aRCUs==null) {
+        if (aMode==null||aTrigger==null||aBase==null||aStart==null||aStop==null||aFilter==null||aWindow==null||aF0C0==null||
+                aF0C1==null||aF0C2==null||aF0C3==null||aF1C0==null||aF1C1==null||aF1C2==null||aF1C3==null||aRCUs==null) {
             logger.error("Error in fillTable, null value in input found.");
             return false;
         }
@@ -114,10 +123,14 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
                                  aStop.elementAt(i+offset),
                                  aFilter.elementAt(i+offset),
                                  aWindow.elementAt(i+offset),
-                                 aC0.elementAt(i+offset),
-                                 aC1.elementAt(i+offset),
-                                 aC2.elementAt(i+offset),
-                                 aC3.elementAt(i+offset),
+                                 aF0C0.elementAt(i+offset),
+                                 aF0C1.elementAt(i+offset),
+                                 aF0C2.elementAt(i+offset),
+                                 aF0C3.elementAt(i+offset),
+                                 aF1C0.elementAt(i+offset),
+                                 aF1C1.elementAt(i+offset),
+                                 aF1C2.elementAt(i+offset),
+                                 aF1C3.elementAt(i+offset),
                                  aRCUs.elementAt(i+offset),
                                  aSubbandList.elementAt(i+offset)};
             this.addRow(newRow);
@@ -137,18 +150,23 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
      * @param  aStop          Vector<String> of all Stoplevels
      * @param  aFilter        Vector<String> of all Filters
      * @param  aWindow        Vector<String> of all Windows
-     * @param  aC0            Vector<String> of all Coeff0s
-     * @param  aC1            Vector<String> of all Coeff1s
-     * @param  aC2            Vector<String> of all Coeff2s
-     * @param  aC3            Vector<String> of all Coeff3s
+     * @param  aF0C0            Vector<String> of all Filter0Coeff0s
+     * @param  aF0C1            Vector<String> of all Filter0Coeff1s
+     * @param  aF0C2            Vector<String> of all Filter0Coeff2s
+     * @param  aF0C3            Vector<String> of all Filter0Coeff3s
+     * @param  aF1C0            Vector<String> of all Filter1Coeff0s
+     * @param  aF1C1            Vector<String> of all Filter1Coeff1s
+     * @param  aF1C2            Vector<String> of all Filter1Coeff2s
+     * @param  aF1C3            Vector<String> of all Filter1Coeff3s
      * @param  aRCUs          Vector<String> of all RCUs involved
      * @param  aSubbandList   Vector<String> of all subbands involved
      *
      * @return True if succes else False
      */
      public boolean getTable(Vector<String> aMode,Vector<String> aTrigger,Vector<String> aBase,Vector<String> aStart,
-                             Vector<String> aStop, Vector<String> aFilter, Vector<String> aWindow, Vector<String> aC0, 
-                             Vector<String> aC1, Vector<String> aC2, Vector<String> aC3, Vector<String> aRCUs,
+                             Vector<String> aStop, Vector<String> aFilter, Vector<String> aWindow, Vector<String> aF0C0,
+                             Vector<String> aF0C1, Vector<String> aF0C2, Vector<String> aF0C3, Vector<String> aF1C0,
+                             Vector<String> aF1C1, Vector<String> aF1C2, Vector<String> aF1C3, Vector<String> aRCUs,
                              Vector<String> aSubbandList) {
          
         int length = aMode.size();
@@ -162,10 +180,14 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
         aStop.setSize(1);
         aFilter.setSize(1);
         aWindow.setSize(1);
-        aC0.setSize(1);
-        aC1.setSize(1);
-        aC2.setSize(1);
-        aC3.setSize(1);
+        aF0C0.setSize(1);
+        aF0C1.setSize(1);
+        aF0C2.setSize(1);
+        aF0C3.setSize(1);
+        aF1C0.setSize(1);
+        aF1C1.setSize(1);
+        aF1C2.setSize(1);
+        aF1C3.setSize(1);
         aRCUs.setSize(1);
         aSubbandList.setSize(1);
         
@@ -178,10 +200,14 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
             aStop.addElement((String)getValueAt(i,3));
             aFilter.addElement((String)getValueAt(i,4));
             aWindow.addElement((String)getValueAt(i,5));
-            aC0.addElement((String)getValueAt(i,6));
-            aC1.addElement((String)getValueAt(i,7));
-            aC2.addElement((String)getValueAt(i,8));
-            aC3.addElement((String)getValueAt(i,9));
+            aF0C0.addElement((String)getValueAt(i,6));
+            aF0C1.addElement((String)getValueAt(i,7));
+            aF0C2.addElement((String)getValueAt(i,8));
+            aF0C3.addElement((String)getValueAt(i,9));
+            aF1C0.addElement((String)getValueAt(i,6));
+            aF1C1.addElement((String)getValueAt(i,7));
+            aF1C2.addElement((String)getValueAt(i,8));
+            aF1C3.addElement((String)getValueAt(i,9));
             aRCUs.addElement((String)getValueAt(i,10));
             aSubbandList.addElement((String)getValueAt(i,11));            
         }
@@ -198,24 +224,24 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
      * @param  aStop        String Stoplevel
      * @param  aFilter      String Filter
      * @param  aWindow      String Window
-     * @param  aC0          String Coeff0
-     * @param  aC1          String Coeff1
-     * @param  aC2          String Coeff2
-     * @param  aC3          String Coeff3
+     * @param  aF0C0          String Filter0Coeff0
+     * @param  aF0C1          String Filter0Coeff1
+     * @param  aF0C2          String Filter0Coeff2
+     * @param  aF0C3          String Filter0Coeff3
      * @param  aRCUs        String RCUs involved
      * @param  aSubbandList String subbands involved
      *
      * @return True if succes else False
      */
     public boolean addRow(String aMode,String aTrigger,String aBase,String aStart, String aStop, String aFilter,
-                          String aWindow,String aC0, String aC1, String aC2, String aC3, String aRCUs) {
+                          String aWindow,String aF0C0, String aF0C1, String aF0C2,String aF0C3, String aF1C0,
+                          String aF1C1,String aF1C2, String aF1C3, String aRCUs) {
       
-        if (aMode==null||aTrigger==null||aBase==null||aStart==null||aStop==null||aFilter==null||aWindow==null||aC0==null||aC1==null||
-                aC2==null||aC3==null||aRCUs==null) {
+        if (aMode==null||aTrigger==null||aBase==null||aStart==null||aStop==null||aFilter==null||aWindow==null|| aF0C0==null||aF0C1==null||aF0C2==null||aF0C3==null||aF1C0==null||aF1C1==null||aF1C2==null||aF1C3==null||aRCUs==null) {
             logger.error("Error in addRow, null value in input found.");
             return false;
         }
-        String[]  newRow = { aMode,aTrigger,aBase,aStart,aStop,aFilter,aWindow,aC0,aC1,aC2,aC3,aRCUs };
+        String[]  newRow = { aMode,aTrigger,aBase,aStart,aStop,aFilter,aWindow,aF0C0,aF0C1,aF0C2,aF0C3,aF1C0,aF1C1,aF1C2,aF1C3,aRCUs };
         this.addRow(newRow);
 
         isChanged=true;
@@ -242,6 +268,10 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
             this.setValueAt(newRow[10],row,10);
             this.setValueAt(newRow[11],row,11);
             this.setValueAt(newRow[12],row,12);
+            this.setValueAt(newRow[13],row,13);
+            this.setValueAt(newRow[14],row,14);
+            this.setValueAt(newRow[15],row,15);
+            this.setValueAt(newRow[16],row,16);
         } else {
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
@@ -271,7 +301,11 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
                                    (String)this.getValueAt(row,9),
                                    (String)this.getValueAt(row,10),
                                    (String)this.getValueAt(row,11),
-                                   (String)this.getValueAt(row,12)};
+                                   (String)this.getValueAt(row,12),
+                                   (String)this.getValueAt(row,13),
+                                   (String)this.getValueAt(row,14),
+                                   (String)this.getValueAt(row,15),
+                                   (String)this.getValueAt(row,16)};
             return selection;
         } else {
             return null;
