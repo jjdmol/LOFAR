@@ -3,8 +3,18 @@ from math import modf
 from time import time,strftime
 import logging
 import logging.handlers
+from traceback import format_exception
 
 DEBUG=False
+
+def my_excepthook( etype, value, tb ):
+  """ Replacement for default exception handler, which uses the logger instead of stderr. """
+
+  lines = format_exception( etype, value, tb )
+
+  for l in lines:
+    for m in l.split("\n")[:-1]:
+      logging.critical( m )
 
 def initLogger():
   if DEBUG:
@@ -29,6 +39,8 @@ def initLogger():
 
   for name,level in loglevels.iteritems():
     logging.addLevelName( level, name )
+
+  sys.excepthook = my_excepthook  
 
 def rotatingLogger( appname, filename ):
   logger = logging.getLogger( appname )
