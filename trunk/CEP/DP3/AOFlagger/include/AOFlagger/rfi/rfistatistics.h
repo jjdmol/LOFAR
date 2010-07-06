@@ -68,21 +68,23 @@ class RFIStatistics {
 			long double lineRfiAmplitude;
 		};
 		struct AmplitudeBin {
-			AmplitudeBin() : centralAmplitude(0.0), centralLogAmplitude(0.0), count(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0)
+			AmplitudeBin() : centralAmplitude(0.0), count(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), featureAvgCount(0), featureMaxCount(0), featureIntCount(0)
 			{
 			}
 			double centralAmplitude;
-			double centralLogAmplitude;
 			long unsigned count;
 			long unsigned rfiCount;
 			long unsigned broadbandRfiCount;
 			long unsigned lineRfiCount;
+			long unsigned featureAvgCount;
+			long unsigned featureMaxCount;
+			long unsigned featureIntCount;
 		};
 		struct BaselineInfo {
-			BaselineInfo() : antenna1(0), antenna2(0), antenna1Name(), antenna2Name(), count(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiSummedAmplitude(0), broadbandRfiAmplitude(0), lineRfiAmplitude(0)
+			BaselineInfo() : antenna1(0), antenna2(0), antenna1Name(), antenna2Name(), baselineLength(0.0), baselineAngle(0.0), count(0), totalAmplitude(0.0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiAmplitude(0.0), broadbandRfiAmplitude(0.0), lineRfiAmplitude(0.0)
 			{
 			}
-			BaselineInfo(const BaselineInfo &source) : antenna1(source.antenna1), antenna2(source.antenna2), antenna1Name(source.antenna1Name), antenna2Name(source.antenna2Name), count(source.count), rfiCount(source.rfiCount), broadbandRfiCount(source.broadbandRfiCount), lineRfiCount(source.lineRfiCount), rfiSummedAmplitude(source.rfiSummedAmplitude), broadbandRfiAmplitude(source.broadbandRfiAmplitude), lineRfiAmplitude(source.lineRfiAmplitude)
+			BaselineInfo(const BaselineInfo &source) : antenna1(source.antenna1), antenna2(source.antenna2), antenna1Name(source.antenna1Name), antenna2Name(source.antenna2Name), baselineLength(source.baselineLength), baselineAngle(source.baselineAngle), count(source.count), totalAmplitude(source.totalAmplitude), rfiCount(source.rfiCount), broadbandRfiCount(source.broadbandRfiCount), lineRfiCount(source.lineRfiCount), rfiAmplitude(source.rfiAmplitude), broadbandRfiAmplitude(source.broadbandRfiAmplitude), lineRfiAmplitude(source.lineRfiAmplitude)
 			{
 			}
 			void operator=(const BaselineInfo &rhs)
@@ -91,22 +93,28 @@ class RFIStatistics {
 				antenna2 = rhs.antenna2;
 				antenna1Name = rhs.antenna1Name;
 				antenna2Name = rhs.antenna2Name;
+				baselineLength = rhs.baselineLength;
+				baselineAngle = rhs.baselineAngle;
 				count = rhs.count;
+				totalAmplitude = rhs.totalAmplitude;
 				rfiCount = rhs.rfiCount;
 				broadbandRfiCount = rhs.broadbandRfiCount;
 				lineRfiCount = rhs.lineRfiCount;
-				rfiSummedAmplitude = rhs.rfiSummedAmplitude;
+				rfiAmplitude = rhs.rfiAmplitude;
 				broadbandRfiAmplitude = rhs.broadbandRfiAmplitude;
 				lineRfiAmplitude = rhs.lineRfiAmplitude;
 			}
 
 			int antenna1, antenna2;
 			std::string antenna1Name, antenna2Name;
+			double baselineLength;
+			double baselineAngle;
 			long unsigned count;
+			double totalAmplitude;
 			long unsigned rfiCount;
 			long unsigned broadbandRfiCount;
 			long unsigned lineRfiCount;
-			long double rfiSummedAmplitude;
+			long double rfiAmplitude;
 			long double broadbandRfiAmplitude;
 			long double lineRfiAmplitude;
 		};
@@ -141,6 +149,12 @@ class RFIStatistics {
 		}
 
 	private:
+		struct FeatureInfo {
+			long double amplitudeSum;
+			num_t amplitudeMax;
+			size_t sampleCount;
+		};
+		typedef std::map<size_t, struct FeatureInfo> FeatureMap;
 		typedef std::map<int, std::map<int, BaselineInfo> > BaselineMatrix;
 		
 		std::map<double, class ChannelInfo> _autoChannels, _crossChannels;
@@ -152,6 +166,7 @@ class RFIStatistics {
 		void addTimesteps(std::map<double, class TimestepInfo> &timesteps, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addBaselines(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
+		void addFeatures(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 
 		void saveChannels(std::map<double, class ChannelInfo> &channels, const char *filename);
 		void saveTimesteps(std::map<double, class TimestepInfo> &timesteps, const char *filename);

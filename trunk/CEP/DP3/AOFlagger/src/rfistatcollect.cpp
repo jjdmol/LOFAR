@@ -184,12 +184,13 @@ void readAmplitudes(RFIStatistics &statistics, string &filename, bool autocorrel
 	ifstream f(filename.c_str());
 	string headers;
 	getline(f, headers);
+	double centralLogAmplitude;
 	while(!f.eof())
 	{
 		RFIStatistics::AmplitudeBin amplitude;
 		f
 		>> amplitude.centralAmplitude
-		>> amplitude.centralLogAmplitude
+		>> centralLogAmplitude
 		>> amplitude.count
 		>> amplitude.rfiCount
 		>> amplitude.broadbandRfiCount

@@ -62,6 +62,17 @@ class SegmentedImage{
 		{
 			return SegmentedImagePtr(CreateUnset(width, height));
 		}
+		static SegmentedImagePtr CreateCopy(SegmentedImagePtr segmentedImage)
+		{
+			SegmentedImage *copy = CreateUnset(segmentedImage->_width, segmentedImage->_height);
+			for(size_t y=0;y<segmentedImage->_height;++y) {
+				for(size_t x=0;x<segmentedImage->_width;++x) {
+					copy->SetValue(x, y, segmentedImage->Value(x, y));
+				}
+			}
+			copy->_segmentCount = segmentedImage->_segmentCount;
+			return SegmentedImagePtr(copy);
+		}
 
 		size_t Value(size_t x, size_t y) const
 		{
