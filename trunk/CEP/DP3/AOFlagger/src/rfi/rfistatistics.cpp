@@ -41,19 +41,19 @@ RFIStatistics::~RFIStatistics()
 void RFIStatistics::Add(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData)
 {
 	Mask2DPtr maskCopy = Mask2D::CreateCopy(mask);
-	SegmentedImagePtr classifiedMask = SegmentedImage::CreatePtr(mask->Width(), mask->Height());
+	SegmentedImagePtr segmentedMask = SegmentedImage::CreatePtr(mask->Width(), mask->Height());
 	
 	Morphology morphology;
-	morphology.SegmentByLengthRatio(mask, classifiedMask);
-	//SegmentedImagePtr classifiedMask = SegmentedImage::CreateCopy(segmentedMask);
+	morphology.SegmentByLengthRatio(mask, segmentedMask);
+	SegmentedImagePtr classifiedMask = SegmentedImage::CreateCopy(segmentedMask);
 	morphology.Classify(classifiedMask);
 
-	//segmentedMask.reset();
 	
 	boost::mutex::scoped_lock lock(_mutex);
 	if(metaData->Antenna1().id == metaData->Antenna2().id)
 	{
-		addFeatures(_autoAmplitudes, image, mask, metaData, classifiedMask);
+		addFeatures(_autoAmplitudes, image, mask, metaData, segmentedMask);
+		segmentedMask.reset();
 		addChannels(_autoChannels, image, mask, metaData, classifiedMask);
 		addTimesteps(_autoTimesteps, image, mask, metaData, classifiedMask);
 		addAmplitudes(_autoAmplitudes, image, mask, metaData, classifiedMask);
@@ -61,7 +61,8 @@ void RFIStatistics::Add(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDat
 		saveTimesteps(_autoTimesteps, "counts-timesteps-auto.txt");
 		saveAmplitudes(_autoAmplitudes, "counts-amplitudes-auto.txt");
 	} else {
-		addFeatures(_crossAmplitudes, image, mask, metaData, classifiedMask);
+		addFeatures(_crossAmplitudes, image, mask, metaData, segmentedMask);
+		segmentedMask.reset();
 		addChannels(_crossChannels, image, mask, metaData, classifiedMask);
 		addTimesteps(_crossTimesteps, image, mask, metaData, classifiedMask);
 		addAmplitudes(_crossAmplitudes, image, mask, metaData, classifiedMask);
