@@ -14,13 +14,6 @@ import socket
 
 DRYRUN = False
 
-def print_exception( str ):
-  import traceback
-
-  print >>sys.stderr, str
-
-  traceback.print_exc()
-
 def convertParsets( args, olapparset, partition = None ):
   # valid observation parameters
   validObsParams = [
@@ -86,7 +79,7 @@ def convertParsets( args, olapparset, partition = None ):
       addParset( olapparset )
       addParset( obsparams["parset"] )  
     except IOError,e:
-      critical("ERROR: Cannot read parset file: %s" % (e,))
+      critical("Cannot read parset file: %s" % (e,))
 
     # parse specific parset values from the command line (all options containing ".")
     # apply them so that we will parse them instead of the parset values
@@ -105,8 +98,7 @@ def convertParsets( args, olapparset, partition = None ):
       try:
         obsid = ObservationID().generateID()
       except IOError,e:
-        print_exception("Could not generate observation ID: %s" % (e,))
-        sys.exit(1)  
+        critical("Could not generate observation ID: %s" % (e,))
 
       parset.setObsID( obsid )
 

@@ -8,13 +8,6 @@ import socket
 
 DRYRUN = False
 
-def print_exception( str ):
-  import traceback
-
-  print >>sys.stderr, str
-
-  traceback.print_exc()
-
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
   import os
