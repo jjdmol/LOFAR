@@ -1,5 +1,7 @@
 #!/bin/bash
 
+FLAGS="-n 10000"
+
 # ----- find multitail
 PATH=$PATH:/globalhome/broekema/bin
 
@@ -36,13 +38,24 @@ done
 
 echo Reading logs from $LOGDIR
 echo Reading multitail configuration from $CONFDIR
-  
-FLAGS="-n 10000"
+
+ERRORLOGS=
+
+if [ "$USER" == "lofarsys" ]
+then
+  for l in /opt/lofar/log/BlueGeneControl.log $HOME/log/run.runParset.py.log
+  do
+    echo Reading additional error log $l
+    ERRORLOGS="$ERRORLOGS $FLAGS -cS olap -fr errors -I $l"
+  done 
+fi
+
 
 multitail --no-mark-change --follow-all --retry-all -m 10240 --basename -F $CONFDIR/multitail-olap.conf \
   $FLAGS -t "-- FLAGS --"  -fr flags -ks flags -i $IONPROC \
   $FLAGS -t "-- ERRORS --" -fr errors          -i $IONPROC \
   $FLAGS                   -fr errors          -I $CNPROC \
+  $ERRORLOGS \
   $FLAGS -t "IONProc/Storage"                  -i $IONPROC \
   $FLAGS -t "CNProc"       -wh 5               -i $CNPROC
 
