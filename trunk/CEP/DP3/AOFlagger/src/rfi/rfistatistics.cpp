@@ -430,6 +430,7 @@ void RFIStatistics::addFeatures(std::map<double, class AmplitudeBin> &amplitudes
 		if(amplitudes.count(intBin) == 0)
 		{
 			AmplitudeBin bin;
+			bin.centralAmplitude = intBin;
 			bin.featureIntCount=1;
 			amplitudes.insert(std::pair<double, AmplitudeBin>(intBin, bin));
 		} else {
@@ -438,6 +439,7 @@ void RFIStatistics::addFeatures(std::map<double, class AmplitudeBin> &amplitudes
 		if(amplitudes.count(avgBin) == 0)
 		{
 			AmplitudeBin bin;
+			bin.centralAmplitude = avgBin;
 			bin.featureAvgCount=1;
 			amplitudes.insert(std::pair<double, AmplitudeBin>(avgBin, bin));
 		} else {
@@ -446,6 +448,7 @@ void RFIStatistics::addFeatures(std::map<double, class AmplitudeBin> &amplitudes
 		if(amplitudes.count(maxBin) == 0)
 		{
 			AmplitudeBin bin;
+			bin.centralAmplitude = maxBin;
 			bin.featureMaxCount=1;
 			amplitudes.insert(std::pair<double, AmplitudeBin>(maxBin, bin));
 		} else {
