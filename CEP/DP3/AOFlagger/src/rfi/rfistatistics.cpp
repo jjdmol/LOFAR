@@ -401,7 +401,7 @@ void RFIStatistics::addFeatures(std::map<double, class AmplitudeBin> &amplitudes
 	
 	for(size_t y=0;y<image->Height();++y) {
 		for(size_t x=0;x<image->Width();++x) {
-			if(mask->Value(x, y))
+			if(mask->Value(x, y) && std::isfinite(image->Value(x, y)))
 			{
 				FeatureMap::iterator i = features.find(segmentedImage->Value(x, y));
 				if(i == features.end()) {
