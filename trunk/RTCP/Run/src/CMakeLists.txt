@@ -5,6 +5,7 @@ lofar_add_bin_program(packetanalysis packetanalysis.c)
 install(PROGRAMS 
   killOLAP
   BlueGeneControl.sh
+  watchlogs.sh
   startOLAP.py
   commandOLAP.py
   runParset.py
@@ -13,6 +14,10 @@ install(PROGRAMS
 install(FILES
   OLAP.parset
   DESTINATION bin)
+
+install(FILES
+  multitail-olap.conf
+  DESTINATION etc)
 
 add_subdirectory(LOFAR)
 add_subdirectory(util)
