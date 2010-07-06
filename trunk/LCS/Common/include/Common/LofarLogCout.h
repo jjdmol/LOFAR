@@ -392,7 +392,7 @@ namespace LOFAR
       gettimeofday(&tv,0);
       localtime_r(&tv.tv_sec,&timeinfo);
       strftime( timestr, sizeof timestr, " %d-%m-%y %T", &timeinfo );
-      snprintf( timestr + len, sizeof timestr - len, ".%03ld ", tv.tv_usec/1000 );
+      snprintf( timestr + len, sizeof timestr - len, ".%03d ", static_cast<int>(tv.tv_usec/1000) );
 
       str << timestr;
       return str;
