@@ -34,6 +34,7 @@
 #include <AOFlagger/rfi/strategy/loadflagsaction.h>
 #include <AOFlagger/rfi/strategy/loadimageaction.h>
 #include <AOFlagger/rfi/strategy/plotaction.h>
+#include <AOFlagger/rfi/strategy/quickcalibrateaction.h>
 #include <AOFlagger/rfi/strategy/setflaggingaction.h>
 #include <AOFlagger/rfi/strategy/setimageaction.h>
 #include <AOFlagger/rfi/strategy/slidingwindowfitaction.h>
@@ -63,6 +64,7 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Load image");
 	list.push_back("Phase adapter");
 	list.push_back("Plot");
+	list.push_back("Quickly calibrate");
 	list.push_back("Set flagging");
 	list.push_back("Set image");
 	list.push_back("Singular value decomposition");
@@ -105,6 +107,8 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new Adapter();
 	else if(action == "Plot")
 		return new PlotAction();
+	else if(action == "Quickly calibrate")
+		return new QuickCalibrateAction();
 	else if(action == "Set flagging")
 		return new SetFlaggingAction();
 	else if(action == "Set image")

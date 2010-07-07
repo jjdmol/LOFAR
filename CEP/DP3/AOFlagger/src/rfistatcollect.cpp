@@ -146,10 +146,13 @@ void readChannels(RFIStatistics &statistics, string &filename, bool autocorrelat
 	{
 		RFIStatistics::ChannelInfo channel;
 		f
-		>> channel.frequencyHz
+		>> channel.frequencyHz;
+		if(f.eof()) break;
+		f
 		>> channel.totalCount
+		>> channel.totalAmplitude
 		>> channel.rfiCount
-		>> channel.rfiSummedAmplitude
+		>> channel.rfiAmplitude
 		>> channel.broadbandRfiCount
 		>> channel.lineRfiCount
 		>> channel.broadbandRfiAmplitude
@@ -167,10 +170,13 @@ void readTimesteps(RFIStatistics &statistics, string &filename, bool autocorrela
 	{
 		RFIStatistics::TimestepInfo timestep;
 		f
-		>> timestep.time
+		>> timestep.time;
+		if(f.eof()) break;
+		f
 		>> timestep.totalCount
+		>> timestep.totalAmplitude
 		>> timestep.rfiCount
-		>> timestep.rfiSummedAmplitude
+		>> timestep.rfiAmplitude
 		>> timestep.broadbandRfiCount
 		>> timestep.lineRfiCount
 		>> timestep.broadbandRfiAmplitude
@@ -189,12 +195,17 @@ void readAmplitudes(RFIStatistics &statistics, string &filename, bool autocorrel
 	{
 		RFIStatistics::AmplitudeBin amplitude;
 		f
-		>> amplitude.centralAmplitude
+		>> amplitude.centralAmplitude;
+		if(f.eof()) break;
+		f
 		>> centralLogAmplitude
 		>> amplitude.count
 		>> amplitude.rfiCount
 		>> amplitude.broadbandRfiCount
-		>> amplitude.lineRfiCount;
+		>> amplitude.lineRfiCount
+		>> amplitude.featureAvgCount
+		>> amplitude.featureIntCount
+		>> amplitude.featureMaxCount;
 		statistics.Add(amplitude, autocorrelation);
 	}
 }
@@ -208,11 +219,14 @@ void readBaselines(RFIStatistics &statistics, string &filename)
 	{
 		RFIStatistics::BaselineInfo baseline;
 		f
-		>> baseline.antenna1
+		>> baseline.antenna1;
+		if(f.eof()) break;
+		f
 		>> baseline.antenna2
 		>> baseline.antenna1Name
 		>> baseline.antenna2Name
 		>> baseline.count
+		>> baseline.totalAmplitude
 		>> baseline.rfiCount
 		>> baseline.broadbandRfiCount
 		>> baseline.lineRfiCount;
