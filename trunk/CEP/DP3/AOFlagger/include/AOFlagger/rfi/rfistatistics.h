@@ -36,34 +36,36 @@
 class RFIStatistics {
 	public:
 		struct ChannelInfo {
-			ChannelInfo() : frequencyHz(0), totalCount(0), rfiCount(0), rfiSummedAmplitude(0), broadbandRfiCount(0), lineRfiCount(0)
+			ChannelInfo() : frequencyHz(0), totalCount(0), totalAmplitude(0.0), rfiCount(0), rfiAmplitude(0.0), broadbandRfiCount(0), lineRfiCount(0), broadbandRfiAmplitude(0.0), lineRfiAmplitude(0.0)
 			{
 			}
-			ChannelInfo(double _frequencyHz) : frequencyHz(_frequencyHz), totalCount(0), rfiCount(0), rfiSummedAmplitude(0), broadbandRfiCount(0), lineRfiCount(0)
+			ChannelInfo(double _frequencyHz) : frequencyHz(_frequencyHz), totalCount(0), totalAmplitude(0.0), rfiCount(0), rfiAmplitude(0.0), broadbandRfiCount(0), lineRfiCount(0), broadbandRfiAmplitude(0.0), lineRfiAmplitude(0.0)
 			{
 			}
 			double frequencyHz;
 			long unsigned totalCount;
+			long double totalAmplitude;
 			long unsigned rfiCount;
-			long double rfiSummedAmplitude;
+			long double rfiAmplitude;
 			long unsigned broadbandRfiCount;
 			long unsigned lineRfiCount;
 			long double broadbandRfiAmplitude;
 			long double lineRfiAmplitude;
 		};
 		struct TimestepInfo {
-			TimestepInfo() : time(0), totalCount(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiSummedAmplitude(0), broadbandRfiAmplitude(0), lineRfiAmplitude(0)
+			TimestepInfo() : time(0), totalCount(0), totalAmplitude(0.0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiAmplitude(0.0), broadbandRfiAmplitude(0.0), lineRfiAmplitude(0.0)
 			{
 			}
-			TimestepInfo(double _time) : time(_time), totalCount(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiSummedAmplitude(0), broadbandRfiAmplitude(0), lineRfiAmplitude(0)
+			TimestepInfo(double _time) : time(_time), totalCount(0), totalAmplitude(0.0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiAmplitude(0.0), broadbandRfiAmplitude(0.0), lineRfiAmplitude(0.0)
 			{
 			}
 			double time;
 			long unsigned totalCount;
+			long double totalAmplitude;
 			long unsigned rfiCount;
 			long unsigned broadbandRfiCount;
 			long unsigned lineRfiCount;
-			long double rfiSummedAmplitude;
+			long double rfiAmplitude;
 			long double broadbandRfiAmplitude;
 			long double lineRfiAmplitude;
 		};

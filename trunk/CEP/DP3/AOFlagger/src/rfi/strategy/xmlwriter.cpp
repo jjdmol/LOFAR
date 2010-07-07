@@ -33,6 +33,7 @@
 #include <AOFlagger/rfi/strategy/loadflagsaction.h>
 #include <AOFlagger/rfi/strategy/loadimageaction.h>
 #include <AOFlagger/rfi/strategy/plotaction.h>
+#include <AOFlagger/rfi/strategy/quickcalibrateaction.h>
 #include <AOFlagger/rfi/strategy/setflaggingaction.h>
 #include <AOFlagger/rfi/strategy/setimageaction.h>
 #include <AOFlagger/rfi/strategy/slidingwindowfitaction.h>
@@ -153,6 +154,9 @@ namespace rfiStrategy {
 				break;
 			case PlotActionType:
 				writePlotAction(static_cast<const PlotAction&>(action));
+				break;
+			case QuickCalibrateActionType:
+				writeQuickCalibrateAction(static_cast<const QuickCalibrateAction&>(action));
 				break;
 			case SetFlaggingActionType:
 				writeSetFlaggingAction(static_cast<const SetFlaggingAction&>(action));
@@ -296,6 +300,11 @@ namespace rfiStrategy {
 		attribute("type", "PlotAction");
 		write<int>("plot-kind", action.PlotKind());
 		write<bool>("logarithmic-y-axis", action.LogarithmicYAxis());
+	}
+
+	void XmlWriter::writeQuickCalibrateAction(const QuickCalibrateAction &action)
+	{
+		attribute("type", "QuickCalibrateAction");
 	}
 
 	void XmlWriter::writeSetFlaggingAction(const SetFlaggingAction &action)

@@ -89,8 +89,9 @@ void RFIStatistics::Add(const ChannelInfo &channel, bool autocorrelation)
 	} else {
 		ChannelInfo &c = element->second;
 		c.totalCount += channel.totalCount;
+		c.totalAmplitude += channel.totalAmplitude;
 		c.rfiCount += channel.rfiCount;
-		c.rfiSummedAmplitude += channel.rfiSummedAmplitude;
+		c.rfiAmplitude += channel.rfiAmplitude;
 		c.broadbandRfiCount += channel.broadbandRfiCount;
 		c.lineRfiCount += channel.lineRfiCount;
 		c.broadbandRfiAmplitude += channel.broadbandRfiAmplitude;
@@ -113,8 +114,9 @@ void RFIStatistics::Add(const TimestepInfo &timestep, bool autocorrelation)
 	} else {
 		TimestepInfo &t = element->second;
 		t.totalCount += timestep.totalCount;
+		t.totalAmplitude += timestep.totalAmplitude;
 		t.rfiCount += timestep.rfiCount;
-		t.rfiSummedAmplitude += timestep.rfiSummedAmplitude;
+		t.rfiAmplitude += timestep.rfiAmplitude;
 		t.broadbandRfiCount += timestep.broadbandRfiCount;
 		t.lineRfiCount += timestep.lineRfiCount;
 		t.broadbandRfiAmplitude += timestep.broadbandRfiAmplitude;
@@ -177,8 +179,10 @@ void RFIStatistics::addChannels(std::map<double, class ChannelInfo> &channels, I
 {
 	for(size_t y=1;y<image->Height();++y)
 	{
+		long unsigned count = 0;
+		long double totalAmplitude = 0.0;
 		long unsigned rfiCount = 0;
-		long double rfiSummedAmplitude = 0.0;
+		long double rfiAmplitude = 0.0;
 		long unsigned broadbandRfiCount = 0;
 		long unsigned lineRfiCount = 0;
 		long double broadbandRfiAmplitude = 0.0;
@@ -186,27 +190,33 @@ void RFIStatistics::addChannels(std::map<double, class ChannelInfo> &channels, I
 		
 		for(size_t x=0;x<image->Width();++x)
 		{
-			if(mask->Value(x, y) && std::isfinite(image->Value(x, y)))
+			if(std::isfinite(image->Value(x, y)))
 			{
-				++rfiCount;
-				rfiSummedAmplitude += image->Value(x, y);
-				if(segmentedImage->Value(x, y) == Morphology::BROADBAND_SEGMENT)
+				totalAmplitude += image->Value(x, y);
+				++count;
+				if(mask->Value(x, y))
 				{
-					++broadbandRfiCount;
-					broadbandRfiAmplitude += image->Value(x, y);
-				} else if(segmentedImage->Value(x, y) == Morphology::LINE_SEGMENT)
-				{
-					++lineRfiCount;
-					lineRfiAmplitude += image->Value(x, y);
+					++rfiCount;
+					rfiAmplitude += image->Value(x, y);
+					if(segmentedImage->Value(x, y) == Morphology::BROADBAND_SEGMENT)
+					{
+						++broadbandRfiCount;
+						broadbandRfiAmplitude += image->Value(x, y);
+					} else if(segmentedImage->Value(x, y) == Morphology::LINE_SEGMENT)
+					{
+						++lineRfiCount;
+						lineRfiAmplitude += image->Value(x, y);
+					}
 				}
 			}
 		}
 		if(channels.count(metaData->Band().channels[y].frequencyHz) == 0)
 		{
 			ChannelInfo channel(metaData->Band().channels[y].frequencyHz);
-			channel.totalCount = image->Width();
+			channel.totalCount = count;
+			channel.totalAmplitude = totalAmplitude;
 			channel.rfiCount = rfiCount;
-			channel.rfiSummedAmplitude = rfiSummedAmplitude;
+			channel.rfiAmplitude = rfiAmplitude;
 			channel.broadbandRfiCount = broadbandRfiCount;
 			channel.lineRfiCount = lineRfiCount;
 			channel.broadbandRfiAmplitude = broadbandRfiAmplitude;
@@ -214,9 +224,10 @@ void RFIStatistics::addChannels(std::map<double, class ChannelInfo> &channels, I
 			channels.insert(std::pair<double, ChannelInfo>(channel.frequencyHz, channel));
 		} else {
 			ChannelInfo &channel = channels.find(metaData->Band().channels[y].frequencyHz)->second;
-			channel.totalCount += image->Width();
+			channel.totalCount += count;
+			channel.totalAmplitude += totalAmplitude;
 			channel.rfiCount += rfiCount;
-			channel.rfiSummedAmplitude += rfiSummedAmplitude;
+			channel.rfiAmplitude += rfiAmplitude;
 			channel.broadbandRfiCount += broadbandRfiCount;
 			channel.lineRfiCount += lineRfiCount;
 			channel.broadbandRfiAmplitude += broadbandRfiAmplitude;
@@ -229,8 +240,10 @@ void RFIStatistics::addTimesteps(std::map<double, class TimestepInfo> &timesteps
 {
 	for(size_t x=0;x<image->Width();++x)
 	{
+		long unsigned totalCount = 0;
+		long double totalAmplitude = 0.0;
 		long unsigned rfiCount = 0;
-		long double rfiSummedAmplitude = 0.0;
+		long double rfiAmplitude = 0.0;
 		long unsigned broadbandRfiCount = 0;
 		long unsigned lineRfiCount = 0;
 		long double broadbandRfiAmplitude = 0.0;
@@ -238,27 +251,34 @@ void RFIStatistics::addTimesteps(std::map<double, class TimestepInfo> &timesteps
 		
 		for(size_t y=1;y<image->Height();++y)
 		{
-			if(mask->Value(x, y))
+			if(std::isfinite(image->Value(x, y)))
 			{
-				++rfiCount;
-				rfiSummedAmplitude += image->Value(x, y);
-				if(segmentedImage->Value(x, y) == Morphology::BROADBAND_SEGMENT)
+				++totalCount;
+				totalAmplitude += image->Value(x, y);
+
+				if(mask->Value(x, y))
 				{
-					++broadbandRfiCount;
-					broadbandRfiAmplitude += image->Value(x, y);
-				} else if(segmentedImage->Value(x, y) == Morphology::LINE_SEGMENT)
-				{
-					++lineRfiCount;
-					lineRfiAmplitude += image->Value(x, y);
+					++rfiCount;
+					rfiAmplitude += image->Value(x, y);
+					if(segmentedImage->Value(x, y) == Morphology::BROADBAND_SEGMENT)
+					{
+						++broadbandRfiCount;
+						broadbandRfiAmplitude += image->Value(x, y);
+					} else if(segmentedImage->Value(x, y) == Morphology::LINE_SEGMENT)
+					{
+						++lineRfiCount;
+						lineRfiAmplitude += image->Value(x, y);
+					}
 				}
 			}
 		}
 		if(timesteps.count(metaData->ObservationTimes()[x]) == 0)
 		{
 			TimestepInfo timestep(metaData->ObservationTimes()[x]);
-			timestep.totalCount = image->Width();
+			timestep.totalCount = totalCount;
+			timestep.totalAmplitude = totalAmplitude;
 			timestep.rfiCount = rfiCount;
-			timestep.rfiSummedAmplitude = rfiSummedAmplitude;
+			timestep.rfiAmplitude = rfiAmplitude;
 			timestep.broadbandRfiCount = broadbandRfiCount;
 			timestep.lineRfiCount = lineRfiCount;
 			timestep.broadbandRfiAmplitude = broadbandRfiAmplitude;
@@ -266,9 +286,10 @@ void RFIStatistics::addTimesteps(std::map<double, class TimestepInfo> &timesteps
 			timesteps.insert(std::pair<double, TimestepInfo>(timestep.time, timestep));
 		} else {
 			TimestepInfo &timestep = timesteps.find(metaData->ObservationTimes()[x])->second;
-			timestep.totalCount += image->Width();
+			timestep.totalCount += totalCount;
+			timestep.totalAmplitude += totalAmplitude;
 			timestep.rfiCount += rfiCount;
-			timestep.rfiSummedAmplitude += rfiSummedAmplitude;
+			timestep.rfiAmplitude += rfiAmplitude;
 			timestep.broadbandRfiCount += broadbandRfiCount;
 			timestep.lineRfiCount += lineRfiCount;
 			timestep.broadbandRfiAmplitude += broadbandRfiAmplitude;
@@ -467,8 +488,9 @@ void RFIStatistics::saveChannels(std::map<double, class ChannelInfo> &channels, 
 		file
 			<< c.frequencyHz << "\t"
 			<< c.totalCount << "\t"
+			<< c.totalAmplitude << "\t"
 			<< c.rfiCount << "\t"
-			<< c.rfiSummedAmplitude << "\t"
+			<< c.rfiAmplitude << "\t"
 			<< c.broadbandRfiCount << "\t"
 			<< c.lineRfiCount << "\t"
 			<< c.broadbandRfiAmplitude << "\t"
@@ -487,8 +509,9 @@ void RFIStatistics::saveTimesteps(std::map<double, class TimestepInfo> &timestep
 		file
 			<< c.time << "\t"
 			<< c.totalCount << "\t"
+			<< c.totalAmplitude << "\t"
 			<< c.rfiCount << "\t"
-			<< c.rfiSummedAmplitude << "\t"
+			<< c.rfiAmplitude << "\t"
 			<< c.broadbandRfiCount << "\t"
 			<< c.lineRfiCount << "\t"
 			<< c.broadbandRfiAmplitude << "\t"
@@ -504,6 +527,7 @@ void RFIStatistics::saveSubbands(std::map<double, class ChannelInfo> &channels, 
 	size_t index = 0;
 	double 
 		bandTotal = 0.0,
+		bandAmp = 0.0,
 		bandRFI = 0.0,
 		bandRFIAmp = 0.0,
 		bandBRFI = 0.0,
@@ -512,11 +536,11 @@ void RFIStatistics::saveSubbands(std::map<double, class ChannelInfo> &channels, 
 		bandLRFIAmp = 0.0;
 	for(std::map<double, class ChannelInfo>::const_iterator i=channels.begin();i!=channels.end();++i)
 	{
-		
 		const ChannelInfo &c = i->second;
 		bandTotal += c.totalCount;
+		bandAmp += c.totalAmplitude;
 		bandRFI += c.rfiCount;
-		bandRFIAmp += c.rfiSummedAmplitude;
+		bandRFIAmp += c.rfiAmplitude;
 		bandBRFI += c.broadbandRfiCount;
 		bandLRFI += c.lineRfiCount;
 		bandBRFIAmp += c.broadbandRfiAmplitude;
@@ -528,6 +552,7 @@ void RFIStatistics::saveSubbands(std::map<double, class ChannelInfo> &channels, 
 			file
 			<< c.frequencyHz << "\t"
 			<< bandTotal << "\t"
+			<< bandAmp << "\t"
 			<< bandRFI << "\t"
 			<< bandRFIAmp << "\t"
 			<< bandBRFI << "\t"
@@ -535,6 +560,7 @@ void RFIStatistics::saveSubbands(std::map<double, class ChannelInfo> &channels, 
 			<< bandBRFIAmp << "\t"
 			<< bandLRFIAmp << "\n";
 			bandTotal = 0.0;
+			bandAmp = 0.0;
 			bandRFI = 0.0;
 			bandRFIAmp = 0.0;
 			bandBRFI = 0.0;
@@ -573,7 +599,7 @@ void RFIStatistics::saveAmplitudes(std::map<double, class AmplitudeBin> &amplitu
 void RFIStatistics::saveBaselines(const char *filename)
 {
 	std::ofstream file(filename);
-	file << "a1\ta2\ta1name\ta2name\tcount\trfiCount\tbroadbandRfiCount\tlineRfiCount\n" << std::setprecision(14);
+	file << "a1\ta2\ta1name\ta2name\tcount\ttotalAmplitude\trfiCount\tbroadbandRfiCount\tlineRfiCount\n" << std::setprecision(14);
 	for(BaselineMatrix::const_iterator i=_baselines.begin();i!=_baselines.end();++i)
 	{
 		const std::map<int, BaselineInfo> &row = i->second;
@@ -586,6 +612,7 @@ void RFIStatistics::saveBaselines(const char *filename)
 				<< b.antenna1Name << "\t"
 				<< b.antenna2Name << "\t"
 				<< b.count << "\t"
+				<< b.totalAmplitude << "\t"
 				<< b.rfiCount << "\t"
 				<< b.broadbandRfiCount << "\t"
 				<< b.lineRfiCount << "\n";

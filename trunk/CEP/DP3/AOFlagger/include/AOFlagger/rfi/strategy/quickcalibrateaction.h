@@ -18,60 +18,43 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef RFIACTION_H
-#define RFIACTION_H 
+#ifndef RFIQUICKCALIBRATEACTION_H
+#define RFIQUICKCALIBRATEACTION_H
+
+#include "actioncontainer.h"
+
+#include "../thresholdtools.h"
 
 #include "../../util/progresslistener.h"
 
 namespace rfiStrategy {
 
-	enum ActionType
+	class QuickCalibrateAction : public Action
 	{
-		ActionBlockType,
-		AdapterType,
-		AddStatisticsActionType,
-		ChangeResolutionActionType,
-		CombineFlagResultsType,
-		ForEachBaselineActionType,
-		ForEachMSActionType,
-		ForEachPolarisationBlockType,
-		FrequencySelectionActionType,
-		FringeStopActionType,
-		ImagerActionType,
-		IterationBlockType,
-		LoadFlagsActionType,
-		LoadImageActionType,
-		PlotActionType,
-		QuickCalibrateActionType,
-		SetFlaggingActionType,
-		SetImageActionType,
-		SlidingWindowFitActionType,
-		SpatialCompositionActionType,
-		StatisticalFlagActionType,
-		StrategyType,
-		SVDActionType,
-		ThresholdActionType,
-		TimeSelectionActionType,
-		WriteFlagsActionType
-	};
-
-	class Action
-	{
-		friend class ActionContainer;
-
 		public:
-			Action() : _parent(0) { }
-			virtual ~Action() { }
-			virtual std::string Description() = 0;
-			virtual void Initialize() { }
-			virtual void Finish() { }
-			virtual void Perform(class ArtifactSet &artifacts, ProgressListener &progress) = 0;
-			class ActionContainer *Parent() const { return _parent; }
-			virtual ActionType Type() const = 0;
-		private:
-			class ActionContainer *_parent;
-	};
+			QuickCalibrateAction() { }
 
+			virtual std::string Description()
+			{
+				return "Quickly calibrate";
+			}
+			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener)
+			{
+				Image2DCPtr image = artifacts.ContaminatedData().GetSingleImage();
+				Mask2DCPtr mask = artifacts.ContaminatedData().GetSingleMask();
+				num_t mean, stddev;
+				ThresholdTools::WinsorizedMeanAndStdDev(image, mask, mean, stddev);
+				for(size_t i=0;i!=artifacts.ContaminatedData().ImageCount();++i)
+				{
+					Image2DCPtr image = artifacts.ContaminatedData().GetImage(i);
+					Image2DPtr normalized = Image2D::CreateCopy(image);
+					normalized->MultiplyValues(1.0/mean);
+					artifacts.ContaminatedData().SetImage(i, normalized);
+				}
+			}
+			virtual ActionType Type() const { return QuickCalibrateActionType; }
+		private:
+	};
 }
 
-#endif // RFIACTION_H
+#endif // RFIQUICKCALIBRATEACTION_H

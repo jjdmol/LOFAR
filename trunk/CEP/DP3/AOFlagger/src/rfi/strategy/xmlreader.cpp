@@ -34,6 +34,7 @@
 #include <AOFlagger/rfi/strategy/loadflagsaction.h>
 #include <AOFlagger/rfi/strategy/loadimageaction.h>
 #include <AOFlagger/rfi/strategy/plotaction.h>
+#include <AOFlagger/rfi/strategy/quickcalibrateaction.h>
 #include <AOFlagger/rfi/strategy/setflaggingaction.h>
 #include <AOFlagger/rfi/strategy/setimageaction.h>
 #include <AOFlagger/rfi/strategy/slidingwindowfitaction.h>
@@ -208,6 +209,8 @@ Action *XmlReader::parseAction(xmlNode *node)
 		newAction = parseLoadImageAction(node);
 	else if(typeStr == "PlotAction")
 		newAction = parsePlotAction(node);
+	else if(typeStr == "QuickCalibrateAction")
+	newAction = parseQuickCalibrateAction(node);
 	else if(typeStr == "SetFlaggingAction")
 		newAction = parseSetFlaggingAction(node);
 	else if(typeStr == "SetImageAction")
@@ -398,6 +401,12 @@ Action *XmlReader::parsePlotAction(xmlNode *node)
 	PlotAction *newAction = new PlotAction();
 	newAction->SetPlotKind((enum PlotAction::PlotKind) getInt(node, "plot-kind"));
 	newAction->SetLogarithmicYAxis(getBool(node, "logarithmic-y-axis"));
+	return newAction;
+}
+
+Action *XmlReader::parseQuickCalibrateAction(xmlNode *node)
+{
+	QuickCalibrateAction *newAction = new QuickCalibrateAction();
 	return newAction;
 }
 
