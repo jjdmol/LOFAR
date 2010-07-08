@@ -82,6 +82,7 @@ namespace LOFAR
       // Name of the input column.
       string                            itsInputColumn;
 
+      // Baseline and correlation selection.
       Selection                         itsSelection;
 
       // Time window.

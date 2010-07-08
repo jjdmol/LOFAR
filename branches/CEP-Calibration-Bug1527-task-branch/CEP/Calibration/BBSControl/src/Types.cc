@@ -34,47 +34,13 @@ namespace LOFAR
   {
     using LOFAR::operator<<;
 
-    void fromParameterSet(const ParameterSet &ps, Selection &selection)
-    {
-      // Read baseline type.
-      selection.type = ps.getString("Selection.BaselineType", selection.type);
-
-      // Read baseline selection.
-      selection.baselines.clear();
-      if(ps.isDefined("Selection.Baselines"))
-      {
-        ParameterValue value(ps.get("Selection.Baselines"));
-        ASSERTSTR(value.isVector(), "Error parsing baseline selection: "
-            << value << "; expected a list enclosed in brackets, e.g."
-            " [5*,[CS0??LBA,6*]]");
-
-        vector<ParameterValue> patterns(value.getVector());
-        for(vector<ParameterValue>::const_iterator pattern = patterns.begin(),
-          pattern_end = patterns.end(); pattern != pattern_end; ++pattern)
-        {
-          vector<string> criterion(pattern->getStringVector());
-          ASSERTSTR(criterion.size() == 1 || criterion.size() == 2, "Error"
-            " parsing baseline selection criterion: " << criterion
-            << "; expected a single shell style pattern, or a list enclosed in"
-            " brackets that contains either one or two shell style patterns,"
-            " e.g. 5*, [5*], or [5*,6*]");
-
-          selection.baselines.push_back(criterion);
-        }
-      }
-
-      selection.correlations = ps.getStringVector("Selection.Correlations",
-        selection.correlations);
-    }
-
     //# -------  ostream operators  ------- #//
 
     ostream& operator<<(ostream& os, const Selection &obj)
     {
       os << "Selection:";
       Indent id;
-      os << endl << indent << "Baseline Type: " << obj.type
-         << endl << indent << "Baselines: " << obj.baselines
+      os << endl << indent << "Baselines: " << obj.baselines
          << endl << indent << "Correlations: " << obj.correlations;
       return os;
     }

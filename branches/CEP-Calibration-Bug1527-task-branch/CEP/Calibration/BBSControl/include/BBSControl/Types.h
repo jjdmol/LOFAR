@@ -52,16 +52,12 @@ namespace LOFAR
     // and which polarizations should be used.
     struct Selection
     {
-      Selection() : type("ANY") {}
+      Selection() {}
       Selection(const ParameterSet &ps);
 
-      string                    type; // One of "ANY", "AUTO", "CROSS".
-      vector<vector<string> >   baselines;
+      string                    baselines;
       vector<string>            correlations;
     };
-
-    // Attempt to read the contents of a Selection instance from a ParameterSet.
-    void fromParameterSet(const ParameterSet &ps, Selection &selection);
 
     // Cell size is defined along the frequency and the time axis, in number
     // of channels and number of timeslots respectively.

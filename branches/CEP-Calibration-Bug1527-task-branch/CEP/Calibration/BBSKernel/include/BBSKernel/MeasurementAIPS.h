@@ -48,6 +48,11 @@ public:
         unsigned int idField = 0,
         unsigned int idDataDescription = 0);
 
+    // \name Measurement interface implementation
+    // These methods form an implementation of the Measurement interface. See
+    // that class for function documentation.
+    //
+    // @{
     virtual VisDimensions dimensions(const VisSelection &selection) const;
 
     virtual VisBuffer::Ptr read(const VisSelection &selection = VisSelection(),
@@ -57,6 +62,9 @@ public:
         const VisSelection &selection = VisSelection(),
         const string &column = "CORRECTED_DATA", bool writeFlags = true,
         flag_t flagMask = ~flag_t(0));
+
+    virtual BaselineMask asMask(const string &filter) const;
+    // @}
 
 private:
     void initInstrument();
@@ -68,11 +76,12 @@ private:
 
     casa::Table getTableSelection(const casa::Table &table,
         const VisSelection &selection) const;
-    casa::TableExprNodeSet getStationSetExpr(const BaselineMask &mask) const;
+    casa::TableExprNode getBaselineExpr(const casa::Table &table,
+        const string &pattern) const;
     BaselineMask getBaselineMask(const VisSelection &selection) const;
     casa::Slicer getCellSlicer(const VisSelection &selection) const;
     VisDimensions getDimensionsImpl(const casa::Table tab_selection,
-        const BaselineMask &mask, const casa::Slicer slicer) const;
+        const casa::Slicer slicer) const;
 
     casa::MeasurementSet    itsMS;
     casa::Table             itsMainTableView;

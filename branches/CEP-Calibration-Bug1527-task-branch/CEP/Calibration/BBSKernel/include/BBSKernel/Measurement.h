@@ -23,6 +23,7 @@
 #ifndef LOFAR_BBSKERNEL_MEASUREMENT_H
 #define LOFAR_BBSKERNEL_MEASUREMENT_H
 
+#include <BBSKernel/BaselineMask.h>
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/VisDimensions.h>
@@ -55,6 +56,10 @@ public:
         const VisSelection &selection = VisSelection(),
         const string &column = "CORRECTED_DATA",
         bool writeFlags = true, flag_t flagMask = ~flag_t(0)) = 0;
+
+    // Apply the given filter to the baselines contained in the Measurement and
+    // return the result as a (boolean) baseline mask.
+    virtual BaselineMask asMask(const string &filter) const = 0;
 
     double getReferenceFreq() const;
     const casa::MDirection &getPhaseReference() const;

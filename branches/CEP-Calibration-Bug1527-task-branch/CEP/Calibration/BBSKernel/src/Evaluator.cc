@@ -150,15 +150,15 @@ void Evaluator::clearStats()
 
 void Evaluator::dumpStats(ostream &out) const
 {
-    out << "Processing statistics: " << endl;
+    out << "Evaluator statistics: " << endl;
     for(size_t i = 0; i < Evaluator::N_ProcTimer; ++i)
     {
         const double elapsed = itsProcTimers[i].getElapsed();
         const unsigned long long count = itsProcTimers[i].getCount();
+        double average = count > 0 ? elapsed / count : 0.0;
 
         out << "TIMER s " << Evaluator::theirProcTimerNames[i] << " total "
-            << elapsed << " count " << count << " avg " << elapsed / count
-            << endl;
+            << elapsed << " count " << count << " avg " << average << endl;
     }
 }
 

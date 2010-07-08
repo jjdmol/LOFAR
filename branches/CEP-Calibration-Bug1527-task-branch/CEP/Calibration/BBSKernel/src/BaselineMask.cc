@@ -30,47 +30,58 @@ namespace LOFAR
 namespace BBS
 {
 
+BaselineMask::BaselineMask(bool defaultMask)
+    :   itsDefaultMask(defaultMask)
+{
+}
+
 bool BaselineMask::empty() const
 {
-    return count(itsMask.begin(), itsMask.end(), true) == 0;
+    return itsDefaultMask || count(itsMask.begin(), itsMask.end(), true) == 0;
 }
 
 const BaselineMask operator!(const BaselineMask &lhs)
 {
-    const size_t size = lhs.itsMask.size();
+    BaselineMask mask(!lhs.itsDefaultMask);
 
-    BaselineMask mask;
+    const size_t size = lhs.itsMask.size();
     mask.itsMask.reserve(size);
+
     for(size_t i = 0; i < size; ++i)
     {
         mask.itsMask.push_back(!lhs.itsMask[i]);
     }
+
     return mask;
 }
 
 const BaselineMask operator||(const BaselineMask &lhs, const BaselineMask &rhs)
 {
-    const size_t size = std::max(lhs.itsMask.size(), rhs.itsMask.size());
+    BaselineMask mask(lhs.itsDefaultMask || rhs.itsDefaultMask);
 
-    BaselineMask mask;
+    const size_t size = std::max(lhs.itsMask.size(), rhs.itsMask.size());
     mask.itsMask.reserve(size);
+
     for(size_t i = 0; i < size; ++i)
     {
         mask.itsMask.push_back(lhs.itsMask[i] || rhs.itsMask[i]);
     }
+
     return mask;
 }
 
 const BaselineMask operator&&(const BaselineMask &lhs, const BaselineMask &rhs)
 {
-    size_t size = std::min(lhs.itsMask.size(), rhs.itsMask.size());
+    BaselineMask mask(lhs.itsDefaultMask && rhs.itsDefaultMask);
 
-    BaselineMask mask;
+    size_t size = std::max(lhs.itsMask.size(), rhs.itsMask.size());
     mask.itsMask.reserve(size);
+
     for(size_t i = 0; i < size; ++i)
     {
         mask.itsMask.push_back(lhs.itsMask[i] && rhs.itsMask[i]);
     }
+
     return mask;
 }
 

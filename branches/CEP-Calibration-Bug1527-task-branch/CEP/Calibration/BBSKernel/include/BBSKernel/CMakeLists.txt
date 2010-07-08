@@ -7,7 +7,6 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 
 # Install header files.
 install(FILES
-  BaselineFilter.h
   BaselineMask.h
   Correlation.h
   CorrelationMask.h
@@ -28,6 +27,7 @@ install(FILES
   Solver.h
   SolverInterfaceTypes.h
   Types.h
+  UVWFlagger.h
   VisBuffer.h
   VisDimensions.h
   VisEquator.h

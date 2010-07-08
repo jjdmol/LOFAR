@@ -73,23 +73,29 @@ namespace LOFAR
 
       // @name Accessor methods
       // @{
-      vector<string>    parms()             const { return itsParms; }
-      vector<string>    exclParms()         const { return itsExclParms; }
-      vector<uint32>    calibrationGroups() const
-      { return itsCalibrationGroups; }
-      bool              globalSolution()    const
-      { return !itsCalibrationGroups.empty(); }
-      CellSize          cellSize()          const { return itsCellSize; }
-      uint32            cellChunkSize()     const { return itsCellChunkSize; }
-      bool              propagate()         const { return itsPropagateFlag; }
-      bool              resample()          const { return itsResampleFlag; }
-      CellSize          resampleCellSize()  const
-      { return itsResampleCellSize; }
-      double            flagDensityThreshold() const
-      { return itsFlagDensityThreshold; }
-      bool              shift()             const { return itsShiftFlag; }
-      casa::MDirection  direction()         const { return itsDirection; }
-      SolverOptions     solverOptions()     const { return itsSolverOptions; }
+      vector<string>        parms()             const { return itsParms; }
+      vector<string>        exclParms()         const { return itsExclParms; }
+      bool                  uvFlag()            const { return itsUVFlag; }
+      pair<double, double>  uvInterval()        const { return itsUVInterval; }
+      vector<uint32>        calibrationGroups() const
+        { return itsCalibrationGroups; }
+      bool                  globalSolution()    const
+        { return !itsCalibrationGroups.empty(); }
+      CellSize              cellSize()          const { return itsCellSize; }
+      uint32                cellChunkSize()     const
+        { return itsCellChunkSize; }
+      bool                  propagate()         const
+        { return itsPropagateFlag; }
+      bool                  resample()          const
+        { return itsResampleFlag; }
+      CellSize              resampleCellSize()  const
+        { return itsResampleCellSize; }
+      double                flagThreshold()     const
+        { return itsFlagThreshold; }
+      bool                  shift()             const { return itsShiftFlag; }
+      casa::MDirection      direction()         const { return itsDirection; }
+      SolverOptions         solverOptions()     const
+        { return itsSolverOptions; }
       // @}
 
       // Return the command type of \c *this as a string.
@@ -102,36 +108,43 @@ namespace LOFAR
       // Read the contents from the ParameterSet \a ps into \c *this.
       virtual void read(const ParameterSet& ps);
 
-      void parseResampleCellSize(const ParameterSet& ps);
-      void parseDirection(const ParameterSet& ps);
+      void setUVInterval(const ParameterSet& ps);
+      void setResampleCellSize(const ParameterSet& ps);
+      void setDirection(const ParameterSet& ps);
 
       // Names of the parameters to fit.
-      vector<string>    itsParms;
+      vector<string>        itsParms;
       // Names of the parameters to exclude from fitting.
-      vector<string>    itsExclParms;
+      vector<string>        itsExclParms;
+      // Should visbilities be flagged temporarily based on UV distance?
+      bool                  itsUVFlag;
+      // Interval of baseline (UV) length in wavelengths used to select samples
+      // for calibration.
+      pair<double, double>  itsUVInterval;
       // Vector of calibration groups.
-      vector<uint32>    itsCalibrationGroups;
+      vector<uint32>        itsCalibrationGroups;
       // Solution cell size.
-      CellSize          itsCellSize;
+      CellSize              itsCellSize;
       // Number of cells (along the time axis) processed together.
-      uint32            itsCellChunkSize;
+      uint32                itsCellChunkSize;
       // Resample observed visbility data?
-      bool              itsResampleFlag;
+      bool                  itsResampleFlag;
       // Resolution on which to fit the model.
-      CellSize          itsResampleCellSize;
-      // Maximal flag density.
-      double            itsFlagDensityThreshold;
+      CellSize              itsResampleCellSize;
+      // Maximal flag density (fraction of samples flagged in a single resample
+      // cell that will cause the output sample to be flagged).
+      double                itsFlagThreshold;
       // Phase shift observed visibility data?
-      bool              itsShiftFlag;
+      bool                  itsShiftFlag;
       // Direction to phase shift the visibility data to.
       // TODO: Extend casacore with I/O stream operators for MDirection
       // instances (alla MVAngle but including the reference type, e.g. J2000).
-      vector<string>    itsDirectionASCII;
-      casa::MDirection  itsDirection;
+      vector<string>        itsDirectionASCII;
+      casa::MDirection      itsDirection;
       // Propagate solutions?
-      bool              itsPropagateFlag;
+      bool                  itsPropagateFlag;
       // Solver options.
-      SolverOptions     itsSolverOptions;
+      SolverOptions         itsSolverOptions;
     };
 
     // @}

@@ -315,7 +315,7 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
 
     // Set caching policy.
     itsCachePolicy = CachePolicy::Ptr(new DefaultCachePolicy());
-    if(config.useExperimentalCaching())
+    if(config.useCaching())
     {
         itsCachePolicy = CachePolicy::Ptr(new ExperimentalCachePolicy());
     }
@@ -488,7 +488,7 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
 
     // Set caching policy.
     itsCachePolicy = CachePolicy::Ptr(new DefaultCachePolicy());
-    if(config.useExperimentalCaching())
+    if(config.useCaching())
     {
         itsCachePolicy = CachePolicy::Ptr(new ExperimentalCachePolicy());
     }
@@ -695,7 +695,7 @@ bool MeasurementExprLOFAR::isCircular(const VisBuffer::Ptr &chunk) const
 
 void MeasurementExprLOFAR::applyCachePolicy(const ModelConfig &config) const
 {
-    if(config.useExperimentalCaching())
+    if(config.useCaching())
     {
         ExperimentalCachePolicy policy;
         policy.apply(itsExpr.begin(), itsExpr.end());

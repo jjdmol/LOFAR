@@ -203,22 +203,25 @@ void VisEquator::clearStats()
 
 void VisEquator::dumpStats(ostream &out) const
 {
-    const NSTimer &timer = itsProcTimer;
     const ProcContext &context = itsProcContext;
 
-    out << "Processing statistics: " << endl;
-    out << "Speed: " << context.count / timer.getElapsed() << " samples/s"
+    double elapsed = itsProcTimer.getElapsed();
+    unsigned long long count = itsProcTimer.getCount();
+    const double speed = elapsed > 0.0 ? count / elapsed : 0.0;
+    double average = count > 0 ? elapsed / count : 0.0;
+
+    out << "VisEquator statistics:" << endl;
+    out << "Speed: " << fixed << speed << " samples/s" << endl;
+    out << "No. of samples processed (unflagged): " << fixed << context.count
         << endl;
-    out << "No. of processed samples (unflagged): " << fixed << context.count
-        << endl;
-    out << "TIMER s ALL total " << timer.getElapsed() << " count "
-        << timer.getCount() << " avg " << timer.getElapsed()
-        / timer.getCount() << endl;
+    out << "TIMER s ALL total " << elapsed << " count " << count << " avg "
+        << average << endl;
 
     for(size_t i = 0; i < VisEquator::ProcContext::N_ProcTimer; ++i)
     {
-        const double elapsed = context.timers[i].getElapsed();
-        const unsigned long long count = context.timers[i].getCount();
+        elapsed = context.timers[i].getElapsed();
+        count = context.timers[i].getCount();
+        average = count > 0 ? elapsed / count : 0.0;
 
         out << "TIMER s " << VisEquator::ProcContext::timerNames[i] << " total"
             << " " << elapsed << " count " << count << " avg " << elapsed

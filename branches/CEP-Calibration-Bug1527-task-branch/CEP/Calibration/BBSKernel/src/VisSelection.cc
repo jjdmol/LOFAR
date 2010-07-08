@@ -140,7 +140,7 @@ void VisSelection::setTimeRange(const string &start, const string &end)
     setEndTime(end);
 }
 
-void VisSelection::setBaselineFilter(const BaselineFilter &filter)
+void VisSelection::setBaselineFilter(const string &filter)
 {
     itsFlags[BASELINE_FILTER] = true;
     itsBaselineFilter = filter;
@@ -152,7 +152,7 @@ void VisSelection::setCorrelationMask(const CorrelationMask &mask)
     itsCorrelationMask = mask;
 }
 
-const BaselineFilter &VisSelection::getBaselineFilter() const
+const string &VisSelection::getBaselineFilter() const
 {
     return itsBaselineFilter;
 }

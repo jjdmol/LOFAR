@@ -277,7 +277,6 @@ namespace LOFAR
             break;
           }
 
-
           case NEXT_CHUNK_WAIT: {
             // Wait for a "result trigger" form the database. If trigger
             // received within time-out period, fetch new results. If any of the

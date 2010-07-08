@@ -62,6 +62,7 @@
 #include <ms/MeasurementSets/MSPolColumns.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
+#include <ms/MeasurementSets/MSSelection.h>
 
 #include <casa/BasicMath/Math.h>
 #include <casa/Utilities/GenSort.h>
@@ -113,9 +114,8 @@ VisDimensions MeasurementAIPS::dimensions(const VisSelection &selection)
     const
 {
     Slicer slicer = getCellSlicer(selection);
-    BaselineMask mask = getBaselineMask(selection);
     Table tab_selection = getTableSelection(itsMainTableView, selection);
-    return getDimensionsImpl(tab_selection, mask, slicer);
+    return getDimensionsImpl(tab_selection, slicer);
 }
 
 VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
@@ -124,11 +124,10 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
     NSTimer readTimer, copyTimer;
 
     Slicer slicer = getCellSlicer(selection);
-    BaselineMask mask = getBaselineMask(selection);
     Table tab_selection = getTableSelection(itsMainTableView, selection);
 
     // Get the dimensions of the visibility data that matches the selection.
-    VisDimensions dims(getDimensionsImpl(tab_selection, mask, slicer));
+    VisDimensions dims(getDimensionsImpl(tab_selection, slicer));
 
     // Allocate buffer for visibility data.
     VisBuffer::Ptr buffer(new VisBuffer(dims, itsInstrument, itsPhaseReference,
@@ -207,12 +206,6 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
             // Get time sequence for this baseline.
             baseline_t baseline(aips_antenna1[i], aips_antenna2[i]);
 
-            // If this baseline is not selected, continue.
-            if(!mask(baseline))
-            {
-                continue;
-            }
-
             // Look up baseline index.
             size_t basel = dims.baselines().index(baseline);
             ASSERT(basel < dims.nBaselines());
@@ -267,7 +260,6 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
     LOG_DEBUG_STR("Writing to column: " << column);
 
     Slicer slicer = getCellSlicer(selection);
-    BaselineMask mask = getBaselineMask(selection);
     Table tab_selection = getTableSelection(itsMainTableView, selection);
 
     // Allocate temporary buffers to be able to reverse frequency channels.
@@ -331,12 +323,6 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
             // Get time sequence for this baseline.
             baseline_t baseline(aips_antenna1[i], aips_antenna2[i]);
 
-            // If this baseline is not selected, continue.
-            if(!mask(baseline))
-            {
-                continue;
-            }
-
             // Get time sequence for this baseline.
             size_t basel = buffer->baselines().index(baseline);
             ASSERT(basel < buffer->nBaselines());
@@ -395,6 +381,35 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
 
     LOG_DEBUG_STR("Read time (meta data): " << readTimer);
     LOG_DEBUG_STR("Write time: " << writeTimer);
+}
+
+BaselineMask MeasurementAIPS::asMask(const string &filter) const
+{
+    // Find all unique baselines.
+    Block<String> sortColumns(2);
+    sortColumns[0] = "ANTENNA1";
+    sortColumns[1] = "ANTENNA2";
+    Table tab_baselines = itsMainTableView.sort(sortColumns, Sort::Ascending,
+        Sort::HeapSort | Sort::NoDuplicates);
+
+    // Select all baselines that match the given pattern.
+    Table tab_selection = tab_baselines(getBaselineExpr(tab_baselines, filter));
+
+    // Fetch the selected baselines.
+    Vector<Int> antenna1 =
+        ROScalarColumn<Int>(tab_selection, "ANTENNA1").getColumn();
+    Vector<Int> antenna2 =
+        ROScalarColumn<Int>(tab_selection, "ANTENNA2").getColumn();
+
+    // Construct a BaselineMask from the selected baseline.
+    BaselineMask mask;
+    for(size_t i = 0; i < antenna1.size(); ++i)
+    {
+        mask.set(antenna1[i], antenna2[i]);
+        mask.set(antenna2[i], antenna1[i]);
+    }
+
+    return mask;
 }
 
 void MeasurementAIPS::initInstrument()
@@ -511,7 +526,7 @@ void MeasurementAIPS::initDimensions()
 
     // Find all unique integration cells.
     Table tab_sorted = itsMainTableView.sort("TIME", Sort::Ascending,
-        Sort::QuickSort + Sort::NoDuplicates);
+        Sort::HeapSort | Sort::NoDuplicates);
 
     // Read TIME and INTERVAL column.
     ROScalarColumn<Double> c_time(tab_sorted, "TIME");
@@ -534,7 +549,7 @@ void MeasurementAIPS::initDimensions()
     sortColumns[0] = "ANTENNA1";
     sortColumns[1] = "ANTENNA2";
     Table tab_baselines = itsMainTableView.sort(sortColumns, Sort::Ascending,
-        Sort::QuickSort + Sort::NoDuplicates);
+        Sort::HeapSort | Sort::NoDuplicates);
     const unsigned int nBaselines = tab_baselines.nrow();
 
     // Initialize baseline axis.
@@ -633,72 +648,37 @@ Table MeasurementAIPS::getTableSelection(const Table &table,
 
     if(selection.isSet(VisSelection::BASELINE_FILTER))
     {
-        TableExprNodeSet stationSetExpr =
-            getStationSetExpr(getBaselineMask(selection));
-
-        // Using an empty TableExprNodeSet in an "in" expression throws an
-        // exception instead of returning an empty result. As a workaround any
-        // baseline selection that would return an empty result is ignored here.
-        // This will cause too much data to be loaded but because read(),
-        // write(), and getDimensionImpls() also check the baseline selection
-        // (through the provided BaselineMask) the client code still gets a
-        // valid (empty) result.
-        if(stationSetExpr.nelements() > 0)
-        {
-            filter = filter && table.col("ANTENNA1").in(stationSetExpr)
-                && table.col("ANTENNA2").in(stationSetExpr);
-        }
-
-        if(selection.getBaselineFilter().baselineType() == BaselineFilter::AUTO)
-        {
-            filter = filter && (table.col("ANTENNA1") == table.col("ANTENNA2"));
-        }
-        else if(selection.getBaselineFilter().baselineType()
-            == BaselineFilter::CROSS)
-        {
-            filter = filter && (table.col("ANTENNA1") != table.col("ANTENNA2"));
-        }
+        filter = filter && getBaselineExpr(table,
+            selection.getBaselineFilter());
     }
 
     if(selection.isSet(VisSelection::CORRELATION_MASK))
     {
-        LOG_WARN_STR("Correlation selection not yet implemented; all available"
-            " correlations will be selected.");
+        THROW(BBSKernelException, "Reading a subset of the available"
+            " correlations is not yet implemented.");
     }
 
     return table(filter);
 }
 
-TableExprNodeSet MeasurementAIPS::getStationSetExpr(const BaselineMask &mask)
-    const
+casa::TableExprNode MeasurementAIPS::getBaselineExpr(const casa::Table &table,
+    const string &pattern) const
 {
-    // Allocate an array of booleans to mark which stations match the baseline
-    // selection.
-    vector<bool> usedStations(itsInstrument.size(), false);
-
-    // Find all stations used by looping over all baselines and marking the
-    // corresponding stations.
-    const BaselineSeq &baselines = this->baselines();
-    for(size_t i = 0; i < baselines.size(); ++i)
+    try
     {
-        if(mask(baselines[i]))
-        {
-            usedStations[baselines[i].first] = true;
-            usedStations[baselines[i].second] = true;
-        }
+        // Create a MeasurementSet instance from the table of unique baselines.
+        // This is required because MSSelection::toTableExprNode only operates
+        // on MeasurementSets.
+        MeasurementSet ms(table);
+        MSSelection selection;
+        selection.setAntennaExpr(pattern);
+        return selection.toTableExprNode(&ms);
     }
-
-    // Create a TAQL set expression from the stations found.
-    TableExprNodeSet expr;
-    for(size_t i = 0; i < usedStations.size(); ++i)
+    catch(AipsError &e)
     {
-        if(usedStations[i])
-        {
-            expr.add(TableExprNodeSetElem(static_cast<Int>(i)));
-        }
+        THROW(BBSKernelException, "Error in baseline selection [" << e.what()
+            << "]");
     }
-
-    return expr;
 }
 
 BaselineMask MeasurementAIPS::getBaselineMask(const VisSelection &selection)
@@ -706,12 +686,11 @@ BaselineMask MeasurementAIPS::getBaselineMask(const VisSelection &selection)
 {
     if(selection.isSet(VisSelection::BASELINE_FILTER))
     {
-        return selection.getBaselineFilter().createMask(itsInstrument);
+        return asMask(selection.getBaselineFilter());
     }
 
-    BaselineFilter filter;
-    filter.append("*");
-    return filter.createMask(itsInstrument);
+    // By default, select cross correlations only.
+    return asMask("*&&");
 }
 
 // NOTE: OPTIMIZATION OPPORTUNITY: when reading all channels, do not use a
@@ -757,8 +736,10 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
     return Slicer(start, end, Slicer::endIsLast);
 }
 
+//VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
+//    const BaselineMask &mask, const Slicer slicer) const
 VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
-    const BaselineMask &mask, const Slicer slicer) const
+    const Slicer slicer) const
 {
     ASSERTSTR(tab_selection.nrow() > 0, "Cannot determine dimensions of empty"
         " data selection (empty Axis is not supported).");
@@ -791,7 +772,7 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
 
     // Find all unique integration cells.
     Table tab_sorted = tab_selection.sort("TIME", Sort::Ascending,
-        Sort::QuickSort + Sort::NoDuplicates);
+        Sort::HeapSort | Sort::NoDuplicates);
 
     // Read TIME and INTERVAL column.
     ROScalarColumn<Double> c_time(tab_sorted, "TIME");
@@ -814,7 +795,7 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     sortBaselineColumns[0] = "ANTENNA1";
     sortBaselineColumns[1] = "ANTENNA2";
     Table tab_baselines = tab_selection.sort(sortBaselineColumns,
-        Sort::Ascending, Sort::QuickSort + Sort::NoDuplicates);
+        Sort::Ascending, Sort::HeapSort | Sort::NoDuplicates);
     const size_t nBaselines = tab_baselines.nrow();
 
     // Initialize baseline axis.
@@ -828,8 +809,7 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     {
         baselines.append(baseline_t(antenna1[i], antenna2[i]));
     }
-    // Filter baselines according to the given baseline mask.
-    dims.setBaselines(filter(baselines, mask));
+    dims.setBaselines(baselines);
 
     // Initialize correlation axis.
     dims.setCorrelations(correlations());

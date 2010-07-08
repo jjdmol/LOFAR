@@ -80,6 +80,8 @@ public:
     const CorrelationSeq &correlations() const;
     // @}
 
+    size_t nSamples() const;
+
     bool hasUVW() const;
 
     // Computes station UVW coordinates in meters for the center of each time
@@ -199,6 +201,11 @@ inline const CorrelationSeq &VisBuffer::correlations() const
 inline bool VisBuffer::hasUVW() const
 {
     return uvw.size() > 0;
+}
+
+inline size_t VisBuffer::nSamples() const
+{
+    return nBaselines() * nTime() * nFreq() * nCorrelations();
 }
 
 } //# namespace BBS

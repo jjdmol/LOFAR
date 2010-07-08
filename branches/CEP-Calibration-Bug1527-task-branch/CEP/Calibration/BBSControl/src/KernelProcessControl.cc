@@ -72,6 +72,7 @@
 #include <BBSKernel/Evaluator.h>
 #include <BBSKernel/VisEquator.h>
 #include <BBSKernel/Solver.h>
+#include <BBSKernel/UVWFlagger.h>
 #include <BBSKernel/Exceptions.h>
 
 namespace LOFAR
@@ -238,15 +239,15 @@ namespace LOFAR
               // If an error occurred, log a descriptive message and exit.
               if(result.is(CommandResult::ERROR)) {
                 LOG_ERROR_STR("Error executing " << command.second->type()
-                    << " command: " << result.message());
+                  << " command: " << result.message());
                 return false;
               }
 
               // If the command was a finalize command, log that we are done
               // and exit.
               if(command.second->type() == "Finalize") {
-                  LOG_INFO("Run completed succesfully.");
-                  clearRunState();
+                LOG_INFO("Run completed succesfully.");
+                clearRunState();
               }
             }
             else {
@@ -419,7 +420,7 @@ namespace LOFAR
       catch(Exception &ex)
       {
         return CommandResult(CommandResult::ERROR, "Failed to read chunk ["
-            + ex.message() + "]");
+          + ex.message() + "]");
       }
 
       // Display information about chunk.
@@ -460,8 +461,8 @@ namespace LOFAR
       ++itsStepCount;
 
       // Determine selected baselines and correlations.
-      BaselineFilter blFilter = createBaselineFilter(command.selection());
-      BaselineMask blMask = blFilter.createMask(itsMeasurement->instrument());
+      BaselineMask blMask =
+        itsMeasurement->asMask(createBaselineFilter(command.selection()));
       CorrelationMask crMask = createCorrelationMask(command.selection());
 
       // Construct model expression.
@@ -515,8 +516,8 @@ namespace LOFAR
       ++itsStepCount;
 
       // Determine selected baselines and correlations.
-      BaselineFilter blFilter = createBaselineFilter(command.selection());
-      BaselineMask blMask = blFilter.createMask(itsMeasurement->instrument());
+      BaselineMask blMask =
+        itsMeasurement->asMask(createBaselineFilter(command.selection()));
       CorrelationMask crMask = createCorrelationMask(command.selection());
 
       // Construct model expression.
@@ -571,8 +572,8 @@ namespace LOFAR
       ++itsStepCount;
 
       // Determine selected baselines and correlations.
-      BaselineFilter blFilter = createBaselineFilter(command.selection());
-      BaselineMask blMask = blFilter.createMask(itsMeasurement->instrument());
+      BaselineMask blMask =
+        itsMeasurement->asMask(createBaselineFilter(command.selection()));
       CorrelationMask crMask = createCorrelationMask(command.selection());
 
       // Construct model expression.
@@ -627,8 +628,8 @@ namespace LOFAR
       ++itsStepCount;
 
       // Determine selected baselines and correlations.
-      BaselineFilter blFilter = createBaselineFilter(command.selection());
-      BaselineMask blMask = blFilter.createMask(itsMeasurement->instrument());
+      BaselineMask blMask =
+        itsMeasurement->asMask(createBaselineFilter(command.selection()));
       CorrelationMask crMask = createCorrelationMask(command.selection());
 
       // Construct model expression.
@@ -694,9 +695,26 @@ namespace LOFAR
       }
 
       // Determine selected baselines and correlations.
-      BaselineFilter blFilter = createBaselineFilter(command.selection());
-      BaselineMask blMask = blFilter.createMask(itsMeasurement->instrument());
+      BaselineMask blMask =
+        itsMeasurement->asMask(createBaselineFilter(command.selection()));
       CorrelationMask crMask = createCorrelationMask(command.selection());
+
+      // If a UV interval has been specified, flag all samples that fall outside
+      // of this interval.
+      if(command.uvFlag())
+      {
+        UVWFlagger flagger(itsChunk);
+        flagger.setBaselineMask(blMask);
+        flagger.setFlagMask(2);
+        flagger.setUVInterval(command.uvInterval().first,
+            command.uvInterval().second);
+        flagger.process();
+
+        // Dump processing statistics to the log.
+        ostringstream oss;
+        flagger.dumpStats(oss);
+        LOG_DEBUG(oss.str());
+      }
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
@@ -733,7 +751,7 @@ namespace LOFAR
         }
         else if(size.freq > 1)
         {
-            freqAxis = freqAxis->compress(size.freq);
+          freqAxis = freqAxis->compress(size.freq);
         }
       }
 
@@ -761,7 +779,7 @@ namespace LOFAR
       if(equator->isSelectionEmpty())
       {
         LOG_WARN_STR("No measured visibility data available in the current"
-            " data selection; solving will proceed without data.");
+          " data selection; solving will proceed without data.");
       }
 
       try
@@ -807,6 +825,13 @@ namespace LOFAR
 
       // Flush solutions to disk.
       ParmManager::instance().flush();
+
+      // Clear the flags for all samples that fall outside the specified UV
+      // interval.
+      if(command.uvFlag())
+      {
+        itsChunk->flagsAndWithMask(~flag_t(2));
+      }
 
       return CommandResult(CommandResult::OK, "Ok.");
     }
@@ -880,50 +905,12 @@ namespace LOFAR
       return Axis::ShPtr(new RegularAxis(freqStart, freqEnd, 1, true));
     }
 
-    BaselineFilter
+    string
     KernelProcessControl::createBaselineFilter(const Selection &selection) const
     {
-      BaselineFilter filter;
-
-      try
-      {
-        filter.setBaselineType(selection.type);
-      }
-      catch(BBSKernelException &ex)
-      {
-        LOG_WARN_STR("Invalid baseline type: " << selection.type << "; will use"
-          << " ANY instead.");
-      }
-
-      typedef vector<vector<string> >::const_iterator PatternIt;
-      for(PatternIt it = selection.baselines.begin(),
-        end = selection.baselines.end(); it != end; ++it)
-      {
-        try
-        {
-          if(it->size() == 1)
-          {
-            filter.append((*it)[0]);
-          }
-          else if(it->size() == 2)
-          {
-            filter.append((*it)[0], (*it)[1]);
-          }
-        }
-        catch(BBSKernelException &ex)
-        {
-          LOG_WARN_STR("Invalid baseline criterion: " << (*it) << "; will"
-            " be ignored.");
-        }
-      }
-
-      // If no valid baseline pattern are found, select all baselines (default).
-      if(filter.empty())
-      {
-        filter.append("*", "*");
-      }
-
-      return filter;
+        // If the baseline selection is empty, select all cross correlations
+        // (default).
+        return selection.baselines.empty() ? "*&" : selection.baselines;
     }
 
     CorrelationMask

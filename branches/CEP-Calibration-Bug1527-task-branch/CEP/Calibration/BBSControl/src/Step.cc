@@ -129,9 +129,7 @@ namespace LOFAR
       const string prefix = "Step." + itsName + ".";
 
       // Write data selection.
-      ps.replace(prefix + "Selection.BaselineType", itsSelection.type);
-      ps.replace(prefix + "Selection.Baselines",
-        toString(itsSelection.baselines));
+      ps.replace(prefix + "Selection.Baselines", itsSelection.baselines);
       ps.replace(prefix + "Selection.Correlations",
         toString(itsSelection.correlations));
 
@@ -180,8 +178,8 @@ namespace LOFAR
           toString(config.getThreshold()));
       }
 
-      ps.add(prefix + "Model.ExperimentalCaching.Enable",
-        toString(itsModelConfig.useExperimentalCaching()));
+      ps.add(prefix + "Model.Caching.Enable",
+        toString(itsModelConfig.useCaching()));
 
       ps.add(prefix + "Model.Sources", toString(itsModelConfig.getSources()));
 
@@ -193,8 +191,11 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      // Read data selection (see Types.cc).
-      fromParameterSet(ps, itsSelection);
+      // Read data selection.
+      itsSelection.baselines = ps.getString("Selection.Baselines",
+        itsSelection.baselines);
+      itsSelection.correlations = ps.getStringVector("Selection.Correlations",
+        itsSelection.correlations);
 
       // Read model configuration.
       itsModelConfig.setPhasors(ps.getBool("Model.Phasors.Enable",
@@ -287,9 +288,8 @@ namespace LOFAR
         itsModelConfig.clearFlaggerConfig();
       }
 
-      itsModelConfig.setExperimentalCaching(ps.getBool("Model"
-        ".ExperimentalCaching.Enable",
-            itsModelConfig.useExperimentalCaching()));
+      itsModelConfig.setCaching(ps.getBool("Model.Caching.Enable",
+        itsModelConfig.useCaching()));
 
       itsModelConfig.setSources(ps.getStringVector("Model.Sources",
         itsModelConfig.getSources()));

@@ -42,6 +42,8 @@ namespace BBS
 class BaselineMask
 {
 public:
+    BaselineMask(bool defaultMask = false);
+
     // Mask baseline.
     void set(const baseline_t &baseline);
     // Unmask baseline.
@@ -62,6 +64,8 @@ public:
     // bottleneck, the result could be cached internally.
     bool empty() const;
 
+    bool defaultMask() const;
+
     // Mask arithmetic.
     friend const BaselineMask operator!(const BaselineMask &lhs);
     friend const BaselineMask operator||(const BaselineMask &lhs,
@@ -73,6 +77,7 @@ private:
     // Compute the linear index of baseline (i, j).
     size_t index(size_t i, size_t j) const;
 
+    bool            itsDefaultMask;
     vector<bool>    itsMask;
 };
 
@@ -95,17 +100,31 @@ inline void BaselineMask::clear(const baseline_t &baseline)
 inline void BaselineMask::set(size_t i, size_t j)
 {
     const size_t index = this->index(i, j);
-    if(index >= itsMask.size())
+
+    // If required, resize the mask.
+    if(index >= itsMask.size() && itsDefaultMask == false)
     {
         itsMask.resize(index + 1);
     }
 
-    itsMask[index] = true;
+    // If required, mask baseline.
+    if(index < itsMask.size())
+    {
+        itsMask[index] = true;
+    }
 }
 
 inline void BaselineMask::clear(size_t i, size_t j)
 {
     const size_t index = this->index(i, j);
+
+    // If required, resize the mask.
+    if(index >= itsMask.size() && itsDefaultMask == true)
+    {
+        itsMask.resize(index + 1);
+    }
+
+    // If required, mask baseline.
     if(index < itsMask.size())
     {
         itsMask[index] = false;
@@ -120,7 +139,7 @@ inline bool BaselineMask::operator()(const baseline_t &baseline) const
 inline bool BaselineMask::operator()(size_t i, size_t j) const
 {
     const size_t index = this->index(i, j);
-    return index < itsMask.size() && itsMask[index];
+    return index < itsMask.size() ? itsMask[index] : itsDefaultMask;
 }
 
 inline size_t BaselineMask::index(size_t i, size_t j) const
@@ -131,6 +150,11 @@ inline size_t BaselineMask::index(size_t i, size_t j) const
     const size_t d_2 = d / 2;
 
     return d_2 * d_2 + d_2 + (d % 2) * d_2 + (d % 2) + std::min(i, j);
+}
+
+inline bool BaselineMask::defaultMask() const
+{
+    return itsDefaultMask;
 }
 
 } //# namespace BBS

@@ -94,8 +94,7 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       ps.add("InputColumn", itsInputColumn);
-      ps.add("Selection.BaselineType", itsSelection.type);
-      ps.add("Selection.Baselines", toString(itsSelection.baselines));
+      ps.add("Selection.Baselines", itsSelection.baselines);
       ps.add("Selection.Correlations", toString(itsSelection.correlations));
       ps.add("UseSolver", toString(itsUseSolver));
     }
@@ -104,8 +103,17 @@ namespace LOFAR
     void InitializeCommand::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+
+      // Read input column.
       itsInputColumn = ps.getString("InputColumn", "DATA");
-      fromParameterSet(ps, itsSelection);
+
+      // Read data selection.
+      itsSelection.baselines = ps.getString("Selection.Baselines",
+        itsSelection.baselines);
+      itsSelection.correlations = ps.getStringVector("Selection.Correlations",
+        itsSelection.correlations);
+
+      // Read flag that controls use of the global solver.
       itsUseSolver = ps.getBool("UseSolver", false);
     }
 

@@ -54,8 +54,11 @@ namespace LOFAR
       // Get the name of the input column
       itsInputColumn = ps.getString("InputColumn", "DATA");
 
-      // Read data selection (see Types.cc).
-      fromParameterSet(ps, itsSelection);
+      // Read data selection.
+      itsSelection.baselines = ps.getString("Selection.Baselines",
+        itsSelection.baselines);
+      itsSelection.correlations = ps.getStringVector("Selection.Correlations",
+        itsSelection.correlations);
 
       // Get the time window.
       itsTimeWindow = ps.getStringVector("TimeWindow", vector<string>());
