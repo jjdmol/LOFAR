@@ -285,7 +285,7 @@ num_t ThresholdConfig::CalculateFalseAlarmRate(size_t resolution, enum Distribut
 				image->SetValue(x, y, RNG::Uniform());
 				break;
 				case Gaussian:
-				image->SetValue(x, y, RNG::Guassian());
+				image->SetValue(x, y, RNG::Gaussian());
 				break;
 				case Rayleigh:
 				image->SetValue(x, y, RNG::Rayleigh());

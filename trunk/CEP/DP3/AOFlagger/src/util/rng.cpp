@@ -33,21 +33,21 @@ double RNG::Uniform()
 	return (long double) rand() / (long double) RAND_MAX;
 }
 
-double RNG::Guassian()
+double RNG::Gaussian()
 {
 	long double a, b;
 	DoubleGaussian(a, b);
 	return a;
 }
 
-double RNG::GuassianProduct()
+double RNG::GaussianProduct()
 {
 	long double a, b;
 	DoubleGaussian(a, b);
 	return a * b;
 }
 
-double RNG::GuassianPartialProduct()
+double RNG::GaussianPartialProduct()
 {
 	long double a, b;
 	DoubleGaussian(a, b);
@@ -81,7 +81,7 @@ void RNG::DoubleGaussian(long double &a, long double &b)
 
 double RNG::Rayleigh()
 {
-	double x = Guassian(), y = Guassian();
+	double x = Gaussian(), y = Gaussian();
 	return sqrt(x*x + y*y);
 }
 
@@ -102,6 +102,11 @@ double RNG::IntegrateGaussian(long double upperLimit)
 	return integral / sqrtl(2.0L * M_PI);
 }
 
+double RNG::EvaluateGaussian(double x, double sigma)
+{
+	return 1.0 / (sigma * sqrtl(2.0L*M_PI)) * expl(-0.5*x*x/sigma);
+}
+
 long double RNG::EvaluateGaussian(long double x, long double sigma)
 {
 	return 1.0L / (sigma * sqrtl(2.0L*M_PI)) * expl(-0.5L*x*x/sigma);
@@ -114,7 +119,7 @@ double RNG::EvaluateGaussian2D(long double x1, long double x2, long double sigma
 
 void RNG::ComplexGaussianAmplitude(num_t &r, num_t &i)
 {
-	num_t amplitude = Guassian();
+	num_t amplitude = Gaussian();
 	num_t phase = Uniform() * 2.0 * M_PIn;
 	r = amplitude * cosn(phase);
 	i = amplitude * sinn(phase);

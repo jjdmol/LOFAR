@@ -241,7 +241,7 @@ Image2D *MitigationTester::CreateGaussianData(unsigned width, unsigned height)
 	Image2D *image = Image2D::CreateEmptyImage(width, height);
 	for(unsigned y=0;y<height;++y) {
 		for(unsigned x=0;x<width;++x) {
-			image->SetValue(x, y, RNG::Guassian());
+			image->SetValue(x, y, RNG::Gaussian());
 		}
 	}
 	return image; 

@@ -95,9 +95,9 @@ class MitigationTester{
 
 		static double Rand(enum NoiseType type) {
 			switch(type) {
-				case Gaussian: return RNG::Guassian();
-				case GaussianProduct: return RNG::GuassianProduct();
-				case GaussianPartialProduct: return RNG::GuassianPartialProduct();
+				case Gaussian: return RNG::Gaussian();
+				case GaussianProduct: return RNG::GaussianProduct();
+				case GaussianPartialProduct: return RNG::GaussianPartialProduct();
 				case Rayleigh: return RNG::Rayleigh();
 			}
 			throw std::exception();
