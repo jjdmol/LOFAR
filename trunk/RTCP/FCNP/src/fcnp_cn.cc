@@ -23,7 +23,7 @@
 
 namespace FCNP_CN {
 
-static unsigned nextMutex = 1024; // TODO: deallocate mutexes
+static unsigned nextMutex = LOCKBOX_RESERVED_LOCKID; // TODO: deallocate mutexes
 
 
 class Semaphore
