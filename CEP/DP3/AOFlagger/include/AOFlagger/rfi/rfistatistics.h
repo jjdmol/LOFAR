@@ -149,7 +149,14 @@ class RFIStatistics {
 			saveSubbands(_autoChannels, "counts-subbands-auto.txt");
 			saveSubbands(_crossChannels, "counts-subbands-cross.txt");
 		}
-
+		const std::map<double, class AmplitudeBin> &GetAutoAmplitudes() const
+		{
+			return _autoAmplitudes;
+		}
+		const std::map<double, class AmplitudeBin> &GetCrossAmplitudes() const
+		{
+			return _crossAmplitudes;
+		}
 	private:
 		struct FeatureInfo {
 			long double amplitudeSum;

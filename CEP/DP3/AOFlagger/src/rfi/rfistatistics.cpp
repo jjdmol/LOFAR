@@ -582,9 +582,10 @@ void RFIStatistics::saveAmplitudes(std::map<double, class AmplitudeBin> &amplitu
 	for(std::map<double, class AmplitudeBin>::const_iterator i=amplitudes.begin();i!=amplitudes.end();++i)
 	{
 		const AmplitudeBin &a = i->second;
+		double logAmp = a.centralAmplitude > 0.0 ? log10(a.centralAmplitude) : 0.0;
 		file
 			<< a.centralAmplitude << "\t"
-			<< log10(a.centralAmplitude) << "\t"
+			<< logAmp << "\t"
 			<< a.count << "\t"
 			<< a.rfiCount << "\t"
 			<< a.broadbandRfiCount << "\t"

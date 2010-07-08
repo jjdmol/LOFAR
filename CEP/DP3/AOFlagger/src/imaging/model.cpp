@@ -88,7 +88,7 @@ void Model::SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num
 	{
 		PointSource &source = **iter;
 		num_t w = GetWPosition(source.dec, source.ra, frequency, earthLattitude, dx, dy);
-		num_t fieldStrength = source.sqrtFluxIntensity + RNG::Guassian() * _sourceSigma;
+		num_t fieldStrength = source.sqrtFluxIntensity + RNG::Gaussian() * _sourceSigma;
 		num_t noiser, noisei;
 		RNG::ComplexGaussianAmplitude(noiser, noisei);
 		r += fieldStrength * cosn((w - delayW) * M_PIn * 2.0) + noiser * _noiseSigma;
@@ -110,7 +110,7 @@ void Model::SimulateUncoherentAntenna(num_t delayDirectionDEC, num_t delayDirect
 	//else {
 		PointSource &source = *_sources[index%_sources.size()];
 		num_t w = GetWPosition(source.dec, source.ra, frequency, earthLattitude, dx, dy);
-		num_t fieldStrength = source.sqrtFluxIntensity + RNG::Guassian() * _sourceSigma;
+		num_t fieldStrength = source.sqrtFluxIntensity + RNG::Gaussian() * _sourceSigma;
 		r = fieldStrength * cosn((w - delayW) * M_PIn * 2.0) + noiser;
 		i = fieldStrength * sinn((w - delayW) * M_PIn * 2.0) + noisei;
 	//}
