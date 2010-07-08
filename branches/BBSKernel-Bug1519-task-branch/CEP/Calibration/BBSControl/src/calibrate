@@ -135,9 +135,8 @@ skip_instrument_db=0
 replace_instrument_db=0
 instrument_db=
 instrument_basename="instrument"
-solver_basename="solver"				# default table "solver"
-parm_log=F									# default off
-
+solverlog_name="solver"				# default table "solver"
+parm_log=F								# default off
 # Arguments
 observation=
 parset=
@@ -241,7 +240,7 @@ do
     fi
     shift
 
-    solver_basename=${1}
+    solverlog_name=${1}
     shift   
     
     instrument_db=${1}
@@ -337,7 +336,7 @@ if test ${verbose} -eq 1; then
     echo "    replace instrument db: ${replace_instrument_db}"
     echo "    instrument db: ${instrument_db}"
     echo "    instrument name: ${instrument_basename}"
-    echo "	  solver name: ${solver_basename}"
+    echo "	  solver name: ${solverlog_name}"
     echo
 fi
 
@@ -514,14 +513,6 @@ EOF
 fi
 
 
-#if test "${parm_log}" -ne "F"; then
-#	event "We will be doing ParmLogging!"
-#	cat > "${key}_control_$$.parset" << EOF
-#ParmLog = "${parm_log}"
-#EOF	
-#fi
-
-
 #
 # EXECUTE LOCAL PROCESS(ES)
 #
@@ -567,12 +558,12 @@ fi
 #
 
 event "execute remote KernelControl processes"
-if test ${verbose} -eq 1 -o ${dry} -eq 1; then														# \"${solver_basename}\"
-echo "startdistproc -useenv -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${instrument_basename}\" \"${sky_basename}\" \"${solver_basename}\" nodry"
+if test ${verbose} -eq 1 -o ${dry} -eq 1; then
+    echo "startdistproc -useenv -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${instrument_basename}\" \"${sky_basename}\" \"${solverlog_name}\" \"${parm_log}\" nodry"
 fi
 
 if test ${dry} -eq 0; then
-	startdistproc -useenv -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${instrument_basename}" "${sky_basename}" "${solver_basename}" nodry
+	startdistproc -useenv -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${instrument_basename}" "${sky_basename}" "${solverlog_name}" "${parm_log}" nodry
 
     if test $? -ne 0; then
         kill_all "${pidlist}"

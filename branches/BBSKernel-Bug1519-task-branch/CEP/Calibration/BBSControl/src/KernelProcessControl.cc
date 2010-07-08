@@ -119,10 +119,6 @@ namespace LOFAR
         ParameterSet *ps = globalParameterSet();
         ASSERT(ps);
 
-		// DEBUG - output parameterset
-//		LOG_DEBUG_STR("Parameterset:" << endl << *ps);
-//		LOG_DEBUG_STR("Logging = " << ps->getString("ParmLog") );
-		
         string filesys = ps->getString("ObservationPart.Filesystem");
         if(filesys == ".")
         {
@@ -134,8 +130,7 @@ namespace LOFAR
         string skyDb = ps->getString("ParmDB.Sky");
         string instrumentDb = ps->getString("ParmDB.Instrument");
         string solverDb=ps->getString("ParmLog");
-		//  string solverDb="solver";	// DEBUG 
-        LOG_DEBUG_STR("solverDb = " << solverDb);
+        string loggingLevel=ps->getString("ParmLoglevel");
         
         try {
           // Open observation part.
@@ -173,9 +168,23 @@ namespace LOFAR
 		  
 		try {
         	// Open ParmDBLog ParmDB for solver logging
-			LOG_INFO_STR("ParmDBLog table: " << solverDb);
-			itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
-        }
+			LOG_INFO_STR("Solver log table: " << solverDb);
+			LOG_INFO_STR("Solver logging level" << loggingLevel);
+			
+			// Depending on value read from parset file for logging level call constructor
+			// with the corresponding enum value
+			//
+			if(loggingLevel=="NONE")
+				itsParmLogger.reset(new ParmDBLog(solverDb));	// call without logging object
+			if(loggingLevel=="PERSOLUTION")
+				itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
+			if(loggingLevel=="PERSOLUTION_CORRMATRIX")
+				itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX));
+			if(loggingLevel=="PERITERATION")
+				itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION));			
+			if(loggingLevel=="PERITERATION_CORRMATRIX")
+				itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX));
+		}
         catch(Exception &e) {
           LOG_ERROR_STR("Failed to open instrument model parameter database: "
             << instrumentDb);
@@ -723,10 +732,12 @@ namespace LOFAR
           controller.init(command.parms(), command.exclParms(), evalGrid,
             solGrid, cellChunkSize, command.propagate());
 
-		  LOG_DEBUG_STR("Calling KernelProcessControl.run(*itsParmLogger)");
-		  LOG_DEBUG_STR("itsParmLogger = " << itsParmLogger << endl);
-          controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
-//          controller.run();
+          LOG_DEBUG_STR("itsParmLogger = " << itsParmLogger << endl);
+          
+          if(itsParmLogger != NULL)
+          	 controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
+          else
+          	 controller.run();						// run without ParmDB logging
         }
       } catch(Exception &ex) {
         return CommandResult(CommandResult::ERROR, "Unable to initialize or run"
@@ -786,10 +797,16 @@ namespace LOFAR
       ASSERT(itsKernelIndex >= 0);
       unsigned int kernel = static_cast<unsigned int>(itsKernelIndex);
 
+      // Determine the calibration group to which this kernel process belongs,
+      // and find the index of the first and last kernel process in that
+      // calibration group.
       unsigned int idx = 0, count = groups[0];
-      while(idx < groups.size() && kernel >= count) {
-        count += groups[idx++];
-      }
+      while(kernel >= count) {
+        ++idx;
+        ASSERT(idx < groups.size());
+        count += groups[idx];
+      }      
+      
       ASSERT(kernel < count);
       LOG_DEBUG_STR("Calibration group index: " << idx);
 

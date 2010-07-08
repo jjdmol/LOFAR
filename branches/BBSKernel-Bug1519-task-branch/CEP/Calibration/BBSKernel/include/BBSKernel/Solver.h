@@ -41,7 +41,7 @@ namespace BBS
 
 class Solver
 {
-  friend class LocalSolveController;
+//  friend class LocalSolveController;
   
 public:
     Solver();
@@ -65,15 +65,12 @@ public:
     // Get the merged equations (meant for debugging purposes).
     void getEquations(vector<CellEquation> &global);
 
+    // Get the maximum number of iterations that are set
+    size_t getMaxIter();
+    
     // Perform an iteration for all available cells.
     bool iterate(vector<CellSolution> &global);
-    
-	// Perform an iteration for all available cells and allow logging of solver parameters to ParmDBLog
-//    bool iterate(vector<CellSolution> &global, ParmDBLog &logger, Grid &SolGrid);
 
-	 // Get maxIter from the Solver object
-//	 inline size_t getMaxIter() { return itsMaxIter; };
-	 
 private:
     struct Cell
     {

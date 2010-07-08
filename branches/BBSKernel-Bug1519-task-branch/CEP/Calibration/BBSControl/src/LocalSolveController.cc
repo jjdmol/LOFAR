@@ -160,8 +160,8 @@ void LocalSolveController::run()
             // Notify LHS and RHS expressions of coefficient update.
             itsLHS->solvableParmsChanged();
             itsRHS->solvableParmsChanged();
- 		  }
-		  
+        }
+
         // Propagate coefficient values to the next cell chunk.
         // TODO: Find a better solution for this.
         if(itsPropagateFlag && cellChunk < nCellChunks - 1)
@@ -248,23 +248,9 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
         	LOG_INFO_STR("Iterate loop");
         	
         	// Construct equations and pass to solver.
-            itsEquator->process(equations);
+         itsEquator->process(equations);
 
-            itsSolver.setEquations(0, equations);
-
-/*
-            // Perform a non-linear LSQ iteration.
-            if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION || 
-            	parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX )
-            {
-            	done = itsSolver.iterate(solutions);
- 			}
- 			else
- 			{
-
-*/
-//			solutionLocation=itsSolGrid.getCellLocation(it->id);	// translate cell id into location on the Grid
-//			solutionBox=itsSolGrid.getCell(solutionLocation);		// get the bounding box of the location of solutioncell		 
+         itsSolver.setEquations(0, equations);
  
 			LOG_DEBUG_STR("done = itsSolver.iterate(solutions);");
 			// Call solver iterate with logging, also needs the solutionBox to know grid coords
@@ -272,31 +258,35 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 
 			// If logging per iteration is requested...
 			// Need to loop over chunks to access individual (intermediate) solutions
-			for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
-			{
-				if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION )
+			//
+			if( parmLogger.getLoggingLevel() == ParmDBLog::PERITERATION ||parmLogger.getLoggingLevel() == ParmDBLog::PERITERATION_CORRMATRIX)
+			{	
+				for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
 				{
-					LOG_DEBUG_STR("logging PERITERATION");
-					parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
-								solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
-								it->chiSqr, it->lmFactor, it->coeff, it->resultText);			
-				}
-				// or logging per iteration including the correlation matrix
-				else if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX )
-				{
-					LOG_DEBUG_STR("logging PERITERATION_CORRMATRIX");
-					parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
-								solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
-								it->chiSqr, it->lmFactor, it->coeff, it->resultText, it->CorrMatrix);			
-				}
-		    }
+					if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION )
+					{
+						LOG_DEBUG_STR("logging PERITERATION");
+						parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
+									solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
+									it->chiSqr, it->lmFactor, it->coeff, it->resultText);			
+					}
+					// or logging per iteration including the correlation matrix
+					else if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX )
+					{
+						LOG_DEBUG_STR("logging PERITERATION_CORRMATRIX");
+						parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
+									solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
+									it->chiSqr, it->lmFactor, it->coeff, it->resultText, it->CorrMatrix);			
+					}
+				 }
+			}
 
-            // Update coefficients.
-            setSolution(solutions, chunkStart, chunkEnd);
+         // Update coefficients.
+         setSolution(solutions, chunkStart, chunkEnd);
 
-            // Notify LHS and RHS expressions of coefficient update.
-            itsLHS->solvableParmsChanged();
-            itsRHS->solvableParmsChanged();
+         // Notify LHS and RHS expressions of coefficient update.
+         itsLHS->solvableParmsChanged();
+         itsRHS->solvableParmsChanged();
  		  }
 		  
 		  
@@ -345,7 +335,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 			 solutionLocation=itsSolGrid.getCellLocation(it->id);	// translate cell id into location on the Grid
 			 solutionBox=itsSolGrid.getCell(solutionLocation);		// get the bounding box of the location of solutioncell
 
-			 it->maxIter=itsSolver.itsMaxIter;		// for completeness store MaxIter in CellSolution object
+			 it->maxIter=itsSolver.getMaxIter();		// for completeness store MaxIter in CellSolution object
 
 			 // Write solver parameters for each solution into parmDB if parm logging level was set
 			 if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION)
