@@ -126,6 +126,7 @@ class Parset(util.Parset.Parset):
         self.setdefault("OLAP.outputCoherentStokes",False);
         self.setdefault("OLAP.outputIncoherentStokes",False);
         self.setdefault("OLAP.Stokes.which","I");
+        self.setdefault("OLAP.Stokes.integrateChannels",False);
         self.setdefault("OLAP.Stokes.integrationSteps",1);
         self.setdefault("OLAP.OLAP_Conn.rawDataOutputOnly",False);
         self.setdefault("OLAP.Correlator.integrationTime",1);
@@ -284,6 +285,8 @@ class Parset(util.Parset.Parset):
         # (minimal) number of times the IONProc will have to integrate
         integrationtime = float( self["OLAP.Correlator.integrationTime"] )
         ionIntegrationSteps = int(math.ceil(integrationtime / maxCnIntegrationTime))
+        if ionIntegrationSteps == 0:
+          ionIntegrationSteps = 1
         self.setdefault('OLAP.IONProc.integrationSteps', ionIntegrationSteps)
 
         # the amount of time CNProc will integrate, translated into samples
