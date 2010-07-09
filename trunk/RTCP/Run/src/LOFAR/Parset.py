@@ -285,8 +285,6 @@ class Parset(util.Parset.Parset):
         # (minimal) number of times the IONProc will have to integrate
         integrationtime = float( self["OLAP.Correlator.integrationTime"] )
         ionIntegrationSteps = int(math.ceil(integrationtime / maxCnIntegrationTime))
-        if ionIntegrationSteps == 0:
-          ionIntegrationSteps = 1
         self.setdefault('OLAP.IONProc.integrationSteps', ionIntegrationSteps)
 
         # the amount of time CNProc will integrate, translated into samples
