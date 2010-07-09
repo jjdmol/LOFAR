@@ -3,7 +3,7 @@
 # Send delays from RCU to HBA and compare results with the expected golden result.
 # To verify modem communication between RCU and HBA
 #
-# Version 1.3  15-03-10   M.J.Norden
+# Version 1.4  09-07-10   M.J.Norden
 
 rm -f hba_modem*.log
 rm -f hba_modem*.diff
@@ -44,8 +44,8 @@ fi
 echo "The rcumode is "$hbamode 
 sleep 2
 
-echo "rspctl --hbadelays=2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2"
-eval "rspctl --hbadelays=2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2"
+echo "rspctl --hbadelays=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16"
+rspctl --hbadelays=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
 sleep $ontime
 
 rspctl --realdelays > hba_modem1.log
@@ -60,7 +60,7 @@ else
 fi
 
 echo "rspctl --hbadelays=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"
-eval "rspctl --hbadelays=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"
+rspctl --hbadelays=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 sleep $ontime
 
 rspctl --realdelays > hba_modem2.log
@@ -75,7 +75,7 @@ else
 fi
 
 echo "rspctl --hbadelays=253,253,253,253,253,253,253,253,253,253,253,253,253,253,253,253"
-eval "rspctl --hbadelays=253,253,253,253,253,253,253,253,253,253,253,253,253,253,253,253"
+rspctl --hbadelays=253,253,253,253,253,253,253,253,253,253,253,253,253,253,253,253
 sleep $ontime
 
 rspctl --realdelays > hba_modem3.log
