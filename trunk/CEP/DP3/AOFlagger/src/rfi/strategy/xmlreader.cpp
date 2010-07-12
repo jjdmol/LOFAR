@@ -242,6 +242,7 @@ Action *XmlReader::parseAction(xmlNode *node)
 Action *XmlReader::parseAdapter(xmlNode *node)
 {
 	Adapter *newAction = new Adapter();
+	newAction->SetRestoreOriginals(getBool(node, "restore-originals"));
 	parseChildren(node, newAction);
 	return newAction;
 }

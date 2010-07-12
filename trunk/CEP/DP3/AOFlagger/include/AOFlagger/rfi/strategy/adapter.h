@@ -104,6 +104,10 @@ namespace rfiStrategy {
 			{
 				_restoreOriginals = restoreOriginals;
 			}
+			bool RestoreOriginals() const
+			{
+				return _restoreOriginals;
+			}
 		private:
 			bool _restoreOriginals;
 	};
