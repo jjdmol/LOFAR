@@ -132,13 +132,20 @@ void readBaselines(RFIStatistics &statistics, string &filename)
 void fitGaus(RFIStatistics &statistics)
 {
 	const std::map<double, class RFIStatistics::AmplitudeBin> &amplitudes = statistics.GetCrossAmplitudes();
-	// Find largest value
-	long unsigned max = amplitudes.begin()->second.featureIntCount;
-	double ampOfMax = amplitudes.begin()->first;
+	
+	std::map<double, double> distribution;
 	for(std::map<double, class RFIStatistics::AmplitudeBin>::const_iterator i=amplitudes.begin();i!=amplitudes.end();++i)
 	{
-		if(i->second.featureIntCount > max) {
-			max = i->second.featureIntCount;
+		distribution.insert(std::pair<double,double>(i->first, i->second.featureAvgCount));
+	}
+	
+	// Find largest value
+	long unsigned max = distribution.begin()->second;
+	double ampOfMax = distribution.begin()->first;
+	for(std::map<double, double>::const_iterator i=distribution.begin();i!=distribution.end();++i)
+	{
+		if(i->second > max) {
+			max = i->second;
 			ampOfMax = i->first;
 		}
 	}
@@ -147,24 +154,24 @@ void fitGaus(RFIStatistics &statistics)
 	double promileArea = 0.0;
 	double promileLimit = max / 1000.0;
 	double promileStart = 0.0, promileEnd;
-	long double popSize = 0;
-	for(std::map<double, class RFIStatistics::AmplitudeBin>::const_iterator i=amplitudes.begin();i!=amplitudes.end();++i)
+	long unsigned popSize = 0;
+	for(std::map<double, double>::const_iterator i=distribution.begin();i!=distribution.end();++i)
 	{
-		if(i->second.featureIntCount > promileLimit) {
-			promileArea += i->second.featureIntCount;
+		if(i->second > promileLimit) {
+			promileArea += i->second;
 			promileEnd = i->first;
 			if(promileStart == 0.0)
  				promileStart = i->first;
 		}
-		popSize += i->second.featureIntCount;
+		popSize += i->second;
 	}
 	double halfPromileArea = promileArea / 2.0;
 	double mean = 0.0;
 	promileArea = 0.0;
-	for(std::map<double, class RFIStatistics::AmplitudeBin>::const_iterator i=amplitudes.begin();i!=amplitudes.end();++i)
+	for(std::map<double, double>::const_iterator i=distribution.begin();i!=distribution.end();++i)
 	{
-		if(i->second.featureIntCount > promileLimit) {
-			promileArea += i->second.featureIntCount;
+		if(i->second > promileLimit) {
+			promileArea += i->second;
 		}
 		if(promileArea > halfPromileArea)
 		{
@@ -175,10 +182,10 @@ void fitGaus(RFIStatistics &statistics)
 	std::cout << "Mean=" << mean << std::endl;
 	double halfStddevArea = 0.682689492137 * halfPromileArea;
 	double stddev = 0.0;
-	for(std::map<double, class RFIStatistics::AmplitudeBin>::const_reverse_iterator i=amplitudes.rbegin();i!=amplitudes.rend();++i)
+	for(std::map<double, double>::const_reverse_iterator i=distribution.rbegin();i!=distribution.rend();++i)
 	{
 		if(i->first <= mean) {
-			halfStddevArea -= i->second.featureIntCount;
+			halfStddevArea -= i->second;
 		}
 		if(halfStddevArea <= 0.0)
 		{
@@ -192,19 +199,18 @@ void fitGaus(RFIStatistics &statistics)
 	f
 	<< setprecision(15)
 	<< "Amplitude\tLogAmplitude\tCount\tCount\tGaussian\tGaussian\tRayleigh\tRayleigh\n";
-	for(std::map<double, class RFIStatistics::AmplitudeBin>::const_iterator i=amplitudes.begin();i!=amplitudes.end();++i)
+	for(std::map<double, double>::const_iterator i=distribution.begin();i!=distribution.end();++i)
 	{
-		if(i != amplitudes.begin())
+		if(i != distribution.begin())
 		{
-			double g = RNG::EvaluateGaussian(i->second.centralAmplitude - mean, stddev)*popSize;
-			double r = RNG::EvaluateRayleigh(i->second.centralAmplitude - mean, stddev)*popSize;
+			double g = RNG::EvaluateGaussian(i->first - mean, stddev)*popSize;
+			double r = RNG::EvaluateRayleigh(i->first, mean)*popSize;
 			double binsize = i->first / 100.0;
 			g *= binsize;
 			r *= binsize;
 			f
-			<< i->second.centralAmplitude << '\t' << log10(i->second.centralAmplitude) << '\t'
-			<< i->second.featureIntCount << '\t' << log10(i->second.featureIntCount) << '\t'
-			<< log10(i->second.featureIntCount/binsize) << '\t' 
+			<< i->first << '\t' << log10(i->first) << '\t'
+			<< i->second << '\t' << log10(i->second) << '\t'
 			<< g << '\t' << log10(g) << '\t' << r << '\t' << log10(r) << '\n';
 		}
 	}

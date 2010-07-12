@@ -580,7 +580,7 @@ void RFIStatistics::saveTimesteps(std::map<double, class TimestepInfo> &timestep
 void RFIStatistics::saveSubbands(std::map<double, class ChannelInfo> &channels, const char *filename)
 {
 	std::ofstream file(filename);
-	file << "s-frequency\te-frequency\ttotalCount\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n" << std::setprecision(14);
+	file << "subband\ts-frequency\te-frequency\ttotalCount\ttotalAmplitude\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n" << std::setprecision(14);
 	size_t index = 0;
 	double 
 		bandTotal = 0.0,
