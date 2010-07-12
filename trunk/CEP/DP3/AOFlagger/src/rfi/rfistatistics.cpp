@@ -350,6 +350,7 @@ void RFIStatistics::addPolarisations(std::map<double, class AmplitudeBin> &ampli
 		TimeFrequencyData *polData = data.CreateTFDataFromPolarisationIndex(polIndex);
 		Image2DCPtr image = polData->GetSingleImage();
 		Mask2DCPtr mask = polData->GetSingleMask();
+		delete polData;
 		
 		for(size_t y=1;y<image->Height();++y)
 		{
@@ -393,7 +394,6 @@ void RFIStatistics::addPolarisations(std::map<double, class AmplitudeBin> &ampli
 				}
 			}
 		}
-		delete polData;
 	}
 }
 
