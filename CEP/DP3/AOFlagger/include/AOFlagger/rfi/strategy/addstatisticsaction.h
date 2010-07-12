@@ -41,7 +41,7 @@ namespace rfiStrategy {
 			}
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &)
 			{
-				statistics.Add(artifacts.ContaminatedData().GetSingleImage(), artifacts.ContaminatedData().GetSingleMask(), artifacts.MetaData());
+				statistics.Add(artifacts.ContaminatedData(), artifacts.MetaData());
 			}
 			virtual ActionType Type() const { return AddStatisticsActionType; }
 			

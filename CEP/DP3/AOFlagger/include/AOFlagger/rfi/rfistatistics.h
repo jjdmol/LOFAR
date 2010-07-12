@@ -26,6 +26,7 @@
 #include <boost/thread/mutex.hpp>
 
 #include <AOFlagger/msio/image2d.h>
+#include <AOFlagger/msio/timefrequencydata.h>
 #include <AOFlagger/msio/timefrequencymetadata.h>
 #include <AOFlagger/msio/mask2d.h>
 #include <AOFlagger/msio/segmentedimage.h>
@@ -70,7 +71,7 @@ class RFIStatistics {
 			long double lineRfiAmplitude;
 		};
 		struct AmplitudeBin {
-			AmplitudeBin() : centralAmplitude(0.0), count(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), featureAvgCount(0), featureMaxCount(0), featureIntCount(0)
+			AmplitudeBin() : centralAmplitude(0.0), count(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), featureAvgCount(0), featureMaxCount(0), featureIntCount(0), xxCount(0), xyCount(0), yxCount(0), yyCount(0), xxRfiCount(0), xyRfiCount(0), yxRfiCount(0), yyRfiCount(0)
 			{
 			}
 			double centralAmplitude;
@@ -81,6 +82,14 @@ class RFIStatistics {
 			long unsigned featureAvgCount;
 			long unsigned featureMaxCount;
 			long unsigned featureIntCount;
+			long unsigned xxCount;
+			long unsigned xyCount;
+			long unsigned yxCount;
+			long unsigned yyCount;
+			long unsigned xxRfiCount;
+			long unsigned xyRfiCount;
+			long unsigned yxRfiCount;
+			long unsigned yyRfiCount;
 		};
 		struct BaselineInfo {
 			BaselineInfo() : antenna1(0), antenna2(0), antenna1Name(), antenna2Name(), baselineLength(0.0), baselineAngle(0.0), count(0), totalAmplitude(0.0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiAmplitude(0.0), broadbandRfiAmplitude(0.0), lineRfiAmplitude(0.0)
@@ -124,7 +133,7 @@ class RFIStatistics {
 		RFIStatistics();
 		~RFIStatistics();
 		
-		void Add(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData);
+		void Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
 		void Add(const ChannelInfo &channel, bool autocorrelation);
 		void Add(const TimestepInfo &timestep, bool autocorrelation);
 		void Add(const AmplitudeBin &amplitudeBin, bool autocorrelation);
@@ -176,6 +185,7 @@ class RFIStatistics {
 		void addAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addBaselines(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addFeatures(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
+		void addPolarisations(std::map<double, class AmplitudeBin> &amplitudes, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
 
 		void saveChannels(std::map<double, class ChannelInfo> &channels, const char *filename);
 		void saveTimesteps(std::map<double, class TimestepInfo> &timesteps, const char *filename);
