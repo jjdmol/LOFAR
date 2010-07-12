@@ -393,6 +393,7 @@ void RFIStatistics::addPolarisations(std::map<double, class AmplitudeBin> &ampli
 				}
 			}
 		}
+		delete polData;
 	}
 }
 
