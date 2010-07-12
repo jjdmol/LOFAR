@@ -202,6 +202,7 @@ namespace rfiStrategy {
 	void XmlWriter::writeAdapter(const Adapter &action)
 	{
 		attribute("type", "Adapter");
+		write<bool>("restore-originals", action.RestoreOriginals());
 		writeContainerItems(action);
 	}
 

@@ -44,13 +44,14 @@ namespace rfiStrategy
 
 // The current file format version
 // 1.0 : start
-// 1.1 : add AddStatisticsAction to list
-#define STRATEGY_FILE_FORMAT_VERSION 1.1
+// 1.1 : add AddStatisticsAction
+// 1.2 : add restore-originals property to Adapter
+#define STRATEGY_FILE_FORMAT_VERSION 1.2
 
 // The earliest format version which can be read by this version of the software
-#define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 1.0
+#define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 1.2
 
 // The earliest software version which is required to read the written files
-#define STRATEGY_FILE_READER_VERSION_REQUIRED 1.0
+#define STRATEGY_FILE_READER_VERSION_REQUIRED 1.2
 
 #endif // RFI_STRATEGY_TYPES
