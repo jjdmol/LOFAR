@@ -100,7 +100,15 @@ void readAmplitudes(RFIStatistics &statistics, string &filename, bool autocorrel
 		>> amplitude.lineRfiCount
 		>> amplitude.featureAvgCount
 		>> amplitude.featureIntCount
-		>> amplitude.featureMaxCount;
+		>> amplitude.featureMaxCount
+		>> amplitude.xxCount
+		>> amplitude.xyCount
+		>> amplitude.yxCount
+		>> amplitude.yyCount
+		>> amplitude.xxRfiCount
+		>> amplitude.xyRfiCount
+		>> amplitude.yxRfiCount
+		>> amplitude.yyRfiCount;
 		statistics.Add(amplitude, autocorrelation);
 	}
 }
