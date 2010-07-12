@@ -23,13 +23,16 @@
 package nl.astron.lofar.lofarutils;
 
 
+import java.awt.Component;
 import java.text.Collator;
 import java.util.BitSet;
 import java.util.regex.Pattern;
 import javax.swing.DefaultListModel;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
 import javax.swing.JList;
-import javax.swing.ListModel;
+import javax.swing.JOptionPane;
 
 /**
  * This panel contains a TreePanel and some textfields that display information
@@ -518,5 +521,19 @@ public abstract class LofarUtils {
                 }
             }
         }
+    }
+
+    /** Shows a generic error panel
+     *
+     * @param parent parent component to which the panel will belong
+     * @param aS the string that contains the error message
+     */
+    static public void showErrorPanel(Component parent,String aS,Icon icon) {
+        if (aS.isEmpty()) {
+            aS="There has been an error, check logging for details";
+        }
+
+        JOptionPane.showMessageDialog(parent,aS,"LOFAR Error",JOptionPane.WARNING_MESSAGE,icon);
+
     }
 }
