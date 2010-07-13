@@ -28,12 +28,13 @@
 
 #include <Interface/InputData.h>
 #include <Interface/TransposedData.h>
+#include <Interface/TransposedBeamFormedData.h>
 #include <Interface/FilteredData.h>
 #include <Interface/PencilBeamData.h>
 #include <Interface/CorrelatedData.h>
 #include <Interface/StokesData.h>
 
-//#define SECOND_TRANSPOSE      1
+#define SECOND_TRANSPOSE      1
 
 namespace LOFAR {
 
@@ -60,6 +61,7 @@ template <typename SAMPLE_TYPE = i8complex> class CN_ProcessingPlan: public Proc
     FilteredData		 *itsFilteredData;
     CorrelatedData		 *itsCorrelatedData;
     BeamFormedData               *itsBeamFormedData;
+    TransposedBeamFormedData     *itsTransposedBeamFormedData;
     StokesData                   *itsCoherentStokesData;
     StokesData                   *itsIncoherentStokesData;
 };

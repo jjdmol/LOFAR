@@ -38,16 +38,15 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
   itsFilteredData(0),
   itsCorrelatedData(0),
   itsBeamFormedData(0),
+  itsTransposedBeamFormedData(0),
   itsCoherentStokesData(0),
   itsIncoherentStokesData(0)
 {
-  (void)hasPhaseThree;
-
   // in fly's eye mode, every station is a beam
   const unsigned nrBeams = configuration.flysEye() ? configuration.nrMergedStations() : configuration.nrPencilBeams();
 
   const unsigned nrBaselines = configuration.nrMergedStations() * (configuration.nrMergedStations() + 1)/2;
-    
+
   if (hasPhaseOne) {
     std::vector<unsigned> &phaseTwoPsets = configuration.phaseTwoPsets();
 
@@ -61,7 +60,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     // create all data structures (actual matrices are allocated later if needed)
     itsSubbandMetaData = new SubbandMetaData(
       configuration.nrStations(),
-      configuration.nrPencilBeams(),
+      nrBeams,
       32
     );
 
@@ -86,12 +85,6 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 #endif
     );
 
-    itsBeamFormedData = new BeamFormedData(
-      nrBeams,
-      configuration.nrChannelsPerSubband(),
-      configuration.nrSamplesPerIntegration()
-    );
-
     itsCoherentStokesData = new StokesData(
       true,
       configuration.nrStokes(),
@@ -110,12 +103,20 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       configuration.nrSamplesPerStokesIntegration()
     );
 
+    itsBeamFormedData = new BeamFormedData(
+      nrBeams,
+      configuration.nrChannelsPerSubband(),
+      configuration.nrSamplesPerIntegration()
+    );
+
     // define TRANSFORMations in chronological order
     TRANSFORM( itsInputData,            itsTransposedInputData );
     TRANSFORM( itsTransposedInputData,  itsFilteredData   );
     TRANSFORM( itsFilteredData,         itsBeamFormedData );
     TRANSFORM( itsFilteredData,         itsCorrelatedData );
+#ifndef SECOND_TRANSPOSE    
     TRANSFORM( itsBeamFormedData,       itsCoherentStokesData );
+#endif
     TRANSFORM( itsFilteredData,         itsIncoherentStokesData );
 
     // send all requested outputs
@@ -125,30 +126,65 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     if( configuration.outputCorrelatedData() ) {
       send( itsCorrelatedData,                         "",                   ProcessingPlan::DIST_SUBBAND );
     }
-#ifdef SECOND_TRANSPOSE    
-    if( configuration.outputBeamFormedData() ) {
-      send( itsBeamFormedData,                         ".beams",             ProcessingPlan::DIST_BEAM );
-    }
-    if( configuration.outputCoherentStokes() ) {
-      send( itsCoherentStokesData,                     ".stokes",            ProcessingPlan::DIST_BEAM );
-    }
-#else    
+
+#ifndef SECOND_TRANSPOSE    
     if( configuration.outputBeamFormedData() ) {
       send( itsBeamFormedData,                         ".beams",             ProcessingPlan::DIST_SUBBAND );
     }
     if( configuration.outputCoherentStokes() ) {
       send( itsCoherentStokesData,                     ".stokes",            ProcessingPlan::DIST_SUBBAND );
     }
-#endif    
+#endif 
+
     if( configuration.outputIncoherentStokes() ) {
       send( itsIncoherentStokesData,                   ".incoherentstokes",  ProcessingPlan::DIST_SUBBAND );
     }
+
+#ifdef SECOND_TRANSPOSE    
+    // whether there will be a second transpose
+    const bool phaseThreeExists = configuration.phaseThreePsets().size() > 0;
+
+    if (phaseThreeExists) {
+      require( itsBeamFormedData );
+    }
+#endif
   }
 
   if (hasPhaseOne) {
     // we need the input data until the end to allow the async transpose to finish
     require( itsInputData );
   }
+
+#ifdef SECOND_TRANSPOSE    
+  if (hasPhaseThree) {
+    itsTransposedBeamFormedData = new TransposedBeamFormedData(
+      configuration.nrBeamsPerPset(),
+      configuration.nrSubbands(),
+      configuration.nrChannelsPerSubband(),
+      configuration.nrSamplesPerIntegration()
+    );
+
+    itsCoherentStokesData = new StokesData(
+      true,
+      configuration.nrStokes(),
+      configuration.nrBeamsPerPset(),
+      //configuration.nrSubbands(),
+      configuration.nrChannelsPerSubband(),
+      configuration.nrSamplesPerIntegration(),
+      configuration.nrSamplesPerStokesIntegration()
+    );
+
+    TRANSFORM( 0,                           itsTransposedBeamFormedData );
+    TRANSFORM( itsTransposedBeamFormedData, itsCoherentStokesData );
+
+    if( configuration.outputBeamFormedData() ) {
+      send( itsTransposedBeamFormedData,               ".beams",             ProcessingPlan::DIST_BEAM );
+    }
+    if( configuration.outputCoherentStokes() ) {
+      send( itsCoherentStokesData,                     ".stokes",            ProcessingPlan::DIST_BEAM );
+    }
+  }
+#endif  
 }
 
 template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::~CN_ProcessingPlan()
@@ -158,6 +194,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::~CN_ProcessingPl
   delete itsSubbandMetaData;
   delete itsTransposedInputData;
   delete itsFilteredData;
+  delete itsTransposedBeamFormedData;
   delete itsCorrelatedData;
   delete itsBeamFormedData;
   delete itsCoherentStokesData;
