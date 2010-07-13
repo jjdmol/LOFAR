@@ -38,6 +38,7 @@
 #include <Interface/Config.h>
 #include <Interface/PencilCoordinates.h>
 #include <Stream/Stream.h>
+#include <algorithm>
 
 #include <boost/date_time/c_local_time_adjustor.hpp>
 
@@ -68,6 +69,7 @@ public:
 	double         stopTime() const;
 	uint32	       nrStations() const;
 	uint32	       nrTabStations() const;
+	uint32	       nrMergedStations() const;
 	uint32	       nrBaselines() const;
 	uint32         nrCrossPolarisations() const;
 	uint32         clockSpeed() const; // Hz
@@ -251,6 +253,15 @@ inline uint32 Parset::nrStations() const
 inline uint32 Parset::nrTabStations() const
 {
   return getStringVector("OLAP.tiedArrayStationNames",true).size();
+}
+
+inline uint32 Parset::nrMergedStations() const
+{
+  if (tabList().empty()) {
+    return nrStations();
+  }
+
+  return *std::max_element( tabList().begin(), tabList().end() ) + 1;
 }   
 
 inline uint32 Parset::nrBaselines() const

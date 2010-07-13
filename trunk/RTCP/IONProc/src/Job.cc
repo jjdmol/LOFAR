@@ -496,9 +496,9 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     unsigned phase, psetIndex, maxlistsize;
     std::vector<unsigned> list; // list of subbands or beams
 
-    //unsigned nrPsets = itsParset.phaseThreePsets().size();
+    unsigned nrbeams = itsParset.flysEye() ? itsParset.nrMergedStations() : itsParset.nrPencilBeams();
 
-    LOG_DEBUG_STR(itsLogPrefix << "Setting up output " << output << " = " << plan.plan[output].name );
+    //unsigned nrPsets = itsParset.phaseThreePsets().size();
 
     switch (plan.plan[output].distribution) {
       case ProcessingPlan::DIST_SUBBAND:
@@ -523,7 +523,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
         for (unsigned beam = 0;  beam < itsParset.nrBeamsPerPset(); beam ++) {
           unsigned beamNumber = psetIndex * itsParset.nrBeamsPerPset() + beam;
 
-          if (beamNumber < itsParset.nrBeams())
+          if (beamNumber < nrbeams)
             list.push_back(beamNumber);
         }
 
@@ -532,6 +532,9 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
       default:
         continue;
     }
+
+    LOG_DEBUG_STR(itsLogPrefix << "Setting up output " << output << " (" << plan.plan[output].name << ") for subbands/beams " << list);
+
 
     outputSections[output] = new OutputSection(itsParset, list, maxlistsize, output, &createCNstream);
   }
