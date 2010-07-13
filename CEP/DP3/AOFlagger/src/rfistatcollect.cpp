@@ -128,6 +128,8 @@ void readBaselines(RFIStatistics &statistics, string &filename)
 		>> baseline.antenna2
 		>> baseline.antenna1Name
 		>> baseline.antenna2Name
+		>> baseline.baselineLength
+		>> baseline.baselineAngle
 		>> baseline.count
 		>> baseline.totalAmplitude
 		>> baseline.rfiCount
