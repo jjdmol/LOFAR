@@ -90,8 +90,8 @@ namespace LOFAR
         { return itsResampleFlag; }
       CellSize              resampleCellSize()  const
         { return itsResampleCellSize; }
-      double                flagThreshold()     const
-        { return itsFlagThreshold; }
+      double                densityThreshold()  const
+        { return itsDensityThreshold; }
       bool                  shift()             const { return itsShiftFlag; }
       casa::MDirection      direction()         const { return itsDirection; }
       SolverOptions         solverOptions()     const
@@ -133,7 +133,7 @@ namespace LOFAR
       CellSize              itsResampleCellSize;
       // Maximal flag density (fraction of samples flagged in a single resample
       // cell that will cause the output sample to be flagged).
-      double                itsFlagThreshold;
+      double                itsDensityThreshold;
       // Phase shift observed visibility data?
       bool                  itsShiftFlag;
       // Direction to phase shift the visibility data to.

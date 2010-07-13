@@ -110,7 +110,7 @@ namespace LOFAR
                 << " (channels)" << endl << indent << "Time: "
                 << itsResampleCellSize.time << " (timeslots)";
             }
-            os << endl << indent << "Flag threshold: " << itsFlagThreshold;
+            os << endl << indent << "Density threshold: " << itsDensityThreshold;
           }
 
           os << endl << indent << "Phase shift observed data: " << boolalpha
@@ -171,8 +171,8 @@ namespace LOFAR
           toString(itsResampleCellSize.freq));
         ps.replace(prefix + "Resample.CellSize.Time",
           toString(itsResampleCellSize.time));
-        ps.replace(prefix + "Resample.FlagThreshold",
-          toString(itsFlagThreshold));
+        ps.replace(prefix + "Resample.DensityThreshold",
+          toString(itsDensityThreshold));
       }
 
       ps.replace(prefix + "Options.MaxIter",
@@ -219,7 +219,7 @@ namespace LOFAR
       itsResampleFlag = pss.getBool("Resample.Enable", false);
       if(itsResampleFlag) {
         setResampleCellSize(pss);
-        itsFlagThreshold = pss.getDouble("Resample.FlagThreshold");
+        itsDensityThreshold = pss.getDouble("Resample.DensityThreshold");
       }
 
       itsSolverOptions.maxIter = pss.getUint32("Options.MaxIter");
