@@ -118,7 +118,7 @@ void readAmplitudes(RFIStatistics &statistics, string &filename, bool autocorrel
 			maxAmp = amplitude.centralAmplitude;
 		}
 	}
-	std::cout << " mode~=" << log10(maxAmp) << ':' << log10(maxCount);
+	std::cout << std::setprecision(14) << " mode~=" << maxAmp << '(' << maxCount << ')' << '\n';
 }
 
 void readBaselines(RFIStatistics &statistics, string &filename)
@@ -151,16 +151,16 @@ void fitGaus(RFIStatistics &statistics)
 {
 	const std::map<double, class RFIStatistics::AmplitudeBin> &amplitudes = statistics.GetCrossAmplitudes();
 	
-	std::map<double, double> distribution;
+	std::map<double, long unsigned> distribution;
 	for(std::map<double, class RFIStatistics::AmplitudeBin>::const_iterator i=amplitudes.begin();i!=amplitudes.end();++i)
 	{
-		distribution.insert(std::pair<double,double>(i->first, i->second.featureAvgCount));
+		distribution.insert(std::pair<double, long unsigned>(i->first, i->second.featureAvgCount));
 	}
 	
 	// Find largest value
 	long unsigned max = distribution.begin()->second;
 	double ampOfMax = distribution.begin()->first;
-	for(std::map<double, double>::const_iterator i=distribution.begin();i!=distribution.end();++i)
+	for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
 	{
 		if(i->second > max) {
 			max = i->second;
@@ -173,7 +173,7 @@ void fitGaus(RFIStatistics &statistics)
 	double promileLimit = max / 1000.0;
 	double promileStart = 0.0, promileEnd;
 	long unsigned popSize = 0;
-	for(std::map<double, double>::const_iterator i=distribution.begin();i!=distribution.end();++i)
+	for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
 	{
 		if(i->second > promileLimit) {
 			promileArea += i->second;
@@ -186,7 +186,7 @@ void fitGaus(RFIStatistics &statistics)
 	double halfPromileArea = promileArea / 2.0;
 	double mean = 0.0;
 	promileArea = 0.0;
-	for(std::map<double, double>::const_iterator i=distribution.begin();i!=distribution.end();++i)
+	for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
 	{
 		if(i->second > promileLimit) {
 			promileArea += i->second;
@@ -200,7 +200,7 @@ void fitGaus(RFIStatistics &statistics)
 	std::cout << "Mean=" << mean << std::endl;
 	double halfStddevArea = 0.682689492137 * halfPromileArea;
 	double stddev = 0.0;
-	for(std::map<double, double>::const_reverse_iterator i=distribution.rbegin();i!=distribution.rend();++i)
+	for(std::map<double, long unsigned>::const_reverse_iterator i=distribution.rbegin();i!=distribution.rend();++i)
 	{
 		if(i->first <= mean) {
 			halfStddevArea -= i->second;
@@ -217,7 +217,7 @@ void fitGaus(RFIStatistics &statistics)
 	f
 	<< setprecision(15)
 	<< "Amplitude\tLogAmplitude\tCount\tCount\tGaussian\tGaussian\tRayleigh\tRayleigh\n";
-	for(std::map<double, double>::const_iterator i=distribution.begin();i!=distribution.end();++i)
+	for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
 	{
 		if(i != distribution.begin())
 		{
