@@ -15,6 +15,7 @@ set(cnproc_LIB_SRCS
   Package__Version.cc
   AsyncCommunication.cc
   AsyncTranspose.cc
+  AsyncTransposeBeams.cc
   BandPass.cc
   CN_Processing.cc
   Correlator.cc
