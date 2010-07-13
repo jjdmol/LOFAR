@@ -214,8 +214,8 @@ void VisEquator::dumpStats(ostream &out) const
     out << "Speed: " << fixed << speed << " samples/s" << endl;
     out << "No. of samples processed (unflagged): " << fixed << context.count
         << endl;
-    out << "TIMER s ALL total " << elapsed << " count " << count << " avg "
-        << average << endl;
+    out << "TIMER s VISEQUATOR ALL total " << elapsed << " count " << count
+        << " avg " << average << endl;
 
     for(size_t i = 0; i < VisEquator::ProcContext::N_ProcTimer; ++i)
     {
@@ -223,9 +223,9 @@ void VisEquator::dumpStats(ostream &out) const
         count = context.timers[i].getCount();
         average = count > 0 ? elapsed / count : 0.0;
 
-        out << "TIMER s " << VisEquator::ProcContext::timerNames[i] << " total"
-            << " " << elapsed << " count " << count << " avg " << elapsed
-            / count << endl;
+        out << "TIMER s VISEQUATOR " << VisEquator::ProcContext::timerNames[i]
+            << " total" << " " << elapsed << " count " << count << " avg "
+            << elapsed / count << endl;
     }
 }
 
@@ -234,6 +234,9 @@ void VisEquator::setBaselineMask(const BaselineMask &mask)
     itsBlMap.clear();
     makeIndexMap(itsLHS->baselines(), itsRHS->baselines(), mask,
         back_inserter(itsBlMap));
+
+    LOG_DEBUG_STR("Selected " << itsBlMap.size() << "/" << itsLHS->nBaselines()
+        << " baseline(s) for processing");
 }
 
 void VisEquator::setCorrelationMask(const CorrelationMask &mask)
@@ -241,6 +244,9 @@ void VisEquator::setCorrelationMask(const CorrelationMask &mask)
     itsCrMap.clear();
     makeIndexMap(itsLHS->correlations(), itsRHS->correlations(), mask,
         back_inserter(itsCrMap));
+
+    LOG_DEBUG_STR("Selected " << itsCrMap.size() << "/"
+        << itsLHS->nCorrelations() << " correlation(s) for processing");
 }
 
 Interval<size_t> VisEquator::findContainedCellRange(const Axis::ShPtr &axis,

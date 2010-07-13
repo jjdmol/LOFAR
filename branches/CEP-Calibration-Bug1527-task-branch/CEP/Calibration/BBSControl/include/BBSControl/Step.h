@@ -98,8 +98,13 @@ namespace LOFAR
       // Make \a parent the parent of this step.
       void setParent(const Step* parent) { itsParent = parent; }
 
-      // Return the data selection.
-      Selection selection() const { return itsSelection; }
+      // Access to the baseline selection.
+      const string &baselines() const
+      { return itsBaselines; }
+
+      // Access to the correlation selection.
+      const vector<string> &correlations() const
+      { return itsCorrelations; }
 
       // Return the model configuration.
       ModelConfig modelConfig() const { return itsModelConfig; }
@@ -135,8 +140,9 @@ namespace LOFAR
       // object with those of its parent.
       const Step*       itsParent;
 
-      // Data selection.
-      Selection         itsSelection;
+      // Baseline and correlation selection.
+      string            itsBaselines;
+      vector<string>    itsCorrelations;
 
       // Model configuration options as specified in the parameter set file.
       ModelConfig       itsModelConfig;

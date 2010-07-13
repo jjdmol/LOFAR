@@ -119,11 +119,12 @@ private:
     Axis::ShPtr getCalGroupFreqAxis(const vector<uint32> &groups) const;
 
     // Create filter string from the baseline selection specified in the parset.
-    string createBaselineFilter(const Selection &selection) const;
+    string createBaselineFilter(const string &selection) const;
 
     // Create CorrelationMask from the baseline selection specified in the
     // parset.
-    CorrelationMask createCorrelationMask(const Selection &selection) const;
+    CorrelationMask createCorrelationMask(const vector<string> &selection)
+        const;
 
     State                                   itsState;
 

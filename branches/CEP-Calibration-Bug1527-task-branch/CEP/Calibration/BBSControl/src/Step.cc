@@ -129,9 +129,8 @@ namespace LOFAR
       const string prefix = "Step." + itsName + ".";
 
       // Write data selection.
-      ps.replace(prefix + "Selection.Baselines", itsSelection.baselines);
-      ps.replace(prefix + "Selection.Correlations",
-        toString(itsSelection.correlations));
+      ps.replace(prefix + "Baselines", itsBaselines);
+      ps.replace(prefix + "Correlations", toString(itsCorrelations));
 
       // Remove all Model keys from the parset. Effectively, key inheritance
       // is handled in read() and here we only output the keys that are relevant
@@ -192,10 +191,8 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Read data selection.
-      itsSelection.baselines = ps.getString("Selection.Baselines",
-        itsSelection.baselines);
-      itsSelection.correlations = ps.getStringVector("Selection.Correlations",
-        itsSelection.correlations);
+      itsBaselines = ps.getString("Baselines", itsBaselines);
+      itsCorrelations = ps.getStringVector("Correlations", itsCorrelations);
 
       // Read model configuration.
       itsModelConfig.setPhasors(ps.getBool("Model.Phasors.Enable",
@@ -303,7 +300,8 @@ namespace LOFAR
       Indent id;  // add an extra indentation level
       os << endl << indent << "Name: " << itsName
         << endl << indent << "Full name: " << fullName()
-        << endl << indent << itsSelection
+        << endl << indent << "Baselines: " << itsBaselines
+        << endl << indent << "Correlations: " << itsCorrelations
         << endl << indent << itsModelConfig;
     }
 

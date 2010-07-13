@@ -41,13 +41,13 @@ const JonesMatrix::View PointCoherence::evaluateImpl(const Grid &grid,
 
     if(stokes.bound(0) || stokes.bound(1))
     {
-        result.assign(0, 0, 0.5 * (stokes(0) + stokes(1)));
-        result.assign(1, 1, 0.5 * (stokes(0) - stokes(1)));
+        result.assign(0, 0, (stokes(0) + stokes(1)));
+        result.assign(1, 1, (stokes(0) - stokes(1)));
     }
 
     if(stokes.bound(2) || stokes.bound(3))
     {
-        Matrix uv = 0.5 * tocomplex(stokes(2), stokes(3));
+        Matrix uv = tocomplex(stokes(2), stokes(3));
         result.assign(0, 1, uv);
         result.assign(1, 0, conj(uv));
     }

@@ -55,13 +55,11 @@ namespace LOFAR
       itsInputColumn = ps.getString("InputColumn", "DATA");
 
       // Read data selection.
-      itsSelection.baselines = ps.getString("Selection.Baselines",
-        itsSelection.baselines);
-      itsSelection.correlations = ps.getStringVector("Selection.Correlations",
-        itsSelection.correlations);
+      itsBaselines = ps.getString("Baselines", "");
+      itsCorrelations = ps.getStringVector("Correlations", vector<string>());
 
-      // Get the time window.
-      itsTimeWindow = ps.getStringVector("TimeWindow", vector<string>());
+      // Get the time range.
+      itsTimeRange = ps.getStringVector("TimeRange", vector<string>());
 
       // Get the chunk size.
       itsChunkSize = ps.getUint32("ChunkSize", 0);
@@ -90,14 +88,15 @@ namespace LOFAR
     void Strategy::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-    	os << indent << "Strategy:";
+      os << indent << "Strategy:";
       Indent indent0;
       os << endl << indent << "Input column: " << itsInputColumn
-        << endl << indent << itsSelection
-        << endl << indent << "TimeWindow: " << itsTimeWindow
-        << endl << indent << "ChunkSize: " << itsChunkSize
+        << endl << indent << "Baselines: " << itsBaselines
+        << endl << indent << "Correlations: " << itsCorrelations
+        << endl << indent << "Time range: " << itsTimeRange
+        << endl << indent << "Chunk size: " << itsChunkSize
         << boolalpha
-        << endl << indent << "UseSolver: " << boolalpha << itsUseSolver
+        << endl << indent << "Use global solver: " << boolalpha << itsUseSolver
         << noboolalpha
         << endl << indent << "Steps:";
       Indent indent1;

@@ -37,7 +37,9 @@ UVWFlagger::UVWFlagger(const VisBuffer::Ptr &buffer)
     :   itsBuffer(buffer),
         itsBaselineMask(true),
         itsMask(1),
-        itsUVIntervalSqr(0.0, std::numeric_limits<double>::max())
+        itsUVIntervalSqr(0.0, std::numeric_limits<double>::max()),
+        itsFlagCount(0),
+        itsSampleCount(0)
 {
 }
 
@@ -56,7 +58,7 @@ void UVWFlagger::setUVMax(double max)
     itsUVIntervalSqr.end = max * max;
 }
 
-void UVWFlagger::setUVInterval(double min, double max)
+void UVWFlagger::setUVRange(double min, double max)
 {
     setUVMin(min);
     setUVMax(max);
@@ -162,7 +164,7 @@ void UVWFlagger::dumpStats(ostream &out) const
     out << "Speed: " << fixed << speed << " samples/s" << endl;
     out << "No. of samples flagged: " << fixed << itsFlagCount << " ("
         << percentage << "%)" << endl;
-    out << "TIMER s ALL total " << itsTimer.getElapsed() << " count "
+    out << "TIMER s UVWFLAGGER ALL total " << itsTimer.getElapsed() << " count "
         << itsTimer.getCount() << " avg " << average << endl;
 }
 

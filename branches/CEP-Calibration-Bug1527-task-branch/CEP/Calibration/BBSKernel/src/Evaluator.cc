@@ -157,8 +157,9 @@ void Evaluator::dumpStats(ostream &out) const
         const unsigned long long count = itsProcTimers[i].getCount();
         double average = count > 0 ? elapsed / count : 0.0;
 
-        out << "TIMER s " << Evaluator::theirProcTimerNames[i] << " total "
-            << elapsed << " count " << count << " avg " << average << endl;
+        out << "TIMER s EVALUATOR " << Evaluator::theirProcTimerNames[i]
+            << " total " << elapsed << " count " << count << " avg " << average
+            << endl;
     }
 }
 

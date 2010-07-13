@@ -339,8 +339,8 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
                 {
                     for(size_t k = 0; k < buffer->nCorrelations(); ++k)
                     {
-                        flagBuffer[j][k] = buffer->flags[basel][tslot][j][k]
-                            & flagMask;
+                        flagBuffer[j][k] =
+                            buffer->flags[basel][tslot][j][k] & flagMask;
                         flagRow = flagRow && flagBuffer[j][k];
                     }
                 }
@@ -689,7 +689,7 @@ BaselineMask MeasurementAIPS::getBaselineMask(const VisSelection &selection)
         return asMask(selection.getBaselineFilter());
     }
 
-    // By default, select cross correlations only.
+    // By default, select all baselines (cross _and_ auto-correlations).
     return asMask("*&&");
 }
 

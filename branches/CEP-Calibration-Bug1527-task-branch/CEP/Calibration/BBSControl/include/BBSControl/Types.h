@@ -48,17 +48,6 @@ namespace LOFAR
     typedef int32 KernelIndex;
     // @}
 
-    // Information about which correlation products (auto, cross, or both),
-    // and which polarizations should be used.
-    struct Selection
-    {
-      Selection() {}
-      Selection(const ParameterSet &ps);
-
-      string                    baselines;
-      vector<string>            correlations;
-    };
-
     // Cell size is defined along the frequency and the time axis, in number
     // of channels and number of timeslots respectively.
     struct CellSize
@@ -71,7 +60,6 @@ namespace LOFAR
 
     // Write the contents of these types in human readable form.
     // @{
-    ostream& operator<<(ostream&, const Selection&);
     ostream& operator<<(ostream&, const CellSize&);
     // @}
 

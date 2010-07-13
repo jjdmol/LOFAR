@@ -78,8 +78,13 @@ namespace LOFAR
       string inputColumn() const
       { return itsInputColumn; }
 
-      Selection selection() const
-      { return itsSelection; }
+      // Access to the baseline selection.
+      const string &baselines() const
+      { return itsBaselines; }
+
+      // Access to the correlation selection.
+      const vector<string> &correlations() const
+      { return itsCorrelations; }
 
       bool useSolver() const
       { return itsUseSolver; }
@@ -88,8 +93,9 @@ namespace LOFAR
       // Name of the input column.
       string            itsInputColumn;
 
-      // Data selection.
-      Selection         itsSelection;
+      // Baseline and correlation selection.
+      string            itsBaselines;
+      vector<string>    itsCorrelations;
 
       // Connect to the global solver?
       bool              itsUseSolver;

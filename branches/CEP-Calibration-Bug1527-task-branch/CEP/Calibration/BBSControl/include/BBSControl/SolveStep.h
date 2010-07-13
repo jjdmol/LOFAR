@@ -76,7 +76,7 @@ namespace LOFAR
       vector<string>        parms()             const { return itsParms; }
       vector<string>        exclParms()         const { return itsExclParms; }
       bool                  uvFlag()            const { return itsUVFlag; }
-      pair<double, double>  uvInterval()        const { return itsUVInterval; }
+      pair<double, double>  uvRange()           const { return itsUVRange; }
       vector<uint32>        calibrationGroups() const
         { return itsCalibrationGroups; }
       bool                  globalSolution()    const
@@ -108,7 +108,7 @@ namespace LOFAR
       // Read the contents from the ParameterSet \a ps into \c *this.
       virtual void read(const ParameterSet& ps);
 
-      void setUVInterval(const ParameterSet& ps);
+      void setUVRange(const ParameterSet& ps);
       void setResampleCellSize(const ParameterSet& ps);
       void setDirection(const ParameterSet& ps);
 
@@ -120,7 +120,7 @@ namespace LOFAR
       bool                  itsUVFlag;
       // Interval of baseline (UV) length in wavelengths used to select samples
       // for calibration.
-      pair<double, double>  itsUVInterval;
+      pair<double, double>  itsUVRange;
       // Vector of calibration groups.
       vector<uint32>        itsCalibrationGroups;
       // Solution cell size.

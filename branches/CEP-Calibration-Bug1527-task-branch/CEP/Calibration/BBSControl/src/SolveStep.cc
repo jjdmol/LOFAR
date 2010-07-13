@@ -89,8 +89,8 @@ namespace LOFAR
         if(itsUVFlag)
         {
           Indent id;
-          os << endl << indent << "UV interval: [" << itsUVInterval.first
-            << "," << itsUVInterval.second << "] (wavelenghts)";
+          os << endl << indent << "UV interval: [" << itsUVRange.first
+            << "," << itsUVRange.second << "] (wavelenghts)";
         }
 
         os << endl << indent << "Calibration groups: " << itsCalibrationGroups
@@ -150,8 +150,8 @@ namespace LOFAR
       ps.replace(prefix + "ExclParms", toString(itsExclParms));
       if(itsUVFlag)
       {
-        ps.replace(prefix + "UVInterval", "[" + toString(itsUVInterval.first)
-          + "," + toString(itsUVInterval.second) + "]");
+        ps.replace(prefix + "UVRange", "[" + toString(itsUVRange.first)
+          + "," + toString(itsUVRange.second) + "]");
       }
       ps.replace(prefix + "CalibrationGroups", toString(itsCalibrationGroups));
       ps.replace(prefix + "CellSize.Freq", toString(itsCellSize.freq));
@@ -200,7 +200,7 @@ namespace LOFAR
       ParameterSet pss(ps.makeSubset("Solve."));
       itsParms = pss.getStringVector("Parms");
       itsExclParms = pss.getStringVector("ExclParms", vector<string>());
-      setUVInterval(pss);
+      setUVRange(pss);
 
       itsCalibrationGroups = pss.getUint32Vector("CalibrationGroups");
       itsCellSize.freq = pss.getUint32("CellSize.Freq");
@@ -231,31 +231,31 @@ namespace LOFAR
       itsSolverOptions.useSVD = pss.getBool("Options.UseSVD");
     }
 
-    void SolveStep::setUVInterval(const ParameterSet& ps)
+    void SolveStep::setUVRange(const ParameterSet& ps)
     {
-      itsUVFlag = ps.isDefined("UVInterval");
+      itsUVFlag = ps.isDefined("UVRange");
 
       if(!itsUVFlag)
       {
-        itsUVInterval = make_pair(0.0, std::numeric_limits<double>::max());
+        itsUVRange = make_pair(0.0, std::numeric_limits<double>::max());
         return;
       }
 
-      vector<double> range = ps.getDoubleVector("UVInterval");
+      vector<double> range = ps.getDoubleVector("UVRange");
       if(range.size() > 2)
       {
-        THROW(BBSControlException, "UVInterval should be given as either [min]"
+        THROW(BBSControlException, "UVRange should be given as either [min]"
           " or [min, max] (in wavelenghts)");
       }
 
-      itsUVInterval.first = range.size() > 0 ? range[0] : 0.0;
-      itsUVInterval.second = range.size() > 1 ? range[1]
+      itsUVRange.first = range.size() > 0 ? range[0] : 0.0;
+      itsUVRange.second = range.size() > 1 ? range[1]
         : std::numeric_limits<double>::max();
 
-      if(itsUVInterval.first > itsUVInterval.second)
+      if(itsUVRange.first > itsUVRange.second)
       {
-        THROW(BBSControlException, "Invalid UVInterval: ["
-          << itsUVInterval.first << "," << itsUVInterval.second << "]");
+        THROW(BBSControlException, "Invalid UVRange: [" << itsUVRange.first
+            << "," << itsUVRange.second << "]");
       }
     }
 

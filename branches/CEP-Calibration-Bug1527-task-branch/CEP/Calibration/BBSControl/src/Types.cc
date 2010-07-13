@@ -36,15 +36,6 @@ namespace LOFAR
 
     //# -------  ostream operators  ------- #//
 
-    ostream& operator<<(ostream& os, const Selection &obj)
-    {
-      os << "Selection:";
-      Indent id;
-      os << endl << indent << "Baselines: " << obj.baselines
-         << endl << indent << "Correlations: " << obj.correlations;
-      return os;
-    }
-
     ostream& operator<<(ostream& os, const CellSize& obj)
     {
       os << "Cell size:";

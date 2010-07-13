@@ -363,9 +363,14 @@ namespace LOFAR
       itsInputColumn = command.inputColumn();
 
       // Initialize the chunk selection.
-      Selection selection = command.selection();
-      itsChunkSelection.setBaselineFilter(createBaselineFilter(selection));
-      itsChunkSelection.setCorrelationMask(createCorrelationMask(selection));
+      if(command.correlations().size() > 0)
+      {
+        return CommandResult(CommandResult::ERROR, "Reading a subset of the"
+          " available correlations is not supported yet.");
+      }
+
+      string blFilter = createBaselineFilter(command.baselines());
+      itsChunkSelection.setBaselineFilter(blFilter);
 
       return CommandResult(CommandResult::OK, "Ok.");
     }
@@ -462,8 +467,8 @@ namespace LOFAR
 
       // Determine selected baselines and correlations.
       BaselineMask blMask =
-        itsMeasurement->asMask(createBaselineFilter(command.selection()));
-      CorrelationMask crMask = createCorrelationMask(command.selection());
+        itsMeasurement->asMask(createBaselineFilter(command.baselines()));
+      CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
@@ -517,8 +522,8 @@ namespace LOFAR
 
       // Determine selected baselines and correlations.
       BaselineMask blMask =
-        itsMeasurement->asMask(createBaselineFilter(command.selection()));
-      CorrelationMask crMask = createCorrelationMask(command.selection());
+        itsMeasurement->asMask(createBaselineFilter(command.baselines()));
+      CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
@@ -573,8 +578,8 @@ namespace LOFAR
 
       // Determine selected baselines and correlations.
       BaselineMask blMask =
-        itsMeasurement->asMask(createBaselineFilter(command.selection()));
-      CorrelationMask crMask = createCorrelationMask(command.selection());
+        itsMeasurement->asMask(createBaselineFilter(command.baselines()));
+      CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
@@ -629,8 +634,8 @@ namespace LOFAR
 
       // Determine selected baselines and correlations.
       BaselineMask blMask =
-        itsMeasurement->asMask(createBaselineFilter(command.selection()));
-      CorrelationMask crMask = createCorrelationMask(command.selection());
+        itsMeasurement->asMask(createBaselineFilter(command.baselines()));
+      CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
@@ -696,8 +701,8 @@ namespace LOFAR
 
       // Determine selected baselines and correlations.
       BaselineMask blMask =
-        itsMeasurement->asMask(createBaselineFilter(command.selection()));
-      CorrelationMask crMask = createCorrelationMask(command.selection());
+        itsMeasurement->asMask(createBaselineFilter(command.baselines()));
+      CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // If a UV interval has been specified, flag all samples that fall outside
       // of this interval.
@@ -706,8 +711,7 @@ namespace LOFAR
         UVWFlagger flagger(itsChunk);
         flagger.setBaselineMask(blMask);
         flagger.setFlagMask(2);
-        flagger.setUVInterval(command.uvInterval().first,
-            command.uvInterval().second);
+        flagger.setUVRange(command.uvRange().first, command.uvRange().second);
         flagger.process();
 
         // Dump processing statistics to the log.
@@ -906,31 +910,30 @@ namespace LOFAR
     }
 
     string
-    KernelProcessControl::createBaselineFilter(const Selection &selection) const
+    KernelProcessControl::createBaselineFilter(const string &selection) const
     {
         // If the baseline selection is empty, select all cross correlations
         // (default).
-        return selection.baselines.empty() ? "*&" : selection.baselines;
+        return selection.empty() ? "*&" : selection;
     }
 
     CorrelationMask
-    KernelProcessControl::createCorrelationMask(const Selection &selection)
+    KernelProcessControl::createCorrelationMask(const vector<string> &selection)
       const
     {
       CorrelationMask mask;
 
       typedef vector<string>::const_iterator CorrelationIt;
-      for(CorrelationIt correlation = selection.correlations.begin(),
-        correlation_end = selection.correlations.end();
-        correlation != correlation_end; ++correlation)
+      for(CorrelationIt it = selection.begin(), end = selection.end();
+        it != end; ++it)
       {
         try
         {
-          mask.set(Correlation::asCorrelation(*correlation));
+          mask.set(Correlation::asCorrelation(*it));
         }
         catch(BBSKernelException &ex)
         {
-          LOG_WARN_STR("Invalid correlation: " << (*correlation) << "; will be"
+          LOG_WARN_STR("Invalid correlation: " << (*it) << "; will be"
             " ignored.");
         }
       }

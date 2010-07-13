@@ -63,13 +63,18 @@ namespace LOFAR
       string inputColumn() const
       { return itsInputColumn; }
 
-      Selection selection() const
-      { return itsSelection; }
+      // Access to the baseline selection.
+      const string &baselines() const
+      { return itsBaselines; }
 
-      vector<string> getTimeWindow() const
-      { return itsTimeWindow; }
+      // Access to the correlation selection.
+      const vector<string> &correlations() const
+      { return itsCorrelations; }
 
-      size_t getChunkSize() const
+      vector<string> timeRange() const
+      { return itsTimeRange; }
+
+      size_t chunkSize() const
       { return itsChunkSize; }
 
       bool useSolver() const
@@ -83,10 +88,11 @@ namespace LOFAR
       string                            itsInputColumn;
 
       // Baseline and correlation selection.
-      Selection                         itsSelection;
+      string                            itsBaselines;
+      vector<string>                    itsCorrelations;
 
       // Time window.
-      vector<string>                    itsTimeWindow;
+      vector<string>                    itsTimeRange;
 
       // Size in timeslots of the block of data that will be processed as a
       // single chunk.

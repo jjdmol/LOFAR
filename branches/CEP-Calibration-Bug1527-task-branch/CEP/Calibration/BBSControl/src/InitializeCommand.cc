@@ -58,7 +58,8 @@ namespace LOFAR
     InitializeCommand::InitializeCommand(const Strategy& strategy)
     {
       itsInputColumn = strategy.inputColumn();
-      itsSelection = strategy.selection();
+      itsBaselines = strategy.baselines();
+      itsCorrelations = strategy.correlations();
       itsUseSolver = strategy.useSolver();
     }
 
@@ -81,8 +82,9 @@ namespace LOFAR
 
       Command::print(os);
       os << endl << indent << "Input column: " << itsInputColumn
-        << endl << indent << itsSelection
-        << endl << indent << "UseSolver: " << boolalpha << itsUseSolver
+        << endl << indent << "Baselines: " << itsBaselines
+        << endl << indent << "Correlations: " << itsCorrelations
+        << endl << indent << "Use global solver: " << boolalpha << itsUseSolver
         << noboolalpha;
     }
 
@@ -94,8 +96,8 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       ps.add("InputColumn", itsInputColumn);
-      ps.add("Selection.Baselines", itsSelection.baselines);
-      ps.add("Selection.Correlations", toString(itsSelection.correlations));
+      ps.add("Baselines", itsBaselines);
+      ps.add("Correlations", toString(itsCorrelations));
       ps.add("UseSolver", toString(itsUseSolver));
     }
 
@@ -108,10 +110,8 @@ namespace LOFAR
       itsInputColumn = ps.getString("InputColumn", "DATA");
 
       // Read data selection.
-      itsSelection.baselines = ps.getString("Selection.Baselines",
-        itsSelection.baselines);
-      itsSelection.correlations = ps.getStringVector("Selection.Correlations",
-        itsSelection.correlations);
+      itsBaselines = ps.getString("Baselines", "");
+      itsCorrelations = ps.getStringVector("Correlations", vector<string>());
 
       // Read flag that controls use of the global solver.
       itsUseSolver = ps.getBool("UseSolver", false);

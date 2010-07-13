@@ -53,7 +53,7 @@ public:
     // Set maximal UV distance in wavelengths.
     void setUVMax(double max);
     // Set UV interval in wavelengths.
-    void setUVInterval(double min, double max);
+    void setUVRange(double min, double max);
 
     // Restrict processing to the baselines included in the mask.
     void setBaselineMask(const BaselineMask &mask);
