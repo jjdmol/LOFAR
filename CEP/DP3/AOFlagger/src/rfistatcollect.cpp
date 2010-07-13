@@ -85,6 +85,8 @@ void readAmplitudes(RFIStatistics &statistics, string &filename, bool autocorrel
 	ifstream f(filename.c_str());
 	string headers;
 	getline(f, headers);
+	double maxCount = 0.0;
+	double maxAmp = 0.0;
 	while(f.good())
 	{
 		double centralLogAmplitude;
@@ -110,7 +112,13 @@ void readAmplitudes(RFIStatistics &statistics, string &filename, bool autocorrel
 		>> amplitude.yxRfiCount
 		>> amplitude.yyRfiCount;
 		statistics.Add(amplitude, autocorrelation);
+		if(amplitude.count/amplitude.centralAmplitude > maxCount)
+		{
+			maxCount = amplitude.count/amplitude.centralAmplitude;
+			maxAmp = amplitude.centralAmplitude;
+		}
 	}
+	std::cout << " mode~=" << log10(maxAmp) << ':' << log10(maxCount);
 }
 
 void readBaselines(RFIStatistics &statistics, string &filename)
