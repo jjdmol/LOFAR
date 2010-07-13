@@ -32,25 +32,6 @@ inline StokesData::StokesData(bool coherent, unsigned nrStokes, unsigned nrPenci
 {
 }
 
-// StokesData, but summed over all channels 
-class StokesDataIntegratedChannels: public SampleData<float,3>
-{
-  public:
-    typedef SampleData<float,3> SuperType;
-
-    StokesDataIntegratedChannels(bool coherent, unsigned nrStokes, unsigned nrPencilBeams, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration);
-
-    virtual StokesDataIntegratedChannels *clone() const { return new StokesDataIntegratedChannels(*this); }
-};
-
-inline StokesDataIntegratedChannels::StokesDataIntegratedChannels(bool coherent, unsigned nrStokes, unsigned nrPencilBeams, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration)
-:
-  // The "| 2" significantly improves transpose speeds for particular
-  // numbers of stations due to cache conflict effects.  The extra memory
-  // is not used.
-  SuperType::SampleData(false, boost::extents[coherent ? nrPencilBeams : 1][(nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2][nrStokes], coherent ? nrPencilBeams : 1)
-{
-}
 
 } // namespace RTCP
 } // namespace LOFAR
