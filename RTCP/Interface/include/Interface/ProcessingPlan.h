@@ -151,6 +151,7 @@ inline void ProcessingPlan::send( StreamableData *set, const char *extension, Pr
 
   // the entry we just created is an output -- configure it as such
   plan.back().output = true;
+  plan.back().name   = find( set )->name;
   plan.back().filenameSuffix = extension;
   plan.back().distribution = distribution;
 
