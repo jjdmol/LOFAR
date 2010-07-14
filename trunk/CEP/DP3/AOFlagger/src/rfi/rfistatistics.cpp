@@ -149,6 +149,14 @@ void RFIStatistics::Add(const AmplitudeBin &amplitudeBin, bool autocorrelation)
 		a.featureAvgCount += amplitudeBin.featureAvgCount;
 		a.featureMaxCount += amplitudeBin.featureMaxCount;
 		a.featureIntCount += amplitudeBin.featureIntCount;
+		a.xxCount += amplitudeBin.xxCount;
+		a.xyCount += amplitudeBin.xyCount;
+		a.yxCount += amplitudeBin.yxCount;
+		a.yyCount += amplitudeBin.yyCount;
+		a.xxRfiCount += amplitudeBin.xxRfiCount;
+		a.xyRfiCount += amplitudeBin.xyRfiCount;
+		a.yxRfiCount += amplitudeBin.yxRfiCount;
+		a.yyRfiCount += amplitudeBin.yyRfiCount;
 	}
 }
 
@@ -539,7 +547,7 @@ void RFIStatistics::addFeatures(std::map<double, class AmplitudeBin> &amplitudes
 void RFIStatistics::saveChannels(std::map<double, class ChannelInfo> &channels, const char *filename)
 {
 	std::ofstream file(filename);
-	file << "frequency\ttotalCount\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n" << std::setprecision(14);
+	file << "frequency\ttotalCount\ttotalAmplitude\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n" << std::setprecision(14);
 	for(std::map<double, class ChannelInfo>::const_iterator i=channels.begin();i!=channels.end();++i)
 	{
 		const ChannelInfo &c = i->second;
@@ -666,7 +674,7 @@ void RFIStatistics::saveAmplitudes(std::map<double, class AmplitudeBin> &amplitu
 void RFIStatistics::saveBaselines(const char *filename)
 {
 	std::ofstream file(filename);
-	file << "a1\ta2\ta1name\ta2name\tbaselineLength\tbaselineAngle\tcount\ttotalAmplitude\trfiCount\tbroadbandRfiCount\tlineRfiCount\n" << std::setprecision(14);
+	file << "a1\ta2\ta1name\ta2name\tbaselineLength\tbaselineAngle\tcount\ttotalAmplitude\trfiCount\tbroadbandRfiCount\tlineRfiCount\trfiAmplitude\tbroadbandRfiAmplitude\tlineRfiAmplitude\n" << std::setprecision(14);
 	for(BaselineMatrix::const_iterator i=_baselines.begin();i!=_baselines.end();++i)
 	{
 		const std::map<int, BaselineInfo> &row = i->second;
@@ -684,7 +692,10 @@ void RFIStatistics::saveBaselines(const char *filename)
 				<< b.totalAmplitude << "\t"
 				<< b.rfiCount << "\t"
 				<< b.broadbandRfiCount << "\t"
-				<< b.lineRfiCount << "\n";
+				<< b.lineRfiCount << "\t"
+				<< b.rfiAmplitude << "\t"
+				<< b.broadbandRfiAmplitude << "\t"
+				<< b.lineRfiAmplitude << "\n";
 		}
 	}
 	file.close();
