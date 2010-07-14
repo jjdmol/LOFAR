@@ -107,14 +107,14 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Read input column.
-      itsInputColumn = ps.getString("InputColumn", "DATA");
+      itsInputColumn = ps.getString("InputColumn");
 
       // Read data selection.
-      itsBaselines = ps.getString("Baselines", "");
-      itsCorrelations = ps.getStringVector("Correlations", vector<string>());
+      itsBaselines = ps.getString("Baselines");
+      itsCorrelations = ps.getStringVector("Correlations");
 
       // Read flag that controls use of the global solver.
-      itsUseSolver = ps.getBool("UseSolver", false);
+      itsUseSolver = ps.getBool("UseSolver");
     }
 
   } //# namespace BBS

@@ -369,8 +369,7 @@ namespace LOFAR
           " available correlations is not supported yet.");
       }
 
-      string blFilter = createBaselineFilter(command.baselines());
-      itsChunkSelection.setBaselineFilter(blFilter);
+      itsChunkSelection.setBaselineFilter(command.baselines());
 
       return CommandResult(CommandResult::OK, "Ok.");
     }
@@ -466,8 +465,7 @@ namespace LOFAR
       ++itsStepCount;
 
       // Determine selected baselines and correlations.
-      BaselineMask blMask =
-        itsMeasurement->asMask(createBaselineFilter(command.baselines()));
+      BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
@@ -521,8 +519,7 @@ namespace LOFAR
       ++itsStepCount;
 
       // Determine selected baselines and correlations.
-      BaselineMask blMask =
-        itsMeasurement->asMask(createBaselineFilter(command.baselines()));
+      BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
@@ -577,8 +574,7 @@ namespace LOFAR
       ++itsStepCount;
 
       // Determine selected baselines and correlations.
-      BaselineMask blMask =
-        itsMeasurement->asMask(createBaselineFilter(command.baselines()));
+      BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
@@ -633,8 +629,7 @@ namespace LOFAR
       ++itsStepCount;
 
       // Determine selected baselines and correlations.
-      BaselineMask blMask =
-        itsMeasurement->asMask(createBaselineFilter(command.baselines()));
+      BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
@@ -700,8 +695,7 @@ namespace LOFAR
       }
 
       // Determine selected baselines and correlations.
-      BaselineMask blMask =
-        itsMeasurement->asMask(createBaselineFilter(command.baselines()));
+      BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // If a UV interval has been specified, flag all samples that fall outside
@@ -907,14 +901,6 @@ namespace LOFAR
         << freqStart / 1e6 << "," << freqEnd / 1e6 << "] MHz");
 
       return Axis::ShPtr(new RegularAxis(freqStart, freqEnd, 1, true));
-    }
-
-    string
-    KernelProcessControl::createBaselineFilter(const string &selection) const
-    {
-        // If the baseline selection is empty, select all cross correlations
-        // (default).
-        return selection.empty() ? "*&" : selection;
     }
 
     CorrelationMask

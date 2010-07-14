@@ -202,7 +202,8 @@ namespace LOFAR
       itsExclParms = pss.getStringVector("ExclParms", vector<string>());
       setUVRange(pss);
 
-      itsCalibrationGroups = pss.getUint32Vector("CalibrationGroups");
+      itsCalibrationGroups = pss.getUint32Vector("CalibrationGroups",
+        vector<uint32>());
       itsCellSize.freq = pss.getUint32("CellSize.Freq");
       itsCellSize.time = pss.getUint32("CellSize.Time");
       itsCellChunkSize = pss.getUint32("CellChunkSize");

@@ -109,6 +109,7 @@ namespace LOFAR
     //##--------   P r o t e c t e d   m e t h o d s   --------##//
 
     Step::Step(const string& name, const Step* parent)
+        : itsBaselines("*&")
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 

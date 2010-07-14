@@ -122,7 +122,7 @@ namespace LOFAR
     protected:
       // Default constructor. Construct an empty Step object and make it a
       // child of the Step object \a parent.
-      Step(const Step* parent = 0) : itsParent(parent) {}
+      Step(const Step* parent = 0) : itsParent(parent), itsBaselines("*&") {}
 
       // Construct a Step. \a name identifies the step name in the
       // parameter set. It does \e not uniquely identify the step \e

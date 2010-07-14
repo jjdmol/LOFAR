@@ -118,9 +118,6 @@ private:
     // kernel is part of.
     Axis::ShPtr getCalGroupFreqAxis(const vector<uint32> &groups) const;
 
-    // Create filter string from the baseline selection specified in the parset.
-    string createBaselineFilter(const string &selection) const;
-
     // Create CorrelationMask from the baseline selection specified in the
     // parset.
     CorrelationMask createCorrelationMask(const vector<string> &selection)

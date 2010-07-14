@@ -55,14 +55,14 @@ namespace LOFAR
       itsInputColumn = ps.getString("InputColumn", "DATA");
 
       // Read data selection.
-      itsBaselines = ps.getString("Baselines", "");
+      itsBaselines = ps.getString("Baselines", "*&");
       itsCorrelations = ps.getStringVector("Correlations", vector<string>());
 
       // Get the time range.
       itsTimeRange = ps.getStringVector("TimeRange", vector<string>());
 
       // Get the chunk size.
-      itsChunkSize = ps.getUint32("ChunkSize", 0);
+      itsChunkSize = ps.getUint32("ChunkSize");
 
       // Use a (global) solver?
       itsUseSolver = ps.getBool("UseSolver", false);
