@@ -99,18 +99,23 @@ bool OutputThread::waitForDone( const struct timespec &timespec )
 }
 
 
+// set the maximum number of concurrent writers
+static Semaphore semaphore(2);
+
+
 void OutputThread::abort()
 {
   LOG_WARN_STR(itsLogPrefix << "OutputThread aborting..." );
+
+  // the OutputThreads are killed sequentially, but cannot be killed if they are still
+  // waiting for our semaphore to be released by another (possibly hanging) thread.
+  semaphore.up(1000000);
 
   itsThread->abort();
 
   LOG_WARN_STR(itsLogPrefix << "OutputThread aborted" );
 }
 
-
-// set the maximum number of concurrent writers
-static Semaphore semaphore(2);
 
 // class to guarantee a done signal will be send
 class DoneSignal {
