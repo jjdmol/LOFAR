@@ -178,8 +178,8 @@ namespace LOFAR
           toString(config.getThreshold()));
       }
 
-      ps.add(prefix + "Model.Caching.Enable",
-        toString(itsModelConfig.useCaching()));
+      ps.add(prefix + "Model.Cache.Enable",
+        toString(itsModelConfig.useCache()));
 
       ps.add(prefix + "Model.Sources", toString(itsModelConfig.getSources()));
 
@@ -286,8 +286,8 @@ namespace LOFAR
         itsModelConfig.clearFlaggerConfig();
       }
 
-      itsModelConfig.setCaching(ps.getBool("Model.Caching.Enable",
-        itsModelConfig.useCaching()));
+      itsModelConfig.setCache(ps.getBool("Model.Cache.Enable",
+        itsModelConfig.useCache()));
 
       itsModelConfig.setSources(ps.getStringVector("Model.Sources",
         itsModelConfig.getSources()));

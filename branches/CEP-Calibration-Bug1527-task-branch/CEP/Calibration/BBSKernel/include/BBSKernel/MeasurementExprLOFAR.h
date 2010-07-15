@@ -105,8 +105,6 @@ private:
     bool isLinear(const VisBuffer::Ptr &chunk) const;
     bool isCircular(const VisBuffer::Ptr &chunk) const;
 
-    void applyCachePolicy(const ModelConfig &config) const;
-
     vector<unsigned int> makeUsedStationList() const;
 
     pair<unsigned int, unsigned int>

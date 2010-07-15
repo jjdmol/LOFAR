@@ -137,8 +137,8 @@ public:
     const FlaggerConfig &getFlaggerConfig() const;
     void clearFlaggerConfig();
 
-    bool useCaching() const;
-    void setCaching(bool value = true);
+    bool useCache() const;
+    void setCache(bool value = true);
 
     void setSources(const vector<string> &sources);
     const vector<string> &getSources() const;
@@ -154,7 +154,7 @@ private:
         BEAM,
         IONOSPHERE,
         FLAGGER,
-        CACHING,
+        CACHE,
         N_ModelOptions
     };
 

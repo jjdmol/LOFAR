@@ -195,9 +195,9 @@ const FlaggerConfig &ModelConfig::getFlaggerConfig() const
     return itsConfigFlagger;
 }
 
-bool ModelConfig::useCaching() const
+bool ModelConfig::useCache() const
 {
-    return itsModelOptions[CACHING];
+    return itsModelOptions[CACHE];
 }
 
 void ModelConfig::setPhasors(bool value)
@@ -261,9 +261,9 @@ void ModelConfig::clearFlaggerConfig()
     itsModelOptions[FLAGGER] = false;
 }
 
-void ModelConfig::setCaching(bool value)
+void ModelConfig::setCache(bool value)
 {
-    itsModelOptions[CACHING] = value;
+    itsModelOptions[CACHE] = value;
 }
 
 void ModelConfig::setSources(const vector<string> &sources)
@@ -344,8 +344,8 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         out << endl << obj.getFlaggerConfig();
     }
 
-    out << endl << indent << "Caching enabled: " << boolalpha
-        << obj.useCaching() << noboolalpha;
+    out << endl << indent << "Cache enabled: " << boolalpha << obj.useCache()
+        << noboolalpha;
 
     out << endl << indent << "Sources: " << obj.getSources();
     return out;
