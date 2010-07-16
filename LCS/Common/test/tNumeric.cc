@@ -27,6 +27,7 @@
 #include <Common/Numeric.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
+#include <Common/lofar_iostream.h>
 #include <limits>
 #include <cmath>
 
