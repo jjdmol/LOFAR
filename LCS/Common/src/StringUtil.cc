@@ -29,6 +29,7 @@
 #include <Common/lofar_algorithm.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>
+#include <Common/lofar_map.h>
 #include <cstring>
 #include <cstdarg>
 #include <cstdio>
