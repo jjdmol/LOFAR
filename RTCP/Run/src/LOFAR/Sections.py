@@ -67,31 +67,9 @@ class Section:
     for c in self.commands:
       self.killCommand(c,timeout)
 
-  def wait(self, lock = Lock()):
-    """ Wait until section finishes, or until the lock is released. Releases lock when section finishes. """
-
-    commands = self.commands
-
-    # wait in a separate thread to allow python to capture KeyboardInterrupts in the main thread
-    class WaitThread(Thread):
-      def run(self):
-        try:
-          for c in commands:
-            c.wait()
-        finally:
-          try:
-            lock.release()  
-          except thread.error:
-            # lock already released
-            pass
-
-    WaitThread().start() 
-
-    # wait for lock to be released by waiting thread or from an external source
-    # !! DO NOT use lock.acquire() since that will delay signals (SIGQUIT/SIGTERM/etc) from arriving until
-    # the lock is acquired.
-    while lock.locked():
-      time.sleep(1)
+  def wait(self):
+    for s in self.commands:
+      s.wait()
 
   def check(self):
     pass
@@ -113,10 +91,32 @@ class SectionSet(list):
       info( "Killing %s." % (s,) )
       s.abort(timeout)
 
-  def wait(self, lock=Lock()):
-    for s in self:
-      info( "Waiting for %s." % (s,) )
-      s.wait(lock)
+  def wait(self, lock = Lock()):
+    """ Wait until the sections finish, or until the lock is released. Releases lock when section finishes. """
+
+    sections = self
+
+    # wait in a separate thread to allow python to capture KeyboardInterrupts in the main thread
+    class WaitThread(Thread):
+      def run(self):
+        try:
+          for s in sections:
+            info( "Waiting for %s." % (s,) )
+            s.wait()
+        finally:
+          try:
+            lock.release()  
+          except thread.error:
+            # lock already released
+            pass
+
+    WaitThread().start() 
+
+    # wait for lock to be released by waiting thread or from an external source
+    # !! DO NOT use lock.acquire() since that will delay signals (SIGQUIT/SIGTERM/etc) from arriving until
+    # the lock is acquired.
+    while lock.locked():
+      time.sleep(1)
 
   def check(self):
     for s in self:
