@@ -142,7 +142,10 @@ void readBaselines(RFIStatistics &statistics, string &filename)
 		>> baseline.totalAmplitude
 		>> baseline.rfiCount
 		>> baseline.broadbandRfiCount
-		>> baseline.lineRfiCount;
+		>> baseline.lineRfiCount
+		>> baseline.rfiAmplitude
+		>> baseline.broadbandRfiAmplitude
+		>> baseline.lineRfiAmplitude;
 		statistics.Add(baseline);
 	}
 }
