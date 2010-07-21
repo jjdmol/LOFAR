@@ -219,21 +219,23 @@ class RFIStatistics {
 		
 		double rfiFraction(const std::map<double, class ChannelInfo> &channels) const
 		{
-			double sum = 0.0;
+			unsigned long totalRFI = 0, total = 0;
 			for(std::map<double, class ChannelInfo>::const_iterator i=channels.begin();i!=channels.end();++i)
 			{
-				sum += i->second.rfiCount / i->second.totalCount;
+				totalRFI += i->second.rfiCount;
+				total += i->second.totalCount;
 			}
-			return sum / channels.size();
+			return (long double) totalRFI / (long double) total;
 		}
 		double rfiFraction(const std::map<double, class TimestepInfo> &timesteps) const
 		{
-			double sum = 0.0;
+			unsigned long totalRFI = 0, total = 0;
 			for(std::map<double, class TimestepInfo>::const_iterator i=timesteps.begin();i!=timesteps.end();++i)
 			{
-				sum += i->second.rfiCount / i->second.totalCount;
+				totalRFI += i->second.rfiCount;
+				total += i->second.totalCount;
 			}
-			return sum / timesteps.size();
+			return (long double) totalRFI / (long double) total;
 		}
 };
 
