@@ -252,6 +252,8 @@ int main(int argc, char **argv)
 	}
 	else
 	{
+		ofstream amplitudeSlopeFile("amplitudeSlopes.txt");
+		amplitudeSlopeFile << "0.01-0.1\t10-100\tcount\n";
 		std::map<double, double> frequencyFlags;
 		std::map<double, long unsigned> timeTotalCount, timeFlagsCount;
 		RFIStatistics statistics;
@@ -271,7 +273,15 @@ int main(int argc, char **argv)
 			else if(filename.find("counts-amplitudes-auto.txt")!=string::npos)
 				readAmplitudes(statistics, filename, true);
 			else if(filename.find("counts-amplitudes-cross.txt")!=string::npos)
+			{
 				readAmplitudes(statistics, filename, false);
+				RFIStatistics single;
+				readAmplitudes(single, filename, false);
+				amplitudeSlopeFile
+				<< single.AmplitudeCrossSlope(0.01, 0.1) << '\t'
+				<< single.AmplitudeCrossSlope(10.0, 100.0) << '\t'
+				<< single.AmplitudeCrossCount(10.0, 100.0) << '\n';
+			}
 			else if(filename.find("counts-baselines.txt")!=string::npos)
 				readBaselines(statistics, filename);
 			else
@@ -284,6 +294,11 @@ int main(int argc, char **argv)
 		<< (round(statistics.RFIFractionInCrossTimeSteps()*10000)/100) << "% RFI in timesteps.\n"
 		<< "Auto correlations: "
 		<< (round(statistics.RFIFractionInAutoChannels()*10000)/100) << "% RFI in channels, "
-		<< (round(statistics.RFIFractionInAutoTimeSteps()*10000)/100) << "% RFI in timesteps.\n";
+		<< (round(statistics.RFIFractionInAutoTimeSteps()*10000)/100) << "% RFI in timesteps.\n"
+		<< std::setprecision(14)
+		<< "Cross correlation slope fit between 0.01 and 0.1 amplitude: "
+		<< statistics.AmplitudeCrossSlope(0.01, 0.1) << "\n"
+		<< "Cross correlation slope fit between 10 and 100 amplitude: "
+		<< statistics.AmplitudeCrossSlope(10.0, 100.0) << "\n";
 	}
 }

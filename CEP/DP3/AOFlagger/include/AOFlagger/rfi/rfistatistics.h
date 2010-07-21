@@ -182,6 +182,14 @@ class RFIStatistics {
 		{
 			return rfiFraction(_autoTimesteps);
 		}
+		double AmplitudeCrossSlope(double startAmplitude, double endAmplitude) const
+		{
+			return amplitudeSlope(_crossAmplitudes, startAmplitude, endAmplitude);
+		}
+		long unsigned AmplitudeCrossCount(double startAmplitude, double endAmplitude)
+		{
+			return count(_crossAmplitudes, startAmplitude, endAmplitude);
+		}
 	private:
 		struct FeatureInfo {
 			long double amplitudeSum;
@@ -236,6 +244,35 @@ class RFIStatistics {
 				total += i->second.totalCount;
 			}
 			return (long double) totalRFI / (long double) total;
+		}
+		double amplitudeSlope(const std::map<double, class AmplitudeBin> &amplitudes, double startAmplitude, double endAmplitude) const
+		{
+			unsigned long n = 0;
+			long double sumX = 0.0, sumXY = 0.0, sumY = 0.0, sumXSquare = 0.0;
+			for(std::map<double, class AmplitudeBin>::const_iterator i=amplitudes.begin();i!=amplitudes.end();++i)
+			{
+				if(i->first > startAmplitude && i->first<endAmplitude)
+				{
+					double x = log10(i->first);
+					double y = log10(i->second.count/i->first);
+					++n;
+					sumX += x;
+					sumXSquare += x * x;
+					sumY += y;
+					sumXY += x * y;
+				}
+			}
+			return (sumXY - sumX*sumY/n)/(sumXSquare - (sumX*sumX/n));
+		}
+		long unsigned count(const std::map<double, class AmplitudeBin> &amplitudes, double startAmplitude, double endAmplitude) const
+		{
+			unsigned long n = 0;
+			for(std::map<double, class AmplitudeBin>::const_iterator i=amplitudes.begin();i!=amplitudes.end();++i)
+			{
+				if(i->first > startAmplitude && i->first<endAmplitude)
+					n+=i->second.count;
+			}
+			return n;
 		}
 };
 
