@@ -279,5 +279,11 @@ int main(int argc, char **argv)
 		}
 		fitGaus(statistics);
 		statistics.Save();
+		std::cout << "Cross correlations: "
+		<< (round(statistics.RFIFractionInCrossChannels()*10000)/100) << "% RFI in channels, "
+		<< (round(statistics.RFIFractionInCrossTimeSteps()*10000)/100) << "% RFI in timesteps.\n"
+		<< "Auto correlations: "
+		<< (round(statistics.RFIFractionInAutoChannels()*10000)/100) << "% RFI in channels, "
+		<< (round(statistics.RFIFractionInAutoTimeSteps()*10000)/100) << "% RFI in timesteps.\n";
 	}
 }
