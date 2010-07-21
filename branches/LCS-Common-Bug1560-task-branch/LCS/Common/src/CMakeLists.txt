@@ -35,6 +35,7 @@ set(common_LIB_SRCS
 set(common_PROGRAMS
   getparsetvalue
   versioncommon
+  logperf
 )
 
 if(HAVE_BACKTRACE)

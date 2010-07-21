@@ -37,7 +37,7 @@
 
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
-#include <log4cplus/global-init.h>
+//#include <log4cplus/global-init.h>
 
 #include <cstring>  // for strstr()
 
@@ -135,28 +135,28 @@ namespace LOFAR {
 // @{
 
 // Should be used when an unrecoverable exception occures.
-#define LOG_FATAL(message) 			LofarLog(FATAL_LOG_LEVEL,message)
+#define LOG_FATAL(message) 			LofarLog(FATAL,message)
 // Should be used when an unrecoverable exception occures.
-#define LOG_FATAL_STR(stream)		LofarLogStr(FATAL_LOG_LEVEL,stream)
+#define LOG_FATAL_STR(stream)		LofarLogStr(FATAL,stream)
 
 // Should be used in case of recoverable exceptions and illegal start parms.
-#define LOG_ERROR(message) 			LofarLog(ERROR_LOG_LEVEL,message)
+#define LOG_ERROR(message) 			LofarLog(ERROR,message)
 // Should be used in case of recoverable exceptions and illegal start parms.
-#define LOG_ERROR_STR(stream)		LofarLogStr(ERROR_LOG_LEVEL,stream)
+#define LOG_ERROR_STR(stream)		LofarLogStr(ERROR,stream)
 
 // Should be used when an unexpected situation occured that could be solved by
 // the software itself.
-#define LOG_WARN(message) 			LofarLog(WARN_LOG_LEVEL,message)
+#define LOG_WARN(message) 			LofarLog(WARN,message)
 // Should be used when an unexpected situation occured that could be solved by
 // the software itself.
-#define LOG_WARN_STR(stream)		LofarLogStr(WARN_LOG_LEVEL,stream)
+#define LOG_WARN_STR(stream)		LofarLogStr(WARN,stream)
 
 // Should be used to notify operator startup and normal termination of
 // programs. It can also be used for other 'global' actions.
-#define LOG_INFO(message) 			LofarLog(INFO_LOG_LEVEL,message)
+#define LOG_INFO(message) 			LofarLog(INFO,message)
 // Should be used to notify operator startup and normal termination of
 // programs. It can also be used for other 'global' actions.
-#define LOG_INFO_STR(stream)		LofarLogStr(INFO_LOG_LEVEL,stream)
+#define LOG_INFO_STR(stream)		LofarLogStr(INFO,stream)
 
 // @}
 
@@ -182,11 +182,11 @@ namespace LOFAR {
 #else
 
 // Use this macro for plain and 'printf' like messages.
-#define LOG_DEBUG(message) 			LofarLog(DEBUG_LOG_LEVEL,message)
+#define LOG_DEBUG(message) 			LofarLog(DEBUG,message)
  
 // Use this macro for operator<< messages
 // \note the 'printf' counterparts are MUCH faster and produce less code!
-#define LOG_DEBUG_STR(stream)		LofarLogStr(DEBUG_LOG_LEVEL,stream)
+#define LOG_DEBUG_STR(stream)		LofarLogStr(DEBUG,stream)
 
 #endif // DISABLE_DEBUG_OUTPUT
 
@@ -386,16 +386,20 @@ void	initTraceModule(void);
 // \internal
 // \name Internal macro's for standard logging functions
 // @{
-#define LofarLog(level,message) do { \
-	log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE).log(log4cplus::level, message, __FILE__, __LINE__); \
-	} while(0)
-
+#define LofarLog(level,message)                                         \
+  do {                                                                  \
+    log4cplus::Logger _logger =                                         \
+      log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE);          \
+    LOG4CPLUS_##level##_STR(_logger, message);                          \
+  } while(0)
+  
 // \internal
-#define LofarLogStr(level,stream) do {		\
-	std::ostringstream	lfr_log_oss;			\
-	lfr_log_oss << stream;						\
-	LofarLog(level,lfr_log_oss.str());			\
-	} while(0)
+#define LofarLogStr(level,stream)                                       \
+  do {                                                                  \
+    log4cplus::Logger _logger =                                         \
+      log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE);          \
+    LOG4CPLUS_##level(_logger, stream);                                 \
+  } while(0)
 // @}
 #endif // DOXYGEN_SHOULD_SKIP_THIS
 
