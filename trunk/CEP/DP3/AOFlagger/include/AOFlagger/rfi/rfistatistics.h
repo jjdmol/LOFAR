@@ -166,6 +166,22 @@ class RFIStatistics {
 		{
 			return _crossAmplitudes;
 		}
+		double RFIFractionInCrossChannels() const
+		{
+			return rfiFraction(_crossChannels);
+		}
+		double RFIFractionInAutoChannels() const
+		{
+			return rfiFraction(_autoChannels);
+		}
+		double RFIFractionInCrossTimeSteps() const
+		{
+			return rfiFraction(_crossTimesteps);
+		}
+		double RFIFractionInAutoTimeSteps() const
+		{
+			return rfiFraction(_autoTimesteps);
+		}
 	private:
 		struct FeatureInfo {
 			long double amplitudeSum;
@@ -200,6 +216,25 @@ class RFIStatistics {
 			return pow(10.0, round(100.0*log10(amplitude))/100.0);
 		}
 		boost::mutex _mutex;
+		
+		double rfiFraction(const std::map<double, class ChannelInfo> &channels) const
+		{
+			double sum = 0.0;
+			for(std::map<double, class ChannelInfo>::const_iterator i=channels.begin();i!=channels.end();++i)
+			{
+				sum += i->second.rfiCount / i->second.totalCount;
+			}
+			return sum / channels.size();
+		}
+		double rfiFraction(const std::map<double, class TimestepInfo> &timesteps) const
+		{
+			double sum = 0.0;
+			for(std::map<double, class TimestepInfo>::const_iterator i=timesteps.begin();i!=timesteps.end();++i)
+			{
+				sum += i->second.rfiCount / i->second.totalCount;
+			}
+			return sum / timesteps.size();
+		}
 };
 
 #endif
