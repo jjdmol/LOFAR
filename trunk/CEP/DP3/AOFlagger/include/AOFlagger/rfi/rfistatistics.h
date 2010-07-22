@@ -71,7 +71,7 @@ class RFIStatistics {
 			long double lineRfiAmplitude;
 		};
 		struct AmplitudeBin {
-			AmplitudeBin() : centralAmplitude(0.0), count(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), featureAvgCount(0), featureMaxCount(0), featureIntCount(0), xxCount(0), xyCount(0), yxCount(0), yyCount(0), xxRfiCount(0), xyRfiCount(0), yxRfiCount(0), yyRfiCount(0)
+			AmplitudeBin() : centralAmplitude(0.0), count(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), featureAvgCount(0), featureMaxCount(0), featureIntCount(0), xxCount(0), xyCount(0), yxCount(0), yyCount(0), xxRfiCount(0), xyRfiCount(0), yxRfiCount(0), yyRfiCount(0), stokesQCount(0), stokesUCount(0), stokesVCount(0)
 			{
 			}
 			double centralAmplitude;
@@ -90,12 +90,15 @@ class RFIStatistics {
 			long unsigned xyRfiCount;
 			long unsigned yxRfiCount;
 			long unsigned yyRfiCount;
+			long unsigned stokesQCount;
+			long unsigned stokesUCount;
+			long unsigned stokesVCount;
 		};
 		struct BaselineInfo {
-			BaselineInfo() : antenna1(0), antenna2(0), antenna1Name(), antenna2Name(), baselineLength(0.0), baselineAngle(0.0), count(0), totalAmplitude(0.0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiAmplitude(0.0), broadbandRfiAmplitude(0.0), lineRfiAmplitude(0.0)
+			BaselineInfo() : antenna1(0), antenna2(0), antenna1Name(), antenna2Name(), baselineLength(0.0), baselineAngle(0.0), count(0), totalAmplitude(0.0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiAmplitude(0.0), broadbandRfiAmplitude(0.0), lineRfiAmplitude(0.0), baselineStatistics(0)
 			{
 			}
-			BaselineInfo(const BaselineInfo &source) : antenna1(source.antenna1), antenna2(source.antenna2), antenna1Name(source.antenna1Name), antenna2Name(source.antenna2Name), baselineLength(source.baselineLength), baselineAngle(source.baselineAngle), count(source.count), totalAmplitude(source.totalAmplitude), rfiCount(source.rfiCount), broadbandRfiCount(source.broadbandRfiCount), lineRfiCount(source.lineRfiCount), rfiAmplitude(source.rfiAmplitude), broadbandRfiAmplitude(source.broadbandRfiAmplitude), lineRfiAmplitude(source.lineRfiAmplitude)
+			BaselineInfo(const BaselineInfo &source) : antenna1(source.antenna1), antenna2(source.antenna2), antenna1Name(source.antenna1Name), antenna2Name(source.antenna2Name), baselineLength(source.baselineLength), baselineAngle(source.baselineAngle), count(source.count), totalAmplitude(source.totalAmplitude), rfiCount(source.rfiCount), broadbandRfiCount(source.broadbandRfiCount), lineRfiCount(source.lineRfiCount), rfiAmplitude(source.rfiAmplitude), broadbandRfiAmplitude(source.broadbandRfiAmplitude), lineRfiAmplitude(source.lineRfiAmplitude), baselineStatistics(source.baselineStatistics)
 			{
 			}
 			void operator=(const BaselineInfo &rhs)
@@ -114,6 +117,7 @@ class RFIStatistics {
 				rfiAmplitude = rhs.rfiAmplitude;
 				broadbandRfiAmplitude = rhs.broadbandRfiAmplitude;
 				lineRfiAmplitude = rhs.lineRfiAmplitude;
+				baselineStatistics = rhs.baselineStatistics;
 			}
 
 			int antenna1, antenna2;
@@ -128,6 +132,7 @@ class RFIStatistics {
 			long double rfiAmplitude;
 			long double broadbandRfiAmplitude;
 			long double lineRfiAmplitude;
+			RFIStatistics *baselineStatistics;
 		};
 
 		RFIStatistics();
@@ -148,15 +153,7 @@ class RFIStatistics {
 		
 		void Save()
 		{
-			saveChannels(_autoChannels, "counts-channels-auto.txt");
-			saveTimesteps(_autoTimesteps, "counts-timesteps-auto.txt");
-			saveAmplitudes(_autoAmplitudes, "counts-amplitudes-auto.txt");
-			saveChannels(_crossChannels, "counts-channels-cross.txt");
-			saveTimesteps(_crossTimesteps, "counts-timesteps-cross.txt");
-			saveAmplitudes(_crossAmplitudes, "counts-amplitudes-cross.txt");
-			saveBaselines("counts-baselines.txt");
-			saveSubbands(_autoChannels, "counts-subbands-auto.txt");
-			saveSubbands(_crossChannels, "counts-subbands-cross.txt");
+			save("");
 		}
 		const std::map<double, class AmplitudeBin> &GetAutoAmplitudes() const
 		{
@@ -191,6 +188,25 @@ class RFIStatistics {
 			return count(_crossAmplitudes, startAmplitude, endAmplitude);
 		}
 	private:
+		void addEverything(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask);
+		void addSingleBaseline(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask);
+		void save(const std::string &baseName)
+		{
+			saveWithoutBaselines(baseName);
+			saveBaselines(baseName+"counts-baselines.txt");
+		}
+		void saveWithoutBaselines(const std::string &baseName)
+		{
+			saveChannels(_autoChannels, baseName+"counts-channels-auto.txt");
+			saveTimesteps(_autoTimesteps, baseName+"counts-timesteps-auto.txt");
+			saveAmplitudes(_autoAmplitudes, baseName+"counts-amplitudes-auto.txt");
+			saveChannels(_crossChannels, baseName+"counts-channels-cross.txt");
+			saveTimesteps(_crossTimesteps, baseName+"counts-timesteps-cross.txt");
+			saveAmplitudes(_crossAmplitudes, baseName+"counts-amplitudes-cross.txt");
+			saveSubbands(_autoChannels, baseName+"counts-subbands-auto.txt");
+			saveSubbands(_crossChannels, baseName+"counts-subbands-cross.txt");
+		}
+
 		struct FeatureInfo {
 			long double amplitudeSum;
 			num_t amplitudeMax;
@@ -207,21 +223,25 @@ class RFIStatistics {
 		void addChannels(std::map<double, class ChannelInfo> &channels, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addTimesteps(std::map<double, class TimestepInfo> &timesteps, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
-		void addBaselines(Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
+		void addBaselines(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask);
 		void addFeatures(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addPolarisations(std::map<double, class AmplitudeBin> &amplitudes, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
+		void addStokes(std::map<double, class AmplitudeBin> &amplitudes, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
 
-		void saveChannels(std::map<double, class ChannelInfo> &channels, const char *filename);
-		void saveTimesteps(std::map<double, class TimestepInfo> &timesteps, const char *filename);
-		void saveAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, const char *filename);
-		void saveBaselines(const char *filename);
-		void saveSubbands(std::map<double, class ChannelInfo> &channels, const char *filename);
+		void saveChannels(std::map<double, class ChannelInfo> &channels, const std::string &filename);
+		void saveTimesteps(std::map<double, class TimestepInfo> &timesteps, const std::string &filename);
+		void saveAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, const std::string &filename);
+		void saveBaselines(const std::string &filename);
+		void saveSubbands(std::map<double, class ChannelInfo> &channels, const std::string &filename);
 		
 		double getCentralAmplitude(double amplitude)
 		{
 			//double decimals = pow(10.0, floor(log10(amplitude)));
 			//return round(100.0 * amplitude / decimals) / 100.0 * decimals;
-			return pow(10.0, round(100.0*log10(amplitude))/100.0);
+			if(amplitude>=0.0)
+				return pow(10.0, round(100.0*log10(amplitude))/100.0);
+			else
+				return -pow(10.0, round(100.0*log10(-amplitude))/100.0);
 		}
 		boost::mutex _mutex;
 		

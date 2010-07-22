@@ -1331,24 +1331,26 @@ void MSWindow::onTimeGraphButtonPressed()
 
 bool MSWindow::onTFWidgetButtonReleased(GdkEventButton *event)
 {
-	if(HasImage() && _plotFrame.is_visible())
+	if(HasImage())
 	{
-		size_t 
-			width = GetOriginalData().ImageWidth(),
-			height = GetOriginalData().ImageHeight();
-		size_t posX = (size_t) roundl((long double) event->x * width / _timeFrequencyWidget.get_width() - 0.5L);
-		size_t posY = (size_t) roundl((long double) event->y * height / _timeFrequencyWidget.get_height() - 0.5L);
-		if(posX >= width)
-			posX = width - 1;
-		if(posY >= height)
-			posY = height - 1;
-
-		_plotFrame.SetTimeFrequencyData(GetActiveData());
-		_plotFrame.SetSelectedSample(posX, posY);
+		if(_plotFrame.is_visible())
+		{
+			size_t 
+				width = GetOriginalData().ImageWidth(),
+				height = GetOriginalData().ImageHeight();
+			size_t posX = (size_t) roundl((long double) event->x * width / _timeFrequencyWidget.get_width() - 0.5L);
+			size_t posY = (size_t) roundl((long double) event->y * height / _timeFrequencyWidget.get_height() - 0.5L);
+			if(posX >= width)
+				posX = width - 1;
+			if(posY >= height)
+				posY = height - 1;
 	
-		_plotFrame.Update();
+			_plotFrame.SetTimeFrequencyData(GetActiveData());
+			_plotFrame.SetSelectedSample(posX, posY);
+		
+			_plotFrame.Update();
+		}
 	}
-
 	return true;
 }
 
