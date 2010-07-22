@@ -65,6 +65,8 @@ static void handleCommand(const std::string &command)
     }
   } else if (command == "quit") {
     quit = true;
+  } else if (command == "") {
+    // quietly drop empty commands
   } else if (myPsetNumber == 0) {
     LOG_ERROR_STR("command \"" << command << "\" not understood");
   }
