@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include <sys/unistd.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 
 #include <stdexcept>
 #include <cstdio>
@@ -241,6 +242,15 @@ int main(int argc, char *argv[])
 
     logPrefix = str(format("[obs %u] ") % parset.observationID());
 
+    // create root directory of the observation tree
+    LOG_INFO_STR(logPrefix << "Creating directory " << parset.getMSBaseDir());
+
+    if (mkdir(parset.getMSBaseDir().c_str(), 0777) != 0 && errno != EEXIST) {
+      unsigned savedErrno = errno; // first argument below clears errno
+      throw SystemCallException(("mkdir " + parset.getMSBaseDir()).c_str(), savedErrno, THROW_ARGS);
+    }
+
+    // start all writers
     for (unsigned output = 0; output < plan.nrOutputTypes(); output ++) {
       ProcessingPlan::distribution_t distribution = plan.plan[output].distribution;
       std::vector<unsigned>	     nodelist = distribution == ProcessingPlan::DIST_SUBBAND ? parset.subbandStorageList() : parset.beamStorageList();
