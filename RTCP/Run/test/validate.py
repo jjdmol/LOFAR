@@ -128,7 +128,7 @@ if __name__ == "__main__":
 
              "Observation.outputCorrelatedData": True,
              "Observation.outputCoherentStokes": True,
-             "Observation.nrPencils":            nrBeams,
+             "Observation.nrPencils":            nrBeams - 1,
             }
 
       for n in xrange(0,nrBeams):
