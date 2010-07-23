@@ -14,7 +14,15 @@ import socket
 
 DRYRUN = False
 
-def convertParsets( args, olapparset, partition = None ):
+def convertParsets( args, olapparset, partition = None, override_keys = {} ):
+  """
+    Adjust and augment the keys of a parset for use in OLAP.
+
+    args:           a string of arguments (parset=RTCP.parset,start=+60, etc, see the __main__ function below)
+    olapparset:     the filename of OLAP.parset (contains station positions and delays)
+    partition:      the BG/P partition that will be used (if none, the partition has to be specified in the parset)
+    override_keys:  parset keys which override ones in the parset
+  """
   # valid observation parameters
   validObsParams = [
     "parset", "output", "stations", "tcp", "null",
@@ -88,6 +96,9 @@ def convertParsets( args, olapparset, partition = None ):
         continue
 
       parset.parse( "%s=%s" % (k,v) )
+
+    for k,v in override_keys.iteritems():
+      parset[k] = v
 
     # reserve an observation id
     parset.postRead()
@@ -169,6 +180,9 @@ def convertParsets( args, olapparset, partition = None ):
         continue
 
       parset.parse( "%s=%s" % (k,v) )
+
+    for k,v in override_keys.iteritems():
+      parset[k] = v
 
   # finalise and save parsets
   usedStoragePorts = []
