@@ -1,6 +1,7 @@
-//# MessageHandlers.cc.h: 
+//# LinearToCircularRL.cc: Jones matrix to convert from linear polarization
+//# coordinates to circular (RL) coordinates.
 //#
-//# Copyright (C) 2007
+//# Copyright (C) 2010
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -21,14 +22,31 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSControl/MessageHandlers.h>
+#include <BBSKernel/Expr/LinearToCircularRL.h>
 
 namespace LOFAR
 {
-  namespace BBS
-  {
-    KernelMessageHandler::~KernelMessageHandler()
-    {
-    }
-  }
+namespace BBS
+{
+
+LinearToCircularRL::LinearToCircularRL()
+{
+    const double scale = 1.0 / std::sqrt(2.0);
+
+    Matrix re(scale);
+    Matrix im(dcomplex(0.0, scale));
+
+    itsH.assign(0, 0, re);
+    itsH.assign(0, 1, im);
+    itsH.assign(1, 0, re);
+    itsH.assign(1, 1, conj(im));
 }
+
+const JonesMatrix LinearToCircularRL::evaluateExpr(const Request&, Cache&,
+    unsigned int) const
+{
+    return itsH;
+}
+
+} //# namespace BBS
+} //# namespace LOFAR

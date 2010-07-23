@@ -109,6 +109,7 @@ namespace LOFAR
     //##--------   P r o t e c t e d   m e t h o d s   --------##//
 
     Step::Step(const string& name, const Step* parent)
+        : itsBaselines("*&")
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -127,12 +128,10 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << itsName);
       const string prefix = "Step." + itsName + ".";
-      ps.replace(prefix + "Baselines.Station1",
-        toString(itsBaselines.station1));
-      ps.replace(prefix + "Baselines.Station2",
-        toString(itsBaselines.station2));
-      ps.replace(prefix + "Correlation.Selection", itsCorrelation.selection);
-      ps.replace(prefix + "Correlation.Type", toString(itsCorrelation.type));
+
+      // Write data selection.
+      ps.replace(prefix + "Baselines", itsBaselines);
+      ps.replace(prefix + "Correlations", toString(itsCorrelations));
 
       // Remove all Model keys from the parset. Effectively, key inheritance
       // is handled in read() and here we only output the keys that are relevant
@@ -179,8 +178,8 @@ namespace LOFAR
           toString(config.getThreshold()));
       }
 
-      ps.add(prefix + "Model.ExperimentalCaching.Enable",
-        toString(itsModelConfig.useExperimentalCaching()));
+      ps.add(prefix + "Model.Cache.Enable",
+        toString(itsModelConfig.useCache()));
 
       ps.add(prefix + "Model.Sources", toString(itsModelConfig.getSources()));
 
@@ -192,20 +191,11 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      // Get the baseline selection for this step.
-      itsBaselines.station1 =
-        ps.getStringVector("Baselines.Station1", itsBaselines.station1);
-      itsBaselines.station2 =
-        ps.getStringVector("Baselines.Station2", itsBaselines.station2);
+      // Read data selection.
+      itsBaselines = ps.getString("Baselines", itsBaselines);
+      itsCorrelations = ps.getStringVector("Correlations", itsCorrelations);
 
-      // Get the correlation selection (ALL, AUTO, or CROSS), and type
-      // (e.g., ["XX", "XY", "YX", "YY"]).
-      itsCorrelation.selection =
-        ps.getString("Correlation.Selection", itsCorrelation.selection);
-      itsCorrelation.type =
-        ps.getStringVector("Correlation.Type", itsCorrelation.type);
-
-      // Get the model configuration.
+      // Read model configuration.
       itsModelConfig.setPhasors(ps.getBool("Model.Phasors.Enable",
         itsModelConfig.usePhasors()));
 
@@ -296,8 +286,8 @@ namespace LOFAR
         itsModelConfig.clearFlaggerConfig();
       }
 
-      itsModelConfig.setExperimentalCaching(ps.getBool("Model.ExperimentalCaching.Enable",
-        itsModelConfig.useExperimentalCaching()));
+      itsModelConfig.setCache(ps.getBool("Model.Cache.Enable",
+        itsModelConfig.useCache()));
 
       itsModelConfig.setSources(ps.getStringVector("Model.Sources",
         itsModelConfig.getSources()));
@@ -311,8 +301,8 @@ namespace LOFAR
       Indent id;  // add an extra indentation level
       os << endl << indent << "Name: " << itsName
         << endl << indent << "Full name: " << fullName()
-    	  << endl << indent << itsBaselines
-    	  << endl << indent << itsCorrelation
+        << endl << indent << "Baselines: " << itsBaselines
+        << endl << indent << "Correlations: " << itsCorrelations
         << endl << indent << itsModelConfig;
     }
 

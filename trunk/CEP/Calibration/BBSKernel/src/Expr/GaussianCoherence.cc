@@ -111,13 +111,13 @@ const JonesMatrix::View GaussianCoherence::evaluateImpl(const Grid &grid,
 
     if(bound || stokes.bound(0) || stokes.bound(1))
     {
-        result.assign(0, 0, coherence * 0.5 * (stokes(0) + stokes(1)));
-        result.assign(1, 1, coherence * 0.5 * (stokes(0) - stokes(1)));
+        result.assign(0, 0, coherence * (stokes(0) + stokes(1)));
+        result.assign(1, 1, coherence * (stokes(0) - stokes(1)));
     }
 
     if(bound || stokes.bound(2) || stokes.bound(3))
     {
-        Matrix uv = coherence * 0.5 * tocomplex(stokes(2), stokes(3));
+        Matrix uv = coherence * tocomplex(stokes(2), stokes(3));
         result.assign(0, 1, uv);
         result.assign(1, 0, conj(uv));
     }

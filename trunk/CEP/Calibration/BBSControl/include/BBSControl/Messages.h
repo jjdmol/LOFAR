@@ -133,41 +133,6 @@ namespace LOFAR
 
     //## --------  C o n c r e t e   c l a s s e s  -------- ##//
 
-    // Message for passing the kernel-id from kernel to solver.
-/*
-    class KernelIdMsg : public KernelMessage
-    {
-    public:
-      typedef KernelMessage super;
-      typedef shared_ptr<KernelIdMsg>     Ptr;
-
-      KernelIdMsg()
-        : KernelMessage()
-      {}
-
-      KernelIdMsg(KernelId kernelId)
-        : KernelMessage(kernelId)
-      {}
-
-      //# -------- Message interface implementation --------
-      virtual void passTo(KernelMessageHandler &handler) const;
-
-    private:
-
-      //# -------- BlobStreamable interface implementation --------
-      static const string theirClassType;
-
-      // Write the contents of \c *this into the blob output stream \a bos.
-      virtual void write(BlobOStream& bos) const;
-
-      // Read the contents from the blob input stream \a bis into \c *this.
-      virtual void read(BlobIStream& bis);
-
-      // Return the type of \c *this as a string.
-      virtual const string& classType() const;
-    };
-*/
-
     // Message for passing the kernel's process-id from kernel to solver.
     class ProcessIdMsg : public KernelMessage
     {

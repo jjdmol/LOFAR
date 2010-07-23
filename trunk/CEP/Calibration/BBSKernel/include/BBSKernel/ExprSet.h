@@ -1,5 +1,5 @@
-//# ExprSet.h: Base class for a set of related expressions, such as the
-//# model expressions for all the baselines of a telescope.
+//# ExprSet.h: Base class for a set of related expressions, such as the model
+//# expressions for all the baselines of a telescope.
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,16 +21,16 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPRESSIONSET_H
-#define LOFAR_BBSKERNEL_EXPRESSIONSET_H
+#ifndef LOFAR_BBSKERNEL_EXPRSET_H
+#define LOFAR_BBSKERNEL_EXPRSET_H
 
 // \file
 // Base class for a set of related expressions, such as the model expressions
 // for all the baselines of a telescope.
 
-#include <BBSKernel/ParmManager.h>
-#include <ParmDB/Box.h>
 #include <Common/lofar_smartptr.h>
+#include <ParmDB/Box.h>
+#include <BBSKernel/ParmManager.h>
 
 namespace LOFAR
 {
@@ -55,13 +55,32 @@ public:
     // Return the domain on which the expressions in the set are defined.
     virtual Box domain() const = 0;
 
-    virtual ParmGroup getParms() const = 0;
-    virtual ParmGroup getSolvableParms() const = 0;
-    virtual void setSolvableParms(const ParmGroup &solvables) = 0;
-    virtual void clearSolvableParms() = 0;
-    virtual void solvableParmsChanged() = 0;
+    // Get the set of parameters this set of expressions depends on.
+    virtual ParmGroup parms() const = 0;
 
+    // Get the set of parameters for which partial derivatives will be computed.
+    virtual ParmGroup solvables() const = 0;
+
+    // Set the parameters for which partial derivatives will be computed.
+    // Parameters that the expressions in this set do not depend on are silently
+    // ingnored. Use parms() to find out beforehand which parameters the
+    // expressions in this set depend on, or use solvables() after calling this
+    // method to get the set of parameters for which partial derivatives will be
+    // computed.
+    virtual void setSolvables(const ParmGroup &solvables) = 0;
+
+    // Clear the set of parameters for which partial derivatives will be
+    // computed, i.e. do not compute any partial derivatives.
+    virtual void clearSolvables() = 0;
+
+    // Notify ExprSet of external updates to the value of the solvables.
+    virtual void solvablesChanged() = 0;
+
+    // Set the grid on which the expressions in the set will be evaluated.
     virtual void setEvalGrid(const Grid &grid) = 0;
+
+    // Evaluate the expression with index i on the evaluation grid and return
+    // the result.
     virtual const T_EXPR evaluate(unsigned int i) = 0;
 };
 

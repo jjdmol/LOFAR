@@ -49,7 +49,7 @@ public:
     using UnaryExpr<Scalar, Scalar>::argument0;
 
     FlagIf(const Expr<Scalar>::ConstPtr &arg0, T_PREDICATE predicate,
-        FlagType mask);
+        flag_t mask);
 
 protected:
     virtual const Scalar evaluateExpr(const Request &request, Cache &cache,
@@ -57,13 +57,13 @@ protected:
 
 private:
     T_PREDICATE itsPredicate;
-    FlagType    itsFlagMask;
+    flag_t      itsFlagMask;
 };
 
 // Helper function to create a FlagIf instance.
 template <typename T_PREDICATE>
 typename FlagIf<T_PREDICATE>::Ptr makeFlagIf(const Expr<Scalar>::ConstPtr &arg0,
-    T_PREDICATE predicate, FlagType mask = FlagType(1))
+    T_PREDICATE predicate, flag_t mask = flag_t(1))
 {
     return typename FlagIf<T_PREDICATE>::Ptr(new FlagIf<T_PREDICATE>(arg0,
         predicate, mask));
@@ -78,7 +78,7 @@ typename FlagIf<T_PREDICATE>::Ptr makeFlagIf(const Expr<Scalar>::ConstPtr &arg0,
 
 template <typename T_PREDICATE>
 FlagIf<T_PREDICATE>::FlagIf(const Expr<Scalar>::ConstPtr &arg0,
-    T_PREDICATE predicate, FlagType mask)
+    T_PREDICATE predicate, flag_t mask)
         :   UnaryExpr<Scalar, Scalar>(arg0),
             itsPredicate(predicate),
             itsFlagMask(mask)
@@ -95,7 +95,7 @@ const Scalar FlagIf<T_PREDICATE>::evaluateExpr(const Request &request,
     // Create result.
     Scalar result;
     // Pass through value.
-    result.setValueSet(arg0.getValueSet());
+    result.setElement(arg0.getElement());
 
     // Compute flags.
     const Matrix value = arg0.value();

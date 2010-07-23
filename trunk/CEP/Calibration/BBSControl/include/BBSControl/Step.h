@@ -30,6 +30,7 @@
 #include <BBSControl/Command.h>
 #include <BBSControl/Types.h>
 #include <BBSKernel/ModelConfig.h>
+
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
@@ -97,13 +98,15 @@ namespace LOFAR
       // Make \a parent the parent of this step.
       void setParent(const Step* parent) { itsParent = parent; }
 
-      // Return the selection of baselines for this step.
-      Baselines baselines() const { return itsBaselines; }
+      // Access to the baseline selection.
+      const string &baselines() const
+      { return itsBaselines; }
 
-      // Return which correlation products should be used for this step.
-      Correlation correlation() const { return itsCorrelation; }
+      // Access to the correlation selection.
+      const vector<string> &correlations() const
+      { return itsCorrelations; }
 
-      // Return the model configuration
+      // Return the model configuration.
       ModelConfig modelConfig() const { return itsModelConfig; }
 
       // @}
@@ -119,7 +122,7 @@ namespace LOFAR
     protected:
       // Default constructor. Construct an empty Step object and make it a
       // child of the Step object \a parent.
-      Step(const Step* parent = 0) : itsParent(parent) {}
+      Step(const Step* parent = 0) : itsParent(parent), itsBaselines("*&") {}
 
       // Construct a Step. \a name identifies the step name in the
       // parameter set. It does \e not uniquely identify the step \e
@@ -129,23 +132,20 @@ namespace LOFAR
 
     private:
       // Name of this step.
-      string                 itsName;
+      string            itsName;
 
       // Pointer to the parent of \c *this. All Step objects have a parent,
       // except the top-level Step object. The parent reference is used,
       // among other things, to initialize the data members of the child
       // object with those of its parent.
-      const Step*            itsParent;
+      const Step*       itsParent;
 
-      // Selection of baselines for this step.
-      Baselines              itsBaselines;
-
-      // Parameters describing which correlation products for which
-      // polarizations should be used for this step.
-      Correlation            itsCorrelation;
+      // Baseline and correlation selection.
+      string            itsBaselines;
+      vector<string>    itsCorrelations;
 
       // Model configuration options as specified in the parameter set file.
-      ModelConfig            itsModelConfig;
+      ModelConfig       itsModelConfig;
 
       // Write the contents of a Step to an output stream.
       friend ostream& operator<<(ostream&, const Step&);

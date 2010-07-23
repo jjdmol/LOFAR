@@ -45,10 +45,6 @@ public:
 
     GaussianSource(const SourceInfo &source, Scope &scope);
 
-//    Expr<Vector<4> >::ConstPtr getStokesVector() const;
-//    Expr<Vector<2> >::ConstPtr getDimensions() const;
-//    Expr<Scalar>::ConstPtr getOrientation() const;
-
     Expr<JonesMatrix>::Ptr coherence(const Expr<Vector<3> >::ConstPtr &uvwLHS,
         const Expr<Vector<3> >::ConstPtr &uvwRHS) const;
 
@@ -59,25 +55,6 @@ private:
 };
 
 // @}
-
-//// -------------------------------------------------------------------------- //
-//// - GaussianSource implementation                                          - //
-//// -------------------------------------------------------------------------- //
-
-//inline Expr<Vector<4> >::ConstPtr GaussianSource::getStokesVector() const
-//{
-//    return itsStokesVector;
-//}
-
-//inline Expr<Vector<2> >::ConstPtr GaussianSource::getDimensions() const
-//{
-//    return itsDimensions;
-//}
-
-//inline Expr<Scalar>::ConstPtr GaussianSource::getOrientation() const
-//{
-//    return itsOrientation;
-//}
 
 } // namespace BBS
 } // namespace LOFAR

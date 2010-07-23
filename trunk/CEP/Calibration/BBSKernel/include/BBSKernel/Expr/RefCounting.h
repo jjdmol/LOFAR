@@ -86,7 +86,6 @@ private:
 inline RefCountable::RefCountable()
     : itsRefCount(0)
 {
-//    LOG_DEBUG("RefCountable()");
 }
 
 inline RefCountable::RefCountable(const RefCountable&)
@@ -99,7 +98,6 @@ inline RefCountable::RefCountable(const RefCountable&)
 
 inline RefCountable::~RefCountable()
 {
-//    LOG_DEBUG("RefCountable destructor");
     ASSERT(itsRefCount == 0);
 }
 
@@ -139,8 +137,6 @@ inline RefCounted<T_IMPL>::RefCounted(T_IMPL *impl)
 template <typename T_IMPL>
 inline RefCounted<T_IMPL>::RefCounted(const RefCounted &other)
 {
-//    cout << "RefCounted copy constructor" << endl;
-
     itsImpl = other.itsImpl;
     if(itsImpl)
     {
@@ -161,8 +157,6 @@ template <typename T_IMPL>
 inline RefCounted<T_IMPL> &RefCounted<T_IMPL>::operator=
     (const RefCounted<T_IMPL> &rhs)
 {
-//    cout << "RefCounted assignment operator" << endl;
-
     if(this != &rhs)
     {
         if(itsImpl && itsImpl->downRefCount() == 0)

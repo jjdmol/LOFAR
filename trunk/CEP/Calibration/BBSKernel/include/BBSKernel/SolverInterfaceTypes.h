@@ -176,7 +176,7 @@ public:
 
     uint32          id;
     vector<double>  coeff;
-    uint32          result;
+    bool            ready;
     string          resultText;
     uint32          rank;
     double          chiSqr;

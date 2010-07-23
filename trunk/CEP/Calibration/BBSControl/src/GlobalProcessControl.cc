@@ -158,11 +158,11 @@ namespace LOFAR
         // Determine global time axis and verify consistency across all parts.
         itsGlobalTimeAxis = getGlobalTimeAxis();
 
-        // Apply TimeWindow selection.
+        // Apply TimeRange selection.
         itsTimeStart = 0;
         itsTimeEnd = itsGlobalTimeAxis->size() - 1;
 
-        const vector<string> &window = itsStrategy.getTimeWindow();
+        const vector<string> &window = itsStrategy.timeRange();
 
         casa::Quantity time;
         if(!window.empty() && casa::MVTime::read(time, window[0])) {
@@ -184,7 +184,7 @@ namespace LOFAR
         }
 
         itsChunkStart = itsTimeStart;
-        itsChunkSize = itsStrategy.getChunkSize();
+        itsChunkSize = itsStrategy.chunkSize();
         if(itsChunkSize == 0) {
           // If chunk size equals 0, take the whole observation as a single
           // chunk.
@@ -276,7 +276,6 @@ namespace LOFAR
             setState(NEXT_CHUNK_WAIT);
             break;
           }
-
 
           case NEXT_CHUNK_WAIT: {
             // Wait for a "result trigger" form the database. If trigger

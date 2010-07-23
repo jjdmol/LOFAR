@@ -42,11 +42,11 @@ namespace LOFAR
     using LOFAR::operator<<;
 
     //##--------   P u b l i c   m e t h o d s   --------##//
-      
+
     Strategy::Strategy(const ParameterSet& parset)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-  
+
       // Create a subset of \a aParSet, containing only the relevant keys for
       // the Strategy.
       ParameterSet ps(parset.makeSubset("Strategy."));
@@ -54,30 +54,26 @@ namespace LOFAR
       // Get the name of the input column
       itsInputColumn = ps.getString("InputColumn", "DATA");
 
-      // Selected stations.
-      itsStations = ps.getStringVector("Stations", vector<string>());
+      // Read data selection.
+      itsBaselines = ps.getString("Baselines", "*&");
+      itsCorrelations = ps.getStringVector("Correlations", vector<string>());
 
-      // Get the correlation product selection (ALL, AUTO, or CROSS)
-      itsCorrelation.selection = ps.getString("Correlation.Selection", "CROSS");
-      itsCorrelation.type = ps.getStringVector("Correlation.Type",
-        vector<string>());
-
-      // Get the time window.
-      itsTimeWindow = ps.getStringVector("TimeWindow", vector<string>());
+      // Get the time range.
+      itsTimeRange = ps.getStringVector("TimeRange", vector<string>());
 
       // Get the chunk size.
-      itsChunkSize = ps.getUint32("ChunkSize", 0);
+      itsChunkSize = ps.getUint32("ChunkSize");
 
       // Use a (global) solver?
       itsUseSolver = ps.getBool("UseSolver", false);
 
       // This strategy consists of the following steps.
       vector<string> steps(ps.getStringVector("Steps"));
-      
+
       if(steps.empty()) {
         THROW(BBSControlException, "Strategy contains no steps");
       }
-      
+
       // Try to create a step for each name in \a steps.
       for(size_t i = 0; i < steps.size(); ++i) {
         itsSteps.push_back(Step::create(steps[i], parset, 0));
@@ -92,15 +88,15 @@ namespace LOFAR
     void Strategy::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-    	os << indent << "Strategy:";
+      os << indent << "Strategy:";
       Indent indent0;
       os << endl << indent << "Input column: " << itsInputColumn
-        << endl << indent << "Stations: " << itsStations
-        << endl << indent << itsCorrelation
-        << endl << indent << "TimeWindow: " << itsTimeWindow
-        << endl << indent << "ChunkSize: " << itsChunkSize
+        << endl << indent << "Baselines: " << itsBaselines
+        << endl << indent << "Correlations: " << itsCorrelations
+        << endl << indent << "Time range: " << itsTimeRange
+        << endl << indent << "Chunk size: " << itsChunkSize
         << boolalpha
-        << endl << indent << "UseSolver: " << boolalpha << itsUseSolver
+        << endl << indent << "Use global solver: " << boolalpha << itsUseSolver
         << noboolalpha
         << endl << indent << "Steps:";
       Indent indent1;
@@ -114,7 +110,7 @@ namespace LOFAR
     ostream& operator<<(ostream& os, const Strategy& in)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      in.print(os); 
+      in.print(os);
       return os;
     }
 
@@ -151,16 +147,16 @@ namespace LOFAR
         itsCurrent.reset();
         return;
       }
-      
+
       shared_ptr<const Step> step(itsStack.top());
       itsStack.pop();
-      
+
       // If the current Step is not a leaf Step, push all its children in
       // reverse order (such that the first child will be popped from the stack
       // first).
       shared_ptr<const MultiStep> multi =
         dynamic_pointer_cast<const MultiStep>(step);
-      
+
       if(multi) {
         MultiStep::const_reverse_iterator revIt = multi->rbegin();
         MultiStep::const_reverse_iterator revItEnd = multi->rend();
@@ -168,7 +164,7 @@ namespace LOFAR
           itsStack.push(*revIt);
           ++revIt;
         }
-        
+
         // Recursive call to traverse to a leaf Step.
         this->operator++();
       } else {

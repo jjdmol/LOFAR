@@ -60,61 +60,50 @@ namespace LOFAR
       // Destructor.
       ~Strategy();
 
-      string getInputColumn() const
+      string inputColumn() const
       { return itsInputColumn; }
 
-      vector<string> getStations() const
-      { return itsStations; }
-      
-      Correlation getCorrelation() const
-      { return itsCorrelation; }
-      
-      vector<string> getTimeWindow() const
-      { return itsTimeWindow; }
-      
-      size_t getChunkSize() const
+      // Access to the baseline selection.
+      const string &baselines() const
+      { return itsBaselines; }
+
+      // Access to the correlation selection.
+      const vector<string> &correlations() const
+      { return itsCorrelations; }
+
+      vector<string> timeRange() const
+      { return itsTimeRange; }
+
+      size_t chunkSize() const
       { return itsChunkSize; }
-      
+
       bool useSolver() const
       { return itsUseSolver; }
-
-      // Write the contents of \c *this into the ParameterSet \a ps.
-//      void write(ParameterSet& ps) const;
-
-      // Read the contents from the ParameterSet \a ps into \c *this.
-//      void read(const ParameterSet& ps);
 
       // Print the contents of \c this into the output stream \a os.
       void print(ostream& os) const;
 
     private:
-//      shared_ptr<const Step> getRoot() const
-//      { return itsRoot; }
-
       // Name of the input column.
-      string                 itsInputColumn;
+      string                            itsInputColumn;
 
-      // Names of the stations to use. Names may contains wildcards, like \c *
-      // and \c ?.
-      vector<string>         itsStations;
-
-      // Correlation product selection.
-      Correlation            itsCorrelation;
+      // Baseline and correlation selection.
+      string                            itsBaselines;
+      vector<string>                    itsCorrelations;
 
       // Time window.
-      vector<string>         itsTimeWindow;
+      vector<string>                    itsTimeRange;
 
       // Size in timeslots of the block of data that will be processed as a
       // single chunk.
-      size_t                 itsChunkSize;
+      size_t                            itsChunkSize;
 
       // Connect to the global solver?
-      bool                   itsUseSolver;
+      bool                              itsUseSolver;
 
       // Root step of the strategy tree.
-//      shared_ptr<Step>  itsRoot;
       vector<shared_ptr<const Step> >   itsSteps;
-      
+
       friend class StrategyIterator;
     };
 
@@ -129,24 +118,24 @@ namespace LOFAR
       // empty Strategy. Allows easy incorporation of a StrategyIterator as a
       // class member.
       StrategyIterator() {}
-      
+
       // Create an StrategyIterator for the given Strategy.
       StrategyIterator(const Strategy &strategy);
-      
+
       // Is the iterator pointing at the end of the Strategy?
       bool atEnd() const;
-      
+
       // Return the current Step.
       shared_ptr<const Step> operator*() const;
-      
+
       // Advance the iterator (prefix).
       void operator++();
-      
+
     private:
       shared_ptr<const Step>          itsCurrent;
       stack<shared_ptr<const Step> >  itsStack;
     };
-   
+
     // @}
 
   } // namespace BBS
