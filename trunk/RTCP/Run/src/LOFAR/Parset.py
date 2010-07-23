@@ -411,6 +411,7 @@ class Parset(util.Parset.Parset):
 
       mask = mask.replace( "${MSNUMBER}", "%05d" % (self.getObsID(),) )
       mask = mask.replace( "${SUBBAND}", "*" )
+      mask = mask.replace( "${RAID}", "*" )
 
       return mask
 
