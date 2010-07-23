@@ -36,7 +36,6 @@
 
 
 #include <time.h>
-#include <sys/stat.h>
 
 #include <boost/format.hpp>
 using boost::format;
@@ -50,14 +49,6 @@ SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, unsigned ou
   const std::string logPrefix = str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputType % subband);
 
 #if defined HAVE_AIPSPP
-  if (outputType == 0) {
-    // create root directory of the observation tree
-    if (mkdir(parset.getMSBaseDir().c_str(), 0777) != 0 && errno != EEXIST) {
-      unsigned savedErrno = errno; // first argument below clears errno
-      throw SystemCallException(("mkdir " + parset.getMSBaseDir()).c_str(), savedErrno, THROW_ARGS);
-    }
-  }
-
   if (outputType == 0 && parset.outputCorrelatedData()) {
     MeasurementSetFormat myFormat(&parset, 512);
           
