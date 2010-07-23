@@ -7,6 +7,7 @@ from runParset import convertParsets
 from LOFAR.Parset import Parset
 from LOFAR.CommandClient import sendCommand
 from LOFAR.Locations import Locations
+from util.Commands import SyncCommand
 from threading import Thread
 from time import sleep
 import os
@@ -173,6 +174,29 @@ class ParsetTester:
        error( "********** Test '%s': Not OK **********" % (self.testname,) )
        return False
 
+  def cleanup(self):
+    # clean up logs and parsets
+    info( "Removing log files in %s." % (self.logdir,) )
+    SyncCommand("rm -f %s/run.CNProc.log %s/run.IONProc.log" % (self.logdir,self.logdir))
+
+    info( "Removing parset %s." % (self.parset.filename,) )
+    SyncCommand("rm -f %s" % (self.parset.filename,))
+
+    info( "Removing log directory %s." % (self.logdir,) )
+    SyncCommand("rmdir -f %s" % (self.logdir,))
+
+    # clean up data products
+    dataMask = self.parset.parseMask()
+    dataMaskParts = dataMask.split("/")
+    dataDir = "/".join(dataMaskParts[0:-1])
+
+    if len(dataMaskParts) >= 4: # safety
+      for storageNode in self.parset["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"]:
+        info( "Removing data in %s:%s" % (storageNode,dataDir) )
+        SyncCommand("ssh %s rm -rf %s" % (storageNode,dataDir))
+    else:    
+      warning( "Not removing data in %s:%s" % (storageNode,dataDir) )
+
 class ValidationError(Exception):
   pass
 
@@ -215,7 +239,7 @@ class NoErrors(LogValidator):
     if level in ["FATAL","ERROR","EXCEPTION"]:
       raise ValidationError( "Encountered an %s" % (level,) )
 
-def testParset( testname, partition, argstr, override_keys = {}, validators = [], ignore_errors = False ):
+def testParset( testname, partition, argstr, override_keys = {}, validators = [], ignore_errors = False, cleanup = True ):
   """ Test and validate a parset.
 
       testname:                 name of the test
@@ -229,7 +253,12 @@ def testParset( testname, partition, argstr, override_keys = {}, validators = []
   pt.readParset( argstr, override_keys )
   pt.runParset()
 
-  return pt.validate( validators or [NoErrors()], ignore_errors )
+  success = pt.validate( validators or [NoErrors()], ignore_errors )
+
+  if success and cleanup:
+    pt.cleanup()
+
+  return success  
 
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
