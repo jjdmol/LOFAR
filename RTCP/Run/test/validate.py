@@ -27,6 +27,11 @@ if __name__ == "__main__":
                         action = "store_true",
                         default = False,
                         help = "be quiet [%default]" )
+  opgroup.add_option( "-k", "--keeplogs",
+                        dest = "quiet",
+                        action = "store_true",
+                        default = False,
+                        help = "keep log files and data products of successful tests [%default]" )
   parser.add_option_group( opgroup )
 
   hwgroup = OptionGroup(parser, "Hardware" )
@@ -59,6 +64,29 @@ if __name__ == "__main__":
 			help = "IONProc executable [%default]" )
   parser.add_option_group( dirgroup )
 
+  testgroup = OptionGroup(parser, "Tests to run (or all tests if nothing is specified)")
+  testgroup.add_option( "--clock",
+  			dest = "clock",
+                        action = "store_true",
+                        default = False,
+			help = "run clock tests" )
+  testgroup.add_option( "--oneoutput",
+  			dest = "oneoutput",
+                        action = "store_true",
+                        default = False,
+			help = "run tests for individual outputs" )
+  testgroup.add_option( "--subbandrun",
+  			dest = "subbandrun",
+                        action = "store_true",
+                        default = False,
+			help = "run tests for varying number of subbands" )
+  testgroup.add_option( "--beamrun",
+  			dest = "beamrun",
+                        action = "store_true",
+                        default = False,
+			help = "run tests for varying number of beams" )
+  parser.add_option_group( testgroup )
+
   # parse arguments
   (options, args) = parser.parse_args()
 
@@ -73,44 +101,24 @@ if __name__ == "__main__":
 
   Locations.resolveAllPaths()
 
+  run_all = not reduce( lambda x,y: x or options[y.dest], testgroup.option_list, True )
+
   # clocks
-  for clock in [160,200]:
-    if not testParset( "%d MHz clock" % (clock,), options.partition, "parset=%s" % (parsetFile,), { "Observation.sampleClock": clock }, [NoErrors()] ):
-      sys.exit(1)
+  if run_all or options.clock:
+    for clock in [160,200]:
+      if not testParset( "%d MHz clock" % (clock,), options.partition, "parset=%s" % (parsetFile,), { "Observation.sampleClock": clock }, [NoErrors()], cleanup = not options.keeplogs ):
+        sys.exit(1)
 
   # individual outputs
-  for output in ["CorrelatedData","CoherentStokes","IncoherentStokes"]:
-    if not testParset( "output %s only" % (output,), options.partition, "parset=%s" % (parsetFile,), { "Observation.output%s" % (output,): True }, [NoErrors()] ):
-      sys.exit(1)
+  if run_all or options.oneoutput:
+    for output in ["CorrelatedData","CoherentStokes","IncoherentStokes"]:
+      if not testParset( "output %s only" % (output,), options.partition, "parset=%s" % (parsetFile,), { "Observation.output%s" % (output,): True }, [NoErrors()], cleanup = not options.keeplogs ):
+        sys.exit(1)
 
   # test 2 outputs, various number of subbands (for 2nd transpose)
-  nrBeams = 1
+  if run_all or options.subbandrun:
+    nrBeams = 1
 
-  for nrSubbands in [1,2,3,4,8,10,11,13,16,32,62,63,64,128,248]:
-    if nrSubbands < nrBeams:
-      continue
-
-    subbands =  [i     for i in xrange(0,nrSubbands)]
-    beams =     [0     for i in xrange(0,nrSubbands)]
-    rspboards = [i//62 for i in xrange(0,nrSubbands)]
-    rspslots  = [i%62  for i in xrange(0,nrSubbands)]
-
-    override_keys = {
-           "Observation.subbandList":    subbands,
-           "Observation.beamList":       beams,
-           "Observation.rspBoardList":   rspboards,
-           "Observation.rspSlotList":    rspslots,
-
-           "Observation.outputCorrelatedData": True,
-           "Observation.outputCoherentStokes": True,
-          }
-
-    if not testParset( "%d subbands" % (nrSubbands,), options.partition, "parset=%s" % (parsetFile,), override_keys, [NoErrors()] ):
-      sys.exit(1)
-
-
-  # test 2 outputs, various number of subbands (for 2nd transpose), multiple beams
-  for nrBeams in [2,4,7,9]:
     for nrSubbands in [1,2,3,4,8,10,11,13,16,32,62,63,64,128,248]:
       if nrSubbands < nrBeams:
         continue
@@ -128,13 +136,38 @@ if __name__ == "__main__":
 
              "Observation.outputCorrelatedData": True,
              "Observation.outputCoherentStokes": True,
-             "Observation.nrPencils":            nrBeams - 1,
             }
 
-      for n in xrange(0,nrBeams):
-        override_keys["Observation.Pencil[%d].angle1" % (n,)] = 0
-        override_keys["Observation.Pencil[%d].angle2" % (n,)] = 0
-
-      if not testParset( "%d subbands" % (nrSubbands,), options.partition, "parset=%s" % (parsetFile,), override_keys, [NoErrors()] ):
+      if not testParset( "%d subbands" % (nrSubbands,), options.partition, "parset=%s" % (parsetFile,), override_keys, [NoErrors()], cleanup = not options.keeplogs ):
         sys.exit(1)
+
+  # test 2 outputs, various number of subbands (for 2nd transpose), multiple beams
+  if run_all or options.beamrun:
+    for nrBeams in [2,4,7,9]:
+      for nrSubbands in [1,2,3,4,8,10,11,13,16,32,62,63,64,128,248]:
+        if nrSubbands < nrBeams:
+          continue
+
+        subbands =  [i     for i in xrange(0,nrSubbands)]
+        beams =     [0     for i in xrange(0,nrSubbands)]
+        rspboards = [i//62 for i in xrange(0,nrSubbands)]
+        rspslots  = [i%62  for i in xrange(0,nrSubbands)]
+
+        override_keys = {
+               "Observation.subbandList":    subbands,
+               "Observation.beamList":       beams,
+               "Observation.rspBoardList":   rspboards,
+               "Observation.rspSlotList":    rspslots,
+
+               "Observation.outputCorrelatedData": True,
+               "Observation.outputCoherentStokes": True,
+               "Observation.nrPencils":            nrBeams - 1,
+              }
+
+        for n in xrange(0,nrBeams):
+          override_keys["Observation.Pencil[%d].angle1" % (n,)] = 0
+          override_keys["Observation.Pencil[%d].angle2" % (n,)] = 0
+
+        if not testParset( "%d beams %d subbands" % (nrBeams,nrSubbands), options.partition, "parset=%s" % (parsetFile,), override_keys, [NoErrors()], cleanup = not options.keeplogs ):
+          sys.exit(1)
 
