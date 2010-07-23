@@ -183,7 +183,7 @@ class ParsetTester:
     SyncCommand("rm -f %s" % (self.parset.filename,))
 
     info( "Removing log directory %s." % (self.logdir,) )
-    SyncCommand("rmdir -f %s" % (self.logdir,))
+    SyncCommand("rmdir %s" % (self.logdir,))
 
     # clean up data products
     dataMask = self.parset.parseMask()
