@@ -228,11 +228,11 @@ class RFIStatistics {
 		void addPolarisations(std::map<double, class AmplitudeBin> &amplitudes, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
 		void addStokes(std::map<double, class AmplitudeBin> &amplitudes, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
 
-		void saveChannels(std::map<double, class ChannelInfo> &channels, const std::string &filename);
-		void saveTimesteps(std::map<double, class TimestepInfo> &timesteps, const std::string &filename);
-		void saveAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, const std::string &filename);
+		void saveChannels(const std::map<double, class ChannelInfo> &channels, const std::string &filename);
+		void saveTimesteps(const std::map<double, class TimestepInfo> &timesteps, const std::string &filename);
+		void saveAmplitudes(const std::map<double, class AmplitudeBin> &amplitudes, const std::string &filename);
 		void saveBaselines(const std::string &filename);
-		void saveSubbands(std::map<double, class ChannelInfo> &channels, const std::string &filename);
+		void saveSubbands(const std::map<double, class ChannelInfo> &channels, const std::string &filename);
 		
 		double getCentralAmplitude(double amplitude)
 		{

@@ -611,7 +611,7 @@ void RFIStatistics::addFeatures(std::map<double, class AmplitudeBin> &amplitudes
 	}
 }
 
-void RFIStatistics::saveChannels(std::map<double, class ChannelInfo> &channels, const std::string &filename)
+void RFIStatistics::saveChannels(const std::map<double, class ChannelInfo> &channels, const std::string &filename)
 {
 	std::ofstream file(filename.c_str());
 	file << "frequency\ttotalCount\ttotalAmplitude\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n" << std::setprecision(14);
@@ -632,7 +632,7 @@ void RFIStatistics::saveChannels(std::map<double, class ChannelInfo> &channels, 
 	file.close();
 }
 
-void RFIStatistics::saveTimesteps(std::map<double, class TimestepInfo> &timesteps, const std::string &filename)
+void RFIStatistics::saveTimesteps(const std::map<double, class TimestepInfo> &timesteps, const std::string &filename)
 {
 	std::ofstream file(filename.c_str());
 	file << "timestep\ttotalCount\ttotalAmplitude\trfiCount\trfiAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n" << std::setprecision(14);
@@ -653,7 +653,7 @@ void RFIStatistics::saveTimesteps(std::map<double, class TimestepInfo> &timestep
 	file.close();
 }
 
-void RFIStatistics::saveSubbands(std::map<double, class ChannelInfo> &channels, const std::string &filename)
+void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &channels, const std::string &filename)
 {
 	std::ofstream file(filename.c_str());
 	file << "subband\ts-frequency\te-frequency\ttotalCount\ttotalAmplitude\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n" << std::setprecision(14);
@@ -708,32 +708,35 @@ void RFIStatistics::saveSubbands(std::map<double, class ChannelInfo> &channels, 
 		std::cout << "Warning: " << (index%255) << " rows were not part of a sub-band (channels were not dividable by 256)" << std::endl;
 }
 
-void RFIStatistics::saveAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, const std::string &filename)
+void RFIStatistics::saveAmplitudes(const std::map<double, class AmplitudeBin> &amplitudes, const std::string &filename)
 {
 	std::ofstream file(filename.c_str());
-	file << "centr-amplitude\tlog-centr-amplitude\tcount\trfiCount\tbroadbandRfiCount\tlineRfiCount\tfeatureAvgCount\tfeatureIntCount\tfeatureMaxCount\txx\txy\tyx\tyy\txxRfi\txyRfi\tyxRfi\tyyRfi\n" << std::setprecision(14);
+	file << "centr-amplitude\tlog-centr-amplitude\tcount\trfiCount\tbroadbandRfiCount\tlineRfiCount\tfeatureAvgCount\tfeatureIntCount\tfeatureMaxCount\txx\txy\tyx\tyy\txxRfi\txyRfi\tyxRfi\tyyRfi\tstokesQ\tstokesU\tstokesV\n" << std::setprecision(14);
 	for(std::map<double, class AmplitudeBin>::const_iterator i=amplitudes.begin();i!=amplitudes.end();++i)
 	{
 		const AmplitudeBin &a = i->second;
 		double logAmp = a.centralAmplitude > 0.0 ? log10(a.centralAmplitude) : 0.0;
 		file
-			<< a.centralAmplitude << "\t"
-			<< logAmp << "\t"
-			<< a.count << "\t"
-			<< a.rfiCount << "\t"
-			<< a.broadbandRfiCount << "\t"
-			<< a.lineRfiCount << "\t"
-			<< a.featureAvgCount<< "\t"
-			<< a.featureIntCount << "\t"
-			<< a.featureMaxCount << "\t"
-			<< a.xxCount << "\t"
-			<< a.xyCount << "\t"
-			<< a.yxCount << "\t"
-			<< a.yyCount << "\t"
-			<< a.xxRfiCount << "\t"
-			<< a.xyRfiCount << "\t"
-			<< a.yxRfiCount << "\t"
-			<< a.yyRfiCount << "\n";
+			<< a.centralAmplitude << '\t'
+			<< logAmp << '\t'
+			<< a.count << '\t'
+			<< a.rfiCount << '\t'
+			<< a.broadbandRfiCount << '\t'
+			<< a.lineRfiCount << '\t'
+			<< a.featureAvgCount<< '\t'
+			<< a.featureIntCount << '\t'
+			<< a.featureMaxCount << '\t'
+			<< a.xxCount << '\t'
+			<< a.xyCount << '\t'
+			<< a.yxCount << '\t'
+			<< a.yyCount << '\t'
+			<< a.xxRfiCount << '\t'
+			<< a.xyRfiCount << '\t'
+			<< a.yxRfiCount << '\t'
+			<< a.yyRfiCount << '\t'
+			<< a.stokesQCount << '\t'
+			<< a.stokesUCount << '\t'
+			<< a.stokesVCount << '\n';
 	}
 	file.close();
 }
@@ -763,9 +766,12 @@ void RFIStatistics::saveBaselines(const std::string &filename)
 				<< b.rfiAmplitude << "\t"
 				<< b.broadbandRfiAmplitude << "\t"
 				<< b.lineRfiAmplitude << "\n";
-			std::stringstream s;
-			s << "baseline-" << b.antenna1 << 'x' << b.antenna2 << '-';
-			b.baselineStatistics->saveWithoutBaselines(s.str());
+			if(b.baselineStatistics != 0)
+			{
+				std::stringstream s;
+				s << "baseline-" << b.antenna1 << 'x' << b.antenna2 << '-';
+				b.baselineStatistics->saveWithoutBaselines(s.str());
+			}
 		}
 	}
 	file.close();

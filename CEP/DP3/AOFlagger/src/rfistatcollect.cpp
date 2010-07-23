@@ -110,7 +110,10 @@ void readAmplitudes(RFIStatistics &statistics, string &filename, bool autocorrel
 		>> amplitude.xxRfiCount
 		>> amplitude.xyRfiCount
 		>> amplitude.yxRfiCount
-		>> amplitude.yyRfiCount;
+		>> amplitude.yyRfiCount
+		>> amplitude.stokesQCount
+		>> amplitude.stokesUCount
+		>> amplitude.stokesVCount;
 		statistics.Add(amplitude, autocorrelation);
 		if(amplitude.count/amplitude.centralAmplitude > maxCount)
 		{
@@ -284,7 +287,11 @@ int main(int argc, char **argv)
 			}
 			else if(filename.find("counts-baselines.txt")!=string::npos)
 				readBaselines(statistics, filename);
-			else
+			else if(filename.find("counts-subbands-auto.txt")!=string::npos)
+				; // skip
+			else if(filename.find("counts-subbands-cross.txt")!=string::npos)
+				; // skip
+			else	
 				throw runtime_error("Could not determine type of file.");
 		}
 		fitGaus(statistics);
