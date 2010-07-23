@@ -70,8 +70,8 @@ void Cache::clear(Policy policy)
         }
     }
 
-    LOG_DEBUG_STR("Cleaned " << n << " cached results for policy "
-        << policyAsString(policy));
+//    LOG_DEBUG_STR("Cleaned " << n << " cached results for policy "
+//        << policyAsString(policy));
 }
 
 void Cache::clearStats()

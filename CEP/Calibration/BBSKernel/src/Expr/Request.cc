@@ -37,9 +37,7 @@ Request::Request()
 
 Request::Request(const Grid &grid)
     :   itsId(theirId++),
-//        itsBoundingBox(grid.getBoundingBox()),
         itsDomain(grid.getBoundingBox())
-//        itsActiveGrid(0)
 {
     append(grid);
 }
@@ -56,18 +54,6 @@ void Request::append(const Grid &grid)
 
     itsGrid.push_back(grid);
 }
-
-//void Request::pushGrid() const
-//{
-//    ++itsActiveGrid;
-//    DBGASSERT(itsActiveGrid < itsGrid.size());
-//}
-
-//void Request::popGrid() const
-//{
-//    DBGASSERT(itsActiveGrid > 0);
-//    --itsActiveGrid;
-//}
 
 } //# namespace BBS
 } //# namespace LOFAR

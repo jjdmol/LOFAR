@@ -53,8 +53,8 @@ public:
     const FlagArray flags() const;
 
     virtual unsigned int size() const = 0;
-    virtual const ValueSet getValueSet(unsigned int i0) const = 0;
-    virtual void setValueSet(unsigned int i0, const ValueSet &set) = 0;
+    virtual const Element getElement(unsigned int i0) const = 0;
+    virtual void setElement(unsigned int i0, const Element &set) = 0;
 
 private:
     FlagArray   itsFlags;
@@ -76,18 +76,18 @@ public:
     void assign(const View &value);
     void assign(const PValueKey &key, const View &value);
 
-    const ValueSet getValueSet() const;
-    void setValueSet(const ValueSet &set);
+    const Element getElement() const;
+    void setElement(const Element &set);
 
     // @{
-    // Support for flat ValueSet indexing.
+    // Support for flat Element indexing.
     unsigned int size() const;
-    const ValueSet getValueSet(unsigned int i0) const;
-    void setValueSet(unsigned int i0, const ValueSet &set);
+    const Element getElement(unsigned int i0) const;
+    void setElement(unsigned int i0, const Element &set);
     // @}
 
 private:
-    ValueSet    itsValueSet;
+    Element itsElement;
 };
 
 // Default template parameters are more or less useless if the template has
@@ -115,14 +115,14 @@ public:
     void assign(unsigned int i0, const PValueKey &key, const Matrix &value);
 
     // @{
-    // Support for flat ValueSet indexing.
+    // Support for flat Element indexing.
     unsigned int size() const;
-    const ValueSet getValueSet(unsigned int i0) const;
-    void setValueSet(unsigned int i0, const ValueSet &set);
+    const Element getElement(unsigned int i0) const;
+    void setElement(unsigned int i0, const Element &set);
     // @}
 
 private:
-    ValueSet    itsValueSet[LENGTH];
+    Element itsElement[LENGTH];
 };
 
 class JonesMatrix: public ExprValue
@@ -143,18 +143,18 @@ public:
     void assign(const View &value);
     void assign(const PValueKey &key, const View &value);
 
-    const ValueSet getValueSet(unsigned int i0, unsigned int i1) const;
-    void setValueSet(unsigned int i0, unsigned int i1, const ValueSet &set);
+    const Element getElement(unsigned int i0, unsigned int i1) const;
+    void setElement(unsigned int i0, unsigned int i1, const Element &set);
 
-    // Support for flat ValueSet indexing.
+    // Support for flat Element indexing.
     // @{
     unsigned int size() const;
-    const ValueSet getValueSet(unsigned int i0) const;
-    void setValueSet(unsigned int i0, const ValueSet &set);
+    const Element getElement(unsigned int i0) const;
+    void setElement(unsigned int i0, const Element &set);
     // @}
 
 private:
-    ValueSet    itsValueSet[4];
+    Element itsElement[4];
 };
 
 // @}
@@ -184,32 +184,32 @@ inline const FlagArray ExprValue::flags() const
 
 inline const Matrix Scalar::value() const
 {
-    return itsValueSet.value();
+    return itsElement.value();
 }
 
 inline const Matrix Scalar::value(const PValueKey &key) const
 {
-    return itsValueSet.value(key);
+    return itsElement.value(key);
 }
 
 inline void Scalar::assign(const Matrix &value)
 {
-    itsValueSet.assign(value);
+    itsElement.assign(value);
 }
 
 inline void Scalar::assign(const PValueKey &key, const Matrix &value)
 {
-    itsValueSet.assign(key, value);
+    itsElement.assign(key, value);
 }
 
-inline const ValueSet Scalar::getValueSet() const
+inline const Element Scalar::getElement() const
 {
-    return itsValueSet;
+    return itsElement;
 }
 
-inline void Scalar::setValueSet(const ValueSet &set)
+inline void Scalar::setElement(const Element &set)
 {
-    itsValueSet = set;
+    itsElement = set;
 }
 
 inline unsigned int Scalar::size() const
@@ -218,23 +218,23 @@ inline unsigned int Scalar::size() const
 }
 
 #if defined(DEBUG) || defined(LOFAR_DEBUG)
-inline const ValueSet Scalar::getValueSet(unsigned int i0) const
+inline const Element Scalar::getElement(unsigned int i0) const
 #else
-inline const ValueSet Scalar::getValueSet(unsigned int) const
+inline const Element Scalar::getElement(unsigned int) const
 #endif
 {
     DBGASSERT(i0 == 0);
-    return itsValueSet;
+    return itsElement;
 }
 
 #if defined(DEBUG) || defined(LOFAR_DEBUG)
-inline void Scalar::setValueSet(unsigned int i0, const ValueSet &set)
+inline void Scalar::setElement(unsigned int i0, const Element &set)
 #else
-inline void Scalar::setValueSet(unsigned int, const ValueSet &set)
+inline void Scalar::setElement(unsigned int, const Element &set)
 #endif
 {
     DBGASSERT(i0 == 0);
-    itsValueSet = set;
+    itsElement = set;
 }
 
 // -------------------------------------------------------------------------- //
@@ -245,7 +245,7 @@ template <unsigned int LENGTH>
 inline const Matrix Vector<LENGTH>::value(unsigned int i0) const
 {
     DBGASSERT(i0 < LENGTH);
-    return itsValueSet[i0].value();
+    return itsElement[i0].value();
 }
 
 template <unsigned int LENGTH>
@@ -253,7 +253,7 @@ inline const Matrix Vector<LENGTH>::value(unsigned int i0, const PValueKey &key)
     const
 {
     DBGASSERT(i0 < LENGTH);
-    return itsValueSet[i0].value(key);
+    return itsElement[i0].value(key);
 }
 
 template <unsigned int LENGTH>
@@ -262,7 +262,7 @@ const typename Vector<LENGTH>::View Vector<LENGTH>::view() const
     View view;
     for(unsigned int i = 0; i < LENGTH; ++i)
     {
-        view.assign(i, itsValueSet[i].value());
+        view.assign(i, itsElement[i].value());
     }
 
     return view;
@@ -278,7 +278,7 @@ const typename Vector<LENGTH>::View Vector<LENGTH>::view(const PValueKey &key)
     for(unsigned int i = 0; i < LENGTH; ++i)
     {
         bool found;
-        const Matrix tmp = itsValueSet[i].value(key, found);
+        const Matrix tmp = itsElement[i].value(key, found);
         view.assign(i, tmp, found);
     }
 
@@ -289,7 +289,7 @@ template <unsigned int LENGTH>
 inline void Vector<LENGTH>::assign(unsigned int i0, const Matrix &value)
 {
     DBGASSERT(i0 < LENGTH);
-    itsValueSet[i0].assign(value);
+    itsElement[i0].assign(value);
 }
 
 template <unsigned int LENGTH>
@@ -297,7 +297,7 @@ inline void Vector<LENGTH>::assign(unsigned int i0, const PValueKey &key,
     const Matrix &value)
 {
     DBGASSERT(i0 < LENGTH);
-    itsValueSet[i0].assign(key, value);
+    itsElement[i0].assign(key, value);
 }
 
 template <unsigned int LENGTH>
@@ -307,7 +307,7 @@ void Vector<LENGTH>::assign(const View &value)
     {
         if(value.bound(i))
         {
-            itsValueSet[i].assign(value(i));
+            itsElement[i].assign(value(i));
         }
     }
 }
@@ -319,7 +319,7 @@ void Vector<LENGTH>::assign(const PValueKey &key, const View &value)
     {
         if(value.bound(i))
         {
-            itsValueSet[i].assign(key, value(i));
+            itsElement[i].assign(key, value(i));
         }
     }
 }
@@ -331,17 +331,17 @@ inline unsigned int Vector<LENGTH>::size() const
 }
 
 template <unsigned int LENGTH>
-inline const ValueSet Vector<LENGTH>::getValueSet(unsigned int i0) const
+inline const Element Vector<LENGTH>::getElement(unsigned int i0) const
 {
     DBGASSERT(i0 < LENGTH);
-    return itsValueSet[i0];
+    return itsElement[i0];
 }
 
 template <unsigned int LENGTH>
-inline void Vector<LENGTH>::setValueSet(unsigned int i0, const ValueSet &set)
+inline void Vector<LENGTH>::setElement(unsigned int i0, const Element &set)
 {
     DBGASSERT(i0 < LENGTH);
-    itsValueSet[i0] = set;
+    itsElement[i0] = set;
 }
 
 // -------------------------------------------------------------------------- //
@@ -351,42 +351,42 @@ inline void Vector<LENGTH>::setValueSet(unsigned int i0, const ValueSet &set)
 inline const Matrix JonesMatrix::value(unsigned int i0, unsigned int i1) const
 {
     DBGASSERT(i0 < 2 && i1 < 2);
-    return itsValueSet[i0 * 2 + i1].value();
+    return itsElement[i0 * 2 + i1].value();
 }
 
 inline const Matrix JonesMatrix::value(unsigned int i0, unsigned int i1,
     const PValueKey &key) const
 {
     DBGASSERT(i0 < 2 && i1 < 2);
-    return itsValueSet[i0 * 2 + i1].value(key);
+    return itsElement[i0 * 2 + i1].value(key);
 }
 
 inline void JonesMatrix::assign(unsigned int i0, unsigned int i1,
     const Matrix &value)
 {
     DBGASSERT(i0 < 2 && i1 < 2);
-    itsValueSet[i0 * 2 + i1].assign(value);
+    itsElement[i0 * 2 + i1].assign(value);
 }
 
 inline void JonesMatrix::assign(unsigned int i0, unsigned int i1,
     const PValueKey &key, const Matrix &value)
 {
     DBGASSERT(i0 < 2 && i1 < 2);
-    itsValueSet[i0 * 2 + i1].assign(key, value);
+    itsElement[i0 * 2 + i1].assign(key, value);
 }
 
-inline const ValueSet JonesMatrix::getValueSet(unsigned int i0, unsigned int i1)
+inline const Element JonesMatrix::getElement(unsigned int i0, unsigned int i1)
     const
 {
     DBGASSERT(i0 < 2 && i1 < 2);
-    return itsValueSet[i0 * 2 + i1];
+    return itsElement[i0 * 2 + i1];
 }
 
-inline void JonesMatrix::setValueSet(unsigned int i0, unsigned int i1,
-    const ValueSet &set)
+inline void JonesMatrix::setElement(unsigned int i0, unsigned int i1,
+    const Element &set)
 {
     DBGASSERT(i0 < 2 && i1 < 2);
-    itsValueSet[i0 * 2 + i1] = set;
+    itsElement[i0 * 2 + i1] = set;
 }
 
 inline unsigned int JonesMatrix::size() const
@@ -394,16 +394,16 @@ inline unsigned int JonesMatrix::size() const
     return 4;
 }
 
-inline const ValueSet JonesMatrix::getValueSet(unsigned int i0) const
+inline const Element JonesMatrix::getElement(unsigned int i0) const
 {
     DBGASSERT(i0 < 4);
-    return itsValueSet[i0];
+    return itsElement[i0];
 }
 
-inline void JonesMatrix::setValueSet(unsigned int i0, const ValueSet &set)
+inline void JonesMatrix::setElement(unsigned int i0, const Element &set)
 {
     DBGASSERT(i0 < 4);
-    itsValueSet[i0] = set;
+    itsElement[i0] = set;
 }
 
 } //# namespace BBS

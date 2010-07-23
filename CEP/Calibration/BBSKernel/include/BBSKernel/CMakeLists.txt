@@ -7,25 +7,30 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 
 # Install header files.
 install(FILES
+  BaselineMask.h
+  Correlation.h
+  CorrelationMask.h
   ElementBeamExpr.h
-  Equator.h
   Evaluator.h
   Exceptions.h
   ExprSet.h
+  IndexedSequence.h
   Instrument.h
   IonosphereExpr.h
   Measurement.h
   MeasurementAIPS.h
-  Model.h
+  MeasurementExpr.h
+  MeasurementExprLOFAR.h
   ModelConfig.h
   ParmManager.h
   ParmProxy.h
   Solver.h
   SolverInterfaceTypes.h
   Types.h
-  VisData.h
+  UVWFlagger.h
+  VisBuffer.h
   VisDimensions.h
-  VisExpr.h
+  VisEquator.h
   VisSelection.h
   DESTINATION include/${PACKAGE_NAME})
 install(FILES
@@ -35,6 +40,7 @@ install(FILES
   Expr/Cache.h
   Expr/CachePolicy.h
   Expr/ConditionNumber.h
+  Expr/Element.h
   Expr/EquatorialCentroid.h
   Expr/Expr.h
   Expr/ExprId.h
@@ -51,6 +57,7 @@ install(FILES
   Expr/GaussianCoherence.h
   Expr/GaussianSource.h
   Expr/HamakerDipole.h
+  Expr/LinearToCircularRL.h
   Expr/Literal.h
   Expr/LMN.h
   Expr/Matrix.h
@@ -80,6 +87,5 @@ install(FILES
   Expr/StationShift.h
   Expr/StationUVW.h
   Expr/TileArrayFactor.h
-  Expr/ValueSet.h
   Expr/YatawattaDipole.h
   DESTINATION include/${PACKAGE_NAME}/Expr)

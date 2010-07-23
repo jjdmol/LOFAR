@@ -77,9 +77,6 @@ ParmProxy::Ptr ParmManagerImpl::get(unsigned int category, const string &name)
 
     if(status.second)
     {
-//        cout << "Fetching parameter from db: " << name << " [" << parmId << "]"
-//            << endl;
-
         // This is the first reference to this parameter.
         const ParmId internalId = itsParmSet.addParm(parmDb, name);
         Parm parm(itsParmCache, internalId);

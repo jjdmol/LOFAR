@@ -1,4 +1,4 @@
-//# NextChunkCommand.cc: 
+//# NextChunkCommand.cc:
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -33,7 +33,7 @@
 
 namespace LOFAR
 {
-  namespace BBS 
+  namespace BBS
   {
 
     // Register NextChunkCommand with the CommandFactory. Use an anonymous
@@ -85,7 +85,7 @@ namespace LOFAR
     void NextChunkCommand::write(ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      
+
       ps.replace(KVpair("Freq.Start", itsFreqRange.first));
       ps.replace(KVpair("Freq.End", itsFreqRange.second));
       ps.replace(KVpair("Time.Start", itsTimeRange.first));
@@ -96,11 +96,11 @@ namespace LOFAR
     void NextChunkCommand::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      
-      itsFreqRange = make_pair(ps.getDouble("Freq.Start", 0.0),
-          ps.getDouble("Freq.End", 0.0));
-      itsTimeRange = make_pair(ps.getDouble("Time.Start", 0.0),
-          ps.getDouble("Time.End", 0.0));
+
+      itsFreqRange = make_pair(ps.getDouble("Freq.Start"),
+        ps.getDouble("Freq.End"));
+      itsTimeRange = make_pair(ps.getDouble("Time.Start"),
+        ps.getDouble("Time.End"));
     }
 
   } //# namespace BBS

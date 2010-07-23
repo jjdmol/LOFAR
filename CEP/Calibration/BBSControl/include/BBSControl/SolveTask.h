@@ -40,7 +40,6 @@ namespace LOFAR
   namespace BBS
   {
     //# Forward declarations
-//    class KernelIdMsg;
     class ProcessIdMsg;
     class CoeffIndexMsg;
     class CoefficientMsg;
@@ -78,18 +77,13 @@ namespace LOFAR
       bool run();
 
     private:
-
-//      virtual void handle(const KernelIdMsg &message);
       virtual void handle(const ProcessIdMsg &message);
       virtual void handle(const CoeffIndexMsg &message);
       virtual void handle(const CoeffMsg &message);
       virtual void handle(const EquationMsg &message);
       virtual void handle(const ChunkDoneMsg &message);
 
-//       unsigned int nrKernels() const { return itsNrKernels; }
-
       void setState(State s);
-//       State state() const { return itsState; }
       const string& showState() const;
 
       // Compose error message and thow SolveTaskException.
@@ -106,10 +100,7 @@ namespace LOFAR
         N_MsgTypes
       };
 
-//       // Number of kernels in this group
-//       unsigned int itsNrKernels;
       vector<KernelConnection> itsKernels;
-//       vector< pair<KernelConnection, MsgType> > itsKernels;
 
       // State that this kernel group is in.
       State itsState;
@@ -135,12 +126,10 @@ namespace LOFAR
       // to work correctly once we allow kernels to send message of different
       // types interleaved. For the time being this will certainly not be the
       // case, but it is something to keep in the back of our minds.
-//      set<KernelId> itsKernelMessageReceived;
       set<KernelIndex> itsKernelMessageReceived;
 
       // The solver associated with this kernel group.
       Solver itsSolver;
-
     };
 
     // @}

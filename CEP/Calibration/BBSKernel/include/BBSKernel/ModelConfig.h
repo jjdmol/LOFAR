@@ -75,34 +75,6 @@ private:
     casa::Path      itsElementPath;
 };
 
-//// Configuration options specific to Hamaker's dipole beam model.
-//class HamakerDipoleConfig
-//{
-//public:
-//    HamakerDipoleConfig();
-//    HamakerDipoleConfig(const string &file);
-
-//    const string &getCoeffFile() const;
-
-//private:
-//    string  itsCoeffFile;
-//};
-
-//// Configuration options specific to Yatawatta's dipole beam model.
-//class YatawattaDipoleConfig
-//{
-//public:
-//    YatawattaDipoleConfig();
-//    YatawattaDipoleConfig(const string &theta, const string &phi);
-
-//    const string &getModuleTheta() const;
-//    const string &getModulePhi() const;
-
-//private:
-//    string  itsModuleTheta;
-//    string  itsModulePhi;
-//};
-
 // Configuration options specific to Mevius' minimal ionospheric model.
 class IonosphereConfig
 {
@@ -133,13 +105,6 @@ private:
 class ModelConfig
 {
 public:
-//    enum BeamType
-//    {
-//        UNKNOWN_BEAM_TYPE,
-//        HAMAKER_DIPOLE,
-//        YATAWATTA_DIPOLE
-//    };
-
     ModelConfig();
 
     bool usePhasors() const;
@@ -160,12 +125,6 @@ public:
     bool useBeam() const;
     void setBeamConfig(const BeamConfig &config);
     const BeamConfig &getBeamConfig() const;
-
-//    BeamType getBeamType() const;
-//    void setBeamConfig(const HamakerDipoleConfig &config);
-//    void setBeamConfig(const YatawattaDipoleConfig &config);
-//    void getBeamConfig(HamakerDipoleConfig &config) const;
-//    void getBeamConfig(YatawattaDipoleConfig &config) const;
     void clearBeamConfig();
 
     bool useIonosphere() const;
@@ -178,8 +137,8 @@ public:
     const FlaggerConfig &getFlaggerConfig() const;
     void clearFlaggerConfig();
 
-    bool useExperimentalCaching() const;
-    void setExperimentalCaching(bool value = true);
+    bool useCache() const;
+    void setCache(bool value = true);
 
     void setSources(const vector<string> &sources);
     const vector<string> &getSources() const;
@@ -195,15 +154,11 @@ private:
         BEAM,
         IONOSPHERE,
         FLAGGER,
-        EXPERIMENTAL_CACHING,
+        CACHE,
         N_ModelOptions
     };
 
     bool                itsModelOptions[N_ModelOptions];
-
-//    BeamType                itsBeamType;
-//    HamakerDipoleConfig     itsConfigBeamHamakerDipole;
-//    YatawattaDipoleConfig   itsConfigBeamYatawattaDipole;
 
     BeamConfig          itsConfigBeam;
     IonosphereConfig    itsConfigIonosphere;
@@ -212,8 +167,6 @@ private:
     vector<string>      itsSources;
 };
 
-//ostream &operator<<(ostream &out, const HamakerDipoleConfig &obj);
-//ostream &operator<<(ostream &out, const YatawattaDipoleConfig &obj);
 ostream &operator<<(ostream &out, const FlaggerConfig &obj);
 ostream &operator<<(ostream &out, const IonosphereConfig &obj);
 ostream &operator<<(ostream &out, const BeamConfig &obj);

@@ -28,7 +28,6 @@ namespace LOFAR
   namespace BBS
   {
     //# Forward declarations
-//    class KernelIdMsg;
     class ProcessIdMsg;
     class CoeffIndexMsg;
     class MergedCoeffIndexMsg;
@@ -55,7 +54,6 @@ namespace LOFAR
     {
     public:
       virtual ~KernelMessageHandler() {}
-//      virtual void handle(const KernelIdMsg &message) = 0;
       virtual void handle(const ProcessIdMsg &message) = 0;
       virtual void handle(const CoeffIndexMsg &message) = 0;
       virtual void handle(const CoeffMsg &message) = 0;

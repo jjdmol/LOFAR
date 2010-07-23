@@ -93,49 +93,6 @@ const string &BeamConfig::getElementTypeAsString() const
     return theirElementTypeName[itsElementType];
 }
 
-//// -------------------------------------------------------------------------- //
-//// - HamakerDipoleConfig implementation                                     - //
-//// -------------------------------------------------------------------------- //
-
-//HamakerDipoleConfig::HamakerDipoleConfig()
-//{
-//}
-
-//HamakerDipoleConfig::HamakerDipoleConfig(const string &file)
-//    :   itsCoeffFile(file)
-//{
-//}
-
-//const string &HamakerDipoleConfig::getCoeffFile() const
-//{
-//    return itsCoeffFile;
-//}
-
-//// -------------------------------------------------------------------------- //
-//// - YatawattaDipoleConfig implementation                                   - //
-//// -------------------------------------------------------------------------- //
-
-//YatawattaDipoleConfig::YatawattaDipoleConfig()
-//{
-//}
-
-//YatawattaDipoleConfig::YatawattaDipoleConfig(const string &theta,
-//    const string &phi)
-//    :   itsModuleTheta(theta),
-//        itsModulePhi(phi)
-//{
-//}
-
-//const string &YatawattaDipoleConfig::getModuleTheta() const
-//{
-//    return itsModuleTheta;
-//}
-
-//const string &YatawattaDipoleConfig::getModulePhi() const
-//{
-//    return itsModulePhi;
-//}
-
 // -------------------------------------------------------------------------- //
 // - IonosphereConfig implementation                                        - //
 // -------------------------------------------------------------------------- //
@@ -179,7 +136,6 @@ double FlaggerConfig::getThreshold() const
 // -------------------------------------------------------------------------- //
 
 ModelConfig::ModelConfig()
-//    :   itsBeamType(UNKNOWN_BEAM_TYPE)
 {
     fill(itsModelOptions, itsModelOptions + N_ModelOptions, false);
 }
@@ -214,35 +170,15 @@ bool ModelConfig::useBeam() const
     return itsModelOptions[BEAM];
 }
 
-//ModelConfig::BeamType ModelConfig::getBeamType() const
-//{
-//    return itsBeamType;
-//}
-
 const BeamConfig &ModelConfig::getBeamConfig() const
 {
     return itsConfigBeam;
 }
 
-//void ModelConfig::getBeamConfig(HamakerDipoleConfig &config) const
-//{
-//    config = itsConfigBeamHamakerDipole;
-//}
-
-//void ModelConfig::getBeamConfig(YatawattaDipoleConfig &config) const
-//{
-//    config = itsConfigBeamYatawattaDipole;
-//}
-
 bool ModelConfig::useIonosphere() const
 {
     return itsModelOptions[IONOSPHERE];
 }
-
-//void ModelConfig::getIonosphereConfig(IonosphereConfig &config) const
-//{
-//    config = itsConfigIonosphere;
-//}
 
 const IonosphereConfig &ModelConfig::getIonosphereConfig() const
 {
@@ -254,19 +190,14 @@ bool ModelConfig::useFlagger() const
     return itsModelOptions[FLAGGER];
 }
 
-//void ModelConfig::getFlaggerConfig(FlaggerConfig &config) const
-//{
-//    config = itsConfigFlagger;
-//}
-
 const FlaggerConfig &ModelConfig::getFlaggerConfig() const
 {
     return itsConfigFlagger;
 }
 
-bool ModelConfig::useExperimentalCaching() const
+bool ModelConfig::useCache() const
 {
-    return itsModelOptions[EXPERIMENTAL_CACHING];
+    return itsModelOptions[CACHE];
 }
 
 void ModelConfig::setPhasors(bool value)
@@ -306,28 +237,6 @@ void ModelConfig::clearBeamConfig()
     itsModelOptions[BEAM] = false;
 }
 
-//void ModelConfig::setBeamConfig(const HamakerDipoleConfig &config)
-//{
-//    itsModelOptions[BEAM] = true;
-//    itsBeamType = HAMAKER_DIPOLE;
-//    itsConfigBeamHamakerDipole = config;
-//}
-
-//void ModelConfig::setBeamConfig(const YatawattaDipoleConfig &config)
-//{
-//    itsModelOptions[BEAM] = true;
-//    itsBeamType = YATAWATTA_DIPOLE;
-//    itsConfigBeamYatawattaDipole = config;
-//}
-
-//void ModelConfig::clearBeamConfig()
-//{
-//    itsConfigBeamHamakerDipole = HamakerDipoleConfig();
-//    itsConfigBeamYatawattaDipole = YatawattaDipoleConfig();
-//    itsBeamType = UNKNOWN_BEAM_TYPE;
-//    itsModelOptions[BEAM] = false;
-//}
-
 void ModelConfig::setIonosphereConfig(const IonosphereConfig &config)
 {
     itsModelOptions[IONOSPHERE] = true;
@@ -352,9 +261,9 @@ void ModelConfig::clearFlaggerConfig()
     itsModelOptions[FLAGGER] = false;
 }
 
-void ModelConfig::setExperimentalCaching(bool value)
+void ModelConfig::setCache(bool value)
 {
-    itsModelOptions[EXPERIMENTAL_CACHING] = value;
+    itsModelOptions[CACHE] = value;
 }
 
 void ModelConfig::setSources(const vector<string> &sources)
@@ -370,21 +279,6 @@ const vector<string> &ModelConfig::getSources() const
 // -------------------------------------------------------------------------- //
 // - Non-member functions                                                   - //
 // -------------------------------------------------------------------------- //
-
-//ostream &operator<<(ostream &out, const HamakerDipoleConfig &obj)
-//{
-//    out << indent << "Type: HamakerDipole" << endl
-//        << indent << "Coefficient file: " << obj.getCoeffFile();
-//    return out;
-//}
-
-//ostream &operator<<(ostream &out, const YatawattaDipoleConfig &obj)
-//{
-//    out << indent << "Type: YatawattaDipole" << endl
-//        << indent << "Module theta: " << obj.getModuleTheta() << endl
-//        << indent << "Module phi: " << obj.getModulePhi();
-//    return out;
-//}
 
 ostream &operator<<(ostream &out, const FlaggerConfig &obj)
 {
@@ -430,27 +324,6 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << noboolalpha;
     if(obj.useBeam())
     {
-//        Indent id;
-
-//        switch(obj.getType())
-//        {
-//        case ModelConfig::HAMAKER_DIPOLE:
-//            {
-//                HamakerDipoleConfig config;
-//                obj.getBeamConfig(config);
-//                out << endl << config;
-//                break;
-//            }
-//        case ModelConfig::YATAWATTA_DIPOLE:
-//            {
-//                YatawattaDipoleConfig config;
-//                obj.getBeamConfig(config);
-//                out << endl << config;
-//                break;
-//            }
-//        default:
-//            out << endl << indent << "Type: <unknown>";
-//        }
         Indent id;
         out << endl << obj.getBeamConfig();
     }
@@ -459,9 +332,6 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.useIonosphere() << noboolalpha;
     if(obj.useIonosphere())
     {
-//        IonosphereConfig config;
-//        obj.getIonosphereConfig(config);
-
         Indent id;
         out << endl << obj.getIonosphereConfig();
     }
@@ -470,15 +340,12 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.useFlagger() << noboolalpha;
     if(obj.useFlagger())
     {
-//        FlaggerConfig config;
-//        obj.getFlaggerConfig(config);
-
         Indent id;
         out << endl << obj.getFlaggerConfig();
     }
 
-    out << endl << indent << "Experimental caching enabled: " << boolalpha
-        << obj.useExperimentalCaching() << noboolalpha;
+    out << endl << indent << "Cache enabled: " << boolalpha << obj.useCache()
+        << noboolalpha;
 
     out << endl << indent << "Sources: " << obj.getSources();
     return out;

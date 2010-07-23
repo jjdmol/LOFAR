@@ -39,9 +39,8 @@ using std::pair;
 // \addtogroup BBSKernel
 // @{
 
-typedef fcomplex                sample_t;
+// Type used to store visibility flags.
 typedef uint8                   flag_t;
-typedef uint8                   tslot_flag_t;
 typedef pair<uint32, uint32>    baseline_t;
 
 enum AxisName
@@ -56,6 +55,24 @@ enum ParmCategory
     INSTRUMENT,
     SKY,
     N_ParmCategory
+};
+
+template <typename T_VALUE>
+class Interval
+{
+public:
+    Interval()
+    {
+    }
+
+    Interval(T_VALUE start, T_VALUE end)
+        :   start(start),
+            end(end)
+    {
+    }
+
+    T_VALUE start;
+    T_VALUE end;
 };
 
 // @}

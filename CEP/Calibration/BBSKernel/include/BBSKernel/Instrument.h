@@ -26,6 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_map.h>
+#include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 

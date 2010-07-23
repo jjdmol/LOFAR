@@ -1,4 +1,5 @@
-//# ExprVisData.cc:
+//# ExprVisData.cc: Make visibility data from an observation available for use
+//# in an expression tree.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -31,184 +32,141 @@ namespace LOFAR
 namespace BBS
 {
 
-ExprVisData::ExprVisData(const VisData::Ptr &chunk, const baseline_t &baseline)
+ExprVisData::ExprVisData(const VisBuffer::Ptr &chunk, const baseline_t &baseline,
+    Correlation::Type element00, Correlation::Type element01,
+    Correlation::Type element10, Correlation::Type element11)
     :   itsChunk(chunk)
 {
-    const VisDimensions &dims = itsChunk->getDimensions();
-    itsBaselineIndex = dims.getBaselineIndex(baseline);
+    itsBaseline = chunk->baselines().index(baseline);
+    ASSERT(itsBaseline < chunk->nBaselines());
+
+    setCorrelation(0, element00);
+    setCorrelation(1, element01);
+    setCorrelation(2, element10);
+    setCorrelation(3, element11);
+}
+
+void ExprVisData::setCorrelation(size_t element, Correlation::Type correlation)
+{
+    const size_t index = itsChunk->correlations().index(correlation);
+
+    itsCorr[element] = index;
+    itsCorrMask[element] = Correlation::isDefined(correlation)
+        && index < itsChunk->nCorrelations();
 }
 
 const JonesMatrix ExprVisData::evaluateExpr(const Request &request,
-    Cache &cache, unsigned int grid) const
+    Cache&, unsigned int grid) const
 {
     vector<pair<size_t, size_t> > axisMapping[2];
+    makeAxisMapping(request[grid][FREQ], itsChunk->grid()[FREQ],
+        back_inserter(axisMapping[FREQ]));
+    makeAxisMapping(request[grid][TIME], itsChunk->grid()[TIME],
+        back_inserter(axisMapping[TIME]));
 
-    const VisDimensions &dims = itsChunk->getDimensions();
-    const Grid &visGrid = dims.getGrid();
-    axisMapping[FREQ] = makeAxisMapping(request[grid][FREQ], visGrid[FREQ]);
-    axisMapping[TIME] = makeAxisMapping(request[grid][TIME], visGrid[TIME]);
-
-    FlagArray flags00(copyFlags(request[grid], "XX", axisMapping));
-    FlagArray flags01(copyFlags(request[grid], "XY", axisMapping));
-    FlagArray flags10(copyFlags(request[grid], "YX", axisMapping));
-    FlagArray flags11(copyFlags(request[grid], "YY", axisMapping));
+    FlagArray flags00(copyFlags(request[grid], 0, axisMapping));
+    FlagArray flags01(copyFlags(request[grid], 1, axisMapping));
+    FlagArray flags10(copyFlags(request[grid], 2, axisMapping));
+    FlagArray flags11(copyFlags(request[grid], 3, axisMapping));
 
     JonesMatrix result;
     result.setFlags(flags00 | flags01 | flags10 | flags11);
-    result.assign(0, 0, copyData(request[grid], "XX", axisMapping));
-    result.assign(0, 1, copyData(request[grid], "XY", axisMapping));
-    result.assign(1, 0, copyData(request[grid], "YX", axisMapping));
-    result.assign(1, 1, copyData(request[grid], "YY", axisMapping));
+    result.assign(0, 0, copyData(request[grid], 0, axisMapping));
+    result.assign(0, 1, copyData(request[grid], 1, axisMapping));
+    result.assign(1, 0, copyData(request[grid], 2, axisMapping));
+    result.assign(1, 1, copyData(request[grid], 3, axisMapping));
 
     return result;
 }
 
-vector<pair<size_t, size_t> >
-ExprVisData::makeAxisMapping(const Axis::ShPtr &from, const Axis::ShPtr &to)
-    const
-{
-    vector<pair<size_t, size_t> > mapping;
-
-    const double overlapStart = std::max(from->start(), to->start());
-    const double overlapEnd = std::min(from->end(), to->end());
-
-    if(overlapStart >= overlapEnd || casa::near(overlapStart, overlapEnd))
-    {
-        return mapping;
-    }
-
-    const size_t start = from->locate(overlapStart);
-    const size_t end = from->locate(overlapEnd, false, start);
-
-    // Intervals are inclusive by convention.
-    const size_t nCells = end - start + 1;
-    mapping.reserve(nCells);
-
-    // Special case for the first cell: cell center may be located outside of
-    // the overlap between the "from" and "to" axis.
-    size_t target = 0;
-    double center = from->center(start);
-    if(center > overlapStart || casa::near(center, overlapStart))
-    {
-        target = to->locate(center);
-        mapping.push_back(make_pair(start, target));
-    }
-
-    for(size_t i = start + 1; i < end; ++i)
-    {
-        target = to->locate(from->center(i), true, target);
-        mapping.push_back(make_pair(i, target));
-    }
-
-    if(nCells > 1)
-    {
-        // Special case for the last cell: cell center may be located outside of
-        // the overlap between the "from" and "to" axis.
-        center = from->center(end);
-        if(center < overlapEnd && !casa::near(center, overlapEnd))
-        {
-            target = to->locate(center, false, target);
-            mapping.push_back(make_pair(end, target));
-        }
-    }
-
-    return mapping;
-}
-
-FlagArray ExprVisData::copyFlags(const Grid &grid, const string &product,
+FlagArray ExprVisData::copyFlags(const Grid &grid, size_t element,
     const vector<pair<size_t, size_t> > (&mapping)[2]) const
 {
+    if(!itsCorrMask[element])
+    {
+        return FlagArray(flag_t(0));
+    }
+
     FlagArray result;
 
-    const VisDimensions &dims = itsChunk->getDimensions();
-    if(dims.hasPolarization(product))
+    // Get polarization product index.
+    const size_t cr = itsCorr[element];
+
+    // Allocate space for the result and initialize to 1.
+    const size_t nFreq = grid[FREQ]->size();
+    const size_t nTime = grid[TIME]->size();
+    result = FlagArray(nFreq, nTime, flag_t(1));
+
+    FlagArray::iterator begin = result.begin();
+
+    // Insanely complicated boost::multi_array types...
+    typedef boost::multi_array<flag_t, 4>::index_range FRange;
+    typedef boost::multi_array<flag_t, 4>::const_array_view<2>::type FSlice;
+
+    // Copy flags.
+    FSlice flags =
+        itsChunk->flags[boost::indices[itsBaseline][FRange()][FRange()][cr]];
+
+    for(unsigned int t = 0; t < mapping[TIME].size(); ++t)
     {
-        // Get polarization product index.
-        const unsigned int productIndex = dims.getPolarizationIndex(product);
+        const pair<size_t, size_t> &tmap = mapping[TIME][t];
+        FlagArray::iterator offset = begin + tmap.first * nFreq;
 
-        // Allocate space for the result and initialize to 1.
-        const unsigned int nChannels = grid[FREQ]->size();
-        const unsigned int nTimeslots = grid[TIME]->size();
-        result = FlagArray(nChannels, nTimeslots, FlagType(1));
-
-        FlagArray::iterator begin = result.begin();
-
-        // Insanely complicated boost::multi_array types...
-        typedef boost::multi_array<FlagType, 4>::index_range FRange;
-        typedef boost::multi_array<FlagType, 4>::const_array_view<2>::type
-            FView;
-
-        // Copy flags.
-        FView flags = itsChunk->vis_flag[boost::indices[itsBaselineIndex]
-            [FRange()][FRange()][productIndex]];
-        for(unsigned int t = 0; t < mapping[TIME].size(); ++t)
+        for(unsigned int f = 0; f < mapping[FREQ].size(); ++f)
         {
-            const pair<size_t, size_t> &tmap = mapping[TIME][t];
-            FlagArray::iterator offset = begin + tmap.first * nChannels;
-
-            // TODO: Check for tslot_flag and skip if true?
-            for(unsigned int f = 0; f < mapping[FREQ].size(); ++f)
-            {
-                const pair<size_t, size_t> &fmap = mapping[FREQ][f];
-                *(offset + fmap.first) = flags[tmap.second][fmap.second];
-            }
+            const pair<size_t, size_t> &fmap = mapping[FREQ][f];
+            *(offset + fmap.first) = flags[tmap.second][fmap.second];
         }
-    }
-    else
-    {
-        result = FlagArray(FlagType(0));
     }
 
     return result;
 }
 
-Matrix ExprVisData::copyData(const Grid &grid, const string &product,
+Matrix ExprVisData::copyData(const Grid &grid, size_t element,
     const vector<pair<size_t, size_t> > (&mapping)[2]) const
 {
+    if(!itsCorrMask[element])
+    {
+        return Matrix(dcomplex(0.0, 0.0));
+    }
+
     Matrix result;
 
-    const VisDimensions &dims = itsChunk->getDimensions();
-    if(dims.hasPolarization(product))
+    // Get polarization product index.
+    const size_t cr = itsCorr[element];
+
+    // Allocate space for the result and initialize to 0.0 + 0.0i.
+    const size_t nFreq = grid[FREQ]->size();
+    const size_t nTime = grid[TIME]->size();
+    result = Matrix(dcomplex(0.0, 0.0), nFreq, nTime);
+
+    // Get pointers to the data.
+    double *re = 0, *im = 0;
+    result.dcomplexStorage(re, im);
+
+    // Insanely complicated boost::multi_array types...
+    typedef boost::multi_array<dcomplex, 4>::index_range SRange;
+    typedef boost::multi_array<dcomplex, 4>::const_array_view<2>::type
+        SSlice;
+
+    // Copy visibility data.
+    SSlice samples =
+        itsChunk->samples[boost::indices[itsBaseline][SRange()][SRange()][cr]];
+
+    for(unsigned int t = 0; t < mapping[TIME].size(); ++t)
     {
-        // Get polarization product index.
-        const unsigned int productIndex = dims.getPolarizationIndex(product);
+        const pair<size_t, size_t> &tmap = mapping[TIME][t];
+        double *destRe = re + tmap.first * nFreq;
+        double *destIm = im + tmap.first * nFreq;
 
-        // Allocate space for the result and initialize to 0.0 + 0.0i.
-        const unsigned int nChannels = grid[FREQ]->size();
-        const unsigned int nTimeslots = grid[TIME]->size();
-        result = Matrix(dcomplex(0.0, 0.0), nChannels, nTimeslots);
-
-        // Get pointers to the data.
-        double *re = 0, *im = 0;
-        result.dcomplexStorage(re, im);
-
-        // Insanely complicated boost::multi_array types...
-        typedef boost::multi_array<sample_t, 4>::index_range DRange;
-        typedef boost::multi_array<sample_t, 4>::const_array_view<2>::type
-            DView;
-
-        // Copy visibility data.
-        DView data = itsChunk->vis_data[boost::indices[itsBaselineIndex]
-            [DRange()][DRange()][productIndex]];
-        for(unsigned int t = 0; t < mapping[TIME].size(); ++t)
+        for(unsigned int f = 0; f < mapping[FREQ].size(); ++f)
         {
-            const pair<size_t, size_t> &tmap = mapping[TIME][t];
-            double *destRe = re + tmap.first * nChannels;
-            double *destIm = im + tmap.first * nChannels;
+            const pair<size_t, size_t> &fmap = mapping[FREQ][f];
+            const dcomplex sample = samples[tmap.second][fmap.second];
 
-            for(unsigned int f = 0; f < mapping[FREQ].size(); ++f)
-            {
-                const pair<size_t, size_t> &fmap = mapping[FREQ][f];
-                const sample_t sample = data[tmap.second][fmap.second];
-
-                destRe[fmap.first] = real(sample);
-                destIm[fmap.first] = imag(sample);
-            }
+            destRe[fmap.first] = real(sample);
+            destIm[fmap.first] = imag(sample);
         }
-    }
-    else
-    {
-        result = Matrix(dcomplex(0.0, 0.0));
     }
 
     return result;

@@ -29,15 +29,7 @@
 
 #include <casa/Arrays/Slicer.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-
-namespace casa
-{
-    class ROMSObservationColumns;
-    class ROMSAntennaColumns;
-    class ROMSSpWindowColumns;
-    class ROMSPolarizationColumns;
-    class ROMSFieldColumns;
-};
+#include <tables/Tables/ExprNodeSet.h>
 
 namespace LOFAR
 {
@@ -56,21 +48,37 @@ public:
         unsigned int idField = 0,
         unsigned int idDataDescription = 0);
 
-    virtual VisDimensions getDimensions(const VisSelection &selection) const;
+    // \name Measurement interface implementation
+    // These methods form an implementation of the Measurement interface. See
+    // that class for function documentation.
+    //
+    // @{
+    virtual VisDimensions dimensions(const VisSelection &selection) const;
 
-    virtual VisData::Ptr read(const VisSelection &selection,
-        const string &column = "DATA", bool readUVW = true) const;
+    virtual VisBuffer::Ptr read(const VisSelection &selection = VisSelection(),
+        const string &column = "DATA") const;
 
-    virtual void write(const VisSelection &selection, VisData::Ptr buffer,
-        const string &column = "CORRECTED_DATA", bool writeFlags = true);
+    virtual void write(VisBuffer::Ptr buffer,
+        const VisSelection &selection = VisSelection(),
+        const string &column = "CORRECTED_DATA", bool writeFlags = true,
+        flag_t flagMask = ~flag_t(0));
+
+    virtual BaselineMask asMask(const string &filter) const;
+    // @}
 
 private:
     void initInstrument();
-    void initPhaseCenter();
+    void initPhaseReference();
     void initDimensions();
+
+    bool hasColumn(const string &column) const;
+    void addDataColumn(const string &column);
 
     casa::Table getTableSelection(const casa::Table &table,
         const VisSelection &selection) const;
+    casa::TableExprNode getBaselineExpr(const casa::Table &table,
+        const string &pattern) const;
+    BaselineMask getBaselineMask(const VisSelection &selection) const;
     casa::Slicer getCellSlicer(const VisSelection &selection) const;
     VisDimensions getDimensionsImpl(const casa::Table tab_selection,
         const casa::Slicer slicer) const;

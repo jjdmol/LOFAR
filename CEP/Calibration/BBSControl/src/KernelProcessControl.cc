@@ -48,7 +48,7 @@
 #include <BBSControl/RefitStep.h>
 
 #include <Common/ParameterSet.h>
-#include <Common/Exceptions.h>
+#include <Common/Exception.h>
 
 #include <Blob/BlobStreamable.h>
 
@@ -67,11 +67,13 @@
 #include <BBSControl/LocalSolveController.h>
 #include <BBSControl/GlobalSolveController.h>
 #include <BBSKernel/MeasurementAIPS.h>
+#include <BBSKernel/MeasurementExprLOFAR.h>
 #include <BBSKernel/ParmManager.h>
 #include <BBSKernel/Evaluator.h>
-#include <BBSKernel/Equator.h>
+#include <BBSKernel/VisEquator.h>
 #include <BBSKernel/Solver.h>
-#include <BBSKernel/VisExpr.h>
+#include <BBSKernel/UVWFlagger.h>
+#include <BBSKernel/Exceptions.h>
 
 namespace LOFAR
 {
@@ -91,7 +93,9 @@ namespace LOFAR
     //##----   P u b l i c   m e t h o d s   ----##//
     KernelProcessControl::KernelProcessControl()
       :   ProcessControl(),
-          itsState(UNDEFINED)
+          itsState(UNDEFINED),
+          itsChunkCount(-1),
+          itsStepCount(0)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
@@ -178,8 +182,8 @@ namespace LOFAR
         }
 
         // Try to register as kernel.
-        const VisDimensions &dims = itsMeasurement->getDimensions();
-        if(!itsCalSession->registerAsKernel(filesys, path, dims.getGrid())) {
+        if(!itsCalSession->registerAsKernel(filesys, path,
+          itsMeasurement->grid())) {
           LOG_ERROR("Registration denied.");
           return false;
         }
@@ -224,7 +228,7 @@ namespace LOFAR
 
             if(command.second) {
               LOG_DEBUG_STR("Executing a " << command.second->type()
-                << "command: " << endl << *(command.second));
+                << " command:" << endl << *(command.second));
 
               // Try to execute the command.
               CommandResult result = command.second->accept(*this);
@@ -235,15 +239,15 @@ namespace LOFAR
               // If an error occurred, log a descriptive message and exit.
               if(result.is(CommandResult::ERROR)) {
                 LOG_ERROR_STR("Error executing " << command.second->type()
-                    << " command: " << result.message());
+                  << " command: " << result.message());
                 return false;
               }
 
               // If the command was a finalize command, log that we are done
               // and exit.
               if(command.second->type() == "Finalize") {
-                  LOG_INFO("Run completed succesfully.");
-                  clearRunState();
+                LOG_INFO("Run completed succesfully.");
+                clearRunState();
               }
             }
             else {
@@ -324,6 +328,10 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
+      // Reset counters.
+      itsChunkCount = -1;
+      itsStepCount = 0;
+
       // Get the index of this kernel process.
       itsKernelIndex = itsCalSession->getIndex();
 
@@ -352,28 +360,16 @@ namespace LOFAR
         itsSolver->sendObject(ProcessIdMsg(itsCalSession->getProcessId()));
       }
 
-      itsInputColumn = command.getInputColumn();
-
-//      // Create model expression.
-//      itsModel.reset(new Model(itsMeasurement->getInstrument(), *itsSourceDb,
-//        itsMeasurement->getPhaseCenter()));
+      itsInputColumn = command.inputColumn();
 
       // Initialize the chunk selection.
-      if(!command.getStations().empty()) {
-        itsChunkSelection.setStations(command.getStations());
+      if(command.correlations().size() > 0)
+      {
+        return CommandResult(CommandResult::ERROR, "Reading a subset of the"
+          " available correlations is not supported yet.");
       }
 
-      Correlation correlation = command.getCorrelation();
-      if(!correlation.type.empty()) {
-        itsChunkSelection.setPolarizations(correlation.type);
-      }
-
-      if(correlation.selection == "AUTO") {
-        itsChunkSelection.setBaselineFilter(VisSelection::AUTO);
-      }
-      else if(correlation.selection == "CROSS") {
-        itsChunkSelection.setBaselineFilter(VisSelection::CROSS);
-      }
+      itsChunkSelection.setBaselineFilter(command.baselines());
 
       return CommandResult(CommandResult::OK, "Ok.");
     }
@@ -391,8 +387,9 @@ namespace LOFAR
       // Check preconditions. Currently it is assumed that each chunk spans the
       // frequency axis of the _entire_ (meta) measurement.
       const pair<double, double> freqRangeCmd(command.getFreqRange());
-      const VisDimensions &dimsObs = itsMeasurement->getDimensions();
-      const pair<double, double> freqRangeObs(dimsObs.getFreqRange());
+      const pair<double, double> freqRangeObs =
+        itsMeasurement->grid()[FREQ]->range();
+
       ASSERT((freqRangeObs.first >= freqRangeCmd.first
         || casa::near(freqRangeObs.first, freqRangeCmd.first))
         && (freqRangeObs.second <= freqRangeCmd.second
@@ -422,16 +419,20 @@ namespace LOFAR
       LOG_DEBUG("Reading chunk...");
       try
       {
-        itsChunk = itsMeasurement->read(itsChunkSelection, itsInputColumn,
-          true);
+        itsChunk = itsMeasurement->read(itsChunkSelection, itsInputColumn);
       }
       catch(Exception &ex)
       {
-        return CommandResult(CommandResult::ERROR, "Failed to read chunk.");
+        return CommandResult(CommandResult::ERROR, "Failed to read chunk ["
+          + ex.message() + "]");
       }
 
       // Display information about chunk.
-      LOG_INFO_STR("Chunk dimensions: " << endl << itsChunk->getDimensions());
+      LOG_INFO_STR("Chunk dimensions: " << endl << itsChunk->dimensions());
+
+      // Update counters.
+      ++itsChunkCount;
+      itsStepCount = 0;
 
       return CommandResult(CommandResult::OK, "Ok.");
     }
@@ -458,36 +459,51 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-      // Parse visibility selection.
-      vector<baseline_t> baselines;
-      vector<string> products;
+      // Log current chunk and step number.
+      LOG_DEBUG_STR("@ chunk " << itsChunkCount << " step " << itsStepCount
+        << " type " << command.type() << " name " << command.fullName());
+      ++itsStepCount;
 
-      if(!(parseBaselineSelection(baselines, command)
-        && parseProductSelection(products, command))) {
-        return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
-          " selection.");
-      }
+      // Determine selected baselines and correlations.
+      BaselineMask blMask = itsMeasurement->asMask(command.baselines());
+      CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
-      Model::Ptr model(new Model(itsMeasurement->getInstrument(), *itsSourceDb,
-        itsMeasurement->getPhaseCenter(), itsMeasurement->getReferenceFreq()));
+      MeasurementExprLOFAR::Ptr model;
 
-      try {
-        model->makeForwardExpr(command.modelConfig(), itsChunk, baselines);
-      } catch(Exception &ex) {
+      try
+      {
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsChunk, blMask));
+      }
+      catch(Exception &ex)
+      {
         return CommandResult(CommandResult::ERROR, "Unable to construct the"
-            " model expression.");
+          " model expression [" + ex.message() + "]");
       }
 
       // Compute simulated visibilities.
       Evaluator evaluator(itsChunk, model);
-      evaluator.setSelection(baselines, products);
+      evaluator.setBaselineMask(blMask);
+      evaluator.setCorrelationMask(crMask);
+
+      if(evaluator.isSelectionEmpty())
+      {
+        LOG_WARN_STR("No visibility data selected for processing.");
+      }
+
       evaluator.process();
 
+      // Dump processing statistics to the log.
+      ostringstream oss;
+      evaluator.dumpStats(oss);
+      LOG_DEBUG(oss.str());
+
       // Optionally write the simulated visibilities.
-      if(!command.outputColumn().empty()) {
-        itsMeasurement->write(itsChunkSelection, itsChunk,
-          command.outputColumn(), command.writeFlags());
+      if(!command.outputColumn().empty())
+      {
+        itsMeasurement->write(itsChunk, itsChunkSelection,
+            command.outputColumn(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -497,37 +513,52 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-      // Parse visibility selection.
-      vector<baseline_t> baselines;
-      vector<string> products;
+      // Log current chunk and step number.
+      LOG_DEBUG_STR("@ chunk " << itsChunkCount << " step " << itsStepCount
+        << " type " << command.type() << " name " << command.fullName());
+      ++itsStepCount;
 
-      if(!(parseBaselineSelection(baselines, command)
-        && parseProductSelection(products, command))) {
-        return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
-          " selection.");
-      }
+      // Determine selected baselines and correlations.
+      BaselineMask blMask = itsMeasurement->asMask(command.baselines());
+      CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
-      Model::Ptr model(new Model(itsMeasurement->getInstrument(), *itsSourceDb,
-        itsMeasurement->getPhaseCenter(), itsMeasurement->getReferenceFreq()));
+      MeasurementExprLOFAR::Ptr model;
 
-      try {
-        model->makeForwardExpr(command.modelConfig(), itsChunk, baselines);
-      } catch(Exception &ex) {
+      try
+      {
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsChunk, blMask));
+      }
+      catch(Exception &ex)
+      {
         return CommandResult(CommandResult::ERROR, "Unable to construct the"
-            " model expression.");
+          " model expression [" + ex.message() + "]");
       }
 
-      // Compute & subtract simulated visibilities.
+      // Compute simulated visibilities.
       Evaluator evaluator(itsChunk, model);
-      evaluator.setSelection(baselines, products);
+      evaluator.setBaselineMask(blMask);
+      evaluator.setCorrelationMask(crMask);
       evaluator.setMode(Evaluator::SUBTRACT);
+
+      if(evaluator.isSelectionEmpty())
+      {
+        LOG_WARN_STR("No visibility data selected for processing.");
+      }
+
       evaluator.process();
 
+      // Dump processing statistics to the log.
+      ostringstream oss;
+      evaluator.dumpStats(oss);
+      LOG_DEBUG(oss.str());
+
       // Optionally write the simulated visibilities.
-      if(!command.outputColumn().empty()) {
-        itsMeasurement->write(itsChunkSelection, itsChunk,
-          command.outputColumn(), command.writeFlags());
+      if(!command.outputColumn().empty())
+      {
+        itsMeasurement->write(itsChunk, itsChunkSelection,
+          command.outputColumn(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -537,37 +568,52 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-      // Parse visibility selection.
-      vector<baseline_t> baselines;
-      vector<string> products;
+      // Log current chunk and step number.
+      LOG_DEBUG_STR("@ chunk " << itsChunkCount << " step " << itsStepCount
+        << " type " << command.type() << " name " << command.fullName());
+      ++itsStepCount;
 
-      if(!(parseBaselineSelection(baselines, command)
-        && parseProductSelection(products, command))) {
-        return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
-          " selection.");
-      }
+      // Determine selected baselines and correlations.
+      BaselineMask blMask = itsMeasurement->asMask(command.baselines());
+      CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
-      Model::Ptr model(new Model(itsMeasurement->getInstrument(), *itsSourceDb,
-        itsMeasurement->getPhaseCenter(), itsMeasurement->getReferenceFreq()));
+      MeasurementExprLOFAR::Ptr model;
 
-      try {
-        model->makeForwardExpr(command.modelConfig(), itsChunk, baselines);
-      } catch(Exception &ex) {
+      try
+      {
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsChunk, blMask));
+      }
+      catch(Exception &ex)
+      {
         return CommandResult(CommandResult::ERROR, "Unable to construct the"
-            " model expression.");
+          " model expression [" + ex.message() + "]");
       }
 
-      // Compute & add simulated visibilities.
+      // Compute simulated visibilities.
       Evaluator evaluator(itsChunk, model);
-      evaluator.setSelection(baselines, products);
+      evaluator.setBaselineMask(blMask);
+      evaluator.setCorrelationMask(crMask);
       evaluator.setMode(Evaluator::ADD);
+
+      if(evaluator.isSelectionEmpty())
+      {
+        LOG_WARN_STR("No visibility data selected for processing.");
+      }
+
       evaluator.process();
 
+      // Dump processing statistics to the log.
+      ostringstream oss;
+      evaluator.dumpStats(oss);
+      LOG_DEBUG(oss.str());
+
       // Optionally write the simulated visibilities.
-      if(!command.outputColumn().empty()) {
-        itsMeasurement->write(itsChunkSelection, itsChunk,
-          command.outputColumn(), command.writeFlags());
+      if(!command.outputColumn().empty())
+      {
+        itsMeasurement->write(itsChunk, itsChunkSelection,
+          command.outputColumn(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -577,36 +623,51 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-      // Parse visibility selection.
-      vector<baseline_t> baselines;
-      vector<string> products;
+      // Log current chunk and step number.
+      LOG_DEBUG_STR("@ chunk " << itsChunkCount << " step " << itsStepCount
+        << " type " << command.type() << " name " << command.fullName());
+      ++itsStepCount;
 
-      if(!(parseBaselineSelection(baselines, command)
-          && parseProductSelection(products, command))) {
-        return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
-          " selection.");
-      }
+      // Determine selected baselines and correlations.
+      BaselineMask blMask = itsMeasurement->asMask(command.baselines());
+      CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
-      Model::Ptr model(new Model(itsMeasurement->getInstrument(), *itsSourceDb,
-        itsMeasurement->getPhaseCenter(), itsMeasurement->getReferenceFreq()));
+      MeasurementExprLOFAR::Ptr model;
 
-      try {
-        model->makeInverseExpr(command.modelConfig(), itsChunk, baselines);
-      } catch(Exception &ex) {
+      try
+      {
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsChunk, blMask, false));
+      }
+      catch(Exception &ex)
+      {
         return CommandResult(CommandResult::ERROR, "Unable to construct the"
-            " model expression.");
+          " model expression [" + ex.message() + "]");
       }
 
       // Compute simulated visibilities.
       Evaluator evaluator(itsChunk, model);
-      evaluator.setSelection(baselines, products);
+      evaluator.setBaselineMask(blMask);
+      evaluator.setCorrelationMask(crMask);
+
+      if(evaluator.isSelectionEmpty())
+      {
+        LOG_WARN_STR("No visibility data selected for processing.");
+      }
+
       evaluator.process();
 
+      // Dump processing statistics to the log.
+      ostringstream oss;
+      evaluator.dumpStats(oss);
+      LOG_DEBUG(oss.str());
+
       // Optionally write the simulated visibilities.
-      if(!command.outputColumn().empty()) {
-        itsMeasurement->write(itsChunkSelection, itsChunk,
-          command.outputColumn(), command.writeFlags());
+      if(!command.outputColumn().empty())
+      {
+        itsMeasurement->write(itsChunk, itsChunkSelection,
+          command.outputColumn(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -616,72 +677,89 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-      // Parse visibility selection.
-      vector<baseline_t> baselines;
-      vector<string> products;
+      // Log current chunk and step number.
+      LOG_DEBUG_STR("@ chunk " << itsChunkCount << " step " << itsStepCount
+        << " type " << command.type() << " name " << command.fullName());
+      ++itsStepCount;
 
-      if(!(parseBaselineSelection(baselines, command)
-          && parseProductSelection(products, command))) {
-        return CommandResult(CommandResult::ERROR, "Unable to parse"
-          " visibility selection.");
+      if(command.resample())
+      {
+        LOG_WARN("Resampling support is unavailable in the current"
+          " implementation; resampling will NOT be performed!");
       }
 
-      // Initialize left and right hand expressions.
-      VisExpr::Ptr lhs;
-      Model::Ptr rhs;
+      if(command.shift())
+      {
+        LOG_WARN("Phase shift support is unavailable in the current"
+          " implementation; phase shift will NOT be performed!");
+      }
 
-      try {
-        lhs.reset(new VisExpr(itsMeasurement->getInstrument(),
-          itsMeasurement->getPhaseCenter(), itsChunk, baselines,
-          command.shift(), command.direction(), command.resample(),
-          command.flagDensityThreshold()));
+      // Determine selected baselines and correlations.
+      BaselineMask blMask = itsMeasurement->asMask(command.baselines());
+      CorrelationMask crMask = createCorrelationMask(command.correlations());
 
-        if(command.shift()) {
-          rhs.reset(new Model(itsMeasurement->getInstrument(), *itsSourceDb,
-            command.direction(), itsMeasurement->getReferenceFreq()));
+      // If a UV interval has been specified, flag all samples that fall outside
+      // of this interval.
+      if(command.uvFlag())
+      {
+        UVWFlagger flagger(itsChunk);
+        flagger.setBaselineMask(blMask);
+        flagger.setFlagMask(2);
+        flagger.setUVRange(command.uvRange().first, command.uvRange().second);
+        flagger.process();
 
-        } else {
-          rhs.reset(new Model(itsMeasurement->getInstrument(), *itsSourceDb,
-            itsMeasurement->getPhaseCenter(),
-            itsMeasurement->getReferenceFreq()));
-        }
+        // Dump processing statistics to the log.
+        ostringstream oss;
+        flagger.dumpStats(oss);
+        LOG_DEBUG(oss.str());
+      }
 
-        rhs->makeForwardExpr(command.modelConfig(), itsChunk, baselines);
-      } catch(Exception &ex) {
-        return CommandResult(CommandResult::ERROR, "Unable to initialize model"
-          " expressions.");
+      // Construct model expression.
+      MeasurementExprLOFAR::Ptr model;
+
+      try
+      {
+        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
+            *itsSourceDb, itsChunk, blMask));
+      }
+      catch(Exception &ex)
+      {
+        return CommandResult(CommandResult::ERROR, "Unable to construct the"
+          " model expression [" + ex.message() + "]");
       }
 
       // Determine evaluation grid.
-      const VisDimensions &obsDims = itsChunk->getDimensions();
-      Axis::ShPtr freqAxis(obsDims.getFreqAxis());
-      Axis::ShPtr timeAxis(obsDims.getTimeAxis());
-
-      if(command.resample()) {
-        freqAxis = freqAxis->compress(command.resampleCellSize().freq);
-        timeAxis = timeAxis->compress(command.resampleCellSize().time);
-      }
-
+      Axis::ShPtr freqAxis(itsChunk->grid()[FREQ]);
+      Axis::ShPtr timeAxis(itsChunk->grid()[TIME]);
       Grid evalGrid(freqAxis, timeAxis);
 
       // Determine solution grid.
       CellSize size = command.cellSize();
 
-      if(command.globalSolution()) {
+      if(command.globalSolution())
+      {
         freqAxis = getCalGroupFreqAxis(command.calibrationGroups());
-      } else {
-        if(size.freq == 0) {
+      }
+      else
+      {
+        if(size.freq == 0)
+        {
           freqAxis.reset(new RegularAxis(freqAxis->start(), freqAxis->end(), 1,
             true));
-        } else if(size.freq > 1) {
-            freqAxis = freqAxis->compress(size.freq);
+        }
+        else if(size.freq > 1)
+        {
+          freqAxis = freqAxis->compress(size.freq);
         }
       }
 
-      if(size.time == 0) {
+      if(size.time == 0)
+      {
         timeAxis.reset(new RegularAxis(timeAxis->start(), timeAxis->end(), 1,
           true));
-      } else if(size.time > 1) {
+      }
+      else if(size.time > 1)
+      {
         timeAxis = timeAxis->compress(size.time);
       }
 
@@ -691,29 +769,67 @@ namespace LOFAR
       unsigned int cellChunkSize = (command.cellChunkSize() == 0 ?
         solGrid[TIME]->size() : command.cellChunkSize());
 
-      try {
-        if(command.globalSolution()) {
-          GlobalSolveController controller(itsKernelIndex, itsSolver, lhs, rhs);
+      // Initialize equator.
+      VisEquator::Ptr equator(new VisEquator(itsChunk, model));
+      equator->setBaselineMask(blMask);
+      equator->setCorrelationMask(crMask);
 
-          controller.init(command.parms(), command.exclParms(), evalGrid,
-            solGrid, cellChunkSize, command.propagate());
-
-          controller.run();
-        } else {
-          LocalSolveController controller(lhs, rhs, command.solverOptions());
-
-          controller.init(command.parms(), command.exclParms(), evalGrid,
-            solGrid, cellChunkSize, command.propagate());
-
-          controller.run();
-        }
-      } catch(Exception &ex) {
-        return CommandResult(CommandResult::ERROR, "Unable to initialize or run"
-          " run solve step controller.");
+      if(equator->isSelectionEmpty())
+      {
+        LOG_WARN_STR("No measured visibility data available in the current"
+          " data selection; solving will proceed without data.");
       }
 
-      // Store solutions to disk.
+      try
+      {
+        if(command.globalSolution())
+        {
+          // Initialize controller.
+          GlobalSolveController controller(itsKernelIndex, equator, itsSolver);
+          controller.setSolutionGrid(solGrid);
+          controller.setSolvables(command.parms(), command.exclParms());
+          controller.setPropagateSolutions(command.propagate());
+          controller.setCellChunkSize(cellChunkSize);
+
+          // Compute a solution of each cell in the solution grid.
+          controller.run();
+        }
+        else
+        {
+          // Initialize local solver.
+          Solver::Ptr solver(new Solver(command.solverOptions()));
+
+          // Initialize controller.
+          LocalSolveController controller(equator, solver);
+          controller.setSolutionGrid(solGrid);
+          controller.setSolvables(command.parms(), command.exclParms());
+          controller.setPropagateSolutions(command.propagate());
+          controller.setCellChunkSize(cellChunkSize);
+
+          // Compute a solution of each cell in the solution grid.
+          controller.run();
+        }
+      }
+      catch(Exception &ex)
+      {
+        return CommandResult(CommandResult::ERROR, "Unable to initialize or run"
+          " solve step controller [" + ex.message() + "]");
+      }
+
+      // Dump processing statistics to the log.
+      ostringstream oss;
+      equator->dumpStats(oss);
+      LOG_DEBUG(oss.str());
+
+      // Flush solutions to disk.
       ParmManager::instance().flush();
+
+      // Clear the flags for all samples that fall outside the specified UV
+      // interval.
+      if(command.uvFlag())
+      {
+        itsChunk->flagsAndWithMask(~flag_t(2));
+      }
 
       return CommandResult(CommandResult::OK, "Ok.");
     }
@@ -760,7 +876,7 @@ namespace LOFAR
     }
 
     Axis::ShPtr KernelProcessControl::getCalGroupFreqAxis
-      (const vector<uint32> &groups) const
+        (const vector<uint32> &groups) const
     {
       ASSERT(itsKernelIndex >= 0);
       unsigned int kernel = static_cast<unsigned int>(itsKernelIndex);
@@ -769,7 +885,8 @@ namespace LOFAR
       // and find the index of the first and last kernel process in that
       // calibration group.
       unsigned int idx = 0, count = groups[0];
-      while(kernel >= count) {
+      while(kernel >= count)
+      {
         ++idx;
         ASSERT(idx < groups.size());
         count += groups[idx];
@@ -791,171 +908,29 @@ namespace LOFAR
       return Axis::ShPtr(new RegularAxis(freqStart, freqEnd, 1, true));
     }
 
-    bool KernelProcessControl::parseBaselineSelection
-      (vector<baseline_t> &result, const Step &command) const
+    CorrelationMask
+    KernelProcessControl::createCorrelationMask(const vector<string> &selection)
+      const
     {
-        const string &filter = command.correlation().selection;
-        if(!filter.empty() && filter != "AUTO" && filter != "CROSS")
+      CorrelationMask mask;
+
+      typedef vector<string>::const_iterator CorrelationIt;
+      for(CorrelationIt it = selection.begin(), end = selection.end();
+        it != end; ++it)
+      {
+        try
         {
-            LOG_ERROR_STR("Correlation.Selection should be empty or one of"
-              " \"AUTO\", \"CROSS\".");
-            return false;
+          mask.set(Correlation::asCorrelation(*it));
         }
-
-        const vector<string> &station1 = command.baselines().station1;
-        const vector<string> &station2 = command.baselines().station2;
-        if(station1.size() != station2.size())
+        catch(BBSKernelException &ex)
         {
-            LOG_ERROR("Baselines.Station1 and Baselines.Station2 should have"
-              " the same length.");
-            return false;
+          LOG_WARN_STR("Invalid correlation: " << (*it) << "; will be"
+            " ignored.");
         }
+      }
 
-        // Filter available baselines.
-        set<baseline_t> selection;
-
-        if(station1.empty())
-        {
-            // If no station groups are speficied, select all the baselines
-            // available in the chunk that match the baseline filter.
-            const VisDimensions &dims = itsChunk->getDimensions();
-            const vector<baseline_t> &baselines = dims.getBaselines();
-
-            vector<baseline_t>::const_iterator baselIt = baselines.begin();
-            vector<baseline_t>::const_iterator baselItEnd = baselines.end();
-            while(baselIt != baselItEnd)
-            {
-                if(filter.empty()
-                    || (baselIt->first == baselIt->second && filter == "AUTO")
-                    || (baselIt->first != baselIt->second && filter == "CROSS"))
-                {
-                    selection.insert(*baselIt);
-                }
-                ++baselIt;
-            }
-        }
-        else
-        {
-            vector<casa::Regex> stationRegex1(station1.size());
-            vector<casa::Regex> stationRegex2(station2.size());
-
-            try
-            {
-                transform(station1.begin(), station1.end(),
-                  stationRegex1.begin(), ptr_fun(casa::Regex::fromPattern));
-                transform(station2.begin(), station2.end(),
-                  stationRegex2.begin(), ptr_fun(casa::Regex::fromPattern));
-            }
-            catch(casa::AipsError &ex)
-            {
-                LOG_ERROR_STR("Error parsing include/exclude pattern"
-                  " (exception: " << ex.what() << ")");
-                return false;
-            }
-
-            for(size_t i = 0; i < stationRegex1.size(); ++i)
-            {
-                // Find the indices of all the stations of which the name
-                // matches the regex specified in the context.
-                set<unsigned int> stationGroup1, stationGroup2;
-
-                const Instrument &instrument = itsMeasurement->getInstrument();
-                for(size_t j = 0; j < instrument.size(); ++j)
-                {
-                    casa::String stationName(instrument[j].name());
-
-                    if(stationName.matches(stationRegex1[i]))
-                    {
-                        stationGroup1.insert(j);
-                    }
-
-                    if(stationName.matches(stationRegex2[i]))
-                    {
-                        stationGroup2.insert(j);
-                    }
-                }
-
-                // Generate all possible baselines (pairs) from the two groups
-                // of station indices. If a baseline is available in the chunk
-                // _and_ matches the baseline filter, select it for processing.
-                const VisDimensions &dims = itsChunk->getDimensions();
-
-                typedef set<unsigned int>::const_iterator IterType;
-                for(IterType it1 = stationGroup1.begin(),
-                    endIt1 = stationGroup1.end(); it1 != endIt1; ++it1)
-                {
-                    for(IterType it2 = stationGroup2.begin(),
-                        endIt2 = stationGroup2.end(); it2 != endIt2; ++it2)
-                    {
-                        if(filter.empty()
-                            || (*it1 == *it2 && filter == "AUTO")
-                            || (*it1 != *it2 && filter == "CROSS"))
-                        {
-                            baseline_t baseline(*it1, *it2);
-
-                            if(dims.hasBaseline(baseline))
-                            {
-                                selection.insert(baseline);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Verify that at least one baseline is selected.
-        if(selection.empty())
-        {
-            LOG_ERROR("Baseline selection did not match any baselines in the"
-                " observation.");
-            return false;
-        }
-
-        result.resize(selection.size());
-        copy(selection.begin(), selection.end(), result.begin());
-        return true;
-    }
-
-    bool KernelProcessControl::parseProductSelection(vector<string> &result,
-        const Step &command) const
-    {
-        const VisDimensions &dims = itsMeasurement->getDimensions();
-        const vector<string> &available = dims.getPolarizations();
-
-        const vector<string> &products = command.correlation().type;
-        if(products.empty())
-        {
-            result = available;
-            return true;
-        }
-
-        // Select polarization products by name.
-        set<string> selection;
-        for(size_t i = 0; i < available.size(); ++i)
-        {
-            // Check if this polarization needs to be processed.
-            for(size_t j = 0; j < products.size(); ++j)
-            {
-                if(available[i] == products[j])
-                {
-                    selection.insert(available[i]);
-                    break;
-                }
-            }
-        }
-
-        // Verify that at least one polarization is selected.
-        if(selection.empty())
-        {
-            LOG_ERROR("Polarization product selection did not match any"
-                " polarization product in the observation.");
-            return false;
-        }
-
-        // Copy selected polarizations.
-        result.resize(selection.size());
-        copy(selection.begin(), selection.end(), result.begin());
-        return true;
+      // If no valid correlations specified, select all correlations (default).
+      return (mask.empty() ? CorrelationMask(true) : mask);
     }
 
 } // namespace BBS

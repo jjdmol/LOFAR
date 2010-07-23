@@ -32,6 +32,8 @@
 
 #include <casa/Quanta/MVAngle.h>
 
+#include <limits>
+
 namespace LOFAR
 {
   namespace BBS
@@ -50,8 +52,8 @@ namespace LOFAR
 
     SolveStep::SolveStep(const string& name,
 			       const ParameterSet& parset,
-			       const Step* parent) :
-      SingleStep(name, parent)
+			       const Step* parent)
+        :   SingleStep(name, parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -82,7 +84,16 @@ namespace LOFAR
         Indent id;
         os << endl << indent << "Solvable parameters: " << itsParms
           << endl << indent << "Excluded parameters: " << itsExclParms
-          << endl << indent << "Calibration groups: "  << itsCalibrationGroups
+          << endl << indent << "Flag on UV interval: " << boolalpha << itsUVFlag
+          << noboolalpha;
+        if(itsUVFlag)
+        {
+          Indent id;
+          os << endl << indent << "UV interval: [" << itsUVRange.first
+            << "," << itsUVRange.second << "] (wavelenghts)";
+        }
+
+        os << endl << indent << "Calibration groups: " << itsCalibrationGroups
           << endl << indent << itsCellSize
           << endl << indent << "Cell chunk size: " << itsCellChunkSize
           << endl << indent << "Propagate solutions: " << boolalpha
@@ -95,13 +106,11 @@ namespace LOFAR
             os << endl << indent << "Resample cell size: ";
             {
               Indent id;
-              os << endl << indent << "Frequency (channels): "
-                << itsResampleCellSize.freq
-                << endl << indent << "Time (timestamps): "
-                << itsResampleCellSize.time;
+              os << endl << indent << "Frequency: " << itsResampleCellSize.freq
+                << " (channels)" << endl << indent << "Time: "
+                << itsResampleCellSize.time << " (timeslots)";
             }
-            os << endl << indent << "Flag density threshold: "
-              << itsFlagDensityThreshold;
+            os << endl << indent << "Density threshold: " << itsDensityThreshold;
           }
 
           os << endl << indent << "Phase shift observed data: " << boolalpha
@@ -139,6 +148,11 @@ namespace LOFAR
       const string prefix = "Step." + name() + ".Solve.";
       ps.replace(prefix + "Parms", toString(itsParms));
       ps.replace(prefix + "ExclParms", toString(itsExclParms));
+      if(itsUVFlag)
+      {
+        ps.replace(prefix + "UVRange", "[" + toString(itsUVRange.first)
+          + "," + toString(itsUVRange.second) + "]");
+      }
       ps.replace(prefix + "CalibrationGroups", toString(itsCalibrationGroups));
       ps.replace(prefix + "CellSize.Freq", toString(itsCellSize.freq));
       ps.replace(prefix + "CellSize.Time", toString(itsCellSize.time));
@@ -157,8 +171,8 @@ namespace LOFAR
           toString(itsResampleCellSize.freq));
         ps.replace(prefix + "Resample.CellSize.Time",
           toString(itsResampleCellSize.time));
-        ps.replace(prefix + "Resample.FlagDensityThreshold",
-          toString(itsFlagDensityThreshold));
+        ps.replace(prefix + "Resample.DensityThreshold",
+          toString(itsDensityThreshold));
       }
 
       ps.replace(prefix + "Options.MaxIter",
@@ -172,7 +186,7 @@ namespace LOFAR
       ps.replace(prefix + "Options.LMFactor",
         toString(itsSolverOptions.lmFactor));
       ps.replace(prefix + "Options.BalancedEqs",
-        toString(itsSolverOptions.balancedEqs));
+        toString(itsSolverOptions.balancedEq));
       ps.replace(prefix + "Options.UseSVD", toString(itsSolverOptions.useSVD));
 
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
@@ -186,7 +200,10 @@ namespace LOFAR
       ParameterSet pss(ps.makeSubset("Solve."));
       itsParms = pss.getStringVector("Parms");
       itsExclParms = pss.getStringVector("ExclParms", vector<string>());
-      itsCalibrationGroups = pss.getUint32Vector("CalibrationGroups");
+      setUVRange(pss);
+
+      itsCalibrationGroups = pss.getUint32Vector("CalibrationGroups",
+        vector<uint32>());
       itsCellSize.freq = pss.getUint32("CellSize.Freq");
       itsCellSize.time = pss.getUint32("CellSize.Time");
       itsCellChunkSize = pss.getUint32("CellChunkSize");
@@ -196,15 +213,14 @@ namespace LOFAR
       itsDirectionASCII = vector<string>();
       itsShiftFlag = pss.getBool("PhaseShift.Enable", false);
       if(itsShiftFlag) {
-        parseDirection(pss);
+        setDirection(pss);
       }
 
       itsResampleCellSize = CellSize(1, 1);
       itsResampleFlag = pss.getBool("Resample.Enable", false);
       if(itsResampleFlag) {
-        parseResampleCellSize(pss);
-        itsFlagDensityThreshold =
-          pss.getDouble("Resample.FlagDensityThreshold");
+        setResampleCellSize(pss);
+        itsDensityThreshold = pss.getDouble("Resample.DensityThreshold");
       }
 
       itsSolverOptions.maxIter = pss.getUint32("Options.MaxIter");
@@ -212,11 +228,39 @@ namespace LOFAR
       itsSolverOptions.epsDerivative = pss.getDouble("Options.EpsDerivative");
       itsSolverOptions.colFactor = pss.getDouble("Options.ColFactor");
       itsSolverOptions.lmFactor = pss.getDouble("Options.LMFactor");
-      itsSolverOptions.balancedEqs = pss.getBool("Options.BalancedEqs");
+      itsSolverOptions.balancedEq = pss.getBool("Options.BalancedEqs");
       itsSolverOptions.useSVD = pss.getBool("Options.UseSVD");
     }
 
-    void SolveStep::parseResampleCellSize(const ParameterSet& ps)
+    void SolveStep::setUVRange(const ParameterSet& ps)
+    {
+      itsUVFlag = ps.isDefined("UVRange");
+
+      if(!itsUVFlag)
+      {
+        itsUVRange = make_pair(0.0, std::numeric_limits<double>::max());
+        return;
+      }
+
+      vector<double> range = ps.getDoubleVector("UVRange");
+      if(range.size() > 2)
+      {
+        THROW(BBSControlException, "UVRange should be given as either [min]"
+          " or [min, max] (in wavelenghts)");
+      }
+
+      itsUVRange.first = range.size() > 0 ? range[0] : 0.0;
+      itsUVRange.second = range.size() > 1 ? range[1]
+        : std::numeric_limits<double>::max();
+
+      if(itsUVRange.first > itsUVRange.second)
+      {
+        THROW(BBSControlException, "Invalid UVRange: [" << itsUVRange.first
+            << "," << itsUVRange.second << "]");
+      }
+    }
+
+    void SolveStep::setResampleCellSize(const ParameterSet& ps)
     {
       itsResampleCellSize.freq = ps.getUint32("Resample.CellSize.Freq");
       itsResampleCellSize.time = ps.getUint32("Resample.CellSize.Time");
@@ -228,7 +272,7 @@ namespace LOFAR
       }
     }
 
-    void SolveStep::parseDirection(const ParameterSet& ps)
+    void SolveStep::setDirection(const ParameterSet& ps)
     {
       // Parse PhaseShift.Direction value and convert to casa::MDirection.
       itsDirectionASCII = ps.getStringVector("PhaseShift.Direction");

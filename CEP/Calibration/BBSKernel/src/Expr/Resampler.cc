@@ -75,35 +75,35 @@ const JonesMatrix Resampler::evaluateExpr(const Request &request, Cache &cache,
 
         for(unsigned int i = 0; i < arg.size(); ++i)
         {
-            const ValueSet in(arg.getValueSet(i));
+            const Element in(arg.getElement(i));
 
-            ValueSet out;
+            Element out;
             out.assign(resampleWithFlags(in.value(), flags, axisMap));
-            for(ValueSet::const_iterator it = in.begin(), end = in.end();
+            for(Element::const_iterator it = in.begin(), end = in.end();
                 it != end; ++it)
             {
                 out.assign(it->first, resampleWithFlags(it->second, flags,
                     axisMap));
             }
 
-            result.setValueSet(i, out);
+            result.setElement(i, out);
         }
     }
     else
     {
         for(unsigned int i = 0; i < arg.size(); ++i)
         {
-            const ValueSet in(arg.getValueSet(i));
+            const Element in(arg.getElement(i));
 
-            ValueSet out;
+            Element out;
             out.assign(resample(in.value(), axisMap));
-            for(ValueSet::const_iterator it = in.begin(), end = in.end();
+            for(Element::const_iterator it = in.begin(), end = in.end();
                 it != end; ++it)
             {
                 out.assign(it->first, resample(it->second, axisMap));
             }
 
-            result.setValueSet(i, out);
+            result.setElement(i, out);
         }
     }
 
@@ -123,7 +123,7 @@ FlagArray Resampler::resampleFlags(const FlagArray &in,
     const unsigned int nTime = map[TIME].back().dst + 1;
 
     // Allocate the output.
-    FlagArray out(nFreq, nTime, FlagType(0));
+    FlagArray out(nFreq, nTime, flag_t(0));
 
     // Allocate temporary 2-D arrays to store the number of samples per output
     // cell and the number of flagged samples per output cell.
@@ -138,7 +138,7 @@ FlagArray Resampler::resampleFlags(const FlagArray &in,
         {
             ++count(itFreq->dst, itTime->dst);
 
-            const FlagType flag = in(itFreq->src, itTime->src);
+            const flag_t flag = in(itFreq->src, itTime->src);
             ASSERT(flag == 0 || flag == 1);
             if(flag)
             {
@@ -163,7 +163,7 @@ FlagArray Resampler::resampleFlags(const FlagArray &in,
             if((static_cast<double>(flagged(f, t)) / count(f, t))
                 < itsFlagDensityThreshold)
             {
-                out(f, t) = FlagType(0);
+                out(f, t) = flag_t(0);
             }
         }
     }

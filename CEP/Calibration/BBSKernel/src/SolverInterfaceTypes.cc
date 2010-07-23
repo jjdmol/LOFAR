@@ -1,4 +1,4 @@
-//# SolverInterfaceTypes.cc: 
+//# SolverInterfaceTypes.cc:
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -109,10 +109,10 @@ namespace BBS
                     + it->second.length - 1 << " ";
             }
         }
-        
+
         return out;
     }
-                        
+
 
     BlobIStream &operator>>(BlobIStream &in, CoeffIndex &obj)
     {
@@ -138,78 +138,78 @@ namespace BBS
     }
 
 
-// -----------------------------------------------------------------------------
+// -------------------------------------------------------------------------- //
     BlobIStream &operator>>(BlobIStream &in, CellCoeff &obj)
     {
         return (in >> obj.id >> obj.coeff);
     }
-        
-        
+
+
     BlobOStream &operator<<(BlobOStream &out, const CellCoeff &obj)
     {
         return (out << obj.id << obj.coeff);
     }
 
 
-// -----------------------------------------------------------------------------
+// -------------------------------------------------------------------------- //
     BlobIStream &operator>>(BlobIStream &in, CellEquation &obj)
     {
         in >> obj.id;
-        
+
         BlobAipsIO aipsBuffer(in);
         casa::AipsIO aipsStream(&aipsBuffer);
         casa::String aipsErrorMessage;
         casa::Record aipsRecord;
 
-        aipsStream >> aipsRecord;        
+        aipsStream >> aipsRecord;
         if(!obj.equation.fromRecord(aipsErrorMessage, aipsRecord))
         {
             THROW(BBSKernelException, "Unable to deserialise normal equations ("
                 << aipsErrorMessage << ")");
         }
-        
+
         return in;
     }
-    
-    
+
+
     BlobOStream &operator<<(BlobOStream &out, const CellEquation &obj)
     {
         out << obj.id;
-        
+
         BlobAipsIO aipsBuffer(out);
         casa::AipsIO aipsStream(&aipsBuffer);
         casa::String aipsErrorMessage;
         casa::Record aipsRecord;
-        
+
         if(!obj.equation.toRecord(aipsErrorMessage, aipsRecord))
         {
             THROW(BBSKernelException, "Unable to serialise normal equations ("
                 << aipsErrorMessage << ")");
-        }        
-        
+        }
+
         aipsStream << aipsRecord;
         return out;
     }
 
 
-// -----------------------------------------------------------------------------
+// -------------------------------------------------------------------------- //
     BlobIStream &operator>>(BlobIStream &in, CellSolution &obj)
     {
         return (in >> obj.id
             >> obj.coeff
-            >> obj.result
+            >> obj.ready
             >> obj.resultText
             >> obj.rank
             >> obj.chiSqr
             >> obj.lmFactor);
     }
 
-    
+
     BlobOStream &operator<<(BlobOStream &out, const CellSolution &obj)
     {
         return (out << obj.id
             << obj.coeff
-            << obj.result
+            << obj.ready
             << obj.resultText
             << obj.rank
             << obj.chiSqr
@@ -218,4 +218,3 @@ namespace BBS
 
 } // namespace BBS
 } // namespace LOFAR
-

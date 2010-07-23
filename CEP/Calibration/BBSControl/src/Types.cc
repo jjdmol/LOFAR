@@ -24,6 +24,7 @@
 
 #include <BBSControl/Types.h>
 #include <BBSControl/StreamUtil.h>
+#include <Common/LofarLogger.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_iomanip.h>
 
@@ -35,48 +36,12 @@ namespace LOFAR
 
     //# -------  ostream operators  ------- #//
 
-    ostream& operator<<(ostream& os, const Correlation& obj)
-    {
-      os << "Correlation:";
-      Indent id;
-      os << endl << indent << "Selection: " << obj.selection
-         << endl << indent << "Type: "      << obj.type;
-      return os;
-    }
-
-
-    ostream& operator<<(ostream& os, const Baselines& obj)
-    {
-      os << "Baselines:";
-      Indent id;
-      os << endl << indent << "Station1: " << obj.station1
-         << endl << indent << "Station2: " << obj.station2;
-      return os;
-    }
-
     ostream& operator<<(ostream& os, const CellSize& obj)
     {
       os << "Cell size:";
       Indent id;
-      os << endl << indent << "Frequency (channels): " << obj.freq << endl
-         << indent << "Time (timestamps): " << obj.time;
-      return os;
-    }
-
-
-    ostream& operator<<(ostream& os, const SolverOptions& obj)
-    {
-      os << "Solver options:";
-      Indent id;
-      os << endl << indent << "Max nr. of iterations: "  << obj.maxIter
-         << endl << indent << "Epsilon value: "          << obj.epsValue
-         << endl << indent << "Epsilon derivative: "     << obj.epsDerivative
-         << endl << indent << "Colinearity factor: "     << obj.colFactor
-         << endl << indent << "LM factor: "              << obj.lmFactor
-         << boolalpha
-         << endl << indent << "Balanced equations: "     << obj.balancedEqs
-         << endl << indent << "Use SVD: "                << obj.useSVD
-         << noboolalpha;
+      os << endl << indent << "Frequency (channels): " << obj.freq
+         << endl << indent << "Time (timestamps): " << obj.time;
       return os;
     }
 
