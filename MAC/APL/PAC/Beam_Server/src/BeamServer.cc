@@ -110,8 +110,8 @@ BeamServer::BeamServer(string name, int argc, char** argv) :
 
 	// get interval information
 	itsHbaInterval 		  = globalParameterSet()->getInt32("BeamServer.HBA_INTERVAL", COMPUTE_INTERVAL);
-	if (itsHbaInterval < 2) {
-		LOG_FATAL("HBA_INTERVAL to small, must be greater or equal to 2 seconds");
+	if (itsHbaInterval < 4) {
+		LOG_FATAL("HBA_INTERVAL to small, must be greater or equal to 4 seconds");
 		exit(EXIT_FAILURE);
 	}
 
