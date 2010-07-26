@@ -11,7 +11,6 @@ set(common_LIB_SRCS
   hexdump.cc
   KVpair.cc
   lofar_bitset.cc
-  LofarLogCout.cc
   LofarLogger.cc
   Numeric.cc
   ParameterSet.cc
@@ -37,6 +36,14 @@ set(common_PROGRAMS
   versioncommon
   logperf
 )
+
+if(HAVE_LOG4CPLUS)
+  list(APPEND common_LIB_SRCS LofarLog4Cplus.cc)
+elseif(HAVE_LOG4CXX)
+  list(APPEND common_LIB_SRCS LofarLog4Cxx.cc)
+else(HAVE_LOG4CPLUS)
+  list(APPEND common_LIB_SRCS LofarLogCout.cc)
+endif(HAVE_LOG4CPLUS)
 
 if(HAVE_BACKTRACE)
   list(APPEND common_LIB_SRCS 

@@ -1,0 +1,131 @@
+#include <Common/LofarLog4Cplus.h>
+#include <Common/LofarLocators.h>
+#include <log4cplus/configurator.h>
+#include <log4cplus/helpers/loglog.h>
+#include <cstdlib>
+
+using namespace log4cplus;
+
+namespace LOFAR
+{
+  void initLog4Cplus(string file)
+  {
+    // Initialize NDC (nested diagnostic context).
+    lofarLoggerInitNode();
+
+    // Initialize tracing module.
+    initTraceModule();
+
+    // Add extension ".log_prop" to <file>, if necessary.
+    if(file.find(".log_prop") == string::npos) file += ".log_prop";
+
+    // Try to locate <file> using the configuration file locator.
+    string propFile = ConfigLocator().locate(file);
+
+    // Use the property configurator if we found a configuration file,
+    // otherwise use the basic configurator.
+    if(!propFile.empty()) {
+      PropertyConfigurator::doConfigure(propFile);
+    } else {
+      helpers::LogLog::getLogLog()->
+        warn(LOG4CPLUS_TEXT("Property configuration file \"") + file +
+             LOG4CPLUS_TEXT("\" not found."));
+      helpers::LogLog::getLogLog()->
+        warn(LOG4CPLUS_TEXT("Using basic logging configuration."));
+      BasicConfigurator::doConfigure();
+    }
+  }
+
+  void initVarLog4Cplus(const string& propFile, const string& logFile,
+                        const string& envVar)
+  {
+    // Assign value \a logFile to environment variable \a envVar.
+    if(!envVar.empty()) {
+      setenv(envVar.c_str(), logFile.c_str(), true);  // set overwrite 'true'
+    }
+    initLog4Cplus(propFile);
+  }
+
+  //# ------------------- implement the eight trace levels -------------------
+  const LogLevel TRACE1_LOG_LEVEL = 1;
+  const LogLevel TRACE2_LOG_LEVEL = 2;
+  const LogLevel TRACE3_LOG_LEVEL = 3;
+  const LogLevel TRACE4_LOG_LEVEL = 4;
+  const LogLevel TRACE5_LOG_LEVEL = 5;
+  const LogLevel TRACE6_LOG_LEVEL = 6;
+  const LogLevel TRACE7_LOG_LEVEL = 7;
+  const LogLevel TRACE8_LOG_LEVEL = 8;
+
+  const tstring _TRACE1_STRING = LOG4CPLUS_TEXT("TRACE1");
+  const tstring _TRACE2_STRING = LOG4CPLUS_TEXT("TRACE2");
+  const tstring _TRACE3_STRING = LOG4CPLUS_TEXT("TRACE3");
+  const tstring _TRACE4_STRING = LOG4CPLUS_TEXT("TRACE4");
+  const tstring _TRACE5_STRING = LOG4CPLUS_TEXT("TRACE5");
+  const tstring _TRACE6_STRING = LOG4CPLUS_TEXT("TRACE6");
+  const tstring _TRACE7_STRING = LOG4CPLUS_TEXT("TRACE7");
+  const tstring _TRACE8_STRING = LOG4CPLUS_TEXT("TRACE8");
+
+  tstring traceLevel2String(LogLevel ll) {
+    switch (ll) {
+    case TRACE1_LOG_LEVEL: return _TRACE1_STRING;
+    case TRACE2_LOG_LEVEL: return _TRACE2_STRING;
+    case TRACE3_LOG_LEVEL: return _TRACE3_STRING;
+    case TRACE4_LOG_LEVEL: return _TRACE4_STRING;
+    case TRACE5_LOG_LEVEL: return _TRACE5_STRING;
+    case TRACE6_LOG_LEVEL: return _TRACE6_STRING;
+    case TRACE7_LOG_LEVEL: return _TRACE7_STRING;
+    case TRACE8_LOG_LEVEL: return _TRACE8_STRING;
+    }
+
+    return tstring();  // not found
+  }
+
+  LogLevel string2TraceLevel (const tstring& lname) {
+    if (lname == _TRACE1_STRING) return TRACE1_LOG_LEVEL;
+    if (lname == _TRACE2_STRING) return TRACE2_LOG_LEVEL;
+    if (lname == _TRACE3_STRING) return TRACE3_LOG_LEVEL;
+    if (lname == _TRACE4_STRING) return TRACE4_LOG_LEVEL;
+    if (lname == _TRACE5_STRING) return TRACE5_LOG_LEVEL;
+    if (lname == _TRACE6_STRING) return TRACE6_LOG_LEVEL;
+    if (lname == _TRACE7_STRING) return TRACE7_LOG_LEVEL;
+    if (lname == _TRACE8_STRING) return TRACE8_LOG_LEVEL;
+
+    return NOT_SET_LOG_LEVEL;   // not found
+  }
+
+  // Create the tracelogger
+  LOFAR::LoggerReference theirTraceLoggerRef("TRC");
+
+  // initTracemodule
+  //
+  // Function that is used when the TRACE levels are NOT compiled out. It
+  // registers the TRACEn management routines at the Log4Cplus LogLevelManager
+  // and sets up the global trace-logger named "TRC", with the additivity set
+  // to false.  Attached to the trace-logger is one Appender that logs to
+  // stderr.
+  //
+  void initTraceModule (void)
+  {
+#ifdef ENABLE_TRACER
+    // Register our own loglevels
+    getLogLevelManager().pushToStringMethod(traceLevel2String);
+    getLogLevelManager().pushFromStringMethod(string2TraceLevel);
+
+    // Setup a property object to initialise the TRACE Logger
+    helpers::Properties  traceProp;
+    traceProp.setProperty("log4cplus.logger.TRC", "DEBUG, STDERR");
+    traceProp.setProperty("log4cplus.additivity.TRC", "false");
+    traceProp.setProperty("log4cplus.appender.STDERR", 
+                          "log4cplus::ConsoleAppender");
+    traceProp.setProperty("log4cplus.appender.STDERR.logToStdErr", "true");
+    traceProp.setProperty("log4cplus.appender.STDERR.ImmediateFlush", "true");
+    traceProp.setProperty("log4cplus.appender.STDERR.layout",
+                          "log4cplus::PatternLayout");
+    traceProp.setProperty("log4cplus.appender.STDERR.layout.ConversionPattern",
+                          "%D{%y%m%d %H%M%S,%q} [%i] %-6p %c{3} [%F:%L] - %m%n");
+    PropertyConfigurator(traceProp).configure();
+    Logger::getInstance("TRC").forcedLog(0, "TRACE module activated");
+#endif
+  }
+
+}

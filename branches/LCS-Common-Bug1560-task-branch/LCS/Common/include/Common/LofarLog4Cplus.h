@@ -62,28 +62,16 @@ namespace LOFAR {
 // @{
 //
 // Only initializes the logger module.
-#define INIT_LOGGER(filename) do { \
-	::LOFAR::lofarLoggerInitNode(); \
-	LofarInitTracingModule \
-	if (!strstr(filename, ".log_prop")) { \
-		log4cplus::PropertyConfigurator::doConfigure(log4cplus::tstring(filename)+".log_prop"); \
-	} \
-	else  {\
-		log4cplus::PropertyConfigurator::doConfigure(filename); \
-	} \
-	} while(0)
-
-#define INIT_VAR_LOGGER(filename,logfile) do { \
-	::LOFAR::lofarLoggerInitNode(); \
-	LofarInitTracingModule \
-	if (!strstr(filename, ".log_prop")) { \
-		log4cplus::PropertyConfigurator::doConfigureP2(log4cplus::tstring(filename)+".log_prop",logfile); \
-	} \
-	else  {\
-		log4cplus::PropertyConfigurator::doConfigureP2(filename,logfile); \
-	} \
-	} while(0)
-
+#define INIT_LOGGER(filename)                   \
+  do {                                          \
+    ::LOFAR::initLog4Cplus(filename);           \
+  } while(0)
+  
+#define INIT_VAR_LOGGER(filename,logfile)                 \
+  do {                                                    \
+    ::LOFAR::initVarLog4Cplus(filename, logfile);         \
+  } while(0)
+  
 // After initialisation a thread is started to monitor any changes in the
 // properties file. An intervaltime in millisecs must be provided.
 #ifdef USE_THREADS
@@ -465,6 +453,25 @@ extern LoggerReference	theirTraceLoggerRef;
 inline LoggerReference&	getLogger() { return theirTraceLoggerRef; }
 
 // @}
+
+  // Initialize Log4cplus.
+  // \param file Name of the properties file. A missing \c ".log_prop"
+  // extension will be added automatically. Note that \a file is deliberatly
+  // passed by value, as we probably have to add the missing file extension.
+  void initLog4Cplus(string file);
+
+  // Initialize Log4cplus. 
+  // This function will call initLog4Cplus under the hood.
+  // \param propFile Name of the properties file. A missing \c ".log_prop"
+  // extension will be added automatically.
+  // \param logFile Name of the output log file.
+
+  // \param envVar Name of the environment variable to be used in the
+  // properties file for the name of the output log file. It defaults to \c
+  // LOG4CPLUS_LOGFILENAME. Note that the environment variable will \e always
+  // be set to the contents of \a logFile, thereby possibly clobbering it.
+  void initVarLog4Cplus(const string& propFile, const string& logFile,
+                        const string& envVar = "LOG4CPLUS_LOGFILENAME");
 
 } // namespace LOFAR
 
