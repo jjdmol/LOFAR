@@ -83,6 +83,9 @@ public:
 	bool isAntennaField(const string&	name) const
 		{ return (name2Index(name) >= 0); }
 
+	int ringNr(const string& fieldName) const
+		{ return ((fieldName == "HBA1") ? 1 : 0); }
+
 private:
 	// Copying is not allowed
 	AntennaField();
@@ -109,7 +112,7 @@ private:
 };
 
 // Make one instance of the AntennaField globally accessable.
-AntennaField* 	globalAntennaFielAntennaField();
+AntennaField* 	globalAntennaField();
 
 
 // @}
