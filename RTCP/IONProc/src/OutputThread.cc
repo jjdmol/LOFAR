@@ -153,12 +153,15 @@ void OutputThread::mainLoop()
 
     LOG_INFO_STR(itsLogPrefix << "Creating connection to " << outputDescriptor << ": done");
   } catch (SystemCallException &ex) {
-    LOG_ERROR_STR(itsLogPrefix << "Connection to " << outputDescriptor << " failed");
     if (ex.error == EINTR) {
-      return;
+      LOG_WARN_STR(itsLogPrefix << "Connection to " << outputDescriptor << " aborted");
     } else {
-      throw;
+      LOG_WARN_STR(itsLogPrefix << "Connection to " << outputDescriptor << " failed: " << ex);
     }
+    return;
+  } catch (SocketStream::TimeOutException &ex) {
+    LOG_WARN_STR(itsLogPrefix << "Connection to " << outputDescriptor << " timed out");
+    return;
   }
 
   // TODO: if a storage node blocks, ionproc can't write anymore in any thread

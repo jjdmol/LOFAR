@@ -498,8 +498,6 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 
     unsigned nrbeams = itsParset.flysEye() ? itsParset.nrMergedStations() : itsParset.nrPencilBeams();
 
-    //unsigned nrPsets = itsParset.phaseThreePsets().size();
-
     switch (plan.plan[output].distribution) {
       case ProcessingPlan::DIST_SUBBAND:
         phase = 2;
@@ -516,9 +514,15 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
         break;
 
       case ProcessingPlan::DIST_BEAM:
+        // simplification: each core produces at most 1 beam
+        assert( itsParset.nrBeamsPerPset() <= itsParset.nrSubbandsPerPset() );
+
+        // simplification: also each core which processes a beam also processes a subband
+        assert( nrbeams <= itsParset.nrSubbands() );
+
         phase = 3;
         psetIndex = itsParset.phaseThreePsetIndex(myPsetNumber);
-        maxlistsize = itsParset.nrBeamsPerPset();
+        maxlistsize = itsParset.nrSubbandsPerPset();
 
         for (unsigned beam = 0;  beam < itsParset.nrBeamsPerPset(); beam ++) {
           unsigned beamNumber = psetIndex * itsParset.nrBeamsPerPset() + beam;

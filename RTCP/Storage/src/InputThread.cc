@@ -60,38 +60,44 @@ InputThread::~InputThread()
 
 void InputThread::mainLoop()
 {
-  try {
-    std::string inputDescriptor = itsParset.getStreamDescriptorBetweenIONandStorage(itsSubbandNumber, itsOutputNumber, itsDistribution == ProcessingPlan::DIST_SUBBAND);
+  std::string inputDescriptor;
 
-    LOG_INFO_STR(itsLogPrefix << "Creating connection from " << inputDescriptor);
+  try {
+    inputDescriptor = itsParset.getStreamDescriptorBetweenIONandStorage(itsSubbandNumber, itsOutputNumber, itsDistribution == ProcessingPlan::DIST_SUBBAND);
+
+    LOG_INFO_STR(itsLogPrefix << "Creating connection from " << inputDescriptor << "..." );
     std::auto_ptr<Stream> streamFromION(Parset::createStream(inputDescriptor, true));
-    LOG_INFO_STR(itsLogPrefix << "Created connection from " << inputDescriptor);
+    LOG_INFO_STR(itsLogPrefix << "Creating connection from " << inputDescriptor << ": done" );
 
     // limit reads from NullStream to 10 blocks; otherwise unlimited
     bool     nullInput = dynamic_cast<NullStream *>(streamFromION.get()) != 0;
     unsigned maxCount  = nullInput ? 10 : ~0;
 
     for (unsigned count = 0; count < maxCount; count ++) {
-      NSTimer			    readTimer("Read data from IONProc", false, false);
+      //NSTimer			    readTimer("Read data from IONProc", false, false);
       std::auto_ptr<StreamableData> data(itsFreeQueue.remove());
 
-      readTimer.start();
+      //readTimer.start();
       data->read(streamFromION.get(), true);
-      readTimer.stop();
+      //readTimer.stop();
 
-      LOG_INFO_STR(itsLogPrefix << readTimer);
+      //LOG_INFO_STR(itsLogPrefix << readTimer);
+      LOG_INFO_STR(itsLogPrefix << "Read block with seqno = " << data->sequenceNumber);
 
       if (nullInput)
 	data.get()->sequenceNumber = count;
 
       itsReceiveQueue.append(data.release());
     }
+  } catch (SocketStream::TimeOutException &) {
+    LOG_WARN_STR(itsLogPrefix << "Connection from " << inputDescriptor << " timed out");
   } catch (Stream::EndOfStreamException &) {
-    LOG_INFO_STR(itsLogPrefix << "No more input data");
+    LOG_INFO_STR(itsLogPrefix << "Connection from " << inputDescriptor << " closed");
   } catch (SystemCallException &ex) {
-    if (ex.error != EINTR) {
-      itsReceiveQueue.append(0); // no more data
-      throw;
+    if (ex.error == EINTR) {
+      LOG_WARN_STR(itsLogPrefix << "Connection from " << inputDescriptor << " aborted");
+    } else {
+      LOG_WARN_STR(itsLogPrefix << "Connection from " << inputDescriptor << " failed: " << ex);
     }
   }
 
