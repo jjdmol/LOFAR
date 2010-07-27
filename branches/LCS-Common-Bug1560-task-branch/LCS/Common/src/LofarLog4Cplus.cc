@@ -8,27 +8,35 @@ using namespace log4cplus;
 
 namespace LOFAR
 {
-  void initLog4Cplus(string file)
+  void initLog4Cplus(string propFile, const string& logFile, 
+                     const string& envVar)
   {
+    // Assign the contents of \a logFile to environment variable \a envVar.
+    if(!envVar.empty()) {
+      setenv(envVar.c_str(), logFile.c_str(), true);  // set overwrite 'true'
+    }
+
     // Initialize NDC (nested diagnostic context).
     lofarLoggerInitNode();
 
     // Initialize tracing module.
     initTraceModule();
 
-    // Add extension ".log_prop" to <file>, if necessary.
-    if(file.find(".log_prop") == string::npos) file += ".log_prop";
+    // Add extension ".log_prop" to \a propFile, if necessary.
+    if(propFile.find(".log_prop") == string::npos) {
+      propFile += ".log_prop";
+    }
 
-    // Try to locate <file> using the configuration file locator.
-    string propFile = ConfigLocator().locate(file);
+    // Try to locate \a propFile using the configuration file locator.
+    string locatedPropFile = ConfigLocator().locate(propFile);
 
     // Use the property configurator if we found a configuration file,
     // otherwise use the basic configurator.
-    if(!propFile.empty()) {
-      PropertyConfigurator::doConfigure(propFile);
+    if(!locatedPropFile.empty()) {
+      PropertyConfigurator::doConfigure(locatedPropFile);
     } else {
       helpers::LogLog::getLogLog()->
-        warn(LOG4CPLUS_TEXT("Property configuration file \"") + file +
+        warn(LOG4CPLUS_TEXT("Property configuration file \"") + propFile +
              LOG4CPLUS_TEXT("\" not found."));
       helpers::LogLog::getLogLog()->
         warn(LOG4CPLUS_TEXT("Using basic logging configuration."));
@@ -36,15 +44,31 @@ namespace LOFAR
     }
   }
 
-  void initVarLog4Cplus(const string& propFile, const string& logFile,
-                        const string& envVar)
+
+#ifdef USE_THREADS
+  void initLog4CplusAndWatch(string propFile, unsigned int watchInterval)
   {
-    // Assign value \a logFile to environment variable \a envVar.
-    if(!envVar.empty()) {
-      setenv(envVar.c_str(), logFile.c_str(), true);  // set overwrite 'true'
+    // Initialize NDC (nested diagnostic context).
+    lofarLoggerInitNode();
+
+    // Initialize tracing module.
+    initTraceModule();
+
+    // Add extension ".log_prop" to \a propFile, if necessary.
+    if(propFile.find(".log_prop") == string::npos) {
+      propFile += ".log_prop";
     }
-    initLog4Cplus(propFile);
+
+    // Try to locate \a propFile using the configuration file locator.
+    string locatedPropFile = ConfigLocator().locate(propFile);
+
+    // Use the configure-and-watch-thread property configurator, even if we
+    // didn't find a properties file. It might be created later and will then
+    // be picked up by the watchdog.
+    ConfigureAndWatchThread(locatedPropFile, watchInterval);
   }
+#endif
+
 
   //# ------------------- implement the eight trace levels -------------------
   const LogLevel TRACE1_LOG_LEVEL = 1;

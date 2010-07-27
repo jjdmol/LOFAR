@@ -72,12 +72,4 @@ void lofarLoggerInitNode(void) {
 #endif
 }
 
-#if defined(HAVE_LOG4CPLUS)
-#elif defined(HAVE_LOG4CXX)
-
-log4cxx::LoggerPtr theirTraceLoggerRef(log4cxx::Logger::getLogger("TRC"));
-
-#endif
-
-
 }	// namespace LOFAR

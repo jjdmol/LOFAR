@@ -69,26 +69,20 @@ namespace LOFAR {
   
 #define INIT_VAR_LOGGER(filename,logfile)                 \
   do {                                                    \
-    ::LOFAR::initVarLog4Cplus(filename, logfile);         \
+    ::LOFAR::initLog4Cplus(filename, logfile);            \
   } while(0)
   
 // After initialisation a thread is started to monitor any changes in the
 // properties file. An intervaltime in millisecs must be provided.
 #ifdef USE_THREADS
-# define INIT_LOGGER_AND_WATCH(filename,watchinterval) do { \
-	::LOFAR::lofarLoggerInitNode(); \
-	LofarInitTracingModule \
-	if (!strstr(filename, ".log_prop")) { \
-		log4cplus::ConfigureAndWatchThread tmpWatchThread(log4cplus::tstring(filename)+".log_prop",watchinterval); \
-	} \
-	else  {\
-		log4cplus::ConfigureAndWatchThread tmpWatchThread(filename,watchinterval); \
-	} \
-	} while(0)
+# define INIT_LOGGER_AND_WATCH(filename,watchinterval)        \
+  do {                                                        \
+    ::LOFAR::initLog4CplusAndWatch(filename, watchinterval);  \
+  } while(0)
 #else
 # define INIT_LOGGER_AND_WATCH(filename,watchinterval) INIT_LOGGER(filename)
 #endif
-
+  
 //@}
 
 //# -------------------- Log Levels for the Operator messages ------------------
@@ -279,12 +273,8 @@ namespace LOFAR {
 // \name Implementation details tracer part
 // @{
 
+// Initialize the trace module
 void	initTraceModule(void);
-
-// \internal
-// Internal macro to define (or not) the initialisation routine of the
-// trace module.
-#define	LofarInitTracingModule	::LOFAR::initTraceModule();
 
 // \internal
 // Internal macro used by the LOG_TRACE_<level> macros.
@@ -454,24 +444,28 @@ inline LoggerReference&	getLogger() { return theirTraceLoggerRef; }
 
 // @}
 
-  // Initialize Log4cplus.
-  // \param file Name of the properties file. A missing \c ".log_prop"
-  // extension will be added automatically. Note that \a file is deliberatly
-  // passed by value, as we probably have to add the missing file extension.
-  void initLog4Cplus(string file);
-
   // Initialize Log4cplus. 
-  // This function will call initLog4Cplus under the hood.
   // \param propFile Name of the properties file. A missing \c ".log_prop"
-  // extension will be added automatically.
+  // extension will automatically be added. Note that \a propFile is
+  // deliberatly passed by value, because we probably have to add the missing
+  // file extension.
   // \param logFile Name of the output log file.
+  // \param envVar Name of the environment variable that can be used in the
+  // properties file as (part of) of the output log filename. It defaults to
+  // \c LOG4CPLUS_LOGFILENAME. Note that the environment variable will \e
+  // always be set to the contents of \a logFile, thereby possibly clobbering
+  // it.
+  void initLog4Cplus(string propFile, const string& logFile = "",
+                     const string& envVar = "LOG4CPLUS_LOGFILENAME");
 
-  // \param envVar Name of the environment variable to be used in the
-  // properties file for the name of the output log file. It defaults to \c
-  // LOG4CPLUS_LOGFILENAME. Note that the environment variable will \e always
-  // be set to the contents of \a logFile, thereby possibly clobbering it.
-  void initVarLog4Cplus(const string& propFile, const string& logFile,
-                        const string& envVar = "LOG4CPLUS_LOGFILENAME");
+  // Initialize Log4cplus with a watchdog thread for the configuration file.
+  // \param propFile Name of the properties file. A missing \c ".log_prop"
+  // extension will automatically be added. Note that \a propFile is
+  // deliberatly passed by value, because we probably have to add the missing
+  // file extension.
+  // \param watchInterval Time interval (in milliseconds) used by the watch
+  // dog to check for changes in the configuration file.
+  void initLog4CplusAndWatch(string propFile, unsigned int watchInterval);
 
 } // namespace LOFAR
 
