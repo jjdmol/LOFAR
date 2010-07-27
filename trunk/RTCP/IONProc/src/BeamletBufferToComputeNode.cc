@@ -446,7 +446,8 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
   itsCurrentTimeStamp += itsNrSamplesPerSubband;
   timer.stop();
 
-  LOG_DEBUG_STR(itsLogPrefix << " ION->CN: " << PrettyTime(timer.getElapsed()));
+  if (itsNrInputs > 0)
+    LOG_DEBUG_STR(itsLogPrefix << " ION->CN: " << PrettyTime(timer.getElapsed()));
 }
 
 template class BeamletBufferToComputeNode<i4complex>;

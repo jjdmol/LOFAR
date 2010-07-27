@@ -110,7 +110,7 @@ OutputThread::~OutputThread()
 
 void OutputThread::writeLogMessage(unsigned sequenceNumber)
 {
-  LOG_INFO_STR(itsLogPrefix << "seqno = " << sequenceNumber);
+  LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << sequenceNumber);
 }
 
 

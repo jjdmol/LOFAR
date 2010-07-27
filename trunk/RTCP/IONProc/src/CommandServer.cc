@@ -46,7 +46,7 @@ static bool quit = false;
 
 static void handleCommand(const std::string &command)
 {
-  LOG_DEBUG_STR("command \"" << command << "\" received");
+  //LOG_DEBUG_STR("command \"" << command << "\" received");
 
   if (command.compare(0, 7, "cancel ") == 0) {
     if (myPsetNumber == 0) {
