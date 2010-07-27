@@ -256,7 +256,7 @@ bool ChildControl::startChild (uint16				aCntlrType,
 	itsActionList.push_back(ci);
 
 	// Trigger statemachine.
-	if (itsListener) {
+	if (itsListener && !itsActionTimer) {
 		itsActionTimer = itsListener->setTimer(0.0);
 		LOG_DEBUG_STR("ACTIONTIMER=" << itsActionTimer);
 	}
@@ -354,9 +354,10 @@ bool ChildControl::requestState	(CTState::CTstateNr	aState,
 			
 		iter++;
 	}	
-	itsTimerPort.cancelTimer(itsActionTimer);
-	itsActionTimer = itsTimerPort.setTimer(0.0);	// invoke _processActionList
-	LOG_DEBUG_STR("ACTIONTIMER=" << itsActionTimer);
+	if (!itsActionTimer) {
+		itsActionTimer = itsTimerPort.setTimer(0.0);	// invoke _processActionList
+		LOG_DEBUG_STR("ACTIONTIMER=" << itsActionTimer);
+	}
 
 	return (true);
 }
@@ -409,9 +410,10 @@ bool ChildControl::rescheduleChilds	(time_t				aStartTime,
 			
 		iter++;
 	}	
-	itsTimerPort.cancelTimer(itsActionTimer);
-	itsActionTimer = itsTimerPort.setTimer(0.0);	// invoke _processActionList
-	LOG_DEBUG_STR("ACTIONTIMER=" << itsActionTimer);
+	if (!itsActionTimer) {
+		itsActionTimer = itsTimerPort.setTimer(0.0);	// invoke _processActionList
+		LOG_DEBUG_STR("ACTIONTIMER=" << itsActionTimer);
+	}
 
 	return (true);
 }
