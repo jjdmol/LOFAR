@@ -4,10 +4,13 @@ install(PROGRAMS
   __init__.py
   BGcontrol.py
   CommandClient.py
+  Core.py
   Locations.py
   Logger.py
+  LogValidators.py
   ObservationID.py
   Parset.py
+  ParsetTester.py
   Partitions.py
   Sections.py
   Stations.py
