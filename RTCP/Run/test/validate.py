@@ -2,7 +2,8 @@
 import sys
 sys.path = sys.path + ["../src"]
 
-from testOLAP import testParset,NoErrors
+from LOFAR.ParsetTester import testParset
+from LOFAR.LogValidators import NoErrors
 from LOFAR.Locations import Locations
 from LOFAR import Logger
 
