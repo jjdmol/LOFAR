@@ -29,7 +29,7 @@ if __name__ == "__main__":
                         default = False,
                         help = "be quiet [%default]" )
   opgroup.add_option( "-k", "--keeplogs",
-                        dest = "quiet",
+                        dest = "keeplogs",
                         action = "store_true",
                         default = False,
                         help = "keep log files and data products of successful tests [%default]" )
