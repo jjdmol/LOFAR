@@ -73,6 +73,13 @@ template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsig
       }
     }
   }
+
+  // In CEP, the first subband is from -98 KHz to 98 KHz, rather than from 0 to 195 KHz.
+  // To avoid that the FFT outputs the channels in the wrong order (from 128 to
+  // 255 followed by channels 0 to 127), we multiply each second FFT input by -1.
+  // This is efficiently achieved by negating the FIR filter constants of all
+  // uneven FIR filters.
+  itsFilterBank.negateWeights();
 }
 
 

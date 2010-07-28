@@ -129,18 +129,34 @@ static void performStationFilter(InverseFilteredData& originalData, vector<FIR<f
     float sample = originalData.samples[time * onStationFilterSize + minorTime];
     float result = FIRs[filterIndex].processNextSample(sample);
     fftInData[minorTime] = result;
-//    fftInData[minorTime] = sample;
+    //    fftInData[minorTime] = sample;
   }
 }
 
 static void printData(InverseFilteredData& data) {
-  for (unsigned time=0; time < nrSamplesPerIntegration*onStationFilterSize; time++) {
+  for (unsigned time = 0; time < nrSamplesPerIntegration * onStationFilterSize; time++) {
     float sample = data.samples[time];
     fprintf(stdout, "%20.10lf\n", sample);
   }
 }
 
+void cepFilterTest() {
+  // CEP filter test
+  FilterBank fb(true, 16, 256, KAISER);
+  boost::multi_array<FIR<fcomplex> , 1> firs(boost::extents[16]);
+
+  // Init the FIR filters themselves with the weights of the filterbank.
+  for (unsigned chan = 0; chan < nrChannels; chan++) {
+    firs[chan].initFilter(&fb, chan);
+  }
+
+  cout << "START CEP WEIGHTS" << endl;
+  fb.printWeights();
+  cout << "END CEP WEIGHTS" << endl;
+}
+
 int main() {
+
   // copy the integer filter constants into a float array.
   for (unsigned filter = 0; filter < onStationFilterSize; filter++) {
     for (unsigned tap = 0; tap < nrTaps; tap++) {
@@ -154,6 +170,10 @@ int main() {
   for (unsigned chan = 0; chan < onStationFilterSize; chan++) {
     FIRs[chan].initFilter(&originalStationFilterBank, chan);
   }
+
+  cout << "START ORIG STATION WEIGHTS" << endl;
+  originalStationFilterBank.printWeights();
+  cout << "END ORIG STATION WEIGHTS" << endl;
 
   // The original data has the same data format as the original data, so reuse it here for this test
   InverseFilteredData originalData(nrSamplesPerIntegration, onStationFilterSize);
@@ -180,7 +200,7 @@ int main() {
 
   generateInputSignal(originalData);
 
-//  printData(originalData);
+  //  printData(originalData);
 
   cerr << "simulating station filter" << endl;
 
@@ -189,12 +209,12 @@ int main() {
     performStationFFT(transposedBeamFormedData, subbandList, time);
   }
 
-//  for (unsigned sb = 0; sb < nrSubbands; sb++) {
-    for (unsigned time = 0; time < nrSamplesPerIntegration; time++) {
-      fcomplex sample = transposedBeamFormedData.samples[1][0][time];
-//      fprintf(stdout, "%20.10lf\n", real(sample));
-    }
-//  }
+  //  for (unsigned sb = 0; sb < nrSubbands; sb++) {
+  for (unsigned time = 0; time < nrSamplesPerIntegration; time++) {
+    fcomplex sample = transposedBeamFormedData.samples[1][0][time];
+    //      fprintf(stdout, "%20.10lf\n", real(sample));
+  }
+  //  }
 
   cerr << "performing inversePPF" << endl;
 
@@ -202,7 +222,7 @@ int main() {
 
   cerr << "inversePPF done" << endl;
 
-//  cout << "result:" << endl;
+  //  cout << "result:" << endl;
 
   printData(invertedFilteredData);
 

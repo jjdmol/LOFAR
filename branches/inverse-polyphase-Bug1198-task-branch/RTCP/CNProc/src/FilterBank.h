@@ -19,13 +19,8 @@ namespace RTCP {
 
 enum WindowType { HAMMING, BLACKMAN, GAUSSIAN, KAISER, PREDEFINED_FILTER };
 
-// The first subband is from -98 KHz to 98 KHz, rather than from 0 to 195 KHz.
-// To avoid that the FFT outputs the channels in the wrong order (from 128 to
-// 255 followed by channels 0 to 127), we multiply each second FFT input by -1.
-// This is efficiently achieved by negating the FIR filter constants of all
-// uneven FIR filters.
-// Also, the filter tap constants for a channel are in reverse order. This makes the 
-// implementation more efficient.
+// Note that the filter tap constants for a channel are in reverse order.
+// This makes the implementation more efficient.
 
 class FilterBank {
   public:
@@ -40,6 +35,17 @@ class FilterBank {
 
   float* getWeights(unsigned channel);
 
+  // In CEP, the first subband is from -98 KHz to 98 KHz, rather than from 0 to 195 KHz.
+  // To avoid that the FFT outputs the channels in the wrong order (from 128 to
+  // 255 followed by channels 0 to 127), we multiply each second FFT input by -1.
+  // This is efficiently achieved by negating the FIR filter constants of all
+  // uneven FIR filters.
+  void negateWeights();
+
+  bool isNegated();
+
+  // Print the weights array in the natural order, in a format that can be read by gnuplot.
+  void printWeights();
 
 private:
   // Hamming window function
@@ -68,6 +74,7 @@ private:
   const unsigned itsNrTaps;
   const unsigned itsNrChannels;
   const bool itsVerbose;
+  bool itsNegated;
 
   // Store the weights in a multiarray, since both the number of channels are not known at compile time.
   boost::multi_array<float, 2, AlignedStdAllocator<float, 32> > weights; // [nrChannels][taps];
@@ -89,6 +96,10 @@ inline unsigned FilterBank::getNrTaps()
 inline float* FilterBank::getWeights(unsigned channel)
 {
 	return weights[channel].origin();
+}
+
+inline bool FilterBank::isNegated() {
+	return itsNegated;
 }
 
 } // namespace RTCP
