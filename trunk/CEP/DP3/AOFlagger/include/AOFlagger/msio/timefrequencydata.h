@@ -401,19 +401,19 @@ class TimeFrequencyData
 						data->SetGlobalMask(GetMask(polarisation));
 						break;
 					case StokesIPolarisation:
-						data= new TimeFrequencyData(StokesIPolarisation, GetStokesIFromDipole(0, 6), GetStokesIFromDipole(1, 7));
+						data = new TimeFrequencyData(StokesIPolarisation, GetStokesIFromDipole(0, 6), GetStokesIFromDipole(1, 7));
 						data->SetGlobalMask(GetMask(polarisation));
 						break;
 					case StokesQPolarisation:
-						data= new TimeFrequencyData(StokesQPolarisation, GetStokesQFromDipole(0, 6), GetStokesQFromDipole(1, 7));
+						data = new TimeFrequencyData(StokesQPolarisation, GetStokesQFromDipole(0,6), GetStokesQFromDipole(1,7));
 						data->SetGlobalMask(GetMask(polarisation));
 						break;
 					case StokesUPolarisation:
-						data= new TimeFrequencyData(StokesUPolarisation, GetStokesUFromDipole(2, 4), GetStokesUFromDipole(3, 5));
+						data = new TimeFrequencyData(StokesUPolarisation, GetStokesUFromDipole(2, 4), GetStokesUFromDipole(3, 5));
 						data->SetGlobalMask(GetMask(polarisation));
 						break;
 					case StokesVPolarisation:
-						data= new TimeFrequencyData(StokesVPolarisation, GetRealStokesVFromDipole(3, 4), GetImaginaryStokesVFromDipole(2, 5));
+						data = new TimeFrequencyData(StokesVPolarisation, GetRealStokesVFromDipole(3, 4), GetImaginaryStokesVFromDipole(2, 5));
 						data->SetGlobalMask(GetMask(polarisation));
 						break;
 					case AutoDipolePolarisation:
@@ -1040,52 +1040,52 @@ class TimeFrequencyData
 		
 		Image2DCPtr GetSingleAbsoluteFromComplexDipole() const
 		{
-			Image2DCPtr real = GetSum(0, 6);
-			Image2DCPtr imag = GetSum(1, 7);
+			Image2DCPtr real = GetSum(_images[0], _images[6]);
+			Image2DCPtr imag = GetSum(_images[1], _images[7]);
 			return GetAbsoluteFromComplex(real, imag);
 		}
 
 		Image2DCPtr GetSingleAbsoluteFromComplexAutoDipole() const
 		{
-			Image2DCPtr real = GetSum(0, 2);
-			Image2DCPtr imag = GetSum(1, 3);
+			Image2DCPtr real = GetSum(_images[0], _images[2]);
+			Image2DCPtr imag = GetSum(_images[1], _images[3]);
 			return GetAbsoluteFromComplex(real, imag);
 		}
 
 		Image2DCPtr GetSingleAbsoluteFromComplexCrossDipole() const
 		{
-			Image2DCPtr real = GetSum(0, 2);
-			Image2DCPtr imag = GetSum(1, 3);
+			Image2DCPtr real = GetSum(_images[0], _images[2]);
+			Image2DCPtr imag = GetSum(_images[1], _images[3]);
 			return GetAbsoluteFromComplex(real, imag);
 		}
 
 		Image2DCPtr GetStokesIFromDipole(size_t xx, size_t yy) const
 		{
-			return GetSum(xx, yy);
+			return GetSum(_images[xx], _images[yy]);
 		}
 		Image2DCPtr GetStokesQFromDipole(size_t xx, size_t yy) const
 		{
-			return GetDifference(xx, yy);
+			return GetDifference(_images[xx], _images[yy]);
 		}
 		Image2DCPtr GetStokesUFromDipole(size_t xy, size_t yx) const
 		{
-			return GetSum(xy, yx);
+			return GetSum(_images[xy], _images[yx]);
 		}
 		Image2DCPtr GetRealStokesVFromDipole(size_t xyImaginary, size_t yxReal) const
 		{
-			return GetNegatedSum(xyImaginary, yxReal);
+			return GetNegatedSum(_images[xyImaginary], _images[yxReal]);
 		}
 		Image2DCPtr GetImaginaryStokesVFromDipole(size_t xyReal, size_t yxImaginary) const
 		{
-			return GetDifference(xyReal, yxImaginary);
+			return GetDifference(_images[xyReal], _images[yxImaginary]);
 		}
 
 		Image2DCPtr GetAbsoluteFromComplex(Image2DCPtr real, Image2DCPtr imag) const;
 		Image2DCPtr GetPhaseFromComplex(Image2DCPtr real, Image2DCPtr imag) const;
 
-		Image2DCPtr GetSum(size_t left, size_t right) const;
-		Image2DCPtr GetNegatedSum(size_t left, size_t right) const;
-		Image2DCPtr GetDifference(size_t left, size_t right) const;
+		Image2DCPtr GetSum(Image2DCPtr left, Image2DCPtr right) const;
+		Image2DCPtr GetNegatedSum(Image2DCPtr left, Image2DCPtr right) const;
+		Image2DCPtr GetDifference(Image2DCPtr left, Image2DCPtr right) const;
 
 		Image2DCPtr GetSinglePhaseFromDipolePhase(size_t xx, size_t yy) const;
 		Image2DCPtr GetZeroImage() const;

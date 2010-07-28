@@ -25,6 +25,8 @@
 #include <gtkmm/box.h>
 #include <gtkmm/checkbutton.h>
 
+#include <AOFlagger/msio/types.h>
+
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
@@ -43,6 +45,8 @@ class HighlightWindow : public Gtk::Window {
 		Gtk::VBox _mainBox;
 		Gtk::HBox _highlightThresholdBox;
 		Gtk::CheckButton _highlightButton;
+
+		num_t _max;
 };
 
 #endif

@@ -42,6 +42,10 @@ TimeFrequencyWidget::TimeFrequencyWidget() :
 {
 	_highlightConfig = new ThresholdConfig();
 	_highlightConfig->InitializeLengthsSingleSample();
+
+	add_events(Gdk::POINTER_MOTION_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::BUTTON_PRESS_MASK);
+	signal_motion_notify_event().connect(sigc::mem_fun(*this, &TimeFrequencyWidget::onMotion));
+	signal_button_release_event().connect(sigc::mem_fun(*this, &TimeFrequencyWidget::onButtonReleased));
 }
 
 TimeFrequencyWidget::~TimeFrequencyWidget()
@@ -335,4 +339,28 @@ Mask2DCPtr TimeFrequencyWidget::GetActiveMask() const
 		else
 			return Mask2D::CreateSetMaskPtr<false>(_original.ImageWidth(), _original.ImageHeight());
 	}
+}
+
+bool TimeFrequencyWidget::onMotion(GdkEventMotion *event)
+{
+	if(HasImage())
+	{
+		int posX = (int) round((event->x - _leftBorderSize) * _image->Width() / (get_width() - _rightBorderSize - _leftBorderSize) - 0.5);
+		int posY = (int) round((event->y - _topBorderSize) * _image->Height() / (get_height() - _bottomBorderSize - _topBorderSize) - 0.5);
+		if(posX >= 0 && posY >= 0 && posX < (int) _image->Width() && posY < (int) _image->Height())
+			_onMouseMoved(posX, posY);
+	}
+	return true;
+}
+
+bool TimeFrequencyWidget::onButtonReleased(GdkEventButton *event)
+{
+	if(HasImage())
+	{
+		int posX = (int) round((double) event->x * _image->Width() / (get_width() - _rightBorderSize - _leftBorderSize) - 0.5 - _leftBorderSize);
+		int posY = (int) round((double) event->y * _image->Height() / (get_height() - _bottomBorderSize - _topBorderSize) - 0.5 - _topBorderSize);
+		if(posX >= 0 && posY >= 0 && posX < (int) _image->Width() && posY < (int) _image->Height())
+			_onButtonReleased(posX, posY);
+	}
+	return true;
 }
