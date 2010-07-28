@@ -174,8 +174,8 @@ class MSWindow : public Gtk::Window {
 		void onEditStrategyPressed();
 		void onExecuteStrategyPressed();
 		void onGoToPressed();
-		bool onTFWidgetMotion(GdkEventMotion *event);
-		bool onTFWidgetButtonReleased(GdkEventButton *event);
+		void onTFWidgetMouseMoved(size_t x, size_t y);
+		void onTFWidgetButtonReleased(size_t x, size_t y);
 		void onMultiplyData();
 		void onSegment();
 		void onCluster();

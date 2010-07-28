@@ -27,19 +27,19 @@ Image2DCPtr TimeFrequencyData::GetAbsoluteFromComplex(Image2DCPtr real, Image2DC
 	return Image2DPtr(FFTTools::CreateAbsoluteImage(*real, *imag));
 }
 			
-Image2DCPtr TimeFrequencyData::GetSum(size_t left, size_t right) const
+Image2DCPtr TimeFrequencyData::GetSum(Image2DCPtr left, Image2DCPtr right) const
 {
-	return StokesImager::CreateSum(_images[left], _images[right]);
+	return StokesImager::CreateSum(left, right);
 }
 
-Image2DCPtr TimeFrequencyData::GetNegatedSum(size_t left, size_t right) const
+Image2DCPtr TimeFrequencyData::GetNegatedSum(Image2DCPtr left, Image2DCPtr right) const
 {
-	return StokesImager::CreateNegatedSum(_images[left], _images[right]);
+	return StokesImager::CreateNegatedSum(left, right);
 }
 
-Image2DCPtr TimeFrequencyData::GetDifference(size_t left, size_t right) const
+Image2DCPtr TimeFrequencyData::GetDifference(Image2DCPtr left, Image2DCPtr right) const
 {
-	return StokesImager::CreateDifference(_images[left], _images[right]);
+	return StokesImager::CreateDifference(left, right);
 }
 
 Image2DCPtr TimeFrequencyData::GetSinglePhaseFromDipolePhase(size_t xx, size_t yy) const

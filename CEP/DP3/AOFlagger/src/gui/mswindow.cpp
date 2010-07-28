@@ -77,9 +77,8 @@ MSWindow::MSWindow() : _imagePlaneWindow(0), _statistics(new RFIStatistics()),  
 	createToolbar();
 
 	_mainVBox.pack_start(_timeFrequencyWidget);
-	_timeFrequencyWidget.add_events(Gdk::POINTER_MOTION_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::BUTTON_PRESS_MASK);
-	_timeFrequencyWidget.signal_motion_notify_event().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetMotion));
-	_timeFrequencyWidget.signal_button_release_event().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetButtonReleased));
+	_timeFrequencyWidget.OnMouseMovedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetMouseMoved));
+	_timeFrequencyWidget.OnButtonReleasedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetButtonReleased));
 	_timeFrequencyWidget.Init();
 	_timeFrequencyWidget.show();
 
@@ -1214,27 +1213,21 @@ void MSWindow::onGoToPressed()
 	}
 }
 
-bool MSWindow::onTFWidgetMotion(GdkEventMotion* event)
+void MSWindow::onTFWidgetMouseMoved(size_t x, size_t y)
 {
-	if(HasImage() && _timeFrequencyWidget.GetMetaData() != 0)
+	if(_timeFrequencyWidget.GetMetaData() != 0)
 	{
 		Image2DCPtr image = _timeFrequencyWidget.Image();
-		size_t posX = (size_t) roundl((long double) event->x * image->Width() / _timeFrequencyWidget.get_width() - 0.5L);
-		size_t posY = (size_t) roundl((long double) event->y * image->Height() / _timeFrequencyWidget.get_height() - 0.5L);
-		if(posX >= image->Width()) posX = image->Width() - 1;
-		if(posY >= image->Height()) posY = image->Height() - 1;
-		long double v = image->Value(posX, posY);
+		num_t v = image->Value(x, y);
 		_statusbar.pop();
 		std::stringstream s;
-		s << "x=" << posX << ",y=" << posY << ",value=" << v;
+		s << "x=" << x << ",y=" << y << ",value=" << v;
 		const std::vector<double> &times = _timeFrequencyWidget.GetMetaData()->ObservationTimes();
-		s << " (t=" << Date::AipsMJDToString(times[posX]) <<
-		", f=" << Frequency::ToString(_timeFrequencyWidget.GetMetaData()->Band().channels[posY].frequencyHz)
+		s << " (t=" << Date::AipsMJDToString(times[x]) <<
+		", f=" << Frequency::ToString(_timeFrequencyWidget.GetMetaData()->Band().channels[y].frequencyHz)
 		<< ")";
 		_statusbar.push(s.str(), 0);
 	}
-
-	return true;
 }
 
 void MSWindow::onShowImagePlane()
@@ -1329,29 +1322,18 @@ void MSWindow::onTimeGraphButtonPressed()
 	}
 }
 
-bool MSWindow::onTFWidgetButtonReleased(GdkEventButton *event)
+void MSWindow::onTFWidgetButtonReleased(size_t x, size_t y)
 {
 	if(HasImage())
 	{
 		if(_plotFrame.is_visible())
 		{
-			size_t 
-				width = GetOriginalData().ImageWidth(),
-				height = GetOriginalData().ImageHeight();
-			size_t posX = (size_t) roundl((long double) event->x * width / _timeFrequencyWidget.get_width() - 0.5L);
-			size_t posY = (size_t) roundl((long double) event->y * height / _timeFrequencyWidget.get_height() - 0.5L);
-			if(posX >= width)
-				posX = width - 1;
-			if(posY >= height)
-				posY = height - 1;
-	
 			_plotFrame.SetTimeFrequencyData(GetActiveData());
-			_plotFrame.SetSelectedSample(posX, posY);
+			_plotFrame.SetSelectedSample(x, y);
 		
 			_plotFrame.Update();
 		}
 	}
-	return true;
 }
 
 void MSWindow::onUnrollPhaseButtonPressed()

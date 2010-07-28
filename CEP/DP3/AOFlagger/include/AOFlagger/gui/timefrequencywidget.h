@@ -108,12 +108,17 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		size_t EndFrequency() const { return _endFrequency; }
 		void SetSegmentedImage(SegmentedImageCPtr segmentedImage) { _segmentedImage = segmentedImage; }
 		TimeFrequencyMetaDataCPtr GetMetaData() { return _metaData; }
+
+		sigc::signal<void, size_t, size_t> &OnMouseMovedEvent() { return _onMouseMoved; }
+		sigc::signal<void, size_t, size_t> &OnButtonReleasedEvent() { return _onButtonReleased; }
 	private:
 		void Clear();
 		void findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max);
 		void redraw();
 		void ShrinkPixBufHorizontally();
 		bool onExposeEvent(GdkEventExpose* ev);
+		bool onMotion(GdkEventMotion *event);
+		bool onButtonReleased(GdkEventButton *event);
 		ColorMap *createColorMap();
 		const TimeFrequencyData getActiveDataWithOriginalFlags() const
 		{
@@ -153,6 +158,9 @@ class TimeFrequencyWidget : public Gtk::DrawingArea {
 		SegmentedImageCPtr _segmentedImage;
 		class HorizontalTimeScale *_horiScale;
 		class VerticalNumericScale *_vertScale;
+
+		sigc::signal<void, size_t, size_t> _onMouseMoved;
+		sigc::signal<void, size_t, size_t> _onButtonReleased;
 };
 
 #endif

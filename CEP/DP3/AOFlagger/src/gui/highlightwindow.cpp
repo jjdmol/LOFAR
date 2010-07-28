@@ -63,6 +63,7 @@ HighlightWindow::HighlightWindow(MSWindow &msWindow) :
 	_mainBox.pack_start(_highlightButton, false, true);
 	_highlightButton.show();
 
+	_max = _msWindow.GetActiveData().GetSingleImage()->GetMaximum();
 
 	add(_mainBox);
 	_mainBox.show();
@@ -81,7 +82,7 @@ void HighlightWindow::onValueChange()
 	// make it exponential and between [0,1]
 	val = powl(2.0L, val) / (4096.0L);
 
-	_msWindow.HighlightConfig().InitializeThresholdsFromFirstThreshold(val, ThresholdConfig::Gaussian);
+	_msWindow.HighlightConfig().InitializeThresholdsFromFirstThreshold(val*_max, ThresholdConfig::Gaussian);
 	_msWindow.HighlightConfig().SetMinimumConnectedSamples((size_t) round(_connectedCountScale.get_value()));
 	if(_highlightButton.get_active())
 		_msWindow.Update();
