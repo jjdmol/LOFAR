@@ -175,6 +175,12 @@ static void fftTest() {
 //  cout << "END FFT TEST INPUT" << endl;
 #endif
 
+  // simulate some zeros
+  for(unsigned int i=248; i<onStationFilterSize; i++) {
+    fftInData[i] = 0.0;
+    inputData[i] = 0.0;
+  }
+
   fftwf_execute(plan);
 
 #if 0
@@ -190,12 +196,14 @@ static void fftTest() {
   float maxError = 0.0f;
 
   for (unsigned time = 0; time < onStationFilterSize; time++) {
+
     float error = fabsf(inputData[time] - (fftInData[time]/((float)onStationFilterSize))); // the error
     if(error > maxError) {
       maxError = error;
     }
 
     fprintf(stdout, "%20.10lf\n", error);
+//    fprintf(stdout, "%20.10lf\n", fftInData[time]);
   }
 
   cerr << "max error = " << maxError << endl;
