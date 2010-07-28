@@ -76,13 +76,15 @@ void InversePPF::destroyFFT() {
 #endif
 }
 
+// Reads itsFftOutData, writes to invertedFilteredData.
 void InversePPF::performFilter(InverseFilteredData& invertedFilteredData, unsigned time, unsigned minorTime) {
-  unsigned filterIndex = minorTime % itsOnStationFilterSize;
   float sample = itsFftOutData[minorTime];
-  float result = itsFIRs[filterIndex].processNextSample(sample);
+  float result = itsFIRs[minorTime].processNextSample(sample);
   invertedFilteredData.samples[time * itsOnStationFilterSize + minorTime] = result;
+//  invertedFilteredData.samples[time * itsOnStationFilterSize + minorTime] = sample;
 }
 
+// Goes from tansposedBeamFormedData to itsFftInData.
 void InversePPF::createFFTInput(const TransposedBeamFormedData& transposedBeamFormedData, unsigned time) {
   fftInTimer.start();
 
@@ -103,6 +105,7 @@ void InversePPF::createFFTInput(const TransposedBeamFormedData& transposedBeamFo
   fftInTimer.stop();
 }
 
+// This method writes the result to itsFFtOutData
 void InversePPF::performInverseFFT() {
   fftTimer.start();
 
