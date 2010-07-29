@@ -385,21 +385,29 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
 
 BaselineMask MeasurementAIPS::asMask(const string &filter) const
 {
+    // NOTE: TEMPORARY WORKAROUND FOR CASACORE BUG.
+    // Due to a bug in casacore, we need to make sure that any Table instance
+    // that is passed to getBaselineExpr() references the same underlying
+    // representation class. Therefore, we cannot first create a Table
+    // containing only unique baselines and select on that. Instead, we do it
+    // the other way around. For large tables this will probably be slower.
+
+    // Select all baselines that match the given pattern.
+    Table tab_selection = itsMainTableView(getBaselineExpr(itsMainTableView,
+        filter));
+
     // Find all unique baselines.
     Block<String> sortColumns(2);
     sortColumns[0] = "ANTENNA1";
     sortColumns[1] = "ANTENNA2";
-    Table tab_baselines = itsMainTableView.sort(sortColumns, Sort::Ascending,
+    Table tab_baselines = tab_selection.sort(sortColumns, Sort::Ascending,
         Sort::HeapSort | Sort::NoDuplicates);
-
-    // Select all baselines that match the given pattern.
-    Table tab_selection = tab_baselines(getBaselineExpr(tab_baselines, filter));
 
     // Fetch the selected baselines.
     Vector<Int> antenna1 =
-        ROScalarColumn<Int>(tab_selection, "ANTENNA1").getColumn();
+        ROScalarColumn<Int>(tab_baselines, "ANTENNA1").getColumn();
     Vector<Int> antenna2 =
-        ROScalarColumn<Int>(tab_selection, "ANTENNA2").getColumn();
+        ROScalarColumn<Int>(tab_baselines, "ANTENNA2").getColumn();
 
     // Construct a BaselineMask from the selected baseline.
     BaselineMask mask;
@@ -664,6 +672,13 @@ Table MeasurementAIPS::getTableSelection(const Table &table,
 casa::TableExprNode MeasurementAIPS::getBaselineExpr(const casa::Table &table,
     const string &pattern) const
 {
+    // TODO: We pass a pointer to an MS instance that is created locally to
+    // MSSelection::toTableExprNode()!! This could be dangerous if it is
+    // referenced by the TableExprNode we return (although it seems to work
+    // fine, probably because the TableExprNode only references the underlying
+    // representation class that is also referenced by the input Table instance,
+    // and kept alive through that reference).
+
     try
     {
         // Create a MeasurementSet instance from the table of unique baselines.
