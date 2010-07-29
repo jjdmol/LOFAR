@@ -338,7 +338,7 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 		// start StopTimer for safety.
 		LOG_INFO_STR("Starting QUIT timer that expires 5 seconds after end of observation");
 		ptime	now(second_clock::universal_time());
-		itsStopTimerID = itsTimerPort->setTimer(time_duration(now - itsStopTime).total_seconds() + 5.0);
+		itsStopTimerID = itsTimerPort->setTimer(time_duration(itsStopTime - now).total_seconds() + 5.0);
 
 		// Start ParentControl task
 		LOG_DEBUG ("Enabling ParentControl task");
