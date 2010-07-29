@@ -2,76 +2,11 @@
 
 from LOFAR import Logger
 from logging import debug,info,warning,error,critical
-from LOFAR import Sections
+from LOFAR.Core import runCorrelator
 from util import Commands
 from LOFAR.Locations import Locations
-from LOFAR.CommandClient import sendCommand
-from util.Hosts import ropen,rmkdir,rexists,runlink,rsymlink
+from util.Hosts import rmkdir,rexists,runlink,rsymlink
 import sys
-import signal
-from threading import Lock
-import thread
-
-DRYRUN = False
-
-aborted = False
-lock = Lock()
-lock.acquire() # lock can be released by anyone to signal the end of the run
-
-# translate signals to KeyboardInterrupts to catch them in a try block
-def sigHandler( sig, frame ):
-  global aborted
-
-  critical( "Caught signal %s -- aborting" % (sig,) )
-  aborted = True
-
-  try:
-    lock.release()
-  except thread.error:
-    pass
-
-signal.signal( signal.SIGTERM, sigHandler )
-signal.signal( signal.SIGQUIT, sigHandler )
-signal.signal( signal.SIGINT, sigHandler )
-
-def runCorrelator( partition, start_cnproc = True, start_ionproc = True ):
-  """ Run an observation using the provided parsets. """
-
-  # ----- Select the sections to start
-  sections = Sections.SectionSet()
-
-  if start_ionproc:
-    sections += [Sections.IONProcSection( partition )]
-  if start_cnproc:
-    sections += [Sections.CNProcSection( partition )]
-
-  # sanity check on sections
-  if not DRYRUN:
-    sections.check()
-
-  # ----- Run all sections
-  try:
-    # start all sections
-    sections.run()
-
-    # wait for all sections to complete
-    sections.wait( lock )
-
-    if aborted:
-      raise Exception("aborted")
-
-  except Exception,e:
-    error( "%s", e )
-
-    try:
-      # soft abort -- wait for all observations to stop
-      sendCommand( partition, "quit" )
-    except: 
-      # hard abort -- kill all sections
-      sections.abort()
-
-  # let the sections clean up 
-  sections.postProcess()
 
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup

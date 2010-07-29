@@ -2,7 +2,7 @@
 
 from LOFAR import Logger
 from logging import debug,info,warning,error,critical
-from LOFAR.Core import convertParsets
+from LOFAR.Core import buildParset, combineParsets
 from LOFAR.Parset import Parset
 from util.Hosts import rsymlink
 from LOFAR.Locations import Locations
@@ -88,7 +88,9 @@ if __name__ == "__main__":
   Logger.initLogger()  
 
   # read and convert parsets
-  parsets = convertParsets( args, options.olapparset, options.partition )  
+  parsets = [buildParset( None, arg, options.olapparset, options.partition ) for arg in args]
+  parsets = combineParsets( parsets )
+  parsets = checkParsets( parsets )
 
   # output them to stdout or file
   info( "========== Saving parsets ==========" )

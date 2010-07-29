@@ -1,10 +1,12 @@
 import Logger
 from logging import debug,info,warning,error,critical
 
-from Core import runCorrelator,convertParsets
+from Core import runCorrelator,buildParset
 from Parset import Parset
 from CommandClient import sendCommand
+from LogValidators import ValidationError
 from Locations import Locations
+from Partitions import PartitionPsets
 from util.Commands import SyncCommand
 from threading import Thread
 from time import sleep
@@ -15,18 +17,23 @@ class ParsetTester:
 
       Usage example:
 
-         pt = ParsetTester( partition, logdir, "name of test" )
-         pt.readParset( "parset=RTCP.parset" )
+         pt = ParsetTester( "RTCP.parset", partition, "name of test" )
+
+         # adjust the parset at will -- it has been read but not post-processed
+         pt.setNrSubbands( 248 )
+         pt.parset["Observation.outputCorrelatedData"] = True
+
+         # run it and validate the logs
          pt.runParset()
          pt.validate( [NoErrors()] )
+
+         # clean up logs and data products (if desired)
+         pt.cleanup()
   """       
 
-  def __init__( self, partition, testname ):
+  def __init__( self, parsetFilename, partition, testname ):
     self.partition = partition
     self.testname = testname
-
-    self.parset = Parset()
-    self.olapparset_filename = "%s/../OLAP.parset" % (os.path.dirname(__file__),)
 
     # configure the correlator before the parsets are added such that they will use the right paths
     testfilename = self.testname
@@ -42,10 +49,55 @@ class ParsetTester:
       "logdir":     self.logdir,
     }
 
-  def readParset( self, argstr, override_keys = {} ):
-    self.parset = convertParsets( [argstr], self.olapparset_filename, self.partition, override_keys )[0]
+    self.parset = Parset()
+    self.olapparset_filename = "%s/../OLAP.parset" % (os.path.dirname(__file__),)
+    self.rtcpparset_filename = parsetFilename
 
-  def runParset( self, starttimeout = 30, runtimeout = 300, stoptimeout = 60 ):
+    for f in [self.olapparset_filename, self.rtcpparset_filename]:
+      self.parset.readFile( Locations.resolvePath( f ) )
+
+  def setNrSubbands( self, nrSubbands ):
+    """ Use subbands 0 .. nrSubbands. """
+
+    subbands =  [i     for i in xrange(0,nrSubbands)]
+    beams =     [0     for i in xrange(0,nrSubbands)]
+    rspboards = [i//62 for i in xrange(0,nrSubbands)]
+    rspslots  = [i%62  for i in xrange(0,nrSubbands)]
+
+    override_keys = {
+           "Observation.subbandList":    subbands,
+           "Observation.beamList":       beams,
+           "Observation.rspBoardList":   rspboards,
+           "Observation.rspSlotList":    rspslots,
+            }
+
+    for k,v in override_keys.iteritems():
+      self.parset[k] = v
+
+  def setNrStations( self, nrStations ):
+    """ Use fake stations 0 .. nrStations which map to this partition. Uses at most |partition| stations. """
+
+    psets = PartitionPsets[self.partition]
+    ipsuffixes = [ip.split(".")[3] for ip in psets]
+    stations = ["S%s" % (s,) for s in ipsuffixes]
+
+    self.parset.forceStations( stations[:nrStations] )
+
+
+  def setNrPencilBeams( self, nrBeams ):
+    """ Use nrBeams fake pencil beams. """
+
+    self.parset["Observation.nrPencils"] = nrBeams - 1
+    for n in xrange(0,nrBeams):
+      self.parset["Observation.Pencil[%d].angle1" % (n,)] = 0
+      self.parset["Observation.Pencil[%d].angle2" % (n,)] = 0
+
+  def runParset( self, starttimeout = 30, runtime = 60, stoptimeout = 120 ):
+    # finalise and check parset BEFORE we start doing anything fancy
+    self.parset = buildParset( self.parset, "", "start=+10,run=%d" % (runtime,), self.partition )
+    self.parset.preWrite()
+    self.parset.check()
+
     self.results["started"] = True
 
     class CorrelatorThread(Thread):
@@ -107,7 +159,7 @@ class ParsetTester:
 
         return ret != (0,0)
 
-      for i in xrange( runtimeout + stoptimeout ):
+      for i in xrange( runtime + stoptimeout ):
         sleep( 1 )
 
         if isStopped():
@@ -193,26 +245,3 @@ class ParsetTester:
         SyncCommand("ssh %s rm -rf %s" % (storageNode,dataDir))
     else:    
       warning( "Not removing data in %s:%s" % (storageNode,dataDir) )
-
-def testParset( testname, partition, argstr, override_keys = {}, validators = [], ignore_errors = False, cleanup = True ):
-  """ Test and validate a parset.
-
-      testname:                 name of the test
-      partition:                name of the BG/P partition
-      argstr:                   string specifying the observation
-      override_keys:            parset keys which override those in the parset
-      validators:               set of validators to run on the logfiles
-      ignore_errors:            if true, continue validating if an error is encountered """
-
-  from LogValidators import NoErrors    
-
-  pt = ParsetTester( partition, testname )
-  pt.readParset( argstr, override_keys )
-  pt.runParset()
-
-  success = pt.validate( validators or [NoErrors()], ignore_errors )
-
-  if success and cleanup:
-    pt.cleanup()
-
-  return success  

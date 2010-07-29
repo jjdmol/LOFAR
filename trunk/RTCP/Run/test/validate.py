@@ -2,9 +2,10 @@
 import sys
 sys.path = sys.path + ["../src"]
 
-from LOFAR.ParsetTester import testParset
+from LOFAR.ParsetTester import ParsetTester
 from LOFAR.LogValidators import NoErrors
 from LOFAR.Locations import Locations
+from LOFAR.Partitions import PartitionPsets
 from LOFAR import Logger
 
 parsetFile = "RTCP-validate.parset"
@@ -85,7 +86,12 @@ if __name__ == "__main__":
   			dest = "beamrun",
                         action = "store_true",
                         default = False,
-			help = "run tests for varying number of beams" )
+			help = "run tests for varying number of beams and subbands" )
+  testgroup.add_option( "--stationrun",
+  			dest = "stationrun",
+                        action = "store_true",
+                        default = False,
+			help = "run tests for varying number of beams and stations" )
   parser.add_option_group( testgroup )
 
   # parse arguments
@@ -104,16 +110,36 @@ if __name__ == "__main__":
 
   run_all = not reduce( lambda x,y: x or options[y.dest], testgroup.option_list, True )
 
+  def initParset( name ):
+    return ParsetTester( parsetFile, options.partition, name )
+
+  def testParset( pt, validators ):
+    pt.runParset()
+
+    success = pt.validate( validators )
+
+    if success and not options.keeplogs:
+      pt.cleanup()
+
+    return success  
+
   # clocks
   if run_all or options.clock:
     for clock in [160,200]:
-      if not testParset( "%d MHz clock" % (clock,), options.partition, "parset=%s" % (parsetFile,), { "Observation.sampleClock": clock }, [NoErrors()], cleanup = not options.keeplogs ):
+      p = initParset( "%d MHz clock" % (clock,) )
+      p.parset["Observation.sampleCock"] = clock
+
+      if not testParset( p, [NoErrors()] ):
         sys.exit(1)
 
   # individual outputs
   if run_all or options.oneoutput:
     for output in ["CorrelatedData","CoherentStokes","IncoherentStokes"]:
-      if not testParset( "output %s only" % (output,), options.partition, "parset=%s" % (parsetFile,), { "Observation.output%s" % (output,): True }, [NoErrors()], cleanup = not options.keeplogs ):
+      p = initParset( "output %s only" % (output,) )
+
+      p.parset["Observation.output%s" % (output,)] = True
+
+      if not testParset( p, [NoErrors()] ):
         sys.exit(1)
 
   # test 2 outputs, various number of subbands (for 2nd transpose)
@@ -124,22 +150,13 @@ if __name__ == "__main__":
       if nrSubbands < nrBeams:
         continue
 
-      subbands =  [i     for i in xrange(0,nrSubbands)]
-      beams =     [0     for i in xrange(0,nrSubbands)]
-      rspboards = [i//62 for i in xrange(0,nrSubbands)]
-      rspslots  = [i%62  for i in xrange(0,nrSubbands)]
+      p = initParset( "%d subbands" % (nrSubbands,) )
+      p.setNrSubbands( nrSubbands )
 
-      override_keys = {
-             "Observation.subbandList":    subbands,
-             "Observation.beamList":       beams,
-             "Observation.rspBoardList":   rspboards,
-             "Observation.rspSlotList":    rspslots,
+      p.parset["Observation.outputCorrelatedData"] = True
+      p.parset["Observation.outputCoherentStokes"] = True
 
-             "Observation.outputCorrelatedData": True,
-             "Observation.outputCoherentStokes": True,
-            }
-
-      if not testParset( "%d subbands" % (nrSubbands,), options.partition, "parset=%s" % (parsetFile,), override_keys, [NoErrors()], cleanup = not options.keeplogs ):
+      if not testParset( p, [NoErrors()] ):
         sys.exit(1)
 
   # test 2 outputs, various number of subbands (for 2nd transpose), multiple beams
@@ -149,26 +166,26 @@ if __name__ == "__main__":
         if nrSubbands < nrBeams:
           continue
 
-        subbands =  [i     for i in xrange(0,nrSubbands)]
-        beams =     [0     for i in xrange(0,nrSubbands)]
-        rspboards = [i//62 for i in xrange(0,nrSubbands)]
-        rspslots  = [i%62  for i in xrange(0,nrSubbands)]
+        p = initParset( "%d beams %d subbands" % (nrBeams,nrSubbands,) )
+        p.setNrSubbands( nrSubbands )
+        p.setNrPencilBeams( nrBeams )
 
-        override_keys = {
-               "Observation.subbandList":    subbands,
-               "Observation.beamList":       beams,
-               "Observation.rspBoardList":   rspboards,
-               "Observation.rspSlotList":    rspslots,
+        p.parset["Observation.outputCorrelatedData"] = True
+        p.parset["Observation.outputCoherentStokes"] = True
 
-               "Observation.outputCorrelatedData": True,
-               "Observation.outputCoherentStokes": True,
-               "Observation.nrPencils":            nrBeams - 1,
-              }
-
-        for n in xrange(0,nrBeams):
-          override_keys["Observation.Pencil[%d].angle1" % (n,)] = 0
-          override_keys["Observation.Pencil[%d].angle2" % (n,)] = 0
-
-        if not testParset( "%d beams %d subbands" % (nrBeams,nrSubbands), options.partition, "parset=%s" % (parsetFile,), override_keys, [NoErrors()], cleanup = not options.keeplogs ):
+        if not testParset( p, [NoErrors()] ):
           sys.exit(1)
 
+  # test 2 outputs, various number of subbands (for 2nd transpose), multiple beams
+  if run_all or options.stationrun:
+    for nrBeams in [2,4,7,9]:
+      for nrStations in xrange(1,len(PartitionPsets[options.partition])):
+        p = initParset( "%d beams %d stations" % (nrBeams,nrStations,) )
+        p.setNrStations( nrStations )
+        p.setNrPencilBeams( nrBeams )
+
+        p.parset["Observation.outputCorrelatedData"] = True
+        p.parset["Observation.outputCoherentStokes"] = True
+
+        if not testParset( p, [NoErrors()] ):
+          sys.exit(1)

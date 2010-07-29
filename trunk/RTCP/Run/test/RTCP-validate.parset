@@ -85,7 +85,7 @@ Observation.bandFilter = LBA_30_90
 #Observation.bandFilter = HBA_170_230
 #Observation.bandFilter = HBA_210_250
 
-OLAP.Correlator.integrationTime = 0.25
+OLAP.Correlator.integrationTime = 1.0
 #OLAP.IONProc.integrationSteps = 1   # (generated)
 #OLAP.CNProc.integrationSteps  = 768 # (generated, multiple of 128 for pencil beams)
 

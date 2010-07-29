@@ -348,7 +348,13 @@ class Parset(util.Parset.Parset):
 
 	self.setStations(stations)
 
-        self['OLAP.storageStationNames'] = [s.name for s in self.stations]
+        def name( s ):
+          try:
+            return s.name
+          except:
+            return s
+
+        self['OLAP.storageStationNames'] = map( name, self.stations )
         del self['Observation.VirtualInstrument.stationList']
         del self['Observation.antennaSet']
         
