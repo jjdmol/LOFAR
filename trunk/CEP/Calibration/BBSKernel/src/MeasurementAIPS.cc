@@ -676,7 +676,11 @@ casa::TableExprNode MeasurementAIPS::getBaselineExpr(const casa::Table &table,
     {
         // NOTE: TEMPORARY WORKAROUND FOR CASACORE BUG.
         // Reset class static state...
-        *(const_cast<TableExprNode*>(MSAntennaParse::node())) = TableExprNode();
+        TableExprNode *tmp = const_cast<TableExprNode*>(MSAntennaParse::node());
+        if(tmp != 0)
+        {
+            *tmp = TableExprNode();
+        }
 
         // Create a MeasurementSet instance from the table of unique baselines.
         // This is required because MSSelection::toTableExprNode only operates
