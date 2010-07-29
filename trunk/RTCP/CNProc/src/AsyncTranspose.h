@@ -61,8 +61,8 @@ template <typename SAMPLE_TYPE> class AsyncTranspose
   std::map<unsigned, unsigned> itsRankToPsetIndex; 
 
   AsyncCommunication itsAsyncComm;
-  const std::vector<unsigned> &itsInputPsets;
-  const std::vector<unsigned> &itsOutputPsets;
+  const std::vector<unsigned> itsInputPsets;
+  const std::vector<unsigned> itsOutputPsets;
   const LocationInfo &itsLocationInfo;
 
   // The number of communicates (writes/reads) needed to transport one sub band.

@@ -156,7 +156,7 @@ void OutputThread::mainLoop()
     if (ex.error == EINTR) {
       LOG_WARN_STR(itsLogPrefix << "Connection to " << outputDescriptor << " aborted");
     } else {
-      LOG_WARN_STR(itsLogPrefix << "Connection to " << outputDescriptor << " failed: " << ex);
+      LOG_WARN_STR(itsLogPrefix << "Connection to " << outputDescriptor << " failed: " << ex.text());
     }
     return;
   } catch (SocketStream::TimeOutException &ex) {
@@ -173,12 +173,16 @@ void OutputThread::mainLoop()
     try {
       // write data, including serial nr
       data->write(streamToStorage.get(), true);
-    } catch (...) {
+    } catch (SystemCallException &ex) {
       semaphore.up();
       itsFreeQueue.append(data);
 
-      LOG_ERROR_STR(itsLogPrefix << "Connection to " << outputDescriptor << " lost");
-      throw;
+      if (ex.error == EINTR) {
+        LOG_WARN_STR(itsLogPrefix << "Connection to " << outputDescriptor << " aborted");
+      } else {
+        LOG_WARN_STR(itsLogPrefix << "Connection to " << outputDescriptor << " lost: " << ex.text());
+      }
+      return;
     }
 
     semaphore.up();

@@ -31,38 +31,29 @@ class AsyncTransposeBeams
 {
   public:
 
-  AsyncTransposeBeams(const bool isTransposeInput, const bool isTransposeOutput, 
-                      const unsigned myNrBeams, const unsigned myFirstBeam,
-	   	      const unsigned groupNumber, const LocationInfo &, 
-		      const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets);
+  AsyncTransposeBeams(const bool isTransposeInput, const bool isTransposeOutput, unsigned nrSubbands,
+	   	      const LocationInfo &, 
+		      const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, const std::vector<unsigned> &usedCoresInPset);
   
   // Post all async receives for the transpose.
-  void postReceive(TransposedBeamFormedData *transposedData, unsigned globalBeamNr, unsigned subband, unsigned psetIndex);
+  void postReceive(TransposedBeamFormedData *transposedData, unsigned subband, unsigned beam, unsigned psetIndex, unsigned coreIndex);
   
   // Wait for a data message. Returns the station number where the message originates.
   unsigned waitForAnyReceive();
   
   // Asynchronously send a subband.
-  void asyncSend(unsigned outputPsetNr, unsigned beam, const BeamFormedData *inputData);
+  void asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned beam, const BeamFormedData *inputData);
   
   // Make sure all async sends have finished.
   void waitForAllSends();
   
  private:
-  
   const bool itsIsTransposeInput, itsIsTransposeOutput;
 
-  unsigned itsNrSubbands;
-  unsigned itsNrSubbandsPerPset;
-  unsigned itsNrPencilBeams;
-
-  // A mapping that tells us, if we receive a message from a source,
-  // to which pset that source belongs.
-  std::map<unsigned, unsigned> itsRankToPsetIndex; 
-
   AsyncCommunication itsAsyncComm;
-  const std::vector<unsigned> &itsInputPsets;
-  const std::vector<unsigned> &itsOutputPsets;
+  const std::vector<unsigned> itsInputPsets;
+  const std::vector<unsigned> itsOutputPsets;
+  const std::vector<unsigned> itsUsedCoresInPset;
   const LocationInfo &itsLocationInfo;
 
   // The number of communicates (writes/reads) needed to transport one sub band.
@@ -72,13 +63,6 @@ class AsyncTransposeBeams
   // The maps are indexed by the inputPset index.
   // The value is -1 if the read finished.
   Matrix<int> itsCommHandles; // [itsNrCommunications][itsNrInputPsets]
-
-  // The number of the transpose group we belong to.
-  // The cores with the same index in a pset together form a group.
-  unsigned itsGroupNumber;
-
-  const unsigned itsMyNrBeams;
-  const unsigned itsMyFirstBeam;
 };
 
 #endif // defined HAVE_MPI

@@ -97,7 +97,7 @@ void InputThread::mainLoop()
     if (ex.error == EINTR) {
       LOG_WARN_STR(itsLogPrefix << "Connection from " << inputDescriptor << " aborted");
     } else {
-      LOG_WARN_STR(itsLogPrefix << "Connection from " << inputDescriptor << " failed: " << ex);
+      LOG_WARN_STR(itsLogPrefix << "Connection from " << inputDescriptor << " failed: " << ex.text());
     }
   }
 
