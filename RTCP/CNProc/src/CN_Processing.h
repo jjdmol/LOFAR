@@ -37,6 +37,7 @@
 #include <ArenaMapping.h>
 
 #include <AsyncTranspose.h>
+#include <AsyncTransposeBeams.h>
 #include <PencilBeams.h>
 #include <PPF.h>
 #include <Correlator.h>
@@ -74,6 +75,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
 
   private:
     void                transposeInput();
+    bool                transposeBeams();
     void                filter();
     void                mergeStations();
     void                formBeams();
@@ -83,6 +85,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
 
     void                sendOutput( unsigned outputNr, StreamableData *outputData );
     void                finishSendingInput();
+    void                finishSendingBeams();
 
 #if 0
     void		checkConsistency(Parset *) const;
@@ -100,8 +103,14 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned            itsNrPencilBeams;
     unsigned            itsNrSubbands;
     unsigned            itsNrSubbandsPerPset;
+    unsigned            itsNrBeams;
+    unsigned            itsMyNrBeams;
+    unsigned            itsNrBeamsPerPset;
     unsigned            itsComputeGroupRank;
     unsigned            itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
+    unsigned            itsPhaseTwoPsetIndex, itsPhaseThreePsetIndex;
+    bool                itsPhaseThreeExists;
+    unsigned            itsUsedCoresPerPset,itsMyCoreIndex;
     Stream	        *itsStream;
     Stream              *(*itsCreateStream)(unsigned, const LocationInfo &);
     std::vector<Stream*> itsOutputStreams;
@@ -111,12 +120,13 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     bool		itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
     bool		itsStokesIntegrateChannels;
     bool                itsNrStokes;
-    
+
     CN_ProcessingPlan<SAMPLE_TYPE> *itsPlan;
     ArenaMapping        itsMapping; // needs to be a member to ensure that its lifetime extends beyond that of its data sets
 
 #if defined HAVE_MPI
     AsyncTranspose<SAMPLE_TYPE> *itsAsyncTransposeInput;
+    AsyncTransposeBeams         *itsAsyncTransposeBeams;
 #endif
 
     PPF<SAMPLE_TYPE>	*itsPPF;

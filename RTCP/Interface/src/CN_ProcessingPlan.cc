@@ -85,15 +85,6 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 #endif
     );
 
-    itsCoherentStokesData = new StokesData(
-      true,
-      configuration.nrStokes(),
-      nrBeams,
-      configuration.nrChannelsPerSubband(),
-      configuration.nrSamplesPerIntegration(),
-      configuration.nrSamplesPerStokesIntegration()
-    );
-
     itsIncoherentStokesData = new StokesData(
       false,
       configuration.nrStokes(),
@@ -114,9 +105,6 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     TRANSFORM( itsTransposedInputData,  itsFilteredData   );
     TRANSFORM( itsFilteredData,         itsBeamFormedData );
     TRANSFORM( itsFilteredData,         itsCorrelatedData );
-#ifndef SECOND_TRANSPOSE    
-    TRANSFORM( itsBeamFormedData,       itsCoherentStokesData );
-#endif
     TRANSFORM( itsFilteredData,         itsIncoherentStokesData );
 
     // send all requested outputs
@@ -126,28 +114,16 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     if( configuration.outputCorrelatedData() ) {
       send( itsCorrelatedData,                         "",                   ProcessingPlan::DIST_SUBBAND );
     }
-
-#ifndef SECOND_TRANSPOSE    
-    if( configuration.outputBeamFormedData() ) {
-      send( itsBeamFormedData,                         ".beams",             ProcessingPlan::DIST_SUBBAND );
-    }
-    if( configuration.outputCoherentStokes() ) {
-      send( itsCoherentStokesData,                     ".stokes",            ProcessingPlan::DIST_SUBBAND );
-    }
-#endif 
-
     if( configuration.outputIncoherentStokes() ) {
       send( itsIncoherentStokesData,                   ".incoherentstokes",  ProcessingPlan::DIST_SUBBAND );
     }
 
-#ifdef SECOND_TRANSPOSE    
     // whether there will be a second transpose
     const bool phaseThreeExists = configuration.phaseThreePsets().size() > 0;
 
     if (phaseThreeExists) {
       require( itsBeamFormedData );
     }
-#endif
   }
 
   if (hasPhaseOne) {
@@ -155,10 +131,8 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     require( itsInputData );
   }
 
-#ifdef SECOND_TRANSPOSE    
   if (hasPhaseThree) {
     itsTransposedBeamFormedData = new TransposedBeamFormedData(
-      configuration.nrBeamsPerPset(),
       configuration.nrSubbands(),
       configuration.nrChannelsPerSubband(),
       configuration.nrSamplesPerIntegration()
@@ -167,8 +141,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     itsCoherentStokesData = new StokesData(
       true,
       configuration.nrStokes(),
-      configuration.nrBeamsPerPset(),
-      //configuration.nrSubbands(),
+      configuration.nrSubbands(),
       configuration.nrChannelsPerSubband(),
       configuration.nrSamplesPerIntegration(),
       configuration.nrSamplesPerStokesIntegration()
@@ -184,7 +157,6 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       send( itsCoherentStokesData,                     ".stokes",            ProcessingPlan::DIST_BEAM );
     }
   }
-#endif  
 }
 
 template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::~CN_ProcessingPlan()
