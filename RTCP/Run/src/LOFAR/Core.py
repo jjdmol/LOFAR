@@ -80,16 +80,16 @@ def runCorrelator( partition, start_cnproc = True, start_ionproc = True ):
   # let the sections clean up 
   sections.postProcess()
 
-
-def convertParsets( args, olapparset, partition = None, override_keys = {} ):
+def buildParset( parset = None, args = "", olapparset = "OLAP.parset", partition = None ):
   """
     Adjust and augment the keys of a parset for use in OLAP.
 
+    parset:         if defined, a parset object which already contains the keys read from the parset files
     args:           a string of arguments (parset=RTCP.parset,start=+60, etc, see the __main__ function below)
     olapparset:     the filename of OLAP.parset (contains station positions and delays)
     partition:      the BG/P partition that will be used (if none, the partition has to be specified in the parset)
-    override_keys:  parset keys which override ones in the parset
   """
+
   # valid observation parameters
   validObsParams = [
     "parset", "output", "stations", "tcp", "null",
@@ -101,6 +101,7 @@ def convertParsets( args, olapparset, partition = None, override_keys = {} ):
     return key in validObsParams or "." in key
 
   # default observation parameters
+
   defaultObsParams = {
     "parset": "RTCP.parset",
     "start": "+15",
@@ -118,32 +119,31 @@ def convertParsets( args, olapparset, partition = None, override_keys = {} ):
     overrideRack( Stations, int(partition[2]) )
 
   # ========== Observations
-  parsets = []
-  for obsIndex,obs in enumerate(args):
-    info( "===== Parsing observation %s: %s =====" % (obsIndex,obs,) )
+  obs = args
+  info( "===== Parsing observation %s =====" % (obs,) )
 
-    # parse and check the observation parameters
-    def splitparam( s ):
-      """ Convert a parameter which is either 'key=value' or 'key' into a
-          key,value tuple. """
+  # parse and check the observation parameters
+  def splitparam( s ):
+    """ Convert a parameter which is either 'key=value' or 'key' into a
+        key,value tuple. """
 
-      if "=" in s:
-        return s.split("=",1)
+    if "=" in s:
+      return s.split("=",1)
 
-      return (s,None)
+    return (s,None)
 
-    obsparams = defaultObsParams.copy()
-    obsparams.update( dict( map( splitparam, obs.split(",") ) ) )
+  obsparams = defaultObsParams.copy()
+  obsparams.update( dict( map( splitparam, obs.split(",") ) ) )
 
-    for p in obsparams:
-      if not isValidObsParam( p ):
-        critical("Unknown observation parameter '%s'" % (p,))
+  for p in obsparams:
+    if not isValidObsParam( p ):
+      critical("Unknown observation parameter '%s'" % (p,))
+
+  if parset is None:
+    parset = Parset()
 
     if "parset" not in obsparams:
       critical("Observation '%s' does not define a parset file." % (obs,))
-
-    parset = Parset()
-    parsets.append( parset )
 
     # read the parset file
     def addParset( f ):
@@ -156,105 +156,105 @@ def convertParsets( args, olapparset, partition = None, override_keys = {} ):
     except IOError,e:
       critical("Cannot read parset file: %s" % (e,))
 
-    # parse specific parset values from the command line (all options containing ".")
-    # apply them so that we will parse them instead of the parset values
-    for k,v in obsparams.iteritems():
-      if "." not in k:
-        continue
+  # parse specific parset values from the command line (all options containing ".")
+  # apply them so that we will parse them instead of the parset values
+  for k,v in obsparams.iteritems():
+    if "." not in k:
+      continue
 
-      parset.parse( "%s=%s" % (k,v) )
+    parset.parse( "%s=%s" % (k,v) )
 
-    for k,v in override_keys.iteritems():
-      parset[k] = v
+  # reserve an observation id
+  parset.postRead()
 
-    # reserve an observation id
-    parset.postRead()
+  if parset.getObsID():
+    info( "Distilled observation ID %s from parset." % (parset.getObsID(),) )
+  else:  
+    try:
+      obsid = ObservationID().generateID()
+    except IOError,e:
+      critical("Could not generate observation ID: %s" % (e,))
 
-    if parset.getObsID():
-      info( "Distilled observation ID %s from parset." % (parset.getObsID(),) )
-    else:  
-      try:
-        obsid = ObservationID().generateID()
-      except IOError,e:
-        critical("Could not generate observation ID: %s" % (e,))
+    parset.setObsID( obsid )
 
-      parset.setObsID( obsid )
+    info( "Generated observation ID %s" % (obsid,) )
 
-      info( "Generated observation ID %s" % (obsid,) )
+  # override parset with command-line values
+  if partition:
+    parset.setPartition( partition )
+  else:
+    parset.setPartition( parset.distillPartition() )
 
-    # override parset with command-line values
-    if partition:
-      parset.setPartition( partition )
-    else:
-      parset.setPartition( parset.distillPartition() )
+  # set stations
+  if "stations" in obsparams:
+    stationList = Stations.parse( obsparams["stations"] )
 
-    # set stations
-    if "stations" in obsparams:
-      stationList = Stations.parse( obsparams["stations"] )
+    parset.forceStations( stationList )
+  else:
+    stationList = parset.stations
 
-      parset.forceStations( stationList )
-    else:
-      stationList = parset.stations
+  if "tcp" in obsparams:
+    # turn all inputs into tcp:*
+    def tcpify( input ):
+      if input.startswith("tcp:") or input.startswith("file:"):
+        return input
+      elif input.startswith("udp:"):
+        return "tcp:"+input[4:]
+      else:
+        return "tcp:"+input
 
-    if "tcp" in obsparams:
-      # turn all inputs into tcp:*
-      def tcpify( input ):
-        if input.startswith("tcp:") or input.startswith("file:"):
-          return input
-        elif input.startswith("udp:"):
-          return "tcp:"+input[4:]
-        else:
-          return "tcp:"+input
+    for s in stationList:
+      s.inputs = map( tcpify, s.inputs )
 
-      for s in stationList:
-        s.inputs = map( tcpify, s.inputs )
+  if "null" in obsparams:
+    # turn all inputs into null:
+    for s in stationList:
+      s.inputs = ["null:"] * len(s.inputs)
 
-    if "null" in obsparams:
-      # turn all inputs into null:
-      for s in stationList:
-        s.inputs = ["null:"] * len(s.inputs)
+  parset.setStations( stationList )
 
-    parset.setStations( stationList )
+  # set runtime
+  if "start" in obsparams and "stop" in obsparams:
+    parset.setStartStopTime( obsparams["start"], obsparams["stop"] )
+  elif "start" in obsparams and "run" in obsparams:
+    parset.setStartRunTime( obsparams["start"], obsparams["run"] )
+  elif "Observation.startTime" in parset and "Observation.stopTime" in parset:
+    parset.setStartStopTime( parset["Observation.startTime"], parset["Observation.stopTime"] )
+  else:  
+    parset.setStartRunTime( obsparams["start"], defaultRunTime )
 
-    # set runtime
-    if "start" in obsparams and "stop" in obsparams:
-      parset.setStartStopTime( obsparams["start"], obsparams["stop"] )
-    elif "start" in obsparams and "run" in obsparams:
-      parset.setStartRunTime( obsparams["start"], obsparams["run"] )
-    elif "Observation.startTime" in parset and "Observation.stopTime" in parset:
-      parset.setStartStopTime( parset["Observation.startTime"], parset["Observation.stopTime"] )
-    else:  
-      parset.setStartRunTime( obsparams["start"], defaultRunTime )
+  info( "Running from %s to %s." % (parset["Observation.startTime"], parset["Observation.stopTime"] ) )
+  info( "Partition     = %s" % (parset.partition,) )
+  info( "Storage Nodes = %s" % (", ".join(parset.storagenodes),) )
+  info( "Stations      = %s" % (", ".join([s.name for s in parset.stations]),) )
 
-    info( "Running from %s to %s." % (parset["Observation.startTime"], parset["Observation.stopTime"] ) )
-    info( "Partition     = %s" % (parset.partition,) )
-    info( "Storage Nodes = %s" % (", ".join(parset.storagenodes),) )
-    info( "Stations      = %s" % (", ".join([s.name for s in parset.stations]),) )
+  # set a few other options
+  configmap = {
+    "clock": parset.setClock,
+    "integration": parset.setIntegrationTime,
+  }
 
-    # set a few other options
-    configmap = {
-      "clock": parset.setClock,
-      "integration": parset.setIntegrationTime,
-    }
+  for k,v in configmap.iteritems():
+    if k in obsparams:
+      v( obsparams[k] )
 
-    for k,v in configmap.iteritems():
-      if k in obsparams:
-        v( obsparams[k] )
+  # reapply them in case they got overwritten
+  for k,v in obsparams.iteritems():
+    if "." not in k:
+      continue
 
-    # reapply them in case they got overwritten
-    for k,v in obsparams.iteritems():
-      if "." not in k:
-        continue
+    parset.parse( "%s=%s" % (k,v) )
 
-      parset.parse( "%s=%s" % (k,v) )
+  parset.setFilename( Locations.resolvePath( obsparams["output"], parset ) )
 
-    for k,v in override_keys.iteritems():
-      parset[k] = v
+  return parset
 
-  # finalise and save parsets
-  usedStoragePorts = []
+def combineParsets( parsets ):
+  """
+    Adjusts a combination of parsets (such as non-overlapping port numbers in Storage) and finalise it.
+  """
 
-  for obsIndex,parset in enumerate(parsets):
+  for parset in parsets:
     parset.disableStoragePorts( usedStoragePorts )
 
     # parse final settings (derive some extra keys)
@@ -264,9 +264,12 @@ def convertParsets( args, olapparset, partition = None, override_keys = {} ):
     for ports in parset.getStoragePorts().itervalues():
       usedStoragePorts.extend( ports )
 
+  return parsets
+
+def checkParsets( parsets ):  
+  for parset in parsets:
     # sanity check on parset
     parset.check()
 
-    parset.setFilename( Locations.resolvePath( obsparams["output"], parset ) )
+  return parsets  
 
-  return parsets
