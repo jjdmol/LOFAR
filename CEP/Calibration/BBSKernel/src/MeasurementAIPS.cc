@@ -51,6 +51,7 @@
 #include <casa/Arrays/Cube.h>
 
 #include <ms/MeasurementSets/MSAntenna.h>
+#include <ms/MeasurementSets/MSAntennaParse.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSDataDescription.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
@@ -385,29 +386,21 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
 
 BaselineMask MeasurementAIPS::asMask(const string &filter) const
 {
-    // NOTE: TEMPORARY WORKAROUND FOR CASACORE BUG.
-    // Due to a bug in casacore, we need to make sure that any Table instance
-    // that is passed to getBaselineExpr() references the same underlying
-    // representation class. Therefore, we cannot first create a Table
-    // containing only unique baselines and select on that. Instead, we do it
-    // the other way around. For large tables this will probably be slower.
-
-    // Select all baselines that match the given pattern.
-    Table tab_selection = itsMainTableView(getBaselineExpr(itsMainTableView,
-        filter));
-
     // Find all unique baselines.
     Block<String> sortColumns(2);
     sortColumns[0] = "ANTENNA1";
     sortColumns[1] = "ANTENNA2";
-    Table tab_baselines = tab_selection.sort(sortColumns, Sort::Ascending,
+    Table tab_baselines = itsMainTableView.sort(sortColumns, Sort::Ascending,
         Sort::HeapSort | Sort::NoDuplicates);
+
+    // Select all baselines that match the given pattern.
+    Table tab_selection = tab_baselines(getBaselineExpr(tab_baselines, filter));
 
     // Fetch the selected baselines.
     Vector<Int> antenna1 =
-        ROScalarColumn<Int>(tab_baselines, "ANTENNA1").getColumn();
+        ROScalarColumn<Int>(tab_selection, "ANTENNA1").getColumn();
     Vector<Int> antenna2 =
-        ROScalarColumn<Int>(tab_baselines, "ANTENNA2").getColumn();
+        ROScalarColumn<Int>(tab_selection, "ANTENNA2").getColumn();
 
     // Construct a BaselineMask from the selected baseline.
     BaselineMask mask;
@@ -681,12 +674,21 @@ casa::TableExprNode MeasurementAIPS::getBaselineExpr(const casa::Table &table,
 
     try
     {
+        // NOTE: TEMPORARY WORKAROUND FOR CASACORE BUG.
+        // Reset class static state...
+        *(const_cast<TableExprNode*>(MSAntennaParse::node())) = TableExprNode();
+
         // Create a MeasurementSet instance from the table of unique baselines.
         // This is required because MSSelection::toTableExprNode only operates
         // on MeasurementSets.
         MeasurementSet ms(table);
+
         MSSelection selection;
-        selection.setAntennaExpr(pattern);
+        if(!selection.setAntennaExpr(pattern))
+        {
+            THROW(BBSKernelException, "MSSelection::setAntennaExpr() failed.");
+        }
+
         return selection.toTableExprNode(&ms);
     }
     catch(AipsError &e)
