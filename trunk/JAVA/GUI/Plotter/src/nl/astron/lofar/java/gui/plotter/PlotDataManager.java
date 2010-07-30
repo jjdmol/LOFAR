@@ -72,6 +72,7 @@ public class PlotDataManager{
     /**
      * Cleans up the data access/export interfaces and other instance variables
      */
+    @Override
     public void finalize() throws Throwable {
         instance = null;
         plotterConfigurationFile = null;
