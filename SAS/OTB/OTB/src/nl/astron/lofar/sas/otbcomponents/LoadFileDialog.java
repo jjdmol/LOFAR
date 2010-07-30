@@ -112,6 +112,7 @@ public class LoadFileDialog extends javax.swing.JDialog {
         fileNameInput.setToolTipText("Filename field");
         getContentPane().add(fileNameInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 40, 290, -1));
 
+        browseButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_fileopen.gif"))); // NOI18N
         browseButton.setText("Browse");
         browseButton.setToolTipText("browse for a file");
         browseButton.addActionListener(new java.awt.event.ActionListener() {
@@ -132,10 +133,12 @@ public class LoadFileDialog extends javax.swing.JDialog {
 
         descriptionInput.setRows(3);
         descriptionInput.setToolTipText("Set Description for this tree");
-        getContentPane().add(descriptionInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 140, 370, 60));
+        getContentPane().add(descriptionInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 140, 390, 60));
 
+        cancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         cancelButton.setText("Cancel");
         cancelButton.setToolTipText("Cancel filesearch");
+        cancelButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
@@ -143,14 +146,16 @@ public class LoadFileDialog extends javax.swing.JDialog {
         });
         getContentPane().add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 230, -1, -1));
 
+        loadButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         loadButton.setText("Load");
         loadButton.setToolTipText("Load this File");
+        loadButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         loadButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 loadButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(loadButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 230, -1, -1));
+        getContentPane().add(loadButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 230, -1, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents

@@ -22,6 +22,7 @@
 
 package nl.astron.lofar.sas.otb.util.treemanagers;
 
+import java.rmi.RemoteException;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.event.TreeModelEvent;
@@ -79,7 +80,7 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
     
     public void defineChildsForNode(TreeNode aNode) {
         logger.trace("Entry - TreeManager jParmDBnode-defineChildNodes("+aNode.getName()+" ("+((jParmDBnode)aNode.getUserObject()).getNodeID()+"))");
-        try {
+       try {
             // You must set the flag before defining children if you
             // use "add" for the new children. Otherwise you get an infinite
             // recursive loop, since add results in a call to getChildCount.
@@ -112,8 +113,8 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
                     }
                 }
             }
-        } catch(Exception e) {
-            logger.fatal("Exception during TreeManager jParmDBnode-defineChildNodes: " + e);
+        } catch(RemoteException e) {
+            logger.error("RemoteException during TreeManager jParmDBnode-defineChildNodes: " + e);
         }
         logger.trace("Exit - TreeManager defineChildNodes("+toString()+")");
     }

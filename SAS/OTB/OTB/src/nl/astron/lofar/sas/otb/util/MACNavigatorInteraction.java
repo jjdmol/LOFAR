@@ -84,7 +84,7 @@ public class MACNavigatorInteraction implements FileListener {
         }
         catch (Exception e)
         {
-        System.err.println ("Error writing to file");
+        System.err.println ("MACNavigatorInteraction::setCurrentSelection | Error writing to file");
         }
         
     }
@@ -114,7 +114,7 @@ public class MACNavigatorInteraction implements FileListener {
         }
         catch (Exception e)
         {
-        System.err.println ("Error writing to file");
+        System.err.println ("MACNavigatorInteraction::setCurrentUser|Error writing to file");
         }
         
     }
@@ -126,6 +126,6 @@ public class MACNavigatorInteraction implements FileListener {
     * @param file  File which has been changed.
     */
     public void fileChanged (File file) {
-        logger.debug("fileChanged: " + file.getPath());
+        logger.debug("MACNavigatorInteraction::fileChanged |fileChanged: " + file.getPath());
     }
 }

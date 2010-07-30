@@ -92,6 +92,7 @@ public class BeamFileDialog extends javax.swing.JDialog {
         fileNameInput.setToolTipText("Filename field");
         getContentPane().add(fileNameInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 40, 290, -1));
 
+        browseButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_fileopen.gif"))); // NOI18N
         browseButton.setText("Browse");
         browseButton.setToolTipText("browse for a file");
         browseButton.addActionListener(new java.awt.event.ActionListener() {
@@ -99,8 +100,9 @@ public class BeamFileDialog extends javax.swing.JDialog {
                 browseButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(browseButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 40, -1, 20));
+        getContentPane().add(browseButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 40, 90, 20));
 
+        cancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         cancelButton.setText("Cancel");
         cancelButton.setToolTipText("Cancel filesearch");
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
@@ -108,8 +110,9 @@ public class BeamFileDialog extends javax.swing.JDialog {
                 cancelButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, -1, -1));
+        getContentPane().add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, 100, -1));
 
+        loadButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         loadButton.setText("Load");
         loadButton.setToolTipText("Load this File");
         loadButton.addActionListener(new java.awt.event.ActionListener() {
@@ -117,7 +120,7 @@ public class BeamFileDialog extends javax.swing.JDialog {
                 loadButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(loadButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 80, -1, -1));
+        getContentPane().add(loadButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 80, 80, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents

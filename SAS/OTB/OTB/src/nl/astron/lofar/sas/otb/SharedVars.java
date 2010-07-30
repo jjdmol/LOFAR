@@ -28,6 +28,7 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface;
+import nl.astron.lofar.sas.otb.exceptions.ParmDBConfigurationException;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.ParmDBConfigurationHelper;
 import org.apache.log4j.Logger;
@@ -143,7 +144,7 @@ public class SharedVars {
                 itsjParmFacade = (jParmFacadeInterface) Naming.lookup(aRC);
                 
             } catch (Throwable e) {
-                logger.error("jParmFacade could not be loaded : "+e.getMessage(),e);
+                logger.error("jParmFacade could not be loaded : "+e.getMessage());
             }
         }
         return itsjParmFacade;

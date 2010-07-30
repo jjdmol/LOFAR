@@ -29,6 +29,7 @@ import java.awt.Cursor;
 import java.rmi.RemoteException;
 import java.util.*;
 import javax.swing.*;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.exceptions.*;
 import nl.astron.lofar.sas.otb.panels.*;
@@ -135,11 +136,15 @@ public class MainFrame extends javax.swing.JFrame {
         
             showPanel(MainPanel.getFriendlyNameStatic());
         } catch(NoServerConnectionException ex ) {
-            logger.error(ex);
+            String aS="No Server Connection "+ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             exit();
             throw ex;
         } catch (NotLoggedInException ex ) {
-            logger.error(ex);
+            String aS="Not logged in "+ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             exit();
             throw ex;
         }
@@ -237,7 +242,9 @@ public class MainFrame extends javax.swing.JFrame {
             return p;
         }
         catch(Exception e) {
-            logger.fatal(e);
+            String aS= e.getMessage();
+            logger.fatal(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_death.gif")));
         }
         return null;
     }
@@ -269,7 +276,9 @@ public class MainFrame extends javax.swing.JFrame {
             showPanel(MainPanel.getFriendlyNameStatic());
         }
         catch(Exception e) {
-            logger.fatal(e);
+            String aS= e.getMessage();
+            logger.fatal(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_death.gif")));
         }
     }
     
@@ -443,9 +452,13 @@ public class MainFrame extends javax.swing.JFrame {
             setVisible(true);
             showPanel(MainPanel.getFriendlyNameStatic());
         } catch (NoServerConnectionException e) {
-            logger.error(e);
+            String aS= "No Server connection"+e.getMessage();
+            logger.fatal(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_death.gif")));
         } catch (NotLoggedInException e) {
-            logger.error(e);
+            String aS= "Not logged in "+e.getMessage();
+            logger.fatal(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_death.gif")));
         }
     }//GEN-LAST:event_jMenuItemLogoutActionPerformed
 
@@ -463,7 +476,9 @@ public class MainFrame extends javax.swing.JFrame {
                 OtdbRmi.getRemoteOTDBaccess().logout(OtdbRmi.getRMIRegistryName());
             }
         } catch (RemoteException ex) {
-            logger.error(ex);
+            String aS= "Remote Exception "+ex.getMessage();
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
         this.dispose();
     }
@@ -508,7 +523,9 @@ public class MainFrame extends javax.swing.JFrame {
                   // Start the actual RMI connection
                     if (! SharedVars.getOTDBrmi().isConnected()) {
                         if (! SharedVars.getOTDBrmi().openAccessConnection()) {
-                            logger.error("Error: failed to open RMI Access Connections");
+                            String aS="Error: failed to open RMI Access Connections";
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,"You didn't select a tree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         } else {
                             aC = "DB connection to: "+OtdbRmi.getRMIServerName()+" Port: "+OtdbRmi.getRMIServerPort();
                         }
@@ -548,11 +565,14 @@ public class MainFrame extends javax.swing.JFrame {
                     registerDefaultPlugins();
                     registerUserPlugins();
                 } catch(NoAccessException e) {
-                    logger.fatal("Access Violation: " + e.getMessage());
-                    JOptionPane.showMessageDialog(this,e.getMessage(),e.getMessage(),JOptionPane.ERROR_MESSAGE);
+                    String aS="Access Violation: " + e.getMessage();
+                    logger.fatal(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_death.gif")));
                     accessAllowed = false;
                 } catch(ConnectionFailedException e) {
-                    JOptionPane.showMessageDialog(this,e.getMessage(),e.getMessage(),JOptionPane.ERROR_MESSAGE);
+                    String aS="Connection failed "+ e.getMessage();
+                    logger.fatal(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_death.gif")));
                     accessAllowed = false;
                 }
             }

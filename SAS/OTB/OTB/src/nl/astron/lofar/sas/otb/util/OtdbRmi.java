@@ -22,10 +22,10 @@
 
 package nl.astron.lofar.sas.otb.util;
 
-import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.TreeMap;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.lofarutils.remoteFileInterface;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.exceptions.ConnectionFailedException;
@@ -53,6 +53,7 @@ import org.apache.log4j.Logger;
  *
  * @updated coolen 16-06-2006,  added support for remotefiletransfer
  * @updated coolen 27-02-2007,  added support for server/port setting
+ * @updated coolen 01-05-2010,  added support for jotdb3 (multi user)
  */
 public class OtdbRmi {
     
@@ -302,7 +303,8 @@ public class OtdbRmi {
           }
         catch (Exception e)
 	  {
-	     logger.debug("Open Remote Access via RMI and JNI failed: " + e);
+	     String aS="Open Remote Access via RMI and JNI failed: " + e;
+             logger.error(aS);
 	  }
         return false;
     }
@@ -335,7 +337,7 @@ public class OtdbRmi {
           }
         catch (Exception e)
 	  {
-	     logger.debug("Open Remote Connection via RMI and JNI failed: " + e);
+	     logger.error("Open Remote Connection via RMI and JNI failed: " + e);
 	  }
         return false;
     }   
@@ -361,7 +363,7 @@ public class OtdbRmi {
           }
         catch (Exception e)
 	  {
-	     logger.debug("Getting Remote Maintenance via RMI and JNI failed: " + e);
+	     logger.error("Getting Remote Maintenance via RMI and JNI failed: " + e);
 	  }
         return false;
     }
@@ -388,7 +390,7 @@ public class OtdbRmi {
           }
         catch (Exception e)
 	  {
-	     logger.debug("Getting Remote Campaign via RMI and JNI failed: " + e);
+	     logger.error("Getting Remote Campaign via RMI and JNI failed: " + e);
 	  }
         return false;
     }
@@ -417,7 +419,7 @@ public class OtdbRmi {
           }
         catch (Exception e)
 	  {
-	     logger.debug("Getting Remote Value via RMI and JNI failed: " + e);
+	     logger.error("Getting Remote Value via RMI and JNI failed: " + e);
 	  }
         return false;
     }
@@ -446,7 +448,7 @@ public class OtdbRmi {
           }
         catch (Exception e)
 	  {
-	   logger.debug("Getting remote Converter via RMI and JNI failed: " + e);
+	   logger.error("Getting remote Converter via RMI and JNI failed: " + e);
 	  }
         return false;
     }
@@ -474,7 +476,7 @@ public class OtdbRmi {
           }
         catch (Exception e)
 	  {
-	     logger.debug("Getting RemoteFileTransfer via RMI and JNI failed: " + e);
+	     logger.error("Getting RemoteFileTransfer via RMI and JNI failed: " + e);
 	  }
         return false;
     }
@@ -490,7 +492,7 @@ public class OtdbRmi {
             logger.debug("Got all conversiontypes");
             return true;
         } catch (Exception e) {
-            logger.debug("Getting ConversionTypes via RMI and JNI failed");
+            logger.error("Getting ConversionTypes via RMI and JNI failed");
         }
         return false;
     }

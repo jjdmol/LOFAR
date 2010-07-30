@@ -14,6 +14,7 @@ package nl.astron.lofar.sas.otbcomponents;
 import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.Vector;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jCampaignInfo;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBtree;
@@ -131,7 +132,9 @@ public class CampaignInfo extends javax.swing.JPanel {
                     this.inputContact.setText("");
                 }
             } catch (RemoteException ex) {
-                logger.error("ObservationPanel: Error getting treeInfo/campaignInfo" + ex);
+                String aS="RemoteException during treeInfo/campaignInfo" + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 this.inputNameTxt.setText("");
                 this.inputTitle.setText("");
                 this.inputPI.setText("");
@@ -158,7 +161,10 @@ public class CampaignInfo extends javax.swing.JPanel {
             try {
                 OtdbRmi.getRemoteCampaign().saveCampaign(aCampaignInfo);
             } catch (RemoteException ex) {
-                logger.error("ObservationPanel: Error saving changed campaignInfo" + ex);            }
+                String aS="ObservationPanel: Error saving changed campaignInfo" + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+            }
         }
     }
 

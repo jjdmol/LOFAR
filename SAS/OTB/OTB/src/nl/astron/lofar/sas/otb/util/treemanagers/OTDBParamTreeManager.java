@@ -124,12 +124,12 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
                 
                 fireTreeInsertionPerformed(evt);
             }
-        } catch(Exception e) {
-            logger.fatal("Exception during TreeManager jOTDBparam-defineChildNodes: " + e);
+        } catch(RemoteException e) {
+            logger.error("RemoteException getComponentList or getComponentParams: " + e);
         }
         
-        logger.trace("Exit - TreeManager defineChildNodes("+toString()+")");
     }
+
     public TreeNode getRootNode(Object arguments){
         jOTDBparam aParam =null;
         jVICnodeDef aVICnodeDef=null;
@@ -137,7 +137,7 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
         try {
             itsComponentID = Integer.parseInt(arguments.toString());
         } catch (NumberFormatException ex) {
-            logger.error("The OTDBParamTreeManager received an incorrect itsComponentID! ",ex);
+            logger.error("The OTDBParamTreeManager received an incorrect itsComponentID! : "+ arguments.toString()+" - " +ex);
         }
         if (itsComponentID == 0 ) {
             // create a sample component param
@@ -156,10 +156,10 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
                     aParam.unit=-1;
                     aParam.description="";
                 } else {
-                    logger.debug("failed to get ComponentNode");
+                    logger.error("failed to get ComponentNode");
                 }
             } catch (RemoteException ex) {
-                logger.fatal("The OTDBParamTreeManager could not build a root node! ",ex);
+                logger.error("The OTDBParamTreeManager could not build a root node! ",ex);
             }
         }
         TreeNode newNode = new TreeNode(OTDBParamTreeManager.instance,aParam,aParam.name);

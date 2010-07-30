@@ -120,8 +120,8 @@ public class TemplateTreeManager extends GenericTreeManager implements ITreeMana
                 TreeModelEvent evt = new TreeModelEvent(newNode,newNode.getPath());
                 fireTreeInsertionPerformed(evt);
             }
-        } catch(Exception e) {
-            logger.fatal("Exception during TemplateTreeManager-defineChildNodes",e);
+        } catch(RemoteException e) {
+            logger.error("RemoteException during getItemList: TemplateTreeManager-defineChildNodes: ",e);
         }
     }
     public TreeNode getRootNode(Object arguments){
@@ -130,7 +130,7 @@ public class TemplateTreeManager extends GenericTreeManager implements ITreeMana
         try {
             itsTreeID = Integer.parseInt(arguments.toString());
         } catch (NumberFormatException ex) {
-            logger.error("The TemplateTreeManager received an incorrect TreeID! ",ex);
+            logger.error("The TemplateTreeManager received an incorrect TreeID "+arguments.toString()+" : "+ex);
         }
         
         if (itsTreeID == 0 ) {
@@ -141,7 +141,7 @@ public class TemplateTreeManager extends GenericTreeManager implements ITreeMana
             try {
                 otdbNode = OtdbRmi.getRemoteMaintenance().getTopNode(itsTreeID);
             } catch (RemoteException ex) {
-                logger.fatal("The TemplateTreeManager could not build a root node! ",ex);
+                logger.error("RemoteException during getTopNode. The TemplateTreeManager could not build a root node! ",ex);
             }
         }
         TreeNode newNode = new TreeNode(TemplateTreeManager.instance,otdbNode,otdbNode.name);

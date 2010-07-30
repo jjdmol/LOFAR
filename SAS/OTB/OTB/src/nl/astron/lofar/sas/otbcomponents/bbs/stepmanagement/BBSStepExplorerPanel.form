@@ -81,6 +81,9 @@
                 </Component>
                 <Component class="javax.swing.JButton" name="stepExplorerRevertButton">
                   <Properties>
+                    <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                      <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_undo.png"/>
+                    </Property>
                     <Property name="text" type="java.lang.String" value="Revert"/>
                     <Property name="toolTipText" type="java.lang.String" value="Revert the step variables to the values present when this dialog was opened."/>
                     <Property name="enabled" type="boolean" value="false"/>
@@ -374,7 +377,9 @@
                               <SubComponents>
                                 <Component class="javax.swing.JButton" name="addNSourceButton">
                                   <Properties>
-                                    <Property name="text" type="java.lang.String" value="Add"/>
+                                    <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                                      <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_add.gif"/>
+                                    </Property>
                                     <Property name="toolTipText" type="java.lang.String" value="Add the source entered above to the list of sources"/>
                                     <Property name="enabled" type="boolean" value="false"/>
                                     <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
@@ -398,7 +403,9 @@
                                 </Component>
                                 <Component class="javax.swing.JButton" name="deleteNSourceButton">
                                   <Properties>
-                                    <Property name="text" type="java.lang.String" value="Delete"/>
+                                    <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                                      <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_delete.png"/>
+                                    </Property>
                                     <Property name="toolTipText" type="java.lang.String" value="Remove the selected source from the list"/>
                                     <Property name="enabled" type="boolean" value="false"/>
                                     <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
@@ -546,7 +553,9 @@
                               <SubComponents>
                                 <Component class="javax.swing.JButton" name="addInstrumentButton">
                                   <Properties>
-                                    <Property name="text" type="java.lang.String" value="Add"/>
+                                    <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                                      <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_add.gif"/>
+                                    </Property>
                                     <Property name="toolTipText" type="java.lang.String" value="Add the source entered above to the list of sources"/>
                                     <Property name="enabled" type="boolean" value="false"/>
                                     <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
@@ -570,7 +579,9 @@
                                 </Component>
                                 <Component class="javax.swing.JButton" name="deleteInstrumentButton">
                                   <Properties>
-                                    <Property name="text" type="java.lang.String" value="Delete"/>
+                                    <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                                      <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_delete.png"/>
+                                    </Property>
                                     <Property name="toolTipText" type="java.lang.String" value="Remove the selected source from the list"/>
                                     <Property name="enabled" type="boolean" value="false"/>
                                     <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
@@ -940,7 +951,9 @@
                       <SubComponents>
                         <Component class="javax.swing.JButton" name="addBaseLineButton">
                           <Properties>
-                            <Property name="text" type="java.lang.String" value="Add"/>
+                            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                              <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_add.gif"/>
+                            </Property>
                             <Property name="toolTipText" type="java.lang.String" value="Adds a baseline using the Station1 and Station2 values in the input boxes above"/>
                             <Property name="enabled" type="boolean" value="false"/>
                             <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
@@ -964,7 +977,9 @@
                         </Component>
                         <Component class="javax.swing.JButton" name="deleteBaseLineButton">
                           <Properties>
-                            <Property name="text" type="java.lang.String" value="Delete"/>
+                            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                              <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_delete.png"/>
+                            </Property>
                             <Property name="toolTipText" type="java.lang.String" value="Deletes the selected baseline (the selected Station 1 and Station 2 pair)"/>
                             <Property name="enabled" type="boolean" value="false"/>
                             <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
@@ -992,6 +1007,9 @@
                 </Container>
                 <Component class="javax.swing.JButton" name="helpButton">
                   <Properties>
+                    <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                      <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_help.png"/>
+                    </Property>
                     <Property name="text" type="java.lang.String" value="Help"/>
                   </Properties>
                   <Events>

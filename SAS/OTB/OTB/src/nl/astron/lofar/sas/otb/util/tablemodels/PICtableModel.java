@@ -22,6 +22,7 @@
 
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
+import java.rmi.RemoteException;
 import java.util.Vector;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.*;
@@ -63,7 +64,7 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
         
         try {
             if (! OtdbRmi.getRemoteOTDB().isConnected()) {
-                logger.debug("No open connection available");
+                logger.error("No open connection available");
                 return false;
             }
 
@@ -71,7 +72,7 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
             int aTreeID=((Integer)data[row][0]).intValue();
             jOTDBtree tInfo=OtdbRmi.getRemoteOTDB().getTreeInfo(aTreeID, false);
             if ( tInfo == null) {
-                logger.debug("Unable to get treeInfo for tree with ID: " + aTreeID);
+                logger.warn("Unable to get treeInfo for tree with ID: " + aTreeID);
                 return false;
             }
             data[row][0]=new Integer(tInfo.treeID());	   
@@ -82,8 +83,8 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
 	    data[row][5]=new String(tInfo.stoptime.replace("T", " "));
 	    data[row][6]=new String(tInfo.description);
             fireTableDataChanged();
-        } catch (Exception e) {
-            logger.debug("Remote OTDB via RMI and JNI failed: " + e);
+        } catch (RemoteException e) {
+            logger.error("Remote OTDB getTreeInfo failed: " + e);
         } 
         return true;
     }
@@ -92,12 +93,12 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
     public boolean fillTable() {
         
        if (otdbRmi == null) {
-            logger.debug("No active otdbRmi connection");
+            logger.error("No active otdbRmi connection");
             return false;
         }
         try {
             if (OtdbRmi.getRemoteOTDB() != null && ! OtdbRmi.getRemoteOTDB().isConnected()) {
-                logger.debug("No open connection available");
+                logger.error("No open connection available");
                 return false;
             }
             // Get a Treelist of all available PIC's
@@ -108,7 +109,7 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
             for (int k=0; k< aTreeList.size();k++) {
                 jOTDBtree tInfo = (jOTDBtree)aTreeList.elementAt(k);
                 if (tInfo == null) {
-                    logger.debug("No such tree found!");
+                    logger.warn("No such tree found!");
                 } else {
                     logger.debug("Gathered info for ID: "+tInfo.treeID());
                     data[k][0]=new Integer(tInfo.treeID());	   
@@ -121,8 +122,8 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
                 }
             }
             fireTableDataChanged();
-        } catch (Exception e) {
-            logger.debug("Remote OTDB via RMI and JNI failed: " + e);
+        } catch (RemoteException e) {
+            logger.debug("Remote OTDB getTreeList failed: " + e);
 	} 
         return true;
     }
@@ -148,6 +149,7 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
             return headers[c];
         }
         catch(ArrayIndexOutOfBoundsException e) {
+            logger.error("ArrayIndex out of bound exception for getColumnName("+c+"): "+e);
             return null;
         }
         
@@ -171,6 +173,7 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
             return data[r][c];
         }
         catch(ArrayIndexOutOfBoundsException e) {
+            logger.error("ArrayIndex out of bound exception for getValueAt("+r+","+c+"): "+e);
             return null;
         }
     }

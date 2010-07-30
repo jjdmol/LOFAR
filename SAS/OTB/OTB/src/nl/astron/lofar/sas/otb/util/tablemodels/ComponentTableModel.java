@@ -60,8 +60,8 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
     public boolean refreshRow(int row) {
         
         try {
-            if (! OtdbRmi.getRemoteOTDB().isConnected()) {
-                logger.debug("No open connection available");
+            if (OtdbRmi.getRemoteOTDB() != null || !OtdbRmi.getRemoteOTDB().isConnected()) {
+                logger.error("No open connection available");
                 return false;
             }
 
@@ -69,7 +69,7 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
             int aNodeID=((Integer)data[row][0]).intValue();
             jVICnodeDef tInfo=OtdbRmi.getRemoteMaintenance().getComponentNode(aNodeID);
             if ( tInfo == null) {
-                logger.debug("Unable to get ComponentInfo for node with ID: " + aNodeID);
+                logger.error("Unable to get ComponentInfo for node with ID: " + aNodeID);
                 return false;
             }
             data[row][0]=new Integer(tInfo.nodeID());	   
@@ -79,8 +79,8 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
 	    data[row][4]=new String(tInfo.constraints);
 	    data[row][5]=new String(tInfo.description);
             fireTableDataChanged();
-        } catch (Exception e) {
-            logger.debug("Remote OTDB via RMI and JNI failed: " + e);
+        } catch (RemoteException e) {
+            logger.error("Remote OTDB via RMI and JNI failed: " + e);
         } 
         return true;
     }
@@ -89,12 +89,12 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
     public boolean fillTable() {
         
        if (otdbRmi == null) {
-            logger.debug("No active otdbRmi connection");
+            logger.error("No active otdbRmi connection");
             return false;
         }
         try {
             if (OtdbRmi.getRemoteOTDB() != null && ! OtdbRmi.getRemoteOTDB().isConnected()) {
-                logger.debug("No open connection available");
+                logger.error("No open connection available");
                 return false;
             }
             // Get a list of all available Components (topnode)
@@ -105,7 +105,7 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
             for (int k=0; k< aComponentList.size();k++) {
                 jVICnodeDef tInfo = (jVICnodeDef)aComponentList.elementAt(k);
                 if (tInfo == null) {
-                    logger.debug("No such component found!");
+                    logger.error("No such component found!");
                 } else {
 
                     logger.debug("Gathered info for ID: "+tInfo.nodeID());
@@ -126,8 +126,8 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
                 }
             }
             fireTableDataChanged();
-        } catch (Exception e) {
-            logger.debug("Remote OTDB via RMI and JNI failed: " + e);
+        } catch (RemoteException e) {
+            logger.error("Remote OTDB via RMI and JNI failed: " + e);
 	} 
         return true;
     }

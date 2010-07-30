@@ -65,7 +65,6 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
         initComponents();
         itsMainFrame = aMainFrame;
         itsNode = aNode;
-        itsOtdbRmi=SharedVars.getOTDBrmi();
 
         initializeTabs();
         initPanel();
@@ -85,10 +84,9 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
-            itsOtdbRmi=SharedVars.getOTDBrmi();
  
         } else {
-            logger.debug("No Mainframe supplied");
+            logger.error("No Mainframe supplied");
         }
     }
     
@@ -164,7 +162,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
         LogParamTableModel model = new LogParamTableModel();
         tablePanel1.setTableModel(model);
         if (itsNode == null ) {
-            logger.debug("empty node supplied");
+            logger.error("empty node supplied");
             LogParamNameText.setText("");
         } else {
             LogParamNameText.setText(itsNode.name);
@@ -277,16 +275,20 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
 
         LogParamEndTimeLabel.setText("EndTime");
 
+        logParamCancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         logParamCancelButton.setText("Cancel");
         logParamCancelButton.setToolTipText("restore defaults");
+        logParamCancelButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         logParamCancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 logParamCancelButtonActionPerformed(evt);
             }
         });
 
+        logParamApplyButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         logParamApplyButton.setText("Apply");
         logParamApplyButton.setToolTipText("Apply changes to logform");
+        logParamApplyButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         logParamApplyButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 logParamApplyButtonActionPerformed(evt);
@@ -305,22 +307,28 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
         LogParamRecentOnlyCheckbox.setText("Most Recent Only");
         LogParamRecentOnlyCheckbox.setToolTipText("Select to get only the most recent log val");
 
+        logParamRefreshButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_refresh_e.gif"))); // NOI18N
         logParamRefreshButton.setText("Refresh");
+        logParamRefreshButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         logParamRefreshButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 logParamRefreshButtonActionPerformed(evt);
             }
         });
 
+        setStartDateButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         setStartDateButton.setText("set");
         setStartDateButton.setToolTipText("set Start Date");
+        setStartDateButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         setStartDateButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 setStartDateButtonActionPerformed(evt);
             }
         });
 
+        setStopDateButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         setStopDateButton.setText("set");
+        setStopDateButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         setStopDateButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 setStopDateButtonActionPerformed(evt);
@@ -345,7 +353,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
                         .add(logParamApplyButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(logParamRefreshButton)
-                        .addContainerGap(729, Short.MAX_VALUE))
+                        .addContainerGap(702, Short.MAX_VALUE))
                     .add(jPanel1Layout.createSequentialGroup()
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(LogParamStartTimeLabel)
@@ -356,23 +364,23 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(jPanel1Layout.createSequentialGroup()
                                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                    .add(LogParamNameText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 851, Short.MAX_VALUE)
+                                    .add(LogParamNameText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 884, Short.MAX_VALUE)
                                     .add(jPanel1Layout.createSequentialGroup()
                                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
                                             .add(org.jdesktop.layout.GroupLayout.LEADING, LogParamEndTimeText)
                                             .add(org.jdesktop.layout.GroupLayout.LEADING, LogParamStartTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 275, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                            .add(setStopDateButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 60, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                            .add(setStartDateButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 60, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                                        .add(51, 51, 51)))
+                                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                                            .add(setStopDateButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                            .add(setStartDateButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 75, Short.MAX_VALUE))
+                                        .add(36, 36, 36)))
                                 .add(14, 14, 14))
                             .add(jPanel1Layout.createSequentialGroup()
                                 .add(LogParamLevelComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 45, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addContainerGap())))
                     .add(jPanel1Layout.createSequentialGroup()
                         .add(LogParamRecentOnlyCheckbox)
-                        .addContainerGap(829, Short.MAX_VALUE))))
+                        .addContainerGap(862, Short.MAX_VALUE))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -413,8 +421,8 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
                 .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(titleText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 950, Short.MAX_VALUE)
-                    .add(tablePanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 950, Short.MAX_VALUE))
+                    .add(titleText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE)
+                    .add(tablePanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 983, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -466,7 +474,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
             itsStartTime = DateTimeChooser.showDialog(this, "StartTime", chooser);
             composeTimeString("start");//GEN-LAST:event_setStartDateButtonActionPerformed
         } catch (ParseException ex) {
-            ex.printStackTrace();
+            logger.error("Exception parsing start time: "+LogParamStartTimeText.getText()+ " --> "+ex);
         }
     }
 
@@ -480,7 +488,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
         try {
             return aD.parse(aS);
         } catch (ParseException ex) {
-            ex.printStackTrace();
+            logger.error("Exception parsing GMT date: "+aDate+ " --> "+ex);
         }        
         return aGMTDate;
         
@@ -494,7 +502,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
             itsStopTime = DateTimeChooser.showDialog(this, "StopTime", chooser);
             composeTimeString("stop");//GEN-LAST:event_setStopDateButtonActionPerformed
         } catch (ParseException ex) {
-           ex.printStackTrace();
+            logger.error("Exception parsing end time: "+LogParamEndTimeText.getText()+ " --> "+ex);
         }
     }
     
@@ -546,13 +554,12 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
                 itsStartTime = aDate.parse(LogParamStartTimeText.getText());
             }
         } catch (ParseException ex) {
-            ex.printStackTrace();
+            logger.error("Exception parsing start or end time: "+LogParamStartTimeText.getText()+"-/-"+LogParamEndTimeText.getText()+" --> "+ex);
         }
     }
     
     private jOTDBnode  itsNode = null;
     private MainFrame  itsMainFrame;
-    private OtdbRmi    itsOtdbRmi; 
     private Date       itsStartTime = null;
     private Date       itsStopTime = null;
     private Locale     itsLocale = new Locale("en");

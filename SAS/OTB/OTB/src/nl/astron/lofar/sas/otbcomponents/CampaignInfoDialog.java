@@ -73,6 +73,7 @@ public class CampaignInfoDialog extends javax.swing.JDialog {
         setName("loadFileDialog"); // NOI18N
         setResizable(false);
 
+        cancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         cancelButton.setText("Cancel");
         cancelButton.setToolTipText("Cancel filesearch");
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
@@ -81,6 +82,7 @@ public class CampaignInfoDialog extends javax.swing.JDialog {
             }
         });
 
+        saveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         saveButton.setText("Apply");
         saveButton.setToolTipText("Apply changes");
         saveButton.addActionListener(new java.awt.event.ActionListener() {
@@ -98,9 +100,9 @@ public class CampaignInfoDialog extends javax.swing.JDialog {
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(campaignInfo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(layout.createSequentialGroup()
-                        .add(cancelButton)
+                        .add(cancelButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 95, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(saveButton)))
+                        .add(saveButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 97, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(

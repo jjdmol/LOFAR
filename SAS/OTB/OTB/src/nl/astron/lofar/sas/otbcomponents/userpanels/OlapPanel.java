@@ -152,7 +152,9 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 }
             }
         } catch (RemoteException ex) {
-            logger.error("Error during getComponentParam: "+ ex);
+            String aS="Error during getComponentParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
         
@@ -249,11 +251,17 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     output.close();
                     logger.trace("File written to: " + aFile.getPath());
                 } catch (RemoteException ex) {
-                    logger.error("exportTree failed : " + ex);
+                    String aS="exportTree failed : " + ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 } catch (FileNotFoundException ex) {
-                    logger.error("Error during newPICTree creation: "+ ex);
+                    String aS="Error during newPICTree creation: "+ ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 } catch (IOException ex) {
-                    logger.error("Error during newPICTree creation: "+ ex);
+                    String aS="Error during newPICTree creation: "+ ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             }
         }       
@@ -281,7 +289,9 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 setField(aNode,aParam,aHWNode);
             }
         } catch (RemoteException ex) {
-            logger.error("Error during retrieveAndDisplayChildDataForNode: "+ ex);
+            String aS="Error during retrieveAndDisplayChildDataForNode: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
     }
@@ -314,7 +324,9 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());                
             }
         } catch (RemoteException ex) {
-            logger.error("Error during getParam: "+ ex);
+            String aS="Error during getParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
         
         if(parentName.equals("CNProc")){
@@ -775,8 +787,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         pencilConfigurationPanel.setColumnSize("angle 2",20);
         pencilConfigurationPanel.repaint();
         buttonPanel1.addButton("Restore");
+        buttonPanel1.setButtonIcon("Restore",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_undo.png")));
         buttonPanel1.addButton("Apply");
-    }
+        buttonPanel1.setButtonIcon("Apply",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png")));
+   }
     
     private void initPanel() {
         // check access
@@ -802,10 +816,13 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 jOTDBtree aTree = OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
                 itsTreeType=OtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
-                logger.error("OlapPanel: Error getting treeInfo/treetype" + ex);
+                String aS="OlapPanel: Error getting treeInfo/treetype" + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 itsTreeType="";
-            }         } else {
-            logger.debug("no node given");
+            }
+         } else {
+            logger.error("no node given");
         }
 
         restore();
@@ -821,7 +838,9 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             OtdbRmi.getRemoteMaintenance().saveNode(aNode); 
         } catch (RemoteException ex) {
-            logger.error("Error: saveNode failed : " + ex);
+            String aS="Error: saveNode failed : " + ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         } 
     }   
     
@@ -866,7 +885,9 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     OtdbRmi.getRemoteMaintenance().deleteNode(itsPencils.elementAt(i));
                 }
             } catch (RemoteException ex) {
-                logger.error("Error during deletion of PencilNode: "+ex);
+                String aS="Error during deletion of PencilNode: "+ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             }
 
             // now that all Nodes are deleted we should collect the tables input and create new Beams to save to the database.
@@ -883,7 +904,9 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     // Duplicates the given node (and its parameters and children)
                     int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultNode.nodeID(),(short)(i-1));
                     if (aN <= 0) {
-                        logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
+                        String aS="Something went wrong with dupNode("+itsNode.treeID()+","+aDefaultNode.nodeID()+") will try to save remainder";
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     } else {
                         // we got a new duplicate whos children need to be filled with the settings from the panel.
                         jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
@@ -911,7 +934,9 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 saveNode(aDefaultNode);
 
             } catch (RemoteException ex) {
-                logger.error("Error during duplication and save : " + ex);
+                String aS="Error during duplication and save : " + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             }
         }
 
@@ -1257,7 +1282,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
         jPanel2.setPreferredSize(new java.awt.Dimension(5240, 3000));
 
-        jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Olap", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Olap", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
         labelNrBitsPerSample.setText("# Bits per Sample:");
 
@@ -1363,7 +1388,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     .addGroup(jPanel8Layout.createSequentialGroup()
                         .addGap(43, 43, 43)
                         .addComponent(jLabel3)))
-                .addContainerGap(124, Short.MAX_VALUE))
+                .addContainerGap(187, Short.MAX_VALUE))
         );
         jPanel8Layout.setVerticalGroup(
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1414,7 +1439,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "CN Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "CN Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
         jPanel7.setToolTipText("BGLProc");
 
         labelNrPPFTaps.setText("# PPFTaps:");
@@ -1433,7 +1458,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(inputPartition)
                     .addComponent(inputNrPPFTaps, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(41, Short.MAX_VALUE))
+                .addContainerGap(47, Short.MAX_VALUE))
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1447,7 +1472,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     .addComponent(inputPartition, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
-        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Storage Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Storage Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
         labelSubbandsPerMs.setText("#subbands per MS:");
 
@@ -1459,7 +1484,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addComponent(labelSubbandsPerMs)
                 .addGap(18, 18, 18)
                 .addComponent(inputSubbandsPerMS, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(18, Short.MAX_VALUE))
+                .addContainerGap(24, Short.MAX_VALUE))
         );
         jPanel11Layout.setVerticalGroup(
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1467,10 +1492,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelSubbandsPerMs)
                     .addComponent(inputSubbandsPerMS, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(57, Short.MAX_VALUE))
+                .addContainerGap(60, Short.MAX_VALUE))
         );
 
-        CorrelatorPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Correlator", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        CorrelatorPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Correlator", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
         CorrelatorPanel.setToolTipText("Correlator");
 
         labelIntegrationTime.setText("integration Time:");
@@ -1498,10 +1523,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     .addComponent(labelIntegrationTime)
                     .addComponent(inputIntegrationTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2))
-                .addContainerGap(32, Short.MAX_VALUE))
+                .addContainerGap(42, Short.MAX_VALUE))
         );
 
-        StokesPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Stokes", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        StokesPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Stokes", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
         StokesPanel.setToolTipText("Stokes");
 
         labelWhich.setText("which");
@@ -1533,7 +1558,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                         .addGroup(StokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(inputIntegrationSteps)
                             .addComponent(inputWhich, 0, 173, Short.MAX_VALUE))))
-                .addContainerGap(53, Short.MAX_VALUE))
+                .addContainerGap(74, Short.MAX_VALUE))
         );
         StokesPanelLayout.setVerticalGroup(
             StokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1547,10 +1572,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     .addComponent(inputIntegrationSteps, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(inputIntegrateChannels, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(93, Short.MAX_VALUE))
+                .addContainerGap(103, Short.MAX_VALUE))
         );
 
-        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Pencil Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Pencil Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
         jPanel3.setPreferredSize(new java.awt.Dimension(200, 125));
         jPanel3.setRequestFocusEnabled(false);
         jPanel3.setVerifyInputWhenFocusTarget(false);
@@ -1561,23 +1586,29 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
+        addPencilButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
         addPencilButton.setText("add pencil");
+        addPencilButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         addPencilButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 addPencilButtonActionPerformed(evt);
             }
         });
 
+        editPencilButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif"))); // NOI18N
         editPencilButton.setText("edit pencil");
         editPencilButton.setEnabled(false);
+        editPencilButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         editPencilButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 editPencilButtonActionPerformed(evt);
             }
         });
 
+        deletePencilButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
         deletePencilButton.setText("delete pencil");
         deletePencilButton.setEnabled(false);
+        deletePencilButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         deletePencilButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 deletePencilButtonActionPerformed(evt);
@@ -1590,7 +1621,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(pencilConfigurationPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 883, Short.MAX_VALUE)
+                    .addComponent(pencilConfigurationPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 946, Short.MAX_VALUE)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(addPencilButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1608,10 +1639,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     .addComponent(editPencilButton)
                     .addComponent(addPencilButton)
                     .addComponent(deletePencilButton))
-                .addContainerGap(13, Short.MAX_VALUE))
+                .addContainerGap(14, Short.MAX_VALUE))
         );
 
-        PencilInfoPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "PencilInfo", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        PencilInfoPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "PencilInfo", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
         PencilInfoPanel.setToolTipText("PencilInfo");
 
         inputFlysEye.setText("Flyseye");
@@ -1648,7 +1679,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                             .addComponent(inputNrRings, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(inputRingSize, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addComponent(inputFlysEye))
-                .addContainerGap(98, Short.MAX_VALUE))
+                .addContainerGap(142, Short.MAX_VALUE))
         );
         PencilInfoPanelLayout.setVerticalGroup(
             PencilInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1662,7 +1693,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGroup(PencilInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelRingSize)
                     .addComponent(inputRingSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(14, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -1672,7 +1703,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 909, Short.MAX_VALUE)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 968, Short.MAX_VALUE)
                     .addComponent(jPanel8, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel4Layout.createSequentialGroup()
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
@@ -1681,7 +1712,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(PencilInfoPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(CorrelatorPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(CorrelatorPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 313, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(StokesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
@@ -1697,7 +1728,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(CorrelatorPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel7, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 82, Short.MAX_VALUE))
+                            .addComponent(jPanel7, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 89, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(PencilInfoPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -1714,13 +1745,13 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(4285, Short.MAX_VALUE))
+                .addContainerGap(4230, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(2369, Short.MAX_VALUE))
+                .addContainerGap(2368, Short.MAX_VALUE))
         );
 
         jScrollPane1.setViewportView(jPanel2);

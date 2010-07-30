@@ -120,8 +120,8 @@ public class ResultTreeManager extends GenericTreeManager implements ITreeManage
                 TreeModelEvent evt = new TreeModelEvent(newNode,newNode.getPath());
                 fireTreeInsertionPerformed(evt);
             }
-        } catch(Exception e) {
-            logger.fatal("Exception during ResultTreeManager-defineChildNodes",e);
+        } catch(RemoteException e) {
+            logger.fatal("RemoteException during ResultTreeManager-defineChildNodes",e);
         }
     }
     public TreeNode getRootNode(Object arguments){
@@ -141,7 +141,7 @@ public class ResultTreeManager extends GenericTreeManager implements ITreeManage
             try {
                 otdbNode = OtdbRmi.getRemoteMaintenance().getTopNode(itsTreeID);
             } catch (RemoteException ex) {
-                logger.fatal("The ResultTreeManager could not build a root node! ",ex);
+                logger.error("RemoteException during getTopNode("+itsTreeID+"): ",ex);
             }
         }
         TreeNode newNode = new TreeNode(ResultTreeManager.instance,otdbNode,otdbNode.name);

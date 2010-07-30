@@ -173,48 +173,59 @@ public class ListPanel extends javax.swing.JPanel {
         jList2 = new javax.swing.JList();
         warningText = new javax.swing.JLabel();
 
-        setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Edit List", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11)));
+        setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Edit List", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
+        AddListItemButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
         AddListItemButton1.setText("Add");
         AddListItemButton1.setToolTipText("Add item to list");
+        AddListItemButton1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         AddListItemButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 AddListItemButton1ActionPerformed(evt);
             }
         });
 
+        DeleteListItemButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
         DeleteListItemButton1.setText("Delete");
         DeleteListItemButton1.setToolTipText("Delete Selected ListItem");
+        DeleteListItemButton1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         DeleteListItemButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 DeleteListItemButton1ActionPerformed(evt);
             }
         });
 
+        ClearListButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delAll.gif"))); // NOI18N
         ClearListButton1.setText("Clear");
         ClearListButton1.setToolTipText("Clear list");
+        ClearListButton1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         ClearListButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 ClearListButton1ActionPerformed(evt);
             }
         });
 
+        UpListButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_arrow_up.gif"))); // NOI18N
         UpListButton1.setText("Up");
         UpListButton1.setToolTipText("Move selected Item UP");
+        UpListButton1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         UpListButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 UpListButton1ActionPerformed(evt);
             }
         });
 
+        DownListButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_arrow_down.gif"))); // NOI18N
         DownListButton1.setText("Down");
         DownListButton1.setToolTipText("Move Selected item Down");
+        DownListButton1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         DownListButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 DownListButton1ActionPerformed(evt);
             }
         });
 
+        ApplyButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         ApplyButton.setText("Apply");
         ApplyButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -222,6 +233,7 @@ public class ListPanel extends javax.swing.JPanel {
             }
         });
 
+        CancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         CancelButton.setText("Cancel");
         CancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -247,7 +259,7 @@ public class ListPanel extends javax.swing.JPanel {
                 .add(19, 19, 19)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
-                        .add(warningText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 362, Short.MAX_VALUE)
+                        .add(warningText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 369, Short.MAX_VALUE)
                         .addContainerGap())
                     .add(layout.createSequentialGroup()
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -276,7 +288,6 @@ public class ListPanel extends javax.swing.JPanel {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(AddListItemButton1)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(DeleteListItemButton1)

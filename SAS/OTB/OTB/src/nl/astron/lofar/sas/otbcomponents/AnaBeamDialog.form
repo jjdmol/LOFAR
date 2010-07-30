@@ -80,7 +80,7 @@
                           <Component id="cancelButton" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="saveButton" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace pref="150" max="32767" attributes="0"/>
+                          <EmptySpace pref="130" max="32767" attributes="0"/>
                       </Group>
                   </Group>
               </Group>
@@ -150,7 +150,7 @@
         <Component class="javax.swing.JButton" name="cancelButton">
           <Properties>
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-              <Image iconType="3" name="/nl/astron/lofar/otb/icons/16_cancel.png"/>
+              <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_cancel.png"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Cancel"/>
           </Properties>
@@ -160,6 +160,9 @@
         </Component>
         <Component class="javax.swing.JButton" name="saveButton">
           <Properties>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_apply.png"/>
+            </Property>
             <Property name="text" type="java.lang.String" value="Save"/>
           </Properties>
           <Events>

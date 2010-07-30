@@ -75,7 +75,7 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
         } else {
-            logger.debug("No Mainframe supplied");
+            logger.error("No Mainframe supplied");
         }
     }
     
@@ -104,7 +104,9 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
                 }
             }
         } catch (RemoteException ex) {
-            logger.error("Error during getComponentParam: "+ ex);
+            String aS="Error during getComponentParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             itsParamList=null;
             return;
         }
@@ -167,7 +169,10 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
     }
     
     private void initialize() {
-        buttonPanel1.addButton("Apply Settings");
+        buttonPanel1.addButton("Restore");
+        buttonPanel1.setButtonIcon("Restore",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_undo.png") ));
+        buttonPanel1.addButton("Apply");
+        buttonPanel1.setButtonIcon("Apply",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png") ));
     }
     
     private void initPanel() {
@@ -240,7 +245,9 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
         try {
            OtdbRmi.getRemoteMaintenance().saveNode(aNode);
         } catch (RemoteException ex) {
-            logger.error("Error: saveNode failed : " + ex);
+            String aS="Error: saveNode failed : " + ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
     }
     
@@ -249,7 +256,8 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
      * @param   enabled     true/false enabled/disabled
      */
     public void enableButtons(boolean enabled) {
-        this.enableOverviewButtons(enabled);
+        buttonPanel1.setButtonEnabled("Apply",enabled);
+        buttonPanel1.setButtonEnabled("Restore",enabled);
     }
     
     /** Sets the buttons visible/invisible
@@ -257,39 +265,31 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
      * @param   visible     true/false visible/invisible
      */
     public void setButtonsVisible(boolean visible) {
-        this.setOverviewButtonsVisible(visible);
-    }
-    private void enableOverviewButtons(boolean enabled) {
-        this.configurationRevertButton.setEnabled(enabled);
+        buttonPanel1.setButtonVisible("Apply",visible);
+        buttonPanel1.setButtonVisible("Restore",visible);
     }
     
-    private void setOverviewButtonsVisible(boolean visible) {
-        this.configurationRevertButton.setVisible(visible);
-    }
     
     /** Enables/disables the complete form
      *
      * @param   enabled     true/false enabled/disabled
      */
     public void setAllEnabled(boolean enabled) {
-        enableOverviewButtons(enabled);
+        enableButtons(enabled);
     }
     
     private void saveInput() {
         
         if (this.ParmDBInstrument != null && !this.ParmDBInstrumentText.getText().equals(ParmDBInstrument.limits)) {
             ParmDBInstrument.limits = ParmDBInstrumentText.getText();
-            logger.trace("Variable BBS ("+ParmDBInstrument.name+"//"+ParmDBInstrument.treeID()+"//"+ParmDBInstrument.nodeID()+"//"+ParmDBInstrument.parentID()+"//"+ParmDBInstrument.paramDefID()+") updated to :"+ParmDBInstrument.limits);
             saveNode(ParmDBInstrument);
         } 
         if (this.ParmDBLocalSky != null && !this.ParmDBLocalSkyText.getText().equals(ParmDBLocalSky.limits)) {
             ParmDBLocalSky.limits = ParmDBLocalSkyText.getText();
-            logger.trace("Variable BBS ("+ParmDBLocalSky.name+"//"+ParmDBLocalSky.treeID()+"//"+ParmDBLocalSky.nodeID()+"//"+ParmDBLocalSky.parentID()+"//"+ParmDBLocalSky.paramDefID()+") updated to :"+ParmDBLocalSky.limits);
             saveNode(ParmDBLocalSky);
         }
         if (this.ParmDBHistory != null && !this.ParmDBHistoryText.getText().equals(ParmDBHistory.limits)) {
             ParmDBHistory.limits = ParmDBHistoryText.getText();
-            logger.trace("Variable BBS ("+ParmDBHistory.name+"//"+ParmDBHistory.treeID()+"//"+ParmDBHistory.nodeID()+"//"+ParmDBHistory.parentID()+"//"+ParmDBHistory.paramDefID()+") updated to :"+ParmDBHistory.limits);
             saveNode(ParmDBHistory);
         }
     }
@@ -310,7 +310,6 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
         ParmDBLocalSkyText = new javax.swing.JTextField();
         ParmDBHistoryText = new javax.swing.JTextField();
         ParmDBHistoryLabel = new javax.swing.JLabel();
-        configurationRevertButton = new javax.swing.JButton();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setLayout(new java.awt.BorderLayout());
@@ -339,17 +338,6 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
         ParmDBHistoryLabel.setText("History :");
         ParmDBPanel.add(ParmDBHistoryLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, 100, 20));
 
-        configurationRevertButton.setText("Revert");
-        configurationRevertButton.setMaximumSize(new java.awt.Dimension(100, 25));
-        configurationRevertButton.setMinimumSize(new java.awt.Dimension(100, 25));
-        configurationRevertButton.setPreferredSize(new java.awt.Dimension(100, 25));
-        configurationRevertButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                configurationRevertButtonActionPerformed(evt);
-            }
-        });
-        ParmDBPanel.add(configurationRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 120, 80, -1));
-
         add(ParmDBPanel, java.awt.BorderLayout.CENTER);
 
         buttonPanel1.addActionListener(new java.awt.event.ActionListener() {
@@ -360,13 +348,11 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void configurationRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configurationRevertButtonActionPerformed
-        this.restoreBBSGlobalSettingsPanel();
-    }//GEN-LAST:event_configurationRevertButtonActionPerformed
-
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand().equals("Apply Settings")) {
+        if (evt.getActionCommand().equals("Apply")) {
             saveInput();
+        } else if(evt.getActionCommand().equals("Restore")) {
+            this.restoreBBSGlobalSettingsPanel();
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
                 
@@ -387,7 +373,6 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JTextField ParmDBLocalSkyText;
     private javax.swing.JPanel ParmDBPanel;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
-    private javax.swing.JButton configurationRevertButton;
     // End of variables declaration//GEN-END:variables
     
     /**

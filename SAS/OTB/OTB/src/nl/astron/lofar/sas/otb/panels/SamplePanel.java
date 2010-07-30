@@ -58,7 +58,10 @@ public class SamplePanel extends javax.swing.JPanel
     public void initialize() {
         treePanel.setTitle("Example Tree");
         buttonPanel.addButton("New Tree");
+        buttonPanel.setButtonIcon("New Tree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_new.png")));
         buttonPanel.addButton("Back to Main");
+        buttonPanel.setButtonIcon("Back to Main",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_exit1.png")));
+
     }
 
     public boolean initializePlugin(MainFrame mainframe) {

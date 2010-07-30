@@ -34,6 +34,7 @@ import java.util.Vector;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 import nl.astron.lofar.lofarutils.DateTimeChooser;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jDefaultTemplate;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
@@ -88,7 +89,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             // set selected Tree to first in the list
             itsTree=OtdbRmi.getRemoteOTDB().getTreeInfo(itsTreeIDs[0], false);
         } catch (RemoteException e) {
-            logger.error("Error getting the Treeinfo " + e);
+            String aS="Error getting the Treeinfo " + e;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             itsTree=null;
         }
         init();                
@@ -120,7 +123,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             // keep the fields that can be changed
             itsTreeState=OtdbRmi.getTreeState().get(itsTree.state);
             itsClassification = OtdbRmi.getClassif().get(itsTree.classification);
-            itsCampaign = itsTree.campaign;
             if(itsTreeType.equals("VHtree")) {
                 itsStarttime = itsTree.starttime;
                 try {
@@ -146,7 +148,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         calcDuration(0);
                     }
                 } catch (RemoteException e) {
-                    logger.error("Error getting the Beams " + e);
+                    String aS="Error getting the Beams " + e;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
 
                 if (itsStarttime.length() > 0 && !itsStarttime.equals("not-a-date-time")) {
@@ -475,7 +479,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     // found DefaultTemplate
                     jDefaultTemplate aT = anI.next();
                     if (aT.treeID() == itsTree.treeID()) {
-                        isDefaultTemplate=true;
                         itsName=aT.name;
                         nameInput.setText(aT.name);
                         nameLabel.setVisible(true);
@@ -484,7 +487,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     }
                 }
             }  catch (RemoteException ex) {
-                logger.error("Error retrieving defaultTemplates");
+                String aS="Error retrieving defaultTemplates: "+ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             }
         } else {
             nameLabel.setVisible(false);
@@ -530,7 +535,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         aTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
                         hasChanged=true;
                         if (!OtdbRmi.getRemoteMaintenance().setTreeState(aTree.treeID(), aTree.state)) {
-                            logger.error("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                            String aS="Error during setTreeState("+aTree.treeID()+","+aTree.state+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                             succes=false;
                         }
                     }
@@ -540,7 +547,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         hasChanged=true;
                         aTree.classification=OtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
                         if (!OtdbRmi.getRemoteMaintenance().setClassification(aTree.treeID(), aTree.classification)) {
-                            logger.error("Error during setClassification: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                            String aS="Error during setClassification("+aTree.treeID()+","+aTree.classification+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                             succes=false;
                         }
                     }
@@ -551,7 +560,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         aTree.starttime = startTimeInput.getText();
                         aTree.stoptime = stopTimeInput.getText();
                         if (OtdbRmi.getRemoteMaintenance().setSchedule(aTree.treeID(),aTree.starttime,aTree.stoptime)) {
-                            logger.error("Error during setSchedule: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                            String aS="Error during setSchedule("+aTree.treeID()+","+aTree.starttime+","+aTree.stoptime+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                             succes=false;
                         }
                     }
@@ -563,7 +574,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     hasChanged=true;
                     itsTree.classification=OtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
                     if (!OtdbRmi.getRemoteMaintenance().setClassification(itsTree.treeID(), itsTree.classification)) {
-                        logger.error("Error during setClassification: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                        String aS="Error during setClassification("+itsTree.treeID()+","+ itsTree.classification+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         succes=false;
                     }
                 }
@@ -571,7 +584,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     hasChanged=true;
                     itsTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
                     if (!OtdbRmi.getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state)) {
-                        logger.error("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                        String aS="Error during setTreeState("+itsTree.treeID()+","+itsTree.state+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         succes=false;
                     }
                 }
@@ -579,7 +594,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     hasChanged=true;
                     itsTree.description = descriptionInput.getText();
                     if (!OtdbRmi.getRemoteMaintenance().setDescription(itsTree.treeID(), itsTree.description)) {
-                        logger.error("Error during setDescription: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                        String aS="Error during setDescription("+itsTree.treeID()+","+itsTree.description+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         succes=false;
                     }
                 }
@@ -592,7 +609,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                            itsTree.starttime = startTimeInput.getText();
                            itsTree.stoptime = stopTimeInput.getText();
                            if (!OtdbRmi.getRemoteMaintenance().setSchedule(itsTree.treeID(),itsTree.starttime,itsTree.stoptime)) {
-                               logger.error("Error during setSchedule: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                               String aS="Error during setSchedule("+itsTree.treeID()+","+itsTree.starttime+","+itsTree.stoptime+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                               logger.error(aS);
+                               LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                                succes=false;
                            }
                         }
@@ -604,7 +623,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         if (itsName != null && !itsName.equals(nameInput.getText())) {
                             itsName=nameInput.getText();
                             if (!OtdbRmi.getRemoteMaintenance().assignTemplateName(itsTree.treeID(),itsName)){
-                                logger.error("Error during assignTemplateName: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                String aS="Error during assignTemplateName("+itsTree.treeID()+","+itsName+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                                logger.error(aS);
+                                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                                 succes=false;
                             } else {
                                 hasChanged=true;
@@ -614,17 +635,23 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                             // check momID, if not zero set to zero
                             if (itsTree.momID() != 0) {
                                 if (!OtdbRmi.getRemoteMaintenance().setMomInfo(itsTree.treeID(),0,itsTree.campaign)) {
-                                    logger.error("Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                    String aS="Error during setMomInfo("+itsTree.treeID()+"0,"+itsTree.campaign+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                                    logger.error(aS);
+                                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                                     succes=false;
                                 }
                             }
                         }
                     } catch (RemoteException ex) {
                         try {
-                            logger.error("Error while setting TemplateName " + OtdbRmi.getRemoteMaintenance().errorMsg());
+                            String aS="RemoteExceptionError while setting TemplateName " + OtdbRmi.getRemoteMaintenance().errorMsg();
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                             succes=false;
                         } catch (RemoteException ex1) {
-                            logger.error("Error getting the remote errorMessage");
+                            String aS="Remote Exception Error getting the remote errorMessage";
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                             succes=false;
                         }
                     }
@@ -632,7 +659,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             }
             return succes;
         } catch (Exception e) {
-          logger.error("Changing metainfo via RMI and JNI failed");
+          String aS="Exception changing metainfo via RMI and JNI failed";
+          logger.error(aS);
+          LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
           return false;
         }
     }
@@ -716,25 +745,29 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         descriptionInput.setLineWrap(true);
         descriptionInput.setRows(3);
         descriptionInput.setToolTipText("Set Description for this tree");
-        getContentPane().add(descriptionInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 460, 510, 60));
+        getContentPane().add(descriptionInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 460, 530, 60));
 
+        cancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         cancelButton.setText("Cancel");
         cancelButton.setToolTipText("Cancel filesearch");
+        cancelButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 530, -1, -1));
+        getContentPane().add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 530, 100, -1));
 
+        saveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         saveButton.setText("Apply");
         saveButton.setToolTipText("Apply changes");
+        saveButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         saveButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 saveButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(saveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 530, -1, -1));
+        getContentPane().add(saveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 530, 90, -1));
 
         jLabel1.setText("ID:");
         getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, 20));
@@ -755,7 +788,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
         creatorInput.setToolTipText("Owner for this TreeNode");
         creatorInput.setEnabled(false);
-        getContentPane().add(creatorInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 140, 410, -1));
+        getContentPane().add(creatorInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 140, 430, -1));
 
         startTimeLabel.setText("StartTime:");
         getContentPane().add(startTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 320, -1, 20));
@@ -784,13 +817,13 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
         creationDateInput.setToolTipText("Date this entry was created");
         creationDateInput.setEnabled(false);
-        getContentPane().add(creationDateInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 170, 410, -1));
+        getContentPane().add(creationDateInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 170, 430, -1));
 
         jLabel11.setText("Type:");
         getContentPane().add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 200, -1, 20));
 
         typeInput.setEnabled(false);
-        getContentPane().add(typeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 200, 410, -1));
+        getContentPane().add(typeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 200, 430, -1));
 
         originalTreeIDLabel.setText("OriginalTree:");
         getContentPane().add(originalTreeIDLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 260, -1, 20));
@@ -817,35 +850,41 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         topLabel.setOpaque(false);
         jScrollPane1.setViewportView(topLabel);
 
-        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 520, 40));
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 530, 40));
 
+        setStartDateButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif"))); // NOI18N
         setStartDateButton.setText("set");
         setStartDateButton.setToolTipText("set Start Date");
+        setStartDateButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         setStartDateButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 setStartDateButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(setStartDateButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 320, 70, -1));
+        getContentPane().add(setStartDateButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 320, 90, -1));
 
+        setStopDateButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif"))); // NOI18N
         setStopDateButton.setText("set");
+        setStopDateButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         setStopDateButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 setStopDateButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(setStopDateButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 410, 70, -1));
+        getContentPane().add(setStopDateButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 410, 90, -1));
 
         durationLabel.setText("Duration:");
         getContentPane().add(durationLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 360, -1, 20));
 
+        setDurationButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         setDurationButton.setText("set");
+        setDurationButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         setDurationButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 setDurationButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(setDurationButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 350, 70, -1));
+        getContentPane().add(setDurationButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 350, 90, -1));
 
         inputDurationDays.setName("Days"); // NOI18N
         getContentPane().add(inputDurationDays, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 360, 50, -1));
@@ -890,13 +929,15 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         timeWarningLabel.setText("WARNING: Observation exceeds maximum length !!!!!!!!!");
         getContentPane().add(timeWarningLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 390, 440, -1));
 
+        showCampaignButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_folder.png"))); // NOI18N
         showCampaignButton.setText("show");
+        showCampaignButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         showCampaignButton.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 showCampaignButtonMouseClicked(evt);
             }
         });
-        getContentPane().add(showCampaignButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 290, 70, -1));
+        getContentPane().add(showCampaignButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 290, 90, -1));
 
         nameLabel.setText("Name:");
         getContentPane().add(nameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 50, -1, 20));
@@ -905,13 +946,15 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         treeIDInput.setEnabled(false);
         getContentPane().add(treeIDInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 50, 90, 20));
 
+        setNameButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         setNameButton.setText("set");
+        setNameButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         setNameButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 setNameButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(setNameButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 50, 60, -1));
+        getContentPane().add(setNameButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 50, 70, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -1110,9 +1153,13 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 }
             } catch (RemoteException ex) {
                 try {
-                    logger.error("Error while getting default template list " + OtdbRmi.getRemoteMaintenance().errorMsg());
+                    String aS= "Remote exception Error while getting default template list " + OtdbRmi.getRemoteMaintenance().errorMsg();
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 } catch (RemoteException ex1) {
-                    logger.error("Error getting the remote errorMessage");
+                    String aS="Remote Exception Error getting the remote errorMessage";
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             }
         }
@@ -1125,12 +1172,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private String    itsName=null;
     private boolean   isAdministrator;
     private boolean   hasChanged=false;
-    private boolean   isDefaultTemplate=false;
     private boolean   itsMultiple=false;
     private String    itsClassification = "";
     private String    itsTreeState = "";
     private String    itsTreeType = "";
-    private String    itsCampaign = "";
     private String    itsStarttime = "";
     private String    itsStoptime = "";
     private String    itsDescription = "";

@@ -128,8 +128,10 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 }
             }
         } catch (RemoteException ex) {
-            logger.error("Error during getComponentParam: "+ ex);
             itsMainFrame.setNormalCursor();
+            String aS="Error during getComponentParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
         
@@ -227,11 +229,17 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                     output.close();
                     logger.trace("File written to: " + aFile.getPath());
                 } catch (RemoteException ex) {
-                    logger.error("exportTree failed : " + ex);
+                    String aS="exportTree failed : " + ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 } catch (FileNotFoundException ex) {
-                    logger.error("Error during newPICTree creation: "+ ex);
+                    String aS="Error during newPICTree creation: "+ ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 } catch (IOException ex) {
-                    logger.error("Error during newPICTree creation: "+ ex);
+                    String aS="Error during newPICTree creation: "+ ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             }
         }
@@ -284,8 +292,10 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     
     private void initialize() {
         buttonPanel1.addButton("Restore");
+        buttonPanel1.setButtonIcon("Restore",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_undo.png")));
         buttonPanel1.setButtonToolTip("Restore","Restores the complete table to it's initial state");
         buttonPanel1.addButton("Apply");
+        buttonPanel1.setButtonIcon("Apply",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png")));
         buttonPanel1.setButtonToolTip("Apply","Deleted all old TBBsetting instances from the Database and will write all new instances");
         buttonPanel1.setButtonEnabled("Restore",false);
         buttonPanel1.setButtonEnabled("Apply",false);
@@ -315,7 +325,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 jOTDBtree aTree = OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
                 itsTreeType=OtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
-                logger.error("TBBConfigPanel: Error getting treeInfo/treetype" + ex);
+                String aS="TBBConfigPanel: Error getting treeInfo/treetype" + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 itsTreeType="";
             }         } else {
             logger.error("ERROR:  no node given");
@@ -380,7 +392,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             //first element should have been the default TBBsettings, so we can assume init of components should have been done
             isInitialized=true;
         } catch (RemoteException ex) {
-            logger.error("Error during retrieveAndDisplayChildDataForNode: "+ ex);
+            String aS="Error during retrieveAndDisplayChildDataForNode: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
     }
@@ -407,7 +421,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());                
             }
         } catch (RemoteException ex) {
-            logger.error("Error during getParam: "+ ex);
+            String aS="Error during getParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
         
         if (aKeyName.equals("operatingMode")) {
@@ -1119,7 +1135,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
 
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
-        jPanel2 = new javax.swing.JPanel();
+        jTabbedPane1 = new javax.swing.JTabbedPane();
+        TBBSettingsPanel = new javax.swing.JPanel();
         labelOperatingMode = new javax.swing.JLabel();
         labelBaselevel = new javax.swing.JLabel();
         labelStartlevel = new javax.swing.JLabel();
@@ -1167,6 +1184,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         inputFilter1Coeff1 = new javax.swing.JTextField();
         inputFilter1Coeff2 = new javax.swing.JTextField();
         inputFilter1Coeff3 = new javax.swing.JTextField();
+        TBBControlPanel = new javax.swing.JPanel();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setMinimumSize(new java.awt.Dimension(800, 400));
@@ -1174,47 +1192,58 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 12));
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("Configure TBB settings");
+        jLabel1.setText("TBB");
         jLabel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1169, Short.MAX_VALUE)
+            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1495, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         add(jPanel1, java.awt.BorderLayout.NORTH);
 
-        jPanel2.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        TBBSettingsPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        TBBSettingsPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         labelOperatingMode.setText("operating Mode:");
+        TBBSettingsPanel.add(labelOperatingMode, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 16, 89, -1));
 
         labelBaselevel.setText("baselevel:");
+        TBBSettingsPanel.add(labelBaselevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 68, 89, -1));
+        labelBaselevel.getAccessibleContext().setAccessibleName("labelBaselevel");
 
         labelStartlevel.setText("startlevel:");
+        TBBSettingsPanel.add(labelStartlevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 94, 89, -1));
 
         labelStoplevel.setText("stoplevel:");
+        TBBSettingsPanel.add(labelStoplevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 120, 89, -1));
 
         labelFilter.setText("filter:");
+        TBBSettingsPanel.add(labelFilter, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 146, 89, -1));
 
         labelWindow.setText("window:");
+        TBBSettingsPanel.add(labelWindow, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 172, 89, -1));
 
         labelCoeff0.setText("coeff0:");
+        TBBSettingsPanel.add(labelCoeff0, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 30, 84, -1));
 
         labelCoeff1.setText("coeff1:");
+        TBBSettingsPanel.add(labelCoeff1, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 60, 84, -1));
 
         labelCoeff2.setText("coeff2:");
+        TBBSettingsPanel.add(labelCoeff2, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 90, 67, -1));
 
         labelCoeff3.setText("coeff3:");
+        TBBSettingsPanel.add(labelCoeff3, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 120, 84, -1));
 
         labelRCUs.setText("RCUs:");
+        TBBSettingsPanel.add(labelRCUs, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 210, 84, -1));
 
         inputOperatingMode.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Transient Detection", "Subband Data", " " }));
         inputOperatingMode.addActionListener(new java.awt.event.ActionListener() {
@@ -1222,30 +1251,35 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputOperatingMode, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 10, 133, -1));
 
         inputBaselevel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputBaselevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(111, 65, 138, -1));
 
         inputStartlevel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputStartlevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(111, 91, 138, -1));
 
         inputStoplevel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputStoplevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(111, 117, 138, -1));
 
         inputFilter.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputFilter, new org.netbeans.lib.awtextra.AbsoluteConstraints(111, 143, 138, -1));
 
         inputWindow.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "16B", "64B", "256B", "1K" }));
         inputWindow.addActionListener(new java.awt.event.ActionListener() {
@@ -1253,55 +1287,71 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputWindow, new org.netbeans.lib.awtextra.AbsoluteConstraints(111, 169, 138, -1));
 
         inputFilter0Coeff0.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputFilter0Coeff0, new org.netbeans.lib.awtextra.AbsoluteConstraints(440, 30, 140, -1));
 
         inputFilter0Coeff1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputFilter0Coeff1, new org.netbeans.lib.awtextra.AbsoluteConstraints(440, 60, 140, -1));
 
         inputFilter0Coeff2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputFilter0Coeff2, new org.netbeans.lib.awtextra.AbsoluteConstraints(440, 90, 140, -1));
 
         inputFilter0Coeff3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputFilter0Coeff3, new org.netbeans.lib.awtextra.AbsoluteConstraints(440, 120, 140, -1));
 
         inputRCUs.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputRCUs, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 200, 1040, -1));
 
         limitsBaselevel.setText("(1-4095)");
+        TBBSettingsPanel.add(limitsBaselevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(253, 71, 62, -1));
 
         limitsStartlevel.setText("(1-15)");
+        TBBSettingsPanel.add(limitsStartlevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(253, 94, 62, -1));
 
         limitsStoplevel.setText("(1-15)");
+        TBBSettingsPanel.add(limitsStoplevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(253, 120, 62, -1));
 
         limitsFilter.setText("(1-255)");
+        TBBSettingsPanel.add(limitsFilter, new org.netbeans.lib.awtextra.AbsoluteConstraints(253, 146, 62, -1));
 
         limitsCoeff0.setText("(0-65535)");
+        TBBSettingsPanel.add(limitsCoeff0, new org.netbeans.lib.awtextra.AbsoluteConstraints(800, 30, 60, -1));
 
         limitsCoeff1.setText("(0-65535)");
+        TBBSettingsPanel.add(limitsCoeff1, new org.netbeans.lib.awtextra.AbsoluteConstraints(800, 60, 70, -1));
 
         limitsCoeff2.setText("(0-65535)");
+        TBBSettingsPanel.add(limitsCoeff2, new org.netbeans.lib.awtextra.AbsoluteConstraints(800, 90, 60, 20));
 
         limitsCoeff3.setText("(0-65535)");
+        TBBSettingsPanel.add(limitsCoeff3, new org.netbeans.lib.awtextra.AbsoluteConstraints(800, 120, 60, -1));
 
         jLabel2.setText("Current configurations");
+        TBBSettingsPanel.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 320, 156, -1));
 
+        editConfigButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif"))); // NOI18N
         editConfigButton.setText("Edit Configuration");
         editConfigButton.setToolTipText("edit the selected configuration from the table");
         editConfigButton.setEnabled(false);
@@ -1310,7 +1360,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 editConfigButtonActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(editConfigButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 620, -1, -1));
 
+        addConfigButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_new.png"))); // NOI18N
         addConfigButton.setText("Apply Configuration");
         addConfigButton.setToolTipText("add composed Configuration to table");
         addConfigButton.addActionListener(new java.awt.event.ActionListener() {
@@ -1318,7 +1370,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 addConfigButtonActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(addConfigButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 270, -1, -1));
 
+        deleteConfigButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
         deleteConfigButton.setText("Delete Configuration");
         deleteConfigButton.setToolTipText("delete the selected configuration from the table");
         deleteConfigButton.setEnabled(false);
@@ -1327,7 +1381,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 deleteConfigButtonActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(deleteConfigButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 620, -1, -1));
 
+        cancelEditButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         cancelEditButton.setText("Cancel edit Configuration");
         cancelEditButton.setToolTipText("sets Configuration  entries back to default");
         cancelEditButton.addActionListener(new java.awt.event.ActionListener() {
@@ -1335,22 +1391,27 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 cancelEditButtonActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(cancelEditButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 270, -1, -1));
 
         TBBConfigurationPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 TBBConfigurationPanelMouseClicked(evt);
             }
         });
+        TBBSettingsPanel.add(TBBConfigurationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 350, 1250, 250));
 
         labelSubbandList.setText("subbands:");
+        TBBSettingsPanel.add(labelSubbandList, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 240, 84, -1));
 
         inputSubbandList.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputSubbandList, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 230, 1040, -1));
 
         labelTriggerMode.setText("triggerMode:");
+        TBBSettingsPanel.add(labelTriggerMode, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 42, 89, -1));
 
         inputTriggerMode.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "One-shot normal", "Continues normal", "One-shot external", "Continue external", "" }));
         inputTriggerMode.setSelectedItem("Continues normal");
@@ -1359,226 +1420,58 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 inputTriggerModeinputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputTriggerMode, new org.netbeans.lib.awtextra.AbsoluteConstraints(111, 39, 133, -1));
 
         jLabel3.setText("Filter 0");
+        TBBSettingsPanel.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(490, 10, -1, -1));
 
         jLabel4.setText("Filter 1");
+        TBBSettingsPanel.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(680, 10, -1, -1));
 
         inputFilter1Coeff0.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputFilter1Coeff0inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputFilter1Coeff0, new org.netbeans.lib.awtextra.AbsoluteConstraints(630, 30, 140, -1));
 
         inputFilter1Coeff1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputFilter1Coeff1inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputFilter1Coeff1, new org.netbeans.lib.awtextra.AbsoluteConstraints(630, 60, 140, -1));
 
         inputFilter1Coeff2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputFilter1Coeff2inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputFilter1Coeff2, new org.netbeans.lib.awtextra.AbsoluteConstraints(630, 90, 140, -1));
 
         inputFilter1Coeff3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputFilter1Coeff3inputActionPerformed(evt);
             }
         });
+        TBBSettingsPanel.add(inputFilter1Coeff3, new org.netbeans.lib.awtextra.AbsoluteConstraints(630, 120, 140, -1));
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(labelBaselevel, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                    .addComponent(labelOperatingMode, javax.swing.GroupLayout.PREFERRED_SIZE, 84, Short.MAX_VALUE)
-                    .addComponent(labelTriggerMode, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                    .addComponent(labelStartlevel, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                    .addComponent(labelFilter, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                    .addComponent(labelWindow, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                    .addComponent(labelStoplevel, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE))
-                .addGap(10, 10, 10)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(inputStartlevel, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
-                    .addComponent(inputBaselevel, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
-                    .addComponent(inputStoplevel, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
-                    .addComponent(inputFilter, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
-                    .addComponent(inputWindow, 0, 133, Short.MAX_VALUE)
-                    .addComponent(inputTriggerMode, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(inputOperatingMode, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(limitsBaselevel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(limitsStartlevel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 56, Short.MAX_VALUE)
-                    .addComponent(limitsStoplevel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 56, Short.MAX_VALUE)
-                    .addComponent(limitsFilter, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 56, Short.MAX_VALUE))
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(310, 310, 310)
-                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(322, 322, 322))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(TBBConfigurationPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 830, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addComponent(editConfigButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(limitsCoeff1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(limitsCoeff0, javax.swing.GroupLayout.DEFAULT_SIZE, 101, Short.MAX_VALUE)
-                                    .addGroup(jPanel2Layout.createSequentialGroup()
-                                        .addComponent(deleteConfigButton)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(addConfigButton)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(cancelEditButton))
-                                    .addComponent(limitsCoeff2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(limitsCoeff3, javax.swing.GroupLayout.DEFAULT_SIZE, 103, Short.MAX_VALUE))))
-                        .addGap(18, 18, 18)))
-                .addContainerGap())
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(labelCoeff2, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(labelCoeff0, javax.swing.GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
-                            .addComponent(labelCoeff1, javax.swing.GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
-                            .addComponent(labelCoeff3, javax.swing.GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
-                            .addComponent(labelRCUs, javax.swing.GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
-                            .addComponent(labelSubbandList, javax.swing.GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE))
-                        .addGap(10, 10, 10)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(inputFilter0Coeff0, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
-                                    .addComponent(inputFilter0Coeff1, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
-                                    .addComponent(inputFilter0Coeff2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
-                                    .addComponent(inputFilter0Coeff3, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE))
-                                .addGap(68, 68, 68)
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(inputFilter1Coeff0, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
-                                    .addComponent(inputFilter1Coeff1, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
-                                    .addComponent(inputFilter1Coeff2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
-                                    .addComponent(inputFilter1Coeff3, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE))
-                                .addGap(705, 705, 705))
-                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                .addComponent(inputSubbandList, javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(inputRCUs, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 1040, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addGap(31, 31, 31))
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGap(135, 135, 135)
-                .addComponent(jLabel3)
-                .addGap(155, 155, 155)
-                .addComponent(jLabel4)
-                .addContainerGap(789, Short.MAX_VALUE))
+        jTabbedPane1.addTab("TBB-settings", TBBSettingsPanel);
+
+        javax.swing.GroupLayout TBBControlPanelLayout = new javax.swing.GroupLayout(TBBControlPanel);
+        TBBControlPanel.setLayout(TBBControlPanelLayout);
+        TBBControlPanelLayout.setHorizontalGroup(
+            TBBControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 1490, Short.MAX_VALUE)
         );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
-                    .addComponent(labelOperatingMode)
-                    .addComponent(inputOperatingMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(6, 6, 6)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(labelTriggerMode)
-                                    .addComponent(inputTriggerMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(labelBaselevel)
-                                    .addComponent(inputBaselevel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addComponent(limitsBaselevel))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(labelStartlevel)
-                            .addComponent(inputStartlevel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(limitsStartlevel))
-                        .addGap(6, 6, 6)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(inputStoplevel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(labelStoplevel)
-                            .addComponent(limitsStoplevel))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(labelFilter)
-                            .addComponent(inputFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(limitsFilter))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(labelWindow)
-                            .addComponent(inputWindow, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(TBBConfigurationPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(19, 19, 19)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(editConfigButton)
-                    .addComponent(deleteConfigButton)
-                    .addComponent(addConfigButton)
-                    .addComponent(cancelEditButton))
-                .addGap(17, 17, 17)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(jLabel4))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(inputFilter0Coeff0, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(labelCoeff0))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(labelCoeff1)
-                            .addComponent(inputFilter0Coeff1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(12, 12, 12)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(labelCoeff2)
-                            .addComponent(inputFilter0Coeff2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(labelCoeff3)
-                            .addComponent(inputFilter0Coeff3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(inputFilter1Coeff0, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(limitsCoeff0))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(inputFilter1Coeff1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(limitsCoeff1))
-                        .addGap(12, 12, 12)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(inputFilter1Coeff2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(limitsCoeff2))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(inputFilter1Coeff3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(limitsCoeff3))))
-                .addGap(18, 18, 18)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(labelRCUs)
-                    .addComponent(inputRCUs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(labelSubbandList)
-                    .addComponent(inputSubbandList, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(116, Short.MAX_VALUE))
+        TBBControlPanelLayout.setVerticalGroup(
+            TBBControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 714, Short.MAX_VALUE)
         );
 
-        labelBaselevel.getAccessibleContext().setAccessibleName("labelBaselevel");
+        jTabbedPane1.addTab("TBBControl", TBBControlPanel);
 
-        add(jPanel2, java.awt.BorderLayout.CENTER);
+        add(jTabbedPane1, java.awt.BorderLayout.CENTER);
 
         buttonPanel1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1698,6 +1591,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.TablePanel TBBConfigurationPanel;
+    private javax.swing.JPanel TBBControlPanel;
+    private javax.swing.JPanel TBBSettingsPanel;
     private javax.swing.JButton addConfigButton;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JButton cancelEditButton;
@@ -1725,7 +1620,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
+    private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JLabel labelBaselevel;
     private javax.swing.JLabel labelCoeff0;
     private javax.swing.JLabel labelCoeff1;

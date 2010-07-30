@@ -100,7 +100,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
         } else {
-            logger.debug("No Mainframe supplied");
+            logger.error("No Mainframe supplied");
         }
     }
     /**
@@ -152,7 +152,9 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 
             }
         } catch (RemoteException ex) {
-            logger.error("Error during getComponentParam: "+ ex);
+            String aS="Error during getComponentParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             itsParamList=null;
             return;
         }
@@ -219,7 +221,9 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
                 setField(aNode,aParam,aHWNode);
             }
         } catch (RemoteException ex) {
-            logger.error("Error during retrieveAndDisplayChildDataForNode: "+ ex);
+            String aS="Error during retrieveAndDisplayChildDataForNode: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
     }
@@ -247,7 +251,11 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
      * Adds the save button on the bottom of the form
      */
     private void initialize() {
-        buttonPanel1.addButton("Apply Settings");
+        buttonPanel1.addButton("Restore");
+        buttonPanel1.setButtonIcon("Restore",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_undo.png")));
+        buttonPanel1.addButton("Apply");
+        buttonPanel1.setButtonIcon("Apply",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png")));
+
     }
     /**
      * Initialization method to be implemented when 
@@ -273,7 +281,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
             // [TODO]
             // Fill from existing cfg needed ????
         } else {
-            logger.debug("no node given");
+            logger.error("no node given");
         }
     }
     /**
@@ -405,7 +413,9 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             OtdbRmi.getRemoteMaintenance().saveNode(aNode);
         } catch (RemoteException ex) {
-            logger.error("Error: saveNode failed : " + ex);
+            String aS="Error: saveNode failed : " + ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
     }
     
@@ -514,7 +524,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         ParmDBLocalSkyText = new javax.swing.JTextField();
         ParmDBHistoryText = new javax.swing.JTextField();
         ParmDBHistoryLabel = new javax.swing.JLabel();
-        configurationRevertButton = new javax.swing.JButton();
         BBSDatasetDeRefText = new javax.swing.JTextField();
         ControllerPanel = new javax.swing.JPanel();
         ControllerHostLabel = new javax.swing.JLabel();
@@ -609,18 +618,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
 
         BBSGlobalSettingsFieldPanel.add(ParmDBPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 240, 350, 110));
 
-        configurationRevertButton.setText("Revert");
-        configurationRevertButton.setToolTipText("Revert the values in this screen to the values present in the database");
-        configurationRevertButton.setMaximumSize(new java.awt.Dimension(100, 25));
-        configurationRevertButton.setMinimumSize(new java.awt.Dimension(100, 25));
-        configurationRevertButton.setPreferredSize(new java.awt.Dimension(100, 25));
-        configurationRevertButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                configurationRevertButtonActionPerformed(evt);
-            }
-        });
-        BBSGlobalSettingsFieldPanel.add(configurationRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 470, 100, -1));
-
         BBSDatasetDeRefText.setEditable(false);
         BBSDatasetDeRefText.setToolTipText("Dereferenced and actually used value.");
         BBSDatasetDeRefText.setMaximumSize(new java.awt.Dimension(440, 19));
@@ -662,13 +659,11 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         add(jTabbedPane1, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void configurationRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configurationRevertButtonActionPerformed
-        this.restoreBBSGlobalSettingsPanel();
-    }//GEN-LAST:event_configurationRevertButtonActionPerformed
-
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand().equals("Apply Settings")) {
+        if(evt.getActionCommand().equals("Apply")) {
             saveInput();
+        }else if(evt.getActionCommand().equals("Restore")) {
+            this.restoreBBSGlobalSettingsPanel();
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
@@ -703,7 +698,6 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JPanel ParmDBPanel;
     private nl.astron.lofar.sas.otbcomponents.bbs.BBSStrategyPanel aBBSStrategyPanel;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
-    private javax.swing.JButton configurationRevertButton;
     private javax.swing.JTabbedPane jTabbedPane1;
     // End of variables declaration//GEN-END:variables
     
