@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import nl.astron.lofar.java.gui.plotter.IPlotDataAccess;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
-import nl.astron.lofar.java.gui.plotter.exceptions.NotImplementedException;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
 
 /**
@@ -48,6 +47,7 @@ public class PlotDataAccessTestImpl implements IPlotDataAccess{
     /**
      * Cleans up any left over variables
      */
+    @Override
     public void finalize() throws Throwable {
         
     }

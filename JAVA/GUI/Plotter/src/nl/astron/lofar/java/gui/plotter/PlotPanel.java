@@ -24,7 +24,6 @@
 package nl.astron.lofar.java.gui.plotter;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -68,6 +67,7 @@ public class PlotPanel extends javax.swing.JPanel implements Printable{
     /**
      * cleans up the instance variables
      */
+    @Override
     public void finalize() throws Throwable {
         plot = null;
         legend = null;
