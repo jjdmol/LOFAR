@@ -33,13 +33,13 @@
               <EmptySpace max="-2" attributes="0"/>
               <Component id="jScrollPane1" min="-2" pref="76" max="-2" attributes="1"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                  <Component id="RemoveAllButton" alignment="0" max="32767" attributes="1"/>
-                  <Component id="AddAllButton" alignment="0" pref="86" max="32767" attributes="1"/>
-                  <Component id="RemoveButton" alignment="0" max="32767" attributes="1"/>
-                  <Component id="AddButton" alignment="0" max="32767" attributes="1"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Component id="AddAllButton" pref="105" max="32767" attributes="1"/>
+                  <Component id="RemoveButton" pref="105" max="32767" attributes="1"/>
+                  <Component id="RemoveAllButton" max="32767" attributes="1"/>
+                  <Component id="AddButton" alignment="0" pref="105" max="32767" attributes="1"/>
               </Group>
-              <EmptySpace max="32767" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -49,15 +49,15 @@
               <Group type="103" groupAlignment="1" attributes="0">
                   <Group type="102" alignment="1" attributes="0">
                       <Component id="AddButton" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="32767" attributes="0"/>
-                      <Component id="AddAllButton" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
+                      <Component id="AddAllButton" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                       <Component id="RemoveButton" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="RemoveAllButton" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" pref="32" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="42" max="-2" attributes="0"/>
                   </Group>
-                  <Component id="jScrollPane2" alignment="0" pref="150" max="32767" attributes="1"/>
+                  <Component id="jScrollPane2" alignment="0" pref="160" max="32767" attributes="1"/>
                   <Component id="jScrollPane1" alignment="0" min="0" pref="0" max="32767" attributes="1"/>
               </Group>
               <EmptySpace max="32767" attributes="0"/>
@@ -68,8 +68,12 @@
   <SubComponents>
     <Component class="javax.swing.JButton" name="AddButton">
       <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_add.gif"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Add"/>
         <Property name="toolTipText" type="java.lang.String" value="Add item to list"/>
+        <Property name="horizontalAlignment" type="int" value="2"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="AddButtonActionPerformed"/>
@@ -77,8 +81,12 @@
     </Component>
     <Component class="javax.swing.JButton" name="RemoveAllButton">
       <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_delAll.gif"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Remove all"/>
         <Property name="toolTipText" type="java.lang.String" value="Remove all items from the list"/>
+        <Property name="horizontalAlignment" type="int" value="2"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="RemoveAllButtonActionPerformed"/>
@@ -134,8 +142,12 @@
     </Container>
     <Component class="javax.swing.JButton" name="AddAllButton">
       <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_addAll.gif"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Add All"/>
         <Property name="toolTipText" type="java.lang.String" value="Add all stations to the list"/>
+        <Property name="horizontalAlignment" type="int" value="2"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="AddAllButtonActionPerformed"/>
@@ -143,8 +155,12 @@
     </Component>
     <Component class="javax.swing.JButton" name="RemoveButton">
       <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_delete.png"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Remove"/>
         <Property name="toolTipText" type="java.lang.String" value="Remove selected items from the list"/>
+        <Property name="horizontalAlignment" type="int" value="2"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="RemoveButtonActionPerformed"/>

@@ -70,13 +70,13 @@ public class RSPMACTableModel extends javax.swing.table.AbstractTableModel {
             if (i < aS.length) {
                 data[k][1]= aS[i];            
             } else {
-                logger.debug("Provided RSPMACAddress string to short, adding empty strings");
+                logger.warn("Provided RSPMACAddress string to short, adding empty strings");
                 data[k][1] = "";
             }
             if (i+1 < aS.length) {
                 data[k][2]= aS[i+1];
             } else {
-                logger.debug("Provided RSPMACAddress string to short, adding empty strings");
+                logger.warn("Provided RSPMACAddress string to short, adding empty strings");
                 data[k][2] = "";                
             }
             i+=2;
@@ -102,6 +102,7 @@ public class RSPMACTableModel extends javax.swing.table.AbstractTableModel {
             return headers[c];
         }
         catch(ArrayIndexOutOfBoundsException e) {
+            logger.error("ArrayIndex out of bound exception for getColumnName("+c+"): "+e);
             return null;
         }
         
@@ -125,6 +126,7 @@ public class RSPMACTableModel extends javax.swing.table.AbstractTableModel {
             return data[r][c];
         }
         catch(ArrayIndexOutOfBoundsException e) {
+            logger.error("ArrayIndex out of bound exception for getValueAt("+r+","+c+"): "+e);
             return null;
         }
     }

@@ -94,6 +94,16 @@ public class ButtonPanel extends javax.swing.JPanel {
         buttons.get(button).setToolTipText(toolTipText);
         jPanelButtons.repaint();
     }
+
+    /** Sets an icon for a button
+     *
+     * @param   button     the Key identifying this button
+     * @param   icon       icon for this button
+     *
+     */
+    public void setButtonIcon(String button,Icon icon) {
+        buttons.get(button).setIcon(icon);
+    }
     
     
     /** remove one button and the actionListeners associated with it
@@ -120,7 +130,7 @@ public class ButtonPanel extends javax.swing.JPanel {
         Iterator it=buttons.keySet().iterator();
         while (it.hasNext()) {
             String key =((String)it.next());
-            System.out.println(key+" <-> "+ buttons.get(key).getText());
+            logger.trace(key+" <-> "+ buttons.get(key).getText());
         }    
      }
 

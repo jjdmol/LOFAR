@@ -71,7 +71,7 @@
                           <Component id="saveButton" min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
-                  <EmptySpace max="32767" attributes="0"/>
+                  <EmptySpace pref="657" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -113,7 +113,11 @@
         </Component>
         <Component class="javax.swing.JButton" name="cancelButton">
           <Properties>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_cancel.png"/>
+            </Property>
             <Property name="text" type="java.lang.String" value="Cancel"/>
+            <Property name="horizontalAlignment" type="int" value="2"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cancelButtonActionPerformed"/>
@@ -121,7 +125,11 @@
         </Component>
         <Component class="javax.swing.JButton" name="saveButton">
           <Properties>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_apply.png"/>
+            </Property>
             <Property name="text" type="java.lang.String" value="Save"/>
+            <Property name="horizontalAlignment" type="int" value="2"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="saveButtonActionPerformed"/>

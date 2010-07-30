@@ -39,7 +39,7 @@ import org.apache.log4j.Logger;
 public class VerticalButtonPanel extends javax.swing.JPanel {
     
     static Logger logger = Logger.getLogger(VerticalButtonPanel.class);
-    static String name = "HorizontalButtonPanel";
+    static String name = "Vertical ButtonPanel";
     
     /** Creates new form BeanForm */
     public VerticalButtonPanel() {

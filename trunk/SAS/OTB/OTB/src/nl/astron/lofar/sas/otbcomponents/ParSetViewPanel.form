@@ -21,7 +21,7 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="SaveParsetButton" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="833" max="32767" attributes="0"/>
+                      <EmptySpace pref="837" max="32767" attributes="0"/>
                   </Group>
                   <Group type="102" alignment="1" attributes="0">
                       <Group type="103" groupAlignment="1" attributes="0">
@@ -40,7 +40,7 @@
               <EmptySpace max="-2" attributes="0"/>
               <Component id="jLabel1" min="-2" pref="20" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="jScrollPane1" pref="407" max="32767" attributes="0"/>
+              <Component id="jScrollPane1" pref="405" max="32767" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="SaveParsetButton" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
@@ -51,7 +51,11 @@
   <SubComponents>
     <Component class="javax.swing.JButton" name="SaveParsetButton">
       <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_save.png"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Save Parset to File"/>
+        <Property name="horizontalAlignment" type="int" value="2"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="SaveParsetButtonActionPerformed"/>

@@ -91,8 +91,11 @@ public class ResultBrowserPanel extends javax.swing.JPanel
 
 
         buttonPanel1.addButton("Query Panel");
+        buttonPanel1.setButtonIcon("Query Panel",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_help.png")));
         buttonPanel1.addButton("Schedule");
+        buttonPanel1.setButtonIcon("Schedule",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_fileopen.gif")));
         buttonPanel1.addButton("Exit");
+        buttonPanel1.setButtonIcon("Exit",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_exit2.png")));
 
 
         buttonPanel.addActionListener(new java.awt.event.ActionListener() {
@@ -113,7 +116,9 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                         buttonPanel.addButton(aKey);
                     }
                 } catch (Exception e) {
-                 logger.fatal("Exception during getItemList.",e);
+                    String aS="Exception during getItemList."+e;
+                    logger.fatal(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_death.gif")));
                 }
             }
         }
@@ -121,7 +126,9 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         try {
             itsTreeType = OtdbRmi.getRemoteTypes().getTreeType(OtdbRmi.getRemoteOTDB().getTreeInfo(itsTreeID, false).type);
         } catch (RemoteException ex) {
-            logger.error("Error getting treetype");
+            String aS="Error getting treetype "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
 
         if (userAccount.isObserver() && !itsTreeType.equalsIgnoreCase("hardware")) {
@@ -164,7 +171,8 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                             }
                         }
                     } catch (RemoteException ex) {
-                        logger.error("ParmDB Plotter could not be loaded : "+ex.getMessage(),ex);
+                        String aS="ParmDB Plotter could not be loaded : "+ex.getMessage()+ex;
+                        logger.error(aS);
                     }
                 }
             }
@@ -257,7 +265,9 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 treePanel.newRootNode(treeManager.getRootNode(itsTreeID));
                 itsMainFrame.setNormalCursor();
             } catch (Exception e) {
-                logger.error("Exception during setNewRootNode: " + e);
+                String aS="Exception during setNewRootNode: " + e;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             }
         }
     }
@@ -283,12 +293,13 @@ public class ResultBrowserPanel extends javax.swing.JPanel
             logger.debug("nodes: " + aL);
             if (aL.size()> 0) {
               changeSelection((jOTDBnode)aL.elementAt(0));
-              itsSelectedButton = evt.getActionCommand();
             } else {
-                logger.error("No panels for this choice");
+                logger.warn("No panels for this choice");
             }
         } catch(Exception e) {
-            logger.fatal("Exception during getItemList.",e);
+            String aS="Exception during getItemList."+e;
+            logger.fatal(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
     }
 
@@ -330,16 +341,22 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 try {
                     p = (JPanel) Class.forName(aPanelName).newInstance();
                 } catch (ClassNotFoundException ex) {
-                    logger.error("Error during getPanel: "+ ex);
+                    String aS="Error during getPanel: "+ ex;
+                    logger.error(aS);
                     itsMainFrame.setNormalCursor();
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     return;
                 } catch (InstantiationException ex) {
-                    logger.error("Error during getPanel: "+ ex);
+                    String aS="Error during getPanel: "+ ex;
+                    logger.error(aS);
                     itsMainFrame.setNormalCursor();
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     return;
                 } catch (IllegalAccessException ex) {
-                    logger.error("Error during getPanel: "+ ex);
+                    String aS="Error during getPanel: "+ ex;
+                    logger.error(aS);
                     itsMainFrame.setNormalCursor();
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     return;
                 }
                 if (p!=null) {
@@ -395,16 +412,22 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 try {
                     p = (JPanel) Class.forName(aPanelName).newInstance();
                 } catch (ClassNotFoundException ex) {
-                    logger.error("Error during getPanel: "+ ex);
+                    String aS="Error during getPanel: "+ ex;
+                    logger.error(aS);
                     itsMainFrame.setNormalCursor();
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     return;
                 } catch (InstantiationException ex) {
-                    logger.error("Error during getPanel: "+ ex);
+                    String aS="Error during getPanel: "+ ex;
+                    logger.error(aS);
                     itsMainFrame.setNormalCursor();
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     return;
                 } catch (IllegalAccessException ex) {
-                    logger.error("Error during getPanel: "+ ex);
+                    String aS="Error during getPanel: "+ ex;
+                    logger.error(aS);
                     itsMainFrame.setNormalCursor();
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     return;
                 }
                 if (p!=null) {
@@ -538,12 +561,9 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     // keep the TreeId that belongs to this panel
     private int itsTreeID = 0;
     private String itsTreeType="";
-    private String itsSelectedButton="";
-
+ 
     TreePath itsLastSelectedPath = null;
     private JTabbedPane jTabbedPane1 = new javax.swing.JTabbedPane();
-    private NodeViewPanel nodeViewPanel1 = new nl.astron.lofar.sas.otbcomponents.NodeViewPanel();
-    private ParameterViewPanel parameterViewPanel1 = new nl.astron.lofar.sas.otbcomponents.ParameterViewPanel();
     private TreePanel treePanel = new nl.astron.lofar.sas.otbcomponents.TreePanel();
     private VerticalButtonPanel buttonPanel = new nl.astron.lofar.sas.otbcomponents.VerticalButtonPanel();
 

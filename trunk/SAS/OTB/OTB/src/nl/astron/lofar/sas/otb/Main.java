@@ -120,16 +120,16 @@ public class Main {
                aMainFrame.setVisible(true);
             }
             catch(NoServerConnectionException ex ) {
-            logger.error(ex);
+                String aS="ex";
+                logger.error(aS);
             }
             catch (NotLoggedInException ex ) {
-            logger.error(ex);
+                logger.error(ex);
             }
         }
         catch(Exception e) {
             // catch all exceptions and create a fatal error message, including 
             // a stack trace.
-            System.out.println("Error: "+ e);
             logger.fatal("Fatal exception, OTB halted",e);
         }
     }

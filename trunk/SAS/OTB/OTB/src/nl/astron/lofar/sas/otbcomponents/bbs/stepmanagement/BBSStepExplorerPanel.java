@@ -31,6 +31,7 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.table.DefaultTableModel;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.operations.IBBSStepOperationPanel;
@@ -75,7 +76,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
         } else {
-            logger.debug("No Mainframe supplied");
+            logger.error("No Mainframe supplied");
         }
     }
     /**
@@ -127,7 +128,9 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
      */
     private void initialize() {
         buttonPanel1.addButton("Apply step and close");
+        buttonPanel1.setButtonIcon("Apply step and close",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png")));
         buttonPanel1.addButton("Close");
+        buttonPanel1.setButtonIcon("Close",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_exit2.png")));
         if(itsBBSStep == null){
             stepExplorerStepNameText.setEditable(true);
         }
@@ -910,13 +913,19 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
             try {
                 newPanel = (JPanel) Class.forName(name).newInstance();
             } catch (ClassNotFoundException ex) {
-                logger.debug("Error during getPanel: "+ ex);
+                String aS="Error during getPanel: "+ ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return;
             } catch (InstantiationException ex) {
-                logger.debug("Error during getPanel: "+ ex);
+                String aS="Error during getPanel: "+ ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return;
             } catch (IllegalAccessException ex) {
-                logger.debug("Error during getPanel: "+ ex);
+                String aS="Error during getPanel: "+ ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return;
             }
             
@@ -1076,6 +1085,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         });
         stepExplorerPanel.add(stepExplorerStepNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 10, 260, 30));
 
+        stepExplorerRevertButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_undo.png"))); // NOI18N
         stepExplorerRevertButton.setText("Revert");
         stepExplorerRevertButton.setToolTipText("Revert the step variables to the values present when this dialog was opened.");
         stepExplorerRevertButton.setEnabled(false);
@@ -1188,7 +1198,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
 
         stepExplorerNSourcesButtonPanel.setLayout(new java.awt.GridBagLayout());
 
-        addNSourceButton.setText("Add");
+        addNSourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
         addNSourceButton.setToolTipText("Add the source entered above to the list of sources");
         addNSourceButton.setEnabled(false);
         addNSourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -1206,7 +1216,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stepExplorerNSourcesButtonPanel.add(addNSourceButton, gridBagConstraints);
 
-        deleteNSourceButton.setText("Delete");
+        deleteNSourceButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
         deleteNSourceButton.setToolTipText("Remove the selected source from the list");
         deleteNSourceButton.setEnabled(false);
         deleteNSourceButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -1271,7 +1281,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
 
         StepExplorerInstrumentModelButtonPanel.setLayout(new java.awt.GridBagLayout());
 
-        addInstrumentButton.setText("Add");
+        addInstrumentButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
         addInstrumentButton.setToolTipText("Add the source entered above to the list of sources");
         addInstrumentButton.setEnabled(false);
         addInstrumentButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -1289,7 +1299,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         StepExplorerInstrumentModelButtonPanel.add(addInstrumentButton, gridBagConstraints);
 
-        deleteInstrumentButton.setText("Delete");
+        deleteInstrumentButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
         deleteInstrumentButton.setToolTipText("Remove the selected source from the list");
         deleteInstrumentButton.setEnabled(false);
         deleteInstrumentButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -1352,7 +1362,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
 
         stepExplorerPanel.add(stepExplorerCorrelationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(550, 270, 170, 120));
 
-        integrationIntervalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Integration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), java.awt.Color.lightGray));
+        integrationIntervalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Integration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), java.awt.Color.lightGray)); // NOI18N
         integrationIntervalPanel.setToolTipText("Cell size for integration. Not yet implemented.");
         integrationIntervalPanel.setEnabled(false);
         integrationIntervalPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -1478,7 +1488,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
 
         baselineModsPanel.setLayout(new java.awt.GridBagLayout());
 
-        addBaseLineButton.setText("Add");
+        addBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
         addBaseLineButton.setToolTipText("Adds a baseline using the Station1 and Station2 values in the input boxes above");
         addBaseLineButton.setEnabled(false);
         addBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -1497,7 +1507,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         baselineModsPanel.add(addBaseLineButton, gridBagConstraints);
 
-        deleteBaseLineButton.setText("Delete");
+        deleteBaseLineButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
         deleteBaseLineButton.setToolTipText("Deletes the selected baseline (the selected Station 1 and Station 2 pair)");
         deleteBaseLineButton.setEnabled(false);
         deleteBaseLineButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -1520,6 +1530,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
 
         stepExplorerPanel.add(BaselineSelectionPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 320, 250));
 
+        helpButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_help.png"))); // NOI18N
         helpButton.setText("Help");
         helpButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

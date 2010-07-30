@@ -110,7 +110,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
         } else {
-            logger.debug("No Mainframe supplied");
+            logger.error("No Mainframe supplied");
         }
     }
     /**
@@ -158,7 +158,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 }
             }
         } catch (RemoteException ex) {
-            logger.error("Error during getComponentParam: "+ ex);
+            String aS="Error during getComponentParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             itsParamList=null;
             return;
         }
@@ -228,7 +230,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 setField(aNode,aParam,aHWNode);
             }
         } catch (RemoteException ex) {
-            logger.error("Error during retrieveAndDisplayChildDataForNode: "+ ex);
+            String aS="Error during retrieveAndDisplayChildDataForNode: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
     }
@@ -268,13 +272,12 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
      */
     
     private void initialize() {
-        this.buttonPanel1.addButton("Apply Settings");
+        this.buttonPanel1.addButton("Revert");
+        this.buttonPanel1.setButtonIcon("Revert",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_undo.png")));
+        this.buttonPanel1.addButton("Apply");
+        this.buttonPanel1.setButtonIcon("Apply",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png")));
         this.stationsList.setModel(new DefaultListModel());
         this.modifyStationsCombobox.removeAllItems();
-        this.modifyStationsCombobox.addItem("CS001");
-        this.modifyStationsCombobox.addItem("CS008");
-        this.modifyStationsCombobox.addItem("CS010");
-        this.modifyStationsCombobox.addItem("CS016");
         
     }
      /**
@@ -301,7 +304,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             // [TODO]
             // Fill from existing cfg needed ????
         } else {
-            logger.debug("no node given");
+            logger.error("no node given");
         }
     }
     /**
@@ -421,7 +424,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             OtdbRmi.getRemoteMaintenance().saveNode(aNode);
         } catch (RemoteException ex) {
-            logger.error("Error: saveNode failed : " + ex);
+            String aS="Error: saveNode failed : " + ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
     }
     
@@ -451,37 +456,30 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         
         if (this.StrategyInputData != null && !this.inputDataText.getText().equals(StrategyInputData.limits)) {
             StrategyInputData.limits = inputDataText.getText();
-            logger.trace("Variable BBS Strategy ("+StrategyInputData.name+"//"+StrategyInputData.treeID()+"//"+StrategyInputData.nodeID()+"//"+StrategyInputData.parentID()+"//"+StrategyInputData.paramDefID()+") from value ("+inputDataText.getText()+") updated to :"+StrategyInputData.limits);
             saveNode(StrategyInputData);
         }
         if (this.StrategyWDSFrequency != null && !this.wdsFrequencyText.getText().equals(StrategyWDSFrequency.limits)) {
             StrategyWDSFrequency.limits = wdsFrequencyText.getText();
-            logger.trace("Variable BBS Strategy ("+StrategyWDSFrequency.name+"//"+StrategyWDSFrequency.treeID()+"//"+StrategyWDSFrequency.nodeID()+"//"+StrategyWDSFrequency.parentID()+"//"+StrategyWDSFrequency.paramDefID()+") updated to :"+StrategyWDSFrequency.limits);
             saveNode(StrategyWDSFrequency);
         }
         if (this.StrategyWDSTime != null && !this.wdsTimeText.getText().equals(StrategyWDSTime.limits)) {
             StrategyWDSTime.limits = wdsTimeText.getText();
-            logger.trace("Variable BBS Strategy ("+StrategyWDSTime.name+"//"+StrategyWDSTime.treeID()+"//"+StrategyWDSTime.nodeID()+"//"+StrategyWDSTime.parentID()+"//"+StrategyWDSTime.paramDefID()+") updated to :"+StrategyWDSTime.limits);
             saveNode(StrategyWDSTime);
         }
         if (this.StrategyIntegrationFrequency != null && !this.integrationFrequencyText.getText().equals(StrategyIntegrationFrequency.limits)) {
             StrategyIntegrationFrequency.limits = integrationFrequencyText.getText();
-            logger.trace("Variable BBS Strategy ("+StrategyIntegrationFrequency.name+"//"+StrategyIntegrationFrequency.treeID()+"//"+StrategyIntegrationFrequency.nodeID()+"//"+StrategyIntegrationFrequency.parentID()+"//"+StrategyIntegrationFrequency.paramDefID()+") updated to :"+StrategyIntegrationFrequency.limits);
             saveNode(StrategyIntegrationFrequency);
         }
         if (this.StrategyIntegrationTime != null && !this.integrationTimeText.getText().equals(StrategyIntegrationTime.limits)) {
             StrategyIntegrationTime.limits = integrationTimeText.getText();
-            logger.trace("Variable BBS Strategy ("+StrategyIntegrationTime.name+"//"+StrategyIntegrationTime.treeID()+"//"+StrategyIntegrationTime.nodeID()+"//"+StrategyIntegrationTime.parentID()+"//"+StrategyIntegrationTime.paramDefID()+") updated to :"+StrategyIntegrationTime.limits);
             saveNode(StrategyIntegrationTime);
         }
         if (this.StrategyCorrelationSelection != null && !this.correlationSelectionBox.getSelectedItem().toString().equals(StrategyCorrelationSelection.limits)) {
             StrategyCorrelationSelection.limits = correlationSelectionBox.getSelectedItem().toString();
-            logger.trace("Variable BBS Strategy ("+StrategyCorrelationSelection.name+"//"+StrategyCorrelationSelection.treeID()+"//"+StrategyCorrelationSelection.nodeID()+"//"+StrategyCorrelationSelection.parentID()+"//"+StrategyCorrelationSelection.paramDefID()+") updating to :"+StrategyCorrelationSelection.limits);
             saveNode(StrategyCorrelationSelection);
         }
         if (this.StrategyCorrelationType != null && !LofarUtils.createStringFromSelectionList(correlationTypeList,true).equals(StrategyCorrelationType.limits)) {
             StrategyCorrelationType.limits = LofarUtils.createStringFromSelectionList(correlationTypeList,true);
-            logger.trace("Variable BBS Strategy ("+StrategyCorrelationType.name+"//"+StrategyCorrelationType.treeID()+"//"+StrategyCorrelationType.nodeID()+"//"+StrategyCorrelationType.parentID()+"//"+StrategyCorrelationType.paramDefID()+") updating to :"+StrategyCorrelationType.limits);
             saveNode(StrategyCorrelationType);
         }
         //clear the stations list if the use all stations checkbox is selected
@@ -490,7 +488,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         }
         if (this.StrategyStations != null && !LofarUtils.createList(stationsList,true).equals(StrategyStations.limits)) {
             StrategyStations.limits = LofarUtils.createList(stationsList,true);
-            logger.trace("Variable BBS Strategy ("+StrategyStations.name+"//"+StrategyStations.treeID()+"//"+StrategyStations.nodeID()+"//"+StrategyStations.parentID()+"//"+StrategyStations.paramDefID()+") updating to :"+StrategyStations.limits);
             saveNode(StrategyStations);
         }
     }
@@ -528,7 +525,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             this.stepsTreePanel.getTree().setSelectionRow(0);
             
         } catch (RemoteException ex) {
-            logger.error("Strategy Step Tree could not be built.",ex);
+            String aS="Strategy Step Tree could not be built. "+ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
     }
     /**
@@ -609,14 +608,13 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         strategyPanel = new javax.swing.JPanel();
         inputDataLabel = new javax.swing.JLabel();
         inputDataText = new javax.swing.JTextField();
-        strategyRevertButton = new javax.swing.JButton();
         stationsPanel = new javax.swing.JPanel();
         stationsScrollPane = new javax.swing.JScrollPane();
         stationsList = new javax.swing.JList();
         stationsModPanel = new javax.swing.JPanel();
         stationsButtonPanel = new javax.swing.JPanel();
-        deleteStationButton = new javax.swing.JButton();
         addStationButton = new javax.swing.JButton();
+        deleteStationButton = new javax.swing.JButton();
         modifyStationsCombobox = new javax.swing.JComboBox();
         stationsUseAllCheckbox = new javax.swing.JCheckBox();
         stepsPanel = new javax.swing.JPanel();
@@ -670,18 +668,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         inputDataText.setToolTipText("Name of the column in the measurement set that contains the input data");
         strategyPanel.add(inputDataText, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 30, 170, -1));
 
-        strategyRevertButton.setText("Revert");
-        strategyRevertButton.setToolTipText("Reverts the values shown in this screen to the values present in the database. WARNING: This also rebuilds the step tree and ignores any changes made to it!");
-        strategyRevertButton.setMaximumSize(new java.awt.Dimension(100, 25));
-        strategyRevertButton.setMinimumSize(new java.awt.Dimension(100, 25));
-        strategyRevertButton.setPreferredSize(new java.awt.Dimension(100, 25));
-        strategyRevertButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                strategyRevertButtonActionPerformed(evt);
-            }
-        });
-        strategyPanel.add(strategyRevertButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 520, -1, -1));
-
         stationsPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Station Names"));
         stationsPanel.setToolTipText("Identifiers of the participating stations.");
         stationsPanel.setLayout(new java.awt.BorderLayout());
@@ -705,8 +691,20 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         stationsButtonPanel.setLayout(new java.awt.GridBagLayout());
 
-        deleteStationButton.setText("Delete");
-        deleteStationButton.setToolTipText("Remove the selected Station from the list");
+        addStationButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
+        addStationButton.setToolTipText("Add elected station");
+        addStationButton.setMaximumSize(new java.awt.Dimension(30, 25));
+        addStationButton.setMinimumSize(new java.awt.Dimension(30, 25));
+        addStationButton.setPreferredSize(new java.awt.Dimension(60, 23));
+        addStationButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addStationButtonActionPerformed(evt);
+            }
+        });
+        stationsButtonPanel.add(addStationButton, new java.awt.GridBagConstraints());
+
+        deleteStationButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
+        deleteStationButton.setToolTipText("Remove  selected station");
         deleteStationButton.setEnabled(false);
         deleteStationButton.setMaximumSize(new java.awt.Dimension(30, 25));
         deleteStationButton.setMinimumSize(new java.awt.Dimension(30, 25));
@@ -716,29 +714,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 deleteStationButtonActionPerformed(evt);
             }
         });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stationsButtonPanel.add(deleteStationButton, gridBagConstraints);
-
-        addStationButton.setText("Add");
-        addStationButton.setToolTipText("Add the station entered to the list");
-        addStationButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        addStationButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        addStationButton.setPreferredSize(new java.awt.Dimension(60, 23));
-        addStationButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                addStationButtonActionPerformed(evt);
-            }
-        });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
-        stationsButtonPanel.add(addStationButton, gridBagConstraints);
+        stationsButtonPanel.add(deleteStationButton, new java.awt.GridBagConstraints());
 
         stationsModPanel.add(stationsButtonPanel, java.awt.BorderLayout.SOUTH);
 
@@ -769,7 +745,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stepsModsPanel.setMinimumSize(new java.awt.Dimension(100, 40));
         stepsModsPanel.setPreferredSize(new java.awt.Dimension(100, 40));
 
-        addStepButton.setText("Add");
+        addStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
         addStepButton.setToolTipText("Add a new Step to the structure");
         addStepButton.setEnabled(false);
         addStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -781,7 +757,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        modifyStepButton.setText("Edit");
+        modifyStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif"))); // NOI18N
         modifyStepButton.setToolTipText("Edit the selected step");
         modifyStepButton.setEnabled(false);
         modifyStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -793,7 +769,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        removeStepButton.setText("Delete");
+        removeStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
         removeStepButton.setToolTipText("Delete the selected step");
         removeStepButton.setEnabled(false);
         removeStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -816,7 +792,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         gridBagConstraints.insets = new java.awt.Insets(2, 10, 2, 2);
         existingStepAddPanel.add(stepsList, gridBagConstraints);
 
-        addExistingStepButton.setText("Add");
+        addExistingStepButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
         addExistingStepButton.setToolTipText("Add the selected existing step to the structure");
         addExistingStepButton.setEnabled(false);
         addExistingStepButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -849,15 +825,12 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         stepsModsPanelLayout.setVerticalGroup(
             stepsModsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(stepsModsPanelLayout.createSequentialGroup()
+                .add(8, 8, 8)
                 .add(stepsModsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(stepsModsPanelLayout.createSequentialGroup()
-                        .add(8, 8, 8)
-                        .add(addStepButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(stepsModsPanelLayout.createSequentialGroup()
-                        .add(8, 8, 8)
-                        .add(stepsModsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                            .add(modifyStepButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(removeStepButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
+                    .add(addStepButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(stepsModsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(modifyStepButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(removeStepButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .add(existingStepAddPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 42, Short.MAX_VALUE)
         );
@@ -957,7 +930,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
 
         strategyPanel.add(workDomainSizePanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 60, 220, 80));
 
-        integrationIntervalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Integration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), java.awt.Color.lightGray));
+        integrationIntervalPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Integration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), java.awt.Color.lightGray)); // NOI18N
         integrationIntervalPanel.setToolTipText("Cell size for integration. Not yet implemented.");
         integrationIntervalPanel.setEnabled(false);
         integrationIntervalPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -1241,7 +1214,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     }//GEN-LAST:event_addStationButtonActionPerformed
     
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand().equals("Apply Settings")) {
+        if(evt.getActionCommand().equals("Apply")) {
             boolean warning = false;
             //perform input validation on the double values in the form
             String integrationTime = this.integrationTimeText.getText();
@@ -1306,6 +1279,16 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 itsMainFrame.setNormalCursor();
             }
             
+        } else if(evt.getActionCommand().equals("Revert")) {
+            String message = "Are you sure you want to revert all strategy attributes, including the step tree?";
+            message+="\n\nThis 'Revert' action will remove all changes you have made in the step tree since the last 'Save Settings' action!";
+            String[] buttons = {"Yes","No"};
+            int choice =  JOptionPane.showOptionDialog(this,message, "Please confirm", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null,buttons,buttons[0]);
+            if(choice == 0){
+                itsMainFrame.setHourglassCursor();
+                this.restoreBBSStrategyPanel();
+                itsMainFrame.setNormalCursor();
+            }
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
@@ -1324,19 +1307,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             this.modifyStationsCombobox.setEnabled(true);
         }
     }//GEN-LAST:event_stationsUseAllCheckboxStateChanged
-    
-    private void strategyRevertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_strategyRevertButtonActionPerformed
-        String message = "Are you sure you want to revert all strategy attributes, including the step tree?";
-        message+="\n\nThis 'Revert' action will remove all changes you have made in the step tree since the last 'Save Settings' action!";
-        String[] buttons = {"Yes","No"};
-        int choice =  JOptionPane.showOptionDialog(this,message, "Please confirm", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null,buttons,buttons[0]);
-        if(choice == 0){
-            itsMainFrame.setHourglassCursor();
-            this.restoreBBSStrategyPanel();
-            itsMainFrame.setNormalCursor();
-        }
-    }//GEN-LAST:event_strategyRevertButtonActionPerformed
-    
+        
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addExistingStepButton;
     private javax.swing.JButton addStationButton;
@@ -1377,7 +1348,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JPanel stepsPanel;
     private nl.astron.lofar.sas.otbcomponents.TreePanel stepsTreePanel;
     private javax.swing.JPanel strategyPanel;
-    private javax.swing.JButton strategyRevertButton;
     private javax.swing.JScrollPane strategyScrollPane;
     private javax.swing.JLabel wdsFrequencyLabel;
     private javax.swing.JTextField wdsFrequencyText;

@@ -147,8 +147,9 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 itsLastSelectedPath = aP;
                 itsMainFrame.setNormalCursor();
             } catch (Exception e) {
-                logger.error("Exception during setNewRootNode: ");
-                e.printStackTrace();
+                String aS="Exception during setNewRootNode: " + e;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             }
         }
     }
@@ -255,7 +256,9 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                             setNewRootNode();
                         }
                     } catch (RemoteException ex) {
-                        logger.error("Error during deletion of Node: " + ex);
+                        String aS="Error during deletion of Node: " + ex;
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
                 }
             }
@@ -267,7 +270,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 if (answer != null || !answer.equals("")) {
                     short idx = Integer.valueOf(answer).shortValue();
                     if (idx < 0) {
-                        logger.error("Index value smaller then 1 not allowed");
+                        logger.warn("Index value smaller then 1 not allowed");
                         return;
                     }
                     try {
@@ -282,10 +285,14 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                                setNewRootNode();
                            }
                         } else {
-                            logger.error("Node duplication failed");
+                            String aS="Node duplication failed";
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         }
                     } catch (RemoteException ex) {
-                        logger.error("Error during duplication of Node: " + ex);
+                        String aS="Error during duplication of Node: " + ex;
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
                 }
             }
@@ -304,12 +311,13 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
             logger.debug("nodes: " + aL);
             if (aL.size() > 0) {
                 changeSelection((jOTDBnode) aL.elementAt(0));
-                itsSelectedButton = evt.getActionCommand();
             } else {
-                logger.error("No panels for this choice");
+                logger.warn("No panels for this choice");
             }
         } catch (Exception e) {
-            logger.fatal("Exception during getItemList.", e);
+            String aS = "Exception during getItemList."+e;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
     }
 
@@ -369,16 +377,22 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 try {
                     p = (JPanel) Class.forName(aPanelName).newInstance();
                 } catch (ClassNotFoundException ex) {
-                    logger.error("Error during getPanel: " + ex);
+                    String aS="Error during getPanel: " + ex;
+                    logger.error(aS);
                     itsMainFrame.setNormalCursor();
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     return;
                 } catch (InstantiationException ex) {
-                    logger.error("Error during getPanel: " + ex);
+                    String aS="Error during getPanel: " + ex;
+                    logger.error(aS);
                     itsMainFrame.setNormalCursor();
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     return;
                 } catch (IllegalAccessException ex) {
-                    logger.error("Error during getPanel: " + ex);
+                    String aS="Error during getPanel: " + ex;
+                    logger.error(aS);
                     itsMainFrame.setNormalCursor();
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     return;
                 }
                 if (p != null) {
@@ -443,7 +457,9 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                         buttonPanel1.setButtonEnabled("Delete", false);
                     }
                } catch (RemoteException ex) {
-                    logger.error("Error: Couldn't get ItemList" , ex);
+                    String aS="Error: Couldn't get ItemList" +ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     buttonPanel1.setButtonEnabled("Delete", true);
                     return;
                 }
@@ -464,11 +480,15 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         treePanel.setTitle("Template List");
         if (userAccount.isObserver()) {
             buttonPanel1.addButton("Exit");
+            buttonPanel1.setButtonIcon("Exit",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_exit2.png")));
 
         } else {
             buttonPanel1.addButton("Delete");
+            buttonPanel1.setButtonIcon("Delete",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png")));
             buttonPanel1.addButton("Duplicate");
+            buttonPanel1.setButtonIcon("Duplicate",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_copy.png")));
             buttonPanel1.addButton("Exit");
+            buttonPanel1.setButtonIcon("Exit",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_exit2.png")));
         }
 
 
@@ -500,7 +520,9 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                         buttonPanel.addButton(aKey);
                     }
                 } catch (Exception e) {
-                 logger.fatal("Exception during getItemList.",e);
+                 String aS="Exception during getItemList."+e;
+                 logger.error(aS);
+                 LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             }
         }
@@ -513,7 +535,6 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
     private jOTDBnode itsSelectedNode = null;
     private TreeInfoDialog treeInfoDialog = null;
     private TreePath itsLastSelectedPath = null;
-    private String itsSelectedButton = "";
     private JTabbedPane jTabbedPane1 = new javax.swing.JTabbedPane();
     private NodeViewPanel nodeViewPanel1 = new nl.astron.lofar.sas.otbcomponents.NodeViewPanel();
     private ParameterViewPanel parameterViewPanel1 = new nl.astron.lofar.sas.otbcomponents.ParameterViewPanel();

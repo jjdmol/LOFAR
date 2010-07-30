@@ -82,7 +82,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
         } else {
-            logger.debug("No Mainframe supplied");
+            logger.error("No Mainframe supplied");
         }
     }
     
@@ -118,7 +118,9 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                 }
             }
         } catch (RemoteException ex) {
-            logger.error("Error during getComponentParam: "+ ex);
+            String aS="Error during getComponentParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
         
@@ -214,13 +216,19 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                     output.write(dldata,0,dldata.length);
                     output.flush();
                     output.close();
-                    logger.trace("File written to: " + aFile.getPath());
+                    logger.info("File written to: " + aFile.getPath());
                 } catch (RemoteException ex) {
-                    logger.error("exportTree failed : " + ex);
+                    String aS="exportTree failed : " + ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 } catch (FileNotFoundException ex) {
-                    logger.error("Error during newPICTree creation: "+ ex);
+                    String aS="Error during newPICTree creation: "+ ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 } catch (IOException ex) {
-                    logger.error("Error during newPICTree creation: "+ ex);
+                    String aS="Error during newPICTree creation: "+ ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             }
         }       
@@ -248,7 +256,9 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                 setField(aNode,aParam,aHWNode);
             }
         } catch (RemoteException ex) {
-            logger.error("Error during retrieveAndDisplayChildDataForNode: "+ ex);
+            String aS="Error during retrieveAndDisplayChildDataForNode: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
     }
@@ -281,7 +291,9 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());                
             }
         } catch (RemoteException ex) {
-            logger.error("Error during getParam: "+ ex);
+            String aS="Error during getParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }        
 
         // Imager Specific parameters    
@@ -481,7 +493,11 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
     
     private void initialize() {
         buttonPanel1.addButton("Restore");
+        buttonPanel1.setButtonIcon("Restore",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_undo.png")));
+
         buttonPanel1.addButton("Apply");
+        buttonPanel1.setButtonIcon("Apply",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png")));
+
     }
     
     private void initPanel() {
@@ -508,10 +524,12 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                 jOTDBtree aTree = OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
                 itsTreeType=OtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
-                logger.error("ImagerPanel: Error getting treeInfo/treetype" + ex);
+                String aS="ImagerPanel: Error getting treeInfo/treetype" + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 itsTreeType="";
             }         } else {
-            logger.debug("no node given");
+            logger.error("no node given");
         }
     }
         
@@ -524,7 +542,9 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             OtdbRmi.getRemoteMaintenance().saveNode(aNode); 
         } catch (RemoteException ex) {
-            logger.error("Error: saveNode failed : " + ex);
+            String aS="Error: saveNode failed : " + ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         } 
     }
     
@@ -612,8 +632,9 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
      */
-    // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -653,9 +674,9 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
 
         setLayout(new java.awt.BorderLayout());
 
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
         jPanel1.setLayout(new java.awt.BorderLayout());
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(0, 0, 0)));
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11));
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Imager Details");
@@ -663,8 +684,10 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
 
         add(jPanel1, java.awt.BorderLayout.NORTH);
 
-        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(0, 0, 0)));
-        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Imager", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
+
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Imager", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
+
         labelDataset.setText("DataSet:");
 
         labelDatacolumn.setText("DataColumn:");
@@ -714,7 +737,8 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGap(17, 17, 17))
         );
 
-        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Gridder", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
+        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Gridder", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
+
         labelType.setText("Type:");
 
         inputType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
@@ -736,19 +760,19 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(labelType, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 64, Short.MAX_VALUE)
-                    .addComponent(labelWmax, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 64, Short.MAX_VALUE)
-                    .addComponent(labelNWPlanes, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 64, Short.MAX_VALUE))
+                    .addComponent(labelType, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 70, Short.MAX_VALUE)
+                    .addComponent(labelWmax, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 70, Short.MAX_VALUE)
+                    .addComponent(labelNWPlanes, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 70, Short.MAX_VALUE))
                 .addGap(20, 20, 20)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(inputType, javax.swing.GroupLayout.Alignment.TRAILING, 0, 213, Short.MAX_VALUE)
-                    .addComponent(inputWmax, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 213, Short.MAX_VALUE)
-                    .addComponent(inputNWPlanes, javax.swing.GroupLayout.DEFAULT_SIZE, 213, Short.MAX_VALUE))
+                    .addComponent(inputType, javax.swing.GroupLayout.Alignment.TRAILING, 0, 219, Short.MAX_VALUE)
+                    .addComponent(inputWmax, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 219, Short.MAX_VALUE)
+                    .addComponent(inputNWPlanes, javax.swing.GroupLayout.DEFAULT_SIZE, 219, Short.MAX_VALUE))
                 .addGap(115, 115, 115)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(labelNFacets, javax.swing.GroupLayout.DEFAULT_SIZE, 64, Short.MAX_VALUE)
-                    .addComponent(labelCutOff, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 64, Short.MAX_VALUE)
-                    .addComponent(labelOversample, javax.swing.GroupLayout.DEFAULT_SIZE, 64, Short.MAX_VALUE))
+                    .addComponent(labelNFacets, javax.swing.GroupLayout.DEFAULT_SIZE, 71, Short.MAX_VALUE)
+                    .addComponent(labelCutOff, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 71, Short.MAX_VALUE)
+                    .addComponent(labelOversample, javax.swing.GroupLayout.DEFAULT_SIZE, 71, Short.MAX_VALUE))
                 .addGap(21, 21, 21)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(inputNFacets)
@@ -779,7 +803,8 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                 .addContainerGap(29, Short.MAX_VALUE))
         );
 
-        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Images", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
+        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Images", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
+
         inputUseI.setText("use I");
         inputUseI.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
         inputUseI.setMargin(new java.awt.Insets(0, 0, 0, 0));
@@ -825,7 +850,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                     .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                         .addComponent(inputCellSize, javax.swing.GroupLayout.Alignment.LEADING)
                         .addComponent(inputShape, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 215, Short.MAX_VALUE)))
-                .addContainerGap(421, Short.MAX_VALUE))
+                .addContainerGap(440, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -858,7 +883,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                         .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(500, Short.MAX_VALUE))
+                .addContainerGap(503, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -868,8 +893,9 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(24, 24, 24)
                 .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(178, 178, 178))
+                .addGap(227, 227, 227))
         );
+
         jScrollPane1.setViewportView(jPanel2);
 
         add(jScrollPane1, java.awt.BorderLayout.CENTER);
@@ -879,9 +905,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
                 buttonPanel1ActionPerformed(evt);
             }
         });
-
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
-
     }// </editor-fold>//GEN-END:initComponents
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed

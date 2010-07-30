@@ -55,12 +55,11 @@ public class SubbandFreqTableModel extends javax.swing.table.AbstractTableModel 
     
     /** Fills the table from the database */
     public boolean fillTable(MainFrame aMainFrame) {
-        
+
         if (SharedVars.getOTDBrmi() == null) {
-            logger.debug("No active otdbRmi connection");
+            logger.error("No active otdbRmi connection");
             return false;
-        }            
-        try {
+        }
 //            data = new Object[aLogList.size()][headers.length];
 //            for (int k=0; k< aLogList.size();k++) {
 //               String [] aS=((jOTDBvalue)aLogList.elementAt(k)).name.split("[.]");
@@ -70,12 +69,7 @@ public class SubbandFreqTableModel extends javax.swing.table.AbstractTableModel 
 //               data[k][2]=((jOTDBvalue)aLogList.elementAt(k)).time;
 //               data[k][3]=((jOTDBvalue)aLogList.elementAt(k)).time;
 //            }
-            fireTableDataChanged();
-        } catch (Exception e) {
-            logger.debug("filling table failed: " + e);
-            return false;
-        } 
-       
+        fireTableDataChanged();
 
         return true;
     }
@@ -97,6 +91,7 @@ public class SubbandFreqTableModel extends javax.swing.table.AbstractTableModel 
             return headers[c];
         }
         catch(ArrayIndexOutOfBoundsException e) {
+            logger.error("ArrayIndex out of bound exception for getColumnName("+c+"): "+e);
             return null;
         }
         
@@ -120,6 +115,7 @@ public class SubbandFreqTableModel extends javax.swing.table.AbstractTableModel 
             return data[r][c];
         }
         catch(ArrayIndexOutOfBoundsException e) {
+            logger.error("ArrayIndex out of bound exception for getValueAt("+r+","+c+"): "+e);
             return null;
         }
     }

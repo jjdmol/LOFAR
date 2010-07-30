@@ -22,6 +22,7 @@
 
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
+import java.rmi.RemoteException;
 import java.util.Vector;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.SharedVars;
@@ -58,7 +59,7 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
     public boolean fillTable(MainFrame aMainFrame,int aNodeID) {
         
         if (SharedVars.getOTDBrmi() == null) {
-            logger.debug("No active otdbRmi connection");
+            logger.error("No active otdbRmi connection");
             return false;
         }            
         try {
@@ -69,7 +70,7 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
                     aMainFrame.getSharedVars().getLogParamEndTime(),
                     aMainFrame.getSharedVars().getLogParamMostRecent());
             if (aLogList==null || aLogList.size()<1 ) {
-                logger.debug("Failed to get searchInPeriod Match");
+                logger.warn("Failed to get searchInPeriod Match");
                 return false;
             }
             data = new Object[aLogList.size()][headers.length];
@@ -79,8 +80,8 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
                data[k][2]=((jOTDBvalue)aLogList.elementAt(k)).time;
             }
             fireTableDataChanged();
-        } catch (Exception e) {
-            logger.debug("searchInPeriod failed: " + e);
+        } catch (RemoteException e) {
+            logger.debug("Remote exception on searchInPeriod: " + e);
             return false;
         } 
        
@@ -105,6 +106,7 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
             return headers[c];
         }
         catch(ArrayIndexOutOfBoundsException e) {
+            logger.error("Array index out of bounds in getColumn("+c+"): "+e);
             return null;
         }
         
@@ -128,6 +130,7 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
             return data[r][c];
         }
         catch(ArrayIndexOutOfBoundsException e) {
+            logger.error("Array index out of bounds in getValueAt("+r+","+c+"): "+e);
             return null;
         }
     }

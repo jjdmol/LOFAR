@@ -133,7 +133,9 @@ public class StationSelectionPanel extends javax.swing.JPanel {
             }
  
         } catch (RemoteException ex) {
-            logger.error("Error during init: "+ ex);
+            String aS="Error during init: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
     
@@ -196,16 +198,20 @@ public class StationSelectionPanel extends javax.swing.JPanel {
 
         setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "StationList", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
+        AddButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
         AddButton.setText("Add");
         AddButton.setToolTipText("Add item to list");
+        AddButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         AddButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 AddButtonActionPerformed(evt);
             }
         });
 
+        RemoveAllButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delAll.gif"))); // NOI18N
         RemoveAllButton.setText("Remove all");
         RemoveAllButton.setToolTipText("Remove all items from the list");
+        RemoveAllButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         RemoveAllButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 RemoveAllButtonActionPerformed(evt);
@@ -228,16 +234,20 @@ public class StationSelectionPanel extends javax.swing.JPanel {
         });
         jScrollPane2.setViewportView(UsedStationList);
 
+        AddAllButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_addAll.gif"))); // NOI18N
         AddAllButton.setText("Add All");
         AddAllButton.setToolTipText("Add all stations to the list");
+        AddAllButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         AddAllButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 AddAllButtonActionPerformed(evt);
             }
         });
 
+        RemoveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
         RemoveButton.setText("Remove");
         RemoveButton.setToolTipText("Remove selected items from the list");
+        RemoveButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         RemoveButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 RemoveButtonActionPerformed(evt);
@@ -253,12 +263,12 @@ public class StationSelectionPanel extends javax.swing.JPanel {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 76, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(AddAllButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
+                    .add(RemoveButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
                     .add(RemoveAllButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(AddAllButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 86, Short.MAX_VALUE)
-                    .add(RemoveButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(AddButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .add(AddButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -266,14 +276,14 @@ public class StationSelectionPanel extends javax.swing.JPanel {
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
                     .add(layout.createSequentialGroup()
                         .add(AddButton)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .add(AddAllButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(AddAllButton)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .add(RemoveButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(RemoveAllButton)
-                        .add(32, 32, 32))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jScrollPane2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 142, Short.MAX_VALUE)
+                        .add(42, 42, 42))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, jScrollPane2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 160, Short.MAX_VALUE)
                     .add(org.jdesktop.layout.GroupLayout.LEADING, jScrollPane1, 0, 0, Short.MAX_VALUE))
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );

@@ -99,7 +99,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
         } else {
-            logger.debug("No Mainframe supplied");
+            logger.error("No Mainframe supplied");
         }
     }
     
@@ -156,7 +156,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 }
             }
         } catch (RemoteException ex) {
-            logger.error("Error during getComponentParam: "+ ex);
+            String aS="Error during getComponentParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
         
@@ -253,11 +255,17 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     output.close();
                     logger.trace("File written to: " + aFile.getPath());
                 } catch (RemoteException ex) {
-                    logger.error("exportTree failed : " + ex);
+                    String aS="exportTree failed : " + ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 } catch (FileNotFoundException ex) {
-                    logger.error("Error during newPICTree creation: "+ ex);
+                    String aS="Error during newPICTree creation: "+ ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 } catch (IOException ex) {
-                    logger.error("Error during newPICTree creation: "+ ex);
+                    String aS="Error during newPICTree creation: "+ ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             }
         }       
@@ -285,7 +293,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 setField(aNode,aParam,aHWNode);
             }
         } catch (RemoteException ex) {
-            logger.error("Error during retrieveAndDisplayChildDataForNode: "+ ex);
+            String aS="Error during retrieveAndDisplayChildDataForNode: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
     }
@@ -297,7 +307,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      * @param aNode  the node to be displayed
      */
     private void setField(jOTDBnode parent,jOTDBparam aParam, jOTDBnode aNode) {
-
         // Generic Observation
         if (aParam==null) {
             return;
@@ -314,7 +323,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());                
             }
         } catch (RemoteException ex) {
-            logger.error("Error during getParam: "+ ex);
+            String aS="Error during getParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
         
         if(parentName.equals("Observation")){        
@@ -621,7 +632,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             if (itsUsedBeamlets.intersects(aNewBitSet)) {
                 String errorMsg = "ERROR:  This BeamletList has beamlets defined that are allready used in a prior BeamConfiguration!!!!!  BeamNr: "+i;
                 JOptionPane.showMessageDialog(this,errorMsg,"BeamletError",JOptionPane.ERROR_MESSAGE);
-                logger.error(errorMsg );
+                logger.debug(errorMsg );
                 return;
             }
             
@@ -633,7 +644,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      
     private void initialize() {
         buttonPanel1.addButton("Restore");
+        buttonPanel1.setButtonIcon("Restore",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_undo.png")));
         buttonPanel1.addButton("Apply");
+        buttonPanel1.setButtonIcon("Apply",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png")));
         this.stationList.setModel(new DefaultListModel());
         this.beamformerStationList.setModel(new DefaultListModel());
 
@@ -694,10 +707,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 jOTDBtree aTree = OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
                 itsTreeType=OtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
-                logger.error("ObservationPanel: Error getting treeInfo/treetype" + ex);
+                String aS="ObservationPanel: Error getting treeInfo/treetype" + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 itsTreeType="";
-            }         } else {
-            logger.debug("no node given");
+            }
+         } else {
+            logger.error("no node given");
         }
         
         // set defaults
@@ -731,7 +747,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             OtdbRmi.getRemoteMaintenance().saveNode(aNode); 
         } catch (RemoteException ex) {
-            logger.error("Error: saveNode failed : " + ex);
+            String aS="Error: saveNode failed : " + ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         } 
     }
     
@@ -790,7 +808,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     OtdbRmi.getRemoteMaintenance().deleteNode(itsBeams.elementAt(i));
                 }
            } catch (RemoteException ex) {
-                logger.error("Error during deletion of default beam node: "+ex);
+                String aS="Error during deletion of default beam node: "+ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return false;
             }
         
@@ -810,7 +830,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     // Duplicates the given node (and its parameters and children)
                     int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultBNode.nodeID(),(short)(i-1));
                     if (aN <= 0) {
-                        logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
+                        String aS="Something went wrong with dupNode("+itsNode.treeID()+","+aDefaultBNode.nodeID()+") will try to save remainder";
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     } else {
                         // we got a new duplicate whos children need to be filled with the settings from the panel.
                         jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
@@ -849,7 +871,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
 
             } catch (RemoteException ex) {
-                logger.error("Error during duplication and save : " + ex);
+                String aS="Error during duplication and save : " + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return false;
             }
 
@@ -871,7 +895,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     OtdbRmi.getRemoteMaintenance().deleteNode(itsAnaBeams.elementAt(i));
                 }
             } catch (RemoteException ex) {
-                logger.error("Error during deletion of default analog beam node: "+ex);
+                String aS="Error during deletion of default analog beam node: "+ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return false;
             }
 
@@ -888,7 +914,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     // Duplicates the given node (and its parameters and children)
                     int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultABNode.nodeID(),(short)(i-1));
                     if (aN <= 0) {
-                        logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
+                        String aS="Something went wrong with dupNode("+itsNode.treeID()+","+aDefaultABNode.nodeID()+") will try to save remainder";
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     } else {
                         // we got a new duplicate whos children need to be filled with the settings from the panel.
                         jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
@@ -922,7 +950,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 }
 
             } catch (RemoteException ex) {
-                logger.error("Error during duplication and save : " + ex);
+                String aS="Error during duplication and save : " + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return false;
             }
         }
@@ -946,7 +976,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     OtdbRmi.getRemoteMaintenance().deleteNode(itsBeamformers.elementAt(i));
                 }
             } catch (RemoteException ex) {
-                logger.error("Error during deletion of defaultNode: "+ex);
+                String aS="Error during deletion of defaultNode: "+ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return false;
             }
 
@@ -968,7 +1000,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     // Duplicates the given node (and its parameters and children)
                     int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultBFNode.nodeID(),(short)(i-1));
                     if (aN <= 0) {
-                        logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
+                        String aS="Something went wrong with dupNode("+itsNode.treeID()+","+aDefaultBFNode.nodeID()+") will try to save remainder";
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     } else {
                         // we got a new duplicate whos children need to be filled with the settings from the panel.
                         jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
@@ -991,7 +1025,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             
 
             } catch (RemoteException ex) {
-                logger.error("Error during duplication and save : " + ex);
+                String aS="Error during duplication and save : " + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return false;
             }
         }
@@ -1039,10 +1075,14 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         if (itsOldTreeDescription != null && !inputTreeDescription.getText().equals(itsOldTreeDescription)) {
             try {
                 if (!OtdbRmi.getRemoteMaintenance().setDescription(itsNode.treeID(), inputTreeDescription.getText())) {
-                    logger.error("Error during setDescription: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                    String aS="Error during setDescription: "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 } 
             } catch (RemoteException ex) {
-                logger.error("Error: saveNode failed : " + ex);
+                String aS="Error: saveNode failed : " + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             } 
             itsOldTreeDescription = inputTreeDescription.getText();
         }
@@ -1077,7 +1117,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             itsOldDescriptionParam=aParam;
             inputDescription.setText(aParam.description);
         } catch (RemoteException ex) {
-            logger.error("Error during getParam: "+ ex);
+            String aS="Error during getParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
     }
@@ -1316,74 +1358,82 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             if(beamFileDialog.isOk()) {
                 aNewFile = beamFileDialog.getFile();
             } else {
-                logger.info("No File chosen");
+                logger.debug("No File chosen");
                 return;
             }
             if (aNewFile != null && aNewFile.exists()) {
-                logger.trace("File to load: " + aNewFile.getName());
+                logger.info("File to load: " + aNewFile.getName());
 
                 // read the file and split input into beam or anabeam components
                 readFile(aNewFile,choice);
             }
         } else {
-            logger.error("Error: Wrong filetype chosen: "+ choice);
+            String aS="Error: Wrong filetype chosen: "+ choice;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
 
     }
 
-    private void readFile(File aNewFile,String choice){
-        logger.trace("File to read: "+ aNewFile.getPath());
-        
-        Vector<String> targets          = new Vector<String>();
-        Vector<String> angles1          = new Vector<String>();
-        Vector<String> angles2          = new Vector<String>();
-        Vector<String> directionTypes   = new Vector<String>();
-        Vector<String> durations        = new Vector<String>();
-        Vector<String> startTimes       = new Vector<String>();
-        Vector<String> subbandList      = new Vector<String>();
-        Vector<String> beamletList      = new Vector<String>();
-        Vector<String> ranks            = new Vector<String>();
-        Vector<String> momIDs           = new Vector<String>();
+    private void readFile(File aNewFile, String choice) {
+        logger.trace("File to read: " + aNewFile.getPath());
+
+        Vector<String> targets = new Vector<String>();
+        Vector<String> angles1 = new Vector<String>();
+        Vector<String> angles2 = new Vector<String>();
+        Vector<String> directionTypes = new Vector<String>();
+        Vector<String> durations = new Vector<String>();
+        Vector<String> startTimes = new Vector<String>();
+        Vector<String> subbandList = new Vector<String>();
+        Vector<String> beamletList = new Vector<String>();
+        Vector<String> ranks = new Vector<String>();
+        Vector<String> momIDs = new Vector<String>();
 
         //line to read filelines into
         String line = "";
-        BufferedReader in=null;
+        BufferedReader in = null;
         try {
-            FileReader f= new FileReader(aNewFile.getPath());
+            FileReader f = new FileReader(aNewFile.getPath());
             in = new BufferedReader(f);
-            while ((line=in.readLine()) != null ) {
+            while ((line = in.readLine()) != null) {
 
                 if (line == null || line.startsWith("#") || line.isEmpty()) {
                     continue;
                 }
-                    // split into key value
-                 String [] keyVal=line.split("[=]");
-                 if (keyVal == null || keyVal.length < 2|| keyVal[0].isEmpty() || keyVal[1].isEmpty()) {
-                     logger.error("Error in input: " + line);
-                     continue;
-                 }
+                // split into key value
+                String[] keyVal = line.split("[=]");
+                if (keyVal == null || keyVal.length < 2 || keyVal[0].isEmpty() || keyVal[1].isEmpty()) {
+                    String aS = "Error in input: " + line;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                    continue;
+                }
 
-                 // split in (ana)beam# and key
-                 String [] beamKey = keyVal[0].split("[.]");
+                // split in (ana)beam# and key
+                String[] beamKey = keyVal[0].split("[.]");
 
-                 if (beamKey == null ||beamKey.length < 2 || beamKey[0].isEmpty() || beamKey[1].isEmpty()) {
-                     logger.error("Error in key input: " + keyVal[0]);
-                     continue;
-                 }
+                if (beamKey == null || beamKey.length < 2 || beamKey[0].isEmpty() || beamKey[1].isEmpty()) {
+                    String aS = "Error in input: " + line;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                    continue;
+                }
 
-                 // check index and if not in list, add new default Vector to all lists
-                 String check="beam";
-                 if (choice.equals("AnaBeams")) {
-                    check="anabeam";
-                 }
-                 int idx = Integer.parseInt(beamKey[0].toLowerCase().replace(check,""));
-                 if (idx < 0 || idx > 7 ) {
-                     logger.error("Error in index, only beam 0-7 allowed : "+idx);
-                     continue;
-                 }
+                // check index and if not in list, add new default Vector to all lists
+                String check = "beam";
+                if (choice.equals("AnaBeams")) {
+                    check = "anabeam";
+                }
+                int idx = Integer.parseInt(beamKey[0].toLowerCase().replace(check, ""));
+                if (idx < 0 || idx > 7) {
+                    String aS = "Error in index, only beam 0-7 allowed : " + idx;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                    continue;
+                }
 
-                 while (angles1.size() < idx+2 ) {
+                while (angles1.size() < idx + 2) {
                     if (choice.equals("Beams")) {
                         targets.add((itsBeamTargets.elementAt(0)));
                         angles1.add(itsBeamAngles1.elementAt(0));
@@ -1395,61 +1445,69 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         beamletList.add(itsBeamBeamletList.elementAt(0));
                         momIDs.add("0");
                     } else if (choice.equals("AnaBeams")) {
-                         targets.add((itsAnaBeamTargets.elementAt(0)));
-                         angles1.add(itsAnaBeamAngles1.elementAt(0));
-                         angles2.add(itsAnaBeamAngles2.elementAt(0));
-                         directionTypes.add(itsAnaBeamDirectionTypes.elementAt(0));
-                         startTimes.add(itsAnaBeamStartTimes.elementAt(0));
-                         durations.add(itsAnaBeamDurations.elementAt(0));
-                         ranks.add(itsAnaBeamRanks.elementAt(0));
+                        targets.add((itsAnaBeamTargets.elementAt(0)));
+                        angles1.add(itsAnaBeamAngles1.elementAt(0));
+                        angles2.add(itsAnaBeamAngles2.elementAt(0));
+                        directionTypes.add(itsAnaBeamDirectionTypes.elementAt(0));
+                        startTimes.add(itsAnaBeamStartTimes.elementAt(0));
+                        durations.add(itsAnaBeamDurations.elementAt(0));
+                        ranks.add(itsAnaBeamRanks.elementAt(0));
                     }
-                 }
+                }
 
 
-                 // add new keyval
-                 // beams start with 0
-                 if (beamKey[1].toLowerCase().equals("angle1")) {
-                    angles1.setElementAt(keyVal[1], idx+1);
-                 } else if (beamKey[1].toLowerCase().equals("angle2")) {
-                    angles2.setElementAt(keyVal[1], idx+1);
-                 } else if (beamKey[1].toLowerCase().equals("directiontype") ) {
-                    if ( keyVal[1].equals("J2000") || keyVal[1].equals("AZEL") || keyVal[1].equals("LMN")) {
-                       directionTypes.setElementAt(keyVal[1], idx+1);
+                // add new keyval
+                // beams start with 0
+                if (beamKey[1].toLowerCase().equals("angle1")) {
+                    angles1.setElementAt(keyVal[1], idx + 1);
+                } else if (beamKey[1].toLowerCase().equals("angle2")) {
+                    angles2.setElementAt(keyVal[1], idx + 1);
+                } else if (beamKey[1].toLowerCase().equals("directiontype")) {
+                    if (keyVal[1].equals("J2000") || keyVal[1].equals("AZEL") || keyVal[1].equals("LMN")) {
+                        directionTypes.setElementAt(keyVal[1], idx + 1);
                     } else {
-                       logger.error("Error in directionType value : "+line);
+                        String aS = "Error in directionType value : " + line;
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
-                 } else if (beamKey[1].toLowerCase().equals("starttime")) {
-                    startTimes.setElementAt(keyVal[1], idx+1);
-                 } else if (beamKey[1].toLowerCase().equals("duration")) {
-                    durations.setElementAt(keyVal[1], idx+1);
-                 } else if (beamKey[1].toLowerCase().equals("subbandlist")) {
-                    subbandList.setElementAt(keyVal[1], idx+1);
-                 } else if (beamKey[1].toLowerCase().equals("beamletlist")) {
-                    beamletList.setElementAt(keyVal[1], idx+1);
-                 } else if (beamKey[1].toLowerCase().equals("target")) {
-                    targets.setElementAt(keyVal[1], idx+1);
-                 } else if (beamKey[1].toLowerCase().equals("rank")) {
-                    if (keyVal[1].equals("1") || keyVal[1].equals("2") || keyVal[1].equals("3") || keyVal[1].equals("4") || keyVal[1].equals("5") ) {
-                       ranks.setElementAt(keyVal[1], idx+1);
+                } else if (beamKey[1].toLowerCase().equals("starttime")) {
+                    startTimes.setElementAt(keyVal[1], idx + 1);
+                } else if (beamKey[1].toLowerCase().equals("duration")) {
+                    durations.setElementAt(keyVal[1], idx + 1);
+                } else if (beamKey[1].toLowerCase().equals("subbandlist")) {
+                    subbandList.setElementAt(keyVal[1], idx + 1);
+                } else if (beamKey[1].toLowerCase().equals("beamletlist")) {
+                    beamletList.setElementAt(keyVal[1], idx + 1);
+                } else if (beamKey[1].toLowerCase().equals("target")) {
+                    targets.setElementAt(keyVal[1], idx + 1);
+                } else if (beamKey[1].toLowerCase().equals("rank")) {
+                    if (keyVal[1].equals("1") || keyVal[1].equals("2") || keyVal[1].equals("3") || keyVal[1].equals("4") || keyVal[1].equals("5")) {
+                        ranks.setElementAt(keyVal[1], idx + 1);
                     } else {
-                       logger.error("Error in ranks value : "+line);
+                        String aS = "Error in ranks value : " + line;
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
                 } else {
-                    logger.error("Unknown key : "+line);
+                    String aS = "Unknown key : " + line;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             }
             // all input read.  close file
             f.close();
         } catch (IOException ex) {
-            logger.error("Error opening or reading file: ", ex);
+            String aS = "Error opening or reading file: " + ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
 
         // fill table with all entries
-        if (choice.equals("Beams") ) {
-            itsBeamConfigurationTableModel.fillTable(itsTreeType, directionTypes,targets, angles1, angles2, durations, startTimes, subbandList, beamletList,momIDs,true);
+        if (choice.equals("Beams")) {
+            itsBeamConfigurationTableModel.fillTable(itsTreeType, directionTypes, targets, angles1, angles2, durations, startTimes, subbandList, beamletList, momIDs, true);
         } else if (choice.equals("AnaBeams")) {
-            itsAnaBeamConfigurationTableModel.fillTable(itsTreeType,directionTypes,targets,angles1,angles2,durations,startTimes,ranks,true);
+            itsAnaBeamConfigurationTableModel.fillTable(itsTreeType, directionTypes, targets, angles1, angles2, durations, startTimes, ranks, true);
         }
     }
 

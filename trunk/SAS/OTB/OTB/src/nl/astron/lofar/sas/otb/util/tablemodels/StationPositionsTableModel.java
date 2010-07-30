@@ -72,19 +72,19 @@ public class StationPositionsTableModel extends javax.swing.table.AbstractTableM
             if (i < aS.length) {
                 data[k][1]= aS[i];            
             } else {
-                logger.debug("Provided StationPosition string to short, adding empty strings");
+                logger.warn("Provided StationPosition string to short, adding empty strings");
                 data[k][1] = "";
             }
             if (i+1 < aS.length) {
                 data[k][2]= aS[i+1];
             } else {
-                logger.debug("Provided StationPosition string to short, adding empty strings");
+                logger.warn("Provided StationPosition string to short, adding empty strings");
                 data[k][2] = "";                
             }
             if (i+2 < aS.length) {
                 data[k][3]= aS[i+2];
             } else {
-                logger.debug("Provided StationPosition string to short, adding empty strings");
+                logger.warn("Provided StationPosition string to short, adding empty strings");
                 data[k][3] = "";                
             }
             i+=3;
@@ -110,6 +110,7 @@ public class StationPositionsTableModel extends javax.swing.table.AbstractTableM
             return headers[c];
         }
         catch(ArrayIndexOutOfBoundsException e) {
+            logger.error("ArrayIndex out of bound exception for getColumnName("+c+"): "+e);
             return null;
         }
         
@@ -133,6 +134,7 @@ public class StationPositionsTableModel extends javax.swing.table.AbstractTableM
             return data[r][c];
         }
         catch(ArrayIndexOutOfBoundsException e) {
+            logger.error("ArrayIndex out of bound exception for getValueAt("+r+","+c+"): "+e);
             return null;
         }
     }

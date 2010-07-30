@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.Vector;
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.*;
 import nl.astron.lofar.sas.otb.jotdb3.jDefaultTemplate;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBtree;
@@ -76,53 +77,87 @@ public class MainPanel extends javax.swing.JPanel
         buttonPanel1.removeAllButtons();
         if (itsTabFocus.equals("PIC")) {
             buttonPanel1.addButton("Query Panel");
+            buttonPanel1.setButtonIcon("Query Panel",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_help.png")));
             buttonPanel1.addButton("New");
+            buttonPanel1.setButtonIcon("New",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_new.png")));
             buttonPanel1.addButton("Delete");
+            buttonPanel1.setButtonIcon("Delete",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png")));
             buttonPanel1.addButton("Refresh");
-            buttonPanel1.setButtonEnabled("Delete",false);
+            buttonPanel1.setButtonIcon("Refresh",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_refresh_e.gif")));
             buttonPanel1.addButton("View");
-            buttonPanel1.setButtonEnabled("View",false);
+            buttonPanel1.setButtonIcon("View",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif")));
             buttonPanel1.addButton("Info");
+            buttonPanel1.setButtonIcon("Info",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_fileopen.gif")));
+
+            buttonPanel1.setButtonEnabled("Delete",false);
+            buttonPanel1.setButtonEnabled("View",false);
             buttonPanel1.setButtonEnabled("Info",false);
         } else if (itsTabFocus.equals("VIC")) {
             buttonPanel1.addButton("Query Panel");
+            buttonPanel1.setButtonIcon("Query Panel",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_help.png")));
             buttonPanel1.addButton("Delete");
+            buttonPanel1.setButtonIcon("Delete",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png")));
             buttonPanel1.addButton("Refresh");
-            buttonPanel1.setButtonEnabled("Delete",false);
+            buttonPanel1.setButtonIcon("Refresh",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_refresh_e.gif")));
             buttonPanel1.addButton("View");
-            buttonPanel1.setButtonEnabled("View",false);
+            buttonPanel1.setButtonIcon("View",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif")));
             buttonPanel1.addButton("Schedule");
+            buttonPanel1.setButtonIcon("Schedule",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_fileopen.gif")));
+
+            buttonPanel1.setButtonEnabled("Delete",false);
+            buttonPanel1.setButtonEnabled("View",false);
             buttonPanel1.setButtonEnabled("Schedule",false);
         } else if (itsTabFocus.equals("Templates")) {
             buttonPanel1.addButton("Query Panel");
+            buttonPanel1.setButtonIcon("Query Panel",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_help.png")));
             buttonPanel1.addButton("Duplicate");
-            buttonPanel1.setButtonEnabled("Duplicate",false);
+            buttonPanel1.setButtonIcon("Duplicate",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_copy.png")));
             buttonPanel1.addButton("Modify");
+            buttonPanel1.setButtonIcon("Modify",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif")));
             buttonPanel1.addButton("Delete");            
+            buttonPanel1.setButtonIcon("Delete",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png")));
             buttonPanel1.addButton("Refresh");
+            buttonPanel1.setButtonIcon("Refresh",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_refresh_e.gif")));
             buttonPanel1.addButton("Build VIC tree");
+            buttonPanel1.setButtonIcon("Build VIC tree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_new.png")));
+            buttonPanel1.addButton("Change Status");
+            buttonPanel1.setButtonIcon("Change Status",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_fileopen.gif")));
+            buttonPanel1.addButton("Set to Default");
+            buttonPanel1.setButtonIcon("Set to Default",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_redo.png")));
+
+            buttonPanel1.setButtonEnabled("Duplicate",false);
             buttonPanel1.setButtonEnabled("Modify",false);
             buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.setButtonEnabled("Build VIC tree",false);
-            buttonPanel1.addButton("Change Status");
             buttonPanel1.setButtonEnabled("Change Status",false); 
-            buttonPanel1.addButton("Set to Default");
             buttonPanel1.setButtonEnabled("Set to Default",false);
         } else if (itsTabFocus.equals("Default Templates")) {
             buttonPanel1.addButton("Duplicate");
-            buttonPanel1.setButtonEnabled("Duplicate",false);
+            buttonPanel1.setButtonIcon("Duplicate",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_copy.png")));
             buttonPanel1.addButton("Modify");
+            buttonPanel1.setButtonIcon("Modify",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif")));
             buttonPanel1.addButton("Refresh");
-            buttonPanel1.setButtonEnabled("Modify",false);
+            buttonPanel1.setButtonIcon("Refresh",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_refresh_e.gif")));
             buttonPanel1.addButton("Change Status");
+            buttonPanel1.setButtonIcon("Change Status",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_fileopen.gif")));
+
+            buttonPanel1.setButtonEnabled("Modify",false);
+            buttonPanel1.setButtonEnabled("Duplicate",false);
             buttonPanel1.setButtonEnabled("Change Status",false);
         } else if (itsTabFocus.equals("Components")) {
             buttonPanel1.addButton("Query Panel");
+            buttonPanel1.setButtonIcon("Query Panel",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_help.png")));
             buttonPanel1.addButton("New");
+            buttonPanel1.setButtonIcon("New",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_new.png")));
             buttonPanel1.addButton("Modify");
+            buttonPanel1.setButtonIcon("Modify",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif")));
             buttonPanel1.addButton("Delete");
+            buttonPanel1.setButtonIcon("Delete",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png")));
             buttonPanel1.addButton("Refresh");
+            buttonPanel1.setButtonIcon("Refresh",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_refresh_e.gif")));
             buttonPanel1.addButton("Build TemplateTree");
+            buttonPanel1.setButtonIcon("Build TemplateTree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_redo.png")));
+
             buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.setButtonEnabled("Modify",false);
             buttonPanel1.setButtonEnabled("Build TemplateTree",false);
@@ -130,6 +165,7 @@ public class MainPanel extends javax.swing.JPanel
         
         }
         buttonPanel1.addButton("Quit");
+        buttonPanel1.setButtonIcon("Quit",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_exit2.png")));
         buttonsInitialized=true;
     }
 
@@ -580,9 +616,8 @@ public class MainPanel extends javax.swing.JPanel
             if (treeID > 0) {
                 itsMainFrame.getSharedVars().setTreeID(treeID);
             } else if (!aButton.equals("New")) {
-                JOptionPane.showMessageDialog(this,"You didn't select a tree",
-                        "Tree selection warning",
-                        JOptionPane.WARNING_MESSAGE);
+                LofarUtils.showErrorPanel(this,"You didn't select a tree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+
                 return;
             }
             if (aButton.equals("Query Panel")) {
@@ -602,7 +637,9 @@ public class MainPanel extends javax.swing.JPanel
                            // Create a new Tree from the found file.
                            int aTreeID=OtdbRmi.getRemoteMaintenance().loadMasterFile(aFileName);
                            if (aTreeID < 1) {
-                               logger.debug("Error on fileLoad: " + aFileName);
+                               String aS="Error on fileLoad: " + aFileName;
+                               logger.error(aS);
+                               LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                            } else {
                                // set changed flag to reload mainpanel
                                itsMainFrame.setChanged(this.getFriendlyName(),true);
@@ -611,13 +648,17 @@ public class MainPanel extends javax.swing.JPanel
                                checkChanged();
                                if (!itsFileDescription.equals("")) {
                                   if (!OtdbRmi.getRemoteMaintenance().setDescription(aTreeID,itsFileDescription)) {
-                                     logger.debug("Error during setDescription in Tree "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                      String aS="Error during setDescription in Tree "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                                     logger.error(aS);
+                                     LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                                   }
                                }
                                   
                                if (!itsFileStatus.equals("")) {
                                   if (!OtdbRmi.getRemoteMaintenance().setTreeState(aTreeID,OtdbRmi.getRemoteTypes().getTreeState(itsFileStatus))) {
-                                     logger.debug("Error during setStatus in Tree "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                      String aS="Error during setStatus in Tree "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                                     logger.error(aS);
+                                     LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                                   }
                                }                               
                            }
@@ -627,11 +668,17 @@ public class MainPanel extends javax.swing.JPanel
                            }
                         }
                    } catch (RemoteException ex) {
-                       logger.debug("Error during newPICTree creation: "+ ex);
+                       String aS="Error during newPICTree creation: "+ ex;
+                       logger.error(aS);
+                       LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                    } catch (FileNotFoundException ex) {
-                       logger.debug("Error during newPICTree creation: "+ ex);
+                       String aS="Error during newPICTree creation: "+ ex;
+                       logger.error(aS);
+                       LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                    } catch (IOException ex) {
-                       logger.debug("Error during newPICTree creation: "+ ex);
+                       String aS="Error during newPICTree creation: "+ ex;
+                       logger.error(aS);
+                       LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                    }
                 }  
 
@@ -643,10 +690,14 @@ public class MainPanel extends javax.swing.JPanel
                             ((PICtableModel)PICPanel.getTableModel()).fillTable();
                             itsMainFrame.setNormalCursor();
                         } else {
-                            logger.debug("Failed to delete tree");
+                            String aS="Failed to delete tree";
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         }
                     } catch (RemoteException ex) {
-                        logger.debug("Remote error during deleteTree: "+ ex);
+                        String aS="Remote error during deleteTree: "+ ex;
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
                 }
             } else if (aButton.equals("View")) {
@@ -670,9 +721,7 @@ public class MainPanel extends javax.swing.JPanel
             if (treeID > 0) {
                 itsMainFrame.getSharedVars().setTreeID(treeID);
             } else {
-                JOptionPane.showMessageDialog(this,"You didn't select a tree",
-                        "Tree selection warning",
-                        JOptionPane.WARNING_MESSAGE);
+                LofarUtils.showErrorPanel(this, "You didn't select a tree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return;
             }
             if (aButton.equals("Query Panel")) {
@@ -686,10 +735,14 @@ public class MainPanel extends javax.swing.JPanel
                             ((VICtableModel)VICPanel.getTableModel()).fillTable();
                             itsMainFrame.setNormalCursor();
                         } else {
-                            logger.debug("Failed to delete tree");
+                            String aS="Failed to delete tree";
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this, aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         }
                     } catch (RemoteException ex) {
-                        logger.debug("Remote error during deleteTree: "+ ex);
+                        String aS="Remote error during deleteTree: "+ ex;
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this, aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
                 }
             } else if (aButton.equals("View")) {
@@ -721,21 +774,20 @@ public class MainPanel extends javax.swing.JPanel
                     aTree =    OtdbRmi.getRemoteOTDB().getTreeInfo(treeID,false);
                     aTreeState=OtdbRmi.getRemoteTypes().getTreeState(aTree.state);
                 } catch (RemoteException ex) {
-                    logger.debug("Error during Remote treeMaintenance");
+                    String aS="Error during Remote treeMaintenance";
+                    logger.debug(aS);
+                    LofarUtils.showErrorPanel(this, aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             } else {
-                JOptionPane.showMessageDialog(this,"You didn't select a tree",
-                        "Tree selection warning",
-                        JOptionPane.WARNING_MESSAGE);
+
+                LofarUtils.showErrorPanel(this, "You didn't select a tree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return;
             }
             if (aButton.equals("Query Panel")) {
                 itsMainFrame.ToDo();
             } else if (aButton.equals("Duplicate")) {
                 if (treeID < 1) {
-                    JOptionPane.showMessageDialog(this,"Select a tree to duplicate first",
-                        "No Tree Selected",
-                        JOptionPane.WARNING_MESSAGE);
+                    LofarUtils.showErrorPanel(this, "You didn't select a tree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 } else {
                     try {
                         int newTreeID=OtdbRmi.getRemoteMaintenance().copyTemplateTree(treeID);
@@ -748,13 +800,17 @@ public class MainPanel extends javax.swing.JPanel
                             if (aT.state != OtdbRmi.getRemoteTypes().getTreeState("described") ) {
                                 aT.state=OtdbRmi.getRemoteTypes().getTreeState("described");
                                 if (!OtdbRmi.getRemoteMaintenance().setTreeState(aT.treeID(), aT.state)) {
-                                    logger.debug("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());                      
+                                    String aS="Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                                    logger.error(aS);
+                                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                                 }
                             }
                             // check momID, if not zero set to zero
                             if (aT.momID() != 0) {
                                 if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aT.treeID(),0, aT.campaign)) {
-                                    logger.debug("Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                    String aS="Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                                    logger.debug(aS);
+                                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                                 }
 
                             }
@@ -767,7 +823,9 @@ public class MainPanel extends javax.swing.JPanel
                         }
            
                     } catch (RemoteException ex) {
-                        logger.debug("Remote error during Build TemplateTree: "+ ex);
+                        String aS="Remote error during Build TemplateTree: "+ ex;
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
                 }
             } else if (aButton.equals("Modify")) {
@@ -805,9 +863,7 @@ public class MainPanel extends javax.swing.JPanel
                 
             } else if (aButton.equals("Build VIC tree")) {
                 if (treeID < 1) {
-                    JOptionPane.showMessageDialog(null,"Select a tree to build first",
-                        "No Tree Selected",
-                        JOptionPane.WARNING_MESSAGE);
+                    LofarUtils.showErrorPanel(this, "You didn't select a tree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 } else {
                     try {
                         int newTreeID=OtdbRmi.getRemoteMaintenance().instanciateTree(itsMainFrame.getSharedVars().getTreeID());
@@ -820,11 +876,15 @@ public class MainPanel extends javax.swing.JPanel
                             itsMainFrame.setChanged(this.getFriendlyName(),true);
                             checkChanged();
                         } else {
-                            logger.error("No VIC Tree created!!! : "+ OtdbRmi.getRemoteMaintenance().errorMsg());
+                            String aS="No VIC Tree created!!! : "+ OtdbRmi.getRemoteMaintenance().errorMsg();
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         }
            
                     } catch (RemoteException ex) {
-                        logger.error("Remote error during Build VICTree: "+ ex);
+                        String aS="Remote error during Build VICTree: "+ ex;
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
                 }
                 
@@ -858,7 +918,9 @@ public class MainPanel extends javax.swing.JPanel
                                 // check momID, if not zero set to zero
                                 if (aTree.momID() != 0) {
                                     if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aTree.treeID(),0,aTree.campaign)) {
-                                        logger.error("Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                        String aS="Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                                        logger.error(aS);
+                                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                                     }
                                 }
 
@@ -868,9 +930,13 @@ public class MainPanel extends javax.swing.JPanel
                             }
                         } catch (RemoteException ex) {
                             try {
-                                logger.error("Error while setting template to default template: " + OtdbRmi.getRemoteMaintenance().errorMsg());
+                                String aS="Error while setting template to default template: " + OtdbRmi.getRemoteMaintenance().errorMsg();
+                                logger.error(aS);
+                                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                             } catch (RemoteException ex1) {
-                                logger.error("Error getting the remote errorMessage");
+                                String aS="Error getting the remote errorMessage";
+                                logger.error(aS);
+                                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                             }
                         }
                     }
@@ -886,21 +952,19 @@ public class MainPanel extends javax.swing.JPanel
                     aTree =    OtdbRmi.getRemoteOTDB().getTreeInfo(treeID,false);
                     aTreeState=OtdbRmi.getRemoteTypes().getTreeState(aTree.state);
                 } catch (RemoteException ex) {
-                    logger.error("Error during Remote treeMaintenance");
+                    String aS="Error during Remote treeMaintenance" + ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             } else {
-                JOptionPane.showMessageDialog(this,"You didn't select a tree",
-                        "Tree selection warning",
-                        JOptionPane.WARNING_MESSAGE);
+                LofarUtils.showErrorPanel(this, "You didn't select a tree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return;
             }
             if (aButton.equals("Query Panel")) {
                 itsMainFrame.ToDo();
             } else if (aButton.equals("Duplicate")) {
                 if (treeID < 1) {
-                    JOptionPane.showMessageDialog(this,"Select a tree to duplicate first",
-                        "No Tree Selected",
-                        JOptionPane.WARNING_MESSAGE);
+                    LofarUtils.showErrorPanel(this, "You didn't select a tree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 } else {
                     try {
                         int newTreeID=OtdbRmi.getRemoteMaintenance().copyTemplateTree(treeID);
@@ -913,13 +977,17 @@ public class MainPanel extends javax.swing.JPanel
                             if (aT.state != OtdbRmi.getRemoteTypes().getTreeState("described") ) {
                                 aT.state=OtdbRmi.getRemoteTypes().getTreeState("described");
                                 if (!OtdbRmi.getRemoteMaintenance().setTreeState(aT.treeID(), aT.state)) {
-                                    logger.error("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                    String aS="Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                                    logger.error(aS);
+                                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                                 }
                             }
                             // check momID, if not zero set to zero
                             if (aT.momID() != 0) {
                                 if (!OtdbRmi.getRemoteMaintenance().setMomInfo(aT.treeID(),0, aT.campaign)) {
-                                    logger.error("Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                    String aS="Error during setMomInfo: "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                                    logger.error(aS);
+                                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                                 }
 
                             }
@@ -928,11 +996,15 @@ public class MainPanel extends javax.swing.JPanel
                             itsMainFrame.setChanged(this.getFriendlyName(),true);
                             checkChanged();
                         } else {
-                            logger.error("No Template Tree created!!!");
+                            String aS="No Template Tree created!!!";
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         }
 
                     } catch (RemoteException ex) {
-                        logger.error("Remote error during Build TemplateTree: "+ ex);
+                        String aS="Remote error during Build TemplateTree: "+ ex;
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
                 }
  
@@ -969,7 +1041,9 @@ public class MainPanel extends javax.swing.JPanel
                             // Create a new Tree from the found file.
                             int anID=OtdbRmi.getRemoteMaintenance().loadComponentFile(aFileName,"","");
                             if (anID < 1) {
-                                logger.error("Error on ComponentfileLoad: " + itsNewFile.getPath());
+                                String aS="Error on ComponentfileLoad: " + itsNewFile.getPath();
+                                logger.error(aS);
+                                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                             } else {
                                 // set the new created fill description stuff if needed
                                 itsMainFrame.getSharedVars().setComponentID(anID);
@@ -977,7 +1051,9 @@ public class MainPanel extends javax.swing.JPanel
                                     jVICnodeDef aND=OtdbRmi.getRemoteMaintenance().getComponentNode(anID);
                                     aND.description=itsFileDescription;
                                     if (!OtdbRmi.getRemoteMaintenance().saveComponentNode(aND)) {
-                                        logger.error("Error during setDescription in Component "+OtdbRmi.getRemoteMaintenance().errorMsg());
+                                        String aS="Error during setDescription in Component "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                                        logger.error(aS);
+                                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                                     }
                                 }
                                 // set changed flag to reload mainpanel
@@ -989,14 +1065,22 @@ public class MainPanel extends javax.swing.JPanel
                                 itsMainFrame.showPanel(aP.getFriendlyName());
                             }
                         } else {
-                            logger.error("upload failed");
+                            String aS="upload failed";
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/tb/icons/16_warn.gif")));
                         }
                     } catch (FileNotFoundException ex) {
-                        logger.error("Error during new Component creation: "+ ex);
+                        String aS="Error during new Component creation: "+ ex;
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     } catch (RemoteException ex) {
-                        logger.error("Error during new Component creation: "+ ex);
+                        String aS="Error during new Component creation: "+ ex;
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     } catch (IOException ex) {
-                        logger.error("Error during new Component creation: "+ ex);
+                        String aS="Error during new Component creation: "+ ex;
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
                 }
             } else if (aButton.equals("Modify")) {
@@ -1020,11 +1104,15 @@ public class MainPanel extends javax.swing.JPanel
                             itsMainFrame.setChanged(this.getFriendlyName(),true);
                             checkChanged();
                         } else {
-                            logger.error("No Template Tree created!!!");
+                            String aS="No Template Tree created!!!";
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         }
                     }
                 } catch (RemoteException ex) {
-                    logger.error("Remote error during Build TemplateTree: "+ ex);
+                    String aS="Remote error during Build TemplateTree: "+ ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             } else if (aButton.equals("Delete")) {
                 int nodeID=itsMainFrame.getSharedVars().getComponentID();
@@ -1034,10 +1122,14 @@ public class MainPanel extends javax.swing.JPanel
                        itsMainFrame.setChanged(this.getFriendlyName(),true);
                        checkChanged();
                      } else {
-                        logger.error("Component not deleted");
+                        String aS="Component not deleted";
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                      }
                 } catch (RemoteException ex) {
-                    logger.error("Remote error during component deletion: "+ ex);
+                    String aS="Remote error during component deletion: "+ ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             }
         } else if (itsTabFocus.equals("Query Results")) {
@@ -1145,7 +1237,9 @@ public class MainPanel extends javax.swing.JPanel
                 aTreeState = OtdbRmi.getRemoteTypes().getTreeState(aTree.state);
                 aClassif   = OtdbRmi.getRemoteTypes().getClassif(aTree.classification);
             } catch (RemoteException ex) {
-                logger.error("Couldn't get Tree");
+                String aS="Couldn't get Tree "+ treeID;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return;
             }
         }
@@ -1247,7 +1341,9 @@ public class MainPanel extends javax.swing.JPanel
                         buttonPanel1.setButtonEnabled("Build TemplateTree",false);                                        
                     }
                 } catch (RemoteException ex) {
-                    logger.error("Error checking isTopComponent");
+                    String aS="Error checking isTopComponent";
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             } else {
                 buttonPanel1.setButtonEnabled("Modify",false);                

@@ -15,6 +15,8 @@
   </Properties>
   <AuxValues>
     <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_autoSetComponentName" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_generateFQN" type="java.lang.Boolean" value="true"/>
     <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_i18nAutoMode" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_layoutCodeTarget" type="java.lang.Integer" value="2"/>
@@ -30,7 +32,7 @@
               <EmptySpace min="-2" pref="19" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
-                      <Component id="warningText" pref="362" max="32767" attributes="0"/>
+                      <Component id="warningText" pref="369" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
@@ -69,7 +71,6 @@
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="1" attributes="0">
-                      <EmptySpace max="-2" attributes="0"/>
                       <Component id="AddListItemButton1" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="DeleteListItemButton1" min="-2" max="-2" attributes="0"/>
@@ -100,8 +101,12 @@
     </Component>
     <Component class="javax.swing.JButton" name="AddListItemButton1">
       <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_add.gif"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Add"/>
         <Property name="toolTipText" type="java.lang.String" value="Add item to list"/>
+        <Property name="horizontalAlignment" type="int" value="2"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="AddListItemButton1ActionPerformed"/>
@@ -109,8 +114,12 @@
     </Component>
     <Component class="javax.swing.JButton" name="DeleteListItemButton1">
       <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_delete.png"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Delete"/>
         <Property name="toolTipText" type="java.lang.String" value="Delete Selected ListItem"/>
+        <Property name="horizontalAlignment" type="int" value="2"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="DeleteListItemButton1ActionPerformed"/>
@@ -118,8 +127,12 @@
     </Component>
     <Component class="javax.swing.JButton" name="ClearListButton1">
       <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_delAll.gif"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Clear"/>
         <Property name="toolTipText" type="java.lang.String" value="Clear list"/>
+        <Property name="horizontalAlignment" type="int" value="2"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ClearListButton1ActionPerformed"/>
@@ -127,8 +140,12 @@
     </Component>
     <Component class="javax.swing.JButton" name="UpListButton1">
       <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_arrow_up.gif"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Up"/>
         <Property name="toolTipText" type="java.lang.String" value="Move selected Item UP"/>
+        <Property name="horizontalAlignment" type="int" value="2"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="UpListButton1ActionPerformed"/>
@@ -136,8 +153,12 @@
     </Component>
     <Component class="javax.swing.JButton" name="DownListButton1">
       <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_arrow_down.gif"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Down"/>
         <Property name="toolTipText" type="java.lang.String" value="Move Selected item Down"/>
+        <Property name="horizontalAlignment" type="int" value="2"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="DownListButton1ActionPerformed"/>
@@ -145,6 +166,9 @@
     </Component>
     <Component class="javax.swing.JButton" name="ApplyButton">
       <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_apply.png"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Apply"/>
       </Properties>
       <Events>
@@ -153,6 +177,9 @@
     </Component>
     <Component class="javax.swing.JButton" name="CancelButton">
       <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_cancel.png"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Cancel"/>
       </Properties>
       <Events>

@@ -277,7 +277,7 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
             this.setValueAt(newRow[15],row,15);
             this.setValueAt(newRow[16],row,16);
         } else {
-            logger.error("Error in updateRow, illegal rownumber supplied");
+            logger.error("Error in updateRow, illegal rownumber supplied: "+row);
             return false;
         }
         isChanged=true;

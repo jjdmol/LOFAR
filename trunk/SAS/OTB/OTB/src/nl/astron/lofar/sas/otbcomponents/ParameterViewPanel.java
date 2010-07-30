@@ -134,14 +134,16 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                     itsNode=null;
                 }
             } catch (RemoteException ex) {
-                logger.debug("Error during getNode: "+ ex);
+                String aS="Error during getNode: "+ ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 itsParam=null;
                 return;
             }
             getParam(itsNode);
             initPanel();
         } else {
-            logger.debug("No node supplied");
+            logger.error("No node supplied");
         }
     }
     
@@ -222,7 +224,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     private void getParam(jOTDBnode aNode) {
         itsParam=null;
         if (aNode == null) {
-            logger.debug("Empty Node supplied for getParam");
+            logger.error("Empty Node supplied for getParam");
             return;
         }
         itsNode=aNode;
@@ -233,7 +235,9 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                 itsParam = OtdbRmi.getRemoteMaintenance().getParam(itsNode.treeID(),itsNode.paramDefID());                
             }
         } catch (RemoteException ex) {
-            logger.error("Error during getParam: "+ ex);
+            String aS="Error during getParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             itsParam=null;
             return;
         }        
@@ -288,7 +292,9 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                     // Have to get new param because we need the unresolved limits field.
                     itsParam = OtdbRmi.getRemoteMaintenance().getParam(itsNode.treeID(),itsNode.paramDefID());                
                 } catch (RemoteException ex) {
-                     logger.error("Error during getParam: "+ ex);
+                    String aS="Error during getParam: "+ ex;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
                 cl.show(CardPanel,"ComboCard");
             } else {
@@ -315,7 +321,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
             // Check if the fields may be changed in this treestate/valmoment
             setAllEnabled(itsAccessRights.isWritable(itsParam));
         } else {
-            logger.debug("no Param given");
+            logger.error("no Param given");
         }
     }
     
@@ -349,11 +355,13 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         return (String)this.ParamTypeText.getSelectedItem();
     }
     
-    private void setType(short aS) {
+    private void setType(short aSh) {
         try {
-            this.ParamTypeText.setSelectedItem(OtdbRmi.getRemoteTypes().getParamType(aS));
+            this.ParamTypeText.setSelectedItem(OtdbRmi.getRemoteTypes().getParamType(aSh));
         } catch (RemoteException e) {
-            logger.error("Error: GetParamType failed " + e);
+            String aS="Error: GetParamType("+aSh+") failed " + e;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
        }
     }
     
@@ -366,11 +374,13 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         return (String)this.ParamUnitText.getSelectedItem();
     }
     
-    private void setUnit(short aS) {
+    private void setUnit(short aSh) {
         try {
-            this.ParamUnitText.setSelectedItem(OtdbRmi.getRemoteTypes().getUnit(aS));
+            this.ParamUnitText.setSelectedItem(OtdbRmi.getRemoteTypes().getUnit(aSh));
         } catch (RemoteException e) {
-            logger.error("ERROR: getUnit failed " + e);
+            String aS="ERROR: getUnit("+aSh+") failed " + e;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
     }
     
@@ -563,20 +573,26 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                 
                 if (paramHasChanged) {
                     if (!OtdbRmi.getRemoteMaintenance().saveParam(itsParam)) {
-                        logger.error("Saving param "+itsParam.nodeID()+","+itsParam.paramID()+"failed: "+ OtdbRmi.getRemoteMaintenance().errorMsg());
+                        String aS="Saving param "+itsParam.nodeID()+","+itsParam.paramID()+"failed: "+ OtdbRmi.getRemoteMaintenance().errorMsg();
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
                 } 
                 if (nodeHasChanged) {
                     if (!OtdbRmi.getRemoteMaintenance().saveNode(itsNode)) {
-                        logger.error("Saving node "+itsNode.nodeID()+"failed: "+ OtdbRmi.getRemoteMaintenance().errorMsg());
+                        String aS="Saving node "+itsNode.nodeID()+"failed: "+ OtdbRmi.getRemoteMaintenance().errorMsg();
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
                 } 
                
             } catch (RemoteException ex) {
-                logger.error("error in Remote connection");
+                String aS="error in Remote connection: "+ ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             }
         } else {
-            logger.debug("no Param given");
+            logger.error("no Param given");
         }
     }
 
@@ -585,8 +601,9 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
      */
-    // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+
         ParamNameLabel = new javax.swing.JLabel();
         ParamIndexLabel = new javax.swing.JLabel();
         ParamTypeLabel = new javax.swing.JLabel();
@@ -640,14 +657,18 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         ParamNameText.setMinimumSize(new java.awt.Dimension(440, 19));
         ParamNameText.setPreferredSize(new java.awt.Dimension(440, 19));
 
+        ParamCancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         ParamCancelButton.setText("Cancel");
+        ParamCancelButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         ParamCancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 ParamCancelButtonActionPerformed(evt);
             }
         });
 
+        ParamApplyButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         ParamApplyButton.setText("Apply");
+        ParamApplyButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         ParamApplyButton.setEnabled(false);
         ParamApplyButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -737,10 +758,9 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                                         .add(derefText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 365, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
                             .add(ParamDescriptionText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 530, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(layout.createSequentialGroup()
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(ParamCancelButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(ParamApplyButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))))
+                                .add(ParamApplyButton)))))
                 .add(421, 421, 421))
         );
         layout.setVerticalGroup(
@@ -789,7 +809,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(ParamApplyButton)
                     .add(ParamCancelButton))
-                .addContainerGap(35, Short.MAX_VALUE))
+                .addContainerGap(33, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 

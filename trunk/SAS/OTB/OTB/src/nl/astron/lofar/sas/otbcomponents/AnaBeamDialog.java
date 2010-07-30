@@ -125,7 +125,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
 
         labelRank.setText("Rank :");
 
-        cancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/otb/icons/16_cancel.png"))); // NOI18N
+        cancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         cancelButton.setText("Cancel");
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -133,6 +133,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
             }
         });
 
+        saveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         saveButton.setText("Save");
         saveButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -172,7 +173,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
                         .add(cancelButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(saveButton)
-                        .addContainerGap(150, Short.MAX_VALUE))))
+                        .addContainerGap(130, Short.MAX_VALUE))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)

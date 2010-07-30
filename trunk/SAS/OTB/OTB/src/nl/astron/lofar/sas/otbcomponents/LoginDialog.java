@@ -76,7 +76,9 @@ public class LoginDialog extends javax.swing.JDialog {
         getContentPane().add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 66, -1));
         getContentPane().add(jPasswordField, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 50, 200, -1));
 
+        jButtonCancel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         jButtonCancel.setText("Cancel");
+        jButtonCancel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         jButtonCancel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonCancelActionPerformed(evt);
@@ -84,13 +86,15 @@ public class LoginDialog extends javax.swing.JDialog {
         });
         getContentPane().add(jButtonCancel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, -1, -1));
 
+        jButtonOK.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         jButtonOK.setText("OK");
+        jButtonOK.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         jButtonOK.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonOKActionPerformed(evt);
             }
         });
-        getContentPane().add(jButtonOK, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 110, -1, -1));
+        getContentPane().add(jButtonOK, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 110, -1, -1));
 
         jLabel3.setText("Database");
         getContentPane().add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 70, 66, -1));

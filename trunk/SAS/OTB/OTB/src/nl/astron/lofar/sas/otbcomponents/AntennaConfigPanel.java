@@ -135,7 +135,9 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 }
            }
         } catch (RemoteException ex) {
-            logger.error("Error during getComponentParam: "+ ex);
+            String aS="RemoteError during getComponentParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             itsParamList=null;
             return;
         }
@@ -159,7 +161,9 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         try {
             OtdbRmi.getRemoteMaintenance().saveNode(aNode);
         } catch (RemoteException ex) {
-            logger.error("Error: saveNode failed : " + ex);
+            String aS="Error: saveNode failed : " + ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
     }
 
@@ -436,7 +440,9 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 setField(aNode,aParam,aHWNode);
             }
         } catch (RemoteException ex) {
-            logger.error("Error during retrieveAndDisplayChildDataForNode: "+ ex);
+            String aS="Error during retrieveAndDisplayChildDataForNode: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             return;
         }
     }
@@ -465,7 +471,10 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());
             }
         } catch (RemoteException ex) {
-            logger.error("Error during getParam: "+ ex);
+            String aS="Error during getParam: "+ ex;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+            return;
         }
 
         if(parentName.equals("Observation")){
@@ -697,7 +706,9 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 jOTDBtree aTree = OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
                 itsTreeType=OtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
-                logger.error("ObservationPanel: Error getting treeInfo/treetype" + ex);
+                String aS="ObservationPanel: Error getting treeInfo/treetype" + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 itsTreeType="";
             }
          } else {
@@ -933,7 +944,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 .addComponent(input1090)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(input3090)
-                .addContainerGap(50, Short.MAX_VALUE))
+                .addContainerGap(51, Short.MAX_VALUE))
         );
 
         panelHBASelection1.setBorder(javax.swing.BorderFactory.createTitledBorder("Antenna Selection"));
@@ -1013,9 +1024,9 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 .addGroup(panelHBASelection1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(inputHBAZero)
                     .addComponent(inputHBAOne))
-                .addContainerGap(28, Short.MAX_VALUE))
+                .addContainerGap(42, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelHBASelection1Layout.createSequentialGroup()
-                .addContainerGap(12, Short.MAX_VALUE)
+                .addContainerGap(26, Short.MAX_VALUE)
                 .addGroup(panelHBASelection1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel2)
                     .addComponent(input110190)
@@ -1039,7 +1050,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 .addComponent(inputHBAJoined)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(inputHBADual)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 116, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 117, Short.MAX_VALUE)
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(input110190)
@@ -1073,7 +1084,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                         .addGap(26, 26, 26))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(labelClockMode, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 24, Short.MAX_VALUE)
                         .addComponent(inputClockMode, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(53, 53, 53))))
         );
@@ -1105,11 +1116,9 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(coreStationSelectionPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(remoteStationSelectionPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(europeStationSelectionPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(europeStationSelectionPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(coreStationSelectionPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 281, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(14, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
@@ -1149,9 +1158,12 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(europeStationLayout, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
-            .addComponent(remoteStationLayout, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
-            .addComponent(coreStationLayout, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(europeStationLayout, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(remoteStationLayout, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(coreStationLayout, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 308, Short.MAX_VALUE))
+                .addContainerGap(18, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1161,7 +1173,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 .addComponent(remoteStationLayout, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(europeStationLayout, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(89, 89, 89))
+                .addGap(92, 92, 92))
         );
 
         add(jPanel3, java.awt.BorderLayout.CENTER);

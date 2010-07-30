@@ -50,6 +50,7 @@ public class ParmDBConfigurationException extends Exception{
      * Returns the exception message that was set in the constructor
      * @return the Exception message
      */
+    @Override
     public String getMessage(){
         return message;
     }

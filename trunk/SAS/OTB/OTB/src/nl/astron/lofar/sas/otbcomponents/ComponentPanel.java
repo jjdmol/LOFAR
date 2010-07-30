@@ -31,6 +31,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBparam;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
@@ -75,7 +76,7 @@ public class ComponentPanel extends javax.swing.JPanel implements IViewPanel{
             itsMainFrame=aMainFrame;
             initComboLists();
         } else {
-            logger.debug("No Mainframe supplied");
+            logger.error("No Mainframe supplied");
         }
     }
     
@@ -95,7 +96,7 @@ public class ComponentPanel extends javax.swing.JPanel implements IViewPanel{
             itsParam=(jOTDBparam)anObject;
             initPanel();
         } else {
-            logger.debug("No param supplied");
+            logger.error("No param supplied");
         }
     }
     
@@ -187,7 +188,7 @@ public class ComponentPanel extends javax.swing.JPanel implements IViewPanel{
             setLimits(String.valueOf(itsParam.limits));
             setDescription(itsParam.description);
         } else {
-            logger.debug("no Param given");
+            logger.error("no Param given");
         }
     }
     
@@ -207,11 +208,13 @@ public class ComponentPanel extends javax.swing.JPanel implements IViewPanel{
         return (String)this.ParamTypeText.getSelectedItem();
     }
     
-    private void setType(short aS) {
+    private void setType(short aSh) {
         try {
-            this.ParamTypeText.setSelectedItem(OtdbRmi.getRemoteTypes().getParamType(aS));
+            this.ParamTypeText.setSelectedItem(OtdbRmi.getRemoteTypes().getParamType(aSh));
         } catch (RemoteException e) {
-            logger.error("Error: GetParamType failed " + e);
+            String aS="Error: GetParamType("+aSh+") failed " + e;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
        }
     }
     
@@ -223,11 +226,13 @@ public class ComponentPanel extends javax.swing.JPanel implements IViewPanel{
         return (String)this.ParamUnitText.getSelectedItem();
     }
     
-    private void setUnit(short aS) {
+    private void setUnit(short aSh) {
         try {
-            this.ParamUnitText.setSelectedItem(OtdbRmi.getRemoteTypes().getUnit(aS));
+            this.ParamUnitText.setSelectedItem(OtdbRmi.getRemoteTypes().getUnit(aSh));
         } catch (RemoteException e) {
-            logger.error("ERROR: getUnit failed " + e);
+            String aS="ERROR: getUnit("+aSh+") failed " + e;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
     }
     
@@ -321,17 +326,21 @@ public class ComponentPanel extends javax.swing.JPanel implements IViewPanel{
                 
                 if (hasChanged) {
                     if (!OtdbRmi.getRemoteMaintenance().saveParam(itsParam)) {
-                        logger.error("Saving param "+itsParam.nodeID()+","+itsParam.paramID()+"failed: "+ OtdbRmi.getRemoteMaintenance().errorMsg());
+                        String aS="Saving param "+itsParam.nodeID()+","+itsParam.paramID()+"failed: "+ OtdbRmi.getRemoteMaintenance().errorMsg();
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
                     ActionEvent evt = new ActionEvent(this,-1,"component Changed");
                     this.fireActionListenerActionPerformed(evt); 
                 } 
                
             } catch (RemoteException ex) {
-                logger.error("error in Remote connection");
+                String aS="error in Remote connection: "+ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             }
         } else {
-            logger.debug("no Param given");
+            logger.error("no Param given");
         }
     }
 
@@ -368,6 +377,7 @@ public class ComponentPanel extends javax.swing.JPanel implements IViewPanel{
         ParamNameText.setMinimumSize(new java.awt.Dimension(440, 19));
         ParamNameText.setPreferredSize(new java.awt.Dimension(440, 19));
 
+        ParamCancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         ParamCancelButton.setText("Cancel");
         ParamCancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -375,6 +385,7 @@ public class ComponentPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
+        ParamApplyButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         ParamApplyButton.setText("Apply");
         ParamApplyButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

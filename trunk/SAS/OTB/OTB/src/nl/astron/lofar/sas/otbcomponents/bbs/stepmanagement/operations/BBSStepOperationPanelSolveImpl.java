@@ -529,7 +529,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
 
         solvableParmsButtonPanel.setLayout(new java.awt.GridBagLayout());
 
-        deleteSolvableParmButton.setText("Delete");
+        deleteSolvableParmButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
         deleteSolvableParmButton.setToolTipText("Remove the selected Station from the list");
         deleteSolvableParmButton.setEnabled(false);
         deleteSolvableParmButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -547,7 +547,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         solvableParmsButtonPanel.add(deleteSolvableParmButton, gridBagConstraints);
 
-        addSolvableParmButton.setText("Add");
+        addSolvableParmButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
         addSolvableParmButton.setToolTipText("Add the station entered to the list");
         addSolvableParmButton.setEnabled(false);
         addSolvableParmButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -614,7 +614,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
 
         excludedParmsButtonPanel.setLayout(new java.awt.GridBagLayout());
 
-        deleteExcludedParmButton.setText("Delete");
+        deleteExcludedParmButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
         deleteExcludedParmButton.setToolTipText("Remove the selected Station from the list");
         deleteExcludedParmButton.setEnabled(false);
         deleteExcludedParmButton.setMaximumSize(new java.awt.Dimension(30, 25));
@@ -632,7 +632,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         excludedParmsButtonPanel.add(deleteExcludedParmButton, gridBagConstraints);
 
-        addExcludedParmButton.setText("Add");
+        addExcludedParmButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
         addExcludedParmButton.setToolTipText("Add the station entered to the list");
         addExcludedParmButton.setEnabled(false);
         addExcludedParmButton.setMaximumSize(new java.awt.Dimension(30, 25));

@@ -60,7 +60,7 @@
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="ParamCancelButton" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Component id="ParamApplyButton" min="-2" pref="70" max="-2" attributes="0"/>
+                              <Component id="ParamApplyButton" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                   </Group>
@@ -125,7 +125,7 @@
                   <Component id="ParamApplyButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="ParamCancelButton" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace pref="35" max="32767" attributes="0"/>
+              <EmptySpace pref="33" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -200,7 +200,11 @@
     </Component>
     <Component class="javax.swing.JButton" name="ParamCancelButton">
       <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_cancel.png"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Cancel"/>
+        <Property name="horizontalAlignment" type="int" value="2"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ParamCancelButtonActionPerformed"/>
@@ -208,7 +212,11 @@
     </Component>
     <Component class="javax.swing.JButton" name="ParamApplyButton">
       <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_apply.png"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Apply"/>
+        <Property name="horizontalAlignment" type="int" value="2"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ParamApplyButtonActionPerformed"/>

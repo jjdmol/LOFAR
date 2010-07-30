@@ -74,7 +74,7 @@ public class BBSStepTreeManager extends GenericTreeManager implements ITreeManag
     public void defineChildsForNode(TreeNode aNode) {
         
         if (aNode.getUserObject() == null) {
-            logger.debug("Error - TreeManager BBSStepNode-defineChildNodes("+aNode.getName()+" does not contain a user object)");
+            logger.error("Error - TreeManager BBSStepNode-defineChildNodes("+aNode.getName()+" does not contain a user object)");
             return;
         }
         //get instance to the bbs step tree helper class

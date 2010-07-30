@@ -245,7 +245,8 @@ public class BBSStepDataManager{
                         }
                     }
                 } catch (RemoteException ex) {
-                    logger.error("Strategy Steps could not be defined! ",ex);
+                    String aS="Strategy Steps could not be defined! "+ex;
+                    logger.error(aS);
                 }
             }
         }
@@ -484,7 +485,7 @@ public class BBSStepDataManager{
                 try {
                     OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
                 } catch (RemoteException ex) {
-                    logger.debug("PersistStep(): Unable to delete the default Template Step from the Step Container: "+aBBSStep.getName());
+                    logger.error("PersistStep(): Unable to delete the default Template Step from the Step Container: "+aBBSStep.getName());
                 }
             }
             //limiting the search for steps that are mentioned in the strategy steps parameter (Strategy.Steps)

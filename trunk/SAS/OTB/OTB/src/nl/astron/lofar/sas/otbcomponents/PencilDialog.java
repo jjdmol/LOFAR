@@ -20,10 +20,7 @@
  */
 
 package nl.astron.lofar.sas.otbcomponents;
-import java.util.BitSet;
-import javax.swing.JOptionPane;
 import javax.swing.border.TitledBorder;
-import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import org.apache.log4j.Logger;
 
@@ -106,14 +103,18 @@ public class PencilDialog extends javax.swing.JDialog {
 
         labelAngle2.setText("Angle 2 :");
 
+        cancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         cancelButton.setText("Cancel");
+        cancelButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
             }
         });
 
+        saveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         saveButton.setText("Save");
+        saveButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         saveButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 saveButtonActionPerformed(evt);
@@ -139,7 +140,7 @@ public class PencilDialog extends javax.swing.JDialog {
                         .add(cancelButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(saveButton)))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(657, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)

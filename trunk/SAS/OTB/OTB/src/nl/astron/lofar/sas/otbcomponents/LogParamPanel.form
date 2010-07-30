@@ -66,7 +66,7 @@
                           <Component id="logParamApplyButton" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="logParamRefreshButton" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace pref="729" max="32767" attributes="0"/>
+                          <EmptySpace pref="702" max="32767" attributes="0"/>
                       </Group>
                       <Group type="102" alignment="0" attributes="0">
                           <Group type="103" groupAlignment="0" attributes="0">
@@ -79,18 +79,18 @@
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" attributes="0">
                                   <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="LogParamNameText" alignment="0" pref="868" max="32767" attributes="1"/>
+                                      <Component id="LogParamNameText" alignment="0" pref="884" max="32767" attributes="1"/>
                                       <Group type="102" alignment="0" attributes="0">
                                           <Group type="103" groupAlignment="1" max="-2" attributes="0">
                                               <Component id="LogParamEndTimeText" alignment="0" max="32767" attributes="1"/>
                                               <Component id="LogParamStartTimeText" alignment="0" min="-2" pref="275" max="-2" attributes="1"/>
                                           </Group>
                                           <EmptySpace max="-2" attributes="0"/>
-                                          <Group type="103" groupAlignment="0" attributes="0">
-                                              <Component id="setStopDateButton" min="-2" pref="60" max="-2" attributes="0"/>
-                                              <Component id="setStartDateButton" alignment="0" min="-2" pref="60" max="-2" attributes="0"/>
+                                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                              <Component id="setStopDateButton" max="32767" attributes="1"/>
+                                              <Component id="setStartDateButton" alignment="0" pref="75" max="32767" attributes="1"/>
                                           </Group>
-                                          <EmptySpace min="-2" pref="51" max="-2" attributes="0"/>
+                                          <EmptySpace min="-2" pref="36" max="-2" attributes="0"/>
                                       </Group>
                                   </Group>
                                   <EmptySpace min="-2" pref="14" max="-2" attributes="0"/>
@@ -103,7 +103,7 @@
                       </Group>
                       <Group type="102" alignment="0" attributes="0">
                           <Component id="LogParamRecentOnlyCheckbox" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace pref="837" max="32767" attributes="0"/>
+                          <EmptySpace pref="862" max="32767" attributes="0"/>
                       </Group>
                   </Group>
               </Group>
@@ -165,8 +165,12 @@
         </Component>
         <Component class="javax.swing.JButton" name="logParamCancelButton">
           <Properties>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_cancel.png"/>
+            </Property>
             <Property name="text" type="java.lang.String" value="Cancel"/>
             <Property name="toolTipText" type="java.lang.String" value="restore defaults"/>
+            <Property name="horizontalAlignment" type="int" value="2"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="logParamCancelButtonActionPerformed"/>
@@ -174,8 +178,12 @@
         </Component>
         <Component class="javax.swing.JButton" name="logParamApplyButton">
           <Properties>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_apply.png"/>
+            </Property>
             <Property name="text" type="java.lang.String" value="Apply"/>
             <Property name="toolTipText" type="java.lang.String" value="Apply changes to logform"/>
+            <Property name="horizontalAlignment" type="int" value="2"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="logParamApplyButtonActionPerformed"/>
@@ -207,7 +215,11 @@
         </Component>
         <Component class="javax.swing.JButton" name="logParamRefreshButton">
           <Properties>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_refresh_e.gif"/>
+            </Property>
             <Property name="text" type="java.lang.String" value="Refresh"/>
+            <Property name="horizontalAlignment" type="int" value="2"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="logParamRefreshButtonActionPerformed"/>
@@ -215,8 +227,12 @@
         </Component>
         <Component class="javax.swing.JButton" name="setStartDateButton">
           <Properties>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_apply.png"/>
+            </Property>
             <Property name="text" type="java.lang.String" value="set"/>
             <Property name="toolTipText" type="java.lang.String" value="set Start Date"/>
+            <Property name="horizontalAlignment" type="int" value="2"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="setStartDateButtonActionPerformed"/>
@@ -224,7 +240,11 @@
         </Component>
         <Component class="javax.swing.JButton" name="setStopDateButton">
           <Properties>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_apply.png"/>
+            </Property>
             <Property name="text" type="java.lang.String" value="set"/>
+            <Property name="horizontalAlignment" type="int" value="2"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="setStopDateButtonActionPerformed"/>

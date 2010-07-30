@@ -22,6 +22,7 @@
 
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
+import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.Vector;
 import nl.astron.lofar.sas.otb.jotdb3.jDefaultTemplate;
@@ -64,7 +65,7 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
         
         try {
             if (! OtdbRmi.getRemoteOTDB().isConnected()) {
-                logger.debug("No open connection available");
+                logger.error("No open connection available");
                 return false;
             }
 
@@ -81,13 +82,13 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
 
             // if no match, return
             if (aDF == null) {
-                logger.error("Couldn't find Matching DefaultTemplate in database");
+                logger.warn("Couldn't find Matching DefaultTemplate in database");
                 return false;
             }
 
             jOTDBtree tInfo=OtdbRmi.getRemoteOTDB().getTreeInfo(aTreeID, false);
             if ( tInfo == null) {
-                logger.debug("Unable to get treeInfo for tree with ID: " + aTreeID);
+                logger.warn("Unable to get treeInfo for tree with ID: " + aTreeID);
                 return false;
             }
             data[row][0]=new Integer(tInfo.treeID());
@@ -99,7 +100,7 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
             data[row][6]=new Integer(tInfo.momID());
             data[row][7]=new String(tInfo.description);
             fireTableDataChanged();
-        } catch (Exception e) {
+        } catch (RemoteException e) {
             logger.debug("Remote OTDB via RMI and JNI failed: " + e);
         } 
         return true;
@@ -108,12 +109,12 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
     /** Fills the table from the database */
     public boolean fillTable() {
        if (otdbRmi == null) {
-            logger.debug("No active otdbRmi connection");
+            logger.warn("No active otdbRmi connection");
             return false;
        }
        try {
             if (OtdbRmi.getRemoteOTDB() != null && ! OtdbRmi.getRemoteOTDB().isConnected()) {
-                logger.debug("No open connection available");
+                logger.error("No open connection available");
                 return false;
             }
             // Get a Treelist of all available VItemplate's
@@ -126,7 +127,7 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
                 jDefaultTemplate aDF = it.next();
                 jOTDBtree tInfo =OtdbRmi.getRemoteOTDB().getTreeInfo(aDF.treeID(), false);
                 if (tInfo.treeID()==0) {
-                    logger.debug("No such tree found!");
+                    logger.warn("Illegal TreeID found!");
                 } else {
                     logger.debug("Gathered info for ID: "+tInfo.treeID());
                     data[k][0]=new Integer(tInfo.treeID());
@@ -141,8 +142,8 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
                 }
             }
             fireTableDataChanged();
-        } catch (Exception e) {
-            logger.debug("Remote OTDB via RMI and JNI failed: " + e);
+        } catch (RemoteException e) {
+            logger.error("Remote OTDB via RMI and JNI failed: " + e);
 	} 
         return true;
     }

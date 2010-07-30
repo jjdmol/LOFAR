@@ -23,6 +23,7 @@
 
 package nl.astron.lofar.sas.otb.panels;
 import java.rmi.RemoteException;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb3.jVICnodeDef;
@@ -103,7 +104,9 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
             treePanel.newRootNode(treeManager.getRootNode(itsComponentID));
             itsMainFrame.setNormalCursor();
         } catch (Exception e) {
-            logger.debug("Exception during setNewRootNode: " + e);
+            String aS="Exception during setNewRootNode: " + e;
+            logger.error(aS);
+            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
     }
     
@@ -125,7 +128,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
                 jSplitPane1.remove(componentPanel1);
                 jSplitPane1.setRightComponent(VICnodeDefViewPanel1);
             } catch (RemoteException ex) {
-                logger.debug("Error getting VICnodeDef");
+                logger.error("Error getting VICnodeDef");
             }
         } else {
             jSplitPane1.remove(VICnodeDefViewPanel1);
@@ -204,8 +207,8 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
     
     
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        logger.debug("actionPerformed: " + evt);
-        logger.debug("Trigger: "+evt.getActionCommand());
+        logger.trace("actionPerformed: " + evt);
+        logger.trace("Trigger: "+evt.getActionCommand());
         if (evt.getActionCommand().equals("Exit")) {
             itsMainFrame.unregisterPlugin(this.getFriendlyName());
             itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
