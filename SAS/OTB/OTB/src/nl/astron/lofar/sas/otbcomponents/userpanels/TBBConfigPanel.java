@@ -1173,7 +1173,6 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         deleteConfigButton = new javax.swing.JButton();
         cancelEditButton = new javax.swing.JButton();
         cancelEditButton.setVisible(false);
-        TBBConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         labelSubbandList = new javax.swing.JLabel();
         inputSubbandList = new javax.swing.JTextField();
         labelTriggerMode = new javax.swing.JLabel();
@@ -1184,6 +1183,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         inputFilter1Coeff1 = new javax.swing.JTextField();
         inputFilter1Coeff2 = new javax.swing.JTextField();
         inputFilter1Coeff3 = new javax.swing.JTextField();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        TBBConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         TBBControlPanel = new javax.swing.JPanel();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
@@ -1393,13 +1394,6 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         });
         TBBSettingsPanel.add(cancelEditButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 270, -1, -1));
 
-        TBBConfigurationPanel.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                TBBConfigurationPanelMouseClicked(evt);
-            }
-        });
-        TBBSettingsPanel.add(TBBConfigurationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 350, 1080, 250));
-
         labelSubbandList.setText("subbands:");
         TBBSettingsPanel.add(labelSubbandList, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 240, 84, -1));
 
@@ -1455,6 +1449,15 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             }
         });
         TBBSettingsPanel.add(inputFilter1Coeff3, new org.netbeans.lib.awtextra.AbsoluteConstraints(630, 120, 140, -1));
+
+        TBBConfigurationPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                TBBConfigurationPanelMouseClicked(evt);
+            }
+        });
+        jScrollPane1.setViewportView(TBBConfigurationPanel);
+
+        TBBSettingsPanel.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 350, 1090, 250));
 
         jTabbedPane1.addTab("TBB-settings", TBBSettingsPanel);
 
@@ -1620,6 +1623,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JLabel labelBaselevel;
     private javax.swing.JLabel labelCoeff0;
