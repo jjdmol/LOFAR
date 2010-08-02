@@ -26,7 +26,7 @@ db2 = pg.connect(user="postgres", host=dbHost, dbname=dbName)
 
 ##
 def print_help():
-    print "Usage: make_antenna_pos_file <stationname> date"
+    print "Usage: make_conf_files <stationname> date"
     print "    <date>      : yyyy.yy e.g. 2008.75 for Oct 1st 2008"
 
 

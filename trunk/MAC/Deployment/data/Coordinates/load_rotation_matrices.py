@@ -22,7 +22,7 @@ def getRotationLines(filename):
     """
     Returns a list containing all lines with rotations
     """
-    f = open(filename,'r')
+    f = open('data/'+filename,'r')
     lines = f.readlines()
     f.close()
     return [ line.strip().split(',') for line in lines[3:]]
