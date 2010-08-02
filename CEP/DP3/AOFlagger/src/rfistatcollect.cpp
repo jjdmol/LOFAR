@@ -291,6 +291,10 @@ int main(int argc, char **argv)
 				; // skip
 			else if(filename.find("counts-subbands-cross.txt")!=string::npos)
 				; // skip
+			else if(filename.find("counts-timeint-auto.txt")!=string::npos)
+				; // skip
+			else if(filename.find("counts-timeint-cross.txt")!=string::npos)
+				; // skip
 			else	
 				throw runtime_error("Could not determine type of file.");
 		}

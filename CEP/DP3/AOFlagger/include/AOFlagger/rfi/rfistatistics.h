@@ -22,6 +22,7 @@
 
 #include <cstring>
 #include <map>
+#include <set>
 
 #include <boost/thread/mutex.hpp>
 
@@ -205,6 +206,8 @@ class RFIStatistics {
 			saveAmplitudes(_crossAmplitudes, baseName+"counts-amplitudes-cross.txt");
 			saveSubbands(_autoChannels, baseName+"counts-subbands-auto.txt");
 			saveSubbands(_crossChannels, baseName+"counts-subbands-cross.txt");
+			saveTimeIntegrated(_autoTimesteps, baseName+"counts-timeint-auto.txt");
+			saveTimeIntegrated(_crossTimesteps, baseName+"counts-timeint-cross.txt");
 		}
 
 		struct FeatureInfo {
@@ -233,7 +236,8 @@ class RFIStatistics {
 		void saveAmplitudes(const std::map<double, class AmplitudeBin> &amplitudes, const std::string &filename);
 		void saveBaselines(const std::string &filename);
 		void saveSubbands(const std::map<double, class ChannelInfo> &channels, const std::string &filename);
-		
+		void saveTimeIntegrated(const std::map<double, class TimestepInfo> &timesteps, const std::string &filename);
+	
 		double getCentralAmplitude(double amplitude)
 		{
 			//double decimals = pow(10.0, floor(log10(amplitude)));
@@ -293,6 +297,35 @@ class RFIStatistics {
 					n+=i->second.count;
 			}
 			return n;
+		}
+		double lowerQuartile(const std::multiset<double> &numbers)
+		{
+			double mid = round((double) numbers.size()/2.0);
+			size_t lq = (size_t) round(mid/2.0);
+			std::multiset<double>::const_iterator iter = numbers.begin();
+			for(size_t i=0;i<lq;++i)
+				++iter;
+			return *iter;
+		}
+		double upperQuartile(const std::multiset<double> &numbers)
+		{
+			double mid = round((double) numbers.size()/2.0);
+			size_t lq = (size_t) round(mid/2.0);
+			std::multiset<double>::const_reverse_iterator iter = numbers.rbegin();
+			for(size_t i=0;i<lq;++i)
+				++iter;
+			return *iter;
+		}
+		double sum(const std::multiset<double> &numbers)
+		{
+			double sum = 0.0;
+			for(std::multiset<double>::const_iterator i=numbers.begin();i!=numbers.end();++i)
+				sum += *i;
+			return sum;
+		}
+		double avg(const std::multiset<double> &numbers)
+		{
+			return sum(numbers) / numbers.size();
 		}
 };
 
