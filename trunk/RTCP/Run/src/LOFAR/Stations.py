@@ -210,7 +210,9 @@ def defineStations( s ):
     "RSP_1": ["HBA1"],
   }
 
-  configdir = Locations["configdir"]
+  # TODO: reolsve only after Locations.files have been finalised
+  # adter processing command-line parameters
+  configdir = Locations.resolvePath( Locations.files["configdir"] )
 
   # parse hostname <-> ip translation, since not all hostnames
   # are ionodes (foreign stations send to a router)
