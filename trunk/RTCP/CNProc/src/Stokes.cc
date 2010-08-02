@@ -44,9 +44,9 @@ static inline void addStokes( struct stokes &stokes, const fcomplex &polX, const
 
 
 // Calculate coherent stokes values from pencil beams.
-void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, const unsigned nrBeams )
+void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, const unsigned nrSubbands )
 {
-  ASSERT( sampleData->samples.shape()[0] == nrBeams );
+  ASSERT( sampleData->samples.shape()[0] == nrSubbands );
   ASSERT( sampleData->samples.shape()[1] == itsNrChannels );
   ASSERT( sampleData->samples.shape()[2] >= itsNrSamplesPerIntegration );
   ASSERT( sampleData->samples.shape()[3] == NR_POLARIZATIONS );
@@ -60,32 +60,31 @@ void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stok
   stokesTimer.start();
 
   // copy flags from beams
-  for(unsigned beam = 0; beam < nrBeams; beam++) {
-    out->flags[beam] = inflags[beam];
+  for(unsigned sb = 0; sb < nrSubbands; sb++) {
+    out->flags[sb] = inflags[sb];
   }
 
   // shorten the flags over the integration length
-  for(unsigned beam = 0; beam < nrBeams; beam++) {
-    out->flags[beam] /= integrationSteps;
+  for(unsigned sb = 0; sb < nrSubbands; sb++) {
+    out->flags[sb] /= integrationSteps;
   }
 
   // TODO: divide by #valid stations
-
-  for( unsigned beam = 0; beam < nrBeams; beam++ ) {
+  for( unsigned sb = 0; sb < nrSubbands; sb++ ) {
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
       for (unsigned inTime = 0, outTime = 0; inTime < itsNrSamplesPerIntegration; inTime += integrationSteps, outTime++ ) {
         struct stokes stokes = { 0, 0, 0, 0 };
 
         for( unsigned fractime = 0; fractime < integrationSteps; fractime++ ) {
-	  addStokes( stokes, in[beam][ch][inTime+fractime][0], in[beam][ch][inTime+fractime][1], allStokes );
+	  addStokes( stokes, in[sb][ch][inTime+fractime][0], in[sb][ch][inTime+fractime][1], allStokes );
         }
 
-        #define dest out->samples[beam][ch][outTime]
-        dest[0] = stokes.I;
+        #define dest(stokes) out->samples[stokes][outTime][sb][ch]
+        dest(0) = stokes.I;
         if( allStokes ) {
-          dest[1] = stokes.Q;
-          dest[2] = stokes.U;
-          dest[3] = stokes.V;
+          dest(1) = stokes.Q;
+          dest(2) = stokes.U;
+          dest(3) = stokes.V;
         }
         #undef dest
       }
@@ -157,12 +156,12 @@ void Stokes::calculateIncoherent( const SampleData<> *sampleData, StokesData *st
         }
       }
 
-      #define dest out->samples[0][ch][outTime]
-      dest[0] = stokes.I / nrValidStations;
+      #define dest(stokes) out->samples[stokes][outTime][0][ch]
+      dest(0) = stokes.I / nrValidStations;
       if( allStokes ) {
-        dest[1] = stokes.Q / nrValidStations;
-        dest[2] = stokes.U / nrValidStations;
-        dest[3] = stokes.V / nrValidStations;
+        dest(1) = stokes.Q / nrValidStations;
+        dest(2) = stokes.U / nrValidStations;
+        dest(3) = stokes.V / nrValidStations;
       }
       #undef dest
     }
