@@ -2,10 +2,11 @@
 
 from LOFAR import Logger
 from logging import debug,info,warning,error,critical
-from LOFAR.Core import buildParset, combineParsets
+from LOFAR.Core import buildParset, combineParsets, checkParsets
 from LOFAR.Parset import Parset
 from util.Hosts import rsymlink
 from LOFAR.Locations import Locations
+from LOFAR.CommandClient import sendCommand
 import sys
 import socket
 
@@ -57,7 +58,7 @@ if __name__ == "__main__":
   hwgroup.add_option( "-O", "--olap-parset",
   			dest = "olapparset",
 			type = "string",
-                        default = "%s/OLAP.parset" % (os.path.dirname(__file__),),
+                        default = "%s/OLAP.parset" % (Locations.files["configdir"],),
   			help = "the parset containing station definitions [%default]" )
   hwgroup.add_option( "-P", "--partition",
   			dest = "partition",
@@ -88,7 +89,7 @@ if __name__ == "__main__":
   Logger.initLogger()  
 
   # read and convert parsets
-  parsets = [buildParset( None, arg, options.olapparset, options.partition ) for arg in args]
+  parsets = [buildParset( None, arg, Locations.resolvePath( options.olapparset ), options.partition ) for arg in args]
   parsets = combineParsets( parsets )
   parsets = checkParsets( parsets )
 

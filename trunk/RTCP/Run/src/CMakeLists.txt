@@ -13,11 +13,8 @@ install(PROGRAMS
   DESTINATION bin)
 
 install(FILES
-  OLAP.parset
-  DESTINATION bin)
-
-install(FILES
   multitail-olap.conf
+  OLAP.parset
   DESTINATION etc)
 
 add_subdirectory(LOFAR)
