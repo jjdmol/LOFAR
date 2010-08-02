@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-## read all rotation matrices from lisp files
-## and store in rotation_matrices.dat file
+## read all normal_vectors and rotation_matrices from lisp files and
+## store in normal_vector.dat and rotation_matrices.dat file 
 
 import os
 import array
@@ -60,7 +60,8 @@ fmat.write("#\n# station, type, station-pqr-to-etrs-matrix(9x float)\n#\n")
 fvec=open('data/normal_vectors.dat','w')
 fvec.write("#\n# station, type, normal-vector(3x float)\n#\n")
 for dirname in os.listdir('vectors-and-matrices/'):
-    
+    if str(dirname).find('svn') != -1:
+        continue
     if os.path.isdir('vectors-and-matrices/'+dirname) == False:
         continue
     lba = hba = hba0 = hba1 = 0
@@ -70,6 +71,8 @@ for dirname in os.listdir('vectors-and-matrices/'):
     strhba1_m = strhba1_v = ''
     
     for rf in os.listdir('vectors-and-matrices/'+dirname):
+        if str(rf).find('svn') != -1:
+            continue
         print 'Reading %s and extract normal-vector and rotation-matrix' %(rf)
         filename = 'vectors-and-matrices/'+dirname+'/'+rf
         vector, matrix = getSet(filename)
