@@ -15,8 +15,3 @@ install(PROGRAMS
   Sections.py
   Stations.py
   DESTINATION bin/LOFAR)
-
-install(FILES
-  MAC+IP.dat
-  RSPConnections.dat
-  DESTINATION bin/LOFAR)

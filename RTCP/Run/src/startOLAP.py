@@ -8,6 +8,8 @@ from LOFAR.Locations import Locations
 from util.Hosts import rmkdir,rexists,runlink,rsymlink
 import sys
 
+DRYRUN = False
+
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
   import os

@@ -3,6 +3,7 @@
 from Partitions import PartitionPsets
 import os
 import sys
+from Locations import Locations
 
 # allow ../util to be found, a bit of a hack
 sys.path += [(os.path.dirname(__file__) or ".")+"/.."]
@@ -209,12 +210,12 @@ def defineStations( s ):
     "RSP_1": ["HBA1"],
   }
 
-  here = os.path.dirname(__file__) or "."
+  configdir = Locations["configdir"]
 
   # parse hostname <-> ip translation, since not all hostnames
   # are ionodes (foreign stations send to a router)
   knownhosts = {}
-  for l in file("%s/MAC+IP.dat" % (here,)):
+  for l in file("%s/MAC+IP.dat" % (configdir,)):
     l = l.split("#")[0].strip() # strip comments and whitespace
 
     info = l.split()
@@ -228,7 +229,7 @@ def defineStations( s ):
   # and LOFAR/Stations.py -l for a mapping of io node -> ip address 
 
   # parse RSPConnections.dat.
-  for l in file("%s/RSPConnections.dat" % (here,)):
+  for l in file("%s/RSPConnections.dat" % (configdir,)):
     l = l.split("#")[0].strip() # strip comments and whitespace
 
     info = l.split()

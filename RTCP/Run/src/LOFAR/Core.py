@@ -136,7 +136,7 @@ def buildParset( parset = None, args = "", olapparset = "OLAP.parset", partition
   obsparams.update( dict( map( splitparam, obs.split(",") ) ) )
 
   for p in obsparams:
-    if not isValidObsParam( p ):
+    if p and not isValidObsParam( p ):
       critical("Unknown observation parameter '%s'" % (p,))
 
   if parset is None:
@@ -253,6 +253,8 @@ def combineParsets( parsets ):
   """
     Adjusts a combination of parsets (such as non-overlapping port numbers in Storage) and finalise it.
   """
+
+  usedStoragePorts = []
 
   for parset in parsets:
     parset.disableStoragePorts( usedStoragePorts )
