@@ -149,7 +149,11 @@ class Locations:
       } )
     else:
       self.files.update( {
+        # the base directory most paths will be related to
 	"basedir": "${HOME}/projects/LOFAR",
+
+        # where configuration files are kept
+        "configdir": "${BASEDIR}/RTCP/Run/src",
 
 	"cnproc":  "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["CNProc"],self.executables["CNProc"]),
 	"ionproc": "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["IONProc"],self.executables["IONProc"]),

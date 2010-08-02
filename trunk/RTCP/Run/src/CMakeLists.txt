@@ -15,6 +15,8 @@ install(PROGRAMS
 install(FILES
   multitail-olap.conf
   OLAP.parset
+  MAC+IP.dat
+  RSPConnections.dat
   DESTINATION etc)
 
 add_subdirectory(LOFAR)
