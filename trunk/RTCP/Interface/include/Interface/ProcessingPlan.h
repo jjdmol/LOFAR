@@ -144,16 +144,6 @@ inline void ProcessingPlan::transform( StreamableData *source, StreamableData *s
 inline void ProcessingPlan::require( StreamableData *source ) {
   transform( source, 0 );
   plan.back().calculate = true;
-}
-
-inline void ProcessingPlan::send( StreamableData *set, const char *extension, ProcessingPlan::distribution_t distribution ) {
-  require( set ); // fake planlet to indicate we need this set
-
-  // the entry we just created is an output -- configure it as such
-  plan.back().output = true;
-  plan.back().name   = find( set )->name;
-  plan.back().filenameSuffix = extension;
-  plan.back().distribution = distribution;
 
   // recursively set calculate=true for this item and all ancestors.
   for(unsigned i = plan.size() - 1; plan[i].source; ) {
@@ -173,6 +163,16 @@ inline void ProcessingPlan::send( StreamableData *set, const char *extension, Pr
       assert( j < i-1 );
     }
   }
+}
+
+inline void ProcessingPlan::send( StreamableData *set, const char *extension, ProcessingPlan::distribution_t distribution ) {
+  require( set ); // fake planlet to indicate we need this set
+
+  // the entry we just created is an output -- configure it as such
+  plan.back().output = true;
+  plan.back().name   = find( set )->name;
+  plan.back().filenameSuffix = extension;
+  plan.back().distribution = distribution;
 }
 
 inline void ProcessingPlan::assignArenas( bool assignAll ) {
