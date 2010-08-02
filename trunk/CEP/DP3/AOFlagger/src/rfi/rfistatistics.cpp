@@ -656,56 +656,140 @@ void RFIStatistics::saveTimesteps(const std::map<double, class TimestepInfo> &ti
 void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &channels, const std::string &filename)
 {
 	std::ofstream file(filename.c_str());
-	file << "subband\ts-frequency\te-frequency\ttotalCount\ttotalAmplitude\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n" << std::setprecision(14);
+	file <<
+		"subband\ts-frequency\te-frequency\ttotalCount\ttotalAmplitude\trfiCount\t"
+		"rfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\t"
+		"totalCountLQ\ttotalCountUQ\ttotalAmplitudeLQ\ttotalAmplitudeUQ\trfiCountLQ\trfiCountUQ\t"
+		"rfiSummedAmplitudeLQ\trfiSummedAmplitudeUQ\tbroadbandRfiCountLQ\tbroadbandRfiCountUQ\t"
+		"lineRfiCountLQ\tlineRfiCountUQ\tbroadbandRfiAmplitudeLQ\tbroadbandRfiAmplitudeUQ\t"
+		"lineRfiAmplitudeLQ\tlineRfiAmplitudeUQ\n"
+	<< std::setprecision(14);
 	size_t index = 0;
-	double 
-		bandTotal = 0.0,
-		bandAmp = 0.0,
-		bandRFI = 0.0,
-		bandRFIAmp = 0.0,
-		bandBRFI = 0.0,
-		bandLRFI = 0.0,
-		bandBRFIAmp = 0.0,
-		bandLRFIAmp = 0.0;
+	std::multiset<double>
+		bandTotals,
+		bandAmps,
+		bandRFIs,
+		bandRFIAmps,
+		bandBRFIs,
+		bandLRFIs,
+		bandBRFIAmps,
+		bandLRFIAmps;
 	for(std::map<double, class ChannelInfo>::const_iterator i=channels.begin();i!=channels.end();++i)
 	{
 		const ChannelInfo &c = i->second;
-		bandTotal += c.totalCount;
-		bandAmp += c.totalAmplitude;
-		bandRFI += c.rfiCount;
-		bandRFIAmp += c.rfiAmplitude;
-		bandBRFI += c.broadbandRfiCount;
-		bandLRFI += c.lineRfiCount;
-		bandBRFIAmp += c.broadbandRfiAmplitude;
-		bandLRFIAmp += c.lineRfiAmplitude;
+		bandTotals.insert(c.totalCount);
+		bandAmps.insert(c.totalAmplitude);
+		bandRFIs.insert(c.rfiCount);
+		bandRFIAmps.insert(c.rfiAmplitude);
+		bandBRFIs.insert(c.broadbandRfiCount);
+		bandLRFIs.insert(c.lineRfiCount);
+		bandBRFIAmps.insert(c.broadbandRfiAmplitude);
+		bandLRFIAmps.insert(c.lineRfiAmplitude);
 		if(index%255 == 0)
 			file << index/255 << '\t' << c.frequencyHz << '\t';
 		else if(index%255 == 254)
 		{
 			file
 			<< c.frequencyHz << "\t"
-			<< bandTotal << "\t"
-			<< bandAmp << "\t"
-			<< bandRFI << "\t"
-			<< bandRFIAmp << "\t"
-			<< bandBRFI << "\t"
-			<< bandLRFI << "\t"
-			<< bandBRFIAmp << "\t"
-			<< bandLRFIAmp << "\n";
-			bandTotal = 0.0;
-			bandAmp = 0.0;
-			bandRFI = 0.0;
-			bandRFIAmp = 0.0;
-			bandBRFI = 0.0;
-			bandLRFI = 0.0;
-			bandBRFIAmp = 0.0;
-			bandLRFIAmp = 0.0;
+			<< sum(bandTotals) << "\t"
+			<< sum(bandAmps) << "\t"
+			<< sum(bandRFIs) << "\t"
+			<< sum(bandRFIAmps) << "\t"
+			<< sum(bandBRFIs) << "\t"
+			<< sum(bandLRFIs) << "\t"
+			<< sum(bandBRFIAmps) << "\t"
+			<< sum(bandLRFIAmps) << "\t"
+			<< lowerQuartile(bandTotals) << "\t" << upperQuartile(bandTotals) << "\t"
+			<< lowerQuartile(bandAmps) << "\t" << upperQuartile(bandAmps) << "\t"
+			<< lowerQuartile(bandRFIs) << "\t" << upperQuartile(bandRFIs) << "\t"
+			<< lowerQuartile(bandRFIAmps) << "\t" << upperQuartile(bandRFIAmps) << "\t"
+			<< lowerQuartile(bandBRFIs) << "\t" << upperQuartile(bandBRFIs) << "\t"
+			<< lowerQuartile(bandLRFIs) << "\t" << upperQuartile(bandLRFIs) << "\t"
+			<< lowerQuartile(bandBRFIAmps) << "\t" << upperQuartile(bandBRFIAmps) << "\t"
+			<< lowerQuartile(bandLRFIAmps) << "\t" << upperQuartile(bandLRFIAmps) << "\n";
+			bandTotals.clear();
+			bandAmps.clear();
+			bandRFIs.clear();
+			bandRFIAmps.clear();
+			bandBRFIs.clear();
+			bandLRFIs.clear();
+			bandBRFIAmps.clear();
+			bandLRFIAmps.clear();
 		}
 		++index;
 	}
 	file.close();
 	if(index%255 != 0)
 		std::cout << "Warning: " << (index%255) << " rows were not part of a sub-band (channels were not dividable by 256)" << std::endl;
+}
+
+void RFIStatistics::saveTimeIntegrated(const std::map<double, class TimestepInfo> &timesteps, const std::string &filename)
+{
+	const size_t STEPS = 200;
+	std::ofstream file(filename.c_str());
+	file <<
+		"timestep\ttime\ttotalCount\ttotalAmplitude\trfiCount\t"
+		"rfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\t"
+		"totalCountLQ\ttotalCountUQ\ttotalAmplitudeLQ\ttotalAmplitudeUQ\trfiCountLQ\trfiCountUQ\t"
+		"rfiSummedAmplitudeLQ\trfiSummedAmplitudeUQ\tbroadbandRfiCountLQ\tbroadbandRfiCountUQ\t"
+		"lineRfiCountLQ\tlineRfiCountUQ\tbroadbandRfiAmplitudeLQ\tbroadbandRfiAmplitudeUQ\t"
+		"lineRfiAmplitudeLQ\tlineRfiAmplitudeUQ\n"
+	<< std::setprecision(14);
+	size_t index = 0, integratedSteps = 0;
+	std::multiset<double>
+		totals,
+		amps,
+		rfis,
+		rfiAmps,
+		brfis,
+		lrfis,
+		brfiAmps,
+		lrfiAmps;
+	for(std::map<double, class TimestepInfo>::const_iterator i=timesteps.begin();i!=timesteps.end();++i)
+	{
+		const TimestepInfo &t = i->second;
+		if(totals.size() == 0)
+			file << t.time << "\t-\t";
+		totals.insert(t.totalCount);
+		amps.insert(t.totalAmplitude);
+		rfis.insert(t.rfiCount);
+		rfiAmps.insert(t.rfiAmplitude);
+		brfis.insert(t.broadbandRfiCount);
+		lrfis.insert(t.lineRfiCount);
+		brfiAmps.insert(t.broadbandRfiAmplitude);
+		lrfiAmps.insert(t.lineRfiAmplitude);
+		++index;
+		if(index * STEPS / timesteps.size() > integratedSteps)
+		{
+			file
+			<< avg(totals) << "\t"
+			<< avg(amps) << "\t"
+			<< avg(rfis) << "\t"
+			<< avg(rfiAmps) << "\t"
+			<< avg(brfis) << "\t"
+			<< avg(lrfis) << "\t"
+			<< avg(brfiAmps) << "\t"
+			<< avg(lrfiAmps) << "\t"
+			<< lowerQuartile(totals) << "\t" << upperQuartile(totals) << "\t"
+			<< lowerQuartile(amps) << "\t" << upperQuartile(amps) << "\t"
+			<< lowerQuartile(rfis) << "\t" << upperQuartile(rfis) << "\t"
+			<< lowerQuartile(rfiAmps) << "\t" << upperQuartile(rfiAmps) << "\t"
+			<< lowerQuartile(brfis) << "\t" << upperQuartile(brfis) << "\t"
+			<< lowerQuartile(lrfis) << "\t" << upperQuartile(lrfis) << "\t"
+			<< lowerQuartile(brfiAmps) << "\t" << upperQuartile(brfiAmps) << "\t"
+			<< lowerQuartile(lrfiAmps) << "\t" << upperQuartile(lrfiAmps) << "\n";
+			totals.clear();
+			amps.clear();
+			rfis.clear();
+			rfiAmps.clear();
+			brfis.clear();
+			lrfis.clear();
+			brfiAmps.clear();
+			lrfiAmps.clear();
+			++integratedSteps;
+		}
+	}
+	file.close();
 }
 
 void RFIStatistics::saveAmplitudes(const std::map<double, class AmplitudeBin> &amplitudes, const std::string &filename)
