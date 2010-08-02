@@ -204,6 +204,8 @@ INSERT INTO unit values (10, 'Hz',		'Hz',	 '',			true);
 INSERT INTO unit values (11, 'kHz',		'kHz',	 '',			true);
 INSERT INTO unit values (12, 'MHz',		'MHz',	 '',			true);
 INSERT INTO unit values (13, 'period',  's|m|h', '',			false);
+INSERT INTO unit values (14, 'seconds',  'sec', '',			false);
+INSERT INTO unit values (15, 'degrees',  'deg', '',			false);
 
 --
 -- Treetype table
