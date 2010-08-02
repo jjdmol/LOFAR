@@ -1,16 +1,17 @@
 #!/usr/bin/python
-
-from LOFAR import Logger
-from logging import debug,info,warning,error,critical
-from LOFAR.ParsetTester import ParsetTester
-from LOFAR.Locations import Locations
-import os
 import sys
+sys.path = sys.path + ["../src"]
+
+from LOFAR.ParsetTester import ParsetTester
+from LOFAR.LogValidators import NoErrors
+from LOFAR.Locations import Locations
+from LOFAR.Partitions import PartitionPsets
+from LOFAR import Logger
 
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
   import os
-  import time
+  import sys
 
   # parse the command line
   parser = OptionParser( usage = """usage: %prog -P partition [options]""" )
@@ -26,6 +27,11 @@ if __name__ == "__main__":
                         action = "store_true",
                         default = False,
                         help = "be quiet [%default]" )
+  opgroup.add_option( "-k", "--keeplogs",
+                        dest = "keeplogs",
+                        action = "store_true",
+                        default = False,
+                        help = "keep log files and data products of successful tests [%default]" )
   parser.add_option_group( opgroup )
 
   hwgroup = OptionGroup(parser, "Hardware" )
@@ -58,6 +64,32 @@ if __name__ == "__main__":
 			help = "IONProc executable [%default]" )
   parser.add_option_group( dirgroup )
 
+  testgroup = OptionGroup(parser, "Test parameters" )
+  testgroup.add_option( "--parset",
+  			dest = "parset",
+                        default = "RTCP.parset",
+			help = "Parset to use [%default]" ),
+  testgroup.add_option( "--name",
+  			dest = "name",
+                        default = "test",
+			help = "Name of this test [%default]" ),
+  testgroup.add_option( "-A", "--nrstations",
+  			dest = "nrstations",
+                        type = "int",
+                        default = 0,
+			help = "If >0, override the number of stations to use [%default]" )
+  testgroup.add_option( "-B", "--nrbeams",
+  			dest = "nrbeams",
+                        type = "int",
+                        default = 0,
+			help = "If >0, override the number of pencil beams to use [%default]" )
+  testgroup.add_option( "-S", "--nrsubbands",
+  			dest = "nrsubbands",
+                        type = "int",
+                        default = 0,
+			help = "If >0, override the number of subbands to use [%default]" )
+  parser.add_option_group( testgroup )
+
   # parse arguments
   (options, args) = parser.parse_args()
 
@@ -72,7 +104,17 @@ if __name__ == "__main__":
 
   Locations.resolveAllPaths()
 
-  logdir = Locations.files["logdir"]
+  pt = ParsetTester( options.parset, options.partition, options.name )
+  if options.nrsubbands > 0: pt.setNrSubbands( options.nrsubbands )
+  if options.nrbeams    > 0: pt.setNrPencilBeams( options.nrbeams )
+  if options.nrstations > 0: pt.setNrStations( options.nrstations )
 
-  for arg in args:
-    testParset( "test", options.partition, arg )
+  pt.runParset()
+
+  success = pt.validate( [NoErrors()] )
+
+  if success and not options.keeplogs:
+    pt.cleanup()
+
+  sys.exit(int(not success))
+

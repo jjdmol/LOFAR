@@ -161,7 +161,7 @@ if __name__ == "__main__":
 
   # test 2 outputs, various number of subbands (for 2nd transpose), multiple beams
   if run_all or options.beamrun:
-    for nrBeams in [2,4,7,9]:
+    for nrBeams in [2,4,7,9,16,32,64]:
       for nrSubbands in [1,2,3,4,8,10,11,13,16,32,62,63,64,128,248]:
         if nrSubbands < nrBeams:
           continue
@@ -178,8 +178,11 @@ if __name__ == "__main__":
 
   # test 2 outputs, various number of subbands (for 2nd transpose), multiple beams
   if run_all or options.stationrun:
-    for nrBeams in [2,4,7,9]:
-      for nrStations in xrange(1,len(PartitionPsets[options.partition])):
+    for nrStations in [2,4,8,16,32,62,64]:
+      for nrBeams in [8,9,16]:
+        if nrStations > len(PartitionPsets[options.partition]):
+          continue
+
         p = initParset( "%d beams %d stations" % (nrBeams,nrStations,) )
         p.setNrStations( nrStations )
         p.setNrPencilBeams( nrBeams )

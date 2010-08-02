@@ -17,7 +17,7 @@ function set_logdir {
   IONPROC=$LOGDIR/run.IONProc.log
 }
 
-for d in . "$HOME/log/latest" "$HOME/projects/LOFAR/log"
+for d in . "$HOME/production/lofar/bgfen/log/latest" "$HOME/log/latest" "$HOME/projects/LOFAR/log"
 do
   set_logdir $d
   if [ -e $IONPROC ]

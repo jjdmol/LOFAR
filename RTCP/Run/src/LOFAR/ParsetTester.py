@@ -50,7 +50,7 @@ class ParsetTester:
     }
 
     self.parset = Parset()
-    self.olapparset_filename = "%s/../OLAP.parset" % (os.path.dirname(__file__),)
+    self.olapparset_filename = "%s/OLAP.parset" % (Locations.files["configdir"],)
     self.rtcpparset_filename = parsetFilename
 
     for f in [self.olapparset_filename, self.rtcpparset_filename]:

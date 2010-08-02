@@ -2,9 +2,6 @@
 
 __all__ = ["Locations","Hosts","isProduction","isDevelopment","homeDir"]
 
-# use settings for old build environment (rub without cmake)
-AUTOTOOLS = False
-
 import os
 import time
 from socket import gethostbyname
@@ -66,28 +63,16 @@ class Locations:
 
   def setDefaults(self):
     # default build variants
-    if AUTOTOOLS:
-      self.buildvars.update( {
-          "CNProc":  "gnubgp_cn",
-          "IONProc": "gnubgp_ion",
-          "Storage": "gnu_openmpi-opt",
-      } )
-      self.executables.update( {
-          "CNProc":  "CN_Processing",
-          "IONProc": "IONProc",
-          "Storage": "Storage",
-      } )
-    else:
-      self.buildvars.update( {
-          "CNProc":  "bgpcn_opt",
-          "IONProc": "bgpion_opt",
-          "Storage": "gnu_opt",
-      } )
-      self.executables.update( {
-          "CNProc":  "CN_Processing",
-          "IONProc": "ION_Processing",
-          "Storage": "Storage_main",
-      } )
+    self.buildvars.update( {
+        "CNProc":  "bgpcn_opt",
+        "IONProc": "bgpion_opt",
+        "Storage": "gnu_opt",
+    } )
+    self.executables.update( {
+        "CNProc":  "CN_Processing",
+        "IONProc": "ION_Processing",
+        "Storage": "Storage_main",
+    } )
 
     self.files.update( {
         # allows ${HOME} to be resolved in other paths
@@ -99,6 +84,9 @@ class Locations:
 
         # where to store logs
 	"logdir":  "${BASEDIR}/D${TIMESTAMP}",
+
+        # where configuration files are kept
+        "configdir": ".",
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
@@ -137,15 +125,18 @@ class Locations:
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
-	"rundir":  "${HOME}/log/L${TIMESTAMP}",
+	"rundir":  "${BASEDIR}/bgfen/log/L${TIMESTAMP}",
 
         # where to store logs
-	"logdir":  "${HOME}/log/L${TIMESTAMP}",
+	"logdir":  "${BASEDIR}/bgfen/log/L${TIMESTAMP}",
+
+        # where configuration files are kept
+        "configdir": "${BASEDIR}/bgfen/etc",
 
         # symlink for each observation to relevant log dir
-        "obssymlink": "${BHOME}/log/L${YEAR}_${MSNUMBER}",
+        "obssymlink": "${BASEDIR}/bgfen/log/L${YEAR}_${MSNUMBER}",
 
-        "logsymlink": "${HOME}/log/latest",
+        "logsymlink": "${BASEDIR}/bgfen/log/latest",
 
         # location of valgrind suppressions file
         "ionsuppfile": "",
