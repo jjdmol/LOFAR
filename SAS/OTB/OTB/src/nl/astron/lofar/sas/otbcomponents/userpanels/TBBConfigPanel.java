@@ -1322,7 +1322,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 inputActionPerformed(evt);
             }
         });
-        TBBSettingsPanel.add(inputRCUs, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 200, 1040, -1));
+        TBBSettingsPanel.add(inputRCUs, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 200, 990, -1));
 
         limitsBaselevel.setText("(1-4095)");
         TBBSettingsPanel.add(limitsBaselevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(253, 71, 62, -1));
@@ -1337,16 +1337,16 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         TBBSettingsPanel.add(limitsFilter, new org.netbeans.lib.awtextra.AbsoluteConstraints(253, 146, 62, -1));
 
         limitsCoeff0.setText("(0-65535)");
-        TBBSettingsPanel.add(limitsCoeff0, new org.netbeans.lib.awtextra.AbsoluteConstraints(800, 30, 60, -1));
+        TBBSettingsPanel.add(limitsCoeff0, new org.netbeans.lib.awtextra.AbsoluteConstraints(800, 30, 100, -1));
 
         limitsCoeff1.setText("(0-65535)");
-        TBBSettingsPanel.add(limitsCoeff1, new org.netbeans.lib.awtextra.AbsoluteConstraints(800, 60, 70, -1));
+        TBBSettingsPanel.add(limitsCoeff1, new org.netbeans.lib.awtextra.AbsoluteConstraints(800, 60, 120, -1));
 
         limitsCoeff2.setText("(0-65535)");
-        TBBSettingsPanel.add(limitsCoeff2, new org.netbeans.lib.awtextra.AbsoluteConstraints(800, 90, 60, 20));
+        TBBSettingsPanel.add(limitsCoeff2, new org.netbeans.lib.awtextra.AbsoluteConstraints(800, 90, 130, 20));
 
         limitsCoeff3.setText("(0-65535)");
-        TBBSettingsPanel.add(limitsCoeff3, new org.netbeans.lib.awtextra.AbsoluteConstraints(800, 120, 60, -1));
+        TBBSettingsPanel.add(limitsCoeff3, new org.netbeans.lib.awtextra.AbsoluteConstraints(800, 120, 130, -1));
 
         jLabel2.setText("Current configurations");
         TBBSettingsPanel.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 320, 156, -1));
@@ -1398,7 +1398,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 TBBConfigurationPanelMouseClicked(evt);
             }
         });
-        TBBSettingsPanel.add(TBBConfigurationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 350, 1250, 250));
+        TBBSettingsPanel.add(TBBConfigurationPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 350, 1080, 250));
 
         labelSubbandList.setText("subbands:");
         TBBSettingsPanel.add(labelSubbandList, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 240, 84, -1));
@@ -1408,7 +1408,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 inputActionPerformed(evt);
             }
         });
-        TBBSettingsPanel.add(inputSubbandList, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 230, 1040, -1));
+        TBBSettingsPanel.add(inputSubbandList, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 230, 990, -1));
 
         labelTriggerMode.setText("triggerMode:");
         TBBSettingsPanel.add(labelTriggerMode, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 42, 89, -1));
