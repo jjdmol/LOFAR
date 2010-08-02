@@ -8,7 +8,7 @@ node  PythonControl  1.0.0  development 'node constraint'  "Controller for the o
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  _hostname               I    text   -      100    0    RS002                   -       "Machine the PythonController should run on"
+par  _hostname               I    text   -      100    0    lfe001                   -       "Machine the PythonController should run on"
 par  pythonProgram			 I	  text	 -		100	   0	startPipeline.py		-		"Python script to start"
 par  pythonHost			 	 I	  text	 -		100	   0	CCU001					-		"Machine the Pythonscript should be started"
 par  runtimeDirectory		 I	  text	 -		100	   0	/home/pipeline/runtime/${MSNUMBER}/run	-	"Where to start the programs"
@@ -20,4 +20,5 @@ par  workingDirectory		 I	  text	 -		100	   0	/data/scratch/${MSNUMBER}/work			-
 uses  DPPP	   		1.0.0  development 	1	"DPcube"
 uses  BBS  	   		1.0.0  development 	1	"Blackboard System"
 uses  Imager 		1.0.0  development 	1	"Imager"
+
 
