@@ -180,11 +180,7 @@ bool PythonControl::_startPython(const string&	pythonProg,
 	}
 
 	// get full path to start script (should be on the same place on each machine)
-	string	startScript = PL.locate("startPython.sh");
-	if (executable.empty()) {
-		LOG_ERROR("StartScript 'startPython.sh' not found.");
-		return (false);
-	}
+	string	startScript = "startPython.sh";
 
 	// construct system command
 	string	startCmd;
