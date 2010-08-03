@@ -30,7 +30,7 @@
 #include <Interface/TransposedData.h>
 #include <Interface/TransposedBeamFormedData.h>
 #include <Interface/FilteredData.h>
-#include <Interface/PencilBeamData.h>
+#include <Interface/BeamFormedData.h>
 #include <Interface/CorrelatedData.h>
 #include <Interface/StokesData.h>
 

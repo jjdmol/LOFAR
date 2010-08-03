@@ -2,7 +2,7 @@
 #define LOFAR_CNPROC_ASYNC_TRANSPOSE_BEAMS_H
 
 #include <AsyncCommunication.h>
-#include <Interface/PencilBeamData.h>
+#include <Interface/BeamFormedData.h>
 #include <LocationInfo.h>
 #include <Interface/TransposedBeamFormedData.h>
 

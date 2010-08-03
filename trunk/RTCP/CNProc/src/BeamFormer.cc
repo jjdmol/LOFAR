@@ -1,7 +1,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <PencilBeams.h>
+#include <BeamFormer.h>
 
 #include <Interface/MultiDimArray.h>
 #include <Interface/Exceptions.h>
@@ -11,7 +11,7 @@
 #include <cassert>
 #include <algorithm>
 
-#ifndef PENCILBEAMS_C_IMPLEMENTATION
+#ifndef BEAMFORMER_C_IMPLEMENTATION
   #include <BeamFormerAsm.h>
 #endif
 
@@ -161,7 +161,7 @@ void BeamFormer::computeFlags( const SampleData<> *in, SampleData<> *out )
   }
 }
 
-#ifdef PENCILBEAMS_C_IMPLEMENTATION
+#ifdef BEAMFORMER_C_IMPLEMENTATION
 void BeamFormer::mergeStations( const SampleData<> *in, SampleData<> *out )
 {
   for (unsigned i = 0; i < itsValidMergeSourceStations.size(); i++ ) {
@@ -505,7 +505,7 @@ void BeamFormer::formBeams( const SubbandMetaData *metaData, SampleData<> *sampl
   ASSERT( sampleData->samples.shape()[2] >= itsNrSamplesPerIntegration );
   ASSERT( sampleData->samples.shape()[3] == NR_POLARIZATIONS );
 
-#if !defined PENCILBEAMS_C_IMPLEMENTATION
+#if !defined BEAMFORMER_C_IMPLEMENTATION
   ASSERT( TIMESTEPSIZE % 16 == 0 );
 
   if( itsNrSamplesPerIntegration % 16 > 0 ) {

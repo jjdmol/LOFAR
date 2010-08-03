@@ -17,12 +17,12 @@ set(cnproc_LIB_SRCS
   AsyncTranspose.cc
   AsyncTransposeBeams.cc
   BandPass.cc
+  BeamFormer.cc
   CN_Processing.cc
   Correlator.cc
   FCNP_ClientStream.cc
   FIR.cc
   LocationInfo.cc
-  PencilBeams.cc
   PPF.cc
   Stokes.cc)
 
