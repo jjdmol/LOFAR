@@ -7,7 +7,6 @@
 #include <Interface/StreamableData.h>
 #include <Interface/BeamFormedData.h>
 #include <Interface/SubbandMetaData.h>
-#include <Interface/PencilCoordinates.h>
 #include <BandPass.h>
 #include <CN_Math.h>
 

@@ -1,5 +1,5 @@
-#ifndef LOFAR_INTERFACE_PENCILCOORDINATES_H
-#define LOFAR_INTERFACE_PENCILCOORDINATES_H
+#ifndef LOFAR_INTERFACE_BEAMCOORDINATES_H
+#define LOFAR_INTERFACE_BEAMCOORDINATES_H
 
 #include <Interface/MultiDimArray.h>
 #include <Common/DataConvert.h>
@@ -11,12 +11,12 @@
 namespace LOFAR {
 namespace RTCP {
 
-// Pencil coordinates are offsets for pencil beams (tied array beams) relative to the center
+// Beam coordinates are offsets for pencil beams (tied array beams) relative to the center
 // of the station/beamformer beam.
 
-class PencilCoord3D {
+class BeamCoord3D {
   public:
-    PencilCoord3D(double ra, double dec) {
+    BeamCoord3D(double ra, double dec) {
       itsXYZ[0] = ra;
       itsXYZ[1] = dec;
       itsXYZ[2] = sqrt(1.0 - ra * ra - dec * dec);
@@ -44,25 +44,25 @@ class PencilCoord3D {
     */  
     }
 
-    PencilCoord3D(double x, double y, double z) {
+    BeamCoord3D(double x, double y, double z) {
       itsXYZ[0] = x;
       itsXYZ[1] = y;
       itsXYZ[2] = z;
     }
 
-    PencilCoord3D(const double xyz[3]) {
+    BeamCoord3D(const double xyz[3]) {
       itsXYZ[0] = xyz[0];
       itsXYZ[1] = xyz[1];
       itsXYZ[2] = xyz[2];
     }
 
-    PencilCoord3D(std::vector<double> xyz) {
+    BeamCoord3D(std::vector<double> xyz) {
       itsXYZ[0] = xyz[0];
       itsXYZ[1] = xyz[1];
       itsXYZ[2] = xyz[2];
     }
 
-    inline PencilCoord3D& operator-= (const PencilCoord3D &rhs)
+    inline BeamCoord3D& operator-= (const BeamCoord3D &rhs)
     {
       itsXYZ[0] -= rhs.itsXYZ[0];
       itsXYZ[1] -= rhs.itsXYZ[1];
@@ -71,7 +71,7 @@ class PencilCoord3D {
       return *this;
     }
 
-    inline PencilCoord3D& operator+= (const PencilCoord3D &rhs)
+    inline BeamCoord3D& operator+= (const BeamCoord3D &rhs)
     {
       itsXYZ[0] += rhs.itsXYZ[0];
       itsXYZ[1] += rhs.itsXYZ[1];
@@ -80,7 +80,7 @@ class PencilCoord3D {
       return *this;
     }
 
-    inline PencilCoord3D& operator*= (double a)
+    inline BeamCoord3D& operator*= (double a)
     {
       itsXYZ[0] *= a;
       itsXYZ[1] *= a;
@@ -99,8 +99,8 @@ class PencilCoord3D {
       return itsXYZ[i];
     }
 
-    friend double operator* (const PencilCoord3D &lhs, const PencilCoord3D &rhs);
-    friend std::ostream& operator<< (std::ostream &os, const PencilCoord3D &c);
+    friend double operator* (const BeamCoord3D &lhs, const BeamCoord3D &rhs);
+    friend std::ostream& operator<< (std::ostream &os, const BeamCoord3D &c);
 
     void read(Stream *);
     void write(Stream *) const;
@@ -110,40 +110,40 @@ class PencilCoord3D {
 };
 
 
-// PencilCoordinates are coordinates of the pencil beams that need to
+// BeamCoordinates are coordinates of the pencil beams that need to
 // be formed. Each coordinate is a normalised vector, relative to the
 // center beam.
 //
 // The center beam has to be included as the first coordinate of (0,0,1).
-class PencilCoordinates
+class BeamCoordinates
 {
   public:
-    PencilCoordinates() {}
-    PencilCoordinates(const std::vector<PencilCoord3D> &coordinates): itsCoordinates(coordinates) {}
-    PencilCoordinates(const Matrix<double> &coordinates);
+    BeamCoordinates() {}
+    BeamCoordinates(const std::vector<BeamCoord3D> &coordinates): itsCoordinates(coordinates) {}
+    BeamCoordinates(const Matrix<double> &coordinates);
 
-    inline std::vector<PencilCoord3D>& getCoordinates() 
+    inline std::vector<BeamCoord3D>& getCoordinates() 
     { return itsCoordinates; }
 
     inline size_t size() const
     { return itsCoordinates.size(); }
 
-    inline const PencilCoord3D &operator[] (unsigned nr) const
+    inline const BeamCoord3D &operator[] (unsigned nr) const
     { return itsCoordinates[nr]; }
 
     void read(Stream *s);
     void write(Stream *s) const;
 
-    PencilCoordinates& operator += (const PencilCoordinates &rhs);
-    PencilCoordinates& operator += (const PencilCoord3D &rhs);
+    BeamCoordinates& operator += (const BeamCoordinates &rhs);
+    BeamCoordinates& operator += (const BeamCoord3D &rhs);
 
-    friend std::ostream& operator<< (std::ostream &os, const PencilCoordinates &c);
+    friend std::ostream& operator<< (std::ostream &os, const BeamCoordinates &c);
 
 private:
-    std::vector<PencilCoord3D>  itsCoordinates;
+    std::vector<BeamCoord3D>  itsCoordinates;
 };
 
-// PencilRings are rings of regular hexagons around a center beam:
+// BeamRings are rings of regular hexagons around a center beam:
 //    _
 //  _/ \_   //
 // / \_/ \  //
@@ -155,10 +155,10 @@ private:
 // the width of each ring is defined as the distance between pencil centers
 //
 // assumes l horizontal (incr left), m vertical (incr up)
-class PencilRings: public PencilCoordinates
+class BeamRings: public BeamCoordinates
 {
   public:
-    PencilRings(unsigned nrRings, double ringWidth);
+    BeamRings(unsigned nrRings, double ringWidth);
 
     unsigned nrPencils() const;
 
@@ -184,7 +184,7 @@ class PencilRings: public PencilCoordinates
     const double	    itsRingWidth;
 };
 
-inline double operator* (const PencilCoord3D &lhs, const PencilCoord3D &rhs)
+inline double operator* (const BeamCoord3D &lhs, const BeamCoord3D &rhs)
 {
   double sum = 0;
 
@@ -194,32 +194,32 @@ inline double operator* (const PencilCoord3D &lhs, const PencilCoord3D &rhs)
   return sum;
 }
 
-inline PencilCoord3D& operator- (const PencilCoord3D &lhs, const PencilCoord3D &rhs)
+inline BeamCoord3D& operator- (const BeamCoord3D &lhs, const BeamCoord3D &rhs)
 {
-  return PencilCoord3D(lhs) -= rhs;
+  return BeamCoord3D(lhs) -= rhs;
 }
 
-inline PencilCoord3D& operator+ (const PencilCoord3D &lhs, const PencilCoord3D &rhs)
+inline BeamCoord3D& operator+ (const BeamCoord3D &lhs, const BeamCoord3D &rhs)
 {
-  return PencilCoord3D(lhs) += rhs;
+  return BeamCoord3D(lhs) += rhs;
 }
 
-inline PencilCoord3D& operator* (double a, const PencilCoord3D &rhs)
+inline BeamCoord3D& operator* (double a, const BeamCoord3D &rhs)
 {
-  return PencilCoord3D(rhs) *= a;
+  return BeamCoord3D(rhs) *= a;
 }
 
-inline PencilCoord3D& operator* (const PencilCoord3D &lhs, double a)
+inline BeamCoord3D& operator* (const BeamCoord3D &lhs, double a)
 {
-  return PencilCoord3D(lhs) *= a;
+  return BeamCoord3D(lhs) *= a;
 }
 
-inline std::ostream& operator << (std::ostream& os, const PencilCoord3D &c)
+inline std::ostream& operator << (std::ostream& os, const BeamCoord3D &c)
 {
   return os << "(" << c.itsXYZ[0] << "," << c.itsXYZ[1] << "," << c.itsXYZ[2] << ")";
 }
 
-inline std::ostream& operator << (std::ostream &os, const PencilCoordinates &c)
+inline std::ostream& operator << (std::ostream &os, const BeamCoordinates &c)
 {
   return os << c.itsCoordinates;
 }

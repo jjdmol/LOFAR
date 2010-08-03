@@ -1,7 +1,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Interface/PencilCoordinates.h>
+#include <Interface/BeamCoordinates.h>
 #include <Common/DataConvert.h>
 
 #ifndef M_SQRT3
@@ -11,7 +11,7 @@
 namespace LOFAR {
 namespace RTCP {
 
-void PencilCoord3D::read(Stream *s)
+void BeamCoord3D::read(Stream *s)
 {
   s->read(&itsXYZ, sizeof itsXYZ);
 
@@ -20,7 +20,7 @@ void PencilCoord3D::read(Stream *s)
 #endif
 }
 
-void PencilCoord3D::write(Stream *s) const
+void BeamCoord3D::write(Stream *s) const
 {
 #if !defined WORDS_BIGENDIAN
   // create a copy to avoid modifying our own values
@@ -36,7 +36,7 @@ void PencilCoord3D::write(Stream *s) const
 #endif
 }
 
-void PencilCoordinates::read(Stream *s)
+void BeamCoordinates::read(Stream *s)
 {
   unsigned numCoordinates;
 
@@ -50,7 +50,7 @@ void PencilCoordinates::read(Stream *s)
 
 
   for (unsigned i = 0; i < numCoordinates; i ++) {
-    PencilCoord3D coord(0, 0, 0);
+    BeamCoord3D coord(0, 0, 0);
 
     coord.read(s);
 
@@ -58,7 +58,7 @@ void PencilCoordinates::read(Stream *s)
   }
 }
 
-void PencilCoordinates::write(Stream *s) const
+void BeamCoordinates::write(Stream *s) const
 {
   unsigned numCoordinates = itsCoordinates.size();
 
@@ -72,7 +72,7 @@ void PencilCoordinates::write(Stream *s) const
     itsCoordinates[i].write(s);
 }
 
-PencilCoordinates& PencilCoordinates::operator+= (const PencilCoordinates &rhs)
+BeamCoordinates& BeamCoordinates::operator+= (const BeamCoordinates &rhs)
 {
   itsCoordinates.reserve(itsCoordinates.size() + rhs.size());
 
@@ -82,40 +82,40 @@ PencilCoordinates& PencilCoordinates::operator+= (const PencilCoordinates &rhs)
   return *this;
 }
 
-PencilCoordinates& PencilCoordinates::operator+= (const PencilCoord3D &rhs)
+BeamCoordinates& BeamCoordinates::operator+= (const BeamCoord3D &rhs)
 {
   itsCoordinates.push_back(rhs);
 
   return *this;
 }
 
-PencilCoordinates::PencilCoordinates(const Matrix<double> &coordinates)
+BeamCoordinates::BeamCoordinates(const Matrix<double> &coordinates)
 {
   itsCoordinates.reserve(coordinates.size());
 
   for (unsigned i = 0; i < coordinates.size(); i ++)
-    itsCoordinates.push_back(PencilCoord3D(coordinates[i][0], coordinates[i][1]));
+    itsCoordinates.push_back(BeamCoord3D(coordinates[i][0], coordinates[i][1]));
 }
 
-PencilRings::PencilRings(const unsigned nrRings, const double ringWidth):
+BeamRings::BeamRings(const unsigned nrRings, const double ringWidth):
   itsNrRings(nrRings),
   itsRingWidth(ringWidth)
 {
   computeBeamCoordinates();
 }
 
-unsigned PencilRings::nrPencils() const
+unsigned BeamRings::nrPencils() const
 {
   // the centered hexagonal number
   return 3 * itsNrRings * (itsNrRings + 1) + 1;
 }
 
-double PencilRings::pencilEdge() const
+double BeamRings::pencilEdge() const
 {
   return itsRingWidth / M_SQRT3;
 }
 
-double PencilRings::pencilWidth() const
+double BeamRings::pencilWidth() const
 {
   //  _   //
   // / \  //
@@ -124,7 +124,7 @@ double PencilRings::pencilWidth() const
   return 2.0 * pencilEdge();
 }
 
-double PencilRings::pencilHeight() const
+double BeamRings::pencilHeight() const
 {
   //  _  _ //
   // / \ : //
@@ -133,7 +133,7 @@ double PencilRings::pencilHeight() const
   return itsRingWidth;
 }
 
-double PencilRings::pencilWidthDelta() const
+double BeamRings::pencilWidthDelta() const
 {
   //  _    //
   // / \_  //
@@ -143,7 +143,7 @@ double PencilRings::pencilWidthDelta() const
   return 1.5 * pencilEdge();
 }
 
-double PencilRings::pencilHeightDelta() const
+double BeamRings::pencilHeightDelta() const
 {
   //  _      //
   // / \_  - //
@@ -152,9 +152,9 @@ double PencilRings::pencilHeightDelta() const
   return 0.5 * itsRingWidth;
 }
 
-void PencilRings::computeBeamCoordinates()
+void BeamRings::computeBeamCoordinates()
 {
-  std::vector<PencilCoord3D> coordinates;
+  std::vector<BeamCoord3D> coordinates;
   double dl[6], dm[6];
 
   // stride for each side, starting from the top, clock-wise
@@ -204,7 +204,7 @@ void PencilRings::computeBeamCoordinates()
   dm[5] = pencilHeightDelta();
 
   // ring 0: the center pencil beam
-  coordinates.push_back(PencilCoord3D(0, 0));
+  coordinates.push_back(BeamCoord3D(0, 0));
 
   // ring 1-n: create the pencil beams from the inner ring outwards
   for (unsigned ring = 1; ring <= itsNrRings; ring ++) {
@@ -214,7 +214,7 @@ void PencilRings::computeBeamCoordinates()
 
     for (unsigned side = 0; side < 6; side ++) {
       for (unsigned pencil = 0; pencil < ring; pencil ++) {
-        coordinates.push_back(PencilCoord3D(l, m));
+        coordinates.push_back(BeamCoord3D(l, m));
         l += dl[side]; m += dm[side];
       }
     }
