@@ -1,18 +1,18 @@
-#ifndef LOFAR_CNPROC_PENCIL_BEAMS_H
-#define LOFAR_CNPROC_PENCIL_BEAMS_H
+#ifndef LOFAR_CNPROC_BEAMFORMER_H
+#define LOFAR_CNPROC_BEAMFORMER_H
 
 #include <vector>
 #include <cmath>
 
 #include <Interface/StreamableData.h>
-#include <Interface/PencilBeamData.h>
+#include <Interface/BeamFormedData.h>
 #include <Interface/SubbandMetaData.h>
 #include <Interface/PencilCoordinates.h>
 #include <BandPass.h>
 #include <CN_Math.h>
 
 #if 0 || !defined HAVE_BGP
-#define PENCILBEAMS_C_IMPLEMENTATION
+#define BEAMFORMER_C_IMPLEMENTATION
 #endif
 
 namespace LOFAR {

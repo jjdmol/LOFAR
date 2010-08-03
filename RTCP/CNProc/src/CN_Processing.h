@@ -38,7 +38,7 @@
 
 #include <AsyncTranspose.h>
 #include <AsyncTransposeBeams.h>
-#include <PencilBeams.h>
+#include <BeamFormer.h>
 #include <PPF.h>
 #include <Correlator.h>
 #include <Stokes.h>
