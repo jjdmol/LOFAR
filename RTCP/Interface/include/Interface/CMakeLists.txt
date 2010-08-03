@@ -3,6 +3,7 @@ set(inst_HEADERS
   Align.h
   AlignedStdAllocator.h
   Allocator.h
+  BeamCoordinates.h
   BeamFormedData.h
   CN_Command.h
   CN_Configuration.h
@@ -18,7 +19,6 @@ set(inst_HEADERS
   SparseSet.h
   Exceptions.h
   StreamableData.h
-  PencilCoordinates.h
   StokesData.h
   ProcessingPlan.h
   CN_ProcessingPlan.h

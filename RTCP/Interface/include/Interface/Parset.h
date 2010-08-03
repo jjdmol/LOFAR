@@ -36,7 +36,7 @@
 #include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h> 
 #include <Interface/Config.h>
-#include <Interface/PencilCoordinates.h>
+#include <Interface/BeamCoordinates.h>
 #include <Stream/Stream.h>
 #include <algorithm>
 
@@ -137,7 +137,7 @@ public:
 
 
 	uint32	       nrPencilBeams() const;
-	PencilCoordinates pencilBeams() const;
+	BeamCoordinates pencilBeams() const;
 
 	unsigned         nrSubbands() const;
 	unsigned         nrBeams() const;
@@ -548,16 +548,16 @@ inline uint32 Parset::nrPencilBeams() const
   return 3 * nrPencilRings() * (nrPencilRings() + 1) + 1 + nrManualPencilBeams();
 }
 
-inline PencilCoordinates Parset::pencilBeams() const
+inline BeamCoordinates Parset::pencilBeams() const
 {
   // include both the pencil rings and the manually defined pencil beam coordinates
-  PencilRings coordinates(nrPencilRings(), pencilRingSize());
+  BeamRings coordinates(nrPencilRings(), pencilRingSize());
 
   for (unsigned i = 0; i < nrManualPencilBeams(); i ++) {
     const std::vector<double> coords = getManualPencilBeam(i);
 
     // assume ra,dec
-    coordinates += PencilCoord3D(coords[0],coords[1]);
+    coordinates += BeamCoord3D(coords[0],coords[1]);
   }
 
   return coordinates;

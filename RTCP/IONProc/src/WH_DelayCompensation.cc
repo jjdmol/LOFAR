@@ -36,7 +36,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/PrettyUnits.h>
 #include <Interface/Exceptions.h>
-#include <Interface/PencilCoordinates.h>
+#include <Interface/BeamCoordinates.h>
 #include <Thread/Mutex.h>
 
 #include <pthread.h>
@@ -208,7 +208,7 @@ namespace LOFAR
     
     void WH_DelayCompensation::setBeamDirections(const Parset *ps)
     {
-      const PencilCoordinates& pencilBeams = ps->pencilBeams();
+      const BeamCoordinates& pencilBeams = ps->pencilBeams();
 
       // What coordinate system is used for these source directions?
       // Currently, we support J2000, ITRF, and AZEL.
@@ -235,7 +235,7 @@ namespace LOFAR
 
         for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++) {
 	  // obtain pencil coordinate
-	  const PencilCoord3D &pencilCoord = pencilBeams[pencil];
+	  const BeamCoord3D &pencilCoord = pencilBeams[pencil];
 
 	  // apply angle modification (TODO: different calculates for J2000 (ra/dec) and AZEL and ITRF!)
 	  const double angle1 = beamDir[0] + pencilCoord[0];
