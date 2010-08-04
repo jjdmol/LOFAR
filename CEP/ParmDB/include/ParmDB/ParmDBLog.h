@@ -59,9 +59,7 @@ namespace BBS {
     // not exist yet.
     // If <src>lock=true</src> a write lock is acquired. In this way no
     // implcit locks have to be acquired on each access.
-    explicit ParmDBLog (const std::string& tableName,
-                        LoggingLevel=PERSOLUTION,
-                        bool forceNew=false,
+    explicit ParmDBLog (const std::string& tableName, enum LoggingLevel LogLevel=PERSOLUTION, bool forceNew=false,
                         bool lock=true);
 
     ~ParmDBLog();

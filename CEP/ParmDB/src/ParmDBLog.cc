@@ -37,12 +37,10 @@ using namespace std;
 namespace LOFAR {
 namespace BBS {
 
-  ParmDBLog::ParmDBLog (const string& tableName, LoggingLevel,
-                        bool forceNew, bool wlock)
+  ParmDBLog::ParmDBLog (const string& tableName, enum LoggingLevel LogLevel, bool forceNew, bool wlock)
   {
-    // Set default logging level to PERSOLUTION
-    itsLoggingLevel = PERSOLUTION;
-  	
+  	 setLoggingLevel(LogLevel);
+  	 
   	 // Create the table if needed or if it does not exist yet.
     if (forceNew  ||  !Table::isReadable (tableName)) {
       createTables (tableName);
