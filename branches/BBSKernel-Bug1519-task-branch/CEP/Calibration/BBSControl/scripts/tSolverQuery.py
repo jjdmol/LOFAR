@@ -107,7 +107,7 @@ solver.solverTable[100]['ENDFREQ'], iteration=1)
         for i in range(0, parms.size-1):
             print solver.timeSlots[i], ":", parms[i+1]
     elif type(parms).__name__=="list":
-        for i in range(0, len(parms)):
+        for i in range(0, len(parms)-1):
             #print type(parms[i+1])
             print parms[i]
     else:
@@ -115,11 +115,12 @@ solver.solverTable[100]['ENDFREQ'], iteration=1)
 
 
     # Read Solution for a particular cell
-    parms=solver.getSolution(solver.solverTable[20]['STARTTIME'],
-solver.solverTable[20]['ENDTIME'],solver.solverTable[20]['STARTFREQ'],
-solver.solverTable[20]['ENDFREQ'])
+    parms=solver.getSolution(solver.solverTable[40]['STARTTIME'],
+solver.solverTable[40]['ENDTIME'],solver.solverTable[40]['STARTFREQ'],
+solver.solverTable[40]['ENDFREQ'])
     print "type(parms): ", type(parms)
-
+    print "Parms: ", parms
+    print "len(parms): ", len(parms)
     
     # Read Starttimes from table
     starttimes=solver.getStartTimes()
@@ -132,6 +133,8 @@ solver.solverTable[20]['ENDFREQ'])
     #    print endtimes[i]
 
 
+    # Read parameter names from table
+    solver.readColumnNames()
 
 # Define main function entry
 if __name__ == "__main__":

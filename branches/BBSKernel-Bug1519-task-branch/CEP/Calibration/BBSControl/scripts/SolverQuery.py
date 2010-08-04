@@ -4,12 +4,13 @@
 # File:			SolverQuery.py
 # Author:		Sven Duscha (duscha@astron.nl)
 # Date:          	2010/07/16
-# Last change:   	2010/07/29
+# Last change:   	2010/08/04
 #
 
 
 # import pyrap as pr
 import pyrap.tables as pt
+import numpy as np            # numpy needed for machine epsilon value
 
 
 class SolverQuery:
@@ -23,13 +24,13 @@ class SolverQuery:
     def __init__(self, tablename="solver"):
         try:
             # Reset frequencies and time vectors that are used for parameter retrieval
-            self.frequencies=0
-            self.timeSlots=0
+            self.frequencies=[]
+            self.timeSlots=[]
 
-            self.startFreqs=0
-            self.endFreqs=0
-            self.startTimes=0
-            self.endTimes=0
+            self.startFreqs=[]
+            self.endFreqs=[]
+            self.startTimes=[]
+            self.endTimes=[]
 
             self.tablename=tablename               # keep tablename in object
             self.solverTable=pt.table(tablename)
@@ -39,7 +40,15 @@ class SolverQuery:
 
     # Flush and close the table of the Solver object
     def close(self):
-        self.frequencies=0
+        self.frequencies=[]
+        self.timeSlots=[]
+
+        self.startFreqs=[]
+        self.endFreqs=[]
+        self.startTimes=[]
+        self.endTimes=[]
+        self.tablename=""
+
         self.solverTable.close()
 
 
@@ -71,6 +80,9 @@ class SolverQuery:
 
     # Build a "standard" query string by searching for a parameter
     def buildQuery( self, colname, start_time, end_time, start_freq, end_freq ):
+        start_time, end_time=self.fuzzyTime(start_time, end_time)
+        start_freq, end_freq=self.fuzzyTime(start_freq, end_freq)
+
         query = "Starttime >= " + start_time + " AND Endtime <= " + end_time + " AND STARTFREQ >= " + start_freq + " AND ENDFREQ <= " + end_freq + ", sortlist='FREQ, TIME'"
 
         print "Query = ", query       # DEBUG
@@ -93,13 +105,21 @@ class SolverQuery:
     #
     def readParameter(self, parameter_name, start_time, end_time, start_freq, end_freq, sort_list="STARTFREQ, STARTTIME"):
         print "readParameter(STARTTIME, STARTFREQ, ENDTIME, ENDFREQ )"   # DEBUG
-  
-        desc=self.tabledesc()             # Get table description (dictionary)
-        column_name=desc[parameter_name]  # lookup column name for the parameter asked for
 
-        query = "STARTTIME >= "+ start_time + "AND ENDTIME <= " + end_time + " AND STARTFREQ >= "+ start_freq + " AND ENDFREQ <= " + end_freq + ", sortlist=sort_list"
-        selection=self.solverTable.query()
-        parameter=selection.getcol(parameter_name)
+        start_time, end_time=self.fuzzyTime(start_time, end_time)
+        start_freq, end_freq=self.fuzzyTime(start_freq, end_freq)
+  
+        colnames=self.solverTable.colnames()
+        column_name=colnames[parameter_name]  # lookup column name for the parameter asked for
+
+        if column_name is not "":
+            query = "STARTTIME >= "+ start_time + "AND ENDTIME <= " + end_time + " AND STARTFREQ >= "+ start_freq + " AND ENDFREQ <= " + end_freq + ", sortlist=sort_list"
+            selection=self.solverTable.query()
+            parameter=selection.getcol(parameter_name)
+            
+            return parameter
+        else:
+            return False
 
 
     # Read a parameter of a cell of a particular iteration
@@ -109,8 +129,10 @@ class SolverQuery:
     #
     def readParameter(self, parameter_name, start_time, end_time, start_freq, end_freq, iteration="Last"):
         print "readParameter(parameter_name, STARTTIME, ENDTIME, STARTFREQ, ENDFREQ, Iteration=", iteration, " )"   # DEBUG
+        start_time, end_time=self.fuzzyTime(start_time, end_time)
+        start_freq, end_freq=self.fuzzyTime(start_freq, end_freq)
 
-        query = "STARTTIME = " + str(start_time) + " AND ENDTIME = " + str(end_time) + " AND STARTFREQ = " + str(start_freq) + " AND ENDFREQ = " + str(end_freq) 
+        query = "STARTTIME >= " + str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) 
 
         if iteration=="Last":    # default: return last iteration only
             #query += ", sortlist=" + sort_list          # apply sorting
@@ -134,13 +156,18 @@ class SolverQuery:
     # exists in the solver table
     #
     def cellExists(self, start_time, end_time, start_freq, end_freq):
-         query="STARTTIME = "+ start_time + "AND ENDTIME = " + end_time + " AND STARTFREQ = " + start_freq + " AND ENDFREQ = " + end_freq
-       
-         result=self.solverTable.query(query)
+        start_time, end_time=self.fuzzyTime(start_time, end_time)
+ 
+        start_time, end_time=self.fuzzyTime(start_time, end_time)
+        start_freq, end_freq=self.fuzzyTime(start_freq, end_freq)
 
-         if result.nrows() >= 0:
+        query="STARTTIME >= "+ start_time + "AND ENDTIME <= " + end_time + " AND STARTFREQ >= " + start_freq + " AND ENDFREQ <= " + end_freq
+       
+        result=self.solverTable.query(query)
+
+        if result.nrows() >= 0:
              return true
-         else:
+        else:
              return false
 
 
@@ -152,8 +179,11 @@ class SolverQuery:
     def findLastIterationCell(self, start_time, end_time, start_freq, end_freq):
          print "findLastIteration(self, start_time, end_time, start_freq, end_freq)"
 
+         start_time, end_time=self.fuzzyTime(start_time, end_time)
+         start_freq, end_freq=self.fuzzyTime(start_freq, end_freq)
+
          # Get first all iterations for that start_time/end_time, start_freq/end_freq
-         query="STARTTIME == "+ str(start_time) + "AND ENDTIME == " + str(end_time) + " AND STARTFREQ == " + str(start_freq) + " AND ENDFREQ == " + str(end_freq) + "sortlist='ITER'"                     # sort by ITER
+         query="STARTTIME >= "+ str(start_time) + "AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + "sortlist='ITER'"                     # sort by ITER
 
          selection=self.solverTable.query(query)             # execute query
          result=selection[selection.nrows()-1]   # set result to last element of selection
@@ -183,20 +213,37 @@ class SolverQuery:
     # for a particular cell
     #
     def getSolution(self, start_time, end_time, start_freq, end_freq, iteration="all"):
-        print "getSolution(self, pt.table)"
- 
-        #query="STARTTIME = "+ str(start_time) + " AND ENDTIME = " + str(end_time) + " AND STARTFREQ = " + str(start_freq) + " AND ENDFREQ = " + str(end_freq) " AND ITER = " + str(iteration) #+ ", sortlist=ITER"
+        #print "getSolution(self, pt.table)"      # DEBUG
 
-        taqlcmd="SELECT SOLUTION FROM " + self.tablename +  " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) 
-        
-        print "ENDTIME - STARTTIME = ", end_time - start_time
-        print "taqlcmd: ", taqlcmd
+        start_time, end_time=self.fuzzyTime(start_time, end_time)
+        start_freq, end_freq=self.fuzzyTime(start_freq, end_freq)
+
+        taqlcmd="SELECT STARTTIME, ENDTIME, ITER, SOLUTION FROM " + self.tablename +  " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) 
+
         selection=pt.taql(taqlcmd)
-
-        print "selection.nrows(): ", selection.nrows()
-
         result=selection.getcol("SOLUTION")
-        print result
+
+        return result
+
+    # Get the correlation matrix for a particular cell
+    # 
+    # TODO: Test this with corrlation matrix output from solver solution
+    #
+    def getCorrMatrix(self, start_time, end_time, start_freq, end_freq, iteration="all"):
+        print "getCorrMatrix(self, start_time, end_time, start_freq, end_freq, iteration=", iteration ,")"   # DEBUG
+
+        start_time, end_time=self.fuzzyTime(start_time, end_time)
+        start_freq, end_freq=self.fuzzyTime(start_freq, end_freq)        
+
+        taqlcmd="SELECT CORRMATRIX FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq)
+
+        print "getCorrMatrix: taqlcmd: ", taqlcmd                             # DEBUG
+        selection=pt.taql(taqlcmd)
+        print "getCorrMatrix: ", selection.nrows(), " ", selection.ncols()    # DEBUG
+
+        print "getCorrMatrix: type(selection): ", type(selection)             # DEBUG
+        return selection
+
 
     #**************************************************
     #
@@ -338,13 +385,16 @@ class SolverQuery:
     def readCell(self, start_time, end_time, start_freq, end_freq, iteration="Last"):
         print "readCell(self, start_time, end_time, start_freq, end_freq, iteration=Last)"  # DEBUG
 
+        start_time, end_time=self.fuzzyTime(start_time, end_time)
+        start_freq, end_freq=self.fuzzyTime(start_freq, end_freq)
+
         # return all iterations (default behaviour)
         if iteration == "all":
            cell={}       # create an empty dictionary
 
            # Loop over all iterations
            for iter in range(1, maxIter):
-                 taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTFREQ=" + str(start_freq) + " AND ENDFREQ=" + str(end_freq) + " AND ITER=" + str(iter)
+                 taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTFREQ >=" + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND ITER = " + str(iter)
                  cell[iter]=pt.taql(taqlcmd)           # execute TaQL command
            return cell
 
@@ -387,7 +437,7 @@ class SolverQuery:
         #print "readFreqColumn(self, parameter, iteration=", iteration, ":"    # DEBUG
 
         # Get first all unique frequencies
-        if self.frequencies==0:
+        if len(self.frequencies)==0:
             self.frequencies=getFreqs()
 
         # Get MAXITER first
@@ -438,8 +488,8 @@ class SolverQuery:
     # Read a parameter for all frequency cells of a particular time slot
     #
     def readFreqColumnTimeSlot(self, parameter, start_time, end_time, iteration="last"):
-        # Get first all unique frequencies
-        if self.timeSlots==0:
+        # Get first all unique time slots
+        if self.timeSlots.size()==0:
             self.timeSlots=getTimeSlots()
 
         if iteration == "last":
@@ -468,7 +518,7 @@ class SolverQuery:
         print "readTimeColumn(self, parameter, iteration=", iteration ,"):"   # DEBUG
         
         # Get first all unique time slots
-        if self.timeSlots==0:
+        if self.timeSlots.size()==0:
             self.timeSlots=self.getTimeSlots()
 
         # Get MAXITER first
@@ -602,7 +652,7 @@ class SolverQuery:
     # only compute them once
     #
     def getFreqs(self):
-        if self.frequencies == 0:
+        if len(self.frequencies) == 0:
             taqlcmd="SELECT UNIQUE STARTFREQ, ENDFREQ FROM " + self.tablename
             self.frequencies=pt.taql(taqlcmd)
 
@@ -637,3 +687,53 @@ class SolverQuery:
         maxIter=0
         maxIter=pt.tablecolumn(self.solverTable, "MAXITER")[0]
         return maxIter
+
+
+    # Use machine epsilon value and time request to make a 
+    # fuzzy time interval
+    #
+    def fuzzyTime(self, start_time, end_time):
+        machineEps=np.finfo(np.double).eps
+
+        fuzzy_start_time=start_time - machineEps
+        fuzzy_end_time=end_time + machineEps
+
+        return fuzzy_start_time, fuzzy_end_time
+
+    
+    # Use reasonable LOFAR frequency selection accuracy to make
+    # fuzzy frequency interval
+    #
+    def fuzzyFreq(self, start_freq, end_freq):
+        freqEpsilon=1    # (with 0.767kHZ channel width a 1Hz "epsilon" should be fine)
+
+        fuzzy_start_freq=start_freq-freqEpsilon       
+        fuzzy_end_freq=end_freq+freqEpsilon
+
+        return fuzzy_start_freq, fuzzy_end_freq
+
+
+    # Read the table columns from the table 
+    #
+    def readColumnNames(self):
+        columnNames=self.solverTable.colnames()
+        return columnNames
+
+
+    # Check if a parameter exists in the table
+    #
+    def parameterExists(self, parameter):
+        columnNames=readColumnNames()
+        for name in columnNames:
+            if name == parameter:
+                return True
+            else:
+                return False
+
+
+    # Read the available solver parameter names from the table
+    # this excludes the cell parameters STARTTIME, ENDTIME,
+    # STARTFREQ, ENDFREQ and ITER
+    #
+    def readParameterNames(self):
+        print "readParameterNames(self)"
