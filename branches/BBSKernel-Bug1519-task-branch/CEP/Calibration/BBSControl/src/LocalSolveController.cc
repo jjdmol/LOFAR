@@ -199,14 +199,14 @@ void LocalSolveController::run()
 // Call run() with parmLogger object -> do logging into ParmDB
 void LocalSolveController::run(ParmDBLog &parmLogger)
 {
-	LOG_DEBUG_STR("LocalSolveController(ParmDBLog)");
+	 LOG_DEBUG_STR("LocalSolveController(ParmDBLog)");
     
     ASSERTSTR(itsInitFlag, "Controller not initialized.");
 
-	Location solutionLocation;		// location of the solution cell
-	Box solutionBox;						// Box of solution cell
+	 Location solutionLocation;		// location of the solution cell
+	 Box solutionBox;						// Box of solution cell
 	 
-	// Exchange coefficient index with solver.
+	 // Exchange coefficient index with solver.
     itsSolver.setCoeffIndex(0, itsCoeffIndex);
 
     // Construct look-up table from Solver's coefficient index.
@@ -221,7 +221,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
     vector<CellEquation> equations;
     vector<CellSolution> solutions;
 
-	cout << "Location chunkStart(0,0);" << endl;
+    cout << "Location chunkStart(0,0);" << endl;
 
     Location chunkStart(0, 0);
     Location chunkEnd(itsSolGrid[FREQ]->size() - 1,
@@ -245,17 +245,13 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
         bool done = false;
         while(!done)
         {
-        	LOG_INFO_STR("Iterate loop");
-        	
         	// Construct equations and pass to solver.
          itsEquator->process(equations);
 
          itsSolver.setEquations(0, equations);
  
-			LOG_DEBUG_STR("done = itsSolver.iterate(solutions);");
-			// Call solver iterate with logging, also needs the solutionBox to know grid coords
 			done = itsSolver.iterate(solutions);
-
+			
 			// If logging per iteration is requested...
 			// Need to loop over chunks to access individual (intermediate) solutions
 			//
@@ -263,9 +259,18 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 			{	
 				for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
 				{
+ 		   		it->maxIter=itsSolver.getMaxIter();		// for completeness store MaxIter in CellSolution object
+
+ 		   		// Determine position on the SolGrid
+ 		   		solutionLocation=itsSolGrid.getCellLocation(it->id);	// translate cell id into location on the Grid
+ 		   		solutionBox=itsSolGrid.getCell(solutionLocation);		// get the bounding box of the location of solutioncell 		   		
+ 		   		
 					if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION )
 					{
-						LOG_DEBUG_STR("logging PERITERATION");
+//						LOG_INFO_STR("logging PERITERATION id = " << it->id << " iter = " << it->niter);
+//						LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
+//						LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first); 		   		
+
 						parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
 									solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
 									it->chiSqr, it->lmFactor, it->coeff, it->resultText);			
@@ -273,7 +278,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 					// or logging per iteration including the correlation matrix
 					else if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX )
 					{
-						LOG_DEBUG_STR("logging PERITERATION_CORRMATRIX");
+//						LOG_INFO_STR("logging PERITERATION_CORRMATRIX");
 						parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
 									solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
 									it->chiSqr, it->lmFactor, it->coeff, it->resultText, it->CorrMatrix);			
@@ -291,69 +296,34 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 		  
 		  
 		  // Loop over solutions
-		  for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
+		  if (!parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION)
 		  {
-			/*
-			 // Debug code: output solver parameters to a file
-			 try
-			 {
-				ofstream solverfile;
-				// write to /tmp because /Users on OS X and /home on Linux differ
-				solverfile.open("/tmp/solverparams.txt", ios::app);
-
-				if(solverfile.fail())
-				  cerr << "Solver::iterate opening of solverparams.txt failed" << endl;
-				
-				solverfile << "solution.id = " << it->id << endl;
-				solverfile << "solution.coeff = " << it->coeff << endl;
-				solverfile << "solution.result = " << it->result << endl;
-				solverfile << "solution.resultText = " << it->resultText << endl;
-				solverfile << "solution.niter = " << it->niter << endl;
-				solverfile << "solution.maxIter = " << it->maxIter << endl;
-				solverfile << "solution.rank = " << it->rank << endl;	
-				solverfile << "solution.rankDeficiency = " << it->rankDeficiency << endl;		  
-				solverfile << "solution.chiSqr = " << it->chiSqr << endl;
-				solverfile << "solution.lmFactor = " << it->lmFactor << endl;
-			 
-
-				if(solutions[0].result==3)		// MAXITER is entry 3 in enum
-				{
-				  solutions[0].maxIterReached=true;
-				  solverfile << "Maximum iterations reached" << endl;
-				  solverfile.close();
-				}  
-			 }
-
-			 catch(string s)
-			 {
-				cerr << "Exception occured: " << s << endl;
-			 }
-			*/
-
-
-			 // Determine position on the SolGrid
-			 solutionLocation=itsSolGrid.getCellLocation(it->id);	// translate cell id into location on the Grid
-			 solutionBox=itsSolGrid.getCell(solutionLocation);		// get the bounding box of the location of solutioncell
-
-			 it->maxIter=itsSolver.getMaxIter();		// for completeness store MaxIter in CellSolution object
-
-			 // Write solver parameters for each solution into parmDB if parm logging level was set
-			 if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION)
-			 {
-				LOG_DEBUG_STR("logging PERSOLUTION");			 
-			 	parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
-							solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
-							it->chiSqr, it->lmFactor, it->coeff, it->resultText);
-			 }
-			 // write solver parameters including correlation matrix to parmDB
-			 else if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION_CORRMATRIX)
-			 {
-				LOG_DEBUG_STR("logging PERSOLUTION_CORRMATRIX");
-			 	parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
-							solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
-							it->chiSqr, it->lmFactor, it->coeff, it->resultText, it->CorrMatrix);			 
-			 }
-		}
+			  for(vector<CellSolution>::iterator it=solutions.begin(); it!=solutions.end(); it++)
+			  {
+			  	  // Determine position on the SolGrid
+			  	  solutionLocation=itsSolGrid.getCellLocation(it->id);	// translate cell id into location on the Grid
+			  	  solutionBox=itsSolGrid.getCell(solutionLocation);		// get the bounding box of the location of solutioncell
+			  	  
+			  	  it->maxIter=itsSolver.getMaxIter();		// for completeness store MaxIter in CellSolution object			 
+			  	  
+			  	  // Write solver parameters for each solution into parmDB if parm logging level was set
+			  	  if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION)
+			  	  {
+			  	  	  //				LOG_DEBUG_STR("logging PERSOLUTION");			 
+			  	  	  parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
+			  	  	  	  solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
+			  	  	  	  it->chiSqr, it->lmFactor, it->coeff, it->resultText);
+			  	  }
+			  	  // write solver parameters including correlation matrix to parmDB
+			  	  else if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION_CORRMATRIX)
+			  	  {
+			  	  	  //				LOG_DEBUG_STR("logging PERSOLUTION_CORRMATRIX");
+			  	  	  parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
+			  	  	  	  solutionBox.upper().second, it->niter, it->maxIter, it->rank, it->rankDeficiency,
+			  	  	  	  it->chiSqr, it->lmFactor, it->coeff, it->resultText, it->CorrMatrix);			 
+			  	  }
+			  }
+		  }
 
         // Propagate coefficient values to the next cell chunk.
         // TODO: Find a better solution for this.

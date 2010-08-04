@@ -166,30 +166,33 @@ namespace LOFAR
           return false;
         }
 		  
-		try {
-        	// Open ParmDBLog ParmDB for solver logging
-			LOG_INFO_STR("Solver log table: " << solverDb);
-			LOG_INFO_STR("Solver logging level" << loggingLevel);
-			
-			// Depending on value read from parset file for logging level call constructor
-			// with the corresponding enum value
-			//
-			if(loggingLevel=="NONE")
-				itsParmLogger.reset(new ParmDBLog(solverDb));	// call without logging object
-			if(loggingLevel=="PERSOLUTION")
-				itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
-			if(loggingLevel=="PERSOLUTION_CORRMATRIX")
-				itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX));
-			if(loggingLevel=="PERITERATION")
-				itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION));			
-			if(loggingLevel=="PERITERATION_CORRMATRIX")
-				itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX));
-		}
-        catch(Exception &e) {
-          LOG_ERROR_STR("Failed to open instrument model parameter database: "
-            << instrumentDb);
-          return false;
-        }
+       if(loggingLevel!="NONE")	// If no parmDBLogging is set, skip the initialization
+       {	
+			try {
+				// Open ParmDBLog ParmDB for solver logging
+				LOG_INFO_STR("Solver log table: " << solverDb);
+				LOG_INFO_STR("Solver logging level" << loggingLevel);
+				
+				// Depending on value read from parset file for logging level call constructor
+				// with the corresponding enum value
+				//
+	//			if(loggingLevel=="NONE")
+	//				itsParmLogger.reset(new ParmDBLog(solverDb));	// call without logging object
+				if(loggingLevel=="PERSOLUTION")
+					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
+				if(loggingLevel=="PERSOLUTION_CORRMATRIX")
+					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX));
+				if(loggingLevel=="PERITERATION")
+					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION));			
+				if(loggingLevel=="PERITERATION_CORRMATRIX")
+					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX));
+			}
+			  catch(Exception &e) {
+				 LOG_ERROR_STR("Failed to open instrument model parameter database: "
+					<< instrumentDb);
+				 return false;
+			  }
+		  }
 
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
@@ -732,8 +735,6 @@ namespace LOFAR
           controller.init(command.parms(), command.exclParms(), evalGrid,
             solGrid, cellChunkSize, command.propagate());
 
-          LOG_DEBUG_STR("itsParmLogger = " << itsParmLogger << endl);
-          
           if(itsParmLogger != NULL)
           	 controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
           else
