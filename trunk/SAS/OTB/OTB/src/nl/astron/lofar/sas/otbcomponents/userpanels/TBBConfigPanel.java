@@ -22,6 +22,7 @@
 
 package nl.astron.lofar.sas.otbcomponents.userpanels;
 
+
 import java.awt.Component;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -99,6 +100,10 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     
     public void setContent(Object anObject) {
         itsNode=(jOTDBnode)anObject;
+
+        //fire up filling for TBBControlPanel
+        this.tbbControlPanel.setMainFrame(this.itsMainFrame);
+        this.tbbControlPanel.setContent(this.itsNode);
         jOTDBparam aParam=null;
         isInitialized=false;
         
@@ -286,6 +291,10 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         inputFilter0Coeff1.setEnabled(enabled);
         inputFilter0Coeff2.setEnabled(enabled);
         inputFilter0Coeff3.setEnabled(enabled);
+        inputFilter1Coeff0.setEnabled(enabled);
+        inputFilter1Coeff1.setEnabled(enabled);
+        inputFilter1Coeff2.setEnabled(enabled);
+        inputFilter1Coeff3.setEnabled(enabled);
         inputRCUs.setEnabled(enabled);
         inputSubbandList.setEnabled(enabled);
     }
@@ -297,8 +306,6 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         buttonPanel1.addButton("Apply");
         buttonPanel1.setButtonIcon("Apply",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png")));
         buttonPanel1.setButtonToolTip("Apply","Deleted all old TBBsetting instances from the Database and will write all new instances");
-        buttonPanel1.setButtonEnabled("Restore",false);
-        buttonPanel1.setButtonEnabled("Apply",false);
     }
     
     private void initPanel() {
@@ -478,12 +485,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             // filter
             if (!isInitialized) {
                inputFilter.setToolTipText(aParam.description);
+               LofarUtils.setPopupComboChoices(inputFilter,aParam.limits);
             }
-            if (isRef && aParam != null) {
-                itsFilters.add(aNode.limits + " : " + aParam.limits);
-            } else {
-                itsFilters.add(aNode.limits);
-            }
+            itsFilters.add(aNode.limits);
             
         } else if (aKeyName.equals("window")) {
             // window
@@ -618,8 +622,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         // set table back to initial values
         itsTBBConfigurationTableModel.fillTable(itsTreeType,itsOperatingModes,itsTriggerModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsFilter0Coeff0s,itsFilter0Coeff1s,itsFilter0Coeff2s,itsFilter0Coeff3s,itsFilter1Coeff0s,itsFilter1Coeff1s,itsFilter1Coeff2s,itsFilter1Coeff3s,itsRCUs,itsSubbandList);
         
-        buttonPanel1.setButtonEnabled("Restore",false);
-        buttonPanel1.setButtonEnabled("Apply",false);
+        // also restore TBBControlPanel
+        tbbControlPanel.restore();
     }
     
     
@@ -651,7 +655,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
          inputStoplevel.setText(itsStoplevels.elementAt(index));
             
          // Filter
-         inputFilter.setText(itsFilters.elementAt(index));
+         if (!itsFilters.elementAt(index).equals("")) {
+             inputFilter.setSelectedItem(itsFilters.elementAt(index));
+         }
 
          // Window
          if (!itsWindows.elementAt(index).equals("")) {
@@ -763,11 +769,6 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             errorMsg += "Stoplevel \n";
         }
         
-        // filter
-        if (Integer.valueOf(inputFilter.getText())<0 || Integer.valueOf(inputFilter.getText())>255) {
-            error=true;
-            errorMsg += "Filter \n";
-        }
         
         // Coeff0
         if (Integer.valueOf(inputFilter0Coeff0.getText())<0 || Integer.valueOf(inputFilter0Coeff0.getText())>65535) {
@@ -866,7 +867,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                            inputBaselevel.getText(),
                            inputStartlevel.getText(),
                            inputStoplevel.getText(),
-                           inputFilter.getText(),
+                           inputFilter.getSelectedItem().toString(),
                            inputWindow.getSelectedItem().toString(),
                            inputFilter0Coeff0.getText(),
                            inputFilter0Coeff1.getText(),
@@ -900,15 +901,12 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         
             // set back to default Button visible
             addConfigButton.setText("Add Configuration");
-            cancelEditButton.setVisible(false);            
+            addConfigButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_new.png")));
+            cancelEditButton.setVisible(false);
         } else {
             setDefaultInput();
         }
         
-        // something obviously changed, so enable restore and save buttons
-        buttonPanel1.setButtonEnabled("Restore",true);
-        buttonPanel1.setButtonEnabled("Apply",true);
-
     }
   
     /** delete all old TBBsettings, and save new table back to the database
@@ -1038,7 +1036,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
          inputStoplevel.setText(selection[4]);
             
          // Filter
-         inputFilter.setText(selection[5]);
+         inputFilter.setSelectedItem(selection[5]);
 
          // Window
          if (!(selection[6]).equals("")) {
@@ -1057,11 +1055,22 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
          // Coeff3
          inputFilter0Coeff3.setText(selection[10]);
 
+         // Coeff0
+         inputFilter1Coeff0.setText(selection[11]);
+
+         // Coeff1
+         inputFilter1Coeff1.setText(selection[12]);
+
+         // Coeff2
+         inputFilter1Coeff2.setText(selection[13]);
+
+         // Coeff3
+         inputFilter1Coeff3.setText(selection[14]);
          // RCUs
-         inputRCUs.setText(selection[11]);
+         inputRCUs.setText(selection[15]);
 
          // subbandList
-         inputSubbandList.setText(selection[12]);
+         inputSubbandList.setText(selection[16]);
     }
         
     /** Edit chosen configuration.
@@ -1080,7 +1089,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         }
         
         // keep old RCUs
-        itsSavedRCUs=selection[11];
+        itsSavedRCUs=selection[15];
         
         //fill table with entry to be editted
         // 0 in lists represent default
@@ -1092,6 +1101,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         
         // set back to default Button visible
         addConfigButton.setText("Apply Changes");
+        buttonPanel1.setButtonIcon("Apply Changes",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_save.png")));
         cancelEditButton.setVisible(true);
         
     }
@@ -1110,9 +1120,6 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 this.editConfigButton.setEnabled(false);
                 this.deleteConfigButton.setEnabled(false);
 
-                // something obviously changed, so enable restore and save buttons
-                buttonPanel1.setButtonEnabled("Restore",true);
-                buttonPanel1.setButtonEnabled("Apply",true);
 
             }
         }
@@ -1152,7 +1159,6 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         inputBaselevel = new javax.swing.JTextField();
         inputStartlevel = new javax.swing.JTextField();
         inputStoplevel = new javax.swing.JTextField();
-        inputFilter = new javax.swing.JTextField();
         inputWindow = new javax.swing.JComboBox();
         inputFilter0Coeff0 = new javax.swing.JTextField();
         inputFilter0Coeff1 = new javax.swing.JTextField();
@@ -1162,7 +1168,6 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         limitsBaselevel = new javax.swing.JLabel();
         limitsStartlevel = new javax.swing.JLabel();
         limitsStoplevel = new javax.swing.JLabel();
-        limitsFilter = new javax.swing.JLabel();
         limitsCoeff0 = new javax.swing.JLabel();
         limitsCoeff1 = new javax.swing.JLabel();
         limitsCoeff2 = new javax.swing.JLabel();
@@ -1185,7 +1190,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         inputFilter1Coeff3 = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         TBBConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        inputFilter = new javax.swing.JComboBox();
         TBBControlPanel = new javax.swing.JPanel();
+        tbbControlPanel = new nl.astron.lofar.sas.otbcomponents.TBBControlPanel();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setMinimumSize(new java.awt.Dimension(800, 400));
@@ -1213,23 +1220,23 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         TBBSettingsPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         labelOperatingMode.setText("operating Mode:");
-        TBBSettingsPanel.add(labelOperatingMode, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 16, 89, -1));
+        TBBSettingsPanel.add(labelOperatingMode, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 16, 100, -1));
 
         labelBaselevel.setText("baselevel:");
-        TBBSettingsPanel.add(labelBaselevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 68, 89, -1));
+        TBBSettingsPanel.add(labelBaselevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, 89, -1));
         labelBaselevel.getAccessibleContext().setAccessibleName("labelBaselevel");
 
         labelStartlevel.setText("startlevel:");
-        TBBSettingsPanel.add(labelStartlevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 94, 89, -1));
+        TBBSettingsPanel.add(labelStartlevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, 89, -1));
 
         labelStoplevel.setText("stoplevel:");
-        TBBSettingsPanel.add(labelStoplevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 120, 89, -1));
+        TBBSettingsPanel.add(labelStoplevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 140, 89, -1));
 
         labelFilter.setText("filter:");
-        TBBSettingsPanel.add(labelFilter, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 146, 89, -1));
+        TBBSettingsPanel.add(labelFilter, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 170, 89, -1));
 
         labelWindow.setText("window:");
-        TBBSettingsPanel.add(labelWindow, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 172, 89, -1));
+        TBBSettingsPanel.add(labelWindow, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 200, 89, -1));
 
         labelCoeff0.setText("coeff0:");
         TBBSettingsPanel.add(labelCoeff0, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 30, 84, -1));
@@ -1244,7 +1251,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         TBBSettingsPanel.add(labelCoeff3, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 120, 84, -1));
 
         labelRCUs.setText("RCUs:");
-        TBBSettingsPanel.add(labelRCUs, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 210, 84, -1));
+        TBBSettingsPanel.add(labelRCUs, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 220, 84, -1));
 
         inputOperatingMode.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Transient Detection", "Subband Data", " " }));
         inputOperatingMode.addActionListener(new java.awt.event.ActionListener() {
@@ -1252,35 +1259,28 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 inputActionPerformed(evt);
             }
         });
-        TBBSettingsPanel.add(inputOperatingMode, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 10, 133, -1));
+        TBBSettingsPanel.add(inputOperatingMode, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 10, 133, -1));
 
         inputBaselevel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
-        TBBSettingsPanel.add(inputBaselevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(111, 65, 138, -1));
+        TBBSettingsPanel.add(inputBaselevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 70, 138, 20));
 
         inputStartlevel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
-        TBBSettingsPanel.add(inputStartlevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(111, 91, 138, -1));
+        TBBSettingsPanel.add(inputStartlevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 100, 138, -1));
 
         inputStoplevel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
-        TBBSettingsPanel.add(inputStoplevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(111, 117, 138, -1));
-
-        inputFilter.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                inputActionPerformed(evt);
-            }
-        });
-        TBBSettingsPanel.add(inputFilter, new org.netbeans.lib.awtextra.AbsoluteConstraints(111, 143, 138, -1));
+        TBBSettingsPanel.add(inputStoplevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 130, 138, -1));
 
         inputWindow.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "16B", "64B", "256B", "1K" }));
         inputWindow.addActionListener(new java.awt.event.ActionListener() {
@@ -1288,7 +1288,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 inputActionPerformed(evt);
             }
         });
-        TBBSettingsPanel.add(inputWindow, new org.netbeans.lib.awtextra.AbsoluteConstraints(111, 169, 138, -1));
+        TBBSettingsPanel.add(inputWindow, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 190, 138, -1));
 
         inputFilter0Coeff0.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1323,19 +1323,16 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 inputActionPerformed(evt);
             }
         });
-        TBBSettingsPanel.add(inputRCUs, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 200, 990, -1));
+        TBBSettingsPanel.add(inputRCUs, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 220, 990, -1));
 
         limitsBaselevel.setText("(1-4095)");
-        TBBSettingsPanel.add(limitsBaselevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(253, 71, 62, -1));
+        TBBSettingsPanel.add(limitsBaselevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 70, 62, -1));
 
         limitsStartlevel.setText("(1-15)");
-        TBBSettingsPanel.add(limitsStartlevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(253, 94, 62, -1));
+        TBBSettingsPanel.add(limitsStartlevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 100, 62, -1));
 
         limitsStoplevel.setText("(1-15)");
-        TBBSettingsPanel.add(limitsStoplevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(253, 120, 62, -1));
-
-        limitsFilter.setText("(1-255)");
-        TBBSettingsPanel.add(limitsFilter, new org.netbeans.lib.awtextra.AbsoluteConstraints(253, 146, 62, -1));
+        TBBSettingsPanel.add(limitsStoplevel, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 130, 62, -1));
 
         limitsCoeff0.setText("(0-65535)");
         TBBSettingsPanel.add(limitsCoeff0, new org.netbeans.lib.awtextra.AbsoluteConstraints(800, 30, 100, -1));
@@ -1371,7 +1368,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 addConfigButtonActionPerformed(evt);
             }
         });
-        TBBSettingsPanel.add(addConfigButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 270, -1, -1));
+        TBBSettingsPanel.add(addConfigButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 290, -1, -1));
 
         deleteConfigButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
         deleteConfigButton.setText("Delete Configuration");
@@ -1392,17 +1389,17 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 cancelEditButtonActionPerformed(evt);
             }
         });
-        TBBSettingsPanel.add(cancelEditButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 270, -1, -1));
+        TBBSettingsPanel.add(cancelEditButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 290, -1, -1));
 
         labelSubbandList.setText("subbands:");
-        TBBSettingsPanel.add(labelSubbandList, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 240, 84, -1));
+        TBBSettingsPanel.add(labelSubbandList, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 250, 84, -1));
 
         inputSubbandList.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
             }
         });
-        TBBSettingsPanel.add(inputSubbandList, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 230, 990, -1));
+        TBBSettingsPanel.add(inputSubbandList, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 250, 990, -1));
 
         labelTriggerMode.setText("triggerMode:");
         TBBSettingsPanel.add(labelTriggerMode, new org.netbeans.lib.awtextra.AbsoluteConstraints(12, 42, 89, -1));
@@ -1414,7 +1411,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 inputTriggerModeinputActionPerformed(evt);
             }
         });
-        TBBSettingsPanel.add(inputTriggerMode, new org.netbeans.lib.awtextra.AbsoluteConstraints(111, 39, 133, -1));
+        TBBSettingsPanel.add(inputTriggerMode, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 40, 133, -1));
 
         jLabel3.setText("Filter 0");
         TBBSettingsPanel.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(490, 10, -1, -1));
@@ -1459,17 +1456,25 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
 
         TBBSettingsPanel.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 350, 1090, 250));
 
+        TBBSettingsPanel.add(inputFilter, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 160, 140, -1));
+
         jTabbedPane1.addTab("TBB-settings", TBBSettingsPanel);
 
         javax.swing.GroupLayout TBBControlPanelLayout = new javax.swing.GroupLayout(TBBControlPanel);
         TBBControlPanel.setLayout(TBBControlPanelLayout);
         TBBControlPanelLayout.setHorizontalGroup(
             TBBControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1490, Short.MAX_VALUE)
+            .addGroup(TBBControlPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(tbbControlPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(357, Short.MAX_VALUE))
         );
         TBBControlPanelLayout.setVerticalGroup(
             TBBControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 714, Short.MAX_VALUE)
+            .addGroup(TBBControlPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(tbbControlPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("TBBControl", TBBControlPanel);
@@ -1486,14 +1491,17 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand().equals("Apply")) {
-            if (JOptionPane.showConfirmDialog(this,"This will throw away all old TBBsettings from the database and rewrite the new ones. Are you sure you want to do this ","Write new configurations",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+            itsMainFrame.setHourglassCursor();
                 save();
-            }
+            // save the input from the AntennaConfig Panel
+            this.tbbControlPanel.saveInput();
+            // reset all buttons, flags and tables to initial start position. So the panel now reflects the new, saved situation
+            initPanel();
+            itsMainFrame.setNormalCursor();
         } else if(evt.getActionCommand().equals("Restore")) {
-            if (JOptionPane.showConfirmDialog(this,"This will throw away all changes and restore the original settings. Are you sure you want to do this ","Restore old configuration",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
-                restore();
-            }
-        }   
+            itsMainFrame.setHourglassCursor();
+            restore();
+            itsMainFrame.setNormalCursor();        }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
     private void cancelEditButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelEditButtonActionPerformed
@@ -1509,6 +1517,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         
         // set back to default Button visible
         addConfigButton.setText("Add Configuration");
+        addConfigButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_new.png")));
         cancelEditButton.setVisible(false);
     }//GEN-LAST:event_cancelEditButtonActionPerformed
     
@@ -1602,7 +1611,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private javax.swing.JButton deleteConfigButton;
     private javax.swing.JButton editConfigButton;
     private javax.swing.JTextField inputBaselevel;
-    private javax.swing.JTextField inputFilter;
+    private javax.swing.JComboBox inputFilter;
     private javax.swing.JTextField inputFilter0Coeff0;
     private javax.swing.JTextField inputFilter0Coeff1;
     private javax.swing.JTextField inputFilter0Coeff2;
@@ -1643,9 +1652,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private javax.swing.JLabel limitsCoeff1;
     private javax.swing.JLabel limitsCoeff2;
     private javax.swing.JLabel limitsCoeff3;
-    private javax.swing.JLabel limitsFilter;
     private javax.swing.JLabel limitsStartlevel;
     private javax.swing.JLabel limitsStoplevel;
+    private nl.astron.lofar.sas.otbcomponents.TBBControlPanel tbbControlPanel;
     // End of variables declaration//GEN-END:variables
     
     /**
