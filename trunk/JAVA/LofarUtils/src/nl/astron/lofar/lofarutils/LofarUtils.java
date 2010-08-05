@@ -26,10 +26,10 @@ package nl.astron.lofar.lofarutils;
 import java.awt.Component;
 import java.text.Collator;
 import java.util.BitSet;
+import java.util.Vector;
 import java.util.regex.Pattern;
 import javax.swing.DefaultListModel;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -362,6 +362,22 @@ public abstract class LofarUtils {
         return first;
     }
 
+    /** Function arrayFromList
+     *
+     * Given a comma seperated list, possibly within brackets this function will return all the comma seperated items as an array from strings
+     *
+     * @param  aList    the comma seperated List
+     * @return the list entries as String []
+     */
+
+    static public String[] arrayFromList(String aList) {
+
+        // split list and strip tab,space,",',[ and ]
+        String aS1=aList.replaceAll("[\\s\"\'\\]\\[]+", "");
+        String[] aV = aS1.split(",");
+
+        return aV;
+    }
 
     /**  Function compactedArrayString(string)
      * 
