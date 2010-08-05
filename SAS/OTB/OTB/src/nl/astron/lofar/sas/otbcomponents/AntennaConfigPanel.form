@@ -510,10 +510,10 @@
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" attributes="0">
-                  <Group type="103" groupAlignment="0" attributes="0">
-                      <Component id="remoteStationSelectionPanel" alignment="0" min="-2" max="-2" attributes="0"/>
-                      <Component id="europeStationSelectionPanel" alignment="0" min="-2" max="-2" attributes="0"/>
-                      <Component id="coreStationSelectionPanel" alignment="0" min="-2" pref="281" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                      <Component id="remoteStationSelectionPanel" alignment="0" max="32767" attributes="1"/>
+                      <Component id="europeStationSelectionPanel" alignment="0" max="32767" attributes="1"/>
+                      <Component id="coreStationSelectionPanel" alignment="0" max="32767" attributes="1"/>
                   </Group>
                   <EmptySpace pref="14" max="32767" attributes="0"/>
               </Group>
@@ -527,7 +527,7 @@
                   <Component id="remoteStationSelectionPanel" min="-2" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="31" max="-2" attributes="0"/>
                   <Component id="europeStationSelectionPanel" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace pref="116" max="32767" attributes="0"/>
+                  <EmptySpace pref="62" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -564,7 +564,7 @@
                       <Component id="remoteStationLayout" alignment="0" max="32767" attributes="1"/>
                       <Component id="coreStationLayout" alignment="0" pref="308" max="32767" attributes="1"/>
                   </Group>
-                  <EmptySpace pref="18" max="32767" attributes="0"/>
+                  <EmptySpace max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>

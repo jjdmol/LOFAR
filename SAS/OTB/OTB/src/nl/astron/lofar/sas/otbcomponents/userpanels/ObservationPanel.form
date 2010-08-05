@@ -108,7 +108,7 @@
                                   </Group>
                               </Group>
                               <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
-                                  <Component id="jPanel3" alignment="0" pref="1197" max="32767" attributes="1"/>
+                                  <Component id="jPanel3" alignment="0" pref="1277" max="32767" attributes="1"/>
                                   <Component id="anaBeamConfiguration" alignment="0" max="32767" attributes="1"/>
                               </Group>
                           </Group>
@@ -298,7 +298,7 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="beamConfigurationPanel" alignment="0" pref="1175" max="32767" attributes="0"/>
+                                  <Component id="beamConfigurationPanel" alignment="0" pref="1255" max="32767" attributes="0"/>
                                   <Group type="102" alignment="0" attributes="0">
                                       <Component id="addBeamButton" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
@@ -339,6 +339,9 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="addBeamButton">
                       <Properties>
+                        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_add.gif"/>
+                        </Property>
                         <Property name="text" type="java.lang.String" value="add beam"/>
                       </Properties>
                       <Events>
@@ -347,6 +350,9 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="editBeamButton">
                       <Properties>
+                        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_edit.gif"/>
+                        </Property>
                         <Property name="text" type="java.lang.String" value="edit beam"/>
                         <Property name="enabled" type="boolean" value="false"/>
                       </Properties>
@@ -356,6 +362,9 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="deleteBeamButton">
                       <Properties>
+                        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_delete.png"/>
+                        </Property>
                         <Property name="text" type="java.lang.String" value="delete beam"/>
                         <Property name="enabled" type="boolean" value="false"/>
                       </Properties>
@@ -365,6 +374,9 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="loadBeamsButton">
                       <Properties>
+                        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_fileopen.gif"/>
+                        </Property>
                         <Property name="text" type="java.lang.String" value="Load File"/>
                         <Property name="toolTipText" type="java.lang.String" value="Load beams from a File"/>
                       </Properties>
@@ -568,6 +580,9 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="addBeamformerButton">
                       <Properties>
+                        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_add.gif"/>
+                        </Property>
                         <Property name="text" type="java.lang.String" value="add beamformer"/>
                       </Properties>
                       <Events>
@@ -576,6 +591,9 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="deleteBeamformerButton">
                       <Properties>
+                        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_delete.png"/>
+                        </Property>
                         <Property name="text" type="java.lang.String" value="delete beamformer"/>
                         <Property name="enabled" type="boolean" value="false"/>
                       </Properties>
@@ -644,7 +662,7 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="anaBeamConfigurationPanel" pref="1163" max="32767" attributes="0"/>
-                              <EmptySpace min="-2" pref="22" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="102" max="-2" attributes="0"/>
                           </Group>
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="addAnaBeamButton" min="-2" max="-2" attributes="0"/>
@@ -654,7 +672,7 @@
                               <Component id="deleteAnaBeamButton" min="-2" max="-2" attributes="0"/>
                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
                               <Component id="loadAnaBeamsButton" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="-2" pref="770" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="839" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -683,6 +701,9 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="addAnaBeamButton">
                       <Properties>
+                        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_add.gif"/>
+                        </Property>
                         <Property name="text" type="java.lang.String" value="add beam"/>
                       </Properties>
                       <Events>
@@ -691,6 +712,9 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="editAnaBeamButton">
                       <Properties>
+                        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_edit.gif"/>
+                        </Property>
                         <Property name="text" type="java.lang.String" value="edit beam"/>
                         <Property name="enabled" type="boolean" value="false"/>
                       </Properties>
@@ -700,6 +724,9 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="deleteAnaBeamButton">
                       <Properties>
+                        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_delete.png"/>
+                        </Property>
                         <Property name="text" type="java.lang.String" value="delete beam"/>
                         <Property name="enabled" type="boolean" value="false"/>
                       </Properties>
@@ -709,6 +736,9 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="loadAnaBeamsButton">
                       <Properties>
+                        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                          <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_fileopen.gif"/>
+                        </Property>
                         <Property name="text" type="java.lang.String" value="Load File"/>
                         <Property name="toolTipText" type="java.lang.String" value="load analogue beams from file"/>
                       </Properties>

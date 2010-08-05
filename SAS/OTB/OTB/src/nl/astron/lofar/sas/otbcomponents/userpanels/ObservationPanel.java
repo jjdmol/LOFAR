@@ -1702,6 +1702,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
+        addBeamButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
         addBeamButton.setText("add beam");
         addBeamButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1709,6 +1710,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
+        editBeamButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif"))); // NOI18N
         editBeamButton.setText("edit beam");
         editBeamButton.setEnabled(false);
         editBeamButton.addActionListener(new java.awt.event.ActionListener() {
@@ -1717,6 +1719,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
+        deleteBeamButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
         deleteBeamButton.setText("delete beam");
         deleteBeamButton.setEnabled(false);
         deleteBeamButton.addActionListener(new java.awt.event.ActionListener() {
@@ -1725,6 +1728,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
+        loadBeamsButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_fileopen.gif"))); // NOI18N
         loadBeamsButton.setText("Load File");
         loadBeamsButton.setToolTipText("Load beams from a File");
         loadBeamsButton.addActionListener(new java.awt.event.ActionListener() {
@@ -1739,7 +1743,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel3Layout.createSequentialGroup()
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(beamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1106, Short.MAX_VALUE)
+                    .add(beamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1255, Short.MAX_VALUE)
                     .add(jPanel3Layout.createSequentialGroup()
                         .add(addBeamButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -1821,6 +1825,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         jLabel2.setFont(new java.awt.Font("Tahoma", 1, 12));
         jLabel2.setText("Stations");
 
+        addBeamformerButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
         addBeamformerButton.setText("add beamformer");
         addBeamformerButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1828,6 +1833,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
+        deleteBeamformerButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
         deleteBeamformerButton.setText("delete beamformer");
         deleteBeamformerButton.setEnabled(false);
         deleteBeamformerButton.addActionListener(new java.awt.event.ActionListener() {
@@ -1908,6 +1914,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
+        addAnaBeamButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
         addAnaBeamButton.setText("add beam");
         addAnaBeamButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1915,6 +1922,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
+        editAnaBeamButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif"))); // NOI18N
         editAnaBeamButton.setText("edit beam");
         editAnaBeamButton.setEnabled(false);
         editAnaBeamButton.addActionListener(new java.awt.event.ActionListener() {
@@ -1923,6 +1931,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
+        deleteAnaBeamButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
         deleteAnaBeamButton.setText("delete beam");
         deleteAnaBeamButton.setEnabled(false);
         deleteAnaBeamButton.addActionListener(new java.awt.event.ActionListener() {
@@ -1931,6 +1940,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
+        loadAnaBeamsButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_fileopen.gif"))); // NOI18N
         loadAnaBeamsButton.setText("Load File");
         loadAnaBeamsButton.setToolTipText("load analogue beams from file");
         loadAnaBeamsButton.addActionListener(new java.awt.event.ActionListener() {
@@ -1944,8 +1954,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         anaBeamConfigurationLayout.setHorizontalGroup(
             anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(anaBeamConfigurationLayout.createSequentialGroup()
-                .add(anaBeamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1094, Short.MAX_VALUE)
-                .add(22, 22, 22))
+                .add(anaBeamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1163, Short.MAX_VALUE)
+                .add(102, 102, 102))
             .add(anaBeamConfigurationLayout.createSequentialGroup()
                 .add(addAnaBeamButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -1954,7 +1964,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(deleteAnaBeamButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(loadAnaBeamsButton)
-                .add(770, 770, 770))
+                .add(839, 839, 839))
         );
         anaBeamConfigurationLayout.setVerticalGroup(
             anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1984,7 +1994,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                             .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                             .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                     .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                        .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1128, Short.MAX_VALUE)
+                        .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1277, Short.MAX_VALUE)
                         .add(org.jdesktop.layout.GroupLayout.LEADING, anaBeamConfiguration, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -1997,7 +2007,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(11, 11, 11)
                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jPanel5, 0, 210, Short.MAX_VALUE))
+                    .add(jPanel5, 0, 211, Short.MAX_VALUE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
