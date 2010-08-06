@@ -54,7 +54,7 @@ void AsyncTransposeBeams::postReceive(TransposedBeamFormedData *transposedData, 
     void   *ptr;
     size_t size;
   } toRead[itsNrCommunications] = {
-    { transposedData->samples[subband].origin(), transposedData->samples[subband].num_elements() * sizeof transposedData->samples[0][0][0][0] }
+    { transposedData->samples[subband].origin(), transposedData->samples[subband].num_elements() * sizeof *transposedData->samples.origin() }
   };
 
   // read it
@@ -123,7 +123,7 @@ void AsyncTransposeBeams::asyncSend(unsigned outputPsetIndex, unsigned coreIndex
     const void   *ptr;
     const size_t size;
   } toWrite[itsNrCommunications] = {
-    { inputData->samples[beam].origin(), inputData->samples[beam].num_elements() * sizeof inputData->samples[0][0][0][0] }
+    { inputData->samples[beam].origin(), inputData->samples[beam].num_elements() * sizeof *inputData->samples.origin() }
   };
 
   // write it
