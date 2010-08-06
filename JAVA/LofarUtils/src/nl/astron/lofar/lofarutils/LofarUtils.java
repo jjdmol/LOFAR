@@ -26,7 +26,6 @@ package nl.astron.lofar.lofarutils;
 import java.awt.Component;
 import java.text.Collator;
 import java.util.BitSet;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import javax.swing.DefaultListModel;
 import javax.swing.Icon;
@@ -552,4 +551,98 @@ public abstract class LofarUtils {
         JOptionPane.showMessageDialog(parent,aS,"LOFAR Error",JOptionPane.WARNING_MESSAGE,icon);
 
     }
+
+    /** Function rad2deg
+     *  calculates notation in degrees from rad
+     *
+     * @param  rad   input in rad
+     * @returns degrees
+    */
+    static public double rad2deg(double rad) {
+        double deg=0;
+
+        if (rad <= 0) return deg;
+
+        deg=rad*(360/(2*Math.PI));
+        return deg;
+    }
+
+    /** Function deg2rad
+     *  calculates notation in rad from degrees
+     *
+     * @param  rad   input in rad
+     * @returns degrees
+    */
+    static public double deg2rad(double deg) {
+        double rad=0;
+
+        if (deg <= 0) return rad;
+
+        rad=deg/360*2*Math.PI;
+        return rad;
+    }
+
+    /** Function deg2hms
+     *  calculates notation in hms from degrees
+     *
+     * @param  degrees   input in degrees
+     * @returns string with h:m:s
+     */
+    static public String deg2hms(double deg) {
+        String hms="";
+
+        if (deg <= 0) return hms;
+
+        int    h = (int) deg/15;
+        int    m = (int) ((deg-h*15)/15*60);
+        double s =  (deg-(h*15)-(m*15/60))/15*3600;
+
+        hms=Integer.toString(h)+":"+Integer.toString(m)+":"+Double.toString(s);
+        return hms;
+    }
+
+    /** Function hms2deg
+     *  calculates notation in deg from hms
+     *
+     * @param  hms   string with h:m:s
+     * @returns degrees
+     */
+    static public double hms2deg(String hms) {
+        double deg=0;
+
+        if (hms.isEmpty()) return deg;
+
+        String [] values = hms.split(":");
+        int h = Integer.valueOf(values[0]);
+        int m = Integer.valueOf(values[1]);
+        double s = Double.valueOf(values[2]);
+
+        deg= (h*15)+(m*15/60)+(s*15/3600);
+
+        return deg;
+    }
+
+    /** Function rad2hms
+     *  calculates notation in hms from rad
+     *
+     * @param  rad   input in rad
+     * @returns string with h:m:s
+     */
+    static public String rad2hms(double rad) {
+
+        return(LofarUtils.deg2hms(LofarUtils.rad2deg(rad)));
+    }
+
+
+    /** Function hms2rad
+     *  calculates notation in rad from hms
+     *
+     * @param  hms   input in string with h:m:s
+     * @returns rad
+     */
+    static public double hms2rad(String hms) {
+
+        return(LofarUtils.deg2rad(LofarUtils.hms2deg(hms)));
+    }
+
 }
