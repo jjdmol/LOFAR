@@ -492,11 +492,11 @@ void RFIStatistics::addBaselines(const TimeFrequencyData &data, TimeFrequencyMet
 				{
 					++rfiCount;
 					rfiAmplitude += image->Value(x, y);
-					if(segmentedMask->Value(x, y) == Morphology::BROADBAND_SEGMENT)
+					if(classifiedMask->Value(x, y) == Morphology::BROADBAND_SEGMENT)
 					{
 						++broadbandRfiCount;
 						broadbandRfiAmplitude += image->Value(x, y);
-					} else if(segmentedMask->Value(x, y) == Morphology::LINE_SEGMENT)
+					} else if(classifiedMask->Value(x, y) == Morphology::LINE_SEGMENT)
 					{
 						++lineRfiCount;
 						lineRfiAmplitude += image->Value(x, y);
