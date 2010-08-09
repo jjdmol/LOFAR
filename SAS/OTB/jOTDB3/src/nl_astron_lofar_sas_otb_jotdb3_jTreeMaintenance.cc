@@ -559,16 +559,16 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_addC
  */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_saveNode(JNIEnv *env, jobject jTreeMaintenance, jobject jNode) {
 
-  jboolean aB;
+  jboolean succes;
   try {
     OTDBnode aNode = convertjOTDBnode (env, jNode, jTreeMaintenance);
-    aB=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->saveNode (aNode);
+    succes=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->saveNode (aNode);
   } catch (exception &ex) {
     cout << "Exception during TreeMaintenance::saveNode" << ex.what() << endl; 
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 
-  return aB;
+  return succes;
 }
 
 /*
@@ -607,7 +607,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_deleteNode(JNIEnv *env, jobject jTreeMaintenance, jobject jNode) {
 
-  jboolean aB ;
+  jboolean succes;
   try {
     jclass class_jOTDBnode = env->FindClass ("nl/astron/lofar/sas/otb/jotdb3/jOTDBnode");
     jfieldID fid_jOTDBnode_itsTreeID = env->GetFieldID (class_jOTDBnode, "itsTreeID", "I");
@@ -615,14 +615,14 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
   
     // Get original OTDB node
     OTDBnode aNode = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->getNode (env->GetIntField (jNode, fid_jOTDBnode_itsTreeID), env->GetIntField (jNode, fid_jOTDBnode_itsNodeID));
-    aB=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->deleteNode(aNode);
+    succes=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->deleteNode(aNode);
   
   } catch (exception &ex) {
     cout << "Exception during TreeMaintenance::deleteNode" << ex.what() << endl; 
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 
-  return aB;
+  return succes;
 }
 
 /*
@@ -666,15 +666,15 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  * Signature: (II)Z
  */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeaintenance_checkTreeConstraints(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jint topNode) {
-  jboolean aB;
+  jboolean succes;
   try {
-  //  aB=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->checkTreeConstraints (aTreeID, topNode);
+  //  succes=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->checkTreeConstraints (aTreeID, topNode);
   } catch (exception &ex) {
     cout << "Exception during TreeMaintenance::checkTreeConstraints(" << aTreeID << "," << topNode << ") "<< ex.what() << endl; 
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 
-  return aB;
+  return succes;
 }
 
 /*
@@ -700,15 +700,15 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_inst
  */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_pruneTree(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jshort pruningLevel) {
 
-  jboolean aB;
+  jboolean succes;
   try {
-    aB= ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->pruneTree (aTreeID, pruningLevel);
+    succes= ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->pruneTree (aTreeID, pruningLevel);
   } catch (exception &ex) {
     cout << "Exception during TreeMaintenance::pruneTree(" << aTreeID << "," << pruningLevel << ") " << ex.what() << endl; 
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 
-  return aB;
+  return succes;
 }
 
 /*
@@ -810,14 +810,14 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  * Signature: (IS)Z
  */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_setTreeState(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jshort aState) {
-  jboolean aB;
+  jboolean succes;
   try {
-    ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->setTreeState (aTreeID, aState);
+    succes=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->setTreeState (aTreeID, aState);
   } catch (exception &ex) {
     cout << "Exception during TreeMaintenance::setTreeState(" << aTreeID << "," << aState <<  ") " << ex.what() << endl; 
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }  
-  return aB;
+  return succes;
 }
 
 /*
@@ -853,9 +853,9 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
   const string endTime (ed);
   const ptime ts (time_from_string (startTime));
   const ptime te (time_from_string (endTime));
-  jboolean aB;
+  jboolean succes;
   try {
-    aB= ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->setSchedule(treeID,ts,te);
+    succes= ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->setSchedule(treeID,ts,te);
     env->ReleaseStringUTFChars (aStartTime, bd);
     env->ReleaseStringUTFChars (anEndTime, ed);
   } catch (exception &ex) {
@@ -864,7 +864,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
     env->ReleaseStringUTFChars (anEndTime, ed);
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }  
-  return aB;
+  return succes;
 }
 
 
