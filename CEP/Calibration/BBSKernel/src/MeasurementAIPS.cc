@@ -600,7 +600,7 @@ void MeasurementAIPS::addDataColumn(const string &column)
     // Added column should get the same shape as the other data columns in
     // the MS.
     ArrayColumnDesc<Complex> columnDescriptor(column, IPosition(2,
-        nCorrelations(), nFreq(), ColumnDesc::FixedShape));
+        nCorrelations(), nFreq()), ColumnDesc::FixedShape);
 
     // Create storage manager. Tile size specification taken from the
     // MSCreate class in the CEP/MS package.
