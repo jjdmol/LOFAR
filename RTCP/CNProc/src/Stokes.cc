@@ -79,7 +79,7 @@ void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stok
 	  addStokes( stokes, in[sb][ch][inTime+fractime][0], in[sb][ch][inTime+fractime][1], allStokes );
         }
 
-        #define dest(stokes) out->samples[stokes][outTime][sb][ch]
+        #define dest(stokes) out->samples[sb][stokes][outTime][ch]
         dest(0) = stokes.I;
         if( allStokes ) {
           dest(1) = stokes.Q;
@@ -156,7 +156,7 @@ void Stokes::calculateIncoherent( const SampleData<> *sampleData, StokesData *st
         }
       }
 
-      #define dest(stokes) out->samples[stokes][outTime][0][ch]
+      #define dest(stokes) out->samples[0][stokes][outTime][ch]
       dest(0) = stokes.I / nrValidStations;
       if( allStokes ) {
         dest(1) = stokes.Q / nrValidStations;

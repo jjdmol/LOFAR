@@ -62,6 +62,7 @@ template <typename SAMPLE_TYPE = i8complex> class CN_ProcessingPlan: public Proc
     TransposedBeamFormedData     *itsTransposedBeamFormedData;
     StokesData                   *itsCoherentStokesData;
     StokesData                   *itsIncoherentStokesData;
+    StokesData                   *itsTransposedCoherentStokesData;
 };
 
 }

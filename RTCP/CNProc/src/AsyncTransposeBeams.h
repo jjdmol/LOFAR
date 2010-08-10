@@ -4,7 +4,6 @@
 #include <AsyncCommunication.h>
 #include <Interface/BeamFormedData.h>
 #include <LocationInfo.h>
-#include <Interface/TransposedBeamFormedData.h>
 
 #if defined HAVE_MPI
 #define MPICH_IGNORE_CXX_SEEK
@@ -36,13 +35,13 @@ class AsyncTransposeBeams
 		      const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, const std::vector<unsigned> &usedCoresInPset);
   
   // Post all async receives for the transpose.
-  void postReceive(TransposedBeamFormedData *transposedData, unsigned subband, unsigned beam, unsigned psetIndex, unsigned coreIndex);
+  template <typename T, unsigned DIM> void postReceive( SampleData<T,DIM> *transposedData, unsigned subband, unsigned beam, unsigned psetIndex, unsigned coreIndex);
   
   // Wait for a data message. Returns the station number where the message originates.
   unsigned waitForAnyReceive();
   
   // Asynchronously send a subband.
-  void asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned beam, const BeamFormedData *inputData);
+  template <typename T, unsigned DIM> void asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned beam, const SampleData<T,DIM> *inputData);
   
   // Make sure all async sends have finished.
   void waitForAllSends();
