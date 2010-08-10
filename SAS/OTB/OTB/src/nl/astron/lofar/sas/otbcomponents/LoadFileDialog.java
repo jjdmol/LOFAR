@@ -120,7 +120,7 @@ public class LoadFileDialog extends javax.swing.JDialog {
                 browseButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(browseButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 40, -1, 20));
+        getContentPane().add(browseButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 40, 100, 20));
 
         statusLabel.setText("Status:");
         getContentPane().add(statusLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, -1, 20));
@@ -133,7 +133,7 @@ public class LoadFileDialog extends javax.swing.JDialog {
 
         descriptionInput.setRows(3);
         descriptionInput.setToolTipText("Set Description for this tree");
-        getContentPane().add(descriptionInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 140, 390, 60));
+        getContentPane().add(descriptionInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 140, 400, 60));
 
         cancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         cancelButton.setText("Cancel");
@@ -155,7 +155,7 @@ public class LoadFileDialog extends javax.swing.JDialog {
                 loadButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(loadButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 230, -1, -1));
+        getContentPane().add(loadButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 230, 100, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents

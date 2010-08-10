@@ -70,8 +70,8 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
                     aMainFrame.getSharedVars().getLogParamEndTime(),
                     aMainFrame.getSharedVars().getLogParamMostRecent());
             if (aLogList==null || aLogList.size()<1 ) {
-                logger.warn("Failed to get searchInPeriod Match");
-                return false;
+                logger.warn("No matches for this searchInPeriod");
+                return true;
             }
             data = new Object[aLogList.size()][headers.length];
             for (int k=0; k< aLogList.size();k++) {
@@ -81,7 +81,7 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
             }
             fireTableDataChanged();
         } catch (RemoteException e) {
-            logger.debug("Remote exception on searchInPeriod: " + e);
+            logger.error("Remote exception on searchInPeriod: " + e);
             return false;
         } 
        

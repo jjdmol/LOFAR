@@ -52,7 +52,6 @@ public class MainFrame extends javax.swing.JFrame {
     private HashMap<String,PluginPanelInfo>  itsPlugins;
     private JPanel                           itsActivePanel;
     private StorageLocation                  itsStorageLocation;
-    private MACNavigatorInteraction          itsMACInteraction;
     private SharedVars                       itsSharedVars;
     private static UserAccount               itsUserAccount;
     private String itsServer               = "";
@@ -109,7 +108,6 @@ public class MainFrame extends javax.swing.JFrame {
 
         itsSharedVars = new SharedVars(this);
         itsStorageLocation = new StorageLocation(SharedVars.getOTDBrmi());
-        itsMACInteraction = new MACNavigatorInteraction(itsStorageLocation);
 
         initComponents();
 
@@ -514,7 +512,7 @@ public class MainFrame extends javax.swing.JFrame {
                 // create a useraccount object Interaction object
                 try {
                     itsUserAccount = new UserAccount(userName, password);
-                    itsMACInteraction.setCurrentUser(userName,password);
+//                    itsMACInteraction.setCurrentUser(userName,password);
 
 
                     statusPanelMainFrame.setText(StatusPanel.MIDDLE,"User: "+userName);

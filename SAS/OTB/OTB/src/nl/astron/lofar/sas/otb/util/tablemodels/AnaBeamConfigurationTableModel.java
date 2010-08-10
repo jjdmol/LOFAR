@@ -50,6 +50,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
     private Vector<String>itsTargets    = new Vector<String>();
     private Vector<String>itsAngles1    = new Vector<String>();
     private Vector<String>itsAngles2    = new Vector<String>();
+    private Vector<String>itsCoordTypes = new Vector<String>();
     private Vector<String>itsDurations  = new Vector<String>();
     private Vector<String>itsStartTimes = new Vector<String>();
     private Vector<String>itsRanks      = new Vector<String>();
@@ -64,6 +65,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         this.addColumn("dirtype");
         this.addColumn("angle 1");
         this.addColumn("angle 2");
+        this.addColumn("coordtype");
         this.addColumn("rank");
     }
     
@@ -73,6 +75,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
      * @param  aTargets    Vector<String> of all target names
      * @param  anAngles1   Vector<String> of all direction 1 angles
      * @param  anAngles2   Vector<String> of all direction 2 angles
+     * @param  aCoordType  Vector<String> of all coordinate types
      * @param  aDurations  Vector<String> of all durations
      * @param  aStartTimes Vector<String> of all startTimes
      * @param  aRanks      Vector<String> of all ranks
@@ -81,11 +84,11 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
      * @return True if succes else False
      */
      public boolean fillTable(String treeType, Vector<String> aDirTypes, Vector<String> aTargets, Vector<String> anAngles1, Vector<String> anAngles2,
-                             Vector<String> aDurations, Vector<String> aStartTimes, Vector<String> aRanks,boolean refill) {
+                             Vector<String> aCoordType,Vector<String> aDurations, Vector<String> aStartTimes, Vector<String> aRanks,boolean refill) {
          
         // "clear" the table
         setRowCount(0);
-        if (aDirTypes==null||aTargets==null||anAngles1==null||anAngles2==null||aDurations==null||aStartTimes==null||aRanks==null) {
+        if (aDirTypes==null||aTargets==null||anAngles1==null||anAngles2==null||aCoordType==null||aDurations==null||aStartTimes==null||aRanks==null) {
             logger.error("Error in fillTable, null value in input found.");
             return false;
         }
@@ -101,6 +104,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
             itsTargets.add(aTargets.get(i));
             itsAngles1.add(anAngles1.get(i));
             itsAngles2.add(anAngles2.get(i));
+            itsCoordTypes.add(aCoordType.get(i));
             itsDurations.add(aDurations.get(i));
             itsStartTimes.add(aStartTimes.get(i));
             itsRanks.add(aRanks.get(i));
@@ -117,6 +121,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
             String[]  newRow = { aDirTypes.elementAt(i+offset),
                                  anAngles1.elementAt(i+offset),
                                  anAngles2.elementAt(i+offset),
+                                 aCoordType.elementAt(i+offset),
                                  aRanks.elementAt(i+offset)
             };
             
@@ -134,6 +139,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
      * @param  aTargets   Vector<String> of all Target names
      * @param  anAngles1   Vector<String> of all direction 1 angles
      * @param  anAngels2   Vector<String> of all direction 2 angles
+     * @param  aCoordType  Vector<String> of all coordinate types
      * @param  aDuration   Vector<String> of all Durations
      * @param  aStartTime  Vector<String> of all StartTimes
      * @param  aRanks   Vector<String> of all ranks
@@ -141,7 +147,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
      * @return True if succes else False
      */
      public boolean getTable(Vector<String> aDirTypes,Vector<String> aTargets,Vector<String> anAngles1,Vector<String> anAngles2,
-                             Vector<String> aDurations,Vector<String> aStartTimes,Vector<String> aRanks) {
+                             Vector<String> aCoordType,Vector<String> aDurations,Vector<String> aStartTimes,Vector<String> aRanks) {
          
         int length = aDirTypes.size();
         
@@ -151,6 +157,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         aTargets.setSize(1);
         anAngles1.setSize(1);
         anAngles2.setSize(1);
+        aCoordType.setSize(1);
         aDurations.setSize(1);
         aStartTimes.setSize(1);
         aRanks.setSize(1);
@@ -160,9 +167,10 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
             aTargets.addElement(itsTargets.get(i+offset));
             anAngles1.addElement((String)getValueAt(i,1));
             anAngles2.addElement((String)getValueAt(i,2));
+            aCoordType.addElement((String)getValueAt(i,3));
             aDurations.addElement(itsDurations.get(i+offset));
             aStartTimes.addElement(itsStartTimes.get(i+offset));
-            aRanks.addElement((String)getValueAt(i,3));
+            aRanks.addElement((String)getValueAt(i,4));
         }
         return true;    
     }
@@ -174,15 +182,16 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
      * @param  aTarget     TargetNames
      * @param  anAngles1   direction 1 angle
      * @param  anAngels2   direction 2 angle
+     * @param  aCoordType  Coordinate Types
      * @param  aDurations  Durations involved
      * @param  aStartTimes StartTimes involved
      * @param  aRank      Ranks involved
      *
      * @return True if succes else False
      */
-    public boolean addRow(String aDirType,String aTarget,String anAngle1,String anAngle2, String aDuration, String aStartTime,String aRank) {
+    public boolean addRow(String aDirType,String aTarget,String anAngle1,String anAngle2, String aCoordType,String aDuration, String aStartTime,String aRank) {
       
-        if (aDirType==null||aTarget==null||anAngle1==null||anAngle2==null||aDuration==null||aStartTime==null||aRank==null) {
+        if (aDirType==null||aTarget==null||anAngle1==null||anAngle2==null||aCoordType==null||aDuration==null||aStartTime==null||aRank==null) {
             logger.error("Error in addRow, null value in input found.");
             return false;
         }
@@ -191,11 +200,12 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         itsTargets.add(aTarget);
         itsAngles1.add(anAngle1);
         itsAngles2.add(anAngle2);
+        itsCoordTypes.add(aCoordType);
         itsDurations.add(aDuration);
         itsStartTimes.add(aStartTime);
         itsRanks.add(aRank);
 
-        String[]  newRow = { aDirType,anAngle1,anAngle2,aRank};
+        String[]  newRow = { aDirType,anAngle1,anAngle2,aCoordType,aRank};
         this.addRow(newRow);
 
         isChanged=true;
@@ -220,13 +230,16 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
             //Angle2
             this.setValueAt(newRow[3],row,2);
             itsAngles2.setElementAt(newRow[3], row+offset);
+            //Coordinate Type
+            this.setValueAt(newRow[4],row,3);
+            itsAngles2.setElementAt(newRow[4], row+offset);
             //Duration
-            itsDurations.setElementAt(newRow[4], row+offset);
+            itsDurations.setElementAt(newRow[5], row+offset);
             //StartTime
-            itsStartTimes.setElementAt(newRow[5], row+offset);
+            itsStartTimes.setElementAt(newRow[6], row+offset);
             //Rank
-            this.setValueAt(newRow[6],row,3);
-            itsRanks.setElementAt(newRow[6], row+offset);
+            this.setValueAt(newRow[7],row,4);
+            itsRanks.setElementAt(newRow[7], row+offset);
         } else {
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
@@ -248,9 +261,10 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
                                    itsTargets.get(row+offset),
                                    (String)this.getValueAt(row,1),
                                    (String)this.getValueAt(row,2),
+                                   (String)this.getValueAt(row,3),
                                    itsDurations.get(row+offset),
                                    itsStartTimes.get(row+offset),
-                                   (String)this.getValueAt(row,3)};
+                                   (String)this.getValueAt(row,4)};
             return selection;
         } else {
             return null;
@@ -265,6 +279,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         itsTargets.removeAllElements();
         itsAngles1.removeAllElements();
         itsAngles2.removeAllElements();
+        itsCoordTypes.removeAllElements();
         itsDurations.removeAllElements();
         itsStartTimes.removeAllElements();
         itsRanks.removeAllElements();
@@ -279,6 +294,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         itsTargets.remove(row+offset);
         itsAngles1.remove(row+offset);
         itsAngles2.remove(row+offset);
+        itsCoordTypes.remove(row+offset);
         itsDurations.remove(row+offset);
         itsStartTimes.remove(row+offset);
         itsRanks.remove(row+offset);
