@@ -7,6 +7,7 @@ from LOFAR.LogValidators import NoErrors
 from LOFAR.Locations import Locations
 from LOFAR.Partitions import PartitionPsets
 from LOFAR import Logger
+from random import sample
 
 parsetFile = "RTCP-validate.parset"
 
@@ -92,6 +93,11 @@ if __name__ == "__main__":
                         action = "store_true",
                         default = False,
 			help = "run tests for varying number of beams and stations" )
+  testgroup.add_option( "--tabrun",
+  			dest = "tabrun",
+                        action = "store_true",
+                        default = False,
+			help = "run tests for merging stations" )
   parser.add_option_group( testgroup )
 
   # parse arguments
@@ -192,3 +198,19 @@ if __name__ == "__main__":
 
         if not testParset( p, [NoErrors()] ):
           sys.exit(1)
+
+  if run_all or options.tabrun:
+    # max nr stations
+    nrStations = len(PartitionPsets[options.partition])
+    for nrTabStations in xrange(2,nrStations+1):
+      p = initParset( "%d merged stations" % (nrTabStations,) )
+      p.setNrStations( nrStations )
+
+      allStationNames = p.parset.stations
+
+      # combine random stations
+      tabList = sample( allStationNames,nrTabStations )
+      p.parset["Observation.Beamformer[0].stationList"] = ",".join(tabList)
+
+      if not testParset( p, [NoErrors()] ):
+        sys.exit(1)
