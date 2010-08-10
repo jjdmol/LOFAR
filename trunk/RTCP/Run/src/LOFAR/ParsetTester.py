@@ -77,11 +77,11 @@ class ParsetTester:
   def setNrStations( self, nrStations ):
     """ Use fake stations 0 .. nrStations which map to this partition. Uses at most |partition| stations. """
 
-    psets = PartitionPsets[self.partition]
+    psets = PartitionPsets[self.partition][:nrStations]
     ipsuffixes = [ip.split(".")[3] for ip in psets]
     stations = ["S%s" % (s,) for s in ipsuffixes]
 
-    self.parset.forceStations( stations[:nrStations] )
+    self.parset.forceStations( stations )
 
 
   def setNrPencilBeams( self, nrBeams ):
