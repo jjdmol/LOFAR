@@ -58,11 +58,12 @@ public class BeamDialog extends javax.swing.JDialog {
         itsTarget=selection[1];
         itsAngle1=selection[2];
         itsAngle2=selection[3];
-        itsDuration=selection[4];
-        itsStartTime=selection[5];
-        itsSubbandList=selection[6];
-        itsBeamletList=selection[7];
-        itsMomID=selection[8];
+        itsCoordType=selection[4];
+        itsDuration=selection[5];
+        itsStartTime=selection[6];
+        itsSubbandList=selection[7];
+        itsBeamletList=selection[8];
+        itsMomID=selection[9];
         editting=edit;
         itsSavedBeamlets=(BitSet)usedBeamlets.clone();
         itsUsedBeamlets=(BitSet)usedBeamlets.clone();
@@ -114,6 +115,7 @@ public class BeamDialog extends javax.swing.JDialog {
         inputDirectionTypes.setSelectedItem(itsDirectionTypes);
         inputAngle1.setText(itsAngle1);
         inputAngle2.setText(itsAngle2);
+        coordTypeChange.setSelectedItem(itsCoordType);
         inputSubbandList.setText(itsSubbandList);
         inputBeamletList.setText(itsBeamletList);
 
@@ -156,6 +158,7 @@ public class BeamDialog extends javax.swing.JDialog {
         cancelButton = new javax.swing.JButton();
         saveButton = new javax.swing.JButton();
         labelDirectionTypes = new javax.swing.JLabel();
+        coordTypeChange = new javax.swing.JComboBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("LOFAR View TreeInfo");
@@ -195,6 +198,14 @@ public class BeamDialog extends javax.swing.JDialog {
 
         labelDirectionTypes.setText("directionTypes :");
 
+        coordTypeChange.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "rad", "deg", "hmsdms", "dmsdms" }));
+        coordTypeChange.setToolTipText("set to alternative coordinates");
+        coordTypeChange.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                coordTypeChangeActionPerformed(evt);
+            }
+        });
+
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -214,34 +225,44 @@ public class BeamDialog extends javax.swing.JDialog {
                         .add(20, 20, 20)
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(inputDirectionTypes, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 75, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                                .add(org.jdesktop.layout.GroupLayout.LEADING, inputAngle2)
-                                .add(org.jdesktop.layout.GroupLayout.LEADING, inputAngle1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 185, Short.MAX_VALUE))))
+                            .add(jPanel1Layout.createSequentialGroup()
+                                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                                    .add(org.jdesktop.layout.GroupLayout.LEADING, inputAngle2)
+                                    .add(org.jdesktop.layout.GroupLayout.LEADING, inputAngle1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 185, Short.MAX_VALUE))
+                                .add(18, 18, 18)
+                                .add(coordTypeChange, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .add(574, 574, 574))
                     .add(jPanel1Layout.createSequentialGroup()
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                             .add(labelSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .add(labelBeamletList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .add(20, 20, 20)
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 844, Short.MAX_VALUE)
-                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputBeamletList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 844, Short.MAX_VALUE))))
+                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 863, Short.MAX_VALUE)
+                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputBeamletList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 863, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel1Layout.createSequentialGroup()
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(inputDirectionTypes, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(labelDirectionTypes))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(labelAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 14, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(inputAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(labelAngle2)
-                    .add(inputAngle2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(inputDirectionTypes, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(labelDirectionTypes))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(labelAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 14, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(inputAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(labelAngle2)
+                            .add(inputAngle2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .add(coordTypeChange, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(20, 20, 20)))
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(inputSubbandList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(labelSubbandList))
@@ -296,6 +317,47 @@ public class BeamDialog extends javax.swing.JDialog {
         setVisible(false);
         dispose();
 }//GEN-LAST:event_cancelButtonActionPerformed
+
+    private void coordTypeChangeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_coordTypeChangeActionPerformed
+
+        if (evt.getActionCommand().equals("comboBoxChanged")) {
+            String ch = coordTypeChange.getSelectedItem().toString();
+            String tmpch = ch;
+            String tmpcoord = itsCoordType;
+            if ((inputAngle1.getText().isEmpty() && inputAngle1.getText().isEmpty()) || ch.equals(itsCoordType)) {
+                return;
+            }
+            try {
+            if (!inputAngle1.getText().isEmpty()) {
+                if (ch.equals("dmsdms")) {
+                    tmpch = "dms";
+                } else if (ch.equals("hmsdms")) {
+                    tmpch = "hms";
+                }
+                if (itsCoordType.equals("hmsdms")) {
+                    tmpcoord="hms";
+                } else if (itsCoordType.equals("dmsdms")) {
+                    tmpcoord="dms";
+                }
+                inputAngle1.setText(LofarUtils.changeCoordinate(tmpcoord, tmpch, inputAngle1.getText()));
+            }
+            if (!inputAngle2.getText().isEmpty()) {
+                if (ch.equals("dmsdms") || ch.equals("hmsdms")) {
+                    tmpch = "dms";
+                }
+                if (itsCoordType.equals("hmsdms") || itsCoordType.equals("dmsdms")) {
+                    tmpcoord="dms";
+                }
+                inputAngle2.setText(LofarUtils.changeCoordinate(tmpcoord, tmpch, inputAngle2.getText()));
+            }
+            itsCoordType = ch;
+            } catch (NumberFormatException ex) {
+                String aS="Error in angle input format :" + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+            }
+        }
+    }//GEN-LAST:event_coordTypeChangeActionPerformed
         
     private void checkChanged() {
         if (!itsDirectionTypes.equals(inputDirectionTypes.getSelectedItem().toString())) {
@@ -310,6 +372,12 @@ public class BeamDialog extends javax.swing.JDialog {
             isChanged=true;
             return;
         }
+
+        if (!itsCoordType.equals(coordTypeChange.getSelectedItem().toString())) {
+            isChanged=true;
+            return;
+        }
+
         if (!itsSubbandList.equals(inputSubbandList.getText())) {
             isChanged=true;
             return;
@@ -325,6 +393,7 @@ public class BeamDialog extends javax.swing.JDialog {
         itsTarget,
         inputAngle1.getText(),
         inputAngle2.getText(),
+        coordTypeChange.getSelectedItem().toString(),
         itsDuration,
         itsStartTime,
         inputSubbandList.getText(),
@@ -343,6 +412,7 @@ public class BeamDialog extends javax.swing.JDialog {
     private String    itsTarget         = "";
     private String    itsAngle1         = "";
     private String    itsAngle2         = "";
+    private String    itsCoordType      = "";
     private String    itsDuration       = "";
     private String    itsStartTime      = "";
     private String    itsSubbandList    = "";
@@ -354,6 +424,7 @@ public class BeamDialog extends javax.swing.JDialog {
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
+    private javax.swing.JComboBox coordTypeChange;
     private javax.swing.JTextField inputAngle1;
     private javax.swing.JTextField inputAngle2;
     private javax.swing.JTextField inputBeamletList;

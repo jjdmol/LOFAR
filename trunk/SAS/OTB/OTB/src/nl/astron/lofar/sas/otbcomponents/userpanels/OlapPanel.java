@@ -133,7 +133,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 }
             }
             //we also need the Virtual Instrument Storagenodes here
-            Vector VIchilds = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(),"VirtualInstrument");
+            Vector VIchilds = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(),"%VirtualInstrument");
 
             // get all the params per child
             Enumeration eVI = VIchilds.elements();

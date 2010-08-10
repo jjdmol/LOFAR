@@ -461,7 +461,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
 
         itsMainFrame.setHourglassCursor();
         if (!((LogParamTableModel)tablePanel1.getTableModel()).fillTable(itsMainFrame,itsNode.nodeID())) {
-            logger.error("Error filling LogParamTableMode");
+            logger.error("Error filling LogParamTableModel("+itsNode.nodeID()+")");
         }
         itsMainFrame.setNormalCursor();        
     }

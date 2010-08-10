@@ -1,4 +1,4 @@
-/* BeamDialog.java
+/* AnaBeamDialog.java
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -58,9 +58,10 @@ public class AnaBeamDialog extends javax.swing.JDialog {
         itsTarget=selection[1];
         itsAngle1=selection[2];
         itsAngle2=selection[3];
-        itsDuration=selection[4];
-        itsStartTime=selection[5];
-        itsRank=selection[6];
+        itsCoordType=selection[4];
+        itsDuration=selection[5];
+        itsStartTime=selection[6];
+        itsRank=selection[7];
         editting=edit;
         initialize();
     }
@@ -71,6 +72,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
         inputDirectionType.setSelectedItem(itsDirectionType);
         inputAngle1.setText(itsAngle1);
         inputAngle2.setText(itsAngle2);
+        coordTypeChange.setSelectedItem(itsCoordType);
         inputRank.setSelectedItem(itsRank);
     }
     
@@ -106,6 +108,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
         saveButton = new javax.swing.JButton();
         labelDirectionType = new javax.swing.JLabel();
         inputRank = new javax.swing.JComboBox();
+        coordTypeChange = new javax.swing.JComboBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("LOFAR View TreeInfo");
@@ -145,6 +148,14 @@ public class AnaBeamDialog extends javax.swing.JDialog {
 
         inputRank.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1" }));
 
+        coordTypeChange.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "rad", "deg", "hmsdms", "dmsdms" }));
+        coordTypeChange.setToolTipText("set to alternative coordinates");
+        coordTypeChange.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                coordTypeChangeActionPerformed(evt);
+            }
+        });
+
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -163,44 +174,51 @@ public class AnaBeamDialog extends javax.swing.JDialog {
                             .add(inputDirectionType, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 75, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(inputAngle2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 185, Short.MAX_VALUE)
                             .add(inputAngle1))
-                        .addContainerGap(16, Short.MAX_VALUE))
+                        .add(26, 26, 26)
+                        .add(coordTypeChange, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())
                     .add(jPanel1Layout.createSequentialGroup()
                         .add(labelRank, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 93, Short.MAX_VALUE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(inputRank, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 75, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .add(126, 126, 126))
+                        .add(266, 266, 266))
                     .add(jPanel1Layout.createSequentialGroup()
                         .add(cancelButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(saveButton)
-                        .addContainerGap(130, Short.MAX_VALUE))))
+                        .addContainerGap(270, Short.MAX_VALUE))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel1Layout.createSequentialGroup()
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(inputDirectionType, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(labelDirectionType))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(labelAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 14, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(inputAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(labelAngle2)
-                    .add(inputAngle2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(inputRank, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(labelRank))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 10, Short.MAX_VALUE)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(cancelButton)
-                    .add(saveButton))
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(inputDirectionType, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(labelDirectionType))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(labelAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 14, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(inputAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(labelAngle2)
+                            .add(inputAngle2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(inputRank, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(labelRank))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 10, Short.MAX_VALUE)
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(cancelButton)
+                            .add(saveButton)))
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(35, 35, 35)
+                        .add(coordTypeChange, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
 
-        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 320, 170));
+        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 460, 170));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -222,6 +240,9 @@ public class AnaBeamDialog extends javax.swing.JDialog {
         if (!itsAngle2.equals(inputAngle2.getText())) {
             isChanged=true;
         }
+        if (!itsCoordType.equals(coordTypeChange.getSelectedItem().toString())) {
+            isChanged=true;
+        }
         if (!itsRank.equals(inputRank.getSelectedItem().toString())) {
             isChanged=true;
         }
@@ -232,6 +253,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
         itsTarget,
         inputAngle1.getText(),
         inputAngle2.getText(),
+        coordTypeChange.getSelectedItem().toString(),
         itsDuration,
         itsStartTime,
         inputRank.getSelectedItem().toString()
@@ -245,6 +267,47 @@ public class AnaBeamDialog extends javax.swing.JDialog {
         setVisible(false);
         dispose();
     }//GEN-LAST:event_cancelButtonActionPerformed
+
+    private void coordTypeChangeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_coordTypeChangeActionPerformed
+
+        if (evt.getActionCommand().equals("comboBoxChanged")) {
+            String ch = coordTypeChange.getSelectedItem().toString();
+            String tmpch = ch;
+            String tmpcoord = itsCoordType;
+            if ((inputAngle1.getText().isEmpty() && inputAngle1.getText().isEmpty()) || ch.equals(itsCoordType)) {
+                return;
+            }
+            try {
+                if (!inputAngle1.getText().isEmpty()) {
+                    if (ch.equals("dmsdms")) {
+                        tmpch = "dms";
+                    } else if (ch.equals("hmsdms")) {
+                        tmpch = "hms";
+                    }
+                    if (itsCoordType.equals("hmsdms")) {
+                        tmpcoord = "hms";
+                    } else if (itsCoordType.equals("dmsdms")) {
+                        tmpcoord = "dms";
+                    }
+                    inputAngle1.setText(LofarUtils.changeCoordinate(tmpcoord, tmpch, inputAngle1.getText()));
+                }
+                if (!inputAngle2.getText().isEmpty()) {
+                    if (ch.equals("dmsdms") || ch.equals("hmsdms")) {
+                        tmpch = "dms";
+                    }
+                    if (itsCoordType.equals("hmsdms") || itsCoordType.equals("dmsdms")) {
+                        tmpcoord = "dms";
+                    }
+                    inputAngle2.setText(LofarUtils.changeCoordinate(tmpcoord, tmpch, inputAngle2.getText()));
+                }
+                itsCoordType = ch;
+            } catch (NumberFormatException ex) {
+                String aS = "Error in angle input format :" + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+            }
+        }
+}//GEN-LAST:event_coordTypeChangeActionPerformed
     
     
     private MainFrame itsMainFrame = null;
@@ -254,6 +317,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
     private String    itsTarget         = "";
     private String    itsAngle1         = "";
     private String    itsAngle2         = "";
+    private String    itsCoordType      = "";
     private String    itsDuration       = "";
     private String    itsStartTime      = "";
     private String    itsRank           = "";
@@ -261,6 +325,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
+    private javax.swing.JComboBox coordTypeChange;
     private javax.swing.JTextField inputAngle1;
     private javax.swing.JTextField inputAngle2;
     private javax.swing.JComboBox inputDirectionType;

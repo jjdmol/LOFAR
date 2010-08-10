@@ -36,7 +36,7 @@ import org.apache.log4j.Logger;
 public class TBBControlPanel extends javax.swing.JPanel implements IViewPanel{
 
     static Logger logger = Logger.getLogger(TBBControlPanel.class);
-    static String name = "TBBControlDialogg";
+    static String name = "TBBControlPanel";
 
     private jOTDBnode            itsNode = null;
     private MainFrame            itsMainFrame;
@@ -109,7 +109,7 @@ public class TBBControlPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             //we need to get all the childs from this node.
             // So we get the node itself and look for its childs
-            Vector<jOTDBnode> TBBnode = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), "TBBControl");
+            Vector<jOTDBnode> TBBnode = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), "%TBBControl");
 
             if (TBBnode.isEmpty() ) {
                 logger.error("TBBControl not found, no content");
