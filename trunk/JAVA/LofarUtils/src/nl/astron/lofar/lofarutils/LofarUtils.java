@@ -582,6 +582,52 @@ public abstract class LofarUtils {
         return rad;
     }
 
+    /** Function rad2hms
+     *  calculates notation in hms from rad
+     *
+     * @param  rad   input in rad
+     * @returns string with h:m:s
+     */
+    static public String rad2hms(double rad) {
+
+        return(LofarUtils.deg2hms(LofarUtils.rad2deg(rad)));
+    }
+
+    /** Function hms2rad
+     *  calculates notation in rad from hms
+     *
+     * @param  hms   input in string with h:m:s
+     * @returns rad
+     */
+    static public double hms2rad(String hms) {
+
+        return(LofarUtils.deg2rad(LofarUtils.hms2deg(hms)));
+    }
+
+
+     /** Function rad2dms
+     *  calculates notation in hms from rad
+     *
+     * @param  rad   input in rad
+     * @returns string with d:m:s
+     */
+    static public String rad2dms(double rad) {
+
+        return(LofarUtils.deg2dms(LofarUtils.rad2deg(rad)));
+    }
+
+
+   /** Function dms2rad
+     *  calculates notation in rad from dms
+     *
+     * @param  dms   input in string with d:m:s
+     * @returns rad
+     */
+    static public double dms2rad(String dms) {
+
+        return(LofarUtils.deg2rad(LofarUtils.dms2deg(dms)));
+    }
+
     /** Function deg2hms
      *  calculates notation in hms from degrees
      *
@@ -595,7 +641,7 @@ public abstract class LofarUtils {
 
         int    h = (int) deg/15;
         int    m = (int) ((deg-h*15)/15*60);
-        double s =  (deg-(h*15)-(m*15/60))/15*3600;
+        double s =  (deg-(h*15.)-(m*15./60))/15.*3600;
 
         hms=Integer.toString(h)+":"+Integer.toString(m)+":"+Double.toString(s);
         return hms;
@@ -607,42 +653,138 @@ public abstract class LofarUtils {
      * @param  hms   string with h:m:s
      * @returns degrees
      */
-    static public double hms2deg(String hms) {
-        double deg=0;
+    static public double hms2deg(String hms) throws NumberFormatException {
+        double deg = 0;
 
-        if (hms.isEmpty()) return deg;
+        if (hms.isEmpty()) {
+            return deg;
+        }
 
-        String [] values = hms.split(":");
+        String[] values = hms.split(":");
         int h = Integer.valueOf(values[0]);
         int m = Integer.valueOf(values[1]);
         double s = Double.valueOf(values[2]);
 
-        deg= (h*15)+(m*15/60)+(s*15/3600);
+        deg = (h * 15.) + (m * 15. / 60) + (s * 15. / 3600);
 
         return deg;
     }
 
-    /** Function rad2hms
-     *  calculates notation in hms from rad
+    /** Function deg2dms
+     *  calculates notation in hms from degrees
      *
-     * @param  rad   input in rad
+     * @param  degrees   input in degrees
+     * @returns string with d:m:s
+     */
+    static public String deg2dms(double deg) {
+        String hms="";
+
+        if (deg <= 0) return hms;
+
+        int    d = (int) deg;
+        int    m = (int) ((deg-d)*60);
+        double s =  (deg-d-(m/60.))*3600.;
+
+        hms=Integer.toString(d)+"°"+Integer.toString(m)+"\'"+Double.toString(s)+"\"";
+        return hms;
+    }
+
+    /** Function dms2deg
+     *  calculates notation in deg from dms
+     *
+     * @param  hms   string with h:m:s
+     * @returns degrees
+     */
+    static public double dms2deg(String dms) throws NumberFormatException {
+        double deg=0;
+
+        if (dms.isEmpty()) return deg;
+
+        String [] v1 = dms.split("°");
+        int d = Integer.valueOf(v1[0]);
+        String [] v2 = v1[1].split("\'");
+        int m = Integer.valueOf(v2[0]);
+        String [] v3 = v2[1].split("\"");
+        double s = Double.valueOf(v3[0]);
+
+        deg= d+(m/60.)+(s/3600.);
+
+        return deg;
+    }
+
+    /** Function dms2hms
+     *  calculates notation in hms from dms
+     *
+     * @param  dms   string with d°m's"
      * @returns string with h:m:s
      */
-    static public String rad2hms(double rad) {
+    static public String dms2hms(String dms) {
 
-        return(LofarUtils.deg2hms(LofarUtils.rad2deg(rad)));
+        if (dms.isEmpty()) return dms;
+
+        return LofarUtils.rad2hms(LofarUtils.dms2rad(dms));
     }
 
-
-    /** Function hms2rad
-     *  calculates notation in rad from hms
+    /** Function hms2dms
+     *  calculates notation in dms from hms
      *
-     * @param  hms   input in string with h:m:s
-     * @returns rad
+     * @param  hms   string with h:m:s
+     * @returns string with d°m's"
      */
-    static public double hms2rad(String hms) {
+    static public String hms2dms(String hms) {
 
-        return(LofarUtils.deg2rad(LofarUtils.hms2deg(hms)));
+        if (hms.isEmpty()) return hms;
+
+        return LofarUtils.rad2dms(LofarUtils.hms2rad(hms));
     }
+
+    /** Function changeCoordinate(String from, String to, String coordinate)
+     *  returns value in another coordinate type
+     *
+     * @param  from        Coordinate type old value is in (rad,deg or hms)
+     * @param  to          Coordinate type new value will be in (rad,deg or hms)
+     * @param  coordinate  The value that needs to be recalculated
+     * @returns string     with new coord value
+     */
+    static public String changeCoordinate(String from, String to, String coordinate) throws NumberFormatException {
+
+        if (from.equals("rad")) {
+            if (to.equals("deg")) {
+                return Double.valueOf(LofarUtils.rad2deg(Double.valueOf(coordinate))).toString();
+            } else if (to.equals("hms")) {
+                return LofarUtils.rad2hms(Double.valueOf(coordinate));
+            } else if (to.equals("dms")) {
+                return LofarUtils.rad2dms(Double.valueOf(coordinate));
+            }
+        } else if (from.equals("deg")) {
+            if (to.equals("rad")) {
+                return Double.valueOf(LofarUtils.deg2rad(Double.valueOf(coordinate))).toString();
+            } else if (to.equals("hms")) {
+                return LofarUtils.deg2hms(Double.valueOf(coordinate));
+            } else if (to.equals("dms")) {
+                return LofarUtils.deg2dms(Double.valueOf(coordinate));
+            }
+        } else if (from.equals("hms")) {
+            if (to.equals("rad")) {
+                return Double.valueOf(LofarUtils.hms2rad(coordinate)).toString();
+            } else if (to.equals("deg")) {
+                return Double.valueOf(LofarUtils.hms2deg(coordinate)).toString();
+            } else if (to.equals("dms")) {
+                return LofarUtils.hms2dms(coordinate);
+            }
+        } else if (from.equals("dms")) {
+            if (to.equals("rad")) {
+                return Double.valueOf(LofarUtils.dms2rad(coordinate)).toString();
+            } else if (to.equals("deg")) {
+                return Double.valueOf(LofarUtils.dms2deg(coordinate)).toString();
+            } else if (to.equals("hms")) {
+                return LofarUtils.dms2hms(coordinate);
+            }
+        }
+
+        // else return unchanged initial value
+        return coordinate;
+    }
+
 
 }
