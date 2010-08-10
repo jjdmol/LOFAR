@@ -4,6 +4,8 @@
 #include <AsyncTransposeBeams.h>
 
 #include <Interface/CN_Mapping.h>
+#include <Interface/TransposedBeamFormedData.h>
+#include <Interface/StokesData.h>
 #include <Interface/PrintVector.h>
 #include <Common/LofarLogger.h>
 
@@ -15,7 +17,8 @@ namespace RTCP {
 
 #if defined HAVE_MPI
 
-union tag {
+
+union Tag {
   struct {
     unsigned sourceRank :13; /* 0..8191, or two BG/P racks */
     unsigned comm       :2;
@@ -42,24 +45,26 @@ AsyncTransposeBeams::AsyncTransposeBeams(
 {
 }
 
-void AsyncTransposeBeams::postReceive(TransposedBeamFormedData *transposedData, unsigned subband, unsigned beam, unsigned psetIndex, unsigned coreIndex)
+template <typename T,unsigned DIM> void AsyncTransposeBeams::postReceive(SampleData<T,DIM> *transposedData, unsigned subband, unsigned beam, unsigned psetIndex, unsigned coreIndex)
 {
   unsigned pset = itsInputPsets[psetIndex];
   unsigned core = itsUsedCoresInPset[coreIndex];
 
   unsigned rank = itsLocationInfo.remapOnTree(pset, core); // TODO cache this? maybe in locationInfo itself?
 
+  (void)beam;
+
   // define what to read
   struct {
     void   *ptr;
     size_t size;
   } toRead[itsNrCommunications] = {
-    { transposedData->samples[subband].origin(), transposedData->samples[subband].num_elements() * sizeof *transposedData->samples.origin() }
+    { transposedData->samples[subband].origin(), transposedData->samples[subband].num_elements() * sizeof(T) }
   };
 
   // read it
   for (unsigned h = 0; h < itsNrCommunications; h ++) {
-    union tag t;
+    Tag t;
 
     t.info.sourceRank = rank;
     t.info.comm       = h;
@@ -71,7 +76,6 @@ void AsyncTransposeBeams::postReceive(TransposedBeamFormedData *transposedData, 
   }
 }
 
-
 // returns station number (= pset index)
 unsigned AsyncTransposeBeams::waitForAnyReceive()
 {
@@ -80,7 +84,7 @@ unsigned AsyncTransposeBeams::waitForAnyReceive()
     unsigned size, source;
     int      tag;
 
-    union tag t;
+    Tag t;
 
     // This read could return any type of message (out of itsCommHandles)
     itsAsyncComm.waitForAnyRead(buf, size, source, tag);
@@ -112,7 +116,7 @@ unsigned AsyncTransposeBeams::waitForAnyReceive()
 }
 
 
-void AsyncTransposeBeams::asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned beam, const BeamFormedData *inputData)
+template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned beam, const SampleData<T,DIM> *inputData)
 {
   unsigned pset = itsOutputPsets[outputPsetIndex];
   unsigned core = itsUsedCoresInPset[coreIndex];
@@ -123,12 +127,12 @@ void AsyncTransposeBeams::asyncSend(unsigned outputPsetIndex, unsigned coreIndex
     const void   *ptr;
     const size_t size;
   } toWrite[itsNrCommunications] = {
-    { inputData->samples[beam].origin(), inputData->samples[beam].num_elements() * sizeof *inputData->samples.origin() }
+    { inputData->samples[beam].origin(), inputData->samples[beam].num_elements() * sizeof(T) }
   };
 
   // write it
   for (unsigned h = 0; h < itsNrCommunications; h ++) {
-    union tag t;
+    Tag t;
     t.info.sourceRank = itsLocationInfo.rank();
     t.info.comm       = h;
     t.info.subband    = subband;
@@ -139,6 +143,13 @@ void AsyncTransposeBeams::asyncSend(unsigned outputPsetIndex, unsigned coreIndex
   }
 }
 
+// specialisation for StokesData
+template void AsyncTransposeBeams::postReceive(SampleData<float,4> *, unsigned, unsigned, unsigned, unsigned);
+template void AsyncTransposeBeams::asyncSend(unsigned, unsigned, unsigned, unsigned, const SampleData<float,4> *);
+
+// specialisation for BeamFormedData
+template void AsyncTransposeBeams::postReceive(SampleData<fcomplex,4> *, unsigned, unsigned, unsigned, unsigned);
+template void AsyncTransposeBeams::asyncSend(unsigned, unsigned, unsigned, unsigned, const SampleData<fcomplex,4> *);
 
 void AsyncTransposeBeams::waitForAllSends()
 {

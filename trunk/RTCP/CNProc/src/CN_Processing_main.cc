@@ -58,7 +58,6 @@ using boost::format;
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 
-
 #if !defined CATCH_EXCEPTIONS
 
 void terminate_with_backtrace()

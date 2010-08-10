@@ -18,17 +18,17 @@ class StokesData: public SampleData<float,4>
   public:
     typedef SampleData<float,4> SuperType;
 
-    StokesData(bool coherent, unsigned nrStokes, unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration);
+    StokesData(bool coherent, unsigned nrStokes, unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration);
 
     virtual StokesData *clone() const { return new StokesData(*this); }
 };
 
-inline StokesData::StokesData(bool coherent, unsigned nrStokes, unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration)
+inline StokesData::StokesData(bool coherent, unsigned nrStokes, unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration)
 :
   // The "| 2" significantly improves transpose speeds for particular
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
-  SuperType::SampleData(false, boost::extents[nrStokes][(nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2][coherent ? nrSubbands : 1][nrChannels], coherent ? nrSubbands : 1)
+  SuperType::SampleData(false, boost::extents[coherent ? nrBeams : 1][nrStokes][(nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2][nrChannels], coherent ? nrBeams : 1)
 {
 }
 

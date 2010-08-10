@@ -100,12 +100,23 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       configuration.nrSamplesPerIntegration()
     );
 
+    itsCoherentStokesData = new StokesData(
+      true,
+      configuration.nrStokes(),
+      nrBeams,
+      configuration.nrChannelsPerSubband(),
+      configuration.nrSamplesPerIntegration(),
+      configuration.nrSamplesPerStokesIntegration()
+    );
+
     // define TRANSFORMations in chronological order
     TRANSFORM( itsInputData,            itsTransposedInputData );
     TRANSFORM( itsTransposedInputData,  itsFilteredData   );
     TRANSFORM( itsFilteredData,         itsBeamFormedData );
     TRANSFORM( itsFilteredData,         itsCorrelatedData );
     TRANSFORM( itsFilteredData,         itsIncoherentStokesData );
+
+    TRANSFORM( itsBeamFormedData,       itsCoherentStokesData );
 
     // send all requested outputs
     if( configuration.outputFilteredData() ) {
@@ -122,7 +133,11 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     const bool phaseThreeExists = configuration.phaseThreePsets().size() > 0;
 
     if (phaseThreeExists) {
-      require( itsBeamFormedData );
+      if ( configuration.outputBeamFormedData() ) {
+        require( itsBeamFormedData );
+      } else {
+        require( itsCoherentStokesData );
+      }
     }
   }
 
@@ -138,7 +153,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       configuration.nrSamplesPerIntegration()
     );
 
-    itsCoherentStokesData = new StokesData(
+    itsTransposedCoherentStokesData = new StokesData(
       true,
       configuration.nrStokes(),
       configuration.nrSubbands(),
@@ -147,14 +162,14 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       configuration.nrSamplesPerStokesIntegration()
     );
 
-    TRANSFORM( 0,                           itsTransposedBeamFormedData );
-    TRANSFORM( itsTransposedBeamFormedData, itsCoherentStokesData );
+    TRANSFORM( 0, itsTransposedBeamFormedData );
+    TRANSFORM( 0, itsTransposedCoherentStokesData );
 
     if( configuration.outputBeamFormedData() ) {
       send( itsTransposedBeamFormedData,               ".beams",             ProcessingPlan::DIST_BEAM );
     }
     if( configuration.outputCoherentStokes() ) {
-      send( itsCoherentStokesData,                     ".stokes",            ProcessingPlan::DIST_BEAM );
+      send( itsTransposedCoherentStokesData,           ".stokes",            ProcessingPlan::DIST_BEAM );
     }
   }
 }
@@ -167,6 +182,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::~CN_ProcessingPl
   delete itsTransposedInputData;
   delete itsFilteredData;
   delete itsTransposedBeamFormedData;
+  delete itsTransposedCoherentStokesData;
   delete itsCorrelatedData;
   delete itsBeamFormedData;
   delete itsCoherentStokesData;
