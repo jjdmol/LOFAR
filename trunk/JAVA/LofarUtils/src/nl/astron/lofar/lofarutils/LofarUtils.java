@@ -685,7 +685,7 @@ public abstract class LofarUtils {
         int    m = (int) ((deg-d)*60);
         double s =  (deg-d-(m/60.))*3600.;
 
-        hms=Integer.toString(d)+"°"+Integer.toString(m)+"\'"+Double.toString(s)+"\"";
+        hms=Integer.toString(d)+"\u00b0"+Integer.toString(m)+"\'"+Double.toString(s)+"\"";
         return hms;
     }
 
@@ -700,7 +700,7 @@ public abstract class LofarUtils {
 
         if (dms.isEmpty()) return deg;
 
-        String [] v1 = dms.split("°");
+        String [] v1 = dms.split("\u00b0");
         int d = Integer.valueOf(v1[0]);
         String [] v2 = v1[1].split("\'");
         int m = Integer.valueOf(v2[0]);
@@ -715,7 +715,7 @@ public abstract class LofarUtils {
     /** Function dms2hms
      *  calculates notation in hms from dms
      *
-     * @param  dms   string with d°m's"
+     * @param  dms   string with dms
      * @returns string with h:m:s
      */
     static public String dms2hms(String dms) {
@@ -729,7 +729,7 @@ public abstract class LofarUtils {
      *  calculates notation in dms from hms
      *
      * @param  hms   string with h:m:s
-     * @returns string with d°m's"
+     * @returns string with dms
      */
     static public String hms2dms(String hms) {
 
