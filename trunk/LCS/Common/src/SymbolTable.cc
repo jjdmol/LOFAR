@@ -86,9 +86,16 @@ on linux, must be present."
     }
     unsigned int size;
     long symcount;
-    symcount = bfd_read_minisymbols(itsBfd, false, (void**) &itsSymbols, &size);
+
+    // circumvent strict-aliasing rules by casting through a union
+    union {
+      asymbol ***src;
+      void **dest;
+    } symbolUnion = { &itsSymbols };
+
+    symcount = bfd_read_minisymbols(itsBfd, false, symbolUnion.dest, &size);
     if (symcount == 0) {
-      symcount = bfd_read_minisymbols(itsBfd, true, (void**) &itsSymbols, &size);
+      symcount = bfd_read_minisymbols(itsBfd, true, symbolUnion.dest, &size);
     }
     if (symcount < 0) {
       bfd_perror(bfdFile);
