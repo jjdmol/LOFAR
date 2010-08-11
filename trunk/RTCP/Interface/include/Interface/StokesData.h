@@ -28,7 +28,7 @@ inline StokesData::StokesData(bool coherent, unsigned nrStokes, unsigned nrBeams
   // The "| 2" significantly improves transpose speeds for particular
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
-  SuperType::SampleData(false, boost::extents[coherent ? nrBeams : 1][nrStokes][(nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2][nrChannels], coherent ? nrBeams : 1)
+  SuperType::SampleData(false, boost::extents[coherent ? nrBeams : 1][nrChannels][(nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2][nrStokes], coherent ? nrBeams : 1)
 {
 }
 
