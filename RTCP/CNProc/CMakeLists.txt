@@ -2,6 +2,8 @@
 
 lofar_package(CNProc 1.0 DEPENDS Common Stream Interface FCNP)
 
+add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)
+
 include(LofarFindPackage)
 lofar_find_package(MASS)
 lofar_find_package(Boost REQUIRED)
