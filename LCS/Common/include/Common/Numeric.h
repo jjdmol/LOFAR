@@ -56,11 +56,24 @@ namespace LOFAR
   // check this at compile-time.
   class Numeric
   {
+  private:
+    // termplate for masking one type with another
+    template <typename T, typename M> union maskUnion {
+      T value;
+      M mask;
+    };
+
   public:
     // Mask type used for floats is a (32-bit) int.
     typedef int floatMask_t;
     // Mask type used for doubles is a (64-bit) long long.
     typedef long long doubleMask_t;
+
+    // @{
+    // Classes to overlap floating point numbers with masks in a type-safe way
+    typedef maskUnion<float,floatMask_t> floatUnion_t;
+    typedef maskUnion<double,doubleMask_t> doubleUnion_t;
+    // @}
 
     // \return \c true if f < 0; otherwise \c false.
     static bool isNegative(float f);
@@ -106,16 +119,6 @@ namespace LOFAR
     static const doubleMask_t doubleMantissaMask = 0x000FFFFFFFFFFFFFLL;
     // @}
 
-    // @{
-    // Classes to overlap floating point numbers with masks in a type-safe way
-    template <typename T, typename M> union maskUnion {
-      T value;
-      M mask;
-    };
-
-    typedef maskUnion<float,floatMask_t> floatUnion;
-    typedef maskUnion<double,doubleMask_t> doubleUnion;
-    // @}
   };
 
 } // namespace LOFAR

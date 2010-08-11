@@ -32,49 +32,49 @@ namespace LOFAR
 {
   bool Numeric::isFinite(float f)
   {
-    floatUnion mask = { f };
+    floatUnion_t mask = { f };
     return mask.mask & floatExponentMask != floatExponentMask;
   }
 
   bool Numeric::isFinite(double d)
   {
-    doubleUnion mask = { d };
+    doubleUnion_t mask = { d };
     return mask.mask & doubleExponentMask != doubleExponentMask;
   }
 
   bool Numeric::isNegative(float f)
   {
-    floatUnion mask = { f };
+    floatUnion_t mask = { f };
     return mask.mask & floatNegativeMask == floatNegativeMask;
   }
 
   bool Numeric::isNegative(double d)
   {
-    doubleUnion mask = { d };
+    doubleUnion_t mask = { d };
     return mask.mask & doubleNegativeMask == doubleNegativeMask;
   }
 
   bool Numeric::isInf(float f)
   {
-    floatUnion mask = { f };
+    floatUnion_t mask = { f };
     return !isFinite(f) && (mask.mask & floatMantissaMask == 0L);
   }
 
   bool Numeric::isInf(double d)
   {
-    doubleUnion mask = { d };
+    doubleUnion_t mask = { d };
     return !isFinite(d) && (mask.mask & doubleMantissaMask == 0LL);
   }
 
   bool Numeric::isNan(float f)
   {
-    floatUnion mask = { f };
+    floatUnion_t mask = { f };
     return !isFinite(f) && (mask.mask & floatMantissaMask != 0L);
   }
 
   bool Numeric::isNan(double d)
   {
-    doubleUnion mask = { d };
+    doubleUnion_t mask = { d };
     return !isFinite(d) && (mask.mask & doubleMantissaMask != 0LL);
   }
 
@@ -101,8 +101,8 @@ namespace LOFAR
     if (isNegative(lhs) != isNegative(rhs)) return lhs == rhs;
 #endif
 
-    floatUnion mlhs = { lhs };
-    floatUnion mrhs = { rhs };
+    floatUnion_t mlhs = { lhs };
+    floatUnion_t mrhs = { rhs };
     floatMask_t ilhs = mlhs.mask;
     floatMask_t irhs = mrhs.mask;
 
@@ -140,8 +140,8 @@ namespace LOFAR
     if (isNegative(lhs) != isNegative(rhs)) return lhs == rhs;
 #endif
 
-    doubleUnion mlhs = { lhs };
-    doubleUnion mrhs = { rhs };
+    doubleUnion_t mlhs = { lhs };
+    doubleUnion_t mrhs = { rhs };
     doubleMask_t ilhs = mlhs.mask;
     doubleMask_t irhs = mrhs.mask;
 
