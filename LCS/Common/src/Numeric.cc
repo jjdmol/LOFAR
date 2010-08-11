@@ -30,59 +30,52 @@
 
 namespace LOFAR
 {
-
   bool Numeric::isFinite(float f)
   {
-    union {
-      floatMask_t mask;
-      float       f;
-    } exponent;
-
-    exponent.f = f;
-    //floatMask_t exponent = *reinterpret_cast<floatMask_t*>(&f) & floatExponentMask;
-    return exponent.mask & floatExponentMask != floatExponentMask;
+    floatUnion mask(f);
+    return mask.mask & floatExponentMask != floatExponentMask;
   }
 
   bool Numeric::isFinite(double d)
   {
-    doubleMask_t exponent = *(doubleMask_t*)&d & doubleExponentMask;
-    return exponent != doubleExponentMask;
+    doubleUnion mask(d);
+    return mask.mask & doubleExponentMask != doubleExponentMask;
   }
 
   bool Numeric::isNegative(float f)
   {
-    floatMask_t sign = *(floatMask_t*)&f & floatNegativeMask;
-    return sign == floatNegativeMask;
+    floatUnion mask(f);
+    return mask.mask & floatNegativeMask == floatNegativeMask;
   }
 
   bool Numeric::isNegative(double d)
   {
-    doubleMask_t sign = *(doubleMask_t*)&d & doubleNegativeMask;
-    return sign == doubleNegativeMask;
+    doubleUnion mask(d);
+    return mask.mask & doubleNegativeMask == doubleNegativeMask;
   }
 
   bool Numeric::isInf(float f)
   {
-    floatMask_t mantissa = *(floatMask_t*)&f & floatMantissaMask;
-    return (!isFinite(f) && mantissa == 0L);
+    floatUnion mask(f);
+    return !isFinite(f) && (mask.mask & floatMantissaMask == 0L);
   }
 
   bool Numeric::isInf(double d)
   {
-    doubleMask_t mantissa = *(doubleMask_t*)&d & doubleMantissaMask;
-    return (!isFinite(d) && mantissa == 0LL);
+    doubleUnion mask(d);
+    return !isFinite(d) && (mask.mask & doubleMantissaMask == 0LL);
   }
 
   bool Numeric::isNan(float f)
   {
-    floatMask_t mantissa = *(floatMask_t*)&f & floatMantissaMask;
-    return (!isFinite(f) && mantissa != 0L);
+    floatUnion mask(f);
+    return !isFinite(f) && (mask.mask & floatMantissaMask != 0L);
   }
 
   bool Numeric::isNan(double d)
   {
-    doubleMask_t mantissa = *(doubleMask_t*)&d & doubleMantissaMask;
-    return (!isFinite(d) && mantissa != 0LL);
+    doubleUnion mask(d);
+    return !isFinite(d) && (mask.mask & doubleMantissaMask != 0LL);
   }
 
 
@@ -108,8 +101,10 @@ namespace LOFAR
     if (isNegative(lhs) != isNegative(rhs)) return lhs == rhs;
 #endif
 
-    floatMask_t ilhs = *(floatMask_t*)&lhs;
-    floatMask_t irhs = *(floatMask_t*)&rhs;
+    floatUnion mlhs(lhs);
+    floatUnion mrhs(rhs);
+    floatMask_t ilhs = mlhs.mask;
+    floatMask_t irhs = mrhs.mask;
 
     // Make \a ilhs and \a irhs lexicographically ordered as twos-complement
     // long.
@@ -145,8 +140,10 @@ namespace LOFAR
     if (isNegative(lhs) != isNegative(rhs)) return lhs == rhs;
 #endif
 
-    doubleMask_t ilhs = *(doubleMask_t*)&lhs;
-    doubleMask_t irhs = *(doubleMask_t*)&rhs;
+    doubleUnion mlhs(lhs);
+    doubleUnion mrhs(rhs);
+    doubleMask_t ilhs = mlhs.mask;
+    doubleMask_t irhs = mrhs.mask;
 
     // Make \a ilhs and \a irhs lexicographically ordered as twos-complement
     // long.
