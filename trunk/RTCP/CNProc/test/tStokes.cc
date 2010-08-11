@@ -1,10 +1,10 @@
 #include <lofar_config.h>
 
-#include <PencilBeams.h>
+#include <BeamFormer.h>
 #include <Stokes.h>
 #include <Common/lofar_complex.h>
 #include <Interface/FilteredData.h>
-#include <Interface/PencilBeamData.h>
+#include <Interface/BeamFormedData.h>
 #include <Interface/StokesData.h>
 #include <vector>
 

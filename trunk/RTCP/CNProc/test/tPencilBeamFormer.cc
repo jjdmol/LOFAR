@@ -1,9 +1,9 @@
 #include <lofar_config.h>
 
-#include <PencilBeams.h>
+#include <BeamFormer.h>
 #include <Common/lofar_complex.h>
 #include <Interface/FilteredData.h>
-#include <Interface/PencilBeamData.h>
+#include <Interface/BeamFormedData.h>
 #include <vector>
 
 using namespace LOFAR;
@@ -14,7 +14,7 @@ using namespace LOFAR::TYPES;
 #define NRPENCILBEAMS           3
 
 #define NRCHANNELS              256
-#define NRSAMPLES               128 // keep computation time short, 128 is minimum (see PencilBeams.cc)
+#define NRSAMPLES               128 // keep computation time short, 128 is minimum (see BeamFormer.cc)
 
 #define CENTERFREQUENCY         (80.0e6)
 #define BASEFREQUENCY           (CENTERFREQUENCY - (NRCHANNELS/2)*CHANNELBW)

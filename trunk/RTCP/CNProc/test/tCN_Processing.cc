@@ -28,7 +28,7 @@
 #include <Common/Exception.h>
 #include <Common/Timer.h>
 #include <PPF.h>
-#include <PencilBeams.h>
+#include <BeamFormer.h>
 #include <Correlator.h>
 #include <ArenaMapping.h>
 
