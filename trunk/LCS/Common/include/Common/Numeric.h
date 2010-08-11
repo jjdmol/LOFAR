@@ -111,8 +111,6 @@ namespace LOFAR
     template <typename T, typename M> union maskUnion {
       T value;
       M mask;
-
-      maskUnion( const T &value ): value(value) {}
     };
 
     typedef maskUnion<float,floatMask_t> floatUnion;
