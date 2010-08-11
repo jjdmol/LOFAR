@@ -37,11 +37,13 @@ using namespace std;
 #define initNumbers(T)                                               \
   LOG_INFO("initNumbers("#T")");                                     \
   typedef Numeric::T##Mask_t mask_t;                                 \
+  typedef Numeric::T##Union_t union_t;                               \
   ASSERT(sizeof(T) == sizeof(mask_t));				     \
   T zero(0), one(1), two(2);                                         \
   /* Create a negative zero                              */          \
-  T negativeZero;                                                    \
-  *(mask_t*)&negativeZero = mask_t(1) << 8*sizeof(T)-1;              \
+  union_t negativeZero_u;                                            \
+  negativeZero_u.mask = mask_t(1) << 8*sizeof(T)-1;                  \
+  T negativeZero(negativeZero_u.value);                              \
   /* Create an infinity */                                           \
   T inf(one/zero);                                                   \
   /* Create a NaN */                                                 \
@@ -54,27 +56,33 @@ using namespace std;
   T nan4(sqrt(-one));                                                \
   /* Copy one of the NANs and modify its representation. */          \
   /* This will still give a NAN, just a different one.   */          \
-  T nan5(nan1);                                                      \
-  (*(mask_t*)&nan5) += 1;                                            \
+  union_t nan5_u = { nan1 };                                         \
+  nan5_u.mask += 1;                                                  \
+  T nan5(nan5_u.value);                                              \
   /* Create number nearest to 2 (1 ULP below)            */          \
-  T nearestTwo(two);                                                 \
-  (*(mask_t*)&nearestTwo) -= 1;                                      \
+  union_t nearestTwo_u = { two };                                    \
+  nearestTwo_u.mask -= 1;                                            \
+  T nearestTwo(nearestTwo_u.value);                                  \
   /* Create a number near to 2 (sizeof(T) ULPs below)     */         \
-  T nearTwo(two);                                                    \
-  (*(mask_t*)&nearTwo) -= sizeof(T);                                 \
+  union_t nearTwo_u = { two };                                       \
+  nearTwo_u.mask -= sizeof(T);                                       \
+  T nearTwo(nearTwo_u.value);                                        \
   /* Create a number not so near to 2 (sizeof(T)^2 ULPs below) */    \
-  T notNearTwo(two);                                                 \
-  (*(mask_t*)&notNearTwo) -= sizeof(T)*sizeof(T);                    \
+  union_t notNearTwo_u = { two };                                    \
+  notNearTwo_u.mask -= sizeof(T)*sizeof(T);                          \
+  T notNearTwo(notNearTwo_u.value);                                  \
   /* Create a denormal by starting with zero and         */          \
   /* incrementing the integer representation.            */          \
-  T smallestDenormal(0);                                             \
-  (*(mask_t*)&smallestDenormal) += 1;
+  union_t smallestDenormal_u = { zero };                             \
+  smallestDenormal_u.mask += 1;                                      \
+  T smallestDenormal(smallestDenormal_u.value);
 
 #define printNumber(os, x)                                           \
 { int p(2*sizeof(x)+1);                                              \
+  union_t u = { x };                                                 \
   os << setprecision(p) << left << setw(17) << #x << " = "           \
      << setw(p+6) << x << " (" << hex << showbase << setw(p+1)       \
-     << *(mask_t*)&x << dec << ")" << endl;                          \
+     << u.value << dec << ")" << endl;                               \
 }
 #define showNumbers(T)                                               \
 { LOG_INFO("showNumbers("#T")");                                     \
@@ -234,8 +242,11 @@ void testFloat()
   float pinf(one/zero);
   float ninf(none/zero);
   float nan(pinf/pinf);
-  long ione(1);
-  float pdmin(*(float*)(&ione)); // smallest denormalized float
+  union {
+    long ione;
+    float fone;
+  } u = { 1 };  
+  float pdmin(u.fone); // smallest denormalized float
   float ndmin(-pdmin);
   
   ASSERT(!Numeric::isNegative(zero));
