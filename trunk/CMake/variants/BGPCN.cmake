@@ -33,7 +33,6 @@ set(BGPCN_EXE_LINKER_FLAGS_DEBUG)
 set(BGPCN_EXE_LINKER_FLAGS_OPT)
 set(BGPCN_COMPILE_DEFINITIONS
   -B/bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/bin
-  -DBOOST_ENABLE_ASSERT_HANDLER
   -DHAVE_BGP
   -DHAVE_BGP_CN
   -DHAVE_FCNP
