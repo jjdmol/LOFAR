@@ -171,7 +171,7 @@ string getTempFileName(const string&	format)
 string myHostname(bool	giveFullName)
 {
 	char	fullhostname[300];
-	if (gethostname(fullhostname, 300) != 0) {
+	if (gethostname(fullhostname, sizeof fullhostname) != 0) {
 		return ("localhost");
 	}
 
@@ -197,19 +197,20 @@ uint32 myIPV4Address()
 	LOG_ERROR ("Function myIPV4Address not available.");
 	return (0);
 #else
-	struct hostent*		hostEnt;
-	if (!(hostEnt = gethostbyname(myHostname(false).c_str()))) {
-		return (0);
-	}
+	struct addrinfo*	hostEnt;
+	struct addrinfo	    hints;
+    memset (&hints, 0, sizeof (struct addrinfo));
+    hints.ai_family = AF_INET; // IPv4
 
-	if (hostEnt->h_length != 4) {
-		LOG_ERROR_STR ("Length of my IPaddress is " << hostEnt->h_length << " i.s.o. 4, ignoring result.");
+	if (!getaddrinfo(myHostname(false).c_str(),NULL,&hints,&hostEnt)) {
 		return (0);
 	}
 
 	// copy info to save place.
 	uint32	address;
-	bcopy (hostEnt->h_addr_list[0], &address, hostEnt->h_length);
+	bcopy (&reinterpret_cast<struct sockaddr_in *>(hostEnt->ai_addr)->sin_addr, &address, sizeof address);
+
+    freeaddrinfo (hostEnt);
 
 	return (address);
 #endif
