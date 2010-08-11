@@ -106,6 +106,18 @@ namespace LOFAR
     static const doubleMask_t doubleMantissaMask = 0x000FFFFFFFFFFFFFLL;
     // @}
 
+    // @{
+    // Classes to overlap floating point numbers with masks in a type-safe way
+    template <typename T, typename M> union maskUnion {
+      T value;
+      M mask;
+
+      maskUnion( const T &value ): value(value) {}
+    };
+
+    typedef maskUnion<float,floatMask_t> floatUnion;
+    typedef maskUnion<double,doubleMask_t> doubleUnion;
+    // @}
   };
 
 } // namespace LOFAR
