@@ -170,13 +170,21 @@ void OutputThread::mainLoop()
     // prevent too many concurrent writers by locking this scope
     semaphore.down();
 
+    struct D {
+      ~D() {
+        semaphore.up();
+        itsFreeQueue.append(data);
+      }
+
+      Queue<StreamableData *> &itsFreeQueue;
+      StreamableData *data;
+    } onDestruct = { itsFreeQueue, data };
+    (void)onDestruct;
+
     try {
       // write data, including serial nr
       data->write(streamToStorage.get(), true);
     } catch (SystemCallException &ex) {
-      semaphore.up();
-      itsFreeQueue.append(data);
-
       if (ex.error == EINTR) {
         LOG_WARN_STR(itsLogPrefix << "Connection to " << outputDescriptor << " aborted");
       } else {
@@ -184,9 +192,6 @@ void OutputThread::mainLoop()
       }
       return;
     }
-
-    semaphore.up();
-    itsFreeQueue.append(data);
   }
 
   delete streamToStorage.release(); // close socket
