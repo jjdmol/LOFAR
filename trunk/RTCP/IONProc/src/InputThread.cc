@@ -103,6 +103,8 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
       // does not send data
 
       size = itsArgs.stream->tryRead(currentPacketPtr, packetSize);
+    } catch (Stream::EndOfStreamException &) {
+      break;
     } catch (SystemCallException &ex) {
       if (ex.error == EINTR)
 	break;
