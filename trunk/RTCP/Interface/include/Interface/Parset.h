@@ -39,6 +39,7 @@
 #include <Interface/BeamCoordinates.h>
 #include <Stream/Stream.h>
 #include <algorithm>
+#include <sstream>
 
 #include <boost/date_time/c_local_time_adjustor.hpp>
 
@@ -112,9 +113,8 @@ public:
 	vector<uint32> phaseTwoPsets() const;
 	vector<uint32> phaseThreePsets() const;
 	vector<uint32> usedPsets() const; // union of phasePsets
-	bool	       overlappingResources(const Parset &) const;
-	bool	       compatibleInputSection(const Parset &) const;
 	vector<uint32> tabList() const;
+	bool           conflictingResources(const Parset &otherParset, std::stringstream &error) const;
 	int	       phaseOnePsetIndex(uint32 pset) const;
 	int	       phaseTwoPsetIndex(uint32 pset) const;
 	int	       phaseThreePsetIndex(uint32 pset) const;
@@ -190,6 +190,9 @@ private:
 	static int     findIndex(uint32 pset, const vector<uint32> &psets);
 	
 	vector<double>   centroidPos(const string &stations) const;
+
+	bool	       compatibleInputSection(const Parset &otherParset, std::stringstream &error) const;
+	bool	       disjointCores(const Parset &, std::stringstream &error) const;
 };
 
 // @}

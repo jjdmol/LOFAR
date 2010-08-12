@@ -449,53 +449,69 @@ vector<uint32> Parset::usedPsets() const
 }
 
 
-bool Parset::overlappingResources(const Parset &otherParset) const
+bool Parset::disjointCores(const Parset &otherParset, std::stringstream &error) const
 {
-  // return true if jobs (partially) use same cores within psets
+  // return false if jobs (partially) use same cores within psets
 
   std::vector<uint32> myPsets    = usedPsets();
   std::vector<uint32> otherPsets = otherParset.usedPsets();
-  std::vector<uint32> psets(myPsets.size() + otherPsets.size());
+  std::vector<uint32> overlappingPsets(myPsets.size() + otherPsets.size());
 
-  bool overlappingPsets = set_intersection(myPsets.begin(), myPsets.end(), otherPsets.begin(), otherPsets.end(), psets.begin()) != psets.begin();
+  overlappingPsets.resize(set_intersection(myPsets.begin(), myPsets.end(), otherPsets.begin(), otherPsets.end(), overlappingPsets.begin()) - overlappingPsets.begin());
 
-  if (!overlappingPsets)
-    return false;
+  if (overlappingPsets.size() == 0)
+    return true;
 
   std::vector<uint32> myCores    = usedCoresInPset();
   std::vector<uint32> otherCores = otherParset.usedCoresInPset();
-  std::vector<uint32> cores(myCores.size() + otherCores.size());
+  std::vector<uint32> overlappingCores(myCores.size() + otherCores.size());
 
   sort(myCores.begin(),    myCores.end());
   sort(otherCores.begin(), otherCores.end());
 
-  bool overlappingCores = set_intersection(myCores.begin(), myCores.end(), otherCores.begin(), otherCores.end(), cores.begin()) != cores.begin();
+  overlappingCores.resize(set_intersection(myCores.begin(), myCores.end(), otherCores.begin(), otherCores.end(), overlappingCores.begin()) - overlappingCores.begin());
 
-  return overlappingCores;
+  if (overlappingCores.size() == 0)
+    return true;
+
+  error << "cores " << overlappingCores << " within psets " << overlappingPsets << " overlap;";
+  return false;
 }
 
 
-bool Parset::compatibleInputSection(const Parset &otherParset) const
+bool Parset::compatibleInputSection(const Parset &otherParset, std::stringstream &error) const
 {
   std::vector<uint32> myStations    = phaseOnePsets();
   std::vector<uint32> otherStations = otherParset.phaseOnePsets();
   std::vector<uint32> psets(myStations.size() + otherStations.size());
 
   bool overlappingStations = set_intersection(myStations.begin(), myStations.end(), otherStations.begin(), otherStations.end(), psets.begin()) != psets.begin();
+  bool good = true;
 
-  if (!overlappingStations)
-    return true;
+  if (overlappingStations) {
+    if (nrBitsPerSample() != otherParset.nrBitsPerSample()) {
+      error << " uses " << nrBitsPerSample() << " instead of " << otherParset.nrBitsPerSample() << " bits;";
+      good = false;
+    }
 
-  if (nrBitsPerSample() != otherParset.nrBitsPerSample())
-    return false;
+    if (clockSpeed() != otherParset.clockSpeed()) {
+      error << " uses " << clockSpeed() / 1e6 << " instead of " << otherParset.clockSpeed() / 1e6 << " MHz clock;";
+      good = false;
+    }
 
-  if (clockSpeed() != otherParset.clockSpeed())
-    return false;
+    if (nrSlotsInFrame() != otherParset.nrSlotsInFrame()) {
+      error << " uses " << nrSlotsInFrame() << " instead of " << otherParset.nrSlotsInFrame() << " slots per frame;";
+      good = false;
+    }
+  }
 
-  if (nrSlotsInFrame() != otherParset.nrSlotsInFrame())
-    return false;
+  return good;
+}
 
-  return true;
+
+bool Parset::conflictingResources(const Parset &otherParset, std::stringstream &error) const
+{
+  return !disjointCores(otherParset, error) | !compatibleInputSection(otherParset, error); // no McCarthy evaluation
 }
 
 
