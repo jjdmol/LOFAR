@@ -38,16 +38,6 @@
 
 namespace LOFAR {
 
-// A class which autodestructs a struct addrinfo result list
-class AddrInfoHolder {
-  public:
-    AddrInfoHolder(struct addrinfo *info): info(info) {}
-    ~AddrInfoHolder() { freeaddrinfo(info); }
-  private:
-    struct addrinfo *info;
-};
-
-
 SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, Mode mode, time_t timeout)
 :
   listen_sk(-1)
@@ -75,7 +65,15 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
   if ((retval = getaddrinfo(hostname, portStr, &hints, &result)) != 0)
     throw SystemCallException("getaddrinfo", retval, THROW_ARGS);
 
-  AddrInfoHolder infoHolder(result); // make sure result will be freed
+  // make sure result will be freed
+  struct D {
+    ~D() {
+      freeaddrinfo(result);
+    }
+
+    struct addrinfo *result;
+  } onDestruct = { result };
+  (void)onDestruct;
 
   // result is a linked list of resolved addresses, we only use the first
 
