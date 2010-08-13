@@ -332,19 +332,7 @@ void Job::claimResources()
 {
   ScopedLock scopedLock(jobQueue.itsMutex);
 
-#if 0
-retry:
-  if (itsDoCancel)
-    return;
-
-  for (std::vector<Job *>::iterator job = jobQueue.itsJobs.begin(); job != jobQueue.itsJobs.end(); job ++)
-    if ((*job)->itsIsRunning && ((*job)->itsParset.overlappingResources(itsParset) || !(*job)->itsParset.compatibleInputSection(itsParset))) {
-      LOG_WARN_STR(itsLogPrefix << "Postponed due to resource conflicts");
-      jobQueue.itsReevaluate.wait(jobQueue.itsMutex);
-      goto retry;
-    }
-#else
-  for (;;) {
+  while (!itsDoCancel) {
     bool conflict = false;
 
     for (std::vector<Job *>::iterator job = jobQueue.itsJobs.begin(); job != jobQueue.itsJobs.end(); job ++) {
@@ -356,14 +344,13 @@ retry:
       }
     }
 
-    if (!conflict)
-      break;
+    if (!conflict) {
+      itsIsRunning = true;
+      return;
+    }
 
     jobQueue.itsReevaluate.wait(jobQueue.itsMutex);
   }
-#endif
-
-  itsIsRunning = true;
 }
 
 
