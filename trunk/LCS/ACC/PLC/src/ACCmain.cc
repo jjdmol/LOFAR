@@ -66,8 +66,6 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 	if (myRank != 0) {
 	        argv = new char*[argc + 1];
 	        argv[argc] = 0;
-	} else {
-		char** argv = orig_argv;
 	}
 
 	for (int arg = 0; arg < argc; arg++) {
