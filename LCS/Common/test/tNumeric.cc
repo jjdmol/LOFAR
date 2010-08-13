@@ -82,7 +82,7 @@ using namespace std;
   union_t u = { x };                                                 \
   os << setprecision(p) << left << setw(17) << #x << " = "           \
      << setw(p+6) << x << " (" << hex << showbase << setw(p+1)       \
-     << u.value << dec << ")" << endl;                               \
+     << u.mask << dec << ")" << endl;                                \
 }
 #define showNumbers(T)                                               \
 { LOG_INFO("showNumbers("#T")");                                     \
