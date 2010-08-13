@@ -91,9 +91,9 @@ unsigned AsyncTransposeBeams::waitForAnyReceive()
 
     t.nr = tag;
 
-    unsigned rank = t.info.sourceRank;
     unsigned subband = t.info.subband;
 
+    //unsigned rank = t.info.sourceRank;
     //LOG_DEBUG_STR( "Received subband " << subband << " from pset ??, rank " << rank << ", tag " << tag );
 
     // mark the right communication handle as received
