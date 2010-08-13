@@ -77,7 +77,7 @@ void terminate_with_backtrace()
 
 #endif
 
-static Stream *createIONstream( unsigned channel, const LocationInfo &locationInfo )
+static Stream *createIONstream( unsigned channel, const LocationInfo & /* locationInfo */ )
 {
 #if 1 && defined HAVE_FCNP && defined HAVE_BGP_CN && !defined USE_VALGRIND
     /* preferred */
