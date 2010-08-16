@@ -139,6 +139,7 @@ event = {
 		name = "allocation";
 		type = "Beamlet2SubbandMap";
 		userdefined;
+		printable;
 	};
 
 	// NEW: so that BeamServer can check for ring inconsistancies.
@@ -189,6 +190,7 @@ event = {
 		name = "allocation";
 		type = "Beamlet2SubbandMap";
 		userdefined;
+		printable;
 	};
 };
 

@@ -27,6 +27,7 @@
 #include <Common/ParameterSet.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
+#include <GCF/PVSS/PVSSinfo.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/AntennaMapper.h>
@@ -1159,24 +1160,25 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 		} // for all boards
 
 		LOG_DEBUG ("Updated all RCU information, updating antenna states");
+		string	pvssDBname(PVSSinfo::getLocalSystemName());
 		for (uint ant = 0; ant < itsNrLBAs; ant++) {
 			if (itsRCUInputStates(itsAntMapper->XRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_LBA)) ||
 				itsRCUInputStates(itsAntMapper->YRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_LBA))) {
-				setObjectState(getName(), formatString("LBA%d", ant), 
+				setObjectState(getName(), formatString("%s:LBA%d", pvssDBname.c_str(), ant), 
 								MAX2(itsRCUstates(itsAntMapper->XRCU(ant)), itsRCUstates(itsAntMapper->YRCU(ant)) ) );
 			}
 			else {
-				setObjectState(getName(), formatString("LBA%d", ant), RTDB_OBJ_STATE_OFF);
+				setObjectState(getName(), formatString("%s:LBA%d", pvssDBname.c_str(), ant), RTDB_OBJ_STATE_OFF);
 			}
 		}
 		for (uint ant = 0; ant < itsNrHBAs; ant++) {
 			if (itsRCUInputStates(itsAntMapper->XRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_HBA)) ||
 				itsRCUInputStates(itsAntMapper->YRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_HBA))) {
-				setObjectState(getName(), formatString("HBA%d", ant), 
+				setObjectState(getName(), formatString("%s:HBA%d", pvssDBname.c_str(), ant), 
 								MAX2(itsRCUstates(itsAntMapper->XRCU(ant)), itsRCUstates(itsAntMapper->YRCU(ant)) ) );
 			}
 			else {
-				setObjectState(getName(), formatString("HBA%d", ant), RTDB_OBJ_STATE_OFF);
+				setObjectState(getName(), formatString("%s:HBA%d", pvssDBname.c_str(), ant), RTDB_OBJ_STATE_OFF);
 			}
 		}
 

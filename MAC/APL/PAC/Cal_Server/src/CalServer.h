@@ -124,9 +124,9 @@ private:
 	vector<int>		itsRCUcounts;		// in how many observations an RCU participates
 
 	// Ports
-	GCFTCPPort m_acceptor;  // connect point for clients
-	GCFPort    m_rspdriver; // connect to RSPDriver for RSP_CONFIG and RSP_SETRCU events
-	GCFTimerPort* itsCheckTimer;
+	GCFTCPPort*		itsListener;  // connect point for clients
+	GCFTCPPort*		itsRSPDriver; // connect to RSPDriver for RSP_CONFIG and RSP_SETRCU events
+	GCFTimerPort*	itsCheckTimer;
 
 	// Client/Server management member variables.
 	map<string, GCFPortInterface*> 	m_clients;      // list of subarraynames with related clients

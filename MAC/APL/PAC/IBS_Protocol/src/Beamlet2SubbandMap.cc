@@ -115,7 +115,7 @@ bitset<MAX_BEAMLETS> Beamlet2SubbandMap::getBeamletBitset() const
 	return result;
 }
 
-#if 0
+//
 // print (os)
 //
 ostream& Beamlet2SubbandMap::print (ostream&	os) const
@@ -123,7 +123,6 @@ ostream& Beamlet2SubbandMap::print (ostream&	os) const
 	int	idx = 0;
 	int	elements = m_beamlet2subband.size();
 	int	MAX_ELEMENTS_PER_LINE	= 31;
-	cout << "#elements: " << elements << endl;
 	os << "#elements: " << elements << endl;
 	return (os);
 	map<uint16,uint16>::const_iterator	iter;
@@ -149,4 +148,4 @@ ostream& Beamlet2SubbandMap::print (ostream&	os) const
 
 	return (os);
 }
-#endif
+

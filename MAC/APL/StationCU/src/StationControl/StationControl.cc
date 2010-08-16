@@ -111,6 +111,9 @@ StationControl::StationControl(const string&	cntlrName) :
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
+	// reading AntennaSets configuration
+	itsAntSet = globalAntennaSets();
+
 	// for doing PVSS queries
 	itsDPservice = new DPservice(this);
 	ASSERTSTR(itsDPservice, "Can't allocate DataPoint Service for PVSS");
@@ -1087,10 +1090,16 @@ LOG_DEBUG_STR("theOBS=" << theObs);
 				 " has no conflicts with other running observations");
 
 	// Create a bitset containing the available receivers for this oberservation.
+	// As base we use the definition of the AntennaSetsfile which we limit to the
+	// receivers specified by the user (if any). Finally we can optionally correct
+	// this set with the 'realtime' availability of the receivers.
 	StationConfig			config;
-	Observation::RCUset_t	realReceivers = 
-			Observation(&theObsPS).getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters);
-
+	Observation::RCUset_t	definedReceivers = itsAntSet->RCUallocation(theObs.antennaSet);
+	Observation::RCUset_t	userReceivers    = theObs.getRCUbitset(config.nrLBAs, config.nrHBAs, theObs.antennaSet);
+	Observation::RCUset_t	realReceivers    = definedReceivers & userReceivers;
+LOG_DEBUG_STR("definedReceivers =" << definedReceivers);
+LOG_DEBUG_STR("userReceivers    =" << userReceivers);
+LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
 	// apply the current state of the hardware to the desired selection when user likes that.
 	if (itsUseHWinfo) {
 		realReceivers &= itsRCUmask;

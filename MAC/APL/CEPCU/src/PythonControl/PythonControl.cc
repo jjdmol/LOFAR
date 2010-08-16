@@ -179,11 +179,9 @@ bool PythonControl::_startPython(const string&	pythonProg,
 		}
 	}
 
-	// get full path to start script (should be on the same place on each machine)
-	string	startScript = "startPython.sh";
-
 	// construct system command
 	string	startCmd;
+	string	startScript("startPython.sh");
 	itsPythonName = formatString("PythonServer{%d}@%s", obsID, pythonHost.c_str());
 
 	if (onRemoteMachine) {

@@ -23,12 +23,14 @@
 #ifndef BEAMSERVER_BEAMSERVERCONSTANTS_H
 #define BEAMSERVER_BEAMSERVERCONSTANTS_H
 
-#define SPEED_OF_LIGHT_MS 	299792458.0		// speed of light in meters/sec
+#define SPEED_OF_LIGHT_MS 		299792458.0		// speed of light in meters/sec
 
-#define LEADIN_TIME 	 	3				// time it take before pointing is active
-#define COMPUTE_INTERVAL 	1				// how often the weights are calculated
-#define UPDATE_INTERVAL  	1				// 
+#define LEADIN_TIME 	 		3				// time it takes before a pointing is active
 
-#define NDIM				3				// l,m,n
+#define HBA_INTERVAL 			300				// normal interval between two HBA-delay settings
+#define HBA_MIN_INTERVAL		4				// absolute minimum interval for the HBAs
+#define DIG_INTERVAL 			1				// how often the weights are sent
+#define DIG_COMPUTE_INTERVAL  	1				// how often the weights are calculated
+
 #endif
 

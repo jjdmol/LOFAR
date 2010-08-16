@@ -45,6 +45,7 @@
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
+#include <APL/APLCommon/AntennaSets.h>
 
 //# local includes
 #include "ActiveObs.h"
@@ -54,6 +55,7 @@
 namespace LOFAR {
 	using APLCommon::ChildControl;
 	using APLCommon::ParentControl;
+	using APLCommon::AntennaSets;
 
 	namespace StationCU {
 	using	MACIO::GCFEvent;
@@ -90,7 +92,7 @@ private:
 	StationControl(const StationControl&);
    	StationControl& operator=(const StationControl&);
 
-	// internla types
+	// internal types
 	typedef	map<string, ActiveObs*>::iterator		ObsIter;
 
 	// helper methods
@@ -129,6 +131,8 @@ private:
 	GCFTCPPort*				itsClkCtrlPort;
 
 	GCFTimerPort*			itsTimerPort;
+
+	AntennaSets*			itsAntSet;
 
 	// ParameterSet variables
 	uint32					itsInstanceNr;

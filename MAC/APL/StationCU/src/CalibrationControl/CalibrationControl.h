@@ -104,7 +104,7 @@ private:
 	// ParameterSet variables
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
-	Observation				itsObsPar;
+	Observation*			itsObsPar;
 };
 
   };//StationCU
