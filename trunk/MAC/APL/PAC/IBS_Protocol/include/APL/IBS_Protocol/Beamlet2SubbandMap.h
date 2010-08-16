@@ -61,7 +61,7 @@ public:
 	bitset<MAX_SUBBANDS> getSubbandBitset() const;
 	bitset<MAX_BEAMLETS> getBeamletBitset() const;
 
-//	ostream& print (ostream& os) const;
+	ostream& print (ostream& os) const;
 
 private:
 	// map beamlet (first) to subband (second).
@@ -71,13 +71,11 @@ private:
 
 inline std::map<uint16, uint16>& Beamlet2SubbandMap::operator()() { return m_beamlet2subband; }
 
-#if 0
 // operator <<
 inline ostream& operator<<(ostream& os, const Beamlet2SubbandMap	theMap)
 {
 	return (theMap.print(os));
 }
-#endif
 
   }; // namespace IBS_Protocol
 }; // namespace LOFAR

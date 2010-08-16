@@ -5,26 +5,22 @@
 #
 # Options to disable communication with RSP driver
 #
-BeamServer.DISABLE_SETWEIGHTS=0
-BeamServer.DISABLE_SETSUBBANDS=0
+BeamServer.EnableSetWeights = 1
+BeamServer.EnableSetSubbands= 1
+BeamServer.EnableSetHBA     = 1
 
 #
-# Prevents output of RaDec coordinates to $prefix/etc/indi_pipe named pipe.
+# normal HBAUpdateInterval >= 10, for testing use 
+# (4, 6 or 8) secs. Note: 4 sec is absolute minimum!
 #
-BeamServer.DISABLE_INDI=1
-
-#
-# Prevent HBA delays to be send to the RSPDriver.
-#	normal HBA_INTERVAL >= 10(interval 5secs), for testing use 
-#       (4, 6 or 8) secs. Note: 4 sec is absolute minimum!
-#
-BeamServer.DISABLE_SETHBA=0
-BeamServer.HBA_INTERVAL=10
+BeamServer.HBAUpdateInterval= 10	# >=10, normally 300
+BeamServer.UpdateInterval   = 1		# should be 1 for normal operation
+BeamServer.ComputeInterval  = 1		# can be 1 for ITRFBeamserver, was 10 for old BeamServer
 
 #
 # Gain of the beamformer
 #
-BeamServer.BF_GAIN=8000
+BeamServer.BeamformerGain=8000
 
 #
 # Set name for various configuration files

@@ -56,6 +56,7 @@ public:
 
 	// Everthing about the bits
 	string				RCUinputs    (const string&		setName, uint stnType = stationTypeValue()) const;
+	bitset<MAX_RCUS>	RCUallocation(const string&		setName, uint stnType = stationTypeValue()) const;
 	bitset<MAX_RCUS>	LBAallocation(const string&		setName, uint stnType = stationTypeValue()) const;
 	bitset<MAX_RCUS>	HBAallocation(const string&		setName, uint stnType = stationTypeValue()) const;
 

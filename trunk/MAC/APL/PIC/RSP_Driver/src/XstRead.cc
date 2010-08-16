@@ -182,6 +182,7 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   //
   int rcu = (getBoardId() * nrRcusPerBoard) + (m_regid % nrRcusPerBoard);
 
+  // pol x pol x Ants x Ants
   Array<complex<double>, 4>& cache(Cache::getInstance().getBack().getXCStats()());
 
   Array<complex<uint32>, 2> xststats((complex<uint32>*)&ack.xst_stat,

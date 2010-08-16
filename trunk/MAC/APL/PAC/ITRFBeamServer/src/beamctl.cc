@@ -31,6 +31,7 @@
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include <APL/RSP_Protocol/RCUSettings.h>
+#include <APL/APLCommon/AntennaSets.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/TM/GCF_Control.h>
 
@@ -53,6 +54,7 @@ namespace LOFAR {
   using namespace CAL_Protocol;
   using namespace IBS_Protocol;
   using namespace GCF::TM;
+  using namespace APLCommon;
   namespace BS {
 
 //
@@ -211,15 +213,16 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& event, GCFPortInterface& po
 	switch (event.signal) {
 	case F_ENTRY: {
 		CALStartEvent start;
+		AntennaSets*	AS(globalAntennaSets());
 		start.name   = BEAMCTL_BEAM + formatString("_%d", getpid());
-		start.parent = itsAntSet;
+		start.parent = AS->antennaField(itsAntSet);
 		start.subset = getRCUMask();
 		start.rcumode().resize(1);
 		start.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)itsRCUmode);
 
 		LOG_INFO(formatString("Rcumode(dec)=%06d", start.rcumode()(0).getRaw()));
 		LOG_INFO(formatString("Rcumode(hex)=%06X", start.rcumode()(0).getRaw()));
-		LOG_INFO_STR("Creating subarray: " << start.name);
+		LOG_INFO_STR("Creating subarray: " << start);
 
 		itsCalServer->send(start);
 	}
@@ -228,7 +231,7 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& event, GCFPortInterface& po
 	case CAL_STARTACK: {
 		CALStartackEvent ack(event);
 		if (ack.status != CAL_Protocol::CAL_SUCCESS) {
-			cerr << "Error: failed to start calibration" << endl;
+			cerr << "Error: failed to start calibration: " << errorName(ack.status) << endl;
 			TRAN(beamctl::final);
 		} else {
 			cout << "Calserver accepted settings." << endl;
@@ -328,7 +331,7 @@ GCFEvent::TResult beamctl::sendPointings(GCFEvent& event, GCFPortInterface& port
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	static bool		sendingDigitalPts(true);
-	static uint		nrPointings(itsDigPointings.size() + itsiAnaPointings+size());
+	static uint		nrPointings(itsDigPointings.size() + itsAnaPointings.size());
 	static uint		curPtNr(1);
 	static list<Pointing>::const_iterator	ptIter = itsDigPointings.begin();
 
@@ -355,7 +358,7 @@ GCFEvent::TResult beamctl::sendPointings(GCFEvent& event, GCFPortInterface& port
 		alloc.isLast   = (curPtNr == nrPointings);
 		itsBeamServer->send(alloc);
 
-		cout << "sending " << (isLast ? " last " : "") << " pointing: " << *ptIter << endl;
+		cout << "sending " << (alloc.isLast ? " last " : "") << " pointing: " << *ptIter << endl;
 
 		++ptIter;
 		++curPtNr;

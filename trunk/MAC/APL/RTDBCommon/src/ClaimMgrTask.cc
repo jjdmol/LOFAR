@@ -167,6 +167,7 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 		switch (itsResolveState) {
 		case RO_CREATED:		// 2
 			itsResolveState = RO_READY;
+			itsTimerPort->cancelAllTimers();
 			itsTimerPort->setTimer(0.1);
 			break;
 
@@ -179,16 +180,18 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 			itsClaimMgrPS->setValue("request.typeName",      GCFPVString(itsObjectType), 0.0, false);
 			itsClaimMgrPS->setValue("request.newObjectName", GCFPVString(itsNameInAppl), 0.0, false);
 			itsClaimMgrPS->flush();
-			itsResolveState = RO_ASKED;
+			itsResolveState = RO_ASKED; // 3
 			// clear result fields
 			itsFieldsReceived = 0;
 			itsResultDPname.clear();
+			itsTimerPort->cancelAllTimers();
 			itsTimerPort->setTimer(3.0);		// don't wait forever.
 		break;
 
 		case RO_ASKED:		// 3
 			LOG_ERROR_STR("No response from ClaimManager in 3 seconds, retrying");
 			itsResolveState = RO_READY;
+			itsTimerPort->cancelAllTimers();
 			itsTimerPort->setTimer(0.0);
 			// ???
 		break;

@@ -25,11 +25,11 @@
 
 //# Common Includes
 #include <Common/LofarLogger.h>
-#include <Common/lofar_string.h>
 #include <Common/lofar_datetime.h>
-
-//# ACC Includes
+#include <Common/lofar_set.h>
+#include <Common/lofar_string.h>
 #include <Common/ParameterSet.h>
+#include <ApplCommon/Observation.h>
 
 //# GCF Includes
 #include <MACIO/GCF_Event.h>
@@ -72,6 +72,9 @@ private:
    	GCFEvent::TResult started_state (GCFEvent& e, GCFPortInterface& p);
 	// connected to BeamServer, waiting for PREPARE event
    	GCFEvent::TResult claimed_state (GCFEvent& e, GCFPortInterface& p);
+	// interim state for sending all pointings
+	GCFEvent::TResult allocBeams_state(GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult sendPointings_state(GCFEvent& event, GCFPortInterface& port);
 	// Normal control mode, beam is active
    	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
 	// Quiting, shutdown connections, send FINISH and quit
@@ -82,15 +85,14 @@ private:
 	BeamControl(const BeamControl&);
    	BeamControl& operator=(const BeamControl&);
 
-	int32	convertDirection		(const string&	typeName);
-	bool	doPrepare				();
-	bool	doRelease				();
-	uint16	handleBeamAllocAck		(GCFEvent&	event);
-	bool	handleBeamFreeAck		(GCFEvent&	event);
+	int32	convertDirection	(const string&	typeName);
+	void	beamsToPVSS			();
+	bool	doRelease			();
+	bool	handleBeamFreeAck	(GCFEvent&	event);
 
-   	void	_connectedHandler		(GCFPortInterface& port);
-   	void	_disconnectedHandler	(GCFPortInterface& port);
-	void	setState				(CTState::CTstateNr     newState);
+   	void	_connectedHandler	(GCFPortInterface& port);
+   	void	_disconnectedHandler(GCFPortInterface& port);
+	void	setState			(CTState::CTstateNr     newState);
 	GCFEvent::TResult	_defaultEventHandler(GCFEvent&	event, GCFPortInterface&	port);
 
    	RTDBPropertySet*		itsPropertySet;
@@ -107,10 +109,12 @@ private:
 	CTState::CTstateNr		itsState;
 
 	// ParameterSet variables
+	Observation*			itsObs;
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
 	uint32					itsNrBeams;
-	map<string, void*>		itsBeamIDs;				// returned from BeamServer
+	uint32					itsNrAnaBeams;
+	set<string>				itsBeamIDs;				// returned from BeamServer
 };
 
   };//StationCU

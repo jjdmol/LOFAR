@@ -30,9 +30,6 @@
 #include "AnaBeamMgr.h"
 
 #include <GCF/TM/GCF_Control.h>
-//#include <GCF/TM/GCF_TimerPort.h>
-#include <APL/APLCommon/AntennaSets.h>
-#include <APL/APLCommon/AntennaPos.h>
 
 #include <set>
 #include <map>
@@ -222,7 +219,7 @@ private:
 	bool	itsSetSubbandsEnabled;	//
 	long	itsUpdateInterval;		//
 	long	itsComputeInterval;		//
-	long	itsHbaInterval;			//
+	long	itsHBAUpdateInterval;	//
 
 	long	itsTestSingleShotTimestamp;	// FOR TESTING PURPOSES
 };

@@ -483,11 +483,16 @@ bool GCFTCPPort::close()
 	// make sure a single server port is unregistered to that is can be 'connect'ed again.
 	// NOTE: 050308 this is neccesary for EventPort but conflicts with the ServiceBroker
 	//				functionality in GSB_Controller.cc.	 this is then 0x0.
+	// NOTE: 190710 GSB_Controller is since dec'08 renamed to CUDaemons/ServiceBroker.cc
 //	if (getType() == SPP) {
 //		_broker->deletePort(*this);
 //	}
 
-	schedule_close();
+	// NOTE: 190710 schedule_close a no-op for some time. We try to call the deletePort again.
+//	schedule_close();
+	if (_broker && getType() != SAP) {
+		_broker->deletePort(*this);
+	}
 
 	// return success when port is still connected
 	// scheduled close will only occur later

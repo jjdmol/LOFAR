@@ -174,7 +174,7 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 		// So askfor this 'core' set by passed zeros.
 		// the receiver bitmap can be derived from the RCUset.
 		StationConfig		config;
-		bitset<MAX_RCUS>	theRCUs(itsObsPar.getRCUbitset(0, 0, 0, config.hasSplitters));
+		bitset<MAX_RCUS>	theRCUs(itsObsPar.getRCUbitset(0, 0, ""));
 		string	rbm;
 		rbm.resize(MAX_RCUS, '0');
 		for (int i = 0; i < MAX_RCUS; i++) {
@@ -511,7 +511,7 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	port
 		}
 		if (itsBeamCntlrReady && itsCalCntlrReady && (itsUsesTBB == itsTBBCntlrReady)) {
 			CTState		cts;
-			itsCurState == cts.signal2stateNr(event.signal);
+			itsCurState = cts.signal2stateNr(event.signal);
 		}
 	}
 	break;

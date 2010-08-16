@@ -215,6 +215,21 @@ string	AntennaSets::RCUinputs    (const string&		setName, uint	stationType) cons
 }
 
 //
+// RCUallocation(setName)
+//
+bitset<MAX_RCUS>	AntennaSets::RCUallocation(const string&		setName, uint	stationType) const
+{
+	bool		LBAfield = usesLBAfield(setName, stationType);
+	AntSetIter	iter 	 = itsDefinitions.find(setName);
+	ASSERTSTR(iter != itsDefinitions.end(), setName << " is not defined in " << itsAntennaSetFile);
+	switch (stationType) {
+	case 0: return (LBAfield ? iter->second.core.LBAallocation   : iter->second.core.HBAallocation);
+	case 1: return (LBAfield ? iter->second.remote.LBAallocation : iter->second.remote.HBAallocation);
+	case 2: return (LBAfield ? iter->second.europe.LBAallocation : iter->second.europe.HBAallocation);
+	default: ASSERT(false);		// satisfy compiler.
+	}
+}
+//
 // LBAallocation(setName)
 //
 bitset<MAX_RCUS>	AntennaSets::LBAallocation(const string&		setName, uint	stationType) const

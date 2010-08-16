@@ -25,7 +25,6 @@
 #include <Common/Version.h>
 #include <Common/ParameterSet.h>
 #include <Common/SystemUtil.h>
-#include <ApplCommon/Observation.h>
 #include <ApplCommon/StationInfo.h>
 
 #include <MACIO/MACServiceInfo.h>
@@ -105,7 +104,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	string	OLAPpos = globalParameterSet()->locateModule("OLAP");
 	LOG_DEBUG(OLAPpos+"OLAP.IONProc.integrationSteps");
 	itsForcedQuitDelay = 15 + globalParameterSet()->getUint32(OLAPpos+"OLAP.IONProc.integrationSteps",0);
-	LOG_DEBUG_STR ("Timer for forcing quit is set to " << itsForcedQuitDelay);
+	LOG_DEBUG_STR ("Timer for forcing quit is " << itsForcedQuitDelay << " seconds");
 
 	// Inform Logging manager who we are
 	LOG_INFO_STR("MACProcessScope: " << createPropertySetName(PSN_OBSERVATION_CONTROL, getName(), itsObsDPname));
@@ -231,7 +230,7 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		break;
 	  
 	case DP_CREATED: {
-			// NOTE: thsi function may be called DURING the construction of the PropertySet.
+			// NOTE: this function may be called DURING the construction of the PropertySet.
 			// Always exit this event in a way that GCF can end the construction.
 			DPCreatedEvent	dpEvent(event);
 			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
@@ -259,7 +258,6 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
-		Observation		theObs(globalParameterSet());
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("Initial"));
 		itsPropertySet->setValue(PN_FSM_ERROR,  GCFPVString(""));
 

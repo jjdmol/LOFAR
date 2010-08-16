@@ -198,15 +198,10 @@ void CacheBuffer::reset(void)
 	m_subbandstats().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_SUBBANDS);
 	m_subbandstats() = 0;
 
-	m_beamletstats().resize(StationSettings::instance()->nrRspBoards() * MEPHeader::N_POL,
-	MEPHeader::N_BEAMLETS);
+	m_beamletstats().resize(StationSettings::instance()->nrRspBoards() * MEPHeader::N_POL, MEPHeader::N_BEAMLETS);
 	m_beamletstats() = 0;
 
-	m_xcstats().resize(MEPHeader::N_POL,
-	MEPHeader::N_POL,
-	StationSettings::instance()->nrBlps(),
-	StationSettings::instance()->nrBlps());
-
+	m_xcstats().resize(MEPHeader::N_POL, MEPHeader::N_POL, StationSettings::instance()->nrBlps(), StationSettings::instance()->nrBlps());
 	m_xcstats() = complex<double>(0,0);
 
 	// BoardStatus

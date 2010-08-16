@@ -31,6 +31,9 @@
 
 #include <MACIO/MACServiceInfo.h>
 
+#include <APL/APLCommon/AntennaField.h>
+#include <APL/APLCommon/AntennaSets.h>
+
 #include <APL/RTCCommon/daemonize.h>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
@@ -73,8 +76,9 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsCalServer			(0),
 	itsBeamsModified		(false),
 	itsAnaBeamMgr			(0),
-	itsUpdateInterval		(UPDATE_INTERVAL),
-	itsComputeInterval		(COMPUTE_INTERVAL),
+	itsUpdateInterval		(0),
+	itsComputeInterval		(0),
+	itsHBAUpdateInterval	(0),
 	itsTestSingleShotTimestamp(timestamp)
 {
 //	LOG_INFO(Version::getInfo<ITRFBeamServerVersion>("ITRFBeamServer"));
@@ -101,15 +105,24 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	ASSERTSTR(itsConnectTimer, "Cannot allocate a general purpose timer");
 
 	// read config settings
-	itsSetHBAEnabled 	  = (globalParameterSet()->getInt32("BeamServer.DISABLE_SETHBA") == 0);
-	itsSetSubbandsEnabled = (globalParameterSet()->getInt32("BeamServer.DISABLE_SETSUBBANDS") == 0);
-	itsSetWeightsEnabled  = (globalParameterSet()->getInt32("BeamServer.DISABLE_SETWEIGHTS") == 0);
-	gBeamformerGain	      =  globalParameterSet()->getInt32("BeamServer.BF_GAIN");
+	itsSetHBAEnabled 	  = globalParameterSet()->getBool("BeamServer.EnableSetHBA", true);
+	itsSetSubbandsEnabled = globalParameterSet()->getBool("BeamServer.EnableSetSubbands", true);
+	itsSetWeightsEnabled  = globalParameterSet()->getBool("BeamServer.EnableSetWeights", true);
+	gBeamformerGain	      = globalParameterSet()->getInt32("BeamServer.BeamformerGain", 8000);
+	if (!itsSetSubbandsEnabled) {
+		LOG_WARN("Setting of subbands IS DISABLED!!!");
+	}
+	if (!itsSetWeightsEnabled) {
+		LOG_WARN("Setting of weights IS DISABLED!!!");
+	}
 
 	// get interval information
-	itsHbaInterval 		  = globalParameterSet()->getInt32("BeamServer.HBA_INTERVAL", COMPUTE_INTERVAL);
-	if (itsHbaInterval < 10) {
-		LOG_FATAL("HBA_INTERVAL is too small, must be greater or equal to 10 seconds");
+	itsUpdateInterval    = globalParameterSet()->getInt32("BeamServer.UpdateInterval",  DIG_INTERVAL);
+	itsComputeInterval   = globalParameterSet()->getInt32("BeamServer.ComputeInterval", DIG_COMPUTE_INTERVAL);
+	itsHBAUpdateInterval = globalParameterSet()->getInt32("BeamServer.HBAUpdateInterval",  HBA_INTERVAL);
+	if (itsHBAUpdateInterval < HBA_MIN_INTERVAL) {
+		LOG_FATAL_STR("HBAUpdateInterval is too small, must be greater or equal to " << 
+						HBA_MIN_INTERVAL << " seconds");
 		exit(EXIT_FAILURE);
 	}
 
@@ -128,6 +141,7 @@ BeamServer::~BeamServer()
 	if (itsCalServer)	 	{ delete itsCalServer; }
 	if (itsRSPDriver)	 	{ delete itsRSPDriver; }
 	if (itsListener)	 	{ delete itsListener; }
+	if (itsAnaBeamMgr)		{ delete itsAnaBeamMgr; }
 }
 
 // ------------------------------ State machines ------------------------------
@@ -151,12 +165,12 @@ GCFEvent::TResult BeamServer::con2rspdriver(GCFEvent& event, GCFPortInterface& p
 		LOG_DEBUG("Loaded AntennaSets file");
 
 		// load the antenna positions
-		ASSERTSTR(globalAntennaPos(), "Could not load the antennaposition file");
+		ASSERTSTR(globalAntennaField(), "Could not load the antennaposition file");
 		LOG_DEBUG("Loaded antenna postions file");
-		LOG_DEBUG_STR("LBA rcu=" << globalAntennaPos()->RCUPos("LBA"));
-		LOG_DEBUG_STR("HBA rcu=" << globalAntennaPos()->RCUPos("HBA"));
-		LOG_DEBUG_STR("HBA0 rcu=" << globalAntennaPos()->RCUPos("HBA0"));
-		LOG_DEBUG_STR("HBA1 rcu=" << globalAntennaPos()->RCUPos("HBA1"));
+		LOG_DEBUG_STR("LBA rcu=" << globalAntennaField()->RCUPos("LBA"));
+		LOG_DEBUG_STR("HBA rcu=" << globalAntennaField()->RCUPos("HBA"));
+		LOG_DEBUG_STR("HBA0 rcu=" << globalAntennaField()->RCUPos("HBA0"));
+		LOG_DEBUG_STR("HBA1 rcu=" << globalAntennaField()->RCUPos("HBA1"));
 	} break;
 
 	case F_ENTRY: {
@@ -333,11 +347,15 @@ GCFEvent::TResult BeamServer::con2calserver(GCFEvent& event, GCFPortInterface& p
 
 	case F_CONNECTED: {
 		// start update timer and start accepting clients
-		LOG_DEBUG_STR("Starting Heartbeat timer with interval: " << itsUpdateInterval << " secs");
+		LOG_DEBUG_STR("Starting digital pointing timer with interval: " << itsUpdateInterval << " secs");
 		itsDigHeartbeat->setTimer(0, 0, itsUpdateInterval, 0);
-		itsAnaHeartbeat->setTimer(itsUpdateInterval/2, 0, itsUpdateInterval, 0);
-//		itsDigHeartbeat->setTimer(10.0);	// FOR TEST SET TIMER ONCE !!!
-//		itsAnaHeartbeat->setTimer(15.0);	// FOR TEST SET TIMER ONCE !!!
+		if (itsSetHBAEnabled) {
+			LOG_DEBUG_STR("Starting analogue pointing timer with interval: " << itsHBAUpdateInterval << " secs");
+			itsAnaHeartbeat->setTimer(2, 0, itsHBAUpdateInterval, 0);	// start 2 seconds later
+		}
+		else {
+			LOG_WARN("Analogue beamforming of HBA tiles IS SWITCHED OFF!");
+		}
 
 		if ((itsListener->getState() != GCFPortInterface::S_CONNECTING) &&
 			(itsListener->getState() != GCFPortInterface::S_CONNECTED)) {
@@ -381,7 +399,6 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 
 	GCFEvent::TResult	status = GCFEvent::HANDLED;
 	static int 			weightsPeriod = 0;
-	static int			hbaPeriod = 0;
 	
 	undertaker();	// remove dead clients from admin
 
@@ -429,16 +446,10 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 		} // port == itsDigHeartbeat
 
 		if (&port == itsAnaHeartbeat) {
-			hbaPeriod += itsHbaInterval; 
-			if (hbaPeriod >= itsHbaInterval) {
-				hbaPeriod = 0;
-				if (itsSetHBAEnabled) {
-					GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
-					LOG_INFO_STR("computing HBA delays " << Timestamp(timer->sec, timer->usec));
-					itsAnaBeamMgr->calculateHBAdelays(Timestamp((long)timer->sec + LEADIN_TIME, 0L), itsJ2000Converter);
-					itsAnaBeamMgr->sendHBAdelays     (*itsRSPDriver);
-				}
-			}
+			GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
+			LOG_INFO_STR("computing HBA delays " << Timestamp(timer->sec, timer->usec));
+			itsAnaBeamMgr->calculateHBAdelays(Timestamp((long)timer->sec + LEADIN_TIME, 0L), itsJ2000Converter);
+			itsAnaBeamMgr->sendHBAdelays     (*itsRSPDriver);
 			return (GCFEvent::HANDLED);
 		}
 		
@@ -449,6 +460,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 	// ---------- requests from the clients ----------
 	case IBS_BEAMALLOC: {
 		IBSBeamallocEvent 	allocEvent(event);
+		LOG_DEBUG_STR("ALLOC event=" << allocEvent);
 		if (beamalloc_start(allocEvent, port)) {
 			LOG_INFO_STR("Beam allocation started, going to beamalloc_state");
 			TRAN(BeamServer::beamalloc_state);
@@ -613,6 +625,7 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 		subscribe.subbandset = itsBeamTransaction.getBeam()->allocation().getSubbandBitset();
 
 		LOG_INFO_STR("Subscribing to subarray: " << subscribe.name);
+		LOG_DEBUG_STR("subbands= " << subscribe.subbandset);
 		itsCalServer->send(subscribe);
 		itsConnectTimer->setTimer(5.0);
 	}
@@ -842,6 +855,7 @@ bool BeamServer::beamfree_start(IBSBeamfreeEvent&  bf,
 
 	// remember on which beam we're working
 	itsBeamTransaction.set(&port, beamIter->second);
+	itsBeamTransaction.allocationDone();
 
 	return (true);
 }
@@ -865,7 +879,7 @@ int BeamServer::beampointto_action(IBSPointtoEvent&		ptEvent,
 		return (IBS_INVALID_TYPE_ERR);
 	}
 
-	LOG_INFO_STR("new pointing for " << beamIter->second->name() << ": " << ptEvent.pointing);
+	LOG_INFO_STR("new pointing for " << (ptEvent.analogue ? "analogue" : "digital") << " beam " << beamIter->second->name() << ": " << ptEvent.pointing);
 
 	//
 	// If the time is not set, then activate the command
@@ -873,7 +887,7 @@ int BeamServer::beampointto_action(IBSPointtoEvent&		ptEvent,
 	// long it takes the command to flow through the pipeline.
 	//
 	Timestamp actualtime;
-	actualtime.setNow(2 * COMPUTE_INTERVAL);
+	actualtime.setNow(2 * DIG_COMPUTE_INTERVAL);
 	if (ptEvent.pointing.time() == Timestamp(0,0)) {
 		ptEvent.pointing.setTime(actualtime);
 	}
@@ -947,7 +961,13 @@ void BeamServer::_createBeamPool()
 //
 void BeamServer::destroyAllBeams(GCFPortInterface* port)
 {
-	ASSERT(port);
+	ASSERT(port);		// sanity check
+
+	// must still be in our admin
+	if (itsClientBeams.find(port) == itsClientBeams.end()) {
+		LOG_INFO_STR("No beams related (anymore) to port " << port->getName());
+		return;
+	}
 
 	// deallocate all beams for this client
 	set<DigitalBeam*>::iterator beamIter = itsClientBeams[port].begin();
@@ -1061,6 +1081,12 @@ void BeamServer::deleteTransactionBeam()
 	// unregister beam
 	_unregisterBeamRCUs(*(itsBeamTransaction.getBeam()));
 	itsClientBeams[itsBeamTransaction.getPort()].erase(itsBeamTransaction.getBeam());
+
+	map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.find(itsBeamTransaction.getBeam()->name());
+	if (beamIter != itsBeamPool.end()) {
+		itsBeamPool.erase(beamIter);
+	}
+	itsAnaBeamMgr->deleteBeam(itsBeamTransaction.getBeam()->name());
 	delete itsBeamTransaction.getBeam();
 	itsBeamTransaction.reset();
 
@@ -1102,7 +1128,7 @@ bool BeamServer::_checkBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 void BeamServer::_allocBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 							    uint								ringNr)
 {
-	LOG_DEBUG_STR("Allocating beamlets for ring " << ringNr);
+	LOG_DEBUG_STR("Allocating " << allocation().size() << " beamlets for ring " << ringNr);
 
 	// map<beamletnr, subbandnr>
 	map<uint16,uint16>::const_iterator iter = allocation().begin();
@@ -1168,6 +1194,8 @@ void BeamServer::_releaseBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 //
 void BeamServer::_registerBeamRCUs(const DigitalBeam&	beam)
 {
+	LOG_DEBUG_STR("_registerBeamRCUS(" << beam.name() << ")");
+
 	bool	isLBAbeam = globalAntennaSets()->usesLBAfield(beam.antennaSetName());
 	vector<uint>&		RCUcounts = isLBAbeam ? itsLBArcus : itsHBArcus;
 	bitset<MAX_RCUS>&	rcuBitset = isLBAbeam ? itsLBAallocation : itsHBAallocation;
@@ -1191,6 +1219,8 @@ void BeamServer::_registerBeamRCUs(const DigitalBeam&	beam)
 //
 void BeamServer::_unregisterBeamRCUs(const DigitalBeam&	beam)
 {
+	LOG_DEBUG_STR("_unregisterBeamRCUS(" << beam.name() << ")");
+
 	bool	isLBAbeam = globalAntennaSets()->usesLBAfield(beam.antennaSetName());
 	vector<uint>&		RCUcounts = isLBAbeam ? itsLBArcus : itsHBArcus;
 	bitset<MAX_RCUS>&	rcuBitset = isLBAbeam ? itsLBAallocation : itsHBAallocation;
@@ -1276,6 +1306,9 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 	LOG_DEBUG_STR("Weights array has size: " << itsWeights.extent(firstDim) << "x" << itsWeights.extent(secondDim));
 	itsWeights(Range::all(), Range::all()) = 0.0;
 
+	// get ptr to antennafield information
+	AntennaField *gAntField = globalAntennaField();
+
 	// Check both LBA and HBA antennas
 	for (uint	fieldNr = 0; fieldNr < 4; fieldNr++) {
 		string	fieldName;
@@ -1295,7 +1328,7 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 		}
 
 		// Get ITRF position of the RCU's [rcu, xyz]
-		blitz::Array<double, 2> rcuPosITRF = globalAntennaPos()->RCUPos(fieldName);
+		blitz::Array<double, 2> rcuPosITRF = gAntField->RCUPos(fieldName);
 		if (rcuPosITRF.size() == 0) {
 			LOG_DEBUG_STR("No antennas defined in this field");
 			continue;
@@ -1303,7 +1336,7 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 		LOG_DEBUG_STR("ITRFRCUPos = " << rcuPosITRF);
 
 		// Get geographical location of subarray in ITRF
-		blitz::Array<double, 1> fieldCentreITRF = globalAntennaPos()->Centre(fieldName);
+		blitz::Array<double, 1> fieldCentreITRF = gAntField->Centre(fieldName);
 		LOG_DEBUG_STR("ITRF position antennaField: " << fieldCentreITRF);
 
 		// convert ITRF position of all antennas to J2000 for timestamp t
@@ -1314,7 +1347,7 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 		}
 
 		// Lengths of the vector of the antennaPosition i.r.t. the fieldCentre,
-		blitz::Array<double,1>	rcuPosLengths = globalAntennaPos()->RCULengths(fieldName);
+		blitz::Array<double,1>	rcuPosLengths = gAntField->RCULengths(fieldName);
 		LOG_DEBUG_STR("rcuPosLengths = " << rcuPosLengths);
 
 		// denormalize length of vector
@@ -1341,6 +1374,10 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 			}
 			LOG_DEBUG_STR("sourceJ2000xyz:" << sourceJ2000xyz);
 
+			// Note: RCUallocation is stationbased, rest info is fieldbased, 
+			//		 use firstRCU as offsetcorrection
+			int	firstRCU(gAntField->ringNr(fieldName) * gAntField->nrAnts(fieldName) * 2);
+			LOG_DEBUG_STR("first RCU of field " << fieldName << "=" << firstRCU);
 			bitset<MAX_RCUS>	RCUallocation(beamIter->second->rcuMask());
 			for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
 				if (!RCUallocation.test(rcu)) {			// all RCUS switched on in LBA/HBA mode
@@ -1360,16 +1397,18 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 					}
 
 					itsWeights(rcu, beamlet) = exp(itsBeamletAllocation[beamlet].scaling * 
-							(rcuJ2000Pos(rcu, 0) * sourceJ2000xyz(0,0) +
-							 rcuJ2000Pos(rcu, 1) * sourceJ2000xyz(0,1) +
-							 rcuJ2000Pos(rcu, 2) * sourceJ2000xyz(0,2)));
+							(rcuJ2000Pos(rcu-firstRCU, 0) * sourceJ2000xyz(0,0) +
+							 rcuJ2000Pos(rcu-firstRCU, 1) * sourceJ2000xyz(0,1) +
+							 rcuJ2000Pos(rcu-firstRCU, 2) * sourceJ2000xyz(0,2)));
 
 					// some debugging
 					if (itsWeights(rcu, beamlet) != complex<double>(1,0)) {
-						stringstream	str;
-						str.precision(20);
-						str << "itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet);
-						LOG_DEBUG_STR(str.str());
+						if (rcu>9 && rcu<17 && beamlet>10 && beamlet<20) {		// limit amount of data
+							stringstream	str;
+							str.precision(20);
+							str << "itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet);
+							LOG_DEBUG_STR(str.str());
+						}
 //						LOG_DEBUG_STR("itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet));
 					}
 				} // beamlets
@@ -1491,6 +1530,8 @@ void BeamServer::send_sbselection()
 		} 
 		else {
 			LOG_DEBUG_STR("No subbandselection for ring segment " << ringNr);
+			// TODO [200710] Shouldn't we send empty selections also (after cleanup of beams).
+			//      Can the RSPDriver handle that???
 		}
 	}
 }

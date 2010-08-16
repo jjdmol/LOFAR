@@ -26,7 +26,7 @@
 #include <Common/LofarConstants.h>
 #include <ApplCommon/StationConfig.h>
 #include <APL/APLCommon/AntennaSets.h>
-#include <APL/APLCommon/AntennaPos.h>
+#include <APL/APLCommon/AntennaField.h>
 #include <APL/RTCCommon/PSAccess.h>		// ParameterSet macros
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 
@@ -260,6 +260,8 @@ void AnaBeamMgr::showAdmin() const
 //
 void AnaBeamMgr::calculateHBAdelays(RTC::Timestamp	targetTime, J2000Converter&	aJ2000Conv)
 {
+#define MIN2(a,b) ((a)<(b)) ? (a) : (b)
+#define MAX2(a,b) ((a)>(b)) ? (a) : (b)
 	// make sure that we use the right pointings.
 	if (targetTime != itsTargetTime) {
 		activateBeams(targetTime);
@@ -303,7 +305,7 @@ void AnaBeamMgr::calculateHBAdelays(RTC::Timestamp	targetTime, J2000Converter&	a
 		// active beams in this field
 
 		// Get geographical location of antennaField in ITRF
-		blitz::Array<double, 1> fieldCentreITRF = globalAntennaPos()->Centre(fieldName);
+		blitz::Array<double, 1> fieldCentreITRF = globalAntennaField()->Centre(fieldName);
 		LOG_DEBUG_STR("ITRF position antennaField " << fieldName << ": " << fieldCentreITRF);
 
 		// HBA delta array
@@ -361,6 +363,7 @@ void AnaBeamMgr::calculateHBAdelays(RTC::Timestamp	targetTime, J2000Converter&	a
 
 			bitset<MAX_RCUS>	RCUallocation(pIter->beam.rcuMask());
 //			LOG_DEBUG_STR("Rcuallocation: " << RCUallocation);
+			int		maxStepNr = itsDelaySteps.size()-1;
 			for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
 				if (!RCUallocation.test(rcu)) {			// all RCUS switched on in LBA/HBA mode
 					continue;
@@ -378,12 +381,17 @@ void AnaBeamMgr::calculateHBAdelays(RTC::Timestamp	targetTime, J2000Converter&	a
 //					LOG_DEBUG_STR("antenna="<<rcu/2 <<", pol="<<rcu%2 <<", element="<<element  <<", delay("<<rcu<<","<<element<<")="<<delay);
 					// calculate approximate DelayStepNr
 					int delayStepNr = static_cast<int>(delay / 0.5E-9);
+					// range check for delayStepNr, max. 32 steps (0..31) 
+					delayStepNr = MIN2(delayStepNr, maxStepNr);	// limit against upper boundary
+					delayStepNr = MAX2(0, delayStepNr);			// limit against lower boundary
 					
 					// look for nearest matching delay step in range "delayStepNr - 2 .. delayStepNr + 2"
 					double minDelayDiff = fabs(delay - itsDelaySteps(delayStepNr));
 					double difference;
 					int minStepNr = delayStepNr;
-					for (int i = (delayStepNr - 2); i <= (delayStepNr + 2); i++){
+					int	stepMinusTwo = MAX2(0, delayStepNr-2);			// limit check to element 0
+					int	stepPlusTwo  = MIN2(maxStepNr, delayStepNr+2);	// limit check to element 31
+					for (int i = stepMinusTwo; i <= stepPlusTwo; i++){
 						if (i == delayStepNr) 
 							continue; // skip approximate nr
 						difference = fabs(delay - itsDelaySteps(i));
@@ -394,10 +402,6 @@ void AnaBeamMgr::calculateHBAdelays(RTC::Timestamp	targetTime, J2000Converter&	a
 					}
 					delayStepNr = minStepNr;
 					
-					// range check for delayStepNr, max. 32 steps (0..31) 
-					if (delayStepNr < 0)  delayStepNr = 0;
-					if (delayStepNr > 31) delayStepNr = 31;
-						
 					// bit1=0.25nS(not used), bit2=0.5nS, bit3=1nS, bit4=2nS, bit5=4nS, bit6=8nS 	
 					itsHBAdelays(rcu,element) = (delayStepNr * 4) + (1 << 7); // assign
 				} // for element
@@ -455,10 +459,7 @@ void AnaBeamMgr::getAllHBADeltas(const string& filename)
 	}
 	itsFile.open(filename.c_str());
 
-	if (!itsFile.good()) {
-		itsFile.close();
-		return;
-	}
+	ASSERTSTR(itsFile.good(), "Can not open file with relative HBA positions: " << filename);
 
 	// The file may have comment lines at the top, starting with '#'
 	// These must be skipped
@@ -490,7 +491,7 @@ void AnaBeamMgr::getAllHBAElementDelays(const string& filename)
 	ifstream	itsFile;
 	string		itsName;
 
-	LOG_DEBUG_STR("Trying to read the HBA element delay steps  from file " << filename);
+	LOG_DEBUG_STR("Trying to read the HBA element delay steps from file " << filename);
 
 	// open new file
 	if (itsFile.is_open()) { 
@@ -498,10 +499,7 @@ void AnaBeamMgr::getAllHBAElementDelays(const string& filename)
 	}
 	itsFile.open(filename.c_str());
 
-	if (!itsFile.good()) {
-		itsFile.close();
-		return;
-	}
+	ASSERTSTR(itsFile.good(), "Can not open file with HBA element delay steps: " << filename);
 
 	// The file may have comment lines at the top, starting with '#'
 	// These must be skipped

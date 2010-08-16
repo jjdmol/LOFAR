@@ -120,7 +120,10 @@ CalServer::CalServer(const string& name, ACCs& accs, int argc, char** argv)
 	m_sampling_frequency(0.0),
 	m_n_rspboards(0),
 	m_n_rcus(0),
-	m_instancenr(-1)
+	m_instancenr(-1),
+	itsListener			(0),
+	itsRSPDriver		(0),
+	itsCheckTimer		(0)
 #ifdef USE_CAL_THREAD
 	, m_calthread(0)
 #endif
@@ -139,16 +142,16 @@ CalServer::CalServer(const string& name, ACCs& accs, int argc, char** argv)
 		ASSERT(m_converter != 0);
 	}
 
+	registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
+	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
+
 	string	instanceID;
 	if (m_instancenr >= 0) {
 		instanceID = formatString("(%d)", m_instancenr);
 	}
 	itsCheckTimer = new GCFTimerPort(*this, "CheckTimer");
-	registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
-	m_acceptor.init(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::MSPP, CAL_PROTOCOL);
-
-	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
-	m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER,  GCFPortInterface::SAP,  RSP_PROTOCOL);
+	itsListener   = new GCFTCPPort(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::MSPP, CAL_PROTOCOL);
+	itsRSPDriver  = new GCFTCPPort(*this, MAC_SVCMASK_RSPDRIVER,  GCFPortInterface::SAP,  RSP_PROTOCOL);
 }
 
 //
@@ -234,6 +237,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 
 			// Load antenna arrays
 			m_arrays.getAll(cl.locate(GET_CONFIG_STRING("CalServer.AntennaArraysFile")));
+			ASSERTSTR(!m_arrays.getNameList().empty(), "No antenna positions found");
 
 			// Setup datapath
 			itsDataDir = globalParameterSet()->getString("CalServer.DataDirectory", "/opt/lofar/bin");
@@ -267,18 +271,18 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	break;
 
 	case F_ENTRY: {
-		if (!m_acceptor.isConnected()) {
-			m_acceptor.open();
+		if (!itsListener->isConnected()) {
+			itsListener->open();
 		}
-		LOG_DEBUG("opening port: m_rspdriver");
-		m_rspdriver.open();
+		LOG_DEBUG("opening port: itsRSPDriver");
+		itsRSPDriver->autoOpen(30, 0, 2);      // try max 30 times every 2 seconds than report DISCO
 	}
 	break;
 
 	case F_CONNECTED: {
-		if ( m_acceptor.isConnected() && m_rspdriver.isConnected()) {
+		if ( itsListener->isConnected() && itsRSPDriver->isConnected()) {
 			RSPGetconfigEvent getconfig;
-			m_rspdriver.send(getconfig);
+			itsRSPDriver->send(getconfig);
 		}
 	}
 	break;
@@ -297,7 +301,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 		getclock.timestamp = Timestamp(0,0);
 		getclock.cache = true;
 
-		m_rspdriver.send(getclock);
+		itsRSPDriver->send(getclock);
 	}
 	break;
 
@@ -318,7 +322,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 		subclock.timestamp = Timestamp(0,0);
 		subclock.period = 1;
 
-		m_rspdriver.send(subclock);
+		itsRSPDriver->send(subclock);
 	}
 	break;
 
@@ -368,14 +372,14 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	switch (e.signal) {
 	case F_ENTRY: {
 		_disableRCUs(0);
-		m_acceptor.setTimer(0.0, 1.0);
+		itsCheckTimer->setTimer(0.0, 1.0);
 	}
 	break;
 
 	case F_ACCEPT_REQ: {
 		GCFTCPPort* client = new GCFTCPPort();
 		client->init(*this, "client", GCFPortInterface::SPP, CAL_PROTOCOL);
-		if (!m_acceptor.accept(*client)) {
+		if (!itsListener->accept(*client)) {
 			delete client;
 			LOG_ERROR ("Could not setup a connection with a new client");
 		}
@@ -476,7 +480,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 		LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
 		port.close();
 
-		if (&m_acceptor == &port) {
+		if (itsListener == &port) {
 			TRAN(CalServer::initial);
 		}
 		else {
@@ -526,6 +530,8 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	CALStartEvent 	 start(e);
 	CALStartackEvent ack;
+
+	LOG_DEBUG_STR("Received CAL_START:" << start);
 
 	ack.status      = CAL_Protocol::CAL_SUCCESS; // assume succes, until otherwise
 	ack.name        = start.name;
@@ -634,7 +640,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			specInvCmd.settings()(0).setYSI(SIon);
 			LOG_DEBUG_STR("NyquistZone = " << start.rcumode()(0).getNyquistZone()
 							<< " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
-			m_rspdriver.send(specInvCmd);
+			itsRSPDriver->send(specInvCmd);
 
 
 			//
@@ -685,7 +691,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 					// previous LOG statement contained start.rcumask.to_ulong() which
 					// throws an exception because the number of bits = 256!
 					LOG_DEBUG(formatString("Sending RSP_SETRCU(%08X)", start.rcumode()(0).getRaw()));
-					m_rspdriver.send(setrcu);
+					itsRSPDriver->send(setrcu);
 				}
 			}
 			_enableRCUs(subarray, delay + 4);
@@ -854,7 +860,7 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 		enableCmd.settings()(0).setEnable(true);
 		sleep (1);
 		LOG_INFO_STR("Enabling some rcu's because they are used for the first time");
-		m_rspdriver.send(enableCmd);
+		itsRSPDriver->send(enableCmd);
 	}
 }
 
@@ -902,7 +908,7 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 		disableCmd.settings()(0).setMode(RCUSettings::Control::MODE_OFF);
 		sleep (1);
 		LOG_INFO_STR("Disabling " << rcus2switchOff.count() << " rcu's because they are not used anymore");
-		m_rspdriver.send(disableCmd);
+		itsRSPDriver->send(disableCmd);
 	}
 }
 
@@ -1014,6 +1020,10 @@ int main(int argc, char** argv)
 		LOG_FATAL("Failed to allocate memory for the ACC arrays.");
 		exit(EXIT_FAILURE);
 	}
+
+	// SOMETIMES CALSERVER IS STARTED BEFORE RSPDRIVER IS ON THE AIR THIS SHOULD BE A PROBLEM
+	// BUT IT SOMETIMES IS. QAD HACK TO AVOID HANGING CalServer
+	sleep(3);
 
 	//
 	// create CalServer and ACMProxy tasks

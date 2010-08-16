@@ -11,7 +11,6 @@ lofar_add_test(tbitsetUtil tbitsetUtil.cc)
 lofar_add_test(tOutOfBand tOutOfBand.cc)
 lofar_add_test(tAntennaMapper tAntennaMapper.cc)
 lofar_add_test(tAntennaSet tAntennaSet.cc)
-lofar_add_test(tAntennaPos tAntennaPos.cc)
 lofar_add_test(tAntennaField tAntennaField.cc)
 
 configure_file(

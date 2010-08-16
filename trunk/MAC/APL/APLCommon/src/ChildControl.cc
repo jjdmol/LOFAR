@@ -155,6 +155,10 @@ bool ChildControl::startChild (uint16				aCntlrType,
 	string	hostname(realHostname(aHostname));
 	LOG_DEBUG_STR("startChild(" << aCntlrType <<","<< anObsID <<","<< instanceNr 
 											  <<","<< hostname << ")");
+	if (hostname.empty()) {
+		LOG_DEBUG("Hostname is empty, aborting startChild function...");
+		return (false);
+	}
 
 	// first check if child already exists
 	string	cntlrName(controllerName(aCntlrType, instanceNr, anObsID, hostname));
@@ -256,8 +260,8 @@ bool ChildControl::startChild (uint16				aCntlrType,
 	itsActionList.push_back(ci);
 
 	// Trigger statemachine.
-	if (itsListener && !itsActionTimer) {
-		itsActionTimer = itsListener->setTimer(0.0);
+	if (!itsActionTimer) {
+		itsActionTimer = itsTimerPort.setTimer(0.0);
 		LOG_DEBUG_STR("ACTIONTIMER=" << itsActionTimer);
 	}
 
@@ -285,6 +289,9 @@ void ChildControl::startChildControllers()
 			// collect the information to start the child controller
 			vector<string>	hostnames = subset.getStringVector(childname+"._hostname");
 			for (uint i = 0; i < hostnames.size(); i++) {
+				if (hostnames[i].empty()) {
+					continue;
+				}
 				uint16	childCntlrType = getControllerType(childname);
 				uint32	treeID         = globalParameterSet()->getUint32("_treeID");
 				uint16	instanceNr	   = 0;		// TODO
@@ -567,8 +574,10 @@ void ChildControl::_processActionList()
 	LOG_TRACE_FLOW("_processActionList()");
 
 	// always cancel timer that brought me here.
-	itsTimerPort.cancelTimer(itsActionTimer);
-	itsActionTimer = 0;
+	if (itsActionTimer) {
+		itsTimerPort.cancelTimer(itsActionTimer);
+		itsActionTimer = 0;
+	}
 
 	uint32	nrActions = itsActionList.size();	// prevents handling rescheduled actions
 	// when list is empty return;
@@ -753,9 +762,10 @@ void ChildControl::_processActionList()
 	}
 
 	if (itsActionList.size()) {							// when unhandled actions in list
-		itsTimerPort.cancelTimer(itsActionTimer);
-		itsActionTimer = itsTimerPort.setTimer(0.2);	// restart timer
-		LOG_DEBUG_STR("ACTIONTIMER=" << itsActionTimer);
+		if (!itsActionTimer) {
+			itsActionTimer = itsTimerPort.setTimer(0.2);	// restart timer
+			LOG_DEBUG_STR("ACTIONTIMER=" << itsActionTimer);
+		}
 	}
 
 }

@@ -30,6 +30,7 @@
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/APLCommon/Controller_Protocol.ph>
+#include <APL/APLCommon/AntennaSets.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <signal.h>
@@ -74,7 +75,9 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 	// Readin some parameters from the ParameterSet.
 	itsTreePrefix = globalParameterSet()->getString("prefix");
 	itsInstanceNr = globalParameterSet()->getUint32("_instanceNr");
-	itsObsPar	  = Observation(globalParameterSet());
+	StationConfig	sc;
+	itsObsPar = new Observation(globalParameterSet(), sc.hasSplitters);
+	ASSERTSTR(itsObsPar, "Could not convert the parameter set into a legal observation definition");
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
@@ -619,8 +622,7 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 //
 bool	CalibrationControl::startCalibration() 
 {
-	bool	stereoBeams((itsObsPar.antennaSet == "HBA_DUAL") && (stationRingName() == "Core"));
-	itsNrBeams = itsObsPar.beams.size() * (stereoBeams ? 2 : 1);
+	itsNrBeams = itsObsPar->beams.size();
 	LOG_DEBUG_STR("Calibrating " << itsNrBeams << " beams.");
 	if (itsNrBeams == 0) {
 		LOG_WARN("No beams specified");
@@ -628,59 +630,35 @@ bool	CalibrationControl::startCalibration()
 	}
 
 	GCFPValueArray		beamNameArr;
-	for (uint32	i(0); i < itsObsPar.beams.size(); i++) {
+	AntennaSets*		AS(globalAntennaSets());
+	for (uint32	i(0); i < itsObsPar->beams.size(); i++) {
 		// construct and send CALStartEvent
-		string		beamName(itsObsPar.getBeamName(i));
 
 		CALStartEvent calStartEvent;
-		calStartEvent.name   = beamName;
+		calStartEvent.name   = itsObsPar->beams[i].name;
 		StationConfig		config;
 		// TODO: As long as the AntennaArray.conf uses different names as SAS we have to use this dirty hack.
-		calStartEvent.parent = itsObsPar.getAntennaArrayName(config.hasSplitters);
+//		calStartEvent.parent = itsObsPar->getAntennaArrayName(config.hasSplitters);
+		calStartEvent.parent = AS->antennaField(itsObsPar->beams[i].antennaSet);
 		calStartEvent.rcumode().resize(1);
 		calStartEvent.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)
-											convertFilterSelection(itsObsPar.filter, itsObsPar.antennaSet));
-		calStartEvent.subset = itsObsPar.getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters);
+											convertFilterSelection(itsObsPar->filter, itsObsPar->beams[i].antennaSet));
+		calStartEvent.subset = itsObsPar->getRCUbitset(0, 0, itsObsPar->beams[i].antennaSet) &
+								AS->RCUallocation(itsObsPar->beams[i].antennaSet);
 
 		// Note: when HBA_DUAL is selected we should set up a calibration on both HBA_0 and HBA_1 field.
-		if (!stereoBeams) {
-			LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
-									calStartEvent.name.c_str(), calStartEvent.parent.c_str(),
-									calStartEvent.rcumode()(0).getRaw()));
-			itsCalServer->send(calStartEvent);
-			beamNameArr.push_back(new GCFPVString(beamName));	// update array for PVSS
-		}
-		else {
-			for (int rcu = config.nrHBAs; rcu < config.nrHBAs*2; rcu++) {	// clear second half of RCUs
-				calStartEvent.subset.reset(rcu);
-			}
-			calStartEvent.parent = "HBA_0";
-			calStartEvent.name   = beamName + "_0";
-			LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
-									calStartEvent.name.c_str(), calStartEvent.parent.c_str(),
-									calStartEvent.rcumode()(0).getRaw()));
-			itsCalServer->send(calStartEvent);
-			beamNameArr.push_back(new GCFPVString(calStartEvent.name));	// update array for PVSS
-
-			calStartEvent.subset = itsObsPar.getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters);
-			calStartEvent.parent = "HBA_1";
-			calStartEvent.name   = beamName + "_1";
-			for (int rcu = 0; rcu < config.nrHBAs; rcu++) {	// clear first half of RCUs
-				calStartEvent.subset.reset(rcu);
-			}
-			LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
-									calStartEvent.name.c_str(), calStartEvent.parent.c_str(),
-									calStartEvent.rcumode()(0).getRaw()));
-			itsCalServer->send(calStartEvent);
-			beamNameArr.push_back(new GCFPVString(calStartEvent.name));	// update array for PVSS
-		}
+		LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
+								calStartEvent.name.c_str(), calStartEvent.parent.c_str(),
+								calStartEvent.rcumode()(0).getRaw()));
+		itsCalServer->send(calStartEvent);
+		beamNameArr.push_back(new GCFPVString(itsObsPar->beams[i].name));	// update array for PVSS
 	} // for all beams
 
 	// inform operator about these values.
 	itsPropertySet->setValue(PN_CC_BEAM_NAMES,	 GCFPVDynArr(LPT_DYNSTRING, beamNameArr));
-	itsPropertySet->setValue(PN_CC_ANTENNA_ARRAY,GCFPVString(itsObsPar.antennaArray));
-	itsPropertySet->setValue(PN_CC_FILTER,		 GCFPVString(itsObsPar.filter));
-	itsPropertySet->setValue(PN_CC_NYQUISTZONE,	 GCFPVInteger(itsObsPar.nyquistZone));
+	itsPropertySet->setValue(PN_CC_ANTENNA_ARRAY,GCFPVString(itsObsPar->antennaArray));
+	itsPropertySet->setValue(PN_CC_FILTER,		 GCFPVString(itsObsPar->filter));
+	itsPropertySet->setValue(PN_CC_NYQUISTZONE,	 GCFPVInteger(itsObsPar->nyquistZone));
 	itsPropertySet->setValue(PN_CC_RCUS,		 GCFPVString(
 										compactedArrayString(globalParameterSet()->
 										getString("Observation.receiverList"))));

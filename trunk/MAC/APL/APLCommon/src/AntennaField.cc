@@ -105,7 +105,7 @@ AntennaField::AntennaField(const string& filename)
 		ASSERTSTR(fieldIndex >= 0, "Only 'LBA','HBA','HBA0' and 'HBA1' allowed for antenna field (not '" << fieldName << "')");
 		if (fields.size() == 2) {
 			// NORMAL-VECTOR or ROTATION-MATRIX
-			if (fields[0].find("NORMAL-VECTOR") != string::npos) {
+			if (fields[0].find("NORMAL_VECTOR") != string::npos) {
 				blitz::Array<double,1>	nVect;
 				inputStream >> nVect;
 				ASSERTSTR(nVect.dimensions() == 1 && nVect.extent(firstDim) == 3, 
@@ -115,7 +115,7 @@ AntennaField::AntennaField(const string& filename)
 				itsNormVectors[fieldIndex] = nVect;
 				continue;
 			}	
-			else if (fields[0].find("ROTATION-MATRIX") != string::npos) {
+			else if (fields[0].find("ROTATION_MATRIX") != string::npos) {
 				blitz::Array<double,2>	rMat;
 				inputStream >> rMat;
 				ASSERTSTR(rMat.dimensions() == 2 && rMat.extent(firstDim) == 3 && rMat.extent(secondDim) == 3, 
