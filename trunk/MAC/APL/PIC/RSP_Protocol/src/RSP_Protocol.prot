@@ -40,6 +40,7 @@ typedef	void*	memptr_t;
 static const int MAX_N_RSPBOARDS 	= 24;
 static const int RSP_SUCCESS       	= 1;
 static const int RSP_FAILURE       	= 0;
+static const int RSP_BUSY       	= -1;
 static const int RSP_RAW_BLOCK_SIZE = 1480;
 
 // The protocol implements the following messages.
