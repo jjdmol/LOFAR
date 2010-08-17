@@ -30,10 +30,22 @@
 
 using namespace LOFAR;
 
-int main (int, char* argv[]) 
+int main (int argc, char* argv[]) 
 {
 	INIT_LOGGER(argv[0]);
 	try {
+		if (argc == 2) {
+			ParameterSet	userPS(argv[1]);
+			Observation		someObs(&userPS);
+			cout << "getRCUbitset(96,48,'') = " << someObs.getRCUbitset(96,48,"") << endl;	// Europe
+			cout << "getRCUbitset(96,96,'') = " << someObs.getRCUbitset(96,96,"") << endl;	// Europe
+			cout << "getRCUbitset(96,48,LBA_XXX) = " << someObs.getRCUbitset(96,48,"LBA_XXX") << endl;	// Core
+			cout << "getRCUbitset(96,96,LBA_XXX) = " << someObs.getRCUbitset(96,96,"LBA_XXX") << endl;	// Core
+			cout << "getRCUbitset(96,48,HBA_XXX) = " << someObs.getRCUbitset(96,48,"HBA_XXX") << endl;	// Core
+			cout << "getRCUbitset(96,96,HBA_XXX) = " << someObs.getRCUbitset(96,96,"HBA_XXX") << endl;	// Core
+			return (0);
+		}
+
 		ParameterSet parSet2("tObservation.in_parset2");
 		Observation  dualObs(&parSet2);
 		cout << dualObs << endl;
@@ -86,49 +98,30 @@ int main (int, char* argv[])
 		for (int r = 0; r < 12; r++) {
 			expectedRCUs.set(r);
 		}
-		cout << "getRCUbitset(48,48,12,false) = " << obs1.getRCUbitset(48,48,12,false) << endl;
 
 		// basic test on RCU bitsets
-		parSet1.replace("ObsSW.Observation.antennaSet", "LBA_OUTER");
 		Observation		obs3(&parSet1);
-		cout << obs3.antennaSet << endl;
-		cout << "getRCUbitset(96,48,12,true)  = " << obs3.getRCUbitset(96,48,12,true) << endl;	// Core
-		cout << "getRCUbitset(96,48,12,false) = " << obs3.getRCUbitset(96,48,12,false) << endl;	// Remote
-		cout << "getRCUbitset(96,48,24,false) = " << obs3.getRCUbitset(96,48,24,false) << endl;	// Europe
-		cout << "getRCUbitset(96,96,24,false) = " << obs3.getRCUbitset(96,96,24,false) << endl;	// Europe
-		
-		// basic test on RCU bitsets
-		obs3.antennaSet = "HBA_BOTH";
-		cout << obs3.antennaSet << endl;
-		cout << "getRCUbitset(96,48,12,true)  = " << obs3.getRCUbitset(96,48,12,true) << endl;	// Core
-		cout << "getRCUbitset(96,48,12,false) = " << obs3.getRCUbitset(96,48,12,false) << endl;	// Remote
-		cout << "getRCUbitset(96,48,24,false) = " << obs3.getRCUbitset(96,48,24,false) << endl;	// Europe
-		cout << "getRCUbitset(96,96,24,false) = " << obs3.getRCUbitset(96,96,24,false) << endl;	// Europe
+		cout << "getRCUbitset(96,48,'') = " << obs3.getRCUbitset(96,48,"") << endl;	// Europe
+		cout << "getRCUbitset(96,96,'') = " << obs3.getRCUbitset(96,96,"") << endl;	// Europe
+		cout << "getRCUbitset(96,48,LBA_XXX) = " << obs3.getRCUbitset(96,48,"LBA_XXX") << endl;	// Core
+		cout << "getRCUbitset(96,96,LBA_XXX) = " << obs3.getRCUbitset(96,96,"LBA_XXX") << endl;	// Core
+		cout << "getRCUbitset(96,48,HBA_XXX) = " << obs3.getRCUbitset(96,48,"HBA_XXX") << endl;	// Core
+		cout << "getRCUbitset(96,96,HBA_XXX) = " << obs3.getRCUbitset(96,96,"HBA_XXX") << endl;	// Core
 		
 		// tricky test on RCU bitsets
+		
+		obs3.antennaSet = "HBA_ZERO";
+		cout << "HBA_ZERO(false) = " << obs3.getAntennaArrayName(false) << endl;
+		cout << "HBA_ZERO(true)  = " << obs3.getAntennaArrayName(true) << endl;
 		obs3.antennaSet = "HBA_ONE";
-		cout << obs3.antennaSet << endl;
-		cout << "getRCUbitset(96,48,12,true)  = " << obs3.getRCUbitset(96,48,12,true) << endl;	// Core
-		cout << "getRCUbitset(96,48,12,false) = " << obs3.getRCUbitset(96,48,12,false) << endl;	// Remote
-		cout << "getRCUbitset(96,48,24,false) = " << obs3.getRCUbitset(96,48,24,false) << endl;	// Europe
-		cout << "getRCUbitset(96,96,24,false) = " << obs3.getRCUbitset(96,96,24,false) << endl;	// Europe
-		
-		// tricky test on RCU bitsets
-		obs3.antennaSet = "HBA_TWO";
-		cout << obs3.antennaSet << endl;
-		cout << "getRCUbitset(96,48,12,true)  = " << obs3.getRCUbitset(96,48,12,true) << endl;	// Core
-		cout << "getRCUbitset(96,48,12,false) = " << obs3.getRCUbitset(96,48,12,false) << endl;	// Remote
-		cout << "getRCUbitset(96,48,24,false) = " << obs3.getRCUbitset(96,48,24,false) << endl;	// Europe
-		cout << "getRCUbitset(96,96,24,false) = " << obs3.getRCUbitset(96,96,24,false) << endl;	// Europe
-		
 		cout << "HBA_ONE(false) = " << obs3.getAntennaArrayName(false) << endl;
 		cout << "HBA_ONE(true)  = " << obs3.getAntennaArrayName(true) << endl;
-		obs3.antennaSet = "HBA_TWO";
-		cout << "HBA_TWO(false) = " << obs3.getAntennaArrayName(false) << endl;
-		cout << "HBA_TWO(true)  = " << obs3.getAntennaArrayName(true) << endl;
-		obs3.antennaSet = "HBA_BOTH";
-		cout << "HBA_BOTH(false) = " << obs3.getAntennaArrayName(false) << endl;
-		cout << "HBA_BOTH(true)  = " << obs3.getAntennaArrayName(true) << endl;
+		obs3.antennaSet = "HBA_DUAL";
+		cout << "HBA_DUAL(false) = " << obs3.getAntennaArrayName(false) << endl;
+		cout << "HBA_DUAL(true)  = " << obs3.getAntennaArrayName(true) << endl;
+		obs3.antennaSet = "HBA_JOINED";
+		cout << "HBA_JOINED(false) = " << obs3.getAntennaArrayName(false) << endl;
+		cout << "HBA_JOINED(true)  = " << obs3.getAntennaArrayName(true) << endl;
 
 		obs3.antennaSet = "LBA_INNER";
 		cout << "LBA_INNER(false) = " << obs3.getAntennaArrayName(false) << endl;

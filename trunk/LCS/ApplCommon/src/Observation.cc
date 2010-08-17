@@ -49,7 +49,8 @@ Observation::Observation() :
 //
 // Observation(ParameterSet*)
 //
-Observation::Observation(ParameterSet*		aParSet) :
+Observation::Observation(ParameterSet*		aParSet,
+						 bool				hasDualHBA) :
 	name(),
 	obsID(0),
 	startTime(0),
@@ -82,7 +83,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 	}
 #endif
 	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
-		stationList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.stationList"));
+		stationList = aParSet->getString(prefix+"VirtualInstrument.stationList");
 		stations    = aParSet->getStringVector(prefix+"VirtualInstrument.stationList", true);	// true:expandable
 	}
 
@@ -160,8 +161,10 @@ Observation::Observation(ParameterSet*		aParSet) :
 		newBeam.name = getBeamName(beamIdx);
 		newBeam.antennaSet = antennaSet;
 		if (dualMode) {
-			newBeam.name += "_0";
 			newBeam.antennaSet = "HBA_ZERO";
+			if (hasDualHBA) {
+				newBeam.name += "_0";
+			}
 		}
 
 		// ONLY one pointing per beam.
@@ -187,7 +190,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 		beams.push_back(newBeam);
 		
 		// Duplicate beam on second HBA subfield when in HBA_DUAL mode.
-		if (dualMode) {
+		if (dualMode && hasDualHBA) {
 			newBeam.name	   = getBeamName(beamIdx) + "_1";
 			newBeam.antennaSet = "HBA_ONE";
 			beams.push_back(newBeam);
@@ -196,7 +199,11 @@ Observation::Observation(ParameterSet*		aParSet) :
 		// finally update beamlet 2 beam mapping.
 		for (int32  i = newBeam.beamlets.size()-1 ; i > -1; i--) {
 			if (beamlet2beams[newBeam.beamlets[i]] != -1) {
-				THROW (Exception, "beamlet " << i << " of beam " << beamIdx << " clashes with beamlet of other beam"); 
+				stringstream	os;
+				os << "beamlet2beams   : "; writeVector(os, beamlet2beams,    ",", "[", "]"); os << endl;
+				os << "beamlet2subbands: "; writeVector(os, beamlet2subbands, ",", "[", "]"); os << endl << endl;
+				LOG_ERROR_STR(os.str());
+				THROW (Exception, "beamlet " << i << "(" << newBeam.beamlets[i] << ") of beam " << beamIdx << " clashes with beamlet of other beam"); 
 			}
 			beamlet2beams   [newBeam.beamlets[i]] = beamIdx;
 			beamlet2subbands[newBeam.beamlets[i]] = newBeam.subbands[i];
@@ -213,8 +220,10 @@ Observation::Observation(ParameterSet*		aParSet) :
 		newBeam.name 	   = getAnaBeamName();
 		newBeam.antennaSet = antennaSet;
 		if (dualMode) {
-			newBeam.name += "_0";
 			newBeam.antennaSet = "HBA_ZERO";
+			if (hasDualHBA) {
+				newBeam.name += "_0";
+			}
 		}
 
 		// ONLY one pointing per beam.
@@ -223,21 +232,24 @@ Observation::Observation(ParameterSet*		aParSet) :
 		newPt.angle2 		= aParSet->getDouble(beamPrefix+"angle2", 0.0);
 		newPt.directionType = aParSet->getString(beamPrefix+"directionType", "");
 		newPt.duration	    = aParSet->getInt   (beamPrefix+"duration", 0);
+		newPt.startTime 	= startTime;	// assume time of observation itself
+#if !defined HAVE_BGL
 		try {
 			string	timeStr = aParSet->getString(beamPrefix+"startTime","");
 			if (!timeStr.empty() && timeStr != "0") {
 				newPt.startTime = to_time_t(time_from_string(timeStr));
 			}
 		} catch (boost::bad_lexical_cast) {
-			THROW (Exception, prefix << "startTime is not a valid time string. Please use YYYY-MM-DD HH:MM:SS[.hhh].");
+			LOG_ERROR_STR("Starttime of pointing of analogue beam " << beamIdx << " not valid, using starttime of observation");
 		}
+#endif
 		newBeam.pointings.push_back(newPt);
 		
-		// add beam to the beam vector
+		// add beam to the analogue beam vector
 		anaBeams.push_back(newBeam);
 
 		// Duplicate beam on second HBA subfield when in HBA_DUAL mode.
-		if (dualMode) {
+		if (dualMode && hasDualHBA) {
 			newBeam.name	   = getBeamName(beamIdx) + "_1";
 			newBeam.antennaSet = "HBA_ONE";
 			anaBeams.push_back(newBeam);
@@ -316,39 +328,28 @@ bool	Observation::conflicts(const	Observation&	other) const
 }
 
 //
-// getRCUbitset(nrLBAs, nrHBAs, nrRSPs): bitset
+// getRCUbitset(nrLBAs, nrHBAs, antennaSet): bitset
 //
 // Returns a bitset containing the RCU's requested by the observation.
+// The can be te list specified in the receiverList or (when empty) just some
+// standin dummmy purely based on the number of antennas.
 //
-bitset<MAX_RCUS> Observation::getRCUbitset(int nrLBAs, int nrHBAs, int nrRSPs, bool	hasSplitters)
+bitset<MAX_RCUS> Observation::getRCUbitset(int nrLBAs, int nrHBAs, const string& anAntennaSet)
 {
-	#define MAX2(a,b) ((a) > (b) ? (a) : (b))
-
-	if (antennaSet.empty() || ((nrLBAs+nrHBAs+nrRSPs) == 0)) {		// old ParameterSet or force no interpretation?
-		return (RCUset);			// return old info.
+	// user defined set always overrules.
+	if (RCUset.any()) {
+		return (RCUset);
 	}
 
 	// HBA's in Core stations sometimes use half of the rcus.
-	bool	fullStation(MAX2(nrLBAs, nrHBAs) <= (nrRSPs * NR_ANTENNAS_PER_RSPBOARD));
-	int		nrAnts   = ((antennaSet.find("LBA") == 0) ? nrLBAs : nrHBAs);
-	if ((antennaSet.find("LBA") == 0) && !fullStation) {
-		nrAnts /= 2;
-	}
-	int		firstRCU = 0;
-	int		lastRCU	 = nrAnts * 2;
-	if (hasSplitters && (antennaSet == "HBA_ZERO")) {
-		lastRCU = nrAnts;
-	}
-	else if (hasSplitters && (antennaSet == "HBA_ONE")) {
-		firstRCU = nrAnts;
-	}
+	int	nrRCUS = 2 * ((anAntennaSet.find("LBA") == 0) ? nrLBAs : nrHBAs);
 	
-	// Set up the RCUbits. Remember that we don't care here which of the three inputs is used.
-	RCUset.reset();
-	for (int rcu = firstRCU; rcu < lastRCU; rcu++) {
-			RCUset.set(rcu);
+	// Set up the RCUbits for this antennaSet. Remember that we don't care here which of the three inputs is used.
+	RCUset_t	tmpRCUset(RCUset);
+	for (int rcu = 0; rcu < nrRCUS; rcu++) {	// check all bits
+		tmpRCUset.set(rcu);
 	}
-	return (RCUset);
+	return (tmpRCUset);
 }
 
 //
@@ -363,18 +364,20 @@ string Observation::getAntennaArrayName(bool hasSplitters) const
 	else {
 		result = antennaSet;
 	}
+
+	if (result.find("LBA") == 0)  {
+		return ("LBA");
+	}
 	
 	if (!hasSplitters) {		// no splitter, always use all HBA
-		if (result.find("HBA") == 0) return ("HBA");
-	}
-	else {						// has splitter, translate SAS names to AntennaArray.conf names
-		if (result == "HBA_ZERO") 	return ("HBA_0");
-		if (result == "HBA_ONE") 	return ("HBA_1");
-		if (result == "HBA_JOINED")	return ("HBA");
 		return ("HBA");
 	}
 
-	return (result);
+	// station has splitters
+	if (result == "HBA_ZERO") 	return ("HBA0");
+	if (result == "HBA_ONE") 	return ("HBA1");
+	if (result == "HBA_JOINED")	return ("HBA");
+	return ("HBA");
 }	
 
 //

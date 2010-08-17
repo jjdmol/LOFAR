@@ -52,7 +52,7 @@ class Observation
 public:
 	Observation();
 	~Observation();
-	explicit	Observation (ParameterSet*		aParSet);
+	explicit	Observation (ParameterSet*		aParSet, bool	hasDualHBA = false);
 
 	// global function for converting filtername to nyquist zone
 	static uint nyquistzoneFromFilter(const string&	filterName);
@@ -65,7 +65,7 @@ public:
 	bool	conflicts(const	Observation&	other) const;
 
 	// Returns a bitset containing the RCU's requested by the observation.
-	bitset<MAX_RCUS> getRCUbitset(int nrLBAs, int nrHBAs, int nrRSPs, bool hasSplitters);
+	bitset<MAX_RCUS> getRCUbitset(int nrLBAs, int nrHBAs, const string& anAntennaSet);
 	// TEMP HACK
 	string getAntennaArrayName(bool hasSplitters) const;
 
