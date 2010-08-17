@@ -37,12 +37,16 @@ set(BGPION_COMPILE_DEFINITIONS
   -DHAVE_BGP
   -DHAVE_BGP_ION
   -DHAVE_FCNP
-  -isystem /bgsys/drivers/ppcfloor/comm/include
-  -isystem /bgsys/drivers/ppcfloor/arch/include
 
   # disable compiler warnings in the following directories
   -isystem /bgsys/LOFAR/openmpi-1.4.1-ion/include
-  -isystem /globalhome/lofarsystem/packages/root/bgp_ion/boost/include)
+  -isystem /globalhome/lofarsystem/packages/root/bgp_ion/boost/include
+
+  # include these AFTER mpi, since the directories below also contain mpi.h,
+  # but for BGPCN
+  -isystem /bgsys/drivers/ppcfloor/comm/include
+  -isystem /bgsys/drivers/ppcfloor/arch/include
+  )
 set(BGPION_COMPILE_DEFINITIONS_DEBUG
   -DENABLE_DBGASSERT
   -DENABLE_TRACER
