@@ -333,7 +333,10 @@ void clientAddClaimCallback(
   		g_ClaimedTypes[ typeName ][ "NAME"      ] = makeDynString(newObjectName);
   		g_ClaimedTypes[ typeName ][ "CLAIMDATE" ] = makeDynTime(claimDate); 
     }
-    dpSet(dpSubStr(DPName,DPSUB_DP)+".claim.name",newObjectName,dpSubStr(DPName,DPSUB_DP)+".claim.claimDate",claimDate); 
+    string aS= dpSubStr(DPName,DPSUB_DP);
+    if (dpExists(aS+".claim.name")) {
+      dpSet(aS+".claim.name",newObjectName,aS+".claim.claimDate",claimDate); 
+    }
   }  
   
   if (bDebug) showMapping("clientAddClaimCallback");
