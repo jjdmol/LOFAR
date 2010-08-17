@@ -158,7 +158,14 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     //get the stateNr and DP that go with this message
     
     time aTime     = getCurrentTime();
+    string aSystem = dpSubStr(aResult[nr][1],DPSUB_SYS);
     string aDP     = aResult[nr][2];
+    if (strpos(aDP,":") < 0) {
+      string aS=aSystem+aDP;
+      aDP=aS;
+    }
+    // check if DPName contains a System name, otherwise get the name from dppart
+    
     int state      = (int)aResult[nr+1][2];
   
     if (state == 60) {
@@ -178,12 +185,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     iPos = dynContains( g_alarms[ "DPNAME"         ], aDP );
 
   
-    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|iPos:" + iPos);
-    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|dpnames in global:"+g_alarms[ "DPNAME"         ]);
-    if(iPos>0 && bDebug)  DebugN("monitorAlarms.ctl:objectStateCallback|floor g_alarms: "+floor(g_alarms["STATE"][iPos]/10));
-    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|floor state: "+floor(state/10));
-    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|force: "+force);
-  
+ 
     // check if existing dp.
     // if it exists, check if new state 1st digit > oldState 1st digit && force, otherwise return
     if (iPos > 0 && ((floor(g_alarms["STATE"][iPos]/10) >= floor(state/10))&& !force)) {
