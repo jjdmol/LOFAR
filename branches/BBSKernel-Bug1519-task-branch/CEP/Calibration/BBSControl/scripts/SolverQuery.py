@@ -21,7 +21,7 @@ class SolverQuery:
 
     # Default constructor, opens the table of name (default: "solver")
     #
-    def __init__(self, tablename="solver"):
+    def __init__(self, tablename=""):
         try:
             # Reset frequencies and time vectors that are used for parameter retrieval
             self.frequencies=[]
@@ -31,14 +31,34 @@ class SolverQuery:
             self.endFreqs=[]
             self.startTimes=[]
             self.endTimes=[]
+            self.parameterNames=""
 
-            self.tablename=tablename               # keep tablename in object
+
+            if tablename is not "":
+                self.tablename=tablename               # keep tablename in object
+                self.solverTable=pt.table(tablename)
+                self.parameterNames=self.readParameterNames()
+
+                return self   # return also the object for calls from the outside?
+        except ValueError:
+            traceback.print_exc()
+
+
+    # Open the solver table
+    #
+    def open(self, tablename):
+        try:
+            self.tablename=tablename
             self.solverTable=pt.table(tablename)
+            self.parameterNames=self.readParameterNames()
+
+            return self   # return also the object for calls from the outside?
         except ValueError:
             traceback.print_exc()
 
 
     # Flush and close the table of the Solver object
+    #
     def close(self):
         self.frequencies=[]
         self.timeSlots=[]
@@ -48,20 +68,10 @@ class SolverQuery:
         self.startTimes=[]
         self.endTimes=[]
         self.tablename=""
+        self.parameterNames=""
 
         self.solverTable.close()
 
-
-    # Open solverDb (=table)
-    # Default name: solver
-    #
-    def openSolverTable( self, tablename="solver" ):
-        try:
-            solverTable=pt.table(tablename)
-            return solverTable
-        except ValueError:
-            traceback.print_exc()
- 
 
     # Return info about Solver table object (as written in the casa table)
     def info(self):
@@ -623,6 +633,8 @@ class SolverQuery:
         taqlcmd="SELECT UNIQUE STARTTIME, ENDTIME FROM " + self.tablename
         timeslots=pt.taql(taqlcmd)
         
+        self.timeSlots=timeslots     # set class variable
+       
         return timeslots
 
 
@@ -633,6 +645,7 @@ class SolverQuery:
         taqlcmd="SELECT UNIQUE STARTTIME FROM " + self.tablename
         starttimes=pt.taql(taqlcmd)
 
+        self.startTimes=starttimes
         #print "No. timeslots: ", starttimes.nrows()     # DEBUG
         return starttimes
 
@@ -643,6 +656,8 @@ class SolverQuery:
     def getEndTimes(self):
         taqlcmd="SELECT UNIQUE ENDTIME FROM " + self.tablename
         endtimes=pt.taql(taqlcmd)
+
+        self.endTimes=endtimes
 
         return endtimes        
  
@@ -660,6 +675,19 @@ class SolverQuery:
         else:
             return self.frequencies
 
+
+    # Return the number of distinct time slots
+    #
+    def getNumTimeSlots(self):
+        #print "getNumTimeSlots(self): ", type(self.getTimeSlots())    # DEBUG
+        return self.getTimeSlots().nrows()
+
+
+    # Return the number of distinct frequencies
+    #
+    def getNumFreqs(self):
+        print "getNumFreqs(self): ", type(self.getFreqs())             # DEBUG
+        return self.getFreqs().nrows()
 
     # Return the unique STARTTIMES present in the
     # Measurementset
@@ -716,6 +744,7 @@ class SolverQuery:
     # Read the table columns from the table 
     #
     def readColumnNames(self):
+        #print "type(self.solverTable): ", type(self.solverTable) 
         columnNames=self.solverTable.colnames()
         return columnNames
 
@@ -723,12 +752,15 @@ class SolverQuery:
     # Check if a parameter exists in the table
     #
     def parameterExists(self, parameter):
-        columnNames=readColumnNames()
+        columnNames=self.readColumnNames()
         for name in columnNames:
             if name == parameter:
-                return True
+                exists=True
+                return exists
             else:
-                return False
+                exists=False
+
+        return exists
 
 
     # Read the available solver parameter names from the table
@@ -737,3 +769,23 @@ class SolverQuery:
     #
     def readParameterNames(self):
         print "readParameterNames(self)"
+        
+        # First get all column names
+        columnNames=self.readColumnNames()
+
+        # Then remove STARTTIME, ENDTIME, STARTFREQ and ENDFREQ from the list
+        #print "type(columnNames): ", type(columnNames)
+        # Do this manually it is faster:
+        del columnNames[0:4]
+        
+        
+        return columnNames
+
+    # Return the parameter names stored in the SolverQuery object
+    #
+    def getParameterNames(self):
+        if self.parameterNames=="":
+            self.parameterNames=self.readParameterNames()
+            return self.parameterNames
+        else:
+            return self.parameterNames

@@ -5,7 +5,7 @@
 # File:			tSolverQuery.py
 # Author:		Sven Duscha (duscha@astron.nl)
 # Date:			2010/07/21
-# Last change		2010/07/26
+# Last change		2010/08/05
 
 
 import os
@@ -134,7 +134,18 @@ solver.solverTable[40]['ENDFREQ'])
 
 
     # Read parameter names from table
-    solver.readColumnNames()
+    columnNames=solver.readColumnNames()
+    print columnNames
+
+    # Check if a prameter exists
+    exists=solver.parameterExists("CHISQR")
+    print "CHISQR exists: ", exists
+
+
+    # Get parameter names
+    parameters=solver.readParameterNames()
+    print "Parameters: ", parameters
+
 
 # Define main function entry
 if __name__ == "__main__":
