@@ -10,7 +10,7 @@
 using namespace std;
 using namespace LOFAR;
 
-const unsigned max_run = 1000000;
+const unsigned max_run = 100000;
 
 // Run function <func> and return the time it took to run it in seconds.
 double time(void (*func)())
@@ -25,7 +25,11 @@ double time(void (*func)())
 void run0()
 {
   for(unsigned i = 0; i < max_run; i++) {
+#ifdef HAVE_LOG4CPLUS
     log4cplus::Logger::getInstance("LCS.Common").isEnabledFor(log4cplus::INFO_LOG_LEVEL);
+#elif HAVE_LOG4CXX
+    log4cxx::Logger::getLogger("LCS.Common")->isInfoEnabled();
+#endif
   }
 }
 
@@ -67,10 +71,10 @@ void run3b()
 int main()
 {
   INIT_LOGGER("logperf");
-  cout << "run 0  took: " << time(run0)  << " seconds" << endl;
-  cout << "run 1  took: " << time(run1)  << " seconds" << endl;
-  cout << "run 2a took: " << time(run2a) << " seconds" << endl;
-  cout << "run 2b took: " << time(run2b) << " seconds" << endl;
-  cout << "run 3a took: " << time(run3a) << " seconds" << endl;
-  cout << "run 3b took: " << time(run3b) << " seconds" << endl;
+  clog << "run 0  took: " << time(run0)  << " seconds" << endl;
+  clog << "run 1  took: " << time(run1)  << " seconds" << endl;
+  clog << "run 2a took: " << time(run2a) << " seconds" << endl;
+  clog << "run 2b took: " << time(run2b) << " seconds" << endl;
+  clog << "run 3a took: " << time(run3a) << " seconds" << endl;
+  clog << "run 3b took: " << time(run3b) << " seconds" << endl;
 }
