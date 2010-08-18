@@ -74,14 +74,14 @@ private:
     bool hasColumn(const string &column) const;
     void addDataColumn(const string &column);
 
-    casa::Table getTableSelection(const casa::Table &table,
+    casa::Table getVisSelection(casa::Table table,
         const VisSelection &selection) const;
-    casa::TableExprNode getBaselineExpr(const casa::Table &table,
+    casa::Table getBaselineSelection(const casa::Table &table,
         const string &pattern) const;
     BaselineMask getBaselineMask(const VisSelection &selection) const;
     casa::Slicer getCellSlicer(const VisSelection &selection) const;
-    VisDimensions getDimensionsImpl(const casa::Table tab_selection,
-        const casa::Slicer slicer) const;
+    VisDimensions getDimensionsImpl(const casa::Table &tab_selection,
+        const casa::Slicer &slicer) const;
 
     casa::MeasurementSet    itsMS;
     casa::Table             itsMainTableView;
