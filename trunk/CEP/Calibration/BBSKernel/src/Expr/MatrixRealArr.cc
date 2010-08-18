@@ -235,7 +235,7 @@ MatrixRep* MatrixRealArr::max (MatrixRep& right)
 }
 MatrixRep* MatrixRealArr::atan2 (MatrixRep& right)
 {
-  return right.maxRep (*this);
+  return right.atan2Rep (*this);
 }
 
 const double* MatrixRealArr::doubleStorage() const
