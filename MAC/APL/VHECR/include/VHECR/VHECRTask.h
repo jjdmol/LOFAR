@@ -24,13 +24,16 @@
 #define VHECR_VHECRTASK_H
 
 //# Common Includes
+#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_datetime.h>
 
+
 //# local includes
 #include "VHECR/TBBTrigger.h"
 #include "VHECR/TBBReadCmd.h"
+#include "VHECR/VHECRsettings.h"
 
 // forward declaration
 
@@ -41,7 +44,7 @@ namespace LOFAR {
     class VHECRTask
     {
     public:
-      VHECRTask();
+      VHECRTask(const string& cntlrName);
       ~VHECRTask();
       
       // define responsefunctionType
@@ -78,7 +81,7 @@ namespace LOFAR {
       uint32 itsDoDirectionFit;
       double forcedDeadTime;
       uint32 totalCoincidences, badFits;
-      int itsNoCoincidenceChannels;
+      uint32 itsNoCoincidenceChannels;
       double itsMinElevation;
       double itsMaxFitVariance;
       string itsParamExtension;
@@ -87,6 +90,12 @@ namespace LOFAR {
 
 #define VHECR_TASK_BUFFER_LENGTH (2*96)
 #define NOFANTENNAS (96)
+    
+    // ADDED BY PD
+    ParameterSet*  itsParameterSet;
+    VHECRsettings* itsSettings;
+    // ADDED BY PD
+    
       double itsCoincidenceTime;
       FILE * itsLogfile;
       // avoid defaultconstruction and copying
@@ -136,8 +145,8 @@ namespace LOFAR {
       void printCoincidence(int coincidenceIndex);
 
       int coincidenceCheck(uint32 latestindex, uint32 nChannles, double timeWindow);
-      void fitDirectionToCoincidence(int coincidenceIndex, int nofChannels);
-      void fitDirectionAndDistanceToCoincidence(int coincidenceIndex, int nofChannels);
+      void fitDirectionToCoincidence(int coincidenceIndex, uint32 nofChannels);
+      void fitDirectionAndDistanceToCoincidence(int coincidenceIndex, uint32 nofChannels);
 
     };
     

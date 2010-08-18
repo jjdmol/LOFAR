@@ -39,10 +39,10 @@ int main(int argc, char* argv[])
    //       case 3:
   //          outputFilename = argv[2];
    //         break;
-	case 2:
+	case 3:
 		break;
 	default:
-		cout << "Syntax: " << argv[0] << " triggerfile" << endl;
+		cout << "Syntax: " << argv[0] << " triggerfile parameterfile" << endl;
 		cout << "Note: program needs file " << argv[0] << ".log_prop" << " for log-system." << endl;
 		return (1);
 	}
@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 	}
 	char			triggerLine [4096];
 	TBBTrigger		theTrigger;
-	VHECRTask		theTask;
+	VHECRTask		theTask(argv[2]);
         theTask.itsDoDirectionFit = 1;
         theTask.itsAntennaPositionsFile = "/Users/acorstanje/usg/data/calibration/AntennaPos/RS205-AntennaArrays.conf";
         theTask.itsAntennaSelection = "LBA_OUTER";

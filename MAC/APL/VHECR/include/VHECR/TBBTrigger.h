@@ -56,8 +56,8 @@ public:
 
 	// --- Datamembers ---
 	// Note that the members are public, we use it as a struct.
-        uint32  itsNo;
-        uint32	itsRcuNr;
+	uint32  itsNo;
+	uint32	itsRcuNr;
 	uint32	itsSeqNr;
 	uint32	itsTime;
 	uint32	itsSampleNr;
