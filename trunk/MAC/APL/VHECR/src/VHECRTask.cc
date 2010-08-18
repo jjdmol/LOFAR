@@ -21,6 +21,7 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 // #include <APS/ParameterSet.h>
 #include <time.h>
 #include <fstream>
@@ -34,7 +35,7 @@ namespace LOFAR {
     //
     // VHECRTask()
     //
-    VHECRTask::VHECRTask() :
+    VHECRTask::VHECRTask(const string& cntlrName) :
       itsNrTriggers (0),
       itsSamplingRate(200000000), // NB. Sampling rate 200 MHz assumed without info! Needs to be changed in the future.
     itsInitialized (false)
@@ -49,6 +50,15 @@ namespace LOFAR {
       itsDoDirectionFit = 0;
       totalCoincidences = 0;
       badFits = 0;
+      
+      // ADDED BY PD
+      // First readin our observation related config file.
+      LOFAR::ConfigLocator cl;
+	  LOG_DEBUG_STR("Reading parset file:" << cl.locate(cntlrName));
+	  itsParameterSet = new ParameterSet(cl.locate(cntlrName));
+	  itsSettings = new VHECRsettings(itsParameterSet);	// does all nasty conversions
+      // END ADDED BY PD
+      
       itsConfigurationFile = "/opt/lofar/etc/VHECRtask.conf"; // /opt/lofar/etc/
       readConfigFile(itsConfigurationFile.c_str());
       if ((itsAntennaSelection != "")&&(itsAntennaPositionsFile != "")) {
@@ -204,7 +214,7 @@ namespace LOFAR {
       cout << "Showing time offsets w.r.t. latest timestamp" << endl;
       int runningIndex = coincidenceIndex;
       int64 refdate = trigBuffer[runningIndex].date; 
-      for (int k=0; k<itsNoCoincidenceChannels; k++)
+      for (uint32 k=0; k<itsNoCoincidenceChannels; k++)
       {
         cout << "RCU " << trigBuffer[runningIndex].RcuNr << ": " << (int64)trigBuffer[runningIndex].date - refdate << endl;
         runningIndex = trigBuffer[runningIndex].next;
@@ -400,7 +410,7 @@ namespace LOFAR {
       return newindex;
     };
    
-    void VHECRTask::fitDirectionToCoincidence(int coincidenceIndex, int nofChannels)
+    void VHECRTask::fitDirectionToCoincidence(int coincidenceIndex, uint32 nofChannels)
     {
       double theta, phi;
       double twopi = 2.0 * 3.1415926536;
@@ -421,7 +431,7 @@ namespace LOFAR {
       double minTh = 1.0e9;
       double minPh = 1.0e9;
       double minSig2 = 1.0e9;
-      double debugTimeOffsets[NOFANTENNAS], minDebugTimeOffsets[NOFANTENNAS];
+      //double debugTimeOffsets[NOFANTENNAS], minDebugTimeOffsets[NOFANTENNAS];
       int64 refdate = trigBuffer[coincidenceIndex].date; // coincidence reference timestamp to subtract from all other timestamps.
       
       position a;
@@ -510,7 +520,7 @@ namespace LOFAR {
       }
     }
     
-    void VHECRTask::fitDirectionAndDistanceToCoincidence(int coincidenceIndex, int nofChannels)
+    void VHECRTask::fitDirectionAndDistanceToCoincidence(int coincidenceIndex, uint32 nofChannels)
     { // number of channels known from requirement
       //     cout << "Do smart stuff... (well, we hope)" << endl;
       double theta, phi, R;

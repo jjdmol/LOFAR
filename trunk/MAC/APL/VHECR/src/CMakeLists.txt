@@ -5,6 +5,7 @@ include(LofarPackageVersion)
 set(vhecr_LIB_SRCS
   Package__Version.cc
   VHECRTask.cc
+  VHECRsettings.cc
   TBBTrigger.cc
   TBBReadCmd.cc)
 

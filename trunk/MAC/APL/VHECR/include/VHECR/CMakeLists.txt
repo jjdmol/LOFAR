@@ -10,4 +10,5 @@ install(FILES
   VHECRTask.h
   TBBTrigger.h
   TBBReadCmd.h
+  VHECRsettings.h
   DESTINATION include/${PACKAGE_NAME})
