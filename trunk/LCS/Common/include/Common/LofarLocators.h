@@ -42,12 +42,12 @@ namespace LOFAR {
 class ConfigLocator : public FileLocator
 {
 public:
-	#define		CONFIG_SUB_DIR		"/etc"
+	#define		CONFIG_SUB_DIR		"etc"
 
-	// Create a FileLocator without a predefined path.
+	// Create a ConfigLocator with a default search path.
 	ConfigLocator() : FileLocator()
 		{	setSubdir(CONFIG_SUB_DIR); }
-	// Create a FileLocator with a predefined path.
+	// Create a ConfigLocator with a predefined search path.
 	explicit ConfigLocator (const string&	aPath) : FileLocator(aPath) 
 		{ 	setSubdir(CONFIG_SUB_DIR); }
 
@@ -62,12 +62,12 @@ private:
 class ProgramLocator : public FileLocator
 {
 public:
-	#define		PROGRAM_SUB_DIR		"/bin"
+	#define		PROGRAM_SUB_DIR		"bin"
 
-	// Create a FileLocator without a predefined path.
+	// Create a ProgramLocator with a default search path.
 	ProgramLocator() : FileLocator()
 		{	setSubdir(PROGRAM_SUB_DIR); }
-	// Create a FileLocator with a predefined path.
+	// Create a ProgramLocator with a predefined search path.
 	explicit ProgramLocator (const string&	aPath) : FileLocator(aPath) 
 		{ 	setSubdir(PROGRAM_SUB_DIR); }
 
