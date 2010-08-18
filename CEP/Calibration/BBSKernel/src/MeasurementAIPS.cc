@@ -115,7 +115,7 @@ VisDimensions MeasurementAIPS::dimensions(const VisSelection &selection)
     const
 {
     Slicer slicer = getCellSlicer(selection);
-    Table tab_selection = getTableSelection(itsMainTableView, selection);
+    Table tab_selection = getVisSelection(itsMainTableView, selection);
     return getDimensionsImpl(tab_selection, slicer);
 }
 
@@ -125,7 +125,7 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
     NSTimer readTimer, copyTimer;
 
     Slicer slicer = getCellSlicer(selection);
-    Table tab_selection = getTableSelection(itsMainTableView, selection);
+    Table tab_selection = getVisSelection(itsMainTableView, selection);
 
     // Get the dimensions of the visibility data that matches the selection.
     VisDimensions dims(getDimensionsImpl(tab_selection, slicer));
@@ -261,7 +261,7 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
     LOG_DEBUG_STR("Writing to column: " << column);
 
     Slicer slicer = getCellSlicer(selection);
-    Table tab_selection = getTableSelection(itsMainTableView, selection);
+    Table tab_selection = getVisSelection(itsMainTableView, selection);
 
     // Allocate temporary buffers to be able to reverse frequency channels.
     // TODO: Some performance can be gained by creating a specialized
@@ -394,7 +394,7 @@ BaselineMask MeasurementAIPS::asMask(const string &filter) const
         Sort::HeapSort | Sort::NoDuplicates);
 
     // Select all baselines that match the given pattern.
-    Table tab_selection = tab_baselines(getBaselineExpr(tab_baselines, filter));
+    Table tab_selection(getBaselineSelection(tab_baselines, filter));
 
     // Fetch the selected baselines.
     Vector<Int> antenna1 =
@@ -433,7 +433,7 @@ void MeasurementAIPS::initInstrument()
     for(unsigned int i = 0; i < static_cast<unsigned int>(antenna.nrow()); ++i)
     {
         // Get station name and ITRF position.
-        casa::MPosition position = MPosition::Convert(antenna.positionMeas()(i),
+        MPosition position = MPosition::Convert(antenna.positionMeas()(i),
             MPosition::ITRF)();
 
         // Store station information.
@@ -627,9 +627,15 @@ void MeasurementAIPS::addDataColumn(const string &column)
 
 // NOTE: OPTIMIZATION OPPORTUNITY: Cache implementation specific selection
 // within a specialization of VisSelection or VisBuffer.
-Table MeasurementAIPS::getTableSelection(const Table &table,
+Table MeasurementAIPS::getVisSelection(Table table,
     const VisSelection &selection) const
 {
+    // Apply baseline selection if required.
+    if(selection.isSet(VisSelection::BASELINE_FILTER))
+    {
+        table = getBaselineSelection(table, selection.getBaselineFilter());
+    }
+
     // Alas, table(TableExprNode(true)) raises an exception instead of selecting
     // everything. Fortunately, table(TableExprNode()) does select everything
     // and even though a default constructed TableExprNode is "null", using it
@@ -647,12 +653,6 @@ Table MeasurementAIPS::getTableSelection(const Table &table,
         filter = filter && table.col("TIME") <= timeRange.second;
     }
 
-    if(selection.isSet(VisSelection::BASELINE_FILTER))
-    {
-        filter = filter && getBaselineExpr(table,
-            selection.getBaselineFilter());
-    }
-
     if(selection.isSet(VisSelection::CORRELATION_MASK))
     {
         THROW(BBSKernelException, "Reading a subset of the available"
@@ -662,26 +662,11 @@ Table MeasurementAIPS::getTableSelection(const Table &table,
     return table(filter);
 }
 
-casa::TableExprNode MeasurementAIPS::getBaselineExpr(const casa::Table &table,
+Table MeasurementAIPS::getBaselineSelection(const Table &table,
     const string &pattern) const
 {
-    // TODO: We pass a pointer to an MS instance that is created locally to
-    // MSSelection::toTableExprNode()!! This could be dangerous if it is
-    // referenced by the TableExprNode we return (although it seems to work
-    // fine, probably because the TableExprNode only references the underlying
-    // representation class that is also referenced by the input Table instance,
-    // and kept alive through that reference).
-
     try
     {
-        // NOTE: TEMPORARY WORKAROUND FOR CASACORE BUG.
-        // Reset class static state...
-        TableExprNode *tmp = const_cast<TableExprNode*>(MSAntennaParse::node());
-        if(tmp != 0)
-        {
-            *tmp = TableExprNode();
-        }
-
         // Create a MeasurementSet instance from the table of unique baselines.
         // This is required because MSSelection::toTableExprNode only operates
         // on MeasurementSets.
@@ -693,7 +678,7 @@ casa::TableExprNode MeasurementAIPS::getBaselineExpr(const casa::Table &table,
             THROW(BBSKernelException, "MSSelection::setAntennaExpr() failed.");
         }
 
-        return selection.toTableExprNode(&ms);
+        return ms(selection.toTableExprNode(&ms));
     }
     catch(AipsError &e)
     {
@@ -757,10 +742,8 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
     return Slicer(start, end, Slicer::endIsLast);
 }
 
-//VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
-//    const BaselineMask &mask, const Slicer slicer) const
-VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
-    const Slicer slicer) const
+VisDimensions MeasurementAIPS::getDimensionsImpl(const Table &tab_selection,
+    const Slicer &slicer) const
 {
     ASSERTSTR(tab_selection.nrow() > 0, "Cannot determine dimensions of empty"
         " data selection (empty Axis is not supported).");
