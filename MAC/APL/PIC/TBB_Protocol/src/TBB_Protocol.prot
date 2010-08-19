@@ -625,8 +625,12 @@ event = {
 	signal = MODE;
 	dir = IN;
 	param = {
+		name = "rcu_mask";
+		type = "bitset<MAX_N_RCUS>";
+	};
+	param = {
 		name = "rec_mode";
-		type = "uint32";
+		type = "uint32[MAX_N_RCUS]";
 	};
 };
 
@@ -739,9 +743,9 @@ event = {
 	signal = CEP_STORAGE;
 	dir = IN;
 	param = {
-		name = "boardmask";
-		type = "uint32";
-};
+		name = "rcu_mask";
+		type = "bitset<MAX_N_RCUS>";
+	};
 	param = {
 		name = "destination";
 		type = "char[20]";
