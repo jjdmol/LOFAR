@@ -29,9 +29,10 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <Common/LofarTypes.h>
 #include <Common/ParameterSet.h>
+#include <Common/LofarTypes.h>
 #include <Common/lofar_bitset.h>
+#include <Common/LofarConstants.h>
 
 namespace LOFAR {
   namespace StationCU {
@@ -54,9 +55,12 @@ public:
 	
 	explicit	TBBObservation (ParameterSet*		aParSet);
 	
-	typedef bitset<192> RCUset_t;
-	
-	typedef struct {
+	typedef bitset<MAX_RCUS> RCUset_t;
+
+	class cSettings {
+	public:
+	    cSettings() {};
+	    ~cSettings() {};
 		uint16 filter0[4];
 		uint16 filter1[4];
 		uint16 triggerLevel;
@@ -66,12 +70,14 @@ public:
 		uint16 detectWindow;
 		uint16 triggerMode;
 		uint32 operatingMode;         // transient or subbands
-   } sTBBsettings;
-	
+		
+		RCUset_t      RCUset;
+		vector<int32> SubbandList;
+   };
 	//# Datamembers
-	sTBBsettings  TbbSettings;
-	RCUset_t      RCUset;
-	vector<int32> SubbandList;
+	vector<cSettings> TbbSettings;
+	//RCUset_t          RCUset;
+	//vector<int32>     SubbandList;
 	
 	bool isLoaded();
 	//# print function for operator<<

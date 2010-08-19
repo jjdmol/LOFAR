@@ -42,49 +42,60 @@ TBBObservation::TBBObservation(ParameterSet*		aParSet)
 {
 	itsSettingsLoaded = false;
 	// analyse ParameterSet.
-	string prefix = aParSet->locateModule("Observation") + "Observation.TBB.TBBsetting.";
+	string prefix = aParSet->locateModule("Observation") + "Observation.TBB.TBBsetting";
 	LOG_DEBUG_STR("'TBB' located at: " << prefix);
 
+	int setNr = 0;
+	string setnr(formatString("[%d].", setNr));
+
+	cSettings tbbsettings;
+
 	// look if the TBB settings are defined
-	if (aParSet->isDefined(prefix+"F0C0")) {
-		LOG_DEBUG_STR("Reading parameterSet ");
+	while (aParSet->isDefined(prefix+setnr+"baselevel")) {
+		LOG_DEBUG_STR("Reading parameterSet " << setNr);
 		itsSettingsLoaded = true;
 
-		// new settings for two filterbanks
-		TbbSettings.filter0[0]    = aParSet->getInt16(prefix+"F0C0");
-		TbbSettings.filter0[1]    = aParSet->getInt16(prefix+"F0C1");
-		TbbSettings.filter0[2]    = aParSet->getInt16(prefix+"F0C2");
-		TbbSettings.filter0[3]    = aParSet->getInt16(prefix+"F0C3");
-		TbbSettings.filter1[0]    = aParSet->getInt16(prefix+"F1C0");
-		TbbSettings.filter1[1]    = aParSet->getInt16(prefix+"F1C1");
-		TbbSettings.filter1[2]    = aParSet->getInt16(prefix+"F1C2");
-		TbbSettings.filter1[3]    = aParSet->getInt16(prefix+"F1C3");
-									 
-		TbbSettings.triggerLevel  = aParSet->getInt16(prefix+"baselevel");
-		TbbSettings.filter        = aParSet->getInt16(prefix+"filter");
-		TbbSettings.startLevel    = aParSet->getInt16(prefix+"startlevel");
-		TbbSettings.stopLevel     = aParSet->getInt16(prefix+"stoplevel");
-		TbbSettings.detectWindow  = _windowNr(aParSet->getString(prefix+"window"));
-		TbbSettings.triggerMode   = aParSet->getUint16(prefix+"triggerMode");
-		TbbSettings.operatingMode = aParSet->getUint32(prefix+"operatingMode");
+		tbbsettings.triggerLevel  = aParSet->getInt16(prefix+setnr+"baselevel");
+		tbbsettings.filter        = aParSet->getInt16(prefix+setnr+"filter");
 
-		RCUset.reset();							// clear RCUset by default.
-		string	rcuString("x=" + expandArrayString(aParSet->getString(prefix+"RCUs")));
+		// new settings for two filterbanks
+		tbbsettings.filter0[0]    = aParSet->getInt16(prefix+setnr+"filter0_coeff0");
+		tbbsettings.filter0[1]    = aParSet->getInt16(prefix+setnr+"filter0_coeff1");
+		tbbsettings.filter0[2]    = aParSet->getInt16(prefix+setnr+"filter0_coeff2");
+		tbbsettings.filter0[3]    = aParSet->getInt16(prefix+setnr+"filter0_coeff3");
+		tbbsettings.filter1[0]    = aParSet->getInt16(prefix+setnr+"filter1_coeff0");
+		tbbsettings.filter1[1]    = aParSet->getInt16(prefix+setnr+"filter1_coeff1");
+		tbbsettings.filter1[2]    = aParSet->getInt16(prefix+setnr+"filter1_coeff2");
+		tbbsettings.filter1[3]    = aParSet->getInt16(prefix+setnr+"filter1_coeff3");
+
+		tbbsettings.operatingMode = aParSet->getUint32(prefix+setnr+"operatingMode");
+		tbbsettings.startLevel    = aParSet->getInt16(prefix+setnr+"startlevel");
+		tbbsettings.stopLevel     = aParSet->getInt16(prefix+setnr+"stoplevel");
+		tbbsettings.triggerMode   = aParSet->getUint16(prefix+setnr+"triggerMode");
+		tbbsettings.detectWindow  = _windowNr(aParSet->getString(prefix+setnr+"window"));
+
+		tbbsettings.RCUset.reset();							// clear RCUset by default.
+		string	rcuString("x=" + expandArrayString(aParSet->getString(prefix+setnr+"RCUs")));
 		ParameterSet	rcuParset;
 		rcuParset.adoptBuffer(rcuString);
 		vector<uint16> RCUnumbers(rcuParset.getUint16Vector("x"));
 		if (RCUnumbers.empty()) {			// No receivers in the list?
-			RCUset.set();						// assume all receivers
+			tbbsettings.RCUset.set();						// assume all receivers
 		} else {
 			for (uint i = 0; i < RCUnumbers.size();i++) {
-				RCUset.set(RCUnumbers[i]);	// set mentioned receivers in all set
+				tbbsettings.RCUset.set(RCUnumbers[i]);	// set mentioned receivers in all set
 			}
 		}
-		
-		SubbandList = aParSet->getInt32Vector(prefix+"subbandList", vector<int32>(), true); 
+
+		TbbSettings.push_back(tbbsettings);
+
+		tbbsettings.SubbandList = aParSet->getInt32Vector(prefix+"subbandList", vector<int32>(), true);
+		setNr++;
+		setnr = formatString("[%d]", setNr);
 	}
-	else {
-		LOG_DEBUG_STR("TBB parameterSet NOT defined");
+
+	if (setNr == 0) {
+		LOG_DEBUG_STR("No TBB parameterSets defined");
 	}
 }
 
@@ -93,7 +104,7 @@ TBBObservation::TBBObservation(ParameterSet*		aParSet)
 //
 uint16 TBBObservation::_windowNr(const string&		wdwName)
 {
-	static	char*		windowNames[] = {
+	static	char* windowNames[] = {
 		"4K", "16K", "64K", "256K", "1M", "4M", "16M", "64M", "256M", "" };
 
 	uint32	idx = 0;
@@ -105,7 +116,6 @@ uint16 TBBObservation::_windowNr(const string&		wdwName)
 	}
 
 	LOG_WARN_STR("detectWindow '" << wdwName << "' is unknown, assuming 1M");
-
 	return (4);
 }
 
@@ -114,27 +124,33 @@ uint16 TBBObservation::_windowNr(const string&		wdwName)
 //#
 ostream& TBBObservation::print(ostream&	os) const
 {
-	os << "RCUset           : " << RCUset << endl;
-	os << "subbandList      : ";
-	std::vector<int32>::const_iterator sb_it;
-	for (sb_it = SubbandList.begin(); sb_it != SubbandList.end(); sb_it++) {
-		os << (*sb_it) << " ";
+	int setNr = 0;
+	vector<cSettings>::const_iterator it;
+	for (it = TbbSettings.begin(); it != TbbSettings.end(); it++ ) {
+		os << "Observation set[" << setNr << "]" << endl;
+		os << "Filter-0 coeff-0 : " << (*it).filter0[0] << endl;
+		os << "Filter-0 coeff-1 : " << (*it).filter0[1] << endl;
+		os << "Filter-0 coeff-2 : " << (*it).filter0[2] << endl;
+		os << "Filter-0 coeff-3 : " << (*it).filter0[3] << endl;
+		os << "Filter-1 coeff-0 : " << (*it).filter1[0] << endl;
+		os << "Filter-1 coeff-1 : " << (*it).filter1[1] << endl;
+		os << "Filter-1 coeff-2 : " << (*it).filter1[2] << endl;
+		os << "Filter-1 coeff-3 : " << (*it).filter1[3] << endl;
+		os << "TriggerLevel     : " << (*it).triggerLevel << endl;
+		os << "Filter           : " << (*it).filter << endl;
+		os << "StartLevel       : " << (*it).startLevel << endl;
+		os << "StopLevel        : " << (*it).stopLevel << endl;
+		os << "detectWindow     : " << (*it).detectWindow << endl;
+		os << "triggerMode      : " << (*it).triggerMode << endl;
+		os << "operatingMode    : " << (*it).operatingMode << endl;
+		os << "RCUset           : " << (*it).RCUset << endl << endl;
+		os << "subbandList      : ";
+		std::vector<int32>::const_iterator sb_it;
+		for (sb_it = (*it).SubbandList.begin(); sb_it != (*it).SubbandList.end(); sb_it++) {
+			os << (*sb_it) << " ";
+		}
+		os << endl;
+		setNr++;
 	}
-	os << endl;
-	os << "Filter-0 coeff-0 : " << TbbSettings.filter0[0] << endl;
-	os << "Filter-0 coeff-1 : " << TbbSettings.filter0[1] << endl;
-	os << "Filter-0 coeff-2 : " << TbbSettings.filter0[2] << endl;
-	os << "Filter-0 coeff-3 : " << TbbSettings.filter0[3] << endl;
-	os << "Filter-1 coeff-0 : " << TbbSettings.filter1[0] << endl;
-	os << "Filter-1 coeff-1 : " << TbbSettings.filter1[1] << endl;
-	os << "Filter-1 coeff-2 : " << TbbSettings.filter1[2] << endl;
-	os << "Filter-1 coeff-3 : " << TbbSettings.filter1[3] << endl;
-	os << "TriggerLevel     : " << TbbSettings.triggerLevel << endl;
-	os << "Filter           : " << TbbSettings.filter << endl;
-	os << "StartLevel       : " << TbbSettings.startLevel << endl;
-	os << "StopLevel        : " << TbbSettings.stopLevel << endl;
-	os << "detectWindow     : " << TbbSettings.detectWindow << endl;
-	os << "triggerMode      : " << TbbSettings.triggerMode << endl;
-	os << "operatingMode    : " << TbbSettings.operatingMode << endl << endl;
 	return (os);
 }

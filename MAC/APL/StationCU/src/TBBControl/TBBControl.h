@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_datetime.h>
+#include <APL/APLCommon/AntennaField.h>
 
 //# ACC Includes
 #include <Common/ParameterSet.h>
@@ -49,20 +50,23 @@
 
 // forward declaration
 
+
 namespace LOFAR {
 	namespace StationCU {
 
-using	MACIO::GCFEvent;
-using	GCF::TM::GCFTimerPort;
-using	GCF::TM::GCFITCPort;
-using	GCF::TM::GCFPort;
-using	GCF::TM::GCFPortInterface;
-using	GCF::TM::GCFTask;
-using	GCF::RTDB::RTDBPropertySet;
-using	APLCommon::ParentControl;
-using	VHECR::TBBReadCmd;
-using	VHECR::TBBTrigger;
-using	VHECR::VHECRTask;
+using   MACIO::GCFEvent;
+using   GCF::TM::GCFTimerPort;
+using   GCF::TM::GCFITCPort;
+using   GCF::TM::GCFPort;
+using   GCF::TM::GCFPortInterface;
+using   GCF::TM::GCFTask;
+using   GCF::RTDB::RTDBPropertySet;
+using   APLCommon::ParentControl;
+using   VHECR::TBBReadCmd;
+using   VHECR::TBBTrigger;
+using   VHECR::VHECRTask;
+
+typedef bitset<MAX_RCUS> RCUset_t;
 
 class TBBControl : public GCFTask
 {
@@ -72,25 +76,25 @@ public:
 
 	// used by externel program
 	void readTBBdata(vector<TBBReadCmd> readCmd);
-	
+
 	// Interrupthandler for switching to finishingstate when exiting the program.
 	static void sigintHandler (int signum);
 	void finish();
 
 private:
 	// During the initial state all connections with the other programs are made.
-   GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
 	// connected to PVSS, waiting for CLAIM event
-   GCFEvent::TResult started_state (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult started_state (GCFEvent& e, GCFPortInterface& p);
 	// connected to TBBDriver, waiting for PREPARE event
-   GCFEvent::TResult claimed_state (GCFEvent& e, GCFPortInterface& p);
-	
+	GCFEvent::TResult claimed_state (GCFEvent& e, GCFPortInterface& p);
+
 	// set boards in right mode, if done got to mode state
 	GCFEvent::TResult doRSPtbbMode(GCFEvent& event, GCFPortInterface& port);
 	// set boards in right mode, if done go to storage state
 	GCFEvent::TResult doTBBmode (GCFEvent& e, GCFPortInterface& p);
-    // set storage for boards, if done got to alloc state
-	GCFEvent::TResult doTBBstorage (GCFEvent& e, GCFPortInterface& p);	    
+	// set storage for boards, if done got to alloc state
+	GCFEvent::TResult doTBBstorage (GCFEvent& e, GCFPortInterface& p);
 	// allocate memory for selected rcus, if done got to trigsetup state
 	GCFEvent::TResult doTBBalloc (GCFEvent& e, GCFPortInterface& p);
 	// setup trigger system for selected rcus, if done got to trigcoef state
@@ -105,59 +109,65 @@ private:
 	GCFEvent::TResult doTBBrelease (GCFEvent& e, GCFPortInterface& p);
 
 	// TBB boards are setup, waiting for RESUME event
-  GCFEvent::TResult prepared_state  (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult prepared_state  (GCFEvent& e, GCFPortInterface& p);
 	// Normal control mode, handling of trigger messages is active
-  GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
 	// send data to CEP for selected rcus
-  GCFEvent::TResult doTBBread  (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult doTBBread  (GCFEvent& e, GCFPortInterface& p);
 
 	// unsubscribe on tbb mesages, if done go to free state
 	GCFEvent::TResult doTBBunsubscribe (GCFEvent& e, GCFPortInterface& p);
 	// free memory for selected rcus, if done got to quiting state
 	GCFEvent::TResult doTBBfree (GCFEvent& e, GCFPortInterface& p);
-	
-	// released state, unsubscribed and freed tbb memory
-	GCFEvent::TResult released_state(GCFEvent& event, GCFPortInterface& port);
-	// Quiting, shutdown connections, send FINISH and quit
-   GCFEvent::TResult quiting_state (GCFEvent& e, GCFPortInterface& p);
+
+	// released state, unsubscribed and freed tbb memory 
+	GCFEvent::TResult released_state(GCFEvent& event, GCFPortInterface& port); 
+	// Quiting, shutdown connections, send FINISH and quit 
+	GCFEvent::TResult quiting_state (GCFEvent& e, GCFPortInterface& p);
 
 
-	
+
 	// avoid defaultconstruction and copying
 	TBBControl();
 	TBBControl(const TBBControl&);
-  TBBControl& operator=(const TBBControl&);
-   
-	void	setState	(CTState::CTstateNr     newState);
-	
-	GCFEvent::TResult	_triggerEventHandler(GCFEvent& event);
-	GCFEvent::TResult	_triggerReleaseAckEventHandler(GCFEvent& event);
-	GCFEvent::TResult	_defaultEventHandler(GCFEvent&	event, GCFPortInterface&	port);
+	TBBControl& operator=(const TBBControl&);
 
-   	RTDBPropertySet*	itsPropertySet;
-	bool				itsPropertySetInitialized;
+	void    setState    (CTState::CTstateNr     newState);
+
+	GCFEvent::TResult   _triggerEventHandler(GCFEvent& event);
+	GCFEvent::TResult   _triggerReleaseAckEventHandler(GCFEvent& event);
+	GCFEvent::TResult   _defaultEventHandler(GCFEvent&  event, GCFPortInterface&    port);
+
+    bool isBoardUsed(int board);
+    
+	ParameterSet*       itsParameterSet;
+	RTDBPropertySet*    itsPropertySet;
+	bool                itsPropertySetInitialized;
+    int                 itsNrTBBs;
+    int                 itsNrRCUs;
 
 	// pointer to parent control task
-	ParentControl*		itsParentControl;
-	GCFITCPort*			itsParentPort;
-	
-	GCFTimerPort*		itsTimerPort;
-	GCFTimerPort*		itsVHECRtimer;
-	
-	GCFTCPPort*			itsTBBDriver;
-	GCFTCPPort*			itsRSPDriver;
+	ParentControl*      itsParentControl;
+	GCFITCPort*         itsParentPort;
 
-	CTState::CTstateNr	itsState;
-	VHECRTask*			itsVHECRTask;				
+	GCFTimerPort*       itsTimerPort;
+	GCFTimerPort*       itsVHECRtimer;
+
+	GCFTCPPort*         itsTBBDriver;
+	GCFTCPPort*         itsRSPDriver;
+
+	CTState::CTstateNr  itsState;
+	VHECRTask*          itsVHECRTask;
 	// ParameterSet variables
-	string				itsTreePrefix;
-	//uint32				itsInstanceNr;
-	TBBObservation*		itsObs;
-	vector<TBBReadCmd>	itsStopCommandVector;
-	vector<TBBReadCmd>	itsReadCommandVector;
-	uint16				itsTriggerMode[192];
+	string              itsTreePrefix;
+	//uint32                itsInstanceNr;
+	TBBObservation*     itsObs;
+	vector<TBBReadCmd>  itsStopCommandVector;
+	vector<TBBReadCmd>  itsReadCommandVector;
+	uint16              itsTriggerMode[192];
+	RCUset_t            itsRCUs;
 };
 
-  };//StationCU
+	};//StationCU
 };//LOFAR
 #endif

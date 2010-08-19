@@ -845,7 +845,7 @@ GCFEvent::TResult TBBMonitor::askRCUSettings(GCFEvent& event, GCFPortInterface& 
 			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_STOPLEVEL,      GCFPVInteger(ack.rcu[rcu].setup.stop_mode), 0.0, false),
 			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER,         GCFPVInteger(ack.rcu[rcu].setup.filter_select), 0.0, false),
 			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_WINDOW,         GCFPVInteger(ack.rcu[rcu].setup.window), 0.0, false),
-			//itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_MODE,           GCFPVInteger(ack.rcu[rcu].setup.trigger_mode), 0.0, false),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_TRIGGER_MODE,   GCFPVInteger(ack.rcu[rcu].setup.trigger_mode), 0.0, false),
 			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_OPERATING_MODE, GCFPVInteger(ack.rcu[rcu].setup.operating_mode), 0.0, false);
 
 			// new filter settings
