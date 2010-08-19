@@ -59,6 +59,10 @@ string myHostname(bool	giveFullName);
 // Returns the IPaddress of this machine. If something goes wrong 0 is returned.
 uint32 myIPV4Address();
 
+// Return the full path to the current executable. An empty string is
+// returned, if the full path cannot be determined.
+string getExecutablePath();
+
 } // namespace LOFAR
 
 #endif
