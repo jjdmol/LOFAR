@@ -466,14 +466,14 @@ GCFEvent::TResult ECMonitor::askStatus(GCFEvent& event, GCFPortInterface& port)
 			if (itsCabs[cab] == 0) { continue; }
 			itsCabs[cab]->setValue(PN_CAB_CONTROL_MODE, GCFPVString(ctrlMode(sts_stat.cab[cab].mode)), 0.0, false);
 
-			if (sts_stat.cab[cab].state & CAB_TEMP_MIN_MIN) { iState = -2; }
-			else if (sts_stat.cab[cab].state & CAB_TEMP_MAX_MAX) { iState = 2; }
-			else if (sts_stat.cab[cab].state & CAB_TEMP_MIN) { iState = -1; }
-			else if (sts_stat.cab[cab].state & CAB_TEMP_MAX) { iState = 1; }
+			if (sts_stat.cab[cab].state & CAB_TEMP_HEATER)        { iState = -2; }
+			else if (sts_stat.cab[cab].state & CAB_TEMP_TRIP)     { iState = 2; }
+			else if (sts_stat.cab[cab].state & CAB_TEMP_MIN_CTRL) { iState = -1; }
+			else if (sts_stat.cab[cab].state & CAB_TEMP_MAX_CTRL) { iState = 1; }
 			else { iState = 0; }
 			itsCabs[cab]->setValue(PN_CAB_TEMP_ALARM, GCFPVBool(iState), 0.0, false);
 
-			if (sts_stat.cab[cab].state & CAB_HUMIDITY_MAX_MAX) { iState = 2; }
+			if (sts_stat.cab[cab].state & CAB_HUMIDITY_TRIP) { iState = 2; }
 			else if (sts_stat.cab[cab].state & CAB_HUMIDITY_MAX) { iState = 1; }
 			else { iState = 0; }
 			itsCabs[cab]->setValue(PN_CAB_HUMIDITY_ALARM, GCFPVBool(iState), 0.0, false);
