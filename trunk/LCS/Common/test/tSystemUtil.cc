@@ -39,6 +39,6 @@ int main()
 	uint32	address = myIPV4Address();
 	cout << formatString("My IPV4 address is  : %08lX\n", ntohl(address));
 	hexdump ((char*) &address, sizeof(uint32));
-	
+	cout << "My executable path  : " << getExecutablePath() << endl;
 	return (0);
 }

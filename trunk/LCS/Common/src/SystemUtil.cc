@@ -28,6 +28,11 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <climits>
+
+#if defined(__APPLE__)
+# include <mach-o/dyld.h>
+#endif
 
 #if !defined(USE_NOSOCKETS)
 // netdb is not available on Cray XT machines with Catamount.
@@ -214,6 +219,35 @@ uint32 myIPV4Address()
 
 	return (address);
 #endif
+}
+
+//
+// getExecutablePath -- see http://stackoverflow.com/questions/1023306
+//
+string getExecutablePath()
+{
+  string path;
+  char buf[PATH_MAX+1];
+#if defined(__APPLE__)
+  uint32_t size = sizeof(buf);
+  if(_NSGetExecutablePath(buf, &size) == 0) {
+    path = buf;
+    if(realpath(path.c_str(), buf)) {
+      path = buf;
+    }
+  }
+#elif defined(__linux__)
+  ssize_t size = readlink("/proc/self/exe", buf, PATH_MAX);
+  if(size != -1) {
+    buf[size] = '\0';
+    path = buf;
+  }
+#elif defined(__sun__)
+  if(realpath(getexecname(), buf)) {
+    path = buf;
+  }
+#endif
+  return path;
 }
 
 } // namespace LOFAR
