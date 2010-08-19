@@ -46,7 +46,7 @@ VHECRsettings::VHECRsettings(ParameterSet* aParSet)
 	// analyse ParameterSet.
 	// get Observation parameters
 	prefix = aParSet->locateModule("Observation") + "Observation.";
-	LOG_DEBUG_STR("'Obsevation' located at: " << prefix);
+	LOG_DEBUG_STR("'Observation' located at: " << prefix);
 
 	clockFreq = aParSet->getInt32(prefix+"sampleClock");
 	antennaSet = aParSet->getString(prefix+"antennaSet");
@@ -76,24 +76,38 @@ VHECRsettings::VHECRsettings(ParameterSet* aParSet)
 
 		noCoincChann    = aParSet->getInt32(prefix+"NoCoincChann");
 		coincidenceTime = aParSet->getDouble(prefix+"CoincidenceTime");
-		doDirectionFit  = aParSet->getInt32(prefix+"DoDirectionFit");
+		string dofit = aParSet->getString(prefix+"DoDirectionFit");
+		if (dofit == "none") { doDirectionFit = 0; }
+		else if (dofit == "simple") { doDirectionFit = 1; }
+		else if (dofit == "fancy") { doDirectionFit = 2; }
 		minElevation    = aParSet->getDouble(prefix+"MinElevation");
 		maxFitVariance  = aParSet->getDouble(prefix+"MaxFitVariance");
+        
+        
+        string prefix = aParSet->locateModule("Observation") + "Observation.TBB.TBBsetting";
+	    LOG_DEBUG_STR("'TBB' located at: " << prefix);
 
-		RCUsetSelected.reset();                         // clear RCUset by default.
-		string  rcuString("x=" + expandArrayString(aParSet->getString(prefix+"RCUs")));
-		ParameterSet    rcuParset;
-		rcuParset.adoptBuffer(rcuString);
-		vector<uint16> RCUnumbers(rcuParset.getUint16Vector("x"));
-		if (RCUnumbers.empty()) {           // No receivers in the list?
-			RCUsetSelected.set();                       // assume all receivers
-		} else {
-			for (uint i = 0; i < RCUnumbers.size(); i++) {
-				RCUsetSelected.set(RCUnumbers[i]);  // set mentioned receivers in all set
-			}
+        int setNr = 0;
+	    string setnr(formatString("[%d].", setNr));
+	    
+	    RCUsetSelected.reset();                         // clear RCUset by default.
+	    while (aParSet->isDefined(prefix+setnr+"RCUs")) {
+		    LOG_DEBUG_STR("Reading SetNr " << setNr);
+		    string  rcuString("x=" + expandArrayString(aParSet->getString(prefix+setnr+"RCUs")));
+		    ParameterSet    rcuParset;
+		    rcuParset.adoptBuffer(rcuString);
+		    vector<uint16> RCUnumbers(rcuParset.getUint16Vector("x"));
+		    if (!RCUnumbers.empty()) {           // No receivers in the list?
+			    for (uint i = 0; i < RCUnumbers.size(); i++) {
+				    RCUsetSelected.set(RCUnumbers[i]);  // set mentioned receivers in all set
+			    }
+		    }
+		    setNr++;
+	        setnr = formatString("[%d]", setNr);
 		}
-
-		RCUsetActive &= RCUsetSelected;
+        LOG_DEBUG_STR("active RCU set  " << RCUsetActive);
+        LOG_DEBUG_STR("selected RCU set" << RCUsetSelected);
+        RCUsetActive &= RCUsetSelected;
 		//SubbandList = aParSet->getInt32Vector(prefix+"subbandList", vector<int32>(), true);
 	}
 	else {
