@@ -1077,13 +1077,17 @@ bool TBBDriver::sendInfo(GCFEvent& event, GCFPortInterface& port)
     		    TBBModeEvent tbb_event(event);
     		    for (int32 rcu = 0; rcu < TS->maxChannels(); rcu++) {
     		        if (tbb_event.rcu_mask.test(rcu)) {
-    		            TS->setChOperatingMode(rcu, tbb_event.rec_mode[rcu]);
+    		            int chan;
+    		            int board;
+    		            TS->convertRcu2Ch(rcu, &board, &chan);
+    		            chan += board * TS->nrChannelsOnBoard();
+    		            TS->setChOperatingMode(chan, tbb_event.rec_mode[rcu]);
     		        }
     		    }
     		    
     		    TBBModeAckEvent ack;
         		for (int32 i = 0; i < TS->maxBoards(); i++) {
-        			ack.status_mask[i] = 0;
+        			ack.status_mask[i] = TBB_SUCCESS;
         		}
     		    port.send(ack);
     		} else {
@@ -1097,12 +1101,16 @@ bool TBBDriver::sendInfo(GCFEvent& event, GCFPortInterface& port)
     		    TBBCepStorageEvent tbb_event(event);
     		    for (int32 rcu = 0; rcu < TS->maxChannels(); rcu++) {
     		        if (tbb_event.rcu_mask.test(rcu)) {
-    		            TS->setDestination(rcu, tbb_event.destination);
+    		            int chan;
+    		            int board;
+    		            TS->convertRcu2Ch(rcu, &board, &chan);
+    		            chan += board * TS->nrChannelsOnBoard();
+    		            TS->setDestination(chan, tbb_event.destination);
     		        }
     		    }
     		    TBBCepStorageAckEvent tbb_ack;
         		for (int32 i = 0; i < TS->maxBoards(); i++) {
-        			tbb_ack.status_mask[i] = 0;
+        			tbb_ack.status_mask[i] = TBB_SUCCESS;
         		}
     		    port.send(tbb_ack);
     		} else {
