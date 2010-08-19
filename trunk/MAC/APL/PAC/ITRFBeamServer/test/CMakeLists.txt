@@ -10,6 +10,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 # Service Broker, which has not been built yet. Therefore we will only build
 # the test programs.
 lofar_add_executable(tLBATracking tLBATracking.cc ../src/J2000Converter.cc)
+lofar_add_executable(tHBATracking tHBATracking.cc ../src/J2000Converter.cc)
 lofar_add_executable(tAnaBeamMgr tAnaBeamMgr.cc ../src/AnaBeamMgr.cc ../src/Beam.cc ../src/AnalogueBeam.cc ../src/J2000Converter)
 lofar_add_executable(tJ2000Converter tJ2000Converter.cc
 ../src/J2000Converter.cc) 
