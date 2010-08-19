@@ -9,7 +9,6 @@ install(PROGRAMS
   startOLAP.py
   commandOLAP.py
   runParset.py
-  testParset.py
   DESTINATION bin)
 
 install(FILES
