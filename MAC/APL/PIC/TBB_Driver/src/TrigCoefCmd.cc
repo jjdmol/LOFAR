@@ -58,8 +58,6 @@ void TrigCoefCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBTrigCoefEvent tbb_event(event);
 		
-	int32 board;         // board 0 .. 11
-	int32 board_channel; // board_channel 0 .. 15	
 	int32 channel;       // channel 0 .. 191 (= maxboard * max_channels_on_board)
 	
 	// if filter coefficients for each RCU are send change next loops
@@ -70,15 +68,13 @@ void TrigCoefCmd::saveTbbEvent(GCFEvent& event)
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
 	    int startRCU = boardnr * TS->nrChannelsOnBoard();
 	    for(int rcunr = startRCU; rcunr < startRCU + (TS->nrChannelsOnBoard() / 2); rcunr++) {
-    		TS->convertRcu2Ch(rcunr,&board,&board_channel);	
-    		channel = (board * TS->nrChannelsOnBoard()) + board_channel;
+    		channel = TS->convertRcuToChan(rcunr);
             for (int c = 0; c < 4; c++) {
                 TS->setChFilterCoefficient(channel, 0, c, static_cast<uint32>(tbb_event.rcu[rcunr].filter0[c]));
                 TS->setChFilterCoefficient(channel, 1, c, static_cast<uint32>(tbb_event.rcu[rcunr].filter1[c]));
             }
             // set settings for upper 8 channels of each board
-            TS->convertRcu2Ch(rcunr+8,&board,&board_channel);	
-            channel = (board * TS->nrChannelsOnBoard()) + board_channel;
+            channel = TS->convertRcuToChan(rcunr+8);
             for (int c = 0; c < 4; c++) {
                 TS->setChFilterCoefficient(channel, 0, c, static_cast<uint32>(tbb_event.rcu[rcunr].filter0[c]));
                 TS->setChFilterCoefficient(channel, 1, c, static_cast<uint32>(tbb_event.rcu[rcunr].filter1[c]));

@@ -194,8 +194,11 @@ public:
 	
 	void clearRcuSettings(int32 boardnr);
 	
-	void convertRcu2Ch(int32 rcunr, int32 *boardnr, int32 *channelnr);
+	void convertRcu2BrdCh(int32 rcunr, int32 *boardnr, int32 *channelnr);
 	void convertCh2Rcu(int32 channelnr, int32 *rcunr);
+	int32 convertRcuToChan(int32 rcunr);
+	int32 convertRcuToBoard(int32 rcunr);
+	int32 convertChanToRcu(int32 channelnr);
 	bool isBoardActive(int32 boardnr);
 	bool isBoardReady(int32 boardnr);
 	void logChannelInfo(int32 channel);

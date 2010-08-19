@@ -57,18 +57,14 @@ void TrigCoefSameCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBTrigCoefSameEvent tbb_event(event);
 		
-	int32 board;         // board 0 .. 11
-	int32 board_channel; // board_channel 0 .. 15	
 	int32 channel;       // channel 0 .. 191 (= maxboard * max_channels_on_board)
-	
 	for(int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
 		if (tbb_event.rcu_mask.test(rcunr) == true) {
-			TS->convertRcu2Ch(rcunr,&board,&board_channel);	
-			channel = (board * TS->nrChannelsOnBoard()) + board_channel;
-                        for (int c = 0; c < 4; c++) {
-                            TS->setChFilterCoefficient(channel, 0, c, tbb_event.coefficients.filter0[c]);
-                            TS->setChFilterCoefficient(channel, 1, c, tbb_event.coefficients.filter1[c]);
-                        }
+			channel = TS->convertRcuToChan(rcunr);
+            for (int c = 0; c < 4; c++) {
+                TS->setChFilterCoefficient(channel, 0, c, tbb_event.coefficients.filter0[c]);
+                TS->setChFilterCoefficient(channel, 1, c, tbb_event.coefficients.filter1[c]);
+            }
 		}
 	}
 	
