@@ -43,7 +43,7 @@ using namespace blitz;
 using namespace RTC;
 
 static char*	supportedTypes[] = { "J2000", "ITRF", "B1950", "AZEL", 
-							 "MERCURY", "VENUS", "MARS", "JUPITER", "SATURN", "URANUS", "NEPTUNE", "PLUTO", "SUN", "MOON"  
+							 "MERCURY", "VENUS", "MARS", "JUPITER", "SATURN", "URANUS", "NEPTUNE", "PLUTO", "SUN", "MOON",
 							 "" };
 
 
@@ -56,7 +56,7 @@ CasaConverter::CasaConverter(const string&	targetName) :
 	// First setup a map with the supported conversion types.
 	MDirection::Types		aType;
 	int	t = 0;
-	while (supportedTypes[t]) {
+	while (supportedTypes[t][0]) {
 		if (!MDirection::getType(aType, supportedTypes[t])) {
 			LOG_ERROR_STR("Type " << supportedTypes[t] << " not supported by this version of casacore!");
 		}

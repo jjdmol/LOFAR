@@ -10,4 +10,4 @@ lofar_find_package(Blitz REQUIRED)
 add_definitions(-DUSE_CAL_THREAD)
 
 add_subdirectory(src)
-#add_subdirectory(test)
+add_subdirectory(test)
