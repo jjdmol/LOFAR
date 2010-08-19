@@ -31,6 +31,8 @@ class LocationInfo
     unsigned nrNodes() const;
     unsigned psetNumber() const;
     unsigned rankInPset() const;
+    unsigned nrPsets() const;
+    unsigned psetSize() const;
 
   private:
 #if defined HAVE_BGP
@@ -40,7 +42,7 @@ class LocationInfo
     std::vector<unsigned> itsPsetNumbers;
 #endif
 
-    unsigned              itsPsetNumber, itsRankInPset;
+    unsigned              itsPsetNumber, itsRankInPset, itsNrPsets, itsPsetSize;
     unsigned              itsRank, itsNrNodes;
 };
 
@@ -66,6 +68,18 @@ inline unsigned LocationInfo::psetNumber() const
 inline unsigned LocationInfo::rankInPset() const
 {
   return itsRankInPset;
+}
+
+
+inline unsigned LocationInfo::nrPsets() const
+{
+  return itsNrPsets;
+}
+
+
+inline unsigned LocationInfo::psetSize() const
+{
+  return itsPsetSize;
 }
 
 } // namespace RTCP
