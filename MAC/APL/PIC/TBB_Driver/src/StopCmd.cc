@@ -59,7 +59,7 @@ void StopCmd::saveTbbEvent(GCFEvent& event)
 	
 	//setChannels(tbb_event.rcu_mask);
 	
-	int32 board;
+	//int32 board;
 	int32 rcu;
 	string hdstr;
 	hexdump(hdstr, &tbb_event.rcu_mask, sizeof(tbb_event.rcu_mask));

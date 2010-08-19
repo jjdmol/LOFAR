@@ -29,6 +29,8 @@
 #include <MACIO/MACServiceInfo.h>
 #include <DriverSettings.h>
 #include <cstdio>
+#include <iostream>
+#include <fstream>
 
 using namespace LOFAR;
 	//using namespace GCFCommon;
@@ -149,8 +151,8 @@ void TbbSettings::getTbbSettings()
 															,itsBoardInfo[boardnr].srcIpCep.c_str()
 															,itsBoardInfo[boardnr].srcMacCep.c_str()));
 		LOG_INFO_STR(formatString("            : Dst Ip = '%s', Dst Mac = '%s'"
-															,itsBoardInfo[boardnr].dstIpCep.c_str()
-															,itsBoardInfo[boardnr].dstMacCep.c_str()));
+															,itsChannelInfo[boardnr].dstIpCep.c_str()
+															,itsChannelInfo[boardnr].dstMacCep.c_str()));
 	}
 }
 
@@ -212,11 +214,13 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsChannelInfo[ch].DetectWindow = 0;
 		itsChannelInfo[ch].TriggerMode = 0;
 		itsChannelInfo[ch].OperatingMode = 0;
-                for (int f = 0; f < 2; f++) {
-                    for (int c = 0; c < 4; c++) {
-			itsChannelInfo[ch].Filter[f][c] = 0;
-                    }
+        for (int f = 0; f < 2; f++) {
+            for (int c = 0; c < 4; c++) {
+		        itsChannelInfo[ch].Filter[f][c] = 0;
+            }
 		}
+		itsChannelInfo[ch].dstIpCep = "";
+		itsChannelInfo[ch].dstMacCep = "";
 	}
 	
 	itsBoardSetup  = false;
@@ -319,6 +323,45 @@ int32 TbbSettings::getFirstChannelNr(int32 board, int32 mp)
 	return((board * itsChannelsOnBoard) + (mp * itsChannelsOnMp));
 }
 
+void TbbSettings::setDestination(int32 rcunr, char *storage)
+{
+    char mac[20];
+    char ip[20];
+    char line[100];
+	char *key;
+	char *val;
+    
+    strcpy(mac,"0");
+    strcpy(ip,"0");
+    
+    ifstream fin("/opt/lofar/etc/StaticMetaData/Storage+MAC.dat", ifstream::in );
+	
+	while (!fin.eof()) {
+        fin.getline(line,100);
+		if (strlen(line) < 6 || line[0] == '#') { continue; }
+        key = strtok (line," ");
+        if (strcmp(storage, key) == 0) {
+            val = strtok(NULL, " ");
+			strcpy(mac,val);
+			val = strtok(NULL, " ");
+			strcpy(ip,val);
+            LOG_DEBUG_STR(formatString("storage=%s  mac=%s  ip=%s", key, mac, ip));
+			break;
+        }
+    }
+    fin.close();
+    
+	if (strlen(ip) == 1 || strlen(mac) == 1 ) {
+		LOG_DEBUG_STR(formatString("storage=%s NOT found", key));
+	}
+	else {
+	    int32 ch;
+	    int32 board;
+	    convertRcu2Ch(rcunr, &board, &ch);
+	    itsChannelInfo[ch * board].dstIpCep = static_cast<string>(ip);
+	    itsChannelInfo[ch * board].dstMacCep = static_cast<string>(mac);
+	}
+}
 
 void TbbSettings::clearRcuSettings(int32 boardnr)
 {

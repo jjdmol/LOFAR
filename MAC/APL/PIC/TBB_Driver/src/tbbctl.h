@@ -45,7 +45,7 @@ namespace LOFAR {
 
 GCFTimerPort* itsCmdTimer;
 
-static const int TBBCTL_VERSION = 226;
+static const int TBBCTL_VERSION = 227;
 
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 
@@ -738,8 +738,8 @@ public:
 	virtual GCFEvent::TResult ack(GCFEvent& e);
 	void setPage(int page) { itsPage = page; }
 	void setVersion(double version) { itsVersion = version; }
-	void setFileNameTp(char *filename) { strcpy(itsFileNameTp,filename); }
-	void setFileNameMp(char *filename) { strcpy(itsFileNameMp,filename); }
+	void setFileNameTp(char *filename) { strncpy(itsFileNameTp,filename,64); }
+	void setFileNameMp(char *filename) { strncpy(itsFileNameMp,filename,64); }
 	void setPassword(uint32 password) { itsPassword = password; }
 private:
 	int itsPage;

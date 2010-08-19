@@ -48,7 +48,7 @@
 #include "TrigCoefSameCmd.h"
 #include "TrigInfoCmd.h"
 #include "ReadCmd.h"
-#include "UdpCmd.h"
+//#include "UdpCmd.h"
 #include "PageperiodCmd.h"
 #include "VersionCmd.h"
 #include "SizeCmd.h"
@@ -317,29 +317,8 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 					continue;
 				}
 
-				if ((TS->getBoardState(board) == setMode) ||
-					(TS->getBoardState(board) == watchdogEnabled)) {
-
-					TPUdpEvent udp;
-					udp.opcode = oc_UDP;
-					udp.status = 0;
-					string2mac(TS->getSrcMacCep(board).c_str(),udp.srcmac);
-					string2mac(TS->getDstMacCep(board).c_str(),udp.dstmac);
-					setup_udpip_header( board,
-										TBB_MODE_TRANSIENT,
-										TS->getSrcIpCep(board).c_str(),
-										TS->getDstIpCep(board).c_str(),
-										udp.ip,
-										udp.udp );
-					itsBoard[board].send(udp);
-					itsBoard[board].setTimer(TS->timeout());
-					LOG_INFO_STR("MODE = TRANSIENT is send to port '" << itsBoard[board].getName() << "'");
-					TS->setSetupCmdDone(board, false);
-					continue;
-				}
-
 				if ((TS->getBoardState(board) == enableArp) ||
-					(TS->getBoardState(board) == modeSet)) {
+					(TS->getBoardState(board) == watchdogEnabled)) {
 
 					TPArpModeEvent arp;
 					arp.opcode = oc_ARPMODE;
@@ -445,13 +424,6 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 			int board = TS->port2Board(&port); // get board nr
 			itsBoard[board].cancelAllTimers();
 			TS->setBoardState(board, watchdogEnabled);
-			TS->setSetupCmdDone(board, true);
-		} break;
-
-		case TP_UDP_ACK: {
-			int board = TS->port2Board(&port); // get board nr
-			itsBoard[board].cancelAllTimers();
-			TS->setBoardState(board,modeSet);
 			TS->setSetupCmdDone(board, true);
 		} break;
 
@@ -666,7 +638,9 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 
 		case TBB_GET_CONFIG:
 		case TBB_RCU_INFO:
-		case TBB_TRIG_SETTINGS: {
+		case TBB_TRIG_SETTINGS:
+		case TBB_MODE:
+        case TBB_CEP_STORAGE: {
 			sendInfo(event, port);
 		} break;
 
@@ -1097,6 +1071,45 @@ bool TBBDriver::sendInfo(GCFEvent& event, GCFPortInterface& port)
 				port.send(ack);
 			}
 		} break;
+		
+		case TBB_MODE: {
+		    if (TS->activeBoardsMask() != 0) {
+    		    TBBModeEvent tbb_event(event);
+    		    for (int32 rcu = 0; rcu < TS->maxChannels(); rcu++) {
+    		        if (tbb_event.rcu_mask.test(rcu)) {
+    		            TS->setChOperatingMode(rcu, tbb_event.rec_mode[rcu]);
+    		        }
+    		    }
+    		    
+    		    TBBModeAckEvent ack;
+        		for (int32 i = 0; i < TS->maxBoards(); i++) {
+        			ack.status_mask[i] = 0;
+        		}
+    		    port.send(ack);
+    		} else {
+				TBBDriverBusyAckEvent ack;
+				port.send(ack);
+			}
+		} break;
+
+		case TBB_CEP_STORAGE: {
+		    if (TS->activeBoardsMask() != 0) {
+    		    TBBCepStorageEvent tbb_event(event);
+    		    for (int32 rcu = 0; rcu < TS->maxChannels(); rcu++) {
+    		        if (tbb_event.rcu_mask.test(rcu)) {
+    		            TS->setDestination(rcu, tbb_event.destination);
+    		        }
+    		    }
+    		    TBBCepStorageAckEvent tbb_ack;
+        		for (int32 i = 0; i < TS->maxBoards(); i++) {
+        			tbb_ack.status_mask[i] = 0;
+        		}
+    		    port.send(tbb_ack);
+    		} else {
+				TBBDriverBusyAckEvent ack;
+				port.send(ack);
+			}
+		} break;
 
 		default: {
 			valid = false;
@@ -1258,13 +1271,6 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 		case TBB_READ:  {
 			ReadCmd *itsCmd;
 			itsCmd = new ReadCmd();
-			itsCmdHandler->setTpCmd(itsCmd);
-		} break;
-
-		case TBB_CEP_STORAGE:
-		case TBB_MODE: {
-			UdpCmd *itsCmd;
-			itsCmd = new UdpCmd();
 			itsCmdHandler->setTpCmd(itsCmd);
 		} break;
 

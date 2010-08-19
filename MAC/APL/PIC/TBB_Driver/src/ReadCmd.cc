@@ -25,6 +25,7 @@
 #include <Common/StringUtil.h>
 
 #include "ReadCmd.h"
+#include "UdpIpTools.h"
 
 
 using namespace LOFAR;
@@ -36,7 +37,7 @@ using	namespace TBB;
 
 //--Constructors for a ReadCmd object.----------------------------------------
 ReadCmd::ReadCmd():
-	itsSecondstime(0), itsSampletime(0), itsPrepages(0), itsPostpages(0)
+	itsSecondstime(0), itsSampletime(0), itsPrepages(0), itsPostpages(0), itsStage(0)
 {
 	TS = TbbSettings::instance();
 	setWaitAck(true);
@@ -49,9 +50,8 @@ ReadCmd::~ReadCmd() { }
 bool ReadCmd::isValid(GCFEvent& event)
 {
 	if ((event.signal == TBB_READ)
-		||(event.signal == TP_READ_ACK)
-		||(event.signal == TP_WATCHDOG_ACK)
-		||(event.signal == TP_CEP_STATUS_ACK)) {
+	    ||(event.signal == TP_UDP_ACK)
+		||(event.signal == TP_READ_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -83,25 +83,60 @@ void ReadCmd::saveTbbEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ReadCmd::sendTpEvent()
 {
-	TPReadEvent tp_event;
+	switch (itsStage) {
+		// stage 1, send udp info
+		case 0: {
+        	TPUdpEvent tp_event;
+        	tp_event.opcode = oc_UDP;
+        	tp_event.status = 0;
+        	uint32 mode = TS->getChOperatingMode(getChannelNr());
+        	// fill in destination mac address
+        	string2mac(TS->getSrcMacCep(getBoardNr()).c_str(), tp_event.srcmac);
+        	string2mac(TS->getDstMacCep(getChannelNr()).c_str(), tp_event.dstmac);
+        	// fill in udp-ip header
+        	setup_udpip_header(	getBoardNr(),
+        						mode,
+        						TS->getSrcIpCep(getBoardNr()).c_str(),
+        						TS->getDstIpCep(getChannelNr()).c_str(),
+        						tp_event.ip,
+        						tp_event.udp );
+        
+        	TS->boardPort(getBoardNr()).send(tp_event);
+        	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+	    } break;
+	    
+	    case 1: {
+	        TPReadEvent tp_event;
 	
-	tp_event.opcode      = oc_READ;
-	tp_event.status      = 0;
-	tp_event.channel     = TS->getChInputNr(getChannelNr());
-	tp_event.secondstime = itsSecondstime;
-	tp_event.sampletime  = itsSampletime;
-	tp_event.prepages    = itsPrepages;
-	tp_event.postpages   = itsPostpages;
-	TS->boardPort(getBoardNr()).send(tp_event);
-	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+        	tp_event.opcode      = oc_READ;
+        	tp_event.status      = 0;
+        	tp_event.channel     = TS->getChInputNr(getChannelNr());
+        	tp_event.secondstime = itsSecondstime;
+        	tp_event.sampletime  = itsSampletime;
+        	tp_event.prepages    = itsPrepages;
+        	tp_event.postpages   = itsPostpages;
+        	TS->boardPort(getBoardNr()).send(tp_event);
+        	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+	    } break;
+	}
 }
 
 // ----------------------------------------------------------------------------
 void ReadCmd::saveTpAckEvent(GCFEvent& event)
 {
+	
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
 		setStatus(getBoardNr(), TBB_TIME_OUT);
+	}
+	else if (event.signal == TP_UDP_ACK) {
+		TPUdpAckEvent tp_ack(event);
+
+		if (tp_ack.status != 0) {
+			setStatus(getBoardNr(), (tp_ack.status << 24));
+		}
+		LOG_DEBUG_STR(formatString("Received UdpAck from boardnr[%d]", getBoardNr()));
+		itsStage = 1;
 	}
 	else if (event.signal == TP_READ_ACK) {
 		TPReadAckEvent tp_ack(event);
@@ -120,8 +155,8 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 		if (tp_ack.status != 0) {
 			setStatus(getBoardNr(), (tp_ack.status << 24));
 		}
+		setDone(true);
 	}
-	setDone(true);
 }
 
 // ----------------------------------------------------------------------------

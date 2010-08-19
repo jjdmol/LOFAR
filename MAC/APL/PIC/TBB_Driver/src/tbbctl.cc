@@ -350,10 +350,10 @@ GCFEvent::TResult TriggerSettingsCmd::ack(GCFEvent& e)
 
 	int32 bnr = 0;
 	int32 oldbnr = -1;
-	
+
 	char trig_mode[4][10] = {"shot RSP","cont RSP","shot Ext","cont Ext"};
 	char oper_mode[4][10] = {"?","transient","subbands","?"};
-	
+
 	for (int rcu=0; rcu < getMaxSelections(); rcu++) {
 		bnr = static_cast<int32>(rcu / 16);
 		if (isSelected(rcu) ) {
@@ -504,7 +504,7 @@ TrigSetupCmd::TrigSetupCmd(GCFPortInterface& port) : Command(port),
 void TrigSetupCmd::send()
 {
 	TBBTrigSetupSameEvent event;
-	
+
 	if (isSelectionDone()) {
 		event.rcu_mask = getRcuMask(); // if select cmd is used
 		event.setup.level = itsLevel;
@@ -766,14 +766,14 @@ void ReadCmd::send()
 			itsPort.send(event);
 			itsPort.setTimer(DELAY);
 		} break;
-		
+
 		case 1: {
 			TBBCepStatusEvent event;
 			event.boardmask = (1 << rcu2board(getRcu()));
 			itsPort.send(event);
 			itsPort.setTimer(DELAY);
 		} break;
-		
+
 		default : break;
 	}
 }
@@ -800,7 +800,7 @@ GCFEvent::TResult ReadCmd::ack(GCFEvent& e)
 				}
 			}
 		} break;
-		
+
 		case 1: {
 			TBBCepStatusAckEvent ack(e);
 			if (ack.pages_left[rcu2board(getRcu())] != 0) {
@@ -812,7 +812,7 @@ GCFEvent::TResult ReadCmd::ack(GCFEvent& e)
 				setCmdDone(true);
 			}
 		} break;
-		
+
 		default : break;
 	}
 	return(GCFEvent::HANDLED);
@@ -911,9 +911,9 @@ GCFEvent::TResult ReadAllCmd::ack(GCFEvent& e)
 		case 1: {
 			TBBReadrAckEvent ack(e);
 			itsSecondsTime = ack.data[0];
-		 	itsSampleTime = ack.data[1];
-		 	cout << formatString("rcu %-3d, last recorded time 0x%08x seconds and sample number 0x%08x",
-		 								itsRcu, itsSecondsTime, itsSampleTime) << endl;
+			itsSampleTime = ack.data[1];
+			cout << formatString("rcu %-3d, last recorded time 0x%08x seconds and sample number 0x%08x",
+										itsRcu, itsSecondsTime, itsSampleTime) << endl;
 			itsStage = 2;
 		} break;
 
@@ -983,7 +983,12 @@ ModeCmd::ModeCmd(GCFPortInterface& port) : Command(port)
 void ModeCmd::send()
 {
 	TBBModeEvent event;
-	event.rec_mode = itsRecMode;
+	for (int ch = 0; ch < itsMaxChannels; ch++) {
+		if (isSelected(ch)) {
+			event.rcu_mask.set(ch);
+			event.rec_mode[ch] = itsRecMode;
+		}
+	}
 	itsPort.send(event);
 	itsPort.setTimer(DELAY);
 }
@@ -1347,40 +1352,41 @@ GCFEvent::TResult ArpModeCmd::ack(GCFEvent& e)
 //---- CEPSETTINGS -------------------------------------------------------------------
 CepStorageCmd::CepStorageCmd(GCFPortInterface& port) : Command(port)
 {
-    cout << endl;
-    cout << "== TBB ========================================= CEP storage node ====" << endl;
-    cout << endl;
+	cout << endl;
+	cout << "== TBB ========================================= CEP storage node ====" << endl;
+	cout << endl;
 }
 
 //-----------------------------------------------------------------------------
 void CepStorageCmd::send()
 {
-    TBBCepStorageEvent event;
-    event.boardmask = getBoardMask();
-    memcpy(event.destination, itsStorageNode, sizeof(itsStorageNode));
-    itsPort.send(event);
-    itsPort.setTimer(DELAY);
+	TBBCepStorageEvent event;
+	event.rcu_mask = getRcuMask();
+	memcpy(event.destination, itsStorageNode, sizeof(itsStorageNode));
+	itsPort.send(event);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
 GCFEvent::TResult CepStorageCmd::ack(GCFEvent& e)
 {
-    TBBCepStorageAckEvent ack(e);
-    cout << "TBB  Info" << endl;
-    cout << "---  -------------------------------------------------------" << endl;
-    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
-        if (isSelected(bnr) ) {
-            if (ack.status_mask[bnr] == TBB_SUCCESS) {
-                cout << formatString(" %2d  storage node set to %s",bnr, itsStorageNode ) << endl;
-            } else {
-                cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
-            }
-        }
-    }
+	TBBCepStorageAckEvent ack(e);
+	cout << "RCU  Info" << endl;
+	cout << "---  -------------------------------------------------------" << endl;
+	for (int rcu=0; rcu < getMaxSelections(); rcu++) {
+		if (isSelected(rcu) ) {
+		    
+			if (ack.status_mask[rcu2board(rcu)] == TBB_SUCCESS) {
+				cout << formatString(" %2d  storage node set to %s",rcu, itsStorageNode ) << endl;
+			} else {
+				cout << formatString(" %2d  %s",rcu, getDriverErrorStr(ack.status_mask[rcu2board(rcu)]).c_str()) << endl;
+			}
+		}
+	}
 
-    setCmdDone(true);
+	setCmdDone(true);
 
-    return(GCFEvent::HANDLED);
+	return(GCFEvent::HANDLED);
 }
 
 //---- STOPCEP -------------------------------------------------------------------
@@ -2312,7 +2318,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 
 			if (itsFreqBands == 0) {
 				itsSampleNr = static_cast<uint32>(itsData[3]);
-			} 
+			}
 			else {
 				itsBandNr = static_cast<int>(itsData[3] & 0x03FF);
 				itsSliceNr = static_cast<int>(itsData[3] >> 10);
@@ -2423,7 +2429,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 				val[val_cnt++] = static_cast<int16>(((data[1] & 0xF0000000) >> 28) | ((data[2] & 0x000000FF) << 4));
 				val[val_cnt++] = static_cast<int16>(( data[2] & 0x000FFF00) >> 8);
 				val[val_cnt++] = static_cast<int16>(( data[2] & 0xFFF00000) >> 20);
-				
+
 				sample_cnt += 8;
 			}
 
@@ -2494,7 +2500,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 */
 		// write all data to file
 		//FILE* file;
-		
+
 		if (val_cnt > 0) {
 			// save unpacked frame to file
 			//snprintf(filename, PATH_MAX, "%s.dat",itsBaseFileName);
@@ -2558,7 +2564,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 					fprintf(file,"Data file format           : binary  int16");
 					fprintf(file," ");
 				}
-				fclose(file);			
+				fclose(file);
 			}
 			else {
 				cout << "opening .nfo file not possible" << endl;
@@ -2585,58 +2591,58 @@ void TBBCtl::commandHelp(int level)
 	cout << "> > > > tbbctl COMMAND USAGE > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > >" << endl;
 	cout << endl;
 	cout << " #  --command                : all boards or active rcu's are selected, and will be displayed" << endl;
-	cout << " #  --command --select=<set> : only information for all selected boards or rcu's is displayed"  << endl;
+	cout << " #  --command --select=<...set> : only information for all selected boards or rcu's is displayed"  << endl;
 	cout << " #    Example: --select=0,1,4  or  --select=0:6  or  --select=0,1,2,8:11" << endl;
 	cout << endl;
 	cout << "______| CHANNEL |_________________________________________________________________________________________________________" << endl;
-	cout << " tbbctl --alloc [--select=<set>]                                    # allocate memmory locations for selected rcu's" << endl;
-	cout << " tbbctl --free [--select=<set>]                                     # free memmory locations for selected rcu's" << endl;
-	cout << " tbbctl --record [--select=<set>]                                   # start recording on selected rcu's" << endl;
-	cout << " tbbctl --stop [--select=<set>]                                     # stop recording on selected rcu's" << endl;
+	cout << " tbbctl --alloc [--select=<rcuset>]                                    # allocate memmory locations for selected rcu's" << endl;
+	cout << " tbbctl --free [--select=<rcuset>]                                     # free memmory locations for selected rcu's" << endl;
+	cout << " tbbctl --record [--select=<rcuset>]                                   # start recording on selected rcu's" << endl;
+	cout << " tbbctl --stop [--select=<rcuset>]                                     # stop recording on selected rcu's" << endl;
 	cout << endl;
 	cout << "______| CEP |_____________________________________________________________________________________________________________" << endl;
-	cout << " tbbctl --mode=[transient | subbands]                               # set receive mode to configure UDP/IP header for CEP tranport" << endl;
-        cout << "      # before using: --read, readall, --arp or --arpmode,          " << endl;
-	cout << "      # first use --mode or --cepsettings to setup UDP/IP header    " << endl;
-        cout << " tbbctl --storage=node [--select=<set>]                             # set storage node to configure UDP/IP header for CEP tranport" << endl;
-        cout << " tbbctl --read=rcunr,secondstime,sampletime,prepages,postpages      # transfer recorded data from rcunr to CEP, " << endl;
-	cout << " tbbctl --readall=pages [--select=<set>]                            # transfer number of pages from all selected rcunr to CEP, " << endl;
-	cout << " tbbctl --stopcep [--select=<set>]                                  # stop sending data to CEP" << endl;
-	cout << " tbbctl --cepdelay=delay [--select=<set>]                           # set delay between CEP frames, 1 delay unit = 5 uS" << endl;
-	cout << " tbbctl --arp [--select=<set>]                                      # send 1 arp message" << endl;
-	cout << " tbbctl --arpmode=mode [--select=<set>]                             # set arp mode, 0=manual, 1=auto(every 42 seconds 1 message)" << endl;
+	cout << " tbbctl --mode=[transient | subbands] [--select=<rcuset>]              # set receive mode to configure UDP/IP header for CEP tranport" << endl;
+	cout << "      # before using: --read, readall, --arp or --arpmode, " << endl;
+	cout << "      # first use --mode or --cepsettings to setup UDP/IP header " << endl;
+	cout << " tbbctl --storage=node [--select=<rcuset>]                             # set storage node to configure UDP/IP header for CEP tranport" << endl;
+	cout << " tbbctl --read=rcunr,secondstime,sampletime,prepages,postpages         # transfer recorded data from rcunr to CEP, " << endl;
+	cout << " tbbctl --readall=pages [--select=<rcuset>]                            # transfer number of pages from all selected rcunr to CEP, " << endl;
+	cout << " tbbctl --stopcep [--select=<boardset>]                                # stop sending data to CEP" << endl;
+	cout << " tbbctl --cepdelay=delay [--select=<boardset>]                         # set delay between CEP frames, 1 delay unit = 5 uS" << endl;
+	cout << " tbbctl --arp [--select=<boardset>]                                    # send 1 arp message" << endl;
+	cout << " tbbctl --arpmode=mode [--select=<boardset>]                           # set arp mode, 0=manual, 1=auto(every 42 seconds 1 message)" << endl;
 	cout << endl;
 	cout << "______| TRIGGER |_________________________________________________________________________________________________________" << endl;
-	cout << " tbbctl --settings [--select=<set>]                                 # list trigger settings for selected rcu's" << endl;
-	cout << " tbbctl --release [--select=<set>]                                  # release trigger system for selected rcu's" << endl;
-	cout << " tbbctl --generate [--select=<set>]                                 # generate a trigger for selected rcu's" << endl;
-	cout << " tbbctl --setup=level,start,stop,filter,window,mode [--select=<set>]# setup trigger system for selected rcu's, mode = 0/1" << endl;
-	cout << " tbbctl --coef=f00,f01,f02,f03,f10,f11,f12,f13 [--select=<set>]     # set trigger coeffients for selected rcu's" << endl;
-	cout << " tbbctl --triginfo=rcu                                              # get trigger info for selected rcu" << endl;
-	cout << " tbbctl --listen=[one_shot | continues]                             # listen for triggers, in continues mode the system" << endl;
-	cout << "                                                                    # is released after a trigger, in one_shot mode" << endl;
-	cout << "                                                                    # the recording is stopped after a trigger" << endl;
+	cout << " tbbctl --settings [--select=<rcuset>]                                 # list trigger settings for selected rcu's" << endl;
+	cout << " tbbctl --release [--select=<rcuset>]                                  # release trigger system for selected rcu's" << endl;
+	cout << " tbbctl --generate [--select=<rcuset>]                                 # generate a trigger for selected rcu's" << endl;
+	cout << " tbbctl --setup=level,start,stop,filter,window,mode [--select=<rcuset>]# setup trigger system for selected rcu's, mode = 0/1" << endl;
+	cout << " tbbctl --coef=f00,f01,f02,f03,f10,f11,f12,f13 [--select=<rcuset>]     # set trigger coeffients for selected rcu's" << endl;
+	cout << " tbbctl --triginfo=rcu                                                 # get trigger info for selected rcu" << endl;
+	cout << " tbbctl --listen=[one_shot | continues]                                # listen for triggers, in continues mode the system" << endl;
+	cout << "                                                                       # is released after a trigger, in one_shot mode" << endl;
+	cout << "                                                                       # the recording is stopped after a trigger" << endl;
 	cout << endl;
 	cout << "______| INFO |____________________________________________________________________________________________________________" << endl;
-	cout << " tbbctl --rcuinfo [--select=<set>]                                  # list rcu info, only allocated rcu's are listed" << endl;
-	cout << " tbbctl --version [--select=<set>]                                  # get version information from selected boards" << endl;
-	cout << " tbbctl --status [--select=<set>]                                   # get status information from selected boards" << endl;
-	cout << " tbbctl --size [--select=<set>]                                     # get installed memory size from selected boards" << endl;
+	cout << " tbbctl --rcuinfo [--select=<rcuset>]                                  # list rcu info, only allocated rcu's are listed" << endl;
+	cout << " tbbctl --version [--select=<boardset>]                                # get version information from selected boards" << endl;
+	cout << " tbbctl --status [--select=<boardset>]                                 # get status information from selected boards" << endl;
+	cout << " tbbctl --size [--select=<boardset>]                                   # get installed memory size from selected boards" << endl;
 	cout << endl;
 	cout << "______| DDR |_____________________________________________________________________________________________________________" << endl;
-	cout << " tbbctl --readpage=rcunr,startpage,npages                           # ddr read npages from rcunr, starting on startpage" << endl;
+	cout << " tbbctl --readpage=rcunr,startpage,npages                              # ddr read npages from rcunr, starting on startpage" << endl;
 	if (level == 3) {
-		cout << " tbbctl --testddr=board                                             # ddr memory test, adress and data lines" << endl;
-		cout << " tbbctl --readddr=board,mp,addr,size                                # read 'size' blocks of 8 words from ddr starting on addr" << endl;
-		cout << " tbbctl --writeddr=board,mp,addr,word[0],word[1] .. word[7]         # write 8 words to ddr starting on addr" << endl;
+		cout << " tbbctl --testddr=board                                                # ddr memory test, adress and data lines" << endl;
+		cout << " tbbctl --readddr=board,mp,addr,size                                   # read 'size' blocks of 8 words from ddr starting on addr" << endl;
+		cout << " tbbctl --writeddr=board,mp,addr,word[0],word[1] .. word[7]            # write 8 words to ddr starting on addr" << endl;
 		cout << endl;
 		cout << "______| MP-REGISTER |_____________________________________________________________________________________________________" << endl;
-		cout << " tbbctl --readreg=board,mp,pid,regid                                # register read" << endl;
-		cout << " tbbctl --writereg=board,mp,pid,regid,data(hex input)               # register write" << endl;
+		cout << " tbbctl --readreg=board,mp,pid,regid                                   # register read" << endl;
+		cout << " tbbctl --writereg=board,mp,pid,regid,data(hex input)                  # register write" << endl;
 		cout << endl;
 		cout << "______| FLASH |___________________________________________________________________________________________________________" << endl;
-		cout << " tbbctl --eraseimage=board,image                                    # erase image from flash" << endl;
-		cout << " tbbctl --readimage=board,image                                     # read image from flash to file" << endl;
+		cout << " tbbctl --eraseimage=board,image                                       # erase image from flash" << endl;
+		cout << " tbbctl --readimage=board,image                                        # read image from flash to file" << endl;
 		cout << " tbbctl --writeimage=boardnr,imagenr,version,tpfilename,mpfilename,password  # write tp and mp file to imagenr on boardnr" << endl;
 		cout << "                                                                             # version is the sw version of the image stored" << endl;
 		cout << "                                                                             # right password is needed for image-0 " << endl;
@@ -2645,17 +2651,17 @@ void TBBCtl::commandHelp(int level)
 		cout << endl;
 		cout << "______| FLASH |___________________________________________________________________________________________________________" << endl;
 	}
-	cout << " tbbctl --imageinfo=board                                           # read info from all images on board" << endl;
-	cout << " tbbctl --config=imagenr [--select=<set>]                           # reconfigure TP and MP's with imagenr [0..15] on " << endl;
-	cout << "                                                                    # selected boards" << endl;
+	cout << " tbbctl --imageinfo=board                                              # read info from all images on board" << endl;
+	cout << " tbbctl --config=imagenr [--select=<boardset>]                         # reconfigure TP and MP's with imagenr [0..15] on " << endl;
+	cout << "                                                                       # selected boards" << endl;
 	cout << "__________________________________________________________________________________________________________________________" << endl;
 	if (level == 3) {
-		cout << " tbbctl --templimits=high,low [--select=<set>]                      # set temp limts for fan control" << endl;
+		cout << " tbbctl --templimits=high,low [--select=<boardset>]                         # set temp limts for fan control" << endl;
 	}
-	cout << " tbbctl --clear [--select=<set>]                                    # clear selected board" << endl;
-	cout << " tbbctl --reset [--select=<set>]                                    # reset to factory images on selected boards" << endl;
+	cout << " tbbctl --clear [--select=<boardset>]                                  # clear selected board" << endl;
+	cout << " tbbctl --reset [--select=<boardset>]                                  # reset to factory images on selected boards" << endl;
 	cout << endl;
-	cout << " tbbctl --help                                                      # this help screen" << endl;
+	cout << " tbbctl --help                                                         # this help screen" << endl;
 	cout << "< < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < " << endl;
 	cout << endl;
 }
@@ -2843,7 +2849,7 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 		case TBB_STOP_CEP_ACK:
 		case TBB_CEP_DELAY_ACK:
 		case TBB_TEMP_LIMIT_ACK:
-        case TBB_CEP_STORAGE_ACK: {
+		case TBB_CEP_STORAGE_ACK: {
 			itsServerPort.cancelAllTimers();
 			status = itsCommand->ack(e); // handle the acknowledgement
 			if (!itsCommand->isCmdDone() && itsCommand->isCmdSendNext()) {
@@ -2927,7 +2933,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 		int option_index = 0;
 		int c = getopt_long(argc, argv,
-                                    "a:bcdefghij:k:l:m::n:o:p:qrst:uv:wx:y:zAB:C:D:E:F:G:H:I:J:K:LMN:",
+									"a:bcdefghij:k:l:m::n:o:p:qrst:uv:wx:y:zAB:C:D:E:F:G:H:I:J:K:LMN:",
 								long_options, &option_index);
 
 		if (c == -1) {
@@ -2944,7 +2950,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 							exit(EXIT_FAILURE);
 							}
 							select = strtolist(optarg, command->getMaxSelections());
-		
+
 						if (select.empty()) {
 							cout << "Error: invalid or missing '--select' option" << endl;
 							exit(EXIT_FAILURE);
@@ -2959,49 +2965,49 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					cout << "Error: channels already selected" << endl;
 				}
 			} break;
-	
+
 			case 'b': {   // --alloc
 				if (command) delete command;
 				AllocCmd* alloccmd = new AllocCmd(itsServerPort);
 				command = alloccmd;
 				command->setCmdType(RCUCMD);
 			} break;
-	
+
 			case 'c': {    // --channelinfo
 				if (command) delete command;
 				ChannelInfoCmd* channelinfocmd = new ChannelInfoCmd(itsServerPort);
 				command = channelinfocmd;
 				command->setCmdType(RCUCMD);
 			} break;
-	
+
 			case 'd': {    // --free
 				if (command) delete command;
 				FreeCmd* freecmd = new FreeCmd(itsServerPort);
 				command = freecmd;
 				command->setCmdType(RCUCMD);
 			} break;
-	
+
 			case 'e': {    // --record
 				if (command) delete command;
 				RecordCmd* recordcmd = new RecordCmd(itsServerPort);
 				command = recordcmd;
 				command->setCmdType(RCUCMD);
 			} break;
-	
+
 			case 'f': {    // --stop
 				if (command) delete command;
 				StopCmd* stopcmd = new StopCmd(itsServerPort);
 				command = stopcmd;
 				command->setCmdType(RCUCMD);
 			} break;
-	
+
 			case 'g': {
 				if (command) delete command;
 				TriggerSettingsCmd* trigsettingscmd = new TriggerSettingsCmd(itsServerPort);
 				command = trigsettingscmd;
 				command->setCmdType(RCUCMD);
 			} break;
-	
+
 			case 'h': {    // --trigrelease
 				if (command) delete command;
 				TrigReleaseCmd* trigreleasecmd = new TrigReleaseCmd(itsServerPort);
@@ -3018,22 +3024,22 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				select.push_back(rcu);
 					command->setSelected(true);
 				}
-	
+
 				command->setCmdType(RCUCMD);
 			} break;
-	
+
 			case 'i': {    // --triggenerate
 				if (command) delete command;
 				TrigGenerateCmd* triggeneratecmd = new TrigGenerateCmd(itsServerPort);
 				command = triggeneratecmd;
 				command->setCmdType(RCUCMD);
 			} break;
-	
+
 			case 'j': {    // --trigsetup
 				if (command) delete command;
 				TrigSetupCmd* trigsetupcmd = new TrigSetupCmd(itsServerPort);
 				command = trigsetupcmd;
-	
+
 				if (optarg) {
 					uint32 level = 0;
 					uint32 start = 0;
@@ -3041,7 +3047,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					uint32 filter = 0;
 					uint32 window = 0;
 					uint32 triggermode = 0;
-	
+
 					int numitems = sscanf(optarg, "%u,%u,%u,%u,%u,%u",&level, &start, &stop, &filter, &window, &triggermode);
 					// check if valid arguments
 					if ( numitems < 6 || numitems == EOF
@@ -3058,12 +3064,12 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 						cout << "                              (b1=0 RSP input),(b1=1 external input)" << endl;
 						exit(EXIT_FAILURE);
 					}
-	
+
 					if ((triggermode & 1) && (level < 4)){
 						cout << "mode=continues with level < 4 can generate to many triggers, auto corrected to level = 4" << endl;
 						level = 4;
 					}
-	
+
 					trigsetupcmd->setLevel(static_cast<uint16>(level));
 					trigsetupcmd->setStartMode(static_cast<uint8>(start));
 					trigsetupcmd->setStopMode(static_cast<uint8>(stop));
@@ -3071,10 +3077,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					trigsetupcmd->setWindow(static_cast<uint8>(window));
 					trigsetupcmd->setTriggerMode(static_cast<uint16>(triggermode));
 				}
-	
+
 				command->setCmdType(RCUCMD);
 			} break;
-	
+
 			case 'k': {    // --trigcoef
 				if (command) delete command;
 				TrigCoefficientCmd* trigcoefficientcmd = new TrigCoefficientCmd(itsServerPort);
@@ -3082,9 +3088,9 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				if (optarg) {
 					uint16 f0[4];
 					uint16 f1[4];
-					
+
 					int numitems = sscanf(optarg, "%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu",
-					               &f0[0], &f0[1], &f0[2], &f0[3], &f1[0], &f1[1], &f1[2], &f1[3]);
+								   &f0[0], &f0[1], &f0[2], &f0[3], &f1[0], &f1[1], &f1[2], &f1[3]);
 					if (numitems < 8 || numitems == EOF) {
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
 						cout << "       '--trigcoef=f0c0, f0c1, f0c2, f0c3, f1c0, f1c1, f1c2, f1c3'   (use 16bit decimal values)" << endl;
@@ -3095,7 +3101,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(RCUCMD);
 			} break;
-	
+
 			case 'l': {    // --triginfo
 				if (command) delete command;
 				TrigInfoCmd* triginfocmd = new TrigInfoCmd(itsServerPort);
@@ -3115,7 +3121,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(RCUCMD);
 			} break;
-	
+
 			case 'm': {    // --listen
 				if (command) delete command;
 				ListenCmd* listencmd = new ListenCmd(itsServerPort);
@@ -3138,12 +3144,12 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(RCUCMD);
 			} break;
-	
+
 			case 'n': {    // --read
 				if (command) delete command;
 				ReadCmd* readcmd = new ReadCmd(itsServerPort);
 				command = readcmd;
-	
+
 				if (optarg) {
 					int rcu = 0;
 					uint32 secondstime = 0;
@@ -3162,19 +3168,19 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					readcmd->setSampleTime(sampletime);
 					readcmd->setPrePages(prepages);
 					readcmd->setPostPages(postpages);
-	
+
 					select.clear();
 					select.push_back(rcu);
 					command->setSelected(true);
 				}
 				command->setCmdType(RCUCMD);
 			} break;
-	
+
 			case 'o': {    // --readall
 				if (command) delete command;
 				ReadAllCmd* readallcmd = new ReadAllCmd(itsServerPort);
 				command = readallcmd;
-	
+
 				if (optarg) {
 					uint32 pages = 0;
 					int numitems = sscanf(optarg, "%u", &pages);
@@ -3187,8 +3193,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(RCUCMD);
 			} break;
-	
-	
+
+
 			case 'p': {    // --mode
 				if (command) delete command;
 				ModeCmd* modecmd = new ModeCmd(itsServerPort);
@@ -3203,15 +3209,15 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 						cout << "       rec_mode=transient or subbands" << endl;
 						exit(EXIT_FAILURE);
 					}
-	
+
 						if (strcmp(rec_mode,"transient") == 0)
 							modecmd->setRecMode(TBB_MODE_TRANSIENT);
 						if (strcmp(rec_mode,"subbands") == 0)
 							modecmd->setRecMode(TBB_MODE_SUBBANDS);
 					}
-					command->setCmdType(BOARDCMD);
+					command->setCmdType(RCUCMD);
 				} break;
-                               
+
 			case 'N': {    // --storage
 				if (command) delete command;
 				CepStorageCmd* storagecmd = new CepStorageCmd(itsServerPort);
@@ -3228,51 +3234,51 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 					storagecmd->setStorageNode(node);
 				}
-				command->setCmdType(BOARDCMD);
+				command->setCmdType(RCUCMD);
 			} break;
-					
+
 			case 'q': {    // --version
 				if (command) delete command;
 				VersionCmd* versioncmd = new VersionCmd(itsServerPort);
 				command = versioncmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'r': {    // --size
 				if (command) delete command;
 				SizeCmd* sizecmd = new SizeCmd(itsServerPort);
 				command = sizecmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 's': {    // --status
 				if (command) delete command;
 				StatusCmd* statuscmd = new StatusCmd(itsServerPort);
 				command = statuscmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'z': {    // --clear
 				if (command) delete command;
 				ClearCmd* clearcmd = new ClearCmd(itsServerPort);
 				command = clearcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'A': {    // --reset
 				if (command) delete command;
 				ResetCmd* resetcmd = new ResetCmd(itsServerPort);
 				command = resetcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'u': {    // --arp
 				if (command) delete command;
 				ArpCmd* arpcmd = new ArpCmd(itsServerPort);
 				command = arpcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'v': {    // --arpmode
 				if (command) delete command;
 				ArpModeCmd* arpmodecmd = new ArpModeCmd(itsServerPort);
@@ -3290,14 +3296,14 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'w': {    // --stopcep
 				if (command) delete command;
 				StopCepCmd* stopcepcmd = new StopCepCmd(itsServerPort);
 				command = stopcepcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'x': {    // --cepdelay
 				if (command) delete command;
 				CepDelayCmd* cepdelaycmd = new CepDelayCmd(itsServerPort);
@@ -3315,7 +3321,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'y': {    // --templimits
 				if (command) delete command;
 				TempLimitCmd* templimitscmd = new TempLimitCmd(itsServerPort);
@@ -3334,14 +3340,12 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-	
-	
-	
+
 			case 'B': {    // --config
 				if (command) delete command;
 				ConfigCmd* configcmd = new ConfigCmd(itsServerPort);
 				command = configcmd;
-	
+
 				if (optarg) {
 					int32 imagenr = 0;
 					int numitems = sscanf(optarg, "%d", &imagenr);
@@ -3353,22 +3357,22 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					}
 					configcmd->setImage((uint32)imagenr);
 				}
-	
+
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 't': {    // --readpage
 				if (command) delete command;
 				ReadPageCmd* readddrcmd = new ReadPageCmd(itsServerPort);
 				command = readddrcmd;
-	
+
 				if (optarg) {
 					int32 rcu = 0;
 					uint32 startpage = 0;
 					uint32 pages = 0;
-	
+
 					int numitems = sscanf(optarg, "%d,%u,%u", &rcu,&startpage,&pages);
-	
+
 					if (numitems < 3 || numitems == EOF || rcu < 0 || rcu >= MAX_N_RCUS) {
 						cout << "Error: invalid readpage value's. Should be of the format " << endl;
 						cout << "       '--readpage=rcu, startpage, pages'" << endl;
@@ -3383,7 +3387,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'C': {    // --erasef
 				if (command) delete command;
 				ErasefCmd* erasefcmd = new ErasefCmd(itsServerPort);
@@ -3392,7 +3396,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int board = 0;
 					int page = 0;
 					int numitems = sscanf(optarg, "%d,%d", &board, &page);
-	
+
 					if (numitems < 2 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= itsMaxBoards) {
 						cout << "Error: invalid page value. Should be of the format " << endl;
 						cout <<  "       '--eraseimage=board, image'" << endl;
@@ -3406,7 +3410,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'D': {    // --readf
 				if (command) delete command;
 				ReadfCmd* readfcmd = new ReadfCmd(itsServerPort);
@@ -3415,7 +3419,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int board = 0;
 					int page = 0;
 					int numitems = sscanf(optarg, "%d,%d", &board, &page);
-	
+
 					if (numitems < 2 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= itsMaxBoards) {
 						cout << "Error: invalid image value. Should be of the format " << endl;
 						cout << "       '--readimage=board, image'"<< endl;
@@ -3429,7 +3433,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'E': {    // --writeimage
 				if (command) delete command;
 				WritefCmd* writefcmd = new WritefCmd(itsServerPort);
@@ -3443,12 +3447,15 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					memset(filename_tp,0,64);
 					memset(filename_mp,0,64);
 					uint32 password = 0;
-	
+
 					int numitems = sscanf(optarg, "%d,%d,%lf,%63[^,],%63[^,],%x",
-															&board, &page, &version,
-															filename_tp, filename_mp,
-															&password );
-	
+													&board, 
+													&page, 
+													&version,
+													filename_tp, 
+													filename_mp,
+													&password );
+
 					if (numitems < 6 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= itsMaxBoards) {
 						cout << "Error: invalid values. Should be of the format " << endl;
 						cout << "       '--writeimage=board, image, file-tp, file-mp, password'"<< endl;
@@ -3456,20 +3463,26 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 						cout << "       password= xxxx for image-0 otherwise use 0" << endl;
 						exit(EXIT_FAILURE);
 					}
-	
+					
+					// simple check if tpxx.hex is in filename_tp and mpxxx.hex is in filename_mp
+					if ((strstr(filename_tp, "tp") == NULL) || (strstr(filename_mp, "mp") == NULL)) {
+						cout << "Error: invalid file names or mixed order" << endl;
+						exit(EXIT_FAILURE);
+					}
+
 					writefcmd->setPage(page);
 					writefcmd->setVersion(version);
 					writefcmd->setFileNameTp(filename_tp);
 					writefcmd->setFileNameMp(filename_mp);
 					writefcmd->setPassword(password);
-	
+
 					select.clear();
 					select.push_back(board);
 					command->setSelected(true);
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'F': { // --imageinfo
 				if (command) delete command;
 				ImageInfoCmd* imageinfocmd = new ImageInfoCmd(itsServerPort);
@@ -3489,20 +3502,20 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'G': {    // --readw
 				if (command) delete command;
 				ReadwCmd* readwcmd = new ReadwCmd(itsServerPort);
 				command = readwcmd;
-	
+
 				if (optarg) {
 					int board = 0;
 					uint32 mp = 0;
 					uint32 startaddr = 0;
 					uint32 size = 0;
-	
+
 					int numitems = sscanf(optarg, "%d,%x,%x,%x", &board,&mp,&startaddr, &size);
-	
+
 					if (numitems < 3 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3) {
 						cout << "Error: invalid read ddr value. Should be of the format " << endl;
 						cout <<  "       '--readw=board, mp, addr'" << endl;
@@ -3518,7 +3531,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'H': {    // --writew
 				if (command) delete command;
 				WritewCmd* writewcmd = new WritewCmd(itsServerPort);
@@ -3528,7 +3541,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int32 mp = 0;
 					uint32 addr = 0;
 					uint32 word[8];
-	
+
 					int numitems = sscanf(optarg, "%d,%d,%x,%x,%x,%x,%x,%x,%x,%x,%x", &board,&mp,&addr,
 										&word[0],&word[1],&word[2],&word[3],&word[4],&word[5],&word[6],&word[7]);
 					if (numitems < 5 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3) {
@@ -3548,14 +3561,14 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'I': {    // --testddr
 				if (command) delete command;
 				TestDdrCmd* testddrcmd = new TestDdrCmd(itsServerPort);
 				command = testddrcmd;
 				if (optarg) {
 					int32 board = 0;
-	
+
 					int numitems = sscanf(optarg, "%d", &board);
 					if (numitems < 1 || numitems == EOF || board < 0 || board >= itsMaxBoards) {
 						cout << "Error: invalid write ddr value. Should be of the format " << endl;
@@ -3569,20 +3582,20 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'J': {    // --readr
 				if (command) delete command;
 				ReadrCmd* readrcmd = new ReadrCmd(itsServerPort);
 				command = readrcmd;
-	
+
 				if (optarg) {
 					int32 board = 0;
 					uint32 mp = 0;
 					uint32 pid = 0;
 					uint32 regid = 0;
-	
+
 					int numitems = sscanf(optarg, "%d,%u,%u,%u", &board, &mp, &pid, &regid);
-	
+
 					if (numitems < 4 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3 || pid > 7 || regid > 7) {
 						cout << "Error: invalid read register value. Should be of the format" << endl;
 						cout << "       '--readreg=board, mp, pid, regid'" << endl;
@@ -3596,27 +3609,27 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					readrcmd->setMp(mp);
 					readrcmd->setPid(pid);
 					readrcmd->setRegId(regid);
-	
+
 					select.clear();
 					select.push_back(board);
 					command->setSelected(true);
 				}
-	
+
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'K': {    // --writer
 				if (command) delete command;
 				WriterCmd* writercmd = new WriterCmd(itsServerPort);
 				command = writercmd;
-	
+
 				if (optarg) {
 					int32 board = 0;
 					uint32 mp = 0;
 					uint32 pid = 0;
 					uint32 regid = 0;
 					char datastr[256];
-	
+
 					int numitems = sscanf(optarg, "%d,%u,%u,%u,%s", &board, &mp, &pid, &regid, datastr);
 					if (numitems < 5 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3 || pid > 7 || regid > 7) {
 						cout << "Error: invalid write register value. Should be of the format " << endl;
@@ -3631,11 +3644,11 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					writercmd->setMp(mp);
 					writercmd->setPid(pid);
 					writercmd->setRegId(regid);
-	
+
 					char* dstr;
 					uint32 val = 0;
 					int wordcnt = 0;
-	
+
 				dstr = strtok (datastr," ,");
 				while (dstr != NULL)
 				{
@@ -3652,18 +3665,18 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-	
+
 			case 'L':
 			case '?': {
 				commandHelp(1);
 				exit(0);
 			} break;
-	
+
 			case 'M': {
 				commandHelp(3);
 				exit(0);
 			} break;
-	
+
 			default: {
 				commandHelp(1);
 				exit(EXIT_FAILURE);
@@ -3703,7 +3716,7 @@ std::list<int> TBBCtl::strtolist(const char* str, int max)
 			cout << formatString("Error: value %ld out of range",val) << endl;
 			resultset.clear();
 			return(resultset);
-	 	}
+		}
 
 		if (end) {
 			switch (*end) {
@@ -3726,11 +3739,11 @@ std::list<int> TBBCtl::strtolist(const char* str, int max)
 					}
 					range = false;
 				} break;
-	
+
 				case ':': {
 					range = true;
 				} break;
-	
+
 				default: {
 					cout << formatString("Error: invalid character %c",*end) << endl;
 					resultset.clear();

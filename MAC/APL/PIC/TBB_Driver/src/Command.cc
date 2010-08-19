@@ -49,18 +49,18 @@ Command::~Command() { }
 void Command::setBoard(int32 board)
 {
 	if (board >= TS->maxBoards()) {
-		itsStatus[0] = TBB_NO_BOARD;
+		itsStatus[board] = TBB_NO_BOARD;
 	} else {
 
 		if (TS->isBoardReady(board) == false) {
-			itsStatus[0] = TBB_NOT_READY;
+			itsStatus[board] = TBB_NOT_READY;
 		}
 
 		if (TS->isBoardActive(board) == false) {
-			itsStatus[0] = TBB_NOT_ACTIVE;
+			itsStatus[board] = TBB_NOT_ACTIVE;
 		}
 				
-		if (itsStatus[0] == TBB_SUCCESS) {
+		if (itsStatus[board] == TBB_SUCCESS) {
 			itsBoards.set(board);
 		}
 	}
@@ -104,18 +104,18 @@ void Command::setChannel(int32 rcu)
 	TS->convertRcu2Ch(rcu,&board,&board_channel);
 	
 	if (board >= TS->maxBoards()) {
-		itsStatus[0] = TBB_NO_BOARD;
+		itsStatus[board] = TBB_NO_BOARD;
 	} else {
 		
 		if (TS->isBoardReady(board) == false) {
-			itsStatus[0] = TBB_NOT_READY;
+			itsStatus[board] = TBB_NOT_READY;
 		}
 		
 		if (TS->isBoardActive(board) == false) {
-			itsStatus[0] = TBB_NOT_ACTIVE;
+			itsStatus[board] = TBB_NOT_ACTIVE;
 		}
 			
-		if (itsStatus[0] == TBB_SUCCESS) {
+		if (itsStatus[board] == TBB_SUCCESS) {
 			itsBoards.set(board);
 			channel = (board * TS->nrChannelsOnBoard()) + board_channel;
 			itsChannels.set(channel);

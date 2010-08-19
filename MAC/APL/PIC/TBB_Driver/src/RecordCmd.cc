@@ -60,7 +60,7 @@ void RecordCmd::saveTbbEvent(GCFEvent& event)
 	
 	//setChannels(tbb_event.rcu_mask);
 	
-	int32 board;
+	//int32 board;
 	int32 rcu;
 	LOG_DEBUG_STR("RecordCmd rcu_mask=" << tbb_event.rcu_mask);
 	for (int i = 0; i < TS->maxChannels(); i++) {

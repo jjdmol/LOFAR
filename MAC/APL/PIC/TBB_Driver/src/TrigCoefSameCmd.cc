@@ -87,13 +87,13 @@ void TrigCoefSameCmd::sendTpEvent()
 	tp_event.status = 0;
 	
 	tp_event.mp = TS->getChMpNr(getChannelNr());
-	int start_channel = TS->getFirstChannelNr(getBoardNr(), TS->getChMpNr(getChannelNr()));
-        for (int i = 0; i < 4; i++) {
-            tp_event.coeffients_even.filter_0[i] = TS->getChFilterCoefficient(getChannelNr(), 0, i);
-            tp_event.coeffients_even.filter_1[i] = TS->getChFilterCoefficient(getChannelNr(), 1, i);
-            tp_event.coeffients_odd.filter_0[i]  = TS->getChFilterCoefficient((getChannelNr() + 2), 0, i);
-            tp_event.coeffients_odd.filter_1[i]  = TS->getChFilterCoefficient((getChannelNr() + 2), 1, i);
-        }
+	//int start_channel = TS->getFirstChannelNr(getBoardNr(), TS->getChMpNr(getChannelNr()));
+    for (int i = 0; i < 4; i++) {
+        tp_event.coeffients_even.filter_0[i] = TS->getChFilterCoefficient(getChannelNr(), 0, i);
+        tp_event.coeffients_even.filter_1[i] = TS->getChFilterCoefficient(getChannelNr(), 1, i);
+        tp_event.coeffients_odd.filter_0[i]  = TS->getChFilterCoefficient((getChannelNr() + 2), 0, i);
+        tp_event.coeffients_odd.filter_1[i]  = TS->getChFilterCoefficient((getChannelNr() + 2), 1, i);
+    }
 	LOG_DEBUG_STR(formatString("Sending TrigCoef to boardnr[%d]",getBoardNr()));
 	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());	

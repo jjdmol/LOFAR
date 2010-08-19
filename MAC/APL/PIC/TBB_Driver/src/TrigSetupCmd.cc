@@ -66,13 +66,13 @@ void TrigSetupCmd::saveTbbEvent(GCFEvent& event)
 		TS->convertRcu2Ch(rcunr,&board,&board_channel);	
 		channel = (board * TS->nrChannelsOnBoard()) + board_channel;
 		
-		TS->setChTriggerLevel(channel, tbb_event.rcu[rcunr].level);
-		TS->setChTriggerStartMode(channel, (tbb_event.rcu[rcunr].start_mode));
-		TS->setChTriggerStopMode(channel, (tbb_event.rcu[rcunr].stop_mode));
-		TS->setChFilterSelect(channel, tbb_event.rcu[rcunr].filter_select);
-		TS->setChDetectWindow(channel, tbb_event.rcu[rcunr].window);
-		TS->setChTriggerMode(channel, tbb_event.rcu[rcunr].trigger_mode);
-		TS->setChOperatingMode(channel, tbb_event.rcu[rcunr].operating_mode);
+		TS->setChTriggerLevel(channel, static_cast<uint32>(tbb_event.rcu[rcunr].level));
+		TS->setChTriggerStartMode(channel, static_cast<uint32>(tbb_event.rcu[rcunr].start_mode));
+		TS->setChTriggerStopMode(channel, static_cast<uint32>(tbb_event.rcu[rcunr].stop_mode));
+		TS->setChFilterSelect(channel, static_cast<uint32>(tbb_event.rcu[rcunr].filter_select));
+		TS->setChDetectWindow(channel, static_cast<uint32>(tbb_event.rcu[rcunr].window));
+		TS->setChTriggerMode(channel, static_cast<uint32>(tbb_event.rcu[rcunr].trigger_mode));
+		TS->setChOperatingMode(channel, static_cast<uint32>(tbb_event.rcu[rcunr].operating_mode));
 	}
 	
 	bitset<MAX_N_RCUS> channels;
@@ -92,12 +92,12 @@ void TrigSetupCmd::sendTpEvent()
 
 	tp_event.mp = TS->getChMpNr(getChannelNr());
 	for (int i = 0; i < 4; i++) {
-		tp_event.channel[i].level         = static_cast<uint32>(TS->getChTriggerLevel(getChannelNr() + i));
-		tp_event.channel[i].td_mode       = static_cast<uint32>((TS->getChTriggerStartMode(getChannelNr() + i) +
-														  (TS->getChTriggerStopMode(getChannelNr() + i) << 4)));
-		tp_event.channel[i].filter_select = static_cast<uint32>(TS->getChFilterSelect(getChannelNr() + i));
-		tp_event.channel[i].window        = static_cast<uint32>(TS->getChDetectWindow(getChannelNr() + i));
-		tp_event.channel[i].trigger_mode  = static_cast<uint32>(TS->getChTriggerMode(getChannelNr() + i));
+		tp_event.channel[i].level         = TS->getChTriggerLevel(getChannelNr() + i);
+		tp_event.channel[i].td_mode       = (TS->getChTriggerStartMode(getChannelNr() + i) +
+											(TS->getChTriggerStopMode(getChannelNr() + i) << 4));
+		tp_event.channel[i].filter_select = TS->getChFilterSelect(getChannelNr() + i);
+		tp_event.channel[i].window        = TS->getChDetectWindow(getChannelNr() + i);
+		tp_event.channel[i].trigger_mode  = TS->getChTriggerMode(getChannelNr() + i);
 	}
 	
 	TS->boardPort(getBoardNr()).send(tp_event);

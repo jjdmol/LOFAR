@@ -63,6 +63,7 @@ private:
 	uint32 itsSampletime;
 	uint32 itsPrepages;
 	uint32 itsPostpages;
+	int32  itsStage;
 };
 
 	} // end TBB namespace

@@ -73,15 +73,15 @@ void TrigCoefCmd::saveTbbEvent(GCFEvent& event)
     		TS->convertRcu2Ch(rcunr,&board,&board_channel);	
     		channel = (board * TS->nrChannelsOnBoard()) + board_channel;
             for (int c = 0; c < 4; c++) {
-                TS->setChFilterCoefficient(channel, 0, c, tbb_event.rcu[rcunr].filter0[c]);
-                TS->setChFilterCoefficient(channel, 1, c, tbb_event.rcu[rcunr].filter1[c]);
+                TS->setChFilterCoefficient(channel, 0, c, static_cast<uint32>(tbb_event.rcu[rcunr].filter0[c]));
+                TS->setChFilterCoefficient(channel, 1, c, static_cast<uint32>(tbb_event.rcu[rcunr].filter1[c]));
             }
             // set settings for upper 8 channels of each board
             TS->convertRcu2Ch(rcunr+8,&board,&board_channel);	
             channel = (board * TS->nrChannelsOnBoard()) + board_channel;
             for (int c = 0; c < 4; c++) {
-                TS->setChFilterCoefficient(channel, 0, c, tbb_event.rcu[rcunr].filter0[c]);
-                TS->setChFilterCoefficient(channel, 1, c, tbb_event.rcu[rcunr].filter1[c]);
+                TS->setChFilterCoefficient(channel, 0, c, static_cast<uint32>(tbb_event.rcu[rcunr].filter0[c]));
+                TS->setChFilterCoefficient(channel, 1, c, static_cast<uint32>(tbb_event.rcu[rcunr].filter1[c]));
             }
             }
 	}
