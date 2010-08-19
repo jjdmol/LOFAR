@@ -40,7 +40,8 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
   itsBeamFormedData(0),
   itsTransposedBeamFormedData(0),
   itsCoherentStokesData(0),
-  itsIncoherentStokesData(0)
+  itsIncoherentStokesData(0),
+  itsTransposedCoherentStokesData(0)
 {
   // in fly's eye mode, every station is a beam
   const unsigned nrBeams = configuration.flysEye() ? configuration.nrMergedStations() : configuration.nrPencilBeams();
