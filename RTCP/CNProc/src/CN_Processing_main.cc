@@ -27,7 +27,7 @@
 #include <Stream/FileStream.h>
 #include <Stream/NamedPipeStream.h>
 #include <Stream/NullStream.h>
-//#include <Stream/SocketStream.h>
+#include <Stream/SocketStream.h>
 #include <CNProc/LocationInfo.h>
 #include <CNProc/CN_Processing.h>
 #include <Common/LofarLogger.h>
@@ -46,6 +46,7 @@
 #endif
 
 #include <cstdio>
+#include <cstring>
 
 #include <boost/format.hpp>
 using boost::format;
@@ -77,35 +78,47 @@ void terminate_with_backtrace()
 
 #endif
 
-static Stream *createIONstream( unsigned channel, const LocationInfo & /* locationInfo */ )
+static const char *ionStreamType;
+
+
+static void getIONstreamType()
 {
-#if 1 && defined HAVE_FCNP && defined HAVE_BGP_CN && !defined USE_VALGRIND
-    /* preferred */
-    static bool initialized = false;
+  if ((ionStreamType = getenv("CN_STREAM_TYPE")) == 0)
+#if !defined HAVE_BGP_ION
+    ionStreamType = "NULL";
+#elif defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
+    ionStreamType = "FCNP";
+#else
+    ionStreamType = "TCP";
+#endif
 
-    LOG_DEBUG("Initializing FCNP");
+#if defined HAVE_FCNP && defined HAVE_BGP_CN && !defined USE_VALGRIND
+  if (ionStreamType == "FCNP")
+    FCNP::init();
+#endif
+}
 
-    if (!initialized) {
-      initialized = true;
-      FCNP_CN::init();
-    }
 
-    return new FCNP_ClientStream(channel);
-#elif 0
+static Stream *createIONstream(unsigned channel, const LocationInfo &locationInfo)
+{
+  if (strcmp(ionStreamType, "NULL") == 0) {
+    return new NullStream;
+  } else if (strcmp(ionStreamType, "TCP") == 0) {
     usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
-
-    return new SocketStream("127.0.0.1", 5000 + locationInfo.rankInPset() + 1000 * channel, SocketStream::TCP, SocketStream::Client);
-#elif 1
+    LOG_DEBUG_STR("new SocketStream(\"127.0.0.1\", 5000 + (" << channel << " * " << locationInfo.nrPsets() << " + " << locationInfo.psetNumber() << ") * " << locationInfo.psetSize() << " + " << locationInfo.rankInPset() << ", ::TCP, ::Client");
+    return new SocketStream("127.0.0.1", 5000 + (channel * locationInfo.nrPsets() + locationInfo.psetNumber()) * locationInfo.psetSize() + locationInfo.rankInPset(), SocketStream::TCP, SocketStream::Client);
+  } else if (strcmp(ionStreamType, "PIPE") == 0) {
     char pipe[128];
     sprintf(pipe, "/tmp/ion-cn-%u-%u-%u", locationInfo.psetNumber(), locationInfo.rankInPset(), channel);
     LOG_DEBUG_STR("new NamedPipeStream(\"" << pipe << "\")");
     return new NamedPipeStream(pipe);
-#elif 0
-    /* used for testing */
-    return new NullStream;
-#else
-    THROW(CNProcException, "unknown Stream type between ION and CN");
+#if defined HAVE_FCNP && defined HAVE_BGP_CN && !defined USE_VALGRIND
+  } else if (strcmp(ionStreamType, "FCNP") == 0) {
+    return new FCNP_ClientStream(channel);
 #endif    
+  } else {
+    THROW(CNProcException, "unknown Stream type between ION and CN");
+  }
 }
 
 int main(int argc, char **argv)
@@ -128,10 +141,7 @@ int main(int argc, char **argv)
 #endif
 
     LocationInfo locationInfo;
-
-#if defined HAVE_BGP
     INIT_LOGGER_WITH_SYSINFO(str(format("CNProc@%04d") % locationInfo.rank()));
-#endif
 
     if (locationInfo.rank() == 0) {
       locationInfo.print();
@@ -146,6 +156,7 @@ int main(int argc, char **argv)
 
     LOG_DEBUG("Creating connection to ION ...");
     
+    getIONstreamType();
     Stream *ionStream = createIONstream(0, locationInfo);
 
     LOG_DEBUG("Creating connection to ION: done");

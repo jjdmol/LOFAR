@@ -15,6 +15,7 @@
 
 
 #include <iostream>
+#include <boost/lexical_cast.hpp>
 
 
 namespace LOFAR {
@@ -33,8 +34,16 @@ LocationInfo::LocationInfo()
 #if defined HAVE_BGP
   getPersonality();
 #else
-  itsPsetNumber = itsRank;
-  itsRankInPset = 0;
+  const char *nrPsetsStr  = getenv("NR_PSETS");
+  const char *psetSizeStr = getenv("PSET_SIZE");
+
+  if (nrPsetsStr == 0 || psetSizeStr == 0)
+    THROW(CNProcException, "environment variables NR_PSETS and PSET_SIZE must be defined");
+
+  itsNrPsets    = boost::lexical_cast<unsigned>(nrPsetsStr);
+  itsPsetSize   = boost::lexical_cast<unsigned>(psetSizeStr);
+  itsPsetNumber = itsRank % itsNrPsets;
+  itsRankInPset = itsRank / itsNrPsets;
 #endif
 }
 
@@ -71,6 +80,9 @@ void LocationInfo::getPersonality()
   for (unsigned rank = 0; rank < itsRank; rank ++)
     if (itsPsetNumbers[rank] == itsPsetNumber)
       ++ itsRankInPset;
+
+  itsNrPsets  = *std::max_element(itsPsetNumbers.begin(), itsPsetNumbers.end()) + 1;
+  itsPsetSize = itsNrNodes / itsNrPsets;
 }
 
 
@@ -107,8 +119,7 @@ void LocationInfo::print() const
 
 unsigned LocationInfo::remapOnTree(unsigned pset, unsigned core) const
 {
-  assert(core == 0); // TODO: support more than 1 core per pset
-  return pset;
+  return pset + itsNrPsets * core;
 }
 
 void LocationInfo::print() const

@@ -119,16 +119,10 @@ void terminate_with_backtrace()
 namespace LOFAR {
 namespace RTCP {
 
-unsigned			   myPsetNumber, nrPsets;
+unsigned			   myPsetNumber, nrPsets, nrCNcoresInPset;
 static boost::multi_array<char, 2> ipAddresses;
 std::vector<Stream *>		   allCNstreams, allIONstreams;
 std::vector<StreamMultiplexer *>   allIONstreamMultiplexers;
-
-#if defined HAVE_BGP
-unsigned			   nrCNcoresInPset = 64; // TODO: how to figure out the number of CN cores?
-#else
-unsigned			   nrCNcoresInPset = 1;
-#endif
 
 static const char		   *cnStreamType;
 
@@ -144,8 +138,8 @@ Stream *createCNstream(unsigned core, unsigned channel)
   if (strcmp(cnStreamType, "NULL") == 0) {
     return new NullStream;
   } else if (strcmp(cnStreamType, "TCP") == 0) {
-    LOG_DEBUG_STR("new SocketStream(\"127.0.0.1\", 5000 + " << core << " + " << nrCNcoresInPset << " * " << channel << ", ::TCP, ::Server");
-    Stream *str = new SocketStream("127.0.0.1", 5000 + core + nrCNcoresInPset * channel, SocketStream::TCP, SocketStream::Server);
+    LOG_DEBUG_STR("new SocketStream(\"127.0.0.1\", 5000 + (" << channel << " * " << nrPsets << " + " << myPsetNumber << ") * " << nrCNcoresInPset << " + " << core << ", ::TCP, ::Server");
+    Stream *str = new SocketStream("127.0.0.1", 5000 + (channel * nrPsets + myPsetNumber) * nrCNcoresInPset + core, SocketStream::TCP, SocketStream::Server);
     LOG_DEBUG_STR("new SocketStream() done");
     return str;
   } else if (strcmp(cnStreamType, "PIPE") == 0) {
@@ -345,6 +339,17 @@ static void master_thread()
 
     if (getenv("AIPSPATH") == 0)
       setenv("AIPSPATH", "/globalhome/lofarsystem/packages/root/bgp_ion/", 0);
+
+#if defined HAVE_BGP
+    nrCNcoresInPset = 64; // TODO: how to figure this out?
+#else
+    const char *str = getenv("PSET_SIZE");
+
+    if (str == 0)
+      throw IONProcException("environment variable PSET_SIZE must be defined", THROW_ARGS);
+
+    nrCNcoresInPset = boost::lexical_cast<unsigned>(str);
+#endif
 
     createAllCNstreams();
     createAllIONstreams();
