@@ -40,7 +40,6 @@ lofar_add_library(tbbdriver
   TrigCoefSameCmd.cc
   TrigInfoCmd.cc
   ReadCmd.cc
-  UdpCmd.cc
   PageperiodCmd.cc
   VersionCmd.cc
   SizeCmd.cc
