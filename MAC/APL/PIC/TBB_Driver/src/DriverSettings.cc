@@ -323,7 +323,7 @@ int32 TbbSettings::getFirstChannelNr(int32 board, int32 mp)
 	return((board * itsChannelsOnBoard) + (mp * itsChannelsOnMp));
 }
 
-void TbbSettings::setDestination(int32 rcunr, char *storage)
+void TbbSettings::setDestination(int32 channelnr, char *storage)
 {
     char mac[20];
     char ip[20];
@@ -355,11 +355,8 @@ void TbbSettings::setDestination(int32 rcunr, char *storage)
 		LOG_DEBUG_STR(formatString("storage=%s NOT found", key));
 	}
 	else {
-	    int32 ch;
-	    int32 board;
-	    convertRcu2Ch(rcunr, &board, &ch);
-	    itsChannelInfo[ch * board].dstIpCep = static_cast<string>(ip);
-	    itsChannelInfo[ch * board].dstMacCep = static_cast<string>(mac);
+	    itsChannelInfo[channelnr].dstIpCep = static_cast<string>(ip);
+	    itsChannelInfo[channelnr].dstMacCep = static_cast<string>(mac);
 	}
 }
 

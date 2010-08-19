@@ -189,7 +189,7 @@ public:
 	void setDstIpCep(int32 channelnr, string ip);
 	void setSrcMacCep(int32 boardnr, string mac);
 	void setDstMacCep(int32 channelnr, string mac);
-	void setDestination(int32 boardnr, char *storage);
+	void setDestination(int32 channelnr, char *storage);
 	
 	
 	void clearRcuSettings(int32 boardnr);
