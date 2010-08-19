@@ -1077,11 +1077,7 @@ bool TBBDriver::sendInfo(GCFEvent& event, GCFPortInterface& port)
     		    TBBModeEvent tbb_event(event);
     		    for (int32 rcu = 0; rcu < TS->maxChannels(); rcu++) {
     		        if (tbb_event.rcu_mask.test(rcu)) {
-    		            int chan;
-    		            int board;
-    		            TS->convertRcu2Ch(rcu, &board, &chan);
-    		            chan += board * TS->nrChannelsOnBoard();
-    		            TS->setChOperatingMode(chan, tbb_event.rec_mode[rcu]);
+    		            TS->setChOperatingMode(TS->convertRcuToChan(rcu), tbb_event.rec_mode[rcu]);
     		        }
     		    }
     		    
@@ -1101,11 +1097,7 @@ bool TBBDriver::sendInfo(GCFEvent& event, GCFPortInterface& port)
     		    TBBCepStorageEvent tbb_event(event);
     		    for (int32 rcu = 0; rcu < TS->maxChannels(); rcu++) {
     		        if (tbb_event.rcu_mask.test(rcu)) {
-    		            int chan;
-    		            int board;
-    		            TS->convertRcu2Ch(rcu, &board, &chan);
-    		            chan += board * TS->nrChannelsOnBoard();
-    		            TS->setDestination(chan, tbb_event.destination);
+    		            TS->setDestination(TS->convertRcuToChan(rcu), tbb_event.destination);
     		        }
     		    }
     		    TBBCepStorageAckEvent tbb_ack;

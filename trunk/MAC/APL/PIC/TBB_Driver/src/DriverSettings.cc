@@ -291,7 +291,7 @@ void TbbSettings::setTimeOut(double timeout)
 	itsTimeOut = timeout;
 }
 
-void TbbSettings::convertRcu2Ch(int32 rcunr, int32 *boardnr, int32 *channelnr)
+void TbbSettings::convertRcu2BrdCh(int32 rcunr, int32 *boardnr, int32 *channelnr)
 {
 	int32 board;	// board 0 .. 11
 	int32 channel;	// channel 0 .. 15
@@ -310,6 +310,31 @@ void TbbSettings::convertCh2Rcu(int32 channelnr, int32 *rcunr)
 	boardnr = (int32)(channelnr / itsChannelsOnBoard);
 	rcu = CH_TO_RCU_TABLE[channelnr % itsChannelsOnBoard] + (boardnr * itsChannelsOnBoard);
 	*rcunr = rcu;
+}
+
+int32 TbbSettings::convertRcuToChan(int32 rcunr)
+{
+    int32 board;	// board 0 .. 11
+	int32 channel;	// channel 0 .. 15
+	
+	board = (rcunr / itsChannelsOnBoard);
+	channel = RCU_TO_CH_TABLE[rcunr % itsChannelsOnBoard];
+    return((board * itsChannelsOnBoard) + channel);
+}
+
+int32 TbbSettings::convertRcuToBoard(int32 rcunr)
+{
+    return(rcunr / itsChannelsOnBoard);
+}
+
+int32 TbbSettings::convertChanToRcu(int32 channelnr)
+{
+    int32 boardnr;
+	int32 rcu;
+	
+	boardnr = (int32)(channelnr / itsChannelsOnBoard);
+	rcu = CH_TO_RCU_TABLE[channelnr % itsChannelsOnBoard] + (boardnr * itsChannelsOnBoard);
+	return(rcu);
 }
 
 bool TbbSettings::isBoardActive(int32 boardnr)

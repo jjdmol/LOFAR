@@ -58,13 +58,9 @@ void TrigSetupCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBTrigSetupEvent tbb_event(event);
 	
-	int32 board;				// board 0 .. 11
-	int32 board_channel;// board_channel 0 .. 15	
 	int32 channel;			// channel 0 .. 191 (= maxboard * max_channels_on_board)
-	
 	for(int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
-		TS->convertRcu2Ch(rcunr,&board,&board_channel);	
-		channel = (board * TS->nrChannelsOnBoard()) + board_channel;
+		channel = TS->convertRcuToChan(rcunr);
 		
 		TS->setChTriggerLevel(channel, static_cast<uint32>(tbb_event.rcu[rcunr].level));
 		TS->setChTriggerStartMode(channel, static_cast<uint32>(tbb_event.rcu[rcunr].start_mode));
