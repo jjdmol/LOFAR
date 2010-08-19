@@ -94,7 +94,7 @@ static void getIONstreamType()
 
 #if defined HAVE_FCNP && defined HAVE_BGP_CN && !defined USE_VALGRIND
   if (ionStreamType == "FCNP")
-    FCNP::init();
+    FCNP_CN::init();
 #endif
 }
 
