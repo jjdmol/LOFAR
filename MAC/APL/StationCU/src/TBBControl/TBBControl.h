@@ -91,8 +91,6 @@ private:
 
 	// set boards in right mode, if done got to mode state
 	GCFEvent::TResult doRSPtbbMode(GCFEvent& event, GCFPortInterface& port);
-	// set boards in right mode, if done go to storage state
-	GCFEvent::TResult doTBBmode (GCFEvent& e, GCFPortInterface& p);
 	// set storage for boards, if done got to alloc state
 	GCFEvent::TResult doTBBstorage (GCFEvent& e, GCFPortInterface& p);
 	// allocate memory for selected rcus, if done got to trigsetup state

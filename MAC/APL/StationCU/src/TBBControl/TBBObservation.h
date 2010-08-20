@@ -69,7 +69,7 @@ public:
 		uint16 stopLevel;
 		uint16 detectWindow;
 		uint16 triggerMode;
-		uint32 operatingMode;         // transient or subbands
+		uint16 operatingMode;         // transient or subbands
 		
 		RCUset_t      RCUset;
 		vector<int32> SubbandList;

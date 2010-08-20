@@ -55,22 +55,22 @@ TBBObservation::TBBObservation(ParameterSet*		aParSet)
 		LOG_DEBUG_STR("Reading parameterSet " << setNr);
 		itsSettingsLoaded = true;
 
-		tbbsettings.triggerLevel  = aParSet->getInt16(prefix+setnr+"baselevel");
-		tbbsettings.filter        = aParSet->getInt16(prefix+setnr+"filter");
+		tbbsettings.triggerLevel  = aParSet->getUint16(prefix+setnr+"baselevel");
+		tbbsettings.filter        = aParSet->getUint16(prefix+setnr+"filter");
 
 		// new settings for two filterbanks
-		tbbsettings.filter0[0]    = aParSet->getInt16(prefix+setnr+"filter0_coeff0");
-		tbbsettings.filter0[1]    = aParSet->getInt16(prefix+setnr+"filter0_coeff1");
-		tbbsettings.filter0[2]    = aParSet->getInt16(prefix+setnr+"filter0_coeff2");
-		tbbsettings.filter0[3]    = aParSet->getInt16(prefix+setnr+"filter0_coeff3");
-		tbbsettings.filter1[0]    = aParSet->getInt16(prefix+setnr+"filter1_coeff0");
-		tbbsettings.filter1[1]    = aParSet->getInt16(prefix+setnr+"filter1_coeff1");
-		tbbsettings.filter1[2]    = aParSet->getInt16(prefix+setnr+"filter1_coeff2");
-		tbbsettings.filter1[3]    = aParSet->getInt16(prefix+setnr+"filter1_coeff3");
+		tbbsettings.filter0[0]    = aParSet->getUint16(prefix+setnr+"filter0_coeff0");
+		tbbsettings.filter0[1]    = aParSet->getUint16(prefix+setnr+"filter0_coeff1");
+		tbbsettings.filter0[2]    = aParSet->getUint16(prefix+setnr+"filter0_coeff2");
+		tbbsettings.filter0[3]    = aParSet->getUint16(prefix+setnr+"filter0_coeff3");
+		tbbsettings.filter1[0]    = aParSet->getUint16(prefix+setnr+"filter1_coeff0");
+		tbbsettings.filter1[1]    = aParSet->getUint16(prefix+setnr+"filter1_coeff1");
+		tbbsettings.filter1[2]    = aParSet->getUint16(prefix+setnr+"filter1_coeff2");
+		tbbsettings.filter1[3]    = aParSet->getUint16(prefix+setnr+"filter1_coeff3");
 
-		tbbsettings.operatingMode = aParSet->getUint32(prefix+setnr+"operatingMode");
-		tbbsettings.startLevel    = aParSet->getInt16(prefix+setnr+"startlevel");
-		tbbsettings.stopLevel     = aParSet->getInt16(prefix+setnr+"stoplevel");
+		tbbsettings.operatingMode = aParSet->getUint16(prefix+setnr+"operatingMode");
+		tbbsettings.startLevel    = aParSet->getUint16(prefix+setnr+"startlevel");
+		tbbsettings.stopLevel     = aParSet->getUint16(prefix+setnr+"stoplevel");
 		tbbsettings.triggerMode   = aParSet->getUint16(prefix+setnr+"triggerMode");
 		tbbsettings.detectWindow  = _windowNr(aParSet->getString(prefix+setnr+"window"));
 
