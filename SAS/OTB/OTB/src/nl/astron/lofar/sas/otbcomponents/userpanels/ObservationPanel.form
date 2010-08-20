@@ -307,6 +307,8 @@
                                       <Component id="deleteBeamButton" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                                       <Component id="loadBeamsButton" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                                      <Component id="copyBeamButton" min="-2" pref="155" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
@@ -323,6 +325,7 @@
                                       <Component id="editBeamButton" alignment="3" min="-2" max="-2" attributes="0"/>
                                       <Component id="deleteBeamButton" alignment="3" min="-2" max="-2" attributes="0"/>
                                       <Component id="loadBeamsButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="copyBeamButton" alignment="3" min="-2" max="-2" attributes="0"/>
                                   </Group>
                                   <Component id="addBeamButton" min="-2" max="-2" attributes="0"/>
                               </Group>
@@ -383,6 +386,19 @@
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="loadBeamsButtonActionPerformed"/>
                       </Events>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="copyBeamButton">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Copy to Analog"/>
+                        <Property name="toolTipText" type="java.lang.String" value="copy the selected beam to the analog table"/>
+                        <Property name="enabled" type="boolean" value="false"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="copyBeamButtonActionPerformed"/>
+                      </Events>
+                      <AuxValues>
+                        <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="this.setVisible(false);"/>
+                      </AuxValues>
                     </Component>
                   </SubComponents>
                 </Container>
