@@ -51,19 +51,15 @@ public:
 	typedef list<string>::iterator		iterator;
 
 	// Create a FileLocator with a default search path. This path consists
-	// of the directories defined in BASE_SEARCH_DIR, plus the output of
-	// getExePath().
+	// of the directory containing the currently running executable and
+	// its parent directory (or "." and ".." if that path cannot be
+	// determined), plus the directories defined in BASE_SEARCH_DIR.
 	FileLocator();
 	// Create a FileLocator with a predefined path.
 	explicit FileLocator (const string&	aPath);
 	// Destructor is virtual to allow defining derived flavors like
 	// ConfigLocator, LogLocator, etc with predefined paths.
 	virtual  ~FileLocator();
-
-	// Get the full path to the current executable. This function tries to
-	// resolve the symbolic link \c /proc/self/exe. Obviously, this will
-	// only work on systems that have a \c proc file system.
-	string getExePath();
 
 	//# Functions for managing the search path
 	// Add the given path(chain) at the end of the current chain.

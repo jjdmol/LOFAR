@@ -27,10 +27,9 @@
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
 #include <Common/FileLocator.h>
+#include <Common/SystemUtil.h>
 #include <cstdlib>
 #include <cstring>
-#include <climits>     // for PATH_MAX
-#include <unistd.h>    // for readlink()
 
 namespace LOFAR {
 
@@ -40,7 +39,7 @@ namespace LOFAR {
 FileLocator::FileLocator()
 {
 	addPathAtBack(resolveInput(BASE_SEARCH_DIR));
-	string p = getExePath();
+	string p = getDirname(getExecutablePath());
 	if (p.empty()) {
 		addPathAtFront(".:..");
 	}
@@ -64,19 +63,6 @@ FileLocator::FileLocator (const string&	aPath)
 //
 FileLocator::~FileLocator()
 {}
-
-string	FileLocator::getExePath()
-{
-        string path;
-        char buf[PATH_MAX+1];
-        ssize_t size = readlink("/proc/self/exe", buf, PATH_MAX);
-        if (size != -1) {
-                buf[size] = '\0';
-                path = buf;
-                path = path.substr(0,path.find_last_of('/'));
-        }
-        return path;
-}
 
 //
 // addPathAtBack(aPath): bool
