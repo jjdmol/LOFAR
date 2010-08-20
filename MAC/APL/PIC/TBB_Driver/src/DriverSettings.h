@@ -324,12 +324,12 @@ inline	string TbbSettings::getIfName() { return(itsIfName); }
 inline	string TbbSettings::getDstMac(int32 boardnr) { return(itsBoardInfo[boardnr].dstMac); }
 inline	string TbbSettings::getSrcIpCep(int32 boardnr) { return(itsBoardInfo[boardnr].srcIpCep); }
 inline	string TbbSettings::getDstIpCep(int32 channelnr) { 
-            if (itsChannelInfo[channelnr].dstIpCep == "") { return(itsBoardInfo[getChBoardNr(channelnr)].dstIpCep); }
+            if (itsChannelInfo[channelnr].dstIpCep.empty()) { return(itsBoardInfo[getChBoardNr(channelnr)].dstIpCep); }
             else { return(itsChannelInfo[channelnr].dstIpCep); }
         }
 inline	string TbbSettings::getSrcMacCep(int32 boardnr) { return(itsBoardInfo[boardnr].srcMacCep); }
 inline	string TbbSettings::getDstMacCep(int32 channelnr) {
-            if (itsChannelInfo[channelnr].dstMacCep == "") { return(itsBoardInfo[getChBoardNr(channelnr)].dstMacCep); }
+            if (itsChannelInfo[channelnr].dstMacCep.empty()) { return(itsBoardInfo[getChBoardNr(channelnr)].dstMacCep); }
             else { return(itsChannelInfo[channelnr].dstMacCep); }
         }
 inline  int32 TbbSettings::saveTriggersToFile() { return(itsSaveTriggersToFile); }

@@ -90,6 +90,7 @@ void ReadCmd::sendTpEvent()
         	tp_event.opcode = oc_UDP;
         	tp_event.status = 0;
         	uint32 mode = TS->getChOperatingMode(getChannelNr());
+        	LOG_DEBUG_STR(formatString("selected mode = %u", mode));
         	// fill in destination mac address
         	string2mac(TS->getSrcMacCep(getBoardNr()).c_str(), tp_event.srcmac);
         	string2mac(TS->getDstMacCep(getChannelNr()).c_str(), tp_event.dstmac);

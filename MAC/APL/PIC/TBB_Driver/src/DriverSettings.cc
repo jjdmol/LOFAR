@@ -151,8 +151,8 @@ void TbbSettings::getTbbSettings()
 															,itsBoardInfo[boardnr].srcIpCep.c_str()
 															,itsBoardInfo[boardnr].srcMacCep.c_str()));
 		LOG_INFO_STR(formatString("            : Dst Ip = '%s', Dst Mac = '%s'"
-															,itsChannelInfo[boardnr].dstIpCep.c_str()
-															,itsChannelInfo[boardnr].dstMacCep.c_str()));
+															,itsBoardInfo[boardnr].dstIpCep.c_str()
+															,itsBoardInfo[boardnr].dstMacCep.c_str()));
 	}
 }
 
@@ -219,8 +219,8 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		        itsChannelInfo[ch].Filter[f][c] = 0;
             }
 		}
-		itsChannelInfo[ch].dstIpCep = "";
-		itsChannelInfo[ch].dstMacCep = "";
+		itsChannelInfo[ch].dstIpCep.clear();
+		itsChannelInfo[ch].dstMacCep.clear();
 	}
 	
 	itsBoardSetup  = false;
