@@ -480,7 +480,7 @@ GCFEvent::TResult TBBControl::doRSPtbbMode(GCFEvent& event, GCFPortInterface& po
 			RSPSettbbackEvent ack(event);
 
 			if (ack.status == RSP_SUCCESS) {
-				TRAN(TBBControl::doTBBmode);  // go to next state.
+				TRAN(TBBControl::doTBBfree);  // go to next state.
 			} else {
 				LOG_DEBUG_STR ("returned status" << ack.status);
 				LOG_ERROR_STR ("Failed to set the operating mode for all the rcus");
@@ -499,56 +499,6 @@ GCFEvent::TResult TBBControl::doRSPtbbMode(GCFEvent& event, GCFPortInterface& po
 	return (status);
 }
 
-
-//==============================================================================
-// doTBBmode(event, port)
-//
-// send TBB_MODE cmd to the TBBDriver
-//==============================================================================
-GCFEvent::TResult TBBControl::doTBBmode(GCFEvent& event, GCFPortInterface& port)
-{
-	LOG_DEBUG_STR ("doTBBmode:" << eventName(event) << "@" << port.getName());
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-
-	static RCUset_t RCUset;
-
-	switch (event.signal) {
-		case F_ENTRY: {
-			TBBModeEvent cmd;
-			RCUset.reset();
-			// preset mode to transient
-			for (int rcu = 0; rcu < itsNrRCUs; rcu++) {
-				cmd.rec_mode[rcu] = TBB_MODE_TRANSIENT;
-			}
-
-			vector<TBBObservation::cSettings>::iterator it;
-			for (it = itsObs->TbbSettings.begin(); it != itsObs->TbbSettings.end(); it++ ) {
-				for (int rcu = 0; rcu < itsNrRCUs; rcu++) {
-					if ((*it).RCUset.test(rcu)) {
-						RCUset.set(rcu);
-						cmd.rcu_mask.set(rcu);
-						cmd.rec_mode[rcu] = (*it).operatingMode;
-					}
-				}
-			}
-			// info to pvss
-			LOG_DEBUG_STR("send TBB_MODE cmd");
-			itsTBBDriver->send(cmd);
-		} break;
-
-		case TBB_MODE_ACK: {
-			TBBModeAckEvent ack(event);
-			TRAN(TBBControl::doTBBfree);  // go to next state.
-		} break;
-
-		default: {
-			status = _defaultEventHandler(event, port);
-		} break;
-	}
-
-	return (status);
-}
 
 //==============================================================================
 // doTBBstorage(event, port)
@@ -744,11 +694,12 @@ GCFEvent::TResult TBBControl::doTBBtrigsetup(GCFEvent& event, GCFPortInterface& 
 					if ((*it).RCUset.test(i)) {
 						RCUset.set(i);
 						cmd.rcu[i].level         = (*it).triggerLevel;
-						cmd.rcu[i].start_mode    = (*it).startLevel;
-						cmd.rcu[i].stop_mode     = (*it).stopLevel;
-						cmd.rcu[i].filter_select = (*it).filter;
-						cmd.rcu[i].window        = (*it).detectWindow;
-						cmd.rcu[i].trigger_mode  = (*it).triggerMode;
+						cmd.rcu[i].start_mode    = static_cast<uint8>((*it).startLevel);
+						cmd.rcu[i].stop_mode     = static_cast<uint8>((*it).stopLevel);
+						cmd.rcu[i].filter_select = static_cast<uint8>((*it).filter);
+						cmd.rcu[i].window        = static_cast<uint8>((*it).detectWindow);
+						cmd.rcu[i].trigger_mode  = static_cast<uint8>((*it).triggerMode);
+						cmd.rcu[i].operating_mode= static_cast<uint8>((*it).operatingMode);
 						itsTriggerMode[i]        = (*it).triggerMode;
 					}
 				}
