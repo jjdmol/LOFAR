@@ -561,7 +561,7 @@ public abstract class LofarUtils {
     static public double rad2deg(double rad) {
         double deg=0;
 
-        if (rad <= 0) return deg;
+        if (rad < 0) return deg;
 
         deg=rad*(360/(2*Math.PI));
         return deg;
@@ -576,7 +576,7 @@ public abstract class LofarUtils {
     static public double deg2rad(double deg) {
         double rad=0;
 
-        if (deg <= 0) return rad;
+        if (deg < 0) return rad;
 
         rad=deg/360*2*Math.PI;
         return rad;
@@ -637,7 +637,7 @@ public abstract class LofarUtils {
     static public String deg2hms(double deg) {
         String hms="";
 
-        if (deg <= 0) return hms;
+        if (deg < 0) return hms;
 
         int    h = (int) deg/15;
         int    m = (int) ((deg-h*15)/15*60);
@@ -679,7 +679,7 @@ public abstract class LofarUtils {
     static public String deg2dms(double deg) {
         String hms="";
 
-        if (deg <= 0) return hms;
+        if (deg < 0) return hms;
 
         int    d = (int) deg;
         int    m = (int) ((deg-d)*60);
