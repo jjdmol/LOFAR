@@ -180,6 +180,9 @@ string myHostname(bool	giveFullName)
 		return ("localhost");
 	}
 
+        // result of gethostname is not guaranteed to be null-terminated!
+        fullhostname[sizeof fullhostname - 1] = 0;
+
 	if (!giveFullName) {
 		char*	dot = strchr(fullhostname, '.');
 		if (dot) {
@@ -207,7 +210,7 @@ uint32 myIPV4Address()
     memset (&hints, 0, sizeof (struct addrinfo));
     hints.ai_family = AF_INET; // IPv4
 
-	if (!getaddrinfo(myHostname(false).c_str(),NULL,&hints,&hostEnt)) {
+	if (getaddrinfo(myHostname(false).c_str(),NULL,&hints,&hostEnt) != 0) {
 		return (0);
 	}
 
