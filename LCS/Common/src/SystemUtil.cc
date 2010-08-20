@@ -253,4 +253,47 @@ string getExecutablePath()
   return path;
 }
 
+
+//
+// Define directory separator character
+//
+#if defined(_WIN32)
+static char dirSep('\\');
+#else
+static char dirSep('/');
+#endif
+
+//
+// getBasename
+//
+string getBasename(const string& path)
+{
+  string::size_type pos = path.rfind(dirSep);
+  if(pos != string::npos) {
+    return path.substr(pos+1);
+  } else {
+    return path;
+  }
+}
+
+//
+// getDirname
+//
+string getDirname(const string& path)
+{
+  string dir;
+  string::size_type pos = path.rfind(dirSep);
+  if(pos != string::npos) {
+    // First keep trailing dir separator, just in case it's the only character.
+    dir = path.substr(0,pos+1);
+    // Next, strip all separator chars after last non-separator char.
+    pos = dir.find_last_not_of(dirSep);
+    if(pos != string::npos) {
+      dir.erase(pos+1);
+    }
+  }
+  return dir;
+}
+
+
 } // namespace LOFAR
