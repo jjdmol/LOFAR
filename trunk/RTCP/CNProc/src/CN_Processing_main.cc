@@ -84,7 +84,7 @@ static const char *ionStreamType;
 static void getIONstreamType()
 {
   if ((ionStreamType = getenv("CN_STREAM_TYPE")) == 0)
-#if !defined HAVE_BGP_ION
+#if !defined HAVE_BGP_CN
     ionStreamType = "NULL";
 #elif defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
     ionStreamType = "FCNP";
