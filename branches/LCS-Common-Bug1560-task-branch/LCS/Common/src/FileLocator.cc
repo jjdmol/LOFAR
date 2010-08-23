@@ -199,14 +199,13 @@ void	FileLocator::removePath  (const string& aPath)
 //
 // locate(aFile): string
 //
-// Tries to find the file in the current searchpath. 
-// Returns the input argument, if that's an absolute path or an empty string.
-// Return full filename if found, or else an empty string.
+// Tries to find the file in the current searchpath. Returns the
+// full filename is found or the original filename when not found.
 //
 string	FileLocator::locate		(const string& aFile)
 {
-	// return immediately if aFile is empty or contains an absolute path
-	if(aFile.empty() || aFile[0] == '/') {
+	// if filename contains a '/', just return the name
+	if (aFile.find("/", 0) != string::npos) {
 		// DILEMMA: the filelocator is often used to locate the log_prop file.
 		//			using LOG_xxx here will result in an errormessage in that case.
 		// SOLUTION: in global-init.cxx a variable 'initialized' is used in l4cp
@@ -241,7 +240,7 @@ string	FileLocator::locate		(const string& aFile)
 	// See DILEMMA.
 //	LOG_DEBUG_STR ("Filename not found in " << getPath() << 
 //				   ", returning empty string");
-	return string();
+	return ("");
 }
 
 //

@@ -80,11 +80,9 @@ public:
 	inline string	getSubdir();
 
 	//# Finally where it is all about.
-	// Tries to locate \a aFile in the search path.
-	// If \a aFile is found, then the full path name is returned; else an
-	// empty string is returned.
-	// If \a aFile contains an absolute path (i.e., it starts with a '/'),
-	// or equals is an empty string, then the input argument is returned.
+	// Tries to locate the given filename. When the file is found in the
+	// chain the full filename is returned. When the file can not be found
+	// the returned string is equal to the passed argument.
 	string	locate		   (const string& aFile);
 
 private:
