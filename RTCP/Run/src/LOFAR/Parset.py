@@ -208,95 +208,6 @@ class Parset(util.Parset.Parset):
 	# This should possibly be detected in the check routine, but it seems
 	# sloppy to let it pass through here unnoticed.
 
-	# input flow configuration
-	for station in self.stations:
-	  self.setdefault('PIC.Core.Station.%s.RSP.ports' % (station.name,), station.inputs)
-	  
-          stationName = station.name.split("_")[0] # remove specific antenna or array name (_hba0 etc) if present
-          self.setdefault("PIC.Core.%s.position" % (stationName,), self["PIC.Core.%s.phaseCenter" % (stationName,)])
-
-	for pset in xrange(len(self.psets)):
-	  self.setdefault('PIC.Core.IONProc.%s[%s].inputs' % (self.partition,pset), [
-	    "%s/RSP%s" % (station.name,rsp) for station in self.stations
-	                                      if station.getPsetIndex(self.partition) == pset
-	                                    for rsp in xrange(len(station.inputs))] )
-
-
-	# output flow configuration
-        self['OLAP.storageStationNames'] = [s.name for s in self.stations]
-
-        self.setdefault('OLAP.OLAP_Conn.IONProc_Storage_Transport','TCP');
-        self.setdefault('OLAP.OLAP_Conn.IONProc_CNProc_Transport','FCNP');
-
-	# subband configuration
-	if "Observation.subbandList" in self:
-	  nrSubbands = len(self.getInt32Vector("Observation.subbandList"))
-
-        nrBeams = 0
-        while "Observation.Beam[%s].angle1" % (nrBeams,) in self:
-          nrBeams += 1
-
-        self.setdefault('Observation.nrBeams', nrBeams)
-
-	# Pset configuration
-	self['OLAP.CNProc.partition'] = self.partition
-        self['OLAP.IONProc.psetList'] = self.psets
-
-	nrPsets = len(self.psets)
-	nrStorageNodes = self.getNrUsedStorageNodes()
-        nrBeams = self.getNrPencilBeams()
-
-        # set and resolve storage hostnames
-        # sort them since mpirun will as well, messing with our indexing schemes!
-        self["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"] = [Hosts.resolve( s, "back") for s in self.storagenodes]
-
-	self.setdefault('OLAP.nrPsets', nrPsets)
-	self.setdefault('OLAP.CNProc.phaseOnePsets', [s.getPsetIndex(self.partition) for s in self.stations])
-	self.setdefault('OLAP.CNProc.phaseTwoPsets', range(nrPsets))
-        if self.phaseThreeExists():
-	  self.setdefault('OLAP.CNProc.phaseThreePsets', range(nrPsets))
-        else:  
-	  self.setdefault('OLAP.CNProc.phaseThreePsets', [])
-
-        # what will be stored where?
-        # outputSubbandPsets may well be set before finalize()
-	self.setdefault('OLAP.subbandsPerPset', int( math.ceil(1.0 * nrSubbands / max( 1, len(self["OLAP.CNProc.phaseTwoPsets"]) ) )  ) )
-	if nrStorageNodes == 0:
-	  self.setdefault('OLAP.storageNodeList',[0] * nrSubbands)
-	else:  
-	  self.setdefault('OLAP.storageNodeList',[i//int(math.ceil(1.0 * nrSubbands/nrStorageNodes)) for i in xrange(0,nrSubbands)])
-
-	self.setdefault('OLAP.PencilInfo.beamsPerPset', int( math.ceil(1.0 * nrBeams / max( 1, len(self["OLAP.CNProc.phaseThreePsets"]) ) ) ) )
-	if nrStorageNodes == 0:
-	  self.setdefault('OLAP.PencilInfo.storageNodeList',[0] * nrBeams)
-	else:  
-	  self.setdefault('OLAP.PencilInfo.storageNodeList',[i//int(math.ceil(1.0 * nrBeams/nrStorageNodes)) for i in xrange(0,nrBeams)])
-
-	#print 'nrSubbands = ' + str(nrSubbands) + ', nrStorageNodes = ' + str(nrStorageNodes) + ', subbandsPerPset = ' + str(self.getSubbandsPerPset())
-
-	#print 'storageNodes: ' + str(self['OLAP.storageNodeList'])
-
-	# calculation configuration
-
-        # integration times of CNProc and IONProc, based on self.integrationtime
-        # maximum amount of time CNProc can integrate
-        maxCnIntegrationTime = 1.2 # seconds
-
-        # (minimal) number of times the IONProc will have to integrate
-        integrationtime = float( self["OLAP.Correlator.integrationTime"] )
-        ionIntegrationSteps = int(math.ceil(integrationtime / maxCnIntegrationTime))
-        self.setdefault('OLAP.IONProc.integrationSteps', ionIntegrationSteps)
-
-        # the amount of time CNProc will integrate, translated into samples
-        cnIntegrationTime = integrationtime / int(self["OLAP.IONProc.integrationSteps"])
-        nrSamplesPerSecond = int(self['Observation.sampleClock']) * 1e6 / 1024 / int(self['Observation.channelsPerSubband'])
-
-        cnIntegrationSteps = int(round(nrSamplesPerSecond * cnIntegrationTime / 16)) * 16
-        self.setdefault('OLAP.CNProc.integrationSteps', cnIntegrationSteps)
-
-        # observation mode
-	self.setdefault('Observation.pulsar.mode',0)
-
 	# tied-array beam forming
         tiedArrayStationList = []
 	tabList = []
@@ -337,6 +248,92 @@ class Parset(util.Parset.Parset):
 	   
 	self.setdefault('OLAP.tiedArrayStationNames', tiedArrayStationList)
 	self.setdefault('OLAP.CNProc.tabList', tabList)
+
+	# input flow configuration
+	for station in self.stations:
+	  self.setdefault('PIC.Core.Station.%s.RSP.ports' % (station.name,), station.inputs)
+	  
+          stationName = station.name.split("_")[0] # remove specific antenna or array name (_hba0 etc) if present
+          self.setdefault("PIC.Core.%s.position" % (stationName,), self["PIC.Core.%s.phaseCenter" % (stationName,)])
+
+	for pset in xrange(len(self.psets)):
+	  self.setdefault('PIC.Core.IONProc.%s[%s].inputs' % (self.partition,pset), [
+	    "%s/RSP%s" % (station.name,rsp) for station in self.stations
+	                                      if station.getPsetIndex(self.partition) == pset
+	                                    for rsp in xrange(len(station.inputs))] )
+
+
+	# output flow configuration
+        self['OLAP.storageStationNames'] = [s.name for s in self.stations]
+
+        self.setdefault('OLAP.OLAP_Conn.IONProc_Storage_Transport','TCP');
+        self.setdefault('OLAP.OLAP_Conn.IONProc_CNProc_Transport','FCNP');
+
+	# subband configuration
+	if "Observation.subbandList" in self:
+	  nrSubbands = len(self.getInt32Vector("Observation.subbandList"))
+
+        nrBeams = 0
+        while "Observation.Beam[%s].angle1" % (nrBeams,) in self:
+          nrBeams += 1
+
+        self.setdefault('Observation.nrBeams', nrBeams)
+
+	# Pset configuration
+	self['OLAP.CNProc.partition'] = self.partition
+        self['OLAP.IONProc.psetList'] = self.psets
+
+	nrPsets = len(self.psets)
+	nrStorageNodes = self.getNrUsedStorageNodes()
+        nrBeamOutputFiles = self.getNrBeamOutputFiles()
+
+        # set and resolve storage hostnames
+        # sort them since mpirun will as well, messing with our indexing schemes!
+        self["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"] = [Hosts.resolve( s, "back") for s in self.storagenodes]
+
+	self.setdefault('OLAP.nrPsets', nrPsets)
+	self.setdefault('OLAP.CNProc.phaseOnePsets', [s.getPsetIndex(self.partition) for s in self.stations])
+	self.setdefault('OLAP.CNProc.phaseTwoPsets', range(nrPsets))
+        if self.phaseThreeExists():
+	  self.setdefault('OLAP.CNProc.phaseThreePsets', range(nrPsets))
+        else:  
+	  self.setdefault('OLAP.CNProc.phaseThreePsets', [])
+
+        # what will be stored where?
+        # outputSubbandPsets may well be set before finalize()
+	self.setdefault('OLAP.subbandsPerPset', int( math.ceil(1.0 * nrSubbands / max( 1, len(self["OLAP.CNProc.phaseTwoPsets"]) ) )  ) )
+	if nrStorageNodes == 0:
+	  self.setdefault('OLAP.storageNodeList',[0] * nrSubbands)
+	else:  
+	  self.setdefault('OLAP.storageNodeList',[i//int(math.ceil(1.0 * nrSubbands/nrStorageNodes)) for i in xrange(0,nrSubbands)])
+
+	self.setdefault('OLAP.PencilInfo.beamsPerPset', int( math.ceil(1.0 * nrBeamOutputFiles / max( 1, len(self["OLAP.CNProc.phaseThreePsets"]) ) ) ) )
+	if nrStorageNodes == 0:
+	  self.setdefault('OLAP.PencilInfo.storageNodeList',[0] * nrBeamOutputFiles)
+	else:  
+	  self.setdefault('OLAP.PencilInfo.storageNodeList',[i//int(math.ceil(1.0 * nrBeamOutputFiles/nrStorageNodes)) for i in xrange(0,nrBeamOutputFiles)])
+
+	#print 'nrSubbands = ' + str(nrSubbands) + ', nrStorageNodes = ' + str(nrStorageNodes) + ', subbandsPerPset = ' + str(self.getSubbandsPerPset())
+
+	#print 'storageNodes: ' + str(self['OLAP.storageNodeList'])
+
+	# calculation configuration
+
+        # integration times of CNProc and IONProc, based on self.integrationtime
+        # maximum amount of time CNProc can integrate
+        maxCnIntegrationTime = 1.2 # seconds
+
+        # (minimal) number of times the IONProc will have to integrate
+        integrationtime = float( self["OLAP.Correlator.integrationTime"] )
+        ionIntegrationSteps = int(math.ceil(integrationtime / maxCnIntegrationTime))
+        self.setdefault('OLAP.IONProc.integrationSteps', ionIntegrationSteps)
+
+        # the amount of time CNProc will integrate, translated into samples
+        cnIntegrationTime = integrationtime / int(self["OLAP.IONProc.integrationSteps"])
+        nrSamplesPerSecond = int(self['Observation.sampleClock']) * 1e6 / 1024 / int(self['Observation.channelsPerSubband'])
+
+        cnIntegrationSteps = int(round(nrSamplesPerSecond * cnIntegrationTime / 16)) * 16
+        self.setdefault('OLAP.CNProc.integrationSteps', cnIntegrationSteps)
 
     def setStations(self,stations):
 	""" Set the array of stations to use (used internally). """
@@ -450,6 +447,20 @@ class Parset(util.Parset.Parset):
       manual = int( self["OLAP.nrPencils"] )
 
       return 3 * rings * (rings + 1) + 1 + manual
+
+    def getNrMergedStations( self ):
+      tabList = self["OLAP.CNProc.tabList"]
+
+      if not tabList:
+        return len(self.stations)
+
+      return max(tabList) + 1  
+
+    def getNrBeamOutputFiles( self ):
+      if self["OLAP.PencilInfo.flysEye"]:
+        return self.getNrMergedStations()
+
+      return self.getNrPencilBeams()  
 
     def phaseThreeExists( self ):  
       # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
