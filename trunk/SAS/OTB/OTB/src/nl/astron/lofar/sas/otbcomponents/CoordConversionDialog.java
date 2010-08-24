@@ -45,8 +45,8 @@ public class CoordConversionDialog extends javax.swing.JDialog {
      * @param   aTree       the Tree we work with
      * @param   aMainFrame  the Mainframe we are part off
      */
-    public CoordConversionDialog(boolean modal, MainFrame aMainFrame) {
-        super(aMainFrame, modal);
+    public CoordConversionDialog(MainFrame aMainFrame) {
+        super(aMainFrame);
         initComponents();
         itsMainFrame = aMainFrame;
 
@@ -99,73 +99,64 @@ public class CoordConversionDialog extends javax.swing.JDialog {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Coordinate Conversions");
-        setAlwaysOnTop(true);
-        setModal(true);
         setName("loadFileDialog"); // NOI18N
         setResizable(false);
-        getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         topLabel.setColumns(20);
         topLabel.setEditable(false);
-        topLabel.setFont(new java.awt.Font("Tahoma", 1, 11));
+        topLabel.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         topLabel.setRows(2);
         topLabel.setText("Coordinate Conversions");
         topLabel.setOpaque(false);
-        getContentPane().add(topLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(139, 0, 154, 21));
 
         cancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         cancelButton.setText("Cancel");
         cancelButton.setToolTipText("Cancel filesearch");
+        cancelButton.setAlignmentX(0.5F);
         cancelButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 460, 100, -1));
 
         jLabel1.setText("Hours:");
-        getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, 20));
+        jLabel1.setAlignmentX(0.5F);
 
         jLabel6.setText("Radians:");
-        getContentPane().add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 270, -1, 20));
+        jLabel6.setAlignmentX(0.5F);
 
         radianInput.setToolTipText("Radians");
-        getContentPane().add(radianInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 270, 200, -1));
 
         jLabel3.setText("Minutes:");
-        getContentPane().add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, -1, 20));
+        jLabel3.setAlignmentX(0.5F);
 
         minuteInput.setToolTipText("Minutes in HMS notation");
-        getContentPane().add(minuteInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 80, 200, -1));
 
         jLabel10.setText("Degrees:");
-        getContentPane().add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 310, -1, 20));
+        jLabel10.setAlignmentX(0.5F);
 
         degreesInput.setToolTipText("Degrees");
-        getContentPane().add(degreesInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 310, 200, -1));
 
         clearFieldsButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_undo.png"))); // NOI18N
         clearFieldsButton.setText("Clear Fields");
+        clearFieldsButton.setAlignmentX(0.5F);
         clearFieldsButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         clearFieldsButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 clearFieldsButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(clearFieldsButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 460, 130, -1));
 
         degreesDMSInput.setToolTipText("Hours in HMS notation");
-        getContentPane().add(degreesDMSInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 160, 200, 20));
 
         momIDLabel1.setText("Seconds:");
-        getContentPane().add(momIDLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, -1, 20));
+        momIDLabel1.setAlignmentX(0.5F);
 
         secondInput.setToolTipText("Seconds in HMS notation");
-        getContentPane().add(secondInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 110, 200, -1));
 
         jLabel2.setText("Degrees:");
-        getContentPane().add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 160, 150, 20));
+        jLabel2.setAlignmentX(0.5F);
 
         convertFromInput.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "HMS", "DMS", "Radians", "Degrees" }));
         convertFromInput.addActionListener(new java.awt.event.ActionListener() {
@@ -173,33 +164,154 @@ public class CoordConversionDialog extends javax.swing.JDialog {
                 convertFromInputActionPerformed(evt);
             }
         });
-        getContentPane().add(convertFromInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 360, 90, -1));
 
         jLabel4.setText("Convert from:");
-        getContentPane().add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 360, -1, -1));
+        jLabel4.setAlignmentX(0.5F);
 
         hourInput.setToolTipText("Degrees in DMS notation");
-        getContentPane().add(hourInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 50, 200, 20));
 
         jLabel5.setText("Minutes:");
-        getContentPane().add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 190, 150, 20));
+        jLabel5.setAlignmentX(0.5F);
 
         minuteDMSInput.setToolTipText("Minutes in HMS notation");
-        getContentPane().add(minuteDMSInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 190, 200, -1));
 
         momIDLabel2.setText("Seconds:");
-        getContentPane().add(momIDLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 220, 150, 20));
+        momIDLabel2.setAlignmentX(0.5F);
 
         secondDMSInput.setToolTipText("Seconds in HMS notation");
-        getContentPane().add(secondDMSInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 220, 200, -1));
 
-        jLabel7.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jLabel7.setFont(new java.awt.Font("Tahoma", 1, 11));
         jLabel7.setText("DMS");
-        getContentPane().add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 140, 50, -1));
+        jLabel7.setAlignmentX(0.5F);
 
-        jLabel8.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jLabel8.setFont(new java.awt.Font("Tahoma", 1, 11));
         jLabel8.setText("HMS");
-        getContentPane().add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 30, -1, -1));
+        jLabel8.setAlignmentX(0.5F);
+
+        org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(layout.createSequentialGroup()
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(layout.createSequentialGroup()
+                        .add(10, 10, 10)
+                        .add(jLabel4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 82, Short.MAX_VALUE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(convertFromInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 200, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(layout.createSequentialGroup()
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(jLabel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 82, Short.MAX_VALUE))
+                            .add(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(jLabel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                            .add(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(jLabel6, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 82, Short.MAX_VALUE))
+                            .add(layout.createSequentialGroup()
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+                                        .addContainerGap()
+                                        .add(momIDLabel2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+                                        .addContainerGap()
+                                        .add(jLabel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+                                        .addContainerGap()
+                                        .add(jLabel2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+                                        .add(10, 10, 10)
+                                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                                            .add(jLabel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                            .add(momIDLabel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 72, Short.MAX_VALUE))))
+                                .add(10, 10, 10)))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(hourInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 200, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(minuteInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 200, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(secondInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 200, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(degreesDMSInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 200, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(minuteDMSInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 200, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(secondDMSInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 200, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(radianInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 200, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(degreesInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 200, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
+                .add(105, 105, 105))
+            .add(layout.createSequentialGroup()
+                .add(10, 10, 10)
+                .add(cancelButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 125, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(10, 10, 10)
+                .add(clearFieldsButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 155, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(101, 101, 101))
+            .add(layout.createSequentialGroup()
+                .add(180, 180, 180)
+                .add(jLabel7, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 120, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(101, 101, 101))
+            .add(layout.createSequentialGroup()
+                .add(180, 180, 180)
+                .add(jLabel8, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 120, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(101, 101, 101))
+            .add(layout.createSequentialGroup()
+                .add(139, 139, 139)
+                .add(topLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 161, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(101, 101, 101))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(layout.createSequentialGroup()
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(layout.createSequentialGroup()
+                        .add(hourInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(minuteInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(10, 10, 10)
+                        .add(secondInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(30, 30, 30)
+                        .add(degreesDMSInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(10, 10, 10)
+                        .add(minuteDMSInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(10, 10, 10)
+                        .add(secondDMSInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(30, 30, 30)
+                        .add(radianInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(20, 20, 20)
+                        .add(degreesInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(layout.createSequentialGroup()
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(layout.createSequentialGroup()
+                                .add(topLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 21, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .add(9, 9, 9)
+                                .add(jLabel8))
+                            .add(layout.createSequentialGroup()
+                                .add(54, 54, 54)
+                                .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jLabel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(10, 10, 10)
+                        .add(momIDLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(10, 10, 10)
+                        .add(jLabel7)
+                        .add(6, 6, 6)
+                        .add(jLabel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(10, 10, 10)
+                        .add(jLabel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(10, 10, 10)
+                        .add(momIDLabel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(30, 30, 30)
+                        .add(jLabel6, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(20, 20, 20)
+                        .add(jLabel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .add(30, 30, 30)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(convertFromInput, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(80, 80, 80)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(cancelButton)
+                    .add(clearFieldsButton))
+                .addContainerGap(28, Short.MAX_VALUE))
+        );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -248,7 +360,7 @@ public class CoordConversionDialog extends javax.swing.JDialog {
                     error=true;
                 }
                 if (error) return;
-                String dms=degreesDMSInput.getText()+"\u00b0"+minuteDMSInput.getText()+"\'"+secondDMSInput.getText()+"\"";
+                String dms=degreesDMSInput.getText()+":"+minuteDMSInput.getText()+":"+secondDMSInput.getText();
                 try {
                     String hms = LofarUtils.dms2hms(dms);
                     double deg = LofarUtils.dms2deg(dms);
@@ -294,12 +406,10 @@ public class CoordConversionDialog extends javax.swing.JDialog {
                     double rad = LofarUtils.hms2rad(hms);
 
                     // split DMS
-                    String[] v1 = dms.split("\u00b0");
+                    String[] v1 = dms.split(":");
                     degreesDMSInput.setText(v1[0]);
-                    String[] v2 = v1[1].split("\'");
-                    minuteDMSInput.setText(v2[0]);
-                    String[] v3 = v2[1].split("\"");
-                    secondDMSInput.setText(v3[0]);
+                    minuteDMSInput.setText(v1[1]);
+                    secondDMSInput.setText(v1[2]);
 
                     radianInput.setText(String.valueOf(rad));
                     degreesInput.setText(String.valueOf(deg));
@@ -327,12 +437,10 @@ public class CoordConversionDialog extends javax.swing.JDialog {
                     double deg = LofarUtils.rad2deg(rad);
 
                     // split DMS
-                    String[] v1 = dms.split("\u00b0");
+                    String[] v1 = dms.split(":");
                     degreesDMSInput.setText(v1[0]);
-                    String[] v2 = v1[1].split("\'");
-                    minuteDMSInput.setText(v2[0]);
-                    String[] v3 = v2[1].split("\"");
-                    secondDMSInput.setText(v3[0]);
+                    minuteDMSInput.setText(v1[1]);
+                    secondDMSInput.setText(v1[2]);
 
                     // split HMS
                     String[] values = hms.split(":");
@@ -361,12 +469,10 @@ public class CoordConversionDialog extends javax.swing.JDialog {
                     double rad = LofarUtils.deg2rad(deg);
 
                     // split DMS
-                    String[] v1 = dms.split("\u00b0");
+                    String[] v1 = dms.split(":");
                     degreesDMSInput.setText(v1[0]);
-                    String[] v2 = v1[1].split("\'");
-                    minuteDMSInput.setText(v2[0]);
-                    String[] v3 = v2[1].split("\"");
-                    secondDMSInput.setText(v3[0]);
+                    minuteDMSInput.setText(v1[1]);
+                    secondDMSInput.setText(v1[2]);
 
                     // split HMS
                     String[] values = hms.split(":");
