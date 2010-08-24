@@ -480,9 +480,8 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void jMenuItemCoordChangeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCoordChangeActionPerformed
         if (itsCoordConversionDialog == null ) {
-            itsCoordConversionDialog = new CoordConversionDialog(true, this);
+            itsCoordConversionDialog = new CoordConversionDialog(this);
         }
-        itsCoordConversionDialog.setLocationRelativeTo(this);
         itsCoordConversionDialog.setVisible(true);
     }//GEN-LAST:event_jMenuItemCoordChangeActionPerformed
 
