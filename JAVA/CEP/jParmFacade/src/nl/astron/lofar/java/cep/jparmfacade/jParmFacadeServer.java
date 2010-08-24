@@ -22,7 +22,7 @@
 package nl.astron.lofar.java.cep.jparmfacade;
 import java.rmi.registry.*;
 import java.rmi.server.RMISocketFactory;
-import nl.astron.lofar.sas.otb.jotdb2.jInitCPPLogger;
+import nl.astron.lofar.sas.otb.jotdb3.jInitCPPLogger;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
