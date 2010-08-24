@@ -11,6 +11,9 @@
 #include <FIR.h>
 #include <InversePPF.h>
 
+#include <FIR_OriginalStationPPFWeights.h> // defines originalStationPPFWeights array
+#include <FIR_InvertedStationPPFWeights.h> // defines invertedStationPPFWeights array
+
 // #undef HAVE_FFTW3
 
 // On the BG/P, FFT2 uses the double floating point units, FFT3 works, but only uses one.
@@ -43,18 +46,17 @@ fftwf_plan plan;
 fftw_plan plan;
 #endif
 
-#include <FIR_OriginalStationPPFWeights.h> // defines originalStationPPFWeights array
 const static unsigned onStationFilterSize = 1024;
 const static unsigned nrTaps = 16;
 
-//const static unsigned nrSubbands = 248;
-const static unsigned nrSubbands = 16;
-const static unsigned nrChannels = 1; // for the NuMoon pipeline, there are no separate channels.
-//const static unsigned nrSamplesPerIntegration = 768 * 256 / 4; // one quarter of a second
-static unsigned nrSamplesPerIntegration = 32;//2048;
-const static double sampleRate = 195312.5;
-const static double centerFrequency = 384 * sampleRate;
-const static double signalFrequency = centerFrequency - .5 * sampleRate;
+//static unsigned nrSubbands = 248;
+static unsigned nrSubbands = 4;
+static unsigned nrChannels = 1; // for the NuMoon pipeline, there are no separate channels.
+//static unsigned nrSamplesPerIntegration = 768 * 256 / 4; // one quarter of a second
+static unsigned nrSamplesPerIntegration = 32; // one quarter of a second
+static double sampleRate = 195312.5;
+static double centerFrequency = (nrSamplesPerIntegration / 2) * sampleRate;
+static double signalFrequency = centerFrequency - (0.5 * sampleRate);
 
 float originalStationPPFWeightsFloat[1024][16];
 float* fftInData;
@@ -119,7 +121,7 @@ static void performStationFFT(TransposedBeamFormedData& transposedBeamFormedData
   for (unsigned subbandIndex = 0; subbandIndex < subbandList.size(); subbandIndex++) {
     unsigned subband = subbandList[subbandIndex];
     fcomplex sample = makefcomplex(fftOutData[subband], fftOutData[onStationFilterSize - subband]);
-    transposedBeamFormedData.samples[subband][0 /* channel */][time] = sample;
+    transposedBeamFormedData.samples[subband][0 /* channel, but there is only one now */][time] = sample;
   }
 }
 
@@ -202,13 +204,48 @@ static void fftTest() {
       maxError = error;
     }
 
-    fprintf(stdout, "%20.10lf\n", error);
+//    fprintf(stdout, "%20.10lf\n", error);
 //    fprintf(stdout, "%20.10lf\n", fftInData[time]);
   }
 
   cerr << "max error = " << maxError << endl;
   free(inputData);
 }
+
+// Do a station filter + inverse filter, but not the FFTs.
+static void filterTest(InverseFilteredData& originalData) {
+  FilterBank originalStationFilterBank(true, nrTaps, onStationFilterSize, (float*) originalStationPPFWeightsFloat);
+  vector<FIR<float> > FIRs;
+  FIRs.resize(onStationFilterSize); // Init the FIR filters themselves with the weights of the filterbank.
+  for (unsigned chan = 0; chan < onStationFilterSize; chan++) {
+    FIRs[chan].initFilter(&originalStationFilterBank, chan);
+  }
+//  cout << "START ORIG STATION WEIGHTS" << endl;
+//  originalStationFilterBank.printWeights();
+//  cout << "END ORIG STATION WEIGHTS" << endl;
+
+  FilterBank invertedStationFilterBank(true, nrTaps, onStationFilterSize, (float*) invertedStationPPFWeights);
+  vector<FIR<float> > inverseFIRs;
+  inverseFIRs.resize(onStationFilterSize); // Init the FIR filters themselves with the weights of the filterbank.
+  for (unsigned chan = 0; chan < onStationFilterSize; chan++) {
+    inverseFIRs[chan].initFilter(&invertedStationFilterBank, chan);
+  }
+
+//  cout << "START INV STATION WEIGHTS" << endl;
+//  invertedStationFilterBank.printWeights();
+//  cout << "END INV STATION WEIGHTS" << endl;
+
+  for(unsigned major=0; major<nrSamplesPerIntegration; major++) {
+    for(unsigned minor = 0; minor < onStationFilterSize; minor++) {
+      float sample = originalData.samples[major * onStationFilterSize + minor];
+      float result = FIRs[minor].processNextSample(sample);
+      float resultInv = inverseFIRs[minor].processNextSample(result);
+
+      fprintf(stdout, "%20.10lf    %20.10lf    %20.10lf\n", sample, result, resultInv);
+    }
+  }
+}
+
 
 int main() {
 
@@ -226,9 +263,11 @@ int main() {
     FIRs[chan].initFilter(&originalStationFilterBank, chan);
   }
 
-  //  cout << "START ORIG STATION WEIGHTS" << endl;
-  //  originalStationFilterBank.printWeights();
-  //  cout << "END ORIG STATION WEIGHTS" << endl;
+#if 0
+  cout << "START ORIG STATION WEIGHTS" << endl;
+  originalStationFilterBank.printWeights();
+  cout << "END ORIG STATION WEIGHTS" << endl;
+#endif
 
   // The original data has the same data format as the original data, so reuse it here for this test
   InverseFilteredData originalData(nrSamplesPerIntegration, onStationFilterSize);
@@ -251,13 +290,20 @@ int main() {
   InversePPF inversePPF(subbandList, nrSamplesPerIntegration, nrTaps, onStationFilterSize, true);
   initFFT();
 
-  fftTest();
+//  fftTest();
 
   cerr << "generating input signal" << endl;
 
   generateInputSignal(originalData);
 
-  //    printData(originalData);
+//  printData(originalData);
+
+
+  filterTest(originalData);
+  exit(0);
+
+
+
 
   cerr << "simulating station filter" << endl;
 

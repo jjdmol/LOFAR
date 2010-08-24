@@ -96,7 +96,7 @@ void InversePPF::createFFTInput(const TransposedBeamFormedData& transposedBeamFo
   // Copy the samples from the different subbands to their correct places.
   for (unsigned i = 0; i < itsNrSubbands; i++) {
     unsigned sb = itsSubbandList[i];
-    fcomplex sample = transposedBeamFormedData.samples[sb][0 /* channel */][time];
+    fcomplex sample = transposedBeamFormedData.samples[sb][0 /* channel, but there only is 1 now */][time];
 
     itsFftInData[sb] = real(sample);
     itsFftInData[itsOnStationFilterSize - sb] = imag(sample);
