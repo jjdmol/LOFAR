@@ -685,7 +685,7 @@ public abstract class LofarUtils {
         int    m = (int) ((deg-d)*60);
         double s =  (deg-d-(m/60.))*3600.;
 
-        hms=Integer.toString(d)+"\u00b0"+Integer.toString(m)+"\'"+Double.toString(s)+"\"";
+        hms=Integer.toString(d)+":"+Integer.toString(m)+":"+Double.toString(s);
         return hms;
     }
 
@@ -700,12 +700,10 @@ public abstract class LofarUtils {
 
         if (dms.isEmpty()) return deg;
 
-        String [] v1 = dms.split("\u00b0");
+        String [] v1 = dms.split(":");
         int d = Integer.valueOf(v1[0]);
-        String [] v2 = v1[1].split("\'");
-        int m = Integer.valueOf(v2[0]);
-        String [] v3 = v2[1].split("\"");
-        double s = Double.valueOf(v3[0]);
+        int m = Integer.valueOf(v1[1]);
+        double s = Double.valueOf(v1[2]);
 
         deg= d+(m/60.)+(s/3600.);
 
