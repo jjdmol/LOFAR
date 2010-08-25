@@ -27,6 +27,7 @@
 //
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
+#include <Common/lofar_bitset.h>
 
 namespace LOFAR {
 	static const int N_POL					  = 2;				// Number of polarizations
@@ -48,6 +49,9 @@ namespace LOFAR {
 	static const int MAX_RSPBOARDS			  = (MAX_RCUS / NR_RCUS_PER_RSPBOARD);
 
 	static const int NR_RCU_MODES			  = 7;
+	static const int NR_SPECTRAL_WINDOWS	  = 5;
+
+	typedef bitset<MAX_RCUS>	RCUmask_t;
 }
 
 #endif
