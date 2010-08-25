@@ -57,7 +57,6 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 
 	BEGIN
       	OPEN fieldList;
-#     	FETCH fieldList INTO vRecord.CEPProcessingUnits;
 	FETCH fieldList INTO vRecord.contactEmail;
 	FETCH fieldList INTO vRecord.contactName;
 	FETCH fieldList INTO vRecord.contactPhone;
@@ -67,14 +66,12 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 	FETCH fieldList INTO vRecord.lastPossibleDay;
 	FETCH fieldList INTO vRecord.late;
 	FETCH fieldList INTO vRecord.nightTimeWeightFactor;
-#	FETCH fieldList INTO vRecord.offlineProcessingUnits;
 	FETCH fieldList INTO vRecord.predecessor;
 	FETCH fieldList INTO vRecord.predMaxTimeDif;
 	FETCH fieldList INTO vRecord.predMinTimeDif;
 	FETCH fieldList INTO vRecord.priority;
 	FETCH fieldList INTO vRecord.projectName;
 	FETCH fieldList INTO vRecord.referenceFrame;
-#	FETCH fieldList INTO vRecord.storageUnits;
 	FETCH fieldList INTO vRecord.taskDuration;
 	FETCH fieldList INTO vRecord.taskID;
 	FETCH fieldList INTO vRecord.taskName;
