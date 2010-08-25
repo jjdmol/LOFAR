@@ -60,8 +60,8 @@ GCFEvent::TResult BoardCmdHandler::idle_state(GCFEvent& event, GCFPortInterface&
 		} break;
 
 		case F_ENTRY: {
-			//itsCmd = 0;
 			if (itsCmd) delete itsCmd;
+			itsCmd = 0;
 		} break;			
 
 		case F_TIMER: {
@@ -81,7 +81,7 @@ GCFEvent::TResult BoardCmdHandler::idle_state(GCFEvent& event, GCFPortInterface&
 					itsDone = true;
 				}
 				TRAN(BoardCmdHandler::send_state);
-			}	else {
+			} else {
 				status = GCFEvent::NOT_HANDLED;
 			}
 		} break;
@@ -101,7 +101,7 @@ GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface&
 				LOG_DEBUG_STR("entering send state, cmd is done");
 				itsCmd->sendTbbAckEvent(itsClientPort);
 				// set timer for TBBDriver, to return to idle state
-				itsSleepTimer->setTimer(0.0);
+				itsSleepTimer->setTimer(0.01);
 				TRAN(BoardCmdHandler::idle_state);
 			} else {
 				LOG_DEBUG_STR("entering send state, next cmd");
@@ -135,6 +135,9 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 		case F_ENTRY: {
 			// if cmd returns no ack or board/channel is not selected or not responding return to send_state		
 			if (!itsCmd->waitAck()) {
+			    if (itsCmd->isDone()) {
+					itsDone = true;
+				}
 				TRAN(BoardCmdHandler::send_state);
 			}
 		} break;
@@ -176,7 +179,8 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 
 		default: {
 			LOG_DEBUG_STR("default cmd");
-			if (itsCmd->isValid(event)) {
+			
+			if ((&port == &TS->boardPort(itsCmd->getBoardNr())) && itsCmd->isValid(event)) {
 				port.cancelAllTimers();
 				itsCmd->saveTpAckEvent(event);
 				if (itsCmd->getSleepTime() > 0.0) {

@@ -684,6 +684,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 
 		case F_EXIT: {
 			if (itsCmd) delete itsCmd;
+			itsCmd = 0;
 		} break;
 
 		case F_ENTRY: {
