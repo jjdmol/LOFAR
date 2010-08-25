@@ -25,7 +25,6 @@
 DROP TYPE schedulerInfo CASCADE;
 
 CREATE TYPE schedulerInfo AS (
-#	CEPProcessingUnits     INT4,
 	contactEmail           VARCHAR(40),
 	contactName            VARCHAR(30),
 	contactPhone           VARCHAR(20),
@@ -35,14 +34,12 @@ CREATE TYPE schedulerInfo AS (
 	lastPossibleDay        INT4,
 	late                   BOOLEAN,
 	nightTimeWeightFactor  INT4,
-#	offlineProcessingUnits INT4,
 	predecessor            INT4,
 	predMaxTimeDif         VARCHAR(10),
 	predMinTimeDif         VARCHAR(10),
 	priority               FLOAT,
 	projectName            VARCHAR(40),
 	referenceFrame         INT4,
-#	storageUnits           INT4,
 	taskDuration           INT4,
 	taskID                 INT4,
 	taskName               VARCHAR(40),
