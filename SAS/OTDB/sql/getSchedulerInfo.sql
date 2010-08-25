@@ -25,7 +25,7 @@
 DROP TYPE schedulerInfo CASCADE;
 
 CREATE TYPE schedulerInfo AS (
-	CEPProcessingUnits     INT4,
+#	CEPProcessingUnits     INT4,
 	contactEmail           VARCHAR(40),
 	contactName            VARCHAR(30),
 	contactPhone           VARCHAR(20),
@@ -35,14 +35,14 @@ CREATE TYPE schedulerInfo AS (
 	lastPossibleDay        INT4,
 	late                   BOOLEAN,
 	nightTimeWeightFactor  INT4,
-	offlineProcessingUnits INT4,
+#	offlineProcessingUnits INT4,
 	predecessor            INT4,
 	predMaxTimeDif         VARCHAR(10),
 	predMinTimeDif         VARCHAR(10),
 	priority               FLOAT,
 	projectName            VARCHAR(40),
 	referenceFrame         INT4,
-	storageUnits           INT4,
+#	storageUnits           INT4,
 	taskDuration           INT4,
 	taskID                 INT4,
 	taskName               VARCHAR(40),
@@ -60,7 +60,7 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 
 	BEGIN
       	OPEN fieldList;
-     	FETCH fieldList INTO vRecord.CEPProcessingUnits;
+#     	FETCH fieldList INTO vRecord.CEPProcessingUnits;
 	FETCH fieldList INTO vRecord.contactEmail;
 	FETCH fieldList INTO vRecord.contactName;
 	FETCH fieldList INTO vRecord.contactPhone;
@@ -70,14 +70,14 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 	FETCH fieldList INTO vRecord.lastPossibleDay;
 	FETCH fieldList INTO vRecord.late;
 	FETCH fieldList INTO vRecord.nightTimeWeightFactor;
-	FETCH fieldList INTO vRecord.offlineProcessingUnits;
+#	FETCH fieldList INTO vRecord.offlineProcessingUnits;
 	FETCH fieldList INTO vRecord.predecessor;
 	FETCH fieldList INTO vRecord.predMaxTimeDif;
 	FETCH fieldList INTO vRecord.predMinTimeDif;
 	FETCH fieldList INTO vRecord.priority;
 	FETCH fieldList INTO vRecord.projectName;
 	FETCH fieldList INTO vRecord.referenceFrame;
-	FETCH fieldList INTO vRecord.storageUnits;
+#	FETCH fieldList INTO vRecord.storageUnits;
 	FETCH fieldList INTO vRecord.taskDuration;
 	FETCH fieldList INTO vRecord.taskID;
 	FETCH fieldList INTO vRecord.taskName;
