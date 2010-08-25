@@ -190,7 +190,7 @@ void Station::readAntennaSelection(const casa::Path &file)
 
             AntennaSelection config;
             ifs >> config;
-            result[config.name()] = config;
+            result.insert(make_pair(config.name(), config));
         }
     }
     catch(ifstream::failure &e)
