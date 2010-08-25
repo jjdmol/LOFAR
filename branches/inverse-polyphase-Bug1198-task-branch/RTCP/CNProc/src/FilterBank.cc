@@ -430,7 +430,6 @@ void FilterBank::generate_filter()
   itsNegated = true;
 }
 #endif // USE_ORIGINAL_FILTER
-
 // In CEP, the first subband is from -98 KHz to 98 KHz, rather than from 0 to 195 KHz.
 // To avoid that the FFT outputs the channels in the wrong order (from 128 to
 // 255 followed by channels 0 to 127), we multiply each second FFT input by -1.
@@ -446,6 +445,17 @@ void FilterBank::negateWeights() {
     }
   }
   itsNegated = !itsNegated;
+}
+
+// Used for debugging.
+void FilterBank::reverseTaps() {
+  for (unsigned channel = 0; channel < itsNrChannels; channel++) {
+    for (unsigned tap = 0; tap < itsNrTaps/2; tap++) {
+      float tmp = weights[channel][itsNrTaps - tap - 1];
+      weights[channel][itsNrTaps - tap - 1] = weights[channel][tap];
+      weights[channel][tap] = tmp;
+    }
+  }
 }
 
 // Print the weights array in the natural order, in a format that can be read by gnuplot.

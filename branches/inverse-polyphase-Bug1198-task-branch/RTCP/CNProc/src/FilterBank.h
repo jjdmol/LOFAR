@@ -44,6 +44,9 @@ class FilterBank {
 
   bool isNegated();
 
+  // Used for debugging.
+  void reverseTaps();
+
   // Print the weights array in the natural order, in a format that can be read by gnuplot.
   void printWeights();
 

@@ -103,7 +103,8 @@ static void destroyFFT() {
 
 static void generateInputSignal(InverseFilteredData& originalData) {
   for (unsigned time = 0; time < nrSamplesPerIntegration * onStationFilterSize; time++) {
-    double val = sin(signalFrequency * time / sampleRate);
+//    double val = sin(signalFrequency * time / sampleRate);
+    double val = sin(time/768.0);
     originalData.samples[time] = val;
     //    double phi = 2 * M_PI * signalFrequency * time / sampleRate;
     //    originalData.samples[time] = toComplex(phi);
@@ -225,6 +226,7 @@ static void filterTest(InverseFilteredData& originalData) {
 //  cout << "END ORIG STATION WEIGHTS" << endl;
 
   FilterBank invertedStationFilterBank(true, nrTaps, onStationFilterSize, (float*) invertedStationPPFWeights);
+
   vector<FIR<float> > inverseFIRs;
   inverseFIRs.resize(onStationFilterSize); // Init the FIR filters themselves with the weights of the filterbank.
   for (unsigned chan = 0; chan < onStationFilterSize; chan++) {
