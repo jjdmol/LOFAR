@@ -62,41 +62,55 @@ namespace LOFAR {
 	\param Clock - Sampling clock speed in MHz (i.e.160 or 200) 
 	\param NoCoincChann - The number of channels needed to detect a coincidence.
 	\param CoincidenceTime - The time-range in seconds during which triggers are considered part of a coincidence.
-	\param DoDirectionFit - Do a direction fit: none [0], simple [1], more fancy [2] 
+	\param DoDirectionFit - Do a direction fit: none [0], simple [1], more fancy [2], etc. 
 	\param MinElevation - Minimum elevation to accept a trigger in degrees.
 	\param MaxFitVariance - Maximum variance (``badness of fit'') of the direction fit to still accept a trigger. 
 	\param ParamExtension - String with "keyword=value;" pairs for additional parameters during development.
       */
       void setParameters(string AntennaSet, string AntennaPositionsFile, int Clock,
 			 int NoCoincChann=48, float CoincidenceTime=1e-6, int DoDirectionFit=0, 
-			 float MinElevation=30., float MaxFitVariance=100., string ParamExtension="");
-
-      struct position {
+			 float MinElevation=30., float MaxFitVariance=100., string ParamExtension="",
+			 float forcedDeadTime=10.);
+      struct positionStruct {
         double x, y, z;
+      };
+      struct fitResultStruct {
+        double theta, phi, mse;
       };
       string itsOutputFilename;
       string itsConfigurationFile;
-      string itsAntennaPositionsFile;
-      string itsAntennaSelection;
-      uint32 itsDoDirectionFit;
-      double forcedDeadTime;
-      uint32 totalCoincidences, badFits;
-      uint32 itsNoCoincidenceChannels;
-      double itsMinElevation;
-      double itsMaxFitVariance;
-      string itsParamExtension;
+      
+uint32 totalCoincidences, badFits;
 
     private:
 
+      string itsAntennaPositionsFile;
+      string itsAntennaSelection;
+      //uint32 itsDoDirectionFit;
+      double itsForcedDeadTime;
+      //uint32 itsNoCoincidenceChannels;
+      //double itsMinElevation;
+      //double itsMaxFitVariance;
+      string itsParamExtension;
+      uint32 itsSamplingRate;   // in Hz!!!
+      //double itsCoincidenceTime;
+
+      /*!
+	\brief Setup and clear internal values, after setParameters() or reading in a configuration file
+
+	\return <tt>true</tt> if everything went fine.
+
+	Only opens output file if not already opened!
+      */      
+      bool setup();
+
+
 #define VHECR_TASK_BUFFER_LENGTH (2*96)
 #define NOFANTENNAS (96)
+
+      ParameterSet*  itsParameterSet;
+      VHECRsettings* itsSettings;
     
-    // ADDED BY PD
-    ParameterSet*  itsParameterSet;
-    VHECRsettings* itsSettings;
-    // ADDED BY PD
-    
-      double itsCoincidenceTime;
       FILE * itsLogfile;
       // avoid defaultconstruction and copying
       VHECRTask(const VHECRTask&);
@@ -104,7 +118,6 @@ namespace LOFAR {
       
       // remote function to call for saving triggers
       uint32 itsNrTriggers;	// just for statistics
-      uint32 itsSamplingRate;   // in Hz!!!
 
       bool   itsInitialized;
       std::vector<TBBReadCmd> itsCommandVector;    // used as temporarely buffer
@@ -130,7 +143,7 @@ namespace LOFAR {
       };
       
           
-      position antennaPositions[96]; // much faster than vector<position> !!
+      positionStruct antennaPositions[96]; // much faster than vector<position> !!
       void readConfigFile(string fileName);
       string readableTime(const uint64 date);
 
@@ -145,7 +158,7 @@ namespace LOFAR {
       void printCoincidence(int coincidenceIndex);
 
       int coincidenceCheck(uint32 latestindex, uint32 nChannles, double timeWindow);
-      void fitDirectionToCoincidence(int coincidenceIndex, uint32 nofChannels);
+      fitResultStruct fitDirectionToCoincidence(int coincidenceIndex, uint32 nofChannels);
       void fitDirectionAndDistanceToCoincidence(int coincidenceIndex, uint32 nofChannels);
 
     };
