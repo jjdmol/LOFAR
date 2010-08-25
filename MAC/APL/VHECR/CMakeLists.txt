@@ -3,7 +3,7 @@
 lofar_package(VHECR 1.0 DEPENDS Common APLCommon)
 
 include(LofarFindPackage)
-lofar_find_package(Boost REQUIRED COMPONENTS date_time)
+lofar_find_package(Boost REQUIRED COMPONENTS date_time program_options)
 
 ##add_definitions(-DBOOST_DISABLE_THREADS)
 

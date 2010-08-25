@@ -27,6 +27,8 @@
 #include <fstream>
 
 #include "VHECR/VHECRTask.h" // path for use in online version
+     
+#define TWOPI  (2.0 * 3.1415926536)
 
 namespace LOFAR {
   //	using namespace ACC::APS;
@@ -36,61 +38,42 @@ namespace LOFAR {
     // VHECRTask()
     //
     VHECRTask::VHECRTask(const string& cntlrName) :
-      itsNrTriggers (0),
-      itsSamplingRate(200000000), // NB. Sampling rate 200 MHz assumed without info! Needs to be changed in the future.
     itsInitialized (false)
     {
       // set default parameters for coincidence
+      itsNrTriggers =0;
+      itsSamplingRate = 200000000; // NB. Sampling rate 200 MHz assumed without info! Needs to be changed in the future.
       itsLogfile = NULL;
       itsAntennaSelection = "";
       itsAntennaPositionsFile = "";
-      itsNoCoincidenceChannels = 32;
-      itsCoincidenceTime = 1.0e-6;
-      forcedDeadTime = 10.0;
-      itsDoDirectionFit = 0;
+      itsForcedDeadTime = 10.0;
       totalCoincidences = 0;
       badFits = 0;
       
-      // ADDED BY PD
       // First readin our observation related config file.
       LOFAR::ConfigLocator cl;
-	  LOG_DEBUG_STR("Reading parset file:" << cl.locate(cntlrName));
-	  itsParameterSet = new ParameterSet(cl.locate(cntlrName));
-	  itsSettings = new VHECRsettings(itsParameterSet);	// does all nasty conversions
-      // END ADDED BY PD
+      LOG_DEBUG_STR("Reading parset file:" << cl.locate(cntlrName));
+      itsParameterSet = new ParameterSet(cl.locate(cntlrName));
+      itsSettings = new VHECRsettings(itsParameterSet);	// does all nasty conversions
       
       itsConfigurationFile = "/opt/lofar/etc/VHECRtask.conf"; // /opt/lofar/etc/
       readConfigFile(itsConfigurationFile.c_str());
-      if ((itsAntennaSelection != "")&&(itsAntennaPositionsFile != "")) {
-	//            cout << itsAntennaSelection << " reading in positions." << endl;
-	readAntennaPositions(itsAntennaPositionsFile, itsAntennaSelection);
-      } else {
-	itsDoDirectionFit = 0;
-      };
-      if (itsLogfile == NULL) { // move this to somewhere else, like readConfigFile...
-	//cout << "VHECRtask: logfile not set, writing log-output to stdout." << endl;
-	itsLogfile = stdout;
-        fprintf(itsLogfile, "VHECRTask logfile\n"); // first line in file has to contain 'VHECR' for Python script to understand it.
-      };
-//      itsOutputFilename = "/opt/lofar/etc/VHECRtaskLogfile.dat";
-//      itsLogfile = fopen(itsOutputFilename.c_str(), "w"); // overwrites existing file...
-
-      //cout << "Number of required coincident channels = " << itsNoCoincidenceChannels << ", coincidence time window = " << itsCoincidenceTime << endl;
-      // Initialize the trigger messages buffer
-      for (uint32 i=0; i<VHECR_TASK_BUFFER_LENGTH; i++){
-	trigBuffer[i].next = i+1;
-	trigBuffer[i].prev = i-1;
-	trigBuffer[i].Time = 0;
-	trigBuffer[i].SampleNr = 0;
-	trigBuffer[i].date = static_cast<uint64>(0.);
-      };
-      first = 0;
-      last = VHECR_TASK_BUFFER_LENGTH-1;
-      trigBuffer[first].prev = VHECR_TASK_BUFFER_LENGTH; //This means "not there"
-
+      setup();
     //  string infile = "/Users/acorstanje/usg/data/calibration/AntennaPos/CS021-AntennaArrays.conf";
     //  string itsAntennaSelection = "LBA_INNER";
     //  readAntennaPositions(infile, itsAntennaSelection);
+      if ((itsLogfile != NULL) && (itsLogfile != stdout)) {
+	fprintf(itsLogfile, "Output file: %s\n", itsOutputFilename.c_str());
+	fprintf(itsLogfile, "Coincidence channels required: %d\n", itsSettings->noCoincChann);
+	fprintf(itsLogfile, "Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
+	fprintf(itsLogfile, "Antenna selection: %s\n", itsAntennaSelection.c_str());
+	fprintf(itsLogfile, "Coincidence time window: %3.6f\n", itsSettings->coincidenceTime);
+	fprintf(itsLogfile, "do Direction fit: %d\n", itsSettings->doDirectionFit);
+	fprintf(itsLogfile, "Minimum elevation: %3.4f\n", itsSettings->minElevation);
+	fprintf(itsLogfile, "Maximum fit-variance: %3.4f\n", itsSettings->maxFitVariance);
+	fflush(itsLogfile);
+      };
+
       LOG_DEBUG ("VHECR construction complete");
     }
     
@@ -103,6 +86,43 @@ namespace LOFAR {
       fclose(itsLogfile);
       LOG_DEBUG ("VHECR destruction");
     }
+    
+    bool VHECRTask::setup()
+    {
+      if ((itsAntennaSelection != "")&&(itsAntennaPositionsFile != "")) {
+	//            cout << itsAntennaSelection << " reading in positions." << endl;
+	readAntennaPositions(itsAntennaPositionsFile, itsAntennaSelection);
+      } else {
+	itsSettings->doDirectionFit = 0;
+      };
+      if (itsLogfile == NULL) { // move this to somewhere else, like readConfigFile...
+	//cout << "VHECRtask: logfile not set, writing log-output to stdout." << endl;
+	itsLogfile = stdout;
+        fprintf(itsLogfile, "VHECRTask logfile\n"); // first line in file has to contain 'VHECR' for Python script to understand it.
+      };
+//      itsOutputFilename = "/opt/lofar/etc/VHECRtaskLogfile.dat";
+//      itsLogfile = fopen(itsOutputFilename.c_str(), "w"); // overwrites existing file...
+
+      // Initialize the trigger messages buffer
+      for (uint32 i=0; i<VHECR_TASK_BUFFER_LENGTH; i++){
+	trigBuffer[i].next = i+1;
+	trigBuffer[i].prev = i-1;
+	trigBuffer[i].Time = 0;
+	trigBuffer[i].SampleNr = 0;
+	trigBuffer[i].date = static_cast<uint64>(0);
+      };
+      first = 0;
+      last = VHECR_TASK_BUFFER_LENGTH-1;
+      trigBuffer[first].prev = VHECR_TASK_BUFFER_LENGTH; //This means "not there"
+
+    //  string infile = "/Users/acorstanje/usg/data/calibration/AntennaPos/CS021-AntennaArrays.conf";
+    //  string itsAntennaSelection = "LBA_INNER";
+    //  readAntennaPositions(infile, itsAntennaSelection);
+      LOG_DEBUG ("VHECR construction complete");
+      return true;
+    }
+    
+    
     
     void VHECRTask::readConfigFile(string fileName)
     {
@@ -131,8 +151,8 @@ namespace LOFAR {
 //          cout << "Filename set to: " << itsOutputFilename << endl;
         } else if (temp == "coincidenceChannels:")
         {          
-          configFile >> itsNoCoincidenceChannels;
-//          cout << "No channels set to: " << itsNoCoincidenceChannels << endl;
+          configFile >> itsSettings->noCoincChann;
+//          cout << "No channels set to: " << itsSettings->noCoincChann << endl;
         } else if (temp == "antennaPositionsFile:")
         {        
           configFile >> itsAntennaPositionsFile;
@@ -141,34 +161,34 @@ namespace LOFAR {
           configFile >> itsAntennaSelection;
         } else if (temp == "coincidenceTime:")
         {
-          configFile >> itsCoincidenceTime;
+          configFile >> itsSettings->coincidenceTime;
         } else if (temp == "doDirectionFit:")
         {
-          configFile >> itsDoDirectionFit;
+          configFile >> itsSettings->doDirectionFit;
         } else
         {
           LOG_DEBUG("Error reading config file!");
         }
       }
-        if (itsLogfile != NULL) {
-	fprintf(itsLogfile, "Output file: %s\nCoincidence channels required: %d\nAntenna positions file: %s\nAntenna selection: %s\nCoincidence time window: %3.6f\ndo Direction fit: %d\n", 
-		itsOutputFilename.c_str(), itsNoCoincidenceChannels, itsAntennaPositionsFile.c_str(), itsAntennaSelection.c_str(), itsCoincidenceTime, itsDoDirectionFit);
-      };
     }
       
-     void VHECRTask::setParameters(string AntennaSet, string AntennaPositionsFile, int Clock,
-			 int NoCoincChann, float CoincidenceTime, int DoDirectionFit, 
-			 float MinElevation, float MaxFitVariance, string ParamExtension)
+    void VHECRTask::setParameters(string AntennaSet, string AntennaPositionsFile, int Clock,
+				  int NoCoincChann, float CoincidenceTime, int DoDirectionFit, 
+				  float MinElevation, float MaxFitVariance, string ParamExtension,
+				  float forcedDeadTime)
      {
-       itsNoCoincidenceChannels = NoCoincChann;
-       itsCoincidenceTime = CoincidenceTime;
-       itsDoDirectionFit = DoDirectionFit;
-       itsMinElevation = MinElevation;
-       itsMaxFitVariance = MaxFitVariance;
+       itsSettings->noCoincChann = NoCoincChann;
+       itsSettings->coincidenceTime = CoincidenceTime;
+       itsSettings->doDirectionFit = DoDirectionFit;
+       itsSettings->minElevation = MinElevation;
+       itsSettings->maxFitVariance = MaxFitVariance;
        itsParamExtension = ParamExtension;
        itsAntennaSelection = AntennaSet;
        itsAntennaPositionsFile = AntennaPositionsFile;
        itsSamplingRate = Clock*1000000;
+       itsForcedDeadTime = forcedDeadTime;
+
+       setup();
      };
 
 
@@ -214,7 +234,7 @@ namespace LOFAR {
       cout << "Showing time offsets w.r.t. latest timestamp" << endl;
       int runningIndex = coincidenceIndex;
       int64 refdate = trigBuffer[runningIndex].date; 
-      for (uint32 k=0; k<itsNoCoincidenceChannels; k++)
+      for (int k=0; k<itsSettings->noCoincChann; k++)
       {
         cout << "RCU " << trigBuffer[runningIndex].RcuNr << ": " << (int64)trigBuffer[runningIndex].date - refdate << endl;
         runningIndex = trigBuffer[runningIndex].next;
@@ -251,10 +271,10 @@ namespace LOFAR {
       int noOfRCUs=0;
 
       int coincidenceIndex;
-      uint64 timeWindow = static_cast<uint64>(itsSamplingRate * itsCoincidenceTime);
+      uint64 timeWindow = static_cast<uint64>(itsSamplingRate * itsSettings->coincidenceTime);
       
-      coincidenceIndex = coincidenceCheck(last, itsNoCoincidenceChannels, itsCoincidenceTime);
-//      cout << "Done coincidence check for new index: " << newindex << ", for " << itsNoCoincidenceChannels << " coincindence channels, for window = " << itsCoincidenceTime << " seconds; result = " << coincidenceIndex << endl;
+      coincidenceIndex = coincidenceCheck(last, itsSettings->noCoincChann, itsSettings->coincidenceTime);
+//      cout << "Done coincidence check for new index: " << newindex << ", for " << itsSettings->noCoincChann << " coincindence channels, for window = " << itsSettings->coincidenceTime << " seconds; result = " << coincidenceIndex << endl;
 
       static uint64 latestCoincidenceTime = 0; // we'll ensure that all coincidences we find are at least 1 time window apart.
                                                // That way we won't see every coincidence (n-8) times (n = # single triggers in one pulse)
@@ -269,6 +289,7 @@ namespace LOFAR {
         gettimeofday(&tv, NULL); 
         // conversion to make it go into the readableTime function
         uint64 pcTimeInSamples = (uint64)tv.tv_sec * itsSamplingRate + (uint64)tv.tv_usec * itsSamplingRate / 1000000;        
+        fitResultStruct directionFitResult;
         if (coincidenceCount % 1 == 0)
         {
 //          cout << "Coincidence at: " << readableTime(trigBuffer[coincidenceIndex].date) << "; ";
@@ -278,13 +299,13 @@ namespace LOFAR {
         //  printCoincidence(coincidenceIndex);
 //         for(uint32 k=0; k<1000; k++)
 //          {
-          if (itsDoDirectionFit == 1)
+          if (itsSettings->doDirectionFit == 1)
           {
-            fitDirectionToCoincidence(coincidenceIndex, itsNoCoincidenceChannels);
+            directionFitResult = fitDirectionToCoincidence(coincidenceIndex, itsSettings->noCoincChann);
           }
-          if (itsDoDirectionFit >= 2)
+          if (itsSettings->doDirectionFit >= 2)
           {
-            fitDirectionAndDistanceToCoincidence(coincidenceIndex, itsNoCoincidenceChannels);
+            fitDirectionAndDistanceToCoincidence(coincidenceIndex, itsSettings->noCoincChann);
           }
          // }
 //          cout << "Done! "<<endl;
@@ -298,9 +319,30 @@ namespace LOFAR {
 	fflush(itsLogfile);   
 
         latestCoincidenceTime = trigBuffer[coincidenceIndex].date;
-	
-        if (latestCoincidenceTime - latestDumpCommand > uint64(forcedDeadTime * 200.0e6))
+	bool dumpData = false;
+        if (latestCoincidenceTime - latestDumpCommand > uint64(itsForcedDeadTime * 200.0e6))
         { // then do the actual dump command. Ensure at least 'forcedDeadTime' seconds apart.
+          if (itsSettings->doDirectionFit > 0)
+          {
+            if (directionFitResult.mse > itsSettings->maxFitVariance)
+            { // be verbose about dump decisions for now... testing.
+              fprintf(itsLogfile, "Not dumping data, variance too high: %f\n", directionFitResult.mse);
+            } else if ( (directionFitResult.theta* (360.0 / TWOPI)) < itsSettings->minElevation)
+            {
+              fprintf(itsLogfile, "Not dumping data, elevation too low: %f\n", directionFitResult.theta*(360./TWOPI));
+            } else
+            {
+	      fprintf(itsLogfile,"directionFitResult good: theta= %f mse= %f\n",
+		      directionFitResult.theta* (360.0 / TWOPI), directionFitResult.mse);
+              dumpData = true;
+            }
+          } else
+          {
+            dumpData = true;
+          }
+        }  
+        if (dumpData)
+        {
           latestDumpCommand = latestCoincidenceTime;
           
           // This adds the trigger to the command queue.
@@ -317,6 +359,7 @@ namespace LOFAR {
             readCmd.push_back(TBBReadCmd(RcuNr, Time, sampleTime, prePages, postPages));	
           };
           itsNrTriggers++;
+          fprintf(itsLogfile, "Dump data\n");
         }
       }; // end: if ( (coincidenceIndex >= 0) ...
       
@@ -325,6 +368,7 @@ namespace LOFAR {
 //       readTBBdata(itsCommandVector);			// report that we want everything
 //       itsCommandVector.clear();					// clear buffer
 //       }
+      fflush(itsLogfile);   
       return noOfRCUs;
     }
     
@@ -410,10 +454,9 @@ namespace LOFAR {
       return newindex;
     };
    
-    void VHECRTask::fitDirectionToCoincidence(int coincidenceIndex, uint32 nofChannels)
+    VHECRTask::fitResultStruct VHECRTask::fitDirectionToCoincidence(int coincidenceIndex, uint32 nofChannels)
     {
       double theta, phi;
-      double twopi = 2.0 * 3.1415926536;
       double c = 2.9979e8;
       
       const uint32 thetaSteps = 30;
@@ -422,25 +465,19 @@ namespace LOFAR {
       double timeDelays[NOFANTENNAS]; 
       
       double fitResult[thetaSteps][phiSteps];
-      //     position myAntennaPositions[NOFANTENNAS];
-      //      for(uint32 k=0;k<NOFANTENNAS;k++)
-      //      {
-      //        myAntennaPositions[k] = antennaPositions[k];
-      //      }
-      
       double minTh = 1.0e9;
       double minPh = 1.0e9;
       double minSig2 = 1.0e9;
       //double debugTimeOffsets[NOFANTENNAS], minDebugTimeOffsets[NOFANTENNAS];
       int64 refdate = trigBuffer[coincidenceIndex].date; // coincidence reference timestamp to subtract from all other timestamps.
       
-      position a;
+      positionStruct a;
       for (uint32 i=0; i<thetaSteps; i++)
       {
         for (uint32 j=0; j<phiSteps; j++)
         {
-          theta = twopi / 4 - twopi/4 * (double)i / thetaSteps;
-          phi = twopi * (double)j / phiSteps;
+          theta = TWOPI / 4 - TWOPI/4 * (double)i / thetaSteps;
+          phi = TWOPI * (double)j / phiSteps;
           
           a.x = - sin(theta) * cos(phi); // + sign when relating to a point in the sky! - sign when doing spherical vector
           a.y = - sin(theta) * sin(phi); // FIXED by removing unwanted 'fix' for 90 degree angle.
@@ -482,7 +519,7 @@ namespace LOFAR {
           if (fitResult[i][j] < minSig2)
           {
             minSig2 = fitResult[i][j];
-            minTh = twopi/4 - theta;
+            minTh = TWOPI/4 - theta;
             minPh = phi;
 //            for(uint32 k=0; k<nofChannels; k++)
 //            {
@@ -492,10 +529,10 @@ namespace LOFAR {
         }
       }
       totalCoincidences++;
-//      cout << "Fit result: theta = " << minTh * (360.0 / twopi) << "; phi = " << minPh * (360.0/twopi) << "; variance = " << minSig2 << endl;
+//      cout << "Fit result: theta = " << minTh * (360.0 / TWOPI) << "; phi = " << minPh * (360.0/TWOPI) << "; variance = " << minSig2 << endl;
       if (minSig2 < 50.0) 
       {
-        fprintf(itsLogfile, "FitResult: %lld %f %f %f\n", refdate, minTh * (360.0 / twopi), minPh * (360.0 / twopi), minSig2);
+        fprintf(itsLogfile, "FitResult: %lld %f %f %f\n", refdate, minTh * (360.0 / TWOPI), minPh * (360.0 / TWOPI), minSig2);
         // debug
         //       uint32 runningIndex = coincidenceIndex;
         //        for (uint32 k=0; k<nofChannels; k++)
@@ -507,6 +544,8 @@ namespace LOFAR {
       } else
       {
         badFits++;
+        fprintf(itsLogfile, "FitResult: %lld %f %f %f BadFit!\n", refdate, minTh * (360.0 / TWOPI), minPh * (360.0 / TWOPI), minSig2);
+
         cout << "Bad fit!" << endl;
         // debug
         
@@ -518,13 +557,17 @@ namespace LOFAR {
         //          runningIndex = trigBuffer[runningIndex].next;
         //        } // end debug
       }
+      fitResultStruct theResult;
+      theResult.theta = minTh;
+      theResult.phi = minPh;
+      theResult.mse = minSig2;
+      return theResult;
     }
     
     void VHECRTask::fitDirectionAndDistanceToCoincidence(int coincidenceIndex, uint32 nofChannels)
     { // number of channels known from requirement
       //     cout << "Do smart stuff... (well, we hope)" << endl;
       double theta, phi, R;
-      double twopi = 2.0 * 3.1415926536;
       double c = 2.9979e8;
       
       const uint32 thetaSteps = 30;
@@ -534,11 +577,6 @@ namespace LOFAR {
       double timeDelays[NOFANTENNAS]; // get rid of that constant
       
       double fitResult[thetaSteps][phiSteps];
-      //     position myAntennaPositions[NOFANTENNAS];
-      //      for(uint32 k=0;k<NOFANTENNAS;k++)
-      //      {
-      //        myAntennaPositions[k] = antennaPositions[k];
-      //      }
       R = 5.0;
       double minR = 1.0e12;
       double overallMinSig2 = 1.0e12;
@@ -552,13 +590,13 @@ namespace LOFAR {
         double debugTimeOffsets[NOFANTENNAS], minDebugTimeOffsets[NOFANTENNAS];
         int64 refdate = trigBuffer[coincidenceIndex].date; // coincidence reference timestamp to subtract from all other timestamps.
         
-        position a;
+        positionStruct a;
         for (uint32 i=0; i<thetaSteps; i++)
         {
           for (uint32 j=0; j<phiSteps; j++)
           {
-            theta = twopi / 4 - twopi/4 * (double)i / thetaSteps;
-            phi = twopi * (double)j / phiSteps;
+            theta = TWOPI / 4 - TWOPI/4 * (double)i / thetaSteps;
+            phi = TWOPI * (double)j / phiSteps;
             
             a.x = R * sin(theta) * cos(phi); // + sign when relating to a point in the sky!
             a.y = R * sin(theta) * sin(phi); // minus 90 degrees to relate to antenna coord system, phi=0: east, phi=90: north...
@@ -650,7 +688,7 @@ namespace LOFAR {
             if (fitResult[i][j] < minSig2)
             {
               minSig2 = fitResult[i][j];
-              minTh = twopi/4 - theta;
+              minTh = TWOPI/4 - theta;
               minPh = phi;
               if (minSig2 < overallMinSig2)
               {
@@ -663,19 +701,19 @@ namespace LOFAR {
               }
             }
             
-            // cout << "theta = " << 360.0/twopi * (twopi/4 - theta) << ", phi = " << (double)j / phiSteps * 360 << ": fitResult = " << fitResult[i][j] << endl;
+            // cout << "theta = " << 360.0/TWOPI * (TWOPI/4 - theta) << ", phi = " << (double)j / phiSteps * 360 << ": fitResult = " << fitResult[i][j] << endl;
             
           }
         }
-        cout << "Fit result: theta = " << minTh * (360.0 / twopi) << "; phi = " << minPh * (360.0/twopi) << "; R = " << R << "; height = " << R * sin(minTh) << "; variance = " << minSig2 << endl;
+        cout << "Fit result: theta = " << minTh * (360.0 / TWOPI) << "; phi = " << minPh * (360.0/TWOPI) << "; R = " << R << "; height = " << R * sin(minTh) << "; variance = " << minSig2 << endl;
         
         //      } // for stepR
         totalCoincidences++;
-        //     cout << "Best fit result: theta = " << minTh * (360.0 / twopi) << "; phi = " << minPh * (360.0/twopi) << "; R = " << minR << "; height = " << R * sin(minTh) << "; variance = " << minSig2 << endl;
+        //     cout << "Best fit result: theta = " << minTh * (360.0 / TWOPI) << "; phi = " << minPh * (360.0/TWOPI) << "; R = " << minR << "; height = " << R * sin(minTh) << "; variance = " << minSig2 << endl;
         if ((minSig2 < 50.0) && (stepR == Rsteps - 1))  // hack to ensure we only call this at the end of the loop...
         {
           cout << "WRITING FILE" << endl;
-          fprintf(itsLogfile, "FitResult: %lld %f %f %f %F\n", refdate, minTh * (360.0 / twopi), minPh * (360.0 / twopi), minSig2, minR);
+          fprintf(itsLogfile, "FitResult: %lld %f %f %f %F\n", refdate, minTh * (360.0 / TWOPI), minPh * (360.0 / TWOPI), minSig2, minR);
           //       for (uint32 k=0; k<nofChannels; k++)
           //        {
           //          cout << k << ": " << minDebugTimeOffsets[k] << endl;
@@ -701,7 +739,7 @@ namespace LOFAR {
       {
 	LOG_FATAL("Failed to open Antenna Positions file!");
 	//cerr << "VHECRTask: Failed to open Antenna Positions file!" << endl;
-	itsDoDirectionFit=0;
+	itsSettings->doDirectionFit = 0;
 	return;
       };
       string temp;
@@ -719,7 +757,6 @@ namespace LOFAR {
       int nrRCUs = nrAntennas * nrPolarizations;
 //      cout << "nr. RCUs: " << nrRCUs << endl;
       
-     // position * antennaPositions = new position[96];
       
       double posx;
       double posy;
