@@ -46,14 +46,14 @@ namespace LOFAR {
 class FileLocator
 {
 public:
-	#define		BASE_SEARCH_DIR		"/opt/lofar:/opt/lofar/share"
+	#define		BASE_SEARCH_DIR		".:..:/opt/lofar:/opt/lofar/share"
 
 	typedef list<string>::iterator		iterator;
 
 	// Create a FileLocator with a default search path. This path consists
-	// of the directory containing the currently running executable and
-	// its parent directory (or "." and ".." if that path cannot be
-	// determined), plus the directories defined in BASE_SEARCH_DIR.
+	// of the directories defined in BASE_SEARCH_DIR, plus the directory
+	// containing the currently running executable and its parent
+	// directory (if these paths can be determined).
 	FileLocator();
 	// Create a FileLocator with a predefined path.
 	explicit FileLocator (const string&	aPath);
