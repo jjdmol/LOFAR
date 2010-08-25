@@ -40,11 +40,8 @@ FileLocator::FileLocator()
 {
 	addPathAtBack(resolveInput(BASE_SEARCH_DIR));
 	string p = getDirname(getExecutablePath());
-	if (p.empty()) {
-		addPathAtFront(".:..");
-	}
-	else {
-		addPathAtFront(p + ":" + p.substr(0,p.find_last_of('/')));
+	if (!p.empty()) {
+		addPathAtBack(p + ":" + getDirname(p));
 	}
 }
 
