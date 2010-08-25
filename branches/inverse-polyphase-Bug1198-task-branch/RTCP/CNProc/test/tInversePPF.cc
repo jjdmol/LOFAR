@@ -300,12 +300,8 @@ int main() {
 
 //  printData(originalData);
 
-
-  filterTest(originalData);
-  exit(0);
-
-
-
+//  filterTest(originalData);
+//  exit(0);
 
   cerr << "simulating station filter" << endl;
 
@@ -330,7 +326,7 @@ int main() {
 
   //  cout << "result:" << endl;
 
-//  printData(invertedFilteredData);
+  printData(invertedFilteredData);
 
   destroyFFT();
   return 0;
