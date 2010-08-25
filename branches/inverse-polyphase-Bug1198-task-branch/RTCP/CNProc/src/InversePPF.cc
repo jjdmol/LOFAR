@@ -81,7 +81,6 @@ void InversePPF::performFilter(InverseFilteredData& invertedFilteredData, unsign
   float sample = itsFftOutData[minorTime];
   float result = itsFIRs[minorTime].processNextSample(sample);
   invertedFilteredData.samples[time * itsOnStationFilterSize + minorTime] = result;
-//  invertedFilteredData.samples[time * itsOnStationFilterSize + minorTime] = sample;
 }
 
 // Goes from tansposedBeamFormedData to itsFftInData.

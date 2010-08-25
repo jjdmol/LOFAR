@@ -49,11 +49,11 @@ fftw_plan plan;
 const static unsigned onStationFilterSize = 1024;
 const static unsigned nrTaps = 16;
 
-//static unsigned nrSubbands = 248;
-static unsigned nrSubbands = 4;
+static unsigned nrSubbands = 248;
+//static unsigned nrSubbands = 4;
 static unsigned nrChannels = 1; // for the NuMoon pipeline, there are no separate channels.
 //static unsigned nrSamplesPerIntegration = 768 * 256 / 4; // one quarter of a second
-static unsigned nrSamplesPerIntegration = 32; // one quarter of a second
+static unsigned nrSamplesPerIntegration = 64; // one quarter of a second
 static double sampleRate = 195312.5;
 static double centerFrequency = (nrSamplesPerIntegration / 2) * sampleRate;
 static double signalFrequency = centerFrequency - (0.5 * sampleRate);
@@ -93,21 +93,10 @@ static void destroyFFT() {
 #endif
 }
 
-/*
- static fcomplex toComplex(double phi) {
- double s, c;
- sincos(phi, &s, &c);
- return makefcomplex(c, s);
- }
- */
-
 static void generateInputSignal(InverseFilteredData& originalData) {
   for (unsigned time = 0; time < nrSamplesPerIntegration * onStationFilterSize; time++) {
-//    double val = sin(signalFrequency * time / sampleRate);
-    double val = sin(time/768.0);
+    double val = sin(time/(768.0*2.0));
     originalData.samples[time] = val;
-    //    double phi = 2 * M_PI * signalFrequency * time / sampleRate;
-    //    originalData.samples[time] = toComplex(phi);
   }
 }
 
@@ -131,7 +120,6 @@ static void performStationFilter(InverseFilteredData& originalData, vector<FIR<f
     float sample = originalData.samples[time * onStationFilterSize + minorTime];
     float result = FIRs[minorTime].processNextSample(sample);
     fftInData[minorTime] = result;
-    //    fftInData[minorTime] = sample;
   }
 }
 
@@ -142,6 +130,7 @@ static void printData(InverseFilteredData& data) {
   }
 }
 
+#if 0
 static void cepFilterTest() {
   // CEP filter test
   FilterBank fb(true, 16, 256, KAISER);
@@ -156,7 +145,9 @@ static void cepFilterTest() {
   fb.printWeights();
   cout << "END CEP WEIGHTS" << endl;
 }
+#endif
 
+#if 0
 static void fftTest() {
   float* inputData = (float*) malloc(onStationFilterSize * sizeof(float));
 
@@ -212,7 +203,9 @@ static void fftTest() {
   cerr << "max error = " << maxError << endl;
   free(inputData);
 }
+#endif
 
+#if 0
 // Do a station filter + inverse filter, but not the FFTs.
 static void filterTest(InverseFilteredData& originalData) {
   FilterBank originalStationFilterBank(true, nrTaps, onStationFilterSize, (float*) originalStationPPFWeightsFloat);
@@ -247,7 +240,7 @@ static void filterTest(InverseFilteredData& originalData) {
     }
   }
 }
-
+#endif
 
 int main() {
 
@@ -298,7 +291,7 @@ int main() {
 
   generateInputSignal(originalData);
 
-//  printData(originalData);
+  printData(originalData);
 
 //  filterTest(originalData);
 //  exit(0);
@@ -326,7 +319,7 @@ int main() {
 
   //  cout << "result:" << endl;
 
-  printData(invertedFilteredData);
+//  printData(invertedFilteredData);
 
   destroyFFT();
   return 0;
