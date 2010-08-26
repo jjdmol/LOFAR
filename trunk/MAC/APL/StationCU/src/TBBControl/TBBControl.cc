@@ -1466,7 +1466,8 @@ GCFEvent::TResult TBBControl::_triggerEventHandler(GCFEvent& event)
 											msg.peak_value,
 											0);
 	itsVHECRTask->addTrigger(trigger);
-
+    LOG_DEBUG_STR("Sending Trigger to VHECR task:" << endl << trigger);
+	/*
 	LOG_TRACE_FLOW ("Sending trigger to PVSS");
 
 	itsPropertySet->setValue(PN_TBC_TRIGGER_RCU_NR,      GCFPVInteger(msg.rcu),            0.0, false);
@@ -1481,7 +1482,7 @@ GCFEvent::TResult TBBControl::_triggerEventHandler(GCFEvent& event)
 							msg.sample_nr, msg.trigger_sum, msg.trigger_samples, msg.peak_value));
 	itsPropertySet->setValue(PN_TBC_TRIGGER_TABLE,       GCFPVString (collection),         0.0, false);
 	itsPropertySet->flush();
-
+    */
 	if((itsTriggerMode[msg.rcu] & 1) == 0) {
 		// release trigger system if mode is one shot (bit0 = 0)
 		TBBTrigReleaseEvent release;
