@@ -171,13 +171,11 @@ namespace LOFAR
 			try {
 				// Open ParmDBLog ParmDB for solver logging
 				LOG_INFO_STR("Solver log table: " << solverDb);
-				LOG_INFO_STR("Solver logging level" << loggingLevel);
+				LOG_INFO_STR("Solver logging level: " << loggingLevel);
 				
 				// Depending on value read from parset file for logging level call constructor
 				// with the corresponding enum value
 				//
-	//			if(loggingLevel=="NONE")
-	//				itsParmLogger.reset(new ParmDBLog(solverDb));	// call without logging object
 				if(loggingLevel=="PERSOLUTION")
 					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
 				if(loggingLevel=="PERSOLUTION_CORRMATRIX")
@@ -736,7 +734,10 @@ namespace LOFAR
             solGrid, cellChunkSize, command.propagate());
 
           if(itsParmLogger != NULL)
+          {
+          	 LOG_DEBUG_STR("controller.run(*itsParmLogger)");
           	 controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
+          }
           else
           	 controller.run();						// run without ParmDB logging
         }

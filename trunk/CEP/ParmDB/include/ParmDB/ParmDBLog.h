@@ -59,7 +59,8 @@ namespace BBS {
     // not exist yet.
     // If <src>lock=true</src> a write lock is acquired. In this way no
     // implcit locks have to be acquired on each access.
-    explicit ParmDBLog (const std::string& tableName, enum LoggingLevel LogLevel=PERSOLUTION, bool forceNew=false,
+    // The default logging level is PERSOLUTION
+    explicit ParmDBLog (const std::string& tableName, enum LoggingLevel LogLevel=PERSOLUTION, bool forceNew=true,
                         bool lock=true);
 
     ~ParmDBLog();
@@ -75,7 +76,7 @@ namespace BBS {
     // Add a solve entry (without correlation matrix).
     void add (double startFreq, double endFreq,
               double startTime, double endTime,
-              uint iter, uint maxIter,
+              uint iter, uint maxIter, bool lastIter,
               uint rank, uint rankDeficiency,
               double chiSquare, double lmFactor,
               const vector<double>& solution, const string& message);
@@ -83,7 +84,7 @@ namespace BBS {
     // Add a solve entry (with correlation matrix).
     void add (double startFreq, double endFreq,
               double startTime, double endTime,
-              uint iter, uint maxIter,
+              uint iter, uint maxIter, bool lastIter,
               uint rank, uint rankDeficiency,
               double chiSquare, double lmFactor,
               const vector<double>& solution, const string& message,
@@ -104,7 +105,7 @@ namespace BBS {
     // Add a row and write the values.
     void doAdd (double startFreq, double endFreq,
                 double startTime, double endTime,
-                uint iter, uint maxIter,
+                uint iter, uint maxIter, bool lastIter,
                 uint rank, uint rankDeficiency,
                 double chiSquare, double lmFactor,
                 const vector<double>& solution, const string& message);
@@ -118,6 +119,7 @@ namespace BBS {
     casa::ScalarColumn<casa::Double> itsEndTime;
     casa::ScalarColumn<casa::uInt>   itsIter;
     casa::ScalarColumn<casa::uInt>   itsMaxIter;
+    casa::ScalarColumn<casa::Bool>   itsLastIter;
     casa::ScalarColumn<casa::uInt>   itsRank;
     casa::ScalarColumn<casa::uInt>   itsRankDef;
     casa::ScalarColumn<casa::Double> itsChiSqr;
