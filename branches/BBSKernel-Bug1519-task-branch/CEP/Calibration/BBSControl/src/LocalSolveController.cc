@@ -256,7 +256,7 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 			// If logging per iteration is requested...
 			// Need to loop over chunks to access individual (intermediate) solutions
 			//
-			LOG_DEBUG_STR("Loglevel: " << parmLogger.getLoggingLevel());
+			//LOG_DEBUG_STR("Loglevel: " << parmLogger.getLoggingLevel());
 			
 			if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION || parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX)
 			{	
@@ -270,9 +270,9 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
  		   		
 					if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION )
 					{
-						LOG_DEBUG_STR("logging PERITERATION id = " << it->id << " iter = " << it->niter);
-						LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
-						LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first); 		   		
+						//LOG_DEBUG_STR("logging PERITERATION id = " << it->id << " iter = " << it->niter);
+						//LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
+						//LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first); 		   		
 
 						parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
 									solutionBox.upper().second, it->niter, it->maxIter, done, it->rank, it->rankDeficiency,
@@ -281,9 +281,9 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 					// or logging per iteration including the correlation matrix
 					else if( parmLogger.getLoggingLevel()==ParmDBLog::PERITERATION_CORRMATRIX )
 					{
-						LOG_DEBUG_STR("logging PERITERATION_CORRMATRIX");
-						LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
-						LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);
+						//LOG_DEBUG_STR("logging PERITERATION_CORRMATRIX");
+						//LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
+						//LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);
 						
 						parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
 									solutionBox.upper().second, it->niter, it->maxIter, done, it->rank, it->rankDeficiency,
@@ -317,9 +317,9 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 			  	  // Write solver parameters for each solution into parmDB if parm logging level was set
 			  	  if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION)
 			  	  {
-			  	  	  LOG_DEBUG_STR("logging PERSOLUTION");			 
-					  LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
-					  LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);
+			  	  	  //LOG_DEBUG_STR("logging PERSOLUTION");			 
+					  //LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
+					  //LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);
 			  	  	  parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
 			  	  	  	  solutionBox.upper().second, it->niter, it->maxIter, true, it->rank, it->rankDeficiency,
 			  	  	  	  it->chiSqr, it->lmFactor, it->coeff, it->resultText);
@@ -327,9 +327,9 @@ void LocalSolveController::run(ParmDBLog &parmLogger)
 			  	  // write solver parameters including correlation matrix to parmDB
 			  	  else if(parmLogger.getLoggingLevel()==ParmDBLog::PERSOLUTION_CORRMATRIX)
 			  	  {
-			  	  	  LOG_DEBUG_STR("logging PERSOLUTION_CORRMATRIX");
-					  LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
-					  LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);
+			  	  	  //LOG_DEBUG_STR("logging PERSOLUTION_CORRMATRIX");
+					  //LOG_DEBUG_STR("solutionBox.lower().first = " << solutionBox.lower().first);
+					  //LOG_DEBUG_STR("solutionBox.upper().first = " << solutionBox.upper().first);
 			  	  	  parmLogger.add(solutionBox.lower().first, solutionBox.upper().first, solutionBox.lower().second, 
 			  	  	  	  solutionBox.upper().second, it->niter, it->maxIter, true, it->rank, it->rankDeficiency,
 			  	  	  	  it->chiSqr, it->lmFactor, it->coeff, it->resultText, it->CorrMatrix);			 
