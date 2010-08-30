@@ -496,6 +496,10 @@ class Parset(util.Parset.Parset):
     def getStoragePorts( self ):
       """ Returns a dictionary of the ports (value) required by each storage node (key). """
 
+      if self["OLAP.OLAP_Conn.IONProc_Storage_Transport"] == "NULL":
+        # no storage used
+        return []
+
       globalPorts = self.getInt32Vector("OLAP.OLAP_Conn.IONProc_Storage_Ports")
       storageNodes = self.storagenodes
       subbandMapping = self.getInt32Vector("OLAP.storageNodeList")
