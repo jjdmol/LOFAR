@@ -25,6 +25,7 @@ if __name__ == "__main__":
     stations=xxx+yyy  use stations xxx and yyy
     tcp               station input arrives over TCP
     null              station input is generated from null:
+    nostorage         do not start storage processes
 
     start=xxx         start/stop time. allowed syntax:
     stop=xxx            [YYYY-MM-DD] HH:MM[:SS]

@@ -94,7 +94,8 @@ def buildParset( parset = None, args = "", olapparset = "OLAP.parset", partition
   validObsParams = [
     "parset", "output", "stations", "tcp", "null",
     "start", "stop", "run",
-    "clock", "integration"
+    "clock", "integration",
+    "nostorage"
   ]
 
   def isValidObsParam( key ):
@@ -212,6 +213,9 @@ def buildParset( parset = None, args = "", olapparset = "OLAP.parset", partition
       s.inputs = ["null:"] * len(s.inputs)
 
   parset.setStations( stationList )
+
+  if "nostorage" in obsparams:
+    parset.disableStorage()
 
   # set runtime
   if "start" in obsparams and "stop" in obsparams:
