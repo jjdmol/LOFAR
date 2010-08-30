@@ -104,6 +104,7 @@ private:
 	bool CheckSize(GCFEvent& event, GCFPortInterface& port);
 	bool sendInfo(GCFEvent& event, GCFPortInterface& port);
 	bool addTbbCommandToQueue(GCFEvent& event, GCFPortInterface& port);
+	bool handleTbbCommandFromQueue();
 	bool SetTbbCommand(unsigned short signal);
 	
 	TbbSettings *TS;
@@ -125,12 +126,12 @@ private:
 	
 	std::deque<TbbEvent*> *itsTbbQueue;
 	
-	GCFTCPPort     itsAcceptor;     // listen for clients on this port
-	GCFETHRawPort* itsBoard;        // array of ports, one for each TBB board
+	GCFTCPPort     itsAcceptor;    // listen for clients on this port
+	GCFETHRawPort* itsBoard;       // array of ports, one for each TBB board
 	GCFTimerPort*  itsAliveTimer;  // used to check precence and reset of the boards
 	GCFTimerPort*  itsSetupTimer;  // used in the setup state
-	GCFTimerPort*  itsCmdTimer;  // used by CommandHandler
-	//GCFTimerPort*  itsSaveTimer;  // used to save triggers to a file
+	GCFTimerPort*  itsCmdTimer;    // used by CommandHandler
+	GCFTimerPort*  itsQueueTimer;  // used to handle events in queue
 	std::list<GCFPortInterface*> itsClientList;  // list of clients
 };
 
