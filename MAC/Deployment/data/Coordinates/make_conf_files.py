@@ -34,7 +34,7 @@ def print_help():
 ## write hba deltas to a File
 ##
 def writeHBADeltas(station,deltas):
-    filename = 'HBA_DELTAS/%s-iHBADeltas.conf' %(str(station).upper())
+    filename = '../StaticMetaData/iHBADeltas/%s-iHBADeltas.conf' %(str(station).upper())
     f = open(filename,'w')
     f.write('#\n')
     f.write('# HBADeltas for %s\n' %(str(station).upper()))
@@ -55,7 +55,7 @@ def writeHBADeltas(station,deltas):
 ##
 def writeAntennaFieldHeader(station,frame):
     dataStr = ''
-    fileName = 'ANTENNA_FILES/'+ station + '-AntennaField.conf'
+    fileName = '../StaticMetaData/AntennaFields/'+ station + '-AntennaField.conf'
     file = open(fileName, 'w')
 
     dataStr += '#\n'
