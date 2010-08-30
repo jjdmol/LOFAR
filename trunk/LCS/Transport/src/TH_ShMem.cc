@@ -279,6 +279,8 @@ bool TH_ShMem::sendBlocking(void* buf, int nbytes, int tag, DataHolder* dh)
   DBGASSERT (nbytes == dh->getDataSize()
 	     && buf == dh->getDataPtr());
 
+  (void)nbytes; (void)dh; // prevent compiler warnings if DBGASSERT is not enabled           
+
   if (itsFirstCall)
   {
     itsFirstCall = false;
