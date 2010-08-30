@@ -379,7 +379,7 @@ static void openShm()
   //shm->minimumNumberOfFilledReceiveFIFOslots = 0;
 }
 
-
+#if 0
 static void closeShm()
 {
   if (Kernel_ProcessCount() > 1) {
@@ -398,7 +398,7 @@ static void closeShm()
     delete [] static_cast<char *>(unalignedShmPtr);
   }
 }
-
+#endif
 
 static void allocateMutexes()
 {
