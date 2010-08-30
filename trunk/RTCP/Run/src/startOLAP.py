@@ -69,11 +69,6 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
 			help = "disable the IONProc section [%default]" )
-  secgroup.add_option( "--nostorage",
-  			dest = "nostorage",
-			action = "store_true",
-			default = False,
-			help = "disable the storage section [%default]" )
   parser.add_option_group( secgroup )
 
   dirgroup = OptionGroup(parser, "Directory and file locations")
