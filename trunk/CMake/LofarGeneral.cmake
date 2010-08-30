@@ -109,7 +109,7 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
         getprotobyname_r(\"tcp\", &result_buf, buf, sizeof buf, &result);
       }" HAVE_GETPROTOBYNAME_R)
 
-    if(NOT DEFINED HAVE_GETPROTOBYNAME_R)  
+    if(NOT HAVE_GETPROTOBYNAME_R)  
       # Solaris uses a different calling convention -- it returns a pointer to
       # the struct instead of an integer
       check_c_source_compiles("
@@ -119,7 +119,7 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
           char buf[1024];
           getprotobyname_r(\"tcp\", &result_buf, buf, sizeof buf);
         }" HAVE_GETPROTOBYNAME_R_SHORT)
-    endif(NOT DEFINED HAVE_GETPROTOBYNAME_R)
+    endif(NOT HAVE_GETPROTOBYNAME_R)
   endif(HAVE_NETDB_H)
 
   ## --------------------------------------------------------------------------
