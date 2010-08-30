@@ -16,6 +16,9 @@
 /* Define to 1 if you have the <net/ethernet.h> header file. */
 #cmakedefine HAVE_NET_ETHERNET_H 1
 
+/* Define to 1 if you have the <netdb.h> header file. */
+#cmakedefine HAVE_NETDB_H 1
+
 /* Define to 1 if you have the <netinet/in.h> header file. */
 #cmakedefine HAVE_NETINET_IN_H 1
 
@@ -160,3 +163,9 @@
 
 /* Define to 1 if you have a declaration for the `basename' function. */
 #cmakedefine HAVE_DECL_BASENAME 1
+
+/* Define to 1 if you have a declaration for the `getprotobyname_r' function which uses the regular calling convention. */
+#cmakedefine HAVE_GETPROTOBYNAME_R 1
+
+/* Define to 1 if you have a declaration for the `getprotobyname_r' function which uses a shorter calling convention. */
+#cmakedefine HAVE_GETPROTOBYNAME_R_SHORT 1
