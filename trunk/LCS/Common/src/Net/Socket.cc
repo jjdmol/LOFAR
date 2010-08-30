@@ -41,11 +41,19 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#if !defined HAVE_BGL
+#ifdef HAVE_NETDB_H 
 // netdb is not available on BGL; all code using netdb will be 
 // conditionally included using the HAVE_BGL definition;
 #include <netdb.h>
 #endif
+
+#if !defined(HAVE_GETPROTOBYNAME_R) && !defined(HAVE_GETPROTOBYNAME_R_SHORT)
+  #ifdef USE_THREADS
+  #include <pthread.h>
+  static pthread_mutex_t getprotobyname_mutex = PTHREAD_MUTEX_INITIALIZER;
+  #endif  
+#endif
+
 
 #endif
 
@@ -434,13 +442,47 @@ int32 Socket::initTCPSocket(bool	asServer)
 
 	// Try to map protocol name to protocol number
 	const char*			protocol = (itsType == UDP ? "udp" : "tcp");
+
+#if defined(HAVE_GETPROTOBYNAME_R)
 	struct protoent*	protoEnt;
 	struct protoent 	protoEnt_buf;
     char                buf[1024];
 	if (getprotobyname_r(protocol, &protoEnt_buf, buf, sizeof buf, &protoEnt) != 0) {
 	  return (itsErrno = PROTOCOL);
 	}
-	itsProtocolType = protoEnt->p_proto;
+    itsProtocolType = protoEnt->p_proto;
+#elif defined(HAVE_GETPROTOBYNAME_R_SHORT)
+    // Solaris returns a pointer to the struct instead of an integer
+	struct protoent*	protoEnt;
+	struct protoent 	protoEnt_buf;
+    char                buf[1024];
+	if ((protoEnt = getprotobyname_r(protocol, &protoEnt_buf, buf, sizeof buf)) == 0) {
+	  return (itsErrno = PROTOCOL);
+	}
+    itsProtocolType = protoEnt->p_proto;
+#else
+    // Mac OS/X does not have either
+	struct protoent*	protoEnt;
+
+    #ifdef USE_THREADS
+    pthread_mutex_lock( &getprotobyname_mutex );
+    #endif
+
+	protoEnt = getprotobyname(protocol);
+
+    if (protoEnt) {
+	  itsProtocolType = protoEnt->p_proto;
+    }
+
+    #ifdef USE_THREADS
+    pthread_mutex_unlock( &getprotobyname_mutex );
+    #endif
+
+	if (!protoEnt) {
+	  return (itsErrno = PROTOCOL);
+	}
+#endif
+
 #endif
 
 	// Finally time to open the real socket

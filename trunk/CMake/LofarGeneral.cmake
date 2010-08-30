@@ -56,6 +56,7 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
   check_include_file(inttypes.h     HAVE_INTTYPES_H)
   check_include_file(memory.h       HAVE_MEMORY_H)
   check_include_file(net/ethernet.h HAVE_NET_ETHERNET_H)
+  check_include_file(netdb.h        HAVE_NETDB_H)
   check_include_file(netinet/in.h   HAVE_NETINET_IN_H)
   check_include_file(signal.h       HAVE_SIGNAL_H)
   check_include_file(stdint.h       HAVE_STDINT_H)
@@ -92,6 +93,34 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
       break()
     endif(HAVE_${func_name})
   endforeach(func_name)
+
+  ## --------------------------------------------------------------------------
+  ## Define `GET_PROTOBYNAME_R' or `GET_PROTOBYNAME_R_SHORT', if
+  ## getprotobyname_r is available using a regular or shorter calling
+  ## convention.
+  ## --------------------------------------------------------------------------
+  include(CheckCSourceCompiles)
+  if(HAVE_NETDB_H)
+    check_c_source_compiles("
+      #include <netdb.h>
+      int main() {
+        struct protoent *result, result_buf;
+        char buf[1024];
+        getprotobyname_r(\"tcp\", &result_buf, buf, sizeof buf, &result);
+      }" HAVE_GETPROTOBYNAME_R)
+
+    if(NOT DEFINED HAVE_GETPROTOBYNAME_R)  
+      # Solaris uses a different calling convention -- it returns a pointer to
+      # the struct instead of an integer
+      check_c_source_compiles("
+        #include <netdb.h>
+        int main() {
+          struct protoent *result, result_buf;
+          char buf[1024];
+          getprotobyname_r(\"tcp\", &result_buf, buf, sizeof buf);
+        }" HAVE_GETPROTOBYNAME_R_SHORT)
+    endif(NOT DEFINED HAVE_GETPROTOBYNAME_R)
+  endif(HAVE_NETDB_H)
 
   ## --------------------------------------------------------------------------
   ## Define custom target 'check', so that we can do 'make check', like we did
