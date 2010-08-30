@@ -146,7 +146,9 @@ static inline void waitForFreeSendSlot()
 }
 
 
+#if 0
 static unsigned minimumNumberOfFilledReceiveFIFOslots;
+#endif
 
 
 static inline void waitForIncomingPacket()
