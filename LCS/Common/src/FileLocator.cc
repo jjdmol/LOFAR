@@ -34,6 +34,17 @@
 namespace LOFAR {
 
 //
+// rstripSlashes() : strip trailing slashes.
+//
+void rstripSlashes(string& path)
+{
+	string::size_type pos = path.find_last_not_of('/');
+	if(pos != string::npos) {
+		path.erase(pos + 1);
+	}
+}
+
+//
 // FileLocator()
 //
 FileLocator::FileLocator()
@@ -83,9 +94,7 @@ void 	FileLocator::addPathAtBack  (const string& aPath)
 			end = sepPos;
 		}
 		// besure path does not end in a '/'
-		if (thePath[end-1] == '/') {
-			end--;
-		}
+		rstripSlashes(thePath);
 		// add path to list.
 		itsPaths.push_back(thePath.substr(start, end-start));
 		start = sepPos+1;
@@ -114,9 +123,7 @@ void 	FileLocator::addPathAtFront (const string& aPath)
 			start = sepPos;
 		}
 		// be sure path does not end in a '/'
-		if (thePath[end] == '/') {
-			end--;
-		}
+		rstripSlashes(thePath);
 		// add path to list.
 		itsPaths.push_front(thePath.substr(start+1, end-start));
 		end = sepPos-1;
@@ -141,7 +148,7 @@ string	FileLocator::getPath		()
 
 	// append all paths in the chain
 	while (iter != chainEnd) {
-		result.append(*iter + "/:");
+		result.append(*iter + ":");
 		++iter;
 	}
 	
@@ -163,16 +170,14 @@ bool 	FileLocator::hasPath		(const string& aPath)
 	string		path2find(resolveInput(aPath));
 	
 	// Paths are stored without an trailing /, remove it from argument.
-	if (path2find[path2find.size()-1] == '/') {
-		path2find.erase(path2find.size() - 1, 1);
-	}
+	rstripSlashes(path2find);
 
 	while (iter != chainEnd) {
 		if (*iter == path2find) {
 			return (true);
 		}
 		if (!itsSubdir.empty()) {
-			if ((*iter)+itsSubdir == path2find) {
+			if ((*iter)+"/"+itsSubdir == path2find) {
 				return(true);
 			}
 		}
@@ -193,9 +198,7 @@ void	FileLocator::removePath  (const string& aPath)
 	string		path2remove(resolveInput(aPath));
 	
 	// Paths are stored without an trailing /, remove it from argument.
-	if (path2remove[path2remove.size()-1] == '/') {
-		path2remove.erase(path2remove.size() - 1, 1);
-	}
+	rstripSlashes(path2remove);
 
 	itsPaths.remove(path2remove);
 }
@@ -227,11 +230,12 @@ string	FileLocator::locate		(const string& aFile)
 		for (int32 test = 0; test <= (itsSubdir.empty() ? 0 : 1); test++) {
 			struct stat		fileStat;
 			string			fullname;
+			fullname = *iter + (*iter != "/" ? "/" : "");
 			if (test == 0) {	// basedir?
-				fullname = *iter + "/" + aFile;
+				fullname += aFile;
 			}
 			else {				// test subdir
-				fullname = *iter + itsSubdir + "/" + aFile;
+				fullname += itsSubdir + "/" + aFile;
 			}
 			int result = stat(fullname.c_str(), &fileStat);
 			if (result == 0) { // found?
@@ -251,20 +255,10 @@ string	FileLocator::locate		(const string& aFile)
 //
 // addSubdir(aSubdir)
 //
-void FileLocator::setSubdir(const string&	aSubdir)
+void FileLocator::setSubdir(string	aSubdir)
 {
-	string::size_type		start = 0;
-	string::size_type		end = aSubdir.size();
-
-	if (aSubdir[start] == '/') {
-		start++;
-	}
-
-	if (aSubdir[end] == '/') {
-		end--;
-	}
-
-	itsSubdir = "/"+aSubdir.substr(start, end-start);
+	rstripSlashes(aSubdir);
+	itsSubdir = aSubdir;
 }
 
 
