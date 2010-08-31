@@ -76,7 +76,7 @@ public:
 	//# Functions for managing subpath
 	// Use given subdir when searching the files. First the 'basedir' is
 	// tried, then the 'basedir'/'subdir' is tried.
-	void			setSubdir  (const string&	aSubdir);
+	void			setSubdir  (string	aSubdir);
 	// Clear the subdir
 	inline void		clearSubdir();
 	// Show the subdir
