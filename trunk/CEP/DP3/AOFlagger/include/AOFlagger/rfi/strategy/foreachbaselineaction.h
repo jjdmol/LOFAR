@@ -96,7 +96,7 @@ namespace rfiStrategy {
 				boost::mutex::scoped_lock lock(_mutex);
 				while(_baselineBuffer.size() == 0 && !_exceptionOccured && !_finishedBaselines)
 					_dataAvailable.wait(lock);
-				if(_finishedBaselines || _exceptionOccured)
+				if((_finishedBaselines && _baselineBuffer.size() == 0) || _exceptionOccured)
 					return 0;
 				else
 				{
