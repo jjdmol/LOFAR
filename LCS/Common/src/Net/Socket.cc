@@ -47,7 +47,7 @@
 #include <netdb.h>
 #endif
 
-#if !defined(HAVE_GETPROTOBYNAME_R) && !defined(HAVE_GETPROTOBYNAME_R_SHORT)
+#if !defined(HAVE_GETPROTOBYNAME_R)
   #ifdef USE_THREADS
   #include <pthread.h>
   static pthread_mutex_t getprotobyname_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -447,21 +447,18 @@ int32 Socket::initTCPSocket(bool	asServer)
 	struct protoent*	protoEnt;
 	struct protoent 	protoEnt_buf;
     char                buf[1024];
-	if (getprotobyname_r(protocol, &protoEnt_buf, buf, sizeof buf, &protoEnt) != 0) {
-	  return (itsErrno = PROTOCOL);
-	}
-    itsProtocolType = protoEnt->p_proto;
-#elif defined(HAVE_GETPROTOBYNAME_R_SHORT)
-    // Solaris returns a pointer to the struct instead of an integer
-	struct protoent*	protoEnt;
-	struct protoent 	protoEnt_buf;
-    char                buf[1024];
+#ifdef _sun_
 	if ((protoEnt = getprotobyname_r(protocol, &protoEnt_buf, buf, sizeof buf)) == 0) {
 	  return (itsErrno = PROTOCOL);
 	}
+#else
+	if (getprotobyname_r(protocol, &protoEnt_buf, buf, sizeof buf, &protoEnt) != 0) {
+	  return (itsErrno = PROTOCOL);
+	}
+#endif    
     itsProtocolType = protoEnt->p_proto;
 #else
-    // Mac OS/X does not have either
+    // Mac OS/X does not have getprotobyname_r
 	struct protoent*	protoEnt;
 
     #ifdef USE_THREADS

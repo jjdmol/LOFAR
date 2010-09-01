@@ -106,20 +106,12 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
       int main() {
         struct protoent *result, result_buf;
         char buf[1024];
+        #ifdef _sun_
+        getprotobyname_r(\"tcp\", &result_buf, buf, sizeof buf);
+        #else
         getprotobyname_r(\"tcp\", &result_buf, buf, sizeof buf, &result);
+        #endif
       }" HAVE_GETPROTOBYNAME_R)
-
-    if(NOT HAVE_GETPROTOBYNAME_R)  
-      # Solaris uses a different calling convention -- it returns a pointer to
-      # the struct instead of an integer
-      check_c_source_compiles("
-        #include <netdb.h>
-        int main() {
-          struct protoent *result, result_buf;
-          char buf[1024];
-          getprotobyname_r(\"tcp\", &result_buf, buf, sizeof buf);
-        }" HAVE_GETPROTOBYNAME_R_SHORT)
-    endif(NOT HAVE_GETPROTOBYNAME_R)
   endif(HAVE_NETDB_H)
 
   ## --------------------------------------------------------------------------
