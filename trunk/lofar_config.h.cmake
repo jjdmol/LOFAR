@@ -164,8 +164,5 @@
 /* Define to 1 if you have a declaration for the `basename' function. */
 #cmakedefine HAVE_DECL_BASENAME 1
 
-/* Define to 1 if you have a declaration for the `getprotobyname_r' function which uses the regular calling convention. */
+/* Define to 1 if you have a declaration for the `getprotobyname_r' function. */
 #cmakedefine HAVE_GETPROTOBYNAME_R 1
-
-/* Define to 1 if you have a declaration for the `getprotobyname_r' function which uses a shorter calling convention. */
-#cmakedefine HAVE_GETPROTOBYNAME_R_SHORT 1
