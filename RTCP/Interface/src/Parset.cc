@@ -195,6 +195,10 @@ Stream *Parset::createStream(const string &description, bool asServer)
     return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 30);
   else if (split.size() == 3 && split[0] == "tcp")
     return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 30);
+  else if (split.size() == 3 && split[0] == "udpkey")
+    return new SocketStream(split[1].c_str(), 0, SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 30, split[2].c_str());
+  else if (split.size() == 3 && split[0] == "tcpkey")
+    return new SocketStream(split[1].c_str(), 0, SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 30, split[2].c_str());
   else if (split.size() == 2 && split[0] == "file")
     return asServer ? new FileStream(split[1].c_str()) : new FileStream(split[1].c_str(), 0666);
   else if (split.size() == 2)
@@ -218,9 +222,7 @@ std::string Parset::getStreamDescriptorBetweenIONandStorage(unsigned subband, un
     unsigned    serverIndex = getUint32Vector(nodelist,true)[subband];
     std::string server = getStringVector(prefix + "_ServerHosts")[serverIndex];
 
-    unsigned    port   = getUint32Vector(prefix + "_Ports",true)[subband + output * nrSubbands()];
-
-    return str(format("tcp:%s:%u") % server % port);
+    return str(format("tcpkey:%s:obs-%s-output-%s-subband-%s") % server % observationID() % output % subband);
   } else if (connectionType == "FILE") {
     std::string filename = str(format("%s.%u") % getString(prefix + "_BaseFileName") % subband);
 

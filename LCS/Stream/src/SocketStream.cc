@@ -22,7 +22,6 @@
 
 #include <lofar_config.h>
 
-#include <Common/SystemCallException.h>
 #include <Stream/SocketStream.h>
 
 #include <cstring>
@@ -35,17 +34,22 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <boost/lexical_cast.hpp>
+
 
 namespace LOFAR {
 
-SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, Mode mode, time_t timeout)
+// port range for unused ports search
+const int MINPORT = 10000;
+const int MAXPORT = 30000;
+
+SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, Mode mode, time_t timeout, const char *nfskey )
 :
   listen_sk(-1)
-{
-  int		  retval;
+{  
   struct addrinfo hints;
-  struct addrinfo *result;
-  
+  bool            autoPort = (port == 0);
+
   // use getaddrinfo, because gethostbyname is not thread safe
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_family = AF_INET; // IPv4
@@ -59,79 +63,122 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
     hints.ai_protocol = IPPROTO_UDP;
   }
 
-  char portStr[16];
-  snprintf(portStr, sizeof portStr, "%hd", port);
+  for(;;) {
+    try {
+      try {
+        char portStr[16];
+        int  retval;
+        struct addrinfo *result;
 
-  if ((retval = getaddrinfo(hostname, portStr, &hints, &result)) != 0)
-    throw SystemCallException("getaddrinfo", retval, THROW_ARGS);
+        if (mode == Client && nfskey)
+          port = readkey(nfskey, timeout);
 
-  // make sure result will be freed
-  struct D {
-    ~D() {
-      freeaddrinfo(result);
-    }
+        if (mode == Server && autoPort && port == 0)
+          port = MINPORT;
 
-    struct addrinfo *result;
-  } onDestruct = { result };
-  (void)onDestruct;
+        snprintf(portStr, sizeof portStr, "%hd", port);
 
-  // result is a linked list of resolved addresses, we only use the first
+        if ((retval = getaddrinfo(hostname, portStr, &hints, &result)) != 0)
+          throw SystemCallException("getaddrinfo", retval, THROW_ARGS);
 
-  if ((fd = socket(result->ai_family, result->ai_socktype, result->ai_protocol)) < 0)
-    throw SystemCallException("socket", errno, THROW_ARGS);
+        // make sure result will be freed
+        struct D {
+          ~D() {
+            freeaddrinfo(result);
+          }
 
-  if (mode == Client) {
-    time_t latestTime = time(0) + timeout;
+          struct addrinfo *result;
+        } onDestruct = { result };
+        (void)onDestruct;
 
-    while (connect(fd, result->ai_addr, result->ai_addrlen) < 0)
-      if (errno == ECONNREFUSED) {
-	if (timeout > 0 && time(0) >= latestTime)
- 	  throw TimeOutException("client socket", THROW_ARGS);
+        // result is a linked list of resolved addresses, we only use the first
 
-	if (usleep(999999) > 0) {
-          // interrupted by a signal handler -- abort to allow this thread to
-          // be forced to continue after receiving a SIGINT, as with any other
-          // system call in this constructor 
- 	  throw SystemCallException("sleep", errno, THROW_ARGS);
+        if ((fd = socket(result->ai_family, result->ai_socktype, result->ai_protocol)) < 0)
+          throw SystemCallException("socket", errno, THROW_ARGS);
+
+        if (mode == Client) {
+          time_t latestTime = time(0) + timeout;
+
+          while (connect(fd, result->ai_addr, result->ai_addrlen) < 0)
+            if (errno == ECONNREFUSED) {
+              if (timeout > 0 && time(0) >= latestTime)
+                throw TimeOutException("client socket", THROW_ARGS);
+
+              if (usleep(999999) > 0) {
+                // interrupted by a signal handler -- abort to allow this thread to
+                // be forced to continue after receiving a SIGINT, as with any other
+                // system call in this constructor 
+                throw SystemCallException("sleep", errno, THROW_ARGS);
+              }
+            } else
+              throw SystemCallException("connect", errno, THROW_ARGS);
+        } else {
+          int on = 1;
+
+          if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) < 0)
+            throw SystemCallException("setsockopt(SO_REUSEADDR)", errno, THROW_ARGS);
+
+          if (bind(fd, result->ai_addr, result->ai_addrlen) < 0)
+            throw BindException("bind", errno, THROW_ARGS);
+
+          if (protocol == TCP) {
+            listen_sk = fd;
+            fd	= -1;
+
+            if (listen(listen_sk, 5) < 0)
+              throw BindException("listen", errno, THROW_ARGS);
+
+            if (nfskey)
+              writekey(nfskey, port);
+
+            // make sure the key will be deleted
+            struct D {
+              ~D() {
+                if (nfskey)
+                  deletekey(nfskey);
+              }
+
+              const char *nfskey;
+            } onDestruct = { nfskey };
+            (void)onDestruct;
+
+            if (timeout > 0) {
+              fd_set fds;
+
+              FD_ZERO(&fds);
+              FD_SET(listen_sk, &fds);
+
+              struct timeval timeval;
+
+              timeval.tv_sec  = timeout;
+              timeval.tv_usec = 0;
+
+              switch (select(listen_sk + 1, &fds, 0, 0, &timeval)) {
+                case -1 : throw SystemCallException("select", errno, THROW_ARGS);
+
+                case  0 : throw TimeOutException("server socket", THROW_ARGS);
+              }
+            }
+
+            if ((fd = accept(listen_sk, 0, 0)) < 0) {
+              throw SystemCallException("accept", errno, THROW_ARGS);
+            }
+          }
         }
-      } else
-	throw SystemCallException("connect", errno, THROW_ARGS);
-  } else {
-    int on = 1;
 
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) < 0)
-      throw SystemCallException("setsockopt(SO_REUSEADDR)", errno, THROW_ARGS);
+        // we have an fd! break out of the infinite loop
+        break;
+      } catch (...) {
+        if (listen_sk >= 0) { close(listen_sk); listen_sk = -1; }
+        if (fd >= 0)        { close(fd);        fd = -1; }
 
-    if (bind(fd, result->ai_addr, result->ai_addrlen) < 0)
-      throw SystemCallException("bind", errno, THROW_ARGS);
-
-    if (protocol == TCP) {
-      listen_sk = fd;
-      fd	= -1;
-
-      if (listen(listen_sk, 5) < 0)
-	throw SystemCallException("listen", errno, THROW_ARGS);
-
-      if (timeout > 0) {
-	fd_set fds;
-
-	FD_ZERO(&fds);
-	FD_SET(listen_sk, &fds);
-
-	struct timeval timeval;
-
-	timeval.tv_sec  = timeout;
-	timeval.tv_usec = 0;
-
-	switch (select(listen_sk + 1, &fds, 0, 0, &timeval)) {
-	  case -1 : throw SystemCallException("select", errno, THROW_ARGS);
-
-	  case  0 : throw TimeOutException("server socket", THROW_ARGS);
-	}
+        throw;
       }
-
-      if ((fd = accept(listen_sk, 0, 0)) < 0)
-	throw SystemCallException("accept", errno, THROW_ARGS);
+    } catch (BindException &e) {
+      if (mode == Server && autoPort && ++port < MAXPORT)
+        continue;
+      else
+        throw;
     }
   }
 }
@@ -144,10 +191,28 @@ SocketStream::~SocketStream()
 }
 
 
-void SocketStream::reaccept()
+void SocketStream::reaccept( time_t timeout )
 {
-  if (close(fd) < 0)
+  if (fd >= 0 && close(fd) < 0)
     throw SystemCallException("close", errno, THROW_ARGS);
+
+  if (timeout > 0) {
+    fd_set fds;
+
+    FD_ZERO(&fds);
+    FD_SET(listen_sk, &fds);
+
+    struct timeval timeval;
+
+    timeval.tv_sec  = timeout;
+    timeval.tv_usec = 0;
+
+    switch (select(listen_sk + 1, &fds, 0, 0, &timeval)) {
+      case -1 : throw SystemCallException("select", errno, THROW_ARGS);
+
+      case  0 : throw TimeOutException("server socket", THROW_ARGS);
+    }
+  }
 
   if ((fd = accept(listen_sk, 0, 0)) < 0)
     throw SystemCallException("accept", errno, THROW_ARGS);
@@ -156,8 +221,51 @@ void SocketStream::reaccept()
 
 void SocketStream::setReadBufferSize(size_t size)
 {
-  if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &size, sizeof size) < 0)
+  if (fd >= 0 && setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &size, sizeof size) < 0)
     perror("setsockopt failed");
+}
+
+short SocketStream::readkey(const char *nfskey, time_t &timeout)
+{
+  for(;;) {
+    char portStr[16];
+    ssize_t len;
+
+    len = readlink(nfskey, portStr, sizeof portStr);
+
+    if (len >= 0) {
+      portStr[len] = 0;
+      return boost::lexical_cast<short>(portStr);
+    }
+
+    if (timeout == 0)
+      throw TimeOutException("client socket", THROW_ARGS);
+
+    if (usleep(999999) > 0) {
+      // interrupted by a signal handler -- abort to allow this thread to
+      // be forced to continue after receiving a SIGINT, as with any other
+      // system call
+      throw SystemCallException("sleep", errno, THROW_ARGS);
+    }
+
+    timeout--;
+  }
+}
+
+void SocketStream::writekey(const char *nfskey, short port)
+{
+  char portStr[16];
+
+  snprintf(portStr, sizeof portStr, "%hd", port);
+
+  if (symlink(portStr, nfskey) < 0)
+    throw SystemCallException("symlink", errno, THROW_ARGS);
+}
+
+void SocketStream::deletekey(const char *nfskey)
+{
+  if (unlink(nfskey) < 0)
+    throw SystemCallException("unlink", errno, THROW_ARGS);
 }
 
 } // namespace LOFAR

@@ -123,7 +123,6 @@ OLAP.maxNetworkDelay = 0.5
 
 # ----- Storage internals
 OLAP.OLAP_Conn.IONProc_Storage_Transport = TCP
-OLAP.OLAP_Conn.IONProc_Storage_Ports = [6300..7291]
 
 # ----- Global internals
 OLAP.log2SasMac = F

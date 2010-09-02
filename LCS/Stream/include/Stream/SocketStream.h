@@ -24,10 +24,10 @@
 #define LOFAR_LCS_STREAM_SOCKET_STREAM_H
 
 #include <Common/Exception.h>
+#include <Common/SystemCallException.h>
 #include <Stream/FileDescriptorBasedStream.h>
 
 #include <time.h>
-
 
 namespace LOFAR {
 
@@ -35,6 +35,7 @@ class SocketStream : public FileDescriptorBasedStream
 {
   public:
     EXCEPTION_CLASS(TimeOutException, LOFAR::Exception);
+    SYSTEMCALLEXCEPTION_CLASS(BindException, LOFAR::SystemCallException);
 
     enum Protocol {
       TCP, UDP
@@ -44,14 +45,18 @@ class SocketStream : public FileDescriptorBasedStream
       Client, Server
     };
 
-  	    SocketStream(const char *hostname, short port, Protocol, Mode, time_t timeout = 0);
+  	    SocketStream(const char *hostname, short port, Protocol, Mode, time_t timeout = 0, const char *nfskey = 0);
     virtual ~SocketStream();
 
-    void    reaccept(); // only for TCP server socket
+    void    reaccept(time_t timeout = 0); // only for TCP server socket
     void    setReadBufferSize(size_t size);
 
   private:
     int     listen_sk;
+
+    static short readkey(const char *nfskey, time_t &timeout);
+    static void writekey(const char *nfskey, short port);
+    static void deletekey(const char *nfskey);
 };
 
 } // namespace LOFAR
