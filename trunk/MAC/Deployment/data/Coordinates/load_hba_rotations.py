@@ -21,14 +21,14 @@ def getRotationLines(filename):
     """
     Returns a list containing all lines with rotations
     """
-    f = open('data/'+filename,'r')
+    f = open(filename,'r')
     lines = f.readlines()
     f.close()
     return [ line.strip().split(',') for line in lines[1:]]
 
 ##
 def getRotation(line):
-    hba0 = hba1 = 0.0
+    hba0 = hba1 = None
     station = str(line[0]).upper()
     if line[1] != '':
         hba0 = (int(line[1])/360.) * 2. * pi
@@ -65,14 +65,14 @@ if __name__ == '__main__':
         try:
             if rotation1 == None:
                 db2.query("select * from add_field_rotation('%s','HBA',%s)" %( stationname, rotation0))
+                print 'station %s  rotation=%f' %(stationname,rotation0)
             if rotation0 != None and rotation1 != None:
                 db2.query("select * from add_field_rotation('%s','HBA0',%s)" %( stationname, rotation0))
                 db2.query("select * from add_field_rotation('%s','HBA1',%s)" %( stationname, rotation1))
-                print 'station=%s  rotation0=%f  rotation1=%f' %(stationname,rotation0, rotation1)
+                print 'station %s  rotation0=%f  rotation1=%f' %(stationname,rotation0, rotation1)
         except:
-            print 'ERR, station=%s has no types defined' %(stationname)
-        
+            print 'WARN, station %s has no HBA types defined yet' %(stationname)
     print ' Done'
     db1.close()
     db2.close()
-    sys.exit(1)
+    sys.exit(0)

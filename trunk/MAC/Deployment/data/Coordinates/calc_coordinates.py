@@ -97,7 +97,7 @@ if __name__ == '__main__':
     #print sys.argv
     if len(sys.argv) != 4:
         print_help()
-        sys.exit(0)
+        sys.exit(1)
     
     #trans=[]
     
@@ -130,5 +130,5 @@ if __name__ == '__main__':
     
     db1.close()
     db2.close()
-    sys.exit(1)
+    sys.exit(0)
 

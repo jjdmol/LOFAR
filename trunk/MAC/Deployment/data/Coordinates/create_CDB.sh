@@ -5,12 +5,19 @@
 # $Id$
 #
 
-DATABASEHOST=10.87.2.185
-DATABASENAME=donker
-if [ $# -eq 1 ]; then
-    DATABASENAME=$1
+if [ -e database.py ]; then
+  DATABASENAME=`grep ^dbName database.py | awk -F= '{print $2}' | sed s/\"//g`
+  DATABASEHOST=`grep ^dbHost database.py | awk -F= '{print $2}' | sed s/\"//g`
+else
+  echo "Cannot find file database.py"
+  exit 1
 fi
 
+echo -e "Using database $DATABASENAME on host $DATABASEHOST; is this ok [y/n]? \c"
+read answer
+if [[ ! "$answer" =~ [yY] ]]; then
+  exit
+fi
 #
 echo "DELETING AND REBUILDING DATABASE " $DATABASENAME
 sleep 5

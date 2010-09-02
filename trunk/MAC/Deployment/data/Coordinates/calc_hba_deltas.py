@@ -6,10 +6,11 @@ import sys,pgdb,pg
 from math import *
 import numpy as np
 import string
+from database import *
 
-dbName="donker"
-dbHost="10.87.2.185"
-#dbHost="dop50"
+# get info from database.py
+dbName=getDBname()
+dbHost=getDBhost()
 
 db1 = pgdb.connect(user="postgres", host=dbHost, database=dbName)
 cursor = db1.cursor()

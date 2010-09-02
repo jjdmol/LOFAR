@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 import re,sys,pg
+from database import *
 
-dbName="donker"
-dbHost="10.87.2.185"
-#dbHost="dop50"
+# get info from database.py
+dbName=getDBname()
+dbHost=getDBhost()
 
 #
 # findStationInfo(stationName)

@@ -159,7 +159,7 @@ def writeAntennaField(station, anttype, aPos):
                     dataStr += '  '
             dataStr += '\n'
         dataStr += ']\n'
-    else: print 'ERROR, no data'
+    else: print 'ERROR, no data for %s, %s' %(station, anttype)
     file.write(dataStr)
     file.close()
     return
@@ -172,7 +172,7 @@ if __name__ == '__main__':
     
     if len(sys.argv) != 3:
         print_help()
-        sys.exit(0)
+        sys.exit(1)
 
     station = str(sys.argv[1]).upper()
     date_years = float(sys.argv[2]) 
@@ -209,7 +209,7 @@ if __name__ == '__main__':
     
     if int(np.shape(aPosL)[0]) == 0 or int(np.shape(aPosH)[0]) == 0:
         print 'ERR, no data found for %s' %(station)
-        exit(0)
+        exit(1)
          
     # do somthing with the data
     print 'Making %s-AntennaField.conf with LBA shape=%s  HBA shape=%s' %(station, np.shape(aPosL), np.shape(aPosL))
@@ -293,6 +293,7 @@ if __name__ == '__main__':
             writeHBADeltas(station,deltas)
         except:
             print 'ERR, no hba-deltas for %s' %(station)
+#            sys.exit(1)
     # if not core station HBADeltas is array 16x3
     else:
         try:
@@ -304,8 +305,9 @@ if __name__ == '__main__':
             writeHBADeltas(station,deltas)
         except:
             print 'ERR, no hba-deltas for %s' %(station)
+ #           sys.exit(1)
     
     db1.close()
     db2.close()
-    sys.exit(1)
+    sys.exit(0)
 

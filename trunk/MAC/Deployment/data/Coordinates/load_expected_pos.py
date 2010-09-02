@@ -63,11 +63,12 @@ if __name__ == '__main__':
     cursor.execute("select name from station")
     stations = cursor.fetchall()
     if station not in stations:
-        print "station %s is not a legal stationame" % stationname
-        sys.exit(1)
+        print "File %s does not refer to a station; continuing with next file" % filename
+        sys.exit()
     db.close()
 
     # show metadata to user
+    print 'file                 : ', filename
     print 'station              : ', stationname
     print 'object types         : ', objecttype
     print 'reference system     : ', refSys
