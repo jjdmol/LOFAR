@@ -55,12 +55,12 @@ void RFIStatistics::Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr
 
 void RFIStatistics::addEverything(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask)
 {
-	addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask);
+	addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask, true);
 	addBaselines(data, metaData, image, mask, segmentedMask, classifiedMask);
 	saveBaselines("counts-baselines.txt");
 }
 
-void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask)
+void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask, bool save)
 {
 	if(metaData->Antenna1().id == metaData->Antenna2().id)
 	{
@@ -74,9 +74,11 @@ void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequen
 			addStokes(_autoAmplitudes, data, metaData);
 			addPolarisations(_autoAmplitudes, data, metaData);
 		}
-		saveChannels(_autoChannels, "counts-channels-auto.txt");
-		saveTimesteps(_autoTimesteps, "counts-timesteps-auto.txt");
-		saveAmplitudes(_autoAmplitudes, "counts-amplitudes-auto.txt");
+		if(save) {
+			saveChannels(_autoChannels, "counts-channels-auto.txt");
+			saveTimesteps(_autoTimesteps, "counts-timesteps-auto.txt");
+			saveAmplitudes(_autoAmplitudes, "counts-amplitudes-auto.txt");
+		}
 	} else {
 		addFeatures(_crossAmplitudes, image, mask, metaData, segmentedMask);
 		segmentedMask.reset();
@@ -88,9 +90,11 @@ void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequen
 			addStokes(_crossAmplitudes, data, metaData);
 			addPolarisations(_crossAmplitudes, data, metaData);
 		}
-		saveChannels(_crossChannels, "counts-channels-cross.txt");
-		saveTimesteps(_crossTimesteps, "counts-timesteps-cross.txt");
-		saveAmplitudes(_crossAmplitudes, "counts-amplitudes-cross.txt");
+		if(save) {
+			saveChannels(_crossChannels, "counts-channels-cross.txt");
+			saveTimesteps(_crossTimesteps, "counts-timesteps-cross.txt");
+			saveAmplitudes(_crossAmplitudes, "counts-amplitudes-cross.txt");
+		}
 	}
 }
 
@@ -533,7 +537,7 @@ void RFIStatistics::addBaselines(const TimeFrequencyData &data, TimeFrequencyMet
 		baseline.broadbandRfiAmplitude = broadbandRfiAmplitude;
 		baseline.lineRfiAmplitude = lineRfiAmplitude;
 		baseline.baselineStatistics = new RFIStatistics();
-		baseline.baselineStatistics->addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask);
+		baseline.baselineStatistics->addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask, false);
 		row.insert(std::pair<int, BaselineInfo>(a2, baseline));
 	} else {
 		BaselineInfo &baseline = row.find(a2)->second;
@@ -545,7 +549,7 @@ void RFIStatistics::addBaselines(const TimeFrequencyData &data, TimeFrequencyMet
 		baseline.lineRfiCount += lineRfiCount;
 		baseline.broadbandRfiAmplitude += broadbandRfiAmplitude;
 		baseline.lineRfiAmplitude += lineRfiAmplitude;
-		baseline.baselineStatistics->addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask);
+		baseline.baselineStatistics->addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask, false);
 	}
 }
 
