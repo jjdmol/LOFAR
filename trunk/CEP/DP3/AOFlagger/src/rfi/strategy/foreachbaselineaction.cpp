@@ -260,7 +260,6 @@ namespace rfiStrategy {
 					++requestedCount;
 					delete index;
 				} else {
-					_action.SetFinishedBaselines();
 					finished = true;
 					break;
 				}
@@ -284,6 +283,7 @@ namespace rfiStrategy {
 			
 			_action._dataAvailable.notify_all();
 		} while(!finished);
+		_action.SetFinishedBaselines();
 	}
 
 	void ForEachBaselineAction::SetProgress(ProgressListener &progress, int no, int count, std::string taskName, int threadId)
