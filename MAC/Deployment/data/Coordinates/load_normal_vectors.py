@@ -23,7 +23,7 @@ def getLines(filename):
     """
     Returns a list containing all lines with normal vectors
     """
-    f = open('data/'+filename,'r')
+    f = open(filename,'r')
     lines = f.readlines()
     f.close()
     return [ line.strip().split(',') for line in lines[3:]]
@@ -77,4 +77,4 @@ if __name__ == '__main__':
     print ' Done'
     db1.close()
     db2.close()
-    sys.exit(1)
+    sys.exit(0)
