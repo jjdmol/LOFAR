@@ -91,8 +91,9 @@ if __name__ == "__main__":
 
   # read and convert parsets
   parsets = [buildParset( None, arg, Locations.resolvePath( options.olapparset ), options.partition ) for arg in args]
-  parsets = combineParsets( parsets )
-  parsets = checkParsets( parsets )
+  for p in parsets:
+    p.preWrite()
+    p.check()
 
   # output them to stdout or file
   info( "========== Saving parsets ==========" )

@@ -493,42 +493,6 @@ class Parset(util.Parset.Parset):
 
       return outputs
 
-    def getStoragePorts( self ):
-      """ Returns a dictionary of the ports (value) required by each storage node (key). """
-
-      if self["OLAP.OLAP_Conn.IONProc_Storage_Transport"] == "NULL":
-        # no storage used
-        return []
-
-      globalPorts = self.getInt32Vector("OLAP.OLAP_Conn.IONProc_Storage_Ports")
-      storageNodes = self.storagenodes
-      subbandMapping = self.getInt32Vector("OLAP.storageNodeList")
-      nrOutputs = self.getNrOutputs()
-
-      assert len(subbandMapping) * nrOutputs <= len(globalPorts), "Not enough Storage ports to listen on (have %d, need %d)" % (len(globalPorts),len(subbandMapping) * nrOutputs)
-
-      localPorts = {}
-
-      for s in storageNodes:
-        localPorts[s] = []
-
-      for i,s in enumerate(subbandMapping):
-        node = storageNodes[s]
-
-        for o in xrange(nrOutputs):
-          portnr = globalPorts[o * len(subbandMapping) + i]
-
-          localPorts[node].append(portnr)
-
-      return localPorts
-
-    def disableStoragePorts( self, reservedPorts ):
-      """ Prevents the use of a certain subset of ports for Storage. """
-
-      portkey = "OLAP.OLAP_Conn.IONProc_Storage_Ports"
-      myports = filter( lambda x: x not in reservedPorts, self.getInt32Vector(portkey) )
-      self[portkey] = myports
-
     def check( self ):
       """ Check the Parset configuration for inconsistencies. """
 

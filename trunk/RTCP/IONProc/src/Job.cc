@@ -156,6 +156,9 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
   ignoreResult = close(0);
   ignoreResult = dup(pipefd[0]);
 
+  char cwd[1024];
+  getcwd( cwd, sizeof cwd );
+
   execl("/usr/bin/ssh",
     "ssh",
     "-i", sshKey,
@@ -165,10 +168,11 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
     "-o", "ServerAliveInterval=30",
     "-l", userName,
     hostName,
-    executable,
-    rank,
-    parset,
-    isBigEndian,
+
+    "cd", cwd, "&&",
+
+    executable, rank, parset, isBigEndian,
+
     static_cast<char *>(0)
   );
 
@@ -189,6 +193,7 @@ void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName
     "\"-o\", \"ServerAliveInterval=30\", "
     "\"-l\", \"" << userName << "\", "
     "\"" << hostName << "\", "
+    "\"cd\", (cwd), \"&&\", " 
     "\"" << executable << "\", "
     "\"" << rank << "\", "
     "\"" << parset << "\", "
