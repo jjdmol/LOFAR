@@ -50,9 +50,9 @@ void rstripSlashes(string& path)
 FileLocator::FileLocator()
 {
 	addPathAtBack(resolveInput(BASE_SEARCH_DIR));
-	string p = getDirname(getExecutablePath());
+	string p = dirname(getExecutablePath());
 	if (!p.empty()) {
-		addPathAtBack(p + ":" + getDirname(p));
+		addPathAtBack(p + ":" + dirname(p));
 	}
 }
 

@@ -63,13 +63,14 @@ uint32 myIPV4Address();
 // returned, if the full path cannot be determined.
 string getExecutablePath();
 
-// Return the basename of \a path. The basename is the part of \a path after
-// the last directory separator character.
-string getBasename(const string& path);
+// Return non-directory portion of a pathname. This implementation closely
+// follows the description in the POSIX standard, IEEE Std 1003.1.
 
-// Return the dirname of \a path. The dirname is the part of \a path up to but
-// not including the last directory separator character.
-string getDirname(const string& path);
+string basename(string path, string suffix="");
+
+// Return the directory portion of a pathname. This implementation closely
+// follows the description in the POSIX standard, IEEE Std 1003.1.
+string dirname(string path);
 
 } // namespace LOFAR
 
