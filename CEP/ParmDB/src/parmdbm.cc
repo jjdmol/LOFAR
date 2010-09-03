@@ -143,8 +143,8 @@ void showHelp()
   cerr << endl;
   cerr << "Show and update contents of parameter tables containing the" << endl;
   cerr << "ME parameters and their defaults." << endl;
-  cerr << " create db='username' dbtype='casa' tablename='meqparm'" << endl;
-  cerr << " open   db='username' dbtype='casa' tablename='meqparm'" << endl;
+  cerr << " create db='username' dbtype='casa' table[name]=" << endl;
+  cerr << " open   db='username' dbtype='casa' table[name]=" << endl;
   cerr << " set    stepx=defaultstepsize stepy=defaultstepsize" << endl;
   cerr << " quit  (or exit or stop)" << endl;
   cerr << endl;
@@ -153,7 +153,7 @@ void showHelp()
   cerr << " adddef parmname valuespec" << endl;
   cerr << " updatedef parmname_pattern valuespec" << endl;
   cerr << " removedef parmname_pattern" << endl;
-  cerr << " export parmname_pattern dbtype='casa' tablename='name' append=0" << endl;
+  cerr << " export parmname_pattern dbtype='casa' table[name]= append=0" << endl;
   cerr << endl;
   cerr << " range [parmname_pattern]       (show the total domain range)" << endl;
   cerr << " show [parmname_pattern] [domain=...]" << endl;
@@ -354,7 +354,8 @@ Block<bool> getMask (const KeyValueMap& kvmap, const string& arrName,
   return res;
 }
 
-Box getDomain (const KeyValueMap& kvmap, int size=2, double defEnd=0)
+Box getDomain (const KeyValueMap& kvmap, ostream& ostr,
+               int size=2, double defEnd=0)
 {
   KeyValueMap::const_iterator value = kvmap.find("domain");
   vector<double> st;
@@ -399,7 +400,7 @@ Box getDomain (const KeyValueMap& kvmap, int size=2, double defEnd=0)
           if (MVTime::read (res, str)) {
             vec.push_back (res.getValue("sec"));
           } else {
-            cout << "Error in interpreting " << iter->getString() << endl;
+            ostr << "Error in interpreting " << iter->getString() << endl;
             ok = false;
             break;
           }
@@ -529,7 +530,7 @@ void newParm (const string& parmName, const KeyValueMap& kvmap, ostream& ostr)
   ParmSet parmset;
   ParmId parmid = parmset.addParm (*parmtab, parmName);
   // Get domain and values (if existing).
-  Box domain = getDomain (kvmap, 2, 1.);
+  Box domain = getDomain (kvmap, ostr, 2, 1.);
   ParmCache cache (parmset, domain);
   ParmValueSet& pvset = cache.getValueSet(parmid);
   // Assure no value exists yet.
@@ -681,19 +682,94 @@ void updateDefParms (ParmMap& parmSet, KeyValueMap& kvmap, ostream& ostr)
   }
 }
 
+// Create a new parm for export.
+int exportNewParm (const string& name, int fixedAxis,
+                   const ParmValueSet& pset, ParmDB& newtab,ostream& ostr)
+{
+  Axis::ShPtr infAxis(new RegularAxis(-1e30, 1e30, 1, true));
+  // Copy the old values.
+  // Check that the fixed axis of all values matches the grid.
+  // Clear the rowId because the new values will be in a new row.
+  vector<ParmValue::ShPtr> values;
+  vector<Grid> grids;
+  values.reserve (pset.size());
+  grids.reserve (pset.size());
+  const Axis& ax0 = *(pset.getParmValue(0).getGrid()[fixedAxis]);
+  for (uint i=0; i<pset.size(); ++i) {
+    ParmValue::ShPtr pval(new ParmValue(pset.getParmValue(i)));
+    if (*(pval->getGrid()[fixedAxis]) != ax0) {
+      return 0;
+    }
+    pval->clearRowId();
+    values.push_back (pval);
+    if (fixedAxis == 0) {
+      grids.push_back (Grid(infAxis, pval->getGrid()[1]));
+    } else {
+      grids.push_back (Grid(pval->getGrid()[0], infAxis));
+    }
+  }
+  // Create the set from the values.
+  ParmValueSet newSet(Grid(grids), values, pset.getDefParmValue(),
+                      pset.getType(),
+                      pset.getPerturbation(), pset.getPertRel());
+  newSet.setSolvableMask (pset.getSolvableMask());
+  // Write the value with the correct id.
+  Int nameId = newtab.getNameId (name);
+  newtab.putValues (name, nameId, newSet);
+  ostr << "Exported record for parameter " << name << endl;
+  return 1;
+}
+
 // Copy constant scalar values to default values in the new table.
-int exportParms (const ParmMap& parmset, ParmDB& newtab)
+// Copy other values with a constant axis to the new table, but set the
+// domain for that axis to infinite.
+// In this way one can have a freq-dependent, time-constant calibration
+// solution and export it with an infinite time interval.
+int exportParms (const ParmMap& parmset, ParmDB& newtab, ostream& ostr)
 {
   int ncopy = 0;
   for (ParmMap::const_iterator iter = parmset.begin();
        iter != parmset.end(); ++iter) {
     const string& name = iter->first;
     const ParmValueSet& pset = iter->second;
-    if (pset.size() == 1) {
-      const ParmValue& pval = pset.getParmValue(0);
-      if (pval.nx() == 1  &  pval.ny() == 1) {
-        newtab.putDefValue (name, pset);
-        ncopy++;
+    if (pset.size() > 0) {
+      if (pset.size() == 1) {
+        const ParmValue& pval = pset.getParmValue(0);
+        if (pval.nx() == 1  &  pval.ny() == 1) {
+          newtab.putDefValue (name, pset);
+          ostr << "Exported default record for parameter " << name << endl;
+          ncopy++;
+        } else if (pval.nx() == 1) {
+          // Constant in x.
+          ncopy += exportNewParm (name, 0, pset, newtab, ostr);
+        } else if (pval.ny() == 1) {
+          // Constant in y.
+          ncopy += exportNewParm (name, 1, pset, newtab, ostr);
+        }
+      } else {
+        // We have a set of ParmValues for which one axis must be fixed,
+        // thus have size 1 and equal for all values.
+        // Note they can all have shape [1,1], so find the variable axis.
+        int fixedAxis = 0;
+        const ParmValue* pval0 = &(pset.getParmValue(0));
+        const ParmValue* pval1 = &(pset.getParmValue(1));
+        if (pval0->nx() == 1  &&  pval0->ny() == 1) {
+          if (pval1->nx() == 1  &&  pval1->ny() == 1) {
+            if (*(pval0->getGrid()[1]) == *(pval1->getGrid()[1])) {
+              fixedAxis = 1;
+              pval0 = 0;
+            }
+          } else {
+            // Use pval1 to find the axis with size > 1.
+            pval0 = pval1;
+          }
+        }
+        if (pval0) {
+          if (pval0->nx() == 1) {
+            fixedAxis = 1;
+          }
+        }
+        ncopy += exportNewParm (name, fixedAxis, pset, newtab, ostr);
       }
     }
   }
@@ -730,7 +806,11 @@ void doIt (bool noPrompt, ostream& ostr)
           string dbHost = kvmap.getString ("host", "dop50.astron.nl");
           string dbName = kvmap.getString ("db", dbUser);
           string dbType = kvmap.getString ("dbtype", "casa");
-          string tableName = kvmap.getString ("tablename", "MeqParm");
+          string tableName = kvmap.getString ("table", "");
+          if (tableName.empty()) {
+            tableName = kvmap.getString ("tablename", "");
+          }
+          ASSERTSTR(!tableName.empty(), "No table name given");
           ParmDBMeta meta (dbType, tableName);
           meta.setSQLMeta (dbName, dbUser, "", dbHost);
           parmtab = new ParmDB (meta);
@@ -796,7 +876,7 @@ void doIt (bool noPrompt, ostream& ostr)
               }
             } else if (cmd==NEW || cmd==DEL || cmd==SHOW) {
               // Read the given parameters and domains.
-              Box domain = getDomain(kvmap);
+              Box domain = getDomain(kvmap, ostr);
               ParmMap parmset;
               parmtab->getValues (parmset, parmName, domain);
               int nrparm = parmset.size();
@@ -820,14 +900,18 @@ void doIt (bool noPrompt, ostream& ostr)
               string dbHost = kvmap.getString ("host", "dop50.astron.nl");
               string dbName = kvmap.getString ("db", dbUser);
               string dbType = kvmap.getString ("dbtype", "casa");
-              string tableName = kvmap.getString ("tablename", "MeqParm");
+              string tableName = kvmap.getString ("table", "");
+              if (tableName.empty()) {
+                tableName = kvmap.getString ("tablename", "MeqParm");
+              }
+              ASSERTSTR(!tableName.empty(), "No output table name given");
               int append = kvmap.getInt ("append", 0);
               ParmDBMeta meta (dbType, tableName);
               meta.setSQLMeta (dbName, dbUser, "", dbHost);
-              ParmDB newtab(meta, append==1);
+              ParmDB newtab(meta, append==0);
               ParmMap parmset;
               parmtab->getValues (parmset, parmName, Box());
-              int ncopy = exportParms (parmset, newtab);
+              int ncopy = exportParms (parmset, newtab, ostr);
               ostr << "Exported " << ncopy << " parms to "
                    << tableName << endl;
             } else if (cmd==NAMES || cmd==NAMESDEF)  {
