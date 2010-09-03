@@ -60,7 +60,9 @@ namespace rfiStrategy {
 					_childActions[childIndex+1] = movedAction;
 				}
 			}
-			
+			inline void InitializeAll();
+			inline void FinishAll();
+
 			iterator begin() { return _childActions.begin(); }
 			iterator end() { return _childActions.end(); }
 			const_iterator begin() const { return _childActions.begin(); }
@@ -71,6 +73,7 @@ namespace rfiStrategy {
 }
 
 #include "action.h"
+#include "strategyiterator.h"
 
 namespace rfiStrategy {
 
@@ -112,6 +115,25 @@ namespace rfiStrategy {
 			}
 	}
 
+	void ActionContainer::InitializeAll()
+	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(*this);
+		while(!i.PastEnd())
+		{
+			i->Initialize();
+			++i;
+		}
+	}
+	
+	void ActionContainer::FinishAll()
+	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(*this);
+		while(!i.PastEnd())
+		{
+			i->Finish();
+			++i;
+		}
+	}
 }
 
 #endif // RFIACTIONCONTAINER_H
