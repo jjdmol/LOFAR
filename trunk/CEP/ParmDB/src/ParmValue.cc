@@ -326,7 +326,7 @@ namespace BBS {
   ParmValue::ShPtr ParmValueSet::copyParmCoeff (const ParmValue::ShPtr& pval)
   {
     ParmValue::ShPtr newpval (new ParmValue(*pval));
-    newpval->setRowId (-1);
+    newpval->clearRowId();
     return newpval;
   }
 

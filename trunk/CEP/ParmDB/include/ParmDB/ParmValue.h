@@ -128,6 +128,8 @@ namespace BBS {
       { return itsRowId; }
     void setRowId (int rowId)
       { itsRowId = rowId; }
+    void clearRowId()
+      { itsRowId = -1; }
     // </group>
     
   private:
