@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 
+#include <Common/LofarLogger.h>
 #include <Stream/SocketStream.h>
 
 #include <cstring>
@@ -33,6 +34,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <cstdlib>
 
 #include <boost/lexical_cast.hpp>
 
@@ -43,8 +45,13 @@ namespace LOFAR {
 const int MINPORT = 10000;
 const int MAXPORT = 30000;
 
-SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, Mode mode, time_t timeout, const char *nfskey )
+SocketStream::SocketStream(const char *hostname, uint16_t port, Protocol protocol, Mode mode, time_t timeout, const char *nfskey )
 :
+  hostname(hostname),
+  port(port),
+  protocol(protocol),
+  mode(mode),
+  nfskey(nfskey),
   listen_sk(-1)
 {  
   struct addrinfo hints;
@@ -71,12 +78,12 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
         struct addrinfo *result;
 
         if (mode == Client && nfskey)
-          port = readkey(nfskey, timeout);
+          port = boost::lexical_cast<uint16_t>(readkey(nfskey, timeout));
 
         if (mode == Server && autoPort && port == 0)
           port = MINPORT;
 
-        snprintf(portStr, sizeof portStr, "%hd", port);
+        snprintf(portStr, sizeof portStr, "%hu", port);
 
         if ((retval = getaddrinfo(hostname, portStr, &hints, &result)) != 0)
           throw SystemCallException("getaddrinfo", retval, THROW_ARGS);
@@ -128,41 +135,7 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
             if (listen(listen_sk, 5) < 0)
               throw BindException("listen", errno, THROW_ARGS);
 
-            if (nfskey)
-              writekey(nfskey, port);
-
-            // make sure the key will be deleted
-            struct D {
-              ~D() {
-                if (nfskey)
-                  deletekey(nfskey);
-              }
-
-              const char *nfskey;
-            } onDestruct = { nfskey };
-            (void)onDestruct;
-
-            if (timeout > 0) {
-              fd_set fds;
-
-              FD_ZERO(&fds);
-              FD_SET(listen_sk, &fds);
-
-              struct timeval timeval;
-
-              timeval.tv_sec  = timeout;
-              timeval.tv_usec = 0;
-
-              switch (select(listen_sk + 1, &fds, 0, 0, &timeval)) {
-                case -1 : throw SystemCallException("select", errno, THROW_ARGS);
-
-                case  0 : throw TimeOutException("server socket", THROW_ARGS);
-              }
-            }
-
-            if ((fd = accept(listen_sk, 0, 0)) < 0) {
-              throw SystemCallException("accept", errno, THROW_ARGS);
-            }
+            accept( timeout );  
           }
         }
 
@@ -193,8 +166,30 @@ SocketStream::~SocketStream()
 
 void SocketStream::reaccept( time_t timeout )
 {
+  ASSERT( mode == Server );
+
   if (fd >= 0 && close(fd) < 0)
     throw SystemCallException("close", errno, THROW_ARGS);
+
+  accept( timeout );  
+}
+
+
+void SocketStream::accept( time_t timeout )
+{
+  if (nfskey)
+    writekey(nfskey, port);
+
+  // make sure the key will be deleted
+  struct D {
+    ~D() {
+      if (nfskey)
+        deletekey(nfskey);
+    }
+
+    const char *nfskey;
+  } onDestruct = { nfskey };
+  (void)onDestruct;
 
   if (timeout > 0) {
     fd_set fds;
@@ -214,7 +209,7 @@ void SocketStream::reaccept( time_t timeout )
     }
   }
 
-  if ((fd = accept(listen_sk, 0, 0)) < 0)
+  if ((fd = ::accept(listen_sk, 0, 0)) < 0)
     throw SystemCallException("accept", errno, THROW_ARGS);
 }
 
@@ -225,7 +220,8 @@ void SocketStream::setReadBufferSize(size_t size)
     perror("setsockopt failed");
 }
 
-short SocketStream::readkey(const char *nfskey, time_t &timeout)
+
+std::string SocketStream::readkey(const char *nfskey, time_t &timeout)
 {
   for(;;) {
     char portStr[16];
@@ -235,7 +231,7 @@ short SocketStream::readkey(const char *nfskey, time_t &timeout)
 
     if (len >= 0) {
       portStr[len] = 0;
-      return boost::lexical_cast<short>(portStr);
+      return std::string(portStr);
     }
 
     if (timeout == 0)
@@ -252,12 +248,13 @@ short SocketStream::readkey(const char *nfskey, time_t &timeout)
   }
 }
 
-void SocketStream::writekey(const char *nfskey, short port)
+void SocketStream::writekey(const char *nfskey, uint16_t port)
 {
   char portStr[16];
 
-  snprintf(portStr, sizeof portStr, "%hd", port);
+  snprintf(portStr, sizeof portStr, "%hu", port);
 
+  // Symlinks can be atomically created over NFS
   if (symlink(portStr, nfskey) < 0)
     throw SystemCallException("symlink", errno, THROW_ARGS);
 }

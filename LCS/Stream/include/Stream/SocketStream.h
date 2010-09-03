@@ -28,6 +28,7 @@
 #include <Stream/FileDescriptorBasedStream.h>
 
 #include <time.h>
+#include <string>
 
 namespace LOFAR {
 
@@ -45,17 +46,24 @@ class SocketStream : public FileDescriptorBasedStream
       Client, Server
     };
 
-  	    SocketStream(const char *hostname, short port, Protocol, Mode, time_t timeout = 0, const char *nfskey = 0);
+  	    SocketStream(const char *hostname, uint16_t port, Protocol, Mode, time_t timeout = 0, const char *nfskey = 0);
     virtual ~SocketStream();
 
     void    reaccept(time_t timeout = 0); // only for TCP server socket
     void    setReadBufferSize(size_t size);
 
   private:
+    const char *hostname;
+    uint16_t port;
+    const Protocol protocol;
+    const Mode mode;
+    const char *nfskey;
     int     listen_sk;
 
-    static short readkey(const char *nfskey, time_t &timeout);
-    static void writekey(const char *nfskey, short port);
+    void accept(time_t timeout);
+
+    static std::string readkey(const char *nfskey, time_t &timeout);
+    static void writekey(const char *nfskey, uint16_t port);
     static void deletekey(const char *nfskey);
 };
 
