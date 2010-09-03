@@ -14,6 +14,7 @@ namespace rfiStrategy
 				: _indices(source._indices), _currentAction(source._currentAction)
 			{
 			}
+
 			StrategyIterator &operator=(const StrategyIterator &source)
 			{
 				_indices = source._indices;
@@ -29,13 +30,13 @@ namespace rfiStrategy
 					_currentAction = &container->GetFirstChild();
 					_indices.push(0);
 				} else {
-					// Current action is not a container, so go back one level
+					// Current action is not a container, so go back levels until a next action is available
 					ActionContainer *parent = _currentAction->Parent();
 					size_t index = _indices.top();
 					_indices.pop();
 					++index;
 
-					while(parent != 0 && index >= parent->GetChildCount())
+					while(_indices.size() != 0 && index >= parent->GetChildCount())
 					{
 						index = _indices.top();
 						_indices.pop();
@@ -81,10 +82,12 @@ namespace rfiStrategy
 			{
 				return StrategyIterator(&action, 0);
 			}
+
 			static StrategyIterator NewEndIterator(ActionContainer &action)
 			{
 				return StrategyIterator(&action, action.GetChildCount());
 			}
+
 		private:
 			StrategyIterator(Action *rootAction, size_t rootIndex)
 			: _currentAction(rootAction)
