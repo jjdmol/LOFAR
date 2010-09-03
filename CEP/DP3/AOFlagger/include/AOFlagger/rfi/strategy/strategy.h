@@ -57,9 +57,6 @@ namespace rfiStrategy {
 			static void SetFlagStokes(Strategy &strategy, bool newValue);
 			static void DisableOptimizations(Strategy &strategy);
 			
-			void InitializeAll();
-			void FinishAll();
-
 			void StartPerformThread(const class ArtifactSet &artifacts, class ProgressListener &progress);
 			ArtifactSet *JoinThread();
 

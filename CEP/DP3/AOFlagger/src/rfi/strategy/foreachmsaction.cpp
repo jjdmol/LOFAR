@@ -30,6 +30,8 @@ void ForEachMSAction::Perform(ArtifactSet &artifacts, ProgressListener &progress
 {
 	unsigned taskIndex = 0;
 	
+	FinishAll();
+
 	for(std::vector<std::string>::const_iterator i=_filenames.begin();i!=_filenames.end();++i)
 	{
 		std::string filename = *i;
@@ -41,17 +43,24 @@ void ForEachMSAction::Perform(ArtifactSet &artifacts, ProgressListener &progress
 		ImageSetIndex *index = imageSet->StartIndex();
 		artifacts.SetImageSet(imageSet);
 		artifacts.SetImageSetIndex(index);
+
+		InitializeAll();
 		
 		ActionBlock::Perform(artifacts, progress);
 		
+		FinishAll();
+
 		artifacts.SetNoImageSet();
 		delete index;
 		delete imageSet;
 	
 		progress.OnEndTask();
+
 		
 		++taskIndex;
 	}
+
+	InitializeAll();
 }
 
 void ForEachMSAction::AddDirectory(const std::string &name)

@@ -1,19 +1,24 @@
 #ifndef STRATEGY_ITERATOR_H
-#define STARTEGY_ITERATOR_H
+#define STRATEGY_ITERATOR_H
 
 #include <stack>
 
-#include <AOFlagger/rfi/strategy/strategy.h>
+#include <AOFlagger/rfi/strategy/actioncontainer.h>
 
 namespace rfiStrategy
 {
-
 	class StrategyIterator
 	{
 		public:
 			StrategyIterator(const StrategyIterator &source)
 				: _indices(source._indices), _currentAction(source._currentAction)
 			{
+			}
+			StrategyIterator &operator=(const StrategyIterator &source)
+			{
+				_indices = source._indices;
+				_currentAction = source._currentAction;
+				return *this;
 			}
 
 			StrategyIterator &operator++()
@@ -47,21 +52,22 @@ namespace rfiStrategy
 							_currentAction = _currentAction->Parent();
 					}
 				}
-
 				return *this;
 			}
+
 			Action &operator*() const
 			{
 				return *_currentAction;
 			}
+
 			Action *operator->() const
 			{
 				return _currentAction;
 			}
-	
+
 			bool PastEnd() const
 			{
-				if(_currentAction->Parent() != 0)
+				if(_indices.size() != 1)
 				{
 					return false;
 				} else
@@ -70,14 +76,15 @@ namespace rfiStrategy
 					return _indices.top() >= container->GetChildCount();
 				}
 			}
-		static StrategyIterator NewStartIterator(Strategy &strategy)
-		{
-			return StrategyIterator(&strategy, 0);
-		}
-		static StrategyIterator NewEndIterator(Strategy &strategy)
-		{
-			return StrategyIterator(&strategy, strategy.GetChildCount());
-		}
+
+			static StrategyIterator NewStartIterator(ActionContainer &action)
+			{
+				return StrategyIterator(&action, 0);
+			}
+			static StrategyIterator NewEndIterator(ActionContainer &action)
+			{
+				return StrategyIterator(&action, action.GetChildCount());
+			}
 		private:
 			StrategyIterator(Action *rootAction, size_t rootIndex)
 			: _currentAction(rootAction)
@@ -91,7 +98,7 @@ namespace rfiStrategy
 			// and contains one value ChildCount of root if the iterator is pointed past the root strategy.
 			std::stack<size_t> _indices;
 
-			// _currentAction is the action currently pointed at by the iterator, expect if
+			// _currentAction is the action currently pointed at by the iterator, except if
 			// the iterator is pointed past the end. In that case, it points to the root
 			// action.
 			Action *_currentAction;
@@ -99,4 +106,4 @@ namespace rfiStrategy
 
 }
 
-#endif
+#endif // STRATEGY_ITERATOR_H
