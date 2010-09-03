@@ -32,45 +32,94 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#define CHECK(cond)                      \
+  do {                                   \
+    if (!(cond)) {                       \
+      errors++;                          \
+      LOG_ERROR("Check failed: " #cond); \
+    }                                    \
+  } while(0)
+
+#define CHECK_STR(cond, strm)                             \
+  do {                                                    \
+    if(!(cond))  {                                        \
+      errors++;                                           \
+      LOG_ERROR_STR("Check failed: " #cond "; " << strm); \
+    } else {                                              \
+      LOG_INFO_STR(strm);                                 \
+    }                                                     \
+  } while(0)
+
 using namespace LOFAR;
+
+int errors;
 
 void testHostname()
 {
   string hostname;
   hostname = myHostname(false);
-  ASSERT(!hostname.empty());
-  cout << "My short hostname is: " << hostname << endl;
+  CHECK(!hostname.empty());
+  LOG_INFO_STR("My short hostname is: " << hostname);
   hostname = myHostname(true);
-  ASSERT(!hostname.empty());
-  cout << "My long hostname is : " << hostname << endl;
+  CHECK(!hostname.empty());
+  LOG_INFO_STR("My long hostname is : " << hostname);
 }
 
 void testIP()
 {
   uint32 address = myIPV4Address();
-  ASSERT(address != 0);
-  cout << formatString("My IPV4 address is  : %08lX\n", ntohl(address));
-  hexdump ((char*) &address, sizeof(uint32));
+  string dump;
+  CHECK_STR(address != 0, 
+            formatString("My IPV4 address is  : %08lX", ntohl(address)));
+  hexdump (dump, (char*) &address, sizeof(address));
+  LOG_INFO(dump);
 }
 
 void testGetExePath()
 {
   string exePath = getExecutablePath();
-  ASSERT(!exePath.empty());
-  cout << "My executable path  : " << getExecutablePath() << endl;
+  CHECK(!exePath.empty());
+  LOG_INFO_STR("My executable path  : " << getExecutablePath());
 }
 
 void testDirnameBasename()
 {
-  const char* paths[] = { 
-    "/usr/lib", "/usr/", "usr", "/", "///", 
-    "//usr//lib", ".", "..", "../a", "../a/.b"
+  struct test {
+    const char* path;
+    const char* suffix;
+    const char* dir;
+    const char* base;
   };
-  cout << "Test of getDirname() and getBasename() :" << endl;
-  for(int i = 0; i < 10; i++) {
-    cout << setw(11) << left << paths[i] << "--> ('" 
-         << getDirname(paths[i]) << "', '" 
-         << getBasename(paths[i]) << "')" << endl;
+  test tests [] = {
+    //    path        suffix   dirname   basename
+    { "/usr/lib"    ,  ""    ,  "/usr"  ,  "lib" },
+    { "/usr/"       ,  ""    ,  "/"     ,  "usr" },
+    { "usr"         ,  ""    ,  "."     ,  "usr" },
+    { "/"           ,  ""    ,  "/"     ,  "/"   },
+    { "."           ,  ""    ,  "."     ,  "."   },
+    { ".."          ,  ""    ,  "."     ,  ".."  },
+    { "///"         ,  ""    ,  "/"     ,  "/"   },
+    { "//"          ,  ""    ,  "/"     ,  "/"   },
+    { "//usr//lib//",  ""    ,  "//usr" ,  "lib" },
+    { "//usr//lib"  ,  ""    ,  "//usr" ,  "lib" },  
+    { "../foo"      ,  ""    ,  ".."    ,  "foo" }, 
+    { "foo/bar"     ,  "bar" ,  "foo"   ,  "bar" }, 
+    { "foo/bar.baz" ,  ".baz",  "foo"   ,  "bar" }
+  };
+  using LOFAR::dirname;
+  using LOFAR::basename;
+  for(size_t i = 0; i < sizeof(tests)/sizeof(test); i++) {
+    test& t = tests[i];
+    CHECK_STR(dirname(t.path) == t.dir,
+              "dirname(\"" << t.path << "\") == " << t.dir);
+    CHECK_STR(basename(t.path, t.suffix) == t.base,
+              "basename(\"" << t.path << "\", \"" << t.suffix << 
+              "\") == " << t.base);
+//     cout << "echo \"dirname(\\\"" << t.path 
+//          << "\\\") == `dirname " << t.path << "`\"" << endl;
+//     cout << "echo \"basename(\\\"" << t.path << "\\\", \\\"" << t.suffix 
+//          << "\\\")" << " == `basename " << t.path << " " << t.suffix << "`\""
+//          << endl;
   }
 }
 

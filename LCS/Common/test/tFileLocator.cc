@@ -108,8 +108,8 @@ int main (int, char *argv[]) {
 	CHECK(Locator1.locate("../namewithslash") == "");
 
 	LOG_INFO ("Searching myself");
-	LOG_INFO_STR ("fullname = " << Locator1.locate(getBasename(argv[0])));
-	CHECK(Locator1.locate(getBasename(argv[0])) != "");
+	LOG_INFO_STR ("fullname = " << Locator1.locate(basename(argv[0])));
+	CHECK(Locator1.locate(basename(argv[0])) != "");
 
 #if RESOLVE_INPUT_NOT_PRIVATE
 	LOG_INFO_STR("'$iserniet': " <<  Locator1.resolveInput("$iserniet"));
@@ -129,8 +129,8 @@ int main (int, char *argv[]) {
 	FileLocator		Locator2;
 	LOG_INFO_STR ("registered path = " << Locator2.getPath());
 	CHECK(Locator2.getPath() == string(BASE_SEARCH_DIR) + ":" +
-		getDirname(getExecutablePath()) + ":" +
-		getDirname(getDirname(getExecutablePath())));
+		dirname(getExecutablePath()) + ":" +
+		dirname(dirname(getExecutablePath())));
 
 	path1 = Locator2.hasPath("$lofarroot");
 	path2 = Locator2.hasPath("/opt/lofar/");
@@ -148,8 +148,8 @@ int main (int, char *argv[]) {
 	LOG_INFO_STR ("registered path = " << Locator2.getPath());
 	LOG_INFO_STR ("registered subdir = " << Locator2.getSubdir());
 	CHECK(Locator2.getPath() == string(BASE_SEARCH_DIR) + ":" +
-		getDirname(getExecutablePath()) + ":" + 
-		getDirname(getDirname(getExecutablePath())));
+		dirname(getExecutablePath()) + ":" + 
+		dirname(dirname(getExecutablePath())));
 	CHECK(Locator2.getSubdir() == "foo");
 
 	path1 = Locator2.hasPath("/opt/lofar/foo");
@@ -165,8 +165,8 @@ int main (int, char *argv[]) {
 	LOG_INFO_STR ("registered path = " << aCL.getPath());
 	LOG_INFO_STR ("registered subdir = " << aCL.getSubdir());
 	CHECK(aCL.getPath() == string(BASE_SEARCH_DIR) + ":" +
-		getDirname(getExecutablePath()) + ":" + 
-		getDirname(getDirname(getExecutablePath())));
+		dirname(getExecutablePath()) + ":" + 
+		dirname(dirname(getExecutablePath())));
 	CHECK(aCL.getSubdir() == "etc");
 
 

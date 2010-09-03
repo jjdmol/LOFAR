@@ -264,35 +264,75 @@ static char dirSep('/');
 #endif
 
 //
-// getBasename
+// basename -- this implementation closely follows the description in the POSIX
+// standard, IEEE Std 1003.1.
 //
-string getBasename(const string& path)
+string basename(string path, string suffix)
 {
-  string::size_type pos = path.rfind(dirSep);
-  if(pos != string::npos) {
-    return path.substr(pos+1);
-  } else {
-    return path;
+  // If path is empty, return an empty string
+  if(path.empty()) return path;
+
+  // If path contains only slash characters, return a single slash character.
+  string::size_type pos = path.find_last_not_of('/');
+  if(pos == string::npos) return "/";
+
+  // Remove any trailing slash characters in path.
+  path.erase(pos+1);
+
+  // If there are any slash characters remaining in path, remove the prefix of
+  // path up to and including the last slash.
+  pos = path.find_last_of('/');
+  if(pos != string::npos) path.erase(0,pos+1);
+
+  // If suffix string is not empty, is not identical to the characters
+  // remaining in path, and is identical to a suffix of the characters
+  // remaining in path, then suffix will be removed from path.
+  if(!suffix.empty() && suffix != path) {
+    pos = path.find(suffix, path.size() - suffix.size());
+    if(pos != string::npos) path.erase(pos);
   }
+
+  // Return the resulting path.
+  return path;
 }
 
 //
-// getDirname
+// dirname -- this implementation closely follows the description in the POSIX
+// standard, IEEE Std 1003.1.
 //
-string getDirname(const string& path)
+string dirname(string path)
 {
-  string dir;
-  string::size_type pos = path.rfind(dirSep);
-  if(pos != string::npos) {
-    // First keep trailing dir separator, just in case it's the only character.
-    dir = path.substr(0,pos+1);
-    // Next, strip all separator chars after last non-separator char.
-    pos = dir.find_last_not_of(dirSep);
-    if(pos != string::npos) {
-      dir.erase(pos+1);
-    }
-  }
-  return dir;
+  // If path is empty, return a single period character.
+  if(path.empty()) return ".";
+
+  // If path contains only slash characters, return a single slash character.
+  string::size_type pos = path.find_last_not_of('/');
+  if(pos == string::npos) return "/";
+
+  // Remove any trailing slash characters in path.
+  path.erase(pos+1);
+
+  // If there are no slash characters remaining in path, return a single
+  // period character.
+  pos = path.find_last_of('/');
+  if(pos == string::npos) return ".";
+ 
+  // Remove any trailing non-slash characters in path.
+  path.erase(pos+1);
+
+  // If the remaining path contains only slash characters, return a single
+  // slash character.
+  pos = path.find_last_not_of('/');
+  if(pos == string::npos) return "/";
+
+  // Remove trailing slash characters in path, if any.
+  path.erase(pos+1);
+
+  // If the remaining path is empty, set path to a single slash character.
+  if(path.empty()) path = "/";
+
+  // Return the resulting path.
+  return path;
 }
 
 
