@@ -255,15 +255,6 @@ string getExecutablePath()
 
 
 //
-// Define directory separator character
-//
-#if defined(_WIN32)
-static char dirSep('\\');
-#else
-static char dirSep('/');
-#endif
-
-//
 // basename -- this implementation closely follows the description in the POSIX
 // standard, IEEE Std 1003.1.
 //
