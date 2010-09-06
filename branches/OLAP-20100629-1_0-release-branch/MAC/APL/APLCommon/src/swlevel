@@ -422,7 +422,7 @@ handle_args()
     fi
   fi
 
-  if [ "$user" != "lofarsys" -a $level > 3 ]; then
+  if [ "$user" != "lofarsys" -a $level -gt 3 ]; then
       echo "Will only start up to level 3 as this appears to be local use"
       $level=3
   fi
