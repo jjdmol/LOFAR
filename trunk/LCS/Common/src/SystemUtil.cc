@@ -258,7 +258,7 @@ string getExecutablePath()
 // basename -- this implementation closely follows the description in the POSIX
 // standard, IEEE Std 1003.1.
 //
-string basename(string path, const string& suffix)
+string basename(string path, string suffix)
 {
   // If path is empty, return an empty string
   if(path.empty()) return path;
@@ -286,15 +286,6 @@ string basename(string path, const string& suffix)
   // Return the resulting path.
   return path;
 }
-
-//
-// basename
-//
-string basename(const char* path, const char* suffix)
-{
-  return basename(string(path), suffix);
-}
-
 
 //
 // dirname -- this implementation closely follows the description in the POSIX
