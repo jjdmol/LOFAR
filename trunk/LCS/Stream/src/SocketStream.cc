@@ -45,10 +45,10 @@ namespace LOFAR {
 const int MINPORT = 10000;
 const int MAXPORT = 30000;
 
-SocketStream::SocketStream(const char *hostname, uint16_t port, Protocol protocol, Mode mode, time_t timeout, const char *nfskey )
+SocketStream::SocketStream(const char *hostname, uint16_t _port, Protocol protocol, Mode mode, time_t timeout, const char *nfskey )
 :
   hostname(hostname),
-  port(port),
+  port(_port),
   protocol(protocol),
   mode(mode),
   nfskey(nfskey),
