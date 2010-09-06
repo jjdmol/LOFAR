@@ -106,8 +106,6 @@ void testDirnameBasename()
     { "foo/bar"     ,  "bar" ,  "foo"   ,  "bar" }, 
     { "foo/bar.baz" ,  ".baz",  "foo"   ,  "bar" }
   };
-  using LOFAR::dirname;
-  using LOFAR::basename;
   for(size_t i = 0; i < sizeof(tests)/sizeof(test); i++) {
     test& t = tests[i];
     CHECK_STR(dirname(t.path) == t.dir,
