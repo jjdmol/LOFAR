@@ -5,7 +5,7 @@
 # File:			tSolverQuery.py
 # Author:		Sven Duscha (duscha@astron.nl)
 # Date:			2010/07/21
-# Last change		2010/08/05
+# Last change		2010/09/06
 
 
 import os
@@ -92,7 +92,7 @@ solver.solverTable[100]['ENDFREQ'], iteration=1)
 
 
     # Read a parameter for all TimeSlots (iteration=last/all/x)
-    parms=solver.readFreqColumn("RANK", iteration=1)
+    parms=solver.readFreqColumn("CHISQR", iteration="last")
 
     print "type(parms).__name__: ", type(parms).__name__
     print "type(solver.frequencies[i])", type(solver.frequencies)
@@ -115,13 +115,14 @@ solver.solverTable[100]['ENDFREQ'], iteration=1)
 
 
     # Read Solution for a particular cell
-    parms=solver.getSolution(solver.solverTable[40]['STARTTIME'],
-solver.solverTable[40]['ENDTIME'],solver.solverTable[40]['STARTFREQ'],
-solver.solverTable[40]['ENDFREQ'])
-    print "type(parms): ", type(parms)
-    print "Parms: ", parms
-    print "len(parms): ", len(parms)
-    
+    solution=solver.getSolution(solver.solverTable[0]['STARTTIME'],
+solver.solverTable[0]['ENDTIME'],solver.solverTable[0]['STARTFREQ'],
+solver.solverTable[0]['ENDFREQ'], iteration=1)
+    print "type(solution): ", type(solution)
+    print "Solution: ", solution
+    print "len(solution): ", len(solution)
+
+
     # Read Starttimes from table
     starttimes=solver.getStartTimes()
     #for i in range(0, starttimes.nrows()):
@@ -130,12 +131,12 @@ solver.solverTable[40]['ENDFREQ'])
     # Read Endtimes from table
     endtimes=solver.getEndTimes()
     #for i in range(0, endtimes.nrows()):
-    #    print endtimes[i]
+        #print endtimes[i]
 
 
     # Read parameter names from table
-    columnNames=solver.readColumnNames()
-    print columnNames
+    #columnNames=solver.readColumnNames()
+    #print columnNames
 
     # Check if a prameter exists
     exists=solver.parameterExists("CHISQR")
@@ -146,6 +147,13 @@ solver.solverTable[40]['ENDFREQ'])
     parameters=solver.readParameterNames()
     print "Parameters: ", parameters
 
+
+    # Read a parameter along frequency column
+    parms=solver.readFreqColumn("CHISQR", iteration="last")
+    for i in range (0, len(parms)-1):
+        print parms[i]
+
+    # Read parameter along time slots
 
 # Define main function entry
 if __name__ == "__main__":

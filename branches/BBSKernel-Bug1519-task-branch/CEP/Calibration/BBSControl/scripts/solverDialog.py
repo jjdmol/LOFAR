@@ -5,7 +5,7 @@
 # File:			solverDialog.py
 # Author:		Sven Duscha (duscha@astron.nl)
 # Date:			2010-08-05
-# Last change;		2010-08-19
+# Last change;		2010-08-30
 #
 #
 
@@ -148,7 +148,7 @@ class SolverAppForm(QMainWindow):
     # If only a single cell is to be shown, adjust timeEndSlider
     # to the position of timeStartSlider, and lock them
     def on_singleCell(self):
-        #print "on_singleCell(self)"   # DEBUG
+        print "on_singleCell(self)"   # DEBUG
 
         if self.singleCellCheckBox.isChecked():
             self.timeEndSlider.setValue(self.timeStartSlider.sliderPosition())
@@ -162,7 +162,7 @@ class SolverAppForm(QMainWindow):
     # Put sliders into sync, so that moving one also moves the other
     #
     def syncSliders(self):
-        #print "syncSliders(self)"   # DEBUG
+        print "syncSliders(self)"   # DEBUG
         self.connect(self.timeStartSlider, SIGNAL('valueChanged(int)'), self.timeEndSlider, SLOT('setValue(int)'))         
         self.connect(self.timeEndSlider, SIGNAL('valueChanged(int)'), self.timeStartSlider, SLOT('setValue(int)'))
 
@@ -172,7 +172,7 @@ class SolverAppForm(QMainWindow):
     def unsyncSliders(self):
         #print "unsyncSliders(self)"  # DEBUG
         self.disconnect(self.timeStartSlider, SIGNAL('valueChanged(int)'), self.timeEndSlider, SLOT('setValue(int)'))         
-        self.disconnect(self.timeEndSlider, SIGNAL('valueChanged(int)'), self.timeEndSlider, SLOT('setValue(int)'))
+        self.disconnect(self.timeEndSlider, SIGNAL('valueChanged(int)'), self.timeStartSlider, SLOT('setValue(int)'))
 
 
     # Function to handle frequency index slider has changed
@@ -386,7 +386,7 @@ class SolverAppForm(QMainWindow):
         # Get indices of sliders:
         tindex=self.timeStartSlider.sliderPosition()
         findex=self.frequencySlider.sliderPosition()
-        # Calculate index
+        # Calculate index into grid
         index=tindex+(self.solverQuery.getNumFreqs()*findex)
 
 
@@ -408,7 +408,9 @@ class SolverAppForm(QMainWindow):
             endfreq=self.solverQuery.frequencies[findex]['ENDFREQ']            
 
             # Read data for selected parameter from solver table
-            data=self.solverQuery.readParameterIdx(parameter, index)
+            #data=self.solverQuery.readParameterIdx(parameter, index)
+
+            data=self.solverQuery.readParameter(parameter, starttime, endtime, startfreq, endfreq)
 
             print "on_draw(): data: ", data
             print "on_draw(): type(data).__name__", type(data).__name__
