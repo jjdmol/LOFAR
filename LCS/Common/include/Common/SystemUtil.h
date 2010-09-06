@@ -63,26 +63,10 @@ uint32 myIPV4Address();
 // returned, if the full path cannot be determined.
 string getExecutablePath();
 
-#ifndef basename
 // Return non-directory portion of a pathname. This implementation closely
-// follows the description in the POSIX standard, IEEE Std 1003.1. If
-// specified, also remove a trailing \a suffix.
-//
-// \warning We don't declare the function if the `basename' macro is available
-// (defined in <libgen.h>) which makes the XPG version of this function
-// available.
-//
-// \note The second version of basename is deliberatly declared as an
-// ambiguous overload of the GNU version (defined in <string.h>), whose output
-// is not POSIX compliant. Using it will cause a compilation error if
-// <string.h> is also included, which must be remedied by employing an
-// explicit \c using statement.
-//
-// @{
-string basename(string path, const string& suffix="");
-string basename(const char* path, const char* suffix="");
-// @}
-#endif
+// follows the description in the POSIX standard, IEEE Std 1003.1.
+
+string basename(string path, string suffix="");
 
 // Return the directory portion of a pathname. This implementation closely
 // follows the description in the POSIX standard, IEEE Std 1003.1.
