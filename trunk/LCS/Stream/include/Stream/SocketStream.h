@@ -24,6 +24,7 @@
 #define LOFAR_LCS_STREAM_SOCKET_STREAM_H
 
 #include <Common/Exception.h>
+#include <Common/LofarTypes.h>
 #include <Common/SystemCallException.h>
 #include <Stream/FileDescriptorBasedStream.h>
 
@@ -46,7 +47,7 @@ class SocketStream : public FileDescriptorBasedStream
       Client, Server
     };
 
-  	    SocketStream(const char *hostname, uint16_t _port, Protocol, Mode, time_t timeout = 0, const char *nfskey = 0);
+  	    SocketStream(const char *hostname, uint16 _port, Protocol, Mode, time_t timeout = 0, const char *nfskey = 0);
     virtual ~SocketStream();
 
     void    reaccept(time_t timeout = 0); // only for TCP server socket
@@ -54,7 +55,7 @@ class SocketStream : public FileDescriptorBasedStream
 
   private:
     const char *hostname;
-    uint16_t port;
+    uint16 port;
     const Protocol protocol;
     const Mode mode;
     const char *nfskey;

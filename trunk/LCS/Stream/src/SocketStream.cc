@@ -45,7 +45,7 @@ namespace LOFAR {
 const int MINPORT = 10000;
 const int MAXPORT = 30000;
 
-SocketStream::SocketStream(const char *hostname, uint16_t _port, Protocol protocol, Mode mode, time_t timeout, const char *nfskey )
+SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol, Mode mode, time_t timeout, const char *nfskey )
 :
   hostname(hostname),
   port(_port),
@@ -78,7 +78,7 @@ SocketStream::SocketStream(const char *hostname, uint16_t _port, Protocol protoc
         struct addrinfo *result;
 
         if (mode == Client && nfskey)
-          port = boost::lexical_cast<uint16_t>(readkey(nfskey, timeout));
+          port = boost::lexical_cast<uint16>(readkey(nfskey, timeout));
 
         if (mode == Server && autoPort && port == 0)
           port = MINPORT;
@@ -248,7 +248,7 @@ std::string SocketStream::readkey(const char *nfskey, time_t &timeout)
   }
 }
 
-void SocketStream::writekey(const char *nfskey, uint16_t port)
+void SocketStream::writekey(const char *nfskey, uint16 port)
 {
   char portStr[16];
 
