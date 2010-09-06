@@ -1,4 +1,4 @@
-//# SocketStream.h: 
+///# SocketStream.h: 
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -46,7 +46,7 @@ class SocketStream : public FileDescriptorBasedStream
       Client, Server
     };
 
-  	    SocketStream(const char *hostname, uint16_t port, Protocol, Mode, time_t timeout = 0, const char *nfskey = 0);
+  	    SocketStream(const char *hostname, uint16_t _port, Protocol, Mode, time_t timeout = 0, const char *nfskey = 0);
     virtual ~SocketStream();
 
     void    reaccept(time_t timeout = 0); // only for TCP server socket
