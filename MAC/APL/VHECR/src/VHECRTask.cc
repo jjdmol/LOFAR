@@ -37,12 +37,45 @@ namespace LOFAR {
     //
     // VHECRTask()
     //
+    VHECRTask::VHECRTask() :
+    itsInitialized (false)
+    {
+      // set default parameters for coincidence
+      itsNrTriggers =0;
+      itsLogfile = NULL;
+      itsAntennaSelection = "";
+      itsAntennaPositionsFile = "";
+      itsForcedDeadTime = 10.0;
+      totalCoincidences = 0;
+      badFits = 0;
+
+      itsParameterSet = NULL;
+      itsSettings = new VHECRsettings(); // empty Settings-object
+
+      setup();
+
+      if ((itsLogfile != NULL) && (itsLogfile != stdout)) {
+	fprintf(itsLogfile, "Output file: %s\n", itsOutputFilename.c_str());
+	fprintf(itsLogfile, "Sampling rate in Hz: %d\n", itsSamplingRate);
+	fprintf(itsLogfile, "Coincidence channels required: %d\n", itsSettings->noCoincChann);
+	fprintf(itsLogfile, "Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
+	fprintf(itsLogfile, "Antenna selection: %s\n", itsAntennaSelection.c_str());
+	fprintf(itsLogfile, "Coincidence time window: %3.6f\n", itsSettings->coincidenceTime);
+	fprintf(itsLogfile, "do Direction fit: %d\n", itsSettings->doDirectionFit);
+	fprintf(itsLogfile, "Minimum elevation: %3.4f\n", itsSettings->minElevation);
+	fprintf(itsLogfile, "Maximum fit-variance: %3.4f\n", itsSettings->maxFitVariance);
+	fflush(itsLogfile);
+      };
+
+      LOG_DEBUG ("VHECR constructed with default/dummy values");
+    }
+
     VHECRTask::VHECRTask(const string& cntlrName) :
     itsInitialized (false)
     {
       // set default parameters for coincidence
       itsNrTriggers =0;
-      itsSamplingRate = 200000000; // NB. Sampling rate 200 MHz assumed without info! Needs to be changed in the future.
+      itsSamplingRate = 200000000; // NB. Sampling rate 200 MHz assumed. Overwritten in setup() function
       itsLogfile = NULL;
       itsAntennaSelection = "";
       itsAntennaPositionsFile = "";
@@ -64,6 +97,7 @@ namespace LOFAR {
     //  readAntennaPositions(infile, itsAntennaSelection);
       if ((itsLogfile != NULL) && (itsLogfile != stdout)) {
 	fprintf(itsLogfile, "Output file: %s\n", itsOutputFilename.c_str());
+	fprintf(itsLogfile, "Sampling rate in Hz: %d\n", itsSamplingRate);
 	fprintf(itsLogfile, "Coincidence channels required: %d\n", itsSettings->noCoincChann);
 	fprintf(itsLogfile, "Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
 	fprintf(itsLogfile, "Antenna selection: %s\n", itsAntennaSelection.c_str());
@@ -100,8 +134,9 @@ namespace LOFAR {
 	itsLogfile = stdout;
         fprintf(itsLogfile, "VHECRTask logfile\n"); // first line in file has to contain 'VHECR' for Python script to understand it.
       };
-//      itsOutputFilename = "/opt/lofar/etc/VHECRtaskLogfile.dat";
-//      itsLogfile = fopen(itsOutputFilename.c_str(), "w"); // overwrites existing file...
+
+      // Set internal values from VHECRsettings object
+      itsSamplingRate = itsSettings->clockFreq*1000000;
 
       // Initialize the trigger messages buffer
       for (uint32 i=0; i<VHECR_TASK_BUFFER_LENGTH; i++){
@@ -182,13 +217,38 @@ namespace LOFAR {
        itsSettings->doDirectionFit = DoDirectionFit;
        itsSettings->minElevation = MinElevation;
        itsSettings->maxFitVariance = MaxFitVariance;
+       itsSettings->clockFreq = Clock;
        itsParamExtension = ParamExtension;
        itsAntennaSelection = AntennaSet;
        itsAntennaPositionsFile = AntennaPositionsFile;
-       itsSamplingRate = Clock*1000000;
        itsForcedDeadTime = forcedDeadTime;
 
        setup();
+       
+       if ((itsLogfile != NULL) ) {
+	 fprintf(itsLogfile, "New setup after call to \"setParameters()\"\n");
+	 fprintf(itsLogfile, "Sampling rate in Hz: %d\n", itsSamplingRate);
+	 fprintf(itsLogfile, "Output file: %s\n", itsOutputFilename.c_str());
+	 fprintf(itsLogfile, "Coincidence channels required: %d\n", itsSettings->noCoincChann);
+	 fprintf(itsLogfile, "Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
+	 fprintf(itsLogfile, "Antenna selection: %s\n", itsAntennaSelection.c_str());
+	 fprintf(itsLogfile, "Coincidence time window: %3.6f\n", itsSettings->coincidenceTime);
+	 fprintf(itsLogfile, "do Direction fit: %d\n", itsSettings->doDirectionFit);
+	 fprintf(itsLogfile, "Minimum elevation: %3.4f\n", itsSettings->minElevation);
+	 fprintf(itsLogfile, "Maximum fit-variance: %3.4f\n", itsSettings->maxFitVariance);
+	 fflush(itsLogfile);
+       } else {
+	 printf("New setup after call to \"setParameters()\"\n");
+	 printf("Sampling rate in Hz: %d\n", itsSamplingRate);
+	 printf("Output file: %s\n", itsOutputFilename.c_str());
+	 printf("Coincidence channels required: %d\n", itsSettings->noCoincChann);
+	 printf("Antenna positions file: %s\n", itsAntennaPositionsFile.c_str());
+	 printf("Antenna selection: %s\n", itsAntennaSelection.c_str());
+	 printf("Coincidence time window: %3.6f\n", itsSettings->coincidenceTime);
+	 printf("do Direction fit: %d\n", itsSettings->doDirectionFit);
+	 printf("Minimum elevation: %3.4f\n", itsSettings->minElevation);
+	 printf("Maximum fit-variance: %3.4f\n", itsSettings->maxFitVariance);
+       };
      };
 
 
