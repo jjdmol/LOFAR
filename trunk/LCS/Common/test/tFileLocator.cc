@@ -43,6 +43,8 @@ int errors;
 
 int main (int, char *argv[]) {
  
+	using LOFAR::basename;
+
 	// Read in the log-environment configuration
 	INIT_LOGGER(argv[0]);
 
