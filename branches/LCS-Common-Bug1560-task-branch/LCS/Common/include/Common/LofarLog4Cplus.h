@@ -273,9 +273,6 @@ namespace LOFAR {
 // \name Implementation details tracer part
 // @{
 
-// Initialize the trace module
-void	initTraceModule(void);
-
 // \internal
 // Internal macro used by the LOG_TRACE_<level> macros.
 #define LofarLogTrace(level,message) do { \
