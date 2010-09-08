@@ -35,6 +35,21 @@ namespace LOFAR {
 	using APLCommon::globalAntennaField;
 	namespace VHECR {
 
+VHECRsettings::VHECRsettings()
+{
+  itsSettingsLoaded = false;
+  // fill the Object with default or dummy values
+  antennaSet        = "NONE";
+  antennaField      = NULL;
+  clockFreq         = 200;
+  noCoincChann      = 50;
+  coincidenceTime   = 1e-6;
+  doDirectionFit    = 0;
+  minElevation      = 0.;
+  maxFitVariance    = 50.;
+
+  LOG_DEBUG_STR("VHECR settings defined with default/dummy values");
+}
 
 VHECRsettings::VHECRsettings(ParameterSet* aParSet)
 {

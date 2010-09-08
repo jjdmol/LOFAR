@@ -44,6 +44,7 @@ namespace LOFAR {
     class VHECRTask
     {
     public:
+      explicit VHECRTask();
       VHECRTask(const string& cntlrName);
       ~VHECRTask();
       
