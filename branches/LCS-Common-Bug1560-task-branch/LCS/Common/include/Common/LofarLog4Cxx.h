@@ -216,9 +216,6 @@ namespace LOFAR {
 #define TRACE_LEVEL_RTTI 7
 #define TRACE_LEVEL_FLOW 8
 
-// Initialize the trace module
-void	initTraceModule(void);
-
 #if 0
 
 #define LofarLogTrace(level,message) LofarLog(TRACE, message)

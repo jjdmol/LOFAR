@@ -1,14 +1,41 @@
 #include <Common/LofarLog4Cxx.h>
 #include <Common/LofarLocators.h>
+#include <Common/SystemUtil.h>
 #include <log4cxx/basicconfigurator.h>
 #include <log4cxx/propertyconfigurator.h>
 #include <log4cxx/helpers/loglog.h>
-#include <cstdlib>
+#include <log4cxx/ndc.h>
 
 using namespace log4cxx;
 
 namespace LOFAR
 {
+  namespace
+  {
+    // Create an NDC (nested diagnostic context) with the text
+    // "application@node" and push it onto the NDC stack.
+    void initNDC(void)
+    {
+      string loggerId(basename(getExecutablePath()) + "@" + myHostname(false));
+      log4cxx::NDC::push(loggerId);
+    }
+
+    // Function that is used when the TRACE levels are NOT compiled out. 
+    //
+    // NOT YET IMPLEMENTED!! The implementation of initTraceModule() in
+    // LofarLog4Cplus.cc could be used as a starting point.
+    void initTraceModule (void)
+    {
+#ifdef ENABLE_TRACER
+#endif
+    }
+  } // namespace
+
+
+  // Create the tracelogger
+  log4cxx::LoggerPtr theirTraceLoggerRef(log4cxx::Logger::getLogger("TRC"));
+
+  // Initialize Log4cxx. 
   void initLog4Cxx(string propFile, const string& logFile, 
                      const string& envVar)
   {
@@ -18,7 +45,7 @@ namespace LOFAR
     }
 
     // Initialize NDC (nested diagnostic context).
-    lofarLoggerInitNode();
+    initNDC();
 
     // Initialize tracing module.
     initTraceModule();
@@ -46,10 +73,11 @@ namespace LOFAR
 
 
 #ifdef USE_THREADS
+  // Initialize Log4cxx with a watchdog thread for the configuration file.
   void initLog4CxxAndWatch(string propFile, unsigned int watchInterval)
   {
     // Initialize NDC (nested diagnostic context).
-    lofarLoggerInitNode();
+    initNDC();
 
     // Initialize tracing module.
     initTraceModule();
@@ -69,21 +97,4 @@ namespace LOFAR
   }
 #endif
 
-
-  // Create the tracelogger
-  log4cxx::LoggerPtr theirTraceLoggerRef(log4cxx::Logger::getLogger("TRC"));
-
-  // initTracemodule
-  //
-  // Function that is used when the TRACE levels are NOT compiled out. 
-  //
-  // NOT YET IMPLEMENTED!! The implementation of initTraceModule() in
-  // LofarLog4Cplus.cc could be used as a starting point.
-  //
-  void initTraceModule (void)
-  {
-#ifdef ENABLE_TRACER
-#endif
-  }
-
-}
+} // namespace LOFAR
