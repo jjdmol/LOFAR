@@ -51,6 +51,8 @@ int main (int	argc, char*	argv[])
 #ifdef HAVE_LOG4CPLUS
         string			logPropFile(progName + ".log_prop");
 	INIT_VAR_LOGGER (aCL.locate(logPropFile).c_str(), progName + "-" + argv[1]);
+#elif HAVE_LOG4COUT        
+        INIT_LOGGER_WITH_SYSINFO(progName);
 #else
         string logPropFile(progName + ".debug");
         INIT_LOGGER (aCL.locate(logPropFile).c_str());	
