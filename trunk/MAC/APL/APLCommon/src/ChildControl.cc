@@ -626,6 +626,16 @@ void ChildControl::_processActionList()
 			continue;
 		}
 
+		// did the connection with this controller failed?
+		if (controller->port == (GCFPortInterface*)-1) {
+			LOG_DEBUG_STR("ActionList:removing  " << action->cntlrName << "->" << 
+					cts.name(action->requestedState) << " because connection failed");
+			action++;							// hop to next
+			itsActionList.pop_front();			// remove at front.
+			nrActions--;						// one less to handle.
+			continue;
+		}
+
 		// in resync mode? don't bother child with unnec. msgs.
 		if (controller->inResync) {
 			LOG_DEBUG_STR("bounching:" << action->cntlrName << "->" << 
