@@ -18,5 +18,9 @@ install(FILES
   RSPConnections.dat
   DESTINATION etc)
 
+install(FILES
+  multitail-olap.conf
+  DESTINATION etc)
+
 add_subdirectory(LOFAR)
 add_subdirectory(util)

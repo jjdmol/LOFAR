@@ -365,10 +365,10 @@ string Parset::getMSname(unsigned sb) const
   replace_all(name, "${SECONDS}", splitStartTime[5]);
 
   replace_all(name, "${MSNUMBER}", str(format("%05u") % getUint32("Observation.ObsID")));
-  replace_all(name, "${SUBBAND}", str(format("%u") % sb));
+  replace_all(name, "${SUBBAND}", str(format("%03u") % sb));
   replace_all(name, "${BEAM}", str(format("%u") % subbandToBeamMapping()[sb]));
 
-  if (isDefined("OLAP.storagRaidList"))
+  if (isDefined("OLAP.storageRaidList"))
     replace_all(name, "${RAID}", str(format("%s") % getStringVector("OLAP.storageRaidList", true)[sb]));
 
   return name;
