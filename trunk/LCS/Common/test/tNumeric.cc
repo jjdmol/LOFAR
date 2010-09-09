@@ -38,11 +38,12 @@ using namespace std;
   LOG_INFO("initNumbers("#T")");                                     \
   typedef Numeric::T##Mask_t mask_t;                                 \
   typedef Numeric::T##Union_t union_t;                               \
+  mask_t negmask = mask_t(1) << 8*sizeof(T)-1;                       \
   ASSERT(sizeof(T) == sizeof(mask_t));				     \
   T zero(0), one(1), two(2);                                         \
   /* Create a negative zero                              */          \
   union_t negativeZero_u;                                            \
-  negativeZero_u.mask = mask_t(1) << 8*sizeof(T)-1;                  \
+  negativeZero_u.mask = negmask;                                     \
   T negativeZero(negativeZero_u.value);                              \
   /* Create an infinity */                                           \
   T inf(one/zero);                                                   \
@@ -80,6 +81,9 @@ using namespace std;
 #define printNumber(os, x)                                           \
 { int p(2*sizeof(x)+1);                                              \
   union_t u = { x };                                                 \
+  /* test output verification requires NaNs to be signed, */         \
+  /* even though the sign of NaN is platform dependent. */           \
+  if (Numeric::isNan(x)) u.mask |= negmask;                          \
   os << setprecision(p) << left << setw(17) << #x << " = "           \
      << setw(p+6) << x << " (" << hex << showbase << setw(p+1)       \
      << u.mask << dec << ")" << endl;                                \

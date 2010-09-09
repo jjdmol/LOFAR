@@ -33,49 +33,49 @@ namespace LOFAR
   bool Numeric::isFinite(float f)
   {
     floatUnion_t mask = { f };
-    return mask.mask & floatExponentMask != floatExponentMask;
+    return (mask.mask & floatExponentMask) != floatExponentMask;
   }
 
   bool Numeric::isFinite(double d)
   {
     doubleUnion_t mask = { d };
-    return mask.mask & doubleExponentMask != doubleExponentMask;
+    return (mask.mask & doubleExponentMask) != doubleExponentMask;
   }
 
   bool Numeric::isNegative(float f)
   {
     floatUnion_t mask = { f };
-    return mask.mask & floatNegativeMask == floatNegativeMask;
+    return (mask.mask & floatNegativeMask) == floatNegativeMask;
   }
 
   bool Numeric::isNegative(double d)
   {
     doubleUnion_t mask = { d };
-    return mask.mask & doubleNegativeMask == doubleNegativeMask;
+    return (mask.mask & doubleNegativeMask) == doubleNegativeMask;
   }
 
   bool Numeric::isInf(float f)
   {
     floatUnion_t mask = { f };
-    return !isFinite(f) && (mask.mask & floatMantissaMask == 0L);
+    return !isFinite(f) && (mask.mask & floatMantissaMask) == 0L;
   }
 
   bool Numeric::isInf(double d)
   {
     doubleUnion_t mask = { d };
-    return !isFinite(d) && (mask.mask & doubleMantissaMask == 0LL);
+    return !isFinite(d) && (mask.mask & doubleMantissaMask) == 0LL;
   }
 
   bool Numeric::isNan(float f)
   {
     floatUnion_t mask = { f };
-    return !isFinite(f) && (mask.mask & floatMantissaMask != 0L);
+    return !isFinite(f) && (mask.mask & floatMantissaMask) != 0L;
   }
 
   bool Numeric::isNan(double d)
   {
     doubleUnion_t mask = { d };
-    return !isFinite(d) && (mask.mask & doubleMantissaMask != 0LL);
+    return !isFinite(d) && (mask.mask & doubleMantissaMask) != 0LL;
   }
 
 
@@ -108,13 +108,22 @@ namespace LOFAR
 
     // Make \a ilhs and \a irhs lexicographically ordered as twos-complement
     // long.
-    if (ilhs < 0) ilhs = floatNegativeMask - ilhs;
-    if (irhs < 0) irhs = floatNegativeMask - irhs;
+    if (isNegative(lhs))
+      ilhs = ~ilhs + 1;
+    else
+      ilhs += floatNegativeMask;
+
+    if (isNegative(rhs))
+      irhs = ~irhs + 1;
+    else
+      irhs += floatNegativeMask;
 
     // If \a ilhs and \a irhs are less than \a maxUlps apart, then \a lhs and
     // \a rhs are considered equal.
-    return std::abs(ilhs - irhs) <= maxUlps;
-
+    if (ilhs < irhs)
+      return irhs - ilhs <= maxUlps;
+    else  
+      return ilhs - irhs <= maxUlps;
   }
 
 
@@ -145,17 +154,23 @@ namespace LOFAR
     doubleMask_t ilhs = mlhs.mask;
     doubleMask_t irhs = mrhs.mask;
 
-    // Make \a ilhs and \a irhs lexicographically ordered as twos-complement
-    // long.
-    if (ilhs < 0) ilhs = doubleNegativeMask - ilhs;
-    if (irhs < 0) irhs = doubleNegativeMask - irhs;
+    // Make \a ilhs and \a irhs lexicographically ordered
+    if (isNegative(lhs))
+      ilhs = ~ilhs + 1;
+    else
+      ilhs += doubleNegativeMask;
+
+    if (isNegative(rhs))
+      irhs = ~irhs + 1;
+    else
+      irhs += doubleNegativeMask;
 
     // If \a ilhs and \a irhs are less than \a maxUlps apart, then \a lhs and
     // \a rhs are considered equal.
-    ilhs -= irhs;
-    if (ilhs < 0) ilhs = -ilhs;
-    return ilhs <= maxUlps;
-
+    if (ilhs < irhs)
+      return irhs - ilhs <= maxUlps;
+    else  
+      return ilhs - irhs <= maxUlps;
   }
   
 
