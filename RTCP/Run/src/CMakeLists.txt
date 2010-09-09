@@ -12,6 +12,7 @@ install(PROGRAMS
   DESTINATION bin)
 
 install(FILES
+  BlueGeneControl.conf
   multitail-olap.conf
   OLAP.parset
   MAC+IP.dat

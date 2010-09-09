@@ -1,10 +1,9 @@
 #!/bin/bash
 COMMAND=$1
 
-PARTITION=R01
-BINPATH=/opt/lofar/bin
-LOG=/opt/lofar/log/BlueGeneControl.log
-PIDFILE=/tmp/BlueGeneControl-$PARTITION.pid
+CONFIG=/opt/lofar/etc/BlueGeneControl.conf
+
+. $CONFIG
 
 function getpid() {
   if [ -e $PIDFILE ]
@@ -48,7 +47,7 @@ case $COMMAND in
          then
          (
            start
-         ) >> $LOG 2>&1
+         ) >> $LOGFILE 2>&1
          fi
          ;;
 
@@ -56,7 +55,7 @@ case $COMMAND in
            stop_soft
            sleep 30
            stop_hard
-         ) >> $LOG 2>&1
+         ) >> $LOGFILE 2>&1
          ;;
 
   status)
@@ -66,4 +65,5 @@ case $COMMAND in
 
   *)     echo "usage: $0 {start|stop|status}"
          ;;
-esac  
+esac
+
