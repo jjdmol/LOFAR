@@ -39,8 +39,6 @@ namespace rfiStrategy {
 		FringeStopActionType,
 		ImagerActionType,
 		IterationBlockType,
-		LoadFlagsActionType,
-		LoadImageActionType,
 		PlotActionType,
 		QuickCalibrateActionType,
 		SetFlaggingActionType,

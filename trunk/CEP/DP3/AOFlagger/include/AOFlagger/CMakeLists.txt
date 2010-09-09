@@ -53,8 +53,6 @@ install(FILES
   gui/strategyframes/foreachpolarisationframe.h
   gui/strategyframes/fringestoppingframe.h
   gui/strategyframes/iterationframe.h
-  gui/strategyframes/loadflaggingframe.h
-  gui/strategyframes/loadimageframe.h
   gui/strategyframes/plotframe.h
   gui/strategyframes/setflaggingframe.h
   gui/strategyframes/setimageframe.h
@@ -140,8 +138,6 @@ install(FILES
   rfi/strategy/imageraction.h
   rfi/strategy/imageset.h
   rfi/strategy/iterationblock.h
-  rfi/strategy/loadflagsaction.h
-  rfi/strategy/loadimageaction.h
   rfi/strategy/msimageset.h
   rfi/strategy/plotaction.h
   rfi/strategy/setflaggingaction.h

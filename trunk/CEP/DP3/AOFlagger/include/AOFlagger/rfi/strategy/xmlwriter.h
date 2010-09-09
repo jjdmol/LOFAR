@@ -68,8 +68,6 @@ namespace rfiStrategy {
 			void writeFringeStopAction(const class FringeStopAction &action);
 			void writeImagerAction(const class ImagerAction &action);
 			void writeIterationBlock(const class IterationBlock &action);
-			void writeLoadFlagsAction(const class LoadFlagsAction &action);
-			void writeLoadImageAction(const class LoadImageAction &action);
 			void writePlotAction(const class PlotAction &action);
 			void writeQuickCalibrateAction(const class QuickCalibrateAction &action);
 			void writeSetFlaggingAction(const class SetFlaggingAction &action);

@@ -30,8 +30,6 @@
 #include <AOFlagger/rfi/strategy/fringestopaction.h>
 #include <AOFlagger/rfi/strategy/imageraction.h>
 #include <AOFlagger/rfi/strategy/iterationblock.h>
-#include <AOFlagger/rfi/strategy/loadflagsaction.h>
-#include <AOFlagger/rfi/strategy/loadimageaction.h>
 #include <AOFlagger/rfi/strategy/plotaction.h>
 #include <AOFlagger/rfi/strategy/quickcalibrateaction.h>
 #include <AOFlagger/rfi/strategy/setflaggingaction.h>
@@ -145,12 +143,6 @@ namespace rfiStrategy {
 				break;
 			case IterationBlockType:
 				writeIterationBlock(static_cast<const IterationBlock&>(action));
-				break;
-			case LoadFlagsActionType:
-				writeLoadFlagsAction(static_cast<const LoadFlagsAction&>(action));
-				break;
-			case LoadImageActionType:
-				writeLoadImageAction(static_cast<const LoadImageAction&>(action));
 				break;
 			case PlotActionType:
 				writePlotAction(static_cast<const PlotAction&>(action));
@@ -279,21 +271,6 @@ namespace rfiStrategy {
 		write<int>("iteration-count", action.IterationCount());
 		write<double>("sensitivity-start", action.SensitivityStart());
 		writeContainerItems(action);
-	}
-
-	void XmlWriter::writeLoadFlagsAction(const LoadFlagsAction &action)
-	{
-		attribute("type", "LoadFlagsAction");
-		write<bool>("join-flags", action.JoinFlags());
-	}
-
-	void XmlWriter::writeLoadImageAction(const LoadImageAction &action)
-	{
-		attribute("type", "LoadImageAction");
-		write<int>("image-kind", action.DataKind());
-		write<bool>("read-all-polarisations", action.ReadAllPolarisations());
-		write<bool>("read-dipole-auto-polarisations", action.ReadDipoleAutoPolarisations());
-		write<bool>("read-stokes-i", action.ReadStokesI());
 	}
 
 	void XmlWriter::writePlotAction(const class PlotAction &action)

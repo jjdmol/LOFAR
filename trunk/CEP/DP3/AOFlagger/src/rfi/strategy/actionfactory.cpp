@@ -31,8 +31,6 @@
 #include <AOFlagger/rfi/strategy/fringestopaction.h>
 #include <AOFlagger/rfi/strategy/imageraction.h>
 #include <AOFlagger/rfi/strategy/iterationblock.h>
-#include <AOFlagger/rfi/strategy/loadflagsaction.h>
-#include <AOFlagger/rfi/strategy/loadimageaction.h>
 #include <AOFlagger/rfi/strategy/plotaction.h>
 #include <AOFlagger/rfi/strategy/quickcalibrateaction.h>
 #include <AOFlagger/rfi/strategy/setflaggingaction.h>
@@ -60,8 +58,6 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Fringe stopping recovery");
 	list.push_back("Image");
 	list.push_back("Iteration");
-	list.push_back("Load flags");
-	list.push_back("Load image");
 	list.push_back("Phase adapter");
 	list.push_back("Plot");
 	list.push_back("Quickly calibrate");
@@ -99,10 +95,6 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new ImagerAction();
 	else if(action == "Iteration")
 		return new IterationBlock();
-	else if(action == "Load flags")
-		return new LoadFlagsAction();
-	else if(action == "Load image")
-		return new LoadImageAction();
 	else if(action == "Phase adapter")
 		return new Adapter();
 	else if(action == "Plot")
@@ -164,14 +156,6 @@ const char *ActionFactory::GetDescription(ActionType action)
 		case FrequencySelectionActionType:
 			return
 				"Flag frequency channels that are very different from other channels.";
-		case LoadImageActionType:
-			return
-				"The Load Image Action loads the time/frequentie data of the currently selected baseline. "
-				"Its parameters are: image-kind : which data column to read (0. DATA, "
-				"1. CORRECTED_DATA, 2. Residual of CORRECTED and MODEL, 3. MODEL_DATA, 4. WEIGHT), "
-				"read-all-polarisations : 1=read all, read-dipole-auto-polarisations : 1=read XX and YY "
-				"(or RR and LL), read-stokes-i : 1=read XX and YY and form Stokes I. Only one of the "
-				"read-.. parameters should be 1.";
 		case SetFlaggingActionType:
 			return
 				"This is an action that is part of the algorithm and should normally not be "

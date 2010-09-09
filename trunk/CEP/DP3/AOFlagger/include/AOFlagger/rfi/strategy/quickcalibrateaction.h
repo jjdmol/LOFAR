@@ -38,7 +38,7 @@ namespace rfiStrategy {
 			{
 				return "Quickly calibrate";
 			}
-			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener)
+			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &)
 			{
 				Image2DCPtr image = artifacts.ContaminatedData().GetSingleImage();
 				Mask2DCPtr mask = artifacts.ContaminatedData().GetSingleMask();

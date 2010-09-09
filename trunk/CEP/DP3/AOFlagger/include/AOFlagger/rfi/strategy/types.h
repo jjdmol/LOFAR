@@ -46,7 +46,8 @@ namespace rfiStrategy
 // 1.0 : start
 // 1.1 : add AddStatisticsAction
 // 1.2 : add restore-originals property to Adapter
-#define STRATEGY_FILE_FORMAT_VERSION 1.2
+// 1.3 : removed LoadFlags en LoadImage actions.
+#define STRATEGY_FILE_FORMAT_VERSION 1.3
 
 // The earliest format version which can be read by this version of the software
 #define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 1.2

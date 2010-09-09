@@ -119,7 +119,7 @@ namespace rfiStrategy {
 			virtual std::string Name() = 0;
 			virtual std::string File() = 0;
 			virtual TimeFrequencyData *LoadData(ImageSetIndex &index) = 0;
-			virtual void LoadFlags(ImageSetIndex &index, TimeFrequencyData &destination) = 0;
+			//virtual void LoadFlags(ImageSetIndex &index, TimeFrequencyData &destination) = 0;
 			//virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index) = 0;
 			virtual void WriteFlags(ImageSetIndex &index, TimeFrequencyData &data) = 0;
 			static class ImageSet *Create(const std::string &file);

@@ -36,8 +36,6 @@
 #include <AOFlagger/gui/strategyframes/foreachpolarisationframe.h>
 #include <AOFlagger/gui/strategyframes/fringestoppingframe.h>
 #include <AOFlagger/gui/strategyframes/iterationframe.h>
-#include <AOFlagger/gui/strategyframes/loadflaggingframe.h>
-#include <AOFlagger/gui/strategyframes/loadimageframe.h>
 #include <AOFlagger/gui/strategyframes/plotframe.h>
 #include <AOFlagger/gui/strategyframes/setflaggingframe.h>
 #include <AOFlagger/gui/strategyframes/setimageframe.h>
@@ -252,12 +250,6 @@ void EditStrategyWindow::onSelectionChanged()
 				break;
 			case IterationBlockType:
 				showRight(new IterationFrame(*static_cast<rfiStrategy::IterationBlock*>(selectedAction), *this));
-				break;
-			case LoadFlagsActionType:
-				showRight(new LoadFlaggingFrame(*static_cast<rfiStrategy::LoadFlagsAction*>(selectedAction), *this));
-				break;
-			case LoadImageActionType:
-				showRight(new LoadImageFrame(*static_cast<rfiStrategy::LoadImageAction*>(selectedAction), *this));
 				break;
 			case SlidingWindowFitActionType:
 				showRight(new SlidingWindowFitFrame(*static_cast<rfiStrategy::SlidingWindowFitAction*>(selectedAction), *this));

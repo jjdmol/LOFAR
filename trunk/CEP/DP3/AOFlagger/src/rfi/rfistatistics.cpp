@@ -322,7 +322,7 @@ void RFIStatistics::addTimesteps(std::map<double, class TimestepInfo> &timesteps
 	}
 }
 
-void RFIStatistics::addAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage)
+void RFIStatistics::addAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr, SegmentedImageCPtr segmentedImage)
 {
 	for(size_t y=1;y<image->Height();++y)
 	{
@@ -363,7 +363,7 @@ void RFIStatistics::addAmplitudes(std::map<double, class AmplitudeBin> &amplitud
 	}
 }
 
-void RFIStatistics::addStokes(std::map<double, class AmplitudeBin> &amplitudes, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
+void RFIStatistics::addStokes(std::map<double, class AmplitudeBin> &amplitudes, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr)
 {
 	for(unsigned i=0;i<3;++i)
 	{
@@ -411,7 +411,7 @@ void RFIStatistics::addStokes(std::map<double, class AmplitudeBin> &amplitudes, 
 	}
 }
 
-void RFIStatistics::addPolarisations(std::map<double, class AmplitudeBin> &amplitudes, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
+void RFIStatistics::addPolarisations(std::map<double, class AmplitudeBin> &amplitudes, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr)
 {
 	for(size_t polIndex=0;polIndex<data.PolarisationCount();++polIndex)
 	{
@@ -551,7 +551,7 @@ void RFIStatistics::addBaselines(const TimeFrequencyData &data, TimeFrequencyMet
 	}
 }
 
-void RFIStatistics::addFeatures(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage)
+void RFIStatistics::addFeatures(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr, SegmentedImageCPtr segmentedImage)
 {
 	FeatureMap features;
 	
