@@ -35,6 +35,8 @@ using namespace LOFAR::StationCU;
 
 int main(int argc, char* argv[])
 {
+	using LOFAR::basename;
+
 	// args: cntlrname, parentHost, parentService
 	GCFScheduler::instance()->init(argc, argv, basename(argv[0]));
 
@@ -46,7 +48,7 @@ int main(int argc, char* argv[])
 
 	string		myName;
 	if (argc < 2) {		// started by swlevel?
-		myName = formatString("%s:%s", myHostname(false).c_str(),  basename(argv[0]));
+		myName = myHostname(false) +  basename(argv[0]);
 	}
 	else {
 		myName = argv[1];
