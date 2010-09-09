@@ -72,7 +72,7 @@ global-ignores = *~ *.log *.private *.result *.tmp installed \
                  build config.guess config.h.in config.sub configure \
                  depcomp install-sh libtool.m4 ltmain.sh lt~obsolete.m4 \
                  ltoptions.m4 ltsugar.m4 ltversion.m4 Makefile.in missing \
-                 Package__Version.* version*.cc *.pyc
+                 *.pyc
 
 ### Set log-encoding to the default encoding for log messages
 # log-encoding = latin1
