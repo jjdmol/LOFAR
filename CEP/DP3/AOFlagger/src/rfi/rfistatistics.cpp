@@ -30,14 +30,6 @@
 #include <AOFlagger/util/plot.h>
 #include <AOFlagger/rfi/morphology.h>
 
-RFIStatistics::RFIStatistics()
-{
-}
-
-RFIStatistics::~RFIStatistics()
-{
-}
-
 void RFIStatistics::Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
 {
 	Mask2DCPtr mask = data.GetSingleMask();
@@ -536,8 +528,11 @@ void RFIStatistics::addBaselines(const TimeFrequencyData &data, TimeFrequencyMet
 		baseline.lineRfiCount = lineRfiCount;
 		baseline.broadbandRfiAmplitude = broadbandRfiAmplitude;
 		baseline.lineRfiAmplitude = lineRfiAmplitude;
-		baseline.baselineStatistics = new RFIStatistics();
-		baseline.baselineStatistics->addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask, false);
+		if(_separateBaselineStatistics)
+		{
+			baseline.baselineStatistics = new RFIStatistics();
+			baseline.baselineStatistics->addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask, false);
+		}
 		row.insert(std::pair<int, BaselineInfo>(a2, baseline));
 	} else {
 		BaselineInfo &baseline = row.find(a2)->second;
@@ -549,7 +544,10 @@ void RFIStatistics::addBaselines(const TimeFrequencyData &data, TimeFrequencyMet
 		baseline.lineRfiCount += lineRfiCount;
 		baseline.broadbandRfiAmplitude += broadbandRfiAmplitude;
 		baseline.lineRfiAmplitude += lineRfiAmplitude;
-		baseline.baselineStatistics->addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask, false);
+		if(_separateBaselineStatistics)
+		{
+			baseline.baselineStatistics->addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask, false);
+		}
 	}
 }
 

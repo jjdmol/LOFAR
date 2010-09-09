@@ -136,8 +136,8 @@ class RFIStatistics {
 			RFIStatistics *baselineStatistics;
 		};
 
-		RFIStatistics();
-		~RFIStatistics();
+		RFIStatistics() : _separateBaselineStatistics(false) { }
+		~RFIStatistics() { }
 		
 		void Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
 		void Add(const ChannelInfo &channel, bool autocorrelation);
@@ -188,6 +188,11 @@ class RFIStatistics {
 		{
 			return count(_crossAmplitudes, startAmplitude, endAmplitude);
 		}
+		void SetSeparateBaselineStatistics(bool haveSeparateBaselineStatistics)
+		{
+			_separateBaselineStatistics = haveSeparateBaselineStatistics;
+		}
+		bool SeparateBaselineStatistics() const { return _separateBaselineStatistics; }
 	private:
 		void addEverything(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask);
 		void addSingleBaseline(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask, bool save);
@@ -222,6 +227,7 @@ class RFIStatistics {
 		std::map<double, class TimestepInfo> _autoTimesteps, _crossTimesteps;
 		std::map<double, class AmplitudeBin> _autoAmplitudes, _crossAmplitudes;
 		BaselineMatrix _baselines;
+		bool _separateBaselineStatistics;
 		
 		void addChannels(std::map<double, class ChannelInfo> &channels, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addTimesteps(std::map<double, class TimestepInfo> &timesteps, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
