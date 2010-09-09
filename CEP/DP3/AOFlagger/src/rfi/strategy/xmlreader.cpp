@@ -31,8 +31,6 @@
 #include <AOFlagger/rfi/strategy/fringestopaction.h>
 #include <AOFlagger/rfi/strategy/imageraction.h>
 #include <AOFlagger/rfi/strategy/iterationblock.h>
-#include <AOFlagger/rfi/strategy/loadflagsaction.h>
-#include <AOFlagger/rfi/strategy/loadimageaction.h>
 #include <AOFlagger/rfi/strategy/plotaction.h>
 #include <AOFlagger/rfi/strategy/quickcalibrateaction.h>
 #include <AOFlagger/rfi/strategy/setflaggingaction.h>
@@ -203,10 +201,6 @@ Action *XmlReader::parseAction(xmlNode *node)
 		newAction = parseImagerAction(node);
 	else if(typeStr == "IterationBlock")
 		newAction = parseIterationBlock(node);
-	else if(typeStr == "LoadFlagsAction")
-		newAction = parseLoadFlagsAction(node);
-	else if(typeStr == "LoadImageAction")
-		newAction = parseLoadImageAction(node);
 	else if(typeStr == "PlotAction")
 		newAction = parsePlotAction(node);
 	else if(typeStr == "QuickCalibrateAction")
@@ -247,7 +241,7 @@ Action *XmlReader::parseAdapter(xmlNode *node)
 	return newAction;
 }
 
-Action *XmlReader::parseAddStatistics(xmlNode *node)
+Action *XmlReader::parseAddStatistics(xmlNode *)
 {
 	AddStatisticsAction *newAction = new AddStatisticsAction();
 	return newAction;
@@ -370,26 +364,6 @@ class Action *XmlReader::parseIterationBlock(xmlNode *node)
 	return newAction;
 }
 
-class Action *XmlReader::parseLoadFlagsAction(xmlNode *node)
-{
-	LoadFlagsAction *newAction = new LoadFlagsAction();
-	newAction->SetJoinFlags(getBool(node, "join-flags"));
-	return newAction;
-}
-
-class Action *XmlReader::parseLoadImageAction(xmlNode *node)
-{
-	LoadImageAction *newAction = new LoadImageAction();
-	newAction->SetDataKind((enum DataKind) getInt(node, "image-kind"));
-	if(getBool(node, "read-all-polarisations"))
-		newAction->SetReadAllPolarisations();
-	if(getBool(node, "read-dipole-auto-polarisations"))
-		newAction->SetReadDipoleAutoPolarisations();
-	if(getBool(node, "read-stokes-i"))
-		newAction->SetReadStokesI();
-	return newAction;
-}
-
 Action *XmlReader::parseSetFlaggingAction(xmlNode *node)
 {
 	SetFlaggingAction *newAction = new SetFlaggingAction();
@@ -405,7 +379,7 @@ Action *XmlReader::parsePlotAction(xmlNode *node)
 	return newAction;
 }
 
-Action *XmlReader::parseQuickCalibrateAction(xmlNode *node)
+Action *XmlReader::parseQuickCalibrateAction(xmlNode *)
 {
 	QuickCalibrateAction *newAction = new QuickCalibrateAction();
 	return newAction;

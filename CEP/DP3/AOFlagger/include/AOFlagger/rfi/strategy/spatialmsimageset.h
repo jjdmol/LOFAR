@@ -144,7 +144,7 @@ namespace rfiStrategy {
 				_baseline.pop();
 				return new BaselineData(data);
 			}
-			virtual void AddWriteFlagsTask(ImageSetIndex &index, std::vector<Mask2DCPtr> &flags)
+			virtual void AddWriteFlagsTask(ImageSetIndex &, std::vector<Mask2DCPtr> &)
 			{
 			}
 			virtual void PerformWriteFlagsTask()

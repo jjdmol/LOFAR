@@ -26,8 +26,6 @@
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
 #include <AOFlagger/rfi/strategy/iterationblock.h>
-#include <AOFlagger/rfi/strategy/loadflagsaction.h>
-#include <AOFlagger/rfi/strategy/loadimageaction.h>
 #include <AOFlagger/rfi/strategy/plotaction.h>
 #include <AOFlagger/rfi/strategy/setflaggingaction.h>
 #include <AOFlagger/rfi/strategy/setimageaction.h>
@@ -257,12 +255,7 @@ namespace rfiStrategy {
 		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
 		while(!i.PastEnd())
 		{
-			if(i->Type() == LoadImageActionType)
-			{
-				LoadImageAction &action = static_cast<LoadImageAction&>(*i);
-				action.SetDataKind(kind);
-			}
-			else if(i->Type() == ForEachBaselineActionType)
+			if(i->Type() == ForEachBaselineActionType)
 			{
 				ForEachBaselineAction &action = static_cast<ForEachBaselineAction&>(*i);
 				action.SetDataKind(kind);
@@ -271,24 +264,9 @@ namespace rfiStrategy {
 		}
 	}
 
-	void Strategy::SetPolarisations(Strategy &strategy, enum PolarisationType type)
+	/** TODO : implement, also in ForEachPolarisation */
+	void Strategy::SetPolarisations(Strategy &, enum PolarisationType)
 	{
-		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
-		while(!i.PastEnd())
-		{
-			if(i->Type() == LoadImageActionType)
-			{
-				LoadImageAction &action = static_cast<LoadImageAction&>(*i);
-				switch(type)
-				{
-					case AutoDipolePolarisation: action.SetReadDipoleAutoPolarisations(); break;
-					case DipolePolarisation: action.SetReadAllPolarisations(); break;
-					case StokesIPolarisation: action.SetReadStokesI(); break;
-					default: throw std::runtime_error("Polarisation not supported");
-				}
-			}
-			++i;
-		}
 	}
 
 	void Strategy::SetBaselines(Strategy &strategy, enum BaselineSelection baselineSelection)

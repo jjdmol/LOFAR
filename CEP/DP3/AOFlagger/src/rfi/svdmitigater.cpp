@@ -120,7 +120,7 @@ void SVDMitigater::Decompose()
 	delete[] a;
 
 	if(_verbose) {
-		for(unsigned i=0;i<minmn;++i)
+		for(int i=0;i<minmn;++i)
 			std::cout << _singularValues[i] << ",";
 		std::cout << std::endl;
 		std::cout << watch.ToString() << std::endl;

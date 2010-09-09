@@ -48,8 +48,6 @@ set(RFI_STRATEGY_FILES
   rfi/strategy/fringestopaction.cpp
   rfi/strategy/imageraction.cpp
   rfi/strategy/imageset.cpp
-  rfi/strategy/loadflagsaction.cpp
-  rfi/strategy/loadimageaction.cpp
   rfi/strategy/msimageset.cpp
   rfi/strategy/plotaction.cpp
   rfi/strategy/slidingwindowfitaction.cpp
