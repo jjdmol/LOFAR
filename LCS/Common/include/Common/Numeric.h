@@ -23,6 +23,8 @@
 #ifndef LOFAR_COMMON_NUMERIC_H
 #define LOFAR_COMMON_NUMERIC_H
 
+#include <Common/LofarTypes.h>
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 // \file
@@ -65,9 +67,9 @@ namespace LOFAR
 
   public:
     // Mask type used for floats is a (32-bit) int.
-    typedef int floatMask_t;
+    typedef uint32 floatMask_t;
     // Mask type used for doubles is a (64-bit) long long.
-    typedef long long doubleMask_t;
+    typedef uint64 doubleMask_t;
 
     // @{
     // Classes to overlap floating point numbers with masks in a type-safe way
@@ -110,13 +112,13 @@ namespace LOFAR
 
     // @{
     // These constants are for IEEE754 floating point numbers.
-    static const floatMask_t floatNegativeMask = 0x80000000L;
-    static const floatMask_t floatExponentMask = 0x7F800000L;
-    static const floatMask_t floatMantissaMask = 0x007FFFFFL;
+    static const floatMask_t floatNegativeMask = 0x80000000UL;
+    static const floatMask_t floatExponentMask = 0x7F800000UL;
+    static const floatMask_t floatMantissaMask = 0x007FFFFFUL;
 
-    static const doubleMask_t doubleNegativeMask = 0x8000000000000000LL;
-    static const doubleMask_t doubleExponentMask = 0x7FF0000000000000LL;
-    static const doubleMask_t doubleMantissaMask = 0x000FFFFFFFFFFFFFLL;
+    static const doubleMask_t doubleNegativeMask = 0x8000000000000000ULL;
+    static const doubleMask_t doubleExponentMask = 0x7FF0000000000000ULL;
+    static const doubleMask_t doubleMantissaMask = 0x000FFFFFFFFFFFFFULL;
     // @}
 
   };
