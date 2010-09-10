@@ -4,6 +4,7 @@
 #include <log4cxx/basicconfigurator.h>
 #include <log4cxx/propertyconfigurator.h>
 #include <log4cxx/helpers/loglog.h>
+#include <log4cxx/helpers/properties.h>
 #include <log4cxx/ndc.h>
 
 using namespace log4cxx;
@@ -21,12 +22,30 @@ namespace LOFAR
     }
 
     // Function that is used when the TRACE levels are NOT compiled out. 
-    //
-    // NOT YET IMPLEMENTED!! The implementation of initTraceModule() in
-    // LofarLog4Cplus.cc could be used as a starting point.
     void initTraceModule (void)
     {
 #ifdef ENABLE_TRACER
+# if 0
+      /* This doesn't work, for reasons I don't understand. The logger TRC
+         appears to get registered using the properties in props, but when
+         it's being used, log4cxx complains that no appenders could be found.
+      */
+      // Setup a property object to initialise the TRACE Logger
+      helpers::Properties  props;
+      props.setProperty("log4j.logger.TRC", "DEBUG, STDERR");
+      props.setProperty("log4j.additivity.TRC", "false");
+      props.setProperty("log4j.appender.STDERR",
+                        "org.apache.log4j.ConsoleAppender");
+      props.setProperty("log4j.appender.STDERR.logToStdErr", "true");
+      props.setProperty("log4j.appender.STDERR.ImmediateFlush", "true");
+      props.setProperty("log4j.appender.STDERR.layout",
+                        "org.apache.log4j.PatternLayout");
+      props.setProperty("log4j.appender.STDERR.layout.ConversionPattern",
+                        "%d{yyMMdd HHmmss,SSS} [%t] %-6p %c{3} [%F:%L] - %m%n");
+      PropertyConfigurator::configure(props);
+      Logger::getLogger("TRC")->forcedLog(log4cxx::Level::getTrace(), 
+                                          "TRACE module activated");
+# endif
 #endif
     }
   } // namespace

@@ -71,10 +71,16 @@ namespace LOFAR {
     ::LOFAR::initLog4Cxx(filename, logfile);    \
   } while(0)
 
-#define INIT_LOGGER_AND_WATCH(filename,watchinterval)      \
-  do {                                                     \
-    ::LOFAR::initLog4CxxAndWatch(filename, watchinterval); \
+// After initialisation a thread is started to monitor any changes in the
+// properties file. An intervaltime in millisecs must be provided.
+#ifdef USE_THREADS
+# define INIT_LOGGER_AND_WATCH(filename,watchinterval)      \
+  do {                                                      \
+    ::LOFAR::initLog4CxxAndWatch(filename, watchinterval);  \
   } while(0)
+#else
+# define INIT_LOGGER_AND_WATCH(filename,watchinterval) INIT_LOGGER(filename)
+#endif
 
   //@}
 
@@ -216,13 +222,9 @@ namespace LOFAR {
 #define TRACE_LEVEL_RTTI 7
 #define TRACE_LEVEL_FLOW 8
 
-#if 0
 
-#define LofarLogTrace(level,message) LofarLog(TRACE, message)
-#define LofarLogTraceStr(level,stream) LofarLogStr(TRACE, stream)
-
-#else
-
+// \internal
+// Internal macro used by the LOG_TRACE_<level> macros.
 #define LofarLogTrace(level,message) \
  do { \
   if (getTraceLogger()->isTraceEnabled()) { \
@@ -245,7 +247,6 @@ namespace LOFAR {
   } \
  } while(0)
 
-#endif
 
   //#
   //# LOG_TRACE_LIFETIME(_STR) (level,message | stream)
@@ -353,8 +354,6 @@ namespace LOFAR {
   // @}
 #endif // DOXYGEN_SHOULD_SKIP_THIS
 
-  void lofarLoggerInitNode(void);
-
 
   // The LifetimeLogger class produces TRACE messages when an instance of this
   // class is created and when it is destroyed.
@@ -368,18 +367,22 @@ namespace LOFAR {
       : itsLogger(logger), itsMsg(msg),
 	itsFile(file), itsLine(line) 
     {
-      itsLogger->forcedLog(log4cxx::Level::getDebug(),
-			   "ENTER: " + itsMsg, 
-			   log4cxx::spi::LocationInfo(itsFile, 0, itsLine));
+      if(itsLogger->isTraceEnabled()) {
+        itsLogger->forcedLog(log4cxx::Level::getTrace(),
+                             "ENTER: " + itsMsg, 
+                             log4cxx::spi::LocationInfo(itsFile, 0, itsLine));
+      }
     }
-
+    
     ~LifetimeLogger()
     {
-      itsLogger->forcedLog(log4cxx::Level::getDebug(),
-			   "EXIT: " + itsMsg, 
-			   log4cxx::spi::LocationInfo(itsFile, 0, itsLine));
+      if(itsLogger->isTraceEnabled()) {
+        itsLogger->forcedLog(log4cxx::Level::getTrace(),
+                             "EXIT: " + itsMsg, 
+                             log4cxx::spi::LocationInfo(itsFile, 0, itsLine));
+      }
     }
-
+    
   private:
     log4cxx::LoggerPtr itsLogger;
     std::string        itsMsg;

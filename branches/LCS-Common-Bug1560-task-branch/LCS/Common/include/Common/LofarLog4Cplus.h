@@ -39,8 +39,6 @@
 #include <log4cplus/configurator.h>
 //#include <log4cplus/global-init.h>
 
-#include <cstring>  // for strstr()
-
 //# This might be undefined if used by an external package like ASKAP.
 #ifndef AUTO_FUNCTION_NAME
 # define AUTO_FUNCTION_NAME __FUNCTION__
@@ -66,7 +64,7 @@ namespace LOFAR {
   do {                                          \
     ::LOFAR::initLog4Cplus(filename);           \
   } while(0)
-  
+
 #define INIT_VAR_LOGGER(filename,logfile)                 \
   do {                                                    \
     ::LOFAR::initLog4Cplus(filename, logfile);            \
@@ -377,8 +375,6 @@ namespace LOFAR {
   } while(0)
 // @}
 #endif // DOXYGEN_SHOULD_SKIP_THIS
-
-void	lofarLoggerInitNode(void);
 
 
 //#------------------------- LoggerReference class ---------------------------------
