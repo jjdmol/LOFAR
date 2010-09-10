@@ -61,31 +61,26 @@ namespace LOFAR {
   // @{
   //
   // Only initializes the logger module.
-#define INIT_LOGGER(filename) \
-do { \
-  ::LOFAR::lofarLoggerInitNode(); \
-  if (!strstr(filename, ".log_prop")) { \
-    log4cxx::PropertyConfigurator::configure \
-       (log4cxx::File(filename + std::string(".log_prop"))); \
-  } else { \
-    log4cxx::PropertyConfigurator::configure \
-       (log4cxx::File(filename)); \
-  } \
-} while(0)
+#define INIT_LOGGER(filename)                   \
+  do {                                          \
+    ::LOFAR::initLog4Cxx(filename);             \
+  } while(0)
 
-#define INIT_VAR_LOGGER(filename,logfile) INIT_LOGGER(filename)
+#define INIT_VAR_LOGGER(filename,logfile)       \
+  do {                                          \
+    ::LOFAR::initLog4Cxx(filename, logfile);    \
+  } while(0)
 
-#define INIT_LOGGER_AND_WATCH(filename,watchinterval) \
-do { \
-  ::LOFAR::lofarLoggerInitNode(); \
-  if (!strstr(filename, ".log_prop")) { \
-    log4cxx::PropertyConfigurator::configureAndWatch \
-       (log4cxx::File(filename + std::string(".log_prop")), watchinterval); \
-  } else { \
-    log4cxx::PropertyConfigurator::configureAndWatch \
-       (log4cxx::File(filename), watchinterval); \
-  } \
-} while(0)
+// After initialisation a thread is started to monitor any changes in the
+// properties file. An intervaltime in millisecs must be provided.
+#ifdef USE_THREADS
+# define INIT_LOGGER_AND_WATCH(filename,watchinterval)      \
+  do {                                                      \
+    ::LOFAR::initLog4CxxAndWatch(filename, watchinterval);  \
+  } while(0)
+#else
+# define INIT_LOGGER_AND_WATCH(filename,watchinterval) INIT_LOGGER(filename)
+#endif
 
   //@}
 
@@ -121,28 +116,28 @@ do { \
   // @{
 
   // Should be used when an unrecoverable exception occures.
-#define LOG_FATAL(message)    LofarLog(Fatal,message)
+#define LOG_FATAL(message)    LofarLog(FATAL,message)
   // Should be used when an unrecoverable exception occures.
-#define LOG_FATAL_STR(stream) LofarLogStr(Fatal,stream)
+#define LOG_FATAL_STR(stream) LofarLogStr(FATAL,stream)
 
   // Should be used in case of recoverable exceptions and illegal start parms.
-#define LOG_ERROR(message)    LofarLog(Error,message)
+#define LOG_ERROR(message)    LofarLog(ERROR,message)
   // Should be used in case of recoverable exceptions and illegal start parms.
-#define LOG_ERROR_STR(stream) LofarLogStr(Error,stream)
+#define LOG_ERROR_STR(stream) LofarLogStr(ERROR,stream)
 
   // Should be used when an unexpected situation occured that could be solved by
   // the software itself.
-#define LOG_WARN(message)     LofarLog(Warn,message)
+#define LOG_WARN(message)     LofarLog(WARN,message)
   // Should be used when an unexpected situation occured that could be solved by
   // the software itself.
-#define LOG_WARN_STR(stream)  LofarLogStr(Warn,stream)
+#define LOG_WARN_STR(stream)  LofarLogStr(WARN,stream)
 
   // Should be used to notify operator startup and normal termination of
   // programs. It can also be used for other 'global' actions.
-#define LOG_INFO(message)     LofarLog(Info,message)
+#define LOG_INFO(message)     LofarLog(INFO,message)
   // Should be used to notify operator startup and normal termination of
   // programs. It can also be used for other 'global' actions.
-#define LOG_INFO_STR(stream)  LofarLogStr(Info,stream)
+#define LOG_INFO_STR(stream)  LofarLogStr(INFO,stream)
 
   // @}
 
@@ -167,12 +162,8 @@ do { \
 #define LOG_DEBUG_STR(stream)
 #else
 
-  // Use this macro for plain and 'printf' like messages.
-#define LOG_DEBUG(message)     LofarLog(Debug,message)
- 
-  // Use this macro for operator<< messages
-  // \note the 'printf' counterparts are MUCH faster and produce less code!
-#define LOG_DEBUG_STR(stream)  LofarLogStr(Debug,stream)
+#define LOG_DEBUG(message)     LofarLog(DEBUG,message)
+#define LOG_DEBUG_STR(stream)  LofarLogStr(DEBUG,stream)
 
 #endif // DISABLE_DEBUG_OUTPUT
 
@@ -231,10 +222,13 @@ do { \
 #define TRACE_LEVEL_RTTI 7
 #define TRACE_LEVEL_FLOW 8
 
+
+// \internal
+// Internal macro used by the LOG_TRACE_<level> macros.
 #define LofarLogTrace(level,message) \
  do { \
-  if (getTraceLogger()->isDebugEnabled()) { \
-    getTraceLogger()->forcedLog (log4cxx::Level::getDebug(), \
+  if (getTraceLogger()->isTraceEnabled()) { \
+    getTraceLogger()->forcedLog (log4cxx::Level::getTrace(), \
                                  message, \
                                  LOG4CXX_LOCATION); \
   } \
@@ -244,14 +238,15 @@ do { \
 // Internal macro used by the LOG_TRACE_<level>_STR macros.
 #define LofarLogTraceStr(level,stream) \
  do { \
-  if (getTraceLogger()->isDebugEnabled()) { \
+  if (getTraceLogger()->isTraceEnabled()) { \
     std::ostringstream	lfr_log_oss; \
     lfr_log_oss << stream; \
-    getTraceLogger()->forcedLog (log4cxx::Level::getDebug(), \
+    getTraceLogger()->forcedLog (log4cxx::Level::getTrace(), \
                                  lfr_log_oss.str(), \
                                  LOG4CXX_LOCATION); \
   } \
  } while(0)
+
 
   //#
   //# LOG_TRACE_LIFETIME(_STR) (level,message | stream)
@@ -348,26 +343,16 @@ do { \
   // \internal
   // \name Internal macro's for standard logging functions
   // @{
-#define LofarLog(type,message) \
- do { \
-  log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger(LOFARLOGGER_FULLPACKAGE); \
-  if (logger->is##type##Enabled()) { \
-    logger->forcedLog (log4cxx::Level::get##type(), message, \
-                       LOG4CXX_LOCATION); \
-  } \
- } while(0)
+#define LofarLog(level,message)                                 \
+  do {                                                          \
+    log4cxx::LoggerPtr _logger =                                \
+      log4cxx::Logger::getLogger(LOFARLOGGER_FULLPACKAGE);      \
+    LOG4CXX_##level(_logger, message);                          \
+  } while(0)
 
-  // \internal
-#define LofarLogStr(type,stream) \
- do { \
-  std::ostringstream lfr_log_oss;    \
-  lfr_log_oss << stream;             \
-  LofarLog(type, lfr_log_oss.str()); \
- } while(0)
+#define LofarLogStr(level,stream) LofarLog(level,stream)
   // @}
 #endif // DOXYGEN_SHOULD_SKIP_THIS
-
-  void lofarLoggerInitNode(void);
 
 
   // The LifetimeLogger class produces TRACE messages when an instance of this
@@ -382,18 +367,22 @@ do { \
       : itsLogger(logger), itsMsg(msg),
 	itsFile(file), itsLine(line) 
     {
-      itsLogger->forcedLog(log4cxx::Level::getDebug(),
-			   "ENTER: " + itsMsg, 
-			   log4cxx::spi::LocationInfo(itsFile, 0, itsLine));
+      if(itsLogger->isTraceEnabled()) {
+        itsLogger->forcedLog(log4cxx::Level::getTrace(),
+                             "ENTER: " + itsMsg, 
+                             log4cxx::spi::LocationInfo(itsFile, 0, itsLine));
+      }
     }
-
+    
     ~LifetimeLogger()
     {
-      itsLogger->forcedLog(log4cxx::Level::getDebug(),
-			   "EXIT: " + itsMsg, 
-			   log4cxx::spi::LocationInfo(itsFile, 0, itsLine));
+      if(itsLogger->isTraceEnabled()) {
+        itsLogger->forcedLog(log4cxx::Level::getTrace(),
+                             "EXIT: " + itsMsg, 
+                             log4cxx::spi::LocationInfo(itsFile, 0, itsLine));
+      }
     }
-
+    
   private:
     log4cxx::LoggerPtr itsLogger;
     std::string        itsMsg;
@@ -408,6 +397,30 @@ do { \
 extern log4cxx::LoggerPtr theirTraceLoggerRef;
 // Function to return the 'mother' of all trace-loggers.
 inline log4cxx::LoggerPtr& getTraceLogger() { return theirTraceLoggerRef; }
+
+  // Initialize Log4cxx. 
+  // \param propFile Name of the properties file. A missing \c ".log_prop"
+  // extension will automatically be added. Note that \a propFile is
+  // deliberatly passed by value, because we probably have to add the missing
+  // file extension.
+  // \param logFile Name of the output log file.
+  // \param envVar Name of the environment variable that can be used in the
+  // properties file as (part of) of the output log filename. It defaults to
+  // \c LOG4CXX_LOGFILENAME. Note that the environment variable will \e
+  // always be set to the contents of \a logFile, thereby possibly clobbering
+  // it.
+  void initLog4Cxx(string propFile, const string& logFile = "",
+                     const string& envVar = "LOG4CXX_LOGFILENAME");
+
+  // Initialize Log4cxx with a watchdog thread for the configuration file.
+  // \param propFile Name of the properties file. A missing \c ".log_prop"
+  // extension will automatically be added. Note that \a propFile is
+  // deliberatly passed by value, because we probably have to add the missing
+  // file extension.
+  // \param watchInterval Time interval (in milliseconds) used by the watch
+  // dog to check for changes in the configuration file.
+  void initLog4CxxAndWatch(string propFile, unsigned int watchInterval);
+
 
 } // namespace LOFAR
 
