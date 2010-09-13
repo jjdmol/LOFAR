@@ -4,8 +4,8 @@
 #
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  PermSW     1.0.0  development 'node constraint'  "Permanent Software"
+node  PermSW     4.0.0  development 'node constraint'  "Permanent Software"
 
 #      name          vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses   MACScheduler  1.0.0  development 1                  "Mac Scheduler"
+uses   MACScheduler  4.0.0  development 1                  "Mac Scheduler"

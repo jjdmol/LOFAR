@@ -23,7 +23,7 @@
 # -- Beamformer --
 #      name       	vers   qual  		constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  Beamformer	1.0.0  development  	'node constraint'  "Beamformer specification"
+node  Beamformer	4.0.0  development  	'node constraint'  "Beamformer specification"
 
 #
 # name			name of the parameter
@@ -38,4 +38,4 @@ node  Beamformer	1.0.0  development  	'node constraint'  "Beamformer specificati
 #--------------------------------------------------------------------------------------------------------
 #    name                dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  stationList         I    text   -      10    0    [0]      - 	'List of all used stations in this beamformer, eg.[CS001,CS008,CS102].'
+par  stationList         I    vtext   -      10    0    '[]'      - 	'List of all used stations in this beamformer, eg.[CS001,CS008,CS102].'

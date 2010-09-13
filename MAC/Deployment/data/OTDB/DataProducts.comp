@@ -6,8 +6,8 @@
 #
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node   DataProducts        	 1.0.0  development 'node constraint'  "DataProducts"
+node   DataProducts        	 4.0.0  development 'node constraint'  "DataProducts"
 
-#    name                    dir. type   unit   prun. vm   value                         constr.  descr.
+#    name                    dir. type   unit   prun. vm   value         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  measurementSets         IO    text   -      10    0    []			     -        'Names of the measurement sets'
+par  measurementSets         IO    vtext   -      10    0  '[]'		 -        'Names of the measurement sets'

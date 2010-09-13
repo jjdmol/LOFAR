@@ -6,7 +6,7 @@
 #
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node   Storage        	 1.0.0  development 'node constraint'  "Storage"
+node   Storage        	 4.0.0  development 'node constraint'  "Storage"
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  _executable             I    text   -      10    0    "Storage"                     -     'The name of the executable to start'
@@ -17,11 +17,11 @@ par  _startstopType          I    ptext  -      10    0    "cmdline|mpirun|bgl;m
 
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node   StorageAppl        	 1.0.0  development 'node constraint'  "Storage"
-uses   Storage          	 1.0.0  development 'node constraint'  "Storage"
+node   StorageAppl        	 4.0.0  development 'node constraint'  "Storage"
+uses   Storage          	 4.0.0  development 'node constraint'  "Storage"
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  processes               I    vtext  -      10    0    '[Storage]'			  -	   "list of processes that must be started"
+par  processes               I    vtext  -      10    0    '["Storage"]'			  -	   "list of processes that must be started"
 par  procesOrder             I    vtext  -      10    0    '[]'							 -	   "Order of the processes, if any! FOR FUTURE USE."
-par  extraInfo               I    vtext  -      10    0    '[.OLAP,PIC]'				 -	   "list of components that the application expects to be in the parsettfile."
+par  extraInfo               I    vtext  -      10    0    '[".OLAP","PIC"]'				 -	   "list of components that the application expects to be in the parsettfile."
 par  _hostname               I    text   -      10    0    'bgfen1'					 -	   "Hostname of the machine on which the ACDaemon is running".
