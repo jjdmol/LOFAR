@@ -47,6 +47,8 @@ import javax.swing.JOptionPane;
  */
 public abstract class LofarUtils {
 
+
+
     /** Returns the c part of a string a.b.c*/
     static public String keyName(String aName) {
         String aS = "";
@@ -84,7 +86,7 @@ public abstract class LofarUtils {
      * References are strings that start with >> for now.
      */
     static public boolean isReference(String aString) {
-        // since an empty string will return true on the startswith method (see equals(onject) )
+        // since an empty string will return true on the startswith method (see equals(object) )
         // we need to check for it first.
         if (aString == null || aString.length() < 1) {
             return false;
