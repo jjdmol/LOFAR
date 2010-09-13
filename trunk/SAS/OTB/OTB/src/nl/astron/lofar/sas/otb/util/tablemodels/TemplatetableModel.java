@@ -75,7 +75,7 @@ public class TemplatetableModel extends javax.swing.table.AbstractTableModel {
                 return false;
             }
             data[row][0]=new Integer(tInfo.treeID());	   
-            data[row][1]=new Integer(tInfo.originalTree);	   
+            data[row][1]=new Integer(tInfo.originalTree);
             data[row][2]=new String(OtdbRmi.getTreeState().get(tInfo.state));
             data[row][3]=new String(OtdbRmi.getClassif().get(tInfo.classification));
             data[row][4]=new String(tInfo.campaign);
