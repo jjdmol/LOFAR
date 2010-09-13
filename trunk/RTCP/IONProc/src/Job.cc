@@ -508,7 +508,14 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     unsigned phase, psetIndex, maxlistsize;
     std::vector<unsigned> list; // list of subbands or beams
 
-    unsigned nrbeams = itsParset.flysEye() ? itsParset.nrMergedStations() : itsParset.nrPencilBeams();
+    unsigned nrsubbeams = 0;
+
+    if (itsParset.outputBeamFormedData())
+      nrsubbeams = NR_POLARIZATIONS;
+    else if (itsParset.outputCoherentStokes())
+      nrsubbeams = itsParset.nrStokes();
+
+    unsigned nrbeams = (itsParset.flysEye() ? itsParset.nrMergedStations() : itsParset.nrPencilBeams()) * nrsubbeams;
 
     switch (plan.plan[output].distribution) {
       case ProcessingPlan::DIST_SUBBAND:

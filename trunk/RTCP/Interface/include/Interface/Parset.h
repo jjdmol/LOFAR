@@ -118,8 +118,6 @@ public:
 	int	       phaseOnePsetIndex(uint32 pset) const;
 	int	       phaseTwoPsetIndex(uint32 pset) const;
 	int	       phaseThreePsetIndex(uint32 pset) const;
-	string	       getMSname(unsigned sb) const;
-	string         getMSBaseDir() const;
 	string         getTransportType(const string& prefix) const;
 
         bool           outputFilteredData() const;

@@ -535,6 +535,56 @@ void BeamFormer::formBeams( const SubbandMetaData *metaData, SampleData<> *sampl
   beamFormTimer.stop();
 }
 
+void BeamFormer::preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFormedData *out )
+{
+  ASSERT( in->samples.shape()[0] == itsNrPencilBeams );
+  ASSERT( in->samples.shape()[1] == itsNrChannels );
+  ASSERT( in->samples.shape()[2] >= itsNrSamplesPerIntegration );
+  ASSERT( in->samples.shape()[3] == NR_POLARIZATIONS );
+
+  ASSERT( out->samples.shape()[0] == itsNrPencilBeams );
+  ASSERT( out->samples.shape()[1] == NR_POLARIZATIONS );
+  ASSERT( out->samples.shape()[2] >= itsNrSamplesPerIntegration );
+  ASSERT( out->samples.shape()[3] == itsNrChannels );
+
+  for (unsigned b = 0; b < itsNrPencilBeams; b++) {
+    out->flags[b] = in->flags[b];
+  }
+
+  for (unsigned b = 0; b < itsNrPencilBeams; b++) {
+    for (unsigned c = 0; c < itsNrChannels; c++) {
+      for (unsigned s = 0; s < itsNrSamplesPerIntegration; s++) {
+        for (unsigned p = 0; p < NR_POLARIZATIONS; p++) {
+          out->samples[b][p][s][c] = in->samples[b][c][s][p];
+        }
+      }
+    }
+  }
+}
+
+void BeamFormer::postTransposeBeams( const TransposedBeamFormedData *in, FinalBeamFormedData *out, unsigned nrSubbands )
+{
+  ASSERT( in->samples.shape()[0] == nrSubbands );
+  ASSERT( in->samples.shape()[1] >= itsNrSamplesPerIntegration );
+  ASSERT( in->samples.shape()[2] == itsNrChannels );
+
+  ASSERT( out->samples.shape()[0] >= itsNrSamplesPerIntegration );
+  ASSERT( out->samples.shape()[1] == nrSubbands );
+  ASSERT( out->samples.shape()[2] == itsNrChannels );
+
+  for (unsigned s = 0; s < nrSubbands; s++) {
+    out->flags[s] = in->flags[s];
+  }
+
+  for (unsigned s = 0; s < nrSubbands; s++) {
+    for (unsigned t = 0; t < itsNrSamplesPerIntegration; t++) {
+      for (unsigned c = 0; c < itsNrChannels; c++) {
+        out->samples[t][s][c] = in->samples[s][t][c];
+      }
+    }
+  }
+}
+
 } // namespace RTCP
 } // namespace LOFAR
 

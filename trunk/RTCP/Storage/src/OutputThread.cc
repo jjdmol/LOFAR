@@ -27,13 +27,19 @@
 #include <Storage/OutputThread.h>
 #include <Storage/MSWriterFile.h>
 #include <Storage/MSWriterNull.h>
+#include <Storage/MeasurementSetFormat.h>
 #include <Interface/StreamableData.h>
 #include <Thread/Semaphore.h>
 #include <Common/DataConvert.h>
 #include <stdio.h>
+
 #include <boost/format.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
 
@@ -42,9 +48,51 @@ using boost::format;
 namespace LOFAR {
 namespace RTCP {
 
-OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, unsigned outputNumber, const ProcessingPlan::planlet &outputConfig, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue)
+static string dirName( const string filename )
+{
+  using namespace boost;
+  
+  string         basedir;
+  vector<string> splitName;
+  
+  split(splitName, filename, is_any_of("/"));
+  
+  for (unsigned i = 0; i < splitName.size()-1 ; i++) {
+    basedir += splitName[i] + '/';
+  }
+  return basedir;
+}
+
+static void makeDir( const char *dirname, const string &logPrefix )
+{
+  struct stat s;
+
+  if (stat( dirname, &s ) == 0) {
+    // path already exists
+    if (s.st_mode & S_IFMT != S_IFDIR) {
+      LOG_WARN_STR(logPrefix << "Not a directory: " << dirname );
+    }
+  } else if (errno == ENOENT) {
+    // create directory
+    LOG_INFO_STR(logPrefix << "Creating directory " << dirname );
+
+    if (mkdir(dirname, 0777) != 0 && errno != EEXIST) {
+      unsigned savedErrno = errno; // first argument below clears errno
+      throw SystemCallException(string("mkdir ") + dirname, savedErrno, THROW_ARGS);
+    }
+  } else {
+    // something else went wrong
+    unsigned savedErrno = errno; // first argument below clears errno
+    throw SystemCallException(string("stat ") + dirname, savedErrno, THROW_ARGS);
+  }
+}
+
+
+OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, unsigned outputNumber, const ProcessingPlan::planlet &outputConfig, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue, bool isBigEndian)
 :
   itsLogPrefix(str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputNumber % subbandNumber)),
+  itsParset(parset),
+  itsOutputConfig(outputConfig),
   itsSubbandNumber(subbandNumber),
   itsOutputNumber(outputNumber),
   itsObservationID(parset.observationID()),
@@ -54,17 +102,15 @@ OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, unsigne
   itsSequenceNumbersFile(0), 
   itsHaveCaughtException(false)
 {
-  std::string filename, seqfilename;
+  std::string filename;
 
   if (dynamic_cast<CorrelatedData *>(outputConfig.source)) {
-    std::stringstream out;
-    out << parset.getMSname(subbandNumber) << "/table.f" << outputNumber << "data";
-    filename = out.str();
+    makeDir( dirName(getMSname()).c_str(), itsLogPrefix );
+
+    filename = str(format("%s/table.f0data") % getMSname());
 
     if (parset.getLofarStManVersion() == 2) {
-      std::stringstream seq;
-      seq << parset.getMSname(subbandNumber) <<"/table.f" << outputNumber << "seqnr";
-      seqfilename = seq.str();
+      string seqfilename = str(format("%s%s/table.f0seqnr") % getMSname() % outputConfig.filename);
       
       try {
 	itsSequenceNumbersFile = new FileStream(seqfilename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
@@ -74,17 +120,27 @@ OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, unsigne
       }
     }
 
+#if defined HAVE_AIPSPP
+    MeasurementSetFormat myFormat(&parset, 512);
+            
+    /// Make MeasurementSet filestructures and required tables
+    myFormat.addSubband(getMSname(), subbandNumber, isBigEndian);
+
+    LOG_INFO_STR(itsLogPrefix << "MeasurementSet created");
+#endif // defined HAVE_AIPSPP
+
   } else {    
-    // raw writer
-    std::stringstream out;
-    out << parset.getMSname(subbandNumber) << outputConfig.filenameSuffix;
-    filename = out.str();
+    // raw writer -- per beam
+    filename = getBeamName();
+
+    makeDir( dirName(filename).c_str(), itsLogPrefix );
   }
 
   LOG_DEBUG_STR(itsLogPrefix << "Writing to " << filename);
 
   try {
     itsWriter = new MSWriterFile(filename.c_str());
+  
   } catch (SystemCallException &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << filename << ": " << ex);
     itsWriter = new MSWriterNull();
@@ -105,6 +161,71 @@ OutputThread::~OutputThread()
 
   if (itsHaveCaughtException)
     LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception(s).") ;
+}
+
+
+string OutputThread::getMSname() const
+{
+  using namespace boost;
+
+  string	 name	   = itsParset.getString("Observation.MSNameMask");
+  string	 startTime = itsParset.getString("Observation.startTime");
+
+  vector<string> splitStartTime;
+  split(splitStartTime, startTime, is_any_of("- :"));
+
+  replace_all(name, "${YEAR}", splitStartTime[0]);
+  replace_all(name, "${MONTH}", splitStartTime[1]);
+  replace_all(name, "${DAY}", splitStartTime[2]);
+  replace_all(name, "${HOURS}", splitStartTime[3]);
+  replace_all(name, "${MINUTES}", splitStartTime[4]);
+  replace_all(name, "${SECONDS}", splitStartTime[5]);
+
+  replace_all(name, "${MSNUMBER}", str(format("%05u") % itsParset.observationID()));
+  replace_all(name, "${SUBBAND}", str(format("%03u") % itsSubbandNumber));
+  replace_all(name, "${BEAM}", str(format("%u") % itsParset.subbandToBeamMapping()[itsSubbandNumber]));
+
+  if (itsParset.isDefined("OLAP.storageRaidList"))
+    replace_all(name, "${RAID}", str(format("%s") % itsParset.getStringVector("OLAP.storageRaidList", true)[itsSubbandNumber]));
+
+  return name;
+}
+
+
+string OutputThread::getBeamName() const
+{
+  using namespace boost;
+
+  const char pols[] = "XY";
+  const char stokes[] = "IQUV";
+
+  const int beam = itsSubbandNumber / itsOutputConfig.nrSubbeams;
+  const int subbeam = itsSubbandNumber % itsOutputConfig.nrSubbeams;
+
+  string name = itsParset.isDefined("Observation.BeamDirMask")
+    ? itsParset.getString("Observation.BeamDirMask") + "/" + itsOutputConfig.filename
+    : dirName( itsParset.getString("Observation.MSNameMask") ) + itsOutputConfig.filename;
+  string	 startTime = itsParset.getString("Observation.startTime");
+  vector<string> splitStartTime;
+  split(splitStartTime, startTime, is_any_of("- :"));
+
+  replace_all(name, "${YEAR}", splitStartTime[0]);
+  replace_all(name, "${MONTH}", splitStartTime[1]);
+  replace_all(name, "${DAY}", splitStartTime[2]);
+  replace_all(name, "${HOURS}", splitStartTime[3]);
+  replace_all(name, "${MINUTES}", splitStartTime[4]);
+  replace_all(name, "${SECONDS}", splitStartTime[5]);
+
+  replace_all(name, "${MSNUMBER}", str(format("%05u") % itsParset.observationID()));
+  replace_all(name, "${BEAM}", str(format("%u") % itsParset.subbandToBeamMapping()[itsSubbandNumber]));
+  replace_all(name, "${PBEAM}", str(format("%u") % beam));
+  replace_all(name, "${POL}", str(format("%c") % pols[subbeam]));
+  replace_all(name, "${STOKES}", str(format("%c") % stokes[subbeam]));
+
+  if (itsParset.isDefined("OLAP.PencilInfo.storageRaidList"))
+    replace_all(name, "${RAID}", str(format("%s") % itsParset.getStringVector("OLAP.PencilInfo.storageRaidList", true)[itsSubbandNumber]));
+
+  return name;
 }
 
 

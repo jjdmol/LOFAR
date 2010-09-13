@@ -41,7 +41,7 @@ class AsyncTransposeBeams
   unsigned waitForAnyReceive();
   
   // Asynchronously send a subband.
-  template <typename T, unsigned DIM> void asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned beam, const SampleData<T,DIM> *inputData);
+  template <typename T, unsigned DIM> void asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned beam, unsigned subbeam, const SampleData<T,DIM> *inputData);
   
   // Make sure all async sends have finished.
   void waitForAllSends();

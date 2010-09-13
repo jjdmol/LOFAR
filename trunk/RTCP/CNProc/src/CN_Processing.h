@@ -79,6 +79,9 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     void                filter();
     void                mergeStations();
     void                formBeams();
+    void                preTransposeBeams();
+    void                postTransposeBeams();
+    void                postTransposeStokes();
     void                calculateCoherentStokes();
     void                calculateIncoherentStokes();
     void                correlate();
@@ -104,6 +107,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned            itsNrSubbands;
     unsigned            itsNrSubbandsPerPset;
     unsigned            itsNrBeams;
+    unsigned            itsNrSubbeams; // the number of polarizations/stokes that will be split off per beam during the transpose
     unsigned            itsMyNrBeams;
     unsigned            itsNrBeamsPerPset;
     unsigned            itsComputeGroupRank;

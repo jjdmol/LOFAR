@@ -20,6 +20,8 @@ class Stokes
     void calculateCoherent( const SampleData<> *sampleData, StokesData *stokesData, const unsigned nrSubbands );
     void calculateIncoherent( const SampleData<> *sampleData, StokesData *stokesData, const std::vector<unsigned> &stationMapping );
 
+    void postTransposeStokes( const StokesData *in, FinalStokesData *out, unsigned nrSubbands );
+
   private:
     const unsigned          itsNrChannels;
     const unsigned          itsNrSamplesPerIntegration;

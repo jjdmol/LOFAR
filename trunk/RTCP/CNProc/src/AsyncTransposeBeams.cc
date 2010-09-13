@@ -4,8 +4,6 @@
 #include <AsyncTransposeBeams.h>
 
 #include <Interface/CN_Mapping.h>
-#include <Interface/TransposedBeamFormedData.h>
-#include <Interface/StokesData.h>
 #include <Interface/PrintVector.h>
 #include <Common/LofarLogger.h>
 
@@ -116,7 +114,7 @@ unsigned AsyncTransposeBeams::waitForAnyReceive()
 }
 
 
-template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned beam, const SampleData<T,DIM> *inputData)
+template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned beam, unsigned subbeam, const SampleData<T,DIM> *inputData)
 {
   unsigned pset = itsOutputPsets[outputPsetIndex];
   unsigned core = itsUsedCoresInPset[coreIndex];
@@ -127,7 +125,7 @@ template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned
     const void   *ptr;
     const size_t size;
   } toWrite[itsNrCommunications] = {
-    { inputData->samples[beam].origin(), inputData->samples[beam].num_elements() * sizeof(T) }
+    { inputData->samples[beam][subbeam].origin(), inputData->samples[beam][subbeam].num_elements() * sizeof(T) }
   };
 
   // write it
@@ -145,11 +143,11 @@ template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned
 
 // specialisation for StokesData
 template void AsyncTransposeBeams::postReceive(SampleData<float,4> *, unsigned, unsigned, unsigned, unsigned);
-template void AsyncTransposeBeams::asyncSend(unsigned, unsigned, unsigned, unsigned, const SampleData<float,4> *);
+template void AsyncTransposeBeams::asyncSend(unsigned, unsigned, unsigned, unsigned, unsigned, const SampleData<float,4> *);
 
 // specialisation for BeamFormedData
-template void AsyncTransposeBeams::postReceive(SampleData<fcomplex,4> *, unsigned, unsigned, unsigned, unsigned);
-template void AsyncTransposeBeams::asyncSend(unsigned, unsigned, unsigned, unsigned, const SampleData<fcomplex,4> *);
+template void AsyncTransposeBeams::postReceive(SampleData<fcomplex,3> *, unsigned, unsigned, unsigned, unsigned);
+template void AsyncTransposeBeams::asyncSend(unsigned, unsigned, unsigned, unsigned, unsigned, const SampleData<fcomplex,4> *);
 
 void AsyncTransposeBeams::waitForAllSends()
 {

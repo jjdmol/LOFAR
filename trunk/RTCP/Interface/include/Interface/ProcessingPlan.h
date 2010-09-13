@@ -68,9 +68,11 @@ class ProcessingPlan
       bool     calculate;
       int      arena;                 // -1: not allocated, >= 0: allocated
 
-      const char         *name;           // name of planlet or data set, for logging purposes
-      const char         *filenameSuffix; // for outputs: extension to use for this output
+      const char         *name;       // name of planlet or data set, for logging purposes
+      const char         *filename;   // for outputs: filename to use for this output
       distribution_t      distribution;
+
+      unsigned nrSubbeams;            // number of subbeams per beam
 
       bool isOutput() const { return output; } // for filtering
     };
@@ -83,8 +85,8 @@ class ProcessingPlan
     // require source for something else
     void require( StreamableData *source );
 
-    // send set (i.e. as output) to be stored in a file or directory with a certain extension
-    void send( StreamableData *set, const char *extension, distribution_t distribution );
+    // send set (i.e. as output) to be stored in a file or directory with a certain filename
+    void send( StreamableData *set, const char *filename, distribution_t distribution, unsigned nrSubbeams = 1 );
 
     // ----- Construct the plan: assign an arena to all
     //       products that have to be calculated.
@@ -165,14 +167,15 @@ inline void ProcessingPlan::require( StreamableData *source ) {
   }
 }
 
-inline void ProcessingPlan::send( StreamableData *set, const char *extension, ProcessingPlan::distribution_t distribution ) {
+inline void ProcessingPlan::send( StreamableData *set, const char *filename, ProcessingPlan::distribution_t distribution, unsigned nrSubbeams ) {
   require( set ); // fake planlet to indicate we need this set
 
   // the entry we just created is an output -- configure it as such
   plan.back().output = true;
   plan.back().name   = find( set )->name;
-  plan.back().filenameSuffix = extension;
+  plan.back().filename = filename;
   plan.back().distribution = distribution;
+  plan.back().nrSubbeams = nrSubbeams;
 }
 
 inline void ProcessingPlan::assignArenas( bool assignAll ) {

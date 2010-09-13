@@ -9,6 +9,8 @@
 #ifndef LOFAR_STORAGE_FORMAT_H
 #define LOFAR_STORAGE_FORMAT_H
 
+#include <string>
+
 namespace LOFAR {
 namespace RTCP {
 
@@ -17,7 +19,7 @@ class Format
   public:
     virtual ~Format();
     
-    virtual void addSubband(unsigned subband, bool isBigEndian) = 0;
+    virtual void addSubband(const std::string MSname, unsigned subband, bool isBigEndian) = 0;
 
 };
 
