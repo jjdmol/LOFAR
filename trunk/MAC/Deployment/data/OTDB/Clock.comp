@@ -4,7 +4,7 @@
 #
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node   Clock160    1.0.0  development 'node constraint'  "160Mhz Clock"
+node   Clock160    4.0.0  development 'node constraint'  "160Mhz Clock"
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
@@ -17,7 +17,7 @@ par  channelWidth            I    dbl    Hz     10    100    610.3515625        
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node   Clock200    1.0.0  development 'node constraint'  "200Mhz Clock"
+node   Clock200    4.0.0  development 'node constraint'  "200Mhz Clock"
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------

@@ -7,7 +7,7 @@
 # -- Connection--
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  @connection@        1.0.1  development 'node constraint'  "Connection between two programs."
+node  @connection@        4.0.0  development 'node constraint'  "Connection between two programs."
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------

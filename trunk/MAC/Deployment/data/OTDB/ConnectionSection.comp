@@ -4,8 +4,8 @@
 #
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node   Connection         1.0.1  development 'node constraint'  "Connections between hosts"
+node   Connection         4.0.0  development 'node constraint'  "Connections between hosts"
 
 #      name             	vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-#uses   Storage-Imaging 		1.0.1  development -                  "Connection between storage and imaging node"
+#uses   Storage-Imaging 	4.0.0  development -                  "Connection between storage and imaging node"

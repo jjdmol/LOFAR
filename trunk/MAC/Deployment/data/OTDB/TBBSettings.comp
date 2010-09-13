@@ -22,7 +22,7 @@
 # -- TBBsetting --
 #      name              vers   qual  constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  TBBsetting         1.0.1  development  'node constraint'  "RCU settings for the TB boards"
+node  TBBsetting         4.0.0  development  'node constraint'  "RCU settings for the TB boards"
 
 #
 # name              name of the parameter
@@ -60,7 +60,7 @@ par  operatingMode       I    pint   -      10    0    '1|2;1'                  
 # -- TBB--
 #      name              vers   qual  constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  TBB               1.0.1  development  'node constraint'  "Placeholder for TBBsettings"
-uses  TBBsetting        1.0.1  development  'node constraint'  "RCU settings for the TB boards"
+node  TBB               4.0.0  development  'node constraint'  "Placeholder for TBBsettings"
+uses  TBBsetting        4.0.0  development  'node constraint'  "RCU settings for the TB boards"
 
 
