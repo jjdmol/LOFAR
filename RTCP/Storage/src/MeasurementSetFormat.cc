@@ -101,27 +101,24 @@ MeasurementSetFormat::MeasurementSetFormat(const Parset *ps, unsigned alignment)
 MeasurementSetFormat::~MeasurementSetFormat()  
 {}
 
-void MeasurementSetFormat::addSubband(unsigned subband, bool isBigEndian)
+void MeasurementSetFormat::addSubband(const string MSname, unsigned subband, bool isBigEndian)
 {
   ScopedLock scopedLock(sharedMutex);
 
   /// First create a valid MeasurementSet with all required
   /// tables. Note that the MS is destroyed immidiately.
-  createMSTables(subband);
+  createMSTables(MSname, subband);
   /// Next make a metafile which describes the raw datafile we're
   /// going to write
-  createMSMetaFile(subband, isBigEndian);
+  createMSMetaFile(MSname, subband, isBigEndian);
 }
 
-void MeasurementSetFormat::createMSTables(unsigned subband)
+void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband)
 {
   try {
-
     TableDesc td = MS::requiredTableDesc();
     MS::addColumnToDesc(td, MS::DATA, 2);
     MS::addColumnToDesc(td, MS::WEIGHT_SPECTRUM, 2);
-
-    string MSname =  itsPS->getMSname(subband);
 
     SetupNewTable newtab(MSname, td, Table::New);
     LofarStMan lofarstman;
@@ -390,7 +387,7 @@ void MeasurementSetFormat::fillHistory() {
   cli.put         (rownr, clivec); 
 }
 
-void MeasurementSetFormat::createMSMetaFile(unsigned subband, bool isBigEndian)
+void MeasurementSetFormat::createMSMetaFile(const string &MSname, unsigned subband, bool isBigEndian)
 { 
   Block<Int> ant1(itsPS->nrBaselines());
   Block<Int> ant2(itsPS->nrBaselines());
@@ -408,7 +405,7 @@ void MeasurementSetFormat::createMSMetaFile(unsigned subband, bool isBigEndian)
     }
   }
 
-  string filename = itsPS->getMSname(subband) + "/table.f0meta";
+  string filename = MSname + "/table.f0meta";
   
   AipsIO aio(filename, ByteIO::New);
   aio.putstart ("LofarStMan", itsPS->getLofarStManVersion()); 

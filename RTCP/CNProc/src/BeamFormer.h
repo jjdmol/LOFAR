@@ -55,6 +55,12 @@ class BeamFormer
     // fills beamFormedData with pencil beams
     void formBeams( const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, double centerFrequency );
 
+    // rearrange dimensions in preparation for transpose
+    void preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFormedData *out );
+
+    // rearrange dimensions into final order after transpose
+    void postTransposeBeams( const TransposedBeamFormedData *in, FinalBeamFormedData *out, unsigned nrSubbands );
+
     // return the station mapping
     std::vector<unsigned> &getStationMapping();
 

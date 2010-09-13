@@ -47,19 +47,24 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(const Parset &, unsigned subbandNumber, unsigned outputNumber, const ProcessingPlan::planlet &outputConfig, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue);
+			    OutputThread(const Parset &, unsigned subbandNumber, unsigned outputNumber, const ProcessingPlan::planlet &outputConfig, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue, bool isBigEndian);
 			    ~OutputThread();
 
     // report any writes that take longer than this (seconds)
     static const float      reportWriteDelay = 0.05;
 
   private:
+    string                  getMSname() const;
+    string                  getBeamName() const;
     void                    writeLogMessage(unsigned sequenceNumber);
     void                    flushSequenceNumbers();
     void                    checkForDroppedData(StreamableData *data);
     void		    mainLoop();
 
     const std::string       itsLogPrefix;
+
+    const Parset            &itsParset;
+    const ProcessingPlan::planlet &itsOutputConfig;
 
     Thread		    *itsThread;
 

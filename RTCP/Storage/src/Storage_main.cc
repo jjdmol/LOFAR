@@ -150,7 +150,6 @@ int main(int argc, char *argv[])
   using namespace log4cplus;
   using namespace log4cplus::helpers;
 
-  lofarLoggerInitNode();
   helpers::Properties traceProp;
   traceProp.setProperty("log4cplus.rootLogger", "DEBUG, STDOUT");
   traceProp.setProperty("log4cplus.logger.TRC", "DEBUG");
@@ -241,14 +240,6 @@ int main(int argc, char *argv[])
     plan.removeNonOutputs();
 
     logPrefix = str(format("[obs %u] ") % parset.observationID());
-
-    // create root directory of the observation tree
-    LOG_INFO_STR(logPrefix << "Creating directory " << parset.getMSBaseDir());
-
-    if (mkdir(parset.getMSBaseDir().c_str(), 0777) != 0 && errno != EEXIST) {
-      unsigned savedErrno = errno; // first argument below clears errno
-      throw SystemCallException(("mkdir " + parset.getMSBaseDir()).c_str(), savedErrno, THROW_ARGS);
-    }
 
     // start all writers
     for (unsigned output = 0; output < plan.nrOutputTypes(); output ++) {

@@ -172,6 +172,16 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
   itsNrBeams                 = itsFlysEye ? itsNrBeamFormedStations : itsNrPencilBeams;
 
+  unsigned multiplier = 0;
+
+  if (configuration.outputBeamFormedData()) {
+    multiplier = NR_POLARIZATIONS;
+  } else if (configuration.outputCoherentStokes()) {
+    multiplier = configuration.nrStokes();
+  }
+
+  itsNrSubbeams = multiplier;
+
   unsigned nrChannels			 = configuration.nrChannelsPerSubband();
   unsigned nrSamplesPerIntegration       = configuration.nrSamplesPerIntegration();
   unsigned nrSamplesPerStokesIntegration = configuration.nrSamplesPerStokesIntegration();
@@ -240,10 +250,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   
     itsPPF		 = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation(), configuration.correctBandPass(), itsLocationInfo.rank() == 0);
 
-    itsCoherentStokes    = new Stokes(itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
     itsIncoherentStokes  = new Stokes(itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
 
     itsCorrelator	 = new Correlator(itsBeamFormer->getStationMapping(), nrChannels, nrSamplesPerIntegration);
+  }
+
+  if (itsHasPhaseTwo || itsHasPhaseThree) {
+    itsCoherentStokes    = new Stokes(itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
   }
 
   // we don't support >1 beam/core (which would require bigger memory structures)
@@ -344,7 +357,7 @@ template <typename SAMPLE_TYPE> bool CN_Processing<SAMPLE_TYPE>::transposeBeams(
     unsigned firstBeamOfPset = itsNrBeamsPerPset * myPset;
     unsigned myBeam          = firstBeamOfPset + relativeCoreIndex;
 
-    if (myBeam < itsNrBeams && relativeCoreIndex < itsNrBeamsPerPset) {
+    if (myBeam < itsNrBeams * itsNrSubbeams && relativeCoreIndex < itsNrBeamsPerPset) {
       beamToProcess = true;
 
       NSTimer postAsyncReceives("post async beam receives", LOG_CONDITION, true);
@@ -373,15 +386,18 @@ template <typename SAMPLE_TYPE> bool CN_Processing<SAMPLE_TYPE>::transposeBeams(
     asyncSendTimer.start();
 
     for (unsigned i = 0; i < itsNrBeams; i ++) {
-      // calculate which (pset,core) produces beam i
-      unsigned pset = i / itsNrBeamsPerPset;
-      unsigned core = (firstCore + i % itsNrBeamsPerPset) % itsUsedCoresPerPset;
+      for (unsigned j = 0; j < itsNrSubbeams; j++) {
+        // calculate which (pset,core) produces beam i
+        unsigned beam = i * itsNrSubbeams + j;
+        unsigned pset = beam / itsNrBeamsPerPset;
+        unsigned core = (firstCore + beam % itsNrBeamsPerPset) % itsUsedCoresPerPset;
 
-      //LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << itsCurrentSubband << " of beam " << i << " to pset " << pset << " core " << core);
-      if (itsPlan->calculate( itsPlan->itsCoherentStokesData )) {
-        itsAsyncTransposeBeams->asyncSend(pset, core, itsCurrentSubband, i, itsPlan->itsCoherentStokesData); // Asynchronously send one beam to another pset.
-      } else {
-        itsAsyncTransposeBeams->asyncSend(pset, core, itsCurrentSubband, i, itsPlan->itsBeamFormedData); // Asynchronously send one beam to another pset.
+        //LOG_DEBUG_STR(itsLogPrefix << "transpose: send subband " << itsCurrentSubband << " of beam " << i << " to pset " << pset << " core " << core);
+        if (itsPlan->calculate( itsPlan->itsCoherentStokesData )) {
+          itsAsyncTransposeBeams->asyncSend(pset, core, itsCurrentSubband, i, j, itsPlan->itsCoherentStokesData); // Asynchronously send one beam to another pset.
+        } else {
+          itsAsyncTransposeBeams->asyncSend(pset, core, itsCurrentSubband, i, j, itsPlan->itsPreTransposeBeamFormedData); // Asynchronously send one beam to another pset.
+        }
       }
     }
 
@@ -443,6 +459,42 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams()
   itsBeamFormer->formBeams(itsPlan->itsSubbandMetaData,itsPlan->itsFilteredData,itsPlan->itsBeamFormedData, itsCenterFrequencies[itsCurrentSubband]);
   computeTimer.stop();
 }
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preTransposeBeams()
+{
+#if defined HAVE_MPI
+  if (LOG_CONDITION)
+    LOG_DEBUG_STR(itsLogPrefix << "Start reordering beams before transpose at " << MPI_Wtime());
+#endif // HAVE_MPI
+  computeTimer.start();
+  itsBeamFormer->preTransposeBeams(itsPlan->itsBeamFormedData, itsPlan->itsPreTransposeBeamFormedData);
+  computeTimer.stop();
+}
+
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postTransposeBeams()
+{
+#if defined HAVE_MPI
+  if (LOG_CONDITION)
+    LOG_DEBUG_STR(itsLogPrefix << "Start reordering beams after transpose at " << MPI_Wtime());
+#endif // HAVE_MPI
+  computeTimer.start();
+  itsBeamFormer->postTransposeBeams(itsPlan->itsTransposedBeamFormedData, itsPlan->itsFinalBeamFormedData, itsNrSubbands);
+  computeTimer.stop();
+}
+
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postTransposeStokes()
+{
+#if defined HAVE_MPI
+  if (LOG_CONDITION)
+    LOG_DEBUG_STR(itsLogPrefix << "Start reordering stokes after transpose at " << MPI_Wtime());
+#endif // HAVE_MPI
+  computeTimer.start();
+  itsCoherentStokes->postTransposeStokes(itsPlan->itsTransposedCoherentStokesData, itsPlan->itsFinalCoherentStokesData, itsNrSubbands);
+  computeTimer.stop();
+}
+
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncoherentStokes()
 {
@@ -567,6 +619,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
       calculateCoherentStokes();
     }
 
+    if( itsPlan->calculate( itsPlan->itsPreTransposeBeamFormedData ) ) {
+      preTransposeBeams();
+    }
+
 #define SEND( data )    do {                    \
     if (itsPlan->output( data )) {              \
       sendOutput( outputNr++, data );           \
@@ -606,16 +662,24 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
         for (unsigned i = 0; i < itsNrSubbands; i++) {
           asyncReceiveTimer.start();
           const unsigned subband = itsAsyncTransposeBeams->waitForAnyReceive();
-          if (LOG_CONDITION)
-            LOG_DEBUG_STR( itsLogPrefix << "transpose: received subband " << subband );
+          //if (LOG_CONDITION)
+          //  LOG_DEBUG_STR( itsLogPrefix << "transpose: received subband " << subband );
           asyncReceiveTimer.stop();
 
           (void)subband;
         }
 #endif
 
-        SEND( itsPlan->itsTransposedBeamFormedData );
-        SEND( itsPlan->itsTransposedCoherentStokesData );
+        if( itsPlan->calculate( itsPlan->itsFinalBeamFormedData ) ) {
+          postTransposeBeams();
+        }
+
+        if( itsPlan->calculate( itsPlan->itsFinalCoherentStokesData ) ) {
+          postTransposeStokes();
+        }
+
+        SEND( itsPlan->itsFinalBeamFormedData );
+        SEND( itsPlan->itsFinalCoherentStokesData );
       }
 
       if (itsHasPhaseTwo) {

@@ -79,7 +79,7 @@ void Stokes::calculateCoherent( const SampleData<> *sampleData, StokesData *stok
 	  addStokes( stokes, in[sb][ch][inTime+fractime][0], in[sb][ch][inTime+fractime][1], allStokes );
         }
 
-        #define dest(stokes) out->samples[sb][ch][outTime][stokes]
+        #define dest(stokes) out->samples[sb][stokes][outTime][ch]
         dest(0) = stokes.I;
         if( allStokes ) {
           dest(1) = stokes.Q;
@@ -152,11 +152,11 @@ void Stokes::calculateIncoherent( const SampleData<> *sampleData, StokesData *st
 	}
 
         for( unsigned fractime = 0; fractime < integrationSteps; fractime++ ) {
-	    addStokes( stokes, in[ch][srcStat][inTime+fractime][0], in[ch][srcStat][inTime+fractime][1], allStokes );
+	  addStokes( stokes, in[ch][srcStat][inTime+fractime][0], in[ch][srcStat][inTime+fractime][1], allStokes );
         }
       }
 
-      #define dest(stokes) out->samples[0][ch][outTime][stokes]
+      #define dest(stokes) out->samples[0][stokes][outTime][ch]
       dest(0) = stokes.I / nrValidStations;
       if( allStokes ) {
         dest(1) = stokes.Q / nrValidStations;
@@ -169,6 +169,30 @@ void Stokes::calculateIncoherent( const SampleData<> *sampleData, StokesData *st
   stokesTimer.stop();
 }
 
+
+void Stokes::postTransposeStokes( const StokesData *in, FinalStokesData *out, unsigned nrSubbands )
+{
+  ASSERT( in->samples.shape()[0] == nrSubbands );
+  ASSERT( in->samples.shape()[1] == 1 );
+  ASSERT( in->samples.shape()[2] >= itsNrSamplesPerIntegration/itsNrSamplesPerStokesIntegration );
+  ASSERT( in->samples.shape()[3] == itsNrChannels );
+
+  ASSERT( out->samples.shape()[0] >= itsNrSamplesPerIntegration/itsNrSamplesPerStokesIntegration );
+  ASSERT( out->samples.shape()[1] == nrSubbands );
+  ASSERT( out->samples.shape()[2] == itsNrChannels );
+
+  for (unsigned s = 0; s < nrSubbands; s++) {
+    out->flags[s] = in->flags[s];
+  }
+
+  for (unsigned s = 0; s < nrSubbands; s++) {
+    for (unsigned t = 0; t < itsNrSamplesPerIntegration/itsNrSamplesPerStokesIntegration; t++) {
+      for (unsigned c = 0; c < itsNrChannels; c++) {
+        out->samples[t][s][c] = in->samples[s][0][t][c];
+      }
+    }
+  }
+}
 
 } // namespace RTCP
 } // namespace LOFAR

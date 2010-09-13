@@ -36,9 +36,7 @@
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -346,48 +344,6 @@ vector<double> Parset::getPhaseCentresOf(const string& name) const
   list = getDoubleVector(locateModule(name.substr(0,index)) + name.substr(0,index)  + ".phaseCenter");
  
   return list; 
-}
-
-string Parset::getMSname(unsigned sb) const
-{
-  using namespace boost;
-
-  string	 name	   = getString("Observation.MSNameMask");
-  string	 startTime = getString("Observation.startTime");
-  vector<string> splitStartTime;
-  split(splitStartTime, startTime, is_any_of("- :"));
-
-  replace_all(name, "${YEAR}", splitStartTime[0]);
-  replace_all(name, "${MONTH}", splitStartTime[1]);
-  replace_all(name, "${DAY}", splitStartTime[2]);
-  replace_all(name, "${HOURS}", splitStartTime[3]);
-  replace_all(name, "${MINUTES}", splitStartTime[4]);
-  replace_all(name, "${SECONDS}", splitStartTime[5]);
-
-  replace_all(name, "${MSNUMBER}", str(format("%05u") % getUint32("Observation.ObsID")));
-  replace_all(name, "${SUBBAND}", str(format("%03u") % sb));
-  replace_all(name, "${BEAM}", str(format("%u") % subbandToBeamMapping()[sb]));
-
-  if (isDefined("OLAP.storageRaidList"))
-    replace_all(name, "${RAID}", str(format("%s") % getStringVector("OLAP.storageRaidList", true)[sb]));
-
-  return name;
-}
-
-string Parset::getMSBaseDir() const
-{
-  using namespace boost;
-  
-  string         name = this->getMSname(0);
-  string         basedir;
-  vector<string> splitName;
-  
-  split(splitName, name, is_any_of("/"));
-  
-  for (unsigned i = 0; i < splitName.size()-1 ; i++) {
-    basedir += splitName[i] + '/';
-  }
-  return basedir;
 }
 
 

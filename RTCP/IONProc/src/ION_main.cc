@@ -452,7 +452,7 @@ int main(int argc, char **argv)
 #if defined HAVE_BGP
   INIT_LOGGER_WITH_SYSINFO(str(format("IONProc@%02d") % myPsetNumber));
 #elif defined HAVE_LOG4CPLUS
-  lofarLoggerInitNode();
+  // do nothing
 #elif defined HAVE_LOG4CXX
   Context::initialize();
   setLevel("Global", 8);

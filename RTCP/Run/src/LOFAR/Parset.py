@@ -457,10 +457,17 @@ class Parset(util.Parset.Parset):
       return max(tabList) + 1  
 
     def getNrBeamOutputFiles( self ):
-      if self["OLAP.PencilInfo.flysEye"]:
-        return self.getNrMergedStations()
+      if self.getBool("OLAP.outputBeamFormedData"):
+        subbeams = 2
+      elif self.getBool("OLAP.outputCoherentStokes"):
+        subbeams = len(self["OLAP.Stokes.which"])
+      else:
+        subbeams = 0
 
-      return self.getNrPencilBeams()  
+      if self.getBool("OLAP.PencilInfo.flysEye"):
+        return self.getNrMergedStations() * subbeams
+
+      return self.getNrPencilBeams() * subbeams
 
     def phaseThreeExists( self ):  
       # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI

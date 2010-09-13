@@ -18,6 +18,8 @@
 
 #include <Storage/Format.h>
 
+#include <string>
+
 //# Forward Declarations
 namespace casa
 {
@@ -36,7 +38,7 @@ class MeasurementSetFormat : public Format
 	  MeasurementSetFormat(const Parset *, uint32 alignment = 1);
   virtual ~MeasurementSetFormat();
 
-  virtual void addSubband(unsigned subband, bool isBigEndian);
+  virtual void addSubband(const string MSname, unsigned subband, bool isBigEndian);
 
  private:
   const Parset *itsPS;
@@ -56,8 +58,8 @@ class MeasurementSetFormat : public Format
 
   static Mutex sharedMutex;
 
-  void createMSTables(unsigned subband);
-  void createMSMetaFile(unsigned subband, bool isBigEndian);
+  void createMSTables(const string &MSname, unsigned subband);
+  void createMSMetaFile(const string &MSname, unsigned subband, bool isBigEndian);
 
   void fillFeed();
   void fillAntenna(const casa::Block<casa::MPosition>& antMPos);

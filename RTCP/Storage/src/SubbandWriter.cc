@@ -30,7 +30,6 @@
 #include <Interface/CN_Configuration.h>
 #include <Interface/CN_ProcessingPlan.h>
 #include <Storage/SubbandWriter.h>
-#include <Storage/MeasurementSetFormat.h>
 
 #include <boost/lexical_cast.hpp>
 
@@ -47,18 +46,7 @@ namespace RTCP {
 SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, unsigned outputType, ProcessingPlan::planlet &outputConfig, bool isBigEndian)
 {
   const std::string logPrefix = str(format("[obs %u output %u subband %3u] ") % parset.observationID() % outputType % subband);
-
-#if defined HAVE_AIPSPP
-  if (outputType == 0 && parset.outputCorrelatedData()) {
-    MeasurementSetFormat myFormat(&parset, 512);
-          
-    /// Make MeasurementSet filestructures and required tables
-    myFormat.addSubband(subband, isBigEndian);
-
-    LOG_INFO_STR(logPrefix << "MeasurementSet created");
-  }
-#endif // defined HAVE_AIPSPP
-
+  
   StreamableData	  *dataTemplate = outputConfig.source;
 
   for (unsigned i = 0; i < maxReceiveQueueSize; i ++) {
@@ -69,7 +57,7 @@ SubbandWriter::SubbandWriter(const Parset &parset, unsigned subband, unsigned ou
   }
 
   itsInputThread  = new InputThread(parset, subband, outputType, outputConfig, itsFreeQueue, itsReceiveQueue);
-  itsOutputThread = new OutputThread(parset, subband, outputType, outputConfig, itsFreeQueue, itsReceiveQueue);
+  itsOutputThread = new OutputThread(parset, subband, outputType, outputConfig, itsFreeQueue, itsReceiveQueue, isBigEndian);
 }
 
 

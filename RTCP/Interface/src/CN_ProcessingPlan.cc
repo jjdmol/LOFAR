@@ -38,10 +38,13 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
   itsFilteredData(0),
   itsCorrelatedData(0),
   itsBeamFormedData(0),
+  itsPreTransposeBeamFormedData(0),
   itsTransposedBeamFormedData(0),
+  itsFinalBeamFormedData(0),
   itsCoherentStokesData(0),
   itsIncoherentStokesData(0),
-  itsTransposedCoherentStokesData(0)
+  itsTransposedCoherentStokesData(0),
+  itsFinalCoherentStokesData(0)
 {
   // in fly's eye mode, every station is a beam
   const unsigned nrBeams = configuration.flysEye() ? configuration.nrMergedStations() : configuration.nrPencilBeams();
@@ -118,16 +121,17 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     TRANSFORM( itsFilteredData,         itsIncoherentStokesData );
 
     TRANSFORM( itsBeamFormedData,       itsCoherentStokesData );
+    TRANSFORM( itsBeamFormedData,       itsPreTransposeBeamFormedData );
 
     // send all requested outputs
     if( configuration.outputFilteredData() ) {
-      send( itsFilteredData,                           ".filtered",          ProcessingPlan::DIST_SUBBAND );
+      send( itsFilteredData,                           "SB${SUBBAND}.filtered",          ProcessingPlan::DIST_SUBBAND );
     }
     if( configuration.outputCorrelatedData() ) {
-      send( itsCorrelatedData,                         "",                   ProcessingPlan::DIST_SUBBAND );
+      send( itsCorrelatedData,                         "SB${SUBBAND}.MS",                ProcessingPlan::DIST_SUBBAND );
     }
     if( configuration.outputIncoherentStokes() ) {
-      send( itsIncoherentStokesData,                   ".incoherentstokes",  ProcessingPlan::DIST_SUBBAND );
+      send( itsIncoherentStokesData,                   "SB${SUBBAND}.incoherentstokes",  ProcessingPlan::DIST_SUBBAND, 1 );
     }
 
     // whether there will be a second transpose
@@ -135,7 +139,7 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
 
     if (phaseThreeExists) {
       if ( configuration.outputBeamFormedData() ) {
-        require( itsBeamFormedData );
+        require( itsPreTransposeBeamFormedData );
       } else {
         require( itsCoherentStokesData );
       }
@@ -154,9 +158,23 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
       configuration.nrSamplesPerIntegration()
     );
 
+    itsFinalBeamFormedData = new FinalBeamFormedData(
+      configuration.nrSubbands(),
+      configuration.nrChannelsPerSubband(),
+      configuration.nrSamplesPerIntegration()
+    );
+
     itsTransposedCoherentStokesData = new StokesData(
       true,
-      configuration.nrStokes(),
+      1,
+      configuration.nrSubbands(),
+      configuration.nrChannelsPerSubband(),
+      configuration.nrSamplesPerIntegration(),
+      configuration.nrSamplesPerStokesIntegration()
+    );
+
+    itsFinalCoherentStokesData = new FinalStokesData(
+      true,
       configuration.nrSubbands(),
       configuration.nrChannelsPerSubband(),
       configuration.nrSamplesPerIntegration(),
@@ -164,13 +182,16 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::CN_ProcessingPla
     );
 
     TRANSFORM( 0, itsTransposedBeamFormedData );
+    TRANSFORM( itsTransposedBeamFormedData, itsFinalBeamFormedData );
+
     TRANSFORM( 0, itsTransposedCoherentStokesData );
+    TRANSFORM( itsTransposedCoherentStokesData, itsFinalCoherentStokesData );
 
     if( configuration.outputBeamFormedData() ) {
-      send( itsTransposedBeamFormedData,               ".beams",             ProcessingPlan::DIST_BEAM );
+      send( itsFinalBeamFormedData,                    "BEAM${PBEAM}-${POL}.voltages",   ProcessingPlan::DIST_BEAM, NR_POLARIZATIONS );
     }
     if( configuration.outputCoherentStokes() ) {
-      send( itsTransposedCoherentStokesData,           ".stokes",            ProcessingPlan::DIST_BEAM );
+      send( itsFinalCoherentStokesData,                "BEAM${PBEAM}-${STOKES}.stokes",  ProcessingPlan::DIST_BEAM, configuration.nrStokes() );
     }
   }
 }
@@ -183,9 +204,12 @@ template <typename SAMPLE_TYPE> CN_ProcessingPlan<SAMPLE_TYPE>::~CN_ProcessingPl
   delete itsTransposedInputData;
   delete itsFilteredData;
   delete itsTransposedBeamFormedData;
+  delete itsFinalBeamFormedData;
   delete itsTransposedCoherentStokesData;
+  delete itsFinalCoherentStokesData;
   delete itsCorrelatedData;
   delete itsBeamFormedData;
+  delete itsPreTransposeBeamFormedData;
   delete itsCoherentStokesData;
   delete itsIncoherentStokesData;
 }
