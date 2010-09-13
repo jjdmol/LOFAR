@@ -32,13 +32,13 @@ using namespace LOFAR::BS;
 int main(int argc, char* argv[])
 {
 	// args: cntlrname, parentHost, parentService
-	GCFScheduler::instance()->init(argc, argv, basename(argv[0]));
+	GCFScheduler::instance()->init(argc, argv, LOFAR::basename(argv[0]));
 
 	long		testTime(0);
 	if (argc == 2) {
 		testTime = atol(argv[1]);
 	}
-	BeamServer	bsTask(basename(argv[0]), testTime);
+	BeamServer	bsTask(LOFAR::basename(argv[0]), testTime);
 	bsTask.start(); 	// make initial transition
 
 	GCFScheduler::instance()->run();
