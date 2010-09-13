@@ -631,17 +631,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                                 hasChanged=true;
                             }
                         }
-                        if (isChanged()) {
-                            // check momID, if not zero set to zero
-                            if (itsTree.momID() != 0) {
-                                if (!OtdbRmi.getRemoteMaintenance().setMomInfo(itsTree.treeID(),0,itsTree.campaign)) {
-                                    String aS="Error during setMomInfo("+itsTree.treeID()+"0,"+itsTree.campaign+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
-                                    logger.error(aS);
-                                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                                    succes=false;
-                                }
-                            }
-                        }
                     } catch (RemoteException ex) {
                         try {
                             String aS="RemoteExceptionError while setting TemplateName " + OtdbRmi.getRemoteMaintenance().errorMsg();

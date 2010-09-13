@@ -223,7 +223,7 @@ public class MainPanel extends javax.swing.JPanel
         
         TemplatetableModel Templatemodel = new TemplatetableModel(SharedVars.getOTDBrmi());
         TemplatesPanel.setTableModel(Templatemodel);
-        TemplatesPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        TemplatesPanel.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         TemplatesPanel.setColumnSize("ID",50);
         TemplatesPanel.setColumnSize("OriginalTree",50);
         TemplatesPanel.setColumnSize("MoMID",50);
