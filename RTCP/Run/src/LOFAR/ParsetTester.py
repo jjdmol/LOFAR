@@ -59,10 +59,10 @@ class ParsetTester:
   def setNrSubbands( self, nrSubbands ):
     """ Use subbands 0 .. nrSubbands. """
 
-    subbands =  [i     for i in xrange(0,nrSubbands)]
-    beams =     [0     for i in xrange(0,nrSubbands)]
-    rspboards = [i//62 for i in xrange(0,nrSubbands)]
-    rspslots  = [i%62  for i in xrange(0,nrSubbands)]
+    subbands =  [i     for i in xrange(nrSubbands)]
+    beams =     [0     for i in xrange(nrSubbands)]
+    rspboards = [i//62 for i in xrange(nrSubbands)]
+    rspslots  = [i%62  for i in xrange(nrSubbands)]
 
     override_keys = {
            "Observation.subbandList":    subbands,
@@ -85,10 +85,10 @@ class ParsetTester:
 
 
   def setNrPencilBeams( self, nrBeams ):
-    """ Use nrBeams fake pencil beams. """
+    """ Use nrBeams fake beams. """
 
     self.parset["OLAP.nrPencils"] = nrBeams - 1
-    for n in xrange(0,nrBeams):
+    for n in xrange(nrBeams):
       self.parset["OLAP.Pencil[%d].angle1" % (n,)] = 0
       self.parset["OLAP.Pencil[%d].angle2" % (n,)] = 0
 
