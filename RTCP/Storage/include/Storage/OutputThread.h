@@ -55,7 +55,6 @@ class OutputThread
 
   private:
     string                  getMSname() const;
-    string                  getBeamName() const;
     void                    writeLogMessage(unsigned sequenceNumber);
     void                    flushSequenceNumbers();
     void                    checkForDroppedData(StreamableData *data);

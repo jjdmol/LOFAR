@@ -102,11 +102,11 @@ OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, unsigne
   itsSequenceNumbersFile(0), 
   itsHaveCaughtException(false)
 {
-  std::string filename;
+  std::string filename = getMSname();
+
+  makeDir( dirName(filename).c_str(), itsLogPrefix );
 
   if (dynamic_cast<CorrelatedData *>(outputConfig.source)) {
-    makeDir( dirName(getMSname()).c_str(), itsLogPrefix );
-
     filename = str(format("%s/table.f0data") % getMSname());
 
     if (parset.getLofarStManVersion() == 2) {
@@ -128,12 +128,6 @@ OutputThread::OutputThread(const Parset &parset, unsigned subbandNumber, unsigne
 
     LOG_INFO_STR(itsLogPrefix << "MeasurementSet created");
 #endif // defined HAVE_AIPSPP
-
-  } else {    
-    // raw writer -- per beam
-    filename = getBeamName();
-
-    makeDir( dirName(filename).c_str(), itsLogPrefix );
   }
 
   LOG_DEBUG_STR(itsLogPrefix << "Writing to " << filename);
@@ -168,43 +162,13 @@ string OutputThread::getMSname() const
 {
   using namespace boost;
 
-  string	 name	   = itsParset.getString("Observation.MSNameMask");
-  string	 startTime = itsParset.getString("Observation.startTime");
-
-  vector<string> splitStartTime;
-  split(splitStartTime, startTime, is_any_of("- :"));
-
-  replace_all(name, "${YEAR}", splitStartTime[0]);
-  replace_all(name, "${MONTH}", splitStartTime[1]);
-  replace_all(name, "${DAY}", splitStartTime[2]);
-  replace_all(name, "${HOURS}", splitStartTime[3]);
-  replace_all(name, "${MINUTES}", splitStartTime[4]);
-  replace_all(name, "${SECONDS}", splitStartTime[5]);
-
-  replace_all(name, "${MSNUMBER}", str(format("%05u") % itsParset.observationID()));
-  replace_all(name, "${SUBBAND}", str(format("%03u") % itsSubbandNumber));
-  replace_all(name, "${BEAM}", str(format("%02u") % itsParset.subbandToBeamMapping()[itsSubbandNumber]));
-
-  if (itsParset.isDefined("OLAP.storageRaidList"))
-    replace_all(name, "${RAID}", str(format("%s") % itsParset.getStringVector("OLAP.storageRaidList", true)[itsSubbandNumber]));
-
-  return name;
-}
-
-
-string OutputThread::getBeamName() const
-{
-  using namespace boost;
-
   const char pols[] = "XY";
   const char stokes[] = "IQUV";
 
   const int beam = itsSubbandNumber / itsOutputConfig.nrSubbeams;
   const int subbeam = itsSubbandNumber % itsOutputConfig.nrSubbeams;
 
-  string name = itsParset.isDefined("Observation.BeamDirMask")
-    ? itsParset.getString("Observation.BeamDirMask") + "/" + itsOutputConfig.filename
-    : dirName( itsParset.getString("Observation.MSNameMask") ) + itsOutputConfig.filename;
+  string         name = dirName( itsParset.getString("Observation.MSNameMask") ) + itsOutputConfig.filename;
   string	 startTime = itsParset.getString("Observation.startTime");
   vector<string> splitStartTime;
   split(splitStartTime, startTime, is_any_of("- :"));
@@ -218,12 +182,16 @@ string OutputThread::getBeamName() const
 
   replace_all(name, "${MSNUMBER}", str(format("%05u") % itsParset.observationID()));
   replace_all(name, "${BEAM}", str(format("%02u") % itsParset.subbandToBeamMapping()[itsSubbandNumber]));
+  replace_all(name, "${SUBBAND}", str(format("%03u") % itsSubbandNumber));
   replace_all(name, "${PBEAM}", str(format("%03u") % beam));
   replace_all(name, "${POL}", str(format("%c") % pols[subbeam]));
   replace_all(name, "${STOKES}", str(format("%c") % stokes[subbeam]));
 
-  if (itsParset.isDefined("OLAP.PencilInfo.storageRaidList"))
-    replace_all(name, "${RAID}", str(format("%s") % itsParset.getStringVector("OLAP.PencilInfo.storageRaidList", true)[itsSubbandNumber]));
+  string raidlistkey = itsOutputConfig.distribution == ProcessingPlan::DIST_SUBBAND
+    ? "OLAP.storageRaidList" : "OLAP.PencilInfo.storageRaidList";
+
+  if (itsParset.isDefined(raidlistkey))
+    replace_all(name, "${RAID}", str(format("%s") % itsParset.getStringVector(raidlistkey, true)[itsSubbandNumber]));
 
   return name;
 }
