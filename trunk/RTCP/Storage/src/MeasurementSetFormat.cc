@@ -394,6 +394,8 @@ void MeasurementSetFormat::createMSMetaFile(const string &MSname, unsigned subba
   uInt inx=0;
   uInt nStations = 0;
 
+  (void)subband;
+
   if (itsPS->nrTabStations() > 0) nStations = itsPS->nrTabStations();
   else nStations = itsPS->nrStations();
 
