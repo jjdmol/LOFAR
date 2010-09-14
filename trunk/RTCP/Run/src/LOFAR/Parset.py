@@ -10,6 +10,7 @@ import socket
 import util.Parset
 import getpass
 import os
+from itertools import count
 from Partitions import PartitionPsets
 from Locations import Hosts,Locations
 from Stations import Stations
@@ -151,16 +152,10 @@ class Parset(util.Parset.Parset):
 
         if "Observation.subbandList" not in self:
           # convert beam configuration
+	  for b in count():
+            if "Observation.Beam[%s].angle1" % (b,) not in self:
+              break
 
-          nrSlotsInFrame = int(self["Observation.nrSlotsInFrame"])
-
-          nrBeams = 0
-	  while "Observation.Beam[%s].angle1" % (nrBeams,) in self:
-            nrBeams += 1
-
-          allSubbands = {}
-
-          for b in xrange(nrBeams):  
 	    beamSubbands = self.getInt32Vector("Observation.Beam[%s].subbandList" % (b,)) # the actual subband number (0..511)
             beamBeamlets = self.getInt32Vector("Observation.Beam[%s].beamletList" % (b,)) # the bebamlet index (0..247)
 
@@ -191,7 +186,7 @@ class Parset(util.Parset.Parset):
 
     def addStorageKeys(self):
 	self["OLAP.Storage.userName"] = getpass.getuser()
-	self["OLAP.Storage.sshIdentityFile"]  = "%s/.ssh/id_rsa"% (os.environ["HOME"],)
+	self["OLAP.Storage.sshIdentityFile"]  = "%s/.ssh/id_rsa" % (os.environ["HOME"],)
 	self["OLAP.Storage.msWriter"] = Locations.resolvePath( Locations.files["storage"], self )
 
     def preWrite(self):
@@ -212,22 +207,23 @@ class Parset(util.Parset.Parset):
         tiedArrayStationList = []
 	tabList = []
 	beamFormedStations = []
-	index = 0
-	
-	while 'Observation.Beamformer[%s].stationList' % (index,) in self:
-	    curlist = self.getString('Observation.Beamformer[%s].stationList' % (index,))
 
-            # remove any initial or trailing "
-	    curlist = curlist.strip('"').rstrip('"')
+        for index in count():
+          if "Observation.Beamformer[%s].stationList" % (index,) not in self:
+            break
 
-            # transform , to +
-	    curlist = curlist.replace(',','+')
+	  curlist = self.getString('Observation.Beamformer[%s].stationList' % (index,))
 
-	    tiedArrayStationList.append(curlist)
+          # remove any initial or trailing "
+	  curlist = curlist.strip('"').rstrip('"')
 
-            # extract the individual stations
-	    beamFormedStations += curlist.split('+')
-	    index += 1
+          # transform , to +
+	  curlist = curlist.replace(',','+')
+
+	  tiedArrayStationList.append(curlist)
+
+          # extract the individual stations
+	  beamFormedStations += curlist.split('+')
 	
 	if index > 0:
 	  # tied-array beamforming will occur
@@ -285,7 +281,7 @@ class Parset(util.Parset.Parset):
 
 	nrPsets = len(self.psets)
 	nrStorageNodes = self.getNrUsedStorageNodes()
-        nrBeamOutputFiles = self.getNrBeamOutputFiles()
+        nrBeamFiles = self.getNrBeamFiles()
 
         # set and resolve storage hostnames
         # sort them since mpirun will as well, messing with our indexing schemes!
@@ -305,13 +301,13 @@ class Parset(util.Parset.Parset):
 	if nrStorageNodes == 0:
 	  self.setdefault('OLAP.storageNodeList',[0] * nrSubbands)
 	else:  
-	  self.setdefault('OLAP.storageNodeList',[i//int(math.ceil(1.0 * nrSubbands/nrStorageNodes)) for i in xrange(0,nrSubbands)])
+	  self.setdefault('OLAP.storageNodeList',[i//int(math.ceil(1.0 * nrSubbands/nrStorageNodes)) for i in xrange(nrSubbands)])
 
-	self.setdefault('OLAP.PencilInfo.beamsPerPset', int( math.ceil(1.0 * nrBeamOutputFiles / max( 1, len(self["OLAP.CNProc.phaseThreePsets"]) ) ) ) )
+	self.setdefault('OLAP.PencilInfo.beamsPerPset', int( math.ceil(1.0 * nrBeamFiles / max( 1, len(self["OLAP.CNProc.phaseThreePsets"]) ) ) ) )
 	if nrStorageNodes == 0:
-	  self.setdefault('OLAP.PencilInfo.storageNodeList',[0] * nrBeamOutputFiles)
+	  self.setdefault('OLAP.PencilInfo.storageNodeList',[0] * nrBeamFiles)
 	else:  
-	  self.setdefault('OLAP.PencilInfo.storageNodeList',[i//int(math.ceil(1.0 * nrBeamOutputFiles/nrStorageNodes)) for i in xrange(0,nrBeamOutputFiles)])
+	  self.setdefault('OLAP.PencilInfo.storageNodeList',[i//int(math.ceil(1.0 * nrBeamFiles/nrStorageNodes)) for i in xrange(nrBeamFiles)])
 
 	#print 'nrSubbands = ' + str(nrSubbands) + ', nrStorageNodes = ' + str(nrStorageNodes) + ', subbandsPerPset = ' + str(self.getSubbandsPerPset())
 
@@ -410,7 +406,7 @@ class Parset(util.Parset.Parset):
       # fill in the mask
       datenames = [ "YEAR", "MONTH", "DAY", "HOURS", "MINUTES", "SECONDS" ] # same order as in time tuple
       for index,d in enumerate(datenames):
-        mask = mask.replace( "${%s}" % d, str(date[index]) )
+        mask = mask.replace( "${%s}" % d, "%02d" % (date[index],) )
 
       mask = mask.replace( "${MSNUMBER}", "%05d" % (self.getObsID(),) )
       mask = mask.replace( "${SUBBAND}", "*" )
@@ -442,7 +438,7 @@ class Parset(util.Parset.Parset):
       del self['OLAP.IONProc.integrationSteps']
       del self['OLAP.CNProc.integrationSteps']
 
-    def getNrPencilBeams( self ):
+    def getNrBeams( self ):
       rings =  int( self["OLAP.PencilInfo.nrRings"] )
       manual = int( self["OLAP.nrPencils"] )
 
@@ -456,18 +452,18 @@ class Parset(util.Parset.Parset):
 
       return max(tabList) + 1  
 
-    def getNrBeamOutputFiles( self ):
+    def getNrBeamFiles( self ):
       if self.getBool("OLAP.outputBeamFormedData"):
-        subbeams = 2
+        files = 2
       elif self.getBool("OLAP.outputCoherentStokes"):
-        subbeams = len(self["OLAP.Stokes.which"])
+        files = len(self["OLAP.Stokes.which"])
       else:
-        subbeams = 0
+        files = 0
 
       if self.getBool("OLAP.PencilInfo.flysEye"):
-        return self.getNrMergedStations() * subbeams
+        return self.getNrMergedStations() * files
 
-      return self.getNrPencilBeams() * subbeams
+      return self.getNrBeams() * files
 
     def phaseThreeExists( self ):  
       # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
@@ -492,18 +488,19 @@ class Parset(util.Parset.Parset):
         "OLAP.outputIncoherentStokes",
       ]
 
-      outputs = 0
-
-      for k in output_keys:
-        if k in self and self.getBool(k):
-          outputs += 1
-
-      return outputs
+      return sum( (1 for k in output_keys if k in self and self.getBool(k)) )
 
     def check( self ):
       """ Check the Parset configuration for inconsistencies. """
 
+      def getBool(k):
+        """ A getBool() routine with False as a default value. """
+        return k in self and self.getBool(k)
+
       assert self.getNrOutputs() > 0, "No data output selected."
+
+      # no both bf complex voltages and stokes
+      assert not (getBool("OLAP.outputBeamFormedData") and getBool("OLAP.outputCoherentStokes")), "Cannot output both complex voltages and coherent stokes."
 
       # verify start/stop times
       assert self["Observation.startTime"] < self["Observation.stopTime"], "Start time (%s) must be before stop time (%s)" % (self["Observation.startTime"],self["Observation.stopTime"])

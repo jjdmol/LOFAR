@@ -17,7 +17,7 @@ def parse( str ):
     # assume YYYY-MM-DD HH:MM:SS, but time elements are optional
     try:
       date,time = str.split()
-    except:
+    except ValueError:
       date,time = str,"00:00:00"
 
     def conv_month(m):
@@ -27,14 +27,13 @@ def parse( str ):
                 "Jul","Aug","Sep",
                 "Oct","Nov","Dec"]
 
-      for n,name in enumerate(months):
-	if name == m:
-	  return n+1
-
-      return int(m)
+      try:
+        return months.index(m) + 1
+      except ValueError:
+        return int(m)
 	  
     y,m,d = date.split("-")
-    date_elements = [int(y),conv_month(m),int(d)]
+    date_elements = [int(y), conv_month(m), int(d)]
 
     h,m,s = time.split(":")
 
@@ -48,7 +47,7 @@ def parse( str ):
     except:
       s,ms = s,0
 
-    time_elements = [int(h),int(m),int(s),int(ms)]
+    time_elements = map( int, [h,m,s,ms] )
 
     return datetime.datetime( *(date_elements + time_elements) )
   elif ":" in str:

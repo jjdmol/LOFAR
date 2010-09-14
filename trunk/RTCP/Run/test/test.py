@@ -3,7 +3,7 @@ import sys
 sys.path = sys.path + ["../src"]
 
 from LOFAR.ParsetTester import ParsetTester
-from LOFAR.LogValidators import NoErrors
+from LOFAR.LogValidators import NoErrors,NoDrops
 from LOFAR.Locations import Locations
 from LOFAR.Partitions import PartitionPsets
 from LOFAR import Logger
@@ -90,6 +90,13 @@ if __name__ == "__main__":
 			help = "If >0, override the number of subbands to use [%default]" )
   parser.add_option_group( testgroup )
 
+  valgroup = OptionGroup(parser, "Validation parameters" )
+  valgroup.add_option( "-d", "--nodrops",
+                        dest = "nodrops",
+                        action = "store_true",
+                        default = False,
+                        help = "do not allow any data to be dropped [%default]" )
+
   # parse arguments
   (options, args) = parser.parse_args()
 
@@ -111,7 +118,11 @@ if __name__ == "__main__":
 
   pt.runParset()
 
-  success = pt.validate( [NoErrors()] )
+  validators = [NoErrors()]
+  if options.nodrops:
+    validators.append( NoDrops() )
+
+  success = pt.validate( validators )
 
   if success and not options.keeplogs:
     pt.cleanup()

@@ -41,3 +41,13 @@ class NoErrors(LogValidator):
     if level in ["FATAL","ERROR","EXCEPTION"]:
       raise ValidationError( "Encountered an %s" % (level,) )
 
+class NoDrops(LogValidator):
+  """ Considers a log valid if there is no dropped data reported. """
+
+  def parseLogLine(self,proc,date,time,level,msg):
+    if proc.startsWith("IONProc") and "Dropping data" in msg:
+      raise ValidationError( "Dropped data" )
+
+    if proc.startsWith("Storage") and "OutputThread dropped" in msg:
+      raise ValidationError( "Dropped data" )
+
