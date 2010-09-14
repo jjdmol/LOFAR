@@ -72,7 +72,7 @@ class ProcessingPlan
       const char         *filename;   // for outputs: filename to use for this output
       distribution_t      distribution;
 
-      unsigned nrSubbeams;            // number of subbeams per beam
+      unsigned nrFilesPerBeam;
 
       bool isOutput() const { return output; } // for filtering
     };
@@ -86,7 +86,7 @@ class ProcessingPlan
     void require( StreamableData *source );
 
     // send set (i.e. as output) to be stored in a file or directory with a certain filename
-    void send( StreamableData *set, const char *filename, distribution_t distribution, unsigned nrSubbeams = 1 );
+    void send( StreamableData *set, const char *filename, distribution_t distribution, unsigned nrFilesPerBeam = 1 );
 
     // ----- Construct the plan: assign an arena to all
     //       products that have to be calculated.
@@ -167,7 +167,7 @@ inline void ProcessingPlan::require( StreamableData *source ) {
   }
 }
 
-inline void ProcessingPlan::send( StreamableData *set, const char *filename, ProcessingPlan::distribution_t distribution, unsigned nrSubbeams ) {
+inline void ProcessingPlan::send( StreamableData *set, const char *filename, ProcessingPlan::distribution_t distribution, unsigned nrFilesPerBeam ) {
   require( set ); // fake planlet to indicate we need this set
 
   // the entry we just created is an output -- configure it as such
@@ -175,7 +175,7 @@ inline void ProcessingPlan::send( StreamableData *set, const char *filename, Pro
   plan.back().name   = find( set )->name;
   plan.back().filename = filename;
   plan.back().distribution = distribution;
-  plan.back().nrSubbeams = nrSubbeams;
+  plan.back().nrFilesPerBeam = nrFilesPerBeam;
 }
 
 inline void ProcessingPlan::assignArenas( bool assignAll ) {

@@ -165,8 +165,8 @@ string OutputThread::getMSname() const
   const char pols[] = "XY";
   const char stokes[] = "IQUV";
 
-  const int beam = itsSubbandNumber / itsOutputConfig.nrSubbeams;
-  const int subbeam = itsSubbandNumber % itsOutputConfig.nrSubbeams;
+  const int beam = itsSubbandNumber / itsOutputConfig.nrFilesPerBeam;
+  const int subbeam = itsSubbandNumber % itsOutputConfig.nrFilesPerBeam;
 
   string         name = dirName( itsParset.getString("Observation.MSNameMask") ) + itsOutputConfig.filename;
   string	 startTime = itsParset.getString("Observation.startTime");
