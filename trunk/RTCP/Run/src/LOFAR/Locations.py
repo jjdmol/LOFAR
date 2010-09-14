@@ -99,7 +99,7 @@ class Locations:
         "obssymlink": "${BASEDIR}/D${YEAR}_${MSNUMBER}",
 
         # parset name mas
-        "parset": "${LOGSYMLINK}/RTCP-${MSNUMBER}.parset",
+        "parset": "${LOGSYMLINK}/L${MSNUMBER}.parset",
 
         # location of the observation id counter
 	"nextmsnumber": "/globalhome/lofarsystem/log/nextMSNumber",
