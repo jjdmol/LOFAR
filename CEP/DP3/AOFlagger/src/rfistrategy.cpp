@@ -186,7 +186,10 @@ int main(int argc, char *argv[])
 			"  CPU usage. Defaults to 3, also overridable in rficonsole.\n"
 			"-ks or -kernel-size <width> <height>\n"
 			"  Gaussian kernel size used for smoothing. Floats. \n"
-			"  Default: 15.0 channels x 7.5 time steps.\n"
+			"  Note that the temporal resolution is temporary decreased before\n"
+			"  Gaussian smoothing, which makes the kernel size three times\n"
+			"  apparantly larger.\n"
+			"  Default: 2.5(x3) time steps x 15.0 channels.\n"
 			"-p or -polarizations <all/auto/stokesi>\n"
 			"  Specify what polarizations to read and process. Independent of this setting,\n"
 			"  the flags of all polarizations will be or-ed together and all polarizations\n"
@@ -195,9 +198,12 @@ int main(int argc, char *argv[])
 			"  Set a factor that is applied to each (sum)threshold operation. Higher\n"
 			"  values mean higher thresholds, thus less flagged samples. Default: 1.\n"
 //			"-t  or -time <time start index>-<time end index>\n"
-			"-ws or -window-size <width> <height>\n"
+			"-ws or -window-size <width in timesteps> <height in channels>\n"
 			"  Window size used in smoothing. Integers. \n"
-			"  Default: 40 channels x 30 time steps (pulsar strategy: 40 x 1)\n"
+			"  Note that the temporal resolution is temporary decreased before\n"
+			"  Gaussian smoothing, which makes the window size three times\n"
+			"  apparantly larger.\n"
+			"  Default: 10(x3) time steps x 40 channels (pulsar strategy: 1 x 40)\n"
 			"\nScripts are recommended to use the long option names.\n";
 		return 1;
 	}
