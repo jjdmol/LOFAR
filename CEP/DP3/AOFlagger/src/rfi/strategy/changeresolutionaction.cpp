@@ -25,22 +25,54 @@ namespace rfiStrategy {
 	
 	void ChangeResolutionAction::Perform(class ArtifactSet &artifacts, class ProgressListener &listener)
 	{
-		if(_decreaseFactor != 1)
+		if(_timeDecreaseFactor != 1)
 		{
 			ArtifactSet artifactsCopy(artifacts);
 			artifactsCopy.SetNoImageSet();
 	
 			TimeFrequencyData oldContaminated = artifacts.ContaminatedData();
 
-			DecreaseSize(artifactsCopy.OriginalData());
-			DecreaseSize(artifactsCopy.ContaminatedData());
-			DecreaseSize(artifactsCopy.RevisedData());
+			DecreaseTime(artifactsCopy.OriginalData());
+			DecreaseTime(artifactsCopy.ContaminatedData());
+			DecreaseTime(artifactsCopy.RevisedData());
+	
+			PerformFrequencyChange(artifactsCopy, listener);
+	
+			IncreaseTime(artifacts.OriginalData(), artifactsCopy.OriginalData(), false);
+			IncreaseTime(artifacts.ContaminatedData(), artifactsCopy.ContaminatedData(), false);
+			IncreaseTime(artifacts.RevisedData(), artifactsCopy.RevisedData(), _restoreRevised);
+
+			if(_restoreRevised)
+			{
+				TimeFrequencyData *contaminatedData =
+					TimeFrequencyData::CreateTFDataFromDiff(oldContaminated, artifacts.RevisedData());
+				contaminatedData->SetMaskFrom(oldContaminated);
+				artifacts.SetContaminatedData(*contaminatedData);
+				delete contaminatedData;
+			}
+		} else {
+			PerformFrequencyChange(artifacts, listener);
+		}
+	}
+
+	void ChangeResolutionAction::PerformFrequencyChange(class ArtifactSet &artifacts, class ProgressListener &listener)
+	{
+		if(_frequencyDecreaseFactor != 1)
+		{
+			ArtifactSet artifactsCopy(artifacts);
+			artifactsCopy.SetNoImageSet();
+	
+			TimeFrequencyData oldContaminated = artifacts.ContaminatedData();
+
+			DecreaseFrequency(artifactsCopy.OriginalData());
+			DecreaseFrequency(artifactsCopy.ContaminatedData());
+			DecreaseFrequency(artifactsCopy.RevisedData());
 	
 			ActionBlock::Perform(artifactsCopy, listener);
 	
-			IncreaseSize(artifacts.OriginalData(), artifactsCopy.OriginalData(), false);
-			IncreaseSize(artifacts.ContaminatedData(), artifactsCopy.ContaminatedData(), false);
-			IncreaseSize(artifacts.RevisedData(), artifactsCopy.RevisedData(), _restoreRevised);
+			IncreaseFrequency(artifacts.OriginalData(), artifactsCopy.OriginalData(), false);
+			IncreaseFrequency(artifacts.ContaminatedData(), artifactsCopy.ContaminatedData(), false);
+			IncreaseFrequency(artifacts.RevisedData(), artifactsCopy.RevisedData(), _restoreRevised);
 
 			if(_restoreRevised)
 			{
@@ -55,25 +87,43 @@ namespace rfiStrategy {
 		}
 	}
 
-	void ChangeResolutionAction::DecreaseSize(TimeFrequencyData &timeFrequencyData)
+	void ChangeResolutionAction::DecreaseTime(TimeFrequencyData &timeFrequencyData)
 	{
 		size_t imageCount = timeFrequencyData.ImageCount();
 		for(size_t i=0;i<imageCount;++i)
 		{
 			Image2DCPtr image = timeFrequencyData.GetImage(i);
-			Image2DPtr newImage = image->ShrinkHorizontally(_decreaseFactor);
+			Image2DPtr newImage = image->ShrinkHorizontally(_timeDecreaseFactor);
 			timeFrequencyData.SetImage(i, newImage);
 		}
 		size_t maskCount = timeFrequencyData.MaskCount();
 		for(size_t i=0;i<maskCount;++i)
 		{
 			Mask2DCPtr mask = timeFrequencyData.GetMask(i);
-			Mask2DPtr newMask = mask->ShrinkHorizontally(_decreaseFactor);
+			Mask2DPtr newMask = mask->ShrinkHorizontally(_timeDecreaseFactor);
 			timeFrequencyData.SetMask(i, newMask);
 		}
 	}
 
-	void ChangeResolutionAction::IncreaseSize(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage)
+	void ChangeResolutionAction::DecreaseFrequency(TimeFrequencyData &timeFrequencyData)
+	{
+		size_t imageCount = timeFrequencyData.ImageCount();
+		for(size_t i=0;i<imageCount;++i)
+		{
+			Image2DCPtr image = timeFrequencyData.GetImage(i);
+			Image2DPtr newImage = image->ShrinkVertically(_frequencyDecreaseFactor);
+			timeFrequencyData.SetImage(i, newImage);
+		}
+		size_t maskCount = timeFrequencyData.MaskCount();
+		for(size_t i=0;i<maskCount;++i)
+		{
+			Mask2DCPtr mask = timeFrequencyData.GetMask(i);
+			Mask2DPtr newMask = mask->ShrinkVertically(_frequencyDecreaseFactor);
+			timeFrequencyData.SetMask(i, newMask);
+		}
+	}
+
+	void ChangeResolutionAction::IncreaseTime(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage)
 	{
 		if(restoreImage)
 		{
@@ -81,7 +131,7 @@ namespace rfiStrategy {
 			for(size_t i=0;i<imageCount;++i)
 			{
 				Image2DCPtr image = changedData.GetImage(i);
-				Image2DPtr newImage = image->EnlargeHorizontally(_decreaseFactor, originalData.ImageWidth());
+				Image2DPtr newImage = image->EnlargeHorizontally(_timeDecreaseFactor, originalData.ImageWidth());
 				originalData.SetImage(i, newImage);
 			}
 		}
@@ -92,9 +142,35 @@ namespace rfiStrategy {
 			{
 				Mask2DCPtr mask = changedData.GetMask(i);
 				Mask2DPtr newMask = Mask2D::CreateUnsetMaskPtr(originalData.ImageWidth(), originalData.ImageHeight());
-				newMask->EnlargeHorizontallyAndSet(mask, _decreaseFactor);
+				newMask->EnlargeHorizontallyAndSet(mask, _timeDecreaseFactor);
 				originalData.SetMask(i, newMask);
 			}
 		}
 	}
+
+	void ChangeResolutionAction::IncreaseFrequency(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage)
+	{
+		if(restoreImage)
+		{
+			size_t imageCount = originalData.ImageCount();
+			for(size_t i=0;i<imageCount;++i)
+			{
+				Image2DCPtr image = changedData.GetImage(i);
+				Image2DPtr newImage = image->EnlargeVertically(_frequencyDecreaseFactor, originalData.ImageWidth());
+				originalData.SetImage(i, newImage);
+			}
+		}
+		if(_restoreMasks)
+		{
+			size_t maskCount = changedData.MaskCount();
+			for(size_t i=0;i<maskCount;++i)
+			{
+				Mask2DCPtr mask = changedData.GetMask(i);
+				Mask2DPtr newMask = Mask2D::CreateUnsetMaskPtr(originalData.ImageWidth(), originalData.ImageHeight());
+				newMask->EnlargeVerticallyAndSet(mask, _frequencyDecreaseFactor);
+				originalData.SetMask(i, newMask);
+			}
+		}
+	}
+
 }

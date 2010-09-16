@@ -49,7 +49,8 @@ namespace rfiStrategy {
 					TimeFrequencyData &contaminated = artifacts.ContaminatedData();
 					Mask2DPtr mask = Mask2D::CreateCopy(contaminated.GetSingleMask());
 					//_thresholdConfig.SetVerbose(true);
-					_thresholdConfig.Execute(contaminated.GetSingleImage(), mask, false, artifacts.Sensitivity() * _baseSensitivity);
+					Image2DCPtr image = contaminated.GetSingleImage();
+					_thresholdConfig.Execute(image, mask, false, artifacts.Sensitivity() * _baseSensitivity);
 					contaminated.SetGlobalMask(mask);
 				}
 				num_t BaseSensitivity() const { return _baseSensitivity; }

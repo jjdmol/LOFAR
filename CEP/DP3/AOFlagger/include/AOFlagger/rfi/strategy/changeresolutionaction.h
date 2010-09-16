@@ -31,10 +31,9 @@ namespace rfiStrategy {
 	*/
 	class ChangeResolutionAction : public ActionBlock {
 		public:
-			ChangeResolutionAction() : _decreaseFactor(10), _restoreRevised(true), _restoreMasks(false)
+			ChangeResolutionAction() : _timeDecreaseFactor(10), _frequencyDecreaseFactor(1), _restoreRevised(true), _restoreMasks(false)
 			{
 			}
-
 			~ChangeResolutionAction()
 			{
 			}
@@ -42,15 +41,26 @@ namespace rfiStrategy {
 			{
 				return "Change resolution";
 			}
-			void SetDecreaseFactor(int newFactor) { _decreaseFactor = newFactor; }
-			int DecreaseFactor() const { return _decreaseFactor; }
+
+			void SetTimeDecreaseFactor(int newFactor) { _timeDecreaseFactor = newFactor; }
+			int TimeDecreaseFactor() const { return _timeDecreaseFactor; }
+
+			void SetFrequencyDecreaseFactor(int newFactor) { _frequencyDecreaseFactor = newFactor; }
+			int FrequencyDecreaseFactor() const { return _frequencyDecreaseFactor; }
 
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener);
 			virtual ActionType Type() const { return ChangeResolutionActionType; }
 		private:
-			int _decreaseFactor;
-			void DecreaseSize(TimeFrequencyData &data);
-			void IncreaseSize(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage);
+			void PerformFrequencyChange(class ArtifactSet &artifacts, class ProgressListener &listener);
+
+			int _timeDecreaseFactor;
+			int _frequencyDecreaseFactor;
+
+			void DecreaseTime(TimeFrequencyData &data);
+			void IncreaseTime(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage);
+
+			void DecreaseFrequency(TimeFrequencyData &data);
+			void IncreaseFrequency(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage);
 
 			bool _restoreRevised;
 			bool _restoreMasks;

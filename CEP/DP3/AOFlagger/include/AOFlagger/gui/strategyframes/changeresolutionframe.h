@@ -36,16 +36,25 @@ class ChangeResolutionFrame : public Gtk::Frame {
 		ChangeResolutionFrame(rfiStrategy::ChangeResolutionAction &action, EditStrategyWindow &editStrategyWindow)
 		: Gtk::Frame("Change resolution"),
 		_editStrategyWindow(editStrategyWindow), _action(action),
-		_decreaseFactorLabel("Decrease factor:"),
-		_decreaseFactorScale(0, 128, 2),
+		_timeDecreaseFactorLabel("Time decrease factor:"),
+		_timeDecreaseFactorScale(0, 128, 1),
+		_frequencyDecreaseFactorLabel("Frequency decrease factor:"),
+		_frequencyDecreaseFactorScale(0, 256, 1),
 		_applyButton(Gtk::Stock::APPLY)
 		{
-			_box.pack_start(_decreaseFactorLabel);
-			_decreaseFactorLabel.show();
+			_box.pack_start(_timeDecreaseFactorLabel);
+			_timeDecreaseFactorLabel.show();
 
-			_box.pack_start(_decreaseFactorScale);
-			_decreaseFactorScale.set_value(_action.DecreaseFactor());
-			_decreaseFactorScale.show();
+			_box.pack_start(_timeDecreaseFactorScale);
+			_timeDecreaseFactorScale.set_value(_action.TimeDecreaseFactor());
+			_timeDecreaseFactorScale.show();
+
+			_box.pack_start(_frequencyDecreaseFactorLabel);
+			_frequencyDecreaseFactorLabel.show();
+
+			_box.pack_start(_frequencyDecreaseFactorScale);
+			_frequencyDecreaseFactorScale.set_value(_action.FrequencyDecreaseFactor());
+			_frequencyDecreaseFactorScale.show();
 
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &ChangeResolutionFrame::onApplyClicked));
@@ -63,13 +72,16 @@ class ChangeResolutionFrame : public Gtk::Frame {
 
 		Gtk::VBox _box;
 		Gtk::HButtonBox _buttonBox;
-		Gtk::Label _decreaseFactorLabel;
-		Gtk::HScale _decreaseFactorScale;
+		Gtk::Label _timeDecreaseFactorLabel;
+		Gtk::HScale _timeDecreaseFactorScale;
+		Gtk::Label _frequencyDecreaseFactorLabel;
+		Gtk::HScale _frequencyDecreaseFactorScale;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
 		{
-			_action.SetDecreaseFactor((size_t) _decreaseFactorScale.get_value());
+			_action.SetTimeDecreaseFactor((size_t) _timeDecreaseFactorScale.get_value());
+			_action.SetFrequencyDecreaseFactor((size_t) _frequencyDecreaseFactorScale.get_value());
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };

@@ -288,10 +288,22 @@ class Image2D {
 		Image2DPtr ShrinkHorizontally(int factor) const;
 
 		/**
-		 * Resample the image horizontally by inreasing the width
+		 * Resample the image vertically by decreasing the height
+		 * with an integer factor.
+		 */
+		Image2DPtr ShrinkVertically(int factor) const;
+
+		/**
+		 * Resample the image horizontally by increasing the width
 		 * with an integer factor.
 		 */
 		Image2DPtr EnlargeHorizontally(int factor, size_t newWidth) const;
+
+		/**
+		 * Resample the image vertically by increasing the width
+		 * with an integer factor.
+		 */
+		Image2DPtr EnlargeVertically(int factor, size_t newHeight) const;
 
 		Image2DPtr Trim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY) const;
 		void SetTrim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY);

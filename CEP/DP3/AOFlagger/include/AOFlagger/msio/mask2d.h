@@ -183,8 +183,10 @@ class Mask2D {
 		}
 
 		Mask2DPtr ShrinkHorizontally(int factor) const;
+		Mask2DPtr ShrinkVertically(int factor) const;
 
 		void EnlargeHorizontallyAndSet(Mask2DCPtr smallMask, int factor);
+		void EnlargeVerticallyAndSet(Mask2DCPtr smallMask, int factor);
 
 		void Join(Mask2DCPtr other)
 		{

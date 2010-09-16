@@ -250,7 +250,7 @@ Action *XmlReader::parseAddStatistics(xmlNode *)
 Action *XmlReader::parseChangeResolutionAction(xmlNode *node)
 {
 	ChangeResolutionAction *newAction = new ChangeResolutionAction();
-	newAction->SetDecreaseFactor(getInt(node, "decrease-factor"));
+	newAction->SetTimeDecreaseFactor(getInt(node, "decrease-factor"));
 	parseChildren(node, newAction);
 	return newAction;
 }
