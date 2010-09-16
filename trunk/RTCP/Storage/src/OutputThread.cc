@@ -181,7 +181,7 @@ string OutputThread::getMSname() const
   replace_all(name, "${SECONDS}", splitStartTime[5]);
 
   replace_all(name, "${MSNUMBER}", str(format("%05u") % itsParset.observationID()));
-  replace_all(name, "${BEAM}", str(format("%02u") % itsParset.subbandToBeamMapping()[itsSubbandNumber]));
+  replace_all(name, "${BEAM}", str(format("%02u") % itsParset.subbandToSAPmapping()[itsSubbandNumber]));
   replace_all(name, "${SUBBAND}", str(format("%03u") % itsSubbandNumber));
   replace_all(name, "${PBEAM}", str(format("%03u") % beam));
   replace_all(name, "${POL}", str(format("%c") % pols[subbeam]));

@@ -85,7 +85,7 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsDelayCompensation	      = ps->delayCompensation();
   itsCorrectClocks	      = ps->correctClocks();
   itsNeedDelays               = (itsDelayCompensation || itsNrPencilBeams > 1 || itsCorrectClocks) && itsNrInputs > 0;
-  itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
+  itsSubbandToSAPmapping      = ps->subbandToSAPmapping();
   if (haveStationInput) {
     itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping(stationName);
     itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping(stationName);
@@ -155,7 +155,7 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::~Beamlet
   delete itsDelayComp;	   itsDelayComp	    = 0;
   delete itsRawDataStream; itsRawDataStream = 0;
 
-  itsSubbandToBeamMapping.resize(0);
+  itsSubbandToSAPmapping.resize(0);
   itsSubbandToRSPboardMapping.resize(0);
   itsSubbandToRSPslotMapping.resize(0);
 }
@@ -294,7 +294,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
 
 	if (subband < itsNrSubbands) {
 	  unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-	  unsigned beam     = itsSubbandToBeamMapping[subband];
+	  unsigned beam     = itsSubbandToSAPmapping[subband];
 
 	  if (itsNeedDelays) {
 	    for (unsigned p = 0; p < itsNrPencilBeams; p ++) {
@@ -327,7 +327,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
 	if (subband < itsNrSubbands) {
 	  unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
 	  unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
-	  unsigned beam     = itsSubbandToBeamMapping[subband];
+	  unsigned beam     = itsSubbandToSAPmapping[subband];
 
 	  itsBeamletBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
 	}
@@ -347,7 +347,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::dum
 
   std::string stationName = itsPS->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station; // TODO: support more than one station
 
-  vector<unsigned> subbandToBeamMapping     = itsPS->subbandToBeamMapping();
+  vector<unsigned> subbandToSAPmapping     = itsPS->subbandToSAPmapping();
   vector<unsigned> subbandToRSPboardMapping = itsPS->subbandToRSPboardMapping(stationName);
   vector<unsigned> subbandToRSPslotMapping  = itsPS->subbandToRSPslotMapping(stationName);
   unsigned	   nrSubbands		    = itsPS->nrSubbands();
@@ -373,7 +373,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::dum
       memcpy(bfraw_data.header.beamDirections[beam], &itsPS->getBeamDirection(beam)[0], sizeof bfraw_data.header.beamDirections[beam]);
 
     for (unsigned subband = 0; subband < nrSubbands; subband ++)
-      bfraw_data.header.subbandToBeamMapping[subband] = subbandToBeamMapping[subband];
+      bfraw_data.header.subbandToSAPmapping[subband] = subbandToSAPmapping[subband];
 
     itsRawDataStream->write(&bfraw_data.header, sizeof bfraw_data.header);
     itsFileHeaderWritten = true;
@@ -397,7 +397,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::dum
   itsRawDataStream->write(&bfraw_data.block_header, sizeof bfraw_data.block_header);
 
   for (unsigned subband = 0; subband < nrSubbands; subband ++)
-    itsBeamletBuffers[subbandToRSPboardMapping[subband]]->sendUnalignedSubband(itsRawDataStream, subbandToRSPslotMapping[subband], subbandToBeamMapping[subband]);
+    itsBeamletBuffers[subbandToRSPboardMapping[subband]]->sendUnalignedSubband(itsRawDataStream, subbandToRSPslotMapping[subband], subbandToSAPmapping[subband]);
 }
 
 
