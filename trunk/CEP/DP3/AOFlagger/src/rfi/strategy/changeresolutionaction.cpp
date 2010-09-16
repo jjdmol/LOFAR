@@ -156,7 +156,7 @@ namespace rfiStrategy {
 			for(size_t i=0;i<imageCount;++i)
 			{
 				Image2DCPtr image = changedData.GetImage(i);
-				Image2DPtr newImage = image->EnlargeVertically(_frequencyDecreaseFactor, originalData.ImageWidth());
+				Image2DPtr newImage = image->EnlargeVertically(_frequencyDecreaseFactor, originalData.ImageHeight());
 				originalData.SetImage(i, newImage);
 			}
 		}
