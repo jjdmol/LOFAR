@@ -37,7 +37,7 @@ namespace rfiStrategy {
 	*/
 	class ForEachBaselineAction : public ActionBlock {
 		public:
-			ForEachBaselineAction() : _threadCount(3), _selection(All), _resultSet(0), _exceptionOccured(false),  _hasInitAntennae(false)
+			ForEachBaselineAction() : _threadCount(3), _selection(CrossCorrelations), _resultSet(0), _exceptionOccured(false),  _hasInitAntennae(false)
 			{
 			}
 			virtual ~ForEachBaselineAction()
