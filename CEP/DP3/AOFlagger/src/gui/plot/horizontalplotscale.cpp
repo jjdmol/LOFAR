@@ -121,7 +121,7 @@ void HorizontalPlotScale::setVisibleTicks()
 		_visibleLargeTicks.push_back(i->second);
 }
 
-bool HorizontalPlotScale::ticksFit(std::map<double, Tick> &ticks)
+bool HorizontalPlotScale::ticksFit(std::map<double, Tick> &/*ticks*/)
 {
 	/*double pos = 0.0;
 	for(std::map<double, Tick>::const_iterator i= ticks.begin();i!=ticks.end();++i)

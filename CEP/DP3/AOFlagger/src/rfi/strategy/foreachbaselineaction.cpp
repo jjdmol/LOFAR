@@ -20,6 +20,7 @@
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
 
 #include <AOFlagger/msio/antennainfo.h>
+#include <AOFlagger/util/stopwatch.h>
 
 #include <iostream>
 #include <sstream>
@@ -241,12 +242,15 @@ namespace rfiStrategy {
 	
 	void ForEachBaselineAction::ReaderFunction::operator()()
 	{
+		Stopwatch watch(true);
 		bool finished = false;
 		size_t threadCount = _action._threadCount;
 		do {
+			watch.Pause();
 			_action.WaitForBufferAvailable(threadCount);
 			
 			boost::mutex::scoped_lock lock(_action._artifacts->IOMutex());
+			watch.Start();
 			
 			size_t wantedCount = threadCount*2 - _action._baselineBuffer.size();
 			size_t requestedCount = 0;
@@ -268,6 +272,7 @@ namespace rfiStrategy {
 			if(requestedCount > 0)
 			{
 				_action._artifacts->ImageSet()->PerformReadRequests();
+				watch.Pause();
 				
 				for(size_t i=0;i<requestedCount;++i)
 				{
@@ -282,8 +287,11 @@ namespace rfiStrategy {
 			lock.unlock();
 			
 			_action._dataAvailable.notify_all();
+			watch.Start();
 		} while(!finished);
 		_action.SetFinishedBaselines();
+		watch.Pause();
+		std::cout << "Time spent on reading: " << watch.ToString() << std::endl;
 	}
 
 	void ForEachBaselineAction::SetProgress(ProgressListener &progress, int no, int count, std::string taskName, int threadId)

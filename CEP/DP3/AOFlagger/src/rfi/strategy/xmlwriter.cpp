@@ -198,7 +198,7 @@ namespace rfiStrategy {
 		writeContainerItems(action);
 	}
 
-	void XmlWriter::writeAddStatisticsAction(const AddStatisticsAction &action)
+	void XmlWriter::writeAddStatisticsAction(const AddStatisticsAction &)
 	{
 		attribute("type", "AddStatisticsAction");
 	}
@@ -280,7 +280,7 @@ namespace rfiStrategy {
 		write<bool>("logarithmic-y-axis", action.LogarithmicYAxis());
 	}
 
-	void XmlWriter::writeQuickCalibrateAction(const QuickCalibrateAction &action)
+	void XmlWriter::writeQuickCalibrateAction(const QuickCalibrateAction &)
 	{
 		attribute("type", "QuickCalibrateAction");
 	}

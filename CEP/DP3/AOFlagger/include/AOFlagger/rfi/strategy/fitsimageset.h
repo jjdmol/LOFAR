@@ -100,7 +100,7 @@ namespace rfiStrategy {
 			virtual size_t GetAntenna2(ImageSetIndex &index) {
 				return _baselines[static_cast<FitsImageSetIndex&>(index)._baselineIndex].second;
 			}
-			virtual void AddReadRequest(ImageSetIndex &index)
+			virtual void AddReadRequest(ImageSetIndex &)
 			{
 			}
 			virtual void PerformReadRequests()
@@ -108,8 +108,9 @@ namespace rfiStrategy {
 			}
 			virtual BaselineData *GetNextRequested()
 			{
+				return 0;
 			}
-			virtual void AddWriteFlagsTask(ImageSetIndex &index, std::vector<Mask2DCPtr> &flags)
+			virtual void AddWriteFlagsTask(ImageSetIndex &, std::vector<Mask2DCPtr> &)
 			{
 			}
 			virtual void PerformWriteFlagsTask()
