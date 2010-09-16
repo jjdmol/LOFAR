@@ -141,7 +141,7 @@ public:
 	unsigned         nrBeams() const;
 	unsigned	 nyquistZone() const;
 
-	vector<unsigned> subbandToBeamMapping() const;
+	vector<unsigned> subbandToSAPmapping() const;
 	vector<double>	 subbandToFrequencyMapping() const;
 	vector<unsigned> subbandToRSPboardMapping(const string &stationName) const;
 	vector<unsigned> subbandToRSPslotMapping(const string &stationName) const;
@@ -434,7 +434,7 @@ inline unsigned Parset::nrSubbands() const
   return getUint32Vector("Observation.subbandList",true).size();
 } 
 
-inline vector<unsigned> Parset::subbandToBeamMapping() const
+inline vector<unsigned> Parset::subbandToSAPmapping() const
 {
   return getUint32Vector("Observation.beamList",true);
 }

@@ -225,10 +225,10 @@ void MeasurementSetFormat::fillFeed()
 
 
 void MeasurementSetFormat::fillField(unsigned subband) {
-  const vector<unsigned> subbandToBeamMapping = itsPS->subbandToBeamMapping();
+  const vector<unsigned> subbandToSAPmapping = itsPS->subbandToSAPmapping();
 
-  MVDirection radec (Quantity(itsPS->getBeamDirection(subbandToBeamMapping[subband])[0], "rad"), 
-		     Quantity(itsPS->getBeamDirection(subbandToBeamMapping[subband])[1], "rad"));
+  MVDirection radec (Quantity(itsPS->getBeamDirection(subbandToSAPmapping[subband])[0], "rad"), 
+		     Quantity(itsPS->getBeamDirection(subbandToSAPmapping[subband])[1], "rad"));
   MDirection indir(radec, MDirection::J2000);
   casa::Vector<MDirection> outdir(1);
   outdir(0) = indir;

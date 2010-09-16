@@ -78,7 +78,7 @@ class BFRawFormat
 					//! The beam pointing directions
 			double   beamDirections[8][2];
 					//! mapping from subbands to beams
-			int16_t     subbandToBeamMapping[maxNrSubbands];
+			int16_t     subbandToSAPmapping[maxNrSubbands];
 					//! Padding to circumvent 8-byte alignment
 			uint32_t    padding;
 		} header;

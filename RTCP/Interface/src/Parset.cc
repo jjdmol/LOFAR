@@ -254,9 +254,9 @@ unsigned Parset::nyquistZone() const
 
 unsigned Parset::nrBeams() const
 {
-  vector<unsigned> beamMapping = subbandToBeamMapping();
+  vector<unsigned> sapMapping = subbandToSAPmapping();
 
-  return *std::max_element(beamMapping.begin(), beamMapping.end()) + 1;
+  return *std::max_element(sapMapping.begin(), sapMapping.end()) + 1;
 }
 
 

@@ -74,7 +74,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     bool			 itsNeedDelays;
     bool			 itsIsRealTime;
     bool			 itsDumpRawData;
-    std::vector<unsigned>	 itsSubbandToBeamMapping;
+    std::vector<unsigned>	 itsSubbandToSAPmapping;
     std::vector<unsigned>	 itsSubbandToRSPboardMapping;
     std::vector<unsigned>	 itsSubbandToRSPslotMapping;
 
