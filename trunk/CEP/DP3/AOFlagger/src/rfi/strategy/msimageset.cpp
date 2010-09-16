@@ -150,62 +150,6 @@ namespace rfiStrategy {
 		return new TimeFrequencyData(data);
 	}
 
-	void MSImageSet::LoadFlags(ImageSetIndex &index, TimeFrequencyData &destination)
-	{
-		/*
-		MSImageSetIndex &msIndex = static_cast<MSImageSetIndex&>(index);
-		if(InitImager(msIndex))
-		{
-			size_t a1 = _baselines[msIndex._baselineIndex].first;
-			size_t a2 = _baselines[msIndex._baselineIndex].second;
-			size_t
-				startIndex = StartIndex(msIndex),
-				endIndex = EndIndex(msIndex);
-			_imager->SetReadData(false);
-			_imager->SetReadFlags(true);
-			_imager->Image(a1, a2, msIndex._band, startIndex, endIndex);
-			switch(destination.Polarisation())
-			{
-				case DipolePolarisation:
-					if(_readStokesI)
-						destination.SetGlobalMask(_imager->FlagStokesI());
-					else if(_readDipoleAutoPolarisations && _readDipoleCrossPolarisations)
-						destination.SetIndividualPolarisationMasks(_imager->FlagXX(), _imager->FlagXY(), _imager->FlagYX(), _imager->FlagYY());
-					else
-						throw BadUsageException("Incorrect settings for flag reading");
-					break;
-				case StokesIPolarisation:
-					if(_readStokesI)
-						destination.SetGlobalMask(_imager->FlagStokesI());
-					else
-						throw BadUsageException("Incorrect settings for flag reading");
-					break;
-				case AutoDipolePolarisation:
-					if(_readStokesI)
-						destination.SetGlobalMask(_imager->FlagStokesI());
-					else if(_readDipoleAutoPolarisations)
-						destination.SetIndividualPolarisationMasks(_imager->FlagXX(), _imager->FlagYY());
-					else
-						throw BadUsageException("Incorrect settings for flag reading");
-					break;
-				case CrossDipolePolarisation:
-				case SinglePolarisation:
-				case XXPolarisation:
-				case XYPolarisation:
-				case YXPolarisation:
-				case YYPolarisation:
-				case StokesQPolarisation:
-				case StokesUPolarisation:
-				case StokesVPolarisation:
-					throw BadUsageException("Loading flags for a time frequency data with uncommon polarisation... Not yet implemented...");
-					break;
-			}
-			_imager->ClearImages();
-			//TimeFrequencyStatistics stats(destination);
-			//std::cout << "Flags read: " << TimeFrequencyStatistics::FormatRatio(stats.GetFlaggedRatio()) << std::endl;
-		}*/
-	}
-
 	TimeFrequencyMetaDataCPtr MSImageSet::createMetaData(ImageSetIndex &index, std::vector<UVW> &uvw)
 	{
 		MSImageSetIndex &msIndex = static_cast<MSImageSetIndex&>(index);

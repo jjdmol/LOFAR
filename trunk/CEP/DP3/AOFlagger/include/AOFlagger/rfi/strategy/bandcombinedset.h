@@ -145,27 +145,27 @@ namespace rfiStrategy {
 				return data;
 			}
 
-			virtual void LoadFlags(ImageSetIndex &index, TimeFrequencyData &destination)
+			virtual void LoadFlags(ImageSetIndex &, TimeFrequencyData &)
 			{
 			}
 
-			virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &index)
+			virtual TimeFrequencyMetaDataCPtr LoadMetaData(ImageSetIndex &)
 			{
 				return TimeFrequencyMetaDataCPtr();
 			}
-			virtual void WriteFlags(ImageSetIndex &index, TimeFrequencyData &data)
+			virtual void WriteFlags(ImageSetIndex &, TimeFrequencyData &)
 			{
 				throw std::runtime_error("Not implemented");
 			}
-			virtual size_t GetPart(ImageSetIndex &index)
+			virtual size_t GetPart(ImageSetIndex &)
 			{
 				throw std::runtime_error("Not implemented");
 			}
-			virtual size_t GetAntenna1(ImageSetIndex &index)
+			virtual size_t GetAntenna1(ImageSetIndex &)
 			{
 				throw std::runtime_error("Not implemented");
 			}
-			virtual size_t GetAntenna2(ImageSetIndex &index)
+			virtual size_t GetAntenna2(ImageSetIndex &)
 			{
 				throw std::runtime_error("Not implemented");
 			}
@@ -189,7 +189,7 @@ namespace rfiStrategy {
 			{
 				return new BaselineData(_data);
 			}
-			virtual void AddWriteFlagsTask(ImageSetIndex &index, std::vector<Mask2DCPtr> &flags)
+			virtual void AddWriteFlagsTask(ImageSetIndex &, std::vector<Mask2DCPtr> &)
 			{
 			}
 			virtual void PerformWriteFlagsTask()

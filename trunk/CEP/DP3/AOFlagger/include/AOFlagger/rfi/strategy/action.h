@@ -30,6 +30,7 @@ namespace rfiStrategy {
 		ActionBlockType,
 		AdapterType,
 		AddStatisticsActionType,
+		BaselineSelectionActionType,
 		ChangeResolutionActionType,
 		CombineFlagResultsType,
 		ForEachBaselineActionType,
