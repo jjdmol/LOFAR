@@ -326,6 +326,32 @@ Image2DPtr Image2D::ShrinkHorizontally(int factor) const
 	return Image2DPtr(newImage);
 }
 
+Image2DPtr Image2D::ShrinkVertically(int factor) const
+{
+	size_t newHeight = (_height + factor - 1) / factor;
+
+	Image2D *newImage = new Image2D(_width, newHeight);
+
+	for(size_t y=0;y<newHeight;++y)
+	{
+		int binSize = factor;
+		if(binSize + y*factor > _height)
+			binSize = _height - y*factor;
+
+		for(size_t x=0;x<newHeight;++x)
+		{
+			num_t sum = 0.0;
+			for(int binY=0;binY<binSize;++binY)
+			{
+				int curY = y*factor + binY;
+				sum += Value(x, curY);
+			}
+			newImage->SetValue(x, y, sum / (num_t) binSize);
+		}
+	}
+	return Image2DPtr(newImage);
+}
+
 Image2DPtr Image2D::EnlargeHorizontally(int factor, size_t newWidth) const
 {
 	Image2D *newImage = new Image2D(newWidth, _height);
@@ -337,6 +363,21 @@ Image2DPtr Image2D::EnlargeHorizontally(int factor, size_t newWidth) const
 		for(size_t y=0;y<_height;++y)
 		{
 			newImage->SetValue(x, y, Value(xOld, y));
+		}
+	}
+	return Image2DPtr(newImage);
+}
+
+Image2DPtr Image2D::EnlargeVertically(int factor, size_t newHeight) const
+{
+	Image2D *newImage = new Image2D(_width, newHeight);
+
+	for(size_t x=0;x<_width;++x)
+	{
+		for(size_t y=0;y<newHeight;++y)
+		{
+			size_t yOld = y / factor;
+			newImage->SetValue(x, y, Value(x, yOld));
 		}
 	}
 	return Image2DPtr(newImage);

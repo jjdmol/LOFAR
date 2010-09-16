@@ -86,9 +86,9 @@ namespace rfiStrategy {
 		current->Add(new SetImageAction());
 		ChangeResolutionAction *changeResAction2 = new ChangeResolutionAction();
 		if(pulsar)
-			changeResAction2->SetDecreaseFactor(1);
+			changeResAction2->SetTimeDecreaseFactor(1);
 		else
-			changeResAction2->SetDecreaseFactor(3);
+			changeResAction2->SetTimeDecreaseFactor(3);
 
 		SlidingWindowFitAction *swfAction2 = new SlidingWindowFitAction();
 		if(pulsar)

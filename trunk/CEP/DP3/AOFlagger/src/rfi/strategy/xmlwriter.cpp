@@ -206,7 +206,7 @@ namespace rfiStrategy {
 	void XmlWriter::writeChangeResolutionAction(const ChangeResolutionAction &action)
 	{
 		attribute("type", "ChangeResolutionAction");
-		write<int>("decrease-factor", action.DecreaseFactor());
+		write<int>("decrease-factor", action.TimeDecreaseFactor());
 		writeContainerItems(action);
 	}
 

@@ -106,6 +106,32 @@ Mask2DPtr Mask2D::ShrinkHorizontally(int factor) const
 	return Mask2DPtr(newMask);
 }
 
+Mask2DPtr Mask2D::ShrinkVertically(int factor) const
+{
+	size_t newHeight = (_height + factor - 1) / factor;
+
+	Mask2D *newMask= new Mask2D(_width, newHeight);
+
+	for(size_t y=0;y<newHeight;++y)
+	{
+		size_t binSize = factor;
+		if(binSize + y*factor > _height)
+			binSize = _height - y*factor;
+
+		for(size_t x=0;x<_width;++x)
+		{
+			bool value = false;
+			for(size_t binY=0;binY<binSize;++binY)
+			{
+				size_t curY = y*factor + binY;
+				value = value | Value(x, curY);
+			}
+			newMask->SetValue(x, y, value);
+		}
+	}
+	return Mask2DPtr(newMask);
+}
+
 void Mask2D::EnlargeHorizontallyAndSet(Mask2DCPtr smallMask, int factor)
 {
 	for(size_t x=0;x<smallMask->Width();++x)
@@ -125,3 +151,21 @@ void Mask2D::EnlargeHorizontallyAndSet(Mask2DCPtr smallMask, int factor)
 	}
 }
 
+void Mask2D::EnlargeVerticallyAndSet(Mask2DCPtr smallMask, int factor)
+{
+	for(size_t y=0;y<smallMask->Height();++y)
+	{
+		size_t binSize = factor;
+		if(binSize + y*factor > _height)
+			binSize = _height - y*factor;
+
+		for(size_t x=0;x<_width;++x)
+		{
+			for(size_t binY=0;binY<binSize;++binY)
+			{
+				size_t curY = y*factor + binY;
+				SetValue(x, curY, smallMask->Value(x, y));
+			}
+		}
+	}
+}
