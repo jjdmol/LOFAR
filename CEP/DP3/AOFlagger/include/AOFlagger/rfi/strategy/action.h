@@ -33,6 +33,7 @@ namespace rfiStrategy {
 		BaselineSelectionActionType,
 		ChangeResolutionActionType,
 		CombineFlagResultsType,
+		CutAreaActionType,
 		ForEachBaselineActionType,
 		ForEachMSActionType,
 		ForEachPolarisationBlockType,

@@ -17,44 +17,14 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#include <AOFlagger/rfi/strategy/cutareaaction.h>
 
-#ifndef RFI_STRATEGY_TYPES
-#define RFI_STRATEGY_TYPES
+#include <AOFlagger/rfi/strategy/artifactset.h>
 
-namespace rfiStrategy
-{
-	class Action;
-	class ActionBlock;
-	class ActionContainer;
-	class ActionFactory;
-	class ArtifactSet;
-	class CombineFlagResults;
-	class ForEachPolarisationBlock;
-	class ImageSet;
-	class ImageSetIndex;
-	class IterationBlock;
-	class MSImageSet;
-	class Strategy;
-
-	enum BaselineSelection
+namespace rfiStrategy {
+	
+	void CutAreaAction::Perform(class ArtifactSet &artifacts, class ProgressListener &listener)
 	{
-		All, CrossCorrelations, AutoCorrelations, EqualToCurrent, AutoCorrelationsOfCurrentAntennae, Current
-	};
+	}
+
 }
-
-// The current file format version
-// 1.0 : start
-// 1.1 : add AddStatisticsAction
-// 1.2 : add restore-originals property to Adapter
-// 1.3 : removed LoadFlags en LoadImage actions.
-// 1.4 : changed the ChangeResolutionAction to contain frequency res changing in addition to
-//       time res changing (parameters were renamed).
-#define STRATEGY_FILE_FORMAT_VERSION 1.4
-
-// The earliest format version which can be read by this version of the software
-#define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 1.4
-
-// The earliest software version which is required to read the written files
-#define STRATEGY_FILE_READER_VERSION_REQUIRED 1.4
-
-#endif // RFI_STRATEGY_TYPES
