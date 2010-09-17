@@ -115,7 +115,7 @@ public class inputFieldBuilderTest extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jToggleButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton1ActionPerformed
-        inputFieldBuilder.setContent(typeTextField.getText(), unitTextField.getText(), valueTextField.getText(), formatTextField.getText(),"");
+        inputFieldBuilder.setContent("test",typeTextField.getText(), unitTextField.getText(), valueTextField.getText(), formatTextField.getText(),"");
     }//GEN-LAST:event_jToggleButton1ActionPerformed
 
     /**
