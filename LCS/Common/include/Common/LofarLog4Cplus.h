@@ -445,8 +445,7 @@ inline LoggerReference&	getLogger() { return theirTraceLoggerRef; }
   // \param envVar Name of the environment variable that can be used in the
   // properties file as (part of) of the output log filename. It defaults to
   // \c LOG4CPLUS_LOGFILENAME. Note that the environment variable will \e
-  // always be set to the contents of \a logFile, thereby possibly clobbering
-  // it.
+  // always be set to the value of \a logFile, thereby possibly clobbering it.
   void initLog4Cplus(string propFile, const string& logFile = "",
                      const string& envVar = "LOG4CPLUS_LOGFILENAME");
 
