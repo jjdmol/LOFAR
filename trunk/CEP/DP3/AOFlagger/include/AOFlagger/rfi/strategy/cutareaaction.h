@@ -42,28 +42,46 @@ namespace rfiStrategy {
 				return "Cut area";
 			}
 
-			void SetTopChannels(int channels) { _topChannels = channels; }
-			int TopChannels() const { return _topChannels; }
-
-			void SetBottomChannels(int channels) { _bottomChannel = channels; }
-			int BottomChannels() const { return _bottomChannel; }
-
 			void SetStartTimeSteps(int channels) { _startTimeSteps = channels; }
 			int StartTimeSteps() const { return _startTimeSteps; }
 
 			void SetEndTimeSteps(int channels) { _endTimeSteps = channels; }
 			int EndTimeSteps() const { return _endTimeSteps; }
 
-			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener);
+			void SetTopChannels(int channels) { _topChannels = channels; }
+			int TopChannels() const { return _topChannels; }
+
+			void SetBottomChannels(int channels) { _bottomChannel = channels; }
+			int BottomChannels() const { return _bottomChannel; }
+
+			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &progress)
+			{
+				TimeFrequencyData oldOriginal(artifacts.OriginalData());
+				TimeFrequencyData oldRevised(artifacts.RevisedData());
+				TimeFrequencyData oldContaminated(artifacts.ContaminatedData());
+
+				Cut(artifacts.OriginalData());
+				Cut(artifacts.RevisedData());
+				Cut(artifacts.ContaminatedData());
+
+				ActionBlock::Perform(artifactsm, progress);
+
+				artifacts.SetOriginalData(oldOriginal);
+				artifacts.SetRevisedData(oldRevised);
+				artifacts.SetContaminatedData(oldContaminated);
+			}
 
 			virtual ActionType Type() const { return CutAreaActionType; }
 		private:
-			void PerformFrequencyChange(class ArtifactSet &artifacts, class ProgressListener &listener);
+			void Cut(class TimeFrequencyData &data)
+			{
+				size_t width = _endTimeSteps - _startTimeSteps;
+			}
 
-			int _topChannels;
-			int _bottomChannel;
 			int _startTimeSteps;
 			int _endTimeSteps;
+			int _topChannels;
+			int _bottomChannel;
 	};
 
 }
