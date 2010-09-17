@@ -50,6 +50,12 @@ namespace rfiStrategy {
 
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener);
 			virtual ActionType Type() const { return ChangeResolutionActionType; }
+
+			bool RestoreRevised() const { return _restoreRevised; }
+			void SetRestoreRevised(bool restoreRevised) { _restoreRevised = restoreRevised; }
+
+			bool RestoreMasks() const { return _restoreMasks; }
+			void SetRestoreMasks(bool restoreMasks) { _restoreMasks = restoreMasks; }
 		private:
 			void PerformFrequencyChange(class ArtifactSet &artifacts, class ProgressListener &listener);
 
@@ -62,7 +68,17 @@ namespace rfiStrategy {
 			void DecreaseFrequency(TimeFrequencyData &data);
 			void IncreaseFrequency(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage);
 
+			/**
+			 * If this is true, the subtasks of this task can change the revised image, and
+			 * this task will scale the changed images back to the original format. If it
+			 * is false, the images before this task will be restored (which is faster, because
+			 * then the changed image does not need to be enlarged).
+			 */
 			bool _restoreRevised;
+
+			/**
+			 * This is like _restoreRevised, but for the masks.
+			 */
 			bool _restoreMasks;
 	};
 
