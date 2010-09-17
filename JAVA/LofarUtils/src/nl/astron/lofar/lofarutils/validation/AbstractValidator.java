@@ -22,6 +22,7 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
     private Dimension cDim;
     private Color color;
 
+ 
     private AbstractValidator() {
         color = new Color(243, 255, 159);
     }
@@ -59,6 +60,7 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
         initComponents();
     }
 
+
     /**
      * Implement the actual validation logic in this method. The method should
      * return false if data is invalid and true if it is valid. It is also possible
@@ -79,6 +81,8 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
      */
 
     public boolean verify(JComponent c) {
+//        System.out.println("AbstractValidator-entered verify. Component-"+ c.getName()+" popup.visible: "+popup.isVisible());
+        popup.setVisible(false);
         if (!validationCriteria(c)) {
 
             if(parent instanceof WantsValidationStatus)
@@ -121,7 +125,7 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
       */
 
     public void keyPressed(KeyEvent e) {
-        releasePopup();
+        checkPopup();
     }
 
     /**
@@ -136,9 +140,22 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
 
     public void keyReleased(KeyEvent e) {}
 
-    public void releasePopup() {
-        popup.setVisible(false);
+    public boolean isVisible() {
+        return popup.isVisible();
     }
+
+    public void checkPopup() {
+        if (popup.isVisible()) {
+//            System.out.println("AbstractValidator-checkPopup"+" popup.visible: "+popup.isVisible());
+            releasePopup();
+        }
+    }
+
+    private void releasePopup() {
+        popup.setVisible(false);
+        popup.dispose();
+    }
+
 
     private void initComponents() {
         popup.getContentPane().setLayout(new FlowLayout());
@@ -148,5 +165,6 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
         popup.getContentPane().add(messageLabel);
         popup.setFocusableWindowState(false);
     }
+
 }
 

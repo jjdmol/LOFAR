@@ -138,7 +138,7 @@ public class Validators {
 
     private static final String REGEXMESSAGE         = "Your regex  and input did not match";
 
-
+    
     static public String validateNode(String input) {
 
         if (!validateAgainstRegex(NODEREGEX,input)) {
@@ -474,7 +474,7 @@ public class Validators {
             return TIMEMESSAGE;
         }
 
-        if (input.startsWith(">>")) return "";
+        if (input.startsWith(">>")||!input.contains(":")) return "";
 
         try {
             Date i = TIMEFORMAT.parse(input);
@@ -494,6 +494,7 @@ public class Validators {
         if (!validateAgainstRegex(TIMEVECTORREGEX,input)) {
             return TIMEVECTORMESSAGE;
         }
+        if (!input.contains(":")) return "";
 
         String aS=input.replaceAll("\\[\\]\\s", "");
         String[] times = aS.split(",");

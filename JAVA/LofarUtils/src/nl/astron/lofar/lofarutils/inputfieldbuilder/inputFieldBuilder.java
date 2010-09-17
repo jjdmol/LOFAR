@@ -12,7 +12,9 @@
 package nl.astron.lofar.lofarutils.inputfieldbuilder;
 
 import java.awt.CardLayout;
+import java.awt.Color;
 import nl.astron.lofar.lofarutils.LofarUtils;
+import nl.astron.lofar.lofarutils.validation.AbstractValidator;
 import nl.astron.lofar.lofarutils.validation.BoolValidator;
 import nl.astron.lofar.lofarutils.validation.BoolVectorValidator;
 import nl.astron.lofar.lofarutils.validation.DateValidator;
@@ -31,11 +33,15 @@ import nl.astron.lofar.lofarutils.validation.TextVectorValidator;
 import nl.astron.lofar.lofarutils.validation.TimeValidator;
 import nl.astron.lofar.lofarutils.validation.TimeVectorValidator;
 
+
 /**
  *
  * @author coolen
  */
 public class inputFieldBuilder extends javax.swing.JPanel {
+
+    public static inputFieldBuilder currentInputField = null;
+
 
     public inputFieldBuilder() {
         itsType="";
@@ -44,10 +50,11 @@ public class inputFieldBuilder extends javax.swing.JPanel {
         itsNodeValue="";
         itsParamValue="";
         initComponents();
-            }
+    }
 
     /** Creates new form inputFieldBuilder */
-    public void setContent(String type,String unit, String nodevalue, String format, String paramvalue) {
+    public void setContent(String aName,String type,String unit, String nodevalue, String format, String paramvalue) {
+        itsName=aName;
         itsType=type;
         itsUnit=unit;
         itsNodeValue=nodevalue;
@@ -100,7 +107,7 @@ public class inputFieldBuilder extends javax.swing.JPanel {
             } else if (itsType.equals("time")) {      // time
                 textInput.setInputVerifier(new TimeValidator(null, textInput));
             } else if (itsType.equals("bool")) {      // bool
-                textInput.setInputVerifier(new BoolValidator(null, textInput));
+                textInput.setInputVerifier(new BoolValidator(null, textInput,""));
             } else if (itsType.equals("text")) {      // text
                 textInput.setInputVerifier(new TextValidator(null, textInput));
             } else if (itsType.equals("node")) {      // text
@@ -128,8 +135,12 @@ public class inputFieldBuilder extends javax.swing.JPanel {
             } else if (itsType.equals("vulng")) {      // Vector of Times
                 textInput.setInputVerifier(new TimeVectorValidator(null, textInput));
             }
+            currentInputField=this;
+            textInput.setName(itsName);
         } else {
             textInput.setInputVerifier(null);
+            currentInputField=null;
+            textInput.setName("");
         }
     }
 
@@ -152,7 +163,16 @@ public class inputFieldBuilder extends javax.swing.JPanel {
         textInput.setEditable(flag);
         setValidators();
     }
-    
+
+    public void checkPopup() {
+        if (!isCombo) {
+//           System.out.println("InputFieldBuilder checkPopup");
+            ((AbstractValidator)textInput.getInputVerifier()).checkPopup();
+            textInput.setBackground(Color.WHITE);
+        }
+    }
+
+    private String itsName="";
     private String itsUnit="";
     private String itsNodeValue="";
     private String itsType="";
@@ -176,6 +196,14 @@ public class inputFieldBuilder extends javax.swing.JPanel {
         setLayout(new java.awt.CardLayout());
 
         textInput.setText("None");
+        textInput.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                textInputFocusGained(evt);
+            }
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                textInputFocusLost(evt);
+            }
+        });
         add(textInput, "TextCard");
 
         comboInput.setEditable(true);
@@ -183,6 +211,29 @@ public class inputFieldBuilder extends javax.swing.JPanel {
         comboInput.setVerifyInputWhenFocusTarget(false);
         add(comboInput, "ComboCard");
     }// </editor-fold>//GEN-END:initComponents
+
+    private void textInputFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_textInputFocusLost
+        if (!isCombo) {
+//            System.out.println("InputFieldBuilder Focus Lost");
+            if (((AbstractValidator)textInput.getInputVerifier()).isVisible()) {
+//                System.out.println("InputFieldBuilder Focus Lost: popup was visible, Focus back to text" );
+               textInput.requestFocusInWindow();
+            } else {
+//                System.out.println("InputFieldBuilder Focus Lost: popup was not visible." );
+                return;
+            }
+        }
+    }//GEN-LAST:event_textInputFocusLost
+
+    private void textInputFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_textInputFocusGained
+//        System.out.println("InputFieldBuilder Focus Gained:" );
+        if (!((AbstractValidator)textInput.getInputVerifier()).isVisible()) {
+//            System.out.println("InputFieldBuilder Gained: popup was NOT visible, reset CurrentInputField" );
+            currentInputField=this;
+        } else {
+//            System.out.println("InputFieldBuilder Gained: popup was visible, keep CurrentInputField" );
+        }
+    }//GEN-LAST:event_textInputFocusGained
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
