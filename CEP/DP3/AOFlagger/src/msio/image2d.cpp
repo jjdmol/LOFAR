@@ -251,22 +251,22 @@ long Image2D::GetImageCountInHUD(FitsFile &file) {
 
 void Image2D::SaveToFitsFile(const std::string &filename) const
 {
-      FitsFile file(filename);
-      file.Create();
-      file.AppendImageHUD(FitsFile::Double64ImageType, _width, _height);
-      long bufferSize = _width * _height;
-      double *buffer = new double[bufferSize];
-      for(long i=0;i<bufferSize;i++) {
-              buffer[i] = _data[i];
-      }
-      try {
-              file.WriteImage(0, buffer, bufferSize, -1e100);
-              file.Close();
-      } catch(FitsIOException &exception) {
-              delete[] buffer;
-              throw;
-      }
-      delete[] buffer;
+	FitsFile file(filename);
+	file.Create();
+	file.AppendImageHUD(FitsFile::Double64ImageType, _width, _height);
+	long bufferSize = _width * _height;
+	double *buffer = new double[bufferSize];
+	for(long i=0;i<bufferSize;i++) {
+		buffer[i] = _data[i];
+	}
+	try {
+		file.WriteImage(0, buffer, bufferSize, -1e100);
+		file.Close();
+	} catch(FitsIOException &exception) {
+		delete[] buffer;
+		throw;
+	}
+	delete[] buffer;
 }
 
 size_t Image2D::GetCountAbove(num_t value) const
@@ -338,7 +338,7 @@ Image2DPtr Image2D::ShrinkVertically(int factor) const
 		if(binSize + y*factor > _height)
 			binSize = _height - y*factor;
 
-		for(size_t x=0;x<newHeight;++x)
+		for(size_t x=0;x<_width;++x)
 		{
 			num_t sum = 0.0;
 			for(int binY=0;binY<binSize;++binY)
