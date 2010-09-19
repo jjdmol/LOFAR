@@ -23,8 +23,4 @@
 
 namespace rfiStrategy {
 	
-	void CutAreaAction::Perform(class ArtifactSet &artifacts, class ProgressListener &listener)
-	{
-	}
-
 }

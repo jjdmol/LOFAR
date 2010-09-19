@@ -675,6 +675,8 @@ class TimeFrequencyData
 		{
 			for(std::vector<Image2DCPtr>::iterator i=_images.begin();i!=_images.end();++i)
 				*i = (*i)->Trim(timeStart, freqStart, timeEnd, freqEnd);
+			for(std::vector<Mask2DCPtr>::iterator i=_flagging.begin();i!=_flagging.end();++i)
+				*i = (*i)->Trim(timeStart, freqStart, timeEnd, freqEnd);
 		}
 		std::string Description() const
 		{
@@ -847,9 +849,9 @@ class TimeFrequencyData
 		void CopyFrom(const TimeFrequencyData &source, size_t destX, size_t destY)
 		{
 			if(source._images.size() != _images.size())
-				throw BadUsageException("CopyImagesFrom: tf data do not match");
+				throw BadUsageException("CopyFrom: tf data do not match");
 			if(source._flagging.size() != _flagging.size())
-				throw BadUsageException("CopyImagesFrom: tf masks do not match");
+				throw BadUsageException("CopyFrom: tf masks do not match");
 			for(size_t i=0;i<_images.size();++i)
 			{
 				Image2DPtr image = Image2D::CreateCopy(_images[i]);
