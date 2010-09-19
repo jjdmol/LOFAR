@@ -307,7 +307,7 @@ class Image2D {
 
 		Image2DPtr Trim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY) const;
 		void SetTrim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY);
-
+		
 		void CopyFrom(Image2DCPtr source, size_t destX, size_t destY)
 		{
 			size_t

@@ -195,6 +195,20 @@ class Mask2D {
 					SetValue(x, y, other->Value(x, y) || Value(x, y));
 			}
 		}
+		Mask2DPtr Trim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY) const
+		{
+			unsigned
+				width = endX - startX,
+				height = endY - startY;
+			Mask2D *mask = new Mask2D(width, height);
+			for(unsigned y=startY;y<endY;++y)
+			{
+				for(unsigned x=startX;x<endX;++x)
+					mask->SetValue(x, y, Value(x, y));
+			}
+			return Mask2DPtr(mask);
+		}
+		
 		void CopyFrom(Mask2DCPtr source, size_t destX, size_t destY)
 		{
 			size_t

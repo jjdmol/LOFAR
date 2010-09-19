@@ -20,9 +20,10 @@
 #ifndef CHANGERESOLUTIONACTION_H
 #define CHANGERESOLUTIONACTION_H
 
-#include "../../msio/timefrequencydata.h"
+#include <AOFlagger/msio/timefrequencydata.h>
 
 #include "actionblock.h"
+#include "artifactset.h"
 
 namespace rfiStrategy {
 	
@@ -31,10 +32,10 @@ namespace rfiStrategy {
 	*/
 	class CutAreaAction : public ActionBlock {
 		public:
-			ChangeResolutionAction() : _topChannels(1), _bottomChannel(0), _startTimeSteps(0), _endTimeSteps(0)
+			CutAreaAction() : _startTimeSteps(0), _endTimeSteps(0), _topChannels(1), _bottomChannels(0)
 			{
 			}
-			~ChangeResolutionAction()
+			~CutAreaAction()
 			{
 			}
 			virtual std::string Description()
@@ -51,8 +52,8 @@ namespace rfiStrategy {
 			void SetTopChannels(int channels) { _topChannels = channels; }
 			int TopChannels() const { return _topChannels; }
 
-			void SetBottomChannels(int channels) { _bottomChannel = channels; }
-			int BottomChannels() const { return _bottomChannel; }
+			void SetBottomChannels(int channels) { _bottomChannels = channels; }
+			int BottomChannels() const { return _bottomChannels; }
 
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &progress)
 			{
@@ -64,7 +65,11 @@ namespace rfiStrategy {
 				Cut(artifacts.RevisedData());
 				Cut(artifacts.ContaminatedData());
 
-				ActionBlock::Perform(artifactsm, progress);
+				ActionBlock::Perform(artifacts, progress);
+				
+				PlaceBack(artifacts.OriginalData(), oldOriginal);
+				PlaceBack(artifacts.RevisedData(), oldRevised);
+				PlaceBack(artifacts.ContaminatedData(), oldContaminated);
 
 				artifacts.SetOriginalData(oldOriginal);
 				artifacts.SetRevisedData(oldRevised);
@@ -75,13 +80,19 @@ namespace rfiStrategy {
 		private:
 			void Cut(class TimeFrequencyData &data)
 			{
-				size_t width = _endTimeSteps - _startTimeSteps;
+				size_t endTime = data.ImageWidth() - _endTimeSteps - _startTimeSteps;
+				size_t endChannel = data.ImageHeight() - _bottomChannels - _topChannels;
+				data.Trim(_startTimeSteps, _topChannels, endTime, endChannel);
+			}
+			void PlaceBack(class TimeFrequencyData &cuttedData, class TimeFrequencyData &oldData)
+			{
+				oldData.CopyFrom(cuttedData, _startTimeSteps, _endTimeSteps);
 			}
 
 			int _startTimeSteps;
 			int _endTimeSteps;
 			int _topChannels;
-			int _bottomChannel;
+			int _bottomChannels;
 	};
 
 }
