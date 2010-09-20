@@ -69,7 +69,7 @@ static void makeDir( const char *dirname, const string &logPrefix )
 
   if (stat( dirname, &s ) == 0) {
     // path already exists
-    if (s.st_mode & S_IFMT != S_IFDIR) {
+    if ((s.st_mode & S_IFMT) != S_IFDIR) {
       LOG_WARN_STR(logPrefix << "Not a directory: " << dirname );
     }
   } else if (errno == ENOENT) {
