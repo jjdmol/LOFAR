@@ -152,6 +152,8 @@ class Parset(util.Parset.Parset):
 
         if "Observation.subbandList" not in self:
           # convert beam configuration
+          allSubbands = {}
+
 	  for b in count():
             if "Observation.Beam[%s].angle1" % (b,) not in self:
               break

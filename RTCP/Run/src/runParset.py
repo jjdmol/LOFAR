@@ -2,7 +2,7 @@
 
 from LOFAR import Logger
 from logging import debug,info,warning,error,critical
-from LOFAR.Core import buildParset, combineParsets, checkParsets
+from LOFAR.Core import buildParset
 from LOFAR.Parset import Parset
 from util.Hosts import rsymlink
 from LOFAR.Locations import Locations
