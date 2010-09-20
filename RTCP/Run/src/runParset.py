@@ -110,6 +110,8 @@ if __name__ == "__main__":
         info( "Created symlink %s -> %s" % (symlinkName, obsDir) )
       except IOError,msg:
         warning( "Failed to create symlink %s -> %s" % (symlinkName,obsDir) )
+      except OSError,msg:
+        warning( "Failed to create symlink %s -> %s" % (symlinkName,obsDir) )
 
       info( "Sending parset %s to the correlator on partition %s" % (parset.filename,parset.partition) )
       try:
