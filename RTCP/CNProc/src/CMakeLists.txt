@@ -22,6 +22,8 @@ set(cnproc_LIB_SRCS
   Correlator.cc
   FCNP_ClientStream.cc
   FIR.cc
+  InversePPF.cc
+  FilterBank.cc
   LocationInfo.cc
   PPF.cc
   Stokes.cc)
