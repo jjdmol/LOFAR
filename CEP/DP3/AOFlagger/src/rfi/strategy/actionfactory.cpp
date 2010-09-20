@@ -24,6 +24,7 @@
 #include <AOFlagger/rfi/strategy/addstatisticsaction.h>
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
+#include <AOFlagger/rfi/strategy/cutareaaction.h>
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
@@ -51,6 +52,7 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Add to statistics");
 	list.push_back("Change resolution");
 	list.push_back("Combine flag results");
+	list.push_back("Cut area");
 	list.push_back("For each baseline");
 	list.push_back("For each polarisation");
 	list.push_back("For each measurement set");
@@ -81,6 +83,8 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new ChangeResolutionAction();
 	else if(action == "Combine flag results")
 		return new CombineFlagResults();
+	else if(action == "Cut area")
+		return new CutAreaAction();
 	else if(action == "For each baseline")
 		return new ForEachBaselineAction();
 	else if(action == "For each measurement set")

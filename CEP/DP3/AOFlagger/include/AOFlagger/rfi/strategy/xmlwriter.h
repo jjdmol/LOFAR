@@ -61,6 +61,7 @@ namespace rfiStrategy {
 			void writeAddStatisticsAction(const class AddStatisticsAction &action);
 			void writeChangeResolutionAction(const class ChangeResolutionAction &action);
 			void writeCombineFlagResults(const class CombineFlagResults &action);
+			void writeCutAreaAction(const class CutAreaAction &action);
 			void writeForEachBaselineAction(const class ForEachBaselineAction &action);
 			void writeForEachMSAction(const class ForEachMSAction &action);
 			void writeForEachPolarisationBlock(const class ForEachPolarisationBlock &action);

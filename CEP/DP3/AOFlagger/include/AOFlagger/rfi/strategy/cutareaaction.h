@@ -80,13 +80,13 @@ namespace rfiStrategy {
 		private:
 			void Cut(class TimeFrequencyData &data)
 			{
-				size_t endTime = data.ImageWidth() - _endTimeSteps - _startTimeSteps;
-				size_t endChannel = data.ImageHeight() - _bottomChannels - _topChannels;
+				size_t endTime = data.ImageWidth() - _endTimeSteps;
+				size_t endChannel = data.ImageHeight() - _bottomChannels;
 				data.Trim(_startTimeSteps, _topChannels, endTime, endChannel);
 			}
 			void PlaceBack(class TimeFrequencyData &cuttedData, class TimeFrequencyData &oldData)
 			{
-				oldData.CopyFrom(cuttedData, _startTimeSteps, _endTimeSteps);
+				oldData.CopyFrom(cuttedData, _startTimeSteps, _topChannels);
 			}
 
 			int _startTimeSteps;

@@ -41,7 +41,6 @@ set(MSIO_FILES
 set(RFI_STRATEGY_FILES
   rfi/strategy/actionfactory.cpp
   rfi/strategy/changeresolutionaction.cpp
-  rfi/strategy/cutareaaction.cpp
   rfi/strategy/fitsimageset.cpp
   rfi/strategy/foreachbaselineaction.cpp
   rfi/strategy/foreachmsaction.cpp

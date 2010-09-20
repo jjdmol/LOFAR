@@ -23,6 +23,7 @@
 #include <AOFlagger/rfi/strategy/addstatisticsaction.h>
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
+#include <AOFlagger/rfi/strategy/cutareaaction.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
@@ -123,6 +124,9 @@ namespace rfiStrategy {
 			case CombineFlagResultsType:
 				writeCombineFlagResults(static_cast<const CombineFlagResults&>(action));
 				break;
+			case CutAreaActionType:
+				writeCutAreaAction(static_cast<const CutAreaAction&>(action));
+				break;
 			case ForEachBaselineActionType:
 				writeForEachBaselineAction(static_cast<const ForEachBaselineAction&>(action));
 				break;
@@ -216,6 +220,16 @@ namespace rfiStrategy {
 	void XmlWriter::writeCombineFlagResults(const CombineFlagResults &action)
 	{
 		attribute("type", "CombineFlagResults");
+		writeContainerItems(action);
+	}
+
+	void XmlWriter::writeCutAreaAction(const class CutAreaAction &action)
+	{
+		attribute("type", "CutAreaAction");
+		write<int>("start-time-steps", action.StartTimeSteps());
+		write<int>("end-time-steps", action.EndTimeSteps());
+		write<int>("top-channels", action.TopChannels());
+		write<int>("bottom-channels", action.BottomChannels());
 		writeContainerItems(action);
 	}
 
