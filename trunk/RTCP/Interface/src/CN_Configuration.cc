@@ -64,6 +64,7 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   tabList()                 = parset.tabList();
   usedCoresInPset()	    = parset.usedCoresInPset();
   refFreqs()                = parset.subbandToFrequencyMapping();
+  subbandList()             = parset.subbandList();
   nrPencilBeams()           = parset.nrPencilBeams();
   refPhaseCentre()          = parset.getRefPhaseCentres();
   outputFilteredData()      = parset.outputFilteredData();
@@ -114,6 +115,9 @@ void CN_Configuration::read(Stream *str)
   itsRefFreqs.resize(itsMarshalledData.itsRefFreqsSize);
   memcpy(&itsRefFreqs[0], itsMarshalledData.itsRefFreqs, itsMarshalledData.itsRefFreqsSize * sizeof(double));
 
+  itsSubbandList.resize(itsMarshalledData.itsSubbandListSize);
+  memcpy(&itsSubbandList[0], itsMarshalledData.itsSubbandList, itsMarshalledData.itsSubbandListSize * sizeof(unsigned));
+
   itsRefPhaseCentre.resize(3);
   memcpy(&itsRefPhaseCentre[0], itsMarshalledData.itsRefPhaseCentre, 3 * sizeof(double));
 
@@ -149,6 +153,10 @@ void CN_Configuration::write(Stream *str)
   itsMarshalledData.itsRefFreqsSize = itsRefFreqs.size();
   assert(itsMarshalledData.itsRefFreqsSize <= MAX_SUBBANDS);
   memcpy(itsMarshalledData.itsRefFreqs, &itsRefFreqs[0], itsMarshalledData.itsRefFreqsSize * sizeof(double));
+
+  itsMarshalledData.itsSubbandListSize = itsSubbandList.size();
+  assert(itsMarshalledData.itsSubbandListSize <= MAX_SUBBANDS);
+  memcpy(itsMarshalledData.itsSubbandList, &itsSubbandList[0], itsMarshalledData.itsSubbandListSize * sizeof(unsigned));
 
   memcpy(itsMarshalledData.itsRefPhaseCentre, &itsRefPhaseCentre[0], 3 * sizeof(double));
   for( unsigned stat = 0; stat < nrStations(); stat++ ) {

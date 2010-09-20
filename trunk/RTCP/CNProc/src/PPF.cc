@@ -38,12 +38,13 @@ template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsig
   itsDelayCompensation(delayCompensation),
   itsCorrectBandPass(correctBandPass),
   itsBandPass(correctBandPass, nrChannels),
+  itsFilterBank(verbose, NR_TAPS, nrChannels, KAISER),
+  itsFIRs(boost::extents[nrStations][NR_POLARIZATIONS][nrChannels]),
 
 #if defined PPF_C_IMPLEMENTATION
-  itsFIRs(boost::extents[nrStations][NR_POLARIZATIONS][nrChannels]),
   itsFFTinData(boost::extents[NR_TAPS - 1 + nrSamplesPerIntegration][NR_POLARIZATIONS][nrChannels])
 #else
-  itsTmp(boost::extents[4][nrSamplesPerIntegration]),
+  itsDelayLines(boost::extents[4][nrSamplesPerIntegration]),
   itsFFTinData(boost::extents[nrSamplesPerIntegration][NR_POLARIZATIONS][nrChannels + 4]),
   itsFFToutData(boost::extents[2][NR_POLARIZATIONS][nrChannels])
 #endif
@@ -65,8 +66,21 @@ template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsig
   initConstantTable();
 #endif
 
-  // Generate the filter constants.
-  FIR::generate_filter(NR_TAPS, nrChannels, verbose);
+  // Init the FIR filters themselves with the weights of the filterbank.
+  for(unsigned stat=0; stat<nrStations; stat++) {
+    for(unsigned pol=0; pol<NR_POLARIZATIONS; pol++) {
+      for(unsigned chan=0; chan<nrChannels; chan++) {
+        itsFIRs[stat][pol][chan].initFilter(&itsFilterBank, chan);
+      }
+    }
+  }
+
+  // In CEP, the first subband is from -98 KHz to 98 KHz, rather than from 0 to 195 KHz.
+  // To avoid that the FFT outputs the channels in the wrong order (from 128 to
+  // 255 followed by channels 0 to 127), we multiply each second FFT input by -1.
+  // This is efficiently achieved by negating the FIR filter constants of all
+  // uneven FIR filters.
+  itsFilterBank.negateWeights();
 }
 
 
@@ -225,13 +239,13 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
   for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
     for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
       for (unsigned time = 0; time < NR_TAPS - 1 + itsNrSamplesPerIntegration; time ++) {
-	SAMPLE_TYPE tmp = transposedData->samples[stat][itsNrChannels * time + chan + alignmentShift][pol];
+	SAMPLE_TYPE currSample = transposedData->samples[stat][itsNrChannels * time + chan + alignmentShift][pol];
 
 #if defined WORDS_BIGENDIAN
-	dataConvert(LittleEndian, &tmp, 1);
+	dataConvert(LittleEndian, &currSample, 1);
 #endif
-	fcomplex sample = makefcomplex(real(tmp), imag(tmp));
-	itsFFTinData[time][pol][chan] = itsFIRs[stat][pol][chan].processNextSample(sample, chan);
+	fcomplex sample = makefcomplex(real(currSample), imag(currSample));
+	itsFFTinData[time][pol][chan] = itsFIRs[stat][pol][chan].processNextSample(sample);
       }
     }
   }
@@ -283,15 +297,16 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 #endif
 	FIRtimer.start();
 	_filter(itsNrChannels,
-		FIR::weights[chan + ch].origin(),
+		itsFIRs[stat][pol][chan + ch].getWeights(),
+//		FIR::weights[chan + ch].origin(),
 		&transposedData->samples[stat][chan + ch + alignmentShift][pol],
-		itsTmp[ch].origin(),
+		itsDelayLines[ch].origin(),
 		itsNrSamplesPerIntegration / NR_TAPS);
 	FIRtimer.stop();
       }
 
       _transpose_4x8(&itsFFTinData[0][pol][chan],
-		     itsTmp.origin(),
+		     itsDelayLines.origin(),
 		     itsNrSamplesPerIntegration,
 		     sizeof(fcomplex) * itsNrSamplesPerIntegration,
 		     sizeof(fcomplex) * NR_POLARIZATIONS * (itsNrChannels + 4));
