@@ -145,7 +145,7 @@ void XmlReader::parseChildren(xmlNode *node, ActionContainer *parent)
 	}
 }
 
-xmlNode *XmlReader::getTextNode(xmlNode *node, const char *subNodeName) const 
+xmlNode *XmlReader::getTextNode(xmlNode *node, const char *subNodeName, bool allowEmpty) const 
 {
 	for (xmlNode *curNode=node->children; curNode!=NULL; curNode=curNode->next) {
 		if(curNode->type == XML_ELEMENT_NODE)
@@ -154,8 +154,13 @@ xmlNode *XmlReader::getTextNode(xmlNode *node, const char *subNodeName) const
 			if(nameStr == subNodeName)
 			{
 				curNode = curNode->children;
-				if(curNode->type != XML_TEXT_NODE)
-					throw XmlReadError("Error occured in reading xml file: value node did not contain text");
+				if(curNode == 0 || curNode->type != XML_TEXT_NODE)
+				{
+					if(allowEmpty)
+						return 0;
+					else
+						throw XmlReadError("Error occured in reading xml file: value node did not contain text");
+				}
 				return curNode;
 			}
 		}
@@ -177,8 +182,11 @@ double XmlReader::getDouble(xmlNode *node, const char *name) const
 
 std::string XmlReader::getString(xmlNode *node, const char *name) const 
 {
-	xmlNode *valNode = getTextNode(node, name);
-	return std::string((const char *) valNode->content);
+	xmlNode *valNode = getTextNode(node, name, true);
+	if(valNode == 0)
+		return std::string();
+	else
+		return std::string((const char *) valNode->content);
 }
 
 Action *XmlReader::parseAction(xmlNode *node)
@@ -194,6 +202,8 @@ Action *XmlReader::parseAction(xmlNode *node)
 		newAction = parseChangeResolutionAction(node);
 	else if(typeStr == "CombineFlagResults")
 		newAction = parseCombineFlagResults(node);
+	else if(typeStr == "CutAreaAction")
+		newAction = parseCutAreaAction(node);
 	else if(typeStr == "ForEachBaselineAction")
 		newAction = parseForEachBaselineAction(node);
 	else if(typeStr == "ForEachMSAction")
