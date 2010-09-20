@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef FOREACHPOLARISATIONFRAME_H
-#define FOREACHPOLARISATIONFRAME_H
+#ifndef CUTAREAFRAME_H
+#define CUTAREAFRAME_H
 
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
@@ -27,24 +27,51 @@
 #include <gtkmm/label.h>
 #include <gtkmm/radiobutton.h>
 
-#include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
+#include <AOFlagger/rfi/strategy/cutareaaction.h>
 
 #include <AOFlagger/gui/editstrategywindow.h>
 
-class ForEachPolarisationFrame : public Gtk::Frame {
+class CutAreaFrame : public Gtk::Frame {
 	public:
-		ForEachPolarisationFrame(rfiStrategy::ForEachPolarisationBlock &action, EditStrategyWindow &editStrategyWindow)
-		: Gtk::Frame("For each baseline"),
+		CutAreaFrame(rfiStrategy::CutAreaAction &action, EditStrategyWindow &editStrategyWindow)
+		: Gtk::Frame("Cut area"),
 		_editStrategyWindow(editStrategyWindow), _action(action),
-		_iterateStokesComponentsButton("Iterate stokes components"),
+		_startTimeLabel("Start time steps to cut:"),
+		_startTimeScale(0, 64, 1),
+		_endTimeLabel("End time steps to cut:"),
+		_endTimeScale(0, 64, 1),
+		_topChannelsLabel("Top channels to cut:"),
+		_topChannelsScale(0, 64, 1),
+		_bottomChannelsLabel("Bottom channels to cut:"),
+		_bottomChannelsScale(0, 64, 1),
 		_applyButton(Gtk::Stock::APPLY)
 		{
-			_box.pack_start(_iterateStokesComponentsButton);
-			_iterateStokesComponentsButton.set_active(_action.IterateStokesValues());
-			_iterateStokesComponentsButton.show();
+			_box.pack_start(_startTimeLabel);
+			_startTimeLabel.show();
+			_box.pack_start(_startTimeScale);
+			_startTimeScale.set_value(_action.StartTimeSteps());
+			_startTimeScale.show();
+
+			_box.pack_start(_endTimeLabel);
+			_endTimeLabel.show();
+			_box.pack_start(_endTimeScale);
+			_endTimeScale.set_value(_action.EndTimeSteps());
+			_endTimeScale.show();
+
+			_box.pack_start(_topChannelsLabel);
+			_topChannelsLabel.show();
+			_box.pack_start(_topChannelsScale);
+			_topChannelsScale.set_value(_action.TopChannels());
+			_topChannelsScale.show();
+
+			_box.pack_start(_bottomChannelsLabel);
+			_bottomChannelsLabel.show();
+			_box.pack_start(_bottomChannelsScale);
+			_bottomChannelsScale.set_value(_action.BottomChannels());
+			_bottomChannelsScale.show();
 
 			_buttonBox.pack_start(_applyButton);
-			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &ForEachPolarisationFrame::onApplyClicked));
+			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &CutAreaFrame::onApplyClicked));
 			_applyButton.show();
 
 			_box.pack_start(_buttonBox);
@@ -55,18 +82,30 @@ class ForEachPolarisationFrame : public Gtk::Frame {
 		}
 	private:
 		EditStrategyWindow &_editStrategyWindow;
-		rfiStrategy::ForEachPolarisationBlock &_action;
+		rfiStrategy::CutAreaAction &_action;
+
+		Gtk::Label _startTimeLabel;
+		Gtk::HScale _startTimeScale;
+		Gtk::Label _endTimeLabel;
+		Gtk::HScale _endTimeScale;
+		Gtk::Label _topChannelsLabel;
+		Gtk::HScale _topChannelsScale;
+		Gtk::Label _bottomChannelsLabel;
+		Gtk::HScale _bottomChannelsScale;
 
 		Gtk::VBox _box;
 		Gtk::HButtonBox _buttonBox;
-		Gtk::CheckButton _iterateStokesComponentsButton;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
 		{
-			_action.SetIterateStokesValues(_iterateStokesComponentsButton.get_active());
+			_action.SetStartTimeSteps((int) _startTimeScale.get_value());
+			_action.SetEndTimeSteps((int) _endTimeScale.get_value());
+			_action.SetTopChannels((int) _topChannelsScale.get_value());
+			_action.SetBottomChannels((int) _bottomChannelsScale.get_value());
+
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };
 
-#endif // FOREACHPOLARISATIONFRAME_H
+#endif // CUTAREAFRAME_H

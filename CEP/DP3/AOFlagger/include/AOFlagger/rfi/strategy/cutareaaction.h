@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef CHANGERESOLUTIONACTION_H
-#define CHANGERESOLUTIONACTION_H
+#ifndef CUTAREAACTION_H
+#define CUTAREAACTION_H
 
 #include <AOFlagger/msio/timefrequencydata.h>
 
@@ -97,4 +97,4 @@ namespace rfiStrategy {
 
 }
 	
-#endif
+#endif // CUTAREAACTION_H
