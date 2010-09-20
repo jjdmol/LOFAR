@@ -35,6 +35,8 @@ unsigned CN_Mapping::mapCoreOnPset(unsigned core, unsigned pset)
 
   return core ^ mapX[(pset >> 0) & 3] ^ mapY[(pset >> 2) & 3] ^ mapZ[(pset >> 4) & 3];
 #else
+  (void)pset;
+
   return core;
 #endif
 }
