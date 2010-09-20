@@ -306,8 +306,13 @@ goto_level()
           if [ ${curlevel} -ge 2 ]; then 
 	    /sbin/pidof RSPDriver 1>/dev/null 2>&1
 	    if [ $? -eq 0 ]; then
-     	      echo "set rcumode to 0 (power save)"
-	      rspctl --rcumode=0 1>/dev/null 2>&1
+	      status=`( rspctl --status | grep ERROR ) >& /dev/null; echo $?`
+              if [ $status -eq 1 ]; then 
+       	        echo "set rcumode to 0 (power save)"
+	        rspctl --rcumode=0 1>/dev/null 2>&1
+	      else
+		echo "Beware: NOT going to rcumode 0 as images are still being initialized"
+	      fi
             fi
           fi
 	fi
