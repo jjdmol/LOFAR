@@ -49,7 +49,7 @@ class XmlReader {
 		void parseChildren(xmlNode *node, class ActionContainer *parent);
 		class Action *parseAction(xmlNode *node);
 
-		xmlNode *getTextNode(xmlNode *node, const char *subNodeName) const;
+		xmlNode *getTextNode(xmlNode *node, const char *subNodeName, bool allowEmpty = false) const;
 		int getInt(xmlNode *node, const char *name) const;
 		double getDouble(xmlNode *node, const char *name) const;
 		std::string getString(xmlNode *node, const char *name) const;
