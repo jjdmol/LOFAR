@@ -134,7 +134,7 @@ class Locations:
         "configdir": "${BASEDIR}/bgfen/etc",
 
         # symlink for each observation to relevant log dir
-        "obssymlink": "${BASEDIR}/bgfen/log/L${YEAR}_${MSNUMBER}",
+        "obssymlink": "${BASEDIR}/bgfen/log/L${MSNUMBER}",
 
         "logsymlink": "${BASEDIR}/bgfen/log/latest",
 
