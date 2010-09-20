@@ -66,6 +66,7 @@ PIC.Core.CS001HBA1.clockCorrectionTime = 0
 PIC.Core.CS001HBA.clockCorrectionTime = 0
 
 PIC.Core.CS021LBA.clockCorrectionTime = 0
+PIC.Core.CS021HBA.clockCorrectionTime = 0
 PIC.Core.CS021HBA0.clockCorrectionTime = 0
 PIC.Core.CS021HBA1.clockCorrectionTime = 0
 
@@ -196,6 +197,7 @@ PIC.Core.CS007HBA1.phaseCenter = [3826538.064, 461169.683, 5064908.799]
 PIC.Core.CS007HBA.phaseCenter = [ 3826508.411 ,   461126.6775,  5064934.9435]
 
 PIC.Core.CS021LBA.phaseCenter   = [3826406.586, 460538.556, 5065064.841]
+PIC.Core.CS021HBA.phaseCenter   = [3826416.201, 460510.528, 5065060.159]
 PIC.Core.CS021HBA0.phaseCenter  = [3826463.468, 460533.037, 5065022.644]
 PIC.Core.CS021HBA1.phaseCenter  = [3826368.857, 460488.009, 5065097.731]
 
