@@ -154,7 +154,7 @@ class RFIStatistics {
 		
 		void Save()
 		{
-			save("");
+			save(_filePrefix);
 		}
 		const std::map<double, class AmplitudeBin> &GetAutoAmplitudes() const
 		{
@@ -193,6 +193,9 @@ class RFIStatistics {
 			_separateBaselineStatistics = haveSeparateBaselineStatistics;
 		}
 		bool SeparateBaselineStatistics() const { return _separateBaselineStatistics; }
+
+		const std::string &FilePrefix() const { return _filePrefix; }
+		void SetFilePrefix(const std::string &filePrefix) { _filePrefix = filePrefix; }
 	private:
 		void addEverything(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask);
 		void addSingleBaseline(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask, bool save);
@@ -228,6 +231,7 @@ class RFIStatistics {
 		std::map<double, class AmplitudeBin> _autoAmplitudes, _crossAmplitudes;
 		BaselineMatrix _baselines;
 		bool _separateBaselineStatistics;
+		std::string _filePrefix;
 		
 		void addChannels(std::map<double, class ChannelInfo> &channels, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addTimesteps(std::map<double, class TimestepInfo> &timesteps, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);

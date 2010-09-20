@@ -175,6 +175,12 @@ double XmlReader::getDouble(xmlNode *node, const char *name) const
 	return atof((const char *) valNode->content);
 }
 
+std::string XmlReader::getString(xmlNode *node, const char *name) const 
+{
+	xmlNode *valNode = getTextNode(node, name);
+	return std::string((const char *) valNode->content);
+}
+
 Action *XmlReader::parseAction(xmlNode *node)
 {
 	Action *newAction = 0;
@@ -242,9 +248,10 @@ Action *XmlReader::parseAdapter(xmlNode *node)
 	return newAction;
 }
 
-Action *XmlReader::parseAddStatistics(xmlNode *)
+Action *XmlReader::parseAddStatistics(xmlNode *node)
 {
 	AddStatisticsAction *newAction = new AddStatisticsAction();
+	newAction->SetFilePrefix(getString(node, "file-prefix"));
 	return newAction;
 }
 
