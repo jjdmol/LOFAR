@@ -42,6 +42,7 @@ namespace rfiStrategy {
 			{
 				switch(_operation)
 				{
+					default:
 					case SumCrossCorrelationsOperation:
 						return "Spatial composition (cross)";
 					case SumAutoCorrelationsOperation:

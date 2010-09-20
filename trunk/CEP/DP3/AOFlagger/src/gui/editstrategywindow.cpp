@@ -31,6 +31,7 @@
 #include <AOFlagger/gui/newstrategyactionframe.h>
 
 #include <AOFlagger/gui/strategyframes/changeresolutionframe.h>
+#include <AOFlagger/gui/strategyframes/cutareaframe.h>
 #include <AOFlagger/gui/strategyframes/foreachbaselineframe.h>
 #include <AOFlagger/gui/strategyframes/foreachmsframe.h>
 #include <AOFlagger/gui/strategyframes/foreachpolarisationframe.h>
@@ -244,6 +245,9 @@ void EditStrategyWindow::onSelectionChanged()
 		{
 			case ChangeResolutionActionType:
 				showRight(new ChangeResolutionFrame(*static_cast<rfiStrategy::ChangeResolutionAction*>(selectedAction), *this));
+				break;
+			case CutAreaActionType:
+				showRight(new CutAreaFrame(*static_cast<rfiStrategy::CutAreaAction*>(selectedAction), *this));
 				break;
 			case FringeStopActionType:
 				showRight(new FringeStoppingFrame(*static_cast<rfiStrategy::FringeStopAction*>(selectedAction), *this));
