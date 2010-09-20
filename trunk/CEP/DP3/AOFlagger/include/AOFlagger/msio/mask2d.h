@@ -204,7 +204,7 @@ class Mask2D {
 			for(unsigned y=startY;y<endY;++y)
 			{
 				for(unsigned x=startX;x<endX;++x)
-					mask->SetValue(x, y, Value(x, y));
+					mask->SetValue(x-startX, y-startY, Value(x, y));
 			}
 			return Mask2DPtr(mask);
 		}

@@ -59,6 +59,7 @@ class XmlReader {
 		class Action *parseAddStatistics(xmlNode *node);
 		class Action *parseChangeResolutionAction(xmlNode *node);
 		class Action *parseCombineFlagResults(xmlNode *node);
+		class Action *parseCutAreaAction(xmlNode *node);
 		class Action *parseForEachBaselineAction(xmlNode *node);
 		class Action *parseForEachMSAction(xmlNode *node);
 		class Action *parseForEachPolarisationBlock(xmlNode *node);

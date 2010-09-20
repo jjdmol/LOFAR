@@ -24,6 +24,7 @@
 #include <AOFlagger/rfi/strategy/addstatisticsaction.h>
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
+#include <AOFlagger/rfi/strategy/cutareaaction.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
@@ -261,6 +262,17 @@ Action *XmlReader::parseChangeResolutionAction(xmlNode *node)
 Action *XmlReader::parseCombineFlagResults(xmlNode *node)
 {
 	CombineFlagResults *newAction = new CombineFlagResults();
+	parseChildren(node, newAction);
+	return newAction;
+}
+
+Action *XmlReader::parseCutAreaAction(xmlNode *node)
+{
+	CutAreaAction *newAction = new CutAreaAction();
+	newAction->SetStartTimeSteps(getInt(node, "start-time-steps"));
+	newAction->SetEndTimeSteps(getInt(node, "end-time-steps"));
+	newAction->SetTopChannels(getInt(node, "top-channels"));
+	newAction->SetBottomChannels(getInt(node, "bottom-channels"));
 	parseChildren(node, newAction);
 	return newAction;
 }
