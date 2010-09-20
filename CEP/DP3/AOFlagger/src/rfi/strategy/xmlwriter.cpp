@@ -202,9 +202,10 @@ namespace rfiStrategy {
 		writeContainerItems(action);
 	}
 
-	void XmlWriter::writeAddStatisticsAction(const AddStatisticsAction &)
+	void XmlWriter::writeAddStatisticsAction(const AddStatisticsAction &action)
 	{
 		attribute("type", "AddStatisticsAction");
+		write("file-prefix", action.FilePrefix().c_str());
 	}
 
 	void XmlWriter::writeChangeResolutionAction(const ChangeResolutionAction &action)

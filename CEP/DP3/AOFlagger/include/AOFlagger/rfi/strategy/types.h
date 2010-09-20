@@ -49,7 +49,7 @@ namespace rfiStrategy
 // 1.3 : removed LoadFlags en LoadImage actions.
 // 1.4 : changed the ChangeResolutionAction to contain frequency res changing in addition to
 //       time res changing (parameters were renamed).
-// 1.5 : added the CutAreaAction
+// 1.5 : added the CutAreaAction and added "file-prefix" parameter of AddStatistics action.
 #define STRATEGY_FILE_FORMAT_VERSION 1.5
 
 // The earliest format version which can be read by this version of the software

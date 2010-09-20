@@ -49,7 +49,7 @@ void RFIStatistics::addEverything(const TimeFrequencyData &data, TimeFrequencyMe
 {
 	addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask, true);
 	addBaselines(data, metaData, image, mask, segmentedMask, classifiedMask);
-	saveBaselines("counts-baselines.txt");
+	saveBaselines(_filePrefix + "counts-baselines.txt");
 }
 
 void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask, bool save)
@@ -67,9 +67,9 @@ void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequen
 			addPolarisations(_autoAmplitudes, data, metaData);
 		}
 		if(save) {
-			saveChannels(_autoChannels, "counts-channels-auto.txt");
-			saveTimesteps(_autoTimesteps, "counts-timesteps-auto.txt");
-			saveAmplitudes(_autoAmplitudes, "counts-amplitudes-auto.txt");
+			saveChannels(_autoChannels, _filePrefix + "counts-channels-auto.txt");
+			saveTimesteps(_autoTimesteps, _filePrefix + "counts-timesteps-auto.txt");
+			saveAmplitudes(_autoAmplitudes, _filePrefix + "counts-amplitudes-auto.txt");
 		}
 	} else {
 		addFeatures(_crossAmplitudes, image, mask, metaData, segmentedMask);
@@ -83,9 +83,9 @@ void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequen
 			addPolarisations(_crossAmplitudes, data, metaData);
 		}
 		if(save) {
-			saveChannels(_crossChannels, "counts-channels-cross.txt");
-			saveTimesteps(_crossTimesteps, "counts-timesteps-cross.txt");
-			saveAmplitudes(_crossAmplitudes, "counts-amplitudes-cross.txt");
+			saveChannels(_crossChannels, _filePrefix + "counts-channels-cross.txt");
+			saveTimesteps(_crossTimesteps, _filePrefix + "counts-timesteps-cross.txt");
+			saveAmplitudes(_crossAmplitudes, _filePrefix + "counts-amplitudes-cross.txt");
 		}
 	}
 }
@@ -855,7 +855,7 @@ void RFIStatistics::saveBaselines(const std::string &filename)
 			if(b.baselineStatistics != 0)
 			{
 				std::stringstream s;
-				s << "baseline-" << b.antenna1 << 'x' << b.antenna2 << '-';
+				s << _filePrefix << "baseline-" << b.antenna1 << 'x' << b.antenna2 << '-';
 				b.baselineStatistics->saveWithoutBaselines(s.str());
 			}
 		}

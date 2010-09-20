@@ -24,6 +24,8 @@
 #include "actioncontainer.h"
 #include "artifactset.h"
 
+#include <string>
+
 #include <AOFlagger/util/progresslistener.h>
 
 #include <AOFlagger/rfi/rfistatistics.h>
@@ -45,6 +47,8 @@ namespace rfiStrategy {
 			}
 			virtual ActionType Type() const { return AddStatisticsActionType; }
 			
+			void SetFilePrefix(const std::string &filePrefix) { statistics.SetFilePrefix(filePrefix); }
+			const std::string &FilePrefix() const { return statistics.FilePrefix(); }
 		private:
 			RFIStatistics statistics;
 	};
