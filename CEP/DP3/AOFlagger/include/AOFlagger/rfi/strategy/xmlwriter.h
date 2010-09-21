@@ -59,6 +59,7 @@ namespace rfiStrategy {
 
 			void writeAdapter(const class Adapter &action);
 			void writeAddStatisticsAction(const class AddStatisticsAction &action);
+			void writeBaselineSelectionAction(const class BaselineSelectionAction &action);
 			void writeChangeResolutionAction(const class ChangeResolutionAction &action);
 			void writeCombineFlagResults(const class CombineFlagResults &action);
 			void writeCutAreaAction(const class CutAreaAction &action);

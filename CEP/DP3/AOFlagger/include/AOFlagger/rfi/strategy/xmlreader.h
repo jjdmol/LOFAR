@@ -57,6 +57,7 @@ class XmlReader {
 
 		class Action *parseAdapter(xmlNode *node);
 		class Action *parseAddStatistics(xmlNode *node);
+		class Action *parseBaselineSelectionAction(xmlNode *node);
 		class Action *parseChangeResolutionAction(xmlNode *node);
 		class Action *parseCombineFlagResults(xmlNode *node);
 		class Action *parseCutAreaAction(xmlNode *node);
