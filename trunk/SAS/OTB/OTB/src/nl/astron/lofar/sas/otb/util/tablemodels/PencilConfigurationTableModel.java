@@ -196,5 +196,8 @@ public class PencilConfigurationTableModel extends javax.swing.table.DefaultTabl
         return false;
     }
 
-
+    @Override
+    public Class getColumnClass(int c) {
+        return getValueAt(0, c).getClass();
+    }
 }

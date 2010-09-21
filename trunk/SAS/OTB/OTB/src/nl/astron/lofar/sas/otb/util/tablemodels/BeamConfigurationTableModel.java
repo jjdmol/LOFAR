@@ -344,5 +344,8 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         return false;
     }
 
-
+    @Override
+    public Class getColumnClass(int c) {
+        return getValueAt(0, c).getClass();
+    }
 }

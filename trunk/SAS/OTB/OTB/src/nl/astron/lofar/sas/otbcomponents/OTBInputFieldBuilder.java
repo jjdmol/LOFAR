@@ -51,7 +51,7 @@ public class OTBInputFieldBuilder extends inputFieldBuilder {
             return;
        }
 
-       super.setContent(aType,aUnit,aNode.limits,aFormat,aParam.limits);
+       super.setContent(aNode.name,aType,aUnit,aNode.limits,aFormat,aParam.limits);
 
     }
 

@@ -305,7 +305,10 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         return isChanged;
     }
 
-
+    @Override
+    public Class getColumnClass(int c) {
+        return getValueAt(0, c).getClass();
+    }
 
     /** returns the isEditable flag from the given row and column.
      *  we need to override this method, since originally all ros/colums from the DefaultTableModel are editable

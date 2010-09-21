@@ -193,4 +193,9 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
             return null;
         }
     }
+
+    @Override
+    public Class getColumnClass(int c) {
+        return getValueAt(0, c).getClass();
+    }
 }

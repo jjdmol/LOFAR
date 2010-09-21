@@ -37,6 +37,7 @@ import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreePath;
 import nl.astron.lofar.lofarutils.LofarUtils;
+import nl.astron.lofar.lofarutils.inputfieldbuilder.inputFieldBuilder;
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
@@ -50,8 +51,6 @@ import nl.astron.lofar.sas.otb.util.treemanagers.ParmDBTreeManager;
 import nl.astron.lofar.sas.otb.util.treemanagers.ResultTreeManager;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import nl.astron.lofar.sas.otbcomponents.VerticalButtonPanel;
-import nl.astron.lofar.sas.otbcomponents.NodeViewPanel;
-import nl.astron.lofar.sas.otbcomponents.ParameterViewPanel;
 import nl.astron.lofar.sas.otbcomponents.TreeInfoDialog;
 import nl.astron.lofar.sas.otbcomponents.TreePanel;
 
@@ -327,6 +326,10 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         // Loop through all the panels and fill the tabPanel with them
         Iterator it = aPanelList.iterator();
         while (it.hasNext()) {
+            if (inputFieldBuilder.currentInputField != null) {
+                inputFieldBuilder.currentInputField.checkPopup();
+            }
+
             boolean skip = false;
             JPanel p=null;
             String aPanelName= it.next().toString();
@@ -398,6 +401,10 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         // Loop through all the panels and fill the tabPanel with them
         Iterator it = aPanelList.iterator();
         while (it.hasNext()) {
+            if (inputFieldBuilder.currentInputField != null) {
+                inputFieldBuilder.currentInputField.checkPopup();
+            }
+
             boolean skip = false;
             JPanel p=null;
             String aPanelName= it.next().toString();

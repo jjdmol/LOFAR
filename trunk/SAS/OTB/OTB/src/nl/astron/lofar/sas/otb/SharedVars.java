@@ -28,9 +28,9 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface;
-import nl.astron.lofar.sas.otb.exceptions.ParmDBConfigurationException;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.ParmDBConfigurationHelper;
+import nl.astron.lofar.sas.otbcomponents.OTBInputFieldBuilder;
 import org.apache.log4j.Logger;
 
 /**
@@ -75,6 +75,9 @@ public class SharedVars {
     private static OtdbRmi                   itsOtdbRmi;
     // holds the jParmFacade Object (JNI access for ParmDB)
     private static jParmFacadeInterface      itsjParmFacade;
+    // hold current abstract validator
+    private static OTBInputFieldBuilder      itsCurrentInput;
+
     
     //LogParam
     private String itsLogParamStartTime="";
