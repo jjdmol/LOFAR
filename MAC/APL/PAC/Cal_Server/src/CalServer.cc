@@ -592,6 +592,8 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 
 		// check dimensions of the various arrays for compatibility
 		// m_accs: subbands x pol x pol x antennas x antennas
+// DISABLED CHECK AFTER ROLL_OUT OF ITRF BEAMSERVER SINCE AntennaArray.conf CONFLICTS WITH AntennaSets.conf
+#if 0
 		if (m_accs.getFront().getACC().extent(firstDim) != GET_CONFIG("CalServer.N_SUBBANDS", i)
 			|| m_accs.getFront().getACC().extent(secondDim) != positions.extent(secondDim)
 			|| m_accs.getFront().getACC().extent(thirdDim)  != positions.extent(secondDim)
@@ -605,7 +607,9 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 							m_accs.getFront().getACC().extent(fourthDim) << " antennas.");
 			ack.status = ERR_RANGE;
 		}
-		else if ((start.subset & invalidmask).any()) {
+		else 
+#endif
+		if ((start.subset & invalidmask).any()) {
 			LOG_INFO("CAL_START: Invalid receiver subset.");
 			ack.status = ERR_RANGE;
 		}
