@@ -179,6 +179,7 @@ namespace rfiStrategy {
 			virtual void WriteFlags(ImageSetIndex &index, TimeFrequencyData &data);
 			size_t PartCount() const { return _partCount; }
 			void SetReadFlags(bool readFlags) { _readFlags = readFlags; }
+			BaselineReaderPtr Reader() { return _reader; }
 		private:
 			MSImageSet(const std::string &location, BaselineReaderPtr reader) :
 				_msFile(location), _set(location), _reader(reader),

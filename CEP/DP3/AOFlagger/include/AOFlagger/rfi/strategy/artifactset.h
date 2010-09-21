@@ -41,7 +41,7 @@ namespace rfiStrategy {
 			_imageSetIndex(0), _imager(0),
 			_ioMutex(ioMutex),
 			_antennaFlagCountPlot(0), _frequencyFlagCountPlot(0),
-			_frequencyPowerPlot(0), _timeFlagCountPlot(0)
+			_frequencyPowerPlot(0), _timeFlagCountPlot(0), _baselineSelectionInfo(0)
 			{
 			}
 
@@ -52,7 +52,8 @@ namespace rfiStrategy {
 				_imager(source._imager), _ioMutex(source._ioMutex),
 				_antennaFlagCountPlot(source._antennaFlagCountPlot), _frequencyFlagCountPlot(source._frequencyFlagCountPlot),
 				_frequencyPowerPlot(source._frequencyPowerPlot),
-				_timeFlagCountPlot(source._timeFlagCountPlot)
+				_timeFlagCountPlot(source._timeFlagCountPlot),
+				_baselineSelectionInfo(source._baselineSelectionInfo)
 			{
 			}
 
@@ -75,6 +76,7 @@ namespace rfiStrategy {
 				_frequencyFlagCountPlot = source._frequencyFlagCountPlot;
 				_frequencyPowerPlot = source._frequencyPowerPlot;
 				_timeFlagCountPlot = source._timeFlagCountPlot;
+				_baselineSelectionInfo = source._baselineSelectionInfo;
 				return *this;
 			}
 
@@ -170,6 +172,14 @@ namespace rfiStrategy {
 			{
 				_timeFlagCountPlot = plot;
 			}
+			class BaselineSelectionInfo *BaselineSelectionInfo()
+			{
+				return _baselineSelectionInfo;
+			}
+			void SetBaselineSelectionInfo(class BaselineSelectionInfo *baselineSelectionInfo)
+			{
+				_baselineSelectionInfo = baselineSelectionInfo;
+			}
 		private:
 			TimeFrequencyData _originalData;
 			TimeFrequencyData _contaminatedData;
@@ -186,6 +196,7 @@ namespace rfiStrategy {
 			class FrequencyFlagCountPlot *_frequencyFlagCountPlot;
 			class FrequencyPowerPlot *_frequencyPowerPlot;
 			class TimeFlagCountPlot *_timeFlagCountPlot;
+			class BaselineSelectionInfo *_baselineSelectionInfo;
 	};
 }
 

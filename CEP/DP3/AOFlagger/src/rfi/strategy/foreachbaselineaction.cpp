@@ -290,6 +290,7 @@ namespace rfiStrategy {
 			watch.Start();
 		} while(!finished);
 		_action.SetFinishedBaselines();
+		_action._dataAvailable.notify_all();
 		watch.Pause();
 		std::cout << "Time spent on reading: " << watch.ToString() << std::endl;
 	}
