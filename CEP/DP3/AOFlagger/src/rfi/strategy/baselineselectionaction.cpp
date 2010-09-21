@@ -73,28 +73,21 @@ namespace rfiStrategy {
 
 		std::cout << "Searching for bad baselines..." << std::endl;
 
-		const double threshold = 5.0;
+		const double threshold = 6.0;
 
 		boost::mutex::scoped_lock lock(info.mutex);
 
 		bool foundMoreBaselines;
 		std::vector<BaselineSelectionInfo::SingleBaselineInfo> markedBaselines;
 		do {
+			std::sort(info.baselines.begin(), info.baselines.end());
+
 			Plot *plot = 0;
 			if(_makePlot)
 			{
 				plot = new Plot("baselineSelection.pdf");
 				plot->SetXAxisText("Baseline length (meters)");
 				plot->SetYAxisText("Percentage RFI");
-				plot->StartScatter("Baselines RFI ratio");
-				for(BaselineSelectionInfo::BaselineVector::const_iterator i=info.baselines.begin();i!=info.baselines.end();++i)
-				{
-					plot->PushDataPoint(i->length, 100.0 * (double) i->rfiCount / (double) i->totalCount);
-				}
-				for(BaselineSelectionInfo::BaselineVector::const_iterator i=markedBaselines.begin();i!=markedBaselines.end();++i)
-				{
-					plot->PushDataPoint(i->length, 100.0 * (double) i->rfiCount / (double) i->totalCount);
-				}
 			}
 
 			size_t unmarkedBaselineCount = info.baselines.size();
@@ -124,12 +117,27 @@ namespace rfiStrategy {
 			if(_makePlot)
 				std::cout << "Estimated std dev for thresholding, in percentage of RFI: " << round(10000.0*stddev)/100.0 << "%" << std::endl;
 	
-			// Select baselines to be thrown away
+			// unselect already marked baselines
+			for(int i=markedBaselines.size()-1;i>=0;--i)
+			{
+				BaselineSelectionInfo::SingleBaselineInfo baseline =
+					markedBaselines[i];
+				double baselineValue =
+					smoothedValue(info, baseline.length) - (double) baseline.rfiCount / (double) baseline.totalCount;
+				if(baselineValue >= mean - threshold*stddev && baselineValue <= mean + threshold*stddev)
+				{
+					markedBaselines.erase(markedBaselines.begin()+i);
+					info.baselines.push_back(baseline);
+					std::cout << "Baseline " << baseline.antenna1Name << " x " << baseline.antenna2Name << " is now within baseline curve" << std::endl;
+				}
+			}
+			
+			// (re)select baselines to be thrown away
 			foundMoreBaselines = false;
 			if(_makePlot)
-				plot->StartLine("Threshold");
+				plot->StartScatter("Threshold");
 			double maxPlotY = 0.0;
-			for(int i=info.baselines.size()-1;i>=0;--i)
+			for(int i=unmarkedBaselineCount-1;i>=0;--i)
 			{
 				double currentValue = (double) info.baselines[i].rfiCount / (double) info.baselines[i].totalCount;
 				if(_makePlot)
@@ -145,17 +153,29 @@ namespace rfiStrategy {
 					<< round(currentValue * 10000.0)/100.0 << "% rfi, "
 					<< round(10.0*fabs((values[i] - mean) / stddev))/10.0 << "*sigma away from est baseline curve)"
 					<< std::endl;
-					
+						
+					if(!info.baselines[i].marked)
+					{
+						foundMoreBaselines = true;
+						info.baselines[i].marked = true;
+					}
 					markedBaselines.push_back(info.baselines[i]);
 					info.baselines.erase(info.baselines.begin()+i);
-					foundMoreBaselines = true;
 				}
 			}
 			if(_makePlot)
-				plot->SetYRange(0.0, maxPlotY*1.5);
-
-			if(_makePlot)
 			{
+				plot->SetYRange(0.0, maxPlotY*1.5);
+				plot->StartScatter("Accepted baselines");
+				for(BaselineSelectionInfo::BaselineVector::const_iterator i=info.baselines.begin();i!=info.baselines.end();++i)
+				{
+					plot->PushDataPoint(i->length, 100.0 * (double) i->rfiCount / (double) i->totalCount);
+				}
+				plot->StartScatter("Rejected baselines");
+				for(BaselineSelectionInfo::BaselineVector::const_iterator i=markedBaselines.begin();i!=markedBaselines.end();++i)
+				{
+					plot->PushDataPoint(i->length, 100.0 * (double) i->rfiCount / (double) i->totalCount);
+				}
 				plot->Close();
 				delete plot;
 			}
@@ -163,7 +183,22 @@ namespace rfiStrategy {
 			delete[] values;
 		} while(foundMoreBaselines);
 
-		std::cout << "Found " << markedBaselines.size() << "/" << (markedBaselines.size()+info.baselines.size()) << " bad baselines" << std::endl;
+		if(markedBaselines.size() > 0)
+		{
+			std::cout << "Found " << markedBaselines.size() << "/" << (markedBaselines.size()+info.baselines.size()) << " bad baselines: ";
+			
+			std::vector<BaselineSelectionInfo::SingleBaselineInfo>::const_iterator badBaselineIter = markedBaselines.begin();
+			std::cout << badBaselineIter->antenna1Name << "x" << badBaselineIter->antenna2Name;
+			while(badBaselineIter!=markedBaselines.end())
+			{
+				std::cout << ", " << badBaselineIter->antenna1Name << "x" << badBaselineIter->antenna2Name;
+				++badBaselineIter;
+			}
+			std::cout << std::endl;
+		} else {
+			std::cout << "No bad baselines found." << std::endl;
+		}
+		
 		if(_flagBadBaselines)
 		{
 			flagBaselines(artifacts, markedBaselines);
@@ -200,11 +235,11 @@ namespace rfiStrategy {
 		reader->PerformWriteRequests();
 	}
 
-	double BaselineSelectionAction::smoothedValue(const BaselineSelectionInfo &info, const BaselineSelectionInfo::SingleBaselineInfo &baseline)
+	double BaselineSelectionAction::smoothedValue(const BaselineSelectionInfo &info, double length)
 	{
 		const double sigma = 0.3;
 
-		double logLength = log(baseline.length);
+		double logLength = log(length);
 
 		double sum = 0.0;
 		double weight = 0.0;
