@@ -24,6 +24,7 @@ sleep 5
 #
 dropdb -h $DATABASEHOST -U postgres $DATABASENAME
 createdb -h $DATABASEHOST -U postgres $DATABASENAME
+createlang -h $DATABASEHOST -U postgres plpgsql $DATABASENAME
 
 echo "creating new tables"
 psql -f create_CDB_base_tables.sql   -h $DATABASEHOST -U postgres $DATABASENAME 2>&1 | grep ERROR | grep -v 'does not exist'

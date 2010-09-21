@@ -38,7 +38,7 @@ def writeHBADeltas(station,deltas):
     f = open(filename,'w')
     f.write('#\n')
     f.write('# HBADeltas for %s\n' %(str(station).upper()))
-    f.write('# Created: %s\n', %(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    f.write('# Created: %s\n' %(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
     f.write('#\n')
     f.write('HBADeltas\n')
     f.write('%d x %d [\n' %(np.shape(deltas)[0],np.shape(deltas)[1]))

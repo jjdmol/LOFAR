@@ -3,7 +3,7 @@
 
 ## database info
 dbName="StationCoordinates"
-dbHost="sas001.control.lofar"
+dbHost="localhost"
 
 def getDBname():
     return(dbName)
