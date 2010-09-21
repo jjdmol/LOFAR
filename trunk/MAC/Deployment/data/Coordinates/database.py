@@ -2,10 +2,8 @@
 #coding: iso-8859-15
 
 ## database info
-dbName="donker"
-dbHost="10.87.2.185"
-#dbHost="dop50"
-
+dbName="StationCoordinates"
+dbHost="sas001.control.lofar"
 
 def getDBname():
     return(dbName)
