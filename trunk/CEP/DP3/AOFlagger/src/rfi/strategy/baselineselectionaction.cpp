@@ -147,7 +147,7 @@ namespace rfiStrategy {
 					plot->PushDataPoint(info.baselines[i].length, 100.0*(values[i] + currentValue + mean - threshold*stddev));
 					if(plotY > maxPlotY) maxPlotY=plotY;
 				}
-				if(values[i] < mean - threshold*stddev || values[i] > mean + threshold*stddev)
+				if(values[i] < mean - threshold*stddev || values[i] > mean + threshold*stddev || currentValue>0.4)
 				{
 					std::cout << "Baseline " << info.baselines[i].antenna1Name << " x " << info.baselines[i].antenna2Name << " looks bad: "
 					<< round(currentValue * 10000.0)/100.0 << "% rfi, "
