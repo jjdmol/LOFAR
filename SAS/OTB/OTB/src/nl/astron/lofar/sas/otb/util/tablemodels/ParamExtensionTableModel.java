@@ -219,5 +219,8 @@ public class ParamExtensionTableModel extends javax.swing.table.DefaultTableMode
         return false;
     }
 
-
+    @Override
+    public Class getColumnClass(int c) {
+        return getValueAt(0, c).getClass();
+    }
 }

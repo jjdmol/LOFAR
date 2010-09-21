@@ -24,6 +24,7 @@
 package nl.astron.lofar.sas.otb.panels;
 import java.rmi.RemoteException;
 import nl.astron.lofar.lofarutils.LofarUtils;
+import nl.astron.lofar.lofarutils.inputfieldbuilder.inputFieldBuilder;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb3.jVICnodeDef;
@@ -120,6 +121,10 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
     
     private void changeTreeSelection(jOTDBparam aParam) {
         logger.debug("ChangeSelection for param: " + aParam.name);
+        if (inputFieldBuilder.currentInputField != null) {
+            inputFieldBuilder.currentInputField.checkPopup();
+        }
+
         itsSelectedParam=aParam;
         if (treePanel.getSelectedRows()[0] == 0) {
             try {

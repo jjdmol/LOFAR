@@ -84,6 +84,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         itsTreeIDs = treeIDs;
         if (treeIDs.length > 1) {
             itsMultiple=true;
+            topLabel.setText("Tree Meta Data  -- MULTIPLE SELECTION -- Only first Tree's info is shown \n" +
+                             "                Changes will be applied to all selections");
+        } else {
+            topLabel.setText("Tree Meta Data");
         }
         try {
             // set selected Tree to first in the list
@@ -106,12 +110,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
         isInitialized=false;
         SimpleDateFormat id = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss",itsLocale);
-        if (itsMultiple) {
-            topLabel.setText("Tree Meta Data  -- MULTIPLE SELECTION -- Only first Tree's info is shown \n" +
-                             "                Changes will be applied to all selections");            
-        } else {
-            topLabel.setText("Tree Meta Data");
-        }
         inputDurationDays.loopEnabled(true);
         inputDurationHours.loopEnabled(true);
         inputDurationMinutes.loopEnabled(true);

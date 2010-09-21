@@ -345,5 +345,8 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
         return false;
     }
 
-
+    @Override
+    public Class getColumnClass(int c) {
+        return getValueAt(0, c).getClass();
+    }
 }

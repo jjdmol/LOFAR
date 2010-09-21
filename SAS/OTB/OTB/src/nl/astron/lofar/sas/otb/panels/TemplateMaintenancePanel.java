@@ -32,6 +32,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.TreePath;
 import nl.astron.lofar.lofarutils.LofarUtils;
+import nl.astron.lofar.lofarutils.inputfieldbuilder.inputFieldBuilder;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.ConfigPanelHelper;
@@ -177,6 +178,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
 
     private void treePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {
         logger.debug("treeSelectionEvent: " + evt);
+
         if (evt != null && evt.getNewLeadSelectionPath() != null &&
                 evt.getNewLeadSelectionPath().getLastPathComponent() != null) {
             if (treePanel.getSelectionPath() != null) {
@@ -364,6 +366,10 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         // Loop through all the panels and fill the tabPanel with them
         Iterator it = aPanelList.iterator();
         while (it.hasNext()) {
+            if (inputFieldBuilder.currentInputField != null) {
+//                System.out.println("changePanel: check popup" );
+                inputFieldBuilder.currentInputField.checkPopup();
+            }
             boolean skip = false;
             JPanel p = null;
             String aPanelName = it.next().toString();

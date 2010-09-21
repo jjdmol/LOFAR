@@ -33,6 +33,7 @@ import java.util.Vector;
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import nl.astron.lofar.lofarutils.LofarUtils;
+import nl.astron.lofar.lofarutils.inputfieldbuilder.inputFieldBuilder;
 import nl.astron.lofar.sas.otb.*;
 import nl.astron.lofar.sas.otb.jotdb3.jDefaultTemplate;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBtree;
@@ -268,6 +269,9 @@ public class MainPanel extends javax.swing.JPanel
     }
     
     public void checkChanged() {
+        if (inputFieldBuilder.currentInputField != null) {
+            inputFieldBuilder.currentInputField.checkPopup();
+        }
         logger.debug("Check Changed status");
         if (this.hasChanged()) {
             // keep selected tree
@@ -602,6 +606,9 @@ public class MainPanel extends javax.swing.JPanel
      */
     private void buttonPanelAction(String aButton) {
         logger.debug("Button pressed: "+aButton+ "  ActiveTab: " + itsTabFocus);
+        if (inputFieldBuilder.currentInputField != null) {
+            inputFieldBuilder.currentInputField.checkPopup();
+        }
         int treeID=getSelectedTreeID();
         if (aButton.equals("Quit")) {
             itsMainFrame.exit();
@@ -847,7 +854,7 @@ public class MainPanel extends javax.swing.JPanel
                                 JOptionPane.INFORMATION_MESSAGE);
                             itsMainFrame.getSharedVars().setTreeID(-1);                              
                             itsMainFrame.setHourglassCursor();
-                            ((VICtableModel)VICPanel.getTableModel()).fillTable();
+                            ((TemplatetableModel)TemplatesPanel.getTableModel()).fillTable();
                             itsMainFrame.setNormalCursor();
                             // set changed flag to reload mainpanel
                             itsMainFrame.setChanged(this.getFriendlyName(),true);
@@ -889,15 +896,19 @@ public class MainPanel extends javax.swing.JPanel
                 }
                 
             } else if (aButton.equals("Change Status")) {
-                if (itsMainFrame.getSharedVars().getTreeID() > 0) {
-                    int [] id = new int[1];
-                    id[0]=itsMainFrame.getSharedVars().getTreeID();
-                    if (viewInfo(id)) {
-                        logger.debug("Tree has been changed, reloading table line");
+
+                // in case of templatetree we have the possibility of changing a multiple selection
+                // so things status can be set for a few entries at once
+
+                if (TemplatesPanel.getSelectedRowCount() > 0) {
+                    if (viewInfo(this.getSelectedTreeIDs()) ) {
+                        logger.debug("Tree has been changed, reloading tableline");
                           itsMainFrame.setChanged(this.getFriendlyName(),true);
                           checkChanged();
                     }
+
                 }
+
             } else if (aButton.equals("Set to Default")) {
                 if (itsMainFrame.getSharedVars().getTreeID() > 0) {
                     String aName=JOptionPane.showInputDialog(null, "Give Name for DefaultTree.\n\n !!!!!! Keep in mind that only Default templates who's names are known to MoM can be used by MoM !!!!!!! \n\n","DefaultTree Name", JOptionPane.QUESTION_MESSAGE);

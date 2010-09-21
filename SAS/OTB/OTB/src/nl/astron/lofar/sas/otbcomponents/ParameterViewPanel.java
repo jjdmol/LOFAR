@@ -33,6 +33,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import nl.astron.lofar.lofarutils.LofarUtils;
+import nl.astron.lofar.lofarutils.inputfieldbuilder.inputFieldBuilder;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
@@ -779,10 +780,22 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     }// </editor-fold>//GEN-END:initComponents
 
     private void ParamApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamApplyButtonActionPerformed
-        saveInput();
+        if (inputFieldBuilder.currentInputField != null) {
+            if (inputFieldBuilder.currentInputField.checkInput()) {
+//                System.out.println("currentInputField has no mistakes,so we can safely save" );
+                saveInput();
+            }
+        } else {
+//            System.out.println("No currentInputField, so we can safely save" );
+            saveInput();
+        }
     }//GEN-LAST:event_ParamApplyButtonActionPerformed
 
     private void ParamCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamCancelButtonActionPerformed
+        if (inputFieldBuilder.currentInputField != null) {
+//            System.out.println("ParamCancel: currentInputField needs to be unset (if visible)" );
+            inputFieldBuilder.currentInputField.checkPopup();
+        }
         initPanel();
     }//GEN-LAST:event_ParamCancelButtonActionPerformed
 

@@ -186,5 +186,8 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
         return false;
     }
 
-
+    @Override
+    public Class getColumnClass(int c) {
+        return getValueAt(0, c).getClass();
+    }
 }

@@ -131,4 +131,9 @@ public class InputNodeMACTableModel extends javax.swing.table.AbstractTableModel
             return null;
         }
     }
+
+    @Override
+    public Class getColumnClass(int c) {
+        return getValueAt(0, c).getClass();
+    }
 }

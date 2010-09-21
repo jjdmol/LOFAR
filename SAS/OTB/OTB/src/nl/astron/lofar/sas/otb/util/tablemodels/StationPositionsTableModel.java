@@ -138,4 +138,9 @@ public class StationPositionsTableModel extends javax.swing.table.AbstractTableM
             return null;
         }
     }
+
+    @Override
+    public Class getColumnClass(int c) {
+        return getValueAt(0, c).getClass();
+    }
 }
