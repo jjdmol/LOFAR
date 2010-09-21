@@ -135,7 +135,7 @@ void Plot::Close()
 			for(unsigned i=0;i<_lineFiles.size();++i)
 			{
 				if(i!=0) header << ",\\";
-				switch(_lineTypes[0]) {
+				switch(_lineTypes[i]) {
 					case Line:
 						header << "\n\"" << _lineFiles[i] << "\" using 1:2 title \"" << _lineTitles[i] << "\" with lines lw 3";
 						break;

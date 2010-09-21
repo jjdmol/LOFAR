@@ -86,7 +86,6 @@ namespace rfiStrategy {
 				plot = new Plot("baselineSelection.pdf");
 				plot->SetXAxisText("Baseline length (meters)");
 				plot->SetYAxisText("Percentage RFI");
-				plot->SetYRangeAutoMax(0.0);
 				plot->StartScatter("Baselines RFI ratio");
 				for(BaselineSelectionInfo::BaselineVector::const_iterator i=info.baselines.begin();i!=info.baselines.end();++i)
 				{
@@ -123,24 +122,27 @@ namespace rfiStrategy {
 			ThresholdTools::TrimmedMeanAndStdDev(valuesCopy, mean, stddev);
 
 			if(_makePlot)
-				std::cout << "Estimated std dev for thresholding, in percentage of RFI: " << round(1000.0*stddev)/10.0 << "%" << std::endl;
+				std::cout << "Estimated std dev for thresholding, in percentage of RFI: " << round(10000.0*stddev)/100.0 << "%" << std::endl;
 	
 			// Select baselines to be thrown away
 			foundMoreBaselines = false;
 			if(_makePlot)
 				plot->StartLine("Threshold");
+			double maxPlotY = 0.0;
 			for(int i=info.baselines.size()-1;i>=0;--i)
 			{
 				double currentValue = (double) info.baselines[i].rfiCount / (double) info.baselines[i].totalCount;
 				if(_makePlot)
 				{
-					plot->PushDataPoint(info.baselines[i].length, 100.0*(values[i] + currentValue + mean + threshold*stddev));
+					double plotY = 100.0*(values[i] + currentValue + mean + threshold*stddev);
+					plot->PushDataPoint(info.baselines[i].length, plotY);
 					plot->PushDataPoint(info.baselines[i].length, 100.0*(values[i] + currentValue + mean - threshold*stddev));
+					if(plotY > maxPlotY) maxPlotY=plotY;
 				}
 				if(values[i] < mean - threshold*stddev || values[i] > mean + threshold*stddev)
 				{
 					std::cout << "Baseline " << info.baselines[i].antenna1Name << " x " << info.baselines[i].antenna2Name << " looks bad: "
-					<< round(currentValue * 100.0) << "% rfi, "
+					<< round(currentValue * 10000.0)/100.0 << "% rfi, "
 					<< round(10.0*fabs((values[i] - mean) / stddev))/10.0 << "*sigma away from est baseline curve)"
 					<< std::endl;
 					
@@ -149,6 +151,8 @@ namespace rfiStrategy {
 					foundMoreBaselines = true;
 				}
 			}
+			if(_makePlot)
+				plot->SetYRange(0.0, maxPlotY*1.5);
 
 			if(_makePlot)
 			{
