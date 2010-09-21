@@ -492,5 +492,7 @@ status_prog
 echo $level > /tmp/level.admin
 chmod ug+rw /tmp/level.admin
 date=`date +%Y-%m-%d\ %H:%M:%S`
-echo [${date}]:$0 $* >> /log/swlevel.log
+if [ -d /log -a -w /log ]; then
+  echo [${date}]:$0 $* >> /log/swlevel.log
+fi  
 exit $level
