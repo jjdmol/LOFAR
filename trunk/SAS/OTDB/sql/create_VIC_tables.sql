@@ -42,12 +42,25 @@ DROP TABLE VICnodedef 	CASCADE;
 DROP TABLE VICparamdef  CASCADE;
 DROP TABLE VICtemplate	CASCADE;
 DROP TABLE VIChierarchy CASCADE;
-DROP TABLE VICkvt 		CASCADE;
+DROP TABLE VICkvt 	CASCADE;
 
 DROP SEQUENCE VICnodedefID;
 DROP SEQUENCE VICparamdefID;
 DROP SEQUENCE VICtemplateID;
 DROP SEQUENCE VIChierarchID;
+
+DROP INDEX Vnodedef_node_indx;
+
+DROP INDEX VTempl_nodeid_indx;
+DROP INDEX VTempl_parent_index_leaf_indx;
+DROP INDEX VTempl_parentid_indx;
+DROP INDEX VTempl_parentid_leaf_name;
+DROP INDEX VTempl_parentid_name_index_indx;
+DROP INDEX VTempl_treeid_nodeid_indx;
+DROP INDEX VTempl_treeid_parentid_indx;
+
+DROP INDEX VIChierarchy_parentid_indx;
+DROP INDEX VIChierarchy_treeid_nodeid_indx;
 
 --
 -- The VIC node Definition table contains the definitions from
@@ -68,10 +81,14 @@ CREATE TABLE VICnodedef (
 	constraints	TEXT,			-- interpreted by OTDB
 	description	TEXT,
 
+	CONSTRAINT      Vnodedef_PK     	PRIMARY KEY (nodeID),
 	CONSTRAINT	Vnodedef_node_uniq	UNIQUE(nodeID),
-	CONSTRAINT	Vnodedef_name_uniq  UNIQUE(name, version, classif)
+	CONSTRAINT	Vnodedef_name_uniq  	UNIQUE(name, version, classif)
 ) WITHOUT OIDS;
 
+-- Index: Vnodedef_node_indx
+
+CREATE UNIQUE INDEX Vnodedef_node_indx ON VICnodedef(nodeID);
 
 --
 -- The VIC parameter Definition table contains the definitions from
@@ -125,9 +142,37 @@ CREATE TABLE VICtemplate (
 	instances	INT2			NOT NULL DEFAULT 1,
 	limits		TEXT,			-- interpreted by GUI: range, enum, default
 
+	CONSTRAINT 	VTempl_PK 		PRIMARY KEY (treeID, nodeID),
 	CONSTRAINT	VTemplNode_uniqin_tree	UNIQUE(treeID, nodeID)
 ) WITHOUT OIDS;
 
+-- Index: VTempl_nodeid_indx
+
+CREATE INDEX VTempl_nodeid_indx ON VICTemplate(nodeID);
+
+-- Index: VTempl_parent_index_leaf_indx
+
+CREATE INDEX VTempl_parent_index_leaf_indx ON VICTemplate(parentid, "index", leaf);
+
+-- Index: VTempl_parentid_indx
+
+CREATE INDEX VTempl_parentid_indx ON VICTemplate(parentid);
+
+-- Index: VTempl_parentid_leaf_name
+
+CREATE INDEX VTempl_parentid_leaf_name ON VICTemplate(parentid, leaf, name);
+
+-- Index: VTempl_parentid_name_index_indx
+
+CREATE INDEX VTempl_parentid_name_index_indx ON VICTemplate(parentid, name, "index");
+
+-- Index: VTempl_treeid_nodeid_indx
+
+CREATE UNIQUE INDEX VTempl_treeid_nodeid_indx ON VICTemplate(treeid, nodeid);
+
+-- Index: VTempl_treeid_parentid_indx
+
+CREATE INDEX VTempl_treeid_parentid_indx ON VICTemplate(treeid, parentid);
 
 --
 -- The VIChierarchy table contains complete VIC trees, the structure is
@@ -146,9 +191,17 @@ CREATE TABLE VIChierarchy (
 	leaf		BOOLEAN			DEFAULT TRUE,
 	value		TEXT,			-- empty for nodes, filled for params
 
+	CONSTRAINT      VIChierarchy_PK		PRIMARY KEY (treeid, nodeid),
 	CONSTRAINT	Vparam_uniq_in_tree	UNIQUE(treeID, nodeID)
 ) WITHOUT OIDS;
 
+-- Index: vichierarchy_parentid_indx
+
+CREATE INDEX VIChierarchy_parentid_indx ON VIChierarchy(parentID);
+
+-- Index: vichierarcky_treeid_nodeid_indx
+
+CREATE UNIQUE INDEX VIChierarchy_treeid_nodeid_indx ON VIChierarchy( treeid, nodeid);
 
 --
 -- VIC Key Values Time sets.

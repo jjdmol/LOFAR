@@ -43,6 +43,10 @@ DROP TABLE PICkvt 		CASCADE;
 DROP TABLE PICparamref  CASCADE;
 DROP SEQUENCE PICparamrefID;
 DROP SEQUENCE PIChierarchID;
+DROP INDEX PIChierarchy_treeid_nodeid_indx;
+DROP INDEX pic_kvt_id;
+DROP INDEX pic_kvt_id_time_indx;
+DROP INDEX pic_kvt_time;
 
 --
 -- The PIC reference table is the representation of the master PIC 
@@ -61,6 +65,7 @@ CREATE TABLE PICparamref (
 	pruning		INT2			DEFAULT 10,
 	description	TEXT,
 
+	CONSTRAINT      param_PK	 	PRIMARY KEY (paramID),
 	CONSTRAINT	paramID_uniq		UNIQUE(paramID),
 	CONSTRAINT	paramname_uniq		UNIQUE(PVSSname)
 ) WITHOUT OIDS;
@@ -86,6 +91,9 @@ CREATE TABLE PIChierarchy (
 	CONSTRAINT	param_uniq_in_tree	UNIQUE(treeID, nodeID)
 ) WITHOUT OIDS;
 
+-- Index: pichierarchy_treeid_nodeid_indx
+
+CREATE UNIQUE INDEX PIChierarchy_treeid_nodeid_indx ON PIChierarchy(treeid, nodeid);
 
 --
 -- PIC Key Values Time sets.
@@ -104,4 +112,7 @@ CREATE TABLE PICkvt (
 
 CREATE INDEX PIC_kvt_id   ON PICkvt(paramID);
 CREATE INDEX PIC_kvt_time ON PICkvt(time);
+CREATE UNIQUE INDEX PIC_kvt_id_time_indx ON pickvt(paramid, "time");
+
+
 

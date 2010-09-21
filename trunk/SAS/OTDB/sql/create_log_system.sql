@@ -43,4 +43,3 @@ CREATE OR REPLACE FUNCTION clearlog()
 	  RETURN;
 	END;
 ' language plpgsql;
-
