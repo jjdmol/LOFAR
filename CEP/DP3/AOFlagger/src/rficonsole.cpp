@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include <AOFlagger/rfi/strategy/artifactset.h>
+#include <AOFlagger/rfi/strategy/baselineselectionaction.h>
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/strategy.h>
 #include <AOFlagger/rfi/strategy/xmlreader.h>
@@ -172,6 +173,7 @@ int main(int argc, char **argv)
 		artifacts.SetAntennaFlagCountPlot(new AntennaFlagCountPlot());
 		artifacts.SetFrequencyFlagCountPlot(new FrequencyFlagCountPlot());
 		artifacts.SetTimeFlagCountPlot(new TimeFlagCountPlot());
+		artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelectionInfo());
 		
 		ConsoleProgressHandler progress;
 		
@@ -184,6 +186,7 @@ int main(int argc, char **argv)
 		delete set->AntennaFlagCountPlot();
 		delete set->FrequencyFlagCountPlot();
 		delete set->TimeFlagCountPlot();
+		delete set->BaselineSelectionInfo();
 
 		delete set;
 
