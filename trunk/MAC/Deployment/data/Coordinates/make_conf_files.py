@@ -78,7 +78,7 @@ def writeNormalVector(station, anttype):
         vector = np.array([float(v) for v in vector])
 
         dataStr = ''
-        fileName = 'ANTENNA_FILES/'+ station + '-AntennaField.conf'
+        fileName = '../StaticMetaData/AntennaFields/'+ station + '-AntennaField.conf'
         file = open(fileName, 'a')
         if len(anttype) > 0:
             dataStr += '\nNORMAL_VECTOR '+str(anttype)+'\n'
@@ -107,7 +107,7 @@ def writeRotationMatrix(station, anttype):
         matrix = np.resize(np.array([float(m) for m in matrix]),(3,3))
     
         dataStr = ''
-        fileName = 'ANTENNA_FILES/'+ station + '-AntennaField.conf'
+        fileName = '../StaticMetaData/AntennaFields/'+ station + '-AntennaField.conf'
         file = open(fileName, 'a')
         if len(anttype) > 0:
             dataStr += '\nROTATION_MATRIX '+str(anttype)+'\n'
@@ -136,7 +136,7 @@ def writeRotationMatrix(station, anttype):
 ##
 def writeAntennaField(station, anttype, aPos):
     dataStr = ''
-    fileName = 'ANTENNA_FILES/'+ station + '-AntennaField.conf'
+    fileName = '../StaticMetaData/AntennaFields/'+ station + '-AntennaField.conf'
     file = open(fileName, 'a')
     if len(anttype) > 0:
         dataStr += '\n'+str(anttype)+'\n'
