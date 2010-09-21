@@ -95,6 +95,7 @@ CREATE TABLE personnel (
 INSERT INTO	personnel VALUES ('');
 INSERT INTO	personnel VALUES ('Brentjens');
 INSERT INTO	personnel VALUES ('Overeem');
+INSERT INTO     personnel VALUES ('Schoenmakers');
 
 
 --
@@ -147,7 +148,7 @@ INSERT INTO	station	VALUES ('RS106', 'Valthermond');
 INSERT INTO	station	VALUES ('RS107', 'Sellingen');
 
 INSERT INTO	station	VALUES ('RS205', 'Valthermond');
-INSERT INTO	station	VALUES ('RS206', 't	Haantje');
+INSERT INTO	station	VALUES ('RS206', 'Het Haantje');
 INSERT INTO	station	VALUES ('RS207', 'Nieuw	Dordrecht/Klazienaveen');
 INSERT INTO	station	VALUES ('RS208', 'Schoonebeek');
 INSERT INTO	station	VALUES ('RS210', 'Borne');
@@ -161,7 +162,7 @@ INSERT INTO	station	VALUES ('RS311', 'Dwingeloo');
 
 INSERT INTO	station	VALUES ('RS404', 'Borger');
 INSERT INTO	station	VALUES ('RS406', 'Gieten');
-INSERT INTO	station	VALUES ('RS407', 'oud Annerveen');
+INSERT INTO	station	VALUES ('RS407', 'Oud Annerveen');
 INSERT INTO	station	VALUES ('RS408', 'Zuidvelde');
 INSERT INTO	station	VALUES ('RS409', 'Weperpolder');
 INSERT INTO	station	VALUES ('RS410', 'Sneek/Heerenveen');
@@ -172,15 +173,14 @@ INSERT INTO	station	VALUES ('RS413', 'Hoornsterzwaag (Donkerbroek)');
 INSERT INTO	station	VALUES ('RS503', 'Buinen (aan de koedijk)');
 INSERT INTO	station	VALUES ('RS506', 'Vledderhuizen');
 INSERT INTO	station	VALUES ('RS507', 'Alteveer');
-INSERT INTO	station	VALUES ('RS508', 't	Waar (Niewolda)');
+INSERT INTO	station	VALUES ('RS508', 'Het Waar (Niewolda)');
 INSERT INTO	station	VALUES ('RS509', 'Oudeschip');
 
 INSERT INTO	station	VALUES ('DE601', 'Effelsberg');
-INSERT INTO	station	VALUES ('DE602', 'Garching');
+INSERT INTO	station	VALUES ('DE602', 'UnterWeilenbach (Garching)');
 INSERT INTO	station	VALUES ('DE603', 'Tautenburg');
 INSERT INTO	station	VALUES ('DE604', 'Potsdam');
 INSERT INTO	station	VALUES ('DE605', 'Juelich');
 INSERT INTO	station	VALUES ('FR606', 'Nancy');
 INSERT INTO	station	VALUES ('SE607', 'Onsala');
-INSERT INTO	station	VALUES ('UK608', 'Chilbolton');
-
+INSERT INTO	station	VALUES ('UK608', 'Chillbolton');
