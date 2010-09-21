@@ -88,6 +88,7 @@ class BaselineReader {
 			return _polarizationCount;
 		}
 		void ShowStatistics();
+		MeasurementSet &Set() { return _measurementSet; }
 	private:
 		struct ReadRequest {
 			int antenna1;

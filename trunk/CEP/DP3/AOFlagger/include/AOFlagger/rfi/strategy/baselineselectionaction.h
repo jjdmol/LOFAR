@@ -17,40 +17,99 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-
 #ifndef RFIBASELINESELECTIONACTION_H
 #define RFIBASELINESELECTIONACTION_H
 
+#include <boost/thread/mutex.hpp>
+
 #include "action.h"
 
-#include "../../util/progresslistener.h"
-
 namespace rfiStrategy {
+
+	struct BaselineSelectionInfo
+	{
+		struct SingleBaselineInfo
+		{
+			SingleBaselineInfo() : marked(false) { }
+
+			SingleBaselineInfo(const SingleBaselineInfo &source) :
+				antenna1(source.antenna1),
+				antenna2(source.antenna2),
+				antenna1Name(source.antenna1Name),
+				antenna2Name(source.antenna2Name),
+				band(source.band),
+				length(source.length),
+				rfiCount(source.rfiCount),
+				totalCount(source.totalCount),
+				marked(source.marked)
+			{
+			}
+			void operator=(const SingleBaselineInfo &source)
+			{
+				antenna1 = source.antenna1;
+				antenna2 = source.antenna2;
+				antenna1Name = source.antenna1Name;
+				antenna2Name = source.antenna2Name;
+				band = source.band;
+				length = source.length;
+				rfiCount = source.rfiCount;
+				totalCount = source.totalCount;
+				marked = source.marked;
+			}
+				
+			int antenna1, antenna2;
+			std::string antenna1Name, antenna2Name;
+			int band;
+			double length;
+			unsigned long rfiCount, totalCount;
+			bool marked;
+		};
+
+		typedef std::vector<SingleBaselineInfo> BaselineVector;
+
+		boost::mutex mutex;
+		BaselineVector baselines;
+	};
 
 	class BaselineSelectionAction : public Action
 	{
 		public:
-			BaselineSelectionAction() { }
+			BaselineSelectionAction() : _preparationStep(true), _flagBadBaselines(false), _makePlot(false) { }
 
 			virtual std::string Description()
 			{
 				if(_preparationStep)
-					return "Select baseline";
+					return "Select baseline (preparation)";
 				else
 					return "Mark bad baselines";
 			}
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener)
 			{
 				if(_preparationStep)
-					Prepare(artifacts, listener);
+					prepare(artifacts, listener);
 				else
-					Mark(artifacts, listener);
+					mark(artifacts, listener);
 			}
 			virtual ActionType Type() const { return BaselineSelectionActionType; }
+
+			bool PreparationStep() const { return _preparationStep; }
+			void SetPreparationStep(bool preparationStep) { _preparationStep = preparationStep; }
+
+			bool FlagBadBaselines() const { return _flagBadBaselines; }
+			void SetFlagBadBaselines(bool flagBadBaselines) { _flagBadBaselines = flagBadBaselines; }
+
+			bool MakePlot() const { return _makePlot; }
+			void SetMakePlot(bool makePlot) { _makePlot = makePlot; }
 		private:
-			void Prepare(class ArtifactSet &artifacts, class ProgressListener &listener);
-			void Mark(class ArtifactSet &artifacts, class ProgressListener &listener);
+			void prepare(class ArtifactSet &artifacts, class ProgressListener &listener);
+			void mark(class ArtifactSet &artifacts, class ProgressListener &listener);
+			void flagBaselines(ArtifactSet &artifacts, std::vector<BaselineSelectionInfo::SingleBaselineInfo> baselines);
+
+			double smoothedValue(const BaselineSelectionInfo &info, const BaselineSelectionInfo::SingleBaselineInfo &baseline);
+
 			bool _preparationStep;
+			bool _flagBadBaselines;
+			bool _makePlot;
 	};
 }
 

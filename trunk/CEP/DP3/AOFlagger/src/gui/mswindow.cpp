@@ -33,6 +33,7 @@
 #include <AOFlagger/msio/spatialmatrixmetadata.h>
 
 #include <AOFlagger/rfi/strategy/artifactset.h>
+#include <AOFlagger/rfi/strategy/baselineselectionaction.h>
 #include <AOFlagger/rfi/strategy/msimageset.h>
 #include <AOFlagger/rfi/strategy/bandcombinedset.h>
 #include <AOFlagger/rfi/strategy/spatialmsimageset.h>
@@ -299,6 +300,7 @@ void MSWindow::onExecuteStrategyPressed()
 	artifacts.SetFrequencyFlagCountPlot(new FrequencyFlagCountPlot());
 	artifacts.SetFrequencyPowerPlot(new FrequencyPowerPlot());
 	artifacts.SetTimeFlagCountPlot(new TimeFlagCountPlot());
+	artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelectionInfo());
 
 	if(HasImage())
 	{
@@ -366,6 +368,7 @@ void MSWindow::onExecuteStrategyFinished()
 		delete artifacts->FrequencyFlagCountPlot();
 		delete artifacts->FrequencyPowerPlot();
 		delete artifacts->TimeFlagCountPlot();
+		delete artifacts->BaselineSelectionInfo();
 		delete artifacts;
 	}
 }
