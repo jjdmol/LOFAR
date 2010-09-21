@@ -164,6 +164,17 @@ public class inputFieldBuilder extends javax.swing.JPanel {
         setValidators();
     }
 
+    public boolean checkInput() {
+        boolean b = true;
+        if (!isCombo) {
+            b=textInput.getInputVerifier().shouldYieldFocus(this);
+            if (!b) {
+                textInput.requestFocusInWindow();
+            }
+        }
+        return b;
+    }
+
     public void checkPopup() {
         if (!isCombo) {
 //           System.out.println("InputFieldBuilder checkPopup");
