@@ -35,8 +35,7 @@
 DROP TABLE OTDBtree CASCADE;
 DROP SEQUENCE	OTDBtreeID;
 DROP TABLE StateHistory CASCADE;
-
-
+DROP INDEX otdbtree_treeid_indx;
 
 CREATE SEQUENCE	OTDBtreeID START 6112;
 
@@ -60,9 +59,14 @@ CREATE TABLE OTDBtree (
 	name		VARCHAR(32),	-- for default templates only
 
 	-- contraints
-	CONSTRAINT	tree_uniq		UNIQUE (treeID)
+	CONSTRAINT	tree_uniq		UNIQUE (treeID),
+	CONSTRAINT 	tree_PK 		PRIMARY KEY (treeid)
+
 ) WITHOUT OIDS;
 
+-- Index: otdbtree_treeid_indx
+
+CREATE INDEX otdbtree_treeid_indx ON otdbtree(treeid);
 
 CREATE TABLE StateHistory (
 	treeID		INT4			NOT NULL,
