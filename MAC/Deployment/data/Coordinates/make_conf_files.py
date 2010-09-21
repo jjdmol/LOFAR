@@ -4,8 +4,8 @@
 # Make AntennaField.conf and iHBADeltas.conf file for given station and date
 #
 
-
 import sys,pgdb, pg
+from datetime import *
 from copy import deepcopy
 from math import *
 import numpy as np
@@ -38,6 +38,7 @@ def writeHBADeltas(station,deltas):
     f = open(filename,'w')
     f.write('#\n')
     f.write('# HBADeltas for %s\n' %(str(station).upper()))
+    f.write('# Created: %s\n', %(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
     f.write('#\n')
     f.write('HBADeltas\n')
     f.write('%d x %d [\n' %(np.shape(deltas)[0],np.shape(deltas)[1]))
@@ -61,6 +62,7 @@ def writeAntennaFieldHeader(station,frame):
     dataStr += '#\n'
     dataStr += '# AntennaPositions for %s\n' %(station)
     dataStr += '# %s target_date = %s\n' %(str(frame), sys.argv[2])
+    dataStr += '# Created: %s\n' %(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     dataStr += '#\n'
     file.write(dataStr)
     file.close()
