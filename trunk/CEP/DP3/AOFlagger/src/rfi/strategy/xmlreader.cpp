@@ -22,6 +22,7 @@
 #include <AOFlagger/rfi/strategy/action.h>
 #include <AOFlagger/rfi/strategy/adapter.h>
 #include <AOFlagger/rfi/strategy/addstatisticsaction.h>
+#include <AOFlagger/rfi/strategy/baselineselectionaction.h>
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/cutareaaction.h>
@@ -198,6 +199,8 @@ Action *XmlReader::parseAction(xmlNode *node)
 		newAction = parseAdapter(node);
 	else if(typeStr == "AddStatisticsAction")
 		newAction = parseAddStatistics(node);
+	else if(typeStr == "BaselineSelectionAction")
+		newAction = parseBaselineSelectionAction(node);
 	else if(typeStr == "ChangeResolutionAction")
 		newAction = parseChangeResolutionAction(node);
 	else if(typeStr == "CombineFlagResults")
@@ -262,6 +265,15 @@ Action *XmlReader::parseAddStatistics(xmlNode *node)
 {
 	AddStatisticsAction *newAction = new AddStatisticsAction();
 	newAction->SetFilePrefix(getString(node, "file-prefix"));
+	return newAction;
+}
+
+Action *XmlReader::parseBaselineSelectionAction(xmlNode *node)
+{
+	BaselineSelectionAction *newAction = new BaselineSelectionAction();
+	newAction->SetPreparationStep(getBool(node, "preparation-step"));
+	newAction->SetFlagBadBaselines(getBool(node, "flag-bad-baselines"));
+	newAction->SetMakePlot(getBool(node, "make-plot"));
 	return newAction;
 }
 

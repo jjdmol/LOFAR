@@ -79,7 +79,7 @@ namespace rfiStrategy {
 			virtual std::string Description()
 			{
 				if(_preparationStep)
-					return "Select baseline (preparation)";
+					return "Select baselines (preparation)";
 				else
 					return "Mark bad baselines";
 			}

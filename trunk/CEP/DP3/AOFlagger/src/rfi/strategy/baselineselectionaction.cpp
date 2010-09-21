@@ -169,7 +169,7 @@ namespace rfiStrategy {
 					"Bad baseline finding is still experimental, please check the results.\n"
 					"These baselines have therefore NOT been flagged yet. Writing flags to\n"
 					"these baselines can be enabled by setting the flag-bad-baselines\n"
-					"property of both BaselineSelectionAction's to true in your strategy\n"
+					"property of both BaselineSelectionAction's to '1' in your strategy\n"
 					"file." << std::endl;
 		}
 	}

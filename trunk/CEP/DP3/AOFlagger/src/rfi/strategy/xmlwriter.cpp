@@ -21,6 +21,7 @@
 
 #include <AOFlagger/rfi/strategy/adapter.h>
 #include <AOFlagger/rfi/strategy/addstatisticsaction.h>
+#include <AOFlagger/rfi/strategy/baselineselectionaction.h>
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/cutareaaction.h>
@@ -118,6 +119,9 @@ namespace rfiStrategy {
 			case AddStatisticsActionType:
 				writeAddStatisticsAction(static_cast<const AddStatisticsAction&>(action));
 				break;
+			case BaselineSelectionActionType:
+				writeBaselineSelectionAction(static_cast<const BaselineSelectionAction&>(action));
+				break;
 			case ChangeResolutionActionType:
 				writeChangeResolutionAction(static_cast<const ChangeResolutionAction&>(action));
 				break;
@@ -206,6 +210,14 @@ namespace rfiStrategy {
 	{
 		attribute("type", "AddStatisticsAction");
 		write("file-prefix", action.FilePrefix().c_str());
+	}
+
+	void XmlWriter::writeBaselineSelectionAction(const class BaselineSelectionAction &action)
+	{
+		attribute("type", "BaselineSelectionAction");
+		write<bool>("preparation-step", action.PreparationStep());
+		write<bool>("flag-bad-baselines", action.FlagBadBaselines());
+		write<bool>("make-plot", action.MakePlot());
 	}
 
 	void XmlWriter::writeChangeResolutionAction(const ChangeResolutionAction &action)

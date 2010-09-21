@@ -20,6 +20,7 @@
 #include <AOFlagger/rfi/strategy/strategy.h>
 
 #include <AOFlagger/rfi/strategy/adapter.h>
+#include <AOFlagger/rfi/strategy/baselineselectionaction.h>
 #include <AOFlagger/rfi/strategy/changeresolutionaction.h>
 #include <AOFlagger/rfi/strategy/combineflagresults.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
@@ -127,6 +128,10 @@ namespace rfiStrategy {
 				block.Add(new TimeSelectionAction());
 		}
 
+		BaselineSelectionAction *baselineSelection = new BaselineSelectionAction();
+		baselineSelection->SetPreparationStep(true);
+		block.Add(baselineSelection);
+
 		SetFlaggingAction *orWithOriginals = new SetFlaggingAction();
 		orWithOriginals->SetNewFlagging(SetFlaggingAction::OrOriginal);
 		block.Add(orWithOriginals);
@@ -173,6 +178,10 @@ namespace rfiStrategy {
 		PlotAction *plotAction = new PlotAction();
 		plotAction->SetPlotKind(PlotAction::AntennaFlagCountPlot);
 		feBaseBlock->Add(plotAction);
+
+		BaselineSelectionAction *baselineSelection = new BaselineSelectionAction();
+		baselineSelection->SetPreparationStep(false);
+		Add(baselineSelection);
 	}
 
 	void Strategy::LoadAverageStrategy(bool pedantic, bool pulsar)
@@ -187,6 +196,10 @@ namespace rfiStrategy {
 		PlotAction *plotAction = new PlotAction();
 		plotAction->SetPlotKind(PlotAction::AntennaFlagCountPlot);
 		feBaseBlock->Add(plotAction);
+
+		BaselineSelectionAction *baselineSelection = new BaselineSelectionAction();
+		baselineSelection->SetPreparationStep(false);
+		Add(baselineSelection);
 	}
 
 	void Strategy::LoadBestStrategy(bool pedantic, bool pulsar)
@@ -201,6 +214,10 @@ namespace rfiStrategy {
 		PlotAction *plotAction = new PlotAction();
 		plotAction->SetPlotKind(PlotAction::AntennaFlagCountPlot);
 		feBaseBlock->Add(plotAction);
+
+		BaselineSelectionAction *baselineSelection = new BaselineSelectionAction();
+		baselineSelection->SetPreparationStep(false);
+		Add(baselineSelection);
 	}
 	
 	ArtifactSet *Strategy::JoinThread()
