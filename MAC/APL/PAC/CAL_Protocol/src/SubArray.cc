@@ -141,8 +141,8 @@ void SubArray::calibrate(CalibrationInterface* cal, ACC& acc)
 {
 	ASSERT(m_result[FRONT]);
 
-	acc.setSelection(m_antenna_selection);
 	if (cal) {
+		acc.setSelection(m_antenna_selection);
 		cal->calibrate(*this, acc, *m_result[FRONT]);
 	}
 	m_result[FRONT]->setDone();
