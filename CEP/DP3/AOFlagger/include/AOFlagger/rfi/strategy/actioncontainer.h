@@ -18,12 +18,12 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include "action.h"
+
 #ifndef RFIACTIONCONTAINER_H
 #define RFIACTIONCONTAINER_H 
 
 #include <vector>
-
-#include "action.h"
 
 namespace rfiStrategy {
 

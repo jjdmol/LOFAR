@@ -65,12 +65,35 @@ namespace rfiStrategy {
 			virtual std::string Description() = 0;
 			virtual void Initialize() { }
 			virtual void Finish() { }
+			/**
+			 * Write any cached / delayed data to disk
+			 */
+			virtual void Sync() { }
 			virtual void Perform(class ArtifactSet &artifacts, ProgressListener &progress) = 0;
 			class ActionContainer *Parent() const { return _parent; }
 			virtual ActionType Type() const = 0;
+
+			inline ActionContainer *GetRoot() const;
 		private:
 			class ActionContainer *_parent;
 	};
+}
+
+#include "actioncontainer.h"
+
+namespace rfiStrategy {
+
+	ActionContainer *Action::GetRoot() const
+	{
+		if(_parent == 0)
+			return static_cast<ActionContainer*>(_parent);
+		else
+		{
+			ActionContainer *iter = _parent;
+			while(iter->_parent != 0) iter = iter->_parent;
+			return iter;
+		}
+	}
 
 }
 
