@@ -31,6 +31,7 @@
 
 #include <AOFlagger/rfi/strategy/artifactset.h>
 #include <AOFlagger/rfi/strategy/msimageset.h>
+#include <AOFlagger/rfi/strategy/strategy.h>
 
 namespace rfiStrategy {
 	
@@ -74,6 +75,8 @@ namespace rfiStrategy {
 		std::cout << "Searching for bad baselines..." << std::endl;
 
 		const double threshold = 6.0;
+
+		Strategy::SyncAll(*GetRoot());
 
 		boost::mutex::scoped_lock lock(info.mutex);
 
@@ -171,7 +174,7 @@ namespace rfiStrategy {
 				{
 					std::cout << "Baseline " << info.baselines[i].antenna1Name << " x " << info.baselines[i].antenna2Name << " looks bad: "
 					<< round(currentValue * 10000.0)/100.0 << "% rfi, "
-					<< round(10.0*fabs((values[i] - mean) / stddev))/10.0 << "*sigma away from est baseline curve)"
+					<< round(10.0*fabs((values[i] - mean) / stddev))/10.0 << "*sigma away from est baseline curve"
 					<< std::endl;
 						
 					if(!info.baselines[i].marked)

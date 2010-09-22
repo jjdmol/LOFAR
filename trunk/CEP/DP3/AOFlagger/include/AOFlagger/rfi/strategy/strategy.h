@@ -70,6 +70,8 @@ namespace rfiStrategy {
 			void LoadAverageStrategy(bool pedantic = false, bool pulsar = false);
 			void LoadBestStrategy(bool pedantic = false, bool pulsar = false);
 
+			static void SyncAll(ActionContainer &root);
+
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener)
 			{
 				listener.OnStartTask(0, 1, "strategy");

@@ -48,6 +48,7 @@ namespace rfiStrategy {
 			virtual void Perform(class ArtifactSet &artifacts, ProgressListener &progress);
 			virtual ActionType Type() const { return WriteFlagsActionType; }
 			virtual void Finish();
+			virtual void Sync() { Finish(); Initialize(); }
 
 			void SetMaxBufferItems(size_t maxBufferItems) { _maxBufferItems = maxBufferItems; }
 			void SetMinBufferItemsForWriting(size_t minBufferItemsForWriting) { _minBufferItemsForWriting = minBufferItemsForWriting; }

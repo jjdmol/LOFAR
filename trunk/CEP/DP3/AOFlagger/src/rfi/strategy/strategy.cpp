@@ -397,4 +397,14 @@ namespace rfiStrategy {
 			++i;
 		}
 	}
+
+	void Strategy::SyncAll(ActionContainer &root)
+	{
+		StrategyIterator i = StrategyIterator::NewStartIterator(root);
+		while(!i.PastEnd())
+		{
+			i->Sync();
+			++i;
+		}
+	}
 }
