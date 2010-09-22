@@ -95,7 +95,7 @@ const Scalar FlagIf<T_PREDICATE>::evaluateExpr(const Request &request,
     // Create result.
     Scalar result;
     // Pass through value.
-    result.setElement(arg0.getElement());
+    result.setElement(arg0.element());
 
     // Compute flags.
     const Matrix value = arg0.value();

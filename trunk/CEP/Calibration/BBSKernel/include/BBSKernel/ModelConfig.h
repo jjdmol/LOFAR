@@ -41,12 +41,12 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
+// Configuration options specific to the beam model.
 class BeamConfig
 {
 public:
     enum ElementType
     {
-        UNKNOWN,
         HAMAKER_LBA,
         HAMAKER_HBA,
         YATAWATTA_LBA,
@@ -63,29 +63,41 @@ public:
     ElementType getElementType() const;
     const casa::Path &getElementPath() const;
 
-    const string &getElementTypeAsString() const;
-    static ElementType getElementTypeFromString(const string &type);
+    static bool isDefined(ElementType in);
+    static ElementType asElementType(const string &in);
+    static const string &asString(ElementType in);
 
 private:
-    static string   theirElementTypeName[N_ElementType];
-
     string          itsConfigName;
     casa::Path      itsConfigPath;
     ElementType     itsElementType;
     casa::Path      itsElementPath;
 };
 
-// Configuration options specific to Mevius' minimal ionospheric model.
+// Configuration options specific to the ionospheric model.
 class IonosphereConfig
 {
 public:
-    IonosphereConfig();
-    IonosphereConfig(unsigned int degree);
+    enum ModelType
+    {
+        MIM,
+        EXPION,
+        N_ModelType
+    };
 
-    unsigned int getDegree() const;
+    IonosphereConfig();
+    IonosphereConfig(ModelType type, unsigned int degree);
+
+    ModelType getModelType() const;
+    unsigned int degree() const;
+
+    static bool isDefined(ModelType in);
+    static ModelType asModelType(const string &in);
+    static const string &asString(ModelType in);
 
 private:
-    unsigned int itsDegree;
+    ModelType       itsModelType;
+    unsigned int    itsDegree;
 };
 
 // Configuration options specific to the condition number flagger.
@@ -112,6 +124,9 @@ public:
 
     bool useBandpass() const;
     void setBandpass(bool value = true);
+
+    bool useClock() const;
+    void setClock(bool value = true);
 
     bool useGain() const;
     void setGain(bool value = true);
@@ -148,6 +163,7 @@ private:
     {
         PHASORS,
         BANDPASS,
+        CLOCK,
         GAIN,
         DIRECTIONAL_GAIN,
         FARADAY_ROTATION,

@@ -146,6 +146,9 @@ private:
     void makeBandpassExpr(const vector<unsigned int> &stations,
         casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
 
+    void makeClockExpr(const vector<unsigned int> &stations,
+        casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);
+
     void makeGainExpr(const ModelConfig &config,
         const vector<unsigned int> &stations,
         casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator);

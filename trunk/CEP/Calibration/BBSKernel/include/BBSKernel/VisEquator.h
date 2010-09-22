@@ -402,7 +402,7 @@ void VisEquator::procExpr(ProcContext &context,
         const size_t crLHS = itsCrMap[cr].first;
         const size_t crRHS = itsCrMap[cr].second;
 
-        const Element elementRHS = RHS.getElement(crRHS);
+        const Element elementRHS = RHS.element(crRHS);
 
         // If there are no coefficients to fit, continue to the next
         // correlation.

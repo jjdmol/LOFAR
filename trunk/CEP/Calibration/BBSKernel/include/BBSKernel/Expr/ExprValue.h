@@ -53,8 +53,8 @@ public:
     const FlagArray flags() const;
 
     virtual unsigned int size() const = 0;
-    virtual const Element getElement(unsigned int i0) const = 0;
-    virtual void setElement(unsigned int i0, const Element &set) = 0;
+    virtual const Element element(unsigned int i0) const = 0;
+    virtual void setElement(unsigned int i0, const Element &element) = 0;
 
 private:
     FlagArray   itsFlags;
@@ -66,6 +66,10 @@ public:
     typedef ExprValueView<Scalar>       View;
     typedef ExprValueIterator<Scalar>   Iterator;
 
+    Scalar();
+    Scalar(const Matrix &value);
+    Scalar(const Element &element);
+
     const Matrix value() const;
     const Matrix value(const PValueKey &key) const;
     const View view() const;
@@ -76,14 +80,14 @@ public:
     void assign(const View &value);
     void assign(const PValueKey &key, const View &value);
 
-    const Element getElement() const;
-    void setElement(const Element &set);
+    const Element element() const;
+    void setElement(const Element &element);
 
     // @{
     // Support for flat Element indexing.
     unsigned int size() const;
-    const Element getElement(unsigned int i0) const;
-    void setElement(unsigned int i0, const Element &set);
+    const Element element(unsigned int i0) const;
+    void setElement(unsigned int i0, const Element &element);
     // @}
 
 private:
@@ -117,8 +121,8 @@ public:
     // @{
     // Support for flat Element indexing.
     unsigned int size() const;
-    const Element getElement(unsigned int i0) const;
-    void setElement(unsigned int i0, const Element &set);
+    const Element element(unsigned int i0) const;
+    void setElement(unsigned int i0, const Element &element);
     // @}
 
 private:
@@ -130,6 +134,12 @@ class JonesMatrix: public ExprValue
 public:
     typedef ExprValueView<JonesMatrix>      View;
     typedef ExprValueIterator<JonesMatrix>  Iterator;
+
+    JonesMatrix();
+    JonesMatrix(const Matrix &el00, const Matrix &el01, const Matrix &el10,
+        const Matrix &el11);
+    JonesMatrix(const Element &el00, const Element &el01, const Element &el10,
+        const Element &el11);
 
     const Matrix value(unsigned int i0, unsigned int i1) const;
     const Matrix value(unsigned int i0, unsigned int i1, const PValueKey &key)
@@ -143,14 +153,14 @@ public:
     void assign(const View &value);
     void assign(const PValueKey &key, const View &value);
 
-    const Element getElement(unsigned int i0, unsigned int i1) const;
-    void setElement(unsigned int i0, unsigned int i1, const Element &set);
+    const Element element(unsigned int i0, unsigned int i1) const;
+    void setElement(unsigned int i0, unsigned int i1, const Element &element);
 
     // Support for flat Element indexing.
     // @{
     unsigned int size() const;
-    const Element getElement(unsigned int i0) const;
-    void setElement(unsigned int i0, const Element &set);
+    const Element element(unsigned int i0) const;
+    void setElement(unsigned int i0, const Element &element);
     // @}
 
 private:
@@ -202,14 +212,14 @@ inline void Scalar::assign(const PValueKey &key, const Matrix &value)
     itsElement.assign(key, value);
 }
 
-inline const Element Scalar::getElement() const
+inline const Element Scalar::element() const
 {
     return itsElement;
 }
 
-inline void Scalar::setElement(const Element &set)
+inline void Scalar::setElement(const Element &element)
 {
-    itsElement = set;
+    itsElement = element;
 }
 
 inline unsigned int Scalar::size() const
@@ -218,9 +228,9 @@ inline unsigned int Scalar::size() const
 }
 
 #if defined(DEBUG) || defined(LOFAR_DEBUG)
-inline const Element Scalar::getElement(unsigned int i0) const
+inline const Element Scalar::element(unsigned int i0) const
 #else
-inline const Element Scalar::getElement(unsigned int) const
+inline const Element Scalar::element(unsigned int) const
 #endif
 {
     DBGASSERT(i0 == 0);
@@ -228,13 +238,13 @@ inline const Element Scalar::getElement(unsigned int) const
 }
 
 #if defined(DEBUG) || defined(LOFAR_DEBUG)
-inline void Scalar::setElement(unsigned int i0, const Element &set)
+inline void Scalar::setElement(unsigned int i0, const Element &element)
 #else
-inline void Scalar::setElement(unsigned int, const Element &set)
+inline void Scalar::setElement(unsigned int, const Element &element)
 #endif
 {
     DBGASSERT(i0 == 0);
-    itsElement = set;
+    itsElement = element;
 }
 
 // -------------------------------------------------------------------------- //
@@ -331,17 +341,17 @@ inline unsigned int Vector<LENGTH>::size() const
 }
 
 template <unsigned int LENGTH>
-inline const Element Vector<LENGTH>::getElement(unsigned int i0) const
+inline const Element Vector<LENGTH>::element(unsigned int i0) const
 {
     DBGASSERT(i0 < LENGTH);
     return itsElement[i0];
 }
 
 template <unsigned int LENGTH>
-inline void Vector<LENGTH>::setElement(unsigned int i0, const Element &set)
+inline void Vector<LENGTH>::setElement(unsigned int i0, const Element &element)
 {
     DBGASSERT(i0 < LENGTH);
-    itsElement[i0] = set;
+    itsElement[i0] = element;
 }
 
 // -------------------------------------------------------------------------- //
@@ -375,7 +385,7 @@ inline void JonesMatrix::assign(unsigned int i0, unsigned int i1,
     itsElement[i0 * 2 + i1].assign(key, value);
 }
 
-inline const Element JonesMatrix::getElement(unsigned int i0, unsigned int i1)
+inline const Element JonesMatrix::element(unsigned int i0, unsigned int i1)
     const
 {
     DBGASSERT(i0 < 2 && i1 < 2);
@@ -383,10 +393,10 @@ inline const Element JonesMatrix::getElement(unsigned int i0, unsigned int i1)
 }
 
 inline void JonesMatrix::setElement(unsigned int i0, unsigned int i1,
-    const Element &set)
+    const Element &element)
 {
     DBGASSERT(i0 < 2 && i1 < 2);
-    itsElement[i0 * 2 + i1] = set;
+    itsElement[i0 * 2 + i1] = element;
 }
 
 inline unsigned int JonesMatrix::size() const
@@ -394,16 +404,16 @@ inline unsigned int JonesMatrix::size() const
     return 4;
 }
 
-inline const Element JonesMatrix::getElement(unsigned int i0) const
+inline const Element JonesMatrix::element(unsigned int i0) const
 {
     DBGASSERT(i0 < 4);
     return itsElement[i0];
 }
 
-inline void JonesMatrix::setElement(unsigned int i0, const Element &set)
+inline void JonesMatrix::setElement(unsigned int i0, const Element &element)
 {
     DBGASSERT(i0 < 4);
-    itsElement[i0] = set;
+    itsElement[i0] = element;
 }
 
 } //# namespace BBS

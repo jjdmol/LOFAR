@@ -67,8 +67,11 @@ const Vector<2>::View AzEl::evaluateImpl(const Grid &grid,
         direction(1).getDouble()),
         casa::MDirection::Ref(casa::MDirection::J2000));
 
+    // TODO: Do we need to use AZEL or AZELGEO here?
+//    casa::MDirection::Convert converter = casa::MDirection::Convert(mDirection,
+//        casa::MDirection::Ref(casa::MDirection::AZEL, frame));
     casa::MDirection::Convert converter = casa::MDirection::Convert(mDirection,
-        casa::MDirection::Ref(casa::MDirection::AZEL, frame));
+        casa::MDirection::Ref(casa::MDirection::AZELGEO, frame));
 
     // Allocate space for the result.
     // TODO: This is a hack! The Matrix class does not support 1xN or Nx1

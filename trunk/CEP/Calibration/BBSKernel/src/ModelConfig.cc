@@ -36,26 +36,44 @@ using LOFAR::operator<<;
 // -------------------------------------------------------------------------- //
 // - BeamConfig implementation                                              - //
 // -------------------------------------------------------------------------- //
-string BeamConfig::theirElementTypeName[BeamConfig::N_ElementType] = {"UNKNOWN",
-    "HAMAKER_LBA", "HAMAKER_HBA", "YATAWATTA_LBA", "YATAWATTA_HBA"};
 
-BeamConfig::ElementType BeamConfig::getElementTypeFromString(const string &type)
+bool BeamConfig::isDefined(ElementType in)
 {
-    ElementType result = UNKNOWN;
+    return in != N_ElementType;
+}
+
+BeamConfig::ElementType BeamConfig::asElementType(const string &in)
+{
+    ElementType out = N_ElementType;
     for(unsigned int i = 0; i < N_ElementType; ++i)
     {
-        if(type == theirElementTypeName[i])
+        if(in == asString(static_cast<ElementType>(i)))
         {
-            result = static_cast<ElementType>(i);
+            out = static_cast<ElementType>(i);
             break;
         }
     }
 
-    return result;
+    return out;
+}
+
+const string &BeamConfig::asString(ElementType in)
+{
+    //# Caution: Always keep this array of strings in sync with the enum
+    //# ElementType that is defined in the header.
+    static const string name[N_ElementType + 1] =
+        {"HAMAKER_LBA",
+        "HAMAKER_HBA",
+        "YATAWATTA_LBA",
+        "YATAWATTA_HBA",
+        //# "<UNDEFINED>" should always be last.
+        "<UNDEFINED>"};
+
+    return name[in];
 }
 
 BeamConfig::BeamConfig()
-    :   itsElementType(UNKNOWN)
+    :   itsElementType(N_ElementType)
 {
 }
 
@@ -88,26 +106,61 @@ const casa::Path &BeamConfig::getElementPath() const
     return itsElementPath;
 }
 
-const string &BeamConfig::getElementTypeAsString() const
-{
-    return theirElementTypeName[itsElementType];
-}
-
 // -------------------------------------------------------------------------- //
 // - IonosphereConfig implementation                                        - //
 // -------------------------------------------------------------------------- //
 
+bool IonosphereConfig::isDefined(ModelType in)
+{
+    return in != N_ModelType;
+}
+
+IonosphereConfig::ModelType IonosphereConfig::asModelType(const string &in)
+{
+    ModelType out = N_ModelType;
+    for(unsigned int i = 0; i < N_ModelType; ++i)
+    {
+        if(in == asString(static_cast<ModelType>(i)))
+        {
+            out = static_cast<ModelType>(i);
+            break;
+        }
+    }
+
+    return out;
+}
+
+const string &IonosphereConfig::asString(ModelType in)
+{
+    //# Caution: Always keep this array of strings in sync with the enum
+    //# ModelType that is defined in the header.
+    static const string name[N_ModelType + 1] =
+        {"MIM",
+        "EXPION",
+        //# "<UNDEFINED>" should always be last.
+        "<UNDEFINED>"};
+
+    return name[in];
+}
+
 IonosphereConfig::IonosphereConfig()
-    :   itsDegree(0)
+    :   itsModelType(N_ModelType),
+        itsDegree(0)
 {
 }
 
-IonosphereConfig::IonosphereConfig(unsigned int degree)
-    :   itsDegree(degree)
+IonosphereConfig::IonosphereConfig(ModelType type, unsigned int degree = 0)
+    :   itsModelType(type),
+        itsDegree(degree)
 {
 }
 
-unsigned int IonosphereConfig::getDegree() const
+IonosphereConfig::ModelType IonosphereConfig::getModelType() const
+{
+    return itsModelType;
+}
+
+unsigned int IonosphereConfig::degree() const
 {
     return itsDegree;
 }
@@ -148,6 +201,11 @@ bool ModelConfig::usePhasors() const
 bool ModelConfig::useBandpass() const
 {
     return itsModelOptions[BANDPASS];
+}
+
+bool ModelConfig::useClock() const
+{
+    return itsModelOptions[CLOCK];
 }
 
 bool ModelConfig::useGain() const
@@ -208,6 +266,11 @@ void ModelConfig::setPhasors(bool value)
 void ModelConfig::setBandpass(bool value)
 {
     itsModelOptions[BANDPASS] = value;
+}
+
+void ModelConfig::setClock(bool value)
+{
+    itsModelOptions[CLOCK] = value;
 }
 
 void ModelConfig::setGain(bool value)
@@ -288,7 +351,14 @@ ostream &operator<<(ostream &out, const FlaggerConfig &obj)
 
 ostream &operator<<(ostream &out, const IonosphereConfig &obj)
 {
-    out << indent << "Degree: " << obj.getDegree();
+    out << indent << "Ionosphere model type: "
+        << IonosphereConfig::asString(obj.getModelType());
+
+    if(obj.getModelType() == IonosphereConfig::MIM)
+    {
+        out << endl << indent << "Degree: " << obj.degree();
+    }
+
     return out;
 }
 
@@ -298,7 +368,7 @@ ostream &operator<<(ostream &out, const BeamConfig &obj)
         << endl << indent << "Antenna configuration path: "
         << obj.getConfigPath().originalName()
         << endl << indent << "Element model type: "
-        << obj.getElementTypeAsString()
+        << BeamConfig::asString(obj.getElementType())
         << endl << indent << "Element model path: "
         << obj.getElementPath().originalName();
     return out;
@@ -313,6 +383,8 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.usePhasors() << noboolalpha;
     out << endl << indent << "Bandpass enabled: " << boolalpha
         << obj.useBandpass() << noboolalpha;
+    out << endl << indent << "Clock enabled: " << boolalpha
+        << obj.useClock() << noboolalpha;
     out << endl << indent << "Gain enabled: " << boolalpha
         << obj.useGain() << noboolalpha;
     out << endl << indent << "Direction dependent gain enabled: " << boolalpha

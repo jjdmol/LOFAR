@@ -22,7 +22,6 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/Expr/FaradayRotation.h>
-
 #include <casa/BasicSL/Constants.h>
 
 using namespace casa;

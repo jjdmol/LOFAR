@@ -32,6 +32,7 @@
 #include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/ConditionNumber.h>
+#include <BBSKernel/Expr/Delay.h>
 #include <BBSKernel/Expr/EquatorialCentroid.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/ExprVisData.h>
@@ -48,7 +49,6 @@
 #include <BBSKernel/Expr/MatrixSum.h>
 #include <BBSKernel/Expr/MergeFlags.h>
 #include <BBSKernel/Expr/PhaseShift.h>
-#include <BBSKernel/Expr/PiercePoint.h>
 #include <BBSKernel/Expr/PointCoherence.h>
 #include <BBSKernel/Expr/PointSource.h>
 #include <BBSKernel/Expr/Request.h>
@@ -292,6 +292,12 @@ void MeasurementExprLOFAR::makeForwardExpr(const ModelConfig &config,
             makeBandpassExpr(stations, diTransform);
         }
 
+        // Create a clock delay expression per station.
+        if(config.useClock())
+        {
+            makeClockExpr(stations, diTransform);
+        }
+
         // Create a direction independent gain expression per station.
         if(config.useGain())
         {
@@ -351,6 +357,12 @@ void MeasurementExprLOFAR::makeInverseExpr(const ModelConfig &config,
         if(config.useBandpass())
         {
             makeBandpassExpr(stations, transform);
+        }
+
+        // Create a clock delay expression per station.
+        if(config.useClock())
+        {
+            makeClockExpr(stations, transform);
         }
 
         // Create a direction independent gain expression per station.
@@ -905,6 +917,22 @@ MeasurementExprLOFAR::makeBandpassExpr(const vector<unsigned int> &stations,
     }
 }
 
+void MeasurementExprLOFAR::makeClockExpr(const vector<unsigned int> &stations,
+    casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
+{
+    for(unsigned int i = 0; i < stations.size(); ++i)
+    {
+        const unsigned int station = stations[i];
+        const string &suffix = itsInstrument[station].name();
+
+        ExprParm::Ptr delay = itsScope(INSTRUMENT, "Clock:" + suffix);
+
+        Expr<Scalar>::Ptr shift = Expr<Scalar>::Ptr(new Delay(delay));
+        accumulator(i) = compose(accumulator(i),
+            Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(shift, shift)));
+    }
+}
+
 void MeasurementExprLOFAR::makeGainExpr(const ModelConfig &config,
     const vector<unsigned int> &stations,
     casa::Vector<Expr<JonesMatrix>::Ptr> &accumulator)
@@ -1102,12 +1130,9 @@ MeasurementExprLOFAR::makeIonosphereExpr(const vector<unsigned int> &stations,
     for(unsigned int i = 0; i < stations.size(); ++i)
     {
         const unsigned int station = stations[i];
-
-        const casa::MPosition &position = itsInstrument[station].position();
-        PiercePoint::Ptr piercePoint(new PiercePoint(position, exprAzEl(i)));
-
-        accumulator(i) = compose(accumulator(i),
-            exprIonosphere->construct(refPosition, piercePoint));
+        accumulator(i) =
+            compose(accumulator(i), exprIonosphere->construct(refPosition,
+                itsInstrument[station].position(), exprAzEl(i)));
     }
 }
 

@@ -146,6 +146,8 @@ public:
 
   MatrixTmp operator-() const;
 
+  friend MatrixTmp pow (const MatrixTmp&, const Matrix&);
+  friend MatrixTmp pow (const MatrixTmp&, const MatrixTmp&);
   friend MatrixTmp posdiff (const MatrixTmp&, const Matrix&);
   friend MatrixTmp posdiff (const MatrixTmp&, const MatrixTmp&);
   friend MatrixTmp tocomplex (const MatrixTmp&, const Matrix&);
@@ -173,7 +175,6 @@ public:
   friend MatrixTmp max (const MatrixTmp&);
   friend MatrixTmp mean(const MatrixTmp&);
   friend MatrixTmp sum (const MatrixTmp&);
-
 
   MatrixRep* rep() const
     { return itsRep; }

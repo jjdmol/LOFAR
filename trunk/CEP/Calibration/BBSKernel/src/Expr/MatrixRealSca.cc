@@ -66,6 +66,10 @@ MatrixRep* MatrixRealSca::divide (MatrixRep& right, bool rightTmp)
 {
   return right.divRep (*this, rightTmp);
 }
+MatrixRep* MatrixRealSca::pow (MatrixRep& right, bool rightTmp)
+{
+  return right.powRep (*this, rightTmp);
+}
 MatrixRep* MatrixRealSca::posdiff (MatrixRep& right)
 {
   return right.posdiffRep (*this);
@@ -166,6 +170,38 @@ MatrixRep *MatrixRealSca::divRep(MatrixComplexArr &left, bool)
     left.itsImag[i] /= itsValue;
   }
   return &left;
+}
+
+MatrixRep* MatrixRealSca::powRep(MatrixRealSca& left, bool rightTmp)
+{
+  MatrixRealSca *v = rightTmp ? this : new MatrixRealSca(itsValue);
+  v->itsValue = std::pow(left.itsValue, itsValue);
+  return v;
+}
+MatrixRep* MatrixRealSca::powRep(MatrixComplexSca& left, bool)
+{
+  return new MatrixComplexSca(std::pow(left.itsValue, itsValue));
+}
+MatrixRep* MatrixRealSca::powRep(MatrixRealArr& left, bool)
+{
+  MatrixRealArr *v = MatrixRealArr::allocate(left.nx(), left.ny());
+  int n = v->nelements();
+  for (int i = 0; i < n; ++i) {
+    v->itsValue[i] = std::pow(left.itsValue[i], itsValue);
+  }
+  return v;
+}
+MatrixRep *MatrixRealSca::powRep(MatrixComplexArr &left, bool)
+{
+  MatrixComplexArr *v = MatrixComplexArr::allocate(left.nx(), left.ny());
+  int n = v->nelements();
+  for (int i = 0; i < n; ++i) {
+    dcomplex value = std::pow(makedcomplex(left.itsReal[i], left.itsImag[i]),
+        itsValue);
+    v->itsReal[i] = real(value);
+    v->itsImag[i] = imag(value);
+  }
+  return v;
 }
 
 MatrixRep* MatrixRealSca::posdiffRep (MatrixRealSca& left)

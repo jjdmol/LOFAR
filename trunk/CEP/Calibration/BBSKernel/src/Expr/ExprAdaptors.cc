@@ -78,7 +78,7 @@ const JonesMatrix AsExpr<JonesMatrix>::evaluateExpr(const Request &request,
     for(unsigned int i = 0; i < 4; ++i)
     {
         args[i] = itsArg[i]->evaluate(request, cache, grid);
-        result.setElement(i, args[i].getElement());
+        result.setElement(i, args[i].element());
     }
 
     // Evaluate flags.
@@ -124,10 +124,10 @@ const JonesMatrix AsDiagonalMatrix::evaluateExpr(const Request &request,
     args[0] = argument0()->evaluate(request, cache, grid);
     args[1] = argument1()->evaluate(request, cache, grid);
 
-    result.setElement(0, 0, args[0].getElement());
+    result.setElement(0, 0, args[0].element());
     result.assign(0, 1, Matrix(makedcomplex(0.0, 0.0)));
     result.assign(1, 0, Matrix(makedcomplex(0.0, 0.0)));
-    result.setElement(1, 1, args[1].getElement());
+    result.setElement(1, 1, args[1].element());
 
     // Evaluate flags.
     FlagArray flags[2];

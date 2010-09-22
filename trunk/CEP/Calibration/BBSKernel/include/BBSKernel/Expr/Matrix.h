@@ -205,6 +205,8 @@ public:
        itsRep->fillRowWithProducts(v0, factor, row);
     }
 
+  friend MatrixTmp pow (const Matrix&, const Matrix&);
+  friend MatrixTmp pow (const Matrix&, const MatrixTmp&);
   friend MatrixTmp posdiff (const Matrix&, const Matrix&);
   friend MatrixTmp posdiff (const Matrix&, const MatrixTmp&);
   friend MatrixTmp tocomplex (const Matrix&, const Matrix&);

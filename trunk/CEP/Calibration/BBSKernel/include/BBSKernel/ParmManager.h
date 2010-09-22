@@ -63,6 +63,8 @@ public:
 
     void initCategory(unsigned int category, const ParmDB &db);
 
+    vector<string> find(unsigned int category, const string &pattern) const;
+
     double getDefaultValue(unsigned int category, const string &name,
         double value = 0.0);
 

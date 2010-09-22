@@ -146,7 +146,7 @@ ExprValueIterator<Vector<LENGTH> >::ExprValueIterator
     itsAtEnd = true;
     for(unsigned int i = 0; i < LENGTH; ++i)
     {
-        itsElement[i] = value.getElement(i);
+        itsElement[i] = value.element(i);
         itsIterator[i] = itsElement[i].begin();
 
         if(itsIterator[i] != itsElement[i].end())

@@ -142,6 +142,8 @@ namespace LOFAR
         toString(itsModelConfig.usePhasors()));
       ps.add(prefix + "Model.Bandpass.Enable",
         toString(itsModelConfig.useBandpass()));
+      ps.add(prefix + "Model.Clock.Enable",
+        toString(itsModelConfig.useClock()));
       ps.add(prefix + "Model.Gain.Enable",
         toString(itsModelConfig.useGain()));
       ps.add(prefix + "Model.DirectionalGain.Enable",
@@ -157,7 +159,7 @@ namespace LOFAR
         ps.add(prefix + "Model.Beam.StationConfig.Path",
           config.getConfigPath().originalName());
         ps.add(prefix + "Model.Beam.Element.Type",
-          config.getElementTypeAsString());
+          BeamConfig::asString(config.getElementType()));
         ps.add(prefix + "Model.Beam.Element.Path",
           config.getElementPath().originalName());
       }
@@ -166,8 +168,12 @@ namespace LOFAR
         toString(itsModelConfig.useIonosphere()));
       if(itsModelConfig.useIonosphere()) {
         const IonosphereConfig &config = itsModelConfig.getIonosphereConfig();
-        ps.add(prefix + "Model.Ionosphere.Degree",
-          toString(config.getDegree()));
+        ps.add(prefix + "Model.Ionosphere.Type",
+          IonosphereConfig::asString(config.getModelType()));
+        if(config.getModelType() == IonosphereConfig::MIM) {
+          ps.add(prefix + "Model.Ionosphere.Degree",
+            toString(config.degree()));
+        }
       }
 
       ps.add(prefix + "Model.Flagger.Enable",
@@ -202,6 +208,9 @@ namespace LOFAR
       itsModelConfig.setBandpass(ps.getBool("Model.Bandpass.Enable",
         itsModelConfig.useBandpass()));
 
+      itsModelConfig.setClock(ps.getBool("Model.Clock.Enable",
+        itsModelConfig.useClock()));
+
       itsModelConfig.setGain(ps.getBool("Model.Gain.Enable",
         itsModelConfig.useGain()));
 
@@ -216,12 +225,17 @@ namespace LOFAR
       if(ps.getBool("Model.Beam.Enable", itsModelConfig.useBeam())) {
         BeamConfig parentConfig = itsModelConfig.getBeamConfig();
 
-        string elementTypeString = ps.getString("Model.Beam.Element.Type",
-          parentConfig.getElementTypeAsString());
-        BeamConfig::ElementType elementType =
-          BeamConfig::getElementTypeFromString(elementTypeString);
+        string elementTypeString;
+        if(itsModelConfig.useBeam()) {
+          elementTypeString = ps.getString("Model.Beam.Element.Type",
+            BeamConfig::asString(parentConfig.getElementType()));
+        } else {
+          elementTypeString = ps.getString("Model.Beam.Element.Type");
+        }
 
-        if(elementType == BeamConfig::UNKNOWN) {
+        BeamConfig::ElementType elementType =
+          BeamConfig::asElementType(elementTypeString);
+        if(!BeamConfig::isDefined(elementType)) {
           THROW(BBSControlException, "Key Model.Beam.Element.Type not found or"
             " invalid.");
         }
@@ -259,15 +273,32 @@ namespace LOFAR
 
       if(ps.getBool("Model.Ionosphere.Enable", itsModelConfig.useIonosphere()))
       {
-        unsigned int degree = 0;
+        IonosphereConfig parentConfig = itsModelConfig.getIonosphereConfig();
+
+        string modelTypeString;
         if(itsModelConfig.useIonosphere()) {
-          degree = ps.getUint("Model.Ionosphere.Degree",
-            itsModelConfig.getIonosphereConfig().getDegree());
+          modelTypeString = ps.getString("Model.Ionosphere.Type",
+            IonosphereConfig::asString(parentConfig.getModelType()));
         } else {
+          modelTypeString = ps.getString("Model.Ionosphere.Type");
+        }
+
+        IonosphereConfig::ModelType modelType =
+          IonosphereConfig::asModelType(modelTypeString);
+        if(!IonosphereConfig::isDefined(modelType)) {
+          THROW(BBSControlException, "Key Model.Ionosphere.Type not found or"
+            " invalid.");
+        }
+
+        unsigned int degree = 0;
+        if(itsModelConfig.useIonosphere()
+          && parentConfig.getModelType() == IonosphereConfig::MIM) {
+          degree = ps.getUint("Model.Ionosphere.Degree", parentConfig.degree());
+        } else if(modelType == IonosphereConfig::MIM) {
           degree = ps.getUint("Model.Ionosphere.Degree");
         }
 
-        itsModelConfig.setIonosphereConfig(IonosphereConfig(degree));
+        itsModelConfig.setIonosphereConfig(IonosphereConfig(modelType, degree));
       } else {
         itsModelConfig.clearIonosphereConfig();
       }
