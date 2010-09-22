@@ -56,6 +56,10 @@ namespace rfiStrategy {
 				totalCount = source.totalCount;
 				marked = source.marked;
 			}
+			bool operator<(const SingleBaselineInfo &rhs) const
+			{
+				return length < rhs.length;
+			}
 				
 			int antenna1, antenna2;
 			std::string antenna1Name, antenna2Name;
@@ -105,7 +109,11 @@ namespace rfiStrategy {
 			void mark(class ArtifactSet &artifacts, class ProgressListener &listener);
 			void flagBaselines(ArtifactSet &artifacts, std::vector<BaselineSelectionInfo::SingleBaselineInfo> baselines);
 
-			double smoothedValue(const BaselineSelectionInfo &info, const BaselineSelectionInfo::SingleBaselineInfo &baseline);
+			double smoothedValue(const BaselineSelectionInfo &info, double length);
+			double smoothedValue(const BaselineSelectionInfo &info, const BaselineSelectionInfo::SingleBaselineInfo &baseline)
+			{
+				return smoothedValue(info, baseline.length);
+			}
 
 			bool _preparationStep;
 			bool _flagBadBaselines;
