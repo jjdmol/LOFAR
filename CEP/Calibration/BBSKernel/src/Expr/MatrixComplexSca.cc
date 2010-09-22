@@ -69,6 +69,10 @@ MatrixRep* MatrixComplexSca::divide (MatrixRep& right, bool rightTmp)
 {
   return right.divRep (*this, rightTmp);
 }
+MatrixRep* MatrixComplexSca::pow (MatrixRep& right, bool rightTmp)
+{
+  return right.powRep (*this, rightTmp);
+}
 MatrixRep* MatrixComplexSca::min (MatrixRep& right)
 {
   return MatrixRep::min(right);
@@ -255,6 +259,55 @@ MatrixRep* MatrixComplexSca::divRep(MatrixComplexArr& left, bool)
 #endif
 
   return &left;
+}
+
+MatrixRep* MatrixComplexSca::powRep(MatrixRealSca& left, bool rightTmp)
+{
+  MatrixComplexSca* v = rightTmp ? this : new MatrixComplexSca(itsValue);
+  v->itsValue = std::pow(left.itsValue, itsValue);
+  return v;
+}
+
+MatrixRep* MatrixComplexSca::powRep(MatrixComplexSca& left, bool rightTmp)
+{
+  MatrixComplexSca* v = rightTmp ? this : new MatrixComplexSca(itsValue);
+  v->itsValue = std::pow(left.itsValue, itsValue);
+  return v;
+}
+
+MatrixRep* MatrixComplexSca::powRep(MatrixRealArr& left, bool)
+{
+  MatrixComplexArr* v = MatrixComplexArr::allocate (left.nx(), left.ny());
+  int n = v->nelements();
+  for (int i = 0; i < n; ++i) {
+    dcomplex value = std::pow(left.itsValue[i], itsValue);
+    v->itsReal[i] = real(value);
+    v->itsImag[i] = imag(value);
+  }
+  return v;
+}
+
+MatrixRep* MatrixComplexSca::powRep(MatrixComplexArr& left, bool)
+{
+#if defined TIMER
+  static NSTimer timer("pow CS CA", true);
+  timer.start();
+#endif
+
+  MatrixComplexArr* v = MatrixComplexArr::allocate (left.nx(), left.ny());
+  int n = v->nelements();
+  for (int i = 0; i < n; ++i) {
+    dcomplex value =
+        std::pow(makedcomplex(left.itsReal[i], left.itsImag[i]), itsValue);
+    v->itsReal[i] = real(value);
+    v->itsImag[i] = imag(value);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
 }
 
 MatrixRep* MatrixComplexSca::negate()

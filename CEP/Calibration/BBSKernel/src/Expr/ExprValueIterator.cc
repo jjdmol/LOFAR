@@ -31,7 +31,7 @@ namespace BBS
 
 ExprValueIterator<Scalar>::ExprValueIterator(const Scalar &value)
 {
-    itsElement = value.getElement(0);
+    itsElement = value.element(0);
     itsIterator = itsElement.begin();
     itsKey =
         itsIterator == itsElement.end() ? PValueKey() : itsIterator->first;
@@ -65,7 +65,7 @@ ExprValueIterator<JonesMatrix>::ExprValueIterator(const JonesMatrix &value)
     itsAtEnd = true;
     for(unsigned int i = 0; i < 4; ++i)
     {
-        itsElement[i] = value.getElement(i);
+        itsElement[i] = value.element(i);
         itsIterator[i] = itsElement[i].begin();
 
         if(itsIterator[i] != itsElement[i].end())

@@ -75,7 +75,7 @@ const JonesMatrix Resampler::evaluateExpr(const Request &request, Cache &cache,
 
         for(unsigned int i = 0; i < arg.size(); ++i)
         {
-            const Element in(arg.getElement(i));
+            const Element in(arg.element(i));
 
             Element out;
             out.assign(resampleWithFlags(in.value(), flags, axisMap));
@@ -93,7 +93,7 @@ const JonesMatrix Resampler::evaluateExpr(const Request &request, Cache &cache,
     {
         for(unsigned int i = 0; i < arg.size(); ++i)
         {
-            const Element in(arg.getElement(i));
+            const Element in(arg.element(i));
 
             Element out;
             out.assign(resample(in.value(), axisMap));

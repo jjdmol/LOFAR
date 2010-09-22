@@ -61,23 +61,46 @@ public:
 
     virtual ~IonosphereExpr();
 
-    virtual Expr<JonesMatrix>::Ptr construct(const casa::MPosition &position,
-        const Expr<Vector<4> >::ConstPtr &piercePoint) const = 0;
+    virtual Expr<JonesMatrix>::Ptr construct(const casa::MPosition &refPosition,
+        const casa::MPosition &station, const Expr<Vector<2> >::ConstPtr &azel)
+        const = 0;
 };
 
-class PolynomialLayerExpr: public IonosphereExpr
+class MIMExpr: public IonosphereExpr
 {
 public:
-    typedef shared_ptr<PolynomialLayerExpr>         Ptr;
-    typedef shared_ptr<const PolynomialLayerExpr>   ConstPtr;
+    typedef shared_ptr<MIMExpr>         Ptr;
+    typedef shared_ptr<const MIMExpr>   ConstPtr;
 
-    PolynomialLayerExpr(const IonosphereConfig &config, Scope &scope);
+    MIMExpr(const IonosphereConfig &config, Scope &scope);
 
-    virtual Expr<JonesMatrix>::Ptr construct(const casa::MPosition &position,
-        const Expr<Vector<4> >::ConstPtr &piercePoint) const;
+    virtual Expr<JonesMatrix>::Ptr construct(const casa::MPosition &refPosition,
+        const casa::MPosition &station, const Expr<Vector<2> >::ConstPtr &azel)
+        const;
 
 private:
+    Expr<Scalar>::Ptr           itsHeight;
     vector<Expr<Scalar>::Ptr>   itsCoeff;
+};
+
+class ExpIonExpr: public IonosphereExpr
+{
+public:
+    typedef shared_ptr<ExpIonExpr>          Ptr;
+    typedef shared_ptr<const ExpIonExpr>    ConstPtr;
+
+    ExpIonExpr(const IonosphereConfig&, Scope &scope);
+
+    virtual Expr<JonesMatrix>::Ptr construct(const casa::MPosition &refPosition,
+        const casa::MPosition &station, const Expr<Vector<2> >::ConstPtr &azel)
+        const;
+
+private:
+    Expr<Scalar>::Ptr               itsR0;
+    Expr<Scalar>::Ptr               itsBeta;
+    Expr<Scalar>::Ptr               itsHeight;
+    vector<Expr<Vector<3> >::Ptr>   itsCalPiercePoint;
+    vector<Expr<Vector<2> >::Ptr>   itsTECWhite;
 };
 
 // @}

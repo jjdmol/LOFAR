@@ -89,16 +89,16 @@ const JonesMatrix MatrixSum::evaluateExpr(const Request &request, Cache &cache,
         }
 
         // Update perturbed values.
-        merge(term.getElement(0, 0), element[0][0]);
-        merge(term.getElement(0, 1), element[0][1]);
-        merge(term.getElement(1, 0), element[1][0]);
-        merge(term.getElement(1, 1), element[1][1]);
+        merge(term.element(0, 0), element[0][0]);
+        merge(term.element(0, 1), element[0][1]);
+        merge(term.element(1, 0), element[1][0]);
+        merge(term.element(1, 1), element[1][1]);
 
         // Update main value (location is important!!).
-        element[0][0].value() += term.getElement(0, 0).value();
-        element[0][1].value() += term.getElement(0, 1).value();
-        element[1][0].value() += term.getElement(1, 0).value();
-        element[1][1].value() += term.getElement(1, 1).value();
+        element[0][0].value() += term.element(0, 0).value();
+        element[0][1].value() += term.element(0, 1).value();
+        element[1][0].value() += term.element(1, 0).value();
+        element[1][1].value() += term.element(1, 1).value();
     }
 
     JonesMatrix result;

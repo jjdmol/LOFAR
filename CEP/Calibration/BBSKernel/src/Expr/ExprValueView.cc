@@ -34,9 +34,26 @@ ExprValueView<Scalar>::ExprValueView()
 {
 }
 
+ExprValueView<Scalar>::ExprValueView(const Matrix &value)
+    :   itsBindMask(false)
+{
+    assign(value);
+}
+
 ExprValueView<JonesMatrix>::ExprValueView()
 {
     itsBindMask[0] = itsBindMask[1] = itsBindMask[2] = itsBindMask[3] = false;
+}
+
+ExprValueView<JonesMatrix>::ExprValueView(const Matrix &el00,
+    const Matrix &el01, const Matrix &el10, const Matrix &el11)
+{
+    itsBindMask[0] = itsBindMask[1] = itsBindMask[2] = itsBindMask[3] = false;
+
+    assign(0, 0, el00);
+    assign(0, 1, el01);
+    assign(1, 0, el10);
+    assign(1, 1, el11);
 }
 
 } //# namespace BBS

@@ -58,6 +58,7 @@ public:
   virtual MatrixRep* subtract (MatrixRep& right, bool rightTmp);
   virtual MatrixRep* multiply (MatrixRep& right, bool rightTmp);
   virtual MatrixRep* divide   (MatrixRep& right, bool rightTmp);
+  virtual MatrixRep* pow      (MatrixRep& right, bool rightTmp);
 
   // Put here to avoid incorrect g++ warning about these function being hidden
   // by the functions of the same name without arguments (i.e. min() and max()).
@@ -91,6 +92,11 @@ private:
   virtual MatrixRep* divRep (MatrixComplexSca& left, bool rightTmp);
   virtual MatrixRep* divRep (MatrixComplexArr& left, bool rightTmp);
 
+  virtual MatrixRep* powRep (MatrixRealSca& left, bool rightTmp);
+  virtual MatrixRep* powRep (MatrixRealArr& left, bool rightTmp);
+  virtual MatrixRep* powRep (MatrixComplexSca& left, bool rightTmp);
+  virtual MatrixRep* powRep (MatrixComplexArr& left, bool rightTmp);
+
   virtual MatrixRep* negate();
 
   virtual MatrixRep* abs();
@@ -107,7 +113,6 @@ private:
   virtual MatrixRep* max();
   virtual MatrixRep* mean();
   virtual MatrixRep* sum();
-
 
   dcomplex itsValue;
 };

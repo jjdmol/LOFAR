@@ -40,6 +40,7 @@ install(FILES
   Expr/Cache.h
   Expr/CachePolicy.h
   Expr/ConditionNumber.h
+  Expr/Delay.h
   Expr/Element.h
   Expr/EquatorialCentroid.h
   Expr/Expr.h
@@ -57,6 +58,7 @@ install(FILES
   Expr/GaussianCoherence.h
   Expr/GaussianSource.h
   Expr/HamakerDipole.h
+  Expr/IonPhaseShift.h
   Expr/LinearToCircularRL.h
   Expr/Literal.h
   Expr/LMN.h

@@ -217,6 +217,10 @@ MatrixRep* MatrixRealArr::divide (MatrixRep& right, bool rightTmp)
 {
   return right.divRep (*this, rightTmp);
 }
+MatrixRep* MatrixRealArr::pow (MatrixRep& right, bool rightTmp)
+{
+  return right.powRep (*this, rightTmp);
+}
 MatrixRep* MatrixRealArr::posdiff (MatrixRep& right)
 {
   return right.posdiffRep (*this);
@@ -578,6 +582,93 @@ MatrixRep* MatrixRealArr::divRep(MatrixComplexArr& left, bool)
 #endif
 
   return &left;
+}
+
+MatrixRep *MatrixRealArr::powRep(MatrixRealSca &left, bool rightTmp)
+{
+#if defined TIMER
+  static NSTimer timer("pow RA RS", true);
+  timer.start();
+#endif
+
+  MatrixRealArr* v = rightTmp ? this : allocate(nx(), ny());
+  for (int i = 0; i < nelements(); i ++) {
+    v->itsValue[i] = std::pow(left.itsValue, itsValue[i]);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
+}
+
+MatrixRep *MatrixRealArr::powRep(MatrixRealArr &left, bool rightTmp)
+{
+  DBGASSERT (nelements() == left.nelements());
+
+#if defined TIMER
+  static NSTimer timer("pow RA RA", true);
+  timer.start();
+#endif
+
+  MatrixRealArr* v = rightTmp ? this : allocate(nx(), ny());
+  for (int i = 0; i < nelements(); i ++) {
+    v->itsValue[i] = std::pow(left.itsValue[i], itsValue[i]);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
+}
+
+MatrixRep* MatrixRealArr::powRep(MatrixComplexSca& left, bool)
+{
+#if defined TIMER
+  static NSTimer timer("pow RA CS", true);
+  timer.start();
+#endif
+
+  MatrixComplexArr* v = MatrixComplexArr::allocate(nx(), ny());
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    dcomplex value = std::pow(left.itsValue, itsValue[i]);
+    v->itsReal[i] = real(value);
+    v->itsImag[i] = imag(value);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
+}
+
+MatrixRep* MatrixRealArr::powRep(MatrixComplexArr& left, bool)
+{
+  DBGASSERT (nelements() == left.nelements());
+
+#if defined TIMER
+  static NSTimer timer("pow RA CA", true);
+  timer.start();
+#endif
+
+  MatrixComplexArr* v = MatrixComplexArr::allocate(nx(), ny());
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    dcomplex value = std::pow(makedcomplex(left.itsReal[i], left.itsImag[i]),
+        itsValue[i]);
+    v->itsReal[i] = real(value);
+    v->itsImag[i] = imag(value);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
 }
 
 MatrixRep* MatrixRealArr::posdiffRep (MatrixRealSca& left)

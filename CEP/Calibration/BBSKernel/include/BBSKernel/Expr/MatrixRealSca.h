@@ -61,6 +61,7 @@ public:
   virtual MatrixRep* subtract (MatrixRep& right, bool rightTmp);
   virtual MatrixRep* multiply (MatrixRep& right, bool rightTmp);
   virtual MatrixRep* divide   (MatrixRep& right, bool rightTmp);
+  virtual MatrixRep* pow      (MatrixRep& right, bool rightTmp);
   virtual MatrixRep* posdiff  (MatrixRep& right);
   virtual MatrixRep* tocomplex(MatrixRep& right);
   virtual MatrixRep* min      (MatrixRep& right);
@@ -87,6 +88,11 @@ private:
   virtual MatrixRep* divRep (MatrixRealArr& left, bool rightTmp);
   virtual MatrixRep* divRep (MatrixComplexSca& left, bool rightTmp);
   virtual MatrixRep* divRep (MatrixComplexArr& left, bool rightTmp);
+
+  virtual MatrixRep* powRep (MatrixRealSca& left, bool rightTmp);
+  virtual MatrixRep* powRep (MatrixRealArr& left, bool rightTmp);
+  virtual MatrixRep* powRep (MatrixComplexSca& left, bool rightTmp);
+  virtual MatrixRep* powRep (MatrixComplexArr& left, bool rightTmp);
 
   virtual MatrixRep* posdiffRep (MatrixRealSca& left);
   virtual MatrixRep* posdiffRep (MatrixRealArr& left);
@@ -121,7 +127,6 @@ private:
   virtual MatrixRep* max();
   virtual MatrixRep* mean();
   virtual MatrixRep* sum();
-
 
   double itsValue;
 };

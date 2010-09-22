@@ -268,6 +268,14 @@ MatrixTmp Matrix::operator-() const
     return MatrixTmp(*this).operator-();
 }
 
+MatrixTmp pow (const Matrix &left, const Matrix& right)
+{
+    return left.itsRep->pow(*right.rep(), false);
+}
+MatrixTmp pow (const Matrix &left, const MatrixTmp& right)
+{
+    return left.itsRep->pow(*right.rep(), true);
+}
 MatrixTmp posdiff (const Matrix& left, const Matrix& right)
 {
     return left.itsRep->posdiff(*right.itsRep);

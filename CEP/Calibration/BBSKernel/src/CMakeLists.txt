@@ -30,6 +30,7 @@ lofar_add_library(bbskernel
   Expr/CachePolicy.cc
   Expr/Cache.cc
   Expr/ConditionNumber.cc
+  Expr/Delay.cc
   Expr/Element.cc
   Expr/EquatorialCentroid.cc
   Expr/Expr.cc
@@ -45,6 +46,7 @@ lofar_add_library(bbskernel
   Expr/GaussianCoherence.cc
   Expr/GaussianSource.cc
   Expr/HamakerDipole.cc
+  Expr/IonPhaseShift.cc
   Expr/LinearToCircularRL.cc
   Expr/Literal.cc
   Expr/LMN.cc

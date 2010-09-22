@@ -28,8 +28,30 @@ namespace LOFAR
 namespace BBS
 {
 
+// -------------------------------------------------------------------------- //
+// - Implementation: ExprValue                                              - //
+// -------------------------------------------------------------------------- //
+
 ExprValue::~ExprValue()
 {
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: Scalar                                                 - //
+// -------------------------------------------------------------------------- //
+
+Scalar::Scalar()
+{
+}
+
+Scalar::Scalar(const Matrix &value)
+{
+    assign(value);
+}
+
+Scalar::Scalar(const Element &element)
+{
+    setElement(element);
 }
 
 const Scalar::View Scalar::view() const
@@ -65,6 +87,32 @@ void Scalar::assign(const PValueKey &key, const View &value)
     {
         itsElement.assign(key, value());
     }
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: JonesMatrix                                            - //
+// -------------------------------------------------------------------------- //
+
+JonesMatrix::JonesMatrix()
+{
+}
+
+JonesMatrix::JonesMatrix(const Matrix &el00, const Matrix &el01,
+    const Matrix &el10, const Matrix &el11)
+{
+    itsElement[0].assign(el00);
+    itsElement[1].assign(el01);
+    itsElement[2].assign(el10);
+    itsElement[3].assign(el11);
+}
+
+JonesMatrix::JonesMatrix(const Element &el00, const Element &el01,
+    const Element &el10, const Element &el11)
+{
+    itsElement[0] = el00;
+    itsElement[1] = el01;
+    itsElement[2] = el10;
+    itsElement[3] = el11;
 }
 
 const JonesMatrix::View JonesMatrix::view() const

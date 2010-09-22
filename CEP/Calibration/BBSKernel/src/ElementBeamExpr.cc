@@ -39,8 +39,8 @@ ElementBeamExpr::Ptr ElementBeamExpr::create(const BeamConfig &config,
     Scope &scope)
 {
     LOG_INFO_STR("Using element beam type: "
-        << config.getElementTypeAsString());
-    ASSERT(config.getElementType() != BeamConfig::UNKNOWN);
+        << BeamConfig::asString(config.getElementType()));
+    ASSERT(BeamConfig::isDefined(config.getElementType()));
 
     switch(config.getElementType())
     {
@@ -67,7 +67,8 @@ HamakerBeamExpr::HamakerBeamExpr(const BeamConfig &config, Scope&)
         || config.getElementType() == BeamConfig::HAMAKER_HBA);
 
     casa::Path path = config.getElementPath();
-    path.append("element_beam_" + config.getElementTypeAsString() + ".coeff");
+    path.append("element_beam_" + BeamConfig::asString(config.getElementType())
+        + ".coeff");
     LOG_INFO_STR("Element beam config file: " << path.expandedName());
 
     // Read beam coefficients from file.
@@ -90,12 +91,12 @@ YatawattaBeamExpr::YatawattaBeamExpr(const BeamConfig &config, Scope&)
     // TODO: Transparantly handle platforms that use a different extension for
     // loadable modules.
     itsModulePath[0] = config.getElementPath();
-    itsModulePath[0].append("element_beam_" + config.getElementTypeAsString()
-        + "_theta.so");
+    itsModulePath[0].append("element_beam_"
+        + BeamConfig::asString(config.getElementType()) + "_theta.so");
 
     itsModulePath[1] = config.getElementPath();
-    itsModulePath[1].append("element_beam_" + config.getElementTypeAsString()
-        + "_phi.so");
+    itsModulePath[1].append("element_beam_"
+        + BeamConfig::asString(config.getElementType()) + "_phi.so");
 
     LOG_INFO_STR("Element beam loadable modules: ["
         << itsModulePath[0].expandedName() << ","

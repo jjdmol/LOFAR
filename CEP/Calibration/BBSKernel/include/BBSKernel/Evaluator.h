@@ -172,7 +172,7 @@ void Evaluator::procExprWithFlags(size_t &bl, const JonesMatrix &rhs)
         FlagArray::const_iterator flagIt = flagsRHS.begin();
 
         // Get pointers to the computed visibilities.
-        const Matrix samplesRHS = rhs.getElement(crRHS).value();
+        const Matrix samplesRHS = rhs.element(crRHS).value();
         const double *reIt = 0, *imIt = 0;
         samplesRHS.dcomplexStorage(reIt, imIt);
 
@@ -221,7 +221,7 @@ void Evaluator::procExpr(size_t &bl, const JonesMatrix &rhs)
         const size_t crRHS = itsCrMap[cr].second;
 
         // Get pointers to the computed visibilities.
-        const Matrix samplesRHS = rhs.getElement(crRHS).value();
+        const Matrix samplesRHS = rhs.element(crRHS).value();
         const double *reIt = 0, *imIt = 0;
         samplesRHS.dcomplexStorage(reIt, imIt);
 

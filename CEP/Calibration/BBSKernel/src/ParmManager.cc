@@ -49,6 +49,13 @@ void ParmManagerImpl::initCategory(unsigned int category, const ParmDB &db)
     itsCategories.insert(make_pair(category, db));
 }
 
+vector<string> ParmManagerImpl::find(unsigned int category,
+    const string &pattern) const
+{
+    const ParmDB &parmDb = getParmDbForCategory(category);
+    return parmDb.getNames(pattern);
+}
+
 double ParmManagerImpl::getDefaultValue(unsigned int category,
     const string &name, double value)
 {

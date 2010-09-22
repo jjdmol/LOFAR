@@ -241,6 +241,10 @@ MatrixRep* MatrixComplexArr::divide (MatrixRep& right, bool rightTmp)
 {
   return right.divRep (*this, rightTmp);
 }
+MatrixRep* MatrixComplexArr::pow (MatrixRep& right, bool rightTmp)
+{
+  return right.powRep (*this, rightTmp);
+}
 MatrixRep* MatrixComplexArr::min (MatrixRep& right)
 {
    return MatrixRep::min(right);
@@ -461,6 +465,100 @@ MatrixRep* MatrixComplexArr::subRep(MatrixComplexArr& left, bool)
 #endif
 
   return &left;
+}
+
+
+MatrixRep* MatrixComplexArr::powRep(MatrixRealSca& left, bool rightTmp)
+{
+#if defined TIMER
+  static NSTimer timer("pow CA RS", true);
+  timer.start();
+#endif
+
+  MatrixComplexArr* v = rightTmp ? this : allocate(nx(), ny());
+  for (int i = 0; i < nelements(); ++i) {
+    dcomplex value =
+        std::pow(left.itsValue, makedcomplex(itsReal[i], itsImag[i]));
+    v->itsReal[i] = real(value);
+    v->itsImag[i] = imag(value);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
+}
+
+MatrixRep* MatrixComplexArr::powRep(MatrixComplexSca& left, bool rightTmp)
+{
+#if defined TIMER
+  static NSTimer timer("pow CA CS", true);
+  timer.start();
+#endif
+
+  MatrixComplexArr* v = rightTmp ? this : allocate(nx(), ny());
+  for (int i = 0; i < nelements(); ++i) {
+    dcomplex value =
+        std::pow(left.itsValue, makedcomplex(itsReal[i], itsImag[i]));
+    v->itsReal[i] = real(value);
+    v->itsImag[i] = imag(value);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
+}
+
+MatrixRep* MatrixComplexArr::powRep(MatrixRealArr& left, bool rightTmp)
+{
+  DBGASSERT (left.nelements() == nelements());
+
+#if defined TIMER
+  static NSTimer timer("pow CA RA", true);
+  timer.start();
+#endif
+
+  MatrixComplexArr* v = rightTmp ? this : allocate(nx(), ny());
+  for (int i = 0; i < nelements(); ++i) {
+    dcomplex value =
+        std::pow(left.itsValue[i], makedcomplex(itsReal[i], itsImag[i]));
+    v->itsReal[i] = real(value);
+    v->itsImag[i] = imag(value);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
+}
+
+
+MatrixRep* MatrixComplexArr::powRep(MatrixComplexArr& left, bool rightTmp)
+{
+  DBGASSERT (left.nelements() == nelements());
+
+#if defined TIMER
+  static NSTimer timer("pow CA CA", true);
+  timer.start();
+#endif
+
+  MatrixComplexArr* v = rightTmp ? this : allocate(nx(), ny());
+  for (int i = 0; i < nelements(); ++i) {
+    dcomplex value = std::pow(makedcomplex(left.itsReal[i], left.itsImag[i]),
+        makedcomplex(itsReal[i], itsImag[i]));
+    v->itsReal[i] = real(value);
+    v->itsImag[i] = imag(value);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
 }
 
 

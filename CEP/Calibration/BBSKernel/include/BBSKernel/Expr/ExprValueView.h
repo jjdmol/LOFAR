@@ -56,6 +56,7 @@ class ExprValueView<Scalar>
 {
 public:
     ExprValueView();
+    ExprValueView(const Matrix &value);
 
     bool valid() const;
     bool bound() const;
@@ -91,6 +92,8 @@ class ExprValueView<JonesMatrix>
 {
 public:
     ExprValueView();
+    ExprValueView(const Matrix &el00, const Matrix &el01, const Matrix &el10,
+        const Matrix &el11);
 
     bool valid(unsigned int i0, unsigned int i1) const;
     bool bound(unsigned int i0, unsigned int i1) const;
