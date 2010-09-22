@@ -260,8 +260,6 @@ namespace rfiStrategy {
 
 	double BaselineSelectionAction::smoothedValue(const BaselineSelectionInfo &info, double length)
 	{
-		const double sigma = 0.3;
-
 		double logLength = log(length);
 
 		double sum = 0.0;
@@ -272,7 +270,7 @@ namespace rfiStrategy {
 			double otherLogLength = log(i->length);
 			double otherValue = (double) i->rfiCount / (double) i->totalCount;
 			double x = otherLogLength-logLength;
-			double curWeight = exp(-x*x/(2.0*sigma*sigma));
+			double curWeight = exp(-x*x/(2.0*_smoothingSigma*_smoothingSigma));
 			sum += curWeight * otherValue;
 			weight += curWeight;
 		}

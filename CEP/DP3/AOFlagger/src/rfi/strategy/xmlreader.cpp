@@ -273,6 +273,8 @@ Action *XmlReader::parseBaselineSelectionAction(xmlNode *node)
 	BaselineSelectionAction *newAction = new BaselineSelectionAction();
 	newAction->SetPreparationStep(getBool(node, "preparation-step"));
 	newAction->SetFlagBadBaselines(getBool(node, "flag-bad-baselines"));
+	newAction->SetAbsThreshold(getDouble(node, "abs-threshold"));
+	newAction->SetSmoothingSigma(getDouble(node, "smoothing-sigma"));
 	newAction->SetMakePlot(getBool(node, "make-plot"));
 	return newAction;
 }
