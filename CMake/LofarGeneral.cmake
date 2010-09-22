@@ -32,6 +32,7 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
   ## --------------------------------------------------------------------------
   ## Configure for testing with CTest/Dart
   ## --------------------------------------------------------------------------
+  set(BUILDNAME ${BUILD_PACKAGES} CACHE INTERNAL "CDash/Dart BuildName")
   include(CTest)
   
   ## --------------------------------------------------------------------------
