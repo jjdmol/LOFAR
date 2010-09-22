@@ -51,7 +51,8 @@ namespace rfiStrategy
 //       time res changing (parameters were renamed).
 // 1.5 : added the CutAreaAction and added "file-prefix" parameter of AddStatistics action.
 // 1.6 : added the BaselineSelectionAction
-#define STRATEGY_FILE_FORMAT_VERSION 1.6
+// 1.7 : added "abs-threshold" and "smoothing-sigma" parameters to the BaselineSelectionAction 
+#define STRATEGY_FILE_FORMAT_VERSION 1.7
 
 // The earliest format version which can be read by this version of the software
 #define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 1.4

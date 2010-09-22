@@ -217,6 +217,8 @@ namespace rfiStrategy {
 		attribute("type", "BaselineSelectionAction");
 		write<bool>("preparation-step", action.PreparationStep());
 		write<bool>("flag-bad-baselines", action.FlagBadBaselines());
+		write<double>("abs-threshold", action.AbsThreshold());
+		write<double>("smoothing-sigma", action.SmoothingSigma());
 		write<bool>("make-plot", action.MakePlot());
 	}
 

@@ -78,7 +78,7 @@ namespace rfiStrategy {
 	class BaselineSelectionAction : public Action
 	{
 		public:
-			BaselineSelectionAction() : _preparationStep(true), _flagBadBaselines(false), _makePlot(false), _absThreshold(0.4) { }
+			BaselineSelectionAction() : _preparationStep(true), _flagBadBaselines(false), _makePlot(false), _absThreshold(0.4), _smoothingSigma(0.6) { }
 
 			virtual std::string Description()
 			{
@@ -104,6 +104,12 @@ namespace rfiStrategy {
 
 			bool MakePlot() const { return _makePlot; }
 			void SetMakePlot(bool makePlot) { _makePlot = makePlot; }
+
+			double AbsThreshold() const { return _absThreshold; }
+			void SetAbsThreshold(double absThreshold) { _absThreshold = absThreshold; }
+
+			double SmoothingSigma() const { return _smoothingSigma; }
+			void SetSmoothingSigma(double smoothingSigma) { _smoothingSigma = smoothingSigma; }
 		private:
 			void prepare(class ArtifactSet &artifacts, class ProgressListener &listener);
 			void mark(class ArtifactSet &artifacts, class ProgressListener &listener);
@@ -119,6 +125,7 @@ namespace rfiStrategy {
 			bool _flagBadBaselines;
 			bool _makePlot;
 			double _absThreshold;
+			double _smoothingSigma;
 	};
 }
 
