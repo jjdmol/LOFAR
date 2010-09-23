@@ -310,11 +310,6 @@
         </Property>
       </Properties>
     </Component>
-    <Component class="javax.swing.JLabel" name="ParamLimitsLabel1">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="Value :"/>
-      </Properties>
-    </Component>
     <Component class="javax.swing.JLabel" name="derefLabel">
       <Properties>
         <Property name="text" type="java.lang.String" value="Deref Value:"/>
