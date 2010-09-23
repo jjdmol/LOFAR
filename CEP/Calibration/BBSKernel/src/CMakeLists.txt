@@ -20,6 +20,7 @@ lofar_add_library(bbskernel
   ParmProxy.cc
   Solver.cc
   SolverInterfaceTypes.cc
+  StationResponse.cc
   UVWFlagger.cc
   VisBuffer.cc
   VisDimensions.cc
