@@ -11,6 +11,9 @@
 
 package nl.astron.lofar.lofarutils.inputfieldbuilder.test;
 
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
 /**
  *
  * @author coolen
@@ -115,7 +118,7 @@ public class inputFieldBuilderTest extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jToggleButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton1ActionPerformed
-        inputFieldBuilder.setContent("test",typeTextField.getText(), unitTextField.getText(), valueTextField.getText(), formatTextField.getText(),"");
+        inputFieldBuilder.setContent(this,(JPanel)getContentPane(),"test",typeTextField.getText(), unitTextField.getText(), valueTextField.getText(), formatTextField.getText(),"");
     }//GEN-LAST:event_jToggleButton1ActionPerformed
 
     /**

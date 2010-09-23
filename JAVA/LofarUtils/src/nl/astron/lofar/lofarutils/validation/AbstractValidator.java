@@ -16,6 +16,7 @@ import javax.swing.*;
 public abstract class AbstractValidator extends InputVerifier implements KeyListener {
     private JDialog popup;
     private Object parent;
+    private Object caller;
     private JLabel messageLabel;
     private JLabel image;
     private Point point;
@@ -60,6 +61,10 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
         initComponents();
     }
 
+    public void setCaller(Object aCaller) {
+        caller=aCaller;
+    }
+
 
     /**
      * Implement the actual validation logic in this method. The method should
@@ -85,8 +90,8 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
         popup.setVisible(false);
         if (!validationCriteria(c)) {
 
-            if(parent instanceof WantsValidationStatus)
-                ((WantsValidationStatus)parent).validateFailed();
+            if(caller instanceof WantsValidationStatus)
+                ((WantsValidationStatus)caller).validateFailed();
 
             c.setBackground(Color.PINK);
             popup.setSize(0, 0);
@@ -102,8 +107,8 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
 
         c.setBackground(Color.WHITE);
 
-        if(parent instanceof WantsValidationStatus)
-            ((WantsValidationStatus)parent).validatePassed();
+        if(caller instanceof WantsValidationStatus)
+            ((WantsValidationStatus)caller).validatePassed();
 
         return true;
     }

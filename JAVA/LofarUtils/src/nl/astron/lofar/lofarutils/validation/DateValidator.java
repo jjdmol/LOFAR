@@ -2,6 +2,7 @@ package nl.astron.lofar.lofarutils.validation;
 
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JTextField;
 
 /**
@@ -16,7 +17,11 @@ public class DateValidator extends AbstractValidator {
         super(parent, c, "");
     }
 
-    protected boolean validationCriteria(JComponent c) {
+   public DateValidator(JFrame parent, JTextField c) {
+        super(parent, c, "");
+    }
+
+       protected boolean validationCriteria(JComponent c) {
         String input = ((JTextField)c).getText();
 
 

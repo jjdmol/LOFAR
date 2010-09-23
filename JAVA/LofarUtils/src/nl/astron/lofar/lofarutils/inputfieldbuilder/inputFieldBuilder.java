@@ -13,6 +13,8 @@ package nl.astron.lofar.lofarutils.inputfieldbuilder;
 
 import java.awt.CardLayout;
 import java.awt.Color;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.lofarutils.validation.AbstractValidator;
 import nl.astron.lofar.lofarutils.validation.BoolValidator;
@@ -44,6 +46,9 @@ public class inputFieldBuilder extends javax.swing.JPanel {
 
 
     public inputFieldBuilder() {
+        itsPanel=null;
+        itsFrame=null;
+        itsName="";
         itsType="";
         itsUnit="";
         itsFormat="";
@@ -53,7 +58,9 @@ public class inputFieldBuilder extends javax.swing.JPanel {
     }
 
     /** Creates new form inputFieldBuilder */
-    public void setContent(String aName,String type,String unit, String nodevalue, String format, String paramvalue) {
+    public void setContent(JFrame aFrame,JPanel aPanel,String aName,String type,String unit, String nodevalue, String format, String paramvalue) {
+        itsPanel=aPanel;
+        itsFrame=aFrame;
         itsName=aName;
         itsType=type;
         itsUnit=unit;
@@ -91,52 +98,53 @@ public class inputFieldBuilder extends javax.swing.JPanel {
         if (textInput.isVisible() && textInput.isEditable()) {
             // int
             if (itsType.equals("int")) {              // signed integer
-                textInput.setInputVerifier(new IntegerValidator(null, textInput, true));
+                textInput.setInputVerifier(new IntegerValidator(itsFrame, textInput, true));
             } else if (itsType.equals("uint")) {      // unsigned integer
-                textInput.setInputVerifier(new IntegerValidator(null, textInput, false));
+                textInput.setInputVerifier(new IntegerValidator(itsFrame, textInput, false));
             } else if (itsType.equals("long")) {      // signed integer
-                textInput.setInputVerifier(new LongValidator(null, textInput, true));
+                textInput.setInputVerifier(new LongValidator(itsFrame, textInput, true));
             } else if (itsType.equals("ulng")) {      // unsigned integer
-                textInput.setInputVerifier(new LongValidator(null, textInput, false));
+                textInput.setInputVerifier(new LongValidator(itsFrame, textInput, false));
             } else if (itsType.equals("dbl")) {       // double
-                textInput.setInputVerifier(new DoubleValidator(null, textInput));
+                textInput.setInputVerifier(new DoubleValidator(itsFrame, textInput));
             } else if (itsType.equals("flt")) {       // float
-                textInput.setInputVerifier(new FloatValidator(null, textInput));
+                textInput.setInputVerifier(new FloatValidator(itsFrame, textInput));
             } else if (itsType.equals("date")) {      // date
-                textInput.setInputVerifier(new DateValidator(null, textInput));
+                textInput.setInputVerifier(new DateValidator(itsFrame, textInput));
             } else if (itsType.equals("time")) {      // time
-                textInput.setInputVerifier(new TimeValidator(null, textInput));
+                textInput.setInputVerifier(new TimeValidator(itsFrame, textInput));
             } else if (itsType.equals("bool")) {      // bool
-                textInput.setInputVerifier(new BoolValidator(null, textInput,""));
+                textInput.setInputVerifier(new BoolValidator(itsFrame, textInput,""));
             } else if (itsType.equals("text")) {      // text
-                textInput.setInputVerifier(new TextValidator(null, textInput));
+                textInput.setInputVerifier(new TextValidator(itsFrame, textInput));
             } else if (itsType.equals("node")) {      // text
-                textInput.setInputVerifier(new NodeValidator(null, textInput));
+                textInput.setInputVerifier(new NodeValidator(itsFrame, textInput));
 
                 // Vectors
             } else if (itsType.equals("vtext")) {     // Vector of Textfields
-                textInput.setInputVerifier(new TextVectorValidator(null, textInput));
+                textInput.setInputVerifier(new TextVectorValidator(itsFrame, textInput));
             } else if (itsType.equals("vbool")) {      // Vector of booleans
-                textInput.setInputVerifier(new BoolVectorValidator(null, textInput));
+                textInput.setInputVerifier(new BoolVectorValidator(itsFrame, textInput));
             } else if (itsType.equals("vdbl")) {      // Vector of doubles
-                textInput.setInputVerifier(new DoubleVectorValidator(null, textInput));
+                textInput.setInputVerifier(new DoubleVectorValidator(itsFrame, textInput));
             } else if (itsType.equals("vflt")) {      // Vector of floats
-                textInput.setInputVerifier(new FloatVectorValidator(null, textInput));
+                textInput.setInputVerifier(new FloatVectorValidator(itsFrame, textInput));
             } else if (itsType.equals("vint")) {       // Vector of signed integers
-                textInput.setInputVerifier(new IntVectorValidator(null, textInput, true));
+                textInput.setInputVerifier(new IntVectorValidator(itsFrame, textInput, true));
             } else if (itsType.equals("vuint")) {      // Vector of unsigned integers
-                textInput.setInputVerifier(new IntVectorValidator(null, textInput, false));
+                textInput.setInputVerifier(new IntVectorValidator(itsFrame, textInput, false));
             } else if (itsType.equals("vlong")) {      // Vector of signed longs
-                textInput.setInputVerifier(new LongVectorValidator(null, textInput, true));
+                textInput.setInputVerifier(new LongVectorValidator(itsFrame, textInput, true));
             } else if (itsType.equals("vulng")) {      // Vector of unsigned longs
-                textInput.setInputVerifier(new LongVectorValidator(null, textInput, false));
+                textInput.setInputVerifier(new LongVectorValidator(itsFrame, textInput, false));
             } else if (itsType.equals("vdate")) {      // Vector of dates
-                textInput.setInputVerifier(new DateVectorValidator(null, textInput));
+                textInput.setInputVerifier(new DateVectorValidator(itsFrame, textInput));
             } else if (itsType.equals("vulng")) {      // Vector of Times
-                textInput.setInputVerifier(new TimeVectorValidator(null, textInput));
+                textInput.setInputVerifier(new TimeVectorValidator(itsFrame, textInput));
             }
             currentInputField=this;
             textInput.setName(itsName);
+            setCaller(itsPanel);
         } else {
             textInput.setInputVerifier(null);
             currentInputField=null;
@@ -167,7 +175,7 @@ public class inputFieldBuilder extends javax.swing.JPanel {
     public boolean checkInput() {
         boolean b = true;
         if (!isCombo) {
-            b=textInput.getInputVerifier().shouldYieldFocus(this);
+            b=textInput.getInputVerifier().shouldYieldFocus(textInput);
             if (!b) {
                 textInput.requestFocusInWindow();
             }
@@ -183,12 +191,20 @@ public class inputFieldBuilder extends javax.swing.JPanel {
         }
     }
 
+    public void setCaller(Object aCaller) {
+        if (!isCombo) {
+            ((AbstractValidator)textInput.getInputVerifier()).setCaller(aCaller);
+        }
+    }
+
     private String itsName="";
     private String itsUnit="";
     private String itsNodeValue="";
     private String itsType="";
     private String itsFormat="";
     private String itsParamValue="";
+    private JPanel itsPanel=null;
+    private JFrame itsFrame=null;
     private boolean isCombo=false;
 
     /** This method is called from within the constructor to
