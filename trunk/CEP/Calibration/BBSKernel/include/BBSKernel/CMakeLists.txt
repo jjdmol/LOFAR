@@ -26,6 +26,7 @@ install(FILES
   ParmProxy.h
   Solver.h
   SolverInterfaceTypes.h
+  StationResponse.h
   Types.h
   UVWFlagger.h
   VisBuffer.h
