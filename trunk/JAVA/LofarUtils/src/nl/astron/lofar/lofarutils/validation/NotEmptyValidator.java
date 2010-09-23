@@ -14,6 +14,7 @@ package nl.astron.lofar.lofarutils.validation;
 import javax.swing.JComponent;
 import javax.swing.JTextField;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 
 /**
  * A class for performing basic validation on text fields. All it does is make
@@ -24,6 +25,10 @@ import javax.swing.JDialog;
 
 public class NotEmptyValidator extends AbstractValidator {
     public NotEmptyValidator(JDialog parent, JTextField c, String message) {
+        super(parent, c, message);
+    }
+
+    public NotEmptyValidator(JFrame parent, JTextField c, String message) {
         super(parent, c, message);
     }
 

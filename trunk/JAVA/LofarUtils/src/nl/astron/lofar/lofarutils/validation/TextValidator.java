@@ -2,6 +2,7 @@ package nl.astron.lofar.lofarutils.validation;
 
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JTextField;
 
 /**
@@ -12,7 +13,11 @@ import javax.swing.JTextField;
 
 public class TextValidator extends AbstractValidator {
 
-       public TextValidator(JDialog parent, JTextField c) {
+    public TextValidator(JDialog parent, JTextField c) {
+        super(parent, c, "");
+    }
+
+    public TextValidator(JFrame parent, JTextField c) {
         super(parent, c, "");
     }
 

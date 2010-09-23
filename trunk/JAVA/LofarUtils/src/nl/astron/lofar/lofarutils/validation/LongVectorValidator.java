@@ -2,6 +2,7 @@ package nl.astron.lofar.lofarutils.validation;
 
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JTextField;
 
 /**
@@ -14,6 +15,11 @@ public class LongVectorValidator extends AbstractValidator {
 
     boolean isSigned=false;
     public LongVectorValidator(JDialog parent, JTextField c, boolean signed) {
+        super(parent, c, "");
+        isSigned=signed;
+    }
+
+    public LongVectorValidator(JFrame parent, JTextField c, boolean signed) {
         super(parent, c, "");
         isSigned=signed;
     }

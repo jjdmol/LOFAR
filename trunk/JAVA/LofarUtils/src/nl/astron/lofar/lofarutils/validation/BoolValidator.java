@@ -18,6 +18,10 @@ public class BoolValidator extends AbstractValidator {
         super(parent, c, message);
     }
 
+    public BoolValidator(JFrame parent, JTextField c, String message) {
+        super(parent, c, message);
+    }
+
     protected boolean validationCriteria(JComponent c) {
         String input = ((JTextField)c).getText();
 
