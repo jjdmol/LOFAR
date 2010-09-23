@@ -1376,8 +1376,10 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 
 			// Note: RCUallocation is stationbased, rest info is fieldbased, 
 			//		 use firstRCU as offsetcorrection
-			int	firstRCU(gAntField->ringNr(fieldName) * gAntField->nrAnts(fieldName) * 2);
+			int	firstRCU    (gAntField->ringNr(fieldName) * gAntField->nrAnts(fieldName) * 2);
+			int	firstBeamlet(gAntField->ringNr(fieldName) * LOFAR::MAX_BEAMLETS);
 			LOG_DEBUG_STR("first RCU of field " << fieldName << "=" << firstRCU);
+			LOG_DEBUG_STR("first beamlet of field " << fieldName << "=" << firstBeamlet);
 			bitset<MAX_RCUS>	RCUallocation(beamIter->second->rcuMask());
 			for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
 				if (!RCUallocation.test(rcu)) {			// all RCUS switched on in LBA/HBA mode
@@ -1396,21 +1398,23 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 						continue;
 					}
 
-					itsWeights(rcu, beamlet) = exp(itsBeamletAllocation[beamlet].scaling * 
+					itsWeights(rcu, beamlet) = exp(itsBeamletAllocation[beamlet+firstBeamlet].scaling * 
 							(rcuJ2000Pos(rcu-firstRCU, 0) * sourceJ2000xyz(0,0) +
 							 rcuJ2000Pos(rcu-firstRCU, 1) * sourceJ2000xyz(0,1) +
 							 rcuJ2000Pos(rcu-firstRCU, 2) * sourceJ2000xyz(0,2)));
 
 					// some debugging
-					if (itsWeights(rcu, beamlet) != complex<double>(1,0)) {
-						if (rcu>9 && rcu<17 && beamlet>10 && beamlet<20) {		// limit amount of data
-							stringstream	str;
-							str.precision(20);
-							str << "itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet);
-							LOG_DEBUG_STR(str.str());
+//					if (itsWeights(rcu, beamlet) != complex<double>(1,0)) {
+//						if (rcu>9 && rcu<17 && beamlet>10 && beamlet<20) {		// limit amount of data
+//							stringstream	str;
+//							str.precision(20);
+//							str << "itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet);
+//							LOG_DEBUG_STR(str.str());
+//						}
+						if (beamlet%100==0) {
+							LOG_DEBUG_STR("itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet));
 						}
-//						LOG_DEBUG_STR("itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet));
-					}
+//					}
 				} // beamlets
 			} // rcus
 		} // beams
