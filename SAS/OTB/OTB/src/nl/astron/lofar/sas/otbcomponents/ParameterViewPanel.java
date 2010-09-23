@@ -1,6 +1,4 @@
 /*
- * ParamViewPanel.java
- *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
  *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
@@ -31,9 +29,11 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JFrame;
 import javax.swing.JPopupMenu;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.lofarutils.inputfieldbuilder.inputFieldBuilder;
+import nl.astron.lofar.lofarutils.validation.WantsValidationStatus;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
@@ -51,7 +51,7 @@ import org.apache.log4j.Logger;
  *
  * @version $Id$
  */
-public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel {
+public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel,WantsValidationStatus {
 
     static Logger logger = Logger.getLogger(ParameterViewPanel.class);
     static String name = "Parameter";
@@ -314,7 +314,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                 derefLabel.setVisible(false);
             }
             setDescription(itsParam.description);
-            CardPanel.setContent(itsNode,itsParam);
+            CardPanel.setContent(itsMainFrame,this,itsNode,itsParam);
         } else {
             logger.error("no Param given");
         }
@@ -599,7 +599,6 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         ParamValMomentText = new javax.swing.JTextField();
         ParamRuntimeModText = new javax.swing.JComboBox();
         CardPanel = new nl.astron.lofar.sas.otbcomponents.OTBInputFieldBuilder();
-        ParamLimitsLabel1 = new javax.swing.JLabel();
         derefLabel = new javax.swing.JLabel();
         derefText = new javax.swing.JTextField();
 
@@ -675,8 +674,6 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         ParamRuntimeModText.setEnabled(false);
 
         CardPanel.setPreferredSize(new java.awt.Dimension(625, 20));
-
-        ParamLimitsLabel1.setText("Value :");
 
         derefLabel.setText("Deref Value:");
         derefLabel.setVisible(false);
@@ -814,7 +811,6 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     private javax.swing.JLabel ParamIndexLabel;
     private javax.swing.JTextField ParamIndexText;
     private javax.swing.JLabel ParamLimitsLabel;
-    private javax.swing.JLabel ParamLimitsLabel1;
     private javax.swing.JLabel ParamNameLabel;
     private javax.swing.JTextField ParamNameText;
     private javax.swing.JLabel ParamPruningLabel;
@@ -875,7 +871,13 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     }
 
 
+    public void validateFailed() {
+        ParamApplyButton.setEnabled(false);
+    }
 
+    public void validatePassed() {
+        ParamApplyButton.setEnabled(true);
+    }
 
 
 }

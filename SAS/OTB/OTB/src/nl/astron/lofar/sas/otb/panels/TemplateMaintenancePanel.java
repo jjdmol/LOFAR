@@ -132,6 +132,10 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 }
 //            }
             this.setChanged(false);
+        } else {
+            if (inputFieldBuilder.currentInputField != null) {
+                inputFieldBuilder.currentInputField.checkInput();
+            }
         }
     }
 

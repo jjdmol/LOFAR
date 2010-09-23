@@ -6,8 +6,11 @@
 package nl.astron.lofar.sas.otbcomponents;
 
 import java.rmi.RemoteException;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.lofarutils.inputfieldbuilder.inputFieldBuilder;
+import nl.astron.lofar.lofarutils.validation.WantsValidationStatus;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBparam;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
@@ -17,16 +20,21 @@ import org.apache.log4j.Logger;
  *
  * @author coolen
  */
-public class OTBInputFieldBuilder extends inputFieldBuilder {
+public class OTBInputFieldBuilder extends inputFieldBuilder implements WantsValidationStatus {
 
     static Logger logger = Logger.getLogger(OTBInputFieldBuilder.class);
     static String name="OTBInputFieldBuilder";
+
+    private JPanel itsCaller = null;
+    private JFrame itsFrame = null;
 
     public OTBInputFieldBuilder() {
         super();
     }
 
-    public void setContent(jOTDBnode aNode,jOTDBparam aParam) {
+    public void setContent(JFrame aFrame,JPanel aCaller,jOTDBnode aNode,jOTDBparam aParam) {
+        itsFrame=aFrame;
+        itsCaller=aCaller;
 
         if (aParam == null ) return;
 
@@ -51,8 +59,20 @@ public class OTBInputFieldBuilder extends inputFieldBuilder {
             return;
        }
 
-       super.setContent(aNode.name,aType,aUnit,aNode.limits,aFormat,aParam.limits);
+       super.setContent(itsFrame,itsCaller,aNode.name,aType,aUnit,aNode.limits,aFormat,aParam.limits);
 
     }
+
+
+    public void validateFailed() {
+        if(itsCaller instanceof WantsValidationStatus)
+                ((WantsValidationStatus)itsCaller).validateFailed();
+    }
+
+    public void validatePassed() {
+        if(itsCaller instanceof WantsValidationStatus)
+                ((WantsValidationStatus)itsCaller).validatePassed();
+    }
+
 
 }
