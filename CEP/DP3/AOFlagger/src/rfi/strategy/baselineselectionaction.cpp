@@ -147,7 +147,7 @@ namespace rfiStrategy {
 				double currentValue = (double) baseline.rfiCount / (double) baseline.totalCount;
 				double baselineValue =
 					smoothedValue(info, baseline.length) - currentValue;
-				if(baselineValue >= mean - threshold*stddev && baselineValue <= mean + threshold*stddev && currentValue<_absThreshold)
+				if(baselineValue >= mean - threshold*stddev && baselineValue <= mean + threshold*stddev && currentValue<_absThreshold && (baseline.rfiCount!=0 || baseline.totalCount<2500))
 				{
 					markedBaselines.erase(markedBaselines.begin()+i);
 					info.baselines.push_back(baseline);
