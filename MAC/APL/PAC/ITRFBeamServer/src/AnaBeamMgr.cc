@@ -24,7 +24,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/LofarConstants.h>
-#include <ApplCommon/StationConfig.h>
 #include <APL/APLCommon/AntennaSets.h>
 #include <APL/APLCommon/AntennaField.h>
 #include <APL/RTCCommon/PSAccess.h>		// ParameterSet macros
@@ -68,8 +67,7 @@ AnaBeamMgr::AnaBeamMgr(uint		nrRCUsPerRing,
 	LOG_DEBUG("Loaded HBADelays file");
 
 	// initialize size of array for HBA delay calculation
-	StationConfig	sc;
-	itsHBAdelays.resize(sc.nrRSPs * NR_RCUS_PER_RSPBOARD, N_HBA_ELEM_PER_TILE);
+	itsHBAdelays.resize(itsSC.nrRSPs * NR_RCUS_PER_RSPBOARD, N_HBA_ELEM_PER_TILE);
 
 }
 
@@ -311,7 +309,7 @@ void AnaBeamMgr::calculateHBAdelays(RTC::Timestamp	targetTime, J2000Converter&	a
 		// HBA delta array
 		LOG_DEBUG_STR("itsTileRelPos = " << itsTileRelPos);
 
-		// TODO: shuold be outside all loops, is static info
+		// TODO: should be outside all loops, is static info
 		// Calc length of vectors of rel. positions of the tile elements
 		blitz::Array<double, 1>		tileRelLength(itsTileRelPos.extent(firstDim));
 		for (int i = 0; i < itsTileRelPos.extent(firstDim); i++) {
@@ -369,11 +367,16 @@ void AnaBeamMgr::calculateHBAdelays(RTC::Timestamp	targetTime, J2000Converter&	a
 					continue;
 				}
 
-				for (int element = 0; element < N_HBA_ELEM_PER_TILE; ++ element) {
+				// Do the HBA_1 antennas use a different rotation and are we calculating such an antenna?
+				int HBAdeltaOffset = (itsDiffHBArotations && (rcu/N_POL >= (itsSC.nrHBAs/2)) 
+									? N_HBA_ELEM_PER_TILE : 0);
+
+				for (int element = 0; element < N_HBA_ELEM_PER_TILE; ++element) {
 					// calculate tile delay.
-					double	delay = ( (sourceJ2000xyz(0,0) * tileRelPosJ2000(element,0)) +
-									  (sourceJ2000xyz(0,1) * tileRelPosJ2000(element,1)) +
-									  (sourceJ2000xyz(0,2) * tileRelPosJ2000(element,2)) ) / SPEED_OF_LIGHT_MS;
+					double	delay = ( (sourceJ2000xyz(0,0) * tileRelPosJ2000(HBAdeltaOffset + element,0)) +
+									  (sourceJ2000xyz(0,1) * tileRelPosJ2000(HBAdeltaOffset + element,1)) +
+									  (sourceJ2000xyz(0,2) * tileRelPosJ2000(HBAdeltaOffset + element,2)) 
+									) / SPEED_OF_LIGHT_MS;
 					
 					// signal front stays in the middle of the tile
 					delay += itsMeanElementDelay;
@@ -479,6 +482,10 @@ void AnaBeamMgr::getAllHBADeltas(const string& filename)
 	// Now comment lines are skipped, so we can read the full array.
 	itsFile >> itsTileRelPos; // read HBA deltas array
 	LOG_DEBUG_STR("HBADeltas = " << itsTileRelPos);
+	itsDiffHBArotations = (itsTileRelPos.extent(firstDim) > N_HBA_ELEM_PER_TILE);
+	if (itsDiffHBArotations) {
+		LOG_INFO("HBA_0 and HBA_1 fields have different rotation-angles");
+	}
 
 	LOG_INFO_STR("Relative HBA element positions read from file " << filename);
 }
