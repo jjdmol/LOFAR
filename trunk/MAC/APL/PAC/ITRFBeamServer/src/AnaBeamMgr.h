@@ -27,6 +27,7 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_list.h>
 #include <Common/lofar_map.h>
+#include <ApplCommon/StationConfig.h>
 #include <GCF/TM/GCF_PortInterface.h>
 #include <APL/RTCCommon/Timestamp.h>
 #include <APL/IBS_Protocol/Pointing.h>
@@ -104,12 +105,14 @@ private:
 	
 	//# ----- DATAMEMBERS -----
 	// Constants
-	uint	itsRCUsPerRing;
-	uint	itsNrRings;
-	double	itsMeanElementDelay;
+	uint			itsRCUsPerRing;
+	uint			itsNrRings;
+	double			itsMeanElementDelay;
+	StationConfig	itsSC;
 
 	// Relative positions of the elements of the HBA tile.
 	blitz::Array<double, 2>		itsTileRelPos;	// [N_HBA_ELEMENTS,x|y|z dipole] = [16,3]
+	bool						itsDiffHBArotations;	// true when itsTileRelPos == [32,3]
 	// Delay steps [0..31] of an element
 	blitz::Array<double, 1>		itsDelaySteps;	// [N_HBA_DELAYS] = [32] 	
 
