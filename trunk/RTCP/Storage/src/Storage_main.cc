@@ -270,6 +270,6 @@ int main(int argc, char *argv[])
   }
 #endif
 
-  LOG_INFO(logPrefix << "Program end");
+  LOG_INFO_STR(logPrefix << "Program end");
   return 0;
 }
