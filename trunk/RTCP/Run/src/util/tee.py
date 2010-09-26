@@ -54,6 +54,8 @@ class Tee(Thread):
               f.write( "%s\n" % (line,) )
             except OSError,e:
               pass
+            except ValueError,e: # ValueError: I/O operation on closed file
+              pass
 
         prevline = lines[-1]      
 
