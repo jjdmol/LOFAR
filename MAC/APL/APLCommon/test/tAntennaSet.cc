@@ -55,6 +55,10 @@ int main (int	argc, char* argv[])
 		LOG_DEBUG_STR("RCUs EUROPE:" << theAS.RCUinputs(theNames[idx], 2));
 		LOG_DEBUG_STR("RCUs REMOTE:" << theAS.RCUinputs(theNames[idx], 1));
 		LOG_DEBUG_STR("RCUs CORE  :" << theAS.RCUinputs(theNames[idx], 0));
+		LOG_DEBUG_STR("AntPos EUROPE:" << theAS.positionIndex(theNames[idx], 2));
+		LOG_DEBUG_STR("AntPos REMOTE:" << theAS.positionIndex(theNames[idx], 1));
+		LOG_DEBUG_STR("AntPos CORE  :" << theAS.positionIndex(theNames[idx], 0));
+
 		// unfortunately strings are printed starting at element 0 and bitsets viceversa
 		// to be able to show it logical to the user we must reverse the bitset
 		bitset<MAX_RCUS>	theRealBS  = theAS.LBAallocation(theNames[idx], 2);

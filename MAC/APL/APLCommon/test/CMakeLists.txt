@@ -12,7 +12,5 @@ lofar_add_test(tOutOfBand tOutOfBand.cc)
 lofar_add_test(tAntennaMapper tAntennaMapper.cc)
 lofar_add_test(tAntennaSet tAntennaSet.cc)
 lofar_add_test(tAntennaField tAntennaField.cc)
+lofar_add_test(tAntennaUse tAntennaUse.cc)
 
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/ResourceAllocatorTest.log_prop.in
-  ${CMAKE_CURRENT_BINARY_DIR}/ResourceAllocatorTest.log_prop)
