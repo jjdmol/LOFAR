@@ -147,18 +147,9 @@ int main(int argc, char *argv[])
   string logPrefix = "[obs unknown] ";
 
 #if defined HAVE_LOG4CPLUS
-  using namespace log4cplus;
-  using namespace log4cplus::helpers;
-
-  helpers::Properties traceProp;
-  traceProp.setProperty("log4cplus.rootLogger", "DEBUG, STDOUT");
-  traceProp.setProperty("log4cplus.logger.TRC", "DEBUG");
-  traceProp.setProperty("log4cplus.appender.STDOUT", "log4cplus::ConsoleAppender");
-  traceProp.setProperty("log4cplus.appender.STDOUT.layout", "log4cplus::PatternLayout");
-  traceProp.setProperty("log4cplus.appender.STDOUT.layout.ConversionPattern", "%x %D{%d-%m-%y %H:%M:%S} %-5p %n");
-  
-  PropertyConfigurator(traceProp).configure();
+  INIT_LOGGER( "Storage" );
 #elif defined HAVE_LOG4CXX
+  #error LOG4CXX support is broken (nonsensical?) -- please fix this code if you want to use it
   Context::initialize();
   setLevel("Global",8);
 #else
