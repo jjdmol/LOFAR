@@ -72,6 +72,16 @@ namespace rfiStrategy {
 			void SetExceptionOccured();
 			void SetFinishedBaselines();
 			void SetProgress(ProgressListener &progress, int no, int count, std::string taskName, int threadId);
+			size_t mathThreadCount() const
+			{
+				// Since IO also takes some CPU, and IO should not be
+				// starved by math (because it is mostly IO limited),
+				// we reserve one of the threads for that.
+				if(_threadCount > 1)
+					return _threadCount - 1;
+				else
+					return _threadCount;
+			}
 
 			size_t BaselineProgress()
 			{

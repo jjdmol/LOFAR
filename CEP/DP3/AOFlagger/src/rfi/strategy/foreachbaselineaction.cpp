@@ -84,7 +84,8 @@ namespace rfiStrategy {
 			ReaderFunction reader(*this);
 			threadGroup.create_thread(reader);
 			
-			for(unsigned i=0;i<_threadCount;++i)
+			size_t mathThreads = mathThreadCount();
+			for(unsigned i=0;i<mathThreads;++i)
 			{
 				PerformFunction function(*this, progress, i);
 				threadGroup.create_thread(function);
@@ -244,7 +245,7 @@ namespace rfiStrategy {
 	{
 		Stopwatch watch(true);
 		bool finished = false;
-		size_t threadCount = _action._threadCount;
+		size_t threadCount = _action.mathThreadCount();
 		do {
 			watch.Pause();
 			_action.WaitForBufferAvailable(threadCount);

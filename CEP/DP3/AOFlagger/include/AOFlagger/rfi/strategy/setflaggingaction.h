@@ -31,7 +31,7 @@ namespace rfiStrategy {
 	class SetFlaggingAction : public Action
 	{
 		public:
-			enum NewFlagging { None, Everything, FromOriginal, Invert, PolarisationsEqual, FlagZeros, OrOriginal };
+			enum NewFlagging { None, Everything, FromOriginal, Invert, PolarisationsEqual, FlagZeros, OrOriginal, ToOriginal };
 
 			SetFlaggingAction() : _newFlagging(None) { }
 
@@ -45,7 +45,9 @@ namespace rfiStrategy {
 					case Everything:
 						return "Set everything flagged";
 					case FromOriginal:
-						return "Set original flags";
+						return "Restore original flags";
+					case ToOriginal:
+						return "Change original flags";
 					case Invert:
 						return "Set inverted flags";
 					case PolarisationsEqual:
@@ -69,6 +71,9 @@ namespace rfiStrategy {
 						break;
 					case FromOriginal:
 						artifacts.ContaminatedData().SetGlobalMask(artifacts.OriginalData().GetSingleMask());
+						break;
+					case ToOriginal:
+						artifacts.OriginalData().SetGlobalMask(artifacts.ContaminatedData().GetSingleMask());
 						break;
 					case Invert: {
 						Mask2DPtr mask = Mask2D::CreateCopy(artifacts.ContaminatedData().GetSingleMask());
