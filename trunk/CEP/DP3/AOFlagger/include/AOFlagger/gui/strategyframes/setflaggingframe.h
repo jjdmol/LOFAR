@@ -38,7 +38,8 @@ class SetFlaggingFrame : public Gtk::Frame {
 		_editStrategyWindow(editStrategyWindow), _action(action),
 		_setNoneButton("Set none"),
 		_setAllButton("Set all"),
-		_setOriginalButton("Set as original"),
+		_setFromOriginalButton("Restore original"),
+		_setToOriginalButton("Change original"),
 		_setInvertButton("Invert"),
 		_setPolarisationsEqualButton("Equal polarisations"),
 		_flagZerosButton("Flag zeros"),
@@ -53,8 +54,11 @@ class SetFlaggingFrame : public Gtk::Frame {
 			_box.pack_start(_setAllButton);
 			_setAllButton.set_group(group);
 
-			_box.pack_start(_setOriginalButton);
-			_setOriginalButton.set_group(group);
+			_box.pack_start(_setFromOriginalButton);
+			_setFromOriginalButton.set_group(group);
+
+			_box.pack_start(_setToOriginalButton);
+			_setToOriginalButton.set_group(group);
 
 			_box.pack_start(_setInvertButton);
 			_setInvertButton.set_group(group);
@@ -77,7 +81,10 @@ class SetFlaggingFrame : public Gtk::Frame {
 					_setAllButton.set_active(true);
 					break;
 				case rfiStrategy::SetFlaggingAction::FromOriginal:
-					_setOriginalButton.set_active(true);
+					_setFromOriginalButton.set_active(true);
+					break;
+				case rfiStrategy::SetFlaggingAction::ToOriginal:
+					_setToOriginalButton.set_active(true);
 					break;
 				case rfiStrategy::SetFlaggingAction::Invert:
 					_setInvertButton.set_active(true);
@@ -95,7 +102,8 @@ class SetFlaggingFrame : public Gtk::Frame {
 
 			_setNoneButton.show();
 			_setAllButton.show();
-			_setOriginalButton.show();
+			_setFromOriginalButton.show();
+			_setToOriginalButton.show();
 			_setInvertButton.show();
 			_setPolarisationsEqualButton.show();
 			_flagZerosButton.show();
@@ -119,7 +127,7 @@ class SetFlaggingFrame : public Gtk::Frame {
 		Gtk::HButtonBox _buttonBox;
 		Gtk::Label _baselinesLabel;
 		Gtk::RadioButton
-			_setNoneButton, _setAllButton, _setOriginalButton, _setInvertButton, _setPolarisationsEqualButton, _flagZerosButton, _orOriginalButton;
+			_setNoneButton, _setAllButton, _setFromOriginalButton, _setToOriginalButton, _setInvertButton, _setPolarisationsEqualButton, _flagZerosButton, _orOriginalButton;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
@@ -128,8 +136,10 @@ class SetFlaggingFrame : public Gtk::Frame {
 				_action.SetNewFlagging(rfiStrategy::SetFlaggingAction::None);
 			else if(_setAllButton.get_active())
 				_action.SetNewFlagging(rfiStrategy::SetFlaggingAction::Everything);
-			else if(_setOriginalButton.get_active())
+			else if(_setFromOriginalButton.get_active())
 				_action.SetNewFlagging(rfiStrategy::SetFlaggingAction::FromOriginal);
+			else if(_setToOriginalButton.get_active())
+				_action.SetNewFlagging(rfiStrategy::SetFlaggingAction::ToOriginal);
 			else if(_setInvertButton.get_active())
 				_action.SetNewFlagging(rfiStrategy::SetFlaggingAction::Invert);
 			else if(_setPolarisationsEqualButton.get_active())
