@@ -503,7 +503,7 @@ int Parset::findIndex(uint32 pset, const vector<uint32> &psets)
 {
   unsigned index = std::find(psets.begin(), psets.end(), pset) - psets.begin();
 
-  return index != psets.size() ? (int) index : -1;
+  return index != psets.size() ? static_cast<int>(index) : -1;
 }
 
 } // namespace RTCP
