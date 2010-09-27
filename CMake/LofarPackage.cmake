@@ -1,6 +1,56 @@
-#  $Id$
+# - LOFAR package related macros.
 #
-#  Copyright (C) 2008-2009
+# The following macros/functions are defined:
+#  lofar_add_package(pkg [srcdir] [REQUIRED])    {function}
+#  lofar_package(<name> [version] [DEPENDS <depend> [depend] ...])    {macro}
+#
+# lofar_add_package() adds a LOFAR package to the build, unless it was
+# excluded from the build (i.e., option BUILD_<pkg> is OFF). 
+#
+# Adding a package implies:
+#  - If the target <pkg> is not yet defined:
+#    - If LOFAR_SVN_UPDATE is ON, or if source directory does not yet exist:
+#      - Do an 'svn update'
+#    - If the package source directory exists:
+#      - Define the option BUILD_<pkg>
+#      - Set the variables PACKAGE_SOURCE_DIR and <pkg>_SOURCE_DIR to the
+#        source directory of <pkg>, and the variables PACKAGE_BINARY_DIR and
+#        <pkg>_BINARY_DIR to the binary directory of <pkg>
+#      - Add a custom target <pkg>
+#      - Add the source directory to the build
+#    - Else: raise an error
+#  - If the target <pkg> is defined:
+#    - Add a dependency of the current package on package <pkg>
+# Furthermore:
+#  - If [srcdir] is not supplied, <pkg>_SOURCE_DIR, which must be defined in
+#    that case, is used as directory name;
+#  - It is not an error if the package source directory does not exist,
+#    unless the REQUIRED keyword is specified.
+# Note:
+#   lofar_add_package() is intentionally declared as a function, to keep the
+#   scope of PACKAGE_NAME local. This way, we can keep track of the name of
+#   our "parent" package when lofar_add_package() is called recursively.
+#
+# lofar_package() defines a LOFAR package.
+#
+# This macro sets the following variables:
+#   ${pkg}_VERSION        Version number of package <pkg>
+#   PACKAGE_VERSION       (idem)
+#   ${pkg}_DEPENDENCIES   List of packages that package <pkg> depends on.
+#   PACKAGE_DEPENDENCIES  (idem)
+# Each dependent package is added to the build. If any of these packages is
+# excluded from the build (e.g., because BUILD_<dep> is OFF), then package
+# <pkg> will also be excluded from the build.
+#
+# The include directories of each dependent package will be added to the
+# include directories of package <pkg>; this is needed, because CMake does
+# not retain the include path across source directories. The libraries
+# created by each dependent package will be added to the list of link 
+# libraries of package <pkg>.
+#
+# A preprocessor definition for LOFARLOGGER_PACKAGE is added.
+
+#  Copyright (C) 2008-2010
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
 #  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
@@ -17,15 +67,9 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-# ----------------------------------------------------------------------------
-# LOFAR package related macros
 #
-# Defines the following macros:
-#   lofar_add_package(pkg [srcdir] [REQUIRED])
-#   lofar_package(<name> [version] [DEPENDS <depend> [depend] ...])
-# ----------------------------------------------------------------------------
+#  $Id$
+
 
 if(NOT LOFAR_PACKAGE_INCLUDED)
 
@@ -43,38 +87,8 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
   # Initialize PACKAGE_NAME to the name of the top-level project
   set(PACKAGE_NAME ${CMAKE_PROJECT_NAME})
 
-  # --------------------------------------------------------------------------
-  # lofar_add_package(pkg [srcdir] [REQUIRED])
-  #
-  # Add a LOFAR package to the build, unless it is excluded from the build
-  # (i.e., option BUILD_<pkg> is OFF).
-  #
-  # Adding a package implies:
-  # - If the target <pkg> is not yet defined:
-  #   - If LOFAR_SVN_UPDATE is ON, or if source directory does not yet exist:
-  #     - Do an 'svn update'
-  #   - If the package source directory exists:
-  #     - Define the option BUILD_<pkg>
-  #     - Set the variables PACKAGE_SOURCE_DIR and <pkg>_SOURCE_DIR to the
-  #       source directory of <pkg>, and the variables PACKAGE_BINARY_DIR and
-  #       <pkg>_BINARY_DIR to the binary directory of <pkg>
-  #     - Add a custom target <pkg>
-  #     - Add the source directory to the build
-  #   - Else: raise an error
-  # - If the target <pkg> is defined:
-  #   - Add a dependency of the current package on package <pkg>
-  #
-  # Furthermore:
-  # - If [srcdir] is not supplied, <pkg>_SOURCE_DIR, which must be defined in
-  #   that case, is used as directory name;
-  # - It is not an error if the package source directory does not exist,
-  #   unless the REQUIRED keyword is specified.
-  #
-  # NOTE:
-  #   lofar_add_package() is intentionally declared as a function, to keep the
-  #   scope of PACKAGE_NAME local. This way, we can keep track of the name of
-  #   our "parent" package when lofar_add_package() is called recursively.
-  # --------------------------------------------------------------------------
+  ############################################################################
+
   function(lofar_add_package _pkg)
     if(NOT DEFINED BUILD_${_pkg} OR BUILD_${_pkg})
       add_dependencies(${PACKAGE_NAME} ${_pkg})
@@ -124,30 +138,7 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
     endif(NOT DEFINED BUILD_${_pkg} OR BUILD_${_pkg})
   endfunction(lofar_add_package _pkg)
 
-
-  # --------------------------------------------------------------------------
-  # lofar_package(<pkg> [version] [DEPENDS <depend> [depend] ...])
-  #
-  # Define a LOFAR package.
-  #
-  # This macro sets the following variables:
-  #   ${pkg}_VERSION        Version number of package <pkg>
-  #   PACKAGE_VERSION       (idem)
-  #   ${pkg}_DEPENDENCIES   List of packages that package <pkg> depends on.
-  #   PACKAGE_DEPENDENCIES  (idem)
-  #
-  # Each dependent package is added to the build. If any of these packages is
-  # excluded from the build (e.g., because BUILD_<dep> is OFF), then package
-  # <pkg> will also be excluded from the build.
-  #
-  # The include directories of each dependent package will be added to the
-  # include directories of package <pkg>; this is needed, because CMake does
-  # not retain the include path across source directories. The libraries
-  # created by each dependent package will be added to the list of link 
-  # libraries of package <pkg>.
-  #
-  # A preprocessor definition for LOFARLOGGER_PACKAGE is added.
-  # --------------------------------------------------------------------------
+  ############################################################################
   macro(lofar_package _pkg)
 
     set(_errmsg

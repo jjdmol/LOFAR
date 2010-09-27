@@ -1,5 +1,15 @@
-# $Id: FindAskapSoft.cmake 13814 2009-08-20 11:55:06Z loose $
+# Try to find AskapSoft.
 #
+# This will define:
+#  ASKAPSOFT_FOUND                - system has AskapSoft
+#  ASKAPSOFT_INCLUDE_DIR          - the AskapSoft include directory (cached)
+#  ASKAPSOFT_INCLUDE_DIRS         - the AskapSoft include directories
+#                                   (identical to ASKAPSOFT_INCLUDE_DIR)
+#  ASKAPSOFT_LIBRARIES            - The AskapSoft libraries (not cached)
+#  ASKAPSOFT_${COMPONENT}_LIBRARY - The absolute path of AskapSoft library 
+#                                   "component" (cached)
+#  ASKAPSOFT_LIBRARIES            - the AskapSoft libraries
+
 # Copyright (C) 2009
 # ASTRON (Netherlands Foundation for Research in Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
@@ -17,19 +27,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-# Try to find AskapSoft.
 #
-# This will define:
-#  
-#  ASKAPSOFT_FOUND        - system has AskapSoft
-#  ASKAPSOFT_INCLUDE_DIR  - the AskapSoft include directory (cached)
-#  ASKAPSOFT_INCLUDE_DIRS - the AskapSoft include directories
-#                         (identical to ASKAPSOFT_INCLUDE_DIR)
-#  ASKAPSOFT_LIBRARIES        - The AskapSoft libraries (not cached)
-#  ASKAPSOFT_${COMPONENT}_LIBRARY - The absolute path of AskapSoft library 
-#                              "component" (cached)
-#  ASKAPSOFT_LIBRARIES    - the AskapSoft libraries
+# $Id: FindAskapSoft.cmake 13814 2009-08-20 11:55:06Z loose $
 
 if(NOT ASKAPSOFT_FOUND)
 

@@ -1,28 +1,8 @@
-#  $Id$
+# - Initialize the LOFAR CMake build environment. 
 #
-#  Copyright (C) 2008-2009
-#  ASTRON (Netherlands Foundation for Research in Astronomy)
-#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+# LofarInit.cmake must be included before the project() command.
 #
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-#  Initialize common LOFAR CMake variables.
-#
-#  The following variables and properties are set.
-#
+# The following variables and properties are set.
 #  Variable               Type      Cached  Description
 #  ========               ====      ======  ===========
 #  CMAKE_INSTALL_PREFIX   path      yes     Installation prefix
@@ -41,12 +21,31 @@
 #  lofar_sharedir         internal  yes     $lofar_top_srcdir/autoconf_share
 #  prefix                 internal  yes     Install prefix
 #
-#
 #  Property                         Scope   Description
 #  ========                         =====   ===========
 #  FIND_LIBRARY_USE_LIB64_PATHS     global  Set to true if either ENABLE_LIB64
 #                                           is set or directory /lib64 exists,
 #                                           otherwise set to false.
+
+#  Copyright (C) 2008-2010
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#  $Id$
 
 if(NOT DEFINED LOFAR_INIT_INCLUDED)
 
