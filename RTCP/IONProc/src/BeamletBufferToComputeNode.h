@@ -89,6 +89,8 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     Matrix<AMC::Direction>	 itsBeamDirectionsAtBegin;
     Matrix<AMC::Direction>	 itsBeamDirectionsAfterEnd;
     unsigned			 itsNrPhaseTwoPsets;
+    int                          itsPhaseThreePsetIndex;
+    bool                         itsPhaseThreeDisjunct;
     unsigned			 itsObservationID;
     
     unsigned			 itsMaxNetworkDelay; // in samples
@@ -99,11 +101,13 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     unsigned			 itsNrInputs;
     unsigned			 itsNrBeams;
     unsigned			 itsNrPencilBeams;
+    unsigned                     itsNrBeamsPerPset;
 
     unsigned			 itsCurrentComputeCore, itsNrCoresPerPset;
     unsigned			 itsPsetNumber;
    
     const std::vector<BeamletBuffer<SAMPLE_TYPE> *> &itsBeamletBuffers;
+    unsigned                     itsBlockNumber;
     WH_DelayCompensation	 *itsDelayComp;
     double			 itsSampleRate, itsSampleDuration;
     double			 itsClockCorrectionTime;

@@ -52,7 +52,7 @@ using boost::format;
 namespace LOFAR {
 namespace RTCP {
 
-OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream *(*createStream)(unsigned,unsigned))
+OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, unsigned cnprocOutputNr, Stream *(*createStream)(unsigned,unsigned))
 :
   itsItemList(itemList),
   itsOutputType(outputType),
@@ -102,7 +102,7 @@ OutputSection::OutputSection(const Parset &parset, std::vector<unsigned> &itemLi
   for (unsigned i = 0; i < itsNrComputeCores; i++) {
     unsigned core = parset.usedCoresInPset()[i];
 
-    itsStreamsFromCNs[i] = createStream(core, outputType + 1);
+    itsStreamsFromCNs[i] = createStream(core, cnprocOutputNr + 1);
   }
 
   LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection: done");

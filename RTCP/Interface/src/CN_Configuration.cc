@@ -61,6 +61,7 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   phaseOnePsets()           = parset.phaseOnePsets();
   phaseTwoPsets()           = parset.phaseTwoPsets();
   phaseThreePsets()         = parset.phaseThreePsets();
+  phaseThreeDisjunct()      = parset.phaseThreeDisjunct();
   tabList()                 = parset.tabList();
   usedCoresInPset()	    = parset.usedCoresInPset();
   refFreqs()                = parset.subbandToFrequencyMapping();

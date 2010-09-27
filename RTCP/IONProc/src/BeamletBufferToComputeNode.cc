@@ -64,6 +64,7 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsNrInputs(beamletBuffers.size()),
   itsPsetNumber(psetNumber),
   itsBeamletBuffers(beamletBuffers),
+  itsBlockNumber(0),
   itsDelayComp(0),
   itsDelayTimer("delay consumer", true, true)
 {
@@ -78,7 +79,10 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsNrSamplesPerSubband      = ps->nrSubbandSamples();
   itsNrBeams		      = ps->nrBeams();
   itsNrPencilBeams	      = ps->nrPencilBeams();
+  itsNrBeamsPerPset	      = ps->nrBeamsPerPset();
   itsNrPhaseTwoPsets	      = ps->phaseTwoPsets().size();
+  itsPhaseThreePsetIndex      = ps->phaseThreePsetIndex( psetNumber );
+  itsPhaseThreeDisjunct       = ps->phaseThreeDisjunct();
   itsCurrentComputeCore	      = 0;
   itsNrCoresPerPset	      = ps->nrCoresPerPset();
   itsSampleDuration	      = ps->sampleDuration();
@@ -270,73 +274,86 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::wri
   LOG_INFO(logStr.str());
 }
 
-
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toComputeNodes()
 {
-  // If the total number of subbands is not dividable by the nrSubbandsPerPset,
-  // we may have to send dummy process commands, without sending subband data.
+  CN_Command command(CN_Command::PROCESS, itsBlockNumber ++);
 
-  CN_Command command(CN_Command::PROCESS);
-  
-  for (unsigned subbandBase = 0; subbandBase < itsNrSubbandsPerPset; subbandBase ++) {
-    Stream *stream = itsCNstreams[itsCurrentComputeCore];
+  if (itsPhaseThreeDisjunct && itsPhaseThreePsetIndex >= 0) {
+    // psets dedicated to phase 3 have a different schedule -- they iterate over
+    // beams instead of subbands, and never need station data as input
 
-    // tell CN to process data
-    command.write(stream);
+    for (unsigned beam = 0; beam < itsNrBeamsPerPset; beam ++) {
+      Stream *stream = itsCNstreams[itsCurrentComputeCore];
 
-    if (itsNrInputs > 0) {
-      // create and send all metadata in one "large" message, since initiating a message
-      // has significant overhead in FCNP.
-      SubbandMetaData metaData(itsNrPhaseTwoPsets, itsNrPencilBeams, 16);
+      // tell CN to process data
+      command.write(stream);
 
-      for (unsigned psetIndex = 0; psetIndex < itsNrPhaseTwoPsets; psetIndex ++) {
-	unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
-
-	if (subband < itsNrSubbands) {
-	  unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-	  unsigned beam     = itsSubbandToSAPmapping[subband];
-
-	  if (itsNeedDelays) {
-	    for (unsigned p = 0; p < itsNrPencilBeams; p ++) {
-	      struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(psetIndex)[p];
-
-	      beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
-	      beamInfo.delayAfterEnd  = itsFineDelaysAfterEnd[beam][p];
-
-	      const vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam][p].coord().get();
-	      const vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam][p].coord().get();
-
-	      for (unsigned i = 0; i < 3; i ++) {
-		beamInfo.beamDirectionAtBegin[i]  = beamDirBegin[i];
-		beamInfo.beamDirectionAfterEnd[i] = beamDirEnd[i];
-	      }
-	    }  
-	  }  
-
-	  metaData.alignmentShift(psetIndex) = itsBeamletBuffers[rspBoard]->alignmentShift(beam);
-	  metaData.setFlags(psetIndex, itsFlags[rspBoard][beam]);
-	}
-      }
-
-      metaData.write(stream);
-
-      // now send all subband data
-      for (unsigned psetIndex = 0; psetIndex < itsNrPhaseTwoPsets; psetIndex ++) {
-	unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
-
-	if (subband < itsNrSubbands) {
-	  unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-	  unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
-	  unsigned beam     = itsSubbandToSAPmapping[subband];
-
-	  itsBeamletBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
-	}
-      }
+      if (++ itsCurrentComputeCore == itsNrCoresPerPset)
+        itsCurrentComputeCore = 0;
     }
+  } else {
+    // If the total number of subbands is not dividable by the nrSubbandsPerPset,
+    // we may have to send dummy process commands, without sending subband data.
 
+    for (unsigned subbandBase = 0; subbandBase < itsNrSubbandsPerPset; subbandBase ++) {
+      Stream *stream = itsCNstreams[itsCurrentComputeCore];
 
-    if (++ itsCurrentComputeCore == itsNrCoresPerPset)
-      itsCurrentComputeCore = 0;
+      // tell CN to process data
+      command.write(stream);
+
+      if (itsNrInputs > 0) {
+        // create and send all metadata in one "large" message, since initiating a message
+        // has significant overhead in FCNP.
+        SubbandMetaData metaData(itsNrPhaseTwoPsets, itsNrPencilBeams, 16);
+
+        for (unsigned psetIndex = 0; psetIndex < itsNrPhaseTwoPsets; psetIndex ++) {
+          unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
+
+          if (subband < itsNrSubbands) {
+            unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
+            unsigned beam     = itsSubbandToSAPmapping[subband];
+
+            if (itsNeedDelays) {
+              for (unsigned p = 0; p < itsNrPencilBeams; p ++) {
+                struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(psetIndex)[p];
+
+                beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
+                beamInfo.delayAfterEnd  = itsFineDelaysAfterEnd[beam][p];
+
+                const vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam][p].coord().get();
+                const vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam][p].coord().get();
+
+                for (unsigned i = 0; i < 3; i ++) {
+                  beamInfo.beamDirectionAtBegin[i]  = beamDirBegin[i];
+                  beamInfo.beamDirectionAfterEnd[i] = beamDirEnd[i];
+                }
+              }  
+            }  
+
+            metaData.alignmentShift(psetIndex) = itsBeamletBuffers[rspBoard]->alignmentShift(beam);
+            metaData.setFlags(psetIndex, itsFlags[rspBoard][beam]);
+          }
+        }
+
+        metaData.write(stream);
+
+        // now send all subband data
+        for (unsigned psetIndex = 0; psetIndex < itsNrPhaseTwoPsets; psetIndex ++) {
+          unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
+
+          if (subband < itsNrSubbands) {
+            unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
+            unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
+            unsigned beam     = itsSubbandToSAPmapping[subband];
+
+            itsBeamletBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
+          }
+        }
+      }
+
+      if (++ itsCurrentComputeCore == itsNrCoresPerPset)
+        itsCurrentComputeCore = 0;
+    }
   }
 }
 
@@ -433,7 +450,6 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
   NSTimer timer;
   timer.start();
   
-
   if (!itsDumpRawData)
     toComputeNodes();
   else if (itsNrInputs > 0)

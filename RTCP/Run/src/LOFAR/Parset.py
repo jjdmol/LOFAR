@@ -112,24 +112,6 @@ class Parset(util.Parset.Parset):
         self.setdefault("Observation.ObserverName","unknown")
         self.setdefault("Observation.ProjectName","unknown")
 
-	self.setdefault("OLAP.CNProc.coresPerPset",64)
-
-        # pencil beam configuration
-        self.setdefault("OLAP.PencilInfo.flysEye",False);
-        self.setdefault("OLAP.PencilInfo.nrRings",0);
-        self.setdefault("OLAP.PencilInfo.ringSize",0.0);
-        self.setdefault("OLAP.nrPencils",0);
-
-        # output configuration
-        self.setdefault("OLAP.outputFilteredData",False);
-        self.setdefault("OLAP.outputBeamFormedData",False);
-        self.setdefault("OLAP.outputCorrelatedData",False);
-        self.setdefault("OLAP.outputCoherentStokes",False);
-        self.setdefault("OLAP.outputIncoherentStokes",False);
-        self.setdefault("OLAP.Stokes.which","I");
-        self.setdefault("OLAP.Stokes.integrateChannels",False);
-        self.setdefault("OLAP.Stokes.integrationSteps",1);
-        self.setdefault("OLAP.OLAP_Conn.rawDataOutputOnly",False);
         self.setdefault("OLAP.Correlator.integrationTime",1);
 
     def convertDepricatedKeys(self):
@@ -271,9 +253,9 @@ class Parset(util.Parset.Parset):
 	if "Observation.subbandList" in self:
 	  nrSubbands = len(self.getInt32Vector("Observation.subbandList"))
 
-        nrBeams = 0
-        while "Observation.Beam[%s].angle1" % (nrBeams,) in self:
-          nrBeams += 1
+        for nrBeams in count():
+          if "Observation.Beam[%s].angle1" % (nrBeams,) not in self:
+            break
 
         self.setdefault('Observation.nrBeams', nrBeams)
 
@@ -293,9 +275,11 @@ class Parset(util.Parset.Parset):
 	self.setdefault('OLAP.CNProc.phaseOnePsets', [s.getPsetIndex(self.partition) for s in self.stations])
 	self.setdefault('OLAP.CNProc.phaseTwoPsets', range(nrPsets))
         if self.phaseThreeExists():
-	  self.setdefault('OLAP.CNProc.phaseThreePsets', range(nrPsets))
+	  self.setdefault('OLAP.CNProc.phaseThreePsets', self['OLAP.CNProc.phaseTwoPsets'])
         else:  
 	  self.setdefault('OLAP.CNProc.phaseThreePsets', [])
+
+        self["OLAP.CNProc.phaseThreeDisjunct"] = self.phaseThreeDisjunct()
 
         # what will be stored where?
         # outputSubbandPsets may well be set before finalize()
@@ -310,10 +294,6 @@ class Parset(util.Parset.Parset):
 	  self.setdefault('OLAP.PencilInfo.storageNodeList',[0] * nrBeamFiles)
 	else:  
 	  self.setdefault('OLAP.PencilInfo.storageNodeList',[i//int(math.ceil(1.0 * nrBeamFiles/nrStorageNodes)) for i in xrange(nrBeamFiles)])
-
-	#print 'nrSubbands = ' + str(nrSubbands) + ', nrStorageNodes = ' + str(nrStorageNodes) + ', subbandsPerPset = ' + str(self.getSubbandsPerPset())
-
-	#print 'storageNodes: ' + str(self['OLAP.storageNodeList'])
 
 	# calculation configuration
 
@@ -480,6 +460,19 @@ class Parset(util.Parset.Parset):
 
       return False
 
+    def phaseThreeDisjunct( self ):
+      phase1 = set(self.getInt32Vector("OLAP.CNProc.phaseOnePsets"))
+      phase2 = set(self.getInt32Vector("OLAP.CNProc.phaseTwoPsets"))
+      phase3 = set(self.getInt32Vector("OLAP.CNProc.phaseThreePsets"))
+
+      return len(phase1.intersection(phase3)) == 0 and len(phase2.intersection(phase3)) == 0
+
+    def phaseTwoThreeEqual( self ):
+      phase2 = set(self.getInt32Vector("OLAP.CNProc.phaseTwoPsets"))
+      phase3 = set(self.getInt32Vector("OLAP.CNProc.phaseThreePsets"))
+
+      return phase2 == phase3
+
     def getNrOutputs( self ):
       # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
       output_keys = [
@@ -500,6 +493,11 @@ class Parset(util.Parset.Parset):
         return k in self and self.getBool(k)
 
       assert self.getNrOutputs() > 0, "No data output selected."
+      assert len(self.stations) > 0, "No stations selected."
+      assert len(self.getInt32Vector("Observation.subbandList")) > 0, "No subbands selected."
+
+      # phase 2 and 3 psets are either disjunct or equal
+      assert self.phaseThreeDisjunct() or self.phaseTwoThreeEqual(), "Phase 2 and 3 should use either disjunct or the same psets."
 
       # no both bf complex voltages and stokes
       assert not (getBool("OLAP.outputBeamFormedData") and getBool("OLAP.outputCoherentStokes")), "Cannot output both complex voltages and coherent stokes."

@@ -35,6 +35,7 @@
 
 #include <Interface/CN_ProcessingPlan.h>
 #include <ArenaMapping.h>
+#include <Ring.h>
 
 #include <AsyncTranspose.h>
 #include <AsyncTransposeBeams.h>
@@ -58,7 +59,7 @@ class CN_Processing_Base // untemplated helper class
     virtual		~CN_Processing_Base();    
 
     virtual void	preprocess(CN_Configuration &) = 0;
-    virtual void	process() = 0;
+    virtual void	process(unsigned) = 0;
     virtual void	postprocess() = 0;
 };
 
@@ -70,12 +71,12 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
 			~CN_Processing();
 
     virtual void	preprocess(CN_Configuration &);
-    virtual void	process();
+    virtual void	process(unsigned);
     virtual void	postprocess();
 
   private:
     void                transposeInput();
-    bool                transposeBeams();
+    bool                transposeBeams(unsigned block);
     void                filter();
     void                mergeStations();
     void                formBeams();
@@ -94,10 +95,6 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     void		checkConsistency(Parset *) const;
 #endif
 
-#if defined HAVE_MPI
-    void		printSubbandList() const;
-#endif
-
     std::string         itsLogPrefix;
 
     unsigned            itsNrStations;
@@ -113,14 +110,14 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned            itsComputeGroupRank;
     unsigned            itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
     unsigned            itsPhaseTwoPsetIndex, itsPhaseThreePsetIndex;
-    bool                itsPhaseThreeExists;
+    bool                itsPhaseThreeExists, itsPhaseThreeDisjunct;
     unsigned            itsUsedCoresPerPset,itsMyCoreIndex;
     Stream	        *itsStream;
     Stream              *(*itsCreateStream)(unsigned, const LocationInfo &);
     std::vector<Stream*> itsOutputStreams;
     const LocationInfo	&itsLocationInfo;
     std::vector<double> itsCenterFrequencies;
-    unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
+    Ring                *itsCurrentSubband, *itsCurrentBeam;
     bool		itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
     bool		itsStokesIntegrateChannels;
     bool                itsNrStokes;

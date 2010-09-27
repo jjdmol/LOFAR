@@ -21,10 +21,12 @@ union Tag {
     unsigned sourceRank :13; /* 0..8191, or two BG/P racks */
     unsigned comm       :2;
     unsigned subband    :8;
-    //unsigned beam       :8;
+    unsigned beam       :8;
   } info;
 
   unsigned nr;
+
+  Tag(): nr(0) {}
 };
 
 AsyncTransposeBeams::AsyncTransposeBeams(
@@ -50,8 +52,6 @@ template <typename T,unsigned DIM> void AsyncTransposeBeams::postReceive(SampleD
 
   unsigned rank = itsLocationInfo.remapOnTree(pset, core); // TODO cache this? maybe in locationInfo itself?
 
-  (void)beam;
-
   // define what to read
   struct {
     void   *ptr;
@@ -66,7 +66,7 @@ template <typename T,unsigned DIM> void AsyncTransposeBeams::postReceive(SampleD
 
     t.info.sourceRank = rank;
     t.info.comm       = h;
-    //t.info.beam       = beam;
+    t.info.beam       = beam;
     t.info.subband    = subband;
 
     //LOG_DEBUG_STR( "Posting to receive beam " << beam << " subband " << subband << " from pset " << pset << ", rank " << rank << ", tag " << t.nr );
@@ -131,10 +131,11 @@ template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned
   // write it
   for (unsigned h = 0; h < itsNrCommunications; h ++) {
     Tag t;
+
     t.info.sourceRank = itsLocationInfo.rank();
     t.info.comm       = h;
     t.info.subband    = subband;
-    //t.info.beam       = beam;
+    t.info.beam       = beam;
 
     //LOG_DEBUG_STR( "Sending beam " << beam << " subband " << subband << " to pset " << pset << ", rank " << rank << ", tag " << t.nr );
     itsAsyncComm.asyncWrite(toWrite[h].ptr, toWrite[h].size, rank, t.nr);

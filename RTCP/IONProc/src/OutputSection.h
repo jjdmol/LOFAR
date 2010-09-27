@@ -37,7 +37,7 @@ namespace RTCP {
 class OutputSection
 {
   public:
-    OutputSection(const Parset &, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, Stream * (*createStream)(unsigned, unsigned));
+    OutputSection(const Parset &, std::vector<unsigned> &itemList, unsigned nrUsedCores, unsigned outputType, unsigned cnprocOutputNr, Stream * (*createStream)(unsigned, unsigned));
     ~OutputSection();
 
     void                        addIterations(unsigned count);

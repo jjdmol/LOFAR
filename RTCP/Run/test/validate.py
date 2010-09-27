@@ -175,6 +175,7 @@ if __name__ == "__main__":
         p = initParset( "%d beams %d subbands" % (nrBeams,nrSubbands,) )
         p.setNrSubbands( nrSubbands )
         p.setNrPencilBeams( nrBeams )
+        p.setNrStations( 2 )
 
         p.parset["Observation.outputCorrelatedData"] = True
         p.parset["Observation.outputCoherentStokes"] = True
