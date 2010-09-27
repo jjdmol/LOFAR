@@ -113,6 +113,7 @@ public:
 	vector<uint32> phaseTwoPsets() const;
 	vector<uint32> phaseThreePsets() const;
 	vector<uint32> usedPsets() const; // union of phasePsets
+        bool           phaseThreeDisjunct() const; // if phase 3 does not overlap with phase 1 or 2
 	vector<uint32> tabList() const;
 	bool           conflictingResources(const Parset &otherParset, std::stringstream &error) const;
 	int	       phaseOnePsetIndex(uint32 pset) const;
@@ -498,6 +499,11 @@ inline vector<uint32> Parset::phaseTwoPsets() const
 inline vector<uint32> Parset::phaseThreePsets() const
 {
   return getUint32Vector("OLAP.CNProc.phaseThreePsets",true);
+}
+
+inline bool Parset::phaseThreeDisjunct() const
+{
+  return getBool("OLAP.CNProc.phaseThreeDisjunct");
 }
 
 inline vector<uint32> Parset::tabList() const

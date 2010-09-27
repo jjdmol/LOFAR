@@ -168,7 +168,7 @@ int main(int argc, char **argv)
     do {
       //LOG_DEBUG("Wait for command");
       command.read(ionStream);
-      //LOG_DEBUG("Received command");
+      LOG_DEBUG("Received command");
 
       switch (command.value()) {
 	case CN_Command::PREPROCESS :	configuration.read(ionStream);
@@ -187,7 +187,7 @@ int main(int argc, char **argv)
 					proc->preprocess(configuration);
 					break;
 
-	case CN_Command::PROCESS :	proc->process();
+	case CN_Command::PROCESS :	proc->process(command.param());
 					break;
 
 	case CN_Command::POSTPROCESS :	proc->postprocess();

@@ -40,9 +40,10 @@ class CN_Command
     };
     
 		 CN_Command();
-		 CN_Command(enum Command);
+		 CN_Command(enum Command, unsigned param = 0);
 
     enum Command &value();
+    unsigned &param();
 
     void	 read(Stream *);
     void	 write(Stream *) const;
@@ -51,6 +52,7 @@ class CN_Command
     struct MarshalledData
     {
       enum Command value;
+      unsigned param;
     } itsMarshalledData;
 };
 
@@ -59,14 +61,20 @@ inline CN_Command::CN_Command()
 {
 }
 
-inline CN_Command::CN_Command(enum Command value)
+inline CN_Command::CN_Command(enum Command value, unsigned param)
 {
   itsMarshalledData.value = value;
+  itsMarshalledData.param = param;
 }
 
 inline enum CN_Command::Command &CN_Command::value()
 {
   return itsMarshalledData.value;
+}
+
+inline unsigned &CN_Command::param()
+{
+  return itsMarshalledData.param;
 }
 
 inline void CN_Command::read(Stream *str)

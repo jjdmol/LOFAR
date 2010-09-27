@@ -3,7 +3,7 @@ Observation.ObserverName = "Developer"
 Observation.ProjectName = "Development"
 
 # ----- Input streams
-Observation.VirtualInstrument.stationList = [CS302]
+Observation.VirtualInstrument.stationList = []
 #Observation.antennaSet=LBA_INNER
 #Observation.antennaSet=LBA_OUTER
 #Observation.antennaSet=LBA_X
@@ -35,8 +35,8 @@ Observation.rspBoardList = [62*0,62*1,62*2,62*3]
 Observation.rspSlotList  = [0..61,0..61,0..61,0..61]
 
 #OLAP.CNProc.phaseOnePsets = [2]
-#OLAP.CNProc.phaseThreePsets = [0..2]
-#OLAP.CNProc.phaseTwoPsets = [0..2]
+OLAP.CNProc.phaseTwoPsets = [0..2]
+OLAP.CNProc.phaseThreePsets = [3]
 
 #Observation.subbandList  = [1..5]
 #Observation.beamList     = [5*0]

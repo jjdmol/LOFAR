@@ -491,7 +491,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     attachToInputSection<SAMPLE_TYPE>();
 
   CN_Configuration configuration(itsParset);
-  CN_ProcessingPlan<> plan(configuration, itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree);
+  CN_ProcessingPlan<> plan(configuration);
   plan.removeNonOutputs();
   unsigned nrOutputTypes = plan.nrOutputTypes();
   std::vector<OutputSection *> outputSections(nrOutputTypes, 0);
@@ -504,9 +504,13 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   Semaphore outputSectionRunToken;
 
   // start output process threads
+  unsigned cnprocOutputNr = 0; // CNProc starts counting from 0, but only counts the outputs it produces
+
   for (unsigned output = 0; output < nrOutputTypes; output ++) {
-    unsigned phase, psetIndex, maxlistsize;
+    unsigned phase, maxlistsize;
+    int psetIndex;
     std::vector<unsigned> list; // list of subbands or beams
+    std::string type;
 
     unsigned nrsubbeams = 0;
 
@@ -520,7 +524,14 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     switch (plan.plan[output].distribution) {
       case ProcessingPlan::DIST_SUBBAND:
         phase = 2;
+        type = "subbands";
         psetIndex = itsParset.phaseTwoPsetIndex(myPsetNumber);
+
+        if (psetIndex < 0) {
+          // this pset does not participate for this output
+          continue;
+        }
+
         maxlistsize = itsParset.nrSubbandsPerPset();
 
         for (unsigned sb = 0; sb < itsParset.nrSubbandsPerPset(); sb ++) {
@@ -533,15 +544,29 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
         break;
 
       case ProcessingPlan::DIST_BEAM:
-        // simplification: each core produces at most 1 beam
-        assert( itsParset.nrBeamsPerPset() <= itsParset.nrSubbandsPerPset() );
-
-        // simplification: also each core which processes a beam also processes a subband
-        assert( nrbeams <= itsParset.nrSubbands() );
-
         phase = 3;
+        type = "beams";
         psetIndex = itsParset.phaseThreePsetIndex(myPsetNumber);
-        maxlistsize = itsParset.nrSubbandsPerPset();
+
+        if (psetIndex < 0) {
+          // this pset does not participate for this output
+          continue;
+        }
+
+        if (itsParset.phaseThreeDisjunct()) {
+          // simplification: each core produces at most 1 beam
+          assert( itsParset.nrBeamsPerPset() <= itsParset.nrCoresPerPset() );
+
+          maxlistsize = itsParset.nrBeamsPerPset();
+        } else {
+          // simplification: each core produces at most 1 beam
+          assert( itsParset.nrBeamsPerPset() <= itsParset.nrSubbandsPerPset() );
+
+          // simplification: also each core which processes a beam also processes a subband
+          assert( nrbeams <= itsParset.nrSubbands() );
+
+          maxlistsize = itsParset.nrSubbandsPerPset();
+        }
 
         for (unsigned beam = 0;  beam < itsParset.nrBeamsPerPset(); beam ++) {
           unsigned beamNumber = psetIndex * itsParset.nrBeamsPerPset() + beam;
@@ -556,10 +581,9 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
         continue;
     }
 
-    LOG_DEBUG_STR(itsLogPrefix << "Setting up output " << output << " (" << plan.plan[output].name << ") for subbands/beams " << list);
+    LOG_DEBUG_STR(itsLogPrefix << "Setting up output " << output << " (" << plan.plan[output].name << ", output " << cnprocOutputNr << " in CNProc) for " << type << " " << list);
 
-
-    outputSections[output] = new OutputSection(itsParset, list, maxlistsize, output, &createCNstream);
+    outputSections[output] = new OutputSection(itsParset, list, maxlistsize, output, cnprocOutputNr++, &createCNstream);
   }
 
   LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input start");
@@ -572,7 +596,8 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 
     for (run = 0; run < itsNrRuns && !isCancelled(); run ++) {
       for (unsigned output = 0; output < nrOutputTypes; output ++) {
-        outputSections[output]->addIterations( 1 );
+        if (outputSections[output])
+          outputSections[output]->addIterations( 1 );
       }
 
       beamletBufferToComputeNode.process();
@@ -580,7 +605,8 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   }
 
   for (unsigned output = 0; output < nrOutputTypes; output ++) {
-    outputSections[output]->noMoreIterations();
+    if (outputSections[output])
+      outputSections[output]->noMoreIterations();
   }
 
   unconfigureCNs();

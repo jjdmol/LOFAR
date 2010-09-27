@@ -56,6 +56,7 @@ class CN_Configuration
     bool		  &correctBandPass();
     double		  &sampleRate();
     std::vector<unsigned> &phaseOnePsets(), &phaseTwoPsets(), &phaseThreePsets(), &tabList();
+    bool                  &phaseThreeDisjunct();
     std::vector<unsigned> &usedCoresInPset();
     std::vector<double>	  &refFreqs();
     std::vector<unsigned> &subbandList();
@@ -106,6 +107,7 @@ class CN_Configuration
       bool		  itsCorrectBandPass;
       double		  itsSampleRate;
       unsigned		  itsPhaseOnePsetsSize, itsPhaseTwoPsetsSize, itsPhaseThreePsetsSize, itsTabListSize;
+      bool                itsPhaseThreeDisjunct;
       unsigned		  itsRefFreqsSize;
       unsigned		  itsSubbandListSize;
       unsigned		  itsPhaseOnePsets[MAX_PSETS], itsPhaseTwoPsets[MAX_PSETS], itsPhaseThreePsets[MAX_PSETS], itsTabList[MAX_PSETS];
@@ -200,6 +202,11 @@ inline std::vector<unsigned> &CN_Configuration::phaseTwoPsets()
 inline std::vector<unsigned> &CN_Configuration::phaseThreePsets()
 {
   return itsPhaseThreePsets;
+}
+
+inline bool &CN_Configuration::phaseThreeDisjunct()
+{
+  return itsMarshalledData.itsPhaseThreeDisjunct;
 }
 
 inline std::vector<unsigned> &CN_Configuration::tabList()
