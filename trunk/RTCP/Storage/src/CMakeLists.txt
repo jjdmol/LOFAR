@@ -13,5 +13,9 @@ lofar_add_library(storage
   Format.cc
   MeasurementSetFormat.cc)
 
+install(FILES
+  Storage.log_prop
+  DESTINATION etc)
+
 lofar_add_bin_program(Storage_main Storage_main.cc)
 lofar_add_bin_program(versionstorage versionstorage.cc)
