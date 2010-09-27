@@ -8,6 +8,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
 lofar_add_package(APLCommon)       # Common tasks and functions
 lofar_add_package(RTCCommon)       # Real Time Control functions
 lofar_add_package(RTDBCommon)      # RealTimeDataBase common software
+lofar_add_package(CASATools)       # Casacore coordinate converter
 lofar_add_package(TestSuite)       # 
 lofar_add_package(CUDaemons)       # Control Unit Daemons
 lofar_add_package(CURTDBDaemons)   # Control Unit RTDB Daemons
