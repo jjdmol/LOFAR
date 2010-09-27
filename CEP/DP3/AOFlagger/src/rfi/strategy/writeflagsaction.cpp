@@ -104,14 +104,15 @@ namespace rfiStrategy {
 		boost::mutex::scoped_lock lock(_mutex);
 		_isFinishing = true;
 		_bufferChange.notify_all();
-		lock.unlock();
 		if(_flusher != 0)
 		{
-			std::cout << "Finishing the flusher thread..." << std::endl;
-			_flusher->join();
-			delete _flusher;
-			delete _imageSet;
+			boost::thread *flusher = _flusher;
 			_flusher = 0;
+			lock.unlock();
+			std::cout << "Finishing the flusher thread..." << std::endl;
+			flusher->join();
+			delete flusher;
+			delete _imageSet;
 		}
 	}
 }

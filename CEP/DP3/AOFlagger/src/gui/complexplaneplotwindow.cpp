@@ -55,10 +55,10 @@ ComplexPlanePlotWindow::ComplexPlanePlotWindow(class MSWindow &_msWindow)
 		_allValuesButton("All values"),
 		_unmaskedValuesButton("Unmasked values"),
 		_maskedValuesButton("Masked values"),
-		_fittedValuesButton("Fitted values"),
-		_individualSampleFitButton("Individually fitted values"),
-		_fringeFitButton("Fringe fitted"),
-		_dynamicFringeFitButton("Dynamic fringe fitted"),
+		_fittedValuesButton("Fitted values (constant freq)"),
+		_individualSampleFitButton("Channel fitted values"),
+		_fringeFitButton("Fringe fitted (varying freq)"),
+		_dynamicFringeFitButton("Dynamic fringe fitted (varying freq+amp)"),
 		_plotButton("Plot"),
 		_xMax(_msWindow.GetOriginalData().ImageWidth()),
 		_yMax(_msWindow.GetOriginalData().ImageHeight())
@@ -298,10 +298,11 @@ void ComplexPlanePlotWindow::onPlotPressed()
 				fitter.Initialize(data);
 				
 				fitter.SetMetaData(_msWindow.TimeFrequencyMetaData());
-				if(_dynamicFringeFitButton.get_active())
+				fitter.PerformFringeStop();
+				/*if(_dynamicFringeFitButton.get_active())
 					fitter.PerformRFIFit(y, y + avgSize, 200);
 				else
-					fitter.PerformRFIFit(y, y + avgSize);
+					fitter.PerformRFIFit(y, y + avgSize);*/
 
 				plot.StartLine("RFI fit");
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(_msWindow.AltMask()->Width(), _msWindow.AltMask()->Height());

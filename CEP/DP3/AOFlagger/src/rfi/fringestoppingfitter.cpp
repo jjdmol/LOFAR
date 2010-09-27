@@ -107,23 +107,23 @@ void FringeStoppingFitter::PerformFringeStop()
 		deltaTime = 1.0;
 	Baseline baseline(*_antenna1Info, *_antenna2Info);
 
-	num_t *rotations = new num_t[real->Height()];
-	for(size_t y=0;y<real->Height();++y)
-		rotations[y] = 0.0L;
+	//num_t *rotations = new num_t[real->Height()];
+	//for(size_t y=0;y<real->Height();++y)
+	//	rotations[y] = 0.0L;
 	for(size_t x=0;x<real->Width();++x)
 	{
 		for(size_t y=0;y<real->Height();++y)
 		{
 			num_t r = real->Value(x, y);
 			num_t i = imaginary->Value(x, y);
-			num_t freq = -rotations[y];
-			rotations[y] +=
-				GetFringeFrequency(x, y) * 2.0L * M_PIn;
-			num_t intRotations =  
-				deltaTime * UVImager::GetFringeCount(0, x, y, _metaData);
-			freq -= intRotations;
+			//num_t freq = -rotations[y];
+			//rotations[y] +=
+			//	GetFringeFrequency(x, y) * 2.0L * M_PIn;
+			num_t intRotations = -x/600.0; 
+				/*deltaTime * */ //UVImager::GetFringeCount(0, x, y, _metaData);
+			//freq -= intRotations;
 
-			num_t cosfreq = cosn(freq*2.0L*M_PIn), sinfreq = sinn(freq*2.0L*M_PIn);
+			num_t cosfreq = cosn(intRotations*2.0L*M_PIn), sinfreq = sinn(intRotations*2.0L*M_PIn);
 			
 			num_t newR = r * cosfreq - i * sinfreq;
 			i = r * sinfreq + i * cosfreq;
@@ -132,7 +132,7 @@ void FringeStoppingFitter::PerformFringeStop()
 			_imaginaryBackground->SetValue(x, y, i);
 		}
 	}
-	delete[] rotations;
+	//delete[] rotations;
 }
 
 num_t FringeStoppingFitter::CalculateMaskedAverage(const Image2D &image, size_t x, size_t yFrom, size_t yLength)

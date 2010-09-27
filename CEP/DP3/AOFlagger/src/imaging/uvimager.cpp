@@ -543,7 +543,7 @@ num_t UVImager::GetFringeStopFrequency(num_t time, const Baseline &baseline, num
 
 num_t UVImager::GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsigned channelIndex, const TimeFrequencyMetaDataCPtr metaData)
 {
-	return metaData->UVW()[timeIndexEnd].w - metaData->UVW()[timeIndexStart].w * metaData->Band().channels[channelIndex].frequencyHz / 299792458.0L;
+	return (metaData->UVW()[timeIndexEnd].w - metaData->UVW()[timeIndexStart].w) * metaData->Band().channels[channelIndex].frequencyHz / 299792458.0L;
 	double
 		timeStart = metaData->ObservationTimes()[timeIndexStart],
 		timeEnd = metaData->ObservationTimes()[timeIndexEnd];

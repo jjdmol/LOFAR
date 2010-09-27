@@ -1222,13 +1222,14 @@ void MSWindow::onTFWidgetMouseMoved(size_t x, size_t y)
 	{
 		Image2DCPtr image = _timeFrequencyWidget.Image();
 		num_t v = image->Value(x, y);
+		UVW uvw = _timeFrequencyWidget.GetMetaData()->UVW()[x];
 		_statusbar.pop();
 		std::stringstream s;
 		s << "x=" << x << ",y=" << y << ",value=" << v;
 		const std::vector<double> &times = _timeFrequencyWidget.GetMetaData()->ObservationTimes();
 		s << " (t=" << Date::AipsMJDToString(times[x]) <<
 		", f=" << Frequency::ToString(_timeFrequencyWidget.GetMetaData()->Band().channels[y].frequencyHz)
-		<< ")";
+		<< ", uvw=" << uvw.u << "," << uvw.v << "," << uvw.w << ')';
 		_statusbar.push(s.str(), 0);
 	}
 }
