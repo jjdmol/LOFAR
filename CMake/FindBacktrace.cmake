@@ -2,14 +2,27 @@
 # The backtrace() function provides you with stack frame return addresses. 
 # In order to translate these return addresses to filename, line number
 # and function name, we need support from the binutils:
-#   - libbfd contains functions to do the address translation
-#   - libiberty contains a function to demangle C++ function names.
+#  - libbfd contains functions to do the address translation
+#  - libiberty contains a function to demangle C++ function names.
 #
-# The following variables are set:
-#   BACKTRACE_FOUND     - system has backtrace support
-#   BACKTRACE_LIBRARIES - libraries needed for backtrace support
+# The following variables will always be set:
+#  BACKTRACE_FOUND     - set if system has backtrace support
+#  BACKTRACE_LIBRARIES - libraries needed to link in backtrace support
+# The following variables will not always be set:
+#  HAVE_EXECINFO_H     - set if header file execinfo.h exists [cached]
+#                        (contains declaration of backtrace())
+#  HAVE_BACKTRACE      - set if backtrace() function exists [cached]
+#  HAVE_BFD_H          - set if header file bfd.h exists [cached]
+#                        (contains declaration of bfd_* functions)
+#  BFD_LIBRARY         - set to full path to libbfd, if found [cached]
+#  IBERTY_LIBRARY      - set to full path to libiberty, if found [cached]
+#  HAVE_DEMANGLE_H     - set if header file demangle.h exists [cached]
+#                        (contains declaration of cplus_demangle())
+#  HAVE_DECL_BASENAME  - set if a declaration for basename() exists [cached]
+#  HAVE_CPLUS_DEMANGLE - set if function demangle() exists [cached]
+#  Z_LIBRARY           - set to full path to libz, if found [cached]
 
-# Copyright (C) 2009
+# Copyright (C) 2009-2010
 # ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 #
