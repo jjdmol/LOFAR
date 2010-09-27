@@ -167,16 +167,17 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
   const char* ed = env->GetStringUTFChars (endDate, 0);
 
   jobject statesVector;
+  vector<TreeState> states;
   try {
 
     if ( *ed == '\0' && *bd == '\0') {
-        vector<TreeState> states = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))
+        states = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))
                            ->getStateList(treeID, isMomID);
     } else if (*ed == '\0') {
-        vector<TreeState> states = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))
+        states = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))
                            ->getStateList(treeID, isMomID,time_from_string(bd));
     } else {
-        vector<TreeState> states = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))
+        states = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))
                           ->getStateList(treeID, isMomID,time_from_string(bd), time_from_string(ed));
     }
     vector<TreeState>::iterator statesIterator;
