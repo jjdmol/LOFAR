@@ -1,5 +1,13 @@
-#  $Id$
+# - Add a MAC protocol source file. 
+#  mac_add_protocol(protocol templ_dir)
+# Use autogen to generate a C++ header and source file from the protocol
+# definition file ${protocol}.prot, using a template in the template directory
+# ${templ_dir}.
 #
+# The generated C++ header file will have an extension '.ph', to distinguish
+# it from ordinary header files. Both C++ header and source file will be
+# generated in the directory ${CMAKE_CURRENT_BINARY_DIR}.
+
 #  Copyright (C) 2008-2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
 #  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
@@ -17,19 +25,9 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#  $Id$
 
-# --------------------------------------------------------------------------
-# mac_add_protocol(protocol templ_dir)
-#
-# Add a MAC protocol source file. 
-# Use autogen to generate a C++ header and source file from the protocol
-# definition file ${protocol}.prot, using a template in the template directory
-# ${templ_dir}.
-#
-# The generated C++ header file will have an extension '.ph', to distinguish
-# it from ordinary header files. Both C++ header and source file will be
-# generated in the directory ${CMAKE_CURRENT_BINARY_DIR}.
-# --------------------------------------------------------------------------
 macro(mac_add_protocol _protocol _templ_dir)
 
   # Search for the autogen program

@@ -1,6 +1,19 @@
-#  LofarFindPackage.cmake: 
+# - Wrapper script around the find_package() command.
 #
-#  Copyright (C) 2008-2009
+# lofar_find_package() finds a package like find_package() does. It uses the
+# LOFAR search path to locate the package, unless the package's root directory
+# <PKG>_ROOT_DIR is defined.
+#
+# Furthermore:
+#  Add preprocessor definitions that are defined in <PKG>_DEFINITIONS.
+#  Add include directories that are defined <PKG>_INCLUDE_DIRS.
+#  Add <PKG>_LIBRARIES to the list of LOFAR_EXTRA_LIBRARIES, needed for
+#  linking.
+#  Add cache variable HAVE_<PKG> that indicates whether the package was found;
+#  it can be used with #cmakedefine.
+# Note: <PKG> equals <package> in uppercase.
+
+#  Copyright (C) 2008-2010
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
 #  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
@@ -22,22 +35,6 @@
 
 include(LofarMacros)
 
-# ----------------------------------------------------------------------------
-# function lofar_find_package(package)
-#
-# Find a package like find_package() does.
-# Use the LOFAR search path to locate the package, unless the package's root
-# directory <PKG>_ROOT_DIR is defined.
-#
-# Furthermore:
-# - Add preprocessor definitions that are defined in <PKG>_DEFINITIONS.
-# - Add include directories that are defined <PKG>_INCLUDE_DIRS.
-# - Add <PKG>_LIBRARIES to the list of LOFAR_EXTRA_LIBRARIES, needed for
-#   linking.
-# - Add cache variable HAVE_<PKG>, which indicates whether the package was 
-#   found. It can be used with #cmakedefine.
-# Note: <PKG> equals <package> in uppercase.
-# ----------------------------------------------------------------------------
 function(lofar_find_package _package)
 
   string(TOLOWER ${_package} _pkg)

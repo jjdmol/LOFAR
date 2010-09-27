@@ -1,6 +1,6 @@
-#  LofarOptions.cmake: Parse CMake options and set associated variables
-#
-#  Copyright (C) 2008-2009
+# - Handle CMake options and set associated variables.
+
+#  Copyright (C) 2008-2010
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
 #  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #

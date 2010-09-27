@@ -1,6 +1,10 @@
-#  $Id$
+# - Handle host-specific and global build configuration settings.
 #
-#  Copyright (C) 2008-2009
+# Include a host-specific 'variants.<hostname>' file, if present; and a
+# global 'variants' file. These files must be located in the directory
+# ${LOFAR_ROOT}/CMake/variants.
+
+#  Copyright (C) 2008-2010
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
 #  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
@@ -17,10 +21,8 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-#  Include a host-specific 'variants.<hostname>' file, if present; and a
-#  global 'variants' file. These files must be located in the directory
-#  ${LOFAR_ROOT}/CMake/variants.
+#
+#  $Id$
 
 if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
 

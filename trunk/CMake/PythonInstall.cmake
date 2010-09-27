@@ -1,5 +1,10 @@
-# $Id$
+# - Install Python source files.
+#  python_install(source1..sourceN DESTINATION install_dir)
+# Install Python source files and byte-compile them in the directory
+# ${PYTHON_INSTALL_DIR}/${install_dir}.
 #
+# Note: PYTHON_INSTALL_DIR will be set by FindPython.cmake.
+
 # Copyright (C) 2008-2009
 # ASTRON (Netherlands Foundation for Research in Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
@@ -17,14 +22,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-# --------------------------------------------------------------------------
-# python_install(source1..sourceN DESTINATION install_dir)
 #
-# Install Python source files and byte-compile them in the directory
-# ${PYTHON_INSTALL_DIR}/${install_dir}.
-# --------------------------------------------------------------------------
+# $Id$
+
 macro(python_install)
 
   # Precondition checks.

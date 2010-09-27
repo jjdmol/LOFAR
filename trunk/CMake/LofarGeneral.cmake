@@ -1,6 +1,17 @@
-#  LofarGeneral.cmake: 
+# - Generic initialization of the LOFAR CMake environment.
 #
-#  Copyright (C) 2008-2009
+# LofarGeneral.cmake must be included after the project() command.
+#
+# It performs the following actions:
+#  Handle all LOFAR build configuration options.
+#  Configure for testing with CTest/Dart.
+#  Check for typedefs of primitive types.
+#  Check for several system header files.
+#  Check endianess.
+#  Check for several system functions.
+#  Define a custom target `check'.
+
+#  Copyright (C) 2008-2010
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
 #  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
