@@ -43,6 +43,7 @@ namespace rfiStrategy {
 		if(!artifacts.HasImageSet())
 			throw BadUsageException("No image set active: can not write flags");
 
+		boost::mutex::scoped_lock lock(_mutex);
 		if(_flusher == 0)
 		{
 			_imageSet = artifacts.ImageSet()->Copy();
@@ -52,6 +53,7 @@ namespace rfiStrategy {
 			flushFunction._parent = this;
 			_flusher = new boost::thread(flushFunction);
 		}
+		lock.unlock();
 
 		std::vector<Mask2DCPtr> masks;
 		for(size_t i=0;i<artifacts.ContaminatedData().MaskCount();++i)
