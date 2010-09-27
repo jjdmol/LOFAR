@@ -212,6 +212,7 @@ namespace rfiStrategy {
 			
 			std::vector<BaselineSelectionInfo::SingleBaselineInfo>::const_iterator badBaselineIter = markedBaselines.begin();
 			std::cout << badBaselineIter->antenna1Name << "x" << badBaselineIter->antenna2Name;
+			++badBaselineIter;
 			while(badBaselineIter!=markedBaselines.end())
 			{
 				std::cout << ", " << badBaselineIter->antenna1Name << "x" << badBaselineIter->antenna2Name;
