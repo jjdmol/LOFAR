@@ -21,6 +21,8 @@
 
 #include <AOFlagger/rfi/strategy/artifactset.h>
 
+#include <stdexcept>
+
 namespace rfiStrategy {
 	
 	void ChangeResolutionAction::Perform(class ArtifactSet &artifacts, class ProgressListener &listener)
@@ -46,7 +48,7 @@ namespace rfiStrategy {
 			{
 				TimeFrequencyData *contaminatedData =
 					TimeFrequencyData::CreateTFDataFromDiff(oldContaminated, artifacts.RevisedData());
-				contaminatedData->SetMaskFrom(oldContaminated);
+				contaminatedData->SetMask(oldContaminated);
 				artifacts.SetContaminatedData(*contaminatedData);
 				delete contaminatedData;
 			}
@@ -78,7 +80,7 @@ namespace rfiStrategy {
 			{
 				TimeFrequencyData *contaminatedData =
 					TimeFrequencyData::CreateTFDataFromDiff(oldContaminated, artifacts.RevisedData());
-				contaminatedData->SetMaskFrom(oldContaminated);
+				contaminatedData->SetMask(oldContaminated);
 				artifacts.SetContaminatedData(*contaminatedData);
 				delete contaminatedData;
 			}
@@ -128,6 +130,8 @@ namespace rfiStrategy {
 		if(restoreImage)
 		{
 			size_t imageCount = originalData.ImageCount();
+			if(imageCount != changedData.ImageCount())
+				throw std::runtime_error("When restoring resolution in change resolution action, original data and changed data do not have the same number of images");
 			for(size_t i=0;i<imageCount;++i)
 			{
 				Image2DCPtr image = changedData.GetImage(i);
@@ -137,7 +141,8 @@ namespace rfiStrategy {
 		}
 		if(_restoreMasks)
 		{
-			size_t maskCount = changedData.MaskCount();
+			originalData.SetMask(changedData);
+			size_t maskCount = originalData.MaskCount();
 			for(size_t i=0;i<maskCount;++i)
 			{
 				Mask2DCPtr mask = changedData.GetMask(i);
@@ -153,6 +158,8 @@ namespace rfiStrategy {
 		if(restoreImage)
 		{
 			size_t imageCount = originalData.ImageCount();
+			if(imageCount != changedData.ImageCount())
+				throw std::runtime_error("When restoring resolution in change resolution action, original data and changed data do not have the same number of images");
 			for(size_t i=0;i<imageCount;++i)
 			{
 				Image2DCPtr image = changedData.GetImage(i);
@@ -162,7 +169,8 @@ namespace rfiStrategy {
 		}
 		if(_restoreMasks)
 		{
-			size_t maskCount = changedData.MaskCount();
+			originalData.SetMask(changedData);
+			size_t maskCount = originalData.MaskCount();
 			for(size_t i=0;i<maskCount;++i)
 			{
 				Mask2DCPtr mask = changedData.GetMask(i);

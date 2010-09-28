@@ -92,11 +92,11 @@ namespace rfiStrategy {
 			listener.OnProgress(i+1, taskCount);
 		}
 		TimeFrequencyData newRevisedData = method.Background();
-		newRevisedData.SetMaskFrom(artifacts.RevisedData());
+		newRevisedData.SetMask(artifacts.RevisedData());
 
 		TimeFrequencyData *contaminatedData =
 			TimeFrequencyData::CreateTFDataFromDiff(artifacts.ContaminatedData(), newRevisedData);
-		contaminatedData->SetMaskFrom(artifacts.ContaminatedData());
+		contaminatedData->SetMask(artifacts.ContaminatedData());
 
 		artifacts.SetRevisedData(newRevisedData);
 		artifacts.SetContaminatedData(*contaminatedData);

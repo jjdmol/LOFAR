@@ -77,11 +77,11 @@ namespace rfiStrategy {
 		for(size_t p=0;p<imageCount;++p)
 			newRevisedData.SetImage(p, images[p]);
 		
-		newRevisedData.SetMaskFrom(artifacts.RevisedData());
+		newRevisedData.SetMask(artifacts.RevisedData());
 
 		TimeFrequencyData *contaminatedData =
 			TimeFrequencyData::CreateTFDataFromDiff(artifacts.ContaminatedData(), newRevisedData);
-		contaminatedData->SetMaskFrom(artifacts.ContaminatedData());
+		contaminatedData->SetMask(artifacts.ContaminatedData());
 
 		artifacts.SetRevisedData(newRevisedData);
 		artifacts.SetContaminatedData(*contaminatedData);
