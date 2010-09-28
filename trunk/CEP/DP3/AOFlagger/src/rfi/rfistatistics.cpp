@@ -929,7 +929,7 @@ void RFIStatistics::saveTimeIntegrated(const std::map<double, class TimestepInfo
 void RFIStatistics::saveAmplitudes(const std::map<double, class AmplitudeBin> &amplitudes, const std::string &filename)
 {
 	std::ofstream file(filename.c_str());
-	file << "centr-amplitude\tlog-centr-amplitude\tcount\trfiCount\tbroadbandRfiCount\tlineRfiCount\tfeatureAvgCount\tfeatureIntCount\tfeatureMaxCount\txx\txy\tyx\tyy\txxRfi\txyRfi\tyxRfi\tyyRfi\tstokesQ\tstokesU\tstokesV\tFalse P\tFalse N\tTrue P\tTrue N\tFalse P amp\tFalse N amp\n" << std::setprecision(14);
+	file << "centr-amplitude\tlog-centr-amplitude\tcount\trfiCount\tbroadbandRfiCount\tlineRfiCount\tfeatureAvgCount\tfeatureIntCount\tfeatureMaxCount\txx\txy\tyx\tyy\txxRfi\txyRfi\tyxRfi\tyyRfi\tstokesQ\tstokesU\tstokesV\tFalseP\tFalseN\tTrueP\tTrueN\n" << std::setprecision(14);
 	for(std::map<double, class AmplitudeBin>::const_iterator i=amplitudes.begin();i!=amplitudes.end();++i)
 	{
 		const AmplitudeBin &a = i->second;
