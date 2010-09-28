@@ -44,9 +44,9 @@ namespace rfiStrategy {
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &)
 			{
 				if(_comparison)
-					statistics.Add(artifacts.ContaminatedData(), artifacts.MetaData());
-				else
 					statistics.Add(artifacts.ContaminatedData(), artifacts.MetaData(), artifacts.OriginalData().GetSingleMask());
+				else
+					statistics.Add(artifacts.ContaminatedData(), artifacts.MetaData());
 			}
 			virtual ActionType Type() const { return AddStatisticsActionType; }
 			
