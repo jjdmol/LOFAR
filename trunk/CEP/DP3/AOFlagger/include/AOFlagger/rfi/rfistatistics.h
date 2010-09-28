@@ -146,13 +146,14 @@ class RFIStatistics {
 			RFIStatistics *baselineStatistics;
 		};
 
-		RFIStatistics() : _separateBaselineStatistics(false), _compareFlags(false) { }
+		RFIStatistics() : _separateBaselineStatistics(false), _compareFlags(false), _filePrefix("") { }
 		~RFIStatistics() { }
 		
 		void Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
 		void Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Mask2DCPtr groundTruthFlagging)
 		{
 			Add(data, metaData);
+			boost::mutex::scoped_lock lock(_mutex);
 			if(metaData->Antenna1().id == metaData->Antenna2().id) {
 				addChannelComparison(_autoChannels, data, metaData, groundTruthFlagging);
 				addAmplitudeComparison(_autoAmplitudes, data, metaData, groundTruthFlagging);

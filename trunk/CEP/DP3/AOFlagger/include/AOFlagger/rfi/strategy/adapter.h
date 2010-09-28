@@ -76,7 +76,7 @@ namespace rfiStrategy {
 						TimeFrequencyData *newContaminatedData =
 							TimeFrequencyData::CreateTFDataFromComplexCombination(artifacts.ContaminatedData(), artifacts.ContaminatedData());
 						newContaminatedData->MultiplyImages(1.0L/M_SQRT2);
-						newContaminatedData->SetMaskFrom(artifacts.ContaminatedData());
+						newContaminatedData->SetMask(artifacts.ContaminatedData());
 						artifacts.SetContaminatedData(*newContaminatedData);
 						delete newContaminatedData;
 					}
@@ -85,7 +85,7 @@ namespace rfiStrategy {
 						TimeFrequencyData *newRevisedData =
 							TimeFrequencyData::CreateTFDataFromComplexCombination(artifacts.RevisedData(), artifacts.RevisedData());
 						newRevisedData->MultiplyImages(1.0L/M_SQRT2);
-						newRevisedData->SetMaskFrom(artifacts.RevisedData());
+						newRevisedData->SetMask(artifacts.RevisedData());
 						artifacts.SetRevisedData(*newRevisedData);
 						delete newRevisedData;
 					}
@@ -94,7 +94,7 @@ namespace rfiStrategy {
 						TimeFrequencyData *newOriginalData =
 							TimeFrequencyData::CreateTFDataFromComplexCombination(artifacts.OriginalData(), artifacts.OriginalData());
 						newOriginalData->MultiplyImages(1.0L/M_SQRT2);
-						newOriginalData->SetMaskFrom(artifacts.OriginalData());
+						newOriginalData->SetMask(artifacts.OriginalData());
 						artifacts.SetOriginalData(*newOriginalData);
 						delete newOriginalData;
 					}

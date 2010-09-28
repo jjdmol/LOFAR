@@ -73,7 +73,19 @@ namespace rfiStrategy {
 						artifacts.ContaminatedData().SetGlobalMask(artifacts.OriginalData().GetSingleMask());
 						break;
 					case ToOriginal:
-						artifacts.OriginalData().SetGlobalMask(artifacts.ContaminatedData().GetSingleMask());
+						if(artifacts.OriginalData().MaskCount() == 1)
+							artifacts.OriginalData().SetGlobalMask(artifacts.ContaminatedData().GetSingleMask());
+						else {
+							if(artifacts.ContaminatedData().MaskCount() == 1) {
+								for(unsigned i=0;i<artifacts.OriginalData().MaskCount();++i)
+									artifacts.OriginalData().SetMask(i, artifacts.ContaminatedData().GetSingleMask());
+							} else if(artifacts.ContaminatedData().MaskCount() != artifacts.OriginalData().MaskCount()) {
+								throw BadUsageException("Error : can't set flagging to original when polarisations are incompatible");
+							} else {
+								for(unsigned i=0;i<artifacts.OriginalData().MaskCount();++i)
+									artifacts.OriginalData().SetMask(i, artifacts.ContaminatedData().GetMask(i));
+							}
+						}
 						break;
 					case Invert: {
 						Mask2DPtr mask = Mask2D::CreateCopy(artifacts.ContaminatedData().GetSingleMask());

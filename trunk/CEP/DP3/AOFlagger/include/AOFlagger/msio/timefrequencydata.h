@@ -354,11 +354,6 @@ class TimeFrequencyData
 			_flagCoverage = IndividualPolarisationFlagCoverage;
 		}
 
-		void SetMaskFrom(const TimeFrequencyData &data)
-		{
-			data.CopyFlaggingTo(this);
-		}
-
 		TimeFrequencyData *CreateTFData(PhaseRepresentation phase) const
 		{
 			if(phase == _phaseRepresentation)

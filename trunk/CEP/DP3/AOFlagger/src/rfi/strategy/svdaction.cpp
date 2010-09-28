@@ -39,11 +39,11 @@ namespace rfiStrategy {
 		}
 
 		TimeFrequencyData newRevisedData = mitigater.Background();
-		newRevisedData.SetMaskFrom(artifacts.RevisedData());
+		newRevisedData.SetMask(artifacts.RevisedData());
 
 		TimeFrequencyData *contaminatedData =
 			TimeFrequencyData::CreateTFDataFromDiff(artifacts.ContaminatedData(), newRevisedData);
-		contaminatedData->SetMaskFrom(artifacts.ContaminatedData());
+		contaminatedData->SetMask(artifacts.ContaminatedData());
 
 		artifacts.SetRevisedData(newRevisedData);
 		artifacts.SetContaminatedData(*contaminatedData);
