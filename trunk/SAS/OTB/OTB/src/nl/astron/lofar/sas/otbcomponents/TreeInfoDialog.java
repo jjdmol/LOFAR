@@ -66,18 +66,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         super(aMainFrame, modal);
         initComponents();
         itsMainFrame = aMainFrame;
-        itsTreeIDs = treeIDs;
-        try {
-            // set selected Tree to first in the list
-            itsTree=OtdbRmi.getRemoteOTDB().getTreeInfo(itsTreeIDs[0], false);
-        } catch (RemoteException e) {
-            logger.error("Error getting the Treeinfo " + e);
-            itsTree=null;
-        }
-        if (treeIDs.length > 1) {
-            itsMultiple=true;
-        }
-        init();        
+        setTree(treeIDs);
     }
     
     public void setTree(int [] treeIDs) {
@@ -87,6 +76,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             topLabel.setText("Tree Meta Data  -- MULTIPLE SELECTION -- Only first Tree's info is shown \n" +
                              "                Changes will be applied to all selections");
         } else {
+            itsMultiple=false;
             topLabel.setText("Tree Meta Data");
         }
         try {
@@ -439,8 +429,25 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             setStopDateButton.setVisible(true);
             if (itsMultiple) {
                 descriptionInput.setEnabled(false);
+                inputDurationDays.setEnabled(false);
+                inputDurationHours.setEnabled(false);
+                inputDurationMinutes.setEnabled(false);
+                inputDurationSeconds.setEnabled(false);
+                setDurationButton.setEnabled(false);
+                setStartDateButton.setEnabled(false);
+                setStopDateButton.setEnabled(false);
+                showCampaignButton.setEnabled(false);
+
             } else {
                 descriptionInput.setEnabled(true);                
+                inputDurationDays.setEnabled(true);
+                inputDurationHours.setEnabled(true);
+                inputDurationMinutes.setEnabled(true);
+                inputDurationSeconds.setEnabled(true);
+                setDurationButton.setEnabled(true);
+                setStartDateButton.setEnabled(true);
+                setStopDateButton.setEnabled(true);
+                showCampaignButton.setEnabled(true);
             }
         }
         if (isAdministrator) {
@@ -546,19 +553,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         aTree.classification=OtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
                         if (!OtdbRmi.getRemoteMaintenance().setClassification(aTree.treeID(), aTree.classification)) {
                             String aS="Error during setClassification("+aTree.treeID()+","+aTree.classification+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
-                            logger.error(aS);
-                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                            succes=false;
-                        }
-                    }
-                    
-                    // Check start & stoptimes and alter in DB when changed
-                    if (!aTree.starttime.replace("T", " ").equals(startTimeInput.getText()) || !aTree.stoptime.replace("T", " ").equals(stopTimeInput.getText())) {
-                        hasChanged=true;
-                        aTree.starttime = startTimeInput.getText();
-                        aTree.stoptime = stopTimeInput.getText();
-                        if (OtdbRmi.getRemoteMaintenance().setSchedule(aTree.treeID(),aTree.starttime,aTree.stoptime)) {
-                            String aS="Error during setSchedule("+aTree.treeID()+","+aTree.starttime+","+aTree.stoptime+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
                             logger.error(aS);
                             LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                             succes=false;
