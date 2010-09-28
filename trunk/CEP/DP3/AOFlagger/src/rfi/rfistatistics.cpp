@@ -112,6 +112,12 @@ void RFIStatistics::Add(const ChannelInfo &channel, bool autocorrelation)
 		c.lineRfiCount += channel.lineRfiCount;
 		c.broadbandRfiAmplitude += channel.broadbandRfiAmplitude;
 		c.lineRfiAmplitude += channel.lineRfiAmplitude;
+		c.falsePositiveCount += channel.falsePositiveCount;
+		c.falseNegativeCount += channel.falseNegativeCount;
+		c.truePositiveCount += channel.truePositiveCount;
+		c.trueNegativeCount += channel.trueNegativeCount;
+		c.falsePositiveAmplitude += channel.falsePositiveAmplitude;
+		c.falseNegativeAmplitude += channel.falseNegativeAmplitude;
 	}
 }
 
@@ -169,6 +175,10 @@ void RFIStatistics::Add(const AmplitudeBin &amplitudeBin, bool autocorrelation)
 		a.xyRfiCount += amplitudeBin.xyRfiCount;
 		a.yxRfiCount += amplitudeBin.yxRfiCount;
 		a.yyRfiCount += amplitudeBin.yyRfiCount;
+		a.falsePositiveCount += amplitudeBin.falsePositiveCount;
+		a.falseNegativeCount += amplitudeBin.falseNegativeCount;
+		a.truePositiveCount += amplitudeBin.truePositiveCount;
+		a.trueNegativeCount += amplitudeBin.trueNegativeCount;
 	}
 }
 
@@ -613,10 +623,94 @@ void RFIStatistics::addFeatures(std::map<double, class AmplitudeBin> &amplitudes
 	}
 }
 
-void RFIStatistics::saveChannels(const std::map<double, class ChannelInfo> &channels, const std::string &filename)
+void RFIStatistics::addChannelComparison(std::map<double, ChannelInfo> &channels, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Mask2DCPtr groundTruthFlagging)
+{
+	Image2DCPtr image = data.GetSingleImage();
+	Mask2DCPtr mask = data.GetSingleMask();
+
+	for(size_t y=1;y<image->Height();++y)
+	{
+		long unsigned falsePositiveCount = 0;
+		long unsigned falseNegativeCount = 0;
+		long unsigned truePositiveCount = 0;
+		long unsigned trueNegativeCount = 0;
+		long double falsePositiveAmplitude = 0;
+		long double falseNegativeAmplitude = 0;
+		
+		for(size_t x=0;x<image->Width();++x)
+		{
+			if(std::isfinite(image->Value(x, y)))
+			{
+				if(mask->Value(x,y) && groundTruthFlagging->Value(x,y))
+					++truePositiveCount;
+				else if(!mask->Value(x,y) && !groundTruthFlagging->Value(x,y))
+					++trueNegativeCount;
+				else if(mask->Value(x,y) && !groundTruthFlagging->Value(x,y))
+				{
+					++falsePositiveCount;
+					falsePositiveAmplitude += image->Value(x, y);
+				}
+				else // !mask->Value(x,y) && groundTruthFlagging->Value(x,y)
+				{
+					++falseNegativeCount;
+					falseNegativeAmplitude += image->Value(x, y);
+				}
+			}
+		}
+		ChannelInfo &channel = channels.find(metaData->Band().channels[y].frequencyHz)->second;
+		channel.falsePositiveCount += falsePositiveCount;
+		channel.falseNegativeCount += falseNegativeCount;
+		channel.truePositiveCount += truePositiveCount;
+		channel.trueNegativeCount += trueNegativeCount;
+		channel.falsePositiveAmplitude += falsePositiveAmplitude;
+		channel.falseNegativeAmplitude += falseNegativeAmplitude;
+	}
+}
+
+void RFIStatistics::addAmplitudeComparison(std::map<double, AmplitudeBin> &amplitudes, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr, Mask2DCPtr groundTruthFlagging)
+{
+	Image2DCPtr image = data.GetSingleImage();
+	Mask2DCPtr mask = data.GetSingleMask();
+
+	for(size_t y=1;y<image->Height();++y)
+	{
+		for(size_t x=0;x<image->Width();++x)
+		{
+			double amp = image->Value(x, y);
+			if(std::isfinite(amp))
+			{
+				double centralAmp = getCentralAmplitude(amp);
+				std::map<double, class AmplitudeBin>::iterator element =
+					amplitudes.find(centralAmp);
+				
+				AmplitudeBin bin;
+				if(element == amplitudes.end())
+				{
+					bin.centralAmplitude = centralAmp;
+				} else {
+					bin = element->second;
+				}
+				if(mask->Value(x,y) && groundTruthFlagging->Value(x,y))
+					++bin.truePositiveCount;
+				else if(!mask->Value(x,y) && !groundTruthFlagging->Value(x,y))
+					++bin.trueNegativeCount;
+				else if(mask->Value(x,y) && !groundTruthFlagging->Value(x,y))
+					++bin.falsePositiveCount;
+				else // !mask->Value(x,y) && groundTruthFlagging->Value(x,y)
+					++bin.falseNegativeCount;
+				if(element == amplitudes.end())
+					amplitudes.insert(std::pair<double, AmplitudeBin>(centralAmp, bin));
+				else
+					amplitudes.find(centralAmp)->second = bin;
+			}
+		}
+	}
+}
+
+void RFIStatistics::saveChannels(const std::map<double, ChannelInfo> &channels, const std::string &filename)
 {
 	std::ofstream file(filename.c_str());
-	file << "frequency\ttotalCount\ttotalAmplitude\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\n" << std::setprecision(14);
+	file << "frequency\ttotalCount\ttotalAmplitude\trfiCount\trfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\tFalse P\tFalse N\tTrue P\tTrue N\tFalse P amp\tFalse N amp\n" << std::setprecision(14);
 	for(std::map<double, class ChannelInfo>::const_iterator i=channels.begin();i!=channels.end();++i)
 	{
 		const ChannelInfo &c = i->second;
@@ -629,7 +723,14 @@ void RFIStatistics::saveChannels(const std::map<double, class ChannelInfo> &chan
 			<< c.broadbandRfiCount << "\t"
 			<< c.lineRfiCount << "\t"
 			<< c.broadbandRfiAmplitude << "\t"
-			<< c.lineRfiAmplitude << "\n";
+			<< c.lineRfiAmplitude << "\t"
+			<< c.falsePositiveCount << "\t"
+			<< c.falseNegativeCount << "\t"
+			<< c.truePositiveCount << "\t"
+			<< c.trueNegativeCount << "\t"
+			<< c.falsePositiveAmplitude << "\t"
+			<< c.falseNegativeAmplitude
+			<< "\n";
 	}
 	file.close();
 }
@@ -661,6 +762,7 @@ void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &chan
 	file <<
 		"subband\ts-frequency\te-frequency\ttotalCount\ttotalAmplitude\trfiCount\t"
 		"rfiSummedAmplitude\tbroadbandRfiCount\tlineRfiCount\tbroadbandRfiAmplitude\tlineRfiAmplitude\t"
+		"False P\tFalse N\tTrue P\tTrue N\tFalse P amp\tFalse N amp\t"
 		"totalCountLQ\ttotalCountUQ\ttotalAmplitudeLQ\ttotalAmplitudeUQ\trfiCountLQ\trfiCountUQ\t"
 		"rfiSummedAmplitudeLQ\trfiSummedAmplitudeUQ\tbroadbandRfiCountLQ\tbroadbandRfiCountUQ\t"
 		"lineRfiCountLQ\tlineRfiCountUQ\tbroadbandRfiAmplitudeLQ\tbroadbandRfiAmplitudeUQ\t"
@@ -675,7 +777,13 @@ void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &chan
 		bandBRFIs,
 		bandLRFIs,
 		bandBRFIAmps,
-		bandLRFIAmps;
+		bandLRFIAmps,
+		bandFP,
+		bandFN,
+		bandTP,
+		bandTN,
+		bandFPAmps,
+		bandFNAmps;
 	for(std::map<double, class ChannelInfo>::const_iterator i=channels.begin();i!=channels.end();++i)
 	{
 		const ChannelInfo &c = i->second;
@@ -687,6 +795,12 @@ void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &chan
 		bandLRFIs.insert(c.lineRfiCount);
 		bandBRFIAmps.insert(c.broadbandRfiAmplitude);
 		bandLRFIAmps.insert(c.lineRfiAmplitude);
+		bandFP.insert(c.falsePositiveCount);
+		bandFN.insert(c.falseNegativeCount);
+		bandTP.insert(c.truePositiveCount);
+		bandTN.insert(c.trueNegativeCount);
+		bandFPAmps.insert(c.falsePositiveAmplitude);
+		bandFNAmps.insert(c.falseNegativeAmplitude);
 		if(index%255 == 0)
 			file << index/255 << '\t' << c.frequencyHz << '\t';
 		else if(index%255 == 254)
@@ -701,6 +815,12 @@ void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &chan
 			<< avg(bandLRFIs) << "\t"
 			<< avg(bandBRFIAmps) << "\t"
 			<< avg(bandLRFIAmps) << "\t"
+			<< avg(bandFP) << "\t"
+			<< avg(bandFN) << "\t"
+			<< avg(bandTP) << "\t"
+			<< avg(bandTN) << "\t"
+			<< avg(bandFPAmps) << "\t"
+			<< avg(bandFNAmps) << "\t"
 			<< lowerQuartile(bandTotals) << "\t" << upperQuartile(bandTotals) << "\t"
 			<< lowerQuartile(bandAmps) << "\t" << upperQuartile(bandAmps) << "\t"
 			<< lowerQuartile(bandRFIs) << "\t" << upperQuartile(bandRFIs) << "\t"
@@ -708,7 +828,13 @@ void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &chan
 			<< lowerQuartile(bandBRFIs) << "\t" << upperQuartile(bandBRFIs) << "\t"
 			<< lowerQuartile(bandLRFIs) << "\t" << upperQuartile(bandLRFIs) << "\t"
 			<< lowerQuartile(bandBRFIAmps) << "\t" << upperQuartile(bandBRFIAmps) << "\t"
-			<< lowerQuartile(bandLRFIAmps) << "\t" << upperQuartile(bandLRFIAmps) << "\n";
+			<< lowerQuartile(bandLRFIAmps) << "\t" << upperQuartile(bandLRFIAmps) << "\t"
+			<< lowerQuartile(bandFP) << "\t" << upperQuartile(bandFP) << "\t"
+			<< lowerQuartile(bandFN) << "\t" << upperQuartile(bandFN) << "\t"
+			<< lowerQuartile(bandTP) << "\t" << upperQuartile(bandTP) << "\t"
+			<< lowerQuartile(bandTN) << "\t" << upperQuartile(bandTN) << "\t"
+			<< lowerQuartile(bandFPAmps) << "\t" << upperQuartile(bandFPAmps) << "\t"
+			<< lowerQuartile(bandFNAmps) << "\t" << upperQuartile(bandFNAmps) << "\n";
 			bandTotals.clear();
 			bandAmps.clear();
 			bandRFIs.clear();
@@ -717,6 +843,12 @@ void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &chan
 			bandLRFIs.clear();
 			bandBRFIAmps.clear();
 			bandLRFIAmps.clear();
+			bandFP.clear();
+			bandFN.clear();
+			bandTP.clear();
+			bandTN.clear();
+			bandFPAmps.clear();
+			bandFNAmps.clear();
 		}
 		++index;
 	}
@@ -797,7 +929,7 @@ void RFIStatistics::saveTimeIntegrated(const std::map<double, class TimestepInfo
 void RFIStatistics::saveAmplitudes(const std::map<double, class AmplitudeBin> &amplitudes, const std::string &filename)
 {
 	std::ofstream file(filename.c_str());
-	file << "centr-amplitude\tlog-centr-amplitude\tcount\trfiCount\tbroadbandRfiCount\tlineRfiCount\tfeatureAvgCount\tfeatureIntCount\tfeatureMaxCount\txx\txy\tyx\tyy\txxRfi\txyRfi\tyxRfi\tyyRfi\tstokesQ\tstokesU\tstokesV\n" << std::setprecision(14);
+	file << "centr-amplitude\tlog-centr-amplitude\tcount\trfiCount\tbroadbandRfiCount\tlineRfiCount\tfeatureAvgCount\tfeatureIntCount\tfeatureMaxCount\txx\txy\tyx\tyy\txxRfi\txyRfi\tyxRfi\tyyRfi\tstokesQ\tstokesU\tstokesV\tFalse P\tFalse N\tTrue P\tTrue N\tFalse P amp\tFalse N amp\n" << std::setprecision(14);
 	for(std::map<double, class AmplitudeBin>::const_iterator i=amplitudes.begin();i!=amplitudes.end();++i)
 	{
 		const AmplitudeBin &a = i->second;
@@ -822,7 +954,12 @@ void RFIStatistics::saveAmplitudes(const std::map<double, class AmplitudeBin> &a
 			<< a.yyRfiCount << '\t'
 			<< a.stokesQCount << '\t'
 			<< a.stokesUCount << '\t'
-			<< a.stokesVCount << '\n';
+			<< a.stokesVCount << '\t'
+			<< a.falsePositiveCount << "\t"
+			<< a.falseNegativeCount << "\t"
+			<< a.truePositiveCount << "\t"
+			<< a.trueNegativeCount
+			<< "\n";
 	}
 	file.close();
 }

@@ -52,7 +52,9 @@ namespace rfiStrategy
 // 1.5 : added the CutAreaAction and added "file-prefix" parameter of AddStatistics action.
 // 1.6 : added the BaselineSelectionAction
 // 1.7 : added "abs-threshold" and "smoothing-sigma" parameters to the BaselineSelectionAction 
-#define STRATEGY_FILE_FORMAT_VERSION 1.7
+// 1.8 : added "compare-original-and-alternative" parameter to AddStatisticsAction, added the enum
+//       value ToOriginal in enum NewFlagging, pamarameter of SetFlaggingAction. 
+#define STRATEGY_FILE_FORMAT_VERSION 1.8
 
 // The earliest format version which can be read by this version of the software
 #define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 1.4

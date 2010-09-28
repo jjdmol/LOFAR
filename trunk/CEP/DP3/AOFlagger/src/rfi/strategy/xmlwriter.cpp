@@ -210,6 +210,7 @@ namespace rfiStrategy {
 	{
 		attribute("type", "AddStatisticsAction");
 		write("file-prefix", action.FilePrefix().c_str());
+		write("compare-original-and-alternative", action.CompareOriginalAndAlternative());
 	}
 
 	void XmlWriter::writeBaselineSelectionAction(const class BaselineSelectionAction &action)
