@@ -97,6 +97,8 @@ public:
 	uint32         nrChannelsPerSubband() const;
 	uint32         nrCoresPerPset() const;
 	vector<unsigned> usedCoresInPset() const;
+	vector<unsigned> usedCoresInPhaseOneTwo() const;
+	vector<unsigned> usedCoresInPhaseThree() const;
 	double         channelWidth() const;
 	bool	       delayCompensation() const;
 	uint32	       nrCalcDelays() const;
@@ -113,7 +115,7 @@ public:
 	vector<uint32> phaseTwoPsets() const;
 	vector<uint32> phaseThreePsets() const;
 	vector<uint32> usedPsets() const; // union of phasePsets
-        bool           phaseThreeDisjunct() const; // if phase 3 does not overlap with phase 1 or 2
+        bool           phaseThreePsetDisjunct() const; // if phase 3 does not overlap with phase 1 or 2
 	vector<uint32> tabList() const;
 	bool           conflictingResources(const Parset &otherParset, std::stringstream &error) const;
 	int	       phaseOnePsetIndex(uint32 pset) const;
@@ -424,6 +426,16 @@ inline uint32 Parset::nrChannelsPerSubband() const
 inline vector<unsigned> Parset::usedCoresInPset() const
 {
   return getUint32Vector("OLAP.CNProc.usedCoresInPset",true);
+}
+
+inline vector<unsigned> Parset::usedCoresInPhaseOneTwo() const
+{
+  return getUint32Vector("OLAP.CNProc.usedCoresInPhaseOneTwo",true);
+}
+
+inline vector<unsigned> Parset::usedCoresInPhaseThree() const
+{
+  return getUint32Vector("OLAP.CNProc.usedCoresInPhaseThree",true);
 }  
  
 inline uint32 Parset::nrCoresPerPset() const
@@ -501,9 +513,9 @@ inline vector<uint32> Parset::phaseThreePsets() const
   return getUint32Vector("OLAP.CNProc.phaseThreePsets",true);
 }
 
-inline bool Parset::phaseThreeDisjunct() const
+inline bool Parset::phaseThreePsetDisjunct() const
 {
-  return getBool("OLAP.CNProc.phaseThreeDisjunct");
+  return getBool("OLAP.CNProc.phaseThreePsetDisjunct");
 }
 
 inline vector<uint32> Parset::tabList() const

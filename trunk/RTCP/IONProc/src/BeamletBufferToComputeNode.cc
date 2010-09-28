@@ -82,7 +82,7 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsNrBeamsPerPset	      = ps->nrBeamsPerPset();
   itsNrPhaseTwoPsets	      = ps->phaseTwoPsets().size();
   itsPhaseThreePsetIndex      = ps->phaseThreePsetIndex( psetNumber );
-  itsPhaseThreeDisjunct       = ps->phaseThreeDisjunct();
+  itsPhaseThreePsetDisjunct       = ps->phaseThreePsetDisjunct();
   itsCurrentComputeCore	      = 0;
   itsNrCoresPerPset	      = ps->nrCoresPerPset();
   itsSampleDuration	      = ps->sampleDuration();
@@ -278,7 +278,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
 {
   CN_Command command(CN_Command::PROCESS, itsBlockNumber ++);
 
-  if (itsPhaseThreeDisjunct && itsPhaseThreePsetIndex >= 0) {
+  if (itsPhaseThreePsetDisjunct && itsPhaseThreePsetIndex >= 0) {
     // psets dedicated to phase 3 have a different schedule -- they iterate over
     // beams instead of subbands, and never need station data as input
 

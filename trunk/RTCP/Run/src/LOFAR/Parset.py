@@ -266,6 +266,7 @@ class Parset(util.Parset.Parset):
 	nrPsets = len(self.psets)
 	nrStorageNodes = self.getNrUsedStorageNodes()
         nrBeamFiles = self.getNrBeamFiles()
+        cores = self.getInt32Vector("OLAP.CNProc.usedCoresInPset")
 
         # set and resolve storage hostnames
         # sort them since mpirun will as well, messing with our indexing schemes!
@@ -279,7 +280,10 @@ class Parset(util.Parset.Parset):
         else:  
 	  self.setdefault('OLAP.CNProc.phaseThreePsets', [])
 
-        self["OLAP.CNProc.phaseThreeDisjunct"] = self.phaseThreeDisjunct()
+        self.setdefault('OLAP.CNProc.usedCoresInPhaseOneTwo',cores)  
+        self.setdefault('OLAP.CNProc.usedCoresInPhaseThree',cores)  
+
+        self["OLAP.CNProc.phaseThreePsetDisjunct"] = self.phaseThreePsetDisjunct()
 
         # what will be stored where?
         # outputSubbandPsets may well be set before finalize()
@@ -460,7 +464,7 @@ class Parset(util.Parset.Parset):
 
       return False
 
-    def phaseThreeDisjunct( self ):
+    def phaseThreePsetDisjunct( self ):
       phase1 = set(self.getInt32Vector("OLAP.CNProc.phaseOnePsets"))
       phase2 = set(self.getInt32Vector("OLAP.CNProc.phaseTwoPsets"))
       phase3 = set(self.getInt32Vector("OLAP.CNProc.phaseThreePsets"))
@@ -497,7 +501,7 @@ class Parset(util.Parset.Parset):
       assert len(self.getInt32Vector("Observation.subbandList")) > 0, "No subbands selected."
 
       # phase 2 and 3 psets are either disjunct or equal
-      assert self.phaseThreeDisjunct() or self.phaseTwoThreeEqual(), "Phase 2 and 3 should use either disjunct or the same psets."
+      assert self.phaseThreePsetDisjunct() or self.phaseTwoThreeEqual(), "Phase 2 and 3 should use either disjunct or the same psets."
 
       # no both bf complex voltages and stokes
       assert not (getBool("OLAP.outputBeamFormedData") and getBool("OLAP.outputCoherentStokes")), "Cannot output both complex voltages and coherent stokes."
