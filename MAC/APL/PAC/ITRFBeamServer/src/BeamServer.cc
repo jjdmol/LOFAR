@@ -1362,6 +1362,9 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 			if (globalAntennaSets()->antennaField(beamIter->second->antennaSetName()) != fieldName) {
 				continue;
 			}
+			// Get the RCU index-schema for this antennaSet.
+			vector<int16>	posIndex = globalAntennaSets()->positionIndex(beamIter->second->antennaSetName());
+
 			// Get the right pointing
 			Pointing	currentPointing = beamIter->second->pointingAtTime(weightTime);
 			blitz::Array<double,2>	sourceJ2000xyz;		// [1, xyz]
@@ -1374,12 +1377,10 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 			}
 			LOG_DEBUG_STR("sourceJ2000xyz:" << sourceJ2000xyz);
 
-			// Note: RCUallocation is stationbased, rest info is fieldbased, 
-			//		 use firstRCU as offsetcorrection
-			int	firstRCU    (gAntField->ringNr(fieldName) * gAntField->nrAnts(fieldName) * 2);
+			// Note: Beamlet numbers depend on the ring.
 			int	firstBeamlet(gAntField->ringNr(fieldName) * LOFAR::MAX_BEAMLETS);
-			LOG_DEBUG_STR("first RCU of field " << fieldName << "=" << firstRCU);
 			LOG_DEBUG_STR("first beamlet of field " << fieldName << "=" << firstBeamlet);
+			// Note: RCUallocation is stationbased, rest info is fieldbased, 
 			bitset<MAX_RCUS>	RCUallocation(beamIter->second->rcuMask());
 			for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
 				if (!RCUallocation.test(rcu)) {			// all RCUS switched on in LBA/HBA mode
@@ -1399,9 +1400,9 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 					}
 
 					itsWeights(rcu, beamlet) = exp(itsBeamletAllocation[beamlet+firstBeamlet].scaling * 
-							(rcuJ2000Pos(rcu-firstRCU, 0) * sourceJ2000xyz(0,0) +
-							 rcuJ2000Pos(rcu-firstRCU, 1) * sourceJ2000xyz(0,1) +
-							 rcuJ2000Pos(rcu-firstRCU, 2) * sourceJ2000xyz(0,2)));
+							(rcuJ2000Pos((int)posIndex[rcu], 0) * sourceJ2000xyz(0,0) +
+							 rcuJ2000Pos((int)posIndex[rcu], 1) * sourceJ2000xyz(0,1) +
+							 rcuJ2000Pos((int)posIndex[rcu], 2) * sourceJ2000xyz(0,2)));
 
 					// some debugging
 //					if (itsWeights(rcu, beamlet) != complex<double>(1,0)) {
@@ -1412,7 +1413,8 @@ bool BeamServer::compute_weights(Timestamp weightTime)
 //							LOG_DEBUG_STR(str.str());
 //						}
 						if (beamlet%100==0) {
-							LOG_DEBUG_STR("itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet));
+							LOG_DEBUG_STR("itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet)
+											<< " : rcuPos[" << posIndex[rcu] << "]=" << rcuJ2000Pos((int)posIndex[rcu],0));
 						}
 //					}
 				} // beamlets
