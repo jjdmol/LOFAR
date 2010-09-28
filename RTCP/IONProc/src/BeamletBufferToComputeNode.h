@@ -90,7 +90,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     Matrix<AMC::Direction>	 itsBeamDirectionsAfterEnd;
     unsigned			 itsNrPhaseTwoPsets;
     int                          itsPhaseThreePsetIndex;
-    bool                         itsPhaseThreeDisjunct;
+    bool                         itsPhaseThreePsetDisjunct;
     unsigned			 itsObservationID;
     
     unsigned			 itsMaxNetworkDelay; // in samples

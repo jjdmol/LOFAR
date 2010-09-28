@@ -553,7 +553,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
           continue;
         }
 
-        if (itsParset.phaseThreeDisjunct()) {
+        if (itsParset.phaseThreePsetDisjunct()) {
           // simplification: each core produces at most 1 beam
           assert( itsParset.nrBeamsPerPset() <= itsParset.nrCoresPerPset() );
 

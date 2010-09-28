@@ -115,24 +115,31 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   unsigned myCoreInPset	    = 0;
 #endif
 
+  std::vector<unsigned> &phaseOneTwoCores  = configuration.usedCoresInPhaseOneTwo();
+  bool inPhaseOneTwoCores  = std::find(phaseOneTwoCores.begin(),  phaseOneTwoCores.end(),  myCoreInPset) != phaseOneTwoCores.end();
+
+  std::vector<unsigned> &phaseThreeCores  = configuration.usedCoresInPhaseThree();
+  bool inPhaseThreeCores   = std::find(phaseThreeCores.begin(),  phaseThreeCores.end(),  myCoreInPset) != phaseThreeCores.end();
+
   std::vector<unsigned> &phaseOnePsets  = configuration.phaseOnePsets();
   std::vector<unsigned>::const_iterator phaseOnePsetIndex  = std::find(phaseOnePsets.begin(),  phaseOnePsets.end(),  myPset);
-  itsHasPhaseOne             = phaseOnePsetIndex != phaseOnePsets.end();
+  itsHasPhaseOne             = phaseOnePsetIndex != phaseOnePsets.end() && inPhaseOneTwoCores;
+
 
   std::vector<unsigned> &phaseTwoPsets  = configuration.phaseTwoPsets();
   std::vector<unsigned>::const_iterator phaseTwoPsetIndex  = std::find(phaseTwoPsets.begin(),  phaseTwoPsets.end(),  myPset);
-  itsHasPhaseTwo             = phaseTwoPsetIndex != phaseTwoPsets.end();
+  itsHasPhaseTwo             = phaseTwoPsetIndex != phaseTwoPsets.end() && inPhaseOneTwoCores;
 
   itsPhaseTwoPsetIndex       = itsHasPhaseTwo ? phaseTwoPsetIndex - phaseTwoPsets.begin() : 0;
   itsPhaseTwoPsetSize        = phaseTwoPsets.size();
 
   std::vector<unsigned> &phaseThreePsets  = configuration.phaseThreePsets();
   std::vector<unsigned>::const_iterator phaseThreePsetIndex  = std::find(phaseThreePsets.begin(),  phaseThreePsets.end(),  myPset);
-  itsHasPhaseThree           = phaseThreePsetIndex != phaseThreePsets.end();
+  itsHasPhaseThree           = phaseThreePsetIndex != phaseThreePsets.end() && inPhaseThreeCores;
   itsPhaseThreePsetIndex     = itsHasPhaseThree ? phaseThreePsetIndex - phaseThreePsets.begin() : 0;
   itsPhaseThreeExists        = phaseThreePsets.size() > 0;
   itsPhaseThreePsetSize      = phaseThreePsets.size();
-  itsPhaseThreeDisjunct      = configuration.phaseThreeDisjunct();
+  itsPhaseThreePsetDisjunct      = configuration.phaseThreePsetDisjunct();
 
   itsLogPrefix = str(format("[obs %u phases %d%d%d] ") % configuration.observationID() % (itsHasPhaseOne ? 1 : 0) % (itsHasPhaseTwo ? 1 : 0) % (itsHasPhaseThree ? 1 : 0));
 
@@ -221,7 +228,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     itsCorrelator	 = new Correlator(itsBeamFormer->getStationMapping(), nrChannels, nrSamplesPerIntegration);
   }
 
-  if (itsHasPhaseThree && itsPhaseThreeDisjunct) {
+  if (itsHasPhaseThree && itsPhaseThreePsetDisjunct) {
     itsCurrentBeam = new Ring(
       itsPhaseThreePsetIndex, itsNrBeamsPerPset,
       itsMyCoreIndex, itsUsedCoresPerPset );
@@ -231,7 +238,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     itsCoherentStokes    = new Stokes(itsNrStokes, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
   }
 
-  if (!itsPhaseThreeDisjunct) {
+  if (!itsPhaseThreePsetDisjunct) {
     // we don't support >1 beam/core (which would require bigger memory structures)
     assert( itsNrBeamsPerPset <= itsUsedCoresPerPset );
 
@@ -326,7 +333,7 @@ template <typename SAMPLE_TYPE> bool CN_Processing<SAMPLE_TYPE>::transposeBeams(
 
     unsigned myBeam;
 
-    if (itsPhaseThreeDisjunct) {
+    if (itsPhaseThreePsetDisjunct) {
       // the phase 3 psets are dedicated to phase 3
       myBeam = *itsCurrentBeam;
 
@@ -379,7 +386,7 @@ template <typename SAMPLE_TYPE> bool CN_Processing<SAMPLE_TYPE>::transposeBeams(
     unsigned relativeCoreIndex = itsCurrentSubband->relative();
 
     // first core in each pset to handle subbands for this 'second' of data
-    unsigned firstCore = itsPhaseThreeDisjunct
+    unsigned firstCore = itsPhaseThreePsetDisjunct
       ? (block * itsNrBeamsPerPset) % itsUsedCoresPerPset
       : (itsMyCoreIndex + (itsUsedCoresPerPset - relativeCoreIndex)) % itsUsedCoresPerPset;
 
@@ -650,7 +657,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
   // we don't support >1 beam/core
   //assert(wasLastSubband);
 
-  if ( (itsHasPhaseThree && itsPhaseThreeDisjunct)
+  if ( (itsHasPhaseThree && itsPhaseThreePsetDisjunct)
     || (*itsCurrentSubband < itsNrSubbands && itsPhaseThreeExists)) {  
     if (itsHasPhaseTwo || itsHasPhaseThree) {
       bool beamToProcess = transposeBeams(block);

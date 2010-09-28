@@ -110,7 +110,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     unsigned            itsComputeGroupRank;
     unsigned            itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
     unsigned            itsPhaseTwoPsetIndex, itsPhaseThreePsetIndex;
-    bool                itsPhaseThreeExists, itsPhaseThreeDisjunct;
+    bool                itsPhaseThreeExists, itsPhaseThreePsetDisjunct;
     unsigned            itsUsedCoresPerPset,itsMyCoreIndex;
     Stream	        *itsStream;
     Stream              *(*itsCreateStream)(unsigned, const LocationInfo &);

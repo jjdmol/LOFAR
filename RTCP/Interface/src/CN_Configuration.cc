@@ -61,9 +61,11 @@ CN_Configuration::CN_Configuration(const Parset &parset)
   phaseOnePsets()           = parset.phaseOnePsets();
   phaseTwoPsets()           = parset.phaseTwoPsets();
   phaseThreePsets()         = parset.phaseThreePsets();
-  phaseThreeDisjunct()      = parset.phaseThreeDisjunct();
+  phaseThreePsetDisjunct()  = parset.phaseThreePsetDisjunct();
   tabList()                 = parset.tabList();
   usedCoresInPset()	    = parset.usedCoresInPset();
+  usedCoresInPhaseOneTwo()  = parset.usedCoresInPhaseOneTwo();
+  usedCoresInPhaseThree()   = parset.usedCoresInPhaseThree();
   refFreqs()                = parset.subbandToFrequencyMapping();
   subbandList()             = parset.subbandList();
   nrPencilBeams()           = parset.nrPencilBeams();
@@ -113,6 +115,12 @@ void CN_Configuration::read(Stream *str)
   itsUsedCoresInPset.resize(itsMarshalledData.itsNrUsedCoresPerPset);
   memcpy(&itsUsedCoresInPset[0], itsMarshalledData.itsUsedCoresInPset, itsMarshalledData.itsNrUsedCoresPerPset * sizeof(unsigned));
 
+  itsUsedCoresInPhaseOneTwo.resize(itsMarshalledData.itsNrUsedCoresInPhaseOneTwo);
+  memcpy(&itsUsedCoresInPset[0], itsMarshalledData.itsUsedCoresInPhaseOneTwo, itsMarshalledData.itsNrUsedCoresInPhaseOneTwo * sizeof(unsigned));
+
+  itsUsedCoresInPhaseThree.resize(itsMarshalledData.itsNrUsedCoresInPhaseThree);
+  memcpy(&itsUsedCoresInPset[0], itsMarshalledData.itsUsedCoresInPhaseThree, itsMarshalledData.itsNrUsedCoresInPhaseThree * sizeof(unsigned));
+
   itsRefFreqs.resize(itsMarshalledData.itsRefFreqsSize);
   memcpy(&itsRefFreqs[0], itsMarshalledData.itsRefFreqs, itsMarshalledData.itsRefFreqsSize * sizeof(double));
 
@@ -150,6 +158,14 @@ void CN_Configuration::write(Stream *str)
   itsMarshalledData.itsNrUsedCoresPerPset = itsUsedCoresInPset.size();
   assert(itsMarshalledData.itsNrUsedCoresPerPset <= MAX_CORES_PER_PSET);
   memcpy(itsMarshalledData.itsUsedCoresInPset, &itsUsedCoresInPset[0], itsMarshalledData.itsNrUsedCoresPerPset * sizeof(unsigned));
+
+  itsMarshalledData.itsNrUsedCoresInPhaseOneTwo = itsUsedCoresInPhaseOneTwo.size();
+  assert(itsMarshalledData.itsNrUsedCoresInPhaseOneTwo <= MAX_CORES_PER_PSET);
+  memcpy(itsMarshalledData.itsUsedCoresInPhaseOneTwo, &itsUsedCoresInPhaseOneTwo[0], itsMarshalledData.itsNrUsedCoresInPhaseOneTwo * sizeof(unsigned));
+
+  itsMarshalledData.itsNrUsedCoresInPhaseThree = itsUsedCoresInPhaseThree.size();
+  assert(itsMarshalledData.itsNrUsedCoresInPhaseThree <= MAX_CORES_PER_PSET);
+  memcpy(itsMarshalledData.itsUsedCoresInPhaseThree, &itsUsedCoresInPhaseThree[0], itsMarshalledData.itsNrUsedCoresInPhaseThree * sizeof(unsigned));
 
   itsMarshalledData.itsRefFreqsSize = itsRefFreqs.size();
   assert(itsMarshalledData.itsRefFreqsSize <= MAX_SUBBANDS);
