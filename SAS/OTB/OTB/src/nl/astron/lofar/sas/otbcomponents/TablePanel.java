@@ -39,7 +39,7 @@ public class TablePanel extends javax.swing.JPanel {
     
     /** Return the model from this table
      *
-     * @return The abstract TableModel
+     * @return The default TableModel
      */
     public AbstractTableModel getTableModel() {
         return (AbstractTableModel)jTable1.getModel();

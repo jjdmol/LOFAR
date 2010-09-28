@@ -42,9 +42,11 @@ import nl.astron.lofar.sas.otb.util.*;
 import nl.astron.lofar.sas.otb.util.tablemodels.ComponentTableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.DefaultTemplatetableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.PICtableModel;
+import nl.astron.lofar.sas.otb.util.tablemodels.StateChangeHistoryTableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.TemplatetableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.VICtableModel;
 import nl.astron.lofar.sas.otbcomponents.LoadFileDialog;
+import nl.astron.lofar.sas.otbcomponents.TableDialog;
 import nl.astron.lofar.sas.otbcomponents.TreeInfoDialog;
 import org.apache.log4j.Logger;
 
@@ -77,6 +79,8 @@ public class MainPanel extends javax.swing.JPanel
     public void initializeButtons() {
         buttonPanel1.removeAllButtons();
         if (itsTabFocus.equals("PIC")) {
+            buttonPanel1.addButton("State History");
+            buttonPanel1.setButtonIcon("State History",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_info.gif")));
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.setButtonIcon("Query Panel",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_help.png")));
             buttonPanel1.addButton("New");
@@ -93,7 +97,10 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.setButtonEnabled("View",false);
             buttonPanel1.setButtonEnabled("Info",false);
+            buttonPanel1.setButtonEnabled("State History",false);
         } else if (itsTabFocus.equals("VIC")) {
+            buttonPanel1.addButton("State History");
+            buttonPanel1.setButtonIcon("State History",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_info.gif")));
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.setButtonIcon("Query Panel",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_help.png")));
             buttonPanel1.addButton("Delete");
@@ -105,10 +112,13 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.addButton("Schedule");
             buttonPanel1.setButtonIcon("Schedule",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_fileopen.gif")));
 
+            buttonPanel1.setButtonEnabled("State History",false);
             buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.setButtonEnabled("View",false);
             buttonPanel1.setButtonEnabled("Schedule",false);
         } else if (itsTabFocus.equals("Templates")) {
+            buttonPanel1.addButton("State History");
+            buttonPanel1.setButtonIcon("State History",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_info.gif")));
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.setButtonIcon("Query Panel",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_help.png")));
             buttonPanel1.addButton("Duplicate");
@@ -132,7 +142,10 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.setButtonEnabled("Build VIC tree",false);
             buttonPanel1.setButtonEnabled("Change Status",false); 
             buttonPanel1.setButtonEnabled("Set to Default",false);
+            buttonPanel1.setButtonEnabled("State History",false);
         } else if (itsTabFocus.equals("Default Templates")) {
+            buttonPanel1.addButton("State History");
+            buttonPanel1.setButtonIcon("State History",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_info.gif")));
             buttonPanel1.addButton("Duplicate");
             buttonPanel1.setButtonIcon("Duplicate",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_copy.png")));
             buttonPanel1.addButton("Modify");
@@ -145,6 +158,7 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.setButtonEnabled("Modify",false);
             buttonPanel1.setButtonEnabled("Duplicate",false);
             buttonPanel1.setButtonEnabled("Change Status",false);
+            buttonPanel1.setButtonEnabled("State History",false);
         } else if (itsTabFocus.equals("Components")) {
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.setButtonIcon("Query Panel",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_help.png")));
@@ -159,7 +173,7 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.addButton("Build TemplateTree");
             buttonPanel1.setButtonIcon("Build TemplateTree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_redo.png")));
 
-            buttonPanel1.setButtonEnabled("Delete",false);
+//            buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.setButtonEnabled("Modify",false);
             buttonPanel1.setButtonEnabled("Build TemplateTree",false);
         } else if (itsTabFocus.equals("Query Results")) {
@@ -630,6 +644,10 @@ public class MainPanel extends javax.swing.JPanel
             if (aButton.equals("Query Panel")) {
                 // TODO open Query Panel
                 itsMainFrame.ToDo();
+            } else if (aButton.equals("State History")) {
+                if (treeID > 0) {
+                    viewStateChanges(treeID);
+                }
             } else if (aButton.equals("New")) {
                 if (getFile("PIC-tree")) {
                     try {
@@ -690,22 +708,24 @@ public class MainPanel extends javax.swing.JPanel
                 }  
 
             } else if (aButton.equals("Delete")) {
-                if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree: ?"+treeID,"Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree(s): ?","Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                     try {
-                        if (OtdbRmi.getRemoteMaintenance().deleteTree(treeID)) {
-                            itsMainFrame.setHourglassCursor();
-                            ((PICtableModel)PICPanel.getTableModel()).fillTable();
-                            itsMainFrame.setNormalCursor();
-                        } else {
-                            String aS="Failed to delete tree";
-                            logger.error(aS);
-                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        int[] treeIDs=getSelectedTreeIDs();
+                        for (int i=0;i< treeIDs.length;i++) {
+                            if (!OtdbRmi.getRemoteMaintenance().deleteTree(treeIDs[i])) {
+                                String aS="Failed to delete tree: "+treeIDs[i];
+                                logger.error(aS);
+                                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                            }
                         }
                     } catch (RemoteException ex) {
                         String aS="Remote error during deleteTree: "+ ex;
                         logger.error(aS);
                         LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
+                    itsMainFrame.setHourglassCursor();
+                    ((PICtableModel)PICPanel.getTableModel()).fillTable();
+                    itsMainFrame.setNormalCursor();
                 }
             } else if (aButton.equals("View")) {
                 ResultBrowserPanel aP=(ResultBrowserPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ResultBrowserPanel", true, true);
@@ -734,23 +754,29 @@ public class MainPanel extends javax.swing.JPanel
             if (aButton.equals("Query Panel")) {
                 // TODO open Query Panel
                 itsMainFrame.ToDo();
+            } else if (aButton.equals("State History")) {
+                if (treeID > 0) {
+                    viewStateChanges(treeID);
+                }
             } else if (aButton.equals("Delete")) {
-                if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree: ?"+treeID,"Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree(s): ?","Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                     try {
-                        if (OtdbRmi.getRemoteMaintenance().deleteTree(treeID)) {
-                            itsMainFrame.setHourglassCursor();
-                            ((VICtableModel)VICPanel.getTableModel()).fillTable();
-                            itsMainFrame.setNormalCursor();
-                        } else {
-                            String aS="Failed to delete tree";
-                            logger.error(aS);
-                            LofarUtils.showErrorPanel(this, aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        int[] treeIDs=getSelectedTreeIDs();
+                        for (int i=0;i< treeIDs.length;i++) {
+                            if (!OtdbRmi.getRemoteMaintenance().deleteTree(treeIDs[i])) {
+                                String aS="Failed to delete tree: "+treeIDs[i];
+                                logger.error(aS);
+                                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                            }
                         }
                     } catch (RemoteException ex) {
                         String aS="Remote error during deleteTree: "+ ex;
                         logger.error(aS);
                         LofarUtils.showErrorPanel(this, aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
+                    itsMainFrame.setHourglassCursor();
+                    ((VICtableModel)VICPanel.getTableModel()).fillTable();
+                    itsMainFrame.setNormalCursor();
                 }
             } else if (aButton.equals("View")) {
                 ResultBrowserPanel aP=(ResultBrowserPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ResultBrowserPanel", true, true);
@@ -792,6 +818,10 @@ public class MainPanel extends javax.swing.JPanel
             }
             if (aButton.equals("Query Panel")) {
                 itsMainFrame.ToDo();
+            } else if (aButton.equals("State History")) {
+                if (treeID > 0) {
+                    viewStateChanges(treeID);
+                }
             } else if (aButton.equals("Duplicate")) {
                 if (treeID < 1) {
                     LofarUtils.showErrorPanel(this, "You didn't select a tree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
@@ -841,31 +871,28 @@ public class MainPanel extends javax.swing.JPanel
                     itsMainFrame.showPanel(aP.getFriendlyName());
                 }
             } else if (aButton.equals("Delete")) {
-               if (treeID < 1) {
-                 JOptionPane.showMessageDialog(this,"Select a tree to delete first",
-                     "No Tree Selected",
-                     JOptionPane.WARNING_MESSAGE);
-                } else {
-                 if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree: ?"+treeID,"Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
-                      try {
-                          if (OtdbRmi.getRemoteMaintenance().deleteTree(treeID)) {
-                            JOptionPane.showMessageDialog(this,"Template Tree Deleted",
-                                "Delete Tree Message",
-                                JOptionPane.INFORMATION_MESSAGE);
-                            itsMainFrame.getSharedVars().setTreeID(-1);                              
-                            itsMainFrame.setHourglassCursor();
-                            ((TemplatetableModel)TemplatesPanel.getTableModel()).fillTable();
-                            itsMainFrame.setNormalCursor();
-                            // set changed flag to reload mainpanel
-                            itsMainFrame.setChanged(this.getFriendlyName(),true);
-                            checkChanged();
-                          } else {
-                            logger.error("Failed to delete tree");
-                          }
-                      } catch (RemoteException ex) {
-                          logger.error("Remote error during deleteTree: "+ ex);
-                      }
-                  }
+                 if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree(s) ?","Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                     try {
+                        int[] treeIDs=getSelectedTreeIDs();
+                        for (int i=0;i< treeIDs.length;i++) {
+                            if (!OtdbRmi.getRemoteMaintenance().deleteTree(treeIDs[i])) {
+                                String aS="Failed to delete tree: "+treeIDs[i];
+                                logger.error(aS);
+                                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                            }
+                        }
+                     } catch (RemoteException ex) {
+                        String aS="Remote error during deleteTree: "+ ex;
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this, aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                    }
+                    itsMainFrame.getSharedVars().setTreeID(-1);                              
+                    itsMainFrame.setHourglassCursor();
+                    ((TemplatetableModel)TemplatesPanel.getTableModel()).fillTable();
+                    itsMainFrame.setNormalCursor();
+                    // set changed flag to reload mainpanel
+//                  itsMainFrame.setChanged(this.getFriendlyName(),true);
+//                    checkChanged();
                 }
                 
             } else if (aButton.equals("Build VIC tree")) {
@@ -973,6 +1000,10 @@ public class MainPanel extends javax.swing.JPanel
             }
             if (aButton.equals("Query Panel")) {
                 itsMainFrame.ToDo();
+            } else if (aButton.equals("State History")) {
+                if (treeID > 0) {
+                    viewStateChanges(treeID);
+                }
             } else if (aButton.equals("Duplicate")) {
                 if (treeID < 1) {
                     LofarUtils.showErrorPanel(this, "You didn't select a tree",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
@@ -1149,7 +1180,26 @@ public class MainPanel extends javax.swing.JPanel
             logger.debug("Other command found: "+aButton);
         }
     }
-    
+
+    /** Launch the statechanges window
+     *
+     * @param  treeID  The treeId of the chosen tree
+     */
+    private void viewStateChanges(int treeID) {
+        // create tableModel
+        itsStateChangeModel = new StateChangeHistoryTableModel(SharedVars.getOTDBrmi(),treeID);
+        // showstateChangeInfo
+        if (stateChangeHistoryDialog == null) {
+            stateChangeHistoryDialog = new TableDialog(itsMainFrame,true,itsStateChangeModel, "State change history");
+        } else {
+            itsStateChangeModel.setTree(treeID);
+            stateChangeHistoryDialog.setModel(itsStateChangeModel);
+        }
+        stateChangeHistoryDialog.setLocationRelativeTo(this);
+        stateChangeHistoryDialog.setVisible(true);
+
+    }
+
     /** Launch TreeInfoDialog,
      *
      * @param  treeIDs  The IDs of the chosen trees.
@@ -1263,7 +1313,9 @@ public class MainPanel extends javax.swing.JPanel
                 }
                 buttonPanel1.setButtonEnabled("View",true);
                 buttonPanel1.setButtonEnabled("Info",true);
+                buttonPanel1.setButtonEnabled("State History",true);
             } else {
+                buttonPanel1.setButtonEnabled("State History",false);
                 buttonPanel1.setButtonEnabled("Delete",false);
                 buttonPanel1.setButtonEnabled("View",false);
                 buttonPanel1.setButtonEnabled("Info",false);
@@ -1274,36 +1326,43 @@ public class MainPanel extends javax.swing.JPanel
                 infoOnly=true;
             }
             if (treeID>0) {
-                if ((aTreeState.equals("idle") || aTreeState.equals("described") || aTreeState.equals("finished")
-                || aTreeState.equals("aborted") || aTreeState.equals("obsolete")) && !infoOnly) {
-                    buttonPanel1.setButtonEnabled("Delete",true);
-                } else {
-                    buttonPanel1.setButtonEnabled("Delete",false);                    
-                }
+                // !!!!!!!!!!!!!!
+                // Need to see if buttons need to be invalidated under certain states....
+                //
                 if (!infoOnly) {
+                    buttonPanel1.setButtonEnabled("State History",true);
                     buttonPanel1.setButtonEnabled("View",true);
                     buttonPanel1.setButtonEnabled("Query Panel",true);
                     buttonPanel1.setButtonEnabled("Refresh",true);
                 } else {
                     buttonPanel1.setButtonEnabled("Query Panel",false);
                     buttonPanel1.setButtonEnabled("Refresh",false);
+                    buttonPanel1.setButtonEnabled("State History",false);
                     buttonPanel1.setButtonEnabled("View",false);
                 }
+                buttonPanel1.setButtonEnabled("Delete",true);
                 buttonPanel1.setButtonEnabled("Schedule",true);
             } else {
                 buttonPanel1.setButtonEnabled("Delete",false);
                 buttonPanel1.setButtonEnabled("View",false);
+                buttonPanel1.setButtonEnabled("State History",false);
                 buttonPanel1.setButtonEnabled("Schedule",false);
             }
         } else if (itsTabFocus.equals("Templates")) {
+            boolean infoOnly=false;
+            if (TemplatesPanel.getSelectedRowCount() > 1) {
+                infoOnly=true;
+            }
+
             if (treeID > 0) {
-                if (aTreeState.equals("idle") ||
+                if ((aTreeState.equals("idle") ||
                         aTreeState.equals("described") ||
                         aTreeState.equals("prepared") ||
-                        aTreeState.equals("approved")) {
+                        aTreeState.equals("approved")) && !infoOnly) {
                     buttonPanel1.setButtonEnabled("Duplicate",true);
                     buttonPanel1.setButtonEnabled("Modify",true);
                     buttonPanel1.setButtonEnabled("Set to Default",true);
+                    buttonPanel1.setButtonEnabled("Query Panel",true);
                     if (aTreeState.equals("approved") || aTreeState.equals("on_hold") || aTreeState.equals("prescheduled")) {
                         buttonPanel1.setButtonEnabled("Build VIC tree",true);
                     } else {
@@ -1312,11 +1371,22 @@ public class MainPanel extends javax.swing.JPanel
                 } else {
                     buttonPanel1.setButtonEnabled("Duplicate",false);
                     buttonPanel1.setButtonEnabled("Modify",false);                                        
-                    buttonPanel1.setButtonEnabled("Set to Default",false);                }
-                    buttonPanel1.setButtonEnabled("Change Status",true);
-                    buttonPanel1.setButtonEnabled("Delete",true);
+                    buttonPanel1.setButtonEnabled("Set to Default",false);
+                }
+                if (infoOnly) {
+                    buttonPanel1.setButtonEnabled("State History",false);
+                    buttonPanel1.setButtonEnabled("Duplicate",false);
+                    buttonPanel1.setButtonEnabled("Modify",false);
+                    buttonPanel1.setButtonEnabled("Query Panel",false);
+                    buttonPanel1.setButtonEnabled("Refresh",false);
+                } else {
+                    buttonPanel1.setButtonEnabled("State History",true);
+                }
+                buttonPanel1.setButtonEnabled("Delete",true);
+                buttonPanel1.setButtonEnabled("Change Status",true);
             } else {
                 buttonPanel1.setButtonEnabled("Duplicate",false);
+                buttonPanel1.setButtonEnabled("State History",false);
                 buttonPanel1.setButtonEnabled("Modify",false);
                 buttonPanel1.setButtonEnabled("Delete",false);                
                 buttonPanel1.setButtonEnabled("Change Status",false);  
@@ -1324,21 +1394,33 @@ public class MainPanel extends javax.swing.JPanel
                 buttonPanel1.setButtonEnabled("Set to Default",false);
             }
         } else if (itsTabFocus.equals("Default Templates")) {
+            boolean infoOnly=false;
+            if (DefaultTemplatesPanel.getSelectedRowCount() > 1) {
+                infoOnly=true;
+            }
             if (treeID > 0) {
-                if (aTreeState.equals("idle") ||
+                if ((aTreeState.equals("idle") ||
                         aTreeState.equals("described") ||
                         aTreeState.equals("prepared") ||
-                        aTreeState.equals("approved")) {
+                        aTreeState.equals("approved")) && !infoOnly) {
                     buttonPanel1.setButtonEnabled("Duplicate",true);
                     buttonPanel1.setButtonEnabled("Modify",true);
                 } else {
                     buttonPanel1.setButtonEnabled("Duplicate",false);
                     buttonPanel1.setButtonEnabled("Modify",false);
                 }
+                if (infoOnly) {
+                    buttonPanel1.setButtonEnabled("State History",false);
+                    buttonPanel1.setButtonEnabled("Duplicate",false);
+                    buttonPanel1.setButtonEnabled("Modify",false);
+                } else {
+                    buttonPanel1.setButtonEnabled("State History",true);
+                }
                 buttonPanel1.setButtonEnabled("Change Status",true);
             } else {
                 buttonPanel1.setButtonEnabled("Duplicate",false);
                 buttonPanel1.setButtonEnabled("Modify",false);
+                buttonPanel1.setButtonEnabled("State History",false);
                 buttonPanel1.setButtonEnabled("Change Status",false);
            }
         } else if (itsTabFocus.equals("Components")) {
@@ -1363,12 +1445,14 @@ public class MainPanel extends javax.swing.JPanel
         }
     }
     
-    private MainFrame      itsMainFrame = null;
-    private String         itsTabFocus="PIC";
-    private boolean        buttonsInitialized=false;
-    private LoadFileDialog loadFileDialog = null;
-    private TreeInfoDialog treeInfoDialog = null;
-    private boolean        changed=false;
+    private MainFrame                   itsMainFrame = null;
+    private String                      itsTabFocus="PIC";
+    private boolean                     buttonsInitialized=false;
+    private LoadFileDialog              loadFileDialog = null;
+    private TreeInfoDialog              treeInfoDialog = null;
+    private TableDialog                 stateChangeHistoryDialog = null;
+    private StateChangeHistoryTableModel itsStateChangeModel = null;
+    private boolean                     changed=false;
     
     // File to be loaded info
     File itsNewFile=null;

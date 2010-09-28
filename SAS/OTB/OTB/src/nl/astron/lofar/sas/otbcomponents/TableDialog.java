@@ -21,6 +21,7 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableModel;
 import nl.astron.lofar.sas.otb.MainFrame;
 import org.apache.log4j.Logger;
 
@@ -44,7 +45,7 @@ public class TableDialog extends javax.swing.JDialog {
      * @param   aModel      The model we work with
      * @param   aTitle      The title for this dialog
      */
-    public TableDialog(java.awt.Frame parent, boolean modal, AbstractTableModel aModel, String aTitle) {
+    public TableDialog(java.awt.Frame parent, boolean modal, DefaultTableModel aModel, String aTitle) {
         super(parent, modal);
         initComponents();
         itsModel = aModel;
@@ -55,7 +56,12 @@ public class TableDialog extends javax.swing.JDialog {
     }
     
     public AbstractTableModel getModel() {        
-        return itsModel;
+        return tablePanel1.getTableModel();
+    }
+
+    public void setModel(DefaultTableModel aModel) {
+        tablePanel1.setTableModel(aModel);
+        itsModel=aModel;
     }
     
     public boolean hasChanged() {
@@ -72,7 +78,6 @@ public class TableDialog extends javax.swing.JDialog {
         tablePanel1.removeWarning();
     }
     
-     
     
     /** This method is called from within the constructor to
      * initialize the form.
