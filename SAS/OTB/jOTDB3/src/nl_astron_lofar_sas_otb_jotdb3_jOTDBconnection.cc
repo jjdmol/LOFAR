@@ -193,6 +193,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
       env->CallObjectMethod(statesVector, mid_Vector_add,convertTreeState(env, *statesIterator ));
     }
 
+
     env->ReleaseStringUTFChars(beginDate, bd);
     env->ReleaseStringUTFChars(endDate, ed);  
   } catch (exception &ex) {
