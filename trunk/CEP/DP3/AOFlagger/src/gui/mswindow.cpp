@@ -1222,14 +1222,18 @@ void MSWindow::onTFWidgetMouseMoved(size_t x, size_t y)
 	{
 		Image2DCPtr image = _timeFrequencyWidget.Image();
 		num_t v = image->Value(x, y);
-		UVW uvw = _timeFrequencyWidget.GetMetaData()->UVW()[x];
 		_statusbar.pop();
 		std::stringstream s;
-		s << "x=" << x << ",y=" << y << ",value=" << v;
-		const std::vector<double> &times = _timeFrequencyWidget.GetMetaData()->ObservationTimes();
-		s << " (t=" << Date::AipsMJDToString(times[x]) <<
-		", f=" << Frequency::ToString(_timeFrequencyWidget.GetMetaData()->Band().channels[y].frequencyHz)
-		<< ", uvw=" << uvw.u << "," << uvw.v << "," << uvw.w << ')';
+			s << "x=" << x << ",y=" << y << ",value=" << v;
+			const std::vector<double> &times = _timeFrequencyWidget.GetMetaData()->ObservationTimes();
+			s << " (t=" << Date::AipsMJDToString(times[x]) <<
+			", f=" << Frequency::ToString(_timeFrequencyWidget.GetMetaData()->Band().channels[y].frequencyHz);
+		if(_timeFrequencyWidget.GetMetaData()->HasUVW())
+		{
+			UVW uvw = _timeFrequencyWidget.GetMetaData()->UVW()[x];
+			s << ", uvw=" << uvw.u << "," << uvw.v << "," << uvw.w;
+		}
+		s << ')';
 		_statusbar.push(s.str(), 0);
 	}
 }
@@ -1367,10 +1371,6 @@ void MSWindow::showError(const std::string &description)
 void MSWindow::onSimulateCorrelation()
 {
 	Model model;
-	//model.AddSource(-M_PIn - 0.04,0.04,0.5);
-	//model.AddSource(-M_PIn - 0.04075,0.04075,0.2);
-	//model.AddSource(-M_PIn + 0.1,0.0,0.35);
-	//model.AddSource(-M_PIn + .101,0.001,0.45);
 	model.loadUrsaMajor();
 
 	WSRTObservatorium wsrtObservatorium;
@@ -1381,25 +1381,19 @@ void MSWindow::onSimulateCorrelation()
 void MSWindow::onSimulateDoubledBaselineCorrelation()
 {
 	Model model;
-	//model.AddSource(-M_PIn - 0.04,0.04,0.5);
-	//model.AddSource(-M_PIn - 0.04075,0.04075,0.2);
-	//model.AddSource(-M_PIn + 0.1,0.0,0.35);
-	//model.AddSource(-M_PIn + .101,0.001,0.45);
 	model.loadUrsaMajor();
 
-	WSRTObservatorium wsrtObservatorium;
-	FourProductCorrelatorTester fpcTester(model, *_imagePlaneWindow->GetImager(), wsrtObservatorium);
-	fpcTester.SimulateTwoProdObservation(-M_PIn-0.05, 0.05, 147000000.0); //TwoProd
-	_imagePlaneWindow->Update();
+	WSRTObservatorium wsrtObservatorium(0,5);
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, -M_PIn-0.05, 0.05, 147000000.0);
+	TimeFrequencyData data = pair.first;
+	TimeFrequencyMetaDataCPtr metaData = pair.second;
+	_timeFrequencyWidget.SetNewData(data, metaData);
+	_timeFrequencyWidget.Update();
 }
 
 void MSWindow::onSimulateFourProductCorrelation()
 {
 	Model model;
-	//model.AddSource(-M_PIn - 0.04,0.04,0.5);
-	//model.AddSource(-M_PIn - 0.04075,0.04075,0.2);
-	//model.AddSource(-M_PIn + 0.1,0.0,0.35);
-	//model.AddSource(-M_PIn + .101,0.001,0.45);
 	model.loadUrsaMajor();
 
 	WSRTObservatorium wsrtObservatorium;
