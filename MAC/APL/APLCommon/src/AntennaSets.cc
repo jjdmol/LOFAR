@@ -147,6 +147,7 @@ bool AntennaSets::_adoptSelector(const string&	selector, const string& antennaFi
 	ASSERTSTR(!selector.empty(), "SelectorString may not be empty");
 	ASSERTSTR(rcuCount, "rcuCount must be > 0");
 
+	antSet.posIndex.assign(MAX_RCUS, -1);	// reset index array
 	uint	strLen(selector.length());
 	uint	rcuNr(0);
 	uint	sIdx(0);
@@ -181,11 +182,18 @@ bool AntennaSets::_adoptSelector(const string&	selector, const string& antennaFi
 				ASSERTSTR(rcuNr < (uint)MAX_RCUS, 
 						"selector:'"<< selector << "' specified more than " << MAX_RCUS << " RCUs");
 
-				if (input=='l' || input=='h') {
+				switch (input) {
+				case 'l':
 					antSet.LBAallocation.set(rcuNr);
-				}
-				else if (input=='H') {
+					antSet.posIndex[rcuNr] = rcuCount + rcuNr;
+					break;
+				case 'h':
+					antSet.LBAallocation.set(rcuNr);
+					antSet.posIndex[rcuNr] = rcuNr;
+					break;
+				case 'H' :
 					antSet.HBAallocation.set(rcuNr);
+					antSet.posIndex[rcuNr] = rcuNr;
 				}
 				antSet.RCUinputs[rcuNr] = input;
 				rcuNr++;
@@ -207,9 +215,9 @@ string	AntennaSets::RCUinputs    (const string&		setName, uint	stationType) cons
 	AntSetIter		iter = itsDefinitions.find(setName);
 	ASSERTSTR(iter != itsDefinitions.end(), setName << " is not defined in " << itsAntennaSetFile);
 	switch (stationType) {
-	case 0: return (iter->second.core.RCUinputs);
-	case 1: return (iter->second.remote.RCUinputs);
-	case 2: return (iter->second.europe.RCUinputs);
+	case IDX_CORE:   return (iter->second.core.RCUinputs);
+	case IDX_REMOTE: return (iter->second.remote.RCUinputs);
+	case IDX_EUROPE: return (iter->second.europe.RCUinputs);
 	default: ASSERT(false);		// satisfy compiler.
 	}
 }
@@ -223,9 +231,9 @@ bitset<MAX_RCUS>	AntennaSets::RCUallocation(const string&		setName, uint	station
 	AntSetIter	iter 	 = itsDefinitions.find(setName);
 	ASSERTSTR(iter != itsDefinitions.end(), setName << " is not defined in " << itsAntennaSetFile);
 	switch (stationType) {
-	case 0: return (LBAfield ? iter->second.core.LBAallocation   : iter->second.core.HBAallocation);
-	case 1: return (LBAfield ? iter->second.remote.LBAallocation : iter->second.remote.HBAallocation);
-	case 2: return (LBAfield ? iter->second.europe.LBAallocation : iter->second.europe.HBAallocation);
+	case IDX_CORE:   return (LBAfield ? iter->second.core.LBAallocation   : iter->second.core.HBAallocation);
+	case IDX_REMOTE: return (LBAfield ? iter->second.remote.LBAallocation : iter->second.remote.HBAallocation);
+	case IDX_EUROPE: return (LBAfield ? iter->second.europe.LBAallocation : iter->second.europe.HBAallocation);
 	default: ASSERT(false);		// satisfy compiler.
 	}
 }
@@ -237,9 +245,9 @@ bitset<MAX_RCUS>	AntennaSets::LBAallocation(const string&		setName, uint	station
 	AntSetIter		iter = itsDefinitions.find(setName);
 	ASSERTSTR(iter != itsDefinitions.end(), setName << " is not defined in " << itsAntennaSetFile);
 	switch (stationType) {
-	case 0: return (iter->second.core.LBAallocation);
-	case 1: return (iter->second.remote.LBAallocation);
-	case 2: return (iter->second.europe.LBAallocation);
+	case IDX_CORE:   return (iter->second.core.LBAallocation);
+	case IDX_REMOTE: return (iter->second.remote.LBAallocation);
+	case IDX_EUROPE: return (iter->second.europe.LBAallocation);
 	default: ASSERT(false);		// satisfy compiler.
 	}
 }
@@ -252,9 +260,24 @@ bitset<MAX_RCUS>	AntennaSets::HBAallocation(const string&		setName, uint	station
 	AntSetIter		iter = itsDefinitions.find(setName);
 	ASSERTSTR(iter != itsDefinitions.end(), setName << " is not defined in " << itsAntennaSetFile);
 	switch (stationType) {
-	case 0: return (iter->second.core.HBAallocation);
-	case 1: return (iter->second.remote.HBAallocation);
-	case 2: return (iter->second.europe.HBAallocation);
+	case IDX_CORE:   return (iter->second.core.HBAallocation);
+	case IDX_REMOTE: return (iter->second.remote.HBAallocation);
+	case IDX_EUROPE: return (iter->second.europe.HBAallocation);
+	default: ASSERT(false);		// satisfy compiler.
+	}
+}
+
+//
+// positionIndex(name, [type])
+//
+vector<int16>	AntennaSets::positionIndex(const string&		setName, uint stationType) const
+{
+	AntSetIter		iter = itsDefinitions.find(setName);
+	ASSERTSTR(iter != itsDefinitions.end(), setName << " is not defined in " << itsAntennaSetFile);
+	switch (stationType) {
+	case IDX_CORE:   return (iter->second.core.posIndex);
+	case IDX_REMOTE: return (iter->second.remote.posIndex);
+	case IDX_EUROPE: return (iter->second.europe.posIndex);
 	default: ASSERT(false);		// satisfy compiler.
 	}
 }
@@ -291,9 +314,9 @@ bool	AntennaSets::usesLBAfield(const string&		setName, uint	stationType) const
 	AntSetIter		iter = itsDefinitions.find(setName);
 	ASSERTSTR(iter != itsDefinitions.end(), setName << " is not defined in " << itsAntennaSetFile);
 	switch (stationType) {
-	case 0: return (iter->second.core.LBAallocation.count());
-	case 1: return (iter->second.remote.LBAallocation.count());
-	case 2: return (iter->second.europe.LBAallocation.count());
+	case IDX_CORE:   return (iter->second.core.LBAallocation.count());
+	case IDX_REMOTE: return (iter->second.remote.LBAallocation.count());
+	case IDX_EUROPE: return (iter->second.europe.LBAallocation.count());
 	default: ASSERT(false);		// satisfy compiler.
 	}
 }
@@ -306,9 +329,9 @@ const string AntennaSets::antennaField(const string&		setName, uint	stationType)
 	AntSetIter		iter = itsDefinitions.find(setName);
 	ASSERTSTR(iter != itsDefinitions.end(), setName << " is not defined in " << itsAntennaSetFile);
 	switch (stationType) {
-	case 0: return (iter->second.core.antennaField);
-	case 1: return (iter->second.remote.antennaField);
-	case 2: return (iter->second.europe.antennaField);
+	case IDX_CORE:   return (iter->second.core.antennaField);
+	case IDX_REMOTE: return (iter->second.remote.antennaField);
+	case IDX_EUROPE: return (iter->second.europe.antennaField);
 	default: ASSERT(false);		// satisfy compiler.
 	}
 }

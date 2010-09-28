@@ -59,6 +59,7 @@ public:
 	bitset<MAX_RCUS>	RCUallocation(const string&		setName, uint stnType = stationTypeValue()) const;
 	bitset<MAX_RCUS>	LBAallocation(const string&		setName, uint stnType = stationTypeValue()) const;
 	bitset<MAX_RCUS>	HBAallocation(const string&		setName, uint stnType = stationTypeValue()) const;
+	vector<int16>		positionIndex(const string&		setName, uint stnType = stationTypeValue()) const;
 
 	// Everthing about the names
 	bool				isAntennaSet (const string&	setName) const;
@@ -85,6 +86,7 @@ private:
 		string				RCUinputs;
 		bitset<MAX_RCUS>	LBAallocation;
 		bitset<MAX_RCUS>	HBAallocation;
+		vector<int16>		posIndex;
 
 		singleSet() { RCUinputs.resize(MAX_RCUS,'.'); }
 	};
