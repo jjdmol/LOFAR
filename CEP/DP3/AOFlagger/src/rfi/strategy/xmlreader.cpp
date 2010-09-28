@@ -265,6 +265,7 @@ Action *XmlReader::parseAddStatistics(xmlNode *node)
 {
 	AddStatisticsAction *newAction = new AddStatisticsAction();
 	newAction->SetFilePrefix(getString(node, "file-prefix"));
+	newAction->SetCompareOriginalAndAlternative(getBool(node, "compare-original-and-alternative"));
 	return newAction;
 }
 

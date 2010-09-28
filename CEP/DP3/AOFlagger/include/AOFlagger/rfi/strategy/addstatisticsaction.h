@@ -43,14 +43,21 @@ namespace rfiStrategy {
 			}
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &)
 			{
-				statistics.Add(artifacts.ContaminatedData(), artifacts.MetaData());
+				if(_comparison)
+					statistics.Add(artifacts.ContaminatedData(), artifacts.MetaData());
+				else
+					statistics.Add(artifacts.ContaminatedData(), artifacts.MetaData(), artifacts.OriginalData().GetSingleMask());
 			}
 			virtual ActionType Type() const { return AddStatisticsActionType; }
 			
 			void SetFilePrefix(const std::string &filePrefix) { statistics.SetFilePrefix(filePrefix); }
 			const std::string &FilePrefix() const { return statistics.FilePrefix(); }
+
+			bool CompareOriginalAndAlternative() const { return _comparison; }
+			void SetCompareOriginalAndAlternative(bool compare) { _comparison = compare; }
 		private:
 			RFIStatistics statistics;
+			bool _comparison;
 	};
 }
 

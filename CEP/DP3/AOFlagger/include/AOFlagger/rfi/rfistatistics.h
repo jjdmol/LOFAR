@@ -38,10 +38,10 @@
 class RFIStatistics {
 	public:
 		struct ChannelInfo {
-			ChannelInfo() : frequencyHz(0), totalCount(0), totalAmplitude(0.0), rfiCount(0), rfiAmplitude(0.0), broadbandRfiCount(0), lineRfiCount(0), broadbandRfiAmplitude(0.0), lineRfiAmplitude(0.0)
+			ChannelInfo() : frequencyHz(0), totalCount(0), totalAmplitude(0.0), rfiCount(0), rfiAmplitude(0.0), broadbandRfiCount(0), lineRfiCount(0), broadbandRfiAmplitude(0.0), lineRfiAmplitude(0.0), falsePositiveCount(0), falseNegativeCount(0), truePositiveCount(0), trueNegativeCount(0), falsePositiveAmplitude(0), falseNegativeAmplitude(0)
 			{
 			}
-			ChannelInfo(double _frequencyHz) : frequencyHz(_frequencyHz), totalCount(0), totalAmplitude(0.0), rfiCount(0), rfiAmplitude(0.0), broadbandRfiCount(0), lineRfiCount(0), broadbandRfiAmplitude(0.0), lineRfiAmplitude(0.0)
+			ChannelInfo(double _frequencyHz) : frequencyHz(_frequencyHz), totalCount(0), totalAmplitude(0.0), rfiCount(0), rfiAmplitude(0.0), broadbandRfiCount(0), lineRfiCount(0), broadbandRfiAmplitude(0.0), lineRfiAmplitude(0.0), falsePositiveCount(0), falseNegativeCount(0), truePositiveCount(0), trueNegativeCount(0), falsePositiveAmplitude(0), falseNegativeAmplitude(0)
 			{
 			}
 			double frequencyHz;
@@ -53,6 +53,12 @@ class RFIStatistics {
 			long unsigned lineRfiCount;
 			long double broadbandRfiAmplitude;
 			long double lineRfiAmplitude;
+			long unsigned falsePositiveCount;
+			long unsigned falseNegativeCount;
+			long unsigned truePositiveCount;
+			long unsigned trueNegativeCount;
+			long double falsePositiveAmplitude;
+			long double falseNegativeAmplitude;
 		};
 		struct TimestepInfo {
 			TimestepInfo() : time(0), totalCount(0), totalAmplitude(0.0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiAmplitude(0.0), broadbandRfiAmplitude(0.0), lineRfiAmplitude(0.0)
@@ -72,7 +78,7 @@ class RFIStatistics {
 			long double lineRfiAmplitude;
 		};
 		struct AmplitudeBin {
-			AmplitudeBin() : centralAmplitude(0.0), count(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), featureAvgCount(0), featureMaxCount(0), featureIntCount(0), xxCount(0), xyCount(0), yxCount(0), yyCount(0), xxRfiCount(0), xyRfiCount(0), yxRfiCount(0), yyRfiCount(0), stokesQCount(0), stokesUCount(0), stokesVCount(0)
+			AmplitudeBin() : centralAmplitude(0.0), count(0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), featureAvgCount(0), featureMaxCount(0), featureIntCount(0), xxCount(0), xyCount(0), yxCount(0), yyCount(0), xxRfiCount(0), xyRfiCount(0), yxRfiCount(0), yyRfiCount(0), stokesQCount(0), stokesUCount(0), stokesVCount(0), falsePositiveCount(0), falseNegativeCount(0), truePositiveCount(0), trueNegativeCount(0)
 			{
 			}
 			double centralAmplitude;
@@ -94,6 +100,10 @@ class RFIStatistics {
 			long unsigned stokesQCount;
 			long unsigned stokesUCount;
 			long unsigned stokesVCount;
+			long unsigned falsePositiveCount;
+			long unsigned falseNegativeCount;
+			long unsigned truePositiveCount;
+			long unsigned trueNegativeCount;
 		};
 		struct BaselineInfo {
 			BaselineInfo() : antenna1(0), antenna2(0), antenna1Name(), antenna2Name(), baselineLength(0.0), baselineAngle(0.0), count(0), totalAmplitude(0.0), rfiCount(0), broadbandRfiCount(0), lineRfiCount(0), rfiAmplitude(0.0), broadbandRfiAmplitude(0.0), lineRfiAmplitude(0.0), baselineStatistics(0)
@@ -136,10 +146,21 @@ class RFIStatistics {
 			RFIStatistics *baselineStatistics;
 		};
 
-		RFIStatistics() : _separateBaselineStatistics(false) { }
+		RFIStatistics() : _separateBaselineStatistics(false), _compareFlags(false) { }
 		~RFIStatistics() { }
 		
 		void Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
+		void Add(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Mask2DCPtr groundTruthFlagging)
+		{
+			Add(data, metaData);
+			if(metaData->Antenna1().id == metaData->Antenna2().id) {
+				addChannelComparison(_autoChannels, data, metaData, groundTruthFlagging);
+				addAmplitudeComparison(_autoAmplitudes, data, metaData, groundTruthFlagging);
+			} else {
+				addChannelComparison(_crossChannels, data, metaData, groundTruthFlagging);
+				addAmplitudeComparison(_crossAmplitudes, data, metaData, groundTruthFlagging);
+			}
+		}
 		void Add(const ChannelInfo &channel, bool autocorrelation);
 		void Add(const TimestepInfo &timestep, bool autocorrelation);
 		void Add(const AmplitudeBin &amplitudeBin, bool autocorrelation);
@@ -231,15 +252,20 @@ class RFIStatistics {
 		std::map<double, class AmplitudeBin> _autoAmplitudes, _crossAmplitudes;
 		BaselineMatrix _baselines;
 		bool _separateBaselineStatistics;
+		bool _compareFlags;
 		std::string _filePrefix;
 		
 		void addChannels(std::map<double, class ChannelInfo> &channels, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addTimesteps(std::map<double, class TimestepInfo> &timesteps, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addBaselines(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask);
+
 		void addFeatures(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage);
 		void addPolarisations(std::map<double, class AmplitudeBin> &amplitudes, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
 		void addStokes(std::map<double, class AmplitudeBin> &amplitudes, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData);
+
+		void addChannelComparison(std::map<double, class ChannelInfo> &channels, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Mask2DCPtr groundTruthFlagging);
+		void addAmplitudeComparison(std::map<double, class AmplitudeBin> &amplitudes, const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Mask2DCPtr groundTruthFlagging);
 
 		void saveChannels(const std::map<double, class ChannelInfo> &channels, const std::string &filename);
 		void saveTimesteps(const std::map<double, class TimestepInfo> &timesteps, const std::string &filename);
