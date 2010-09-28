@@ -20,7 +20,8 @@
 #include <AOFlagger/imaging/model.h>
 
 #include <AOFlagger/msio/image2d.h>
-#include <AOFlagger/imaging/uvimager.h>
+#include <AOFlagger/msio/timefrequencydata.h>
+
 #include <AOFlagger/imaging/observatorium.h>
 #include <AOFlagger/util/rng.h>
 
@@ -34,13 +35,15 @@ Model::~Model()
 {
 }
 
-void Model::SimulateObservation(UVImager &imager, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency)
+template<typename T>
+void Model::SimulateObservation(struct OutputReceiver<T> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency)
 {
 	size_t frequencySteps = 1;
 
 	for(size_t f=0;f<frequencySteps;++f)
 	{
 		double channelFrequency = frequency + observatorium.ChannelWidthHz() * f * 256/frequencySteps;
+		receiver.SetY(f);
 		for(size_t i=0;i<observatorium.AntennaCount();++i)
 		{
 			for(size_t j=i+1;j<observatorium.AntennaCount();++j)
@@ -53,13 +56,35 @@ void Model::SimulateObservation(UVImager &imager, Observatorium &observatorium, 
 					dy = antenna1.position.y - antenna2.position.y,
 					dz = antenna1.position.z - antenna2.position.z;
 
-				SimulateCorrelation(imager, delayDirectionDEC, delayDirectionRA, dx, dy, dz, channelFrequency, 12*60*60, 10.0);
+				SimulateCorrelation(receiver, delayDirectionDEC, delayDirectionRA, dx, dy, dz, channelFrequency, 12*60*60, 10.0);
 			}
 		}
 	}
 }
 
-void Model::SimulateCorrelation(UVImager &imager, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, double totalTime, double integrationTime)
+template void Model::SimulateObservation(struct OutputReceiver<UVImager> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
+template void Model::SimulateObservation(struct OutputReceiver<TimeFrequencyData> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
+
+std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency)
+{
+	OutputReceiver<TimeFrequencyData> tfOutputter;
+	tfOutputter._real = Image2D::CreateZeroImagePtr(12*60*60/10, 1);
+	tfOutputter._imaginary = Image2D::CreateZeroImagePtr(12*60*60/10, 1);
+	SimulateObservation(tfOutputter, observatorium, delayDirectionDEC, delayDirectionRA, frequency);
+
+	TimeFrequencyMetaData *metaData = new TimeFrequencyMetaData();
+	metaData->SetAntenna1(observatorium.GetAntenna(0));
+	metaData->SetAntenna2(observatorium.GetAntenna(1));
+	metaData->SetBand(observatorium.BandInfo());
+	std::vector<double> times;
+	for(num_t t=0.0;t<12*60*60;t+=10) times.push_back(t);
+	metaData->SetObservationTimes(times);
+
+	return std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr>(TimeFrequencyData(StokesIPolarisation, tfOutputter._real, tfOutputter._imaginary), TimeFrequencyMetaDataPtr(metaData));
+}
+
+template<typename T>
+void Model::SimulateCorrelation(struct OutputReceiver<T> &receiver, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, double totalTime, double integrationTime)
 {
 	num_t wavelength = 1.0L / frequency;
 	size_t index = 0;
@@ -73,11 +98,12 @@ void Model::SimulateCorrelation(UVImager &imager, num_t delayDirectionDEC, num_t
 		num_t
 			r = r1 * r2 - (i1 * -i2),
 			i = r1 * -i2 + r2 * i1;
-		imager.SetUVValue(u, v, r, i, 1.0);
-		imager.SetUVValue(-u, -v, r, -i, 1.0);
+		receiver.SetUVValue(index, u, v, r, i, 1.0);
 		++index;
 	}
 }
+
+template void Model::SimulateCorrelation(struct OutputReceiver<UVImager> &receiver, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, double totalTime, double integrationTime);
 
 void Model::SimulateAntenna(num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i)
 {

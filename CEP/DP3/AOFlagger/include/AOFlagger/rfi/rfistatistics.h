@@ -165,7 +165,6 @@ class RFIStatistics {
 				saveChannels(_crossChannels, _filePrefix + "counts-channels-cross.txt");
 				saveAmplitudes(_crossAmplitudes, _filePrefix + "counts-amplitudes-cross.txt");
 			}
-			saveWithoutBaselines(_filePrefix);
 		}
 		void Add(const ChannelInfo &channel, bool autocorrelation);
 		void Add(const TimestepInfo &timestep, bool autocorrelation);
