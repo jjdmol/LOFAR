@@ -157,10 +157,15 @@ class RFIStatistics {
 			if(metaData->Antenna1().id == metaData->Antenna2().id) {
 				addChannelComparison(_autoChannels, data, metaData, groundTruthFlagging);
 				addAmplitudeComparison(_autoAmplitudes, data, metaData, groundTruthFlagging);
+				saveChannels(_autoChannels, _filePrefix + "counts-channels-auto.txt");
+				saveAmplitudes(_autoAmplitudes, _filePrefix + "counts-amplitudes-auto.txt");
 			} else {
 				addChannelComparison(_crossChannels, data, metaData, groundTruthFlagging);
 				addAmplitudeComparison(_crossAmplitudes, data, metaData, groundTruthFlagging);
+				saveChannels(_crossChannels, _filePrefix + "counts-channels-cross.txt");
+				saveAmplitudes(_crossAmplitudes, _filePrefix + "counts-amplitudes-cross.txt");
 			}
+			saveWithoutBaselines(_filePrefix);
 		}
 		void Add(const ChannelInfo &channel, bool autocorrelation);
 		void Add(const TimestepInfo &timestep, bool autocorrelation);

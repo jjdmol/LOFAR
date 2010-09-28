@@ -51,7 +51,13 @@ void readChannels(RFIStatistics &statistics, string &filename, bool autocorrelat
 		>> channel.broadbandRfiCount
 		>> channel.lineRfiCount
 		>> channel.broadbandRfiAmplitude
-		>> channel.lineRfiAmplitude;
+		>> channel.lineRfiAmplitude
+		>> channel.falsePositiveCount
+		>> channel.falseNegativeCount
+		>> channel.truePositiveCount
+		>> channel.trueNegativeCount
+		>> channel.falsePositiveAmplitude
+		>> channel.falseNegativeAmplitude;
 		statistics.Add(channel, autocorrelation);
 	}
 }
@@ -113,7 +119,11 @@ void readAmplitudes(RFIStatistics &statistics, string &filename, bool autocorrel
 		>> amplitude.yyRfiCount
 		>> amplitude.stokesQCount
 		>> amplitude.stokesUCount
-		>> amplitude.stokesVCount;
+		>> amplitude.stokesVCount
+		>> amplitude.falsePositiveCount
+		>> amplitude.falseNegativeCount
+		>> amplitude.truePositiveCount
+		>> amplitude.trueNegativeCount;
 		statistics.Add(amplitude, autocorrelation);
 		if(amplitude.count/amplitude.centralAmplitude > maxCount)
 		{
