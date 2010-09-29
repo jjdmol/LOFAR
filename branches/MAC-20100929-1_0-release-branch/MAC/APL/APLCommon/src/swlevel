@@ -124,24 +124,23 @@ start_prog()
 		    # tenance etc.
 		    if [ "$user" = "lofarsys" ]; then
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
-			$BINDIR/$prog 1>/dev/null 2>&1 &
-			usleep 250000
+			$BINDIR/$prog 1>>/localhome/log/$prog.stdout 2>&1 &
 		    fi
-		else
+  		else
 		    if [ -n "$asroot" ]; then
 		       sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
 		       if [ "$prog" = "RSPDriver" ]; then
 			   selectImage
-			   sudo -b $BINDIR/$prog 1>/dev/null 2>&1
+			   sudo -b $BINDIR/$prog 1>>/localhome/log/$prog.stdout 2>&1
 		       else
-		           sudo -b $BINDIR/$prog 1>/dev/null 2>&1
+		           sudo -b $BINDIR/$prog 1>>/localhome/log/$prog.stdout 2>&1
 		       fi
 		    else
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
-			$BINDIR/$prog 1>/dev/null 2>&1 &
+			$BINDIR/$prog 1>>/localhome/log/$prog.stdout 2>&1 &
 		    fi
-		    usleep 250000
 		fi
+		usleep 250000
 		ps -ef | grep -v grep | egrep '[0-9][0-9] [a-zA-Z0-9/_.]*/'${prog}
 	fi
 }
@@ -199,7 +198,7 @@ stop_prog()
 	# when normal kill did not work, kill is with -9
 	for pid in `/sbin/pidof ${prog}`
 	do 
-		sleep 2
+		#sleep 2
 		echo "Hard killing ${prog}(${pid})"
 		$asroot kill -9 $pid 1>/dev/null 2>&1
 	done
@@ -492,7 +491,5 @@ status_prog
 echo $level > /tmp/level.admin
 chmod ug+rw /tmp/level.admin
 date=`date +%Y-%m-%d\ %H:%M:%S`
-if [ -d /log -a -w /log ]; then
-  echo [${date}]:$0 $* >> /log/swlevel.log
-fi  
+echo [${date}]:$0 $* >> /log/swlevel.log
 exit $level
