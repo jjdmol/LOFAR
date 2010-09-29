@@ -244,19 +244,9 @@ status_prog()
 		fi
 		echo ${levelnr}:${prog}:${pid[*]} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3 }'
 		# Some Checks
-		# AMCServer needs two instances
-		if [ "$prog" == "AMCServer" -a $level -ge 3 ]; then
-		    if [ ${#pid[@]} -lt 2 ]; then 
-		       missing="$missing ${prog}[$levelnr]"
-		    fi
-		    if [ ${#pid[@]} -gt 2 ]; then 
-                       toomany="$toomany ${prog}[$levelnr]"
-		    fi
-		else
-		    # Other controllers must have one instance, only
-		    if [ ${#pid[@]} -ge 2 ]; then 
-                       toomany="$toomany ${prog}[$levelnr]"
-		    fi
+		# Controllers must have one instance, only
+		if [ ${#pid[@]} -ge 2 ]; then 
+                     toomany="$toomany ${prog}[$levelnr]"
 		fi
 		
 		# Check for missing controllers 
