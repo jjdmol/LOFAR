@@ -23,10 +23,11 @@
 //# @author Ger van Diepen <diepen at astron dot nl>
 
 //# Includes
+#include <lofar_config.h>
 #include <LofarGridder/Register.h>
-#include <LofarGridder/LofarGridder.h>
+#include <LofarGridder/LofarWProjectGridder.h>
 
 void register_lofargridder()
 {
-  LOFAR::LofarGridder::registerGridder();
+  LOFAR::LofarWProjectGridder::registerGridder();
 }

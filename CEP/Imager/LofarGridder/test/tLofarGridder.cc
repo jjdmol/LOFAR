@@ -37,7 +37,7 @@ int main (int argc, const char** argv)
 
     // Create a LofarGridder instance.
     ParameterSet parset;
-    parset.add ("gridder", "LofarGridder");
+    parset.add ("gridder", "LofarGridder.WProject");
     IVisGridder::ShPtr gridder = VisGridderFactory::make (parset);
 
   } catch (const std::exception& x) {
