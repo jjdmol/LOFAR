@@ -1246,7 +1246,7 @@ void MSWindow::onShowImagePlane()
 void MSWindow::onAddToImagePlane()
 {
 	try {
-		if(_timeFrequencyWidget.GetMetaData() != 0)
+		if(_timeFrequencyWidget.GetMetaData() != 0 && _timeFrequencyWidget.GetMetaData()->HasUVW())
 			_imagePlaneWindow->AddData(GetActiveData(), _timeFrequencyWidget.GetMetaData());
 		else if(_spatialMetaData != 0)
 			_imagePlaneWindow->AddData(GetActiveData(), _spatialMetaData);
@@ -1372,6 +1372,7 @@ void MSWindow::onSimulateCorrelation()
 {
 	Model model;
 	model.loadUrsaMajor();
+	model.loadUrsaMajorDistortingSource();
 
 	WSRTObservatorium wsrtObservatorium;
 	model.SimulateObservation(*_imagePlaneWindow->GetImager(), wsrtObservatorium, -M_PIn-0.05, 0.05, 147000000.0);
@@ -1382,6 +1383,7 @@ void MSWindow::onSimulateDoubledBaselineCorrelation()
 {
 	Model model;
 	model.loadUrsaMajor();
+	model.loadUrsaMajorDistortingSource();
 
 	WSRTObservatorium wsrtObservatorium(0,5);
 	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, -M_PIn-0.05, 0.05, 147000000.0);

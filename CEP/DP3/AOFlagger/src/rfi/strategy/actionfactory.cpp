@@ -28,6 +28,7 @@
 #include <AOFlagger/rfi/strategy/cutareaaction.h>
 #include <AOFlagger/rfi/strategy/frequencyselectionaction.h>
 #include <AOFlagger/rfi/strategy/foreachbaselineaction.h>
+#include <AOFlagger/rfi/strategy/foreachcomplexcomponentaction.h>
 #include <AOFlagger/rfi/strategy/foreachpolarisationblock.h>
 #include <AOFlagger/rfi/strategy/foreachmsaction.h>
 #include <AOFlagger/rfi/strategy/fringestopaction.h>
@@ -56,6 +57,7 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Combine flag results");
 	list.push_back("Cut area");
 	list.push_back("For each baseline");
+	list.push_back("For each complex component");
 	list.push_back("For each polarisation");
 	list.push_back("For each measurement set");
 	list.push_back("Frequency selection");
@@ -91,6 +93,8 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new CutAreaAction();
 	else if(action == "For each baseline")
 		return new ForEachBaselineAction();
+	else if(action == "For each complex component")
+		return new ForEachComplexComponentAction();
 	else if(action == "For each measurement set")
 		return new ForEachMSAction();
 	else if(action == "For each polarisation")

@@ -38,11 +38,11 @@ Model::~Model()
 template<typename T>
 void Model::SimulateObservation(struct OutputReceiver<T> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency)
 {
-	size_t frequencySteps = 1;
+	size_t channelCount = observatorium.BandInfo().channelCount;
 
-	for(size_t f=0;f<frequencySteps;++f)
+	for(size_t f=0;f<channelCount;++f)
 	{
-		double channelFrequency = frequency + observatorium.ChannelWidthHz() * f * 256/frequencySteps;
+		double channelFrequency = frequency + observatorium.ChannelWidthHz() * f;
 		receiver.SetY(f);
 		for(size_t i=0;i<observatorium.AntennaCount();++i)
 		{
@@ -67,9 +67,10 @@ template void Model::SimulateObservation(struct OutputReceiver<TimeFrequencyData
 
 std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency)
 {
+	size_t channelCount = observatorium.BandInfo().channelCount;
 	OutputReceiver<TimeFrequencyData> tfOutputter;
-	tfOutputter._real = Image2D::CreateZeroImagePtr(12*60*60/10, 1);
-	tfOutputter._imaginary = Image2D::CreateZeroImagePtr(12*60*60/10, 1);
+	tfOutputter._real = Image2D::CreateZeroImagePtr(12*60*60/10, channelCount);
+	tfOutputter._imaginary = Image2D::CreateZeroImagePtr(12*60*60/10, channelCount);
 	SimulateObservation(tfOutputter, observatorium, delayDirectionDEC, delayDirectionRA, frequency);
 
 	TimeFrequencyMetaData *metaData = new TimeFrequencyMetaData();
@@ -77,7 +78,22 @@ std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservatio
 	metaData->SetAntenna2(observatorium.GetAntenna(1));
 	metaData->SetBand(observatorium.BandInfo());
 	std::vector<double> times;
-	for(num_t t=0.0;t<12*60*60;t+=10) times.push_back(t);
+	std::vector<UVW> uvws;
+	num_t wavelength = 1.0L / frequency;
+	double
+		dx = metaData->Antenna1().position.x - metaData->Antenna2().position.x,
+		dy = metaData->Antenna1().position.y - metaData->Antenna2().position.y,
+		dz = metaData->Antenna1().position.z - metaData->Antenna2().position.z;
+	for(num_t t=0.0;t<12*60*60;t+=10)
+	{
+		times.push_back(t);
+		num_t earthLattitudeApprox = t*(M_PIn/12.0/60.0/60.0);
+		UVW uvw;
+		GetUVPosition(uvw.u, uvw.v, earthLattitudeApprox, delayDirectionDEC, delayDirectionRA, dx, dy, dz, wavelength);
+		uvw.w = 0.0;
+		uvws.push_back(uvw);
+	}
+	metaData->SetUVW(uvws);
 	metaData->SetObservationTimes(times);
 
 	return std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr>(TimeFrequencyData(StokesIPolarisation, tfOutputter._real, tfOutputter._imaginary), TimeFrequencyMetaDataPtr(metaData));
@@ -246,4 +262,16 @@ void Model::loadUrsaMajor()
 	AddSource(cd + s*rs*-4, cr + s*-85, 6.0/8.0 + fluxoffset); // Alioth
 	AddSource(cd + s*rs*2, cr + s*-131, 5.0/8.0 + fluxoffset); // Zeta
 	AddSource(cd + s*rs*-36, cr + s*-192, 7.0/8.0 + fluxoffset); // Alkaid
+}
+
+void Model::loadUrsaMajorDistortingSource()
+{
+	double
+		s = 0.00005, //scale
+		rs = 8.0; // stretch in dec
+	double cd = -M_PIn - 0.05;
+	double cr = 0.05;
+	double fluxoffset = 0.0;
+
+	AddSource(cd + s*rs*160, cr + s*300, 4.0 + fluxoffset); // Dubhe
 }
