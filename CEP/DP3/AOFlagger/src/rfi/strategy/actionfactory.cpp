@@ -43,6 +43,7 @@
 #include <AOFlagger/rfi/strategy/statisticalflagaction.h>
 #include <AOFlagger/rfi/strategy/svdaction.h>
 #include <AOFlagger/rfi/strategy/thresholdaction.h>
+#include <AOFlagger/rfi/strategy/timeconvolutionaction.h>
 #include <AOFlagger/rfi/strategy/timeselectionaction.h>
 #include <AOFlagger/rfi/strategy/writeflagsaction.h>
 
@@ -74,6 +75,7 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Spatial composition");
 	list.push_back("Statistical flagging");
 	list.push_back("Threshold");
+	list.push_back("Time convolution");
 	list.push_back("Time selection");
 	list.push_back("Write flags");
 	return list;
@@ -127,6 +129,8 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new StatisticalFlagAction();
 	else if(action == "Threshold")
 		return new ThresholdAction();
+	else if(action == "Time convolution")
+		return new TimeConvolutionAction();
 	else if(action == "Time selection")
 		return new TimeSelectionAction();
 	else if(action == "Write flags")

@@ -273,5 +273,5 @@ void Model::loadUrsaMajorDistortingSource()
 	double cr = 0.05;
 	double fluxoffset = 0.0;
 
-	AddSource(cd + s*rs*160, cr + s*300, 4.0 + fluxoffset); // Dubhe
+	AddSource(cd + s*rs*320, cr + s*600, 4.0 + fluxoffset); // Dubhe
 }
