@@ -263,7 +263,7 @@ GCFEvent::TResult LogClient::operational(GCFEvent&			event,
 					getLogLevelManager().toString(logEvent.getLogLevel()).c_str(),
 					logEvent.getLoggerName().c_str(),
 					logEvent.getMessage().c_str(),
-					basename(logEvent.getFile().c_str()),
+					basename(logEvent.getFile()).c_str(),
 					logEvent.getLine()));
 
 LOG_DEBUG_STR("Storing message " << itsInSeqnr);
