@@ -31,6 +31,7 @@
 template<typename T>
 struct OutputReceiver
 {
+	void SetY(size_t) { }
 };
 template<>
 struct OutputReceiver<class UVImager>
@@ -98,6 +99,7 @@ class Model {
 		static num_t GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngle, num_t dx, num_t dy);
 
 		void loadUrsaMajor();
+		void loadUrsaMajorDistortingSource();
 	private:
 		std::vector<PointSource *> _sources;
 		double _noiseSigma, _sourceSigma;

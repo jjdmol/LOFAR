@@ -131,6 +131,7 @@ install(FILES
   rfi/strategy/combineflagresults.h
   rfi/strategy/fitsimageset.h
   rfi/strategy/foreachbaselineaction.h
+  rfi/strategy/foreachcomplexcomponentaction.h
   rfi/strategy/foreachmsaction.h
   rfi/strategy/foreachpolarisationblock.h
   rfi/strategy/frequencyselectionaction.h

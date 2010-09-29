@@ -14,11 +14,13 @@ class Observatorium
 		}
 		size_t AntennaCount() const { return _antennae.size(); }
 		const AntennaInfo &GetAntenna(size_t index) const { return _antennae[index]; }
+		
 		void SetChannelWidthHz(double channelWidthHz)
 		{
 			_channelWidthHz = channelWidthHz;
 		}
 		double ChannelWidthHz() const { return _channelWidthHz; }
+		
 		const struct BandInfo &BandInfo() const
 		{
 			return _bandInfo;
@@ -42,6 +44,7 @@ struct WSRTObservatorium : public Observatorium
 			WSRTn(i, antennas[i]);
 			AddAntenna(antennas[i]);
 		}
+		initBand();
 	}
 	WSRTObservatorium(size_t antenna1, size_t antenna2)
 	{
@@ -52,6 +55,7 @@ struct WSRTObservatorium : public Observatorium
 		WSRTn(antenna2, antennas[1]);
 		AddAntenna(antennas[0]);
 		AddAntenna(antennas[1]);
+		initBand();
 	}
 
 	private:
@@ -167,16 +171,16 @@ struct WSRTObservatorium : public Observatorium
 		}
 		void initBand()
 		{
-			SetChannelWidthHz(10000.0);
 			GetBandInfo().windowIndex = 0;
-			GetBandInfo().channelCount = 256;
-			for(size_t i=0;i<256;++i)
+			GetBandInfo().channelCount = 16;
+			SetChannelWidthHz(10000.0 * 256.0 / GetBandInfo().channelCount);
+			for(size_t i=0;i<GetBandInfo().channelCount;++i)
 			{
 				ChannelInfo channel;
 				channel.frequencyIndex = i;
 				channel.channelWidthHz = ChannelWidthHz();
 				channel.frequencyHz = 147000000.0 + ChannelWidthHz() * i;
-				GetBandInfo().channels[i] = channel;
+				GetBandInfo().channels.push_back(channel);
 			}
 		}
 };
