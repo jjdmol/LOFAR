@@ -26,8 +26,8 @@
 #
 VERSION="v2.1 20100517"		# loading image 1 before starting RSPdriver
 BINDIR=/opt/lofar/bin
-LOGDIR=${BINDIR}/../log
-ETCDIR=${BINDIR}/../etc
+LOGDIR=/opt/lofar/log
+ETCDIR=/opt/lofar/etc
 LEVELTABLE=${ETCDIR}/swlevel.conf
 
 #
@@ -124,20 +124,20 @@ start_prog()
 		    # tenance etc.
 		    if [ "$user" = "lofarsys" ]; then
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
-			$BINDIR/$prog 1>>/localhome/log/$prog.stdout 2>&1 &
+			$BINDIR/$prog 1>>$LOGDIR//$prog.stdout 2>&1 &
 		    fi
   		else
 		    if [ -n "$asroot" ]; then
 		       sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
 		       if [ "$prog" = "RSPDriver" ]; then
 			   selectImage
-			   sudo -b $BINDIR/$prog 1>>/localhome/log/$prog.stdout 2>&1
+			   sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout 2>&1
 		       else
-		           sudo -b $BINDIR/$prog 1>>/localhome/log/$prog.stdout 2>&1
+		           sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout 2>&1
 		       fi
 		    else
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
-			$BINDIR/$prog 1>>/localhome/log/$prog.stdout 2>&1 &
+			$BINDIR/$prog 1>>$LOGDIR/$prog.stdout 2>&1 &
 		    fi
 		fi
 		usleep 250000
