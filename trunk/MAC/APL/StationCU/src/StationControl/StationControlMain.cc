@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
 	string		myName;
 	if (argc < 2) {		// started by swlevel?
-		myName = myHostname(false) +  basename(argv[0]);
+		myName = myHostname(false) + ":" + basename(argv[0]);
 	}
 	else {
 		myName = argv[1];
