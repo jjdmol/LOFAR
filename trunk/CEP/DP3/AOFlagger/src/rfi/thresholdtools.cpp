@@ -424,6 +424,21 @@ void ThresholdTools::OneDimensionalGausConvolution(num_t *data, unsigned dataSiz
 	delete[] kernel;
 }
 
+void ThresholdTools::OneDimensionalSincConvolution(num_t *data, unsigned dataSize, num_t stretchFactor)
+{
+	num_t *kernel = new num_t[dataSize];
+	for(unsigned i=0;i<dataSize;++i)
+	{
+		num_t x = (((num_t) i-(num_t) dataSize/2.0) * 1.0 / stretchFactor);
+		if(x!=0.0)
+			kernel[i] = sinn(x) / x;
+		else
+			kernel[i] = 1.0;
+	}
+	OneDimensionalConvolution(data, dataSize, kernel, dataSize);
+	delete[] kernel;
+}
+
 num_t ThresholdTools::Mode(Image2DCPtr image, Mask2DCPtr mask)
 {
 	num_t mode = 0.0;
