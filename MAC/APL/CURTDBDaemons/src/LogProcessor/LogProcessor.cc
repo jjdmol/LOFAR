@@ -254,7 +254,7 @@ GCFEvent::TResult LogProcessor::operational(GCFEvent&			event,
 					getLogLevelManager().toString(l4cpLogEvent.getLogLevel()).c_str(),
 					l4cpLogEvent.getLoggerName().c_str(),
 					l4cpLogEvent.getMessage().c_str(),
-					basename(l4cpLogEvent.getFile().c_str()),
+					basename(l4cpLogEvent.getFile()).c_str(),
 					l4cpLogEvent.getLine()));
 
 #if 0
