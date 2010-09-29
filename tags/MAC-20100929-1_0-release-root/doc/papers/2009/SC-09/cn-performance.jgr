@@ -1,0 +1,247 @@
+newgraph
+  (* slightly increase the bbox, to avoid that a small part of the figure
+     is chopped *)
+  X 5.65
+  Y 4.8
+
+  xaxis
+    size 5
+    min 29.6
+    max 82
+    no_draw_hash_marks
+    no_auto_hash_labels
+    hash_label at 32 : 32
+    hash_label at 36 : 36
+    hash_label at 40 : 40
+    hash_label at 44 : 44
+    hash_label at 48 : 48
+    hash_label at 52 : 52
+    hash_label at 56 : 56
+    hash_label at 60 : 60
+    hash_label at 64 :        64(=B)
+
+    hash_label at 72 : A
+    hash_label at 76 : B
+    hash_label at 80 : C
+    hash_labels
+      font Helvetica
+      fontsize 13
+
+  newstring
+    font Helvetica-Bold
+    fontsize 13
+    x 48
+    y -1.1
+    : Nr. Stations
+
+  copystring
+    x 76
+    : Obs. Mode
+    
+  yaxis
+    size 4.2
+    min 0
+    max 8.07
+    hash_labels
+      font Helvetica
+      fontsize 13
+
+    label
+      font Helvetica-Bold
+      fontsize 13
+      : Execution Time (s)
+
+  legend
+    defaults
+    font Helvetica
+    fontsize 12
+    hjl
+    vjt
+    x 32.4
+    y 7.5
+
+
+newcurve
+  linetype dashed
+  marktype none
+  color .6 .6 .6
+  pts
+    30 4.025
+    82 4.025
+
+newstring
+  font Helvetica-Italic
+  fontsize 12
+  x 30.7
+  y 4.1
+  hjl
+  vjb
+  lcolor .6 .6 .6
+  : max. runtime with
+
+copystring
+  y 3.9
+  vjt
+  : 992 subbands
+
+copystring
+  x 81.7
+  y 7.9
+  hjr
+  vjt
+  : max. runtime with 496 subbands
+
+newcurve
+  linetype dashed
+  marktype none
+  color .6 .6 .6
+  pts
+    30 8.05
+    82 8.05
+
+newcurve
+marktype xbar
+  marksize 3.4
+  cfill 0.494117618 0 0.129411757
+  label
+    : receive samples from I/O node
+  pts
+    32 1.82
+    36 2.14
+    40 2.53
+    44 2.94
+    48 3.44
+    52 3.88
+    56 4.38
+    60 4.95
+    64 5.61
+
+    72 5.66
+    76 5.61
+    80 3.40
+
+newcurve
+  marktype xbar
+  marksize 3.4
+  cfill .8 0 .8
+  label
+    : exchange data
+  pts
+    32 1.76
+    36 2.07
+    40 2.46
+    44 2.87
+    48 3.37
+    52 3.81
+    56 4.31
+    60 4.87
+    64 5.54
+
+    72 5.53
+    76 5.54
+    80 3.36
+
+newcurve
+  marktype xbar
+  marksize 3.4
+  cfill 0 0.270588219 0.525490165
+  label
+    : FIR filter (incl. int to float conversion)
+  pts
+    32 1.73
+    36 2.05
+    40 2.44
+    44 2.84
+    48 3.36
+    52 3.77
+    56 4.28
+    60 4.81
+    64 5.46
+
+    72 5.47
+    76 5.46
+    80 3.34
+
+newcurve
+  marktype xbar
+  marksize 3.4
+  cfill 1 0.258823514 0.0549019575
+  label
+    : FFT
+  pts
+    32 1.45
+    36 1.74
+    40 2.10
+    44 2.46
+    48 2.93
+    52 3.32
+    56 3.80
+    60 4.29
+    64 4.89
+
+    72 4.90
+    76 4.89
+    80 2.93
+
+newcurve
+  marktype xbar
+  marksize 3.4
+  cfill 1 0.827450931 0.125490189
+  label
+    : miscellaneous (incl. phase shift & bandpass)
+  pts
+    32 1.17
+    36 1.43
+    40 1.75
+    44 2.08
+    48 2.51
+    52 2.87
+    56 3.31
+    60 3.77
+    64 4.34
+
+    72 4.34
+    76 4.34
+    80 2.51
+
+newcurve
+  marktype xbar
+  marksize 3.4
+  cfill 0.34117645 0.615686238 0.109803915
+  label
+    : correlate
+  pts
+    32 0.999
+    36 1.27
+    40 1.56
+    44 1.88
+    48 2.26
+    52 2.64
+    56 3.05
+    60 3.5
+    64 4
+
+    72 3.99
+    76 4
+    80 2.25
+
+newcurve
+  marktype xbar
+  marksize 3.4
+  cfill 0.51372546 0.792156816 1
+  label
+    : send correlations to I/O node
+  pts
+    32 0.01
+    36 0.02
+    40 0.01
+    44 0.01
+    48 0.03
+    52 0.02
+    56 0.02
+    60 0.02
+    64 0.04
+
+    72 0.025
+    76 0.035
+    80 0.022
