@@ -21,6 +21,7 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 import javax.swing.border.TitledBorder;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import org.apache.log4j.Logger;
 
@@ -50,6 +51,7 @@ public class PencilDialog extends javax.swing.JDialog {
         initComponents();
         itsAngle1=selection[0];
         itsAngle2=selection[1];
+        itsCoordType=selection[2];
         initialize();
     }
     
@@ -58,6 +60,7 @@ public class PencilDialog extends javax.swing.JDialog {
 
         inputAngle1.setText(itsAngle1);
         inputAngle2.setText(itsAngle2);
+        coordTypeChange.setSelectedItem(itsCoordType);
     }
     
     public boolean hasChanged() {
@@ -88,6 +91,7 @@ public class PencilDialog extends javax.swing.JDialog {
         inputAngle2 = new javax.swing.JTextField();
         cancelButton = new javax.swing.JButton();
         saveButton = new javax.swing.JButton();
+        coordTypeChange = new javax.swing.JComboBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("LOFAR View TreeInfo");
@@ -121,6 +125,14 @@ public class PencilDialog extends javax.swing.JDialog {
             }
         });
 
+        coordTypeChange.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "rad", "deg", "hmsdms", "dmsdms" }));
+        coordTypeChange.setToolTipText("set to alternative coordinates");
+        coordTypeChange.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                coordTypeChangeActionPerformed(evt);
+            }
+        });
+
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -135,27 +147,35 @@ public class PencilDialog extends javax.swing.JDialog {
                         .add(43, 43, 43)
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                             .add(inputAngle1)
-                            .add(inputAngle2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 185, Short.MAX_VALUE)))
+                            .add(inputAngle2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 185, Short.MAX_VALUE))
+                        .add(18, 18, 18)
+                        .add(coordTypeChange, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                     .add(jPanel1Layout.createSequentialGroup()
                         .add(cancelButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(saveButton)))
-                .addContainerGap(657, Short.MAX_VALUE))
+                .addContainerGap(576, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel1Layout.createSequentialGroup()
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(labelAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 14, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(inputAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(labelAngle2)
-                    .add(inputAngle2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(18, 18, 18)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(cancelButton)
-                    .add(saveButton)))
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(labelAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 14, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(inputAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(labelAngle2)
+                            .add(inputAngle2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .add(18, 18, 18)
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(cancelButton)
+                            .add(saveButton)))
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .add(coordTypeChange, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(85, Short.MAX_VALUE))
         );
 
         getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 950, 200));
@@ -177,11 +197,16 @@ public class PencilDialog extends javax.swing.JDialog {
         if (!itsAngle2.equals(inputAngle2.getText())) {
             isChanged=true;
         }
+        if (!itsCoordType.equals(coordTypeChange.getSelectedItem().toString())) {
+            isChanged=true;
+            return;
+        }
+
     }
     
     public String[] getBeam() {
         String[] newRow = {inputAngle1.getText(),
-        inputAngle2.getText()};
+        inputAngle2.getText(),coordTypeChange.getSelectedItem().toString()};
         
         return newRow;
     }
@@ -191,6 +216,47 @@ public class PencilDialog extends javax.swing.JDialog {
         setVisible(false);
         dispose();
     }//GEN-LAST:event_cancelButtonActionPerformed
+
+    private void coordTypeChangeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_coordTypeChangeActionPerformed
+
+        if (evt.getActionCommand().equals("comboBoxChanged")) {
+            String ch = coordTypeChange.getSelectedItem().toString();
+            String tmpch = ch;
+            String tmpcoord = itsCoordType;
+            if ((inputAngle1.getText().isEmpty() && inputAngle1.getText().isEmpty()) || ch.equals(itsCoordType)) {
+                return;
+            }
+            try {
+                if (!inputAngle1.getText().isEmpty()) {
+                    if (ch.equals("dmsdms")) {
+                        tmpch = "dms";
+                    } else if (ch.equals("hmsdms")) {
+                        tmpch = "hms";
+                    }
+                    if (itsCoordType.equals("hmsdms")) {
+                        tmpcoord="hms";
+                    } else if (itsCoordType.equals("dmsdms")) {
+                        tmpcoord="dms";
+                    }
+                    inputAngle1.setText(LofarUtils.changeCoordinate(tmpcoord, tmpch, inputAngle1.getText()));
+                }
+                if (!inputAngle2.getText().isEmpty()) {
+                    if (ch.equals("dmsdms") || ch.equals("hmsdms")) {
+                        tmpch = "dms";
+                    }
+                    if (itsCoordType.equals("hmsdms") || itsCoordType.equals("dmsdms")) {
+                        tmpcoord="dms";
+                    }
+                    inputAngle2.setText(LofarUtils.changeCoordinate(tmpcoord, tmpch, inputAngle2.getText()));
+                }
+                itsCoordType = ch;
+            } catch (NumberFormatException ex) {
+                String aS="Error in angle input format :" + ex;
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+            }
+        }
+}//GEN-LAST:event_coordTypeChangeActionPerformed
     
     
     private MainFrame itsMainFrame = null;
@@ -198,9 +264,11 @@ public class PencilDialog extends javax.swing.JDialog {
     
     private String    itsAngle1         = "";
     private String    itsAngle2         = "";
-    
+    private String    itsCoordType      = "";
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
+    private javax.swing.JComboBox coordTypeChange;
     private javax.swing.JTextField inputAngle1;
     private javax.swing.JTextField inputAngle2;
     private javax.swing.JPanel jPanel1;

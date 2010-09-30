@@ -137,6 +137,7 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
 
     @Override
     public Class getColumnClass(int c) {
-        return getValueAt(0, c).getClass();
+        Object value=this.getValueAt(0,c);
+        return (value==null?Object.class:value.getClass());
     }
 }

@@ -600,6 +600,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     itsAngle1.add(aNode.limits);
                 }
+                itsCoordTypes.add("rad");
             } else if (aKeyName.equals("angle2")) {
                 if (isRef && aParam != null) {
                     itsAngle2.add(aNode.limits + " : " + aParam.limits);
@@ -773,7 +774,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
       // Pencils
       // set table back to initial values
       if (itsAngle1!=null && itsAngle2!=null) {
-          itsPencilConfigurationTableModel.fillTable(itsTreeType,itsAngle1,itsAngle2);
+          itsPencilConfigurationTableModel.fillTable(itsTreeType,itsAngle1,itsAngle2,itsCoordTypes,false);
       }
       
       checkSettings();
@@ -872,8 +873,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         checkSettings();
     }
     
-    private void saveInput() {
+    private boolean saveInput() {
         boolean hasChanged = false;
+        // keep default Pencils
+        jOTDBnode aDefaultNode= itsPencils.elementAt(0);
 
         if (itsPencilConfigurationTableModel.changed()) {
             int i=1;
@@ -891,16 +894,14 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             }
 
             // now that all Nodes are deleted we should collect the tables input and create new Beams to save to the database.
-            itsPencilConfigurationTableModel.getTable(itsAngle1,itsAngle2);
-            // keep default Pencils
-            jOTDBnode aDefaultNode= itsPencils.elementAt(0);
+            itsPencilConfigurationTableModel.getTable(itsAngle1,itsAngle2,itsCoordTypes);
             try {
-                // for all elements
+               // for all elements
                 for (i=1; i < itsAngle1.size();i++) {
 
                     // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
                     // with the values from the set fields and save the elements again
-                    //
+                   //
                     // Duplicates the given node (and its parameters and children)
                     int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultNode.nodeID(),(short)(i-1));
                     if (aN <= 0) {
@@ -910,7 +911,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     } else {
                         // we got a new duplicate whos children need to be filled with the settings from the panel.
                         jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
-                        // store new duplicate in itsPencilss.
+                        // store new duplicate in itsBeams.
                         itsPencils.add(aNode);
 
                         Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
@@ -920,25 +921,43 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                             jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
                             String aKeyName = LofarUtils.keyName(aHWNode.name);
                             if (aKeyName.equals("angle1")) {
-                                aHWNode.limits=itsAngle1.elementAt(i);
+                                String aVal=itsAngle1.elementAt(i);
+                                if (!itsCoordTypes.elementAt(i).equals("rad") ) {
+                                    String tmp=itsCoordTypes.elementAt(i);
+                                    if (tmp.equals("hmsdms")) {
+                                        tmp="hms";
+                                    } else if (tmp.equals("dmsdms")) {
+                                        tmp="dms";
+                                    }
+                                    aVal=LofarUtils.changeCoordinate(tmp, "rad", aVal);
+                                }
+                                aHWNode.limits=aVal;
                             } else if (aKeyName.equals("angle2")) {
-                                aHWNode.limits=itsAngle2.elementAt(i);
+                                String aVal=itsAngle2.elementAt(i);
+                                if (!itsCoordTypes.elementAt(i).equals("rad") ) {
+                                    String tmp=itsCoordTypes.elementAt(i);
+                                    if (tmp.equals("hmsdms") || tmp.equals("dmsdms")) {
+                                        tmp="dms";
+                                    }
+                                    aVal=LofarUtils.changeCoordinate(tmp, "rad", aVal);
+                                }
+                                aHWNode.limits=aVal;
                             }
                             saveNode(aHWNode);
                         }
                     }
                 }
-
-                // store new number of instances in baseSetting
-                aDefaultNode.instances=(short)(itsAngle1.size()-1); // - default at -1
-                saveNode(aDefaultNode);
-
             } catch (RemoteException ex) {
                 String aS="Error during duplication and save : " + ex;
                 logger.error(aS);
                 LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                return false;
             }
         }
+        // store new number of instances in baseSetting
+        short pencils= (short)(itsAngle1.size()-1);
+        aDefaultNode.instances = pencils; //
+        saveNode(aDefaultNode);
 
         // Generic OLAP       
         if ((!inputDelayCompensation.isSelected() &  
@@ -1123,6 +1142,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             itsIntegrateChannels.limits = rt;
             saveNode(itsIntegrateChannels);
         }
+        return true;
     }
 
     private void deletePencil() {
@@ -1150,7 +1170,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
 
         itsSelectedRow=-1;
         // set selection to defaults.
-        String [] selection = {itsAngle1.elementAt(0),itsAngle2.elementAt(0)};
+        String [] selection = {itsAngle1.elementAt(0),itsAngle2.elementAt(0),itsCoordTypes.elementAt(0)};
         if (editting) {
             itsSelectedRow = pencilConfigurationPanel.getSelectedRow();
             selection = itsPencilConfigurationTableModel.getSelection(itsSelectedRow);
@@ -1178,7 +1198,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 // set editting = false
                 editting=false;
             } else {
-                itsPencilConfigurationTableModel.addRow(newRow);
+                itsPencilConfigurationTableModel.addRow(newRow[0],newRow[1],newRow[2]);
             }
         }
 
@@ -1861,6 +1881,8 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
 
     // Pencil
     private Vector<jOTDBnode> itsPencils          = new Vector<jOTDBnode>();
+    private Vector<String>    itsCoordTypes      = new Vector<String>();
+
     // Olap Pencil parameters
     private Vector<String>    itsAngle1         = new Vector<String>();
     private Vector<String>    itsAngle2         = new Vector<String>();
