@@ -23,6 +23,8 @@
 #include "artifactset.h"
 #include "actionblock.h"
 
+#include <AOFlagger/rfi/strategy/action.h>
+
 namespace rfiStrategy {
 
 	class ForEachComplexComponentAction : public ActionBlock
@@ -35,7 +37,7 @@ namespace rfiStrategy {
 			{
 				return "For each complex component";
 			}
-			virtual ActionType Type() const { return AdapterType; }
+			virtual ActionType Type() const { return ForEachComplexComponentActionType; }
 			virtual void Perform(ArtifactSet &artifacts, class ProgressListener &listener)
 			{
 				size_t taskCount = 0;
