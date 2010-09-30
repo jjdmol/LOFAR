@@ -40,9 +40,9 @@ namespace rfiStrategy {
 	
 			PerformFrequencyChange(artifactsCopy, listener);
 	
-			IncreaseTime(artifacts.OriginalData(), artifactsCopy.OriginalData(), false);
-			IncreaseTime(artifacts.ContaminatedData(), artifactsCopy.ContaminatedData(), false);
-			IncreaseTime(artifacts.RevisedData(), artifactsCopy.RevisedData(), _restoreRevised);
+			IncreaseTime(artifacts.OriginalData(), artifactsCopy.OriginalData(), false, false);
+			IncreaseTime(artifacts.ContaminatedData(), artifactsCopy.ContaminatedData(), false, _restoreMasks);
+			IncreaseTime(artifacts.RevisedData(), artifactsCopy.RevisedData(), _restoreRevised, _restoreMasks);
 
 			if(_restoreRevised)
 			{
@@ -72,9 +72,9 @@ namespace rfiStrategy {
 	
 			ActionBlock::Perform(artifactsCopy, listener);
 	
-			IncreaseFrequency(artifacts.OriginalData(), artifactsCopy.OriginalData(), false);
-			IncreaseFrequency(artifacts.ContaminatedData(), artifactsCopy.ContaminatedData(), false);
-			IncreaseFrequency(artifacts.RevisedData(), artifactsCopy.RevisedData(), _restoreRevised);
+			IncreaseFrequency(artifacts.OriginalData(), artifactsCopy.OriginalData(), false, false);
+			IncreaseFrequency(artifacts.ContaminatedData(), artifactsCopy.ContaminatedData(), false, _restoreMasks);
+			IncreaseFrequency(artifacts.RevisedData(), artifactsCopy.RevisedData(), _restoreRevised, _restoreMasks);
 
 			if(_restoreRevised)
 			{
@@ -125,7 +125,7 @@ namespace rfiStrategy {
 		}
 	}
 
-	void ChangeResolutionAction::IncreaseTime(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage)
+	void ChangeResolutionAction::IncreaseTime(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage, bool restoreMask)
 	{
 		if(restoreImage)
 		{
@@ -139,7 +139,7 @@ namespace rfiStrategy {
 				originalData.SetImage(i, newImage);
 			}
 		}
-		if(_restoreMasks)
+		if(restoreMask)
 		{
 			originalData.SetMask(changedData);
 			size_t maskCount = originalData.MaskCount();
@@ -153,7 +153,7 @@ namespace rfiStrategy {
 		}
 	}
 
-	void ChangeResolutionAction::IncreaseFrequency(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage)
+	void ChangeResolutionAction::IncreaseFrequency(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage, bool restoreMask)
 	{
 		if(restoreImage)
 		{
@@ -167,7 +167,7 @@ namespace rfiStrategy {
 				originalData.SetImage(i, newImage);
 			}
 		}
-		if(_restoreMasks)
+		if(restoreMask)
 		{
 			originalData.SetMask(changedData);
 			size_t maskCount = originalData.MaskCount();
