@@ -63,10 +63,10 @@ namespace rfiStrategy {
 			int _frequencyDecreaseFactor;
 
 			void DecreaseTime(TimeFrequencyData &data);
-			void IncreaseTime(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage);
+			void IncreaseTime(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage, bool restoreMask);
 
 			void DecreaseFrequency(TimeFrequencyData &data);
-			void IncreaseFrequency(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage);
+			void IncreaseFrequency(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage, bool restoreMask);
 
 			/**
 			 * If this is true, the subtasks of this task can change the revised image, and
