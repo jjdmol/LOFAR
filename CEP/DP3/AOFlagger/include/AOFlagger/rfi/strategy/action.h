@@ -35,6 +35,7 @@ namespace rfiStrategy {
 		CombineFlagResultsType,
 		CutAreaActionType,
 		ForEachBaselineActionType,
+		ForEachComplexComponentActionType,
 		ForEachMSActionType,
 		ForEachPolarisationBlockType,
 		FrequencySelectionActionType,
@@ -51,6 +52,7 @@ namespace rfiStrategy {
 		StrategyType,
 		SVDActionType,
 		ThresholdActionType,
+		TimeConvolutionActionType,
 		TimeSelectionActionType,
 		WriteFlagsActionType
 	};

@@ -23,6 +23,8 @@
 #include "artifactset.h"
 #include "actionblock.h"
 
+#include <AOFlagger/rfi/strategy/action.h>
+
 #include <AOFlagger/rfi/thresholdtools.h>
 
 namespace rfiStrategy {
@@ -37,20 +39,31 @@ namespace rfiStrategy {
 			{
 				return "Time convolution";
 			}
-			virtual ActionType Type() const { return AdapterType; }
+			virtual ActionType Type() const { return TimeConvolutionActionType; }
 			virtual void Perform(ArtifactSet &artifacts, class ProgressListener &)
 			{
 				TimeFrequencyData data = artifacts.ContaminatedData();
 				Image2DCPtr image = data.GetSingleImage();
-				num_t *row = new num_t[image->Width()];
+				num_t *row = new num_t[image->Width()*3];
 				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
+				unsigned width = image->Width();
+				num_t sign;
+				if(data.PhaseRepresentation() == TimeFrequencyData::RealPart)
+					sign = 1.0;
+				else if(data.PhaseRepresentation() == TimeFrequencyData::ImaginaryPart)
+					sign = -1.0;
+				else
+					throw BadUsageException("Data is not real or imaginary");
 				for(unsigned y=0;y<image->Height();++y)
 				{
-					for(unsigned x=0;x<image->Width();++x)
-						row[x] = image->Value(x, y);
-					ThresholdTools::OneDimensionalSincConvolution(row, image->Width(), _sincSize);
-					for(unsigned x=0;x<image->Width();++x)
-						newImage->SetValue(x, y, row[x]);
+					for(unsigned x=0;x<width;++x) {
+						row[x] = sign * image->Value(x, y);
+						row[x+width] = image->Value(x, y);
+						row[x+2*width] = sign * image->Value(x, y);
+					}
+					ThresholdTools::OneDimensionalSincConvolution(row, width*3, _sincSize);
+					for(unsigned x=0;x<width;++x)
+						newImage->SetValue(x, y, row[x+width]);
 				}
 				delete[] row;
 				

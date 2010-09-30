@@ -1382,7 +1382,7 @@ void MSWindow::onSimulateCorrelation()
 void MSWindow::onSimulateDoubledBaselineCorrelation()
 {
 	Model model;
-	model.loadUrsaMajor();
+	//model.loadUrsaMajor();
 	model.loadUrsaMajorDistortingSource();
 
 	WSRTObservatorium wsrtObservatorium(0,5);
