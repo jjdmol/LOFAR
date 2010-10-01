@@ -152,6 +152,7 @@ install(FILES
   rfi/strategy/thresholdaction.h
   rfi/strategy/timeselectionaction.h
   rfi/strategy/types.h
+  rfi/strategy/uvprojectaction.h
   rfi/strategy/writeflagsaction.h
   rfi/strategy/xmlreader.h
   rfi/strategy/xmlwriter.h

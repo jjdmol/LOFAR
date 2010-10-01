@@ -45,6 +45,7 @@
 #include <AOFlagger/rfi/strategy/thresholdaction.h>
 #include <AOFlagger/rfi/strategy/timeconvolutionaction.h>
 #include <AOFlagger/rfi/strategy/timeselectionaction.h>
+#include <AOFlagger/rfi/strategy/uvprojectaction.h>
 #include <AOFlagger/rfi/strategy/writeflagsaction.h>
 
 namespace rfiStrategy {
@@ -77,6 +78,7 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Threshold");
 	list.push_back("Time convolution");
 	list.push_back("Time selection");
+	list.push_back("UV-projection");
 	list.push_back("Write flags");
 	return list;
 }
@@ -133,6 +135,8 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new TimeConvolutionAction();
 	else if(action == "Time selection")
 		return new TimeSelectionAction();
+	else if(action == "UV-projection")
+		return new UVProjectAction();
 	else if(action == "Write flags")
 		return new WriteFlagsAction();
 	else
