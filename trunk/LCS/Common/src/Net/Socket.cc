@@ -374,6 +374,21 @@ int32 Socket::initTCPSocket(bool	asServer)
 	itsTCPAddr.sin_family = AF_INET;
 	itsTCPAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
+#ifndef HAVE_BGL
+    // Construct hints for various getaddrinfo lookups
+    struct addrinfo       hints;
+
+    memset (&hints, 0, sizeof (struct addrinfo));
+    hints.ai_family   = AF_INET; // no IPv6
+    if (itsType == UDP) {
+      hints.ai_socktype = SOCK_DGRAM;
+      hints.ai_protocol = IPPROTO_UDP;
+    } else {
+      hints.ai_socktype = SOCK_STREAM;
+      hints.ai_protocol = IPPROTO_TCP;
+    }
+#endif
+
 	// as Client we must resolve the hostname to connect to.
 	if (!asServer) {
 		uint32				IPbytes;
@@ -386,25 +401,22 @@ int32 Socket::initTCPSocket(bool	asServer)
 		    return (itsErrno = BADHOST);
 		  }
 #else
-		  struct hostent*		hostEnt;		// server host entry
+		  struct addrinfo*		hostEnt;		// server host entry
+
 		  // No, try to resolve the name
-		  if (!(hostEnt = gethostbyname(itsHost.c_str()))) {
+		  if (getaddrinfo(itsHost.c_str(), NULL, &hints, &hostEnt) != 0) {
 		    LOG_ERROR(formatString("Socket:Hostname (%s) can not be resolved",
 														itsHost.c_str()));
 		    return (itsErrno = BADHOST);
 		  }
-		  // Check type
-		  if (hostEnt->h_addrtype != AF_INET) {
-		    LOG_ERROR(formatString(
-						"Socket:Hostname(%s) is not of type AF_INET",
-						itsHost.c_str()));
-		    return (itsErrno = BADADDRTYPE);
-		  }
-		  memcpy (&IPbytes, hostEnt->h_addr, sizeof (IPbytes));
+
+		  memcpy (&IPbytes, &reinterpret_cast<struct sockaddr_in *>(hostEnt->ai_addr)->sin_addr, sizeof IPbytes);
+
+          freeaddrinfo(hostEnt);
 #endif
 		}
 		memcpy ((char*) &itsTCPAddr.sin_addr.s_addr, (char*) &IPbytes, 
-															sizeof(IPbytes));
+															sizeof IPbytes);
 	}
 			
 	// try to resolve the service
@@ -412,25 +424,24 @@ int32 Socket::initTCPSocket(bool	asServer)
 	itsProtocolType = 6;		// assume tcp
 	if (!(itsTCPAddr.sin_port = htons((uint16)atoi(itsPort.c_str())))) {
 		LOG_ERROR(formatString("Socket:Portnr/service(%s) can not be resolved",
-													itsHost.c_str()));
+													itsPort.c_str()));
 		return (itsErrno = PORT);
 	}
 #else
-	const char*			protocol = (itsType == UDP ? "udp" : "tcp");
-	struct servent*		servEnt;		// service info entry
-	if ((servEnt = getservbyname(itsPort.c_str(), protocol))) {
-		itsTCPAddr.sin_port = servEnt->s_port;
-	}
-	else {
-		if (!(itsTCPAddr.sin_port = htons((uint16)atoi(itsPort.c_str())))) {
-			LOG_ERROR(formatString(
-						"Socket:Portnr/service(%s) can not be resolved",
-						itsHost.c_str()));
-			return (itsErrno = PORT);
-		}
+	struct addrinfo*	servEnt;		// service info entry
+
+	if (getaddrinfo(NULL, itsPort.c_str(), &hints, &servEnt) != 0) {
+		LOG_ERROR(formatString(
+					"Socket:Portnr/service(%s) can not be resolved",
+					itsPort.c_str()));
+		return (itsErrno = PORT);
 	}
 
+	itsTCPAddr.sin_port = reinterpret_cast<struct sockaddr_in *>(servEnt->ai_addr)->sin_port;
+    freeaddrinfo(servEnt);
+
 	// Try to map protocol name to protocol number
+	const char*			protocol = (itsType == UDP ? "udp" : "tcp");
 
 #if defined(HAVE_GETPROTOBYNAME_R)
 	struct protoent*	protoEnt;
