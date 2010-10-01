@@ -21,8 +21,8 @@
 //#  $Id$
 
 
-#ifndef LOFAR_INTERFACE_BITSET_H
-#define LOFAR_INTERFACE_BITSET_H
+#ifndef LOFAR_INTERFACE_SPARSESET_H
+#define LOFAR_INTERFACE_SPARSESET_H
 
 #include <sys/types.h>
 #include <stdint.h>
