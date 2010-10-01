@@ -42,7 +42,7 @@ namespace rfiStrategy {
 			virtual ActionType Type() const { return UVProjectActionType; }
 			virtual void Perform(ArtifactSet &artifacts, class ProgressListener &)
 			{
-				TimeFrequencyData &data = artifacts.RevisedData();
+				TimeFrequencyData &data = artifacts.ContaminatedData();
 
 				for(size_t imageIndex = 0; imageIndex != data.ImageCount(); ++imageIndex)
 				{
@@ -64,7 +64,7 @@ namespace rfiStrategy {
 	
 					size_t nextX = 0;
 					size_t firstX = 0;
-					bool forwardDirection = false;
+					bool forwardDirection = true;
 					for(size_t xI=0;xI<width;++xI)
 					{
 						size_t x;
@@ -80,7 +80,7 @@ namespace rfiStrategy {
 						else
 							uProject = -uvw.u * cosRotate + uvw.v * sinRotate;
 						size_t xProject = (size_t) ((uProject-minU) / (maxU-minU) * (num_t) width) % width;
-						if(x != xI)
+						if(xI != 0)
 						{
 							while(nextX != (xProject + 1)%width)
 							{
@@ -94,20 +94,23 @@ namespace rfiStrategy {
 							nextX = xProject;
 						}
 					}
-					for(size_t x=nextX;x!=firstX;x=(x+1)%width)
+					if(forwardDirection)
 					{
-						for(size_t y=0;y<image->Height();++y)
-							newImage->SetValue(x, y, image->Value(0, y));
+						for(size_t x=nextX;x!=firstX;x=(x+1)%width)
+						{
+							for(size_t y=0;y<image->Height();++y)
+								newImage->SetValue(x, y, image->Value(0, y));
+						}
 					}
 
 					data.SetImage(imageIndex, newImage);
 				}
 
-				TimeFrequencyData *contaminatedData =
+				/*TimeFrequencyData *contaminatedData =
 					TimeFrequencyData::CreateTFDataFromDiff(artifacts.ContaminatedData(), data);
 				contaminatedData->SetMask(artifacts.ContaminatedData());
 				artifacts.SetContaminatedData(*contaminatedData);
-				delete contaminatedData;
+				delete contaminatedData;*/
 			}
 		private:
 			num_t _directionRad;
