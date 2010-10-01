@@ -1,0 +1,215 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2007
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# $Id$
+
+import sys
+import os
+import re
+import lofar.parameterset
+import lofar.expion.ionosphere as ionosphere
+
+from pylab import *
+
+arguments = sys.argv.__iter__()
+scriptname = os.path.basename(arguments.next())
+
+def print_error(msg):
+   print "%s: %s" % (scriptname, msg)
+
+sky_name = 'sky'
+instrument_name = 'instrument'
+clusterdescfile = "~/CEP.clusterdesc"
+infile = ""
+outfile = ""
+
+def display_help_and_exit(dummy = None):
+   print '''usage:
+   %s [options] <parsetfile> <gdsfiles> ''' % scriptname
+   print
+   print '''arguments:
+   <gdsfiles>     gds file(s)'''
+   print
+   print '''options:
+   -h, --help        display this help text
+   --cluster-desc <cluster description file>
+                     Define cluster description file
+                     (default: ~/CEP.clusterdesc)
+   --sky-name <skyname>
+                     Define basename for the sky model parmdb
+                     (default: sky)
+   --instrument-name <instrumentname>
+                     Define basename of the instrument parmdb
+                     (default: instrument)'''
+   exit()
+
+def set_outfile(arguments):
+   global outfile
+   try:
+      outfile = arguments.next()
+      if outfile[0] == '-':
+         raise ValueError
+   except (KeyError, ValueError):
+      print_error( "--dump should be followed by the name of the outfile")
+      exit()
+
+def set_infile(arguments):
+   global infile
+   try:
+      infile = arguments.next()
+      if infile[0] == '-':
+         raise ValueError
+   except (KeyError, ValueError):
+      print_error( "--restore should be followed by the name of the infile")
+      exit()
+
+def set_clusterdesc(arguments):
+   global clusterdescfile
+   try:
+      clusterdescfile = arguments.next()
+      if clusterdescfile[0] == '-':
+         raise ValueError
+   except (KeyError, ValueError):
+      print_error( "--cluster-desc should be followed by the name of the cluster description file")
+      exit()
+
+def set_instrument_name(arguments):
+   global instrument_name
+   try:
+      instrument_name = arguments.next()
+      if instrument_name[0] == '-':
+         raise ValueError
+   except (KeyError, ValueError):
+      print_error( "--instrument-name should be followed by the basename of the instrument parmdb")
+      exit()
+
+def set_sky_name(arguments):
+   global sky_name
+   try:
+      sky_name = arguments.next()
+      if sky_name[0] == '-':
+         raise ValueError
+   except (KeyError, ValueError):
+      print_error( "--sky-name should be followed by the basename of the sky parmdb")
+      exit()
+
+options = { '-h':                display_help_and_exit, 
+            '--help':            display_help_and_exit,
+            '--dump':            set_outfile,
+            '--restore':         set_infile,
+            '--cluster-desc':    set_clusterdesc,
+            '--sky':             set_sky_name,
+            '--instrument-name': set_instrument_name}
+
+while True:
+   try: 
+      argument = arguments.next()
+   except StopIteration:
+      print_error( "No parset file and no gds file(s) specified" )
+      display_help_and_exit()
+   if argument[0] == '-':
+      try:
+         options[argument](arguments)
+      except KeyError:
+         print_error( "Unknown option: " + argument )
+         display_help_and_exit()
+   else:
+      break
+
+parsetfile = argument
+parset = lofar.parameterset.parameterset( parsetfile )
+
+print clusterdescfile
+clusterdescfile = os.path.expanduser( clusterdescfile )
+print clusterdescfile
+
+clusterdesc = lofar.parameterset.parameterset( clusterdescfile )
+NNodes = clusterdesc.getInt("NNodes")
+Nodes = []
+for n in range(NNodes) : 
+   Nodes.append(clusterdesc.getString( "Node" + str(n) + ".NodeName" ))
+   
+gdsfiles = []
+gdsfiles.extend(arguments)
+
+if (len(gdsfiles) == 0) & (len(infile) == 0) :
+   print_error( "No gds file(s) specified" )
+   display_help_and_exit()
+
+
+print "parset-file: " + repr(parsetfile)
+print "gds-files: " + repr(gdsfiles)
+print "instrument-name: " + repr(instrument_name)
+print "sky-name: " + repr(sky_name)
+
+stations = parset.getStringVector("Stations", [])
+sources = parset.getStringVector("Sources", [])
+
+DirectionalGainEnable = parset.getBool( "DirectionalGain.Enable", True ) 
+
+print repr(stations)
+print repr(sources)
+print repr(DirectionalGainEnable)
+
+if len(infile) == 0 :
+   ion_model = ionosphere.IonosphericModel(gdsfiles, clusterdescfile, DirectionalGainEnable = DirectionalGainEnable, stations = stations, sources = sources)
+else :
+   ion_model = ionosphere.IonosphericModel( infile )
+
+print ion_model.freqs[0]
+print ion_model.freqs[-1]
+print ion_model.pointing
+print ion_model.phases.shape
+
+
+#ion_model.calculate_piercepoints()
+
+def operation_solve ( step ):
+   ClockEnable = parset.getBool('.'.join(["Steps", step, "Clock.Enable"]), True )
+   ion_model.ClockTEC( ClockEnable, Nodes )
+   
+def operation_store ( step ):
+   ClockTEC_parmdbname = parset.getString('.'.join(["Steps", step, "ClockTEC.parmdb"]), "ClockTEC.parmdb")
+   phases_parmdbname = parset.getString('.'.join(["Steps", step, "Phases.parmdb"]), "ionosphere")
+   ion_model.write_ClockTEC_to_parmdb( ClockTEC_parmdbname )
+   ion_model.write_phases_to_parmdb( ClockTEC_parmdbname, phases_parmdbname )
+   
+def operation_plot ( step ):
+   print ion_model.TEC.shape
+   figure(1)
+   plot(ion_model.Clock[0,:,:])
+   figure(2)
+   plot(ion_model.TEC[0,:,:])
+   show()
+
+Operations = { "SOLVE": operation_solve ,
+               "STORE":  operation_store,
+               "PLOT":  operation_plot }
+
+steps = parset.getStringVector("Strategy.Steps", [] )
+
+for step in steps:
+   operation = parset.getString( '.'.join( [ "Steps", step, "Operation" ] ) )
+   Operations[ operation ] ( step )
+
+
+if len(outfile) > 0 :
+   ion_model.save( outfile )
+
