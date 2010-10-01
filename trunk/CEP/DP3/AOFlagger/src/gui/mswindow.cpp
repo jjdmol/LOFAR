@@ -312,11 +312,12 @@ void MSWindow::onExecuteStrategyPressed()
 		artifacts.SetRevisedData(*zero);
 		delete zero;
 	}
+	if(_timeFrequencyWidget.GetMetaData() != 0)
+			artifacts.SetMetaData(_timeFrequencyWidget.GetMetaData());
 	if(HasImageSet())
 	{
 		if(dynamic_cast<rfiStrategy::MSImageSet*>(_imageSet) != 0)
 		{
-			artifacts.SetMetaData(_timeFrequencyWidget.GetMetaData());
 			artifacts.SetImageSet(_imageSet);
 			artifacts.SetImageSetIndex(_imageSetIndex);
 		}
@@ -1389,6 +1390,7 @@ void MSWindow::onSimulateDoubledBaselineCorrelation()
 	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, -M_PIn-0.05, 0.05, 147000000.0);
 	TimeFrequencyData data = pair.first;
 	TimeFrequencyMetaDataCPtr metaData = pair.second;
+	
 	_timeFrequencyWidget.SetNewData(data, metaData);
 	_timeFrequencyWidget.Update();
 }
