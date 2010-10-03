@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef ITERATIONFRAME_H
-#define ITERATIONFRAME_H
+#ifndef UV_PROJECT_FRAME_H
+#define UV_PROJECT_FRAME_H
 
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
@@ -27,37 +27,43 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include <AOFlagger/rfi/strategy/iterationblock.h>
+#include <AOFlagger/rfi/strategy/uvprojectaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
-class IterationFrame : public Gtk::Frame {
+class UVProjectFrame : public Gtk::Frame {
 	public:
-		IterationFrame(rfiStrategy::IterationBlock &iterationBlock, EditStrategyWindow &editStrategyWindow)
-		: Gtk::Frame("Iteration"),
-		_editStrategyWindow(editStrategyWindow), _iterationBlock(iterationBlock),
-		_iterationCountLabel("Iteration count:"),
-		_sensitivityStartLabel("Sensitivity start value (moves to 1):"),
-		_iterationCountScale(0, 100, 1),
-		_sensitivityStartScale(0, 25.0, 0.25),
+		UVProjectFrame(rfiStrategy::UVProjectAction &action, EditStrategyWindow &editStrategyWindow)
+		: Gtk::Frame("UV project"),
+		_editStrategyWindow(editStrategyWindow), _action(action),
+		_onRevisedButton("On revised"),
+		_onContaminatedButton("On contaminated"),
+		_angleLabel("Angle: (degrees)"),
+		_angleScale(-180, 180, 1),
+		_reverseButton("Reverse"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
-			_box.pack_start(_iterationCountLabel);
-			_iterationCountLabel.show();
+			_box.pack_start(_onRevisedButton);
+			_onRevisedButton.set_active(action.OnRevised());
+			_onRevisedButton.show();
+			
+			_box.pack_start(_onContaminatedButton);
+			_onContaminatedButton.set_active(action.OnContaminated());
+			_onContaminatedButton.show();
+			
+			_box.pack_start(_angleLabel);
+			_angleLabel.show();
 
-			_box.pack_start(_iterationCountScale);
-			_iterationCountScale.set_value(_iterationBlock.IterationCount());
-			_iterationCountScale.show();
-
-			_box.pack_start(_sensitivityStartLabel);
-			_sensitivityStartLabel.show();
-
-			_box.pack_start(_sensitivityStartScale);
-			_sensitivityStartScale.set_value(_iterationBlock.SensitivityStart());
-			_sensitivityStartScale.show();
+			_box.pack_start(_angleScale);
+			_angleScale.set_value(action.DirectionRad()*180.0/M_PI);
+			_angleScale.show();
+			
+			_box.pack_start(_reverseButton);
+			_reverseButton.set_active(action.Reverse());
+			_reverseButton.show();
 
 			_buttonBox.pack_start(_applyButton);
-			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &IterationFrame::onApplyClicked));
+			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &UVProjectFrame::onApplyClicked));
 			_applyButton.show();
 
 			_box.pack_start(_buttonBox);
@@ -68,20 +74,23 @@ class IterationFrame : public Gtk::Frame {
 		}
 	private:
 		EditStrategyWindow &_editStrategyWindow;
-		rfiStrategy::IterationBlock &_iterationBlock;
+		rfiStrategy::UVProjectAction &_action;
 
 		Gtk::VBox _box;
 		Gtk::HButtonBox _buttonBox;
-		Gtk::Label _iterationCountLabel, _sensitivityStartLabel;
-		Gtk::HScale _iterationCountScale, _sensitivityStartScale;
+		Gtk::CheckButton _onRevisedButton, _onContaminatedButton;
+		Gtk::Label _angleLabel;
+		Gtk::HScale _angleScale;
+		Gtk::CheckButton _reverseButton;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
 		{
-			_iterationBlock.SetIterationCount((size_t) _iterationCountScale.get_value());
-			_iterationBlock.SetSensitivityStart(_sensitivityStartScale.get_value());
-			_editStrategyWindow.UpdateAction(&_iterationBlock);
-
+			_action.SetOnRevised(_onRevisedButton.get_active());
+			_action.SetOnContaminated(_onContaminatedButton.get_active());
+			_action.SetDirectionRad((num_t) _angleScale.get_value()/180.0*M_PI);
+			_action.SetReverse(_reverseButton.get_active());
+			_editStrategyWindow.UpdateAction(&_action);
 		}
 };
 
