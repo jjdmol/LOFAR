@@ -27,44 +27,76 @@
 
 #include <AOFlagger/msio/timefrequencydata.h>
 
+#include <iostream>
+
 namespace rfiStrategy {
 
 	class UVProjectAction : public Action
 	{
 		public:
-			UVProjectAction() : Action(), _directionRad(1.0/4.0 * M_PIn)
+			UVProjectAction() : Action(), _directionRad(-2.5/180.0*M_PI/*atann(600.0/(8.0*320.0))*/), _reverse(false), _onRevised(false), _onContaminated(true)
 			{
 			}
 			virtual std::string Description()
 			{
-				return "UV-project";
+				if(_reverse)
+					return "Reverse UV-project";
+				else
+					return "UV-project";
 			}
 			virtual ActionType Type() const { return UVProjectActionType; }
 			virtual void Perform(ArtifactSet &artifacts, class ProgressListener &)
 			{
-				TimeFrequencyData &data = artifacts.ContaminatedData();
-
+				if(_onContaminated)
+					perform(artifacts.ContaminatedData(), artifacts.MetaData());
+				if(_onRevised)
+					perform(artifacts.RevisedData(), artifacts.MetaData());
+			}
+			num_t DirectionRad() const { return _directionRad; }
+			void SetDirectionRad(num_t directionRad) { _directionRad = directionRad; }
+			
+			bool Reverse() const { return _reverse; }
+			void SetReverse(bool reverse) { _reverse = reverse; }
+			
+			bool OnRevised() const { return _onRevised; }
+			void SetOnRevised(bool onRevised) { _onRevised = onRevised; }
+			
+			bool OnContaminated() const { return _onContaminated; }
+			void SetOnContaminated(bool onContaminated) { _onContaminated = onContaminated; }
+		private:
+			void perform(TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
+			{
 				for(size_t imageIndex = 0; imageIndex != data.ImageCount(); ++imageIndex)
 				{
 					Image2DCPtr image = data.GetImage(imageIndex);
 					Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
 	
-					const num_t cosRotate = cosn(_directionRad);
-					const num_t sinRotate = sinn(_directionRad);
+					const long double cosRotate = cosl(_directionRad);
+					const long double sinRotate = sinl(_directionRad);
 					const size_t width = image->Width();
-	
-					num_t maxU = -1e20, minU = 1e20;
+					
+					long double conjugateSign;
+					if((data.PhaseRepresentation() == TimeFrequencyData::ComplexRepresentation && (imageIndex%2)==1) || data.PhaseRepresentation() == TimeFrequencyData::ImaginaryPart)
+						conjugateSign = -1.0;
+					else
+						conjugateSign = 1.0;
+
+					// Find length of the major axis of the ellipse
+					long double maxU = -1e20, minU = 1e20;
 					for(size_t x=0;x<width;++x)
 					{
-						const UVW &uvw = artifacts.MetaData()->UVW()[x];
-						const num_t uProject = uvw.u * cosRotate - uvw.v * sinRotate;
-						if(uProject > maxU) maxU = uProject;
-						if(uProject < minU) minU = uProject;
+						const UVW &uvw = metaData->UVW()[x];
+						const long double uProjectUpper = uvw.u * cosRotate - uvw.v * sinRotate;
+						if(uProjectUpper > maxU) maxU = uProjectUpper;
+						if(uProjectUpper < minU) minU = uProjectUpper;
+						const long double uProjectBottom = -uvw.u * cosRotate + uvw.v * sinRotate;
+						if(uProjectBottom > maxU) maxU = uProjectBottom;
+						if(uProjectBottom < minU) minU = uProjectBottom;
 					}
 	
 					size_t nextX = 0;
 					size_t firstX = 0;
-					bool forwardDirection = true;
+					bool forwardDirection = false;
 					for(size_t xI=0;xI<width;++xI)
 					{
 						size_t x;
@@ -72,20 +104,31 @@ namespace rfiStrategy {
 							x = xI;
 						else
 							x = width - 1 - xI;
-						const UVW &uvw = artifacts.MetaData()->UVW()[x];
-						const num_t vProject = uvw.u * sinRotate + uvw.v * cosRotate;
-						num_t uProject;
-						if(vProject >= 0.0)
+						const UVW &uvw = metaData->UVW()[x];
+						const long double vProject = uvw.u * sinRotate + uvw.v * cosRotate;
+						long double uProject, currentSign;
+						if(vProject >= 0.0) {
 							uProject = uvw.u * cosRotate - uvw.v * sinRotate;
-						else
+							currentSign = 1.0;
+						} else {
 							uProject = -uvw.u * cosRotate + uvw.v * sinRotate;
-						size_t xProject = (size_t) ((uProject-minU) / (maxU-minU) * (num_t) width) % width;
+							currentSign = conjugateSign;
+						}
+						size_t xProject = (size_t) ((uProject-minU) / (maxU-minU) * (long double) width) % width;
 						if(xI != 0)
 						{
+							// Solve rounding errors that might cause wrapping to occur at one point and
+							// not at a later point
+							if((int) xProject - (int) nextX > (int) width/2) xProject = (nextX+width-1)%width;
 							while(nextX != (xProject + 1)%width)
 							{
-								for(size_t y=0;y<image->Height();++y)
-									newImage->SetValue(nextX, y, image->Value(x, y));
+								if(_reverse) {
+									for(size_t y=0;y<image->Height();++y)
+										newImage->SetValue(x, y, image->Value(nextX, y) * currentSign);
+								} else {
+									for(size_t y=0;y<image->Height();++y)
+										newImage->SetValue(nextX, y, image->Value(x, y) * currentSign);
+								}
 	
 								nextX = (nextX + 1) % width;
 							}
@@ -94,26 +137,28 @@ namespace rfiStrategy {
 							nextX = xProject;
 						}
 					}
-					if(forwardDirection)
+					if((firstX+width-nextX)%width < width/2)
 					{
 						for(size_t x=nextX;x!=firstX;x=(x+1)%width)
 						{
-							for(size_t y=0;y<image->Height();++y)
-								newImage->SetValue(x, y, image->Value(0, y));
+							if(_reverse)
+							{
+								for(size_t y=0;y<image->Height();++y)
+									newImage->SetValue(0, y, image->Value(x, y));
+							} else {
+								for(size_t y=0;y<image->Height();++y)
+									newImage->SetValue(x, y, image->Value(0, y));
+							}
 						}
 					}
 
 					data.SetImage(imageIndex, newImage);
 				}
-
-				/*TimeFrequencyData *contaminatedData =
-					TimeFrequencyData::CreateTFDataFromDiff(artifacts.ContaminatedData(), data);
-				contaminatedData->SetMask(artifacts.ContaminatedData());
-				artifacts.SetContaminatedData(*contaminatedData);
-				delete contaminatedData;*/
 			}
-		private:
+			
 			num_t _directionRad;
+			bool _reverse;
+			bool _onRevised, _onContaminated;
 	};
 
 } // namespace

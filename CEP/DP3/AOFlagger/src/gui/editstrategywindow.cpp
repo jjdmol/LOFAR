@@ -47,6 +47,7 @@
 #include <AOFlagger/gui/strategyframes/svdframe.h>
 #include <AOFlagger/gui/strategyframes/thresholdframe.h>
 #include <AOFlagger/gui/strategyframes/timeselectionframe.h>
+#include <AOFlagger/gui/strategyframes/uvprojectframe.h>
 
 using namespace rfiStrategy;
 
@@ -294,6 +295,9 @@ void EditStrategyWindow::onSelectionChanged()
 				break;
 			case TimeSelectionActionType:
 				showRight(new TimeSelectionFrame(*static_cast<rfiStrategy::TimeSelectionAction*>(selectedAction), *this));
+				break;
+			case UVProjectActionType:
+				showRight(new UVProjectFrame(*static_cast<rfiStrategy::UVProjectAction*>(selectedAction), *this));
 				break;
 			default:
 				break;
