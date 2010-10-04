@@ -39,11 +39,13 @@ SyntaxError()
 
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
-	echo "Syntax: $(basename $0) [-s/S/v/V] [-i x] [-l][ 0 | 1 | 2 | 3 | 4 | 5 | 6 ]"
+	echo "Syntax: $(basename $0) [-s/S/v/V] [-i x] [-k/r processname] [-l][ 0 |1 |2 |3 |4 |5 |6 ]"
 	echo "-s: Show current level, exit (-S: only print number)"
 	echo "-v: Show running LOFAR version, exit (-V: only print version)"
 	echo "-i: Load RSP firmware from image [x] (default image is 1)"
         echo "-l: Set to level as provided (optional)"
+        echo "-k: Kill process with name processname"
+        echo "-r: Run process with name processname"        
         echo
 	echo "Levels:"
 	echo "0:  Stop all lofar software"
@@ -382,7 +384,7 @@ handle_args()
 {
 
   # Handle arguments
-  while getopts  "hSsVvi:l:" flag
+  while getopts  "hSsVvi:l:k:r:" flag
   do
     case "$flag" in
     [sS])
@@ -396,6 +398,16 @@ handle_args()
     # This is needed to be able to retrieve the requested swlevel
     # when it is not provided with option -l
     shift $((OPTIND-1)); OPTIND=1
+    ;;
+    k)
+    procesname=$OPTARG
+    stop_prog $procesname
+    exit
+    ;;
+    r)
+    procesname=$OPTARG
+    start_prog $procesname
+    exit
     ;;
     l)
     level=$OPTARG
