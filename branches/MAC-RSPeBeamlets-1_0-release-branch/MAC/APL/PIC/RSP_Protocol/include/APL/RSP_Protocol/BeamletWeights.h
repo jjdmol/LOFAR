@@ -31,51 +31,69 @@
 
 namespace LOFAR {
   namespace RSP_Protocol {
-    class BeamletWeights
-    {
-    public:
-      /**
-       * Constants.
-       */
-      static const int SINGLE_TIMESTEP = 1;
 
-      /**
-       * Constructors for a BeamletWeights object.
-       * Currently the tv_usec part is always set to 0 irrespective
-       * of the value passed in.
-       */
-      BeamletWeights() { }
-	  
-      /* Destructor for BeamletWeights. */
-      virtual ~BeamletWeights() {}
+class BeamletWeights
+{
+public:
+	// Constants.
+	static const int SINGLE_TIMESTEP = 1;
 
-      static const int NDIM = 3; // dimension (N_POL) REMOVED, now using rcumask
+	// The ebeamlet concept is used to be able to address the Wx and Wy weights 
+	// for each RCU/subband signal independently.
+	// Therefore, we use the following view:
+	// One LOFAR beamlet consist of two ebeamlets. The first ebeamlet is associated 
+	// with the Wx weights and the second ebeamlet is associated with the Wy weights.
+	// 
+	// The dimension of the itsWeights array is increased to 4 and we use the third
+	// dimension to select between X or Y weights. 
+	// 
+	// This behaviour can be selected with the --weightselect option of the --weights 
+	// command.
+	static const int N_EBEAMLETS     = 2; // number of ebeamlets in one LOFAR beamlet
 
-      /* get reference to the weights array */
-      blitz::Array<std::complex<int16>, NDIM>& operator()();
+	static const int NDIM = 4; // increased for e-beamlet mgt.
 
-    public:
-      /*@{*/
-      /**
-       * marshalling methods
-       */
-      unsigned int getSize();
-      unsigned int pack  (void* buffer);
-      unsigned int unpack(void *buffer);
-      /*@}*/
+	static const int SELECT_X_IS_Y  = -1;
+	static const int SELECT_X_ONLY  =  0;
+	static const int SELECT_Y_ONLY  =  1;
+	static const int SELECT_X_AND_Y =  2;
 
-    private:
-      /**
-       * The beamlet weights.
-       * Dimension 1: nr_timesteps (>1)
-       * Dimension 2: count(rcumask)
-       * Dimension 3: N_BEAMLETS
-       * REMOVED Dimension 4, now using rcumask...
-       */
-      blitz::Array<std::complex<int16>, NDIM> m_weights;
-    };
+	// Constructors for a BeamletWeights object.
+	BeamletWeights() : itsWeightSelect(-1) { }
 
-    inline blitz::Array<std::complex<int16>, RSP_Protocol::BeamletWeights::NDIM>& BeamletWeights::operator()() { return m_weights; }
-  };
+	// Destructor for BeamletWeights.
+	virtual ~BeamletWeights() {}
+
+	// get reference to the weights array
+	blitz::Array<std::complex<int16>, NDIM>& operator()()
+		{ return (itsWeights); }
+
+	// Accessors to the weightSelector
+	// Note: 0:X, 1:Y, 2:X+Y delivered in weights-array.
+	bool weightSelect(int	aWeightSelect);
+	int	 weightSelect() const { return (itsWeightSelect); }
+
+	/*@{*/
+	// marshalling methods
+	unsigned int getSize();
+	unsigned int pack  (void* buffer);
+	unsigned int unpack(void *buffer);
+	/*@}*/
+
+private:
+	// The beamlet weights.
+	// Dimension 1: nr_timesteps (>1)
+	// Dimension 2: count(rcumask)
+	// Dimension 3: Select between X or Y weights
+	// Dimension 4: N_BEAMLETS
+	blitz::Array<std::complex<int16>, NDIM> itsWeights;
+	// WeightSelect
+	// 0:only X, 1:only Y, 2: both are specified
+	// Note: weightSelect value must match dimension of the itsWeightsArray ofcourse.
+	int32			itsWeightSelect;
+};
+
+  }; // namespace RSP_Protocol
 }; //namespace LOFAR
+
 #endif /* BEAMLETWEIGHTS_H_ */

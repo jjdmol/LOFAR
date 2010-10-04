@@ -48,7 +48,7 @@ namespace LOFAR {
       /**
        * Set the actual weights for this command.
        */
-      void setWeights(blitz::Array<std::complex<int16>, RSP_Protocol::BeamletWeights::NDIM> weights);
+      void setWeights(blitz::Array<std::complex<int16>, RSP_Protocol::BeamletWeights::NDIM> weights, int weightSelect);
 
       /**
        * Acknowledge the command by sending the appropriate

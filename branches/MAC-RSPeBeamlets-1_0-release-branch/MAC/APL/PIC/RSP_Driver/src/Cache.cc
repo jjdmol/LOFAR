@@ -138,7 +138,8 @@ void CacheBuffer::reset(void)
 	tv.tv_sec = 0; tv.tv_usec = 0;
 	m_timestamp.set(tv);
 
-	m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), MEPHeader::N_BEAMLETS);
+	m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), 
+							  BeamletWeights::N_EBEAMLETS, MAX_BEAMLETS); // 1 x rcus x 2 x 248
 	m_beamletweights() = complex<int16>(0,0);
 
 	m_subbandselection().resize(StationSettings::instance()->nrRcus(),
@@ -148,8 +149,8 @@ void CacheBuffer::reset(void)
 	if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i)) {
 		// these weights ensure that the beamlet statistics
 		// exactly match the subband statistics
-		m_beamletweights()(Range::all(), Range::all(), Range::all()) =
-		complex<int16>(GET_CONFIG("RSPDriver.BF_GAIN", i), 0);
+		m_beamletweights()(Range::all(), Range::all(), 0, Range::all()) = 
+								complex<int16>(GET_CONFIG("RSPDriver.BF_GAIN", i), 0);
 
 		//
 		// Set default subband selection starting at RSPDriver.FIRST_SUBBAND

@@ -40,56 +40,74 @@ SetWeightsCmd::SetWeightsCmd(RSPSetweightsEvent& sw_event, GCFPortInterface& por
 			     Operation oper, int timestep) :
 	Command("SetWeights", port, oper)
 {
-  RSPSetweightsEvent* event = new RSPSetweightsEvent();
-  m_event = event;
-  
-  event->timestamp = sw_event.timestamp + (long)timestep;
-  event->rcumask   = sw_event.rcumask;
+	RSPSetweightsEvent* event = new RSPSetweightsEvent();
+	m_event = event;
+
+	event->timestamp = sw_event.timestamp + (long)timestep;
+	event->rcumask   = sw_event.rcumask;
 }
 
 SetWeightsCmd::~SetWeightsCmd()
 {
-  delete m_event;
+	delete m_event;
 }
 
-void SetWeightsCmd::setWeights(Array<complex<int16>, BeamletWeights::NDIM> weights)
+void SetWeightsCmd::setWeights(Array<complex<int16>, BeamletWeights::NDIM> weights, int someWeightSelect)
 {
-  RSPSetweightsEvent* event = static_cast<RSPSetweightsEvent*>(m_event);
-  
-  event->weights().resize(BeamletWeights::SINGLE_TIMESTEP,
-			  event->rcumask.count(), weights.extent(thirdDim));
-  event->weights() = weights;
+	RSPSetweightsEvent* event = static_cast<RSPSetweightsEvent*>(m_event);
+
+	event->weights().resize(BeamletWeights::SINGLE_TIMESTEP,
+							event->rcumask.count(), weights.extent(thirdDim), weights.extent(fourthDim));
+	event->weights() = weights;
+	event->weights.weightSelect(someWeightSelect);
 }
 
 void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
 {
-  RSPSetweightsackEvent ack;
+	RSPSetweightsackEvent ack;
 
-  ack.timestamp = getTimestamp();
-  ack.status = RSP_SUCCESS;
-  
-  getPort()->send(ack);
+	ack.timestamp = getTimestamp();
+	ack.status = RSP_SUCCESS;
+
+	getPort()->send(ack);
 }
 
 void SetWeightsCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
-  int input_rcu = 0;
-  for (int cache_rcu = 0;
-       cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
-  {
-    if (m_event->rcumask[cache_rcu])
-    {
-      cache.getBeamletWeights()()(0, cache_rcu, Range::all()) =
-	m_event->weights()(0, input_rcu, Range::all());
+	RSPSetweightsEvent* RSPevent = static_cast<RSPSetweightsEvent*>(m_event);
 
-      if (setModFlag) {
-	cache.getCache().getState().bf().write(cache_rcu * MEPHeader::N_PHASE);
-	cache.getCache().getState().bf().write(cache_rcu * MEPHeader::N_PHASE + 1);
-      }
+	int input_rcu = 0;
+	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
+		if (m_event->rcumask[cache_rcu]) {
+			switch (RSPevent->weights.weightSelect()) {
+			case BeamletWeights::SELECT_X_IS_Y:
+				cache.getBeamletWeights()()(0, cache_rcu, 0, Range::all()) =
+													m_event->weights()(0, input_rcu, 0, Range::all());
+				cache.getBeamletWeights()()(0, cache_rcu, 1, Range::all()) =
+													m_event->weights()(0, input_rcu, 0, Range::all());
+				break;
+			case BeamletWeights::SELECT_X_ONLY:
+			case BeamletWeights::SELECT_Y_ONLY:
+				cache.getBeamletWeights()()(0, cache_rcu, RSPevent->weights.weightSelect(), Range::all()) =
+													m_event->weights()(0, input_rcu, 0, Range::all());
+				break;
+			case BeamletWeights::SELECT_X_AND_Y:
+				cache.getBeamletWeights()()(0, cache_rcu, Range::all(), Range::all()) =
+													m_event->weights()(0, input_rcu, Range::all(), Range::all());
+				break;
+			default:
+				LOG_FATAL_STR("Value " << RSPevent->weights.weightSelect() << " for weightselect is not allowed, COMMAND NOT APPLIED");
+				return;
+			} // switch
 
-      input_rcu++;
-    }
-  }
+			if (setModFlag) {
+				cache.getCache().getState().bf().write(cache_rcu * MEPHeader::N_PHASE);
+				cache.getCache().getState().bf().write(cache_rcu * MEPHeader::N_PHASE + 1);
+			}
+
+			input_rcu++;
+		}
+	}
 }
 
 void SetWeightsCmd::complete(CacheBuffer& /*cache*/)
@@ -99,17 +117,28 @@ void SetWeightsCmd::complete(CacheBuffer& /*cache*/)
 
 const Timestamp& SetWeightsCmd::getTimestamp() const
 {
-  return m_event->timestamp;
+	return (m_event->timestamp);
 }
 
 void SetWeightsCmd::setTimestamp(const Timestamp& timestamp)
 {
-  m_event->timestamp = timestamp;
+	m_event->timestamp = timestamp;
 }
 
 bool SetWeightsCmd::validate() const
 {
-  // validation is done in the caller (RSPDriverTask)
-  return true;
+	RSPSetweightsEvent* RSPevent = static_cast<RSPSetweightsEvent*>(m_event);
+	int	WSvalue = RSPevent->weights.weightSelect();
+
+	// validation is done in the caller (RSPDriverTask)
+	if (m_event->weights().extent(thirdDim) == 2 && WSvalue != 2) {
+		LOG_ERROR("Dimension of weights array does not match weightSelect of 2");
+		return (false);
+	}
+	if (m_event->weights().extent(thirdDim) != 2 && WSvalue == 2) {
+		LOG_ERROR_STR("Dimension of weights array does not match weightSelect of " << WSvalue);
+		return (false);
+	}
+	return (true);
 }
 

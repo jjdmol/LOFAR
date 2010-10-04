@@ -49,29 +49,22 @@ GetWeightsCmd::~GetWeightsCmd()
 
 void GetWeightsCmd::ack(CacheBuffer& cache)
 {
-  RSPGetweightsackEvent ack;
+	RSPGetweightsackEvent ack;
 
-  ack.timestamp = getTimestamp();
-  ack.status = RSP_SUCCESS;
+	ack.timestamp = getTimestamp();
+	ack.status = RSP_SUCCESS;
+	ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP, m_event->rcumask.count(), BeamletWeights::N_EBEAMLETS, MAX_BEAMLETS);
 
-  ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP,
-		       m_event->rcumask.count(),
-		       MEPHeader::N_BEAMLETS);
+	int result_rcu = 0;
+	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
+		if (m_event->rcumask[cache_rcu]) {
+			ack.weights()(0, result_rcu, Range::all(), Range::all()) = 
+					cache.getBeamletWeights()()(0, cache_rcu, Range::all(), Range::all());
+			result_rcu++;
+		}
+	}
 
-  int result_rcu = 0;
-  for (int cache_rcu = 0;
-       cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
-  {
-    if (m_event->rcumask[cache_rcu])
-    {
-      ack.weights()(0, result_rcu, Range::all()) =
-	cache.getBeamletWeights()()(0, cache_rcu, Range::all());
-      
-      result_rcu++;
-    }
-  }
-  
-  getPort()->send(ack);
+	getPort()->send(ack);
 }
 
 void GetWeightsCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)

@@ -73,8 +73,8 @@ public:
 	}
 
 	// Get the mask (MAX_N_RCUS bits).
-	bitset<MEPHeader::MAX_N_RCUS> getRCUMask() const {
-		bitset<MEPHeader::MAX_N_RCUS> mask;
+	RCUmask_t getRCUMask() const {
+		RCUmask_t mask;
 
 		mask.reset();
 		std::list<int>::const_iterator it;
@@ -82,7 +82,7 @@ public:
 		for (it = m_select.begin(); it != m_select.end(); ++it, ++count) {
 			if (count >= get_ndevices())
 				break;
-			if (*it < MEPHeader::MAX_N_RCUS)
+			if (*it < MAX_RCUS)
 				mask.set(*it);
 		}
 		return mask;
@@ -105,13 +105,13 @@ public:
 	}
 
 	// Get the mask (N_BEAMLETS bits).
-	bitset<MEPHeader::N_BEAMLETS> getBEAMLETSMask() const {
-		bitset<MEPHeader::N_BEAMLETS> mask;
+	bitset<MAX_BEAMLETS> getBEAMLETSMask() const {
+		bitset<MAX_BEAMLETS> mask;
 
 		mask.reset();
 		std::list<int>::const_iterator it;
 		for (it = m_beamlets.begin(); it != m_beamlets.end(); ++it) {
-			if (*it < MEPHeader::N_BEAMLETS)
+			if (*it < MAX_BEAMLETS)
 				mask.set(*it);
 		}
 		return mask;
@@ -141,7 +141,7 @@ public:
 	}
 
 	// Set mode (true == get, false = set)
-	void setMode(bool get) {
+	void getMode(bool get) {
 		m_get = get;
 	}
 
@@ -197,14 +197,24 @@ public:
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
 	void setValue(std::complex<double> value) {
-		m_value = value;
+		itsValue = value;
 	}
-	void setType(int type) { m_type = type; }
+	void setType(int type) { itsType = type; }
+	void setWeightSelect(int weightSelect) {
+		itsWeightSelect = weightSelect;
+	}
+	void fromFile(bool fromFile) { itsReadFromFile = fromFile; }
+	bool fromFile() { return(itsReadFromFile); }
 private:
-	std::complex<double> 					m_value;
-	int                  					m_type;
-	int									 	itsStage;
-	blitz::Array<std::complex<int16>, 3>	itsWeights;
+	std::complex<double>	itsValue;
+	int						itsType;
+	int						itsStage;
+	int						itsWeightSelect;
+	bool					itsReadFromFile;
+public:
+	blitz::Array<std::complex<int16>, BeamletWeights::NDIM>		itsFullWeights;
+	// Note: only 1 timeslice can be specified hence NDIM-1
+	blitz::Array<std::complex<double>, BeamletWeights::NDIM-1>	itsInpWeights;
 };
 
 //

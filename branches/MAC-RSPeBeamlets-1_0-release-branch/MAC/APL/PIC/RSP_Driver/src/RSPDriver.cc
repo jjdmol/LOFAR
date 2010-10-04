@@ -1253,12 +1253,16 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 	// unpack the event 
 	RSPSetweightsEvent* sw_event = new RSPSetweightsEvent(event);
 
-	// range check on parameters 
+	// range check on parameters [ >=1, 1..MAX_RCUS, 1 or 2, MAX_BEAMLETS ]
 	if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
 		|| (sw_event->weights().extent(firstDim) < 1)
 		|| (sw_event->weights().extent(secondDim) > StationSettings::instance()->nrRcus())
-		|| (sw_event->weights().extent(thirdDim) != MEPHeader::N_BEAMLETS)) {
-		LOG_ERROR("SETWEIGHTS: invalid parameter");
+		|| ((sw_event->weights().extent(thirdDim) != BeamletWeights::N_EBEAMLETS) && 
+			(sw_event->weights().extent(thirdDim) != 1)) 
+		|| (sw_event->weights().extent(fourthDim) != MAX_BEAMLETS)) {
+		LOG_ERROR_STR("SETWEIGHTS: invalid parameter:[" << sw_event->weights().extent(firstDim) << "," <<
+				sw_event->weights().extent(secondDim) << "," << sw_event->weights().extent(thirdDim) << "," <<
+				sw_event->weights().extent(fourthDim) << "]");
 
 		delete sw_event;
 
@@ -1269,16 +1273,35 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 		return;
 	}
 
+#if 0
+	// When 3th dimension is 1 we are dealing with non-ebeamlet aware SW like a beamserver.
+	// Prepare a temp array at full size
+	blitz::Array<std::complex<int16>, BeamletWeights::NDIM> tempWeights;
+	if (sw_event->weights().extent(thirdDim) == 1) {
+		tempWeights.resize(sw_event->weights().extent(firstDim), sw_event->weights().extent(secondDim), 
+							BeamletWeights::N_EBEAMLETS, MAX_BEAMLETS);
+		tempWeights(Range::all(), Range::all(), 0, Range::all()) = sw_event->weights()(Range::all(), Range::all(), 0, Range::all());
+		tempWeights(Range::all(), Range::all(), 1, Range::all()) = sw_event->weights()(Range::all(), Range::all(), 0, Range::all());
+	}
+#endif
+
 	for (int timestep = 0; timestep < sw_event->weights().extent(firstDim); timestep++) {
 		Ptr<SetWeightsCmd> command = new SetWeightsCmd(*sw_event, port, Command::WRITE, timestep);
 
 		//PD add base correction here
-		command->setWeights(sw_event->weights()(Range(timestep, timestep), Range::all(), Range::all()));
+//		if (sw_event->weights().extent(thirdDim) == 1) {
+//			command->setWeights(tempWeights(Range(timestep, timestep), Range::all(), Range::all(), Range::all()));
+//		}
+//		else {
+			command->setWeights(sw_event->weights()(Range(timestep, timestep), Range::all(), Range::all(), Range::all()), 
+								sw_event->weights.weightSelect());
+//		}
 
 		// if weights for only one timestep are given (and the timestamp == Timestamp(0,0))
 		 // then the weights may be applied immediately
 		m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::LATER, (sw_event->weights().extent(firstDim) == 1));
 	}
+//	tempWeights.free();
 
 	/* cleanup the event */
 	delete sw_event;

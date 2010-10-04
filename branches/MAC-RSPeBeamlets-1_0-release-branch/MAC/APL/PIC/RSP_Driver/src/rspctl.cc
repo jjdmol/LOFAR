@@ -162,16 +162,15 @@ inline double blitz_angle(complex<double> val)
 	return atan(val.imag() / val.real()) * 180.0 / M_PI;
 }
 
-WeightsCommand::WeightsCommand(GCFPortInterface& port) : Command(port), m_type(WeightsCommand::COMPLEX),
-	itsStage(0)
+WeightsCommand::WeightsCommand(GCFPortInterface& port) : 
+	Command(port), itsType(WeightsCommand::COMPLEX), itsStage(0), itsWeightSelect(-1), itsReadFromFile(false)
 {
 }
 
 void WeightsCommand::send()
 {
+	// Note: a SET command is preceded by a GET command, hence we use itsStage here for flowcontrol iso getMode().
 	switch (itsStage) {
-	//if (getMode())
-	//{
 	case 0: {
 		// GET
 		RSPGetweightsEvent getweights;
@@ -182,35 +181,86 @@ void WeightsCommand::send()
 
 		m_rspport.send(getweights);
 	} break;
-
-	//else
 	case 1: {
 		// SET
 		RSPSetweightsEvent   setweights;
 		setweights.timestamp = Timestamp(0,0);
 		setweights.rcumask   = getRCUMask();
 
-		logMessage(cerr,formatString("rcumask.count()=%d",setweights.rcumask.count()));
-		setweights.weights().resize(1, setweights.rcumask.count(), MEPHeader::N_BEAMLETS);
+//		logMessage(cerr,formatString("rcumask.count()=%d",setweights.rcumask.count()));
+		setweights.weights().resize(1, setweights.rcumask.count(), BeamletWeights::N_EBEAMLETS, MAX_BEAMLETS);
+		setweights.weights.weightSelect(BeamletWeights::SELECT_X_AND_Y);	// expansion it done here
 
-		bitset<MEPHeader::N_BEAMLETS> beamlet_mask = getBEAMLETSMask();
+		bitset<MAX_BEAMLETS> beamlet_mask = getBEAMLETSMask();
+		bool	doubleWeights(false);
 
-		// -1 < m_value <= 1
-		complex<double> value = m_value;
-		value *= (1<<14); // -.99999 should become -16383 and 1 should become 16384
-		setweights.weights() = itsWeights;
+		if (itsReadFromFile) {
+			// we can finally check the dimension of the input
+			if ((uint)itsInpWeights.extent(firstDim) != setweights.rcumask.count()) {
+				cerr << setweights.rcumask.count() << " RCUs specified in --select, while for " << 
+							itsInpWeights.extent(firstDim) << " RCUs values are specified in the file" << endl;
+				GCFScheduler::instance()->stop();
+				return;
+			}
+			doubleWeights = (itsInpWeights.extent(secondDim) == 2);
+			if ((!doubleWeights && itsWeightSelect == 2) ||
+				(doubleWeights && (itsWeightSelect == 0 || itsWeightSelect == 1))) {
+				cerr << "Number of polarisations (" << itsInpWeights.extent(secondDim) << 
+						") is not conform the setting of --weightselect (" << itsWeightSelect << ")" << endl;
+				GCFScheduler::instance()->stop();
+				return;
+			}
+			if ((uint)itsInpWeights.extent(thirdDim) != beamlet_mask.count()) {
+				cerr << beamlet_mask.count() << " beamlets specified in --beamlets, while for " << 
+							itsInpWeights.extent(thirdDim) << " beamlets values are specified in the file" << endl;
+				GCFScheduler::instance()->stop();
+				return;
+			}
+		} // if read from file
+
+		// -1 < itsValue <= 1
+		setweights.weights() = itsFullWeights;
 		int rcunr = 0;
 		for (int rcu = 0; rcu < MEPHeader::MAX_N_RCUS; rcu++) {
 			if (setweights.rcumask.test(rcu)) {
+				int	beamletnr = 0;
 				for (int beamlet = 0; beamlet < MEPHeader::N_BEAMLETS; beamlet++) {
 					if (beamlet_mask.test(beamlet)) {
-						setweights.weights()(0,rcunr,beamlet) = complex<int16>((int16)value.real(), (int16)value.imag()); // complex<int16>((int16)value,0);
-					}
-				}
+						complex<double> dvalue0, dvalue1;
+						dvalue0 = itsReadFromFile ? itsInpWeights(rcunr,0,beamletnr) : itsValue;
+						dvalue1 = itsReadFromFile ? (doubleWeights ? itsInpWeights(rcunr,1,beamletnr) : itsInpWeights(rcunr,0,beamletnr)) : itsValue;
+						dvalue0 *= (1<<14); // -.99999 should become -16383 and 1 should become 16384
+						dvalue1 *= (1<<14); // -.99999 should become -16383 and 1 should become 16384
+						complex<int16> value0, value1;
+						value0 = complex<int16>((int16)dvalue0.real(), (int16)dvalue0.imag());
+						value1 = complex<int16>((int16)dvalue1.real(), (int16)dvalue1.imag());
+						switch (itsWeightSelect) {
+						case -1: // Wx = Wy
+							cout << "weights(0,"<< rcunr << ",0," << beamlet << ")=" << value0 << endl;
+							cout << "weights(0,"<< rcunr << ",1," << beamlet << ")=" << value0 << endl;
+							setweights.weights()(0,rcunr,0,beamlet) = value0;
+							setweights.weights()(0,rcunr,1,beamlet) = value0;
+							break;
+						case 0:
+						case 1:
+							setweights.weights()(0,rcunr,itsWeightSelect,beamlet) = value0;
+							cout << "weights(0,"<< rcunr << "," << itsWeightSelect << "," << beamlet << ")=" << value0 << endl;
+							break;
+						case 2:
+							cout << "weights(0,"<< rcunr << ",0," << beamlet << ")=" << value0 << endl;
+							cout << "weights(0,"<< rcunr << ",1," << beamlet << ")=" << value1 << endl;
+							setweights.weights()(0,rcunr,0,beamlet) = value0;
+							setweights.weights()(0,rcunr,1,beamlet) = value1;
+							break;
+						default:
+							break;
+						} // switch
+						beamletnr++;
+					} // if beamlet in mask
+				} // for each beamlet
 				rcunr++;
-			}
-
-		}
+			} // if rcu in mask
+		} // for each rcu
 		m_rspport.send(setweights);
 	} break;
 
@@ -226,12 +276,12 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 	switch (e.signal) {
 		case RSP_GETWEIGHTSACK: {
 			RSPGetweightsackEvent ack(e);
-			bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
-			itsWeights.resize(1, mask.count(), MEPHeader::N_BEAMLETS);
-			itsWeights = complex<int16>(0,0);
-			itsWeights = ack.weights();
+			RCUmask_t RCUmask = getRCUMask();
+			itsFullWeights.resize(1, RCUmask.count(), BeamletWeights::N_EBEAMLETS, MAX_BEAMLETS);
+			itsFullWeights = complex<int16>(0,0);
+			itsFullWeights = ack.weights();
 
-			if (RSP_SUCCESS != ack.status) {
+			if (ack.status != RSP_SUCCESS) {
 				logMessage(cerr,"Error: RSP_GETWEIGHTS command failed.");
 				GCFScheduler::instance()->stop();
 				return status;
@@ -239,17 +289,17 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 
 
 			if (getMode()) {
-				if (WeightsCommand::COMPLEX == m_type) {
+				if (itsType == WeightsCommand::COMPLEX) {
 					int rcuin = 0;
 					for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
-						if (mask[rcuout]) {
+						if (RCUmask[rcuout]) {
 							std::ostringstream logStream;
-							logStream << ack.weights()(0, rcuin++, Range::all());
+							logStream << ack.weights()(0, rcuin++, Range::all(), Range::all());
 							logMessage(cout,formatString("RCU[%2d].weights=%s", rcuout,logStream.str().c_str()));
 						}
 					}
 				} else {
-					blitz::Array<complex<double>, 3> ackweights;
+					blitz::Array<complex<double>, BeamletWeights::NDIM> ackweights;
 					ackweights.resize(ack.weights().shape());
 
 					// convert to amplitude and angle
@@ -257,10 +307,10 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 
 					int rcuin = 0;
 					for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
-						if (mask[rcuout]) {
+						if (RCUmask[rcuout]) {
 							std::ostringstream logStream;
-							logStream << ackweights(0, rcuin++, Range::all());
-							logMessage(cout,formatString("RCU[%2d].weights=%s", rcuout,logStream.str().c_str()));
+							logStream << ackweights(0, rcuin++, Range::all(), Range::all());
+							logMessage(cout,formatString(" RCU[%2d].weights=%s", rcuout,logStream.str().c_str()));
 						}
 					}
 				}
@@ -318,7 +368,7 @@ void SubbandsCommand::send()
 		setsubbands.rcumask   = getRCUMask();
 		setsubbands.subbands.setType(m_type);
 
-		logMessage(cerr,formatString("rcumask.count()=%d",setsubbands.rcumask.count()));
+//		logMessage(cerr,formatString("rcumask.count()=%d",setsubbands.rcumask.count()));
 
 		// if only 1 subband selected, apply selection to all
 		switch (m_type) {
@@ -385,14 +435,14 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
 					if (mask[rcuout]) {
 						std::ostringstream logStream;
 						logStream << ack.subbands()(rcuin++, Range::all());
-			if (SubbandSelection::BEAMLET == m_type) {
-				logMessage(cout,formatString("RCU[%2d].subbands=%s", rcuout,logStream.str().c_str()));
-			} else {
-				logMessage(cout,formatString("RCU[%2d].xcsubbands=%s", rcuout,logStream.str().c_str()));
-			}
-					}
-				}
-			}
+						if (SubbandSelection::BEAMLET == m_type) {
+							logMessage(cout,formatString("RCU[%2d].subbands=%s", rcuout,logStream.str().c_str()));
+						} else {
+							logMessage(cout,formatString("RCU[%2d].xcsubbands=%s", rcuout,logStream.str().c_str()));
+						}
+					} // if  rcu in mask
+				} // for rcu
+			} // if success
 			else {
 				logMessage(cerr,"Error: RSP_GETSUBBANDS command failed.");
 			}
@@ -922,7 +972,7 @@ void TBBCommand::send()
 		settbb.timestamp = Timestamp(0,0);
 		settbb.rcumask   = getRCUMask();
 
-		logMessage(cout,formatString("rcumask.count()=%d", settbb.rcumask.count()));
+//		logMessage(cout,formatString("rcumask.count()=%d", settbb.rcumask.count()));
 
 		// if only 1 subband selected, apply selection to all
 		switch (m_type) {
@@ -2877,7 +2927,14 @@ static void usage(bool exportMode)
 	cout << "--- Signalprocessing -----------------------------------------------------------------------------------------" << endl;
 	cout << "rspctl --weights                    [--select=<set>]  # get weights as complex values" << endl;
 	cout << "  Example --weights --select=1,2,4:7 or --select=1:3,5:7" << endl;
-	cout << "rspctl --weights=value.re[,value.im][--select=<set>][--beamlets=<set>] # set weights as complex value" << endl;
+	cout << "rspctl --weights=value.re[,value.im][--select=<set>][--beamlets=<set>][--weightselect=0|1]" << endl;
+	cout << "                                                      # set weights as complex value" << endl;
+	cout << "rspctl --weightsfile=<file> [--select=<set>][--beamlets=<set>][--weightselect=0|1]" << endl;
+	cout << "                                                      # set complex value weights, read them from a file" << endl;
+	cout << "                                                      # dimension [ rcucount, n_directions, beamlets ]" << endl;
+	cout << "                                                      # rcucount must match select.count()" << endl;
+	cout << "                                                      # n_directions must 1 or 2" << endl;
+	cout << "                                                      # beamlets must match beamlets.count()" << endl;
 	cout << "rspctl --aweights                   [--select=<set>]  # get weights as power and angle (in degrees)" << endl;
 	cout << "rspctl --aweights=amplitude[,angle] [--select=<set>]  # set weights as amplitude and angle (in degrees)" << endl;
 	cout << "rspctl --subbands                   [--select=<set>]  # get subband selection" << endl;
@@ -2982,6 +3039,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{ "rspclear",       optional_argument, 0, 'C' },
 		{ "directory"  ,    required_argument, 0, 'D' },
 		{ "rcuenable",      optional_argument, 0, 'E' },
+		{ "weightsfile",    required_argument, 0, 'F' },
 		{ "wgmode",         required_argument, 0, 'G' },
 		{ "hbadelays",      optional_argument, 0, 'H' },
 		{ "specinv",        optional_argument, 0, 'I' },
@@ -2992,6 +3050,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{ "regstate",       no_argument,       0, 'S' },
 		{ "tbbmode",        optional_argument, 0, 'T' },
 		{ "spustatus",      no_argument, 	   0, 'V' },
+		{ "weightselect",   required_argument, 0, 'W' },
 		{ "expert",         no_argument, 	   0, 'X' },
 		{ "datastream",     optional_argument, 0, 'Y' },
 		{ "splitter",       optional_argument, 0, 'Z' },
@@ -3005,7 +3064,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	realDelays = false;
 	while (1) {
 		int option_index = 0;
-		int c = getopt_long(argc, argv, "a::b:c::d:e::f:g::hi:l:m:n:p::qr::s::t::vw::xy:z::A:BC::D:E::G:H::I::LP:QR::ST::VX1:2:", long_options, &option_index);
+		int c = getopt_long(argc, argv, "a::b:c::d:e::f:g::hi:l:m:n:p::qr::s::t::vw::xy:z::A:BC::D:E::G:H::I::LP:QR::ST::VW:X1:2:", long_options, &option_index);
 
 		if (c == -1) // end of argument list reached?
 			break;
@@ -3013,7 +3072,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		switch (c) {
 		case 'l': // --select
 			if (optarg) {
-				if (!command || 0 == command->get_ndevices()) {
+				if (!command || command->get_ndevices() == 0) {
 					logMessage(cerr,"Error: 'command' argument should come before --select argument");
 					exit(EXIT_FAILURE);
 				}
@@ -3030,7 +3089,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'b': // --beamlets
 			if (optarg) {
-				if (!command || 0 == command->get_ndevices()) {
+				if (!command || command->get_ndevices() == 0) {
 					logMessage(cerr,"Error: 'command' argument should come before --beamlets argument");
 					exit(EXIT_FAILURE);
 				}
@@ -3047,8 +3106,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'w': // --weights
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--weights: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			WeightsCommand* weightscommand = new WeightsCommand(*itsRSPDriver);
 			weightscommand->setType(WeightsCommand::COMPLEX);
 			command = weightscommand;
@@ -3056,7 +3117,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			command->set_ndevices(m_nrcus);
 
 			if (optarg) {
-				weightscommand->setMode(false);
+				weightscommand->getMode(false);
 				double re = 0.0, im = 0.0;
 				int numitems = sscanf(optarg, "%lf,%lf", &re, &im);
 				if (numitems == 0 || numitems == EOF) {
@@ -3071,8 +3132,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'a': // --aweights
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--aweights: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			WeightsCommand* weightscommand = new WeightsCommand(*itsRSPDriver);
 			weightscommand->setType(WeightsCommand::ANGLE);
 			command = weightscommand;
@@ -3080,7 +3143,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			command->set_ndevices(m_nrcus);
 
 			if (optarg) {
-				weightscommand->setMode(false);
+				weightscommand->getMode(false);
 				double amplitude = 0.0, angle = 0.0;
 				int numitems = sscanf(optarg, "%lf,%lf", &amplitude, &angle);
 				if (numitems == 0 || numitems == EOF) {
@@ -3102,8 +3165,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 's': // --subbands
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--subbands: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			SubbandsCommand* subbandscommand = new SubbandsCommand(*itsRSPDriver);
 			subbandscommand->setType(SubbandSelection::BEAMLET);
 
@@ -3111,7 +3176,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			command->set_ndevices(m_nrcus);
 
 			if (optarg) {
-				subbandscommand->setMode(false);
+				subbandscommand->getMode(false);
 				list<int> subbandlist = strtolist(optarg, MEPHeader::N_SUBBANDS);
 				if (subbandlist.empty()) {
 					logMessage(cerr,"Error: invalid or empty '--subbands' option");
@@ -3124,15 +3189,17 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'r': // --rcu
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--rcu: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			RCUCommand* rcucommand = new RCUCommand(*itsRSPDriver);
 			command = rcucommand;
 
 			command->set_ndevices(m_nrcus);
 
 			if (optarg) {
-				rcucommand->setMode(false);
+				rcucommand->getMode(false);
 				unsigned long controlopt = strtoul(optarg, 0, 0);
 				if (controlopt > 0xFFFFFFFF) {
 					logMessage(cerr,"Error: option '--rcu' parameter must be < 0xFFFFFFFF");
@@ -3154,8 +3221,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			// instantiate once, then reuse to add control bits
 			if (!rcumodecommand) {
-				if (command)
-					delete command;
+				if (command) {
+					logMessage(cerr, "--rcu...: is a command not an option");
+					exit(EXIT_FAILURE);
+				}
 				rcumodecommand = new RCUCommand(*itsRSPDriver);
 			}
 
@@ -3170,7 +3239,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				}
 			}
 
-			rcumodecommand->setMode(false);
+			rcumodecommand->getMode(false);
 			unsigned long controlopt = 0;
 
 			switch (c) {
@@ -3232,17 +3301,53 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		}
 		break;
 
+		case 'F': // --weightsfile
+		{
+			if (command) {
+				logMessage(cerr, "--weightsfile: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
+			WeightsCommand* weightscommand = new WeightsCommand(*itsRSPDriver);
+			weightscommand->setType(WeightsCommand::COMPLEX);
+			weightscommand->fromFile(true);
+			command = weightscommand;
+			command->set_ndevices(m_nrcus);
+			command->getMode(false);
+
+			if (optarg) {
+				ifstream	inputStream;
+				inputStream.open(optarg);
+				if (!inputStream.good()) {
+					logMessage(cerr, "Weightsfile cannot be opened successfully.");
+					delete command;
+					return (0);
+				}
+
+				// file is open, try to read the contents
+				inputStream >> weightscommand->itsInpWeights;
+				inputStream.close();
+
+				// checking dimensions and so is only possible after all other arguments are parsed
+				if (weightscommand->itsInpWeights.extent(secondDim) == 2) {
+					weightscommand->setWeightSelect(2);
+				}
+			}
+		}
+		break;
+
 		case 'g': // --wg
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--wg: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			WGCommand* wgcommand = new WGCommand(*itsRSPDriver);
 			command = wgcommand;
 
 			command->set_ndevices(m_nrcus);
 
 			if (optarg) {
-				wgcommand->setMode(false);
+				wgcommand->getMode(false);
 				double frequency = atof(optarg);
 				if ( frequency < 0 ) {
 					logMessage(cerr,"Error: option '--wg' parameter must be > 0");
@@ -3303,8 +3408,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'q' : // --status
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--status: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			StatusCommand* statuscommand = new StatusCommand(*itsRSPDriver);
 			command = statuscommand;
 
@@ -3314,8 +3421,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'Q': // --tdstatus
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--tdstatus: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			TDStatusCommand* tdstatuscommand = new TDStatusCommand(*itsRSPDriver);
 			command = tdstatuscommand;
 			command->set_ndevices(m_nrspboards);
@@ -3324,23 +3433,42 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'V': // --spustatus
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--spustatus: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			SPUStatusCommand* spustatuscommand = new SPUStatusCommand(*itsRSPDriver);
 			command = spustatuscommand;
 			command->set_ndevices(m_nrspboards);
 		}
 		break;
 
+		case 'W': // --weightselect
+		{
+			if (optarg) {
+				WeightsCommand*	weightscommand = dynamic_cast<WeightsCommand*>(command);
+				int weightSelect = atoi(optarg);
+				if (weightSelect != 0 && weightSelect != 1) {
+					logMessage(cerr,"Error: option '--weightselect' parameter must be 0 or 1 (select first or second weight)");
+					delete command;
+					return (0);
+				}
+				weightscommand->setWeightSelect(weightSelect);
+			}
+		}
+		break;
+
 		case 'Z': // --splitter
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--splitter: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			SplitterCommand* splitterCommand = new SplitterCommand(*itsRSPDriver);
 			command = splitterCommand;
 			command->set_ndevices(m_nrspboards);
 			if (optarg) {
-				splitterCommand->setMode(false); // true=get,false=set
+				splitterCommand->getMode(false); // true=get,false=set
 				splitterCommand->state(atoi(optarg));
 			}
 
@@ -3349,8 +3477,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 't': // --statistics
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--statistics: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			StatisticsCommand* statscommand = new StatisticsCommand(*itsRSPDriver);
 			command = statscommand;
 
@@ -3380,8 +3510,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'x': // -- xcstatistics
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--xcstatistics: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			XCStatisticsCommand* xcstatscommand = new XCStatisticsCommand(*itsRSPDriver);
 			xcstatscommand->setAngle(xcangle);
 			command = xcstatscommand;
@@ -3391,8 +3523,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'z': // -- xcsubbands
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--xcsubbands: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			SubbandsCommand* subbandscommand = new SubbandsCommand(*itsRSPDriver);
 			subbandscommand->setType(SubbandSelection::XLET);
 			command = subbandscommand;
@@ -3400,7 +3534,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			command->set_ndevices(m_nrcus);
 
 			if (optarg) {
-				subbandscommand->setMode(false);
+				subbandscommand->getMode(false);
 
 				int subband = atoi(optarg);
 
@@ -3420,15 +3554,17 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'c': // --clock
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--clock: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			ClockCommand* clockcommand = new ClockCommand(*itsRSPDriver);
 			command = clockcommand;
 
 			command->set_ndevices(m_nrspboards);
 
 			if (optarg) {
-				clockcommand->setMode(false);
+				clockcommand->getMode(false);
 				double clock = atof(optarg);
 				if ( 0 != (uint32)clock && 160 != (uint32)clock && 200 != (uint32)clock) {
 					logMessage(cerr,"Error: option '--clocks' parameter must be 0 (off), 160 (MHz) or 200 (MHz)");
@@ -3442,21 +3578,25 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'C': // --rspclear
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--rspclear: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			RSUCommand* rsucommand = new RSUCommand(*itsRSPDriver);
 			command = rsucommand;
 			command->set_ndevices(m_nrspboards);
 
-			rsucommand->setMode(false); // is a SET command
+			rsucommand->getMode(false); // is a SET command
 			rsucommand->control().setClear(true);
 		}
 		break;
 
 		case 'S': // --regstate
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--regstate: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			RegisterStateCommand* regstatecommand = new RegisterStateCommand(*itsRSPDriver);
 			command = regstatecommand;
 		}
@@ -3464,8 +3604,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'v': // --version
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--version: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			VersionCommand* versioncommand = new VersionCommand(*itsRSPDriver);
 			command = versioncommand;
 			command->set_ndevices(m_nrspboards);
@@ -3478,8 +3620,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		case 'H':  // --hbadelays
 		{
 			if (!hbacommand) {
-				if (command)
-					delete command;
+				if (command) {
+					logMessage(cerr, "--...relays: is a command not an option");
+					exit(EXIT_FAILURE);
+				}
 				hbacommand = new HBACommand(*itsRSPDriver);
 			}
 
@@ -3487,7 +3631,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			command->set_ndevices(m_nrcus);
 
 			if (optarg) {
-				hbacommand->setMode(false); // set the HBA delays
+				hbacommand->getMode(false); // set the HBA delays
 				hbacommand->setDelayList(strtolist(optarg, (uint8)-1));
 			}
 		}
@@ -3495,15 +3639,17 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'T': // --tbbmode
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--tbbmode: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			TBBCommand* tbbcommand = new TBBCommand(*itsRSPDriver);
 			command = tbbcommand;
 
 			command->set_ndevices(m_nrcus);
 
 			if (optarg) {
-				tbbcommand->setMode(false);
+				tbbcommand->getMode(false);
 				if (!strcmp(optarg, "transient")) {
 					tbbcommand->setType(TBBCommand::TRANSIENT);
 				} else if (!strncmp(optarg, "subbands", strlen("subbands"))) {
@@ -3531,8 +3677,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'L': // --latency
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--latency: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			LatencyCommand* latencyCmd = new LatencyCommand(*itsRSPDriver);
 			command = latencyCmd;
 
@@ -3542,15 +3690,17 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'I': // --spectral Inversion
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--specinv: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			SICommand* specInvCmd = new SICommand(*itsRSPDriver);
 			command = specInvCmd;
 
 			command->set_ndevices(m_nrcus);
 
 			if (optarg) {
-				specInvCmd->setMode(false);
+				specInvCmd->getMode(false);
 				specInvCmd->setSI(strncmp(optarg, "0", 1));
 			}
 		}
@@ -3558,15 +3708,17 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'Y': // --datastream
 		{
-			if (command)
-				delete command;
+			if (command) {
+				logMessage(cerr, "--datastream: is a command not an option");
+				exit(EXIT_FAILURE);
+			}
 			DataStreamCommand* datastreamCmd = new DataStreamCommand(*itsRSPDriver);
 			command = datastreamCmd;
 
 			command->set_ndevices(m_nrspboards);
 
 			if (optarg) {
-				datastreamCmd->setMode(false);
+				datastreamCmd->getMode(false);
 				datastreamCmd->setStream(strncmp(optarg, "0", 1));
 			}
 		}
@@ -3584,7 +3736,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'd': // --duration
 			if (optarg) {
-				if (!command || 0 == command->get_ndevices()) {
+				if (!command || command->get_ndevices() == 0) {
 					logMessage(cerr,"Error: 'command' argument should come before --duration argument");
 					exit(EXIT_FAILURE);
 				}
@@ -3602,7 +3754,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'i': // -- integration
 			if (optarg) {
-				if (!command || 0 == command->get_ndevices()) {
+				if (!command || command->get_ndevices() == 0) {
 					logMessage(cerr,"Error: 'command' argument should come before --integration argument");
 					exit(EXIT_FAILURE);
 				}
@@ -3620,7 +3772,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		case 'D': // -- directory
 			if (optarg) {
-				if (!command || 0 == command->get_ndevices()) {
+				if (!command || command->get_ndevices() == 0) {
 					logMessage(cerr,"Error: 'command' argument should come before --directory argument");
 					exit(EXIT_FAILURE);
 				}
@@ -3640,11 +3792,12 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		case '2': {  // writeblock=RSPboard,hexAddress,offset,(datalen|filename)
 			// allocate the right command
 			if (command) {
-				delete (command);
+				logMessage(cerr, "--...block: is a command not an option");
+				exit(EXIT_FAILURE);
 			}
 			RawBlockCommand* rbCmd = new RawBlockCommand(*itsRSPDriver);
 			command = rbCmd;
-			rbCmd->setMode(c == '1');
+			rbCmd->getMode(c == '1');
 
 			// we definitely need arguments
 			if (!optarg) {

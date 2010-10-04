@@ -63,7 +63,9 @@ void BWWrite::sendrequest()
 
 	// reset m_offset and m_remaining for each register
 	if (0 == getCurrentIndex()) {
+		//                  4                NPOL*size(complex<uint16>)   = 4 * (2*4) = 32
 		m_offset = MEPHeader::N_LOCAL_XLETS * MEPHeader::WEIGHT_SIZE;
+		//         (4+248)*NPOL*size(complex<uint16>)     = 2016 - 32 = 1984
 		m_remaining = MEPHeader::BF_XROUT_SIZE - m_offset; // representative for XR, XI, YR, YI size
 	}
 
@@ -78,6 +80,7 @@ void BWWrite::sendrequest()
 	// send next BF configure message
 	EPABfCoefsWriteEvent bfcoefs;
 
+	//                      248                 (2*4)                           2               = 1984/2=992
 	size_t size = (MEPHeader::N_BEAMLETS * MEPHeader::WEIGHT_SIZE) / MEPHeader::BF_N_FRAGMENTS;
 	LOG_DEBUG_STR("size=" << size);
 
@@ -99,22 +102,10 @@ void BWWrite::sendrequest()
 		break;
 	}
 
-	// create blitz view om the weights in the bfcoefs message to be sent to the RSP hardware
+	// create blitz view on the weights in the bfcoefs message to be sent to the RSP hardware
 	int nbeamlets_per_fragment = MEPHeader::N_BEAMLETS / MEPHeader::BF_N_FRAGMENTS;
 	Array<complex<int16>, 2> weights(nbeamlets_per_fragment, MEPHeader::N_POL);
 	bfcoefs.coef.setBuffer(weights.data(), weights.size() * sizeof(complex<uint16>));
-
-#if 0
-	Array<int, 2> index(MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
-	Array<int, 2> mapped_index(nbeamlets_per_fragment, MEPHeader::N_POL);
-
-	for (int beamlet = 0; beamlet < MEPHeader::N_BEAMLETS; beamlet++) {
-		for (int pol = 0; pol < MEPHeader::N_POL; pol++) {
-			index(beamlet, pol) = beamlet * MEPHeader::N_POL + pol;
-		}
-	}
-	mapped_index = 0;
-#endif
 
 	LOG_DEBUG_STR("weights shape=" << weights.shape());
 
@@ -122,37 +113,45 @@ void BWWrite::sendrequest()
 	for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
 
 		int hw_offset = lane;
+		// lane * (248 / 4 ) + ( idx * 124 / 4 )
 		int cache_offset = lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) + (getCurrentIndex() * nbeamlets_per_fragment / MEPHeader::N_SERDES_LANES);
 
 		Range hw_range(hw_offset, hw_offset + nbeamlets_per_fragment - MEPHeader::N_BLPS, MEPHeader::N_BLPS);
 		Range cache_range(cache_offset, cache_offset + (nbeamlets_per_fragment / MEPHeader::N_SERDES_LANES) - 1, 1);
 
-		LOG_DEBUG_STR("lane=" << lane);
-		LOG_DEBUG_STR("hw_range=" << hw_range);
-		LOG_DEBUG_STR("cache_range=" << cache_range);
+//		if (global_blp == 4) {
+//			LOG_INFO_STR("lane=" << lane);
+//			LOG_INFO_STR("hw_range=" << hw_range);
+//			LOG_INFO_STR("cache_range=" << cache_range);
+//		}
 
-		// X
-		weights(hw_range, 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, cache_range);
-
-		// Y
-		weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, cache_range);
-
-#if 0
-			mapped_index(hw_range, 0) = index(cache_range, 0);
-			mapped_index(hw_range, 1) = index(cache_range, 1);
-#endif
-	}
-
-#if 0
-		LOG_DEBUG_STR("mapped_index=" << mapped_index);
-#endif
+		// distribute cache values to weights array in EPA order (interleave 4[=hwrange])
+		// beamletWeights[timeslots(=1), rcus(=96|192), e-beamlet(=2), max_beamlets(=248) ]
+		// Get W_{x,2j,l}  and W_{y,2j+1,l}
+		if ((m_regid == MEPHeader::BF_XROUT) || (m_regid == MEPHeader::BF_XIOUT)) {
+			// X input W_{x,2j,l}
+			weights(hw_range, 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, 0, cache_range);
+			// Y input W_{y,2j,l}
+			weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, 1, cache_range);
+//			weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, 0, cache_range);
+		}
+		else {
+			// Get W_{y,2j,l}  and W_{x,2j+1,l}
+			// X input W_{x,2j+1,l}
+//			weights(hw_range, 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, 1, cache_range);
+			weights(hw_range, 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, 1, cache_range);
+			// Y input W_{y,2j+1,l}
+			weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, 0, cache_range);
+//			weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, 1, cache_range);
+		}
+	} // for all lanes
 
 	// update m_remaining and m_offset for next write
 	m_remaining -= size;
 	m_offset    += size;
 
 	//
-	// conjugate weights to get the correct matrix
+	// conjugate weights to get the correct matrix (make i -> -i)
 
 	// weight a_r + i . a_i
 	//
@@ -179,7 +178,7 @@ void BWWrite::sendrequest()
 			// no added conversions needed
 
 			// y weights should be 0
-			weights(Range::all(), 1) = 0;
+			// weights(Range::all(), 1) = 0;
 		}
 		break;
 
@@ -189,7 +188,7 @@ void BWWrite::sendrequest()
 			weights *= complex<int16>(0,1);
 
 			// y weights should be 0
-			weights(Range::all(), 1) = 0;
+			// weights(Range::all(), 1) = 0;
 		}
 		break;
 
@@ -198,7 +197,7 @@ void BWWrite::sendrequest()
 			// no added conversions needed
 
 			// x weights should be 0
-			weights(Range::all(), 0) = 0;
+			// weights(Range::all(), 0) = 0;
 		}
 		break;
 
@@ -208,7 +207,7 @@ void BWWrite::sendrequest()
 			weights *= complex<int16>(0,1);
 
 			// x weights should be 0
-			weights(Range::all(), 0) = 0;
+			// weights(Range::all(), 0) = 0;
 		}
 		break;
 	}// switch
@@ -224,6 +223,10 @@ void BWWrite::sendrequest()
 
 	m_hdr = bfcoefs.hdr;
 	getBoardPort().send(bfcoefs);
+
+//	if (global_blp == 4) {
+//		LOG_INFO_STR("send:regid=" << m_regid);
+//	}
 }
 
 void BWWrite::sendrequest_status()

@@ -31,16 +31,28 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
+bool BeamletWeights::weightSelect(int	aWeightSelect)
+{
+	if (aWeightSelect < SELECT_X_IS_Y || aWeightSelect > SELECT_X_AND_Y) {
+		LOG_ERROR_STR ("BeamletWeights: weightselect value must be in the range of -1 till 2, not " << aWeightSelect);
+		return (false);
+	}
+	itsWeightSelect = aWeightSelect;
+	return (true);
+}
+
 unsigned int BeamletWeights::getSize()
 {
-  return MSH_ARRAY_SIZE(m_weights, complex<int16>);
+  return (sizeof(itsWeightSelect) + MSH_ARRAY_SIZE(itsWeights, complex<int16>));
 }
 
 unsigned int BeamletWeights::pack  (void* buffer)
 {
   unsigned int offset = 0;
 
-  MSH_PACK_ARRAY(buffer, offset, m_weights, complex<int16>);
+  memcpy((char*)buffer + offset, &itsWeightSelect, sizeof(itsWeightSelect));
+  offset += sizeof(itsWeightSelect);
+  MSH_PACK_ARRAY(buffer, offset, itsWeights, complex<int16>);
 
   return offset;
 }
@@ -49,7 +61,9 @@ unsigned int BeamletWeights::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_weights, complex<int16>, NDIM);
+  memcpy(&itsWeightSelect, (char*)buffer + offset, sizeof(itsWeightSelect));
+  offset += sizeof(itsWeightSelect);
+  MSH_UNPACK_ARRAY(buffer, offset, itsWeights, complex<int16>, NDIM);
 
   return offset;
 }
