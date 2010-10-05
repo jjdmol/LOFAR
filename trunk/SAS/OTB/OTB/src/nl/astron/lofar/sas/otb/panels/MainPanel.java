@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.Vector;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import nl.astron.lofar.lofarutils.LofarUtils;
@@ -223,6 +224,7 @@ public class MainPanel extends javax.swing.JPanel
         PICPanel.setColumnSize("ID",35);
         PICPanel.setColumnSize("Description",700);
         PICPanel.setAutoCreateRowSorter(true);
+        PICPanel.setTableCellAlignment(JLabel.LEFT);
         
 
         VICtableModel VICmodel = new VICtableModel(SharedVars.getOTDBrmi());
@@ -235,6 +237,7 @@ public class MainPanel extends javax.swing.JPanel
         VICPanel.setColumnSize("StopTime",175);
         VICPanel.setColumnSize("Description",700);
         VICPanel.setAutoCreateRowSorter(true);
+        VICPanel.setTableCellAlignment(JLabel.LEFT);
         
         TemplatetableModel Templatemodel = new TemplatetableModel(SharedVars.getOTDBrmi());
         TemplatesPanel.setTableModel(Templatemodel);
@@ -244,7 +247,8 @@ public class MainPanel extends javax.swing.JPanel
         TemplatesPanel.setColumnSize("MoMID",50);
         TemplatesPanel.setColumnSize("Description",700);
         TemplatesPanel.setAutoCreateRowSorter(true);
-        
+        TemplatesPanel.setTableCellAlignment(JLabel.LEFT);
+
         DefaultTemplatetableModel DefaultTemplatemodel = new DefaultTemplatetableModel(SharedVars.getOTDBrmi());
         DefaultTemplatesPanel.setTableModel(DefaultTemplatemodel);
         DefaultTemplatesPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -254,6 +258,8 @@ public class MainPanel extends javax.swing.JPanel
         DefaultTemplatesPanel.setColumnSize("MoMID",50);
         DefaultTemplatesPanel.setColumnSize("Description",500);
         DefaultTemplatesPanel.setAutoCreateRowSorter(true);
+        DefaultTemplatesPanel.setTableCellAlignment(JLabel.LEFT);
+
 
         ComponentTableModel Componentmodel = new ComponentTableModel(SharedVars.getOTDBrmi());
         ComponentsPanel.setTableModel(Componentmodel);
@@ -261,6 +267,7 @@ public class MainPanel extends javax.swing.JPanel
         ComponentsPanel.setColumnSize("ID",50);
         ComponentsPanel.setColumnSize("Description",685);
         ComponentsPanel.setAutoCreateRowSorter(true);
+        ComponentsPanel.setTableCellAlignment(JLabel.LEFT);
         
         //TODO: do the same for the other tabs
     }
@@ -1195,7 +1202,10 @@ public class MainPanel extends javax.swing.JPanel
             itsStateChangeModel.setTree(treeID);
             stateChangeHistoryDialog.setModel(itsStateChangeModel);
         }
+        stateChangeHistoryDialog.showCancelButton(false);
         stateChangeHistoryDialog.setLocationRelativeTo(this);
+        stateChangeHistoryDialog.setTableCellAlignment(JLabel.LEFT);
+
         stateChangeHistoryDialog.setVisible(true);
 
     }

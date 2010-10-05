@@ -24,7 +24,6 @@ package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.rmi.RemoteException;
 import java.util.Vector;
-import nl.astron.lofar.sas.otb.jotdb3.jOTDBtree;
 import nl.astron.lofar.sas.otb.jotdb3.jTreeState;
 import nl.astron.lofar.sas.otb.util.*;
 import org.apache.log4j.Logger;
