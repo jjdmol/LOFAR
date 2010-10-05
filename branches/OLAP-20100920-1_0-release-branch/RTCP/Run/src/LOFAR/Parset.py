@@ -52,7 +52,7 @@ class Parset(util.Parset.Parset):
           if antennaset == "":
             # useful for manually entered complete station names like CS302HBA1
             suffix = ""
-          elif antennaset.startswith("LBA")
+          elif antennaset in ["LBA_X","LBA_Y","LBA_SPARSE_EVEN","LBA_SPARSE_ODD","LBA_INNER","LBA_OUTER"]
             suffix = ["LBA"]
           elif station.startswith("CS"):
             if antennaset == "HBA_ZERO":
