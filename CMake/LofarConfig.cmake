@@ -43,4 +43,11 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
     ${CMAKE_BINARY_DIR}/lofarinit.csh
     DESTINATION .)
 
+  # Configure the CTestCustom.cmake file, used by CTest/Dart, if it exists.
+  if(EXISTS ${CMAKE_SOURCE_DIR}/CTestCustom.cmake.in)
+    configure_file(
+      ${CMAKE_SOURCE_DIR}/CTestCustom.cmake.in
+      ${CMAKE_BINARY_DIR}/CTestCustom.cmake @ONLY)
+  endif(EXISTS ${CMAKE_SOURCE_DIR}/CTestCustom.cmake.in)
+  
 endif("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")

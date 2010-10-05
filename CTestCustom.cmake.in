@@ -1,0 +1,47 @@
+# - CTest custom settings.
+# See http://www.cmake.org/Wiki/CMake_Testing_With_CTest for details.
+
+# Regular expression for errors during build process
+set(CTEST_CUSTOM_ERROR_MATCH)
+
+# Regular expression for error exceptions during build process
+set(CTEST_CUSTOM_ERROR_EXCEPTION)
+
+# Regular expression for warnings during build process
+set(CTEST_CUSTOM_WARNING_MATCH)
+
+# Regular expression for warning exception during build process
+set(CTEST_CUSTOM_WARNING_EXCEPTION)
+
+# Maximum number of errors to display
+set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_ERRORS)
+
+# Maximum number of warnings to display
+set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS 200)
+
+# List of tests to ignore during the Test stage
+set(CTEST_CUSTOM_TESTS_IGNORE)
+
+# List of tests to ignore during the MemCheck stage
+set(CTEST_CUSTOM_MEMCHECK_IGNORE)
+
+# Command to execute before any tests are run during Test stage
+set(CTEST_CUSTOM_PRE_TEST)
+
+# Command to execute after any tests are run during Test stage
+set(CTEST_CUSTOM_POST_TEST)
+
+# Maximum size of passed test output
+set(CTEST_CUSTOM_MAXIMUM_PASSED_TEST_OUTPUT_SIZE)
+
+# Maximum size of failed test output
+set(CTEST_CUSTOM_MAXIMUM_FAILED_TEST_OUTPUT_SIZE)
+
+# Command to execute before any tests are run during MemCheck stage
+set(CTEST_CUSTOM_PRE_MEMCHECK)
+
+# Command to execute after any tests are run during MemCheck stage
+set(CTEST_CUSTOM_POST_MEMCHECK)
+
+# Regular expression for excluding files from coverage testing
+set(CTEST_CUSTOM_COVERAGE_EXCLUDE)
