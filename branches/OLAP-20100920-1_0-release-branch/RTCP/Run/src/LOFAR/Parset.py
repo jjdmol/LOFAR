@@ -52,7 +52,7 @@ class Parset(util.Parset.Parset):
           if antennaset == "":
             # useful for manually entered complete station names like CS302HBA1
             suffix = ""
-          elif antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE"]:
+          elif antennaset.startswith("LBA")
             suffix = ["LBA"]
           elif station.startswith("CS"):
             if antennaset == "HBA_ZERO":
@@ -199,6 +199,9 @@ class Parset(util.Parset.Parset):
         self.convertDepricatedKeys();
         self.addMissingKeys();
 	self.addStorageKeys();
+
+        # Versioning info
+        self["OLAP.BeamsAreTransposed"] = True
 
 	# TODO: we use self.setdefault, but this can create inconsistencies if we
 	# set one value but not the other in a pair of interdependent parameters.
