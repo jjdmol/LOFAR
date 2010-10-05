@@ -63,6 +63,10 @@ public class TableDialog extends javax.swing.JDialog {
         tablePanel1.setTableModel(aModel);
         itsModel=aModel;
     }
+
+    public void setTableCellAlignment(int alignment) {
+        tablePanel1.setTableCellAlignment(alignment);
+    }
     
     public boolean hasChanged() {
         return isChanged;
@@ -77,7 +81,14 @@ public class TableDialog extends javax.swing.JDialog {
     public void removeWarning() {
         tablePanel1.removeWarning();
     }
+
+    public void showCancelButton(boolean aFlag) {
+        this.cancelButton.setVisible(aFlag);
+    }
     
+    public void showOkButton(boolean aFlag) {
+        this.okButton.setVisible(aFlag);
+    }
     
     /** This method is called from within the constructor to
      * initialize the form.
@@ -162,6 +173,7 @@ public class TableDialog extends javax.swing.JDialog {
         setVisible(false);
         dispose();
     }//GEN-LAST:event_okButtonActionPerformed
+
 
 
     private MainFrame itsMainFrame = null;

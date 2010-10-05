@@ -6,6 +6,7 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 import org.apache.log4j.Logger;
 
@@ -44,7 +45,17 @@ public class TablePanel extends javax.swing.JPanel {
     public AbstractTableModel getTableModel() {
         return (AbstractTableModel)jTable1.getModel();
     }
-    
+
+    public void setTableCellAlignment(int alignment) {
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+        renderer.setHorizontalAlignment(alignment);
+        for (int i=0; i<jTable1.getColumnCount();i++){
+            jTable1.setDefaultRenderer(jTable1.getColumnClass(i),renderer);
+        }
+        // repaint to show table cell changes
+        jTable1.updateUI();
+     }
+
     public void setColumnSize(String colName, int size) {
         TableColumn column = jTable1.getColumn(colName);
         column.setPreferredWidth(size);
