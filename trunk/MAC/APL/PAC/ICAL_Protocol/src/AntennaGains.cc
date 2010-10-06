@@ -28,71 +28,59 @@
 #include <APL/RTCCommon/MarshallBlitz.h>
 #include <Common/LofarTypes.h>
 
-using namespace std;
 using namespace blitz;
-using namespace LOFAR;
-using namespace CAL;
+namespace LOFAR {
+  namespace ICAL {
 
-AntennaGains::AntennaGains() : m_mutex(new pthread_mutex_t)
+AntennaGains::AntennaGains()
 {
-  ASSERT(m_mutex);
-  pthread_mutex_init((pthread_mutex_t*)m_mutex, 0);
-  lock();
-
-  m_done = false;
-
   m_gains.resize(1,1,1);
   m_gains = 0;
   
   m_quality.resize(1,1,1);
   m_quality = 0;
-
-  unlock();
 }
 
-AntennaGains::AntennaGains(int nantennas, int npol, int nsubbands) : m_mutex(new pthread_mutex_t)
+AntennaGains::AntennaGains(uint nrRCUs, uint nsubbands)
 {
-  ASSERT(m_mutex);
-  pthread_mutex_init((pthread_mutex_t*)m_mutex, 0);
-  lock(); m_done = false; unlock();
-
-  if (nantennas < 0 || npol < 0 || nsubbands < 0) {
-      nantennas = 0;
-      npol = 0;
-      nsubbands = 0;
-    }
-   
-  m_gains.resize(nantennas, npol, nsubbands);
+  m_gains.resize(nrRCUs, nsubbands);
   m_gains = 1;
 
-  m_quality.resize(nantennas, npol, nsubbands);
+  m_quality.resize(nrRCUs, nsubbands);
   m_quality = 1;
 }
 
 AntennaGains::~AntennaGains()
 {
-  if (m_mutex) 
-	delete m_mutex;
+}
+
+//
+// clone()
+//
+AntennaGains* AntennaGains::clone() const
+{
+	AntennaGains*	theClone = new AntennaGains(m_gains.extent(firstDim), m_gains.extent(secondDim));
+	ASSERTSTR(theClone, "Could not clone the AntennaGains class");
+
+	theClone->m_gains   = m_gains;
+	theClone->m_quality = m_quality;
+
+	return (theClone);
 }
 
 unsigned int AntennaGains::getSize()
 {
   return 
       MSH_ARRAY_SIZE(m_gains, complex<double>)
-    + MSH_ARRAY_SIZE(m_quality, double)
-    + sizeof(bool);
+    + MSH_ARRAY_SIZE(m_quality, double);
 }
 
 unsigned int AntennaGains::pack(void* buffer)
 {
   unsigned int offset = 0;
 
-  lock();
   MSH_PACK_ARRAY(buffer, offset, m_gains, complex<double>);
   MSH_PACK_ARRAY(buffer, offset, m_quality, double);
-  memcpy((char*)buffer + offset, &m_done, sizeof(bool));
-  offset += sizeof(bool);
-  unlock();
 
   return offset;
 }
@@ -101,12 +89,8 @@ unsigned int AntennaGains::unpack(void* buffer)
 {
   unsigned int offset = 0;
 
-  lock();
-  MSH_UNPACK_ARRAY(buffer, offset, m_gains, complex<double>, 3);
-  MSH_UNPACK_ARRAY(buffer, offset, m_quality, double, 3);
-  memcpy(&m_done, (char*)buffer + offset, sizeof(bool));
-  offset += sizeof(bool);
-  unlock();
+  MSH_UNPACK_ARRAY(buffer, offset, m_gains, complex<double>, 2);
+  MSH_UNPACK_ARRAY(buffer, offset, m_quality, double, 2);
 
   return offset;
 }
@@ -114,17 +98,14 @@ unsigned int AntennaGains::unpack(void* buffer)
 AntennaGains& AntennaGains::operator=(const AntennaGains& rhs)
 {
   if (this != &rhs) {
-    lock(); rhs.lock();
-
     m_gains.resize(rhs.m_gains.shape());
     m_gains = rhs.m_gains.copy();
     
     m_quality.resize(rhs.m_quality.shape());
     m_quality = rhs.m_quality.copy();
-    
-    m_done = rhs.m_done;
-    rhs.unlock(); unlock();
   }
   return *this;
 }
 
+  } // namespace ICAL
+} // namespace LOFAR

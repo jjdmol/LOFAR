@@ -13,21 +13,26 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 # Add the current source directory to the -I path.
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+# QED hack
+include_directories(/usr/local/matlab-2008a/extern/include)
+
 lofar_add_library(caldevel
   Package__Version.cc
+  ACC.cc
+  ACCcache.cc
+  RequestPool.cc
   CalibrationThread.cc
-  DipoleModel.cc
-  DipoleModelData.cc
-  Source.cc
-  SourceData.cc
-  SubArrays.cc
-  SubArraySubscription.cc)
+  SubArrayMgr.cc)
   
 lofar_add_bin_program(versionitrfcalserver versionitrfcalserver.cc)
-lofar_add_bin_program(CalServer CalServer.cc ACMProxy.cc)
+lofar_add_bin_program(iCalServer CalServerMain.cc CalServer.cc ACMProxy.cc LBACalibration.cc /usr/local/matlab-2008a/bin/glnx86/libmwmclmcrrt.so)
 lofar_add_bin_program(calinfo calinfo.cc)
 
-foreach(file CalServer.conf DipoleModel.conf SourceCatalog.conf)
+target_link_libraries(iCalServer 
+  ${CMAKE_CURRENT_BINARY_DIR}/../../LBA_Calibration/src/liblba_calibration.so
+  /usr/local/matlab-2008a/bin/glnx86/libmwmclmcrrt.so)
+
+foreach(file CalServer.conf SourceCatalog.conf)
   configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/${file}.in
     ${CMAKE_CURRENT_BINARY_DIR}/${file})

@@ -24,75 +24,75 @@
 #ifndef SPECTRALWINDOW_H_
 #define SPECTRALWINDOW_H_
 
-#include <string>
-#include <vector>
 #include <Common/LofarTypes.h>
 #include <Common/LofarConstants.h>
 
 namespace LOFAR {
-  namespace CAL {
+  namespace ICAL {
 
-    /**
-     * Class which represents a window on the electromagnetic spectrum.
-     *
-     * A window is defined by three parameters:
-     * - sampling frequency
-     * - nyquist_zone
-     * - nsubbands
-     *
-     * The band starting at frequency ((nyquist_zone - 1) * (sampling_frequency / 2.0)) and
-     * ending at (nyquist_zone * (sampling_frequency / 2.0)) is filtered into
-     * nsubband equal frequency bins.
-     * 
-     * The method getSubbandFreq(subband) returns the center frequency of a subband.
-     */
-    class SpectralWindow
-    {
-    public:
-      // Constructors
-      SpectralWindow();
-      SpectralWindow(std::string name, double sampling_freq,
-					 int nyquist_zone, int numsubbands, uint32 rcucontrol);
-      virtual ~SpectralWindow();
+// Class which represents a window on the electromagnetic spectrum.
+//
+// A window is defined by two parameters:
+// - sampling frequency
+// - nyquist_zone
+//
+// The band starting at frequency ((nyquist_zone - 1) * (sampling_frequency / 2.0)) and
+// ending at (nyquist_zone * (sampling_frequency / 2.0)) is split into MAX_SUBBANDS frequency bins
+class SpectralWindow
+{
+public:
+	// Constructors
+	SpectralWindow();
+	explicit SpectralWindow(uint rcumode);
+	SpectralWindow(const string& name, double sampling_freq, int nyquist_zone, bool LBAfilterOn);
+	~SpectralWindow();
 
-      // Return the name of the spectral window.
-      std::string getName() const { return m_name; }
-      
-      // Return the sampling frequency for this window
-      double getSamplingFrequency() const { return m_sampling_freq; }
-      
-      // Return the nyquist zone for this window.
-      int getNyquistZone() const { return m_nyquist_zone; }
+	// Return the name of the spectral window.
+	string name() const { return itsName; }
 
-      // Return the number of subbands for the spectral window.
-      int getNumSubbands() const { return m_numsubbands; }
-      
-      // Return the width of the subbands.
-      double getSubbandWidth() const { return m_sampling_freq / (2.0 * MAX_SUBBANDS); }
-      
-      // Return frequency of a specific subband.
-      double getSubbandFreq(int subband) const;
+	// Return the sampling frequency for this window
+	double samplingFrequency() const { return itsSamplingFreq; }
 
-	  // Returns try if spectralWindow is ment for the HBA antennas.
-	  bool isForHBA() const;
+	// Return the nyquist zone for this window.
+	int nyquistZone() const { return itsNyquistZone; }
 
-    public:
-      /*@{*/
-      // marshalling methods
-      unsigned int getSize() const;
-      unsigned int pack   (void* buffer) const;
-      unsigned int unpack (void* buffer);
-      /*@}*/
+	// Return the LBA filter setting
+	int LBAfilterOn() const { return itsLBAfilterOn; }
 
-    private:
-      std::string m_name;          // name of the spectral window
-      double      m_sampling_freq; // sampling frequency
-      uint16      m_nyquist_zone;  // defines the window
-      uint16      m_numsubbands;   // number of subbands
-      uint32      m_rcucontrol;    // RCU control setting
-    };
+	// Return the rcumode of SPW (only defined for HBA SPW's).
+	uint rcumodeHBA() const;
 
-  }; // namespace CAL
+	// Return the width of the subbands.
+	double subbandWidth() const { return itsSamplingFreq / (2.0 * MAX_SUBBANDS); }
+
+	// Return centre frequency of a specific subband.
+	double subbandFreq(int subband) const;
+
+	/*@{*/
+	// marshalling methods
+	unsigned int getSize() const;
+	unsigned int pack   (void* buffer) const;
+	unsigned int unpack (void* buffer);
+	/*@}*/
+
+	// call for operator<<
+	ostream& print (ostream& os) const;
+
+private:
+	string	itsName;			// name of the spectral window
+	double	itsSamplingFreq;	// sampling frequency
+	uint16	itsNyquistZone;		// defines the window
+	bool	itsLBAfilterOn;		// 10-30Mhz filter switch on/off
+};
+
+// operator<<
+inline ostream& operator<<(ostream& os, const SpectralWindow& spw)
+{
+	return (spw.print(os));
+}
+
+
+  }; // namespace ICAL
 }; // namespace LOFAR
 
 #endif /* SPECTRALWINDOW_H_ */

@@ -27,24 +27,29 @@
 #include <Common/lofar_list.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_string.h>
-#include <APL/RTCCommon/ResourceCache.h>
-#include <APL/CAL_Protocol/SubArray.h>
-#include "Source.h"
-#include "DipoleModel.h"
-#include "SubArrays.h"
+#include <Common/lofar_thread.h>
+#include <ApplCommon/StationConfig.h>
+#include <APL/ICAL_Protocol/SubArray.h>
+#include "ACCcache.h"
+#include "RequestPool.h"
+#include "SubArrayMgr.h"
 #include "LBACalibration.h"
 
 #include <GCF/TM/GCF_Control.h>
 
 namespace LOFAR {
-  using RTC::ResourceCache;
-  namespace CAL {
+  using GCF::TM::GCFPort;
+  using GCF::TM::GCFTask;
+  using GCF::TM::GCFPortInterface;
+  using GCF::TM::GCFTCPPort;
+  using GCF::TM::GCFTimerPort;
+  namespace ICAL {
 
 #ifdef USE_CAL_THREAD
 class CalibrationThread;
 #endif
 
-class CalServer : public GCFTask
+class CalServer : public GCF::TM::GCFTask
 {
 public:
 	// The constructor of the CalServer task.
@@ -53,9 +58,9 @@ public:
 	// GTMTopologyService classes.
 	// @param accs Reference to the global ACC's. These ACC's are shared between
 	// the calibration algorithm and the ACMProxy class.
-	CalServer(const string& name, ResourceCache& theACCs, CalibrationInterface*	theCal, 
-			  int argc, char** argv);
-	virtual ~CalServer();
+	CalServer(const string& name, ACCcache& theACCs, LBACalibration&	theCal);
+//			  int argc, char** argv);
+	~CalServer();
 
 	// Adopt the commandline switches
 	void parseOptions(int argc, char** argv);
@@ -68,12 +73,12 @@ public:
 
 	/*@{*/
 	// States
-	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &port);
-	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &port);
+	GCFEvent::TResult initial    (GCFEvent& e, GCFPortInterface &port);
+	GCFEvent::TResult operational(GCFEvent& e, GCFPortInterface &port);
 	/*@}*/
 
 	/*@{*/
-	// Handle the CAL_Protocol requests
+	// Handle the ICAL_Protocol requests
 	GCFEvent::TResult handle_cal_start      (GCFEvent& e, GCFPortInterface &port);
 	GCFEvent::TResult handle_cal_stop       (GCFEvent& e, GCFPortInterface &port);
 	GCFEvent::TResult handle_cal_subscribe  (GCFEvent& e, GCFPortInterface &port);
@@ -84,31 +89,42 @@ public:
 	// Write ACC to file if configured to do so.
 	void write_acc();
 
+	// Increment RCU usagecounters and enable newly used RCUs
+	void _enableRCUs(SubArray*	subarray, int 	delay);
+
+	// decremetn RCU usagecounters and disable unused RCUs
+	void _disableRCUs(SubArray*	subarray);
+
 private:
-	AntennaArrays			m_arrays;       // antenna arrays (read from file)
-	Sources					m_sources;      // source catalog (read from file)
-	DipoleModels			m_dipolemodels; // dipole model   (read from file)
+	SubArrayMgr		itsSubArrays;    // the subarrays (created by clients)
+	ACCcache&		itsACCs;		// front and back ACC buffers (received from ACMProxy)
+	bool			itsACCsSwapped;	// state of the ACC cache.
 
-	SubArrays				m_subarrays;    // the subarrays (created by clients)
-	ResourceCache&			itsACCs;		// front and back ACC buffers (received from ACMProxy)
-	bool					itsACCsSwapped;	// state of the ACC cache.
-
-	CalibrationInterface*	itsLBAcal;      // pointer to the calibration algorithm to use
+	LBACalibration&	itsLBAcal;      // pointer to the calibration algorithm to use
 
 	// Current sampling frequency of the system.
-	double m_sampling_frequency;
+	int				itsClockSetting; 
 
-	// remember number of RSP boards and number of rcus
-	int m_n_rspboards;
-	int m_n_rcus;
-	int m_n_subbands;
+	vector<int>		itsRCUcounts;			// in how many observations an RCU participates
+	string			itsDataDir;				// Directory where the interum resultfiles are stored.
 
-	// Which instance of the services we should use.
-	int32 m_instancenr;
+	// remember which subband range to calibrate.
+	int 			itsLowestSubband;
+	int				itsHighestSubband;
+	int				itsRequestSubband;
+	int				itsReceiveSubband;
+
+	RequestPool*	itsRequestPool;
+
+	// configfile settings
+	bool			itsCollectionEnabled;
+	bool			itsCalibrationEnabled;
+	StationConfig	itsSC;
 
 	// Ports
-	GCFTCPPort m_acceptor;  // connect point for clients
-	GCFPort    m_rspdriver; // connect to RSPDriver for RSP_CONFIG and RSP_SETRCU events
+	GCFTCPPort*		itsListener;  // connect point for clients
+	GCFTCPPort*		itsRSPDriver; // connect to RSPDriver for RSP_CONFIG and RSP_SETRCU events
+	GCFTimerPort*	itsHeartBeat; // connect to RSPDriver for RSP_CONFIG and RSP_SETRCU events
 
 	// Client/Server management member variables.
 	map<string, GCFPortInterface*> 	m_clients;      // list of subarraynames with related clients
@@ -116,8 +132,8 @@ private:
 
 #ifdef USE_CAL_THREAD
 	// CalibrationThread
-	CalibrationThread* m_calthread;
-	pthread_mutex_t    m_globallock;
+	CalibrationThread*		itsCalibrationThread;
+	pthread_mutex_t    		itsGlobalLock;
 #endif
 };
 

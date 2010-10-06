@@ -1,7 +1,7 @@
 //#  -*- mode: c++ -*-
-//#  CalibrationThread.h: class definition for the CalibrationThread class.
+//#  RequestPool.h: Admin class for timestamp/subband pairs
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2010
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -19,43 +19,46 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: CalibrationThread.h 6902 2005-10-24 14:05:17Z wierenga $
+//#  $Id: RequestPool.h 11768 2008-09-17 14:18:33Z overeem $
 
-#ifndef CALIBRATIONTHREAD_H_
-#define CALIBRATIONTHREAD_H_
+#ifndef REQUEST_POOL_H_
+#define REQUEST_POOL_H_
 
-#ifdef USE_CAL_THREAD
-#include <pthread.h>
-
-class mwArray;
+#include <Common/lofar_list.h>
+#include <APL/RTCCommon/Timestamp.h>
 
 namespace LOFAR {
+  using RTC::Timestamp;
   namespace ICAL {
 
-class SubArrays;
-class CalibrationInterface;
-
-class CalibrationThread
+// Admin class for timestamp/subband pairs
+class RequestPool
 {
 public:
-	CalibrationThread(pthread_mutex_t&      globallock);
-	virtual ~CalibrationThread();
+	explicit RequestPool(int		poolsize);
+	~RequestPool();
 
-	void run();
-	int join();
+	void	add				(int	subbandNr, const Timestamp&	aTS);
+	void	remove			(int	subbandNr);
+	void	clear			()			{ itsPool.clear();	}
+	void	clearBeforeTime	(const Timestamp&	aTime);
+	bool	full			() const	{ return (itsPool.size() >= itsPoolSize); }
+	int		findOnTimestamp (const Timestamp& 	aTS) const;
 
 private:
-	static void* thread_main(void* thisthread);
-
-	// thread management
-	pthread_t        m_thread;
-	pthread_mutex_t& m_globallock;
+	RequestPool();
+	class Request { 
+	public:
+		Request(int sb, const Timestamp& ts) : subband(sb), time(ts) {};
+		int			subband; 
+		Timestamp	time; 
+	};
+	list<Request>    	itsPool; 
+	uint				itsPoolSize;
 };
 
   }; // namespace ICAL
 }; // namespace LOFAR
 
-#endif
-
-#endif /* CALIBRATIONTHREAD_H_ */
+#endif 
 

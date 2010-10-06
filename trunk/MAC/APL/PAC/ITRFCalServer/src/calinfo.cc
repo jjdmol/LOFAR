@@ -33,7 +33,7 @@
 namespace LOFAR {
   using namespace GCF;
   using namespace GCF::TM;
-  namespace CAL {
+  namespace ICAL {
 
 calinfo::calinfo(const string&	name) : 
 	GCFTask((State)&calinfo::initial, "calinfo"),
@@ -99,8 +99,8 @@ GCFEvent::TResult	calinfo::getInfo(GCFEvent&	event, GCFPortInterface&	port)
 		SubArrayMap::iterator	end  = answer.subarraymap.end();
 		while (iter != end) {
 			cout << "name          :" << iter->first << endl;
-			cout << "spectralwindow:" << iter->second->getSPW().getName() << endl;
-			cout << "RCUmask       :" << iter->second->getRCUMask() << endl;
+			cout << "spectralwindow:" << iter->second->SPW().name() << endl;
+			cout << "RCUmask       :" << iter->second->RCUMask() << endl;
 			iter++;
 		}
 		TRAN(calinfo::finish);
@@ -120,7 +120,8 @@ GCFEvent::TResult	calinfo::getInfo(GCFEvent&	event, GCFPortInterface&	port)
 	return (GCFEvent::HANDLED);
 }
 
-GCFEvent::TResult	calinfo::finish(GCFEvent&	event, GCFPortInterface&	port) {
+GCFEvent::TResult	calinfo::finish(GCFEvent&	event, GCFPortInterface&	port) 
+{
 	GCFScheduler::instance()->stop();
 	return (GCFEvent::HANDLED);
 }
@@ -128,13 +129,13 @@ GCFEvent::TResult	calinfo::finish(GCFEvent&	event, GCFPortInterface&	port) {
 
 
 
-  } // namespace CAL
+  } // namespace ICAL
 } // namespace LOFAR
 
 using namespace LOFAR;
 using namespace LOFAR::GCF;
 using namespace LOFAR::GCF::TM;
-using namespace LOFAR::CAL;
+using namespace LOFAR::ICAL;
 
 int main(int	argc,	char*	argv[])
 {
@@ -146,7 +147,7 @@ int main(int	argc,	char*	argv[])
 	GCFScheduler::instance()->init(argc, argv, "calinfo");
 	LOG_INFO(formatString("Program %s has started", argv[0]));
 
-	CAL::calinfo		ciTask(saName);
+	ICAL::calinfo		ciTask(saName);
 	ciTask.start();
 
 	GCFScheduler::instance()->run();

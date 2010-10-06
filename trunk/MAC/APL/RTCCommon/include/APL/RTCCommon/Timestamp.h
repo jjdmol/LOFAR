@@ -91,7 +91,9 @@ namespace RTC
 	   * Overloaded operators.
 	   */
 	  Timestamp& operator=(const Timestamp& rhs);
+	  Timestamp  operator-(long delay) const;
 	  Timestamp  operator+(long delay) const;
+	  Timestamp& operator+=(long delay);
 	  bool       operator>(const Timestamp& rhs) const;
 	  bool       operator<(const Timestamp& rhs) const;
 	  bool       operator<=(const Timestamp& rhs) const;
@@ -166,11 +168,24 @@ private:
     return *this;
   }
 
+  inline Timestamp Timestamp::operator-(long delay) const
+  {
+    Timestamp ts(m_tv);
+    ts.m_tv.tv_sec -= delay;
+    return ts;
+  }
+
   inline Timestamp Timestamp::operator+(long delay) const
   {
     Timestamp ts(m_tv);
     ts.m_tv.tv_sec += delay;
     return ts;
+  }
+
+  inline Timestamp& Timestamp::operator+=(long delay)
+  {
+	m_tv.tv_sec += delay;
+	return (*this);
   }
 
   inline bool Timestamp::operator>(const Timestamp& rhs) const

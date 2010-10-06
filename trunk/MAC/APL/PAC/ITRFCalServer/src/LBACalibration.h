@@ -24,60 +24,55 @@
 #ifndef LOFAR_CAL_LBACALIBRATION_H
 #define LOFAR_CAL_LBACALIBRATION_H
 
-#include <APL/RTCCommon/ResourceCache.h>
+#include <blitz/array.h>
+#include <APL/APLCommon/AntennaField.h>
 #include <APL/ICAL_Protocol/AntennaGains.h>
 #include <APL/ICAL_Protocol/SubArray.h>
-#include <APL/ICAL_Protocol/CalibrationInterface.h>
-#include <AMCBase/ConverterClient.h>
-#include <AMCBase/Direction.h>
-#include <blitz/array.h>
-#include "DipoleModel.h"
-#include "Source.h"
-
-// for debugging
-#include <fstream>
+#include "ACCcache.h"
+//#include "CasaConverter.h"
 
 namespace LOFAR {
-  namespace CAL {
+  using APLCommon::AntennaField;
+  namespace ICAL {
 
-class LBACalibration: public CalibrationInterface
+class LBACalibration
 {
 public:
 	LBACalibration();
 	~LBACalibration();
 	
-	// Tell the class where the mwArrays for the ACCs are located.
-	void setACCs(RTC::ResourceCache*	theACCs);
+	void setACCs(ACCcache&	theACCs) {
+		itsACCs = &theACCs;
+	}
 
-	// Recalc the postion of the calibration sources, called once after a new ACC is available.
-	void repositionSources(time_t	theTime);
-
-	// preform the calibration
-	void calibrateSubArray(const SubArray&	subArray, AntennaGains& gains);
+	// Calibrates the values collected in the ACCcache.
+	AntennaGains& run(uint rcumode, const string& antennaField, RCUmask_t rcuMask);
 
 private:
-	// Read the calibration sources from the file.
-	int _initSources();
-
 	// Initialize the internal (matlab) frequency array.
-	void _initFrequencies(const SpectralWindow&	spw,  mwArray**	theFrequencies);
+	void _initFrequencies(uint	rcumode);
 
 	// Initialize the internal (matlab) antenna postion array.
-	void _initLBAantennas(SubArray&  	subArray, mwArray**	theAntennas);
+	void _initAntennaPositions(const string& antennaField);
 
 	// Matlab 'main' routine that is called by calibrate.
 	static int	 gCalibration(int argc, const char** argv);
 	int	 		doCalibration(int argc, const char** argv);
 
-	RTC::ResourceCache*		itsACCs;
-	AMC::ConverterClient*	itsAMCclient;	// interface for coordinate conversion (Astronomical Measures Conversion)
-	ofstream 				logfile;
-	vector<AMC::Direction>	itsSources;		// J2000 definition of the calibraton sources.
-	mwArray*				itsSourcePos;	// actual position of the calibration sources above the horizon.
-	mwArray*				itsFrequencies;	// frequencies of the 512 subbands.
+	ACCcache*				itsACCs;
+//	CasaConverter*			itsCasaConverter;
+//	ofstream 				logfile;
+	mwArray*				itsFrequencies;		// frequencies of the 512 subbands.
+	mwArray*				itsXpos;			// x-polarized positions
+	mwArray*				itsYpos;			// y-polarized positions
+
+	AntennaField*			itsAntField;
+	AntennaGains			itsAntGains;
+	uint					itsPrevRCUmode;
+	string					itsPrevAntennaField;
 };
 
-  }; // namespace CAL
+  }; // namespace ICAL
 }; // namespace LOFAR
 
 #endif /* LOFAR_CAL_LBACALIBRATION_H */

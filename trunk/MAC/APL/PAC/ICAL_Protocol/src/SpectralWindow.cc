@@ -23,39 +23,45 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Common/StringUtil.h>
 
 #include <APL/ICAL_Protocol/SpectralWindow.h>
-
-#include <blitz/array.h>
-#include <sstream>
 
 #include <MACIO/Marshalling.h>
 #include <APL/RTCCommon/MarshallBlitz.h>
 
-#include <math.h>
-
-using namespace std;
-using namespace blitz;
-using namespace LOFAR;
-using namespace CAL;
+namespace LOFAR {
+  namespace ICAL {
 
 SpectralWindow::SpectralWindow() :
-  m_name("undefined"), m_sampling_freq(0), m_nyquist_zone(0), m_numsubbands(0), m_rcucontrol(0)
+  itsName("undefined"), itsSamplingFreq(0), itsNyquistZone(0), itsLBAfilterOn(0)
 {
 	LOG_TRACE_OBJ("SpectralWindow()");
 }
 
-SpectralWindow::SpectralWindow(std::string name, double sampling_freq,
-								 int nyquist_zone, int numsubbands, uint32 rcucontrol) :
-	m_name(name), 
-	m_sampling_freq(sampling_freq),
-	m_nyquist_zone(nyquist_zone), 
-	m_numsubbands(numsubbands), 
-	m_rcucontrol(rcucontrol) 
+SpectralWindow::SpectralWindow(uint rcumode)
 {
-	LOG_TRACE_OBJ(formatString("SpectralWindow(%s,%f,%d,%d,%08X)", 
-						name.c_str(), sampling_freq, nyquist_zone, numsubbands, rcucontrol));
+	switch (rcumode) {
+	case 1: *this = SpectralWindow("rcumode1", 200.0e6, 1, false);	// 1
+	case 2: *this = SpectralWindow("rcumode2", 200.0e6, 1, true);	// 2
+	case 3: *this = SpectralWindow("rcumode3", 200.0e6, 1, false);	// 1
+	case 4: *this = SpectralWindow("rcumode4", 200.0e6, 1, true);	// 2
+	case 5: *this = SpectralWindow("rcumode5", 200.0e6, 2, false);	// 3
+	case 6: *this = SpectralWindow("rcumode6", 160.0e6, 3, false);	// 4
+	case 7: *this = SpectralWindow("rcumode7", 200.0e6, 3, false);	// 5
+	default:
+		ASSERTSTR(rcumode >= 1 && rcumode <= (uint)NR_RCU_MODES, "rcumode must have value: 1.." << NR_RCU_MODES);
+	}
+}
+
+SpectralWindow::SpectralWindow(const string& name, double sampling_freq,
+								 int nyquist_zone, bool LBAfilterOn) :
+	itsName			(name), 
+	itsSamplingFreq(sampling_freq),
+	itsNyquistZone (nyquist_zone), 
+	itsLBAfilterOn	(LBAfilterOn) 
+{
+	LOG_TRACE_OBJ(formatString("SpectralWindow(%s,%f,%d,%s)", 
+						name.c_str(), sampling_freq, nyquist_zone, (LBAfilterOn ? "ON" : " OFF")));
 }
  
 SpectralWindow::~SpectralWindow()
@@ -63,73 +69,59 @@ SpectralWindow::~SpectralWindow()
 	LOG_TRACE_OBJ("~SpectralWindow()");
 }
 
-double SpectralWindow::getSubbandFreq(int subband) const
-{
-//	LOG_TRACE_OBJ_STR("SpectralWindow::getSubbandFreq(" << subband << " of " << m_numsubbands << ")");
-
-	ASSERT(m_numsubbands);
-	ASSERT(subband >= 0 && subband <= m_numsubbands);
-
-	bool is160 	   = ::fabs(160e6 - m_sampling_freq) < 1e-4;
-	float freqOffset = (is160 ? 80.0e6 : 100.0e6) * (m_nyquist_zone - 1);
-
-	return (freqOffset + ((subband % m_numsubbands) * getSubbandWidth()));
-}
-
-
 //
-// isForHBA(): bool
+// rcumodeHBA()
 //
-bool SpectralWindow::isForHBA() const
+uint SpectralWindow::rcumodeHBA() const
 {
-	LOG_DEBUG (formatString("isForHBA(%06X)", m_rcucontrol));
-
-	switch (m_rcucontrol) {
-	case 0x017900:	// LB_10_90
-	case 0x057900:	// LB_30_80
-	case 0x037A00:	// LBH_10_90
-	case 0x077A00:	// LBH_30_80
-		return (false);
-		break;
-
-	case 0x07A400: // HB_110_190
-	case 0x079400: // HB_170_230
-	case 0x078400: // HB_210_250
-		return (true);
-		break;
-
-	default:
-		LOG_WARN(formatString("Unknown RCUcontrol setting (0x%X), assuming LBA array",
-							m_rcucontrol));
-		break;
+	switch (itsNyquistZone) {
+	case 1:	return (0);	// LBA
+	case 2: return (5);
+	case 3: return (itsSamplingFreq == 200.0e6 ? 7 : 6);
+	default: ASSERTSTR(false, "rcuMode cannot be determined, illegal nyquistzone.");
 	}
-
-	return (false);		// assume LBA
 }
 
+double SpectralWindow::subbandFreq(int subband) const
+{
+	ASSERT(subband >= 0 && subband < MAX_SUBBANDS);
 
+	bool	is160 	   = ::fabs(160e6 - itsSamplingFreq) < 1e-4;
+	float	freqOffset = (is160 ? 80.0e6 : 100.0e6) * (itsNyquistZone - 1);
+
+	return (freqOffset + (subband * subbandWidth()));
+}
+
+// print function for operator<<
+ostream& SpectralWindow::print(ostream& os) const
+{
+	os << "SpectralWindow " << itsName << ":sampleFreq=" << itsSamplingFreq << ", nyquistzone=" << itsNyquistZone;
+	os << ", LBAfilter=" << (itsLBAfilterOn ? "ON" : "OFF");
+	return (os);
+}
+
+//
+// ---------- pack and unpack functions ----------
+//
 unsigned int SpectralWindow::getSize() const
 {
-  return MSH_STRING_SIZE(m_name) +
-    sizeof(m_sampling_freq) +
-    sizeof(m_nyquist_zone) +
-    sizeof(m_numsubbands) +
-    sizeof(m_rcucontrol);
+  return MSH_STRING_SIZE(itsName) +
+    sizeof(itsSamplingFreq) +
+    sizeof(itsNyquistZone) +
+    sizeof(itsLBAfilterOn);
 }
 
 unsigned int SpectralWindow::pack(void* buffer) const
 {
   unsigned int offset = 0;
 
-  MSH_PACK_STRING(buffer, offset, m_name);
-  memcpy(((char*)buffer) + offset, &m_sampling_freq, sizeof(m_sampling_freq));
-  offset += sizeof(m_sampling_freq);
-  memcpy(((char*)buffer) + offset, &m_nyquist_zone, sizeof(m_nyquist_zone));
-  offset += sizeof(m_nyquist_zone);
-  memcpy(((char*)buffer) + offset, &m_numsubbands, sizeof(m_numsubbands));
-  offset += sizeof(m_numsubbands);
-  memcpy(((char*)buffer) + offset, &m_rcucontrol, sizeof(m_rcucontrol));
-  offset += sizeof(m_rcucontrol);
+  MSH_PACK_STRING(buffer, offset, itsName);
+  memcpy(((char*)buffer) + offset, &itsSamplingFreq, sizeof(itsSamplingFreq));
+  offset += sizeof(itsSamplingFreq);
+  memcpy(((char*)buffer) + offset, &itsNyquistZone, sizeof(itsNyquistZone));
+  offset += sizeof(itsNyquistZone);
+  memcpy(((char*)buffer) + offset, &itsLBAfilterOn, sizeof(itsLBAfilterOn));
+  offset += sizeof(itsLBAfilterOn);
 
   return offset;
 }
@@ -138,15 +130,16 @@ unsigned int SpectralWindow::unpack(void* buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_STRING(buffer, offset, m_name);
-  memcpy(&m_sampling_freq, ((char*)buffer) + offset, sizeof(m_sampling_freq));
-  offset += sizeof(m_sampling_freq);
-  memcpy(&m_nyquist_zone, ((char*)buffer) + offset, sizeof(m_nyquist_zone));
-  offset += sizeof(m_nyquist_zone);
-  memcpy(&m_numsubbands, ((char*)buffer) + offset, sizeof(m_numsubbands));
-  offset += sizeof(m_numsubbands);
-  memcpy(&m_rcucontrol, ((char*)buffer) + offset, sizeof(m_rcucontrol));
-  offset += sizeof(m_rcucontrol);
+  MSH_UNPACK_STRING(buffer, offset, itsName);
+  memcpy(&itsSamplingFreq, ((char*)buffer) + offset, sizeof(itsSamplingFreq));
+  offset += sizeof(itsSamplingFreq);
+  memcpy(&itsNyquistZone, ((char*)buffer) + offset, sizeof(itsNyquistZone));
+  offset += sizeof(itsNyquistZone);
+  memcpy(&itsLBAfilterOn, ((char*)buffer) + offset, sizeof(itsLBAfilterOn));
+  offset += sizeof(itsLBAfilterOn);
 
   return offset;
 }
+
+  }  // namespace ICAL
+}  // namespace LOFAR

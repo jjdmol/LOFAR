@@ -26,20 +26,15 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <APL/RTCCommon/PSAccess.h>					// GET_CONFIG macro's
-#include <APL/ICAL_Protocol/CalibrationInterface.h>
 
 #include <pthread.h>
 #include "SubArrays.h"
 #include "CalibrationThread.h"
 
 using namespace LOFAR;
-using namespace CAL;
+using namespace ICAL;
 
-CalibrationThread::CalibrationThread(SubArrays*            subarrays,
-									 CalibrationInterface* cal,
-									 pthread_mutex_t&      globallock) :
-	m_subarrays(subarrays), 
-	m_cal(cal), 
+CalibrationThread::CalibrationThread(pthread_mutex_t&      globallock) :
 	m_thread(0), 
 	m_globallock(globallock)
 {
@@ -71,9 +66,9 @@ void* CalibrationThread::thread_main(void* thisthread)
 
 	bool	writeGains(GET_CONFIG("CalServer.WriteGainsToFile", i) == 1);
 	if (GET_CONFIG("CalServer.DisableCalibration", i)) {
-		thread->m_subarrays->calibrateAll(0, writeGains);
+//TODO		thread->m_subarrays->calibrateAll(0, writeGains);
 	} else {
-		thread->m_subarrays->calibrateAll(thread->m_cal, writeGains);
+//TODO		thread->m_subarrays->calibrateAll(thread->m_cal, writeGains);
 	}
 
 	pthread_mutex_unlock(&(thread->m_globallock));

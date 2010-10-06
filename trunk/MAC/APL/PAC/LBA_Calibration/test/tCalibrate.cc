@@ -1,4 +1,4 @@
-#include <APL/LBA_Calibration/lba_calibration.h>
+#include <APL/LBA_Calibration/liblba_calibration.h>
 #include <iostream>
 #include <fstream>
 #include <iterator>
