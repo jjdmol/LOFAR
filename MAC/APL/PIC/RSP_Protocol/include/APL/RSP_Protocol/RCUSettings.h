@@ -107,6 +107,10 @@ public:
 		// 3 = Nyquist zone III
 		int getNyquistZone() const;
 
+		bool LBAfilter() const {
+			return (m_value & _30MHZ_MASK);
+		}
+
 		// Set the raw control bytes of a RCU
 		// Each RCU has 4 bytes:
 		//    mask      meaning    explanation
@@ -246,6 +250,7 @@ public:
 		// masks used to set/get bits
 		static const uint32 DELAY_MASK   = 0x0000007F;
 		static const uint32 ENABLE_MASK  = 0x00000080;
+		static const uint32 _30MHZ_MASK	 = 0x00040000;
 		static const uint32 MODE_MASK    = 0x0007FF00;
 		static const uint32 ATT_MASK     = 0x00F80000;
 		static const uint32 PRSG_MASK    = 0x01000000;

@@ -1,5 +1,5 @@
 //#  -*- mode: c++ -*-
-//#  SourceData.h: definition of data for a sky source
+//#  ACCcache.cc: implementation of the Auto Correlation Cube class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -19,44 +19,37 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: SourceData.h 6818 2005-10-20 09:31:47Z cvs $
+//#  $Id: ACC.cc 6967 2005-10-31 16:28:09Z wierenga $
 
-#ifndef SOURCEDATA_H_
-#define SOURCEDATA_H_
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+#include <Common/LofarConstants.h>
 
-#include <string>
-#include <blitz/array.h>
-#include <fstream>
+#include "ACCcache.h"
 
 namespace LOFAR {
-  namespace CAL {
+  namespace ICAL {
 
-    class SourceData
-    {
-    public:
+ACCcache::ACCcache() : 
+	itsIsSwapped(false)
+{
+	itsBackCache  = new ACC(MAX_SUBBANDS, MAX_RCUS);
+	itsFrontCache = new ACC(MAX_SUBBANDS, MAX_RCUS);
+}
 
-      SourceData();
-      virtual ~SourceData();
+ACCcache::~ACCcache()
+{
+	delete itsBackCache;
+	delete itsFrontCache;
+}
 
-      bool getNextFromFile(std::string filename);
+void ACCcache::swap()
+{
+	ACC*	tmp = itsFrontCache;
+	itsFrontCache = itsBackCache;
+	itsBackCache = tmp;
+	itsIsSwapped = !itsIsSwapped;
+}
 
-      std::string getName() const { return m_name; }
-      double getRA() const { return m_ra; }
-      double getDEC() const { return m_dec; }
-      const blitz::Array<double, 2>& getFlux() const { return m_flux; }
-
-    private:
-      std::string             m_filename;
-      std::ifstream           m_file;
-
-      std::string             m_name;
-      double                  m_ra;
-      double                  m_dec;
-      blitz::Array<double, 2> m_flux;
-    };
-
-  }; // namespace CAL
-}; // namespace LOFAR
-
-#endif /* SOURCEDATA_H_ */
-
+  } // namespace ICAL
+} // namespace LOFAR

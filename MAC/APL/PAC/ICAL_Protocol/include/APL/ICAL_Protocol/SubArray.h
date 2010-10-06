@@ -21,35 +21,29 @@
 //#
 //#  $Id: SubArray.h 10637 2007-11-05 10:37:26Z overeem $
 
-#ifndef SUBARRAY_H_
-#define SUBARRAY_H_
+#ifndef ICALPROTOCOL_SUBARRAY_H_
+#define ICALPROTOCOL_SUBARRAY_H_
+
+#include <blitz/array.h>
 
 #include <Common/lofar_map.h>
-#include <Common/lofar_list.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_bitset.h>
+#include <Common/LofarConstants.h>
 
-#include <APL/RTCCommon/Subject.h>
-#include <APL/RSP_Protocol/MEPHeader.h>
 #include <APL/ICAL_Protocol/SpectralWindow.h>
-#include <APL/ICAL_Protocol/AntennaArray.h>
-/*#include "ACC.h"*/
-#include "SharedResource.h"
 #include <APL/ICAL_Protocol/AntennaGains.h>
 
 namespace LOFAR {
-  using EPA_Protocol::MEPHeader;
-  namespace CAL {
+  namespace ICAL {
 
 // forward declarations
-class ACC;
-class CalibrationInterface;
 
-class SubArray : public AntennaArray, public RTC::Subject
+class SubArray
 {
 public:
-	// Default constructor.
-	SubArray();
+	// default constructor
+	SubArray();	// needed for packing/unpacking
 
 	// Construct a subarray.
 	// @param name   The name of the subarray.
@@ -60,51 +54,55 @@ public:
 	// @param nyquist_zone The nyquist zone in which we wish to measure.
 	// @param nsubbands The number of subbands of the spectral window.
 	// @param rcucontrol The RCU control setting (LB, HBL, HBH, etc).
-	SubArray(string                    name,
-	const blitz::Array<double, 1>& geoloc,
-	const blitz::Array<double, 3>& pos,
-	const blitz::Array<bool, 2>&   select,
-	double                         sampling_frequency,
-	int                            nyquist_zone,
-	int                            nsubbands,
-	uint32                         rcucontrol);
-	SubArray(string name); // used to return unknown subarray
-	virtual ~SubArray();
+	SubArray(const string&             		name,
+			 const string&					antennaSet,
+			 RCUmask_t						RCUmask,
+			 bool							LBAfilterOn,
+			 double                         sampling_frequency,
+			 int                            nyquist_zone);
+	SubArray(const string& name); // used to return unknown subarray
+	~SubArray();
 
 	// Start (background) calibration of the subarray
 	// using the specified algorithm and ACC as input.
 	// @param cal The calibration algorithm to use.
 	// @param acc The Array Correlation Cube on which to calibrate.
-	void calibrate(CalibrationInterface* cal);
+	void updateGains(const AntennaGains&	newGains);
 
 	// Get calibration result (if available).
 	// @param cal Calibration result
-	bool getGains(AntennaGains*& cal, int buffer = FRONT);
+	AntennaGains& getGains() 
+		{ return (*itsGains); }
+
+	// Write gains to a file
+	void writeGains();
+
+	// get name of Subarray
+	const string& name() const	
+		{ return (itsName); }
+
+	// get antennaSetname of Subarray
+	const string& antennaSet() const	
+		{ return (itsAntennaSet); }
 
 	// get bitset containing the rcu's of the subArray.
-	typedef bitset<MEPHeader::MAX_N_RCUS> 	RCUmask_t;
-	RCUmask_t	 getRCUMask() const;
-
-	// Abort background calibration.
-	void abortCalibration();
-
-	// Check whether calibration has completed.
-	bool isDone();
-
-	// Used to clear the 'done' flag after updating all subscriptions.
-	void clearDone();
+	RCUmask_t	 RCUMask(uint	rcumode) const;
+	RCUmask_t	 RCUMask() const	
+		{ return (itsRCUmask); }
 
 	// Get a reference to the spectral window for this subarray.
-	const SpectralWindow& getSPW() const;
+	const SpectralWindow& SPW() const 
+		{ return (itsSPW); }
 
-	// Assignement operator.
+	// Get a reference to the RCUmodes
+	const blitz::Array<uint,1>& RCUmodes() const 
+		{ return (itsRCUmodes); }
+
+	// Test if RCUmode is used by this array
+	bool usesRCUmode(int	rcumode) const;
+
+	// Assignment operator.
 	SubArray& operator=(const SubArray& rhs);
-
-	// Enumeration of buffer positions.
-	enum {
-		FRONT = 0,
-		BACK = 1
-	};
 
 	//@{
 	// marshalling methods
@@ -113,26 +111,30 @@ public:
 	unsigned int unpack (void* buffer);
 	//@}
 
+	// call for operator<<
+	ostream& print (ostream& os) const;
+
 private:
 	// prevent copy 
 	SubArray(const SubArray& other); // no implementation
 
-	int						m_antenna_count;		// number of seleted antennas
-	blitz::Array<bool, 2>	m_antenna_selection;	// antenna selection dimensions: 
-													// (nantennas x npol)
-	RCUmask_t				itsRCUmask;
+	string					itsName;			// unique name choosen by user.
+	string					itsAntennaSet;		// name of the used antennaSet
+	SpectralWindow 			itsSPW;				// the spectral window for this subarray
+	RCUmask_t				itsRCUmask;			// used RCU's
 
-	SpectralWindow 			m_spw;              // the spectral window for this subarray
-	AntennaGains*			m_result[BACK + 1]; // two calibration result records
+	blitz::Array<uint,1>	itsRCUmodes;		// redundant info (=AntSet+SPW for each rcu in RCUmask)
+	bitset<NR_RCU_MODES+1>	itsRCUuseFlags;		// which modes are used.
+//	bool					itsLBAfilterOn;
+	AntennaGains*			itsGains;			// calibration result record
 };
 
-//
-// getRCUMask()
-//
-inline	SubArray::RCUmask_t	SubArray::getRCUMask() const
+// operator<<
+inline ostream& operator<< (ostream& os, const SubArray& anSA)
 {
-	return (itsRCUmask);
+	return (anSA.print(os));
 }
+
 
 // ------------------- SubArraymap -------------------
 //
@@ -148,7 +150,7 @@ public:
 	//@}
 };
 
-  }; // namespace CAL
+  }; // namespace ICAL
 }; // namespace LOFAR
 
 #endif 

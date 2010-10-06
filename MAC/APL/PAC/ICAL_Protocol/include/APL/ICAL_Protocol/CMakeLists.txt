@@ -2,14 +2,9 @@
 
 # List of header files that will be installed.
 set(inst_HEADERS
-  AntennaArray.h
-  AntennaArrayData.h
   AntennaGains.h
-  SharedResource.h
   SpectralWindow.h
-  SubArray.h
-  CalibrationInterface.h
-  ACC.h)
+  SubArray.h)
 
 # Add definition of include path suffix definition, because the header files
 # reside in a non-standard location. 

@@ -24,53 +24,64 @@
 #ifndef ACMPROXY_H_
 #define ACMPROXY_H_
 
-#include <APL/LBA_Calibration/lba_calibration.h>	// the matlab stuff
-#include <APL/RSP_Protocol/XCStatistics.h>
-#include <APL/RTCCommon/Timestamp.h>
-#include <APL/RTCCommon/ResourceCache.h>
-
+#include <Common/LofarConstants.h>
 #include <GCF/TM/GCF_Control.h>	// The lot: Task, Port, Fsm, Timer etc.
+#include <APL/RTCCommon/Timestamp.h>
+#include <APL/ICAL_Protocol/SubArray.h>				// for RCUmask_t
+#include <APL/LBA_Calibration/liblba_calibration.h>	// the matlab stuff
+//#include <APL/RSP_Protocol/XCStatistics.h>
+#include "ACCcache.h"
+#include "RequestPool.h"
 
 namespace LOFAR {
   typedef		void*		memptr_t;
-  using RTC::ResourceCache;
-  namespace CAL {
+  using GCF::TM::GCFEvent;
+  using GCF::TM::GCFTask;
+  using GCF::TM::GCFTCPPort;
+  using GCF::TM::GCFTimerPort;
+  using GCF::TM::GCFPortInterface;
+  using RTC::Timestamp;
+  namespace ICAL {
 
+// The ACMProxy class is a 'independant' task that connects to the RSPDriver and
+// collects the cross-correlation information of each subband and stores it in the
+// back-cache of the ACCcache. Start of the collectioncycle is trigger with the
+// 'wating4start' flag, end of the cycle is marked by setting the 'ready' flag.
 class ACMProxy : public GCFTask
 {
 public:
 	// The constructor of the ACMProxy task.
-	// @param name The name of the task. The name is used for looking
-	// up connection establishment information using the GTMNameService and
-	// GTMTopologyService classes.
-	ACMProxy(string name, ResourceCache&	theACCs);
-	virtual ~ACMProxy();
-
-	// All necessary connections established?
-	bool isEnabled();
+	// @param name The name of the task. 
+	// @param theACC Reference to a cache with two MWArray's for storing ACM information.
+	ACMProxy(const string& name, ACCcache&	theACCs);
+	~ACMProxy();
 
 	/*@{*/
 	// States
-	GCFEvent::TResult initial      (GCFEvent& e, GCFPortInterface& port);
-	GCFEvent::TResult idle         (GCFEvent& e, GCFPortInterface& port);
-	GCFEvent::TResult initializing (GCFEvent& e, GCFPortInterface& port);
-	GCFEvent::TResult receiving    (GCFEvent& e, GCFPortInterface& port);
-	GCFEvent::TResult unsubscribing(GCFEvent& e, GCFPortInterface& port);
+	GCFEvent::TResult con2RSPDriver		(GCFEvent& e, GCFPortInterface& port);
+	GCFEvent::TResult idle				(GCFEvent& e, GCFPortInterface& port);
+	GCFEvent::TResult getXCsubscription (GCFEvent& e, GCFPortInterface& port);
+	GCFEvent::TResult collectACinfo		(GCFEvent& e, GCFPortInterface& port);
+	GCFEvent::TResult unsubscribing		(GCFEvent& e, GCFPortInterface& port);
 	/*@}*/
 
 private:
-	ResourceCache&	itsACCs;			// pointer to a pointer to a mwArray containing the MatlabACC
+	ACCcache&		itsACCs;			// pointer to a pointer to a mwArray containing the MatlabACC
 										// the ACMProxy may use.
 	// Port to the RSPDriver.
-	GCFPort 		m_rspdriver;		// connection to the RSPDriver
-	memptr_t		m_handle; 			// handle for the UPDXCSTATS events
+	GCFTCPPort*				itsRSPDriver;		// connection to the RSPDriver
+	GCFTimerPort*			itsTimerPort;		// connection to the RSPDriver
+	memptr_t				itsSubscrHandle; 	// handle for the UPDXCSTATS events
+	RCUmask_t				itsRCUmask;
+	RequestPool*			itsRequestPool;		// pool with outstanding XCstat requests.
 
-	RTC::Timestamp  m_starttime; 		// first ACM will be received at this time
-	int     		m_request_subband;  // current index for request subband
-	int     		m_update_subband;   // current index for update subband
-	int				m_n_subbands;		// the number if subband that must be calibrated.
-	int     		m_nrcus;            // the number of RCU's in the station (as reported by the RSPDriver)
-	int     		m_nrspboards;       // the number of RSP boards in the station (as reported by the RSPDriver)
+	// Subband administration
+	int				itsFirstSubband;	// lowest subband to calibrate.
+	int				itsLastSubband;		// highest subband to calibrate.
+	int				itsRequestSubband;	// Subband that must be requested
+	int				itsReceiveSubband;	// Subband expected to receive.
+
+	Timestamp  		itsStartTime;		// first ACM will be received at this time
 };
 
   }; // namespace CAL

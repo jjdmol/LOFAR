@@ -23,65 +23,71 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/ParameterSet.h>
 #include <MACIO/MACServiceInfo.h>
+#include <APL/RTCCommon/Timestamp.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include "ACMProxy.h"
 
-// from RTCCommon
-#include <APL/RTCCommon/Timestamp.h>
-#include <APL/RTCCommon/PSAccess.h>
-
-#include <APS/ParameterSet.h>
-
 using namespace std;
 using namespace blitz;
-using namespace LOFAR;
-using namespace RSP_Protocol;
-using namespace CAL;
-using namespace RTC;
+namespace LOFAR {
+  using namespace LOFAR;
+  using namespace GCF::TM;
+  using namespace RSP_Protocol;
+  using namespace RTC;
+	namespace ICAL {
 
-#define START_DELAY 4
+#define START_DELAY 4L
 
-ACMProxy::ACMProxy(string name, ResourceCache&	theACCs) :
-	GCFTask			 ((State)&ACMProxy::initial, name),
-	itsACCs			 (theACCs),
-    m_handle		 (0),
-    m_request_subband(0),
-    m_update_subband (0),
-	m_n_subbands	 (0),
-    m_nrcus			 (0)
+ACMProxy::ACMProxy(const string& name, ACCcache&	theACCs) :
+	GCFTask			  ((State)&ACMProxy::con2RSPDriver, name),
+	itsACCs			  (theACCs),
+	itsRSPDriver	  (0),
+	itsTimerPort	  (0),
+	itsRequestPool	  (0),
+	itsFirstSubband	  (0),
+	itsLastSubband	  (0),
+	itsRequestSubband (0),
+	itsReceiveSubband (0)
 {
 	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
 
-	m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
+	itsRSPDriver = new GCFTCPPort(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
+	ASSERTSTR(itsRSPDriver, "Can't allocate a TCP port for collection ACM data at the RSPDriver");
 
-	m_n_subbands = globalParameterSet()->getInt("CalServer.N_SUBBANDS");
+	itsTimerPort = new GCFTimerPort(*this, "ACMheartbeat");
+	ASSERTSTR(itsTimerPort, "Can't allocate a general purpose timer");
+
+	itsRequestPool = new RequestPool(globalParameterSet()->getInt("CalServer.requestPoolSize", 5));
+	ASSERTSTR(itsRequestPool, "Can't allocate buffer for RSP XC requests");
+
+	itsFirstSubband   = globalParameterSet()->getInt("CalServer.firstSubband",0);
+	itsLastSubband    = globalParameterSet()->getInt("CalServer.lastSubband",MAX_SUBBANDS-1);
+	itsRequestSubband = itsLastSubband+1;
+	itsReceiveSubband = itsLastSubband+1;
 }
 
 ACMProxy::~ACMProxy()
-{}
-
-GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
 {
-	GCFEvent::TResult status = GCFEvent::HANDLED;
+	if (itsRSPDriver)   { itsRSPDriver->close(); delete itsRSPDriver; }
+	if (itsTimerPort)   { itsTimerPort->close(); delete itsTimerPort; }
+	if (itsRequestPool) { delete itsRequestPool; }
+}
 
-	switch(e.signal) {
+//
+// con2RSPDriver(event, port)
+//
+GCFEvent::TResult ACMProxy::con2RSPDriver(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR("con2RSPDriver:" << eventName(event) << "@" << port.getName());
+
+	switch(event.signal) {
 	case F_ENTRY: {
-		m_handle = 0;
-		m_starttime = Timestamp(0,0);
-		m_request_subband = 0;
-		m_update_subband = 0;
-
-		LOG_DEBUG("opening port: m_rspdriver");
-		m_rspdriver.open();
-
-		//
-		// When TRAN(CalServer::initial) is done when handling F_DISCONNECTED
-		// in any of the other states, then F_ENTRY of ::initial will be followed
-		// by a port.close() in the GCF framework which cancels the open on the previous line.
-		// Setting this timer will make sure the port is opened again.
-		//
-		m_rspdriver.setTimer(0.0);
+		itsTimerPort->cancelAllTimers();
+		itsSubscrHandle = 0;
+		LOG_INFO("Trying to connect to the RSPDriver for ACM collection");
+		itsRSPDriver->autoOpen(30,0,2);	// try 30 times with interval of 2 seconds
 	}
 	break;
 
@@ -89,123 +95,266 @@ GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
 	break;
 
 	case F_CONNECTED: {
-		if (m_rspdriver.isConnected()) {
+		if (itsRSPDriver->isConnected()) {
+			LOG_INFO("Connected to RSPDriver, asking station configuration");
 			RSPGetconfigEvent getconfig;
-			m_rspdriver.send(getconfig);
+			itsRSPDriver->send(getconfig);
 		}
 	}
 	break;
 
 	case RSP_GETCONFIGACK: {
-		RSPGetconfigackEvent ack(e);
-		m_nrcus = ack.n_rcus;
-		m_nrspboards = ack.n_rspboards;
-//		if (m_nrcus != m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol()) {
-//			LOG_FATAL("CalServer.N_ANTENNAS does not match value from hardware");
-//			exit(EXIT_FAILURE);
-//		}
-		TRAN(ACMProxy::idle);
+		RSPGetconfigackEvent ack(event);
+		// prepare RCUmask for RSPcommands
+		itsRCUmask.reset();
+		for (int i = 0; i < ack.n_rcus; i++) {
+			itsRCUmask.set(i);
+		}
+		// wait for start of new cycle or continue interrupted cycle
+		if (itsReceiveSubband > itsLastSubband) {
+			TRAN(ACMProxy::idle);
+		}
+		else {
+			TRAN(ACMProxy::getXCsubscription);
+		}
 	}
 	break;
 
 	case F_DISCONNECTED: {
-		// if we get disconnected, but we're in test mode, simply continue to the idle state
-		if (GET_CONFIG("CalServer.ACCTestEnable", i)) {
-			TRAN(ACMProxy::idle);
-		}
-		else {  
-			LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
-			port.close();
-			port.setTimer(2.0);
-		}
+		LOG_ERROR("No connection with the RSPDriver, retry in 3 seconds");
+		itsRSPDriver->close();
+		itsTimerPort->setTimer(3.0);
 	}
 	break;
 
 	case F_TIMER: {
 		if (!port.isConnected()) {
-			LOG_DEBUG(formatString("open port '%s'", port.getName().c_str()));
-			port.open();
+			LOG_DEBUG("itsRSPDriver->autoOpen(30,0,2)");
+			itsRSPDriver->autoOpen(30,0,2);
 		}
 	}
 	break;
 
 	case F_EXIT:
 		// stop timer, we're connected
-		m_rspdriver.cancelAllTimers();
+		itsTimerPort->cancelAllTimers();
 	break;
 
 	default:
-		status = GCFEvent::NOT_HANDLED;
+		return(GCFEvent::NOT_HANDLED);
 		break;
 	}
 
-	return status;
+	return (GCFEvent::HANDLED);
 }
 
-GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
+//
+// idle(event, port)
+//
+// wait for new start of cycle
+//
+GCFEvent::TResult ACMProxy::idle(GCFEvent& event, GCFPortInterface& port)
 {
-	GCFEvent::TResult status = GCFEvent::HANDLED;
+	LOG_DEBUG_STR("idle:" << eventName(event) << "@" << port.getName());
 
-	switch (e.signal) {
+	switch (event.signal) {
 	case F_ENTRY: {
-		m_rspdriver.setTimer(2.0, 2.0); // check every two second
+		itsTimerPort->setTimer(1.0, 1.0); // check every second
 	}
 	break;
 
-	case F_CONNECTED: {
-		LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
-		TRAN(ACMProxy::initializing);
+	case F_EXIT: {
+		itsTimerPort->cancelAllTimers();
 	}
 	break;
 
 	case F_TIMER: {
-		/*GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);*/
+		if (itsACCs.getBack().isWaiting4Start()) {
+			LOG_DEBUG_STR(itsACCs.getBack());
+			LOG_INFO("New start of collection cycle requested, starting it.");
+			itsACCs.getBack().started();
+			LOG_DEBUG_STR(itsACCs.getBack());
+			itsRequestSubband = itsFirstSubband;
+			itsReceiveSubband = itsFirstSubband;
+			TRAN(ACMProxy::getXCsubscription);
+		}
+	}
+	break;
 
-		//
-		// start collecting the next ACC if needed
-		//
-#if 0
-		// TODO: HAVE TO REWRITE THIS TO THE MATLAB ACCS, PUT THE TRAN IN THE F_CONNECTED STATE
-		if (m_accs.getBack().writeLock()) {
-			LOG_INFO("collecting next batch of ACMs");
+	case F_DISCONNECTED: {
+		LOG_INFO("lost connection with the RSPDriver, going to reconnect state");
+		itsRSPDriver->close();
+		TRAN(ACMProxy::con2RSPDriver);
+	}
+	break;
+	}
 
-			if (GET_CONFIG("CalServer.ACCTestEnable", i)) {
-				const char* testfilename = GET_CONFIG_STRING("CalServer.ACCTestFile");
-				const char* dot          = strrchr(testfilename, '.');
-				if (dot) {
-					dot++;
-					if (0 == strncmp(dot, "txt", 3)) {
-						if (0 != m_accs.getBack().getFromFile(GET_CONFIG_STRING("CalServer.ACCTestFile"))) {
-							LOG_FATAL("Failed to get ACC.");
-							exit(EXIT_FAILURE);
-						}
-					} else if (0 == strncmp(dot, "bin", 3)) {
-						if (0 != m_accs.getBack().getFromBinaryFile(GET_CONFIG_STRING("CalServer.ACCTestFile"))) {
-							LOG_FATAL("Failed to get ACC.");
-							exit(EXIT_FAILURE);
-						}
-					} else dot = 0;
-				}
+	return (GCFEvent::HANDLED);
+}
 
-				if (!dot) {
-					LOG_FATAL_STR("CalServer.ACCTestFile must end in '.txt' or '.dat': offending value:" <<
-					GET_CONFIG_STRING("CalServer.ACCTestFile"));
-					exit(EXIT_FAILURE);
-				}
-				finalize(true); // done reading from file
-			} else {
-				if (!GET_CONFIG("CalServer.DisableACMProxy", i)) {
-					TRAN(ACMProxy::initializing);
-				}
+
+//
+// getXCsubscription(event, port)
+//
+GCFEvent::TResult ACMProxy::getXCsubscription(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR("getXCsubscription:" << eventName(event) << "@" << port.getName());
+
+	switch (event.signal) {
+	case F_ENTRY: {
+		// subscribe to statistics
+		RSPSubxcstatsEvent subxc;
+		itsStartTime.setNow();
+		itsStartTime += (long)START_DELAY; // start START_DELAY seconds from now
+		subxc.timestamp = itsStartTime + (long)1; // wait 1 second to get result
+		subxc.period = 1;
+		itsRSPDriver->send(subxc);
+	}
+	break;
+
+	case RSP_SUBXCSTATSACK: {
+		RSPSubxcstatsackEvent ack(event);
+		if (ack.status == RSP_BUSY) {
+			LOG_INFO ("RSPDriver, retrying a XCsubscription over 5 seconds.");
+			itsTimerPort->setTimer(5.0);
+			break;
+		}
+		if (ack.status != RSP_SUCCESS) {
+			LOG_FATAL("SUBCXSTATSACK returned error status");
+			exit(EXIT_FAILURE);
+		}
+		itsSubscrHandle = ack.handle;
+		TRAN(ACMProxy::collectACinfo);
+	}
+	break;
+
+	case F_TIMER: {
+		TRAN(ACMProxy::getXCsubscription);	// redo request for subscription
+	}
+	break;
+
+	case F_EXIT: {
+		itsTimerPort->cancelAllTimers();
+	}
+	break;
+
+	case F_DISCONNECTED: {
+		LOG_INFO("lost connection with the RSPDriver, going to reconnect state");
+		itsRSPDriver->close();
+		TRAN(ACMProxy::con2RSPDriver);
+	}
+	break;
+	}
+
+	return (GCFEvent::HANDLED);
+}
+
+
+//
+// collectACinfo(event, port)
+//
+// collect the AC info for every subband
+//
+GCFEvent::TResult ACMProxy::collectACinfo(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR("collectACinfo:" << eventName(event) << "@" << port.getName());
+
+	switch (event.signal) {
+	case F_ENTRY: {
+		itsTimerPort->setTimer(1.0, 1.0); // heartbeat at 1 second interval
+
+		if (itsRequestSubband == itsFirstSubband) {		// start of new cycle?
+			itsStartTime.setNow();
+			itsStartTime += (long)START_DELAY; // start START_DELAY seconds from now
+			LOG_INFO_STR("starttime for ACM collection: " << itsStartTime);
+			// wait for timer
+		}
+	}
+	break;
+
+	case F_EXIT: {
+		itsTimerPort->cancelAllTimers();
+	}
+	break;
+
+	case F_TIMER: {
+		Timestamp	justPast;
+		justPast.setNow();
+
+		// is abort requested?
+		if (itsACCs.getBack().isAborted()) {
+			LOG_INFO ("Aborting collection of ACMinfo on request of main task!");
+			itsRequestPool->clearBeforeTime(justPast-(2*START_DELAY));	// clear request admin
+			itsRequestSubband = itsLastSubband+1;		// mark subband admin ready
+			itsReceiveSubband = itsLastSubband+1;
+			itsACCs.getBack().setReady(true);			// communicate back that we are ready
+			LOG_DEBUG_STR(itsACCs.getBack());
+			TRAN(ACMProxy::unsubscribing);
+			break;
+		}
+			
+		// delete requests that were missed !!!???
+		itsRequestPool->clearBeforeTime(justPast-1L);
+
+		// send subband request
+		if (itsRequestSubband <= itsLastSubband && !itsRequestPool->full()) {
+			RSPSetsubbandsEvent	sse;
+			sse.timestamp = itsStartTime;
+			sse.rcumask   = itsRCUmask;
+			sse.subbands.setType(SubbandSelection::XLET);
+			sse.subbands().resize(1, 1);
+			sse.subbands() = itsRequestSubband;
+			LOG_DEBUG_STR("XLETrequest " << itsRequestSubband << " for " << itsStartTime);
+			itsRSPDriver->send(sse);	// will result in RSP_SUBBANDSELECTACK
+			itsRequestPool->add(itsRequestSubband, itsStartTime+1L); 
+		}
+	}
+	break;
+
+    case RSP_SETSUBBANDSACK: {
+		RSPSetsubbandsackEvent ack(event);
+		if (ack.status == RSP_SUCCESS) {
+			itsRequestSubband++;
+			LOG_DEBUG_STR("XLETrequest incremented to " << itsRequestSubband);
+			// wait for timer to send next
+		} 
+		else {
+			LOG_FATAL_STR("Request for subband " << itsRequestSubband << " failed, retrying");
+			itsRequestPool->remove(itsRequestSubband);
+			// just wait for timer
+		}
+		itsStartTime.setNow();
+		itsStartTime += (long)START_DELAY;
+      }
+      break;
+
+	case RSP_UPDXCSTATS: {
+		RSPUpdxcstatsEvent upd(event);
+		if (upd.status == RSP_SUCCESS) {
+			int	subbandNr = itsRequestPool->findOnTimestamp(upd.timestamp);
+			if (subbandNr < 0) {
+				LOG_DEBUG_STR("XCstat for timestamp " << upd.timestamp << " not in our admin");
+				break;
 			}
-		} else {
-			LOG_WARN("failed to get writeLock on ACC backbuffer");
+			if (subbandNr != itsReceiveSubband) {
+				LOG_WARN_STR("Expected ACM for subband " << itsReceiveSubband << " iso " << subbandNr);
+			}
+			LOG_DEBUG_STR("ACK: XC subband " << subbandNr << " @ " << upd.timestamp);
+			LOG_DEBUG_STR("upd.stats().shape=" << upd.stats().shape());
+			itsACCs.getBack().updateACM(subbandNr, upd.timestamp, upd.stats());
+			itsRequestPool->remove(subbandNr);
+			itsReceiveSubband = subbandNr+1;
+			// test for end of cycle
+			if (itsReceiveSubband > itsLastSubband) {
+				itsACCs.getBack().setReady(true);
+				LOG_DEBUG_STR(itsACCs.getBack());
+				TRAN(ACMProxy::unsubscribing);
+			}
+		} 
+		else {
+			LOG_FATAL("UPDXCSTATS returned error code");
+			exit(EXIT_FAILURE);
 		}
-#else
-		if (m_rspdriver.isConnected()) {
-			TRAN(ACMProxy::initializing);
-		}
-#endif
 	}
 	break;
 
@@ -213,265 +362,78 @@ GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 		LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
 		port.close();
 
-//		finalize(false);
+		// whenever we come back restart the collectcycle with the subband we are waiting for now.
+		itsRequestSubband = itsReceiveSubband;
+		LOG_DEBUG_STR("REQUESTSUBBAND SET TO " << itsRequestSubband);
 
-		TRAN(ACMProxy::initial);
-	}
-	break;
-
-	case F_EXIT: {
-		// stop timer, it is not needed in the next state
-		m_rspdriver.cancelAllTimers();
+		TRAN(ACMProxy::con2RSPDriver);
 	}
 	break;
 
 	default:
-		status = GCFEvent::NOT_HANDLED;
-		break;
+		return (GCFEvent::NOT_HANDLED);
 	}
 
-	return status;
+	return (GCFEvent::HANDLED);
 }
 
-/**
- * In this state a few SETSUBBANDS commands are sent to the
- * RSPDriver to select the right subband for cross correlation.
- */
-GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal) {
-    case F_ENTRY: {
-		RSPSetsubbandsEvent ss;
-
-		m_starttime.setNow();
-		m_starttime = m_starttime + (long)START_DELAY; // start START_DELAY seconds from now
-
-		LOG_INFO_STR("starttime for ACM collection: " << m_starttime);
-
-		ss.timestamp = m_starttime;
-		ss.rcumask.reset();
-		for (int i = 0; i < m_nrcus; i++) {
-		  ss.rcumask.set(i);
-		}
-
-		m_request_subband = 0;
-		m_update_subband = 0;
-
-		ss.subbands.setType(SubbandSelection::XLET);
-		ss.subbands().resize(1, 1);
-		ss.subbands() = m_request_subband;
-
-		LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
-		m_rspdriver.send(ss);
-
-		m_request_subband++;
-      }
-      break;
-
-    case RSP_SETSUBBANDSACK: {
-		RSPSetsubbandsackEvent ack(e);
-
-		if (SUCCESS == ack.status) {
-
-		  if (m_request_subband < START_DELAY) {
-			// request next subband
-			RSPSetsubbandsEvent ss;
-	  
-			ss.timestamp = m_starttime + (long)m_request_subband;
-			ss.rcumask.reset();
-			for (int i = 0; i < m_nrcus; i++) {
-			  ss.rcumask.set(i);
-			}
-	    
-			ss.subbands.setType(SubbandSelection::XLET);
-			ss.subbands().resize(1, 1);
-			ss.subbands() = m_request_subband;
-
-			LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
-			port.send(ss);
-
-			m_request_subband++;
-
-		  } else {
-			TRAN(ACMProxy::receiving);
-		  }
-		} else {
-		  LOG_FATAL("SETSUBBANDSACK returned error status");
-		  exit(EXIT_FAILURE);
-		}
-      }
-      break;
-
-    case F_EXIT:
-      break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-    }
-
-  return status;
-}
-
-GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal) {
-    case F_ENTRY: {
-		// subscribe to statistics
-		RSPSubxcstatsEvent subxc;
-
-		subxc.timestamp = m_starttime + (long)1; // wait 1 second to get result
-		subxc.period = 1;
-
-		m_rspdriver.send(subxc);
-      }
-      break;
-
-    case RSP_SUBXCSTATSACK: {
-		RSPSubxcstatsackEvent ack(e);
-
-		if (SUCCESS != ack.status) {
-		  LOG_FATAL("SUBCXSTATSACK returned error status");
-		  exit(EXIT_FAILURE);
-		}
-
-		m_handle = ack.handle;
-      }
-      break;
-
-    case RSP_UPDXCSTATS: {
-		RSPUpdxcstatsEvent upd(e);
-
-		if (m_update_subband < m_n_subbands) {
-			if (m_handle == upd.handle) {
-				if (SUCCESS == upd.status) {
-
-					LOG_DEBUG_STR("ACK: XC subband " << m_update_subband << " @ " << upd.timestamp);
-					LOG_DEBUG_STR("upd.stats().shape=" << upd.stats().shape());
-
-					if (upd.timestamp != m_starttime + (long)m_update_subband + (long)1) {
-						LOG_WARN("incorrect timestamp on XC statistics");
-					}
-
-					mwArray*	theBackACC = (mwArray*) itsACCs.getBack();
-					for (int idx2 = 1; idx2 <= (m_nrcus/2); idx2++) {
-						for (int idx1 = 1; idx1 <= (m_nrcus/2); idx1++) {
-							(*theBackACC)(idx1, idx2, m_update_subband).Real() = upd.stats()(idx1, idx2, 0, 0).real(); // ???
-							(*theBackACC)(idx1, idx2, m_update_subband).Imag() = upd.stats()(idx1, idx2, 1, 1).imag(); // ???
-						}
-					}
-				} 
-				else {
-					LOG_FATAL("UPDXCSTATS returned error code");
-					exit(EXIT_FAILURE);
-				}
-			} 
-			else {
-				LOG_WARN("Received UPDXCSTATS event with unknown handle.");
-			}
-			m_update_subband++;
-		} 
-		else {	// finished this ACC.
-			TRAN(ACMProxy::unsubscribing);
-		}
-
-		if (m_request_subband < m_n_subbands) {
-			// request next subband
-			RSPSetsubbandsEvent ss;
-
-			ss.timestamp = m_starttime + (long)m_request_subband;
-			ss.rcumask.reset();
-			for (int i = 0; i < m_nrcus; i++) {
-				ss.rcumask.set(i);
-			}
-
-			ss.subbands.setType(SubbandSelection::XLET);
-			ss.subbands().resize(1, 1);
-			ss.subbands() = m_request_subband;
-
-			LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
-			port.send(ss);
-
-			m_request_subband++;
-		}
-      }
-      break;
-
-    case RSP_SETSUBBANDSACK: {
-		RSPSetsubbandsackEvent ack(e);
-		if (SUCCESS != ack.status) {
-		  LOG_FATAL("SETSUBBANDSACK returned error status");
-		  exit(EXIT_FAILURE);
-		}
-      }
-      break;
-
-    case F_DISCONNECTED: {
-		LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
-		port.close();
-
-//		finalize(false);
-
-		TRAN(ACMProxy::initial);
-      }
-      break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-    }
-
-  return status;
-}
 
 //
 // unsubscribing(event, port)
 //
-GCFEvent::TResult ACMProxy::unsubscribing(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult ACMProxy::unsubscribing(GCFEvent& event, GCFPortInterface& port)
 {
-	GCFEvent::TResult status = GCFEvent::HANDLED;
+	LOG_DEBUG_STR("unsubscribing:" << eventName(event) << "@" << port.getName());
 
-	switch (e.signal) {
+	switch (event.signal) {
 	case F_ENTRY: {
 		RSPUnsubxcstatsEvent unsub;
-		unsub.handle = m_handle;
-		m_rspdriver.send(unsub);
+		unsub.handle = itsSubscrHandle;
+		itsRSPDriver->send(unsub);
 	}
 	break;
 
 	case RSP_UNSUBXCSTATSACK: {
-		RSPUnsubxcstatsackEvent ack(e);
-
-		if (SUCCESS != ack.status) {
+		RSPUnsubxcstatsackEvent ack(event);
+		if (ack.status == RSP_BUSY) {
+			LOG_INFO_STR("RSPDRiver busy, retrying unscubscription on XCstat over 5 seconds");
+			itsTimerPort->setTimer(5.0);
+			break;
+		}
+		if (ack.status != RSP_SUCCESS) {
 			LOG_FATAL("UNSUBXCSTATSACK returned error status");
 			exit(EXIT_FAILURE);
 		}
 
-		// Swap buffer to signal the 'other' side.
-		itsACCs.swap();
-
+		itsSubscrHandle = 0;
 		LOG_INFO("finished collecting ACMs");
 		TRAN(ACMProxy::idle);
 	}
 	break;
 
+	case F_TIMER:
+		// ignore timer event, probably a (late) queued heartbeat
+	break;
+
+	case F_EXIT: {
+		itsTimerPort->cancelAllTimers();
+	}
+	break;
+
 	case F_DISCONNECTED: {
 		LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
 		port.close();
 
-		TRAN(ACMProxy::initial);
+		TRAN(ACMProxy::con2RSPDriver);
 	}
 	break;
 
 	default:
-		status = GCFEvent::NOT_HANDLED;
-		break;
+		return (GCFEvent::NOT_HANDLED);
 	}
 
-	return status;
+	return (GCFEvent::HANDLED);
 }
 
+  } // namespace ICAL
+} // namespace LOFAR

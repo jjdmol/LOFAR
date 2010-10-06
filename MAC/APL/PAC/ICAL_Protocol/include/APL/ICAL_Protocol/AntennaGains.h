@@ -25,12 +25,10 @@
 #ifndef ANTENNAGAINS_H_
 #define ANTENNAGAINS_H_
 
-#include <math.h>
 #include <blitz/array.h>
-#include <pthread.h>
 
 namespace LOFAR {
-  namespace CAL {
+  namespace ICAL {
 
     /**
      * This class holds the results of a remote station calibration: the
@@ -47,7 +45,7 @@ namespace LOFAR {
        * Constructors
        */
       AntennaGains();
-      AntennaGains(int nantennas, int npol, int nsubbands);
+      AntennaGains(uint nRCUs, uint nsubbands);
       /*@}*/
 
       /**
@@ -55,29 +53,22 @@ namespace LOFAR {
        */
       virtual ~AntennaGains();
 
+	  // Make a copy of this class
+	  AntennaGains* clone() const;
+
       /**
        * Get reference to the array with calibrated antenna gains.
        * @return a reference to the calibrated gains. A three dimensional array of
        * complex doubles with dimensions: nantennas x npol x nsubbands
        */
-      const blitz::Array<std::complex<double>, 3>& getGains() const { return m_gains; }
+      const blitz::Array<std::complex<double>, 2>& getGains() const { return m_gains; }
 
       /**
        * Get reference to the array with quality measure.
        * @return a reference to the quality measure array. A 3-dimensional array
        * of doubles with nantennas x npol x nsubbands elements.
        */
-      const blitz::Array<double, 3>& getQuality() const { return m_quality; }
-
-      /**
-       * has the calibration algorithm producing this result completed?
-       */
-      inline bool isDone() const { bool done; lock(); done = m_done; unlock(); return done; }
-
-      /**
-       * set the complete status.
-       */
-      inline void setDone(bool value = true) { lock(); m_done = value; unlock(); }
+      const blitz::Array<double, 2>& getQuality() const { return m_quality; }
 
       /**
        * assignment operator
@@ -85,12 +76,6 @@ namespace LOFAR {
        * because the rhs must be locked during the assignment.
        */
       AntennaGains& operator=(const AntennaGains& rhs);
-
-      /**
-       * lock/unlock
-       */
-      inline int lock()   const { return pthread_mutex_lock((pthread_mutex_t*)m_mutex);   }
-      inline int unlock() const { return pthread_mutex_unlock((pthread_mutex_t*)m_mutex); }
 
     public:
       /*@{*/
@@ -109,14 +94,11 @@ namespace LOFAR {
       AntennaGains(const AntennaGains & copy);
 
     private:
-      blitz::Array<std::complex<double>, 3> m_gains;
-      blitz::Array<double, 3>               m_quality;
-      bool                                  m_done; // has the calibration finished
-
-      const pthread_mutex_t* m_mutex; // control access to the m_done flag
+      blitz::Array<std::complex<double>, 2> m_gains;
+      blitz::Array<double, 2>               m_quality;
     };
 
-  }; // namespace CAL
+  }; // namespace ICAL
 }; // namespace LOFAR
 
 #endif /* CALIBRATIONRESULT_H_ */
